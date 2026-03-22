@@ -1678,4 +1678,407 @@ module dndTest {
   run test_hostile_move_same_size = {
     assert(not(pCanMoveThroughHostile(Medium, Medium)))
   }
+
+  // ============================================================
+  // Phase 6: Spellcasting System
+  // ============================================================
+
+  // -- Test Fixtures --
+
+  // 5th-level wizard: CL 5 → slots 4/3/2/0/.../0
+  pure val WIZARD_5_SLOTS: SpellSlotState = {
+    slotsMax: pBuildSlotMap(5),
+    slotsCurrent: pBuildSlotMap(5),
+    pactSlotsMax: 0,
+    pactSlotsCurrent: 0,
+    pactSlotLevel: 0,
+    concentrating: false,
+    concentrationSpellId: "",
+  }
+
+  // 3rd-level warlock: 2 pact slots at level 2, no regular slots
+  pure val WARLOCK_3_SLOTS: SpellSlotState = {
+    slotsMax: EMPTY_SLOTS,
+    slotsCurrent: EMPTY_SLOTS,
+    pactSlotsMax: 2,
+    pactSlotsCurrent: 2,
+    pactSlotLevel: 2,
+    concentrating: false,
+    concentrationSpellId: "",
+  }
+
+  // -- Expend Slot --
+
+  run test_expend_slot_1st = {
+    val ss = pExpendSlot(WIZARD_5_SLOTS, 1)
+    // 4 → 3
+    assert(ss.slotsCurrent.get(1) == 3)
+  }
+
+  run test_expend_slot_2nd = {
+    val ss = pExpendSlot(WIZARD_5_SLOTS, 2)
+    // 3 → 2
+    assert(ss.slotsCurrent.get(2) == 2)
+  }
+
+  run test_expend_slot_empty = {
+    // 4th level has 0 slots at CL 5
+    val ss = pExpendSlot(WIZARD_5_SLOTS, 4)
+    assert(ss.slotsCurrent.get(4) == 0)
+  }
+
+  run test_expend_slot_to_zero = {
+    // 3rd level has 2 slots; expend twice
+    val ss = pExpendSlot(pExpendSlot(WIZARD_5_SLOTS, 3), 3)
+    assert(ss.slotsCurrent.get(3) == 0)
+  }
+
+  run test_expend_slot_at_zero_noop = {
+    // Expend 3rd three times: third is noop
+    val ss = pExpendSlot(pExpendSlot(pExpendSlot(WIZARD_5_SLOTS, 3), 3), 3)
+    assert(ss.slotsCurrent.get(3) == 0)
+  }
+
+  // -- Expend Pact Slot --
+
+  run test_expend_pact_slot = {
+    val ss = pExpendPactSlot(WARLOCK_3_SLOTS)
+    assert(ss.pactSlotsCurrent == 1)
+  }
+
+  run test_expend_pact_slot_empty = {
+    val ss = pExpendPactSlot(pExpendPactSlot(pExpendPactSlot(WARLOCK_3_SLOTS)))
+    // Third expend is noop
+    assert(ss.pactSlotsCurrent == 0)
+  }
+
+  run test_expend_pact_slot_nonwarlock = {
+    val ss = pExpendPactSlot(WIZARD_5_SLOTS)
+    assert(ss.pactSlotsCurrent == 0)
+  }
+
+  // -- Can Cast At Level --
+
+  run test_can_cast_at_level_exact = {
+    // 1st level spell in 1st level slot
+    assert(pCanCastAtLevel(WIZARD_5_SLOTS, 1, 1))
+  }
+
+  run test_can_cast_at_level_upcast = {
+    // 1st level spell in 2nd level slot
+    assert(pCanCastAtLevel(WIZARD_5_SLOTS, 1, 2))
+  }
+
+  run test_can_cast_at_level_insufficient = {
+    // 3rd level spell in 2nd level slot → false
+    assert(not(pCanCastAtLevel(WIZARD_5_SLOTS, 3, 2)))
+  }
+
+  run test_can_cast_at_level_no_slots = {
+    // 4th level spell in 4th level slot → 0 slots at CL 5
+    assert(not(pCanCastAtLevel(WIZARD_5_SLOTS, 4, 4)))
+  }
+
+  // -- Can Cast With Pact Slot --
+
+  run test_can_cast_pact_valid = {
+    // 1st level spell, pact level 2 → true
+    assert(pCanCastWithPactSlot(WARLOCK_3_SLOTS, 1))
+  }
+
+  run test_can_cast_pact_exact_level = {
+    // 2nd level spell, pact level 2 → true
+    assert(pCanCastWithPactSlot(WARLOCK_3_SLOTS, 2))
+  }
+
+  run test_can_cast_pact_too_high = {
+    // 3rd level spell, pact level 2 → false
+    assert(not(pCanCastWithPactSlot(WARLOCK_3_SLOTS, 3)))
+  }
+
+  run test_can_cast_pact_no_slots = {
+    val ss = pExpendPactSlot(pExpendPactSlot(WARLOCK_3_SLOTS))
+    assert(not(pCanCastWithPactSlot(ss, 1)))
+  }
+
+  // -- Restore Slots --
+
+  run test_restore_all_slots = {
+    val spent = pExpendSlot(pExpendSlot(WIZARD_5_SLOTS, 1), 2)
+    val restored = pRestoreAllSlots(spent)
+    all {
+      assert(restored.slotsCurrent.get(1) == 4),
+      assert(restored.slotsCurrent.get(2) == 3),
+    }
+  }
+
+  run test_restore_all_includes_pact = {
+    val spent = pExpendPactSlot(WARLOCK_3_SLOTS)
+    val restored = pRestoreAllSlots(spent)
+    assert(restored.pactSlotsCurrent == 2)
+  }
+
+  run test_restore_pact_only = {
+    // Hybrid: wizard slots + warlock pact slots
+    val hybrid: SpellSlotState = {
+      slotsMax: pBuildSlotMap(5),
+      slotsCurrent: pBuildSlotMap(5),
+      pactSlotsMax: 2,
+      pactSlotsCurrent: 0,
+      pactSlotLevel: 3,
+      concentrating: false,
+      concentrationSpellId: "",
+    }
+    val spent = pExpendSlot(hybrid, 1)
+    val restored = pRestorePactSlots(spent)
+    all {
+      // Pact restored
+      assert(restored.pactSlotsCurrent == 2),
+      // Regular NOT restored
+      assert(restored.slotsCurrent.get(1) == 3),
+    }
+  }
+
+  // -- Multiclass Caster Level --
+
+  run test_multiclass_cl_full_only = {
+    // Wizard 5 → CL 5
+    assert(pMulticlassCasterLevel(5, 0, 0) == 5)
+  }
+
+  run test_multiclass_cl_half_only = {
+    // Paladin 6 → floor(6/2) = 3
+    assert(pMulticlassCasterLevel(0, 6, 0) == 3)
+  }
+
+  run test_multiclass_cl_third_only = {
+    // Eldritch Knight 9 → floor(9/3) = 3
+    assert(pMulticlassCasterLevel(0, 0, 9) == 3)
+  }
+
+  run test_multiclass_cl_mixed = {
+    // Wizard 5 / Paladin 4 / EK 3 → 5 + 2 + 1 = 8
+    assert(pMulticlassCasterLevel(5, 4, 3) == 8)
+  }
+
+  run test_multiclass_cl_half_rounds_down = {
+    // Ranger 3 → floor(3/2) = 1
+    assert(pMulticlassCasterLevel(0, 3, 0) == 1)
+  }
+
+  run test_multiclass_cl_third_rounds_down = {
+    // Arcane Trickster 5 → floor(5/3) = 1
+    assert(pMulticlassCasterLevel(0, 0, 5) == 1)
+  }
+
+  // -- Slots Per Level (PHB table spot checks) --
+
+  run test_slots_cl1 = {
+    all {
+      assert(pSlotsPerLevel(1, 1) == 2),
+      assert(pSlotsPerLevel(1, 2) == 0),
+    }
+  }
+
+  run test_slots_cl5 = {
+    all {
+      assert(pSlotsPerLevel(5, 1) == 4),
+      assert(pSlotsPerLevel(5, 2) == 3),
+      assert(pSlotsPerLevel(5, 3) == 2),
+      assert(pSlotsPerLevel(5, 4) == 0),
+    }
+  }
+
+  run test_slots_cl9 = {
+    all {
+      assert(pSlotsPerLevel(9, 4) == 3),
+      assert(pSlotsPerLevel(9, 5) == 1),
+      assert(pSlotsPerLevel(9, 6) == 0),
+    }
+  }
+
+  run test_slots_cl17 = {
+    all {
+      assert(pSlotsPerLevel(17, 5) == 2),
+      assert(pSlotsPerLevel(17, 9) == 1),
+    }
+  }
+
+  run test_slots_cl20 = {
+    all {
+      assert(pSlotsPerLevel(20, 5) == 3),
+      assert(pSlotsPerLevel(20, 6) == 2),
+      assert(pSlotsPerLevel(20, 7) == 2),
+      assert(pSlotsPerLevel(20, 8) == 1),
+      assert(pSlotsPerLevel(20, 9) == 1),
+    }
+  }
+
+  run test_slots_cl18_5th_level = {
+    // CL 18: 5th level slots = 3
+    assert(pSlotsPerLevel(18, 5) == 3)
+  }
+
+  run test_slots_cl19_6th_level = {
+    // CL 19: 6th level slots = 2
+    assert(pSlotsPerLevel(19, 6) == 2)
+  }
+
+  // -- Build Slot Map --
+
+  run test_build_slot_map_cl5 = {
+    val m = pBuildSlotMap(5)
+    all {
+      assert(m.get(1) == 4),
+      assert(m.get(2) == 3),
+      assert(m.get(3) == 2),
+      assert(m.get(4) == 0),
+      assert(m.get(9) == 0),
+    }
+  }
+
+  run test_build_slot_map_cl0 = {
+    // CL 0: no slots at all
+    val m = pBuildSlotMap(0)
+    all {
+      assert(m.get(1) == 0),
+      assert(m.get(9) == 0),
+    }
+  }
+
+  // -- Concentration DC --
+
+  run test_conc_dc_low_damage = {
+    // 10 damage → max(10, 5) = 10
+    assert(pConcentrationDC(10) == 10)
+  }
+
+  run test_conc_dc_high_damage = {
+    // 30 damage → max(10, 15) = 15
+    assert(pConcentrationDC(30) == 15)
+  }
+
+  run test_conc_dc_minimum = {
+    // 1 damage → max(10, 0) = 10
+    assert(pConcentrationDC(1) == 10)
+  }
+
+  run test_conc_dc_exact_20 = {
+    // 20 damage → max(10, 10) = 10
+    assert(pConcentrationDC(20) == 10)
+  }
+
+  run test_conc_dc_22 = {
+    // 22 damage → max(10, 11) = 11
+    assert(pConcentrationDC(22) == 11)
+  }
+
+  // -- Break Concentration --
+
+  run test_break_concentration = {
+    val ss = WIZARD_5_SLOTS.with("concentrating", true).with("concentrationSpellId", "bless")
+    val result = pBreakConcentration(ss)
+    all {
+      assert(not(result.concentrating)),
+      assert(result.concentrationSpellId == ""),
+    }
+  }
+
+  // -- Start Concentration --
+
+  run test_start_concentration_fresh = {
+    val ss = pStartConcentration(WIZARD_5_SLOTS, "hold_person")
+    all {
+      assert(ss.concentrating),
+      assert(ss.concentrationSpellId == "hold_person"),
+    }
+  }
+
+  run test_start_concentration_replaces = {
+    val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
+    val ss2 = pStartConcentration(ss, "hold_person")
+    all {
+      assert(ss2.concentrating),
+      assert(ss2.concentrationSpellId == "hold_person"),
+    }
+  }
+
+  // -- Concentration Check --
+
+  run test_conc_check_pass = {
+    val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
+    val result = pConcentrationCheck(ss, true)
+    all {
+      assert(result.concentrating),
+      assert(result.concentrationSpellId == "bless"),
+    }
+  }
+
+  run test_conc_check_fail = {
+    val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
+    val result = pConcentrationCheck(ss, false)
+    all {
+      assert(not(result.concentrating)),
+      assert(result.concentrationSpellId == ""),
+    }
+  }
+
+  run test_conc_check_not_concentrating = {
+    // Fail save but not concentrating → noop
+    val result = pConcentrationCheck(WIZARD_5_SLOTS, false)
+    assert(not(result.concentrating))
+  }
+
+  // -- Component Validation --
+
+  run test_components_all_satisfied = {
+    assert(pCanProvideComponents(FRESH20, true, true, true))
+  }
+
+  run test_components_no_verbal_paralyzed = {
+    val s = pApplyCondition(FRESH20, CParalyzed)
+    assert(not(pCanProvideComponents(s, true, false, true)))
+  }
+
+  run test_components_no_somatic_no_hand = {
+    assert(not(pCanProvideComponents(FRESH20, false, true, false)))
+  }
+
+  run test_components_verbal_not_required = {
+    val s = pApplyCondition(FRESH20, CParalyzed)
+    // V not required → paralysis doesn't matter
+    assert(pCanProvideComponents(s, false, false, true))
+  }
+
+  run test_components_somatic_not_required = {
+    // S not required → no free hand doesn't matter
+    assert(pCanProvideComponents(FRESH20, false, false, false))
+  }
+
+  run test_components_unconscious_no_verbal = {
+    val s = pApplyCondition(FRESH20, CUnconscious)
+    assert(not(pCanProvideComponents(s, true, false, true)))
+  }
+
+  // -- Existing bonus action spell / armor proficiency integration --
+
+  run test_bonus_action_spell_blocks_action_spell = {
+    val t = pMarkBonusActionSpell(BASIC_TURN)
+    assert(not(canCastNonCantripAction(t)))
+  }
+
+  run test_action_spell_blocks_bonus_spell = {
+    val t = pMarkNonCantripActionSpell(BASIC_TURN)
+    assert(not(canCastBonusActionSpell(t)))
+  }
+
+  run test_armor_blocks_casting = {
+    // Wearing chain mail without heavy armor proficiency
+    val noProfConfig = TEST_FIGHTER_5.with("armorProficiencies", Set(LightArmor, MediumArmor))
+    assert(lacksArmorProficiency(WearingArmor(CHAIN_MAIL), noProfConfig.armorProficiencies))
+  }
+
+  run test_armor_proficient_allows_casting = {
+    assert(not(lacksArmorProficiency(WearingArmor(CHAIN_MAIL), TEST_FIGHTER_5.armorProficiencies)))
+  }
 }
