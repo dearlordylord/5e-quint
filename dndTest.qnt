@@ -236,17 +236,17 @@ module dndTest {
 
   pure val RAPIER: Weapon = {
     name: "Rapier", damageDie: 8, versatileDie: 0, damageType: Piercing,
-    properties: Set(Finesse), normalRange: 0, longRange: 0,
+    properties: Set(Finesse), isMelee: true, normalRange: 0, longRange: 0,
   }
 
   pure val LONGBOW: Weapon = {
     name: "Longbow", damageDie: 8, versatileDie: 0, damageType: Piercing,
-    properties: Set(Ammunition, Heavy, TwoHanded), normalRange: 150, longRange: 600,
+    properties: Set(Ammunition, Heavy, TwoHanded), isMelee: false, normalRange: 150, longRange: 600,
   }
 
   pure val GREATSWORD: Weapon = {
     name: "Greatsword", damageDie: 12, versatileDie: 0, damageType: Slashing,
-    properties: Set(Heavy, TwoHanded), normalRange: 0, longRange: 0,
+    properties: Set(Heavy, TwoHanded), isMelee: true, normalRange: 0, longRange: 0,
   }
 
   run test_finesse_picks_higher = {
@@ -1222,5 +1222,233 @@ module dndTest {
   run test_aggregate_attacker_restrained = {
     val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("attackerRestrained", true))
     assert(m.hasDisadvantage)
+  }
+
+  // ============================================================
+  // Phase 4: Combat Actions & Interactions
+  // ============================================================
+
+  // -- Loading property --
+
+  pure val HAND_CROSSBOW: Weapon = {
+    name: "Hand Crossbow", damageDie: 6, versatileDie: 0, damageType: Piercing,
+    properties: Set(Ammunition, Light_, Loading), isMelee: false, normalRange: 30, longRange: 120,
+  }
+
+  pure val SHORTSWORD: Weapon = {
+    name: "Shortsword", damageDie: 6, versatileDie: 0, damageType: Piercing,
+    properties: Set(Finesse, Light_), isMelee: true, normalRange: 0, longRange: 0,
+  }
+
+  pure val DAGGER: Weapon = {
+    name: "Dagger", damageDie: 4, versatileDie: 0, damageType: Piercing,
+    properties: Set(Finesse, Light_, Thrown), isMelee: true, normalRange: 20, longRange: 60,
+  }
+
+  run test_loading_blocks_extra_attack = assert(not(pCanExtraAttackWithWeapon(HAND_CROSSBOW)))
+
+  run test_no_loading_allows_extra_attack = assert(pCanExtraAttackWithWeapon(SHORTSWORD))
+
+  // -- Two-Weapon Fighting --
+
+  run test_twf_full_preconditions_both_light_melee = {
+    val t = pUseAction(BASIC_TURN, FRESH20, AAttack)
+    assert(pCanTWFWithWeapons(SHORTSWORD, DAGGER, t, FRESH20))
+  }
+
+  run test_twf_fails_non_light_main = {
+    val t = pUseAction(BASIC_TURN, FRESH20, AAttack)
+    assert(not(pCanTWFWithWeapons(RAPIER, SHORTSWORD, t, FRESH20)))
+  }
+
+  run test_twf_fails_ranged_weapon = {
+    val t = pUseAction(BASIC_TURN, FRESH20, AAttack)
+    assert(not(pCanTWFWithWeapons(SHORTSWORD, LONGBOW, t, FRESH20)))
+  }
+
+  run test_twf_thrown_counts_as_melee = {
+    val t = pUseAction(BASIC_TURN, FRESH20, AAttack)
+    assert(pCanTWFWithWeapons(DAGGER, DAGGER, t, FRESH20))
+  }
+
+  run test_twf_no_attack_action_fails = {
+    assert(not(pCanTWFWithWeapons(SHORTSWORD, SHORTSWORD, BASIC_TURN, FRESH20)))
+  }
+
+  run test_twf_offhand_damage_positive_mod = {
+    // STR mod +3: not added
+    assert(pTWFOffHandDamage(4, 3) == 4)
+  }
+
+  run test_twf_offhand_damage_negative_mod = {
+    // STR mod -1: added
+    assert(pTWFOffHandDamage(4, -1) == 3)
+  }
+
+  run test_twf_offhand_damage_zero_mod = {
+    assert(pTWFOffHandDamage(4, 0) == 4)
+  }
+
+  run test_twf_offhand_damage_floor_zero = {
+    // dice 1, mod -3: 1 + (-3) = -2, floored to 0
+    assert(pTWFOffHandDamage(1, -3) == 0)
+  }
+
+  // -- Size comparison --
+
+  run test_size_allows_grapple_same = assert(pWithinOneSize(Medium, Medium))
+  run test_size_allows_grapple_one_larger = assert(pWithinOneSize(Medium, Large))
+  run test_size_blocks_grapple_two_larger = assert(not(pWithinOneSize(Medium, Huge)))
+  run test_size_allows_grapple_smaller = assert(pWithinOneSize(Large, Small))
+  run test_target_two_sizes_smaller = assert(pTargetTwoSizesSmaller(Large, Tiny))
+  run test_target_not_two_sizes_smaller = assert(not(pTargetTwoSizesSmaller(Medium, Small)))
+
+  // -- Grapple --
+
+  run test_grapple_success = {
+    val r = pGrapple(Medium, Medium, FRESH20, AWins, true)
+    all { assert(r.success), assert(r.targetState.grappled) }
+  }
+
+  run test_grapple_fail_contest = {
+    val r = pGrapple(Medium, Medium, FRESH20, BWins, true)
+    all { assert(not(r.success)), assert(not(r.targetState.grappled)) }
+  }
+
+  run test_grapple_tie_fails = {
+    val r = pGrapple(Medium, Medium, FRESH20, Tie, true)
+    all { assert(not(r.success)), assert(not(r.targetState.grappled)) }
+  }
+
+  run test_grapple_auto_success_incapacitated = {
+    val target = pApplyCondition(FRESH20, CStunned)
+    val r = pGrapple(Medium, Medium, target, BWins, true) // contest lost but incapacitated
+    all { assert(r.success), assert(r.targetState.grappled) }
+  }
+
+  run test_grapple_too_large = {
+    val r = pGrapple(Medium, Huge, FRESH20, AWins, true)
+    assert(not(r.success))
+  }
+
+  run test_grapple_no_free_hand = {
+    val r = pGrapple(Medium, Medium, FRESH20, AWins, false)
+    assert(not(r.success))
+  }
+
+  // -- Release Grapple --
+
+  run test_release_grapple = {
+    val s = pApplyCondition(FRESH20, CGrappled)
+    val s2 = pReleaseGrapple(s)
+    assert(not(s2.grappled))
+  }
+
+  // -- Escape Grapple --
+
+  run test_escape_grapple_success = {
+    val s = pApplyCondition(FRESH20, CGrappled)
+    val s2 = pEscapeGrapple(s, BWins) // target wins = BWins
+    assert(not(s2.grappled))
+  }
+
+  run test_escape_grapple_fail = {
+    val s = pApplyCondition(FRESH20, CGrappled)
+    val s2 = pEscapeGrapple(s, AWins) // attacker wins = still grappled
+    assert(s2.grappled)
+  }
+
+  run test_escape_grapple_tie = {
+    val s = pApplyCondition(FRESH20, CGrappled)
+    val s2 = pEscapeGrapple(s, Tie) // tie = no change
+    assert(s2.grappled)
+  }
+
+  // -- Shove --
+
+  run test_shove_prone_success = {
+    val r = pShove(Medium, Medium, FRESH20, AWins, ShoveProne)
+    all { assert(r.success), assert(r.targetState.prone) }
+  }
+
+  run test_shove_push_success = {
+    val r = pShove(Medium, Medium, FRESH20, AWins, ShovePush)
+    all { assert(r.success), assert(not(r.targetState.prone)) } // push is spatial, no state change
+  }
+
+  run test_shove_fail_contest = {
+    val r = pShove(Medium, Medium, FRESH20, BWins, ShoveProne)
+    all { assert(not(r.success)), assert(not(r.targetState.prone)) }
+  }
+
+  run test_shove_tie_fails = {
+    val r = pShove(Medium, Medium, FRESH20, Tie, ShoveProne)
+    all { assert(not(r.success)), assert(not(r.targetState.prone)) }
+  }
+
+  run test_shove_too_large = {
+    val r = pShove(Small, Huge, FRESH20, AWins, ShoveProne)
+    assert(not(r.success))
+  }
+
+  run test_shove_auto_success_incapacitated = {
+    val target = pApplyCondition(FRESH20, CParalyzed)
+    val r = pShove(Medium, Medium, target, BWins, ShoveProne) // contest lost but incapacitated
+    all { assert(r.success), assert(r.targetState.prone) }
+  }
+
+  // -- Mounted Combat --
+
+  run test_mount_dismount_cost = {
+    // Speed 30, cost = 15
+    val t = pMountOrDismount(BASIC_TURN)
+    assert(t.movementRemaining == 15) // 30 - 15
+  }
+
+  run test_mount_insufficient_movement = {
+    val t = pUseMovement(BASIC_TURN, 20, 1) // 10 remaining, cost = 15
+    val t2 = pMountOrDismount(t)
+    assert(t2.movementRemaining == 10) // no change
+  }
+
+  run test_mount_speed_zero = {
+    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
+      false, 0, false, false)
+    val t2 = pMountOrDismount(t)
+    assert(t2.movementRemaining == 0) // speed 0, can't mount
+  }
+
+  run test_controlled_mount_dash_valid = assert(pIsValidControlledMountAction(ADash))
+  run test_controlled_mount_disengage_valid = assert(pIsValidControlledMountAction(ADisengage))
+  run test_controlled_mount_dodge_valid = assert(pIsValidControlledMountAction(ADodge))
+  run test_controlled_mount_attack_invalid = assert(not(pIsValidControlledMountAction(AAttack)))
+  run test_controlled_mount_cast_invalid = assert(not(pIsValidControlledMountAction(ACastSpell)))
+
+  // Forced dismount save
+  run test_forced_dismount_save_pass = {
+    // d20=12, DEX mod +2, proficient, prof bonus 3 -> 12+2+3=17 >= 10
+    assert(pForcedDismountSave(12, 2, true, 3))
+  }
+
+  run test_forced_dismount_save_fail = {
+    // d20=3, DEX mod -1, not proficient, prof bonus 2 -> 3+(-1)=2 < 10
+    assert(not(pForcedDismountSave(3, -1, false, 2)))
+  }
+
+  // Mount knocked prone: use reaction to dismount safely
+  run test_mount_knocked_prone_use_reaction = {
+    val r = pMountKnockedProne(FRESH20, BASIC_TURN, true)
+    all { assert(not(r.creatureState.prone)), assert(not(r.turnState.reactionAvailable)) }
+  }
+
+  run test_mount_knocked_prone_no_reaction = {
+    val r = pMountKnockedProne(FRESH20, BASIC_TURN, false)
+    all { assert(r.creatureState.prone), assert(r.turnState.reactionAvailable) }
+  }
+
+  run test_mount_knocked_prone_reaction_unavailable = {
+    val t = pUseReaction(BASIC_TURN) // reaction already used
+    val r = pMountKnockedProne(FRESH20, t, true) // wants to use reaction but can't
+    all { assert(r.creatureState.prone), assert(not(r.turnState.reactionAvailable)) }
   }
 }

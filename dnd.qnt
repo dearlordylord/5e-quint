@@ -312,6 +312,7 @@ module dnd {
     versatileDie: int,            // 0 if not versatile
     damageType: DamageType,
     properties: Set[WeaponProperty],
+    isMelee: bool,                // true for melee weapons (including melee-Thrown like dagger)
     normalRange: int,             // 0 for melee-only
     longRange: int,               // 0 for melee-only
   }
@@ -326,7 +327,7 @@ module dnd {
   pure def weaponAttackAbility(weapon: Weapon, strMod: int, dexMod: int): int = {
     if (weapon.properties.contains(Finesse)) {
       if (dexMod > strMod) dexMod else strMod
-    } else if (weapon.normalRange > 0 and not(weapon.properties.contains(Thrown))) {
+    } else if (not(weapon.isMelee)) {
       dexMod
     } else {
       strMod
@@ -963,5 +964,165 @@ module dnd {
   /// Requires: Attack action taken, bonus action not used, creature can act.
   pure def pCanTwoWeaponFighting(t: TurnState, creature: CreatureState): bool =
     t.attackActionUsed and not(t.bonusActionUsed) and not(isIncapacitated(creature))
+
+  // ============================================================
+  // 13. COMBAT ACTIONS & INTERACTIONS (Phase 4)
+  // ============================================================
+
+  // -- 13.1 Loading property --
+
+  /// Loading: limits weapon to one attack per action/bonus/reaction,
+  /// regardless of Extra Attack. Returns whether extra attack is allowed.
+  pure def pCanExtraAttackWithWeapon(weapon: Weapon): bool =
+    not(weapon.properties.contains(Loading))
+
+  // -- 13.2 Two-Weapon Fighting --
+
+  /// Full TWF precondition: both weapons must be Light melee.
+  /// Caller ensures weapons are distinct (PHB: "a different light melee weapon").
+  pure def pCanTWFWithWeapons(
+    mainWeapon: Weapon,
+    offHandWeapon: Weapon,
+    t: TurnState,
+    creature: CreatureState
+  ): bool = {
+    if (not(pCanTwoWeaponFighting(t, creature))) false
+    else {
+      val mainLight = mainWeapon.properties.contains(Light_)
+      val offLight = offHandWeapon.properties.contains(Light_)
+      mainLight and offLight and mainWeapon.isMelee and offHandWeapon.isMelee
+    }
+  }
+
+  /// TWF off-hand damage: don't add ability modifier unless negative.
+  pure def pTWFOffHandDamage(diceResult: int, abilityMod: int): int = {
+    val mod = if (abilityMod < 0) abilityMod else 0
+    val dmg = diceResult + mod
+    if (dmg < 0) 0 else dmg
+  }
+
+  // -- 13.3 Grapple & Shove --
+
+  pure def sizeOrd(s: Size): int = match s {
+    | Tiny => 0
+    | Small => 1
+    | Medium => 2
+    | Large => 3
+    | Huge => 4
+    | Gargantuan => 5
+  }
+
+  /// Target at most one size larger
+  pure def pWithinOneSize(attackerSize: Size, targetSize: Size): bool =
+    sizeOrd(targetSize) <= sizeOrd(attackerSize) + 1
+
+  /// For grapple speed penalty exemption (pStartTurn's grappledTargetTwoSizesSmaller param)
+  pure def pTargetTwoSizesSmaller(attackerSize: Size, targetSize: Size): bool =
+    sizeOrd(targetSize) <= sizeOrd(attackerSize) - 2
+
+  /// Shared result type for grapple and shove (both are contested special attacks)
+  type ContestActionResult = { success: bool, targetState: CreatureState }
+
+  /// Attempt grapple. Replaces one attack within Attack action.
+  /// Auto-success if target is incapacitated. Tie = no change (status quo).
+  pure def pGrapple(
+    attackerSize: Size,
+    targetSize: Size,
+    targetState: CreatureState,
+    contestResult: ContestResult,
+    attackerHasFreeHand: bool
+  ): ContestActionResult = {
+    if (not(pWithinOneSize(attackerSize, targetSize)) or not(attackerHasFreeHand))
+      { success: false, targetState: targetState }
+    else if (isIncapacitated(targetState) or contestResult == AWins)
+      { success: true, targetState: pApplyCondition(targetState, CGrappled) }
+    else
+      { success: false, targetState: targetState }
+  }
+
+  /// Release grapple (no action required)
+  pure def pReleaseGrapple(targetState: CreatureState): CreatureState =
+    pRemoveCondition(targetState, CGrappled)
+
+  /// Escape grapple. Target uses its action.
+  /// BWins = escape; AWins/Tie = no change (status quo).
+  pure def pEscapeGrapple(
+    targetState: CreatureState,
+    contestResult: ContestResult
+  ): CreatureState = {
+    if (contestResult == BWins) pReleaseGrapple(targetState)
+    else targetState
+  }
+
+  type ShoveChoice = ShoveProne | ShovePush
+
+  /// Attempt shove. Replaces one attack within Attack action.
+  /// Same size rule as grapple. No free hand required (PHB: shove has no hand requirement).
+  pure def pShove(
+    attackerSize: Size,
+    targetSize: Size,
+    targetState: CreatureState,
+    contestResult: ContestResult,
+    choice: ShoveChoice
+  ): ContestActionResult = {
+    if (not(pWithinOneSize(attackerSize, targetSize)))
+      { success: false, targetState: targetState }
+    else if (isIncapacitated(targetState) or contestResult == AWins)
+      match choice {
+        | ShoveProne => { success: true, targetState: pApplyCondition(targetState, CProne) }
+        | ShovePush => { success: true, targetState: targetState }
+      }
+    else
+      { success: false, targetState: targetState }
+  }
+
+  // -- 13.4 Opportunity Attacks --
+  // pCanBeOpportunityAttacked already defined in section 12.
+  // OA trigger rules are externalized (caller decides).
+  // OA costs reaction (caller calls pUseReaction).
+  // OA is one melee attack (caller resolves via existing attack functions).
+
+  // -- 13.5 Mounted Combat --
+
+  type MountType = ControlledMount | IndependentMount
+
+  /// Costs half speed. PHB: "once during your move" — caller enforces the once constraint.
+  /// Can't mount if speed is 0 (PHB: "you can't mount it if your speed is 0").
+  pure def pMountOrDismount(t: TurnState): TurnState = {
+    val cost = t.effectiveSpeed / 2
+    if (cost > t.movementRemaining or t.effectiveSpeed == 0) t
+    else t.with("movementRemaining", t.movementRemaining - cost)
+  }
+
+  pure def pIsValidControlledMountAction(actionType: ActionType): bool = match actionType {
+    | ADash => true
+    | ADisengage => true
+    | ADodge => true
+    | _ => false
+  }
+
+  /// DC 10 DEX save. Triggers: (1) mount moved against will, (2) rider knocked prone.
+  pure def pForcedDismountSave(
+    d20Roll: int,
+    dexMod: int,
+    isProficient: bool,
+    profBonus: int
+  ): bool = {
+    saveSucceeds(d20Roll, dexMod, isProficient, profBonus, 0, 10)
+  }
+
+  /// Mount knocked prone (trigger 3): rider can use reaction to land on feet.
+  type MountKnockedProneResult = { creatureState: CreatureState, turnState: TurnState }
+
+  pure def pMountKnockedProne(
+    creature: CreatureState,
+    t: TurnState,
+    usesReaction: bool
+  ): MountKnockedProneResult = {
+    if (usesReaction and t.reactionAvailable)
+      { creatureState: creature, turnState: pUseReaction(t) }
+    else
+      { creatureState: pApplyCondition(creature, CProne), turnState: t }
+  }
 
 }
