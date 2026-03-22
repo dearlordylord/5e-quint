@@ -69,14 +69,19 @@ module dnd {
     hasSpellcasting: bool,
     canRitualCast: bool,
     unarmoredDefense: UnarmoredDefense,
-    features: Set[str],
+    features: Set[Feature],
   }
+
+  type Feature = FExtraAttack | FExtraAttack2 | FExtraAttack3
 
   type UnarmoredDefense = NoUnarmoredDefense | BarbarianUD | MonkUD
 
   // ============================================================
   // 3. PURE FUNCTIONS - Config & Resolution
   // ============================================================
+
+  pure def intMax(a: int, b: int): int = if (a > b) a else b
+  pure def intMin(a: int, b: int): int = if (a < b) a else b
 
   /// (score - 10) / 2, floor division
   pure def abilityModifier(score: int): int = {
@@ -278,7 +283,7 @@ module dnd {
       | WearingArmor(armor) => match armor.category {
         | LightArmor => armor.baseAC + dexMod
         | MediumArmor => {
-          val cappedDex = if (dexMod > 2) 2 else dexMod
+          val cappedDex = intMin(dexMod, 2)
           armor.baseAC + cappedDex
         }
         | HeavyArmor => armor.baseAC
@@ -320,13 +325,13 @@ module dnd {
   /// Unarmed strike: 1 + STR mod bludgeoning, always proficient
   pure def unarmedDamage(strMod: int): int = {
     val dmg = 1 + strMod
-    if (dmg < 0) 0 else dmg
+    intMax(0, dmg)
   }
 
   /// Choose attack ability mod for a weapon (finesse picks higher)
   pure def weaponAttackAbility(weapon: Weapon, strMod: int, dexMod: int): int = {
     if (weapon.properties.contains(Finesse)) {
-      if (dexMod > strMod) dexMod else strMod
+      intMax(dexMod, strMod)
     } else if (not(weapon.isMelee)) {
       dexMod
     } else {
@@ -511,18 +516,18 @@ module dnd {
 
   /// Increment exhaustion. Level 6 = death. Level 4+ halves max HP and clamps current HP.
   pure def pAddExhaustion(s: CreatureState, levels: int): CreatureState = {
-    val newLevel = if (s.exhaustion + levels > 6) 6 else s.exhaustion + levels
+    val newLevel = intMin(s.exhaustion + levels, 6)
     val s1 = s.with("exhaustion", newLevel)
     if (newLevel >= 6) s1.with("dead", true).with("hp", 0)
     else {
       val effMax = effectiveMaxHp(s1)
-      if (s1.hp > effMax) s1.with("hp", effMax) else s1
+      s1.with("hp", intMin(s1.hp, effMax))
     }
   }
 
   /// Reduce exhaustion (min 0). HP does not auto-increase.
   pure def pReduceExhaustion(s: CreatureState, levels: int): CreatureState = {
-    val newLevel = if (s.exhaustion - levels < 0) 0 else s.exhaustion - levels
+    val newLevel = intMax(s.exhaustion - levels, 0)
     s.with("exhaustion", newLevel)
   }
 
@@ -630,7 +635,7 @@ module dnd {
     if (s.dead or amount <= 0) s
     else {
       val effMax = effectiveMaxHp(s)
-      val newHp = if (s.hp + amount > effMax) effMax else s.hp + amount
+      val newHp = intMin(s.hp + amount, effMax)
       val s1 = s.with("hp", newHp)
       if (s.hp == 0 and newHp > 0)
         pRemoveCondition(s1, CUnconscious)
@@ -720,9 +725,9 @@ module dnd {
   /// Extra attacks from config features. Default 0.
   /// Fighter 5: 1, Fighter 11: 2, Fighter 20: 3
   pure def extraAttacksFromConfig(config: CharConfig): int = {
-    if (config.features.contains("extra_attack_3")) 3
-    else if (config.features.contains("extra_attack_2")) 2
-    else if (config.features.contains("extra_attack")) 1
+    if (config.features.contains(FExtraAttack3)) 3
+    else if (config.features.contains(FExtraAttack2)) 2
+    else if (config.features.contains(FExtraAttack)) 1
     else 0
   }
 
@@ -743,7 +748,7 @@ module dnd {
     else {
       val baseSpeed = config.speeds.get(Walk)
       val armorPenalty = armorSpeedPenalty(armorState, config.abilityScores.get(Str))
-      val afterArmor = if (baseSpeed - armorPenalty < 0) 0 else baseSpeed - armorPenalty
+      val afterArmor = intMax(0, baseSpeed - armorPenalty)
       val afterExhaustion =
         if (creature.exhaustion >= 5) 0
         else if (creature.exhaustion >= 2) afterArmor / 2
@@ -752,7 +757,7 @@ module dnd {
         if (isGrappling and not(grappledTargetTwoSizesSmaller)) afterExhaustion / 2
         else afterExhaustion
       val withMod = afterGrappling + callerSpeedModifier
-      if (withMod < 0) 0 else withMod
+      intMax(0, withMod)
     }
     {
       movementRemaining: if (isSurprised) 0 else speed,
@@ -1000,7 +1005,7 @@ module dnd {
   pure def pTWFOffHandDamage(diceResult: int, abilityMod: int): int = {
     val mod = if (abilityMod < 0) abilityMod else 0
     val dmg = diceResult + mod
-    if (dmg < 0) 0 else dmg
+    intMax(0, dmg)
   }
 
   // -- 13.3 Grapple & Shove --
@@ -1212,7 +1217,7 @@ module dnd {
   /// PHB: height = 3 + STR mod (min 0 ft) with running start (≥10 ft), half standing.
   pure def pHighJumpHeight(strScore: int, hasRunningStart: bool): int = {
     val base = 3 + abilityModifier(strScore)
-    val height = if (base < 0) 0 else base
+    val height = intMax(0, base)
     if (hasRunningStart) height else height / 2
   }
 
@@ -1245,9 +1250,10 @@ module dnd {
     pactSlotsMax: int,           // 0 for non-warlocks
     pactSlotsCurrent: int,
     pactSlotLevel: int,          // warlock pact slot level (1-5)
-    concentrating: bool,
     concentrationSpellId: str,   // "" if not concentrating
   }
+
+  pure def isConcentrating(ss: SpellSlotState): bool = ss.concentrationSpellId != ""
 
   pure val EMPTY_SLOTS: int -> int =
     Map(1 -> 0, 2 -> 0, 3 -> 0, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0)
@@ -1355,23 +1361,23 @@ module dnd {
   /// Concentration save DC. PHB: DC = max(10, floor(damage / 2)).
   pure def pConcentrationDC(damageTaken: int): int = {
     val half = damageTaken / 2
-    if (half > 10) half else 10
+    intMax(half, 10)
   }
 
   /// Break concentration. Clears spell.
   pure def pBreakConcentration(ss: SpellSlotState): SpellSlotState =
-    ss.with("concentrating", false).with("concentrationSpellId", "")
+    ss.with("concentrationSpellId", "")
 
   /// Start concentrating on a spell. Replaces existing concentration if any.
   /// PHB: "You can't concentrate on two spells at once."
   pure def pStartConcentration(ss: SpellSlotState, spellId: str): SpellSlotState =
-    ss.with("concentrating", true).with("concentrationSpellId", spellId)
+    ss.with("concentrationSpellId", spellId)
 
   /// Resolve concentration check after taking damage.
   /// Caller computes DC via pConcentrationDC, resolves save via saveSucceeds, passes result.
   /// Separate call per damage source.
   pure def pConcentrationCheck(ss: SpellSlotState, conSaveSucceeded: bool): SpellSlotState =
-    if (not(ss.concentrating)) ss
+    if (not(isConcentrating(ss))) ss
     else if (conSaveSucceeded) ss
     else pBreakConcentration(ss)
 
@@ -1405,14 +1411,14 @@ module dnd {
     if (s.hitDiceRemaining <= 0 or s.dead) s
     else {
       val raw = dieRoll + conMod
-      val healing = if (raw < 0) 0 else raw
+      val healing = intMax(0, raw)
       pHeal(s, healing).with("hitDiceRemaining", s.hitDiceRemaining - 1)
     }
 
   /// Short rest: spend hit dice from a list of pre-resolved rolls, then return state.
   /// Caller also calls pRestorePactSlots on SpellSlotState if applicable.
   pure def pShortRest(s: CreatureState, conMod: int, hdRolls: List[int]): CreatureState = {
-    val cap = if (s.hitDiceRemaining < hdRolls.length()) s.hitDiceRemaining else hdRolls.length()
+    val cap = intMin(s.hitDiceRemaining, hdRolls.length())
     hdRolls.slice(0, cap).foldl(s, (acc, roll) => pSpendHitDie(acc, conMod, roll))
   }
 
@@ -1421,9 +1427,9 @@ module dnd {
   /// How many hit dice to recover on a long rest.
   /// PHB: up to max(1, floor(totalHD / 2)), can't exceed what was spent.
   pure def pHitDiceRecovery(totalHitDice: int, hitDiceRemaining: int): int = {
-    val maxRecover = if (totalHitDice / 2 < 1) 1 else totalHitDice / 2
+    val maxRecover = intMax(1, totalHitDice / 2)
     val spent = totalHitDice - hitDiceRemaining
-    if (spent < maxRecover) spent else maxRecover
+    intMin(spent, maxRecover)
   }
 
   /// Long rest. PHB Ch8:

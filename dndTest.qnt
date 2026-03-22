@@ -752,7 +752,7 @@ module dndTest {
     hasSpellcasting: false,
     canRitualCast: false,
     unarmoredDefense: NoUnarmoredDefense,
-    features: Set("extra_attack"),
+    features: Set(FExtraAttack),
   }
 
   pure val BASIC_TURN: TurnState = pStartTurn(
@@ -775,12 +775,12 @@ module dndTest {
   }
 
   run test_extra_attacks_fighter11 = {
-    val cfg = TEST_FIGHTER_5.with("features", Set("extra_attack_2"))
+    val cfg = TEST_FIGHTER_5.with("features", Set(FExtraAttack2))
     assert(extraAttacksFromConfig(cfg) == 2)
   }
 
   run test_extra_attacks_fighter20 = {
-    val cfg = TEST_FIGHTER_5.with("features", Set("extra_attack_3"))
+    val cfg = TEST_FIGHTER_5.with("features", Set(FExtraAttack3))
     assert(extraAttacksFromConfig(cfg) == 3)
   }
 
@@ -1692,7 +1692,6 @@ module dndTest {
     pactSlotsMax: 0,
     pactSlotsCurrent: 0,
     pactSlotLevel: 0,
-    concentrating: false,
     concentrationSpellId: "",
   }
 
@@ -1703,7 +1702,6 @@ module dndTest {
     pactSlotsMax: 2,
     pactSlotsCurrent: 2,
     pactSlotLevel: 2,
-    concentrating: false,
     concentrationSpellId: "",
   }
 
@@ -1826,7 +1824,6 @@ module dndTest {
       pactSlotsMax: 2,
       pactSlotsCurrent: 0,
       pactSlotLevel: 3,
-      concentrating: false,
       concentrationSpellId: "",
     }
     val spent = pExpendSlot(hybrid, 1)
@@ -1976,10 +1973,10 @@ module dndTest {
   // -- Break Concentration --
 
   run test_break_concentration = {
-    val ss = WIZARD_5_SLOTS.with("concentrating", true).with("concentrationSpellId", "bless")
+    val ss = WIZARD_5_SLOTS.with("concentrationSpellId", "bless")
     val result = pBreakConcentration(ss)
     all {
-      assert(not(result.concentrating)),
+      assert(not(isConcentrating(result))),
       assert(result.concentrationSpellId == ""),
     }
   }
@@ -1989,7 +1986,7 @@ module dndTest {
   run test_start_concentration_fresh = {
     val ss = pStartConcentration(WIZARD_5_SLOTS, "hold_person")
     all {
-      assert(ss.concentrating),
+      assert(isConcentrating(ss)),
       assert(ss.concentrationSpellId == "hold_person"),
     }
   }
@@ -1998,7 +1995,7 @@ module dndTest {
     val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
     val ss2 = pStartConcentration(ss, "hold_person")
     all {
-      assert(ss2.concentrating),
+      assert(isConcentrating(ss2)),
       assert(ss2.concentrationSpellId == "hold_person"),
     }
   }
@@ -2009,7 +2006,7 @@ module dndTest {
     val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
     val result = pConcentrationCheck(ss, true)
     all {
-      assert(result.concentrating),
+      assert(isConcentrating(result)),
       assert(result.concentrationSpellId == "bless"),
     }
   }
@@ -2018,7 +2015,7 @@ module dndTest {
     val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
     val result = pConcentrationCheck(ss, false)
     all {
-      assert(not(result.concentrating)),
+      assert(not(isConcentrating(result))),
       assert(result.concentrationSpellId == ""),
     }
   }
@@ -2026,7 +2023,7 @@ module dndTest {
   run test_conc_check_not_concentrating = {
     // Fail save but not concentrating → noop
     val result = pConcentrationCheck(WIZARD_5_SLOTS, false)
-    assert(not(result.concentrating))
+    assert(not(isConcentrating(result)))
   }
 
   // -- Component Validation --
