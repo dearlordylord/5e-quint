@@ -417,6 +417,7 @@ module dnd {
     stunned: bool,
     unconscious: bool,
     incapacitatedSources: Set[IncapSource],
+    hitDiceRemaining: int,         // how many HD available to spend (total = level)
   }
 
   pure val ALL_DAMAGE_TYPES: Set[DamageType] =
@@ -433,6 +434,7 @@ module dnd {
     poisoned: false, prone: false, restrained: false,
     stunned: false, unconscious: false,
     incapacitatedSources: Set(),
+    hitDiceRemaining: 0,
   }
 
   pure def isIncapacitated(s: CreatureState): bool =
@@ -1388,5 +1390,54 @@ module dnd {
     val sOk = not(requiresSomatic) or hasFreeHand
     vOk and sOk
   }
+
+  // ============================================================
+  // 16. RESTING & RECOVERY (Phase 7)
+  // ============================================================
+  // PHB Ch8: Short Rest (1+ hour), Long Rest (8+ hours).
+  // SpellSlotState restoration handled by existing pRestorePactSlots / pRestoreAllSlots.
+
+  // -- 16.1 Short Rest: Hit Die Spending --
+
+  /// Spend one hit die. Heals dieRoll + conMod (min 0). Decrements hitDiceRemaining.
+  /// No-op if no HD remaining or creature is dead.
+  pure def pSpendHitDie(s: CreatureState, conMod: int, dieRoll: int): CreatureState =
+    if (s.hitDiceRemaining <= 0 or s.dead) s
+    else {
+      val healing = if (dieRoll + conMod < 0) 0 else dieRoll + conMod
+      pHeal(s, healing).with("hitDiceRemaining", s.hitDiceRemaining - 1)
+    }
+
+  /// Short rest: spend hit dice from a list of pre-resolved rolls, then return state.
+  /// Caller also calls pRestorePactSlots on SpellSlotState if applicable.
+  pure def pShortRest(s: CreatureState, conMod: int, hdRolls: List[int]): CreatureState =
+    hdRolls.foldl(s, (acc, roll) => pSpendHitDie(acc, conMod, roll))
+
+  // -- 16.2 Long Rest --
+
+  /// How many hit dice to recover on a long rest.
+  /// PHB: up to max(1, floor(totalHD / 2)), can't exceed what was spent.
+  pure def pHitDiceRecovery(totalHitDice: int, hitDiceRemaining: int): int = {
+    val maxRecover = if (totalHitDice / 2 < 1) 1 else totalHitDice / 2
+    val spent = totalHitDice - hitDiceRemaining
+    if (spent < maxRecover) spent else maxRecover
+  }
+
+  /// Long rest. PHB Ch8:
+  /// - Must have >= 1 HP at start of rest to benefit (otherwise no-op)
+  /// - Reduce exhaustion by 1 (if hasEaten)
+  /// - Regain all lost HP (to effectiveMaxHp after exhaustion change)
+  /// - Recover hit dice: up to max(1, floor(totalHD / 2))
+  /// - Clear temp HP (default-duration temp HP expire)
+  /// Caller also calls pRestoreAllSlots on SpellSlotState.
+  pure def pLongRest(s: CreatureState, totalHitDice: int, hasEaten: bool): CreatureState =
+    if (s.hp < 1) s
+    else {
+      val s1 = if (hasEaten) pReduceExhaustion(s, 1) else s
+      val s2 = s1.with("hp", effectiveMaxHp(s1))
+      val recovery = pHitDiceRecovery(totalHitDice, s2.hitDiceRemaining)
+      s2.with("hitDiceRemaining", s2.hitDiceRemaining + recovery)
+        .with("tempHp", 0)
+    }
 
 }
