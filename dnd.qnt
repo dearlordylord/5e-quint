@@ -1404,14 +1404,17 @@ module dnd {
   pure def pSpendHitDie(s: CreatureState, conMod: int, dieRoll: int): CreatureState =
     if (s.hitDiceRemaining <= 0 or s.dead) s
     else {
-      val healing = if (dieRoll + conMod < 0) 0 else dieRoll + conMod
+      val raw = dieRoll + conMod
+      val healing = if (raw < 0) 0 else raw
       pHeal(s, healing).with("hitDiceRemaining", s.hitDiceRemaining - 1)
     }
 
   /// Short rest: spend hit dice from a list of pre-resolved rolls, then return state.
   /// Caller also calls pRestorePactSlots on SpellSlotState if applicable.
-  pure def pShortRest(s: CreatureState, conMod: int, hdRolls: List[int]): CreatureState =
-    hdRolls.foldl(s, (acc, roll) => pSpendHitDie(acc, conMod, roll))
+  pure def pShortRest(s: CreatureState, conMod: int, hdRolls: List[int]): CreatureState = {
+    val cap = if (s.hitDiceRemaining < hdRolls.length()) s.hitDiceRemaining else hdRolls.length()
+    hdRolls.slice(0, cap).foldl(s, (acc, roll) => pSpendHitDie(acc, conMod, roll))
+  }
 
   // -- 16.2 Long Rest --
 
