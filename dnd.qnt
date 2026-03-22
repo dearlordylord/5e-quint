@@ -379,4 +379,589 @@ module dnd {
   }
   // Shield: 1 action don, 1 action doff (handled in turn/action economy)
 
+  // ============================================================
+  // 8. CREATURE STATE TYPES (Phase 2)
+  // ============================================================
+
+  type Condition =
+    | CBlinded | CCharmed | CDeafened | CFrightened | CGrappled
+    | CIncapacitated | CInvisible | CParalyzed | CPetrified
+    | CPoisoned | CProne | CRestrained | CStunned | CUnconscious
+
+  type IncapSource = ISParalyzed | ISPetrified | ISStunned | ISUnconscious | ISDirect
+
+  type DeathSaves = { successes: int, failures: int }
+
+  pure val DEATH_SAVES_RESET: DeathSaves = { successes: 0, failures: 0 }
+
+  type CreatureState = {
+    hp: int,
+    maxHp: int,
+    tempHp: int,
+    deathSaves: DeathSaves,
+    stable: bool,
+    dead: bool,
+    blinded: bool,
+    charmed: bool,
+    deafened: bool,
+    exhaustion: int,
+    frightened: bool,
+    grappled: bool,
+    invisible: bool,
+    paralyzed: bool,
+    petrified: bool,
+    poisoned: bool,
+    prone: bool,
+    restrained: bool,
+    stunned: bool,
+    unconscious: bool,
+    incapacitatedSources: Set[IncapSource],
+  }
+
+  pure val ALL_DAMAGE_TYPES: Set[DamageType] =
+    Set(Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic,
+        Piercing, Poison, Psychic, Radiant, Slashing, Thunder)
+
+  pure def freshCreature(maxHp: int): CreatureState = {
+    hp: maxHp, maxHp: maxHp, tempHp: 0,
+    deathSaves: DEATH_SAVES_RESET,
+    stable: false, dead: false,
+    blinded: false, charmed: false, deafened: false,
+    exhaustion: 0, frightened: false, grappled: false,
+    invisible: false, paralyzed: false, petrified: false,
+    poisoned: false, prone: false, restrained: false,
+    stunned: false, unconscious: false,
+    incapacitatedSources: Set(),
+  }
+
+  pure def isIncapacitated(s: CreatureState): bool =
+    s.incapacitatedSources.size() > 0
+
+  pure def isConscious(s: CreatureState): bool = s.hp > 0 and not(s.dead)
+
+  /// Exhaustion 4+ halves max HP
+  pure def effectiveMaxHp(s: CreatureState): int =
+    if (s.exhaustion >= 4) s.maxHp / 2 else s.maxHp
+
+  // ============================================================
+  // 9. CONDITIONS (character/conditions)
+  // ============================================================
+
+  /// Apply a condition, including implication side effects.
+  /// Paralyzed/Petrified/Stunned -> incapacitated.
+  /// Unconscious -> incapacitated + prone.
+  /// Petrified blocks poisoned condition.
+  pure def pApplyCondition(s: CreatureState, c: Condition): CreatureState = match c {
+    | CBlinded => s.with("blinded", true)
+    | CCharmed => s.with("charmed", true)
+    | CDeafened => s.with("deafened", true)
+    | CFrightened => s.with("frightened", true)
+    | CGrappled => s.with("grappled", true)
+    | CIncapacitated =>
+        s.with("incapacitatedSources", s.incapacitatedSources.union(Set(ISDirect)))
+    | CInvisible => s.with("invisible", true)
+    | CParalyzed =>
+        s.with("paralyzed", true)
+         .with("incapacitatedSources", s.incapacitatedSources.union(Set(ISParalyzed)))
+    | CPetrified =>
+        s.with("petrified", true)
+         .with("incapacitatedSources", s.incapacitatedSources.union(Set(ISPetrified)))
+    | CPoisoned => if (s.petrified) s else s.with("poisoned", true)
+    | CProne => s.with("prone", true)
+    | CRestrained => s.with("restrained", true)
+    | CStunned =>
+        s.with("stunned", true)
+         .with("incapacitatedSources", s.incapacitatedSources.union(Set(ISStunned)))
+    | CUnconscious =>
+        s.with("unconscious", true)
+         .with("prone", true)
+         .with("incapacitatedSources", s.incapacitatedSources.union(Set(ISUnconscious)))
+  }
+
+  /// Remove a condition, re-deriving implications.
+  /// Prone is NOT removed when unconscious is removed — creature must stand up.
+  pure def pRemoveCondition(s: CreatureState, c: Condition): CreatureState = match c {
+    | CBlinded => s.with("blinded", false)
+    | CCharmed => s.with("charmed", false)
+    | CDeafened => s.with("deafened", false)
+    | CFrightened => s.with("frightened", false)
+    | CGrappled => s.with("grappled", false)
+    | CIncapacitated =>
+        s.with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISDirect)))
+    | CInvisible => s.with("invisible", false)
+    | CParalyzed =>
+        s.with("paralyzed", false)
+         .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISParalyzed)))
+    | CPetrified =>
+        s.with("petrified", false)
+         .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISPetrified)))
+    | CPoisoned => s.with("poisoned", false)
+    | CProne => s.with("prone", false)
+    | CRestrained => s.with("restrained", false)
+    | CStunned =>
+        s.with("stunned", false)
+         .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISStunned)))
+    | CUnconscious =>
+        s.with("unconscious", false)
+         .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISUnconscious)))
+  }
+
+  /// Increment exhaustion. Level 6 = death. Level 4+ halves max HP and clamps current HP.
+  pure def pAddExhaustion(s: CreatureState, levels: int): CreatureState = {
+    val newLevel = if (s.exhaustion + levels > 6) 6 else s.exhaustion + levels
+    val s1 = s.with("exhaustion", newLevel)
+    if (newLevel >= 6) s1.with("dead", true).with("hp", 0)
+    else {
+      val effMax = effectiveMaxHp(s1)
+      if (s1.hp > effMax) s1.with("hp", effMax) else s1
+    }
+  }
+
+  /// Reduce exhaustion (min 0). HP does not auto-increase.
+  pure def pReduceExhaustion(s: CreatureState, levels: int): CreatureState = {
+    val newLevel = if (s.exhaustion - levels < 0) 0 else s.exhaustion - levels
+    s.with("exhaustion", newLevel)
+  }
+
+  // -- Modifier aggregation --
+
+  /// Modifiers on this creature's own attack rolls from its conditions
+  pure def pOwnAttackModifiers(s: CreatureState, frightSourceInLOS: bool): AdvState = {
+    {
+      hasAdvantage: s.invisible,
+      hasDisadvantage: s.blinded or s.prone or s.restrained
+        or s.poisoned or (s.frightened and frightSourceInLOS) or s.exhaustion >= 3,
+    }
+  }
+
+  type DefenseMods = { attackerAdvantage: bool, attackerDisadvantage: bool, autoCrit: bool }
+
+  /// Modifiers on attacks AGAINST this creature from its conditions
+  pure def pDefenseModifiers(s: CreatureState, attackerWithin5ft: bool): DefenseMods = {
+    {
+      attackerAdvantage: s.blinded or s.paralyzed or s.petrified
+        or s.stunned or s.unconscious or s.restrained
+        or (s.prone and attackerWithin5ft),
+      attackerDisadvantage: s.invisible or (s.prone and not(attackerWithin5ft)),
+      autoCrit: (s.paralyzed or s.unconscious) and attackerWithin5ft,
+    }
+  }
+
+  type D20Mods = { hasAdvantage: bool, hasDisadvantage: bool, autoFail: bool }
+
+  /// Ability check modifiers from conditions
+  pure def pCheckModifiers(
+    s: CreatureState,
+    requiresSight: bool, requiresHearing: bool, frightSourceInLOS: bool
+  ): D20Mods = {
+    {
+      hasAdvantage: false,
+      hasDisadvantage: s.exhaustion >= 1 or s.poisoned
+        or (s.frightened and frightSourceInLOS),
+      autoFail: (s.blinded and requiresSight) or (s.deafened and requiresHearing),
+    }
+  }
+
+  /// Saving throw modifiers from conditions
+  pure def pSaveModifiers(s: CreatureState, ability: Ability): D20Mods = {
+    val isStrOrDex = ability == Str or ability == Dex
+    {
+      hasAdvantage: false,
+      hasDisadvantage: s.exhaustion >= 3 or (s.restrained and ability == Dex),
+      autoFail: isStrOrDex and (s.paralyzed or s.petrified or s.stunned or s.unconscious),
+    }
+  }
+
+  pure def pCanAct(s: CreatureState): bool = not(isIncapacitated(s))
+
+  pure def pCanSpeak(s: CreatureState): bool =
+    not(s.paralyzed) and not(s.petrified) and not(s.unconscious)
+
+  // ============================================================
+  // 10. HIT POINTS (character/hitpoints)
+  // ============================================================
+
+  /// Apply damage with resistance/vulnerability/immunity, temp HP absorption,
+  /// instant death, and death save failures at 0 HP.
+  /// Petrified auto-adds resistance to all damage types.
+  pure def pTakeDamage(
+    s: CreatureState,
+    amount: int,
+    damageType: DamageType,
+    resistances: Set[DamageType],
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType],
+    isCritical: bool
+  ): CreatureState = {
+    if (s.dead) s
+    else {
+      val effMax = effectiveMaxHp(s)
+      val effResist = if (s.petrified) ALL_DAMAGE_TYPES else resistances
+      val effAmount = applyDamageModifiers(amount, damageType, immunities, effResist, vulnerabilities)
+      if (effAmount <= 0) s
+      else {
+        val tempAbsorb = if (s.tempHp >= effAmount) effAmount else s.tempHp
+        val dmgThrough = effAmount - tempAbsorb
+        val s1 = s.with("tempHp", s.tempHp - tempAbsorb)
+        if (dmgThrough == 0) s1
+        else if (s1.hp == 0) {
+          // Already at 0 HP: death save failures or instant death
+          if (dmgThrough >= effMax) s1.with("dead", true)
+          else pAddDeathFailures(s1.with("stable", false), if (isCritical) 2 else 1)
+        } else {
+          // HP > 0: apply remaining damage
+          val newHp = s1.hp - dmgThrough
+          if (newHp <= 0) {
+            val overflow = -newHp
+            val s2 = s1.with("hp", 0)
+            if (overflow >= effMax) s2.with("dead", true)
+            else pApplyCondition(s2, CUnconscious)
+          } else s1.with("hp", newHp)
+        }
+      }
+    }
+  }
+
+  /// Heal. Caps at effectiveMaxHp. At 0 HP: regain consciousness, reset death saves.
+  pure def pHeal(s: CreatureState, amount: int): CreatureState = {
+    if (s.dead or amount <= 0) s
+    else {
+      val effMax = effectiveMaxHp(s)
+      val newHp = if (s.hp + amount > effMax) effMax else s.hp + amount
+      val s1 = s.with("hp", newHp)
+      if (s.hp == 0 and newHp > 0)
+        pRemoveCondition(s1, CUnconscious)
+          .with("deathSaves", DEATH_SAVES_RESET)
+          .with("stable", false)
+      else s1
+    }
+  }
+
+  /// Player chooses: keepOld=true keeps current temp HP, false replaces with new amount.
+  /// Temp HP at 0 HP do NOT restore consciousness.
+  pure def pGrantTempHp(s: CreatureState, amount: int, keepOld: bool): CreatureState =
+    if (keepOld) s else s.with("tempHp", amount)
+
+  /// Add death save failures. 3+ failures = dead.
+  pure def pAddDeathFailures(s: CreatureState, count: int): CreatureState = {
+    val newFails = s.deathSaves.failures + count
+    val s1 = s.with("deathSaves", { successes: s.deathSaves.successes, failures: newFails })
+    if (newFails >= 3) s1.with("dead", true) else s1
+  }
+
+  /// Death saving throw. Only rolls when at 0 HP, not stable, not dead.
+  /// Nat 20: regain 1 HP + consciousness. Nat 1: two failures.
+  /// 3 successes: stable. 3 failures: dead.
+  pure def pDeathSave(s: CreatureState, d20Roll: int): CreatureState = {
+    if (s.dead or s.hp > 0 or s.stable) s
+    else if (d20Roll == 20) {
+      pRemoveCondition(
+        s.with("hp", 1).with("deathSaves", DEATH_SAVES_RESET),
+        CUnconscious
+      )
+    } else if (d20Roll == 1) {
+      pAddDeathFailures(s, 2)
+    } else if (d20Roll >= 10) {
+      val newSucc = s.deathSaves.successes + 1
+      if (newSucc >= 3)
+        s.with("stable", true).with("deathSaves", DEATH_SAVES_RESET)
+      else
+        s.with("deathSaves", { successes: newSucc, failures: s.deathSaves.failures })
+    } else {
+      pAddDeathFailures(s, 1)
+    }
+  }
+
+  /// Stabilize at 0 HP (DC 10 Medicine or healer's kit). Resets death saves.
+  pure def pStabilize(s: CreatureState): CreatureState =
+    if (s.dead or s.hp > 0) s
+    else s.with("stable", true).with("deathSaves", DEATH_SAVES_RESET)
+
+  /// Stable creature regains 1 HP after 1d4 hours
+  pure def pStableRecovery(s: CreatureState): CreatureState =
+    if (not(s.stable) or s.dead) s else pHeal(s, 1)
+
+  /// Melee attacker's choice when reducing to 0: unconscious + stable
+  pure def pKnockOut(s: CreatureState): CreatureState =
+    pApplyCondition(s.with("hp", 0), CUnconscious)
+      .with("stable", true)
+      .with("deathSaves", DEATH_SAVES_RESET)
+
+  // ============================================================
+  // 11. TURN STRUCTURE & ACTION ECONOMY (combat/turn)
+  // ============================================================
+
+  /// Per-turn mutable state, reset each turn.
+  type TurnState = {
+    movementRemaining: int,
+    effectiveSpeed: int,
+    actionUsed: bool,
+    attackActionUsed: bool,
+    bonusActionUsed: bool,
+    reactionAvailable: bool,
+    freeInteractionUsed: bool,
+    extraAttacksRemaining: int,
+    disengaged: bool,
+    dodging: bool,
+    readiedAction: bool,
+    bonusActionSpellCast: bool,
+    nonCantripActionSpellCast: bool,
+    surprised: bool,
+  }
+
+  /// Action types for pUseAction
+  type ActionType =
+    | AAttack | ACastSpell | ADash | ADisengage | ADodge
+    | AHelp | AHide | AReady | ASearch | AUseObject
+
+  /// Extra attacks from config features. Default 0.
+  /// Fighter 5: 1, Fighter 11: 2, Fighter 20: 3
+  pure def extraAttacksFromConfig(config: CharConfig): int = {
+    if (config.features.contains("extra_attack_3")) 3
+    else if (config.features.contains("extra_attack_2")) 2
+    else if (config.features.contains("extra_attack")) 1
+    else 0
+  }
+
+  /// Start a new turn. Resets action economy. Movement = effective speed.
+  /// Surprised creatures can't move or act on first turn.
+  /// Reaction resets at start of own turn.
+  pure def pStartTurn(
+    config: CharConfig,
+    creature: CreatureState,
+    armorState: ArmorState,
+    isSurprised: bool,
+    callerSpeedModifier: int,
+    isGrappling: bool,
+    grappledTargetTwoSizesSmaller: bool
+  ): TurnState = {
+    // Grappled/restrained: speed 0, no bonuses apply — short-circuit
+    val speed = if (creature.grappled or creature.restrained) 0
+    else {
+      val baseSpeed = config.speeds.get(Walk)
+      val armorPenalty = armorSpeedPenalty(armorState, config.abilityScores.get(Str))
+      val afterArmor = if (baseSpeed - armorPenalty < 0) 0 else baseSpeed - armorPenalty
+      val afterExhaustion =
+        if (creature.exhaustion >= 5) 0
+        else if (creature.exhaustion >= 2) afterArmor / 2
+        else afterArmor
+      val afterGrappling =
+        if (isGrappling and not(grappledTargetTwoSizesSmaller)) afterExhaustion / 2
+        else afterExhaustion
+      val withMod = afterGrappling + callerSpeedModifier
+      if (withMod < 0) 0 else withMod
+    }
+    {
+      movementRemaining: if (isSurprised) 0 else speed,
+      effectiveSpeed: speed,
+      actionUsed: isSurprised,
+      attackActionUsed: false,
+      bonusActionUsed: isSurprised,
+      reactionAvailable: not(isSurprised),
+      freeInteractionUsed: false,
+      extraAttacksRemaining: extraAttacksFromConfig(config),
+      disengaged: false,
+      dodging: false,
+      readiedAction: false,
+      bonusActionSpellCast: false,
+      nonCantripActionSpellCast: false,
+      surprised: isSurprised,
+    }
+  }
+
+  /// Use the action for this turn. Returns updated TurnState.
+  /// Precondition: action not yet used, creature can act.
+  /// Side effects depend on action type.
+  pure def pUseAction(t: TurnState, creature: CreatureState, actionType: ActionType): TurnState = {
+    if (t.actionUsed or isIncapacitated(creature)) t
+    else {
+      val t1 = t.with("actionUsed", true)
+      val t2 = match actionType {
+        | AAttack => t1.with("attackActionUsed", true)
+        | ADisengage => t1.with("disengaged", true)
+        | ADodge => t1.with("dodging", true)
+        | ADash => t1.with("movementRemaining", t1.movementRemaining + t1.effectiveSpeed)
+        | AReady => t1.with("readiedAction", true)
+        | _ => t1
+      }
+      t2
+    }
+  }
+
+  /// Use bonus action. Can't use if can't take actions (incapacitated).
+  pure def pUseBonusAction(t: TurnState, creature: CreatureState): TurnState = {
+    if (t.bonusActionUsed or isIncapacitated(creature)) t
+    else t.with("bonusActionUsed", true)
+  }
+
+  /// Use reaction. Can happen on any creature's turn.
+  pure def pUseReaction(t: TurnState): TurnState = {
+    if (not(t.reactionAvailable)) t
+    else t.with("reactionAvailable", false)
+  }
+
+  /// Spend movement. feet = distance to move, movementCost = multiplier (1 = normal, 2 = difficult terrain, etc.)
+  /// Returns updated TurnState; no change if insufficient movement.
+  pure def pUseMovement(t: TurnState, feet: int, movementCost: int): TurnState = {
+    val cost = feet * movementCost
+    if (cost > t.movementRemaining or cost < 0) t
+    else t.with("movementRemaining", t.movementRemaining - cost)
+  }
+
+  /// Use free object interaction. First is free, second requires an action.
+  pure def pUseObjectInteraction(t: TurnState): TurnState = {
+    if (not(t.freeInteractionUsed)) t.with("freeInteractionUsed", true)
+    else t // second interaction needs Use an Object action (caller handles)
+  }
+
+  /// Use one extra attack within the Attack action.
+  pure def pUseExtraAttack(t: TurnState): TurnState = {
+    if (t.extraAttacksRemaining <= 0) t
+    else t.with("extraAttacksRemaining", t.extraAttacksRemaining - 1)
+  }
+
+  /// Mark that a bonus action spell was cast this turn.
+  /// Restricts action to cantrips only.
+  pure def pMarkBonusActionSpell(t: TurnState): TurnState =
+    t.with("bonusActionSpellCast", true)
+
+  /// Mark that a non-cantrip spell was cast as action this turn.
+  /// Blocks bonus action spells.
+  pure def pMarkNonCantripActionSpell(t: TurnState): TurnState =
+    t.with("nonCantripActionSpellCast", true)
+
+  /// Can cast a bonus action spell this turn?
+  /// Blocked if a non-cantrip spell was already cast as action.
+  pure def canCastBonusActionSpell(t: TurnState): bool =
+    not(t.nonCantripActionSpellCast)
+
+  /// Can cast a non-cantrip spell as action this turn?
+  /// Blocked if a bonus action spell was cast this turn.
+  pure def canCastNonCantripAction(t: TurnState): bool =
+    not(t.bonusActionSpellCast)
+
+  /// After surprise turn ends, creature can use reactions again.
+  /// Modeled as: at end of surprised creature's first turn, reaction becomes available.
+  pure def pEndSurpriseTurn(t: TurnState): TurnState =
+    if (t.surprised) t.with("reactionAvailable", true).with("surprised", false)
+    else t
+
+  // ============================================================
+  // 12. ATTACK MODIFIER AGGREGATION (combat/attack)
+  // ============================================================
+
+  /// Full attack context for resolving an attack.
+  /// Combines creature conditions, turn state, position, and environment.
+  type AttackContext = {
+    // Attacker conditions (from pOwnAttackModifiers)
+    attackerBlinded: bool,
+    attackerProne: bool,
+    attackerRestrained: bool,
+    attackerPoisoned: bool,
+    attackerFrightened: bool,
+    attackerFrightSourceInLOS: bool,
+    attackerExhaustion: int,
+    // Target conditions (from pDefenseModifiers)
+    targetBlinded: bool,
+    targetParalyzed: bool,
+    targetPetrified: bool,
+    targetStunned: bool,
+    targetUnconscious: bool,
+    targetRestrained: bool,
+    targetProne: bool,
+    // Position
+    attackerWithin5ft: bool,
+    // Turn state
+    targetDodging: bool,
+    targetCanSeeAttacker: bool,
+    // Unseen attacker/target
+    attackerCanSeeTarget: bool,
+    // Ranged
+    isRangedAttack: bool,
+    beyondNormalRange: bool,
+    hostileWithin5ft: bool,
+    // Weapon
+    isHeavyWeapon: bool,
+    wielderSizeSmallOrTiny: bool,
+    // Environment
+    squeezing: bool,
+    underwater: bool,
+    attackerHasSwimSpeed: bool,
+    isUnderwaterMeleeException: bool,
+    isUnderwaterRangedException: bool,
+  }
+
+  type FullAttackMods = {
+    hasAdvantage: bool,
+    hasDisadvantage: bool,
+    autoCrit: bool,
+    autoMiss: bool,
+  }
+
+  /// Aggregate all advantage/disadvantage sources for a single attack.
+  pure def pAggregateAttackMods(ctx: AttackContext): FullAttackMods = {
+    // --- Advantage sources ---
+    val adv_targetBlinded = ctx.targetBlinded
+    val adv_targetIncap = ctx.targetParalyzed or ctx.targetPetrified
+                          or ctx.targetStunned or ctx.targetUnconscious
+    val adv_targetProne5ft = ctx.targetProne and ctx.attackerWithin5ft
+    val adv_targetRestrained = ctx.targetRestrained
+    // PHB p.195: "When a creature can't see you, you have advantage on attack rolls against it."
+    // Subsumes invisible, hidden, darkness, etc.
+    val adv_unseenAttacker = not(ctx.targetCanSeeAttacker)
+
+    val anyAdvantage = adv_targetBlinded or adv_targetIncap
+      or adv_targetProne5ft or adv_targetRestrained or adv_unseenAttacker
+
+    // --- Disadvantage sources ---
+    val disadv_attackerBlinded = ctx.attackerBlinded
+    val disadv_attackerProne = ctx.attackerProne
+    val disadv_attackerRestrained = ctx.attackerRestrained
+    val disadv_attackerPoisoned = ctx.attackerPoisoned
+    val disadv_attackerFrightened = ctx.attackerFrightened and ctx.attackerFrightSourceInLOS
+    val disadv_exhaustion3 = ctx.attackerExhaustion >= 3
+    val disadv_targetProneBeyond5ft = ctx.targetProne and not(ctx.attackerWithin5ft)
+    val disadv_rangedBeyondNormal = ctx.isRangedAttack and ctx.beyondNormalRange
+    val disadv_rangedCloseQuarters = ctx.isRangedAttack and ctx.hostileWithin5ft
+    val disadv_cantSeeTarget = not(ctx.attackerCanSeeTarget)
+    val disadv_heavySmall = ctx.isHeavyWeapon and ctx.wielderSizeSmallOrTiny
+    val disadv_squeezing = ctx.squeezing
+    val disadv_underwaterMelee = ctx.underwater and not(ctx.isRangedAttack)
+      and not(ctx.attackerHasSwimSpeed) and not(ctx.isUnderwaterMeleeException)
+    val disadv_underwaterRanged = ctx.underwater and ctx.isRangedAttack
+      and not(ctx.beyondNormalRange) and not(ctx.isUnderwaterRangedException)
+    val disadv_dodging = ctx.targetDodging and ctx.targetCanSeeAttacker
+
+    val anyDisadvantage = disadv_attackerBlinded
+      or disadv_attackerProne or disadv_attackerRestrained or disadv_attackerPoisoned
+      or disadv_attackerFrightened or disadv_exhaustion3 or disadv_targetProneBeyond5ft
+      or disadv_rangedBeyondNormal or disadv_rangedCloseQuarters or disadv_cantSeeTarget
+      or disadv_heavySmall or disadv_squeezing or disadv_underwaterMelee
+      or disadv_underwaterRanged or disadv_dodging
+
+    // --- Auto-crit ---
+    val autoCrit = (ctx.targetParalyzed or ctx.targetUnconscious) and ctx.attackerWithin5ft
+
+    // --- Auto-miss: underwater ranged beyond normal range ---
+    val autoMiss = ctx.underwater and ctx.isRangedAttack and ctx.beyondNormalRange
+
+    // --- Resolve: any adv + any disadv cancel ---
+    val resolved = resolveAdvantage({ hasAdvantage: anyAdvantage, hasDisadvantage: anyDisadvantage })
+
+    {
+      hasAdvantage: resolved.hasAdvantage,
+      hasDisadvantage: resolved.hasDisadvantage,
+      autoCrit: autoCrit,
+      autoMiss: autoMiss,
+    }
+  }
+
+  /// Opportunity attack eligibility (from target's perspective)
+  pure def pCanBeOpportunityAttacked(t: TurnState): bool = not(t.disengaged)
+
+  /// Two-weapon fighting: can use bonus action for off-hand attack?
+  /// Requires: Attack action taken, bonus action not used, creature can act.
+  pure def pCanTwoWeaponFighting(t: TurnState, creature: CreatureState): bool =
+    t.attackActionUsed and not(t.bonusActionUsed) and not(isIncapacitated(creature))
+
 }
