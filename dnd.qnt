@@ -1016,9 +1016,10 @@ module dnd {
   pure def pWithinOneSize(attackerSize: Size, targetSize: Size): bool =
     sizeOrd(targetSize) <= sizeOrd(attackerSize) + 1
 
-  /// For grapple speed penalty exemption (pStartTurn's grappledTargetTwoSizesSmaller param)
-  pure def pTargetTwoSizesSmaller(attackerSize: Size, targetSize: Size): bool =
-    sizeOrd(targetSize) <= sizeOrd(attackerSize) - 2
+  /// Is sizeB at least two sizes smaller than sizeA?
+  /// Used for grapple speed penalty exemption and hostile space movement.
+  pure def pTwoSizesSmaller(sizeA: Size, sizeB: Size): bool =
+    sizeOrd(sizeB) <= sizeOrd(sizeA) - 2
 
   /// Shared result type for grapple and shove (both are contested special attacks)
   type ContestActionResult = { success: bool, targetState: CreatureState }
@@ -1086,13 +1087,17 @@ module dnd {
 
   type MountType = ControlledMount | IndependentMount
 
-  /// Costs half speed. PHB: "once during your move" — caller enforces the once constraint.
-  /// Can't mount if speed is 0 (PHB: "you can't mount it if your speed is 0").
-  pure def pMountOrDismount(t: TurnState): TurnState = {
+  /// Spend half effective speed. Fails if speed is 0 or insufficient movement.
+  /// Used by mount/dismount and standing from prone.
+  pure def pSpendHalfSpeed(t: TurnState): TurnState = {
     val cost = t.effectiveSpeed / 2
-    if (cost > t.movementRemaining or t.effectiveSpeed == 0) t
+    if (t.effectiveSpeed == 0 or cost > t.movementRemaining) t
     else t.with("movementRemaining", t.movementRemaining - cost)
   }
+
+  /// Costs half speed. PHB: "once during your move" — caller enforces the once constraint.
+  /// Can't mount if speed is 0 (PHB: "you can't mount it if your speed is 0").
+  pure def pMountOrDismount(t: TurnState): TurnState = pSpendHalfSpeed(t)
 
   pure def pIsValidControlledMountAction(actionType: ActionType): bool = match actionType {
     | ADash => true
@@ -1124,5 +1129,104 @@ module dnd {
     else
       { creatureState: pApplyCondition(creature, CProne), turnState: t }
   }
+
+  // ============================================================
+  // 14. MOVEMENT SYSTEM (Phase 5)
+  // ============================================================
+
+  // -- 14.1 Movement Cost Multiplier --
+
+  /// Compute movement cost multiplier per foot of movement.
+  /// Extra foot penalties stack additively: base 1 + extras.
+  /// PHB Ch8: climbing/swimming/crawling costs 1 extra foot (2 extra in difficult terrain).
+  /// PHB Ch9: difficult terrain costs 1 extra foot. Squeezing costs 1 extra foot.
+  /// Caller uses result with pUseMovement(t, feet, multiplier).
+  pure def pMovementCost(
+    isDifficultTerrain: bool,
+    isCrawling: bool,
+    isClimbingOrSwimming: bool,
+    hasRelevantSpeed: bool,
+    isSqueezing: bool
+  ): int = {
+    val terrainExtra = if (isDifficultTerrain) 1 else 0
+    val crawlExtra = if (isCrawling) 1 else 0
+    val climbSwimExtra = if (isClimbingOrSwimming and not(hasRelevantSpeed)) 1 else 0
+    val squeezeExtra = if (isSqueezing) 1 else 0
+    1 + terrainExtra + crawlExtra + climbSwimExtra + squeezeExtra
+  }
+
+  // -- 14.2 Prone Movement --
+
+  /// Stand from prone. Costs half effective speed.
+  /// PHB: "You can't stand up if you don't have enough movement left or if your speed is 0."
+  /// Returns TurnState unchanged if can't stand. Caller removes CProne on success.
+  pure def pStandFromProne(t: TurnState): TurnState = pSpendHalfSpeed(t)
+
+  /// Drop prone. Free (0 movement cost).
+  /// PHB: "You can drop prone without using any of your speed."
+  pure def pDropProne(s: CreatureState): CreatureState = pApplyCondition(s, CProne)
+
+  // -- 14.3 Flying Movement --
+
+  /// PHB: flying creature falls if knocked prone, speed reduced to 0,
+  /// or otherwise deprived of ability to move — unless it has hover
+  /// or is held aloft by magic (e.g. fly spell).
+  /// Returns true if the creature falls.
+  pure def pFlyingCreatureFalls(
+    creature: CreatureState,
+    effectiveSpeed: int,
+    hasHover: bool,
+    heldAloftByMagic: bool
+  ): bool =
+    if (hasHover or heldAloftByMagic) false
+    else creature.prone or effectiveSpeed == 0
+
+  // -- 14.4 Speed Type Switching --
+
+  /// Switch speed type mid-move.
+  /// PHB: "subtract the distance you've already moved from the new speed."
+  /// Caller provides effective speed for new type (after all modifiers)
+  /// and total distance already moved this turn (actual feet, not budget spent).
+  /// Returns TurnState unchanged if new remaining would be 0 or less.
+  pure def pSwitchSpeedType(
+    t: TurnState,
+    newTypeEffectiveSpeed: int,
+    distanceAlreadyMoved: int
+  ): TurnState = {
+    val newRemaining = newTypeEffectiveSpeed - distanceAlreadyMoved
+    if (newRemaining <= 0) t
+    else t.with("movementRemaining", newRemaining).with("effectiveSpeed", newTypeEffectiveSpeed)
+  }
+
+  // -- 14.5 Jumping --
+
+  /// Long jump distance in feet.
+  /// PHB: cover feet = STR score with running start (≥10 ft), half standing.
+  /// Jump distance costs movement normally.
+  pure def pLongJumpDistance(strScore: int, hasRunningStart: bool): int =
+    if (hasRunningStart) strScore else strScore / 2
+
+  /// High jump height in feet.
+  /// PHB: height = 3 + STR mod (min 0 ft) with running start (≥10 ft), half standing.
+  pure def pHighJumpHeight(strScore: int, hasRunningStart: bool): int = {
+    val base = 3 + abilityModifier(strScore)
+    val height = if (base < 0) 0 else base
+    if (hasRunningStart) height else height / 2
+  }
+
+  /// Landing in difficult terrain after a jump.
+  /// PHB: DC 10 Acrobatics or land prone. Caller resolves check, passes result.
+  pure def pJumpLandInDifficultTerrain(
+    creature: CreatureState,
+    checkPassed: bool
+  ): CreatureState =
+    if (checkPassed) creature else pApplyCondition(creature, CProne)
+
+  // -- 14.6 Movement Constraints --
+
+  /// Can move through a hostile creature's space?
+  /// PHB: "only if the creature is at least two sizes larger or smaller than you."
+  pure def pCanMoveThroughHostile(moverSize: Size, hostileSize: Size): bool =
+    pTwoSizesSmaller(moverSize, hostileSize) or pTwoSizesSmaller(hostileSize, moverSize)
 
 }

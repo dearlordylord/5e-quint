@@ -1300,8 +1300,8 @@ module dndTest {
   run test_size_allows_grapple_one_larger = assert(pWithinOneSize(Medium, Large))
   run test_size_blocks_grapple_two_larger = assert(not(pWithinOneSize(Medium, Huge)))
   run test_size_allows_grapple_smaller = assert(pWithinOneSize(Large, Small))
-  run test_target_two_sizes_smaller = assert(pTargetTwoSizesSmaller(Large, Tiny))
-  run test_target_not_two_sizes_smaller = assert(not(pTargetTwoSizesSmaller(Medium, Small)))
+  run test_target_two_sizes_smaller = assert(pTwoSizesSmaller(Large, Tiny))
+  run test_target_not_two_sizes_smaller = assert(not(pTwoSizesSmaller(Medium, Small)))
 
   // -- Grapple --
 
@@ -1450,5 +1450,232 @@ module dndTest {
     val t = pUseReaction(BASIC_TURN) // reaction already used
     val r = pMountKnockedProne(FRESH20, t, true) // wants to use reaction but can't
     all { assert(r.creatureState.prone), assert(not(r.turnState.reactionAvailable)) }
+  }
+
+  // ============================================================
+  // Phase 5: Movement System
+  // ============================================================
+
+  // -- Movement Cost Multiplier --
+
+  run test_movement_cost_normal = assert(pMovementCost(false, false, false, false, false) == 1)
+
+  run test_movement_cost_difficult_terrain = assert(pMovementCost(true, false, false, false, false) == 2)
+
+  run test_movement_cost_crawling = assert(pMovementCost(false, true, false, false, false) == 2)
+
+  run test_movement_cost_climbing_no_speed = assert(pMovementCost(false, false, true, false, false) == 2)
+
+  run test_movement_cost_climbing_with_speed = assert(pMovementCost(false, false, true, true, false) == 1)
+
+  run test_movement_cost_squeezing = assert(pMovementCost(false, false, false, false, true) == 2)
+
+  // PHB: "Crawling 1 foot in difficult terrain, therefore, costs 3 feet of movement."
+  run test_movement_cost_crawl_difficult = assert(pMovementCost(true, true, false, false, false) == 3)
+
+  // PHB Ch8: climbing without speed in difficult terrain = 3 (1 base + 1 terrain + 1 climb)
+  run test_movement_cost_climb_no_speed_difficult = assert(pMovementCost(true, false, true, false, false) == 3)
+
+  // Climbing WITH speed in difficult terrain: only terrain penalty
+  run test_movement_cost_climb_with_speed_difficult = assert(pMovementCost(true, false, true, true, false) == 2)
+
+  // Squeezing + difficult terrain
+  run test_movement_cost_squeeze_difficult = assert(pMovementCost(true, false, false, false, true) == 3)
+
+  // -- Stand from Prone --
+
+  run test_stand_from_prone_normal = {
+    // Speed 30, cost = 15
+    val t = pStandFromProne(BASIC_TURN)
+    assert(t.movementRemaining == 15)
+  }
+
+  run test_stand_from_prone_speed_zero = {
+    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
+      false, 0, false, false)
+    val t2 = pStandFromProne(t)
+    assert(t2.movementRemaining == 0) // speed 0, can't stand
+  }
+
+  run test_stand_from_prone_insufficient_movement = {
+    val t = pUseMovement(BASIC_TURN, 20, 1) // 10 remaining, cost = 15
+    val t2 = pStandFromProne(t)
+    assert(t2.movementRemaining == 10) // no change
+  }
+
+  run test_stand_from_prone_exact_half = {
+    // Speed 30, remaining 15, cost 15 — exactly enough
+    val t = pUseMovement(BASIC_TURN, 15, 1)
+    val t2 = pStandFromProne(t)
+    assert(t2.movementRemaining == 0)
+  }
+
+  // -- Drop Prone --
+
+  run test_drop_prone = {
+    val s = pDropProne(FRESH20)
+    assert(s.prone)
+  }
+
+  run test_drop_prone_already_prone = {
+    val s = pDropProne(pApplyCondition(FRESH20, CProne))
+    assert(s.prone) // idempotent
+  }
+
+  // -- Flying Creature Falls --
+
+  run test_flying_falls_prone = {
+    val s = pApplyCondition(FRESH20, CProne)
+    assert(pFlyingCreatureFalls(s, 30, false, false))
+  }
+
+  run test_flying_falls_speed_zero = {
+    assert(pFlyingCreatureFalls(FRESH20, 0, false, false))
+  }
+
+  run test_flying_no_fall_hover = {
+    val s = pApplyCondition(FRESH20, CProne)
+    assert(not(pFlyingCreatureFalls(s, 30, true, false)))
+  }
+
+  run test_flying_no_fall_magic = {
+    val s = pApplyCondition(FRESH20, CProne)
+    assert(not(pFlyingCreatureFalls(s, 30, false, true)))
+  }
+
+  run test_flying_no_fall_normal = {
+    assert(not(pFlyingCreatureFalls(FRESH20, 30, false, false)))
+  }
+
+  // -- Switch Speed Type --
+
+  run test_switch_speed_walk_to_fly = {
+    // Walk 30, Fly 60. Walked 0 feet. Switch to fly: 60 - 0 = 60
+    val t = pSwitchSpeedType(BASIC_TURN, 60, 0)
+    all { assert(t.movementRemaining == 60), assert(t.effectiveSpeed == 60) }
+  }
+
+  run test_switch_speed_with_distance = {
+    // Walk 30, Fly 60. Walked 20 feet. Switch to fly: 60 - 20 = 40
+    val t = pSwitchSpeedType(BASIC_TURN, 60, 20)
+    all { assert(t.movementRemaining == 40), assert(t.effectiveSpeed == 60) }
+  }
+
+  run test_switch_speed_impossible = {
+    // Walk 30, Fly 20. Walked 25 feet. Switch to fly: 20 - 25 = -5 → can't
+    val t = pUseMovement(BASIC_TURN, 25, 1)
+    val t2 = pSwitchSpeedType(t, 20, 25)
+    assert(t2.movementRemaining == 5) // no change
+  }
+
+  run test_switch_speed_exact_zero = {
+    // Walk 30, Fly 20. Walked 20 feet. Switch to fly: 20 - 20 = 0 → can't
+    val t = pSwitchSpeedType(BASIC_TURN, 20, 20)
+    assert(t.movementRemaining == 30) // no change
+  }
+
+  // PHB example: speed 30, fly 60. Fly 20, walk 10, fly 30 more.
+  run test_switch_speed_phb_example = {
+    // Start with fly 60
+    val t0 = pSwitchSpeedType(BASIC_TURN, 60, 0) // switch to fly from walk
+    val t1 = pUseMovement(t0, 20, 1) // fly 20, remaining 40
+    // Switch to walk. Distance moved = 20. Walk speed 30. 30 - 20 = 10
+    val t2 = pSwitchSpeedType(t1, 30, 20)
+    val t3 = pUseMovement(t2, 10, 1) // walk 10, remaining 0
+    // Switch to fly. Distance moved = 30. Fly speed 60. 60 - 30 = 30
+    val t4 = pSwitchSpeedType(t3, 60, 30)
+    all { assert(t4.movementRemaining == 30), assert(t4.effectiveSpeed == 60) }
+  }
+
+  // -- Long Jump --
+
+  run test_long_jump_running = {
+    // STR 16 → 16 feet
+    assert(pLongJumpDistance(16, true) == 16)
+  }
+
+  run test_long_jump_standing = {
+    // STR 16 → 8 feet
+    assert(pLongJumpDistance(16, false) == 8)
+  }
+
+  run test_long_jump_standing_odd = {
+    // STR 15 → 7 feet (15/2 = 7, integer division)
+    assert(pLongJumpDistance(15, false) == 7)
+  }
+
+  // -- High Jump --
+
+  run test_high_jump_running = {
+    // STR 16, mod +3 → 3 + 3 = 6 feet
+    assert(pHighJumpHeight(16, true) == 6)
+  }
+
+  run test_high_jump_standing = {
+    // STR 16, mod +3 → 6 / 2 = 3 feet
+    assert(pHighJumpHeight(16, false) == 3)
+  }
+
+  run test_high_jump_low_str = {
+    // STR 6, mod -2 → 3 + (-2) = 1 foot
+    assert(pHighJumpHeight(6, true) == 1)
+  }
+
+  run test_high_jump_very_low_str = {
+    // STR 1, mod -5 → 3 + (-5) = -2 → min 0
+    assert(pHighJumpHeight(1, true) == 0)
+  }
+
+  run test_high_jump_very_low_str_standing = {
+    // STR 1 → base 0, standing = 0/2 = 0
+    assert(pHighJumpHeight(1, false) == 0)
+  }
+
+  run test_high_jump_str10 = {
+    // STR 10, mod 0 → 3 + 0 = 3 feet
+    assert(pHighJumpHeight(10, true) == 3)
+  }
+
+  // -- Jump Landing in Difficult Terrain --
+
+  run test_jump_land_pass = {
+    val s = pJumpLandInDifficultTerrain(FRESH20, true)
+    assert(not(s.prone))
+  }
+
+  run test_jump_land_fail = {
+    val s = pJumpLandInDifficultTerrain(FRESH20, false)
+    assert(s.prone)
+  }
+
+  // -- Hostile Movement --
+
+  run test_hostile_move_medium_tiny = {
+    // diff = 2 - 0 = 2 ≥ 2 → can move through
+    assert(pCanMoveThroughHostile(Medium, Tiny))
+  }
+
+  run test_hostile_move_tiny_medium = {
+    // diff = 0 - 2 = -2 ≤ -2 → can move through
+    assert(pCanMoveThroughHostile(Tiny, Medium))
+  }
+
+  run test_hostile_move_medium_small = {
+    // diff = 2 - 1 = 1, not ≥ 2 → can't
+    assert(not(pCanMoveThroughHostile(Medium, Small)))
+  }
+
+  run test_hostile_move_medium_large = {
+    // diff = 2 - 3 = -1, not ≤ -2 → can't
+    assert(not(pCanMoveThroughHostile(Medium, Large)))
+  }
+
+  run test_hostile_move_medium_huge = {
+    // diff = 2 - 4 = -2 ≤ -2 → can move through
+    assert(pCanMoveThroughHostile(Medium, Huge))
+  }
+
+  run test_hostile_move_same_size = {
+    assert(not(pCanMoveThroughHostile(Medium, Medium)))
   }
 }
