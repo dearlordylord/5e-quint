@@ -608,7 +608,7 @@ module dnd {
       val effAmount = applyDamageModifiers(amount, damageType, immunities, effResist, vulnerabilities)
       if (effAmount <= 0) s
       else {
-        val tempAbsorb = if (s.tempHp >= effAmount) effAmount else s.tempHp
+        val tempAbsorb = intMin(s.tempHp, effAmount)
         val dmgThrough = effAmount - tempAbsorb
         val s1 = s.with("tempHp", s.tempHp - tempAbsorb)
         if (dmgThrough == 0) s1
