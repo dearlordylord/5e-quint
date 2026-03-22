@@ -1229,4 +1229,164 @@ module dnd {
   pure def pCanMoveThroughHostile(moverSize: Size, hostileSize: Size): bool =
     pTwoSizesSmaller(moverSize, hostileSize) or pTwoSizesSmaller(hostileSize, moverSize)
 
+  // ============================================================
+  // 15. SPELLCASTING SYSTEM (Phase 6)
+  // ============================================================
+
+  // -- 15.1 Types & Constants --
+
+  type CasterType = FullCaster | HalfCaster | ThirdCaster
+
+  type SpellSlotState = {
+    slotsMax: int -> int,        // spell level 1-9 -> max slots
+    slotsCurrent: int -> int,    // spell level 1-9 -> current slots
+    pactSlotsMax: int,           // 0 for non-warlocks
+    pactSlotsCurrent: int,
+    pactSlotLevel: int,          // warlock pact slot level (1-5)
+    concentrating: bool,
+    concentrationSpellId: str,   // "" if not concentrating
+  }
+
+  pure val EMPTY_SLOTS: int -> int =
+    Map(1 -> 0, 2 -> 0, 3 -> 0, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0)
+
+  // -- 15.2 Slot Management --
+
+  /// Expend a regular spell slot. Returns unchanged state if no slots at that level.
+  pure def pExpendSlot(ss: SpellSlotState, level: int): SpellSlotState = {
+    val current = ss.slotsCurrent.get(level)
+    if (current <= 0) ss
+    else ss.with("slotsCurrent", ss.slotsCurrent.set(level, current - 1))
+  }
+
+  /// Expend a warlock pact slot. Returns unchanged state if no pact slots.
+  pure def pExpendPactSlot(ss: SpellSlotState): SpellSlotState =
+    if (ss.pactSlotsCurrent <= 0) ss
+    else ss.with("pactSlotsCurrent", ss.pactSlotsCurrent - 1)
+
+  /// Can cast a spell at spellLevel using a slot of slotLevel?
+  /// PHB: slot must be >= spell level and have remaining uses.
+  pure def pCanCastAtLevel(ss: SpellSlotState, spellLevel: int, slotLevel: int): bool =
+    slotLevel >= spellLevel and ss.slotsCurrent.get(slotLevel) > 0
+
+  /// Can cast a spell using a warlock pact slot?
+  /// PHB: pact slot level must be >= spell level.
+  pure def pCanCastWithPactSlot(ss: SpellSlotState, spellLevel: int): bool =
+    ss.pactSlotsCurrent > 0 and ss.pactSlotLevel >= spellLevel
+
+  /// Restore all spell slots (long rest). Restores both regular and pact slots.
+  pure def pRestoreAllSlots(ss: SpellSlotState): SpellSlotState =
+    ss.with("slotsCurrent", ss.slotsMax)
+      .with("pactSlotsCurrent", ss.pactSlotsMax)
+
+  /// Restore only pact slots (short rest).
+  pure def pRestorePactSlots(ss: SpellSlotState): SpellSlotState =
+    ss.with("pactSlotsCurrent", ss.pactSlotsMax)
+
+  // -- 15.3 Multiclass Slot Calculation --
+
+  /// Compute effective caster level for multiclass spellcaster table.
+  /// PHB Ch6: full casters contribute full level, half casters floor(level/2),
+  /// third casters floor(level/3). Warlock pact magic is separate.
+  pure def pMulticlassCasterLevel(fullLevels: int, halfLevels: int, thirdLevels: int): int =
+    fullLevels + halfLevels / 2 + thirdLevels / 3
+
+  /// Multiclass Spellcaster table (PHB Ch6).
+  /// Returns number of spell slots for given caster level and spell level.
+  pure def pSlotsPerLevel(casterLevel: int, spellLevel: int): int = {
+    if (spellLevel == 1) {
+      if (casterLevel >= 3) 4
+      else if (casterLevel == 2) 3
+      else if (casterLevel == 1) 2
+      else 0
+    } else if (spellLevel == 2) {
+      if (casterLevel >= 4) 3
+      else if (casterLevel == 3) 2
+      else 0
+    } else if (spellLevel == 3) {
+      if (casterLevel >= 6) 3
+      else if (casterLevel == 5) 2
+      else 0
+    } else if (spellLevel == 4) {
+      if (casterLevel >= 9) 3
+      else if (casterLevel == 8) 2
+      else if (casterLevel == 7) 1
+      else 0
+    } else if (spellLevel == 5) {
+      if (casterLevel >= 18) 3
+      else if (casterLevel >= 10) 2
+      else if (casterLevel == 9) 1
+      else 0
+    } else if (spellLevel == 6) {
+      if (casterLevel >= 19) 2
+      else if (casterLevel >= 11) 1
+      else 0
+    } else if (spellLevel == 7) {
+      if (casterLevel >= 20) 2
+      else if (casterLevel >= 13) 1
+      else 0
+    } else if (spellLevel == 8) {
+      if (casterLevel >= 15) 1
+      else 0
+    } else if (spellLevel == 9) {
+      if (casterLevel >= 17) 1
+      else 0
+    } else 0
+  }
+
+  /// Build a full slot map from caster level.
+  pure def pBuildSlotMap(casterLevel: int): int -> int =
+    Map(
+      1 -> pSlotsPerLevel(casterLevel, 1),
+      2 -> pSlotsPerLevel(casterLevel, 2),
+      3 -> pSlotsPerLevel(casterLevel, 3),
+      4 -> pSlotsPerLevel(casterLevel, 4),
+      5 -> pSlotsPerLevel(casterLevel, 5),
+      6 -> pSlotsPerLevel(casterLevel, 6),
+      7 -> pSlotsPerLevel(casterLevel, 7),
+      8 -> pSlotsPerLevel(casterLevel, 8),
+      9 -> pSlotsPerLevel(casterLevel, 9)
+    )
+
+  // -- 15.4 Concentration --
+
+  /// Concentration save DC. PHB: DC = max(10, floor(damage / 2)).
+  pure def pConcentrationDC(damageTaken: int): int = {
+    val half = damageTaken / 2
+    if (half > 10) half else 10
+  }
+
+  /// Break concentration. Clears spell.
+  pure def pBreakConcentration(ss: SpellSlotState): SpellSlotState =
+    ss.with("concentrating", false).with("concentrationSpellId", "")
+
+  /// Start concentrating on a spell. Replaces existing concentration if any.
+  /// PHB: "You can't concentrate on two spells at once."
+  pure def pStartConcentration(ss: SpellSlotState, spellId: str): SpellSlotState =
+    ss.with("concentrating", true).with("concentrationSpellId", spellId)
+
+  /// Resolve concentration check after taking damage.
+  /// Caller computes DC via pConcentrationDC, resolves save via saveSucceeds, passes result.
+  /// Separate call per damage source.
+  pure def pConcentrationCheck(ss: SpellSlotState, conSaveSucceeded: bool): SpellSlotState =
+    if (not(ss.concentrating)) ss
+    else if (conSaveSucceeded) ss
+    else pBreakConcentration(ss)
+
+  // -- 15.5 Casting Validation --
+
+  /// Can the creature provide the required spell components?
+  /// V: requires ability to speak (pCanSpeak). S: requires a free hand (caller-provided).
+  /// M: caller validates (focus/pouch/specific component).
+  pure def pCanProvideComponents(
+    creature: CreatureState,
+    requiresVerbal: bool,
+    requiresSomatic: bool,
+    hasFreeHand: bool
+  ): bool = {
+    val vOk = not(requiresVerbal) or pCanSpeak(creature)
+    val sOk = not(requiresSomatic) or hasFreeHand
+    vOk and sOk
+  }
+
 }
