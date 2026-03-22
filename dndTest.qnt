@@ -330,4 +330,897 @@ module dndTest {
 
   run test_normal_damage = assert(normalDamage(6, 3) == 9)
   run test_critical_damage = assert(criticalDamage(6, 5, 3) == 14)
+
+  // ============================================================
+  // Phase 2: Creature State Tests
+  // ============================================================
+
+  pure val FRESH20: CreatureState = freshCreature(20)
+  pure val DYING20: CreatureState = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious)
+
+  // -- Fresh creature --
+  run test_fresh_creature = {
+    val s = FRESH20
+    all { assert(s.hp == 20), assert(s.maxHp == 20), assert(s.tempHp == 0),
+          assert(not(s.dead)), assert(not(s.unconscious)) }
+  }
+
+  // -- effectiveMaxHp --
+  run test_effective_max_hp_normal = assert(effectiveMaxHp(FRESH20) == 20)
+  run test_effective_max_hp_exhaustion4 = {
+    val s = FRESH20.with("exhaustion", 4)
+    assert(effectiveMaxHp(s) == 10)
+  }
+
+  // -- isIncapacitated --
+  run test_incapacitated_none = assert(not(isIncapacitated(FRESH20)))
+  run test_incapacitated_from_paralyzed = assert(isIncapacitated(pApplyCondition(FRESH20, CParalyzed)))
+
+  // ============================================================
+  // Take Damage
+  // ============================================================
+
+  run test_take_damage_basic = {
+    val s = pTakeDamage(FRESH20, 5, Slashing, Set(), Set(), Set(), false)
+    assert(s.hp == 15)
+  }
+
+  run test_take_damage_temp_hp_partial = {
+    val s = pTakeDamage(FRESH20.with("tempHp", 3), 5, Slashing, Set(), Set(), Set(), false)
+    all { assert(s.hp == 18), assert(s.tempHp == 0) }
+  }
+
+  run test_take_damage_temp_hp_full = {
+    val s = pTakeDamage(FRESH20.with("tempHp", 10), 5, Slashing, Set(), Set(), Set(), false)
+    all { assert(s.hp == 20), assert(s.tempHp == 5) }
+  }
+
+  run test_take_damage_drops_to_0 = {
+    val s = pTakeDamage(FRESH20, 20, Slashing, Set(), Set(), Set(), false)
+    all { assert(s.hp == 0), assert(s.unconscious), assert(s.prone),
+          assert(isIncapacitated(s)), assert(not(s.dead)) }
+  }
+
+  run test_take_damage_instant_death = {
+    // 40 - 20 = 20 overflow >= 20 maxHp
+    val s = pTakeDamage(FRESH20, 40, Slashing, Set(), Set(), Set(), false)
+    assert(s.dead)
+  }
+
+  run test_take_damage_at_0hp_failure = {
+    val s = pTakeDamage(DYING20, 5, Slashing, Set(), Set(), Set(), false)
+    all { assert(s.deathSaves.failures == 1), assert(not(s.dead)) }
+  }
+
+  run test_take_damage_at_0hp_crit_2_failures = {
+    val s = pTakeDamage(DYING20, 5, Slashing, Set(), Set(), Set(), true)
+    all { assert(s.deathSaves.failures == 2), assert(not(s.dead)) }
+  }
+
+  run test_take_damage_at_0hp_instant_death = {
+    val s = pTakeDamage(DYING20, 20, Slashing, Set(), Set(), Set(), false)
+    assert(s.dead)
+  }
+
+  run test_take_damage_at_0hp_temp_absorbs = {
+    val s = pTakeDamage(DYING20.with("tempHp", 10), 5, Slashing, Set(), Set(), Set(), false)
+    all { assert(s.tempHp == 5), assert(s.deathSaves.failures == 0), assert(not(s.dead)) }
+  }
+
+  run test_take_damage_dead_noop = {
+    val s = pTakeDamage(FRESH20.with("dead", true), 10, Slashing, Set(), Set(), Set(), false)
+    assert(s.hp == 20)
+  }
+
+  run test_take_damage_petrified_resistance = {
+    val s = pApplyCondition(FRESH20, CPetrified)
+    val s2 = pTakeDamage(s, 10, Fire, Set(), Set(), Set(), false)
+    assert(s2.hp == 15) // 10/2 = 5 damage
+  }
+
+  run test_take_damage_stable_becomes_unstable = {
+    val s = pTakeDamage(DYING20.with("stable", true), 5, Slashing, Set(), Set(), Set(), false)
+    all { assert(not(s.stable)), assert(s.deathSaves.failures == 1) }
+  }
+
+  // Resistance then vulnerability: 7/2=3, 3*2=6
+  run test_take_damage_resist_vuln_sequential = {
+    val s = pTakeDamage(FRESH20, 7, Slashing, Set(Slashing), Set(Slashing), Set(), false)
+    assert(s.hp == 14) // 20 - 6
+  }
+
+  // Immune to damage at 0 HP: no death save failure
+  run test_take_damage_at_0hp_immune = {
+    val s = pTakeDamage(DYING20, 10, Fire, Set(), Set(), Set(Fire), false)
+    all { assert(s.deathSaves.failures == 0), assert(not(s.dead)) }
+  }
+
+  // ============================================================
+  // Heal
+  // ============================================================
+
+  run test_heal_basic = {
+    val s = pHeal(FRESH20.with("hp", 10), 5)
+    assert(s.hp == 15)
+  }
+
+  run test_heal_cap_at_max = {
+    val s = pHeal(FRESH20.with("hp", 18), 5)
+    assert(s.hp == 20)
+  }
+
+  run test_heal_capped_by_exhaustion4 = {
+    val s = pAddExhaustion(FRESH20, 4).with("hp", 5) // maxHp 20, effective 10, hp 5
+    val s2 = pHeal(s, 20) // heal 20 but capped at effective 10
+    assert(s2.hp == 10)
+  }
+
+  run test_heal_from_0_consciousness = {
+    val s = pHeal(DYING20.with("deathSaves", { successes: 2, failures: 1 }), 5)
+    all { assert(s.hp == 5), assert(not(s.unconscious)),
+          assert(s.deathSaves.successes == 0), assert(s.deathSaves.failures == 0) }
+  }
+
+  run test_heal_dead_noop = {
+    val s = pHeal(FRESH20.with("dead", true).with("hp", 0), 10)
+    assert(s.hp == 0)
+  }
+
+  // ============================================================
+  // Temp HP
+  // ============================================================
+
+  run test_temp_hp_new = assert(pGrantTempHp(FRESH20, 10, false).tempHp == 10)
+  run test_temp_hp_keep_old = assert(pGrantTempHp(FRESH20.with("tempHp", 8), 12, true).tempHp == 8)
+
+  run test_temp_hp_no_consciousness = {
+    val s = pGrantTempHp(DYING20, 10, false)
+    all { assert(s.tempHp == 10), assert(s.hp == 0), assert(s.unconscious) }
+  }
+
+  // ============================================================
+  // Death Saves
+  // ============================================================
+
+  run test_death_save_success = {
+    val s = pDeathSave(DYING20, 12)
+    all { assert(s.deathSaves.successes == 1), assert(s.deathSaves.failures == 0) }
+  }
+
+  // Boundary: exactly 10 is a success
+  run test_death_save_exactly_10 = {
+    val s = pDeathSave(DYING20, 10)
+    all { assert(s.deathSaves.successes == 1), assert(s.deathSaves.failures == 0) }
+  }
+
+  run test_death_save_failure = {
+    val s = pDeathSave(DYING20, 5)
+    all { assert(s.deathSaves.successes == 0), assert(s.deathSaves.failures == 1) }
+  }
+
+  run test_death_save_third_success_stable = {
+    val s = DYING20.with("deathSaves", { successes: 2, failures: 1 })
+    val s2 = pDeathSave(s, 14)
+    all { assert(s2.stable), assert(s2.deathSaves.successes == 0),
+          assert(s2.deathSaves.failures == 0), assert(not(s2.dead)) }
+  }
+
+  run test_death_save_third_failure_dead = {
+    val s = DYING20.with("deathSaves", { successes: 1, failures: 2 })
+    val s2 = pDeathSave(s, 5)
+    assert(s2.dead)
+  }
+
+  run test_death_save_nat1_two_failures = {
+    val s = pDeathSave(DYING20, 1)
+    assert(s.deathSaves.failures == 2)
+  }
+
+  run test_death_save_nat1_causes_death = {
+    val s = pDeathSave(DYING20.with("deathSaves", { successes: 0, failures: 2 }), 1)
+    assert(s.dead)
+  }
+
+  run test_death_save_nat20_regain_hp = {
+    val s = pDeathSave(DYING20.with("deathSaves", { successes: 1, failures: 2 }), 20)
+    all { assert(s.hp == 1), assert(not(s.unconscious)),
+          assert(s.deathSaves.successes == 0), assert(s.deathSaves.failures == 0) }
+  }
+
+  run test_death_save_stable_noop = {
+    val s = pDeathSave(DYING20.with("stable", true), 5)
+    assert(s.deathSaves.failures == 0)
+  }
+
+  // ============================================================
+  // Stabilize & Recovery
+  // ============================================================
+
+  run test_stabilize_resets_death_saves = {
+    val s = pStabilize(DYING20.with("deathSaves", { successes: 1, failures: 2 }))
+    all { assert(s.stable), assert(s.deathSaves.successes == 0),
+          assert(s.deathSaves.failures == 0) }
+  }
+
+  run test_stable_recovery = {
+    val s = pStableRecovery(DYING20.with("stable", true))
+    all { assert(s.hp == 1), assert(not(s.unconscious)),
+          assert(not(s.stable)), assert(s.prone) }
+  }
+
+  // ============================================================
+  // Knock Out
+  // ============================================================
+
+  run test_knock_out = {
+    val s = pKnockOut(FRESH20)
+    all { assert(s.hp == 0), assert(s.unconscious), assert(s.prone),
+          assert(s.stable), assert(isIncapacitated(s)),
+          assert(s.deathSaves == DEATH_SAVES_RESET) }
+  }
+
+  // ============================================================
+  // Conditions
+  // ============================================================
+
+  run test_apply_blinded = assert(pApplyCondition(FRESH20, CBlinded).blinded)
+
+  run test_paralyzed_implies_incapacitated = {
+    val s = pApplyCondition(FRESH20, CParalyzed)
+    all { assert(s.paralyzed), assert(isIncapacitated(s)) }
+  }
+
+  run test_unconscious_implies_prone_incap = {
+    val s = pApplyCondition(FRESH20, CUnconscious)
+    all { assert(s.unconscious), assert(s.prone), assert(isIncapacitated(s)) }
+  }
+
+  run test_remove_paralyzed_while_stunned_incap_stays = {
+    val s = pApplyCondition(pApplyCondition(FRESH20, CParalyzed), CStunned)
+    val s2 = pRemoveCondition(s, CParalyzed)
+    all { assert(not(s2.paralyzed)), assert(s2.stunned), assert(isIncapacitated(s2)) }
+  }
+
+  run test_remove_unconscious_prone_stays = {
+    val s = pRemoveCondition(pApplyCondition(FRESH20, CUnconscious), CUnconscious)
+    all { assert(not(s.unconscious)), assert(s.prone), assert(not(isIncapacitated(s))) }
+  }
+
+  run test_petrified_blocks_poison = {
+    val s = pApplyCondition(pApplyCondition(FRESH20, CPetrified), CPoisoned)
+    assert(not(s.poisoned))
+  }
+
+  // ============================================================
+  // Exhaustion
+  // ============================================================
+
+  run test_exhaustion_add = assert(pAddExhaustion(FRESH20, 2).exhaustion == 2)
+
+  run test_exhaustion_4_halves_max_hp_clamps = {
+    val s = pAddExhaustion(FRESH20, 4)
+    all { assert(s.exhaustion == 4), assert(effectiveMaxHp(s) == 10), assert(s.hp == 10) }
+  }
+
+  run test_exhaustion_6_death = {
+    val s = pAddExhaustion(FRESH20, 6)
+    all { assert(s.dead), assert(s.hp == 0) }
+  }
+
+  run test_exhaustion_reduce = assert(pReduceExhaustion(pAddExhaustion(FRESH20, 3), 1).exhaustion == 2)
+
+  // ============================================================
+  // Own Attack Modifiers
+  // ============================================================
+
+  run test_own_attack_invisible_adv = {
+    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CInvisible), false)
+    all { assert(m.hasAdvantage), assert(not(m.hasDisadvantage)) }
+  }
+
+  run test_own_attack_blinded_disadv = {
+    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CBlinded), false)
+    all { assert(not(m.hasAdvantage)), assert(m.hasDisadvantage) }
+  }
+
+  run test_own_attack_frightened_in_los = {
+    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CFrightened), true)
+    assert(m.hasDisadvantage)
+  }
+
+  run test_own_attack_frightened_not_in_los = {
+    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CFrightened), false)
+    assert(not(m.hasDisadvantage))
+  }
+
+  // ============================================================
+  // Defense Modifiers
+  // ============================================================
+
+  run test_defense_paralyzed_within_5ft = {
+    val m = pDefenseModifiers(pApplyCondition(FRESH20, CParalyzed), true)
+    all { assert(m.attackerAdvantage), assert(m.autoCrit) }
+  }
+
+  run test_defense_prone_within_5ft = {
+    val m = pDefenseModifiers(pApplyCondition(FRESH20, CProne), true)
+    all { assert(m.attackerAdvantage), assert(not(m.attackerDisadvantage)) }
+  }
+
+  run test_defense_prone_beyond_5ft = {
+    val m = pDefenseModifiers(pApplyCondition(FRESH20, CProne), false)
+    all { assert(not(m.attackerAdvantage)), assert(m.attackerDisadvantage) }
+  }
+
+  run test_defense_invisible_disadv = {
+    val m = pDefenseModifiers(pApplyCondition(FRESH20, CInvisible), true)
+    assert(m.attackerDisadvantage)
+  }
+
+  // ============================================================
+  // Check Modifiers
+  // ============================================================
+
+  run test_check_exhaustion1_disadv = {
+    val m = pCheckModifiers(pAddExhaustion(FRESH20, 1), false, false, false)
+    assert(m.hasDisadvantage)
+  }
+
+  run test_check_blinded_sight_autofail = {
+    val m = pCheckModifiers(pApplyCondition(FRESH20, CBlinded), true, false, false)
+    assert(m.autoFail)
+  }
+
+  run test_check_blinded_no_sight_ok = {
+    val m = pCheckModifiers(pApplyCondition(FRESH20, CBlinded), false, false, false)
+    assert(not(m.autoFail))
+  }
+
+  run test_check_deafened_hearing_autofail = {
+    val m = pCheckModifiers(pApplyCondition(FRESH20, CDeafened), false, true, false)
+    assert(m.autoFail)
+  }
+
+  // ============================================================
+  // Save Modifiers
+  // ============================================================
+
+  run test_save_paralyzed_str_autofail = {
+    val m = pSaveModifiers(pApplyCondition(FRESH20, CParalyzed), Str)
+    assert(m.autoFail)
+  }
+
+  run test_save_paralyzed_wis_no_autofail = {
+    val m = pSaveModifiers(pApplyCondition(FRESH20, CParalyzed), Wis)
+    assert(not(m.autoFail))
+  }
+
+  run test_save_restrained_dex_disadv = {
+    val m = pSaveModifiers(pApplyCondition(FRESH20, CRestrained), Dex)
+    assert(m.hasDisadvantage)
+  }
+
+  run test_save_exhaustion3_disadv = {
+    val m = pSaveModifiers(pAddExhaustion(FRESH20, 3), Wis)
+    assert(m.hasDisadvantage)
+  }
+
+  // ============================================================
+  // Can Act / Can Speak
+  // ============================================================
+
+  run test_can_act_normal = assert(pCanAct(FRESH20))
+  run test_can_act_incapacitated = assert(not(pCanAct(pApplyCondition(FRESH20, CParalyzed))))
+  run test_can_speak_normal = assert(pCanSpeak(FRESH20))
+  run test_can_speak_paralyzed = assert(not(pCanSpeak(pApplyCondition(FRESH20, CParalyzed))))
+  run test_can_speak_stunned_ok = assert(pCanSpeak(pApplyCondition(FRESH20, CStunned)))
+
+  // ============================================================
+  // Combined scenarios
+  // ============================================================
+
+  // Auto-crit at 0 HP: unconscious within 5ft -> autoCrit, crit damage = 2 death save failures
+  run test_autocrit_at_0hp = {
+    val dm = pDefenseModifiers(DYING20, true)
+    val s = pTakeDamage(DYING20, 5, Slashing, Set(), Set(), Set(), true)
+    all { assert(dm.autoCrit), assert(s.deathSaves.failures == 2) }
+  }
+
+  // Stabilize then take damage: death saves restart from 0
+  run test_stabilize_then_damage = {
+    val s = pStabilize(DYING20.with("deathSaves", { successes: 2, failures: 2 }))
+    val s2 = pTakeDamage(s, 3, Slashing, Set(), Set(), Set(), false)
+    all { assert(not(s2.stable)), assert(s2.deathSaves.failures == 1),
+          assert(s2.deathSaves.successes == 0) }
+  }
+
+  // ============================================================
+  // Phase 3: Turn Structure & Action Economy
+  // ============================================================
+
+  pure val TEST_FIGHTER_5: CharConfig = {
+    abilityScores: Map(Str -> 16, Dex -> 14, Con -> 14, Int_ -> 10, Wis -> 12, Cha -> 8),
+    level: 5,
+    size: Medium,
+    speeds: Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0),
+    saveProficiencies: Set(Str, Con),
+    skillProficiencies: Set(Athletics, Perception),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(LightArmor, MediumArmor, HeavyArmor),
+    hitDieType: 10,
+    spellcastingAbility: Int_,
+    hasSpellcasting: false,
+    canRitualCast: false,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set("extra_attack"),
+  }
+
+  pure val BASIC_TURN: TurnState = pStartTurn(
+    TEST_FIGHTER_5, FRESH20, Unarmored, false, 0, false, false
+  )
+
+  // -- Start turn basics --
+
+  run test_start_turn_movement = assert(BASIC_TURN.movementRemaining == 30)
+  run test_start_turn_action_free = assert(not(BASIC_TURN.actionUsed))
+  run test_start_turn_bonus_free = assert(not(BASIC_TURN.bonusActionUsed))
+  run test_start_turn_reaction_available = assert(BASIC_TURN.reactionAvailable)
+  run test_start_turn_extra_attacks = assert(BASIC_TURN.extraAttacksRemaining == 1)
+
+  // -- Extra attacks from config --
+
+  run test_extra_attacks_none = {
+    val cfg = TEST_FIGHTER_5.with("features", Set())
+    assert(extraAttacksFromConfig(cfg) == 0)
+  }
+
+  run test_extra_attacks_fighter11 = {
+    val cfg = TEST_FIGHTER_5.with("features", Set("extra_attack_2"))
+    assert(extraAttacksFromConfig(cfg) == 2)
+  }
+
+  run test_extra_attacks_fighter20 = {
+    val cfg = TEST_FIGHTER_5.with("features", Set("extra_attack_3"))
+    assert(extraAttacksFromConfig(cfg) == 3)
+  }
+
+  // -- Surprise --
+
+  run test_surprised_no_movement = {
+    val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored, true, 0, false, false)
+    all { assert(t.movementRemaining == 0), assert(t.actionUsed), assert(t.bonusActionUsed),
+          assert(not(t.reactionAvailable)), assert(t.surprised) }
+  }
+
+  run test_end_surprise_turn_reaction = {
+    val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored, true, 0, false, false)
+    val t2 = pEndSurpriseTurn(t)
+    all { assert(t2.reactionAvailable), assert(not(t2.surprised)) }
+  }
+
+  // -- Speed modifiers --
+
+  run test_speed_heavy_armor_penalty = {
+    val t = pStartTurn(TEST_FIGHTER_5.with("abilityScores",
+      Map(Str -> 12, Dex -> 14, Con -> 14, Int_ -> 10, Wis -> 12, Cha -> 8)),
+      FRESH20, WearingArmor(CHAIN_MAIL), false, 0, false, false)
+    assert(t.movementRemaining == 20) // 30 - 10 (STR 12 < 13)
+  }
+
+  run test_speed_exhaustion2_halved = {
+    val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 2), Unarmored,
+      false, 0, false, false)
+    assert(t.movementRemaining == 15) // 30 / 2
+  }
+
+  run test_speed_exhaustion5_zero = {
+    val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 5), Unarmored,
+      false, 0, false, false)
+    assert(t.movementRemaining == 0)
+  }
+
+  run test_speed_grappled_zero = {
+    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
+      false, 0, false, false)
+    assert(t.movementRemaining == 0)
+  }
+
+  run test_speed_grappled_ignores_bonus = {
+    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
+      false, 10, false, false) // +10 from spell, should be ignored
+    assert(t.movementRemaining == 0)
+  }
+
+  run test_speed_grappling_halved = {
+    val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
+      false, 0, true, false) // grappling, target not 2+ sizes smaller
+    assert(t.movementRemaining == 15)
+  }
+
+  run test_speed_grappling_tiny_target = {
+    val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
+      false, 0, true, true) // grappling, target 2+ sizes smaller
+    assert(t.movementRemaining == 30) // no penalty
+  }
+
+  run test_speed_caller_modifier = {
+    val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
+      false, 10, false, false) // +10 from Longstrider
+    assert(t.movementRemaining == 40)
+  }
+
+  // -- Action usage --
+
+  run test_use_action = {
+    val t = pUseAction(BASIC_TURN, FRESH20, AAttack)
+    assert(t.actionUsed)
+  }
+
+  run test_use_action_twice_noop = {
+    val t = pUseAction(pUseAction(BASIC_TURN, FRESH20, AAttack), FRESH20, ADash)
+    assert(t.movementRemaining == 30) // Dash didn't apply
+  }
+
+  run test_use_action_incapacitated_noop = {
+    val s = pApplyCondition(FRESH20, CStunned)
+    val t = pUseAction(BASIC_TURN, s, AAttack)
+    assert(not(t.actionUsed)) // can't act while incapacitated
+  }
+
+  // -- Disengage --
+
+  run test_disengage = {
+    val t = pUseAction(BASIC_TURN, FRESH20, ADisengage)
+    all { assert(t.actionUsed), assert(t.disengaged) }
+  }
+
+  run test_disengage_blocks_oa = {
+    val t = pUseAction(BASIC_TURN, FRESH20, ADisengage)
+    assert(not(pCanBeOpportunityAttacked(t)))
+  }
+
+  run test_no_disengage_allows_oa = assert(pCanBeOpportunityAttacked(BASIC_TURN))
+
+  // -- Dodge --
+
+  run test_dodge = {
+    val t = pUseAction(BASIC_TURN, FRESH20, ADodge)
+    all { assert(t.actionUsed), assert(t.dodging) }
+  }
+
+  // -- Dash --
+
+  run test_dash_adds_speed = {
+    val t = pUseAction(BASIC_TURN, FRESH20, ADash)
+    assert(t.movementRemaining == 60) // 30 + 30 (adds speed, not doubles remaining)
+  }
+
+  run test_dash_after_partial_move = {
+    val t1 = pUseMovement(BASIC_TURN, 10, 1) // move 10, 20 remaining
+    val t2 = pUseAction(t1, FRESH20, ADash)
+    assert(t2.movementRemaining == 50) // 20 + 30 speed
+  }
+
+  // -- Ready --
+
+  run test_ready = {
+    val t = pUseAction(BASIC_TURN, FRESH20, AReady)
+    all { assert(t.actionUsed), assert(t.readiedAction) }
+  }
+
+  // -- Bonus action --
+
+  run test_use_bonus_action = {
+    val t = pUseBonusAction(BASIC_TURN, FRESH20)
+    assert(t.bonusActionUsed)
+  }
+
+  run test_bonus_action_twice_noop = {
+    val t = pUseBonusAction(pUseBonusAction(BASIC_TURN, FRESH20), FRESH20)
+    assert(t.bonusActionUsed)
+  }
+
+  // -- Reaction --
+
+  run test_use_reaction = {
+    val t = pUseReaction(BASIC_TURN)
+    assert(not(t.reactionAvailable))
+  }
+
+  run test_use_reaction_twice_noop = {
+    val t = pUseReaction(pUseReaction(BASIC_TURN))
+    assert(not(t.reactionAvailable))
+  }
+
+  // -- Movement --
+
+  run test_use_movement = {
+    val t = pUseMovement(BASIC_TURN, 15, 1)
+    assert(t.movementRemaining == 15)
+  }
+
+  run test_use_movement_difficult_terrain = {
+    val t = pUseMovement(BASIC_TURN, 10, 2) // 10 ft in difficult terrain = 20 ft cost
+    assert(t.movementRemaining == 10)
+  }
+
+  run test_use_movement_insufficient = {
+    val t = pUseMovement(BASIC_TURN, 20, 2) // 40 ft cost > 30 ft
+    assert(t.movementRemaining == 30) // no change
+  }
+
+  run test_use_movement_split = {
+    val t1 = pUseMovement(BASIC_TURN, 10, 1) // move 10
+    val t2 = pUseMovement(t1, 15, 1)          // move 15 more
+    assert(t2.movementRemaining == 5)
+  }
+
+  // -- Extra attacks --
+
+  run test_use_extra_attack = {
+    val t = pUseExtraAttack(BASIC_TURN)
+    assert(t.extraAttacksRemaining == 0)
+  }
+
+  run test_use_extra_attack_depleted = {
+    val t = pUseExtraAttack(pUseExtraAttack(BASIC_TURN))
+    assert(t.extraAttacksRemaining == 0) // can't go below 0
+  }
+
+  // -- Object interaction --
+
+  run test_object_interaction_free = {
+    val t = pUseObjectInteraction(BASIC_TURN)
+    assert(t.freeInteractionUsed)
+  }
+
+  run test_object_interaction_second_needs_action = {
+    val t = pUseObjectInteraction(pUseObjectInteraction(BASIC_TURN))
+    assert(t.freeInteractionUsed) // already used, no additional change
+  }
+
+  // -- Bonus action spell rule --
+
+  run test_bonus_spell_blocks_non_cantrip = {
+    val t = pMarkBonusActionSpell(BASIC_TURN)
+    all { assert(t.bonusActionSpellCast), assert(not(canCastNonCantripAction(t))) }
+  }
+
+  run test_non_cantrip_action_blocks_bonus_spell = {
+    val t = pMarkNonCantripActionSpell(BASIC_TURN)
+    all { assert(t.nonCantripActionSpellCast), assert(not(canCastBonusActionSpell(t))) }
+  }
+
+  run test_cantrip_action_allows_bonus_spell = {
+    // No mark = cantrip or no spell cast as action
+    assert(canCastBonusActionSpell(BASIC_TURN))
+  }
+
+  // -- Two-weapon fighting --
+
+  run test_twf_eligible = {
+    val t = pUseAction(BASIC_TURN, FRESH20, AAttack)
+    assert(pCanTwoWeaponFighting(t, FRESH20))
+  }
+
+  run test_twf_no_attack_action = assert(not(pCanTwoWeaponFighting(BASIC_TURN, FRESH20)))
+
+  run test_twf_after_dash_not_eligible = {
+    val t = pUseAction(BASIC_TURN, FRESH20, ADash)
+    assert(not(pCanTwoWeaponFighting(t, FRESH20)))
+  }
+
+  run test_twf_bonus_used = {
+    val t = pUseBonusAction(pUseAction(BASIC_TURN, FRESH20, AAttack), FRESH20)
+    assert(not(pCanTwoWeaponFighting(t, FRESH20)))
+  }
+
+  // ============================================================
+  // Phase 3: Attack Modifier Aggregation
+  // ============================================================
+
+  pure val BASE_ATTACK_CTX: AttackContext = {
+    attackerBlinded: false, attackerProne: false,
+    attackerRestrained: false, attackerPoisoned: false, attackerFrightened: false,
+    attackerFrightSourceInLOS: false, attackerExhaustion: 0,
+    targetBlinded: false, targetParalyzed: false,
+    targetPetrified: false, targetStunned: false, targetUnconscious: false,
+    targetRestrained: false, targetProne: false,
+    attackerWithin5ft: true, targetDodging: false, targetCanSeeAttacker: true,
+    attackerCanSeeTarget: true,
+    isRangedAttack: false, beyondNormalRange: false, hostileWithin5ft: false,
+    isHeavyWeapon: false, wielderSizeSmallOrTiny: false,
+    squeezing: false, underwater: false, attackerHasSwimSpeed: false,
+    isUnderwaterMeleeException: false, isUnderwaterRangedException: false,
+  }
+
+  // Clean attack: no modifiers
+  run test_aggregate_clean = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX)
+    all { assert(not(m.hasAdvantage)), assert(not(m.hasDisadvantage)),
+          assert(not(m.autoCrit)), assert(not(m.autoMiss)) }
+  }
+
+  // Target blinded: advantage
+  run test_aggregate_target_blinded = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("targetBlinded", true))
+    all { assert(m.hasAdvantage), assert(not(m.hasDisadvantage)) }
+  }
+
+  // Attacker blinded: disadvantage
+  run test_aggregate_attacker_blinded = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("attackerBlinded", true))
+    all { assert(not(m.hasAdvantage)), assert(m.hasDisadvantage) }
+  }
+
+  // Adv + disadv cancel
+  run test_aggregate_adv_disadv_cancel = {
+    val ctx = BASE_ATTACK_CTX.with("targetBlinded", true).with("attackerBlinded", true)
+    val m = pAggregateAttackMods(ctx)
+    all { assert(not(m.hasAdvantage)), assert(not(m.hasDisadvantage)) }
+  }
+
+  // Paralyzed within 5ft: adv + autocrit
+  run test_aggregate_paralyzed_autocrit = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("targetParalyzed", true))
+    all { assert(m.hasAdvantage), assert(m.autoCrit) }
+  }
+
+  // Unconscious within 5ft: adv + autocrit
+  run test_aggregate_unconscious_autocrit = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("targetUnconscious", true))
+    all { assert(m.hasAdvantage), assert(m.autoCrit) }
+  }
+
+  // Paralyzed beyond 5ft: adv but no autocrit
+  run test_aggregate_paralyzed_beyond_5ft = {
+    val ctx = BASE_ATTACK_CTX.with("targetParalyzed", true).with("attackerWithin5ft", false)
+    val m = pAggregateAttackMods(ctx)
+    all { assert(m.hasAdvantage), assert(not(m.autoCrit)) }
+  }
+
+  // Target dodging + can see attacker: disadvantage
+  run test_aggregate_dodging = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("targetDodging", true))
+    assert(m.hasDisadvantage)
+  }
+
+  // Target dodging but can't see attacker: no disadvantage
+  run test_aggregate_dodging_blind = {
+    val ctx = BASE_ATTACK_CTX.with("targetDodging", true).with("targetCanSeeAttacker", false)
+    val m = pAggregateAttackMods(ctx)
+    // no dodge disadv, but attacker gets advantage (unseen)
+    assert(not(m.hasDisadvantage))
+  }
+
+  // Prone target within 5ft: advantage
+  run test_aggregate_prone_within_5ft = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("targetProne", true))
+    all { assert(m.hasAdvantage), assert(not(m.hasDisadvantage)) }
+  }
+
+  // Prone target beyond 5ft: disadvantage (ALL attacks, not just ranged)
+  run test_aggregate_prone_beyond_5ft = {
+    val ctx = BASE_ATTACK_CTX.with("targetProne", true).with("attackerWithin5ft", false)
+    val m = pAggregateAttackMods(ctx)
+    all { assert(not(m.hasAdvantage)), assert(m.hasDisadvantage) }
+  }
+
+  // Ranged attack beyond normal range: disadvantage
+  run test_aggregate_ranged_beyond_normal = {
+    val ctx = BASE_ATTACK_CTX.with("isRangedAttack", true).with("beyondNormalRange", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasDisadvantage)
+  }
+
+  // Ranged in close quarters: disadvantage
+  run test_aggregate_ranged_close_quarters = {
+    val ctx = BASE_ATTACK_CTX.with("isRangedAttack", true).with("hostileWithin5ft", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasDisadvantage)
+  }
+
+  // Heavy weapon + small creature: disadvantage
+  run test_aggregate_heavy_small = {
+    val ctx = BASE_ATTACK_CTX.with("isHeavyWeapon", true).with("wielderSizeSmallOrTiny", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasDisadvantage)
+  }
+
+  // Squeezing attacker: disadvantage
+  run test_aggregate_squeezing = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("squeezing", true))
+    assert(m.hasDisadvantage)
+  }
+
+  // Underwater melee without swim speed (non-exception weapon): disadvantage
+  run test_aggregate_underwater_melee_disadv = {
+    val ctx = BASE_ATTACK_CTX.with("underwater", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasDisadvantage)
+  }
+
+  // Underwater melee with exception weapon (dagger, javelin, etc.): no disadvantage
+  run test_aggregate_underwater_melee_exception = {
+    val ctx = BASE_ATTACK_CTX.with("underwater", true).with("isUnderwaterMeleeException", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(not(m.hasDisadvantage))
+  }
+
+  // Underwater melee with swim speed: no disadvantage
+  run test_aggregate_underwater_melee_swim_speed = {
+    val ctx = BASE_ATTACK_CTX.with("underwater", true).with("attackerHasSwimSpeed", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(not(m.hasDisadvantage))
+  }
+
+  // Underwater ranged within normal range (non-exception): disadvantage
+  run test_aggregate_underwater_ranged_disadv = {
+    val ctx = BASE_ATTACK_CTX.with("underwater", true).with("isRangedAttack", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasDisadvantage)
+  }
+
+  // Underwater ranged beyond normal range: auto-miss
+  run test_aggregate_underwater_ranged_automiss = {
+    val ctx = BASE_ATTACK_CTX.with("underwater", true).with("isRangedAttack", true)
+      .with("beyondNormalRange", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.autoMiss)
+  }
+
+  // Underwater ranged with exception weapon: no disadvantage
+  run test_aggregate_underwater_ranged_exception = {
+    val ctx = BASE_ATTACK_CTX.with("underwater", true).with("isRangedAttack", true)
+      .with("isUnderwaterRangedException", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(not(m.hasDisadvantage))
+  }
+
+  // Exhaustion 3: disadvantage on attacks
+  run test_aggregate_exhaustion3 = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("attackerExhaustion", 3))
+    assert(m.hasDisadvantage)
+  }
+
+
+  // Unseen attacker (not invisible, e.g. in darkness): advantage
+  run test_aggregate_unseen_attacker = {
+    val ctx = BASE_ATTACK_CTX.with("targetCanSeeAttacker", false)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasAdvantage)
+  }
+
+  // Can't see target: disadvantage
+  run test_aggregate_cant_see_target = {
+    val ctx = BASE_ATTACK_CTX.with("attackerCanSeeTarget", false)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasDisadvantage)
+  }
+
+  // Frightened with source in LOS: disadvantage
+  run test_aggregate_frightened_in_los = {
+    val ctx = BASE_ATTACK_CTX.with("attackerFrightened", true).with("attackerFrightSourceInLOS", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasDisadvantage)
+  }
+
+  // Frightened without source in LOS: no disadvantage
+  run test_aggregate_frightened_no_los = {
+    val ctx = BASE_ATTACK_CTX.with("attackerFrightened", true).with("attackerFrightSourceInLOS", false)
+    val m = pAggregateAttackMods(ctx)
+    assert(not(m.hasDisadvantage))
+  }
+
+  // Target restrained: attacker advantage
+  run test_aggregate_target_restrained = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("targetRestrained", true))
+    assert(m.hasAdvantage)
+  }
+
+  // Attacker restrained: disadvantage
+  run test_aggregate_attacker_restrained = {
+    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("attackerRestrained", true))
+    assert(m.hasDisadvantage)
+  }
 }
