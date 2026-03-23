@@ -12,6 +12,7 @@ import type {
   MovementFeet,
   ShoveChoice,
   Size,
+  SpellSlots,
   TempHP
 } from "#/types.ts"
 
@@ -51,6 +52,13 @@ export interface DndContext {
   readonly bonusActionSpellCast: boolean
   readonly nonCantripActionSpellCast: boolean
   readonly surprised: boolean
+  readonly slotsMax: SpellSlots
+  readonly slotsCurrent: SpellSlots
+  readonly pactSlotsMax: number
+  readonly pactSlotsCurrent: number
+  readonly pactSlotLevel: number
+  readonly concentrationSpellId: string
+  readonly hitDiceRemaining: number
 }
 
 // --- Events ---
@@ -110,6 +118,14 @@ export type DndEvent =
       readonly contestResult: ContestResult
       readonly choice: ShoveChoice
     }
+  | { readonly type: "EXPEND_SLOT"; readonly level: number }
+  | { readonly type: "EXPEND_PACT_SLOT" }
+  | { readonly type: "START_CONCENTRATION"; readonly spellId: string }
+  | { readonly type: "BREAK_CONCENTRATION" }
+  | { readonly type: "CONCENTRATION_CHECK"; readonly conSaveSucceeded: boolean }
+  | { readonly type: "SHORT_REST"; readonly conMod: number; readonly hdRolls: ReadonlyArray<number> }
+  | { readonly type: "LONG_REST"; readonly totalHitDice: number; readonly hasEaten: boolean }
+  | { readonly type: "SPEND_HIT_DIE"; readonly conMod: number; readonly dieRoll: number }
 
 // --- Event extractors ---
 
@@ -124,6 +140,12 @@ type UseActionEvent = Extract<DndEvent, { readonly type: "USE_ACTION" }>
 type UseMovementEvent = Extract<DndEvent, { readonly type: "USE_MOVEMENT" }>
 type GrappleEvent = Extract<DndEvent, { readonly type: "GRAPPLE" }>
 type EscapeGrappleEvent = Extract<DndEvent, { readonly type: "ESCAPE_GRAPPLE" }>
+type ExpendSlotEvent = Extract<DndEvent, { readonly type: "EXPEND_SLOT" }>
+type StartConcentrationEvent = Extract<DndEvent, { readonly type: "START_CONCENTRATION" }>
+type ConcentrationCheckEvent = Extract<DndEvent, { readonly type: "CONCENTRATION_CHECK" }>
+type ShortRestEvent = Extract<DndEvent, { readonly type: "SHORT_REST" }>
+type LongRestEvent = Extract<DndEvent, { readonly type: "LONG_REST" }>
+type SpendHitDieEvent = Extract<DndEvent, { readonly type: "SPEND_HIT_DIE" }>
 type ShoveEvent = Extract<DndEvent, { readonly type: "SHOVE" }>
 
 export function asTakeDamage(event: DndEvent): TakeDamageEvent {
@@ -161,6 +183,24 @@ export function asEscapeGrapple(event: DndEvent): EscapeGrappleEvent {
 }
 export function asShove(event: DndEvent): ShoveEvent {
   return event as ShoveEvent
+}
+export function asExpendSlot(event: DndEvent): ExpendSlotEvent {
+  return event as ExpendSlotEvent
+}
+export function asStartConcentration(event: DndEvent): StartConcentrationEvent {
+  return event as StartConcentrationEvent
+}
+export function asConcentrationCheck(event: DndEvent): ConcentrationCheckEvent {
+  return event as ConcentrationCheckEvent
+}
+export function asShortRest(event: DndEvent): ShortRestEvent {
+  return event as ShortRestEvent
+}
+export function asLongRest(event: DndEvent): LongRestEvent {
+  return event as LongRestEvent
+}
+export function asSpendHitDie(event: DndEvent): SpendHitDieEvent {
+  return event as SpendHitDieEvent
 }
 
 // --- Initial context constants ---

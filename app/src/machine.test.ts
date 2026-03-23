@@ -5,17 +5,22 @@ import type { DndContext, DndSnapshot } from "#/machine.ts"
 import { dndMachine } from "#/machine.ts"
 import {
   aggregateAttackMods,
-  applyDamageModifiers,
   calculateAC,
-  calculateEffectiveSpeed,
   coverBonus,
   criticalDamage,
-  effectiveMaxHp,
-  movementCostMultiplier,
   normalDamage,
   resolveAdvantage,
   resolveAttackRoll,
   withinOneSize
+} from "#/machine-combat.ts"
+import {
+  applyDamageModifiers,
+  calculateEffectiveSpeed,
+  calculateMulticlassSlots,
+  concentrationDC,
+  effectiveMaxHp,
+  hitDiceRecovery,
+  movementCostMultiplier
 } from "#/machine-helpers.ts"
 import {
   canAct,
@@ -1641,5 +1646,201 @@ describe("aggregateAttackMods", () => {
 
   it("unseen attacker: advantage", () => {
     expect(aggregateAttackMods({ ...baseCtx, targetCanSeeAttacker: false }).hasAdvantage).toBe(true)
+  })
+})
+
+// ============================================================
+// Phase 5: Spellcasting + Rest
+// ============================================================
+
+function isConcentrating(s: DndSnapshot) {
+  return s.matches({ spellcasting: "concentrating" })
+}
+
+function isSpellIdle(s: DndSnapshot) {
+  return s.matches({ spellcasting: "idle" })
+}
+
+describe("concentration", () => {
+  it("at most one concentration spell active", () => {
+    const a = create()
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    expect(isConcentrating(snap(a))).toBe(true)
+    expect(ctx(a).concentrationSpellId).toBe("bless")
+  })
+
+  it("new concentration spell replaces old", () => {
+    const a = create()
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "haste" })
+    expect(ctx(a).concentrationSpellId).toBe("haste")
+    expect(isConcentrating(snap(a))).toBe(true)
+  })
+
+  it("break concentration explicitly", () => {
+    const a = create()
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "BREAK_CONCENTRATION" })
+    expect(ctx(a).concentrationSpellId).toBe("")
+    expect(isSpellIdle(snap(a))).toBe(true)
+  })
+
+  it("concentration check: save succeeded keeps concentration", () => {
+    const a = create()
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: true })
+    expect(ctx(a).concentrationSpellId).toBe("bless")
+    expect(isConcentrating(snap(a))).toBe(true)
+  })
+
+  it("concentration check: save failed breaks concentration", () => {
+    const a = create()
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: false })
+    expect(ctx(a).concentrationSpellId).toBe("")
+    expect(isSpellIdle(snap(a))).toBe(true)
+  })
+
+  it("concentration broken by incapacitation", () => {
+    const a = create()
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    applyCondition(a, "paralyzed")
+    expect(ctx(a).concentrationSpellId).toBe("")
+    expect(isSpellIdle(snap(a))).toBe(true)
+  })
+
+  it("concentration broken by death", () => {
+    const a = create(10)
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    takeDamage(a, 20)
+    expect(isDead(snap(a))).toBe(true)
+    expect(ctx(a).concentrationSpellId).toBe("")
+  })
+})
+
+describe("concentrationDC helper", () => {
+  it("DC = max(10, floor(damage/2))", () => {
+    expect(concentrationDC(10)).toBe(10)
+    expect(concentrationDC(20)).toBe(10)
+    expect(concentrationDC(22)).toBe(11)
+    expect(concentrationDC(30)).toBe(15)
+  })
+})
+
+describe("spell slot expenditure", () => {
+  it("expend slot from 0 is no-op", () => {
+    const a = create()
+    expect(ctx(a).slotsCurrent).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0])
+    a.send({ type: "EXPEND_SLOT", level: 1 })
+    expect(ctx(a).slotsCurrent[0]).toBe(0)
+  })
+
+  it("expend pact slot deducts", () => {
+    const a = create()
+    a.send({ type: "EXPEND_PACT_SLOT" })
+    // pactSlotsCurrent starts at 0, so no change
+    expect(ctx(a).pactSlotsCurrent).toBe(0)
+  })
+})
+
+describe("short rest", () => {
+  it("spend hit dice: roll + CON mod, min 0", () => {
+    const a = create()
+    takeDamage(a, 15)
+    // Can't spend HD when hitDiceRemaining is 0
+    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [5, 3] })
+    expect(ctx(a).hp).toBe(5)
+  })
+
+  it("short rest restores pact slots", () => {
+    const a = create()
+    a.send({ type: "SHORT_REST", conMod: 0, hdRolls: [] })
+    // pactSlotsMax is 0, so pactSlotsCurrent restored to 0
+    expect(ctx(a).pactSlotsCurrent).toBe(0)
+  })
+})
+
+describe("long rest", () => {
+  it("restores full HP", () => {
+    const a = create()
+    takeDamage(a, 15)
+    a.send({ type: "LONG_REST", totalHitDice: 5, hasEaten: false })
+    expect(ctx(a).hp).toBe(DEFAULT_MAX_HP)
+  })
+
+  it("reduces exhaustion by 1 if ate", () => {
+    const a = create()
+    addExhaustion(a, 3)
+    a.send({ type: "LONG_REST", totalHitDice: 5, hasEaten: true })
+    expect(ctx(a).exhaustion).toBe(2)
+  })
+
+  it("no exhaustion reduction if didn't eat", () => {
+    const a = create()
+    addExhaustion(a, 3)
+    a.send({ type: "LONG_REST", totalHitDice: 5, hasEaten: false })
+    expect(ctx(a).exhaustion).toBe(3)
+  })
+
+  it("restores spell slots to max", () => {
+    const a = create()
+    a.send({ type: "LONG_REST", totalHitDice: 5, hasEaten: false })
+    expect(ctx(a).slotsCurrent).toEqual(ctx(a).slotsMax)
+  })
+
+  it("clears temp HP", () => {
+    const a = create()
+    grantTempHp(a, 10)
+    a.send({ type: "LONG_REST", totalHitDice: 5, hasEaten: false })
+    expect(ctx(a).tempHp).toBe(0)
+  })
+
+  it("requires >= 1 HP", () => {
+    const a = create()
+    takeDamage(a, DEFAULT_MAX_HP)
+    expect(ctx(a).hp).toBe(0)
+    const hpBefore = ctx(a).hp
+    a.send({ type: "LONG_REST", totalHitDice: 5, hasEaten: true })
+    expect(ctx(a).hp).toBe(hpBefore)
+  })
+
+  it("restores hit dice: max(1, floor(total/2))", () => {
+    expect(hitDiceRecovery(10, 5)).toBe(5)
+    expect(hitDiceRecovery(10, 9)).toBe(1)
+    expect(hitDiceRecovery(1, 0)).toBe(1)
+    expect(hitDiceRecovery(3, 1)).toBe(1)
+  })
+})
+
+describe("multiclass slot calculation", () => {
+  it("single full caster level 5", () => {
+    const slots = calculateMulticlassSlots([{ type: "full", level: 5 }])
+    expect(slots[0]).toBe(4)
+    expect(slots[1]).toBe(3)
+    expect(slots[2]).toBe(2)
+    expect(slots[3]).toBe(0)
+  })
+
+  it("half + full caster combo", () => {
+    const slots = calculateMulticlassSlots([
+      { type: "full", level: 5 },
+      { type: "half", level: 4 }
+    ])
+    // casterLevel = 5 + 2 = 7
+    expect(slots[0]).toBe(4)
+    expect(slots[1]).toBe(3)
+    expect(slots[2]).toBe(3)
+    expect(slots[3]).toBe(1)
+  })
+
+  it("third caster level 3 = caster level 1", () => {
+    const slots = calculateMulticlassSlots([{ type: "third", level: 3 }])
+    expect(slots[0]).toBe(2)
+    expect(slots[1]).toBe(0)
+  })
+
+  it("no caster levels returns empty", () => {
+    const slots = calculateMulticlassSlots([])
+    expect(slots).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0])
   })
 })
