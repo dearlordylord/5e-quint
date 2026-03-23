@@ -214,10 +214,10 @@ Connects Quint traces to XState via `@firfi/quint-connect`. The critical correct
 - Sync enforcement test: parse Quint AST, detect state fields not covered by driver
 
 ### Acceptance
-- [ ] `EventActionMap` covers every Quint action — missing one is a compile error
-- [ ] `snapshotToQuintState()` maps all 5 XState regions to flat Quint fields
+- [x] `EventActionMap` covers every Quint action — missing one is a compile error
+- [x] `snapshotToQuintState()` maps all 5 XState regions to flat Quint fields
 - [ ] 50+ MBT traces x 30 steps pass (Quint state matches XState state after every step)
-- [ ] Sync test detects new Quint fields not yet mapped
+- [x] Sync test detects new Quint fields not yet mapped
 
 ---
 

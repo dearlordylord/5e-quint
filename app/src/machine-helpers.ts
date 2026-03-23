@@ -332,16 +332,18 @@ export function hitDiceRecovery(totalHitDice: number, currentRemaining: number):
 export function computeShortRest(
   currentHp: number,
   maxHp: number,
+  exhaustion: number,
   hitDiceRemaining: number,
   pactSlotsMax: number,
   conMod: number,
   hdRolls: ReadonlyArray<number>
 ): { readonly newHp: number; readonly newHitDice: number; readonly newPactSlots: number } {
+  const effMax = effectiveMaxHp(exhaustion, maxHp)
   const cap = Math.min(hitDiceRemaining, hdRolls.length)
   let curHp = currentHp
   let curHd = hitDiceRemaining
   for (let i = 0; i < cap; i++) {
-    curHp = Math.min(curHp + Math.max(0, hdRolls[i] + conMod), maxHp)
+    curHp = Math.min(curHp + Math.max(0, hdRolls[i] + conMod), effMax)
     curHd = curHd - 1
   }
   return { newHitDice: curHd, newHp: curHp, newPactSlots: pactSlotsMax }
@@ -394,8 +396,31 @@ export function armorSpeedPenalty(armorStrRequirement: number, strScore: number)
   return 0
 }
 
-/** Compute fall damage result: applies damage modifiers, returns HP/tempHP changes and whether to prone. */
-export function computeFallDamage(
+/** Dehydration exhaustion levels: 2 if already exhausted, else 1. Matches Quint pApplyDehydration. */
+export function dehydrationLevels(currentExhaustion: number, halfWater: boolean, conSaveSucceeded: boolean): number {
+  if (halfWater && conSaveSucceeded) return 0
+  return currentExhaustion >= 1 ? 2 : 1
+}
+
+/** All D&D 5e damage types. Used for petrified resistance. */
+export const ALL_DAMAGE_TYPES: ReadonlySet<DamageType> = new Set([
+  "acid",
+  "bludgeoning",
+  "cold",
+  "fire",
+  "force",
+  "lightning",
+  "necrotic",
+  "piercing",
+  "poison",
+  "psychic",
+  "radiant",
+  "slashing",
+  "thunder"
+] as const)
+
+/** Compute fall damage as TakeDamageResult. Used by guards and actions. */
+export function computeFallResult(
   damageRoll: number,
   ctxHp: number,
   ctxMaxHp: number,
@@ -404,28 +429,18 @@ export function computeFallDamage(
   immunities: ReadonlySet<DamageType>,
   resistances: ReadonlySet<DamageType>,
   vulnerabilities: ReadonlySet<DamageType>
-): { readonly newHp: number; readonly newTempHp: number; readonly landsProne: boolean } | null {
-  if (damageRoll <= 0) return null
-  const eff = applyDamageModifiers(damageRoll, "bludgeoning", immunities, resistances, vulnerabilities)
-  if (eff === 0) return null
-  const r = computeTakeDamage(
+): TakeDamageResult {
+  return computeTakeDamage(
     ctxHp,
     ctxMaxHp,
     ctxTempHp,
     ctxExhaustion,
-    eff,
+    damageRoll,
     "bludgeoning",
-    new Set(),
-    new Set(),
-    new Set()
+    immunities,
+    resistances,
+    vulnerabilities
   )
-  return { landsProne: r.dmgThrough > 0, newHp: r.newHp, newTempHp: r.newTempHp }
-}
-
-/** Dehydration exhaustion levels: 2 if already exhausted, else 1. Matches Quint pApplyDehydration. */
-export function dehydrationLevels(currentExhaustion: number, halfWater: boolean, conSaveSucceeded: boolean): number {
-  if (halfWater && conSaveSucceeded) return 0
-  return currentExhaustion >= 1 ? 2 : 1
 }
 
 // --- State path constants (for stateIn guards) ---
