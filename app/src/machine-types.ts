@@ -1,6 +1,7 @@
 import type {
   ActionType,
   Condition,
+  ContestResult,
   D20Roll,
   DamageType,
   DeathSaves,
@@ -9,6 +10,8 @@ import type {
   HP,
   IncapSource,
   MovementFeet,
+  ShoveChoice,
+  Size,
   TempHP
 } from "#/types.ts"
 
@@ -91,6 +94,22 @@ export type DndEvent =
   | { readonly type: "END_SURPRISE_TURN" }
   | { readonly type: "MARK_BONUS_ACTION_SPELL" }
   | { readonly type: "MARK_NON_CANTRIP_ACTION_SPELL" }
+  | {
+      readonly type: "GRAPPLE"
+      readonly attackerSize: Size
+      readonly targetSize: Size
+      readonly contestResult: ContestResult
+      readonly attackerHasFreeHand: boolean
+    }
+  | { readonly type: "RELEASE_GRAPPLE" }
+  | { readonly type: "ESCAPE_GRAPPLE"; readonly contestResult: ContestResult }
+  | {
+      readonly type: "SHOVE"
+      readonly attackerSize: Size
+      readonly targetSize: Size
+      readonly contestResult: ContestResult
+      readonly choice: ShoveChoice
+    }
 
 // --- Event extractors ---
 
@@ -103,6 +122,9 @@ type ExhaustionEvent = Extract<DndEvent, { readonly type: "ADD_EXHAUSTION" | "RE
 type StartTurnEvent = Extract<DndEvent, { readonly type: "START_TURN" }>
 type UseActionEvent = Extract<DndEvent, { readonly type: "USE_ACTION" }>
 type UseMovementEvent = Extract<DndEvent, { readonly type: "USE_MOVEMENT" }>
+type GrappleEvent = Extract<DndEvent, { readonly type: "GRAPPLE" }>
+type EscapeGrappleEvent = Extract<DndEvent, { readonly type: "ESCAPE_GRAPPLE" }>
+type ShoveEvent = Extract<DndEvent, { readonly type: "SHOVE" }>
 
 export function asTakeDamage(event: DndEvent): TakeDamageEvent {
   return event as TakeDamageEvent
@@ -130,6 +152,15 @@ export function asUseAction(event: DndEvent): UseActionEvent {
 }
 export function asUseMovement(event: DndEvent): UseMovementEvent {
   return event as UseMovementEvent
+}
+export function asGrapple(event: DndEvent): GrappleEvent {
+  return event as GrappleEvent
+}
+export function asEscapeGrapple(event: DndEvent): EscapeGrappleEvent {
+  return event as EscapeGrappleEvent
+}
+export function asShove(event: DndEvent): ShoveEvent {
+  return event as ShoveEvent
 }
 
 // --- Initial context constants ---

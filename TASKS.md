@@ -129,15 +129,15 @@ Full attack pipeline: roll -> hit/miss -> damage -> application. Plus grapple, s
 - `machine.test.ts`: Nat 1/20 edges, cover on AC and DEX saves, adv/disadv cancellation, crit damage calc, AC calculation for all armor types + unarmored defense variants, grapple size constraints, shove prone/push, two-weapon fighting preconditions
 
 ### Acceptance
-- [ ] Nat 20 always hits regardless of AC; nat 1 always misses
-- [ ] Critical hit doubles dice only, not flat modifiers
-- [ ] Resistance/vulnerability sequential: halve then double, not cancelled
-- [ ] Cover: half +2 AC/DEX saves, three-quarters +5, total = can't target
-- [ ] AC calculation correct for all armor categories + shield + unarmored defense
-- [ ] Grapple: target <= 1 size larger, free hand required, contest resolution, auto-success if incapacitated
-- [ ] Shove: prone or push 5ft, same size constraint
-- [ ] Attack modifier aggregation matches Quint pure functions for all condition combinations
-- [ ] Underwater combat modifiers applied correctly
+- [x] Nat 20 always hits regardless of AC; nat 1 always misses
+- [x] Critical hit doubles dice only, not flat modifiers
+- [x] Resistance/vulnerability sequential: halve then double, not cancelled
+- [x] Cover: half +2 AC/DEX saves, three-quarters +5, total = can't target
+- [x] AC calculation correct for all armor categories + shield + unarmored defense
+- [x] Grapple: target <= 1 size larger, free hand required, contest resolution, auto-success if incapacitated
+- [x] Shove: prone or push 5ft, same size constraint
+- [x] Attack modifier aggregation matches Quint pure functions for all condition combinations
+- [x] Underwater combat modifiers applied correctly
 
 ---
 
