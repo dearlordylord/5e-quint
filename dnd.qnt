@@ -1631,11 +1631,9 @@ module dnd {
     else if (score == 15) 9
     else 0
 
-  /// Sum point buy costs for a list of 6 ability scores.
   pure def pPointBuyTotalCost(scores: List[int]): int =
     scores.foldl(0, (acc, s) => acc + pPointBuyCost(s))
 
-  /// Validate a point buy allocation: 6 scores, each 8-15, total cost <= 27.
   pure def pValidPointBuy(scores: List[int]): bool =
     scores.length() == 6
     and scores.foldl(true, (acc, s) => acc and s >= 8 and s <= 15)
@@ -1643,7 +1641,6 @@ module dnd {
 
   // -- 18.3 Level Advancement --
 
-  /// XP thresholds per level (PHB Character Advancement table).
   pure def pXpForLevel(level: int): int =
     if (level <= 1) 0
     else if (level == 2) 300
@@ -1666,7 +1663,6 @@ module dnd {
     else if (level == 19) 305000
     else 355000
 
-  /// Determine character level from XP total.
   pure def pLevelForXp(xp: int): int =
     if (xp >= 355000) 20
     else if (xp >= 305000) 19
@@ -1698,14 +1694,12 @@ module dnd {
   pure def pLevelUpHp(dieRoll: int, conMod: int): int =
     intMax(1, dieRoll + conMod)
 
-  /// ASI levels (PHB: all classes gain ASI at 4, 8, 12, 16, 19).
-  /// Fighter gets extra at 6, 14; Rogue at 10 — handled by caller's class features.
+  /// Fighter gets extra ASI at 6, 14; Rogue at 10 — handled by caller's class features.
   pure val ASI_LEVELS: Set[int] = Set(4, 8, 12, 16, 19)
 
   pure def pIsASILevel(level: int): bool = ASI_LEVELS.contains(level)
 
-  /// Apply ability score increase, capped at 20 (typical PC maximum).
-  /// Caller invokes once with +2, or twice with +1 each.
+  /// Caller invokes once with +2, or twice with +1 each. Capped at 20.
   pure def pApplyASI(scores: Ability -> int, ability: Ability, increase: int): Ability -> int =
     scores.set(ability, intMin(scores.get(ability) + increase, 20))
 
@@ -1716,8 +1710,6 @@ module dnd {
 
   // -- 18.4 Multiclassing --
 
-  /// Check if ability scores meet multiclass prerequisites for a class (PHB Ch6).
-  /// Must meet prereqs for BOTH current and new class to multiclass.
   pure def pMeetsMulticlassPrereq(scores: Ability -> int, c: ClassName): bool = match c {
     | Barbarian => scores.get(Str) >= 13
     | Bard => scores.get(Cha) >= 13
@@ -1733,7 +1725,7 @@ module dnd {
     | Wizard => scores.get(Int_) >= 13
   }
 
-  /// Can multiclass from current class into new class?
+  /// Must meet prereqs for BOTH current and new class (PHB Ch6).
   pure def pCanMulticlass(scores: Ability -> int, currentClass: ClassName, newClass: ClassName): bool =
     pMeetsMulticlassPrereq(scores, currentClass) and pMeetsMulticlassPrereq(scores, newClass)
 
