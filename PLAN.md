@@ -5,6 +5,18 @@ following State type + Pure functions + Thin actions patterns (cf. savage repo).
 
 Reference material: `.references/rules/` (PHB chapters 0-15).
 
+## Progress
+
+- [x] Phase 1: Core Types, Config & Resolution
+- [x] Phase 2: Character Status State Machine
+- [x] Phase 3: Combat Turn & Attack
+- [x] Phase 4: Combat Actions & Interactions
+- [x] Phase 5: Movement System
+- [x] Phase 6: Spellcasting System
+- [x] Phase 7: Resting & Recovery
+- [ ] Phase 8: Environmental Rules
+- [ ] Phase 9: Character Construction & Leveling
+
 ---
 
 ## Design Principles
@@ -112,7 +124,7 @@ Immutable for the duration of the state machine. Caller constructs at init.
 - `spellcastingAbility: Ability` (or none)
 - `hasUnarmoredDefense: {active: bool, ability: Ability}` (Barbarian: CON, Monk: WIS)
 - `canRitualCast: bool` (class feature required — not all spellcasters can ritual cast)
-- `features: Set[str]` (opaque tags like "extra_attack", "cunning_action", etc.)
+- `features: Set[Feature]` (sum type: `FExtraAttack`, `FExtraAttack2`, `FExtraAttack3`, etc.)
 
 Pure functions:
 - `abilityModifier(score: int): int` = `(score - 10) / 2` (floor division)
