@@ -4,7 +4,6 @@ Formal specification of D&D 5e PHB combat and character mechanics in [Quint](htt
 
 - `dnd.qnt` — spec (types, pure functions, state transitions)
 - `dndTest.qnt` — unit tests
-- `CLAUDE.md` — project conventions
 - [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md) — domain glossary (D&D 5e PHB terms used across spec, machine, and codebase)
 
 ## QA Corpus Validation
