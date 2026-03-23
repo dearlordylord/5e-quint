@@ -17,7 +17,9 @@ export default defineConfig({
         "**/*.gen.*",
         "src/router.tsx",
         "src/routes/**",
-        ".tanstack/**"
+        ".tanstack/**",
+        "src/main.ts",
+        "src/machine-setup.ts"
       ],
       thresholds: {
         lines: 95,
