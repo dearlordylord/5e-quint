@@ -16,6 +16,16 @@ import type {
   TempHP
 } from "#/types.ts"
 
+// --- Machine input ---
+
+export interface DndMachineInput {
+  readonly maxHp: number
+  readonly hitDiceRemaining?: number
+  readonly effectiveSpeed?: number
+  readonly movementRemaining?: number
+  readonly extraAttacksRemaining?: number
+}
+
 // --- Context ---
 
 export interface DndContext {

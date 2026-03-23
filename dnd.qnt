@@ -1894,8 +1894,13 @@ module dnd {
     state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots
   }
 
-  action doKnockOut = all {
-    state' = pKnockOut(state), turnState' = turnState, spellSlots' = spellSlots
+  action doKnockOut = {
+    val s1 = pKnockOut(state)
+    // KnockOut applies unconscious → incapacitated → breaks concentration
+    val ss1 = if (isIncapacitated(s1) and not(isIncapacitated(state)) and isConcentrating(spellSlots))
+      pBreakConcentration(spellSlots)
+    else spellSlots
+    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
   }
 
   // Condition actions
@@ -2001,7 +2006,9 @@ module dnd {
 
   action doStartConcentration = {
     nondet spellId = Set("spell_a", "spell_b", "spell_c").oneOf()
-    all { state' = state, turnState' = turnState, spellSlots' = pStartConcentration(spellSlots, spellId) }
+    // Can't start concentration when dead
+    val ss1 = if (state.dead) spellSlots else pStartConcentration(spellSlots, spellId)
+    all { state' = state, turnState' = turnState, spellSlots' = ss1 }
   }
 
   action doBreakConcentration = all {
@@ -2053,8 +2060,13 @@ module dnd {
     }
   }
 
-  action doSuffocate = all {
-    state' = pSuffocate(state), turnState' = turnState, spellSlots' = spellSlots
+  action doSuffocate = {
+    val s1 = pSuffocate(state)
+    // Suffocation applies unconscious → incapacitated → breaks concentration
+    val ss1 = if (isIncapacitated(s1) and not(isIncapacitated(state)) and isConcentrating(spellSlots))
+      pBreakConcentration(spellSlots)
+    else spellSlots
+    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
   }
 
   action doApplyStarvation = all {
