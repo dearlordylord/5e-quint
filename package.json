@@ -1,9 +1,15 @@
 {
   "private": true,
+  "packageManager": "pnpm@10.29.3",
   "scripts": {
     "prepare": "husky"
   },
   "devDependencies": {
     "husky": "^9.1.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
