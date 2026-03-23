@@ -33,6 +33,7 @@ export interface DndContext {
   readonly maxHp: HP
   readonly tempHp: TempHP
   readonly deathSaves: DeathSaves
+  readonly stable: boolean
   readonly exhaustion: ExhaustionLevel
   readonly blinded: boolean
   readonly charmed: boolean

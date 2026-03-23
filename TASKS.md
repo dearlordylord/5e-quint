@@ -216,7 +216,7 @@ Connects Quint traces to XState via `@firfi/quint-connect`. The critical correct
 ### Acceptance
 - [x] `EventActionMap` covers every Quint action — missing one is a compile error
 - [x] `snapshotToQuintState()` maps all 5 XState regions to flat Quint fields
-- [ ] 50+ MBT traces x 30 steps pass (Quint state matches XState state after every step)
+- [x] 50+ MBT traces x 30 steps pass (Quint state matches XState state after every step)
 - [x] Sync test detects new Quint fields not yet mapped
 
 ---
