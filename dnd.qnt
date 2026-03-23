@@ -1470,8 +1470,11 @@ module dnd {
     vulnerabilities: Set[DamageType],
     immunities: Set[DamageType]
   ): CreatureState = {
-    val s1 = pTakeDamage(s, damageRoll, Bludgeoning, resistances, vulnerabilities, immunities, false)
-    if (s1 == s) s else pApplyCondition(s1, CProne)
+    if (damageRoll <= 0) s
+    else {
+      val s1 = pTakeDamage(s, damageRoll, Bludgeoning, resistances, vulnerabilities, immunities, false)
+      if (s1 == s) s else pApplyCondition(s1, CProne)
+    }
   }
 
   // -- 17.2 Suffocation --
