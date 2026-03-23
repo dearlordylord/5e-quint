@@ -1,0 +1,272 @@
+import { type FormEvent, useState } from "react"
+
+import { useT } from "#/i18n.ts"
+import type { DndEvent } from "#/machine.ts"
+import type { Condition, DamageType } from "#/types.ts"
+import { d20Roll, healAmount, tempHp } from "#/types.ts"
+
+const DAMAGE_TYPES: ReadonlyArray<DamageType> = [
+  "acid",
+  "bludgeoning",
+  "cold",
+  "fire",
+  "force",
+  "lightning",
+  "necrotic",
+  "piercing",
+  "poison",
+  "psychic",
+  "radiant",
+  "slashing",
+  "thunder"
+]
+
+const CONDITIONS: ReadonlyArray<Condition> = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "frightened",
+  "grappled",
+  "incapacitated",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious"
+]
+
+const INIT_SPEED = 30
+
+function Section({ children, title }: { readonly title: string; readonly children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border border-gray-700 rounded">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full text-left px-3 py-2 text-sm font-medium hover:bg-gray-700"
+      >
+        {open ? "▾" : "▸"} {title}
+      </button>
+      {open && <div className="px-3 pb-3 space-y-2">{children}</div>}
+    </div>
+  )
+}
+
+function NumInput({
+  label,
+  max,
+  min,
+  onChange,
+  value
+}: {
+  readonly label: string
+  readonly value: number
+  readonly onChange: (n: number) => void
+  readonly min?: number
+  readonly max?: number
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm">
+      <span className="w-24 text-gray-400">{label}</span>
+      <input
+        type="number"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-20 bg-gray-700 rounded px-2 py-1 text-white"
+      />
+    </label>
+  )
+}
+
+function Btn({ label, onClick }: { readonly label: string; readonly onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="rounded bg-amber-700 px-3 py-1 text-sm text-white hover:bg-amber-600">
+      {label}
+    </button>
+  )
+}
+
+export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
+  const t = useT()
+  const [dmgAmount, setDmgAmount] = useState(5)
+  const [dmgType, setDmgType] = useState<DamageType>("bludgeoning")
+  const [isCrit, setIsCrit] = useState(false)
+  const [healAmt, setHealAmt] = useState(5)
+  const [tmpHp, setTmpHp] = useState(5)
+  const [d20, setD20] = useState(10)
+  const [condition, setCondition] = useState<Condition>("blinded")
+  const [exhLevels, setExhLevels] = useState(1)
+  const [slotLevel, setSlotLevel] = useState(1)
+  const [spellId, setSpellId] = useState("spell_a")
+  const [fallDmg, setFallDmg] = useState(10)
+
+  const prevent = (fn: () => void) => (e: FormEvent) => {
+    e.preventDefault()
+    fn()
+  }
+  const empty = () => new Set<DamageType>()
+
+  return (
+    <div className="space-y-2 bg-gray-800 rounded-xl p-4">
+      <h2 className="text-lg font-bold mb-2">{t.events}</h2>
+
+      <Section title={t.takeDamage}>
+        <form
+          onSubmit={prevent(() =>
+            send({
+              type: "TAKE_DAMAGE",
+              amount: dmgAmount,
+              damageType: dmgType,
+              resistances: empty(),
+              vulnerabilities: empty(),
+              immunities: empty(),
+              isCritical: isCrit
+            })
+          )}
+        >
+          <NumInput label={t.amount} value={dmgAmount} onChange={setDmgAmount} min={0} />
+          <label className="flex items-center gap-2 text-sm mt-1">
+            <span className="w-24 text-gray-400">{t.damageType}</span>
+            <select
+              value={dmgType}
+              onChange={(e) => setDmgType(e.target.value as DamageType)}
+              className="bg-gray-700 rounded px-2 py-1 text-white"
+            >
+              {DAMAGE_TYPES.map((dt) => (
+                <option key={dt} value={dt}>
+                  {dt}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm mt-1">
+            <input type="checkbox" checked={isCrit} onChange={(e) => setIsCrit(e.target.checked)} />
+            <span>{t.critical}</span>
+          </label>
+          <button type="submit" className="mt-2 rounded bg-red-700 px-3 py-1 text-sm text-white hover:bg-red-600">
+            {t.takeDamage}
+          </button>
+        </form>
+      </Section>
+
+      <Section title={t.heal}>
+        <NumInput label={t.amount} value={healAmt} onChange={setHealAmt} min={0} />
+        <Btn label={t.heal} onClick={() => send({ type: "HEAL", amount: healAmount(healAmt) })} />
+      </Section>
+
+      <Section title={t.grantTempHp}>
+        <NumInput label={t.amount} value={tmpHp} onChange={setTmpHp} min={0} />
+        <Btn
+          label={t.grantTempHp}
+          onClick={() => send({ type: "GRANT_TEMP_HP", amount: tempHp(tmpHp), keepOld: false })}
+        />
+      </Section>
+
+      <Section title={t.deathSave}>
+        <NumInput label={t.roll} value={d20} onChange={setD20} min={1} max={20} />
+        <Btn label={t.deathSave} onClick={() => send({ type: "DEATH_SAVE", d20Roll: d20Roll(d20) })} />
+      </Section>
+
+      <div className="flex gap-2">
+        <Btn label={t.stabilize} onClick={() => send({ type: "STABILIZE" })} />
+        <Btn label={t.knockOut} onClick={() => send({ type: "KNOCK_OUT" })} />
+      </div>
+
+      <Section title={t.applyCondition}>
+        <label className="flex items-center gap-2 text-sm">
+          <span className="w-24 text-gray-400">{t.conditions}</span>
+          <select
+            value={condition}
+            onChange={(e) => setCondition(e.target.value as Condition)}
+            className="bg-gray-700 rounded px-2 py-1 text-white"
+          >
+            {CONDITIONS.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="flex gap-2 mt-1">
+          <Btn label={t.applyCondition} onClick={() => send({ type: "APPLY_CONDITION", condition })} />
+          <Btn label={t.removeCondition} onClick={() => send({ type: "REMOVE_CONDITION", condition })} />
+        </div>
+      </Section>
+
+      <Section title={t.exhaustion}>
+        <NumInput label={t.amount} value={exhLevels} onChange={setExhLevels} min={1} max={6} />
+        <div className="flex gap-2">
+          <Btn label={t.addExhaustion} onClick={() => send({ type: "ADD_EXHAUSTION", levels: exhLevels })} />
+          <Btn label={t.reduceExhaustion} onClick={() => send({ type: "REDUCE_EXHAUSTION", levels: exhLevels })} />
+        </div>
+      </Section>
+
+      <Section title={t.turnResources}>
+        <Btn
+          label={t.startTurn}
+          onClick={() =>
+            send({
+              type: "START_TURN",
+              baseSpeed: INIT_SPEED,
+              armorPenalty: 0,
+              extraAttacks: 1,
+              isSurprised: false,
+              callerSpeedModifier: 0,
+              isGrappling: false,
+              grappledTargetTwoSizesSmaller: false
+            })
+          }
+        />
+      </Section>
+
+      <Section title={t.spellSlots}>
+        <NumInput label={t.level} value={slotLevel} onChange={setSlotLevel} min={1} max={9} />
+        <Btn label={t.expendSlot} onClick={() => send({ type: "EXPEND_SLOT", level: slotLevel })} />
+        <div className="mt-2">
+          <NumInput label={t.spellId} value={0} onChange={() => {}} />
+          <input
+            value={spellId}
+            onChange={(e) => setSpellId(e.target.value)}
+            className="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm mt-1"
+            placeholder="spell_a"
+          />
+          <div className="flex gap-2 mt-1">
+            <Btn label={t.startConcentration} onClick={() => send({ type: "START_CONCENTRATION", spellId })} />
+            <Btn label={t.breakConcentration} onClick={() => send({ type: "BREAK_CONCENTRATION" })} />
+          </div>
+        </div>
+      </Section>
+
+      <Section title={t.shortRest + " / " + t.longRest}>
+        <div className="flex gap-2">
+          <Btn label={t.shortRest} onClick={() => send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })} />
+          <Btn label={t.longRest} onClick={() => send({ type: "LONG_REST", totalHitDice: 5, hasEaten: true })} />
+        </div>
+      </Section>
+
+      <Section title={t.applyFall + " / " + t.suffocate}>
+        <NumInput label={t.amount} value={fallDmg} onChange={setFallDmg} min={0} />
+        <div className="flex gap-2 mt-1">
+          <Btn
+            label={t.applyFall}
+            onClick={() =>
+              send({
+                type: "APPLY_FALL",
+                damageRoll: fallDmg,
+                resistances: empty(),
+                vulnerabilities: empty(),
+                immunities: empty()
+              })
+            }
+          />
+          <Btn label={t.suffocate} onClick={() => send({ type: "SUFFOCATE" })} />
+        </div>
+      </Section>
+    </div>
+  )
+}
