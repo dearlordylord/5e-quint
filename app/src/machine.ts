@@ -137,6 +137,11 @@ export const dndMachine = setup({
     fallInstantDeathFromDying: ({ context: c, event: e }) =>
       ((r) => r.dmgThrough > 0 && r.dmgThrough >= r.effMax)(fallR(c, e)),
     fallNoDamage: ({ context: c, event: e }) => fallR(c, e).effAmount === 0,
+    deathFromFallFailures: ({ context: c, event: e }) => {
+      const r = fallR(c, e)
+      if (r.dmgThrough === 0) return false
+      return addDeathFailures(c.deathSaves.failures, false).isDead
+    },
     canSuffocate: ({ context: c }) => c.hp > 0,
     shortRestHeals: ({ context: c, event: e }) => {
       const ev = asShortRest(e)
@@ -158,13 +163,10 @@ export const dndMachine = setup({
   actions: {
     applyDamage: assign(({ context: c, event: e }) => {
       const r = dmgR(c, e)
-      const breakConc = c.concentrationSpellId !== "" && (r.newHp !== c.hp || r.newTempHp !== c.tempHp)
-      return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp), ...(breakConc ? { concentrationSpellId: "" } : {}) }
+      return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp) }
     }),
     absorbTempHpOnly: assign(({ context: c, event: e }) => {
-      const newTmp = dmgR(c, e).newTempHp
-      const breakConc = c.concentrationSpellId !== "" && newTmp !== c.tempHp
-      return { tempHp: tempHp(newTmp), ...(breakConc ? { concentrationSpellId: "" } : {}) }
+      return { tempHp: tempHp(dmgR(c, e).newTempHp) }
     }),
     applyDamageAtZeroHp: assign(({ context: c, event: e }) => {
       const r = dmgR(c, e)
@@ -172,8 +174,7 @@ export const dndMachine = setup({
       return {
         deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(newFailures) },
         tempHp: tempHp(r.newTempHp),
-        stable: false,
-        ...(c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {})
+        stable: false
       }
     }),
     applyDeathSave: assign(({ context: c, event: e }) => {
@@ -200,7 +201,8 @@ export const dndMachine = setup({
     setUnconscious: assign(({ context: c }) => ({
       unconscious: true,
       prone: true,
-      incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious")
+      incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious"),
+      ...concBreak(c)
     })),
     clearUnconscious: assign(({ context: c }) => ({
       unconscious: false,

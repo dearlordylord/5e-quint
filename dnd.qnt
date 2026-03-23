@@ -1373,6 +1373,14 @@ module dnd {
   pure def pStartConcentration(ss: SpellSlotState, spellId: str): SpellSlotState =
     ss.with("concentrationSpellId", spellId)
 
+  /// Break concentration if transition caused incapacitation or death (no save).
+  pure def pBreakConcOnStateChange(ss: SpellSlotState, oldS: CreatureState, newS: CreatureState): SpellSlotState =
+    if (isConcentrating(ss) and (
+      (newS.dead and not(oldS.dead)) or
+      (isIncapacitated(newS) and not(isIncapacitated(oldS)))
+    )) pBreakConcentration(ss)
+    else ss
+
   /// Resolve concentration check after taking damage.
   /// Caller computes DC via pConcentrationDC, resolves save via saveSucceeds, passes result.
   /// Separate call per damage source.
@@ -1854,11 +1862,7 @@ module dnd {
     nondet dt = DAMAGE_TYPES.oneOf()
     nondet isCrit = Bool.oneOf()
     val s1 = pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit)
-    // Break concentration on damage (if concentrating, caller must resolve save)
-    val ss1 = if (isConcentrating(spellSlots) and s1 != state)
-      pBreakConcentration(spellSlots)
-    else spellSlots
-    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
   }
 
   action doTakeDamageWithMods = {
@@ -1868,10 +1872,7 @@ module dnd {
     nondet resType = DAMAGE_TYPES.oneOf()
     nondet vulnType = DAMAGE_TYPES.oneOf()
     val s1 = pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit)
-    val ss1 = if (isConcentrating(spellSlots) and s1 != state)
-      pBreakConcentration(spellSlots)
-    else spellSlots
-    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
   }
 
   action doHeal = {
@@ -2053,11 +2054,8 @@ module dnd {
   // Environmental actions
   action doApplyFall = {
     nondet damageRoll = DAMAGE_RANGE.oneOf()
-    all {
-      state' = pApplyFall(state, damageRoll, Set(), Set(), Set()),
-      turnState' = turnState,
-      spellSlots' = spellSlots,
-    }
+    val s1 = pApplyFall(state, damageRoll, Set(), Set(), Set())
+    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
   }
 
   action doSuffocate = {

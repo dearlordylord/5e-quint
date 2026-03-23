@@ -8,13 +8,18 @@ const DYING_TAKE_DAMAGE_PREFIX = [
   {
     guard: "deathFromDamageFailures" as const,
     target: "#dnd.damageTrack.dead",
-    actions: ["applyDamageAtZeroHp"]
+    actions: ["applyDamageAtZeroHp", "breakConcentration"]
   }
 ] as const
 
 const DYING_FALL_PREFIX = [
   { guard: "fallNoDamage" as const },
-  { guard: "fallInstantDeathFromDying" as const, target: "#dnd.damageTrack.dead", actions: ["applyFall"] }
+  { guard: "fallInstantDeathFromDying" as const, target: "#dnd.damageTrack.dead", actions: ["applyFall", "breakConcentration"] },
+  {
+    guard: "deathFromFallFailures" as const,
+    target: "#dnd.damageTrack.dead",
+    actions: ["applyFallAtZeroHp", "breakConcentration"]
+  }
 ] as const
 
 export const damageTrackConfig = {
@@ -24,7 +29,7 @@ export const damageTrackConfig = {
       always: { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
       on: {
         TAKE_DAMAGE: [
-          { guard: "instantDeathFromConscious" as const, target: "#dnd.damageTrack.dead", actions: ["applyDamage"] },
+          { guard: "instantDeathFromConscious" as const, target: "#dnd.damageTrack.dead", actions: ["applyDamage", "breakConcentration"] },
           {
             guard: "dropsToZeroHp" as const,
             target: "#dnd.damageTrack.dying",
@@ -39,7 +44,7 @@ export const damageTrackConfig = {
           actions: ["applyKnockOut", "setUnconscious"]
         },
         APPLY_FALL: [
-          { guard: "fallInstantDeath" as const, target: "#dnd.damageTrack.dead", actions: ["applyFall"] },
+          { guard: "fallInstantDeath" as const, target: "#dnd.damageTrack.dead", actions: ["applyFall", "breakConcentration"] },
           {
             guard: "fallDropsToZero" as const,
             target: "#dnd.damageTrack.dying",
