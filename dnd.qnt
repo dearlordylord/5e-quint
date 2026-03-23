@@ -1995,14 +1995,16 @@ module dnd {
     state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots
   }
 
-  // Spell slot actions
+  // Spell slot actions (A1: requires ability to act — see ASSUMPTIONS.md)
   action doExpendSlot = {
     nondet level = SLOT_LEVEL_RANGE.oneOf()
-    all { state' = state, turnState' = turnState, spellSlots' = pExpendSlot(spellSlots, level) }
+    val ss1 = if (isConscious(state) and pCanAct(state)) pExpendSlot(spellSlots, level) else spellSlots
+    all { state' = state, turnState' = turnState, spellSlots' = ss1 }
   }
 
-  action doExpendPactSlot = all {
-    state' = state, turnState' = turnState, spellSlots' = pExpendPactSlot(spellSlots)
+  action doExpendPactSlot = {
+    val ss1 = if (isConscious(state) and pCanAct(state)) pExpendPactSlot(spellSlots) else spellSlots
+    all { state' = state, turnState' = turnState, spellSlots' = ss1 }
   }
 
   action doStartConcentration = {

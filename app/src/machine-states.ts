@@ -14,7 +14,11 @@ const DYING_TAKE_DAMAGE_PREFIX = [
 
 const DYING_FALL_PREFIX = [
   { guard: "fallNoDamage" as const },
-  { guard: "fallInstantDeathFromDying" as const, target: "#dnd.damageTrack.dead", actions: ["applyFall", "breakConcentration"] },
+  {
+    guard: "fallInstantDeathFromDying" as const,
+    target: "#dnd.damageTrack.dead",
+    actions: ["applyFall", "breakConcentration"]
+  },
   {
     guard: "deathFromFallFailures" as const,
     target: "#dnd.damageTrack.dead",
@@ -29,7 +33,11 @@ export const damageTrackConfig = {
       always: { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
       on: {
         TAKE_DAMAGE: [
-          { guard: "instantDeathFromConscious" as const, target: "#dnd.damageTrack.dead", actions: ["applyDamage", "breakConcentration"] },
+          {
+            guard: "instantDeathFromConscious" as const,
+            target: "#dnd.damageTrack.dead",
+            actions: ["applyDamage", "breakConcentration"]
+          },
           {
             guard: "dropsToZeroHp" as const,
             target: "#dnd.damageTrack.dying",
@@ -44,7 +52,11 @@ export const damageTrackConfig = {
           actions: ["applyKnockOut", "setUnconscious"]
         },
         APPLY_FALL: [
-          { guard: "fallInstantDeath" as const, target: "#dnd.damageTrack.dead", actions: ["applyFall", "breakConcentration"] },
+          {
+            guard: "fallInstantDeath" as const,
+            target: "#dnd.damageTrack.dead",
+            actions: ["applyFall", "breakConcentration"]
+          },
           {
             guard: "fallDropsToZero" as const,
             target: "#dnd.damageTrack.dying",
@@ -176,8 +188,8 @@ export const rootEventHandlers = {
   RELEASE_GRAPPLE: { actions: ["releaseGrapple"] },
   ESCAPE_GRAPPLE: { actions: ["escapeGrapple"] },
   SHOVE: { actions: ["applyShove"] },
-  EXPEND_SLOT: { actions: ["expendSlot"] },
-  EXPEND_PACT_SLOT: { actions: ["expendPactSlot"] },
+  EXPEND_SLOT: { guard: "canExpendSlot" as const, actions: ["expendSlot"] },
+  EXPEND_PACT_SLOT: { guard: "canExpendSlot" as const, actions: ["expendPactSlot"] },
   SHORT_REST: { actions: ["shortRest"] },
   LONG_REST: { actions: ["longRest"] },
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },
