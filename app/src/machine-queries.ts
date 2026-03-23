@@ -1,4 +1,4 @@
-import type { DndContext } from "#/machine.ts"
+import type { DndContext } from "#/machine-types.ts"
 import type { Ability, AdvState, D20Mods, DefenseMods } from "#/types.ts"
 
 // --- Constants ---

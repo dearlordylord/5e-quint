@@ -3,7 +3,12 @@ import { createActor } from "xstate"
 
 import type { DndContext, DndSnapshot } from "#/machine.ts"
 import { dndMachine } from "#/machine.ts"
-import { applyDamageModifiers, effectiveMaxHp } from "#/machine-helpers.ts"
+import {
+  applyDamageModifiers,
+  calculateEffectiveSpeed,
+  effectiveMaxHp,
+  movementCostMultiplier
+} from "#/machine-helpers.ts"
 import {
   canAct,
   canSpeak,
@@ -13,7 +18,7 @@ import {
   ownAttackMods,
   saveMods
 } from "#/machine-queries.ts"
-import type { Condition, DamageType } from "#/types.ts"
+import type { ActionType, Condition, DamageType } from "#/types.ts"
 import { d20Roll, damageAmount, healAmount, hp, tempHp } from "#/types.ts"
 
 // --- Helpers ---
@@ -904,5 +909,370 @@ describe("frightened - LOS parameterization", () => {
     applyCondition(a, "frightened")
     expect(ownAttackMods(ctx(a), true).hasDisadvantage).toBe(true)
     expect(ownAttackMods(ctx(a), false).hasDisadvantage).toBe(false)
+  })
+})
+
+// ============================================================
+// Phase 3: Turn Structure + Action Economy
+// ============================================================
+
+const DEFAULT_BASE_SPEED = 30
+
+function startTurn(
+  actor: ReturnType<typeof create>,
+  opts: {
+    baseSpeed?: number
+    armorPenalty?: number
+    extraAttacks?: number
+    isSurprised?: boolean
+    callerSpeedModifier?: number
+    isGrappling?: boolean
+    grappledTargetTwoSizesSmaller?: boolean
+  } = {}
+) {
+  actor.send({
+    type: "START_TURN",
+    baseSpeed: opts.baseSpeed ?? DEFAULT_BASE_SPEED,
+    armorPenalty: opts.armorPenalty ?? 0,
+    extraAttacks: opts.extraAttacks ?? 0,
+    isSurprised: opts.isSurprised ?? false,
+    callerSpeedModifier: opts.callerSpeedModifier ?? 0,
+    isGrappling: opts.isGrappling ?? false,
+    grappledTargetTwoSizesSmaller: opts.grappledTargetTwoSizesSmaller ?? false
+  })
+}
+
+function useAction(actor: ReturnType<typeof create>, actionType: ActionType) {
+  actor.send({ type: "USE_ACTION", actionType })
+}
+
+function useMovement(actor: ReturnType<typeof create>, feet: number, movCost = 1) {
+  actor.send({ type: "USE_MOVEMENT", feet, movementCost: movCost })
+}
+
+describe("turn lifecycle - START_TURN", () => {
+  it("resets movement, action/bonus/reaction flags", () => {
+    const a = create()
+    startTurn(a)
+    expect(ctx(a).movementRemaining).toBe(DEFAULT_BASE_SPEED)
+    expect(ctx(a).effectiveSpeed).toBe(DEFAULT_BASE_SPEED)
+    expect(ctx(a).actionUsed).toBe(false)
+    expect(ctx(a).bonusActionUsed).toBe(false)
+    expect(ctx(a).reactionAvailable).toBe(true)
+  })
+
+  it("sets extra attacks from config", () => {
+    const a = create()
+    startTurn(a, { extraAttacks: 2 })
+    expect(ctx(a).extraAttacksRemaining).toBe(2)
+  })
+
+  it("clears dodging from previous turn", () => {
+    const a = create()
+    startTurn(a)
+    useAction(a, "dodge")
+    expect(ctx(a).dodging).toBe(true)
+    startTurn(a)
+    expect(ctx(a).dodging).toBe(false)
+  })
+
+  it("clears disengaged from previous turn", () => {
+    const a = create()
+    startTurn(a)
+    useAction(a, "disengage")
+    expect(ctx(a).disengaged).toBe(true)
+    startTurn(a)
+    expect(ctx(a).disengaged).toBe(false)
+  })
+})
+
+describe("turn - action budget", () => {
+  it("at most 1 action per turn", () => {
+    const a = create()
+    startTurn(a)
+    useAction(a, "dodge")
+    expect(ctx(a).actionUsed).toBe(true)
+    useAction(a, "dash")
+    expect(ctx(a).dodging).toBe(true)
+    expect(ctx(a).movementRemaining).toBe(DEFAULT_BASE_SPEED)
+  })
+
+  it("at most 1 bonus action per turn", () => {
+    const a = create()
+    startTurn(a)
+    a.send({ type: "USE_BONUS_ACTION" })
+    expect(ctx(a).bonusActionUsed).toBe(true)
+    a.send({ type: "USE_BONUS_ACTION" })
+    expect(ctx(a).bonusActionUsed).toBe(true)
+  })
+
+  it("at most 1 reaction per round", () => {
+    const a = create()
+    startTurn(a)
+    a.send({ type: "USE_REACTION" })
+    expect(ctx(a).reactionAvailable).toBe(false)
+    a.send({ type: "USE_REACTION" })
+    expect(ctx(a).reactionAvailable).toBe(false)
+  })
+})
+
+describe("turn - movement", () => {
+  it("movement can split (before/after action)", () => {
+    const a = create()
+    startTurn(a)
+    useMovement(a, 10)
+    expect(ctx(a).movementRemaining).toBe(20)
+    useAction(a, "attack")
+    useMovement(a, 15)
+    expect(ctx(a).movementRemaining).toBe(5)
+  })
+
+  it("cannot exceed remaining movement", () => {
+    const a = create()
+    startTurn(a)
+    useMovement(a, 35)
+    expect(ctx(a).movementRemaining).toBe(DEFAULT_BASE_SPEED)
+  })
+
+  it("dash doubles available movement", () => {
+    const a = create()
+    startTurn(a)
+    useAction(a, "dash")
+    expect(ctx(a).movementRemaining).toBe(60)
+  })
+})
+
+describe("turn - bonus action spell rule", () => {
+  it("bonus action spell -> action restricted to cantrip (tracked)", () => {
+    const a = create()
+    startTurn(a)
+    a.send({ type: "MARK_BONUS_ACTION_SPELL" })
+    expect(ctx(a).bonusActionSpellCast).toBe(true)
+  })
+
+  it("non-cantrip action spell blocks bonus action spells (tracked)", () => {
+    const a = create()
+    startTurn(a)
+    a.send({ type: "MARK_NON_CANTRIP_ACTION_SPELL" })
+    expect(ctx(a).nonCantripActionSpellCast).toBe(true)
+  })
+})
+
+describe("turn - incapacitated blocks actions", () => {
+  it("incapacitated creature cannot use action", () => {
+    const a = create()
+    startTurn(a)
+    applyCondition(a, "paralyzed")
+    useAction(a, "attack")
+    expect(ctx(a).actionUsed).toBe(false)
+  })
+
+  it("incapacitated creature cannot use bonus action", () => {
+    const a = create()
+    startTurn(a)
+    applyCondition(a, "stunned")
+    a.send({ type: "USE_BONUS_ACTION" })
+    expect(ctx(a).bonusActionUsed).toBe(false)
+  })
+})
+
+describe("turn - dodge", () => {
+  it("dodge: active until next turn start", () => {
+    const a = create()
+    startTurn(a)
+    useAction(a, "dodge")
+    expect(ctx(a).dodging).toBe(true)
+    startTurn(a)
+    expect(ctx(a).dodging).toBe(false)
+  })
+})
+
+describe("turn - standing from prone", () => {
+  it("standing costs half effective speed", () => {
+    const a = create()
+    startTurn(a)
+    applyCondition(a, "prone")
+    a.send({ type: "STAND_FROM_PRONE" })
+    expect(ctx(a).prone).toBe(false)
+    expect(ctx(a).movementRemaining).toBe(15)
+  })
+
+  it("fails if insufficient movement", () => {
+    const a = create()
+    startTurn(a)
+    applyCondition(a, "prone")
+    useMovement(a, 20)
+    a.send({ type: "STAND_FROM_PRONE" })
+    expect(ctx(a).prone).toBe(true)
+    expect(ctx(a).movementRemaining).toBe(10)
+  })
+
+  it("fails if effective speed is 0", () => {
+    const a = create()
+    applyCondition(a, "grappled")
+    startTurn(a)
+    applyCondition(a, "prone")
+    a.send({ type: "STAND_FROM_PRONE" })
+    expect(ctx(a).prone).toBe(true)
+  })
+})
+
+describe("turn - surprised", () => {
+  it("surprised: can't move or act first turn", () => {
+    const a = create()
+    startTurn(a, { isSurprised: true })
+    expect(ctx(a).actionUsed).toBe(true)
+    expect(ctx(a).bonusActionUsed).toBe(true)
+    expect(ctx(a).reactionAvailable).toBe(false)
+    expect(ctx(a).movementRemaining).toBe(0)
+    expect(ctx(a).surprised).toBe(true)
+  })
+
+  it("reaction available after surprise turn ends", () => {
+    const a = create()
+    startTurn(a, { isSurprised: true })
+    a.send({ type: "END_SURPRISE_TURN" })
+    expect(ctx(a).reactionAvailable).toBe(true)
+    expect(ctx(a).surprised).toBe(false)
+  })
+
+  it("next turn after surprise is normal", () => {
+    const a = create()
+    startTurn(a, { isSurprised: true })
+    a.send({ type: "END_SURPRISE_TURN" })
+    startTurn(a)
+    expect(ctx(a).actionUsed).toBe(false)
+    expect(ctx(a).movementRemaining).toBe(DEFAULT_BASE_SPEED)
+  })
+})
+
+describe("speed modifiers from conditions", () => {
+  it("grappled: speed 0", () => {
+    const a = create()
+    applyCondition(a, "grappled")
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(0)
+    expect(ctx(a).movementRemaining).toBe(0)
+  })
+
+  it("restrained: speed 0", () => {
+    const a = create()
+    applyCondition(a, "restrained")
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(0)
+  })
+
+  it("exhaustion 2: speed halved", () => {
+    const a = create()
+    addExhaustion(a, 2)
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(15)
+  })
+
+  it("exhaustion 5: speed 0", () => {
+    const a = create()
+    addExhaustion(a, 5)
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(0)
+  })
+
+  it("armor penalty reduces base speed", () => {
+    const a = create()
+    startTurn(a, { armorPenalty: 10 })
+    expect(ctx(a).effectiveSpeed).toBe(20)
+  })
+})
+
+describe("calculateEffectiveSpeed helper", () => {
+  const baseParams = {
+    baseSpeed: 30,
+    armorPenalty: 0,
+    grappled: false,
+    restrained: false,
+    exhaustion: 0,
+    callerSpeedModifier: 0,
+    isGrappling: false,
+    grappledTargetTwoSizesSmaller: false
+  }
+
+  it("base speed with no modifiers", () => {
+    expect(calculateEffectiveSpeed(baseParams)).toBe(30)
+  })
+
+  it("grappled returns 0", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, grappled: true })).toBe(0)
+  })
+
+  it("exhaustion 2 halves", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, exhaustion: 2 })).toBe(15)
+  })
+
+  it("exhaustion 5 zeroes", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, exhaustion: 5 })).toBe(0)
+  })
+
+  it("grappling halves unless target 2 sizes smaller", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, isGrappling: true })).toBe(15)
+    expect(calculateEffectiveSpeed({ ...baseParams, isGrappling: true, grappledTargetTwoSizesSmaller: true })).toBe(30)
+  })
+
+  it("caller modifier adds to speed", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, callerSpeedModifier: 10 })).toBe(40)
+  })
+
+  it("speed never goes below 0", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, callerSpeedModifier: -50 })).toBe(0)
+  })
+})
+
+describe("movementCostMultiplier helper", () => {
+  const baseParams = {
+    isDifficultTerrain: false,
+    isCrawling: false,
+    isClimbingOrSwimming: false,
+    hasRelevantSpeed: false,
+    isSqueezing: false
+  }
+
+  it("normal terrain costs 1", () => {
+    expect(movementCostMultiplier(baseParams)).toBe(1)
+  })
+
+  it("difficult terrain costs 2", () => {
+    expect(movementCostMultiplier({ ...baseParams, isDifficultTerrain: true })).toBe(2)
+  })
+
+  it("crawling costs 2", () => {
+    expect(movementCostMultiplier({ ...baseParams, isCrawling: true })).toBe(2)
+  })
+
+  it("climbing without swim speed costs 2", () => {
+    expect(movementCostMultiplier({ ...baseParams, isClimbingOrSwimming: true })).toBe(2)
+  })
+
+  it("climbing with relevant speed costs 1", () => {
+    expect(movementCostMultiplier({ ...baseParams, isClimbingOrSwimming: true, hasRelevantSpeed: true })).toBe(1)
+  })
+
+  it("crawling in difficult terrain costs 3", () => {
+    expect(movementCostMultiplier({ ...baseParams, isDifficultTerrain: true, isCrawling: true })).toBe(3)
+  })
+})
+
+describe("turn - extra attacks", () => {
+  it("can use extra attacks", () => {
+    const a = create()
+    startTurn(a, { extraAttacks: 2 })
+    a.send({ type: "USE_EXTRA_ATTACK" })
+    expect(ctx(a).extraAttacksRemaining).toBe(1)
+    a.send({ type: "USE_EXTRA_ATTACK" })
+    expect(ctx(a).extraAttacksRemaining).toBe(0)
+  })
+
+  it("cannot use extra attack when 0 remaining", () => {
+    const a = create()
+    startTurn(a, { extraAttacks: 0 })
+    a.send({ type: "USE_EXTRA_ATTACK" })
+    expect(ctx(a).extraAttacksRemaining).toBe(0)
   })
 })

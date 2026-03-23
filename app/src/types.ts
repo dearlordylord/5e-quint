@@ -37,6 +37,20 @@ export type Condition =
 
 export type IncapSource = "paralyzed" | "petrified" | "stunned" | "unconscious" | "direct"
 
+export type ActionType =
+  | "attack"
+  | "cast"
+  | "dash"
+  | "disengage"
+  | "dodge"
+  | "help"
+  | "hide"
+  | "ready"
+  | "search"
+  | "useObject"
+
+export type SpeedType = "walk" | "fly" | "swim" | "climb" | "burrow"
+
 // --- Modifier result types ---
 
 export interface AdvState {
@@ -136,6 +150,13 @@ export function proficiencyBonus(n: number): ProficiencyBonus {
   return ProficiencyBonus.make(Math.max(MIN, Math.min(MAX, Math.floor(n))) as 2 | 3 | 4 | 5 | 6)
 }
 export type { ProficiencyBonus }
+
+const MovementFeet = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0), Schema.brand("MovementFeet"))
+type MovementFeet = typeof MovementFeet.Type
+export function movementFeet(n: number): MovementFeet {
+  return MovementFeet.make(Math.max(0, Math.floor(n)))
+}
+export type { MovementFeet }
 
 // --- Record types ---
 

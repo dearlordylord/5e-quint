@@ -212,6 +212,65 @@ export function computeAddExhaustion(
   return { newExhaustion, newHp: Math.min(currentHp, effMax) }
 }
 
+// --- Speed calculation ---
+
+const EXHAUSTION_SPEED_HALVE_THRESHOLD = 2
+const EXHAUSTION_SPEED_ZERO_THRESHOLD = 5
+const SPEED_HALVE_DIVISOR = 2
+
+/** Calculate effective speed from base speed, conditions, and external factors. Matches Quint pStartTurn speed logic. */
+export function calculateEffectiveSpeed(params: {
+  readonly baseSpeed: number
+  readonly armorPenalty: number
+  readonly grappled: boolean
+  readonly restrained: boolean
+  readonly exhaustion: number
+  readonly callerSpeedModifier: number
+  readonly isGrappling: boolean
+  readonly grappledTargetTwoSizesSmaller: boolean
+}): number {
+  if (params.grappled || params.restrained) return 0
+  const afterArmor = Math.max(0, params.baseSpeed - params.armorPenalty)
+  const afterExhaustion =
+    params.exhaustion >= EXHAUSTION_SPEED_ZERO_THRESHOLD
+      ? 0
+      : params.exhaustion >= EXHAUSTION_SPEED_HALVE_THRESHOLD
+        ? Math.floor(afterArmor / SPEED_HALVE_DIVISOR)
+        : afterArmor
+  const afterGrappling =
+    params.isGrappling && !params.grappledTargetTwoSizesSmaller
+      ? Math.floor(afterExhaustion / SPEED_HALVE_DIVISOR)
+      : afterExhaustion
+  return Math.max(0, afterGrappling + params.callerSpeedModifier)
+}
+
+/** Movement cost multiplier. Matches Quint pMovementCost. */
+export function movementCostMultiplier(params: {
+  readonly isDifficultTerrain: boolean
+  readonly isCrawling: boolean
+  readonly isClimbingOrSwimming: boolean
+  readonly hasRelevantSpeed: boolean
+  readonly isSqueezing: boolean
+}): number {
+  const terrainExtra = params.isDifficultTerrain ? 1 : 0
+  const crawlExtra = params.isCrawling ? 1 : 0
+  const climbSwimExtra = params.isClimbingOrSwimming && !params.hasRelevantSpeed ? 1 : 0
+  const squeezeExtra = params.isSqueezing ? 1 : 0
+  return 1 + terrainExtra + crawlExtra + climbSwimExtra + squeezeExtra
+}
+
+/** Spend half effective speed (for standing from prone). Matches Quint pSpendHalfSpeed. */
+export function spendHalfSpeed(
+  movementRemaining: number,
+  effectiveSpeed: number
+): { readonly success: boolean; readonly newMovementRemaining: number } {
+  const cost = Math.floor(effectiveSpeed / SPEED_HALVE_DIVISOR)
+  if (effectiveSpeed === 0 || cost > movementRemaining) {
+    return { newMovementRemaining: movementRemaining, success: false }
+  }
+  return { newMovementRemaining: movementRemaining - cost, success: true }
+}
+
 // --- State path constants (for stateIn guards) ---
 
 export const CONSCIOUS_STATE = { damageTrack: "conscious" as const }

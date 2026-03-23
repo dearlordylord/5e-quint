@@ -104,15 +104,15 @@ Adds the turnPhase region. Models a creature's turn: movement budget, action/bon
 - `machine.test.ts`: Turn lifecycle, action budget enforcement, bonus action spell rule, surprised creature restrictions, movement splitting, speed modifiers from conditions
 
 ### Acceptance
-- [ ] START_TURN resets movement, action/bonus/reaction flags, extra attacks from config
-- [ ] At most 1 action, 1 bonus action per turn; at most 1 reaction per round
-- [ ] Movement can split (before/after action, between attacks)
-- [ ] Bonus action spell -> action restricted to cantrip only (and vice versa)
-- [ ] Incapacitated creature cannot take actions or reactions
-- [ ] Dodge: attacks against have disadv until next turn start; ends if incapacitated
-- [ ] Standing from prone costs half effective speed; fails if insufficient
-- [ ] Surprised: can't move or act first turn, reaction available after turn ends
-- [ ] Speed 0 when grappled or restrained; halved at exhaustion 2+; 0 at exhaustion 5+
+- [x] START_TURN resets movement, action/bonus/reaction flags, extra attacks from config
+- [x] At most 1 action, 1 bonus action per turn; at most 1 reaction per round
+- [x] Movement can split (before/after action, between attacks)
+- [x] Bonus action spell -> action restricted to cantrip only (and vice versa)
+- [x] Incapacitated creature cannot take actions or reactions
+- [x] Dodge: attacks against have disadv until next turn start; ends if incapacitated
+- [x] Standing from prone costs half effective speed; fails if insufficient
+- [x] Surprised: can't move or act first turn, reaction available after turn ends
+- [x] Speed 0 when grappled or restrained; halved at exhaustion 2+; 0 at exhaustion 5+
 
 ---
 
