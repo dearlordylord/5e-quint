@@ -15,14 +15,17 @@ import {
 } from "#/machine-combat.ts"
 import {
   applyDamageModifiers,
+  armorSpeedPenalty,
   calculateEffectiveSpeed,
   calculateMulticlassSlots,
   concentrationDC,
   dehydrationLevels,
   effectiveMaxHp,
+  expendSlot,
   fallDamageDice,
   hitDiceRecovery,
-  movementCostMultiplier
+  movementCostMultiplier,
+  slotsPerLevel
 } from "#/machine-helpers.ts"
 import {
   canAct,
@@ -34,7 +37,7 @@ import {
   saveMods
 } from "#/machine-queries.ts"
 import type { ActionType, ArmorState, AttackContext, Condition, DamageType } from "#/types.ts"
-import { d20Roll, damageAmount, healAmount, hp, tempHp } from "#/types.ts"
+import { abilityScore, d20Roll, damageAmount, healAmount, hp, proficiencyBonus, tempHp } from "#/types.ts"
 
 // --- Helpers ---
 
@@ -1970,5 +1973,228 @@ describe("dehydrationLevels helper", () => {
 
   it("not exhausted = 1", () => {
     expect(dehydrationLevels(0, false, false)).toBe(1)
+  })
+})
+
+// ============================================================
+// Coverage: uncovered branches
+// ============================================================
+
+describe("slotsPerLevel", () => {
+  it("invalid spell level returns 0", () => {
+    expect(slotsPerLevel(10, 0)).toBe(0)
+    expect(slotsPerLevel(10, 10)).toBe(0)
+  })
+  it("level 1 slots scale with caster level", () => {
+    expect(slotsPerLevel(0, 1)).toBe(0)
+    expect(slotsPerLevel(1, 1)).toBe(2)
+    expect(slotsPerLevel(2, 1)).toBe(3)
+    expect(slotsPerLevel(3, 1)).toBe(4)
+  })
+  it("level 2 slots scale with caster level", () => {
+    expect(slotsPerLevel(2, 2)).toBe(0)
+    expect(slotsPerLevel(3, 2)).toBe(2)
+    expect(slotsPerLevel(4, 2)).toBe(3)
+  })
+  it("level 3 slots", () => {
+    expect(slotsPerLevel(4, 3)).toBe(0)
+    expect(slotsPerLevel(5, 3)).toBe(2)
+    expect(slotsPerLevel(6, 3)).toBe(3)
+  })
+  it("level 4 slots", () => {
+    expect(slotsPerLevel(6, 4)).toBe(0)
+    expect(slotsPerLevel(7, 4)).toBe(1)
+    expect(slotsPerLevel(8, 4)).toBe(2)
+    expect(slotsPerLevel(9, 4)).toBe(3)
+  })
+  it("level 5 slots", () => {
+    expect(slotsPerLevel(8, 5)).toBe(0)
+    expect(slotsPerLevel(9, 5)).toBe(1)
+    expect(slotsPerLevel(10, 5)).toBe(2)
+    expect(slotsPerLevel(18, 5)).toBe(3)
+  })
+  it("level 6-9 slots", () => {
+    expect(slotsPerLevel(10, 6)).toBe(0)
+    expect(slotsPerLevel(11, 6)).toBe(1)
+    expect(slotsPerLevel(19, 6)).toBe(2)
+    expect(slotsPerLevel(12, 7)).toBe(0)
+    expect(slotsPerLevel(13, 7)).toBe(1)
+    expect(slotsPerLevel(20, 7)).toBe(2)
+    expect(slotsPerLevel(14, 8)).toBe(0)
+    expect(slotsPerLevel(15, 8)).toBe(1)
+    expect(slotsPerLevel(16, 9)).toBe(0)
+    expect(slotsPerLevel(17, 9)).toBe(1)
+  })
+})
+
+describe("armorSpeedPenalty", () => {
+  const HEAVY_PENALTY = 10
+  it("penalty when STR below requirement", () => {
+    expect(armorSpeedPenalty(15, 10)).toBe(HEAVY_PENALTY)
+  })
+  it("no penalty when STR meets requirement", () => {
+    expect(armorSpeedPenalty(15, 15)).toBe(0)
+  })
+  it("no penalty when no requirement", () => {
+    expect(armorSpeedPenalty(0, 8)).toBe(0)
+  })
+})
+
+describe("aggregateAttackMods additional branches", () => {
+  const baseCtx: AttackContext = {
+    attackerBlinded: false,
+    attackerCanSeeTarget: true,
+    attackerExhaustion: 0,
+    attackerFrightSourceInLOS: false,
+    attackerFrightened: false,
+    attackerHasSwimSpeed: false,
+    attackerPoisoned: false,
+    attackerProne: false,
+    attackerRestrained: false,
+    attackerWithin5ft: true,
+    beyondNormalRange: false,
+    hostileWithin5ft: false,
+    isHeavyWeapon: false,
+    isRangedAttack: false,
+    isUnderwaterMeleeException: false,
+    isUnderwaterRangedException: false,
+    squeezing: false,
+    targetBlinded: false,
+    targetCanSeeAttacker: true,
+    targetDodging: false,
+    targetParalyzed: false,
+    targetPetrified: false,
+    targetProne: false,
+    targetRestrained: false,
+    targetStunned: false,
+    targetUnconscious: false,
+    underwater: false,
+    wielderSizeSmallOrTiny: false
+  }
+
+  it("frightened + source in LOS: disadv", () => {
+    expect(
+      aggregateAttackMods({ ...baseCtx, attackerFrightened: true, attackerFrightSourceInLOS: true }).hasDisadvantage
+    ).toBe(true)
+  })
+  it("target prone + beyond 5ft: disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, targetProne: true, attackerWithin5ft: false }).hasDisadvantage).toBe(true)
+  })
+  it("ranged + hostile within 5ft: disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, isRangedAttack: true, hostileWithin5ft: true }).hasDisadvantage).toBe(true)
+  })
+  it("underwater ranged within normal range: disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, underwater: true, isRangedAttack: true }).hasDisadvantage).toBe(true)
+  })
+})
+
+describe("branded type clamping", () => {
+  it("abilityScore clamps high", () => {
+    expect(abilityScore(40)).toBe(30)
+  })
+  it("abilityScore clamps low", () => {
+    expect(abilityScore(0)).toBe(1)
+  })
+  it("proficiencyBonus clamps high", () => {
+    expect(proficiencyBonus(8)).toBe(6)
+  })
+  it("proficiencyBonus clamps low", () => {
+    expect(proficiencyBonus(1)).toBe(2)
+  })
+})
+
+describe("expendSlot helper", () => {
+  it("deducts one slot at given level", () => {
+    const slots = [2, 1, 0, 0, 0, 0, 0, 0, 0]
+    const result = expendSlot(slots, 1)
+    expect(result[0]).toBe(1)
+    expect(result[1]).toBe(1)
+  })
+})
+
+describe("machine action edge cases", () => {
+  const INIT_SPEED = 30
+
+  it("stand from prone fails with insufficient movement", () => {
+    const a = createActor(dndMachine, {
+      input: {
+        maxHp: DEFAULT_MAX_HP,
+        effectiveSpeed: INIT_SPEED,
+        movementRemaining: INIT_SPEED,
+        extraAttacksRemaining: 1
+      }
+    })
+    a.start()
+    a.send({ type: "DROP_PRONE" })
+    expect(ctx(a).prone).toBe(true)
+    // Consume almost all movement, leave only 4 (need 15 to stand at speed 30)
+    a.send({ type: "USE_MOVEMENT", feet: 26, movementCost: 1 })
+    expect(ctx(a).movementRemaining).toBe(4)
+    a.send({ type: "STAND_FROM_PRONE" })
+    expect(ctx(a).prone).toBe(true) // still prone
+  })
+
+  it("expend pact slot with 0 remaining is no-op", () => {
+    const a = create()
+    expect(ctx(a).pactSlotsCurrent).toBe(0)
+    a.send({ type: "EXPEND_PACT_SLOT" })
+    expect(ctx(a).pactSlotsCurrent).toBe(0)
+  })
+
+  it("spend hit die with 0 remaining is no-op", () => {
+    const a = createActor(dndMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: 0 } })
+    a.start()
+    a.send({ type: "SPEND_HIT_DIE", conMod: 2, dieRoll: 4 })
+    expect(ctx(a).hp).toBe(DEFAULT_MAX_HP) // unchanged
+  })
+
+  it("fall instant death from conscious", () => {
+    const a = create(INSTANT_DEATH_HP)
+    a.send({
+      type: "APPLY_FALL",
+      damageRoll: 25,
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set()
+    })
+    expect(isDead(snap(a))).toBe(true)
+  })
+
+  it("use action: ready", () => {
+    const a = createActor(dndMachine, {
+      input: { maxHp: DEFAULT_MAX_HP, effectiveSpeed: 30, movementRemaining: 30, extraAttacksRemaining: 1 }
+    })
+    a.start()
+    a.send({ type: "USE_ACTION", actionType: "ready" as ActionType })
+    expect(ctx(a).readiedAction).toBe(true)
+    expect(ctx(a).actionUsed).toBe(true)
+  })
+
+  it("fall at 0 HP with temp HP fully absorbing damage", () => {
+    const a = create()
+    // Drop to 0 HP
+    a.send({
+      type: "TAKE_DAMAGE",
+      amount: DEFAULT_MAX_HP,
+      damageType: "bludgeoning" as DamageType,
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false
+    })
+    expect(ctx(a).hp).toBe(0)
+    // Grant temp HP while dying
+    a.send({ type: "GRANT_TEMP_HP", amount: tempHp(15), keepOld: false })
+    expect(ctx(a).tempHp).toBe(15)
+    // Fall for 5 damage — fully absorbed by temp HP
+    a.send({
+      type: "APPLY_FALL",
+      damageRoll: 5,
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set()
+    })
+    expect(ctx(a).tempHp).toBe(10) // 15 - 5
+    expect(ctx(a).hp).toBe(0) // still 0
   })
 })
