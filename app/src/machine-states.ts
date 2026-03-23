@@ -78,3 +78,35 @@ export const damageTrackConfig = {
     dead: { entry: ["breakConcentration"] }
   }
 } as const
+
+const START_TURN_TRANSITIONS = [
+  { guard: "isSurprised" as const, target: "surprised", actions: ["initTurn"] },
+  { target: "acting", actions: ["initTurn"] }
+] as const
+
+export const turnPhaseConfig = {
+  initial: "outOfCombat" as const,
+  states: {
+    outOfCombat: { on: { START_TURN: START_TURN_TRANSITIONS } },
+    acting: {
+      on: {
+        START_TURN: START_TURN_TRANSITIONS,
+        USE_ACTION: { actions: ["useAction"] },
+        USE_BONUS_ACTION: { actions: ["useBonusAction"] },
+        USE_REACTION: { actions: ["useReaction"] },
+        USE_MOVEMENT: { actions: ["useMovement"] },
+        USE_EXTRA_ATTACK: { actions: ["useExtraAttack"] },
+        STAND_FROM_PRONE: { guard: "canStandFromProne" as const, actions: ["standFromProne"] },
+        DROP_PRONE: { actions: ["dropProne"] },
+        MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
+        MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
+      }
+    },
+    surprised: {
+      on: {
+        END_SURPRISE_TURN: { target: "outOfCombat", actions: ["endSurprise"] },
+        START_TURN: START_TURN_TRANSITIONS
+      }
+    }
+  }
+} as const

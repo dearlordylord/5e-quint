@@ -18,7 +18,9 @@ import {
   calculateEffectiveSpeed,
   calculateMulticlassSlots,
   concentrationDC,
+  dehydrationLevels,
   effectiveMaxHp,
+  fallDamageDice,
   hitDiceRecovery,
   movementCostMultiplier
 } from "#/machine-helpers.ts"
@@ -1842,5 +1844,131 @@ describe("multiclass slot calculation", () => {
   it("no caster levels returns empty", () => {
     const slots = calculateMulticlassSlots([])
     expect(slots).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0])
+  })
+})
+
+// ============================================================
+// Phase 6: Environmental + Equipment Events
+// ============================================================
+
+describe("fall damage", () => {
+  it("fallDamageDice: correct d6 count", () => {
+    expect(fallDamageDice(10)).toBe(1)
+    expect(fallDamageDice(50)).toBe(5)
+    expect(fallDamageDice(200)).toBe(20)
+    expect(fallDamageDice(300)).toBe(20)
+  })
+
+  it("fall: apply damage and land prone", () => {
+    const a = create()
+    a.send({
+      type: "APPLY_FALL",
+      damageRoll: 10,
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set()
+    })
+    expect(ctx(a).hp).toBe(10)
+    expect(ctx(a).prone).toBe(true)
+  })
+
+  it("fall: no damage = no prone", () => {
+    const a = create()
+    a.send({
+      type: "APPLY_FALL",
+      damageRoll: 0,
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set()
+    })
+    expect(ctx(a).hp).toBe(DEFAULT_MAX_HP)
+    expect(ctx(a).prone).toBe(false)
+  })
+
+  it("fall: immune to bludgeoning = no prone", () => {
+    const a = create()
+    a.send({
+      type: "APPLY_FALL",
+      damageRoll: 10,
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(["bludgeoning" as const])
+    })
+    expect(ctx(a).hp).toBe(DEFAULT_MAX_HP)
+    expect(ctx(a).prone).toBe(false)
+  })
+})
+
+describe("suffocation", () => {
+  it("suffocate -> 0 HP + unconscious", () => {
+    const a = create()
+    a.send({ type: "SUFFOCATE" })
+    expect(ctx(a).hp).toBe(0)
+    expect(ctx(a).unconscious).toBe(true)
+    expect(ctx(a).prone).toBe(true)
+  })
+
+  it("suffocate at 0 HP does nothing", () => {
+    const a = create()
+    takeDamage(a, DEFAULT_MAX_HP)
+    const before = ctx(a)
+    a.send({ type: "SUFFOCATE" })
+    expect(ctx(a).hp).toBe(before.hp)
+  })
+})
+
+describe("starvation", () => {
+  it("adds 1 exhaustion", () => {
+    const a = create()
+    a.send({ type: "APPLY_STARVATION" })
+    expect(ctx(a).exhaustion).toBe(1)
+  })
+
+  it("stacks exhaustion", () => {
+    const a = create()
+    a.send({ type: "APPLY_STARVATION" })
+    a.send({ type: "APPLY_STARVATION" })
+    expect(ctx(a).exhaustion).toBe(2)
+  })
+})
+
+describe("dehydration", () => {
+  it("already exhausted -> 2 levels", () => {
+    const a = create()
+    addExhaustion(a, 1)
+    a.send({ type: "APPLY_DEHYDRATION", halfWater: false, conSaveSucceeded: false })
+    expect(ctx(a).exhaustion).toBe(3)
+  })
+
+  it("not exhausted -> 1 level", () => {
+    const a = create()
+    a.send({ type: "APPLY_DEHYDRATION", halfWater: false, conSaveSucceeded: false })
+    expect(ctx(a).exhaustion).toBe(1)
+  })
+
+  it("half water + save succeeded = no exhaustion", () => {
+    const a = create()
+    a.send({ type: "APPLY_DEHYDRATION", halfWater: true, conSaveSucceeded: true })
+    expect(ctx(a).exhaustion).toBe(0)
+  })
+
+  it("half water + save failed = exhaustion", () => {
+    const a = create()
+    a.send({ type: "APPLY_DEHYDRATION", halfWater: true, conSaveSucceeded: false })
+    expect(ctx(a).exhaustion).toBe(1)
+  })
+})
+
+describe("dehydrationLevels helper", () => {
+  it("half water + save pass = 0", () => {
+    expect(dehydrationLevels(0, true, true)).toBe(0)
+  })
+
+  it("already exhausted = 2", () => {
+    expect(dehydrationLevels(1, false, false)).toBe(2)
+  })
+
+  it("not exhausted = 1", () => {
+    expect(dehydrationLevels(0, false, false)).toBe(1)
   })
 })

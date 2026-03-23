@@ -377,6 +377,57 @@ export function computeLongRest(
   }
 }
 
+// --- Environmental helpers ---
+
+const FALL_DAMAGE_DIVISOR = 10
+const FALL_DAMAGE_MAX_DICE = 20
+const ARMOR_SPEED_PENALTY = 10
+
+/** Fall damage d6 count. Matches Quint: min(floor(height/10), 20). */
+export function fallDamageDice(heightFeet: number): number {
+  return Math.min(Math.floor(heightFeet / FALL_DAMAGE_DIVISOR), FALL_DAMAGE_MAX_DICE)
+}
+
+/** Armor speed penalty: 10ft if heavy armor STR requirement not met. Matches Quint armorSpeedPenalty. */
+export function armorSpeedPenalty(armorStrRequirement: number, strScore: number): number {
+  if (armorStrRequirement > 0 && strScore < armorStrRequirement) return ARMOR_SPEED_PENALTY
+  return 0
+}
+
+/** Compute fall damage result: applies damage modifiers, returns HP/tempHP changes and whether to prone. */
+export function computeFallDamage(
+  damageRoll: number,
+  ctxHp: number,
+  ctxMaxHp: number,
+  ctxTempHp: number,
+  ctxExhaustion: number,
+  immunities: ReadonlySet<DamageType>,
+  resistances: ReadonlySet<DamageType>,
+  vulnerabilities: ReadonlySet<DamageType>
+): { readonly newHp: number; readonly newTempHp: number; readonly landsProne: boolean } | null {
+  if (damageRoll <= 0) return null
+  const eff = applyDamageModifiers(damageRoll, "bludgeoning", immunities, resistances, vulnerabilities)
+  if (eff === 0) return null
+  const r = computeTakeDamage(
+    ctxHp,
+    ctxMaxHp,
+    ctxTempHp,
+    ctxExhaustion,
+    eff,
+    "bludgeoning",
+    new Set(),
+    new Set(),
+    new Set()
+  )
+  return { landsProne: r.dmgThrough > 0, newHp: r.newHp, newTempHp: r.newTempHp }
+}
+
+/** Dehydration exhaustion levels: 2 if already exhausted, else 1. Matches Quint pApplyDehydration. */
+export function dehydrationLevels(currentExhaustion: number, halfWater: boolean, conSaveSucceeded: boolean): number {
+  if (halfWater && conSaveSucceeded) return 0
+  return currentExhaustion >= 1 ? 2 : 1
+}
+
 // --- State path constants (for stateIn guards) ---
 
 export const CONSCIOUS_STATE = { damageTrack: "conscious" as const }
