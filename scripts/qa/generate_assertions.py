@@ -153,6 +153,11 @@ def generate_one(entry, system_prompt):
         if not ok:
             return h, f"typecheck failed: {err}"
 
+    # Prepend source URL
+    url = entry.get("url", "")
+    if url:
+        text = f"// Source: {url}\n{text}"
+
     with open(cache_file, "w") as f:
         f.write(text)
 
@@ -162,14 +167,26 @@ def generate_one(entry, system_prompt):
 def rebuild_qnt():
     """Assemble all cached assertions into a .qnt test file."""
     chunks = []
+    seen_names = set()
     for fname in sorted(os.listdir(CACHE_DIR)):
         if not fname.endswith(".qnt"):
             continue
+        h = fname[:-4]
         with open(os.path.join(CACHE_DIR, fname)) as f:
             content = f.read().strip()
         if content.startswith("// SKIP"):
             continue
-        chunks.append(content)
+        # Deduplicate test names by appending hash suffix on collision
+        deduped = content
+        for m in re.finditer(r"run (qa_\w+)", content):
+            name = m.group(1)
+            if name in seen_names:
+                new_name = f"{name}_{h[:8]}"
+                deduped = deduped.replace(f"run {name}", f"run {new_name}", 1)
+                seen_names.add(new_name)
+            else:
+                seen_names.add(name)
+        chunks.append(deduped)
 
     with open(OUTPUT_QNT, "w") as f:
         f.write("// -*- mode: Bluespec; -*-\n\n")

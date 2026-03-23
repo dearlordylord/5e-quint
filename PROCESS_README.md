@@ -205,16 +205,102 @@ It calls `quint test qa_generated.qnt --main qa_generated --match "qa_"`, parses
 - Summary to stdout with failed test names
 - Exit code 1 if any failures
 
-A test failure means one of:
+### Failure output
 
-1. **Spec bug** — [dnd.qnt](dnd.qnt) doesn't match the PHB rule. Fix the spec.
-2. **Wrong community answer** — the Q&A was incorrect. Delete the cache entry.
-3. **LLM misinterpretation** — Sonnet encoded the Q&A wrong. Delete cache entry, it regenerates on next run.
+For each failure, `run_tests.py` prints:
+- Q&A source link (clickable)
+- Quint error message
+- The failing test code
+- A copy-pasteable `rm` command
 
-To find the cache entry for a failed test:
+All failure details are also persisted in `.references/qa/test_results.jsonl` with fields: `test`, `status`, `source_url`, `cache_file`, `error`, `code`.
+
+---
+
+## Stage 6: Review Failures
+
+A test failure means the spec and the community answer disagree. Here's how to resolve each one, A to Z.
+
+### Step 1: Run tests
+
 ```bash
-grep -rl "qa_failed_test_name" .references/qa/cache/assertions/
+python3 scripts/qa/run_tests.py --rebuild
 ```
+
+Failures are printed to stdout and saved to `.references/qa/test_results.jsonl`.
+
+### Step 2: For each failure, read the output
+
+The failure block shows you everything:
+```
+--- [1/3] qa_half_cover_increases_effective_ac ---
+Q&A: https://rpg.stackexchange.com/q/143504
+Cache: .references/qa/cache/assertions/dd513df888c35808.qnt
+  Error [QNT508]: Assertion failed
+    4337:     assert(nocover.hits and not(halfcover.hits))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Code:
+    run qa_half_cover_increases_effective_ac = {
+      val nocover = resolveAttackRoll(14, 0, 15, coverBonus(NoCover))
+      ...
+    }
+
+  Action:
+    rm .references/qa/cache/assertions/dd513df888c35808.qnt
+```
+
+### Step 3: Open the Q&A link, read the rule discussion
+
+Understand what the community says the rule should be.
+
+### Step 4: Diagnose — one of three causes
+
+**A. Spec bug** — the spec doesn't match the PHB rule.
+```bash
+# Fix dnd.qnt, then verify:
+quint test dndTest.qnt --main dndTest      # existing tests still pass
+python3 scripts/qa/run_tests.py            # the QA test now passes too
+```
+
+**B. Bad Q&A** — the community answer is wrong, or the question is unencodable.
+```bash
+# Permanently skip: overwrite the cache file with a SKIP marker.
+# This is cached — it won't regenerate.
+echo '// SKIP: community answer incorrect — <your reason>' > .references/qa/cache/assertions/{hash}.qnt
+
+# Rebuild to exclude it from qa_generated.qnt:
+python3 scripts/qa/generate_assertions.py --rebuild
+```
+
+**C. LLM misinterpretation** — Sonnet wrote bad test code (wrong math, wrong function, etc.)
+```bash
+# Option 1: Delete and let it regenerate (might produce same error).
+rm .references/qa/cache/assertions/{hash}.qnt
+python3 scripts/qa/generate_assertions.py --limit 1 --workers 1
+
+# Option 2: Manually fix the test code in the cache file.
+# Edit .references/qa/cache/assertions/{hash}.qnt directly.
+# Then rebuild:
+python3 scripts/qa/generate_assertions.py --rebuild
+python3 scripts/qa/run_tests.py
+```
+
+### Step 5: Confirm resolution
+
+```bash
+python3 scripts/qa/run_tests.py
+# Should show 0 failed, or one fewer failure than before.
+```
+
+### Decision summary
+
+| Cause | Action on cache file | Then |
+|-------|---------------------|------|
+| Spec bug | Keep as-is | Fix `dnd.qnt`, rerun tests |
+| Bad Q&A | Overwrite with `// SKIP: reason` | `--rebuild` |
+| LLM wrong, retry | `rm {hash}.qnt` | `--limit 1` to regenerate |
+| LLM wrong, manual fix | Edit `{hash}.qnt` directly | `--rebuild`, rerun tests |
 
 ---
 
@@ -258,7 +344,13 @@ python3 scripts/qa/classify.py --limit 100 --source se --workers 5
 python3 scripts/qa/generate_assertions.py --limit 10 --workers 3
 
 # Run all generated tests
-quint test qa_generated.qnt --main qa_generated --match "qa_" --verbosity 5
+python3 scripts/qa/run_tests.py --rebuild
+
+# Review failures (see Stage 6 above for full workflow)
+# Spec bug:    fix dnd.qnt, rerun
+# Bad Q&A:     echo '// SKIP: reason' > .references/qa/cache/assertions/{hash}.qnt
+# LLM wrong:   rm .references/qa/cache/assertions/{hash}.qnt  (auto-retries)
+# LLM wrong:   edit .references/qa/cache/assertions/{hash}.qnt (manual fix)
 ```
 
 Each step is resumable. Cached results are never reprocessed. Run the same command again to process the next N.
