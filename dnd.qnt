@@ -504,7 +504,7 @@ module dnd {
         s.with("petrified", false)
          .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISPetrified)))
     | CPoisoned => s.with("poisoned", false)
-    | CProne => s.with("prone", false)
+    | CProne => if (s.unconscious) s else s.with("prone", false)
     | CRestrained => s.with("restrained", false)
     | CStunned =>
         s.with("stunned", false)
@@ -652,7 +652,7 @@ module dnd {
 
   /// Add death save failures. 3+ failures = dead.
   pure def pAddDeathFailures(s: CreatureState, count: int): CreatureState = {
-    val newFails = s.deathSaves.failures + count
+    val newFails = intMin(s.deathSaves.failures + count, 3)
     val s1 = s.with("deathSaves", { successes: s.deathSaves.successes, failures: newFails })
     if (newFails >= 3) s1.with("dead", true) else s1
   }
@@ -1742,5 +1742,493 @@ module dnd {
   // Must meet feat prerequisites; losing prerequisite disables feat.
   // Individual feat mechanics are not enumerated — framework only.
   // Caller tracks taken feats and validates prerequisites.
+
+  // ============================================================
+  // 19. MBT INFRASTRUCTURE — State Variables, Actions, Invariants
+  // ============================================================
+  // Required by @firfi/quint-connect for model-based testing.
+  // Pattern from savage.qnt: thin action wrappers around pure functions.
+
+  // -- 19.1 State Variables --
+
+  var state: CreatureState
+  var turnState: TurnState
+  var spellSlots: SpellSlotState
+
+  // -- 19.2 Nondeterministic Parameter Ranges --
+
+  pure val HP_RANGE = 1.to(30)
+  pure val DAMAGE_RANGE = 0.to(60)
+  pure val HEAL_RANGE = 1.to(30)
+  pure val D20_RANGE = 1.to(20)
+  pure val TEMP_HP_RANGE = 0.to(20)
+  pure val EXHAUSTION_ADD_RANGE = 1.to(3)
+  pure val SLOT_LEVEL_RANGE = 1.to(9)
+  pure val MOVEMENT_RANGE = 5.to(30)
+  pure val MOVE_COST_RANGE = 1.to(3)
+  pure val HD_ROLL_RANGE = 1.to(12)
+
+  pure val CONDITIONS: Set[Condition] = Set(
+    CBlinded, CCharmed, CDeafened, CFrightened, CGrappled,
+    CIncapacitated, CInvisible, CParalyzed, CPetrified,
+    CPoisoned, CProne, CRestrained, CStunned, CUnconscious
+  )
+
+  pure val DAMAGE_TYPES: Set[DamageType] = Set(
+    Acid, Bludgeoning, Cold, Fire, Force, Lightning,
+    Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder
+  )
+
+  pure val ACTION_TYPES: Set[ActionType] = Set(
+    AAttack, ACastSpell, ADash, ADisengage, ADodge,
+    AHelp, AHide, AReady, ASearch, AUseObject
+  )
+
+  pure val SIZES: Set[Size] = Set(Tiny, Small, Medium, Large, Huge, Gargantuan)
+
+  pure val SHOVE_CHOICES: Set[ShoveChoice] = Set(ShoveProne, ShovePush)
+
+  pure val CONTEST_RESULTS: Set[ContestResult] = Set(AWins, BWins, Tie)
+
+  // -- 19.3 Test Config --
+
+  pure val TEST_CONFIG: CharConfig = {
+    abilityScores: Map(Str -> 14, Dex -> 12, Con -> 14, Int_ -> 10, Wis -> 13, Cha -> 8),
+    level: 5,
+    size: Medium,
+    speeds: Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0),
+    saveProficiencies: Set(Str, Con),
+    skillProficiencies: Set(Athletics, Perception),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(LightArmor, MediumArmor, HeavyArmor),
+    hitDieType: 10,
+    spellcastingAbility: Wis,
+    hasSpellcasting: false,
+    canRitualCast: false,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(FExtraAttack),
+  }
+
+  pure val FRESH_TURN: TurnState = {
+    movementRemaining: 30,
+    effectiveSpeed: 30,
+    actionUsed: false,
+    attackActionUsed: false,
+    bonusActionUsed: false,
+    reactionAvailable: true,
+    freeInteractionUsed: false,
+    extraAttacksRemaining: 1,
+    disengaged: false,
+    dodging: false,
+    readiedAction: false,
+    bonusActionSpellCast: false,
+    nonCantripActionSpellCast: false,
+    surprised: false,
+  }
+
+  pure val FRESH_SPELL_SLOTS: SpellSlotState = {
+    slotsMax: EMPTY_SLOTS,
+    slotsCurrent: EMPTY_SLOTS,
+    pactSlotsMax: 0,
+    pactSlotsCurrent: 0,
+    pactSlotLevel: 0,
+    concentrationSpellId: "",
+  }
+
+  // -- 19.4 Action Init --
+
+  action init = {
+    nondet maxHp = HP_RANGE.oneOf()
+    all {
+      state' = freshCreature(maxHp).with("hitDiceRemaining", 5),
+      turnState' = FRESH_TURN,
+      spellSlots' = FRESH_SPELL_SLOTS,
+    }
+  }
+
+  // -- 19.5 Thin Action Wrappers --
+
+  // HP / damage track actions
+  action doTakeDamage = {
+    nondet amount = DAMAGE_RANGE.oneOf()
+    nondet dt = DAMAGE_TYPES.oneOf()
+    nondet isCrit = Bool.oneOf()
+    val s1 = pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit)
+    // Break concentration on damage (if concentrating, caller must resolve save)
+    val ss1 = if (isConcentrating(spellSlots) and s1 != state)
+      pBreakConcentration(spellSlots)
+    else spellSlots
+    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+  }
+
+  action doTakeDamageWithMods = {
+    nondet amount = DAMAGE_RANGE.oneOf()
+    nondet dt = DAMAGE_TYPES.oneOf()
+    nondet isCrit = Bool.oneOf()
+    nondet resType = DAMAGE_TYPES.oneOf()
+    nondet vulnType = DAMAGE_TYPES.oneOf()
+    val s1 = pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit)
+    val ss1 = if (isConcentrating(spellSlots) and s1 != state)
+      pBreakConcentration(spellSlots)
+    else spellSlots
+    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+  }
+
+  action doHeal = {
+    nondet amount = HEAL_RANGE.oneOf()
+    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  action doGrantTempHp = {
+    nondet amount = TEMP_HP_RANGE.oneOf()
+    nondet keepOld = Bool.oneOf()
+    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  action doDeathSave = {
+    nondet roll = D20_RANGE.oneOf()
+    all { state' = pDeathSave(state, roll), turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  action doStabilize = all {
+    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots
+  }
+
+  action doKnockOut = all {
+    state' = pKnockOut(state), turnState' = turnState, spellSlots' = spellSlots
+  }
+
+  // Condition actions
+  action doApplyCondition = {
+    nondet c = CONDITIONS.oneOf()
+    val s1 = pApplyCondition(state, c)
+    // Incapacitation breaks concentration
+    val ss1 = if (isIncapacitated(s1) and not(isIncapacitated(state)) and isConcentrating(spellSlots))
+      pBreakConcentration(spellSlots)
+    else spellSlots
+    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+  }
+
+  action doRemoveCondition = {
+    nondet c = CONDITIONS.oneOf()
+    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  // Exhaustion actions
+  action doAddExhaustion = {
+    nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
+    val s1 = pAddExhaustion(state, levels)
+    // Death breaks concentration
+    val ss1 = if (s1.dead and not(state.dead) and isConcentrating(spellSlots))
+      pBreakConcentration(spellSlots)
+    else spellSlots
+    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+  }
+
+  action doReduceExhaustion = {
+    nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
+    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  // Turn actions
+  action doStartTurn = {
+    nondet isSurprised = Bool.oneOf()
+    nondet callerSpeedMod = (-10).to(10).oneOf()
+    nondet isGrappling = Bool.oneOf()
+    nondet grappledSmall = Bool.oneOf()
+    val t1 = pStartTurn(TEST_CONFIG, state, Unarmored, isSurprised, callerSpeedMod, isGrappling, grappledSmall)
+    all { state' = state, turnState' = t1, spellSlots' = spellSlots }
+  }
+
+  action doUseAction = {
+    nondet at = ACTION_TYPES.oneOf()
+    all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots }
+  }
+
+  action doUseBonusAction = all {
+    state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots
+  }
+
+  action doUseReaction = all {
+    state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots
+  }
+
+  action doUseMovement = {
+    nondet feet = MOVEMENT_RANGE.oneOf()
+    nondet cost = MOVE_COST_RANGE.oneOf()
+    all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots }
+  }
+
+  action doUseExtraAttack = all {
+    state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots
+  }
+
+  action doStandFromProne = {
+    // Can't stand if incapacitated (unconscious, paralyzed, etc.)
+    if (isIncapacitated(state)) all { state' = state, turnState' = turnState, spellSlots' = spellSlots }
+    else {
+      val t1 = pStandFromProne(turnState)
+      val s1 = if (t1 != turnState) pRemoveCondition(state, CProne) else state
+      all { state' = s1, turnState' = t1, spellSlots' = spellSlots }
+    }
+  }
+
+  action doDropProne = all {
+    state' = pDropProne(state), turnState' = turnState, spellSlots' = spellSlots
+  }
+
+  action doEndSurpriseTurn = all {
+    state' = state, turnState' = pEndSurpriseTurn(turnState), spellSlots' = spellSlots
+  }
+
+  action doMarkBonusActionSpell = all {
+    state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots
+  }
+
+  action doMarkNonCantripActionSpell = all {
+    state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots
+  }
+
+  // Spell slot actions
+  action doExpendSlot = {
+    nondet level = SLOT_LEVEL_RANGE.oneOf()
+    all { state' = state, turnState' = turnState, spellSlots' = pExpendSlot(spellSlots, level) }
+  }
+
+  action doExpendPactSlot = all {
+    state' = state, turnState' = turnState, spellSlots' = pExpendPactSlot(spellSlots)
+  }
+
+  action doStartConcentration = {
+    nondet spellId = Set("spell_a", "spell_b", "spell_c").oneOf()
+    all { state' = state, turnState' = turnState, spellSlots' = pStartConcentration(spellSlots, spellId) }
+  }
+
+  action doBreakConcentration = all {
+    state' = state, turnState' = turnState, spellSlots' = pBreakConcentration(spellSlots)
+  }
+
+  action doConcentrationCheck = {
+    nondet saveSucceeded = Bool.oneOf()
+    all { state' = state, turnState' = turnState, spellSlots' = pConcentrationCheck(spellSlots, saveSucceeded) }
+  }
+
+  // Rest actions
+  action doSpendHitDie = {
+    nondet conMod = (-2).to(5).oneOf()
+    nondet dieRoll = HD_ROLL_RANGE.oneOf()
+    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  action doShortRest = {
+    nondet conMod = (-2).to(5).oneOf()
+    nondet numDice = 0.to(3).oneOf()
+    nondet r1 = HD_ROLL_RANGE.oneOf()
+    nondet r2 = HD_ROLL_RANGE.oneOf()
+    nondet r3 = HD_ROLL_RANGE.oneOf()
+    val rolls = [r1, r2, r3].slice(0, numDice)
+    all {
+      state' = pShortRest(state, conMod, rolls),
+      turnState' = turnState,
+      spellSlots' = pRestorePactSlots(spellSlots),
+    }
+  }
+
+  action doLongRest = {
+    nondet hasEaten = Bool.oneOf()
+    all {
+      state' = pLongRest(state, 5, hasEaten),
+      turnState' = turnState,
+      spellSlots' = pRestoreAllSlots(spellSlots),
+    }
+  }
+
+  // Environmental actions
+  action doApplyFall = {
+    nondet damageRoll = DAMAGE_RANGE.oneOf()
+    all {
+      state' = pApplyFall(state, damageRoll, Set(), Set(), Set()),
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+    }
+  }
+
+  action doSuffocate = all {
+    state' = pSuffocate(state), turnState' = turnState, spellSlots' = spellSlots
+  }
+
+  action doApplyStarvation = all {
+    state' = pApplyStarvation(state), turnState' = turnState, spellSlots' = spellSlots
+  }
+
+  action doApplyDehydration = {
+    nondet halfWater = Bool.oneOf()
+    nondet saveSucceeded = Bool.oneOf()
+    all {
+      state' = pApplyDehydration(state, halfWater, saveSucceeded),
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+    }
+  }
+
+  // Grapple/Shove actions (applied to self as target)
+  action doGrapple = {
+    nondet atkSize = SIZES.oneOf()
+    nondet tgtSize = SIZES.oneOf()
+    nondet contest = CONTEST_RESULTS.oneOf()
+    nondet freeHand = Bool.oneOf()
+    val result = pGrapple(atkSize, tgtSize, state, contest, freeHand)
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  action doReleaseGrapple = all {
+    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots
+  }
+
+  action doEscapeGrapple = {
+    nondet contest = CONTEST_RESULTS.oneOf()
+    all { state' = pEscapeGrapple(state, contest), turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  action doShove = {
+    nondet atkSize = SIZES.oneOf()
+    nondet tgtSize = SIZES.oneOf()
+    nondet contest = CONTEST_RESULTS.oneOf()
+    nondet choice = SHOVE_CHOICES.oneOf()
+    val result = pShove(atkSize, tgtSize, state, contest, choice)
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  // -- 19.6 Step Action --
+
+  action step = {
+    if (state.dead) {
+      all { state' = state, turnState' = turnState, spellSlots' = spellSlots }
+    } else {
+      any {
+        doTakeDamage,
+        doTakeDamageWithMods,
+        doHeal,
+        doGrantTempHp,
+        doDeathSave,
+        doStabilize,
+        doKnockOut,
+        doApplyCondition,
+        doRemoveCondition,
+        doAddExhaustion,
+        doReduceExhaustion,
+        doStartTurn,
+        doUseAction,
+        doUseBonusAction,
+        doUseReaction,
+        doUseMovement,
+        doUseExtraAttack,
+        doStandFromProne,
+        doDropProne,
+        doEndSurpriseTurn,
+        doMarkBonusActionSpell,
+        doMarkNonCantripActionSpell,
+        doExpendSlot,
+        doExpendPactSlot,
+        doStartConcentration,
+        doBreakConcentration,
+        doConcentrationCheck,
+        doSpendHitDie,
+        doShortRest,
+        doLongRest,
+        doApplyFall,
+        doSuffocate,
+        doApplyStarvation,
+        doApplyDehydration,
+        doGrapple,
+        doReleaseGrapple,
+        doEscapeGrapple,
+        doShove,
+      }
+    }
+  }
+
+  // -- 19.7 Safety Invariants --
+
+  val hpBounded = state.hp >= 0 and state.hp <= state.maxHp
+
+  val tempHpNonNegative = state.tempHp >= 0
+
+  val deathSavesBounded =
+    state.deathSaves.successes >= 0 and state.deathSaves.successes <= 3
+    and state.deathSaves.failures >= 0 and state.deathSaves.failures <= 3
+
+  val deadImpliesHp0 = state.dead implies state.hp == 0
+
+  val exhaustionBounded = state.exhaustion >= 0 and state.exhaustion <= 6
+
+  val exhaustion6ImpliesDead = (state.exhaustion >= 6) implies state.dead
+
+  val paralyzedImpliesIncap =
+    state.paralyzed implies state.incapacitatedSources.contains(ISParalyzed)
+
+  val petrifiedImpliesIncap =
+    state.petrified implies state.incapacitatedSources.contains(ISPetrified)
+
+  val stunnedImpliesIncap =
+    state.stunned implies state.incapacitatedSources.contains(ISStunned)
+
+  val unconsciousImpliesIncap =
+    state.unconscious implies state.incapacitatedSources.contains(ISUnconscious)
+
+  val unconsciousImpliesProne =
+    state.unconscious implies state.prone
+
+  val incapSourcesConsistent =
+    (state.incapacitatedSources.size() > 0) == isIncapacitated(state)
+
+  val stableImpliesDeathSavesReset =
+    state.stable implies (state.deathSaves.successes == 0 and state.deathSaves.failures == 0)
+
+  val deadIsAbsorbing = state.dead implies (
+    pTakeDamage(state, 10, Slashing, Set(), Set(), Set(), false) == state
+    and pHeal(state, 10) == state
+    and pDeathSave(state, 15) == state
+  )
+
+  val consciousImpliesHpPositive = isConscious(state) implies state.hp > 0
+
+  val atMostOneConcentration =
+    (spellSlots.concentrationSpellId != "") implies isConcentrating(spellSlots)
+
+  val slotsBounded =
+    spellSlots.slotsCurrent.keys().forall(level =>
+      spellSlots.slotsCurrent.get(level) >= 0
+      and spellSlots.slotsCurrent.get(level) <= spellSlots.slotsMax.get(level)
+    )
+
+  val pactSlotsBounded =
+    spellSlots.pactSlotsCurrent >= 0
+    and spellSlots.pactSlotsCurrent <= spellSlots.pactSlotsMax
+
+  val hitDiceNonNegative = state.hitDiceRemaining >= 0
+
+  /// Combined invariant for all safety properties.
+  val allInvariants = and {
+    hpBounded,
+    tempHpNonNegative,
+    deathSavesBounded,
+    deadImpliesHp0,
+    exhaustionBounded,
+    exhaustion6ImpliesDead,
+    paralyzedImpliesIncap,
+    petrifiedImpliesIncap,
+    stunnedImpliesIncap,
+    unconsciousImpliesIncap,
+    unconsciousImpliesProne,
+    incapSourcesConsistent,
+    stableImpliesDeathSavesReset,
+    deadIsAbsorbing,
+    consciousImpliesHpPositive,
+    atMostOneConcentration,
+    slotsBounded,
+    pactSlotsBounded,
+    hitDiceNonNegative,
+  }
 
 }
