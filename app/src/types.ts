@@ -230,8 +230,25 @@ export type CasterType = "full" | "half" | "third"
 
 export type SpellSlots = ReadonlyArray<number>
 
-const SPELL_SLOT_LEVELS = 9
-export const EMPTY_SLOTS: SpellSlots = Array.from({ length: SPELL_SLOT_LEVELS }, () => 0)
+export const SPELL_SLOT_LEVELS = 9
+export const EMPTY_SLOTS: SpellSlots = new Array(SPELL_SLOT_LEVELS).fill(0) as SpellSlots
+
+export const ALL_CONDITIONS: ReadonlyArray<Condition> = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "frightened",
+  "grappled",
+  "incapacitated",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious"
+] as const
 
 // --- Record types ---
 

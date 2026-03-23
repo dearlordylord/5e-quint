@@ -1,5 +1,5 @@
 import type { CasterType, Condition, DamageType, IncapSource, SpellSlots } from "#/types.ts"
-import { EMPTY_SLOTS } from "#/types.ts"
+import { EMPTY_SLOTS, SPELL_SLOT_LEVELS } from "#/types.ts"
 
 // --- Constants ---
 
@@ -9,7 +9,7 @@ const NAT_20 = 20
 const NAT_1 = 1
 const DEATH_SAVE_SUCCESS_MIN = 10
 const NAT_1_FAILURE_COUNT = 2
-const RESISTANCE_DIVISOR = 2
+const HALVE_DIVISOR = 2
 const VULNERABILITY_MULTIPLIER = 2
 
 // --- Pure functions ---
@@ -23,13 +23,13 @@ export function applyDamageModifiers(
   vulnerabilities: ReadonlySet<DamageType>
 ): number {
   if (immunities.has(damageType)) return 0
-  const afterResist = resistances.has(damageType) ? Math.floor(amount / RESISTANCE_DIVISOR) : amount
+  const afterResist = resistances.has(damageType) ? Math.floor(amount / HALVE_DIVISOR) : amount
   return vulnerabilities.has(damageType) ? afterResist * VULNERABILITY_MULTIPLIER : afterResist
 }
 
 /** Exhaustion 4+ halves max HP. Matches Quint effectiveMaxHp. */
 export function effectiveMaxHp(exhaustion: number, maxHp: number): number {
-  return exhaustion >= EXHAUSTION_HP_HALVE_THRESHOLD ? Math.floor(maxHp / RESISTANCE_DIVISOR) : maxHp
+  return exhaustion >= EXHAUSTION_HP_HALVE_THRESHOLD ? Math.floor(maxHp / HALVE_DIVISOR) : maxHp
 }
 
 // --- Damage computation result ---
@@ -159,7 +159,7 @@ export function applyConditionUpdate(
   isPetrified: boolean
 ): ConditionUpdate {
   const incapSource = INCAP_SOURCE_MAP[condition]
-  const incapSources = incapSource ? new Set([...currentIncapSources, incapSource]) : currentIncapSources
+  const incapSources = incapSource ? new Set(currentIncapSources).add(incapSource) : currentIncapSources
 
   if (condition === "incapacitated") {
     return { conditionFlags: {}, incapSources }
@@ -181,9 +181,14 @@ export function removeConditionUpdate(
   currentIncapSources: ReadonlySet<IncapSource>
 ): ConditionUpdate {
   const incapSource = INCAP_SOURCE_MAP[condition]
-  const incapSources = incapSource
-    ? new Set([...currentIncapSources].filter((s) => s !== incapSource))
-    : currentIncapSources
+  let incapSources: ReadonlySet<IncapSource>
+  if (incapSource) {
+    const s = new Set(currentIncapSources)
+    s.delete(incapSource)
+    incapSources = s
+  } else {
+    incapSources = currentIncapSources
+  }
 
   if (condition === "incapacitated") {
     return { conditionFlags: {}, incapSources }
@@ -195,8 +200,7 @@ export function removeConditionUpdate(
 
 // --- Exhaustion helpers ---
 
-const EXHAUSTION_DEATH_THRESHOLD = 6
-const MAX_EXHAUSTION = 6
+export const MAX_EXHAUSTION = 6
 
 /** Compute new exhaustion level and HP after adding exhaustion. Matches Quint pAddExhaustion. */
 export function computeAddExhaustion(
@@ -206,7 +210,7 @@ export function computeAddExhaustion(
   maxHp: number
 ): { readonly newExhaustion: number; readonly newHp: number } {
   const newExhaustion = Math.min(currentExhaustion + levels, MAX_EXHAUSTION)
-  if (newExhaustion >= EXHAUSTION_DEATH_THRESHOLD) {
+  if (newExhaustion >= MAX_EXHAUSTION) {
     return { newExhaustion, newHp: 0 }
   }
   const effMax = effectiveMaxHp(newExhaustion, maxHp)
@@ -217,7 +221,6 @@ export function computeAddExhaustion(
 
 const EXHAUSTION_SPEED_HALVE_THRESHOLD = 2
 const EXHAUSTION_SPEED_ZERO_THRESHOLD = 5
-const SPEED_HALVE_DIVISOR = 2
 
 /** Calculate effective speed from base speed, conditions, and external factors. Matches Quint pStartTurn speed logic. */
 export function calculateEffectiveSpeed(params: {
@@ -236,11 +239,11 @@ export function calculateEffectiveSpeed(params: {
     params.exhaustion >= EXHAUSTION_SPEED_ZERO_THRESHOLD
       ? 0
       : params.exhaustion >= EXHAUSTION_SPEED_HALVE_THRESHOLD
-        ? Math.floor(afterArmor / SPEED_HALVE_DIVISOR)
+        ? Math.floor(afterArmor / HALVE_DIVISOR)
         : afterArmor
   const afterGrappling =
     params.isGrappling && !params.grappledTargetTwoSizesSmaller
-      ? Math.floor(afterExhaustion / SPEED_HALVE_DIVISOR)
+      ? Math.floor(afterExhaustion / HALVE_DIVISOR)
       : afterExhaustion
   return Math.max(0, afterGrappling + params.callerSpeedModifier)
 }
@@ -265,7 +268,7 @@ export function spendHalfSpeed(
   movementRemaining: number,
   effectiveSpeed: number
 ): { readonly success: boolean; readonly newMovementRemaining: number } {
-  const cost = Math.floor(effectiveSpeed / SPEED_HALVE_DIVISOR)
+  const cost = Math.floor(effectiveSpeed / HALVE_DIVISOR)
   if (effectiveSpeed === 0 || cost > movementRemaining) {
     return { newMovementRemaining: movementRemaining, success: false }
   }
@@ -275,14 +278,11 @@ export function spendHalfSpeed(
 // --- Spellcasting helpers ---
 
 const CONCENTRATION_DC_MIN = 10
-const CONCENTRATION_DC_DIVISOR = 2
-const HIT_DICE_RECOVERY_DIVISOR = 2
-const HALF_CASTER_DIVISOR = 2
 const THIRD_CASTER_DIVISOR = 3
 
 /** Concentration save DC. Matches Quint pConcentrationDC. */
 export function concentrationDC(damageTaken: number): number {
-  return Math.max(CONCENTRATION_DC_MIN, Math.floor(damageTaken / CONCENTRATION_DC_DIVISOR))
+  return Math.max(CONCENTRATION_DC_MIN, Math.floor(damageTaken / HALVE_DIVISOR))
 }
 
 /** Expend a spell slot at the given level (1-9). Returns new slotsCurrent. */
@@ -314,17 +314,16 @@ export function calculateMulticlassSlots(
 ): SpellSlots {
   const casterLevel = classLevels.reduce((sum, cl) => {
     if (cl.type === "full") return sum + cl.level
-    if (cl.type === "half") return sum + Math.floor(cl.level / HALF_CASTER_DIVISOR)
+    if (cl.type === "half") return sum + Math.floor(cl.level / HALVE_DIVISOR)
     return sum + Math.floor(cl.level / THIRD_CASTER_DIVISOR)
   }, 0)
   if (casterLevel === 0) return EMPTY_SLOTS
-  const SPELL_LEVELS = 9
-  return Array.from({ length: SPELL_LEVELS }, (_, i) => slotsPerLevel(casterLevel, i + 1))
+  return Array.from({ length: SPELL_SLOT_LEVELS }, (_, i) => slotsPerLevel(casterLevel, i + 1))
 }
 
 /** Hit dice recovery on long rest: max(1, floor(total/2)). */
 export function hitDiceRecovery(totalHitDice: number, currentRemaining: number): number {
-  const recovery = Math.max(1, Math.floor(totalHitDice / HIT_DICE_RECOVERY_DIVISOR))
+  const recovery = Math.max(1, Math.floor(totalHitDice / HALVE_DIVISOR))
   return Math.min(recovery, totalHitDice - currentRemaining)
 }
 
@@ -341,12 +340,10 @@ export function computeShortRest(
   const effMax = effectiveMaxHp(exhaustion, maxHp)
   const cap = Math.min(hitDiceRemaining, hdRolls.length)
   let curHp = currentHp
-  let curHd = hitDiceRemaining
   for (let i = 0; i < cap; i++) {
     curHp = Math.min(curHp + Math.max(0, hdRolls[i] + conMod), effMax)
-    curHd = curHd - 1
   }
-  return { newHitDice: curHd, newHp: curHp, newPactSlots: pactSlotsMax }
+  return { newHitDice: hitDiceRemaining - cap, newHp: curHp, newPactSlots: pactSlotsMax }
 }
 
 /** Compute long rest results. */
@@ -450,3 +447,13 @@ export const DYING_STATE = { damageTrack: "dying" as const }
 export const DEAD_STATE = { damageTrack: "dead" as const }
 export const UNSTABLE_STATE = { damageTrack: { dying: "unstable" as const } }
 export const STABLE_STATE = { damageTrack: { dying: "stable" as const } }
+
+// --- IncapSource set helpers ---
+
+export const addIncapSource = (s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> =>
+  new Set(s).add(v)
+export function removeIncapSource(s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> {
+  const n = new Set(s)
+  n.delete(v)
+  return n
+}
