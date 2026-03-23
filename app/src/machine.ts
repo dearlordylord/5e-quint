@@ -9,15 +9,20 @@ import {
   computeTakeDamage,
   removeConditionUpdate,
   resolveDeathSave,
+  resolveGrapple,
+  resolveShove,
   spendHalfSpeed
 } from "#/machine-helpers.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
 import {
   asCondition,
   asDeathSave,
+  asEscapeGrapple,
   asExhaustion,
   asGrantTempHp,
+  asGrapple,
   asHeal,
+  asShove,
   asStartTurn,
   asTakeDamage,
   asUseAction,
@@ -215,7 +220,32 @@ export const dndMachine = setup({
     dropProne: assign({ prone: true }),
     endSurprise: assign({ reactionAvailable: true, surprised: false }),
     markBonusActionSpell: assign({ bonusActionSpellCast: true }),
-    markNonCantripActionSpell: assign({ nonCantripActionSpellCast: true })
+    markNonCantripActionSpell: assign({ nonCantripActionSpellCast: true }),
+    applyGrapple: assign(({ context, event }) => {
+      const e = asGrapple(event)
+      if (
+        !resolveGrapple(
+          e.attackerSize,
+          e.targetSize,
+          e.contestResult,
+          e.attackerHasFreeHand,
+          context.incapacitatedSources.size > 0
+        )
+      )
+        return {}
+      return { grappled: true }
+    }),
+    releaseGrapple: assign({ grappled: false }),
+    escapeGrapple: assign(({ event }) => {
+      if (asEscapeGrapple(event).contestResult !== "bWins") return {}
+      return { grappled: false }
+    }),
+    applyShove: assign(({ context, event }) => {
+      const e = asShove(event)
+      if (!resolveShove(e.attackerSize, e.targetSize, e.contestResult, context.incapacitatedSources.size > 0)) return {}
+      if (e.choice === "prone") return { prone: true }
+      return {}
+    })
   }
 }).createMachine({
   id: "dnd",
@@ -234,7 +264,11 @@ export const dndMachine = setup({
   }),
   on: {
     ADD_EXHAUSTION: { actions: ["addExhaustion"] },
-    REDUCE_EXHAUSTION: { actions: ["reduceExhaustion"] }
+    REDUCE_EXHAUSTION: { actions: ["reduceExhaustion"] },
+    GRAPPLE: { actions: ["applyGrapple"] },
+    RELEASE_GRAPPLE: { actions: ["releaseGrapple"] },
+    ESCAPE_GRAPPLE: { actions: ["escapeGrapple"] },
+    SHOVE: { actions: ["applyShove"] }
   },
   states: {
     damageTrack: {

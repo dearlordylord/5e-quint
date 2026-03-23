@@ -4,10 +4,18 @@ import { createActor } from "xstate"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
 import { dndMachine } from "#/machine.ts"
 import {
+  aggregateAttackMods,
   applyDamageModifiers,
+  calculateAC,
   calculateEffectiveSpeed,
+  coverBonus,
+  criticalDamage,
   effectiveMaxHp,
-  movementCostMultiplier
+  movementCostMultiplier,
+  normalDamage,
+  resolveAdvantage,
+  resolveAttackRoll,
+  withinOneSize
 } from "#/machine-helpers.ts"
 import {
   canAct,
@@ -18,7 +26,7 @@ import {
   ownAttackMods,
   saveMods
 } from "#/machine-queries.ts"
-import type { ActionType, Condition, DamageType } from "#/types.ts"
+import type { ActionType, ArmorState, AttackContext, Condition, DamageType } from "#/types.ts"
 import { d20Roll, damageAmount, healAmount, hp, tempHp } from "#/types.ts"
 
 // --- Helpers ---
@@ -1274,5 +1282,364 @@ describe("turn - extra attacks", () => {
     startTurn(a, { extraAttacks: 0 })
     a.send({ type: "USE_EXTRA_ATTACK" })
     expect(ctx(a).extraAttacksRemaining).toBe(0)
+  })
+})
+
+// ============================================================
+// Phase 4: Attack Resolution + Combat Actions
+// ============================================================
+
+describe("resolveAttackRoll", () => {
+  it("nat 20 always hits regardless of AC", () => {
+    const result = resolveAttackRoll(20, 0, 100, 0)
+    expect(result.hits).toBe(true)
+    expect(result.isCritical).toBe(true)
+  })
+
+  it("nat 1 always misses regardless of bonuses", () => {
+    const result = resolveAttackRoll(1, 100, 5, 0)
+    expect(result.hits).toBe(false)
+    expect(result.isCritical).toBe(false)
+  })
+
+  it("normal roll vs AC comparison", () => {
+    expect(resolveAttackRoll(10, 5, 15, 0).hits).toBe(true)
+    expect(resolveAttackRoll(10, 4, 15, 0).hits).toBe(false)
+  })
+
+  it("cover bonus adds to AC", () => {
+    expect(resolveAttackRoll(10, 5, 14, 2).hits).toBe(false)
+    expect(resolveAttackRoll(10, 6, 14, 2).hits).toBe(true)
+  })
+})
+
+describe("damage calculation", () => {
+  it("normal damage = dice + modifier", () => {
+    expect(normalDamage(8, 3)).toBe(11)
+  })
+
+  it("critical hit doubles dice only, not flat modifiers", () => {
+    expect(criticalDamage(8, 8, 3)).toBe(19)
+    expect(criticalDamage(6, 6, 5)).toBe(17)
+  })
+})
+
+describe("resolveAdvantage", () => {
+  it("adv + disadv cancel to neither", () => {
+    const result = resolveAdvantage({ hasAdvantage: true, hasDisadvantage: true })
+    expect(result.hasAdvantage).toBe(false)
+    expect(result.hasDisadvantage).toBe(false)
+  })
+
+  it("only advantage preserved", () => {
+    const result = resolveAdvantage({ hasAdvantage: true, hasDisadvantage: false })
+    expect(result.hasAdvantage).toBe(true)
+  })
+})
+
+describe("coverBonus", () => {
+  it("half cover +2", () => {
+    expect(coverBonus("half")).toBe(2)
+  })
+
+  it("three-quarters cover +5", () => {
+    expect(coverBonus("threeQuarters")).toBe(5)
+  })
+
+  it("total cover = 0 (can't target)", () => {
+    expect(coverBonus("total")).toBe(0)
+  })
+
+  it("no cover = 0", () => {
+    expect(coverBonus("none")).toBe(0)
+  })
+})
+
+describe("calculateAC", () => {
+  const unarmored: ArmorState = { type: "unarmored" }
+  const baseParams = {
+    armorState: unarmored,
+    dexMod: 2,
+    hasShield: false,
+    unarmoredDef: "none" as const,
+    conMod: 0,
+    wisMod: 0
+  }
+
+  it("no armor: 10 + DEX", () => {
+    expect(calculateAC(baseParams)).toBe(12)
+  })
+
+  it("light armor: base + DEX", () => {
+    const studded: ArmorState = {
+      type: "wearingArmor",
+      armor: { category: "light", baseAC: 12, strRequirement: 0, stealthDisadvantage: false }
+    }
+    expect(calculateAC({ ...baseParams, armorState: studded })).toBe(14)
+  })
+
+  it("medium armor: base + min(DEX, 2)", () => {
+    const breastplate: ArmorState = {
+      type: "wearingArmor",
+      armor: { category: "medium", baseAC: 14, strRequirement: 0, stealthDisadvantage: false }
+    }
+    expect(calculateAC({ ...baseParams, armorState: breastplate, dexMod: 4 })).toBe(16)
+  })
+
+  it("heavy armor: base only, no DEX", () => {
+    const plate: ArmorState = {
+      type: "wearingArmor",
+      armor: { category: "heavy", baseAC: 18, strRequirement: 15, stealthDisadvantage: true }
+    }
+    expect(calculateAC({ ...baseParams, armorState: plate, dexMod: 5 })).toBe(18)
+  })
+
+  it("shield adds +2", () => {
+    expect(calculateAC({ ...baseParams, hasShield: true })).toBe(14)
+  })
+
+  it("barbarian unarmored defense: 10 + DEX + CON", () => {
+    expect(calculateAC({ ...baseParams, unarmoredDef: "barbarian", conMod: 3 })).toBe(15)
+  })
+
+  it("monk unarmored defense: 10 + DEX + WIS", () => {
+    expect(calculateAC({ ...baseParams, unarmoredDef: "monk", wisMod: 2 })).toBe(14)
+  })
+})
+
+describe("grapple", () => {
+  it("grapple succeeds: attacker wins contest", () => {
+    const a = create()
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "medium",
+      targetSize: "medium",
+      contestResult: "aWins",
+      attackerHasFreeHand: true
+    })
+    expect(ctx(a).grappled).toBe(true)
+  })
+
+  it("grapple fails: target wins contest", () => {
+    const a = create()
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "medium",
+      targetSize: "medium",
+      contestResult: "bWins",
+      attackerHasFreeHand: true
+    })
+    expect(ctx(a).grappled).toBe(false)
+  })
+
+  it("grapple fails: target > 1 size larger", () => {
+    const a = create()
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "small",
+      targetSize: "large",
+      contestResult: "aWins",
+      attackerHasFreeHand: true
+    })
+    expect(ctx(a).grappled).toBe(false)
+  })
+
+  it("grapple fails: no free hand", () => {
+    const a = create()
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "medium",
+      targetSize: "medium",
+      contestResult: "aWins",
+      attackerHasFreeHand: false
+    })
+    expect(ctx(a).grappled).toBe(false)
+  })
+
+  it("grapple auto-success if incapacitated", () => {
+    const a = create()
+    applyCondition(a, "paralyzed")
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "medium",
+      targetSize: "medium",
+      contestResult: "bWins",
+      attackerHasFreeHand: true
+    })
+    expect(ctx(a).grappled).toBe(true)
+  })
+
+  it("release grapple", () => {
+    const a = create()
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "medium",
+      targetSize: "medium",
+      contestResult: "aWins",
+      attackerHasFreeHand: true
+    })
+    a.send({ type: "RELEASE_GRAPPLE" })
+    expect(ctx(a).grappled).toBe(false)
+  })
+
+  it("escape grapple: target wins", () => {
+    const a = create()
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "medium",
+      targetSize: "medium",
+      contestResult: "aWins",
+      attackerHasFreeHand: true
+    })
+    a.send({ type: "ESCAPE_GRAPPLE", contestResult: "bWins" })
+    expect(ctx(a).grappled).toBe(false)
+  })
+
+  it("escape grapple: attacker wins keeps grapple", () => {
+    const a = create()
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "medium",
+      targetSize: "medium",
+      contestResult: "aWins",
+      attackerHasFreeHand: true
+    })
+    a.send({ type: "ESCAPE_GRAPPLE", contestResult: "aWins" })
+    expect(ctx(a).grappled).toBe(true)
+  })
+})
+
+describe("shove", () => {
+  it("shove prone: success", () => {
+    const a = create()
+    a.send({ type: "SHOVE", attackerSize: "medium", targetSize: "medium", contestResult: "aWins", choice: "prone" })
+    expect(ctx(a).prone).toBe(true)
+  })
+
+  it("shove push: no state change (caller handles)", () => {
+    const a = create()
+    a.send({ type: "SHOVE", attackerSize: "medium", targetSize: "medium", contestResult: "aWins", choice: "push" })
+    expect(ctx(a).prone).toBe(false)
+  })
+
+  it("shove fails: target too large", () => {
+    const a = create()
+    a.send({ type: "SHOVE", attackerSize: "small", targetSize: "large", contestResult: "aWins", choice: "prone" })
+    expect(ctx(a).prone).toBe(false)
+  })
+})
+
+describe("withinOneSize", () => {
+  it("same size allowed", () => {
+    expect(withinOneSize("medium", "medium")).toBe(true)
+  })
+
+  it("one size larger allowed", () => {
+    expect(withinOneSize("medium", "large")).toBe(true)
+  })
+
+  it("two sizes larger not allowed", () => {
+    expect(withinOneSize("medium", "huge")).toBe(false)
+  })
+
+  it("smaller target always allowed", () => {
+    expect(withinOneSize("large", "small")).toBe(true)
+  })
+})
+
+describe("aggregateAttackMods", () => {
+  const baseCtx: AttackContext = {
+    attackerBlinded: false,
+    attackerCanSeeTarget: true,
+    attackerExhaustion: 0,
+    attackerFrightSourceInLOS: false,
+    attackerFrightened: false,
+    attackerHasSwimSpeed: false,
+    attackerPoisoned: false,
+    attackerProne: false,
+    attackerRestrained: false,
+    attackerWithin5ft: true,
+    beyondNormalRange: false,
+    hostileWithin5ft: false,
+    isHeavyWeapon: false,
+    isRangedAttack: false,
+    isUnderwaterMeleeException: false,
+    isUnderwaterRangedException: false,
+    squeezing: false,
+    targetBlinded: false,
+    targetCanSeeAttacker: true,
+    targetDodging: false,
+    targetParalyzed: false,
+    targetPetrified: false,
+    targetProne: false,
+    targetRestrained: false,
+    targetStunned: false,
+    targetUnconscious: false,
+    underwater: false,
+    wielderSizeSmallOrTiny: false
+  }
+
+  it("no conditions: no mods", () => {
+    const r = aggregateAttackMods(baseCtx)
+    expect(r.hasAdvantage).toBe(false)
+    expect(r.hasDisadvantage).toBe(false)
+    expect(r.autoCrit).toBe(false)
+    expect(r.autoMiss).toBe(false)
+  })
+
+  it("target blinded: advantage", () => {
+    expect(aggregateAttackMods({ ...baseCtx, targetBlinded: true }).hasAdvantage).toBe(true)
+  })
+
+  it("attacker blinded: disadvantage", () => {
+    expect(aggregateAttackMods({ ...baseCtx, attackerBlinded: true }).hasDisadvantage).toBe(true)
+  })
+
+  it("adv + disadv cancel", () => {
+    const r = aggregateAttackMods({ ...baseCtx, targetBlinded: true, attackerBlinded: true })
+    expect(r.hasAdvantage).toBe(false)
+    expect(r.hasDisadvantage).toBe(false)
+  })
+
+  it("target dodging and can see attacker: disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, targetDodging: true }).hasDisadvantage).toBe(true)
+  })
+
+  it("auto-crit: paralyzed + within 5ft", () => {
+    expect(aggregateAttackMods({ ...baseCtx, targetParalyzed: true }).autoCrit).toBe(true)
+  })
+
+  it("auto-crit: unconscious + within 5ft", () => {
+    expect(aggregateAttackMods({ ...baseCtx, targetUnconscious: true }).autoCrit).toBe(true)
+  })
+
+  it("no auto-crit: paralyzed but beyond 5ft", () => {
+    expect(aggregateAttackMods({ ...baseCtx, targetParalyzed: true, attackerWithin5ft: false }).autoCrit).toBe(false)
+  })
+
+  it("underwater ranged beyond normal: auto-miss", () => {
+    expect(
+      aggregateAttackMods({ ...baseCtx, underwater: true, isRangedAttack: true, beyondNormalRange: true }).autoMiss
+    ).toBe(true)
+  })
+
+  it("heavy weapon + small creature: disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, isHeavyWeapon: true, wielderSizeSmallOrTiny: true }).hasDisadvantage).toBe(
+      true
+    )
+  })
+
+  it("underwater melee without swim speed: disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, underwater: true }).hasDisadvantage).toBe(true)
+  })
+
+  it("underwater melee with swim speed: no disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, underwater: true, attackerHasSwimSpeed: true }).hasDisadvantage).toBe(
+      false
+    )
+  })
+
+  it("unseen attacker: advantage", () => {
+    expect(aggregateAttackMods({ ...baseCtx, targetCanSeeAttacker: false }).hasAdvantage).toBe(true)
   })
 })

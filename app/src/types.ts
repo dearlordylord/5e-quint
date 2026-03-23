@@ -51,6 +51,27 @@ export type ActionType =
 
 export type SpeedType = "walk" | "fly" | "swim" | "climb" | "burrow"
 
+export type CoverType = "none" | "half" | "threeQuarters" | "total"
+
+export type ArmorCategory = "light" | "medium" | "heavy"
+
+export type Size = "tiny" | "small" | "medium" | "large" | "huge" | "gargantuan"
+
+export type ContestResult = "aWins" | "bWins" | "tie"
+
+export type ShoveChoice = "prone" | "push"
+
+export type UnarmoredDefense = "none" | "barbarian" | "monk"
+
+export interface Armor {
+  readonly category: ArmorCategory
+  readonly baseAC: number
+  readonly strRequirement: number
+  readonly stealthDisadvantage: boolean
+}
+
+export type ArmorState = { readonly type: "unarmored" } | { readonly type: "wearingArmor"; readonly armor: Armor }
+
 // --- Modifier result types ---
 
 export interface AdvState {
@@ -68,6 +89,49 @@ export interface D20Mods {
   readonly hasAdvantage: boolean
   readonly hasDisadvantage: boolean
   readonly autoFail: boolean
+}
+
+export interface AttackResult {
+  readonly hits: boolean
+  readonly isCritical: boolean
+}
+
+export interface FullAttackMods {
+  readonly hasAdvantage: boolean
+  readonly hasDisadvantage: boolean
+  readonly autoCrit: boolean
+  readonly autoMiss: boolean
+}
+
+export interface AttackContext {
+  readonly attackerBlinded: boolean
+  readonly attackerProne: boolean
+  readonly attackerRestrained: boolean
+  readonly attackerPoisoned: boolean
+  readonly attackerFrightened: boolean
+  readonly attackerFrightSourceInLOS: boolean
+  readonly attackerExhaustion: number
+  readonly targetBlinded: boolean
+  readonly targetParalyzed: boolean
+  readonly targetPetrified: boolean
+  readonly targetStunned: boolean
+  readonly targetUnconscious: boolean
+  readonly targetRestrained: boolean
+  readonly targetProne: boolean
+  readonly attackerWithin5ft: boolean
+  readonly targetDodging: boolean
+  readonly targetCanSeeAttacker: boolean
+  readonly attackerCanSeeTarget: boolean
+  readonly isRangedAttack: boolean
+  readonly beyondNormalRange: boolean
+  readonly hostileWithin5ft: boolean
+  readonly isHeavyWeapon: boolean
+  readonly wielderSizeSmallOrTiny: boolean
+  readonly squeezing: boolean
+  readonly underwater: boolean
+  readonly attackerHasSwimSpeed: boolean
+  readonly isUnderwaterMeleeException: boolean
+  readonly isUnderwaterRangedException: boolean
 }
 
 // --- Branded numeric types ---
