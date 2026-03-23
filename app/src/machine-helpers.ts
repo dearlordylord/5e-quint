@@ -34,7 +34,7 @@ export function effectiveMaxHp(exhaustion: number, maxHp: number): number {
 
 // --- Damage computation result ---
 
-export interface TakeDamageResult {
+interface TakeDamageResult {
   readonly effAmount: number
   readonly dmgThrough: number
   readonly newTempHp: number
@@ -67,7 +67,7 @@ export function computeTakeDamage(
 
 // --- Death save logic ---
 
-export interface DeathSaveResult {
+interface DeathSaveResult {
   readonly newSuccesses: number
   readonly newFailures: number
   readonly isDead: boolean
@@ -131,7 +131,7 @@ const INCAP_SOURCE_MAP: Readonly<Partial<Record<Condition, IncapSource>>> = {
 }
 
 /** Condition boolean field names in context (excludes "incapacitated" which is derived). */
-export type ConditionFlag =
+type ConditionFlag =
   | "blinded"
   | "charmed"
   | "deafened"
@@ -147,7 +147,7 @@ export type ConditionFlag =
   | "unconscious"
 
 /** Result of applying or removing a condition. */
-export interface ConditionUpdate {
+interface ConditionUpdate {
   readonly conditionFlags: Readonly<Partial<Record<ConditionFlag, boolean>>>
   readonly incapSources: ReadonlySet<IncapSource>
 }
@@ -159,7 +159,7 @@ export function applyConditionUpdate(
   isPetrified: boolean
 ): ConditionUpdate {
   const incapSource = INCAP_SOURCE_MAP[condition]
-  const incapSources = incapSource ? new Set(currentIncapSources).add(incapSource) : currentIncapSources
+  const incapSources = incapSource ? addIncapSource(currentIncapSources, incapSource) : currentIncapSources
 
   if (condition === "incapacitated") {
     return { conditionFlags: {}, incapSources }
@@ -450,7 +450,7 @@ export const exhUpdate = (r: { newExhaustion: number; newHp: number }) => ({
 // --- IncapSource set helpers ---
 
 export const addIncapSource = (s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> =>
-  new Set(s).add(v)
+  s.has(v) ? s : new Set(s).add(v)
 export function removeIncapSource(s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> {
   const n = new Set(s)
   n.delete(v)
