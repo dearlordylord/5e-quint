@@ -232,13 +232,13 @@ React UI for stepping through creature state changes. Same as savage's simulator
 - Tailwind 4 styling
 
 ### Acceptance
-- [ ] Dev server runs, renders creature state
-- [ ] Can dispatch any event via UI and see state update
-- [ ] All 14 conditions visually indicated
-- [ ] Death save tracker visible in dying state
-- [ ] Turn resource panel shows action/bonus/reaction/movement/extra attacks
-- [ ] Spell slot grid with expenditure
-- [ ] i18n toggle switches EN/RU
+- [x] Dev server runs, renders creature state
+- [x] Can dispatch any event via UI and see state update
+- [x] All 14 conditions visually indicated
+- [x] Death save tracker visible in dying state
+- [x] Turn resource panel shows action/bonus/reaction/movement/extra attacks
+- [x] Spell slot grid with expenditure
+- [x] i18n toggle switches EN/RU
 
 ---
 
