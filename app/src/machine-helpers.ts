@@ -4,9 +4,9 @@ import { EMPTY_SLOTS, SPELL_SLOT_LEVELS } from "#/types.ts"
 // --- Constants ---
 
 const EXHAUSTION_HP_HALVE_THRESHOLD = 4
-const DEATH_SAVE_THRESHOLD = 3
-const NAT_20 = 20
-const NAT_1 = 1
+export const DEATH_SAVE_THRESHOLD = 3
+export const NAT_20 = 20
+export const NAT_1 = 1
 const DEATH_SAVE_SUCCESS_MIN = 10
 const NAT_1_FAILURE_COUNT = 2
 const HALVE_DIVISOR = 2
@@ -439,14 +439,6 @@ export function computeFallResult(
     vulnerabilities
   )
 }
-
-// --- State path constants (for stateIn guards) ---
-
-export const CONSCIOUS_STATE = { damageTrack: "conscious" as const }
-export const DYING_STATE = { damageTrack: "dying" as const }
-export const DEAD_STATE = { damageTrack: "dead" as const }
-export const UNSTABLE_STATE = { damageTrack: { dying: "unstable" as const } }
-export const STABLE_STATE = { damageTrack: { dying: "stable" as const } }
 
 // --- IncapSource set helpers ---
 

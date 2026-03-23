@@ -3,9 +3,8 @@ import type { Ability, AdvState, D20Mods, DefenseMods } from "#/types.ts"
 
 // --- Constants ---
 
-const EXHAUSTION_ATTACK_DISADV_THRESHOLD = 3
 const EXHAUSTION_CHECK_DISADV_THRESHOLD = 1
-const EXHAUSTION_SAVE_DISADV_THRESHOLD = 3
+export const EXHAUSTION_DISADV_THRESHOLD = 3
 
 // --- Derived state queries ---
 
@@ -36,7 +35,7 @@ export function ownAttackMods(ctx: DndContext, frightSourceInLOS: boolean): AdvS
       ctx.restrained ||
       ctx.poisoned ||
       (ctx.frightened && frightSourceInLOS) ||
-      ctx.exhaustion >= EXHAUSTION_ATTACK_DISADV_THRESHOLD
+      ctx.exhaustion >= EXHAUSTION_DISADV_THRESHOLD
   }
 }
 
@@ -76,7 +75,7 @@ export function saveMods(ctx: DndContext, ability: Ability): D20Mods {
   const isStrOrDex = ability === "str" || ability === "dex"
   return {
     hasAdvantage: false,
-    hasDisadvantage: ctx.exhaustion >= EXHAUSTION_SAVE_DISADV_THRESHOLD || (ctx.restrained && ability === "dex"),
+    hasDisadvantage: ctx.exhaustion >= EXHAUSTION_DISADV_THRESHOLD || (ctx.restrained && ability === "dex"),
     autoFail: isStrOrDex && (ctx.paralyzed || ctx.petrified || ctx.stunned || ctx.unconscious)
   }
 }

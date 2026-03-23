@@ -1,3 +1,5 @@
+import { NAT_1, NAT_20 } from "#/machine-helpers.ts"
+import { EXHAUSTION_DISADV_THRESHOLD } from "#/machine-queries.ts"
 import type {
   AdvState,
   ArmorState,
@@ -12,14 +14,11 @@ import type {
 
 // --- Constants ---
 
-const NAT_20_ATTACK = 20
-const NAT_1_ATTACK = 1
 const BASE_AC = 10
 const SHIELD_BONUS = 2
 const MEDIUM_DEX_CAP = 2
 const HALF_COVER_BONUS = 2
 const THREE_QUARTERS_COVER_BONUS = 5
-const EXHAUSTION_ATTACK_DISADV = 3
 
 // --- Attack resolution ---
 
@@ -36,8 +35,8 @@ export function resolveAttackRoll(
   targetAC: number,
   targetCoverBonus: number
 ): AttackResult {
-  if (d20Roll === NAT_20_ATTACK) return { hits: true, isCritical: true }
-  if (d20Roll === NAT_1_ATTACK) return { hits: false, isCritical: false }
+  if (d20Roll === NAT_20) return { hits: true, isCritical: true }
+  if (d20Roll === NAT_1) return { hits: false, isCritical: false }
   return { hits: d20Roll + attackBonus >= targetAC + targetCoverBonus, isCritical: false }
 }
 
@@ -113,7 +112,7 @@ export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
     ctx.attackerRestrained ||
     ctx.attackerPoisoned ||
     (ctx.attackerFrightened && ctx.attackerFrightSourceInLOS) ||
-    ctx.attackerExhaustion >= EXHAUSTION_ATTACK_DISADV ||
+    ctx.attackerExhaustion >= EXHAUSTION_DISADV_THRESHOLD ||
     (ctx.targetProne && !ctx.attackerWithin5ft) ||
     (ctx.isRangedAttack && ctx.beyondNormalRange) ||
     (ctx.isRangedAttack && ctx.hostileWithin5ft) ||
