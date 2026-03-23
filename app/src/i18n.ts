@@ -66,7 +66,17 @@ const en = {
   suffocate: "Suffocate",
   critical: "Critical",
   dodging: "Dodging",
-  disengaged: "Disengaged"
+  disengaged: "Disengaged",
+  transitionLog: "Event Log",
+  logNoEvents: "No events yet.",
+  logColNumber: "#",
+  logColEvent: "Event",
+  logColFrom: "From",
+  logColTo: "To",
+  btnUndo: "Undo",
+  btnRedo: "Redo",
+  btnClear: "Clear",
+  dying: "Dying"
 } as const
 
 const ru: Messages = {
@@ -135,7 +145,17 @@ const ru: Messages = {
   suffocate: "Удушение",
   critical: "Критический",
   dodging: "Уклонение",
-  disengaged: "Отступление"
+  disengaged: "Отступление",
+  transitionLog: "Журнал событий",
+  logNoEvents: "Нет событий.",
+  logColNumber: "#",
+  logColEvent: "Событие",
+  logColFrom: "Из",
+  logColTo: "В",
+  btnUndo: "Отменить",
+  btnRedo: "Повторить",
+  btnClear: "Очистить",
+  dying: "При смерти"
 }
 
 export type MessageKey = keyof typeof en
