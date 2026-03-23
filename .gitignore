@@ -23,3 +23,4 @@ node_modules/
 .ralph/.loop_start_sha
 .ralph_backup_*
 _apalache-out/
+qa_generated.qnt
