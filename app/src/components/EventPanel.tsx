@@ -2,7 +2,7 @@ import { type FormEvent, useState } from "react"
 
 import { DEFAULT_HIT_DICE, DEFAULT_SPEED } from "#/components/App.tsx"
 import { useT } from "#/i18n.ts"
-import type { DndEvent } from "#/machine.ts"
+import type { DndEvent, DndSnapshot } from "#/machine.ts"
 import { ALL_DAMAGE_TYPES } from "#/machine-helpers.ts"
 import type { Condition, DamageType } from "#/types.ts"
 import { ALL_CONDITIONS, d20Roll, healAmount, tempHp } from "#/types.ts"
@@ -58,15 +58,33 @@ function NumInput({
   )
 }
 
-function Btn({ label, onClick }: { readonly label: string; readonly onClick: () => void }) {
+function Btn({
+  disabled,
+  label,
+  onClick
+}: {
+  readonly label: string
+  readonly onClick: () => void
+  readonly disabled?: boolean
+}) {
   return (
-    <button onClick={onClick} className="rounded bg-amber-700 px-3 py-1 text-sm text-white hover:bg-amber-600">
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded bg-amber-700 px-3 py-1 text-sm text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed"
+    >
       {label}
     </button>
   )
 }
 
-export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
+export function EventPanel({
+  send,
+  snapshot
+}: {
+  readonly send: (e: DndEvent) => void
+  readonly snapshot: DndSnapshot
+}) {
   const t = useT()
   const [dmgAmount, setDmgAmount] = useState(5)
   const [dmgType, setDmgType] = useState<DamageType>("bludgeoning")
@@ -79,6 +97,7 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
   const [slotLevel, setSlotLevel] = useState(1)
   const [spellId, setSpellId] = useState("spell_a")
   const [fallDmg, setFallDmg] = useState(10)
+  const [keepOld, setKeepOld] = useState(false)
 
   return (
     <div className="space-y-2 bg-gray-800 rounded-xl p-4">
@@ -130,10 +149,11 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
 
       <Section title={t.grantTempHp}>
         <NumInput label={t.amount} value={tmpHp} onChange={setTmpHp} min={0} />
-        <Btn
-          label={t.grantTempHp}
-          onClick={() => send({ type: "GRANT_TEMP_HP", amount: tempHp(tmpHp), keepOld: false })}
-        />
+        <label className="flex items-center gap-2 text-sm mt-1">
+          <input type="checkbox" checked={keepOld} onChange={(e) => setKeepOld(e.target.checked)} />
+          <span>{t.keepOld}</span>
+        </label>
+        <Btn label={t.grantTempHp} onClick={() => send({ type: "GRANT_TEMP_HP", amount: tempHp(tmpHp), keepOld })} />
       </Section>
 
       <Section title={t.deathSave}>
@@ -195,7 +215,11 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
 
       <Section title={t.spellSlots}>
         <NumInput label={t.level} value={slotLevel} onChange={setSlotLevel} min={1} max={9} />
-        <Btn label={t.expendSlot} onClick={() => send({ type: "EXPEND_SLOT", level: slotLevel })} />
+        <Btn
+          label={t.expendSlot}
+          disabled={!snapshot.can({ type: "EXPEND_SLOT", level: slotLevel })}
+          onClick={() => send({ type: "EXPEND_SLOT", level: slotLevel })}
+        />
         <div className="mt-2">
           <input
             value={spellId}

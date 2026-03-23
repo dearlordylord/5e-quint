@@ -26,7 +26,7 @@ function formatEvent(e: DndEvent): string {
     case "HEAL":
       return `HEAL ${e.amount}`
     case "GRANT_TEMP_HP":
-      return `GRANT_TEMP_HP ${e.amount}`
+      return `GRANT_TEMP_HP ${e.amount}${e.keepOld ? " keepOld" : ""}`
     case "DEATH_SAVE":
       return `DEATH_SAVE d20=${e.d20Roll}`
     case "APPLY_CONDITION":
