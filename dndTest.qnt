@@ -2534,4 +2534,241 @@ module dndTest {
   run test_forced_march_dc_9hrs = assert(pForcedMarchDC(9) == 11)
   run test_forced_march_dc_10hrs = assert(pForcedMarchDC(10) == 12)
   run test_forced_march_dc_12hrs = assert(pForcedMarchDC(12) == 14)
+
+  // ============================================================
+  // Phase 9: Character Construction & Leveling
+  // ============================================================
+
+  // -- 18.1 Class Hit Dice --
+
+  run test_class_hd_barbarian = assert(pClassHitDie(Barbarian) == 12)
+  run test_class_hd_fighter = assert(pClassHitDie(Fighter) == 10)
+  run test_class_hd_paladin = assert(pClassHitDie(Paladin) == 10)
+  run test_class_hd_ranger = assert(pClassHitDie(Ranger) == 10)
+  run test_class_hd_bard = assert(pClassHitDie(Bard) == 8)
+  run test_class_hd_cleric = assert(pClassHitDie(Cleric) == 8)
+  run test_class_hd_rogue = assert(pClassHitDie(Rogue) == 8)
+  run test_class_hd_wizard = assert(pClassHitDie(Wizard) == 6)
+  run test_class_hd_sorcerer = assert(pClassHitDie(Sorcerer) == 6)
+
+  // -- 18.2 Point Buy --
+
+  run test_point_buy_cost_8 = assert(pPointBuyCost(8) == 0)
+  run test_point_buy_cost_10 = assert(pPointBuyCost(10) == 2)
+  run test_point_buy_cost_13 = assert(pPointBuyCost(13) == 5)
+  run test_point_buy_cost_14 = assert(pPointBuyCost(14) == 7)
+  run test_point_buy_cost_15 = assert(pPointBuyCost(15) == 9)
+
+  run test_point_buy_total_standard = {
+    // 15(9) + 14(7) + 13(5) + 12(4) + 10(2) + 8(0) = 27
+    assert(pPointBuyTotalCost([15, 14, 13, 12, 10, 8]) == 27)
+  }
+
+  run test_point_buy_total_flat = {
+    // 13(5) * 3 + 12(4) * 3 = 15 + 12 = 27
+    assert(pPointBuyTotalCost([13, 13, 13, 12, 12, 12]) == 27)
+  }
+
+  run test_valid_point_buy_standard = {
+    assert(pValidPointBuy([15, 14, 13, 12, 10, 8]))
+  }
+
+  run test_valid_point_buy_all_equal = {
+    // 13(5)*3 + 12(4)*3 = 27
+    assert(pValidPointBuy([13, 13, 13, 12, 12, 12]))
+  }
+
+  run test_invalid_point_buy_too_expensive = {
+    // 15(9)*3 + 8(0)*3 = 27, ok. 15(9)*3 + 15(9) + 8(0)*2 = 36 > 27
+    assert(not(pValidPointBuy([15, 15, 15, 15, 8, 8])))
+  }
+
+  run test_invalid_point_buy_score_too_high = {
+    assert(not(pValidPointBuy([16, 14, 13, 12, 10, 8])))
+  }
+
+  run test_invalid_point_buy_score_too_low = {
+    assert(not(pValidPointBuy([15, 14, 13, 12, 10, 7])))
+  }
+
+  run test_invalid_point_buy_wrong_count = {
+    assert(not(pValidPointBuy([15, 14, 13, 12, 10])))
+  }
+
+  // -- 18.3 XP & Level --
+
+  run test_xp_for_level_1 = assert(pXpForLevel(1) == 0)
+  run test_xp_for_level_2 = assert(pXpForLevel(2) == 300)
+  run test_xp_for_level_5 = assert(pXpForLevel(5) == 6500)
+  run test_xp_for_level_10 = assert(pXpForLevel(10) == 64000)
+  run test_xp_for_level_20 = assert(pXpForLevel(20) == 355000)
+
+  run test_level_for_xp_0 = assert(pLevelForXp(0) == 1)
+  run test_level_for_xp_299 = assert(pLevelForXp(299) == 1)
+  run test_level_for_xp_300 = assert(pLevelForXp(300) == 2)
+  run test_level_for_xp_6500 = assert(pLevelForXp(6500) == 5)
+  run test_level_for_xp_6499 = assert(pLevelForXp(6499) == 4)
+  run test_level_for_xp_355000 = assert(pLevelForXp(355000) == 20)
+  run test_level_for_xp_huge = assert(pLevelForXp(1000000) == 20)
+
+  // -- HP on Level Up --
+
+  run test_first_level_hp_fighter = {
+    // d10 + CON mod 2 = 12
+    assert(pFirstLevelHp(10, 2) == 12)
+  }
+
+  run test_first_level_hp_wizard_low_con = {
+    // d6 + CON mod -1 = 5
+    assert(pFirstLevelHp(6, -1) == 5)
+  }
+
+  run test_first_level_hp_min_1 = {
+    // d6 + CON mod -7 → max(1, -1) = 1
+    assert(pFirstLevelHp(6, -7) == 1)
+  }
+
+  run test_level_up_hp_normal = {
+    // Roll 6 + CON mod 2 = 8
+    assert(pLevelUpHp(6, 2) == 8)
+  }
+
+  run test_level_up_hp_low_roll = {
+    // Roll 1 + CON mod -1 = 0 → min 1
+    assert(pLevelUpHp(1, -1) == 1)
+  }
+
+  run test_level_up_hp_negative_total = {
+    // Roll 1 + CON mod -3 = -2 → min 1
+    assert(pLevelUpHp(1, -3) == 1)
+  }
+
+  // -- ASI --
+
+  run test_is_asi_level_4 = assert(pIsASILevel(4))
+  run test_is_asi_level_8 = assert(pIsASILevel(8))
+  run test_is_asi_level_12 = assert(pIsASILevel(12))
+  run test_is_asi_level_16 = assert(pIsASILevel(16))
+  run test_is_asi_level_19 = assert(pIsASILevel(19))
+  run test_not_asi_level_1 = assert(not(pIsASILevel(1)))
+  run test_not_asi_level_5 = assert(not(pIsASILevel(5)))
+  run test_not_asi_level_20 = assert(not(pIsASILevel(20)))
+
+  // Test fixture: ability scores for ASI tests
+  pure val TEST_SCORES: Ability -> int =
+    Map(Str -> 14, Dex -> 12, Con -> 13, Int_ -> 10, Wis -> 8, Cha -> 15)
+
+  run test_apply_asi_plus_2 = {
+    val scores = pApplyASI(TEST_SCORES, Str, 2)
+    assert(scores.get(Str) == 16)
+  }
+
+  run test_apply_asi_plus_1 = {
+    val scores = pApplyASI(TEST_SCORES, Dex, 1)
+    assert(scores.get(Dex) == 13)
+  }
+
+  run test_apply_asi_cap_at_20 = {
+    // CHA 15 + 2 = 17, fine. But if score were 19:
+    val scores = pApplyASI(TEST_SCORES.set(Cha, 19), Cha, 2)
+    assert(scores.get(Cha) == 20)
+  }
+
+  run test_apply_asi_already_20 = {
+    val scores = pApplyASI(TEST_SCORES.set(Str, 20), Str, 2)
+    assert(scores.get(Str) == 20)
+  }
+
+  run test_apply_asi_two_abilities = {
+    // +1 STR, +1 CON
+    val scores = pApplyASI(pApplyASI(TEST_SCORES, Str, 1), Con, 1)
+    all {
+      assert(scores.get(Str) == 15),
+      assert(scores.get(Con) == 14),
+    }
+  }
+
+  run test_con_mod_hp_adjustment = {
+    // CON mod goes from +1 to +2 at level 8 → +8 HP
+    assert(pConModHpAdjustment(1, 2, 8) == 8)
+  }
+
+  run test_con_mod_hp_adjustment_two_point = {
+    // CON mod goes from +2 to +4 at level 5 → +10 HP
+    assert(pConModHpAdjustment(2, 4, 5) == 10)
+  }
+
+  run test_con_mod_hp_adjustment_no_change = {
+    assert(pConModHpAdjustment(3, 3, 10) == 0)
+  }
+
+  // -- 18.4 Multiclassing Prerequisites --
+
+  pure val MC_SCORES: Ability -> int =
+    Map(Str -> 15, Dex -> 14, Con -> 12, Int_ -> 10, Wis -> 13, Cha -> 8)
+
+  run test_mc_prereq_barbarian_pass = assert(pMeetsMulticlassPrereq(MC_SCORES, Barbarian))
+  run test_mc_prereq_bard_fail = assert(not(pMeetsMulticlassPrereq(MC_SCORES, Bard))) // CHA 8
+  run test_mc_prereq_cleric_pass = assert(pMeetsMulticlassPrereq(MC_SCORES, Cleric)) // WIS 13
+  run test_mc_prereq_fighter_str = assert(pMeetsMulticlassPrereq(MC_SCORES, Fighter)) // STR 15
+
+  run test_mc_prereq_fighter_dex = {
+    // STR 10, DEX 14 → Fighter prereq (STR 13 OR DEX 13) passes via DEX
+    val scores = MC_SCORES.set(Str, 10)
+    assert(pMeetsMulticlassPrereq(scores, Fighter))
+  }
+
+  run test_mc_prereq_fighter_neither = {
+    val scores = MC_SCORES.set(Str, 10).set(Dex, 10)
+    assert(not(pMeetsMulticlassPrereq(scores, Fighter)))
+  }
+
+  run test_mc_prereq_monk_both = {
+    // DEX 14 AND WIS 13 → passes
+    assert(pMeetsMulticlassPrereq(MC_SCORES, Monk))
+  }
+
+  run test_mc_prereq_monk_missing_wis = {
+    val scores = MC_SCORES.set(Wis, 10)
+    assert(not(pMeetsMulticlassPrereq(scores, Monk)))
+  }
+
+  run test_mc_prereq_paladin_both = {
+    // STR 15 AND CHA 8 → fails (CHA < 13)
+    assert(not(pMeetsMulticlassPrereq(MC_SCORES, Paladin)))
+  }
+
+  run test_mc_prereq_wizard_fail = {
+    // INT 10 < 13
+    assert(not(pMeetsMulticlassPrereq(MC_SCORES, Wizard)))
+  }
+
+  run test_mc_prereq_exact_13 = {
+    // Score exactly 13 meets the prereq
+    assert(pMeetsMulticlassPrereq(MC_SCORES, Cleric)) // WIS 13
+  }
+
+  run test_can_multiclass_both_meet = {
+    // Fighter (STR 15) → Cleric (WIS 13): both meet
+    assert(pCanMulticlass(MC_SCORES, Fighter, Cleric))
+  }
+
+  run test_can_multiclass_current_fails = {
+    // Bard (CHA 8) → Cleric (WIS 13): current fails
+    assert(not(pCanMulticlass(MC_SCORES, Bard, Cleric)))
+  }
+
+  run test_can_multiclass_new_fails = {
+    // Fighter (STR 15) → Wizard (INT 10): new fails
+    assert(not(pCanMulticlass(MC_SCORES, Fighter, Wizard)))
+  }
+
+  // -- Extra Attack & Unarmored Defense stacking --
+
+  run test_extra_attack_stacks_first = assert(pExtraAttackStacks(false))
+  run test_extra_attack_no_stack = assert(not(pExtraAttackStacks(true)))
+
+  run test_can_gain_ud_first = assert(pCanGainUnarmoredDefense(NoUnarmoredDefense))
+  run test_cant_gain_ud_barbarian = assert(not(pCanGainUnarmoredDefense(BarbarianUD)))
+  run test_cant_gain_ud_monk = assert(not(pCanGainUnarmoredDefense(MonkUD)))
 }

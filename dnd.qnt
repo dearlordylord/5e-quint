@@ -1587,4 +1587,168 @@ module dnd {
     if (hoursMarched <= 8) 0
     else 10 + (hoursMarched - 8)
 
+  // ============================================================
+  // 18. CHARACTER CONSTRUCTION & LEVELING (Phase 9)
+  // ============================================================
+  // PHB Ch1 (character creation), Ch6 (multiclassing, feats).
+
+  // -- 18.1 Class Types & Hit Dice --
+
+  type ClassName =
+    | Barbarian | Bard | Cleric | Druid | Fighter | Monk
+    | Paladin | Ranger | Rogue | Sorcerer | Warlock | Wizard
+
+  /// Hit die type per class (PHB class tables).
+  pure def pClassHitDie(c: ClassName): int = match c {
+    | Barbarian => 12
+    | Fighter => 10
+    | Paladin => 10
+    | Ranger => 10
+    | Bard => 8
+    | Cleric => 8
+    | Druid => 8
+    | Monk => 8
+    | Rogue => 8
+    | Warlock => 8
+    | Sorcerer => 6
+    | Wizard => 6
+  }
+
+  // -- 18.2 Ability Score Generation --
+
+  pure val STANDARD_ARRAY: List[int] = [15, 14, 13, 12, 10, 8]
+
+  /// Point buy cost for a single ability score (PHB table).
+  /// Scores outside 8-15 return 0 (invalid, caller validates range).
+  pure def pPointBuyCost(score: int): int =
+    if (score <= 8) 0
+    else if (score == 9) 1
+    else if (score == 10) 2
+    else if (score == 11) 3
+    else if (score == 12) 4
+    else if (score == 13) 5
+    else if (score == 14) 7
+    else if (score == 15) 9
+    else 0
+
+  /// Sum point buy costs for a list of 6 ability scores.
+  pure def pPointBuyTotalCost(scores: List[int]): int =
+    scores.foldl(0, (acc, s) => acc + pPointBuyCost(s))
+
+  /// Validate a point buy allocation: 6 scores, each 8-15, total cost <= 27.
+  pure def pValidPointBuy(scores: List[int]): bool =
+    scores.length() == 6
+    and scores.foldl(true, (acc, s) => acc and s >= 8 and s <= 15)
+    and pPointBuyTotalCost(scores) <= 27
+
+  // -- 18.3 Level Advancement --
+
+  /// XP thresholds per level (PHB Character Advancement table).
+  pure def pXpForLevel(level: int): int =
+    if (level <= 1) 0
+    else if (level == 2) 300
+    else if (level == 3) 900
+    else if (level == 4) 2700
+    else if (level == 5) 6500
+    else if (level == 6) 14000
+    else if (level == 7) 23000
+    else if (level == 8) 34000
+    else if (level == 9) 48000
+    else if (level == 10) 64000
+    else if (level == 11) 85000
+    else if (level == 12) 100000
+    else if (level == 13) 120000
+    else if (level == 14) 140000
+    else if (level == 15) 165000
+    else if (level == 16) 195000
+    else if (level == 17) 225000
+    else if (level == 18) 265000
+    else if (level == 19) 305000
+    else 355000
+
+  /// Determine character level from XP total.
+  pure def pLevelForXp(xp: int): int =
+    if (xp >= 355000) 20
+    else if (xp >= 305000) 19
+    else if (xp >= 265000) 18
+    else if (xp >= 225000) 17
+    else if (xp >= 195000) 16
+    else if (xp >= 165000) 15
+    else if (xp >= 140000) 14
+    else if (xp >= 120000) 13
+    else if (xp >= 100000) 12
+    else if (xp >= 85000) 11
+    else if (xp >= 64000) 10
+    else if (xp >= 48000) 9
+    else if (xp >= 34000) 8
+    else if (xp >= 23000) 7
+    else if (xp >= 14000) 6
+    else if (xp >= 6500) 5
+    else if (xp >= 2700) 4
+    else if (xp >= 900) 3
+    else if (xp >= 300) 2
+    else 1
+
+  /// HP at 1st level of first class: max hit die + CON mod (min 1).
+  pure def pFirstLevelHp(hitDieType: int, conMod: int): int =
+    intMax(1, hitDieType + conMod)
+
+  /// HP gained on level up: dieRoll + CON mod (min 1).
+  /// Also used for multiclass level gains (PHB Ch6: NOT max HD).
+  pure def pLevelUpHp(dieRoll: int, conMod: int): int =
+    intMax(1, dieRoll + conMod)
+
+  /// ASI levels (PHB: all classes gain ASI at 4, 8, 12, 16, 19).
+  /// Fighter gets extra at 6, 14; Rogue at 10 — handled by caller's class features.
+  pure val ASI_LEVELS: Set[int] = Set(4, 8, 12, 16, 19)
+
+  pure def pIsASILevel(level: int): bool = ASI_LEVELS.contains(level)
+
+  /// Apply ability score increase, capped at 20 (typical PC maximum).
+  /// Caller invokes once with +2, or twice with +1 each.
+  pure def pApplyASI(scores: Ability -> int, ability: Ability, increase: int): Ability -> int =
+    scores.set(ability, intMin(scores.get(ability) + increase, 20))
+
+  /// When CON modifier changes (e.g., via ASI), HP max adjusts retroactively.
+  /// PHB Ch1: "your hit point maximum increases by 1 for each level you have attained."
+  pure def pConModHpAdjustment(oldConMod: int, newConMod: int, totalLevel: int): int =
+    (newConMod - oldConMod) * totalLevel
+
+  // -- 18.4 Multiclassing --
+
+  /// Check if ability scores meet multiclass prerequisites for a class (PHB Ch6).
+  /// Must meet prereqs for BOTH current and new class to multiclass.
+  pure def pMeetsMulticlassPrereq(scores: Ability -> int, c: ClassName): bool = match c {
+    | Barbarian => scores.get(Str) >= 13
+    | Bard => scores.get(Cha) >= 13
+    | Cleric => scores.get(Wis) >= 13
+    | Druid => scores.get(Wis) >= 13
+    | Fighter => scores.get(Str) >= 13 or scores.get(Dex) >= 13
+    | Monk => scores.get(Dex) >= 13 and scores.get(Wis) >= 13
+    | Paladin => scores.get(Str) >= 13 and scores.get(Cha) >= 13
+    | Ranger => scores.get(Dex) >= 13 and scores.get(Wis) >= 13
+    | Rogue => scores.get(Dex) >= 13
+    | Sorcerer => scores.get(Cha) >= 13
+    | Warlock => scores.get(Cha) >= 13
+    | Wizard => scores.get(Int_) >= 13
+  }
+
+  /// Can multiclass from current class into new class?
+  pure def pCanMulticlass(scores: Ability -> int, currentClass: ClassName, newClass: ClassName): bool =
+    pMeetsMulticlassPrereq(scores, currentClass) and pMeetsMulticlassPrereq(scores, newClass)
+
+  /// Extra Attack doesn't stack across classes (PHB Ch6).
+  pure def pExtraAttackStacks(alreadyHasExtraAttack: bool): bool = not(alreadyHasExtraAttack)
+
+  /// Unarmored Defense can't be gained from a second class (PHB Ch6).
+  pure def pCanGainUnarmoredDefense(currentUD: UnarmoredDefense): bool =
+    currentUD == NoUnarmoredDefense
+
+  // -- 18.5 Feats (optional rule framework) --
+  // PHB Ch6: at ASI levels (pIsASILevel), can forgo ASI to take a feat.
+  // Each feat taken only once (unless description says otherwise).
+  // Must meet feat prerequisites; losing prerequisite disables feat.
+  // Individual feat mechanics are not enumerated — framework only.
+  // Caller tracks taken feats and validates prerequisites.
+
 }
