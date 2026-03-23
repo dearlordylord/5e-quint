@@ -2771,4 +2771,88 @@ module dndTest {
   run test_can_gain_ud_first = assert(pCanGainUnarmoredDefense(NoUnarmoredDefense))
   run test_cant_gain_ud_barbarian = assert(not(pCanGainUnarmoredDefense(BarbarianUD)))
   run test_cant_gain_ud_monk = assert(not(pCanGainUnarmoredDefense(MonkUD)))
+
+  // ============================================================
+  // Invariant Verification (MBT trace tests)
+  // ============================================================
+  // These tests verify that allInvariants hold across multi-step traces.
+  // Complement `quint run --invariant=allInvariants` with deterministic traces.
+
+  run test_invariants_5steps =
+    init.then(step).then(step).then(step).then(step).then(step)
+        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots })
+
+  run test_invariants_10steps =
+    init
+      .then(step).then(step).then(step).then(step).then(step)
+      .then(step).then(step).then(step).then(step).then(step)
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots })
+
+  run test_invariants_20steps =
+    init
+      .then(step).then(step).then(step).then(step).then(step)
+      .then(step).then(step).then(step).then(step).then(step)
+      .then(step).then(step).then(step).then(step).then(step)
+      .then(step).then(step).then(step).then(step).then(step)
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots })
+
+  // Individual invariant tests on known state constructions
+  run test_inv_deadIsAbsorbing_construction = {
+    val s = freshCreature(20).with("dead", true).with("hp", 0)
+    all {
+      assert(pTakeDamage(s, 10, Slashing, Set(), Set(), Set(), false) == s),
+      assert(pHeal(s, 10) == s),
+      assert(pDeathSave(s, 15) == s),
+    }
+  }
+
+  run test_inv_stableImpliesDeathSavesReset_construction = {
+    val s = freshCreature(20).with("hp", 0).with("stable", true)
+    all {
+      assert(s.deathSaves.successes == 0),
+      assert(s.deathSaves.failures == 0),
+    }
+  }
+
+  run test_inv_paralyzedImpliesIncap_via_apply = {
+    val s = pApplyCondition(freshCreature(20), CParalyzed)
+    all {
+      assert(s.paralyzed),
+      assert(s.incapacitatedSources.contains(ISParalyzed)),
+      assert(isIncapacitated(s)),
+    }
+  }
+
+  run test_inv_unconsciousImpliesProne_via_apply = {
+    val s = pApplyCondition(freshCreature(20), CUnconscious)
+    all {
+      assert(s.unconscious),
+      assert(s.prone),
+      assert(isIncapacitated(s)),
+    }
+  }
+
+  run test_inv_prone_not_removed_while_unconscious = {
+    val s = pApplyCondition(freshCreature(20), CUnconscious)
+    val s1 = pRemoveCondition(s, CProne)
+    // Prone should NOT be removed while unconscious
+    assert(s1.prone)
+  }
+
+  run test_inv_exhaustion6_implies_dead = {
+    val s = pAddExhaustion(freshCreature(20), 6)
+    all { assert(s.dead), assert(s.hp == 0) }
+  }
+
+  run test_inv_hp_bounded_after_heal = {
+    val s = pHeal(freshCreature(20), 100)
+    assert(s.hp <= s.maxHp)
+  }
+
+  run test_inv_death_saves_bounded_nat1_at_2_failures = {
+    val s = freshCreature(20).with("hp", 0)
+              .with("deathSaves", { successes: 0, failures: 2 })
+    val s1 = pDeathSave(s, 1) // nat 1 = +2 failures, but should clamp to 3
+    all { assert(s1.deathSaves.failures <= 3), assert(s1.dead) }
+  }
 }

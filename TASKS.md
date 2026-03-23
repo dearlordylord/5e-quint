@@ -197,10 +197,10 @@ Makes the Quint spec MBT-ready. Adds thin actions, nondeterministic `step`, and 
 - `dndTest.qnt`: Verify invariants hold across random traces
 
 ### Acceptance
-- [ ] `quint run dnd.qnt --invariant=allInvariants` passes (1000+ steps, no violations)
-- [ ] Every pure function has a corresponding thin action
-- [ ] `step` action covers all actions nondeterministically
-- [ ] All invariants from PRD listed and verified
+- [x] `quint run dnd.qnt --invariant=allInvariants` passes (1000+ steps, no violations)
+- [x] Every pure function has a corresponding thin action
+- [x] `step` action covers all actions nondeterministically
+- [x] All invariants from PRD listed and verified
 
 ---
 
