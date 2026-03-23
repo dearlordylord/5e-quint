@@ -1690,6 +1690,32 @@ describe("concentration", () => {
     expect(isSpellIdle(snap(a))).toBe(true)
   })
 
+  it("damage does not auto-break concentration (needs Con save)", () => {
+    const a = create()
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    takeDamage(a, 5)
+    expect(ctx(a).concentrationSpellId).toBe("bless")
+    expect(isConcentrating(snap(a))).toBe(true)
+  })
+
+  it("temp HP absorption does not auto-break concentration", () => {
+    const a = create()
+    grantTempHp(a, 10)
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    takeDamage(a, 5)
+    expect(ctx(a).concentrationSpellId).toBe("bless")
+    expect(isConcentrating(snap(a))).toBe(true)
+  })
+
+  it("dropping to 0 HP breaks concentration (incapacitation)", () => {
+    const a = create(20)
+    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    takeDamage(a, 20)
+    expect(isUnstable(snap(a))).toBe(true)
+    expect(ctx(a).concentrationSpellId).toBe("")
+    expect(isSpellIdle(snap(a))).toBe(true)
+  })
+
   it("concentration check: save succeeded keeps concentration", () => {
     const a = create()
     a.send({ type: "START_CONCENTRATION", spellId: "bless" })
