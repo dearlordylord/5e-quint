@@ -14,7 +14,7 @@ Reference material: `.references/rules/` (PHB chapters 0-15).
 - [x] Phase 5: Movement System
 - [x] Phase 6: Spellcasting System
 - [x] Phase 7: Resting & Recovery
-- [ ] Phase 8: Environmental Rules
+- [x] Phase 8: Environmental Rules
 - [ ] Phase 9: Character Construction & Leveling
 
 ---

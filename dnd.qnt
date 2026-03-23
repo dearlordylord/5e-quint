@@ -1449,4 +1449,147 @@ module dnd {
         .with("tempHp", 0)
     }
 
+  // ============================================================
+  // 17. ENVIRONMENTAL RULES (Phase 8)
+  // ============================================================
+  // PHB Ch8: The Environment — falling, suffocation, vision/light,
+  // food/water, travel & forced march.
+
+  // -- 17.1 Falling --
+
+  /// Number of d6 for fall damage. PHB: 1d6 per 10 feet, max 20d6.
+  pure def pFallingDamageDice(heightFeet: int): int =
+    intMin(heightFeet / 10, 20)
+
+  /// Apply fall: bludgeoning damage + land prone unless damage entirely avoided.
+  /// Caller pre-rolls damage dice and passes total. isCritical = false for falls.
+  /// Petrified creatures use ALL_DAMAGE_TYPES as resistance (handled by pTakeDamage).
+  pure def pApplyFall(
+    s: CreatureState,
+    damageRoll: int,
+    resistances: Set[DamageType],
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType]
+  ): CreatureState = {
+    val effResist = if (s.petrified) ALL_DAMAGE_TYPES else resistances
+    val effDamage = applyDamageModifiers(damageRoll, Bludgeoning, immunities, effResist, vulnerabilities)
+    if (effDamage <= 0) s
+    else {
+      val s1 = pTakeDamage(s, damageRoll, Bludgeoning, resistances, vulnerabilities, immunities, false)
+      pApplyCondition(s1, CProne)
+    }
+  }
+
+  // -- 17.2 Suffocation --
+
+  /// Rounds a creature can hold its breath. PHB: 1 + CON mod minutes, min 30 seconds.
+  /// Returns rounds (1 minute = 10 rounds, 30 seconds = 5 rounds).
+  pure def pHoldBreathRounds(conMod: int): int =
+    intMax((1 + conMod) * 10, 5)
+
+  /// Rounds a suffocating creature survives after running out of breath.
+  /// PHB: CON mod rounds, min 1. After these rounds expire, drops to 0 HP.
+  pure def pSuffocationRounds(conMod: int): int =
+    intMax(conMod, 1)
+
+  /// Apply suffocation death: drop to 0 HP, dying (unconscious + prone).
+  /// Cannot regain HP or stabilize until breathing again (caller enforces).
+  pure def pSuffocate(s: CreatureState): CreatureState =
+    if (s.dead or s.hp == 0) s
+    else pApplyCondition(s.with("hp", 0), CUnconscious)
+
+  // -- 17.3 Vision & Light --
+
+  type Obscurement = Unobscured | LightlyObscured | HeavilyObscured
+
+  /// Map illumination to obscurement level.
+  pure def pIlluminationObscurement(light: Illumination): Obscurement = match light {
+    | Bright => Unobscured
+    | Dim => LightlyObscured
+    | Dark => HeavilyObscured
+  }
+
+  /// Effective obscurement considering darkvision.
+  /// Darkvision: darkness -> dim equivalent (lightly obscured); dim -> bright (unobscured).
+  /// Blindsight/truesight override obscurement entirely (caller handles).
+  pure def pEffectiveObscurement(light: Illumination, hasDarkvision: bool): Obscurement = {
+    if (hasDarkvision) {
+      match light {
+        | Bright => Unobscured
+        | Dim => Unobscured
+        | Dark => LightlyObscured
+      }
+    } else pIlluminationObscurement(light)
+  }
+
+  /// Whether a creature is effectively blinded by obscurement.
+  pure def pBlindedByObscurement(obs: Obscurement): bool = obs == HeavilyObscured
+
+  /// Perception disadvantage from obscurement (sight-based checks).
+  pure def pPerceptionDisadvantage(obs: Obscurement): bool =
+    obs == LightlyObscured or obs == HeavilyObscured
+
+  // -- 17.4 Food & Water --
+
+  /// Days a creature can go without food before exhaustion.
+  /// PHB: 3 + CON mod, min 1.
+  pure def pStarvationThreshold(conMod: int): int = intMax(3 + conMod, 1)
+
+  /// Apply starvation exhaustion. PHB: 1 level per day beyond threshold.
+  pure def pApplyStarvation(s: CreatureState): CreatureState = pAddExhaustion(s, 1)
+
+  /// Apply dehydration exhaustion. PHB Ch8:
+  /// halfWater=true: drank half (DC 15 CON save); false: less than half (auto fail).
+  /// If already exhausted (>= 1 level), takes 2 levels instead of 1.
+  pure def pApplyDehydration(s: CreatureState, halfWater: bool, conSaveSucceeded: bool): CreatureState = {
+    if (halfWater and conSaveSucceeded) s
+    else {
+      val levels = if (s.exhaustion >= 1) 2 else 1
+      pAddExhaustion(s, levels)
+    }
+  }
+
+  // -- 17.5 Travel & Forced March --
+
+  type TravelPace = PaceFast | PaceNormal | PaceSlow
+
+  /// Travel speed in feet per minute (PHB table, 30ft base speed).
+  pure def pTravelFeetPerMinute(pace: TravelPace): int = match pace {
+    | PaceFast => 400
+    | PaceNormal => 300
+    | PaceSlow => 200
+  }
+
+  /// Travel distance in miles per hour.
+  pure def pTravelMilesPerHour(pace: TravelPace): int = match pace {
+    | PaceFast => 4
+    | PaceNormal => 3
+    | PaceSlow => 2
+  }
+
+  /// Travel distance in miles per day (8 hours).
+  pure def pTravelMilesPerDay(pace: TravelPace): int = match pace {
+    | PaceFast => 30
+    | PaceNormal => 24
+    | PaceSlow => 18
+  }
+
+  /// Fast pace: -5 to passive Perception.
+  pure def pTravelPerceptionPenalty(pace: TravelPace): int = match pace {
+    | PaceFast => -5
+    | _ => 0
+  }
+
+  /// Slow pace allows stealth.
+  pure def pCanStealthWhileTraveling(pace: TravelPace): bool = pace == PaceSlow
+
+  /// Difficult terrain halves travel distance.
+  pure def pDifficultTerrainTravel(distance: int): int = distance / 2
+
+  /// Forced march CON save DC. PHB: DC 10 + (hours past 8).
+  /// Returns 0 if not yet forced marching (hours <= 8).
+  pure def pForcedMarchDC(hoursMarched: int): int =
+    if (hoursMarched <= 8) 0
+    else 10 + (hoursMarched - 8)
+
 }

@@ -2309,4 +2309,229 @@ module dndTest {
       assert(s.tempHp == 0),
     }
   }
+
+  // ============================================================
+  // Phase 8: Environmental Rules
+  // ============================================================
+
+  // -- 17.1 Falling --
+
+  run test_falling_dice_10ft = assert(pFallingDamageDice(10) == 1)
+  run test_falling_dice_50ft = assert(pFallingDamageDice(50) == 5)
+  run test_falling_dice_200ft = assert(pFallingDamageDice(200) == 20)
+  run test_falling_dice_300ft_capped = assert(pFallingDamageDice(300) == 20)
+  run test_falling_dice_5ft = assert(pFallingDamageDice(5) == 0)
+  run test_falling_dice_0ft = assert(pFallingDamageDice(0) == 0)
+
+  run test_fall_damage_and_prone = {
+    val s = freshCreature(30)
+    val s1 = pApplyFall(s, 10, Set(), Set(), Set())
+    all {
+      assert(s1.hp == 20),
+      assert(s1.prone),
+    }
+  }
+
+  run test_fall_no_damage_no_prone = {
+    // 0 damage roll (< 10ft fall) → no prone
+    val s = freshCreature(30)
+    val s1 = pApplyFall(s, 0, Set(), Set(), Set())
+    all {
+      assert(s1.hp == 30),
+      assert(not(s1.prone)),
+    }
+  }
+
+  run test_fall_immune_bludgeoning = {
+    // Immune to bludgeoning → no damage, no prone
+    val s = freshCreature(30)
+    val s1 = pApplyFall(s, 10, Set(), Set(), Set(Bludgeoning))
+    all {
+      assert(s1.hp == 30),
+      assert(not(s1.prone)),
+    }
+  }
+
+  run test_fall_resistant_bludgeoning = {
+    // Resistant: 10 → 5 damage, still prone
+    val s = freshCreature(30)
+    val s1 = pApplyFall(s, 10, Set(Bludgeoning), Set(), Set())
+    all {
+      assert(s1.hp == 25),
+      assert(s1.prone),
+    }
+  }
+
+  run test_fall_vulnerable_bludgeoning = {
+    // Vulnerable: 10 → 20 damage, prone
+    val s = freshCreature(30)
+    val s1 = pApplyFall(s, 10, Set(), Set(Bludgeoning), Set())
+    all {
+      assert(s1.hp == 10),
+      assert(s1.prone),
+    }
+  }
+
+  run test_fall_kills = {
+    // Fall damage exceeds HP → 0 HP, unconscious (includes prone)
+    val s = freshCreature(10)
+    val s1 = pApplyFall(s, 15, Set(), Set(), Set())
+    all {
+      assert(s1.hp == 0),
+      assert(s1.prone),
+      assert(s1.unconscious),
+    }
+  }
+
+  run test_fall_with_temp_hp = {
+    // Temp HP absorbs some damage, still prone
+    val s = freshCreature(30).with("tempHp", 5)
+    val s1 = pApplyFall(s, 8, Set(), Set(), Set())
+    all {
+      assert(s1.tempHp == 0),
+      assert(s1.hp == 27),
+      assert(s1.prone),
+    }
+  }
+
+  // -- 17.2 Suffocation --
+
+  run test_hold_breath_positive_con = assert(pHoldBreathRounds(2) == 30) // 3 minutes
+  run test_hold_breath_zero_con = assert(pHoldBreathRounds(0) == 10) // 1 minute
+  run test_hold_breath_neg1_con = assert(pHoldBreathRounds(-1) == 5) // 30 sec minimum
+  run test_hold_breath_neg3_con = assert(pHoldBreathRounds(-3) == 5) // 30 sec minimum
+
+  run test_suffocation_rounds_positive = assert(pSuffocationRounds(3) == 3)
+  run test_suffocation_rounds_zero = assert(pSuffocationRounds(0) == 1) // min 1
+  run test_suffocation_rounds_negative = assert(pSuffocationRounds(-2) == 1) // min 1
+
+  run test_suffocate_drops_to_0 = {
+    val s = freshCreature(30)
+    val s1 = pSuffocate(s)
+    all {
+      assert(s1.hp == 0),
+      assert(s1.unconscious),
+      assert(s1.prone),
+    }
+  }
+
+  run test_suffocate_already_0hp = {
+    // Already at 0 → no-op
+    val s = freshCreature(30).with("hp", 0)
+    val s1 = pSuffocate(s)
+    assert(s1 == s)
+  }
+
+  run test_suffocate_dead = {
+    val s = freshCreature(30).with("dead", true)
+    val s1 = pSuffocate(s)
+    assert(s1 == s)
+  }
+
+  // -- 17.3 Vision & Light --
+
+  run test_illumination_bright = assert(pIlluminationObscurement(Bright) == Unobscured)
+  run test_illumination_dim = assert(pIlluminationObscurement(Dim) == LightlyObscured)
+  run test_illumination_dark = assert(pIlluminationObscurement(Dark) == HeavilyObscured)
+
+  run test_darkvision_bright = assert(pEffectiveObscurement(Bright, true) == Unobscured)
+  run test_darkvision_dim = assert(pEffectiveObscurement(Dim, true) == Unobscured)
+  run test_darkvision_dark = assert(pEffectiveObscurement(Dark, true) == LightlyObscured)
+  run test_no_darkvision_dark = assert(pEffectiveObscurement(Dark, false) == HeavilyObscured)
+
+  run test_blinded_by_heavy_obscurement = assert(pBlindedByObscurement(HeavilyObscured))
+  run test_not_blinded_by_light = assert(not(pBlindedByObscurement(LightlyObscured)))
+  run test_not_blinded_unobscured = assert(not(pBlindedByObscurement(Unobscured)))
+
+  run test_perception_disadv_light = assert(pPerceptionDisadvantage(LightlyObscured))
+  run test_perception_disadv_heavy = assert(pPerceptionDisadvantage(HeavilyObscured))
+  run test_no_perception_disadv_unobscured = assert(not(pPerceptionDisadvantage(Unobscured)))
+
+  // -- 17.4 Food & Water --
+
+  run test_starvation_threshold_positive = assert(pStarvationThreshold(2) == 5)
+  run test_starvation_threshold_zero = assert(pStarvationThreshold(0) == 3)
+  run test_starvation_threshold_negative = assert(pStarvationThreshold(-3) == 1) // min 1
+  run test_starvation_threshold_very_negative = assert(pStarvationThreshold(-5) == 1)
+
+  run test_starvation_adds_1_exhaustion = {
+    val s = freshCreature(30)
+    val s1 = pApplyStarvation(s)
+    assert(s1.exhaustion == 1)
+  }
+
+  run test_dehydration_no_water_fresh = {
+    // No water, not yet exhausted → 1 level
+    val s = freshCreature(30)
+    val s1 = pApplyDehydration(s, false, false)
+    assert(s1.exhaustion == 1)
+  }
+
+  run test_dehydration_no_water_already_exhausted = {
+    // No water, already exhausted → 2 levels
+    val s = freshCreature(30).with("exhaustion", 1)
+    val s1 = pApplyDehydration(s, false, false)
+    assert(s1.exhaustion == 3)
+  }
+
+  run test_dehydration_half_water_save_fails = {
+    // Half water, failed save, not exhausted → 1 level
+    val s = freshCreature(30)
+    val s1 = pApplyDehydration(s, true, false)
+    assert(s1.exhaustion == 1)
+  }
+
+  run test_dehydration_half_water_save_succeeds = {
+    // Half water, passed save → no effect
+    val s = freshCreature(30)
+    val s1 = pApplyDehydration(s, true, true)
+    assert(s1.exhaustion == 0)
+  }
+
+  run test_dehydration_half_water_already_exhausted_fail = {
+    // Half water, failed save, already exhausted → 2 levels
+    val s = freshCreature(30).with("exhaustion", 2)
+    val s1 = pApplyDehydration(s, true, false)
+    assert(s1.exhaustion == 4)
+  }
+
+  run test_dehydration_escalation_causes_death = {
+    // Exhaustion 5 + dehydration (2 levels) → 6 → dead
+    val s = freshCreature(30).with("exhaustion", 5)
+    val s1 = pApplyDehydration(s, false, false)
+    all {
+      assert(s1.exhaustion == 6),
+      assert(s1.dead),
+    }
+  }
+
+  // -- 17.5 Travel & Forced March --
+
+  run test_travel_feet_fast = assert(pTravelFeetPerMinute(PaceFast) == 400)
+  run test_travel_feet_normal = assert(pTravelFeetPerMinute(PaceNormal) == 300)
+  run test_travel_feet_slow = assert(pTravelFeetPerMinute(PaceSlow) == 200)
+
+  run test_travel_mph_fast = assert(pTravelMilesPerHour(PaceFast) == 4)
+  run test_travel_mph_normal = assert(pTravelMilesPerHour(PaceNormal) == 3)
+  run test_travel_mph_slow = assert(pTravelMilesPerHour(PaceSlow) == 2)
+
+  run test_travel_mpd_fast = assert(pTravelMilesPerDay(PaceFast) == 30)
+  run test_travel_mpd_normal = assert(pTravelMilesPerDay(PaceNormal) == 24)
+  run test_travel_mpd_slow = assert(pTravelMilesPerDay(PaceSlow) == 18)
+
+  run test_travel_perception_fast = assert(pTravelPerceptionPenalty(PaceFast) == -5)
+  run test_travel_perception_normal = assert(pTravelPerceptionPenalty(PaceNormal) == 0)
+  run test_travel_perception_slow = assert(pTravelPerceptionPenalty(PaceSlow) == 0)
+
+  run test_stealth_slow = assert(pCanStealthWhileTraveling(PaceSlow))
+  run test_stealth_normal = assert(not(pCanStealthWhileTraveling(PaceNormal)))
+  run test_stealth_fast = assert(not(pCanStealthWhileTraveling(PaceFast)))
+
+  run test_difficult_terrain = assert(pDifficultTerrainTravel(300) == 150)
+  run test_difficult_terrain_odd = assert(pDifficultTerrainTravel(301) == 150)
+
+  run test_forced_march_dc_8hrs = assert(pForcedMarchDC(8) == 0)
+  run test_forced_march_dc_9hrs = assert(pForcedMarchDC(9) == 11)
+  run test_forced_march_dc_10hrs = assert(pForcedMarchDC(10) == 12)
+  run test_forced_march_dc_12hrs = assert(pForcedMarchDC(12) == 14)
 }
