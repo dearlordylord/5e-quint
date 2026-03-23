@@ -52,17 +52,17 @@ The smallest end-to-end proof: take damage, heal, die. Establishes the branded t
 - `machine.test.ts`: Unit tests covering the 5 death save paths, instant death, temp HP absorption, damage modifiers, healing at 0 HP
 
 ### Acceptance
-- [ ] `npm run check-all` passes (build + typecheck + lint + test)
-- [ ] Branded type constructors clamp values (HP can't go negative, DeathSaveCount 0-3, D20Roll 1-20)
-- [ ] TAKE_DAMAGE: temp HP absorbs first, overflow to real HP, instant death if overflow >= maxHp
-- [ ] TAKE_DAMAGE at 0 HP: +1 death save failure (crit = +2)
-- [ ] DEATH_SAVE: nat 1 = +2 failures, nat 20 = regain 1 HP, >= 10 = success, < 10 = failure
-- [ ] 3 successes -> stable, 3 failures -> dead
-- [ ] HEAL at 0 HP resets death saves, transitions conscious
-- [ ] STABILIZE resets death saves, transitions to stable
-- [ ] KNOCK_OUT -> unconscious + stable at 0 HP
-- [ ] Dead is absorbing (no events transition out)
-- [ ] Resistance then vulnerability applied sequentially (halve 7 = 3, double 3 = 6)
+- [x] `npm run check-all` passes (build + typecheck + lint + test)
+- [x] Branded type constructors clamp values (HP can't go negative, DeathSaveCount 0-3, D20Roll 1-20)
+- [x] TAKE_DAMAGE: temp HP absorbs first, overflow to real HP, instant death if overflow >= maxHp
+- [x] TAKE_DAMAGE at 0 HP: +1 death save failure (crit = +2)
+- [x] DEATH_SAVE: nat 1 = +2 failures, nat 20 = regain 1 HP, >= 10 = success, < 10 = failure
+- [x] 3 successes -> stable, 3 failures -> dead
+- [x] HEAL at 0 HP resets death saves, transitions conscious
+- [x] STABILIZE resets death saves, transitions to stable
+- [x] KNOCK_OUT -> unconscious + stable at 0 HP
+- [x] Dead is absorbing (no events transition out)
+- [x] Resistance then vulnerability applied sequentially (halve 7 = 3, double 3 = 6)
 
 ---
 
@@ -79,15 +79,15 @@ Adds the conditionTrack (14 parallel sub-regions) and exhaustionTrack. Wires con
 - `machine.test.ts`: Tests for condition implications, exhaustion ladder, modifier aggregation, condition+damage interactions
 
 ### Acceptance
-- [ ] APPLY_CONDITION(paralyzed) sets incapacitated; REMOVE while stunned active -> incapacitated remains
-- [ ] Unconscious implies incapacitated AND prone
-- [ ] Exhaustion 6 transitions to dead
-- [ ] Exhaustion 4 halves maxHp (derived, not stored)
-- [ ] Modifier aggregation: blinded gives disadv on own attacks + adv to attackers
-- [ ] Prone: attacker within 5ft = adv, beyond 5ft = disadv
-- [ ] Auto-crit: paralyzed or unconscious + attacker within 5ft
-- [ ] Frightened: disadv on checks/attacks only when source in LOS (parameterized)
-- [ ] `canAct` = not incapacitated; `canSpeak` = not paralyzed/petrified/unconscious
+- [x] APPLY_CONDITION(paralyzed) sets incapacitated; REMOVE while stunned active -> incapacitated remains
+- [x] Unconscious implies incapacitated AND prone
+- [x] Exhaustion 6 transitions to dead
+- [x] Exhaustion 4 halves maxHp (derived, not stored)
+- [x] Modifier aggregation: blinded gives disadv on own attacks + adv to attackers
+- [x] Prone: attacker within 5ft = adv, beyond 5ft = disadv
+- [x] Auto-crit: paralyzed or unconscious + attacker within 5ft
+- [x] Frightened: disadv on checks/attacks only when source in LOS (parameterized)
+- [x] `canAct` = not incapacitated; `canSpeak` = not paralyzed/petrified/unconscious
 
 ---
 
