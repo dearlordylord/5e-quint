@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), "../..")
@@ -74,6 +75,36 @@ def format_prompt(entry):
     return "\n\n".join(parts)
 
 
+def typecheck_fragment(text):
+    """Wrap a Quint fragment in a module and typecheck it. Returns (ok, error_msg)."""
+    wrapped = (
+        'module _qa_check {\n'
+        '  import dnd.* from "./dnd"\n\n'
+        f'  {text}\n'
+        '}\n'
+    )
+    # Must be in BASE_DIR so the relative import resolves
+    try:
+        fd, tmp_path = tempfile.mkstemp(suffix=".qnt", dir=BASE_DIR)
+        with os.fdopen(fd, "w") as f:
+            f.write(wrapped)
+        result = subprocess.run(
+            ["quint", "typecheck", tmp_path],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode != 0:
+            err = (result.stderr + result.stdout).strip()
+            return False, err[:500]
+        return True, None
+    except Exception as e:
+        return False, str(e)
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
 def generate_one(entry, system_prompt):
     h = entry_hash(entry)
     cache_file = os.path.join(CACHE_DIR, f"{h}.qnt")
@@ -115,6 +146,12 @@ def generate_one(entry, system_prompt):
 
     if not text:
         return h, "empty response"
+
+    # SKIP entries bypass typecheck
+    if not text.startswith("// SKIP"):
+        ok, err = typecheck_fragment(text)
+        if not ok:
+            return h, f"typecheck failed: {err}"
 
     with open(cache_file, "w") as f:
         f.write(text)
