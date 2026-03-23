@@ -1,5 +1,5 @@
 import type { CasterType, Condition, DamageType, IncapSource, SpellSlots } from "#/types.ts"
-import { EMPTY_SLOTS, SPELL_SLOT_LEVELS } from "#/types.ts"
+import { EMPTY_SLOTS, exhaustionLevel, hp, SPELL_SLOT_LEVELS } from "#/types.ts"
 
 // --- Constants ---
 
@@ -8,7 +8,7 @@ export const DEATH_SAVE_THRESHOLD = 3
 export const NAT_20 = 20
 export const NAT_1 = 1
 const DEATH_SAVE_SUCCESS_MIN = 10
-const NAT_1_FAILURE_COUNT = 2
+const DOUBLE_FAILURE_COUNT = 2
 const HALVE_DIVISOR = 2
 const VULNERABILITY_MULTIPLIER = 2
 
@@ -80,7 +80,7 @@ export function resolveDeathSave(d20Roll: number, successes: number, failures: n
     return { isDead: false, isStabilized: false, newFailures: 0, newSuccesses: 0, regainsConsciousness: true }
   }
   if (d20Roll === NAT_1) {
-    const newFail = failures + NAT_1_FAILURE_COUNT
+    const newFail = failures + DOUBLE_FAILURE_COUNT
     return {
       isDead: newFail >= DEATH_SAVE_THRESHOLD,
       isStabilized: false,
@@ -114,7 +114,7 @@ export function addDeathFailures(
   currentFailures: number,
   isCritical: boolean
 ): { readonly newFailures: number; readonly isDead: boolean } {
-  const count = isCritical ? NAT_1_FAILURE_COUNT : 1
+  const count = isCritical ? DOUBLE_FAILURE_COUNT : 1
   const newFailures = currentFailures + count
   return { isDead: newFailures >= DEATH_SAVE_THRESHOLD, newFailures }
 }
@@ -182,7 +182,7 @@ export function removeConditionUpdate(
 ): ConditionUpdate {
   const incapSource = INCAP_SOURCE_MAP[condition]
   let incapSources: ReadonlySet<IncapSource>
-  if (incapSource) {
+  if (incapSource && currentIncapSources.has(incapSource)) {
     const s = new Set(currentIncapSources)
     s.delete(incapSource)
     incapSources = s
@@ -372,7 +372,7 @@ export function computeLongRest(
     newHitDice: hitDiceRemaining + recovery,
     newHp: effMax,
     newPactSlots: pactSlotsMax,
-    newSlots: [...slotsMax]
+    newSlots: slotsMax
   }
 }
 
@@ -439,6 +439,13 @@ export function computeFallResult(
     vulnerabilities
   )
 }
+
+// --- Shared context update helpers ---
+
+export const exhUpdate = (r: { newExhaustion: number; newHp: number }) => ({
+  exhaustion: exhaustionLevel(r.newExhaustion),
+  hp: hp(r.newHp)
+})
 
 // --- IncapSource set helpers ---
 

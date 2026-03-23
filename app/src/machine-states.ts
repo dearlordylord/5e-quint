@@ -1,3 +1,22 @@
+const DYING_TAKE_DAMAGE_PREFIX = [
+  { guard: "noDamageThrough" as const, actions: ["absorbTempHpOnly"] },
+  {
+    guard: "instantDeathFromDying" as const,
+    target: "#dnd.damageTrack.dead",
+    actions: ["absorbTempHpOnly", "breakConcentration"]
+  },
+  {
+    guard: "deathFromDamageFailures" as const,
+    target: "#dnd.damageTrack.dead",
+    actions: ["applyDamageAtZeroHp"]
+  }
+] as const
+
+const DYING_FALL_PREFIX = [
+  { guard: "fallNoDamage" as const },
+  { guard: "fallInstantDeathFromDying" as const, target: "#dnd.damageTrack.dead", actions: ["applyFall"] }
+] as const
+
 export const damageTrackConfig = {
   initial: "conscious" as const,
   states: {
@@ -45,11 +64,7 @@ export const damageTrackConfig = {
           target: "#dnd.damageTrack.dying.stable",
           actions: ["applyKnockOut", "setUnconscious"]
         },
-        APPLY_FALL: [
-          { guard: "fallNoDamage" as const },
-          { guard: "fallInstantDeathFromDying" as const, target: "#dnd.damageTrack.dead", actions: ["applyFall"] },
-          { actions: ["applyFallAtZeroHp"] }
-        ],
+        APPLY_FALL: [...DYING_FALL_PREFIX, { actions: ["applyFallAtZeroHp"] }],
         SHORT_REST: [
           {
             guard: "shortRestHeals" as const,
@@ -78,20 +93,7 @@ export const damageTrackConfig = {
       states: {
         unstable: {
           on: {
-            TAKE_DAMAGE: [
-              { guard: "noDamageThrough" as const, actions: ["absorbTempHpOnly"] },
-              {
-                guard: "instantDeathFromDying" as const,
-                target: "#dnd.damageTrack.dead",
-                actions: ["absorbTempHpOnly", "breakConcentration"]
-              },
-              {
-                guard: "deathFromDamageFailures" as const,
-                target: "#dnd.damageTrack.dead",
-                actions: ["applyDamageAtZeroHp"]
-              },
-              { actions: ["applyDamageAtZeroHp"] }
-            ],
+            TAKE_DAMAGE: [...DYING_TAKE_DAMAGE_PREFIX, { actions: ["applyDamageAtZeroHp"] }],
             DEATH_SAVE: [
               {
                 guard: "deathSaveRegainsConsciousness" as const,
@@ -107,29 +109,8 @@ export const damageTrackConfig = {
         },
         stable: {
           on: {
-            TAKE_DAMAGE: [
-              { guard: "noDamageThrough" as const, actions: ["absorbTempHpOnly"] },
-              {
-                guard: "instantDeathFromDying" as const,
-                target: "#dnd.damageTrack.dead",
-                actions: ["absorbTempHpOnly", "breakConcentration"]
-              },
-              {
-                guard: "deathFromDamageFailures" as const,
-                target: "#dnd.damageTrack.dead",
-                actions: ["applyDamageAtZeroHp"]
-              },
-              { target: "unstable", actions: ["applyDamageAtZeroHp"] }
-            ],
-            APPLY_FALL: [
-              { guard: "fallNoDamage" as const },
-              {
-                guard: "fallInstantDeathFromDying" as const,
-                target: "#dnd.damageTrack.dead",
-                actions: ["applyFall"]
-              },
-              { target: "unstable", actions: ["applyFallAtZeroHp"] }
-            ]
+            TAKE_DAMAGE: [...DYING_TAKE_DAMAGE_PREFIX, { target: "unstable", actions: ["applyDamageAtZeroHp"] }],
+            APPLY_FALL: [...DYING_FALL_PREFIX, { target: "unstable", actions: ["applyFallAtZeroHp"] }]
           }
         }
       }
