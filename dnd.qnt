@@ -1462,8 +1462,7 @@ module dnd {
     intMin(heightFeet / 10, 20)
 
   /// Apply fall: bludgeoning damage + land prone unless damage entirely avoided.
-  /// Caller pre-rolls damage dice and passes total. isCritical = false for falls.
-  /// Petrified creatures use ALL_DAMAGE_TYPES as resistance (handled by pTakeDamage).
+  /// Prone applies if any damage reached the creature (including temp HP absorption).
   pure def pApplyFall(
     s: CreatureState,
     damageRoll: int,
@@ -1471,13 +1470,8 @@ module dnd {
     vulnerabilities: Set[DamageType],
     immunities: Set[DamageType]
   ): CreatureState = {
-    val effResist = if (s.petrified) ALL_DAMAGE_TYPES else resistances
-    val effDamage = applyDamageModifiers(damageRoll, Bludgeoning, immunities, effResist, vulnerabilities)
-    if (effDamage <= 0) s
-    else {
-      val s1 = pTakeDamage(s, damageRoll, Bludgeoning, resistances, vulnerabilities, immunities, false)
-      pApplyCondition(s1, CProne)
-    }
+    val s1 = pTakeDamage(s, damageRoll, Bludgeoning, resistances, vulnerabilities, immunities, false)
+    if (s1 == s) s else pApplyCondition(s1, CProne)
   }
 
   // -- 17.2 Suffocation --
@@ -1574,13 +1568,11 @@ module dnd {
     | PaceSlow => 18
   }
 
-  /// Fast pace: -5 to passive Perception.
   pure def pTravelPerceptionPenalty(pace: TravelPace): int = match pace {
     | PaceFast => -5
     | _ => 0
   }
 
-  /// Slow pace allows stealth.
   pure def pCanStealthWhileTraveling(pace: TravelPace): bool = pace == PaceSlow
 
   /// Difficult terrain halves travel distance.
