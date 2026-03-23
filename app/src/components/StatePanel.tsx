@@ -1,6 +1,7 @@
 import { useT } from "#/i18n.ts"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
 import { DEATH_SAVE_THRESHOLD, MAX_EXHAUSTION } from "#/machine-helpers.ts"
+import { isIncapacitated } from "#/machine-queries.ts"
 import { ALL_CONDITIONS, SPELL_SLOT_LEVELS } from "#/types.ts"
 
 type TrackLabel = "conscious" | "stable" | "unstable" | "dead"
@@ -76,7 +77,7 @@ function ExhaustionGauge({ level }: { readonly level: number }) {
 
 function ConditionBadges({ ctx }: { readonly ctx: DndContext }) {
   const t = useT()
-  const isIncap = ctx.incapacitatedSources.size > 0
+  const isIncap = isIncapacitated(ctx)
   return (
     <div>
       <h3 className="text-sm text-gray-400 mb-1">{t.conditions}</h3>
