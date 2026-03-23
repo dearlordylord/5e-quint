@@ -147,21 +147,61 @@ def generate_one(entry, system_prompt):
     if not text:
         return h, "empty response"
 
-    # SKIP entries bypass typecheck
-    if not text.startswith("// SKIP"):
-        ok, err = typecheck_fragment(text)
-        if not ok:
-            return h, f"typecheck failed: {err}"
+    # SKIP entries bypass typecheck and module wrapping
+    if text.startswith("// SKIP"):
+        with open(cache_file, "w") as f:
+            f.write(text)
+        return h, "ok"
 
-    # Prepend source URL
+    ok, err = typecheck_fragment(text)
+    if not ok:
+        return h, f"typecheck failed: {err}"
+
+    # Wrap as standalone navigable module
     url = entry.get("url", "")
-    if url:
-        text = f"// Source: {url}\n{text}"
+    source_line = f"// Source: {url}\n" if url else ""
+    wrapped = (
+        f"{source_line}"
+        f"module _qa_{h} {{\n"
+        f'  import dnd.* from "./dnd"\n'
+        f"\n"
+    )
+    for line in text.split("\n"):
+        wrapped += f"  {line}\n"
+    wrapped += "}\n"
 
     with open(cache_file, "w") as f:
-        f.write(text)
+        f.write(wrapped)
 
     return h, "ok"
+
+
+def extract_body(content):
+    """Extract the run statements from a cache file, stripping module wrapper if present."""
+    lines = content.strip().split("\n")
+    # Check if wrapped in module (new format)
+    has_module = any(re.match(r"module _qa_\w+\s*\{", line) for line in lines)
+    if not has_module:
+        # Old format: raw fragment, possibly with // Source: line
+        return content.strip()
+    # Strip: // Source, module declaration, import, closing }
+    body_lines = []
+    in_body = False
+    for line in lines:
+        if line.startswith("// Source:"):
+            body_lines.append(line)
+            continue
+        if re.match(r"module _qa_\w+\s*\{", line):
+            continue
+        if re.match(r'\s*import dnd\.\*', line):
+            in_body = True
+            continue
+        if in_body and line.strip() == "}" and line == lines[-1]:
+            continue  # closing brace
+        if in_body:
+            # Remove one level of indentation (2 spaces)
+            body_lines.append(line[2:] if line.startswith("  ") else line)
+    return "\n".join(body_lines).strip()
 
 
 def rebuild_qnt():
@@ -176,9 +216,10 @@ def rebuild_qnt():
             content = f.read().strip()
         if content.startswith("// SKIP"):
             continue
+        body = extract_body(content)
         # Deduplicate test names by appending hash suffix on collision
-        deduped = content
-        for m in re.finditer(r"run (qa_\w+)", content):
+        deduped = body
+        for m in re.finditer(r"run (qa_\w+)", body):
             name = m.group(1)
             if name in seen_names:
                 new_name = f"{name}_{h[:8]}"
