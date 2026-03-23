@@ -191,7 +191,7 @@ export function StatePanel({ ctx, snapshot }: { readonly snapshot: DndSnapshot; 
       {track !== "conscious" && track !== "dead" && <DeathSaveTracker ctx={ctx} />}
       <ExhaustionGauge level={ctx.exhaustion} />
       <ConditionBadges ctx={ctx} />
-      <TurnResources ctx={ctx} />
+      {track === "conscious" && <TurnResources ctx={ctx} />}
       <SpellSlotGrid ctx={ctx} />
     </div>
   )
