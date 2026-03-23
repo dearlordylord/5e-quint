@@ -1,0 +1,9 @@
+set -e
+
+echo "Running lint-staged..."
+(cd app && npx lint-staged)
+
+echo "Running gitleaks to check for secrets..."
+gitleaks protect --verbose --staged
+
+echo "No secrets detected"
