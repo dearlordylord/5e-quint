@@ -139,3 +139,45 @@ scripts/qa/
 
 qa_generated.qnt          # assembled test file (repo root, gitignored)
 ```
+
+## Bootstrapping from scratch
+
+All `.references/` data is gitignored (too large — SE corpus 44M, Reddit corpus 438M). A fresh clone must regenerate:
+
+```bash
+# 1. SE (~5 min: 285MB download + extract + parse)
+python3 scripts/qa/download_se.py        # needs: brew install 7zip
+python3 scripts/qa/parse_se.py
+
+# 2. Reddit (~3 hrs total)
+python3 scripts/qa/download_reddit.py posts      # ~5 min, 279k posts
+python3 scripts/qa/download_reddit.py comments   # ~3 hrs, 107k trees
+python3 scripts/qa/parse_reddit.py
+
+# 3. Then run the Quick Start commands above
+```
+
+To skip Reddit and work with SE only: `--source se` on classify.py.
+
+## Troubleshooting
+
+**"No corpus file found"** — Run the download+parse steps above. The classify and assertion scripts check for corpus files and exit with a clear message if missing.
+
+**Assertion doesn't compile (Quint syntax error)** — Sonnet sometimes produces invalid Quint (wrong function name, bad syntax). Fix:
+```bash
+# Find the bad cache entry — quint error message shows the test name
+# Look up which cache file contains it:
+grep -rl "qa_bad_test_name" .references/qa/cache/assertions/
+# Delete it and rerun:
+rm .references/qa/cache/assertions/{hash}.qnt
+python3 scripts/qa/generate_assertions.py --rebuild
+```
+
+**Assertion compiles but fails (spec disagrees with community answer)** — This is the interesting case. Either:
+1. The spec has a bug → fix `dnd.qnt`
+2. The community answer is wrong → delete the cache entry
+3. The LLM misinterpreted the Q&A → delete cache entry, it will regenerate on next run
+
+**Classification seems wrong** — Delete the cache entry in `.references/qa/cache/classify/{hash}.json` and rerun. It will reprocess that entry.
+
+**Claude CLI auth error ("Not logged in")** — Run `claude /login` first. The scripts use OAuth subscription auth, not API keys.
