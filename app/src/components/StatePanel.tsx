@@ -1,26 +1,7 @@
 import { type MessageKey, useT } from "#/i18n.ts"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
-import type { Condition } from "#/types.ts"
-
-const ALL_CONDITIONS: ReadonlyArray<Condition> = [
-  "blinded",
-  "charmed",
-  "deafened",
-  "frightened",
-  "grappled",
-  "incapacitated",
-  "invisible",
-  "paralyzed",
-  "petrified",
-  "poisoned",
-  "prone",
-  "restrained",
-  "stunned",
-  "unconscious"
-]
-
-const SLOT_LEVELS = 9
-const MAX_EXHAUSTION = 6
+import { MAX_EXHAUSTION } from "#/machine-helpers.ts"
+import { ALL_CONDITIONS, SPELL_SLOT_LEVELS } from "#/types.ts"
 
 function damageTrackLabel(snap: DndSnapshot): string {
   if (snap.matches({ damageTrack: "dead" })) return "dead"
@@ -160,7 +141,7 @@ function SpellSlotGrid({ ctx }: { readonly ctx: DndContext }) {
     <div>
       <h3 className="text-sm text-gray-400 mb-1">{t.spellSlots}</h3>
       <div className="grid grid-cols-9 gap-1 text-center text-xs">
-        {Array.from({ length: SLOT_LEVELS }, (_, i) => (
+        {Array.from({ length: SPELL_SLOT_LEVELS }, (_, i) => (
           <div key={i} className="bg-gray-800 rounded p-1">
             <div className="text-gray-500">{i + 1}</div>
             <div className={ctx.slotsCurrent[i] > 0 ? "text-blue-400" : "text-gray-600"}>
@@ -187,20 +168,21 @@ function StatusBadge({ color, label }: { readonly label: string; readonly color:
   return <span className={`px-3 py-1 rounded-full text-sm font-bold ${color}`}>{label}</span>
 }
 
+const TRACK_COLORS: Record<string, string> = {
+  conscious: "bg-green-800 text-green-200",
+  unstable: "bg-red-800 text-red-200",
+  stable: "bg-yellow-800 text-yellow-200",
+  dead: "bg-gray-800 text-gray-400"
+}
+
 export function StatePanel({ ctx, snapshot }: { readonly snapshot: DndSnapshot; readonly ctx: DndContext }) {
   const t = useT()
   const track = damageTrackLabel(snapshot)
-  const trackColors: Record<string, string> = {
-    conscious: "bg-green-800 text-green-200",
-    unstable: "bg-red-800 text-red-200",
-    stable: "bg-yellow-800 text-yellow-200",
-    dead: "bg-gray-800 text-gray-400"
-  }
   return (
     <div className="space-y-4 bg-gray-800 rounded-xl p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">{t.state}</h2>
-        <StatusBadge color={trackColors[track] || ""} label={t[track as MessageKey] || track} />
+        <StatusBadge color={TRACK_COLORS[track] || ""} label={t[track as MessageKey] || track} />
       </div>
       <HpBar ctx={ctx} />
       {track !== "conscious" && track !== "dead" && <DeathSaveTracker ctx={ctx} />}

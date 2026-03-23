@@ -2,43 +2,13 @@ import { type FormEvent, useState } from "react"
 
 import { useT } from "#/i18n.ts"
 import type { DndEvent } from "#/machine.ts"
+import { ALL_DAMAGE_TYPES } from "#/machine-helpers.ts"
 import type { Condition, DamageType } from "#/types.ts"
-import { d20Roll, healAmount, tempHp } from "#/types.ts"
+import { ALL_CONDITIONS, d20Roll, healAmount, tempHp } from "#/types.ts"
 
-const DAMAGE_TYPES: ReadonlyArray<DamageType> = [
-  "acid",
-  "bludgeoning",
-  "cold",
-  "fire",
-  "force",
-  "lightning",
-  "necrotic",
-  "piercing",
-  "poison",
-  "psychic",
-  "radiant",
-  "slashing",
-  "thunder"
-]
-
-const CONDITIONS: ReadonlyArray<Condition> = [
-  "blinded",
-  "charmed",
-  "deafened",
-  "frightened",
-  "grappled",
-  "incapacitated",
-  "invisible",
-  "paralyzed",
-  "petrified",
-  "poisoned",
-  "prone",
-  "restrained",
-  "stunned",
-  "unconscious"
-]
-
-const INIT_SPEED = 30
+const DAMAGE_TYPES: ReadonlyArray<DamageType> = Array.from(ALL_DAMAGE_TYPES)
+const DEFAULT_SPEED = 30
+const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
 
 function Section({ children, title }: { readonly title: string; readonly children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -109,7 +79,6 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
     e.preventDefault()
     fn()
   }
-  const empty = () => new Set<DamageType>()
 
   return (
     <div className="space-y-2 bg-gray-800 rounded-xl p-4">
@@ -122,9 +91,9 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
               type: "TAKE_DAMAGE",
               amount: dmgAmount,
               damageType: dmgType,
-              resistances: empty(),
-              vulnerabilities: empty(),
-              immunities: empty(),
+              resistances: EMPTY_DAMAGE_SET,
+              vulnerabilities: EMPTY_DAMAGE_SET,
+              immunities: EMPTY_DAMAGE_SET,
               isCritical: isCrit
             })
           )}
@@ -185,7 +154,7 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
             onChange={(e) => setCondition(e.target.value as Condition)}
             className="bg-gray-700 rounded px-2 py-1 text-white"
           >
-            {CONDITIONS.map((c) => (
+            {ALL_CONDITIONS.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
@@ -212,7 +181,7 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
           onClick={() =>
             send({
               type: "START_TURN",
-              baseSpeed: INIT_SPEED,
+              baseSpeed: DEFAULT_SPEED,
               armorPenalty: 0,
               extraAttacks: 1,
               isSurprised: false,
@@ -228,7 +197,6 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
         <NumInput label={t.level} value={slotLevel} onChange={setSlotLevel} min={1} max={9} />
         <Btn label={t.expendSlot} onClick={() => send({ type: "EXPEND_SLOT", level: slotLevel })} />
         <div className="mt-2">
-          <NumInput label={t.spellId} value={0} onChange={() => {}} />
           <input
             value={spellId}
             onChange={(e) => setSpellId(e.target.value)}
@@ -258,9 +226,9 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
               send({
                 type: "APPLY_FALL",
                 damageRoll: fallDmg,
-                resistances: empty(),
-                vulnerabilities: empty(),
-                immunities: empty()
+                resistances: EMPTY_DAMAGE_SET,
+                vulnerabilities: EMPTY_DAMAGE_SET,
+                immunities: EMPTY_DAMAGE_SET
               })
             }
           />

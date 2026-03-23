@@ -4,6 +4,7 @@ import { assign, setup } from "xstate"
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import {
   addDeathFailures,
+  addIncapSource,
   ALL_DAMAGE_TYPES,
   applyConditionUpdate,
   calculateEffectiveSpeed,
@@ -15,10 +16,13 @@ import {
   dehydrationLevels,
   effectiveMaxHp,
   expendSlot,
+  MAX_EXHAUSTION,
   removeConditionUpdate,
+  removeIncapSource,
   resolveDeathSave,
   spendHalfSpeed
 } from "#/machine-helpers.ts"
+import { isIncapacitated } from "#/machine-queries.ts"
 import {
   conditionTrackConfig,
   damageTrackConfig,
@@ -51,22 +55,31 @@ import {
   INITIAL_CONDITIONS,
   INITIAL_TURN_STATE
 } from "#/machine-types.ts"
-import type { ExhaustionLevel, IncapSource } from "#/types.ts"
-import { DEATH_SAVES_RESET, deathSaveCount, EMPTY_SLOTS, exhaustionLevel, hp, movementFeet, tempHp } from "#/types.ts"
+import {
+  DEATH_SAVES_RESET,
+  deathSaveCount,
+  EMPTY_SLOTS,
+  exhaustionLevel,
+  hp,
+  type IncapSource,
+  movementFeet,
+  tempHp
+} from "#/types.ts"
 
 export type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
-const EXHAUSTION_DEATH = 6
-const fallR = (c: DndContext, e: DndEvent) =>
-  computeFallResult(
-    asApplyFall(e).damageRoll,
+const fallR = (c: DndContext, e: DndEvent) => {
+  const ev = asApplyFall(e)
+  return computeFallResult(
+    ev.damageRoll,
     c.hp,
     c.maxHp,
     c.tempHp,
     c.exhaustion,
-    asApplyFall(e).immunities,
-    c.petrified ? ALL_DAMAGE_TYPES : asApplyFall(e).resistances,
-    asApplyFall(e).vulnerabilities
+    ev.immunities,
+    c.petrified ? ALL_DAMAGE_TYPES : ev.resistances,
+    ev.vulnerabilities
   )
+}
 const dmgR = (c: DndContext, e: DndEvent) => {
   const ev = asTakeDamage(e)
   return computeTakeDamage(
@@ -83,11 +96,8 @@ const dmgR = (c: DndContext, e: DndEvent) => {
 }
 const dsR = (c: DndContext, e: DndEvent) =>
   resolveDeathSave(asDeathSave(e).d20Roll, c.deathSaves.successes, c.deathSaves.failures)
-const addIS = (s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> => new Set([...s, v])
-const rmIS = (s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> =>
-  new Set([...s].filter((x) => x !== v))
 const concBreak = (c: DndContext) =>
-  c.incapacitatedSources.size === 0 && c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {}
+  !isIncapacitated(c) && c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {}
 
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 const MT = { context: {} as DndContext, events: {} as DndEvent, input: {} as DndMachineInput }
@@ -136,12 +146,10 @@ export const dndMachine = setup({
       const ev = asSpendHitDie(e)
       return c.hp === 0 && Math.max(0, ev.dieRoll + ev.conMod) > 0
     },
-    exhaustionDeath: ({ context: c }) => c.exhaustion >= EXHAUSTION_DEATH,
+    exhaustionDeath: ({ context: c }) => c.exhaustion >= MAX_EXHAUSTION,
     isSurprised: ({ event: e }) => asStartTurn(e).isSurprised,
     canStandFromProne: ({ context: c }) =>
-      c.incapacitatedSources.size === 0 &&
-      c.effectiveSpeed > 0 &&
-      spendHalfSpeed(c.movementRemaining, c.effectiveSpeed).success,
+      !isIncapacitated(c) && c.effectiveSpeed > 0 && spendHalfSpeed(c.movementRemaining, c.effectiveSpeed).success,
     shouldBreakConcentration: ({ context: c }) => c.concentrationSpellId === ""
   },
   actions: {
@@ -189,17 +197,17 @@ export const dndMachine = setup({
     setUnconscious: assign(({ context: c }) => ({
       unconscious: true,
       prone: true,
-      incapacitatedSources: addIS(c.incapacitatedSources, "unconscious")
+      incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious")
     })),
     clearUnconscious: assign(({ context: c }) => ({
       unconscious: false,
-      incapacitatedSources: rmIS(c.incapacitatedSources, "unconscious"),
+      incapacitatedSources: removeIncapSource(c.incapacitatedSources, "unconscious"),
       stable: false,
       deathSaves: DEATH_SAVES_RESET
     })),
     applyCondition: assign(({ context: c, event: e }) => {
       const u = applyConditionUpdate(asCondition(e).condition, c.incapacitatedSources, c.petrified)
-      const becameIncap = c.incapacitatedSources.size === 0 && u.incapSources.size > 0
+      const becameIncap = !isIncapacitated(c) && u.incapSources.size > 0
       return {
         ...u.conditionFlags,
         incapacitatedSources: u.incapSources,
@@ -214,7 +222,7 @@ export const dndMachine = setup({
     }),
     addExhaustion: assign(({ context: c, event: e }) => {
       const r = computeAddExhaustion(c.exhaustion, asExhaustion(e).levels, c.hp, c.maxHp)
-      const diedFromExhaust = r.newExhaustion >= EXHAUSTION_DEATH && c.exhaustion < EXHAUSTION_DEATH
+      const diedFromExhaust = r.newExhaustion >= MAX_EXHAUSTION && c.exhaustion < MAX_EXHAUSTION
       return {
         exhaustion: exhaustionLevel(r.newExhaustion),
         hp: hp(r.newHp),
@@ -249,7 +257,7 @@ export const dndMachine = setup({
     }),
     useAction: assign(({ context: c, event: e }) => {
       const ev = asUseAction(e)
-      if (c.actionUsed || c.incapacitatedSources.size > 0) return {}
+      if (c.actionUsed || isIncapacitated(c)) return {}
       if (ev.actionType === "attack") return { actionUsed: true, attackActionUsed: true }
       if (ev.actionType === "disengage") return { actionUsed: true, disengaged: true }
       if (ev.actionType === "dodge") return { actionUsed: true, dodging: true }
@@ -259,7 +267,7 @@ export const dndMachine = setup({
       return { actionUsed: true }
     }),
     useBonusAction: assign(({ context: c }) =>
-      c.bonusActionUsed || c.incapacitatedSources.size > 0 ? {} : { bonusActionUsed: true }
+      c.bonusActionUsed || isIncapacitated(c) ? {} : { bonusActionUsed: true }
     ),
     useReaction: assign(({ context: c }) => (c.reactionAvailable ? { reactionAvailable: false } : {})),
     useMovement: assign(({ context: c, event: e }) => {
@@ -287,7 +295,7 @@ export const dndMachine = setup({
         ev.targetSize,
         ev.contestResult,
         ev.attackerHasFreeHand,
-        c.incapacitatedSources.size > 0
+        isIncapacitated(c)
       )
       return ok ? { grappled: true } : {}
     }),
@@ -295,7 +303,7 @@ export const dndMachine = setup({
     escapeGrapple: assign(({ event: e }) => (asEscapeGrapple(e).contestResult === "bWins" ? { grappled: false } : {})),
     applyShove: assign(({ context: c, event: e }) => {
       const ev = asShove(e)
-      if (!resolveShove(ev.attackerSize, ev.targetSize, ev.contestResult, c.incapacitatedSources.size > 0)) return {}
+      if (!resolveShove(ev.attackerSize, ev.targetSize, ev.contestResult, isIncapacitated(c))) return {}
       if (ev.choice === "prone") return { prone: true }
       return {}
     }),
@@ -330,7 +338,7 @@ export const dndMachine = setup({
         c.maxHp,
         c.exhaustion,
         c.hitDiceRemaining,
-        c.slotsCurrent,
+        c.slotsMax,
         c.pactSlotsMax,
         ev.totalHitDice,
         ev.hasEaten
@@ -368,7 +376,7 @@ export const dndMachine = setup({
       hp: hp(0),
       unconscious: true,
       prone: true,
-      incapacitatedSources: addIS(c.incapacitatedSources, "unconscious"),
+      incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious"),
       ...concBreak(c)
     })),
     applyStarvation: assign(({ context: c }) => {
@@ -393,7 +401,7 @@ export const dndMachine = setup({
     deathSaves: DEATH_SAVES_RESET,
     stable: false,
     effectiveSpeed: movementFeet(i.effectiveSpeed ?? 0),
-    exhaustion: 0 as ExhaustionLevel,
+    exhaustion: exhaustionLevel(0),
     extraAttacksRemaining: i.extraAttacksRemaining ?? 0,
     hitDiceRemaining: i.hitDiceRemaining ?? 0,
     hp: hp(i.maxHp),
