@@ -140,24 +140,22 @@ scripts/qa/
 qa_generated.qnt          # assembled test file (repo root, gitignored)
 ```
 
-## Bootstrapping from scratch
+## Data files
 
-All `.references/` data is gitignored (too large — SE corpus 44M, Reddit corpus 438M). A fresh clone must regenerate:
+Corpus data lives in `.references/qa/` (gitignored, too large — SE 44M, Reddit 438M). These files already exist in the working directory — **do not re-download unless `ls .references/qa/*_corpus.jsonl` shows they're missing.** If missing, regenerate with:
 
 ```bash
-# 1. SE (~5 min: 285MB download + extract + parse)
+# SE (~5 min: 285MB download + extract + parse)
 python3 scripts/qa/download_se.py        # needs: brew install 7zip
 python3 scripts/qa/parse_se.py
 
-# 2. Reddit (~3 hrs total)
+# Reddit (~3 hrs total)
 python3 scripts/qa/download_reddit.py posts      # ~5 min, 279k posts
 python3 scripts/qa/download_reddit.py comments   # ~3 hrs, 107k trees
 python3 scripts/qa/parse_reddit.py
-
-# 3. Then run the Quick Start commands above
 ```
 
-To skip Reddit and work with SE only: `--source se` on classify.py.
+To work with SE only (skip Reddit): use `--source se` on classify.py.
 
 ## Troubleshooting
 
