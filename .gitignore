@@ -1,6 +1,7 @@
 *.pdf
 node_modules/
-.references/
+.references/*
+!.references/srd/
 .output/
 .vinxi/
 .claude
