@@ -41,6 +41,10 @@ export const damageTrackConfig = {
       on: {
         HEAL: { target: "#dnd.damageTrack.conscious", actions: ["applyHealFromZero", "clearUnconscious"] },
         GRANT_TEMP_HP: { actions: ["applyTempHp"] },
+        KNOCK_OUT: {
+          target: "#dnd.damageTrack.dying.stable",
+          actions: ["applyKnockOut", "setUnconscious"]
+        },
         APPLY_FALL: [
           { guard: "fallNoDamage" as const },
           { guard: "fallInstantDeathFromDying" as const, target: "#dnd.damageTrack.dead", actions: ["applyFall"] },
@@ -79,7 +83,7 @@ export const damageTrackConfig = {
               {
                 guard: "instantDeathFromDying" as const,
                 target: "#dnd.damageTrack.dead",
-                actions: ["absorbTempHpOnly"]
+                actions: ["absorbTempHpOnly", "breakConcentration"]
               },
               {
                 guard: "deathFromDamageFailures" as const,
@@ -108,7 +112,7 @@ export const damageTrackConfig = {
               {
                 guard: "instantDeathFromDying" as const,
                 target: "#dnd.damageTrack.dead",
-                actions: ["absorbTempHpOnly"]
+                actions: ["absorbTempHpOnly", "breakConcentration"]
               },
               {
                 guard: "deathFromDamageFailures" as const,
@@ -130,7 +134,7 @@ export const damageTrackConfig = {
         }
       }
     },
-    dead: { entry: ["breakConcentration"] }
+    dead: {}
   }
 } as const
 

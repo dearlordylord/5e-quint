@@ -251,10 +251,6 @@ function isDead(snap: DndSnapshot): boolean {
   return snap.matches({ damageTrack: "dead" })
 }
 
-function isStable(snap: DndSnapshot): boolean {
-  return !isDead(snap) && snap.matches({ damageTrack: { dying: "stable" } })
-}
-
 function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
   const c = snap.context
   const dead = isDead(snap)
@@ -264,7 +260,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     tempHp: c.tempHp,
     deathSavesSuccesses: c.deathSaves.successes,
     deathSavesFailures: c.deathSaves.failures,
-    stable: isStable(snap),
+    stable: c.stable,
     dead,
     blinded: c.blinded,
     charmed: c.charmed,
@@ -793,40 +789,31 @@ describe("MBT driver sync", () => {
 // ============================================================
 
 describe("DnD MBT", () => {
-  // MBT traces are nondeterministic. Some traces expose remaining divergences
-  // between flat Quint state and hierarchical XState machine (concentration break
-  // timing, damageTrack sub-state vs context field mapping).
-  // Set MBT_TRACES=50 MBT_STEPS=30 for full validation once divergences are resolved.
-  it.skipIf(!process.env["MBT_TRACES"])(
-    "replays Quint traces against XState machine",
-    async () => {
-      await run({
-        spec: path.resolve(import.meta.dirname, "../../dnd.qnt"),
-        driver: dndDriver,
-        backend: "rust",
-        nTraces: Number(process.env["MBT_TRACES"] ?? "1"),
-        maxSteps: Number(process.env["MBT_STEPS"] ?? "30"),
-        stateCheck: stateCheck(
-          (raw) => quintParsedToNormalized(QuintFullState.parse(raw)),
-          (spec, impl) => {
-            // When dead, XState loses sub-state position (stable is a state node, not context)
-            const skipWhenDead = new Set<string>(["stable"])
-            const keys = Object.keys(spec) as Array<keyof NormalizedState>
-            for (const k of keys) {
-              if (spec.dead && skipWhenDead.has(k)) continue
-              const sv = spec[k]
-              const iv = impl[k]
-              if (sv instanceof Set && iv instanceof Set) {
-                if (!setsEqual(sv, iv)) return false
-              } else if (Array.isArray(sv) && Array.isArray(iv)) {
-                if (!arraysEqual(sv, iv)) return false
-              } else if (sv !== iv) return false
-            }
-            return true
+  it("replays Quint traces against XState machine", async () => {
+    const MBT_TRACE_COUNT = 50
+    const MBT_STEP_COUNT = 30
+    await run({
+      spec: path.resolve(import.meta.dirname, "../../dnd.qnt"),
+      driver: dndDriver,
+      backend: "rust",
+      nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
+      maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
+      stateCheck: stateCheck(
+        (raw) => quintParsedToNormalized(QuintFullState.parse(raw)),
+        (spec, impl) => {
+          const keys = Object.keys(spec) as Array<keyof NormalizedState>
+          for (const k of keys) {
+            const sv = spec[k]
+            const iv = impl[k]
+            if (sv instanceof Set && iv instanceof Set) {
+              if (!setsEqual(sv, iv)) return false
+            } else if (Array.isArray(sv) && Array.isArray(iv)) {
+              if (!arraysEqual(sv, iv)) return false
+            } else if (sv !== iv) return false
           }
-        )
-      })
-    },
-    180_000
-  )
+          return true
+        }
+      )
+    })
+  }, 180_000)
 })

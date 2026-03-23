@@ -64,7 +64,7 @@ const fallR = (c: DndContext, e: DndEvent) =>
     c.tempHp,
     c.exhaustion,
     asApplyFall(e).immunities,
-    asApplyFall(e).resistances,
+    c.petrified ? ALL_DAMAGE_TYPES : asApplyFall(e).resistances,
     asApplyFall(e).vulnerabilities
   )
 const dmgR = (c: DndContext, e: DndEvent) => {
@@ -86,6 +86,8 @@ const dsR = (c: DndContext, e: DndEvent) =>
 const addIS = (s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> => new Set([...s, v])
 const rmIS = (s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> =>
   new Set([...s].filter((x) => x !== v))
+const concBreak = (c: DndContext) =>
+  c.incapacitatedSources.size === 0 && c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {}
 
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 const MT = { context: {} as DndContext, events: {} as DndEvent, input: {} as DndMachineInput }
@@ -121,7 +123,7 @@ export const dndMachine = setup({
       ((r) => r.dmgThrough > 0 && r.newHp === 0 && r.overflow < r.effMax)(fallR(c, e)),
     fallInstantDeathFromDying: ({ context: c, event: e }) =>
       ((r) => r.dmgThrough > 0 && r.dmgThrough >= r.effMax)(fallR(c, e)),
-    fallNoDamage: ({ context: c, event: e }) => ((r) => r.newHp === c.hp && r.newTempHp === c.tempHp)(fallR(c, e)),
+    fallNoDamage: ({ context: c, event: e }) => fallR(c, e).effAmount === 0,
     canSuffocate: ({ context: c }) => c.hp > 0,
     shortRestHeals: ({ context: c, event: e }) => {
       const ev = asShortRest(e)
@@ -159,13 +161,14 @@ export const dndMachine = setup({
       return {
         deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(newFailures) },
         tempHp: tempHp(r.newTempHp),
+        stable: false,
         ...(c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {})
       }
     }),
     applyDeathSave: assign(({ context: c, event: e }) => {
       const r = dsR(c, e)
       if (r.regainsConsciousness) return { deathSaves: DEATH_SAVES_RESET, hp: hp(1) }
-      if (r.isStabilized) return { deathSaves: DEATH_SAVES_RESET }
+      if (r.isStabilized) return { deathSaves: DEATH_SAVES_RESET, stable: true }
       return { deathSaves: { successes: deathSaveCount(r.newSuccesses), failures: deathSaveCount(r.newFailures) } }
     }),
     applyHeal: assign(({ context: c, event: e }) => ({
@@ -175,44 +178,48 @@ export const dndMachine = setup({
       deathSaves: DEATH_SAVES_RESET,
       hp: hp(Math.min(asHeal(e).amount, effectiveMaxHp(c.exhaustion, c.maxHp)))
     })),
-    applyTempHp: assign(({ event: e }) => {
-      const ev = asGrantTempHp(e)
-      return ev.keepOld ? {} : { tempHp: ev.amount }
-    }),
-    applyKnockOut: assign({ deathSaves: DEATH_SAVES_RESET, hp: hp(0) }),
-    applyStabilize: assign({ deathSaves: DEATH_SAVES_RESET }),
-    setUnconscious: assign(({ context: c }) => {
-      const wasIncap = c.incapacitatedSources.size > 0
-      const breakConc = !wasIncap && c.concentrationSpellId !== ""
-      return {
-        unconscious: true,
-        prone: true,
-        incapacitatedSources: addIS(c.incapacitatedSources, "unconscious"),
-        ...(breakConc ? { concentrationSpellId: "" } : {})
-      }
-    }),
+    applyTempHp: assign(({ event: e }) => (asGrantTempHp(e).keepOld ? {} : { tempHp: asGrantTempHp(e).amount })),
+    applyKnockOut: assign(({ context: c }) => ({
+      deathSaves: DEATH_SAVES_RESET,
+      hp: hp(0),
+      stable: true,
+      ...concBreak(c)
+    })),
+    applyStabilize: assign({ deathSaves: DEATH_SAVES_RESET, stable: true }),
+    setUnconscious: assign(({ context: c }) => ({
+      unconscious: true,
+      prone: true,
+      incapacitatedSources: addIS(c.incapacitatedSources, "unconscious")
+    })),
     clearUnconscious: assign(({ context: c }) => ({
       unconscious: false,
-      incapacitatedSources: rmIS(c.incapacitatedSources, "unconscious")
+      incapacitatedSources: rmIS(c.incapacitatedSources, "unconscious"),
+      stable: false,
+      deathSaves: DEATH_SAVES_RESET
     })),
     applyCondition: assign(({ context: c, event: e }) => {
       const u = applyConditionUpdate(asCondition(e).condition, c.incapacitatedSources, c.petrified)
-      const wasIncap = c.incapacitatedSources.size > 0
-      const isNowIncap = u.incapSources.size > 0
-      const breakConc = !wasIncap && isNowIncap && c.concentrationSpellId !== ""
+      const becameIncap = c.incapacitatedSources.size === 0 && u.incapSources.size > 0
       return {
         ...u.conditionFlags,
         incapacitatedSources: u.incapSources,
-        ...(breakConc ? { concentrationSpellId: "" } : {})
+        ...(becameIncap && c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {})
       }
     }),
     removeCondition: assign(({ context: c, event: e }) => {
-      const u = removeConditionUpdate(asCondition(e).condition, c.incapacitatedSources)
+      const cond = asCondition(e).condition
+      if (cond === "prone" && c.unconscious) return {}
+      const u = removeConditionUpdate(cond, c.incapacitatedSources)
       return { ...u.conditionFlags, incapacitatedSources: u.incapSources }
     }),
     addExhaustion: assign(({ context: c, event: e }) => {
       const r = computeAddExhaustion(c.exhaustion, asExhaustion(e).levels, c.hp, c.maxHp)
-      return { exhaustion: exhaustionLevel(r.newExhaustion), hp: hp(r.newHp) }
+      const diedFromExhaust = r.newExhaustion >= EXHAUSTION_DEATH && c.exhaustion < EXHAUSTION_DEATH
+      return {
+        exhaustion: exhaustionLevel(r.newExhaustion),
+        hp: hp(r.newHp),
+        ...(diedFromExhaust && c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {})
+      }
     }),
     reduceExhaustion: assign(({ context: c, event: e }) => ({
       exhaustion: exhaustionLevel(Math.max(0, c.exhaustion - asExhaustion(e).levels))
@@ -251,24 +258,19 @@ export const dndMachine = setup({
       if (ev.actionType === "ready") return { actionUsed: true, readiedAction: true }
       return { actionUsed: true }
     }),
-    useBonusAction: assign(({ context: c }) => {
-      if (c.bonusActionUsed || c.incapacitatedSources.size > 0) return {}
-      return { bonusActionUsed: true }
-    }),
-    useReaction: assign(({ context: c }) => {
-      if (!c.reactionAvailable) return {}
-      return { reactionAvailable: false }
-    }),
+    useBonusAction: assign(({ context: c }) =>
+      c.bonusActionUsed || c.incapacitatedSources.size > 0 ? {} : { bonusActionUsed: true }
+    ),
+    useReaction: assign(({ context: c }) => (c.reactionAvailable ? { reactionAvailable: false } : {})),
     useMovement: assign(({ context: c, event: e }) => {
       const ev = asUseMovement(e)
       const cost = ev.feet * ev.movementCost
       if (cost > c.movementRemaining || cost < 0) return {}
       return { movementRemaining: movementFeet(c.movementRemaining - cost) }
     }),
-    useExtraAttack: assign(({ context: c }) => {
-      if (c.extraAttacksRemaining <= 0) return {}
-      return { extraAttacksRemaining: c.extraAttacksRemaining - 1 }
-    }),
+    useExtraAttack: assign(({ context: c }) =>
+      c.extraAttacksRemaining <= 0 ? {} : { extraAttacksRemaining: c.extraAttacksRemaining - 1 }
+    ),
     standFromProne: assign(({ context: c }) => {
       const r = spendHalfSpeed(c.movementRemaining, c.effectiveSpeed)
       if (!r.success) return {}
@@ -280,23 +282,17 @@ export const dndMachine = setup({
     markNonCantripActionSpell: assign({ nonCantripActionSpellCast: true }),
     applyGrapple: assign(({ context: c, event: e }) => {
       const ev = asGrapple(e)
-      if (
-        !resolveGrapple(
-          ev.attackerSize,
-          ev.targetSize,
-          ev.contestResult,
-          ev.attackerHasFreeHand,
-          c.incapacitatedSources.size > 0
-        )
+      const ok = resolveGrapple(
+        ev.attackerSize,
+        ev.targetSize,
+        ev.contestResult,
+        ev.attackerHasFreeHand,
+        c.incapacitatedSources.size > 0
       )
-        return {}
-      return { grappled: true }
+      return ok ? { grappled: true } : {}
     }),
     releaseGrapple: assign({ grappled: false }),
-    escapeGrapple: assign(({ event: e }) => {
-      if (asEscapeGrapple(e).contestResult !== "bWins") return {}
-      return { grappled: false }
-    }),
+    escapeGrapple: assign(({ event: e }) => (asEscapeGrapple(e).contestResult === "bWins" ? { grappled: false } : {})),
     applyShove: assign(({ context: c, event: e }) => {
       const ev = asShove(e)
       if (!resolveShove(ev.attackerSize, ev.targetSize, ev.contestResult, c.incapacitatedSources.size > 0)) return {}
@@ -306,16 +302,14 @@ export const dndMachine = setup({
     expendSlot: assign(({ context: c, event: e }) => ({
       slotsCurrent: expendSlot(c.slotsCurrent, asExpendSlot(e).level)
     })),
-    expendPactSlot: assign(({ context: c }) => {
-      if (c.pactSlotsCurrent <= 0) return {}
-      return { pactSlotsCurrent: c.pactSlotsCurrent - 1 }
-    }),
+    expendPactSlot: assign(({ context: c }) =>
+      c.pactSlotsCurrent <= 0 ? {} : { pactSlotsCurrent: c.pactSlotsCurrent - 1 }
+    ),
     startConcentration: assign(({ event: e }) => ({ concentrationSpellId: asStartConcentration(e).spellId })),
     breakConcentration: assign({ concentrationSpellId: "" }),
-    concentrationCheck: assign(({ context: c, event: e }) => {
-      if (c.concentrationSpellId === "" || asConcentrationCheck(e).conSaveSucceeded) return {}
-      return { concentrationSpellId: "" }
-    }),
+    concentrationCheck: assign(({ context: c, event: e }) =>
+      c.concentrationSpellId === "" || asConcentrationCheck(e).conSaveSucceeded ? {} : { concentrationSpellId: "" }
+    ),
     spendHitDie: assign(({ context: c, event: e }) => {
       if (c.hitDiceRemaining <= 0) return {}
       const ev = asSpendHitDie(e)
@@ -353,11 +347,10 @@ export const dndMachine = setup({
     }),
     applyFall: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
-      const stateChanged = r.newHp !== c.hp || r.newTempHp !== c.tempHp
       return {
         hp: hp(r.newHp),
         tempHp: tempHp(r.newTempHp),
-        ...(stateChanged ? { prone: true } : {})
+        ...(r.newHp !== c.hp || r.newTempHp !== c.tempHp ? { prone: true } : {})
       }
     }),
     applyFallAtZeroHp: assign(({ context: c, event: e }) => {
@@ -367,14 +360,16 @@ export const dndMachine = setup({
       return {
         tempHp: tempHp(r.newTempHp),
         deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(df.newFailures) },
-        prone: true
+        prone: true,
+        stable: false
       }
     }),
     suffocate: assign(({ context: c }) => ({
       hp: hp(0),
       unconscious: true,
       prone: true,
-      incapacitatedSources: addIS(c.incapacitatedSources, "unconscious")
+      incapacitatedSources: addIS(c.incapacitatedSources, "unconscious"),
+      ...concBreak(c)
     })),
     applyStarvation: assign(({ context: c }) => {
       const r = computeAddExhaustion(c.exhaustion, 1, c.hp, c.maxHp)
@@ -396,6 +391,7 @@ export const dndMachine = setup({
     ...INITIAL_TURN_STATE,
     concentrationSpellId: "",
     deathSaves: DEATH_SAVES_RESET,
+    stable: false,
     effectiveSpeed: movementFeet(i.effectiveSpeed ?? 0),
     exhaustion: 0 as ExhaustionLevel,
     extraAttacksRemaining: i.extraAttacksRemaining ?? 0,
