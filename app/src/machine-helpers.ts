@@ -131,20 +131,7 @@ const INCAP_SOURCE_MAP: Readonly<Partial<Record<Condition, IncapSource>>> = {
 }
 
 /** Condition boolean field names in context (excludes "incapacitated" which is derived). */
-type ConditionFlag =
-  | "blinded"
-  | "charmed"
-  | "deafened"
-  | "frightened"
-  | "grappled"
-  | "invisible"
-  | "paralyzed"
-  | "petrified"
-  | "poisoned"
-  | "prone"
-  | "restrained"
-  | "stunned"
-  | "unconscious"
+type ConditionFlag = Exclude<Condition, "incapacitated">
 
 /** Result of applying or removing a condition. */
 interface ConditionUpdate {
@@ -181,14 +168,7 @@ export function removeConditionUpdate(
   currentIncapSources: ReadonlySet<IncapSource>
 ): ConditionUpdate {
   const incapSource = INCAP_SOURCE_MAP[condition]
-  let incapSources: ReadonlySet<IncapSource>
-  if (incapSource && currentIncapSources.has(incapSource)) {
-    const s = new Set(currentIncapSources)
-    s.delete(incapSource)
-    incapSources = s
-  } else {
-    incapSources = currentIncapSources
-  }
+  const incapSources = incapSource ? removeIncapSource(currentIncapSources, incapSource) : currentIncapSources
 
   if (condition === "incapacitated") {
     return { conditionFlags: {}, incapSources }
@@ -452,6 +432,7 @@ export const exhUpdate = (r: { newExhaustion: number; newHp: number }) => ({
 export const addIncapSource = (s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> =>
   s.has(v) ? s : new Set(s).add(v)
 export function removeIncapSource(s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> {
+  if (!s.has(v)) return s
   const n = new Set(s)
   n.delete(v)
   return n
