@@ -18,16 +18,17 @@ Reference: savage repo (`/Users/firfi/work/typescript/savage`) — same architec
 - [x] Phase 8: Environmental Rules
 - [x] Phase 9: Character Construction & Leveling
 
-### Part 2: XState Bridge + Frontend (TODO)
+### Part 2: XState Bridge + Frontend (DONE except Scenario Cookbook)
 
-- [ ] Phase 10: Quint Actions & Invariants (make spec MBT-ready)
-- [ ] Phase 11: App Scaffold + Branded Types
-- [ ] Phase 12: XState Machine — Damage & Conditions
-- [ ] Phase 13: XState Machine — Turn & Combat
-- [ ] Phase 14: XState Machine — Spellcasting & Rest
-- [ ] Phase 15: MBT Bridge (quint-connect)
-- [ ] Phase 16: Frontend — Interactive Simulator
-- [ ] Phase 17: Frontend — Scenario Cookbook
+- [x] Phases 1+2: Damage track, conditions, exhaustion
+- [x] Phase 3: Turn structure + action economy
+- [x] Phase 4: Attack resolution + combat actions
+- [x] Phase 5: Spellcasting + rest
+- [x] Phase 6: Environmental events + equipment
+- [x] Phase 7: Quint actions + invariants (MBT prerequisite)
+- [x] Phase 8: MBT bridge (50 traces × 30 steps)
+- [x] Phase 9: Interactive simulator frontend (EN/RU)
+- [ ] Phase 10: Scenario cookbook
 
 ---
 
@@ -1062,9 +1063,24 @@ XState v5 + `@xstate/react` + TanStack Start + Tailwind 4 + Paraglide i18n (EN/R
 
 Same as savage: **single-creature state machine**. Models one creature's mutable state during combat. `CharConfig` is immutable input. Multi-creature interactions externalized as event payloads.
 
+**In scope:** HP/temp HP tracking, death saves, conditions + implications, exhaustion levels, action economy (action/bonus/reaction/movement/extra attacks), spell slot management, concentration state, rest recovery, grapple/shove state, fall/suffocation/starvation/dehydration effects.
+
+**Out of scope (caller's responsibility):**
+- Dice rolling — caller passes final values (`amount`, `d20Roll`, `dieRoll`)
+- Damage modifier calculation — caller computes ability mod + weapon + bonuses and passes `amount`
+- Two-weapon fighting damage restriction (PHB: no ability mod on bonus attack damage unless negative)
+- Spell selection / preparation / known spells
+- Equipment inventory beyond armor state and shield
+- Position / distance tracking (5ft melee range, push distance, etc.)
+- Line of sight / frightened source proximity
+- Multiattack sequencing beyond extra attack count
+- Class/race features beyond what's encoded in event parameters
+
+The Quint spec (`dnd.qnt`) has identical scope. Both receive pre-computed values from the caller.
+
 ### Source of truth
 
-`dnd.qnt`. XState machine produces identical state transitions for all inputs. Verified by MBT.
+`dnd.qnt`. XState machine produces identical state transitions for all inputs. Verified by MBT (50 traces × 30 steps).
 
 ### Quint state → XState mapping
 
