@@ -366,7 +366,8 @@ export const dndMachine = setup({
     }),
     applyFallAtZeroHp: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
-      if (r.dmgThrough === 0) return { tempHp: tempHp(r.newTempHp) }
+      if (r.dmgThrough === 0)
+        return { tempHp: tempHp(r.newTempHp), ...(r.newTempHp !== c.tempHp ? { prone: true } : {}) }
       const df = addDeathFailures(c.deathSaves.failures, false)
       return {
         tempHp: tempHp(r.newTempHp),
