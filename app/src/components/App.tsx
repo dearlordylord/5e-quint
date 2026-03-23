@@ -138,7 +138,7 @@ export function App() {
           </header>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <StatePanel snapshot={snapshot} ctx={ctx} />
-            <MemoEventPanel send={send} />
+            <MemoEventPanel send={send} snapshot={snapshot} />
             <TransitionLog log={log} cursor={cursor} onJumpTo={jumpTo} onClear={onClear} />
           </div>
         </div>

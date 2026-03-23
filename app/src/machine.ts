@@ -158,7 +158,8 @@ export const dndMachine = setup({
     isSurprised: ({ event: e }) => asStartTurn(e).isSurprised,
     canStandFromProne: ({ context: c }) =>
       !isIncapacitated(c) && c.effectiveSpeed > 0 && spendHalfSpeed(c.movementRemaining, c.effectiveSpeed).success,
-    shouldBreakConcentration: ({ context: c }) => c.concentrationSpellId === ""
+    shouldBreakConcentration: ({ context: c }) => c.concentrationSpellId === "",
+    canExpendSlot: ({ context: c }) => c.hp > 0 && !isIncapacitated(c)
   },
   actions: {
     applyDamage: assign(({ context: c, event: e }) => {

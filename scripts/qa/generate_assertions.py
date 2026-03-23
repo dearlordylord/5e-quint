@@ -212,6 +212,9 @@ def rebuild_qnt():
         if not fname.endswith(".qnt"):
             continue
         h = fname[:-4]
+        # Skip non-hash files (e.g. dnd.qnt symlink)
+        if not re.match(r'^[0-9a-f]+$', h):
+            continue
         with open(os.path.join(CACHE_DIR, fname)) as f:
             content = f.read().strip()
         if content.startswith("// SKIP"):
