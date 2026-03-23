@@ -110,19 +110,19 @@ def extract_test_block(test_name, content):
 
 
 def write_results(passed, failed, failure_details):
-    # Look up cache files once per failure
+    # Look up cache files and extract test blocks once per failure
     cache_info = {}
     for name in failed:
         path, content = find_cache_file(name)
-        cache_info[name] = (path, content)
+        url = extract_source_url(content) if content else None
+        code = extract_test_block(name, content) if content else None
+        cache_info[name] = (path, content, url, code)
 
     with open(RESULTS_FILE, "w") as f:
         for name in passed:
             f.write(json.dumps({"test": name, "status": "pass"}) + "\n")
         for name in failed:
-            cache_path, content = cache_info[name]
-            url = extract_source_url(content) if content else None
-            code = extract_test_block(name, content) if content else None
+            cache_path, _, url, code = cache_info[name]
             record = {
                 "test": name,
                 "status": "fail",
@@ -147,8 +147,7 @@ def write_results(passed, failed, failure_details):
     print(f"{'='*60}\n")
 
     for i, name in enumerate(failed, 1):
-        cache_path, content = cache_info[name]
-        url = extract_source_url(content) if content else None
+        cache_path, _, url, code = cache_info[name]
 
         print(f"--- [{i}/{len(failed)}] {name} ---")
         if url:
@@ -161,7 +160,6 @@ def write_results(passed, failed, failure_details):
             for line in err.split("\n"):
                 print(f"  {line}")
 
-        code = extract_test_block(name, content) if content else None
         if code:
             print(f"\n  Code:")
             for line in code.split("\n"):
