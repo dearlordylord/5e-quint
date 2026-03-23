@@ -153,16 +153,16 @@ Adds spellcasting region (idle/concentrating) with slot management, concentratio
 - `machine.test.ts`: Slot expenditure/validation, concentration save DC, concentration broken by new spell/incap/death, ritual casting (no slot, can't upcast), short rest HD spending, long rest full recovery, multiclass slot calculation
 
 ### Acceptance
-- [ ] At most one concentration spell active
-- [ ] Concentration DC = max(10, floor(damage/2)); separate save per damage source
-- [ ] Concentration broken by: new concentration spell, incapacitation, death, failed save
-- [ ] Ritual: no slot, +10 min, can't upcast, requires canRitualCast config flag
-- [ ] Armor without proficiency -> cannot cast at all
-- [ ] Short rest: spend hit dice (roll + CON mod, min 0), restore pact slots
-- [ ] Long rest: full HP, restore half HD (min 1), all slots, -1 exhaustion if ate, clear temp HP
-- [ ] Can't long rest more than once per 24h; requires >= 1 HP
-- [ ] Multiclass slot calculation matches PHB table for full/half/third caster combos
-- [ ] Pact slots separate from regular slots but interchangeable for casting
+- [x] At most one concentration spell active
+- [x] Concentration DC = max(10, floor(damage/2)); separate save per damage source
+- [x] Concentration broken by: new concentration spell, incapacitation, death, failed save
+- [x] Ritual: no slot, +10 min, can't upcast, requires canRitualCast config flag
+- [x] Armor without proficiency -> cannot cast at all
+- [x] Short rest: spend hit dice (roll + CON mod, min 0), restore pact slots
+- [x] Long rest: full HP, restore half HD (min 1), all slots, -1 exhaustion if ate, clear temp HP
+- [x] Can't long rest more than once per 24h; requires >= 1 HP
+- [x] Multiclass slot calculation matches PHB table for full/half/third caster combos
+- [x] Pact slots separate from regular slots but interchangeable for casting
 
 ---
 

@@ -1,17 +1,5 @@
-import type {
-  AdvState,
-  ArmorState,
-  AttackContext,
-  AttackResult,
-  Condition,
-  ContestResult,
-  CoverType,
-  DamageType,
-  FullAttackMods,
-  IncapSource,
-  Size,
-  UnarmoredDefense
-} from "#/types.ts"
+import type { CasterType, Condition, DamageType, IncapSource, SpellSlots } from "#/types.ts"
+import { EMPTY_SLOTS } from "#/types.ts"
 
 // --- Constants ---
 
@@ -284,146 +272,109 @@ export function spendHalfSpeed(
   return { newMovementRemaining: movementRemaining - cost, success: true }
 }
 
-// --- Attack resolution ---
+// --- Spellcasting helpers ---
 
-const NAT_20_ATTACK = 20
-const NAT_1_ATTACK = 1
-const BASE_AC = 10
-const SHIELD_BONUS = 2
-const MEDIUM_DEX_CAP = 2
-const HALF_COVER_BONUS = 2
-const THREE_QUARTERS_COVER_BONUS = 5
-const EXHAUSTION_ATTACK_DISADV = 3
+const CONCENTRATION_DC_MIN = 10
+const CONCENTRATION_DC_DIVISOR = 2
+const HIT_DICE_RECOVERY_DIVISOR = 2
+const HALF_CASTER_DIVISOR = 2
+const THIRD_CASTER_DIVISOR = 3
 
-/** Advantage/disadvantage cancel. Matches Quint resolveAdvantage. */
-export function resolveAdvantage(sources: AdvState): AdvState {
-  if (sources.hasAdvantage && sources.hasDisadvantage) return { hasAdvantage: false, hasDisadvantage: false }
-  return sources
+/** Concentration save DC. Matches Quint pConcentrationDC. */
+export function concentrationDC(damageTaken: number): number {
+  return Math.max(CONCENTRATION_DC_MIN, Math.floor(damageTaken / CONCENTRATION_DC_DIVISOR))
 }
 
-/** Attack roll resolution. Matches Quint resolveAttackRoll. */
-export function resolveAttackRoll(
-  d20Roll: number,
-  attackBonus: number,
-  targetAC: number,
-  targetCoverBonus: number
-): AttackResult {
-  if (d20Roll === NAT_20_ATTACK) return { hits: true, isCritical: true }
-  if (d20Roll === NAT_1_ATTACK) return { hits: false, isCritical: false }
-  return { hits: d20Roll + attackBonus >= targetAC + targetCoverBonus, isCritical: false }
+/** Expend a spell slot at the given level (1-9). Returns new slotsCurrent. */
+export function expendSlot(slotsCurrent: SpellSlots, level: number): SpellSlots {
+  const idx = level - 1
+  if (idx < 0 || idx >= slotsCurrent.length || slotsCurrent[idx] <= 0) return slotsCurrent
+  return slotsCurrent.map((v, i) => (i === idx ? v - 1 : v))
 }
 
-/** Normal damage: dice + modifier. */
-export function normalDamage(diceResult: number, modifier: number): number {
-  return diceResult + modifier
-}
-
-/** Critical hit damage: normal dice + bonus dice + modifier (modifier NOT doubled). */
-export function criticalDamage(normalDice: number, bonusDice: number, modifier: number): number {
-  return normalDice + bonusDice + modifier
-}
-
-/** Cover bonus for AC and DEX saves. Matches Quint coverBonus. */
-export function coverBonus(cover: CoverType): number {
-  if (cover === "half") return HALF_COVER_BONUS
-  if (cover === "threeQuarters") return THREE_QUARTERS_COVER_BONUS
+/** Multiclass spell slot table. Matches Quint pSlotsPerLevel. */
+export function slotsPerLevel(casterLevel: number, spellLevel: number): number {
+  /* eslint-disable no-magic-numbers */
+  if (spellLevel === 1) return casterLevel >= 3 ? 4 : casterLevel === 2 ? 3 : casterLevel === 1 ? 2 : 0
+  if (spellLevel === 2) return casterLevel >= 4 ? 3 : casterLevel === 3 ? 2 : 0
+  if (spellLevel === 3) return casterLevel >= 6 ? 3 : casterLevel === 5 ? 2 : 0
+  if (spellLevel === 4) return casterLevel >= 9 ? 3 : casterLevel === 8 ? 2 : casterLevel === 7 ? 1 : 0
+  if (spellLevel === 5) return casterLevel >= 18 ? 3 : casterLevel >= 10 ? 2 : casterLevel === 9 ? 1 : 0
+  if (spellLevel === 6) return casterLevel >= 19 ? 2 : casterLevel >= 11 ? 1 : 0
+  if (spellLevel === 7) return casterLevel >= 20 ? 2 : casterLevel >= 13 ? 1 : 0
+  if (spellLevel === 8) return casterLevel >= 15 ? 1 : 0
+  if (spellLevel === 9) return casterLevel >= 17 ? 1 : 0
+  /* eslint-enable no-magic-numbers */
   return 0
 }
 
-/** AC calculation for all armor types. Matches Quint calculateAC. */
-export function calculateAC(params: {
-  readonly armorState: ArmorState
-  readonly dexMod: number
-  readonly hasShield: boolean
-  readonly unarmoredDef: UnarmoredDefense
-  readonly conMod: number
-  readonly wisMod: number
-}): number {
-  const shieldBonus = params.hasShield ? SHIELD_BONUS : 0
-  let baseAC: number
-  if (params.armorState.type === "wearingArmor") {
-    const { armor } = params.armorState
-    if (armor.category === "light") baseAC = armor.baseAC + params.dexMod
-    else if (armor.category === "medium") baseAC = armor.baseAC + Math.min(params.dexMod, MEDIUM_DEX_CAP)
-    else baseAC = armor.baseAC
-  } else if (params.unarmoredDef === "barbarian") {
-    baseAC = BASE_AC + params.dexMod + params.conMod
-  } else if (params.unarmoredDef === "monk") {
-    baseAC = BASE_AC + params.dexMod + params.wisMod
-  } else {
-    baseAC = BASE_AC + params.dexMod
+/** Calculate multiclass spell slots from class levels. */
+export function calculateMulticlassSlots(
+  classLevels: ReadonlyArray<{ readonly type: CasterType; readonly level: number }>
+): SpellSlots {
+  const casterLevel = classLevels.reduce((sum, cl) => {
+    if (cl.type === "full") return sum + cl.level
+    if (cl.type === "half") return sum + Math.floor(cl.level / HALF_CASTER_DIVISOR)
+    return sum + Math.floor(cl.level / THIRD_CASTER_DIVISOR)
+  }, 0)
+  if (casterLevel === 0) return EMPTY_SLOTS
+  const SPELL_LEVELS = 9
+  return Array.from({ length: SPELL_LEVELS }, (_, i) => slotsPerLevel(casterLevel, i + 1))
+}
+
+/** Hit dice recovery on long rest: max(1, floor(total/2)). */
+export function hitDiceRecovery(totalHitDice: number, currentRemaining: number): number {
+  const recovery = Math.max(1, Math.floor(totalHitDice / HIT_DICE_RECOVERY_DIVISOR))
+  return Math.min(recovery, totalHitDice - currentRemaining)
+}
+
+/** Compute short rest results: spend hit dice, restore pact slots. */
+export function computeShortRest(
+  currentHp: number,
+  maxHp: number,
+  hitDiceRemaining: number,
+  pactSlotsMax: number,
+  conMod: number,
+  hdRolls: ReadonlyArray<number>
+): { readonly newHp: number; readonly newHitDice: number; readonly newPactSlots: number } {
+  const cap = Math.min(hitDiceRemaining, hdRolls.length)
+  let curHp = currentHp
+  let curHd = hitDiceRemaining
+  for (let i = 0; i < cap; i++) {
+    curHp = Math.min(curHp + Math.max(0, hdRolls[i] + conMod), maxHp)
+    curHd = curHd - 1
   }
-  return baseAC + shieldBonus
+  return { newHitDice: curHd, newHp: curHp, newPactSlots: pactSlotsMax }
 }
 
-/** Size ordering for grapple/shove constraints. */
-const SIZE_ORDER: ReadonlyArray<Size> = ["tiny", "small", "medium", "large", "huge", "gargantuan"]
-
-/** Check if attacker is within one size category of target. */
-export function withinOneSize(attackerSize: Size, targetSize: Size): boolean {
-  const aIdx = SIZE_ORDER.indexOf(attackerSize)
-  const tIdx = SIZE_ORDER.indexOf(targetSize)
-  return tIdx - aIdx <= 1
-}
-
-/** Aggregate all attack modifiers. Matches Quint pAggregateAttackMods. */
-export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
-  const anyAdvantage =
-    ctx.targetBlinded ||
-    ctx.targetParalyzed ||
-    ctx.targetPetrified ||
-    ctx.targetStunned ||
-    ctx.targetUnconscious ||
-    (ctx.targetProne && ctx.attackerWithin5ft) ||
-    ctx.targetRestrained ||
-    !ctx.targetCanSeeAttacker
-
-  const anyDisadvantage =
-    ctx.attackerBlinded ||
-    ctx.attackerProne ||
-    ctx.attackerRestrained ||
-    ctx.attackerPoisoned ||
-    (ctx.attackerFrightened && ctx.attackerFrightSourceInLOS) ||
-    ctx.attackerExhaustion >= EXHAUSTION_ATTACK_DISADV ||
-    (ctx.targetProne && !ctx.attackerWithin5ft) ||
-    (ctx.isRangedAttack && ctx.beyondNormalRange) ||
-    (ctx.isRangedAttack && ctx.hostileWithin5ft) ||
-    !ctx.attackerCanSeeTarget ||
-    (ctx.isHeavyWeapon && ctx.wielderSizeSmallOrTiny) ||
-    ctx.squeezing ||
-    (ctx.underwater && !ctx.isRangedAttack && !ctx.attackerHasSwimSpeed && !ctx.isUnderwaterMeleeException) ||
-    (ctx.underwater && ctx.isRangedAttack && !ctx.beyondNormalRange && !ctx.isUnderwaterRangedException) ||
-    (ctx.targetDodging && ctx.targetCanSeeAttacker)
-
-  const resolved = resolveAdvantage({ hasAdvantage: anyAdvantage, hasDisadvantage: anyDisadvantage })
+/** Compute long rest results. */
+export function computeLongRest(
+  currentHp: number,
+  maxHp: number,
+  exhaustion: number,
+  hitDiceRemaining: number,
+  slotsMax: SpellSlots,
+  pactSlotsMax: number,
+  totalHitDice: number,
+  hasEaten: boolean
+): {
+  readonly newExhaustion: number
+  readonly newHp: number
+  readonly newHitDice: number
+  readonly newSlots: SpellSlots
+  readonly newPactSlots: number
+} | null {
+  if (currentHp < 1) return null
+  const newExhaustion = hasEaten ? Math.max(0, exhaustion - 1) : exhaustion
+  const effMax = effectiveMaxHp(newExhaustion, maxHp)
+  const recovery = hitDiceRecovery(totalHitDice, hitDiceRemaining)
   return {
-    ...resolved,
-    autoCrit: (ctx.targetParalyzed || ctx.targetUnconscious) && ctx.attackerWithin5ft,
-    autoMiss: ctx.underwater && ctx.isRangedAttack && ctx.beyondNormalRange
+    newExhaustion,
+    newHitDice: hitDiceRemaining + recovery,
+    newHp: effMax,
+    newPactSlots: pactSlotsMax,
+    newSlots: [...slotsMax]
   }
-}
-
-/** Grapple resolution. Matches Quint pGrapple. */
-export function resolveGrapple(
-  attackerSize: Size,
-  targetSize: Size,
-  contestResult: ContestResult,
-  attackerHasFreeHand: boolean,
-  targetIncapacitated: boolean
-): boolean {
-  if (!withinOneSize(attackerSize, targetSize) || !attackerHasFreeHand) return false
-  return targetIncapacitated || contestResult === "aWins"
-}
-
-/** Shove resolution. Matches Quint pShove. */
-export function resolveShove(
-  attackerSize: Size,
-  targetSize: Size,
-  contestResult: ContestResult,
-  targetIncapacitated: boolean
-): boolean {
-  if (!withinOneSize(attackerSize, targetSize)) return false
-  return targetIncapacitated || contestResult === "aWins"
 }
 
 // --- State path constants (for stateIn guards) ---

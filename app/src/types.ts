@@ -222,6 +222,13 @@ export function movementFeet(n: number): MovementFeet {
 }
 export type { MovementFeet }
 
+export type CasterType = "full" | "half" | "third"
+
+export type SpellSlots = ReadonlyArray<number>
+
+const SPELL_SLOT_LEVELS = 9
+export const EMPTY_SLOTS: SpellSlots = Array.from({ length: SPELL_SLOT_LEVELS }, () => 0)
+
 // --- Record types ---
 
 export interface DeathSaves {
