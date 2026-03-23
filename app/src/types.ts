@@ -63,6 +63,10 @@ export type ShoveChoice = "prone" | "push"
 
 export type UnarmoredDefense = "none" | "barbarian" | "monk"
 
+export type Illumination = "bright" | "dim" | "dark"
+
+export type TravelPace = "fast" | "normal" | "slow"
+
 export interface Armor {
   readonly category: ArmorCategory
   readonly baseAC: number

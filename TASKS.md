@@ -177,13 +177,13 @@ Adds remaining events: falling, suffocation, starvation, dehydration, equipment 
 - `machine.test.ts`: Fall damage + land prone, suffocation -> 0 HP, food/water exhaustion (including doubled dehydration when already exhausted), equipment don/doff timing, armor STR requirement speed penalty
 
 ### Acceptance
-- [ ] Fall: correct d6 count, land prone unless damage avoided
-- [ ] Suffocation: hold breath = 1 + CON mod minutes (min 30s), then CON mod rounds, then 0 HP
-- [ ] Starvation: 1 exhaustion/day after (3 + CON mod) days
-- [ ] Dehydration: already exhausted -> 2 levels instead of 1 (water only, not food)
-- [ ] Equipment context tracks armor state and shield
-- [ ] All 30+ events from PRD event table are implemented
-- [ ] Full `npm run check-all` passes with complete machine
+- [x] Fall: correct d6 count, land prone unless damage avoided
+- [x] Suffocation: hold breath = 1 + CON mod minutes (min 30s), then CON mod rounds, then 0 HP
+- [x] Starvation: 1 exhaustion/day after (3 + CON mod) days
+- [x] Dehydration: already exhausted -> 2 levels instead of 1 (water only, not food)
+- [x] Equipment context tracks armor state and shield
+- [x] All 30+ events from PRD event table are implemented
+- [x] Full `npm run check-all` passes with complete machine
 
 ---
 

@@ -7,17 +7,21 @@ import {
   applyConditionUpdate,
   calculateEffectiveSpeed,
   computeAddExhaustion,
+  computeFallDamage,
   computeLongRest,
   computeShortRest,
   computeTakeDamage,
+  dehydrationLevels,
   expendSlot,
   removeConditionUpdate,
   resolveDeathSave,
   spendHalfSpeed
 } from "#/machine-helpers.ts"
-import { damageTrackConfig } from "#/machine-states.ts"
+import { damageTrackConfig, turnPhaseConfig } from "#/machine-states.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
 import {
+  asApplyDehydration,
+  asApplyFall,
   asConcentrationCheck,
   asCondition,
   asDeathSave,
@@ -291,6 +295,42 @@ export const dndMachine = setup({
         slotsCurrent: r.newSlots,
         tempHp: tempHp(0)
       }
+    }),
+    applyFall: assign(({ context: c, event: e }) => {
+      const ev = asApplyFall(e)
+      const r = computeFallDamage(
+        ev.damageRoll,
+        c.hp,
+        c.maxHp,
+        c.tempHp,
+        c.exhaustion,
+        ev.immunities,
+        ev.resistances,
+        ev.vulnerabilities
+      )
+      if (!r) return {}
+      if (!r.landsProne) return { tempHp: tempHp(r.newTempHp) }
+      return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp), prone: true }
+    }),
+    suffocate: assign(({ context: c }) => {
+      if (c.hp === 0) return {}
+      return {
+        hp: hp(0),
+        unconscious: true,
+        prone: true,
+        incapacitatedSources: addIS(c.incapacitatedSources, "unconscious")
+      }
+    }),
+    applyStarvation: assign(({ context: c }) => {
+      const r = computeAddExhaustion(c.exhaustion, 1, c.hp, c.maxHp)
+      return { exhaustion: exhaustionLevel(r.newExhaustion), hp: hp(r.newHp) }
+    }),
+    applyDehydration: assign(({ context: c, event: e }) => {
+      const ev = asApplyDehydration(e)
+      const levels = dehydrationLevels(c.exhaustion, ev.halfWater, ev.conSaveSucceeded)
+      if (levels === 0) return {}
+      const r = computeAddExhaustion(c.exhaustion, levels, c.hp, c.maxHp)
+      return { exhaustion: exhaustionLevel(r.newExhaustion), hp: hp(r.newHp) }
     })
   }
 }).createMachine({
@@ -326,7 +366,11 @@ export const dndMachine = setup({
     EXPEND_PACT_SLOT: { actions: ["expendPactSlot"] },
     SHORT_REST: { actions: ["shortRest"] },
     LONG_REST: { actions: ["longRest"] },
-    SPEND_HIT_DIE: { actions: ["spendHitDie"] }
+    SPEND_HIT_DIE: { actions: ["spendHitDie"] },
+    APPLY_FALL: { actions: ["applyFall"] },
+    SUFFOCATE: { actions: ["suffocate"] },
+    APPLY_STARVATION: { actions: ["applyStarvation"] },
+    APPLY_DEHYDRATION: { actions: ["applyDehydration"] }
   },
   states: {
     damageTrack: damageTrackConfig,
@@ -338,45 +382,7 @@ export const dndMachine = setup({
         }
       }
     },
-    turnPhase: {
-      initial: "outOfCombat",
-      states: {
-        outOfCombat: {
-          on: {
-            START_TURN: [
-              { guard: "isSurprised", target: "surprised", actions: ["initTurn"] },
-              { target: "acting", actions: ["initTurn"] }
-            ]
-          }
-        },
-        acting: {
-          on: {
-            START_TURN: [
-              { guard: "isSurprised", target: "surprised", actions: ["initTurn"] },
-              { target: "acting", actions: ["initTurn"] }
-            ],
-            USE_ACTION: { actions: ["useAction"] },
-            USE_BONUS_ACTION: { actions: ["useBonusAction"] },
-            USE_REACTION: { actions: ["useReaction"] },
-            USE_MOVEMENT: { actions: ["useMovement"] },
-            USE_EXTRA_ATTACK: { actions: ["useExtraAttack"] },
-            STAND_FROM_PRONE: { guard: "canStandFromProne", actions: ["standFromProne"] },
-            DROP_PRONE: { actions: ["dropProne"] },
-            MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
-            MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
-          }
-        },
-        surprised: {
-          on: {
-            END_SURPRISE_TURN: { target: "outOfCombat", actions: ["endSurprise"] },
-            START_TURN: [
-              { guard: "isSurprised", target: "surprised", actions: ["initTurn"] },
-              { target: "acting", actions: ["initTurn"] }
-            ]
-          }
-        }
-      }
-    },
+    turnPhase: turnPhaseConfig,
     spellcasting: {
       initial: "idle",
       states: {

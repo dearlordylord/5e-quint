@@ -126,6 +126,16 @@ export type DndEvent =
   | { readonly type: "SHORT_REST"; readonly conMod: number; readonly hdRolls: ReadonlyArray<number> }
   | { readonly type: "LONG_REST"; readonly totalHitDice: number; readonly hasEaten: boolean }
   | { readonly type: "SPEND_HIT_DIE"; readonly conMod: number; readonly dieRoll: number }
+  | {
+      readonly type: "APPLY_FALL"
+      readonly damageRoll: number
+      readonly resistances: ReadonlySet<DamageType>
+      readonly vulnerabilities: ReadonlySet<DamageType>
+      readonly immunities: ReadonlySet<DamageType>
+    }
+  | { readonly type: "SUFFOCATE" }
+  | { readonly type: "APPLY_STARVATION" }
+  | { readonly type: "APPLY_DEHYDRATION"; readonly halfWater: boolean; readonly conSaveSucceeded: boolean }
 
 // --- Event extractors ---
 
@@ -147,6 +157,8 @@ type ShortRestEvent = Extract<DndEvent, { readonly type: "SHORT_REST" }>
 type LongRestEvent = Extract<DndEvent, { readonly type: "LONG_REST" }>
 type SpendHitDieEvent = Extract<DndEvent, { readonly type: "SPEND_HIT_DIE" }>
 type ShoveEvent = Extract<DndEvent, { readonly type: "SHOVE" }>
+type ApplyFallEvent = Extract<DndEvent, { readonly type: "APPLY_FALL" }>
+type ApplyDehydrationEvent = Extract<DndEvent, { readonly type: "APPLY_DEHYDRATION" }>
 
 export function asTakeDamage(event: DndEvent): TakeDamageEvent {
   return event as TakeDamageEvent
@@ -201,6 +213,12 @@ export function asLongRest(event: DndEvent): LongRestEvent {
 }
 export function asSpendHitDie(event: DndEvent): SpendHitDieEvent {
   return event as SpendHitDieEvent
+}
+export function asApplyFall(event: DndEvent): ApplyFallEvent {
+  return event as ApplyFallEvent
+}
+export function asApplyDehydration(event: DndEvent): ApplyDehydrationEvent {
+  return event as ApplyDehydrationEvent
 }
 
 // --- Initial context constants ---
