@@ -18,7 +18,6 @@ export default defineConfig({
         "src/router.tsx",
         "src/routes/**",
         ".tanstack/**",
-        "src/main.ts",
         "src/entry.tsx",
         "src/i18n.ts",
         "src/components/**"

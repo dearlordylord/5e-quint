@@ -4,9 +4,7 @@ const en = {
   title: "D&D 5e Simulator",
   hp: "HP",
   tempHp: "Temp HP",
-  maxHp: "Max HP",
   exhaustion: "Exhaustion",
-  deathSaves: "Death Saves",
   successes: "Successes",
   failures: "Failures",
   conditions: "Conditions",
@@ -16,22 +14,18 @@ const en = {
   reaction: "Reaction",
   movement: "Movement",
   extraAttacks: "Extra Attacks",
-  speed: "Speed",
   spellSlots: "Spell Slots",
   pactSlots: "Pact Slots",
   concentration: "Concentration",
   conscious: "Conscious",
-  dying: "Dying",
   stable: "Stable",
   dead: "Dead",
   unstable: "Unstable",
   surprised: "Surprised",
-  dispatch: "Dispatch Event",
   amount: "Amount",
   damageType: "Damage Type",
   roll: "Roll",
   level: "Level",
-  spellId: "Spell ID",
   available: "Available",
   used: "Used",
   remaining: "Remaining",
@@ -71,7 +65,6 @@ const en = {
   applyFall: "Apply Fall",
   suffocate: "Suffocate",
   critical: "Critical",
-  none: "None",
   dodging: "Dodging",
   disengaged: "Disengaged"
 } as const
@@ -80,9 +73,7 @@ const ru: Messages = {
   title: "D&D 5e Симулятор",
   hp: "ХП",
   tempHp: "Врем. ХП",
-  maxHp: "Макс. ХП",
   exhaustion: "Истощение",
-  deathSaves: "Спасброски от смерти",
   successes: "Успехи",
   failures: "Провалы",
   conditions: "Состояния",
@@ -92,22 +83,18 @@ const ru: Messages = {
   reaction: "Реакция",
   movement: "Перемещение",
   extraAttacks: "Доп. атаки",
-  speed: "Скорость",
   spellSlots: "Ячейки заклинаний",
   pactSlots: "Ячейки договора",
   concentration: "Концентрация",
   conscious: "В сознании",
-  dying: "При смерти",
   stable: "Стабилен",
   dead: "Мёртв",
   unstable: "Нестабилен",
   surprised: "Застигнут врасплох",
-  dispatch: "Отправить событие",
   amount: "Количество",
   damageType: "Тип урона",
   roll: "Бросок",
   level: "Уровень",
-  spellId: "ID заклинания",
   available: "Доступно",
   used: "Использовано",
   remaining: "Осталось",
@@ -147,14 +134,13 @@ const ru: Messages = {
   applyFall: "Падение",
   suffocate: "Удушение",
   critical: "Критический",
-  none: "Нет",
   dodging: "Уклонение",
   disengaged: "Отступление"
 }
 
 export type MessageKey = keyof typeof en
 export type Messages = Record<MessageKey, string>
-export const messages: Record<string, Messages> = { en, ru }
+export const messages = { en, ru } satisfies Record<string, Messages>
 export type Locale = keyof typeof messages
 
 export const I18nContext = createContext<Messages>(en)

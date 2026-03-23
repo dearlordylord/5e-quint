@@ -10,6 +10,11 @@ const DAMAGE_TYPES: ReadonlyArray<DamageType> = Array.from(ALL_DAMAGE_TYPES)
 const DEFAULT_SPEED = 30
 const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
 
+const prevent = (fn: () => void) => (e: FormEvent) => {
+  e.preventDefault()
+  fn()
+}
+
 function Section({ children, title }: { readonly title: string; readonly children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   return (
@@ -74,11 +79,6 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
   const [slotLevel, setSlotLevel] = useState(1)
   const [spellId, setSpellId] = useState("spell_a")
   const [fallDmg, setFallDmg] = useState(10)
-
-  const prevent = (fn: () => void) => (e: FormEvent) => {
-    e.preventDefault()
-    fn()
-  }
 
   return (
     <div className="space-y-2 bg-gray-800 rounded-xl p-4">

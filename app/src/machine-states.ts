@@ -31,7 +31,7 @@ export const damageTrackConfig = {
         SUFFOCATE: {
           guard: "canSuffocate" as const,
           target: "#dnd.damageTrack.dying",
-          actions: ["suffocate", "setUnconscious"]
+          actions: ["suffocate"]
         }
       }
     },

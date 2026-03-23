@@ -1,6 +1,6 @@
 import { type MessageKey, useT } from "#/i18n.ts"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
-import { MAX_EXHAUSTION } from "#/machine-helpers.ts"
+import { DEATH_SAVE_THRESHOLD, MAX_EXHAUSTION } from "#/machine-helpers.ts"
 import { ALL_CONDITIONS, SPELL_SLOT_LEVELS } from "#/types.ts"
 
 function damageTrackLabel(snap: DndSnapshot): string {
@@ -34,7 +34,7 @@ function HpBar({ ctx }: { readonly ctx: DndContext }) {
 
 function DeathSaveTracker({ ctx }: { readonly ctx: DndContext }) {
   const t = useT()
-  const DOT_COUNT = 3
+  const DOT_COUNT = DEATH_SAVE_THRESHOLD
   return (
     <div className="flex gap-4 text-sm">
       <div>

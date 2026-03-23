@@ -1,22 +1,22 @@
 import { useSelector } from "@xstate/react"
-import { useMemo, useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import { createActor } from "xstate"
 
 import { EventPanel } from "#/components/EventPanel.tsx"
 import { StatePanel } from "#/components/StatePanel.tsx"
 import { I18nContext, type Locale, LocaleContext, messages, useLocale, useT } from "#/i18n.ts"
-import type { DndContext, DndSnapshot } from "#/machine.ts"
+import type { DndContext, DndEvent, DndSnapshot } from "#/machine.ts"
 import { dndMachine } from "#/machine.ts"
 
 const DEFAULT_MAX_HP = 20
-const INIT_SPEED = 30
+const DEFAULT_SPEED = 30
 
 function createInitialActor() {
   const actor = createActor(dndMachine, {
     input: {
       maxHp: DEFAULT_MAX_HP,
-      effectiveSpeed: INIT_SPEED,
-      movementRemaining: INIT_SPEED,
+      effectiveSpeed: DEFAULT_SPEED,
+      movementRemaining: DEFAULT_SPEED,
       extraAttacksRemaining: 1,
       hitDiceRemaining: 5
     }
@@ -43,6 +43,7 @@ export function App() {
   const [actor] = useState(createInitialActor)
   const snapshot = useSelector(actor, (s: DndSnapshot) => s)
   const ctx: DndContext = snapshot.context
+  const send = useCallback((e: DndEvent) => actor.send(e), [actor])
 
   const localeValue = useMemo(() => ({ locale, setLocale }), [locale])
 
@@ -56,10 +57,12 @@ export function App() {
           </header>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <StatePanel snapshot={snapshot} ctx={ctx} />
-            <EventPanel send={(e) => actor.send(e)} />
+            <MemoEventPanel send={send} />
           </div>
         </div>
       </I18nContext>
     </LocaleContext>
   )
 }
+
+const MemoEventPanel = memo(EventPanel)
