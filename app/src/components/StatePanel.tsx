@@ -1,9 +1,11 @@
-import { type MessageKey, useT } from "#/i18n.ts"
+import { useT } from "#/i18n.ts"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
 import { DEATH_SAVE_THRESHOLD, MAX_EXHAUSTION } from "#/machine-helpers.ts"
 import { ALL_CONDITIONS, SPELL_SLOT_LEVELS } from "#/types.ts"
 
-function damageTrackLabel(snap: DndSnapshot): string {
+type TrackLabel = "conscious" | "stable" | "unstable" | "dead"
+
+function damageTrackLabel(snap: DndSnapshot): TrackLabel {
   if (snap.matches({ damageTrack: "dead" })) return "dead"
   if (snap.matches({ damageTrack: { dying: "stable" } })) return "stable"
   if (snap.matches({ damageTrack: { dying: "unstable" } })) return "unstable"
@@ -168,7 +170,7 @@ function StatusBadge({ color, label }: { readonly label: string; readonly color:
   return <span className={`px-3 py-1 rounded-full text-sm font-bold ${color}`}>{label}</span>
 }
 
-const TRACK_COLORS: Record<string, string> = {
+const TRACK_COLORS: Record<TrackLabel, string> = {
   conscious: "bg-green-800 text-green-200",
   unstable: "bg-red-800 text-red-200",
   stable: "bg-yellow-800 text-yellow-200",
@@ -182,7 +184,7 @@ export function StatePanel({ ctx, snapshot }: { readonly snapshot: DndSnapshot; 
     <div className="space-y-4 bg-gray-800 rounded-xl p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">{t.state}</h2>
-        <StatusBadge color={TRACK_COLORS[track] || ""} label={t[track as MessageKey] || track} />
+        <StatusBadge color={TRACK_COLORS[track]} label={t[track]} />
       </div>
       <HpBar ctx={ctx} />
       {track !== "conscious" && track !== "dead" && <DeathSaveTracker ctx={ctx} />}

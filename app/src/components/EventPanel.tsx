@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react"
 
+import { DEFAULT_HIT_DICE, DEFAULT_SPEED } from "#/components/App.tsx"
 import { useT } from "#/i18n.ts"
 import type { DndEvent } from "#/machine.ts"
 import { ALL_DAMAGE_TYPES } from "#/machine-helpers.ts"
@@ -7,7 +8,6 @@ import type { Condition, DamageType } from "#/types.ts"
 import { ALL_CONDITIONS, d20Roll, healAmount, tempHp } from "#/types.ts"
 
 const DAMAGE_TYPES: ReadonlyArray<DamageType> = Array.from(ALL_DAMAGE_TYPES)
-const DEFAULT_SPEED = 30
 const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
 
 const prevent = (fn: () => void) => (e: FormEvent) => {
@@ -213,7 +213,10 @@ export function EventPanel({ send }: { readonly send: (e: DndEvent) => void }) {
       <Section title={t.shortRest + " / " + t.longRest}>
         <div className="flex gap-2">
           <Btn label={t.shortRest} onClick={() => send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })} />
-          <Btn label={t.longRest} onClick={() => send({ type: "LONG_REST", totalHitDice: 5, hasEaten: true })} />
+          <Btn
+            label={t.longRest}
+            onClick={() => send({ type: "LONG_REST", totalHitDice: DEFAULT_HIT_DICE, hasEaten: true })}
+          />
         </div>
       </Section>
 

@@ -49,8 +49,6 @@ export type ActionType =
   | "search"
   | "useObject"
 
-export type SpeedType = "walk" | "fly" | "swim" | "climb" | "burrow"
-
 export type CoverType = "none" | "half" | "threeQuarters" | "total"
 
 export type ArmorCategory = "light" | "medium" | "heavy"
@@ -62,10 +60,6 @@ export type ContestResult = "aWins" | "bWins" | "tie"
 export type ShoveChoice = "prone" | "push"
 
 export type UnarmoredDefense = "none" | "barbarian" | "monk"
-
-export type Illumination = "bright" | "dim" | "dark"
-
-export type TravelPace = "fast" | "normal" | "slow"
 
 export interface Armor {
   readonly category: ArmorCategory

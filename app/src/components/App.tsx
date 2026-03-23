@@ -9,7 +9,8 @@ import type { DndContext, DndEvent, DndSnapshot } from "#/machine.ts"
 import { dndMachine } from "#/machine.ts"
 
 const DEFAULT_MAX_HP = 20
-const DEFAULT_SPEED = 30
+export const DEFAULT_SPEED = 30
+export const DEFAULT_HIT_DICE = 5
 
 function createInitialActor() {
   const actor = createActor(dndMachine, {
@@ -18,7 +19,7 @@ function createInitialActor() {
       effectiveSpeed: DEFAULT_SPEED,
       movementRemaining: DEFAULT_SPEED,
       extraAttacksRemaining: 1,
-      hitDiceRemaining: 5
+      hitDiceRemaining: DEFAULT_HIT_DICE
     }
   })
   actor.start()

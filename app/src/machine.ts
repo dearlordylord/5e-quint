@@ -15,6 +15,7 @@ import {
   computeTakeDamage,
   dehydrationLevels,
   effectiveMaxHp,
+  exhUpdate,
   expendSlot,
   MAX_EXHAUSTION,
   removeConditionUpdate,
@@ -56,6 +57,7 @@ import {
   INITIAL_TURN_STATE
 } from "#/machine-types.ts"
 import {
+  type DamageType,
   DEATH_SAVES_RESET,
   deathSaveCount,
   EMPTY_SLOTS,
@@ -67,6 +69,7 @@ import {
 } from "#/types.ts"
 
 export type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
+const petrifiedR = (c: DndContext, r: ReadonlySet<DamageType>) => (c.petrified ? ALL_DAMAGE_TYPES : r)
 const fallR = (c: DndContext, e: DndEvent) => {
   const ev = asApplyFall(e)
   return computeFallResult(
@@ -76,7 +79,7 @@ const fallR = (c: DndContext, e: DndEvent) => {
     c.tempHp,
     c.exhaustion,
     ev.immunities,
-    c.petrified ? ALL_DAMAGE_TYPES : ev.resistances,
+    petrifiedR(c, ev.resistances),
     ev.vulnerabilities
   )
 }
@@ -90,7 +93,7 @@ const dmgR = (c: DndContext, e: DndEvent) => {
     ev.amount,
     ev.damageType,
     ev.immunities,
-    c.petrified ? ALL_DAMAGE_TYPES : ev.resistances,
+    petrifiedR(c, ev.resistances),
     ev.vulnerabilities
   )
 }
@@ -379,16 +382,12 @@ export const dndMachine = setup({
       incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious"),
       ...concBreak(c)
     })),
-    applyStarvation: assign(({ context: c }) => {
-      const r = computeAddExhaustion(c.exhaustion, 1, c.hp, c.maxHp)
-      return { exhaustion: exhaustionLevel(r.newExhaustion), hp: hp(r.newHp) }
-    }),
+    applyStarvation: assign(({ context: c }) => exhUpdate(computeAddExhaustion(c.exhaustion, 1, c.hp, c.maxHp))),
     applyDehydration: assign(({ context: c, event: e }) => {
       const ev = asApplyDehydration(e)
       const levels = dehydrationLevels(c.exhaustion, ev.halfWater, ev.conSaveSucceeded)
       if (levels === 0) return {}
-      const r = computeAddExhaustion(c.exhaustion, levels, c.hp, c.maxHp)
-      return { exhaustion: exhaustionLevel(r.newExhaustion), hp: hp(r.newHp) }
+      return exhUpdate(computeAddExhaustion(c.exhaustion, levels, c.hp, c.maxHp))
     })
   }
 }).createMachine({
