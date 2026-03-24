@@ -229,6 +229,15 @@ module dnd {
     }
   }
 
+  /// Augment resistance set for underwater environment.
+  /// SRD 5.2.1: "Anything underwater has Resistance to Fire damage."
+  pure def pUnderwaterResistances(
+    resistances: Set[DamageType],
+    isUnderwater: bool
+  ): Set[DamageType] = {
+    if (isUnderwater) resistances.union(Set(Fire)) else resistances
+  }
+
   /// Critical hit damage: normal dice + bonus dice + modifier (modifier NOT doubled)
   pure def criticalDamage(normalDice: int, bonusDice: int, modifier: int): int = {
     normalDice + bonusDice + modifier
