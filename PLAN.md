@@ -12,7 +12,7 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 
 ## Status
 
-M0 (core spec under SRD 5.1) is done. M2 (SRD 5.2.1 migration) is in progress. Tasks below reflect SRD 5.2.1 rules. Implementation blocked until M2.5 completes.
+M0 (core spec under SRD 5.1) is done. M2 (SRD 5.2.1 migration) is done. TA1 (Active Effect Lifecycle) is done. Next: TA2 (END_TURN).
 
 ## Scope
 

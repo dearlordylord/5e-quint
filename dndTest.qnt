@@ -645,6 +645,131 @@ module dndTest {
   }
 
   // ============================================================
+  // Active Effect Lifecycle
+  // ============================================================
+
+  pure val EMPTY_EFFECTS: Set[ActiveEffect] = Set()
+  pure val EFF_A: ActiveEffect = { spellId: "hold_person", remainingTurns: 3 }
+  pure val EFF_B: ActiveEffect = { spellId: "bless", remainingTurns: 10 }
+  pure val TWO_EFFECTS: Set[ActiveEffect] = Set(EFF_A, EFF_B)
+
+  // -- pAddEffect --
+
+  run test_add_effect_to_empty = {
+    val result = pAddEffect(EMPTY_EFFECTS, "hold_person", 3)
+    all { assert(result.size() == 1), assert(pHasEffect(result, "hold_person")) }
+  }
+
+  run test_add_effect_no_duplicate = {
+    val result = pAddEffect(TWO_EFFECTS, "haste", 5)
+    assert(result.size() == 3)
+  }
+
+  run test_add_effect_replaces_same_spellId = {
+    val result = pAddEffect(TWO_EFFECTS, "hold_person", 7)
+    all {
+      assert(result.size() == 2),
+      assert(pHasEffect(result, "hold_person")),
+      assert(result.exists(e => e.spellId == "hold_person" and e.remainingTurns == 7))
+    }
+  }
+
+  // -- pRemoveEffect --
+
+  run test_remove_effect_present = {
+    val result = pRemoveEffect(TWO_EFFECTS, "hold_person")
+    all { assert(result.size() == 1), assert(not(pHasEffect(result, "hold_person"))) }
+  }
+
+  run test_remove_effect_absent_noop = {
+    val result = pRemoveEffect(TWO_EFFECTS, "nonexistent")
+    assert(result.size() == 2)
+  }
+
+  // -- pDecrementDurations --
+
+  run test_decrement_durations = {
+    val result = pDecrementDurations(TWO_EFFECTS)
+    all {
+      assert(result.exists(e => e.spellId == "hold_person" and e.remainingTurns == 2)),
+      assert(result.exists(e => e.spellId == "bless" and e.remainingTurns == 9))
+    }
+  }
+
+  run test_decrement_to_zero = {
+    val effects = Set({ spellId: "shield", remainingTurns: 1 })
+    val result = pDecrementDurations(effects)
+    assert(result.exists(e => e.spellId == "shield" and e.remainingTurns == 0))
+  }
+
+  // -- pExpiredEffects --
+
+  run test_expired_effects_none = assert(pExpiredEffects(TWO_EFFECTS) == Set())
+
+  run test_expired_effects_some = {
+    val effects = Set(
+      { spellId: "a", remainingTurns: 0 },
+      { spellId: "b", remainingTurns: 3 },
+      { spellId: "c", remainingTurns: -1 }
+    )
+    assert(pExpiredEffects(effects) == Set("a", "c"))
+  }
+
+  // -- pClearExpired --
+
+  run test_clear_expired = {
+    val effects = Set(
+      { spellId: "a", remainingTurns: 0 },
+      { spellId: "b", remainingTurns: 3 }
+    )
+    val result = pClearExpired(effects)
+    all { assert(result.size() == 1), assert(pHasEffect(result, "b")) }
+  }
+
+  run test_clear_expired_none_expired = assert(pClearExpired(TWO_EFFECTS) == TWO_EFFECTS)
+
+  // -- pHasEffect --
+
+  run test_has_effect_true = assert(pHasEffect(TWO_EFFECTS, "bless"))
+  run test_has_effect_false = assert(not(pHasEffect(TWO_EFFECTS, "fireball")))
+  run test_has_effect_empty = assert(not(pHasEffect(EMPTY_EFFECTS, "anything")))
+
+  // -- pEffectsOnConcBreak --
+
+  run test_conc_break_removes_effect = {
+    val ssOld = FRESH_SPELL_SLOTS.with("concentrationSpellId", "hold_person")
+    val ssNew = FRESH_SPELL_SLOTS  // concentration broken
+    val effects = TWO_EFFECTS
+    val result = pEffectsOnConcBreak(ssOld, ssNew, effects)
+    all { assert(not(pHasEffect(result, "hold_person"))), assert(pHasEffect(result, "bless")) }
+  }
+
+  run test_conc_break_no_break_keeps_effects = {
+    val ssOld = FRESH_SPELL_SLOTS.with("concentrationSpellId", "hold_person")
+    val ssNew = ssOld  // no break
+    val result = pEffectsOnConcBreak(ssOld, ssNew, TWO_EFFECTS)
+    assert(result == TWO_EFFECTS)
+  }
+
+  run test_conc_break_not_concentrating_noop = {
+    val result = pEffectsOnConcBreak(FRESH_SPELL_SLOTS, FRESH_SPELL_SLOTS, TWO_EFFECTS)
+    assert(result == TWO_EFFECTS)
+  }
+
+  // -- Full lifecycle: add -> decrement -> expire -> clear --
+
+  run test_lifecycle_add_decrement_expire_clear = {
+    val e0 = pAddEffect(EMPTY_EFFECTS, "spell_x", 2)
+    val e1 = pDecrementDurations(e0)  // remainingTurns = 1
+    val e2 = pDecrementDurations(e1)  // remainingTurns = 0
+    all {
+      assert(pExpiredEffects(e1) == Set()),
+      assert(pExpiredEffects(e2) == Set("spell_x")),
+      assert(pClearExpired(e2).size() == 0)
+    }
+  }
+
+  // ============================================================
   // Own Attack Modifiers
   // ============================================================
 
