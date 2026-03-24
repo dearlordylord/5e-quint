@@ -617,6 +617,10 @@ module dnd {
     }
   }
 
+  /// Cover bonus for saving throws: applies only to DEX saves (Rules-Glossary "Cover").
+  pure def pSaveCoverBonus(ability: Ability, cover: CoverType): int =
+    if (ability == Dex) coverBonus(cover) else 0
+
   /// Exhaustion flat penalty: -2 * exhaustion level, applied to all D20 Tests.
   pure def exhaustionPenalty(s: CreatureState): int = -2 * s.exhaustion
 
