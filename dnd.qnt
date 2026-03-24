@@ -400,6 +400,12 @@ module dnd {
 
   pure val DEATH_SAVES_RESET: DeathSaves = { successes: 0, failures: 0 }
 
+  /// Timed effect on a creature (spell, ability, etc.) with duration in turns.
+  /// Instant spells (Fireball, Healing Word) don't create an ActiveEffect —
+  /// they just apply damage/healing/conditions directly.
+  /// Core spec owns lifecycle only; spell-specific behavior lives in caller.
+  type ActiveEffect = { spellId: str, remainingTurns: int }
+
   type CreatureState = {
     hp: int,
     maxHp: int,
@@ -423,6 +429,7 @@ module dnd {
     unconscious: bool,
     incapacitatedSources: Set[IncapSource],
     hitPointDiceRemaining: int,         // how many HD available to spend (total = level)
+    activeEffects: Set[ActiveEffect],   // timed effects (spells, abilities); lifecycle only
   }
 
   pure val ALL_DAMAGE_TYPES: Set[DamageType] =
@@ -440,6 +447,7 @@ module dnd {
     stunned: false, unconscious: false,
     incapacitatedSources: Set(),
     hitPointDiceRemaining: 0,
+    activeEffects: Set(),
   }
 
   pure def isIncapacitated(s: CreatureState): bool =
@@ -449,6 +457,33 @@ module dnd {
 
   /// Effective max HP (extension point for effects that modify HP maximum).
   pure def effectiveMaxHp(s: CreatureState): int = s.maxHp
+
+  // -- 8.1 Active Effect Lifecycle --
+  // Core owns add/remove/decrement/expire. Spell-specific behavior is caller's job.
+
+  /// Add an effect, replacing any existing with the same spellId (no stacking).
+  pure def pAddEffect(effects: Set[ActiveEffect], spellId: str, durationTurns: int): Set[ActiveEffect] =
+    effects.filter(e => e.spellId != spellId).union(Set({ spellId: spellId, remainingTurns: durationTurns }))
+
+  /// Remove an effect by spellId (dispel, concentration break, etc.).
+  pure def pRemoveEffect(effects: Set[ActiveEffect], spellId: str): Set[ActiveEffect] =
+    effects.filter(e => e.spellId != spellId)
+
+  /// Decrement all durations by 1. Called during START_TURN (TA4).
+  pure def pDecrementDurations(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.map(e => { spellId: e.spellId, remainingTurns: e.remainingTurns - 1 })
+
+  /// Return spellIds of effects whose duration has expired (remainingTurns <= 0).
+  pure def pExpiredEffects(effects: Set[ActiveEffect]): Set[str] =
+    effects.filter(e => e.remainingTurns <= 0).map(e => e.spellId)
+
+  /// Remove all expired effects (remainingTurns <= 0).
+  pure def pClearExpired(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(e => e.remainingTurns > 0)
+
+  /// Check whether an effect with the given spellId is active.
+  pure def pHasEffect(effects: Set[ActiveEffect], spellId: str): bool =
+    effects.exists(e => e.spellId == spellId)
 
   // ============================================================
   // 9. CONDITIONS (character/conditions)
@@ -1377,6 +1412,20 @@ module dnd {
     )) pBreakConcentration(ss)
     else ss
 
+  /// Remove the concentrated spell's active effect if concentration broke.
+  pure def pEffectsOnConcBreak(ssOld: SpellSlotState, ssNew: SpellSlotState, effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    if (isConcentrating(ssOld) and not(isConcentrating(ssNew)))
+      pRemoveEffect(effects, ssOld.concentrationSpellId)
+    else effects
+
+  type ConcBreakResult = { creature: CreatureState, slots: SpellSlotState }
+
+  /// Combined: break concentration on state change + remove associated active effect.
+  pure def pWithConcBreak(ss: SpellSlotState, oldS: CreatureState, newS: CreatureState): ConcBreakResult = {
+    val ssNew = pBreakConcOnStateChange(ss, oldS, newS)
+    { creature: newS.with("activeEffects", pEffectsOnConcBreak(ss, ssNew, newS.activeEffects)), slots: ssNew }
+  }
+
   /// Resolve concentration check after taking damage.
   /// Caller computes DC via pConcentrationDC, resolves save via saveSucceeds, passes result.
   /// Separate call per damage source.
@@ -1760,6 +1809,8 @@ module dnd {
   pure val MOVEMENT_RANGE = 5.to(30)
   pure val MOVE_COST_RANGE = 1.to(3)
   pure val HD_ROLL_RANGE = 1.to(12)
+  pure val EFFECT_DURATION_RANGE = 1.to(10)
+  pure val SPELL_IDS: Set[str] = Set("spell_a", "spell_b", "spell_c")
 
   pure val CONDITIONS: Set[Condition] = Set(
     CBlinded, CCharmed, CDeafened, CFrightened, CGrappled,
@@ -1841,8 +1892,8 @@ module dnd {
     nondet amount = DAMAGE_RANGE.oneOf()
     nondet dt = DAMAGE_TYPES.oneOf()
     nondet isCrit = Bool.oneOf()
-    val s1 = pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit)
-    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
+    val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
   }
 
   action doTakeDamageWithMods = {
@@ -1851,8 +1902,8 @@ module dnd {
     nondet isCrit = Bool.oneOf()
     nondet resType = DAMAGE_TYPES.oneOf()
     nondet vulnType = DAMAGE_TYPES.oneOf()
-    val s1 = pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit)
-    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
+    val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
   }
 
   action doHeal = {
@@ -1876,14 +1927,14 @@ module dnd {
   }
 
   action doKnockOut = {
-    val s1 = pKnockOut(state)
-    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
+    val r = pWithConcBreak(spellSlots, state, pKnockOut(state))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
   }
 
   action doApplyCondition = {
     nondet c = CONDITIONS.oneOf()
-    val s1 = pApplyCondition(state, c)
-    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
+    val r = pWithConcBreak(spellSlots, state, pApplyCondition(state, c))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
   }
 
   action doRemoveCondition = {
@@ -1894,8 +1945,8 @@ module dnd {
   // Exhaustion actions
   action doAddExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
-    val s1 = pAddExhaustion(state, levels)
-    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
+    val r = pWithConcBreak(spellSlots, state, pAddExhaustion(state, levels))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
   }
 
   action doReduceExhaustion = {
@@ -1970,19 +2021,40 @@ module dnd {
   }
 
   action doStartConcentration = {
-    nondet spellId = Set("spell_a", "spell_b", "spell_c").oneOf()
-    // Can't start concentration when dead
-    val ss1 = if (state.dead) spellSlots else pStartConcentration(spellSlots, spellId)
-    all { state' = state, turnState' = turnState, spellSlots' = ss1 }
+    nondet spellId = SPELL_IDS.oneOf()
+    nondet duration = EFFECT_DURATION_RANGE.oneOf()
+    if (state.dead) all { state' = state, turnState' = turnState, spellSlots' = spellSlots }
+    else {
+      val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
+      val effects2 = pAddEffect(effects1, spellId, duration)
+      val ss1 = pStartConcentration(spellSlots, spellId)
+      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1 }
+    }
   }
 
-  action doBreakConcentration = all {
-    state' = state, turnState' = turnState, spellSlots' = pBreakConcentration(spellSlots)
+  action doBreakConcentration = {
+    val ss1 = pBreakConcentration(spellSlots)
+    val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1 }
   }
 
   action doConcentrationCheck = {
     nondet saveSucceeded = Bool.oneOf()
-    all { state' = state, turnState' = turnState, spellSlots' = pConcentrationCheck(spellSlots, saveSucceeded) }
+    val ss1 = pConcentrationCheck(spellSlots, saveSucceeded)
+    val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1 }
+  }
+
+  // Active effect actions
+  action doAddEffect = {
+    nondet spellId = SPELL_IDS.oneOf()
+    nondet duration = EFFECT_DURATION_RANGE.oneOf()
+    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration)), turnState' = turnState, spellSlots' = spellSlots }
+  }
+
+  action doRemoveEffect = {
+    nondet spellId = SPELL_IDS.oneOf()
+    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots }
   }
 
   // Rest actions
@@ -2017,25 +2089,25 @@ module dnd {
   // Environmental actions
   action doApplyFall = {
     nondet damageRoll = DAMAGE_RANGE.oneOf()
-    val s1 = pApplyFall(state, damageRoll, Set(), Set(), Set())
-    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
+    val r = pWithConcBreak(spellSlots, state, pApplyFall(state, damageRoll, Set(), Set(), Set()))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
   }
 
   action doSuffocate = {
-    val s1 = pSuffocate(state)
-    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
+    val r = pWithConcBreak(spellSlots, state, pSuffocate(state))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
   }
 
   action doApplyStarvation = {
-    val s1 = pApplyStarvation(state)
-    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
+    val r = pWithConcBreak(spellSlots, state, pApplyStarvation(state))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
   }
 
   action doApplyDehydration = {
     nondet halfWater = Bool.oneOf()
     nondet saveSucceeded = Bool.oneOf()
-    val s1 = pApplyDehydration(state, halfWater, saveSucceeded)
-    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
+    val r = pWithConcBreak(spellSlots, state, pApplyDehydration(state, halfWater, saveSucceeded))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
   }
 
   // Grapple/Shove actions (applied to self as target)
@@ -2099,6 +2171,8 @@ module dnd {
         doStartConcentration,
         doBreakConcentration,
         doConcentrationCheck,
+        doAddEffect,
+        doRemoveEffect,
         doSpendHitDie,
         doShortRest,
         doLongRest,
@@ -2172,6 +2246,14 @@ module dnd {
 
   val hitDiceNonNegative = state.hitPointDiceRemaining >= 0
 
+  /// No two active effects share the same spellId.
+  val activeEffectsUniqueSpellIds =
+    state.activeEffects.forall(e1 =>
+      state.activeEffects.forall(e2 =>
+        (e1.spellId == e2.spellId) implies (e1 == e2)
+      )
+    )
+
   /// Combined invariant for all safety properties.
   val allInvariants = and {
     hpBounded,
@@ -2192,6 +2274,7 @@ module dnd {
     slotsBounded,
     pactSlotsBounded,
     hitDiceNonNegative,
+    activeEffectsUniqueSpellIds,
   }
 
 }
