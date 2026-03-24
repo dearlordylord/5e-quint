@@ -39,6 +39,8 @@ MBT infrastructure wired to `@firfi/quint-connect`.
 
 ### 5.2.1 Revision Needed for Completed Features
 
+> **Research complete.** See `REVISION_RESEARCH.md` for full SRD 5.1 vs 5.2.1 delta analysis of each item below. TL;DR: most items are already migrated; actual work needed: dehydration/malnutrition rewrite, squeezing removal, TWF melee-only ASSUMPTIONS.md entry.
+
 The following completed features were implemented under SRD 5.1 and need revision for 5.2.1 during M2.5:
 
 - **Exhaustion:** completely new system. Was 6 tiers with specific per-tier effects (disadv ability checks, speed halved, disadv attacks/saves, HP max halved, speed 0, death). Now: -2 x level on D20 Tests, -5 x level ft Speed, death at level 6 (Rules-Glossary.md "Exhaustion [Condition]").
@@ -157,12 +159,13 @@ END_TURN:
   2. Remove where (expiresAt == AtEndOfTurn AND turnsRemaining ≤ 0)
 ```
 
-| SRD pattern | expiresAt | turnsRemaining | Removed at |
-|---|---|---|---|
-| "until start of next turn" | AtStartOfTurn | 1 | START_TURN (after decrement) |
-| "until end of next turn" | AtEndOfTurn | 1 | END_TURN (next turn) |
-| "for N rounds" | AtEndOfTurn | N | END_TURN (Nth turn) |
-| "concentration, up to N" | AtEndOfTurn | N | END_TURN or early (conc break/save) |
+| Cat | SRD pattern | expiresAt | turnsRemaining | Removed at | Examples |
+|-----|-------------|-----------|----------------|------------|----------|
+| A | "until start of next turn" | AtStartOfTurn | 1 | START_TURN (after decrement) | Dodge, Shield, Reckless Attack, reaction cooldown |
+| B | "until end of next turn" | AtEndOfTurn | 1 | END_TURN (next turn) | Rage (each extension), Ray of Sickness |
+| C | "for N rounds" + end-of-turn saves | AtEndOfTurn | N | END_TURN (Nth turn) | Hold Person, Blindness/Deafness, Hypnotic Pattern |
+| D | "for N rounds" + start-of-turn damage | AtEndOfTurn | N | END_TURN (Nth turn) | Searing Smite, Ensnaring Strike |
+| E | concentration, no fixed trigger | AtEndOfTurn | N | END_TURN or early (conc break/save) | Spirit Guardians, Bless |
 
 Core lifecycle functions:
 - `pAddEffect(effects, spellId, durationTurns, expiresAt)` — add effect, replace existing with same spellId (no stacking)
