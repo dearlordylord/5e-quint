@@ -91,24 +91,42 @@ module dndTest {
   // ============================================================
 
   run test_attack_nat20 = {
-    val r = resolveAttackRoll(20, -5, 30, 0)
+    val r = resolveAttackRoll(20, -5, 30, 0, 20)
     all { assert(r.hits == true), assert(r.isCritical == true) }
   }
 
   run test_attack_nat1 = {
-    val r = resolveAttackRoll(1, 20, 5, 0)
+    val r = resolveAttackRoll(1, 20, 5, 0, 20)
     all { assert(r.hits == false), assert(r.isCritical == false) }
   }
 
   run test_attack_normal_hit = {
-    val r = resolveAttackRoll(15, 5, 18, 0)
+    val r = resolveAttackRoll(15, 5, 18, 0, 20)
     all { assert(r.hits == true), assert(r.isCritical == false) }
   }
 
   run test_attack_hit_exact_with_cover = {
-    val r = resolveAttackRoll(13, 5, 16, 2)
+    val r = resolveAttackRoll(13, 5, 16, 2, 20)
     // 13 + 5 = 18, AC 16 + 2 = 18, hits (>=)
     all { assert(r.hits == true), assert(r.isCritical == false) }
+  }
+
+  // -- Crit Range Parameterization (T02) --
+
+  run test_crit_range_19_crits_on_19 = {
+    val r = resolveAttackRoll(19, 0, 30, 0, 19)
+    all { assert(r.hits == true), assert(r.isCritical == true) }
+  }
+
+  run test_crit_range_20_no_crit_on_19 = {
+    val r = resolveAttackRoll(19, 0, 30, 0, 20)
+    // 19 + 0 = 19 < AC 30, misses; not a crit
+    all { assert(r.hits == false), assert(r.isCritical == false) }
+  }
+
+  run test_crit_range_18_crits_on_18 = {
+    val r = resolveAttackRoll(18, 0, 30, 0, 18)
+    all { assert(r.hits == true), assert(r.isCritical == true) }
   }
 
   // ============================================================
@@ -316,6 +334,7 @@ module dndTest {
     canRitualCast: true,
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
+    critRange: 20,
   }
 
   // Spell save DC = 8 + INT mod(4) + prof(3) = 15
@@ -913,6 +932,7 @@ module dndTest {
     canRitualCast: false,
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
+    critRange: 20,
   }
 
   pure val BASIC_TURN: TurnState = pStartTurn(
