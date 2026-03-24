@@ -1,0 +1,1 @@
+// SKIP: The spec models combat/adventure mechanics; it has no downtime activity system, lifestyle expense tracking, or minimum-hours-per-day requirement — the core rule in this Q&A cannot be encoded.

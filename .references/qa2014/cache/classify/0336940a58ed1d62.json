@@ -1,0 +1,1 @@
+{"source": "se", "id": "134450", "hash": "0336940a58ed1d62", "is_raw": true, "category": "class_features", "rule_summary": "Projected Ward requires an active Arcane Ward to function; the ward cannot absorb damage if it does not exist or has 0 HP."}

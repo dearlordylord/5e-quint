@@ -1,0 +1,1 @@
+// SKIP: Spec does not model Pack Tactics, the Help action's advantage grant to another creature, or 'ally' as a distinct semantic concept; the ruling (ally ≠ self) has no mappable function or field in the existing spec.

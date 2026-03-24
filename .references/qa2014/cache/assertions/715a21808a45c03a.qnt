@@ -1,0 +1,1 @@
+// SKIP: Spec models no familiar mechanics, creature type selection, or Pact of the Chain; the ruling (spirit type is independent of form stat block type) has no representable state in the current spec.

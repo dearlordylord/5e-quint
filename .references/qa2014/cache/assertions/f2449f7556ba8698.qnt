@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns DM-discretion treasure placement (DMG p.133); no treasure, monster motivation, or hoard mechanics exist in the spec.

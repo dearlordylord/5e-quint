@@ -1,0 +1,1 @@
+{"source": "se", "id": "183656", "hash": "91c8acd87d882206", "is_raw": true, "category": "class_features", "rule_summary": "Gravity Well triggers only when casting a spell 'on a creature' with an immediate effect; area spells like Web with delayed saving throws do not trigger the feature."}

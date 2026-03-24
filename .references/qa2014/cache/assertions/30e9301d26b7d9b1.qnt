@@ -1,0 +1,1 @@
+// SKIP: Q&A resolves to DM discretion with no mechanical rule — the spec has no scrying spell, creature identity/transformation tracking, or undead type; no testable assertion can be derived.

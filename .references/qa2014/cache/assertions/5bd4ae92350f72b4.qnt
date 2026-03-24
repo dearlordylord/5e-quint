@@ -1,0 +1,1 @@
+// SKIP: spec has no `maxHp`-reduction-as-tracked-effect mechanic and no `pGreaterRestoration` function; the Q&A's core distinction (one merged effect vs. N separate bite effects removed by a single casting) cannot be encoded with existing spec functions.

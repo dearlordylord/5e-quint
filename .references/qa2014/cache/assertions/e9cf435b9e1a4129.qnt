@@ -1,0 +1,1 @@
+// SKIP: The spec has no magic item system, item charges, or item-based casting mechanic. The Enspelled Weapon rule (non-spellcaster casts via weapon charges, bypassing hasSpellcasting) cannot be encoded with existing spec functions.

@@ -1,0 +1,1 @@
+{"source": "se", "id": "164579", "hash": "2e8568d4f2597e49", "is_raw": true, "category": "class_features", "rule_summary": "Magical Tinkering and weapon infusions both require a nonmagical object; applying one makes the object magical, preventing the other from being applied."}

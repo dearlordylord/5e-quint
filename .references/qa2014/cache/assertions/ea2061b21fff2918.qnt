@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns the Instrument of Illusions magic item and Minor Illusion cantrip's specific visual/auditory effects — neither magic items nor individual spell effects (illusion radius, sound vs. image distinction, cantrip-level-0 slot exemption) are modeled in the spec.

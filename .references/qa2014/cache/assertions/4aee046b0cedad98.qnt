@@ -1,0 +1,1 @@
+// SKIP: The Q&A concerns Adventurers League organized-play rules for copying spells between spellbooks during downtime — a campaign-logistics rule with no corresponding mechanic in the spec (no spellbook, no spell-copying downtime activity, no "same adventure" grouping state).

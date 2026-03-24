@@ -1,0 +1,1 @@
+// SKIP: Spec has no location/hidden-state tracking or Message-spell-specific mechanics; the rule is purely about what spell description text does/doesn't grant to a target, which is unmodeled.

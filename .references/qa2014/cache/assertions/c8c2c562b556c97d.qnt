@@ -1,0 +1,1 @@
+// SKIP: Spec has no model for magic items, attunement, or per-user item property charges/cooldowns; the rule is about Hat of Wizardry "once per long rest" resetting per attuned user, which requires item state and attunement tracking absent from the spec.

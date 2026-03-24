@@ -1,0 +1,1 @@
+// SKIP: The spec models the standard PHB spell slot system only; it has no Spell Points variant (DMG p.288–289), no spell point pool, and no Arcane Recovery feature. The Q&A's conversion formula (⌈11/8 × spell levels⌉) and the mechanics it addresses cannot be encoded with existing spec functions.

@@ -1,0 +1,1 @@
+// SKIP: Water Walk's automatic 60ft/round surfacing effect requires forced-movement and vertical-position tracking not modeled in the spec; the spec has no Water Walk spell state, no mandatory end-of-turn displacement mechanic, and no concept of absolute spatial position — only a movement budget remaining.

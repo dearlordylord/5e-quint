@@ -1,0 +1,1 @@
+// SKIP: Accepted answer is a pure DM adjudication ruling ("DM determines if beast has appropriate anatomy to wield a weapon"). The spec models finesse weapon attack ability selection and size-based disadvantage, but encodes no concept of Wild Shape, beast forms, or anatomy-based weapon eligibility — there is no mechanical predicate to assert against.

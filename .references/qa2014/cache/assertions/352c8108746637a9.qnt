@@ -1,0 +1,1 @@
+// SKIP: spec contains no CR calculation system — no effective-AC/HP adjustment formulas, no DPR-to-CR table, no DMG 274-281 offensive/defensive CR averaging logic

@@ -1,0 +1,1 @@
+// SKIP: Patron favors (Tasha's Cauldron of Everything) are a DM-discretionary narrative mechanic with no fixed mechanical rules; the spec models only PHB core mechanics (HP, conditions, saves, slots, movement, etc.) and has no functions to represent patron relationships, favor accrual, or perk activation.

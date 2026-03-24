@@ -1,0 +1,1 @@
+// SKIP: spec models no spell-range targeting, weapon reach vs spell range distinction, or Spell Sniper feat — all mechanics central to this Q&A

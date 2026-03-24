@@ -1,0 +1,1 @@
+// SKIP: The spec does not model material component costs, the Limited Wish feature, or spell list filtering; pCanProvideComponents only checks Verbal/Somatic components (material components are explicitly delegated to the caller), so the core rule cannot be encoded against existing spec functions.

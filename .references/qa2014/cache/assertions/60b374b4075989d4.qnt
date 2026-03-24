@@ -1,0 +1,1 @@
+// SKIP: Spec has no model of familiars, Find Familiar spell, telepathic communication range, or INT-gated understanding; the relevant rule is purely narrative/spell-description-level and no existing function in the spec encodes it.

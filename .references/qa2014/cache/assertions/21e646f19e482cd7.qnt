@@ -1,0 +1,1 @@
+// SKIP: Spec contains no attunement, familiar, or magical tattoo mechanics — the ruling is entirely about item attunement eligibility and manual dexterity prerequisites, none of which are modeled.

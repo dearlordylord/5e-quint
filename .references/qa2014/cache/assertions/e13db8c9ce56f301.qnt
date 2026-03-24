@@ -1,0 +1,1 @@
+// SKIP: True Polymorph, condition immunities (e.g., immunity to the Poisoned *condition* from undead/construct creature type), disease mechanics, and curse/hex effects are not modeled in the spec; the spec tracks damage-type immunities (Set[DamageType]) but has no condition immunity concept, no polymorph transformation mechanic, and no disease or curse state fields.

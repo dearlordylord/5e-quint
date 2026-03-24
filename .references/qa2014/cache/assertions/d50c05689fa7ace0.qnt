@@ -1,0 +1,1 @@
+// SKIP: The spec models spell slots, concentration, and casting components but has no representation of individual spell definitions, targeting categories (single-target vs. area vs. summoning), or Glyph of Warding's storage eligibility logic. The Q&A's accepted answer turns on whether specific named spells meet a textual targeting criterion — a property the spec cannot express.

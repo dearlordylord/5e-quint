@@ -1,0 +1,1 @@
+// SKIP: Teleport spell targeting and transportation mechanics (moving willing creatures/objects to a destination) are not modeled in the spec; only spell slot expenditure is present, with no representation of spell effects, targeting rules, or creature willingness as a targeting condition.

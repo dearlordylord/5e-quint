@@ -1,0 +1,1 @@
+// SKIP: Thaumaturgy's voice amplification ("three times as loud") is a narrative/DM-ruling mechanic; the spec models no sound volume, audible distance, or cantrip flavor effects to assert against.

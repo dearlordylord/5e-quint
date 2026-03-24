@@ -1,0 +1,1 @@
+// SKIP: Spec contains no alignment system, ideals, or good/evil act classification — purely lore/flavor mechanics with no mechanical representation in dnd.qnt.

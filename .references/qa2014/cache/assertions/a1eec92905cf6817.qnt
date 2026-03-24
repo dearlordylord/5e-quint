@@ -1,0 +1,1 @@
+// SKIP: Soul Bag and Nightmare Haunting are Monster Manual monster abilities with no corresponding mechanics in the spec (no soul capture, no creature ability tracking, no Nightmare Haunting trigger).

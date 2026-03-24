@@ -1,0 +1,1 @@
+// SKIP: Fold Space (Dimensional Loop magic item) and AoE spell targeting geometry are not modeled in the spec; no functions exist for "treat space as within 5 feet" or area-of-effect radius inclusion checks.

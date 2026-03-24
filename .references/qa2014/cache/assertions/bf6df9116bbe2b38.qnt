@@ -1,0 +1,1 @@
+// SKIP: Spec models a single creature's TurnState with no initiative roll mechanics, no multi-creature initiative tracking, and no Primal Companion feature; the rule ("companion acts on the ranger's turn, not its own initiative roll") cannot be encoded without a second creature's TurnState and an initiative ordering system.

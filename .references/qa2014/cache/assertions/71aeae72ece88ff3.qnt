@@ -1,0 +1,1 @@
+// SKIP: Fey crossings are a DMG planar-travel mechanic; the spec models only PHB combat/condition/movement/spellcasting mechanics with no functions for planes, portals, or bidirectional traversal.

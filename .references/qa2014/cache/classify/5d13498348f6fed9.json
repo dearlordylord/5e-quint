@@ -1,0 +1,1 @@
+{"source": "se", "id": "165659", "hash": "5d13498348f6fed9", "is_raw": true, "category": "hp_death", "rule_summary": "When *Aid* increases maximum hit points by 5 and another effect reduces maximum hit points, both modifications apply independently rather than *Aid* serving as a buffer against the reduction."}

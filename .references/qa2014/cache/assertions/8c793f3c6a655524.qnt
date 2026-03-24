@@ -1,0 +1,1 @@
+// SKIP: spec has no Great Weapon Fighting reroll mechanic; all dice are pre-resolved integers passed by caller, and no probability distribution functions exist to encode the GWF 1s/2s reroll statistics the Q&A addresses

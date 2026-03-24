@@ -1,0 +1,1 @@
+{"source": "se", "id": "169919", "hash": "2b5498b6a93deaa7", "is_raw": true, "category": "class_features", "rule_summary": "Blade Flourish's speed increase stacks across multiple Attack actions in the same turn because the effect lasts until end of turn, which is less than 1 round and not subject to same-name effect stacking rules."}

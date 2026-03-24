@@ -1,0 +1,1 @@
+// SKIP: Artisan's Blessing crafting ritual and raw-material-vs-market-value logic are not modelled in the spec; no functions exist for Channel Divinity, item crafting, or economic value calculations.

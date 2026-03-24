@@ -1,0 +1,1 @@
+// SKIP: Spec covers no Artificer class, no subclass features, and no Arcane Armor / Thunder Gauntlets mechanic; ClassName enum excludes Artificer entirely.

@@ -1,0 +1,1 @@
+{"source": "se", "id": "180260", "hash": "a8b435afc872fa2b", "is_raw": true, "category": "movement", "rule_summary": "A polymorphed creature's flight ability is not itself magical even though polymorph is a spell, so flying while polymorphed counts as nonmagical flight for environmental effects."}

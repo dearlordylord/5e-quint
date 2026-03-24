@@ -1,0 +1,1 @@
+// SKIP: Speak with Animals flavor/mechanics are purely narrative/DM discretion with no quantifiable rules; the spec has no spellcasting flavor, language, or communication mechanics to encode as assertions.

@@ -1,0 +1,1 @@
+// SKIP: Spec has no creature type taxonomy (plant, undead, etc.), no Fire Storm spell definition, and no selective area-effect exclusion mechanic — the rule is entirely about spell-specific targeting logic that the spec does not model.

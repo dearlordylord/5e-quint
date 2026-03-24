@@ -1,0 +1,1 @@
+// SKIP: Q&A is about D&D cosmology/lore (planar geography, ghost metaphysics) with no mechanical rule encodable in the spec's pure functions or state machine.

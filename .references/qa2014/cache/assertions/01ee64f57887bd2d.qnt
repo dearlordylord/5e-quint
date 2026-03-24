@@ -1,0 +1,1 @@
+// SKIP: Spec models no undead/living creature type distinction, no Clone spell, no soul-transfer or phylactery mechanics — the ruling's three key predicates (creature is living, soul is free, soul resides in phylactery) are all outside the spec's scope.

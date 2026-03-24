@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns Simulacrum NPC behavior and order-interpretation under DM fiat — no spec functions model spell effects, NPC decision-making, or vague-order resolution; the accepted answer is explicitly "DM-fiat, varies by creature duplicated."

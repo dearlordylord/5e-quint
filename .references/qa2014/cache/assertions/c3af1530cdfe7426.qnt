@@ -1,0 +1,1 @@
+// SKIP: The spec models no curse condition, blood curse effects, Remove Curse spell, or Greater Restoration spell. There are no functions or types in the spec to represent cursed state or its removal.

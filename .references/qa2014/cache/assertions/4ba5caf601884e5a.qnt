@@ -1,0 +1,1 @@
+// SKIP: Artillerist Eldritch Cannon mechanics (space occupation, held-in-hand state for summoned objects) are not modeled in the spec; the spec has no cannon entity, no object-space-occupation tracking, and no "held in hand" state for non-weapon items.

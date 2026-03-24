@@ -1,0 +1,1 @@
+// SKIP: Spec has no function for item-granted ability score increases that bypass the normal cap; `pApplyASI` explicitly caps at 20 (`intMin(..., 20)`) and there is no alternative path (e.g., `pApplyItemASI`) that models Manual/Tome mechanics or a per-ability maximum above 20.

@@ -1,0 +1,1 @@
+// SKIP: Wild Shape beast-form speech capability and familiar/Voice-of-the-Chain-Master mechanics are not modeled in the spec; neither the wildShapeActive flag, beast speech capability, nor familiar speech actions exist in any spec type or function.

@@ -1,0 +1,1 @@
+// SKIP: The accepted answer is pure GM fiat ("it's up to your GM"); no mechanical rule exists in the PHB or the spec for sigil sequence learning prerequisites, spell acquisition ordering, or teleportation circle access. The spec models combat/conditions/slots/concentration — none of which encode this narrative/social ruling.

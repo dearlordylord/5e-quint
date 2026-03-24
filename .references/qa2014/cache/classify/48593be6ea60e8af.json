@@ -1,0 +1,1 @@
+{"source": "se", "id": "136006", "hash": "48593be6ea60e8af", "is_raw": true, "category": "spellcasting", "rule_summary": "Whether Mirror Image duplicate AC (10 + DEX modifier) is fixed at casting time or updates dynamically as the caster's Dexterity modifier changes during spell duration."}

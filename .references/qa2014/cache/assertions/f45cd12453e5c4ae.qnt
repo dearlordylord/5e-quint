@@ -1,0 +1,1 @@
+// SKIP: Spec has no Undead Thralls feature, no spell tags (Creation vs Summoning), and no mechanic for distinguishing spells that create undead from corpses vs. summon existing undead spirits.

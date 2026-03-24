@@ -1,0 +1,1 @@
+// SKIP: The spec does not model the Haste spell, its lethargy effect (can't move or take actions after the spell ends), or overlapping spell-instance interactions. No existing types, conditions, or turn-state fields represent Haste's benefits or the lethargy flag; encoding this Q&A would require inventing functions outside the spec.

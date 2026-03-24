@@ -1,0 +1,1 @@
+// SKIP: The accepted answer is "Ask your GM" — there is no authoritative rule to encode as an assertion. The question is an unresolved RAW ambiguity; the spec has no model of spell area-of-effect geometry, spatial position, or per-spell condition-removal triggers that would allow either interpretation to be tested.

@@ -1,0 +1,1 @@
+// SKIP: The Xanathar's Guide optional rule (sleeping in medium/heavy armor reduces HD recovery to 1/4 and blocks exhaustion reduction) is not modeled in the spec — `pLongRest` has no armor-state or sleep/trance parameter. Elf Trance as a race feature is likewise absent. There are no existing functions to distinguish "sleeping in armor" from "trancing in armor" long rest paths.

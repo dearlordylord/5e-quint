@@ -1,0 +1,1 @@
+// SKIP: spec models no weapon-degradation state or monster Corrosive Form trait; the ruling hinges on whether a hit that resolves to 0 effective damage (via immunity) still triggers a weapon penalty — a mechanic entirely absent from the spec's CreatureState, AttackResult, and damage pipeline.

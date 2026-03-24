@@ -1,0 +1,1 @@
+// SKIP: Polymorph stat-block replacement (and its equipment/attack restrictions) is not modeled in the spec; there is no pPolymorph function, no beast-form CharConfig substitution, and no equipment-melding state to assert against.

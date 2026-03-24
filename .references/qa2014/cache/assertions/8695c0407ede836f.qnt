@@ -1,0 +1,1 @@
+// SKIP: spec has no mechanism for class feature durations or voluntary early termination of non-concentration class features; Giant's Might and Rune Knight are not modeled

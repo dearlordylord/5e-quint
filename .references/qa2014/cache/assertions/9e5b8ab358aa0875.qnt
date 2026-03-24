@@ -1,0 +1,1 @@
+// SKIP: The accepted answer is that 5e RAW specifies no timing trigger for level advancement. The spec models `CharConfig.level` as a static immutable field with no XP state variable, no level-up action, and no timing mechanism — there is no mechanical predicate to assert against.

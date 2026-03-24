@@ -1,0 +1,1 @@
+// SKIP: The spec models spell slots, concentration, and casting validation but has no functions representing spell AOE position, point-of-origin, or movement of area effects — the rule that "AOE spells remain static at their point of origin unless the description explicitly allows movement" cannot be encoded against any existing spec function.

@@ -1,0 +1,1 @@
+{"source": "se", "id": "192600", "hash": "049275f68d82c95c", "is_raw": true, "category": "combat", "rule_summary": "When calculating Adjusted XP for mixed-CR monster encounters, don't count monsters whose CR is significantly below the average unless they materially contribute to the encounter's difficulty."}

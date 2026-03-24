@@ -1,0 +1,1 @@
+// SKIP: spec models no spell-trigger-on-movement mechanic and has no willing-vs-forced movement distinction; Snare activation and Thornwhip forced-movement interaction cannot be encoded with existing functions.

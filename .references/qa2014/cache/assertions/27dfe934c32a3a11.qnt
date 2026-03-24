@@ -1,0 +1,1 @@
+// SKIP: CR calculation is not modeled in the spec; no functions or state variables exist for challenge rating adjustment or monster design.

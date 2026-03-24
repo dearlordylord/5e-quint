@@ -1,0 +1,1 @@
+{"source": "se", "id": "162913", "hash": "7492947020a1bb81", "is_raw": true, "category": "hp_death", "rule_summary": "Whether multiple identical effects (vampire bites reducing maximum HP) stack into a single effect or remain separate, and whether Greater Restoration removes one bite's effect or all accumulated HP loss."}

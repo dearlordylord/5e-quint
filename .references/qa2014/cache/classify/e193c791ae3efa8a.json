@@ -1,0 +1,1 @@
+{"source": "se", "id": "180135", "hash": "e193c791ae3efa8a", "is_raw": true, "category": "equipment", "rule_summary": "When multiple instances of a curse effect with the same name have overlapping duration, only the most potent one applies per the Combining Game Effects rule."}

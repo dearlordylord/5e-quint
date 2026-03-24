@@ -1,0 +1,1 @@
+// SKIP: Q&A is purely about homebrew DM fiat — the Command spell forcing a lycanthrope shapechange has no defined rules interaction; the accepted answer explicitly states this is not a defined use of the spell and all mechanics (magic tattoos, curse control, ritual removal) are invented narrative with no PHB rules to encode.

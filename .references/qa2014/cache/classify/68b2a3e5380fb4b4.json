@@ -1,0 +1,1 @@
+{"source": "se", "id": "147512", "hash": "68b2a3e5380fb4b4", "is_raw": true, "category": "other_mechanics", "rule_summary": "Encounter difficulty is calculated by adding NPCs to the party side and recalculating the overall encounter CR, not by subtracting the NPC's CR from the enemy total."}

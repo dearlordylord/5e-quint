@@ -1,0 +1,1 @@
+// SKIP: Lance weapon not defined in spec; Dual Wielder feat absent from Feature type (only FExtraAttack variants exist); no mechanism for mounted state converting a weapon to one-handed for TWF eligibility; pCanTWFWithWeapons hardcodes Light_ property check with no override path.

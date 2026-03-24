@@ -1,0 +1,1 @@
+// SKIP: spec models no True Polymorph function, no Enlarge/Reduce size-modification mechanic, and no object-state resulting from polymorph; the Q&A's rule (enlarged creature's current size gates object creation; object retains that size after Enlarge expires) cannot be encoded with existing spec functions

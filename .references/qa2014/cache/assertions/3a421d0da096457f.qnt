@@ -1,0 +1,1 @@
+// SKIP: Spec has no CR values, Polymorph beast-form validation, or Find Steed targeting mechanics; the rule requires CR comparison logic absent from all spec functions.

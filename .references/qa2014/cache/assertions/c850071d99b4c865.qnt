@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns whether harvested materials from Conjure Animals persist after spell end — requires modeling conjured creature lifecycle, item/material objects, and spell-end cleanup, none of which exist in the spec.

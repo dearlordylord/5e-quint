@@ -1,0 +1,1 @@
+{"source": "se", "id": "99116", "hash": "22585d29fa4e66bf", "is_raw": true, "category": "spellcasting", "rule_summary": "Cylindrical area of effect origins must be centered on ground-level terrain or at the spell effect's height, with the ground reference point (stable platform a creature can stand on) determining vertical measurement, not caster position."}

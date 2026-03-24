@@ -1,0 +1,1 @@
+// SKIP: spec models slot expenditure and concentration but has no representation of spell-specific targeting rules or per-upcast creature counts; the Etherealness "3 total including caster" ruling cannot be expressed with existing functions

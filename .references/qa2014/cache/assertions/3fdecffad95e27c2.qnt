@@ -1,0 +1,1 @@
+// SKIP: The Q&A concerns Disguise Self item-persistence rules, Silent Image illusion maintenance on objects, and physical-inspection reveal mechanics — none of which are modeled in the spec (no illusion spell effects, no "on your person" item tracking, no inspection check for illusions).

@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns narrative/flavor distinction between wizard fine inks and warlock rare inks for spell copying — no mechanical rule is adjudicated and the spec models no spell-copying cost, ink types, Book of Shadows, or spellbook transcription mechanics.

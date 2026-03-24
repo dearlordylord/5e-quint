@@ -1,0 +1,1 @@
+{"source": "se", "id": "180205", "hash": "22fce737117caf05", "is_raw": true, "category": "spellcasting", "rule_summary": "Spells with instantaneous duration have no ongoing magical effect, so they cannot be detected by Detect Magic or dispelled by Dispel Magic, and are unaffected by Antimagic Field."}

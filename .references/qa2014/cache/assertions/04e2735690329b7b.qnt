@@ -1,0 +1,1 @@
+// SKIP: The spec models general PHB mechanics (conditions, damage, checks, etc.) but does not model monster-specific traits such as Sunlight Sensitivity. There is no function or type representing creature trait flags (e.g., hasSunlightSensitivity), so the RAW ruling that mind flayers lack any sunlight penalty cannot be encoded as a testable assertion against this spec.

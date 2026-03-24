@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns AL treasure checkpoint economy and XGE per-party magic item distribution tables — no magic item, party, or loot tracking exists in the spec.

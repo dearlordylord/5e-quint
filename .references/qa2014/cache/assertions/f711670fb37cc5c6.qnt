@@ -1,0 +1,1 @@
+// SKIP: Steel Defender companion mechanics (bonus-action command, per-turn action budget) and Haste's extra-action grant are not modeled in the spec; the accepted answer also explicitly states the interaction is unspecified and requires a DM ruling, so no deterministic assertion can be encoded.

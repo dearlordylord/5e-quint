@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns the Soldier background's Military Rank narrative feature (DM discretion on requisitioning scope and duration) — no mechanical rule encoded in the spec; spec models only combat, conditions, HP, spellcasting, and turn structure.

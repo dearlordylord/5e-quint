@@ -1,0 +1,1 @@
+{"source": "se", "id": "95007", "hash": "b4ae15eadd4ecb09", "is_raw": true, "category": "movement", "rule_summary": "When switching movement speeds (e.g., by shapeshifting), distance already moved is subtracted from the new speed, limiting remaining movement that turn."}

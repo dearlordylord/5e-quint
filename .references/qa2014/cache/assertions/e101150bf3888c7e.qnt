@@ -1,0 +1,1 @@
+// SKIP: The spec models combat, conditions, HP, spell slots, movement, and resting mechanics. It has no crafting system, magic item rarity types, gp cost functions, or time-tracking for item creation. The Q&A's accepted answer (2,500 gp / 100 days per +2 arrow under DMG RAW) cannot be encoded against any existing spec function.

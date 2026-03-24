@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns DMG p.277 effective HP multipliers for CR calculation (a monster design/balancing meta-rule), which is not modeled in the spec. The spec's `applyDamageModifiers` handles actual combat damage resolution, not the abstract EHP scaling table used during CR derivation.

@@ -1,0 +1,1 @@
+// SKIP: The spec models only the general `canBeTargeted` rule (TotalCover → false) with no mechanism for spell-specific targeting overrides; Sending's cover-bypass is a spell-level exception the spec cannot express.

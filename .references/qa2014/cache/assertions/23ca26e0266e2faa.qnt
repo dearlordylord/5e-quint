@@ -1,0 +1,1 @@
+// SKIP: Neither the Gunner feat nor the Reload weapon property exist in the spec; `WeaponProperty` only includes `Loading` (not `Reload`), and `Feature` only models `FExtraAttack`/`FExtraAttack2`/`FExtraAttack3` — the distinction between Loading and Reload cannot be encoded.

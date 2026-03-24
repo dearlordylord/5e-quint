@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns monster lore/infernal hierarchy classification — no monster type, CR, or faction-rank concepts exist in the spec.

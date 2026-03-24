@@ -1,0 +1,1 @@
+// SKIP: Malleable Illusion and Illusory Reality are Illusionist subclass features with no representation in the spec; the spec has no model of illusion spells, made-real objects, or school-of-magic feature interactions.

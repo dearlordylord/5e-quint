@@ -1,0 +1,1 @@
+// SKIP: Spec contains no encounter difficulty / CR budget functions (DMG Ch3 territory); no pEncounterDifficulty, xpThreshold, or CR-to-XP helpers exist to assert against.

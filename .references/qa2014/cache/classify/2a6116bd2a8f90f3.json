@@ -1,0 +1,1 @@
+{"source": "se", "id": "41911", "hash": "2a6116bd2a8f90f3", "is_raw": true, "category": "hp_death", "rule_summary": "Damage dealt to a creature at 0 HP (including stable creatures) counts as a death saving throw failure; critical hits count as two failures."}

@@ -1,0 +1,1 @@
+// SKIP: Spec has no model of ability/effect visibility, perception of magical manipulation, or Wild Magic Sorcerer features (Bend Luck). No existing function encodes "detectability of fate-twisting" — this is pure narrative/DM ruling with no mechanical hook in the spec.

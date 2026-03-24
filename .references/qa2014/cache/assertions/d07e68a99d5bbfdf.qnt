@@ -1,0 +1,1 @@
+// SKIP: Q&A is a lore/interpretation question about doppelganger Shapechanger ability and scent; no mechanical rule is asserted that maps to any function in the spec (no doppelganger types, shapeshifting, or scent-detection mechanics exist in dnd.qnt).

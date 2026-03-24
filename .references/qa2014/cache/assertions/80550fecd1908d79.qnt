@@ -1,0 +1,1 @@
+// SKIP: Spec has no model of magical vs. non-magical light sources, no Darkness spell effect, and no dispel mechanics — the rule (magical light illuminates inside Darkness but doesn't dispel it) cannot be encoded with existing spec functions.

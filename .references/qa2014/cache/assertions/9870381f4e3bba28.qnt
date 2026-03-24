@@ -1,0 +1,1 @@
+// SKIP: Spec models no Antimagic Field mechanic, no Hexblade's Curse feature, and no SAC "is it magical?" determination logic — the rule cannot be encoded with existing functions.

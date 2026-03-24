@@ -1,0 +1,1 @@
+// SKIP: spec has no Wild Shape transformation, Beast form state, or Grung Poisonous Skin trait; the physical-capability gating rule for retained features during Wild Shape cannot be encoded with existing spec functions

@@ -1,0 +1,1 @@
+// SKIP: Q&A is about CR-calculation heuristics (mirror image ≈ N×avg-hit effective HP), not a rule interaction encodable with the spec's existing functions. The spec has no mirror image spell, no illusory-duplicate mechanics, and no CR-calculation functions.

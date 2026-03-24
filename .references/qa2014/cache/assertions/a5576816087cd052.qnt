@@ -1,0 +1,1 @@
+// SKIP: Locate Object's lead-blocking / skip-to-next-nearest logic requires world-state models (object positions, lead shielding, nearest-object resolution) that have no representation in the spec's functions or state variables.

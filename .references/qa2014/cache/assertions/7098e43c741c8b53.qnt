@@ -1,0 +1,1 @@
+// SKIP: Feat uniqueness enforcement is explicitly out-of-scope for the spec — section 18.5 notes "Each feat taken only once (unless description says otherwise)" but marks the entire system "framework only; Caller tracks taken feats." No state variable or function exists to test feat-taking restrictions.

@@ -1,0 +1,1 @@
+// SKIP: spec models abilityScores as an immutable CharConfig field with no runtime reduction function; Blood Hunter mutagen mechanics and the consequence of an ability score reaching 0 are not implemented in the spec.

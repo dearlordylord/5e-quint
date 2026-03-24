@@ -1,0 +1,1 @@
+{"source": "se", "id": "112226", "hash": "4b35f88fdf0c82ff", "is_raw": true, "category": "hp_death", "rule_summary": "When temporary hit points absorb damage, you are still considered to be taking damage for the purposes of triggering damage-related effects such as poison or concentration checks."}

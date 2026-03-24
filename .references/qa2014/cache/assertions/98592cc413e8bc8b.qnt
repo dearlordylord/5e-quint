@@ -1,0 +1,1 @@
+// SKIP: Hag creature type classification (Fey vs Fiend) is a monster stat block/lore question with no mechanical encoding in the spec — the spec models creature states, conditions, and combat mechanics but has no concept of creature type or creature type tags.

@@ -1,0 +1,1 @@
+// SKIP: spec has no model of magic items, item charges, attunement, or the identify spell; the Q&A's rule (charges revealed via identify/attunement) has no corresponding functions or state fields to assert against

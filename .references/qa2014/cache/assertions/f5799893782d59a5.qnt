@@ -1,0 +1,1 @@
+// SKIP: spec has no dispel magic function, no multi-spell-effect tracking on a creature, and the "simultaneous effects" ordering rule (controller decides sequence) is a game-table procedure with no mechanical encoding in the current model.

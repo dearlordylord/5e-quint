@@ -1,0 +1,1 @@
+{"source": "se", "id": "98014", "hash": "55ebc8048704cdad", "is_raw": true, "category": "class_features", "rule_summary": "Divine Smite requires expending a spell slot to use, so spells cast without spell slots (e.g., Magic Initiate, racial abilities) cannot fuel the feature."}

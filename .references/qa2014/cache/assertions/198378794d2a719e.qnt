@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns equipment pack contents and item description ambiguity (Climber's Kit vs. Burglar's/Dungeoneer's Pack overlap); accepted answer is "DM's call with no official mechanical rule." The spec has no inventory, item, or pack-contents functions to assert against.

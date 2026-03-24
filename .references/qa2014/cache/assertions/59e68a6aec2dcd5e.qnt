@@ -1,0 +1,1 @@
+// SKIP: spec models no familiar system, Pact of the Chain feature, Find Familiar, or Flock of Familiars — the Q&A's rule (PotC expands familiar options available to Flock of Familiars) has no representable primitives in the spec

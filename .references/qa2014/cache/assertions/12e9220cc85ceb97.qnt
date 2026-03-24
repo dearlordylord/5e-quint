@@ -1,0 +1,1 @@
+// SKIP: Neither the Healer feat (once-per-short-rest-per-creature restriction) nor Polymorph (creature form/stat-block substitution) are modeled in the spec; creature identity across form changes cannot be tested with available functions.

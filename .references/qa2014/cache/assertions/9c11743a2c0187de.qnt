@@ -1,0 +1,1 @@
+// SKIP: Spec has no totem warrior mechanics (Spirit Seeker, Aspect of the Beast, totem animal choices at levels 3/6/14); Feature type only models FExtraAttack variants — cannot encode independent totem spirit selection per feature tier.

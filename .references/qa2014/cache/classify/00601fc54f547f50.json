@@ -1,0 +1,1 @@
+{"source": "se", "id": "213646", "hash": "00601fc54f547f50", "is_raw": true, "category": "hp_death", "rule_summary": "How to determine the maximum hit points of a summoned creature when the spell's HP formula (5 + 10 per spell level) differs from the calculation using its Hit Dice and Constitution modifier."}

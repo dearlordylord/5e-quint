@@ -1,0 +1,1 @@
+// SKIP: Indomitable feature and per-rest reroll-use tracking not modeled in spec; spec has no reroll state, Indomitable feature flag, or "must use new roll" constraint — only stateless `saveSucceeds`

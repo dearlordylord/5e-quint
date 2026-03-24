@@ -1,0 +1,1 @@
+// SKIP: Spellbook physical form is purely narrative/flavor with no mechanical effect; the spec models spell slots, concentration, and casting mechanics but has no representation of spellbook objects or their appearance.

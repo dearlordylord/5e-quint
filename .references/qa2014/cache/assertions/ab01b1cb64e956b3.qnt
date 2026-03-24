@@ -1,0 +1,1 @@
+// SKIP: Wild Shape transformation, magic item eligibility, and "horse or similar creature" qualification checks are not modeled in the spec; no applicable functions or types exist to encode this rule.

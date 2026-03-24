@@ -1,0 +1,1 @@
+// SKIP: Crafting/tool proficiency mechanics (Woodcarver's Tools, artisan tool checks for fletching arrows) are not modeled in the spec — no crafting system, tool proficiency types, or item creation functions exist.

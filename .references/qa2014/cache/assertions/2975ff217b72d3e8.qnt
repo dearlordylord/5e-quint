@@ -1,0 +1,1 @@
+// SKIP: Spec models creature/combat mechanics only; no object HP, object resistance, or mundane-vs-magical object property system exists to encode ice durability.

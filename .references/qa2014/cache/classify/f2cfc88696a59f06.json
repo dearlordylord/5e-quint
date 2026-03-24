@@ -1,0 +1,1 @@
+{"source": "se", "id": "166371", "hash": "f2cfc88696a59f06", "is_raw": true, "category": "spellcasting", "rule_summary": "When the Sleep spell would affect multiple creatures with equal lowest hit points but insufficient total hit points remain for all of them, the caster decides the order in which effects are applied per the simultaneous effects rule."}

@@ -1,0 +1,1 @@
+// SKIP: The Wish spell's outcome mechanics (DM latitude, partial achievement, spell failure) are narrative/social rules with no formal encoding in the spec. The spec models slot expenditure and concentration but not spell effect resolution or DM discretion over wish wording.

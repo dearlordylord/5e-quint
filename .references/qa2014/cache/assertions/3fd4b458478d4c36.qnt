@@ -1,0 +1,1 @@
+// SKIP: Knock/Temple-of-the-Gods interaction requires spell-specific effect logic (which spells unlock which magical barriers) not modeled in the spec; no functions exist for spell targeting validity or inter-spell suppression beyond Arcane Lock.

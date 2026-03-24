@@ -1,0 +1,1 @@
+{"source": "se", "id": "157386", "hash": "5724005bf27cc282", "is_raw": true, "category": "other_mechanics", "rule_summary": "Challenge Rating for monsters with non-damage abilities is calculated by converting their effects into equivalent AC, HP, or per-round damage using the Monster Features table (DMG p.280-281), then verified through playtesting."}

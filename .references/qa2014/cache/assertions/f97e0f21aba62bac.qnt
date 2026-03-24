@@ -1,0 +1,1 @@
+// SKIP: The Alchemist feat and Artificer healing draught are UA/feat mechanics not modeled in the spec (no potion system, no feat effect application, no Artificer class features).

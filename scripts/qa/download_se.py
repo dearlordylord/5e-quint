@@ -7,7 +7,7 @@ import sys
 import urllib.request
 
 DUMP_URL = "https://archive.org/download/stackexchange_20251231/stackexchange_20251231/rpg.stackexchange.com.7z"
-RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
+RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/raw")
 ARCHIVE_PATH = os.path.join(RAW_DIR, "rpg.stackexchange.com.7z")
 EXTRACT_DIR = os.path.join(RAW_DIR, "rpg.stackexchange.com")
 

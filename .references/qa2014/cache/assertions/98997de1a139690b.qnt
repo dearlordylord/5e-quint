@@ -1,0 +1,1 @@
+// SKIP: The Dual Wielder feat (removes light-weapon requirement from pCanTWFWithWeapons) is not modeled in the spec; Feature type only covers FExtraAttack variants, and pCanTWFWithWeapons unconditionally requires Light_ on both weapons with no feat-override parameter.

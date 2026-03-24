@@ -1,0 +1,1 @@
+// SKIP: spec has no Change Shape, True Polymorph, or equipment-melding mechanics; the ruling's core distinction (living creature ≠ equipment) requires object/creature classification logic not present in the spec.

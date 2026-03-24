@@ -1,0 +1,1 @@
+// SKIP: The accepted answer is "DM ruling required" with no definitive mechanical outcome — the question is entirely adjudicated by DM discretion and situational context, none of which maps to any deterministic function in the spec.

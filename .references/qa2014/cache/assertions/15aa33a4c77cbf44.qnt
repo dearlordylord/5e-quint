@@ -1,0 +1,1 @@
+// SKIP: The spec models concentration, spell slots, conditions, HP, and turn structure but has no concept of Shapechange form assumptions, per-form ability use counters, or recharge mechanics — the core rule being tested cannot be encoded.

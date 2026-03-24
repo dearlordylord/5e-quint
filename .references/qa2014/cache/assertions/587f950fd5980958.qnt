@@ -1,0 +1,1 @@
+// SKIP: spec does not model Help-action advantage grants in state — no helpedTarget or hasHelpAdvantage field in TurnState or CreatureState; pAggregateAttackMods has no "helped by ally" input, so the single-ally, single-attack-roll constraint cannot be encoded against existing functions.

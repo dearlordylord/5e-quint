@@ -1,0 +1,1 @@
+// SKIP: Accepted answer is explicit GM discretion with no codified rule; spec models no tremorsense sense type, no jump-detection mechanic, and no visibility-from-special-senses pathway to encode.

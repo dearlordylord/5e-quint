@@ -1,0 +1,1 @@
+// SKIP: Spec has no True Polymorph mechanic, no object-splitting model, no dispel magic, and no "creature reform location" logic; the Q&A turns entirely on those missing primitives.

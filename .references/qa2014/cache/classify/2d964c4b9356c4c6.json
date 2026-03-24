@@ -1,0 +1,1 @@
+{"source": "se", "id": "192732", "hash": "2d964c4b9356c4c6", "is_raw": true, "category": "equipment", "rule_summary": "Magic item property cooldowns that reference 'you' apply to each individual attunement separately, not to the item globally, allowing different attuned users to each use the property once per long rest."}

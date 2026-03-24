@@ -1,0 +1,1 @@
+// SKIP: Catapult spell object-movement mechanics (object state, impact-only damage, targeting direction choice) are not modeled in the spec; the spec has no object state, no spell-path geometry, and no per-spell targeting rules.

@@ -1,0 +1,1 @@
+// SKIP: spec models no familiar mechanics, spell targeting prerequisites, or "seen within 30 feet" conditions — the Q&A requires modeling Find Familiar senses and Locate Creature's target-selection prerequisites, neither of which exist in the spec

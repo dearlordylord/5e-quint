@@ -1,0 +1,1 @@
+// SKIP: The spec has no spellbook, spell-learning, or spell-copying mechanics; the accepted answer is "DM decides" with no firm rule to encode as a deterministic assertion.

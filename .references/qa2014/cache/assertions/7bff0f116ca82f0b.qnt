@@ -1,0 +1,1 @@
+// SKIP: Initiative order tracking and DM information-disclosure rules are not modeled in the spec; no initiative roll, initiative state, or turn-ordering data structures exist.

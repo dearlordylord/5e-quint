@@ -1,0 +1,1 @@
+// SKIP: Crafting downtime rules (XGtE p.128) require tool proficiencies, gold/currency tracking, and workweek calculations — none of which exist in the spec. The spec models combat, conditions, HP, spellcasting, and movement only.

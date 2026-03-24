@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns downtime activity economics (PHB p.187 lifestyle/profession earnings and p.159 spellcasting services pricing). The spec has no gold, currency, lifestyle, or downtime activity mechanics — nothing to assert against.

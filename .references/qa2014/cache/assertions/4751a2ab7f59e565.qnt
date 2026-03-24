@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns DM adjudication of object volume for the Prestidigitation cantrip — no spell effect geometry, volume calculation, or DM ruling mechanism exists in the spec.

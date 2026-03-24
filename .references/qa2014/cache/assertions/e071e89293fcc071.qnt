@@ -1,0 +1,1 @@
+// SKIP: spec has no object type distinct from CreatureState; Bigby's Hand is a conjured object (not a creature) and the rule "healing spells only target creatures, not objects" cannot be encoded — pHeal operates solely on CreatureState and there is no parallel object-state or object-heal path in the spec to assert against

@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns Tomb of Annihilation adventure-specific maze navigation rules (DC 15 Wisdom/Survival check series to traverse Dungrunglung's thorn maze) and the "specific beats general" ruling that an NPC escort bypasses those checks. Neither maze navigation state, NPC escort mechanics, nor adventure module overrides are modeled in this PHB core-rules spec.

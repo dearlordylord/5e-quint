@@ -1,0 +1,1 @@
+// SKIP: The spec models spell slots, concentration, and casting mechanics but has no concept of a spellbook as a game object, spell preparation requirements, or spell-copying mechanics — none of the accepted answer's rules (spellbook ownership, preparing spells from a spellbook, copying spells between spellbooks) can be encoded with the existing functions.

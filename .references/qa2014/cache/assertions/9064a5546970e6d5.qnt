@@ -1,0 +1,1 @@
+// SKIP: The spec models no Mechanus variant rule (automatic-average dice), no Hurl Through Hell feature, and no plane-of-existence context; the accepted answer is explicitly a DM ruling with no deterministic mechanical outcome encodable against the existing pure functions.

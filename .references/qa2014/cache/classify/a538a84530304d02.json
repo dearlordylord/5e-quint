@@ -1,0 +1,1 @@
+{"source": "se", "id": "166166", "hash": "a538a84530304d02", "is_raw": true, "category": "class_features", "rule_summary": "When Wildshape automatically ends due to dropping to zero hit points, the Shifter racial transformation ability remains active because they are distinct effects with separate ending conditions."}

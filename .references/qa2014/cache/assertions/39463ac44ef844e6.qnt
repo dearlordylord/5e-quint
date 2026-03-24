@@ -1,0 +1,1 @@
+// SKIP: Spec has no model for Performance of Creation, Creative Crescendo, material components with GP value, or Drawmij's Instant Summons. `pCanProvideComponents` only validates V (can speak) and S (free hand); M-component GP-value eligibility is explicitly "caller validates" with no supporting mechanics in the spec.

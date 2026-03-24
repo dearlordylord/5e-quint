@@ -1,0 +1,1 @@
+// SKIP: spec has no True Polymorph spell, aging, or maturation mechanics — the ruling is purely about narrative completeness of creature transformation, not any modeled stat-block or game mechanic.

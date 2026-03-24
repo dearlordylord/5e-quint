@@ -1,0 +1,1 @@
+// SKIP: Spec models no language tracking, polymorph transformation, or Tongues spell; the core mechanics (language stat replacement via True Polymorph, Tongues "at least one language" prerequisite) have no representation in any spec function or state field.

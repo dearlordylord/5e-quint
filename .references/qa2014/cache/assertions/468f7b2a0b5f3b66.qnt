@@ -1,0 +1,1 @@
+// SKIP: Draconic Ancestry and Elemental Affinity are class features not modeled in the spec; no function exists to associate a dragon type with a specific damage type or apply a per-damage-type bonus to spell damage rolls.

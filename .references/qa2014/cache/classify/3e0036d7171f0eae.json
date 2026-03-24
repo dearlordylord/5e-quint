@@ -1,0 +1,1 @@
+{"source": "se", "id": "176350", "hash": "3e0036d7171f0eae", "is_raw": true, "category": "hp_death", "rule_summary": "Arcane Ward only prevents damage taken; instant-death effects (like Banshee's Wail on a failed save) are not damage, so the ward doesn't prevent dropping to 0 HP, but it remains active and can still reduce damage during death saves."}

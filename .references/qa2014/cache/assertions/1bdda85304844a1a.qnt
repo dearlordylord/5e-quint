@@ -1,0 +1,1 @@
+// SKIP: Rod of Absorption mechanics (absorbing spells as reaction, tracking stored energy levels per absorbed spell level) are not modeled in the spec; no magic item energy storage or `absorbSpell` function exists.

@@ -1,0 +1,1 @@
+// SKIP: Q&A is about narrative/DM-adjudication ambiguity in spell flavor text — no mechanical rule exists in the spec to encode.

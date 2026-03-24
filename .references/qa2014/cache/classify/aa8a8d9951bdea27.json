@@ -1,0 +1,1 @@
+{"source": "se", "id": "191431", "hash": "aa8a8d9951bdea27", "is_raw": true, "category": "movement", "rule_summary": "A character's speed halved by exhaustion is rounded down once to determine current speed, which applies to each movement action (normal move, Dash)."}

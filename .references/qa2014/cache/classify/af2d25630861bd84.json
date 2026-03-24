@@ -1,0 +1,1 @@
+{"source": "se", "id": "125220", "hash": "af2d25630861bd84", "is_raw": true, "category": "class_features", "rule_summary": "Font of Magic requires expending a spell slot, but Ring of Spell Storing stores spells, not spell slots, so the class feature cannot convert them."}

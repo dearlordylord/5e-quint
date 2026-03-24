@@ -1,0 +1,1 @@
+// SKIP: Gravity Well (Graviturgy Wizard feature) is not modeled in the spec; no mechanism exists for "cast on a creature" vs. area-spell targeting distinction, nor for immediate-vs-delayed saving throw timing relative to cast.

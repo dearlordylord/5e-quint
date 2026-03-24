@@ -1,0 +1,1 @@
+// SKIP: The spec models spell slots as resources and casting timing rules (bonus-action spell restrictions), but has no representation of spell ranges, metamagic, sorcery points, or individual spell descriptions (Identify). The Distant Spell / touch-range override interaction cannot be encoded.

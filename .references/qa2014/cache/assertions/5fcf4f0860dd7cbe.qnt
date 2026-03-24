@@ -1,0 +1,1 @@
+// SKIP: The Q&A concerns magic item rarity classification as a design/balance concept; the spec models creature mechanics (HP, conditions, combat, spells, movement) and has no functions or types for item rarity tiers.

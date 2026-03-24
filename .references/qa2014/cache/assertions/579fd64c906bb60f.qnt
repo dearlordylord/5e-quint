@@ -1,0 +1,1 @@
+// SKIP: Spec has no model of spell commands, command issuance timing, or Geas-specific mechanics; it tracks slot expenditure and concentration state only, with no way to encode "single command issued at cast time" vs "multiple commands during duration".

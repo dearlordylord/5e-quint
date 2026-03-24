@@ -1,0 +1,1 @@
+// SKIP: spec has no antimagic field mechanic; no way to flag damage as magical/suppressible or model zone-based spell suppression — Dragon's Breath exhale effect and its environmental blocking are entirely outside the spec's model

@@ -1,0 +1,1 @@
+{"source": "se", "id": "79462", "hash": "72deb2058216091c", "is_raw": true, "category": "equipment", "rule_summary": "Magic armor without a specified type inherits weight and mechanical properties from its base armor type."}

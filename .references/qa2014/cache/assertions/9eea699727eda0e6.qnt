@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns DMG monster CR calculation (AC/HP/damage equivalence table, playtesting guidance) — the spec models only player-character mechanics and contains no functions for CR derivation, monster feature benchmarking, or equivalent-offense/defense conversion.

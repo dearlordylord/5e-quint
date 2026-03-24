@@ -1,0 +1,1 @@
+// SKIP: Material component validation is out of scope for this spec — `pCanProvideComponents` explicitly delegates M components to "caller validates (focus/pouch/specific component)" and the spec has no spell registry, material component descriptors, or value/property matching logic to encode whether one physical object satisfies two different spell M requirements.

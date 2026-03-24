@@ -1,0 +1,1 @@
+// SKIP: Q&A is purely about roleplaying/tenet interpretation for Oath of the Ancients — no mechanical rules (HP, conditions, checks, saves, slots, movement) are involved; the spec has no functions for paladin oaths, alignment, or narrative conduct standards.

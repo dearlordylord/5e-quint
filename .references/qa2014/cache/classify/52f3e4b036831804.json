@@ -1,0 +1,1 @@
+{"source": "se", "id": "176814", "hash": "52f3e4b036831804", "is_raw": true, "category": "hp_death", "rule_summary": "A reaction with unspecified timing occurs after its trigger completes; reducing a creature to 0 HP causes immediate unconsciousness and incapacitation, preventing reactions from triggering."}

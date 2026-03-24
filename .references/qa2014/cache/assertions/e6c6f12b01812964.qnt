@@ -1,0 +1,1 @@
+// SKIP: spec lacks exhaustion-immunity modeling (no condition-immunity field on CreatureState) and no Wild Shape / elemental-form mechanics needed to encode the rule that exhaustion immunity prevents/removes exhaustion gain when Frenzied Rage ends in elemental form

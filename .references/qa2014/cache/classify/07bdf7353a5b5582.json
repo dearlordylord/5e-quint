@@ -1,0 +1,1 @@
+{"source": "se", "id": "110738", "hash": "07bdf7353a5b5582", "is_raw": true, "category": "other_mechanics", "rule_summary": "Multiple damage resistances are treated as a single multiplier to effective hit points when calculating a custom monster's Challenge Rating, based on the expected CR range (DMG p. 277)."}

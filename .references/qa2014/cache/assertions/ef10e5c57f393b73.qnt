@@ -1,0 +1,1 @@
+// SKIP: Spec models no spell-targeting metadata (targets-only-caster vs. multi-target), no Find Greater Steed mount-targeting feature, and no Time Stop mechanics; the rule interaction cannot be encoded with existing functions.

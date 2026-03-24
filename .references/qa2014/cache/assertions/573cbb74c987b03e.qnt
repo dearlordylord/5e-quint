@@ -1,0 +1,1 @@
+// SKIP: spec models only verbal/somatic components in pCanProvideComponents; no material component cost, consumption flag, or spellcasting focus substitution logic exists to encode the focus-replaces-M-component rule

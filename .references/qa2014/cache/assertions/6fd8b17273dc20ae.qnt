@@ -1,0 +1,1 @@
+// SKIP: The spec has no Wish spell function or per-spell stress/exhaustion-trigger logic; the rule (non-duplicate Wish use causes exhaustion) cannot be distinguished from generic exhaustion application without a dedicated pCastWish primitive.

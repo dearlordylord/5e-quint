@@ -1,0 +1,1 @@
+// SKIP: spec has no position tracking or spell-area geometry; the "caster leaves spell area" termination condition for Leomund's Tiny Hut cannot be modelled with existing functions

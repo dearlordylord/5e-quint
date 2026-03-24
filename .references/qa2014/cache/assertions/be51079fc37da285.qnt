@@ -1,0 +1,1 @@
+// SKIP: Inspiration and background characteristics are not modeled in the spec; no relevant types, state variables, or functions exist to encode this ruling.

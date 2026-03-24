@@ -1,0 +1,1 @@
+// SKIP: CR calculation (DMG pp. 274-278) — DPR tables, defensive/offensive CR tiers, AC/attack-bonus adjustment steps — are not modeled in the spec; no functions exist for pCalculateCR, pDamagePerRound, pDefensiveCR, or pOffensiveCR.

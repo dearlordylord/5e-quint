@@ -2,6 +2,10 @@
 node_modules/
 .references/*
 !.references/srd/
+!.references/qa2014/
+.references/qa2014/raw/
+.references/qa2014/se_corpus.jsonl
+.references/qa2014/reddit_corpus.jsonl
 .output/
 .vinxi/
 .claude

@@ -1,0 +1,1 @@
+// SKIP: The spec models spell slot resources (SpellSlotState.slotsCurrent/slotsMax) but contains no "prepared spells list" field — there is no state tracking which spells are currently prepared, so the rule that prepared spells persist indefinitely and are unchanged by long rests cannot be encoded against this spec.

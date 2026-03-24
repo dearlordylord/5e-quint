@@ -1,0 +1,1 @@
+// SKIP: Spec has no magic item system, no concept of item ownership or wearing state, and no mechanism to model item-specific "wearer only" restrictions (Robe of Useful Items patch detachment). The grapple mechanics exist but the item interaction rule cannot be encoded.

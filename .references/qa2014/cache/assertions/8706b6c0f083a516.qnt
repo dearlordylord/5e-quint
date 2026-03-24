@@ -1,0 +1,1 @@
+// SKIP: The spec models damage-type immunities and condition immunities structurally, but has no creature-type system, no spell-specific immunity mechanic, and no "detect thoughts" spell encoded. The Q&A ruling (doppelgangers lack immunity to detect thoughts) cannot be expressed with any existing spec function.
