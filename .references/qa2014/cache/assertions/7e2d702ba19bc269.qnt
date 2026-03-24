@@ -1,0 +1,1 @@
+// SKIP: spec does not model spatial reach or distance — pCanBeOpportunityAttacked only checks not(t.disengaged); the ruling that melee attack reach equals OA trigger reach requires distance primitives absent from the spec.

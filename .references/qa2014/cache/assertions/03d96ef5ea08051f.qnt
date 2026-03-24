@@ -1,0 +1,1 @@
+// SKIP: Q&A is pure lore — instruments named after in-world historic colleges vs. subclass colleges. No mechanical rule encoded in the spec (no magic items, bard subclasses, or college concepts exist in the spec's functions/types).

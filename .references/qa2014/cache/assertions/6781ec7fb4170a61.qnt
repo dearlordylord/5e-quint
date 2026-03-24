@@ -1,0 +1,1 @@
+// SKIP: Spec has no model of spell areas-of-effect, spatial containment, or Druid Grove's embedded effect placement; these mechanics require geometric region reasoning absent from the spec.

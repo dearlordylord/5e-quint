@@ -1,0 +1,1 @@
+// SKIP: Spec does not model Monk class features (Martial Arts die, ki points, Hand of Harm, One with the Blade); no functions exist to encode the distinction between rolling a die reference vs. using its maximum value in that context.

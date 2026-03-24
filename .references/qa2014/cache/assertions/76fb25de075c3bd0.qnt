@@ -1,0 +1,1 @@
+// SKIP: Spec models no Wild Shape mechanic, no beast-form ability inheritance, and no Telepathy capability; the Q&A rule cannot be encoded with existing functions.

@@ -1,0 +1,1 @@
+// SKIP: Hallow's area-entry trigger and fey creature type are not modeled in the spec; no functions exist for AoE entry restrictions or creature subtypes (fey/humanoid).

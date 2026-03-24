@@ -1,0 +1,1 @@
+{"source": "se", "id": "64318", "hash": "dd6ae95b90fe6b09", "is_raw": true, "category": "conditions", "rule_summary": "The Poisoned condition is only applied if explicitly stated in an attack or effect; poison damage alone does not automatically inflict the condition."}

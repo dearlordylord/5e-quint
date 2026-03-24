@@ -1,0 +1,1 @@
+// SKIP: spec has no position/distance model; the Q&A's core ruling (range measured from caster's current position, not from the hand's current position) requires spatial coordinates that do not exist in the spec's functions or state.

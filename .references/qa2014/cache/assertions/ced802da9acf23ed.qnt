@@ -1,0 +1,1 @@
+// SKIP: The spec's `pLongRest` has no concept of race traits (elf trance), rest duration (4 h vs 8 h), light-activity interruption budget, or strenuous-activity restart rules — none of the mechanics central to this Q&A are modelled.

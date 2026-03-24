@@ -1,0 +1,1 @@
+// SKIP: Spec has no telepathy, communication, or monster-trait mechanics; cannot model one-way vs. two-way telepathic contact or the aboleth's Probing Telepathy trait.

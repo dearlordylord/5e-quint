@@ -1,0 +1,1 @@
+{"source": "se", "id": "132490", "hash": "726cf2231105b7e8", "is_raw": true, "category": "combat", "rule_summary": "Readied actions without specified timing occur after their trigger finishes, not during it, so a readied Eldritch Blast cannot interrupt an opportunity attack in progress."}

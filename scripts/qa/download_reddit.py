@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 API_BASE = "https://arctic-shift.photon-reddit.com/api"
-RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
+RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/raw")
 POSTS_PATH = os.path.join(RAW_DIR, "dndnext_posts.jsonl")
 COMMENTS_DIR = os.path.join(RAW_DIR, "dndnext_comments")
 

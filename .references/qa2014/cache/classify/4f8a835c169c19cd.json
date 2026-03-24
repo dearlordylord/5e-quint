@@ -1,0 +1,1 @@
+{"source": "se", "id": "127976", "hash": "4f8a835c169c19cd", "is_raw": true, "category": "spellcasting", "rule_summary": "Whether Locate Object skips over objects blocked by lead to find the next-nearest matching object, or fails if the nearest object is shielded."}

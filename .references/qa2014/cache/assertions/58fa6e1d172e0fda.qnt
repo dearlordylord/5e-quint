@@ -1,0 +1,1 @@
+// SKIP: Spec has no model of magic items, attunement, item position, or creature-specific anatomy (multi-headed monsters). The Ioun Stone / severed head ruling cannot be expressed with the available pure functions.

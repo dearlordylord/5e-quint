@@ -1,0 +1,1 @@
+{"source": "se", "id": "161477", "hash": "2087ce0322af529e", "is_raw": true, "category": "movement", "rule_summary": "Standing up from prone costs movement equal to half your speed, recalculated whenever speed is modified."}

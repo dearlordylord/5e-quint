@@ -1,0 +1,1 @@
+// SKIP: Alignment mechanics (alignment types, alignment shifts, tracking good/evil acts) are not modeled in the spec; no relevant types or functions exist to encode this rule.

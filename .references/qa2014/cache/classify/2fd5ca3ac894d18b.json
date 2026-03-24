@@ -1,0 +1,1 @@
+{"source": "se", "id": "183664", "hash": "2fd5ca3ac894d18b", "is_raw": true, "category": "spellcasting", "rule_summary": "Transmuted Spell metamagic cannot be applied to Enervation because necrotic damage is not among the damage types it can convert (acid, cold, fire, lightning, poison, thunder)."}

@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns character creation race availability (Half-Dragon NPC template vs. Dragonborn playable race) — the spec has no race/template system, racial traits, or breath weapon mechanics to assert against.

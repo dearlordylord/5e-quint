@@ -1,0 +1,1 @@
+// SKIP: Spec has no spell effect duration tracking, time-beyond-turns model, or Goodberry mechanics — cannot encode "magical properties expire after 24 hours" with existing functions.

@@ -1,0 +1,1 @@
+// SKIP: The spec models save resolution arithmetic and creature conditions, but has no representation of Prismatic Wall layers, per-layer save triggers, or the "passing through vs. standing still" precondition that determines whether a save is required at all. The Q&A's ruling is entirely about trigger conditions for saves, not the resolution of saves once triggered.

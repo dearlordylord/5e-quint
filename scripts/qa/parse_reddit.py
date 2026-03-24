@@ -4,10 +4,10 @@
 import json
 import os
 
-RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
+RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/raw")
 POSTS_PATH = os.path.join(RAW_DIR, "dndnext_posts.jsonl")
 COMMENTS_DIR = os.path.join(RAW_DIR, "dndnext_comments")
-OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa/reddit_corpus.jsonl")
+OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/reddit_corpus.jsonl")
 
 TOP_N_COMMENTS = 10
 

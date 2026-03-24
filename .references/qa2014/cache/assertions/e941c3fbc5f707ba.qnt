@@ -1,0 +1,1 @@
+// SKIP: spec does not model creature types (humanoid vs monstrosity), per-creature condition immunities (charmed immunity), shapechanger-specific spell interactions (moonbeam revert, detect thoughts), or zone of truth — all mechanics central to the accepted answer

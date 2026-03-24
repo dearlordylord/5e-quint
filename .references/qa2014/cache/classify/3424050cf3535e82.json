@@ -1,0 +1,1 @@
+{"source": "se", "id": "213482", "hash": "3424050cf3535e82", "is_raw": true, "category": "conditions", "rule_summary": "Truesight can perceive creatures with the Invisible condition, but still requires line of sight and cannot bypass heavy obscurement that imposes the Blinded condition against viewers."}

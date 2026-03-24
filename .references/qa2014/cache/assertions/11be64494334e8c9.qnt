@@ -1,0 +1,1 @@
+// SKIP: Q&A accepted answer is explicitly "no official rule exists — DM ruling only"; spec models single damage type per attack with no mechanism for assigning flat bonus damage to a chosen type, and there is no Sharpshooter feat or multi-type-per-hit split in the spec.

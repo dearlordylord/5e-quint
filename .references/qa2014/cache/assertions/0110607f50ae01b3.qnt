@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns spell-specific geometry (whether Bones of the Earth pillars can be angled); the spec models no spell area-of-effect shapes, pillar orientation, or the pinch/crush mechanic of that specific spell — only generic damage and conditions.

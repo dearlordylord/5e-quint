@@ -1,0 +1,1 @@
+// SKIP: spec has no creature-type taxonomy (Beast vs Dragon); Animal Handling's applicability to a target requires a creature-type field absent from the spec's skill and check functions

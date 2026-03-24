@@ -1,0 +1,1 @@
+// SKIP: The spec models CCharmed as a plain condition with no logic for when it ends based on the charmer's actions (the "harmful act" trigger). It also has no Arcane Ward / pre-creature damage-interception mechanic. Neither the charm-ending condition nor the ward absorption layer exist as spec functions, so the Q&A ruling cannot be encoded as a testable assertion.

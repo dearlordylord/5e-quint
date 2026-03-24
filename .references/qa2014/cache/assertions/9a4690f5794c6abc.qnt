@@ -1,0 +1,1 @@
+// SKIP: spec has no Sanctuary spell state, no spell-targeting model, and no mechanism to distinguish "mechanically affects a creature" from "creates an environmental effect a creature reacts to" — the entire Q&A turns on a semantic targeting distinction that is not encoded anywhere in the spec's functions or types.

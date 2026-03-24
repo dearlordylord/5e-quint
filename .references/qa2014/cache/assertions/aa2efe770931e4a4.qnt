@@ -1,0 +1,1 @@
+// SKIP: Accepted answer is "The rules don't cover this. The DM decides." — no mechanical rule to encode; the spec has no Polymorph, size-change, or grid/positioning system.

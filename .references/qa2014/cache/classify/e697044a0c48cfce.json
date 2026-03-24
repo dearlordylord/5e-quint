@@ -1,0 +1,1 @@
+{"source": "se", "id": "71151", "hash": "e697044a0c48cfce", "is_raw": true, "category": "class_features", "rule_summary": "When a druid ends Wild Shape, diseases and poisons acquired in animal form persist in the original form if that form is a valid target for the disease, since Wild Shape does not explicitly remove conditions."}

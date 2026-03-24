@@ -1,0 +1,1 @@
+{"source": "se", "id": "197565", "hash": "b857478c5d68b7ab", "is_raw": true, "category": "hp_death", "rule_summary": "Level 4 exhaustion reduces maximum hit points (rounded down); when maximum HP becomes 0, the creature's current HP also becomes 0 and triggers death saving throws."}

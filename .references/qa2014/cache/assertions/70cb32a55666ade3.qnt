@@ -1,0 +1,1 @@
+// SKIP: The Sending spell's targeting logic (familiar creature identity, disguise/impersonation, spell fizzle on dead target) is not modeled in the spec — no creature familiarity tracking, no spell targeting system, no identity/disguise state, and no mechanism for a spell failing to reach a target.

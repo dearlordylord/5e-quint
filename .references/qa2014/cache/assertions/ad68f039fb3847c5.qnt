@@ -1,0 +1,1 @@
+// SKIP: Spec models neither the Changeling Shapechanger trait nor Draconic Resilience/Dragon Wings as distinct mechanics; `UnarmoredDefense` has no Draconic variant, fly speed toggle is absent, and no appearance-change function exists to assert against.

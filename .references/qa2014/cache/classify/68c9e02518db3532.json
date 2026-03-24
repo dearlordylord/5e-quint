@@ -1,0 +1,1 @@
+{"source": "se", "id": "109841", "hash": "68c9e02518db3532", "is_raw": true, "category": "combat", "rule_summary": "Saving throw-based spell effects don't resolve until the target's turn, creating mechanical lag due to initiative order and affecting action economy."}

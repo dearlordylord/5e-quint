@@ -1,0 +1,1 @@
+// SKIP: Dragonmarks (Mark of Finding, House Tharashk) are Eberron setting content not modeled in the PHB-focused spec; no functions exist for racial traits, dragonmark eligibility, or setting-specific character creation rules.

@@ -1,0 +1,1 @@
+// SKIP: Paladin oath adherence and the loss of paladin abilities/spellcasting on oath violation are DM-adjudicated narrative mechanics with no corresponding functions in the spec (no oath state, no mechanism to revoke hasSpellcasting or class features based on roleplay behavior).

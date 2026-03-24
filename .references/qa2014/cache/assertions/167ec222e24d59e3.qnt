@@ -1,0 +1,1 @@
+// SKIP: spec has no magical/nonmagical damage tag on DamageType, no attack-vs-feature damage distinction, and no Insignia of Claws item effect; the ruling that Unarmed Fighting's 1d4 grapple damage is not made magical (because it is not an attack) cannot be expressed with the existing spec functions

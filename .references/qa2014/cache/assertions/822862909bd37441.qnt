@@ -1,0 +1,1 @@
+// SKIP: spec has no language tracking, Wild Shape transformation state, or Detect Thoughts spell mechanics; pCanSpeak models physical speech impediment (paralyzed/petrified/unconscious) only, not whether a creature speaks any language

@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns language knowledge and rune literacy — narrative/lore rules with no mechanical analog in the spec (no language, script, or knowledge-system types modeled).

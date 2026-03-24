@@ -1,0 +1,1 @@
+// SKIP: The accepted answer is a DM-ruling/interpretation question (prescriptive vs. descriptive reading of spell descriptions) with no definitive RAW outcome. The spec has no model of spell targeting rules, area-of-effect mechanics, or non-creature spell interaction — there are no existing functions to encode this ruling as a testable assertion.

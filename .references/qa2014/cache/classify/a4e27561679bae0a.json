@@ -1,0 +1,1 @@
+{"source": "se", "id": "213012", "hash": "a4e27561679bae0a", "is_raw": true, "category": "equipment", "rule_summary": "The variant encumbrance rule applies fixed weight thresholds (5× Strength for encumbered, 10× Strength for heavily encumbered) regardless of creature size, as the PHB text contains no size modifier."}

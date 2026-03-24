@@ -1,0 +1,1 @@
+// SKIP: spec has no creature-type or race fields, no Hallow exclusion logic, and no Magic Aura mask mechanic — cannot encode creature-type detection spells with existing functions.

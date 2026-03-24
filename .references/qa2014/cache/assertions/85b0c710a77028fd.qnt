@@ -1,0 +1,1 @@
+// SKIP: spec models no spell effects (Mending, Revivify), no body-part integrity field, and no "eligible for resurrection" predicate; the Q&A rule cannot be encoded with existing spec functions.

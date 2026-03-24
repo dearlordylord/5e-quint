@@ -1,0 +1,1 @@
+// SKIP: The spec has no model of spell duration dice (e.g., Time Stop's d4+1 extra-turns roll) or any mechanic for rerolling/modifying non-d20, non-damage dice. The accepted answer is a negative claim about published content ("no such feature exists"), not a mechanical rule expressible with the spec's existing functions.

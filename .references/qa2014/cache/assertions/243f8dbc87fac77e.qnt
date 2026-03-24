@@ -1,0 +1,1 @@
+// SKIP: The spec has no function modeling subclass acquisition level per class (e.g., `pSubclassLevel(ClassName): int`). The `ClassName` type and leveling functions (`pLevelForXp`, `pIsASILevel`, etc.) exist, but no mapping from class to the level at which its subclass feature is gained is defined anywhere in the spec.

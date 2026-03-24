@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns DM discretion on treasure distribution and CR loot tables — the spec models combat/condition/action mechanics only; no treasure, loot, CR reward, or encounter-reward functions exist.

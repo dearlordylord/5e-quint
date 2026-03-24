@@ -1,0 +1,1 @@
+// SKIP: Time Stop's d4+1 free-turn count and the timing of that roll are not modeled in the spec; the spec has no notion of spell-specific turn-generation mechanics, multi-turn spell effects, or roll-timing decisions.

@@ -1,0 +1,1 @@
+// SKIP: Sorcery points are not modeled in the spec; no sorcery point pool, maximum cap, or Font of Magic conversion functions exist to encode this rule.

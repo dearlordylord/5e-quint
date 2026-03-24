@@ -1,0 +1,1 @@
+// SKIP: Magic item rarity rankings (common/uncommon/rare/very rare/legendary/artifact) and the Wondrous item category are DMG concepts not modeled in the spec; the spec contains no types, functions, or state for item rarity, power equivalence, or artifact status.

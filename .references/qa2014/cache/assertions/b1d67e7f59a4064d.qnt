@@ -1,0 +1,1 @@
+// SKIP: Spec has no model of Rune Knight / Rune Carver feature, object wearability/holdability eligibility, or rune inscription mechanics — cannot encode with existing functions.

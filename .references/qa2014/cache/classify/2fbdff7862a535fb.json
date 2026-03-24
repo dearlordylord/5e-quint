@@ -1,0 +1,1 @@
+{"source": "se", "id": "177998", "hash": "2fbdff7862a535fb", "is_raw": true, "category": "other_mechanics", "rule_summary": "CR calculation uses average damage per round from a monster's most effective attacks, adjusted by HP tier, AC vs. target AC 15, and attack bonus vs. target +6, per DMG guidelines."}

@@ -1,0 +1,1 @@
+{"source": "se", "id": "179154", "hash": "cff13e8953f54d37", "is_raw": true, "category": "combat", "rule_summary": "Brace combat maneuver cannot trigger when an enemy enters an Echo Knight's echo's reach because Brace's trigger condition requires the reach to be the fighter's own reach, which the echo does not satisfy."}

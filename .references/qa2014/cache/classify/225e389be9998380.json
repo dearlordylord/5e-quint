@@ -1,0 +1,1 @@
+{"source": "se", "id": "174536", "hash": "225e389be9998380", "is_raw": true, "category": "movement", "rule_summary": "When falling begins (at end of action, end of turn, or on monster's turn) and whether it resolves before or after subsequent turns in combat order."}

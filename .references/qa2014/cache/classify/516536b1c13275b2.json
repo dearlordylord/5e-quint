@@ -1,0 +1,1 @@
+{"source": "se", "id": "180739", "hash": "516536b1c13275b2", "is_raw": true, "category": "class_features", "rule_summary": "Arcane Armor creates Thunder Gauntlets as part of the Guardian model even if the base armor lacks gauntlets, since the feature expands to cover the entire body and explicitly provides gauntlets."}

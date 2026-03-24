@@ -1,0 +1,1 @@
+// SKIP: The spec models armor, skill, and save proficiencies but has no representation of musical instrument proficiency types, instrument categories, or any related bard equipment mechanics. There is no CharConfig field, type, or function in the spec that could encode the distinction between per-instrument vs. per-category proficiency.

@@ -1,0 +1,1 @@
+// SKIP: Spec models spell slot expenditure and concentration mechanics only — no concept of spell-specific success/failure conditions, environmental geometry (room height, ceiling), or rope/extradimensional space effects. Rope Trick's "succeeds regardless of ceiling height" ruling cannot be encoded against existing functions.

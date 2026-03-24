@@ -1,0 +1,1 @@
+// SKIP: Compulsion spell's "horizontal direction" restriction is a spatial/semantic ruling with no corresponding movement-direction or spell-designation model in the spec; the spec has no direction type, orientation state, or forced-movement-direction mechanic to assert against.

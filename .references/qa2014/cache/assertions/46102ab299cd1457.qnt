@@ -1,0 +1,1 @@
+// SKIP: spec models spell slots, concentration, and casting validation but has no concept of spell targeting semantics, divination protection (private sanctum), or commune's deity-knowledge mechanic; the accepted answer's core claim (commune does not target creatures) requires a targeting model that does not exist in the spec.

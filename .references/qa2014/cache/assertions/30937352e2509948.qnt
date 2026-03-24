@@ -1,0 +1,1 @@
+// SKIP: spec has no area-of-effect, Wild Magic Surge table, or spell-targeting (point vs. self) mechanics — the rule is purely about AoE origin interpretation, which requires spell geometry not present in the spec

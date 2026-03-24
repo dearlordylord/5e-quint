@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns Adventurers League source-book legality rules (approved book list, spell school/list restrictions from Fey Touched feat). The spec models PHB mechanical rules only — it has no types or functions for feat spell selection, spell schools, or organized-play publication restrictions.

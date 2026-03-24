@@ -1,0 +1,1 @@
+// SKIP: The spec models concentration breaking and creature states, but does not model polymorph/shapechange form changes, monster-specific abilities (Body Thief), or possession mechanics. The rule under test (losing assumed-form abilities when concentration ends) requires modeling that the spec has no functions for.

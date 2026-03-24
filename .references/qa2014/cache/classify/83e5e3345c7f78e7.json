@@ -1,0 +1,1 @@
+{"source": "se", "id": "94850", "hash": "83e5e3345c7f78e7", "is_raw": true, "category": "movement", "rule_summary": "When a creature's speed is reduced to 0, all of its movement speeds (walking, flying, swimming, climbing) are reduced to 0, as special movement types depend on having available movement speed."}

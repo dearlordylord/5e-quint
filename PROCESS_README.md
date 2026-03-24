@@ -34,7 +34,7 @@ Two independent data sources. Both are large and already downloaded — you skip
 [scripts/qa/download_se.py](scripts/qa/download_se.py) downloads the full `rpg.stackexchange.com` data dump (~285MB .7z) from archive.org and extracts XML files with 7z.
 
 - Input: archive.org SE dump (2025-12-31)
-- Output: `.references/qa/raw/rpg.stackexchange.com/Posts.xml` (344MB XML)
+- Output: `.references/qa2014/raw/rpg.stackexchange.com/Posts.xml` (344MB XML)
 - Requires: `brew install 7zip`
 
 ### Reddit
@@ -42,7 +42,7 @@ Two independent data sources. Both are large and already downloaded — you skip
 [scripts/qa/download_reddit.py](scripts/qa/download_reddit.py) paginates the Arctic Shift API for all r/dndnext posts, then fetches comment trees for posts with score >= 5 and >= 2 comments.
 
 - Input: Arctic Shift API (`arctic-shift.photon-reddit.com`)
-- Output: `.references/qa/raw/dndnext_posts.jsonl` + `.references/qa/raw/dndnext_comments/{id}.json`
+- Output: `.references/qa2014/raw/dndnext_posts.jsonl` + `.references/qa2014/raw/dndnext_comments/{id}.json`
 - ~279k posts, ~107k comment trees
 
 Both scripts resume from where they left off on rerun.
@@ -57,16 +57,16 @@ Parsing extracts the raw downloads into clean JSONL corpora.
 
 [scripts/qa/parse_se.py](scripts/qa/parse_se.py) reads `Posts.xml`, filters to `dnd-5e` tagged questions, and joins each question with its accepted answer.
 
-- Input: `.references/qa/raw/rpg.stackexchange.com/Posts.xml`
-- Output: `.references/qa/se_corpus.jsonl` — 15,107 Q&A pairs
+- Input: `.references/qa2014/raw/rpg.stackexchange.com/Posts.xml`
+- Output: `.references/qa2014/se_corpus.jsonl` — 15,107 Q&A pairs
 - Each entry: `{source, id, title, question, answer, tags, q_score, a_score, url}`
 
 ### Reddit
 
 [scripts/qa/parse_reddit.py](scripts/qa/parse_reddit.py) joins posts with their top 10 root-level comments by score. Filters out `[deleted]`, `[removed]`, AutoModerator. Unwraps the `{kind, data}` envelope from Arctic Shift's comment tree format.
 
-- Input: `.references/qa/raw/dndnext_posts.jsonl` + comment tree JSONs
-- Output: `.references/qa/reddit_corpus.jsonl` — 91,348 entries
+- Input: `.references/qa2014/raw/dndnext_posts.jsonl` + comment tree JSONs
+- Output: `.references/qa2014/reddit_corpus.jsonl` — 91,348 entries
 - Each entry: `{source, id, title, question, comments[{author, body, score}], flair, score, url}`
 
 ---
@@ -101,7 +101,7 @@ Categories: `combat`, `conditions`, `hp_death`, `ability_checks`, `spellcasting`
 
 Each entry is hashed (SHA256, 16-char prefix of the JSON-serialized entry). Result cached at:
 ```
-.references/qa/cache/classify/{hash}.json
+.references/qa2014/cache/classify/{hash}.json
 ```
 
 On rerun, cached entries are skipped. `--limit N` processes only N **uncached** entries, so you grow the dataset incrementally.
@@ -110,7 +110,7 @@ On rerun, cached entries are skipped. `--limit N` processes only N **uncached** 
 
 All cached classifications are merged with their original corpus entries into:
 ```
-.references/qa/classified.jsonl
+.references/qa2014/classified.jsonl
 ```
 
 This file is rebuilt from cache on every run (and on `--rebuild`).
@@ -140,7 +140,7 @@ The entire spec (~2200 lines of [dnd.qnt](dnd.qnt)) is included in the system pr
 
 ### What each cached assertion looks like
 
-A cached file at `.references/qa/cache/assertions/{hash}.qnt` contains raw Quint — no module wrapper, no imports:
+A cached file at `.references/qa2014/cache/assertions/{hash}.qnt` contains raw Quint — no module wrapper, no imports:
 
 ```quint
 // Is a Raging Barbarian immune to 1-damage attacks?
@@ -175,7 +175,7 @@ This file is gitignored — it's generated output.
 
 Same content-hash scheme. Cache at:
 ```
-.references/qa/cache/assertions/{hash}.qnt
+.references/qa2014/cache/assertions/{hash}.qnt
 ```
 
 `--limit N` processes only N uncached entries.
@@ -201,7 +201,7 @@ python3 scripts/qa/run_tests.py --rebuild    # rebuild .qnt first, then run
 ```
 
 It calls `quint test qa_generated.qnt --main qa_generated --match "qa_"`, parses the output, and writes:
-- `.references/qa/test_results.jsonl` — one `{test, status}` per test (`"pass"` or `"fail"`)
+- `.references/qa2014/test_results.jsonl` — one `{test, status}` per test (`"pass"` or `"fail"`)
 - Summary to stdout with failed test names
 - Exit code 1 if any failures
 
@@ -213,7 +213,7 @@ For each failure, `run_tests.py` prints:
 - The failing test code
 - A copy-pasteable `rm` command
 
-All failure details are also persisted in `.references/qa/test_results.jsonl` with fields: `test`, `status`, `source_url`, `cache_file`, `error`, `code`.
+All failure details are also persisted in `.references/qa2014/test_results.jsonl` with fields: `test`, `status`, `source_url`, `cache_file`, `error`, `code`.
 
 ---
 
@@ -227,7 +227,7 @@ A test failure means the spec and the community answer disagree. Here's how to r
 python3 scripts/qa/run_tests.py --rebuild
 ```
 
-Failures are printed to stdout and saved to `.references/qa/test_results.jsonl`.
+Failures are printed to stdout and saved to `.references/qa2014/test_results.jsonl`.
 
 ### Step 2: For each failure, read the output
 
@@ -235,7 +235,7 @@ The failure block shows you everything:
 ```
 --- [1/3] qa_half_cover_increases_effective_ac ---
 Q&A: https://rpg.stackexchange.com/q/143504
-Cache: .references/qa/cache/assertions/dd513df888c35808.qnt
+Cache: .references/qa2014/cache/assertions/dd513df888c35808.qnt
   Error [QNT508]: Assertion failed
     4337:     assert(nocover.hits and not(halfcover.hits))
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -247,7 +247,7 @@ Cache: .references/qa/cache/assertions/dd513df888c35808.qnt
     }
 
   Action:
-    rm .references/qa/cache/assertions/dd513df888c35808.qnt
+    rm .references/qa2014/cache/assertions/dd513df888c35808.qnt
 ```
 
 ### Step 3: Open the Q&A link, read the rule discussion
@@ -267,7 +267,7 @@ python3 scripts/qa/run_tests.py            # the QA test now passes too
 ```bash
 # Permanently skip: overwrite the cache file with a SKIP marker.
 # This is cached — it won't regenerate.
-echo '// SKIP: community answer incorrect — <your reason>' > .references/qa/cache/assertions/{hash}.qnt
+echo '// SKIP: community answer incorrect — <your reason>' > .references/qa2014/cache/assertions/{hash}.qnt
 
 # Rebuild to exclude it from qa_generated.qnt:
 python3 scripts/qa/generate_assertions.py --rebuild
@@ -276,11 +276,11 @@ python3 scripts/qa/generate_assertions.py --rebuild
 **C. LLM misinterpretation** — Sonnet wrote bad test code (wrong math, wrong function, etc.)
 ```bash
 # Option 1: Delete and let it regenerate (might produce same error).
-rm .references/qa/cache/assertions/{hash}.qnt
+rm .references/qa2014/cache/assertions/{hash}.qnt
 python3 scripts/qa/generate_assertions.py --limit 1 --workers 1
 
 # Option 2: Manually fix the test code in the cache file.
-# Edit .references/qa/cache/assertions/{hash}.qnt directly.
+# Edit .references/qa2014/cache/assertions/{hash}.qnt directly.
 # Then rebuild:
 python3 scripts/qa/generate_assertions.py --rebuild
 python3 scripts/qa/run_tests.py
@@ -320,10 +320,10 @@ python3 scripts/qa/run_tests.py
 | [scripts/qa/run_tests.py](scripts/qa/run_tests.py) | Run tests, write structured results |
 | [scripts/qa/QA_README.md](scripts/qa/QA_README.md) | Operational reference |
 
-### Data (all gitignored in `.references/qa/`)
+### Data (all gitignored in `.references/qa2014/`)
 
 ```
-.references/qa/
+.references/qa2014/
   se_corpus.jsonl              ← 15k SE Q&A pairs
   reddit_corpus.jsonl          ← 91k Reddit posts+comments
   classified.jsonl             ← assembled classification results
@@ -348,9 +348,9 @@ python3 scripts/qa/run_tests.py --rebuild
 
 # Review failures (see Stage 6 above for full workflow)
 # Spec bug:    fix dnd.qnt, rerun
-# Bad Q&A:     echo '// SKIP: reason' > .references/qa/cache/assertions/{hash}.qnt
-# LLM wrong:   rm .references/qa/cache/assertions/{hash}.qnt  (auto-retries)
-# LLM wrong:   edit .references/qa/cache/assertions/{hash}.qnt (manual fix)
+# Bad Q&A:     echo '// SKIP: reason' > .references/qa2014/cache/assertions/{hash}.qnt
+# LLM wrong:   rm .references/qa2014/cache/assertions/{hash}.qnt  (auto-retries)
+# LLM wrong:   edit .references/qa2014/cache/assertions/{hash}.qnt (manual fix)
 ```
 
 Each step is resumable. Cached results are never reprocessed. Run the same command again to process the next N.

@@ -1,0 +1,1 @@
+{"source": "se", "id": "92732", "hash": "e4baa3af5a66e58a", "is_raw": true, "category": "combat", "rule_summary": "Colossus Slayer's bonus damage triggers based on the target's HP before the triggering attack's damage is applied, not after."}

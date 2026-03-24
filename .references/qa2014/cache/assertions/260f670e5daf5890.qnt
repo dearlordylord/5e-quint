@@ -1,0 +1,1 @@
+// SKIP: Spec models only base short-rest hit-die spending (pSpendHitDie/pShortRest with dieRoll+conMod). No parameters or functions exist for Chef feat bonus (+1d8) or cook's utensils bonus (+1 HP per HD spent); feat/tool stacking mechanics are not encoded.

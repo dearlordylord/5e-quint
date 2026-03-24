@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns creature type conversion (celestial→fiend) and alignment tracking, neither of which are modeled in the spec; the spec has no alignment field, creature type, or planar affiliation system.

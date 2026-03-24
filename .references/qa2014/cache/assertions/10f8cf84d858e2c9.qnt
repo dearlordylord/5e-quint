@@ -1,0 +1,1 @@
+// SKIP: The spec models no language or script system; the Q&A is pure lore with no mechanical rule encodable against CharConfig, CreatureState, TurnState, or SpellSlotState.

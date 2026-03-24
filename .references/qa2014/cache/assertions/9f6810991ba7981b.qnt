@@ -1,0 +1,1 @@
+// SKIP: Wild Shape transformation and potion temporary stat boosts (runtime CharConfig.abilityScores mutation) are not modeled in the spec; CharConfig is immutable for the state machine lifetime.

@@ -1,0 +1,1 @@
+{"source": "se", "id": "213818", "hash": "d73b0bc94c50ce61", "is_raw": true, "category": "conditions", "rule_summary": "A condition is suppressed when its target becomes invalid, but persists for re-application if the target becomes valid again."}

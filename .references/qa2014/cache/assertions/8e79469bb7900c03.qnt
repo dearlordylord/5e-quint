@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns DM-discretion outcomes for the Wish spell interacting with the Deck of Many Things — neither the Wish spell's adjudication logic nor the Deck of Many Things mechanics exist in the spec; no encodable assertion is possible.

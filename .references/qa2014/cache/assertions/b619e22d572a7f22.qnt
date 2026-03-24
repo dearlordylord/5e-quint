@@ -1,0 +1,1 @@
+// SKIP: Accepted answer explicitly states "No RAW exists" — outcome is entirely a DM ruling with no codifiable rule to assert against.

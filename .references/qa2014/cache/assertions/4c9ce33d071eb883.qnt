@@ -1,0 +1,1 @@
+// SKIP: The Q&A concerns feat prerequisites, spell list scoping, and subclass feature access — none of which are modeled in the spec (no spell lists, no feat logic beyond ASI framework, no subclass/Circle Spells mechanics).

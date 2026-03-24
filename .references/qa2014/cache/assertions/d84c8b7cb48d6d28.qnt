@@ -1,0 +1,1 @@
+// SKIP: spec models no Knock spell, no lock state, and no multi-lock mechanic; the rule (one lock unlocked per casting) has no corresponding function or state to assert against.

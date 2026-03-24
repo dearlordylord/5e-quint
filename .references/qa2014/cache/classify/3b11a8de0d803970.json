@@ -1,0 +1,1 @@
+{"source": "se", "id": "197040", "hash": "3b11a8de0d803970", "is_raw": true, "category": "class_features", "rule_summary": "Draconic Sorcerer's Elemental Affinity applies only when the spell actually deals the associated damage type, not merely when the spell is capable of dealing that type."}

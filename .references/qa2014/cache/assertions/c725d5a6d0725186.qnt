@@ -1,0 +1,1 @@
+// SKIP: Spec models PHB creature state only; no polymorph/form-switching, CR tracking, or multi-statblock concepts exist to encode Change Shape mechanics.

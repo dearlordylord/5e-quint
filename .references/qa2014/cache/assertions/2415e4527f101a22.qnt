@@ -1,0 +1,1 @@
+// SKIP: Spec models creature/combat state; no spell-list membership, Magical Secrets feature, or class spell availability mechanics exist to encode this GM-discretion ruling.

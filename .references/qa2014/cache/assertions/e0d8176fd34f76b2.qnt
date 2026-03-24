@@ -1,0 +1,1 @@
+// SKIP: Water Elemental's Freeze trait (speed -20 on cold damage) is a monster stat-block feature not modeled in the spec; the spec has no per-damage-type speed-reduction mechanic and no monster stat blocks.

@@ -1,0 +1,1 @@
+// SKIP: The spec has no swarm type, no "isSwarm" flag, and no Polymorph spell mechanics. The ruling concerns whether a collection-of-beasts entity qualifies as a single creature target for a specific spell — a targeting validity concept entirely absent from the spec's data model and functions.

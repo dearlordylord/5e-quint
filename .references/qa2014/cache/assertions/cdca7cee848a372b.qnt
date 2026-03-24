@@ -1,0 +1,1 @@
+// SKIP: Gathered Swarm and Nature's Veil are Tasha's Cauldron of Everything subclass features; neither the Swarmkeeper subclass nor any "equipment turns invisible" tracking exists in this PHB-only spec.

@@ -1,0 +1,1 @@
+// SKIP: Spec has no language, literacy, or reading/writing mechanics — no types, state, or functions to encode this rule against.

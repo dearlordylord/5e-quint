@@ -1,0 +1,1 @@
+{"source": "se", "id": "196985", "hash": "ec3d60d064d0bf9a", "is_raw": true, "category": "class_features", "rule_summary": "The Repulsion Shield reaction triggers immediately after being hit by a melee attack, meaning damage is applied before the reaction resolves and cannot prevent the damage."}

@@ -1,0 +1,1 @@
+// SKIP: Spec models creature/combat mechanics only; no polymorph state, container geometry, or item inventory — Mimic shapechanger item-storage ruling cannot be encoded.

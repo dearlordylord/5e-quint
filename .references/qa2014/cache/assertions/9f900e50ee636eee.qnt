@@ -1,0 +1,1 @@
+// SKIP: The spec models spell slot mechanics (pCanCastAtLevel, pExpendSlot) but has no concept of summoning spells, creature CR ratings, or a mapping from slot level to summoned creature options — the Conjure Celestial creature list is game-content knowledge, not a mechanical rule expressible with the existing spec functions.

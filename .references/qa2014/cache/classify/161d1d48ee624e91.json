@@ -1,0 +1,1 @@
+{"source": "se", "id": "99973", "hash": "161d1d48ee624e91", "is_raw": true, "category": "hp_death", "rule_summary": "When a character is merged with their raven via Soul of the Raven, all damage applies to the character's HP instead of the raven, because Sentinel Raven prevents the raven from taking damage; on death, the merged form reverts and the raven vanishes."}

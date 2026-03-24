@@ -1,0 +1,1 @@
+// SKIP: Q&A requires spellbook mechanics, spell preparation lists, Arcane Recovery, ritual casting rules, and the Keen Mind feat — none of which exist in the spec (Feature type only covers FExtraAttack variants; CharConfig.canRitualCast is an unmodeled boolean flag with no associated functions).

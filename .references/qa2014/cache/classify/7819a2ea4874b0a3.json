@@ -1,0 +1,1 @@
+{"source": "se", "id": "142075", "hash": "7819a2ea4874b0a3", "is_raw": true, "category": "spellcasting", "rule_summary": "Spells with instantaneous duration (like Animate Dead) cannot be dispelled because there is no ongoing spell effect to dispel; the consequences (animated undead, control bond) persist but are not themselves magical effects subject to Dispel Magic."}

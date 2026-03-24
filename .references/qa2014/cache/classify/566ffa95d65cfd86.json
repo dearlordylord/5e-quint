@@ -1,0 +1,1 @@
+{"source": "se", "id": "201468", "hash": "566ffa95d65cfd86", "is_raw": true, "category": "spellcasting", "rule_summary": "When a creature polymorphed into an object via True Polymorph is broken into multiple separate objects, determines whether Dispel Magic targets all pieces (original creature) or only the specific object piece."}

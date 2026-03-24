@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns the narrative/informational output of the Find Traps spell (what flavor text the DM reveals). The spec models mechanical game state (HP, conditions, spell slots, turn economy, etc.) and has no functions for trap detection, spell information revelation, or GM-facing descriptive output.

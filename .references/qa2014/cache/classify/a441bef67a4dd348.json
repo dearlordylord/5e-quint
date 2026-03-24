@@ -1,0 +1,1 @@
+{"source": "se", "id": "65415", "hash": "a441bef67a4dd348", "is_raw": true, "category": "class_features", "rule_summary": "Only actions that involve an attack roll count as attacks; saving throw-based spells like Fireball do not trigger Uncanny Dodge."}

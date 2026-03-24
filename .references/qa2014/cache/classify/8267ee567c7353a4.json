@@ -1,0 +1,1 @@
+{"source": "se", "id": "78773", "hash": "8267ee567c7353a4", "is_raw": true, "category": "hp_death", "rule_summary": "Relentless Endurance does not prevent death when maximum hit points are reduced to 0, as the character is killed outright rather than merely reduced to 0 current HP."}

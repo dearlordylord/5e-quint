@@ -1,0 +1,1 @@
+// SKIP: The Q&A is about lore/fluff (Aarakocra lifespan from a sourcebook), not a mechanical rule. The spec models combat, conditions, HP, spells, movement, and ability checks — there is no age, lifespan, or race-trait system to assert against.

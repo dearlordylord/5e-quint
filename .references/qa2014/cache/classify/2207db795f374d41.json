@@ -1,0 +1,1 @@
+{"source": "se", "id": "145199", "hash": "2207db795f374d41", "is_raw": true, "category": "class_features", "rule_summary": "A monk's Deflect Missiles ability triggers on ranged weapon attacks, which includes throwing melee weapons because the attack is ranged and uses a weapon."}

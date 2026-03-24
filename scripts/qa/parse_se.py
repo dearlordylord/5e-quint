@@ -7,9 +7,9 @@ import os
 import re
 import xml.etree.ElementTree as ET
 
-RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
+RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/raw")
 POSTS_XML = os.path.join(RAW_DIR, "rpg.stackexchange.com", "Posts.xml")
-OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa/se_corpus.jsonl")
+OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/se_corpus.jsonl")
 
 
 def strip_html(s):

@@ -1,0 +1,1 @@
+// SKIP: Pact of the Blade weapon-binding and summoning mechanics are not modeled in the spec; the Feature type only includes FExtraAttack variants, and there is no representation of pact weapon identity, magic weapon binding, or conjuration form selection.

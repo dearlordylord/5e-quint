@@ -1,0 +1,1 @@
+// SKIP: No Kensei Monk mechanics, kensei weapon eligibility checks, or mithral material system exist in the spec; the rule involves weapon-type selection and material property modification neither of which are modeled.

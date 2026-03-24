@@ -1,0 +1,1 @@
+{"source": "se", "id": "100063", "hash": "4c250d91acaa14a5", "is_raw": true, "category": "other_mechanics", "rule_summary": "When calculating effective HP for CR, apply only the immunity multiplier if a monster has both resistances and immunities to different damage types."}

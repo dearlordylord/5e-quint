@@ -1,0 +1,1 @@
+{"source": "se", "id": "191949", "hash": "8fe21b43e868433a", "is_raw": true, "category": "equipment", "rule_summary": "Magic item activation only requires an action if the item's description explicitly states it does; if no action is specified, the item requires no action to activate."}

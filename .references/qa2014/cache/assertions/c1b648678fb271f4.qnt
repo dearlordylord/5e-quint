@@ -1,0 +1,1 @@
+// SKIP: Steel Defender and Artificer Battle Smith subclass (Tasha's Cauldron of Everything) are not modeled in the spec; no companion command, audible/visual range, or telepathic link mechanics exist to encode this ruling.

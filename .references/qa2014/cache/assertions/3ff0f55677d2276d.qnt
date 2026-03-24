@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns spell-specific effects (Feeblemind, Imprisonment, Magic Jar, Clone/Minimus Containment) that reduce ability scores or trap souls in objects; the spec models CharConfig.abilityScores as immutable and has no soul-trapping, possession, or named-spell-effect mechanics to assert against.

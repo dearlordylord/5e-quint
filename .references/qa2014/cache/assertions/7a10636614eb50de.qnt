@@ -1,0 +1,1 @@
+// SKIP: Q&A concerns class spell list access, Mystic Arcanum (class feature), True Polymorph's monster-transform mechanic, and magic items (Ring of Spell Storing, Voyager Staff) — none modeled in the spec. The spec tracks slot expenditure mechanics but not which spells a class may know or item-granted spell access.

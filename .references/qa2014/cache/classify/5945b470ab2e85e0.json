@@ -1,0 +1,1 @@
+{"source": "se", "id": "169977", "hash": "5945b470ab2e85e0", "is_raw": true, "category": "spellcasting", "rule_summary": "True Polymorph's size restriction for object creation applies to the target's current size after Enlarge/Reduce modification, and the resulting object retains that size when Enlarge/Reduce expires."}

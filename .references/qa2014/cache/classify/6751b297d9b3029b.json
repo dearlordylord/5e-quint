@@ -1,0 +1,1 @@
+{"source": "se", "id": "161223", "hash": "6751b297d9b3029b", "is_raw": true, "category": "hp_death", "rule_summary": "Creatures reduced to 0 HP that do not die immediately fall unconscious and prone, not remaining conscious until their next turn."}

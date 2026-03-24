@@ -1,0 +1,1 @@
+// SKIP: No quiver, ammunition container, or item capacity mechanics exist in the spec; javelin storage rules are DM-fiat/DMG magic item territory with no PHB pure functions to encode.

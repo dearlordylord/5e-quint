@@ -1,0 +1,1 @@
+// SKIP: Elf sub-race mechanics (darkvision, trance, elf weapon training, cantrip selection, speed differences between High/Wood/Drow) are not modeled in the spec; no Race type, racial trait functions, or sub-race stat blocks exist.

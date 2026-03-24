@@ -1,0 +1,1 @@
+{"source": "se", "id": "141620", "hash": "29d58b044b449a7e", "is_raw": true, "category": "class_features", "rule_summary": "Ability score increases from feats can only be applied to the specific ability score the feat specifies; they cannot be redirected to a different ability score if the target score is already at maximum."}

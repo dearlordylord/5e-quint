@@ -1,0 +1,1 @@
+{"source": "se", "id": "64370", "hash": "6b659df5c1a9c194", "is_raw": true, "category": "class_features", "rule_summary": "Whether magic armor automatically resizes to fit a Wild Shape form depends on interaction between Wild Shape rules (equipment doesn't change size) and magic item rules (many garments magically adjust to wearer)."}

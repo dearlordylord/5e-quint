@@ -1,0 +1,1 @@
+// SKIP: The spec models armor as AC/category/stealth-disadvantage data (Armor type) with no concept of limbs, body-part replacement, or item-granted appendages. Arcane Propulsion Armor's limb-replacement property has no corresponding function or state field to assert against.

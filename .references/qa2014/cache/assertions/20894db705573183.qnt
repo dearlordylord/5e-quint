@@ -1,0 +1,1 @@
+// SKIP: Spec models no Speak With Dead or Clone spell mechanics, no soul/corpse interaction logic — the relevant rule (corpse-only targeting independent of soul location) has no encodable analog in existing functions.

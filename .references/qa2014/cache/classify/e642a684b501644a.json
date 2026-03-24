@@ -1,0 +1,1 @@
+{"source": "se", "id": "63489", "hash": "e642a684b501644a", "is_raw": true, "category": "class_features", "rule_summary": "Create Thrall's charmed condition ends only when remove curse is cast, the charmed condition is removed by other means, or the feature is reused; taking damage does not grant a saving throw to end the effect."}

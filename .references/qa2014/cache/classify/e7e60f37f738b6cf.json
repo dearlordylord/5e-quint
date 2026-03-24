@@ -1,0 +1,1 @@
+{"source": "se", "id": "203749", "hash": "e7e60f37f738b6cf", "is_raw": true, "category": "class_features", "rule_summary": "Game features with the same name (such as Fighting Style: Defense from multiple classes) do not stack; only the most potent effect applies."}

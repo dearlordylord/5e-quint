@@ -1,0 +1,1 @@
+{"source": "se", "id": "86613", "hash": "1d53661e4f7d4fb2", "is_raw": true, "category": "movement", "rule_summary": "Whether travel pace categories (Fast, Normal, Slow) from the standard table apply to flying creatures, or require calculation based on different base movement speeds."}

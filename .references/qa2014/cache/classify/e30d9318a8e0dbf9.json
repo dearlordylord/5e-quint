@@ -1,0 +1,1 @@
+{"source": "se", "id": "158512", "hash": "e30d9318a8e0dbf9", "is_raw": true, "category": "class_features", "rule_summary": "Fractional values from dividing in damage calculations round down unless explicitly stated otherwise."}

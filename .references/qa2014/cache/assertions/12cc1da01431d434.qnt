@@ -1,0 +1,1 @@
+// SKIP: Artificer Magical Tinkering and infusion mechanics are not in the spec; the spec covers PHB core rules only and has no functions modeling item magical status, Magical Tinkering, or artificer infusions.

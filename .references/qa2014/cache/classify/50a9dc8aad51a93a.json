@@ -1,0 +1,1 @@
+{"source": "se", "id": "80441", "hash": "50a9dc8aad51a93a", "is_raw": true, "category": "class_features", "rule_summary": "Multiple instances of the same named game feature (e.g., Aura of Protection) do not stack; only the most potent one applies."}

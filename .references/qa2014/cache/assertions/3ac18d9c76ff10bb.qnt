@@ -1,0 +1,1 @@
+// SKIP: The accepted answer is a DM-ruling judgment call about whether Mold Earth's "shaping patterns" produce functional vs. cosmetic changes. The spec contains no Mold Earth spell, no mechanic for spell-created environmental features, and "probably not intended" cannot be encoded as a testable assertion against any existing spec function.

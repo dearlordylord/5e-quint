@@ -1,0 +1,1 @@
+// SKIP: The Q&A concerns a DM-discretion ruling on two specific named spells (Blade of Disaster, Resilient Sphere) whose barrier-penetration and damage-blocking effects are not modeled in the spec. The spec has no representation of spell barriers, "pass through barrier" properties, or spell-level precedence logic for resolving contradictory exception rules.

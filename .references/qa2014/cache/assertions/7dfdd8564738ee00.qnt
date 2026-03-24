@@ -1,0 +1,1 @@
+// SKIP: Spec models no spatial geometry, divination spell information content, or 3D/cardinal direction semantics — no functions exist to encode whether Locate Object reveals elevation vs. cardinal-only direction.

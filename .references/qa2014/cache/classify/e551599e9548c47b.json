@@ -1,0 +1,1 @@
+{"source": "se", "id": "202600", "hash": "e551599e9548c47b", "is_raw": true, "category": "spellcasting", "rule_summary": "Nondetection only blocks divination magic and perception through magical scrying sensors (which must be explicitly created by spells like Scrying, Clairvoyance, and Soul Cage), so Alarm does not trigger it since Alarm is abjuration and creates no sensor."}

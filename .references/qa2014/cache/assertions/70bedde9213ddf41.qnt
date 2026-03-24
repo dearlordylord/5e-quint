@@ -1,0 +1,1 @@
+// SKIP: Wild Shape transformation mechanics (form switching, per-rest use tracking, beast HP pooling on revert) are not modeled in the spec; no `pWildShape`, no form identity fields, and no resource counter for Wild Shape uses exist to encode this rule.

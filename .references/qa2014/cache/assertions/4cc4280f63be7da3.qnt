@@ -1,0 +1,1 @@
+// SKIP: Spec has no functions for Overchannel (maximize spell damage), Shield Guardian spell storage, or spell parameter persistence — the mechanics under dispute are entirely absent from the spec's pure function set.

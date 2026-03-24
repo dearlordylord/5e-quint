@@ -1,0 +1,1 @@
+// SKIP: Wild Magic Surge table effects and item/possession flammability are not modeled in the spec; the spec has no representation of carried objects, their material properties, or the "another creature" ownership distinction required to encode this rule.

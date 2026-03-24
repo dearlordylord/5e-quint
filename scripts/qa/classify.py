@@ -19,7 +19,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), "../..")
-QA_DIR = os.path.join(BASE_DIR, ".references/qa")
+QA_DIR = os.path.join(BASE_DIR, ".references/qa2014")
 CACHE_DIR = os.path.join(QA_DIR, "cache/classify")
 SE_CORPUS = os.path.join(QA_DIR, "se_corpus.jsonl")
 REDDIT_CORPUS = os.path.join(QA_DIR, "reddit_corpus.jsonl")

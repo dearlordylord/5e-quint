@@ -1,0 +1,1 @@
+// SKIP: The spec models concentration as a single `concentrationSpellId` string with no concept of secondary effects (e.g., Illusory Reality materialized objects) that persist independently after concentration ends. The Illusory Reality class feature and its 1-minute object duration are not represented in any spec field or function.

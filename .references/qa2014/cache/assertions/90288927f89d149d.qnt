@@ -1,0 +1,1 @@
+// SKIP: The spec has no model of alignment, factions, or Adventurer's League character creation rules; these are organizational/meta-game restrictions not covered by any PHB mechanical function in the spec.

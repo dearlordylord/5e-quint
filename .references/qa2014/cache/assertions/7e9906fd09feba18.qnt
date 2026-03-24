@@ -1,0 +1,1 @@
+// SKIP: The spec models spell slot expenditure/restoration but has no function for spell preparation count (e.g. level + spellcasting ability modifier). No existing pure def maps to the accepted answer's core mechanic.

@@ -1,0 +1,1 @@
+// SKIP: Attunement mechanics (max 3 items, one item per short rest) are not modeled in the spec — no attunement types, state fields, or functions exist to encode this rule.

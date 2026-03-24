@@ -1,0 +1,1 @@
+{"source": "se", "id": "212182", "hash": "5cad3f2fe371f5b1", "is_raw": true, "category": "equipment", "rule_summary": "The Gunner feat ignores the Loading property of firearms, not the Reload property, as these are distinct weapon properties with different mechanical effects."}

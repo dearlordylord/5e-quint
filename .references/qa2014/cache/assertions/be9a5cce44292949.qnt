@@ -1,0 +1,1 @@
+// SKIP: Spec has no model of spell/ritual learning eligibility, ritual tags on class features, or Weapon Bond as a learnable entity; canRitualCast is a bool flag with no associated "learn ritual" function to assert against.

@@ -1,0 +1,1 @@
+// SKIP: spec has no model of body parts, limb state, or ring-of-regeneration mechanics; the Q&A turns on whether "lose" is present-tense (i.e., loss event occurs while wearing the ring) vs. pre-existing amputation — a distinction that requires tracking when a limb was lost relative to item equip, neither of which exists in the spec

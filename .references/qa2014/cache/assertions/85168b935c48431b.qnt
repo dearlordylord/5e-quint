@@ -1,0 +1,1 @@
+// SKIP: spec has no alignment system, creature type classification, or Deck of Many Things mechanics — the ruling is purely ontological/narrative and cannot be encoded with existing functions

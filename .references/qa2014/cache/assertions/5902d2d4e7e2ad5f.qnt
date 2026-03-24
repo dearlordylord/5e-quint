@@ -1,0 +1,1 @@
+// SKIP: The spec has no model of magic items, item destruction, or simultaneous effect ordering. The Horn of Blasting's explosion/effect sequencing is a DM-adjudicated timing question (per XGtE) with no corresponding functions or state in the spec.

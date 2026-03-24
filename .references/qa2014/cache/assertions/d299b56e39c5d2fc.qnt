@@ -1,0 +1,1 @@
+// SKIP: The Q&A concerns whether a dead creature's corpse continues to occupy its space — a spatial/positional mechanic with no ruling in 5e RAW (accepted answer is "DM call"). The spec has no spatial grid, no dead-creature space-blocking state, and no function modeling corpse occupancy or movement impediment by dead creatures.

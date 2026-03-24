@@ -1,0 +1,1 @@
+// SKIP: Wild shape mechanics (beast stat replacement, druid level movement-speed restrictions) are not modelled in the spec; CharConfig stores speeds but there is no wildShape function or level-gating logic to assert against.

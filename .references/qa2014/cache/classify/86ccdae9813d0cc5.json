@@ -1,0 +1,1 @@
+{"source": "se", "id": "142136", "hash": "86ccdae9813d0cc5", "is_raw": true, "category": "other_mechanics", "rule_summary": "Challenge Rating (CR) calculation for monsters accounts for defensive rating (AC and HP), offensive rating (spell damage averaged over 3 rounds), and special traits that affect combat effectiveness."}

@@ -1,0 +1,1 @@
+// SKIP: spec has no Wild Shape mechanics, magic item auto-resize logic, or druid transformation state — the Q&A turns entirely on the interaction between Wild Shape equipment rules and DMG magic garment sizing, neither of which is modeled.

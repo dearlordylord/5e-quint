@@ -1,0 +1,1 @@
+{"source": "se", "id": "190639", "hash": "3f48d1d703e8e272", "is_raw": true, "category": "hp_death", "rule_summary": "Taking damage at 0 HP causes automatic death save failures without rolling a d20, so reroll features requiring an actual saving throw roll (like Indomitable or Diamond Soul) cannot be used."}

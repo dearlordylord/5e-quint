@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 BASE_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), "../.."))
-QA_DIR = os.path.join(BASE_DIR, ".references/qa")
+QA_DIR = os.path.join(BASE_DIR, ".references/qa2014")
 CACHE_DIR = os.path.join(QA_DIR, "cache/assertions")
 OUTPUT_QNT = os.path.join(BASE_DIR, "qa_generated.qnt")
 RESULTS_FILE = os.path.join(QA_DIR, "test_results.jsonl")
@@ -24,7 +24,7 @@ def run_tests():
     result = subprocess.run(
         ["quint", "test", OUTPUT_QNT, "--main", "qa_generated",
          "--match", "qa_", "--verbosity", "5"],
-        capture_output=True, text=True, timeout=300,
+        capture_output=True, text=True, timeout=1200,
     )
     output = result.stdout + result.stderr
     return result.returncode, output

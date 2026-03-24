@@ -1,0 +1,1 @@
+{"source": "se", "id": "165592", "hash": "800eb58d50f44eb2", "is_raw": true, "category": "class_features", "rule_summary": "Multiple instances of temporary hit points from separate sources cannot be added together; the recipient chooses which pool to keep."}

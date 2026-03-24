@@ -1,0 +1,1 @@
+{"source": "se", "id": "96489", "hash": "f80fe2d3f5d8b800", "is_raw": true, "category": "hp_death", "rule_summary": "Constitution modifier adds to HP gained per level, so low CON can result in minimal or zero HP increases even when rolling for hit points."}

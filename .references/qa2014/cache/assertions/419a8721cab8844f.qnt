@@ -1,0 +1,1 @@
+// SKIP: The spec has no spell target type model (creature vs. object vs. area-of-effect). `pCanProvideComponents`, slot management, and concentration are present, but there is no `SpellTargetType` enum or target-validation function to assert "a spell only affects what its description permits."

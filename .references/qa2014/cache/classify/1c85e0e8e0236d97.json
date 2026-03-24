@@ -1,0 +1,1 @@
+{"source": "se", "id": "176482", "hash": "1c85e0e8e0236d97", "is_raw": true, "category": "movement", "rule_summary": "Travel pace rules specify daily distances (30/24/18 miles) that differ from hourly rates multiplied by 8-hour day to maintain multiples of 6 for hex-based map conversion."}

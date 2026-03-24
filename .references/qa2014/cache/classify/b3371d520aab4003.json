@@ -1,0 +1,1 @@
+{"source": "se", "id": "208945", "hash": "b3371d520aab4003", "is_raw": true, "category": "spellcasting", "rule_summary": "Blood Channeling damage taken during spell casting doesn't trigger concentration saving throws because the spell is not yet fully cast when the damage is taken."}

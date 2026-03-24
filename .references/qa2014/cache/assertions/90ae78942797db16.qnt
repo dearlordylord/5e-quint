@@ -1,0 +1,1 @@
+// SKIP: The spec models ritual casting only as a boolean flag (`canRitualCast`) with no distinction between the Ritual Caster feat and class-feature variants, no ritual-book-in-hand requirement, no restriction against expending spell slots for ritual spells, and no spell-transcription mechanics — the Q&A's key differences are all outside the spec's current scope.

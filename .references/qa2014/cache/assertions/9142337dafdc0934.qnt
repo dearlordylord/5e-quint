@@ -1,0 +1,1 @@
+// SKIP: Gaze of Two Minds is UA/One D&D playtest content (not PHB), and its core mechanic — perceiving through another creature's senses and casting spells from their location — requires multi-creature positional modeling not present in the spec. The spec is single-creature and has no invocation system or remote-casting concept to encode.

@@ -1,0 +1,1 @@
+// SKIP: Artificer infusions and attunement mechanics are not modeled in the spec; the spec has no Artificer class, no infusion system, and no attunement tracking.

@@ -1,0 +1,1 @@
+// SKIP: Spec has no model of spell schools, magic item auras, or Detect Magic identification mechanics; the Q&A's rule ("items have no explicit school") cannot be expressed as an assertion over any function in the spec.

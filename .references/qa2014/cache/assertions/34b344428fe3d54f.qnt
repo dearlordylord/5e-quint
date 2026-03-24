@@ -1,0 +1,1 @@
+// SKIP: Spec models no creature positioning, distances, or Spirit Shroud's 10-foot proximity condition; Echo Knight's "as if you were in the echo's space" substitution mechanic is also absent from the spec.

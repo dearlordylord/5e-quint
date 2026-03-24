@@ -1,0 +1,1 @@
+// SKIP: The Q&A concerns Paladin oath semantics (source of power, subjective intent, oath-breaking criteria) — no oath, tenet, or divine-authority mechanics exist in the spec; only class name `Paladin` and hit die are present.

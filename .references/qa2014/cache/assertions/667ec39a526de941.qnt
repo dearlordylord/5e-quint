@@ -1,0 +1,1 @@
+// SKIP: The spec models only a single caster's concentration slot (`SpellSlotState.concentrationSpellId`) and has no mechanism to track multiple overlapping spell effects on a *target* from different casters, no spell potency/slot-level comparison for effect precedence, and no "dormant" effect state. The Q&A rule requires all three to be testable.

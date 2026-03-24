@@ -1,0 +1,1 @@
+// SKIP: Spec models concentration only as breaking on death (pBreakConcOnStateChange); it has no mechanism for trigger-based contingent spell activation or post-death spell firing — the Contingency interaction requires both, which are outside the spec's scope.

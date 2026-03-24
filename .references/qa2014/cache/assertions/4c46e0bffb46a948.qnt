@@ -1,0 +1,1 @@
+// SKIP: Speak with Dead corpse-mouth targeting requires modeling corpse physical integrity (jaw/skeletal state) and spell targeting rules against dead creatures — neither concept exists in the spec's CreatureState, SpellSlotState, or any casting validation function.
