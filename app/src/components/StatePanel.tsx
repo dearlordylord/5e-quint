@@ -128,7 +128,6 @@ function TurnResources({ ctx }: { readonly ctx: DndContext }) {
           </span>
         </div>
       </div>
-      {ctx.surprised && <span className="text-yellow-400 text-xs mt-1 block">{t.surprised}</span>}
       {ctx.dodging && <span className="text-blue-400 text-xs">{t.dodging}</span>}
       {ctx.disengaged && <span className="text-blue-400 text-xs ml-2">{t.disengaged}</span>}
     </div>
