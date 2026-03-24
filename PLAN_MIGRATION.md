@@ -2,6 +2,8 @@
 
 Migrate the formal spec, XState machine, MBT bridge, QA pipeline, and docs from SRD 5.1 (2014 rules) to SRD 5.2.1 (2024 rules).
 
+**SRD parity principle:** the spec formalizes the SRD and nothing else. Every rule traces to a specific SRD passage. No homebrew or interpretive extensions. Where the formalization requires choices the SRD doesn't prescribe, those are documented in `ASSUMPTIONS.md`. This migration changes the source of truth from SRD 5.1 to SRD 5.2.1.
+
 Two plan files to migrate, strictly in order:
 1. **PLAN.md** (core) — generic mechanics in `dnd.qnt`. Migrated first.
 2. **PLAN_NONCORE.md** (non-core) — class features, spells, racial traits in TS/caller. Migrated second, after core is stable.
@@ -15,32 +17,14 @@ Note: `Magic-Items/` may be incomplete (only `Items-Q-Z.md` + `Overview.md`, no 
 
 ---
 
-## Phase 0 — Preserve 5.1 Artifacts
+## Phase 0 — Preserve 5.1 Artifacts ✅ DONE
 
-Freeze current state so 5.1 remains runnable and testable.
+Completed: `81c0554`. Tag: `v5.1-final`.
 
-### M0.1 Archive Quint spec
-- `dnd.qnt` -> `dnd2014.qnt`
-- `dndTest.qnt` -> `dnd2014Test.qnt`
-- Update import in `dnd2014Test.qnt`: `import dnd.* from "./dnd"` -> `import dnd.* from "./dnd2014"`
-- Verify: `quint test dnd2014Test.qnt` passes
-
-### M0.2 Archive PLANs
-- `PLAN.md` -> `PLAN_2014.md`
-- `PLAN_NONCORE.md` -> `PLAN_NONCORE_2014.md`
-
-### M0.3 Branch the XState machine (decision point)
-Two options — pick one:
-
-**Option A — Copy**: `machine.ts` -> `machine2014.ts`, etc. Keep 2014 machine importable for comparison. MBT test stays pointed at 2014 files until 2024 machine is ready.
-
-**Option B — In-place**: Evolve machine.ts directly. Use git history as the 2014 reference.
-
-Recommendation: **Option A** initially — copy all `machine*.ts` + `types.ts` to `*2014.ts` variants. Once 2024 machine passes MBT, delete 2014 copies.
-
-### M0.4 Tag/branch git
-- `git tag v5.1-final` before any migration work
-- Consider a `migration/5.2.1` branch
+- M0.1: `dnd2014.qnt` + `dnd2014Test.qnt` archived, `quint test` passes
+- M0.2: `PLAN_2014.md` + `PLAN_NONCORE_2014.md` archived
+- M0.3: **Option B** chosen — evolve in-place, git history as 5.1 reference
+- M0.4: `v5.1-final` tag set. Continuing on `master` (greenfield)
 
 ---
 

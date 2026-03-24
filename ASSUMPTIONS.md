@@ -1,6 +1,8 @@
 # Modeling Assumptions
 
-Strictness decisions where the PHB rules imply a constraint that isn't strictly necessary for model safety but reflects how the game actually works. Each entry records the assumption, rules justification, and what changed in both Quint and XState.
+The spec (`dnd.qnt`) maintains direct feature parity with the SRD. Formalizing prose rules into a state machine sometimes requires making explicit what the SRD leaves implicit — adding events the rules assume (END_TURN), connecting constraints that follow logically but aren't stated verbatim (slot expenditure requires ability to act), or choosing a formalization where the architecture demands one (single-creature time tracking). These modeling decisions are documented here. They are curated by the project owner, kept minimal, and stay close to RAW.
+
+Each entry records the assumption, rules justification, and what changed in both Quint and XState.
 
 ## A1: Spell slot expenditure requires ability to act
 

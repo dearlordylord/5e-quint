@@ -34,36 +34,43 @@ Reference: savage repo (`/Users/firfi/work/typescript/savage`) — same architec
 
 ## Design Principles
 
-1. **Keep it composable.** Single-creature state machine. Multi-creature interactions
+1. **Direct SRD feature parity.** The spec is a direct formalization of the SRD —
+   nothing more, nothing less. Every modeled rule must trace to a specific SRD
+   passage. No homebrew, no interpretive extensions, no "reasonable" additions
+   beyond the text. Where the formalization requires choices the SRD doesn't
+   prescribe (implicit events, implied constraints, architecture-driven decisions),
+   those are documented in `ASSUMPTIONS.md`, curated by the project owner.
+
+2. **Keep it composable.** Single-creature state machine. Multi-creature interactions
    (opportunity attacks, Help, grapple contests) are externalized as parameters —
    the caller provides contest results, target states, etc. Same as savage's approach
    to dice rolls. This makes the spec modular and add-able.
 
-2. **All dice are pre-resolved.** Callers pass roll results as arguments. The spec
+3. **All dice are pre-resolved.** Callers pass roll results as arguments. The spec
    never generates random values — it validates transitions given outcomes.
 
-3. **Composed records, implementer's choice.** State may be one big record (savage-style)
+4. **Composed records, implementer's choice.** State may be one big record (savage-style)
    or composed from sub-records (HP, conditions, turn resources, etc.). The plan
    specifies logical groupings; the implementer decides physical structure.
 
-4. **Ability scores are immutable config.** Like savage's `isWildCard`/`maxWounds`,
+5. **Ability scores are immutable config.** Like savage's `isWildCard`/`maxWounds`,
    ability scores and class features don't change during the state machine's scope.
    Level-up produces a new config, not a state mutation.
 
-5. **No battlemaps, no grids, no coordinates.** Spatial relationships (range, AoE,
+6. **No battlemaps, no grids, no coordinates.** Spatial relationships (range, AoE,
    positioning) are caller-provided booleans/enums, not computed from coordinates.
 
-6. **Module structure is aspirational.** Savage uses one module + one test file.
+7. **Module structure is aspirational.** Savage uses one module + one test file.
    Quint supports multi-module imports. The file tree below may consolidate in
    practice. Start with one file, split when it gets unwieldy.
 
-7. **Only formalize what has deterministic rules.** DM-fiat mechanics, narrative
+8. **Only formalize what has deterministic rules.** DM-fiat mechanics, narrative
    content, and "the DM decides" situations are out of scope.
 
-8. **Cross-reference with rules at every phase.** Before implementing a phase,
-   re-read the corresponding PHB chapter(s) in `.references/rules/`. After
-   implementing, re-read them again and verify every rule is covered. This is
-   mandatory — not optional, not "if time permits."
+9. **Cross-reference with rules at every phase.** Before implementing a phase,
+   re-read the corresponding SRD sections. After implementing, re-read them again
+   and verify every rule is covered. This is mandatory — not optional, not
+   "if time permits."
 
 ---
 

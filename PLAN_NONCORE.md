@@ -4,6 +4,12 @@
 
 Class features, spell effects, racial traits, and subclass mechanics. These compose on top of core primitives (PLAN.md / `dnd.qnt`) and are implemented in TypeScript (XState machine / caller side).
 
+**SRD parity:** all modeled features must trace directly to SRD text. No homebrew or interpretive extensions. Where the formalization requires choices the SRD doesn't prescribe, those are documented in `ASSUMPTIONS.md`.
+
+## BLOCKED
+
+**All tasks below are blocked until PLAN_MIGRATION.md phases M0 + M2 + M3 complete** (M0: archive 5.1 artifacts; M2: migrate core plan to 5.2.1; M3: migrate this file to 5.2.1). Do not implement any task in this file until migration is done. Task descriptions below reflect SRD 5.1 and will change during migration.
+
 > **NOTE — Suggestive, not prescriptive.** Function names, signatures, state fields, and type
 > definitions listed in tasks below are *illustrative suggestions* to communicate intent and scope.
 > The implementer decides the actual design — names, decomposition, data representations —
@@ -562,6 +568,7 @@ Prereq STR 13+. Advantage on attacks against creature you're grappling. Pin (act
 
 ## Suggested Execution Order
 
+0. **Complete PLAN_MIGRATION.md M0 + M2 + M3 first.** Tasks below are 5.1 descriptions and will be rewritten during migration.
 1. **[T01]** Config Identity (most class tasks depend on it), **[T01.5]** Multiclass Proficiency Rules
 2. **[T03-T06, T08, T09]** Shared mechanics (no deps or only T01; unblock class tasks)
 3. **[T07]** Channel Divinity (needs T01; unblocks Paladin/Cleric)
