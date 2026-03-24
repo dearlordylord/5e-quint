@@ -422,7 +422,7 @@ module dnd {
     stunned: bool,
     unconscious: bool,
     incapacitatedSources: Set[IncapSource],
-    hitDiceRemaining: int,         // how many HD available to spend (total = level)
+    hitPointDiceRemaining: int,         // how many HD available to spend (total = level)
   }
 
   pure val ALL_DAMAGE_TYPES: Set[DamageType] =
@@ -439,7 +439,7 @@ module dnd {
     poisoned: false, prone: false, restrained: false,
     stunned: false, unconscious: false,
     incapacitatedSources: Set(),
-    hitDiceRemaining: 0,
+    hitPointDiceRemaining: 0,
   }
 
   pure def isIncapacitated(s: CreatureState): bool =
@@ -447,9 +447,8 @@ module dnd {
 
   pure def isConscious(s: CreatureState): bool = s.hp > 0 and not(s.dead)
 
-  /// Exhaustion 4+ halves max HP
-  pure def effectiveMaxHp(s: CreatureState): int =
-    if (s.exhaustion >= 4) s.maxHp / 2 else s.maxHp
+  /// Effective max HP (extension point for effects that modify HP maximum).
+  pure def effectiveMaxHp(s: CreatureState): int = s.maxHp
 
   // ============================================================
   // 9. CONDITIONS (character/conditions)
@@ -514,15 +513,12 @@ module dnd {
          .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISUnconscious)))
   }
 
-  /// Increment exhaustion. Level 6 = death. Level 4+ halves max HP and clamps current HP.
+  /// Increment exhaustion. Level 6 = death.
   pure def pAddExhaustion(s: CreatureState, levels: int): CreatureState = {
     val newLevel = intMin(s.exhaustion + levels, 6)
     val s1 = s.with("exhaustion", newLevel)
     if (newLevel >= 6) s1.with("dead", true).with("hp", 0)
-    else {
-      val effMax = effectiveMaxHp(s1)
-      s1.with("hp", intMin(s1.hp, effMax))
-    }
+    else s1
   }
 
   /// Reduce exhaustion (min 0). HP does not auto-increase.
@@ -533,12 +529,13 @@ module dnd {
 
   // -- Modifier aggregation --
 
-  /// Modifiers on this creature's own attack rolls from its conditions
+  /// Modifiers on this creature's own attack rolls from its conditions.
+  /// Exhaustion flat penalty applied separately via exhaustionPenalty.
   pure def pOwnAttackModifiers(s: CreatureState, frightSourceInLOS: bool): AdvState = {
     {
       hasAdvantage: s.invisible,
       hasDisadvantage: s.blinded or s.prone or s.restrained
-        or s.poisoned or (s.frightened and frightSourceInLOS) or s.exhaustion >= 3,
+        or s.poisoned or (s.frightened and frightSourceInLOS),
     }
   }
 
@@ -557,28 +554,33 @@ module dnd {
 
   type D20Mods = { hasAdvantage: bool, hasDisadvantage: bool, autoFail: bool }
 
-  /// Ability check modifiers from conditions
+  /// Ability check modifiers from conditions.
+  /// Exhaustion flat penalty applied separately via exhaustionPenalty.
   pure def pCheckModifiers(
     s: CreatureState,
     requiresSight: bool, requiresHearing: bool, frightSourceInLOS: bool
   ): D20Mods = {
     {
       hasAdvantage: false,
-      hasDisadvantage: s.exhaustion >= 1 or s.poisoned
+      hasDisadvantage: s.poisoned
         or (s.frightened and frightSourceInLOS),
       autoFail: (s.blinded and requiresSight) or (s.deafened and requiresHearing),
     }
   }
 
-  /// Saving throw modifiers from conditions
+  /// Saving throw modifiers from conditions.
+  /// Exhaustion flat penalty applied separately via exhaustionPenalty.
   pure def pSaveModifiers(s: CreatureState, ability: Ability): D20Mods = {
     val isStrOrDex = ability == Str or ability == Dex
     {
       hasAdvantage: false,
-      hasDisadvantage: s.exhaustion >= 3 or (s.restrained and ability == Dex),
+      hasDisadvantage: s.restrained and ability == Dex,
       autoFail: isStrOrDex and (s.paralyzed or s.petrified or s.stunned or s.unconscious),
     }
   }
+
+  /// Exhaustion flat penalty: -2 * exhaustion level, applied to all D20 Tests.
+  pure def exhaustionPenalty(s: CreatureState): int = -2 * s.exhaustion
 
   pure def pCanAct(s: CreatureState): bool = not(isIncapacitated(s))
 
@@ -689,11 +691,10 @@ module dnd {
   pure def pStableRecovery(s: CreatureState): CreatureState =
     if (not(s.stable) or s.dead) s else pHeal(s, 1)
 
-  /// Melee attacker's choice when reducing to 0: unconscious + stable
+  /// Melee attacker's choice: reduce to 1 HP + unconscious.
+  /// Creature starts a Short Rest (caller responsibility).
   pure def pKnockOut(s: CreatureState): CreatureState =
-    pApplyCondition(s.with("hp", 0), CUnconscious)
-      .with("stable", true)
-      .with("deathSaves", DEATH_SAVES_RESET)
+    pApplyCondition(s.with("hp", 1), CUnconscious)
 
   // ============================================================
   // 11. TURN STRUCTURE & ACTION ECONOMY (combat/turn)
@@ -714,13 +715,12 @@ module dnd {
     readiedAction: bool,
     bonusActionSpellCast: bool,
     nonCantripActionSpellCast: bool,
-    surprised: bool,
   }
 
   /// Action types for pUseAction
   type ActionType =
-    | AAttack | ACastSpell | ADash | ADisengage | ADodge
-    | AHelp | AHide | AReady | ASearch | AUseObject
+    | AAttack | AMagic | ADash | ADisengage | ADodge
+    | AHelp | AHide | AInfluence | AReady | ASearch | AStudy | AUtilize
 
   /// Extra attacks from config features. Default 0.
   /// Fighter 5: 1, Fighter 11: 2, Fighter 20: 3
@@ -732,13 +732,11 @@ module dnd {
   }
 
   /// Start a new turn. Resets action economy. Movement = effective speed.
-  /// Surprised creatures can't move or act on first turn.
   /// Reaction resets at start of own turn.
   pure def pStartTurn(
     config: CharConfig,
     creature: CreatureState,
     armorState: ArmorState,
-    isSurprised: bool,
     callerSpeedModifier: int,
     isGrappling: bool,
     grappledTargetTwoSizesSmaller: bool
@@ -749,10 +747,7 @@ module dnd {
       val baseSpeed = config.speeds.get(Walk)
       val armorPenalty = armorSpeedPenalty(armorState, config.abilityScores.get(Str))
       val afterArmor = intMax(0, baseSpeed - armorPenalty)
-      val afterExhaustion =
-        if (creature.exhaustion >= 5) 0
-        else if (creature.exhaustion >= 2) afterArmor / 2
-        else afterArmor
+      val afterExhaustion = intMax(0, afterArmor - 5 * creature.exhaustion)
       val afterGrappling =
         if (isGrappling and not(grappledTargetTwoSizesSmaller)) afterExhaustion / 2
         else afterExhaustion
@@ -760,12 +755,12 @@ module dnd {
       intMax(0, withMod)
     }
     {
-      movementRemaining: if (isSurprised) 0 else speed,
+      movementRemaining: speed,
       effectiveSpeed: speed,
-      actionUsed: isSurprised,
+      actionUsed: false,
       attackActionUsed: false,
-      bonusActionUsed: isSurprised,
-      reactionAvailable: not(isSurprised),
+      bonusActionUsed: false,
+      reactionAvailable: true,
       freeInteractionUsed: false,
       extraAttacksRemaining: extraAttacksFromConfig(config),
       disengaged: false,
@@ -773,7 +768,6 @@ module dnd {
       readiedAction: false,
       bonusActionSpellCast: false,
       nonCantripActionSpellCast: false,
-      surprised: isSurprised,
     }
   }
 
@@ -848,12 +842,6 @@ module dnd {
   pure def canCastNonCantripAction(t: TurnState): bool =
     not(t.bonusActionSpellCast)
 
-  /// After surprise turn ends, creature can use reactions again.
-  /// Modeled as: at end of surprised creature's first turn, reaction becomes available.
-  pure def pEndSurpriseTurn(t: TurnState): TurnState =
-    if (t.surprised) t.with("reactionAvailable", true).with("surprised", false)
-    else t
-
   // ============================================================
   // 12. ATTACK MODIFIER AGGREGATION (combat/attack)
   // ============================================================
@@ -868,7 +856,6 @@ module dnd {
     attackerPoisoned: bool,
     attackerFrightened: bool,
     attackerFrightSourceInLOS: bool,
-    attackerExhaustion: int,
     // Target conditions (from pDefenseModifiers)
     targetBlinded: bool,
     targetParalyzed: bool,
@@ -891,11 +878,13 @@ module dnd {
     // Weapon
     isHeavyWeapon: bool,
     wielderSizeSmallOrTiny: bool,
+    attackerGrappled: bool,
+    targetIsGrappler: bool,
     // Environment
     squeezing: bool,
     underwater: bool,
     attackerHasSwimSpeed: bool,
-    isUnderwaterMeleeException: bool,
+    isUnderwaterMeleePiercing: bool,
     isUnderwaterRangedException: bool,
   }
 
@@ -927,24 +916,24 @@ module dnd {
     val disadv_attackerRestrained = ctx.attackerRestrained
     val disadv_attackerPoisoned = ctx.attackerPoisoned
     val disadv_attackerFrightened = ctx.attackerFrightened and ctx.attackerFrightSourceInLOS
-    val disadv_exhaustion3 = ctx.attackerExhaustion >= 3
     val disadv_targetProneBeyond5ft = ctx.targetProne and not(ctx.attackerWithin5ft)
     val disadv_rangedBeyondNormal = ctx.isRangedAttack and ctx.beyondNormalRange
     val disadv_rangedCloseQuarters = ctx.isRangedAttack and ctx.hostileWithin5ft
     val disadv_cantSeeTarget = not(ctx.attackerCanSeeTarget)
     val disadv_heavySmall = ctx.isHeavyWeapon and ctx.wielderSizeSmallOrTiny
+    val disadv_grappled = ctx.attackerGrappled and not(ctx.targetIsGrappler)
     val disadv_squeezing = ctx.squeezing
     val disadv_underwaterMelee = ctx.underwater and not(ctx.isRangedAttack)
-      and not(ctx.attackerHasSwimSpeed) and not(ctx.isUnderwaterMeleeException)
+      and not(ctx.attackerHasSwimSpeed) and not(ctx.isUnderwaterMeleePiercing)
     val disadv_underwaterRanged = ctx.underwater and ctx.isRangedAttack
       and not(ctx.beyondNormalRange) and not(ctx.isUnderwaterRangedException)
     val disadv_dodging = ctx.targetDodging and ctx.targetCanSeeAttacker
 
     val anyDisadvantage = disadv_attackerBlinded
       or disadv_attackerProne or disadv_attackerRestrained or disadv_attackerPoisoned
-      or disadv_attackerFrightened or disadv_exhaustion3 or disadv_targetProneBeyond5ft
+      or disadv_attackerFrightened or disadv_targetProneBeyond5ft
       or disadv_rangedBeyondNormal or disadv_rangedCloseQuarters or disadv_cantSeeTarget
-      or disadv_heavySmall or disadv_squeezing or disadv_underwaterMelee
+      or disadv_heavySmall or disadv_grappled or disadv_squeezing or disadv_underwaterMelee
       or disadv_underwaterRanged or disadv_dodging
 
     // --- Auto-crit ---
@@ -1028,21 +1017,26 @@ module dnd {
   pure def pTwoSizesSmaller(sizeA: Size, sizeB: Size): bool =
     sizeOrd(sizeB) <= sizeOrd(sizeA) - 2
 
-  /// Shared result type for grapple and shove (both are contested special attacks)
-  type ContestActionResult = { success: bool, targetState: CreatureState }
+  /// Grapple/Shove save DC: 8 + attacker's STR mod + PB.
+  pure def pGrappleShoveDC(strMod: int, profBonus: int): int = 8 + strMod + profBonus
 
-  /// Attempt grapple. Replaces one attack within Attack action.
-  /// Auto-success if target is incapacitated. Tie = no change (status quo).
+  /// Shared result type for grapple and shove
+  type GrappleShoveResult = { success: bool, targetState: CreatureState }
+
+  /// Attempt grapple via Unarmed Strike.
+  /// Target makes STR or DEX save (their choice) vs DC = 8 + attacker STR mod + PB.
+  /// Auto-success if target is incapacitated.
+  /// Caller resolves the save and passes `targetSaveFailed: bool`.
   pure def pGrapple(
     attackerSize: Size,
     targetSize: Size,
     targetState: CreatureState,
-    contestResult: ContestResult,
+    targetSaveFailed: bool,
     attackerHasFreeHand: bool
-  ): ContestActionResult = {
+  ): GrappleShoveResult = {
     if (not(pWithinOneSize(attackerSize, targetSize)) or not(attackerHasFreeHand))
       { success: false, targetState: targetState }
-    else if (isIncapacitated(targetState) or contestResult == AWins)
+    else if (isIncapacitated(targetState) or targetSaveFailed)
       { success: true, targetState: pApplyCondition(targetState, CGrappled) }
     else
       { success: false, targetState: targetState }
@@ -1052,30 +1046,33 @@ module dnd {
   pure def pReleaseGrapple(targetState: CreatureState): CreatureState =
     pRemoveCondition(targetState, CGrappled)
 
-  /// Escape grapple. Target uses its action.
-  /// BWins = escape; AWins/Tie = no change (status quo).
+  /// Escape grapple. Target uses its action to make Athletics/Acrobatics check
+  /// against the grapple's escape DC.
+  /// Caller resolves the check and passes `escapeSucceeded: bool`.
   pure def pEscapeGrapple(
     targetState: CreatureState,
-    contestResult: ContestResult
+    escapeSucceeded: bool
   ): CreatureState = {
-    if (contestResult == BWins) pReleaseGrapple(targetState)
+    if (escapeSucceeded) pReleaseGrapple(targetState)
     else targetState
   }
 
   type ShoveChoice = ShoveProne | ShovePush
 
-  /// Attempt shove. Replaces one attack within Attack action.
-  /// Same size rule as grapple. No free hand required (PHB: shove has no hand requirement).
+  /// Attempt shove via Unarmed Strike.
+  /// Target makes STR or DEX save (their choice) vs DC = 8 + attacker STR mod + PB.
+  /// Same size rule as grapple. No free hand required.
+  /// Caller resolves the save and passes `targetSaveFailed: bool`.
   pure def pShove(
     attackerSize: Size,
     targetSize: Size,
     targetState: CreatureState,
-    contestResult: ContestResult,
+    targetSaveFailed: bool,
     choice: ShoveChoice
-  ): ContestActionResult = {
+  ): GrappleShoveResult = {
     if (not(pWithinOneSize(attackerSize, targetSize)))
       { success: false, targetState: targetState }
-    else if (isIncapacitated(targetState) or contestResult == AWins)
+    else if (isIncapacitated(targetState) or targetSaveFailed)
       match choice {
         | ShoveProne => { success: true, targetState: pApplyCondition(targetState, CProne) }
         | ShovePush => { success: true, targetState: targetState }
@@ -1092,7 +1089,6 @@ module dnd {
 
   // -- 13.5 Mounted Combat --
 
-  type MountType = ControlledMount | IndependentMount
 
   /// Spend half effective speed. Fails if speed is 0 or insufficient movement.
   /// Used by mount/dismount and standing from prone.
@@ -1169,9 +1165,10 @@ module dnd {
   /// Returns TurnState unchanged if can't stand. Caller removes CProne on success.
   pure def pStandFromProne(t: TurnState): TurnState = pSpendHalfSpeed(t)
 
-  /// Drop prone. Free (0 movement cost).
-  /// PHB: "You can drop prone without using any of your speed."
-  pure def pDropProne(s: CreatureState): CreatureState = pApplyCondition(s, CProne)
+  /// Drop prone. Free (0 movement cost). Can't drop prone if Speed is 0.
+  pure def pDropProne(s: CreatureState, effectiveSpeed: int): CreatureState =
+    if (effectiveSpeed == 0) s
+    else pApplyCondition(s, CProne)
 
   // -- 14.3 Flying Movement --
 
@@ -1242,7 +1239,6 @@ module dnd {
 
   // -- 15.1 Types & Constants --
 
-  type CasterType = FullCaster | HalfCaster | ThirdCaster
 
   type SpellSlotState = {
     slotsMax: int -> int,        // spell level 1-9 -> max slots
@@ -1358,10 +1354,10 @@ module dnd {
 
   // -- 15.4 Concentration --
 
-  /// Concentration save DC. PHB: DC = max(10, floor(damage / 2)).
+  /// Concentration save DC: max(10, floor(damage / 2)), capped at 30.
   pure def pConcentrationDC(damageTaken: int): int = {
     val half = damageTaken / 2
-    intMax(half, 10)
+    intMin(intMax(half, 10), 30)
   }
 
   /// Break concentration. Clears spell.
@@ -1413,47 +1409,37 @@ module dnd {
 
   // -- 16.1 Short Rest: Hit Die Spending --
 
-  /// Spend one hit die. Heals dieRoll + conMod (min 0). Decrements hitDiceRemaining.
+  /// Spend one hit die. Heals dieRoll + conMod (min 0). Decrements hitPointDiceRemaining.
   /// No-op if no HD remaining or creature is dead.
   pure def pSpendHitDie(s: CreatureState, conMod: int, dieRoll: int): CreatureState =
-    if (s.hitDiceRemaining <= 0 or s.dead) s
+    if (s.hitPointDiceRemaining <= 0 or s.dead) s
     else {
       val raw = dieRoll + conMod
       val healing = intMax(0, raw)
-      pHeal(s, healing).with("hitDiceRemaining", s.hitDiceRemaining - 1)
+      pHeal(s, healing).with("hitPointDiceRemaining", s.hitPointDiceRemaining - 1)
     }
 
   /// Short rest: spend hit dice from a list of pre-resolved rolls, then return state.
   /// Caller also calls pRestorePactSlots on SpellSlotState if applicable.
   pure def pShortRest(s: CreatureState, conMod: int, hdRolls: List[int]): CreatureState = {
-    val cap = intMin(s.hitDiceRemaining, hdRolls.length())
+    val cap = intMin(s.hitPointDiceRemaining, hdRolls.length())
     hdRolls.slice(0, cap).foldl(s, (acc, roll) => pSpendHitDie(acc, conMod, roll))
   }
 
   // -- 16.2 Long Rest --
 
-  /// How many hit dice to recover on a long rest.
-  /// PHB: up to max(1, floor(totalHD / 2)), can't exceed what was spent.
-  pure def pHitDiceRecovery(totalHitDice: int, hitDiceRemaining: int): int = {
-    val maxRecover = intMax(1, totalHitDice / 2)
-    val spent = totalHitDice - hitDiceRemaining
-    intMin(spent, maxRecover)
-  }
-
-  /// Long rest. PHB Ch8:
+  /// Long rest (Rules-Glossary "Long Rest"):
   /// - Must have >= 1 HP at start of rest to benefit (otherwise no-op)
-  /// - Reduce exhaustion by 1 (if hasEaten)
-  /// - Regain all lost HP (to effectiveMaxHp after exhaustion change)
-  /// - Recover hit dice: up to max(1, floor(totalHD / 2))
-  /// - Clear temp HP (default-duration temp HP expire)
+  /// - Regain all lost HP and all spent Hit Point Dice
+  /// - Exhaustion level decreases by 1 (unconditional, no food requirement)
+  /// - Clear temp HP
   /// Caller also calls pRestoreAllSlots on SpellSlotState.
-  pure def pLongRest(s: CreatureState, totalHitDice: int, hasEaten: bool): CreatureState =
+  pure def pLongRest(s: CreatureState, totalHitPointDice: int): CreatureState =
     if (s.hp < 1) s
     else {
-      val s1 = if (hasEaten) pReduceExhaustion(s, 1) else s
+      val s1 = pReduceExhaustion(s, 1)
       val s2 = s1.with("hp", effectiveMaxHp(s1))
-      val recovery = pHitDiceRecovery(totalHitDice, s2.hitDiceRemaining)
-      s2.with("hitDiceRemaining", s2.hitDiceRemaining + recovery)
+      s2.with("hitPointDiceRemaining", totalHitPointDice)
         .with("tempHp", 0)
     }
 
@@ -1624,7 +1610,6 @@ module dnd {
 
   // -- 18.2 Ability Score Generation --
 
-  pure val STANDARD_ARRAY: List[int] = [15, 14, 13, 12, 10, 8]
 
   /// Point buy cost for a single ability score (PHB table).
   /// Scores outside 8-15 return 0 (invalid, caller validates range).
@@ -1782,21 +1767,17 @@ module dnd {
     CPoisoned, CProne, CRestrained, CStunned, CUnconscious
   )
 
-  pure val DAMAGE_TYPES: Set[DamageType] = Set(
-    Acid, Bludgeoning, Cold, Fire, Force, Lightning,
-    Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder
-  )
+  pure val DAMAGE_TYPES: Set[DamageType] = ALL_DAMAGE_TYPES
 
   pure val ACTION_TYPES: Set[ActionType] = Set(
-    AAttack, ACastSpell, ADash, ADisengage, ADodge,
-    AHelp, AHide, AReady, ASearch, AUseObject
+    AAttack, AMagic, ADash, ADisengage, ADodge,
+    AHelp, AHide, AInfluence, AReady, ASearch, AStudy, AUtilize
   )
 
   pure val SIZES: Set[Size] = Set(Tiny, Small, Medium, Large, Huge, Gargantuan)
 
   pure val SHOVE_CHOICES: Set[ShoveChoice] = Set(ShoveProne, ShovePush)
 
-  pure val CONTEST_RESULTS: Set[ContestResult] = Set(AWins, BWins, Tie)
 
   // -- 19.3 Test Config --
 
@@ -1831,7 +1812,6 @@ module dnd {
     readiedAction: false,
     bonusActionSpellCast: false,
     nonCantripActionSpellCast: false,
-    surprised: false,
   }
 
   pure val FRESH_SPELL_SLOTS: SpellSlotState = {
@@ -1848,7 +1828,7 @@ module dnd {
   action init = {
     nondet maxHp = HP_RANGE.oneOf()
     all {
-      state' = freshCreature(maxHp).with("hitDiceRemaining", 5),
+      state' = freshCreature(maxHp).with("hitPointDiceRemaining", 5),
       turnState' = FRESH_TURN,
       spellSlots' = FRESH_SPELL_SLOTS,
     }
@@ -1897,22 +1877,13 @@ module dnd {
 
   action doKnockOut = {
     val s1 = pKnockOut(state)
-    // KnockOut applies unconscious → incapacitated → breaks concentration
-    val ss1 = if (isIncapacitated(s1) and not(isIncapacitated(state)) and isConcentrating(spellSlots))
-      pBreakConcentration(spellSlots)
-    else spellSlots
-    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
   }
 
-  // Condition actions
   action doApplyCondition = {
     nondet c = CONDITIONS.oneOf()
     val s1 = pApplyCondition(state, c)
-    // Incapacitation breaks concentration
-    val ss1 = if (isIncapacitated(s1) and not(isIncapacitated(state)) and isConcentrating(spellSlots))
-      pBreakConcentration(spellSlots)
-    else spellSlots
-    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
   }
 
   action doRemoveCondition = {
@@ -1924,11 +1895,7 @@ module dnd {
   action doAddExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
     val s1 = pAddExhaustion(state, levels)
-    // Death breaks concentration
-    val ss1 = if (s1.dead and not(state.dead) and isConcentrating(spellSlots))
-      pBreakConcentration(spellSlots)
-    else spellSlots
-    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
   }
 
   action doReduceExhaustion = {
@@ -1938,11 +1905,10 @@ module dnd {
 
   // Turn actions
   action doStartTurn = {
-    nondet isSurprised = Bool.oneOf()
     nondet callerSpeedMod = (-10).to(10).oneOf()
     nondet isGrappling = Bool.oneOf()
     nondet grappledSmall = Bool.oneOf()
-    val t1 = pStartTurn(TEST_CONFIG, state, Unarmored, isSurprised, callerSpeedMod, isGrappling, grappledSmall)
+    val t1 = pStartTurn(TEST_CONFIG, state, Unarmored, callerSpeedMod, isGrappling, grappledSmall)
     all { state' = state, turnState' = t1, spellSlots' = spellSlots }
   }
 
@@ -1980,11 +1946,7 @@ module dnd {
   }
 
   action doDropProne = all {
-    state' = pDropProne(state), turnState' = turnState, spellSlots' = spellSlots
-  }
-
-  action doEndSurpriseTurn = all {
-    state' = state, turnState' = pEndSurpriseTurn(turnState), spellSlots' = spellSlots
+    state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots
   }
 
   action doMarkBonusActionSpell = all {
@@ -2045,9 +2007,8 @@ module dnd {
   }
 
   action doLongRest = {
-    nondet hasEaten = Bool.oneOf()
     all {
-      state' = pLongRest(state, 5, hasEaten),
+      state' = pLongRest(state, 5),
       turnState' = turnState,
       spellSlots' = pRestoreAllSlots(spellSlots),
     }
@@ -2062,34 +2023,28 @@ module dnd {
 
   action doSuffocate = {
     val s1 = pSuffocate(state)
-    // Suffocation applies unconscious → incapacitated → breaks concentration
-    val ss1 = if (isIncapacitated(s1) and not(isIncapacitated(state)) and isConcentrating(spellSlots))
-      pBreakConcentration(spellSlots)
-    else spellSlots
-    all { state' = s1, turnState' = turnState, spellSlots' = ss1 }
+    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
   }
 
-  action doApplyStarvation = all {
-    state' = pApplyStarvation(state), turnState' = turnState, spellSlots' = spellSlots
+  action doApplyStarvation = {
+    val s1 = pApplyStarvation(state)
+    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
   }
 
   action doApplyDehydration = {
     nondet halfWater = Bool.oneOf()
     nondet saveSucceeded = Bool.oneOf()
-    all {
-      state' = pApplyDehydration(state, halfWater, saveSucceeded),
-      turnState' = turnState,
-      spellSlots' = spellSlots,
-    }
+    val s1 = pApplyDehydration(state, halfWater, saveSucceeded)
+    all { state' = s1, turnState' = turnState, spellSlots' = pBreakConcOnStateChange(spellSlots, state, s1) }
   }
 
   // Grapple/Shove actions (applied to self as target)
   action doGrapple = {
     nondet atkSize = SIZES.oneOf()
     nondet tgtSize = SIZES.oneOf()
-    nondet contest = CONTEST_RESULTS.oneOf()
+    nondet saveFailed = Bool.oneOf()
     nondet freeHand = Bool.oneOf()
-    val result = pGrapple(atkSize, tgtSize, state, contest, freeHand)
+    val result = pGrapple(atkSize, tgtSize, state, saveFailed, freeHand)
     all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots }
   }
 
@@ -2098,16 +2053,16 @@ module dnd {
   }
 
   action doEscapeGrapple = {
-    nondet contest = CONTEST_RESULTS.oneOf()
-    all { state' = pEscapeGrapple(state, contest), turnState' = turnState, spellSlots' = spellSlots }
+    nondet escaped = Bool.oneOf()
+    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots }
   }
 
   action doShove = {
     nondet atkSize = SIZES.oneOf()
     nondet tgtSize = SIZES.oneOf()
-    nondet contest = CONTEST_RESULTS.oneOf()
+    nondet saveFailed = Bool.oneOf()
     nondet choice = SHOVE_CHOICES.oneOf()
-    val result = pShove(atkSize, tgtSize, state, contest, choice)
+    val result = pShove(atkSize, tgtSize, state, saveFailed, choice)
     all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots }
   }
 
@@ -2137,7 +2092,6 @@ module dnd {
         doUseExtraAttack,
         doStandFromProne,
         doDropProne,
-        doEndSurpriseTurn,
         doMarkBonusActionSpell,
         doMarkNonCantripActionSpell,
         doExpendSlot,
@@ -2191,8 +2145,8 @@ module dnd {
   val unconsciousImpliesProne =
     state.unconscious implies state.prone
 
-  val incapSourcesConsistent =
-    (state.incapacitatedSources.size() > 0) == isIncapacitated(state)
+  /// Dead creatures should not be concentrating.
+  val deadNotConcentrating = state.dead implies not(isConcentrating(spellSlots))
 
   val stableImpliesDeathSavesReset =
     state.stable implies (state.deathSaves.successes == 0 and state.deathSaves.failures == 0)
@@ -2203,10 +2157,8 @@ module dnd {
     and pDeathSave(state, 15) == state
   )
 
-  val consciousImpliesHpPositive = isConscious(state) implies state.hp > 0
-
-  val atMostOneConcentration =
-    (spellSlots.concentrationSpellId != "") implies isConcentrating(spellSlots)
+  /// Incapacitated creatures should not be concentrating.
+  val incapNotConcentrating = isIncapacitated(state) implies not(isConcentrating(spellSlots))
 
   val slotsBounded =
     spellSlots.slotsCurrent.keys().forall(level =>
@@ -2218,7 +2170,7 @@ module dnd {
     spellSlots.pactSlotsCurrent >= 0
     and spellSlots.pactSlotsCurrent <= spellSlots.pactSlotsMax
 
-  val hitDiceNonNegative = state.hitDiceRemaining >= 0
+  val hitDiceNonNegative = state.hitPointDiceRemaining >= 0
 
   /// Combined invariant for all safety properties.
   val allInvariants = and {
@@ -2233,11 +2185,10 @@ module dnd {
     stunnedImpliesIncap,
     unconsciousImpliesIncap,
     unconsciousImpliesProne,
-    incapSourcesConsistent,
     stableImpliesDeathSavesReset,
     deadIsAbsorbing,
-    consciousImpliesHpPositive,
-    atMostOneConcentration,
+    deadNotConcentrating,
+    incapNotConcentrating,
     slotsBounded,
     pactSlotsBounded,
     hitDiceNonNegative,

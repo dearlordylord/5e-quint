@@ -1,8 +1,8 @@
-# D&D 5e SRD 5.1 — Core Specification Plan
+# D&D 5e SRD 5.2.1 — Core Specification Plan
 
-**Edition: SRD 5.1 (2014). Pending port to SRD 5.2.1 via PLAN_MIGRATION.md.**
+**Edition: SRD 5.2.1 (2024).**
 
-Source: SRD 5.1 (CC-BY-4.0). Reference: `.references/srd/`
+Source: SRD 5.2.1 (CC-BY-4.0). Reference: `.references/srd-5.2.1/`
 Single-creature state machine. All dice pre-resolved. Multi-creature interactions caller-provided.
 
 > **NOTE — Suggestive, not prescriptive.** Function names, signatures, state fields, and type
@@ -10,11 +10,17 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 > The implementer decides the actual Quint design — names, decomposition, data representations —
 > and iterates freely. Treat task descriptions as "what to model," not "how to type it."
 
+## Status
+
+M0 (core spec under SRD 5.1) is done. M2 (SRD 5.2.1 migration) is in progress. Tasks below reflect SRD 5.2.1 rules. Implementation blocked until M2.5 completes.
+
 ## Scope
 
 This plan covers **core mechanics only** — generic rules modeled in `dnd.qnt` that any class, spell, or racial feature composes on top of. Class features, spell effects, racial traits, and subclass mechanics live in `PLAN_NONCORE.md` (TS/caller side).
 
 **Boundary rule:** if a mechanic is specific to a class, spell, species, or subclass, it belongs in PLAN_NONCORE.md. If it's a generic rule that multiple features compose (d20 resolution, conditions, action economy, damage modifiers, etc.), it belongs here.
+
+**SRD parity:** the spec formalizes the SRD and nothing else. Every rule must trace to a specific SRD passage. No homebrew or interpretive extensions. Where the formalization requires choices the SRD doesn't prescribe, those are documented in `ASSUMPTIONS.md`.
 
 ## Completed
 
@@ -31,6 +37,22 @@ spellcasting framework (slots, concentration, ritual, bonus action rule, multicl
 resting, environment, character construction & leveling, unarmored defense (Barbarian/Monk
 AC formulas already in `CharConfig.unarmoredDefense`), Extra Attack (`FExtraAttack` variants).
 MBT infrastructure wired to `@firfi/quint-connect`.
+
+### 5.2.1 Revision Needed for Completed Features
+
+The following completed features were implemented under SRD 5.1 and need revision for 5.2.1 during M2.5:
+
+- **Exhaustion:** completely new system. Was 6 tiers with specific per-tier effects (disadv ability checks, speed halved, disadv attacks/saves, HP max halved, speed 0, death). Now: -2 x level on D20 Tests, -5 x level ft Speed, death at level 6 (Rules-Glossary.md "Exhaustion [Condition]").
+- **Stunned:** no longer includes Speed 0. 5.2.1 Stunned = Incapacitated + auto-fail STR/DEX saves + Advantage on attacks against. No Speed reduction (Rules-Glossary.md "Stunned [Condition]").
+- **Grappled:** added "Disadvantage on attack rolls against any target other than the grappler" (Rules-Glossary.md "Grappled [Condition]").
+- **Surprise:** was turn-skip; now Disadvantage on Initiative roll, which is pre-combat. Remove from turn state machine (Rules-Glossary.md "Initiative," Playing-the-Game.md "Surprise").
+- **Knock Out:** was reduce to 0 HP; now reduce to 1 HP + Unconscious condition + starts Short Rest. Unconscious ends if creature regains any HP (Playing-the-Game.md "Knocking Out a Creature").
+- **Concentration DC:** now capped at max DC 30. DC = max(10, floor(damage/2)), up to 30 (Rules-Glossary.md "Concentration").
+- **Grapple/Shove:** was contested Athletics checks; now saving throw (Str or Dex, target's choice) vs DC 8 + Str mod + PB, as part of Unarmed Strike (Rules-Glossary.md "Unarmed Strike").
+- **Two-weapon fighting (Light property):** bonus attack no longer adds ability modifier to damage unless that modifier is negative (Equipment.md "Light" property).
+- **Underwater melee:** any weapon dealing Piercing damage avoids Disadvantage; was a specific weapon list (Playing-the-Game.md "Impeded Weapons").
+- **Squeezing:** absent from SRD 5.2.1. Existing squeezing code should be removed during M2.5.
+- **Type renames:** Cast a Spell -> Magic [Action], Use an Object -> Utilize [Action], Hit Dice -> Hit Point Dice. New actions: Study, Influence.
 
 ---
 
@@ -57,7 +79,7 @@ Each task lists: state additions, new pure functions, and test criteria.
 
 **[T02] Crit Range Parameterization**
 Replace hardcoded `d20Roll == 20` crit check with `d20Roll >= critRange` in `pResolveAttack`.
-Add `critRange: int` to config (default 20). Champion sets 19/18.
+Add `critRange: int` to config (default 20). Champion sets 19/18. SRD 5.2.1 Critical Hit is still natural 20; expanded crit range is a class feature (Champion Fighter).
 - State: `critRange` in config
 - Functions: modify `pResolveAttack`
 - Test: crit on 19 with critRange=19; no crit on 19 with critRange=20; crit on 18 with critRange=18
@@ -70,29 +92,23 @@ Add `critRange: int` to config (default 20). Champion sets 19/18.
 [T10a] Cover (P1) -> deps: none
 [T10c] Resistance Stacking & Order of Operations (P1) -> deps: none
 [T10d] Underwater Combat — fire resistance (P3) -> deps: none
-[T10e] Squeezing — defense modifiers (P3) -> deps: none
 ```
 
 **[T10a] Cover**
-Partially implemented: `CoverType`, `coverBonus()`, `canBeTargeted()`, and attack-roll integration (`targetCoverBonus` param in `resolveAttackRoll`) already exist. Remaining: integrate cover bonus into DEX save resolution via `pSaveModifiers`.
+Partially implemented: `CoverType`, `coverBonus()`, `canBeTargeted()`, and attack-roll integration (`targetCoverBonus` param in `resolveAttackRoll`) already exist. Remaining: integrate cover bonus into DEX save resolution via `pSaveModifiers`. SRD 5.2.1 Cover rules unchanged: Half Cover +2 AC and DEX saves, Three-Quarters +5 (Rules-Glossary.md "Cover").
 - Functions: modify `pSaveModifiers` to add cover bonus for DEX saves
 - Test: half cover +2 DEX save; three-quarters +5 DEX save; cover doesn't affect non-DEX saves
 
 **[T10c] Resistance Stacking & Order of Operations**
-Partially implemented: `applyDamageModifiers` already handles immunity->resistance->vulnerability ordering, and uses `Set[DamageType]` so multiple instances naturally count as one. Remaining: add flat-modifier support (applied before halving/doubling) — current function has no pre-resistance flat modifier step.
+Partially implemented: `applyDamageModifiers` already handles immunity->resistance->vulnerability ordering, and uses `Set[DamageType]` so multiple instances naturally count as one. Remaining: add flat-modifier support (applied before halving/doubling). SRD 5.2.1 explicitly defines the order: "adjustments such as bonuses, penalties, or multipliers are applied first; Resistance is applied second; and Vulnerability is applied third" (Playing-the-Game.md "Order of Application"). The planned flat-modifier step aligns with this.
 - Functions: extend `applyDamageModifiers` (or add wrapper) to accept flat modifiers applied before resistance/vulnerability
-- Test: flat bonuses applied before halving; resistance + vulnerability = apply both in order (halve then double = 1x); multiple resistance sources still count as one
+- Test: flat bonuses applied before halving; resistance + vulnerability = apply both in order (halve then double = 1x); multiple resistance sources still count as one; example from SRD: 28 Fire damage - 5 flat = 23, halved (Resistance) = 11, doubled (Vulnerability) = 22
 
 **[T10d] Underwater Combat — fire resistance**
-Partially implemented: attack penalties (melee disadvantage, ranged auto-miss/disadvantage) already in `AttackContext` and `pAggregateAttackMods`. Remaining: fire resistance for fully submerged creatures.
-- State: `isFullySubmerged: bool` (for fire resistance — stricter than merely underwater)
-- Functions: modify damage resolution to add fire resistance when fully submerged
-- Test: fully submerged = fire resistance; wading does not grant fire resistance
-
-**[T10e] Squeezing — defense modifiers**
-Partially implemented: attack disadvantage (`squeezing` in `AttackContext`, `disadv_squeezing` in `pAggregateAttackMods`) and movement cost (`isSqueezing` in `pMovementCost`) already exist. Remaining: advantage on attacks against squeezing creature, DEX save disadvantage while squeezing.
-- Functions: modify `pDefenseModifiers` for advantage against squeezer; modify `pSaveModifiers` for DEX disadvantage while squeezing
-- Test: attacks against squeezer have advantage; DEX saves at disadvantage while squeezing
+Partially implemented: attack penalties (melee disadvantage, ranged auto-miss/disadvantage) already in `AttackContext` and `pAggregateAttackMods`. Remaining: fire resistance for creatures underwater. SRD 5.2.1 simplifies: "Anything underwater has Resistance to Fire damage" (Playing-the-Game.md "Fire Resistance"). No "fully submerged" distinction — just underwater or not.
+- State: use existing `isUnderwater` or equivalent field (no `isFullySubmerged` needed)
+- Functions: modify damage resolution to add fire Resistance when underwater
+- Test: underwater = fire Resistance; not underwater = no fire Resistance
 
 ---
 
@@ -158,9 +174,10 @@ Spec processes each save (removing conditions on success) and applies damage. Du
 
 **[TA3] Combat Mode Separation**
 
-The structured round/turn/action economy is combat-only (PHB Ch. 9). Outside combat, GM uses minute/hour/day time. Resting requires non-combat context.
+The structured round/turn/action economy is combat-only (SRD 5.2.1 Playing-the-Game "Combat"). Outside combat, GM uses minute/hour/day time. Resting requires non-combat context.
 
-Introduce top-level combat/non-combat gate:
+Introduce top-level combat/non-combat gate. SRD 5.2.1 MAJOR CHANGE: surprise no longer skips turns. Surprise = Disadvantage on Initiative roll, resolved before the state machine starts (Rules-Glossary.md "Initiative"). No `surprised` sub-state; no `END_SURPRISE_TURN` transition.
+
 ```
 outOfCombat
   accepts: SHORT_REST, LONG_REST, SPEND_HIT_DIE, ENTER_COMBAT
@@ -172,8 +189,6 @@ inCombat
              USE_EXTRA_ATTACK, STAND_FROM_PRONE, DROP_PRONE,
              MARK_BONUS_ACTION_SPELL, MARK_NON_CANTRIP_ACTION_SPELL,
              END_TURN -> waitingForTurn
-  surprised
-    accepts: END_SURPRISE_TURN -> waitingForTurn
   EXIT_COMBAT -> outOfCombat
 ```
 
@@ -193,7 +208,8 @@ Current: START_TURN accepted from any state (can be spammed). Fix:
 2. Extended event arguments (in addition to existing):
 ```
 START_TURN: {
-  // existing: isSurprised, baseSpeed, callerSpeedModifier, isGrappling, grappledTargetTwoSizesSmaller
+  // existing: baseSpeed, callerSpeedModifier, isGrappling, grappledTargetTwoSizesSmaller
+  // removed: isSurprised (surprise is pre-combat in 5.2.1)
   // new:
   deathSaveRoll?: number           // d20 result, only if hp == 0
   startOfTurnEffects: Array<{
@@ -231,7 +247,7 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 All independent (parallel):
 [T02]-Crit Range
 [T10a]-Cover, [T10c]-Resistance Stacking,
-[T10d]-Underwater (fire resist), [T10e]-Squeezing (defense mods)
+[T10d]-Underwater (fire resist)
 
 [TA1]-Active Effect Lifecycle
   +--[TA2]-END_TURN
@@ -243,7 +259,7 @@ All independent (parallel):
 
 1. **[TA1]** Active Effect Lifecycle (foundation for all timed effects)
 2. **[TA2]** END_TURN, then **[TA3]** Combat Mode, then **[TA4]** START_TURN Refactoring (sequential chain)
-3. **[T02]** Crit Range, **[T10a, T10c-e]** Combat Rule Extensions (all independent, parallel)
+3. **[T02]** Crit Range, **[T10a, T10c, T10d]** Combat Rule Extensions (all independent, parallel)
 
 ---
 

@@ -347,9 +347,10 @@ module dndTest {
 
   // -- effectiveMaxHp --
   run test_effective_max_hp_normal = assert(effectiveMaxHp(FRESH20) == 20)
+
   run test_effective_max_hp_exhaustion4 = {
     val s = FRESH20.with("exhaustion", 4)
-    assert(effectiveMaxHp(s) == 10)
+    assert(effectiveMaxHp(s) == 20)
   }
 
   // -- isIncapacitated --
@@ -449,10 +450,10 @@ module dndTest {
     assert(s.hp == 20)
   }
 
-  run test_heal_capped_by_exhaustion4 = {
-    val s = pAddExhaustion(FRESH20, 4).with("hp", 5) // maxHp 20, effective 10, hp 5
-    val s2 = pHeal(s, 20) // heal 20 but capped at effective 10
-    assert(s2.hp == 10)
+  run test_heal_not_capped_by_exhaustion4 = {
+    val s = pAddExhaustion(FRESH20, 4).with("hp", 5) // maxHp 20, effective 20, hp 5
+    val s2 = pHeal(s, 20) // heal 20, capped at 20
+    assert(s2.hp == 20)
   }
 
   run test_heal_from_0_consciousness = {
@@ -554,9 +555,8 @@ module dndTest {
 
   run test_knock_out = {
     val s = pKnockOut(FRESH20)
-    all { assert(s.hp == 0), assert(s.unconscious), assert(s.prone),
-          assert(s.stable), assert(isIncapacitated(s)),
-          assert(s.deathSaves == DEATH_SAVES_RESET) }
+    all { assert(s.hp == 1), assert(s.unconscious), assert(s.prone),
+          assert(isIncapacitated(s)) }
   }
 
   // ============================================================
@@ -597,9 +597,9 @@ module dndTest {
 
   run test_exhaustion_add = assert(pAddExhaustion(FRESH20, 2).exhaustion == 2)
 
-  run test_exhaustion_4_halves_max_hp_clamps = {
+  run test_exhaustion_4_no_hp_change = {
     val s = pAddExhaustion(FRESH20, 4)
-    all { assert(s.exhaustion == 4), assert(effectiveMaxHp(s) == 10), assert(s.hp == 10) }
+    all { assert(s.exhaustion == 4), assert(effectiveMaxHp(s) == 20), assert(s.hp == 20) }
   }
 
   run test_exhaustion_6_death = {
@@ -608,6 +608,41 @@ module dndTest {
   }
 
   run test_exhaustion_reduce = assert(pReduceExhaustion(pAddExhaustion(FRESH20, 3), 1).exhaustion == 2)
+
+  // -- Exhaustion Penalty --
+
+  run test_exhaustion_penalty_0 = assert(exhaustionPenalty(FRESH20) == 0)
+
+  run test_exhaustion_penalty_1 = {
+    val s = pAddExhaustion(FRESH20, 1)
+    assert(exhaustionPenalty(s) == -2)
+  }
+
+  run test_exhaustion_penalty_3 = {
+    val s = pAddExhaustion(FRESH20, 3)
+    assert(exhaustionPenalty(s) == -6)
+  }
+
+  run test_exhaustion_penalty_5 = {
+    val s = pAddExhaustion(FRESH20, 5)
+    assert(exhaustionPenalty(s) == -10)
+  }
+
+  // -- Exhaustion Speed --
+
+  run test_speed_exhaustion1_reduced_by_5 = {
+    val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 1), Unarmored,
+      0, false, false)
+    assert(t.movementRemaining == 25) // 30 - 5*1 = 25
+  }
+
+  run test_speed_exhaustion_high_clamps_to_zero = {
+    // exhaustion 6 is death, but test with 5 and speed 20
+    val cfg = TEST_FIGHTER_5.with("speeds", Map(Walk -> 20, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0))
+    val t = pStartTurn(cfg, pAddExhaustion(FRESH20, 5), Unarmored,
+      0, false, false)
+    assert(t.movementRemaining == 0) // 20 - 25 → clamped to 0
+  }
 
   // ============================================================
   // Own Attack Modifiers
@@ -661,9 +696,9 @@ module dndTest {
   // Check Modifiers
   // ============================================================
 
-  run test_check_exhaustion1_disadv = {
+  run test_check_exhaustion1_no_disadv = {
     val m = pCheckModifiers(pAddExhaustion(FRESH20, 1), false, false, false)
-    assert(m.hasDisadvantage)
+    assert(not(m.hasDisadvantage))
   }
 
   run test_check_blinded_sight_autofail = {
@@ -700,9 +735,9 @@ module dndTest {
     assert(m.hasDisadvantage)
   }
 
-  run test_save_exhaustion3_disadv = {
+  run test_save_exhaustion3_no_disadv = {
     val m = pSaveModifiers(pAddExhaustion(FRESH20, 3), Wis)
-    assert(m.hasDisadvantage)
+    assert(not(m.hasDisadvantage))
   }
 
   // ============================================================
@@ -756,7 +791,7 @@ module dndTest {
   }
 
   pure val BASIC_TURN: TurnState = pStartTurn(
-    TEST_FIGHTER_5, FRESH20, Unarmored, false, 0, false, false
+    TEST_FIGHTER_5, FRESH20, Unarmored, 0, false, false
   )
 
   // -- Start turn basics --
@@ -784,68 +819,54 @@ module dndTest {
     assert(extraAttacksFromConfig(cfg) == 3)
   }
 
-  // -- Surprise --
-
-  run test_surprised_no_movement = {
-    val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored, true, 0, false, false)
-    all { assert(t.movementRemaining == 0), assert(t.actionUsed), assert(t.bonusActionUsed),
-          assert(not(t.reactionAvailable)), assert(t.surprised) }
-  }
-
-  run test_end_surprise_turn_reaction = {
-    val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored, true, 0, false, false)
-    val t2 = pEndSurpriseTurn(t)
-    all { assert(t2.reactionAvailable), assert(not(t2.surprised)) }
-  }
-
   // -- Speed modifiers --
 
   run test_speed_heavy_armor_penalty = {
     val t = pStartTurn(TEST_FIGHTER_5.with("abilityScores",
       Map(Str -> 12, Dex -> 14, Con -> 14, Int_ -> 10, Wis -> 12, Cha -> 8)),
-      FRESH20, WearingArmor(CHAIN_MAIL), false, 0, false, false)
+      FRESH20, WearingArmor(CHAIN_MAIL), 0, false, false)
     assert(t.movementRemaining == 20) // 30 - 10 (STR 12 < 13)
   }
 
-  run test_speed_exhaustion2_halved = {
+  run test_speed_exhaustion2_reduced_by_10 = {
     val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 2), Unarmored,
-      false, 0, false, false)
-    assert(t.movementRemaining == 15) // 30 / 2
+      0, false, false)
+    assert(t.movementRemaining == 20) // 30 - 5*2 = 20
   }
 
-  run test_speed_exhaustion5_zero = {
+  run test_speed_exhaustion5_reduced_by_25 = {
     val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 5), Unarmored,
-      false, 0, false, false)
-    assert(t.movementRemaining == 0)
+      0, false, false)
+    assert(t.movementRemaining == 5) // 30 - 5*5 = 5
   }
 
   run test_speed_grappled_zero = {
     val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
-      false, 0, false, false)
+      0, false, false)
     assert(t.movementRemaining == 0)
   }
 
   run test_speed_grappled_ignores_bonus = {
     val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
-      false, 10, false, false) // +10 from spell, should be ignored
+      10, false, false) // +10 from spell, should be ignored
     assert(t.movementRemaining == 0)
   }
 
   run test_speed_grappling_halved = {
     val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
-      false, 0, true, false) // grappling, target not 2+ sizes smaller
+      0, true, false) // grappling, target not 2+ sizes smaller
     assert(t.movementRemaining == 15)
   }
 
   run test_speed_grappling_tiny_target = {
     val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
-      false, 0, true, true) // grappling, target 2+ sizes smaller
+      0, true, true) // grappling, target 2+ sizes smaller
     assert(t.movementRemaining == 30) // no penalty
   }
 
   run test_speed_caller_modifier = {
     val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
-      false, 10, false, false) // +10 from Longstrider
+      10, false, false) // +10 from Longstrider
     assert(t.movementRemaining == 40)
   }
 
@@ -1022,7 +1043,7 @@ module dndTest {
   pure val BASE_ATTACK_CTX: AttackContext = {
     attackerBlinded: false, attackerProne: false,
     attackerRestrained: false, attackerPoisoned: false, attackerFrightened: false,
-    attackerFrightSourceInLOS: false, attackerExhaustion: 0,
+    attackerFrightSourceInLOS: false,
     targetBlinded: false, targetParalyzed: false,
     targetPetrified: false, targetStunned: false, targetUnconscious: false,
     targetRestrained: false, targetProne: false,
@@ -1030,8 +1051,9 @@ module dndTest {
     attackerCanSeeTarget: true,
     isRangedAttack: false, beyondNormalRange: false, hostileWithin5ft: false,
     isHeavyWeapon: false, wielderSizeSmallOrTiny: false,
+    attackerGrappled: false, targetIsGrappler: false,
     squeezing: false, underwater: false, attackerHasSwimSpeed: false,
-    isUnderwaterMeleeException: false, isUnderwaterRangedException: false,
+    isUnderwaterMeleePiercing: false, isUnderwaterRangedException: false,
   }
 
   // Clean attack: no modifiers
@@ -1140,9 +1162,8 @@ module dndTest {
     assert(m.hasDisadvantage)
   }
 
-  // Underwater melee with exception weapon (dagger, javelin, etc.): no disadvantage
-  run test_aggregate_underwater_melee_exception = {
-    val ctx = BASE_ATTACK_CTX.with("underwater", true).with("isUnderwaterMeleeException", true)
+  run test_aggregate_underwater_melee_piercing = {
+    val ctx = BASE_ATTACK_CTX.with("underwater", true).with("isUnderwaterMeleePiercing", true)
     val m = pAggregateAttackMods(ctx)
     assert(not(m.hasDisadvantage))
   }
@@ -1176,13 +1197,6 @@ module dndTest {
     val m = pAggregateAttackMods(ctx)
     assert(not(m.hasDisadvantage))
   }
-
-  // Exhaustion 3: disadvantage on attacks
-  run test_aggregate_exhaustion3 = {
-    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("attackerExhaustion", 3))
-    assert(m.hasDisadvantage)
-  }
-
 
   // Unseen attacker (not invisible, e.g. in darkness): advantage
   run test_aggregate_unseen_attacker = {
@@ -1222,6 +1236,18 @@ module dndTest {
   run test_aggregate_attacker_restrained = {
     val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("attackerRestrained", true))
     assert(m.hasDisadvantage)
+  }
+
+  run test_aggregate_grappled_vs_non_grappler = {
+    val ctx = BASE_ATTACK_CTX.with("attackerGrappled", true).with("targetIsGrappler", false)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasDisadvantage)
+  }
+
+  run test_aggregate_grappled_vs_grappler = {
+    val ctx = BASE_ATTACK_CTX.with("attackerGrappled", true).with("targetIsGrappler", true)
+    val m = pAggregateAttackMods(ctx)
+    assert(not(m.hasDisadvantage))
   }
 
   // ============================================================
@@ -1294,6 +1320,18 @@ module dndTest {
     assert(pTWFOffHandDamage(1, -3) == 0)
   }
 
+  // -- Grapple/Shove DC --
+
+  run test_grapple_shove_dc = {
+    // STR mod +3, PB +2 → DC = 8 + 3 + 2 = 13
+    assert(pGrappleShoveDC(3, 2) == 13)
+  }
+
+  run test_grapple_shove_dc_negative_str = {
+    // STR mod -1, PB +2 → DC = 8 + (-1) + 2 = 9
+    assert(pGrappleShoveDC(-1, 2) == 9)
+  }
+
   // -- Size comparison --
 
   run test_size_allows_grapple_same = assert(pWithinOneSize(Medium, Medium))
@@ -1306,33 +1344,28 @@ module dndTest {
   // -- Grapple --
 
   run test_grapple_success = {
-    val r = pGrapple(Medium, Medium, FRESH20, AWins, true)
+    val r = pGrapple(Medium, Medium, FRESH20, true, true) // target save failed
     all { assert(r.success), assert(r.targetState.grappled) }
   }
 
-  run test_grapple_fail_contest = {
-    val r = pGrapple(Medium, Medium, FRESH20, BWins, true)
-    all { assert(not(r.success)), assert(not(r.targetState.grappled)) }
-  }
-
-  run test_grapple_tie_fails = {
-    val r = pGrapple(Medium, Medium, FRESH20, Tie, true)
+  run test_grapple_fail_save = {
+    val r = pGrapple(Medium, Medium, FRESH20, false, true) // target save succeeded
     all { assert(not(r.success)), assert(not(r.targetState.grappled)) }
   }
 
   run test_grapple_auto_success_incapacitated = {
     val target = pApplyCondition(FRESH20, CStunned)
-    val r = pGrapple(Medium, Medium, target, BWins, true) // contest lost but incapacitated
+    val r = pGrapple(Medium, Medium, target, false, true) // save succeeded but incapacitated
     all { assert(r.success), assert(r.targetState.grappled) }
   }
 
   run test_grapple_too_large = {
-    val r = pGrapple(Medium, Huge, FRESH20, AWins, true)
+    val r = pGrapple(Medium, Huge, FRESH20, true, true)
     assert(not(r.success))
   }
 
   run test_grapple_no_free_hand = {
-    val r = pGrapple(Medium, Medium, FRESH20, AWins, false)
+    val r = pGrapple(Medium, Medium, FRESH20, true, false)
     assert(not(r.success))
   }
 
@@ -1348,52 +1381,41 @@ module dndTest {
 
   run test_escape_grapple_success = {
     val s = pApplyCondition(FRESH20, CGrappled)
-    val s2 = pEscapeGrapple(s, BWins) // target wins = BWins
+    val s2 = pEscapeGrapple(s, true) // check succeeded
     assert(not(s2.grappled))
   }
 
   run test_escape_grapple_fail = {
     val s = pApplyCondition(FRESH20, CGrappled)
-    val s2 = pEscapeGrapple(s, AWins) // attacker wins = still grappled
-    assert(s2.grappled)
-  }
-
-  run test_escape_grapple_tie = {
-    val s = pApplyCondition(FRESH20, CGrappled)
-    val s2 = pEscapeGrapple(s, Tie) // tie = no change
+    val s2 = pEscapeGrapple(s, false) // check failed
     assert(s2.grappled)
   }
 
   // -- Shove --
 
   run test_shove_prone_success = {
-    val r = pShove(Medium, Medium, FRESH20, AWins, ShoveProne)
+    val r = pShove(Medium, Medium, FRESH20, true, ShoveProne) // target save failed
     all { assert(r.success), assert(r.targetState.prone) }
   }
 
   run test_shove_push_success = {
-    val r = pShove(Medium, Medium, FRESH20, AWins, ShovePush)
+    val r = pShove(Medium, Medium, FRESH20, true, ShovePush)
     all { assert(r.success), assert(not(r.targetState.prone)) } // push is spatial, no state change
   }
 
-  run test_shove_fail_contest = {
-    val r = pShove(Medium, Medium, FRESH20, BWins, ShoveProne)
-    all { assert(not(r.success)), assert(not(r.targetState.prone)) }
-  }
-
-  run test_shove_tie_fails = {
-    val r = pShove(Medium, Medium, FRESH20, Tie, ShoveProne)
+  run test_shove_fail_save = {
+    val r = pShove(Medium, Medium, FRESH20, false, ShoveProne) // target save succeeded
     all { assert(not(r.success)), assert(not(r.targetState.prone)) }
   }
 
   run test_shove_too_large = {
-    val r = pShove(Small, Huge, FRESH20, AWins, ShoveProne)
+    val r = pShove(Small, Huge, FRESH20, true, ShoveProne)
     assert(not(r.success))
   }
 
   run test_shove_auto_success_incapacitated = {
     val target = pApplyCondition(FRESH20, CParalyzed)
-    val r = pShove(Medium, Medium, target, BWins, ShoveProne) // contest lost but incapacitated
+    val r = pShove(Medium, Medium, target, false, ShoveProne) // save succeeded but incapacitated
     all { assert(r.success), assert(r.targetState.prone) }
   }
 
@@ -1413,7 +1435,7 @@ module dndTest {
 
   run test_mount_speed_zero = {
     val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
-      false, 0, false, false)
+      0, false, false)
     val t2 = pMountOrDismount(t)
     assert(t2.movementRemaining == 0) // speed 0, can't mount
   }
@@ -1422,7 +1444,7 @@ module dndTest {
   run test_controlled_mount_disengage_valid = assert(pIsValidControlledMountAction(ADisengage))
   run test_controlled_mount_dodge_valid = assert(pIsValidControlledMountAction(ADodge))
   run test_controlled_mount_attack_invalid = assert(not(pIsValidControlledMountAction(AAttack)))
-  run test_controlled_mount_cast_invalid = assert(not(pIsValidControlledMountAction(ACastSpell)))
+  run test_controlled_mount_cast_invalid = assert(not(pIsValidControlledMountAction(AMagic)))
 
   // Forced dismount save
   run test_forced_dismount_save_pass = {
@@ -1492,7 +1514,7 @@ module dndTest {
 
   run test_stand_from_prone_speed_zero = {
     val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
-      false, 0, false, false)
+      0, false, false)
     val t2 = pStandFromProne(t)
     assert(t2.movementRemaining == 0) // speed 0, can't stand
   }
@@ -1513,13 +1535,18 @@ module dndTest {
   // -- Drop Prone --
 
   run test_drop_prone = {
-    val s = pDropProne(FRESH20)
+    val s = pDropProne(FRESH20, 30)
     assert(s.prone)
   }
 
   run test_drop_prone_already_prone = {
-    val s = pDropProne(pApplyCondition(FRESH20, CProne))
+    val s = pDropProne(pApplyCondition(FRESH20, CProne), 30)
     assert(s.prone) // idempotent
+  }
+
+  run test_drop_prone_speed_zero_blocked = {
+    val s = pDropProne(FRESH20, 0)
+    assert(not(s.prone))
   }
 
   // -- Flying Creature Falls --
@@ -1951,8 +1978,12 @@ module dndTest {
   }
 
   run test_conc_dc_high_damage = {
-    // 30 damage → max(10, 15) = 15
+    // 30 damage → min(max(10, 15), 30) = 15
     assert(pConcentrationDC(30) == 15)
+  }
+
+  run test_conc_dc_capped_at_30 = {
+    assert(pConcentrationDC(70) == 30)
   }
 
   run test_conc_dc_minimum = {
@@ -2087,11 +2118,11 @@ module dndTest {
 
   /// Fighter at level 5, 30 max HP, taken 15 damage, 3 of 5 HD remaining
   pure val WOUNDED_FIGHTER: CreatureState =
-    freshCreature(30).with("hp", 15).with("hitDiceRemaining", 3)
+    freshCreature(30).with("hp", 15).with("hitPointDiceRemaining", 3)
 
   /// Fighter at level 5, full HP, all 5 HD available
   pure val RESTED_FIGHTER: CreatureState =
-    freshCreature(30).with("hitDiceRemaining", 5)
+    freshCreature(30).with("hitPointDiceRemaining", 5)
 
   // CON mod for fighter (Con 14 → +2)
   pure val FIGHTER_CON_MOD: int = 2
@@ -2103,7 +2134,7 @@ module dndTest {
     val s = pSpendHitDie(WOUNDED_FIGHTER, FIGHTER_CON_MOD, 6)
     all {
       assert(s.hp == 23),
-      assert(s.hitDiceRemaining == 2),
+      assert(s.hitPointDiceRemaining == 2),
     }
   }
 
@@ -2112,17 +2143,17 @@ module dndTest {
     val s = pSpendHitDie(WOUNDED_FIGHTER, FIGHTER_CON_MOD, 10)
     all {
       assert(s.hp == 27),
-      assert(s.hitDiceRemaining == 2),
+      assert(s.hitPointDiceRemaining == 2),
     }
   }
 
   run test_spend_hd_no_dice_remaining = {
     // 0 HD remaining → no-op
-    val s = WOUNDED_FIGHTER.with("hitDiceRemaining", 0)
+    val s = WOUNDED_FIGHTER.with("hitPointDiceRemaining", 0)
     val result = pSpendHitDie(s, FIGHTER_CON_MOD, 8)
     all {
       assert(result.hp == 15),
-      assert(result.hitDiceRemaining == 0),
+      assert(result.hitPointDiceRemaining == 0),
     }
   }
 
@@ -2137,7 +2168,7 @@ module dndTest {
     val s = pSpendHitDie(WOUNDED_FIGHTER, -1, 2)
     all {
       assert(s.hp == 16),
-      assert(s.hitDiceRemaining == 2),
+      assert(s.hitPointDiceRemaining == 2),
     }
   }
 
@@ -2146,21 +2177,21 @@ module dndTest {
     val s = pSpendHitDie(WOUNDED_FIGHTER, -3, 1)
     all {
       assert(s.hp == 15),
-      assert(s.hitDiceRemaining == 2),
+      assert(s.hitPointDiceRemaining == 2),
     }
   }
 
   run test_spend_hd_at_0hp_regains_consciousness = {
     // 0 HP, spend HD → heals and regains consciousness
     val s = pApplyCondition(
-      freshCreature(20).with("hp", 0).with("hitDiceRemaining", 3),
+      freshCreature(20).with("hp", 0).with("hitPointDiceRemaining", 3),
       CUnconscious
     )
     val result = pSpendHitDie(s, FIGHTER_CON_MOD, 4)
     all {
       assert(result.hp == 6),
       assert(not(result.unconscious)),
-      assert(result.hitDiceRemaining == 2),
+      assert(result.hitPointDiceRemaining == 2),
     }
   }
 
@@ -2171,7 +2202,7 @@ module dndTest {
     val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [5, 3])
     all {
       assert(s.hp == 27),
-      assert(s.hitDiceRemaining == 1),
+      assert(s.hitPointDiceRemaining == 1),
     }
   }
 
@@ -2180,7 +2211,7 @@ module dndTest {
     val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [])
     all {
       assert(s.hp == 15),
-      assert(s.hitDiceRemaining == 3),
+      assert(s.hitPointDiceRemaining == 3),
     }
   }
 
@@ -2190,7 +2221,7 @@ module dndTest {
     // 3 rolls of 4+2=6 each → 18 healing. HP 15 → 30 (capped). HD 3 → 0.
     all {
       assert(s.hp == 30),
-      assert(s.hitDiceRemaining == 0),
+      assert(s.hitPointDiceRemaining == 0),
     }
   }
 
@@ -2201,111 +2232,65 @@ module dndTest {
     assert(result.hp == 30)
   }
 
-  // -- pHitDiceRecovery --
-
-  run test_hd_recovery_half = {
-    // Level 8, 0 HD remaining → recover 4 (max(1, 8/2) = 4, spent = 8)
-    assert(pHitDiceRecovery(8, 0) == 4)
-  }
-
-  run test_hd_recovery_min_one = {
-    // Level 1, 0 HD remaining → recover 1 (max(1, 1/2) = max(1,0) = 1)
-    assert(pHitDiceRecovery(1, 0) == 1)
-  }
-
-  run test_hd_recovery_capped_by_spent = {
-    // Level 8, 7 HD remaining → only 1 spent, recover 1 (not 4)
-    assert(pHitDiceRecovery(8, 7) == 1)
-  }
-
-  run test_hd_recovery_none_spent = {
-    // Level 5, 5 HD remaining → 0 spent, recover 0
-    assert(pHitDiceRecovery(5, 5) == 0)
-  }
-
-  run test_hd_recovery_odd_level = {
-    // Level 5, 0 remaining → recover max(1, 5/2)=max(1,2)=2, spent=5 → 2
-    assert(pHitDiceRecovery(5, 0) == 2)
-  }
-
   // -- pLongRest --
 
   run test_long_rest_full_hp = {
-    // HP 15 → 30 (maxHp). hasEaten = true.
-    val s = pLongRest(WOUNDED_FIGHTER, 5, true)
+    val s = pLongRest(WOUNDED_FIGHTER, 5)
     assert(s.hp == 30)
   }
 
-  run test_long_rest_hd_recovery = {
-    // 3 of 5 HD remaining → 2 spent → recover min(2, max(1,2))=2 → 5 HD
-    val s = pLongRest(WOUNDED_FIGHTER, 5, true)
-    assert(s.hitDiceRemaining == 5)
+  run test_long_rest_hd_recovery_all = {
+    val s = pLongRest(WOUNDED_FIGHTER, 5)
+    assert(s.hitPointDiceRemaining == 5)
   }
 
-  run test_long_rest_hd_recovery_partial = {
-    // 0 of 5 HD remaining → 5 spent → recover max(1,2)=2 → 2 HD
-    val s0 = WOUNDED_FIGHTER.with("hitDiceRemaining", 0)
-    val s = pLongRest(s0, 5, true)
-    assert(s.hitDiceRemaining == 2)
+  run test_long_rest_hd_recovery_from_zero = {
+    // 0 of 5 HD remaining → all recovered
+    val s0 = WOUNDED_FIGHTER.with("hitPointDiceRemaining", 0)
+    val s = pLongRest(s0, 5)
+    assert(s.hitPointDiceRemaining == 5)
   }
 
   run test_long_rest_clears_temp_hp = {
     val s0 = WOUNDED_FIGHTER.with("tempHp", 10)
-    val s = pLongRest(s0, 5, true)
+    val s = pLongRest(s0, 5)
     assert(s.tempHp == 0)
   }
 
-  run test_long_rest_exhaustion_with_food = {
+  run test_long_rest_exhaustion_reduces = {
     val s0 = WOUNDED_FIGHTER.with("exhaustion", 2)
-    val s = pLongRest(s0, 5, true)
+    val s = pLongRest(s0, 5)
     assert(s.exhaustion == 1)
-  }
-
-  run test_long_rest_exhaustion_no_food = {
-    // hasEaten = false → exhaustion stays
-    val s0 = WOUNDED_FIGHTER.with("exhaustion", 2)
-    val s = pLongRest(s0, 5, false)
-    assert(s.exhaustion == 2)
   }
 
   run test_long_rest_0hp_noop = {
     // Must have >= 1 HP to benefit
     val s0 = WOUNDED_FIGHTER.with("hp", 0)
-    val s = pLongRest(s0, 5, true)
+    val s = pLongRest(s0, 5)
     all {
       assert(s.hp == 0),
-      assert(s.hitDiceRemaining == 3),
+      assert(s.hitPointDiceRemaining == 3),
     }
   }
 
   run test_long_rest_exhaustion4_then_heal = {
-    // Exhaustion 4 → halved max HP. After rest: exhaustion drops to 3 (ate),
-    // effectiveMaxHp = full 30, HP restored to 30.
+    // Exhaustion 4 → after rest: exhaustion drops to 3,
+    // effectiveMaxHp = 30, HP restored to 30.
     val s0 = WOUNDED_FIGHTER.with("exhaustion", 4)
-    val s = pLongRest(s0, 5, true)
+    val s = pLongRest(s0, 5)
     all {
       assert(s.exhaustion == 3),
       assert(s.hp == 30),
     }
   }
 
-  run test_long_rest_exhaustion4_no_food = {
-    // Exhaustion 4, no food → stays at 4, effectiveMaxHp = 15, HP → 15
-    val s0 = WOUNDED_FIGHTER.with("exhaustion", 4)
-    val s = pLongRest(s0, 5, false)
-    all {
-      assert(s.exhaustion == 4),
-      assert(s.hp == 15),
-    }
-  }
-
   run test_long_rest_already_full = {
-    // Already at full HP and HD → no change (besides temp HP clear)
+    // Already at full HP and HD → no change (besides temp HP clear + exhaustion reduction)
     val s0 = RESTED_FIGHTER.with("tempHp", 5)
-    val s = pLongRest(s0, 5, true)
+    val s = pLongRest(s0, 5)
     all {
       assert(s.hp == 30),
-      assert(s.hitDiceRemaining == 5),
+      assert(s.hitPointDiceRemaining == 5),
       assert(s.tempHp == 0),
     }
   }
