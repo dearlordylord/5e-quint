@@ -72,7 +72,6 @@ function formatEvent(e: DndEvent): string {
     case "USE_EXTRA_ATTACK":
     case "STAND_FROM_PRONE":
     case "DROP_PRONE":
-    case "END_SURPRISE_TURN":
     case "MARK_BONUS_ACTION_SPELL":
     case "MARK_NON_CANTRIP_ACTION_SPELL":
     case "RELEASE_GRAPPLE":
@@ -80,7 +79,12 @@ function formatEvent(e: DndEvent): string {
     case "BREAK_CONCENTRATION":
     case "SUFFOCATE":
     case "APPLY_STARVATION":
+    case "END_TURN":
       return e.type
+    case "ADD_EFFECT":
+      return `ADD_EFFECT ${e.spellId}`
+    case "REMOVE_EFFECT":
+      return `REMOVE_EFFECT ${e.spellId}`
   }
 }
 

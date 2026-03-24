@@ -136,23 +136,20 @@ export const damageTrackConfig = {
   }
 } as const
 
-const START_TURN_TRANSITIONS = [
-  { guard: "isSurprised" as const, target: "surprised", actions: ["initTurn"] },
-  { target: "acting", actions: ["initTurn"] }
-] as const
-
 export const turnPhaseConfig = {
   initial: "outOfCombat" as const,
   states: {
-    outOfCombat: { on: { START_TURN: START_TURN_TRANSITIONS } },
-    acting: {
-      on: { START_TURN: START_TURN_TRANSITIONS }
+    outOfCombat: {
+      on: { START_TURN: { target: "acting" as const, actions: ["initTurn"] } }
     },
-    surprised: {
+    acting: {
       on: {
-        END_SURPRISE_TURN: { target: "outOfCombat", actions: ["endSurprise"] },
-        START_TURN: START_TURN_TRANSITIONS
+        START_TURN: { target: "acting" as const, actions: ["initTurn"] },
+        END_TURN: { target: "waitingForTurn" as const, actions: ["endTurn"] }
       }
+    },
+    waitingForTurn: {
+      on: { START_TURN: { target: "acting" as const, actions: ["initTurn"] } }
     }
   }
 } as const
@@ -182,6 +179,8 @@ export const spellcastingConfig = {
 } as const
 
 export const rootEventHandlers = {
+  ADD_EFFECT: { actions: ["addEffect"] },
+  REMOVE_EFFECT: { actions: ["removeEffect"] },
   ADD_EXHAUSTION: { actions: ["addExhaustion"] },
   REDUCE_EXHAUSTION: { actions: ["reduceExhaustion"] },
   GRAPPLE: { actions: ["applyGrapple"] },

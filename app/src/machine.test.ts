@@ -942,7 +942,6 @@ function startTurn(
     baseSpeed?: number
     armorPenalty?: number
     extraAttacks?: number
-    isSurprised?: boolean
     callerSpeedModifier?: number
     isGrappling?: boolean
     grappledTargetTwoSizesSmaller?: boolean
@@ -953,7 +952,6 @@ function startTurn(
     baseSpeed: opts.baseSpeed ?? DEFAULT_BASE_SPEED,
     armorPenalty: opts.armorPenalty ?? 0,
     extraAttacks: opts.extraAttacks ?? 0,
-    isSurprised: opts.isSurprised ?? false,
     callerSpeedModifier: opts.callerSpeedModifier ?? 0,
     isGrappling: opts.isGrappling ?? false,
     grappledTargetTwoSizesSmaller: opts.grappledTargetTwoSizesSmaller ?? false
@@ -1135,35 +1133,6 @@ describe("turn - standing from prone", () => {
   })
 })
 
-describe("turn - surprised", () => {
-  it("surprised: can't move or act first turn", () => {
-    const a = create()
-    startTurn(a, { isSurprised: true })
-    expect(ctx(a).actionUsed).toBe(true)
-    expect(ctx(a).bonusActionUsed).toBe(true)
-    expect(ctx(a).reactionAvailable).toBe(false)
-    expect(ctx(a).movementRemaining).toBe(0)
-    expect(ctx(a).surprised).toBe(true)
-  })
-
-  it("reaction available after surprise turn ends", () => {
-    const a = create()
-    startTurn(a, { isSurprised: true })
-    a.send({ type: "END_SURPRISE_TURN" })
-    expect(ctx(a).reactionAvailable).toBe(true)
-    expect(ctx(a).surprised).toBe(false)
-  })
-
-  it("next turn after surprise is normal", () => {
-    const a = create()
-    startTurn(a, { isSurprised: true })
-    a.send({ type: "END_SURPRISE_TURN" })
-    startTurn(a)
-    expect(ctx(a).actionUsed).toBe(false)
-    expect(ctx(a).movementRemaining).toBe(DEFAULT_BASE_SPEED)
-  })
-})
-
 describe("speed modifiers from conditions", () => {
   it("grappled: speed 0", () => {
     const a = create()
@@ -1180,18 +1149,18 @@ describe("speed modifiers from conditions", () => {
     expect(ctx(a).effectiveSpeed).toBe(0)
   })
 
-  it("exhaustion 2: speed halved", () => {
+  it("exhaustion 2: speed reduced by 10 (5.2.1: -5 per level)", () => {
     const a = create()
     addExhaustion(a, 2)
     startTurn(a)
-    expect(ctx(a).effectiveSpeed).toBe(15)
+    expect(ctx(a).effectiveSpeed).toBe(20)
   })
 
-  it("exhaustion 5: speed 0", () => {
+  it("exhaustion 5: speed reduced by 25 (5.2.1: -5 per level)", () => {
     const a = create()
     addExhaustion(a, 5)
     startTurn(a)
-    expect(ctx(a).effectiveSpeed).toBe(0)
+    expect(ctx(a).effectiveSpeed).toBe(5)
   })
 
   it("armor penalty reduces base speed", () => {
@@ -1221,12 +1190,12 @@ describe("calculateEffectiveSpeed helper", () => {
     expect(calculateEffectiveSpeed({ ...baseParams, grappled: true })).toBe(0)
   })
 
-  it("exhaustion 2 halves", () => {
-    expect(calculateEffectiveSpeed({ ...baseParams, exhaustion: 2 })).toBe(15)
+  it("exhaustion 2: -10ft (5.2.1)", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, exhaustion: 2 })).toBe(20)
   })
 
-  it("exhaustion 5 zeroes", () => {
-    expect(calculateEffectiveSpeed({ ...baseParams, exhaustion: 5 })).toBe(0)
+  it("exhaustion 5: -25ft (5.2.1)", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, exhaustion: 5 })).toBe(5)
   })
 
   it("grappling halves unless target 2 sizes smaller", () => {
@@ -1669,22 +1638,22 @@ function isSpellIdle(s: DndSnapshot) {
 describe("concentration", () => {
   it("at most one concentration spell active", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
     expect(isConcentrating(snap(a))).toBe(true)
     expect(ctx(a).concentrationSpellId).toBe("bless")
   })
 
   it("new concentration spell replaces old", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
-    a.send({ type: "START_CONCENTRATION", spellId: "haste" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "haste", durationTurns: 10, expiresAt: "end" })
     expect(ctx(a).concentrationSpellId).toBe("haste")
     expect(isConcentrating(snap(a))).toBe(true)
   })
 
   it("break concentration explicitly", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
     a.send({ type: "BREAK_CONCENTRATION" })
     expect(ctx(a).concentrationSpellId).toBe("")
     expect(isSpellIdle(snap(a))).toBe(true)
@@ -1692,7 +1661,7 @@ describe("concentration", () => {
 
   it("damage does not auto-break concentration (needs Con save)", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
     takeDamage(a, 5)
     expect(ctx(a).concentrationSpellId).toBe("bless")
     expect(isConcentrating(snap(a))).toBe(true)
@@ -1701,7 +1670,7 @@ describe("concentration", () => {
   it("temp HP absorption does not auto-break concentration", () => {
     const a = create()
     grantTempHp(a, 10)
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
     takeDamage(a, 5)
     expect(ctx(a).concentrationSpellId).toBe("bless")
     expect(isConcentrating(snap(a))).toBe(true)
@@ -1709,7 +1678,7 @@ describe("concentration", () => {
 
   it("dropping to 0 HP breaks concentration (incapacitation)", () => {
     const a = create(20)
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
     takeDamage(a, 20)
     expect(isUnstable(snap(a))).toBe(true)
     expect(ctx(a).concentrationSpellId).toBe("")
@@ -1718,7 +1687,7 @@ describe("concentration", () => {
 
   it("concentration check: save succeeded keeps concentration", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
     a.send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: true })
     expect(ctx(a).concentrationSpellId).toBe("bless")
     expect(isConcentrating(snap(a))).toBe(true)
@@ -1726,7 +1695,7 @@ describe("concentration", () => {
 
   it("concentration check: save failed breaks concentration", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
     a.send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: false })
     expect(ctx(a).concentrationSpellId).toBe("")
     expect(isSpellIdle(snap(a))).toBe(true)
@@ -1734,7 +1703,7 @@ describe("concentration", () => {
 
   it("concentration broken by incapacitation", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
     applyCondition(a, "paralyzed")
     expect(ctx(a).concentrationSpellId).toBe("")
     expect(isSpellIdle(snap(a))).toBe(true)
@@ -1742,7 +1711,7 @@ describe("concentration", () => {
 
   it("concentration broken by death", () => {
     const a = create(10)
-    a.send({ type: "START_CONCENTRATION", spellId: "bless" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
     takeDamage(a, 20)
     expect(isDead(snap(a))).toBe(true)
     expect(ctx(a).concentrationSpellId).toBe("")

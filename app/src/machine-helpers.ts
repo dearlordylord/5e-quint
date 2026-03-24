@@ -1,5 +1,5 @@
-import type { CasterType, Condition, DamageType, IncapSource, SpellSlots } from "#/types.ts"
-import { EMPTY_SLOTS, exhaustionLevel, hp, SPELL_SLOT_LEVELS } from "#/types.ts"
+import type { ActiveEffect, CasterType, Condition, DamageType, HP, IncapSource, SpellSlots, TempHP } from "#/types.ts"
+import { EMPTY_SLOTS, exhaustionLevel, hp, SPELL_SLOT_LEVELS, tempHp } from "#/types.ts"
 
 // --- Constants ---
 
@@ -199,8 +199,8 @@ export function computeAddExhaustion(
 
 // --- Speed calculation ---
 
-const EXHAUSTION_SPEED_HALVE_THRESHOLD = 2
-const EXHAUSTION_SPEED_ZERO_THRESHOLD = 5
+/** SRD 5.2.1 exhaustion speed penalty: -5 × exhaustion level ft. */
+const EXHAUSTION_SPEED_PENALTY_PER_LEVEL = 5
 
 /** Calculate effective speed from base speed, conditions, and external factors. Matches Quint pStartTurn speed logic. */
 export function calculateEffectiveSpeed(params: {
@@ -215,12 +215,7 @@ export function calculateEffectiveSpeed(params: {
 }): number {
   if (params.grappled || params.restrained) return 0
   const afterArmor = Math.max(0, params.baseSpeed - params.armorPenalty)
-  const afterExhaustion =
-    params.exhaustion >= EXHAUSTION_SPEED_ZERO_THRESHOLD
-      ? 0
-      : params.exhaustion >= EXHAUSTION_SPEED_HALVE_THRESHOLD
-        ? Math.floor(afterArmor / HALVE_DIVISOR)
-        : afterArmor
+  const afterExhaustion = Math.max(0, afterArmor - EXHAUSTION_SPEED_PENALTY_PER_LEVEL * params.exhaustion)
   const afterGrappling =
     params.isGrappling && !params.grappledTargetTwoSizesSmaller
       ? Math.floor(afterExhaustion / HALVE_DIVISOR)
@@ -436,4 +431,82 @@ export function removeIncapSource(s: ReadonlySet<IncapSource>, v: IncapSource): 
   const n = new Set(s)
   n.delete(v)
   return n
+}
+
+// --- END_TURN processing ---
+
+interface EndTurnSave {
+  readonly spellId: string
+  readonly saveSucceeded: boolean
+  readonly conditionsToRemove: ReadonlyArray<Condition>
+}
+
+interface EndTurnDamage {
+  readonly spellId: string
+  readonly damage: number
+  readonly damageType: DamageType
+  readonly conSaveSucceeded: boolean
+}
+
+export interface EndTurnResult {
+  readonly conditions: Record<string, boolean>
+  readonly activeEffects: ReadonlyArray<ActiveEffect>
+  readonly concentrationSpellId: string
+  readonly hp: HP
+  readonly incapacitatedSources: ReadonlySet<IncapSource>
+  readonly tempHp: TempHP
+}
+
+export function computeEndTurn(
+  curHp: number,
+  maxHp: number,
+  curTempHp: number,
+  exhaustion: number,
+  concSpellId: string,
+  activeEffects: ReadonlyArray<ActiveEffect>,
+  incapSources: ReadonlySet<IncapSource>,
+  saves: ReadonlyArray<EndTurnSave>,
+  damages: ReadonlyArray<EndTurnDamage>
+): EndTurnResult {
+  let ae = [...activeEffects]
+  let conditions: Record<string, boolean> = {}
+  let incap = incapSources
+  let conc = concSpellId
+  let h = curHp
+  let th = curTempHp
+
+  for (const save of saves) {
+    if (save.saveSucceeded) {
+      ae = ae.filter((a) => a.spellId !== save.spellId)
+      for (const cond of save.conditionsToRemove) {
+        const u = removeConditionUpdate(cond, incap)
+        conditions = { ...conditions, ...u.conditionFlags }
+        incap = u.incapSources
+      }
+    }
+  }
+
+  for (const dmg of damages) {
+    const prevHp = h
+    const r = computeTakeDamage(h, maxHp, th, exhaustion, dmg.damage, dmg.damageType, new Set(), new Set(), new Set())
+    h = r.newHp
+    th = r.newTempHp
+    if (conc) {
+      if ((h === 0 && prevHp > 0) || !dmg.conSaveSucceeded) {
+        ae = ae.filter((a) => a.spellId !== conc)
+        conc = ""
+      }
+    }
+  }
+
+  ae = ae.filter((a) => !(a.expiresAt === "end" && a.turnsRemaining <= 0))
+
+  return {
+    conditions,
+    activeEffects: ae,
+    concentrationSpellId: conc,
+    hp: hp(h),
+    incapacitatedSources: incap,
+    tempHp: tempHp(th)
+  }
 }

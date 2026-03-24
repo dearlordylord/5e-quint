@@ -39,15 +39,17 @@ export type IncapSource = "paralyzed" | "petrified" | "stunned" | "unconscious" 
 
 export type ActionType =
   | "attack"
-  | "cast"
+  | "magic"
   | "dash"
   | "disengage"
   | "dodge"
   | "help"
   | "hide"
+  | "influence"
   | "ready"
   | "search"
-  | "useObject"
+  | "study"
+  | "utilize"
 
 export type CoverType = "none" | "half" | "threeQuarters" | "total"
 
@@ -60,6 +62,14 @@ export type ContestResult = "aWins" | "bWins" | "tie"
 export type ShoveChoice = "prone" | "push"
 
 export type UnarmoredDefense = "none" | "barbarian" | "monk"
+
+export type ExpiryPhase = "start" | "end"
+
+export interface ActiveEffect {
+  readonly spellId: string
+  readonly turnsRemaining: number
+  readonly expiresAt: ExpiryPhase
+}
 
 export interface Armor {
   readonly category: ArmorCategory

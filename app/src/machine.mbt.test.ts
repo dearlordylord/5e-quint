@@ -37,15 +37,17 @@ const QUINT_CONDITION_MAP: Record<string, Condition> = {
 
 const QUINT_ACTION_TYPE_MAP: Record<string, string> = {
   AAttack: "attack",
-  ACastSpell: "cast",
+  AMagic: "magic",
   ADash: "dash",
   ADisengage: "disengage",
   ADodge: "dodge",
   AHelp: "help",
   AHide: "hide",
+  AInfluence: "influence",
   AReady: "ready",
   ASearch: "search",
-  AUseObject: "useObject"
+  AStudy: "study",
+  AUtilize: "utilize"
 }
 
 const QUINT_SIZE_MAP: Record<string, Size> = {
@@ -137,7 +139,21 @@ const QuintCreatureState = z.object({
   stunned: z.boolean(),
   unconscious: z.boolean(),
   incapacitatedSources: QuintIncapSourceSet,
-  hitDiceRemaining: z.bigint()
+  hitPointDiceRemaining: z.bigint(),
+  activeEffects: z.any().transform((raw: unknown) => {
+    const items: Array<{ spellId: string; turnsRemaining: number; expiresAt: string }> = []
+    if (raw instanceof Set) {
+      for (const e of raw) {
+        const r = e as Record<string, unknown>
+        items.push({
+          spellId: String(r.spellId ?? ""),
+          turnsRemaining: Number(r.turnsRemaining ?? r.remainingTurns ?? 0),
+          expiresAt: variantToString(r.expiresAt) === "AtStartOfTurn" ? "start" : "end"
+        })
+      }
+    }
+    return items.sort((a, b) => a.spellId.localeCompare(b.spellId))
+  })
 })
 
 const QuintTurnState = z.object({
@@ -153,8 +169,7 @@ const QuintTurnState = z.object({
   dodging: z.boolean(),
   readiedAction: z.boolean(),
   bonusActionSpellCast: z.boolean(),
-  nonCantripActionSpellCast: z.boolean(),
-  surprised: z.boolean()
+  nonCantripActionSpellCast: z.boolean()
 })
 
 const QuintSlotMap = z.any().transform((raw: unknown) => {
@@ -187,7 +202,8 @@ const QuintSpellSlotState = z.object({
 const QuintFullState = z.object({
   state: QuintCreatureState,
   turnState: QuintTurnState,
-  spellSlots: QuintSpellSlotState
+  spellSlots: QuintSpellSlotState,
+  turnPhase: z.string()
 })
 
 // ============================================================
@@ -218,7 +234,8 @@ interface NormalizedState {
   readonly stunned: boolean
   readonly unconscious: boolean
   readonly incapacitatedSources: ReadonlySet<string>
-  readonly hitDiceRemaining: number
+  readonly hitPointDiceRemaining: number
+  readonly activeEffects: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>
   // TurnState
   readonly movementRemaining: number
   readonly effectiveSpeed: number
@@ -233,7 +250,8 @@ interface NormalizedState {
   readonly readiedAction: boolean
   readonly bonusActionSpellCast: boolean
   readonly nonCantripActionSpellCast: boolean
-  readonly surprised: boolean
+  // turnPhase
+  readonly turnPhase: string
   // SpellSlotState
   readonly slotsMax: ReadonlyArray<number>
   readonly slotsCurrent: ReadonlyArray<number>
@@ -277,7 +295,10 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     stunned: c.stunned,
     unconscious: c.unconscious,
     incapacitatedSources: c.incapacitatedSources,
-    hitDiceRemaining: c.hitDiceRemaining,
+    hitPointDiceRemaining: c.hitDiceRemaining,
+    activeEffects: [...c.activeEffects]
+      .sort((a, b) => a.spellId.localeCompare(b.spellId))
+      .map((ae) => ({ spellId: ae.spellId, turnsRemaining: ae.turnsRemaining, expiresAt: ae.expiresAt })),
     movementRemaining: c.movementRemaining,
     effectiveSpeed: c.effectiveSpeed,
     actionUsed: c.actionUsed,
@@ -291,7 +312,11 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     readiedAction: c.readiedAction,
     bonusActionSpellCast: c.bonusActionSpellCast,
     nonCantripActionSpellCast: c.nonCantripActionSpellCast,
-    surprised: c.surprised,
+    turnPhase: snap.matches({ turnPhase: "acting" })
+      ? "acting"
+      : snap.matches({ turnPhase: "waitingForTurn" })
+        ? "waitingForTurn"
+        : "outOfCombat",
     slotsMax: [...c.slotsMax],
     slotsCurrent: [...c.slotsCurrent],
     pactSlotsMax: c.pactSlotsMax,
@@ -328,7 +353,8 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     stunned: s.stunned,
     unconscious: s.unconscious,
     incapacitatedSources: s.incapacitatedSources,
-    hitDiceRemaining: Number(s.hitDiceRemaining),
+    hitPointDiceRemaining: Number(s.hitPointDiceRemaining),
+    activeEffects: s.activeEffects,
     movementRemaining: Number(t.movementRemaining),
     effectiveSpeed: Number(t.effectiveSpeed),
     actionUsed: t.actionUsed,
@@ -342,7 +368,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     readiedAction: t.readiedAction,
     bonusActionSpellCast: t.bonusActionSpellCast,
     nonCantripActionSpellCast: t.nonCantripActionSpellCast,
-    surprised: t.surprised,
+    turnPhase: raw.turnPhase,
     slotsMax: ss.slotsMax,
     slotsCurrent: ss.slotsCurrent,
     pactSlotsMax: Number(ss.pactSlotsMax),
@@ -375,7 +401,7 @@ type EventActionMap = {
   USE_EXTRA_ATTACK: "doUseExtraAttack"
   STAND_FROM_PRONE: "doStandFromProne"
   DROP_PRONE: "doDropProne"
-  END_SURPRISE_TURN: "doEndSurpriseTurn"
+  END_TURN: "doEndTurn"
   MARK_BONUS_ACTION_SPELL: "doMarkBonusActionSpell"
   MARK_NON_CANTRIP_ACTION_SPELL: "doMarkNonCantripActionSpell"
   GRAPPLE: "doGrapple"
@@ -394,6 +420,8 @@ type EventActionMap = {
   SUFFOCATE: "doSuffocate"
   APPLY_STARVATION: "doApplyStarvation"
   APPLY_DEHYDRATION: "doApplyDehydration"
+  ADD_EFFECT: "doAddEffect"
+  REMOVE_EFFECT: "doRemoveEffect"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -440,7 +468,6 @@ const driverSchema = {
   doAddExhaustion: { levels: ITFBigInt },
   doReduceExhaustion: { levels: ITFBigInt },
   doStartTurn: {
-    isSurprised: z.boolean(),
     callerSpeedMod: ITFBigInt,
     isGrappling: z.boolean(),
     grappledSmall: z.boolean()
@@ -452,17 +479,29 @@ const driverSchema = {
   doUseExtraAttack: {},
   doStandFromProne: {},
   doDropProne: {},
-  doEndSurpriseTurn: {},
+  doEndTurn: {
+    numSaves: ITFBigInt,
+    saveSpellId: z.string(),
+    saveSucceeded: z.boolean(),
+    saveCondition: ITFVariant,
+    numDmg: ITFBigInt,
+    dmgSpellId: z.string(),
+    dmgAmount: ITFBigInt,
+    dmgType: ITFVariant,
+    conSave: z.boolean()
+  },
   doMarkBonusActionSpell: {},
   doMarkNonCantripActionSpell: {},
   doExpendSlot: { level: ITFBigInt },
   doExpendPactSlot: {},
-  doStartConcentration: { spellId: z.string() },
+  doStartConcentration: { spellId: z.string(), duration: ITFBigInt, expiresAt: ITFVariant },
   doBreakConcentration: {},
+  doAddEffect: { spellId: z.string(), duration: ITFBigInt, expiresAt: ITFVariant },
+  doRemoveEffect: { spellId: z.string() },
   doConcentrationCheck: { saveSucceeded: z.boolean() },
   doSpendHitDie: { conMod: ITFBigInt, dieRoll: ITFBigInt },
   doShortRest: { conMod: ITFBigInt, numDice: ITFBigInt, r1: ITFBigInt, r2: ITFBigInt, r3: ITFBigInt },
-  doLongRest: { hasEaten: z.boolean() },
+  doLongRest: {},
   doApplyFall: { damageRoll: ITFBigInt },
   doSuffocate: {},
   doApplyStarvation: {},
@@ -479,6 +518,10 @@ function mapDamageType(s: string): DamageType {
 }
 
 const HIT_DICE_TOTAL = 5
+
+function mapExpiryPhase(s: string): "start" | "end" {
+  return s === "AtStartOfTurn" ? "start" : "end"
+}
 
 const dndDriver = defineDriver(driverSchema, () => {
   let actor: ReturnType<typeof createActor<typeof dndMachine>> | null = null
@@ -557,7 +600,7 @@ const dndDriver = defineDriver(driverSchema, () => {
     doReduceExhaustion: ({ levels }) => {
       send({ type: "REDUCE_EXHAUSTION", levels: Number(levels) })
     },
-    doStartTurn: ({ callerSpeedMod, grappledSmall, isGrappling, isSurprised }) => {
+    doStartTurn: ({ callerSpeedMod, grappledSmall, isGrappling }) => {
       // Quint uses TEST_CONFIG: Walk=30, no armor penalty, extraAttack=1
       const BASE_SPEED = 30
       send({
@@ -565,7 +608,6 @@ const dndDriver = defineDriver(driverSchema, () => {
         baseSpeed: BASE_SPEED,
         armorPenalty: 0,
         extraAttacks: 1,
-        isSurprised,
         callerSpeedModifier: Number(callerSpeedMod),
         isGrappling,
         grappledTargetTwoSizesSmaller: grappledSmall
@@ -599,8 +641,39 @@ const dndDriver = defineDriver(driverSchema, () => {
     doDropProne: () => {
       send({ type: "DROP_PRONE" })
     },
-    doEndSurpriseTurn: () => {
-      send({ type: "END_SURPRISE_TURN" })
+    doEndTurn: ({
+      conSave,
+      dmgAmount,
+      dmgSpellId,
+      dmgType,
+      numDmg,
+      numSaves,
+      saveCondition,
+      saveSpellId,
+      saveSucceeded
+    }) => {
+      const saves =
+        Number(numSaves) === 0
+          ? []
+          : [
+              {
+                spellId: saveSpellId,
+                saveSucceeded,
+                conditionsToRemove: [QUINT_CONDITION_MAP[saveCondition] ?? "blinded"]
+              }
+            ]
+      const damages =
+        Number(numDmg) === 0
+          ? []
+          : [
+              {
+                spellId: dmgSpellId,
+                damage: Number(dmgAmount),
+                damageType: mapDamageType(dmgType),
+                conSaveSucceeded: conSave
+              }
+            ]
+      send({ type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages })
     },
     doMarkBonusActionSpell: () => {
       send({ type: "MARK_BONUS_ACTION_SPELL" })
@@ -614,11 +687,22 @@ const dndDriver = defineDriver(driverSchema, () => {
     doExpendPactSlot: () => {
       send({ type: "EXPEND_PACT_SLOT" })
     },
-    doStartConcentration: ({ spellId }) => {
-      send({ type: "START_CONCENTRATION", spellId })
+    doStartConcentration: ({ duration, expiresAt, spellId }) => {
+      send({
+        type: "START_CONCENTRATION",
+        spellId,
+        durationTurns: Number(duration),
+        expiresAt: mapExpiryPhase(expiresAt)
+      })
     },
     doBreakConcentration: () => {
       send({ type: "BREAK_CONCENTRATION" })
+    },
+    doAddEffect: ({ duration, expiresAt, spellId }) => {
+      send({ type: "ADD_EFFECT", spellId, durationTurns: Number(duration), expiresAt: mapExpiryPhase(expiresAt) })
+    },
+    doRemoveEffect: ({ spellId }) => {
+      send({ type: "REMOVE_EFFECT", spellId })
     },
     doConcentrationCheck: ({ saveSucceeded }) => {
       send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: saveSucceeded })
@@ -631,8 +715,8 @@ const dndDriver = defineDriver(driverSchema, () => {
       const rolls = [Number(r1), Number(r2), Number(r3)].slice(0, n)
       send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls: rolls })
     },
-    doLongRest: ({ hasEaten }) => {
-      send({ type: "LONG_REST", totalHitDice: HIT_DICE_TOTAL, hasEaten })
+    doLongRest: () => {
+      send({ type: "LONG_REST", totalHitDice: HIT_DICE_TOTAL, hasEaten: true })
     },
     doApplyFall: ({ damageRoll }) => {
       send({
@@ -695,6 +779,22 @@ function setsEqual(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
 function arraysEqual(a: ReadonlyArray<number>, b: ReadonlyArray<number>): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+  return true
+}
+
+function activeEffectsEqual(
+  a: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>,
+  b: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>
+): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (
+      a[i].spellId !== b[i].spellId ||
+      a[i].turnsRemaining !== b[i].turnsRemaining ||
+      a[i].expiresAt !== b[i].expiresAt
+    )
+      return false
+  }
   return true
 }
 
@@ -805,7 +905,15 @@ describe("DnD MBT", () => {
           for (const k of keys) {
             const sv = spec[k]
             const iv = impl[k]
-            if (sv instanceof Set && iv instanceof Set) {
+            if (k === "activeEffects") {
+              if (
+                !activeEffectsEqual(
+                  sv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>,
+                  iv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>
+                )
+              )
+                return false
+            } else if (sv instanceof Set && iv instanceof Set) {
               if (!setsEqual(sv, iv)) return false
             } else if (Array.isArray(sv) && Array.isArray(iv)) {
               if (!arraysEqual(sv, iv)) return false

@@ -1,11 +1,13 @@
 import type {
   ActionType,
+  ActiveEffect,
   Condition,
   ContestResult,
   D20Roll,
   DamageType,
   DeathSaves,
   ExhaustionLevel,
+  ExpiryPhase,
   HealAmount,
   HP,
   IncapSource,
@@ -62,7 +64,6 @@ export interface DndContext {
   readonly readiedAction: boolean
   readonly bonusActionSpellCast: boolean
   readonly nonCantripActionSpellCast: boolean
-  readonly surprised: boolean
   readonly slotsMax: SpellSlots
   readonly slotsCurrent: SpellSlots
   readonly pactSlotsMax: number
@@ -70,6 +71,7 @@ export interface DndContext {
   readonly pactSlotLevel: number
   readonly concentrationSpellId: string
   readonly hitDiceRemaining: number
+  readonly activeEffects: ReadonlyArray<ActiveEffect>
 }
 
 // --- Events ---
@@ -98,10 +100,23 @@ export type DndEvent =
       readonly baseSpeed: number
       readonly armorPenalty: number
       readonly extraAttacks: number
-      readonly isSurprised: boolean
       readonly callerSpeedModifier: number
       readonly isGrappling: boolean
       readonly grappledTargetTwoSizesSmaller: boolean
+    }
+  | {
+      readonly type: "END_TURN"
+      readonly endOfTurnSaves: ReadonlyArray<{
+        readonly spellId: string
+        readonly saveSucceeded: boolean
+        readonly conditionsToRemove: ReadonlyArray<Condition>
+      }>
+      readonly endOfTurnDamage: ReadonlyArray<{
+        readonly spellId: string
+        readonly damage: number
+        readonly damageType: DamageType
+        readonly conSaveSucceeded: boolean
+      }>
     }
   | { readonly type: "USE_ACTION"; readonly actionType: ActionType }
   | { readonly type: "USE_BONUS_ACTION" }
@@ -110,7 +125,6 @@ export type DndEvent =
   | { readonly type: "USE_EXTRA_ATTACK" }
   | { readonly type: "STAND_FROM_PRONE" }
   | { readonly type: "DROP_PRONE" }
-  | { readonly type: "END_SURPRISE_TURN" }
   | { readonly type: "MARK_BONUS_ACTION_SPELL" }
   | { readonly type: "MARK_NON_CANTRIP_ACTION_SPELL" }
   | {
@@ -131,7 +145,19 @@ export type DndEvent =
     }
   | { readonly type: "EXPEND_SLOT"; readonly level: number }
   | { readonly type: "EXPEND_PACT_SLOT" }
-  | { readonly type: "START_CONCENTRATION"; readonly spellId: string }
+  | {
+      readonly type: "START_CONCENTRATION"
+      readonly spellId: string
+      readonly durationTurns: number
+      readonly expiresAt: ExpiryPhase
+    }
+  | {
+      readonly type: "ADD_EFFECT"
+      readonly spellId: string
+      readonly durationTurns: number
+      readonly expiresAt: ExpiryPhase
+    }
+  | { readonly type: "REMOVE_EFFECT"; readonly spellId: string }
   | { readonly type: "BREAK_CONCENTRATION" }
   | { readonly type: "CONCENTRATION_CHECK"; readonly conSaveSucceeded: boolean }
   | { readonly type: "SHORT_REST"; readonly conMod: number; readonly hdRolls: ReadonlyArray<number> }
@@ -170,6 +196,9 @@ type SpendHitDieEvent = Extract<DndEvent, { readonly type: "SPEND_HIT_DIE" }>
 type ShoveEvent = Extract<DndEvent, { readonly type: "SHOVE" }>
 type ApplyFallEvent = Extract<DndEvent, { readonly type: "APPLY_FALL" }>
 type ApplyDehydrationEvent = Extract<DndEvent, { readonly type: "APPLY_DEHYDRATION" }>
+type EndTurnEvent = Extract<DndEvent, { readonly type: "END_TURN" }>
+type AddEffectEvent = Extract<DndEvent, { readonly type: "ADD_EFFECT" }>
+type RemoveEffectEvent = Extract<DndEvent, { readonly type: "REMOVE_EFFECT" }>
 
 export function asTakeDamage(event: DndEvent): TakeDamageEvent {
   return event as TakeDamageEvent
@@ -231,6 +260,15 @@ export function asApplyFall(event: DndEvent): ApplyFallEvent {
 export function asApplyDehydration(event: DndEvent): ApplyDehydrationEvent {
   return event as ApplyDehydrationEvent
 }
+export function asEndTurn(event: DndEvent): EndTurnEvent {
+  return event as EndTurnEvent
+}
+export function asAddEffect(event: DndEvent): AddEffectEvent {
+  return event as AddEffectEvent
+}
+export function asRemoveEffect(event: DndEvent): RemoveEffectEvent {
+  return event as RemoveEffectEvent
+}
 
 // --- Initial context constants ---
 
@@ -261,6 +299,5 @@ export const INITIAL_TURN_STATE = {
   freeInteractionUsed: false,
   nonCantripActionSpellCast: false,
   readiedAction: false,
-  reactionAvailable: true,
-  surprised: false
+  reactionAvailable: true
 } as const
