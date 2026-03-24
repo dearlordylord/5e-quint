@@ -213,18 +213,25 @@ module dnd {
   // 5. DAMAGE MODIFIERS
   // ============================================================
 
-  /// Apply in order: immunity -> resistance -> vulnerability.
-  /// Multiple instances of same type count as one.
+  /// SRD 5.2.1 "Order of Application" (Playing-the-Game.md):
+  /// 1. Adjustments (bonuses, penalties, multipliers) applied first
+  /// 2. Resistance applied second (halve)
+  /// 3. Vulnerability applied third (double)
+  /// Immunity overrides all. Multiple instances of same type count as one.
+  /// flatModifier: flat adjustment subtracted from damage before resistance/vulnerability
+  /// (positive = damage reduction, negative = damage increase).
   pure def applyDamageModifiers(
     amount: int,
     damageType: DamageType,
     immunities: Set[DamageType],
     resistances: Set[DamageType],
-    vulnerabilities: Set[DamageType]
+    vulnerabilities: Set[DamageType],
+    flatModifier: int
   ): int = {
     if (immunities.contains(damageType)) 0
     else {
-      val afterResist = if (resistances.contains(damageType)) amount / 2 else amount
+      val afterFlat = intMax(0, amount - flatModifier)
+      val afterResist = if (resistances.contains(damageType)) afterFlat / 2 else afterFlat
       if (vulnerabilities.contains(damageType)) afterResist * 2 else afterResist
     }
   }
@@ -642,7 +649,7 @@ module dnd {
     else {
       val effMax = effectiveMaxHp(s)
       val effResist = if (s.petrified) ALL_DAMAGE_TYPES else resistances
-      val effAmount = applyDamageModifiers(amount, damageType, immunities, effResist, vulnerabilities)
+      val effAmount = applyDamageModifiers(amount, damageType, immunities, effResist, vulnerabilities, 0)
       if (effAmount <= 0) s
       else {
         val tempAbsorb = intMin(s.tempHp, effAmount)

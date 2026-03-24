@@ -125,29 +125,82 @@ module dndTest {
   // ============================================================
 
   run test_damage_immune = {
-    val dmg = applyDamageModifiers(20, Fire, Set(Fire), Set(), Set())
+    val dmg = applyDamageModifiers(20, Fire, Set(Fire), Set(), Set(), 0)
     assert(dmg == 0)
   }
 
   run test_damage_resist = {
-    val dmg = applyDamageModifiers(7, Slashing, Set(), Set(Slashing), Set())
+    val dmg = applyDamageModifiers(7, Slashing, Set(), Set(Slashing), Set(), 0)
     assert(dmg == 3) // floor(7/2)
   }
 
   run test_damage_vulnerable = {
-    val dmg = applyDamageModifiers(10, Radiant, Set(), Set(), Set(Radiant))
+    val dmg = applyDamageModifiers(10, Radiant, Set(), Set(), Set(Radiant), 0)
     assert(dmg == 20)
   }
 
   // Resistance then vulnerability: halve 7 = 3, double 3 = 6
   run test_damage_resist_then_vulnerable = {
-    val dmg = applyDamageModifiers(7, Fire, Set(), Set(Fire), Set(Fire))
+    val dmg = applyDamageModifiers(7, Fire, Set(), Set(Fire), Set(Fire), 0)
     assert(dmg == 6)
   }
 
   run test_damage_immune_trumps = {
-    val dmg = applyDamageModifiers(20, Cold, Set(Cold), Set(Cold), Set(Cold))
+    val dmg = applyDamageModifiers(20, Cold, Set(Cold), Set(Cold), Set(Cold), 0)
     assert(dmg == 0)
+  }
+
+  // ============================================================
+  // Flat Damage Modifiers (SRD 5.2.1 "Order of Application")
+  // ============================================================
+
+  // SRD example: 28 Fire - 5 flat = 23, halved (Resistance) = 11
+  run test_flat_modifier_before_resistance = {
+    val dmg = applyDamageModifiers(28, Fire, Set(), Set(Fire), Set(), 5)
+    assert(dmg == 11)
+  }
+
+  // SRD example: 28 Fire - 5 flat = 23, halved = 11, doubled (Vulnerability) = 22
+  run test_flat_modifier_resistance_vulnerability = {
+    val dmg = applyDamageModifiers(28, Fire, Set(), Set(Fire), Set(Fire), 5)
+    assert(dmg == 22)
+  }
+
+  // Resistance + vulnerability without flat mod: halve then double = same
+  run test_resistance_vulnerability_no_flat = {
+    val dmg = applyDamageModifiers(10, Fire, Set(), Set(Fire), Set(Fire), 0)
+    assert(dmg == 10)
+  }
+
+  // Multiple resistance sources count as one (Set ensures no duplication)
+  run test_multiple_resistance_sources_count_as_one = {
+    // Even if caller somehow passes set with same type, Set deduplicates
+    val dmg = applyDamageModifiers(20, Fire, Set(), Set(Fire), Set(), 0)
+    assert(dmg == 10)
+  }
+
+  // Flat modifier alone (no resistance/vulnerability)
+  run test_flat_modifier_alone = {
+    val dmg = applyDamageModifiers(20, Fire, Set(), Set(), Set(), 5)
+    assert(dmg == 15)
+  }
+
+  // Flat modifier cannot reduce damage below 0
+  run test_flat_modifier_floor_zero = {
+    val dmg = applyDamageModifiers(3, Fire, Set(), Set(), Set(), 10)
+    assert(dmg == 0)
+  }
+
+  // Immunity trumps flat modifier
+  run test_flat_modifier_with_immunity = {
+    val dmg = applyDamageModifiers(28, Fire, Set(Fire), Set(), Set(), 5)
+    assert(dmg == 0)
+  }
+
+  // Negative flat modifier (damage increase) applied before resistance
+  run test_negative_flat_modifier = {
+    val dmg = applyDamageModifiers(10, Fire, Set(), Set(Fire), Set(), -4)
+    assert(dmg == 7) // 10 + 4 = 14, halved = 7
   }
 
   // ============================================================
