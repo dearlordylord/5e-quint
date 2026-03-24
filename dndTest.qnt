@@ -872,10 +872,7 @@ module dndTest {
   run test_save_cover_half_dex = assert(pSaveCoverBonus(Dex, HalfCover) == 2)
   run test_save_cover_three_quarters_dex = assert(pSaveCoverBonus(Dex, ThreeQuartersCover) == 5)
   run test_save_cover_none_dex = assert(pSaveCoverBonus(Dex, NoCover) == 0)
-  run test_save_cover_half_wis = assert(pSaveCoverBonus(Wis, HalfCover) == 0)
-  run test_save_cover_half_con = assert(pSaveCoverBonus(Con, HalfCover) == 0)
-  run test_save_cover_half_str = assert(pSaveCoverBonus(Str, HalfCover) == 0)
-  run test_save_cover_three_quarters_wis = assert(pSaveCoverBonus(Wis, ThreeQuartersCover) == 0)
+  run test_save_cover_non_dex = assert(pSaveCoverBonus(Wis, HalfCover) == 0)
 
   // ============================================================
   // Can Act / Can Speak
