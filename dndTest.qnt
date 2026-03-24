@@ -156,40 +156,40 @@ module dndTest {
 
   // Underwater: fire resistance added
   run test_underwater_fire_resistance = {
-    val res = pUnderwaterResistances(Set(), true)
+    val res = underwaterResistances(Set(), true)
     assert(res.contains(Fire))
   }
 
   // Not underwater: no fire resistance added
   run test_not_underwater_no_fire_resistance = {
-    val res = pUnderwaterResistances(Set(), false)
+    val res = underwaterResistances(Set(), false)
     assert(not(res.contains(Fire)))
   }
 
   // Underwater creature takes half fire damage
   run test_underwater_fire_damage_halved = {
-    val res = pUnderwaterResistances(Set(), true)
+    val res = underwaterResistances(Set(), true)
     val s = pTakeDamage(FRESH20, 10, Fire, res, Set(), Set(), false)
     assert(s.hp == 15) // 10/2 = 5 damage
   }
 
   // Not underwater: full fire damage
   run test_not_underwater_full_fire_damage = {
-    val res = pUnderwaterResistances(Set(), false)
+    val res = underwaterResistances(Set(), false)
     val s = pTakeDamage(FRESH20, 10, Fire, res, Set(), Set(), false)
     assert(s.hp == 10) // 10 damage
   }
 
   // Underwater with existing fire resistance: still only halves once (resistance doesn't stack)
   run test_underwater_fire_resistance_no_stack = {
-    val res = pUnderwaterResistances(Set(Fire), true)
+    val res = underwaterResistances(Set(Fire), true)
     val s = pTakeDamage(FRESH20, 10, Fire, res, Set(), Set(), false)
     assert(s.hp == 15) // 10/2 = 5, not 10/4
   }
 
   // Underwater creature takes normal non-fire damage
   run test_underwater_nonfire_damage_normal = {
-    val res = pUnderwaterResistances(Set(), true)
+    val res = underwaterResistances(Set(), true)
     val s = pTakeDamage(FRESH20, 10, Slashing, res, Set(), Set(), false)
     assert(s.hp == 10) // full 10 damage, no resistance
   }

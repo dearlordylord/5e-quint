@@ -231,7 +231,7 @@ module dnd {
 
   /// Augment resistance set for underwater environment.
   /// SRD 5.2.1: "Anything underwater has Resistance to Fire damage."
-  pure def pUnderwaterResistances(
+  pure def underwaterResistances(
     resistances: Set[DamageType],
     isUnderwater: bool
   ): Set[DamageType] = {
