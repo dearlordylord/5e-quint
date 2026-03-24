@@ -181,7 +181,7 @@ module dnd {
   /// Attack roll result
   type AttackResult = { hits: bool, isCritical: bool }
 
-  /// Attack resolution: d20 >= critRange always hits+crits, nat1 always misses
+  /// Attack resolution: nat1 always misses, d20 >= critRange always hits+crits
   pure def resolveAttackRoll(
     d20Roll: int,
     attackBonus: int,
@@ -189,8 +189,8 @@ module dnd {
     targetCoverBonus: int,
     critRange: int
   ): AttackResult = {
-    if (d20Roll >= critRange) { hits: true, isCritical: true }
-    else if (d20Roll == 1) { hits: false, isCritical: false }
+    if (d20Roll == 1) { hits: false, isCritical: false }
+    else if (d20Roll >= critRange) { hits: true, isCritical: true }
     else {
       val total = d20Roll + attackBonus
       val ac = targetAC + targetCoverBonus
