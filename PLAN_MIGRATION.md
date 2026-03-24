@@ -1,6 +1,10 @@
-# SRD 5.1 → 5.2.1 Migration Plan
+# SRD 5.1 -> 5.2.1 Migration Plan
 
 Migrate the formal spec, XState machine, MBT bridge, QA pipeline, and docs from SRD 5.1 (2014 rules) to SRD 5.2.1 (2024 rules).
+
+Two plan files to migrate, strictly in order:
+1. **PLAN.md** (core) — generic mechanics in `dnd.qnt`. Migrated first.
+2. **PLAN_NONCORE.md** (non-core) — class features, spells, racial traits in TS/caller. Migrated second, after core is stable.
 
 References:
 - `.references/srd-5.2.1/` — full SRD 5.2.1 text (Classes/, Spells/, Monsters/, Magic-Items/, plus top-level Playing-the-Game.md, Rules-Glossary.md, Equipment.md, etc.)
@@ -16,20 +20,21 @@ Note: `Magic-Items/` may be incomplete (only `Items-Q-Z.md` + `Overview.md`, no 
 Freeze current state so 5.1 remains runnable and testable.
 
 ### M0.1 Archive Quint spec
-- `dnd.qnt` → `dnd2014.qnt`
-- `dndTest.qnt` → `dnd2014Test.qnt`
-- Update import in `dnd2014Test.qnt`: `import dnd.* from "./dnd"` → `import dnd.* from "./dnd2014"`
+- `dnd.qnt` -> `dnd2014.qnt`
+- `dndTest.qnt` -> `dnd2014Test.qnt`
+- Update import in `dnd2014Test.qnt`: `import dnd.* from "./dnd"` -> `import dnd.* from "./dnd2014"`
 - Verify: `quint test dnd2014Test.qnt` passes
 
-### M0.2 Archive PLAN
-- `PLAN.md` → `PLAN_2014.md` (already deleted from git — restore from last commit or keep as-is)
+### M0.2 Archive PLANs
+- `PLAN.md` -> `PLAN_2014.md`
+- `PLAN_NONCORE.md` -> `PLAN_NONCORE_2014.md`
 
 ### M0.3 Branch the XState machine (decision point)
 Two options — pick one:
 
-**Option A — Copy**: `machine.ts` → `machine2014.ts`, `machine-helpers.ts` → `machine-helpers2014.ts`, etc. Keep 2014 machine importable for comparison. MBT test stays pointed at 2014 files until 2024 machine is ready.
+**Option A — Copy**: `machine.ts` -> `machine2014.ts`, etc. Keep 2014 machine importable for comparison. MBT test stays pointed at 2014 files until 2024 machine is ready.
 
-**Option B — In-place**: Evolve machine.ts directly. Use git history as the 2014 reference. Simpler, but loses ability to run both side by side.
+**Option B — In-place**: Evolve machine.ts directly. Use git history as the 2014 reference.
 
 Recommendation: **Option A** initially — copy all `machine*.ts` + `types.ts` to `*2014.ts` variants. Once 2024 machine passes MBT, delete 2014 copies.
 
@@ -71,45 +76,65 @@ Current state: 15,107 SE entries (14,878 tagged `dnd-5e-2014`, 239 tagged `dnd-5
 
 ---
 
-## Phase 2 — New Quint Spec (`dnd.qnt` for 5.2.1)
+## Phase 2 — Migrate PLAN.md (Core) to 5.2.1
 
-Start from `dnd2014.qnt` as template, apply 5.2.1 changes systematically.
+Port every task in PLAN.md from SRD 5.1 rules to SRD 5.2.1 rules. This is a rule-checking task: read the conversion guide and full SRD 5.2.1 text, update each task's description to reflect 2024 mechanics.
+
+Use `.references/srd-5.2.1-conversion/` as the delta manifest. Look up actual rules in `.references/srd-5.2.1/`.
 
 ### M2.1 Core rules delta
-Changes that affect the entire spec:
 
-| 5.1 | 5.2.1 | Impact |
-|-----|-------|--------|
-| Surprise skips turn | Surprise = disadvantage on Initiative | Remove surprised-skip-turn, add initiative modifier |
-| Bonus-action spell rule | One Spell with Spell Slot per Turn | Rewrite spell-per-turn constraint |
-| Knock out → 0 HP | Knock out → 1 HP + start Short Rest | Modify `pKnockOut` |
-| Exhaustion: 6 tiers, cumulative debuffs | Exhaustion: conditions-based (revised) | Rewrite exhaustion system |
-| Stunned: can't move | Stunned: can move, can't speak | Modify `CStunned` effects |
-| Grappled: speed 0 | Grappled: revised (speed halved?) | Modify `CGrappled` effects |
-| Saving throws: must roll | Saving throws: can choose to fail | Add voluntary-fail option to save resolution |
-| Cast a Spell action | Magic action (covers spells + magic items + magical features) | Rename action type |
-| Use an Object action | Utilize action | Rename |
-| Race | Species | Rename throughout |
-| Hit Dice | Hit Point Dice | Rename |
+Changes that affect PLAN.md tasks:
+
+| 5.1 | 5.2.1 | Location in current spec (needs updating) |
+|-----|-------|-------------------------------------------|
+| Surprise skips turn | Surprise = disadvantage on Initiative | TA3, TA4 |
+| Bonus-action spell rule | One Spell with Spell Slot per Turn | dnd.qnt spellcasting section |
+| Knock out -> 0 HP | Knock out -> 1 HP + start Short Rest | dnd.qnt pKnockOut |
+| Exhaustion: 6 tiers, cumulative | Exhaustion: conditions-based (revised) | dnd.qnt pAddExhaustion |
+| Stunned: can't move | Stunned: can move, can't speak | dnd.qnt pApplyCondition |
+| Grappled: speed 0 | Grappled: speed 0 + disadvantage on attacks vs non-grappler + drag costs 1 extra ft/ft | dnd.qnt pStartTurn, pOwnAttackModifiers |
+| Saving throws: must roll | Can choose to fail | dnd.qnt saveSucceeds |
+| Cast a Spell action | Magic action | dnd.qnt ActionType |
+| Use an Object action | Utilize action | dnd.qnt ActionType |
+| Race | Species | Non-core T01 (CharConfig identity) |
+| Hit Dice | Hit Point Dice | Rename throughout |
 | Armor proficiency | Armor training | Rename |
-| Walking Speed | Speed | Already modeled as Speed |
-| Concentration DC: no cap | Concentration DC: max 30 | Add cap |
-| Unarmed Strike: separate from grapple/shove | Unarmed Strike: includes grapple/shove options | Restructure |
-| Attack action: fixed | Attack action: equip/unequip per attack, move between attacks | Extend action model |
+| Concentration DC: no cap | Concentration DC: max 30 | dnd.qnt pConcentrationDC |
+| Unarmed Strike: separate | Unarmed Strike: includes grapple/shove | dnd.qnt section 13 (grapple/shove) |
+| Attack action: fixed | Equip/unequip per attack, move between | dnd.qnt section 11 (turn structure) |
 
-### M2.2 Type/enum renames
-- `Race` → `Species`; add `Goliath`, `Orc`; remove subraces (replaced by trait choices)
-- `Ki` → `Focus` (Monk)
-- `DivineSmite` → `PaladinsSmite`
-- `CastASpell` → `Magic` (action)
-- `UseAnObject` → `Utilize` (action)
-- `HitDice` → `HitPointDice`
-- `FightingStyle` → now a Feat category, not class feature
-- `Feeblemind` → `Befuddlement`
-- `BrandingSmite` → `ShiningSmite`
-- Subclass names: `DraconicBloodline` → `DraconicSorcery`, `TheFiend` → `FiendPatron`, `Evocation` → `Evoker`, `WayOfTheOpenHand` → `WarriorOfTheOpenHand`
+### M2.2 Type/enum renames in core
+- `HitDice` -> `HitPointDice`
+- `ACastSpell` -> `AMagic`
+- `AUseObject` -> `AUtilize`
+- Add new action types: `AStudy`, `AInfluence`
+- Note: `Race` -> `Species` rename is non-core (T01 in PLAN_NONCORE.md)
 
-### M2.3 Class feature overhaul
+### M2.3 Condition revisions in core
+- Exhaustion: completely new system (replace 6-tier with new)
+- Stunned: can move, can't speak (reverse current behavior)
+- Grappled: revised
+- Charmed, Incapacitated, Invisible, Petrified: revised
+
+### M2.4 New core mechanics
+- Weapon Mastery framework (property system, not individual mastery effects)
+- Concentration DC cap at 30
+- Voluntary save failure
+- Unarmed Strike restructure (grapple/shove as options within Unarmed Strike)
+
+### M2.5 Implement migrated core spec
+- Apply all M2.1-M2.4 changes to `dnd.qnt`
+- Write new `dndTest.qnt` (or adapt from `dnd2014Test.qnt`)
+- `quint test dndTest.qnt` must pass
+
+---
+
+## Phase 3 — Migrate PLAN_NONCORE.md to 5.2.1
+
+Port every task in PLAN_NONCORE.md from SRD 5.1 rules to SRD 5.2.1 rules. Same rule-checking approach as Phase 2. Depends on Phase 2 being complete (non-core composes on core).
+
+### M3.1 Class feature delta
 Every class gains new features and has existing ones revised. Major structural change: 6 classes pick subclass at level 3 (was 1-2).
 
 New features to add per class (not in 5.1 at all):
@@ -124,134 +149,116 @@ New features to add per class (not in 5.1 at all):
 - **Cleric**: Sear Undead, Improved Blessed Strikes, Greater Divine Intervention, Divine Order
 - **Druid**: Wild Companion, Wild Resurgence, Elemental Fury / Improved Elemental Fury
 - **Sorcerer**: Innate Sorcery, Sorcery Incarnate, Arcane Apotheosis; new metamagics (Seeking Spell, Transmuted Spell)
-- **Warlock**: Magical Cunning, Contract Patron; Pact Boons moved to invocations; new invocations (Devouring Blade, Eldritch Mind, Eldritch Smite, etc.)
+- **Warlock**: Magical Cunning, Contract Patron; Pact Boons moved to invocations; new invocations
 - **Wizard**: Scholar, Memorize Spell
 
-Revised features: see `.references/srd-5.2.1-conversion/03-classes.md` for full list per class. Berserker Frenzy no longer causes exhaustion. Monk's Ki is renamed Focus. Divine Smite is now a spell (Paladin's Smite). Channel Divinity absorbs Divine Sense. Etc.
+Revised features: see `.references/srd-5.2.1-conversion/03-classes.md` for full list. Key changes: Berserker Frenzy no longer causes exhaustion, Ki renamed Focus, Divine Smite is now a spell (Paladin's Smite), Channel Divinity absorbs Divine Sense, Fighting Styles are now Feats.
 
-### M2.4 Equipment & Weapon Mastery
-- **Weapon Mastery properties**: entirely new system (Cleave, Slow, Nick, Topple, Graze, Push, Sap, Vex). Each weapon has a mastery property. Classes unlock mastery at various levels.
-- Weapons table revised: Trident damage up, Lance changed, Net → adventuring gear
-- New weapons: Musket, Pistol
-- Armor naming standardized (Padded → Padded Armor, etc.)
-- **Fighting Styles → Feats**: no longer class features; ASI is also a Feat now
+New features fold into existing PLAN_NONCORE.md tasks where a matching class section exists (e.g., Barbarian new features -> T12 Barbarian Passives, Fighter new features -> T22/T23). Features with no natural home get new task IDs assigned during migration (e.g., Weapon Mastery per-class unlocks, Epic Boons).
 
-### M2.5 Feat system
+### M3.2 Type/enum renames in non-core
+- `Ki` -> `Focus` (Monk)
+- `DivineSmite` -> `PaladinsSmite`
+- `FightingStyle` -> Feat category
+- `Feeblemind` -> `Befuddlement`
+- `BrandingSmite` -> `ShiningSmite`
+- Subclass names: `DraconicBloodline` -> `DraconicSorcery`, `TheFiend` -> `FiendPatron`, `Evocation` -> `Evoker`, `WayOfTheOpenHand` -> `WarriorOfTheOpenHand`
+
+### M3.3 Species (was Races)
+- Ability scores no longer from species — come from Background
+- Subraces eliminated (trait choices within species instead)
+- New: Goliath, Orc
+- T140/T141 need full rewrite
+
+### M3.4 Spell changes
+- All spells revised in presentation/stats
+- Renames: Feeblemind->Befuddlement, Branding Smite->Shining Smite
+- ~20 new spells (Divine Smite is now a spell, Hex, Chromatic Orb, etc.)
+- Spell lists per class revised
+- One Spell with Spell Slot per Turn: replaces bonus-action spell restriction
+
+### M3.5 Feat system
 - Feats categorized: Origin, General, Fighting Style, Epic Boon
 - ASI is a feat
 - Grappler revised
 - Many new feats in SRD (all categories)
-- PLAN.md currently only models Grappler — scope decision: model all SRD feats or keep minimal?
+- Scope decision: model all SRD feats or keep minimal?
 
-### M2.6 Species (was Races)
-- Ability scores no longer from species — come from Background
-- Subraces eliminated (trait choices within species instead)
-- All species descriptions revised
-- New: Goliath, Orc
-- T140/T141 need full rewrite
-
-### M2.7 Spell changes
-- All spells revised in presentation/stats
-- Renames: Feeblemind→Befuddlement, Branding Smite→Shining Smite
-- ~20 new spells (Divine Smite is now a spell, Hex, Chromatic Orb, etc.)
-- Spell lists per class revised
-- Rituals: no special class feature needed
-- Always-Prepared: generalized rule
-- One Spell with Spell Slot per Turn: replaces bonus-action spell restriction
-
-### M2.8 Condition revisions
-- Exhaustion: completely new system
-- Stunned: can move, can't speak
-- Grappled: revised
-- Charmed: revised
-- Incapacitated: revised
-- Invisible: revised
-- Petrified: revised
-
-### M2.9 New `dndTest.qnt`
-- Write tests for 2024 spec from scratch (or adapt from `dnd2014Test.qnt`)
-- Each revised mechanic needs new test coverage
-- `quint test dndTest.qnt` must pass
+### M3.6 Equipment & Weapon Mastery (non-core aspects)
+- Weapon Mastery individual effects (Cleave, Slow, Nick, Topple, Graze, Push, Sap, Vex) — per-weapon behavior, TS side
+- Fighting Styles -> Feats: T05 restructure
+- New weapons: Musket, Pistol
 
 ---
 
-## Phase 3 — XState Machine Migration
+## Phase 4 — XState Machine Migration
 
-### M3.1 Update `types.ts`
+### M4.1 Update `types.ts`
 - Rename types to match 2024 terminology
 - Add new enums (Weapon Mastery, feat categories, species, etc.)
 - Remove subraces, add species trait choices
 
-### M3.2 Update `machine.ts` + `machine-helpers.ts` + `machine-combat.ts`
+### M4.2 Update `machine.ts` + `machine-helpers.ts` + `machine-combat.ts`
 - Evolve state machine to match new `dnd.qnt`
 - Key changes: new action types (Magic, Utilize, Study, Influence), revised conditions, new class features
-- Surprise → initiative disadvantage (not turn skip)
-- Bonus-action spell rule → one slot spell per turn
+- Surprise -> initiative disadvantage (not turn skip)
+- Bonus-action spell rule -> one slot spell per turn
 - Unarmed Strike restructure (includes grapple/shove)
 
-### M3.3 Update `machine-states.ts` + `machine-queries.ts`
+### M4.3 Update `machine-states.ts` + `machine-queries.ts`
 - State hierarchy changes for new action types
 - Query functions for new mechanics
 
-### M3.4 Update `machine-types.ts`
+### M4.4 Update `machine-types.ts`
 - Context type changes to match new `dnd.qnt` state fields
 
-### M3.5 Reconnect MBT bridge (`machine.mbt.test.ts`)
-- Update Quint→TS enum mappings (new condition names, action types, etc.)
+### M4.5 Reconnect MBT bridge (`machine.mbt.test.ts`)
+- Update Quint->TS enum mappings (new condition names, action types, etc.)
 - Point at new `dnd.qnt` (not `dnd2014.qnt`)
 - Update `stateCheck` field mappings for changed/new context fields
 - Run 50 traces x 30 steps — must pass
 
-### M3.6 Update `machine.test.ts`
+### M4.6 Update `machine.test.ts`
 - Adapt unit tests for revised mechanics
 - Add tests for new features
 
 ---
 
-## Phase 4 — Docs & References
+## Phase 5 — Docs & References
 
-### M4.1 Add SRD 5.2.1 reference files
-- Place full SRD 5.2.1 text at `.references/srd-5.2.1/` (organized by section)
-- Keep `.references/srd/` as the 5.1 reference (rename to `.references/srd-5.1/`?)
-
-### M4.2 Update `UBIQUITOUS_LANGUAGE.md`
-- Race → Species
-- Ki → Monk's Focus
-- Hit Dice → Hit Point Dice
-- Armor proficiency → Armor training
-- Cast a Spell → Magic action
-- Use an Object → Utilize
+### M5.1 Update `UBIQUITOUS_LANGUAGE.md`
+- Race -> Species
+- Ki -> Monk's Focus
+- Hit Dice -> Hit Point Dice
+- Armor proficiency -> Armor training
+- Cast a Spell -> Magic action
+- Use an Object -> Utilize
 - Add: D20 Test, Heroic Inspiration, Bloodied, Weapon Mastery, etc.
 
-### M4.3 Update `CLAUDE.md`
+### M5.2 Update `CLAUDE.md`
 - Reference new SRD location
 - Update parity rules for new spec
 
-### M4.4 Update `README.md`
+### M5.3 Update `README.md`
 - Note SRD version (5.2.1)
 - Link to conversion guide
 - Mention 5.1 archived artifacts
 
-### M4.5 Write new `PLAN.md`
-- Full rewrite of task DAG for 5.2.1 mechanics
-- Use `.references/srd-5.2.1/` as sole source (same audit methodology as 5.1 plan)
-
 ---
 
-## Phase 5 — QA Pipeline Rebuild for 2024
+## Phase 6 — QA Pipeline Rebuild for 2024
 
-### M5.1 Regenerate 2024 assertions
+### M6.1 Regenerate 2024 assertions
 - Run `generate_assertions.py --edition 2024` against new `dnd.qnt`
 - Only 239 SE entries tagged `dnd-5e-2024` — thin corpus initially
-- As community produces more 2024 Q&A, corpus grows automatically on re-download
 
-### M5.2 Validate 2014 assertions still work
+### M6.2 Validate 2014 assertions still work
 - `quint test qa_generated_2014.qnt --main qa_generated_2014` against `dnd2014.qnt`
 - Should pass unchanged (regression guard)
 
-### M5.3 Cross-version triage
+### M6.3 Cross-version triage
 - Some 2014 Q&A is version-agnostic (basic d20 math, HP overflow, etc.)
-- Classifier could tag these as `ambiguous` → usable for both versions
+- Classifier could tag these as `ambiguous` -> usable for both versions
 - Low priority; manual curation later
 
 ---
@@ -259,53 +266,45 @@ Revised features: see `.references/srd-5.2.1-conversion/03-classes.md` for full 
 ## Dependency Order
 
 ```
-M0 (archive) ─────────────────────────────────────────┐
-  M0.1 archive qnt                                    │
-  M0.2 archive PLAN                                   │
-  M0.3 branch machine                                 │
-  M0.4 git tag                                        │
-                                                      │
-M1 (QA pipeline) ── can start in parallel with M0 ────┤
-  M1.1 classify --edition                             │
-  M1.2 generate --edition                             │
-  M1.3 edition field in classification                 │
-  M1.4 version-sensitive test runner                   │
-  M1.5 triage assertion cache                          │
-                                                      │
-M4.1 (add SRD 5.2.1 files) ── prerequisite ──────────┤
-                                                      │
-M2 (new qnt spec) ── needs M0.1 + M4.1 ──────────────┤
-  M2.1 core rules delta                               │
-  M2.2 type renames                                    │
-  M2.3 class features                                  │
-  M2.4 equipment + weapon mastery                      │
-  M2.5 feat system                                     │
-  M2.6 species                                         │
-  M2.7 spells                                          │
-  M2.8 conditions                                      │
-  M2.9 new tests                                       │
-                                                      │
-M3 (XState) ── needs M2 ─────────────────────────────┤
-  M3.1-M3.6 machine + MBT                             │
-                                                      │
-M4.2-M4.5 (docs) ── needs M2 ────────────────────────┤
-                                                      │
-M5 (QA rebuild) ── needs M1 + M2 ─────────────────────┘
+M0 (archive) ──────────────────────────────────────────┐
+  M0.1 archive qnt                                     |
+  M0.2 archive PLANs                                   |
+  M0.3 branch machine                                  |
+  M0.4 git tag                                         |
+                                                       |
+M1 (QA pipeline) -- can start in parallel with M0 ─────|
+  M1.1-M1.5 edition tagging                            |
+                                                       |
+M2 (migrate PLAN.md core) -- needs M0.1 ───────────────|
+  M2.1-M2.4 rule-check core tasks against 5.2.1       |
+  M2.5 implement migrated core spec                    |
+                                                       |
+M3 (migrate PLAN_NONCORE.md) -- needs M2 ──────────────|
+  M3.1-M3.6 rule-check non-core tasks against 5.2.1   |
+                                                       |
+M4 (XState + TS) -- needs M2.5; M3 for TS target ─────|
+  M4.1-M4.6 machine + MBT                              |
+                                                       |
+M5 (docs) -- needs M2 ────────────────────────────────-|
+                                                       |
+M6 (QA rebuild) -- needs M1 + M2.5 ────────────────────┘
 ```
 
-Parallelizable: M0 + M1 can start immediately. M2-M5 are now unblocked (SRD 5.2.1 text available).
+Key ordering constraint: **M2 (core) strictly before M3 (non-core)**. Non-core depends on core primitives being stable.
+
+Parallelizable: M0 + M1 can start immediately. M3 can start as soon as M2 is done. M4 needs M2.5 (core spec implemented) to start core XState parity; M3 (non-core plan migrated) so TypeScript knows the full target design for non-core pure functions and caller logic. M5 can start after M2.
 
 ---
 
 ## Risk / Open Questions
 
 1. **Magic-Items A-P may be missing** — `Magic-Items/` only has `Items-Q-Z.md` + `Overview.md`.
-2. **Weapon Mastery scope** — large new system. Model all mastery properties or subset? Each weapon gets one property; many classes unlock mastery at different levels.
+2. **Weapon Mastery scope** — large new system. Core framework (property on weapons, unlock by class level) goes in PLAN.md. Individual mastery effects (Cleave, Slow, etc.) go in PLAN_NONCORE.md. How many to model?
 3. **Feat system scope** — 5.2.1 SRD has many more feats than 5.1's sole Grappler. How many to model?
-4. **Epic Boons** — every class gets one at 19-20. These are basically capstone feats. Model all or treat as config?
-5. **Subclass level shift** — 6 classes now pick subclass at 3 instead of 1-2. Does this change the CharConfig structure or just the level gating?
+4. **Epic Boons** — every class gets one at 19-20. Model all or treat as config?
+5. **Subclass level shift** — 6 classes now pick subclass at 3 instead of 1-2. Affects CharConfig structure?
 6. **Keep both specs runnable long-term?** — or archive 2014 and move on?
-7. **Thin 2024 QA corpus** — only 239 SE entries. May need to supplement with manual test cases until community produces more.
-8. **UI components** — `app/src/components/*.tsx` reference machine types. Need updating in M3.
-9. **`@firfi/quint-connect` compatibility** — MBT bridge. Any version issues with changed trace format?
-10. **Berserker Frenzy** — no longer causes exhaustion in 5.2.1. This is a significant mechanical shift. Existing tests that assert exhaustion will fail.
+7. **Thin 2024 QA corpus** — only 239 SE entries. May need manual test cases.
+8. **UI components** — `app/src/components/*.tsx` reference machine types. Need updating in M4.
+9. **`@firfi/quint-connect` compatibility** — MBT bridge. Any version issues?
+10. **Berserker Frenzy** — no longer causes exhaustion in 5.2.1. Significant mechanical shift.
