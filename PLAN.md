@@ -10,10 +10,6 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 > The implementer decides the actual Quint design — names, decomposition, data representations —
 > and iterates freely. Treat task descriptions as "what to model," not "how to type it."
 
-## Status
-
-M0 (core spec under SRD 5.1) is done. M2 (SRD 5.2.1 migration) is done. TA1 (Active Effect Lifecycle) is done. Next: TA2 (END_TURN).
-
 ## Scope
 
 This plan covers **core mechanics only** — generic rules modeled in `dnd.qnt` that any class, spell, or racial feature composes on top of. Class features, spell effects, racial traits, and subclass mechanics live in `PLAN_NONCORE.md` (TS/caller side).
@@ -123,36 +119,73 @@ Absorbed from PLAN_APPENDIX.md. These are foundational changes to turn structure
 [TA4] START_TURN Refactoring (P1) -> deps: [TA3]
 ```
 
-**[TA1] Active Effect Lifecycle**
+**[TA1] Active Effect Lifecycle** *(done)*
 
 Core spec (`dnd.qnt`) owns the lifecycle: add, remove, decrement, expiry. Knows nothing about what specific spells do. Spell-specific behavior lives in TypeScript (caller).
 
+**Design note — clock first, wiring later.** TA1 intentionally builds only the duration clock. Spell→condition linkage (e.g., Hold Person → Paralyzed) is caller-side (PLAN_NONCORE). The clock must exist before anything can use it.
+
 State addition to CreatureState:
 ```quint
+type ExpiryPhase = AtStartOfTurn | AtEndOfTurn
+
 type ActiveEffect = {
   spellId: str,
-  remainingTurns: int,   // decremented each START_TURN; 0 = expired
+  turnsRemaining: int,    // decremented once per round at START_TURN; ≤0 = expired
+  expiresAt: ExpiryPhase  // when the removal check fires (see timing analysis below)
 }
 
 // In CreatureState:
 activeEffects: Set[ActiveEffect]
 ```
 
+**Two-phase expiry model.** The SRD has two distinct expiry points: "until the start of your next turn" (Dodge, Shield) vs "until the end of your next turn" / "for N rounds" (Rage, Hold Person). Effects are removed at the phase matching their `expiresAt` field. Decrement happens once per round at START_TURN. See `TEMP_timing_analysis.md` for full traces.
+
+```
+START_TURN:
+  1. Decrement ALL turnsRemaining by 1
+  2. Remove where (expiresAt == AtStartOfTurn AND turnsRemaining ≤ 0)
+  3. Process start-of-turn triggers (surviving effects only)
+
+(acting)
+
+END_TURN:
+  1. Process end-of-turn triggers (saves, damage)
+  2. Remove where (expiresAt == AtEndOfTurn AND turnsRemaining ≤ 0)
+```
+
+| SRD pattern | expiresAt | turnsRemaining | Removed at |
+|---|---|---|---|
+| "until start of next turn" | AtStartOfTurn | 1 | START_TURN (after decrement) |
+| "until end of next turn" | AtEndOfTurn | 1 | END_TURN (next turn) |
+| "for N rounds" | AtEndOfTurn | N | END_TURN (Nth turn) |
+| "concentration, up to N" | AtEndOfTurn | N | END_TURN or early (conc break/save) |
+
 Core lifecycle functions:
-- `pAddEffect(effects, spellId, durationTurns)` — add effect, replace existing with same spellId (no stacking)
+- `pAddEffect(effects, spellId, durationTurns, expiresAt)` — add effect, replace existing with same spellId (no stacking)
 - `pRemoveEffect(effects, spellId)` — remove by spellId (dispel, concentration break)
-- `pDecrementDurations(effects)` — decrement all by 1, called during START_TURN
-- `pExpiredEffects(effects)` — return spellIds with remainingTurns <= 0
-- `pClearExpired(effects)` — remove all expired
-- `pHasEffect(effects, spellId)` — check if active
+- `pDecrementDurations(effects)` — decrement all by 1, called at START_TURN step 1
+- `pExpiredAtPhase(effects, phase)` — return effects where `expiresAt == phase AND turnsRemaining ≤ 0`
+- `pClearExpiredAtPhase(effects, phase)` — remove expired effects for the given phase
+- `pHasEffect(effects, spellId)` — check if active (must check `turnsRemaining > 0`)
+- `pTickEffects(effects, n)` — atomic decrement-by-n + clear all expired; used out of combat
 
 Interaction with concentration: when concentration breaks, also call `pRemoveEffect` for the concentrated spell. When new concentration starts, break old + remove old effect + add new.
 
-Interaction with conditions: separate systems. Hold Person = `pAddEffect("hold_person", 10)` + `pApplyCondition(CParalyzed)`. Caller coordinates.
+Interaction with conditions: separate systems. Hold Person = `pAddEffect("hold_person", 10, AtEndOfTurn)` + `pApplyCondition(CParalyzed)`. Caller coordinates.
+
+Out-of-combat time advance: caller calls `pTickEffects(effects, n)` where n = rounds elapsed. `expiresAt` phase is irrelevant outside combat — just decrement and clear.
 
 Completeness criterion: any SRD spell can be expressed as a sequence of pAddEffect, condition/damage/healing primitives, START_TURN/END_TURN event args, pRemoveEffect. No spell should require new fields in CreatureState.
 
-- Test: add effect; decrement reduces all durations; expired effects detected; clear removes them; replace existing with same spellId; remove by spellId; concentration break removes associated effect
+- Test: add effect; decrement reduces all durations; phase-aware expiry (AtStartOfTurn vs AtEndOfTurn); replace existing with same spellId; remove by spellId; concentration break removes associated effect; pTickEffects(n) clears sub-n effects; pHasEffect returns false for expired effects
+
+**[TA1-fix] Zombie effect prevention + concentration invariant** *(P1, do before TA2)*
+
+1. **`pHasEffect` must check `turnsRemaining > 0`** — current impl only checks existence, so expired-but-uncleared effects appear "active."
+2. **`pTickEffects(effects, n)`** — atomic decrement-by-n + clear all expired. Prevents zombie effects from callers who decrement without clearing. Also serves as the out-of-combat time-advance primitive.
+3. **`ActiveEffect` type needs `expiresAt: ExpiryPhase`** field — see two-phase expiry model above. Current impl has only `{ spellId, remainingTurns }`.
+4. **`concentrationConsistency` invariant** — "if dead or incapacitated, `concentrationSpellId` must be empty." Safety net for the manual `pWithConcBreak` wrapping pattern: catches missing wraps during random walks.
 
 **[TA2] END_TURN Event**
 
@@ -168,9 +201,9 @@ END_TURN: {
 }
 ```
 
-Spec processes each save (removing conditions on success) and applies damage. Duration decrement happens on START_TURN, not here.
+Spec processes each save (removing conditions on success) and applies damage. Duration decrement happens at START_TURN, not here. **But END_TURN must also remove expired `AtEndOfTurn` effects** (step 2 in the two-phase expiry model — see TA1 timing table).
 
-- Test: end-of-turn save success removes effect + associated condition; end-of-turn damage applied; transition from acting to waitingForTurn; can't END_TURN from waitingForTurn
+- Test: end-of-turn save success removes effect + associated condition; end-of-turn damage applied; expired AtEndOfTurn effects removed; transition from acting to waitingForTurn; can't END_TURN from waitingForTurn
 
 **[TA3] Combat Mode Separation**
 
@@ -221,10 +254,14 @@ START_TURN: {
   }>
 }
 ```
-3. Duration decrement: after processing start-of-turn effects, decrement all active effect durations, remove expired.
+3. Two-phase effect lifecycle at START_TURN (per TA1 timing model):
+   - Decrement ALL `turnsRemaining` by 1
+   - Remove effects where `expiresAt == AtStartOfTurn AND turnsRemaining ≤ 0`
+   - Then process start-of-turn triggers (surviving effects only)
+   - (AtEndOfTurn removal happens in END_TURN — see TA2)
 4. Death save integration: if hp == 0 and not stable and not dead, process deathSaveRoll as part of START_TURN.
 
-- Test: START_TURN only from waitingForTurn; start-of-turn effects processed; durations decremented; expired removed; death save integrated; can't spam START_TURN
+- Test: START_TURN only from waitingForTurn; AtStartOfTurn effects removed before processing; start-of-turn effects processed for surviving effects; durations decremented; death save integrated; can't spam START_TURN
 
 ---
 

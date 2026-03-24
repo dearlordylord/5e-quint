@@ -55,6 +55,7 @@ module dnd {
   // ============================================================
 
   /// Immutable for the duration of the state machine.
+  // Adding a field here requires updating all CharConfig literals (TEST_CONFIG, TEST_WIZARD, TEST_FIGHTER_5, etc.)
   type CharConfig = {
     abilityScores: Ability -> int,   // 1-30
     level: int,                      // 1-20
