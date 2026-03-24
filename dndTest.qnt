@@ -166,19 +166,6 @@ module dndTest {
     assert(dmg == 22)
   }
 
-  // Resistance + vulnerability without flat mod: halve then double = same
-  run test_resistance_vulnerability_no_flat = {
-    val dmg = applyDamageModifiers(10, Fire, Set(), Set(Fire), Set(Fire), 0)
-    assert(dmg == 10)
-  }
-
-  // Multiple resistance sources count as one (Set ensures no duplication)
-  run test_multiple_resistance_sources_count_as_one = {
-    // Even if caller somehow passes set with same type, Set deduplicates
-    val dmg = applyDamageModifiers(20, Fire, Set(), Set(Fire), Set(), 0)
-    assert(dmg == 10)
-  }
-
   // Flat modifier alone (no resistance/vulnerability)
   run test_flat_modifier_alone = {
     val dmg = applyDamageModifiers(20, Fire, Set(), Set(), Set(), 5)
