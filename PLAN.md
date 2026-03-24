@@ -27,11 +27,14 @@ combat actions, two-weapon fighting, grapple & shove, opportunity attacks,
 mounted combat (partial — no task to complete; mount/dismount, controlled mount actions,
 forced dismount save, mount knocked prone reaction all implemented),
 movement system (including flying falls: `pFlyingCreatureFalls`),
-underwater combat attack penalties (via `AttackContext` fields; missing: fire resistance for fully submerged),
+underwater combat (attack penalties via `AttackContext` + fire resistance via `underwaterResistances`),
 squeezing attack disadvantage and movement cost (missing: advantage on attacks against squeezer, DEX save disadvantage),
 spellcasting framework (slots, concentration, ritual, bonus action rule, multiclass slots, pact slots),
 resting, environment, character construction & leveling, unarmored defense (Barbarian/Monk
 AC formulas already in `CharConfig.unarmoredDefense`), Extra Attack (`FExtraAttack` variants).
+crit range parameterization (`critRange` in `CharConfig`),
+cover DEX save bonus (`pSaveCoverBonus`),
+damage flat modifiers before resistance/vulnerability (`applyDamageModifiers` `flatModifier` param).
 MBT infrastructure wired to `@firfi/quint-connect`.
 
 ### 5.2.1 Revision Needed for Completed Features
@@ -70,10 +73,10 @@ Each task lists: state additions, new pure functions, and test criteria.
 ### Config & Resolution Extensions
 
 ```
-[T02] Crit Range Parameterization (P1) -> deps: none
+[T02] Crit Range Parameterization (P1) -> deps: none  ✓ done
 ```
 
-**[T02] Crit Range Parameterization**
+**[T02] Crit Range Parameterization** *(done)*
 Replace hardcoded `d20Roll == 20` crit check with `d20Roll >= critRange` in `pResolveAttack`.
 Add `critRange: int` to config (default 20). Champion sets 19/18. SRD 5.2.1 Critical Hit is still natural 20; expanded crit range is a class feature (Champion Fighter).
 - State: `critRange` in config
@@ -85,22 +88,22 @@ Add `critRange: int` to config (default 20). Champion sets 19/18. SRD 5.2.1 Crit
 ### Combat Rule Extensions
 
 ```
-[T10a] Cover (P1) -> deps: none
-[T10c] Resistance Stacking & Order of Operations (P1) -> deps: none
-[T10d] Underwater Combat — fire resistance (P3) -> deps: none
+[T10a] Cover (P1) -> deps: none  ✓ done
+[T10c] Resistance Stacking & Order of Operations (P1) -> deps: none  ✓ done
+[T10d] Underwater Combat — fire resistance (P3) -> deps: none  ✓ done
 ```
 
-**[T10a] Cover**
+**[T10a] Cover** *(done)*
 Partially implemented: `CoverType`, `coverBonus()`, `canBeTargeted()`, and attack-roll integration (`targetCoverBonus` param in `resolveAttackRoll`) already exist. Remaining: integrate cover bonus into DEX save resolution via `pSaveModifiers`. SRD 5.2.1 Cover rules unchanged: Half Cover +2 AC and DEX saves, Three-Quarters +5 (Rules-Glossary.md "Cover").
 - Functions: modify `pSaveModifiers` to add cover bonus for DEX saves
 - Test: half cover +2 DEX save; three-quarters +5 DEX save; cover doesn't affect non-DEX saves
 
-**[T10c] Resistance Stacking & Order of Operations**
+**[T10c] Resistance Stacking & Order of Operations** *(done)*
 Partially implemented: `applyDamageModifiers` already handles immunity->resistance->vulnerability ordering, and uses `Set[DamageType]` so multiple instances naturally count as one. Remaining: add flat-modifier support (applied before halving/doubling). SRD 5.2.1 explicitly defines the order: "adjustments such as bonuses, penalties, or multipliers are applied first; Resistance is applied second; and Vulnerability is applied third" (Playing-the-Game.md "Order of Application"). The planned flat-modifier step aligns with this.
 - Functions: extend `applyDamageModifiers` (or add wrapper) to accept flat modifiers applied before resistance/vulnerability
 - Test: flat bonuses applied before halving; resistance + vulnerability = apply both in order (halve then double = 1x); multiple resistance sources still count as one; example from SRD: 28 Fire damage - 5 flat = 23, halved (Resistance) = 11, doubled (Vulnerability) = 22
 
-**[T10d] Underwater Combat — fire resistance**
+**[T10d] Underwater Combat — fire resistance** *(done)*
 Partially implemented: attack penalties (melee disadvantage, ranged auto-miss/disadvantage) already in `AttackContext` and `pAggregateAttackMods`. Remaining: fire resistance for creatures underwater. SRD 5.2.1 simplifies: "Anything underwater has Resistance to Fire damage" (Playing-the-Game.md "Fire Resistance"). No "fully submerged" distinction — just underwater or not.
 - State: use existing `isUnderwater` or equivalent field (no `isFullySubmerged` needed)
 - Functions: modify damage resolution to add fire Resistance when underwater
@@ -281,22 +284,20 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 ## DAG Visualization
 
 ```
-All independent (parallel):
-[T02]-Crit Range
-[T10a]-Cover, [T10c]-Resistance Stacking,
-[T10d]-Underwater (fire resist)
+✓ [T02]-Crit Range
+✓ [T10a]-Cover, [T10c]-Resistance Stacking, [T10d]-Underwater
 
-[TA1]-Active Effect Lifecycle
-  +--[TA2]-END_TURN
-       +--[TA3]-Combat Mode
-            +--[TA4]-START_TURN Refactoring
+✓ [TA1]-Active Effect Lifecycle
+  +--[TA1-fix]-Zombie prevention + concentration invariant
+       +--[TA2]-END_TURN
+            +--[TA3]-Combat Mode
+                 +--[TA4]-START_TURN Refactoring
 ```
 
 ## Suggested Execution Order
 
-1. **[TA1]** Active Effect Lifecycle (foundation for all timed effects)
+1. **[TA1-fix]** Zombie effect prevention + concentration invariant (prerequisite for TA2)
 2. **[TA2]** END_TURN, then **[TA3]** Combat Mode, then **[TA4]** START_TURN Refactoring (sequential chain)
-3. **[T02]** Crit Range, **[T10a, T10c, T10d]** Combat Rule Extensions (all independent, parallel)
 
 ---
 
