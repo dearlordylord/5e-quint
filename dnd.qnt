@@ -70,6 +70,7 @@ module dnd {
     canRitualCast: bool,
     unarmoredDefense: UnarmoredDefense,
     features: Set[Feature],
+    critRange: int,            // minimum d20 roll for critical hit (default 20; Champion 19/18)
   }
 
   type Feature = FExtraAttack | FExtraAttack2 | FExtraAttack3
@@ -180,14 +181,15 @@ module dnd {
   /// Attack roll result
   type AttackResult = { hits: bool, isCritical: bool }
 
-  /// Attack resolution: nat20 always hits+crits, nat1 always misses
+  /// Attack resolution: d20 >= critRange always hits+crits, nat1 always misses
   pure def resolveAttackRoll(
     d20Roll: int,
     attackBonus: int,
     targetAC: int,
-    targetCoverBonus: int
+    targetCoverBonus: int,
+    critRange: int
   ): AttackResult = {
-    if (d20Roll == 20) { hits: true, isCritical: true }
+    if (d20Roll >= critRange) { hits: true, isCritical: true }
     else if (d20Roll == 1) { hits: false, isCritical: false }
     else {
       val total = d20Roll + attackBonus
@@ -1847,6 +1849,7 @@ module dnd {
     canRitualCast: false,
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
+    critRange: 20,
   }
 
   pure val FRESH_TURN: TurnState = {
