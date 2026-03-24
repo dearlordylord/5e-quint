@@ -19,7 +19,7 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), "../..")
-QA_DIR = os.path.join(BASE_DIR, ".references/qa2014")
+QA_DIR = os.path.join(BASE_DIR, ".references/qa")
 CACHE_DIR = os.path.join(QA_DIR, "cache/assertions")
 CLASSIFIED = os.path.join(QA_DIR, "classified.jsonl")
 OUTPUT_QNT = os.path.join(BASE_DIR, "qa_generated.qnt")

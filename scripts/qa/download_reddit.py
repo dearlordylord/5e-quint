@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download r/dndnext posts and comment trees from Arctic Shift API."""
+"""Download r/onednd posts and comment trees from Arctic Shift API."""
 
 import json
 import os
@@ -12,9 +12,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 API_BASE = "https://arctic-shift.photon-reddit.com/api"
-RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/raw")
-POSTS_PATH = os.path.join(RAW_DIR, "dndnext_posts.jsonl")
-COMMENTS_DIR = os.path.join(RAW_DIR, "dndnext_comments")
+RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
+POSTS_PATH = os.path.join(RAW_DIR, "onednd_posts.jsonl")
+COMMENTS_DIR = os.path.join(RAW_DIR, "onednd_comments")
 
 POST_FIELDS = "id,title,selftext,score,created_utc,num_comments,link_flair_text,author"
 
@@ -45,7 +45,7 @@ def api_get(endpoint, params, max_retries=5):
 
 
 def download_posts():
-    """Paginate through all dndnext posts using date-based cursor."""
+    """Paginate through all onednd posts using date-based cursor."""
     os.makedirs(RAW_DIR, exist_ok=True)
 
     last_ts = 0
@@ -66,7 +66,7 @@ def download_posts():
     with open(POSTS_PATH, mode) as f:
         while True:
             params = {
-                "subreddit": "dndnext",
+                "subreddit": "onednd",
                 "limit": "auto",
                 "sort": "asc",
                 "after": after_ts,

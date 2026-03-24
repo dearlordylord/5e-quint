@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parse RPG Stack Exchange dump → JSONL corpus of dnd-5e Q&A pairs."""
+"""Parse RPG Stack Exchange dump → JSONL corpus of dnd-5e-2024 Q&A pairs."""
 
 import html
 import json
@@ -7,9 +7,9 @@ import os
 import re
 import xml.etree.ElementTree as ET
 
-RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/raw")
+RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
 POSTS_XML = os.path.join(RAW_DIR, "rpg.stackexchange.com", "Posts.xml")
-OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/se_corpus.jsonl")
+OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa/se_corpus.jsonl")
 
 
 def strip_html(s):
@@ -38,7 +38,7 @@ def parse():
         tags = elem.get("Tags", "")
         post_id = elem.get("Id")
 
-        if post_type == "1" and "dnd-5e" in tags:
+        if post_type == "1" and "dnd-5e-2024" in tags:
             # Question
             questions[post_id] = {
                 "id": post_id,
@@ -59,7 +59,7 @@ def parse():
             }
         elem.clear()
 
-    print(f"Found {len(questions)} dnd-5e questions, {len(answers)} total answers")
+    print(f"Found {len(questions)} dnd-5e-2024 questions, {len(answers)} total answers")
 
     # Pass 2: join questions with accepted answers
     paired = 0

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Parse downloaded Reddit dndnext data → JSONL corpus."""
+"""Parse downloaded Reddit onednd data → JSONL corpus."""
 
 import json
 import os
 
-RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/raw")
-POSTS_PATH = os.path.join(RAW_DIR, "dndnext_posts.jsonl")
-COMMENTS_DIR = os.path.join(RAW_DIR, "dndnext_comments")
-OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa2014/reddit_corpus.jsonl")
+RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
+POSTS_PATH = os.path.join(RAW_DIR, "onednd_posts.jsonl")
+COMMENTS_DIR = os.path.join(RAW_DIR, "onednd_comments")
+OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa/reddit_corpus.jsonl")
 
 TOP_N_COMMENTS = 10
 
@@ -77,7 +77,7 @@ def parse():
                 "comments": comments,
                 "flair": post.get("link_flair_text", ""),
                 "score": post.get("score", 0),
-                "url": f"https://reddit.com/r/dndnext/comments/{post_id}/",
+                "url": f"https://reddit.com/r/onednd/comments/{post_id}/",
             }
             fout.write(json.dumps(entry, ensure_ascii=False) + "\n")
             count += 1
