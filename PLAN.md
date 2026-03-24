@@ -19,9 +19,15 @@ This plan covers **core mechanics only** — generic rules modeled in `dnd.qnt` 
 ## Completed
 
 Core types, config, d20 resolution, equipment, HP/death saves, 14 conditions + exhaustion,
-turn structure & action economy, attack resolution, combat actions, two-weapon fighting,
-grapple & shove, opportunity attacks, mounted combat (partial), movement system,
-spellcasting framework (slots, concentration, ritual, bonus action rule, multiclass slots),
+turn structure & action economy, attack resolution (including condition-attack interactions:
+auto-crit for paralyzed/unconscious within 5ft, auto-fail STR/DEX saves, petrified resistance),
+combat actions, two-weapon fighting, grapple & shove, opportunity attacks,
+mounted combat (partial — no task to complete; mount/dismount, controlled mount actions,
+forced dismount save, mount knocked prone reaction all implemented),
+movement system (including flying falls: `pFlyingCreatureFalls`),
+underwater combat attack penalties (via `AttackContext` fields; missing: fire resistance for fully submerged),
+squeezing attack disadvantage and movement cost (missing: advantage on attacks against squeezer, DEX save disadvantage),
+spellcasting framework (slots, concentration, ritual, bonus action rule, multiclass slots, pact slots),
 resting, environment, character construction & leveling, unarmored defense (Barbarian/Monk
 AC formulas already in `CharConfig.unarmoredDefense`), Extra Attack (`FExtraAttack` variants).
 MBT infrastructure wired to `@firfi/quint-connect`.
@@ -62,45 +68,31 @@ Add `critRange: int` to config (default 20). Champion sets 19/18.
 
 ```
 [T10a] Cover (P1) -> deps: none
-[T10b] Condition-Attack Interactions (P1) -> deps: none
 [T10c] Resistance Stacking & Order of Operations (P1) -> deps: none
-[T10d] Underwater Combat (P3) -> deps: none
-[T10e] Squeezing (P3) -> deps: none
-[T10f] Flying Falls (P2) -> deps: none
+[T10d] Underwater Combat — fire resistance (P3) -> deps: none
+[T10e] Squeezing — defense modifiers (P3) -> deps: none
 ```
 
 **[T10a] Cover**
-Partially implemented: `CoverType`, `coverBonus()`, `canBeTargeted()`, and attack-roll integration (`targetCoverBonus` param in `resolveAttackRoll`) already exist. Remaining: integrate cover bonus into DEX save resolution via `pGetSaveModifiers`.
+Partially implemented: `CoverType`, `coverBonus()`, `canBeTargeted()`, and attack-roll integration (`targetCoverBonus` param in `resolveAttackRoll`) already exist. Remaining: integrate cover bonus into DEX save resolution via `pSaveModifiers`.
 - Functions: modify `pSaveModifiers` to add cover bonus for DEX saves
 - Test: half cover +2 DEX save; three-quarters +5 DEX save; cover doesn't affect non-DEX saves
-
-**[T10b] Condition-Attack Interactions**
-Auto-crit: attacks that hit a paralyzed or unconscious creature within 5 feet are automatic critical hits. Auto-fail saves: paralyzed, stunned, unconscious, and petrified creatures automatically fail STR and DEX saving throws. Petrified also grants resistance to all damage. These are core condition effects that interact with attack and save resolution.
-- Functions: modify `pResolveIncomingAttack` to auto-crit if target is paralyzed/unconscious and attacker within 5ft; modify `pResolveSave` to auto-fail STR/DEX if paralyzed/stunned/unconscious/petrified
-- Test: melee attack on paralyzed target within 5ft is auto-crit; ranged attack on paralyzed target is NOT auto-crit; paralyzed creature auto-fails DEX save (e.g. Fireball); stunned creature auto-fails STR save; petrified creature auto-fails both; unconscious at 0 HP + auto-crit within 5ft = two death save failures; petrified creature has resistance to all damage
 
 **[T10c] Resistance Stacking & Order of Operations**
 Partially implemented: `applyDamageModifiers` already handles immunity->resistance->vulnerability ordering, and uses `Set[DamageType]` so multiple instances naturally count as one. Remaining: add flat-modifier support (applied before halving/doubling) — current function has no pre-resistance flat modifier step.
 - Functions: extend `applyDamageModifiers` (or add wrapper) to accept flat modifiers applied before resistance/vulnerability
 - Test: flat bonuses applied before halving; resistance + vulnerability = apply both in order (halve then double = 1x); multiple resistance sources still count as one
 
-**[T10d] Underwater Combat**
-Melee weapons (except dagger, javelin, shortsword, spear, trident): disadvantage on attack rolls unless creature has swim speed. Ranged weapons: auto-miss beyond normal range; disadvantage within normal range (except crossbow, net, javelin-like thrown). Fully immersed creatures have fire resistance.
-- State: `isUnderwater: bool` (for attack penalties), `isFullySubmerged: bool` (for fire resistance — stricter than merely underwater)
-- Functions: modify `pGetOwnAttackModifiers` for underwater melee/ranged penalties; modify `pApplyDamageModifiers` for fire resistance when fully submerged
-- Test: underwater melee with longsword = disadvantage without swim speed; underwater melee with shortsword = no penalty; underwater ranged beyond normal range = auto-miss; fully submerged = fire resistance (wading does not grant fire resistance)
+**[T10d] Underwater Combat — fire resistance**
+Partially implemented: attack penalties (melee disadvantage, ranged auto-miss/disadvantage) already in `AttackContext` and `pAggregateAttackMods`. Remaining: fire resistance for fully submerged creatures.
+- State: `isFullySubmerged: bool` (for fire resistance — stricter than merely underwater)
+- Functions: modify damage resolution to add fire resistance when fully submerged
+- Test: fully submerged = fire resistance; wading does not grant fire resistance
 
-**[T10e] Squeezing**
-A creature can squeeze through a space one size smaller. While squeezing: +1 extra foot per foot moved, disadvantage on attack rolls and DEX saves, advantage on attacks against the creature.
-- State: `isSqueezed: bool`
-- Functions: modify `pGetOwnAttackModifiers` for disadvantage; modify `pGetDefenseModifiers` for advantage against; modify `pGetSaveModifiers` for DEX disadvantage; modify `pMovementCost` for +1
-- Test: squeezing = disadvantage on own attacks; attacks against have advantage; DEX saves at disadvantage; movement costs +1 per foot
-
-**[T10f] Flying Falls**
-A flying creature knocked prone, with speed reduced to 0, or otherwise deprived of ability to move, falls — unless it can hover or is held aloft by magic. Falling creature descends up to 500 feet instantly and takes 1d6 bludgeoning per 10 feet fallen.
-- State: derived from `isFlying`, `isProne`, `speed == 0`, `canHover`
-- Functions: `pCheckFlyingFall(isFlying, isProne, speed, canHover, isMagicallyAloft)->falls if flying + (prone or speed==0) and !canHover and !isMagicallyAloft`
-- Test: flying + prone = falls; flying + speed 0 = falls; flying + prone + hover = doesn't fall; flying + prone + fly spell (magically aloft) = doesn't fall; falling damage = 1d6 per 10 feet
+**[T10e] Squeezing — defense modifiers**
+Partially implemented: attack disadvantage (`squeezing` in `AttackContext`, `disadv_squeezing` in `pAggregateAttackMods`) and movement cost (`isSqueezing` in `pMovementCost`) already exist. Remaining: advantage on attacks against squeezing creature, DEX save disadvantage while squeezing.
+- Functions: modify `pDefenseModifiers` for advantage against squeezer; modify `pSaveModifiers` for DEX disadvantage while squeezing
+- Test: attacks against squeezer have advantage; DEX saves at disadvantage while squeezing
 
 ---
 
@@ -238,9 +230,8 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 ```
 All independent (parallel):
 [T02]-Crit Range
-[T10a]-Cover, [T10b]-Condition-Attack Interactions,
-[T10c]-Resistance Stacking, [T10d]-Underwater Combat,
-[T10e]-Squeezing, [T10f]-Flying Falls
+[T10a]-Cover, [T10c]-Resistance Stacking,
+[T10d]-Underwater (fire resist), [T10e]-Squeezing (defense mods)
 
 [TA1]-Active Effect Lifecycle
   +--[TA2]-END_TURN
@@ -252,7 +243,7 @@ All independent (parallel):
 
 1. **[TA1]** Active Effect Lifecycle (foundation for all timed effects)
 2. **[TA2]** END_TURN, then **[TA3]** Combat Mode, then **[TA4]** START_TURN Refactoring (sequential chain)
-3. **[T02]** Crit Range, **[T10a-f]** Combat Rule Extensions (all independent, parallel)
+3. **[T02]** Crit Range, **[T10a, T10c-e]** Combat Rule Extensions (all independent, parallel)
 
 ---
 

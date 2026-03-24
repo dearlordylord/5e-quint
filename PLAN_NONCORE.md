@@ -23,7 +23,7 @@ No task here should require adding new fields to `CreatureState` or `TurnState` 
 
 ### Cross-file dependencies
 
-Tasks in PLAN.md (core): T02, T10a-f, TA1-TA4. When a task below lists a dependency like `deps: [T02]`, that task lives in PLAN.md.
+Tasks in PLAN.md (core): T02, T10a, T10c-e, TA1-TA4. (T10b and T10f completed, no longer in the plan.) When a task below lists a dependency like `deps: [T02]`, that task lives in PLAN.md.
 
 All non-core tasks implicitly depend on TA1-TA4 (active effect lifecycle, turn lifecycle) being complete. Tasks that manage timed effects (Rage duration, spell durations, Sacred Weapon, etc.) directly compose on `pAddEffect`/`pRemoveEffect` from TA1. This blanket dependency is not repeated in individual task `deps:` lists.
 
@@ -59,7 +59,7 @@ Extend `Feature` sum type or replace with `(class, level)` derivation.
 When multiclassing into a non-starting class, only partial proficiencies are gained (varies per class: Fighter gets armor/weapons/shields, Wizard gets nothing, etc.). Affects AC and weapon eligibility. Attacking with a non-proficient weapon: no proficiency bonus added to attack roll (NOT disadvantage). Druid restriction: will not wear metal armor or shields (config flag).
 - State: `startingClass: ClassName` in config; per-class multiclass proficiency table as pure lookup
 - Functions: `pMulticlassProficiencies(className) -> Set[Proficiency]`; modify attack resolution to omit proficiency bonus for non-proficient weapons (caller-side, attackBonus already pre-computed)
-- Constraint: Unarmored Defense can't be gained from a second class if already possessed; Extra Attack from multiple classes doesn't stack (can't exceed 2 attacks unless class feature says otherwise, e.g. Fighter); Thirsting Blade doesn't add to Extra Attack
+- Constraint: Unarmored Defense stacking (`pCanGainUnarmoredDefense`) and Extra Attack stacking (`pExtraAttackStacks`) already implemented in `dnd.qnt` section 18. Thirsting Blade doesn't add to Extra Attack (warlock-specific, enforced here)
 - Test: Wizard multiclass gains no new proficiencies; Fighter multiclass gains light/medium armor + shields + simple/martial weapons; Bard multiclass gains light armor + 1 skill; attack with non-proficient weapon has no prof bonus (not disadvantage); Barbarian/Monk multiclass doesn't grant second Unarmored Defense
 
 ---
