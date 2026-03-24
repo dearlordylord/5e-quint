@@ -2,6 +2,8 @@
 node_modules/
 .references/*
 !.references/srd/
+!.references/srd-5.2.1/
+!.references/srd-5.2.1-conversion/
 !.references/qa2014/
 .references/qa2014/raw/
 .references/qa2014/se_corpus.jsonl

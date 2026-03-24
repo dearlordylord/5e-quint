@@ -1,0 +1,79 @@
+# Capitalization
+
+Game objects are more rigorously capitalized. The following terms are capitalized:
+
+- Abilities {Strength, Intelligence}
+- Action names {the Attack action, the Dash action}
+- Action types {Bonus Action, Legendary Action, Reaction}
+- Advantage
+- Adventuring gear that has rules {Arrow, Map}
+- Alignments {Chaotic Neutral, Lawful Good}
+- Areas of effect {Cone, Cylinder, Line}
+- Armor Class (AC)
+- Armor categories {Light, Medium}
+- Armors {Breastplate, Hide Armor}
+- Attitudes {Friendly, Hostile}
+- Attunement
+- Bloodied
+- Challenge Rating (CR)
+- Classes {Fighter, Wizard}
+- Class features {Sneak Attack, Rage}
+- Coin currencies {GP, SP, PP}
+- Concentration
+- Conditions {Poisoned, Prone}
+- Cover {Half Cover, Three-Quarters Cover}
+- Creature type (Fey, Humanoid, Undead)
+- Critical Hit
+- Curses {Demonic Possession}
+- Damage susceptibility {Immunity, Resistance, Vulnerability}
+- Damage types {Acid, Piercing, Thunder}
+- Death Saving Throw
+- Difficult Terrain
+- Difficulty Class (DC)
+- Disadvantage
+- D20 Test
+- Experience Points (XP)
+- Feat categories {General Feat, Origin Feat}
+- Feats {Alert, Boon of Fate, Grappler}
+- Game Master (GM)
+- Heroic Inspiration
+- Hit Point Dice
+- Hit Points (HP)
+- Initiative
+- Languages {Common, Dwarvish, Elvish}
+- Lifestyles {Modest, Wealthy}
+- Light levels {Bright Light, Dim Light}
+- Magical contagions {Cackle Fever, Sewer Plague}
+- Magic item categories {the Wand category}
+- Magic items {Bag of Holding, Feather Token}
+- Magic item rarities {Common, Very Rare}
+- Mastery properties {Cleave, Slow}
+- Obscurement {Heavily Obscured, Lightly Obscured}
+- Opportunity Attack
+- Passive Perception
+- Planes of existence {Elemental Planes, Upper Planes}
+- Poisons {Crawler Mucus, Midnight Tears}
+- Proficiency Bonus
+- Rests {Short Rest, Long Rest}
+- Ritual
+- Schools of magic {Abjuration, Evocation}
+- Size {Medium, Tiny}
+- Skills {Arcana, Perception}
+- Special senses {Darkvision, Tremorsense}
+- Species for player characters {Dwarf, Elf}
+- Speeds {Climb Speed, Fly Speed, Speed}
+- Spells {Command, Fireball}
+- Spell components {Verbal, Material, Somatic}
+- Stable
+- Stat block names {Ankheg, Goblin Boss}
+- Subclass features {Blessed Healer, Improved Critical}
+- Subclasses {Champion, Draconic Sorcery}
+- Temporary Hit Points
+- Tools {Disguise Kit, Thieves' Tools}
+- Traits in species and monsters {Resourceful, Siege Monster}
+- Travel paces {Fast, Slow}
+- Vehicles {Airship, Rowboat}
+- Weapon categories {Melee, Simple}
+- Weapon properties {Finesse, Light}
+- Weapons {Heavy Crossbow, Longsword}
+- Named parts of actions, class features, magic items, spells, etc. {the Break Enchantment feature of the *Dispel Evil and Good* spell}
