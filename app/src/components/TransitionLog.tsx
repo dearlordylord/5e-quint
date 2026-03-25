@@ -3,7 +3,7 @@ import { memo, useMemo } from "react"
 import { useT } from "#/i18n.ts"
 import type { DndEvent, DndSnapshot } from "#/machine.ts"
 
-type StateKey = "conscious" | "dying" | "stable" | "dead"
+type StateKey = "alive" | "dying" | "stable" | "dead"
 
 export interface LogEntry {
   id: number
@@ -16,7 +16,7 @@ export function stateKey(snap: DndSnapshot): StateKey {
   if (snap.matches({ damageTrack: "dead" })) return "dead"
   if (snap.matches({ damageTrack: { dying: "stable" } })) return "stable"
   if (snap.matches({ damageTrack: "dying" })) return "dying"
-  return "conscious"
+  return "alive"
 }
 
 function formatEvent(e: DndEvent): string {

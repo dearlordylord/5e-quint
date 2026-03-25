@@ -27,14 +27,14 @@ const DYING_FALL_PREFIX = [
 ] as const
 
 export const damageTrackConfig = {
-  initial: "conscious" as const,
+  initial: "alive" as const,
   states: {
-    conscious: {
+    alive: {
       always: { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
       on: {
         TAKE_DAMAGE: [
           {
-            guard: "instantDeathFromConscious" as const,
+            guard: "instantDeathFromAlive" as const,
             target: "#dnd.damageTrack.dead",
             actions: ["applyDamage", "breakConcentration"]
           },
@@ -47,10 +47,7 @@ export const damageTrackConfig = {
         ],
         HEAL: { actions: ["applyHeal"] },
         GRANT_TEMP_HP: { actions: ["applyTempHp"] },
-        KNOCK_OUT: {
-          target: "#dnd.damageTrack.dying.stable",
-          actions: ["applyKnockOut", "setUnconscious"]
-        },
+        KNOCK_OUT: { actions: ["applyKnockOut", "setUnconscious"] },
         APPLY_FALL: [
           {
             guard: "fallInstantDeath" as const,
@@ -75,17 +72,14 @@ export const damageTrackConfig = {
       initial: "unstable" as const,
       always: { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
       on: {
-        HEAL: { target: "#dnd.damageTrack.conscious", actions: ["applyHealFromZero", "clearUnconscious"] },
+        HEAL: { target: "#dnd.damageTrack.alive", actions: ["applyHealFromZero", "clearUnconscious"] },
         GRANT_TEMP_HP: { actions: ["applyTempHp"] },
-        KNOCK_OUT: {
-          target: "#dnd.damageTrack.dying.stable",
-          actions: ["applyKnockOut", "setUnconscious"]
-        },
+        KNOCK_OUT: { target: "#dnd.damageTrack.alive", actions: ["applyKnockOut"] },
         APPLY_FALL: [...DYING_FALL_PREFIX, { actions: ["applyFallAtZeroHp"] }],
         SHORT_REST: [
           {
             guard: "shortRestHeals" as const,
-            target: "#dnd.damageTrack.conscious",
+            target: "#dnd.damageTrack.alive",
             actions: ["shortRest", "clearUnconscious"]
           },
           { actions: ["shortRest"] }
@@ -93,7 +87,7 @@ export const damageTrackConfig = {
         LONG_REST: [
           {
             guard: "longRestHeals" as const,
-            target: "#dnd.damageTrack.conscious",
+            target: "#dnd.damageTrack.alive",
             actions: ["longRest", "clearUnconscious"]
           },
           { actions: ["longRest"] }
@@ -101,7 +95,7 @@ export const damageTrackConfig = {
         SPEND_HIT_DIE: [
           {
             guard: "hitDieHeals" as const,
-            target: "#dnd.damageTrack.conscious",
+            target: "#dnd.damageTrack.alive",
             actions: ["spendHitDie", "clearUnconscious"]
           },
           { actions: ["spendHitDie"] }
@@ -114,7 +108,7 @@ export const damageTrackConfig = {
             DEATH_SAVE: [
               {
                 guard: "deathSaveRegainsConsciousness" as const,
-                target: "#dnd.damageTrack.conscious",
+                target: "#dnd.damageTrack.alive",
                 actions: ["applyDeathSave", "clearUnconscious"]
               },
               { guard: "deathSaveStabilizes" as const, target: "stable", actions: ["applyDeathSave"] },

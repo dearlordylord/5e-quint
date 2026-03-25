@@ -54,8 +54,8 @@ function snap(actor: ReturnType<typeof create>): DndSnapshot {
   return actor.getSnapshot()
 }
 
-function isConscious(s: DndSnapshot) {
-  return s.matches({ damageTrack: "conscious" })
+function isAlive(s: DndSnapshot) {
+  return s.matches({ damageTrack: "alive" })
 }
 
 function isUnstable(s: DndSnapshot) {
@@ -197,14 +197,14 @@ describe("effectiveMaxHp", () => {
 describe("damage track - basic damage", () => {
   it("starts conscious with full HP", () => {
     const a = create()
-    expect(isConscious(snap(a))).toBe(true)
+    expect(isAlive(snap(a))).toBe(true)
     expect(snap(a).context.hp).toBe(DEFAULT_MAX_HP)
   })
 
   it("reduces HP from damage", () => {
     const a = create()
     takeDamage(a, 5)
-    expect(isConscious(snap(a))).toBe(true)
+    expect(isAlive(snap(a))).toBe(true)
     expect(snap(a).context.hp).toBe(15)
   })
 
@@ -348,7 +348,7 @@ describe("damage track - death saves", () => {
   it("nat 20 = regain 1 HP and consciousness", () => {
     const a = createDying()
     deathSave(a, 20)
-    expect(isConscious(snap(a))).toBe(true)
+    expect(isAlive(snap(a))).toBe(true)
     expect(snap(a).context.hp).toBe(1)
     expect(snap(a).context.deathSaves.successes).toBe(0)
     expect(snap(a).context.deathSaves.failures).toBe(0)
@@ -359,7 +359,7 @@ describe("damage track - death saves", () => {
     deathSave(a, 5) // 1 failure
     deathSave(a, 15) // 1 success
     deathSave(a, 20) // nat 20
-    expect(isConscious(snap(a))).toBe(true)
+    expect(isAlive(snap(a))).toBe(true)
     expect(snap(a).context.deathSaves.successes).toBe(0)
     expect(snap(a).context.deathSaves.failures).toBe(0)
   })
@@ -415,7 +415,7 @@ describe("damage track - healing", () => {
     takeDamage(a, DEFAULT_MAX_HP)
     expect(isUnstable(snap(a))).toBe(true)
     heal(a, 5)
-    expect(isConscious(snap(a))).toBe(true)
+    expect(isAlive(snap(a))).toBe(true)
     expect(snap(a).context.hp).toBe(5)
   })
 
@@ -433,7 +433,7 @@ describe("damage track - healing", () => {
     takeDamage(a, DEFAULT_MAX_HP)
     stabilize(a)
     heal(a, 3)
-    expect(isConscious(snap(a))).toBe(true)
+    expect(isAlive(snap(a))).toBe(true)
     expect(snap(a).context.hp).toBe(3)
   })
 })
@@ -451,13 +451,13 @@ describe("damage track - stabilize", () => {
 })
 
 describe("damage track - knock out", () => {
-  it("knock out sets HP to 0 and stable", () => {
+  it("knock out sets HP to 1, stays alive, unconscious+prone", () => {
     const a = create()
     knockOut(a)
-    expect(isStable(snap(a))).toBe(true)
-    expect(snap(a).context.hp).toBe(0)
-    expect(snap(a).context.deathSaves.successes).toBe(0)
-    expect(snap(a).context.deathSaves.failures).toBe(0)
+    expect(isAlive(snap(a))).toBe(true)
+    expect(snap(a).context.hp).toBe(1)
+    expect(snap(a).context.unconscious).toBe(true)
+    expect(snap(a).context.prone).toBe(true)
   })
 })
 
@@ -600,7 +600,7 @@ describe("condition implications - unconscious", () => {
     const a = create()
     takeDamage(a, DEFAULT_MAX_HP)
     heal(a, 5)
-    expect(isConscious(snap(a))).toBe(true)
+    expect(isAlive(snap(a))).toBe(true)
     expect(ctx(a).unconscious).toBe(false)
     expect(ctx(a).prone).toBe(true)
   })
@@ -609,7 +609,7 @@ describe("condition implications - unconscious", () => {
     const a = create()
     takeDamage(a, DEFAULT_MAX_HP)
     deathSave(a, 20)
-    expect(isConscious(snap(a))).toBe(true)
+    expect(isAlive(snap(a))).toBe(true)
     expect(ctx(a).unconscious).toBe(false)
     expect(ctx(a).prone).toBe(true)
   })
@@ -617,7 +617,7 @@ describe("condition implications - unconscious", () => {
   it("KNOCK_OUT sets unconscious and prone", () => {
     const a = create()
     knockOut(a)
-    expect(isStable(snap(a))).toBe(true)
+    expect(isAlive(snap(a))).toBe(true)
     expect(ctx(a).unconscious).toBe(true)
     expect(ctx(a).prone).toBe(true)
     expect(isIncapacitated(ctx(a))).toBe(true)
