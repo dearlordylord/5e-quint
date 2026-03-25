@@ -121,11 +121,12 @@ export const dndMachine = setup({
     },
     canSuffocate: ({ context: c }) => c.hp > 0,
     shortRestHeals: ({ context: c, event: e }) => {
+      if (c.inCombat) return false
       const ev = asShortRest(e)
       const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
       return c.hp === 0 && r.newHp > 0
     },
-    longRestHeals: ({ context: c }) => c.hp >= 1,
+    longRestHeals: ({ context: c }) => !c.inCombat && c.hp >= 1,
     hitDieHeals: ({ context: c, event: e }) => {
       if (c.hitDiceRemaining <= 0) return false
       const ev = asSpendHitDie(e)
@@ -137,10 +138,13 @@ export const dndMachine = setup({
     shouldBreakConcentration: ({ context: c }) => c.concentrationSpellId === "",
     canExpendSlot: ({ context: c }) => c.hp > 0 && !isIncapacitated(c),
     contextDead: ({ context: c }) => c.dead,
-    hpZeroUnconscious: ({ context: c }) => c.hp === 0 && c.unconscious
+    hpZeroUnconscious: ({ context: c }) => c.hp === 0 && c.unconscious,
+    isOutOfCombat: ({ context: c }) => !c.inCombat
   },
   actions: {
     markDead: assign({ dead: true }),
+    enterCombat: assign({ inCombat: true }),
+    exitCombat: assign({ inCombat: false }),
     applyDamage: assign(({ context: c, event: e }) => {
       const r = dmgR(c, e)
       return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp) }
@@ -380,6 +384,7 @@ export const dndMachine = setup({
     activeEffects: [] as ReadonlyArray<ActiveEffect>,
     concentrationSpellId: "",
     dead: false,
+    inCombat: false,
     deathSaves: DEATH_SAVES_RESET,
     stable: false,
     effectiveSpeed: movementFeet(i.effectiveSpeed ?? 0),

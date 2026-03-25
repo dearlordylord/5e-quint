@@ -420,6 +420,8 @@ type EventActionMap = {
   APPLY_DEHYDRATION: "doApplyDehydration"
   ADD_EFFECT: "doAddEffect"
   REMOVE_EFFECT: "doRemoveEffect"
+  ENTER_COMBAT: "doEnterCombat"
+  EXIT_COMBAT: "doExitCombat"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -497,6 +499,8 @@ const driverSchema = {
   doReleaseGrapple: {},
   doEscapeGrapple: { escaped: z.boolean() },
   doShove: { atkSize: ITFVariant, tgtSize: ITFVariant, saveFailed: z.boolean(), choice: ITFVariant },
+  doEnterCombat: {},
+  doExitCombat: {},
   step: {} // dead character no-op
 } as const
 
@@ -737,6 +741,12 @@ const dndDriver = defineDriver(driverSchema, () => {
         targetSaveFailed: saveFailed,
         choice: QUINT_SHOVE_MAP[choice] ?? "prone"
       })
+    },
+    doEnterCombat: () => {
+      send({ type: "ENTER_COMBAT" })
+    },
+    doExitCombat: () => {
+      send({ type: "EXIT_COMBAT" })
     },
     step: () => {}, // dead character no-op
     getState: () => snapshotToNormalized(ensureActor().getSnapshot()),

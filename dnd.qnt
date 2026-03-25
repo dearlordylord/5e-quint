@@ -2033,40 +2033,62 @@ module dnd {
   }
 
   // Turn actions
+  action unchanged = all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+
+  // Combat mode transitions
+  action doEnterCombat = {
+    if (turnPhase != "outOfCombat") unchanged
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn" }
+  }
+
+  action doExitCombat = {
+    if (turnPhase == "outOfCombat") unchanged
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat" }
+  }
+
   action doStartTurn = {
     nondet callerSpeedMod = (-10).to(10).oneOf()
     nondet isGrappling = Bool.oneOf()
     nondet grappledSmall = Bool.oneOf()
-    val t1 = pStartTurn(TEST_CONFIG, state, Unarmored, callerSpeedMod, isGrappling, grappledSmall)
-    all { state' = state, turnState' = t1, spellSlots' = spellSlots, turnPhase' = "acting" }
+    if (turnPhase != "waitingForTurn") unchanged
+    else {
+      val t1 = pStartTurn(TEST_CONFIG, state, Unarmored, callerSpeedMod, isGrappling, grappledSmall)
+      all { state' = state, turnState' = t1, spellSlots' = spellSlots, turnPhase' = "acting" }
+    }
   }
 
   action doUseAction = {
     nondet at = ACTION_TYPES.oneOf()
-    all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase }
+    if (turnPhase != "acting") unchanged
+    else all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
-  action doUseBonusAction = all {
-    state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase
+  action doUseBonusAction = {
+    if (turnPhase != "acting") unchanged
+    else all { state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
-  action doUseReaction = all {
-    state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase
+  action doUseReaction = {
+    if (turnPhase != "acting") unchanged
+    else all { state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doUseMovement = {
     nondet feet = MOVEMENT_RANGE.oneOf()
     nondet cost = MOVE_COST_RANGE.oneOf()
-    all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase }
+    if (turnPhase != "acting") unchanged
+    else all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
-  action doUseExtraAttack = all {
-    state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase
+  action doUseExtraAttack = {
+    if (turnPhase != "acting") unchanged
+    else all { state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doStandFromProne = {
+    if (turnPhase != "acting") unchanged
     // Can't stand if incapacitated (unconscious, paralyzed, etc.)
-    if (isIncapacitated(state)) all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    else if (isIncapacitated(state)) unchanged
     else {
       val t1 = pStandFromProne(turnState)
       val s1 = if (t1 != turnState) pRemoveCondition(state, CProne) else state
@@ -2074,16 +2096,19 @@ module dnd {
     }
   }
 
-  action doDropProne = all {
-    state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase
+  action doDropProne = {
+    if (turnPhase != "acting") unchanged
+    else all { state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
-  action doMarkBonusActionSpell = all {
-    state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase
+  action doMarkBonusActionSpell = {
+    if (turnPhase != "acting") unchanged
+    else all { state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
-  action doMarkNonCantripActionSpell = all {
-    state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase
+  action doMarkNonCantripActionSpell = {
+    if (turnPhase != "acting") unchanged
+    else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   // Spell slot actions (A1: requires ability to act — see ASSUMPTIONS.md)
@@ -2101,7 +2126,7 @@ module dnd {
   action doStartConcentration = {
     nondet spellId = SPELL_IDS.oneOf()
     nondet duration = EFFECT_DURATION_RANGE.oneOf()
-    if (state.dead) all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    if (state.dead) unchanged
     else {
       val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
       val effects2 = pAddEffect(effects1, spellId, duration, AtEndOfTurn)
@@ -2149,21 +2174,27 @@ module dnd {
     nondet r1 = HD_ROLL_RANGE.oneOf()
     nondet r2 = HD_ROLL_RANGE.oneOf()
     nondet r3 = HD_ROLL_RANGE.oneOf()
-    val rolls = [r1, r2, r3].slice(0, numDice)
-    all {
-      state' = pShortRest(state, conMod, rolls),
-      turnState' = turnState,
-      spellSlots' = pRestorePactSlots(spellSlots),
-      turnPhase' = turnPhase,
+    if (turnPhase != "outOfCombat") unchanged
+    else {
+      val rolls = [r1, r2, r3].slice(0, numDice)
+      all {
+        state' = pShortRest(state, conMod, rolls),
+        turnState' = turnState,
+        spellSlots' = pRestorePactSlots(spellSlots),
+        turnPhase' = turnPhase,
+      }
     }
   }
 
   action doLongRest = {
-    all {
-      state' = pLongRest(state, 5),
-      turnState' = turnState,
-      spellSlots' = pRestoreAllSlots(spellSlots),
-      turnPhase' = turnPhase,
+    if (turnPhase != "outOfCombat") unchanged
+    else {
+      all {
+        state' = pLongRest(state, 5),
+        turnState' = turnState,
+        spellSlots' = pRestoreAllSlots(spellSlots),
+        turnPhase' = turnPhase,
+      }
     }
   }
 
@@ -2222,9 +2253,8 @@ module dnd {
   // -- 19.6 doEndTurn Action --
 
   action doEndTurn = {
-    if (turnPhase != "acting") {
-      all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
-    } else {
+    if (turnPhase != "acting") unchanged
+    else {
       nondet numSaves = 0.to(1).oneOf()
       nondet saveSpellId = SPELL_IDS.oneOf()
       nondet saveSucceeded = Bool.oneOf()
@@ -2251,9 +2281,8 @@ module dnd {
   // -- 19.7 Step Action --
 
   action step = {
-    if (state.dead) {
-      all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
-    } else {
+    if (state.dead) unchanged
+    else {
       any {
         doTakeDamage,
         doTakeDamageWithMods,
@@ -2295,6 +2324,8 @@ module dnd {
         doEscapeGrapple,
         doShove,
         doEndTurn,
+        doEnterCombat,
+        doExitCombat,
       }
     }
   }

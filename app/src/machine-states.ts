@@ -89,7 +89,7 @@ export const damageTrackConfig = {
             target: "#dnd.damageTrack.alive",
             actions: ["shortRest", "clearUnconscious"]
           },
-          { actions: ["shortRest"] }
+          { guard: "isOutOfCombat" as const, actions: ["shortRest"] }
         ],
         LONG_REST: [
           {
@@ -97,7 +97,7 @@ export const damageTrackConfig = {
             target: "#dnd.damageTrack.alive",
             actions: ["longRest", "clearUnconscious"]
           },
-          { actions: ["longRest"] }
+          { guard: "isOutOfCombat" as const, actions: ["longRest"] }
         ],
         SPEND_HIT_DIE: [
           {
@@ -141,16 +141,28 @@ export const turnPhaseConfig = {
   initial: "outOfCombat" as const,
   states: {
     outOfCombat: {
-      on: { START_TURN: { target: "acting" as const, actions: ["initTurn"] } }
+      on: { ENTER_COMBAT: { target: "waitingForTurn" as const, actions: ["enterCombat"] } }
     },
     acting: {
       on: {
-        START_TURN: { target: "acting" as const, actions: ["initTurn"] },
-        END_TURN: { target: "waitingForTurn" as const, actions: ["endTurn"] }
+        END_TURN: { target: "waitingForTurn" as const, actions: ["endTurn"] },
+        EXIT_COMBAT: { target: "outOfCombat" as const, actions: ["exitCombat"] },
+        USE_ACTION: { actions: ["useAction"] },
+        USE_BONUS_ACTION: { actions: ["useBonusAction"] },
+        USE_REACTION: { actions: ["useReaction"] },
+        USE_MOVEMENT: { actions: ["useMovement"] },
+        USE_EXTRA_ATTACK: { actions: ["useExtraAttack"] },
+        STAND_FROM_PRONE: { guard: "canStandFromProne" as const, actions: ["standFromProne"] },
+        DROP_PRONE: { actions: ["dropProne"] },
+        MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
+        MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
       }
     },
     waitingForTurn: {
-      on: { START_TURN: { target: "acting" as const, actions: ["initTurn"] } }
+      on: {
+        START_TURN: { target: "acting" as const, actions: ["initTurn"] },
+        EXIT_COMBAT: { target: "outOfCombat" as const, actions: ["exitCombat"] }
+      }
     }
   }
 } as const
@@ -190,18 +202,9 @@ export const rootEventHandlers = {
   SHOVE: { actions: ["applyShove"] },
   EXPEND_SLOT: { guard: "canExpendSlot" as const, actions: ["expendSlot"] },
   EXPEND_PACT_SLOT: { guard: "canExpendSlot" as const, actions: ["expendPactSlot"] },
-  SHORT_REST: { actions: ["shortRest"] },
-  LONG_REST: { actions: ["longRest"] },
+  SHORT_REST: { guard: "isOutOfCombat" as const, actions: ["shortRest"] },
+  LONG_REST: { guard: "isOutOfCombat" as const, actions: ["longRest"] },
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },
   APPLY_STARVATION: { actions: ["applyStarvation"] },
-  APPLY_DEHYDRATION: { actions: ["applyDehydration"] },
-  USE_ACTION: { actions: ["useAction"] },
-  USE_BONUS_ACTION: { actions: ["useBonusAction"] },
-  USE_REACTION: { actions: ["useReaction"] },
-  USE_MOVEMENT: { actions: ["useMovement"] },
-  USE_EXTRA_ATTACK: { actions: ["useExtraAttack"] },
-  STAND_FROM_PRONE: { guard: "canStandFromProne" as const, actions: ["standFromProne"] },
-  DROP_PRONE: { actions: ["dropProne"] },
-  MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
-  MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
+  APPLY_DEHYDRATION: { actions: ["applyDehydration"] }
 } as const

@@ -307,13 +307,18 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 ✓ [TA1]-Active Effect Lifecycle
   ✓ [TA1-fix]-Zombie prevention + expiresAt + concentration invariant
        ✓ [TA2]-END_TURN
-            +--[TA3]-Combat Mode
+            ✓ [TA3]-Combat Mode
                  +--[TA4]-START_TURN Refactoring
 ```
 
 ## Suggested Execution Order
 
-Next: **[TA3]** Combat Mode, then **[TA4]** START_TURN Refactoring
+Next: **[TA4]** START_TURN Refactoring
+
+### Housekeeping (no deps, do anytime)
+
+**Extract guards to `machine-guards.ts`.**
+`machine.ts` is at 413/420 lines. Guards are ~55 lines of pure `({context, event}) => boolean` functions — clean seam, no XState type issues. Extracting drops machine.ts to ~358 lines (62 lines headroom). Actions are NOT worth extracting (thin `assign()` wrappers, would add type friction).
 
 **Cross-plan dependency:** PLAN_NONCORE.md implementation is blocked until TA3+TA4 are complete (non-core composes on combat mode + turn lifecycle primitives). See `PLAN_MIGRATION.md` for the full sequencing between core, non-core, and the 5.1→5.2.1 migration.
 

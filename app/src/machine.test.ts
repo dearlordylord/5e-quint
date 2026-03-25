@@ -932,6 +932,9 @@ function startTurn(
     grappledTargetTwoSizesSmaller?: boolean
   } = {}
 ) {
+  const s = actor.getSnapshot()
+  if (s.matches({ turnPhase: "outOfCombat" })) enterCombat(actor)
+  else if (s.matches({ turnPhase: "acting" })) endTurn(actor)
   actor.send({
     type: "START_TURN",
     baseSpeed: opts.baseSpeed ?? DEFAULT_BASE_SPEED,
@@ -941,6 +944,14 @@ function startTurn(
     isGrappling: opts.isGrappling ?? false,
     grappledTargetTwoSizesSmaller: opts.grappledTargetTwoSizesSmaller ?? false
   })
+}
+
+function enterCombat(actor: ReturnType<typeof create>) {
+  actor.send({ type: "ENTER_COMBAT" })
+}
+
+function endTurn(actor: ReturnType<typeof create>) {
+  actor.send({ type: "END_TURN", endOfTurnSaves: [], endOfTurnDamage: [] })
 }
 
 function useAction(actor: ReturnType<typeof create>, actionType: ActionType) {
@@ -984,6 +995,87 @@ describe("turn lifecycle - START_TURN", () => {
     expect(ctx(a).disengaged).toBe(true)
     startTurn(a)
     expect(ctx(a).disengaged).toBe(false)
+  })
+})
+
+describe("combat mode separation (TA3)", () => {
+  it("ENTER_COMBAT transitions outOfCombat -> waitingForTurn", () => {
+    const a = create()
+    expect(snap(a).matches({ turnPhase: "outOfCombat" })).toBe(true)
+    enterCombat(a)
+    expect(snap(a).matches({ turnPhase: "waitingForTurn" })).toBe(true)
+  })
+
+  it("EXIT_COMBAT transitions acting -> outOfCombat", () => {
+    const a = create()
+    startTurn(a)
+    expect(snap(a).matches({ turnPhase: "acting" })).toBe(true)
+    a.send({ type: "EXIT_COMBAT" })
+    expect(snap(a).matches({ turnPhase: "outOfCombat" })).toBe(true)
+  })
+
+  it("EXIT_COMBAT transitions waitingForTurn -> outOfCombat", () => {
+    const a = create()
+    enterCombat(a)
+    expect(snap(a).matches({ turnPhase: "waitingForTurn" })).toBe(true)
+    a.send({ type: "EXIT_COMBAT" })
+    expect(snap(a).matches({ turnPhase: "outOfCombat" })).toBe(true)
+  })
+
+  it("START_TURN ignored from outOfCombat", () => {
+    const a = create()
+    a.send({
+      type: "START_TURN",
+      baseSpeed: 30,
+      armorPenalty: 0,
+      extraAttacks: 0,
+      callerSpeedModifier: 0,
+      isGrappling: false,
+      grappledTargetTwoSizesSmaller: false
+    })
+    expect(snap(a).matches({ turnPhase: "outOfCombat" })).toBe(true)
+  })
+
+  it("USE_ACTION ignored when outOfCombat", () => {
+    const a = create()
+    useAction(a, "dodge")
+    expect(ctx(a).actionUsed).toBe(false)
+  })
+
+  it("USE_ACTION ignored when waitingForTurn", () => {
+    const a = create()
+    enterCombat(a)
+    useAction(a, "dodge")
+    expect(ctx(a).actionUsed).toBe(false)
+  })
+
+  it("SHORT_REST ignored when acting", () => {
+    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: 3 } })
+    a.start()
+    startTurn(a)
+    takeDamage(a, 5)
+    const hpBefore = ctx(a).hp
+    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })
+    expect(ctx(a).hp).toBe(hpBefore)
+  })
+
+  it("SHORT_REST ignored when waitingForTurn", () => {
+    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: 3 } })
+    a.start()
+    startTurn(a)
+    takeDamage(a, 5)
+    endTurn(a)
+    const hpBefore = ctx(a).hp
+    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })
+    expect(ctx(a).hp).toBe(hpBefore)
+  })
+
+  it("SHORT_REST works when outOfCombat", () => {
+    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: 3 } })
+    a.start()
+    takeDamage(a, 5)
+    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })
+    expect(ctx(a).hp).toBe(20)
   })
 })
 
@@ -2086,18 +2178,9 @@ describe("expendSlot helper", () => {
 })
 
 describe("machine action edge cases", () => {
-  const INIT_SPEED = 30
-
   it("stand from prone fails with insufficient movement", () => {
-    const a = createActor(dndMachine, {
-      input: {
-        maxHp: DEFAULT_MAX_HP,
-        effectiveSpeed: INIT_SPEED,
-        movementRemaining: INIT_SPEED,
-        extraAttacksRemaining: 1
-      }
-    })
-    a.start()
+    const a = create()
+    startTurn(a)
     a.send({ type: "DROP_PRONE" })
     expect(ctx(a).prone).toBe(true)
     // Consume almost all movement, leave only 4 (need 15 to stand at speed 30)
@@ -2134,10 +2217,8 @@ describe("machine action edge cases", () => {
   })
 
   it("use action: ready", () => {
-    const a = createActor(dndMachine, {
-      input: { maxHp: DEFAULT_MAX_HP, effectiveSpeed: 30, movementRemaining: 30, extraAttacksRemaining: 1 }
-    })
-    a.start()
+    const a = create()
+    startTurn(a)
     a.send({ type: "USE_ACTION", actionType: "ready" as ActionType })
     expect(ctx(a).readiedAction).toBe(true)
     expect(ctx(a).actionUsed).toBe(true)

@@ -36,6 +36,7 @@ export interface DndContext {
   readonly deathSaves: DeathSaves
   readonly stable: boolean
   readonly dead: boolean // bridge: endTurn (turnTrack) signals death to damageTrack via always guard
+  readonly inCombat: boolean // bridge: turnPhase region signals combat mode to damageTrack guards
   readonly exhaustion: ExhaustionLevel
   readonly blinded: boolean
   readonly charmed: boolean
@@ -177,6 +178,8 @@ export type DndEvent =
   | { readonly type: "SUFFOCATE" }
   | { readonly type: "APPLY_STARVATION" }
   | { readonly type: "APPLY_DEHYDRATION"; readonly halfWater: boolean; readonly conSaveSucceeded: boolean }
+  | { readonly type: "ENTER_COMBAT" }
+  | { readonly type: "EXIT_COMBAT" }
 
 // --- Event extractors ---
 
