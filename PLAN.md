@@ -315,6 +315,8 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 
 Next: **[TA3]** Combat Mode, then **[TA4]** START_TURN Refactoring
 
+**Cross-plan dependency:** PLAN_NONCORE.md implementation is blocked until TA3+TA4 are complete (non-core composes on combat mode + turn lifecycle primitives). See `PLAN_MIGRATION.md` for the full sequencing between core, non-core, and the 5.1→5.2.1 migration.
+
 ---
 
 ## What is NOT in this Plan

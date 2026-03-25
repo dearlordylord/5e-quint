@@ -28,35 +28,9 @@ Completed: `81c0554`. Tag: `v5.1-final`.
 
 ---
 
-## Phase 1 — QA Pipeline Version Tagging
+## Phase 1 — QA Pipeline Version Tagging ✅ SUPERSEDED
 
-Current state: 15,107 SE entries (14,878 tagged `dnd-5e-2014`, 239 tagged `dnd-5e-2024`). 2,020 classified, 876 assertion caches. Pipeline has no version awareness.
-
-### M1.1 Add `--edition` filter to `classify.py`
-- New flag: `--edition 2014|2024|all` (default `all` for backward compat)
-- Filter corpus entries by SE tag: `dnd-5e-2014` vs `dnd-5e-2024`
-- Reddit entries: filter by flair or date heuristic (posts after 2024-09-01 likely reference new rules)
-
-### M1.2 Add `--edition` filter to `generate_assertions.py`
-- Filter classified entries by edition before generating
-- System prompt must include the correct spec (`dnd2014.qnt` or `dnd.qnt`) matching the edition
-- Separate assertion cache dirs: `cache/assertions-2014/`, `cache/assertions-2024/`
-- Separate output files: `qa_generated_2014.qnt` (imports `dnd2014`), `qa_generated.qnt` (imports `dnd`)
-
-### M1.3 Add edition field to classification output
-- `classify.py` output gains `"edition": "2014"|"2024"|"ambiguous"`
-- Classifier prompt updated to detect edition from tags, terminology (e.g., "species" vs "race", "Monk's Focus" vs "Ki", "D20 Test" vs listing all three)
-- Existing cache: keep as-is, treat as `edition: "2014"` by default
-
-### M1.4 Version-sensitive QA assertion validation
-- `run_tests.py` (if it exists) or test runner must pick the right spec module
-- Add `--edition` to any test-runner scripts
-
-### M1.5 Triage existing assertion cache
-- 876 cached `.qnt` files reference `dnd` module functions that will change
-- For 2014: move to `cache/assertions-2014/`, update imports to `dnd2014`
-- For 2024: wipe and regenerate once `dnd.qnt` (2024) exists
-- Provide a migration script: `scripts/qa/migrate_assertion_cache.py`
+Pipeline already targets 5.2.1 only: `parse_se.py` filters for `dnd-5e-2024` tag, `generate_assertions.py` imports from `dnd.qnt` (5.2.1 spec). Dual-edition support unnecessary — 2014 spec archived, pipeline only produces 2024 assertions.
 
 ---
 
@@ -118,93 +92,148 @@ Changes that affect PLAN.md tasks:
 
 Port every task in PLAN_NONCORE.md from SRD 5.1 rules to SRD 5.2.1 rules. Same rule-checking approach as Phase 2. Depends on Phase 2 being complete (non-core composes on core).
 
+**Scope decisions:** minimal for new spells and feats — document names + TODO markers, no full descriptions until implementation. Strict SRD 5.2.1 parity throughout (no 5.1 holdovers like Dueling).
+
+**Execution order:** M3.2 (renames) -> M3.5 (feat framework) -> M3.1 (class deltas) -> M3.3/M3.4/M3.6 (independent, any order)
+
 ### M3.1 Class feature delta
-Every class gains new features and has existing ones revised. Major structural change: 6 classes pick subclass at level 3 (was 1-2).
 
-New features to add per class (not in 5.1 at all):
-- **All classes**: Epic Boon (level 19-20 capstone feat), Weapon Mastery
-- **Barbarian**: Primal Knowledge, Instinctive Pounce, Brutal Strike / Improved Brutal Strike
-- **Fighter**: Tactical Mind, Tactical Shift, Tactical Master, Studied Attacks
-- **Rogue**: Steady Aim, Cunning Strike, Improved Cunning Strike, Devious Strikes
-- **Monk**: Uncanny Metabolism, Heightened Focus, Deflect Energy, Superior Defense, Body and Mind
-- **Paladin**: Faithful Steed, Abjure Foes, Restoring Touch
-- **Ranger**: Deft Explorer, Roving, Tireless, Relentless Hunter, Nature's Veil, Precise Hunter
-- **Bard**: Words of Creation
-- **Cleric**: Sear Undead, Improved Blessed Strikes, Greater Divine Intervention, Divine Order
-- **Druid**: Wild Companion, Wild Resurgence, Elemental Fury / Improved Elemental Fury
-- **Sorcerer**: Innate Sorcery, Sorcery Incarnate, Arcane Apotheosis; new metamagics (Seeking Spell, Transmuted Spell)
-- **Warlock**: Magical Cunning, Contract Patron; Pact Boons moved to invocations; new invocations
-- **Wizard**: Scholar, Memorize Spell
+Every class gains new features and has existing ones revised. 5 classes pick subclass at L3 (was L1-2): Cleric, Druid, Sorcerer, Warlock, Wizard. Features moved from subclass to class level for Cleric (Divine Order, Blessed Strikes) and Druid (Primal Order, Elemental Fury).
 
-Revised features: see `.references/srd-5.2.1-conversion/03-classes.md` for full list. Key changes: Berserker Frenzy no longer causes exhaustion, Ki renamed Focus, Divine Smite is now a spell (Paladin's Smite), Channel Divinity absorbs Divine Sense, Fighting Styles are now Feats.
+Per-class rewrites in PLAN_NONCORE.md:
 
-New features fold into existing PLAN_NONCORE.md tasks where a matching class section exists (e.g., Barbarian new features -> T12 Barbarian Passives, Fighter new features -> T22/T23). Features with no natural home get new task IDs assigned during migration (e.g., Weapon Mastery per-class unlocks, Epic Boons).
+**T05 Fighting Styles** — restructure as feat framework. Only 4 feats in SRD 5.2.1: Archery, Defense, Great Weapon Fighting, Two-Weapon Fighting. Dueling and Protection removed (not in SRD 5.2.1). Prerequisite: "Fighting Style Feature" — only Fighter (L1), Paladin (L2), Ranger (L2) can take them. Fighters can swap on level-up. Champion gets second at L7. Paladin alternative: Blessed Warrior (2 Cleric cantrips). Ranger alternative: Druidic Warrior (2 Druid cantrips).
+
+**T10-T13 Barbarian:**
+- T10 Rage: maintenance rules changed (attack roll OR force save OR BA), duration up to 10 min. Persistent Rage (L15): regain all uses on Initiative 1/LR, lasts 10 min without extension
+- T11 Reckless: add Brutal Strike interaction — forgo advantage for +1d10 + effect at L9, 2d10 + two effects at L17. Effects: Forceful Blow (push 15ft), Hamstring Blow (Speed -15ft), Staggering Blow (L13, disadv next save), Sundering Blow (L13, +5 next attack vs target)
+- T12 Barbarian Passives: add Primal Knowledge (L3), Instinctive Pounce (L7, move half speed on rage entry)
+- T13 Berserker: **Frenzy no longer causes exhaustion**. Frenzy, Retaliation, Intimidating Presence all revised
+
+**T20-T23 Fighter:**
+- T20 Second Wind: scales uses (2 at L2, 3 at L?, 4 at L?). Add Tactical Mind (L2, expend SW use on failed check +1d10), Tactical Shift (L5, half-speed move without OAs on SW)
+- T21 Action Surge: 1 use, 2 at L17, once/turn (unchanged)
+- T22 Indomitable: 1/2/3 uses at L9/L13/L17
+- T23 Champion: add Heroic Warrior (L10, gain Heroic Inspiration each turn if lacking). Survivor revised (Bloodied = <=50% HP threshold). Additional Fighting Style at L7 = second Fighting Style feat
+- NEW features: Tactical Master (L9, swap weapon mastery for Push/Sap/Slow), Studied Attacks (L13, Advantage on next attack after miss)
+
+**T30-T33 Rogue:**
+- T30 Sneak Attack: base unchanged. Add Cunning Strike system (L5): spend SA dice for effects — Poison (1d6 cost, CON save or Poisoned), Trip (1d6, DEX save or Prone), Withdraw (1d6, move half speed no OAs)
+- NEW: Steady Aim (L3, BA for Advantage on next attack, Speed->0). Improved Cunning Strike (L11, two effects per SA). Devious Strikes (L14): Daze (2d6, CON save or limited actions), Knock Out (6d6, CON save or Unconscious), Obscure (3d6, DEX save or Blinded)
+- T33 Thief: Supreme Sneak adds Stealth Attack Cunning Strike option
+
+**T40-T46 Monk (Ki -> Focus):**
+- T40: Focus Pool (was Ki Pool). Martial Arts die now d6/d8/d10/d12 (was d4/d6/d8/d10)
+- T41 Martial Arts: revised die progression
+- T42: Focus Actions (was Ki Actions). Flurry scales to 3 strikes at L10. Patient Defense grants temp HP at L10. Step of the Wind can carry ally at L10
+- T43 Stunning Strike: on save success, Speed halved + Advantage on next attack vs target (not just "nothing")
+- T44 Monk Passives: Self-Restoration replaces Stillness of Mind + Purity of Body (remove Charmed/Frightened/Poisoned at end of turn). Disciplined Survivor replaces Diamond Soul (all save prof + FP reroll). Superior Defense (L18, 3 FP for all resistance except Force). Add Uncanny Metabolism (L2, regain all FP + heal on Initiative 1/LR), Deflect Energy (L13, Deflect Attacks works on all damage types), Perfect Focus (L15, regain FP to 4 on Initiative)
+- T46 Open Hand -> Warrior of the Open Hand: effects renamed (Addle/Push/Topple). Wholeness of Body changed (BA heal, WIS mod uses/LR). Add Fleet Step (L11). Quivering Palm revised (4 FP, 10d12 Force, half on success — no longer save-or-die)
+
+**T60-T63 Paladin:**
+- T61: Paladin's Smite feature (always prepared Divine Smite spell + 1 free cast/LR). Document spell mechanics here. Radiant Strikes (L11, replaces Improved Divine Smite) = +1d8 Radiant on melee hit
+- T62 Paladin Passives: add Faithful Steed (L5, free Find Steed 1/LR), Abjure Foes (L9, Channel Divinity frighten CHA mod targets within 60ft), Restoring Touch (L14, spend 5 LoH HP to remove Blinded/Charmed/Deafened/Frightened/Paralyzed/Stunned). Aura Expansion now separate feature at L18 (30ft)
+- T63 Oath of Devotion: add Smite of Protection (L15, Half Cover in aura on Divine Smite cast). Sacred Weapon and Holy Nimbus revised
+
+**T70-T71 Ranger:**
+- T70: Favored Enemy + Natural Explorer replaced by Deft Explorer (L1), Roving (L6), Tireless (L10). Add Nature's Veil (L14, Invisible as BA), Precise Hunter (L17), Relentless Hunter. Feral Senses and Foe Slayer revised
+- T71 Hunter: add Hunter's Lore (new), Superior Hunter's Prey (new). All tier choices (Prey/Tactics/Defense) revised
+
+**T80-T81 Bard:**
+- T80: Font of Inspiration revised, Superior Inspiration revised. Add Words of Creation (L20)
+- T81 Lore: Cutting Words revised, Peerless Skill revised. Additional Magical Secrets -> Magical Discoveries
+
+**T90-T91 Cleric:**
+- T90: subclass at L3 (was L1). Add Divine Order (L1 class feature, replaces subclass Bonus Proficiencies: Protector or Thaumaturge). Add Blessed Strikes (L7 class feature, replaces subclass Divine Strike). Channel Divinity now incorporates Divine Sense. Add Sear Undead, Improved Blessed Strikes, Greater Divine Intervention
+- T91 Life Domain: Disciple of Life, Preserve Life, Supreme Healing revised. Add Land's Aid (new)
+
+**T100-T101 Druid:**
+- T100: subclass at L3 (was L2). Add Primal Order (L1 class feature: Magician or Warden). Add Elemental Fury (L7 class feature: Potent Spellcasting or Primal Strike). Add Wild Companion, Wild Resurgence, Improved Elemental Fury (L15). Wild Shape revised
+- T101 Circle of the Land: Natural Recovery, Nature's Ward, Nature's Sanctuary revised. Add Land's Aid (new)
+
+**T110-T112 Sorcerer:**
+- T110: subclass at L3 (was L1). Add Innate Sorcery, Sorcery Incarnate, Arcane Apotheosis. Sorcerous Restoration revised
+- T111 Metamagic: 6 revised options + 2 new (Seeking Spell, Transmuted Spell)
+- T112: Draconic Bloodline -> Draconic Sorcery. Resilience/Elemental Affinity/Dragon Wings revised. Add Draconic Spells (new), Dragon Companion (new task T112b)
+
+**T120-T122 Warlock:**
+- T120: subclass at L3 (was L1). **Pact Boon eliminated as class feature** — Blade/Chain/Tome are now invocation options from L1. Add Magical Cunning (L2, regain half pact slots 1/LR), Contact Patron (L9). Eldritch Master revised (regain ALL slots via Magical Cunning at L20)
+- T121 Invocations: 7 new (Devouring Blade, Eldritch Mind, Eldritch Smite, Gift of the Depths, Gift of the Protectors, Investment of the Chain Master, Lessons of the First Ones). 18 revised
+- T122: The Fiend -> Fiend Patron. Dark One's Blessing triggers on ally kills within 10ft too. Dark One's Own Luck uses=CHA mod (was 1/SR). Hurl Through Hell revised (8d10 Psychic + Incapacitated, CHA save, 1/LR or expend pact slot)
+
+**T130-T131 Wizard:**
+- T130: subclass at L3 (was L1). Add Scholar, Memorize Spell
+- T131: Evocation -> Evoker. Sculpt Spells, Potent Cantrip, Overchannel revised
 
 ### M3.2 Type/enum renames in non-core
-- `Ki` -> `Focus` (Monk)
-- `DivineSmite` -> `PaladinsSmite`
-- `FightingStyle` -> Feat category
-- `Feeblemind` -> `Befuddlement`
-- `BrandingSmite` -> `ShiningSmite`
-- Subclass names: `DraconicBloodline` -> `DraconicSorcery`, `TheFiend` -> `FiendPatron`, `Evocation` -> `Evoker`, `WayOfTheOpenHand` -> `WarriorOfTheOpenHand`
+
+| Old | New | Affected tasks |
+|-----|-----|----------------|
+| `Ki` / `kiPoints` | `Focus` / `focusPoints` | T40-T46 |
+| `DivineSmite` | `PaladinsSmite` | T61 |
+| `FightingStyle` (class feature) | Fighting Style Feat | T05, T23 |
+| `Feeblemind` | `Befuddlement` | T153 |
+| `BrandingSmite` | `ShiningSmite` | T156 |
+| `DraconicBloodline` | `DraconicSorcery` | T112 |
+| `TheFiend` | `FiendPatron` | T122 |
+| `Evocation` | `Evoker` | T131 |
+| `WayOfTheOpenHand` | `WarriorOfTheOpenHand` | T46 |
+| `race` / `subrace` | `species` (no subraces) | T01, T140, T141 |
+| `DeflectMissiles` | `DeflectAttacks` | T45 |
+| `DiamondSoul` | `DisciplinedSurvivor` | T44 |
+| `StillnessOfMind` + `PurityOfBody` | `SelfRestoration` | T44 |
+| `ImprovedDivineSmite` | `RadiantStrikes` | T62 |
+| `AdditionalMagicalSecrets` | `MagicalDiscoveries` | T81 |
 
 ### M3.3 Species (was Races)
-- Ability scores no longer from species — come from Background
-- Subraces eliminated (trait choices within species instead)
-- New: Goliath, Orc
-- T140/T141 need full rewrite
+
+Full rewrite of T140/T141:
+- **Removed species:** Half-Orc, Half-Elf (no longer exist in SRD 5.2.1)
+- **Removed traits:** Savage Attacks (entirely gone), Fey Ancestry (verify against Elf lineages)
+- **New species:** Orc (Relentless Endurance kept + Adrenaline Rush: BA Dash + temp HP, prof-bonus uses/SR), Goliath (Giant Ancestry — 6 combat options, TODO: enumerate)
+- **Structural:** ability scores from Background not species; subraces eliminated; Elf has lineage options (Drow, High Elf, Wood Elf)
+- All 7 existing species traits revised against 5.2.1 text
+- Scope: model combat-relevant traits only, TODO for full catalog
 
 ### M3.4 Spell changes
-- All spells revised in presentation/stats
-- Renames: Feeblemind->Befuddlement, Branding Smite->Shining Smite
-- ~20 new spells (Divine Smite is now a spell, Hex, Chromatic Orb, etc.)
+
+- **Renames:** Feeblemind -> Befuddlement, Branding Smite -> Shining Smite
+- **20 new spells** (add to T150-T161 as TODO entries): Aura of Life, Charm Monster, Chromatic Orb, Dissonant Whispers, Divine Smite, Dragon's Breath, Elementalism, Ensnaring Strike, Hex, Ice Knife, Mind Spike, Phantasmal Force, Power Word Heal, Ray of Sickness, Searing Smite, Sorcerous Burst, Starry Wisp, Summon Dragon, Tsunami, Vitriolic Sphere
+- One Spell with Spell Slot per Turn: already handled in core
 - Spell lists per class revised
-- One Spell with Spell Slot per Turn: replaces bonus-action spell restriction
+- Divine Smite spell: referenced from T61 (Paladin's Smite feature)
 
 ### M3.5 Feat system
-- Feats categorized: Origin, General, Fighting Style, Epic Boon
-- ASI is a feat
-- Grappler revised
-- Many new feats in SRD (all categories)
-- Scope decision: model all SRD feats or keep minimal?
+
+New section in PLAN_NONCORE.md. Minimal scope — framework + TODO for individual effects.
+
+- **4 categories:** Origin, General, Fighting Style, Epic Boon
+- **ASI is now a General Feat** (not class feature)
+- **Fighting Style feats:** cross-reference T05. Only 4 in SRD 5.2.1. Prerequisite: "Fighting Style Feature"
+- **Epic Boons:** `epicBoon: EpicBoon` in config, generic. Every class gains one at L19. TODO: enumerate individual boon effects from SRD 5.2.1
+- **T200 Grappler:** revise per 5.2.1
+- TODO: enumerate all SRD 5.2.1 feats per category
 
 ### M3.6 Equipment & Weapon Mastery (non-core aspects)
-- Weapon Mastery individual effects (Cleave, Slow, Nick, Topple, Graze, Push, Sap, Vex) — per-weapon behavior, TS side
-- Fighting Styles -> Feats: T05 restructure
-- New weapons: Musket, Pistol
+
+- **Weapon Mastery effects** (TODO, names only): Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex — per-weapon behavior, TS side
+- **New weapons:** Musket, Pistol
+- **Net:** moved from weapons to adventuring gear
+- **Potion of Healing:** now Bonus Action (not just Action)
+- **Removed from SRD:** Dueling, Protection fighting styles
 
 ---
 
-## Phase 4 — XState Machine Migration
+## Phase 4 — XState Machine Migration ✅ MOSTLY DONE
 
-### M4.1 Update `types.ts`
-- Rename types to match 2024 terminology
-- Add new enums (Weapon Mastery, feat categories, species, etc.)
-- Remove subraces, add species trait choices
+Done incrementally during PLAN.md implementation and bug fixes. No standalone migration phase needed.
 
-### M4.2 Update `machine.ts` + `machine-helpers.ts` + `machine-combat.ts`
-- Evolve state machine to match new `dnd.qnt`
-- Key changes: new action types (Magic, Utilize, Study, Influence), revised conditions, new class features
-- Surprise -> initiative disadvantage (not turn skip)
-- Bonus-action spell rule -> one slot spell per turn
-- Unarmed Strike restructure (includes grapple/shove)
-
-### M4.3 Update `machine-states.ts` + `machine-queries.ts`
-- State hierarchy changes for new action types
-- Query functions for new mechanics
-
-### M4.4 Update `machine-types.ts`
-- Context type changes to match new `dnd.qnt` state fields
-
-### M4.5 Reconnect MBT bridge (`machine.mbt.test.ts`)
-- Update Quint->TS enum mappings (new condition names, action types, etc.)
-- Point at new `dnd.qnt` (not `dnd2014.qnt`)
-- Update `stateCheck` field mappings for changed/new context fields
-- Run 50 traces x 30 steps — must pass
-
-### M4.6 Update `machine.test.ts`
-- Adapt unit tests for revised mechanics
-- Add tests for new features
+- **M4.1 types.ts:** Done. Action types (Magic, Utilize, Study, Influence) in place. Weapon Mastery/feat/species enums depend on M3.
+- **M4.2 machine logic:** Done. Save-based grapple/shove, 5.2.1 exhaustion, surprise removed, new action types, bonus-action spell rule. Residual gaps (Concentration DC cap at 30, Grappled attack-disadv vs non-grappler) tracked in PLAN.md "5.2.1 Revision Needed."
+- **M4.3 states/queries:** Done. No surprised sub-state, outOfCombat→acting→waitingForTurn hierarchy.
+- **M4.4 machine-types:** Done. `hitDiceRemaining` not renamed to `hitPointDiceRemaining` (MBT bridge compensates); cosmetic, tracked in PLAN.md.
+- **M4.5 MBT bridge:** Done. Points at `dnd.qnt`, all enum maps updated, 50×30 configured.
+- **M4.6 machine.test.ts:** Done for migrated mechanics. Tests for residual gaps will come with their implementation.
 
 ---
 
@@ -256,39 +285,67 @@ M0 (archive) ──────────────────────�
   M0.3 branch machine                                  |
   M0.4 git tag                                         |
                                                        |
-M1 (QA pipeline) -- can start in parallel with M0 ─────|
-  M1.1-M1.5 edition tagging                            |
+M1 (QA pipeline) ✅ SUPERSEDED ─────────────────────────|
                                                        |
 M2 (migrate PLAN.md core) -- needs M0.1 ───────────────|
   M2.1-M2.4 rule-check core tasks against 5.2.1       |
   M2.5 implement migrated core spec                    |
                                                        |
 M3 (migrate PLAN_NONCORE.md) -- needs M2 ──────────────|
-  M3.1-M3.6 rule-check non-core tasks against 5.2.1   |
+  M3.2 renames (first)                                 |
+  M3.5 feat framework (needs M3.2)                     |
+  M3.1 class deltas (needs M3.5, bulk work)            |
+  M3.3 species, M3.4 spells, M3.6 equipment (parallel) |
                                                        |
-M4 (XState + TS) -- needs M2.5; M3 for TS target ─────|
-  M4.1-M4.6 machine + MBT                              |
+M4 (XState + TS) ✅ MOSTLY DONE ────────────────────────|
                                                        |
 M5 (docs) -- needs M2 ────────────────────────────────-|
                                                        |
-M6 (QA rebuild) -- needs M1 + M2.5 ────────────────────┘
+M6 (QA rebuild) -- needs M2.5 ──────────────────────────┘
 ```
 
 Key ordering constraint: **M2 (core) strictly before M3 (non-core)**. Non-core depends on core primitives being stable.
 
-Parallelizable: M0 + M1 can start immediately. M3 can start as soon as M2 is done. M4 needs M2.5 (core spec implemented) to start core XState parity; M3 (non-core plan migrated) so TypeScript knows the full target design for non-core pure functions and caller logic. M5 can start after M2.
+Parallelizable: M3 can start as soon as M2 is done. M4 needs M2.5 (core spec implemented) to start core XState parity; M3 (non-core plan migrated) so TypeScript knows the full target design for non-core pure functions and caller logic. M5 can start after M2.
+
+### Cross-plan sequencing
+
+M3 (document rewrite, no code) and PLAN.md's remaining tasks (TA3 Combat Mode, TA4 START_TURN Refactoring) are **independent and can run in parallel**.
+
+PLAN_NONCORE.md **implementation** (writing code for T01, T03-T06, etc.) is blocked on BOTH:
+1. **M3 complete** — so task descriptions reflect SRD 5.2.1
+2. **TA3+TA4 complete** — core combat mode + turn lifecycle primitives that non-core composes on
+
+```
+PLAN_MIGRATION M3 (doc rewrite)  ||  PLAN.md TA3+TA4 (code)
+            ╲                          ╱
+             ╲                        ╱
+              ▼                      ▼
+         PLAN_NONCORE.md implementation UNBLOCKED
+```
 
 ---
 
 ## Risk / Open Questions
 
-1. **Magic-Items A-P may be missing** — `Magic-Items/` only has `Items-Q-Z.md` + `Overview.md`.
-2. **Weapon Mastery scope** — large new system. Core framework (property on weapons, unlock by class level) goes in PLAN.md. Individual mastery effects (Cleave, Slow, etc.) go in PLAN_NONCORE.md. How many to model?
-3. **Feat system scope** — 5.2.1 SRD has many more feats than 5.1's sole Grappler. How many to model?
-4. **Epic Boons** — every class gets one at 19-20. Model all or treat as config?
-5. **Subclass level shift** — 6 classes now pick subclass at 3 instead of 1-2. Affects CharConfig structure?
-6. **Keep both specs runnable long-term?** — or archive 2014 and move on?
-7. **Thin 2024 QA corpus** — only 239 SE entries. May need manual test cases.
-8. **UI components** — `app/src/components/*.tsx` reference machine types. Need updating in M4.
-9. **`@firfi/quint-connect` compatibility** — MBT bridge. Any version issues?
-10. **Berserker Frenzy** — no longer causes exhaustion in 5.2.1. Significant mechanical shift.
+### Resolved
+
+1. ~~**Magic-Items A-P may be missing**~~ — `Magic-Items/` only has `Items-Q-Z.md` + `Overview.md`. Low priority, magic items not in current modeling scope.
+2. ~~**Weapon Mastery scope**~~ — minimal: document effect names (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex) as TODOs in M3.6. Core framework in PLAN.md, individual effects in PLAN_NONCORE.md.
+3. ~~**Feat system scope**~~ — minimal: document framework + categories (Origin, General, Fighting Style, Epic Boon) with TODOs. Enumerate individual feats later.
+4. ~~**Epic Boons**~~ — generic config (`epicBoon: EpicBoon`). Not per-class — Epic Boons are feats in a shared category, any class picks one at L19.
+5. ~~**Subclass level shift**~~ — 5 classes (Cleric, Druid, Sorcerer, Warlock, Wizard) now L3. Mostly character-building concern. Cleric/Druid had features move to class level (Divine Order, Primal Order, Blessed Strikes, Elemental Fury). Documented in M3.1.
+6. ~~**Berserker Frenzy**~~ — no longer causes exhaustion. Documented in M3.1 T13.
+7. ~~**Divine Smite modeling**~~ — stays in T61 (Paladin features). SRD 5.2.1 makes it a spell, but the Paladin's Smite class feature + spell mechanics are documented together in T61.
+8. ~~**Half-Orc/Half-Elf removal**~~ — both removed as species. Orc (new) gets Relentless Endurance + Adrenaline Rush. Savage Attacks removed entirely. Documented in M3.3.
+9. ~~**Fighting Style delivery**~~ — now feats with "Fighting Style Feature" prerequisite. Classes still grant at specific levels (Fighter L1, Paladin L2, Ranger L2). Only 4 feats in SRD 5.2.1 (Archery, Defense, Great Weapon Fighting, Two-Weapon Fighting). Dueling/Protection removed — strict SRD parity. Documented in M3.1 T05.
+
+### Open
+
+1. **Keep both specs runnable long-term?** — or archive 2014 and move on?
+2. **Thin 2024 QA corpus** — only 239 SE entries. May need manual test cases.
+3. **UI components** — `app/src/components/*.tsx` reference machine types. Need updating in M4.
+4. **`@firfi/quint-connect` compatibility** — MBT bridge. Any version issues?
+5. **Dragon Companion (T112b)** — Draconic Sorcery new feature. Complex enough for own task. Scope TBD.
+6. **Goliath Giant Ancestry** — 6 combat options to enumerate from SRD 5.2.1. TODO in M3.3.
+7. **Elf lineage traits** — Drow/High Elf/Wood Elf lineage options replace subraces. Need to verify which 5.1 Elf traits (Fey Ancestry, Trance, etc.) survived.
