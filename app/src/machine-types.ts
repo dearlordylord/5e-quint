@@ -76,6 +76,19 @@ export interface DndContext {
 
 // --- Events ---
 
+export interface EndTurnSave {
+  readonly spellId: string
+  readonly saveSucceeded: boolean
+  readonly conditionsToRemove: ReadonlyArray<Condition>
+}
+
+export interface EndTurnDamage {
+  readonly spellId: string
+  readonly damage: number
+  readonly damageType: DamageType
+  readonly conSaveSucceeded: boolean
+}
+
 export type DndEvent =
   | {
       readonly type: "TAKE_DAMAGE"
@@ -106,17 +119,8 @@ export type DndEvent =
     }
   | {
       readonly type: "END_TURN"
-      readonly endOfTurnSaves: ReadonlyArray<{
-        readonly spellId: string
-        readonly saveSucceeded: boolean
-        readonly conditionsToRemove: ReadonlyArray<Condition>
-      }>
-      readonly endOfTurnDamage: ReadonlyArray<{
-        readonly spellId: string
-        readonly damage: number
-        readonly damageType: DamageType
-        readonly conSaveSucceeded: boolean
-      }>
+      readonly endOfTurnSaves: ReadonlyArray<EndTurnSave>
+      readonly endOfTurnDamage: ReadonlyArray<EndTurnDamage>
     }
   | { readonly type: "USE_ACTION"; readonly actionType: ActionType }
   | { readonly type: "USE_BONUS_ACTION" }

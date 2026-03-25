@@ -1,4 +1,15 @@
-import type { ActiveEffect, CasterType, Condition, DamageType, HP, IncapSource, SpellSlots, TempHP } from "#/types.ts"
+import type { EndTurnDamage, EndTurnSave } from "#/machine-types.ts"
+import type {
+  ActiveEffect,
+  CasterType,
+  Condition,
+  DamageType,
+  ExpiryPhase,
+  HP,
+  IncapSource,
+  SpellSlots,
+  TempHP
+} from "#/types.ts"
 import { EMPTY_SLOTS, exhaustionLevel, hp, SPELL_SLOT_LEVELS, tempHp } from "#/types.ts"
 
 // --- Constants ---
@@ -433,23 +444,25 @@ export function removeIncapSource(s: ReadonlySet<IncapSource>, v: IncapSource): 
   return n
 }
 
+// --- Active effect helpers ---
+
+export function addAe(
+  aes: ReadonlyArray<ActiveEffect>,
+  spellId: string,
+  turnsRemaining: number,
+  expiresAt: ExpiryPhase
+): ReadonlyArray<ActiveEffect> {
+  return [...aes.filter((ae) => ae.spellId !== spellId), { spellId, turnsRemaining, expiresAt }]
+}
+
+export function removeAe(aes: ReadonlyArray<ActiveEffect>, spellId: string): ReadonlyArray<ActiveEffect> {
+  return aes.filter((ae) => ae.spellId !== spellId)
+}
+
 // --- END_TURN processing ---
 
-interface EndTurnSave {
-  readonly spellId: string
-  readonly saveSucceeded: boolean
-  readonly conditionsToRemove: ReadonlyArray<Condition>
-}
-
-interface EndTurnDamage {
-  readonly spellId: string
-  readonly damage: number
-  readonly damageType: DamageType
-  readonly conSaveSucceeded: boolean
-}
-
 export interface EndTurnResult {
-  readonly conditions: Record<string, boolean>
+  readonly conditions: Readonly<Partial<Record<ConditionFlag, boolean>>>
   readonly activeEffects: ReadonlyArray<ActiveEffect>
   readonly concentrationSpellId: string
   readonly hp: HP
@@ -457,30 +470,38 @@ export interface EndTurnResult {
   readonly tempHp: TempHP
 }
 
+interface EndTurnCtx {
+  readonly hp: number
+  readonly maxHp: number
+  readonly tempHp: number
+  readonly exhaustion: number
+  readonly concentrationSpellId: string
+  readonly activeEffects: ReadonlyArray<ActiveEffect>
+  readonly incapacitatedSources: ReadonlySet<IncapSource>
+}
+
+const EMPTY_DMG_SET: ReadonlySet<DamageType> = new Set()
+
 export function computeEndTurn(
-  curHp: number,
-  maxHp: number,
-  curTempHp: number,
-  exhaustion: number,
-  concSpellId: string,
-  activeEffects: ReadonlyArray<ActiveEffect>,
-  incapSources: ReadonlySet<IncapSource>,
+  ctx: EndTurnCtx,
   saves: ReadonlyArray<EndTurnSave>,
   damages: ReadonlyArray<EndTurnDamage>
 ): EndTurnResult {
-  let ae = [...activeEffects]
-  let conditions: Record<string, boolean> = {}
-  let incap = incapSources
-  let conc = concSpellId
-  let h = curHp
-  let th = curTempHp
+  const conditions: Partial<Record<ConditionFlag, boolean>> = {}
+  let incap = ctx.incapacitatedSources
+  let conc = ctx.concentrationSpellId
+  let h = ctx.hp
+  let th = ctx.tempHp
+
+  // Collect effect IDs to remove (saves + concentration break)
+  const removeIds = new Set<string>()
 
   for (const save of saves) {
     if (save.saveSucceeded) {
-      ae = ae.filter((a) => a.spellId !== save.spellId)
+      removeIds.add(save.spellId)
       for (const cond of save.conditionsToRemove) {
         const u = removeConditionUpdate(cond, incap)
-        conditions = { ...conditions, ...u.conditionFlags }
+        Object.assign(conditions, u.conditionFlags)
         incap = u.incapSources
       }
     }
@@ -488,18 +509,31 @@ export function computeEndTurn(
 
   for (const dmg of damages) {
     const prevHp = h
-    const r = computeTakeDamage(h, maxHp, th, exhaustion, dmg.damage, dmg.damageType, new Set(), new Set(), new Set())
+    const r = computeTakeDamage(
+      h,
+      ctx.maxHp,
+      th,
+      ctx.exhaustion,
+      dmg.damage,
+      dmg.damageType,
+      EMPTY_DMG_SET,
+      EMPTY_DMG_SET,
+      EMPTY_DMG_SET
+    )
     h = r.newHp
     th = r.newTempHp
     if (conc) {
       if ((h === 0 && prevHp > 0) || !dmg.conSaveSucceeded) {
-        ae = ae.filter((a) => a.spellId !== conc)
+        removeIds.add(conc)
         conc = ""
       }
     }
   }
 
-  ae = ae.filter((a) => !(a.expiresAt === "end" && a.turnsRemaining <= 0))
+  // Single pass: remove by ID + clear expired AtEndOfTurn
+  const ae = ctx.activeEffects.filter(
+    (a) => !removeIds.has(a.spellId) && !(a.expiresAt === "end" && a.turnsRemaining <= 0)
+  )
 
   return {
     conditions,
