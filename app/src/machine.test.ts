@@ -17,7 +17,6 @@ import {
   applyDamageModifiers,
   armorSpeedPenalty,
   calculateEffectiveSpeed,
-  dehydrationLevels,
   effectiveMaxHp,
   fallDamageDice,
   movementCostMultiplier
@@ -2001,43 +2000,17 @@ describe("starvation", () => {
 })
 
 describe("dehydration", () => {
-  it("already exhausted -> 2 levels", () => {
+  it("adds 1 exhaustion", () => {
     const a = create()
-    addExhaustion(a, 1)
-    a.send({ type: "APPLY_DEHYDRATION", halfWater: false, conSaveSucceeded: false })
+    a.send({ type: "APPLY_DEHYDRATION" })
+    expect(ctx(a).exhaustion).toBe(1)
+  })
+
+  it("stacks exhaustion (still +1)", () => {
+    const a = create()
+    addExhaustion(a, 2)
+    a.send({ type: "APPLY_DEHYDRATION" })
     expect(ctx(a).exhaustion).toBe(3)
-  })
-
-  it("not exhausted -> 1 level", () => {
-    const a = create()
-    a.send({ type: "APPLY_DEHYDRATION", halfWater: false, conSaveSucceeded: false })
-    expect(ctx(a).exhaustion).toBe(1)
-  })
-
-  it("half water + save succeeded = no exhaustion", () => {
-    const a = create()
-    a.send({ type: "APPLY_DEHYDRATION", halfWater: true, conSaveSucceeded: true })
-    expect(ctx(a).exhaustion).toBe(0)
-  })
-
-  it("half water + save failed = exhaustion", () => {
-    const a = create()
-    a.send({ type: "APPLY_DEHYDRATION", halfWater: true, conSaveSucceeded: false })
-    expect(ctx(a).exhaustion).toBe(1)
-  })
-})
-
-describe("dehydrationLevels helper", () => {
-  it("half water + save pass = 0", () => {
-    expect(dehydrationLevels(0, true, true)).toBe(0)
-  })
-
-  it("already exhausted = 2", () => {
-    expect(dehydrationLevels(1, false, false)).toBe(2)
-  })
-
-  it("not exhausted = 1", () => {
-    expect(dehydrationLevels(0, false, false)).toBe(1)
   })
 })
 

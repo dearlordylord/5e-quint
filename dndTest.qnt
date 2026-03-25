@@ -2783,10 +2783,7 @@ module dndTest {
 
   // -- 17.4 Food & Water --
 
-  run test_starvation_threshold_positive = assert(pStarvationThreshold(2) == 5)
-  run test_starvation_threshold_zero = assert(pStarvationThreshold(0) == 3)
-  run test_starvation_threshold_negative = assert(pStarvationThreshold(-3) == 1) // min 1
-  run test_starvation_threshold_very_negative = assert(pStarvationThreshold(-5) == 1)
+  run test_starvation_threshold = assert(pStarvationThreshold == 5)
 
   run test_starvation_adds_1_exhaustion = {
     val s = freshCreature(30)
@@ -2794,45 +2791,24 @@ module dndTest {
     assert(s1.exhaustion == 1)
   }
 
-  run test_dehydration_no_water_fresh = {
-    // No water, not yet exhausted → 1 level
+  run test_dehydration_adds_1_exhaustion = {
+    // SRD 5.2.1: always +1 exhaustion
     val s = freshCreature(30)
-    val s1 = pApplyDehydration(s, false, false)
+    val s1 = pApplyDehydration(s)
     assert(s1.exhaustion == 1)
   }
 
-  run test_dehydration_no_water_already_exhausted = {
-    // No water, already exhausted → 2 levels
-    val s = freshCreature(30).with("exhaustion", 1)
-    val s1 = pApplyDehydration(s, false, false)
+  run test_dehydration_stacks = {
+    // Already exhausted → still only +1
+    val s = freshCreature(30).with("exhaustion", 2)
+    val s1 = pApplyDehydration(s)
     assert(s1.exhaustion == 3)
   }
 
-  run test_dehydration_half_water_save_fails = {
-    // Half water, failed save, not exhausted → 1 level
-    val s = freshCreature(30)
-    val s1 = pApplyDehydration(s, true, false)
-    assert(s1.exhaustion == 1)
-  }
-
-  run test_dehydration_half_water_save_succeeds = {
-    // Half water, passed save → no effect
-    val s = freshCreature(30)
-    val s1 = pApplyDehydration(s, true, true)
-    assert(s1.exhaustion == 0)
-  }
-
-  run test_dehydration_half_water_already_exhausted_fail = {
-    // Half water, failed save, already exhausted → 2 levels
-    val s = freshCreature(30).with("exhaustion", 2)
-    val s1 = pApplyDehydration(s, true, false)
-    assert(s1.exhaustion == 4)
-  }
-
-  run test_dehydration_escalation_causes_death = {
-    // Exhaustion 5 + dehydration (2 levels) → 6 → dead
+  run test_dehydration_causes_death_at_max = {
+    // Exhaustion 5 + 1 → 6 → dead
     val s = freshCreature(30).with("exhaustion", 5)
-    val s1 = pApplyDehydration(s, false, false)
+    val s1 = pApplyDehydration(s)
     all {
       assert(s1.exhaustion == 6),
       assert(s1.dead),

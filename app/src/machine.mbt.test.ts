@@ -503,7 +503,7 @@ const driverSchema = {
   doApplyFall: { damageRoll: ITFBigInt },
   doSuffocate: {},
   doApplyStarvation: {},
-  doApplyDehydration: { halfWater: z.boolean(), saveSucceeded: z.boolean() },
+  doApplyDehydration: {},
   doGrapple: { atkSize: ITFVariant, tgtSize: ITFVariant, saveFailed: z.boolean(), freeHand: z.boolean() },
   doReleaseGrapple: {},
   doEscapeGrapple: { escaped: z.boolean() },
@@ -752,8 +752,8 @@ const dndDriver = defineDriver(driverSchema, () => {
     doApplyStarvation: () => {
       send({ type: "APPLY_STARVATION" })
     },
-    doApplyDehydration: ({ halfWater, saveSucceeded }) => {
-      send({ type: "APPLY_DEHYDRATION", halfWater, conSaveSucceeded: saveSucceeded })
+    doApplyDehydration: () => {
+      send({ type: "APPLY_DEHYDRATION" })
     },
     doGrapple: ({ atkSize, freeHand, saveFailed, tgtSize }) => {
       send({

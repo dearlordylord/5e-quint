@@ -64,7 +64,7 @@ function formatEvent(e: DndEvent): string {
     case "SHOVE":
       return `SHOVE ${e.choice} ${e.targetSaveFailed ? "fail" : "save"}`
     case "APPLY_DEHYDRATION":
-      return `DEHYDRATION${e.halfWater ? " half" : ""}${e.conSaveSucceeded ? " pass" : " fail"}`
+      return "DEHYDRATION +1"
     case "STABILIZE":
     case "KNOCK_OUT":
     case "USE_BONUS_ACTION":
