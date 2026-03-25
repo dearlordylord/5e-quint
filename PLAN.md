@@ -241,25 +241,32 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 
 ---
 
+## Known Bugs (M2 parity gaps)
+
+These are pre-existing XState/MBT parity issues surfaced during TA2 MBT wiring. They cause nondeterministic MBT trace failures depending on which actions the random walk exercises.
+
+1. **Grapple + incapacitatedSources:** Quint `pGrapple` checks `isIncapacitated(targetState)` which reads `incapacitatedSources`. When the creature is unconscious, Quint's `pApplyCondition(CUnconscious)` adds `ISUnconscious` to `incapacitatedSources`. XState's `setUnconscious` does the same. But at some point the sets diverge — the MBT comparison shows `grappled: false` (Quint) vs `grappled: true` (XState) with `incapacitatedSources: {}` on both sides despite `unconscious: true`. Root cause: likely a missing `addIncapSource` call in some XState path, or the normalization drops entries. Needs investigation.
+
+2. **Concentration consistency invariant:** `incapNotConcentrating` (isIncapacitated implies concentrationSpellId == "") fails during random walks. Root cause: some action path applies incapacitation without wrapping in `pWithConcBreak`/`concBreak`. The invariant catches the missing wrap. Needs audit of all incapacitation paths.
+
+---
+
 ## DAG Visualization
 
 ```
-All independent (parallel):
-[T02]-Crit Range
-[T10a]-Cover, [T10c]-Resistance Stacking,
-[T10d]-Underwater (fire resist)
+✓ [T02]-Crit Range
+✓ [T10a]-Cover, [T10c]-Resistance Stacking, [T10d]-Underwater
 
-[TA1]-Active Effect Lifecycle
-  +--[TA2]-END_TURN
-       +--[TA3]-Combat Mode
-            +--[TA4]-START_TURN Refactoring
+✓ [TA1]-Active Effect Lifecycle
+  ✓ [TA1-fix]-Zombie prevention + expiresAt + concentration invariant
+       ✓ [TA2]-END_TURN
+            +--[TA3]-Combat Mode
+                 +--[TA4]-START_TURN Refactoring
 ```
 
 ## Suggested Execution Order
 
-1. **[TA1]** Active Effect Lifecycle (foundation for all timed effects)
-2. **[TA2]** END_TURN, then **[TA3]** Combat Mode, then **[TA4]** START_TURN Refactoring (sequential chain)
-3. **[T02]** Crit Range, **[T10a, T10c, T10d]** Combat Rule Extensions (all independent, parallel)
+Next: **[TA3]** Combat Mode, then **[TA4]** START_TURN Refactoring
 
 ---
 
