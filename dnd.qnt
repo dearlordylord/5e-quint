@@ -1724,22 +1724,15 @@ module dnd {
   // -- 17.4 Food & Water --
 
   /// Days a creature can go without food before exhaustion.
-  /// PHB: 3 + CON mod, min 1.
-  pure def pStarvationThreshold(conMod: int): int = intMax(3 + conMod, 1)
+  /// SRD 5.2.1 "Malnutrition": flat 5 days, no CON modifier.
+  pure val pStarvationThreshold: int = 5
 
   /// Apply starvation exhaustion. PHB: 1 level per day beyond threshold.
   pure def pApplyStarvation(s: CreatureState): CreatureState = pAddExhaustion(s, 1)
 
-  /// Apply dehydration exhaustion. PHB Ch8:
-  /// halfWater=true: drank half (DC 15 CON save); false: less than half (auto fail).
-  /// If already exhausted (>= 1 level), takes 2 levels instead of 1.
-  pure def pApplyDehydration(s: CreatureState, halfWater: bool, conSaveSucceeded: bool): CreatureState = {
-    if (halfWater and conSaveSucceeded) s
-    else {
-      val levels = if (s.exhaustion >= 1) 2 else 1
-      pAddExhaustion(s, levels)
-    }
-  }
+  /// Apply dehydration exhaustion. SRD 5.2.1 "Dehydration":
+  /// Creature that drinks less than half required water gains 1 Exhaustion level.
+  pure def pApplyDehydration(s: CreatureState): CreatureState = pAddExhaustion(s, 1)
 
   // -- 17.5 Travel & Forced March --
 
@@ -2314,9 +2307,7 @@ module dnd {
   }
 
   action doApplyDehydration = {
-    nondet halfWater = Bool.oneOf()
-    nondet saveSucceeded = Bool.oneOf()
-    val r = pWithConcBreak(spellSlots, state, pApplyDehydration(state, halfWater, saveSucceeded))
+    val r = pWithConcBreak(spellSlots, state, pApplyDehydration(state))
     all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 

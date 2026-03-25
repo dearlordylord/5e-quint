@@ -302,12 +302,6 @@ export function armorSpeedPenalty(armorStrRequirement: number, strScore: number)
   return 0
 }
 
-/** Dehydration exhaustion levels: 2 if already exhausted, else 1. Matches Quint pApplyDehydration. */
-export function dehydrationLevels(currentExhaustion: number, halfWater: boolean, conSaveSucceeded: boolean): number {
-  if (halfWater && conSaveSucceeded) return 0
-  return currentExhaustion >= 1 ? 2 : 1
-}
-
 /** All D&D 5e damage types. Used for petrified resistance. */
 export const ALL_DAMAGE_TYPES: ReadonlySet<DamageType> = new Set([
   "acid",

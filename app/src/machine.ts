@@ -11,7 +11,6 @@ import {
   applyConditionUpdate,
   calculateEffectiveSpeed,
   computeAddExhaustion,
-  dehydrationLevels,
   effectiveMaxHp,
   exhUpdate,
   MAX_EXHAUSTION,
@@ -31,7 +30,6 @@ import {
 } from "#/machine-states.ts"
 import {
   asAddEffect,
-  asApplyDehydration,
   asConcentrationCheck,
   asCondition,
   asEndTurn,
@@ -318,12 +316,7 @@ export const dndMachine = setup({
       ...concBreak(c)
     })),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
-    applyDehydration: assign(({ context: c, event: e }) => {
-      const ev = asApplyDehydration(e)
-      const levels = dehydrationLevels(c.exhaustion, ev.halfWater, ev.conSaveSucceeded)
-      if (levels === 0) return {}
-      return exhaustionWithConcBreak(c, levels)
-    })
+    applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1))
   }
 }).createMachine({
   id: "dnd",

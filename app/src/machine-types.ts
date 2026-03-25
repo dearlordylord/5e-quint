@@ -216,7 +216,7 @@ export type DndEvent =
     }
   | { readonly type: "SUFFOCATE" }
   | { readonly type: "APPLY_STARVATION" }
-  | { readonly type: "APPLY_DEHYDRATION"; readonly halfWater: boolean; readonly conSaveSucceeded: boolean }
+  | { readonly type: "APPLY_DEHYDRATION" }
   | { readonly type: "ENTER_COMBAT" }
   | { readonly type: "EXIT_COMBAT" }
 
@@ -241,7 +241,7 @@ type LongRestEvent = Extract<DndEvent, { readonly type: "LONG_REST" }>
 type SpendHitDieEvent = Extract<DndEvent, { readonly type: "SPEND_HIT_DIE" }>
 type ShoveEvent = Extract<DndEvent, { readonly type: "SHOVE" }>
 type ApplyFallEvent = Extract<DndEvent, { readonly type: "APPLY_FALL" }>
-type ApplyDehydrationEvent = Extract<DndEvent, { readonly type: "APPLY_DEHYDRATION" }>
+
 type EndTurnEvent = Extract<DndEvent, { readonly type: "END_TURN" }>
 type AddEffectEvent = Extract<DndEvent, { readonly type: "ADD_EFFECT" }>
 type RemoveEffectEvent = Extract<DndEvent, { readonly type: "REMOVE_EFFECT" }>
@@ -303,9 +303,7 @@ export function asSpendHitDie(event: DndEvent): SpendHitDieEvent {
 export function asApplyFall(event: DndEvent): ApplyFallEvent {
   return event as ApplyFallEvent
 }
-export function asApplyDehydration(event: DndEvent): ApplyDehydrationEvent {
-  return event as ApplyDehydrationEvent
-}
+
 export function asEndTurn(event: DndEvent): EndTurnEvent {
   return event as EndTurnEvent
 }
