@@ -79,7 +79,7 @@ module dnd {
   // ============================================================
 
   /// Immutable for the duration of the state machine.
-  // Adding a field here requires updating all CharConfig literals (TEST_CONFIG, TEST_WIZARD, TEST_FIGHTER_5, etc.)
+  // Adding a field here requires updating all CharConfig literals (TEST_CONFIG in dnd.qnt; TEST_WIZARD, TEST_FIGHTER_5, TEST_BARBARIAN_ORC, TEST_CLERIC_DWARF, TEST_ROGUE_HALFLING, TEST_PALADIN_DRAGONBORN, TEST_RANGER_ELF, TEST_MONK_GNOME, TEST_SORCERER_TIEFLING, TEST_WARLOCK_GOLIATH, TEST_BARD_HUMAN, TEST_DRUID_ELF in dndTest.qnt)
   type CharConfig = {
     className: ClassName,            // primary class
     subclass: SubclassName,          // SRD 5.2.1: one subclass per class
@@ -101,6 +101,8 @@ module dnd {
     unarmoredDefense: UnarmoredDefense,
     features: Set[Feature],
     critRange: int,            // minimum d20 roll for critical hit (default 20; Champion 19/18)
+    hasEvasion: bool,
+    hasUncannyDodge: bool,
   }
 
   type Feature = FExtraAttack | FExtraAttack2 | FExtraAttack3
@@ -303,6 +305,22 @@ module dnd {
   pure def normalDamage(diceResult: int, modifier: int): int = {
     diceResult + modifier
   }
+
+  /// SRD 5.2.1 Evasion (Rogue 7, Monk 7): DEX save success -> 0; fail -> half.
+  /// Returns the damage AFTER evasion. Caller handles normal save-for-half separately.
+  /// Can't use if Incapacitated.
+  pure def pEvasionDamage(hasEvasion: bool, isIncapacitated: bool, dexSaveSucceeded: bool, fullDamage: int): int =
+    if (not(hasEvasion) or isIncapacitated) fullDamage
+    else if (dexSaveSucceeded) 0
+    else fullDamage / 2
+
+  /// SRD 5.2.1 Uncanny Dodge (Rogue 5): halve attack damage (round down).
+  pure def pUncannyDodgeDamage(damage: int): int = damage / 2
+
+  /// Precondition: can the creature use Uncanny Dodge right now?
+  /// Requires: has feature, reaction available, attacker visible, not incapacitated.
+  pure def pCanUncannyDodge(config: CharConfig, turnState: TurnState, creature: CreatureState, attackerVisible: bool): bool =
+    config.hasUncannyDodge and turnState.reactionAvailable and attackerVisible and not(isIncapacitated(creature))
 
   // ============================================================
   // 6. EQUIPMENT (character/equipment)
@@ -2069,6 +2087,8 @@ module dnd {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val FRESH_TURN: TurnState = {

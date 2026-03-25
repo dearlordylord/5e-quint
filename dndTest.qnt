@@ -426,6 +426,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   // Spell save DC = 8 + INT mod(4) + prof(3) = 15
@@ -1160,6 +1162,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val BASIC_TURN: TurnState = pStartTurn(
@@ -3203,6 +3207,8 @@ module dndTest {
     unarmoredDefense: BarbarianUD,
     features: Set(FExtraAttack),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val TEST_CLERIC_DWARF: CharConfig = {
@@ -3226,6 +3232,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val TEST_ROGUE_HALFLING: CharConfig = {
@@ -3249,6 +3257,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
+    hasEvasion: true,
+    hasUncannyDodge: true,
   }
 
   pure val TEST_PALADIN_DRAGONBORN: CharConfig = {
@@ -3272,6 +3282,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val TEST_RANGER_ELF: CharConfig = {
@@ -3295,6 +3307,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val TEST_MONK_GNOME: CharConfig = {
@@ -3318,6 +3332,8 @@ module dndTest {
     unarmoredDefense: MonkUD,
     features: Set(FExtraAttack),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val TEST_SORCERER_TIEFLING: CharConfig = {
@@ -3341,6 +3357,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val TEST_WARLOCK_GOLIATH: CharConfig = {
@@ -3364,6 +3382,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val TEST_BARD_HUMAN: CharConfig = {
@@ -3387,6 +3407,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   pure val TEST_DRUID_ELF: CharConfig = {
@@ -3410,6 +3432,8 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
+    hasEvasion: false,
+    hasUncannyDodge: false,
   }
 
   run test_config_barbarian_extra_attacks = assert(extraAttacksFromConfig(TEST_BARBARIAN_ORC) == 1)
@@ -3573,6 +3597,44 @@ module dndTest {
     assert(TEST_FIRE_BOLT.components.contains(Somatic)),
     assert(not(TEST_FIRE_BOLT.components.contains(Material))),
     assert(TEST_HOLD_PERSON.components.contains(Material)),
+  }
+
+  // ============================================================
+  // Evasion (T03)
+  // ============================================================
+
+  run test_evasion_save_success = assert(pEvasionDamage(true, false, true, 10) == 0)
+
+  run test_evasion_save_fail_half = assert(pEvasionDamage(true, false, false, 10) == 5)
+
+  run test_evasion_save_fail_odd_rounds_down = assert(pEvasionDamage(true, false, false, 7) == 3)
+
+  run test_evasion_zero_damage = assert(pEvasionDamage(true, false, true, 0) == 0)
+
+  run test_evasion_incapacitated_full_damage = assert(pEvasionDamage(true, true, true, 10) == 10)
+
+  run test_evasion_no_feature_full_damage = assert(pEvasionDamage(false, false, true, 10) == 10)
+
+  // ============================================================
+  // Uncanny Dodge (T04)
+  // ============================================================
+
+  run test_uncanny_dodge_10 = assert(pUncannyDodgeDamage(10) == 5)
+
+  run test_uncanny_dodge_odd_rounds_down = assert(pUncannyDodgeDamage(7) == 3)
+
+  run test_uncanny_dodge_zero = assert(pUncannyDodgeDamage(0) == 0)
+
+  run test_uncanny_dodge_precondition_no_reaction = {
+    val t = FRESH_TURN.with("reactionAvailable", false)
+    val creature = freshCreature(20)
+    assert(not(pCanUncannyDodge(TEST_ROGUE_HALFLING, t, creature, true)))
+  }
+
+  run test_uncanny_dodge_precondition_attacker_not_visible = {
+    val t = FRESH_TURN
+    val creature = freshCreature(20)
+    assert(not(pCanUncannyDodge(TEST_ROGUE_HALFLING, t, creature, false)))
   }
 
 }
