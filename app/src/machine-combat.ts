@@ -117,7 +117,6 @@ export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
     (ctx.isRangedAttack && ctx.hostileWithin5ft) ||
     !ctx.attackerCanSeeTarget ||
     (ctx.isHeavyWeapon && ctx.wielderSizeSmallOrTiny) ||
-    ctx.squeezing ||
     (ctx.underwater && !ctx.isRangedAttack && !ctx.attackerHasSwimSpeed && !ctx.isUnderwaterMeleeException) ||
     (ctx.underwater && ctx.isRangedAttack && !ctx.beyondNormalRange && !ctx.isUnderwaterRangedException) ||
     (ctx.targetDodging && ctx.targetCanSeeAttacker)

@@ -264,13 +264,11 @@ export function movementCostMultiplier(params: {
   readonly isCrawling: boolean
   readonly isClimbingOrSwimming: boolean
   readonly hasRelevantSpeed: boolean
-  readonly isSqueezing: boolean
 }): number {
   const terrainExtra = params.isDifficultTerrain ? 1 : 0
   const crawlExtra = params.isCrawling ? 1 : 0
   const climbSwimExtra = params.isClimbingOrSwimming && !params.hasRelevantSpeed ? 1 : 0
-  const squeezeExtra = params.isSqueezing ? 1 : 0
-  return 1 + terrainExtra + crawlExtra + climbSwimExtra + squeezeExtra
+  return 1 + terrainExtra + crawlExtra + climbSwimExtra
 }
 
 /** Spend half effective speed (for standing from prone). Matches Quint pSpendHalfSpeed. */

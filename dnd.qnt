@@ -964,7 +964,6 @@ module dnd {
     attackerGrappled: bool,
     targetIsGrappler: bool,
     // Environment
-    squeezing: bool,
     underwater: bool,
     attackerHasSwimSpeed: bool,
     isUnderwaterMeleePiercing: bool,
@@ -1005,7 +1004,6 @@ module dnd {
     val disadv_cantSeeTarget = not(ctx.attackerCanSeeTarget)
     val disadv_heavySmall = ctx.isHeavyWeapon and ctx.wielderSizeSmallOrTiny
     val disadv_grappled = ctx.attackerGrappled and not(ctx.targetIsGrappler)
-    val disadv_squeezing = ctx.squeezing
     val disadv_underwaterMelee = ctx.underwater and not(ctx.isRangedAttack)
       and not(ctx.attackerHasSwimSpeed) and not(ctx.isUnderwaterMeleePiercing)
     val disadv_underwaterRanged = ctx.underwater and ctx.isRangedAttack
@@ -1016,7 +1014,7 @@ module dnd {
       or disadv_attackerProne or disadv_attackerRestrained or disadv_attackerPoisoned
       or disadv_attackerFrightened or disadv_targetProneBeyond5ft
       or disadv_rangedBeyondNormal or disadv_rangedCloseQuarters or disadv_cantSeeTarget
-      or disadv_heavySmall or disadv_grappled or disadv_squeezing or disadv_underwaterMelee
+      or disadv_heavySmall or disadv_grappled or disadv_underwaterMelee
       or disadv_underwaterRanged or disadv_dodging
 
     // --- Auto-crit ---
@@ -1225,20 +1223,18 @@ module dnd {
   /// Compute movement cost multiplier per foot of movement.
   /// Extra foot penalties stack additively: base 1 + extras.
   /// PHB Ch8: climbing/swimming/crawling costs 1 extra foot (2 extra in difficult terrain).
-  /// PHB Ch9: difficult terrain costs 1 extra foot. Squeezing costs 1 extra foot.
+  /// PHB Ch9: difficult terrain costs 1 extra foot.
   /// Caller uses result with pUseMovement(t, feet, multiplier).
   pure def pMovementCost(
     isDifficultTerrain: bool,
     isCrawling: bool,
     isClimbingOrSwimming: bool,
-    hasRelevantSpeed: bool,
-    isSqueezing: bool
+    hasRelevantSpeed: bool
   ): int = {
     val terrainExtra = if (isDifficultTerrain) 1 else 0
     val crawlExtra = if (isCrawling) 1 else 0
     val climbSwimExtra = if (isClimbingOrSwimming and not(hasRelevantSpeed)) 1 else 0
-    val squeezeExtra = if (isSqueezing) 1 else 0
-    1 + terrainExtra + crawlExtra + climbSwimExtra + squeezeExtra
+    1 + terrainExtra + crawlExtra + climbSwimExtra
   }
 
   // -- 14.2 Prone Movement --

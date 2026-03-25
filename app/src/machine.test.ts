@@ -1296,8 +1296,7 @@ describe("movementCostMultiplier helper", () => {
     isDifficultTerrain: false,
     isCrawling: false,
     isClimbingOrSwimming: false,
-    hasRelevantSpeed: false,
-    isSqueezing: false
+    hasRelevantSpeed: false
   }
 
   it("normal terrain costs 1", () => {
@@ -1623,7 +1622,6 @@ describe("aggregateAttackMods", () => {
     isRangedAttack: false,
     isUnderwaterMeleeException: false,
     isUnderwaterRangedException: false,
-    squeezing: false,
     targetBlinded: false,
     targetCanSeeAttacker: true,
     targetDodging: false,
@@ -2125,7 +2123,6 @@ describe("aggregateAttackMods additional branches", () => {
     isRangedAttack: false,
     isUnderwaterMeleeException: false,
     isUnderwaterRangedException: false,
-    squeezing: false,
     targetBlinded: false,
     targetCanSeeAttacker: true,
     targetDodging: false,

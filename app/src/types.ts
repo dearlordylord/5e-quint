@@ -133,7 +133,6 @@ export interface AttackContext {
   readonly hostileWithin5ft: boolean
   readonly isHeavyWeapon: boolean
   readonly wielderSizeSmallOrTiny: boolean
-  readonly squeezing: boolean
   readonly underwater: boolean
   readonly attackerHasSwimSpeed: boolean
   readonly isUnderwaterMeleeException: boolean
