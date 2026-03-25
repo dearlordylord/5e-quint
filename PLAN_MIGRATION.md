@@ -34,7 +34,7 @@ Pipeline already targets 5.2.1 only: `parse_se.py` filters for `dnd-5e-2024` tag
 
 ---
 
-## Phase 2 — Migrate PLAN.md (Core) to 5.2.1
+## Phase 2 — Migrate PLAN.md (Core) to 5.2.1 ✅ DONE
 
 Port every task in PLAN.md from SRD 5.1 rules to SRD 5.2.1 rules. This is a rule-checking task: read the conversion guide and full SRD 5.2.1 text, update each task's description to reflect 2024 mechanics.
 
@@ -88,7 +88,7 @@ Changes that affect PLAN.md tasks:
 
 ---
 
-## Phase 3 — Migrate PLAN_NONCORE.md to 5.2.1
+## Phase 3 — Migrate PLAN_NONCORE.md to 5.2.1 ✅ DONE
 
 Port every task in PLAN_NONCORE.md from SRD 5.1 rules to SRD 5.2.1 rules. Same rule-checking approach as Phase 2. Depends on Phase 2 being complete (non-core composes on core).
 
@@ -287,15 +287,9 @@ M0 (archive) ──────────────────────�
                                                        |
 M1 (QA pipeline) ✅ SUPERSEDED ─────────────────────────|
                                                        |
-M2 (migrate PLAN.md core) -- needs M0.1 ───────────────|
-  M2.1-M2.4 rule-check core tasks against 5.2.1       |
-  M2.5 implement migrated core spec                    |
+M2 (migrate PLAN.md core) ✅ DONE ──────────────────────|
                                                        |
-M3 (migrate PLAN_NONCORE.md) -- needs M2 ──────────────|
-  M3.2 renames (first)                                 |
-  M3.5 feat framework (needs M3.2)                     |
-  M3.1 class deltas (needs M3.5, bulk work)            |
-  M3.3 species, M3.4 spells, M3.6 equipment (parallel) |
+M3 (migrate PLAN_NONCORE.md) ✅ DONE ───────────────────|
                                                        |
 M4 (XState + TS) ✅ MOSTLY DONE ────────────────────────|
                                                        |
@@ -304,25 +298,11 @@ M5 (docs) -- needs M2 ───────────────────�
 M6 (QA rebuild) -- needs M2.5 ──────────────────────────┘
 ```
 
-Key ordering constraint: **M2 (core) strictly before M3 (non-core)**. Non-core depends on core primitives being stable.
-
-Parallelizable: M3 can start as soon as M2 is done. M4 needs M2.5 (core spec implemented) to start core XState parity; M3 (non-core plan migrated) so TypeScript knows the full target design for non-core pure functions and caller logic. M5 can start after M2.
+M0–M4 complete. Remaining: M5 (docs), M6 (QA pipeline rebuild). Both are unblocked.
 
 ### Cross-plan sequencing
 
-M3 (document rewrite, no code) and PLAN.md's remaining tasks (TA3 Combat Mode, TA4 START_TURN Refactoring) are **independent and can run in parallel**.
-
-PLAN_NONCORE.md **implementation** (writing code for T01, T03-T06, etc.) is blocked on BOTH:
-1. **M3 complete** — so task descriptions reflect SRD 5.2.1
-2. **TA3+TA4 complete** — core combat mode + turn lifecycle primitives that non-core composes on
-
-```
-PLAN_MIGRATION M3 (doc rewrite)  ||  PLAN.md TA3+TA4 (code)
-            ╲                          ╱
-             ╲                        ╱
-              ▼                      ▼
-         PLAN_NONCORE.md implementation UNBLOCKED
-```
+M3 (doc rewrite) and TA3+TA4 (core code) were the two blockers for PLAN_NONCORE.md implementation. Both are now complete. PLAN_NONCORE.md implementation is **fully unblocked**.
 
 ---
 
