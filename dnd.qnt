@@ -40,6 +40,30 @@ module dnd {
 
   type Illumination = Bright | Dim | Dark
 
+  // SRD 5.2.1 spell schools (Rules Glossary / spell lists)
+  type SpellSchool =
+    | Abjuration | Conjuration | Divination | Enchantment
+    | Evocation | Illusion | Necromancy | Transmutation
+
+  type CastingTime =
+    | CTAction | CTBonusAction | CTReaction | CTMinutes(int) | CTHours(int)
+
+  type SpellComponent = Verbal | Somatic | Material
+
+  type SpellEffectType =
+    | SETDamage | SETHealing | SETCondition | SETBuff
+    | SETUtility | SETSummon | SETControl
+
+  type SpellData = {
+    name: str,
+    level: int,               // 0 = cantrip
+    school: SpellSchool,
+    castingTime: CastingTime,
+    concentration: bool,
+    components: Set[SpellComponent],
+    effectType: SpellEffectType,
+  }
+
   // Skill -> default ability mapping
   pure def skillAbility(s: Skill): Ability = match s {
     | Acrobatics => Dex     | AnimalHandling => Wis | Arcana => Int_
