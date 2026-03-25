@@ -752,29 +752,35 @@ module dndTest {
   // ============================================================
 
   pure val EMPTY_EFFECTS: Set[ActiveEffect] = Set()
-  pure val EFF_A: ActiveEffect = { spellId: "hold_person", remainingTurns: 3 }
-  pure val EFF_B: ActiveEffect = { spellId: "bless", remainingTurns: 10 }
+  pure val EFF_A: ActiveEffect = { spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn }
+  pure val EFF_B: ActiveEffect = { spellId: "bless", turnsRemaining: 10, expiresAt: AtEndOfTurn }
+  pure val EFF_START: ActiveEffect = { spellId: "dodge", turnsRemaining: 1, expiresAt: AtStartOfTurn }
   pure val TWO_EFFECTS: Set[ActiveEffect] = Set(EFF_A, EFF_B)
 
   // -- pAddEffect --
 
   run test_add_effect_to_empty = {
-    val result = pAddEffect(EMPTY_EFFECTS, "hold_person", 3)
+    val result = pAddEffect(EMPTY_EFFECTS, "hold_person", 3, AtEndOfTurn)
     all { assert(result.size() == 1), assert(pHasEffect(result, "hold_person")) }
   }
 
   run test_add_effect_no_duplicate = {
-    val result = pAddEffect(TWO_EFFECTS, "haste", 5)
+    val result = pAddEffect(TWO_EFFECTS, "haste", 5, AtEndOfTurn)
     assert(result.size() == 3)
   }
 
   run test_add_effect_replaces_same_spellId = {
-    val result = pAddEffect(TWO_EFFECTS, "hold_person", 7)
+    val result = pAddEffect(TWO_EFFECTS, "hold_person", 7, AtEndOfTurn)
     all {
       assert(result.size() == 2),
       assert(pHasEffect(result, "hold_person")),
-      assert(result.exists(e => e.spellId == "hold_person" and e.remainingTurns == 7))
+      assert(result.exists(e => e.spellId == "hold_person" and e.turnsRemaining == 7))
     }
+  }
+
+  run test_add_effect_with_start_phase = {
+    val result = pAddEffect(EMPTY_EFFECTS, "dodge", 1, AtStartOfTurn)
+    assert(result.exists(e => e.spellId == "dodge" and e.expiresAt == AtStartOfTurn))
   }
 
   // -- pRemoveEffect --
@@ -794,48 +800,93 @@ module dndTest {
   run test_decrement_durations = {
     val result = pDecrementDurations(TWO_EFFECTS)
     all {
-      assert(result.exists(e => e.spellId == "hold_person" and e.remainingTurns == 2)),
-      assert(result.exists(e => e.spellId == "bless" and e.remainingTurns == 9))
+      assert(result.exists(e => e.spellId == "hold_person" and e.turnsRemaining == 2)),
+      assert(result.exists(e => e.spellId == "bless" and e.turnsRemaining == 9))
     }
   }
 
   run test_decrement_to_zero = {
-    val effects = Set({ spellId: "shield", remainingTurns: 1 })
+    val effects = Set({ spellId: "shield", turnsRemaining: 1, expiresAt: AtStartOfTurn })
     val result = pDecrementDurations(effects)
-    assert(result.exists(e => e.spellId == "shield" and e.remainingTurns == 0))
+    assert(result.exists(e => e.spellId == "shield" and e.turnsRemaining == 0))
   }
 
-  // -- pExpiredEffects --
+  // -- pExpiredAtPhase --
 
-  run test_expired_effects_none = assert(pExpiredEffects(TWO_EFFECTS) == Set())
+  run test_expired_at_phase_none = assert(pExpiredAtPhase(TWO_EFFECTS, AtEndOfTurn) == Set())
 
-  run test_expired_effects_some = {
+  run test_expired_at_phase_end = {
     val effects = Set(
-      { spellId: "a", remainingTurns: 0 },
-      { spellId: "b", remainingTurns: 3 },
-      { spellId: "c", remainingTurns: -1 }
+      { spellId: "a", turnsRemaining: 0, expiresAt: AtEndOfTurn },
+      { spellId: "b", turnsRemaining: 3, expiresAt: AtEndOfTurn },
+      { spellId: "c", turnsRemaining: -1, expiresAt: AtEndOfTurn }
     )
-    assert(pExpiredEffects(effects) == Set("a", "c"))
+    val expired = pExpiredAtPhase(effects, AtEndOfTurn)
+    all { assert(expired.exists(e => e.spellId == "a")), assert(expired.exists(e => e.spellId == "c")), assert(expired.size() == 2) }
   }
 
-  // -- pClearExpired --
-
-  run test_clear_expired = {
+  run test_expired_at_phase_start_only = {
     val effects = Set(
-      { spellId: "a", remainingTurns: 0 },
-      { spellId: "b", remainingTurns: 3 }
+      { spellId: "a", turnsRemaining: 0, expiresAt: AtStartOfTurn },
+      { spellId: "b", turnsRemaining: 0, expiresAt: AtEndOfTurn }
     )
-    val result = pClearExpired(effects)
-    all { assert(result.size() == 1), assert(pHasEffect(result, "b")) }
+    val expiredStart = pExpiredAtPhase(effects, AtStartOfTurn)
+    val expiredEnd = pExpiredAtPhase(effects, AtEndOfTurn)
+    all {
+      assert(expiredStart.size() == 1),
+      assert(expiredStart.exists(e => e.spellId == "a")),
+      assert(expiredEnd.size() == 1),
+      assert(expiredEnd.exists(e => e.spellId == "b"))
+    }
   }
 
-  run test_clear_expired_none_expired = assert(pClearExpired(TWO_EFFECTS) == TWO_EFFECTS)
+  // -- pClearExpiredAtPhase --
+
+  run test_clear_expired_at_phase = {
+    val effects = Set(
+      { spellId: "a", turnsRemaining: 0, expiresAt: AtEndOfTurn },
+      { spellId: "b", turnsRemaining: 3, expiresAt: AtEndOfTurn },
+      { spellId: "c", turnsRemaining: 0, expiresAt: AtStartOfTurn }
+    )
+    val result = pClearExpiredAtPhase(effects, AtEndOfTurn)
+    all {
+      assert(result.size() == 2),
+      assert(pHasEffect(result, "b")),
+      assert(result.exists(e => e.spellId == "c"))  // AtStartOfTurn not cleared
+    }
+  }
+
+  run test_clear_expired_none_expired = assert(pClearExpiredAtPhase(TWO_EFFECTS, AtEndOfTurn) == TWO_EFFECTS)
 
   // -- pHasEffect --
 
   run test_has_effect_true = assert(pHasEffect(TWO_EFFECTS, "bless"))
   run test_has_effect_false = assert(not(pHasEffect(TWO_EFFECTS, "fireball")))
   run test_has_effect_empty = assert(not(pHasEffect(EMPTY_EFFECTS, "anything")))
+
+  run test_has_effect_expired_false = {
+    val effects = Set({ spellId: "shield", turnsRemaining: 0, expiresAt: AtStartOfTurn })
+    assert(not(pHasEffect(effects, "shield")))
+  }
+
+  // -- pTickEffects --
+
+  run test_tick_effects = {
+    val effects = Set(
+      { spellId: "a", turnsRemaining: 5, expiresAt: AtEndOfTurn },
+      { spellId: "b", turnsRemaining: 2, expiresAt: AtStartOfTurn }
+    )
+    val result = pTickEffects(effects, 3)
+    all {
+      assert(result.size() == 1),
+      assert(result.exists(e => e.spellId == "a" and e.turnsRemaining == 2))
+    }
+  }
+
+  run test_tick_effects_all_expire = {
+    val result = pTickEffects(TWO_EFFECTS, 10)
+    assert(result.size() == 0)
+  }
 
   // -- pEffectsOnConcBreak --
 
@@ -862,14 +913,85 @@ module dndTest {
   // -- Full lifecycle: add -> decrement -> expire -> clear --
 
   run test_lifecycle_add_decrement_expire_clear = {
-    val e0 = pAddEffect(EMPTY_EFFECTS, "spell_x", 2)
-    val e1 = pDecrementDurations(e0)  // remainingTurns = 1
-    val e2 = pDecrementDurations(e1)  // remainingTurns = 0
+    val e0 = pAddEffect(EMPTY_EFFECTS, "spell_x", 2, AtEndOfTurn)
+    val e1 = pDecrementDurations(e0)  // turnsRemaining = 1
+    val e2 = pDecrementDurations(e1)  // turnsRemaining = 0
     all {
-      assert(pExpiredEffects(e1) == Set()),
-      assert(pExpiredEffects(e2) == Set("spell_x")),
-      assert(pClearExpired(e2).size() == 0)
+      assert(pExpiredAtPhase(e1, AtEndOfTurn) == Set()),
+      assert(pExpiredAtPhase(e2, AtEndOfTurn).size() == 1),
+      assert(pClearExpiredAtPhase(e2, AtEndOfTurn).size() == 0)
     }
+  }
+
+  // ============================================================
+  // END_TURN Processing (TA2)
+  // ============================================================
+
+  run test_end_turn_save_removes_effect = {
+    val s = freshCreature(20).with("activeEffects",
+      Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn }))
+    val saves = [{ spellId: "hold_person", saveSucceeded: true, conditionsToRemove: Set() }]
+    val r = pEndTurn(s, FRESH_SPELL_SLOTS, saves, [])
+    assert(not(pHasEffect(r.creature.activeEffects, "hold_person")))
+  }
+
+  run test_end_turn_save_removes_condition = {
+    val s = freshCreature(20)
+      .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn }))
+    val s2 = pApplyCondition(s, CParalyzed)
+    val saves = [{ spellId: "hold_person", saveSucceeded: true, conditionsToRemove: Set(CParalyzed) }]
+    val r = pEndTurn(s2, FRESH_SPELL_SLOTS, saves, [])
+    all {
+      assert(not(pHasEffect(r.creature.activeEffects, "hold_person"))),
+      assert(not(r.creature.paralyzed))
+    }
+  }
+
+  run test_end_turn_save_fail_keeps = {
+    val s = freshCreature(20)
+      .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn }))
+    val s2 = pApplyCondition(s, CParalyzed)
+    val saves = [{ spellId: "hold_person", saveSucceeded: false, conditionsToRemove: Set(CParalyzed) }]
+    val r = pEndTurn(s2, FRESH_SPELL_SLOTS, saves, [])
+    all {
+      assert(pHasEffect(r.creature.activeEffects, "hold_person")),
+      assert(r.creature.paralyzed)
+    }
+  }
+
+  run test_end_turn_damage_applied = {
+    val s = freshCreature(20)
+    val damages = [{ spellId: "wall_of_fire", damage: 5, damageType: Fire, conSaveSucceeded: true }]
+    val r = pEndTurn(s, FRESH_SPELL_SLOTS, [], damages)
+    assert(r.creature.hp == 15)
+  }
+
+  run test_end_turn_damage_breaks_conc = {
+    val s = freshCreature(20)
+      .with("activeEffects", Set({ spellId: "bless", turnsRemaining: 5, expiresAt: AtEndOfTurn }))
+    val ss = FRESH_SPELL_SLOTS.with("concentrationSpellId", "bless")
+    val damages = [{ spellId: "wall_of_fire", damage: 5, damageType: Fire, conSaveSucceeded: false }]
+    val r = pEndTurn(s, ss, [], damages)
+    all {
+      assert(r.creature.hp == 15),
+      assert(r.slots.concentrationSpellId == ""),
+      assert(not(pHasEffect(r.creature.activeEffects, "bless")))
+    }
+  }
+
+  run test_end_turn_clears_expired_at_end = {
+    val s = freshCreature(20)
+      .with("activeEffects", Set({ spellId: "rage", turnsRemaining: 0, expiresAt: AtEndOfTurn }))
+    val r = pEndTurn(s, FRESH_SPELL_SLOTS, [], [])
+    assert(r.creature.activeEffects.size() == 0)
+  }
+
+  run test_end_turn_preserves_start_expired = {
+    val s = freshCreature(20)
+      .with("activeEffects", Set({ spellId: "dodge", turnsRemaining: 0, expiresAt: AtStartOfTurn }))
+    val r = pEndTurn(s, FRESH_SPELL_SLOTS, [], [])
+    // AtStartOfTurn expired effects are NOT cleared by END_TURN — that's START_TURN's job
+    assert(r.creature.activeEffects.size() == 1)
   }
 
   // ============================================================
@@ -3003,13 +3125,13 @@ module dndTest {
 
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
-        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots })
+        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase })
 
   run test_invariants_10steps =
     init
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase })
 
   run test_invariants_20steps =
     init
@@ -3017,7 +3139,7 @@ module dndTest {
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase })
 
   // Individual invariant tests on known state constructions
   run test_inv_deadIsAbsorbing_construction = {

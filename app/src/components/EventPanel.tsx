@@ -204,7 +204,6 @@ export function EventPanel({
               baseSpeed: DEFAULT_SPEED,
               armorPenalty: 0,
               extraAttacks: 1,
-              isSurprised: false,
               callerSpeedModifier: 0,
               isGrappling: false,
               grappledTargetTwoSizesSmaller: false
@@ -228,7 +227,10 @@ export function EventPanel({
             placeholder="spell_a"
           />
           <div className="flex gap-2 mt-1">
-            <Btn label={t.startConcentration} onClick={() => send({ type: "START_CONCENTRATION", spellId })} />
+            <Btn
+              label={t.startConcentration}
+              onClick={() => send({ type: "START_CONCENTRATION", spellId, durationTurns: 10, expiresAt: "end" })}
+            />
             <Btn label={t.breakConcentration} onClick={() => send({ type: "BREAK_CONCENTRATION" })} />
           </div>
         </div>

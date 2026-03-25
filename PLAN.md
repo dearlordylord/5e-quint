@@ -284,6 +284,18 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 
 ---
 
+## Known Bugs (M2 parity gaps)
+
+These are pre-existing XState/MBT parity issues surfaced during TA2 MBT wiring. They cause nondeterministic MBT trace failures depending on which actions the random walk exercises.
+
+1. **Grapple + incapacitatedSources:** Quint `pGrapple` checks `isIncapacitated(targetState)` which reads `incapacitatedSources`. When the creature is unconscious, Quint's `pApplyCondition(CUnconscious)` adds `ISUnconscious` to `incapacitatedSources`. XState's `setUnconscious` does the same. But at some point the sets diverge — the MBT comparison shows `grappled: false` (Quint) vs `grappled: true` (XState) with `incapacitatedSources: {}` on both sides despite `unconscious: true`. Root cause: likely a missing `addIncapSource` call in some XState path, or the normalization drops entries. Needs investigation.
+
+2. **Concentration consistency invariant:** `incapNotConcentrating` (isIncapacitated implies concentrationSpellId == "") fails during random walks. Root cause: some action path applies incapacitation without wrapping in `pWithConcBreak`/`concBreak`. The invariant catches the missing wrap. Needs audit of all incapacitation paths.
+
+3. **hitPointDiceRemaining divergence:** MBT traces show `hitPointDiceRemaining: 5` (Quint) vs `4` (XState) after a sequence involving SPEND_HIT_DIE or SHORT_REST. The field mapping is correct (Quint `hitPointDiceRemaining` ↔ XState `hitDiceRemaining`). Root cause: likely a behavioral difference in hit dice spending or recovery logic. Surfaced after KNOCK_OUT fix eliminated the earlier blocking failure.
+
+---
+
 ## DAG Visualization
 
 ```
@@ -291,16 +303,15 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 ✓ [T10a]-Cover, [T10c]-Resistance Stacking, [T10d]-Underwater
 
 ✓ [TA1]-Active Effect Lifecycle
-  +--[TA1-fix]-Zombie prevention + concentration invariant
-       +--[TA2]-END_TURN
+  ✓ [TA1-fix]-Zombie prevention + expiresAt + concentration invariant
+       ✓ [TA2]-END_TURN
             +--[TA3]-Combat Mode
                  +--[TA4]-START_TURN Refactoring
 ```
 
 ## Suggested Execution Order
 
-1. **[TA1-fix]** Zombie effect prevention + concentration invariant (prerequisite for TA2)
-2. **[TA2]** END_TURN, then **[TA3]** Combat Mode, then **[TA4]** START_TURN Refactoring (sequential chain)
+Next: **[TA3]** Combat Mode, then **[TA4]** START_TURN Refactoring
 
 ---
 

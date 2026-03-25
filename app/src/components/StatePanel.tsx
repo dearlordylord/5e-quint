@@ -4,13 +4,13 @@ import { DEATH_SAVE_THRESHOLD, MAX_EXHAUSTION } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import { ALL_CONDITIONS, SPELL_SLOT_LEVELS } from "#/types.ts"
 
-type TrackLabel = "conscious" | "stable" | "unstable" | "dead"
+type TrackLabel = "alive" | "stable" | "unstable" | "dead"
 
 function damageTrackLabel(snap: DndSnapshot): TrackLabel {
   if (snap.matches({ damageTrack: "dead" })) return "dead"
   if (snap.matches({ damageTrack: { dying: "stable" } })) return "stable"
   if (snap.matches({ damageTrack: { dying: "unstable" } })) return "unstable"
-  return "conscious"
+  return "alive"
 }
 
 function HpBar({ ctx }: { readonly ctx: DndContext }) {
@@ -128,7 +128,6 @@ function TurnResources({ ctx }: { readonly ctx: DndContext }) {
           </span>
         </div>
       </div>
-      {ctx.surprised && <span className="text-yellow-400 text-xs mt-1 block">{t.surprised}</span>}
       {ctx.dodging && <span className="text-blue-400 text-xs">{t.dodging}</span>}
       {ctx.disengaged && <span className="text-blue-400 text-xs ml-2">{t.disengaged}</span>}
     </div>
@@ -172,7 +171,7 @@ function StatusBadge({ color, label }: { readonly label: string; readonly color:
 }
 
 const TRACK_COLORS: Record<TrackLabel, string> = {
-  conscious: "bg-green-800 text-green-200",
+  alive: "bg-green-800 text-green-200",
   unstable: "bg-red-800 text-red-200",
   stable: "bg-yellow-800 text-yellow-200",
   dead: "bg-gray-800 text-gray-400"
@@ -188,10 +187,10 @@ export function StatePanel({ ctx, snapshot }: { readonly snapshot: DndSnapshot; 
         <StatusBadge color={TRACK_COLORS[track]} label={t[track]} />
       </div>
       <HpBar ctx={ctx} />
-      {track !== "conscious" && track !== "dead" && <DeathSaveTracker ctx={ctx} />}
+      {track !== "alive" && track !== "dead" && <DeathSaveTracker ctx={ctx} />}
       <ExhaustionGauge level={ctx.exhaustion} />
       <ConditionBadges ctx={ctx} />
-      {track === "conscious" && <TurnResources ctx={ctx} />}
+      {track === "alive" && <TurnResources ctx={ctx} />}
       <SpellSlotGrid ctx={ctx} />
     </div>
   )

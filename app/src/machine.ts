@@ -2,28 +2,24 @@ import type { SnapshotFrom } from "xstate"
 import { assign, setup } from "xstate"
 
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
+import { dmgR, dsR, fallR } from "#/machine-damage.ts"
+import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
 import {
   addDeathFailures,
   addIncapSource,
-  ALL_DAMAGE_TYPES,
   applyConditionUpdate,
   calculateEffectiveSpeed,
   computeAddExhaustion,
-  computeFallResult,
-  computeLongRest,
-  computeShortRest,
-  computeTakeDamage,
   dehydrationLevels,
   effectiveMaxHp,
   exhUpdate,
-  expendSlot,
   MAX_EXHAUSTION,
   removeConditionUpdate,
   removeIncapSource,
-  resolveDeathSave,
   spendHalfSpeed
 } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
+import { computeLongRest, computeShortRest, expendSlot } from "#/machine-spells.ts"
 import {
   conditionTrackConfig,
   damageTrackConfig,
@@ -31,13 +27,12 @@ import {
   spellcastingConfig,
   turnPhaseConfig
 } from "#/machine-states.ts"
-import type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
 import {
+  asAddEffect,
   asApplyDehydration,
-  asApplyFall,
   asConcentrationCheck,
   asCondition,
-  asDeathSave,
+  asEndTurn,
   asEscapeGrapple,
   asExhaustion,
   asExpendSlot,
@@ -45,6 +40,7 @@ import {
   asGrapple,
   asHeal,
   asLongRest,
+  asRemoveEffect,
   asShortRest,
   asShove,
   asSpendHitDie,
@@ -53,11 +49,14 @@ import {
   asTakeDamage,
   asUseAction,
   asUseMovement,
+  type DndContext,
+  type DndEvent,
+  type DndMachineInput,
   INITIAL_CONDITIONS,
   INITIAL_TURN_STATE
 } from "#/machine-types.ts"
 import {
-  type DamageType,
+  type ActiveEffect,
   DEATH_SAVES_RESET,
   deathSaveCount,
   EMPTY_SLOTS,
@@ -69,38 +68,11 @@ import {
 } from "#/types.ts"
 
 export type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
-const petrifiedR = (c: DndContext, r: ReadonlySet<DamageType>) => (c.petrified ? ALL_DAMAGE_TYPES : r)
-const fallR = (c: DndContext, e: DndEvent) => {
-  const ev = asApplyFall(e)
-  return computeFallResult(
-    ev.damageRoll,
-    c.hp,
-    c.maxHp,
-    c.tempHp,
-    c.exhaustion,
-    ev.immunities,
-    petrifiedR(c, ev.resistances),
-    ev.vulnerabilities
-  )
-}
-const dmgR = (c: DndContext, e: DndEvent) => {
-  const ev = asTakeDamage(e)
-  return computeTakeDamage(
-    c.hp,
-    c.maxHp,
-    c.tempHp,
-    c.exhaustion,
-    ev.amount,
-    ev.damageType,
-    ev.immunities,
-    petrifiedR(c, ev.resistances),
-    ev.vulnerabilities
-  )
-}
-const dsR = (c: DndContext, e: DndEvent) =>
-  resolveDeathSave(asDeathSave(e).d20Roll, c.deathSaves.successes, c.deathSaves.failures)
-const concBreak = (c: DndContext) =>
-  !isIncapacitated(c) && c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {}
+const concBreakFields = (c: DndContext) =>
+  c.concentrationSpellId !== ""
+    ? { concentrationSpellId: "", activeEffects: removeAe(c.activeEffects, c.concentrationSpellId) }
+    : {}
+const concBreak = (c: DndContext) => (!isIncapacitated(c) ? concBreakFields(c) : {})
 
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 const MT = { context: {} as DndContext, events: {} as DndEvent, input: {} as DndMachineInput }
@@ -109,7 +81,7 @@ const MT = { context: {} as DndContext, events: {} as DndEvent, input: {} as Dnd
 export const dndMachine = setup({
   types: MT,
   guards: {
-    instantDeathFromConscious: ({ context: c, event: e }) => {
+    instantDeathFromAlive: ({ context: c, event: e }) => {
       const r = dmgR(c, e)
       return r.dmgThrough > 0 && r.newHp === 0 && r.overflow >= r.effMax
     },
@@ -155,7 +127,6 @@ export const dndMachine = setup({
       return c.hp === 0 && Math.max(0, ev.dieRoll + ev.conMod) > 0
     },
     exhaustionDeath: ({ context: c }) => c.exhaustion >= MAX_EXHAUSTION,
-    isSurprised: ({ event: e }) => asStartTurn(e).isSurprised,
     canStandFromProne: ({ context: c }) =>
       !isIncapacitated(c) && c.effectiveSpeed > 0 && spendHalfSpeed(c.movementRemaining, c.effectiveSpeed).success,
     shouldBreakConcentration: ({ context: c }) => c.concentrationSpellId === "",
@@ -166,15 +137,12 @@ export const dndMachine = setup({
       const r = dmgR(c, e)
       return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp) }
     }),
-    absorbTempHpOnly: assign(({ context: c, event: e }) => {
-      return { tempHp: tempHp(dmgR(c, e).newTempHp) }
-    }),
+    absorbTempHpOnly: assign(({ context: c, event: e }) => ({ tempHp: tempHp(dmgR(c, e).newTempHp) })),
     applyDamageAtZeroHp: assign(({ context: c, event: e }) => {
-      const r = dmgR(c, e)
       const { newFailures } = addDeathFailures(c.deathSaves.failures, asTakeDamage(e).isCritical)
       return {
         deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(newFailures) },
-        tempHp: tempHp(r.newTempHp),
+        tempHp: tempHp(dmgR(c, e).newTempHp),
         stable: false
       }
     }),
@@ -193,9 +161,7 @@ export const dndMachine = setup({
     })),
     applyTempHp: assign(({ event: e }) => (asGrantTempHp(e).keepOld ? {} : { tempHp: asGrantTempHp(e).amount })),
     applyKnockOut: assign(({ context: c }) => ({
-      deathSaves: DEATH_SAVES_RESET,
-      hp: hp(0),
-      stable: true,
+      hp: hp(1),
       ...concBreak(c)
     })),
     applyStabilize: assign({ deathSaves: DEATH_SAVES_RESET, stable: true }),
@@ -213,11 +179,10 @@ export const dndMachine = setup({
     })),
     applyCondition: assign(({ context: c, event: e }) => {
       const u = applyConditionUpdate(asCondition(e).condition, c.incapacitatedSources, c.petrified)
-      const becameIncap = !isIncapacitated(c) && u.incapSources.size > 0
       return {
         ...u.conditionFlags,
         incapacitatedSources: u.incapSources,
-        ...(becameIncap && c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {})
+        ...(!isIncapacitated(c) && u.incapSources.size > 0 ? concBreakFields(c) : {})
       }
     }),
     removeCondition: assign(({ context: c, event: e }) => {
@@ -228,12 +193,8 @@ export const dndMachine = setup({
     }),
     addExhaustion: assign(({ context: c, event: e }) => {
       const r = computeAddExhaustion(c.exhaustion, asExhaustion(e).levels, c.hp, c.maxHp)
-      const diedFromExhaust = r.newExhaustion >= MAX_EXHAUSTION && c.exhaustion < MAX_EXHAUSTION
-      return {
-        exhaustion: exhaustionLevel(r.newExhaustion),
-        hp: hp(r.newHp),
-        ...(diedFromExhaust && c.concentrationSpellId !== "" ? { concentrationSpellId: "" } : {})
-      }
+      const died = r.newExhaustion >= MAX_EXHAUSTION && c.exhaustion < MAX_EXHAUSTION
+      return { ...exhUpdate(r), ...(died ? concBreakFields(c) : {}) }
     }),
     reduceExhaustion: assign(({ context: c, event: e }) => ({
       exhaustion: exhaustionLevel(Math.max(0, c.exhaustion - asExhaustion(e).levels))
@@ -252,35 +213,38 @@ export const dndMachine = setup({
       })
       return {
         ...INITIAL_TURN_STATE,
-        actionUsed: ev.isSurprised,
-        bonusActionUsed: ev.isSurprised,
         effectiveSpeed: movementFeet(speed),
         extraAttacksRemaining: ev.extraAttacks,
-        movementRemaining: movementFeet(ev.isSurprised ? 0 : speed),
-        reactionAvailable: !ev.isSurprised,
-        surprised: ev.isSurprised
+        movementRemaining: movementFeet(speed)
       }
     }),
     useAction: assign(({ context: c, event: e }) => {
       const ev = asUseAction(e)
       if (c.actionUsed || isIncapacitated(c)) return {}
-      if (ev.actionType === "attack") return { actionUsed: true, attackActionUsed: true }
-      if (ev.actionType === "disengage") return { actionUsed: true, disengaged: true }
-      if (ev.actionType === "dodge") return { actionUsed: true, dodging: true }
-      if (ev.actionType === "dash")
-        return { actionUsed: true, movementRemaining: movementFeet(c.movementRemaining + c.effectiveSpeed) }
-      if (ev.actionType === "ready") return { actionUsed: true, readiedAction: true }
-      return { actionUsed: true }
+      switch (ev.actionType) {
+        case "attack":
+          return { actionUsed: true, attackActionUsed: true }
+        case "disengage":
+          return { actionUsed: true, disengaged: true }
+        case "dodge":
+          return { actionUsed: true, dodging: true }
+        case "dash":
+          return { actionUsed: true, movementRemaining: movementFeet(c.movementRemaining + c.effectiveSpeed) }
+        case "ready":
+          return { actionUsed: true, readiedAction: true }
+        default:
+          return { actionUsed: true }
+      }
     }),
     useBonusAction: assign(({ context: c }) =>
       c.bonusActionUsed || isIncapacitated(c) ? {} : { bonusActionUsed: true }
     ),
     useReaction: assign(({ context: c }) => (c.reactionAvailable ? { reactionAvailable: false } : {})),
     useMovement: assign(({ context: c, event: e }) => {
-      const ev = asUseMovement(e)
-      const cost = ev.feet * ev.movementCost
-      if (cost > c.movementRemaining || cost < 0) return {}
-      return { movementRemaining: movementFeet(c.movementRemaining - cost) }
+      const cost = asUseMovement(e).feet * asUseMovement(e).movementCost
+      return cost > c.movementRemaining || cost < 0
+        ? {}
+        : { movementRemaining: movementFeet(c.movementRemaining - cost) }
     }),
     useExtraAttack: assign(({ context: c }) =>
       c.extraAttacksRemaining <= 0 ? {} : { extraAttacksRemaining: c.extraAttacksRemaining - 1 }
@@ -291,7 +255,11 @@ export const dndMachine = setup({
       return { movementRemaining: movementFeet(r.newMovementRemaining), ...(c.prone ? { prone: false } : {}) }
     }),
     dropProne: assign({ prone: true }),
-    endSurprise: assign({ reactionAvailable: true, surprised: false }),
+    endTurn: assign(({ context: c, event: e }) => {
+      const ev = asEndTurn(e)
+      const { conditions: conds, ...rest } = computeEndTurn(c, ev.endOfTurnSaves, ev.endOfTurnDamage)
+      return { ...conds, ...rest }
+    }),
     markBonusActionSpell: assign({ bonusActionSpellCast: true }),
     markNonCantripActionSpell: assign({ nonCantripActionSpellCast: true }),
     applyGrapple: assign(({ context: c, event: e }) => {
@@ -319,11 +287,25 @@ export const dndMachine = setup({
     expendPactSlot: assign(({ context: c }) =>
       c.pactSlotsCurrent <= 0 ? {} : { pactSlotsCurrent: c.pactSlotsCurrent - 1 }
     ),
-    startConcentration: assign(({ event: e }) => ({ concentrationSpellId: asStartConcentration(e).spellId })),
-    breakConcentration: assign({ concentrationSpellId: "" }),
+    startConcentration: assign(({ context: c, event: e }) => {
+      const ev = asStartConcentration(e)
+      const base = c.concentrationSpellId ? removeAe(c.activeEffects, c.concentrationSpellId) : c.activeEffects
+      return {
+        concentrationSpellId: ev.spellId,
+        activeEffects: addAe(base, ev.spellId, ev.durationTurns, ev.expiresAt)
+      }
+    }),
+    breakConcentration: assign(({ context: c }) => concBreakFields(c)),
     concentrationCheck: assign(({ context: c, event: e }) =>
-      c.concentrationSpellId === "" || asConcentrationCheck(e).conSaveSucceeded ? {} : { concentrationSpellId: "" }
+      c.concentrationSpellId === "" || asConcentrationCheck(e).conSaveSucceeded ? {} : concBreakFields(c)
     ),
+    addEffect: assign(({ context: c, event: e }) => {
+      const ev = asAddEffect(e)
+      return { activeEffects: addAe(c.activeEffects, ev.spellId, ev.durationTurns, ev.expiresAt) }
+    }),
+    removeEffect: assign(({ context: c, event: e }) => ({
+      activeEffects: removeAe(c.activeEffects, asRemoveEffect(e).spellId)
+    })),
     spendHitDie: assign(({ context: c, event: e }) => {
       if (c.hitDiceRemaining <= 0) return {}
       const ev = asSpendHitDie(e)
@@ -400,6 +382,7 @@ export const dndMachine = setup({
   context: ({ input: i }) => ({
     ...INITIAL_CONDITIONS,
     ...INITIAL_TURN_STATE,
+    activeEffects: [] as ReadonlyArray<ActiveEffect>,
     concentrationSpellId: "",
     deathSaves: DEATH_SAVES_RESET,
     stable: false,

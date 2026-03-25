@@ -3,7 +3,7 @@ import { memo, useMemo } from "react"
 import { useT } from "#/i18n.ts"
 import type { DndEvent, DndSnapshot } from "#/machine.ts"
 
-type StateKey = "conscious" | "dying" | "stable" | "dead"
+type StateKey = "alive" | "dying" | "stable" | "dead"
 
 export interface LogEntry {
   id: number
@@ -16,7 +16,7 @@ export function stateKey(snap: DndSnapshot): StateKey {
   if (snap.matches({ damageTrack: "dead" })) return "dead"
   if (snap.matches({ damageTrack: { dying: "stable" } })) return "stable"
   if (snap.matches({ damageTrack: "dying" })) return "dying"
-  return "conscious"
+  return "alive"
 }
 
 function formatEvent(e: DndEvent): string {
@@ -72,7 +72,6 @@ function formatEvent(e: DndEvent): string {
     case "USE_EXTRA_ATTACK":
     case "STAND_FROM_PRONE":
     case "DROP_PRONE":
-    case "END_SURPRISE_TURN":
     case "MARK_BONUS_ACTION_SPELL":
     case "MARK_NON_CANTRIP_ACTION_SPELL":
     case "RELEASE_GRAPPLE":
@@ -80,7 +79,12 @@ function formatEvent(e: DndEvent): string {
     case "BREAK_CONCENTRATION":
     case "SUFFOCATE":
     case "APPLY_STARVATION":
+    case "END_TURN":
       return e.type
+    case "ADD_EFFECT":
+      return `ADD_EFFECT ${e.spellId}`
+    case "REMOVE_EFFECT":
+      return `REMOVE_EFFECT ${e.spellId}`
   }
 }
 

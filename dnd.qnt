@@ -419,11 +419,21 @@ module dnd {
 
   pure val DEATH_SAVES_RESET: DeathSaves = { successes: 0, failures: 0 }
 
+  /// When an effect's removal check fires: start of turn or end of turn.
+  /// SRD has two distinct expiry points — see PLAN.md timing analysis.
+  type ExpiryPhase = AtStartOfTurn | AtEndOfTurn
+
   /// Timed effect on a creature (spell, ability, etc.) with duration in turns.
   /// Instant spells (Fireball, Healing Word) don't create an ActiveEffect —
   /// they just apply damage/healing/conditions directly.
   /// Core spec owns lifecycle only; spell-specific behavior lives in caller.
-  type ActiveEffect = { spellId: str, remainingTurns: int }
+  type ActiveEffect = { spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase }
+
+  /// End-of-turn save: caller provides spell, result, and conditions to remove on success.
+  type EndOfTurnSave = { spellId: str, saveSucceeded: bool, conditionsToRemove: Set[Condition] }
+
+  /// End-of-turn damage: caller provides spell, amount, type, and pre-resolved concentration save.
+  type EndOfTurnDamage = { spellId: str, damage: int, damageType: DamageType, conSaveSucceeded: bool }
 
   type CreatureState = {
     hp: int,
@@ -481,8 +491,8 @@ module dnd {
   // Core owns add/remove/decrement/expire. Spell-specific behavior is caller's job.
 
   /// Add an effect, replacing any existing with the same spellId (no stacking).
-  pure def pAddEffect(effects: Set[ActiveEffect], spellId: str, durationTurns: int): Set[ActiveEffect] =
-    effects.filter(e => e.spellId != spellId).union(Set({ spellId: spellId, remainingTurns: durationTurns }))
+  pure def pAddEffect(effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase): Set[ActiveEffect] =
+    effects.filter(e => e.spellId != spellId).union(Set({ spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt }))
 
   /// Remove an effect by spellId (dispel, concentration break, etc.).
   pure def pRemoveEffect(effects: Set[ActiveEffect], spellId: str): Set[ActiveEffect] =
@@ -490,19 +500,23 @@ module dnd {
 
   /// Decrement all durations by 1. Called during START_TURN (TA4).
   pure def pDecrementDurations(effects: Set[ActiveEffect]): Set[ActiveEffect] =
-    effects.map(e => { spellId: e.spellId, remainingTurns: e.remainingTurns - 1 })
+    effects.map(e => e.with("turnsRemaining", e.turnsRemaining - 1))
 
-  /// Return spellIds of effects whose duration has expired (remainingTurns <= 0).
-  pure def pExpiredEffects(effects: Set[ActiveEffect]): Set[str] =
-    effects.filter(e => e.remainingTurns <= 0).map(e => e.spellId)
+  /// Return effects expired at the given phase (turnsRemaining <= 0 AND matching expiresAt).
+  pure def pExpiredAtPhase(effects: Set[ActiveEffect], phase: ExpiryPhase): Set[ActiveEffect] =
+    effects.filter(e => e.expiresAt == phase and e.turnsRemaining <= 0)
 
-  /// Remove all expired effects (remainingTurns <= 0).
-  pure def pClearExpired(effects: Set[ActiveEffect]): Set[ActiveEffect] =
-    effects.filter(e => e.remainingTurns > 0)
+  /// Remove expired effects for the given phase only.
+  pure def pClearExpiredAtPhase(effects: Set[ActiveEffect], phase: ExpiryPhase): Set[ActiveEffect] =
+    effects.exclude(pExpiredAtPhase(effects, phase))
 
-  /// Check whether an effect with the given spellId is active.
+  /// Check whether an effect with the given spellId is active (not expired).
   pure def pHasEffect(effects: Set[ActiveEffect], spellId: str): bool =
-    effects.exists(e => e.spellId == spellId)
+    effects.exists(e => e.spellId == spellId and e.turnsRemaining > 0)
+
+  /// Atomic decrement-by-n + clear all expired. Out-of-combat time advance primitive.
+  pure def pTickEffects(effects: Set[ActiveEffect], n: int): Set[ActiveEffect] =
+    effects.map(e => e.with("turnsRemaining", e.turnsRemaining - n)).filter(e => e.turnsRemaining > 0)
 
   // ============================================================
   // 9. CONDITIONS (character/conditions)
@@ -1457,7 +1471,45 @@ module dnd {
     else if (conSaveSucceeded) ss
     else pBreakConcentration(ss)
 
-  // -- 15.5 Casting Validation --
+  // -- 15.5 END_TURN Processing (TA2) --
+
+  /// Process end-of-turn saves. On success: remove active effect + specified conditions.
+  pure def pProcessEndOfTurnSaves(s: CreatureState, saves: List[EndOfTurnSave]): CreatureState =
+    saves.foldl(s, (acc, save) =>
+      if (save.saveSucceeded) {
+        val s1 = acc.with("activeEffects", pRemoveEffect(acc.activeEffects, save.spellId))
+        save.conditionsToRemove.fold(s1, (a, c) => pRemoveCondition(a, c))
+      } else acc
+    )
+
+  /// Process end-of-turn damage. Apply each, handle concentration breaks.
+  pure def pProcessEndOfTurnDamage(
+    s: CreatureState, ss: SpellSlotState, damages: List[EndOfTurnDamage]
+  ): ConcBreakResult =
+    damages.foldl({ creature: s, slots: ss }, (acc, dmg) => {
+      val newS = pTakeDamage(acc.creature, dmg.damage, dmg.damageType, Set(), Set(), Set(), false)
+      val r = pWithConcBreak(acc.slots, acc.creature, newS)
+      // If still concentrating after state-change break, check concentration save
+      val r2 = if (isConcentrating(r.slots)) {
+        val ss2 = pConcentrationCheck(r.slots, dmg.conSaveSucceeded)
+        val eff2 = pEffectsOnConcBreak(r.slots, ss2, r.creature.activeEffects)
+        { creature: r.creature.with("activeEffects", eff2), slots: ss2 }
+      } else r
+      r2
+    })
+
+  /// Full END_TURN processing: saves -> damage -> clear expired AtEndOfTurn effects.
+  pure def pEndTurn(
+    s: CreatureState, ss: SpellSlotState,
+    saves: List[EndOfTurnSave], damages: List[EndOfTurnDamage]
+  ): ConcBreakResult = {
+    val s1 = pProcessEndOfTurnSaves(s, saves)
+    val r = pProcessEndOfTurnDamage(s1, ss, damages)
+    val cleaned = pClearExpiredAtPhase(r.creature.activeEffects, AtEndOfTurn)
+    { creature: r.creature.with("activeEffects", cleaned), slots: r.slots }
+  }
+
+  // -- 15.6 Casting Validation --
 
   /// Can the creature provide the required spell components?
   /// V: requires ability to speak (pCanSpeak). S: requires a free hand (caller-provided).
@@ -1819,6 +1871,7 @@ module dnd {
   var state: CreatureState
   var turnState: TurnState
   var spellSlots: SpellSlotState
+  var turnPhase: str  // "outOfCombat" | "acting" | "waitingForTurn"
 
   // -- 19.2 Nondeterministic Parameter Ranges --
 
@@ -1906,6 +1959,7 @@ module dnd {
       state' = freshCreature(maxHp).with("hitPointDiceRemaining", 5),
       turnState' = FRESH_TURN,
       spellSlots' = FRESH_SPELL_SLOTS,
+      turnPhase' = "outOfCombat",
     }
   }
 
@@ -1917,7 +1971,7 @@ module dnd {
     nondet dt = DAMAGE_TYPES.oneOf()
     nondet isCrit = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 
   action doTakeDamageWithMods = {
@@ -1927,55 +1981,55 @@ module dnd {
     nondet resType = DAMAGE_TYPES.oneOf()
     nondet vulnType = DAMAGE_TYPES.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 
   action doHeal = {
     nondet amount = HEAL_RANGE.oneOf()
-    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doGrantTempHp = {
     nondet amount = TEMP_HP_RANGE.oneOf()
     nondet keepOld = Bool.oneOf()
-    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doDeathSave = {
     nondet roll = D20_RANGE.oneOf()
-    all { state' = pDeathSave(state, roll), turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = pDeathSave(state, roll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doStabilize = all {
-    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots
+    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase
   }
 
   action doKnockOut = {
     val r = pWithConcBreak(spellSlots, state, pKnockOut(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 
   action doApplyCondition = {
     nondet c = CONDITIONS.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyCondition(state, c))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 
   action doRemoveCondition = {
     nondet c = CONDITIONS.oneOf()
-    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   // Exhaustion actions
   action doAddExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
     val r = pWithConcBreak(spellSlots, state, pAddExhaustion(state, levels))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 
   action doReduceExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
-    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   // Turn actions
@@ -1984,108 +2038,109 @@ module dnd {
     nondet isGrappling = Bool.oneOf()
     nondet grappledSmall = Bool.oneOf()
     val t1 = pStartTurn(TEST_CONFIG, state, Unarmored, callerSpeedMod, isGrappling, grappledSmall)
-    all { state' = state, turnState' = t1, spellSlots' = spellSlots }
+    all { state' = state, turnState' = t1, spellSlots' = spellSlots, turnPhase' = "acting" }
   }
 
   action doUseAction = {
     nondet at = ACTION_TYPES.oneOf()
-    all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots }
+    all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doUseBonusAction = all {
-    state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots
+    state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase
   }
 
   action doUseReaction = all {
-    state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots
+    state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase
   }
 
   action doUseMovement = {
     nondet feet = MOVEMENT_RANGE.oneOf()
     nondet cost = MOVE_COST_RANGE.oneOf()
-    all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots }
+    all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doUseExtraAttack = all {
-    state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots
+    state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase
   }
 
   action doStandFromProne = {
     // Can't stand if incapacitated (unconscious, paralyzed, etc.)
-    if (isIncapacitated(state)) all { state' = state, turnState' = turnState, spellSlots' = spellSlots }
+    if (isIncapacitated(state)) all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
     else {
       val t1 = pStandFromProne(turnState)
       val s1 = if (t1 != turnState) pRemoveCondition(state, CProne) else state
-      all { state' = s1, turnState' = t1, spellSlots' = spellSlots }
+      all { state' = s1, turnState' = t1, spellSlots' = spellSlots, turnPhase' = turnPhase }
     }
   }
 
   action doDropProne = all {
-    state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots
+    state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase
   }
 
   action doMarkBonusActionSpell = all {
-    state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots
+    state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase
   }
 
   action doMarkNonCantripActionSpell = all {
-    state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots
+    state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase
   }
 
   // Spell slot actions (A1: requires ability to act — see ASSUMPTIONS.md)
   action doExpendSlot = {
     nondet level = SLOT_LEVEL_RANGE.oneOf()
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendSlot(spellSlots, level) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1 }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
   }
 
   action doExpendPactSlot = {
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendPactSlot(spellSlots) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1 }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
   }
 
   action doStartConcentration = {
     nondet spellId = SPELL_IDS.oneOf()
     nondet duration = EFFECT_DURATION_RANGE.oneOf()
-    if (state.dead) all { state' = state, turnState' = turnState, spellSlots' = spellSlots }
+    if (state.dead) all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
     else {
       val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
-      val effects2 = pAddEffect(effects1, spellId, duration)
+      val effects2 = pAddEffect(effects1, spellId, duration, AtEndOfTurn)
       val ss1 = pStartConcentration(spellSlots, spellId)
-      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1 }
+      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
     }
   }
 
   action doBreakConcentration = {
     val ss1 = pBreakConcentration(spellSlots)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1 }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
   }
 
   action doConcentrationCheck = {
     nondet saveSucceeded = Bool.oneOf()
     val ss1 = pConcentrationCheck(spellSlots, saveSucceeded)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1 }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
   }
 
   // Active effect actions
   action doAddEffect = {
     nondet spellId = SPELL_IDS.oneOf()
     nondet duration = EFFECT_DURATION_RANGE.oneOf()
-    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration)), turnState' = turnState, spellSlots' = spellSlots }
+    nondet expiresAt = Set(AtStartOfTurn, AtEndOfTurn).oneOf()
+    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration, expiresAt)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doRemoveEffect = {
     nondet spellId = SPELL_IDS.oneOf()
-    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   // Rest actions
   action doSpendHitDie = {
     nondet conMod = (-2).to(5).oneOf()
     nondet dieRoll = HD_ROLL_RANGE.oneOf()
-    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doShortRest = {
@@ -2099,6 +2154,7 @@ module dnd {
       state' = pShortRest(state, conMod, rolls),
       turnState' = turnState,
       spellSlots' = pRestorePactSlots(spellSlots),
+      turnPhase' = turnPhase,
     }
   }
 
@@ -2107,6 +2163,7 @@ module dnd {
       state' = pLongRest(state, 5),
       turnState' = turnState,
       spellSlots' = pRestoreAllSlots(spellSlots),
+      turnPhase' = turnPhase,
     }
   }
 
@@ -2114,24 +2171,24 @@ module dnd {
   action doApplyFall = {
     nondet damageRoll = DAMAGE_RANGE.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyFall(state, damageRoll, Set(), Set(), Set()))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 
   action doSuffocate = {
     val r = pWithConcBreak(spellSlots, state, pSuffocate(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 
   action doApplyStarvation = {
     val r = pWithConcBreak(spellSlots, state, pApplyStarvation(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 
   action doApplyDehydration = {
     nondet halfWater = Bool.oneOf()
     nondet saveSucceeded = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyDehydration(state, halfWater, saveSucceeded))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
   }
 
   // Grapple/Shove actions (applied to self as target)
@@ -2141,16 +2198,16 @@ module dnd {
     nondet saveFailed = Bool.oneOf()
     nondet freeHand = Bool.oneOf()
     val result = pGrapple(atkSize, tgtSize, state, saveFailed, freeHand)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doReleaseGrapple = all {
-    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots
+    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase
   }
 
   action doEscapeGrapple = {
     nondet escaped = Bool.oneOf()
-    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
   action doShove = {
@@ -2159,14 +2216,43 @@ module dnd {
     nondet saveFailed = Bool.oneOf()
     nondet choice = SHOVE_CHOICES.oneOf()
     val result = pShove(atkSize, tgtSize, state, saveFailed, choice)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
   }
 
-  // -- 19.6 Step Action --
+  // -- 19.6 doEndTurn Action --
+
+  action doEndTurn = {
+    if (turnPhase != "acting") {
+      all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    } else {
+      nondet numSaves = 0.to(1).oneOf()
+      nondet saveSpellId = SPELL_IDS.oneOf()
+      nondet saveSucceeded = Bool.oneOf()
+      nondet saveCondition = CONDITIONS.oneOf()
+      val saves = if (numSaves == 0) []
+        else [{ spellId: saveSpellId, saveSucceeded: saveSucceeded, conditionsToRemove: Set(saveCondition) }]
+      nondet numDmg = 0.to(1).oneOf()
+      nondet dmgSpellId = SPELL_IDS.oneOf()
+      nondet dmgAmount = DAMAGE_RANGE.oneOf()
+      nondet dmgType = DAMAGE_TYPES.oneOf()
+      nondet conSave = Bool.oneOf()
+      val damages = if (numDmg == 0) []
+        else [{ spellId: dmgSpellId, damage: dmgAmount, damageType: dmgType, conSaveSucceeded: conSave }]
+      val result = pEndTurn(state, spellSlots, saves, damages)
+      all {
+        state' = result.creature,
+        turnState' = turnState,
+        spellSlots' = result.slots,
+        turnPhase' = "waitingForTurn",
+      }
+    }
+  }
+
+  // -- 19.7 Step Action --
 
   action step = {
     if (state.dead) {
-      all { state' = state, turnState' = turnState, spellSlots' = spellSlots }
+      all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
     } else {
       any {
         doTakeDamage,
@@ -2208,6 +2294,7 @@ module dnd {
         doReleaseGrapple,
         doEscapeGrapple,
         doShove,
+        doEndTurn,
       }
     }
   }
@@ -2278,6 +2365,8 @@ module dnd {
       )
     )
 
+  val turnPhaseValid = turnPhase.in(Set("outOfCombat", "acting", "waitingForTurn"))
+
   /// Combined invariant for all safety properties.
   val allInvariants = and {
     hpBounded,
@@ -2299,6 +2388,7 @@ module dnd {
     pactSlotsBounded,
     hitDiceNonNegative,
     activeEffectsUniqueSpellIds,
+    turnPhaseValid,
   }
 
 }
