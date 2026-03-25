@@ -13,6 +13,9 @@ import re
 
 from qa_utils import fetch_url, strip_html
 
+# NOTE: DDB is a JS SPA — static fetch returns a shell with minimal content (~5 Q&A).
+# For full extraction: save the page as HTML from a browser, place it at CACHE_FILE below,
+# then rerun. The parser will use the cached file automatically.
 BASE_URL = "https://www.dndbeyond.com/sources/dnd/sae/sage-advice-compendium"
 RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
 CACHE_FILE = os.path.join(RAW_DIR, "sage_advice_raw.html")

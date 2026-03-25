@@ -38,17 +38,11 @@ def fetch_archive_pages():
             break
 
         # Extract post links from archive page
-        # TODO: Verify selector — sageadvice.eu typically uses <h2 class="entry-title"><a href="...">
+        # sageadvice.eu uses <h1 class="entry-title"><a href="...">
         links = re.findall(
-            r'<h[23][^>]*class="[^"]*entry-title[^"]*"[^>]*>\s*<a\s+href="([^"]+)"[^>]*>(.*?)</a>',
+            r'<h[123][^>]*class="[^"]*entry-title[^"]*"[^>]*>\s*<a\s+href="([^"]+)"[^>]*>(.*?)</a>',
             raw, re.DOTALL
         )
-        if not links:
-            # Fallback: try any <article> with <a> inside heading
-            links = re.findall(
-                r'<a\s+href="(https://www\.sageadvice\.eu/[^"]+)"[^>]*>(.*?)</a>',
-                raw, re.DOTALL
-            )
 
         for href, title in links:
             # Filter out non-post links (tag pages, category pages, etc.)
@@ -88,17 +82,18 @@ def parse_post(url, raw_html):
     )
     content = content_match.group(1) if content_match else raw_html
 
-    # Extract blockquote (official answer)
-    blockquotes = re.findall(r"<blockquote[^>]*>(.*?)</blockquote>", content, re.DOTALL)
+    # Extract blockquotes — typical structure: BQ1=question tweet, BQ2=official answer
+    # Search full page (not just entry-content which may be truncated by ads/widgets)
+    blockquotes = re.findall(r"<blockquote[^>]*>(.*?)</blockquote>", raw_html, re.DOTALL)
     if not blockquotes:
         return None
 
-    answer = strip_html(blockquotes[-1])  # Last blockquote is typically the official answer
+    answer = strip_html(blockquotes[-1])  # Last blockquote is the official answer
 
-    # Question is the non-blockquote text content, or the title
-    question_html = re.sub(r"<blockquote[^>]*>.*?</blockquote>", "", content, flags=re.DOTALL)
-    question = strip_html(question_html).strip()
-    if len(question) < 10:
+    # Question: use first blockquote if multiple, otherwise fall back to title
+    if len(blockquotes) >= 2:
+        question = strip_html(blockquotes[0])
+    else:
         question = title
 
     if len(answer) < 10:

@@ -12,7 +12,9 @@ import re
 
 from qa_utils import fetch_url, strip_html
 
-# TODO: Verify this URL against the live D&D Beyond errata page
+# NOTE: DDB errata URLs return 404 for automated fetches (JS-rendered or auth-gated).
+# To use this scraper: save the errata page as HTML from a browser, place it at CACHE_FILE below.
+# Tested URLs (all 404): /errata/phb-2024, /errata, /errata/players-handbook-2024, /errata/ph-2024
 ERRATA_URL = "https://www.dndbeyond.com/sources/dnd/errata/phb-2024"
 RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
 CACHE_FILE = os.path.join(RAW_DIR, "errata_phb_2024_raw.html")
