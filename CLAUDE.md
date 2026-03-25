@@ -17,6 +17,10 @@ The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parit
 - **Never** remove or rename context fields that the MBT bridge maps — check `machine.mbt.test.ts` before removing anything from `DndContext`.
 - If a simplify/refactor changes behavior, the MBT tests MUST still pass. If they don't, the refactor is wrong.
 
+## ESLint file size limits
+
+`app/src/machine.ts` has a 420-line eslint `max-lines` limit. When adding actions, extract logic into `machine-helpers.ts` (or `machine-combat.ts`) to stay under the cap.
+
 ## /simplify convergence
 
 After significant changes, run `/simplify` repeatedly until it converges — i.e., each round finds fewer issues until no important fixes remain. Typical progression: round 1 catches dead code and obvious duplication; round 2 catches subtler issues (bugs, tautological invariants, missed dedup); round 3 should find nothing significant. If round N still finds real issues, keep going.
