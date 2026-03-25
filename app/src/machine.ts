@@ -2,19 +2,17 @@ import type { SnapshotFrom } from "xstate"
 import { assign, setup } from "xstate"
 
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
+import { dmgR, dsR, fallR } from "#/machine-damage.ts"
 import {
   addAe,
   addDeathFailures,
   addIncapSource,
-  ALL_DAMAGE_TYPES,
   applyConditionUpdate,
   calculateEffectiveSpeed,
   computeAddExhaustion,
   computeEndTurn,
-  computeFallResult,
   computeLongRest,
   computeShortRest,
-  computeTakeDamage,
   dehydrationLevels,
   effectiveMaxHp,
   exhUpdate,
@@ -23,7 +21,6 @@ import {
   removeAe,
   removeConditionUpdate,
   removeIncapSource,
-  resolveDeathSave,
   spendHalfSpeed
 } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
@@ -34,14 +31,11 @@ import {
   spellcastingConfig,
   turnPhaseConfig
 } from "#/machine-states.ts"
-import type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
 import {
   asAddEffect,
   asApplyDehydration,
-  asApplyFall,
   asConcentrationCheck,
   asCondition,
-  asDeathSave,
   asEndTurn,
   asEscapeGrapple,
   asExhaustion,
@@ -59,12 +53,14 @@ import {
   asTakeDamage,
   asUseAction,
   asUseMovement,
+  type DndContext,
+  type DndEvent,
+  type DndMachineInput,
   INITIAL_CONDITIONS,
   INITIAL_TURN_STATE
 } from "#/machine-types.ts"
 import {
   type ActiveEffect,
-  type DamageType,
   DEATH_SAVES_RESET,
   deathSaveCount,
   EMPTY_SLOTS,
@@ -76,36 +72,6 @@ import {
 } from "#/types.ts"
 
 export type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
-const petrifiedR = (c: DndContext, r: ReadonlySet<DamageType>) => (c.petrified ? ALL_DAMAGE_TYPES : r)
-const fallR = (c: DndContext, e: DndEvent) => {
-  const ev = asApplyFall(e)
-  return computeFallResult(
-    ev.damageRoll,
-    c.hp,
-    c.maxHp,
-    c.tempHp,
-    c.exhaustion,
-    ev.immunities,
-    petrifiedR(c, ev.resistances),
-    ev.vulnerabilities
-  )
-}
-const dmgR = (c: DndContext, e: DndEvent) => {
-  const ev = asTakeDamage(e)
-  return computeTakeDamage(
-    c.hp,
-    c.maxHp,
-    c.tempHp,
-    c.exhaustion,
-    ev.amount,
-    ev.damageType,
-    ev.immunities,
-    petrifiedR(c, ev.resistances),
-    ev.vulnerabilities
-  )
-}
-const dsR = (c: DndContext, e: DndEvent) =>
-  resolveDeathSave(asDeathSave(e).d20Roll, c.deathSaves.successes, c.deathSaves.failures)
 const concBreakFields = (c: DndContext) =>
   c.concentrationSpellId !== ""
     ? { concentrationSpellId: "", activeEffects: removeAe(c.activeEffects, c.concentrationSpellId) }
@@ -119,7 +85,7 @@ const MT = { context: {} as DndContext, events: {} as DndEvent, input: {} as Dnd
 export const dndMachine = setup({
   types: MT,
   guards: {
-    instantDeathFromConscious: ({ context: c, event: e }) => {
+    instantDeathFromAlive: ({ context: c, event: e }) => {
       const r = dmgR(c, e)
       return r.dmgThrough > 0 && r.newHp === 0 && r.overflow >= r.effMax
     },
@@ -199,9 +165,7 @@ export const dndMachine = setup({
     })),
     applyTempHp: assign(({ event: e }) => (asGrantTempHp(e).keepOld ? {} : { tempHp: asGrantTempHp(e).amount })),
     applyKnockOut: assign(({ context: c }) => ({
-      deathSaves: DEATH_SAVES_RESET,
-      hp: hp(0),
-      stable: true,
+      hp: hp(1),
       ...concBreak(c)
     })),
     applyStabilize: assign({ deathSaves: DEATH_SAVES_RESET, stable: true }),
