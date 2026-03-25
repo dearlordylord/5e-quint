@@ -70,7 +70,7 @@ When multiclassing into a non-starting class, only partial proficiencies are gai
 ```
 [T03] Evasion (P1) -> deps: none  ✓ done
 [T04] Uncanny Dodge (P1) -> deps: none  ✓ done
-[T05] Fighting Style Feats (P1) -> deps: [T201]
+[T05] Fighting Style Feats (P1) -> deps: [T201]  ✓ done
 [T06] Bonus-Action-As-Action Pattern (P1) -> deps: none  ✓ done
 [T07] Channel Divinity Framework (P2) -> deps: [T01]  ✓ done
 [T08] Spell Effect Data Model (P2) -> deps: none  ✓ done
@@ -89,13 +89,10 @@ Used by Rogue 5, Hunter 15. Reaction: halve one attack's damage.
 - Functions: `pUncannyDodge(damage) -> floor(damage/2)`; precondition: reaction available AND attacker is visible (can't use vs unseen attacker)
 - Test: 10 damage->5; 7->3; can't use twice (reaction consumed); can't use when incapacitated; can't use vs unseen attacker
 
-**[T05] Fighting Style Feats**
-SRD 5.2.1: Fighting Styles are now feats requiring the "Fighting Style Feature" prerequisite. Only 4 feats in SRD 5.2.1: **Archery**, **Defense**, **Great Weapon Fighting**, **Two-Weapon Fighting**. Dueling and Protection are not in SRD 5.2.1.
-
-Classes that grant the Fighting Style Feature: Fighter (L1), Paladin (L2), Ranger (L2). Fighters can swap their Fighting Style feat on level-up. Champion gets a second Fighting Style feat at L7. Paladin alternative at L2: Blessed Warrior (learn 2 Cleric cantrips). Ranger alternative at L2: Druidic Warrior (learn 2 Druid cantrips).
-- State: `fightingStyles: Set[FightingStyleFeat]` in config; `hasFightingStyleFeature: bool`
-- Functions: `pArcheryAttackMod` (+2 on ranged attacks), `pDefenseACMod` (+1 AC with armor training), `pGWFReroll` (reroll 1s/2s on damage dice), `pTWFDamageMod` (add ability mod to off-hand attack damage)
-- Test: Archery +2 on ranged; Defense +1 only with armor; GWF reroll 1s/2s; TWF adds ability mod to offhand; can't take without Fighting Style Feature; Fighter can have two styles (via Champion L7)
+**[T05] Fighting Style Feats** *(done)*
+4 SRD 5.2.1 Fighting Style feats: Archery (+2 ranged), Defense (+1 AC with armor), GWF (treat 1-2 as 3), TWF (add ability mod to off-hand).
+- Functions: `pArcheryAttackBonus`, `pDefenseACBonus`, `pGWFDamageDie`, `pTWFOffHandDamageStyled`
+- `hasFightingStyleFeature: bool` in CharConfig (Fighter L1, Paladin L2, Ranger L2)
 
 **[T06] Bonus-Action-As-Action Pattern** *(done)*
 Generalize the pattern: "use bonus action to take Dash/Disengage/Hide" (Cunning Action, Step of the Wind, Vanish). Pure function takes `turnState` + `actionChoice` -> modified `turnState` with bonus used + action effect applied.
@@ -717,21 +714,13 @@ SRD 5.2.1: each weapon has a Mastery property. Only classes/features that grant 
 
 ```
 [T200] Grappler Feat (P4) -> deps: none
-[T201] Feat System Framework (P2) -> deps: [T01]
+[T201] Feat System Framework (P2) -> deps: [T01]  ✓ done
 ```
 
-**[T201] Feat System Framework**
-SRD 5.2.1 introduces 4 feat categories. ASI is now a General Feat (not a class feature). All classes gain a feat instead of or in addition to ASI at standard ASI levels.
-
-Categories:
-- **Origin**: taken at character creation (L1), no prerequisites. Grant a benefit related to your origins. TODO: enumerate SRD 5.2.1 Origin feats.
-- **General**: taken at standard feat levels. ASI (+2 to one score or +1/+1) is a General Feat. TODO: enumerate SRD 5.2.1 General feats.
-- **Fighting Style**: require "Fighting Style Feature" prerequisite (see T05). 4 feats: Archery, Defense, Great Weapon Fighting, Two-Weapon Fighting.
-- **Epic Boon**: taken at L19. Every class gains one. Grant powerful, often unique abilities. TODO: enumerate SRD 5.2.1 Epic Boon options.
-
-- State: `feats: Set[Feat]`, `epicBoon: EpicBoon option` in CharConfig; ASI handled via ability score config
-- Functions: `pCanTakeFeat(config, feat)->check category prerequisites`; `pApplyASI(config, score, amount)->+ability score`
-- Test: Origin feat at L1 no prereqs; Fighting Style feat requires feature; Epic Boon only at L19; ASI treated as General Feat
+**[T201] Feat System Framework** *(done)*
+Prerequisite checking for feat categories. `feats: Set[Feat]` and `epicBoon` deferred until concrete Origin/General/Epic Boon feats get mechanics.
+- Functions: `pCanTakeFightingStyleFeat`, `pCanTakeEpicBoon`
+- `pApplyASI` already existed
 
 **[T200] Grappler Feat**
 SRD 5.2.1 revised per 5.2.1 text (TODO: verify exact changes — Advantage on attacks while grappling and Pin mechanic may have changed).
@@ -748,7 +737,7 @@ Core is complete (PLAN.md). This file is now the active plan. All tasks are unbl
 1. ~~**[T01]** Config Identity + species~~ ✓, **[T01.5]** Multiclass Proficiency Rules
 2. ~~**[T03, T04, T06, T08]** Shared mechanics~~ ✓ (T09 dropped — not in SRD 5.2.1)
 3. ~~**[T07]** Channel Divinity (needs T01; unblocks Paladin/Cleric)~~ ✓
-4. **[T201]** Feat System Framework; then **[T05]** Fighting Style Feats (needs T201)
+4. ~~**[T201]** Feat System Framework; then **[T05]** Fighting Style Feats (needs T201)~~ ✓
 5. **P1 class features** — T10 Rage, T11 Reckless, T20 Second Wind, T21 Action Surge, T30 Sneak Attack, T40 Focus Pool, T41 Martial Arts, T60 Lay on Hands, T61 Paladin's Smite, T100 Wild Shape, T110 Sorcery Points (all need only T01); **T200** Grappler Feat (no deps)
 6. **P1 dependent** — T13 Berserker (needs T10), T23 Champion (needs T02+T05), T31 Cunning Action (needs T06), T42 Focus Actions (needs T40+T06), T43 Stunning Strike (needs T40)
 7. **P1-P2 spells** — T150 Damage Patterns, T152 AC/Defense Buffs, T153 Condition Debuffs (all need T08)
