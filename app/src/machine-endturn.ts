@@ -38,7 +38,6 @@ interface EndTurnCtx {
   readonly hp: number
   readonly maxHp: number
   readonly tempHp: number
-  readonly exhaustion: number
   readonly concentrationSpellId: string
   readonly activeEffects: ReadonlyArray<ActiveEffect>
   readonly incapacitatedSources: ReadonlySet<IncapSource>
@@ -85,7 +84,6 @@ export function computeEndTurn(
       h,
       ctx.maxHp,
       th,
-      ctx.exhaustion,
       dmg.damage,
       dmg.damageType,
       EMPTY_DMG_SET,

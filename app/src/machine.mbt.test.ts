@@ -694,7 +694,7 @@ const dndDriver = defineDriver(driverSchema, () => {
       send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls: rolls })
     },
     doLongRest: () => {
-      send({ type: "LONG_REST", totalHitDice: HIT_DICE_TOTAL, hasEaten: true })
+      send({ type: "LONG_REST", totalHitDice: HIT_DICE_TOTAL })
     },
     doApplyFall: ({ damageRoll }) => {
       send({

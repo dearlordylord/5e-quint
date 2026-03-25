@@ -122,7 +122,7 @@ export const dndMachine = setup({
     canSuffocate: ({ context: c }) => c.hp > 0,
     shortRestHeals: ({ context: c, event: e }) => {
       const ev = asShortRest(e)
-      const r = computeShortRest(c.hp, c.maxHp, c.exhaustion, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
+      const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
       return c.hp === 0 && r.newHp > 0
     },
     longRestHeals: ({ context: c }) => c.hp >= 1,
@@ -320,12 +320,12 @@ export const dndMachine = setup({
     }),
     shortRest: assign(({ context: c, event: e }) => {
       const ev = asShortRest(e)
-      const r = computeShortRest(c.hp, c.maxHp, c.exhaustion, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
+      const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
       return { hitDiceRemaining: r.newHitDice, hp: hp(r.newHp), pactSlotsCurrent: r.newPactSlots }
     }),
     longRest: assign(({ context: c, event: e }) => {
       const ev = asLongRest(e)
-      const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, ev.totalHitDice, ev.hasEaten)
+      const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, ev.totalHitDice)
       if (!r) return {}
       return {
         exhaustion: exhaustionLevel(r.newExhaustion),

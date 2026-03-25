@@ -239,10 +239,7 @@ export function EventPanel({
       <Section title={t.shortRest + " / " + t.longRest}>
         <div className="flex gap-2">
           <Btn label={t.shortRest} onClick={() => send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })} />
-          <Btn
-            label={t.longRest}
-            onClick={() => send({ type: "LONG_REST", totalHitDice: DEFAULT_HIT_DICE, hasEaten: true })}
-          />
+          <Btn label={t.longRest} onClick={() => send({ type: "LONG_REST", totalHitDice: DEFAULT_HIT_DICE })} />
         </div>
       </Section>
 

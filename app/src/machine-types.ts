@@ -165,7 +165,7 @@ export type DndEvent =
   | { readonly type: "BREAK_CONCENTRATION" }
   | { readonly type: "CONCENTRATION_CHECK"; readonly conSaveSucceeded: boolean }
   | { readonly type: "SHORT_REST"; readonly conMod: number; readonly hdRolls: ReadonlyArray<number> }
-  | { readonly type: "LONG_REST"; readonly totalHitDice: number; readonly hasEaten: boolean }
+  | { readonly type: "LONG_REST"; readonly totalHitDice: number }
   | { readonly type: "SPEND_HIT_DIE"; readonly conMod: number; readonly dieRoll: number }
   | {
       readonly type: "APPLY_FALL"

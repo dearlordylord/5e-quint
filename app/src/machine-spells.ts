@@ -51,7 +51,6 @@ export function calculateMulticlassSlots(
 export function computeShortRest(
   currentHp: number,
   maxHp: number,
-  exhaustion: number,
   hitDiceRemaining: number,
   pactSlotsMax: number,
   conMod: number,
@@ -73,8 +72,7 @@ export function computeLongRest(
   exhaustion: number,
   slotsMax: SpellSlots,
   pactSlotsMax: number,
-  totalHitDice: number,
-  hasEaten: boolean
+  totalHitDice: number
 ): {
   readonly newExhaustion: number
   readonly newHp: number
@@ -83,7 +81,7 @@ export function computeLongRest(
   readonly newPactSlots: number
 } | null {
   if (currentHp < 1) return null
-  const newExhaustion = hasEaten ? Math.max(0, exhaustion - 1) : exhaustion
+  const newExhaustion = Math.max(0, exhaustion - 1)
   const effMax = effectiveMaxHp(maxHp)
   return {
     newExhaustion,

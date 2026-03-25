@@ -43,7 +43,7 @@ MBT infrastructure wired to `@firfi/quint-connect`.
 
 The following completed features were implemented under SRD 5.1 and need revision for 5.2.1 during M2.5:
 
-- **Exhaustion:** completely new system. Was 6 tiers with specific per-tier effects (disadv ability checks, speed halved, disadv attacks/saves, HP max halved, speed 0, death). Now: -2 x level on D20 Tests, -5 x level ft Speed, death at level 6 (Rules-Glossary.md "Exhaustion [Condition]"). *Partially migrated:* speed penalty and HP-max-halving removal done; remaining: XState `computeLongRest` still gates exhaustion reduction on `hasEaten` (5.1 rule) — Quint and SRD 5.2.1 reduce unconditionally. Remove `hasEaten` from `LONG_REST` event and `computeLongRest`.
+- ~~**Exhaustion:** completely new system. Was 6 tiers with specific per-tier effects (disadv ability checks, speed halved, disadv attacks/saves, HP max halved, speed 0, death). Now: -2 x level on D20 Tests, -5 x level ft Speed, death at level 6 (Rules-Glossary.md "Exhaustion [Condition]").~~ *(done — speed penalty, HP-max-halving removal, `hasEaten` removal, dead exhaustion params cleanup all complete)*
 - **Stunned:** no longer includes Speed 0. 5.2.1 Stunned = Incapacitated + auto-fail STR/DEX saves + Advantage on attacks against. No Speed reduction (Rules-Glossary.md "Stunned [Condition]").
 - **Grappled:** added "Disadvantage on attack rolls against any target other than the grappler" (Rules-Glossary.md "Grappled [Condition]").
 - **Surprise:** was turn-skip; now Disadvantage on Initiative roll, which is pre-combat. Remove from turn state machine (Rules-Glossary.md "Initiative," Playing-the-Game.md "Surprise").

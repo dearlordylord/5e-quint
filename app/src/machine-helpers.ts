@@ -47,7 +47,6 @@ export function computeTakeDamage(
   ctxHp: number,
   ctxMaxHp: number,
   ctxTempHp: number,
-  ctxExhaustion: number,
   amount: number,
   damageType: DamageType,
   immunities: ReadonlySet<DamageType>,
@@ -295,7 +294,6 @@ export function computeFallResult(
   ctxHp: number,
   ctxMaxHp: number,
   ctxTempHp: number,
-  ctxExhaustion: number,
   immunities: ReadonlySet<DamageType>,
   resistances: ReadonlySet<DamageType>,
   vulnerabilities: ReadonlySet<DamageType>
@@ -304,7 +302,6 @@ export function computeFallResult(
     ctxHp,
     ctxMaxHp,
     ctxTempHp,
-    ctxExhaustion,
     damageRoll,
     "bludgeoning",
     immunities,
