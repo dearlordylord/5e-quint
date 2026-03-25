@@ -64,3 +64,11 @@ Each entry records the assumption, rules justification, and what changed in both
 **Rules basis (SRD 5.2.1 Rules-Glossary "Incapacitated [Condition]"):** "An Incapacitated creature can't take any action, Bonus Action, or Reaction." Casting a spell (which starts concentration) requires an action or bonus action. Therefore incapacitated creatures cannot start new concentration.
 
 **Changes:** Implemented in TA4. `dnd.qnt`: `doStartConcentration` guarded by `not(isIncapacitated(state))`. XState: `canConcentrate` guard on both START_CONCENTRATION handlers in `machine-states.ts`.
+
+## A8: Two-Weapon Fighting requires melee weapons
+
+**Assumption:** `pCanTWFWithWeapons` requires both weapons to have the Light property AND be melee weapons.
+
+**Rules basis (Equipment.md "Light [Weapon Property]"):** SRD 5.2.1 says "when you take the Attack action on your turn and attack with a Light weapon, you can make one extra attack as a Bonus Action later on the same turn with a different Light weapon." The 5.2.1 text is silent on whether the weapons must be melee. SRD 5.1 explicitly required "light melee weapon." We retain the melee-only requirement because: (a) all Light weapons in the SRD equipment tables are melee weapons (Hand Crossbow is Light but one-handed, and TWF requires a weapon "in the other hand"), (b) removing the constraint would allow dual-wielding hand crossbows RAW, which contradicts the Ammunition property's "one hand free to load" requirement, and (c) the constraint is strictly more conservative than the SRD text.
+
+**Changes:** No code changes. Documents existing `pCanTWFWithWeapons` behavior in `dnd.qnt` and `canTwoWeaponFight` in XState.
