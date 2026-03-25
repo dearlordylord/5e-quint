@@ -249,6 +249,8 @@ These are pre-existing XState/MBT parity issues surfaced during TA2 MBT wiring. 
 
 2. **Concentration consistency invariant:** `incapNotConcentrating` (isIncapacitated implies concentrationSpellId == "") fails during random walks. Root cause: some action path applies incapacitation without wrapping in `pWithConcBreak`/`concBreak`. The invariant catches the missing wrap. Needs audit of all incapacitation paths.
 
+3. **hitPointDiceRemaining divergence:** MBT traces show `hitPointDiceRemaining: 5` (Quint) vs `4` (XState) after a sequence involving SPEND_HIT_DIE or SHORT_REST. The field mapping is correct (Quint `hitPointDiceRemaining` ↔ XState `hitDiceRemaining`). Root cause: likely a behavioral difference in hit dice spending or recovery logic. Surfaced after KNOCK_OUT fix eliminated the earlier blocking failure.
+
 ---
 
 ## DAG Visualization
