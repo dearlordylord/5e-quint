@@ -1412,7 +1412,7 @@ module dndTest {
     isRangedAttack: false, beyondNormalRange: false, hostileWithin5ft: false,
     isHeavyWeapon: false, wielderSizeSmallOrTiny: false,
     attackerGrappled: false, targetIsGrappler: false,
-    squeezing: false, underwater: false, attackerHasSwimSpeed: false,
+    underwater: false, attackerHasSwimSpeed: false,
     isUnderwaterMeleePiercing: false, isUnderwaterRangedException: false,
   }
 
@@ -1506,12 +1506,6 @@ module dndTest {
   run test_aggregate_heavy_small = {
     val ctx = BASE_ATTACK_CTX.with("isHeavyWeapon", true).with("wielderSizeSmallOrTiny", true)
     val m = pAggregateAttackMods(ctx)
-    assert(m.hasDisadvantage)
-  }
-
-  // Squeezing attacker: disadvantage
-  run test_aggregate_squeezing = {
-    val m = pAggregateAttackMods(BASE_ATTACK_CTX.with("squeezing", true))
     assert(m.hasDisadvantage)
   }
 
@@ -1840,29 +1834,24 @@ module dndTest {
 
   // -- Movement Cost Multiplier --
 
-  run test_movement_cost_normal = assert(pMovementCost(false, false, false, false, false) == 1)
+  run test_movement_cost_normal = assert(pMovementCost(false, false, false, false) == 1)
 
-  run test_movement_cost_difficult_terrain = assert(pMovementCost(true, false, false, false, false) == 2)
+  run test_movement_cost_difficult_terrain = assert(pMovementCost(true, false, false, false) == 2)
 
-  run test_movement_cost_crawling = assert(pMovementCost(false, true, false, false, false) == 2)
+  run test_movement_cost_crawling = assert(pMovementCost(false, true, false, false) == 2)
 
-  run test_movement_cost_climbing_no_speed = assert(pMovementCost(false, false, true, false, false) == 2)
+  run test_movement_cost_climbing_no_speed = assert(pMovementCost(false, false, true, false) == 2)
 
-  run test_movement_cost_climbing_with_speed = assert(pMovementCost(false, false, true, true, false) == 1)
-
-  run test_movement_cost_squeezing = assert(pMovementCost(false, false, false, false, true) == 2)
+  run test_movement_cost_climbing_with_speed = assert(pMovementCost(false, false, true, true) == 1)
 
   // PHB: "Crawling 1 foot in difficult terrain, therefore, costs 3 feet of movement."
-  run test_movement_cost_crawl_difficult = assert(pMovementCost(true, true, false, false, false) == 3)
+  run test_movement_cost_crawl_difficult = assert(pMovementCost(true, true, false, false) == 3)
 
   // PHB Ch8: climbing without speed in difficult terrain = 3 (1 base + 1 terrain + 1 climb)
-  run test_movement_cost_climb_no_speed_difficult = assert(pMovementCost(true, false, true, false, false) == 3)
+  run test_movement_cost_climb_no_speed_difficult = assert(pMovementCost(true, false, true, false) == 3)
 
   // Climbing WITH speed in difficult terrain: only terrain penalty
-  run test_movement_cost_climb_with_speed_difficult = assert(pMovementCost(true, false, true, true, false) == 2)
-
-  // Squeezing + difficult terrain
-  run test_movement_cost_squeeze_difficult = assert(pMovementCost(true, false, false, false, true) == 3)
+  run test_movement_cost_climb_with_speed_difficult = assert(pMovementCost(true, false, true, true) == 2)
 
   // -- Stand from Prone --
 
