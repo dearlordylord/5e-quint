@@ -68,22 +68,22 @@ When multiclassing into a non-starting class, only partial proficiencies are gai
 ## Shared Mechanics
 
 ```
-[T03] Evasion (P1) -> deps: none
-[T04] Uncanny Dodge (P1) -> deps: none
+[T03] Evasion (P1) -> deps: none  ✓ done
+[T04] Uncanny Dodge (P1) -> deps: none  ✓ done
 [T05] Fighting Style Feats (P1) -> deps: [T201]
-[T06] Bonus-Action-As-Action Pattern (P1) -> deps: none
+[T06] Bonus-Action-As-Action Pattern (P1) -> deps: none  ✓ done
 [T07] Channel Divinity Framework (P2) -> deps: [T01]
-[T08] Spell Effect Data Model (P2) -> deps: none
-[T09] Land's Stride (P2) -> deps: none
+[T08] Spell Effect Data Model (P2) -> deps: none  ✓ done
+[T09] Land's Stride (P2) -> deps: none  ✗ dropped (not in SRD 5.2.1)
 ```
 
-**[T03] Evasion (shared)**
+**[T03] Evasion (shared)** *(done)*
 Used by Rogue 7, Monk 7, Hunter 15. `pEvasion(dexSaveSucceeded, fullDamage) -> 0 on success, floor(fullDamage/2) on fail`.
 - State: `hasEvasion: bool` in config (or derived from class+level)
 - Functions: `pEvasionDamage`
 - Test: save success->0; save fail->half; 0 damage->0; odd damage rounds down
 
-**[T04] Uncanny Dodge (shared)**
+**[T04] Uncanny Dodge (shared)** *(done)*
 Used by Rogue 5, Hunter 15. Reaction: halve one attack's damage.
 - State: consumes reaction (already in TurnState)
 - Functions: `pUncannyDodge(damage) -> floor(damage/2)`; precondition: reaction available AND attacker is visible (can't use vs unseen attacker)
@@ -97,7 +97,7 @@ Classes that grant the Fighting Style Feature: Fighter (L1), Paladin (L2), Range
 - Functions: `pArcheryAttackMod` (+2 on ranged attacks), `pDefenseACMod` (+1 AC with armor training), `pGWFReroll` (reroll 1s/2s on damage dice), `pTWFDamageMod` (add ability mod to off-hand attack damage)
 - Test: Archery +2 on ranged; Defense +1 only with armor; GWF reroll 1s/2s; TWF adds ability mod to offhand; can't take without Fighting Style Feature; Fighter can have two styles (via Champion L7)
 
-**[T06] Bonus-Action-As-Action Pattern**
+**[T06] Bonus-Action-As-Action Pattern** *(done)*
 Generalize the pattern: "use bonus action to take Dash/Disengage/Hide" (Cunning Action, Step of the Wind, Vanish). Pure function takes `turnState` + `actionChoice` -> modified `turnState` with bonus used + action effect applied.
 - Functions: `pBonusActionDash`, `pBonusActionDisengage`, `pBonusActionHide`
 - Test: bonus action consumed; movement doubled (Dash); disengaged set; can't use if bonus already used
@@ -108,16 +108,13 @@ Shared by Cleric and Paladin. Resource: 1-3 charges/short rest (scales with leve
 - Functions: `pExpendChannelDivinity(state)`, `pRestoreChannelDivinity(state, config)`
 - Test: expend decrements; can't expend at 0; short rest restores to max; max scales with level; multiclass doesn't double charges
 
-**[T08] Spell Effect Data Model**
+**[T08] Spell Effect Data Model** *(done)*
 Define `SpellEffectType` sum type and `SpellData` record (name, level, school, casting time, concentration, components). Type definitions only — the foundation that T150-T161 build on. T150 implements damage pattern functions using these types.
 - State: type definitions only
 - Test: construct sample spells; verify field access
 
-**[T09] Land's Stride (shared)**
-Used by Ranger (Roving/Deft Explorer), Druid (Circle of the Land). Nonmagical difficult terrain costs no extra movement; nonmagical plants don't slow or damage; advantage on saves vs magical plants.
-- State: `hasLandsStride: bool` in config
-- Functions: modify `pMovementCost` — if hasLandsStride and nonmagical: cost=1
-- Test: difficult terrain cost 1 (not 2) with Land's Stride; magical still 2
+**[T09] Land's Stride (shared)** *(dropped — not in SRD 5.2.1)*
+"Land's Stride" does not exist in SRD 5.2.1. Ranger got "Roving" (speed +10, Climb/Swim), Druid got "Land's Aid" (damage/healing). Neither matches the 5.1 Land's Stride mechanic.
 
 ---
 
@@ -750,7 +747,7 @@ Prereq: STR 13+ (Origin or General — verify category). Advantage on attacks ag
 Core is complete (PLAN.md). This file is now the active plan. All tasks are unblocked.
 
 1. ~~**[T01]** Config Identity + species~~ ✓, **[T01.5]** Multiclass Proficiency Rules
-2. **[T03, T04, T06, T08, T09]** Shared mechanics (no deps or T01 only)
+2. ~~**[T03, T04, T06, T08]** Shared mechanics~~ ✓ (T09 dropped — not in SRD 5.2.1)
 3. **[T07]** Channel Divinity (needs T01; unblocks Paladin/Cleric)
 4. **[T201]** Feat System Framework; then **[T05]** Fighting Style Feats (needs T201)
 5. **P1 class features** — T10 Rage, T11 Reckless, T20 Second Wind, T21 Action Surge, T30 Sneak Attack, T40 Focus Pool, T41 Martial Arts, T60 Lay on Hands, T61 Paladin's Smite, T100 Wild Shape, T110 Sorcery Points (all need only T01); **T200** Grappler Feat (no deps)
