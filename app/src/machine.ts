@@ -3,6 +3,7 @@ import { assign, setup } from "xstate"
 
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import {
+  addAe,
   addDeathFailures,
   addIncapSource,
   ALL_DAMAGE_TYPES,
@@ -19,6 +20,7 @@ import {
   exhUpdate,
   expendSlot,
   MAX_EXHAUSTION,
+  removeAe,
   removeConditionUpdate,
   removeIncapSource,
   resolveDeathSave,
@@ -67,7 +69,6 @@ import {
   deathSaveCount,
   EMPTY_SLOTS,
   exhaustionLevel,
-  type ExpiryPhase,
   hp,
   type IncapSource,
   movementFeet,
@@ -105,11 +106,6 @@ const dmgR = (c: DndContext, e: DndEvent) => {
 }
 const dsR = (c: DndContext, e: DndEvent) =>
   resolveDeathSave(asDeathSave(e).d20Roll, c.deathSaves.successes, c.deathSaves.failures)
-const addAe = (aes: ReadonlyArray<ActiveEffect>, spellId: string, turnsRemaining: number, expiresAt: ExpiryPhase) => [
-  ...aes.filter((ae) => ae.spellId !== spellId),
-  { spellId, turnsRemaining, expiresAt }
-]
-const removeAe = (aes: ReadonlyArray<ActiveEffect>, spellId: string) => aes.filter((ae) => ae.spellId !== spellId)
 const concBreakFields = (c: DndContext) =>
   c.concentrationSpellId !== ""
     ? { concentrationSpellId: "", activeEffects: removeAe(c.activeEffects, c.concentrationSpellId) }
@@ -301,25 +297,8 @@ export const dndMachine = setup({
     dropProne: assign({ prone: true }),
     endTurn: assign(({ context: c, event: e }) => {
       const ev = asEndTurn(e)
-      const r = computeEndTurn(
-        c.hp,
-        c.maxHp,
-        c.tempHp,
-        c.exhaustion,
-        c.concentrationSpellId,
-        c.activeEffects,
-        c.incapacitatedSources,
-        ev.endOfTurnSaves,
-        ev.endOfTurnDamage
-      )
-      return {
-        ...r.conditions,
-        activeEffects: r.activeEffects,
-        concentrationSpellId: r.concentrationSpellId,
-        hp: r.hp,
-        incapacitatedSources: r.incapacitatedSources,
-        tempHp: r.tempHp
-      }
+      const { conditions: conds, ...rest } = computeEndTurn(c, ev.endOfTurnSaves, ev.endOfTurnDamage)
+      return { ...conds, ...rest }
     }),
     markBonusActionSpell: assign({ bonusActionSpellCast: true }),
     markNonCantripActionSpell: assign({ nonCantripActionSpellCast: true }),

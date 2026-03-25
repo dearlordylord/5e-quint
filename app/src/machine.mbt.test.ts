@@ -11,7 +11,7 @@ import { createActor } from "xstate"
 import { z } from "zod"
 
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
-import type { Condition, ContestResult, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
+import type { ActionType, Condition, ContestResult, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
 import { d20Roll, healAmount, tempHp } from "#/types.ts"
 
 // ============================================================
@@ -110,6 +110,10 @@ function variantToString(v: unknown): string {
   return String(v)
 }
 
+function mapExpiryPhase(s: string): "start" | "end" {
+  return s === "AtStartOfTurn" ? "start" : "end"
+}
+
 const QuintIncapSourceSet = z.any().transform((raw: unknown) => {
   let items: Array<string> = []
   if (raw instanceof Set) items = [...raw].map(variantToString)
@@ -148,7 +152,7 @@ const QuintCreatureState = z.object({
         items.push({
           spellId: String(r.spellId ?? ""),
           turnsRemaining: Number(r.turnsRemaining ?? r.remainingTurns ?? 0),
-          expiresAt: variantToString(r.expiresAt) === "AtStartOfTurn" ? "start" : "end"
+          expiresAt: mapExpiryPhase(variantToString(r.expiresAt))
         })
       }
     }
@@ -435,18 +439,7 @@ void (true as AssertAllEventsMapped)
 // Driver: map Quint actions → XState events
 // ============================================================
 
-// Quint variant values come through ITF as either strings or objects with a tag.
-// This schema normalizes them to strings.
-const ITFVariant = z.any().transform((v: unknown) => {
-  if (typeof v === "string") return v
-  if (typeof v === "object" && v !== null) {
-    // Handle Quint variant objects: could be {tag: "AWins"} or {AWins: {}} etc.
-    if ("tag" in v) return String((v as Record<string, unknown>).tag)
-    const keys = Object.keys(v)
-    if (keys.length === 1) return keys[0]
-  }
-  return String(v)
-})
+const ITFVariant = z.any().transform(variantToString)
 
 const driverSchema = {
   init: { maxHp: ITFBigInt },
@@ -480,15 +473,15 @@ const driverSchema = {
   doStandFromProne: {},
   doDropProne: {},
   doEndTurn: {
-    numSaves: ITFBigInt,
-    saveSpellId: z.string(),
-    saveSucceeded: z.boolean(),
-    saveCondition: ITFVariant,
-    numDmg: ITFBigInt,
-    dmgSpellId: z.string(),
-    dmgAmount: ITFBigInt,
-    dmgType: ITFVariant,
-    conSave: z.boolean()
+    numSaves: ITFBigInt.optional(),
+    saveSpellId: z.string().optional(),
+    saveSucceeded: z.boolean().optional(),
+    saveCondition: ITFVariant.optional(),
+    numDmg: ITFBigInt.optional(),
+    dmgSpellId: z.string().optional(),
+    dmgAmount: ITFBigInt.optional(),
+    dmgType: ITFVariant.optional(),
+    conSave: z.boolean().optional()
   },
   doMarkBonusActionSpell: {},
   doMarkNonCantripActionSpell: {},
@@ -518,10 +511,6 @@ function mapDamageType(s: string): DamageType {
 }
 
 const HIT_DICE_TOTAL = 5
-
-function mapExpiryPhase(s: string): "start" | "end" {
-  return s === "AtStartOfTurn" ? "start" : "end"
-}
 
 const dndDriver = defineDriver(driverSchema, () => {
   let actor: ReturnType<typeof createActor<typeof dndMachine>> | null = null
@@ -616,11 +605,7 @@ const dndDriver = defineDriver(driverSchema, () => {
     doUseAction: ({ at }) => {
       send({
         type: "USE_ACTION",
-        actionType: (QUINT_ACTION_TYPE_MAP[at] ?? "attack") as DndEvent & { type: "USE_ACTION" } extends {
-          actionType: infer A
-        }
-          ? A
-          : never
+        actionType: (QUINT_ACTION_TYPE_MAP[at] ?? "attack") as ActionType
       })
     },
     doUseBonusAction: () => {
@@ -652,27 +637,26 @@ const dndDriver = defineDriver(driverSchema, () => {
       saveSpellId,
       saveSucceeded
     }) => {
-      const saves =
-        Number(numSaves) === 0
-          ? []
-          : [
-              {
-                spellId: saveSpellId,
-                saveSucceeded,
-                conditionsToRemove: [QUINT_CONDITION_MAP[saveCondition] ?? "blinded"]
-              }
-            ]
-      const damages =
-        Number(numDmg) === 0
-          ? []
-          : [
-              {
-                spellId: dmgSpellId,
-                damage: Number(dmgAmount),
-                damageType: mapDamageType(dmgType),
-                conSaveSucceeded: conSave
-              }
-            ]
+      // When turnPhase != "acting", Quint skips nondet generation — all params are undefined (no-op path)
+      const saves = !numSaves
+        ? []
+        : [
+            {
+              spellId: saveSpellId ?? "",
+              saveSucceeded: saveSucceeded ?? false,
+              conditionsToRemove: [QUINT_CONDITION_MAP[saveCondition ?? ""] ?? "blinded"]
+            }
+          ]
+      const damages = !numDmg
+        ? []
+        : [
+            {
+              spellId: dmgSpellId ?? "",
+              damage: Number(dmgAmount ?? 0),
+              damageType: mapDamageType(dmgType ?? "Bludgeoning"),
+              conSaveSucceeded: conSave ?? false
+            }
+          ]
       send({ type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages })
     },
     doMarkBonusActionSpell: () => {
