@@ -291,7 +291,7 @@ All three parity bugs (grapple/shove edition mismatch, concentration consistency
 
 ## Suggested Execution Order
 
-All core tasks complete. Next: 5.2.1 revision items (see section above) or PLAN_NONCORE.md.
+All core tasks and 5.2.1 revision complete. Next: PLAN_NONCORE.md.
 
 ### Housekeeping (no deps, do anytime)
 
