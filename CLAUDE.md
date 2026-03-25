@@ -1,5 +1,15 @@
 # D&D 5e PHB — project notes
 
+## Quint gotchas
+
+Things that cause non-obvious errors, not discoverable by reading code.
+
+- **Reserved names:** `size` is a built-in operator — use `creatureSize` for parameters.
+- **Integer division:** Quint `/` truncates toward zero, NOT floor — matters for negative numbers.
+- **Cross-file imports:** Must use `from` clause: `import dnd.* from "./dnd"` (bare `import dnd.*` fails silently with "unknown module").
+- **Test syntax:** Multiple assertions use `all { assert(x), assert(y) }` — `and { }` causes parse errors in `run` blocks.
+- **Verbose test output:** `quint test --match "pattern"` for per-test output (default only shows module name).
+
 ## SRD feature parity (CRITICAL)
 
 The spec (`dnd.qnt`) is a **direct formalization of the SRD** — nothing more, nothing less. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
@@ -24,6 +34,10 @@ The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parit
 ## /simplify convergence
 
 After significant changes, run `/simplify` repeatedly until it converges — i.e., each round finds fewer issues until no important fixes remain. Typical progression: round 1 catches dead code and obvious duplication; round 2 catches subtler issues (bugs, tautological invariants, missed dedup); round 3 should find nothing significant. If round N still finds real issues, keep going.
+
+## QA pipeline
+
+Community Q&A corpus used to generate Quint test assertions against the spec. Full docs: `scripts/qa/QA_README.md`.
 
 ## Rules reference
 

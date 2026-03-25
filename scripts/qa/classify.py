@@ -4,26 +4,38 @@
 Usage:
     python3 scripts/qa/classify.py                  # process all uncached
     python3 scripts/qa/classify.py --limit 10       # process 10 uncached entries
-    python3 scripts/qa/classify.py --source se      # only SE corpus
-    python3 scripts/qa/classify.py --source reddit  # only Reddit corpus
+    python3 scripts/qa/classify.py --source se             # only SE corpus
+    python3 scripts/qa/classify.py --source reddit         # only Reddit corpus
+    python3 scripts/qa/classify.py --source sage_advice    # only Sage Advice corpus
+    python3 scripts/qa/classify.py --source sageadvice_eu  # only sageadvice.eu corpus
+    python3 scripts/qa/classify.py --source errata         # only errata corpus
     python3 scripts/qa/classify.py --workers 5      # concurrency (default 5)
     python3 scripts/qa/classify.py --rebuild        # rebuild classified.jsonl from cache only
 """
 
 import argparse
-import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from qa_utils import entry_hash
+
 BASE_DIR = os.path.join(os.path.dirname(__file__), "../..")
 QA_DIR = os.path.join(BASE_DIR, ".references/qa")
 CACHE_DIR = os.path.join(QA_DIR, "cache/classify")
-SE_CORPUS = os.path.join(QA_DIR, "se_corpus.jsonl")
-REDDIT_CORPUS = os.path.join(QA_DIR, "reddit_corpus.jsonl")
 OUTPUT = os.path.join(QA_DIR, "classified.jsonl")
+
+# Source name → corpus file path (adding a new source only requires a new entry here)
+CORPUS_FILES = {
+    "se": os.path.join(QA_DIR, "se_corpus.jsonl"),
+    "reddit": os.path.join(QA_DIR, "reddit_corpus.jsonl"),
+    "sage_advice": os.path.join(QA_DIR, "sage_advice_corpus.jsonl"),
+    "sageadvice_eu": os.path.join(QA_DIR, "sageadvice_eu_corpus.jsonl"),
+    "errata": os.path.join(QA_DIR, "errata_corpus.jsonl"),
+}
 
 SYSTEM_PROMPT = """You are a classifier for D&D 5e rules questions.
 
@@ -42,11 +54,6 @@ Output a single JSON object with these fields:
 Examples of RAW mechanics: attack rolls, damage calculation, saving throws, AC, conditions effects, death saves, spell interactions, action economy, opportunity attacks, grappling.
 
 NOT mechanics: homebrew advice, campaign ideas, character builds (unless asking about a specific rule interaction), lore, opinions, edition comparisons, product recommendations."""
-
-
-def entry_hash(entry):
-    raw = json.dumps(entry, sort_keys=True, ensure_ascii=False)
-    return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
 
 def format_prompt(entry):
@@ -99,7 +106,6 @@ def classify_one(entry):
     try:
         text = result.stdout.strip()
         # Extract first JSON object from response (model may add commentary after)
-        import re
         match = re.search(r"\{[^{}]*\}", text, re.DOTALL)
         if not match:
             return h, None, f"no JSON found in: {text[:200]}"
@@ -126,14 +132,9 @@ def classify_one(entry):
 
 def load_corpus(source):
     entries = []
-    if source in ("se", "all"):
-        if os.path.exists(SE_CORPUS):
-            with open(SE_CORPUS) as f:
-                for line in f:
-                    entries.append(json.loads(line))
-    if source in ("reddit", "all"):
-        if os.path.exists(REDDIT_CORPUS):
-            with open(REDDIT_CORPUS) as f:
+    for name, path in CORPUS_FILES.items():
+        if source in (name, "all") and os.path.exists(path):
+            with open(path) as f:
                 for line in f:
                     entries.append(json.loads(line))
     return entries
@@ -160,7 +161,7 @@ def rebuild_from_cache(entries):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0, help="Max uncached entries to process (0=all)")
-    parser.add_argument("--source", choices=["se", "reddit", "all"], default="all")
+    parser.add_argument("--source", choices=[*CORPUS_FILES.keys(), "all"], default="all")
     parser.add_argument("--workers", type=int, default=5)
     parser.add_argument("--rebuild", action="store_true", help="Only rebuild output from cache")
     args = parser.parse_args()
