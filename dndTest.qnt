@@ -3487,4 +3487,47 @@ module dndTest {
     assert(spellAttackBonus(TEST_SORCERER_TIEFLING) == 7)
   }
 
+  // ============================================================
+  // T06: Bonus-Action-As-Action Pattern
+  // ============================================================
+
+  run test_bonus_action_dash = {
+    val t = pBonusActionDash(BASIC_TURN, FRESH20)
+    all { assert(t.bonusActionUsed), assert(t.movementRemaining == 60) }
+  }
+
+  run test_bonus_action_dash_already_used = {
+    val t0 = BASIC_TURN.with("bonusActionUsed", true)
+    val t = pBonusActionDash(t0, FRESH20)
+    assert(t == t0)
+  }
+
+  run test_bonus_action_disengage = {
+    val t = pBonusActionDisengage(BASIC_TURN, FRESH20)
+    all { assert(t.bonusActionUsed), assert(t.disengaged) }
+  }
+
+  run test_bonus_action_hide = {
+    val t = pBonusActionHide(BASIC_TURN, FRESH20)
+    assert(t.bonusActionUsed)
+  }
+
+  run test_bonus_action_incapacitated_noop = {
+    val s = pApplyCondition(FRESH20, CStunned)
+    val tDash = pBonusActionDash(BASIC_TURN, s)
+    val tDisengage = pBonusActionDisengage(BASIC_TURN, s)
+    val tHide = pBonusActionHide(BASIC_TURN, s)
+    all {
+      assert(tDash == BASIC_TURN),
+      assert(tDisengage == BASIC_TURN),
+      assert(tHide == BASIC_TURN),
+    }
+  }
+
+  run test_action_dash_plus_bonus_action_dash = {
+    val t1 = pUseAction(BASIC_TURN, FRESH20, ADash)     // 30 + 30 = 60
+    val t2 = pBonusActionDash(t1, FRESH20)               // 60 + 30 = 90
+    all { assert(t2.movementRemaining == 90), assert(t2.actionUsed), assert(t2.bonusActionUsed) }
+  }
+
 }

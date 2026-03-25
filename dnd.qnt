@@ -901,6 +901,23 @@ module dnd {
     else t.with("bonusActionUsed", true)
   }
 
+  /// SRD 5.2.1: Cunning Action / Step of the Wind pattern.
+  /// Use bonus action to Dash — adds effectiveSpeed to movementRemaining.
+  pure def pBonusActionDash(t: TurnState, creature: CreatureState): TurnState =
+    if (t.bonusActionUsed or isIncapacitated(creature)) t
+    else t.with("bonusActionUsed", true)
+          .with("movementRemaining", t.movementRemaining + t.effectiveSpeed)
+
+  /// Use bonus action to Disengage.
+  pure def pBonusActionDisengage(t: TurnState, creature: CreatureState): TurnState =
+    if (t.bonusActionUsed or isIncapacitated(creature)) t
+    else t.with("bonusActionUsed", true).with("disengaged", true)
+
+  /// Use bonus action to Hide. Hidden status resolved by caller (Stealth check).
+  pure def pBonusActionHide(t: TurnState, creature: CreatureState): TurnState =
+    if (t.bonusActionUsed or isIncapacitated(creature)) t
+    else t.with("bonusActionUsed", true)
+
   /// Use reaction. Can happen on any creature's turn.
   pure def pUseReaction(t: TurnState): TurnState = {
     if (not(t.reactionAvailable)) t
