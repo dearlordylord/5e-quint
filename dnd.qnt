@@ -320,6 +320,34 @@ module dnd {
   pure def pCanUncannyDodge(config: CharConfig, turnState: TurnState, creature: CreatureState, attackerVisible: bool): bool =
     config.hasUncannyDodge and turnState.reactionAvailable and attackerVisible and not(isIncapacitated(creature))
 
+  // -- Channel Divinity Framework (SRD 5.2.1) --
+
+  /// Max Channel Divinity uses for a Cleric at given class level.
+  pure def pClericChannelDivinityMax(clericLevel: int): int =
+    if (clericLevel < 2) 0
+    else if (clericLevel < 6) 2
+    else if (clericLevel < 18) 3
+    else 4
+
+  /// Max Channel Divinity uses for a Paladin at given class level.
+  pure def pPaladinChannelDivinityMax(paladinLevel: int): int =
+    if (paladinLevel < 3) 0
+    else if (paladinLevel < 11) 2
+    else 3
+
+  /// Max Channel Divinity uses from config. Sums per-class pools.
+  pure def pChannelDivinityMax(config: CharConfig): int =
+    pClericChannelDivinityMax(config.classLevels.get(Cleric)) +
+    pPaladinChannelDivinityMax(config.classLevels.get(Paladin))
+
+  /// Expend one Channel Divinity use. Returns unchanged charges if at 0.
+  pure def pExpendChannelDivinity(charges: int): int =
+    if (charges <= 0) charges else charges - 1
+
+  /// Restore Channel Divinity on short rest: regain 1 use, capped at max.
+  pure def pRestoreChannelDivinityShort(charges: int, max: int): int =
+    if (charges >= max) charges else charges + 1
+
   // ============================================================
   // 6. EQUIPMENT (character/equipment)
   // ============================================================
