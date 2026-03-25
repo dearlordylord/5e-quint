@@ -317,8 +317,6 @@ module dnd {
   /// SRD 5.2.1 Uncanny Dodge (Rogue 5): halve attack damage (round down).
   pure def pUncannyDodgeDamage(damage: int): int = damage / 2
 
-  /// Precondition: can the creature use Uncanny Dodge right now?
-  /// Requires: has feature, reaction available, attacker visible, not incapacitated.
   pure def pCanUncannyDodge(config: CharConfig, turnState: TurnState, creature: CreatureState, attackerVisible: bool): bool =
     config.hasUncannyDodge and turnState.reactionAvailable and attackerVisible and not(isIncapacitated(creature))
 
@@ -943,7 +941,6 @@ module dnd {
     else t.with("bonusActionUsed", true)
   }
 
-  /// SRD 5.2.1: Cunning Action / Step of the Wind pattern.
   /// Use bonus action to Dash — adds effectiveSpeed to movementRemaining.
   pure def pBonusActionDash(t: TurnState, creature: CreatureState): TurnState =
     if (t.bonusActionUsed or isIncapacitated(creature)) t
