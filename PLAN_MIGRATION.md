@@ -228,8 +228,8 @@ New section in PLAN_NONCORE.md. Minimal scope — framework + TODO for individua
 
 Done incrementally during PLAN.md implementation and bug fixes. No standalone migration phase needed.
 
-- **M4.1 types.ts:** Done. Action types (Magic, Utilize, Study, Influence) in place. Weapon Mastery/feat/species enums depend on M3.
-- **M4.2 machine logic:** Done. Save-based grapple/shove, 5.2.1 exhaustion, surprise removed, new action types, bonus-action spell rule. Residual gaps (Concentration DC cap at 30, Grappled attack-disadv vs non-grappler) tracked in PLAN.md "5.2.1 Revision Needed."
+- **M4.1 types.ts:** Done. Action types (Magic, Utilize, Study, Influence) in place. Weapon Mastery/feat/species enums await non-core implementation (PLAN_NONCORE.md unblocked).
+- **M4.2 machine logic:** Done. Save-based grapple/shove, 5.2.1 exhaustion, surprise removed, new action types, bonus-action spell rule. Residual gaps (Concentration DC cap at 30, Grappled attack-disadv vs non-grappler) resolved — PLAN.md 5.2.1 revision complete.
 - **M4.3 states/queries:** Done. No surprised sub-state, outOfCombat→acting→waitingForTurn hierarchy.
 - **M4.4 machine-types:** Done. `hitDiceRemaining` not renamed to `hitPointDiceRemaining` (MBT bridge compensates); cosmetic, tracked in PLAN.md.
 - **M4.5 MBT bridge:** Done. Points at `dnd.qnt`, all enum maps updated, 50×30 configured.
@@ -293,9 +293,9 @@ M3 (migrate PLAN_NONCORE.md) ✅ DONE ──────────────
                                                        |
 M4 (XState + TS) ✅ MOSTLY DONE ────────────────────────|
                                                        |
-M5 (docs) -- needs M2 ────────────────────────────────-|
+M5 (docs) pending ───────────────────────────────────--|
                                                        |
-M6 (QA rebuild) -- needs M2.5 ──────────────────────────┘
+M6 (QA rebuild) pending ────────────────────────────────┘
 ```
 
 M0–M4 complete. Remaining: M5 (docs), M6 (QA pipeline rebuild). Both are unblocked.
@@ -322,9 +322,9 @@ M3 (doc rewrite) and TA3+TA4 (core code) were the two blockers for PLAN_NONCORE.
 
 ### Open
 
-1. **Keep both specs runnable long-term?** — or archive 2014 and move on?
+1. ~~**Keep both specs runnable long-term?**~~ — resolved by M0: 2014 archived at `v5.1-final`, moving on.
 2. **Thin 2024 QA corpus** — only 239 SE entries. May need manual test cases.
-3. **UI components** — `app/src/components/*.tsx` reference machine types. Need updating in M4.
+3. ~~**UI components**~~ — resolved by M4. Only remaining cosmetic: `totalHitDice` in EventPanel.tsx (deliberate non-rename per M4.4).
 4. **`@firfi/quint-connect` compatibility** — MBT bridge. Any version issues?
 5. **Dragon Companion (T112b)** — Draconic Sorcery new feature. Complex enough for own task. Scope TBD.
 6. **Goliath Giant Ancestry** — 6 combat options to enumerate from SRD 5.2.1. TODO in M3.3.
