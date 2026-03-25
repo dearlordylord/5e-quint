@@ -43,13 +43,11 @@ MBT infrastructure wired to `@firfi/quint-connect`.
 
 The following completed features were implemented under SRD 5.1 and need revision for 5.2.1 during M2.5:
 
-- ~~**Exhaustion:** completely new system. Was 6 tiers with specific per-tier effects (disadv ability checks, speed halved, disadv attacks/saves, HP max halved, speed 0, death). Now: -2 x level on D20 Tests, -5 x level ft Speed, death at level 6 (Rules-Glossary.md "Exhaustion [Condition]").~~ *(done — speed penalty, HP-max-halving removal, `hasEaten` removal, dead exhaustion params cleanup all complete)*
 - **Stunned:** no longer includes Speed 0. 5.2.1 Stunned = Incapacitated + auto-fail STR/DEX saves + Advantage on attacks against. No Speed reduction (Rules-Glossary.md "Stunned [Condition]").
 - **Grappled:** added "Disadvantage on attack rolls against any target other than the grappler" (Rules-Glossary.md "Grappled [Condition]").
 - **Surprise:** was turn-skip; now Disadvantage on Initiative roll, which is pre-combat. Remove from turn state machine (Rules-Glossary.md "Initiative," Playing-the-Game.md "Surprise").
 - **Knock Out:** was reduce to 0 HP; now reduce to 1 HP + Unconscious condition + starts Short Rest. Unconscious ends if creature regains any HP (Playing-the-Game.md "Knocking Out a Creature").
 - **Concentration DC:** now capped at max DC 30. DC = max(10, floor(damage/2)), up to 30 (Rules-Glossary.md "Concentration").
-- ~~**Grapple/Shove:** was contested Athletics checks; now saving throw (Str or Dex, target's choice) vs DC 8 + Str mod + PB, as part of Unarmed Strike (Rules-Glossary.md "Unarmed Strike").~~ *(done — migrated to save-based in Bug 1 fix)*
 - **Two-weapon fighting (Light property):** bonus attack no longer adds ability modifier to damage unless that modifier is negative (Equipment.md "Light" property).
 - **Underwater melee:** any weapon dealing Piercing damage avoids Disadvantage; was a specific weapon list (Playing-the-Game.md "Impeded Weapons").
 - **Squeezing:** absent from SRD 5.2.1. Existing squeezing code should be removed during M2.5.
@@ -286,15 +284,7 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 
 ## Known Bugs (M2 parity gaps) — all resolved
 
-1. ~~**Grapple + incapacitatedSources:**~~ Root cause was SRD edition mismatch: Quint used 5.2.1 save-based grapple/shove (`saveFailed: bool`), XState used 5.1 contest-based (`contestResult: ContestResult`). MBT mapped `saveFailed` to `contest` (undefined → fallback `"tie"`), so grapple/shove never succeeded via contest. Fix: migrated XState to save-based, updated MBT schemas. The incapacitatedSources divergence was a red herring symptom.
-
-2. ~~**Concentration consistency invariant:**~~ `applyStarvation`/`applyDehydration` lacked `concBreak` when exhaustion reached level 6 (death). Fix: `exhaustionWithConcBreak` helper. Full incapacitation-path audit confirmed all paths covered.
-
-3. ~~**hitPointDiceRemaining divergence:**~~ XState used 5.1 half-recovery on long rest; Quint used 5.2.1 full restore. Fix: `computeLongRest` → `newHitDice: totalHitDice`, removed `hitDiceRecovery`.
-
-**Additional 5.2.1 parity fixes applied during bug investigation:**
-- End-of-turn damage now handles death/unconscious/deathSave transitions (`computeEndTurn` + damageTrack `always` guards with `dead` context bridge field)
-- Exhaustion no longer halves max HP (`effectiveMaxHp` simplified to identity)
+All three parity bugs (grapple/shove edition mismatch, concentration consistency on exhaustion death, hit dice long rest recovery) and additional 5.2.1 parity fixes (end-of-turn damage death transitions, exhaustion max HP halving removal) are resolved. See git history for details.
 
 ---
 
@@ -316,8 +306,6 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 Next: **[TA4]** START_TURN Refactoring
 
 ### Housekeeping (no deps, do anytime)
-
-**~~Extract guards to `machine-guards.ts`.~~** *(done)* Guards extracted to `machine-guards.ts`. `machine.ts` at 359/420 lines (61 lines headroom). Shared damage-threshold predicates (`isInstantDeath`, `isDropToZero`, `isInstantDeathFromDying`) deduplicated between damage and fall guards.
 
 **Cross-plan dependency:** PLAN_NONCORE.md implementation is blocked until TA3+TA4 are complete (non-core composes on combat mode + turn lifecycle primitives). See `PLAN_MIGRATION.md` for the full sequencing between core, non-core, and the 5.1→5.2.1 migration.
 
