@@ -37,21 +37,9 @@ cover DEX save bonus (`pSaveCoverBonus`),
 damage flat modifiers before resistance/vulnerability (`applyDamageModifiers` `flatModifier` param).
 MBT infrastructure wired to `@firfi/quint-connect`.
 
-### 5.2.1 Revision Needed for Completed Features
+### 5.2.1 Revision — Complete
 
-> **Research complete.** See `REVISION_RESEARCH.md` for full SRD 5.1 vs 5.2.1 delta analysis of each item below. TL;DR: most items are already migrated; actual work needed: dehydration/malnutrition rewrite, squeezing removal, TWF melee-only ASSUMPTIONS.md entry.
-
-The following completed features were implemented under SRD 5.1 and need revision for 5.2.1 during M2.5:
-
-- **Stunned:** no longer includes Speed 0. 5.2.1 Stunned = Incapacitated + auto-fail STR/DEX saves + Advantage on attacks against. No Speed reduction (Rules-Glossary.md "Stunned [Condition]").
-- **Grappled:** added "Disadvantage on attack rolls against any target other than the grappler" (Rules-Glossary.md "Grappled [Condition]").
-- **Surprise:** was turn-skip; now Disadvantage on Initiative roll, which is pre-combat. Remove from turn state machine (Rules-Glossary.md "Initiative," Playing-the-Game.md "Surprise").
-- **Knock Out:** was reduce to 0 HP; now reduce to 1 HP + Unconscious condition + starts Short Rest. Unconscious ends if creature regains any HP (Playing-the-Game.md "Knocking Out a Creature").
-- **Concentration DC:** now capped at max DC 30. DC = max(10, floor(damage/2)), up to 30 (Rules-Glossary.md "Concentration").
-- **Two-weapon fighting (Light property):** bonus attack no longer adds ability modifier to damage unless that modifier is negative (Equipment.md "Light" property).
-- **Underwater melee:** any weapon dealing Piercing damage avoids Disadvantage; was a specific weapon list (Playing-the-Game.md "Impeded Weapons").
-- **Squeezing:** absent from SRD 5.2.1. Existing squeezing code should be removed during M2.5.
-- **Type renames:** Cast a Spell -> Magic [Action], Use an Object -> Utilize [Action], Hit Dice -> Hit Point Dice. New actions: Study, Influence.
+> All revision items resolved. See `REVISION_RESEARCH.md` for the full delta analysis. Items already aligned at time of research: Stunned, Grappled, Surprise, Knock Out, Concentration DC, TWF damage, Underwater melee, Type renames. Items that required work (now done): dehydration/malnutrition rewrite, squeezing removal, TWF melee-only ASSUMPTIONS.md entry (A8).
 
 ---
 
