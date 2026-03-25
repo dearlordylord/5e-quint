@@ -72,7 +72,7 @@ When multiclassing into a non-starting class, only partial proficiencies are gai
 [T04] Uncanny Dodge (P1) -> deps: none  ✓ done
 [T05] Fighting Style Feats (P1) -> deps: [T201]
 [T06] Bonus-Action-As-Action Pattern (P1) -> deps: none  ✓ done
-[T07] Channel Divinity Framework (P2) -> deps: [T01]
+[T07] Channel Divinity Framework (P2) -> deps: [T01]  ✓ done
 [T08] Spell Effect Data Model (P2) -> deps: none  ✓ done
 [T09] Land's Stride (P2) -> deps: none  ✗ dropped (not in SRD 5.2.1)
 ```
@@ -102,11 +102,10 @@ Generalize the pattern: "use bonus action to take Dash/Disengage/Hide" (Cunning 
 - Functions: `pBonusActionDash`, `pBonusActionDisengage`, `pBonusActionHide`
 - Test: bonus action consumed; movement doubled (Dash); disengaged set; can't use if bonus already used
 
-**[T07] Channel Divinity Framework**
-Shared by Cleric and Paladin. Resource: 1-3 charges/short rest (scales with level). Multiple sources (multiclass) don't stack charges, but you can choose effects from either class.
-- State: `channelDivinityCharges: int`, `channelDivinityMax: int`
-- Functions: `pExpendChannelDivinity(state)`, `pRestoreChannelDivinity(state, config)`
-- Test: expend decrements; can't expend at 0; short rest restores to max; max scales with level; multiclass doesn't double charges
+**[T07] Channel Divinity Framework** *(done)*
+Shared by Cleric and Paladin. Per-class scaling: Cleric 2/3/4 (L2/L6/L18), Paladin 2/3 (L3/L11). Multiclass modeled as additive per-class pools (ASSUMPTIONS.md A6).
+- Functions: `pClericChannelDivinityMax`, `pPaladinChannelDivinityMax`, `pChannelDivinityMax`, `pExpendChannelDivinity`, `pRestoreChannelDivinityShort`
+- Test: boundary scaling for both classes, multiclass additive sum, expend/restore edge cases
 
 **[T08] Spell Effect Data Model** *(done)*
 Define `SpellEffectType` sum type and `SpellData` record (name, level, school, casting time, concentration, components). Type definitions only — the foundation that T150-T161 build on. T150 implements damage pattern functions using these types.
@@ -748,7 +747,7 @@ Core is complete (PLAN.md). This file is now the active plan. All tasks are unbl
 
 1. ~~**[T01]** Config Identity + species~~ ✓, **[T01.5]** Multiclass Proficiency Rules
 2. ~~**[T03, T04, T06, T08]** Shared mechanics~~ ✓ (T09 dropped — not in SRD 5.2.1)
-3. **[T07]** Channel Divinity (needs T01; unblocks Paladin/Cleric)
+3. ~~**[T07]** Channel Divinity (needs T01; unblocks Paladin/Cleric)~~ ✓
 4. **[T201]** Feat System Framework; then **[T05]** Fighting Style Feats (needs T201)
 5. **P1 class features** — T10 Rage, T11 Reckless, T20 Second Wind, T21 Action Surge, T30 Sneak Attack, T40 Focus Pool, T41 Martial Arts, T60 Lay on Hands, T61 Paladin's Smite, T100 Wild Shape, T110 Sorcery Points (all need only T01); **T200** Grappler Feat (no deps)
 6. **P1 dependent** — T13 Berserker (needs T10), T23 Champion (needs T02+T05), T31 Cunning Action (needs T06), T42 Focus Actions (needs T40+T06), T43 Stunning Strike (needs T40)
