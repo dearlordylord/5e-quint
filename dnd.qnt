@@ -57,6 +57,11 @@ module dnd {
   /// Immutable for the duration of the state machine.
   // Adding a field here requires updating all CharConfig literals (TEST_CONFIG, TEST_WIZARD, TEST_FIGHTER_5, etc.)
   type CharConfig = {
+    className: ClassName,            // primary class
+    subclass: SubclassName,          // SRD 5.2.1: one subclass per class
+    species: Species,                // SRD 5.2.1 species (replaces 5.1 "race")
+    classLevels: ClassName -> int,   // scaffold: populated but not yet read — reserved for multiclass support (T01.5)
+    fightingStyles: Set[FightingStyleFeat], // Fighting Style feats chosen (Fighter/Paladin/Ranger)
     abilityScores: Ability -> int,   // 1-30
     level: int,                      // 1-20
     size: Size,
@@ -77,6 +82,23 @@ module dnd {
   type Feature = FExtraAttack | FExtraAttack2 | FExtraAttack3
 
   type UnarmoredDefense = NoUnarmoredDefense | BarbarianUD | MonkUD
+
+  /// SRD 5.2.1 species (Character Origins chapter).
+  /// Subraces are eliminated; lineage options (Elf → Drow/High Elf/Wood Elf) are
+  /// handled by separate config fields when needed, not by the Species type itself.
+  type Species =
+    | Dragonborn | Dwarf | Elf | Gnome | Goliath
+    | Halfling | Human | Orc | Tiefling
+
+  /// SRD 5.2.1 subclass names (one per class in the SRD).
+  type SubclassName =
+    | PathOfTheBerserker | CollegeOfLore | LifeDomain | CircleOfTheLand
+    | Champion | WarriorOfTheOpenHand | OathOfDevotion | Hunter
+    | Thief | DraconicSorcery | FiendPatron | Evoker
+
+  /// SRD 5.2.1 Fighting Style feats (Feats chapter).
+  /// Classes with Fighting Style feature: Fighter (level 1), Paladin (level 2), Ranger (level 2).
+  type FightingStyleFeat = FSArchery | FSDefense | FSGreatWeaponFighting | FSTwoWeaponFighting
 
   // ============================================================
   // 3. PURE FUNCTIONS - Config & Resolution
@@ -1782,6 +1804,17 @@ module dnd {
     | Barbarian | Bard | Cleric | Druid | Fighter | Monk
     | Paladin | Ranger | Rogue | Sorcerer | Warlock | Wizard
 
+  /// Zero-level map for all classes (scaffold for classLevels — not yet read by any pure def).
+  pure val ZERO_CLASS_LEVELS: ClassName -> int = Map(
+    Barbarian -> 0, Bard -> 0, Cleric -> 0, Druid -> 0,
+    Fighter -> 0, Monk -> 0, Paladin -> 0, Ranger -> 0,
+    Rogue -> 0, Sorcerer -> 0, Warlock -> 0, Wizard -> 0
+  )
+
+  /// Create classLevels map for a single-class character (scaffold — see classLevels field doc).
+  pure def singleClassLevels(c: ClassName, level: int): ClassName -> int =
+    ZERO_CLASS_LEVELS.set(c, level)
+
   /// Hit die type per class (PHB class tables).
   pure def pClassHitDie(c: ClassName): int = match c {
     | Barbarian => 12
@@ -1975,6 +2008,11 @@ module dnd {
   // -- 19.3 Test Config --
 
   pure val TEST_CONFIG: CharConfig = {
+    className: Fighter,
+    subclass: Champion,
+    species: Human,
+    classLevels: singleClassLevels(Fighter, 5),
+    fightingStyles: Set(FSDefense),
     abilityScores: Map(Str -> 14, Dex -> 12, Con -> 14, Int_ -> 10, Wis -> 13, Cha -> 8),
     level: 5,
     size: Medium,

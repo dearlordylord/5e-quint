@@ -403,11 +403,18 @@ module dndTest {
   // Spell Save DC & Attack Bonus
   // ============================================================
 
+  pure val STD_SPEEDS = Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0)
+
   pure val TEST_WIZARD: CharConfig = {
+    className: Wizard,
+    subclass: Evoker,
+    species: Human,
+    classLevels: singleClassLevels(Wizard, 5),
+    fightingStyles: Set(),
     abilityScores: Map(Str -> 8, Dex -> 14, Con -> 12, Int_ -> 18, Wis -> 10, Cha -> 10),
     level: 5,
     size: Medium,
-    speeds: Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0),
+    speeds: STD_SPEEDS,
     saveProficiencies: Set(Int_, Wis),
     skillProficiencies: Set(Arcana, Investigation),
     expertiseSkills: Set(),
@@ -1133,10 +1140,15 @@ module dndTest {
   // ============================================================
 
   pure val TEST_FIGHTER_5: CharConfig = {
+    className: Fighter,
+    subclass: Champion,
+    species: Human,
+    classLevels: singleClassLevels(Fighter, 5),
+    fightingStyles: Set(FSDefense),
     abilityScores: Map(Str -> 16, Dex -> 14, Con -> 14, Int_ -> 10, Wis -> 12, Cha -> 8),
     level: 5,
     size: Medium,
-    speeds: Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0),
+    speeds: STD_SPEEDS,
     saveProficiencies: Set(Str, Con),
     skillProficiencies: Set(Athletics, Perception),
     expertiseSkills: Set(),
@@ -3165,4 +3177,314 @@ module dndTest {
     val s1 = pDeathSave(s, 1) // nat 1 = +2 failures, but should clamp to 3
     all { assert(s1.deathSaves.failures <= 3), assert(s1.dead) }
   }
+
+  // ============================================================
+  // Config Identity Extensions (T01)
+  // ============================================================
+
+  pure val TEST_BARBARIAN_ORC: CharConfig = {
+    className: Barbarian,
+    subclass: PathOfTheBerserker,
+    species: Orc,
+    classLevels: singleClassLevels(Barbarian, 5),
+    fightingStyles: Set(),
+    abilityScores: Map(Str -> 16, Dex -> 14, Con -> 16, Int_ -> 8, Wis -> 12, Cha -> 10),
+    level: 5,
+    size: Medium,
+    speeds: STD_SPEEDS,
+    saveProficiencies: Set(Str, Con),
+    skillProficiencies: Set(Athletics, Perception),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(LightArmor, MediumArmor),
+    hitDieType: 12,
+    spellcastingAbility: Wis,
+    hasSpellcasting: false,
+    canRitualCast: false,
+    unarmoredDefense: BarbarianUD,
+    features: Set(FExtraAttack),
+    critRange: 20,
+  }
+
+  pure val TEST_CLERIC_DWARF: CharConfig = {
+    className: Cleric,
+    subclass: LifeDomain,
+    species: Dwarf,
+    classLevels: singleClassLevels(Cleric, 5),
+    fightingStyles: Set(),
+    abilityScores: Map(Str -> 14, Dex -> 10, Con -> 14, Int_ -> 10, Wis -> 18, Cha -> 12),
+    level: 5,
+    size: Medium,
+    speeds: STD_SPEEDS,
+    saveProficiencies: Set(Wis, Cha),
+    skillProficiencies: Set(Medicine, Religion),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(LightArmor, MediumArmor, HeavyArmor),
+    hitDieType: 8,
+    spellcastingAbility: Wis,
+    hasSpellcasting: true,
+    canRitualCast: true,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(),
+    critRange: 20,
+  }
+
+  pure val TEST_ROGUE_HALFLING: CharConfig = {
+    className: Rogue,
+    subclass: Thief,
+    species: Halfling,
+    classLevels: singleClassLevels(Rogue, 5),
+    fightingStyles: Set(),
+    abilityScores: Map(Str -> 8, Dex -> 18, Con -> 12, Int_ -> 14, Wis -> 10, Cha -> 12),
+    level: 5,
+    size: Small,
+    speeds: STD_SPEEDS,
+    saveProficiencies: Set(Dex, Int_),
+    skillProficiencies: Set(Stealth, Acrobatics, SleightOfHand, Perception),
+    expertiseSkills: Set(Stealth, Perception),
+    armorProficiencies: Set(LightArmor),
+    hitDieType: 8,
+    spellcastingAbility: Int_,
+    hasSpellcasting: false,
+    canRitualCast: false,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(),
+    critRange: 20,
+  }
+
+  pure val TEST_PALADIN_DRAGONBORN: CharConfig = {
+    className: Paladin,
+    subclass: OathOfDevotion,
+    species: Dragonborn,
+    classLevels: singleClassLevels(Paladin, 5),
+    fightingStyles: Set(FSDefense),
+    abilityScores: Map(Str -> 16, Dex -> 10, Con -> 14, Int_ -> 8, Wis -> 12, Cha -> 16),
+    level: 5,
+    size: Medium,
+    speeds: STD_SPEEDS,
+    saveProficiencies: Set(Wis, Cha),
+    skillProficiencies: Set(Athletics, Religion),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(LightArmor, MediumArmor, HeavyArmor),
+    hitDieType: 10,
+    spellcastingAbility: Cha,
+    hasSpellcasting: true,
+    canRitualCast: false,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(FExtraAttack),
+    critRange: 20,
+  }
+
+  pure val TEST_RANGER_ELF: CharConfig = {
+    className: Ranger,
+    subclass: Hunter,
+    species: Elf,
+    classLevels: singleClassLevels(Ranger, 5),
+    fightingStyles: Set(FSArchery),
+    abilityScores: Map(Str -> 12, Dex -> 16, Con -> 14, Int_ -> 10, Wis -> 14, Cha -> 8),
+    level: 5,
+    size: Medium,
+    speeds: STD_SPEEDS,
+    saveProficiencies: Set(Str, Dex),
+    skillProficiencies: Set(Stealth, Perception, Survival),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(LightArmor, MediumArmor),
+    hitDieType: 10,
+    spellcastingAbility: Wis,
+    hasSpellcasting: true,
+    canRitualCast: false,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(FExtraAttack),
+    critRange: 20,
+  }
+
+  pure val TEST_MONK_GNOME: CharConfig = {
+    className: Monk,
+    subclass: WarriorOfTheOpenHand,
+    species: Gnome,
+    classLevels: singleClassLevels(Monk, 5),
+    fightingStyles: Set(),
+    abilityScores: Map(Str -> 10, Dex -> 18, Con -> 14, Int_ -> 12, Wis -> 16, Cha -> 8),
+    level: 5,
+    size: Small,
+    speeds: STD_SPEEDS,
+    saveProficiencies: Set(Str, Dex),
+    skillProficiencies: Set(Acrobatics, Stealth),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(),
+    hitDieType: 8,
+    spellcastingAbility: Wis,
+    hasSpellcasting: false,
+    canRitualCast: false,
+    unarmoredDefense: MonkUD,
+    features: Set(FExtraAttack),
+    critRange: 20,
+  }
+
+  pure val TEST_SORCERER_TIEFLING: CharConfig = {
+    className: Sorcerer,
+    subclass: DraconicSorcery,
+    species: Tiefling,
+    classLevels: singleClassLevels(Sorcerer, 5),
+    fightingStyles: Set(),
+    abilityScores: Map(Str -> 8, Dex -> 14, Con -> 14, Int_ -> 10, Wis -> 10, Cha -> 18),
+    level: 5,
+    size: Medium,
+    speeds: STD_SPEEDS,
+    saveProficiencies: Set(Con, Cha),
+    skillProficiencies: Set(Arcana, Persuasion),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(),
+    hitDieType: 6,
+    spellcastingAbility: Cha,
+    hasSpellcasting: true,
+    canRitualCast: false,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(),
+    critRange: 20,
+  }
+
+  pure val TEST_WARLOCK_GOLIATH: CharConfig = {
+    className: Warlock,
+    subclass: FiendPatron,
+    species: Goliath,
+    classLevels: singleClassLevels(Warlock, 5),
+    fightingStyles: Set(),
+    abilityScores: Map(Str -> 14, Dex -> 12, Con -> 14, Int_ -> 10, Wis -> 10, Cha -> 16),
+    level: 5,
+    size: Medium,
+    speeds: Map(Walk -> 35, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0), // Goliath: 35 ft base
+    saveProficiencies: Set(Wis, Cha),
+    skillProficiencies: Set(Arcana, Deception),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(LightArmor),
+    hitDieType: 8,
+    spellcastingAbility: Cha,
+    hasSpellcasting: true,
+    canRitualCast: false,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(),
+    critRange: 20,
+  }
+
+  pure val TEST_BARD_HUMAN: CharConfig = {
+    className: Bard,
+    subclass: CollegeOfLore,
+    species: Human,
+    classLevels: singleClassLevels(Bard, 5),
+    fightingStyles: Set(),
+    abilityScores: Map(Str -> 8, Dex -> 14, Con -> 14, Int_ -> 12, Wis -> 10, Cha -> 18),
+    level: 5,
+    size: Medium,
+    speeds: STD_SPEEDS,
+    saveProficiencies: Set(Dex, Cha),
+    skillProficiencies: Set(Performance, Persuasion, Deception),
+    expertiseSkills: Set(Persuasion, Performance),
+    armorProficiencies: Set(LightArmor),
+    hitDieType: 8,
+    spellcastingAbility: Cha,
+    hasSpellcasting: true,
+    canRitualCast: true,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(),
+    critRange: 20,
+  }
+
+  pure val TEST_DRUID_ELF: CharConfig = {
+    className: Druid,
+    subclass: CircleOfTheLand,
+    species: Elf,
+    classLevels: singleClassLevels(Druid, 5),
+    fightingStyles: Set(),
+    abilityScores: Map(Str -> 10, Dex -> 14, Con -> 14, Int_ -> 12, Wis -> 18, Cha -> 8),
+    level: 5,
+    size: Medium,
+    speeds: STD_SPEEDS,
+    saveProficiencies: Set(Int_, Wis),
+    skillProficiencies: Set(Nature, Perception),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(LightArmor),
+    hitDieType: 8,
+    spellcastingAbility: Wis,
+    hasSpellcasting: true,
+    canRitualCast: true,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(),
+    critRange: 20,
+  }
+
+  run test_config_barbarian_extra_attacks = assert(extraAttacksFromConfig(TEST_BARBARIAN_ORC) == 1)
+  run test_config_fighter_extra_attacks = assert(extraAttacksFromConfig(TEST_FIGHTER_5) == 1)
+  run test_config_paladin_extra_attacks = assert(extraAttacksFromConfig(TEST_PALADIN_DRAGONBORN) == 1)
+  run test_config_ranger_extra_attacks = assert(extraAttacksFromConfig(TEST_RANGER_ELF) == 1)
+  run test_config_monk_extra_attacks = assert(extraAttacksFromConfig(TEST_MONK_GNOME) == 1)
+
+  run test_config_wizard_no_extra_attacks = assert(extraAttacksFromConfig(TEST_WIZARD) == 0)
+  run test_config_cleric_no_extra_attacks = assert(extraAttacksFromConfig(TEST_CLERIC_DWARF) == 0)
+  run test_config_rogue_no_extra_attacks = assert(extraAttacksFromConfig(TEST_ROGUE_HALFLING) == 0)
+  run test_config_sorcerer_no_extra_attacks = assert(extraAttacksFromConfig(TEST_SORCERER_TIEFLING) == 0)
+  run test_config_warlock_no_extra_attacks = assert(extraAttacksFromConfig(TEST_WARLOCK_GOLIATH) == 0)
+  run test_config_bard_no_extra_attacks = assert(extraAttacksFromConfig(TEST_BARD_HUMAN) == 0)
+  run test_config_druid_no_extra_attacks = assert(extraAttacksFromConfig(TEST_DRUID_ELF) == 0)
+
+  run test_config_single_class_levels = {
+    val levels = singleClassLevels(Fighter, 5)
+    all {
+      assert(levels.get(Fighter) == 5),
+      assert(levels.get(Wizard) == 0),
+      assert(levels.get(Barbarian) == 0)
+    }
+  }
+
+  // classLevels must be consistent with level + className on all test configs
+  run test_config_class_levels_consistency = {
+    all {
+      assert(TEST_CONFIG.classLevels.get(TEST_CONFIG.className) == TEST_CONFIG.level),
+      assert(TEST_FIGHTER_5.classLevels.get(TEST_FIGHTER_5.className) == TEST_FIGHTER_5.level),
+      assert(TEST_WIZARD.classLevels.get(TEST_WIZARD.className) == TEST_WIZARD.level),
+      assert(TEST_BARBARIAN_ORC.classLevels.get(TEST_BARBARIAN_ORC.className) == TEST_BARBARIAN_ORC.level),
+      assert(TEST_CLERIC_DWARF.classLevels.get(TEST_CLERIC_DWARF.className) == TEST_CLERIC_DWARF.level),
+      assert(TEST_ROGUE_HALFLING.classLevels.get(TEST_ROGUE_HALFLING.className) == TEST_ROGUE_HALFLING.level),
+      assert(TEST_PALADIN_DRAGONBORN.classLevels.get(TEST_PALADIN_DRAGONBORN.className) == TEST_PALADIN_DRAGONBORN.level),
+      assert(TEST_RANGER_ELF.classLevels.get(TEST_RANGER_ELF.className) == TEST_RANGER_ELF.level),
+      assert(TEST_MONK_GNOME.classLevels.get(TEST_MONK_GNOME.className) == TEST_MONK_GNOME.level),
+      assert(TEST_SORCERER_TIEFLING.classLevels.get(TEST_SORCERER_TIEFLING.className) == TEST_SORCERER_TIEFLING.level),
+      assert(TEST_WARLOCK_GOLIATH.classLevels.get(TEST_WARLOCK_GOLIATH.className) == TEST_WARLOCK_GOLIATH.level),
+      assert(TEST_BARD_HUMAN.classLevels.get(TEST_BARD_HUMAN.className) == TEST_BARD_HUMAN.level),
+      assert(TEST_DRUID_ELF.classLevels.get(TEST_DRUID_ELF.className) == TEST_DRUID_ELF.level)
+    }
+  }
+
+  run test_config_hit_die_fighter = assert(TEST_FIGHTER_5.hitDieType == pClassHitDie(Fighter))
+  run test_config_hit_die_wizard = assert(TEST_WIZARD.hitDieType == pClassHitDie(Wizard))
+  run test_config_hit_die_barbarian = assert(TEST_BARBARIAN_ORC.hitDieType == pClassHitDie(Barbarian))
+  run test_config_hit_die_cleric = assert(TEST_CLERIC_DWARF.hitDieType == pClassHitDie(Cleric))
+  run test_config_hit_die_rogue = assert(TEST_ROGUE_HALFLING.hitDieType == pClassHitDie(Rogue))
+  run test_config_hit_die_sorcerer = assert(TEST_SORCERER_TIEFLING.hitDieType == pClassHitDie(Sorcerer))
+
+  run test_config_fighter11_extra_attacks = {
+    val cfg = TEST_FIGHTER_5
+      .with("level", 11)
+      .with("classLevels", singleClassLevels(Fighter, 11))
+      .with("features", Set(FExtraAttack2))
+    assert(extraAttacksFromConfig(cfg) == 2)
+  }
+
+  run test_config_fighter20_extra_attacks = {
+    val cfg = TEST_FIGHTER_5
+      .with("level", 20)
+      .with("classLevels", singleClassLevels(Fighter, 20))
+      .with("features", Set(FExtraAttack3))
+    assert(extraAttacksFromConfig(cfg) == 3)
+  }
+
+  run test_config_cleric_spell_save_dc = {
+    // 8 + WIS mod(4) + prof(3) = 15
+    assert(spellSaveDC(TEST_CLERIC_DWARF) == 15)
+  }
+
+  run test_config_sorcerer_spell_attack_bonus = {
+    // CHA mod(4) + prof(3) = 7
+    assert(spellAttackBonus(TEST_SORCERER_TIEFLING) == 7)
+  }
+
 }

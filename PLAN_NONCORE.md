@@ -45,15 +45,16 @@ Note: T10 (Rage) and T10a-f (Cover, etc.) share the T10 prefix but are unrelated
 ## Config & Identity
 
 ```
-[T01] Config Identity Extensions (P1) -> deps: none
+[T01] Config Identity Extensions (P1) -> deps: none  ✓ done
 [T01.5] Multiclass Proficiency Rules (P2) -> deps: [T01]
 ```
 
-**[T01] Config Identity Extensions**
+**[T01] Config Identity Extensions** *(done)*
 Extend `CharConfig` with `className`, `subclass`, `species`, `classLevels`, `fightingStyles`.
 Extend `Feature` sum type or replace with `(class, level)` derivation. Note: SRD 5.2.1 uses `species` (not `race`); subraces are eliminated (Elf uses lineage options: Drow, High Elf, Wood Elf). Ability score increases come from Background, not species.
 - State: config fields only, no mutable state
 - Test: construct configs for each class/species combo; verify `extraAttacksFromConfig`, `proficiencyBonus` still work
+- **Open question:** SRD 5.2.1 made Ritual casting universal (any prepared spell with Ritual tag). `canRitualCast` is currently `false` for Paladin/Ranger/Sorcerer/Warlock — needs ASSUMPTIONS.md entry or fix.
 
 **[T01.5] Multiclass Proficiency Rules**
 When multiclassing into a non-starting class, only partial proficiencies are gained (varies per class: Fighter gets armor/weapons/shields, Wizard gets nothing, etc.). Attacking with a non-proficient weapon: no proficiency bonus added to attack roll (NOT disadvantage). Druid restriction: will not wear metal armor or shields (config flag).
@@ -748,7 +749,7 @@ Prereq: STR 13+ (Origin or General — verify category). Advantage on attacks ag
 
 Core is complete (PLAN.md). This file is now the active plan. All tasks are unblocked.
 
-1. **[T01]** Config Identity + species, **[T01.5]** Multiclass Proficiency Rules
+1. ~~**[T01]** Config Identity + species~~ ✓, **[T01.5]** Multiclass Proficiency Rules
 2. **[T03, T04, T06, T08, T09]** Shared mechanics (no deps or T01 only)
 3. **[T07]** Channel Divinity (needs T01; unblocks Paladin/Cleric)
 4. **[T201]** Feat System Framework; then **[T05]** Fighting Style Feats (needs T201)
