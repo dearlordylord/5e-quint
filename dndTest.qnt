@@ -3487,4 +3487,49 @@ module dndTest {
     assert(spellAttackBonus(TEST_SORCERER_TIEFLING) == 7)
   }
 
+  // ============================================================
+  // T08: Spell Effect Data Model
+  // ============================================================
+
+  pure val TEST_FIRE_BOLT: SpellData = {
+    name: "Fire Bolt",
+    level: 0,
+    school: Evocation,
+    castingTime: CTAction,
+    concentration: false,
+    components: Set(Verbal, Somatic),
+    effectType: SETDamage,
+  }
+
+  pure val TEST_HOLD_PERSON: SpellData = {
+    name: "Hold Person",
+    level: 2,
+    school: Enchantment,
+    castingTime: CTAction,
+    concentration: true,
+    components: Set(Verbal, Somatic, Material),
+    effectType: SETCondition,
+  }
+
+  run test_spell_cantrip_fire_bolt = all {
+    assert(TEST_FIRE_BOLT.level == 0),
+    assert(TEST_FIRE_BOLT.school == Evocation),
+    assert(TEST_FIRE_BOLT.concentration == false),
+    assert(TEST_FIRE_BOLT.effectType == SETDamage),
+  }
+
+  run test_spell_concentration_hold_person = all {
+    assert(TEST_HOLD_PERSON.level == 2),
+    assert(TEST_HOLD_PERSON.school == Enchantment),
+    assert(TEST_HOLD_PERSON.concentration == true),
+    assert(TEST_HOLD_PERSON.effectType == SETCondition),
+  }
+
+  run test_spell_component_membership = all {
+    assert(TEST_FIRE_BOLT.components.contains(Verbal)),
+    assert(TEST_FIRE_BOLT.components.contains(Somatic)),
+    assert(not(TEST_FIRE_BOLT.components.contains(Material))),
+    assert(TEST_HOLD_PERSON.components.contains(Material)),
+  }
+
 }
