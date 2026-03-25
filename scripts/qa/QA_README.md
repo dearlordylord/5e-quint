@@ -8,7 +8,7 @@ There are two corpuses, stored in separate directories. **2024 is the current ac
 
 | Corpus | Directory | SE tag / subreddit | SE entries | Reddit entries | Status |
 |--------|-----------|-------------------|------------|----------------|--------|
-| **2024 (current)** | `.references/qa/` | `dnd-5e-2024`, `dnd-5.5e`, post-cutoff `dnd-5e-2014` / r/onednd | 239+ | 9,702 | Active — scripts use this |
+| **2024 (current)** | `.references/qa/` | `dnd-5e-2024`, `dnd-5.5e`, post-cutoff `dnd-5e-2014` / r/onednd | 407 | 9,702 | Active — scripts use this |
 | 2014 (archived) | `.references/qa2014/` | `dnd-5e` / r/dndnext | 15,107 | 91,348 | Archived — not used by scripts |
 
 Both directories are gitignored (inside `.references/`). The 2014 corpus was the first generation; the 2024 corpus targets SRD 5.2.1 rules specifically.
@@ -23,7 +23,7 @@ python3 scripts/qa/classify.py --limit 100 --source se --workers 5
 
 # Step 2: Generate Quint assertions for 100 uncached classified entries
 #         (only processes entries where is_raw=true)
-python3 scripts/qa/generate_assertions.py --limit 100 --workers 3
+python3 scripts/qa/generate_assertions.py --agent claude --limit 100 --workers 3
 
 # Step 3: Run generated tests against the spec
 quint test qa_generated.qnt --main qa_generated --match "qa_" --verbosity 5
@@ -55,16 +55,18 @@ SE dump / Reddit API / Sage Advice / sageadvice.eu / Errata → raw data → par
 
 **Sage Advice Compendium** — `download_sage_advice.py`
 - Fetches the official Sage Advice Compendium from D&D Beyond
+- **DDB is a JS SPA** — static fetch returns a shell with minimal content (~5 Q&A). For full extraction: save the page as HTML from a browser, place at `.references/qa/raw/sage_advice_raw.html`, then rerun
 - Parses Q&A pairs from HTML (bold questions + paragraph answers, grouped by section)
 - Output: `.references/qa/sage_advice_corpus.jsonl` — `{source, id, title, question, answer, category, tags, url}`
 
 **sageadvice.eu** — `download_sageadvice_eu.py`
-- Paginates the official-answer tag archive at sageadvice.eu
-- Fetches individual post pages, extracts Q&A from title/content + blockquote
+- Paginates the official-answer tag archive at sageadvice.eu (h1.entry-title links)
+- Fetches individual post pages, extracts Q&A from blockquotes (first=question, last=answer)
+- Polite crawling: 1s between archive pages, 0.5s between posts; all HTML cached
 - Output: `.references/qa/sageadvice_eu_corpus.jsonl` — `{source, id, title, question, answer, tags, url}`
 
 **D&D Beyond Errata** — `download_errata.py`
-- Fetches 2024 PHB errata from D&D Beyond
+- **DDB errata URLs return 404** for automated fetches (JS-rendered or auth-gated). Save the errata page as HTML from a browser, place at `.references/qa/raw/errata_phb_2024_raw.html`, then rerun
 - Parses correction entries and converts to synthetic Q&A format
 - Output: `.references/qa/errata_corpus.jsonl` — `{source, id, title, question, answer, tags, original_text, corrected_text, book, section, url}`
 
@@ -159,6 +161,7 @@ scripts/qa/
   parse_reddit.py             # Reddit JSONL → reddit_corpus.jsonl
   classify.py                 # corpus → classified.jsonl (via haiku)
   generate_assertions.py      # classified → qa_generated.qnt (via sonnet)
+  qa_utils.py                 # shared utilities (strip_html, fetch_url, entry_hash)
   QA_README.md                # this file
 
 .references/qa/               # 2024 corpus (current, gitignored)
@@ -170,7 +173,7 @@ scripts/qa/
     sageadvice_eu_pages/    # cached sageadvice.eu archive pages
     sageadvice_eu_posts/    # cached sageadvice.eu individual posts
     errata_phb_2024_raw.html # cached errata page
-  se_corpus.jsonl           # parsed SE Q&A pairs (239+)
+  se_corpus.jsonl           # parsed SE Q&A pairs (407)
   reddit_corpus.jsonl       # parsed Reddit posts+comments (9,702)
   sage_advice_corpus.jsonl  # Sage Advice Compendium Q&A pairs
   sageadvice_eu_corpus.jsonl # sageadvice.eu official answers
