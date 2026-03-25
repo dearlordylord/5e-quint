@@ -3,7 +3,6 @@ import { exhaustionLevel, hp } from "#/types.ts"
 
 // --- Constants ---
 
-const EXHAUSTION_HP_HALVE_THRESHOLD = 4
 export const DEATH_SAVE_THRESHOLD = 3
 export const NAT_20 = 20
 export const NAT_1 = 1
@@ -27,9 +26,9 @@ export function applyDamageModifiers(
   return vulnerabilities.has(damageType) ? afterResist * VULNERABILITY_MULTIPLIER : afterResist
 }
 
-/** Exhaustion 4+ halves max HP. Matches Quint effectiveMaxHp. */
-export function effectiveMaxHp(exhaustion: number, maxHp: number): number {
-  return exhaustion >= EXHAUSTION_HP_HALVE_THRESHOLD ? Math.floor(maxHp / HALVE_DIVISOR) : maxHp
+/** Effective max HP. SRD 5.2.1: exhaustion no longer halves max HP. Kept as abstraction point for future max-HP modifiers. */
+export function effectiveMaxHp(maxHp: number): number {
+  return maxHp
 }
 
 // --- Damage computation result ---
@@ -61,7 +60,7 @@ export function computeTakeDamage(
   const newTempHp = ctxTempHp - tempAbsorb
   const newHp = Math.max(0, ctxHp - dmgThrough)
   const overflow = dmgThrough > ctxHp ? dmgThrough - ctxHp : 0
-  const effMax = effectiveMaxHp(ctxExhaustion, ctxMaxHp)
+  const effMax = effectiveMaxHp(ctxMaxHp)
   return { dmgThrough, effAmount, effMax, newHp, newTempHp, overflow }
 }
 
@@ -193,7 +192,7 @@ export function computeAddExhaustion(
   if (newExhaustion >= MAX_EXHAUSTION) {
     return { newExhaustion, newHp: 0 }
   }
-  const effMax = effectiveMaxHp(newExhaustion, maxHp)
+  const effMax = effectiveMaxHp(maxHp)
   return { newExhaustion, newHp: Math.min(currentHp, effMax) }
 }
 

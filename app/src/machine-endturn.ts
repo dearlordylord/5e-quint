@@ -1,7 +1,7 @@
-import { computeTakeDamage, removeConditionUpdate } from "#/machine-helpers.ts"
+import { addDeathFailures, addIncapSource, computeTakeDamage, removeConditionUpdate } from "#/machine-helpers.ts"
 import type { EndTurnDamage, EndTurnSave } from "#/machine-types.ts"
-import type { ActiveEffect, Condition, DamageType, ExpiryPhase, HP, IncapSource, TempHP } from "#/types.ts"
-import { hp, tempHp } from "#/types.ts"
+import type { ActiveEffect, Condition, DamageType, DeathSaves, ExpiryPhase, HP, IncapSource, TempHP } from "#/types.ts"
+import { deathSaveCount, hp, tempHp } from "#/types.ts"
 
 // --- Active effect helpers ---
 
@@ -29,6 +29,9 @@ export interface EndTurnResult {
   readonly hp: HP
   readonly incapacitatedSources: ReadonlySet<IncapSource>
   readonly tempHp: TempHP
+  readonly dead: boolean
+  readonly stable: boolean
+  readonly deathSaves: DeathSaves
 }
 
 interface EndTurnCtx {
@@ -39,6 +42,9 @@ interface EndTurnCtx {
   readonly concentrationSpellId: string
   readonly activeEffects: ReadonlyArray<ActiveEffect>
   readonly incapacitatedSources: ReadonlySet<IncapSource>
+  readonly dead: boolean
+  readonly stable: boolean
+  readonly deathSaves: DeathSaves
 }
 
 const EMPTY_DMG_SET: ReadonlySet<DamageType> = new Set()
@@ -53,6 +59,10 @@ export function computeEndTurn(
   let conc = ctx.concentrationSpellId
   let h = ctx.hp
   let th = ctx.tempHp
+  let dead = ctx.dead
+  let stable = ctx.stable
+  let deathFailures = ctx.deathSaves.failures
+  const deathSuccesses = ctx.deathSaves.successes
 
   // Collect effect IDs to remove (saves + concentration break)
   const removeIds = new Set<string>()
@@ -69,6 +79,7 @@ export function computeEndTurn(
   }
 
   for (const dmg of damages) {
+    if (dead) break
     const prevHp = h
     const r = computeTakeDamage(
       h,
@@ -83,11 +94,35 @@ export function computeEndTurn(
     )
     h = r.newHp
     th = r.newTempHp
-    if (conc) {
-      if ((h === 0 && prevHp > 0) || !dmg.conSaveSucceeded) {
-        removeIds.add(conc)
-        conc = ""
+
+    if (r.dmgThrough > 0) {
+      if (prevHp > 0 && h === 0) {
+        // Dropping from alive to 0 HP
+        if (r.overflow >= r.effMax) {
+          dead = true
+        } else {
+          conditions.unconscious = true
+          conditions.prone = true
+          incap = addIncapSource(incap, "unconscious")
+          stable = false
+        }
+      } else if (prevHp === 0) {
+        // Already at 0 HP: death save failures or instant death
+        if (r.dmgThrough >= r.effMax) {
+          dead = true
+        } else {
+          const df = addDeathFailures(deathFailures, false)
+          deathFailures = df.newFailures
+          stable = false
+          if (df.isDead) dead = true
+        }
       }
+    }
+
+    // Concentration handling
+    if (conc && (dead || (h === 0 && prevHp > 0) || !dmg.conSaveSucceeded)) {
+      removeIds.add(conc)
+      conc = ""
     }
   }
 
@@ -102,6 +137,9 @@ export function computeEndTurn(
     concentrationSpellId: conc,
     hp: hp(h),
     incapacitatedSources: incap,
-    tempHp: tempHp(th)
+    tempHp: tempHp(th),
+    dead,
+    stable,
+    deathSaves: { successes: deathSuccesses, failures: deathSaveCount(deathFailures) }
   }
 }

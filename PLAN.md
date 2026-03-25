@@ -43,13 +43,13 @@ MBT infrastructure wired to `@firfi/quint-connect`.
 
 The following completed features were implemented under SRD 5.1 and need revision for 5.2.1 during M2.5:
 
-- **Exhaustion:** completely new system. Was 6 tiers with specific per-tier effects (disadv ability checks, speed halved, disadv attacks/saves, HP max halved, speed 0, death). Now: -2 x level on D20 Tests, -5 x level ft Speed, death at level 6 (Rules-Glossary.md "Exhaustion [Condition]").
+- **Exhaustion:** completely new system. Was 6 tiers with specific per-tier effects (disadv ability checks, speed halved, disadv attacks/saves, HP max halved, speed 0, death). Now: -2 x level on D20 Tests, -5 x level ft Speed, death at level 6 (Rules-Glossary.md "Exhaustion [Condition]"). *Partially migrated:* speed penalty and HP-max-halving removal done; remaining: XState `computeLongRest` still gates exhaustion reduction on `hasEaten` (5.1 rule) — Quint and SRD 5.2.1 reduce unconditionally. Remove `hasEaten` from `LONG_REST` event and `computeLongRest`.
 - **Stunned:** no longer includes Speed 0. 5.2.1 Stunned = Incapacitated + auto-fail STR/DEX saves + Advantage on attacks against. No Speed reduction (Rules-Glossary.md "Stunned [Condition]").
 - **Grappled:** added "Disadvantage on attack rolls against any target other than the grappler" (Rules-Glossary.md "Grappled [Condition]").
 - **Surprise:** was turn-skip; now Disadvantage on Initiative roll, which is pre-combat. Remove from turn state machine (Rules-Glossary.md "Initiative," Playing-the-Game.md "Surprise").
 - **Knock Out:** was reduce to 0 HP; now reduce to 1 HP + Unconscious condition + starts Short Rest. Unconscious ends if creature regains any HP (Playing-the-Game.md "Knocking Out a Creature").
 - **Concentration DC:** now capped at max DC 30. DC = max(10, floor(damage/2)), up to 30 (Rules-Glossary.md "Concentration").
-- **Grapple/Shove:** was contested Athletics checks; now saving throw (Str or Dex, target's choice) vs DC 8 + Str mod + PB, as part of Unarmed Strike (Rules-Glossary.md "Unarmed Strike").
+- ~~**Grapple/Shove:** was contested Athletics checks; now saving throw (Str or Dex, target's choice) vs DC 8 + Str mod + PB, as part of Unarmed Strike (Rules-Glossary.md "Unarmed Strike").~~ *(done — migrated to save-based in Bug 1 fix)*
 - **Two-weapon fighting (Light property):** bonus attack no longer adds ability modifier to damage unless that modifier is negative (Equipment.md "Light" property).
 - **Underwater melee:** any weapon dealing Piercing damage avoids Disadvantage; was a specific weapon list (Playing-the-Game.md "Impeded Weapons").
 - **Squeezing:** absent from SRD 5.2.1. Existing squeezing code should be removed during M2.5.
@@ -284,15 +284,17 @@ Each START_TURN/END_TURN cycle = one round passing. Effect durations decrement b
 
 ---
 
-## Known Bugs (M2 parity gaps)
+## Known Bugs (M2 parity gaps) — all resolved
 
-These are pre-existing XState/MBT parity issues surfaced during TA2 MBT wiring. They cause nondeterministic MBT trace failures depending on which actions the random walk exercises.
+1. ~~**Grapple + incapacitatedSources:**~~ Root cause was SRD edition mismatch: Quint used 5.2.1 save-based grapple/shove (`saveFailed: bool`), XState used 5.1 contest-based (`contestResult: ContestResult`). MBT mapped `saveFailed` to `contest` (undefined → fallback `"tie"`), so grapple/shove never succeeded via contest. Fix: migrated XState to save-based, updated MBT schemas. The incapacitatedSources divergence was a red herring symptom.
 
-1. **Grapple + incapacitatedSources:** Quint `pGrapple` checks `isIncapacitated(targetState)` which reads `incapacitatedSources`. When the creature is unconscious, Quint's `pApplyCondition(CUnconscious)` adds `ISUnconscious` to `incapacitatedSources`. XState's `setUnconscious` does the same. But at some point the sets diverge — the MBT comparison shows `grappled: false` (Quint) vs `grappled: true` (XState) with `incapacitatedSources: {}` on both sides despite `unconscious: true`. Root cause: likely a missing `addIncapSource` call in some XState path, or the normalization drops entries. Needs investigation.
+2. ~~**Concentration consistency invariant:**~~ `applyStarvation`/`applyDehydration` lacked `concBreak` when exhaustion reached level 6 (death). Fix: `exhaustionWithConcBreak` helper. Full incapacitation-path audit confirmed all paths covered.
 
-2. **Concentration consistency invariant:** `incapNotConcentrating` (isIncapacitated implies concentrationSpellId == "") fails during random walks. Root cause: some action path applies incapacitation without wrapping in `pWithConcBreak`/`concBreak`. The invariant catches the missing wrap. Needs audit of all incapacitation paths.
+3. ~~**hitPointDiceRemaining divergence:**~~ XState used 5.1 half-recovery on long rest; Quint used 5.2.1 full restore. Fix: `computeLongRest` → `newHitDice: totalHitDice`, removed `hitDiceRecovery`.
 
-3. **hitPointDiceRemaining divergence:** MBT traces show `hitPointDiceRemaining: 5` (Quint) vs `4` (XState) after a sequence involving SPEND_HIT_DIE or SHORT_REST. The field mapping is correct (Quint `hitPointDiceRemaining` ↔ XState `hitDiceRemaining`). Root cause: likely a behavioral difference in hit dice spending or recovery logic. Surfaced after KNOCK_OUT fix eliminated the earlier blocking failure.
+**Additional 5.2.1 parity fixes applied during bug investigation:**
+- End-of-turn damage now handles death/unconscious/deathSave transitions (`computeEndTurn` + damageTrack `always` guards with `dead` context bridge field)
+- Exhaustion no longer halves max HP (`effectiveMaxHp` simplified to identity)
 
 ---
 

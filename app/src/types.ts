@@ -57,8 +57,6 @@ export type ArmorCategory = "light" | "medium" | "heavy"
 
 export type Size = "tiny" | "small" | "medium" | "large" | "huge" | "gargantuan"
 
-export type ContestResult = "aWins" | "bWins" | "tie"
-
 export type ShoveChoice = "prone" | "push"
 
 export type UnarmoredDefense = "none" | "barbarian" | "monk"

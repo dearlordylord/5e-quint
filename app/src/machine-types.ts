@@ -2,7 +2,6 @@ import type {
   ActionType,
   ActiveEffect,
   Condition,
-  ContestResult,
   D20Roll,
   DamageType,
   DeathSaves,
@@ -36,6 +35,7 @@ export interface DndContext {
   readonly tempHp: TempHP
   readonly deathSaves: DeathSaves
   readonly stable: boolean
+  readonly dead: boolean // bridge: endTurn (turnTrack) signals death to damageTrack via always guard
   readonly exhaustion: ExhaustionLevel
   readonly blinded: boolean
   readonly charmed: boolean
@@ -135,16 +135,16 @@ export type DndEvent =
       readonly type: "GRAPPLE"
       readonly attackerSize: Size
       readonly targetSize: Size
-      readonly contestResult: ContestResult
+      readonly targetSaveFailed: boolean
       readonly attackerHasFreeHand: boolean
     }
   | { readonly type: "RELEASE_GRAPPLE" }
-  | { readonly type: "ESCAPE_GRAPPLE"; readonly contestResult: ContestResult }
+  | { readonly type: "ESCAPE_GRAPPLE"; readonly escapeSucceeded: boolean }
   | {
       readonly type: "SHOVE"
       readonly attackerSize: Size
       readonly targetSize: Size
-      readonly contestResult: ContestResult
+      readonly targetSaveFailed: boolean
       readonly choice: ShoveChoice
     }
   | { readonly type: "EXPEND_SLOT"; readonly level: number }

@@ -30,7 +30,11 @@ export const damageTrackConfig = {
   initial: "alive" as const,
   states: {
     alive: {
-      always: { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
+      always: [
+        { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
+        { guard: "contextDead" as const, target: "#dnd.damageTrack.dead" },
+        { guard: "hpZeroUnconscious" as const, target: "#dnd.damageTrack.dying" }
+      ],
       on: {
         TAKE_DAMAGE: [
           {
@@ -70,7 +74,10 @@ export const damageTrackConfig = {
     },
     dying: {
       initial: "unstable" as const,
-      always: { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
+      always: [
+        { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
+        { guard: "contextDead" as const, target: "#dnd.damageTrack.dead" }
+      ],
       on: {
         HEAL: { target: "#dnd.damageTrack.alive", actions: ["applyHealFromZero", "clearUnconscious"] },
         GRANT_TEMP_HP: { actions: ["applyTempHp"] },
@@ -126,7 +133,7 @@ export const damageTrackConfig = {
         }
       }
     },
-    dead: {}
+    dead: { entry: "markDead" as const }
   }
 } as const
 

@@ -47,12 +47,6 @@ export function calculateMulticlassSlots(
   return Array.from({ length: SPELL_SLOT_LEVELS }, (_, i) => slotsPerLevel(casterLevel, i + 1))
 }
 
-/** Hit dice recovery on long rest: max(1, floor(total/2)). */
-export function hitDiceRecovery(totalHitDice: number, currentRemaining: number): number {
-  const recovery = Math.max(1, Math.floor(totalHitDice / HALVE_DIVISOR))
-  return Math.min(recovery, totalHitDice - currentRemaining)
-}
-
 /** Compute short rest results: spend hit dice, restore pact slots. */
 export function computeShortRest(
   currentHp: number,
@@ -63,7 +57,7 @@ export function computeShortRest(
   conMod: number,
   hdRolls: ReadonlyArray<number>
 ): { readonly newHp: number; readonly newHitDice: number; readonly newPactSlots: number } {
-  const effMax = effectiveMaxHp(exhaustion, maxHp)
+  const effMax = effectiveMaxHp(maxHp)
   const cap = Math.min(hitDiceRemaining, hdRolls.length)
   let curHp = currentHp
   for (let i = 0; i < cap; i++) {
@@ -77,7 +71,6 @@ export function computeLongRest(
   currentHp: number,
   maxHp: number,
   exhaustion: number,
-  hitDiceRemaining: number,
   slotsMax: SpellSlots,
   pactSlotsMax: number,
   totalHitDice: number,
@@ -91,11 +84,10 @@ export function computeLongRest(
 } | null {
   if (currentHp < 1) return null
   const newExhaustion = hasEaten ? Math.max(0, exhaustion - 1) : exhaustion
-  const effMax = effectiveMaxHp(newExhaustion, maxHp)
-  const recovery = hitDiceRecovery(totalHitDice, hitDiceRemaining)
+  const effMax = effectiveMaxHp(maxHp)
   return {
     newExhaustion,
-    newHitDice: hitDiceRemaining + recovery,
+    newHitDice: totalHitDice,
     newHp: effMax,
     newPactSlots: pactSlotsMax,
     newSlots: slotsMax

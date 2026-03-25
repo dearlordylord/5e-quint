@@ -5,7 +5,6 @@ import type {
   ArmorState,
   AttackContext,
   AttackResult,
-  ContestResult,
   CoverType,
   FullAttackMods,
   Size,
@@ -131,25 +130,25 @@ export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
   }
 }
 
-/** Grapple resolution. Matches Quint pGrapple. */
+/** Grapple resolution. Matches Quint pGrapple (SRD 5.2.1 save-based). */
 export function resolveGrapple(
   attackerSize: Size,
   targetSize: Size,
-  contestResult: ContestResult,
+  targetSaveFailed: boolean,
   attackerHasFreeHand: boolean,
   targetIncapacitated: boolean
 ): boolean {
   if (!withinOneSize(attackerSize, targetSize) || !attackerHasFreeHand) return false
-  return targetIncapacitated || contestResult === "aWins"
+  return targetIncapacitated || targetSaveFailed
 }
 
-/** Shove resolution. Matches Quint pShove. */
+/** Shove resolution. Matches Quint pShove (SRD 5.2.1 save-based). */
 export function resolveShove(
   attackerSize: Size,
   targetSize: Size,
-  contestResult: ContestResult,
+  targetSaveFailed: boolean,
   targetIncapacitated: boolean
 ): boolean {
   if (!withinOneSize(attackerSize, targetSize)) return false
-  return targetIncapacitated || contestResult === "aWins"
+  return targetIncapacitated || targetSaveFailed
 }

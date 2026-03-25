@@ -73,6 +73,11 @@ const concBreakFields = (c: DndContext) =>
     ? { concentrationSpellId: "", activeEffects: removeAe(c.activeEffects, c.concentrationSpellId) }
     : {}
 const concBreak = (c: DndContext) => (!isIncapacitated(c) ? concBreakFields(c) : {})
+const exhaustionWithConcBreak = (c: DndContext, levels: number) => {
+  const r = computeAddExhaustion(c.exhaustion, levels, c.hp, c.maxHp)
+  const died = r.newExhaustion >= MAX_EXHAUSTION && c.exhaustion < MAX_EXHAUSTION
+  return { ...exhUpdate(r), ...(died ? concBreakFields(c) : {}) }
+}
 
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 const MT = { context: {} as DndContext, events: {} as DndEvent, input: {} as DndMachineInput }
@@ -130,9 +135,12 @@ export const dndMachine = setup({
     canStandFromProne: ({ context: c }) =>
       !isIncapacitated(c) && c.effectiveSpeed > 0 && spendHalfSpeed(c.movementRemaining, c.effectiveSpeed).success,
     shouldBreakConcentration: ({ context: c }) => c.concentrationSpellId === "",
-    canExpendSlot: ({ context: c }) => c.hp > 0 && !isIncapacitated(c)
+    canExpendSlot: ({ context: c }) => c.hp > 0 && !isIncapacitated(c),
+    contextDead: ({ context: c }) => c.dead,
+    hpZeroUnconscious: ({ context: c }) => c.hp === 0 && c.unconscious
   },
   actions: {
+    markDead: assign({ dead: true }),
     applyDamage: assign(({ context: c, event: e }) => {
       const r = dmgR(c, e)
       return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp) }
@@ -153,11 +161,11 @@ export const dndMachine = setup({
       return { deathSaves: { successes: deathSaveCount(r.newSuccesses), failures: deathSaveCount(r.newFailures) } }
     }),
     applyHeal: assign(({ context: c, event: e }) => ({
-      hp: hp(Math.min(c.hp + asHeal(e).amount, effectiveMaxHp(c.exhaustion, c.maxHp)))
+      hp: hp(Math.min(c.hp + asHeal(e).amount, effectiveMaxHp(c.maxHp)))
     })),
     applyHealFromZero: assign(({ context: c, event: e }) => ({
       deathSaves: DEATH_SAVES_RESET,
-      hp: hp(Math.min(asHeal(e).amount, effectiveMaxHp(c.exhaustion, c.maxHp)))
+      hp: hp(Math.min(asHeal(e).amount, effectiveMaxHp(c.maxHp)))
     })),
     applyTempHp: assign(({ event: e }) => (asGrantTempHp(e).keepOld ? {} : { tempHp: asGrantTempHp(e).amount })),
     applyKnockOut: assign(({ context: c }) => ({
@@ -191,11 +199,7 @@ export const dndMachine = setup({
       const u = removeConditionUpdate(cond, c.incapacitatedSources)
       return { ...u.conditionFlags, incapacitatedSources: u.incapSources }
     }),
-    addExhaustion: assign(({ context: c, event: e }) => {
-      const r = computeAddExhaustion(c.exhaustion, asExhaustion(e).levels, c.hp, c.maxHp)
-      const died = r.newExhaustion >= MAX_EXHAUSTION && c.exhaustion < MAX_EXHAUSTION
-      return { ...exhUpdate(r), ...(died ? concBreakFields(c) : {}) }
-    }),
+    addExhaustion: assign(({ context: c, event: e }) => exhaustionWithConcBreak(c, asExhaustion(e).levels)),
     reduceExhaustion: assign(({ context: c, event: e }) => ({
       exhaustion: exhaustionLevel(Math.max(0, c.exhaustion - asExhaustion(e).levels))
     })),
@@ -267,17 +271,17 @@ export const dndMachine = setup({
       const ok = resolveGrapple(
         ev.attackerSize,
         ev.targetSize,
-        ev.contestResult,
+        ev.targetSaveFailed,
         ev.attackerHasFreeHand,
         isIncapacitated(c)
       )
       return ok ? { grappled: true } : {}
     }),
     releaseGrapple: assign({ grappled: false }),
-    escapeGrapple: assign(({ event: e }) => (asEscapeGrapple(e).contestResult === "bWins" ? { grappled: false } : {})),
+    escapeGrapple: assign(({ event: e }) => (asEscapeGrapple(e).escapeSucceeded ? { grappled: false } : {})),
     applyShove: assign(({ context: c, event: e }) => {
       const ev = asShove(e)
-      if (!resolveShove(ev.attackerSize, ev.targetSize, ev.contestResult, isIncapacitated(c))) return {}
+      if (!resolveShove(ev.attackerSize, ev.targetSize, ev.targetSaveFailed, isIncapacitated(c))) return {}
       if (ev.choice === "prone") return { prone: true }
       return {}
     }),
@@ -311,7 +315,7 @@ export const dndMachine = setup({
       const ev = asSpendHitDie(e)
       return {
         hitDiceRemaining: c.hitDiceRemaining - 1,
-        hp: hp(Math.min(c.hp + Math.max(0, ev.dieRoll + ev.conMod), effectiveMaxHp(c.exhaustion, c.maxHp)))
+        hp: hp(Math.min(c.hp + Math.max(0, ev.dieRoll + ev.conMod), effectiveMaxHp(c.maxHp)))
       }
     }),
     shortRest: assign(({ context: c, event: e }) => {
@@ -321,16 +325,7 @@ export const dndMachine = setup({
     }),
     longRest: assign(({ context: c, event: e }) => {
       const ev = asLongRest(e)
-      const r = computeLongRest(
-        c.hp,
-        c.maxHp,
-        c.exhaustion,
-        c.hitDiceRemaining,
-        c.slotsMax,
-        c.pactSlotsMax,
-        ev.totalHitDice,
-        ev.hasEaten
-      )
+      const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, ev.totalHitDice, ev.hasEaten)
       if (!r) return {}
       return {
         exhaustion: exhaustionLevel(r.newExhaustion),
@@ -368,12 +363,12 @@ export const dndMachine = setup({
       incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious"),
       ...concBreak(c)
     })),
-    applyStarvation: assign(({ context: c }) => exhUpdate(computeAddExhaustion(c.exhaustion, 1, c.hp, c.maxHp))),
+    applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     applyDehydration: assign(({ context: c, event: e }) => {
       const ev = asApplyDehydration(e)
       const levels = dehydrationLevels(c.exhaustion, ev.halfWater, ev.conSaveSucceeded)
       if (levels === 0) return {}
-      return exhUpdate(computeAddExhaustion(c.exhaustion, levels, c.hp, c.maxHp))
+      return exhaustionWithConcBreak(c, levels)
     })
   }
 }).createMachine({
@@ -384,6 +379,7 @@ export const dndMachine = setup({
     ...INITIAL_TURN_STATE,
     activeEffects: [] as ReadonlyArray<ActiveEffect>,
     concentrationSpellId: "",
+    dead: false,
     deathSaves: DEATH_SAVES_RESET,
     stable: false,
     effectiveSpeed: movementFeet(i.effectiveSpeed ?? 0),

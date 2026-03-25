@@ -31,13 +31,7 @@ import {
   ownAttackMods,
   saveMods
 } from "#/machine-queries.ts"
-import {
-  calculateMulticlassSlots,
-  concentrationDC,
-  expendSlot,
-  hitDiceRecovery,
-  slotsPerLevel
-} from "#/machine-spells.ts"
+import { calculateMulticlassSlots, concentrationDC, expendSlot, slotsPerLevel } from "#/machine-spells.ts"
 import type { ActionType, ArmorState, AttackContext, Condition, DamageType } from "#/types.ts"
 import { abilityScore, d20Roll, damageAmount, healAmount, hp, proficiencyBonus, tempHp } from "#/types.ts"
 
@@ -183,16 +177,10 @@ describe("applyDamageModifiers", () => {
 })
 
 describe("effectiveMaxHp", () => {
-  it("no exhaustion returns full maxHp", () => {
-    expect(effectiveMaxHp(0, 20)).toBe(20)
-  })
-
-  it("exhaustion 4 halves maxHp", () => {
-    expect(effectiveMaxHp(4, 20)).toBe(10)
-  })
-
-  it("exhaustion 3 returns full maxHp", () => {
-    expect(effectiveMaxHp(3, 20)).toBe(20)
+  it("SRD 5.2.1: returns maxHp unchanged regardless of value", () => {
+    expect(effectiveMaxHp(20)).toBe(20)
+    expect(effectiveMaxHp(1)).toBe(1)
+    expect(effectiveMaxHp(100)).toBe(100)
   })
 })
 
@@ -689,16 +677,11 @@ describe("exhaustion", () => {
     expect(ctx(a).exhaustion).toBe(5)
   })
 
-  it("exhaustion 4 halves maxHp (derived via effectiveMaxHp)", () => {
+  it("SRD 5.2.1: exhaustion 4 does not halve maxHp or cap HP", () => {
     const a = create()
     addExhaustion(a, 4)
-    expect(effectiveMaxHp(ctx(a).exhaustion, ctx(a).maxHp)).toBe(10)
-  })
-
-  it("exhaustion 4 caps HP to effective max", () => {
-    const a = create()
-    addExhaustion(a, 4)
-    expect(ctx(a).hp).toBe(10)
+    expect(effectiveMaxHp(ctx(a).maxHp)).toBe(DEFAULT_MAX_HP)
+    expect(ctx(a).hp).toBe(DEFAULT_MAX_HP)
   })
 
   it("reduce exhaustion", () => {
@@ -1389,25 +1372,25 @@ describe("calculateAC", () => {
 })
 
 describe("grapple", () => {
-  it("grapple succeeds: attacker wins contest", () => {
+  it("grapple succeeds: target save failed", () => {
     const a = create()
     a.send({
       type: "GRAPPLE",
       attackerSize: "medium",
       targetSize: "medium",
-      contestResult: "aWins",
+      targetSaveFailed: true,
       attackerHasFreeHand: true
     })
     expect(ctx(a).grappled).toBe(true)
   })
 
-  it("grapple fails: target wins contest", () => {
+  it("grapple fails: target save succeeded", () => {
     const a = create()
     a.send({
       type: "GRAPPLE",
       attackerSize: "medium",
       targetSize: "medium",
-      contestResult: "bWins",
+      targetSaveFailed: false,
       attackerHasFreeHand: true
     })
     expect(ctx(a).grappled).toBe(false)
@@ -1419,7 +1402,7 @@ describe("grapple", () => {
       type: "GRAPPLE",
       attackerSize: "small",
       targetSize: "large",
-      contestResult: "aWins",
+      targetSaveFailed: true,
       attackerHasFreeHand: true
     })
     expect(ctx(a).grappled).toBe(false)
@@ -1431,7 +1414,7 @@ describe("grapple", () => {
       type: "GRAPPLE",
       attackerSize: "medium",
       targetSize: "medium",
-      contestResult: "aWins",
+      targetSaveFailed: true,
       attackerHasFreeHand: false
     })
     expect(ctx(a).grappled).toBe(false)
@@ -1444,7 +1427,7 @@ describe("grapple", () => {
       type: "GRAPPLE",
       attackerSize: "medium",
       targetSize: "medium",
-      contestResult: "bWins",
+      targetSaveFailed: false,
       attackerHasFreeHand: true
     })
     expect(ctx(a).grappled).toBe(true)
@@ -1456,36 +1439,36 @@ describe("grapple", () => {
       type: "GRAPPLE",
       attackerSize: "medium",
       targetSize: "medium",
-      contestResult: "aWins",
+      targetSaveFailed: true,
       attackerHasFreeHand: true
     })
     a.send({ type: "RELEASE_GRAPPLE" })
     expect(ctx(a).grappled).toBe(false)
   })
 
-  it("escape grapple: target wins", () => {
+  it("escape grapple: target succeeds", () => {
     const a = create()
     a.send({
       type: "GRAPPLE",
       attackerSize: "medium",
       targetSize: "medium",
-      contestResult: "aWins",
+      targetSaveFailed: true,
       attackerHasFreeHand: true
     })
-    a.send({ type: "ESCAPE_GRAPPLE", contestResult: "bWins" })
+    a.send({ type: "ESCAPE_GRAPPLE", escapeSucceeded: true })
     expect(ctx(a).grappled).toBe(false)
   })
 
-  it("escape grapple: attacker wins keeps grapple", () => {
+  it("escape grapple: target fails keeps grapple", () => {
     const a = create()
     a.send({
       type: "GRAPPLE",
       attackerSize: "medium",
       targetSize: "medium",
-      contestResult: "aWins",
+      targetSaveFailed: true,
       attackerHasFreeHand: true
     })
-    a.send({ type: "ESCAPE_GRAPPLE", contestResult: "aWins" })
+    a.send({ type: "ESCAPE_GRAPPLE", escapeSucceeded: false })
     expect(ctx(a).grappled).toBe(true)
   })
 })
@@ -1493,19 +1476,19 @@ describe("grapple", () => {
 describe("shove", () => {
   it("shove prone: success", () => {
     const a = create()
-    a.send({ type: "SHOVE", attackerSize: "medium", targetSize: "medium", contestResult: "aWins", choice: "prone" })
+    a.send({ type: "SHOVE", attackerSize: "medium", targetSize: "medium", targetSaveFailed: true, choice: "prone" })
     expect(ctx(a).prone).toBe(true)
   })
 
   it("shove push: no state change (caller handles)", () => {
     const a = create()
-    a.send({ type: "SHOVE", attackerSize: "medium", targetSize: "medium", contestResult: "aWins", choice: "push" })
+    a.send({ type: "SHOVE", attackerSize: "medium", targetSize: "medium", targetSaveFailed: true, choice: "push" })
     expect(ctx(a).prone).toBe(false)
   })
 
   it("shove fails: target too large", () => {
     const a = create()
-    a.send({ type: "SHOVE", attackerSize: "small", targetSize: "large", contestResult: "aWins", choice: "prone" })
+    a.send({ type: "SHOVE", attackerSize: "small", targetSize: "large", targetSaveFailed: true, choice: "prone" })
     expect(ctx(a).prone).toBe(false)
   })
 })
@@ -1806,11 +1789,11 @@ describe("long rest", () => {
     expect(ctx(a).hp).toBe(hpBefore)
   })
 
-  it("restores hit dice: max(1, floor(total/2))", () => {
-    expect(hitDiceRecovery(10, 5)).toBe(5)
-    expect(hitDiceRecovery(10, 9)).toBe(1)
-    expect(hitDiceRecovery(1, 0)).toBe(1)
-    expect(hitDiceRecovery(3, 1)).toBe(1)
+  it("restores all spent hit dice (SRD 5.2.1)", () => {
+    const a = createActor(dndMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: 2 } })
+    a.start()
+    a.send({ type: "LONG_REST", totalHitDice: 8, hasEaten: true })
+    expect(ctx(a).hitDiceRemaining).toBe(8)
   })
 })
 

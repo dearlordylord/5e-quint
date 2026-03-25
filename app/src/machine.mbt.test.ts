@@ -11,7 +11,7 @@ import { createActor } from "xstate"
 import { z } from "zod"
 
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
-import type { ActionType, Condition, ContestResult, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
+import type { ActionType, Condition, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
 import { d20Roll, healAmount, tempHp } from "#/types.ts"
 
 // ============================================================
@@ -57,12 +57,6 @@ const QUINT_SIZE_MAP: Record<string, Size> = {
   Large: "large",
   Huge: "huge",
   Gargantuan: "gargantuan"
-}
-
-const QUINT_CONTEST_MAP: Record<string, ContestResult> = {
-  AWins: "aWins",
-  BWins: "bWins",
-  Tie: "tie"
 }
 
 const QUINT_SHOVE_MAP: Record<string, ShoveChoice> = {
@@ -499,10 +493,10 @@ const driverSchema = {
   doSuffocate: {},
   doApplyStarvation: {},
   doApplyDehydration: { halfWater: z.boolean(), saveSucceeded: z.boolean() },
-  doGrapple: { atkSize: ITFVariant, tgtSize: ITFVariant, contest: ITFVariant, freeHand: z.boolean() },
+  doGrapple: { atkSize: ITFVariant, tgtSize: ITFVariant, saveFailed: z.boolean(), freeHand: z.boolean() },
   doReleaseGrapple: {},
-  doEscapeGrapple: { contest: ITFVariant },
-  doShove: { atkSize: ITFVariant, tgtSize: ITFVariant, contest: ITFVariant, choice: ITFVariant },
+  doEscapeGrapple: { escaped: z.boolean() },
+  doShove: { atkSize: ITFVariant, tgtSize: ITFVariant, saveFailed: z.boolean(), choice: ITFVariant },
   step: {} // dead character no-op
 } as const
 
@@ -720,27 +714,27 @@ const dndDriver = defineDriver(driverSchema, () => {
     doApplyDehydration: ({ halfWater, saveSucceeded }) => {
       send({ type: "APPLY_DEHYDRATION", halfWater, conSaveSucceeded: saveSucceeded })
     },
-    doGrapple: ({ atkSize, contest, freeHand, tgtSize }) => {
+    doGrapple: ({ atkSize, freeHand, saveFailed, tgtSize }) => {
       send({
         type: "GRAPPLE",
         attackerSize: QUINT_SIZE_MAP[atkSize] ?? "medium",
         targetSize: QUINT_SIZE_MAP[tgtSize] ?? "medium",
-        contestResult: QUINT_CONTEST_MAP[contest] ?? "tie",
+        targetSaveFailed: saveFailed,
         attackerHasFreeHand: freeHand
       })
     },
     doReleaseGrapple: () => {
       send({ type: "RELEASE_GRAPPLE" })
     },
-    doEscapeGrapple: ({ contest }) => {
-      send({ type: "ESCAPE_GRAPPLE", contestResult: QUINT_CONTEST_MAP[contest] ?? "tie" })
+    doEscapeGrapple: ({ escaped }) => {
+      send({ type: "ESCAPE_GRAPPLE", escapeSucceeded: escaped })
     },
-    doShove: ({ atkSize, choice, contest, tgtSize }) => {
+    doShove: ({ atkSize, choice, saveFailed, tgtSize }) => {
       send({
         type: "SHOVE",
         attackerSize: QUINT_SIZE_MAP[atkSize] ?? "medium",
         targetSize: QUINT_SIZE_MAP[tgtSize] ?? "medium",
-        contestResult: QUINT_CONTEST_MAP[contest] ?? "tie",
+        targetSaveFailed: saveFailed,
         choice: QUINT_SHOVE_MAP[choice] ?? "prone"
       })
     },
