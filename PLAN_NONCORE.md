@@ -592,10 +592,17 @@ Traits:
 - **Halfling Lucky**: reroll nat 1 on any d20 — unchanged
 - **Dragonborn Breath Weapon**: revised per 5.2.1 — TODO: verify exact scaling and DC formula
 - **Halfling Nimbleness**: move through larger creature's space — unchanged
-- **Goliath Giant Ancestry** (NEW): 6 combat options, choose one (TODO: enumerate from SRD 5.2.1 — options include Stone's Endurance, etc.)
+- **Goliath Giant Ancestry** (NEW): choose one of 6 options; all cost Prof Bonus uses/LR:
+  - Cloud's Jaunt: BA — teleport 30 ft to visible unoccupied space
+  - Fire's Burn: BA (on hit) — +1d10 Fire damage
+  - Frost's Chill: BA (on hit) — +1d6 Cold + Speed −10 ft until start of your next turn
+  - Hill's Tumble: BA (on hit vs Large or smaller) — Prone
+  - Stone's Endurance: Reaction (take damage) — roll 1d12+CON, reduce damage by that total
+  - Storm's Thunder: Reaction (take damage from creature ≤60 ft) — deal 1d8 Thunder to that creature
+  Additional traits: Large Form (L5+, 1/LR BA → Large size 10 min, +10 Speed, Adv STR checks); Powerful Build (passive — Adv end Grappled, count as one size larger for carry)
 - **Savage Attacks (Half-Orc)**: REMOVED — Half-Orc no longer exists in SRD 5.2.1
 - State: `relentlessEnduranceUsed: bool`, `adrenalineRushCharges: int`, `breathWeaponUsed: bool`, `giantAncestryChoice: GiantAncestryOption`
-- Functions: `pRelentlessEndurance(state)->drop to 1 HP instead of 0`; `pAdrenalineRush(state, config)->Dash + temp HP = prof bonus`; `pHalflingLucky(d20)->reroll if 1`; `pBreathWeapon(state, config, savedRolls)->area damage, 1/SR`; `pGiantAncestry(state, choice, ...)->TODO per option`
+- Functions: `pRelentlessEndurance(state)->drop to 1 HP instead of 0`; `pAdrenalineRush(state, config)->Dash + temp HP = prof bonus`; `pHalflingLucky(d20)->reroll if 1`; `pBreathWeapon(state, config, savedRolls)->area damage, 1/SR`; `pGiantAncestry(state, choice, ...)->BA/Reaction per option above`
 - Test: Relentless Endurance 1/LR; Adrenaline Rush = prof bonus uses/LR + temp HP; Lucky rerolls 1s; Breath Weapon 1/SR; Goliath option as per SRD
 
 **[T141] Species Save/Resistance Modifiers**
@@ -608,7 +615,7 @@ All traits revised against SRD 5.2.1 text:
 - **Dragonborn Damage Resistance**: match ancestry type — unchanged in concept, revised per 5.2.1
 - **Hill Dwarf Toughness**: +1 HP/level — TODO: verify if still exists in 5.2.1
 - **Tiefling Infernal Legacy**: racial spells at 1/LR — TODO: verify 5.2.1 spell list
-- **Fey Ancestry** (Elf): Advantage on saves vs Charmed + immunity to sleep magic — TODO: verify which Elf lineages retain this
+- **Fey Ancestry** (Elf): Advantage on saves vs Charmed — all lineages (base trait, unchanged). Sleep immunity not in 5.2.1 text.
 - State: `infernalLegacyHellishRebukeUsed: bool`, `infernalLegacyDarknessUsed: bool`
 - Functions: modify saves/damage for each trait
 - Test: per trait — verify against SRD 5.2.1 text before implementation
@@ -787,6 +794,4 @@ New in 5.2.1: 20 spells added (distributed across T150-T156 as TODO entries).
 - Improvised weapons, Help action, Ready action spell-holding
 - Spellbook mechanics, non-combat species traits
 - Charmed social interaction, Antimagic Field interactions
-- Elf lineage trait details (Drow/High Elf/Wood Elf — verify before implementing T141)
-- Goliath Giant Ancestry full option list (6 options — enumerate from SRD before implementing T140)
-- Dragon Companion (T112b) — scope TBD
+- Dragon Companion (T112b) — perpetual TODO, not v1
