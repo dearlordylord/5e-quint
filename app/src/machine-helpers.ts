@@ -33,7 +33,7 @@ export function effectiveMaxHp(maxHp: number): number {
 
 // --- Damage computation result ---
 
-interface TakeDamageResult {
+export interface TakeDamageResult {
   readonly effAmount: number
   readonly dmgThrough: number
   readonly newTempHp: number

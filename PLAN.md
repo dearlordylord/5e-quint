@@ -317,8 +317,7 @@ Next: **[TA4]** START_TURN Refactoring
 
 ### Housekeeping (no deps, do anytime)
 
-**Extract guards to `machine-guards.ts`.**
-`machine.ts` is at 413/420 lines. Guards are ~55 lines of pure `({context, event}) => boolean` functions — clean seam, no XState type issues. Extracting drops machine.ts to ~358 lines (62 lines headroom). Actions are NOT worth extracting (thin `assign()` wrappers, would add type friction).
+**~~Extract guards to `machine-guards.ts`.~~** *(done)* Guards extracted to `machine-guards.ts`. `machine.ts` at 359/420 lines (61 lines headroom). Shared damage-threshold predicates (`isInstantDeath`, `isDropToZero`, `isInstantDeathFromDying`) deduplicated between damage and fall guards.
 
 **Cross-plan dependency:** PLAN_NONCORE.md implementation is blocked until TA3+TA4 are complete (non-core composes on combat mode + turn lifecycle primitives). See `PLAN_MIGRATION.md` for the full sequencing between core, non-core, and the 5.1→5.2.1 migration.
 

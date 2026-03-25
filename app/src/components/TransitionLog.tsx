@@ -58,11 +58,11 @@ function formatEvent(e: DndEvent): string {
     case "APPLY_FALL":
       return `FALL ${e.damageRoll}`
     case "GRAPPLE":
-      return `GRAPPLE ${e.contestResult}`
+      return `GRAPPLE ${e.targetSaveFailed ? "fail" : "save"}`
     case "ESCAPE_GRAPPLE":
-      return `ESCAPE_GRAPPLE ${e.contestResult}`
+      return `ESCAPE_GRAPPLE ${e.escapeSucceeded ? "escaped" : "held"}`
     case "SHOVE":
-      return `SHOVE ${e.choice} ${e.contestResult}`
+      return `SHOVE ${e.choice} ${e.targetSaveFailed ? "fail" : "save"}`
     case "APPLY_DEHYDRATION":
       return `DEHYDRATION${e.halfWater ? " half" : ""}${e.conSaveSucceeded ? " pass" : " fail"}`
     case "STABILIZE":
@@ -80,6 +80,8 @@ function formatEvent(e: DndEvent): string {
     case "SUFFOCATE":
     case "APPLY_STARVATION":
     case "END_TURN":
+    case "ENTER_COMBAT":
+    case "EXIT_COMBAT":
       return e.type
     case "ADD_EFFECT":
       return `ADD_EFFECT ${e.spellId}`

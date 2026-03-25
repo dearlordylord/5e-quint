@@ -110,7 +110,7 @@ export function computeEndTurn(
           dead = true
         } else {
           const df = addDeathFailures(deathFailures, false)
-          deathFailures = df.newFailures
+          deathFailures = deathSaveCount(df.newFailures)
           stable = false
           if (df.isDead) dead = true
         }
@@ -138,6 +138,6 @@ export function computeEndTurn(
     tempHp: tempHp(th),
     dead,
     stable,
-    deathSaves: { successes: deathSuccesses, failures: deathSaveCount(deathFailures) }
+    deathSaves: { successes: deathSuccesses, failures: deathFailures }
   }
 }
