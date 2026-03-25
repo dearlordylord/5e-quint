@@ -103,6 +103,7 @@ module dnd {
     critRange: int,            // minimum d20 roll for critical hit (default 20; Champion 19/18)
     hasEvasion: bool,
     hasUncannyDodge: bool,
+    hasFightingStyleFeature: bool,  // Fighter L1, Paladin L2, Ranger L2
   }
 
   type Feature = FExtraAttack | FExtraAttack2 | FExtraAttack3
@@ -347,6 +348,36 @@ module dnd {
   /// Restore Channel Divinity on short rest: regain 1 use, capped at max.
   pure def pRestoreChannelDivinityShort(charges: int, max: int): int =
     if (charges >= max) charges else charges + 1
+
+  // -- Feat System Framework (SRD 5.2.1) --
+
+  /// Can a character take a Fighting Style feat?
+  pure def pCanTakeFightingStyleFeat(config: CharConfig): bool =
+    config.hasFightingStyleFeature
+
+  /// Can a character take an Epic Boon feat? Requires level 19+.
+  pure def pCanTakeEpicBoon(config: CharConfig): bool =
+    config.level >= 19
+
+  // -- Fighting Style Feat Effects (SRD 5.2.1) --
+
+  /// Archery: +2 to attack rolls with Ranged weapons.
+  pure def pArcheryAttackBonus(styles: Set[FightingStyleFeat], isRanged: bool): int =
+    if (isRanged and styles.contains(FSArchery)) 2 else 0
+
+  /// Defense: +1 AC while wearing Light, Medium, or Heavy armor.
+  pure def pDefenseACBonus(styles: Set[FightingStyleFeat], isWearingArmor: bool): int =
+    if (isWearingArmor and styles.contains(FSDefense)) 1 else 0
+
+  /// Great Weapon Fighting: treat 1 or 2 on a damage die as 3.
+  /// Caller must verify weapon has Two-Handed or Versatile property.
+  pure def pGWFDamageDie(styles: Set[FightingStyleFeat], dieResult: int): int =
+    if (styles.contains(FSGreatWeaponFighting) and dieResult <= 2) 3
+    else dieResult
+
+  /// TWF off-hand damage with Fighting Style: always add ability modifier.
+  pure def pTWFOffHandDamageStyled(diceResult: int, abilityMod: int): int =
+    intMax(0, diceResult + abilityMod)
 
   // ============================================================
   // 6. EQUIPMENT (character/equipment)
@@ -2114,6 +2145,7 @@ module dnd {
     critRange: 20,
     hasEvasion: false,
     hasUncannyDodge: false,
+    hasFightingStyleFeature: true,  // Fighter L1
   }
 
   pure val FRESH_TURN: TurnState = {
