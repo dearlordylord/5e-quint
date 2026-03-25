@@ -435,6 +435,17 @@ module dnd {
   /// End-of-turn damage: caller provides spell, amount, type, and pre-resolved concentration save.
   type EndOfTurnDamage = { spellId: str, damage: int, damageType: DamageType, conSaveSucceeded: bool }
 
+  /// Start-of-turn effect trigger: caller provides pre-resolved per-effect data.
+  type StartOfTurnEffect = {
+    spellId: str,
+    healAmount: int,         // 0 = none
+    tempHpAmount: int,       // 0 = none
+    saveResult: bool,        // true = save succeeded, remove effect
+    damageAmount: int,       // 0 = none
+    damageType: DamageType,
+    conSaveSucceeded: bool   // for concentration check on damage
+  }
+
   type CreatureState = {
     hp: int,
     maxHp: int,
@@ -1509,6 +1520,72 @@ module dnd {
     { creature: r.creature.with("activeEffects", cleaned), slots: r.slots }
   }
 
+  // -- 15.5b START_TURN Processing (TA4) --
+
+  /// Process start-of-turn effects. Only processes effects that survived expiry.
+  /// Mirrors pProcessEndOfTurnDamage for damage/concentration handling.
+  pure def pProcessStartOfTurn(
+    s: CreatureState, ss: SpellSlotState, effects: List[StartOfTurnEffect]
+  ): ConcBreakResult =
+    effects.foldl({ creature: s, slots: ss }, (acc, eff) => {
+      // Only process if the effect survived decrement + expiry
+      if (not(pHasEffect(acc.creature.activeEffects, eff.spellId))) acc
+      else {
+        // Save success: remove effect
+        val s1 = if (eff.saveResult)
+          acc.creature.with("activeEffects", pRemoveEffect(acc.creature.activeEffects, eff.spellId))
+        else acc.creature
+        // Heal
+        val s2 = if (eff.healAmount > 0) pHeal(s1, eff.healAmount) else s1
+        // Temp HP (replace mode)
+        val s3 = if (eff.tempHpAmount > 0) pGrantTempHp(s2, eff.tempHpAmount, false) else s2
+        // Damage + concentration break
+        if (eff.damageAmount > 0) {
+          val s4 = pTakeDamage(s3, eff.damageAmount, eff.damageType, Set(), Set(), Set(), false)
+          val r = pWithConcBreak(acc.slots, acc.creature, s4)
+          val r2 = if (isConcentrating(r.slots)) {
+            val ss2 = pConcentrationCheck(r.slots, eff.conSaveSucceeded)
+            val eff2 = pEffectsOnConcBreak(r.slots, ss2, r.creature.activeEffects)
+            { creature: r.creature.with("activeEffects", eff2), slots: ss2 }
+          } else r
+          r2
+        } else {
+          // No damage — check for concentration break from state change (death from heal overflow, etc.)
+          pWithConcBreak(acc.slots, acc.creature, s3)
+        }
+      }
+    })
+
+  /// Full START_TURN orchestrator: decrement → expiry → death save → effects → turn reset.
+  type StartTurnFullResult = { creature: CreatureState, slots: SpellSlotState, turn: TurnState }
+
+  pure def pStartTurnFull(
+    config: CharConfig,
+    s: CreatureState,
+    ss: SpellSlotState,
+    armorState: ArmorState,
+    callerSpeedModifier: int,
+    isGrappling: bool,
+    grappledTargetTwoSizesSmaller: bool,
+    deathSaveRoll: int,
+    startEffects: List[StartOfTurnEffect]
+  ): StartTurnFullResult = {
+    // 1. Decrement all durations
+    val eff1 = pDecrementDurations(s.activeEffects)
+    // 2. Clear expired AtStartOfTurn
+    val eff2 = pClearExpiredAtPhase(eff1, AtStartOfTurn)
+    val s1 = s.with("activeEffects", eff2)
+    // 3. Death save (if applicable)
+    val s2 = if (s1.hp == 0 and not(s1.stable) and not(s1.dead) and deathSaveRoll > 0)
+      pDeathSave(s1, deathSaveRoll)
+    else s1
+    // 4. Process start-of-turn effects
+    val r = pProcessStartOfTurn(s2, ss, startEffects)
+    // 5. Turn state reset (uses post-processing creature state)
+    val t = pStartTurn(config, r.creature, armorState, callerSpeedModifier, isGrappling, grappledTargetTwoSizesSmaller)
+    { creature: r.creature, slots: r.slots, turn: t }
+  }
+
   // -- 15.6 Casting Validation --
 
   /// Can the creature provide the required spell components?
@@ -2050,10 +2127,31 @@ module dnd {
     nondet callerSpeedMod = (-10).to(10).oneOf()
     nondet isGrappling = Bool.oneOf()
     nondet grappledSmall = Bool.oneOf()
+    nondet deathSaveRoll = D20_RANGE.oneOf()
+    nondet numEffects = 0.to(1).oneOf()
+    nondet effSpellId = SPELL_IDS.oneOf()
+    nondet effHeal = 0.to(5).oneOf()
+    nondet effTempHp = 0.to(5).oneOf()
+    nondet effSaveResult = Bool.oneOf()
+    nondet effDmgAmount = DAMAGE_RANGE.oneOf()
+    nondet effDmgType = DAMAGE_TYPES.oneOf()
+    nondet effConSave = Bool.oneOf()
     if (turnPhase != "waitingForTurn") unchanged
     else {
-      val t1 = pStartTurn(TEST_CONFIG, state, Unarmored, callerSpeedMod, isGrappling, grappledSmall)
-      all { state' = state, turnState' = t1, spellSlots' = spellSlots, turnPhase' = "acting" }
+      val effects: List[StartOfTurnEffect] = if (numEffects == 0) []
+        else [{
+          spellId: effSpellId, healAmount: effHeal, tempHpAmount: effTempHp,
+          saveResult: effSaveResult, damageAmount: effDmgAmount,
+          damageType: effDmgType, conSaveSucceeded: effConSave
+        }]
+      val r = pStartTurnFull(TEST_CONFIG, state, spellSlots, Unarmored,
+        callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, effects)
+      all {
+        state' = r.creature,
+        turnState' = r.turn,
+        spellSlots' = r.slots,
+        turnPhase' = "acting",
+      }
     }
   }
 
@@ -2126,7 +2224,7 @@ module dnd {
   action doStartConcentration = {
     nondet spellId = SPELL_IDS.oneOf()
     nondet duration = EFFECT_DURATION_RANGE.oneOf()
-    if (state.dead) unchanged
+    if (state.dead or isIncapacitated(state)) unchanged
     else {
       val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
       val effects2 = pAddEffect(effects1, spellId, duration, AtEndOfTurn)

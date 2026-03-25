@@ -31,6 +31,8 @@ export function effectiveMaxHp(maxHp: number): number {
   return maxHp
 }
 
+export const EMPTY_DMG_SET: ReadonlySet<DamageType> = new Set()
+
 // --- Damage computation result ---
 
 export interface TakeDamageResult {
@@ -117,6 +119,41 @@ export function addDeathFailures(
   return { isDead: newFailures >= DEATH_SAVE_THRESHOLD, newFailures }
 }
 
+// --- Damage-at-zero-HP state transitions ---
+
+export interface DamageAtZeroUpdate {
+  readonly dead: boolean
+  readonly stable: boolean
+  readonly newDeathFailures: number
+  readonly unconscious?: true
+  readonly prone?: true
+  readonly addIncap?: true
+}
+
+/** Shared logic for damage-at-zero transitions: drop-to-zero, instant death, death failures. */
+export function damageAtZeroTransition(
+  prevHp: number,
+  newHp: number,
+  dmgThrough: number,
+  overflow: number,
+  effMax: number,
+  deathFailures: number,
+  stable: boolean,
+  dead: boolean
+): DamageAtZeroUpdate {
+  if (dmgThrough <= 0) return { dead, stable, newDeathFailures: deathFailures }
+  if (prevHp > 0 && newHp === 0) {
+    if (overflow >= effMax) return { dead: true, stable, newDeathFailures: deathFailures }
+    return { dead, stable: false, newDeathFailures: deathFailures, unconscious: true, prone: true, addIncap: true }
+  }
+  if (prevHp === 0) {
+    if (dmgThrough >= effMax) return { dead: true, stable, newDeathFailures: deathFailures }
+    const df = addDeathFailures(deathFailures, false)
+    return { dead: df.isDead, stable: false, newDeathFailures: df.newFailures }
+  }
+  return { dead, stable, newDeathFailures: deathFailures }
+}
+
 // --- Condition implication logic ---
 
 /** Maps conditions to their incapacitated source. Only conditions that imply incapacitated are listed. */
@@ -129,7 +166,7 @@ const INCAP_SOURCE_MAP: Readonly<Partial<Record<Condition, IncapSource>>> = {
 }
 
 /** Condition boolean field names in context (excludes "incapacitated" which is derived). */
-type ConditionFlag = Exclude<Condition, "incapacitated">
+export type ConditionFlag = Exclude<Condition, "incapacitated">
 
 /** Result of applying or removing a condition. */
 interface ConditionUpdate {

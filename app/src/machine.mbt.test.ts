@@ -459,7 +459,16 @@ const driverSchema = {
   doStartTurn: {
     callerSpeedMod: ITFBigInt,
     isGrappling: z.boolean(),
-    grappledSmall: z.boolean()
+    grappledSmall: z.boolean(),
+    deathSaveRoll: ITFBigInt.optional(),
+    numEffects: ITFBigInt.optional(),
+    effSpellId: z.string().optional(),
+    effHeal: ITFBigInt.optional(),
+    effTempHp: ITFBigInt.optional(),
+    effSaveResult: z.boolean().optional(),
+    effDmgAmount: ITFBigInt.optional(),
+    effDmgType: ITFVariant.optional(),
+    effConSave: z.boolean().optional()
   },
   doUseAction: { at: ITFVariant },
   doUseBonusAction: {},
@@ -587,9 +596,35 @@ const dndDriver = defineDriver(driverSchema, () => {
     doReduceExhaustion: ({ levels }) => {
       send({ type: "REDUCE_EXHAUSTION", levels: Number(levels) })
     },
-    doStartTurn: ({ callerSpeedMod, grappledSmall, isGrappling }) => {
+    doStartTurn: ({
+      callerSpeedMod,
+      deathSaveRoll: dsRoll,
+      effConSave,
+      effDmgAmount,
+      effDmgType,
+      effHeal,
+      effSaveResult,
+      effSpellId,
+      effTempHp,
+      grappledSmall,
+      isGrappling,
+      numEffects
+    }) => {
       // Quint uses TEST_CONFIG: Walk=30, no armor penalty, extraAttack=1
       const BASE_SPEED = 30
+      const effects = !numEffects
+        ? []
+        : [
+            {
+              spellId: effSpellId ?? "",
+              healAmount: Number(effHeal ?? 0),
+              tempHpAmount: Number(effTempHp ?? 0),
+              saveResult: effSaveResult ?? false,
+              damageAmount: Number(effDmgAmount ?? 0),
+              damageType: mapDamageType(effDmgType ?? "Bludgeoning"),
+              conSaveSucceeded: effConSave ?? false
+            }
+          ]
       send({
         type: "START_TURN",
         baseSpeed: BASE_SPEED,
@@ -597,7 +632,9 @@ const dndDriver = defineDriver(driverSchema, () => {
         extraAttacks: 1,
         callerSpeedModifier: Number(callerSpeedMod),
         isGrappling,
-        grappledTargetTwoSizesSmaller: grappledSmall
+        grappledTargetTwoSizesSmaller: grappledSmall,
+        deathSaveRoll: dsRoll != null ? d20Roll(Number(dsRoll)) : undefined,
+        startOfTurnEffects: effects
       })
     },
     doUseAction: ({ at }) => {

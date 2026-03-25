@@ -39,7 +39,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (PHB Ch. 9):** "A round represents about 6 seconds in the game world." Reactions, opportunity attacks, and reaction spells (Shield, Counterspell) are interrupt-style triggers within the round framework, not smaller time quanta. No spell or ability uses a duration shorter than 1 round. The phrase "until the end of this turn" (same-turn, sub-round duration) does not appear anywhere in the rules.
 
-**Changes:** Not yet implemented. See PLAN_APPENDIX.md section 5.
+**Changes:** Duration tracking implemented in TA4.
 
 ## A5: Single-creature turn = 1 round for duration tracking
 
@@ -47,4 +47,20 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis:** This is a simplification. In multi-creature combat, a round is one full pass through the initiative order. An effect cast mid-round by another creature would technically expire at that creature's turn N rounds later, not at our turn. In a single-creature model we only observe our own turns, so each turn = 1 round is the only tractable approach. The caller is responsible for providing correct initial duration values accounting for initiative-order offset if needed.
 
-**Changes:** Not yet implemented. See PLAN_APPENDIX.md section 5.
+**Changes:** Implemented in TA4. `dnd.qnt`: `pStartTurnFull` decrements durations and clears expired effects per cycle. XState: `computeStartTurn` in `machine-startturn.ts` mirrors this.
+
+## A6: Death save precedes start-of-turn effect processing
+
+**Assumption:** At the start of a turn, the death save (if applicable) resolves before any start-of-turn spell effects (heals, damage, temp HP, saves).
+
+**Rules basis (SRD 5.2.1 Rules-Glossary "Death Saving Throw"):** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw." This is a mandatory, first-order rule. Start-of-turn spell effects (e.g., Regenerate's heal, Searing Smite's burn) trigger "at the start of your turn" at the same timing point but are optional/conditional. The death save resolves first because: (a) it is mandatory, (b) a natural 20 changes the creature's conscious state (hp 0→1), which affects subsequent processing, (c) death from 3 failures makes subsequent effects irrelevant.
+
+**Changes:** Implemented in TA4. `dnd.qnt`: `pStartTurnFull` calls `pDeathSave` (step 3) before `pProcessStartOfTurn` (step 4). XState: `computeStartTurn` follows the same order.
+
+## A7: Incapacitated creatures cannot start concentration
+
+**Assumption:** START_CONCENTRATION is blocked when the creature is dead or incapacitated.
+
+**Rules basis (SRD 5.2.1 Rules-Glossary "Incapacitated [Condition]"):** "An Incapacitated creature can't take any action, Bonus Action, or Reaction." Casting a spell (which starts concentration) requires an action or bonus action. Therefore incapacitated creatures cannot start new concentration.
+
+**Changes:** Implemented in TA4. `dnd.qnt`: `doStartConcentration` guarded by `not(isIncapacitated(state))`. XState: `canConcentrate` guard on both START_CONCENTRATION handlers in `machine-states.ts`.

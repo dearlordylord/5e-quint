@@ -21,6 +21,7 @@ import {
 } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import { computeLongRest, computeShortRest, expendSlot } from "#/machine-spells.ts"
+import { computeStartTurn } from "#/machine-startturn.ts"
 import {
   conditionTrackConfig,
   damageTrackConfig,
@@ -155,17 +156,20 @@ export const dndMachine = setup({
     })),
     initTurn: assign(({ context: c, event: e }) => {
       const ev = asStartTurn(e)
+      const { conditions: conds, ...cr } = computeStartTurn(c, ev.deathSaveRoll, ev.startOfTurnEffects)
       const speed = calculateEffectiveSpeed({
         armorPenalty: ev.armorPenalty,
         baseSpeed: ev.baseSpeed,
         callerSpeedModifier: ev.callerSpeedModifier,
         exhaustion: c.exhaustion,
-        grappled: c.grappled,
+        grappled: conds.grappled ?? c.grappled,
         grappledTargetTwoSizesSmaller: ev.grappledTargetTwoSizesSmaller,
         isGrappling: ev.isGrappling,
-        restrained: c.restrained
+        restrained: conds.restrained ?? c.restrained
       })
       return {
+        ...conds,
+        ...cr,
         ...INITIAL_TURN_STATE,
         effectiveSpeed: movementFeet(speed),
         extraAttacksRemaining: ev.extraAttacks,

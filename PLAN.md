@@ -237,7 +237,7 @@ Always available: ADD_EXHAUSTION, REDUCE_EXHAUSTION, GRAPPLE, RELEASE_GRAPPLE, E
 
 - Test: action economy events blocked out of combat; rest events blocked in combat; always-available events work in both; START_TURN only from waitingForTurn
 
-**[TA4] START_TURN Refactoring**
+**[TA4] START_TURN Refactoring** *(done)*
 
 Current: START_TURN accepted from any state (can be spammed). Fix:
 
@@ -298,12 +298,12 @@ All three parity bugs (grapple/shove edition mismatch, concentration consistency
   ✓ [TA1-fix]-Zombie prevention + expiresAt + concentration invariant
        ✓ [TA2]-END_TURN
             ✓ [TA3]-Combat Mode
-                 +--[TA4]-START_TURN Refactoring
+                 ✓ [TA4]-START_TURN Refactoring
 ```
 
 ## Suggested Execution Order
 
-Next: **[TA4]** START_TURN Refactoring
+All core tasks complete. Next: 5.2.1 revision items (see section above) or PLAN_NONCORE.md.
 
 ### Housekeeping (no deps, do anytime)
 

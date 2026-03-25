@@ -942,7 +942,8 @@ function startTurn(
     extraAttacks: opts.extraAttacks ?? 0,
     callerSpeedModifier: opts.callerSpeedModifier ?? 0,
     isGrappling: opts.isGrappling ?? false,
-    grappledTargetTwoSizesSmaller: opts.grappledTargetTwoSizesSmaller ?? false
+    grappledTargetTwoSizesSmaller: opts.grappledTargetTwoSizesSmaller ?? false,
+    startOfTurnEffects: []
   })
 }
 
@@ -1031,7 +1032,8 @@ describe("combat mode separation (TA3)", () => {
       extraAttacks: 0,
       callerSpeedModifier: 0,
       isGrappling: false,
-      grappledTargetTwoSizesSmaller: false
+      grappledTargetTwoSizesSmaller: false,
+      startOfTurnEffects: []
     })
     expect(snap(a).matches({ turnPhase: "outOfCombat" })).toBe(true)
   })

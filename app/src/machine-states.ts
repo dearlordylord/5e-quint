@@ -76,7 +76,8 @@ export const damageTrackConfig = {
       initial: "unstable" as const,
       always: [
         { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
-        { guard: "contextDead" as const, target: "#dnd.damageTrack.dead" }
+        { guard: "contextDead" as const, target: "#dnd.damageTrack.dead" },
+        { guard: "regainedConsciousness" as const, target: "#dnd.damageTrack.alive" }
       ],
       on: {
         HEAL: { target: "#dnd.damageTrack.alive", actions: ["applyHealFromZero", "clearUnconscious"] },
@@ -179,13 +180,21 @@ export const conditionTrackConfig = {
 export const spellcastingConfig = {
   initial: "idle" as const,
   states: {
-    idle: { on: { START_CONCENTRATION: { target: "concentrating", actions: ["startConcentration"] } } },
+    idle: {
+      on: {
+        START_CONCENTRATION: {
+          guard: "canConcentrate" as const,
+          target: "concentrating",
+          actions: ["startConcentration"]
+        }
+      }
+    },
     concentrating: {
       always: { guard: "shouldBreakConcentration" as const, target: "idle", actions: ["breakConcentration"] },
       on: {
         BREAK_CONCENTRATION: { target: "idle", actions: ["breakConcentration"] },
         CONCENTRATION_CHECK: { actions: ["concentrationCheck"] },
-        START_CONCENTRATION: { actions: ["startConcentration"] }
+        START_CONCENTRATION: { guard: "canConcentrate" as const, actions: ["startConcentration"] }
       }
     }
   }

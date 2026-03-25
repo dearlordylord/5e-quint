@@ -1,6 +1,13 @@
-import { addDeathFailures, addIncapSource, computeTakeDamage, removeConditionUpdate } from "#/machine-helpers.ts"
-import type { EndTurnDamage, EndTurnSave } from "#/machine-types.ts"
-import type { ActiveEffect, Condition, DamageType, DeathSaves, ExpiryPhase, HP, IncapSource, TempHP } from "#/types.ts"
+import {
+  addIncapSource,
+  computeTakeDamage,
+  type ConditionFlag,
+  damageAtZeroTransition,
+  EMPTY_DMG_SET,
+  removeConditionUpdate
+} from "#/machine-helpers.ts"
+import type { EndTurnDamage, EndTurnSave, TurnPhaseCtx, TurnPhaseResult } from "#/machine-types.ts"
+import type { ActiveEffect, ExpiryPhase } from "#/types.ts"
 import { deathSaveCount, hp, tempHp } from "#/types.ts"
 
 // --- Active effect helpers ---
@@ -20,39 +27,11 @@ export function removeAe(aes: ReadonlyArray<ActiveEffect>, spellId: string): Rea
 
 // --- END_TURN processing ---
 
-type ConditionFlag = Exclude<Condition, "incapacitated">
-
-export interface EndTurnResult {
-  readonly conditions: Readonly<Partial<Record<ConditionFlag, boolean>>>
-  readonly activeEffects: ReadonlyArray<ActiveEffect>
-  readonly concentrationSpellId: string
-  readonly hp: HP
-  readonly incapacitatedSources: ReadonlySet<IncapSource>
-  readonly tempHp: TempHP
-  readonly dead: boolean
-  readonly stable: boolean
-  readonly deathSaves: DeathSaves
-}
-
-interface EndTurnCtx {
-  readonly hp: number
-  readonly maxHp: number
-  readonly tempHp: number
-  readonly concentrationSpellId: string
-  readonly activeEffects: ReadonlyArray<ActiveEffect>
-  readonly incapacitatedSources: ReadonlySet<IncapSource>
-  readonly dead: boolean
-  readonly stable: boolean
-  readonly deathSaves: DeathSaves
-}
-
-const EMPTY_DMG_SET: ReadonlySet<DamageType> = new Set()
-
 export function computeEndTurn(
-  ctx: EndTurnCtx,
+  ctx: TurnPhaseCtx,
   saves: ReadonlyArray<EndTurnSave>,
   damages: ReadonlyArray<EndTurnDamage>
-): EndTurnResult {
+): TurnPhaseResult {
   const conditions: Partial<Record<ConditionFlag, boolean>> = {}
   let incap = ctx.incapacitatedSources
   let conc = ctx.concentrationSpellId
@@ -60,7 +39,7 @@ export function computeEndTurn(
   let th = ctx.tempHp
   let dead = ctx.dead
   let stable = ctx.stable
-  let deathFailures = ctx.deathSaves.failures
+  let deathFailures = ctx.deathSaves.failures as number
   const deathSuccesses = ctx.deathSaves.successes
 
   // Collect effect IDs to remove (saves + concentration break)
@@ -93,29 +72,15 @@ export function computeEndTurn(
     h = r.newHp
     th = r.newTempHp
 
-    if (r.dmgThrough > 0) {
-      if (prevHp > 0 && h === 0) {
-        // Dropping from alive to 0 HP
-        if (r.overflow >= r.effMax) {
-          dead = true
-        } else {
-          conditions.unconscious = true
-          conditions.prone = true
-          incap = addIncapSource(incap, "unconscious")
-          stable = false
-        }
-      } else if (prevHp === 0) {
-        // Already at 0 HP: death save failures or instant death
-        if (r.dmgThrough >= r.effMax) {
-          dead = true
-        } else {
-          const df = addDeathFailures(deathFailures, false)
-          deathFailures = deathSaveCount(df.newFailures)
-          stable = false
-          if (df.isDead) dead = true
-        }
-      }
+    const dz = damageAtZeroTransition(prevHp, h, r.dmgThrough, r.overflow, r.effMax, deathFailures, stable, dead)
+    dead = dz.dead
+    stable = dz.stable
+    deathFailures = dz.newDeathFailures
+    if (dz.unconscious) {
+      conditions.unconscious = true
+      conditions.prone = true
     }
+    if (dz.addIncap) incap = addIncapSource(incap, "unconscious")
 
     // Concentration handling
     if (conc && (dead || (h === 0 && prevHp > 0) || !dmg.conSaveSucceeded)) {
@@ -138,6 +103,6 @@ export function computeEndTurn(
     tempHp: tempHp(th),
     dead,
     stable,
-    deathSaves: { successes: deathSuccesses, failures: deathFailures }
+    deathSaves: { successes: deathSuccesses, failures: deathSaveCount(deathFailures) }
   }
 }

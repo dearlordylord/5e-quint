@@ -206,7 +206,8 @@ export function EventPanel({
               extraAttacks: 1,
               callerSpeedModifier: 0,
               isGrappling: false,
-              grappledTargetTwoSizesSmaller: false
+              grappledTargetTwoSizesSmaller: false,
+              startOfTurnEffects: []
             })
           }
         />

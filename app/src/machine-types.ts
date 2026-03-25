@@ -1,3 +1,4 @@
+import type { ConditionFlag } from "#/machine-helpers.ts"
 import type {
   ActionType,
   ActiveEffect,
@@ -16,6 +17,32 @@ import type {
   SpellSlots,
   TempHP
 } from "#/types.ts"
+
+// --- Shared turn-processing types (used by both START_TURN and END_TURN) ---
+
+export interface TurnPhaseCtx {
+  readonly hp: number
+  readonly maxHp: number
+  readonly tempHp: number
+  readonly concentrationSpellId: string
+  readonly activeEffects: ReadonlyArray<ActiveEffect>
+  readonly incapacitatedSources: ReadonlySet<IncapSource>
+  readonly dead: boolean
+  readonly stable: boolean
+  readonly deathSaves: DeathSaves
+}
+
+export interface TurnPhaseResult {
+  readonly conditions: Readonly<Partial<Record<ConditionFlag, boolean>>>
+  readonly activeEffects: ReadonlyArray<ActiveEffect>
+  readonly concentrationSpellId: string
+  readonly hp: HP
+  readonly incapacitatedSources: ReadonlySet<IncapSource>
+  readonly tempHp: TempHP
+  readonly dead: boolean
+  readonly stable: boolean
+  readonly deathSaves: DeathSaves
+}
 
 // --- Machine input ---
 
@@ -90,6 +117,16 @@ export interface EndTurnDamage {
   readonly conSaveSucceeded: boolean
 }
 
+export interface StartTurnEffect {
+  readonly spellId: string
+  readonly healAmount: number
+  readonly tempHpAmount: number
+  readonly saveResult: boolean
+  readonly damageAmount: number
+  readonly damageType: DamageType
+  readonly conSaveSucceeded: boolean
+}
+
 export type DndEvent =
   | {
       readonly type: "TAKE_DAMAGE"
@@ -117,6 +154,8 @@ export type DndEvent =
       readonly callerSpeedModifier: number
       readonly isGrappling: boolean
       readonly grappledTargetTwoSizesSmaller: boolean
+      readonly deathSaveRoll?: D20Roll
+      readonly startOfTurnEffects: ReadonlyArray<StartTurnEffect>
     }
   | {
       readonly type: "END_TURN"
