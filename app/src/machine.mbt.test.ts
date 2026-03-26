@@ -422,6 +422,7 @@ type EventActionMap = {
   REMOVE_EFFECT: "doRemoveEffect"
   ENTER_COMBAT: "doEnterCombat"
   EXIT_COMBAT: "doExitCombat"
+  GRANT_EXTRA_ACTION: "doGrantExtraAction"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap

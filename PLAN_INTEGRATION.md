@@ -18,7 +18,7 @@
 |---------|-------|------|---------|-------|---------|
 | Rage | 1 | T10 ✓ | ✓ | ✓ | ongoing toggle |
 | Unarmored Defense | 1 | — | — | — | passive modifier |
-| Reckless Attack | 2 | T11 ✓ | ✓ | ✓ | declaration |
+| Reckless Attack | 2 | T11 ✓ | ✓ | ✓ | ongoing toggle |
 | Danger Sense | 2 | T12 | — | — | passive modifier |
 | Primal Knowledge | 3 | T12 | — | — | passive modifier |
 | Extra Attack | 5 | core | ✓ | ✓ | config-only |
@@ -62,6 +62,7 @@
 | Feature | Level | Task | Pure Fn | Wired | Pattern |
 |---------|-------|------|---------|-------|---------|
 | Expertise | 1,6 | — | — | — | config-only |
+| Thieves' Cant | 1 | — | — | — | config-only |
 | Sneak Attack | 1 | T30 ✓ | ✓ | — | conditional damage |
 | Cunning Action | 2 | T31 ✓ | ✓ | — | extra action |
 | Steady Aim | 3 | T30 ✓ | ✓ | — | one-shot resource |
@@ -96,6 +97,7 @@
 | Empowered Strikes | 6 | T44 | — | — | passive modifier |
 | Evasion | 7 | T03 ✓ | ✓ | — | reaction |
 | Acrobatic Movement | 9 | T44 | — | — | passive modifier |
+| Heightened Focus | 10 | T42 ✓ | ✓ | — | resource pool |
 | Self-Restoration | 10 | T44 | — | — | passive modifier |
 | Deflect Energy | 13 | T45 | ✓ | — | passive modifier |
 | Disciplined Survivor | 14 | T44 | ✓ | — | passive modifier |
@@ -116,18 +118,22 @@
 |---------|-------|------|---------|-------|---------|
 | Spellcasting | 1 | T01 ✓ | — | — | spell-dependent |
 | Favored Enemy | 1 | T70 | — | — | one-shot resource |
+| Weapon Mastery | 1 | T170 ✓ | — | — | config-only |
 | Deft Explorer | 2 | T70 | — | — | passive modifier |
 | Fighting Style | 2 | T05 ✓ | — | — | config-only |
 | Extra Attack | 5 | core | ✓ | ✓ | config-only |
 | Roving | 6 | T70 | — | — | passive modifier |
 | Expertise | 9 | T70 | — | — | config-only |
 | Tireless | 10 | T70 | — | — | one-shot resource |
+| Relentless Hunter | 13 | T70 | — | — | passive modifier |
 | Nature's Veil | 14 | T70 | — | — | one-shot resource |
+| Precise Hunter | 17 | T70 | — | — | passive modifier |
+| Feral Senses | 18 | T70 | — | — | passive modifier |
 | Foe Slayer | 20 | T70 | — | — | passive modifier |
 | **Hunter: Hunter's Prey** | 3 | T71 | — | — | conditional damage |
 | **Hunter: Defensive Tactics** | 7 | T71 | — | — | passive modifier |
-| **Hunter: Multiattack** | 11 | T71 | — | — | extra action |
-| **Hunter: Superior Defense** | 15 | T71 | — | — | reaction |
+| **Hunter: Superior Hunter's Prey** | 11 | T71 | — | — | conditional damage |
+| **Hunter: Superior Hunter's Defense** | 15 | T71 | — | — | reaction |
 
 ### Paladin
 
@@ -137,12 +143,14 @@
 | Lay on Hands | 1 | T60 ✓ | ✓ | — | resource pool |
 | Paladin's Smite | 2 | T61 ✓ | ✓ | — | one-shot resource |
 | Channel Divinity | 3 | T07 ✓ | ✓ | — | resource pool |
+| Faithful Steed | 5 | T62 | — | — | spell-dependent |
 | Extra Attack | 5 | core | ✓ | ✓ | config-only |
 | Aura of Protection | 6 | T62 | — | — | passive modifier |
 | Abjure Foes | 9 | T62 | ✓ | — | one-shot resource |
 | Aura of Courage | 10 | T62 | — | — | passive modifier |
 | Radiant Strikes | 11 | T62 | ✓ | — | passive modifier |
 | Restoring Touch | 14 | T62 | — | — | one-shot resource |
+| Aura Expansion | 18 | T62 | — | — | config-only |
 | **Devotion: Sacred Weapon** | 3 | T63 | — | — | ongoing toggle |
 | **Devotion: Aura of Devotion** | 7 | T63 | — | — | passive modifier |
 | **Devotion: Smite of Protection** | 15 | T63 | — | — | reaction |
@@ -159,6 +167,8 @@
 | Sear Undead | 5 | T90 | — | — | passive modifier |
 | Blessed Strikes | 7 | T90 | — | — | passive modifier |
 | Divine Intervention | 10 | T90 | — | — | one-shot resource |
+| Improved Blessed Strikes | 14 | T90 | — | — | passive modifier |
+| Greater Divine Intervention | 20 | T90 | — | — | one-shot resource |
 | **Life: Disciple of Life** | 3 | T91 | — | — | passive modifier |
 | **Life: Preserve Life** | 3 | T91 | — | — | one-shot resource |
 | **Life: Blessed Healer** | 6 | T91 | — | — | passive modifier |
@@ -169,11 +179,13 @@
 | Feature | Level | Task | Pure Fn | Wired | Pattern |
 |---------|-------|------|---------|-------|---------|
 | Spellcasting | 1 | T01 ✓ | — | — | spell-dependent |
+| Druidic | 1 | — | — | — | config-only |
 | Primal Order | 1 | T100 ✓ | ✓ | — | config-only |
 | Wild Shape | 2 | T100 ✓ | ✓ | — | resource pool |
 | Wild Companion | 2 | T100 ✓ | ✓ | — | one-shot resource |
 | Wild Resurgence | 5 | T100 ✓ | ✓ | — | one-shot resource |
 | Elemental Fury | 7 | T100 ✓ | ✓ | — | passive modifier |
+| Improved Elemental Fury | 15 | T100 ✓ | ✓ | — | passive modifier |
 | Beast Spells | 18 | T100 ✓ | ✓ | — | ongoing toggle |
 | Archdruid | 20 | T100 ✓ | ✓ | — | resource pool |
 | **Land: Land's Aid** | 3 | T101 | — | — | spell-dependent |
@@ -190,6 +202,7 @@
 | Font of Magic | 2 | T110 ✓ | ✓ | — | resource pool |
 | Metamagic (10 options) | 2 | T111 | — | — | resource pool |
 | Sorcerous Restoration | 5 | T110 ✓ | ✓ | — | one-shot resource |
+| Sorcery Incarnate | 7 | T110 ✓ | ✓ | — | ongoing toggle |
 | Arcane Apotheosis | 20 | T110 ✓ | ✓ | — | passive modifier |
 | **Draconic: Resilience** | 3 | T112 | — | — | passive modifier |
 | **Draconic: Elemental Affinity** | 6 | T112 | — | — | spell-dependent |
@@ -206,7 +219,7 @@
 | Contact Patron | 9 | T120 | — | — | spell-dependent |
 | Mystic Arcanum | 11+ | T120 | — | — | spell-dependent |
 | Eldritch Master | 20 | T120 | — | — | one-shot resource |
-| **Fiend: Dark One's Blessing** | 1 | T122 | — | — | reaction |
+| **Fiend: Dark One's Blessing** | 3 | T122 | — | — | passive modifier |
 | **Fiend: Dark One's Own Luck** | 6 | T122 | — | — | one-shot resource |
 | **Fiend: Fiendish Resilience** | 10 | T122 | — | — | passive modifier |
 | **Fiend: Hurl Through Hell** | 14 | T122 | — | — | one-shot resource |
@@ -216,13 +229,15 @@
 | Feature | Level | Task | Pure Fn | Wired | Pattern |
 |---------|-------|------|---------|-------|---------|
 | Spellcasting | 1 | T01 ✓ | — | — | spell-dependent |
+| Ritual Adept | 1 | T130 | — | — | config-only |
 | Arcane Recovery | 1 | T130 | — | — | one-shot resource |
 | Scholar | 2 | T130 | — | — | config-only |
 | Memorize Spell | 5 | T130 | — | — | ongoing toggle |
 | Spell Mastery | 18 | T130 | — | — | passive modifier |
 | Signature Spells | 20 | T130 | — | — | spell-dependent |
+| **Evoker: Evocation Savant** | 3 | T131 | — | — | config-only |
+| **Evoker: Potent Cantrip** | 3 | T131 | — | — | passive modifier |
 | **Evoker: Sculpt Spells** | 6 | T131 | — | — | spell-dependent |
-| **Evoker: Potent Cantrip** | 6 | T131 | — | — | passive modifier |
 | **Evoker: Empowered Evocation** | 10 | T131 | — | — | spell-dependent |
 | **Evoker: Overchannel** | 14 | T131 | — | — | one-shot resource |
 
@@ -238,7 +253,10 @@
 | Countercharm | 7 | T80 | — | — | reaction |
 | Superior Inspiration | 18 | T80 | — | — | passive modifier |
 | Words of Creation | 20 | T80 | — | — | spell-dependent |
+| Magical Secrets | 10 | — | — | — | spell-dependent |
+| **Lore: Bonus Proficiencies** | 3 | T81 | — | — | config-only |
 | **Lore: Cutting Words** | 3 | T81 | — | — | reaction |
+| **Lore: Magical Discoveries** | 6 | T81 | — | — | spell-dependent |
 | **Lore: Peerless Skill** | 14 | T81 | — | — | passive modifier |
 
 ---
@@ -264,37 +282,37 @@ Proficiency rules per class, attack resolution integration.
 
 ## Integration Pattern Groups
 
-### Pattern: Passive Modifier (35 features — most common)
+### Pattern: Passive Modifier (~55 features — most common)
 Examples: Danger Sense, Fast Movement, Evasion, Reliable Talent, Jack of All Trades, Unarmored Defense
 **Machine interaction:** None. Computed at query time by bridge functions.
 **Integration:** Add query functions to bridge, expose on hook. Batch-implementable.
 
-### Pattern: One-Shot Resource (15 features)
+### Pattern: One-Shot Resource (~29 features)
 Examples: Second Wind, Tactical Mind, Indomitable, Relentless Rage, Stroke of Luck, Arcane Recovery
 **Machine interaction:** Sends existing events (HEAL, USE_BONUS_ACTION, etc.)
 **Integration:** Already validated (Second Wind). Mechanical to add more.
 
-### Pattern: Ongoing Toggle (8 features)
+### Pattern: Ongoing Toggle (~10 features)
 Examples: Rage, Innate Sorcery, Sacred Weapon, Wild Shape, Beast Spells, Superior Defense
 **Machine interaction:** May send BREAK_CONCENTRATION; resistance/advantage via query.
 **Integration:** Already validated (Rage). Similar pattern for each.
 
-### Pattern: Reaction (8 features)
+### Pattern: Reaction (~10 features)
 Examples: Uncanny Dodge, Deflect Attacks, Slow Fall, Retaliation, Countercharm, Cutting Words
 **Machine interaction:** Sends USE_REACTION.
 **Integration:** New pattern — not yet validated. Priority for next wire-up.
 
-### Pattern: Resource Pool (10 features)
+### Pattern: Resource Pool (~16 features)
 Examples: Focus Points, Lay on Hands, Sorcery Points, Bardic Inspiration, Channel Divinity
 **Machine interaction:** Various (HEAL, USE_BONUS_ACTION, conditions).
 **Integration:** Similar to Fighter charges but with multiple consumers per pool.
 
-### Pattern: Conditional Damage (12 features)
+### Pattern: Conditional Damage (~11 features)
 Examples: Sneak Attack, Brutal Strike, Hunter's Prey, Stunning Strike, Divine Smite
 **Machine interaction:** Modifies damage in TAKE_DAMAGE events.
 **Integration:** Not yet wired — pure functions exist but bridge needs damage composition.
 
-### Pattern: Extra Action (6 features)
+### Pattern: Extra Action (~7 features)
 Examples: Action Surge, Cunning Action, Focus Actions, Thief's Reflexes
 **Machine interaction:** GRANT_EXTRA_ACTION or USE_BONUS_ACTION.
 **Integration:** Already validated (Action Surge).
@@ -334,10 +352,10 @@ Features that have pure functions but aren't wired yet. Mechanical work — add 
 
 | Metric | Count |
 |--------|-------|
-| Total SRD class features | ~200 |
+| Total SRD class features (tables above) | ~175 |
 | Pure functions implemented | ~170 exports across 7 files |
 | Features wired (integration layer) | 6 (Rage, Reckless, Second Wind, Action Surge + queries) |
 | Features with pure fns but not wired | ~50 |
-| Features not started | ~80 |
+| Features not started | ~85 |
 | Classes with no implementation file | 5 (Ranger, Bard, Cleric, Warlock, Wizard) |
 | Incomplete tasks in PLAN_NONCORE.md | 42 |

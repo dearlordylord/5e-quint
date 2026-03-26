@@ -103,24 +103,24 @@ describe("lay on hands", () => {
 
   describe("cure conditions", () => {
     it("cure costs 5 from pool", () => {
-      const state = { hp: 20, maxHp: 20, layOnHandsPool: 25, conditions: ["poisoned"] }
+      const state = { hp: 20, maxHp: 20, layOnHandsPool: 25, conditions: ["poisoned"] as const }
       const result = pLayOnHandsCure(state, "poisoned")
       expect(result.layOnHandsPool).toBe(20)
       expect(result.conditionRemoved).toBe("poisoned")
     })
 
     it("can cure poisoned condition", () => {
-      const state = { hp: 20, maxHp: 20, layOnHandsPool: 10, conditions: ["poisoned"] }
+      const state = { hp: 20, maxHp: 20, layOnHandsPool: 10, conditions: ["poisoned"] as const }
       expect(canLayOnHandsCure(state, "poisoned", 1)).toBe(true)
     })
 
     it("can't cure if pool < 5", () => {
-      const state = { hp: 20, maxHp: 20, layOnHandsPool: 4, conditions: ["poisoned"] }
+      const state = { hp: 20, maxHp: 20, layOnHandsPool: 4, conditions: ["poisoned"] as const }
       expect(canLayOnHandsCure(state, "poisoned", 1)).toBe(false)
     })
 
     it("can't cure non-poisoned conditions before level 14", () => {
-      const state = { hp: 20, maxHp: 20, layOnHandsPool: 25, conditions: ["blinded"] }
+      const state = { hp: 20, maxHp: 20, layOnHandsPool: 25, conditions: ["blinded"] as const }
       expect(canLayOnHandsCure(state, "blinded", 10)).toBe(false)
     })
 
@@ -148,7 +148,7 @@ describe("lay on hands", () => {
     })
 
     it("can cure frightened at level 14", () => {
-      const state = { hp: 20, maxHp: 20, layOnHandsPool: 25, conditions: ["frightened"] }
+      const state = { hp: 20, maxHp: 20, layOnHandsPool: 25, conditions: ["frightened"] as const }
       expect(canLayOnHandsCure(state, "frightened", 14)).toBe(true)
     })
   })
