@@ -13,6 +13,8 @@ import {
   fighterShortRest,
   secondWindMaxCharges
 } from "#/features/class-fighter.ts"
+import { pExpendFocus, pInitFocusPool, pRestoreFocus, pRestoreFocusLongRest } from "#/features/class-monk.ts"
+import { layOnHandsPoolMax, paladinLongRest } from "#/features/class-paladin.ts"
 
 export interface FeatureConfig {
   readonly className: string
@@ -40,9 +42,23 @@ export interface BarbarianFeatureState {
   readonly intimidatingPresenceUsed: boolean
 }
 
+export interface MonkFeatureState {
+  readonly focusPoints: number
+  readonly focusMax: number
+  readonly uncannyMetabolismUsed: boolean
+}
+
+export interface PaladinFeatureState {
+  readonly layOnHandsPool: number
+  readonly layOnHandsMax: number
+  readonly smiteFreeUsed: boolean
+}
+
 export interface FeatureState {
   readonly fighter?: FighterFeatureState
   readonly barbarian?: BarbarianFeatureState
+  readonly monk?: MonkFeatureState
+  readonly paladin?: PaladinFeatureState
 }
 
 export type FeatureAction =
@@ -56,6 +72,15 @@ export type FeatureAction =
   | { readonly type: "BERSERKER_APPLY_FRENZY" }
   | { readonly type: "BERSERKER_USE_RETALIATION" }
   | { readonly type: "BERSERKER_USE_INTIMIDATING_PRESENCE" }
+  | { readonly type: "MONK_EXPEND_FOCUS"; readonly cost: number }
+  | {
+      readonly type: "MONK_USE_UNCANNY_METABOLISM"
+      readonly focusPoints: number
+      readonly uncannyMetabolismUsed: boolean
+    }
+  | { readonly type: "PALADIN_LAY_ON_HANDS"; readonly poolAfter: number }
+  | { readonly type: "PALADIN_LAY_ON_HANDS_CURE"; readonly poolAfter: number }
+  | { readonly type: "PALADIN_SMITE_FREE" }
   | { readonly type: "NOTIFY_SHORT_REST" }
   | { readonly type: "NOTIFY_LONG_REST" }
   | { readonly type: "NOTIFY_START_TURN" }
@@ -115,6 +140,26 @@ export function createInitialFeatureState(config: FeatureConfig): FeatureState {
         recklessThisTurn: false,
         frenzyUsedThisTurn: false,
         intimidatingPresenceUsed: false
+      }
+    }
+  }
+  if (config.className === "monk") {
+    const pool = pInitFocusPool(config.level)
+    return {
+      monk: {
+        focusPoints: pool.focusPoints,
+        focusMax: pool.focusMax,
+        uncannyMetabolismUsed: pool.uncannyMetabolismUsed
+      }
+    }
+  }
+  if (config.className === "paladin") {
+    const max = layOnHandsPoolMax(config.level)
+    return {
+      paladin: {
+        layOnHandsPool: max,
+        layOnHandsMax: max,
+        smiteFreeUsed: false
       }
     }
   }
@@ -255,6 +300,97 @@ function reduceBarbarian(state: FeatureState, action: FeatureAction, config: Fea
   }
 }
 
+function reduceMonk(state: FeatureState, action: FeatureAction, _config: FeatureConfig): FeatureState {
+  if (!state.monk) return state
+  const m = state.monk
+
+  switch (action.type) {
+    case "MONK_EXPEND_FOCUS": {
+      const result = pExpendFocus(
+        { focusPoints: m.focusPoints, focusMax: m.focusMax, uncannyMetabolismUsed: m.uncannyMetabolismUsed },
+        action.cost
+      )
+      if (!result.success) return state
+      return { ...state, monk: { ...m, focusPoints: result.focusPoints } }
+    }
+
+    case "MONK_USE_UNCANNY_METABOLISM":
+      return {
+        ...state,
+        monk: { ...m, focusPoints: action.focusPoints, uncannyMetabolismUsed: action.uncannyMetabolismUsed }
+      }
+
+    case "NOTIFY_SHORT_REST": {
+      const restored = pRestoreFocus({
+        focusPoints: m.focusPoints,
+        focusMax: m.focusMax,
+        uncannyMetabolismUsed: m.uncannyMetabolismUsed
+      })
+      return {
+        ...state,
+        monk: {
+          focusPoints: restored.focusPoints,
+          focusMax: restored.focusMax,
+          uncannyMetabolismUsed: restored.uncannyMetabolismUsed
+        }
+      }
+    }
+
+    case "NOTIFY_LONG_REST": {
+      const restored = pRestoreFocusLongRest({
+        focusPoints: m.focusPoints,
+        focusMax: m.focusMax,
+        uncannyMetabolismUsed: m.uncannyMetabolismUsed
+      })
+      return {
+        ...state,
+        monk: {
+          focusPoints: restored.focusPoints,
+          focusMax: restored.focusMax,
+          uncannyMetabolismUsed: restored.uncannyMetabolismUsed
+        }
+      }
+    }
+
+    default:
+      return state
+  }
+}
+
+function reducePaladin(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
+  if (!state.paladin) return state
+  const p = state.paladin
+
+  switch (action.type) {
+    case "PALADIN_LAY_ON_HANDS":
+      return { ...state, paladin: { ...p, layOnHandsPool: action.poolAfter } }
+
+    case "PALADIN_LAY_ON_HANDS_CURE":
+      return { ...state, paladin: { ...p, layOnHandsPool: action.poolAfter } }
+
+    case "PALADIN_SMITE_FREE":
+      return { ...state, paladin: { ...p, smiteFreeUsed: true } }
+
+    case "NOTIFY_START_TURN":
+      return state
+
+    case "NOTIFY_LONG_REST": {
+      const rest = paladinLongRest(config.level)
+      return {
+        ...state,
+        paladin: {
+          ...p,
+          layOnHandsPool: rest.layOnHandsPool,
+          smiteFreeUsed: false
+        }
+      }
+    }
+
+    default:
+      return state
+  }
+}
+
 export function featureReducer(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
   if (action.type === "RESET") {
     return createInitialFeatureState(config)
@@ -263,5 +399,7 @@ export function featureReducer(state: FeatureState, action: FeatureAction, confi
   let result = state
   result = reduceFighter(result, action, config)
   result = reduceBarbarian(result, action, config)
+  result = reduceMonk(result, action, config)
+  result = reducePaladin(result, action, config)
   return result
 }
