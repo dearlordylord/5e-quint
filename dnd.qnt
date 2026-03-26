@@ -1388,8 +1388,8 @@ module dnd {
 
   // -- 14.3 Flying Movement --
 
-  /// PHB: flying creature falls if knocked prone, speed reduced to 0,
-  /// or otherwise deprived of ability to move — unless it has hover
+  /// PHB: flying creature falls if it has the Incapacitated or Prone
+  /// condition, or its fly speed is reduced to 0 — unless it can hover
   /// or is held aloft by magic (e.g. fly spell).
   /// Returns true if the creature falls.
   pure def pFlyingCreatureFalls(
@@ -1399,7 +1399,7 @@ module dnd {
     heldAloftByMagic: bool
   ): bool =
     if (hasHover or heldAloftByMagic) false
-    else creature.prone or effectiveSpeed == 0
+    else creature.prone or isIncapacitated(creature) or effectiveSpeed == 0
 
   // -- 14.4 Speed Type Switching --
 
