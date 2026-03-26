@@ -8,12 +8,12 @@ The core combat rules of D&D 5e — conditions, action economy, spellcasting, at
 
 ```mermaid
 graph TD
-    SRD["SRD 5.2.1 — CC-BY-4.0 rules corpus by Wizards of the Coast"] -.->|rules trace to| SPEC
+    SRD["<a href='https://www.dndbeyond.com/resources/1781-systems-reference-document-srd'>SRD 5.2.1</a> — CC-BY-4.0 rules corpus by Wizards of the Coast"] -.->|rules trace to| SPEC
     SRD -.->|class features trace to| FEATURES
     QA[QA corpus — community Q&A] -.->|generates assertions| TEST
-    SPEC["dnd.qnt — Quint spec of core game 'physics'"] --> TEST[quint test — unit tests]
+    SPEC["dnd.qnt — <a href='https://github.com/informalsystems/quint'>Quint</a> spec of core game 'physics'"] --> TEST[quint test — unit tests]
     SPEC --> TRACES[quint run — random execution traces]
-    TRACES --> MBT[MBT bridge]
+    TRACES --> MBT["<a href='https://github.com/dearlordylord/quint-connect-ts'>MBT bridge</a>"]
     MBT -->|field-by-field comparison| XSTATE["<a href='https://xstate.js.org/'>XState</a>"]
     XSTATE --> FEATURES[class feature pure functions]
     XSTATE --> UI[React UI]
@@ -62,7 +62,7 @@ Quint generates random execution traces (sequences of actions like "start turn, 
 
 Refactors, new features, and bug fixes in the TypeScript code are checked against the formal spec automatically. If the implementation diverges from the spec, you'll know.
 
-The bridge uses [`@firfi/quint-connect`](https://github.com/nicothin/quint-connect) to parse Quint traces and map them to XState events.
+The bridge uses [`@firfi/quint-connect`](https://github.com/dearlordylord/quint-connect-ts) to parse Quint traces and map them to XState events.
 
 ## Running it
 
