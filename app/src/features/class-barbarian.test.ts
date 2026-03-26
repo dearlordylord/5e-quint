@@ -11,7 +11,6 @@ import {
   availableBrutalStrikeEffects,
   brutalStrikeDamageDice,
   brutalStrikeEffectCount,
-  canActWhileSurprised,
   canApplyFrenzy,
   canCastWhileRaging,
   canEnterRage,
@@ -331,10 +330,10 @@ describe("rage", () => {
       expect(result.persistentRageUsed).toBe(true)
     })
 
-    it("should not regain uses if charges > 0", () => {
+    it("should regain all uses at Initiative even with charges remaining", () => {
       const result = pPersistentRageOnInitiative(2, 5, false)
-      expect(result.newCharges).toBe(2)
-      expect(result.persistentRageUsed).toBe(false)
+      expect(result.newCharges).toBe(5)
+      expect(result.persistentRageUsed).toBe(true)
     })
 
     it("should not regain uses if already used (once per Long Rest)", () => {
@@ -385,23 +384,19 @@ describe("reckless attack", () => {
 
 describe("brutal strike", () => {
   it("should not be available below level 9", () => {
-    expect(canUseBrutalStrike(true, 8, true, true)).toBe(false)
+    expect(canUseBrutalStrike(true, 8, true)).toBe(false)
   })
 
-  it("should be available at level 9 with reckless STR melee", () => {
-    expect(canUseBrutalStrike(true, 9, true, true)).toBe(true)
+  it("should be available at level 9 with reckless STR attack", () => {
+    expect(canUseBrutalStrike(true, 9, true)).toBe(true)
   })
 
   it("should not be available without reckless attack", () => {
-    expect(canUseBrutalStrike(false, 9, true, true)).toBe(false)
+    expect(canUseBrutalStrike(false, 9, true)).toBe(false)
   })
 
   it("should not be available for non-STR attacks", () => {
-    expect(canUseBrutalStrike(true, 9, false, true)).toBe(false)
-  })
-
-  it("should not be available for ranged attacks", () => {
-    expect(canUseBrutalStrike(true, 9, true, false)).toBe(false)
+    expect(canUseBrutalStrike(true, 9, false)).toBe(false)
   })
 
   describe("damage dice", () => {
@@ -719,13 +714,6 @@ describe("feral instinct (L7)", () => {
     expect(hasFeralInstinct(6)).toBe(false)
   })
 
-  it("should allow acting while surprised at L7+", () => {
-    expect(canActWhileSurprised(7)).toBe(true)
-  })
-
-  it("should not allow acting while surprised below L7", () => {
-    expect(canActWhileSurprised(6)).toBe(false)
-  })
 })
 
 // --- Instinctive Pounce Tests ---
