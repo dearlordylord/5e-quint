@@ -132,7 +132,7 @@ Define `SpellEffectType` sum type and `SpellData` record (name, level, school, c
 ```
 [T10] Rage (P1) -> deps: [T01]  ✓ done
 [T11] Reckless Attack (P1) -> deps: [T01]  ✓ done
-[T12] Barbarian Passives (P2) -> deps: [T01]
+[T12] Barbarian Passives (P2) -> deps: [T01]  ✓ done
 [T13] Berserker (P2) -> deps: [T10]  ✓ done
 ```
 
@@ -181,7 +181,7 @@ SRD 5.2.1: completely revised. Frenzy is now extra damage (not a bonus attack). 
 [T20] Second Wind (P1) -> deps: [T01]  ✓ done
 [T20b] Fighter Base Features (P2) -> deps: [T01, T170]
 [T21] Action Surge (P1) -> deps: [T01]  ✓ done
-[T22] Indomitable (P2) -> deps: [T01]
+[T22] Indomitable (P2) -> deps: [T01]  ✓ done
 [T23] Champion (P1) -> deps: [T02, T05]  ✓ done
 ```
 
@@ -222,7 +222,7 @@ Improved Critical (L3: critRange 19), Heroic Warrior (NEW L10: gain Heroic Inspi
 ```
 [T30] Sneak Attack + Cunning Strike (P1) -> deps: [T01]  ✓ done
 [T31] Cunning Action (P1) -> deps: [T06]  ✓ done
-[T32] Rogue Passives (P2) -> deps: [T01, T03, T04]
+[T32] Rogue Passives (P2) -> deps: [T01, T03, T04]  ✓ done
 [T33] Thief (P3) -> deps: [T31]
 ```
 
@@ -274,7 +274,7 @@ Fast Hands (Use Object, disarm trap/open lock, or Sleight of Hand check as bonus
 [T41] Martial Arts (P1) -> deps: [T01]  ✓ done
 [T42] Focus Actions (P1) -> deps: [T40, T06]  ✓ done
 [T43] Stunning Strike (P1) -> deps: [T40]  ✓ done
-[T44] Monk Passives (P2) -> deps: [T01, T03]
+[T44] Monk Passives (P2) -> deps: [T01, T03]  ✓ done
 [T45] Monk Reactions (P2) -> deps: [T40]
 [T46] Warrior of the Open Hand (P2) -> deps: [T42]
 ```
@@ -326,7 +326,7 @@ SRD 5.2.1 rename: Way of the Open Hand → Warrior of the Open Hand. Effects ren
 ```
 [T60] Lay on Hands (P1) -> deps: [T01]  ✓ done
 [T61] Paladin's Smite (P1) -> deps: [T01]  ✓ done
-[T62] Paladin Passives (P2) -> deps: [T01, T07]
+[T62] Paladin Passives (P2) -> deps: [T01, T07]  ✓ done
 [T63] Oath of Devotion (P2) -> deps: [T07]
 ```
 
@@ -796,6 +796,16 @@ Found during Batch 1 integration validation. All fixed.
 6. ~~**Open Hand Addle `cantTakeReactions` overstates**~~ — Renamed to `cantMakeOpportunityAttacks`.
 7. ~~**Deflect Attacks throw-back "two rolls"**~~ — Added `dieCount: 2` to `ThrowBackDamage` interface.
 8. ~~**Empowered Strikes comment**~~ — Updated JSDoc to "Force damage or normal damage type."
+
+## Known Integration Layer Issues
+
+Found during simplify passes. Pre-existing or low-priority — not blocking.
+
+1. **`smiteFreeUsed` missing per-turn reset** — `feature-store.ts` Paladin reducer has no `NOTIFY_START_TURN` case to reset `smiteFreeUsed`. SRD says free smite is 1/turn, but currently it locks until long rest.
+2. **Unused `rogueLevel` param** — `feature-bridge-rogue.ts:canExecuteSneakAttack` accepts `rogueLevel` but never uses it. The underlying `canSneakAttack` doesn't take level.
+3. **`NOTIFY_START_TURN` as no-op sentinel** — `feature-bridge-monk.ts` and `feature-bridge.ts` dispatch `{ type: "NOTIFY_START_TURN" }` as a no-op when no feature action is needed. Fragile if `NOTIFY_START_TURN` gains side effects.
+4. **`intimidatingPresenceDC` hardcoded to 0** — `useFeatures.ts` calls `getIntimidatingPresenceDC(0, 0)`, producing meaningless DC. Needs real `strMod`/`profBonus` from config.
+5. **`useFeatures.test.tsx` requires jsdom** — Pre-existing test infrastructure gap. The hook test file fails with `ERR_MODULE_NOT_FOUND: jsdom`. Not related to feature code.
 
 ---
 

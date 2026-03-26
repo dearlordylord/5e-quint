@@ -120,19 +120,12 @@ export const getRadiantStrikesDice: (config: RadiantStrikesConfig) => number = p
 
 // --- Passive re-exports ---
 
-export { auraOfCourageRange, auraOfProtectionRange } from "#/features/class-paladin.ts"
+export const getCanUseAuraOfCourage: (paladinLevel: number, isConscious: boolean) => boolean =
+  canUseAuraOfCourage
 
-export function getCanUseAuraOfCourage(paladinLevel: number, isConscious: boolean): boolean {
-  return canUseAuraOfCourage(paladinLevel, isConscious)
-}
+export const getAuraOfCourageRange: (paladinLevel: number) => number = auraOfCourageRange
 
-export function getAuraOfCourageRange(paladinLevel: number): number {
-  return auraOfCourageRange(paladinLevel)
-}
-
-export function getAuraOfProtectionRange(paladinLevel: number): number {
-  return auraOfProtectionRange(paladinLevel)
-}
+export const getAuraOfProtectionRange: (paladinLevel: number) => number = auraOfProtectionRange
 
 // --- Faithful Steed (Level 5, 1/LR) ---
 

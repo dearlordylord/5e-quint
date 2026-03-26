@@ -2,22 +2,13 @@ import {
   canApplyFrenzy,
   canEnterRage,
   canRetaliate,
-  canUseDangerSense,
   canUseIntimidatingPresence,
-  canUseRelentlessRage,
-  fastMovementBonus,
   frenzyDamageDice,
-  hasFeralInstinct,
-  indomitableMight,
-  instinctivePounceDistance,
   intimidatingPresenceDC,
   mindlessRageImmunities,
   mindlessRageOnEnterRage,
-  primalChampionBonus,
   rageDamageBonus,
-  rageResistances,
-  relentlessRageDC,
-  relentlessRageResult
+  rageResistances
 } from "#/features/class-barbarian.ts"
 import {
   canUseActionSurge,
@@ -315,38 +306,18 @@ export function executeIntimidatingPresence(): BridgeResult {
 
 export const getIntimidatingPresenceDC: (strMod: number, profBonus: number) => number = intimidatingPresenceDC
 
-// --- Barbarian: Passive queries (re-exported pure functions) ---
-
+// --- Barbarian passives: extracted to feature-bridge-barbarian.ts to stay under max-lines ---
 export {
+  canExecuteRelentlessRage,
   canUseDangerSense,
+  executeRelentlessRage,
   fastMovementBonus,
+  getRelentlessRageDC,
   hasFeralInstinct,
   indomitableMight,
   instinctivePounceDistance,
   primalChampionBonus
-}
-
-// --- Barbarian: Relentless Rage (needs BridgeResult / state) ---
-
-export function canExecuteRelentlessRage(featureState: FeatureState, barbarianLevel: number): boolean {
-  if (!featureState.barbarian) return false
-  return canUseRelentlessRage(barbarianLevel, featureState.barbarian.raging)
-}
-
-export function executeRelentlessRage(conSaveSucceeded: boolean, barbarianLevel: number): BridgeResult {
-  // relentlessRageResult is available for callers to check HP outcome;
-  // the rage ending on failure is handled by the caller based on result
-  void relentlessRageResult(conSaveSucceeded, barbarianLevel)
-  return {
-    featureAction: { type: "BARBARIAN_USE_RELENTLESS_RAGE" },
-    machineEvents: []
-  }
-}
-
-export function getRelentlessRageDC(featureState: FeatureState): number {
-  if (!featureState.barbarian) return 0
-  return relentlessRageDC(featureState.barbarian.relentlessRageTimesUsed)
-}
+} from "#/features/feature-bridge-barbarian.ts"
 
 // --- Paladin bridge: extracted to feature-bridge-paladin.ts to stay under max-lines ---
 export {

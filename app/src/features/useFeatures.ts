@@ -342,7 +342,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
   const relentlessRageFn = useCallback(
     (conSaveSucceeded: boolean): BridgeResult | null => {
       if (!canExecuteRelentlessRage(featureState, config.level)) return null
-      const result = executeRelentlessRage(conSaveSucceeded, config.level)
+      const result = executeRelentlessRage()
       dispatch(result.featureAction)
       return result
     },
