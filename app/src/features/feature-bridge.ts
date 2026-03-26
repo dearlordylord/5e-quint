@@ -2,13 +2,22 @@ import {
   canApplyFrenzy,
   canEnterRage,
   canRetaliate,
+  canUseDangerSense,
   canUseIntimidatingPresence,
+  canUseRelentlessRage,
+  fastMovementBonus,
   frenzyDamageDice,
+  hasFeralInstinct,
+  indomitableMight,
+  instinctivePounceDistance,
   intimidatingPresenceDC,
   mindlessRageImmunities,
   mindlessRageOnEnterRage,
+  primalChampionBonus,
   rageDamageBonus,
-  rageResistances
+  rageResistances,
+  relentlessRageDC,
+  relentlessRageResult
 } from "#/features/class-barbarian.ts"
 import {
   canUseActionSurge,
@@ -306,15 +315,58 @@ export function executeIntimidatingPresence(): BridgeResult {
 
 export const getIntimidatingPresenceDC: (strMod: number, profBonus: number) => number = intimidatingPresenceDC
 
+// --- Barbarian: Passive queries (re-exported pure functions) ---
+
+export {
+  canUseDangerSense,
+  fastMovementBonus,
+  hasFeralInstinct,
+  indomitableMight,
+  instinctivePounceDistance,
+  primalChampionBonus
+}
+
+// --- Barbarian: Relentless Rage (needs BridgeResult / state) ---
+
+export function canExecuteRelentlessRage(featureState: FeatureState, barbarianLevel: number): boolean {
+  if (!featureState.barbarian) return false
+  return canUseRelentlessRage(barbarianLevel, featureState.barbarian.raging)
+}
+
+export function executeRelentlessRage(conSaveSucceeded: boolean, barbarianLevel: number): BridgeResult {
+  // relentlessRageResult is available for callers to check HP outcome;
+  // the rage ending on failure is handled by the caller based on result
+  void relentlessRageResult(conSaveSucceeded, barbarianLevel)
+  return {
+    featureAction: { type: "BARBARIAN_USE_RELENTLESS_RAGE" },
+    machineEvents: []
+  }
+}
+
+export function getRelentlessRageDC(featureState: FeatureState): number {
+  if (!featureState.barbarian) return 0
+  return relentlessRageDC(featureState.barbarian.relentlessRageTimesUsed)
+}
+
 // --- Paladin bridge: extracted to feature-bridge-paladin.ts to stay under max-lines ---
 export {
+  canExecuteAbjureFoes,
+  canExecuteFaithfulSteed,
   canExecuteLayOnHandsCure,
   canExecuteLayOnHandsHeal,
   canExecutePaladinSmiteFree,
+  canExecuteRestoringTouch,
+  executeAbjureFoes,
+  executeFaithfulSteed,
   executeLayOnHandsCure,
   executeLayOnHandsHeal,
   executePaladinSmiteFree,
+  executeRestoringTouch,
+  getAbjureFoesResult,
+  getAuraOfCourageRange,
   getAuraOfProtectionBonus,
+  getAuraOfProtectionRange,
+  getCanUseAuraOfCourage,
   getCanUseAuraOfProtection,
   getDivineSmiteDamage,
   getRadiantStrikesDice
@@ -322,22 +374,42 @@ export {
 
 // --- Monk bridge: extracted to feature-bridge-monk.ts to stay under max-lines ---
 export {
+  canExecuteDeflectAttacks,
+  canExecuteDisciplinedSurvivorReroll,
   canExecuteFlurryOfBlows,
   canExecutePatientDefenseFocus,
   canExecutePatientDefenseFree,
+  canExecuteQuiveringPalm,
+  canExecuteSlowFall,
   canExecuteStepOfTheWindFocus,
   canExecuteStepOfTheWindFree,
   canExecuteStunningStrike,
+  canExecuteSuperiorDefense,
   canExecuteUncannyMetabolism,
+  canExecuteWholenessOfBody,
+  canSelfRestore,
+  executeDeflectAttacks,
+  executeDisciplinedSurvivorReroll,
   executeFlurryOfBlows,
   executePatientDefenseFocus,
   executePatientDefenseFree,
+  executeQuiveringPalm,
+  executeSlowFall,
   executeStepOfTheWindFocus,
   executeStepOfTheWindFree,
   executeStunningStrike,
+  executeSuperiorDefense,
+  executeTriggerQuiveringPalm,
   executeUncannyMetabolism,
+  executeWholenessOfBody,
   getBonusUnarmedStrikeEligible,
-  getMartialArtsDie
+  getMartialArtsDie,
+  hasDeflectEnergy,
+  hasDisciplinedSurvivor,
+  hasFleetStep,
+  hasFocusEmpoweredStrikes,
+  selfRestorationConditions,
+  unarmoredMovementBonus
 } from "#/features/feature-bridge-monk.ts"
 
 // --- Rogue bridge: extracted to feature-bridge-rogue.ts to stay under max-lines ---
