@@ -120,7 +120,7 @@ Define `SpellEffectType` sum type and `SpellData` record (name, level, school, c
 [T10] Rage (P1) -> deps: [T01]  ✓ done
 [T11] Reckless Attack (P1) -> deps: [T01]  ✓ done
 [T12] Barbarian Passives (P2) -> deps: [T01]
-[T13] Berserker (P2) -> deps: [T10]
+[T13] Berserker (P2) -> deps: [T10]  ✓ done
 ```
 
 **[T10] Rage** *(done)*
@@ -150,7 +150,7 @@ Danger Sense, Fast Movement, Primal Knowledge (NEW L3), Instinctive Pounce (NEW 
   - Primal Champion (L20): STR +4, CON +4, score maximums raised to 24
 - Test: Danger Sense advantage only when not blinded/deafened/incapacitated; Fast Movement +10 only without heavy armor; Primal Knowledge adds proficiency to chosen skill; Instinctive Pounce grants half-speed move on rage entry; Relentless Rage DC increments +5, resets on rest; Indomitable Might replaces low STR rolls; Primal Champion raises scores and caps
 
-**[T13] Berserker**
+**[T13] Berserker** *(done)*
 SRD 5.2.1: completely revised. Frenzy is now extra damage (not a bonus attack). Retaliation moved to L10. Intimidating Presence at L14 with new DC formula.
 - L3 Frenzy: when using Reckless Attack while raging, deal extra damage on first STR-based hit each turn — roll d6s equal to Rage Damage bonus (+2/+3/+4 = 2d6/3d6/4d6). Same damage type as the weapon/unarmed strike. No exhaustion.
 - L6 Mindless Rage (unchanged): immune to charmed/frightened while raging; suspend pre-existing charmed/frightened effects (resume when rage ends).
@@ -169,7 +169,7 @@ SRD 5.2.1: completely revised. Frenzy is now extra damage (not a bonus attack). 
 [T20b] Fighter Base Features (P2) -> deps: [T01, T170]
 [T21] Action Surge (P1) -> deps: [T01]  ✓ done
 [T22] Indomitable (P2) -> deps: [T01]
-[T23] Champion (P1) -> deps: [T02, T05]
+[T23] Champion (P1) -> deps: [T02, T05]  ✓ done
 ```
 
 **[T20] Second Wind** *(done)*
@@ -196,7 +196,7 @@ New base Fighter features in SRD 5.2.1:
 - Functions: `pIndomitable(state, newRoll)->use new roll for save`; decrement charges
 - Test: expend charge; can't at 0; resets on long rest; 1 charge at 9, 2 at 13, 3 at 17
 
-**[T23] Champion**
+**[T23] Champion** *(done)*
 Improved Critical (L3: critRange 19), Heroic Warrior (NEW L10: gain Heroic Inspiration at start of each turn if you lack it), Additional Fighting Style (L7: second Fighting Style feat), Remarkable Athlete, Superior Critical (L15: critRange 18), Survivor (revised: heal at turn start if Bloodied — i.e., at or below half max HP and above 0).
 - State: uses `critRange` from [T02]; additional fighting style uses [T05]
 - Functions: set critRange=19 at L3, 18 at L15; `pRemarkableAthlete(profBonus, isSTRDEXCON, hasProficiency)->add ceil(profBonus/2) if not proficient` (rounds UP); `pHeroicWarrior(state)->grant Heroic Inspiration if lacking at turn start`; `pSurvivor(state, config)->heal 5+CON mod at turn start if 0 < hp <= floor(maxHp/2)`
@@ -208,7 +208,7 @@ Improved Critical (L3: critRange 19), Heroic Warrior (NEW L10: gain Heroic Inspi
 
 ```
 [T30] Sneak Attack + Cunning Strike (P1) -> deps: [T01]  ✓ done
-[T31] Cunning Action (P1) -> deps: [T06]
+[T31] Cunning Action (P1) -> deps: [T06]  ✓ done
 [T32] Rogue Passives (P2) -> deps: [T01, T03, T04]
 [T33] Thief (P3) -> deps: [T31]
 ```
@@ -236,7 +236,7 @@ Devious Strikes (L14): additional Cunning Strike options:
 - Functions: `pSteadyAim(turnState)->grant Advantage on next attack, set speed to 0`; `pCunningStrike(state, effect, diceForfeited, saveResult)->remove dice, apply effect on failed save`; `pCanApplyCunningStrike(sneakAttackDiceTotal, diceForfeited)->bool` (must have enough dice remaining)
 - Test: SA dice correct per level; requires finesse or ranged + advantage or adjacent ally; once per turn; Steady Aim grants advantage + zeroes speed; Cunning Strike requires sufficient dice; each effect triggers on failed save; Improved CS allows two effects; Devious Strikes options cost correctly; SA dice deducted before applying; resets on turn start
 
-**[T31] Cunning Action**
+**[T31] Cunning Action** *(done)*
 Uses [T06] pattern. Rogue 2+: Dash/Disengage/Hide as bonus action.
 - Functions: `pCunningAction(turnState, choice)` — delegates to [T06] functions
 - Test: each of three options works as bonus; can't use if bonus already used; requires Rogue 2+
@@ -259,8 +259,8 @@ Fast Hands (Use Object, disarm trap/open lock, or Sleight of Hand check as bonus
 ```
 [T40] Focus Pool (P1) -> deps: [T01]  ✓ done
 [T41] Martial Arts (P1) -> deps: [T01]  ✓ done
-[T42] Focus Actions (P1) -> deps: [T40, T06]
-[T43] Stunning Strike (P1) -> deps: [T40]
+[T42] Focus Actions (P1) -> deps: [T40, T06]  ✓ done
+[T43] Stunning Strike (P1) -> deps: [T40]  ✓ done
 [T44] Monk Passives (P2) -> deps: [T01, T03]
 [T45] Monk Reactions (P2) -> deps: [T40]
 [T46] Warrior of the Open Hand (P2) -> deps: [T42]
@@ -277,12 +277,12 @@ SRD 5.2.1: renamed Ki → Monk's Focus (Focus Points). Martial Arts die progress
 - Functions: `pMartialArtsDie(monkLevel)->d6/d8/d10/d12` (at L1/L5/L11/L17); modify attack to allow DEX for unarmed/monk weapons; bonus action unarmed strike after Attack action with unarmed strike or monk weapon (no Focus cost)
 - Test: d6 at 1, d8 at 5, d10 at 11, d12 at 17; DEX used for unarmed; bonus action unarmed requires Attack action with unarmed/monk weapon
 
-**[T42] Focus Actions**
+**[T42] Focus Actions** *(done)*
 Flurry of Blows (1 FP: 2 unarmed as bonus; scales to 3 strikes at L10), Patient Defense (1 FP: Dodge as bonus; at L10 also grant temp HP equal to Martial Arts die), Step of the Wind (1 FP: Dash or Disengage as bonus + double jump; at L10 can carry a willing creature of your size or smaller).
 - Functions: `pFlurryOfBlows(state, turnState, monkLevel)`, `pPatientDefense(state, turnState, monkLevel)`, `pStepOfTheWind(state, turnState, choice, monkLevel, carryingAlly)`; all consume 1 FP + bonus action via [T06]
 - Test: each costs 1 FP; each consumes bonus action; Flurry 2 strikes at L1-9, 3 at L10+; Patient Defense grants temp HP at L10+; Step of the Wind can carry ally at L10+; Flurry replaces Martial Arts bonus
 
-**[T43] Stunning Strike**
+**[T43] Stunning Strike** *(done)*
 SRD 5.2.1: on a **failed** save, target is Stunned until end of your next turn (unchanged). On a **successful** save, target's Speed is halved and it has Disadvantage on its next attack roll before your next turn ends (new partial effect on success).
 - Functions: `pStunningStrike(state, targetSaveResult)->expend FP; if fail: stunned; if success: halve speed + disadvantage on next attack`
 - Test: costs 1 FP; only on melee hit; stunned on fail; speed halved + next attack disadv on success; can use multiple times per turn (each costs FP)
@@ -743,7 +743,7 @@ Core is complete (PLAN.md). This file is now the active plan. All tasks are unbl
 3. ~~**[T07]** Channel Divinity (needs T01; unblocks Paladin/Cleric)~~ ✓
 4. ~~**[T201]** Feat System Framework; then **[T05]** Fighting Style Feats (needs T201)~~ ✓
 5. ~~**P1 class features** — T10 Rage, T11 Reckless, T20 Second Wind, T21 Action Surge, T30 Sneak Attack, T40 Focus Pool, T41 Martial Arts, T60 Lay on Hands, T61 Paladin's Smite, T100 Wild Shape, T110 Sorcery Points; T200 Grappler Feat~~ ✓
-6. **P1 dependent** — T13 Berserker (needs T10), T23 Champion (needs T02+T05), T31 Cunning Action (needs T06), T42 Focus Actions (needs T40+T06), T43 Stunning Strike (needs T40)
+6. ~~**P1 dependent** — T13 Berserker (needs T10), T23 Champion (needs T02+T05), T31 Cunning Action (needs T06), T42 Focus Actions (needs T40+T06), T43 Stunning Strike (needs T40)~~ ✓
 7. **P1-P2 spells** — T150 Damage Patterns, T152 AC/Defense Buffs, T153 Condition Debuffs (all need T08)
 8. **P2-P3 class features, species traits, T170 Weapon Mastery** in any order — **T20b** Fighter Base Features must follow T170 (needs T01+T170)
 9. **P2-P3 spells, remaining** in any order
