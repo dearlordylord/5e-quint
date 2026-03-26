@@ -33,7 +33,7 @@ Core game "physics" — the foundation everything else builds on: action economy
 - d20 resolution, advantage/disadvantage, proficiency
 - Conditions and exhaustion
 - Action economy: action, bonus action, reaction, movement, free interaction, extra attack
-- Attack resolution: crits, cover, underwater combat, squeezing
+- Attack resolution: crits, cover, underwater combat
 - Grapple and shove (SRD 5.2.1 save-based)
 - Two-weapon fighting, mounted combat
 - Spellcasting: slots, concentration, ritual casting, multiclass slot calculation, pact magic
