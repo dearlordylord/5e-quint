@@ -13,9 +13,6 @@ import re
 
 from qa_utils import fetch_url, strip_html
 
-# NOTE: DDB is a JS SPA — static fetch returns a shell with minimal content (~5 Q&A).
-# For full extraction: save the page as HTML from a browser, place it at CACHE_FILE below,
-# then rerun. The parser will use the cached file automatically.
 BASE_URL = "https://www.dndbeyond.com/sources/dnd/sae/sage-advice-compendium"
 RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
 CACHE_FILE = os.path.join(RAW_DIR, "sage_advice_raw.html")
@@ -25,58 +22,53 @@ OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa/sage_advi
 def parse_qa_pairs(raw_html):
     """Parse Q&A pairs from the Sage Advice Compendium HTML.
 
-    The expected structure is sections with headings (h2/h3), where each Q&A
-    is a bold/strong question followed by paragraph answer text.
-
-    TODO: The exact HTML structure depends on D&D Beyond's current page layout.
-    This parser attempts to handle common patterns but may need adjustment
-    if the page structure changes.
+    DDB structure: h3 = section headings, h4 = questions, following <p> = answers.
+    Each h4 has class "compendium-hr heading-anchor" and the question as text.
+    Answer is all <p> elements between this h4 and the next h4 (or h3).
     """
     pairs = []
     current_category = "General"
 
-    # Extract section headings — try h2 and h3
-    # TODO: Verify heading level used on live page
-    sections = re.split(r"<h[23][^>]*>(.*?)</h[23]>", raw_html, flags=re.DOTALL)
+    # Split on h3 (section headings) and h4 (questions)
+    # This gives us alternating: content, tag+attrs, heading text, content, ...
+    parts = re.split(r"<(h[34])[^>]*>(.*?)</\1>", raw_html, flags=re.DOTALL)
 
-    # sections[0] is preamble, then alternating: heading, content, heading, content ...
-    for i in range(1, len(sections) - 1, 2):
-        heading = strip_html(sections[i])
-        content = sections[i + 1]
-        if heading:
-            current_category = heading
+    # parts: [preamble, tag1, heading1, content1, tag2, heading2, content2, ...]
+    i = 1
+    while i < len(parts) - 2:
+        tag = parts[i]       # "h3" or "h4"
+        heading = strip_html(parts[i + 1])
+        content = parts[i + 2]
+        i += 3
 
-        # Find Q&A pairs: bold/strong text = question, following text = answer
-        # Pattern 1: <p><strong>Q?</strong> ... </p> <p>A? ...</p>
-        # Pattern 2: <strong>Q?</strong> followed by paragraph(s)
-        # TODO: Confirm which pattern the live page uses
-        qa_blocks = re.split(r"<(?:strong|b)[^>]*>(.*?)</(?:strong|b)>", content, flags=re.DOTALL)
+        if tag == "h3":
+            if heading:
+                current_category = heading
+            continue
 
-        for j in range(1, len(qa_blocks) - 1, 2):
-            question_raw = qa_blocks[j]
-            answer_raw = qa_blocks[j + 1]
+        # tag == "h4" — this is a question
+        question = heading.strip()
+        if len(question) < 10:
+            continue
 
-            question = strip_html(question_raw).strip()
-            answer = strip_html(answer_raw).strip()
+        # Answer is all <p> content until the next heading
+        answer_parts = re.findall(r"<p[^>]*>(.*?)</p>", content, re.DOTALL)
+        answer = "\n\n".join(strip_html(p) for p in answer_parts).strip()
 
-            # Skip very short or empty entries
-            if len(question) < 10 or len(answer) < 10:
-                continue
+        if len(answer) < 10:
+            continue
 
-            # Generate a stable ID from question content
-            q_hash = hashlib.sha256(question.encode()).hexdigest()[:12]
-            entry_id = f"sa_{q_hash}"
-
-            pairs.append({
-                "source": "sage_advice",
-                "id": entry_id,
-                "title": question[:120],
-                "question": question,
-                "answer": answer,
-                "category": current_category,
-                "tags": ["sage-advice", "official"],
-                "url": BASE_URL,
-            })
+        q_hash = hashlib.sha256(question.encode()).hexdigest()[:12]
+        pairs.append({
+            "source": "sage_advice",
+            "id": f"sa_{q_hash}",
+            "title": question[:120],
+            "question": question,
+            "answer": answer,
+            "category": current_category,
+            "tags": ["sage-advice", "official"],
+            "url": BASE_URL,
+        })
 
     return pairs
 

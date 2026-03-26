@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
-"""Fetch and parse D&D Beyond 2024 PHB errata → JSONL corpus.
+"""Parse D&D 2024 PHB errata from a community-compiled source → JSONL corpus.
 
-Fetches the official errata page from D&D Beyond, parses correction entries,
-converts them to synthetic Q&A format, and outputs a JSONL corpus file.
+DDB applies errata silently inline — there is no standalone errata page.
+This script parses a manually-provided HTML file containing errata corrections
+(e.g., saved from a community wiki or Reddit compilation) and converts them
+to synthetic Q&A format for the classification pipeline.
+
+Usage:
+    1. Save an errata source as HTML to .references/qa/raw/errata_phb_2024_raw.html
+    2. python3 scripts/qa/download_errata.py
 """
 
 import hashlib
@@ -10,12 +16,11 @@ import json
 import os
 import re
 
-from qa_utils import fetch_url, strip_html
+from qa_utils import strip_html
 
-# NOTE: DDB errata URLs return 404 for automated fetches (JS-rendered or auth-gated).
-# To use this scraper: save the errata page as HTML from a browser, place it at CACHE_FILE below.
-# Tested URLs (all 404): /errata/phb-2024, /errata, /errata/players-handbook-2024, /errata/ph-2024
-ERRATA_URL = "https://www.dndbeyond.com/sources/dnd/errata/phb-2024"
+# No live URL — DDB has no standalone errata page (corrections are applied inline).
+# Place a manually-saved HTML file at CACHE_FILE to use this script.
+ERRATA_URL = ""
 RAW_DIR = os.path.join(os.path.dirname(__file__), "../../.references/qa/raw")
 CACHE_FILE = os.path.join(RAW_DIR, "errata_phb_2024_raw.html")
 OUTPUT = os.path.join(os.path.dirname(__file__), "../../.references/qa/errata_corpus.jsonl")
@@ -110,11 +115,13 @@ def parse_errata(raw_html):
 
 
 def main():
-    os.makedirs(RAW_DIR, exist_ok=True)
-    raw_html = fetch_url(ERRATA_URL, CACHE_FILE)
-    if raw_html is None:
-        print(f"Failed to fetch {ERRATA_URL} (404)")
+    if not os.path.exists(CACHE_FILE):
+        print(f"No errata HTML found at {CACHE_FILE}")
+        print("DDB has no standalone errata page — corrections are applied inline.")
+        print("To use this script: save a community errata compilation as HTML to that path.")
         return
+    with open(CACHE_FILE, "r", encoding="utf-8") as f:
+        raw_html = f.read()
     entries = parse_errata(raw_html)
     print(f"Parsed {len(entries)} errata entries")
 

@@ -54,9 +54,8 @@ SE dump / Reddit API / Sage Advice / sageadvice.eu / Errata → raw data → par
 - Output: `.references/qa/reddit_corpus.jsonl` — `{source, id, title, question, comments[{author, body, score}], flair, score, url}`
 
 **Sage Advice Compendium** — `download_sage_advice.py`
-- Fetches the official Sage Advice Compendium from D&D Beyond
-- **DDB is a JS SPA** — static fetch returns a shell with minimal content (~5 Q&A). For full extraction: save the page as HTML from a browser, place at `.references/qa/raw/sage_advice_raw.html`, then rerun
-- Parses Q&A pairs from HTML (bold questions + paragraph answers, grouped by section)
+- Fetches the official Sage Advice Compendium from D&D Beyond (page is SSR'd, works with plain fetch)
+- Parses Q&A pairs from HTML: h3 = section headings, h4 = questions, following `<p>` = answers (97 pairs)
 - Output: `.references/qa/sage_advice_corpus.jsonl` — `{source, id, title, question, answer, category, tags, url}`
 
 **sageadvice.eu** — `download_sageadvice_eu.py`
@@ -66,7 +65,8 @@ SE dump / Reddit API / Sage Advice / sageadvice.eu / Errata → raw data → par
 - Output: `.references/qa/sageadvice_eu_corpus.jsonl` — `{source, id, title, question, answer, tags, url}`
 
 **D&D Beyond Errata** — `download_errata.py`
-- **DDB errata URLs return 404** for automated fetches (JS-rendered or auth-gated). Save the errata page as HTML from a browser, place at `.references/qa/raw/errata_phb_2024_raw.html`, then rerun
+- DDB applies errata silently inline — there is no standalone errata page (all URLs 404)
+- Requires manually-saved HTML from a community errata compilation placed at `.references/qa/raw/errata_phb_2024_raw.html`
 - Parses correction entries and converts to synthetic Q&A format
 - Output: `.references/qa/errata_corpus.jsonl` — `{source, id, title, question, answer, tags, original_text, corrected_text, book, section, url}`
 
