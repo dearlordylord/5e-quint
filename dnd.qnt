@@ -97,7 +97,7 @@ module dnd {
     hitDieType: int,                 // 6, 8, 10, or 12
     spellcastingAbility: Ability,    // ignored if not a caster
     hasSpellcasting: bool,
-    canRitualCast: bool,
+
     unarmoredDefense: UnarmoredDefense,
     features: Set[Feature],
     critRange: int,            // minimum d20 roll for critical hit (default 20; Champion 19/18)
@@ -2145,7 +2145,6 @@ module dnd {
     hitDieType: 10,
     spellcastingAbility: Wis,
     hasSpellcasting: false,
-    canRitualCast: false,
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
     critRange: 20,

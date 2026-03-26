@@ -156,7 +156,7 @@ Adds spellcasting region (idle/concentrating) with slot management, concentratio
 - [x] At most one concentration spell active
 - [x] Concentration DC = max(10, floor(damage/2)); separate save per damage source
 - [x] Concentration broken by: new concentration spell, incapacitation, death, failed save
-- [x] Ritual: no slot, +10 min, can't upcast, requires canRitualCast config flag
+- [x] Ritual: no slot, +10 min, can't upcast (caller-orchestrated, canRitualCast removed — see ASSUMPTIONS.md A10)
 - [x] Armor without proficiency -> cannot cast at all
 - [x] Short rest: spend hit dice (roll + CON mod, min 0), restore pact slots
 - [x] Long rest: full HP, restore half HD (min 1), all slots, -1 exhaustion if ate, clear temp HP

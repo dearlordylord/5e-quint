@@ -73,10 +73,22 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Changes:** No code changes. Documents existing `pCanTWFWithWeapons` behavior in `dnd.qnt` and `canTwoWeaponFight` in XState.
 
-## A6: Multiclass Channel Divinity — additive per-class pools
+## A9: Multiclass Channel Divinity — additive per-class pools
 
 **Assumption:** `pChannelDivinityMax(config)` sums `pClericChannelDivinityMax` and `pPaladinChannelDivinityMax` independently based on each class's level. A Cleric 6 / Paladin 3 would have max 3 + 2 = 5 uses, drawn from a single shared charges counter.
 
 **Rules basis:** SRD 5.2.1 Cleric (L2) and Paladin (L3) both say "this class's Channel Divinity," implying per-class tracking. However, the SRD 5.2.1 does not include explicit multiclass rules for Channel Divinity. The 5.1 PHB multiclass rules stated that gaining Channel Divinity from a second class does not grant additional uses — only additional effect options. We model additive pools as a permissive interpretation of 5.2.1's per-class language, which diverges from 5.1 intent (5.1 said no extra uses). This assumption can be revised if official 5.2.1 multiclass guidance clarifies.
 
 **Changes:** `dnd.qnt`: `pChannelDivinityMax` sums per-class max functions. No XState changes (framework only).
+
+## A10: Ritual casting — caller-orchestrated, no slot expenditure
+
+**Assumption:** Ritual casting is modeled as the absence of slot expenditure. The caller skips `pExpendSlot` and optionally calls `pStartConcentration` if the spell requires it. The old `canRitualCast: bool` config flag was removed — ritual casting is universal in 5.2.1.
+
+**Rules basis (SRD 5.2.1 Rules Glossary, "Ritual"):** "If you have a spell prepared that has the Ritual tag, you can cast that spell as a Ritual. The Ritual version of a spell takes 10 minutes longer to cast than normal. It also doesn't expend a spell slot, which means the ritual version of a spell can't be cast at a higher level."
+
+**Why no dedicated function:** The spec has no composite "cast spell" action — slot expenditure, concentration, and effects are separate events. Ritual casting means the caller orchestrates the same events minus `pExpendSlot`. Whether the spell requires concentration is a separate property of the spell, not of ritual casting itself. A `pCastAsRitual` wrapper would conflate ritual casting with concentration.
+
+**What's not modeled:** Casting time (+10 minutes — spec doesn't model time beyond action/bonus action). Spell identity and Ritual tag (spec models slots, not individual spells). Spell preparation lists. Wizard "Ritual Adept" (class feature for `features/`).
+
+**Changes:** Removed `canRitualCast: bool` from `CharConfig` (5.2.1 made ritual casting universal). No new function needed — ritual casting is the caller choosing not to call `pExpendSlot`.
