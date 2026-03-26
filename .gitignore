@@ -19,3 +19,5 @@ dist/
 __pycache__/
 _apalache-out/
 qa_generated.qnt
+LAUNCH.md
+POST_DRAFT.md
