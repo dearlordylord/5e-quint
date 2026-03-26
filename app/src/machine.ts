@@ -176,20 +176,21 @@ export const dndMachine = setup({
     }),
     useAction: assign(({ context: c, event: e }) => {
       const ev = asUseAction(e)
-      if (c.actionUsed || isIncapacitated(c)) return {}
+      if (c.actionsRemaining <= 0 || isIncapacitated(c)) return {}
+      const base = { actionsRemaining: c.actionsRemaining - 1 }
       switch (ev.actionType) {
         case "attack":
-          return { actionUsed: true, attackActionUsed: true }
+          return { ...base, attackActionUsed: true }
         case "disengage":
-          return { actionUsed: true, disengaged: true }
+          return { ...base, disengaged: true }
         case "dodge":
-          return { actionUsed: true, dodging: true }
+          return { ...base, dodging: true }
         case "dash":
-          return { actionUsed: true, movementRemaining: movementFeet(c.movementRemaining + c.effectiveSpeed) }
+          return { ...base, movementRemaining: movementFeet(c.movementRemaining + c.effectiveSpeed) }
         case "ready":
-          return { actionUsed: true, readiedAction: true }
+          return { ...base, readiedAction: true }
         default:
-          return { actionUsed: true }
+          return base
       }
     }),
     useBonusAction: assign(({ context: c }) =>

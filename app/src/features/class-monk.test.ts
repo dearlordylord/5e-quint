@@ -645,19 +645,19 @@ describe("Disciplined Survivor", () => {
 
 describe("Superior Defense", () => {
   it("can't use below L18", () => {
-    expect(canUseSuperiorDefense(17, 10, false)).toBe(false)
+    expect(canUseSuperiorDefense(17, 10, 1)).toBe(false)
   })
 
   it("can't use without 3 FP", () => {
-    expect(canUseSuperiorDefense(18, 2, false)).toBe(false)
+    expect(canUseSuperiorDefense(18, 2, 1)).toBe(false)
   })
 
   it("can't use if action used", () => {
-    expect(canUseSuperiorDefense(18, 10, true)).toBe(false)
+    expect(canUseSuperiorDefense(18, 10, 0)).toBe(false)
   })
 
   it("can use at L18+ with 3 FP and action available", () => {
-    expect(canUseSuperiorDefense(18, 3, false)).toBe(true)
+    expect(canUseSuperiorDefense(18, 3, 1)).toBe(true)
   })
 
   it("costs 3 FP and grants resistance for 1 minute", () => {

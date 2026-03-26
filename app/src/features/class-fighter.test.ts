@@ -199,37 +199,39 @@ describe("actionSurgeMaxCharges", () => {
 
 describe("canUseActionSurge", () => {
   it("returns true when charges > 0 and not used this turn", () => {
-    expect(canUseActionSurge({ actionSurgeCharges: 1, actionSurgeUsedThisTurn: false, actionUsed: true })).toBe(true)
+    expect(canUseActionSurge({ actionSurgeCharges: 1, actionSurgeUsedThisTurn: false, actionsRemaining: 0 })).toBe(true)
   })
 
   it("returns false when charges are 0", () => {
-    expect(canUseActionSurge({ actionSurgeCharges: 0, actionSurgeUsedThisTurn: false, actionUsed: true })).toBe(false)
+    expect(canUseActionSurge({ actionSurgeCharges: 0, actionSurgeUsedThisTurn: false, actionsRemaining: 0 })).toBe(
+      false
+    )
   })
 
   it("returns false when already used this turn (even with 2 charges)", () => {
-    expect(canUseActionSurge({ actionSurgeCharges: 1, actionSurgeUsedThisTurn: true, actionUsed: false })).toBe(false)
+    expect(canUseActionSurge({ actionSurgeCharges: 1, actionSurgeUsedThisTurn: true, actionsRemaining: 1 })).toBe(false)
   })
 })
 
 describe("useActionSurge", () => {
-  it("resets actionUsed to false (grants second action)", () => {
-    const result = useActionSurge({ actionSurgeCharges: 1, actionSurgeUsedThisTurn: false, actionUsed: true })
-    expect(result.actionUsed).toBe(false)
+  it("grants additional action (increments actionsRemaining)", () => {
+    const result = useActionSurge({ actionSurgeCharges: 1, actionSurgeUsedThisTurn: false, actionsRemaining: 0 })
+    expect(result.actionsRemaining).toBe(1)
   })
 
   it("decrements charges", () => {
-    const result = useActionSurge({ actionSurgeCharges: 2, actionSurgeUsedThisTurn: false, actionUsed: true })
+    const result = useActionSurge({ actionSurgeCharges: 2, actionSurgeUsedThisTurn: false, actionsRemaining: 0 })
     expect(result.actionSurgeCharges).toBe(1)
   })
 
   it("marks action surge used this turn", () => {
-    const result = useActionSurge({ actionSurgeCharges: 1, actionSurgeUsedThisTurn: false, actionUsed: true })
+    const result = useActionSurge({ actionSurgeCharges: 1, actionSurgeUsedThisTurn: false, actionsRemaining: 0 })
     expect(result.actionSurgeUsedThisTurn).toBe(true)
   })
 
   it("can only use once per turn even with 2 charges", () => {
     // Use first charge
-    const first = useActionSurge({ actionSurgeCharges: 2, actionSurgeUsedThisTurn: false, actionUsed: true })
+    const first = useActionSurge({ actionSurgeCharges: 2, actionSurgeUsedThisTurn: false, actionsRemaining: 0 })
     expect(first.actionSurgeCharges).toBe(1)
     expect(first.actionSurgeUsedThisTurn).toBe(true)
 
@@ -238,7 +240,7 @@ describe("useActionSurge", () => {
       canUseActionSurge({
         actionSurgeCharges: first.actionSurgeCharges,
         actionSurgeUsedThisTurn: first.actionSurgeUsedThisTurn,
-        actionUsed: true
+        actionsRemaining: 0
       })
     ).toBe(false)
   })

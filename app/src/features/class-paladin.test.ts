@@ -335,17 +335,17 @@ describe("aura of protection", () => {
 
 describe("abjure foes", () => {
   it("requires level 9+", () => {
-    expect(canAbjureFoes(8, 2, false)).toBe(false)
-    expect(canAbjureFoes(9, 2, false)).toBe(true)
+    expect(canAbjureFoes(8, 2, 1)).toBe(false)
+    expect(canAbjureFoes(9, 2, 1)).toBe(true)
   })
 
   it("requires channel divinity charges", () => {
-    expect(canAbjureFoes(9, 0, false)).toBe(false)
-    expect(canAbjureFoes(9, 1, false)).toBe(true)
+    expect(canAbjureFoes(9, 0, 1)).toBe(false)
+    expect(canAbjureFoes(9, 1, 1)).toBe(true)
   })
 
   it("requires action available", () => {
-    expect(canAbjureFoes(9, 2, true)).toBe(false)
+    expect(canAbjureFoes(9, 2, 0)).toBe(false)
   })
 
   it("target fails save: frightened and restricted actions", () => {

@@ -102,7 +102,7 @@ export function useTacticalMind(input: TacticalMindInput): TacticalMindResult {
 export interface ActionSurgeState {
   readonly actionSurgeCharges: number
   readonly actionSurgeUsedThisTurn: boolean
-  readonly actionUsed: boolean
+  readonly actionsRemaining: number
 }
 
 /** Action Surge max charges from the Fighter Features table (SRD 5.2.1). */
@@ -118,7 +118,7 @@ export function canUseActionSurge(state: ActionSurgeState): boolean {
 }
 
 export interface ActionSurgeResult {
-  readonly actionUsed: false
+  readonly actionsRemaining: number
   readonly actionSurgeCharges: number
   readonly actionSurgeUsedThisTurn: true
 }
@@ -129,7 +129,7 @@ export interface ActionSurgeResult {
  */
 export function useActionSurge(state: ActionSurgeState): ActionSurgeResult {
   return {
-    actionUsed: false, // reset action availability
+    actionsRemaining: state.actionsRemaining + 1, // grant additional action
     actionSurgeCharges: state.actionSurgeCharges - 1,
     actionSurgeUsedThisTurn: true
   }

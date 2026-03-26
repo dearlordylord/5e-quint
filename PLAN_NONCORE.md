@@ -42,7 +42,7 @@ Experimental worktree wiring `features/` pure functions into the XState machine 
 2. Bridge return shape `{ featureAction, machineEvents[] }` — cleanly separates feature state updates from machine events
 3. Ref-based wiring solves circular dep between `send` and `notify`
 
-**Blocker found:** Action Surge can't reset `actionUsed: boolean` from outside the machine. Proposed fix: `actionUsed: bool` → `actionsRemaining: int` in core (Quint + XState), matching the existing `extraAttacksRemaining: int` pattern. This is a core representation change (PLAN.md scope), not a feature leak — Action Surge and Haste both just increment the counter from caller side.
+**Blocker resolved:** `actionUsed: bool` → `actionsRemaining: int` in core (Quint + XState), matching the existing `extraAttacksRemaining: int` pattern. Action Surge and Haste increment the counter from caller side.
 
 ---
 
@@ -201,7 +201,7 @@ New base Fighter features in SRD 5.2.1:
 
 **[T21] Action Surge** *(done)*
 - State: `actionSurgeCharges: int`
-- Functions: `pActionSurge(turnState)->reset actionUsed to false`; decrement charges; precondition: not already used Action Surge this turn
+- Functions: `pActionSurge(turnState)->increment actionsRemaining`; decrement charges; precondition: not already used Action Surge this turn
 - Test: grants second action; can't use at 0 charges; resets on short rest; 2 charges at level 17; can only use ONE Action Surge per turn (even with 2 charges)
 
 **[T22] Indomitable**

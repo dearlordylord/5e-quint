@@ -968,7 +968,7 @@ describe("turn lifecycle - START_TURN", () => {
     startTurn(a)
     expect(ctx(a).movementRemaining).toBe(DEFAULT_BASE_SPEED)
     expect(ctx(a).effectiveSpeed).toBe(DEFAULT_BASE_SPEED)
-    expect(ctx(a).actionUsed).toBe(false)
+    expect(ctx(a).actionsRemaining).toBe(1)
     expect(ctx(a).bonusActionUsed).toBe(false)
     expect(ctx(a).reactionAvailable).toBe(true)
   })
@@ -1040,14 +1040,14 @@ describe("combat mode separation (TA3)", () => {
   it("USE_ACTION ignored when outOfCombat", () => {
     const a = create()
     useAction(a, "dodge")
-    expect(ctx(a).actionUsed).toBe(false)
+    expect(ctx(a).actionsRemaining).toBe(1)
   })
 
   it("USE_ACTION ignored when waitingForTurn", () => {
     const a = create()
     enterCombat(a)
     useAction(a, "dodge")
-    expect(ctx(a).actionUsed).toBe(false)
+    expect(ctx(a).actionsRemaining).toBe(1)
   })
 
   it("SHORT_REST ignored when acting", () => {
@@ -1085,7 +1085,7 @@ describe("turn - action budget", () => {
     const a = create()
     startTurn(a)
     useAction(a, "dodge")
-    expect(ctx(a).actionUsed).toBe(true)
+    expect(ctx(a).actionsRemaining).toBe(0)
     useAction(a, "dash")
     expect(ctx(a).dodging).toBe(true)
     expect(ctx(a).movementRemaining).toBe(DEFAULT_BASE_SPEED)
@@ -1158,7 +1158,7 @@ describe("turn - incapacitated blocks actions", () => {
     startTurn(a)
     applyCondition(a, "paralyzed")
     useAction(a, "attack")
-    expect(ctx(a).actionUsed).toBe(false)
+    expect(ctx(a).actionsRemaining).toBe(1)
   })
 
   it("incapacitated creature cannot use bonus action", () => {
@@ -2193,7 +2193,7 @@ describe("machine action edge cases", () => {
     startTurn(a)
     a.send({ type: "USE_ACTION", actionType: "ready" as ActionType })
     expect(ctx(a).readiedAction).toBe(true)
-    expect(ctx(a).actionUsed).toBe(true)
+    expect(ctx(a).actionsRemaining).toBe(0)
   })
 
   it("fall at 0 HP with temp HP fully absorbing damage", () => {

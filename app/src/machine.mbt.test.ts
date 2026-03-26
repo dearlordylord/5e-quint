@@ -157,7 +157,7 @@ const QuintCreatureState = z.object({
 const QuintTurnState = z.object({
   movementRemaining: z.bigint(),
   effectiveSpeed: z.bigint(),
-  actionUsed: z.boolean(),
+  actionsRemaining: z.bigint(),
   attackActionUsed: z.boolean(),
   bonusActionUsed: z.boolean(),
   reactionAvailable: z.boolean(),
@@ -237,7 +237,7 @@ interface NormalizedState {
   // TurnState
   readonly movementRemaining: number
   readonly effectiveSpeed: number
-  readonly actionUsed: boolean
+  readonly actionsRemaining: number
   readonly attackActionUsed: boolean
   readonly bonusActionUsed: boolean
   readonly reactionAvailable: boolean
@@ -299,7 +299,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
       .map((ae) => ({ spellId: ae.spellId, turnsRemaining: ae.turnsRemaining, expiresAt: ae.expiresAt })),
     movementRemaining: c.movementRemaining,
     effectiveSpeed: c.effectiveSpeed,
-    actionUsed: c.actionUsed,
+    actionsRemaining: c.actionsRemaining,
     attackActionUsed: c.attackActionUsed,
     bonusActionUsed: c.bonusActionUsed,
     reactionAvailable: c.reactionAvailable,
@@ -355,7 +355,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     activeEffects: s.activeEffects,
     movementRemaining: Number(t.movementRemaining),
     effectiveSpeed: Number(t.effectiveSpeed),
-    actionUsed: t.actionUsed,
+    actionsRemaining: Number(t.actionsRemaining),
     attackActionUsed: t.attackActionUsed,
     bonusActionUsed: t.bonusActionUsed,
     reactionAvailable: t.reactionAvailable,

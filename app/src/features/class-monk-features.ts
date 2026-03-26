@@ -95,8 +95,8 @@ export function disciplinedSurvivorReroll(focusPoints: number, newRoll: number):
 // --- Superior Defense (L18) ---
 
 /** Can use Superior Defense: L18+, 3 FP, action available. */
-export function canUseSuperiorDefense(monkLevel: number, focusPoints: number, actionUsed: boolean): boolean {
-  return monkLevel >= SUPERIOR_DEFENSE_LEVEL && focusPoints >= SUPERIOR_DEFENSE_COST && !actionUsed
+export function canUseSuperiorDefense(monkLevel: number, focusPoints: number, actionsRemaining: number): boolean {
+  return monkLevel >= SUPERIOR_DEFENSE_LEVEL && focusPoints >= SUPERIOR_DEFENSE_COST && actionsRemaining > 0
 }
 
 /** Spend 3 FP to gain resistance to all damage except Force for 1 minute. */

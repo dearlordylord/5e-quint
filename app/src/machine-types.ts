@@ -81,7 +81,8 @@ export interface DndContext {
   readonly incapacitatedSources: ReadonlySet<IncapSource>
   readonly movementRemaining: MovementFeet
   readonly effectiveSpeed: MovementFeet
-  readonly actionUsed: boolean
+  /** Actions remaining this turn (default 1; counter enables Action Surge / Haste granting additional actions). */
+  readonly actionsRemaining: number
   readonly attackActionUsed: boolean
   readonly bonusActionUsed: boolean
   readonly reactionAvailable: boolean
@@ -333,7 +334,7 @@ export const INITIAL_CONDITIONS = {
 } as const
 
 export const INITIAL_TURN_STATE = {
-  actionUsed: false,
+  actionsRemaining: 1,
   attackActionUsed: false,
   bonusActionSpellCast: false,
   bonusActionUsed: false,

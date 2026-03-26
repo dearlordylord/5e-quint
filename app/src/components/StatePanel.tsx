@@ -101,7 +101,7 @@ function ConditionBadges({ ctx }: { readonly ctx: DndContext }) {
 function TurnResources({ ctx }: { readonly ctx: DndContext }) {
   const t = useT()
   const resources = [
-    { label: t.action, used: ctx.actionUsed },
+    { label: t.action, used: ctx.actionsRemaining <= 0 },
     { label: t.bonusAction, used: ctx.bonusActionUsed },
     { label: t.reaction, used: !ctx.reactionAvailable }
   ]

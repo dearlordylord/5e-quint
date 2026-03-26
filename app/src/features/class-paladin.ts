@@ -195,8 +195,8 @@ export interface AbjureFoesResult {
   readonly restrictedActions: boolean
 }
 
-export function canAbjureFoes(paladinLevel: number, channelDivinityCharges: number, actionUsed: boolean): boolean {
-  return paladinLevel >= ABJURE_FOES_LEVEL && channelDivinityCharges > 0 && !actionUsed
+export function canAbjureFoes(paladinLevel: number, channelDivinityCharges: number, actionsRemaining: number): boolean {
+  return paladinLevel >= ABJURE_FOES_LEVEL && channelDivinityCharges > 0 && actionsRemaining > 0
 }
 
 export function abjureFoesResult(targetSavePassed: boolean): AbjureFoesResult {

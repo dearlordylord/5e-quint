@@ -908,7 +908,7 @@ module dnd {
   type TurnState = {
     movementRemaining: int,
     effectiveSpeed: int,
-    actionUsed: bool,
+    actionsRemaining: int,  // default 1; counter enables Action Surge / Haste granting additional actions
     attackActionUsed: bool,
     bonusActionUsed: bool,
     reactionAvailable: bool,
@@ -961,7 +961,7 @@ module dnd {
     {
       movementRemaining: speed,
       effectiveSpeed: speed,
-      actionUsed: false,
+      actionsRemaining: 1,
       attackActionUsed: false,
       bonusActionUsed: false,
       reactionAvailable: true,
@@ -979,9 +979,9 @@ module dnd {
   /// Precondition: action not yet used, creature can act.
   /// Side effects depend on action type.
   pure def pUseAction(t: TurnState, creature: CreatureState, actionType: ActionType): TurnState = {
-    if (t.actionUsed or isIncapacitated(creature)) t
+    if (t.actionsRemaining <= 0 or isIncapacitated(creature)) t
     else {
-      val t1 = t.with("actionUsed", true)
+      val t1 = t.with("actionsRemaining", t.actionsRemaining - 1)
       val t2 = match actionType {
         | AAttack => t1.with("attackActionUsed", true)
         | ADisengage => t1.with("disengaged", true)
@@ -2151,7 +2151,7 @@ module dnd {
   pure val FRESH_TURN: TurnState = {
     movementRemaining: 30,
     effectiveSpeed: 30,
-    actionUsed: false,
+    actionsRemaining: 1,
     attackActionUsed: false,
     bonusActionUsed: false,
     reactionAvailable: true,

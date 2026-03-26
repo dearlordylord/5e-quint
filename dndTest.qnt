@@ -1175,7 +1175,7 @@ module dndTest {
   // -- Start turn basics --
 
   run test_start_turn_movement = assert(BASIC_TURN.movementRemaining == 30)
-  run test_start_turn_action_free = assert(not(BASIC_TURN.actionUsed))
+  run test_start_turn_action_free = assert(BASIC_TURN.actionsRemaining == 1)
   run test_start_turn_bonus_free = assert(not(BASIC_TURN.bonusActionUsed))
   run test_start_turn_reaction_available = assert(BASIC_TURN.reactionAvailable)
   run test_start_turn_extra_attacks = assert(BASIC_TURN.extraAttacksRemaining == 1)
@@ -1252,7 +1252,7 @@ module dndTest {
 
   run test_use_action = {
     val t = pUseAction(BASIC_TURN, FRESH20, AAttack)
-    assert(t.actionUsed)
+    assert(t.actionsRemaining == 0)
   }
 
   run test_use_action_twice_noop = {
@@ -1263,14 +1263,14 @@ module dndTest {
   run test_use_action_incapacitated_noop = {
     val s = pApplyCondition(FRESH20, CStunned)
     val t = pUseAction(BASIC_TURN, s, AAttack)
-    assert(not(t.actionUsed)) // can't act while incapacitated
+    assert(t.actionsRemaining > 0) // can't act while incapacitated
   }
 
   // -- Disengage --
 
   run test_disengage = {
     val t = pUseAction(BASIC_TURN, FRESH20, ADisengage)
-    all { assert(t.actionUsed), assert(t.disengaged) }
+    all { assert(t.actionsRemaining == 0), assert(t.disengaged) }
   }
 
   run test_disengage_blocks_oa = {
@@ -1284,7 +1284,7 @@ module dndTest {
 
   run test_dodge = {
     val t = pUseAction(BASIC_TURN, FRESH20, ADodge)
-    all { assert(t.actionUsed), assert(t.dodging) }
+    all { assert(t.actionsRemaining == 0), assert(t.dodging) }
   }
 
   // -- Dash --
@@ -1304,7 +1304,7 @@ module dndTest {
 
   run test_ready = {
     val t = pUseAction(BASIC_TURN, FRESH20, AReady)
-    all { assert(t.actionUsed), assert(t.readiedAction) }
+    all { assert(t.actionsRemaining == 0), assert(t.readiedAction) }
   }
 
   // -- Bonus action --
@@ -3563,7 +3563,7 @@ module dndTest {
   run test_action_dash_plus_bonus_action_dash = {
     val t1 = pUseAction(BASIC_TURN, FRESH20, ADash)     // 30 + 30 = 60
     val t2 = pBonusActionDash(t1, FRESH20)               // 60 + 30 = 90
-    all { assert(t2.movementRemaining == 90), assert(t2.actionUsed), assert(t2.bonusActionUsed) }
+    all { assert(t2.movementRemaining == 90), assert(t2.actionsRemaining == 0), assert(t2.bonusActionUsed) }
   }
 
   // ============================================================
