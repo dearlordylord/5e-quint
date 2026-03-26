@@ -33,9 +33,9 @@ Note: T10 (Rage) and T10a-f (Cover, etc.) share the T10 prefix but are unrelated
 
 ### Integration experiment (worktree)
 
-Experimental worktree wiring `features/` pure functions into the XState machine + React UI: `.claude/worktrees/agent-a92299a2` (branch `worktree-agent-a92299a2`).
+Experiment complete (worktree cleaned up). Wired `features/` pure functions into XState machine + React UI. Fighter Second Wind + Action Surge as test case.
 
-**Files created:** `features/feature-store.ts` (useReducer store), `features/feature-bridge.ts` (pure fn → `{ featureAction, machineEvents[] }`), `features/useFeatures.ts` (React hook), `components/FeaturePanel.tsx` (UI panel). Wired into `App.tsx` as 4th column. Fighter Second Wind + Action Surge as test case.
+**Files created:** `features/feature-store.ts` (useReducer store), `features/feature-bridge.ts` (pure fn → `{ featureAction, machineEvents[] }`), `features/useFeatures.ts` (React hook), `components/FeaturePanel.tsx` (UI panel). Wired into `App.tsx` as 4th column.
 
 **Validated patterns:**
 1. `notify(event)` wrapping `send()` — feature store reacts to machine events (rest → restore charges, turn start → reset flags)
@@ -186,15 +186,15 @@ SRD 5.2.1: completely revised. Frenzy is now extra damage (not a bonus attack). 
 ```
 
 **[T20] Second Wind** *(done)*
-SRD 5.2.1: Second Wind gains additional uses at higher levels (2 uses at L2, scales further — TODO: verify exact level thresholds). New features at L2: Tactical Mind (expend a SW use on a failed ability check to add 1d10; if this pushes the total to pass, it passes). New L5 feature: Tactical Shift (when you activate SW, move up to half your Speed without provoking OAs).
+SRD 5.2.1: Second Wind uses scale: L1-3: 2 uses, L4-16: 3 uses, L17-20: 4 uses. Regain one expended use on Short Rest, all on Long Rest. New features at L2: Tactical Mind (expend a SW use on a failed ability check to add 1d10; if this pushes the total to pass, it passes). New L5 feature: Tactical Shift (when you activate SW, move up to half your Speed without provoking OAs).
 - State: `secondWindCharges: int`, `secondWindMax: int`
 - Functions: `pSecondWind(state, config, d10Roll)->heal(1d10+fighterLevel), decrement charges`; `pTacticalMind(state, d10, checkResult)->add d10 to failed check, decrement charges`; `pTacticalShift(state, turnState)->move half speed without OA triggers on SW use`; preconditions: charges > 0, bonus action available
 - Test: heals correct amount; can't exceed maxHp; consumes bonus action; charges multiple at higher levels; Tactical Mind adds d10 to failed check; resets on short rest
 
 **[T20b] Fighter Base Features**
 New base Fighter features in SRD 5.2.1:
-- Tactical Master (L9): when you hit with a weapon that has the Push, Sap, or Slow mastery property, you can substitute your weapon mastery property for one of those three options
-- Studied Attacks (L13): if you miss an attack, you have Advantage on your next attack roll against the same target before the end of your next turn
+- Tactical Master (L9): when you attack with a weapon whose mastery property you can use, you can replace that property with Push, Sap, or Slow for that attack
+- Studied Attacks (L13): if you make an attack roll against a creature and miss, you have Advantage on your next attack roll against that creature before the end of your next turn
 - State: `studiedAttackTarget: CreatureId option` (set on miss, cleared on hit or turn end)
 - Functions: `pTacticalMaster(weaponMastery, substituteChoice)->use alternate mastery effect`; `pStudiedAttack(state, missedTarget)->set advantage vs that target`
 - Test: Tactical Master substitutes mastery property; Studied Attacks advantage only vs same target, only after a miss; clears after use
@@ -261,8 +261,8 @@ Expertise (double prof on 2 skills at 1st, 2 more at 6th), Evasion [T03], Uncann
 - Test: Reliable Talent replaces 9->10 but not 11->11; Elusive cancels advantage from all sources; Stroke of Luck only on missed attack or failed ability check (not saves), resets on short rest; Blindsense is config flag (caller-provided)
 
 **[T33] Thief**
-Fast Hands (Use Object, disarm trap/open lock, or Sleight of Hand check as bonus via Cunning Action), Second-Story Work (climbing free, jump +DEX), Supreme Sneak (advantage Stealth if <= half speed; adds Stealth Attack as a Cunning Strike option at L13), Use Magic Device (config flag), Thief's Reflexes (L17: two turns in first round; can't use if surprised).
-- Functions: modify `pMovementCost` for climbing cost=1; modify jump distance +DEX mod; Fast Hands extends Cunning Action to include Use Object; Supreme Sneak Cunning Strike option (TODO: verify exact 5.2.1 effect)
+Fast Hands (Use Object, disarm trap/open lock, or Sleight of Hand check as bonus via Cunning Action), Second-Story Work (climbing free, jump +DEX), Supreme Sneak (L9: advantage Stealth if <= half speed; adds Stealth Attack Cunning Strike option — Cost: 1d6 SA dice, if you have Hide's Invisible condition, this attack doesn't end it if you end your turn behind Three-Quarters Cover or Total Cover), Use Magic Device (L13: config flag), Thief's Reflexes (L17: two turns in first round; can't use if surprised).
+- Functions: modify `pMovementCost` for climbing cost=1; modify jump distance +DEX mod; Fast Hands extends Cunning Action to include Use Object; `pStealthAttack(state, behindCover)->1d6 SA dice cost, preserve Invisible if behind 3/4+ Cover`
 - Test: climbing cost 1; jump distance +DEX mod; Fast Hands adds Use Object; Thief's Reflexes is caller-managed
 
 ---
@@ -350,13 +350,13 @@ Radiant Strikes (L11): on a hit with a melee weapon **or unarmed strike**, you c
 - Test: 1st slot->2d8; 2nd->3d8; 4th->5d8 (cap); 4th vs undead->6d8; free cast available 1/LR; Radiant Strikes +1d8 on every melee/unarmed hit at L11+
 
 **[T62] Paladin Passives**
-Divine Health (immune disease), Divine Sense (1+CHA mod uses/LR; incorporated into Channel Divinity in 5.2.1 — TODO: verify exact mechanism), Aura of Protection (L6: +CHA mod min +1 to own saves while conscious; extends to 30ft via Aura Expansion L18), Aura of Courage (L10: immune to frightened while conscious; 30ft via Aura Expansion), Radiant Strikes [T61], Faithful Steed (NEW L5: cast Find Steed 1/LR without slot), Abjure Foes (NEW L9: Channel Divinity, action — frighten up to CHA mod creatures within 60ft that can see/hear you, WIS save, frightened 1 min or until damage; caller-provided for multi-target), Restoring Touch (NEW L14: spend 5 LoH HP to remove one of: Blinded, Charmed, Deafened, Frightened, Paralyzed, or Stunned from a creature you touch), Aura Expansion (L18: Aura of Protection and Aura of Courage extend to 30ft).
+Divine Health (immune disease), Divine Sense (now a Channel Divinity option at L3: BA, detect Celestials/Fiends/Undead within 60ft for 10 min, know location and creature type; also detect consecrated/desecrated places), Aura of Protection (L6: +CHA mod min +1 to own saves while conscious; extends to 30ft via Aura Expansion L18), Aura of Courage (L10: immune to frightened while conscious; 30ft via Aura Expansion), Radiant Strikes [T61], Faithful Steed (NEW L5: cast Find Steed 1/LR without slot), Abjure Foes (NEW L9: Channel Divinity, action — frighten up to CHA mod creatures within 60ft that can see/hear you, WIS save, frightened 1 min or until damage; caller-provided for multi-target), Restoring Touch (NEW L14: spend 5 LoH HP to remove one of: Blinded, Charmed, Deafened, Frightened, Paralyzed, or Stunned from a creature you touch), Aura Expansion (L18: Aura of Protection and Aura of Courage extend to 30ft).
 - State: `faithfulSteedUsed: bool`, `abjureFoesCharges: int` (uses Channel Divinity)
 - Functions: modify `pApplyCondition` to block disease for Divine Health; `pAuraOfProtection(state, config)->+CHA mod to own saves`; `pFaithfulSteed(state)->mark used, cast Find Steed`; `pAbjureFoes(state, targetSaveResult)->expend Channel Divinity, frighten on fail`; `pRestoringTouch(state, conditionToRemove)->spend 5 LoH pool`; `pRadiantStrikes` in T61
 - Test: Divine Health blocks disease; Aura of Protection +CHA min +1 to own saves; Faithful Steed 1/LR; Abjure Foes uses Channel Divinity; Restoring Touch costs 5 LoH; Aura Expansion at L18
 
 **[T63] Oath of Devotion**
-Sacred Weapon (Channel Divinity: +CHA to attacks for 1 min, weapon emits light; revised per 5.2.1 — TODO: verify exact changes), Turn the Unholy (Channel Divinity, caller-provided multi-target), Aura of Devotion (L7: self + 10ft allies can't be charmed while conscious; 30ft at L18), Smite of Protection (NEW L15: when you cast Divine Smite, creatures of your choice in your Aura gain Half Cover until your next turn), Purity of Spirit (L15, revised — TODO: verify 5.2.1 exact text), Holy Nimbus (L20: revised per 5.2.1 — TODO: verify exact changes; 1/LR).
+Sacred Weapon (L3 Channel Divinity: on Attack action, expend Channel Divinity to imbue one melee weapon for 10 min — add CHA mod to attack rolls (min +1), each hit deals normal or Radiant damage, weapon emits bright light 20ft + dim 20ft; can end early; ends if not carrying weapon), Turn the Unholy (Channel Divinity, caller-provided multi-target), Aura of Devotion (L7: self + 10ft allies can't be charmed while conscious; 30ft at L18), Smite of Protection (L15: when you cast Divine Smite, you and allies have Half Cover while in your Aura of Protection until start of your next turn). ~~Purity of Spirit~~ replaced by Smite of Protection in 5.2.1. Holy Nimbus (L20: BA, imbue Aura of Protection with holy power for 10 min; Holy Ward: Advantage on saves forced by Fiend or Undead; Radiant Damage: enemies starting turn in aura take CHA mod + Prof Bonus Radiant; Sunlight: aura filled with bright sunlight; 1/LR or restore by expending a L5 spell slot).
 - State: `sacredWeaponActive: bool`, `holyNimbusActive: bool`
 - Functions: `pSacredWeapon(state)->expend Channel Divinity, set active`; modify `pResolveAttack` for +CHA (min +1) while active; `pSmiteOfProtection(state)->on Divine Smite cast, grant Half Cover in aura`; `pHolyNimbus(state)->1/LR, activate`
 - Test: Sacred Weapon adds CHA mod to attacks; consumes Channel Divinity; Smite of Protection triggers on Divine Smite; Holy Nimbus 1/LR
@@ -375,32 +375,32 @@ SRD 5.2.1: Favored Enemy and Natural Explorer replaced entirely. New base featur
 - Deft Explorer (L1): Expertise in one skill + Know one extra language; at L6 Roving (+5ft speed, climb/swim speed = walk speed); at L10 Tireless (1d8+WIS temp HP as action, uses = WIS mod/LR; reduce exhaustion 1 level on short rest)
 - Fighting Style feat (L2, [T05])
 - Nature's Veil (L14: Invisible as BA until start of your next turn, uses=WIS mod/LR)
-- Precise Hunter (L17: Advantage on attack rolls vs Heavily Obscured, Invisible, or creatures you can't see clearly)
-- Relentless Hunter (TODO: verify exact 5.2.1 feature)
-- Feral Senses (L18, revised: no disadvantage from being unable to see the attacker if you can hear it; aware of invisible creatures within 30ft)
+- Relentless Hunter (L13): taking damage can't break your Concentration on Hunter's Mark
+- Precise Hunter (L17): Advantage on attack rolls against the creature currently marked by your Hunter's Mark
+- Feral Senses (L18): Blindsight with a range of 30 feet
 - Foe Slayer (L20, revised: +WIS mod to attack or damage vs any creature, 1/turn — no longer restricted to Favored Enemy)
-- Hide in Plain Sight (L10, replaced by Tireless above — TODO: verify if feature still exists in 5.2.1)
-- Vanish (L14, replaced by Nature's Veil — TODO: verify)
+- ~~Hide in Plain Sight~~ (deleted in 5.2.1, replaced by Tireless at L10)
+- ~~Vanish~~ (deleted in 5.2.1, replaced by Nature's Veil at L14)
 - State: `natureVeilCharges: int`, `tiredlessCharges: int`, `roving: bool` (derived from level)
-- Functions: `pDeftExplorer(config)->expertise + language`; `pRoving(state, config)->+5ft speed + climb/swim speeds`; `pTireless(state, config, dieRoll)->grant temp HP, consume charge`; `pNaturesVeil(state, turnState)->grant Invisible until start of next turn, consume charge`; `pFoeSlayer(config, wisMod)->+WIS to attack or damage, 1/turn`; modify `pGetOwnAttackModifiers` for Precise Hunter/Feral Senses
-- Test: Deft Explorer expertise; Roving grants climb/swim speeds; Tireless temp HP = 1d8+WIS, resets on LR; Nature's Veil Invisible 1/turn, uses = WIS mod; Foe Slayer adds WIS mod 1/turn; Feral Senses removes disadvantage from unseen
+- Functions: `pDeftExplorer(config)->expertise + language`; `pRoving(state, config)->+5ft speed + climb/swim speeds`; `pTireless(state, config, dieRoll)->grant temp HP, consume charge`; `pNaturesVeil(state, turnState)->grant Invisible until start of next turn, consume charge`; `pFoeSlayer(config, wisMod)->+WIS to attack or damage, 1/turn`; `pRelentlessHunter->concentration on Hunter's Mark unbreakable by damage`; modify `pGetOwnAttackModifiers` for Precise Hunter (advantage vs marked target); Feral Senses = Blindsight 30ft (config flag)
+- Test: Deft Explorer expertise; Roving grants climb/swim speeds; Tireless temp HP = 1d8+WIS, resets on LR; Nature's Veil Invisible 1/turn, uses = WIS mod; Foe Slayer adds WIS mod 1/turn; Relentless Hunter blocks conc break from damage on Hunter's Mark; Precise Hunter advantage vs marked creature; Feral Senses = Blindsight 30ft
 
 **[T71] Hunter**
-SRD 5.2.1: all tier choices revised. Note: specific per-tier options per 5.2.1 may differ from 5.1 — use SRD text for final implementation.
+SRD 5.2.1: tier structure revised — fewer choices per tier, some tiers replaced by base features.
 
-New base features: Hunter's Lore (L3: learn two creature types' damage immunities/resistances/vulnerabilities, TODO: model as passive lookup); Superior Hunter's Prey (NEW, TODO: verify exact 5.2.1 feature).
+- Hunter's Lore (L3, base): while a creature is marked by your Hunter's Mark, you know whether it has any Immunities, Resistances, or Vulnerabilities, and if so, what they are. Passive ability, no action required.
 
-3rd — Hunter's Prey (revised, choose ONE): Colossus Slayer (+1d8 if target < max HP, 1/turn), Giant Killer (reaction attack after Large+ creature within 5ft hits/misses you), Horde Breaker (extra attack on different creature within 5ft).
+3rd — Hunter's Prey (choose ONE): Colossus Slayer (+1d8 if target < max HP, 1/turn), Horde Breaker (extra attack on different creature within 5ft of original target). ~~Giant Killer~~ not in SRD 5.2.1.
 
-7th — Defensive Tactics (revised, choose ONE): Escape the Horde (OAs against you have disadvantage), Multiattack Defense (+4 AC after creature hits you vs subsequent attacks from same creature), Steel Will (advantage vs frightened).
+7th — Defensive Tactics (choose ONE): Escape the Horde (OAs against you have disadvantage), Multiattack Defense (+4 AC after creature hits you vs subsequent attacks from same creature). ~~Steel Will~~ not in SRD 5.2.1.
 
-11th — Multiattack (revised, choose ONE): Volley (ranged attack each creature in 10ft of a point — caller-provided), Whirlwind Attack (melee attack each creature within 5ft — caller-provided).
+11th — Superior Hunter's Prey (base feature, not a choice): once per turn when you deal damage to a creature marked by Hunter's Mark, you can also deal that spell's extra damage to a different creature you can see within 30 ft of the first creature.
 
-15th — Superior Hunter's Defense (revised, choose ONE): Evasion [T03], Stand Against the Tide (redirect missed melee — caller-provided), Uncanny Dodge [T04].
+15th — Superior Hunter's Defense (base feature, not a choice): when you take damage, you can take a Reaction to give yourself Resistance to that damage and any other damage of the same type until the end of the current turn.
 
-- State: `hunterPrey: HunterPreyChoice`, `defensiveTactic: DefensiveTacticChoice`, `multiattack: MultiattackChoice`, `superiorDefense: SuperiorDefenseChoice` — all enums in config
-- Functions: `pColossusSlayer(targetBelowMax)->+1d8`; `pHordeBreaker(turnState)->grant one extra attack`; `pMultiattackDefense(alreadyHitBySameCreature)->+4 AC`; modify saves for Steel Will; modify OA for Escape the Horde
-- Test: Colossus Slayer only when target < max HP, 1/turn; Multiattack Defense +4 AC after first hit from same creature; tier choices mutually exclusive
+- State: `hunterPrey: HunterPreyChoice`, `defensiveTactic: DefensiveTacticChoice` — enums in config (L11 and L15 are base features, no choices)
+- Functions: `pColossusSlayer(targetBelowMax)->+1d8`; `pHordeBreaker(turnState)->grant one extra attack`; `pMultiattackDefense(alreadyHitBySameCreature)->+4 AC`; modify OA for Escape the Horde; `pSuperiorHuntersPrey(state)->spread Hunter's Mark damage to second target within 30ft, 1/turn`; `pSuperiorHuntersDefense(state)->Reaction, Resistance to damage type until end of turn`
+- Test: Colossus Slayer only when target < max HP, 1/turn; Multiattack Defense +4 AC after first hit from same creature; Superior Hunter's Prey spreads damage 1/turn; Superior Hunter's Defense consumes Reaction
 
 ---
 
@@ -412,7 +412,7 @@ New base features: Hunter's Lore (L3: learn two creature types' damage immunitie
 ```
 
 **[T80] Bardic Inspiration + Jack of All Trades + Countercharm + Song of Rest**
-SRD 5.2.1: Font of Inspiration (L5) revised (regain charges on short rest instead of long rest — TODO: verify exact 5.2.1 text). Superior Inspiration (L20) revised (regain 1 if 0 when rolling Initiative — unchanged). Words of Creation (NEW L20: TODO enumerate effect).
+SRD 5.2.1: Font of Inspiration (L5): regain all expended Bardic Inspiration uses on Short or Long Rest; can also expend a spell slot (no action) to regain one use. Superior Inspiration (L20): regain 1 if 0 when rolling Initiative (unchanged). Words of Creation (L20): always have Power Word Heal and Power Word Kill prepared; when you cast either, can target a second creature within 10 ft of the first target.
 - State: `bardicInspirationCharges: int`
 - Functions: `pBardicInspirationDie(level)->d6/d8/d10/d12`; `pExpendInspiration(state)->decrement`; `pJackOfAllTrades(profBonus, hasProficiency)->if not proficient: +floor(profBonus/2)`; Countercharm (L6): action, advantage on saves vs charmed/frightened until end of next turn; Song of Rest (L2): `pSongOfRestDie(bardLevel)->d6/d8/d10/d12`; Superior Inspiration: regain 1 if 0 at initiative; Expertise (L3: double prof on 2 skills, 2 more at L10 — config)
 - Test: correct die at each tier; charges = max(CHA mod, 1); recharge short rest at L5+; Jack adds half prof to unproficient checks only; Superior Inspiration triggers when 0 at initiative
@@ -436,7 +436,7 @@ SRD 5.2.1: subclass at L3 (was L1). New base class features:
 - Divine Order (L1, choose ONE): Protector (medium armor + shield training + martial weapons) or Thaumaturge (+WIS to Religion/Arcana checks — config flag)
 - Blessed Strikes (L7, choose ONE — replaces subclass Divine Strike): Potent Spellcasting (add WIS mod to cantrip damage) or Divine Strike (+1d8/+2d8 weapon damage at L8/L14)
 - Channel Divinity: incorporates Divine Sense; Turn Undead unchanged; Sear Undead (new Channel Divinity option: when you use Turn Undead, deal Radiant damage = WIS mod × prof bonus to affected undead)
-- Improved Blessed Strikes (L14: enhance the L7 choice — TODO: verify exact 5.2.1 text)
+- Improved Blessed Strikes (L14): Divine Strike increases to 2d8; Potent Spellcasting: when cantrip deals damage, grant creature within 60 ft temp HP = 2 × WIS modifier
 - Greater Divine Intervention (L20: cast any Divine/Cleric spell without slot 1/LR, revised from the d100 mechanic)
 - Destroy Undead (CR threshold by level — caller-provided, unchanged)
 - State: `divineOrderChoice: DivineOrderChoice`, `blessedStrikesChoice: BlessedStrikesChoice`
@@ -444,9 +444,9 @@ SRD 5.2.1: subclass at L3 (was L1). New base class features:
 - Test: CR thresholds at correct levels; Protector grants armor/weapon training; Thaumaturge +WIS to Religion/Arcana; Blessed Strikes choice exclusive; Potent Spellcasting adds WIS to cantrip
 
 **[T91] Life Domain**
-Disciple of Life (revised per 5.2.1 — TODO: verify exact bonus formula), Preserve Life (Channel Divinity: distribute HP pool — revised), Blessed Healer (self-heal when healing others), Divine Strike → replaced by Blessed Strikes [T90], Supreme Healing (max healing dice at L17 — unchanged), Land's Aid (NEW: TODO enumerate 5.2.1 effect).
-- Functions: `pDiscipleOfLife(spellLevel)->bonus healing`; `pPreserveLife(clericLevel)->pool = 5×clericLevel`; `pBlessedHealer(spellLevel, targetIsSelf)->if !self: bonus HP`; `pSupremeHealing(dice, dieSize)->dice*dieSize`; `pLandAid(state)->TODO`
-- Test: Disciple healing bonus; Preserve Life pool = 5×level, cap per target; Supreme Healing returns max; Land's Aid TODO
+Disciple of Life (L3: when a spell you cast with a spell slot restores HP, that creature regains additional HP = 2 + spell slot level on the turn you cast it), Preserve Life (Channel Divinity: distribute HP pool — revised), Blessed Healer (self-heal when healing others), Divine Strike → replaced by Blessed Strikes [T90], Supreme Healing (max healing dice at L17 — unchanged). Note: ~~Land's Aid~~ is a Druid (Circle of the Land) feature, not Cleric — removed from this task.
+- Functions: `pDiscipleOfLife(spellLevel)->bonus healing = 2 + slotLevel`; `pPreserveLife(clericLevel)->pool = 5×clericLevel`; `pBlessedHealer(spellLevel, targetIsSelf)->if !self: bonus HP`; `pSupremeHealing(dice, dieSize)->dice*dieSize`
+- Test: Disciple healing bonus = 2 + slot level; Preserve Life pool = 5×level, cap per target; Supreme Healing returns max
 
 ---
 
@@ -459,23 +459,23 @@ Disciple of Life (revised per 5.2.1 — TODO: verify exact bonus formula), Prese
 
 **[T100] Wild Shape Framework** *(done)*
 SRD 5.2.1: subclass at L3 (was L2). New base class features:
-- Primal Order (L1, choose ONE): Magician (learn extra language + Druidic in script form, 1 extra spell slot — TODO: verify) or Warden (martial weapons proficiency + 1d8 extra melee damage with Primal Strike)
+- Primal Order (L1, choose ONE): Magician (know one extra cantrip from Druid spell list + bonus to INT (Arcana or Nature) checks equal to WIS modifier, min +1) or Warden (proficiency with Martial weapons + training with Medium armor)
 - Elemental Fury (L7, choose ONE): Potent Spellcasting (add WIS mod to cantrip damage) or Primal Strike (weapon/unarmed hits count as magical; on a hit, +1d8 cold/fire/lightning/thunder)
 - Wild Companion: as a BA, expend Wild Shape use to cast Find Familiar (lasts until end of next long rest)
 - Wild Resurgence (L5?): when you have no Wild Shape uses, expend a spell slot to regain 1 use; 1/LR also regain 1 slot of any level you can cast
-- Improved Elemental Fury (L15): enhance the L7 choice (TODO: verify exact text)
-- Wild Shape: CR cap 1/4 at L2, 1/2 at L4, 1 at L8+; 2 charges/short rest (TODO: verify if unlimited at L20 changed)
+- Improved Elemental Fury (L15): Potent Spellcasting: cantrip range increases by 300 ft (if range >= 10 ft); Primal Strike: extra damage increases to 2d8
+- Wild Shape: CR cap 1/4 at L2, 1/2 at L4, 1 at L8+ (cap stays at 1, never unlimited); 2 charges/short rest
 - Does NOT break concentration; can't cast until Beast Spells L18 (V/S only)
-- Archdruid (L20): ignore V/S/non-costly-M on druid spells
+- Archdruid (L20): ignore V/S/non-costly-M on druid spells; Evergreen Wild Shape: when you roll Initiative and have no Wild Shape uses, regain one
 - State: `wildShapeCharges: int`, `inWildShape: bool`, `wildShapeHp: int`, `wildShapeMaxHp: int`, `originalHp: int`, `primalOrderChoice: PrimalOrderChoice`, `elementalFuryChoice: ElementalFuryChoice`
 - Functions: `pEnterWildShape`, `pWildShapeDamage(state, amount)->if beast HP 0: revert + overflow`, `pExitWildShape`, `pWildCompanion(state)->expend Wild Shape use`; `pWildResurgence(state)->expend slot for Wild Shape use`; `pPrimalStrike(config)->+1d8 elemental on hit`
 - Test: entering stores original HP; overflow carries; revert restores; CR prereqs enforced; can't cast while shifted (except Beast Spells L18); charge decrement; short rest restores; Wild Companion costs Wild Shape use; Primal Strike +1d8 at L7+
 
 **[T101] Circle of the Land**
-Natural Recovery revised (recover slots on short rest, total <= ceil(druidLevel/2), no 6th+; 1/LR — TODO: verify 5.2.1 changes), Circle Spells (config), ~~Land's Stride [T09]~~ (dropped), Nature's Ward (revised: immune charm/fright from fey/elemental, immune poison/disease at L10), Nature's Sanctuary (L14: WIS save or must pick different target — caller-provided), Land's Aid (NEW: TODO enumerate 5.2.1 text).
+Land's Aid (L3): Magic action, expend Wild Shape use, choose point within 60 ft. 10-ft-radius Sphere: creatures of choice make CON save vs spell DC — 2d6 Necrotic on fail, half on success. One creature of choice in area regains 2d6 HP. Scales: 3d6 at L10, 4d6 at L14. Natural Recovery (L6): can cast one L1+ prepared Circle Spell without slot (1/LR); on Short Rest, recover spell slots with combined level <= ceil(druidLevel/2), no 6th+. Circle Spells (config), ~~Land's Stride [T09]~~ (dropped), Nature's Ward (revised: immune charm/fright from fey/elemental, immune poison/disease at L10), Nature's Sanctuary (L14: WIS save or must pick different target — caller-provided).
 - State: `naturalRecoveryUsed: bool`
-- Functions: `pNaturalRecovery(state, config, slotsToRecover)->validate total <= ceil(druidLevel/2), none 6th+`; modify condition resistance for Nature's Ward
-- Test: Natural Recovery validates slot total; Nature's Ward blocks specific condition sources; Land's Aid TODO
+- Functions: `pLandsAid(state, config)->expend Wild Shape, CON save vs DC, 2d6/3d6/4d6 Necrotic + healing`; `pNaturalRecovery(state, config, slotsToRecover)->validate total <= ceil(druidLevel/2), none 6th+`; modify condition resistance for Nature's Ward
+- Test: Land's Aid costs Wild Shape use, correct damage/healing per tier, CON save vs spell DC; Natural Recovery validates slot total; Nature's Ward blocks specific condition sources
 
 ---
 
@@ -491,9 +491,9 @@ Natural Recovery revised (recover slots on short rest, total <= ceil(druidLevel/
 **[T110] Sorcery Points + Flexible Casting** *(done)*
 SRD 5.2.1: subclass at L3 (was L1). New base class features:
 - Innate Sorcery (L1): as a BA, activate for 1 min — +1 to spell save DC and Advantage on checks made to maintain concentration; 2 uses/LR
-- Sorcery Incarnate (TODO: verify exact level and effect in 5.2.1)
-- Arcane Apotheosis (L20): TODO enumerate effect
-- Sorcerous Restoration revised (TODO: verify exact 5.2.1 — was +4 FP on short rest)
+- Sorcery Incarnate (L7): if no Innate Sorcery uses left, can spend 2 SP to activate it as BA; while Innate Sorcery active, can use up to two Metamagic options per spell
+- Arcane Apotheosis (L20): while Innate Sorcery active, can use one Metamagic option per turn without spending SP
+- Sorcerous Restoration (L5): on Short Rest, regain expended SP up to half Sorcerer level (round down); 1/LR
 - State: `sorceryPoints: int`, `innateSorceryActive: bool`, `innateSorceryCharges: int`
 - Functions: `pConvertSlotToPoints(state, slotLevel)->gain 1-5 points`; `pConvertPointsToSlot(state, slotLevel)->spend 2-7 points, create slot (max 5th, vanish on LR)`; `pInnateSorcery(state, turnState)->+1 DC + concentration advantage, 1 min`
 - Test: correct costs; can't create above 5th; can't overspend; resets on LR; Innate Sorcery uses = 2/LR; +1 DC while active
@@ -502,20 +502,20 @@ SRD 5.2.1: subclass at L3 (was L1). New base class features:
 SRD 5.2.1: 6 original options revised, 2 new options added. Learns 2 at L3, can gain more at higher levels. Only one per spell EXCEPT Empowered which can combine.
 - Quickened (2 SP→bonus action cast), Empowered (1 SP→reroll up to CHA mod damage dice), Heightened (3 SP→Disadvantage on first save), Subtle (1 SP→no V/S), Careful (1 SP→chosen creatures auto-succeed save), Extended (1 SP→double duration max 24h)
 - NEW: Seeking Spell (2 SP→reroll missed spell attack roll), Transmuted Spell (1 SP→change damage type to acid/cold/fire/lightning/poison/thunder)
-- Note: Distant and Twinned may be revised or removed per 5.2.1 — TODO: verify final set from SRD text
+- Distant Spell (1 SP→double range if 5ft+, or Touch→30ft) and Twinned Spell (1 SP→increase spell's effective level by 1, for spells that target additional creatures at higher levels) both present in 5.2.1
 - State: `metamagicKnown: Set[Metamagic]`
 - Functions: one per metamagic option
 - Test: each costs correct SP; Quickened triggers bonus action spell rule; only one per spell except Empowered; Seeking Spell rerolls attack; Transmuted Spell changes type
 
 **[T112] Draconic Sorcery**
-SRD 5.2.1 rename: Draconic Bloodline → Draconic Sorcery. Draconic Resilience (13+DEX AC unarmored, +1 HP/level), Draconic Spells (NEW: always prepared spells tied to ancestry type — config, TODO: enumerate), Elemental Affinity (L6: +CHA damage for ancestry type; 1 SP→resistance 1 hour), Dragon Wings (L14: BA fly at walk speed; can't in non-accommodating armor), Draconic Presence (revised — TODO: verify 5.2.1 text).
+SRD 5.2.1 rename: Draconic Bloodline → Draconic Sorcery. Draconic Resilience (L3: 13+DEX AC unarmored, +1 HP/level), Draconic Spells (L3: always prepared — L3: Alter Self, Chromatic Orb, Command, Dragon's Breath; L5: Fear, Fly; L7: Arcane Eye, Charm Monster; L9: Legend Lore, Summon Dragon), Elemental Affinity (L6: +CHA damage for ancestry type; 1 SP→resistance 1 hour), Dragon Wings (L14: BA fly at walk speed; can't in non-accommodating armor). ~~Draconic Presence~~ does not exist in SRD 5.2.1 — the L18 feature is Dragon Companion (T112b).
 - **Core dependency:** Draconic Resilience requires `DraconicUD` variant in `UnarmoredDefense` type in `dnd.qnt` and case in `calculateAC`.
 - State: `draconicAncestryType: DamageType`, `dragonWingsActive: bool`
 - Functions: modify AC for Draconic Resilience (13+DEX); modify max HP; `pElementalAffinity(config, spellDamageType)->+CHA if match`; `pDragonWings->set fly speed = walk speed`
 - Test: AC = 13+DEX without armor; +1 HP per sorcerer level; Elemental Affinity only matching type; Dragon Wings blocked by non-accommodating armor
 
 **[T112b] Dragon Companion**
-New feature in SRD 5.2.1 Draconic Sorcery. TODO: enumerate full effect from SRD 5.2.1 Classes/Sorcerer section.
+L18 Draconic Sorcery. Cast Summon Dragon without a Material component. Cast it 1/LR without a spell slot. When casting, can modify to not require Concentration (duration becomes 1 minute for that casting).
 
 ---
 
@@ -540,11 +540,11 @@ SRD 5.2.1: subclass at L3 (was L1). Pact Boon eliminated as a class feature — 
 **[T121] Invocations**
 SRD 5.2.1: 7 new invocations, 18 revised. Pact Boon options now invocations from L1 (Pact of the Blade, Pact of the Chain, Pact of the Tome).
 
-Combat invocations: Agonizing Blast (+CHA to EB per beam), Lifedrinker (+CHA necrotic on pact weapon), Thirsting Blade (Extra Attack with pact weapon at L5+), Repelling Blast (push 10ft per beam), Eldritch Spear (EB range 300ft), Eldritch Smite (NEW: expend pact slot on hit for Radiant damage + Prone — TODO: verify exact), Devouring Blade (NEW: TODO enumerate).
+Combat invocations: Agonizing Blast (+CHA to EB per beam), Lifedrinker (+CHA necrotic on pact weapon), Thirsting Blade (Extra Attack with pact weapon at L5+), Repelling Blast (push 10ft per beam), Eldritch Spear (EB range 300ft), Eldritch Smite (NEW: prereq L5+ + Pact of the Blade; once/turn on pact weapon hit, expend Pact Magic slot for 1d8 + 1d8/slot level Force damage; can make target Prone if Huge or smaller), Devouring Blade (NEW: prereq L12+ + Thirsting Blade; Extra Attack grants two extra attacks instead of one, 3 total).
 
 Defensive: Armor of Shadows (Mage Armor at will), Fiendish Vigor (False Life at will), Devil's Sight (120ft darkness vision), One with Shadows (invisible in dim/dark), Eldritch Mind (NEW: Advantage on concentration checks).
 
-Pact Boon: Gift of the Protectors (NEW: Pact of the Chain — TODO), Investment of the Chain Master (NEW: enhance familiar — TODO), Gift of the Depths (NEW: swim speed + water breathing — TODO), Lessons of the First Ones (NEW: gain an Origin feat — TODO).
+Pact Boon: Gift of the Protectors (NEW: prereq L9+ + Pact of the Tome; Book of Shadows page holds CHA mod names; named creature at 0 HP not killed outright drops to 1 HP instead; triggers 1/LR; names erasable via Magic action), Investment of the Chain Master (NEW: prereq L5+ + Pact of the Chain; Find Familiar gains: Fly or Swim 40ft, BA Attack command, Necrotic/Radiant damage substitution, uses your spell save DC, Reaction for Resistance to familiar's damage), Gift of the Depths (NEW: prereq L5+; breathe underwater + Swim Speed = Speed; cast Water Breathing 1/LR without slot), Lessons of the First Ones (NEW: prereq L2+; gain one Origin feat; repeatable with different feat each time).
 
 - State: `invocations: Set[Invocation]`, `pactBoon: PactBoon option` (now derived from invocation choices)
 - Functions: modify damage for Agonizing Blast/Lifedrinker; modify AC for Armor of Shadows; Thirsting Blade grants extra attack; `pEldritchMind(state)->advantage on concentration checks`
@@ -567,17 +567,17 @@ SRD 5.2.1 rename: The Fiend → Fiend Patron. Dark One's Blessing (revised: temp
 
 **[T130] Arcane Recovery**
 SRD 5.2.1: subclass at L3 (was L1). New base class features:
-- Scholar (L2): Expertise in two skills from Arcana/History/Investigation/Medicine/Nature/Religion; also gain proficiency in one of those skills — TODO: verify exact 5.2.1 text
-- Memorize Spell (L5): after each long rest, replace one of your prepared spells with one from your spellbook for free (additional prepared spell slot, effectively — TODO: verify exact mechanic)
+- Scholar (L2): choose one skill you already have proficiency in (from Arcana/History/Investigation/Medicine/Nature/Religion); gain Expertise in that one skill
+- Memorize Spell (L5): whenever you finish a Short Rest, you can study your spellbook and replace one L1+ prepared Wizard spell with another L1+ spell from the book
 - Spell Mastery (L18): chosen 1st+2nd at lowest level without slot — unchanged
 - Signature Spells (L20): 3rd-level 1/SR each — unchanged
 - Arcane Recovery (unchanged): 1/LR on short rest, recover slots <= ceil(wizard level/2), no 6th+
 - State: `arcaneRecoveryUsed: bool`, `spellMasterySlots: Set[int]`, `signatureSpellsUsed: Set[str]`
-- Functions: `pArcaneRecovery(state, config, slotsToRecover)->validate sum <= ceil(level/2), none 6th+`; `pScholar(config)->expertise in two skills`
-- Test: can't recover 6th+; total <= ceil(half wizard level); once per LR; Scholar expertise on chosen skills
+- Functions: `pArcaneRecovery(state, config, slotsToRecover)->validate sum <= ceil(level/2), none 6th+`; `pScholar(config)->expertise in one skill`
+- Test: can't recover 6th+; total <= ceil(half wizard level); once per LR; Scholar expertise on one chosen skill; Memorize Spell swaps one prepared spell on short rest
 
 **[T131] Evoker**
-SRD 5.2.1 rename: Evocation subclass → Evoker. Sculpt Spells revised per 5.2.1 (choose up to 1+spell level creatures for auto-succeed — TODO: verify exact changes). Potent Cantrip revised (half damage on save success — unchanged). Empowered Evocation revised (+INT mod to one damage roll of wizard evocation spell — unchanged). Overchannel revised (max damage on wizard damage spells 1-5; self necrotic on repeat — TODO: verify if formula changed).
+SRD 5.2.1 rename: Evocation subclass → Evoker. Sculpt Spells (L6): choose up to 1 + spell level creatures you can see; they auto-succeed saves and take no damage (where they'd normally take half on success). Potent Cantrip (half damage on save success — unchanged). Empowered Evocation (+INT mod to one damage roll of wizard evocation spell — unchanged). Overchannel (L14): cast a L1-5 Wizard damage spell at max damage; first use free/LR; subsequent: 2d12 Necrotic per slot level (ignores Resistance/Immunity), increasing by 1d12 each additional use before LR.
 - State: `overchannelUseCount: int`
 - Functions: `pPotentCantrip(fullDamage)->floor(fullDamage/2)` on save success; `pEmpoweredEvocation(config, damage)->damage + INT mod`; `pOverchannel(state, diceCount, dieSize)->diceCount*dieSize`
 - Test: Potent Cantrip half on save; Empowered adds INT to one roll; Overchannel max damage; first free, subsequent cost escalating necrotic
@@ -599,9 +599,9 @@ SRD 5.2.1 species: Human (no combat traits), Elf (lineage options), Dwarf, Halfl
 Traits:
 - **Small species Heavy Weapon Disadvantage** (Halfling, Gnome): Disadvantage on attacks with Heavy weapons — unchanged
 - **Orc Relentless Endurance** (Orc replaces Half-Orc): when you drop to 0 HP, drop to 1 HP instead; 1/LR
-- **Orc Adrenaline Rush** (NEW, Orc): take the Dash action as a BA; gain temp HP = prof bonus; uses = prof bonus/LR
+- **Orc Adrenaline Rush** (NEW, Orc): take the Dash action as a BA; gain temp HP = prof bonus; uses = prof bonus/Short or Long Rest
 - **Halfling Lucky**: reroll nat 1 on any d20 — unchanged
-- **Dragonborn Breath Weapon**: revised per 5.2.1 — TODO: verify exact scaling and DC formula
+- **Dragonborn Breath Weapon**: replaces one attack in Attack action; DEX save DC 8 + CON mod + Prof Bonus; 15-ft Cone or 30-ft Line (choose each time); 1d10 → 2d10 (L5) → 3d10 (L11) → 4d10 (L17); damage type from Draconic Ancestry
 - **Halfling Nimbleness**: move through larger creature's space — unchanged
 - **Goliath Giant Ancestry** (NEW): choose one of 6 options; all cost Prof Bonus uses/LR:
   - Cloud's Jaunt: BA — teleport 30 ft to visible unoccupied space
@@ -618,16 +618,16 @@ Traits:
 
 **[T141] Species Save/Resistance Modifiers**
 All traits revised against SRD 5.2.1 text:
-- **Dwarven Resilience**: Advantage on saves vs Poison + Resistance to Poison damage — TODO: verify exact 5.2.1 text
+- **Dwarven Resilience**: Resistance to Poison damage + Advantage on saves to avoid or end Poisoned condition
 - **Dwarf Heavy Armor Speed**: no speed penalty in heavy armor — config flag
 - **Gnome Cunning**: Advantage on INT/WIS/CHA saves vs magic — unchanged
 - **Halfling Brave**: Advantage vs Frightened — unchanged
 - **Tiefling Hellish Resistance**: Fire Resistance — unchanged
 - **Dragonborn Damage Resistance**: match ancestry type — unchanged in concept, revised per 5.2.1
-- **Hill Dwarf Toughness**: +1 HP/level — TODO: verify if still exists in 5.2.1
-- **Tiefling Infernal Legacy**: racial spells at 1/LR — TODO: verify 5.2.1 spell list
+- **Dwarven Toughness** (universal to all Dwarves, no subraces in 5.2.1): HP max +1, and +1 again whenever you gain a level
+- **Tiefling Fiendish Legacy** (renamed from Infernal Legacy; choose ONE): Abyssal (Poison Spray cantrip → Ray of Sickness L3 → Hold Person L5), Chthonic (Chill Touch cantrip → False Life L3 → Ray of Enfeeblement L5), Infernal (Fire Bolt cantrip → Hellish Rebuke L3 → Darkness L5) — spells cast 1/LR each
 - **Fey Ancestry** (Elf): Advantage on saves vs Charmed — all lineages (base trait, unchanged). Sleep immunity not in 5.2.1 text.
-- State: `infernalLegacyHellishRebukeUsed: bool`, `infernalLegacyDarknessUsed: bool`
+- State: `fiendishLegacyChoice: FiendishLegacyChoice`, `fiendishLegacyL3Used: bool`, `fiendishLegacyL5Used: bool`
 - Functions: modify saves/damage for each trait
 - Test: per trait — verify against SRD 5.2.1 text before implementation
 
@@ -720,7 +720,8 @@ SRD 5.2.1: each weapon has a Mastery property. Only classes/features that grant 
 
 ## Equipment Updates (SRD 5.2.1)
 
-- **New weapons**: Musket (ranged, TODO stats), Pistol (ranged, TODO stats)
+- **Musket**: 1d12 Piercing, Ammunition (Range 40/120, Bullet), Loading, Two-Handed, Mastery: Slow, 10 lb., 500 GP
+- **Pistol**: 1d10 Piercing, Ammunition (Range 30/90, Bullet), Loading, Mastery: Vex, 3 lb., 250 GP
 - **Net**: moved from weapon to adventuring gear (no longer has weapon mastery)
 - **Potion of Healing**: now a Bonus Action to drink (was Action)
 - **Removed fighting styles**: Dueling, Protection not in SRD 5.2.1 — see T05
@@ -757,8 +758,8 @@ Core is complete (PLAN.md). This file is now the active plan. All tasks are unbl
 4. ~~**[T201]** Feat System Framework; then **[T05]** Fighting Style Feats (needs T201)~~ ✓
 5. ~~**P1 class features** — T10 Rage, T11 Reckless, T20 Second Wind, T21 Action Surge, T30 Sneak Attack, T40 Focus Pool, T41 Martial Arts, T60 Lay on Hands, T61 Paladin's Smite, T100 Wild Shape, T110 Sorcery Points; T200 Grappler Feat~~ ✓
 6. ~~**P1 dependent** — T13 Berserker (needs T10), T23 Champion (needs T02+T05), T31 Cunning Action (needs T06), T42 Focus Actions (needs T40+T06), T43 Stunning Strike (needs T40)~~ ✓
-7. **P1-P2 spells** — T150 Damage Patterns, T152 AC/Defense Buffs, T153 Condition Debuffs (all need T08)
-8. **P2-P3 class features, species traits, T170 Weapon Mastery** in any order — **T20b** Fighter Base Features must follow T170 (needs T01+T170)
+7. ~~**P1-P2 spells** — T150 Damage Patterns, T152 AC/Defense Buffs, T153 Condition Debuffs (all need T08)~~ ✓
+8. **P2-P3 class features, species traits, ~~T170 Weapon Mastery~~** in any order — **T20b** Fighter Base Features must follow T170 (needs T01+T170)
 9. **P2-P3 spells, remaining** in any order
 
 ---
@@ -781,13 +782,13 @@ Core is complete (PLAN.md). This file is now the active plan. All tasks are unbl
 | Polymorph | 1+True | T161 |
 | Summon (~50), Utility (~110) | ~160 | Not modeled |
 
-New in 5.2.1: 20 spells added (distributed across T150-T156 as TODO entries).
+New in 5.2.1: 20 spells added (distributed across T150-T156 as tracking entries).
 
 ## What is NOT Formalized
 
 - Subclasses beyond the 12 SRD subclasses (1 per class)
 - Spells not in SRD 5.2.1
-- Feats beyond those enumerated per category (TODO: full enumeration)
+- Feats beyond those enumerated per category (full enumeration deferred)
 - Species/lineages beyond SRD 5.2.1 list
 - Battlemaps/grids/coordinates
 - AoE geometry
@@ -797,4 +798,4 @@ New in 5.2.1: 20 spells added (distributed across T150-T156 as TODO entries).
 - Improvised weapons, Help action, Ready action spell-holding
 - Spellbook mechanics, non-combat species traits
 - Charmed social interaction, Antimagic Field interactions
-- Dragon Companion (T112b) — perpetual TODO, not v1
+- Dragon Companion (T112b) — L18 Draconic Sorcery, low priority
