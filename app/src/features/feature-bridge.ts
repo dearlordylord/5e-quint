@@ -190,8 +190,10 @@ export function executeDeclareReckless(): BridgeResult {
 
 // --- Barbarian: Query functions (no BridgeResult -- pure data for UI) ---
 
+const EMPTY_SET: ReadonlySet<never> = new Set()
+
 export function getRageResistances(featureState: FeatureState): ReadonlySet<DamageType> {
-  if (!featureState.barbarian) return new Set()
+  if (!featureState.barbarian) return EMPTY_SET
   return rageResistances(featureState.barbarian.raging)
 }
 
@@ -231,7 +233,7 @@ export function getFrenzyDamageDice(featureState: FeatureState, barbarianLevel: 
 // --- Berserker: Mindless Rage (L6) ---
 
 export function getMindlessRageImmunities(featureState: FeatureState, berserkerLevel: number): ReadonlySet<Condition> {
-  if (!featureState.barbarian) return new Set()
+  if (!featureState.barbarian) return EMPTY_SET
   return mindlessRageImmunities(featureState.barbarian.raging, berserkerLevel)
 }
 
@@ -241,23 +243,21 @@ export const getEnterRageConditionsToRemove: (
 ) => ReadonlyArray<Condition> = mindlessRageOnEnterRage
 
 export function executeEnterRageWithMindlessRage(
-  _featureState: FeatureState,
+  featureState: FeatureState,
   ctx: DndContext,
   berserkerLevel: number,
   currentConditions: ReadonlyArray<Condition>
 ): BridgeResult {
+  const base = executeEnterRage(featureState, ctx)
   const conditionsToRemove = mindlessRageOnEnterRage(currentConditions, berserkerLevel)
-  const baseEvents: ReadonlyArray<DndEvent> =
-    ctx.concentrationSpellId !== ""
-      ? [{ type: "USE_BONUS_ACTION" }, { type: "BREAK_CONCENTRATION" }]
-      : [{ type: "USE_BONUS_ACTION" }]
+  if (conditionsToRemove.length === 0) return base
   const removeEvents: ReadonlyArray<DndEvent> = conditionsToRemove.map((c) => ({
     type: "REMOVE_CONDITION" as const,
     condition: c
   }))
   return {
-    featureAction: { type: "BARBARIAN_ENTER_RAGE" },
-    machineEvents: [...baseEvents, ...removeEvents]
+    featureAction: base.featureAction,
+    machineEvents: [...base.machineEvents, ...removeEvents]
   }
 }
 

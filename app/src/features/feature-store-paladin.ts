@@ -16,9 +16,6 @@ export function reducePaladin(state: FeatureState, action: FeatureAction, config
     case "PALADIN_SMITE_FREE":
       return { ...state, paladin: { ...p, smiteFreeUsed: true } }
 
-    case "NOTIFY_START_TURN":
-      return state
-
     case "NOTIFY_LONG_REST": {
       const rest = paladinLongRest(config.level)
       return {

@@ -204,6 +204,7 @@ function reduceFighter(state: FeatureState, action: FeatureAction, config: Featu
 
   switch (action.type) {
     case "FIGHTER_USE_SECOND_WIND":
+    case "FIGHTER_USE_TACTICAL_MIND":
       return { ...state, fighter: { ...f, secondWindCharges: f.secondWindCharges - 1 } }
 
     case "FIGHTER_USE_ACTION_SURGE":
@@ -211,9 +212,6 @@ function reduceFighter(state: FeatureState, action: FeatureAction, config: Featu
         ...state,
         fighter: { ...f, actionSurgeCharges: f.actionSurgeCharges - 1, actionSurgeUsedThisTurn: true }
       }
-
-    case "FIGHTER_USE_TACTICAL_MIND":
-      return { ...state, fighter: { ...f, secondWindCharges: f.secondWindCharges - 1 } }
 
     case "FIGHTER_USE_INDOMITABLE":
       return { ...state, fighter: { ...f, indomitableCharges: f.indomitableCharges - 1 } }
@@ -354,10 +352,7 @@ function reduceMonk(state: FeatureState, action: FeatureAction, _config: Feature
 
   switch (action.type) {
     case "MONK_EXPEND_FOCUS": {
-      const result = pExpendFocus(
-        { focusPoints: m.focusPoints, focusMax: m.focusMax, uncannyMetabolismUsed: m.uncannyMetabolismUsed },
-        action.cost
-      )
+      const result = pExpendFocus(m, action.cost)
       if (!result.success) return state
       return { ...state, monk: { ...m, focusPoints: result.focusPoints } }
     }
@@ -368,37 +363,11 @@ function reduceMonk(state: FeatureState, action: FeatureAction, _config: Feature
         monk: { ...m, focusPoints: action.focusPoints, uncannyMetabolismUsed: action.uncannyMetabolismUsed }
       }
 
-    case "NOTIFY_SHORT_REST": {
-      const restored = pRestoreFocus({
-        focusPoints: m.focusPoints,
-        focusMax: m.focusMax,
-        uncannyMetabolismUsed: m.uncannyMetabolismUsed
-      })
-      return {
-        ...state,
-        monk: {
-          focusPoints: restored.focusPoints,
-          focusMax: restored.focusMax,
-          uncannyMetabolismUsed: restored.uncannyMetabolismUsed
-        }
-      }
-    }
+    case "NOTIFY_SHORT_REST":
+      return { ...state, monk: pRestoreFocus(m) }
 
-    case "NOTIFY_LONG_REST": {
-      const restored = pRestoreFocusLongRest({
-        focusPoints: m.focusPoints,
-        focusMax: m.focusMax,
-        uncannyMetabolismUsed: m.uncannyMetabolismUsed
-      })
-      return {
-        ...state,
-        monk: {
-          focusPoints: restored.focusPoints,
-          focusMax: restored.focusMax,
-          uncannyMetabolismUsed: restored.uncannyMetabolismUsed
-        }
-      }
-    }
+    case "NOTIFY_LONG_REST":
+      return { ...state, monk: pRestoreFocusLongRest(m) }
 
     default:
       return state
