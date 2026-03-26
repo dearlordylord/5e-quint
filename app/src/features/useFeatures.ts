@@ -55,7 +55,7 @@ export interface UseFeatures {
   readonly secondWind: (d10Roll: number) => BridgeResult | null
   readonly actionSurge: () => BridgeResult | null
   readonly canTacticalMind: (checkFailed: boolean) => boolean
-  readonly tacticalMind: () => BridgeResult | null
+  readonly tacticalMind: (boostedCheckSucceeded: boolean) => BridgeResult | null
   readonly canIndomitable: boolean
   readonly indomitable: () => BridgeResult | null
   // Champion

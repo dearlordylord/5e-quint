@@ -99,9 +99,11 @@ export function canExecuteTacticalMind(
   return canUseTacticalMind(featureState.fighter.secondWindCharges, fighterLevel, checkFailed)
 }
 
-export function executeTacticalMind(): BridgeResult {
+// SRD: "If the check still fails, this use of Second Wind isn't expended."
+// Only dispatch the charge-decrement action if the boosted check succeeded.
+export function executeTacticalMind(boostedCheckSucceeded: boolean): BridgeResult {
   return {
-    featureAction: { type: "FIGHTER_USE_TACTICAL_MIND" },
+    featureAction: boostedCheckSucceeded ? { type: "FIGHTER_USE_TACTICAL_MIND" } : { type: "NOTIFY_START_TURN" }, // no-op: charge not consumed
     machineEvents: []
   }
 }
