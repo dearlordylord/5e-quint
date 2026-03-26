@@ -117,7 +117,7 @@ export interface UseFeatures {
   readonly divineSmiteDamage: (slotLevel: number, isUndeadOrFiend: boolean) => number
   readonly auraOfProtectionBonus: number
   readonly canUseAuraOfProtection: boolean
-  readonly hasDivineHealth: boolean
+
   readonly radiantStrikesDice: number
   // Rogue
   readonly sneakAttackDice: number
@@ -349,7 +349,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     divineSmiteDamage: monkPaladin.divineSmiteDamage,
     auraOfProtectionBonus: monkPaladin.auraOfProtectionBonus,
     canUseAuraOfProtection: monkPaladin.canUseAuraOfProtection,
-    hasDivineHealth: monkPaladin.hasDivineHealth,
+
     radiantStrikesDice: monkPaladin.radiantStrikesDice,
     sneakAttackDice: rogueFeatures.sneakAttackDice,
     canSneakAttack: rogueFeatures.canSneakAttack,
