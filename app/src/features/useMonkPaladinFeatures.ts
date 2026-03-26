@@ -45,7 +45,7 @@ export interface MonkPaladinHookResult {
   readonly canPatientDefenseFree: boolean
   readonly patientDefenseFree: () => BridgeResult | null
   readonly canPatientDefenseFocus: boolean
-  readonly patientDefenseFocus: (twoMartialArtsDieRollsTotal: number) => BridgeResult | null
+  readonly patientDefenseFocus: () => BridgeResult | null
   readonly canStepOfTheWindFree: boolean
   readonly stepOfTheWindFree: () => BridgeResult | null
   readonly canStepOfTheWindFocus: boolean
@@ -81,10 +81,10 @@ export function useMonkPaladinFeatures(
 
   const flurryOfBlowsCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
-    const result = executeFlurryOfBlows(featureState, level)
+    const result = executeFlurryOfBlows()
     dispatch(result.featureAction)
     return result
-  }, [featureState, ctx, level, dispatch])
+  }, [ctx, dispatch])
 
   const canPatientDefenseFreeVal = ctx ? canExecutePatientDefenseFree(featureState, ctx) : false
 
@@ -97,15 +97,12 @@ export function useMonkPaladinFeatures(
 
   const canPatientDefenseFocusVal = ctx ? canExecutePatientDefenseFocus(featureState, ctx) : false
 
-  const patientDefenseFocusCb = useCallback(
-    (twoMartialArtsDieRollsTotal: number): BridgeResult | null => {
-      if (!ctx) return null
-      const result = executePatientDefenseFocus(featureState, level, twoMartialArtsDieRollsTotal)
-      dispatch(result.featureAction)
-      return result
-    },
-    [featureState, ctx, level, dispatch]
-  )
+  const patientDefenseFocusCb = useCallback((): BridgeResult | null => {
+    if (!ctx) return null
+    const result = executePatientDefenseFocus()
+    dispatch(result.featureAction)
+    return result
+  }, [ctx, dispatch])
 
   const canStepOfTheWindFreeVal = ctx ? canExecuteStepOfTheWindFree(featureState, ctx) : false
 
@@ -120,12 +117,12 @@ export function useMonkPaladinFeatures(
 
   const stepOfTheWindFocusCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
-    const result = executeStepOfTheWindFocus(featureState, level)
+    const result = executeStepOfTheWindFocus()
     dispatch(result.featureAction)
     return result
-  }, [featureState, ctx, level, dispatch])
+  }, [ctx, dispatch])
 
-  // Stunning Strike: defaults to unarmed, not used this turn
+  // TODO: stunningStrikeUsedThisTurn and weaponCategory should come from caller state
   const canStunningStrikeVal = canExecuteStunningStrike(featureState, level, false, "unarmed")
 
   const stunningStrikeCb = useCallback(
@@ -151,7 +148,7 @@ export function useMonkPaladinFeatures(
   )
 
   const martialArtsDieVal = getMartialArtsDie(level)
-  // Default: no attack action, unarmed, no armor, no shield
+  // TODO: these params should come from caller state (attack action, weapon, armor)
   const bonusUnarmedStrikeEligibleVal = getBonusUnarmedStrikeEligible(false, "unarmed", false, false)
 
   // Paladin
@@ -190,8 +187,9 @@ export function useMonkPaladinFeatures(
     return result
   }, [dispatch])
 
-  const auraBonus = getAuraOfProtectionBonus(level, 0) // caller provides actual chaMod via config or UI
-  const canAura = getCanUseAuraOfProtection(level, true) // defaults to conscious
+  // TODO: chaMod and isConscious should come from caller state
+  const auraBonus = getAuraOfProtectionBonus(level, 0)
+  const canAura = getCanUseAuraOfProtection(level, true)
   const divineHealth = getHasDivineHealth(level)
   const radiantDice = getRadiantStrikesDice({ paladinLevel: level, isMeleeOrUnarmed: true })
 

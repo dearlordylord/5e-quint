@@ -96,7 +96,7 @@ export interface UseFeatures {
   readonly canPatientDefenseFree: boolean
   readonly patientDefenseFree: () => BridgeResult | null
   readonly canPatientDefenseFocus: boolean
-  readonly patientDefenseFocus: (twoMartialArtsDieRollsTotal: number) => BridgeResult | null
+  readonly patientDefenseFocus: () => BridgeResult | null
   readonly canStepOfTheWindFree: boolean
   readonly stepOfTheWindFree: () => BridgeResult | null
   readonly canStepOfTheWindFocus: boolean
