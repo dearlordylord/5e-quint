@@ -67,7 +67,7 @@ Extend `CharConfig` with `className`, `subclass`, `species`, `classLevels`, `fig
 Extend `Feature` sum type or replace with `(class, level)` derivation. Note: SRD 5.2.1 uses `species` (not `race`); subraces are eliminated (Elf uses lineage options: Drow, High Elf, Wood Elf). Ability score increases come from Background, not species.
 - State: config fields only, no mutable state
 - Test: construct configs for each class/species combo; verify `extraAttacksFromConfig`, `proficiencyBonus` still work
-- **Open question:** SRD 5.2.1 made Ritual casting universal (any prepared spell with Ritual tag). `canRitualCast` is currently `false` for Paladin/Ranger/Sorcerer/Warlock — needs ASSUMPTIONS.md entry or fix.
+- **Resolved:** Ritual casting is caller-orchestrated — caller skips `pExpendSlot` for ritual spells. No dedicated function needed. `canRitualCast` config flag removed (universal in 5.2.1). See ASSUMPTIONS.md A10.
 
 **[T01.5] Multiclass Proficiency Rules**
 When multiclassing into a non-starting class, only partial proficiencies are gained (varies per class: Fighter gets armor/weapons/shields, Wizard gets nothing, etc.). Attacking with a non-proficient weapon: no proficiency bonus added to attack roll (NOT disadvantage). Druid restriction: will not wear metal armor or shields (config flag).
@@ -783,6 +783,21 @@ Core is complete (PLAN.md). This file is now the active plan. All tasks are unbl
 | Summon (~50), Utility (~110) | ~160 | Not modeled |
 
 New in 5.2.1: 20 spells added (distributed across T150-T156 as tracking entries).
+
+## Known SRD 5.2.1 Parity Bugs (pure functions)
+
+Found during Batch 1 integration validation. These are pre-existing issues in the pure function layer, not the integration wiring.
+
+1. **Divine Smite 5d8 cap** — `class-paladin.ts:93` enforces `MAX_SMITE_DICE = 5` from SRD 5.1. SRD 5.2.1 removed this cap. A 5th-level slot should deal 6d8, not 5d8.
+2. **Divine Health modeled but removed in 5.2.1** — `class-paladin.ts:148-153`. Not in the SRD 5.2.1 Paladin Features table. Should be removed or gated behind edition flag.
+3. **Persistent Rage `rageCharges === 0` too restrictive** — `class-barbarian.ts:185`. SRD says "you can regain all expended uses" with no requirement to be at zero charges.
+4. **Brutal Strike `isMelee` guard not in SRD** — `class-barbarian.ts:272`. SRD only requires "Strength-based attack roll" (thrown STR weapons should qualify).
+5. **Feral Instinct `canActWhileSurprised` is 5.1 holdover** — `class-barbarian.ts:479-482`. SRD 5.2.1 Feral Instinct only grants Advantage on Initiative; the "act while surprised" text was removed.
+6. **Open Hand Addle `cantTakeReactions` overstates** — `class-monk-features.ts:196,232`. SRD only blocks Opportunity Attacks, not all reactions.
+7. **Deflect Attacks throw-back "two rolls"** — `class-monk-features.ts:120-123`. SRD specifies "two rolls of your Martial Arts die" but interface has single `dieSize`.
+8. **Empowered Strikes comment** — `class-monk-features.ts:54` says "magical for overcoming resistance" (5.1); SRD 5.2.1 says "Force damage or normal damage type."
+
+---
 
 ## What is NOT Formalized
 
