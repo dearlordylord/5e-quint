@@ -212,7 +212,6 @@ export interface UseQuiveringPalmResult {
 }
 
 export interface TriggerQuiveringPalmResult {
-  readonly reducedToZeroHp: boolean
   readonly forceDamage: number
 }
 
@@ -295,9 +294,9 @@ export function useQuiveringPalm(focusPoints: number): UseQuiveringPalmResult {
  */
 export function triggerQuiveringPalm(targetSavePassed: boolean, d12Total: number): TriggerQuiveringPalmResult {
   if (!targetSavePassed) {
-    return { reducedToZeroHp: false, forceDamage: d12Total }
+    return { forceDamage: d12Total }
   }
   /* eslint-disable no-magic-numbers */
-  return { reducedToZeroHp: false, forceDamage: Math.floor(d12Total / 2) }
+  return { forceDamage: Math.floor(d12Total / 2) }
   /* eslint-enable no-magic-numbers */
 }

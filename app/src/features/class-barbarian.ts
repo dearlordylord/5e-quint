@@ -455,11 +455,6 @@ export function canUseDangerSense(barbarianLevel: number, isIncapacitated: boole
   return barbarianLevel >= DANGER_SENSE_LEVEL && !isIncapacitated
 }
 
-/** Returns true (advantage on DEX saves) when Danger Sense is active. */
-export function dangerSenseAdvantage(canUse: boolean): boolean {
-  return canUse
-}
-
 // --- Fast Movement (L5) ---
 
 /** Returns +10ft speed bonus if L5+ and not wearing heavy armor, else 0. */

@@ -897,13 +897,11 @@ describe("Quivering Palm", () => {
 
   it("trigger: failed save = full 10d12 Force damage", () => {
     const result = triggerQuiveringPalm(false, 55)
-    expect(result.reducedToZeroHp).toBe(false)
     expect(result.forceDamage).toBe(55)
   })
 
   it("trigger: successful save = half damage (floored)", () => {
     const result = triggerQuiveringPalm(true, 55)
-    expect(result.reducedToZeroHp).toBe(false)
     expect(result.forceDamage).toBe(27)
   })
 
