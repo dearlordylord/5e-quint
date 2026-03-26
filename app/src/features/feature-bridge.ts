@@ -1,8 +1,19 @@
-import { canEnterRage, rageDamageBonus, rageResistances } from "#/features/class-barbarian.ts"
+import {
+  canApplyFrenzy,
+  canEnterRage,
+  canRetaliate,
+  canUseIntimidatingPresence,
+  frenzyDamageDice,
+  intimidatingPresenceDC,
+  mindlessRageImmunities,
+  mindlessRageOnEnterRage,
+  rageDamageBonus,
+  rageResistances
+} from "#/features/class-barbarian.ts"
 import { canUseActionSurge, canUseSecondWind, useSecondWind as applySecondWind } from "#/features/class-fighter.ts"
 import type { FeatureAction, FeatureState } from "#/features/feature-store.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
-import type { DamageType } from "#/types.ts"
+import type { Condition, DamageType } from "#/types.ts"
 import { healAmount } from "#/types.ts"
 
 export interface BridgeResult {
@@ -137,3 +148,103 @@ export function getRageDamageBonus(featureState: FeatureState, barbarianLevel: n
   if (!featureState.barbarian?.raging) return 0
   return rageDamageBonus(barbarianLevel)
 }
+
+// --- Berserker: Frenzy (L3) ---
+
+export function canExecuteFrenzy(
+  featureState: FeatureState,
+  berserkerLevel: number,
+  isStrengthBased: boolean
+): boolean {
+  if (!featureState.barbarian || berserkerLevel < 3) return false
+  const b = featureState.barbarian
+  return canApplyFrenzy(b.raging, b.recklessThisTurn, isStrengthBased, b.frenzyUsedThisTurn)
+}
+
+export function executeFrenzy(): BridgeResult {
+  return {
+    featureAction: { type: "BERSERKER_APPLY_FRENZY" },
+    machineEvents: []
+  }
+}
+
+export function getFrenzyDamageDice(featureState: FeatureState, barbarianLevel: number): number {
+  if (!featureState.barbarian?.raging) return 0
+  return frenzyDamageDice(rageDamageBonus(barbarianLevel))
+}
+
+// --- Berserker: Mindless Rage (L6) ---
+
+export function getMindlessRageImmunities(featureState: FeatureState, berserkerLevel: number): ReadonlySet<Condition> {
+  if (!featureState.barbarian) return new Set()
+  return mindlessRageImmunities(featureState.barbarian.raging, berserkerLevel)
+}
+
+export const getEnterRageConditionsToRemove: (
+  currentConditions: ReadonlyArray<Condition>,
+  berserkerLevel: number
+) => ReadonlyArray<Condition> = mindlessRageOnEnterRage
+
+export function executeEnterRageWithMindlessRage(
+  _featureState: FeatureState,
+  ctx: DndContext,
+  berserkerLevel: number,
+  currentConditions: ReadonlyArray<Condition>
+): BridgeResult {
+  const conditionsToRemove = mindlessRageOnEnterRage(currentConditions, berserkerLevel)
+  const baseEvents: ReadonlyArray<DndEvent> =
+    ctx.concentrationSpellId !== ""
+      ? [{ type: "USE_BONUS_ACTION" }, { type: "BREAK_CONCENTRATION" }]
+      : [{ type: "USE_BONUS_ACTION" }]
+  const removeEvents: ReadonlyArray<DndEvent> = conditionsToRemove.map((c) => ({
+    type: "REMOVE_CONDITION" as const,
+    condition: c
+  }))
+  return {
+    featureAction: { type: "BARBARIAN_ENTER_RAGE" },
+    machineEvents: [...baseEvents, ...removeEvents]
+  }
+}
+
+// --- Berserker: Retaliation (L10) ---
+
+export function canExecuteRetaliation(
+  featureState: FeatureState,
+  ctx: DndContext,
+  berserkerLevel: number,
+  damagedByCreatureWithin5ft: boolean
+): boolean {
+  if (!featureState.barbarian) return false
+  return canRetaliate(berserkerLevel, ctx.reactionAvailable, damagedByCreatureWithin5ft)
+}
+
+export function executeRetaliation(): BridgeResult {
+  return {
+    featureAction: { type: "BERSERKER_USE_RETALIATION" },
+    machineEvents: [{ type: "USE_REACTION" }]
+  }
+}
+
+// --- Berserker: Intimidating Presence (L14) ---
+
+export function canExecuteIntimidatingPresence(
+  featureState: FeatureState,
+  ctx: DndContext,
+  berserkerLevel: number
+): boolean {
+  if (!featureState.barbarian) return false
+  return canUseIntimidatingPresence(
+    berserkerLevel,
+    ctx.bonusActionUsed,
+    featureState.barbarian.intimidatingPresenceUsed
+  )
+}
+
+export function executeIntimidatingPresence(): BridgeResult {
+  return {
+    featureAction: { type: "BERSERKER_USE_INTIMIDATING_PRESENCE" },
+    machineEvents: [{ type: "USE_BONUS_ACTION" }]
+  }
+}
+
+export const getIntimidatingPresenceDC: (strMod: number, profBonus: number) => number = intimidatingPresenceDC

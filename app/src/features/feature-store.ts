@@ -17,6 +17,7 @@ import {
 export interface FeatureConfig {
   readonly className: string
   readonly level: number
+  readonly berserkerLevel?: number
 }
 
 export interface FighterFeatureState {
@@ -35,6 +36,8 @@ export interface BarbarianFeatureState {
   readonly attackedOrForcedSaveThisTurn: boolean
   readonly rageExtendedWithBA: boolean
   readonly recklessThisTurn: boolean
+  readonly frenzyUsedThisTurn: boolean
+  readonly intimidatingPresenceUsed: boolean
 }
 
 export interface FeatureState {
@@ -50,6 +53,9 @@ export type FeatureAction =
   | { readonly type: "BARBARIAN_EXTEND_RAGE_BA" }
   | { readonly type: "BARBARIAN_MARK_ATTACK_OR_SAVE" }
   | { readonly type: "BARBARIAN_DECLARE_RECKLESS" }
+  | { readonly type: "BERSERKER_APPLY_FRENZY" }
+  | { readonly type: "BERSERKER_USE_RETALIATION" }
+  | { readonly type: "BERSERKER_USE_INTIMIDATING_PRESENCE" }
   | { readonly type: "NOTIFY_SHORT_REST" }
   | { readonly type: "NOTIFY_LONG_REST" }
   | { readonly type: "NOTIFY_START_TURN" }
@@ -68,7 +74,7 @@ function barbarianToRageState(b: BarbarianFeatureState): RageState {
   }
 }
 
-function rageStateToBarbarianPatch(r: RageState, recklessThisTurn: boolean): BarbarianFeatureState {
+function rageStateToBarbarianPatch(r: RageState, prev: BarbarianFeatureState): BarbarianFeatureState {
   return {
     raging: r.raging,
     rageCharges: r.rageCharges,
@@ -76,7 +82,9 @@ function rageStateToBarbarianPatch(r: RageState, recklessThisTurn: boolean): Bar
     rageTurnsRemaining: r.rageTurnsRemaining,
     attackedOrForcedSaveThisTurn: r.attackedOrForcedSaveThisTurn,
     rageExtendedWithBA: r.rageExtendedWithBA,
-    recklessThisTurn
+    recklessThisTurn: prev.recklessThisTurn,
+    frenzyUsedThisTurn: prev.frenzyUsedThisTurn,
+    intimidatingPresenceUsed: prev.intimidatingPresenceUsed
   }
 }
 
@@ -104,7 +112,9 @@ export function createInitialFeatureState(config: FeatureConfig): FeatureState {
         rageTurnsRemaining: 0,
         attackedOrForcedSaveThisTurn: false,
         rageExtendedWithBA: false,
-        recklessThisTurn: false
+        recklessThisTurn: false,
+        frenzyUsedThisTurn: false,
+        intimidatingPresenceUsed: false
       }
     }
   }
@@ -175,26 +185,35 @@ function reduceBarbarian(state: FeatureState, action: FeatureAction, config: Fea
   switch (action.type) {
     case "BARBARIAN_ENTER_RAGE": {
       const next = pEnterRage(rageState)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b.recklessThisTurn) }
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
     }
 
     case "BARBARIAN_END_RAGE": {
       const next = pEndRage(rageState)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b.recklessThisTurn) }
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
     }
 
     case "BARBARIAN_EXTEND_RAGE_BA": {
       const next = pExtendRageWithBA(rageState)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b.recklessThisTurn) }
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
     }
 
     case "BARBARIAN_MARK_ATTACK_OR_SAVE": {
       const next = pMarkAttackOrForcedSave(rageState)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b.recklessThisTurn) }
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
     }
 
     case "BARBARIAN_DECLARE_RECKLESS":
       return { ...state, barbarian: { ...b, recklessThisTurn: true } }
+
+    case "BERSERKER_APPLY_FRENZY":
+      return { ...state, barbarian: { ...b, frenzyUsedThisTurn: true } }
+
+    case "BERSERKER_USE_RETALIATION":
+      return state // no store-side state change; machine event (USE_REACTION) handled by bridge
+
+    case "BERSERKER_USE_INTIMIDATING_PRESENCE":
+      return { ...state, barbarian: { ...b, intimidatingPresenceUsed: true } }
 
     case "NOTIFY_START_TURN":
       return {
@@ -203,13 +222,14 @@ function reduceBarbarian(state: FeatureState, action: FeatureAction, config: Fea
           ...b,
           recklessThisTurn: false,
           attackedOrForcedSaveThisTurn: false,
-          rageExtendedWithBA: false
+          rageExtendedWithBA: false,
+          frenzyUsedThisTurn: false
         }
       }
 
     case "NOTIFY_END_TURN": {
       const next = pCheckRageMaintenance(rageState, config.level)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b.recklessThisTurn) }
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
     }
 
     case "NOTIFY_LONG_REST": {
@@ -223,7 +243,9 @@ function reduceBarbarian(state: FeatureState, action: FeatureAction, config: Fea
           rageTurnsRemaining: 0,
           attackedOrForcedSaveThisTurn: false,
           rageExtendedWithBA: false,
-          recklessThisTurn: false
+          recklessThisTurn: false,
+          frenzyUsedThisTurn: false,
+          intimidatingPresenceUsed: false
         }
       }
     }

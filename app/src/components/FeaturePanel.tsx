@@ -55,6 +55,21 @@ export function FeaturePanel({
     }
   }
 
+  const handleFrenzy = () => {
+    const result = features.frenzy()
+    if (result) onFeatureAction(result)
+  }
+
+  const handleRetaliation = () => {
+    const result = features.retaliation()
+    if (result) onFeatureAction(result)
+  }
+
+  const handleIntimidatingPresence = () => {
+    const result = features.intimidatingPresence()
+    if (result) onFeatureAction(result)
+  }
+
   return (
     <div className="bg-gray-800 rounded-lg p-4 shadow-lg border border-indigo-700">
       {fighter && (
@@ -224,6 +239,77 @@ export function FeaturePanel({
               Reckless Attack
             </button>
           </div>
+
+          {/* Berserker Subclass Features */}
+          {features.berserkerLevel >= 3 && (
+            <>
+              <h3 className="text-md font-semibold text-red-300 mt-4 mb-2">Berserker</h3>
+
+              {/* Frenzy (L3) */}
+              <div className="mb-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm text-gray-300">Frenzy</span>
+                  {barbarian.frenzyUsedThisTurn && (
+                    <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">Used this turn</span>
+                  )}
+                  {features.frenzyDamageDice > 0 && (
+                    <span className="text-xs text-gray-400">({features.frenzyDamageDice}d6)</span>
+                  )}
+                </div>
+                <button
+                  onClick={handleFrenzy}
+                  disabled={!features.canFrenzy}
+                  className="px-3 py-1 rounded text-sm font-medium bg-red-700 hover:bg-red-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Frenzy
+                </button>
+              </div>
+
+              {/* Mindless Rage (L6) */}
+              {features.berserkerLevel >= 6 && features.mindlessRageImmunities.size > 0 && (
+                <div className="mb-2 p-2 bg-red-900/30 border border-red-700 rounded text-xs text-red-300">
+                  Mindless Rage: immune to {[...features.mindlessRageImmunities].join(", ")}
+                </div>
+              )}
+
+              {/* Retaliation (L10) */}
+              {features.berserkerLevel >= 10 && (
+                <div className="mb-2">
+                  <span className="text-sm text-gray-300">Retaliation</span>
+                  <div className="mt-1">
+                    <button
+                      onClick={handleRetaliation}
+                      disabled={!features.canRetaliation}
+                      className="px-3 py-1 rounded text-sm font-medium bg-red-700 hover:bg-red-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Retaliate
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Intimidating Presence (L14) */}
+              {features.berserkerLevel >= 14 && (
+                <div className="mb-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm text-gray-300">Intimidating Presence</span>
+                    <div className="flex gap-1">
+                      <div
+                        className={`w-3 h-3 rounded-full ${barbarian.intimidatingPresenceUsed ? "bg-gray-600" : "bg-red-400"}`}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleIntimidatingPresence}
+                    disabled={!features.canIntimidatingPresence}
+                    className="px-3 py-1 rounded text-sm font-medium bg-red-700 hover:bg-red-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Intimidating Presence
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </>
       )}
     </div>
