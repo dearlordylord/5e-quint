@@ -19,7 +19,7 @@ import { pInitFocusPool } from "#/features/class-monk.ts"
 import { wholenessOfBodyMaxCharges } from "#/features/class-monk-features.ts"
 import { layOnHandsPoolMax } from "#/features/class-paladin.ts"
 import { reduceMonk } from "#/features/feature-store-monk.ts"
-import { reducePaladin } from "#/features/feature-store-paladin.ts"
+import { channelDivinityMaxCharges, reducePaladin } from "#/features/feature-store-paladin.ts"
 import { reduceRogue } from "#/features/feature-store-rogue.ts"
 
 export interface FeatureConfig {

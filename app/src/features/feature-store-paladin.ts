@@ -4,7 +4,7 @@
 import { paladinLongRest } from "#/features/class-paladin.ts"
 import type { FeatureAction, FeatureConfig, FeatureState } from "#/features/feature-store.ts"
 
-function channelDivinityMaxCharges(paladinLevel: number): number {
+export function channelDivinityMaxCharges(paladinLevel: number): number {
   if (paladinLevel < 3) return 0
   if (paladinLevel < 11) return 2
   return 3
