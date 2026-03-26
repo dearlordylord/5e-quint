@@ -182,7 +182,7 @@ export function pPersistentRageOnInitiative(
   rageMaxCharges: number,
   persistentRageUsed: boolean
 ): { readonly newCharges: number; readonly persistentRageUsed: boolean } {
-  if (rageCharges === 0 && !persistentRageUsed) {
+  if (!persistentRageUsed) {
     return { newCharges: rageMaxCharges, persistentRageUsed: true }
   }
   return { newCharges: rageCharges, persistentRageUsed }
@@ -260,16 +260,15 @@ export function brutalStrikeDamageDice(barbarianLevel: number): number {
 }
 
 /**
- * Can use Brutal Strike: must be using Reckless Attack, L9+, STR-based melee.
+ * Can use Brutal Strike: must be using Reckless Attack, L9+, STR-based attack.
  * Foregoes advantage on one attack roll to deal extra damage + effect.
  */
 export function canUseBrutalStrike(
   recklessThisTurn: boolean,
   barbarianLevel: number,
-  isStrengthBased: boolean,
-  isMelee: boolean
+  isStrengthBased: boolean
 ): boolean {
-  return recklessThisTurn && barbarianLevel >= BRUTAL_STRIKE_LEVEL && isStrengthBased && isMelee
+  return recklessThisTurn && barbarianLevel >= BRUTAL_STRIKE_LEVEL && isStrengthBased
 }
 
 /**
@@ -473,11 +472,6 @@ export function fastMovementBonus(barbarianLevel: number, armorWeight: ArmorWeig
 
 /** Whether the barbarian has Feral Instinct (L7+): grants Initiative advantage. */
 export function hasFeralInstinct(barbarianLevel: number): boolean {
-  return barbarianLevel >= FERAL_INSTINCT_LEVEL
-}
-
-/** Whether the barbarian can act while surprised (L7+, must enter rage). */
-export function canActWhileSurprised(barbarianLevel: number): boolean {
   return barbarianLevel >= FERAL_INSTINCT_LEVEL
 }
 
