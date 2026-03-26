@@ -1,5 +1,7 @@
 import { type FormEvent, useState } from "react"
 
+import { MonkPanel } from "#/components/MonkPanel.tsx"
+import { PaladinPanel } from "#/components/PaladinPanel.tsx"
 import type { BridgeResult } from "#/features/feature-bridge.ts"
 import type { UseFeatures } from "#/features/useFeatures.ts"
 
@@ -13,8 +15,10 @@ export function FeaturePanel({
   const [d10Roll, setD10Roll] = useState(5)
   const fighter = features.featureState.fighter
   const barbarian = features.featureState.barbarian
+  const monk = features.featureState.monk
+  const paladin = features.featureState.paladin
 
-  if (!fighter && !barbarian) return null
+  if (!fighter && !barbarian && !monk && !paladin) return null
 
   const handleSecondWind = (e: FormEvent) => {
     e.preventDefault()
@@ -143,6 +147,8 @@ export function FeaturePanel({
           )}
         </>
       )}
+
+      {monk && <MonkPanel features={features} monk={monk} onFeatureAction={onFeatureAction} />}
 
       {barbarian && (
         <>
@@ -312,6 +318,7 @@ export function FeaturePanel({
           )}
         </>
       )}
+      {paladin && <PaladinPanel features={features} paladin={paladin} onFeatureAction={onFeatureAction} />}
     </div>
   )
 }
