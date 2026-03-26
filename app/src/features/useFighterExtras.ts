@@ -21,7 +21,7 @@ import type { FeatureAction, FeatureState } from "#/features/feature-store.ts"
 // eslint-disable-next-line functional/no-mixed-types -- hook return bundles state + methods by design
 export interface FighterExtrasHookResult {
   readonly canTacticalMind: (checkFailed: boolean) => boolean
-  readonly tacticalMind: () => BridgeResult | null
+  readonly tacticalMind: (boostedCheckSucceeded: boolean) => BridgeResult | null
   readonly canIndomitable: boolean
   readonly indomitable: () => BridgeResult | null
   readonly championCritRange: number
@@ -43,11 +43,14 @@ export function useFighterExtras(
     [featureState, level]
   )
 
-  const tacticalMind = useCallback((): BridgeResult | null => {
-    const result = executeTacticalMind()
-    dispatch(result.featureAction)
-    return result
-  }, [dispatch])
+  const tacticalMind = useCallback(
+    (boostedCheckSucceeded: boolean): BridgeResult | null => {
+      const result = executeTacticalMind(boostedCheckSucceeded)
+      dispatch(result.featureAction)
+      return result
+    },
+    [dispatch]
+  )
 
   const canIndomitableVal = canExecuteIndomitable(featureState, level)
 
