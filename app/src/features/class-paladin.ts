@@ -90,16 +90,15 @@ export const layOnHandsLongRest: (paladinLevel: number) => number = layOnHandsPo
 
 // --- Paladin's Smite (Level 2) + Divine Smite spell ---
 
-const MAX_SMITE_DICE = 5
-
 /**
  * Calculate Divine Smite damage dice (d8s).
- * Base: 2d8 at spell slot level 1, +1d8 per slot level above 1, max 5d8.
+ * Base: 2d8 at spell slot level 1, +1d8 per slot level above 1.
  * +1d8 extra vs Fiend or Undead.
+ * SRD 5.2.1: no cap on smite dice.
  */
 export function pDivineSmiteDamage(slotLevel: number, isUndeadOrFiend: boolean): number {
   const baseDice = 2
-  const fromSlot = Math.min(baseDice + (slotLevel - 1), MAX_SMITE_DICE)
+  const fromSlot = baseDice + (slotLevel - 1)
   return isUndeadOrFiend ? fromSlot + 1 : fromSlot
 }
 
@@ -142,14 +141,6 @@ export function pRadiantStrikes(config: RadiantStrikesConfig): number {
     return RADIANT_STRIKES_DICE
   }
   return 0
-}
-
-// --- Divine Health (Level 3) ---
-
-export const DIVINE_HEALTH_LEVEL = 3
-
-export function hasDivineHealth(paladinLevel: number): boolean {
-  return paladinLevel >= DIVINE_HEALTH_LEVEL
 }
 
 // --- Faithful Steed (Level 5) ---

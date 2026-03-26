@@ -15,7 +15,6 @@ import {
   canUseFaithfulSteed,
   canUseRestoringTouch,
   curableConditions,
-  hasDivineHealth,
   layOnHandsLongRest,
   layOnHandsPoolMax,
   paladinLongRest,
@@ -176,24 +175,24 @@ describe("divine smite damage", () => {
     expect(pDivineSmiteDamage(3, false)).toBe(4)
   })
 
-  it("4th level slot -> 5d8 (cap)", () => {
+  it("4th level slot -> 5d8", () => {
     expect(pDivineSmiteDamage(4, false)).toBe(5)
   })
 
-  it("5th level slot -> 5d8 (still capped)", () => {
-    expect(pDivineSmiteDamage(5, false)).toBe(5)
+  it("5th level slot -> 6d8", () => {
+    expect(pDivineSmiteDamage(5, false)).toBe(6)
   })
 
   it("1st level slot vs undead -> 3d8", () => {
     expect(pDivineSmiteDamage(1, true)).toBe(3)
   })
 
-  it("4th level slot vs undead -> 6d8 (cap + 1 for undead)", () => {
+  it("4th level slot vs undead -> 6d8", () => {
     expect(pDivineSmiteDamage(4, true)).toBe(6)
   })
 
-  it("5th level slot vs fiend -> 6d8 (cap + 1)", () => {
-    expect(pDivineSmiteDamage(5, true)).toBe(6)
+  it("5th level slot vs fiend -> 7d8", () => {
+    expect(pDivineSmiteDamage(5, true)).toBe(7)
   })
 })
 
@@ -241,21 +240,6 @@ describe("radiant strikes", () => {
 
   it("works at level 20", () => {
     expect(pRadiantStrikes({ paladinLevel: 20, isMeleeOrUnarmed: true })).toBe(1)
-  })
-})
-
-// --- Divine Health ---
-
-describe("divine health", () => {
-  it("false below level 3", () => {
-    expect(hasDivineHealth(1)).toBe(false)
-    expect(hasDivineHealth(2)).toBe(false)
-  })
-
-  it("true at level 3+", () => {
-    expect(hasDivineHealth(3)).toBe(true)
-    expect(hasDivineHealth(10)).toBe(true)
-    expect(hasDivineHealth(20)).toBe(true)
   })
 })
 
