@@ -1042,6 +1042,12 @@ module dnd {
     else t.with("extraAttacksRemaining", t.extraAttacksRemaining - 1)
   }
 
+  /// Grant one additional action this turn (Action Surge, Haste).
+  /// Caller-side features enforce action type restrictions.
+  pure def pGrantExtraAction(t: TurnState): TurnState = {
+    t.with("actionsRemaining", t.actionsRemaining + 1)
+  }
+
   /// Mark that a bonus action spell was cast this turn.
   /// Restricts action to cantrips only.
   pure def pMarkBonusActionSpell(t: TurnState): TurnState =

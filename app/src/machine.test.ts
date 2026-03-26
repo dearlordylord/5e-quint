@@ -2224,3 +2224,48 @@ describe("machine action edge cases", () => {
     expect(ctx(a).hp).toBe(0) // still 0
   })
 })
+
+describe("GRANT_EXTRA_ACTION", () => {
+  it("increments actionsRemaining from 0 to 1", () => {
+    const a = create()
+    startTurn(a)
+    useAction(a, "attack")
+    expect(ctx(a).actionsRemaining).toBe(0)
+    a.send({ type: "GRANT_EXTRA_ACTION" })
+    expect(ctx(a).actionsRemaining).toBe(1)
+  })
+
+  it("can use action after granting extra action", () => {
+    const a = create()
+    startTurn(a)
+    useAction(a, "attack")
+    expect(ctx(a).actionsRemaining).toBe(0)
+    a.send({ type: "GRANT_EXTRA_ACTION" })
+    useAction(a, "dodge")
+    expect(ctx(a).actionsRemaining).toBe(0)
+    expect(ctx(a).dodging).toBe(true)
+  })
+
+  it("ignored when outOfCombat", () => {
+    const a = create()
+    expect(snap(a).matches({ turnPhase: "outOfCombat" })).toBe(true)
+    a.send({ type: "GRANT_EXTRA_ACTION" })
+    expect(ctx(a).actionsRemaining).toBe(1) // unchanged from initial
+  })
+
+  it("ignored when waitingForTurn", () => {
+    const a = create()
+    enterCombat(a)
+    expect(snap(a).matches({ turnPhase: "waitingForTurn" })).toBe(true)
+    a.send({ type: "GRANT_EXTRA_ACTION" })
+    expect(ctx(a).actionsRemaining).toBe(1) // unchanged from initial
+  })
+
+  it("multiple grants stack", () => {
+    const a = create()
+    startTurn(a)
+    a.send({ type: "GRANT_EXTRA_ACTION" })
+    a.send({ type: "GRANT_EXTRA_ACTION" })
+    expect(ctx(a).actionsRemaining).toBe(3)
+  })
+})

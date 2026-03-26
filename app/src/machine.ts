@@ -206,6 +206,9 @@ export const dndMachine = setup({
     useExtraAttack: assign(({ context: c }) =>
       c.extraAttacksRemaining <= 0 ? {} : { extraAttacksRemaining: c.extraAttacksRemaining - 1 }
     ),
+    grantExtraAction: assign(({ context: c }) => ({
+      actionsRemaining: c.actionsRemaining + 1
+    })),
     standFromProne: assign(({ context: c }) => {
       const r = spendHalfSpeed(c.movementRemaining, c.effectiveSpeed)
       if (!r.success) return {}

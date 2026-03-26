@@ -188,6 +188,7 @@ export type DndEvent =
       readonly targetSaveFailed: boolean
       readonly choice: ShoveChoice
     }
+  | { readonly type: "GRANT_EXTRA_ACTION" }
   | { readonly type: "EXPEND_SLOT"; readonly level: number }
   | { readonly type: "EXPEND_PACT_SLOT" }
   | {

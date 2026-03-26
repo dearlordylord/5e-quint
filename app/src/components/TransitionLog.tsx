@@ -84,6 +84,7 @@ function formatEvent(e: DndEvent): string {
     case "END_TURN":
     case "ENTER_COMBAT":
     case "EXIT_COMBAT":
+    case "GRANT_EXTRA_ACTION":
       return e.type
     case "ADD_EFFECT":
       return `ADD_EFFECT ${e.spellId}`
