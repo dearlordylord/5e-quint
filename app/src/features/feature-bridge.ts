@@ -10,20 +10,19 @@ import {
   rageDamageBonus,
   rageResistances
 } from "#/features/class-barbarian.ts"
-import { canUseActionSurge, canUseSecondWind, useSecondWind as applySecondWind } from "#/features/class-fighter.ts"
 import {
-  auraOfProtectionBonus as auraOfProtectionBonusPure,
-  canLayOnHandsCure as canLayOnHandsCurePure,
-  canLayOnHandsHeal as canLayOnHandsHealPure,
-  canPaladinSmiteFree as canPaladinSmiteFreePure,
-  canUseAuraOfProtection as canUseAuraOfProtectionPure,
-  hasDivineHealth as hasDivineHealthPure,
-  pDivineSmiteDamage as pDivineSmiteDamagePure,
-  pLayOnHands as pLayOnHandsPure,
-  pLayOnHandsCure as pLayOnHandsCurePure,
-  pRadiantStrikes as pRadiantStrikesPure,
-  type RadiantStrikesConfig
-} from "#/features/class-paladin.ts"
+  canUseActionSurge,
+  canUseIndomitable,
+  canUseSecondWind,
+  canUseTacticalMind,
+  championCritRange,
+  hasRemarkableAthlete,
+  heroicWarriorInspiration,
+  remarkableAthleteCritMovement,
+  survivorDefyDeathAdvantage,
+  survivorHeroicRally,
+  useSecondWind as applySecondWind
+} from "#/features/class-fighter.ts"
 import type { FeatureAction, FeatureState } from "#/features/feature-store.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
 import type { Condition, DamageType } from "#/types.ts"
@@ -87,6 +86,49 @@ export function executeActionSurge(featureState: FeatureState): BridgeResult {
     featureAction: { type: "FIGHTER_USE_ACTION_SURGE" },
     machineEvents: [{ type: "GRANT_EXTRA_ACTION" }]
   }
+}
+
+// --- Fighter: Tactical Mind ---
+
+export function canExecuteTacticalMind(
+  featureState: FeatureState,
+  fighterLevel: number,
+  checkFailed: boolean
+): boolean {
+  if (!featureState.fighter) return false
+  return canUseTacticalMind(featureState.fighter.secondWindCharges, fighterLevel, checkFailed)
+}
+
+export function executeTacticalMind(): BridgeResult {
+  return {
+    featureAction: { type: "FIGHTER_USE_TACTICAL_MIND" },
+    machineEvents: []
+  }
+}
+
+// --- Fighter: Indomitable ---
+
+export function canExecuteIndomitable(featureState: FeatureState, fighterLevel: number): boolean {
+  if (!featureState.fighter) return false
+  return canUseIndomitable(fighterLevel, featureState.fighter.indomitableCharges)
+}
+
+export function executeIndomitable(): BridgeResult {
+  return {
+    featureAction: { type: "FIGHTER_USE_INDOMITABLE" },
+    machineEvents: []
+  }
+}
+
+// --- Champion subclass queries (passive — no state) ---
+
+export {
+  championCritRange,
+  hasRemarkableAthlete,
+  heroicWarriorInspiration,
+  remarkableAthleteCritMovement,
+  survivorDefyDeathAdvantage,
+  survivorHeroicRally
 }
 
 // --- Barbarian: Rage ---
@@ -262,97 +304,20 @@ export function executeIntimidatingPresence(): BridgeResult {
 
 export const getIntimidatingPresenceDC: (strMod: number, profBonus: number) => number = intimidatingPresenceDC
 
-// --- Paladin: Lay on Hands ---
-
-export function canExecuteLayOnHandsHeal(featureState: FeatureState, ctx: DndContext): boolean {
-  if (!featureState.paladin) return false
-  return canLayOnHandsHealPure({
-    hp: ctx.hp,
-    maxHp: ctx.maxHp,
-    layOnHandsPool: featureState.paladin.layOnHandsPool,
-    conditions: []
-  })
-}
-
-export function executeLayOnHandsHeal(featureState: FeatureState, ctx: DndContext, amount: number): BridgeResult {
-  if (!featureState.paladin) throw new Error("executeLayOnHandsHeal called without paladin state")
-  const result = pLayOnHandsPure(
-    {
-      hp: ctx.hp,
-      maxHp: ctx.maxHp,
-      layOnHandsPool: featureState.paladin.layOnHandsPool,
-      conditions: []
-    },
-    amount
-  )
-  return {
-    featureAction: { type: "PALADIN_LAY_ON_HANDS", poolAfter: result.layOnHandsPool },
-    machineEvents: [{ type: "HEAL", amount: healAmount(result.healedAmount) }]
-  }
-}
-
-export function canExecuteLayOnHandsCure(
-  featureState: FeatureState,
-  condition: Condition,
-  paladinLevel: number,
-  currentConditions: ReadonlyArray<Condition>
-): boolean {
-  if (!featureState.paladin) return false
-  return canLayOnHandsCurePure(
-    {
-      hp: 1,
-      maxHp: 1,
-      layOnHandsPool: featureState.paladin.layOnHandsPool,
-      conditions: currentConditions
-    },
-    condition,
-    paladinLevel
-  )
-}
-
-export function executeLayOnHandsCure(featureState: FeatureState, condition: Condition): BridgeResult {
-  if (!featureState.paladin) throw new Error("executeLayOnHandsCure called without paladin state")
-  const result = pLayOnHandsCurePure(
-    {
-      hp: 1,
-      maxHp: 1,
-      layOnHandsPool: featureState.paladin.layOnHandsPool,
-      conditions: [condition]
-    },
-    condition
-  )
-  return {
-    featureAction: { type: "PALADIN_LAY_ON_HANDS_CURE", poolAfter: result.layOnHandsPool },
-    machineEvents: [{ type: "REMOVE_CONDITION", condition }]
-  }
-}
-
-// --- Paladin: Smite (free use per turn) ---
-
-export function canExecutePaladinSmiteFree(featureState: FeatureState): boolean {
-  if (!featureState.paladin) return false
-  return canPaladinSmiteFreePure({ paladinSmiteFreeUseAvailable: !featureState.paladin.smiteFreeUsed })
-}
-
-export function executePaladinSmiteFree(): BridgeResult {
-  return {
-    featureAction: { type: "PALADIN_SMITE_FREE" },
-    machineEvents: []
-  }
-}
-
-// --- Paladin: Query functions ---
-
-export const getDivineSmiteDamage: (slotLevel: number, isUndeadOrFiend: boolean) => number = pDivineSmiteDamagePure
-
-export const getAuraOfProtectionBonus: (paladinLevel: number, chaMod: number) => number = auraOfProtectionBonusPure
-
-export const getCanUseAuraOfProtection: (paladinLevel: number, isConscious: boolean) => boolean =
-  canUseAuraOfProtectionPure
-
-export const getHasDivineHealth: (paladinLevel: number) => boolean = hasDivineHealthPure
-
-export const getRadiantStrikesDice: (config: RadiantStrikesConfig) => number = pRadiantStrikesPure
+// --- Paladin bridge: extracted to feature-bridge-paladin.ts to stay under max-lines ---
+export {
+  canExecuteLayOnHandsCure,
+  canExecuteLayOnHandsHeal,
+  canExecutePaladinSmiteFree,
+  executeLayOnHandsCure,
+  executeLayOnHandsHeal,
+  executePaladinSmiteFree,
+  getAuraOfProtectionBonus,
+  getCanUseAuraOfProtection,
+  getDivineSmiteDamage,
+  getHasDivineHealth,
+  getRadiantStrikesDice
+} from "#/features/feature-bridge-paladin.ts"
 
 // --- Monk bridge: extracted to feature-bridge-monk.ts to stay under max-lines ---
 export {
@@ -373,3 +338,20 @@ export {
   getBonusUnarmedStrikeEligible,
   getMartialArtsDie
 } from "#/features/feature-bridge-monk.ts"
+
+// --- Rogue bridge: extracted to feature-bridge-rogue.ts to stay under max-lines ---
+export {
+  canExecuteCunningAction,
+  canExecuteCunningStrike,
+  canExecuteSneakAttack,
+  canExecuteSteadyAim,
+  canExecuteStrokeOfLuck,
+  executeCunningAction,
+  executeSneakAttack,
+  executeSteadyAim,
+  executeStrokeOfLuck,
+  getElusiveCancelsAdvantage,
+  getHasSlipperyMind,
+  getReliableTalent,
+  getSneakAttackDice
+} from "#/features/feature-bridge-rogue.ts"

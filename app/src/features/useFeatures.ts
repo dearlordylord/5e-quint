@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useReducer } from "react"
 
 import { canCastWhileRaging } from "#/features/class-barbarian.ts"
+import type { CunningActionChoice, StrikeEffect } from "#/features/class-rogue.ts"
 import type { BridgeResult } from "#/features/feature-bridge.ts"
 import {
   canExecuteActionSurge,
@@ -8,51 +9,24 @@ import {
   canExecuteEndRage,
   canExecuteEnterRage,
   canExecuteExtendRageBA,
-  canExecuteFlurryOfBlows,
   canExecuteFrenzy,
   canExecuteIntimidatingPresence,
-  canExecuteLayOnHandsCure,
-  canExecuteLayOnHandsHeal,
-  canExecutePaladinSmiteFree,
-  canExecutePatientDefenseFocus,
-  canExecutePatientDefenseFree,
   canExecuteRetaliation,
   canExecuteSecondWind,
-  canExecuteStepOfTheWindFocus,
-  canExecuteStepOfTheWindFree,
-  canExecuteStunningStrike,
-  canExecuteUncannyMetabolism,
   executeActionSurge,
   executeDeclareReckless,
   executeEndRage,
   executeEnterRage,
   executeEnterRageWithMindlessRage,
   executeExtendRageBA,
-  executeFlurryOfBlows,
   executeFrenzy,
   executeIntimidatingPresence,
-  executeLayOnHandsCure,
-  executeLayOnHandsHeal,
-  executePaladinSmiteFree,
-  executePatientDefenseFocus,
-  executePatientDefenseFree,
   executeRetaliation,
   executeSecondWind,
-  executeStepOfTheWindFocus,
-  executeStepOfTheWindFree,
-  executeStunningStrike,
-  executeUncannyMetabolism,
-  getAuraOfProtectionBonus,
-  getBonusUnarmedStrikeEligible,
-  getCanUseAuraOfProtection,
-  getDivineSmiteDamage,
   getFrenzyDamageDice,
-  getHasDivineHealth,
   getIntimidatingPresenceDC,
   getIsRaging,
-  getMartialArtsDie,
   getMindlessRageImmunities,
-  getRadiantStrikesDice,
   getRageDamageBonus,
   getRageResistances
 } from "#/features/feature-bridge.ts"
@@ -63,6 +37,9 @@ import {
   featureReducer,
   type FeatureState
 } from "#/features/feature-store.ts"
+import { useFighterExtras } from "#/features/useFighterExtras.ts"
+import { useMonkPaladinFeatures } from "#/features/useMonkPaladinFeatures.ts"
+import { useRogueFeatures } from "#/features/useRogueFeatures.ts"
 import type { DndSnapshot } from "#/machine.ts"
 import type { DndEvent } from "#/machine-types.ts"
 import type { Condition, DamageType } from "#/types.ts"
@@ -77,6 +54,17 @@ export interface UseFeatures {
   readonly canActionSurge: boolean
   readonly secondWind: (d10Roll: number) => BridgeResult | null
   readonly actionSurge: () => BridgeResult | null
+  readonly canTacticalMind: (checkFailed: boolean) => boolean
+  readonly tacticalMind: () => BridgeResult | null
+  readonly canIndomitable: boolean
+  readonly indomitable: () => BridgeResult | null
+  // Champion
+  readonly championCritRange: number
+  readonly hasRemarkableAthlete: boolean
+  readonly remarkableAthleteCritMovement: (effectiveSpeed: number) => number
+  readonly heroicWarriorInspiration: (hasHeroicInspiration: boolean) => boolean
+  readonly survivorDefyDeathAdvantage: boolean
+  readonly survivorHeroicRally: (currentHp: number, maxHp: number, conMod: number) => number
   // Barbarian
   readonly canEnterRage: boolean
   readonly enterRage: () => BridgeResult | null
@@ -131,6 +119,26 @@ export interface UseFeatures {
   readonly canUseAuraOfProtection: boolean
   readonly hasDivineHealth: boolean
   readonly radiantStrikesDice: number
+  // Rogue
+  readonly sneakAttackDice: number
+  readonly canSneakAttack: (params: {
+    readonly hasAdvantage: boolean
+    readonly hasDisadvantage: boolean
+    readonly allyAdjacentAndNotIncapacitated: boolean
+    readonly isFinesse: boolean
+    readonly isRanged: boolean
+  }) => boolean
+  readonly sneakAttack: () => BridgeResult | null
+  readonly canCunningAction: boolean
+  readonly cunningAction: (choice: CunningActionChoice) => BridgeResult | null
+  readonly canSteadyAim: boolean
+  readonly steadyAim: () => BridgeResult | null
+  readonly canCunningStrike: (sneakAttackDiceUsed: number, effect: StrikeEffect) => boolean
+  readonly canStrokeOfLuck: boolean
+  readonly strokeOfLuck: () => BridgeResult | null
+  readonly reliableTalent: (d20Roll: number, isProficient: boolean) => number
+  readonly hasSlipperyMind: boolean
+  readonly elusiveCancelsAdvantage: (isIncapacitated: boolean) => boolean
   // Shared
   readonly notify: (event: DndEvent) => void
   readonly resetToInitial: () => void
@@ -183,6 +191,9 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     dispatch(result.featureAction)
     return result
   }, [featureState, ctx])
+
+  // Fighter extras (Tactical Mind, Indomitable, Champion)
+  const fighterExtras = useFighterExtras(featureState, config.level, config.championLevel ?? 0, dispatch)
 
   // Barbarian
   const canEnterRageVal = ctx ? canExecuteEnterRage(featureState, ctx) : false
@@ -264,124 +275,11 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
 
   const intimidatingDC = getIntimidatingPresenceDC(0, 0) // caller provides actual strMod/profBonus via config or UI
 
-  // Monk
-  const canFlurryOfBlowsVal = ctx ? canExecuteFlurryOfBlows(featureState, ctx) : false
+  // Monk + Paladin (extracted to useMonkPaladinFeatures)
+  const monkPaladin = useMonkPaladinFeatures(featureState, ctx, config.level, dispatch)
 
-  const flurryOfBlowsCb = useCallback((): BridgeResult | null => {
-    if (!ctx) return null
-    const result = executeFlurryOfBlows(featureState, config.level)
-    dispatch(result.featureAction)
-    return result
-  }, [featureState, ctx, config.level])
-
-  const canPatientDefenseFreeVal = ctx ? canExecutePatientDefenseFree(featureState, ctx) : false
-
-  const patientDefenseFreeCb = useCallback((): BridgeResult | null => {
-    if (!ctx) return null
-    const result = executePatientDefenseFree()
-    dispatch(result.featureAction)
-    return result
-  }, [ctx])
-
-  const canPatientDefenseFocusVal = ctx ? canExecutePatientDefenseFocus(featureState, ctx) : false
-
-  const patientDefenseFocusCb = useCallback(
-    (twoMartialArtsDieRollsTotal: number): BridgeResult | null => {
-      if (!ctx) return null
-      const result = executePatientDefenseFocus(featureState, config.level, twoMartialArtsDieRollsTotal)
-      dispatch(result.featureAction)
-      return result
-    },
-    [featureState, ctx, config.level]
-  )
-
-  const canStepOfTheWindFreeVal = ctx ? canExecuteStepOfTheWindFree(featureState, ctx) : false
-
-  const stepOfTheWindFreeCb = useCallback((): BridgeResult | null => {
-    if (!ctx) return null
-    const result = executeStepOfTheWindFree()
-    dispatch(result.featureAction)
-    return result
-  }, [ctx])
-
-  const canStepOfTheWindFocusVal = ctx ? canExecuteStepOfTheWindFocus(featureState, ctx) : false
-
-  const stepOfTheWindFocusCb = useCallback((): BridgeResult | null => {
-    if (!ctx) return null
-    const result = executeStepOfTheWindFocus(featureState, config.level)
-    dispatch(result.featureAction)
-    return result
-  }, [featureState, ctx, config.level])
-
-  // Stunning Strike: defaults to unarmed, not used this turn
-  const canStunningStrikeVal = canExecuteStunningStrike(featureState, config.level, false, "unarmed")
-
-  const stunningStrikeCb = useCallback(
-    (targetSavePassed: boolean): BridgeResult | null => {
-      if (!ctx) return null
-      const result = executeStunningStrike(featureState, targetSavePassed)
-      dispatch(result.featureAction)
-      return result
-    },
-    [featureState, ctx]
-  )
-
-  const canUncannyMetabolismVal = canExecuteUncannyMetabolism(featureState, config.level)
-
-  const uncannyMetabolismCb = useCallback(
-    (d8Roll: number): BridgeResult | null => {
-      if (!ctx) return null
-      const result = executeUncannyMetabolism(featureState, config.level, d8Roll)
-      dispatch(result.featureAction)
-      return result
-    },
-    [featureState, ctx, config.level]
-  )
-
-  const martialArtsDieVal = getMartialArtsDie(config.level)
-  // Default: no attack action, unarmed, no armor, no shield
-  const bonusUnarmedStrikeEligibleVal = getBonusUnarmedStrikeEligible(false, "unarmed", false, false)
-
-  // Paladin
-  const canLayOnHandsHealVal = ctx ? canExecuteLayOnHandsHeal(featureState, ctx) : false
-
-  const layOnHandsHealCb = useCallback(
-    (amount: number): BridgeResult | null => {
-      if (!ctx) return null
-      const result = executeLayOnHandsHeal(featureState, ctx, amount)
-      dispatch(result.featureAction)
-      return result
-    },
-    [featureState, ctx]
-  )
-
-  const canLayOnHandsCureCb = useCallback(
-    (condition: Condition, currentConditions: ReadonlyArray<Condition>): boolean =>
-      canExecuteLayOnHandsCure(featureState, condition, config.level, currentConditions),
-    [featureState, config.level]
-  )
-
-  const layOnHandsCureCb = useCallback(
-    (condition: Condition): BridgeResult | null => {
-      const result = executeLayOnHandsCure(featureState, condition)
-      dispatch(result.featureAction)
-      return result
-    },
-    [featureState]
-  )
-
-  const canPaladinSmiteFreeVal = canExecutePaladinSmiteFree(featureState)
-
-  const paladinSmiteFreeCb = useCallback((): BridgeResult | null => {
-    const result = executePaladinSmiteFree()
-    dispatch(result.featureAction)
-    return result
-  }, [])
-
-  const auraBonus = getAuraOfProtectionBonus(config.level, 0) // caller provides actual chaMod via config or UI
-  const canAura = getCanUseAuraOfProtection(config.level, true) // defaults to conscious
-  const divineHealth = getHasDivineHealth(config.level)
-  const radiantDice = getRadiantStrikesDice({ paladinLevel: config.level, isMeleeOrUnarmed: true })
+  // Rogue (extracted to useRogueFeatures)
+  const rogueFeatures = useRogueFeatures(featureState, ctx, config.level, dispatch)
 
   const resetToInitial = useCallback(() => {
     dispatch({ type: "RESET" })
@@ -393,6 +291,16 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     canActionSurge,
     secondWind,
     actionSurge,
+    canTacticalMind: fighterExtras.canTacticalMind,
+    tacticalMind: fighterExtras.tacticalMind,
+    canIndomitable: fighterExtras.canIndomitable,
+    indomitable: fighterExtras.indomitable,
+    championCritRange: fighterExtras.championCritRange,
+    hasRemarkableAthlete: fighterExtras.hasRemarkableAthlete,
+    remarkableAthleteCritMovement: fighterExtras.remarkableAthleteCritMovement,
+    heroicWarriorInspiration: fighterExtras.heroicWarriorInspiration,
+    survivorDefyDeathAdvantage: fighterExtras.survivorDefyDeathAdvantage,
+    survivorHeroicRally: fighterExtras.survivorHeroicRally,
     canEnterRage: canEnterRageVal,
     enterRage,
     canEndRage: canEndRageVal,
@@ -416,33 +324,46 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     canIntimidatingPresence: canIntimidatingPresenceVal,
     intimidatingPresence: intimidatingPresenceCb,
     intimidatingPresenceDC: intimidatingDC,
-    canFlurryOfBlows: canFlurryOfBlowsVal,
-    flurryOfBlows: flurryOfBlowsCb,
-    canPatientDefenseFree: canPatientDefenseFreeVal,
-    patientDefenseFree: patientDefenseFreeCb,
-    canPatientDefenseFocus: canPatientDefenseFocusVal,
-    patientDefenseFocus: patientDefenseFocusCb,
-    canStepOfTheWindFree: canStepOfTheWindFreeVal,
-    stepOfTheWindFree: stepOfTheWindFreeCb,
-    canStepOfTheWindFocus: canStepOfTheWindFocusVal,
-    stepOfTheWindFocus: stepOfTheWindFocusCb,
-    canStunningStrike: canStunningStrikeVal,
-    stunningStrike: stunningStrikeCb,
-    canUncannyMetabolism: canUncannyMetabolismVal,
-    uncannyMetabolism: uncannyMetabolismCb,
-    martialArtsDie: martialArtsDieVal,
-    bonusUnarmedStrikeEligible: bonusUnarmedStrikeEligibleVal,
-    canLayOnHandsHeal: canLayOnHandsHealVal,
-    layOnHandsHeal: layOnHandsHealCb,
-    canLayOnHandsCure: canLayOnHandsCureCb,
-    layOnHandsCure: layOnHandsCureCb,
-    canPaladinSmiteFree: canPaladinSmiteFreeVal,
-    paladinSmiteFree: paladinSmiteFreeCb,
-    divineSmiteDamage: getDivineSmiteDamage,
-    auraOfProtectionBonus: auraBonus,
-    canUseAuraOfProtection: canAura,
-    hasDivineHealth: divineHealth,
-    radiantStrikesDice: radiantDice,
+    canFlurryOfBlows: monkPaladin.canFlurryOfBlows,
+    flurryOfBlows: monkPaladin.flurryOfBlows,
+    canPatientDefenseFree: monkPaladin.canPatientDefenseFree,
+    patientDefenseFree: monkPaladin.patientDefenseFree,
+    canPatientDefenseFocus: monkPaladin.canPatientDefenseFocus,
+    patientDefenseFocus: monkPaladin.patientDefenseFocus,
+    canStepOfTheWindFree: monkPaladin.canStepOfTheWindFree,
+    stepOfTheWindFree: monkPaladin.stepOfTheWindFree,
+    canStepOfTheWindFocus: monkPaladin.canStepOfTheWindFocus,
+    stepOfTheWindFocus: monkPaladin.stepOfTheWindFocus,
+    canStunningStrike: monkPaladin.canStunningStrike,
+    stunningStrike: monkPaladin.stunningStrike,
+    canUncannyMetabolism: monkPaladin.canUncannyMetabolism,
+    uncannyMetabolism: monkPaladin.uncannyMetabolism,
+    martialArtsDie: monkPaladin.martialArtsDie,
+    bonusUnarmedStrikeEligible: monkPaladin.bonusUnarmedStrikeEligible,
+    canLayOnHandsHeal: monkPaladin.canLayOnHandsHeal,
+    layOnHandsHeal: monkPaladin.layOnHandsHeal,
+    canLayOnHandsCure: monkPaladin.canLayOnHandsCure,
+    layOnHandsCure: monkPaladin.layOnHandsCure,
+    canPaladinSmiteFree: monkPaladin.canPaladinSmiteFree,
+    paladinSmiteFree: monkPaladin.paladinSmiteFree,
+    divineSmiteDamage: monkPaladin.divineSmiteDamage,
+    auraOfProtectionBonus: monkPaladin.auraOfProtectionBonus,
+    canUseAuraOfProtection: monkPaladin.canUseAuraOfProtection,
+    hasDivineHealth: monkPaladin.hasDivineHealth,
+    radiantStrikesDice: monkPaladin.radiantStrikesDice,
+    sneakAttackDice: rogueFeatures.sneakAttackDice,
+    canSneakAttack: rogueFeatures.canSneakAttack,
+    sneakAttack: rogueFeatures.sneakAttack,
+    canCunningAction: rogueFeatures.canCunningAction,
+    cunningAction: rogueFeatures.cunningAction,
+    canSteadyAim: rogueFeatures.canSteadyAim,
+    steadyAim: rogueFeatures.steadyAim,
+    canCunningStrike: rogueFeatures.canCunningStrike,
+    canStrokeOfLuck: rogueFeatures.canStrokeOfLuck,
+    strokeOfLuck: rogueFeatures.strokeOfLuck,
+    reliableTalent: rogueFeatures.reliableTalent,
+    hasSlipperyMind: rogueFeatures.hasSlipperyMind,
+    elusiveCancelsAdvantage: rogueFeatures.elusiveCancelsAdvantage,
     notify,
     resetToInitial,
     dispatch

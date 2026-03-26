@@ -11,15 +11,20 @@ import {
   actionSurgeMaxCharges,
   fighterLongRest,
   fighterShortRest,
+  indomitableLongRest,
+  indomitableMaxCharges,
   secondWindMaxCharges
 } from "#/features/class-fighter.ts"
 import { pExpendFocus, pInitFocusPool, pRestoreFocus, pRestoreFocusLongRest } from "#/features/class-monk.ts"
-import { layOnHandsPoolMax, paladinLongRest } from "#/features/class-paladin.ts"
+import { layOnHandsPoolMax } from "#/features/class-paladin.ts"
+import { reducePaladin } from "#/features/feature-store-paladin.ts"
+import { reduceRogue } from "#/features/feature-store-rogue.ts"
 
 export interface FeatureConfig {
   readonly className: string
   readonly level: number
   readonly berserkerLevel?: number
+  readonly championLevel?: number
 }
 
 export interface FighterFeatureState {
@@ -28,6 +33,8 @@ export interface FighterFeatureState {
   readonly actionSurgeCharges: number
   readonly actionSurgeMax: number
   readonly actionSurgeUsedThisTurn: boolean
+  readonly indomitableCharges: number
+  readonly indomitableMax: number
 }
 
 export interface BarbarianFeatureState {
@@ -54,16 +61,25 @@ export interface PaladinFeatureState {
   readonly smiteFreeUsed: boolean
 }
 
+export interface RogueFeatureState {
+  readonly sneakAttackUsedThisTurn: boolean
+  readonly steadyAimUsed: boolean
+  readonly strokeOfLuckUsed: boolean
+}
+
 export interface FeatureState {
   readonly fighter?: FighterFeatureState
   readonly barbarian?: BarbarianFeatureState
   readonly monk?: MonkFeatureState
   readonly paladin?: PaladinFeatureState
+  readonly rogue?: RogueFeatureState
 }
 
 export type FeatureAction =
   | { readonly type: "FIGHTER_USE_SECOND_WIND" }
   | { readonly type: "FIGHTER_USE_ACTION_SURGE" }
+  | { readonly type: "FIGHTER_USE_TACTICAL_MIND" }
+  | { readonly type: "FIGHTER_USE_INDOMITABLE" }
   | { readonly type: "BARBARIAN_ENTER_RAGE" }
   | { readonly type: "BARBARIAN_END_RAGE" }
   | { readonly type: "BARBARIAN_EXTEND_RAGE_BA" }
@@ -81,6 +97,10 @@ export type FeatureAction =
   | { readonly type: "PALADIN_LAY_ON_HANDS"; readonly poolAfter: number }
   | { readonly type: "PALADIN_LAY_ON_HANDS_CURE"; readonly poolAfter: number }
   | { readonly type: "PALADIN_SMITE_FREE" }
+  | { readonly type: "ROGUE_USE_CUNNING_ACTION" }
+  | { readonly type: "ROGUE_USE_STEADY_AIM" }
+  | { readonly type: "ROGUE_USE_SNEAK_ATTACK" }
+  | { readonly type: "ROGUE_USE_STROKE_OF_LUCK" }
   | { readonly type: "NOTIFY_SHORT_REST" }
   | { readonly type: "NOTIFY_LONG_REST" }
   | { readonly type: "NOTIFY_START_TURN" }
@@ -117,13 +137,25 @@ export function createInitialFeatureState(config: FeatureConfig): FeatureState {
   if (config.className === "fighter") {
     const swMax = secondWindMaxCharges(config.level)
     const asMax = actionSurgeMaxCharges(config.level)
+    const indMax = indomitableMaxCharges(config.level)
     return {
       fighter: {
         secondWindCharges: swMax,
         secondWindMax: swMax,
         actionSurgeCharges: asMax,
         actionSurgeMax: asMax,
-        actionSurgeUsedThisTurn: false
+        actionSurgeUsedThisTurn: false,
+        indomitableCharges: indMax,
+        indomitableMax: indMax
+      }
+    }
+  }
+  if (config.className === "rogue") {
+    return {
+      rogue: {
+        sneakAttackUsedThisTurn: false,
+        steadyAimUsed: false,
+        strokeOfLuckUsed: false
       }
     }
   }
@@ -166,7 +198,7 @@ export function createInitialFeatureState(config: FeatureConfig): FeatureState {
   return {}
 }
 
-function reduceFighter(state: FeatureState, action: FeatureAction, _config: FeatureConfig): FeatureState {
+function reduceFighter(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
   if (!state.fighter) return state
   const f = state.fighter
 
@@ -179,6 +211,12 @@ function reduceFighter(state: FeatureState, action: FeatureAction, _config: Feat
         ...state,
         fighter: { ...f, actionSurgeCharges: f.actionSurgeCharges - 1, actionSurgeUsedThisTurn: true }
       }
+
+    case "FIGHTER_USE_TACTICAL_MIND":
+      return { ...state, fighter: { ...f, secondWindCharges: f.secondWindCharges - 1 } }
+
+    case "FIGHTER_USE_INDOMITABLE":
+      return { ...state, fighter: { ...f, indomitableCharges: f.indomitableCharges - 1 } }
 
     case "NOTIFY_SHORT_REST": {
       const rest = fighterShortRest({
@@ -209,7 +247,8 @@ function reduceFighter(state: FeatureState, action: FeatureAction, _config: Feat
         fighter: {
           ...f,
           secondWindCharges: rest.secondWindCharges,
-          actionSurgeCharges: rest.actionSurgeCharges
+          actionSurgeCharges: rest.actionSurgeCharges,
+          indomitableCharges: indomitableLongRest(config.level)
         }
       }
     }
@@ -357,40 +396,6 @@ function reduceMonk(state: FeatureState, action: FeatureAction, _config: Feature
   }
 }
 
-function reducePaladin(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
-  if (!state.paladin) return state
-  const p = state.paladin
-
-  switch (action.type) {
-    case "PALADIN_LAY_ON_HANDS":
-      return { ...state, paladin: { ...p, layOnHandsPool: action.poolAfter } }
-
-    case "PALADIN_LAY_ON_HANDS_CURE":
-      return { ...state, paladin: { ...p, layOnHandsPool: action.poolAfter } }
-
-    case "PALADIN_SMITE_FREE":
-      return { ...state, paladin: { ...p, smiteFreeUsed: true } }
-
-    case "NOTIFY_START_TURN":
-      return state
-
-    case "NOTIFY_LONG_REST": {
-      const rest = paladinLongRest(config.level)
-      return {
-        ...state,
-        paladin: {
-          ...p,
-          layOnHandsPool: rest.layOnHandsPool,
-          smiteFreeUsed: false
-        }
-      }
-    }
-
-    default:
-      return state
-  }
-}
-
 export function featureReducer(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
   if (action.type === "RESET") {
     return createInitialFeatureState(config)
@@ -401,5 +406,6 @@ export function featureReducer(state: FeatureState, action: FeatureAction, confi
   result = reduceBarbarian(result, action, config)
   result = reduceMonk(result, action, config)
   result = reducePaladin(result, action, config)
+  result = reduceRogue(result, action, config)
   return result
 }
