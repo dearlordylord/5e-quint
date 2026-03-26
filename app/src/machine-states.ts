@@ -155,6 +155,7 @@ export const turnPhaseConfig = {
         USE_EXTRA_ATTACK: { actions: ["useExtraAttack"] },
         STAND_FROM_PRONE: { guard: "canStandFromProne" as const, actions: ["standFromProne"] },
         DROP_PRONE: { actions: ["dropProne"] },
+        GRANT_EXTRA_ACTION: { actions: ["grantExtraAction"] },
         MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
         MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
       }

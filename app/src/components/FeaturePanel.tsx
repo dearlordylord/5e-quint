@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react"
+import { type FormEvent, useState } from "react"
 
 import type { BridgeResult } from "#/features/feature-bridge.ts"
 import type { UseFeatures } from "#/features/useFeatures.ts"
@@ -18,9 +18,12 @@ export function FeaturePanel({
   const handleSecondWind = (e: FormEvent) => {
     e.preventDefault()
     const result = features.secondWind(d10Roll)
-    if (result) {
-      onFeatureAction(result)
-    }
+    if (result) onFeatureAction(result)
+  }
+
+  const handleActionSurge = () => {
+    const result = features.actionSurge()
+    if (result) onFeatureAction(result)
   }
 
   return (
@@ -38,9 +41,7 @@ export function FeaturePanel({
           {Array.from({ length: fighter.secondWindMax }, (_, i) => (
             <div
               key={i}
-              className={`w-3 h-3 rounded-full ${
-                i < fighter.secondWindCharges ? "bg-indigo-400" : "bg-gray-600"
-              }`}
+              className={`w-3 h-3 rounded-full ${i < fighter.secondWindCharges ? "bg-indigo-400" : "bg-gray-600"}`}
             />
           ))}
         </div>
@@ -65,6 +66,35 @@ export function FeaturePanel({
           </button>
         </form>
       </div>
+      {fighter.actionSurgeMax > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-300">Action Surge</span>
+            <span className="text-sm text-gray-400">
+              {fighter.actionSurgeCharges}/{fighter.actionSurgeMax}
+            </span>
+          </div>
+          <div className="flex gap-1 mb-2">
+            {Array.from({ length: fighter.actionSurgeMax }, (_, i) => (
+              <div
+                key={i}
+                className={`w-3 h-3 rounded-full ${i < fighter.actionSurgeCharges ? "bg-amber-400" : "bg-gray-600"}`}
+              />
+            ))}
+          </div>
+          <div className="flex gap-2 items-center">
+            <button
+              type="button"
+              onClick={handleActionSurge}
+              disabled={!features.canActionSurge}
+              className="px-3 py-1 rounded text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Action Surge
+            </button>
+            {fighter.actionSurgeUsedThisTurn && <span className="text-xs text-amber-300">Used this turn</span>}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

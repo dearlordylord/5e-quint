@@ -1,14 +1,13 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react"
-import { createActor } from "xstate"
 import { describe, expect, it } from "vitest"
-
-import { dndMachine } from "#/machine.ts"
-import type { DndEvent } from "#/machine-types.ts"
-import type { DndSnapshot } from "#/machine.ts"
+import { createActor } from "xstate"
 
 import type { FeatureConfig } from "#/features/feature-store.ts"
 import { useFeatures } from "#/features/useFeatures.ts"
+import type { DndSnapshot } from "#/machine.ts"
+import { dndMachine } from "#/machine.ts"
+import type { DndEvent } from "#/machine-types.ts"
 
 const FIGHTER_L5: FeatureConfig = { className: "fighter", level: 5 }
 const WIZARD_L5: FeatureConfig = { className: "wizard", level: 5 }
@@ -142,7 +141,9 @@ describe("useFeatures", () => {
       const snap = makeActingSnapshot()
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
 
-      act(() => { result.current.secondWind(5) })
+      act(() => {
+        result.current.secondWind(5)
+      })
       expect(result.current.featureState.fighter!.secondWindCharges).toBe(2)
     })
 
@@ -233,6 +234,69 @@ describe("useFeatures", () => {
 
       act(() => result.current.dispatch({ type: "FIGHTER_USE_SECOND_WIND" }))
       expect(result.current.featureState.fighter!.secondWindCharges).toBe(2)
+    })
+  })
+
+  describe("actionSurge", () => {
+    it("returns BridgeResult with GRANT_EXTRA_ACTION", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
+
+      let bridgeResult: ReturnType<typeof result.current.actionSurge>
+      act(() => {
+        bridgeResult = result.current.actionSurge()
+      })
+      expect(bridgeResult!).not.toBeNull()
+      expect(bridgeResult!.machineEvents).toHaveLength(1)
+      expect(bridgeResult!.machineEvents[0].type).toBe("GRANT_EXTRA_ACTION")
+      expect(bridgeResult!.featureAction).toEqual({ type: "FIGHTER_USE_ACTION_SURGE" })
+    })
+
+    it("canActionSurge becomes false after use", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
+
+      expect(result.current.canActionSurge).toBe(true)
+      act(() => {
+        result.current.actionSurge()
+      })
+      expect(result.current.canActionSurge).toBe(false)
+    })
+
+    it("canActionSurge resets after START_TURN (usedThisTurn)", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
+
+      // Use action surge (sets usedThisTurn, but L5 fighter only has 1 charge so charges also drops to 0)
+      // We need to test the usedThisTurn reset specifically. Use dispatch to set usedThisTurn without consuming charge.
+      act(() => result.current.dispatch({ type: "FIGHTER_USE_ACTION_SURGE" }))
+      expect(result.current.featureState.fighter!.actionSurgeUsedThisTurn).toBe(true)
+
+      // Notify START_TURN resets usedThisTurn
+      act(() =>
+        result.current.notify({
+          type: "START_TURN",
+          baseSpeed: 30,
+          armorPenalty: 0,
+          extraAttacks: 1,
+          callerSpeedModifier: 0,
+          isGrappling: false,
+          grappledTargetTwoSizesSmaller: false,
+          startOfTurnEffects: []
+        } as DndEvent)
+      )
+      expect(result.current.featureState.fighter!.actionSurgeUsedThisTurn).toBe(false)
+    })
+
+    it("charges restore after short rest", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
+
+      act(() => result.current.dispatch({ type: "FIGHTER_USE_ACTION_SURGE" }))
+      expect(result.current.featureState.fighter!.actionSurgeCharges).toBe(0)
+
+      act(() => result.current.notify({ type: "SHORT_REST", conMod: 2, hdRolls: [] } as DndEvent))
+      expect(result.current.featureState.fighter!.actionSurgeCharges).toBe(1)
     })
   })
 })

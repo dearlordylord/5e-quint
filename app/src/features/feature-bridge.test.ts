@@ -1,13 +1,41 @@
 import { describe, expect, it } from "vitest"
 
+import {
+  canExecuteActionSurge,
+  canExecuteSecondWind,
+  executeActionSurge,
+  executeSecondWind
+} from "#/features/feature-bridge.ts"
+import type { FeatureState } from "#/features/feature-store.ts"
 import type { DndContext } from "#/machine-types.ts"
 import { DEATH_SAVES_RESET, EMPTY_SLOTS, exhaustionLevel, hp, movementFeet, tempHp } from "#/types.ts"
 
-import { canExecuteSecondWind, executeSecondWind } from "#/features/feature-bridge.ts"
-import type { FeatureState } from "#/features/feature-store.ts"
-
 function makeFighterState(charges: number, max: number = 3): FeatureState {
-  return { fighter: { secondWindCharges: charges, secondWindMax: max } }
+  return {
+    fighter: {
+      secondWindCharges: charges,
+      secondWindMax: max,
+      actionSurgeCharges: 1,
+      actionSurgeMax: 1,
+      actionSurgeUsedThisTurn: false
+    }
+  }
+}
+
+function makeFighterStateWithSurge(
+  actionSurgeCharges: number,
+  actionSurgeUsedThisTurn: boolean,
+  actionSurgeMax: number = 1
+): FeatureState {
+  return {
+    fighter: {
+      secondWindCharges: 3,
+      secondWindMax: 3,
+      actionSurgeCharges,
+      actionSurgeMax,
+      actionSurgeUsedThisTurn
+    }
+  }
 }
 
 function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
@@ -83,9 +111,8 @@ describe("executeSecondWind", () => {
     // healAmount = d10Roll(7) + fighterLevel(5) = 12
     const healEvent = result.machineEvents.find((e) => e.type === "HEAL")
     expect(healEvent).toBeDefined()
-    if (healEvent && healEvent.type === "HEAL") {
-      expect(Number(healEvent.amount)).toBe(12)
-    }
+    expect(healEvent!.type).toBe("HEAL")
+    expect(Number((healEvent as Extract<typeof healEvent, { type: "HEAL" }>).amount)).toBe(12)
   })
 
   it("returns USE_BONUS_ACTION + HEAL events", () => {
@@ -98,5 +125,36 @@ describe("executeSecondWind", () => {
   it("returns FIGHTER_USE_SECOND_WIND feature action", () => {
     const result = executeSecondWind(makeFighterState(2), makeCtx(), 5, 5)
     expect(result.featureAction).toEqual({ type: "FIGHTER_USE_SECOND_WIND" })
+  })
+})
+
+describe("canExecuteActionSurge", () => {
+  it("returns true when charges > 0 and not used this turn", () => {
+    expect(canExecuteActionSurge(makeFighterStateWithSurge(1, false), makeCtx())).toBe(true)
+  })
+
+  it("returns false when charges = 0", () => {
+    expect(canExecuteActionSurge(makeFighterStateWithSurge(0, false), makeCtx())).toBe(false)
+  })
+
+  it("returns false when used this turn", () => {
+    expect(canExecuteActionSurge(makeFighterStateWithSurge(1, true), makeCtx())).toBe(false)
+  })
+
+  it("returns false for non-fighter state", () => {
+    expect(canExecuteActionSurge({}, makeCtx())).toBe(false)
+  })
+})
+
+describe("executeActionSurge", () => {
+  it("returns GRANT_EXTRA_ACTION machine event", () => {
+    const result = executeActionSurge(makeFighterStateWithSurge(1, false))
+    expect(result.machineEvents).toHaveLength(1)
+    expect(result.machineEvents[0].type).toBe("GRANT_EXTRA_ACTION")
+  })
+
+  it("returns FIGHTER_USE_ACTION_SURGE feature action", () => {
+    const result = executeActionSurge(makeFighterStateWithSurge(1, false))
+    expect(result.featureAction).toEqual({ type: "FIGHTER_USE_ACTION_SURGE" })
   })
 })

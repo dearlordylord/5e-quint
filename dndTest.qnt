@@ -1266,6 +1266,19 @@ module dndTest {
     assert(t.actionsRemaining > 0) // can't act while incapacitated
   }
 
+  // -- Grant extra action --
+
+  run test_grant_extra_action = {
+    val t = pUseAction(BASIC_TURN, FRESH20, AAttack)
+    val t2 = pGrantExtraAction(t)
+    all { assert(t2.actionsRemaining == 1), assert(t2.attackActionUsed) }
+  }
+
+  run test_grant_extra_action_stacks = {
+    val t = pGrantExtraAction(pGrantExtraAction(BASIC_TURN))
+    assert(t.actionsRemaining == 3)
+  }
+
   // -- Disengage --
 
   run test_disengage = {
