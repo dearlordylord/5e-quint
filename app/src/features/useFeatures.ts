@@ -2,8 +2,8 @@ import { useCallback, useMemo, useReducer } from "react"
 
 import { canCastWhileRaging } from "#/features/class-barbarian.ts"
 import type { CunningActionChoice, StrikeEffect } from "#/features/class-rogue.ts"
-import type { BridgeResult } from "#/features/feature-bridge.ts"
 import type { AbjureFoesResult } from "#/features/class-paladin.ts"
+import type { BridgeResult } from "#/features/feature-bridge.ts"
 import {
   canExecuteActionSurge,
   canExecuteDeclareReckless,
@@ -222,7 +222,6 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
   }, [])
 
   const ctx = snapshot?.context ?? null
-
   // Fighter
   const canSecondWind = ctx ? canExecuteSecondWind(featureState, ctx) : false
   const canActionSurge = ctx ? canExecuteActionSurge(featureState, ctx) : false
@@ -244,14 +243,9 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     return result
   }, [featureState, ctx])
 
-  // Fighter extras (Tactical Mind, Indomitable, Champion)
   const fighterExtras = useFighterExtras(featureState, config.level, config.championLevel ?? 0, dispatch)
-
-  // Barbarian
   const canEnterRageVal = ctx ? canExecuteEnterRage(featureState, ctx) : false
-
   const berserkerLevel = config.berserkerLevel ?? 0
-
   const enterRage = useCallback((): BridgeResult | null => {
     if (!ctx) return null
     const result =
@@ -340,7 +334,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
   const primalChampionBonusVal = primalChampionBonus(config.level)
 
   const relentlessRageFn = useCallback(
-    (conSaveSucceeded: boolean): BridgeResult | null => {
+    (_conSaveSucceeded: boolean): BridgeResult | null => {
       if (!canExecuteRelentlessRage(featureState, config.level)) return null
       const result = executeRelentlessRage()
       dispatch(result.featureAction)
@@ -414,75 +408,8 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     relentlessRage: relentlessRageFn,
     indomitableMightFn,
     primalChampionBonus: primalChampionBonusVal,
-    canFlurryOfBlows: monkPaladin.canFlurryOfBlows,
-    flurryOfBlows: monkPaladin.flurryOfBlows,
-    canPatientDefenseFree: monkPaladin.canPatientDefenseFree,
-    patientDefenseFree: monkPaladin.patientDefenseFree,
-    canPatientDefenseFocus: monkPaladin.canPatientDefenseFocus,
-    patientDefenseFocus: monkPaladin.patientDefenseFocus,
-    canStepOfTheWindFree: monkPaladin.canStepOfTheWindFree,
-    stepOfTheWindFree: monkPaladin.stepOfTheWindFree,
-    canStepOfTheWindFocus: monkPaladin.canStepOfTheWindFocus,
-    stepOfTheWindFocus: monkPaladin.stepOfTheWindFocus,
-    canStunningStrike: monkPaladin.canStunningStrike,
-    stunningStrike: monkPaladin.stunningStrike,
-    canUncannyMetabolism: monkPaladin.canUncannyMetabolism,
-    uncannyMetabolism: monkPaladin.uncannyMetabolism,
-    martialArtsDie: monkPaladin.martialArtsDie,
-    bonusUnarmedStrikeEligible: monkPaladin.bonusUnarmedStrikeEligible,
-    unarmoredMovementBonus: monkPaladin.unarmoredMovementBonus,
-    hasFocusEmpoweredStrikes: monkPaladin.hasFocusEmpoweredStrikes,
-    canSelfRestore: monkPaladin.canSelfRestore,
-    selfRestorationConditions: monkPaladin.selfRestorationConditions,
-    hasDeflectEnergy: monkPaladin.hasDeflectEnergy,
-    hasDisciplinedSurvivor: monkPaladin.hasDisciplinedSurvivor,
-    hasFleetStep: monkPaladin.hasFleetStep,
-    canDeflectAttacks: monkPaladin.canDeflectAttacks,
-    deflectAttacks: monkPaladin.deflectAttacks,
-    canSlowFall: monkPaladin.canSlowFall,
-    slowFall: monkPaladin.slowFall,
-    canSuperiorDefense: monkPaladin.canSuperiorDefense,
-    superiorDefense: monkPaladin.superiorDefense,
-    canWholenessOfBody: monkPaladin.canWholenessOfBody,
-    wholenessOfBody: monkPaladin.wholenessOfBody,
-    canQuiveringPalm: monkPaladin.canQuiveringPalm,
-    quiveringPalm: monkPaladin.quiveringPalm,
-    triggerQuiveringPalm: monkPaladin.triggerQuiveringPalm,
-    canDisciplinedSurvivorReroll: monkPaladin.canDisciplinedSurvivorReroll,
-    disciplinedSurvivorReroll: monkPaladin.disciplinedSurvivorReroll,
-    canLayOnHandsHeal: monkPaladin.canLayOnHandsHeal,
-    layOnHandsHeal: monkPaladin.layOnHandsHeal,
-    canLayOnHandsCure: monkPaladin.canLayOnHandsCure,
-    layOnHandsCure: monkPaladin.layOnHandsCure,
-    canPaladinSmiteFree: monkPaladin.canPaladinSmiteFree,
-    paladinSmiteFree: monkPaladin.paladinSmiteFree,
-    divineSmiteDamage: monkPaladin.divineSmiteDamage,
-    auraOfProtectionBonus: monkPaladin.auraOfProtectionBonus,
-    canUseAuraOfProtection: monkPaladin.canUseAuraOfProtection,
-    radiantStrikesDice: monkPaladin.radiantStrikesDice,
-    canUseAuraOfCourage: monkPaladin.canUseAuraOfCourage,
-    auraOfCourageRange: monkPaladin.auraOfCourageRange,
-    auraOfProtectionRange: monkPaladin.auraOfProtectionRange,
-    canFaithfulSteed: monkPaladin.canFaithfulSteed,
-    faithfulSteed: monkPaladin.faithfulSteed,
-    canAbjureFoes: monkPaladin.canAbjureFoes,
-    abjureFoes: monkPaladin.abjureFoes,
-    abjureFoesResult: monkPaladin.abjureFoesResult,
-    canRestoringTouch: monkPaladin.canRestoringTouch,
-    restoringTouch: monkPaladin.restoringTouch,
-    sneakAttackDice: rogueFeatures.sneakAttackDice,
-    canSneakAttack: rogueFeatures.canSneakAttack,
-    sneakAttack: rogueFeatures.sneakAttack,
-    canCunningAction: rogueFeatures.canCunningAction,
-    cunningAction: rogueFeatures.cunningAction,
-    canSteadyAim: rogueFeatures.canSteadyAim,
-    steadyAim: rogueFeatures.steadyAim,
-    canCunningStrike: rogueFeatures.canCunningStrike,
-    canStrokeOfLuck: rogueFeatures.canStrokeOfLuck,
-    strokeOfLuck: rogueFeatures.strokeOfLuck,
-    reliableTalent: rogueFeatures.reliableTalent,
-    hasSlipperyMind: rogueFeatures.hasSlipperyMind,
-    elusiveCancelsAdvantage: rogueFeatures.elusiveCancelsAdvantage,
+    ...monkPaladin,
+    ...rogueFeatures,
     notify,
     resetToInitial,
     dispatch
