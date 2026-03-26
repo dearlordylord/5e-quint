@@ -10,6 +10,7 @@ import { dndMachine } from "#/machine.ts"
 import type { DndEvent } from "#/machine-types.ts"
 
 const FIGHTER_L5: FeatureConfig = { className: "fighter", level: 5 }
+const BARBARIAN_L5: FeatureConfig = { className: "barbarian", level: 5 }
 const WIZARD_L5: FeatureConfig = { className: "wizard", level: 5 }
 
 function makeSnapshot(input = { maxHp: 20 }): DndSnapshot {
@@ -297,6 +298,163 @@ describe("useFeatures", () => {
 
       act(() => result.current.notify({ type: "SHORT_REST", conMod: 2, hdRolls: [] } as DndEvent))
       expect(result.current.featureState.fighter!.actionSurgeCharges).toBe(1)
+    })
+  })
+})
+
+describe("useFeatures — barbarian", () => {
+  describe("initial state", () => {
+    it("barbarian config has correct charges", () => {
+      const snap = makeSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+      expect(result.current.featureState.barbarian).toBeDefined()
+      expect(result.current.featureState.barbarian!.rageCharges).toBe(3)
+      expect(result.current.isRaging).toBe(false)
+      expect(result.current.canCastSpells).toBe(true)
+    })
+  })
+
+  describe("enter rage", () => {
+    it("enter rage sets isRaging true and decrements charges", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+
+      expect(result.current.canEnterRage).toBe(true)
+      act(() => {
+        result.current.enterRage()
+      })
+      expect(result.current.isRaging).toBe(true)
+      expect(result.current.featureState.barbarian!.rageCharges).toBe(2)
+      expect(result.current.canCastSpells).toBe(false)
+    })
+  })
+
+  describe("end turn — rage maintenance", () => {
+    it("end turn without marking attack → rage ends", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+
+      act(() => {
+        result.current.enterRage()
+      })
+      expect(result.current.isRaging).toBe(true)
+
+      // End turn without marking attack
+      act(() => {
+        result.current.notify({
+          type: "END_TURN",
+          endOfTurnSaves: [],
+          endOfTurnDamage: []
+        } as DndEvent)
+      })
+      expect(result.current.isRaging).toBe(false)
+    })
+
+    it("end turn after marking attack → rage continues", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+
+      act(() => {
+        result.current.enterRage()
+      })
+      act(() => {
+        result.current.markAttackOrSave()
+      })
+      act(() => {
+        result.current.notify({
+          type: "END_TURN",
+          endOfTurnSaves: [],
+          endOfTurnDamage: []
+        } as DndEvent)
+      })
+      expect(result.current.isRaging).toBe(true)
+    })
+  })
+
+  describe("extend rage with BA", () => {
+    it("extend rage with BA → bonus action consumed via machine event", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+
+      act(() => {
+        result.current.enterRage()
+      })
+
+      let bridgeResult: ReturnType<typeof result.current.extendRageBA>
+      act(() => {
+        bridgeResult = result.current.extendRageBA()
+      })
+      expect(bridgeResult!).not.toBeNull()
+      expect(bridgeResult!.machineEvents).toHaveLength(1)
+      expect(bridgeResult!.machineEvents[0].type).toBe("USE_BONUS_ACTION")
+    })
+  })
+
+  describe("reckless attack", () => {
+    it("declare reckless → recklessThisTurn true", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+
+      expect(result.current.canDeclareReckless).toBe(true)
+      act(() => {
+        result.current.declareReckless()
+      })
+      expect(result.current.featureState.barbarian!.recklessThisTurn).toBe(true)
+      expect(result.current.canDeclareReckless).toBe(false)
+    })
+
+    it("reckless resets at start turn", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+
+      act(() => {
+        result.current.declareReckless()
+      })
+      expect(result.current.featureState.barbarian!.recklessThisTurn).toBe(true)
+
+      act(() => {
+        result.current.notify({
+          type: "START_TURN",
+          baseSpeed: 30,
+          armorPenalty: 0,
+          extraAttacks: 1,
+          callerSpeedModifier: 0,
+          isGrappling: false,
+          grappledTargetTwoSizesSmaller: false,
+          startOfTurnEffects: []
+        } as DndEvent)
+      })
+      expect(result.current.featureState.barbarian!.recklessThisTurn).toBe(false)
+    })
+  })
+
+  describe("rage resistances and damage bonus", () => {
+    it("rageResistances returns B/P/S when raging", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+
+      act(() => {
+        result.current.enterRage()
+      })
+      expect(result.current.rageResistances.has("bludgeoning")).toBe(true)
+      expect(result.current.rageResistances.has("piercing")).toBe(true)
+      expect(result.current.rageResistances.has("slashing")).toBe(true)
+    })
+
+    it("rageDamageBonus is +2 at L5 when raging", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+
+      act(() => {
+        result.current.enterRage()
+      })
+      expect(result.current.rageDamageBonus).toBe(2)
+    })
+
+    it("rageDamageBonus is 0 when not raging", () => {
+      const snap = makeActingSnapshot()
+      const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
+      expect(result.current.rageDamageBonus).toBe(0)
     })
   })
 })

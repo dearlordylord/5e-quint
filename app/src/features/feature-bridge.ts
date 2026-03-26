@@ -1,12 +1,16 @@
+import { canEnterRage, rageDamageBonus, rageResistances } from "#/features/class-barbarian.ts"
 import { canUseActionSurge, canUseSecondWind, useSecondWind as applySecondWind } from "#/features/class-fighter.ts"
 import type { FeatureAction, FeatureState } from "#/features/feature-store.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
+import type { DamageType } from "#/types.ts"
 import { healAmount } from "#/types.ts"
 
 export interface BridgeResult {
   readonly featureAction: FeatureAction
   readonly machineEvents: ReadonlyArray<DndEvent>
 }
+
+// --- Fighter: Second Wind ---
 
 export function canExecuteSecondWind(featureState: FeatureState, ctx: DndContext): boolean {
   if (!featureState.fighter) return false
@@ -42,6 +46,8 @@ export function executeSecondWind(
   }
 }
 
+// --- Fighter: Action Surge ---
+
 export function canExecuteActionSurge(featureState: FeatureState, ctx: DndContext): boolean {
   if (!featureState.fighter) return false
   return canUseActionSurge({
@@ -57,4 +63,77 @@ export function executeActionSurge(featureState: FeatureState): BridgeResult {
     featureAction: { type: "FIGHTER_USE_ACTION_SURGE" },
     machineEvents: [{ type: "GRANT_EXTRA_ACTION" }]
   }
+}
+
+// --- Barbarian: Rage ---
+
+export function canExecuteEnterRage(featureState: FeatureState, ctx: DndContext): boolean {
+  if (!featureState.barbarian) return false
+  const b = featureState.barbarian
+  // TODO: armor weight should come from context/config, not hardcoded.
+  // Currently no heavy armor tracking in DndContext — caller must prevent raging in heavy armor.
+  return !b.raging && !ctx.bonusActionUsed && canEnterRage(b.rageCharges, "light")
+}
+
+export function executeEnterRage(_featureState: FeatureState, ctx: DndContext): BridgeResult {
+  // Entering rage costs a Bonus Action and breaks concentration if active
+  const machineEvents: ReadonlyArray<DndEvent> =
+    ctx.concentrationSpellId !== ""
+      ? [{ type: "USE_BONUS_ACTION" }, { type: "BREAK_CONCENTRATION" }]
+      : [{ type: "USE_BONUS_ACTION" }]
+  return {
+    featureAction: { type: "BARBARIAN_ENTER_RAGE" },
+    machineEvents
+  }
+}
+
+export function canExecuteEndRage(featureState: FeatureState): boolean {
+  return featureState.barbarian?.raging === true
+}
+
+export function executeEndRage(): BridgeResult {
+  return {
+    featureAction: { type: "BARBARIAN_END_RAGE" },
+    machineEvents: []
+  }
+}
+
+export function canExecuteExtendRageBA(featureState: FeatureState, ctx: DndContext): boolean {
+  if (!featureState.barbarian) return false
+  return featureState.barbarian.raging && !ctx.bonusActionUsed
+}
+
+export function executeExtendRageBA(): BridgeResult {
+  return {
+    featureAction: { type: "BARBARIAN_EXTEND_RAGE_BA" },
+    machineEvents: [{ type: "USE_BONUS_ACTION" }]
+  }
+}
+
+export function canExecuteDeclareReckless(featureState: FeatureState): boolean {
+  if (!featureState.barbarian) return false
+  return !featureState.barbarian.recklessThisTurn
+}
+
+export function executeDeclareReckless(): BridgeResult {
+  return {
+    featureAction: { type: "BARBARIAN_DECLARE_RECKLESS" },
+    machineEvents: []
+  }
+}
+
+// --- Barbarian: Query functions (no BridgeResult -- pure data for UI) ---
+
+export function getRageResistances(featureState: FeatureState): ReadonlySet<DamageType> {
+  if (!featureState.barbarian) return new Set()
+  return rageResistances(featureState.barbarian.raging)
+}
+
+export function getIsRaging(featureState: FeatureState): boolean {
+  return featureState.barbarian?.raging === true
+}
+
+export function getRageDamageBonus(featureState: FeatureState, barbarianLevel: number): number {
+  if (!featureState.barbarian?.raging) return 0
+  return rageDamageBonus(barbarianLevel)
 }

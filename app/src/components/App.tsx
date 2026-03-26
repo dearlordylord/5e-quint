@@ -15,7 +15,12 @@ const DEFAULT_MAX_HP = 20
 export const DEFAULT_SPEED = 30
 export const DEFAULT_HIT_DICE = 5
 
-const FEATURE_CONFIG: FeatureConfig = { className: "fighter", level: 5 }
+function getClassFromUrl(): string {
+  const params = new URLSearchParams(window.location.search)
+  return params.get("class") ?? "fighter"
+}
+
+const FEATURE_CONFIG: FeatureConfig = { className: getClassFromUrl(), level: 5 }
 
 const DEFAULT_INPUT: DndMachineInput = {
   maxHp: DEFAULT_MAX_HP,
@@ -180,7 +185,7 @@ export function App() {
           </header>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <StatePanel snapshot={snapshot} ctx={ctx} />
-            <MemoEventPanel send={send} snapshot={snapshot} />
+            <MemoEventPanel send={send} snapshot={snapshot} rageResistances={features.rageResistances} />
             <FeaturePanel features={features} onFeatureAction={onFeatureAction} />
             <TransitionLog log={log} cursor={cursor} onJumpTo={jumpTo} onClear={onClear} />
           </div>

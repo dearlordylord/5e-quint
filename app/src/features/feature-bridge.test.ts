@@ -2,11 +2,19 @@ import { describe, expect, it } from "vitest"
 
 import {
   canExecuteActionSurge,
+  canExecuteDeclareReckless,
+  canExecuteEndRage,
+  canExecuteEnterRage,
+  canExecuteExtendRageBA,
   canExecuteSecondWind,
   executeActionSurge,
-  executeSecondWind
+  executeEnterRage,
+  executeSecondWind,
+  getIsRaging,
+  getRageDamageBonus,
+  getRageResistances
 } from "#/features/feature-bridge.ts"
-import type { FeatureState } from "#/features/feature-store.ts"
+import type { BarbarianFeatureState, FeatureState } from "#/features/feature-store.ts"
 import type { DndContext } from "#/machine-types.ts"
 import { DEATH_SAVES_RESET, EMPTY_SLOTS, exhaustionLevel, hp, movementFeet, tempHp } from "#/types.ts"
 
@@ -34,6 +42,21 @@ function makeFighterStateWithSurge(
       actionSurgeCharges,
       actionSurgeMax,
       actionSurgeUsedThisTurn
+    }
+  }
+}
+
+function makeBarbarianState(overrides: Partial<BarbarianFeatureState> = {}): FeatureState {
+  return {
+    barbarian: {
+      raging: false,
+      rageCharges: 3,
+      rageMaxCharges: 3,
+      rageTurnsRemaining: 0,
+      attackedOrForcedSaveThisTurn: false,
+      rageExtendedWithBA: false,
+      recklessThisTurn: false,
+      ...overrides
     }
   }
 }
@@ -156,5 +179,128 @@ describe("executeActionSurge", () => {
   it("returns FIGHTER_USE_ACTION_SURGE feature action", () => {
     const result = executeActionSurge(makeFighterStateWithSurge(1, false))
     expect(result.featureAction).toEqual({ type: "FIGHTER_USE_ACTION_SURGE" })
+  })
+})
+
+// --- Barbarian Bridge Tests ---
+
+describe("canExecuteEnterRage", () => {
+  it("returns true when not raging, charges > 0, and bonus action available", () => {
+    expect(canExecuteEnterRage(makeBarbarianState(), makeCtx())).toBe(true)
+  })
+
+  it("returns false when already raging", () => {
+    expect(canExecuteEnterRage(makeBarbarianState({ raging: true }), makeCtx())).toBe(false)
+  })
+
+  it("returns false when charges = 0", () => {
+    expect(canExecuteEnterRage(makeBarbarianState({ rageCharges: 0 }), makeCtx())).toBe(false)
+  })
+
+  it("returns false when bonus action used", () => {
+    expect(canExecuteEnterRage(makeBarbarianState(), makeCtx({ bonusActionUsed: true }))).toBe(false)
+  })
+
+  it("returns false for non-barbarian state", () => {
+    expect(canExecuteEnterRage({}, makeCtx())).toBe(false)
+  })
+})
+
+describe("executeEnterRage", () => {
+  it("sends USE_BONUS_ACTION + BREAK_CONCENTRATION when concentrating", () => {
+    const result = executeEnterRage(makeBarbarianState(), makeCtx({ concentrationSpellId: "spell_x" }))
+    expect(result.machineEvents).toHaveLength(2)
+    expect(result.machineEvents[0].type).toBe("USE_BONUS_ACTION")
+    expect(result.machineEvents[1].type).toBe("BREAK_CONCENTRATION")
+    expect(result.featureAction).toEqual({ type: "BARBARIAN_ENTER_RAGE" })
+  })
+
+  it("sends USE_BONUS_ACTION only when not concentrating", () => {
+    const result = executeEnterRage(makeBarbarianState(), makeCtx({ concentrationSpellId: "" }))
+    expect(result.machineEvents).toHaveLength(1)
+    expect(result.machineEvents[0].type).toBe("USE_BONUS_ACTION")
+    expect(result.featureAction).toEqual({ type: "BARBARIAN_ENTER_RAGE" })
+  })
+})
+
+describe("canExecuteEndRage", () => {
+  it("returns true when raging", () => {
+    expect(canExecuteEndRage(makeBarbarianState({ raging: true }))).toBe(true)
+  })
+
+  it("returns false when not raging", () => {
+    expect(canExecuteEndRage(makeBarbarianState({ raging: false }))).toBe(false)
+  })
+})
+
+describe("canExecuteExtendRageBA", () => {
+  it("returns true when raging and bonus action not used", () => {
+    expect(canExecuteExtendRageBA(makeBarbarianState({ raging: true }), makeCtx({ bonusActionUsed: false }))).toBe(true)
+  })
+
+  it("returns false when bonus action used", () => {
+    expect(canExecuteExtendRageBA(makeBarbarianState({ raging: true }), makeCtx({ bonusActionUsed: true }))).toBe(false)
+  })
+
+  it("returns false when not raging", () => {
+    expect(canExecuteExtendRageBA(makeBarbarianState({ raging: false }), makeCtx())).toBe(false)
+  })
+})
+
+describe("canExecuteDeclareReckless", () => {
+  it("returns true when not yet reckless", () => {
+    expect(canExecuteDeclareReckless(makeBarbarianState({ recklessThisTurn: false }))).toBe(true)
+  })
+
+  it("returns false when already reckless", () => {
+    expect(canExecuteDeclareReckless(makeBarbarianState({ recklessThisTurn: true }))).toBe(false)
+  })
+})
+
+describe("getRageResistances", () => {
+  it("returns B/P/S when raging", () => {
+    const res = getRageResistances(makeBarbarianState({ raging: true }))
+    expect(res.has("bludgeoning")).toBe(true)
+    expect(res.has("piercing")).toBe(true)
+    expect(res.has("slashing")).toBe(true)
+    expect(res.size).toBe(3)
+  })
+
+  it("returns empty set when not raging", () => {
+    const res = getRageResistances(makeBarbarianState({ raging: false }))
+    expect(res.size).toBe(0)
+  })
+
+  it("returns empty set for non-barbarian", () => {
+    const res = getRageResistances({})
+    expect(res.size).toBe(0)
+  })
+})
+
+describe("getIsRaging", () => {
+  it("returns true when raging", () => {
+    expect(getIsRaging(makeBarbarianState({ raging: true }))).toBe(true)
+  })
+
+  it("returns false when not raging", () => {
+    expect(getIsRaging(makeBarbarianState({ raging: false }))).toBe(false)
+  })
+
+  it("returns false for non-barbarian", () => {
+    expect(getIsRaging({})).toBe(false)
+  })
+})
+
+describe("getRageDamageBonus", () => {
+  it("returns +2 at level 5 when raging", () => {
+    expect(getRageDamageBonus(makeBarbarianState({ raging: true }), 5)).toBe(2)
+  })
+
+  it("returns 0 when not raging", () => {
+    expect(getRageDamageBonus(makeBarbarianState({ raging: false }), 5)).toBe(0)
+  })
+
+  it("returns +3 at level 9 when raging", () => {
+    expect(getRageDamageBonus(makeBarbarianState({ raging: true }), 9)).toBe(3)
   })
 })

@@ -79,11 +79,13 @@ function Btn({
 }
 
 export function EventPanel({
+  rageResistances,
   send,
   snapshot
 }: {
   readonly send: (e: DndEvent) => void
   readonly snapshot: DndSnapshot
+  readonly rageResistances?: ReadonlySet<DamageType>
 }) {
   const t = useT()
   const [dmgAmount, setDmgAmount] = useState(5)
@@ -105,17 +107,21 @@ export function EventPanel({
 
       <Section title={t.takeDamage}>
         <form
-          onSubmit={prevent(() =>
+          onSubmit={prevent(() => {
+            const mergedResistances =
+              rageResistances && rageResistances.size > 0
+                ? new Set([...EMPTY_DAMAGE_SET, ...rageResistances])
+                : EMPTY_DAMAGE_SET
             send({
               type: "TAKE_DAMAGE",
               amount: dmgAmount,
               damageType: dmgType,
-              resistances: EMPTY_DAMAGE_SET,
+              resistances: mergedResistances,
               vulnerabilities: EMPTY_DAMAGE_SET,
               immunities: EMPTY_DAMAGE_SET,
               isCritical: isCrit
             })
-          )}
+          })}
         >
           <NumInput label={t.amount} value={dmgAmount} onChange={setDmgAmount} min={0} />
           <label className="flex items-center gap-2 text-sm mt-1">
