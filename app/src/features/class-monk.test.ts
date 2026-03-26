@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest"
 
 import type { FocusPoolState } from "#/features/class-monk.ts"
 import {
+  canFlurryOfBlows,
+  canPatientDefenseFocus,
+  canPatientDefenseFree,
+  canStepOfTheWindFocus,
+  canStepOfTheWindFree,
+  canStunningStrike,
+  flurryOfBlowsStrikes,
   pBonusUnarmedStrikeEligible,
   pDexterousAttacks,
   pExpendFocus,
@@ -14,7 +21,13 @@ import {
   pRestoreFocus,
   pRestoreFocusLongRest,
   pRollInitiative,
-  pUncannyMetabolism
+  pUncannyMetabolism,
+  useFlurryOfBlows,
+  usePatientDefenseFocus,
+  usePatientDefenseFree,
+  useStepOfTheWindFocus,
+  useStepOfTheWindFree,
+  useStunningStrike
 } from "#/features/class-monk.ts"
 
 // --- Helpers ---
@@ -343,5 +356,163 @@ describe("Martial Arts", () => {
     it("not eligible when wielding shield", () => {
       expect(pBonusUnarmedStrikeEligible(true, "unarmed", false, true)).toBe(false)
     })
+  })
+})
+
+// --- Focus Actions (T42) ---
+
+describe("Flurry of Blows", () => {
+  it("can't use without FP", () => {
+    expect(canFlurryOfBlows(0, false)).toBe(false)
+  })
+
+  it("can't use if bonus action used", () => {
+    expect(canFlurryOfBlows(3, true)).toBe(false)
+  })
+
+  it("costs 1 FP", () => {
+    const result = useFlurryOfBlows(3, 5)
+    expect(result.focusPoints).toBe(2)
+    expect(result.bonusActionUsed).toBe(true)
+  })
+
+  it("2 strikes before L10", () => {
+    expect(flurryOfBlowsStrikes(2)).toBe(2)
+    expect(flurryOfBlowsStrikes(9)).toBe(2)
+    const result = useFlurryOfBlows(3, 9)
+    expect(result.unarmedStrikes).toBe(2)
+  })
+
+  it("3 strikes at L10+", () => {
+    expect(flurryOfBlowsStrikes(10)).toBe(3)
+    expect(flurryOfBlowsStrikes(20)).toBe(3)
+    const result = useFlurryOfBlows(3, 10)
+    expect(result.unarmedStrikes).toBe(3)
+  })
+})
+
+describe("Patient Defense", () => {
+  it("free version: no FP cost, only Disengage", () => {
+    const result = usePatientDefenseFree(5)
+    expect(result.focusPoints).toBe(5)
+    expect(result.bonusActionUsed).toBe(true)
+    expect(result.disengageGranted).toBe(true)
+    expect(result.dodgeGranted).toBe(false)
+    expect(result.tempHp).toBe(0)
+  })
+
+  it("focus version: costs 1 FP, Disengage + Dodge", () => {
+    const result = usePatientDefenseFocus(5, 5, 4)
+    expect(result.focusPoints).toBe(4)
+    expect(result.bonusActionUsed).toBe(true)
+    expect(result.disengageGranted).toBe(true)
+    expect(result.dodgeGranted).toBe(true)
+    expect(result.tempHp).toBe(0)
+  })
+
+  it("focus version at L10+: also grants temp HP", () => {
+    const result = usePatientDefenseFocus(5, 10, 6)
+    expect(result.focusPoints).toBe(4)
+    expect(result.dodgeGranted).toBe(true)
+    expect(result.tempHp).toBe(6)
+  })
+
+  it("can't use if bonus action already used (free)", () => {
+    expect(canPatientDefenseFree(true)).toBe(false)
+    expect(canPatientDefenseFree(false)).toBe(true)
+  })
+
+  it("can't use if bonus action already used (focus)", () => {
+    expect(canPatientDefenseFocus(3, true)).toBe(false)
+  })
+
+  it("can't use focus without FP", () => {
+    expect(canPatientDefenseFocus(0, false)).toBe(false)
+  })
+})
+
+describe("Step of the Wind", () => {
+  it("free version: no FP cost, only Dash", () => {
+    const result = useStepOfTheWindFree(5)
+    expect(result.focusPoints).toBe(5)
+    expect(result.bonusActionUsed).toBe(true)
+    expect(result.dashGranted).toBe(true)
+    expect(result.disengageGranted).toBe(false)
+    expect(result.jumpDistanceDoubled).toBe(false)
+    expect(result.canCarryAlly).toBe(false)
+  })
+
+  it("focus version: costs 1 FP, Dash + Disengage + double jump", () => {
+    const result = useStepOfTheWindFocus(5, 5)
+    expect(result.focusPoints).toBe(4)
+    expect(result.bonusActionUsed).toBe(true)
+    expect(result.dashGranted).toBe(true)
+    expect(result.disengageGranted).toBe(true)
+    expect(result.jumpDistanceDoubled).toBe(true)
+    expect(result.canCarryAlly).toBe(false)
+  })
+
+  it("focus version at L10+: can carry ally", () => {
+    const result = useStepOfTheWindFocus(5, 10)
+    expect(result.focusPoints).toBe(4)
+    expect(result.disengageGranted).toBe(true)
+    expect(result.jumpDistanceDoubled).toBe(true)
+    expect(result.canCarryAlly).toBe(true)
+  })
+
+  it("can't use if bonus action already used (free)", () => {
+    expect(canStepOfTheWindFree(true)).toBe(false)
+    expect(canStepOfTheWindFree(false)).toBe(true)
+  })
+
+  it("can't use if bonus action already used (focus)", () => {
+    expect(canStepOfTheWindFocus(3, true)).toBe(false)
+  })
+
+  it("can't use focus without FP", () => {
+    expect(canStepOfTheWindFocus(0, false)).toBe(false)
+  })
+})
+
+// --- Stunning Strike (T43) ---
+
+describe("Stunning Strike", () => {
+  it("can't use below L5", () => {
+    expect(canStunningStrike(4, 5, false, "unarmed")).toBe(false)
+  })
+
+  it("costs 1 FP", () => {
+    const result = useStunningStrike(5, false)
+    expect(result.focusPoints).toBe(4)
+  })
+
+  it("once per turn only", () => {
+    expect(canStunningStrike(5, 5, true, "unarmed")).toBe(false)
+  })
+
+  it("must be unarmed or monk weapon, not other", () => {
+    expect(canStunningStrike(5, 5, false, "unarmed")).toBe(true)
+    expect(canStunningStrike(5, 5, false, "monkWeapon")).toBe(true)
+    expect(canStunningStrike(5, 5, false, "other")).toBe(false)
+  })
+
+  it("can't use without FP", () => {
+    expect(canStunningStrike(5, 0, false, "unarmed")).toBe(false)
+  })
+
+  it("failed save: target stunned", () => {
+    const result = useStunningStrike(5, false)
+    expect(result.stunningStrikeUsedThisTurn).toBe(true)
+    expect(result.targetStunned).toBe(true)
+    expect(result.targetSpeedHalved).toBe(false)
+    expect(result.advantageOnNextAttackVsTarget).toBe(false)
+  })
+
+  it("successful save: speed halved + advantage on next attack vs target", () => {
+    const result = useStunningStrike(5, true)
+    expect(result.stunningStrikeUsedThisTurn).toBe(true)
+    expect(result.targetStunned).toBe(false)
+    expect(result.targetSpeedHalved).toBe(true)
+    expect(result.advantageOnNextAttackVsTarget).toBe(true)
   })
 })

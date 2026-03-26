@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { RageState } from "#/features/class-barbarian.ts"
 import {
   applyForcefulBlow,
+  applyFrenzy,
   applyHamstringBlow,
   applyRageDamageBonus,
   applyStaggeringBlow,
@@ -10,9 +11,16 @@ import {
   availableBrutalStrikeEffects,
   brutalStrikeDamageDice,
   brutalStrikeEffectCount,
+  canApplyFrenzy,
   canCastWhileRaging,
   canEnterRage,
+  canRetaliate,
   canUseBrutalStrike,
+  canUseIntimidatingPresence,
+  frenzyDamageDice,
+  intimidatingPresenceDC,
+  mindlessRageImmunities,
+  mindlessRageOnEnterRage,
   pBrutalStrike,
   pCheckRageEndConditions,
   pCheckRageMaintenance,
@@ -28,7 +36,9 @@ import {
   rageResistances,
   rageStrengthAdvantage,
   recklessAttackAdvantage,
-  recklessDefenseDisadvantage
+  recklessDefenseDisadvantage,
+  restoreIntimidatingPresenceWithRage,
+  useIntimidatingPresence
 } from "#/features/class-barbarian.ts"
 
 // --- Helpers ---
@@ -106,8 +116,8 @@ describe("rage", () => {
       expect(rageDamageBonus(15)).toBe(3)
     })
 
-    it("should give +4 damage at level 16 (from table: L16 rage damage is +4)", () => {
-      expect(rageDamageBonus(16)).toBe(3)
+    it("should give +4 damage at level 16 (SRD table: +4 starts at L16)", () => {
+      expect(rageDamageBonus(16)).toBe(4)
     })
 
     it("should give +4 damage at level 17", () => {
@@ -480,5 +490,157 @@ describe("brutal strike", () => {
       const result = applySunderingBlow()
       expect(result.nextAttackBonus).toBe(5)
     })
+  })
+})
+
+// --- Berserker Subclass Tests ---
+
+describe("frenzy (L3 Berserker)", () => {
+  it("should allow frenzy when raging, reckless, STR-based, and not used this turn", () => {
+    expect(canApplyFrenzy(true, true, true, false)).toBe(true)
+  })
+
+  it("should not allow frenzy when not raging", () => {
+    expect(canApplyFrenzy(false, true, true, false)).toBe(false)
+  })
+
+  it("should not allow frenzy when not reckless", () => {
+    expect(canApplyFrenzy(true, false, true, false)).toBe(false)
+  })
+
+  it("should not allow frenzy when not STR-based", () => {
+    expect(canApplyFrenzy(true, true, false, false)).toBe(false)
+  })
+
+  it("should not allow frenzy if already used this turn", () => {
+    expect(canApplyFrenzy(true, true, true, true)).toBe(false)
+  })
+
+  it("should return 2d6 when rage damage bonus is +2", () => {
+    expect(frenzyDamageDice(2)).toBe(2)
+  })
+
+  it("should return 3d6 when rage damage bonus is +3", () => {
+    expect(frenzyDamageDice(3)).toBe(3)
+  })
+
+  it("should return 4d6 when rage damage bonus is +4", () => {
+    expect(frenzyDamageDice(4)).toBe(4)
+  })
+
+  it("should apply frenzy damage and mark as used", () => {
+    const result = applyFrenzy(9)
+    expect(result.extraDamage).toBe(9)
+    expect(result.frenzyUsedThisTurn).toBe(true)
+  })
+})
+
+describe("mindless rage (L6 Berserker)", () => {
+  it("should grant charmed and frightened immunity while raging at L6+", () => {
+    const immunities = mindlessRageImmunities(true, 6)
+    expect(immunities.has("charmed")).toBe(true)
+    expect(immunities.has("frightened")).toBe(true)
+    expect(immunities.size).toBe(2)
+  })
+
+  it("should grant immunities at higher berserker levels", () => {
+    const immunities = mindlessRageImmunities(true, 10)
+    expect(immunities.has("charmed")).toBe(true)
+    expect(immunities.has("frightened")).toBe(true)
+  })
+
+  it("should not grant immunities when not raging", () => {
+    const immunities = mindlessRageImmunities(false, 6)
+    expect(immunities.size).toBe(0)
+  })
+
+  it("should not grant immunities below L6", () => {
+    const immunities = mindlessRageImmunities(true, 5)
+    expect(immunities.size).toBe(0)
+  })
+
+  it("should remove charmed and frightened when entering rage at L6+", () => {
+    const toRemove = mindlessRageOnEnterRage(["charmed", "frightened", "poisoned"], 6)
+    expect(toRemove).toContain("charmed")
+    expect(toRemove).toContain("frightened")
+    expect(toRemove).not.toContain("poisoned")
+    expect(toRemove).toHaveLength(2)
+  })
+
+  it("should not remove conditions when entering rage below L6", () => {
+    const toRemove = mindlessRageOnEnterRage(["charmed", "frightened"], 5)
+    expect(toRemove).toHaveLength(0)
+  })
+
+  it("should return empty array if no charmed/frightened conditions present", () => {
+    const toRemove = mindlessRageOnEnterRage(["poisoned", "prone"], 6)
+    expect(toRemove).toHaveLength(0)
+  })
+})
+
+describe("retaliation (L10 Berserker)", () => {
+  it("should allow retaliation at L10+ with reaction and creature within 5ft", () => {
+    expect(canRetaliate(10, true, true)).toBe(true)
+  })
+
+  it("should allow retaliation at higher levels", () => {
+    expect(canRetaliate(14, true, true)).toBe(true)
+  })
+
+  it("should not allow retaliation below L10", () => {
+    expect(canRetaliate(9, true, true)).toBe(false)
+  })
+
+  it("should not allow retaliation without reaction available", () => {
+    expect(canRetaliate(10, false, true)).toBe(false)
+  })
+
+  it("should not allow retaliation if creature not within 5ft", () => {
+    expect(canRetaliate(10, true, false)).toBe(false)
+  })
+})
+
+describe("intimidating presence (L14 Berserker)", () => {
+  it("should compute DC as 8 + STR mod + proficiency bonus", () => {
+    expect(intimidatingPresenceDC(4, 5)).toBe(17) // 8 + 4 + 5
+    expect(intimidatingPresenceDC(3, 2)).toBe(13) // 8 + 3 + 2
+    expect(intimidatingPresenceDC(5, 5)).toBe(18) // 8 + 5 + 5
+  })
+
+  it("should allow use at L14+ with bonus action and not yet used", () => {
+    expect(canUseIntimidatingPresence(14, false, false)).toBe(true)
+  })
+
+  it("should not allow use below L14", () => {
+    expect(canUseIntimidatingPresence(13, false, false)).toBe(false)
+  })
+
+  it("should not allow use if bonus action already used", () => {
+    expect(canUseIntimidatingPresence(14, true, false)).toBe(false)
+  })
+
+  it("should not allow use if already used (once per Long Rest)", () => {
+    expect(canUseIntimidatingPresence(14, false, true)).toBe(false)
+  })
+
+  it("should mark bonus action and presence as used", () => {
+    const result = useIntimidatingPresence()
+    expect(result.intimidatingPresenceUsed).toBe(true)
+    expect(result.bonusActionUsed).toBe(true)
+  })
+
+  it("should restore presence by expending a rage charge", () => {
+    const result = restoreIntimidatingPresenceWithRage(3, true)
+    expect(result).toEqual({ rageCharges: 2, intimidatingPresenceUsed: false })
+  })
+
+  it("should not restore if no rage charges", () => {
+    const result = restoreIntimidatingPresenceWithRage(0, true)
+    expect(result).toBeNull()
+  })
+
+  it("should not restore if not yet used", () => {
+    const result = restoreIntimidatingPresenceWithRage(3, false)
+    expect(result).toBeNull()
   })
 })

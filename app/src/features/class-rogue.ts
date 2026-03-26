@@ -1,7 +1,9 @@
+import { featureSaveDC } from "#/srd-constants.ts"
 import type { Condition, Size } from "#/types.ts"
 
 // --- Constants ---
 
+const CUNNING_ACTION_LEVEL = 2
 const STEADY_AIM_LEVEL = 3
 const CUNNING_STRIKE_LEVEL = 5
 const IMPROVED_CS_LEVEL = 11
@@ -20,6 +22,18 @@ export type DeviousStrikeEffect = "daze" | "knockOut" | "obscure"
 
 /** All possible strike effects */
 export type StrikeEffect = CunningStrikeEffect | DeviousStrikeEffect
+
+/** Cunning Action choices (L2 Rogue) */
+export type CunningActionChoice = "dash" | "disengage" | "hide"
+
+/** Result of using Cunning Action */
+export interface CunningActionResult {
+  readonly bonusActionUsed: true
+  readonly action: CunningActionChoice
+  readonly dashGranted: boolean
+  readonly disengageGranted: boolean
+  readonly hideGranted: boolean
+}
 
 /** Result of applying Steady Aim */
 export interface SteadyAimResult {
@@ -78,6 +92,31 @@ export function applySneakAttack(diceResult: number): SneakAttackResult {
   }
 }
 
+// --- Cunning Action (L2) ---
+
+/**
+ * SRD: "Your quick thinking and agility allow you to move and act quickly.
+ * On your turn, you can take one of the following actions as a Bonus Action:
+ * Dash, Disengage, or Hide."
+ * Requires L2+ Rogue and bonus action not yet used.
+ */
+export function canUseCunningAction(rogueLevel: number, bonusActionUsed: boolean): boolean {
+  if (rogueLevel < CUNNING_ACTION_LEVEL) return false
+  if (bonusActionUsed) return false
+  return true
+}
+
+/** Use Cunning Action: consumes bonus action and grants the chosen action effect. */
+export function useCunningAction(choice: CunningActionChoice): CunningActionResult {
+  return {
+    bonusActionUsed: true,
+    action: choice,
+    dashGranted: choice === "dash",
+    disengageGranted: choice === "disengage",
+    hideGranted: choice === "hide"
+  }
+}
+
 // --- Steady Aim (L3) ---
 
 /**
@@ -89,8 +128,10 @@ export function canSteadyAim(params: {
   readonly rogueLevel: number
   readonly hasMovedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
+  readonly bonusActionUsed: boolean
 }): boolean {
   if (params.rogueLevel < STEADY_AIM_LEVEL) return false
+  if (params.bonusActionUsed) return false
   if (params.hasMovedThisTurn) return false
   if (params.steadyAimUsedThisTurn) return false
   return true
@@ -146,9 +187,7 @@ export function maxCunningStrikeEffects(rogueLevel: number): number {
 }
 
 /** SRD: DC = 8 + Dexterity modifier + Proficiency Bonus. */
-export function cunningStrikeDC(dexModifier: number, profBonus: number): number {
-  return 8 + dexModifier + profBonus
-}
+export const cunningStrikeDC: (dexModifier: number, profBonus: number) => number = featureSaveDC
 
 /**
  * Apply a Cunning Strike effect. Deducts dice cost and applies the effect if save fails.

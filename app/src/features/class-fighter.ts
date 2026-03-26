@@ -165,3 +165,89 @@ export function fighterLongRest(state: FighterRestState): {
     actionSurgeCharges: state.actionSurgeMax
   }
 }
+
+// =============================================================================
+// Champion Subclass Features (SRD 5.2.1)
+// =============================================================================
+
+// --- Constants ---
+
+export const CHAMPION_IMPROVED_CRITICAL_LEVEL = 3
+export const CHAMPION_ADDITIONAL_FIGHTING_STYLE_LEVEL = 7
+export const CHAMPION_HEROIC_WARRIOR_LEVEL = 10
+export const CHAMPION_SUPERIOR_CRITICAL_LEVEL = 15
+export const CHAMPION_SURVIVOR_LEVEL = 18
+export const SURVIVOR_HEAL_BASE = 5
+export const SURVIVOR_DEFY_DEATH_THRESHOLD = 18
+
+// --- Improved Critical (L3) / Superior Critical (L15) ---
+
+/**
+ * Returns the minimum d20 roll needed for a Critical Hit for a Champion Fighter.
+ * Default: 20; L3+: 19; L15+: 18.
+ */
+export function championCritRange(fighterLevel: number): number {
+  if (fighterLevel >= CHAMPION_SUPERIOR_CRITICAL_LEVEL) return 18
+  if (fighterLevel >= CHAMPION_IMPROVED_CRITICAL_LEVEL) return 19
+  return 20
+}
+
+// --- Remarkable Athlete (L3 Champion) ---
+
+/** Whether Remarkable Athlete is active (Champion level 3+). Grants Advantage on Initiative and Athletics. */
+export function hasRemarkableAthlete(championLevel: number): boolean {
+  return championLevel >= CHAMPION_IMPROVED_CRITICAL_LEVEL
+}
+
+/**
+ * After scoring a Critical Hit, move up to half your Speed without provoking Opportunity Attacks.
+ * Returns the distance (floored) if Champion level 3+, else 0.
+ */
+export function remarkableAthleteCritMovement(championLevel: number, effectiveSpeed: number): number {
+  if (championLevel < CHAMPION_IMPROVED_CRITICAL_LEVEL) return 0
+  return Math.floor(effectiveSpeed / 2)
+}
+
+// --- Heroic Warrior (L10 Champion) ---
+
+/**
+ * At the start of your turn, gain Heroic Inspiration if you don't already have it.
+ * Returns true if inspiration should be granted (L10+ and doesn't already have it).
+ */
+export function heroicWarriorInspiration(championLevel: number, hasHeroicInspiration: boolean): boolean {
+  return championLevel >= CHAMPION_HEROIC_WARRIOR_LEVEL && !hasHeroicInspiration
+}
+
+// --- Survivor (L18 Champion) ---
+
+/** Defy Death: Advantage on Death Saving Throws at Champion level 18+. */
+export function survivorDefyDeathAdvantage(championLevel: number): boolean {
+  return championLevel >= CHAMPION_SURVIVOR_LEVEL
+}
+
+/**
+ * Defy Death: rolls of 18-20 on Death Saving Throws count as a 20.
+ * Returns 18 if L18+ (the threshold at or above which a roll counts as 20),
+ * else 21 (never triggers since max d20 roll is 20).
+ */
+export function survivorDefyDeathThreshold(championLevel: number): number {
+  return championLevel >= CHAMPION_SURVIVOR_LEVEL ? SURVIVOR_DEFY_DEATH_THRESHOLD : 21
+}
+
+/**
+ * Bloodied: at or below half max HP AND has at least 1 HP.
+ */
+export function isBloodied(currentHp: number, maxHp: number): boolean {
+  return currentHp > 0 && currentHp <= Math.floor(maxHp / 2)
+}
+
+/**
+ * Heroic Rally: at the start of each turn, regain 5 + CON modifier HP
+ * if Bloodied (0 < hp <= floor(maxHp/2)) and Champion level 18+.
+ * Returns the amount of HP to heal, or 0 if conditions not met.
+ */
+export function survivorHeroicRally(championLevel: number, currentHp: number, maxHp: number, conMod: number): number {
+  if (championLevel < CHAMPION_SURVIVOR_LEVEL) return 0
+  if (!isBloodied(currentHp, maxHp)) return 0
+  return SURVIVOR_HEAL_BASE + conMod
+}

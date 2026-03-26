@@ -5,9 +5,17 @@ import {
   canUseActionSurge,
   canUseSecondWind,
   canUseTacticalMind,
+  championCritRange,
   fighterLongRest,
   fighterShortRest,
+  hasRemarkableAthlete,
+  heroicWarriorInspiration,
+  isBloodied,
+  remarkableAthleteCritMovement,
   secondWindMaxCharges,
+  survivorDefyDeathAdvantage,
+  survivorDefyDeathThreshold,
+  survivorHeroicRally,
   useActionSurge,
   useSecondWind,
   useTacticalMind
@@ -285,5 +293,186 @@ describe("fighterLongRest", () => {
       actionSurgeMax: 2
     })
     expect(result.actionSurgeCharges).toBe(2)
+  })
+})
+
+// =============================================================================
+// Champion Subclass
+// =============================================================================
+
+// --- Improved Critical / Superior Critical ---
+
+describe("championCritRange", () => {
+  it("returns 20 (default) below level 3", () => {
+    expect(championCritRange(1)).toBe(20)
+    expect(championCritRange(2)).toBe(20)
+  })
+
+  it("returns 19 at level 3 (Improved Critical)", () => {
+    expect(championCritRange(3)).toBe(19)
+  })
+
+  it("returns 19 for levels 3-14", () => {
+    expect(championCritRange(7)).toBe(19)
+    expect(championCritRange(14)).toBe(19)
+  })
+
+  it("returns 18 at level 15 (Superior Critical)", () => {
+    expect(championCritRange(15)).toBe(18)
+  })
+
+  it("returns 18 at level 20", () => {
+    expect(championCritRange(20)).toBe(18)
+  })
+})
+
+// --- Remarkable Athlete ---
+
+describe("hasRemarkableAthlete", () => {
+  it("returns false below Champion level 3", () => {
+    expect(hasRemarkableAthlete(1)).toBe(false)
+    expect(hasRemarkableAthlete(2)).toBe(false)
+  })
+
+  it("returns true at Champion level 3+ (grants Advantage on Initiative and Athletics)", () => {
+    expect(hasRemarkableAthlete(3)).toBe(true)
+    expect(hasRemarkableAthlete(10)).toBe(true)
+    expect(hasRemarkableAthlete(15)).toBe(true)
+  })
+})
+
+describe("remarkableAthleteCritMovement", () => {
+  it("returns 0 below Champion level 3", () => {
+    expect(remarkableAthleteCritMovement(2, 30)).toBe(0)
+  })
+
+  it("returns half speed at Champion level 3+", () => {
+    expect(remarkableAthleteCritMovement(3, 30)).toBe(15)
+  })
+
+  it("floors half speed for odd speeds", () => {
+    expect(remarkableAthleteCritMovement(5, 25)).toBe(12)
+  })
+
+  it("returns 0 distance for 0 speed", () => {
+    expect(remarkableAthleteCritMovement(3, 0)).toBe(0)
+  })
+})
+
+// --- Heroic Warrior ---
+
+describe("heroicWarriorInspiration", () => {
+  it("returns false below Champion level 10", () => {
+    expect(heroicWarriorInspiration(9, false)).toBe(false)
+  })
+
+  it("returns true at Champion level 10+ without inspiration", () => {
+    expect(heroicWarriorInspiration(10, false)).toBe(true)
+    expect(heroicWarriorInspiration(15, false)).toBe(true)
+  })
+
+  it("returns false if already has Heroic Inspiration", () => {
+    expect(heroicWarriorInspiration(10, true)).toBe(false)
+    expect(heroicWarriorInspiration(20, true)).toBe(false)
+  })
+})
+
+// --- Survivor: Defy Death ---
+
+describe("survivorDefyDeathAdvantage", () => {
+  it("returns false below Champion level 18", () => {
+    expect(survivorDefyDeathAdvantage(17)).toBe(false)
+  })
+
+  it("returns true at Champion level 18+", () => {
+    expect(survivorDefyDeathAdvantage(18)).toBe(true)
+    expect(survivorDefyDeathAdvantage(20)).toBe(true)
+  })
+})
+
+describe("survivorDefyDeathThreshold", () => {
+  it("returns 21 (never triggers) below Champion level 18", () => {
+    expect(survivorDefyDeathThreshold(17)).toBe(21)
+  })
+
+  it("returns 18 at Champion level 18+ (18-20 count as 20)", () => {
+    expect(survivorDefyDeathThreshold(18)).toBe(18)
+    expect(survivorDefyDeathThreshold(20)).toBe(18)
+  })
+})
+
+// --- isBloodied ---
+
+describe("isBloodied", () => {
+  it("returns true when hp is exactly half maxHp", () => {
+    expect(isBloodied(10, 20)).toBe(true)
+  })
+
+  it("returns true when hp is below half maxHp", () => {
+    expect(isBloodied(5, 20)).toBe(true)
+    expect(isBloodied(1, 20)).toBe(true)
+  })
+
+  it("returns false when hp is above half maxHp", () => {
+    expect(isBloodied(11, 20)).toBe(false)
+    expect(isBloodied(20, 20)).toBe(false)
+  })
+
+  it("returns false when hp is 0 (unconscious)", () => {
+    expect(isBloodied(0, 20)).toBe(false)
+  })
+
+  it("handles odd maxHp (floor of half)", () => {
+    // floor(21/2) = 10
+    expect(isBloodied(10, 21)).toBe(true)
+    expect(isBloodied(11, 21)).toBe(false)
+  })
+
+  it("handles maxHp of 1", () => {
+    // floor(1/2) = 0, so hp must be > 0 AND <= 0 — never true
+    expect(isBloodied(1, 1)).toBe(false)
+    expect(isBloodied(0, 1)).toBe(false)
+  })
+})
+
+// --- Survivor: Heroic Rally ---
+
+describe("survivorHeroicRally", () => {
+  it("returns 0 below Champion level 18", () => {
+    expect(survivorHeroicRally(17, 5, 20, 3)).toBe(0)
+  })
+
+  it("heals 5 + CON mod when Bloodied at level 18+", () => {
+    expect(survivorHeroicRally(18, 5, 20, 3)).toBe(8) // 5 + 3
+  })
+
+  it("heals with negative CON mod", () => {
+    expect(survivorHeroicRally(18, 5, 20, -1)).toBe(4) // 5 + (-1)
+  })
+
+  it("does not heal at full HP", () => {
+    expect(survivorHeroicRally(18, 20, 20, 3)).toBe(0)
+  })
+
+  it("does not heal at 0 HP (unconscious)", () => {
+    expect(survivorHeroicRally(18, 0, 20, 3)).toBe(0)
+  })
+
+  it("does not heal when above half HP", () => {
+    expect(survivorHeroicRally(18, 11, 20, 3)).toBe(0)
+  })
+
+  it("heals at exactly half HP", () => {
+    expect(survivorHeroicRally(18, 10, 20, 3)).toBe(8)
+  })
+
+  it("respects floor for odd maxHp Bloodied threshold", () => {
+    // floor(21/2) = 10, so hp=10 is Bloodied, hp=11 is not
+    expect(survivorHeroicRally(18, 10, 21, 2)).toBe(7) // 5 + 2
+    expect(survivorHeroicRally(18, 11, 21, 2)).toBe(0)
+  })
+
+  it("heals at level 20", () => {
+    expect(survivorHeroicRally(20, 5, 40, 4)).toBe(9) // 5 + 4
   })
 })

@@ -7,11 +7,13 @@ import {
   canApplyCunningStrike,
   canSneakAttack,
   canSteadyAim,
+  canUseCunningAction,
   cunningStrikeDC,
   maxCunningStrikeEffects,
   resetRogueTurnState,
   sneakAttackDice,
-  strikeDieCost
+  strikeDieCost,
+  useCunningAction
 } from "#/features/class-rogue.ts"
 
 // --- Sneak Attack dice ---
@@ -95,20 +97,70 @@ describe("applySneakAttack", () => {
   })
 })
 
+// --- Cunning Action ---
+
+describe("canUseCunningAction", () => {
+  it("requires rogue level 2+", () => {
+    expect(canUseCunningAction(1, false)).toBe(false)
+    expect(canUseCunningAction(2, false)).toBe(true)
+    expect(canUseCunningAction(5, false)).toBe(true)
+  })
+
+  it("denies if bonus action already used", () => {
+    expect(canUseCunningAction(2, true)).toBe(false)
+    expect(canUseCunningAction(10, true)).toBe(false)
+  })
+})
+
+describe("useCunningAction", () => {
+  it("dash choice: bonusActionUsed=true, dashGranted=true, others false", () => {
+    const result = useCunningAction("dash")
+    expect(result.bonusActionUsed).toBe(true)
+    expect(result.action).toBe("dash")
+    expect(result.dashGranted).toBe(true)
+    expect(result.disengageGranted).toBe(false)
+    expect(result.hideGranted).toBe(false)
+  })
+
+  it("disengage choice: bonusActionUsed=true, disengageGranted=true, others false", () => {
+    const result = useCunningAction("disengage")
+    expect(result.bonusActionUsed).toBe(true)
+    expect(result.action).toBe("disengage")
+    expect(result.dashGranted).toBe(false)
+    expect(result.disengageGranted).toBe(true)
+    expect(result.hideGranted).toBe(false)
+  })
+
+  it("hide choice: bonusActionUsed=true, hideGranted=true, others false", () => {
+    const result = useCunningAction("hide")
+    expect(result.bonusActionUsed).toBe(true)
+    expect(result.action).toBe("hide")
+    expect(result.dashGranted).toBe(false)
+    expect(result.disengageGranted).toBe(false)
+    expect(result.hideGranted).toBe(true)
+  })
+})
+
 // --- Steady Aim ---
 
 describe("canSteadyAim", () => {
+  const base = { rogueLevel: 5, hasMovedThisTurn: false, steadyAimUsedThisTurn: false, bonusActionUsed: false }
+
   it("requires rogue level 3+", () => {
-    expect(canSteadyAim({ rogueLevel: 2, hasMovedThisTurn: false, steadyAimUsedThisTurn: false })).toBe(false)
-    expect(canSteadyAim({ rogueLevel: 3, hasMovedThisTurn: false, steadyAimUsedThisTurn: false })).toBe(true)
+    expect(canSteadyAim({ ...base, rogueLevel: 2 })).toBe(false)
+    expect(canSteadyAim({ ...base, rogueLevel: 3 })).toBe(true)
   })
 
   it("denies if already moved this turn", () => {
-    expect(canSteadyAim({ rogueLevel: 5, hasMovedThisTurn: true, steadyAimUsedThisTurn: false })).toBe(false)
+    expect(canSteadyAim({ ...base, hasMovedThisTurn: true })).toBe(false)
   })
 
   it("denies if already used this turn", () => {
-    expect(canSteadyAim({ rogueLevel: 5, hasMovedThisTurn: false, steadyAimUsedThisTurn: true })).toBe(false)
+    expect(canSteadyAim({ ...base, steadyAimUsedThisTurn: true })).toBe(false)
+  })
+
+  it("denies if bonus action already used", () => {
+    expect(canSteadyAim({ ...base, bonusActionUsed: true })).toBe(false)
   })
 })
 

@@ -1,4 +1,5 @@
-import type { DamageType } from "#/types.ts"
+import { featureSaveDC } from "#/srd-constants.ts"
+import type { Condition, DamageType } from "#/types.ts"
 
 // --- Types ---
 
@@ -50,6 +51,8 @@ const PERSISTENT_RAGE_LEVEL = 15
 const BRUTAL_STRIKE_LEVEL = 9
 const IMPROVED_BRUTAL_STRIKE_L13 = 13
 const IMPROVED_BRUTAL_STRIKE_L17 = 17
+const RAGE_DAMAGE_PLUS_3_LEVEL = 9
+const RAGE_DAMAGE_PLUS_4_LEVEL = 16
 const FORCEFUL_BLOW_PUSH_FEET = 15
 const HAMSTRING_BLOW_SPEED_REDUCTION = 15
 const SUNDERING_BLOW_ATTACK_BONUS = 5
@@ -66,11 +69,11 @@ const BRUTAL_STRIKE_IMPROVED: ReadonlyArray<BrutalStrikeEffect> = [
 
 // --- Rage damage bonus by level (SRD 5.2.1 table) ---
 
-/** Returns the rage damage bonus for the given barbarian level. */
+/** Returns the rage damage bonus for the given barbarian level (SRD 5.2.1 table). */
 export function rageDamageBonus(barbarianLevel: number): number {
-  if (barbarianLevel >= IMPROVED_BRUTAL_STRIKE_L17) return 4 // L16+
-  if (barbarianLevel >= BRUTAL_STRIKE_LEVEL) return 3 // L9+
-  return 2 // L1+
+  if (barbarianLevel >= RAGE_DAMAGE_PLUS_4_LEVEL) return 4
+  if (barbarianLevel >= RAGE_DAMAGE_PLUS_3_LEVEL) return 3
+  return 2
 }
 
 /** Returns the max rage charges for the given barbarian level. */
@@ -316,5 +319,121 @@ export function applyStaggeringBlow(): {
 export function applySunderingBlow(): { readonly nextAttackBonus: number } {
   return {
     nextAttackBonus: SUNDERING_BLOW_ATTACK_BONUS
+  }
+}
+
+// --- Berserker Subclass Constants ---
+
+export const BERSERKER_FRENZY_LEVEL = 3
+export const BERSERKER_MINDLESS_RAGE_LEVEL = 6
+export const BERSERKER_RETALIATION_LEVEL = 10
+export const BERSERKER_INTIMIDATING_PRESENCE_LEVEL = 14
+export const INTIMIDATING_PRESENCE_RANGE_FEET = 30
+
+const MINDLESS_RAGE_IMMUNITIES: ReadonlySet<Condition> = new Set(["charmed", "frightened"])
+const EMPTY_CONDITION_SET: ReadonlySet<Condition> = new Set()
+
+// --- Frenzy (L3 Berserker) ---
+
+/**
+ * Can apply Frenzy extra damage: must be raging, used Reckless Attack this turn,
+ * STR-based attack, and not already used Frenzy this turn.
+ */
+export function canApplyFrenzy(
+  raging: boolean,
+  recklessThisTurn: boolean,
+  isStrengthBased: boolean,
+  frenzyUsedThisTurn: boolean
+): boolean {
+  return raging && recklessThisTurn && isStrengthBased && !frenzyUsedThisTurn
+}
+
+/** Returns number of d6s for Frenzy extra damage (equals rage damage bonus). */
+export function frenzyDamageDice(rageDmgBonus: number): number {
+  return rageDmgBonus
+}
+
+/** Apply Frenzy extra damage from rolled d6s. */
+export function applyFrenzy(d6Total: number): {
+  readonly extraDamage: number
+  readonly frenzyUsedThisTurn: true
+} {
+  return {
+    extraDamage: d6Total,
+    frenzyUsedThisTurn: true
+  }
+}
+
+// --- Mindless Rage (L6 Berserker) ---
+
+/**
+ * Returns condition immunities granted by Mindless Rage.
+ * Charmed and Frightened immunity while raging at L6+.
+ */
+export function mindlessRageImmunities(raging: boolean, berserkerLevel: number): ReadonlySet<Condition> {
+  if (raging && berserkerLevel >= BERSERKER_MINDLESS_RAGE_LEVEL) return MINDLESS_RAGE_IMMUNITIES
+  return EMPTY_CONDITION_SET
+}
+
+/**
+ * Returns conditions to remove when entering rage (Mindless Rage at L6+).
+ * Charmed and Frightened end when entering rage.
+ */
+export function mindlessRageOnEnterRage(
+  currentConditions: ReadonlyArray<Condition>,
+  berserkerLevel: number
+): ReadonlyArray<Condition> {
+  if (berserkerLevel < BERSERKER_MINDLESS_RAGE_LEVEL) return []
+  return currentConditions.filter((c) => c === "charmed" || c === "frightened")
+}
+
+// --- Retaliation (L10 Berserker) ---
+
+/** Check eligibility for Retaliation reaction attack. */
+export function canRetaliate(
+  berserkerLevel: number,
+  reactionAvailable: boolean,
+  damagedByCreatureWithin5ft: boolean
+): boolean {
+  return berserkerLevel >= BERSERKER_RETALIATION_LEVEL && reactionAvailable && damagedByCreatureWithin5ft
+}
+
+// --- Intimidating Presence (L14 Berserker) ---
+
+/** Returns the DC for Intimidating Presence: 8 + STR mod + proficiency bonus. */
+export const intimidatingPresenceDC: (strMod: number, profBonus: number) => number = featureSaveDC
+
+/** Check if Intimidating Presence can be used. */
+export function canUseIntimidatingPresence(
+  berserkerLevel: number,
+  bonusActionUsed: boolean,
+  intimidatingPresenceUsed: boolean
+): boolean {
+  return berserkerLevel >= BERSERKER_INTIMIDATING_PRESENCE_LEVEL && !bonusActionUsed && !intimidatingPresenceUsed
+}
+
+/** Use Intimidating Presence as a Bonus Action. */
+export function useIntimidatingPresence(): {
+  readonly intimidatingPresenceUsed: true
+  readonly bonusActionUsed: true
+} {
+  return {
+    intimidatingPresenceUsed: true,
+    bonusActionUsed: true
+  }
+}
+
+/**
+ * Restore Intimidating Presence by expending a rage charge.
+ * Returns null if cannot restore (no charges or not yet used).
+ */
+export function restoreIntimidatingPresenceWithRage(
+  rageCharges: number,
+  intimidatingPresenceUsed: boolean
+): { readonly rageCharges: number; readonly intimidatingPresenceUsed: false } | null {
+  if (!intimidatingPresenceUsed || rageCharges <= 0) return null
+  return {
+    rageCharges: rageCharges - 1,
+    intimidatingPresenceUsed: false
   }
 }
