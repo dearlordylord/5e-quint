@@ -117,19 +117,19 @@ Define `SpellEffectType` sum type and `SpellData` record (name, level, school, c
 ## Barbarian
 
 ```
-[T10] Rage (P1) -> deps: [T01]
-[T11] Reckless Attack (P1) -> deps: [T01]
+[T10] Rage (P1) -> deps: [T01]  ✓ done
+[T11] Reckless Attack (P1) -> deps: [T01]  ✓ done
 [T12] Barbarian Passives (P2) -> deps: [T01]
 [T13] Berserker (P2) -> deps: [T10]
 ```
 
-**[T10] Rage**
+**[T10] Rage** *(done)*
 SRD 5.2.1: rage maintenance changed — rage continues if you make an attack roll, force a creature to make a saving throw, OR take a Bonus Action to extend it (was: must have attacked or taken damage). Duration up to 10 minutes (was 1 minute). Persistent Rage (L15): regain all rage uses when you roll Initiative if you have none; rage lasts up to 10 min without needing to maintain (was: doesn't end from inaction).
 - State: `raging: bool`, `rageCharges: int`, `rageMaxCharges: int`, `attackedOrForcedSaveThisTurn: bool`, `rageExtendedWithBA: bool`
 - Functions: `pEnterRage`, `pEndRage`, `pExtendRageWithBA`, `pRageDamageBonus(level)->+2/+3/+4`, modify `pApplyDamageModifiers` for B/P/S resistance while raging, modify `pGetSaveModifiers` for advantage on STR saves, modify `pGetCheckModifiers` for advantage on STR checks, block spellcasting while raging; entering rage drops any active concentration spell
 - Test: enter rage decrements charges; can't rage at 0 charges; can't rage in heavy armor; +2 damage at level 1; B/P/S resistance halves damage; advantage on STR saves; can't cast while raging; entering rage breaks concentration; rage maintained via attack roll OR forced save OR BA extension; Persistent Rage (L15) regains all uses at Initiative if 0
 
-**[T11] Reckless Attack**
+**[T11] Reckless Attack** *(done)*
 SRD 5.2.1: Brutal Strike added at L9. When using Reckless Attack, you can forgo the advantage on one attack to instead deal +1d10 damage and apply one Brutal Strike effect. At L17: +2d10 and two effects. L9 effects: Forceful Blow (push target 15ft), Hamstring Blow (target Speed -15ft until start of your next turn). L13 effects added: Staggering Blow (target has Disadvantage on next saving throw it makes before your next turn), Sundering Blow (+5 to next attack roll against target before your next turn ends).
 - State: `recklessThisTurn: bool`, `brutalStrikeChoice: BrutalStrikeEffect option` on TurnState
 - Functions: `pDeclareReckless(turnState)`, `pBrutalStrike(turnState, effect, d10Result)->apply effect + bonus damage; forgo advantage on that attack`, modify `pGetOwnAttackModifiers` for advantage on melee STR attacks when reckless (except Brutal Strike attack), modify `pGetDefenseModifiers` for advantage on attacks against until next turn
@@ -161,14 +161,14 @@ SRD 5.2.1: Frenzy no longer causes exhaustion. Frenzy, Retaliation, Intimidating
 ## Fighter
 
 ```
-[T20] Second Wind (P1) -> deps: [T01]
+[T20] Second Wind (P1) -> deps: [T01]  ✓ done
 [T20b] Fighter Base Features (P2) -> deps: [T01, T170]
-[T21] Action Surge (P1) -> deps: [T01]
+[T21] Action Surge (P1) -> deps: [T01]  ✓ done
 [T22] Indomitable (P2) -> deps: [T01]
 [T23] Champion (P1) -> deps: [T02, T05]
 ```
 
-**[T20] Second Wind**
+**[T20] Second Wind** *(done)*
 SRD 5.2.1: Second Wind gains additional uses at higher levels (2 uses at L2, scales further — TODO: verify exact level thresholds). New features at L2: Tactical Mind (expend a SW use on a failed ability check to add 1d10; if this pushes the total to pass, it passes). New L5 feature: Tactical Shift (when you activate SW, move up to half your Speed without provoking OAs).
 - State: `secondWindCharges: int`, `secondWindMax: int`
 - Functions: `pSecondWind(state, config, d10Roll)->heal(1d10+fighterLevel), decrement charges`; `pTacticalMind(state, d10, checkResult)->add d10 to failed check, decrement charges`; `pTacticalShift(state, turnState)->move half speed without OA triggers on SW use`; preconditions: charges > 0, bonus action available
@@ -182,7 +182,7 @@ New base Fighter features in SRD 5.2.1:
 - Functions: `pTacticalMaster(weaponMastery, substituteChoice)->use alternate mastery effect`; `pStudiedAttack(state, missedTarget)->set advantage vs that target`
 - Test: Tactical Master substitutes mastery property; Studied Attacks advantage only vs same target, only after a miss; clears after use
 
-**[T21] Action Surge**
+**[T21] Action Surge** *(done)*
 - State: `actionSurgeCharges: int`
 - Functions: `pActionSurge(turnState)->reset actionUsed to false`; decrement charges; precondition: not already used Action Surge this turn
 - Test: grants second action; can't use at 0 charges; resets on short rest; 2 charges at level 17; can only use ONE Action Surge per turn (even with 2 charges)
@@ -203,13 +203,13 @@ Improved Critical (L3: critRange 19), Heroic Warrior (NEW L10: gain Heroic Inspi
 ## Rogue
 
 ```
-[T30] Sneak Attack + Cunning Strike (P1) -> deps: [T01]
+[T30] Sneak Attack + Cunning Strike (P1) -> deps: [T01]  ✓ done
 [T31] Cunning Action (P1) -> deps: [T06]
 [T32] Rogue Passives (P2) -> deps: [T01, T03, T04]
 [T33] Thief (P3) -> deps: [T31]
 ```
 
-**[T30] Sneak Attack + Cunning Strike**
+**[T30] Sneak Attack + Cunning Strike** *(done)*
 SRD 5.2.1 adds Cunning Strike (L5), Steady Aim (L3), Improved Cunning Strike (L11), and Devious Strikes (L14).
 
 Sneak Attack base (unchanged): `pSneakAttackDice(rogueLevel)->ceil(level/2)`, `pCanSneakAttack(hasAdvantage, allyAdjacentAndNotIncapacitated, isFinesse, isRanged)->bool`, `pApplySneakAttack(state, diceResult)->add damage + mark used`
@@ -253,8 +253,8 @@ Fast Hands (Use Object, disarm trap/open lock, or Sleight of Hand check as bonus
 ## Monk
 
 ```
-[T40] Focus Pool (P1) -> deps: [T01]
-[T41] Martial Arts (P1) -> deps: [T01]
+[T40] Focus Pool (P1) -> deps: [T01]  ✓ done
+[T41] Martial Arts (P1) -> deps: [T01]  ✓ done
 [T42] Focus Actions (P1) -> deps: [T40, T06]
 [T43] Stunning Strike (P1) -> deps: [T40]
 [T44] Monk Passives (P2) -> deps: [T01, T03]
@@ -262,13 +262,13 @@ Fast Hands (Use Object, disarm trap/open lock, or Sleight of Hand check as bonus
 [T46] Warrior of the Open Hand (P2) -> deps: [T42]
 ```
 
-**[T40] Focus Pool**
+**[T40] Focus Pool** *(done)*
 SRD 5.2.1: renamed Ki → Monk's Focus (Focus Points). Martial Arts die progression revised: d6/d8/d10/d12 at tiers (was d4/d6/d8/d10).
 - State: `focusPoints: int`, `focusMax: int`
 - Functions: `pExpendFocus(state, cost)`, `pRestoreFocus(state, config)` (short rest -> full); Uncanny Metabolism (L2): when you roll Initiative, regain all focus points and heal equal to one Martial Arts die (1/LR); Perfect Focus (L15): when you roll Initiative and have fewer than 4 FP, regain to 4
 - Test: expend decrements; can't expend below 0; short rest restores to max=monk level; Uncanny Metabolism restores all FP + heals at Initiative 1/LR; Perfect Focus: if < 4 FP at Initiative, becomes 4
 
-**[T41] Martial Arts**
+**[T41] Martial Arts** *(done)*
 - State: none new (derived from class+level)
 - Functions: `pMartialArtsDie(monkLevel)->d6/d8/d10/d12` (at L1/L5/L11/L17); modify attack to allow DEX for unarmed/monk weapons; bonus action unarmed strike after Attack action with unarmed strike or monk weapon (no Focus cost)
 - Test: d6 at 1, d8 at 5, d10 at 11, d12 at 17; DEX used for unarmed; bonus action unarmed requires Attack action with unarmed/monk weapon
@@ -307,18 +307,18 @@ SRD 5.2.1 rename: Way of the Open Hand → Warrior of the Open Hand. Effects ren
 ## Paladin
 
 ```
-[T60] Lay on Hands (P1) -> deps: [T01]
-[T61] Paladin's Smite (P1) -> deps: [T01]
+[T60] Lay on Hands (P1) -> deps: [T01]  ✓ done
+[T61] Paladin's Smite (P1) -> deps: [T01]  ✓ done
 [T62] Paladin Passives (P2) -> deps: [T01, T07]
 [T63] Oath of Devotion (P2) -> deps: [T07]
 ```
 
-**[T60] Lay on Hands**
+**[T60] Lay on Hands** *(done)*
 - State: `layOnHandsPool: int`
 - Functions: `pLayOnHands(state, amount)->heal up to amount from pool`; `pLayOnHandsCure(state)->spend 5 from pool to remove one disease or one poison`; add Restoring Touch (L14, see T62)
 - Test: heal correct amount; pool decrements; can't exceed pool; cure costs 5; resets on long rest; pool = paladin level × 5
 
-**[T61] Paladin's Smite**
+**[T61] Paladin's Smite** *(done)*
 SRD 5.2.1: Divine Smite is now the Paladin's Smite class feature — the spell Divine Smite is always prepared; you can cast it once per long rest without a spell slot. When you expend a spell slot to cast Divine Smite: +2d8 Radiant per spell slot level (max +5d8 from slot), +1d8 extra vs undead/fiend.
 Radiant Strikes (L11): on a hit with a melee weapon **or unarmed strike**, you can deal +1d8 Radiant damage (free, no slot required). Replaces Improved Divine Smite.
 
@@ -349,7 +349,7 @@ Sacred Weapon (Channel Divinity: +CHA to attacks for 1 min, weapon emits light; 
 ## Ranger
 
 ```
-[T70] Ranger Features (P2) -> deps: [T01, T05, T09]
+[T70] Ranger Features (P2) -> deps: [T01, T05]
 [T71] Hunter (P2) -> deps: [T01, T03, T04]
 ```
 
@@ -436,11 +436,11 @@ Disciple of Life (revised per 5.2.1 — TODO: verify exact bonus formula), Prese
 ## Druid
 
 ```
-[T100] Wild Shape Framework (P1) -> deps: [T01]
-[T101] Circle of the Land (P3) -> deps: [T01, T09]
+[T100] Wild Shape Framework (P1) -> deps: [T01]  ✓ done
+[T101] Circle of the Land (P3) -> deps: [T01]
 ```
 
-**[T100] Wild Shape Framework**
+**[T100] Wild Shape Framework** *(done)*
 SRD 5.2.1: subclass at L3 (was L2). New base class features:
 - Primal Order (L1, choose ONE): Magician (learn extra language + Druidic in script form, 1 extra spell slot — TODO: verify) or Warden (martial weapons proficiency + 1d8 extra melee damage with Primal Strike)
 - Elemental Fury (L7, choose ONE): Potent Spellcasting (add WIS mod to cantrip damage) or Primal Strike (weapon/unarmed hits count as magical; on a hit, +1d8 cold/fire/lightning/thunder)
@@ -455,7 +455,7 @@ SRD 5.2.1: subclass at L3 (was L2). New base class features:
 - Test: entering stores original HP; overflow carries; revert restores; CR prereqs enforced; can't cast while shifted (except Beast Spells L18); charge decrement; short rest restores; Wild Companion costs Wild Shape use; Primal Strike +1d8 at L7+
 
 **[T101] Circle of the Land**
-Natural Recovery revised (recover slots on short rest, total <= ceil(druidLevel/2), no 6th+; 1/LR — TODO: verify 5.2.1 changes), Circle Spells (config), Land's Stride [T09], Nature's Ward (revised: immune charm/fright from fey/elemental, immune poison/disease at L10), Nature's Sanctuary (L14: WIS save or must pick different target — caller-provided), Land's Aid (NEW: TODO enumerate 5.2.1 text).
+Natural Recovery revised (recover slots on short rest, total <= ceil(druidLevel/2), no 6th+; 1/LR — TODO: verify 5.2.1 changes), Circle Spells (config), ~~Land's Stride [T09]~~ (dropped), Nature's Ward (revised: immune charm/fright from fey/elemental, immune poison/disease at L10), Nature's Sanctuary (L14: WIS save or must pick different target — caller-provided), Land's Aid (NEW: TODO enumerate 5.2.1 text).
 - State: `naturalRecoveryUsed: bool`
 - Functions: `pNaturalRecovery(state, config, slotsToRecover)->validate total <= ceil(druidLevel/2), none 6th+`; modify condition resistance for Nature's Ward
 - Test: Natural Recovery validates slot total; Nature's Ward blocks specific condition sources; Land's Aid TODO
@@ -465,13 +465,13 @@ Natural Recovery revised (recover slots on short rest, total <= ceil(druidLevel/
 ## Sorcerer
 
 ```
-[T110] Sorcery Points + Flexible Casting (P1) -> deps: [T01]
+[T110] Sorcery Points + Flexible Casting (P1) -> deps: [T01]  ✓ done
 [T111] Metamagic (P1) -> deps: [T110]
 [T112] Draconic Sorcery (P2) -> deps: [T01]
 [T112b] Dragon Companion (P3) -> deps: [T112]
 ```
 
-**[T110] Sorcery Points + Flexible Casting**
+**[T110] Sorcery Points + Flexible Casting** *(done)*
 SRD 5.2.1: subclass at L3 (was L1). New base class features:
 - Innate Sorcery (L1): as a BA, activate for 1 min — +1 to spell save DC and Advantage on checks made to maintain concentration; 2 uses/LR
 - Sorcery Incarnate (TODO: verify exact level and effect in 5.2.1)
@@ -713,7 +713,7 @@ SRD 5.2.1: each weapon has a Mastery property. Only classes/features that grant 
 ## Feat System
 
 ```
-[T200] Grappler Feat (P4) -> deps: none
+[T200] Grappler Feat (P4) -> deps: none  ✓ done
 [T201] Feat System Framework (P2) -> deps: [T01]  ✓ done
 ```
 
@@ -722,11 +722,11 @@ Prerequisite checking for feat categories. `feats: Set[Feat]` and `epicBoon` def
 - Functions: `pCanTakeFightingStyleFeat`, `pCanTakeEpicBoon`
 - `pApplyASI` already existed
 
-**[T200] Grappler Feat**
-SRD 5.2.1 revised per 5.2.1 text (TODO: verify exact changes — Advantage on attacks while grappling and Pin mechanic may have changed).
-Prereq: STR 13+ (Origin or General — verify category). Advantage on attacks against creature you're grappling. Pin (action to grapple check): both restrained until grapple ends.
-- Functions: modify attack modifiers for advantage when grappling; `pPinGrapple(contestResult)->both restrained`
-- Test: advantage only against grappled target; Pin restrains both; Pin consumes action; Pin ends when grapple ends
+**[T200] Grappler Feat** *(done)*
+SRD 5.2.1 revised: Pin mechanic removed, replaced with Punch and Grab + Fast Wrestler.
+Prereq: STR or DEX 13+. Attack Advantage on attacks against creature you're grappling. Punch and Grab (once/turn: combine Damage and Grapple on Unarmed Strike hit). Fast Wrestler (no extra movement cost to drag creatures your size or smaller).
+- Functions: `grapplerAttackAdvantage`, `resolvePunchAndGrab`, `grapplerMovementCost`, `canTakeGrapplerFeat`
+- Test: advantage only against grappled target; Punch and Grab combines damage+grapple; Fast Wrestler removes drag penalty; prereq STR or DEX 13+
 
 ---
 
@@ -738,7 +738,7 @@ Core is complete (PLAN.md). This file is now the active plan. All tasks are unbl
 2. ~~**[T03, T04, T06, T08]** Shared mechanics~~ ✓ (T09 dropped — not in SRD 5.2.1)
 3. ~~**[T07]** Channel Divinity (needs T01; unblocks Paladin/Cleric)~~ ✓
 4. ~~**[T201]** Feat System Framework; then **[T05]** Fighting Style Feats (needs T201)~~ ✓
-5. **P1 class features** — T10 Rage, T11 Reckless, T20 Second Wind, T21 Action Surge, T30 Sneak Attack, T40 Focus Pool, T41 Martial Arts, T60 Lay on Hands, T61 Paladin's Smite, T100 Wild Shape, T110 Sorcery Points (all need only T01); **T200** Grappler Feat (no deps)
+5. ~~**P1 class features** — T10 Rage, T11 Reckless, T20 Second Wind, T21 Action Surge, T30 Sneak Attack, T40 Focus Pool, T41 Martial Arts, T60 Lay on Hands, T61 Paladin's Smite, T100 Wild Shape, T110 Sorcery Points; T200 Grappler Feat~~ ✓
 6. **P1 dependent** — T13 Berserker (needs T10), T23 Champion (needs T02+T05), T31 Cunning Action (needs T06), T42 Focus Actions (needs T40+T06), T43 Stunning Strike (needs T40)
 7. **P1-P2 spells** — T150 Damage Patterns, T152 AC/Defense Buffs, T153 Condition Debuffs (all need T08)
 8. **P2-P3 class features, species traits, T170 Weapon Mastery** in any order — **T20b** Fighter Base Features must follow T170 (needs T01+T170)
