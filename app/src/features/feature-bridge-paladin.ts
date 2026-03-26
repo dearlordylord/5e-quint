@@ -23,7 +23,7 @@ import { healAmount } from "#/types.ts"
 // --- Paladin: Lay on Hands ---
 
 export function canExecuteLayOnHandsHeal(featureState: FeatureState, ctx: DndContext): boolean {
-  if (!featureState.paladin) return false
+  if (!featureState.paladin || ctx.bonusActionUsed) return false
   return canLayOnHandsHealPure({
     hp: ctx.hp,
     maxHp: ctx.maxHp,
@@ -45,7 +45,7 @@ export function executeLayOnHandsHeal(featureState: FeatureState, ctx: DndContex
   )
   return {
     featureAction: { type: "PALADIN_LAY_ON_HANDS", poolAfter: result.layOnHandsPool },
-    machineEvents: [{ type: "HEAL", amount: healAmount(result.healedAmount) }]
+    machineEvents: [{ type: "USE_BONUS_ACTION" }, { type: "HEAL", amount: healAmount(result.healedAmount) }]
   }
 }
 
@@ -53,9 +53,10 @@ export function canExecuteLayOnHandsCure(
   featureState: FeatureState,
   condition: Condition,
   paladinLevel: number,
-  currentConditions: ReadonlyArray<Condition>
+  currentConditions: ReadonlyArray<Condition>,
+  bonusActionUsed: boolean
 ): boolean {
-  if (!featureState.paladin) return false
+  if (!featureState.paladin || bonusActionUsed) return false
   return canLayOnHandsCurePure(
     {
       hp: 1,
@@ -81,7 +82,7 @@ export function executeLayOnHandsCure(featureState: FeatureState, condition: Con
   )
   return {
     featureAction: { type: "PALADIN_LAY_ON_HANDS_CURE", poolAfter: result.layOnHandsPool },
-    machineEvents: [{ type: "REMOVE_CONDITION", condition }]
+    machineEvents: [{ type: "USE_BONUS_ACTION" }, { type: "REMOVE_CONDITION", condition }]
   }
 }
 
