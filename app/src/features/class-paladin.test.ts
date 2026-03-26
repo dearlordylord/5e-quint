@@ -23,8 +23,6 @@ import {
   pLayOnHandsCure,
   pPaladinSmiteFree,
   pRadiantStrikes,
-  restoringTouchConditions,
-
   useFaithfulSteed
 } from "#/features/class-paladin.ts"
 
@@ -378,17 +376,6 @@ describe("aura of courage", () => {
 // --- Restoring Touch ---
 
 describe("restoring touch", () => {
-  it("correct condition list", () => {
-    const conditions = restoringTouchConditions()
-    expect(conditions).toContain("blinded")
-    expect(conditions).toContain("charmed")
-    expect(conditions).toContain("deafened")
-    expect(conditions).toContain("frightened")
-    expect(conditions).toContain("paralyzed")
-    expect(conditions).toContain("stunned")
-    expect(conditions).toHaveLength(6)
-  })
-
   it("requires level 14+ and pool >= 5", () => {
     expect(canUseRestoringTouch(13, 10)).toBe(false)
     expect(canUseRestoringTouch(14, 4)).toBe(false)

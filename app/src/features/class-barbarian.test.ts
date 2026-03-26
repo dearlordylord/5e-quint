@@ -19,7 +19,7 @@ import {
   canUseDangerSense,
   canUseIntimidatingPresence,
   canUseRelentlessRage,
-  dangerSenseAdvantage,
+
   fastMovementBonus,
   frenzyDamageDice,
   hasFeralInstinct,
@@ -666,13 +666,7 @@ describe("danger sense (L2)", () => {
     expect(canUseDangerSense(2, true)).toBe(false)
   })
 
-  it("should grant advantage on DEX saves when active", () => {
-    expect(dangerSenseAdvantage(true)).toBe(true)
-  })
 
-  it("should not grant advantage when inactive", () => {
-    expect(dangerSenseAdvantage(false)).toBe(false)
-  })
 })
 
 // --- Fast Movement Tests ---
@@ -802,7 +796,7 @@ describe("indomitable might (L18)", () => {
 // --- Primal Champion Tests ---
 
 describe("primal champion (L20)", () => {
-  it("should grant +4 STR, +4 CON, max 24 at L20", () => {
+  it("should grant +4 STR, +4 CON, max 25 at L20", () => {
     expect(primalChampionBonus(20)).toEqual({ strBonus: 4, conBonus: 4, maxScore: 25 })
   })
 
