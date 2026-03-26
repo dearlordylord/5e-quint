@@ -13,7 +13,7 @@ import {
   pLayOnHandsCure,
   pPaladinSmiteFree,
   pRadiantStrikes
-} from "#/machine-paladin.ts"
+} from "#/features/class-paladin.ts"
 
 // --- Lay on Hands ---
 

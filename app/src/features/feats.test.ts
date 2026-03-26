@@ -5,7 +5,7 @@ import {
   grapplerAttackAdvantage,
   grapplerMovementCost,
   resolvePunchAndGrab
-} from "#/machine-feats.ts"
+} from "#/features/feats.ts"
 
 // --- Prerequisite ---
 

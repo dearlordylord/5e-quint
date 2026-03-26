@@ -12,7 +12,7 @@ import {
   sorcerousRestoration,
   sorceryPointsMax,
   useInnateSorcery
-} from "#/machine-sorcerer.ts"
+} from "#/features/class-sorcerer.ts"
 
 // --- Sorcery Points Max ---
 

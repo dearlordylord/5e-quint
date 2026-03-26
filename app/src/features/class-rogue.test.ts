@@ -12,7 +12,7 @@ import {
   resetRogueTurnState,
   sneakAttackDice,
   strikeDieCost
-} from "#/machine-rogue.ts"
+} from "#/features/class-rogue.ts"
 
 // --- Sneak Attack dice ---
 

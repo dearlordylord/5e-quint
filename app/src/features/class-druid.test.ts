@@ -28,7 +28,7 @@ import {
   type WildShapeForm,
   wildShapeMaxCharges,
   type WildShapeState
-} from "#/machine-druid.ts"
+} from "#/features/class-druid.ts"
 
 // --- Helpers ---
 

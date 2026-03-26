@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { RageState } from "#/machine-barbarian.ts"
+import type { RageState } from "#/features/class-barbarian.ts"
 import {
   applyForcefulBlow,
   applyHamstringBlow,
@@ -29,7 +29,7 @@ import {
   rageStrengthAdvantage,
   recklessAttackAdvantage,
   recklessDefenseDisadvantage
-} from "#/machine-barbarian.ts"
+} from "#/features/class-barbarian.ts"
 
 // --- Helpers ---
 

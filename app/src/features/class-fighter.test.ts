@@ -11,7 +11,7 @@ import {
   useActionSurge,
   useSecondWind,
   useTacticalMind
-} from "#/machine-fighter.ts"
+} from "#/features/class-fighter.ts"
 
 // --- Second Wind ---
 

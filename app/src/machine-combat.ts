@@ -1,5 +1,6 @@
 import { NAT_1, NAT_20 } from "#/machine-helpers.ts"
 import { EXHAUSTION_DISADV_THRESHOLD } from "#/machine-queries.ts"
+import { SIZE_ORDER } from "#/srd-constants.ts"
 import type {
   AdvState,
   ArmorState,
@@ -83,8 +84,6 @@ export function calculateAC(params: {
 }
 
 // --- Size and contest resolution ---
-
-const SIZE_ORDER: ReadonlyArray<Size> = ["tiny", "small", "medium", "large", "huge", "gargantuan"]
 
 /** Check if attacker is within one size category of target. */
 export function withinOneSize(attackerSize: Size, targetSize: Size): boolean {

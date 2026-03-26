@@ -2,13 +2,13 @@
 // General Feat (Prerequisite: Level 4+, Strength or Dexterity 13+)
 
 import { withinOneSize } from "#/machine-combat.ts"
+import { SIZE_ORDER } from "#/srd-constants.ts"
 import type { AdvState, Size } from "#/types.ts"
 
 // --- Constants ---
 
 const GRAPPLER_ABILITY_PREREQ = 13
 const STANDARD_DRAG_COST = 2
-const SIZE_ORDER: ReadonlyArray<Size> = ["tiny", "small", "medium", "large", "huge", "gargantuan"]
 
 export function canTakeGrapplerFeat(strScore: number, dexScore: number): boolean {
   return strScore >= GRAPPLER_ABILITY_PREREQ || dexScore >= GRAPPLER_ABILITY_PREREQ

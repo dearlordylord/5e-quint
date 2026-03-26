@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { FocusPoolState } from "#/machine-monk.ts"
+import type { FocusPoolState } from "#/features/class-monk.ts"
 import {
   pBonusUnarmedStrikeEligible,
   pDexterousAttacks,
@@ -15,7 +15,7 @@ import {
   pRestoreFocusLongRest,
   pRollInitiative,
   pUncannyMetabolism
-} from "#/machine-monk.ts"
+} from "#/features/class-monk.ts"
 
 // --- Helpers ---
 
