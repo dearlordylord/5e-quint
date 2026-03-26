@@ -28,6 +28,10 @@ The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parit
 - **Never** remove or rename context fields that the MBT bridge maps — check `machine.mbt.test.ts` before removing anything from `DndContext`.
 - If a simplify/refactor changes behavior, the MBT tests MUST still pass. If they don't, the refactor is wrong.
 
+## Non-core features
+
+`app/src/features/` — pure functions for class features, feats, spells, species traits. See `features/README.md`.
+
 ## ESLint file size limits
 
 `app/src/machine.ts` has a 420-line eslint `max-lines` limit. When adding actions, extract logic into `machine-helpers.ts` (or `machine-combat.ts`) to stay under the cap.

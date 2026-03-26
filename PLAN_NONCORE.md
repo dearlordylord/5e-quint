@@ -151,10 +151,14 @@ Danger Sense, Fast Movement, Primal Knowledge (NEW L3), Instinctive Pounce (NEW 
 - Test: Danger Sense advantage only when not blinded/deafened/incapacitated; Fast Movement +10 only without heavy armor; Primal Knowledge adds proficiency to chosen skill; Instinctive Pounce grants half-speed move on rage entry; Relentless Rage DC increments +5, resets on rest; Indomitable Might replaces low STR rolls; Primal Champion raises scores and caps
 
 **[T13] Berserker**
-SRD 5.2.1: Frenzy no longer causes exhaustion. Frenzy, Retaliation, Intimidating Presence all revised per 5.2.1.
-- State: `frenzyActive: bool`
-- Functions: `pActivateFrenzy(state)->frenzyActive during rage`; Frenzy revised (TODO: verify 5.2.1 exact mechanic — bonus attack on melee hit, or once per turn BA; no exhaustion); Mindless Rage (L6, unchanged): block charmed/frightened while raging, suspend pre-existing effects (resume when rage ends); Intimidating Presence revised per 5.2.1 (TODO: verify DC and duration); Retaliation (L14, unchanged): reaction melee attack when you take damage from creature within 5ft, consumes reaction
-- Test: Frenzy grants additional attack (TODO: verify exact trigger); ending frenzy rage does NOT add exhaustion; Mindless Rage blocks charmed/frightened + suspends pre-existing; Retaliation consumes reaction, requires taking damage from creature within 5ft
+SRD 5.2.1: completely revised. Frenzy is now extra damage (not a bonus attack). Retaliation moved to L10. Intimidating Presence at L14 with new DC formula.
+- L3 Frenzy: when using Reckless Attack while raging, deal extra damage on first STR-based hit each turn — roll d6s equal to Rage Damage bonus (+2/+3/+4 = 2d6/3d6/4d6). Same damage type as the weapon/unarmed strike. No exhaustion.
+- L6 Mindless Rage (unchanged): immune to charmed/frightened while raging; suspend pre-existing charmed/frightened effects (resume when rage ends).
+- L10 Retaliation: reaction melee attack (weapon or unarmed) when you take damage from a creature within 5ft. Consumes reaction.
+- L14 Intimidating Presence: BA, each creature of your choice in 30ft emanation makes WIS save (DC 8 + STR mod + prof bonus). Failed = Frightened 1 min. Repeat save at end of each creature's turn.
+- State: none beyond RageState from T10 (Frenzy keys off Reckless Attack + Rage, both already tracked)
+- Functions: `pFrenzyDamage(rageDamageBonus)->extra d6 count`; `pMindlessRage(raging, conditions)->block/suspend charmed+frightened`; `pRetaliation(reactionAvailable, damagedByCreatureWithin5ft)->can react`; `pIntimidatingPresence(strMod, profBonus)->DC`
+- Test: Frenzy adds 2d6/3d6/4d6 per Rage Damage tier; requires Reckless Attack + Rage; only first hit per turn; Mindless Rage blocks charmed/frightened while raging + suspends pre-existing; Retaliation consumes reaction, requires damage from creature within 5ft; Intimidating Presence DC = 8+STR+prof, Frightened 1 min with repeat saves
 
 ---
 
