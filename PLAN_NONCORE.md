@@ -347,13 +347,13 @@ Radiant Strikes (L11): on a hit with a melee weapon **or unarmed strike**, you c
 
 - State: `paladinSmiteFreeUseAvailable: bool` (1/LR free cast)
 - Functions: `pDivineSmiteDamage(slotLevel, isUndeadOrFiend)->dice count`; `pRadiantStrikes(config)->+1d8 radiant at L11+ on melee or unarmed hit`; integrate with slot expenditure; `pPaladinSmiteFree(state)->use free cast`
-- Test: 1st slot->2d8; 2nd->3d8; 4th->5d8 (cap); 4th vs undead->6d8; free cast available 1/LR; Radiant Strikes +1d8 on every melee/unarmed hit at L11+
+- Test: 1st slot->2d8; 2nd->3d8; 4th->5d8; 5th->6d8; 4th vs undead->6d8; free cast available 1/LR; Radiant Strikes +1d8 on every melee/unarmed hit at L11+
 
 **[T62] Paladin Passives**
-Divine Health (immune disease), Divine Sense (now a Channel Divinity option at L3: BA, detect Celestials/Fiends/Undead within 60ft for 10 min, know location and creature type; also detect consecrated/desecrated places), Aura of Protection (L6: +CHA mod min +1 to own saves while conscious; extends to 30ft via Aura Expansion L18), Aura of Courage (L10: immune to frightened while conscious; 30ft via Aura Expansion), Radiant Strikes [T61], Faithful Steed (NEW L5: cast Find Steed 1/LR without slot), Abjure Foes (NEW L9: Channel Divinity, action — frighten up to CHA mod creatures within 60ft that can see/hear you, WIS save, frightened 1 min or until damage; caller-provided for multi-target), Restoring Touch (NEW L14: spend 5 LoH HP to remove one of: Blinded, Charmed, Deafened, Frightened, Paralyzed, or Stunned from a creature you touch), Aura Expansion (L18: Aura of Protection and Aura of Courage extend to 30ft).
+~~Divine Health (removed in SRD 5.2.1)~~, Divine Sense (now a Channel Divinity option at L3: BA, detect Celestials/Fiends/Undead within 60ft for 10 min, know location and creature type; also detect consecrated/desecrated places), Aura of Protection (L6: +CHA mod min +1 to own saves while conscious; extends to 30ft via Aura Expansion L18), Aura of Courage (L10: immune to frightened while conscious; 30ft via Aura Expansion), Radiant Strikes [T61], Faithful Steed (NEW L5: cast Find Steed 1/LR without slot), Abjure Foes (NEW L9: Channel Divinity, action — frighten up to CHA mod creatures within 60ft that can see/hear you, WIS save, frightened 1 min or until damage; caller-provided for multi-target), Restoring Touch (NEW L14: spend 5 LoH HP to remove one of: Blinded, Charmed, Deafened, Frightened, Paralyzed, or Stunned from a creature you touch), Aura Expansion (L18: Aura of Protection and Aura of Courage extend to 30ft).
 - State: `faithfulSteedUsed: bool`, `abjureFoesCharges: int` (uses Channel Divinity)
-- Functions: modify `pApplyCondition` to block disease for Divine Health; `pAuraOfProtection(state, config)->+CHA mod to own saves`; `pFaithfulSteed(state)->mark used, cast Find Steed`; `pAbjureFoes(state, targetSaveResult)->expend Channel Divinity, frighten on fail`; `pRestoringTouch(state, conditionToRemove)->spend 5 LoH pool`; `pRadiantStrikes` in T61
-- Test: Divine Health blocks disease; Aura of Protection +CHA min +1 to own saves; Faithful Steed 1/LR; Abjure Foes uses Channel Divinity; Restoring Touch costs 5 LoH; Aura Expansion at L18
+- Functions: `pAuraOfProtection(state, config)->+CHA mod to own saves`; `pFaithfulSteed(state)->mark used, cast Find Steed`; `pAbjureFoes(state, targetSaveResult)->expend Channel Divinity, frighten on fail`; `pRestoringTouch(state, conditionToRemove)->spend 5 LoH pool`; `pRadiantStrikes` in T61
+- Test: Aura of Protection +CHA min +1 to own saves; Faithful Steed 1/LR; Abjure Foes uses Channel Divinity; Restoring Touch costs 5 LoH; Aura Expansion at L18
 
 **[T63] Oath of Devotion**
 Sacred Weapon (L3 Channel Divinity: on Attack action, expend Channel Divinity to imbue one melee weapon for 10 min — add CHA mod to attack rolls (min +1), each hit deals normal or Radiant damage, weapon emits bright light 20ft + dim 20ft; can end early; ends if not carrying weapon), Turn the Unholy (Channel Divinity, caller-provided multi-target), Aura of Devotion (L7: self + 10ft allies can't be charmed while conscious; 30ft at L18), Smite of Protection (L15: when you cast Divine Smite, you and allies have Half Cover while in your Aura of Protection until start of your next turn). ~~Purity of Spirit~~ replaced by Smite of Protection in 5.2.1. Holy Nimbus (L20: BA, imbue Aura of Protection with holy power for 10 min; Holy Ward: Advantage on saves forced by Fiend or Undead; Radiant Damage: enemies starting turn in aura take CHA mod + Prof Bonus Radiant; Sunlight: aura filled with bright sunlight; 1/LR or restore by expending a L5 spell slot).
@@ -784,18 +784,18 @@ Core is complete (PLAN.md). This file is now the active plan. All tasks are unbl
 
 New in 5.2.1: 20 spells added (distributed across T150-T156 as tracking entries).
 
-## Known SRD 5.2.1 Parity Bugs (pure functions)
+## Known SRD 5.2.1 Parity Bugs (pure functions) — ALL RESOLVED
 
-Found during Batch 1 integration validation. These are pre-existing issues in the pure function layer, not the integration wiring.
+Found during Batch 1 integration validation. All fixed.
 
-1. **Divine Smite 5d8 cap** — `class-paladin.ts:93` enforces `MAX_SMITE_DICE = 5` from SRD 5.1. SRD 5.2.1 removed this cap. A 5th-level slot should deal 6d8, not 5d8.
-2. **Divine Health modeled but removed in 5.2.1** — `class-paladin.ts:148-153`. Not in the SRD 5.2.1 Paladin Features table. Should be removed or gated behind edition flag.
-3. **Persistent Rage `rageCharges === 0` too restrictive** — `class-barbarian.ts:185`. SRD says "you can regain all expended uses" with no requirement to be at zero charges.
-4. **Brutal Strike `isMelee` guard not in SRD** — `class-barbarian.ts:272`. SRD only requires "Strength-based attack roll" (thrown STR weapons should qualify).
-5. **Feral Instinct `canActWhileSurprised` is 5.1 holdover** — `class-barbarian.ts:479-482`. SRD 5.2.1 Feral Instinct only grants Advantage on Initiative; the "act while surprised" text was removed.
-6. **Open Hand Addle `cantTakeReactions` overstates** — `class-monk-features.ts:196,232`. SRD only blocks Opportunity Attacks, not all reactions.
-7. **Deflect Attacks throw-back "two rolls"** — `class-monk-features.ts:120-123`. SRD specifies "two rolls of your Martial Arts die" but interface has single `dieSize`.
-8. **Empowered Strikes comment** — `class-monk-features.ts:54` says "magical for overcoming resistance" (5.1); SRD 5.2.1 says "Force damage or normal damage type."
+1. ~~**Divine Smite 5d8 cap**~~ — Removed `MAX_SMITE_DICE` cap. Dice scale without limit per SRD 5.2.1.
+2. ~~**Divine Health modeled but removed in 5.2.1**~~ — Removed `hasDivineHealth` from pure fn, bridge, hook, and UI.
+3. ~~**Persistent Rage `rageCharges === 0` too restrictive**~~ — Loosened guard to `!persistentRageUsed`.
+4. ~~**Brutal Strike `isMelee` guard not in SRD**~~ — Removed `isMelee` param; STR-based thrown weapons now qualify.
+5. ~~**Feral Instinct `canActWhileSurprised` is 5.1 holdover**~~ — Removed function entirely.
+6. ~~**Open Hand Addle `cantTakeReactions` overstates**~~ — Renamed to `cantMakeOpportunityAttacks`.
+7. ~~**Deflect Attacks throw-back "two rolls"**~~ — Added `dieCount: 2` to `ThrowBackDamage` interface.
+8. ~~**Empowered Strikes comment**~~ — Updated JSDoc to "Force damage or normal damage type."
 
 ---
 

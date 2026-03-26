@@ -109,5 +109,4 @@ export const getAuraOfProtectionBonus: (paladinLevel: number, chaMod: number) =>
 export const getCanUseAuraOfProtection: (paladinLevel: number, isConscious: boolean) => boolean =
   canUseAuraOfProtectionPure
 
-
 export const getRadiantStrikesDice: (config: RadiantStrikesConfig) => number = pRadiantStrikesPure
