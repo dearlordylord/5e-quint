@@ -33,6 +33,9 @@ def fetch_url(url, cache_path):
         if e.code == 404:
             return None
         raise
+    except (TimeoutError, urllib.error.URLError, OSError):
+        # Network timeout or transient failure — skip this URL
+        return None
     os.makedirs(os.path.dirname(cache_path), exist_ok=True)
     with open(cache_path, "w", encoding="utf-8") as f:
         f.write(raw)
