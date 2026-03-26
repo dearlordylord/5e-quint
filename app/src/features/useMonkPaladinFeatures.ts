@@ -166,8 +166,8 @@ export function useMonkPaladinFeatures(
 
   const canLayOnHandsCureCb = useCallback(
     (condition: Condition, currentConditions: ReadonlyArray<Condition>): boolean =>
-      canExecuteLayOnHandsCure(featureState, condition, level, currentConditions),
-    [featureState, level]
+      canExecuteLayOnHandsCure(featureState, condition, level, currentConditions, ctx?.bonusActionUsed ?? false),
+    [featureState, level, ctx]
   )
 
   const layOnHandsCureCb = useCallback(

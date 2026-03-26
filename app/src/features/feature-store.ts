@@ -316,6 +316,15 @@ function reduceBarbarian(state: FeatureState, action: FeatureAction, config: Fea
       return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
     }
 
+    case "NOTIFY_SHORT_REST": {
+      // SRD: "You regain one expended use when you finish a Short Rest"
+      const max = rageMaxCharges(config.level)
+      return {
+        ...state,
+        barbarian: { ...b, rageCharges: Math.min(b.rageCharges + 1, max) }
+      }
+    }
+
     case "NOTIFY_LONG_REST": {
       const max = rageMaxCharges(config.level)
       return {
