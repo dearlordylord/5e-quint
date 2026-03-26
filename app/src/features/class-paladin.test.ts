@@ -24,7 +24,7 @@ import {
   pPaladinSmiteFree,
   pRadiantStrikes,
   restoringTouchConditions,
-  restoringTouchCost,
+
   useFaithfulSteed
 } from "#/features/class-paladin.ts"
 
@@ -378,10 +378,6 @@ describe("aura of courage", () => {
 // --- Restoring Touch ---
 
 describe("restoring touch", () => {
-  it("costs 5 HP from pool", () => {
-    expect(restoringTouchCost()).toBe(5)
-  })
-
   it("correct condition list", () => {
     const conditions = restoringTouchConditions()
     expect(conditions).toContain("blinded")

@@ -302,11 +302,11 @@ export function applyHamstringBlow(): HamstringBlowResult {
 /** Staggering Blow: target has disadvantage on next save, can't make opportunity attacks. */
 export function applyStaggeringBlow(): {
   readonly disadvantageOnNextSave: boolean
-  readonly noOpportunityAttacks: boolean
+  readonly cantMakeOpportunityAttacks: boolean
 } {
   return {
     disadvantageOnNextSave: true,
-    noOpportunityAttacks: true
+    cantMakeOpportunityAttacks: true
   }
 }
 

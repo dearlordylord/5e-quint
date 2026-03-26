@@ -29,7 +29,6 @@ import {
   getBonusUnarmedStrikeEligible,
   getCanUseAuraOfProtection,
   getDivineSmiteDamage,
-
   getMartialArtsDie,
   getRadiantStrikesDice
 } from "#/features/feature-bridge.ts"
@@ -219,7 +218,6 @@ export function useMonkPaladinFeatures(
     divineSmiteDamage: getDivineSmiteDamage,
     auraOfProtectionBonus: auraBonus,
     canUseAuraOfProtection: canAura,
-
     radiantStrikesDice: radiantDice
   }
 }

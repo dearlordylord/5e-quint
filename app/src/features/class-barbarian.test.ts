@@ -483,7 +483,7 @@ describe("brutal strike", () => {
     it("should impose disadvantage on next save and block opportunity attacks", () => {
       const result = applyStaggeringBlow()
       expect(result.disadvantageOnNextSave).toBe(true)
-      expect(result.noOpportunityAttacks).toBe(true)
+      expect(result.cantMakeOpportunityAttacks).toBe(true)
     })
   })
 

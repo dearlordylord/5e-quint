@@ -213,19 +213,14 @@ export function auraOfCourageRange(paladinLevel: number): number {
 
 // --- Restoring Touch (Level 14) ---
 
-export const RESTORING_TOUCH_LEVEL_CONST = 14
-export const RESTORING_TOUCH_COST = 5
 
-export function restoringTouchCost(): 5 {
-  return 5
-}
 
 export function restoringTouchConditions(): ReadonlyArray<Condition> {
   return ["blinded", "charmed", "deafened", "frightened", "paralyzed", "stunned"]
 }
 
 export function canUseRestoringTouch(paladinLevel: number, layOnHandsPool: number): boolean {
-  return paladinLevel >= RESTORING_TOUCH_LEVEL && layOnHandsPool >= RESTORING_TOUCH_COST
+  return paladinLevel >= RESTORING_TOUCH_LEVEL && layOnHandsPool >= CURE_COST
 }
 
 // --- Combined long rest ---
