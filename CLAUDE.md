@@ -9,6 +9,7 @@ Things that cause non-obvious errors, not discoverable by reading code.
 - **Cross-file imports:** Must use `from` clause: `import dnd.* from "./dnd"` (bare `import dnd.*` fails silently with "unknown module").
 - **Test syntax:** Multiple assertions use `all { assert(x), assert(y) }` — `and { }` causes parse errors in `run` blocks.
 - **Verbose test output:** `quint test --match "pattern"` for per-test output (default only shows module name).
+- **Rust evaluator GLIBC mismatch:** If MBT tests fail with `EPIPE`, run `./scripts/build-quint-evaluator.sh` (re-run after `npm install`).
 
 ## SRD feature parity (CRITICAL)
 
