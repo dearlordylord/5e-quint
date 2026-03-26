@@ -8,8 +8,8 @@ module _qa_51716e9f3aa3f4e2 {
     val t1 = pUseAction(FRESH_TURN, creature, AAttack)
     val t2 = pUseAction(t1, creature, ACastSpell)
     assert(
-      t1.actionUsed
-      and t2.actionUsed
+      t1.actionsRemaining == 0
+      and t2.actionsRemaining == 0
       // second pUseAction call is a no-op: state unchanged
       and t2.attackActionUsed
       and not(t1.bonusActionUsed)

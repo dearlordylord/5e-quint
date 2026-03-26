@@ -10,7 +10,7 @@ module _qa_961198634fe8cff5 {
     // Simulate using the action (e.g. via Action Surge's extra action)
     val t1 = pUseAction(t0, creature, AAttack)
     // Action is consumed, but bonus action remains untouched
-    assert(t1.actionUsed and not(t1.bonusActionUsed))
+    assert(t1.actionsRemaining == 0 and not(t1.bonusActionUsed))
   }
   
   // "Possible" bonus action means bonus actions require a separate feature to exist at all.
@@ -21,6 +21,6 @@ module _qa_961198634fe8cff5 {
     val t1 = pUseAction(t0, creature, AAttack)
     val t2 = pUseBonusAction(t1, creature)
     // Spending the bonus action is a distinct operation from spending the action
-    assert(t2.actionUsed and t2.bonusActionUsed)
+    assert(t2.actionsRemaining == 0 and t2.bonusActionUsed)
   }
 }

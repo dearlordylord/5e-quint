@@ -10,7 +10,7 @@ module _qa_852abc8d4929fbd3 {
     val t1 = pUseAction(t0, creature, ACastSpell)
     // Attempting a second action is a no-op — action already consumed
     val t2 = pUseAction(t1, creature, AAttack)
-    assert(t1.actionUsed == true and t2 == t1)
+    assert(t1.actionsRemaining == 0 and t2 == t1)
   }
   
   // Can I use the Dimension Door spell to teleport onto the back of an ancient green dragon?
@@ -20,7 +20,7 @@ module _qa_852abc8d4929fbd3 {
     val t0 = FRESH_TURN
     val t1 = pUseBonusAction(t0, creature)
     val t2 = pMarkBonusActionSpell(t1)
-    assert(t2.bonusActionUsed == true and t2.actionUsed == false)
+    assert(t2.bonusActionUsed == true and t2.actionsRemaining > 0)
   }
   
   // Can I use the Dimension Door spell to teleport onto the back of an ancient green dragon?
@@ -44,7 +44,7 @@ module _qa_852abc8d4929fbd3 {
     val riderTotal  = 18 + 4  // d20=18, Athletics
     val dragonTotal = 12 + 5  // d20=12, dragon Acrobatics
     assert(
-      t3.actionUsed == true and
+      t3.actionsRemaining == 0 and
       t3.bonusActionUsed == true and
       contestWinner(riderTotal, dragonTotal) == AWins
     )

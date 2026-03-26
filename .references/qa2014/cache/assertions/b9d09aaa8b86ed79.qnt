@@ -37,7 +37,7 @@ module _qa_b9d09aaa8b86ed79 {
     val creature = freshCreature(20)
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, creature, ASearch)
-    assert(not(t0.actionUsed) and t1.actionUsed)
+    assert(t0.actionsRemaining > 0 and t1.actionsRemaining == 0)
   }
   
   // When is physical interaction or examining an illusion acceptable?
@@ -50,6 +50,6 @@ module _qa_b9d09aaa8b86ed79 {
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, creature, ASearch)
     // pUseAction no-ops when creature is incapacitated
-    assert(not(t1.actionUsed))
+    assert(t1.actionsRemaining > 0)
   }
 }

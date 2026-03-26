@@ -22,7 +22,7 @@ module _qa_f4baf5085a01aa8a {
     val creature = freshCreature(20)
     val afterUse = pUseAction(FRESH_TURN, creature, AUseObject)
     assert(
-      afterUse.actionUsed       == true   // action slot consumed (pressing the button)
+      afterUse.actionsRemaining == 0       == true   // action slot consumed (pressing the button)
       and afterUse.reactionAvailable == true  // reaction is unaffected — can't "reactively press"
       and afterUse.bonusActionUsed   == false // bonus action also unaffected
     )

@@ -5,7 +5,7 @@ module _qa_ef692784a84b6236 {
   // Wall of Fire - Do you end your turn near the wall if you damage the player that cast it and they lose concentration and the spell ends?
   run qa_wall_of_fire_concentration_break_before_end_of_turn = {
     // Enemy's turn: action used to attack Player 1, but bonus action still available (turn not yet over)
-    val enemyTurn = FRESH_TURN.with("actionUsed", true).with("attackActionUsed", true)
+    val enemyTurn = FRESH_TURN.with("actionsRemaining", 0).with("attackActionUsed", true)
     // Player 1 (caster) is concentrating on Wall of Fire
     val casterSlots = FRESH_SPELL_SLOTS.with("concentrationSpellId", "wall_of_fire")
     // Enemy's attack deals 20 damage to Player 1; concentration DC = max(10, 20/2) = 10

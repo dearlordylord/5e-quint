@@ -7,7 +7,7 @@ module _qa_c1f0456029a494a3 {
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, AUseObject)
     // Setting the trap (including affixing the heavy chain) is fully resolved by the single Use an Object action
-    assert(t1.actionUsed == true and not(FRESH_TURN.actionUsed))
+    assert(t1.actionsRemaining == 0 and FRESH_TURN.actionsRemaining > 0)
   }
   
   // How long does it take to set up a Hunting Trap? — creature failing DC 13 DEX save takes piercing damage and is movement-restricted

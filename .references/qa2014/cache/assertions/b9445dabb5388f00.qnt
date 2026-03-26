@@ -14,11 +14,11 @@ module _qa_b9445dabb5388f00 {
     assert(
       // Both sides: locked out of movement, actions, bonus actions, and reactions on first turn
       turnA.movementRemaining == 0 and
-      turnA.actionUsed == true and
+      turnA.actionsRemaining == 0 and
       turnA.bonusActionUsed == true and
       turnA.reactionAvailable == false and
       turnB.movementRemaining == 0 and
-      turnB.actionUsed == true and
+      turnB.actionsRemaining == 0 and
       turnB.bonusActionUsed == true and
       turnB.reactionAvailable == false and
       // Once the (empty) surprised turn ends, reactions are restored for both sides

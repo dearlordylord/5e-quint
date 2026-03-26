@@ -18,7 +18,7 @@ module _qa_5bc9671edd8ff38f {
       // Drawing the javelin consumed the free object interaction
       t1.freeInteractionUsed == true
       // Attack action is used and flagged
-      and t2.actionUsed == true
+      and t2.actionsRemaining == 0
       and t2.attackActionUsed == true
       // Extra attack slot consumed for the halberd strike
       and t3.extraAttacksRemaining == 0

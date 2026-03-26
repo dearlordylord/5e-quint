@@ -7,7 +7,7 @@ module _qa_d2f84ef4aaf1fecf {
     val creature = freshCreature(20)
     val t = FRESH_TURN
     val t1 = pUseAction(t, creature, AHelp)
-    assert(t1.actionUsed and not(t.actionUsed))
+    assert(t1.actionsRemaining == 0 and t.actionsRemaining > 0)
   }
   
   // Sprite stays invisible: target cannot see it, granting advantage on its ranged attacks

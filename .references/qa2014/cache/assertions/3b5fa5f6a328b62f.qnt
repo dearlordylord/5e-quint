@@ -12,7 +12,7 @@ module _qa_3b5fa5f6a328b62f {
     val turn2 = pUseAction(turn1, creature, AUseObject)
     assert(
       // First action consumed
-      turn1.actionUsed
+      turn1.actionsRemaining == 0
       // Second action attempt is a no-op — action already spent
       and turn2 == turn1
     )

@@ -12,7 +12,7 @@ module _qa_511ab1267d89fc8e {
     val t1 = pUseAction(t0, s0, AReady)
     assert(
       // Ready action was consumed
-      t1.actionUsed == true
+      t1.actionsRemaining == 0
       and t1.readiedAction == true
       // invisible condition is NOT removed by the Ready action itself
       and s0.invisible == true

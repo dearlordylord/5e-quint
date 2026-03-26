@@ -8,7 +8,7 @@ module _qa_29b58b9f3233fc95 {
     val s0 = freshCreature(10)
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, s0, AReady)
-    assert(t1.actionUsed and t1.readiedAction and t1.reactionAvailable)
+    assert(t1.actionsRemaining == 0 and t1.readiedAction and t1.reactionAvailable)
   }
   
   // Can I specify the timing "before ..." for my ready action? — reaction fires after trigger finishes

@@ -12,8 +12,8 @@ module _qa_2160204185abb327 {
     val t2 = pUseAction(FRESH_TURN, caster, ACastSpell)
     assert(
       // Each turn's action is consumed by the cast
-      t1.actionUsed
-      and t2.actionUsed
+      t1.actionsRemaining == 0
+      and t2.actionsRemaining == 0
       // Cantrip: nonCantripActionSpellCast never set, so no restriction on subsequent turns
       and not(t1.nonCantripActionSpellCast)
       and not(t2.nonCantripActionSpellCast)

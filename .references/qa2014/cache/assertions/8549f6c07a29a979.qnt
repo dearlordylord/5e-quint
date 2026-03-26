@@ -4,9 +4,9 @@ module _qa_8549f6c07a29a979 {
 
   // Is there a better technique to handle the lag between cause and effect?
   // Core mechanic of accepted answer: creature that already used its action can still
-  // use its Reaction (pUseReaction only checks reactionAvailable, not actionUsed).
+  // use its Reaction (pUseReaction only checks reactionAvailable, actionsRemaining > 0).
   run qa_reaction_usable_after_own_action = {
-    val turnAfterAction = FRESH_TURN.with("actionUsed", true)
+    val turnAfterAction = FRESH_TURN.with("actionsRemaining", 0)
     val t2 = pUseReaction(turnAfterAction)
     assert(
       turnAfterAction.reactionAvailable == true
@@ -43,6 +43,6 @@ module _qa_8549f6c07a29a979 {
     val grappled = freshCreature(20).with("grappled", true)
     val freed = pReleaseGrapple(grappled)
     // Release costs no action/bonus/reaction on turn state
-    assert(freed.grappled == false and FRESH_TURN.actionUsed == false)
+    assert(freed.grappled == false and FRESH_TURN.actionsRemaining > 0)
   }
 }

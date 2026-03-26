@@ -8,7 +8,7 @@ module _qa_d4b8c09fa4766b74 {
     val creature = freshCreature(20)
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, creature, AReady)
-    assert(t1.actionUsed and t1.readiedAction and t1.reactionAvailable)
+    assert(t1.actionsRemaining == 0 and t1.readiedAction and t1.reactionAvailable)
   }
   
   // Readied action fires AFTER trigger: reaction is a separate resource consumed post-trigger

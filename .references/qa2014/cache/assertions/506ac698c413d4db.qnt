@@ -9,7 +9,7 @@ module _qa_506ac698c413d4db {
     val s = freshCreature(20).with("restrained", true)
     val t1 = pUseAction(FRESH_TURN, s, AAttack)
     // Action consumed, but restrained condition unchanged — no action-based escape exists
-    assert(s.restrained == true and t1.actionUsed == true)
+    assert(s.restrained == true and t1.actionsRemaining == 0)
   }
   
   // Contrast: grapple explicitly has an action-based escape mechanic (pEscapeGrapple)

@@ -8,7 +8,7 @@ module _qa_4232f415bb34cae9 {
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, creature, AUseObject)
     assert(
-      t1.actionUsed == true
+      t1.actionsRemaining == 0
       and t1.bonusActionUsed == false
       and t1.freeInteractionUsed == false
     )

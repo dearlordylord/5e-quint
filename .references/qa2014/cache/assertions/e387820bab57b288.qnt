@@ -11,7 +11,7 @@ module _qa_e387820bab57b288 {
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, AUseObject)
     assert(
-      t1.actionUsed
+      t1.actionsRemaining == 0
       and checkSucceeds(d20Roll, chaMod, NoneProf, proficiencyBonus(1), 0, 15)
     )
   }
@@ -24,7 +24,7 @@ module _qa_e387820bab57b288 {
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, AUseObject)
     assert(
-      t1.actionUsed
+      t1.actionsRemaining == 0
       and not(checkSucceeds(d20Roll, chaMod, NoneProf, proficiencyBonus(1), 0, 15))
     )
   }
@@ -34,7 +34,7 @@ module _qa_e387820bab57b288 {
   run qa_scroll_protection_incapacitated_cannot_attempt = {
     val creature = pApplyCondition(freshCreature(20), CIncapacitated)
     val t1 = pUseAction(FRESH_TURN, creature, AUseObject)
-    assert(not(t1.actionUsed))
+    assert(t1.actionsRemaining > 0)
   }
   
   // From where can a creature attempt to overcome a Scroll of Protection?

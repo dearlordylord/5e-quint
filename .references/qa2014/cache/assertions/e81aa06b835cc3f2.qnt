@@ -26,7 +26,7 @@ module _qa_e81aa06b835cc3f2 {
   run qa_surprised_first_turn_fully_locked = {
     val creature = freshCreature(20)
     val t = pStartTurn(TEST_CONFIG, creature, Unarmored, true, 0, false, false)
-    assert(t.actionUsed and t.bonusActionUsed and t.movementRemaining == 0 and not(t.reactionAvailable))
+    assert(t.actionsRemaining == 0 and t.bonusActionUsed and t.movementRemaining == 0 and not(t.reactionAvailable))
   }
   
   // How to handle initiative for a sleeping creature? — after surprised turn ends, reaction becomes available again
@@ -41,7 +41,7 @@ module _qa_e81aa06b835cc3f2 {
   run qa_incapacitated_action_noop = {
     val sleeping = pApplyCondition(freshCreature(20), CUnconscious)
     val t2 = pUseAction(FRESH_TURN, sleeping, AAttack)
-    assert(not(t2.actionUsed))
+    assert(t2.actionsRemaining > 0)
   }
   
   // How to handle initiative for a sleeping creature? — aggregate attack mods: rogue attacking prone unconscious goblin within 5ft gives advantage + autoCrit

@@ -10,7 +10,7 @@ module _qa_49f6d7b909d07d16 {
     val t1 = pUseAction(t0, creature, ACastSpell)
     assert(
       // The spell cast consumes exactly the action — done within the turn
-      t1.actionUsed == true
+      t1.actionsRemaining == 0
       // Bonus action is NOT consumed (it was just an action, not a bonus action cast)
       and t1.bonusActionUsed == false
       // Movement is unaffected — the action completes immediately, not over hours

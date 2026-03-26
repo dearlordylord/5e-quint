@@ -27,7 +27,7 @@ module _qa_651d8cc97e71b4d0 {
     // Model mount regaining its full MAB (action, bonus action, movement) on its next turn
     val mountTurn = pStartTurn(TEST_CONFIG, mountCreature, Unarmored, false, 0, false, false)
     assert(
-      not(mountTurn.actionUsed) and
+      mountTurn.actionsRemaining > 0 and
       not(mountTurn.bonusActionUsed) and
       mountTurn.movementRemaining == TEST_CONFIG.speeds.get(Walk)
     )

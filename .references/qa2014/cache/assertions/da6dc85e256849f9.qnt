@@ -11,7 +11,7 @@ module _qa_da6dc85e256849f9 {
       // Reaction is spent — OA was taken
       t1.reactionAvailable == false
       // Action is NOT consumed — OA never grants an action
-      and t1.actionUsed == false
+      and t1.actionsRemaining > 0
       // Attack action not triggered either — no attackActionUsed-gated abilities become available
       and t1.attackActionUsed == false
     )

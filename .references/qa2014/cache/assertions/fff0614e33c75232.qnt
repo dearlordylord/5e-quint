@@ -7,7 +7,7 @@ module _qa_fff0614e33c75232 {
     // Attack action taken (first attack done), extra attack still pending — bonus action is available
     val creature = freshCreature(20)
     val t = FRESH_TURN
-      .with("actionUsed", true)
+      .with("actionsRemaining", 0)
       .with("attackActionUsed", true)
       .with("extraAttacksRemaining", 1)
       .with("bonusActionUsed", false)
@@ -19,7 +19,7 @@ module _qa_fff0614e33c75232 {
   run qa_reaction_between_attacks = {
     // Reaction (e.g. Shield, Opportunity Attack trigger) available while Attack action is in progress
     val t = FRESH_TURN
-      .with("actionUsed", true)
+      .with("actionsRemaining", 0)
       .with("attackActionUsed", true)
       .with("extraAttacksRemaining", 1)
       .with("reactionAvailable", true)
@@ -33,7 +33,7 @@ module _qa_fff0614e33c75232 {
     // PHB: TWF off-hand attack is a bonus action; timing is player's choice, so usable between extra attacks
     val creature = freshCreature(20)
     val t = FRESH_TURN
-      .with("actionUsed", true)
+      .with("actionsRemaining", 0)
       .with("attackActionUsed", true)
       .with("extraAttacksRemaining", 1)
       .with("bonusActionUsed", false)
@@ -48,7 +48,7 @@ module _qa_fff0614e33c75232 {
       .with("stunned", true)
       .with("incapacitatedSources", Set(ISStunned))
     val t = FRESH_TURN
-      .with("actionUsed", true)
+      .with("actionsRemaining", 0)
       .with("attackActionUsed", true)
       .with("extraAttacksRemaining", 1)
       .with("bonusActionUsed", false)

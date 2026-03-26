@@ -10,7 +10,7 @@ module _qa_44572b3d5a705d27 {
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, creature, AReady)
     assert(
-      t1.actionUsed and
+      t1.actionsRemaining == 0 and
       t1.readiedAction and
       not(t1.bonusActionUsed) and
       t1.reactionAvailable  // reaction still available: fires when trigger condition is met
@@ -48,7 +48,7 @@ module _qa_44572b3d5a705d27 {
       // PHB answer: "the enemy's freedom of action is unaffected" —
       // pTakeDamage has no TurnState parameter; enemy movement and action are unchanged
       enemyTurnBefore.movementRemaining == 20 and
-      not(enemyTurnBefore.actionUsed)
+      enemyTurnBefore.actionsRemaining > 0
     )
   }
 }

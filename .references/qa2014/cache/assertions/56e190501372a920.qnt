@@ -22,7 +22,7 @@ module _qa_56e190501372a920 {
     val target = freshCreature(20)
     val underGaze = pApplyCondition(pApplyCondition(target, CCharmed), CIncapacitated)
     val t1 = pUseAction(FRESH_TURN, underGaze, AAttack)
-    assert(not(t1.actionUsed))
+    assert(t1.actionsRemaining > 0)
   }
   
   // Could you kill someone using Enchantment School Wizard's Hypnotic Gaze forever?

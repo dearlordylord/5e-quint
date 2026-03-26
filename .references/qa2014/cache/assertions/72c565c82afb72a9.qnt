@@ -11,7 +11,7 @@ module _qa_72c565c82afb72a9 {
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, creature, AReady)
     assert(
-      t1.actionUsed      == true  and  // action spent on Ready
+      t1.actionsRemaining == 0      == true  and  // action spent on Ready
       t1.readiedAction   == true  and  // ready flag set
       t1.bonusActionUsed == false      // bonus action untouched; cannot be readied
     )

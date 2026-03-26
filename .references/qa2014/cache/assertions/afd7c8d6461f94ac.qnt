@@ -27,7 +27,7 @@ module _qa_afd7c8d6461f94ac {
     // Flagon 3: Fast Hands — bonus action grants another Use an Object
     val t3 = pUseBonusAction(t2, creature)
     assert(
-      t3.actionUsed == true
+      t3.actionsRemaining == 0
       and t3.freeInteractionUsed == true
       and t3.bonusActionUsed == true
     )

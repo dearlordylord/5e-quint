@@ -28,7 +28,7 @@ module _qa_b4ff8739568aec2f {
     // so the Crossbow Expert bonus action attack slot is still available.
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, AAttack)
-    assert(t1.actionUsed and t1.attackActionUsed and not(t1.bonusActionUsed))
+    assert(t1.actionsRemaining == 0 and t1.attackActionUsed and not(t1.bonusActionUsed))
   }
   
   // Does Crossbow Expert let me fire a hand crossbow as a bonus action after using a one-handed weapon's versatile property?

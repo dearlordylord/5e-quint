@@ -12,7 +12,7 @@ module _qa_bfcb1c5265fab6b2 {
     val t = pStartTurn(TEST_CONFIG, monster, Unarmored, false, 0, false, false)
     assert(
       not(t.surprised)
-      and not(t.actionUsed)
+      and t.actionsRemaining > 0
       and not(t.bonusActionUsed)
       and t.reactionAvailable
       and t.movementRemaining > 0
@@ -25,7 +25,7 @@ module _qa_bfcb1c5265fab6b2 {
     val t = pStartTurn(TEST_CONFIG, creature, Unarmored, true, 0, false, false)
     assert(
       t.surprised
-      and t.actionUsed
+      and t.actionsRemaining == 0
       and t.bonusActionUsed
       and t.movementRemaining == 0
       and not(t.reactionAvailable)

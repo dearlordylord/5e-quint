@@ -9,7 +9,7 @@ module _qa_c96026c37c202a74 {
     val t0 = FRESH_TURN
     // Initiating the song costs the action (AUseObject as proxy for monster special ability)
     val t1 = pUseAction(t0, harpy, AUseObject)
-    assert(t1.actionUsed and not(t1.bonusActionUsed))
+    assert(t1.actionsRemaining == 0 and not(t1.bonusActionUsed))
   }
   
   // Is a harpy's luring song an action or a bonus action?
@@ -18,7 +18,7 @@ module _qa_c96026c37c202a74 {
     val harpy = freshCreature(38)
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, harpy, AUseObject)
-    assert(t1.actionUsed and t1.reactionAvailable and not(t1.bonusActionUsed))
+    assert(t1.actionsRemaining == 0 and t1.reactionAvailable and not(t1.bonusActionUsed))
   }
   
   // Is a harpy's luring song an action or a bonus action?
@@ -28,7 +28,7 @@ module _qa_c96026c37c202a74 {
     // Simulate a subsequent turn: fresh turn, song already active, continue with bonus action only
     val t0 = FRESH_TURN
     val t1 = pUseBonusAction(t0, harpy)
-    assert(t1.bonusActionUsed and not(t1.actionUsed))
+    assert(t1.bonusActionUsed and t1.actionsRemaining > 0)
   }
   
   // Is a harpy's luring song an action or a bonus action?
@@ -39,6 +39,6 @@ module _qa_c96026c37c202a74 {
     // Harpy stopped singing; to restart it must use its action
     val t1 = pUseAction(t0, harpy, AUseObject)
     // Action is now spent; bonus action is still free (not sufficient to restart alone)
-    assert(t1.actionUsed and not(t1.bonusActionUsed))
+    assert(t1.actionsRemaining == 0 and not(t1.bonusActionUsed))
   }
 }

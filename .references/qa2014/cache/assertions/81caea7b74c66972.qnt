@@ -12,8 +12,8 @@ module _qa_81caea7b74c66972 {
     assert(and {
       // Paralyzed implies incapacitated — the root cause
       isIncapacitated(paralyzed),
-      // Incapacitated blocks all actions, so actionUsed stays false
-      not(afterAction.actionUsed),
+      // Incapacitated blocks all actions, so actionsRemaining stays 1
+      afterAction.actionsRemaining > 0,
       // Bonus actions are also blocked when you can't take actions
       not(afterBonus.bonusActionUsed),
     })

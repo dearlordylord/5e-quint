@@ -32,7 +32,7 @@ module _qa_e92d0e97534b58a5 {
     val config = TEST_CONFIG
     val creature = freshCreature(20)
     val t = pStartTurn(config, creature, Unarmored, true, 0, false, false)
-    assert(t.surprised == true and t.actionUsed == true and t.bonusActionUsed == true)
+    assert(t.surprised == true and t.actionsRemaining == 0 and t.bonusActionUsed == true)
   }
   
   // Surprise is a first-turn condition only: surprised flag clears after end of surprise turn

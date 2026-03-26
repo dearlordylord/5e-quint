@@ -13,7 +13,7 @@ module _qa_0dff2592bcd5d143 {
       // After readying: action spent, flag set, but reaction is STILL available —
       // the trigger (spell being cast) has not yet finished.
       val readiedState =
-          t1.actionUsed == true
+          t1.actionsRemaining == 0
           and t1.readiedAction == true
           and t1.reactionAvailable == true
       // The triggering spell (1 action) completes; NOW the readied reaction fires.

@@ -18,11 +18,11 @@ module _qa_e9f32a6d6a0c02c4 {
   
     assert(
       // Each cast consumes exactly one action
-      turn1_after.actionUsed
+      turn1_after.actionsRemaining == 0
       // A new turn restores the action (unlimited use across turns)
-      and not(turn2.actionUsed)
+      and turn2.actionsRemaining > 0
       // The spell can be cast again on the next turn
-      and turn2_after.actionUsed
+      and turn2_after.actionsRemaining == 0
     )
   }
   

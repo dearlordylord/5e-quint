@@ -15,7 +15,7 @@ module _qa_d52aec74c16c02ed {
     // pUseAction(AReady) marks the readied action but never starts concentration.
     assert(
       t1.readiedAction == true
-      and t1.actionUsed == true
+      and t1.actionsRemaining == 0
       and ss0.concentrationSpellId == ""
       and not(isConcentrating(ss0))
     )

@@ -19,14 +19,14 @@ module _qa_c3a132a68af0d373 {
     // Simulate using action for Prestidigitation (ACastSpell; caller does NOT call
     // pMarkNonCantripActionSpell because it's a cantrip).
     val t1 = pUseAction(FRESH_TURN, creature, ACastSpell)
-    assert(t1.actionUsed and canCastBonusActionSpell(t1))
+    assert(t1.actionsRemaining == 0 and canCastBonusActionSpell(t1))
   }
   
   // Can a Bard use Prestidigitation to conjure a musical instrument trinket for their spellcasting focus?
   run qa_prestidigitation_action_consumed_blocks_second_action_cast = {
     // Accepted answer: "you must use your action to cast prestidigitation, and then you
     // cannot use your action again to cast another spell" — models the every-other-round
-    // inefficiency. pUseAction is idempotent when actionUsed is already true.
+    // inefficiency. pUseAction is idempotent when actionsRemaining is already 0.
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, ACastSpell)   // Prestidigitation
     val t2 = pUseAction(t1, creature, ACastSpell)           // attempt second action spell

@@ -7,7 +7,7 @@ module _qa_956e1eb386527334 {
     // Prone is not incapacitated; pUseAction only blocks on isIncapacitated
     val proneState = pApplyCondition(freshCreature(20), CProne)
     val t1 = pUseAction(FRESH_TURN, proneState, ADodge)
-    assert(t1.dodging and t1.actionUsed)
+    assert(t1.dodging and t1.actionsRemaining == 0)
   }
   
   // Can you take the Dodge action while prone? - melee attacker within 5ft: prone advantage + dodge disadvantage cancel

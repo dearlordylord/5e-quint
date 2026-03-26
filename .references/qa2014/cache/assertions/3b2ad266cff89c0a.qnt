@@ -14,7 +14,7 @@ module _qa_3b2ad266cff89c0a {
     // Attempt to use action again for anything else (e.g. Attack) — must be a no-op
     val t2 = pUseAction(t1, creature, AAttack)
     assert(
-      t1.actionUsed == true and
+      t1.actionsRemaining == 0 and
       t2 == t1
     )
   }

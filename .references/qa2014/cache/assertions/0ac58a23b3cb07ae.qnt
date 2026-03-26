@@ -12,6 +12,6 @@ module _qa_0ac58a23b3cb07ae {
     val t1 = pUseAction(t0, creature, AAttack)
     // Attempt a second action to don the shield — blocked, action already consumed
     val t2 = pUseAction(t1, creature, AUseObject)
-    assert(t1.actionUsed and t2 == t1)
+    assert(t1.actionsRemaining == 0 and t2 == t1)
   }
 }

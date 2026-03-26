@@ -8,7 +8,7 @@ module _qa_0a9b23486c77e28d {
     val creature = freshCreature(30)
     val t = pStartTurn(TEST_CONFIG, creature, Unarmored, false, 0, false, false)
     assert(
-      not(t.actionUsed) and
+      t.actionsRemaining > 0 and
       not(t.bonusActionUsed) and
       t.reactionAvailable and
       t.movementRemaining == 30 and
@@ -21,7 +21,7 @@ module _qa_0a9b23486c77e28d {
     val creature = freshCreature(30)
     val t = pStartTurn(TEST_CONFIG, creature, Unarmored, true, 0, false, false)
     assert(
-      t.actionUsed and
+      t.actionsRemaining == 0 and
       t.bonusActionUsed and
       not(t.reactionAvailable) and
       t.movementRemaining == 0 and
@@ -36,11 +36,11 @@ module _qa_0a9b23486c77e28d {
     val surprisedTurn = pStartTurn(TEST_CONFIG, creature, Unarmored, true,  0, false, false)
     assert(
       // Immune character (e.g. Weapon of Warning bearer) can act, move, and react
-      not(immuneTurn.actionUsed) and
+      immuneTurn.actionsRemaining > 0 and
       immuneTurn.movementRemaining > 0 and
       immuneTurn.reactionAvailable and
       // Surprised ally is locked out for the first turn
-      surprisedTurn.actionUsed and
+      surprisedTurn.actionsRemaining == 0 and
       surprisedTurn.movementRemaining == 0 and
       not(surprisedTurn.reactionAvailable)
     )

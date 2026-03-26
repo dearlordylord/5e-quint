@@ -6,7 +6,7 @@ module _qa_fcb5cfae4c2ff5a2 {
   run qa_help_action_consumes_action_not_attack = {
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, AHelp)
-    assert(t1.actionUsed == true and t1.attackActionUsed == false and t1.bonusActionUsed == false)
+    assert(t1.actionsRemaining == 0 and t1.attackActionUsed == false and t1.bonusActionUsed == false)
   }
   
   // Can a support combat style be effective without magic? — advantage (from Help) converts a near-miss into a hit

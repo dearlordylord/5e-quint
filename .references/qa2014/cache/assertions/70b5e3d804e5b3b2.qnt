@@ -8,7 +8,7 @@ module _qa_70b5e3d804e5b3b2 {
     // After using the Attack action and burning the extra attack (2 total attacks),
     // freeInteractionUsed must still be false — the turn-level free interaction is untouched.
     val creature = freshCreature(20)
-    val t0 = FRESH_TURN   // extraAttacksRemaining: 1, freeInteractionUsed: false
+    val t0 = FRESH_TURN   // extraAttacksRemaining: 1, freeInteractionsRemaining: 1
     val t1 = pUseAction(t0, creature, AAttack)   // base attack
     val t2 = pUseExtraAttack(t1)                 // extra attack (Fighter 5 / FExtraAttack)
     assert(

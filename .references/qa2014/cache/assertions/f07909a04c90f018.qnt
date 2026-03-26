@@ -11,11 +11,11 @@ module _qa_f07909a04c90f018 {
     // Reaction is consumed by the attack
     val reactionConsumed = not(t1.reactionAvailable)
     // But the action slot is completely untouched — no spell was cast
-    val actionStillFree = not(t1.actionUsed)
+    val actionStillFree = t1.actionsRemaining > 0
     // Casting a spell requires spending the action separately
     val creature = freshCreature(20)
     val t2 = pUseAction(t1, creature, ACastSpell)
-    val castingSpellConsumesAction = t2.actionUsed
+    val castingSpellConsumesAction = t2.actionsRemaining == 0
     assert(reactionConsumed and actionStillFree and castingSpellConsumesAction)
   }
 }

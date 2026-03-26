@@ -15,7 +15,7 @@ module _qa_44c94dac87cb7f0f {
       ssAfterBreak.concentrationSpellId == ""
       and not(isConcentrating(ssAfterBreak))
       // TurnState completely unaffected by breaking concentration
-      and turnAfterAction.actionUsed == true       // only action consumed was dismissing Blink
+      and turnAfterAction.actionsRemaining == 0       // only action consumed was dismissing Blink
       and turnAfterAction.bonusActionUsed == false // bonus action untouched
       and turnAfterAction.reactionAvailable == true // reaction untouched
     )
@@ -27,7 +27,7 @@ module _qa_44c94dac87cb7f0f {
     val turnAfterReady = pUseAction(FRESH_TURN, creature, AReady)
     // Ready action consumed, readiedAction set — but reaction is still free for the trigger
     assert(
-      turnAfterReady.actionUsed == true
+      turnAfterReady.actionsRemaining == 0
       and turnAfterReady.readiedAction == true
       and turnAfterReady.reactionAvailable == true  // reaction fires when trigger (entering Ethereal) occurs
       and turnAfterReady.bonusActionUsed == false

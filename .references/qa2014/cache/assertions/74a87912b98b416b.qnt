@@ -12,11 +12,11 @@ module _qa_74a87912b98b416b {
     val impTurn: TurnState = {
       movementRemaining: 20,
       effectiveSpeed: 20,
-      actionUsed: false,
+      actionsRemaining: 1,
       attackActionUsed: false,
       bonusActionUsed: false,
       reactionAvailable: true,
-      freeInteractionUsed: false,
+      freeInteractionsRemaining: 1,
       extraAttacksRemaining: 0,
       disengaged: false,
       dodging: false,
@@ -34,7 +34,7 @@ module _qa_74a87912b98b416b {
     // (2) Fly speed (60ft) is now available — movement type switched
     // (3) Creature stat block (HP, conditions) is entirely unchanged
     assert(
-      afterShapechange.actionUsed == true
+      afterShapechange.actionsRemaining == 0
       and afterShapechange.effectiveSpeed == 60
       and afterShapechange.movementRemaining == 60
       and impState.hp == impHp

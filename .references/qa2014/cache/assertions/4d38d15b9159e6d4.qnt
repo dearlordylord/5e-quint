@@ -13,14 +13,14 @@ module _qa_4d38d15b9159e6d4 {
       // A's movement budget is reduced by moving into B's space
       a_turn_after_move.movementRemaining == FRESH_TURN.movementRemaining - 5
       // B's action is consumed — the Ready action is the cost of the swap per accepted answer
-      and b_turn_after_ready.actionUsed == true
+      and b_turn_after_ready.actionsRemaining == 0
       and b_turn_after_ready.readiedAction == true
       // B's bonus action is NOT spent — only the action is consumed
       and b_turn_after_ready.bonusActionUsed == false
       // B's movement budget on B's own turn is unaffected by choosing Ready
       and b_turn_after_ready.movementRemaining == FRESH_TURN.movementRemaining
       // A second action attempt by B is silently ignored (action already spent)
-      and pUseAction(b_turn_after_ready, creature, ADash).actionUsed == true
+      and pUseAction(b_turn_after_ready, creature, ADash).actionsRemaining == 0
       and pUseAction(b_turn_after_ready, creature, ADash).attackActionUsed == false
     )
   }

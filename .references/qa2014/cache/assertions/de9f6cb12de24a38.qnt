@@ -9,7 +9,7 @@ module _qa_de9f6cb12de24a38 {
     // NPC "noticed the threat" (not surprised), wins initiative
     val t = pStartTurn(TEST_CONFIG, creature, Unarmored, false, 0, false, false)
     assert(
-      not(t.actionUsed) and
+      t.actionsRemaining > 0 and
       not(t.bonusActionUsed) and
       t.movementRemaining == 30 and
       t.reactionAvailable
@@ -23,7 +23,7 @@ module _qa_de9f6cb12de24a38 {
     val t0 = pStartTurn(TEST_CONFIG, creature, Unarmored, false, 0, false, false)
     // NPC chooses to dodge — a valid response to perceived hostile intent
     val t1 = pUseAction(t0, creature, ADodge)
-    assert(t1.actionUsed and t1.dodging)
+    assert(t1.actionsRemaining == 0 and t1.dodging)
   }
   
   // "If I start combat by making an attack, does a high-initiative enemy see it coming?"
@@ -32,7 +32,7 @@ module _qa_de9f6cb12de24a38 {
     val creature = freshCreature(20)
     val t = pStartTurn(TEST_CONFIG, creature, Unarmored, true, 0, false, false)
     assert(
-      t.actionUsed and
+      t.actionsRemaining == 0 and
       t.bonusActionUsed and
       t.movementRemaining == 0 and
       not(t.reactionAvailable)
@@ -40,7 +40,7 @@ module _qa_de9f6cb12de24a38 {
   }
   
   // "If I start combat by making an attack, does a high-initiative enemy see it coming?"
-  // Surprised creature's action is blocked — pUseAction is a no-op when actionUsed is already true
+  // Surprised creature's action is blocked — pUseAction is a no-op when actionsRemaining is already 0
   run qa_surprised_creature_cannot_use_action = {
     val creature = freshCreature(20)
     val t0 = pStartTurn(TEST_CONFIG, creature, Unarmored, true, 0, false, false)

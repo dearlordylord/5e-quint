@@ -16,7 +16,7 @@ module _qa_69996e3fcd2ed4fa {
     val afterSenses = pUseAction(FRESH_TURN, creature, AUseObject)
     // Attempt to also cast a spell as an action — must be blocked
     val afterSpell = pUseAction(afterSenses, creature, ACastSpell)
-    assert(afterSenses.actionUsed == true and afterSpell == afterSenses)
+    assert(afterSenses.actionsRemaining == 0 and afterSpell == afterSenses)
   }
   
   // Does Voice of the Chain Master allow casting certain spells from an isolated space?

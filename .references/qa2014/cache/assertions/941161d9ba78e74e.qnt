@@ -19,7 +19,7 @@ module _qa_941161d9ba78e74e {
   
     assert(
       // Action was consumed on the casting turn
-      t1.actionUsed
+      t1.actionsRemaining == 0
       // Bonus action consumed on the subsequent turn
       and t2.bonusActionUsed
       // First application reduced HP by roll1

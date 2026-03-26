@@ -13,11 +13,11 @@ module _qa_7f0525f1ed96b62d {
     val tAfterAttack = pUseAction(t0, creature, AAttack)
     assert(
       // Before the attack the action economy is fully intact (command word cost nothing)
-      t0.actionUsed == false and
+      t0.actionsRemaining > 0 and
       t0.bonusActionUsed == false and
       t0.freeInteractionUsed == false and
       // Attack action is still usable and correctly consumed
-      tAfterAttack.actionUsed == true and
+      tAfterAttack.actionsRemaining == 0 and
       tAfterAttack.attackActionUsed == true and
       // Bonus action was never touched — still free for e.g. off-hand strike
       tAfterAttack.bonusActionUsed == false

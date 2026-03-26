@@ -7,7 +7,7 @@ module _qa_34ec2eb2e0d3f64e {
   run qa_first_object_interaction_is_free = {
     val t0 = FRESH_TURN
     val t1 = pUseObjectInteraction(t0)
-    assert(t1.freeInteractionUsed == true and t1.actionUsed == false)
+    assert(t1.freeInteractionUsed == true and t1.actionsRemaining > 0)
   }
   
   // Q&A: How should a Valor Bard's focus, weapon and shield interact?
@@ -26,6 +26,6 @@ module _qa_34ec2eb2e0d3f64e {
     val t0 = FRESH_TURN
     val t1 = pUseObjectInteraction(t0)          // stow instrument: free interaction used
     val t2 = pUseAction(t1, creature, AUseObject) // draw weapon: costs the action
-    assert(t1.freeInteractionUsed == true and t2.actionUsed == true)
+    assert(t1.freeInteractionUsed == true and t2.actionsRemaining == 0)
   }
 }

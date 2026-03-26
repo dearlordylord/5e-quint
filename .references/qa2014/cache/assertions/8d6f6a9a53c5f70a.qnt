@@ -16,7 +16,7 @@ module _qa_8d6f6a9a53c5f70a {
     assert(and {
       // Surprised turn: no movement, action already spent, bonus action already spent
       surprisedTurn.movementRemaining == 0,
-      surprisedTurn.actionUsed      == true,
+      surprisedTurn.actionsRemaining == 0      == true,
       surprisedTurn.bonusActionUsed == true,
       // But the passive heal (regeneration) is NOT an action — it still applies
       afterRegen.hp == 30,

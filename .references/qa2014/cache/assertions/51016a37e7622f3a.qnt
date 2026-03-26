@@ -9,7 +9,7 @@ module _qa_51016a37e7622f3a {
     // Cast a Spell uses the action but does not consume the free object interaction
     val t1 = pUseAction(t0, creature, ACastSpell)
     // Action is spent on the spell
-    val actionSpent = t1.actionUsed
+    val actionSpent = t1.actionsRemaining == 0
     // Free interaction slot is still open — drawing a weapon is possible in tandem
     val canStillDrawWeapon = not(t1.freeInteractionUsed)
     // Exercise the draw: pUseObjectInteraction marks it used

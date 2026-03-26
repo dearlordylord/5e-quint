@@ -8,7 +8,7 @@ module _qa_dbe4d5700cd7d07b {
     val helper = freshCreature(20)
     val t = FRESH_TURN
     val t1 = pUseAction(t, helper, AReady)
-    assert(t1.actionUsed and t1.readiedAction and t1.reactionAvailable)
+    assert(t1.actionsRemaining == 0 and t1.readiedAction and t1.reactionAvailable)
   }
   
   // Can someone use a Readied Help action between multiple attacks?

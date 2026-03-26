@@ -12,11 +12,11 @@ module _qa_a7fa87f809a95a2b {
     val t2 = pUseBonusAction(t1, creature)
     val t3 = pUseAction(t2, creature, ADisengage)
     assert(
-      t1.actionUsed == true
+      t1.actionsRemaining == 0
       and t2.bonusActionUsed == true
       // Disengage was not granted — action already consumed
       and t3.disengaged == false
-      and t3.actionUsed == true
+      and t3.actionsRemaining == 0
     )
   }
   
@@ -43,7 +43,7 @@ module _qa_a7fa87f809a95a2b {
     val t2 = pUseBonusAction(t1, creature)
     val t3 = pUseMovement(t2, 10, 1)
     assert(
-      t3.actionUsed == true
+      t3.actionsRemaining == 0
       and t3.bonusActionUsed == true
       and t3.movementRemaining == 20
     )
@@ -58,7 +58,7 @@ module _qa_a7fa87f809a95a2b {
     val t1 = pUseAction(t0, creature, AAttack)
     val t2 = pUseBonusAction(t1, creature)
     val t3 = pUseAction(t2, creature, AUseObject)
-    // t3 must equal t2: pUseAction is a no-op when actionUsed is already true
+    // t3 must equal t2: pUseAction is a no-op when actionsRemaining is already 0
     assert(t3 == t2)
   }
 }

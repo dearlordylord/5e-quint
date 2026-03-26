@@ -7,7 +7,7 @@ module _qa_f358cd7beceaf197 {
     // Equipping any instrument (strummed or hammered) uses the one free object interaction per turn
     val t0 = FRESH_TURN
     val t1 = pUseObjectInteraction(t0)
-    assert(t1.freeInteractionUsed == true and t1.actionUsed == false)
+    assert(t1.freeInteractionUsed == true and t1.actionsRemaining > 0)
   }
   
   // Is the dulcimer listed under 5e's tools intended to be the hammered variety or the strummed variety?
@@ -35,6 +35,6 @@ module _qa_f358cd7beceaf197 {
     val t0 = FRESH_TURN
     val t1 = pUseObjectInteraction(t0)
     // action still unused — bard can cast a spell on the same turn
-    assert(t1.actionUsed == false)
+    assert(t1.actionsRemaining > 0)
   }
 }

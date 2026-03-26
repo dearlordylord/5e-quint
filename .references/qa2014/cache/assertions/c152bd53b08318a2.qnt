@@ -19,9 +19,9 @@ module _qa_c152bd53b08318a2 {
     assert(and {
       mountCanDash, mountCanDisengage, mountCanDodge,
       mountCannotHelp, mountCannotSearch, mountCannotHide,
-      afterHelp.actionUsed,
-      afterSearch.actionUsed,
-      afterHide.actionUsed,
+      afterHelp.actionsRemaining == 0,
+      afterSearch.actionsRemaining == 0,
+      afterHide.actionsRemaining == 0,
     })
   }
 }

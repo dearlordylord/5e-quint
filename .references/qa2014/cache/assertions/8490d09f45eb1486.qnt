@@ -34,7 +34,7 @@ module _qa_8490d09f45eb1486 {
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, s0, ADash)   // regular Dash action
     val t2 = pUseBonusAction(t1, s0)     // bonus-action Dash (Step of the Wind / Cunning Action)
-    assert(t2.actionUsed and t2.bonusActionUsed)
+    assert(t2.actionsRemaining == 0 and t2.bonusActionUsed)
   }
   
   // DMG Chase Rules: failed Con check uses checkSucceeds; DC 10 with no proficiency fails on low roll

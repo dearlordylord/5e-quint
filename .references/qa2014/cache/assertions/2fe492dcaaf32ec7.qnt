@@ -6,7 +6,7 @@ module _qa_2fe492dcaaf32ec7 {
   // Accepted: dismissal costs an action only when explicitly stated; unspecified = free
   run qa_free_dismissal_no_action_cost = {
     val s0 = freshCreature(20)
-    val t0 = FRESH_TURN  // actionUsed = false, action available
+    val t0 = FRESH_TURN  // actionsRemaining = 1, action available
   
     // Free dismissal: pBreakConcentration (and by analogy, Brand of Castigation dismissal)
     // does NOT route through pUseAction → turn state is untouched
@@ -20,9 +20,9 @@ module _qa_2fe492dcaaf32ec7 {
       // Effect is gone after free dismissal
       not(isConcentrating(ss1)) and
       // Free dismissal: action NOT consumed — turn state never touched
-      t0.actionUsed == false and
+      t0.actionsRemaining > 0 and
       // Contrast: explicit action cost DOES consume the action
-      t1.actionUsed == true
+      t1.actionsRemaining == 0
     )
   }
   
@@ -36,7 +36,7 @@ module _qa_2fe492dcaaf32ec7 {
   
     assert(
       not(s1.grappled) and   // grapple dismissed
-      t0.actionUsed == false // action was NOT consumed
+      t0.actionsRemaining > 0 // action was NOT consumed
     )
   }
 }

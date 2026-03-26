@@ -22,7 +22,7 @@ module _qa_f5dba97917303179 {
     // No turn resources consumed (externally moved by another effect, not the creature's own action)
     assert(
       s0.invisible
-      and not(t0.actionUsed)
+      and t0.actionsRemaining > 0
       and not(t0.bonusActionUsed)
       and t0.reactionAvailable
     )

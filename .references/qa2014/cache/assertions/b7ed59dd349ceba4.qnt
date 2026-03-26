@@ -13,7 +13,7 @@ module _qa_b7ed59dd349ceba4 {
     assert(
       not(afterOA.reactionAvailable)    // reaction consumed by the OA
       and not(afterOA.attackActionUsed) // Attack action was NOT taken
-      and not(afterOA.actionUsed)       // action slot untouched
+      and afterOA.actionsRemaining > 0       // action slot untouched
     )
   }
 }

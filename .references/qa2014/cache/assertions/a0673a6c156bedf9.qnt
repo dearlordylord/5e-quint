@@ -12,9 +12,9 @@ module _qa_a0673a6c156bedf9 {
     val t2 = pStartTurn(TEST_CONFIG, creature, Unarmored, false, 0, false, false)
     val t2a = pUseAction(t2, creature, AAttack)
     assert(
-      t1.actionUsed and
+      t1.actionsRemaining == 0 and
       isConcentrating(ss1) and
-      not(t2.actionUsed) and
+      t2.actionsRemaining > 0 and
       t2a.attackActionUsed
     )
   }

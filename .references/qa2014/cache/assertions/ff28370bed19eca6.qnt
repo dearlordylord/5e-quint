@@ -44,7 +44,7 @@ module _qa_ff28370bed19eca6 {
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, ACastSpell)
     val t2 = pMarkNonCantripActionSpell(t1)
-    assert(t2.actionUsed and t2.nonCantripActionSpellCast)
+    assert(t2.actionsRemaining == 0 and t2.nonCantripActionSpellCast)
   }
   
   // Ring of Revivification: spellcasting bonus uses the caster's own spellcasting ability

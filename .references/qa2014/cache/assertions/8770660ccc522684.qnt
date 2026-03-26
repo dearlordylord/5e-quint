@@ -7,7 +7,7 @@ module _qa_8770660ccc522684 {
     val grappled = freshCreature(20).with("grappled", true)
     // Exhaust every turn resource: action, bonus action, reaction
     val allSpentTurn = FRESH_TURN
-      .with("actionUsed", true)
+      .with("actionsRemaining", 0)
       .with("bonusActionUsed", true)
       .with("reactionAvailable", false)
     // pReleaseGrapple signature is (CreatureState) -> CreatureState — no TurnState parameter,
@@ -16,7 +16,7 @@ module _qa_8770660ccc522684 {
     assert(
       not(released.grappled)
       // allSpentTurn is completely unmodified — release is truly free
-      and allSpentTurn.actionUsed == true
+      and allSpentTurn.actionsRemaining == 0
       and allSpentTurn.bonusActionUsed == true
       and allSpentTurn.reactionAvailable == false
     )

@@ -7,7 +7,7 @@ module _qa_290dac078d2ce241 {
     val creature = freshCreature(20)
     // Mid-turn: Attack action used, bonus action (e.g. Curving Arrow) and reaction (e.g. Sentinel) still available
     val midTurn = FRESH_TURN
-      .with("actionUsed", true)
+      .with("actionsRemaining", 0)
       .with("attackActionUsed", true)
     // Temporal Shunt effect: creature vanishes instantly — all remaining turn resources forfeit
     // "no time between failing the save and the beginning of their next turn"
@@ -25,7 +25,7 @@ module _qa_290dac078d2ce241 {
       afterBonusAttempt == shuntedTurn
       and afterReactionAttempt == shuntedTurn
       and nextTurn.bonusActionUsed == false
-      and nextTurn.actionUsed == false
+      and nextTurn.actionsRemaining > 0
       and nextTurn.reactionAvailable == true
       and nextTurn.movementRemaining > 0
     )

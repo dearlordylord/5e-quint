@@ -20,7 +20,7 @@ module _qa_0b631f75d3d6eea2 {
     val t0 = FRESH_TURN
     val t1 = pUseAction(t0, c, ACastSpell)
     assert(
-      t1.actionUsed == true
+      t1.actionsRemaining == 0
       and t1.reactionAvailable == true
     )
   }

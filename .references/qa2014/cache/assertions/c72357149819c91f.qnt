@@ -81,7 +81,7 @@ module _qa_c72357149819c91f {
   run qa_hide_action_uses_action_slot = {
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, AHide)
-    assert(t1.actionUsed and not(t1.attackActionUsed) and not(t1.dodging) and not(t1.disengaged))
+    assert(t1.actionsRemaining == 0 and not(t1.attackActionUsed) and not(t1.dodging) and not(t1.disengaged))
   }
   
   // The Hiding Rules Contradict Themselves. What Can I Make Of This?

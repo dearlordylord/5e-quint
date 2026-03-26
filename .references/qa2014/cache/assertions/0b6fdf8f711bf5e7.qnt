@@ -22,7 +22,7 @@ module _qa_0b6fdf8f711bf5e7 {
           // without using your movement, action, or reaction."
           // The grappled creature's TurnState is completely unmodified by the drag —
           // no self-movement, no action spent, not disengaged.
-          not(grappledTurn.actionUsed),
+          grappledTurn.actionsRemaining > 0,
           not(grappledTurn.disengaged),
           not(grappledTurn.attackActionUsed),
       })

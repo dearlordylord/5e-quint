@@ -14,7 +14,7 @@ module _qa_4e4a8e3a58037de9 {
     // after its trigger finishes when timing is unspecified)
     val turnAfterFiring = pUseReaction(turnAfterReady)
     assert(and {
-      turnAfterReady.actionUsed == true,
+      turnAfterReady.actionsRemaining == 0,
       turnAfterReady.readiedAction == true,
       // Reaction still available immediately after readying — trigger hasn't fired yet
       turnAfterReady.reactionAvailable == true,

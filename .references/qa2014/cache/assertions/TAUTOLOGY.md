@@ -30,16 +30,16 @@ Legend:
 | `1f9f88b2a43a2dbd` | PARTIAL | runs 1-3 use `if (saveFailed) pApplyCondition(...)` then assert the condition; guaranteed whenever saveFailed is true |
 | `20dda7fcf3b6f1b0` | PARTIAL | `normalDamage(14, 0) == 14` is identity-op (zero modifier) |
 | `23768542e1947e0c` | NO_OP | `alchemistCheck == astronomerCheck` where both are identical `checkSucceeds(...)` calls with identical inputs |
-| `2fe492dcaaf32ec7` | PARTIAL | asserts `t0.actionUsed == false` reading FRESH_TURN constant field |
+| `2fe492dcaaf32ec7` | PARTIAL | asserts `t0.actionsRemaining == 1` reading FRESH_TURN constant field |
 | `36b7d68342043709` | PARTIAL | `alertTurn.surprised == false` reads FRESH_TURN field directly |
 | `370803b572db291c` | PARTIAL | `afterFailedStabilize = dying` (no-op); asserting its fields is foregone |
 | `371dfdcb0ca3e5ca` | PARTIAL | `afterSourceDies = charmedTarget` (no-op); "source dies has no effect" proven by not calling anything |
 | `3839f4cfee591266` | PARTIAL | asserts `corpse.dead` after `.with("dead", true)` |
 | `38b739486af06e14` | PARTIAL | `firstUse == secondUse` trivially true — identical `saveSucceeds` calls with identical args |
 | `3c7711c15fc05377` | CLAIM_MISMATCH | Elemental Affinity type-matching encoded as inline if/else, not via model function |
-| `44572b3d5a705d27` | PARTIAL | asserts `enemyTurnBefore.movementRemaining == 20` and `not(actionUsed)` on manually-set FRESH_TURN values |
+| `44572b3d5a705d27` | PARTIAL | asserts `enemyTurnBefore.movementRemaining == 20` and `actionsRemaining > 0` on manually-set FRESH_TURN values |
 | `44c94dac87cb7f0f` | PARTIAL | run 3: `val ssOutField = ssInField` (no-op assignment), asserts `ssOutField == ss` |
-| `452f2ffef5e9d3b5` | PARTIAL | asserts `not(turn.actionUsed)`, `not(turn.bonusActionUsed)`, `turn.movementRemaining > 0` on unmodified FRESH_TURN |
+| `452f2ffef5e9d3b5` | PARTIAL | asserts `not(turn.actionsRemaining)`, `not(turn.bonusActionUsed)`, `turn.movementRemaining > 0` on unmodified FRESH_TURN |
 | `45a6d0713ce69187` | PARTIAL | `upcastBypassesImmunity = 7 > 6` is pure arithmetic; immunity bypass never exercised via model function |
 | `4c94074275dc128f` | PARTIAL | run 1 asserts `not(isConcentrating(FRESH_SPELL_SLOTS))` with no model call; run 4 is no-op assignment |
 | `506ac698c413d4db` | PARTIAL | run 1 asserts `s.restrained == true` where s was `.with("restrained", true)` |
@@ -52,7 +52,7 @@ Legend:
 | `74a87912b98b416b` | PARTIAL | asserts `impState.hp == impHp` etc. where `impState = freshCreature(impHp)` never modified |
 | `76d6ddef117e6a83` | PARTIAL | asserts `invisibleCreature.invisible` where set via `.with("invisible", true)` |
 | `7d373ed5b7a997d2` | PARTIAL | `aoaTriggersAtHit = creature.tempHp > 0` checks `10 > 0` on manually constructed creature |
-| `8770660ccc522684` | PARTIAL | asserts `allSpentTurn.actionUsed == true` etc. on manually `.with()`-constructed TurnState |
+| `8770660ccc522684` | PARTIAL | asserts `allSpentTurn.actionsRemaining == 0` etc. on manually `.with()`-constructed TurnState |
 | `8913e1a3c701f6f4` | PARTIAL | `resolveAdvantage({hasAdvantage: false, hasDisadvantage: true})` then asserts those same fields back |
 | `895e526a27294d41` | PARTIAL | `afterGainHd` constructed via `.with("maxHp", ...).with("hp", ...)`; asserts those manually set values |
 | `8f193751aba9266a` | MANUAL_CONSTRUCTION | `ss.concentrationSpellId == "hunters_mark"` asserts field set via `.with()` on FRESH_SPELL_SLOTS; no model function touches `ss` |

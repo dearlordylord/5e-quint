@@ -17,7 +17,7 @@ module _qa_62e98f5b6a2c6085 {
   run qa_active_perception_search_uses_action = {
     val creature = freshCreature(10)
     val t1 = pUseAction(FRESH_TURN, creature, ASearch)
-    assert(t1.actionUsed == true)
+    assert(t1.actionsRemaining == 0)
   }
   
   // Once the action is spent, a second Search attempt is silently blocked — only one per turn

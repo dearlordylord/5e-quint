@@ -27,7 +27,7 @@ module _qa_452f2ffef5e9d3b5 {
       // Still prone — pRemoveCondition(CUnconscious) does not remove prone
       and afterSave.prone
       // Death save consumed no action: TurnState is completely untouched
-      and not(turn.actionUsed)
+      and turn.actionsRemaining > 0
       and not(turn.bonusActionUsed)
       and turn.movementRemaining > 0
     )

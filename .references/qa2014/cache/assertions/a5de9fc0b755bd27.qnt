@@ -37,7 +37,7 @@ module _qa_a5de9fc0b755bd27 {
   // (5) Casting a cantrip as action does NOT mark nonCantripActionSpell,
   //     so bonus action for TWF weapon attack is still legal
   run qa_dual_wielder_cantrip_does_not_block_bonus = {
-    // A cantrip uses the action slot (actionUsed=true) but does NOT call pMarkNonCantripActionSpell
+    // A cantrip uses the action slot (actionsRemaining=0) but does NOT call pMarkNonCantripActionSpell
     // Simulate: action used for cantrip (not AAttack, no attackActionUsed side-effect needed here)
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, ACastSpell)

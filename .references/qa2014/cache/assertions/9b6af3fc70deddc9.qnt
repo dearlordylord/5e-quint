@@ -8,17 +8,17 @@ module _qa_9b6af3fc70deddc9 {
     val t = pUseObjectInteraction(FRESH_TURN)
     assert(
       t.freeInteractionUsed == true and
-      t.actionUsed == false
+      t.actionsRemaining > 0
     )
   }
   
   // Does drinking an Antitoxin take an action? (contrast: a healing potion uses the AUseObject action)
-  // Drinking a magical potion is "Use Magic Item" / Use an Object action, consuming actionUsed
+  // Drinking a magical potion is "Use Magic Item" / Use an Object action, consuming the action
   run qa_magic_potion_requires_action = {
     val creature = freshCreature(20)
     val t = pUseAction(FRESH_TURN, creature, AUseObject)
     assert(
-      t.actionUsed == true and
+      t.actionsRemaining == 0 and
       t.freeInteractionUsed == false
     )
   }

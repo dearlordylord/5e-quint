@@ -14,7 +14,7 @@ module _qa_9b8add2ac6c3144b {
     val afterReaction = pUseReaction(mageSlayerTurn)
     assert(
       // Caster did cast a spell (their action was used)
-      casterTurn.actionUsed == true and
+      casterTurn.actionsRemaining == 0 and
       // It was a cantrip: nonCantripActionSpellCast not set (level-0 spell)
       casterTurn.nonCantripActionSpellCast == false and
       // Reaction was available before Mage Slayer fires

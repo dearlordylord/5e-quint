@@ -28,7 +28,7 @@ module _qa_b699d060bbe13a97 {
     // Accepted answer: "A creature that uses its action to examine the image"
     val creature = freshCreature(20)
     val t1 = pUseAction(FRESH_TURN, creature, ASearch)
-    assert(t1.actionUsed and not(t1.bonusActionUsed))
+    assert(t1.actionsRemaining == 0 and not(t1.bonusActionUsed))
   }
   
   // From how far away can an illusion be investigated? — expertise doubles contribution, still not guaranteed
@@ -44,6 +44,6 @@ module _qa_b699d060bbe13a97 {
                                      .with("incapacitatedSources", Set(ISStunned))
     val t1 = pUseAction(FRESH_TURN, creature, ASearch)
     // incapacitated: pUseAction is a no-op, action remains unused
-    assert(not(t1.actionUsed))
+    assert(t1.actionsRemaining > 0)
   }
 }

@@ -7,7 +7,7 @@ module _qa_df19d9a39d74838a {
     val guardState = freshCreature(30)
     val surprisedTurn = pStartTurn(TEST_CONFIG, guardState, Unarmored, true, 0, false, false)
     assert(
-      surprisedTurn.actionUsed == true and
+      surprisedTurn.actionsRemaining == 0 and
       surprisedTurn.bonusActionUsed == true and
       surprisedTurn.movementRemaining == 0 and
       surprisedTurn.reactionAvailable == false
@@ -20,8 +20,8 @@ module _qa_df19d9a39d74838a {
     val rogueTurn = pStartTurn(TEST_CONFIG, rogueState, Unarmored, false, 0, false, false)
     val afterAttack = pUseAction(rogueTurn, rogueState, AAttack)
     assert(
-      rogueTurn.actionUsed == false and
-      afterAttack.actionUsed == true and
+      rogueTurn.actionsRemaining > 0 and
+      afterAttack.actionsRemaining == 0 and
       afterAttack.attackActionUsed == true
     )
   }
