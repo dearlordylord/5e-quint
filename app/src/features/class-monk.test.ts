@@ -728,15 +728,19 @@ describe("Deflect Attacks", () => {
     expect(canThrowBack(true, 0)).toBe(false)
   })
 
-  it("throw-back uses Martial Arts die + DEX mod", () => {
+  it("throw-back uses two rolls of Martial Arts die + DEX mod", () => {
     const result = throwBackDamage(5, 4)
+    expect(result.dieCount).toBe(2)
     expect(result.dieSize).toBe(8) // L5 = d8
     expect(result.modifier).toBe(4)
   })
 
   it("throw-back die scales with level", () => {
+    expect(throwBackDamage(1, 3).dieCount).toBe(2)
     expect(throwBackDamage(1, 3).dieSize).toBe(6)
+    expect(throwBackDamage(11, 3).dieCount).toBe(2)
     expect(throwBackDamage(11, 3).dieSize).toBe(10)
+    expect(throwBackDamage(17, 3).dieCount).toBe(2)
     expect(throwBackDamage(17, 3).dieSize).toBe(12)
   })
 })
@@ -770,10 +774,10 @@ describe("Slow Fall", () => {
 // --- Warrior of the Open Hand (T46) ---
 
 describe("Open Hand Technique", () => {
-  it("Addle: no save, can't take Reactions", () => {
+  it("Addle: no save, can't make Opportunity Attacks", () => {
     const result = openHandTechniqueResult("addle", false, "medium")
     expect(result.effectApplied).toBe(true)
-    expect(result.cantTakeReactions).toBe(true)
+    expect(result.cantMakeOpportunityAttacks).toBe(true)
     expect(result.pushedFeet).toBe(0)
     expect(result.prone).toBe(false)
   })
@@ -781,7 +785,7 @@ describe("Open Hand Technique", () => {
   it("Addle: works regardless of save result", () => {
     const result = openHandTechniqueResult("addle", true, "huge")
     expect(result.effectApplied).toBe(true)
-    expect(result.cantTakeReactions).toBe(true)
+    expect(result.cantMakeOpportunityAttacks).toBe(true)
   })
 
   it("Push: failed save, Large or smaller, pushed 15ft", () => {

@@ -51,7 +51,7 @@ export function canUseUnarmoredMovement(wearingArmor: boolean, wieldingShield: b
 
 // --- Focus-Empowered Strikes (L6) ---
 
-/** Unarmed strikes count as magical for overcoming resistance/immunity at L6+. */
+/** Unarmed Strikes can deal Force damage or their normal damage type (L6+). */
 export function hasFocusEmpoweredStrikes(monkLevel: number): boolean {
   return monkLevel >= FOCUS_EMPOWERED_STRIKES_LEVEL
 }
@@ -118,6 +118,7 @@ export interface DeflectAttacksResult {
 }
 
 export interface ThrowBackDamage {
+  readonly dieCount: number
   readonly dieSize: MartialArtsDie
   readonly modifier: number
 }
@@ -156,9 +157,10 @@ export function canThrowBack(reducedToZero: boolean, focusPoints: number): boole
   return reducedToZero && focusPoints >= DEFLECT_THROW_BACK_COST
 }
 
-/** Throw-back damage: Martial Arts die + DEX mod. */
+/** Throw-back damage: two rolls of Martial Arts die + DEX mod. */
 export function throwBackDamage(monkLevel: number, dexMod: number): ThrowBackDamage {
   return {
+    dieCount: 2,
     dieSize: pMartialArtsDie(monkLevel),
     modifier: dexMod
   }
@@ -193,7 +195,7 @@ export type OpenHandTechniqueChoice = "addle" | "push" | "topple"
 
 export interface OpenHandTechniqueResult {
   readonly effectApplied: boolean
-  readonly cantTakeReactions: boolean
+  readonly cantMakeOpportunityAttacks: boolean
   readonly pushedFeet: number
   readonly prone: boolean
 }
@@ -220,7 +222,7 @@ const QUIVERING_PALM_COST = 4
 
 /**
  * Open Hand Technique: when you hit with Flurry of Blows, choose one effect.
- * Addle: no save, can't take Reactions. Push: Large or smaller, STR save. Topple: DEX save.
+ * Addle: no save, can't make Opportunity Attacks. Push: Large or smaller, STR save. Topple: DEX save.
  */
 export function openHandTechniqueResult(
   choice: OpenHandTechniqueChoice,
@@ -229,20 +231,20 @@ export function openHandTechniqueResult(
 ): OpenHandTechniqueResult {
   switch (choice) {
     case "addle":
-      return { effectApplied: true, cantTakeReactions: true, pushedFeet: 0, prone: false }
+      return { effectApplied: true, cantMakeOpportunityAttacks: true, pushedFeet: 0, prone: false }
     case "push": {
       const tooLarge = targetSize === "huge" || targetSize === "gargantuan"
       if (tooLarge || targetSavePassed) {
-        return { effectApplied: false, cantTakeReactions: false, pushedFeet: 0, prone: false }
+        return { effectApplied: false, cantMakeOpportunityAttacks: false, pushedFeet: 0, prone: false }
       }
 
-      return { effectApplied: true, cantTakeReactions: false, pushedFeet: 15, prone: false }
+      return { effectApplied: true, cantMakeOpportunityAttacks: false, pushedFeet: 15, prone: false }
     }
     case "topple":
       if (targetSavePassed) {
-        return { effectApplied: false, cantTakeReactions: false, pushedFeet: 0, prone: false }
+        return { effectApplied: false, cantMakeOpportunityAttacks: false, pushedFeet: 0, prone: false }
       }
-      return { effectApplied: true, cantTakeReactions: false, pushedFeet: 0, prone: true }
+      return { effectApplied: true, cantMakeOpportunityAttacks: false, pushedFeet: 0, prone: true }
   }
 }
 
