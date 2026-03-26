@@ -6,18 +6,24 @@ import type { UseFeatures } from "#/features/useFeatures.ts"
 
 const D8_DEFAULT = 4
 const D8_MAX = 8
+const QUIVERING_PALM_LEVEL = 17
 
 export function MonkPanel({
   features,
   monk,
+  monkLevel,
   onFeatureAction
 }: {
   readonly features: UseFeatures
   readonly monk: MonkFeatureState
+  readonly monkLevel: number
   readonly onFeatureAction: (result: BridgeResult) => void
 }) {
   const [d8Roll, setD8Roll] = useState(D8_DEFAULT)
   const [stunSavePassed, setStunSavePassed] = useState(false)
+  const [wobDieRoll, setWobDieRoll] = useState(D8_DEFAULT)
+  // TODO: wisMod should come from config
+  const [wisMod] = useState(0)
 
   const handleFlurryOfBlows = () => {
     const result = features.flurryOfBlows()
@@ -55,6 +61,42 @@ export function MonkPanel({
     if (result) onFeatureAction(result)
   }
 
+  const handleDeflectAttacks = () => {
+    const result = features.deflectAttacks()
+    if (result) onFeatureAction(result)
+  }
+
+  const handleSlowFall = () => {
+    const result = features.slowFall()
+    if (result) onFeatureAction(result)
+  }
+
+  const handleSuperiorDefense = () => {
+    const result = features.superiorDefense()
+    if (result) onFeatureAction(result)
+  }
+
+  const handleWholenessOfBody = (e: FormEvent) => {
+    e.preventDefault()
+    const result = features.wholenessOfBody(wobDieRoll, wisMod)
+    if (result) onFeatureAction(result)
+  }
+
+  const handleQuiveringPalm = () => {
+    const result = features.quiveringPalm()
+    if (result) onFeatureAction(result)
+  }
+
+  const handleTriggerQuiveringPalm = () => {
+    const result = features.triggerQuiveringPalm()
+    if (result) onFeatureAction(result)
+  }
+
+  const handleDisciplinedSurvivorReroll = () => {
+    const result = features.disciplinedSurvivorReroll()
+    if (result) onFeatureAction(result)
+  }
+
   return (
     <>
       <h2 className="text-lg font-semibold text-emerald-400 mb-3">Monk Features</h2>
@@ -78,6 +120,33 @@ export function MonkPanel({
 
         {/* Martial Arts Die */}
         <div className="text-xs text-gray-400 mb-2">Martial Arts Die: d{features.martialArtsDie}</div>
+      </div>
+
+      {/* Passive Indicators */}
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-emerald-300 mb-2">Passive Features</h3>
+        <div className="flex flex-wrap gap-2 text-xs">
+          {features.unarmoredMovementBonus > 0 && (
+            <span className="bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded">
+              Unarmored Movement +{features.unarmoredMovementBonus}ft
+            </span>
+          )}
+          {features.hasFocusEmpoweredStrikes && (
+            <span className="bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded">Empowered Strikes</span>
+          )}
+          {features.canSelfRestore && (
+            <span className="bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded">Self-Restoration</span>
+          )}
+          {features.hasDeflectEnergy && (
+            <span className="bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded">Deflect Energy</span>
+          )}
+          {features.hasDisciplinedSurvivor && (
+            <span className="bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded">Disciplined Survivor</span>
+          )}
+          {features.hasFleetStep && (
+            <span className="bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded">Fleet Step</span>
+          )}
+        </div>
       </div>
 
       {/* Focus Actions */}
@@ -152,6 +221,119 @@ export function MonkPanel({
           </button>
         </div>
       </div>
+
+      {/* Reactions */}
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-emerald-300 mb-2">Reactions</h3>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleDeflectAttacks}
+            disabled={!features.canDeflectAttacks}
+            className="px-3 py-1 rounded text-sm font-medium bg-emerald-700 hover:bg-emerald-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Deflect Attacks
+          </button>
+          <button
+            type="button"
+            onClick={handleSlowFall}
+            disabled={!features.canSlowFall}
+            className="px-3 py-1 rounded text-sm font-medium bg-emerald-700 hover:bg-emerald-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Slow Fall
+          </button>
+        </div>
+      </div>
+
+      {/* Superior Defense */}
+      {features.canSuperiorDefense && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={handleSuperiorDefense}
+            className="px-3 py-1 rounded text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white"
+          >
+            Superior Defense (3 FP + Action)
+          </button>
+        </div>
+      )}
+
+      {/* Disciplined Survivor Reroll */}
+      {features.hasDisciplinedSurvivor && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={handleDisciplinedSurvivorReroll}
+            disabled={!features.canDisciplinedSurvivorReroll}
+            className="px-3 py-1 rounded text-sm font-medium bg-emerald-700 hover:bg-emerald-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Disciplined Survivor Reroll (1 FP)
+          </button>
+        </div>
+      )}
+
+      {/* Wholeness of Body */}
+      {monk.wholenessOfBodyMax > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-300">Wholeness of Body</span>
+            <span className="text-sm text-gray-400">
+              {monk.wholenessOfBodyCharges}/{monk.wholenessOfBodyMax}
+            </span>
+          </div>
+          <form onSubmit={handleWholenessOfBody} className="flex gap-2 items-end">
+            <div>
+              <label className="text-xs text-gray-400">MA die</label>
+              <input
+                type="number"
+                min={1}
+                max={D8_MAX}
+                value={wobDieRoll}
+                onChange={(e) => setWobDieRoll(Number(e.target.value))}
+                className="w-16 bg-gray-700 text-white rounded px-2 py-1 text-sm"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!features.canWholenessOfBody}
+              className="px-3 py-1 rounded text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Wholeness of Body
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Quivering Palm */}
+      {monkLevel >= QUIVERING_PALM_LEVEL && (
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm text-gray-300">Quivering Palm</span>
+            {monk.quiveringPalmActive && (
+              <span className="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded">Active</span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleQuiveringPalm}
+              disabled={!features.canQuiveringPalm || monk.quiveringPalmActive}
+              className="px-3 py-1 rounded text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Quivering Palm (4 FP)
+            </button>
+            {monk.quiveringPalmActive && (
+              <button
+                type="button"
+                onClick={handleTriggerQuiveringPalm}
+                className="px-3 py-1 rounded text-sm font-medium bg-red-600 hover:bg-red-500 text-white"
+              >
+                Trigger
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Uncanny Metabolism */}
       {!monk.uncannyMetabolismUsed && (

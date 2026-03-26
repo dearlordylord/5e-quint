@@ -2,12 +2,19 @@
 // Extracted from feature-bridge.ts to stay under eslint max-lines (420).
 
 import {
+  type AbjureFoesResult,
+  abjureFoesResult,
+  auraOfCourageRange,
   auraOfProtectionBonus as auraOfProtectionBonusPure,
+  auraOfProtectionRange,
+  canAbjureFoes,
   canLayOnHandsCure as canLayOnHandsCurePure,
   canLayOnHandsHeal as canLayOnHandsHealPure,
   canPaladinSmiteFree as canPaladinSmiteFreePure,
+  canUseAuraOfCourage,
   canUseAuraOfProtection as canUseAuraOfProtectionPure,
-
+  canUseFaithfulSteed,
+  canUseRestoringTouch,
   pDivineSmiteDamage as pDivineSmiteDamagePure,
   pLayOnHands as pLayOnHandsPure,
   pLayOnHandsCure as pLayOnHandsCurePure,
@@ -110,3 +117,66 @@ export const getCanUseAuraOfProtection: (paladinLevel: number, isConscious: bool
   canUseAuraOfProtectionPure
 
 export const getRadiantStrikesDice: (config: RadiantStrikesConfig) => number = pRadiantStrikesPure
+
+// --- Passive re-exports ---
+
+export { auraOfCourageRange, auraOfProtectionRange } from "#/features/class-paladin.ts"
+
+export function getCanUseAuraOfCourage(paladinLevel: number, isConscious: boolean): boolean {
+  return canUseAuraOfCourage(paladinLevel, isConscious)
+}
+
+export function getAuraOfCourageRange(paladinLevel: number): number {
+  return auraOfCourageRange(paladinLevel)
+}
+
+export function getAuraOfProtectionRange(paladinLevel: number): number {
+  return auraOfProtectionRange(paladinLevel)
+}
+
+// --- Faithful Steed (Level 5, 1/LR) ---
+
+export function canExecuteFaithfulSteed(featureState: FeatureState, paladinLevel: number): boolean {
+  if (!featureState.paladin) return false
+  return canUseFaithfulSteed(paladinLevel, featureState.paladin.faithfulSteedUsed)
+}
+
+export function executeFaithfulSteed(): BridgeResult {
+  return { featureAction: { type: "PALADIN_USE_FAITHFUL_STEED" }, machineEvents: [] }
+}
+
+// --- Abjure Foes (Level 9, uses Channel Divinity + action) ---
+
+export function canExecuteAbjureFoes(featureState: FeatureState, ctx: DndContext, paladinLevel: number): boolean {
+  if (!featureState.paladin) return false
+  return canAbjureFoes(paladinLevel, featureState.paladin.channelDivinityCharges, ctx.actionsRemaining)
+}
+
+export function executeAbjureFoes(): BridgeResult {
+  return {
+    featureAction: { type: "PALADIN_USE_ABJURE_FOES" },
+    machineEvents: [{ type: "USE_ACTION", actionType: "magic" }]
+  }
+}
+
+export function getAbjureFoesResult(targetSavePassed: boolean): AbjureFoesResult {
+  return abjureFoesResult(targetSavePassed)
+}
+
+// --- Restoring Touch (Level 14, costs 5 from LoH pool) ---
+
+const RESTORING_TOUCH_COST = 5
+
+export function canExecuteRestoringTouch(featureState: FeatureState, paladinLevel: number): boolean {
+  if (!featureState.paladin) return false
+  return canUseRestoringTouch(paladinLevel, featureState.paladin.layOnHandsPool)
+}
+
+export function executeRestoringTouch(featureState: FeatureState): BridgeResult {
+  if (!featureState.paladin) throw new Error("executeRestoringTouch called without paladin state")
+  const poolAfter = featureState.paladin.layOnHandsPool - RESTORING_TOUCH_COST
+  return {
+    featureAction: { type: "PALADIN_RESTORING_TOUCH", poolAfter },
+    machineEvents: []
+  }
+}

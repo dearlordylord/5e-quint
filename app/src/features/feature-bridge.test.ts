@@ -62,6 +62,7 @@ function makeBarbarianState(overrides: Partial<BarbarianFeatureState> = {}): Fea
       recklessThisTurn: false,
       frenzyUsedThisTurn: false,
       intimidatingPresenceUsed: false,
+      relentlessRageTimesUsed: 0,
       ...overrides
     }
   }

@@ -186,7 +186,7 @@ export function App() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <StatePanel snapshot={snapshot} ctx={ctx} />
             <MemoEventPanel send={send} snapshot={snapshot} rageResistances={features.rageResistances} />
-            <FeaturePanel features={features} onFeatureAction={onFeatureAction} />
+            <FeaturePanel features={features} config={FEATURE_CONFIG} onFeatureAction={onFeatureAction} />
             <TransitionLog log={log} cursor={cursor} onJumpTo={jumpTo} onClear={onClear} />
           </div>
         </div>

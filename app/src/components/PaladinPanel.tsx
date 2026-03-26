@@ -106,7 +106,92 @@ export function PaladinPanel({
         </button>
       </div>
 
+      {/* Channel Divinity Charges */}
+      {paladin.channelDivinityMax > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-300">Channel Divinity</span>
+            <span className="text-sm text-gray-400">
+              {paladin.channelDivinityCharges}/{paladin.channelDivinityMax}
+            </span>
+          </div>
+          <div className="flex gap-1 mb-2">
+            {Array.from({ length: paladin.channelDivinityMax }, (_, i) => (
+              <div
+                key={i}
+                className={`w-3 h-3 rounded-full ${i < paladin.channelDivinityCharges ? "bg-yellow-400" : "bg-gray-600"}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Faithful Steed */}
+      <div className="mb-2">
+        <button
+          type="button"
+          onClick={() => {
+            const result = features.faithfulSteed()
+            if (result) onFeatureAction(result)
+          }}
+          disabled={!features.canFaithfulSteed}
+          className="px-3 py-1 rounded text-sm font-medium bg-yellow-600 hover:bg-yellow-500 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Faithful Steed
+        </button>
+        {paladin.faithfulSteedUsed && <span className="text-xs text-gray-400 ml-2">Used (1/LR)</span>}
+      </div>
+
+      {/* Abjure Foes */}
+      {paladin.channelDivinityMax > 0 && (
+        <div className="mb-2">
+          <button
+            type="button"
+            onClick={() => {
+              const result = features.abjureFoes()
+              if (result) onFeatureAction(result)
+            }}
+            disabled={!features.canAbjureFoes}
+            className="px-3 py-1 rounded text-sm font-medium bg-yellow-700 hover:bg-yellow-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Abjure Foes
+          </button>
+        </div>
+      )}
+
+      {/* Restoring Touch */}
+      <div className="mb-2">
+        <button
+          type="button"
+          onClick={() => {
+            const result = features.restoringTouch()
+            if (result) onFeatureAction(result)
+          }}
+          disabled={!features.canRestoringTouch}
+          className="px-3 py-1 rounded text-sm font-medium bg-yellow-600 hover:bg-yellow-500 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Restoring Touch (5 LoH)
+        </button>
+      </div>
+
       {/* Passive Indicators */}
+
+      {features.auraOfProtectionRange > 0 && (
+        <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-700 rounded text-sm">
+          <span className="text-yellow-300">Aura of Protection</span>
+          <span className="text-xs text-gray-400 ml-2">{features.auraOfProtectionRange} ft.</span>
+        </div>
+      )}
+
+      {features.auraOfCourageRange > 0 && (
+        <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-700 rounded text-sm">
+          <span className="text-yellow-300">Aura of Courage</span>
+          <span className="text-xs text-gray-400 ml-2">{features.auraOfCourageRange} ft.</span>
+          {!features.canUseAuraOfCourage && (
+            <span className="text-xs text-red-400 ml-2">(unconscious)</span>
+          )}
+        </div>
+      )}
 
       {features.canUseAuraOfProtection && (
         <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-700 rounded text-xs text-yellow-300">

@@ -3,6 +3,7 @@ import { useCallback, useMemo, useReducer } from "react"
 import { canCastWhileRaging } from "#/features/class-barbarian.ts"
 import type { CunningActionChoice, StrikeEffect } from "#/features/class-rogue.ts"
 import type { BridgeResult } from "#/features/feature-bridge.ts"
+import type { AbjureFoesResult } from "#/features/class-paladin.ts"
 import {
   canExecuteActionSurge,
   canExecuteDeclareReckless,
@@ -11,8 +12,10 @@ import {
   canExecuteExtendRageBA,
   canExecuteFrenzy,
   canExecuteIntimidatingPresence,
+  canExecuteRelentlessRage,
   canExecuteRetaliation,
   canExecuteSecondWind,
+  canUseDangerSense,
   executeActionSurge,
   executeDeclareReckless,
   executeEndRage,
@@ -21,14 +24,21 @@ import {
   executeExtendRageBA,
   executeFrenzy,
   executeIntimidatingPresence,
+  executeRelentlessRage,
   executeRetaliation,
   executeSecondWind,
+  fastMovementBonus,
   getFrenzyDamageDice,
   getIntimidatingPresenceDC,
   getIsRaging,
   getMindlessRageImmunities,
   getRageDamageBonus,
-  getRageResistances
+  getRageResistances,
+  getRelentlessRageDC,
+  hasFeralInstinct,
+  indomitableMight,
+  instinctivePounceDistance,
+  primalChampionBonus
 } from "#/features/feature-bridge.ts"
 import {
   createInitialFeatureState,
@@ -80,6 +90,16 @@ export interface UseFeatures {
   readonly rageDamageBonus: number
   readonly canCastSpells: boolean
   readonly berserkerLevel: number
+  // Barbarian passive features
+  readonly dangerSenseActive: boolean
+  readonly fastMovementBonus: number
+  readonly hasFeralInstinct: boolean
+  readonly instinctivePounceDistance: number
+  readonly canRelentlessRage: boolean
+  readonly relentlessRageDC: number
+  readonly relentlessRage: (conSaveSucceeded: boolean) => BridgeResult | null
+  readonly indomitableMightFn: (checkTotal: number, strScore: number) => number
+  readonly primalChampionBonus: { readonly strBonus: number; readonly conBonus: number; readonly maxScore: number }
   // Berserker
   readonly canFrenzy: boolean
   readonly frenzy: () => BridgeResult | null
@@ -107,6 +127,28 @@ export interface UseFeatures {
   readonly uncannyMetabolism: (d8Roll: number) => BridgeResult | null
   readonly martialArtsDie: number
   readonly bonusUnarmedStrikeEligible: boolean
+  // Monk passives
+  readonly unarmoredMovementBonus: number
+  readonly hasFocusEmpoweredStrikes: boolean
+  readonly canSelfRestore: boolean
+  readonly selfRestorationConditions: ReadonlyArray<Condition>
+  readonly hasDeflectEnergy: boolean
+  readonly hasDisciplinedSurvivor: boolean
+  readonly hasFleetStep: boolean
+  // Monk active features
+  readonly canDeflectAttacks: boolean
+  readonly deflectAttacks: () => BridgeResult | null
+  readonly canSlowFall: boolean
+  readonly slowFall: () => BridgeResult | null
+  readonly canSuperiorDefense: boolean
+  readonly superiorDefense: () => BridgeResult | null
+  readonly canWholenessOfBody: boolean
+  readonly wholenessOfBody: (martialArtsDieRoll: number, wisMod: number) => BridgeResult | null
+  readonly canQuiveringPalm: boolean
+  readonly quiveringPalm: () => BridgeResult | null
+  readonly triggerQuiveringPalm: () => BridgeResult | null
+  readonly canDisciplinedSurvivorReroll: boolean
+  readonly disciplinedSurvivorReroll: () => BridgeResult | null
   // Paladin
   readonly canLayOnHandsHeal: boolean
   readonly layOnHandsHeal: (amount: number) => BridgeResult | null
@@ -118,6 +160,17 @@ export interface UseFeatures {
   readonly auraOfProtectionBonus: number
   readonly canUseAuraOfProtection: boolean
   readonly radiantStrikesDice: number
+  // Paladin passives
+  readonly canUseAuraOfCourage: boolean
+  readonly auraOfCourageRange: number
+  readonly auraOfProtectionRange: number
+  readonly canFaithfulSteed: boolean
+  readonly faithfulSteed: () => BridgeResult | null
+  readonly canAbjureFoes: boolean
+  readonly abjureFoes: () => BridgeResult | null
+  readonly abjureFoesResult: (targetSavePassed: boolean) => AbjureFoesResult
+  readonly canRestoringTouch: boolean
+  readonly restoringTouch: () => BridgeResult | null
   // Rogue
   readonly sneakAttackDice: number
   readonly canSneakAttack: (params: {
@@ -274,6 +327,35 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
 
   const intimidatingDC = getIntimidatingPresenceDC(0, 0) // caller provides actual strMod/profBonus via config or UI
 
+  // Barbarian passive features
+  // TODO: isIncapacitated should come from machine context when available
+  const dangerSenseActiveVal = canUseDangerSense(config.level, /* isIncapacitated */ false)
+  // TODO: armorWeight should come from context/config, not hardcoded
+  const fastMovementBonusVal = fastMovementBonus(config.level, /* armorWeight */ "light")
+  const hasFeralInstinctVal = hasFeralInstinct(config.level)
+  // TODO: effectiveSpeed should come from machine context when available
+  const instinctivePounceDistanceVal = instinctivePounceDistance(config.level, /* effectiveSpeed */ 30)
+  const canRelentlessRageVal = canExecuteRelentlessRage(featureState, config.level)
+  const relentlessRageDCVal = getRelentlessRageDC(featureState)
+  const primalChampionBonusVal = primalChampionBonus(config.level)
+
+  const relentlessRageFn = useCallback(
+    (conSaveSucceeded: boolean): BridgeResult | null => {
+      if (!canExecuteRelentlessRage(featureState, config.level)) return null
+      const result = executeRelentlessRage(conSaveSucceeded, config.level)
+      dispatch(result.featureAction)
+      return result
+    },
+    [featureState, config.level]
+  )
+
+  const indomitableMightFn = useCallback(
+    (checkTotal: number, strScore: number): number => {
+      return indomitableMight(config.level, checkTotal, strScore)
+    },
+    [config.level]
+  )
+
   // Monk + Paladin (extracted to useMonkPaladinFeatures)
   const monkPaladin = useMonkPaladinFeatures(featureState, ctx, config.level, dispatch)
 
@@ -323,6 +405,15 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     canIntimidatingPresence: canIntimidatingPresenceVal,
     intimidatingPresence: intimidatingPresenceCb,
     intimidatingPresenceDC: intimidatingDC,
+    dangerSenseActive: dangerSenseActiveVal,
+    fastMovementBonus: fastMovementBonusVal,
+    hasFeralInstinct: hasFeralInstinctVal,
+    instinctivePounceDistance: instinctivePounceDistanceVal,
+    canRelentlessRage: canRelentlessRageVal,
+    relentlessRageDC: relentlessRageDCVal,
+    relentlessRage: relentlessRageFn,
+    indomitableMightFn,
+    primalChampionBonus: primalChampionBonusVal,
     canFlurryOfBlows: monkPaladin.canFlurryOfBlows,
     flurryOfBlows: monkPaladin.flurryOfBlows,
     canPatientDefenseFree: monkPaladin.canPatientDefenseFree,
@@ -339,6 +430,26 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     uncannyMetabolism: monkPaladin.uncannyMetabolism,
     martialArtsDie: monkPaladin.martialArtsDie,
     bonusUnarmedStrikeEligible: monkPaladin.bonusUnarmedStrikeEligible,
+    unarmoredMovementBonus: monkPaladin.unarmoredMovementBonus,
+    hasFocusEmpoweredStrikes: monkPaladin.hasFocusEmpoweredStrikes,
+    canSelfRestore: monkPaladin.canSelfRestore,
+    selfRestorationConditions: monkPaladin.selfRestorationConditions,
+    hasDeflectEnergy: monkPaladin.hasDeflectEnergy,
+    hasDisciplinedSurvivor: monkPaladin.hasDisciplinedSurvivor,
+    hasFleetStep: monkPaladin.hasFleetStep,
+    canDeflectAttacks: monkPaladin.canDeflectAttacks,
+    deflectAttacks: monkPaladin.deflectAttacks,
+    canSlowFall: monkPaladin.canSlowFall,
+    slowFall: monkPaladin.slowFall,
+    canSuperiorDefense: monkPaladin.canSuperiorDefense,
+    superiorDefense: monkPaladin.superiorDefense,
+    canWholenessOfBody: monkPaladin.canWholenessOfBody,
+    wholenessOfBody: monkPaladin.wholenessOfBody,
+    canQuiveringPalm: monkPaladin.canQuiveringPalm,
+    quiveringPalm: monkPaladin.quiveringPalm,
+    triggerQuiveringPalm: monkPaladin.triggerQuiveringPalm,
+    canDisciplinedSurvivorReroll: monkPaladin.canDisciplinedSurvivorReroll,
+    disciplinedSurvivorReroll: monkPaladin.disciplinedSurvivorReroll,
     canLayOnHandsHeal: monkPaladin.canLayOnHandsHeal,
     layOnHandsHeal: monkPaladin.layOnHandsHeal,
     canLayOnHandsCure: monkPaladin.canLayOnHandsCure,
@@ -349,6 +460,16 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     auraOfProtectionBonus: monkPaladin.auraOfProtectionBonus,
     canUseAuraOfProtection: monkPaladin.canUseAuraOfProtection,
     radiantStrikesDice: monkPaladin.radiantStrikesDice,
+    canUseAuraOfCourage: monkPaladin.canUseAuraOfCourage,
+    auraOfCourageRange: monkPaladin.auraOfCourageRange,
+    auraOfProtectionRange: monkPaladin.auraOfProtectionRange,
+    canFaithfulSteed: monkPaladin.canFaithfulSteed,
+    faithfulSteed: monkPaladin.faithfulSteed,
+    canAbjureFoes: monkPaladin.canAbjureFoes,
+    abjureFoes: monkPaladin.abjureFoes,
+    abjureFoesResult: monkPaladin.abjureFoesResult,
+    canRestoringTouch: monkPaladin.canRestoringTouch,
+    restoringTouch: monkPaladin.restoringTouch,
     sneakAttackDice: rogueFeatures.sneakAttackDice,
     canSneakAttack: rogueFeatures.canSneakAttack,
     sneakAttack: rogueFeatures.sneakAttack,

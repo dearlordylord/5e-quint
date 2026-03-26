@@ -4,13 +4,16 @@ import { MonkPanel } from "#/components/MonkPanel.tsx"
 import { PaladinPanel } from "#/components/PaladinPanel.tsx"
 import { RoguePanel } from "#/components/RoguePanel.tsx"
 import type { BridgeResult } from "#/features/feature-bridge.ts"
+import type { FeatureConfig } from "#/features/feature-store.ts"
 import type { UseFeatures } from "#/features/useFeatures.ts"
 
 export function FeaturePanel({
   features,
+  config,
   onFeatureAction
 }: {
   readonly features: UseFeatures
+  readonly config: FeatureConfig
   readonly onFeatureAction: (result: BridgeResult) => void
 }) {
   const [d10Roll, setD10Roll] = useState(5)
@@ -74,6 +77,13 @@ export function FeaturePanel({
   const handleIntimidatingPresence = () => {
     const result = features.intimidatingPresence()
     if (result) onFeatureAction(result)
+  }
+
+  const handleRelentlessRage = (succeeded: boolean) => {
+    const result = features.relentlessRage(succeeded)
+    if (result) {
+      onFeatureAction(result)
+    }
   }
 
   return (
@@ -180,7 +190,9 @@ export function FeaturePanel({
         </>
       )}
 
-      {monk && <MonkPanel features={features} monk={monk} onFeatureAction={onFeatureAction} />}
+      {monk && (
+        <MonkPanel features={features} monk={monk} monkLevel={config.level} onFeatureAction={onFeatureAction} />
+      )}
 
       {barbarian && (
         <>
@@ -347,6 +359,70 @@ export function FeaturePanel({
                 </div>
               )}
             </>
+          )}
+
+          {/* Passive Features */}
+          {features.dangerSenseActive && (
+            <div className="mb-2 p-2 bg-gray-700 rounded text-sm">
+              <span className="text-gray-300">Danger Sense</span>
+              <span className="text-xs text-gray-400 ml-2">Advantage on DEX saves</span>
+            </div>
+          )}
+
+          {features.fastMovementBonus > 0 && (
+            <div className="mb-2 p-2 bg-gray-700 rounded text-sm">
+              <span className="text-gray-300">Fast Movement</span>
+              <span className="text-xs text-gray-400 ml-2">+{features.fastMovementBonus} ft speed</span>
+            </div>
+          )}
+
+          {features.hasFeralInstinct && (
+            <div className="mb-2 p-2 bg-gray-700 rounded text-sm">
+              <span className="text-gray-300">Feral Instinct</span>
+              <span className="text-xs text-gray-400 ml-2">
+                Advantage on Initiative, pounce {features.instinctivePounceDistance} ft
+              </span>
+            </div>
+          )}
+
+          {features.canRelentlessRage && (
+            <div className="mb-2 p-2 bg-gray-700 rounded text-sm">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-gray-300">Relentless Rage</span>
+                <span className="text-xs text-gray-400">DC {features.relentlessRageDC}</span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleRelentlessRage(true)}
+                  className="px-2 py-0.5 rounded text-xs font-medium bg-green-700 hover:bg-green-600 text-white"
+                >
+                  Save Succeeded
+                </button>
+                <button
+                  onClick={() => handleRelentlessRage(false)}
+                  className="px-2 py-0.5 rounded text-xs font-medium bg-red-700 hover:bg-red-600 text-white"
+                >
+                  Save Failed
+                </button>
+              </div>
+            </div>
+          )}
+
+          {features.indomitableMightFn(0, 1) > 0 && (
+            <div className="mb-2 p-2 bg-gray-700 rounded text-sm">
+              <span className="text-gray-300">Indomitable Might</span>
+              <span className="text-xs text-gray-400 ml-2">STR checks/saves use STR score as minimum</span>
+            </div>
+          )}
+
+          {features.primalChampionBonus.strBonus > 0 && (
+            <div className="mb-2 p-2 bg-gray-700 rounded text-sm">
+              <span className="text-gray-300">Primal Champion</span>
+              <span className="text-xs text-gray-400 ml-2">
+                +{features.primalChampionBonus.strBonus} STR, +{features.primalChampionBonus.conBonus} CON (max{" "}
+                {features.primalChampionBonus.maxScore})
+              </span>
+            </div>
           )}
         </>
       )}
