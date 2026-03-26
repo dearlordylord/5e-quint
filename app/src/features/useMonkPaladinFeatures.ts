@@ -29,7 +29,7 @@ import {
   getBonusUnarmedStrikeEligible,
   getCanUseAuraOfProtection,
   getDivineSmiteDamage,
-  getHasDivineHealth,
+
   getMartialArtsDie,
   getRadiantStrikesDice
 } from "#/features/feature-bridge.ts"
@@ -66,7 +66,7 @@ export interface MonkPaladinHookResult {
   readonly divineSmiteDamage: (slotLevel: number, isUndeadOrFiend: boolean) => number
   readonly auraOfProtectionBonus: number
   readonly canUseAuraOfProtection: boolean
-  readonly hasDivineHealth: boolean
+
   readonly radiantStrikesDice: number
 }
 
@@ -190,7 +190,7 @@ export function useMonkPaladinFeatures(
   // TODO: chaMod and isConscious should come from caller state
   const auraBonus = getAuraOfProtectionBonus(level, 0)
   const canAura = getCanUseAuraOfProtection(level, true)
-  const divineHealth = getHasDivineHealth(level)
+
   const radiantDice = getRadiantStrikesDice({ paladinLevel: level, isMeleeOrUnarmed: true })
 
   return {
@@ -219,7 +219,7 @@ export function useMonkPaladinFeatures(
     divineSmiteDamage: getDivineSmiteDamage,
     auraOfProtectionBonus: auraBonus,
     canUseAuraOfProtection: canAura,
-    hasDivineHealth: divineHealth,
+
     radiantStrikesDice: radiantDice
   }
 }

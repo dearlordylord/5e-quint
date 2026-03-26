@@ -7,7 +7,7 @@ import {
   canLayOnHandsHeal as canLayOnHandsHealPure,
   canPaladinSmiteFree as canPaladinSmiteFreePure,
   canUseAuraOfProtection as canUseAuraOfProtectionPure,
-  hasDivineHealth as hasDivineHealthPure,
+
   pDivineSmiteDamage as pDivineSmiteDamagePure,
   pLayOnHands as pLayOnHandsPure,
   pLayOnHandsCure as pLayOnHandsCurePure,
@@ -109,6 +109,5 @@ export const getAuraOfProtectionBonus: (paladinLevel: number, chaMod: number) =>
 export const getCanUseAuraOfProtection: (paladinLevel: number, isConscious: boolean) => boolean =
   canUseAuraOfProtectionPure
 
-export const getHasDivineHealth: (paladinLevel: number) => boolean = hasDivineHealthPure
 
 export const getRadiantStrikesDice: (config: RadiantStrikesConfig) => number = pRadiantStrikesPure

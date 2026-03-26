@@ -317,7 +317,7 @@ export {
   getAuraOfProtectionBonus,
   getCanUseAuraOfProtection,
   getDivineSmiteDamage,
-  getHasDivineHealth,
+
   getRadiantStrikesDice
 } from "#/features/feature-bridge-paladin.ts"
 

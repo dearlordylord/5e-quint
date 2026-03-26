@@ -107,11 +107,7 @@ export function PaladinPanel({
       </div>
 
       {/* Passive Indicators */}
-      {features.hasDivineHealth && (
-        <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-700 rounded text-xs text-yellow-300">
-          Divine Health: immune to disease
-        </div>
-      )}
+
       {features.canUseAuraOfProtection && (
         <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-700 rounded text-xs text-yellow-300">
           Aura of Protection: +{features.auraOfProtectionBonus} to saving throws
