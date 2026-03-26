@@ -13,9 +13,6 @@ import {
   pBonusUnarmedStrikeEligible,
   pMartialArtsDie,
   pUncannyMetabolism,
-  useFlurryOfBlows as applyFlurryOfBlows,
-  usePatientDefenseFocus as applyPatientDefenseFocus,
-  useStepOfTheWindFocus as applyStepOfTheWindFocus,
   useStunningStrike as applyStunningStrike
 } from "#/features/class-monk.ts"
 import type { BridgeResult } from "#/features/feature-bridge.ts"
@@ -31,13 +28,18 @@ export function canExecuteFlurryOfBlows(featureState: FeatureState, ctx: DndCont
   return canFlurryOfBlows(featureState.monk.focusPoints, ctx.bonusActionUsed)
 }
 
-export function executeFlurryOfBlows(featureState: FeatureState, monkLevel: number): BridgeResult {
-  if (!featureState.monk) throw new Error("executeFlurryOfBlows called without monk state")
-  const _result = applyFlurryOfBlows(featureState.monk.focusPoints, monkLevel)
-  return {
-    featureAction: { type: "MONK_EXPEND_FOCUS", cost: FOCUS_ACTION_COST },
-    machineEvents: [{ type: "USE_BONUS_ACTION" }]
-  }
+const EXPEND_FOCUS_BONUS_ACTION: BridgeResult = {
+  featureAction: { type: "MONK_EXPEND_FOCUS", cost: FOCUS_ACTION_COST },
+  machineEvents: [{ type: "USE_BONUS_ACTION" }]
+}
+
+const FREE_BONUS_ACTION: BridgeResult = {
+  featureAction: { type: "NOTIFY_START_TURN" }, // no store-side state change for free version
+  machineEvents: [{ type: "USE_BONUS_ACTION" }]
+}
+
+export function executeFlurryOfBlows(): BridgeResult {
+  return EXPEND_FOCUS_BONUS_ACTION
 }
 
 // --- Patient Defense (free) ---
@@ -48,10 +50,7 @@ export function canExecutePatientDefenseFree(featureState: FeatureState, ctx: Dn
 }
 
 export function executePatientDefenseFree(): BridgeResult {
-  return {
-    featureAction: { type: "NOTIFY_START_TURN" }, // no store-side state change for free version
-    machineEvents: [{ type: "USE_BONUS_ACTION" }]
-  }
+  return FREE_BONUS_ACTION
 }
 
 // --- Patient Defense (focus) ---
@@ -61,17 +60,8 @@ export function canExecutePatientDefenseFocus(featureState: FeatureState, ctx: D
   return canPatientDefenseFocus(featureState.monk.focusPoints, ctx.bonusActionUsed)
 }
 
-export function executePatientDefenseFocus(
-  featureState: FeatureState,
-  monkLevel: number,
-  twoMartialArtsDieRollsTotal: number
-): BridgeResult {
-  if (!featureState.monk) throw new Error("executePatientDefenseFocus called without monk state")
-  const _result = applyPatientDefenseFocus(featureState.monk.focusPoints, monkLevel, twoMartialArtsDieRollsTotal)
-  return {
-    featureAction: { type: "MONK_EXPEND_FOCUS", cost: FOCUS_ACTION_COST },
-    machineEvents: [{ type: "USE_BONUS_ACTION" }]
-  }
+export function executePatientDefenseFocus(): BridgeResult {
+  return EXPEND_FOCUS_BONUS_ACTION
 }
 
 // --- Step of the Wind (free) ---
@@ -82,10 +72,7 @@ export function canExecuteStepOfTheWindFree(featureState: FeatureState, ctx: Dnd
 }
 
 export function executeStepOfTheWindFree(): BridgeResult {
-  return {
-    featureAction: { type: "NOTIFY_START_TURN" }, // no store-side state change for free version
-    machineEvents: [{ type: "USE_BONUS_ACTION" }]
-  }
+  return FREE_BONUS_ACTION
 }
 
 // --- Step of the Wind (focus) ---
@@ -95,13 +82,8 @@ export function canExecuteStepOfTheWindFocus(featureState: FeatureState, ctx: Dn
   return canStepOfTheWindFocus(featureState.monk.focusPoints, ctx.bonusActionUsed)
 }
 
-export function executeStepOfTheWindFocus(featureState: FeatureState, monkLevel: number): BridgeResult {
-  if (!featureState.monk) throw new Error("executeStepOfTheWindFocus called without monk state")
-  const _result = applyStepOfTheWindFocus(featureState.monk.focusPoints, monkLevel)
-  return {
-    featureAction: { type: "MONK_EXPEND_FOCUS", cost: FOCUS_ACTION_COST },
-    machineEvents: [{ type: "USE_BONUS_ACTION" }]
-  }
+export function executeStepOfTheWindFocus(): BridgeResult {
+  return EXPEND_FOCUS_BONUS_ACTION
 }
 
 // --- Stunning Strike ---

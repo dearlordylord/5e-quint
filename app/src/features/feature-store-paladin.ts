@@ -10,8 +10,6 @@ export function reducePaladin(state: FeatureState, action: FeatureAction, config
 
   switch (action.type) {
     case "PALADIN_LAY_ON_HANDS":
-      return { ...state, paladin: { ...p, layOnHandsPool: action.poolAfter } }
-
     case "PALADIN_LAY_ON_HANDS_CURE":
       return { ...state, paladin: { ...p, layOnHandsPool: action.poolAfter } }
 

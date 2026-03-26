@@ -7,6 +7,7 @@ import type { UseFeatures } from "#/features/useFeatures.ts"
 const LOH_DEFAULT = 5
 const LOH_CURE_COST = 5
 const PERCENT = 100
+const POISONED_CONDITIONS: ReadonlyArray<"poisoned"> = ["poisoned"]
 
 export function PaladinPanel({
   features,
@@ -79,7 +80,7 @@ export function PaladinPanel({
           <button
             type="button"
             onClick={() => handleLayOnHandsCure("poisoned")}
-            disabled={!features.canLayOnHandsCure("poisoned", ["poisoned"])}
+            disabled={!features.canLayOnHandsCure("poisoned", POISONED_CONDITIONS)}
             className="px-3 py-1 rounded text-sm font-medium bg-green-700 hover:bg-green-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Cure Poisoned ({LOH_CURE_COST} HP)

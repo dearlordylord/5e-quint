@@ -30,7 +30,7 @@ export function MonkPanel({
   }
 
   const handlePatientDefenseFocus = () => {
-    const result = features.patientDefenseFocus(0)
+    const result = features.patientDefenseFocus()
     if (result) onFeatureAction(result)
   }
 
