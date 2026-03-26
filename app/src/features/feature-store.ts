@@ -15,9 +15,11 @@ import {
   indomitableMaxCharges,
   secondWindMaxCharges
 } from "#/features/class-fighter.ts"
-import { pExpendFocus, pInitFocusPool, pRestoreFocus, pRestoreFocusLongRest } from "#/features/class-monk.ts"
+import { pInitFocusPool } from "#/features/class-monk.ts"
 import { wholenessOfBodyMaxCharges } from "#/features/class-monk-features.ts"
-import { layOnHandsPoolMax, paladinLongRest } from "#/features/class-paladin.ts"
+import { layOnHandsPoolMax } from "#/features/class-paladin.ts"
+import { reduceMonk } from "#/features/feature-store-monk.ts"
+import { reducePaladin } from "#/features/feature-store-paladin.ts"
 import { reduceRogue } from "#/features/feature-store-rogue.ts"
 
 export interface FeatureConfig {
@@ -126,15 +128,8 @@ export type FeatureAction =
   | { readonly type: "NOTIFY_END_TURN" }
   | { readonly type: "RESET" }
 
-// SRD 5.2.1: Paladin Channel Divinity — 2 uses at L3, +1 at L11
-const CHANNEL_DIVINITY_LEVEL = 3
-const CHANNEL_DIVINITY_EXTRA_USE_LEVEL = 11
 
-function channelDivinityMaxCharges(paladinLevel: number): number {
-  if (paladinLevel < CHANNEL_DIVINITY_LEVEL) return 0
-  if (paladinLevel >= CHANNEL_DIVINITY_EXTRA_USE_LEVEL) return 3
-  return 2
-}
+
 
 function barbarianToRageState(b: BarbarianFeatureState): RageState {
   return {
@@ -391,130 +386,8 @@ function reduceBarbarian(state: FeatureState, action: FeatureAction, config: Fea
   }
 }
 
-function reduceMonk(state: FeatureState, action: FeatureAction, _config: FeatureConfig): FeatureState {
-  if (!state.monk) return state
-  const m = state.monk
-
-  switch (action.type) {
-    case "MONK_EXPEND_FOCUS": {
-      const result = pExpendFocus(m, action.cost)
-      if (!result.success) return state
-      return { ...state, monk: { ...m, focusPoints: result.focusPoints } }
-    }
-
-    case "MONK_USE_UNCANNY_METABOLISM":
-      return {
-        ...state,
-        monk: { ...m, focusPoints: action.focusPoints, uncannyMetabolismUsed: action.uncannyMetabolismUsed }
-      }
-
-    case "MONK_USE_WHOLENESS_OF_BODY":
-      return { ...state, monk: { ...m, wholenessOfBodyCharges: action.chargesAfter } }
-
-    case "MONK_USE_QUIVERING_PALM":
-      return { ...state, monk: { ...m, quiveringPalmActive: true } }
-
-    case "MONK_TRIGGER_QUIVERING_PALM":
-      return { ...state, monk: { ...m, quiveringPalmActive: false } }
-
-    case "MONK_USE_SUPERIOR_DEFENSE":
-      return state // FP expenditure handled via MONK_EXPEND_FOCUS; action cost via machine event
-
-    case "MONK_USE_DISCIPLINED_SURVIVOR_REROLL":
-      return state // FP expenditure handled via MONK_EXPEND_FOCUS
-
-    case "MONK_USE_DEFLECT_ATTACKS":
-      return { ...state, monk: { ...m, deflectAttacksUsedThisRound: true } }
-
-    case "MONK_USE_SLOW_FALL":
-      return state // reaction cost handled by machine event
-
-    case "NOTIFY_START_TURN":
-      return { ...state, monk: { ...m, deflectAttacksUsedThisRound: false } }
-
-    case "NOTIFY_SHORT_REST": {
-      const restored = pRestoreFocus(m)
-      return {
-        ...state,
-        monk: {
-          ...m,
-          focusPoints: restored.focusPoints,
-          focusMax: restored.focusMax,
-          uncannyMetabolismUsed: restored.uncannyMetabolismUsed,
-          wholenessOfBodyCharges: m.wholenessOfBodyMax,
-          deflectAttacksUsedThisRound: false
-        }
-      }
-    }
-
-    case "NOTIFY_LONG_REST": {
-      const restored = pRestoreFocusLongRest(m)
-      return {
-        ...state,
-        monk: {
-          ...m,
-          focusPoints: restored.focusPoints,
-          focusMax: restored.focusMax,
-          uncannyMetabolismUsed: restored.uncannyMetabolismUsed,
-          wholenessOfBodyCharges: m.wholenessOfBodyMax,
-          quiveringPalmActive: false,
-          deflectAttacksUsedThisRound: false
-        }
-      }
-    }
-
-    default:
-      return state
-  }
-}
-
-function reducePaladin(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
-  if (!state.paladin) return state
-  const p = state.paladin
-
-  switch (action.type) {
-    case "PALADIN_LAY_ON_HANDS":
-    case "PALADIN_LAY_ON_HANDS_CURE":
-      return { ...state, paladin: { ...p, layOnHandsPool: action.poolAfter } }
-
-    case "PALADIN_SMITE_FREE":
-      return { ...state, paladin: { ...p, smiteFreeUsed: true } }
-
-    case "PALADIN_USE_FAITHFUL_STEED":
-      return { ...state, paladin: { ...p, faithfulSteedUsed: true } }
-
-    case "PALADIN_USE_ABJURE_FOES":
-      return { ...state, paladin: { ...p, channelDivinityCharges: p.channelDivinityCharges - 1 } }
-
-    case "PALADIN_RESTORING_TOUCH":
-      return { ...state, paladin: { ...p, layOnHandsPool: action.poolAfter } }
-
-    case "NOTIFY_SHORT_REST": {
-      // Channel Divinity: regain 1 use on short rest (SRD 5.2.1)
-      const cdAfterShort = Math.min(p.channelDivinityCharges + 1, p.channelDivinityMax)
-      return { ...state, paladin: { ...p, channelDivinityCharges: cdAfterShort } }
-    }
-
-    case "NOTIFY_LONG_REST": {
-      const rest = paladinLongRest(config.level)
-      const cdMax = channelDivinityMaxCharges(config.level)
-      return {
-        ...state,
-        paladin: {
-          ...p,
-          layOnHandsPool: rest.layOnHandsPool,
-          smiteFreeUsed: false,
-          faithfulSteedUsed: false,
-          channelDivinityCharges: cdMax,
-          channelDivinityMax: cdMax
-        }
-      }
-    }
-
-    default:
-      return state
-  }
-}
+// reduceMonk extracted to feature-store-monk.ts
+// reducePaladin extracted to feature-store-paladin.ts
 
 export function featureReducer(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
   if (action.type === "RESET") {
