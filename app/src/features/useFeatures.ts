@@ -8,14 +8,24 @@ import {
   canExecuteEndRage,
   canExecuteEnterRage,
   canExecuteExtendRageBA,
+  canExecuteFrenzy,
+  canExecuteIntimidatingPresence,
+  canExecuteRetaliation,
   canExecuteSecondWind,
   executeActionSurge,
   executeDeclareReckless,
   executeEndRage,
   executeEnterRage,
+  executeEnterRageWithMindlessRage,
   executeExtendRageBA,
+  executeFrenzy,
+  executeIntimidatingPresence,
+  executeRetaliation,
   executeSecondWind,
+  getFrenzyDamageDice,
+  getIntimidatingPresenceDC,
   getIsRaging,
+  getMindlessRageImmunities,
   getRageDamageBonus,
   getRageResistances
 } from "#/features/feature-bridge.ts"
@@ -28,7 +38,7 @@ import {
 } from "#/features/feature-store.ts"
 import type { DndSnapshot } from "#/machine.ts"
 import type { DndEvent } from "#/machine-types.ts"
-import type { DamageType } from "#/types.ts"
+import type { Condition, DamageType } from "#/types.ts"
 
 export type { FeatureConfig } from "#/features/feature-store.ts"
 
@@ -54,6 +64,17 @@ export interface UseFeatures {
   readonly rageResistances: ReadonlySet<DamageType>
   readonly rageDamageBonus: number
   readonly canCastSpells: boolean
+  readonly berserkerLevel: number
+  // Berserker
+  readonly canFrenzy: boolean
+  readonly frenzy: () => BridgeResult | null
+  readonly frenzyDamageDice: number
+  readonly mindlessRageImmunities: ReadonlySet<Condition>
+  readonly canRetaliation: boolean
+  readonly retaliation: () => BridgeResult | null
+  readonly canIntimidatingPresence: boolean
+  readonly intimidatingPresence: () => BridgeResult | null
+  readonly intimidatingPresenceDC: number
   // Shared
   readonly notify: (event: DndEvent) => void
   readonly resetToInitial: () => void
@@ -110,12 +131,17 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
   // Barbarian
   const canEnterRageVal = ctx ? canExecuteEnterRage(featureState, ctx) : false
 
+  const berserkerLevel = config.berserkerLevel ?? 0
+
   const enterRage = useCallback((): BridgeResult | null => {
     if (!ctx) return null
-    const result = executeEnterRage(featureState, ctx)
+    const result =
+      berserkerLevel >= 6
+        ? executeEnterRageWithMindlessRage(featureState, ctx, berserkerLevel, [])
+        : executeEnterRage(featureState, ctx)
     dispatch(result.featureAction)
     return result
-  }, [featureState, ctx])
+  }, [featureState, ctx, berserkerLevel])
 
   const canEndRageVal = canExecuteEndRage(featureState)
 
@@ -150,6 +176,38 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
   const rageDmgBonus = getRageDamageBonus(featureState, config.level)
   const canCastSpells = featureState.barbarian ? canCastWhileRaging(featureState.barbarian.raging) : true
 
+  // Berserker
+  // Frenzy: isStrengthBased defaults to true (caller can check canFrenzy before calling)
+  const canFrenzyVal = canExecuteFrenzy(featureState, berserkerLevel, true)
+
+  const frenzy = useCallback((): BridgeResult | null => {
+    const result = executeFrenzy()
+    dispatch(result.featureAction)
+    return result
+  }, [])
+
+  const frenzyDice = getFrenzyDamageDice(featureState, config.level)
+
+  const mindlessImmunities = getMindlessRageImmunities(featureState, berserkerLevel)
+
+  const canRetaliationVal = ctx ? canExecuteRetaliation(featureState, ctx, berserkerLevel, false) : false
+
+  const retaliationCb = useCallback((): BridgeResult | null => {
+    const result = executeRetaliation()
+    dispatch(result.featureAction)
+    return result
+  }, [])
+
+  const canIntimidatingPresenceVal = ctx ? canExecuteIntimidatingPresence(featureState, ctx, berserkerLevel) : false
+
+  const intimidatingPresenceCb = useCallback((): BridgeResult | null => {
+    const result = executeIntimidatingPresence()
+    dispatch(result.featureAction)
+    return result
+  }, [])
+
+  const intimidatingDC = getIntimidatingPresenceDC(0, 0) // caller provides actual strMod/profBonus via config or UI
+
   const resetToInitial = useCallback(() => {
     dispatch({ type: "RESET" })
   }, [])
@@ -173,6 +231,16 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     rageResistances: rageRes,
     rageDamageBonus: rageDmgBonus,
     canCastSpells,
+    berserkerLevel,
+    canFrenzy: canFrenzyVal,
+    frenzy,
+    frenzyDamageDice: frenzyDice,
+    mindlessRageImmunities: mindlessImmunities,
+    canRetaliation: canRetaliationVal,
+    retaliation: retaliationCb,
+    canIntimidatingPresence: canIntimidatingPresenceVal,
+    intimidatingPresence: intimidatingPresenceCb,
+    intimidatingPresenceDC: intimidatingDC,
     notify,
     resetToInitial,
     dispatch
