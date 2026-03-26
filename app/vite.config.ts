@@ -4,5 +4,8 @@ import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 
 export default defineConfig({
-  plugins: [tailwindcss(), react(), tsconfigPaths({ projects: ["./tsconfig.json"] })]
+  plugins: [tailwindcss(), react(), tsconfigPaths({ projects: ["./tsconfig.json"] })],
+  server: {
+    allowedHosts: ["determined_johnson.orb.local"]
+  }
 })

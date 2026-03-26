@@ -2,8 +2,11 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createActor } from "xstate"
 
 import { EventPanel } from "#/components/EventPanel.tsx"
+import { FeaturePanel } from "#/components/FeaturePanel.tsx"
 import { StatePanel } from "#/components/StatePanel.tsx"
 import { type LogEntry, stateKey, TransitionLog } from "#/components/TransitionLog.tsx"
+import type { BridgeResult } from "#/features/feature-bridge.ts"
+import { type FeatureConfig, useFeatures } from "#/features/useFeatures.ts"
 import { I18nContext, type Locale, LocaleContext, messages, useLocale, useT } from "#/i18n.ts"
 import { dndMachine, type DndSnapshot } from "#/machine.ts"
 import type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
@@ -11,6 +14,8 @@ import type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
 const DEFAULT_MAX_HP = 20
 export const DEFAULT_SPEED = 30
 export const DEFAULT_HIT_DICE = 5
+
+const FEATURE_CONFIG: FeatureConfig = { className: "fighter", level: 5 }
 
 const DEFAULT_INPUT: DndMachineInput = {
   maxHp: DEFAULT_MAX_HP,
@@ -56,6 +61,15 @@ export function App() {
   const cursorRef = useRef(-1)
   const logRef = useRef<Array<LogEntry>>([])
 
+  const features = useFeatures(FEATURE_CONFIG, snapshot)
+  const { resetToInitial, notify: notifyFeatures, dispatch: dispatchFeature } = features
+  // Ref breaks a circular dependency: `send` needs to call `notifyFeatures` after
+  // dispatching, but `send` is defined before `useFeatures` runs. The ref lets `send`
+  // call whatever `notifyFeatures` points to at invocation time.
+  // TODO: find a cleaner way to wire feature notifications without the ref indirection.
+  const notifyFeaturesRef = useRef<((event: DndEvent) => void) | null>(null)
+  notifyFeaturesRef.current = notifyFeatures
+
   const updateCursor = useCallback((val: number) => {
     cursorRef.current = val
     setCursor(val)
@@ -84,8 +98,8 @@ export function App() {
     }
   }, [])
 
-  const send = useCallback(
-    (event: DndEvent) => {
+  const appendLogEntry = useCallback(
+    (event: DndEvent, featureAction?: BridgeResult["featureAction"]) => {
       if (!actorRef.current) return
       const before = stateKey(actorRef.current.getSnapshot())
       actorRef.current.send(event)
@@ -94,7 +108,8 @@ export function App() {
         id: ++logIdRef.current,
         event,
         fromState: before,
-        toState: after
+        toState: after,
+        ...(featureAction ? { featureAction } : {})
       }
       const truncateAt = cursorRef.current + 1
       const nextLog = [...logRef.current.slice(0, truncateAt), newEntry]
@@ -103,6 +118,24 @@ export function App() {
       updateCursor(truncateAt)
     },
     [updateCursor]
+  )
+
+  const send = useCallback(
+    (event: DndEvent) => {
+      appendLogEntry(event)
+      notifyFeaturesRef.current?.(event)
+    },
+    [appendLogEntry]
+  )
+
+  const onFeatureAction = useCallback(
+    (result: BridgeResult) => {
+      for (let i = 0; i < result.machineEvents.length; i++) {
+        const event = result.machineEvents[i]
+        appendLogEntry(event, i === 0 ? result.featureAction : undefined)
+      }
+    },
+    [appendLogEntry]
   )
 
   const jumpTo = useCallback(
@@ -115,12 +148,21 @@ export function App() {
       actor.subscribe(setSnapshot)
       actorRef.current = actor
       setSnapshot(newSnap)
+      // Replay feature state
+      resetToInitial()
+      for (const entry of currentLog.slice(0, targetIndex + 1)) {
+        notifyFeatures(entry.event)
+        if (entry.featureAction) dispatchFeature(entry.featureAction)
+      }
       updateCursor(targetIndex)
     },
-    [updateCursor]
+    [updateCursor, resetToInitial, notifyFeatures, dispatchFeature]
   )
 
-  const onClear = useCallback(() => initActor(DEFAULT_INPUT), [initActor])
+  const onClear = useCallback(() => {
+    initActor(DEFAULT_INPUT)
+    resetToInitial()
+  }, [initActor, resetToInitial])
 
   const localeValue = useMemo(() => ({ locale, setLocale }), [locale])
 
@@ -136,9 +178,10 @@ export function App() {
             <h1 className="text-2xl font-bold text-amber-400">{messages[locale].title}</h1>
             <LangToggle />
           </header>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <StatePanel snapshot={snapshot} ctx={ctx} />
             <MemoEventPanel send={send} snapshot={snapshot} />
+            <FeaturePanel features={features} onFeatureAction={onFeatureAction} />
             <TransitionLog log={log} cursor={cursor} onJumpTo={jumpTo} onClear={onClear} />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react"
 
+import type { FeatureAction } from "#/features/feature-store.ts"
 import { useT } from "#/i18n.ts"
 import type { DndEvent, DndSnapshot } from "#/machine.ts"
 
@@ -10,6 +11,7 @@ export interface LogEntry {
   event: DndEvent
   fromState: StateKey
   toState: StateKey
+  featureAction?: FeatureAction
 }
 
 export function stateKey(snap: DndSnapshot): StateKey {
