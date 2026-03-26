@@ -279,19 +279,19 @@ export function usePatientDefenseFree(focusPoints: number): PatientDefenseResult
 
 /**
  * Use focus Patient Defense: Disengage + Dodge as Bonus Action, costs 1 FP.
- * At L10+, also grants temp HP equal to Martial Arts die roll.
+ * At L10+ (Heightened Focus), also grants temp HP equal to two rolls of Martial Arts die.
  */
 export function usePatientDefenseFocus(
   focusPoints: number,
   monkLevel: number,
-  martialArtsDieRoll: number
+  twoMartialArtsDieRollsTotal: number
 ): PatientDefenseResult {
   return {
     focusPoints: focusPoints - FOCUS_ACTION_COST,
     bonusActionUsed: true,
     disengageGranted: true,
     dodgeGranted: true,
-    tempHp: monkLevel >= PATIENT_DEFENSE_TEMP_HP_LEVEL ? martialArtsDieRoll : 0
+    tempHp: monkLevel >= PATIENT_DEFENSE_TEMP_HP_LEVEL ? twoMartialArtsDieRollsTotal : 0
   }
 }
 
@@ -379,3 +379,5 @@ export function useStunningStrike(focusPoints: number, targetSavePassed: boolean
     advantageOnNextAttackVsTarget: targetSavePassed
   }
 }
+
+// T44/T45/T46 extracted to class-monk-features.ts to stay under eslint max-lines.

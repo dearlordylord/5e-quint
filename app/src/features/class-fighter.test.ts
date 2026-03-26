@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   actionSurgeMaxCharges,
   canUseActionSurge,
+  canUseIndomitable,
   canUseSecondWind,
   canUseTacticalMind,
   championCritRange,
@@ -10,6 +11,8 @@ import {
   fighterShortRest,
   hasRemarkableAthlete,
   heroicWarriorInspiration,
+  indomitableLongRest,
+  indomitableMaxCharges,
   isBloodied,
   remarkableAthleteCritMovement,
   secondWindMaxCharges,
@@ -17,6 +20,7 @@ import {
   survivorDefyDeathThreshold,
   survivorHeroicRally,
   useActionSurge,
+  useIndomitable,
   useSecondWind,
   useTacticalMind
 } from "#/features/class-fighter.ts"
@@ -474,5 +478,100 @@ describe("survivorHeroicRally", () => {
 
   it("heals at level 20", () => {
     expect(survivorHeroicRally(20, 5, 40, 4)).toBe(9) // 5 + 4
+  })
+})
+
+// =============================================================================
+// Indomitable (Level 9 Fighter)
+// =============================================================================
+
+describe("indomitableMaxCharges", () => {
+  it("returns 0 below level 9", () => {
+    expect(indomitableMaxCharges(0)).toBe(0)
+    expect(indomitableMaxCharges(1)).toBe(0)
+    expect(indomitableMaxCharges(8)).toBe(0)
+  })
+
+  it("returns 1 for levels 9-12", () => {
+    expect(indomitableMaxCharges(9)).toBe(1)
+    expect(indomitableMaxCharges(10)).toBe(1)
+    expect(indomitableMaxCharges(12)).toBe(1)
+  })
+
+  it("returns 2 for levels 13-16", () => {
+    expect(indomitableMaxCharges(13)).toBe(2)
+    expect(indomitableMaxCharges(14)).toBe(2)
+    expect(indomitableMaxCharges(16)).toBe(2)
+  })
+
+  it("returns 3 at level 17+", () => {
+    expect(indomitableMaxCharges(17)).toBe(3)
+    expect(indomitableMaxCharges(18)).toBe(3)
+    expect(indomitableMaxCharges(20)).toBe(3)
+  })
+})
+
+describe("canUseIndomitable", () => {
+  it("returns true at level 9+ with charges > 0", () => {
+    expect(canUseIndomitable(9, 1)).toBe(true)
+    expect(canUseIndomitable(13, 2)).toBe(true)
+    expect(canUseIndomitable(20, 3)).toBe(true)
+  })
+
+  it("returns false below level 9", () => {
+    expect(canUseIndomitable(8, 1)).toBe(false)
+    expect(canUseIndomitable(1, 1)).toBe(false)
+  })
+
+  it("returns false with 0 charges", () => {
+    expect(canUseIndomitable(9, 0)).toBe(false)
+    expect(canUseIndomitable(17, 0)).toBe(false)
+  })
+
+  it("returns false below level 9 even with charges", () => {
+    expect(canUseIndomitable(5, 3)).toBe(false)
+  })
+})
+
+describe("useIndomitable", () => {
+  it("decrements charges and returns the new roll", () => {
+    const result = useIndomitable(2, 15)
+    expect(result.indomitableCharges).toBe(1)
+    expect(result.newSaveResult).toBe(15)
+  })
+
+  it("works down to 1 charge", () => {
+    const result = useIndomitable(1, 8)
+    expect(result.indomitableCharges).toBe(0)
+    expect(result.newSaveResult).toBe(8)
+  })
+
+  it("returns the exact new roll value", () => {
+    const result = useIndomitable(3, 20)
+    expect(result.newSaveResult).toBe(20)
+    expect(result.indomitableCharges).toBe(2)
+  })
+})
+
+describe("indomitableLongRest", () => {
+  it("returns 0 below level 9", () => {
+    expect(indomitableLongRest(8)).toBe(0)
+    expect(indomitableLongRest(1)).toBe(0)
+  })
+
+  it("restores to 1 at level 9", () => {
+    expect(indomitableLongRest(9)).toBe(1)
+  })
+
+  it("restores to 2 at level 13", () => {
+    expect(indomitableLongRest(13)).toBe(2)
+  })
+
+  it("restores to 3 at level 17", () => {
+    expect(indomitableLongRest(17)).toBe(3)
+  })
+
+  it("restores to 3 at level 20", () => {
+    expect(indomitableLongRest(20)).toBe(3)
   })
 })

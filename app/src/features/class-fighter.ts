@@ -251,3 +251,58 @@ export function survivorHeroicRally(championLevel: number, currentHp: number, ma
   if (!isBloodied(currentHp, maxHp)) return 0
   return SURVIVOR_HEAL_BASE + conMod
 }
+
+// =============================================================================
+// Indomitable (Level 9 Fighter) — SRD 5.2.1
+// =============================================================================
+
+// --- Constants ---
+
+export const INDOMITABLE_LEVEL = 9
+export const INDOMITABLE_TWO_CHARGES_LEVEL = 13
+export const INDOMITABLE_THREE_CHARGES_LEVEL = 17
+
+// --- Indomitable max charges by level ---
+
+/**
+ * Returns the maximum number of Indomitable uses for a given fighter level.
+ * 0 below L9, 1 at L9, 2 at L13, 3 at L17.
+ */
+export function indomitableMaxCharges(fighterLevel: number): number {
+  if (fighterLevel < INDOMITABLE_LEVEL) return 0
+  if (fighterLevel < INDOMITABLE_TWO_CHARGES_LEVEL) return 1
+  if (fighterLevel < INDOMITABLE_THREE_CHARGES_LEVEL) return 2
+  return 3
+}
+
+// --- Indomitable usage ---
+
+/**
+ * Precondition: can use Indomitable. Fighter level >= 9 and charges > 0.
+ */
+export function canUseIndomitable(fighterLevel: number, indomitableCharges: number): boolean {
+  return fighterLevel >= INDOMITABLE_LEVEL && indomitableCharges > 0
+}
+
+/**
+ * Indomitable: reroll a failed saving throw with a bonus equal to your Fighter level.
+ * You must use the new roll. Decrements charges.
+ * The caller provides the new roll result (already including the reroll + fighter level bonus).
+ */
+export function useIndomitable(
+  indomitableCharges: number,
+  newRoll: number
+): {
+  readonly indomitableCharges: number
+  readonly newSaveResult: number
+} {
+  return {
+    indomitableCharges: indomitableCharges - 1,
+    newSaveResult: newRoll
+  }
+}
+
+// --- Indomitable long rest recovery ---
+
+/** Long rest: regain all Indomitable uses for the given fighter level. */
+export const indomitableLongRest: (fighterLevel: number) => number = indomitableMaxCharges

@@ -221,13 +221,9 @@ export function pDeclareReckless(): RecklessState {
   }
 }
 
-/** Only applies to Strength-based melee attacks (not ranged, not DEX). */
-export function recklessAttackAdvantage(
-  recklessThisTurn: boolean,
-  isStrengthBased: boolean,
-  isMelee: boolean
-): boolean {
-  return recklessThisTurn && isStrengthBased && isMelee
+/** SRD 5.2.1: Advantage on attack rolls using Strength (melee or ranged). */
+export function recklessAttackAdvantage(recklessThisTurn: boolean, isStrengthBased: boolean): boolean {
+  return recklessThisTurn && isStrengthBased
 }
 
 export function recklessDefenseDisadvantage(recklessThisTurn: boolean): boolean {
@@ -436,4 +432,104 @@ export function restoreIntimidatingPresenceWithRage(
     rageCharges: rageCharges - 1,
     intimidatingPresenceUsed: false
   }
+}
+
+// --- Barbarian Passive Features Constants ---
+
+export const DANGER_SENSE_LEVEL = 2
+export const FAST_MOVEMENT_LEVEL = 5
+export const FERAL_INSTINCT_LEVEL = 7
+export const INSTINCTIVE_POUNCE_LEVEL = 7
+export const RELENTLESS_RAGE_LEVEL = 11
+export const RELENTLESS_RAGE_BASE_DC = 10
+export const RELENTLESS_RAGE_DC_INCREMENT = 5
+export const INDOMITABLE_MIGHT_LEVEL = 18
+export const PRIMAL_CHAMPION_LEVEL = 20
+export const PRIMAL_CHAMPION_BONUS = 4
+export const PRIMAL_CHAMPION_MAX_SCORE = 25
+export const FAST_MOVEMENT_BONUS = 10
+
+// --- Danger Sense (L2) ---
+
+/** SRD 5.2.1: Advantage on DEX saves unless Incapacitated. */
+export function canUseDangerSense(barbarianLevel: number, isIncapacitated: boolean): boolean {
+  return barbarianLevel >= DANGER_SENSE_LEVEL && !isIncapacitated
+}
+
+/** Returns true (advantage on DEX saves) when Danger Sense is active. */
+export function dangerSenseAdvantage(canUse: boolean): boolean {
+  return canUse
+}
+
+// --- Fast Movement (L5) ---
+
+/** Returns +10ft speed bonus if L5+ and not wearing heavy armor, else 0. */
+export function fastMovementBonus(barbarianLevel: number, armorWeight: ArmorWeight): number {
+  if (barbarianLevel >= FAST_MOVEMENT_LEVEL && armorWeight !== "heavy") return FAST_MOVEMENT_BONUS
+  return 0
+}
+
+// --- Feral Instinct (L7) ---
+
+/** Whether the barbarian has Feral Instinct (L7+): grants Initiative advantage. */
+export function hasFeralInstinct(barbarianLevel: number): boolean {
+  return barbarianLevel >= FERAL_INSTINCT_LEVEL
+}
+
+/** Whether the barbarian can act while surprised (L7+, must enter rage). */
+export function canActWhileSurprised(barbarianLevel: number): boolean {
+  return barbarianLevel >= FERAL_INSTINCT_LEVEL
+}
+
+// --- Instinctive Pounce (L7) ---
+
+/** Distance you can move when entering rage: floor(speed/2) at L7+, else 0. */
+export function instinctivePounceDistance(barbarianLevel: number, effectiveSpeed: number): number {
+  if (barbarianLevel < INSTINCTIVE_POUNCE_LEVEL) return 0
+  return Math.floor(effectiveSpeed / 2)
+}
+
+// --- Relentless Rage (L11) ---
+
+/** Returns the DC for Relentless Rage: 10 + (timesUsed * 5). */
+export function relentlessRageDC(timesUsed: number): number {
+  return RELENTLESS_RAGE_BASE_DC + timesUsed * RELENTLESS_RAGE_DC_INCREMENT
+}
+
+/** Whether Relentless Rage can be used: L11+, must be raging. */
+export function canUseRelentlessRage(barbarianLevel: number, raging: boolean): boolean {
+  return barbarianLevel >= RELENTLESS_RAGE_LEVEL && raging
+}
+
+/** SRD 5.2.1: On success, HP changes to 2x barbarian level. */
+export function relentlessRageResult(
+  conSaveSucceeded: boolean,
+  barbarianLevel: number
+): { readonly survived: boolean; readonly newHp: number } {
+  if (conSaveSucceeded) {
+    return { survived: true, newHp: 2 * barbarianLevel }
+  }
+  return { survived: false, newHp: 0 }
+}
+
+// --- Indomitable Might (L18) ---
+
+/** SRD 5.2.1: If total for a STR check/save is less than STR score, use STR score. */
+export function indomitableMight(barbarianLevel: number, checkTotal: number, strScore: number): number {
+  if (barbarianLevel >= INDOMITABLE_MIGHT_LEVEL) return Math.max(checkTotal, strScore)
+  return checkTotal
+}
+
+// --- Primal Champion (L20) ---
+
+/** STR/CON bonuses and max score at L20+. */
+export function primalChampionBonus(barbarianLevel: number): {
+  readonly strBonus: number
+  readonly conBonus: number
+  readonly maxScore: number
+} {
+  if (barbarianLevel >= PRIMAL_CHAMPION_LEVEL) {
+    return { strBonus: PRIMAL_CHAMPION_BONUS, conBonus: PRIMAL_CHAMPION_BONUS, maxScore: PRIMAL_CHAMPION_MAX_SCORE }
+  }
+  return { strBonus: 0, conBonus: 0, maxScore: 20 }
 }

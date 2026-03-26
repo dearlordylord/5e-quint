@@ -264,3 +264,78 @@ export function resetRogueTurnState(): {
     steadyAimUsedThisTurn: false
   }
 }
+
+// --- Passive Features (High-Level) ---
+
+export const RELIABLE_TALENT_LEVEL = 7
+export const SLIPPERY_MIND_LEVEL = 15
+export const ELUSIVE_LEVEL = 18
+export const STROKE_OF_LUCK_LEVEL = 20
+
+/** Result of using Stroke of Luck on an attack */
+export interface StrokeOfLuckAttackResult {
+  readonly turnMissIntoHit: true
+  readonly strokeOfLuckUsed: true
+}
+
+/** Result of using Stroke of Luck on an ability check */
+export interface StrokeOfLuckAbilityCheckResult {
+  readonly treatAs20: true
+  readonly strokeOfLuckUsed: true
+}
+
+// --- Reliable Talent (L7) ---
+
+/**
+ * SRD 5.2.1: Whenever you make an ability check that uses one of your skill or tool
+ * proficiencies, you can treat a d20 roll of 9 or lower as a 10.
+ */
+export function reliableTalent(rogueLevel: number, d20Roll: number, isProficient: boolean): number {
+  /* eslint-disable no-magic-numbers */
+  if (rogueLevel < RELIABLE_TALENT_LEVEL) return d20Roll
+  if (!isProficient) return d20Roll
+  return Math.max(10, d20Roll)
+  /* eslint-enable no-magic-numbers */
+}
+
+// --- Slippery Mind (L15) ---
+
+/** SRD 5.2.1: You gain proficiency in Wisdom and Charisma saving throws. */
+export function hasSlipperyMind(rogueLevel: number): boolean {
+  return rogueLevel >= SLIPPERY_MIND_LEVEL
+}
+
+// --- Elusive (L18) ---
+
+/**
+ * SRD: No attack roll can have Advantage against you unless you have the
+ * Incapacitated condition.
+ * Returns true if Elusive cancels incoming advantage.
+ */
+export function elusiveCancelsAdvantage(rogueLevel: number, isIncapacitated: boolean): boolean {
+  if (rogueLevel < ELUSIVE_LEVEL) return false
+  if (isIncapacitated) return false
+  return true
+}
+
+// --- Stroke of Luck (L20) ---
+
+/**
+ * SRD: If you fail a D20 Test, you can turn the roll into a 20.
+ * Once per Short or Long Rest.
+ */
+export function canUseStrokeOfLuck(rogueLevel: number, strokeOfLuckUsed: boolean): boolean {
+  if (rogueLevel < STROKE_OF_LUCK_LEVEL) return false
+  if (strokeOfLuckUsed) return false
+  return true
+}
+
+/** Use Stroke of Luck to turn a missed attack into a hit. */
+export function strokeOfLuckAttack(): StrokeOfLuckAttackResult {
+  return { turnMissIntoHit: true, strokeOfLuckUsed: true }
+}
+
+/** Use Stroke of Luck to treat a failed ability check d20 roll as a 20. */
+export function strokeOfLuckAbilityCheck(): StrokeOfLuckAbilityCheckResult {
+  return { treatAs20: true, strokeOfLuckUsed: true }
+}

@@ -11,13 +11,21 @@ import {
   availableBrutalStrikeEffects,
   brutalStrikeDamageDice,
   brutalStrikeEffectCount,
+  canActWhileSurprised,
   canApplyFrenzy,
   canCastWhileRaging,
   canEnterRage,
   canRetaliate,
   canUseBrutalStrike,
+  canUseDangerSense,
   canUseIntimidatingPresence,
+  canUseRelentlessRage,
+  dangerSenseAdvantage,
+  fastMovementBonus,
   frenzyDamageDice,
+  hasFeralInstinct,
+  indomitableMight,
+  instinctivePounceDistance,
   intimidatingPresenceDC,
   mindlessRageImmunities,
   mindlessRageOnEnterRage,
@@ -31,12 +39,15 @@ import {
   pMarkAttackOrForcedSave,
   pPersistentRageOnInitiative,
   pResetReckless,
+  primalChampionBonus,
   rageDamageBonus,
   rageMaxCharges,
   rageResistances,
   rageStrengthAdvantage,
   recklessAttackAdvantage,
   recklessDefenseDisadvantage,
+  relentlessRageDC,
+  relentlessRageResult,
   restoreIntimidatingPresenceWithRage,
   useIntimidatingPresence
 } from "#/features/class-barbarian.ts"
@@ -343,20 +354,16 @@ describe("reckless attack", () => {
     expect(result.brutalStrikeEffects).toEqual([])
   })
 
-  it("should grant advantage on own STR melee attacks", () => {
-    expect(recklessAttackAdvantage(true, true, true)).toBe(true)
+  it("should grant advantage on own STR-based attacks (melee or ranged)", () => {
+    expect(recklessAttackAdvantage(true, true)).toBe(true)
   })
 
-  it("should not grant advantage on ranged attacks", () => {
-    expect(recklessAttackAdvantage(true, true, false)).toBe(false)
-  })
-
-  it("should not grant advantage on DEX-based melee attacks", () => {
-    expect(recklessAttackAdvantage(true, false, true)).toBe(false)
+  it("should not grant advantage on DEX-based attacks", () => {
+    expect(recklessAttackAdvantage(true, false)).toBe(false)
   })
 
   it("should not grant advantage if not reckless", () => {
-    expect(recklessAttackAdvantage(false, true, true)).toBe(false)
+    expect(recklessAttackAdvantage(false, true)).toBe(false)
   })
 
   it("should grant attackers advantage against reckless barbarian", () => {
@@ -642,5 +649,180 @@ describe("intimidating presence (L14 Berserker)", () => {
   it("should not restore if not yet used", () => {
     const result = restoreIntimidatingPresenceWithRage(3, false)
     expect(result).toBeNull()
+  })
+})
+
+// --- Danger Sense Tests ---
+
+describe("danger sense (L2)", () => {
+  it("should be usable at L2+", () => {
+    expect(canUseDangerSense(2, false)).toBe(true)
+  })
+
+  it("should be usable at higher levels", () => {
+    expect(canUseDangerSense(10, false)).toBe(true)
+  })
+
+  it("should not be usable below L2", () => {
+    expect(canUseDangerSense(1, false)).toBe(false)
+  })
+
+  it("should not be usable when incapacitated", () => {
+    expect(canUseDangerSense(2, true)).toBe(false)
+  })
+
+  it("should grant advantage on DEX saves when active", () => {
+    expect(dangerSenseAdvantage(true)).toBe(true)
+  })
+
+  it("should not grant advantage when inactive", () => {
+    expect(dangerSenseAdvantage(false)).toBe(false)
+  })
+})
+
+// --- Fast Movement Tests ---
+
+describe("fast movement (L5)", () => {
+  it("should grant +10ft at L5+", () => {
+    expect(fastMovementBonus(5, "none")).toBe(10)
+  })
+
+  it("should grant +10ft at higher levels", () => {
+    expect(fastMovementBonus(10, "light")).toBe(10)
+  })
+
+  it("should grant +10ft in medium armor", () => {
+    expect(fastMovementBonus(5, "medium")).toBe(10)
+  })
+
+  it("should not grant bonus with heavy armor", () => {
+    expect(fastMovementBonus(5, "heavy")).toBe(0)
+  })
+
+  it("should not grant bonus below L5", () => {
+    expect(fastMovementBonus(4, "none")).toBe(0)
+  })
+})
+
+// --- Feral Instinct Tests ---
+
+describe("feral instinct (L7)", () => {
+  it("should grant initiative advantage at L7+", () => {
+    expect(hasFeralInstinct(7)).toBe(true)
+  })
+
+  it("should grant initiative advantage at higher levels", () => {
+    expect(hasFeralInstinct(15)).toBe(true)
+  })
+
+  it("should not grant initiative advantage below L7", () => {
+    expect(hasFeralInstinct(6)).toBe(false)
+  })
+
+  it("should allow acting while surprised at L7+", () => {
+    expect(canActWhileSurprised(7)).toBe(true)
+  })
+
+  it("should not allow acting while surprised below L7", () => {
+    expect(canActWhileSurprised(6)).toBe(false)
+  })
+})
+
+// --- Instinctive Pounce Tests ---
+
+describe("instinctive pounce (L7)", () => {
+  it("should grant half speed at L7+", () => {
+    expect(instinctivePounceDistance(7, 30)).toBe(15)
+  })
+
+  it("should floor odd speeds", () => {
+    expect(instinctivePounceDistance(7, 25)).toBe(12)
+  })
+
+  it("should return 0 below L7", () => {
+    expect(instinctivePounceDistance(6, 30)).toBe(0)
+  })
+
+  it("should handle 0 speed", () => {
+    expect(instinctivePounceDistance(7, 0)).toBe(0)
+  })
+
+  it("should work at higher levels", () => {
+    expect(instinctivePounceDistance(20, 40)).toBe(20)
+  })
+})
+
+// --- Relentless Rage Tests ---
+
+describe("relentless rage (L11)", () => {
+  it("should start DC at 10", () => {
+    expect(relentlessRageDC(0)).toBe(10)
+  })
+
+  it("should increment DC by 5 per use", () => {
+    expect(relentlessRageDC(1)).toBe(15)
+    expect(relentlessRageDC(2)).toBe(20)
+    expect(relentlessRageDC(3)).toBe(25)
+  })
+
+  it("should require L11+ and raging", () => {
+    expect(canUseRelentlessRage(11, true)).toBe(true)
+  })
+
+  it("should not be usable below L11", () => {
+    expect(canUseRelentlessRage(10, true)).toBe(false)
+  })
+
+  it("should not be usable when not raging", () => {
+    expect(canUseRelentlessRage(11, false)).toBe(false)
+  })
+
+  it("should set HP to 2x barbarian level on successful save", () => {
+    expect(relentlessRageResult(true, 11)).toEqual({ survived: true, newHp: 22 })
+    expect(relentlessRageResult(true, 15)).toEqual({ survived: true, newHp: 30 })
+  })
+
+  it("should drop to 0 HP on failed save", () => {
+    expect(relentlessRageResult(false, 11)).toEqual({ survived: false, newHp: 0 })
+  })
+})
+
+// --- Indomitable Might Tests ---
+
+describe("indomitable might (L18)", () => {
+  it("should use STR score when higher at L18+", () => {
+    expect(indomitableMight(18, 5, 20)).toBe(20)
+  })
+
+  it("should use d20 roll when higher at L18+", () => {
+    expect(indomitableMight(18, 18, 15)).toBe(18)
+  })
+
+  it("should use d20 roll when equal at L18+", () => {
+    expect(indomitableMight(18, 15, 15)).toBe(15)
+  })
+
+  it("should not apply below L18", () => {
+    expect(indomitableMight(17, 5, 20)).toBe(5)
+  })
+
+  it("should work at L20", () => {
+    expect(indomitableMight(20, 3, 24)).toBe(24)
+  })
+})
+
+// --- Primal Champion Tests ---
+
+describe("primal champion (L20)", () => {
+  it("should grant +4 STR, +4 CON, max 24 at L20", () => {
+    expect(primalChampionBonus(20)).toEqual({ strBonus: 4, conBonus: 4, maxScore: 25 })
+  })
+
+  it("should grant no bonus below L20", () => {
+    expect(primalChampionBonus(19)).toEqual({ strBonus: 0, conBonus: 0, maxScore: 20 })
+  })
+
+  it("should grant no bonus at L1", () => {
+    expect(primalChampionBonus(1)).toEqual({ strBonus: 0, conBonus: 0, maxScore: 20 })
   })
 })

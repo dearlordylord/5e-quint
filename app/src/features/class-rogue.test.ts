@@ -8,11 +8,21 @@ import {
   canSneakAttack,
   canSteadyAim,
   canUseCunningAction,
+  canUseStrokeOfLuck,
   cunningStrikeDC,
+  ELUSIVE_LEVEL,
+  elusiveCancelsAdvantage,
+  hasSlipperyMind,
   maxCunningStrikeEffects,
+  RELIABLE_TALENT_LEVEL,
+  reliableTalent,
   resetRogueTurnState,
+  SLIPPERY_MIND_LEVEL,
   sneakAttackDice,
   strikeDieCost,
+  STROKE_OF_LUCK_LEVEL,
+  strokeOfLuckAbilityCheck,
+  strokeOfLuckAttack,
   useCunningAction
 } from "#/features/class-rogue.ts"
 
@@ -360,5 +370,116 @@ describe("resetRogueTurnState", () => {
     const state = resetRogueTurnState()
     expect(state.sneakAttackUsedThisTurn).toBe(false)
     expect(state.steadyAimUsedThisTurn).toBe(false)
+  })
+})
+
+// --- Passive Feature Constants ---
+
+describe("passive feature constants", () => {
+  it("has correct level thresholds", () => {
+    expect(RELIABLE_TALENT_LEVEL).toBe(7)
+    expect(SLIPPERY_MIND_LEVEL).toBe(15)
+    expect(ELUSIVE_LEVEL).toBe(18)
+    expect(STROKE_OF_LUCK_LEVEL).toBe(20)
+  })
+})
+
+// --- Reliable Talent (L7) ---
+
+describe("reliableTalent", () => {
+  it("treats a roll of 9 as 10 when proficient and L7+", () => {
+    expect(reliableTalent(7, 9, true)).toBe(10)
+  })
+
+  it("treats a roll of 10 as 10 (no change needed)", () => {
+    expect(reliableTalent(7, 10, true)).toBe(10)
+  })
+
+  it("does not change a roll of 11 or higher", () => {
+    expect(reliableTalent(7, 11, true)).toBe(11)
+    expect(reliableTalent(7, 20, true)).toBe(20)
+  })
+
+  it("does not apply when not proficient", () => {
+    expect(reliableTalent(7, 5, false)).toBe(5)
+    expect(reliableTalent(20, 1, false)).toBe(1)
+  })
+
+  it("does not apply below L7", () => {
+    expect(reliableTalent(6, 5, true)).toBe(5)
+    expect(reliableTalent(3, 3, true)).toBe(3)
+  })
+
+  it("applies at L7 and above", () => {
+    expect(reliableTalent(7, 4, true)).toBe(10)
+    expect(reliableTalent(15, 1, true)).toBe(10)
+    expect(reliableTalent(20, 8, true)).toBe(10)
+  })
+})
+
+// --- Slippery Mind (L15) ---
+
+describe("hasSlipperyMind", () => {
+  it("returns false below L15", () => {
+    expect(hasSlipperyMind(14)).toBe(false)
+    expect(hasSlipperyMind(1)).toBe(false)
+  })
+
+  it("returns true at L15+", () => {
+    expect(hasSlipperyMind(15)).toBe(true)
+    expect(hasSlipperyMind(16)).toBe(true)
+    expect(hasSlipperyMind(20)).toBe(true)
+  })
+})
+
+// --- Elusive (L18) ---
+
+describe("elusiveCancelsAdvantage", () => {
+  it("cancels advantage at L18+", () => {
+    expect(elusiveCancelsAdvantage(18, false)).toBe(true)
+    expect(elusiveCancelsAdvantage(20, false)).toBe(true)
+  })
+
+  it("does not cancel below L18", () => {
+    expect(elusiveCancelsAdvantage(17, false)).toBe(false)
+    expect(elusiveCancelsAdvantage(1, false)).toBe(false)
+  })
+
+  it("does not cancel when incapacitated", () => {
+    expect(elusiveCancelsAdvantage(18, true)).toBe(false)
+    expect(elusiveCancelsAdvantage(20, true)).toBe(false)
+  })
+})
+
+// --- Stroke of Luck (L20) ---
+
+describe("canUseStrokeOfLuck", () => {
+  it("requires L20+", () => {
+    expect(canUseStrokeOfLuck(19, false)).toBe(false)
+    expect(canUseStrokeOfLuck(20, false)).toBe(true)
+  })
+
+  it("cannot use when already used", () => {
+    expect(canUseStrokeOfLuck(20, true)).toBe(false)
+  })
+
+  it("can use at L20 when not yet used", () => {
+    expect(canUseStrokeOfLuck(20, false)).toBe(true)
+  })
+})
+
+describe("strokeOfLuckAttack", () => {
+  it("turns miss into hit and marks used", () => {
+    const result = strokeOfLuckAttack()
+    expect(result.turnMissIntoHit).toBe(true)
+    expect(result.strokeOfLuckUsed).toBe(true)
+  })
+})
+
+describe("strokeOfLuckAbilityCheck", () => {
+  it("treats as 20 and marks used", () => {
+    const result = strokeOfLuckAbilityCheck()
+    expect(result.treatAs20).toBe(true)
+    expect(result.strokeOfLuckUsed).toBe(true)
   })
 })

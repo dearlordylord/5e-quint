@@ -31,6 +31,19 @@ All non-core tasks implicitly depend on TA1-TA4 (active effect lifecycle, turn l
 
 Note: T10 (Rage) and T10a-f (Cover, etc.) share the T10 prefix but are unrelated — T10 is in this file, T10a-f are in PLAN.md.
 
+### Integration experiment (worktree)
+
+Experimental worktree wiring `features/` pure functions into the XState machine + React UI: `.claude/worktrees/agent-a92299a2` (branch `worktree-agent-a92299a2`).
+
+**Files created:** `features/feature-store.ts` (useReducer store), `features/feature-bridge.ts` (pure fn → `{ featureAction, machineEvents[] }`), `features/useFeatures.ts` (React hook), `components/FeaturePanel.tsx` (UI panel). Wired into `App.tsx` as 4th column. Fighter Second Wind + Action Surge as test case.
+
+**Validated patterns:**
+1. `notify(event)` wrapping `send()` — feature store reacts to machine events (rest → restore charges, turn start → reset flags)
+2. Bridge return shape `{ featureAction, machineEvents[] }` — cleanly separates feature state updates from machine events
+3. Ref-based wiring solves circular dep between `send` and `notify`
+
+**Blocker found:** Action Surge can't reset `actionUsed: boolean` from outside the machine. Proposed fix: `actionUsed: bool` → `actionsRemaining: int` in core (Quint + XState), matching the existing `extraAttacksRemaining: int` pattern. This is a core representation change (PLAN.md scope), not a feature leak — Action Surge and Haste both just increment the counter from caller side.
+
 ---
 
 ## Priority Tiers

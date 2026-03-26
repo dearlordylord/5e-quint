@@ -144,16 +144,111 @@ export function pRadiantStrikes(config: RadiantStrikesConfig): number {
   return 0
 }
 
+// --- Divine Health (Level 3) ---
+
+export const DIVINE_HEALTH_LEVEL = 3
+
+export function hasDivineHealth(paladinLevel: number): boolean {
+  return paladinLevel >= DIVINE_HEALTH_LEVEL
+}
+
+// --- Faithful Steed (Level 5) ---
+
+export const FAITHFUL_STEED_LEVEL = 5
+
+export function canUseFaithfulSteed(paladinLevel: number, faithfulSteedUsed: boolean): boolean {
+  return paladinLevel >= FAITHFUL_STEED_LEVEL && !faithfulSteedUsed
+}
+
+export function useFaithfulSteed(): { readonly faithfulSteedUsed: true } {
+  return { faithfulSteedUsed: true }
+}
+
+// --- Aura of Protection (Level 6) ---
+
+export const AURA_OF_PROTECTION_LEVEL = 6
+export const AURA_EXPANSION_LEVEL = 18
+
+export function auraOfProtectionBonus(paladinLevel: number, chaMod: number): number {
+  if (paladinLevel < AURA_OF_PROTECTION_LEVEL) return 0
+  return Math.max(1, chaMod)
+}
+
+export function auraOfProtectionRange(paladinLevel: number): number {
+  if (paladinLevel < AURA_OF_PROTECTION_LEVEL) return 0
+  if (paladinLevel >= AURA_EXPANSION_LEVEL) return 30
+  return 10
+}
+
+export function canUseAuraOfProtection(paladinLevel: number, isConscious: boolean): boolean {
+  return paladinLevel >= AURA_OF_PROTECTION_LEVEL && isConscious
+}
+
+// --- Abjure Foes (Level 9) ---
+
+export const ABJURE_FOES_LEVEL = 9
+export const ABJURE_FOES_RANGE_FEET = 60
+
+export interface AbjureFoesResult {
+  readonly frightened: boolean
+  /** SRD: "can do only one of the following: move, take an action, or take a Bonus Action." */
+  readonly restrictedActions: boolean
+}
+
+export function canAbjureFoes(paladinLevel: number, channelDivinityCharges: number, actionUsed: boolean): boolean {
+  return paladinLevel >= ABJURE_FOES_LEVEL && channelDivinityCharges > 0 && !actionUsed
+}
+
+export function abjureFoesResult(targetSavePassed: boolean): AbjureFoesResult {
+  return {
+    frightened: !targetSavePassed,
+    restrictedActions: !targetSavePassed
+  }
+}
+
+// --- Aura of Courage (Level 10) ---
+
+export const AURA_OF_COURAGE_LEVEL = 10
+
+export function canUseAuraOfCourage(paladinLevel: number, isConscious: boolean): boolean {
+  return paladinLevel >= AURA_OF_COURAGE_LEVEL && isConscious
+}
+
+export function auraOfCourageRange(paladinLevel: number): number {
+  if (paladinLevel < AURA_OF_COURAGE_LEVEL) return 0
+  if (paladinLevel >= AURA_EXPANSION_LEVEL) return 30
+  return 10
+}
+
+// --- Restoring Touch (Level 14) ---
+
+export const RESTORING_TOUCH_LEVEL_CONST = 14
+export const RESTORING_TOUCH_COST = 5
+
+export function restoringTouchCost(): 5 {
+  return 5
+}
+
+export function restoringTouchConditions(): ReadonlyArray<Condition> {
+  return ["blinded", "charmed", "deafened", "frightened", "paralyzed", "stunned"]
+}
+
+export function canUseRestoringTouch(paladinLevel: number, layOnHandsPool: number): boolean {
+  return paladinLevel >= RESTORING_TOUCH_LEVEL && layOnHandsPool >= RESTORING_TOUCH_COST
+}
+
 // --- Combined long rest ---
 
 export interface PaladinLongRestResult {
   readonly layOnHandsPool: number
   readonly paladinSmiteFreeUseAvailable: true
+  readonly faithfulSteedUsed: false
 }
 
 export function paladinLongRest(paladinLevel: number): PaladinLongRestResult {
   return {
     layOnHandsPool: layOnHandsPoolMax(paladinLevel),
-    paladinSmiteFreeUseAvailable: true
+    paladinSmiteFreeUseAvailable: true,
+    faithfulSteedUsed: false
   }
 }

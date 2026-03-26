@@ -1,10 +1,21 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  ABJURE_FOES_RANGE_FEET,
+  abjureFoesResult,
+  auraOfCourageRange,
+  auraOfProtectionBonus,
+  auraOfProtectionRange,
+  canAbjureFoes,
   canLayOnHandsCure,
   canLayOnHandsHeal,
   canPaladinSmiteFree,
+  canUseAuraOfCourage,
+  canUseAuraOfProtection,
+  canUseFaithfulSteed,
+  canUseRestoringTouch,
   curableConditions,
+  hasDivineHealth,
   layOnHandsLongRest,
   layOnHandsPoolMax,
   paladinLongRest,
@@ -12,7 +23,10 @@ import {
   pLayOnHands,
   pLayOnHandsCure,
   pPaladinSmiteFree,
-  pRadiantStrikes
+  pRadiantStrikes,
+  restoringTouchConditions,
+  restoringTouchCost,
+  useFaithfulSteed
 } from "#/features/class-paladin.ts"
 
 // --- Lay on Hands ---
@@ -230,12 +244,186 @@ describe("radiant strikes", () => {
   })
 })
 
+// --- Divine Health ---
+
+describe("divine health", () => {
+  it("false below level 3", () => {
+    expect(hasDivineHealth(1)).toBe(false)
+    expect(hasDivineHealth(2)).toBe(false)
+  })
+
+  it("true at level 3+", () => {
+    expect(hasDivineHealth(3)).toBe(true)
+    expect(hasDivineHealth(10)).toBe(true)
+    expect(hasDivineHealth(20)).toBe(true)
+  })
+})
+
+// --- Faithful Steed ---
+
+describe("faithful steed", () => {
+  it("not available below level 5", () => {
+    expect(canUseFaithfulSteed(4, false)).toBe(false)
+  })
+
+  it("available at level 5+ when not used", () => {
+    expect(canUseFaithfulSteed(5, false)).toBe(true)
+    expect(canUseFaithfulSteed(10, false)).toBe(true)
+  })
+
+  it("not available when already used", () => {
+    expect(canUseFaithfulSteed(5, true)).toBe(false)
+  })
+
+  it("useFaithfulSteed marks it as used", () => {
+    const result = useFaithfulSteed()
+    expect(result.faithfulSteedUsed).toBe(true)
+  })
+})
+
+// --- Aura of Protection ---
+
+describe("aura of protection", () => {
+  describe("bonus", () => {
+    it("0 below level 6", () => {
+      expect(auraOfProtectionBonus(5, 3)).toBe(0)
+    })
+
+    it("equals CHA mod at level 6+", () => {
+      expect(auraOfProtectionBonus(6, 3)).toBe(3)
+      expect(auraOfProtectionBonus(10, 5)).toBe(5)
+    })
+
+    it("minimum +1 even with negative CHA mod", () => {
+      expect(auraOfProtectionBonus(6, -1)).toBe(1)
+      expect(auraOfProtectionBonus(6, 0)).toBe(1)
+    })
+  })
+
+  describe("range", () => {
+    it("0 below level 6", () => {
+      expect(auraOfProtectionRange(5)).toBe(0)
+    })
+
+    it("10 at level 6+", () => {
+      expect(auraOfProtectionRange(6)).toBe(10)
+      expect(auraOfProtectionRange(17)).toBe(10)
+    })
+
+    it("30 at level 18+ (Aura Expansion)", () => {
+      expect(auraOfProtectionRange(18)).toBe(30)
+      expect(auraOfProtectionRange(20)).toBe(30)
+    })
+  })
+
+  describe("requires conscious", () => {
+    it("active when conscious at level 6+", () => {
+      expect(canUseAuraOfProtection(6, true)).toBe(true)
+    })
+
+    it("inactive when not conscious", () => {
+      expect(canUseAuraOfProtection(6, false)).toBe(false)
+    })
+
+    it("inactive below level 6", () => {
+      expect(canUseAuraOfProtection(5, true)).toBe(false)
+    })
+  })
+})
+
+// --- Abjure Foes ---
+
+describe("abjure foes", () => {
+  it("requires level 9+", () => {
+    expect(canAbjureFoes(8, 2, false)).toBe(false)
+    expect(canAbjureFoes(9, 2, false)).toBe(true)
+  })
+
+  it("requires channel divinity charges", () => {
+    expect(canAbjureFoes(9, 0, false)).toBe(false)
+    expect(canAbjureFoes(9, 1, false)).toBe(true)
+  })
+
+  it("requires action available", () => {
+    expect(canAbjureFoes(9, 2, true)).toBe(false)
+  })
+
+  it("target fails save: frightened and restricted actions", () => {
+    const result = abjureFoesResult(false)
+    expect(result.frightened).toBe(true)
+    expect(result.restrictedActions).toBe(true)
+  })
+
+  it("target passes save: no effects", () => {
+    const result = abjureFoesResult(true)
+    expect(result.frightened).toBe(false)
+    expect(result.restrictedActions).toBe(false)
+  })
+
+  it("range is 60 feet", () => {
+    expect(ABJURE_FOES_RANGE_FEET).toBe(60)
+  })
+})
+
+// --- Aura of Courage ---
+
+describe("aura of courage", () => {
+  it("requires level 10+ and conscious", () => {
+    expect(canUseAuraOfCourage(9, true)).toBe(false)
+    expect(canUseAuraOfCourage(10, true)).toBe(true)
+    expect(canUseAuraOfCourage(10, false)).toBe(false)
+  })
+
+  describe("range", () => {
+    it("0 below level 10", () => {
+      expect(auraOfCourageRange(9)).toBe(0)
+    })
+
+    it("10 at level 10+", () => {
+      expect(auraOfCourageRange(10)).toBe(10)
+      expect(auraOfCourageRange(17)).toBe(10)
+    })
+
+    it("30 at level 18+ (Aura Expansion)", () => {
+      expect(auraOfCourageRange(18)).toBe(30)
+      expect(auraOfCourageRange(20)).toBe(30)
+    })
+  })
+})
+
+// --- Restoring Touch ---
+
+describe("restoring touch", () => {
+  it("costs 5 HP from pool", () => {
+    expect(restoringTouchCost()).toBe(5)
+  })
+
+  it("correct condition list", () => {
+    const conditions = restoringTouchConditions()
+    expect(conditions).toContain("blinded")
+    expect(conditions).toContain("charmed")
+    expect(conditions).toContain("deafened")
+    expect(conditions).toContain("frightened")
+    expect(conditions).toContain("paralyzed")
+    expect(conditions).toContain("stunned")
+    expect(conditions).toHaveLength(6)
+  })
+
+  it("requires level 14+ and pool >= 5", () => {
+    expect(canUseRestoringTouch(13, 10)).toBe(false)
+    expect(canUseRestoringTouch(14, 4)).toBe(false)
+    expect(canUseRestoringTouch(14, 5)).toBe(true)
+    expect(canUseRestoringTouch(20, 100)).toBe(true)
+  })
+})
+
 // --- Combined long rest ---
 
 describe("paladin long rest", () => {
-  it("restores pool and free smite", () => {
+  it("restores pool, free smite, and faithful steed", () => {
     const result = paladinLongRest(10)
     expect(result.layOnHandsPool).toBe(50)
     expect(result.paladinSmiteFreeUseAvailable).toBe(true)
+    expect(result.faithfulSteedUsed).toBe(false)
   })
 })

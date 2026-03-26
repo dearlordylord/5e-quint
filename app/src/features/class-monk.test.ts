@@ -29,6 +29,34 @@ import {
   useStepOfTheWindFree,
   useStunningStrike
 } from "#/features/class-monk.ts"
+import {
+  applySlowFall,
+  canDeflectAttacks,
+  canSelfRestore,
+  canSlowFall,
+  canThrowBack,
+  canUseQuiveringPalm,
+  canUseSuperiorDefense,
+  canUseUnarmoredMovement,
+  canUseWholenessOfBody,
+  deflectAttacksReduction,
+  deflectAttacksResult,
+  disciplinedSurvivorReroll,
+  hasDeflectEnergy,
+  hasDisciplinedSurvivor,
+  hasFleetStep,
+  hasFocusEmpoweredStrikes,
+  openHandTechniqueResult,
+  selfRestorationConditions,
+  slowFallReduction,
+  throwBackDamage,
+  triggerQuiveringPalm,
+  unarmoredMovementBonus,
+  useQuiveringPalm,
+  useSuperiorDefense,
+  useWholenessOfBody,
+  wholenessOfBodyMaxCharges
+} from "#/features/class-monk-features.ts"
 
 // --- Helpers ---
 
@@ -514,5 +542,369 @@ describe("Stunning Strike", () => {
     expect(result.targetStunned).toBe(false)
     expect(result.targetSpeedHalved).toBe(true)
     expect(result.advantageOnNextAttackVsTarget).toBe(true)
+  })
+})
+
+// --- Monk Passives (T44) ---
+
+describe("Unarmored Movement", () => {
+  it("returns 0 at L1", () => {
+    expect(unarmoredMovementBonus(1)).toBe(0)
+  })
+
+  it("+10ft at L2-5", () => {
+    expect(unarmoredMovementBonus(2)).toBe(10)
+    expect(unarmoredMovementBonus(5)).toBe(10)
+  })
+
+  it("+15ft at L6-9", () => {
+    expect(unarmoredMovementBonus(6)).toBe(15)
+    expect(unarmoredMovementBonus(9)).toBe(15)
+  })
+
+  it("+20ft at L10-13", () => {
+    expect(unarmoredMovementBonus(10)).toBe(20)
+    expect(unarmoredMovementBonus(13)).toBe(20)
+  })
+
+  it("+25ft at L14-17", () => {
+    expect(unarmoredMovementBonus(14)).toBe(25)
+    expect(unarmoredMovementBonus(17)).toBe(25)
+  })
+
+  it("+30ft at L18-20", () => {
+    expect(unarmoredMovementBonus(18)).toBe(30)
+    expect(unarmoredMovementBonus(20)).toBe(30)
+  })
+
+  it("denied with armor", () => {
+    expect(canUseUnarmoredMovement(true, false)).toBe(false)
+  })
+
+  it("denied with shield", () => {
+    expect(canUseUnarmoredMovement(false, true)).toBe(false)
+  })
+
+  it("allowed without armor or shield", () => {
+    expect(canUseUnarmoredMovement(false, false)).toBe(true)
+  })
+})
+
+describe("Focus-Empowered Strikes", () => {
+  it("not available below L6", () => {
+    expect(hasFocusEmpoweredStrikes(5)).toBe(false)
+  })
+
+  it("available at L6+", () => {
+    expect(hasFocusEmpoweredStrikes(6)).toBe(true)
+    expect(hasFocusEmpoweredStrikes(20)).toBe(true)
+  })
+})
+
+describe("Self-Restoration", () => {
+  it("not available below L10", () => {
+    expect(canSelfRestore(9)).toBe(false)
+  })
+
+  it("available at L10+", () => {
+    expect(canSelfRestore(10)).toBe(true)
+    expect(canSelfRestore(20)).toBe(true)
+  })
+
+  it("removes charmed, frightened, poisoned", () => {
+    const conditions = selfRestorationConditions()
+    expect(conditions).toEqual(["charmed", "frightened", "poisoned"])
+  })
+})
+
+describe("Deflect Energy", () => {
+  it("not available below L13", () => {
+    expect(hasDeflectEnergy(12)).toBe(false)
+  })
+
+  it("available at L13+", () => {
+    expect(hasDeflectEnergy(13)).toBe(true)
+  })
+})
+
+describe("Disciplined Survivor", () => {
+  it("not available below L14", () => {
+    expect(hasDisciplinedSurvivor(13)).toBe(false)
+  })
+
+  it("available at L14+", () => {
+    expect(hasDisciplinedSurvivor(14)).toBe(true)
+  })
+
+  it("reroll expends 1 FP and returns new roll", () => {
+    const result = disciplinedSurvivorReroll(5, 18)
+    expect(result.focusPoints).toBe(4)
+    expect(result.newSaveResult).toBe(18)
+  })
+})
+
+describe("Superior Defense", () => {
+  it("can't use below L18", () => {
+    expect(canUseSuperiorDefense(17, 10, false)).toBe(false)
+  })
+
+  it("can't use without 3 FP", () => {
+    expect(canUseSuperiorDefense(18, 2, false)).toBe(false)
+  })
+
+  it("can't use if action used", () => {
+    expect(canUseSuperiorDefense(18, 10, true)).toBe(false)
+  })
+
+  it("can use at L18+ with 3 FP and action available", () => {
+    expect(canUseSuperiorDefense(18, 3, false)).toBe(true)
+  })
+
+  it("costs 3 FP and grants resistance for 1 minute", () => {
+    const result = useSuperiorDefense(10)
+    expect(result.focusPoints).toBe(7)
+    expect(result.resistancesGranted).toBe(true)
+    expect(result.durationMinutes).toBe(1)
+  })
+})
+
+// --- Monk Reactions (T45) ---
+
+describe("Deflect Attacks", () => {
+  it("reduction = d10 + DEX mod + monk level", () => {
+    // d10=7, DEX=4, level=5 => 16
+    expect(deflectAttacksReduction(7, 4, 5)).toBe(16)
+  })
+
+  it("reduction at higher levels", () => {
+    // d10=10, DEX=5, level=20 => 35
+    expect(deflectAttacksReduction(10, 5, 20)).toBe(35)
+  })
+
+  it("can't use below L3", () => {
+    expect(canDeflectAttacks(2, true, true, false)).toBe(false)
+  })
+
+  it("can't use without reaction", () => {
+    expect(canDeflectAttacks(5, false, true, false)).toBe(false)
+  })
+
+  it("requires weapon attack before L13", () => {
+    expect(canDeflectAttacks(5, true, false, false)).toBe(false)
+    expect(canDeflectAttacks(5, true, true, false)).toBe(true)
+  })
+
+  it("any damage type at L13+ (Deflect Energy)", () => {
+    expect(canDeflectAttacks(13, true, false, true)).toBe(true)
+  })
+
+  it("result: damage reduced correctly", () => {
+    const result = deflectAttacksResult(20, 16)
+    expect(result.damageTaken).toBe(4)
+    expect(result.reducedToZero).toBe(false)
+  })
+
+  it("result: reduced to zero", () => {
+    const result = deflectAttacksResult(15, 20)
+    expect(result.damageTaken).toBe(0)
+    expect(result.reducedToZero).toBe(true)
+  })
+
+  it("result: exact reduction to zero", () => {
+    const result = deflectAttacksResult(16, 16)
+    expect(result.damageTaken).toBe(0)
+    expect(result.reducedToZero).toBe(true)
+  })
+
+  it("can throw back when reduced to 0 and has 1 FP", () => {
+    expect(canThrowBack(true, 1)).toBe(true)
+  })
+
+  it("can't throw back when not reduced to 0", () => {
+    expect(canThrowBack(false, 5)).toBe(false)
+  })
+
+  it("can't throw back without FP", () => {
+    expect(canThrowBack(true, 0)).toBe(false)
+  })
+
+  it("throw-back uses Martial Arts die + DEX mod", () => {
+    const result = throwBackDamage(5, 4)
+    expect(result.dieSize).toBe(8) // L5 = d8
+    expect(result.modifier).toBe(4)
+  })
+
+  it("throw-back die scales with level", () => {
+    expect(throwBackDamage(1, 3).dieSize).toBe(6)
+    expect(throwBackDamage(11, 3).dieSize).toBe(10)
+    expect(throwBackDamage(17, 3).dieSize).toBe(12)
+  })
+})
+
+describe("Slow Fall", () => {
+  it("reduction = 5 * monk level", () => {
+    expect(slowFallReduction(4)).toBe(20)
+    expect(slowFallReduction(10)).toBe(50)
+    expect(slowFallReduction(20)).toBe(100)
+  })
+
+  it("can't use below L4", () => {
+    expect(canSlowFall(3, true)).toBe(false)
+  })
+
+  it("can't use without reaction", () => {
+    expect(canSlowFall(4, false)).toBe(false)
+  })
+
+  it("can use at L4+ with reaction", () => {
+    expect(canSlowFall(4, true)).toBe(true)
+  })
+
+  it("reduces fall damage, minimum 0", () => {
+    expect(applySlowFall(30, 4)).toBe(10) // 30 - 20 = 10
+    expect(applySlowFall(15, 4)).toBe(0) // 15 - 20 = -5 -> 0
+    expect(applySlowFall(20, 4)).toBe(0) // 20 - 20 = 0
+  })
+})
+
+// --- Warrior of the Open Hand (T46) ---
+
+describe("Open Hand Technique", () => {
+  it("Addle: no save, can't take Reactions", () => {
+    const result = openHandTechniqueResult("addle", false, "medium")
+    expect(result.effectApplied).toBe(true)
+    expect(result.cantTakeReactions).toBe(true)
+    expect(result.pushedFeet).toBe(0)
+    expect(result.prone).toBe(false)
+  })
+
+  it("Addle: works regardless of save result", () => {
+    const result = openHandTechniqueResult("addle", true, "huge")
+    expect(result.effectApplied).toBe(true)
+    expect(result.cantTakeReactions).toBe(true)
+  })
+
+  it("Push: failed save, Large or smaller, pushed 15ft", () => {
+    const result = openHandTechniqueResult("push", false, "large")
+    expect(result.effectApplied).toBe(true)
+    expect(result.pushedFeet).toBe(15)
+  })
+
+  it("Push: successful save, not pushed", () => {
+    const result = openHandTechniqueResult("push", true, "medium")
+    expect(result.effectApplied).toBe(false)
+    expect(result.pushedFeet).toBe(0)
+  })
+
+  it("Push: Huge target, not pushed", () => {
+    const result = openHandTechniqueResult("push", false, "huge")
+    expect(result.effectApplied).toBe(false)
+    expect(result.pushedFeet).toBe(0)
+  })
+
+  it("Push: Gargantuan target, not pushed", () => {
+    const result = openHandTechniqueResult("push", false, "gargantuan")
+    expect(result.effectApplied).toBe(false)
+    expect(result.pushedFeet).toBe(0)
+  })
+
+  it("Push: Small target, failed save, pushed", () => {
+    const result = openHandTechniqueResult("push", false, "small")
+    expect(result.effectApplied).toBe(true)
+    expect(result.pushedFeet).toBe(15)
+  })
+
+  it("Topple: failed save, target Prone", () => {
+    const result = openHandTechniqueResult("topple", false, "medium")
+    expect(result.effectApplied).toBe(true)
+    expect(result.prone).toBe(true)
+  })
+
+  it("Topple: successful save, not Prone", () => {
+    const result = openHandTechniqueResult("topple", true, "medium")
+    expect(result.effectApplied).toBe(false)
+    expect(result.prone).toBe(false)
+  })
+})
+
+describe("Wholeness of Body", () => {
+  it("can't use without charges", () => {
+    expect(canUseWholenessOfBody(0, false)).toBe(false)
+  })
+
+  it("can't use if bonus action used", () => {
+    expect(canUseWholenessOfBody(2, true)).toBe(false)
+  })
+
+  it("can use with charges and bonus action available", () => {
+    expect(canUseWholenessOfBody(1, false)).toBe(true)
+  })
+
+  it("max charges = WIS mod (min 1)", () => {
+    expect(wholenessOfBodyMaxCharges(3)).toBe(3)
+    expect(wholenessOfBodyMaxCharges(5)).toBe(5)
+    expect(wholenessOfBodyMaxCharges(0)).toBe(1)
+    expect(wholenessOfBodyMaxCharges(-1)).toBe(1)
+  })
+
+  it("heal = Martial Arts die + WIS mod, decrements charges", () => {
+    const result = useWholenessOfBody(3, 5, 3)
+    expect(result.healAmount).toBe(8)
+    expect(result.wholenessCharges).toBe(2)
+    expect(result.bonusActionUsed).toBe(true)
+  })
+
+  it("heal minimum 1 HP", () => {
+    const result = useWholenessOfBody(2, 1, -1)
+    expect(result.healAmount).toBe(1) // max(1, 1 + (-1)) = max(1, 0) = 1
+    expect(result.wholenessCharges).toBe(1)
+  })
+})
+
+describe("Fleet Step", () => {
+  it("not available below L11", () => {
+    expect(hasFleetStep(10)).toBe(false)
+  })
+
+  it("available at L11+", () => {
+    expect(hasFleetStep(11)).toBe(true)
+    expect(hasFleetStep(20)).toBe(true)
+  })
+})
+
+describe("Quivering Palm", () => {
+  it("can't use below L17", () => {
+    expect(canUseQuiveringPalm(16, 10)).toBe(false)
+  })
+
+  it("can't use without 4 FP", () => {
+    expect(canUseQuiveringPalm(17, 3)).toBe(false)
+  })
+
+  it("can use at L17+ with 4 FP", () => {
+    expect(canUseQuiveringPalm(17, 4)).toBe(true)
+  })
+
+  it("costs 4 FP and activates", () => {
+    const result = useQuiveringPalm(10)
+    expect(result.focusPoints).toBe(6)
+    expect(result.quiveringPalmActive).toBe(true)
+  })
+
+  it("trigger: failed save = full 10d12 Force damage", () => {
+    const result = triggerQuiveringPalm(false, 55)
+    expect(result.reducedToZeroHp).toBe(false)
+    expect(result.forceDamage).toBe(55)
+  })
+
+  it("trigger: successful save = half damage (floored)", () => {
+    const result = triggerQuiveringPalm(true, 55)
+    expect(result.reducedToZeroHp).toBe(false)
+    expect(result.forceDamage).toBe(27)
+  })
+
+  it("trigger: successful save with even damage", () => {
+    const result = triggerQuiveringPalm(true, 60)
+    expect(result.forceDamage).toBe(30)
   })
 })
