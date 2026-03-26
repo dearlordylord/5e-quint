@@ -25,7 +25,9 @@ function makeFighterState(charges: number, max: number = 3): FeatureState {
       secondWindMax: max,
       actionSurgeCharges: 1,
       actionSurgeMax: 1,
-      actionSurgeUsedThisTurn: false
+      actionSurgeUsedThisTurn: false,
+      indomitableCharges: 0,
+      indomitableMax: 0
     }
   }
 }
@@ -41,7 +43,9 @@ function makeFighterStateWithSurge(
       secondWindMax: 3,
       actionSurgeCharges,
       actionSurgeMax,
-      actionSurgeUsedThisTurn
+      actionSurgeUsedThisTurn,
+      indomitableCharges: 0,
+      indomitableMax: 0
     }
   }
 }

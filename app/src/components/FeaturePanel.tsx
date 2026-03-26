@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react"
 
 import { MonkPanel } from "#/components/MonkPanel.tsx"
 import { PaladinPanel } from "#/components/PaladinPanel.tsx"
+import { RoguePanel } from "#/components/RoguePanel.tsx"
 import type { BridgeResult } from "#/features/feature-bridge.ts"
 import type { UseFeatures } from "#/features/useFeatures.ts"
 
@@ -17,8 +18,9 @@ export function FeaturePanel({
   const barbarian = features.featureState.barbarian
   const monk = features.featureState.monk
   const paladin = features.featureState.paladin
+  const rogue = features.featureState.rogue
 
-  if (!fighter && !barbarian && !monk && !paladin) return null
+  if (!fighter && !barbarian && !monk && !paladin && !rogue) return null
 
   const handleSecondWind = (e: FormEvent) => {
     e.preventDefault()
@@ -143,6 +145,36 @@ export function FeaturePanel({
                 </button>
                 {fighter.actionSurgeUsedThisTurn && <span className="text-xs text-amber-300">Used this turn</span>}
               </div>
+            </div>
+          )}
+          {fighter.indomitableMax > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-300">Indomitable</span>
+                <span className="text-sm text-gray-400">
+                  {fighter.indomitableCharges}/{fighter.indomitableMax}
+                </span>
+              </div>
+              <div className="flex gap-1 mb-2">
+                {Array.from({ length: fighter.indomitableMax }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-full ${i < fighter.indomitableCharges ? "bg-emerald-400" : "bg-gray-600"}`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          {features.championCritRange < 20 && (
+            <div className="mb-4 p-2 bg-indigo-900/30 border border-indigo-700 rounded text-sm">
+              <div className="text-indigo-300 font-medium mb-1">Champion</div>
+              <div className="text-xs text-gray-400">Critical Hit range: {features.championCritRange}-20</div>
+              {features.hasRemarkableAthlete && (
+                <div className="text-xs text-gray-400">Remarkable Athlete: Advantage on Initiative and Athletics</div>
+              )}
+              {features.survivorDefyDeathAdvantage && (
+                <div className="text-xs text-gray-400">Survivor: Advantage on Death Saving Throws</div>
+              )}
             </div>
           )}
         </>
@@ -319,6 +351,8 @@ export function FeaturePanel({
         </>
       )}
       {paladin && <PaladinPanel features={features} paladin={paladin} onFeatureAction={onFeatureAction} />}
+
+      {rogue && <RoguePanel features={features} rogue={rogue} onFeatureAction={onFeatureAction} />}
     </div>
   )
 }
