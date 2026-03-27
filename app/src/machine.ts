@@ -6,9 +6,15 @@ import { dmgR, dsR, fallR } from "#/machine-damage.ts"
 import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
 import { guards } from "#/machine-guards.ts"
 import {
+  CHAMPION_SURVIVOR_LEVEL,
+  heroicWarriorInspiration,
+  survivorHeroicRally
+} from "#/features/class-fighter.ts"
+import {
   addDeathFailures,
   addIncapSource,
   applyConditionUpdate,
+  applyDefyDeath,
   calculateEffectiveSpeed,
   computeAddExhaustion,
   effectiveMaxHp,
@@ -49,6 +55,7 @@ import {
   asTakeDamage,
   asUseAction,
   asUseMovement,
+  asUseBonusMovement,
   asUseSecondWind,
   asUseTacticalMind,
   type DndContext,
@@ -157,13 +164,9 @@ export const dndMachine = setup({
     })),
     initTurn: assign(({ context: c, event: e }) => {
       const ev = asStartTurn(e)
-      const { conditions: conds, ...cr } = computeStartTurn(
-        c,
-        ev.deathSaveRoll,
-        ev.startOfTurnEffects,
-        ev.deathSaveRoll2,
-        c.fighterLevel
-      )
+      const effectiveDsRoll =
+        ev.deathSaveRoll != null ? applyDefyDeath(c.fighterLevel, ev.deathSaveRoll, ev.deathSaveRoll2) : undefined
+      const { conditions: conds, ...cr } = computeStartTurn(c, effectiveDsRoll, ev.startOfTurnEffects)
       const speed = calculateEffectiveSpeed({
         armorPenalty: ev.armorPenalty,
         baseSpeed: ev.baseSpeed,
@@ -174,16 +177,13 @@ export const dndMachine = setup({
         isGrappling: ev.isGrappling,
         restrained: conds.restrained ?? c.restrained
       })
-      // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied at start of turn
-      let resultHp = cr.hp as number
-      if (c.fighterLevel >= 18 && resultHp > 0 && resultHp <= Math.floor(c.maxHp / 2) && ev.conMod != null) {
-        resultHp = Math.min(resultHp + 5 + ev.conMod, effectiveMaxHp(c.maxHp))
-      }
+      const rallyHeal = survivorHeroicRally(c.fighterLevel, cr.hp as number, c.maxHp, ev.conMod ?? 0)
+      const resultHp = rallyHeal > 0 ? Math.min((cr.hp as number) + rallyHeal, effectiveMaxHp(c.maxHp)) : cr.hp
       return {
         ...conds,
         ...cr,
         ...INITIAL_TURN_STATE,
-        hp: hp(resultHp),
+        hp: hp(resultHp as number),
         effectiveSpeed: movementFeet(speed),
         extraAttacksRemaining: ev.extraAttacks,
         movementRemaining: movementFeet(speed)
@@ -368,14 +368,14 @@ export const dndMachine = setup({
     }),
     fighterStartTurn: assign(({ context: c }) => ({
       actionSurgeUsedThisTurn: false,
-      ...(c.fighterLevel >= 10 && !c.heroicInspiration ? { heroicInspiration: true } : {})
+      ...(heroicWarriorInspiration(c.fighterLevel, c.heroicInspiration) ? { heroicInspiration: true } : {})
     })),
     useHeroicInspiration: assign(({ context: c }) => {
       if (!c.heroicInspiration) return {}
       return { heroicInspiration: false }
     }),
     useBonusMovement: assign(({ context: c, event: e }) => {
-      const ev = e as Extract<DndEvent, { type: "USE_BONUS_MOVEMENT" }>
+      const ev = asUseBonusMovement(e)
       if (c.bonusMovementRemaining <= 0) return {}
       return { bonusMovementRemaining: Math.max(c.bonusMovementRemaining - ev.feet, 0) }
     }),

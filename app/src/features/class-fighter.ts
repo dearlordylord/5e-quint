@@ -129,6 +129,14 @@ export interface ActionSurgeState {
   readonly actionsRemaining: number
 }
 
+/** Extra Attack count from the Fighter Features table (SRD 5.2.1). L5: 1, L11: 2, L20: 3. */
+export function fighterExtraAttacks(fighterLevel: number): number {
+  if (fighterLevel >= 20) return 3
+  if (fighterLevel >= 11) return 2
+  if (fighterLevel >= 5) return 1
+  return 0
+}
+
 /** Action Surge max charges from the Fighter Features table (SRD 5.2.1). */
 export function actionSurgeMaxCharges(fighterLevel: number): number {
   if (fighterLevel < 2) return 0
