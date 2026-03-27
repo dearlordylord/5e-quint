@@ -3117,13 +3117,13 @@ module dndTest {
 
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
-        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase })
+        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState })
 
   run test_invariants_10steps =
     init
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState })
 
   run test_invariants_20steps =
     init
@@ -3131,7 +3131,7 @@ module dndTest {
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState })
 
   // Individual invariant tests on known state constructions
   run test_inv_deadIsAbsorbing_construction = {
@@ -3567,5 +3567,203 @@ module dndTest {
   // ==========================================================================
   // Regression: base TWF does NOT add positive ability modifier
   run test_twf_base_no_positive_mod = assert(pTWFOffHandDamage(4, 3) == 4)
+
+  // ==========================================================================
+  // Fighter Charge Mechanics (Second Wind, Action Surge, Indomitable)
+  // ==========================================================================
+
+  // -- secondWindMaxCharges --
+  run test_secondWindMaxCharges_level0 = assert(secondWindMaxCharges(0) == 0)
+  run test_secondWindMaxCharges_level1 = assert(secondWindMaxCharges(1) == 2)
+  run test_secondWindMaxCharges_level3 = assert(secondWindMaxCharges(3) == 2)
+  run test_secondWindMaxCharges_level4 = assert(secondWindMaxCharges(4) == 3)
+  run test_secondWindMaxCharges_level9 = assert(secondWindMaxCharges(9) == 3)
+  run test_secondWindMaxCharges_level10 = assert(secondWindMaxCharges(10) == 4)
+
+  // -- actionSurgeMaxCharges --
+  run test_actionSurgeMaxCharges_level1 = assert(actionSurgeMaxCharges(1) == 0)
+  run test_actionSurgeMaxCharges_level2 = assert(actionSurgeMaxCharges(2) == 1)
+  run test_actionSurgeMaxCharges_level16 = assert(actionSurgeMaxCharges(16) == 1)
+  run test_actionSurgeMaxCharges_level17 = assert(actionSurgeMaxCharges(17) == 2)
+
+  // -- indomitableMaxCharges --
+  run test_indomitableMaxCharges_level8 = assert(indomitableMaxCharges(8) == 0)
+  run test_indomitableMaxCharges_level9 = assert(indomitableMaxCharges(9) == 1)
+  run test_indomitableMaxCharges_level12 = assert(indomitableMaxCharges(12) == 1)
+  run test_indomitableMaxCharges_level13 = assert(indomitableMaxCharges(13) == 2)
+  run test_indomitableMaxCharges_level16 = assert(indomitableMaxCharges(16) == 2)
+  run test_indomitableMaxCharges_level17 = assert(indomitableMaxCharges(17) == 3)
+
+  // -- freshFighterState --
+  run test_freshFighterState_level5 = {
+    val fs = freshFighterState(5)
+    all {
+      assert(fs.secondWindCharges == 3),
+      assert(fs.secondWindMax == 3),
+      assert(fs.actionSurgeCharges == 1),
+      assert(fs.actionSurgeMax == 1),
+      assert(fs.actionSurgeUsedThisTurn == false),
+      assert(fs.indomitableCharges == 0),
+      assert(fs.indomitableMax == 0),
+    }
+  }
+
+  // -- canUseSecondWind --
+  pure val FIGHTER_FS: FighterState = {
+    secondWindCharges: 2,
+    secondWindMax: 2,
+    actionSurgeCharges: 1,
+    actionSurgeMax: 1,
+    actionSurgeUsedThisTurn: false,
+    indomitableCharges: 0,
+    indomitableMax: 0,
+  }
+
+  run test_canUseSecondWind_true = {
+    val s = freshCreature(30)
+    assert(canUseSecondWind(FIGHTER_FS, FRESH_TURN, s) == true)
+  }
+
+  run test_canUseSecondWind_false_no_charges = {
+    val fs = FIGHTER_FS.with("secondWindCharges", 0)
+    val s = freshCreature(30)
+    assert(canUseSecondWind(fs, FRESH_TURN, s) == false)
+  }
+
+  run test_canUseSecondWind_false_bonus_used = {
+    val ts = FRESH_TURN.with("bonusActionUsed", true)
+    val s = freshCreature(30)
+    assert(canUseSecondWind(FIGHTER_FS, ts, s) == false)
+  }
+
+  run test_canUseSecondWind_false_incapacitated = {
+    val s = pApplyCondition(freshCreature(30), CStunned)
+    assert(canUseSecondWind(FIGHTER_FS, FRESH_TURN, s) == false)
+  }
+
+  // -- canUseActionSurge --
+  run test_canUseActionSurge_true = {
+    val s = freshCreature(30)
+    assert(canUseActionSurge(FIGHTER_FS, s) == true)
+  }
+
+  run test_canUseActionSurge_false_no_charges = {
+    val fs = FIGHTER_FS.with("actionSurgeCharges", 0)
+    val s = freshCreature(30)
+    assert(canUseActionSurge(fs, s) == false)
+  }
+
+  run test_canUseActionSurge_false_used_this_turn = {
+    val fs = FIGHTER_FS.with("actionSurgeUsedThisTurn", true)
+    val s = freshCreature(30)
+    assert(canUseActionSurge(fs, s) == false)
+  }
+
+  run test_canUseActionSurge_false_incapacitated = {
+    val s = pApplyCondition(freshCreature(30), CParalyzed)
+    assert(canUseActionSurge(FIGHTER_FS, s) == false)
+  }
+
+  // -- canUseIndomitable --
+  run test_canUseIndomitable_true = {
+    val fs = FIGHTER_FS.with("indomitableCharges", 1).with("indomitableMax", 1)
+    assert(canUseIndomitable(9, fs) == true)
+  }
+
+  run test_canUseIndomitable_false_low_level = {
+    val fs = FIGHTER_FS.with("indomitableCharges", 1).with("indomitableMax", 1)
+    assert(canUseIndomitable(8, fs) == false)
+  }
+
+  run test_canUseIndomitable_false_no_charges = {
+    val fs = FIGHTER_FS.with("indomitableCharges", 0).with("indomitableMax", 1)
+    assert(canUseIndomitable(9, fs) == false)
+  }
+
+  // -- pUseSecondWind --
+  run test_pUseSecondWind_heals_correctly = {
+    val s = freshCreature(30).with("hp", 10)
+    val result = pUseSecondWind(s, FIGHTER_FS, 5, 5)
+    all {
+      assert(result.creature.hp == 20),         // 10 + 5 + 5 = 20
+      assert(result.fighter.secondWindCharges == 1),  // 2 - 1
+    }
+  }
+
+  run test_pUseSecondWind_clamps_to_maxHp = {
+    val s = freshCreature(30).with("hp", 25)
+    val result = pUseSecondWind(s, FIGHTER_FS, 10, 5)
+    all {
+      assert(result.creature.hp == 30),         // min(25 + 15, 30) = 30
+      assert(result.fighter.secondWindCharges == 1),
+    }
+  }
+
+  run test_pUseSecondWind_at_0hp_clears_unconscious = {
+    // pHeal at 0 HP clears unconscious and resets death saves
+    val s = pApplyCondition(freshCreature(30).with("hp", 0), CUnconscious)
+    val result = pUseSecondWind(s, FIGHTER_FS, 5, 5)
+    all {
+      assert(result.creature.hp == 10),          // 0 + 5 + 5 = 10
+      assert(result.creature.unconscious == false),
+      assert(result.creature.deathSaves.successes == 0),
+      assert(result.creature.deathSaves.failures == 0),
+    }
+  }
+
+  // -- pUseActionSurge --
+  run test_pUseActionSurge_grants_action = {
+    val result = pUseActionSurge(FRESH_TURN, FIGHTER_FS)
+    all {
+      assert(result.turn.actionsRemaining == 2),           // 1 + 1
+      assert(result.fighter.actionSurgeCharges == 0),       // 1 - 1
+      assert(result.fighter.actionSurgeUsedThisTurn == true),
+    }
+  }
+
+  // -- pUseIndomitable --
+  run test_pUseIndomitable_decrements = {
+    val fs = FIGHTER_FS.with("indomitableCharges", 2).with("indomitableMax", 2)
+    val result = pUseIndomitable(fs)
+    assert(result.indomitableCharges == 1)
+  }
+
+  // -- pFighterShortRest --
+  run test_pFighterShortRest_restores = {
+    val fs = FIGHTER_FS.with("secondWindCharges", 0).with("actionSurgeCharges", 0)
+    val result = pFighterShortRest(fs)
+    all {
+      assert(result.secondWindCharges == 1),    // regain 1 (capped at max 2)
+      assert(result.actionSurgeCharges == 1),   // restore all (max is 1)
+    }
+  }
+
+  run test_pFighterShortRest_sw_capped = {
+    // Already at max — should not exceed
+    val result = pFighterShortRest(FIGHTER_FS)
+    assert(result.secondWindCharges == 2)
+  }
+
+  // -- pFighterLongRest --
+  run test_pFighterLongRest_restores_all = {
+    val fs = FIGHTER_FS
+      .with("secondWindCharges", 0)
+      .with("actionSurgeCharges", 0)
+      .with("indomitableCharges", 0)
+      .with("indomitableMax", 2)
+    val result = pFighterLongRest(fs)
+    all {
+      assert(result.secondWindCharges == 2),
+      assert(result.actionSurgeCharges == 1),
+      assert(result.indomitableCharges == 2),
+    }
+  }
+
+  // -- pFighterStartTurn --
+  run test_pFighterStartTurn_resets_surge_flag = {
+    val fs = FIGHTER_FS.with("actionSurgeUsedThisTurn", true)
+    val result = pFighterStartTurn(fs)
+    assert(result.actionSurgeUsedThisTurn == false)
+  }
 
 }
