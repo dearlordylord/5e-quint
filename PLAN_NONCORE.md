@@ -807,7 +807,7 @@ Found during simplify passes. Pre-existing or low-priority — not blocking.
 4. **`intimidatingPresenceDC` hardcoded to 0** — `useFeatures.ts` calls `getIntimidatingPresenceDC(0, 0)`, producing meaningless DC. Needs real `strMod`/`profBonus` from config.
 5. **`useFeatures.test.tsx` requires jsdom** — Pre-existing test infrastructure gap. The hook test file fails with `ERR_MODULE_NOT_FOUND: jsdom`. Not related to feature code.
 6. **Champion `critRange: 20` in L5 test configs** — `TEST_CONFIG` and `TEST_FIGHTER_5` use `critRange: 20` but Champion gets Improved Critical at L3 (should be 19). Pre-existing; unrelated to fighter charge work.
-7. **Inductive invariant patterns not in core spec** — The POC `dndFighter.qnt` had a working Apalache inductive invariant (`inductiveInv` with `VALID_FIGHTER_STATES` set comprehension, level↔max constraints, actionSurge↔actionsRemaining coupling). These were not ported to `dnd.qnt` because Apalache may timeout on the full model. When adding more class state vars, consider adding inductive invariants for the full model or per-class sub-models.
+7. **Inductive invariants & fighter integration hacks** — See `PLAN_CLEANUP.md` for full details (6 hacks to fix + inductive invariant restoration plan with code).
 
 ---
 
