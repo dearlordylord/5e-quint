@@ -31,12 +31,12 @@ Every change must pass the scaling question: **"What happens when we have all 8+
 | Indomitable (charges) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
 | Extra Attack tiers | ✓ | ✓ | — | ✓ |
 | Fighting Styles (passive formulas) | ✓ formulas | ✗ | ✓ | ✗ |
-| Tactical Mind (L2) | ✗ | ✗ | ✓ | ✗ |
-| Tactical Shift (L5, on SW) | ✗ | ✗ | ✓ | ✗ |
-| Champion: Improved/Superior Critical | ✗ | ✗ | ✓ | ✗ |
-| Champion: Remarkable Athlete | ✗ | ✗ | ✓ | ✗ |
-| Champion: Heroic Warrior (L10) | ✗ | ✗ | ✓ | ✗ |
-| Champion: Survivor/Defy Death (L18) | ✗ | ✗ | ✓ | ✗ |
+| Tactical Mind (L2) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
+| Tactical Shift (L5, on SW) | ✓ via P1 | ✓ | ✓ | ✓ |
+| Champion: Improved/Superior Critical | ✓ configForLevel | ✗ | ✓ | ✓ (via critRange) |
+| Champion: Remarkable Athlete | ✗ query only | ✗ | ✓ | ✗ |
+| Champion: Heroic Warrior (L10) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
+| Champion: Survivor/Defy Death (L18) | ✓ | ✓ | ✓ | ✓ |
 
 ## Current parity (other classes)
 
@@ -103,6 +103,42 @@ For `fighterState` (7 fields, ~7K records), the `VALID_FIGHTER_STATES` set compr
 **What would unblock it:**
 - Quint adding a symbolic record type expression (equivalent to TLA+'s `[field: Set, ...]` function sets)
 - Or: a restricted sub-model that strips CreatureState/SpellSlotState down to just the fields Apalache needs
+
+### E. Tactical Mind (Level 2) ✓
+
+- Added `canUseTacticalMind`, `pUseTacticalMind` pure functions + `doUseTacticalMind` action
+- Quint + XState (`USE_TACTICAL_MIND`) + MBT bridge
+- Charge only consumed if boosted check succeeds (SRD 5.2.1)
+
+### G1. Heroic Warrior (Champion L10) ✓
+
+- Added `heroicInspiration: bool` to `FighterState`
+- `pFighterStartTurn` grants inspiration at L10+ if not already held
+- `doUseHeroicInspiration` action to consume inspiration
+- Updated `VALID_FIGHTER_STATES` with new bool dimension
+- Init level set expanded to `Set(5, 9, 10)`
+- Quint + XState (`USE_HEROIC_INSPIRATION`) + MBT bridge
+
+### G2. Survivor (Champion L18) ✓
+
+- **Defy Death:** `pFighterDeathSaveRoll` — advantage (two rolls, take max) + threshold (18-20 → 20). Applied to `doDeathSave` and `pStartTurnFull`.
+- **Heroic Rally:** `isBloodied`, `pHeroicRally` — heal 5+conMod at turn start if bloodied (0 < hp ≤ maxHp/2).
+- Added `deathSaveRoll2` and `conMod` nondet params to `doStartTurn`
+- Init level set expanded to `Set(5, 9, 10, 18)`
+- Quint + XState (DEATH_SAVE gains d20Roll2, START_TURN gains deathSaveRoll2/conMod) + MBT bridge
+
+### P1. Bonus movement grants ✓
+
+- Added `bonusMovementRemaining: int` and `bonusMovementOAFree: bool` to `TurnState`
+- `pGrantBonusMovement`, `canUseBonusMovement`, `pUseBonusMovement` pure functions
+- `doUseBonusMovement` action + `bonusMovementBounded` invariant
+- Reset at turn start via `pStartTurn`
+- Quint + XState (`USE_BONUS_MOVEMENT`) + MBT bridge
+
+### F. Tactical Shift (L5) ✓
+
+- Extended `doUseSecondWind` / `useSecondWind` to call `pGrantBonusMovement(ts, effectiveSpeed, true)` at L5+
+- Uses P1 infrastructure — no new actions or state
 
 ---
 
