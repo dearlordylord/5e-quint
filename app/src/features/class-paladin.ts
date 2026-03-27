@@ -197,6 +197,29 @@ export function abjureFoesResult(targetSavePassed: boolean): AbjureFoesResult {
   }
 }
 
+// --- Channel Divinity Framework (SRD 5.2.1) ---
+
+/* eslint-disable no-magic-numbers */
+
+/** Max Channel Divinity uses for a Paladin at given class level. */
+export function paladinChannelDivinityMax(paladinLevel: number): number {
+  if (paladinLevel < 3) return 0
+  if (paladinLevel < 11) return 2
+  return 3
+}
+
+/** Expend one Channel Divinity use. Returns unchanged charges if at 0. */
+export function expendChannelDivinity(charges: number): number {
+  return charges <= 0 ? charges : charges - 1
+}
+
+/** Restore Channel Divinity on short rest: regain 1 use, capped at max. */
+export function restoreChannelDivinityShort(charges: number, max: number): number {
+  return charges >= max ? charges : charges + 1
+}
+
+/* eslint-enable no-magic-numbers */
+
 // --- Aura of Courage (Level 10) ---
 
 export const AURA_OF_COURAGE_LEVEL = 10

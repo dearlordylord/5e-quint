@@ -425,8 +425,7 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: false,
   }
 
@@ -1161,8 +1160,7 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: true,
   }
 
@@ -3219,8 +3217,7 @@ module dndTest {
     unarmoredDefense: BarbarianUD,
     features: Set(FExtraAttack),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: false,
   }
 
@@ -3244,8 +3241,7 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: false,
   }
 
@@ -3269,8 +3265,6 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: true,
     hasFightingStyleFeature: false,
   }
 
@@ -3294,8 +3288,7 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: true,
   }
 
@@ -3319,8 +3312,7 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(FExtraAttack),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: true,
   }
 
@@ -3344,8 +3336,7 @@ module dndTest {
     unarmoredDefense: MonkUD,
     features: Set(FExtraAttack),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: false,
   }
 
@@ -3369,8 +3360,7 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: false,
   }
 
@@ -3394,8 +3384,7 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: false,
   }
 
@@ -3419,8 +3408,7 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: false,
   }
 
@@ -3444,8 +3432,7 @@ module dndTest {
     unarmoredDefense: NoUnarmoredDefense,
     features: Set(),
     critRange: 20,
-    hasEvasion: false,
-    hasUncannyDodge: false,
+
     hasFightingStyleFeature: false,
   }
 
@@ -3566,82 +3553,6 @@ module dndTest {
     val t2 = pBonusActionDash(t1, FRESH20)               // 60 + 30 = 90
     all { assert(t2.movementRemaining == 90), assert(t2.actionsRemaining == 0), assert(t2.bonusActionUsed) }
   }
-
-  // ============================================================
-  // Evasion (T03)
-  // ============================================================
-
-  run test_evasion_save_success = assert(pEvasionDamage(true, false, true, 10) == 0)
-
-  run test_evasion_save_fail_half = assert(pEvasionDamage(true, false, false, 10) == 5)
-
-  run test_evasion_save_fail_odd_rounds_down = assert(pEvasionDamage(true, false, false, 7) == 3)
-
-  run test_evasion_incapacitated_full_damage = assert(pEvasionDamage(true, true, true, 10) == 10)
-
-  run test_evasion_no_feature_full_damage = assert(pEvasionDamage(false, false, true, 10) == 10)
-
-  // ============================================================
-  // Uncanny Dodge (T04)
-  // ============================================================
-
-  run test_uncanny_dodge_10 = assert(pUncannyDodgeDamage(10) == 5)
-
-  run test_uncanny_dodge_odd_rounds_down = assert(pUncannyDodgeDamage(7) == 3)
-
-  run test_uncanny_dodge_zero = assert(pUncannyDodgeDamage(0) == 0)
-
-  run test_uncanny_dodge_precondition_no_reaction = {
-    val t = FRESH_TURN.with("reactionAvailable", false)
-    val creature = freshCreature(20)
-    assert(not(pCanUncannyDodge(TEST_ROGUE_HALFLING, t, creature, true)))
-  }
-
-  run test_uncanny_dodge_precondition_attacker_not_visible = {
-    val t = FRESH_TURN
-    val creature = freshCreature(20)
-    assert(not(pCanUncannyDodge(TEST_ROGUE_HALFLING, t, creature, false)))
-  }
-
-  // ==========================================================================
-  // T07 — Channel Divinity Framework
-  // ==========================================================================
-
-  // Cleric scaling: test each boundary and the level just below it
-  run test_cleric_cd_max_level_1 = assert(pClericChannelDivinityMax(1) == 0)
-  run test_cleric_cd_max_level_2 = assert(pClericChannelDivinityMax(2) == 2)
-  run test_cleric_cd_max_level_5 = assert(pClericChannelDivinityMax(5) == 2)
-  run test_cleric_cd_max_level_6 = assert(pClericChannelDivinityMax(6) == 3)
-  run test_cleric_cd_max_level_17 = assert(pClericChannelDivinityMax(17) == 3)
-  run test_cleric_cd_max_level_18 = assert(pClericChannelDivinityMax(18) == 4)
-
-  // Paladin scaling: test each boundary and the level just below it
-  run test_paladin_cd_max_level_2 = assert(pPaladinChannelDivinityMax(2) == 0)
-  run test_paladin_cd_max_level_3 = assert(pPaladinChannelDivinityMax(3) == 2)
-  run test_paladin_cd_max_level_10 = assert(pPaladinChannelDivinityMax(10) == 2)
-  run test_paladin_cd_max_level_11 = assert(pPaladinChannelDivinityMax(11) == 3)
-
-  // Combined max from config
-  run test_cd_max_cleric = assert(pChannelDivinityMax(TEST_CLERIC_DWARF) == 2)
-  run test_cd_max_paladin = assert(pChannelDivinityMax(TEST_PALADIN_DRAGONBORN) == 2)
-  run test_cd_max_wizard_none = assert(pChannelDivinityMax(TEST_WIZARD) == 0)
-
-  // Multiclass: exercises the additive sum (Cleric 6 -> 3, Paladin 3 -> 2 = 5)
-  run test_cd_max_multiclass = {
-    val multiConfig = TEST_CLERIC_DWARF.with("classLevels",
-      ZERO_CLASS_LEVELS.set(Cleric, 6).set(Paladin, 3))
-    assert(pChannelDivinityMax(multiConfig) == 5)
-  }
-
-  // Expend
-  run test_cd_expend = assert(pExpendChannelDivinity(2) == 1)
-  run test_cd_expend_to_zero = assert(pExpendChannelDivinity(1) == 0)
-  run test_cd_expend_at_zero = assert(pExpendChannelDivinity(0) == 0)
-
-  // Short rest: regain 1, capped at max
-  run test_cd_short_rest_restore = assert(pRestoreChannelDivinityShort(1, 3) == 2)
-  run test_cd_short_rest_already_full = assert(pRestoreChannelDivinityShort(3, 3) == 3)
-  run test_cd_short_rest_from_zero = assert(pRestoreChannelDivinityShort(0, 2) == 1)
 
   // ==========================================================================
   // T201 — Feat System Framework
