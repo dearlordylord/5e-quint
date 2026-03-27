@@ -1,14 +1,20 @@
 # Plan: Quint Spec Parity & Class Feature Migration
 
+## Why Quint
+
+TS unit tests are deterministic — they check the cases you thought to write. Quint explores the nondeterministic state space: thousands of random traces through all possible action orderings, catching bugs that arise from unexpected state combinations. MBT then proves the XState runtime matches the Quint spec field-by-field across those traces. The spec also serves as executable SRD documentation — every modeled rule traces to a specific SRD passage.
+
 ## Goal
 
 Every class feature that affects state tracked by the XState machine should be spec'd in Quint and MBT-verified. The three layers have distinct roles:
 
-- **Quint** — formal spec, source of truth for correctness
-- **XState machine** — Quint-parity state machine, verified by MBT traces
-- **TS features layer** — single implementation of class features, bridges to machine events
+- **Quint** (`dnd.qnt`) — formal spec, source of truth for correctness
+- **XState machine** (`machine.ts`) — Quint-parity state machine, verified by MBT traces
+- **TS features layer** (`app/src/features/`) — single implementation of class features, bridges to machine events via `feature-bridge.ts`
 
 Currently only base rules (HP, damage, conditions, turns, rests, slots, grapple/shove) and 3 Fighter charge mechanics have Quint specs. The rest of Fighter and all other classes exist only in TS.
+
+**"Quint parity" scope:** CLAUDE.md says "never add logic to XState that diverges from Quint spec." This applies to mechanics that ARE modeled in Quint. Features not yet in Quint (Tactical Mind, Champion subclass, all other classes) live only in the TS features layer — that's the current state, not a violation. The goal is to move them into Quint over time.
 
 ## Architectural constraint
 
@@ -49,12 +55,12 @@ Second Wind, Action Surge, and Indomitable each have THREE implementations:
 
 The XState inline implementations exist because the MBT bridge sends events directly to the machine (e.g., `USE_SECOND_WIND`), bypassing the features layer. The machine must handle these events with its own logic.
 
-**Resolution:** When tackling this, choose one of:
+**Resolution options:**
 - (a) MBT bridge routes through the features layer bridge (features layer becomes the single implementation, machine actions become thin pass-throughs)
 - (b) Machine actions delegate to the features layer functions (imports from `class-fighter.ts`)
 - (c) Accept the duplication — it's small (30 lines in machine.ts) and MBT proves they match
 
-This is a design decision. The duplication is MBT-verified so it's not a correctness risk, just maintenance overhead.
+**Current default: (c).** The duplication is MBT-verified so it's not a correctness risk, just maintenance overhead. It doesn't block adding new features to Quint. Revisit when the duplication grows beyond Fighter or becomes a maintenance burden.
 
 ---
 
@@ -102,7 +108,11 @@ For `fighterState` (7 fields, ~7K records), the `VALID_FIGHTER_STATES` set compr
 
 ## Next: Migrate remaining Fighter features to Quint
 
-Each feature follows the same recipe: add pure functions + action wrapper in `dnd.qnt`, add driver handler in MBT bridge, add `fighterLevel` to state comparison. The `fighterLevel` state variable and `configForLevel` infrastructure are already in place.
+Each feature follows the same recipe: add pure functions + action wrapper in `dnd.qnt`, add driver handler in MBT bridge. The `fighterLevel` state variable and `configForLevel` infrastructure are already in place.
+
+**Caveat — `configForLevel` is Champion-only.** It hardcodes Champion subclass logic (crit range thresholds, Extra Attack tiers). When adding Battle Master or Eldritch Knight, it needs to become `configForChampionLevel` or take a subclass parameter.
+
+**Caveat — frame condition tax.** Each new state variable (e.g., `var heroicInspiration: bool`) requires adding `heroicInspiration' = heroicInspiration` to every action (~48). This is mechanical but verbose. Mitigation: bundle related fields into existing records (e.g., add `heroicInspiration` to `FighterState`) to avoid new top-level vars. See deferred item C for the eventual record-consolidation plan.
 
 ### E. Tactical Mind (Level 2)
 
