@@ -476,6 +476,7 @@ const ITFVariant = z.any().transform(variantToString)
 
 const driverSchema = {
   init: { maxHp: ITFBigInt },
+  init9: { maxHp: ITFBigInt },
   doTakeDamage: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
   doTakeDamageWithMods: {
     amount: ITFBigInt,
@@ -550,296 +551,314 @@ const driverSchema = {
   doUseSecondWind: { d10Roll: ITFBigInt },
   doUseActionSurge: {},
   doUseIndomitable: {},
-  step: {} // dead character no-op
+  // L9 variants — same XState events, different fighterLevel
+  doLongRestL9: {},
+  doUseSecondWindL9: { d10Roll: ITFBigInt },
+  doUseIndomitableL9: {},
+  step: {}, // dead character no-op
+  step9: {} // dead character no-op (L9)
 } as const
 
 function mapDamageType(s: string): DamageType {
   return QUINT_DAMAGE_TYPE_MAP[s] ?? "bludgeoning"
 }
 
-const HIT_DICE_TOTAL = 5
+function createDndDriver(fighterLevel: number, hitDiceTotal: number) {
+  return defineDriver(driverSchema, () => {
+    let actor: ReturnType<typeof createActor<typeof dndMachine>> | null = null
 
-const dndDriver = defineDriver(driverSchema, () => {
-  let actor: ReturnType<typeof createActor<typeof dndMachine>> | null = null
+    function ensureActor() {
+      if (!actor) throw new Error("Actor not initialized — init must come first")
+      return actor
+    }
 
-  function ensureActor() {
-    if (!actor) throw new Error("Actor not initialized — init must come first")
-    return actor
-  }
+    function send(event: DndEvent) {
+      ensureActor().send(event)
+    }
 
-  function send(event: DndEvent) {
-    ensureActor().send(event)
-  }
-
-  return {
-    init: ({ maxHp: mhp }) => {
+    function initActor(mhp: bigint | number) {
       if (actor) actor.stop()
-      // Match Quint FRESH_TURN: movementRemaining=30, effectiveSpeed=30, extraAttacks=1, hitDice=5
       const INIT_SPEED = 30
       actor = createActor(dndMachine, {
         input: {
           maxHp: Number(mhp),
-          hitDiceRemaining: HIT_DICE_TOTAL,
+          hitDiceRemaining: hitDiceTotal,
           effectiveSpeed: INIT_SPEED,
           movementRemaining: INIT_SPEED,
           extraAttacksRemaining: 1,
-          fighterLevel: 5 // Match Quint TEST_CONFIG.level
+          fighterLevel
         }
       })
       actor.start()
-    },
-    doTakeDamage: ({ amount, dt, isCrit }) => {
-      send({
-        type: "TAKE_DAMAGE",
-        amount: Number(amount),
-        damageType: mapDamageType(dt),
-        resistances: new Set(),
-        vulnerabilities: new Set(),
-        immunities: new Set(),
-        isCritical: isCrit
-      })
-    },
-    doTakeDamageWithMods: ({ amount, dt, isCrit, resType, vulnType }) => {
-      send({
-        type: "TAKE_DAMAGE",
-        amount: Number(amount),
-        damageType: mapDamageType(dt),
-        resistances: new Set([mapDamageType(resType)]),
-        vulnerabilities: new Set([mapDamageType(vulnType)]),
-        immunities: new Set(),
-        isCritical: isCrit
-      })
-    },
-    doHeal: ({ amount }) => {
-      send({ type: "HEAL", amount: healAmount(Number(amount)) })
-    },
-    doGrantTempHp: ({ amount, keepOld }) => {
-      send({ type: "GRANT_TEMP_HP", amount: tempHp(Number(amount)), keepOld })
-    },
-    doDeathSave: ({ roll }) => {
-      send({ type: "DEATH_SAVE", d20Roll: d20Roll(Number(roll)) })
-    },
-    doStabilize: () => {
-      send({ type: "STABILIZE" })
-    },
-    doKnockOut: () => {
-      send({ type: "KNOCK_OUT" })
-    },
-    doApplyCondition: ({ c }) => {
-      send({ type: "APPLY_CONDITION", condition: QUINT_CONDITION_MAP[c] ?? "blinded" })
-    },
-    doRemoveCondition: ({ c }) => {
-      send({ type: "REMOVE_CONDITION", condition: QUINT_CONDITION_MAP[c] ?? "blinded" })
-    },
-    doAddExhaustion: ({ levels }) => {
-      send({ type: "ADD_EXHAUSTION", levels: Number(levels) })
-    },
-    doReduceExhaustion: ({ levels }) => {
-      send({ type: "REDUCE_EXHAUSTION", levels: Number(levels) })
-    },
-    doStartTurn: ({
-      callerSpeedMod,
-      deathSaveRoll: dsRoll,
-      effConSave,
-      effDmgAmount,
-      effDmgType,
-      effHeal,
-      effSaveResult,
-      effSpellId,
-      effTempHp,
-      grappledSmall,
-      isGrappling,
-      numEffects
-    }) => {
-      // Quint uses TEST_CONFIG: Walk=30, no armor penalty, extraAttack=1
-      const BASE_SPEED = 30
-      const effects = !numEffects
-        ? []
-        : [
-            {
-              spellId: effSpellId ?? "",
-              healAmount: Number(effHeal ?? 0),
-              tempHpAmount: Number(effTempHp ?? 0),
-              saveResult: effSaveResult ?? false,
-              damageAmount: Number(effDmgAmount ?? 0),
-              damageType: mapDamageType(effDmgType ?? "Bludgeoning"),
-              conSaveSucceeded: effConSave ?? false
-            }
-          ]
-      send({
-        type: "START_TURN",
-        baseSpeed: BASE_SPEED,
-        armorPenalty: 0,
-        extraAttacks: 1,
-        callerSpeedModifier: Number(callerSpeedMod),
+    }
+
+    return {
+      init: ({ maxHp: mhp }) => initActor(mhp),
+      init9: ({ maxHp: mhp }) => initActor(mhp),
+      doTakeDamage: ({ amount, dt, isCrit }) => {
+        send({
+          type: "TAKE_DAMAGE",
+          amount: Number(amount),
+          damageType: mapDamageType(dt),
+          resistances: new Set(),
+          vulnerabilities: new Set(),
+          immunities: new Set(),
+          isCritical: isCrit
+        })
+      },
+      doTakeDamageWithMods: ({ amount, dt, isCrit, resType, vulnType }) => {
+        send({
+          type: "TAKE_DAMAGE",
+          amount: Number(amount),
+          damageType: mapDamageType(dt),
+          resistances: new Set([mapDamageType(resType)]),
+          vulnerabilities: new Set([mapDamageType(vulnType)]),
+          immunities: new Set(),
+          isCritical: isCrit
+        })
+      },
+      doHeal: ({ amount }) => {
+        send({ type: "HEAL", amount: healAmount(Number(amount)) })
+      },
+      doGrantTempHp: ({ amount, keepOld }) => {
+        send({ type: "GRANT_TEMP_HP", amount: tempHp(Number(amount)), keepOld })
+      },
+      doDeathSave: ({ roll }) => {
+        send({ type: "DEATH_SAVE", d20Roll: d20Roll(Number(roll)) })
+      },
+      doStabilize: () => {
+        send({ type: "STABILIZE" })
+      },
+      doKnockOut: () => {
+        send({ type: "KNOCK_OUT" })
+      },
+      doApplyCondition: ({ c }) => {
+        send({ type: "APPLY_CONDITION", condition: QUINT_CONDITION_MAP[c] ?? "blinded" })
+      },
+      doRemoveCondition: ({ c }) => {
+        send({ type: "REMOVE_CONDITION", condition: QUINT_CONDITION_MAP[c] ?? "blinded" })
+      },
+      doAddExhaustion: ({ levels }) => {
+        send({ type: "ADD_EXHAUSTION", levels: Number(levels) })
+      },
+      doReduceExhaustion: ({ levels }) => {
+        send({ type: "REDUCE_EXHAUSTION", levels: Number(levels) })
+      },
+      doStartTurn: ({
+        callerSpeedMod,
+        deathSaveRoll: dsRoll,
+        effConSave,
+        effDmgAmount,
+        effDmgType,
+        effHeal,
+        effSaveResult,
+        effSpellId,
+        effTempHp,
+        grappledSmall,
         isGrappling,
-        grappledTargetTwoSizesSmaller: grappledSmall,
-        deathSaveRoll: dsRoll != null ? d20Roll(Number(dsRoll)) : undefined,
-        startOfTurnEffects: effects
-      })
-    },
-    doUseAction: ({ at }) => {
-      send({
-        type: "USE_ACTION",
-        actionType: (QUINT_ACTION_TYPE_MAP[at] ?? "attack") as ActionType
-      })
-    },
-    doUseBonusAction: () => {
-      send({ type: "USE_BONUS_ACTION" })
-    },
-    doUseReaction: () => {
-      send({ type: "USE_REACTION" })
-    },
-    doUseMovement: ({ cost, feet }) => {
-      send({ type: "USE_MOVEMENT", feet: Number(feet), movementCost: Number(cost) })
-    },
-    doUseExtraAttack: () => {
-      send({ type: "USE_EXTRA_ATTACK" })
-    },
-    doStandFromProne: () => {
-      send({ type: "STAND_FROM_PRONE" })
-    },
-    doDropProne: () => {
-      send({ type: "DROP_PRONE" })
-    },
-    doEndTurn: ({
-      conSave,
-      dmgAmount,
-      dmgSpellId,
-      dmgType,
-      numDmg,
-      numSaves,
-      saveCondition,
-      saveSpellId,
-      saveSucceeded
-    }) => {
-      // When turnPhase != "acting", Quint skips nondet generation — all params are undefined (no-op path)
-      const saves = !numSaves
-        ? []
-        : [
-            {
-              spellId: saveSpellId ?? "",
-              saveSucceeded: saveSucceeded ?? false,
-              conditionsToRemove: [QUINT_CONDITION_MAP[saveCondition ?? ""] ?? "blinded"]
-            }
-          ]
-      const damages = !numDmg
-        ? []
-        : [
-            {
-              spellId: dmgSpellId ?? "",
-              damage: Number(dmgAmount ?? 0),
-              damageType: mapDamageType(dmgType ?? "Bludgeoning"),
-              conSaveSucceeded: conSave ?? false
-            }
-          ]
-      send({ type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages })
-    },
-    doMarkBonusActionSpell: () => {
-      send({ type: "MARK_BONUS_ACTION_SPELL" })
-    },
-    doMarkNonCantripActionSpell: () => {
-      send({ type: "MARK_NON_CANTRIP_ACTION_SPELL" })
-    },
-    doExpendSlot: ({ level }) => {
-      send({ type: "EXPEND_SLOT", level: Number(level) })
-    },
-    doExpendPactSlot: () => {
-      send({ type: "EXPEND_PACT_SLOT" })
-    },
-    doStartConcentration: ({ duration, expiresAt, spellId }) => {
-      send({
-        type: "START_CONCENTRATION",
-        spellId,
-        durationTurns: Number(duration),
-        expiresAt: mapExpiryPhase(expiresAt)
-      })
-    },
-    doBreakConcentration: () => {
-      send({ type: "BREAK_CONCENTRATION" })
-    },
-    doAddEffect: ({ duration, expiresAt, spellId }) => {
-      send({ type: "ADD_EFFECT", spellId, durationTurns: Number(duration), expiresAt: mapExpiryPhase(expiresAt) })
-    },
-    doRemoveEffect: ({ spellId }) => {
-      send({ type: "REMOVE_EFFECT", spellId })
-    },
-    doConcentrationCheck: ({ saveSucceeded }) => {
-      send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: saveSucceeded })
-    },
-    doSpendHitDie: ({ conMod, dieRoll }) => {
-      send({ type: "SPEND_HIT_DIE", conMod: Number(conMod), dieRoll: Number(dieRoll) })
-    },
-    doShortRest: ({ conMod, numDice, r1, r2, r3 }) => {
-      const n = Number(numDice)
-      const rolls = [Number(r1), Number(r2), Number(r3)].slice(0, n)
-      send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls: rolls })
-    },
-    doLongRest: () => {
-      send({ type: "LONG_REST", totalHitDice: HIT_DICE_TOTAL })
-    },
-    doApplyFall: ({ damageRoll }) => {
-      send({
-        type: "APPLY_FALL",
-        damageRoll: Number(damageRoll),
-        resistances: new Set(),
-        vulnerabilities: new Set(),
-        immunities: new Set()
-      })
-    },
-    doSuffocate: () => {
-      send({ type: "SUFFOCATE" })
-    },
-    doApplyStarvation: () => {
-      send({ type: "APPLY_STARVATION" })
-    },
-    doApplyDehydration: () => {
-      send({ type: "APPLY_DEHYDRATION" })
-    },
-    doGrapple: ({ atkSize, freeHand, saveFailed, tgtSize }) => {
-      send({
-        type: "GRAPPLE",
-        attackerSize: QUINT_SIZE_MAP[atkSize] ?? "medium",
-        targetSize: QUINT_SIZE_MAP[tgtSize] ?? "medium",
-        targetSaveFailed: saveFailed,
-        attackerHasFreeHand: freeHand
-      })
-    },
-    doReleaseGrapple: () => {
-      send({ type: "RELEASE_GRAPPLE" })
-    },
-    doEscapeGrapple: ({ escaped }) => {
-      send({ type: "ESCAPE_GRAPPLE", escapeSucceeded: escaped })
-    },
-    doShove: ({ atkSize, choice, saveFailed, tgtSize }) => {
-      send({
-        type: "SHOVE",
-        attackerSize: QUINT_SIZE_MAP[atkSize] ?? "medium",
-        targetSize: QUINT_SIZE_MAP[tgtSize] ?? "medium",
-        targetSaveFailed: saveFailed,
-        choice: QUINT_SHOVE_MAP[choice] ?? "prone"
-      })
-    },
-    doEnterCombat: () => {
-      send({ type: "ENTER_COMBAT" })
-    },
-    doExitCombat: () => {
-      send({ type: "EXIT_COMBAT" })
-    },
-    doUseSecondWind: ({ d10Roll }) => {
-      send({ type: "USE_SECOND_WIND", d10Roll: Number(d10Roll), fighterLevel: 5 })
-    },
-    doUseActionSurge: () => {
-      send({ type: "USE_ACTION_SURGE" })
-    },
-    doUseIndomitable: () => {
-      send({ type: "USE_INDOMITABLE" })
-    },
-    step: () => {}, // dead character no-op
-    getState: () => snapshotToNormalized(ensureActor().getSnapshot()),
-    config: () => ({ statePath: [] })
-  }
-})
+        numEffects
+      }) => {
+        // Quint uses TEST_CONFIG: Walk=30, no armor penalty, extraAttack=1
+        const BASE_SPEED = 30
+        const effects = !numEffects
+          ? []
+          : [
+              {
+                spellId: effSpellId ?? "",
+                healAmount: Number(effHeal ?? 0),
+                tempHpAmount: Number(effTempHp ?? 0),
+                saveResult: effSaveResult ?? false,
+                damageAmount: Number(effDmgAmount ?? 0),
+                damageType: mapDamageType(effDmgType ?? "Bludgeoning"),
+                conSaveSucceeded: effConSave ?? false
+              }
+            ]
+        send({
+          type: "START_TURN",
+          baseSpeed: BASE_SPEED,
+          armorPenalty: 0,
+          extraAttacks: 1,
+          callerSpeedModifier: Number(callerSpeedMod),
+          isGrappling,
+          grappledTargetTwoSizesSmaller: grappledSmall,
+          deathSaveRoll: dsRoll != null ? d20Roll(Number(dsRoll)) : undefined,
+          startOfTurnEffects: effects
+        })
+      },
+      doUseAction: ({ at }) => {
+        send({
+          type: "USE_ACTION",
+          actionType: (QUINT_ACTION_TYPE_MAP[at] ?? "attack") as ActionType
+        })
+      },
+      doUseBonusAction: () => {
+        send({ type: "USE_BONUS_ACTION" })
+      },
+      doUseReaction: () => {
+        send({ type: "USE_REACTION" })
+      },
+      doUseMovement: ({ cost, feet }) => {
+        send({ type: "USE_MOVEMENT", feet: Number(feet), movementCost: Number(cost) })
+      },
+      doUseExtraAttack: () => {
+        send({ type: "USE_EXTRA_ATTACK" })
+      },
+      doStandFromProne: () => {
+        send({ type: "STAND_FROM_PRONE" })
+      },
+      doDropProne: () => {
+        send({ type: "DROP_PRONE" })
+      },
+      doEndTurn: ({
+        conSave,
+        dmgAmount,
+        dmgSpellId,
+        dmgType,
+        numDmg,
+        numSaves,
+        saveCondition,
+        saveSpellId,
+        saveSucceeded
+      }) => {
+        // When turnPhase != "acting", Quint skips nondet generation — all params are undefined (no-op path)
+        const saves = !numSaves
+          ? []
+          : [
+              {
+                spellId: saveSpellId ?? "",
+                saveSucceeded: saveSucceeded ?? false,
+                conditionsToRemove: [QUINT_CONDITION_MAP[saveCondition ?? ""] ?? "blinded"]
+              }
+            ]
+        const damages = !numDmg
+          ? []
+          : [
+              {
+                spellId: dmgSpellId ?? "",
+                damage: Number(dmgAmount ?? 0),
+                damageType: mapDamageType(dmgType ?? "Bludgeoning"),
+                conSaveSucceeded: conSave ?? false
+              }
+            ]
+        send({ type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages })
+      },
+      doMarkBonusActionSpell: () => {
+        send({ type: "MARK_BONUS_ACTION_SPELL" })
+      },
+      doMarkNonCantripActionSpell: () => {
+        send({ type: "MARK_NON_CANTRIP_ACTION_SPELL" })
+      },
+      doExpendSlot: ({ level }) => {
+        send({ type: "EXPEND_SLOT", level: Number(level) })
+      },
+      doExpendPactSlot: () => {
+        send({ type: "EXPEND_PACT_SLOT" })
+      },
+      doStartConcentration: ({ duration, expiresAt, spellId }) => {
+        send({
+          type: "START_CONCENTRATION",
+          spellId,
+          durationTurns: Number(duration),
+          expiresAt: mapExpiryPhase(expiresAt)
+        })
+      },
+      doBreakConcentration: () => {
+        send({ type: "BREAK_CONCENTRATION" })
+      },
+      doAddEffect: ({ duration, expiresAt, spellId }) => {
+        send({ type: "ADD_EFFECT", spellId, durationTurns: Number(duration), expiresAt: mapExpiryPhase(expiresAt) })
+      },
+      doRemoveEffect: ({ spellId }) => {
+        send({ type: "REMOVE_EFFECT", spellId })
+      },
+      doConcentrationCheck: ({ saveSucceeded }) => {
+        send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: saveSucceeded })
+      },
+      doSpendHitDie: ({ conMod, dieRoll }) => {
+        send({ type: "SPEND_HIT_DIE", conMod: Number(conMod), dieRoll: Number(dieRoll) })
+      },
+      doShortRest: ({ conMod, numDice, r1, r2, r3 }) => {
+        const n = Number(numDice)
+        const rolls = [Number(r1), Number(r2), Number(r3)].slice(0, n)
+        send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls: rolls })
+      },
+      doLongRest: () => {
+        send({ type: "LONG_REST", totalHitDice: hitDiceTotal })
+      },
+      doApplyFall: ({ damageRoll }) => {
+        send({
+          type: "APPLY_FALL",
+          damageRoll: Number(damageRoll),
+          resistances: new Set(),
+          vulnerabilities: new Set(),
+          immunities: new Set()
+        })
+      },
+      doSuffocate: () => {
+        send({ type: "SUFFOCATE" })
+      },
+      doApplyStarvation: () => {
+        send({ type: "APPLY_STARVATION" })
+      },
+      doApplyDehydration: () => {
+        send({ type: "APPLY_DEHYDRATION" })
+      },
+      doGrapple: ({ atkSize, freeHand, saveFailed, tgtSize }) => {
+        send({
+          type: "GRAPPLE",
+          attackerSize: QUINT_SIZE_MAP[atkSize] ?? "medium",
+          targetSize: QUINT_SIZE_MAP[tgtSize] ?? "medium",
+          targetSaveFailed: saveFailed,
+          attackerHasFreeHand: freeHand
+        })
+      },
+      doReleaseGrapple: () => {
+        send({ type: "RELEASE_GRAPPLE" })
+      },
+      doEscapeGrapple: ({ escaped }) => {
+        send({ type: "ESCAPE_GRAPPLE", escapeSucceeded: escaped })
+      },
+      doShove: ({ atkSize, choice, saveFailed, tgtSize }) => {
+        send({
+          type: "SHOVE",
+          attackerSize: QUINT_SIZE_MAP[atkSize] ?? "medium",
+          targetSize: QUINT_SIZE_MAP[tgtSize] ?? "medium",
+          targetSaveFailed: saveFailed,
+          choice: QUINT_SHOVE_MAP[choice] ?? "prone"
+        })
+      },
+      doEnterCombat: () => {
+        send({ type: "ENTER_COMBAT" })
+      },
+      doExitCombat: () => {
+        send({ type: "EXIT_COMBAT" })
+      },
+      doUseSecondWind: ({ d10Roll }) => {
+        send({ type: "USE_SECOND_WIND", d10Roll: Number(d10Roll), fighterLevel })
+      },
+      doUseActionSurge: () => {
+        send({ type: "USE_ACTION_SURGE" })
+      },
+      doUseIndomitable: () => {
+        send({ type: "USE_INDOMITABLE" })
+      },
+      // L9 variants — same XState events, uses factory fighterLevel
+      doLongRestL9: () => {
+        send({ type: "LONG_REST", totalHitDice: hitDiceTotal })
+      },
+      doUseSecondWindL9: ({ d10Roll }) => {
+        send({ type: "USE_SECOND_WIND", d10Roll: Number(d10Roll), fighterLevel })
+      },
+      doUseIndomitableL9: () => {
+        send({ type: "USE_INDOMITABLE" })
+      },
+      step: () => {}, // dead character no-op
+      step9: () => {}, // dead character no-op (L9)
+      getState: () => snapshotToNormalized(ensureActor().getSnapshot()),
+      config: () => ({ statePath: [] })
+    }
+  })
+}
 
 // ============================================================
 // State comparison
@@ -963,40 +982,57 @@ describe("MBT driver sync", () => {
 // MBT test
 // ============================================================
 
+const mbtStateCheck = stateCheck(
+  (raw) => quintParsedToNormalized(QuintFullState.parse(raw)),
+  (spec, impl) => {
+    const keys = Object.keys(spec) as Array<keyof NormalizedState>
+    for (const k of keys) {
+      const sv = spec[k]
+      const iv = impl[k]
+      if (k === "activeEffects") {
+        if (
+          !activeEffectsEqual(
+            sv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>,
+            iv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>
+          )
+        )
+          return false
+      } else if (sv instanceof Set && iv instanceof Set) {
+        if (!setsEqual(sv, iv)) return false
+      } else if (Array.isArray(sv) && Array.isArray(iv)) {
+        if (!arraysEqual(sv, iv)) return false
+      } else if (sv !== iv) return false
+    }
+    return true
+  }
+)
+
 describe("DnD MBT", () => {
-  it("replays Quint traces against XState machine", async () => {
-    const MBT_TRACE_COUNT = 50
-    const MBT_STEP_COUNT = 30
+  const MBT_TRACE_COUNT = 50
+  const MBT_STEP_COUNT = 30
+  const specPath = path.resolve(import.meta.dirname, "../../dnd.qnt")
+
+  it("replays Quint traces against XState machine (L5)", async () => {
     await run({
-      spec: path.resolve(import.meta.dirname, "../../dnd.qnt"),
-      driver: dndDriver,
+      spec: specPath,
+      driver: createDndDriver(5, 5),
       backend: "rust",
       nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
       maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
-      stateCheck: stateCheck(
-        (raw) => quintParsedToNormalized(QuintFullState.parse(raw)),
-        (spec, impl) => {
-          const keys = Object.keys(spec) as Array<keyof NormalizedState>
-          for (const k of keys) {
-            const sv = spec[k]
-            const iv = impl[k]
-            if (k === "activeEffects") {
-              if (
-                !activeEffectsEqual(
-                  sv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>,
-                  iv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>
-                )
-              )
-                return false
-            } else if (sv instanceof Set && iv instanceof Set) {
-              if (!setsEqual(sv, iv)) return false
-            } else if (Array.isArray(sv) && Array.isArray(iv)) {
-              if (!arraysEqual(sv, iv)) return false
-            } else if (sv !== iv) return false
-          }
-          return true
-        }
-      )
+      stateCheck: mbtStateCheck
+    })
+  }, 180_000)
+
+  it("replays Quint traces against XState machine (L9 — Indomitable)", async () => {
+    await run({
+      spec: specPath,
+      init: "init9",
+      step: "step9",
+      driver: createDndDriver(9, 9),
+      backend: "rust",
+      nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
+      maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
+      stateCheck: mbtStateCheck
     })
   }, 180_000)
 })

@@ -2224,6 +2224,33 @@ module dnd {
 
   pure val FRESH_FIGHTER_STATE: FighterState = freshFighterState(TEST_CONFIG.level)
 
+  // Level 9 Champion Fighter — exercises Indomitable (L9+) and Improved Critical (critRange 19).
+  // Separate state space from TEST_CONFIG (L5); traces don't mix.
+  pure val TEST_CONFIG_L9: CharConfig = {
+    className: Fighter,
+    subclass: Champion,
+    species: Human,
+    classLevels: singleClassLevels(Fighter, 9),
+    fightingStyles: Set(FSDefense),
+    abilityScores: Map(Str -> 14, Dex -> 12, Con -> 14, Int_ -> 10, Wis -> 13, Cha -> 8),
+    level: 9,
+    size: Medium,
+    speeds: Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0),
+    saveProficiencies: Set(Str, Con),
+    skillProficiencies: Set(Athletics, Perception),
+    expertiseSkills: Set(),
+    armorProficiencies: Set(LightArmor, MediumArmor, HeavyArmor),
+    hitDieType: 10,
+    spellcastingAbility: Wis,
+    hasSpellcasting: false,
+    unarmoredDefense: NoUnarmoredDefense,
+    features: Set(FExtraAttack),
+    critRange: 19,              // Champion Improved Critical (L3)
+    hasFightingStyleFeature: true,
+  }
+
+  pure val FRESH_FIGHTER_STATE_L9: FighterState = freshFighterState(TEST_CONFIG_L9.level)
+
   // -- 19.4 Action Init --
 
   action init = {
@@ -2234,6 +2261,17 @@ module dnd {
       spellSlots' = FRESH_SPELL_SLOTS,
       turnPhase' = "outOfCombat",
       fighterState' = FRESH_FIGHTER_STATE,
+    }
+  }
+
+  action init9 = {
+    nondet maxHp = HP_RANGE.oneOf()
+    all {
+      state' = freshCreature(maxHp).with("hitPointDiceRemaining", 9),
+      turnState' = FRESH_TURN,
+      spellSlots' = FRESH_SPELL_SLOTS,
+      turnPhase' = "outOfCombat",
+      fighterState' = FRESH_FIGHTER_STATE_L9,
     }
   }
 
@@ -2617,6 +2655,49 @@ module dnd {
     }
   }
 
+  action doLongRestL9 = {
+    if (turnPhase != "outOfCombat") unchanged
+    else {
+      all {
+        state' = pLongRest(state, 9),
+        turnState' = turnState,
+        spellSlots' = pRestoreAllSlots(spellSlots),
+        turnPhase' = turnPhase,
+        fighterState' = pFighterLongRest(fighterState),
+      }
+    }
+  }
+
+  // -- 19.6c Fighter L9 Action Variants --
+  // Separate wrappers using TEST_CONFIG_L9.level for the L9 state space.
+  // Only the actions that reference TEST_CONFIG.level need variants.
+
+  action doUseSecondWindL9 = {
+    nondet d10Roll = 1.to(10).oneOf()
+    if (turnPhase != "acting" or not(canUseSecondWind(fighterState, turnState, state))) unchanged
+    else {
+      val result = pUseSecondWind(state, fighterState, d10Roll, TEST_CONFIG_L9.level)
+      all {
+        state' = result.creature,
+        turnState' = turnState.with("bonusActionUsed", true),
+        spellSlots' = spellSlots,
+        turnPhase' = turnPhase,
+        fighterState' = result.fighter,
+      }
+    }
+  }
+
+  action doUseIndomitableL9 = {
+    if (turnPhase != "acting" or not(canUseIndomitable(TEST_CONFIG_L9.level, fighterState))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = pUseIndomitable(fighterState),
+    }
+  }
+
   // -- 19.7 Step Action --
 
   action step = {
@@ -2668,6 +2749,60 @@ module dnd {
         doUseSecondWind,
         doUseActionSurge,
         doUseIndomitable,
+      }
+    }
+  }
+
+  // L9 step: identical to step but uses L9 fighter action variants.
+  action step9 = {
+    if (state.dead) unchanged
+    else {
+      any {
+        doTakeDamage,
+        doTakeDamageWithMods,
+        doHeal,
+        doGrantTempHp,
+        doDeathSave,
+        doStabilize,
+        doKnockOut,
+        doApplyCondition,
+        doRemoveCondition,
+        doAddExhaustion,
+        doReduceExhaustion,
+        doStartTurn,
+        doUseAction,
+        doUseBonusAction,
+        doUseReaction,
+        doUseMovement,
+        doUseExtraAttack,
+        doStandFromProne,
+        doDropProne,
+        doMarkBonusActionSpell,
+        doMarkNonCantripActionSpell,
+        doExpendSlot,
+        doExpendPactSlot,
+        doStartConcentration,
+        doBreakConcentration,
+        doConcentrationCheck,
+        doAddEffect,
+        doRemoveEffect,
+        doSpendHitDie,
+        doShortRest,
+        doLongRestL9,
+        doApplyFall,
+        doSuffocate,
+        doApplyStarvation,
+        doApplyDehydration,
+        doGrapple,
+        doReleaseGrapple,
+        doEscapeGrapple,
+        doShove,
+        doEndTurn,
+        doEnterCombat,
+        doExitCombat,
+        doUseSecondWindL9,
+        doUseActionSurge,
+        doUseIndomitableL9,
       }
     }
   }
