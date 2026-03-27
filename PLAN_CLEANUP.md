@@ -110,11 +110,51 @@ For `fighterState` (7 fields, ~7K records), the `VALID_FIGHTER_STATES` set compr
 
 Each feature follows the same recipe: add pure functions + action wrapper in `dnd.qnt`, add driver handler in MBT bridge. The `fighterLevel` state variable and `configForLevel` infrastructure are already in place.
 
-**Dependencies:** E, F, and G are independent of each other. Within G, G1 and G2 both modify `FighterState` and `doStartTurn` — run them sequentially to avoid merge conflicts.
+**Dependencies and recommended order:**
+- **E** (Tactical Mind) is independent — no new state fields, light.
+- **G1** (Heroic Warrior) is independent — one new FighterState field, medium-light.
+- **G2** (Survivor) depends on G1 — both modify FighterState + doStartTurn, run sequentially.
+- **P1** (Bonus movement grants) is independent — new TurnState infrastructure, medium.
+- **F** (Tactical Shift) depends on P1 — wires bonus movement into Second Wind, light once P1 exists.
+
+**Recommended implementation order:** E → G1 → G2 → P1 → F. Ship E + G1 + G2 first (unblocked, immediate value). P1 + F follow as infrastructure + wiring.
+
+**Agent granularity — what to hand to a single agent:**
+- **E alone** is the best first task for an independent agent. Smallest scope, no new state fields, mirrors the existing doUseIndomitable pattern closely. Validates the full recipe (Quint → XState → MBT → pipeline) without risking merge conflicts. If it succeeds, the recipe is proven.
+- **G1 alone** is a good standalone task. One new field on FighterState (inside the record — no frame condition tax), ~6 touchpoints across layers, clear pattern. Can run in parallel with E on a separate worktree.
+- **G2 alone** after G1 is merged. Modifies existing actions (doDeathSave, doStartTurn) rather than adding new ones. Needs careful SRD-accurate logic for advantage + threshold + Heroic Rally. Medium effort — give the agent the full SRD text for Survivor.
+- **P1 alone** is infrastructure. Two new TurnState fields, one new action, cross-layer plumbing. Can run in parallel with E and G1 on a separate worktree. No class-specific logic — pure movement mechanics.
+- **F after P1** is trivial wiring — extend doUseSecondWind to set the bonus movement fields. Could be part of the P1 task or a quick follow-up.
+- **Do NOT combine G1 + G2 into one agent task.** They touch the same functions (FighterState, doStartTurn, pFighterStartTurn) and the combined scope is too large for one pass — the agent will make mistakes in the second half that require backtracking through the first.
 
 **Caveat — `configForLevel` is Champion-only.** It hardcodes Champion subclass logic (crit range thresholds, Extra Attack tiers). When adding Battle Master or Eldritch Knight, it needs to become `configForChampionLevel` or take a subclass parameter.
 
 **Caveat — frame condition tax.** Each new state variable (e.g., `var heroicInspiration: bool`) requires adding `heroicInspiration' = heroicInspiration` to every action (~48). This is mechanical but verbose. Mitigation: bundle related fields into existing records (e.g., add `heroicInspiration` to `FighterState`) to avoid new top-level vars. See deferred item C for the eventual record-consolidation plan.
+
+### P1. Bonus movement grants (prerequisite for F, Remarkable Athlete crit movement, Barbarian Instinctive Pounce, Rogue Withdraw)
+
+**Problem:** Multiple features across classes grant immediate bonus movement of `floor(Speed/2)`, independent of the normal movement budget (`movementRemaining`). Some grant OA immunity for that movement, some don't. The model currently has no concept of bonus movement — `movementRemaining` is the only movement tracking — and `disengaged` is turn-wide OA immunity, too coarse for movement-scoped immunity.
+
+**Speed vs Movement distinction (see UBIQUITOUS_LANGUAGE.md):** Speed is the capacity stat; Movement is consumption from the budget. A creature with 0 `movementRemaining` but nonzero Speed can still use bonus movement grants. Bonus movement does NOT deduct from `movementRemaining`.
+
+**Features that use this pattern:**
+
+| Feature | Class | Trigger | OA-free? |
+|---------|-------|---------|----------|
+| Tactical Shift (L5) | Fighter | Second Wind | Yes |
+| Remarkable Athlete (L3 Champion) | Fighter | Critical Hit | Yes |
+| Instinctive Pounce (L7) | Barbarian | Enter Rage | No |
+| Cunning Strike: Withdraw (L5) | Rogue | Sneak Attack (costs 1d6) | Yes |
+
+**Design: two new fields on TurnState:**
+- `bonusMovementRemaining: int` — distance available (0 = none). Set by the granting action, consumed by `doUseBonusMovement`, reset at turn start.
+- `bonusMovementOAFree: bool` — whether this bonus movement is OA-immune. Set alongside the grant. Independent of `disengaged` (which remains turn-wide Disengage effect).
+
+**New action:** `doUseBonusMovement` — spends 1..`bonusMovementRemaining` feet, deducting from `bonusMovementRemaining` (not `movementRemaining`). OA eligibility during this movement is determined by `bonusMovementOAFree` (caller queries it, same externalized pattern as `pCanBeOpportunityAttacked`).
+
+**`disengaged` stays as-is.** It tracks the turn-wide Disengage effect. `bonusMovementOAFree` is scoped to the bonus movement only. Disengage and bonus movement OA immunity are independent — a creature could have both.
+
+**Implementation scope:** Add fields to TurnState (Quint + XState), pure functions for granting/consuming bonus movement, `doUseBonusMovement` action, frame conditions on all existing actions, MBT bridge updates. Then F and other features set the fields as part of their triggering actions.
 
 ### Suggested recipe (verify against current code before following)
 
@@ -132,9 +172,9 @@ This is a starting point based on how SW/AS/Ind were added. The codebase may hav
 
 Second Wind charge can be spent on a failed ability check to add 1d10. Charge only consumed if boosted check succeeds. Already implemented in `class-fighter.ts:104-122`. Needs: Quint pure function + action wrapper, MBT handler.
 
-### F. Tactical Shift (Level 5, triggered by Second Wind)
+### F. Tactical Shift (Level 5, triggered by Second Wind) — depends on P1
 
-On Second Wind use at L5+, move up to half speed without opportunity attacks. Already implemented in `class-fighter.ts:77`. Needs: extend `doUseSecondWind` Quint action to track shift distance, or model as a separate effect.
+On Second Wind use at L5+, move up to half Speed without provoking OAs. Already implemented in `class-fighter.ts:77`. **Depends on P1 (bonus movement grants).** After P1 is in place: extend `doUseSecondWind` to set `bonusMovementRemaining = floor(effectiveSpeed / 2)` and `bonusMovementOAFree = true` when `fighterLevel >= 5`. The movement is then consumed via `doUseBonusMovement` (from P1).
 
 ### G. Champion subclass features
 
@@ -142,7 +182,7 @@ Passive formulas already in `class-fighter.ts:199-277`. `configForLevel` already
 
 - G1: Heroic Warrior (L10): Grant inspiration at turn start if not already held. Add `heroicInspiration: bool` to `FighterState`, integrate into `pFighterStartTurn`.
 - G2: Survivor (L18): Defy Death (death save advantage + threshold 18→20), Heroic Rally (heal 5+CON at turn start if bloodied). Integrate into `doStartTurn` / `pStartTurnFull`.
-- Remarkable Athlete (L3): Advantage on Initiative + Athletics — query only, no state needed.
+- Remarkable Athlete (L3): Advantage on Initiative + Athletics — query only, no state needed. Crit movement ("move up to half your Speed without provoking OAs") depends on P1 — same bonus movement grant pattern as Tactical Shift.
 
 ---
 
