@@ -167,7 +167,9 @@ const QuintTurnState = z.object({
   dodging: z.boolean(),
   readiedAction: z.boolean(),
   bonusActionSpellCast: z.boolean(),
-  nonCantripActionSpellCast: z.boolean()
+  nonCantripActionSpellCast: z.boolean(),
+  bonusMovementRemaining: z.bigint(),
+  bonusMovementOAFree: z.boolean()
 })
 
 const QuintSlotMap = z.any().transform((raw: unknown) => {
@@ -261,6 +263,8 @@ interface NormalizedState {
   readonly readiedAction: boolean
   readonly bonusActionSpellCast: boolean
   readonly nonCantripActionSpellCast: boolean
+  readonly bonusMovementRemaining: number
+  readonly bonusMovementOAFree: boolean
   // turnPhase
   readonly turnPhase: string
   // SpellSlotState
@@ -333,6 +337,8 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     readiedAction: c.readiedAction,
     bonusActionSpellCast: c.bonusActionSpellCast,
     nonCantripActionSpellCast: c.nonCantripActionSpellCast,
+    bonusMovementRemaining: c.bonusMovementRemaining,
+    bonusMovementOAFree: c.bonusMovementOAFree,
     turnPhase: snap.matches({ turnPhase: "acting" })
       ? "acting"
       : snap.matches({ turnPhase: "waitingForTurn" })
@@ -398,6 +404,8 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     readiedAction: t.readiedAction,
     bonusActionSpellCast: t.bonusActionSpellCast,
     nonCantripActionSpellCast: t.nonCantripActionSpellCast,
+    bonusMovementRemaining: Number(t.bonusMovementRemaining),
+    bonusMovementOAFree: t.bonusMovementOAFree,
     turnPhase: raw.turnPhase,
     slotsMax: ss.slotsMax,
     slotsCurrent: ss.slotsCurrent,
@@ -469,6 +477,7 @@ type EventActionMap = {
   USE_INDOMITABLE: "doUseIndomitable"
   USE_TACTICAL_MIND: "doUseTacticalMind"
   USE_HEROIC_INSPIRATION: "doUseHeroicInspiration"
+  USE_BONUS_MOVEMENT: "doUseBonusMovement"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -562,6 +571,7 @@ const driverSchema = {
   doUseIndomitable: {},
   doUseTacticalMind: { boostedCheckSucceeds: z.boolean() },
   doUseHeroicInspiration: {},
+  doUseBonusMovement: { feet: ITFBigInt },
   step: {} // dead character no-op
 } as const
 
@@ -853,6 +863,9 @@ function createDndDriver() {
       },
       doUseHeroicInspiration: () => {
         send({ type: "USE_HEROIC_INSPIRATION" })
+      },
+      doUseBonusMovement: ({ feet }) => {
+        send({ type: "USE_BONUS_MOVEMENT", feet: Number(feet) })
       },
       step: () => {}, // dead character no-op
       getState: () => snapshotToNormalized(ensureActor().getSnapshot()),

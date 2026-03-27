@@ -866,6 +866,8 @@ module dnd {
     readiedAction: bool,
     bonusActionSpellCast: bool,
     nonCantripActionSpellCast: bool,
+    bonusMovementRemaining: int,
+    bonusMovementOAFree: bool,
   }
 
   /// Action types for pUseAction
@@ -919,6 +921,8 @@ module dnd {
       readiedAction: false,
       bonusActionSpellCast: false,
       nonCantripActionSpellCast: false,
+      bonusMovementRemaining: 0,
+      bonusMovementOAFree: false,
     }
   }
 
@@ -975,6 +979,22 @@ module dnd {
     val cost = feet * movementCost
     if (cost > t.movementRemaining or cost < 0) t
     else t.with("movementRemaining", t.movementRemaining - cost)
+  }
+
+  /// Grant bonus movement (floor of effectiveSpeed / 2), with or without OA immunity.
+  pure def pGrantBonusMovement(ts: TurnState, effectiveSpeed: int, oaFree: bool): TurnState = {
+    ts.with("bonusMovementRemaining", effectiveSpeed / 2)
+      .with("bonusMovementOAFree", oaFree)
+  }
+
+  /// Can use bonus movement: has remaining bonus movement.
+  pure def canUseBonusMovement(ts: TurnState): bool = {
+    ts.bonusMovementRemaining > 0
+  }
+
+  /// Consume bonus movement.
+  pure def pUseBonusMovement(ts: TurnState, feet: int): TurnState = {
+    ts.with("bonusMovementRemaining", intMax(ts.bonusMovementRemaining - feet, 0))
   }
 
   /// Use free object interaction. First is free, second requires an action.
@@ -2253,6 +2273,8 @@ module dnd {
     readiedAction: false,
     bonusActionSpellCast: false,
     nonCantripActionSpellCast: false,
+    bonusMovementRemaining: 0,
+    bonusMovementOAFree: false,
   }
 
   pure val FRESH_SPELL_SLOTS: SpellSlotState = {
@@ -2694,6 +2716,21 @@ module dnd {
     }
   }
 
+  // -- 19.6c Bonus Movement Action --
+
+  action doUseBonusMovement = {
+    nondet feet = 1.to(15).oneOf()
+    if (turnPhase != "acting" or not(canUseBonusMovement(turnState))) unchanged
+    else all {
+      state' = state,
+      turnState' = pUseBonusMovement(turnState, feet),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState,
+      fighterLevel' = fighterLevel,
+    }
+  }
+
   // -- 19.7 Step Action --
 
   action step = {
@@ -2747,6 +2784,7 @@ module dnd {
         doUseIndomitable,
         doUseTacticalMind,
         doUseHeroicInspiration,
+        doUseBonusMovement,
       }
     }
   }
@@ -2828,6 +2866,8 @@ module dnd {
   val indomitableBounded =
     fighterState.indomitableCharges >= 0 and fighterState.indomitableCharges <= fighterState.indomitableMax
 
+  val bonusMovementBounded = turnState.bonusMovementRemaining >= 0
+
   /// Combined invariant for all safety properties.
   val allInvariants = and {
     hpBounded,
@@ -2853,6 +2893,7 @@ module dnd {
     secondWindBounded,
     actionSurgeBounded,
     indomitableBounded,
+    bonusMovementBounded,
   }
 
   // ============================================================
@@ -2933,6 +2974,7 @@ module dnd {
     turnState.movementRemaining >= 0,
     turnState.effectiveSpeed >= 0,
     turnState.extraAttacksRemaining >= 0,
+    turnState.bonusMovementRemaining >= 0,
 
     // Spell slot bounds
     spellSlots.pactSlotsCurrent >= 0,

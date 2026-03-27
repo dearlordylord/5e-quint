@@ -357,6 +357,11 @@ export const dndMachine = setup({
       if (!c.heroicInspiration) return {}
       return { heroicInspiration: false }
     }),
+    useBonusMovement: assign(({ context: c, event: e }) => {
+      const ev = e as Extract<DndEvent, { type: "USE_BONUS_MOVEMENT" }>
+      if (c.bonusMovementRemaining <= 0) return {}
+      return { bonusMovementRemaining: Math.max(c.bonusMovementRemaining - ev.feet, 0) }
+    }),
     fighterShortRest: assign(({ context: c }) => ({
       secondWindCharges: Math.min(c.secondWindCharges + 1, c.secondWindMax),
       actionSurgeCharges: c.actionSurgeMax
