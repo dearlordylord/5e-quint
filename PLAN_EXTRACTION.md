@@ -45,16 +45,11 @@
 **Destination:** Already in `class-rogue.ts`. Caller computes halved damage, passes result to machine.
 **Note:** The spec's `pCanUncannyDodge` checks `hasUncannyDodge AND reactionAvailable AND not incapacitated AND attackerVisible` — the reaction/incap checks are generic, but the feature gate is class-specific.
 
----
+### E5: Fighting Style Effects → Non-Core ✓
 
-## Deferred (reassess later)
-
-### E5: Fighting Style Functions → Non-Core (lean yes, but complex)
-
-**What:** `pArcheryAttackBonus`, `pDefenseACBonus`, `pGWFDamageDie`, `pTWFOffHandDamageStyled` + `hasFightingStyleFeature`, `fightingStyles` in CharConfig.
-**Why:** 3-class feature (Fighter, Paladin, Ranger). The functions are feature implementations.
-**Impact:** High — TWF off-hand damage is integrated into TWF resolution path. GWF die reroll affects core damage computation. Extracting means spec loses ability to verify TWF/GWF correctness in random walks.
-**Decision:** Defer. Reassess after E2-E4 pattern is validated.
+**What:** `pArcheryAttackBonus`, `pDefenseACBonus`, `pGWFDamageDie`, `pTWFOffHandDamageStyled` removed from spec.
+**Destination:** `app/src/features/class-fighter.ts`.
+**Note:** Feat gates (`pCanTakeFightingStyleFeat`, `pCanTakeEpicBoon`) and the `FightingStyleFeat` type + `fightingStyles` config field stay in core.
 
 ---
 
