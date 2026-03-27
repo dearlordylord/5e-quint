@@ -196,12 +196,23 @@ const QuintSpellSlotState = z.object({
   concentrationSpellId: z.string()
 })
 
-// Combined state from all 3 Quint vars
+const QuintFighterState = z.object({
+  secondWindCharges: z.bigint(),
+  secondWindMax: z.bigint(),
+  actionSurgeCharges: z.bigint(),
+  actionSurgeMax: z.bigint(),
+  actionSurgeUsedThisTurn: z.boolean(),
+  indomitableCharges: z.bigint(),
+  indomitableMax: z.bigint()
+})
+
+// Combined state from all Quint vars
 const QuintFullState = z.object({
   state: QuintCreatureState,
   turnState: QuintTurnState,
   spellSlots: QuintSpellSlotState,
-  turnPhase: z.string()
+  turnPhase: z.string(),
+  fighterState: QuintFighterState
 })
 
 // ============================================================
@@ -257,6 +268,14 @@ interface NormalizedState {
   readonly pactSlotsCurrent: number
   readonly pactSlotLevel: number
   readonly concentrationSpellId: string
+  // FighterState
+  readonly secondWindCharges: number
+  readonly secondWindMax: number
+  readonly actionSurgeCharges: number
+  readonly actionSurgeMax: number
+  readonly actionSurgeUsedThisTurn: boolean
+  readonly indomitableCharges: number
+  readonly indomitableMax: number
 }
 
 // ============================================================
@@ -320,7 +339,14 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     pactSlotsMax: c.pactSlotsMax,
     pactSlotsCurrent: c.pactSlotsCurrent,
     pactSlotLevel: c.pactSlotLevel,
-    concentrationSpellId: c.concentrationSpellId
+    concentrationSpellId: c.concentrationSpellId,
+    secondWindCharges: c.secondWindCharges,
+    secondWindMax: c.secondWindMax,
+    actionSurgeCharges: c.actionSurgeCharges,
+    actionSurgeMax: c.actionSurgeMax,
+    actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
+    indomitableCharges: c.indomitableCharges,
+    indomitableMax: c.indomitableMax
   }
 }
 
@@ -372,7 +398,14 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     pactSlotsMax: Number(ss.pactSlotsMax),
     pactSlotsCurrent: Number(ss.pactSlotsCurrent),
     pactSlotLevel: Number(ss.pactSlotLevel),
-    concentrationSpellId: ss.concentrationSpellId
+    concentrationSpellId: ss.concentrationSpellId,
+    secondWindCharges: Number(raw.fighterState.secondWindCharges),
+    secondWindMax: Number(raw.fighterState.secondWindMax),
+    actionSurgeCharges: Number(raw.fighterState.actionSurgeCharges),
+    actionSurgeMax: Number(raw.fighterState.actionSurgeMax),
+    actionSurgeUsedThisTurn: raw.fighterState.actionSurgeUsedThisTurn,
+    indomitableCharges: Number(raw.fighterState.indomitableCharges),
+    indomitableMax: Number(raw.fighterState.indomitableMax)
   }
 }
 
@@ -423,6 +456,9 @@ type EventActionMap = {
   ENTER_COMBAT: "doEnterCombat"
   EXIT_COMBAT: "doExitCombat"
   GRANT_EXTRA_ACTION: "doGrantExtraAction"
+  USE_SECOND_WIND: "doUseSecondWind"
+  USE_ACTION_SURGE: "doUseActionSurge"
+  USE_INDOMITABLE: "doUseIndomitable"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -511,6 +547,9 @@ const driverSchema = {
   doShove: { atkSize: ITFVariant, tgtSize: ITFVariant, saveFailed: z.boolean(), choice: ITFVariant },
   doEnterCombat: {},
   doExitCombat: {},
+  doUseSecondWind: { d10Roll: ITFBigInt },
+  doUseActionSurge: {},
+  doUseIndomitable: {},
   step: {} // dead character no-op
 } as const
 
@@ -543,7 +582,8 @@ const dndDriver = defineDriver(driverSchema, () => {
           hitDiceRemaining: HIT_DICE_TOTAL,
           effectiveSpeed: INIT_SPEED,
           movementRemaining: INIT_SPEED,
-          extraAttacksRemaining: 1
+          extraAttacksRemaining: 1,
+          fighterLevel: 5 // Match Quint TEST_CONFIG.level
         }
       })
       actor.start()
@@ -785,6 +825,15 @@ const dndDriver = defineDriver(driverSchema, () => {
     },
     doExitCombat: () => {
       send({ type: "EXIT_COMBAT" })
+    },
+    doUseSecondWind: ({ d10Roll }) => {
+      send({ type: "USE_SECOND_WIND", d10Roll: Number(d10Roll), fighterLevel: 5 })
+    },
+    doUseActionSurge: () => {
+      send({ type: "USE_ACTION_SURGE" })
+    },
+    doUseIndomitable: () => {
+      send({ type: "USE_INDOMITABLE" })
     },
     step: () => {}, // dead character no-op
     getState: () => snapshotToNormalized(ensureActor().getSnapshot()),

@@ -113,6 +113,13 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     concentrationSpellId: "",
     hitDiceRemaining: 5,
     activeEffects: [],
+    secondWindCharges: 0,
+    secondWindMax: 0,
+    actionSurgeCharges: 0,
+    actionSurgeMax: 0,
+    actionSurgeUsedThisTurn: false,
+    indomitableCharges: 0,
+    indomitableMax: 0,
     ...overrides
   }
 }

@@ -49,11 +49,13 @@ import {
   asTakeDamage,
   asUseAction,
   asUseMovement,
+  asUseSecondWind,
   type DndContext,
   type DndEvent,
   type DndMachineInput,
   INITIAL_CONDITIONS,
-  INITIAL_TURN_STATE
+  INITIAL_TURN_STATE,
+  initialFighterState
 } from "#/machine-types.ts"
 import {
   type ActiveEffect,
@@ -320,7 +322,49 @@ export const dndMachine = setup({
       ...concBreak(c)
     })),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
-    applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1))
+    applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
+    useSecondWind: assign(({ context: c, event: e }) => {
+      const ev = asUseSecondWind(e)
+      if (c.secondWindCharges <= 0 || c.bonusActionUsed || isIncapacitated(c)) return {}
+      const healAmount = ev.d10Roll + ev.fighterLevel
+      const newHp = Math.min(c.hp + healAmount, effectiveMaxHp(c.maxHp))
+      return { hp: hp(newHp), secondWindCharges: c.secondWindCharges - 1, bonusActionUsed: true }
+    }),
+    useSecondWindFromZero: assign(({ context: c, event: e }) => {
+      const ev = asUseSecondWind(e)
+      if (c.secondWindCharges <= 0 || c.bonusActionUsed || isIncapacitated(c)) return {}
+      const healAmount = ev.d10Roll + ev.fighterLevel
+      const newHp = Math.min(healAmount, effectiveMaxHp(c.maxHp))
+      return {
+        hp: hp(newHp),
+        secondWindCharges: c.secondWindCharges - 1,
+        bonusActionUsed: true,
+        deathSaves: DEATH_SAVES_RESET,
+        stable: false
+      }
+    }),
+    useActionSurge: assign(({ context: c }) => {
+      if (c.actionSurgeCharges <= 0 || c.actionSurgeUsedThisTurn || isIncapacitated(c)) return {}
+      return {
+        actionsRemaining: c.actionsRemaining + 1,
+        actionSurgeCharges: c.actionSurgeCharges - 1,
+        actionSurgeUsedThisTurn: true
+      }
+    }),
+    useIndomitable: assign(({ context: c }) => {
+      if (c.indomitableCharges <= 0) return {}
+      return { indomitableCharges: c.indomitableCharges - 1 }
+    }),
+    fighterStartTurn: assign({ actionSurgeUsedThisTurn: false }),
+    fighterShortRest: assign(({ context: c }) => ({
+      secondWindCharges: Math.min(c.secondWindCharges + 1, c.secondWindMax),
+      actionSurgeCharges: c.actionSurgeMax
+    })),
+    fighterLongRest: assign(({ context: c }) => ({
+      secondWindCharges: c.secondWindMax,
+      actionSurgeCharges: c.actionSurgeMax,
+      indomitableCharges: c.indomitableMax
+    }))
   }
 }).createMachine({
   id: "dnd",
@@ -328,6 +372,7 @@ export const dndMachine = setup({
   context: ({ input: i }) => ({
     ...INITIAL_CONDITIONS,
     ...INITIAL_TURN_STATE,
+    ...initialFighterState(i.fighterLevel ?? 0),
     activeEffects: [] as ReadonlyArray<ActiveEffect>,
     concentrationSpellId: "",
     dead: false,
