@@ -2849,9 +2849,10 @@ module dnd {
     // Fighter state must be a structurally valid record
     fighterState.in(VALID_FIGHTER_STATES),
 
+    // Turn phase valid
+    turnPhase.in(Set("outOfCombat", "acting", "waitingForTurn")),
+
     // Level-to-max charge relationships (established by init, preserved by step).
-    // Without these, the solver finds states like level=1 + actionSurgeMax=2
-    // which can't arise from init but satisfy the structural bounds.
     fighterState.secondWindMax == secondWindMaxCharges(fighterLevel),
     fighterState.actionSurgeMax == actionSurgeMaxCharges(fighterLevel),
     fighterState.indomitableMax == indomitableMaxCharges(fighterLevel),
@@ -2863,8 +2864,7 @@ module dnd {
     turnState.actionsRemaining <= 2,
     not(fighterState.actionSurgeUsedThisTurn) implies turnState.actionsRemaining <= 1,
 
-    // Core state bounds (needed so the solver doesn't start from
-    // impossible core states that would break fighter transitions)
+    // Core state bounds
     state.hp >= 0,
     state.hp <= state.maxHp,
     state.maxHp >= 1,
@@ -2885,9 +2885,6 @@ module dnd {
     // Spell slot bounds
     spellSlots.pactSlotsCurrent >= 0,
     spellSlots.pactSlotsCurrent <= spellSlots.pactSlotsMax,
-
-    // Turn phase valid
-    turnPhase.in(Set("outOfCombat", "acting", "waitingForTurn")),
   }
 
 }
