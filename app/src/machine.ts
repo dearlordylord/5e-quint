@@ -50,6 +50,7 @@ import {
   asUseAction,
   asUseMovement,
   asUseSecondWind,
+  asUseTacticalMind,
   type DndContext,
   type DndEvent,
   type DndMachineInput,
@@ -341,6 +342,12 @@ export const dndMachine = setup({
     useIndomitable: assign(({ context: c }) => {
       if (c.indomitableCharges <= 0) return {}
       return { indomitableCharges: c.indomitableCharges - 1 }
+    }),
+    useTacticalMind: assign(({ context: c, event: e }) => {
+      const ev = asUseTacticalMind(e)
+      if (c.fighterLevel < 2 || c.secondWindCharges <= 0 || isIncapacitated(c) || c.dead) return {}
+      if (!ev.boostedCheckSucceeds) return {}
+      return { secondWindCharges: c.secondWindCharges - 1 }
     }),
     fighterStartTurn: assign({ actionSurgeUsedThisTurn: false }),
     fighterShortRest: assign(({ context: c }) => ({

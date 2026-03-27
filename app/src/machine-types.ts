@@ -235,6 +235,7 @@ export type DndEvent =
   | { readonly type: "USE_SECOND_WIND"; readonly d10Roll: number; readonly fighterLevel: number }
   | { readonly type: "USE_ACTION_SURGE" }
   | { readonly type: "USE_INDOMITABLE" }
+  | { readonly type: "USE_TACTICAL_MIND"; readonly boostedCheckSucceeds: boolean }
 
 // --- Event extractors ---
 
@@ -259,6 +260,7 @@ type ShoveEvent = Extract<DndEvent, { readonly type: "SHOVE" }>
 type ApplyFallEvent = Extract<DndEvent, { readonly type: "APPLY_FALL" }>
 
 type UseSecondWindEvent = Extract<DndEvent, { readonly type: "USE_SECOND_WIND" }>
+type UseTacticalMindEvent = Extract<DndEvent, { readonly type: "USE_TACTICAL_MIND" }>
 
 type EndTurnEvent = Extract<DndEvent, { readonly type: "END_TURN" }>
 type AddEffectEvent = Extract<DndEvent, { readonly type: "ADD_EFFECT" }>
@@ -324,6 +326,10 @@ export function asApplyFall(event: DndEvent): ApplyFallEvent {
 
 export function asUseSecondWind(event: DndEvent): UseSecondWindEvent {
   return event as UseSecondWindEvent
+}
+
+export function asUseTacticalMind(event: DndEvent): UseTacticalMindEvent {
+  return event as UseTacticalMindEvent
 }
 
 export function asEndTurn(event: DndEvent): EndTurnEvent {
