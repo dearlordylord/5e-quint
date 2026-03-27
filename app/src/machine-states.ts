@@ -159,6 +159,7 @@ export const turnPhaseConfig = {
         USE_SECOND_WIND: { actions: ["useSecondWind"] },
         USE_ACTION_SURGE: { actions: ["useActionSurge"] },
         USE_INDOMITABLE: { actions: ["useIndomitable"] },
+        USE_TACTICAL_MIND: { actions: ["useTacticalMind"] },
         MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
         MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
       }

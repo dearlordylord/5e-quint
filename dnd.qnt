@@ -1941,6 +1941,18 @@ module dnd {
     fs.with("indomitableCharges", fs.indomitableCharges - 1)
   }
 
+  /// Can use Tactical Mind: level >= 2 and Second Wind charges > 0 (SRD 5.2.1).
+  pure def canUseTacticalMind(fighterLevel: int, fs: FighterState): bool = {
+    fighterLevel >= 2 and fs.secondWindCharges > 0
+  }
+
+  /// Tactical Mind: expend a Second Wind use on a failed ability check to add 1d10.
+  /// Charge is only consumed if the boosted check succeeds.
+  pure def pUseTacticalMind(fs: FighterState, boostedCheckSucceeds: bool): FighterState = {
+    if (boostedCheckSucceeds) fs.with("secondWindCharges", fs.secondWindCharges - 1)
+    else fs
+  }
+
   /// Fighter short rest: regain 1 SW charge (capped), restore all AS charges.
   pure def pFighterShortRest(fs: FighterState): FighterState = {
     fs.with("secondWindCharges", intMin(fs.secondWindCharges + 1, fs.secondWindMax))
@@ -2647,6 +2659,19 @@ module dnd {
     }
   }
 
+  action doUseTacticalMind = {
+    nondet boostedCheckSucceeds = Bool.oneOf()
+    if (turnPhase != "acting" or not(canUseTacticalMind(fighterLevel, fighterState)) or isIncapacitated(state) or state.dead) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = pUseTacticalMind(fighterState, boostedCheckSucceeds),
+      fighterLevel' = fighterLevel,
+    }
+  }
+
   // -- 19.7 Step Action --
 
   action step = {
@@ -2698,6 +2723,7 @@ module dnd {
         doUseSecondWind,
         doUseActionSurge,
         doUseIndomitable,
+        doUseTacticalMind,
       }
     }
   }

@@ -463,6 +463,7 @@ type EventActionMap = {
   USE_SECOND_WIND: "doUseSecondWind"
   USE_ACTION_SURGE: "doUseActionSurge"
   USE_INDOMITABLE: "doUseIndomitable"
+  USE_TACTICAL_MIND: "doUseTacticalMind"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -554,6 +555,7 @@ const driverSchema = {
   doUseSecondWind: { d10Roll: ITFBigInt },
   doUseActionSurge: {},
   doUseIndomitable: {},
+  doUseTacticalMind: { boostedCheckSucceeds: z.boolean() },
   step: {} // dead character no-op
 } as const
 
@@ -839,6 +841,9 @@ function createDndDriver() {
       },
       doUseIndomitable: () => {
         send({ type: "USE_INDOMITABLE" })
+      },
+      doUseTacticalMind: ({ boostedCheckSucceeds }) => {
+        send({ type: "USE_TACTICAL_MIND", boostedCheckSucceeds })
       },
       step: () => {}, // dead character no-op
       getState: () => snapshotToNormalized(ensureActor().getSnapshot()),
