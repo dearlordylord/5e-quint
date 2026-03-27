@@ -3117,13 +3117,13 @@ module dndTest {
 
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
-        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState })
+        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel })
 
   run test_invariants_10steps =
     init
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel })
 
   run test_invariants_20steps =
     init
@@ -3131,7 +3131,7 @@ module dndTest {
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel })
 
   // Individual invariant tests on known state constructions
   run test_inv_deadIsAbsorbing_construction = {

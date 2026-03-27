@@ -111,6 +111,7 @@ export interface DndContext {
   readonly actionSurgeUsedThisTurn: boolean
   readonly indomitableCharges: number
   readonly indomitableMax: number
+  readonly fighterLevel: number
 }
 
 // --- Events ---
