@@ -106,6 +106,16 @@ module dnd {
 
   type Feature = FExtraAttack | FExtraAttack2 | FExtraAttack3
 
+  type FighterState = {
+    secondWindCharges: int,
+    secondWindMax: int,
+    actionSurgeCharges: int,
+    actionSurgeMax: int,
+    actionSurgeUsedThisTurn: bool,
+    indomitableCharges: int,
+    indomitableMax: int,
+  }
+
   type UnarmoredDefense = NoUnarmoredDefense | BarbarianUD | MonkUD
 
   /// SRD 5.2.1 species (Character Origins chapter).
@@ -1851,6 +1861,105 @@ module dnd {
     else 10 + (hoursMarched - 8)
 
   // ============================================================
+  // 17.6 FIGHTER CLASS FEATURES (SRD 5.2.1 Fighter)
+  // ============================================================
+
+  /// Second Wind max uses (SRD 5.2.1 Fighter Features table).
+  /// L0: 0, L1-3: 2, L4-9: 3, L10+: 4.
+  pure def secondWindMaxCharges(fighterLevel: int): int = {
+    if (fighterLevel <= 0) 0
+    else if (fighterLevel <= 3) 2
+    else if (fighterLevel <= 9) 3
+    else 4
+  }
+
+  /// Action Surge max charges (SRD 5.2.1).
+  /// Below L2: 0, L2-16: 1, L17+: 2.
+  pure def actionSurgeMaxCharges(fighterLevel: int): int = {
+    if (fighterLevel < 2) 0
+    else if (fighterLevel < 17) 1
+    else 2
+  }
+
+  /// Indomitable max charges (SRD 5.2.1).
+  /// Below L9: 0, L9-12: 1, L13-16: 2, L17+: 3.
+  pure def indomitableMaxCharges(fighterLevel: int): int = {
+    if (fighterLevel < 9) 0
+    else if (fighterLevel < 13) 1
+    else if (fighterLevel < 17) 2
+    else 3
+  }
+
+  /// Fresh fighter state for a given level.
+  pure def freshFighterState(fighterLevel: int): FighterState = {
+    val swMax = secondWindMaxCharges(fighterLevel)
+    val asMax = actionSurgeMaxCharges(fighterLevel)
+    val indMax = indomitableMaxCharges(fighterLevel)
+    {
+      secondWindCharges: swMax, secondWindMax: swMax,
+      actionSurgeCharges: asMax, actionSurgeMax: asMax,
+      actionSurgeUsedThisTurn: false,
+      indomitableCharges: indMax, indomitableMax: indMax,
+    }
+  }
+
+  /// Can use Second Wind: charges > 0, bonus action available, not incapacitated, not dead.
+  pure def canUseSecondWind(fs: FighterState, ts: TurnState, s: CreatureState): bool = {
+    fs.secondWindCharges > 0 and not(ts.bonusActionUsed) and not(isIncapacitated(s)) and not(s.dead)
+  }
+
+  /// Use Second Wind: heal d10 + level via pHeal, decrement charge.
+  pure def pUseSecondWind(s: CreatureState, fs: FighterState, d10Roll: int, fighterLevel: int): { creature: CreatureState, fighter: FighterState } = {
+    val healAmount = d10Roll + fighterLevel
+    {
+      creature: pHeal(s, healAmount),
+      fighter: fs.with("secondWindCharges", fs.secondWindCharges - 1),
+    }
+  }
+
+  /// Can use Action Surge: charges > 0, not used this turn, not incapacitated.
+  pure def canUseActionSurge(fs: FighterState, s: CreatureState): bool = {
+    fs.actionSurgeCharges > 0 and not(fs.actionSurgeUsedThisTurn) and not(isIncapacitated(s))
+  }
+
+  /// Use Action Surge: grant +1 action, decrement charge, mark used.
+  pure def pUseActionSurge(ts: TurnState, fs: FighterState): { turn: TurnState, fighter: FighterState } = {
+    {
+      turn: ts.with("actionsRemaining", ts.actionsRemaining + 1),
+      fighter: fs.with("actionSurgeCharges", fs.actionSurgeCharges - 1)
+                .with("actionSurgeUsedThisTurn", true),
+    }
+  }
+
+  /// Can use Indomitable: level >= 9 and charges > 0.
+  pure def canUseIndomitable(fighterLevel: int, fs: FighterState): bool = {
+    fighterLevel >= 9 and fs.indomitableCharges > 0
+  }
+
+  /// Use Indomitable: decrement charge (caller handles reroll).
+  pure def pUseIndomitable(fs: FighterState): FighterState = {
+    fs.with("indomitableCharges", fs.indomitableCharges - 1)
+  }
+
+  /// Fighter short rest: regain 1 SW charge (capped), restore all AS charges.
+  pure def pFighterShortRest(fs: FighterState): FighterState = {
+    fs.with("secondWindCharges", intMin(fs.secondWindCharges + 1, fs.secondWindMax))
+      .with("actionSurgeCharges", fs.actionSurgeMax)
+  }
+
+  /// Fighter long rest: restore all charges to max.
+  pure def pFighterLongRest(fs: FighterState): FighterState = {
+    fs.with("secondWindCharges", fs.secondWindMax)
+      .with("actionSurgeCharges", fs.actionSurgeMax)
+      .with("indomitableCharges", fs.indomitableMax)
+  }
+
+  /// Fighter start of turn: reset actionSurgeUsedThisTurn flag.
+  pure def pFighterStartTurn(fs: FighterState): FighterState = {
+    fs.with("actionSurgeUsedThisTurn", false)
+  }
+
+  // ============================================================
   // 18. CHARACTER CONSTRUCTION & LEVELING (Phase 9)
   // ============================================================
   // PHB Ch1 (character creation), Ch6 (multiclassing, feats).
@@ -2028,6 +2137,7 @@ module dnd {
   var turnState: TurnState
   var spellSlots: SpellSlotState
   var turnPhase: str  // "outOfCombat" | "acting" | "waitingForTurn"
+  var fighterState: FighterState
 
   // -- 19.2 Nondeterministic Parameter Ranges --
 
@@ -2112,6 +2222,8 @@ module dnd {
     concentrationSpellId: "",
   }
 
+  pure val FRESH_FIGHTER_STATE: FighterState = freshFighterState(TEST_CONFIG.level)
+
   // -- 19.4 Action Init --
 
   action init = {
@@ -2121,6 +2233,7 @@ module dnd {
       turnState' = FRESH_TURN,
       spellSlots' = FRESH_SPELL_SLOTS,
       turnPhase' = "outOfCombat",
+      fighterState' = FRESH_FIGHTER_STATE,
     }
   }
 
@@ -2132,7 +2245,7 @@ module dnd {
     nondet dt = DAMAGE_TYPES.oneOf()
     nondet isCrit = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doTakeDamageWithMods = {
@@ -2142,69 +2255,69 @@ module dnd {
     nondet resType = DAMAGE_TYPES.oneOf()
     nondet vulnType = DAMAGE_TYPES.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doHeal = {
     nondet amount = HEAL_RANGE.oneOf()
-    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doGrantTempHp = {
     nondet amount = TEMP_HP_RANGE.oneOf()
     nondet keepOld = Bool.oneOf()
-    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doDeathSave = {
     nondet roll = D20_RANGE.oneOf()
-    all { state' = pDeathSave(state, roll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = pDeathSave(state, roll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doStabilize = all {
-    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase
+    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState
   }
 
   action doKnockOut = {
     val r = pWithConcBreak(spellSlots, state, pKnockOut(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doApplyCondition = {
     nondet c = CONDITIONS.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyCondition(state, c))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doRemoveCondition = {
     nondet c = CONDITIONS.oneOf()
-    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   // Exhaustion actions
   action doAddExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
     val r = pWithConcBreak(spellSlots, state, pAddExhaustion(state, levels))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doReduceExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
-    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   // Turn actions
-  action unchanged = all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+  action unchanged = all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
 
   // Combat mode transitions
   action doEnterCombat = {
     if (turnPhase != "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn" }
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn", fighterState' = fighterState }
   }
 
   action doExitCombat = {
     if (turnPhase == "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat" }
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat", fighterState' = fighterState }
   }
 
   action doStartTurn = {
@@ -2235,6 +2348,7 @@ module dnd {
         turnState' = r.turn,
         spellSlots' = r.slots,
         turnPhase' = "acting",
+        fighterState' = pFighterStartTurn(fighterState),
       }
     }
   }
@@ -2242,29 +2356,29 @@ module dnd {
   action doUseAction = {
     nondet at = ACTION_TYPES.oneOf()
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase }
+    else all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doUseBonusAction = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase }
+    else all { state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doUseReaction = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase }
+    else all { state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doUseMovement = {
     nondet feet = MOVEMENT_RANGE.oneOf()
     nondet cost = MOVE_COST_RANGE.oneOf()
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase }
+    else all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doUseExtraAttack = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase }
+    else all { state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doStandFromProne = {
@@ -2274,35 +2388,35 @@ module dnd {
     else {
       val t1 = pStandFromProne(turnState)
       val s1 = if (t1 != turnState) pRemoveCondition(state, CProne) else state
-      all { state' = s1, turnState' = t1, spellSlots' = spellSlots, turnPhase' = turnPhase }
+      all { state' = s1, turnState' = t1, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
     }
   }
 
   action doDropProne = {
     if (turnPhase != "acting") unchanged
-    else all { state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    else all { state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doMarkBonusActionSpell = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase }
+    else all { state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doMarkNonCantripActionSpell = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase }
+    else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   // Spell slot actions (A1: requires ability to act — see ASSUMPTIONS.md)
   action doExpendSlot = {
     nondet level = SLOT_LEVEL_RANGE.oneOf()
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendSlot(spellSlots, level) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doExpendPactSlot = {
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendPactSlot(spellSlots) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doStartConcentration = {
@@ -2313,21 +2427,21 @@ module dnd {
       val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
       val effects2 = pAddEffect(effects1, spellId, duration, AtEndOfTurn)
       val ss1 = pStartConcentration(spellSlots, spellId)
-      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
+      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState }
     }
   }
 
   action doBreakConcentration = {
     val ss1 = pBreakConcentration(spellSlots)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doConcentrationCheck = {
     nondet saveSucceeded = Bool.oneOf()
     val ss1 = pConcentrationCheck(spellSlots, saveSucceeded)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   // Active effect actions
@@ -2335,19 +2449,19 @@ module dnd {
     nondet spellId = SPELL_IDS.oneOf()
     nondet duration = EFFECT_DURATION_RANGE.oneOf()
     nondet expiresAt = Set(AtStartOfTurn, AtEndOfTurn).oneOf()
-    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration, expiresAt)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration, expiresAt)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doRemoveEffect = {
     nondet spellId = SPELL_IDS.oneOf()
-    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   // Rest actions
   action doSpendHitDie = {
     nondet conMod = (-2).to(5).oneOf()
     nondet dieRoll = HD_ROLL_RANGE.oneOf()
-    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doShortRest = {
@@ -2364,6 +2478,7 @@ module dnd {
         turnState' = turnState,
         spellSlots' = pRestorePactSlots(spellSlots),
         turnPhase' = turnPhase,
+        fighterState' = pFighterShortRest(fighterState),
       }
     }
   }
@@ -2376,6 +2491,7 @@ module dnd {
         turnState' = turnState,
         spellSlots' = pRestoreAllSlots(spellSlots),
         turnPhase' = turnPhase,
+        fighterState' = pFighterLongRest(fighterState),
       }
     }
   }
@@ -2384,22 +2500,22 @@ module dnd {
   action doApplyFall = {
     nondet damageRoll = DAMAGE_RANGE.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyFall(state, damageRoll, Set(), Set(), Set()))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doSuffocate = {
     val r = pWithConcBreak(spellSlots, state, pSuffocate(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doApplyStarvation = {
     val r = pWithConcBreak(spellSlots, state, pApplyStarvation(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doApplyDehydration = {
     val r = pWithConcBreak(spellSlots, state, pApplyDehydration(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   // Grapple/Shove actions (applied to self as target)
@@ -2409,16 +2525,16 @@ module dnd {
     nondet saveFailed = Bool.oneOf()
     nondet freeHand = Bool.oneOf()
     val result = pGrapple(atkSize, tgtSize, state, saveFailed, freeHand)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doReleaseGrapple = all {
-    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase
+    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState
   }
 
   action doEscapeGrapple = {
     nondet escaped = Bool.oneOf()
-    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   action doShove = {
@@ -2427,7 +2543,7 @@ module dnd {
     nondet saveFailed = Bool.oneOf()
     nondet choice = SHOVE_CHOICES.oneOf()
     val result = pShove(atkSize, tgtSize, state, saveFailed, choice)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState }
   }
 
   // -- 19.6 doEndTurn Action --
@@ -2454,7 +2570,50 @@ module dnd {
         turnState' = turnState,
         spellSlots' = result.slots,
         turnPhase' = "waitingForTurn",
+        fighterState' = fighterState,
       }
+    }
+  }
+
+  // -- 19.6b Fighter Class Actions --
+
+  action doUseSecondWind = {
+    nondet d10Roll = 1.to(10).oneOf()
+    if (turnPhase != "acting" or not(canUseSecondWind(fighterState, turnState, state))) unchanged
+    else {
+      val result = pUseSecondWind(state, fighterState, d10Roll, TEST_CONFIG.level)
+      all {
+        state' = result.creature,
+        turnState' = turnState.with("bonusActionUsed", true),
+        spellSlots' = spellSlots,
+        turnPhase' = turnPhase,
+        fighterState' = result.fighter,
+      }
+    }
+  }
+
+  action doUseActionSurge = {
+    if (turnPhase != "acting" or not(canUseActionSurge(fighterState, state))) unchanged
+    else {
+      val result = pUseActionSurge(turnState, fighterState)
+      all {
+        state' = state,
+        turnState' = result.turn,
+        spellSlots' = spellSlots,
+        turnPhase' = turnPhase,
+        fighterState' = result.fighter,
+      }
+    }
+  }
+
+  action doUseIndomitable = {
+    if (not(canUseIndomitable(TEST_CONFIG.level, fighterState))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = pUseIndomitable(fighterState),
     }
   }
 
@@ -2506,6 +2665,9 @@ module dnd {
         doEndTurn,
         doEnterCombat,
         doExitCombat,
+        doUseSecondWind,
+        doUseActionSurge,
+        doUseIndomitable,
       }
     }
   }
@@ -2578,6 +2740,15 @@ module dnd {
 
   val turnPhaseValid = turnPhase.in(Set("outOfCombat", "acting", "waitingForTurn"))
 
+  val secondWindBounded =
+    fighterState.secondWindCharges >= 0 and fighterState.secondWindCharges <= fighterState.secondWindMax
+
+  val actionSurgeBounded =
+    fighterState.actionSurgeCharges >= 0 and fighterState.actionSurgeCharges <= fighterState.actionSurgeMax
+
+  val indomitableBounded =
+    fighterState.indomitableCharges >= 0 and fighterState.indomitableCharges <= fighterState.indomitableMax
+
   /// Combined invariant for all safety properties.
   val allInvariants = and {
     hpBounded,
@@ -2600,6 +2771,9 @@ module dnd {
     hitDiceNonNegative,
     activeEffectsUniqueSpellIds,
     turnPhaseValid,
+    secondWindBounded,
+    actionSurgeBounded,
+    indomitableBounded,
   }
 
 }
