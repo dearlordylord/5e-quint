@@ -88,17 +88,17 @@ export const damageTrackConfig = {
           {
             guard: "shortRestHeals" as const,
             target: "#dnd.damageTrack.alive",
-            actions: ["shortRest", "clearUnconscious"]
+            actions: ["shortRest", "fighterShortRest", "clearUnconscious"]
           },
-          { guard: "isOutOfCombat" as const, actions: ["shortRest"] }
+          { guard: "isOutOfCombat" as const, actions: ["shortRest", "fighterShortRest"] }
         ],
         LONG_REST: [
           {
             guard: "longRestHeals" as const,
             target: "#dnd.damageTrack.alive",
-            actions: ["longRest", "clearUnconscious"]
+            actions: ["longRest", "fighterLongRest", "clearUnconscious"]
           },
-          { guard: "isOutOfCombat" as const, actions: ["longRest"] }
+          { guard: "isOutOfCombat" as const, actions: ["longRest", "fighterLongRest"] }
         ],
         SPEND_HIT_DIE: [
           {
@@ -156,13 +156,16 @@ export const turnPhaseConfig = {
         STAND_FROM_PRONE: { guard: "canStandFromProne" as const, actions: ["standFromProne"] },
         DROP_PRONE: { actions: ["dropProne"] },
         GRANT_EXTRA_ACTION: { actions: ["grantExtraAction"] },
+        USE_SECOND_WIND: { actions: ["useSecondWind"] },
+        USE_ACTION_SURGE: { actions: ["useActionSurge"] },
+        USE_INDOMITABLE: { actions: ["useIndomitable"] },
         MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
         MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
       }
     },
     waitingForTurn: {
       on: {
-        START_TURN: { target: "acting" as const, actions: ["initTurn"] },
+        START_TURN: { target: "acting" as const, actions: ["initTurn", "fighterStartTurn"] },
         EXIT_COMBAT: { target: "outOfCombat" as const, actions: ["exitCombat"] }
       }
     }
@@ -212,8 +215,8 @@ export const rootEventHandlers = {
   SHOVE: { actions: ["applyShove"] },
   EXPEND_SLOT: { guard: "canExpendSlot" as const, actions: ["expendSlot"] },
   EXPEND_PACT_SLOT: { guard: "canExpendSlot" as const, actions: ["expendPactSlot"] },
-  SHORT_REST: { guard: "isOutOfCombat" as const, actions: ["shortRest"] },
-  LONG_REST: { guard: "isOutOfCombat" as const, actions: ["longRest"] },
+  SHORT_REST: { guard: "isOutOfCombat" as const, actions: ["shortRest", "fighterShortRest"] },
+  LONG_REST: { guard: "isOutOfCombat" as const, actions: ["longRest", "fighterLongRest"] },
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },
   APPLY_STARVATION: { actions: ["applyStarvation"] },
   APPLY_DEHYDRATION: { actions: ["applyDehydration"] }

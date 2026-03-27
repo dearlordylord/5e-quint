@@ -52,6 +52,7 @@ export interface DndMachineInput {
   readonly effectiveSpeed?: number
   readonly movementRemaining?: number
   readonly extraAttacksRemaining?: number
+  readonly fighterLevel?: number
 }
 
 // --- Context ---
@@ -101,6 +102,14 @@ export interface DndContext {
   readonly concentrationSpellId: string
   readonly hitDiceRemaining: number
   readonly activeEffects: ReadonlyArray<ActiveEffect>
+  // Fighter charge state (Quint parity: fighterState)
+  readonly secondWindCharges: number
+  readonly secondWindMax: number
+  readonly actionSurgeCharges: number
+  readonly actionSurgeMax: number
+  readonly actionSurgeUsedThisTurn: boolean
+  readonly indomitableCharges: number
+  readonly indomitableMax: number
 }
 
 // --- Events ---
@@ -221,6 +230,9 @@ export type DndEvent =
   | { readonly type: "APPLY_DEHYDRATION" }
   | { readonly type: "ENTER_COMBAT" }
   | { readonly type: "EXIT_COMBAT" }
+  | { readonly type: "USE_SECOND_WIND"; readonly d10Roll: number; readonly fighterLevel: number }
+  | { readonly type: "USE_ACTION_SURGE" }
+  | { readonly type: "USE_INDOMITABLE" }
 
 // --- Event extractors ---
 
@@ -243,6 +255,8 @@ type LongRestEvent = Extract<DndEvent, { readonly type: "LONG_REST" }>
 type SpendHitDieEvent = Extract<DndEvent, { readonly type: "SPEND_HIT_DIE" }>
 type ShoveEvent = Extract<DndEvent, { readonly type: "SHOVE" }>
 type ApplyFallEvent = Extract<DndEvent, { readonly type: "APPLY_FALL" }>
+
+type UseSecondWindEvent = Extract<DndEvent, { readonly type: "USE_SECOND_WIND" }>
 
 type EndTurnEvent = Extract<DndEvent, { readonly type: "END_TURN" }>
 type AddEffectEvent = Extract<DndEvent, { readonly type: "ADD_EFFECT" }>
@@ -306,6 +320,10 @@ export function asApplyFall(event: DndEvent): ApplyFallEvent {
   return event as ApplyFallEvent
 }
 
+export function asUseSecondWind(event: DndEvent): UseSecondWindEvent {
+  return event as UseSecondWindEvent
+}
+
 export function asEndTurn(event: DndEvent): EndTurnEvent {
   return event as EndTurnEvent
 }
@@ -333,6 +351,21 @@ export const INITIAL_CONDITIONS = {
   stunned: false,
   unconscious: false
 } as const
+
+export function initialFighterState(fighterLevel: number) {
+  const swMax = fighterLevel <= 0 ? 0 : fighterLevel <= 3 ? 2 : fighterLevel <= 9 ? 3 : 4
+  const asMax = fighterLevel < 2 ? 0 : fighterLevel < 17 ? 1 : 2
+  const indMax = fighterLevel < 9 ? 0 : fighterLevel < 13 ? 1 : fighterLevel < 17 ? 2 : 3
+  return {
+    secondWindCharges: swMax,
+    secondWindMax: swMax,
+    actionSurgeCharges: asMax,
+    actionSurgeMax: asMax,
+    actionSurgeUsedThisTurn: false,
+    indomitableCharges: indMax,
+    indomitableMax: indMax
+  }
+}
 
 export const INITIAL_TURN_STATE = {
   actionsRemaining: 1,
