@@ -108,7 +108,8 @@
 
 | Term | Definition | Aliases to avoid |
 |------|-----------|-----------------|
-| **Speed** | Distance in feet a creature can move on its turn; types include Walk, Fly, Swim, Climb, Burrow | Movement speed, movement rate |
+| **Speed** | A creature's stat: the maximum distance in feet it is allowed to move on its turn; types include Walk, Fly, Swim, Climb, Burrow; Speed is a capacity, not a resource — it doesn't decrease when you move (but can be reduced by conditions like Exhaustion L2 or Grappled → 0) | Movement speed, movement rate |
+| **Movement** | The act of expending distance from your turn's movement budget (which starts at your Speed); distinct from Speed itself — a creature that has used all its Movement still has its Speed; some features grant bonus movement independent of the normal budget (e.g., Tactical Shift, Dash) | Speed (Speed is the capacity; Movement is the consumption) |
 | **Difficult Terrain** | Terrain that costs 1 extra foot per foot of movement (e.g., rubble, undergrowth, another creature's space) | Rough terrain, hazardous terrain |
 | **Squeezing** | Moving through a space sized for one category smaller; costs 1 extra foot per foot; disadvantage on attack rolls and Dex saves; attacks against have advantage | — |
 | **Long Jump** | Horizontal jump; distance = Strength score (feet) with 10+ ft running start, half that standing; each foot costs 1 foot of movement | — |
