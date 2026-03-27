@@ -268,6 +268,7 @@ type ApplyFallEvent = Extract<DndEvent, { readonly type: "APPLY_FALL" }>
 
 type UseSecondWindEvent = Extract<DndEvent, { readonly type: "USE_SECOND_WIND" }>
 type UseTacticalMindEvent = Extract<DndEvent, { readonly type: "USE_TACTICAL_MIND" }>
+type UseBonusMovementEvent = Extract<DndEvent, { readonly type: "USE_BONUS_MOVEMENT" }>
 
 type EndTurnEvent = Extract<DndEvent, { readonly type: "END_TURN" }>
 type AddEffectEvent = Extract<DndEvent, { readonly type: "ADD_EFFECT" }>
@@ -337,6 +338,9 @@ export function asUseSecondWind(event: DndEvent): UseSecondWindEvent {
 
 export function asUseTacticalMind(event: DndEvent): UseTacticalMindEvent {
   return event as UseTacticalMindEvent
+}
+export function asUseBonusMovement(event: DndEvent): UseBonusMovementEvent {
+  return event as UseBonusMovementEvent
 }
 
 export function asEndTurn(event: DndEvent): EndTurnEvent {

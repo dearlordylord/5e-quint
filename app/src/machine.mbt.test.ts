@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest"
 import { createActor } from "xstate"
 import { z } from "zod"
 
+import { fighterExtraAttacks } from "#/features/class-fighter.ts"
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
 import type { ActionType, Condition, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
 import { d20Roll, healAmount, tempHp } from "#/types.ts"
@@ -678,10 +679,7 @@ function createDndDriver() {
       }) => {
         // Quint uses configForLevel: Walk=30, no armor penalty
         const BASE_SPEED = 30
-        const snap = ensureActor().getSnapshot()
-        const fl = snap.context.fighterLevel
-        // Extra Attack tiers: L5+ = 1, L11+ = 2, L20 = 3
-        const extraAttacks = fl >= 20 ? 3 : fl >= 11 ? 2 : fl >= 5 ? 1 : 0
+        const extraAttacks = fighterExtraAttacks(ensureActor().getSnapshot().context.fighterLevel)
         const effects = !numEffects
           ? []
           : [

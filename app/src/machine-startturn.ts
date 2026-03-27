@@ -28,9 +28,7 @@ function hasEffect(aes: ReadonlyArray<ActiveEffect>, spellId: string): boolean {
 export function computeStartTurn(
   ctx: TurnPhaseCtx,
   deathSaveRoll: number | undefined,
-  effects: ReadonlyArray<StartTurnEffect>,
-  deathSaveRoll2?: number,
-  fighterLevel?: number
+  effects: ReadonlyArray<StartTurnEffect>
 ): TurnPhaseResult {
   const conditions: Partial<Record<ConditionFlag, boolean>> = {}
   let incap = ctx.incapacitatedSources
@@ -45,16 +43,9 @@ export function computeStartTurn(
   // 1. Decrement durations + clear expired AtStartOfTurn
   let ae = clearExpiredStart(decrementDurations(ctx.activeEffects))
 
-  // 2. Death save (if applicable) — Defy Death (Champion L18) applied
+  // 2. Death save (if applicable)
   if (h === 0 && !stable && !dead && deathSaveRoll != null) {
-    let effectiveRoll = deathSaveRoll
-    if ((fighterLevel ?? 0) >= 18 && deathSaveRoll2 != null) {
-      effectiveRoll = Math.max(effectiveRoll, deathSaveRoll2)
-    }
-    if ((fighterLevel ?? 0) >= 18 && effectiveRoll >= 18) {
-      effectiveRoll = 20
-    }
-    const ds = resolveDeathSave(effectiveRoll, dsSucc, dsFail)
+    const ds = resolveDeathSave(deathSaveRoll, dsSucc, dsFail)
     if (ds.regainsConsciousness) {
       h = 1
       conditions.unconscious = false

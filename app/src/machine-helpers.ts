@@ -1,3 +1,4 @@
+import { CHAMPION_SURVIVOR_LEVEL, SURVIVOR_DEFY_DEATH_THRESHOLD } from "#/features/class-fighter.ts"
 import type { Condition, DamageType, IncapSource } from "#/types.ts"
 import { exhaustionLevel, hp } from "#/types.ts"
 
@@ -29,6 +30,18 @@ export function applyDamageModifiers(
 /** Effective max HP. SRD 5.2.1: exhaustion no longer halves max HP. Kept as abstraction point for future max-HP modifiers. */
 export function effectiveMaxHp(maxHp: number): number {
   return maxHp
+}
+
+/** Defy Death (Champion L18): advantage on death saves, rolls 18-20 count as 20. */
+export function applyDefyDeath(fighterLevel: number, roll1: number, roll2: number | undefined): number {
+  let roll = roll1
+  if (fighterLevel >= CHAMPION_SURVIVOR_LEVEL && roll2 != null) {
+    roll = Math.max(roll, roll2)
+  }
+  if (fighterLevel >= CHAMPION_SURVIVOR_LEVEL && roll >= SURVIVOR_DEFY_DEATH_THRESHOLD) {
+    roll = 20
+  }
+  return roll
 }
 
 export const EMPTY_DMG_SET: ReadonlySet<DamageType> = new Set()
