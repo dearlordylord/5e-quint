@@ -349,7 +349,14 @@ export const dndMachine = setup({
       if (!ev.boostedCheckSucceeds) return {}
       return { secondWindCharges: c.secondWindCharges - 1 }
     }),
-    fighterStartTurn: assign({ actionSurgeUsedThisTurn: false }),
+    fighterStartTurn: assign(({ context: c }) => ({
+      actionSurgeUsedThisTurn: false,
+      ...(c.fighterLevel >= 10 && !c.heroicInspiration ? { heroicInspiration: true } : {})
+    })),
+    useHeroicInspiration: assign(({ context: c }) => {
+      if (!c.heroicInspiration) return {}
+      return { heroicInspiration: false }
+    }),
     fighterShortRest: assign(({ context: c }) => ({
       secondWindCharges: Math.min(c.secondWindCharges + 1, c.secondWindMax),
       actionSurgeCharges: c.actionSurgeMax

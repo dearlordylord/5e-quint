@@ -160,6 +160,7 @@ export const turnPhaseConfig = {
         USE_ACTION_SURGE: { actions: ["useActionSurge"] },
         USE_INDOMITABLE: { actions: ["useIndomitable"] },
         USE_TACTICAL_MIND: { actions: ["useTacticalMind"] },
+        USE_HEROIC_INSPIRATION: { actions: ["useHeroicInspiration"] },
         MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
         MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
       }
