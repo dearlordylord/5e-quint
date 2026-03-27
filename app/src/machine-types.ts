@@ -95,6 +95,8 @@ export interface DndContext {
   readonly readiedAction: boolean
   readonly bonusActionSpellCast: boolean
   readonly nonCantripActionSpellCast: boolean
+  readonly bonusMovementRemaining: number
+  readonly bonusMovementOAFree: boolean
   readonly slotsMax: SpellSlots
   readonly slotsCurrent: SpellSlots
   readonly pactSlotsMax: number
@@ -231,6 +233,7 @@ export type DndEvent =
   | { readonly type: "SUFFOCATE" }
   | { readonly type: "APPLY_STARVATION" }
   | { readonly type: "APPLY_DEHYDRATION" }
+  | { readonly type: "USE_BONUS_MOVEMENT"; readonly feet: number }
   | { readonly type: "ENTER_COMBAT" }
   | { readonly type: "EXIT_COMBAT" }
   | { readonly type: "USE_SECOND_WIND"; readonly d10Roll: number; readonly fighterLevel: number }
@@ -389,5 +392,7 @@ export const INITIAL_TURN_STATE = {
   freeInteractionUsed: false,
   nonCantripActionSpellCast: false,
   readiedAction: false,
-  reactionAvailable: true
+  reactionAvailable: true,
+  bonusMovementRemaining: 0,
+  bonusMovementOAFree: false
 } as const

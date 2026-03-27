@@ -152,6 +152,7 @@ export const turnPhaseConfig = {
         USE_BONUS_ACTION: { actions: ["useBonusAction"] },
         USE_REACTION: { actions: ["useReaction"] },
         USE_MOVEMENT: { actions: ["useMovement"] },
+        USE_BONUS_MOVEMENT: { actions: ["useBonusMovement"] },
         USE_EXTRA_ATTACK: { actions: ["useExtraAttack"] },
         STAND_FROM_PRONE: { guard: "canStandFromProne" as const, actions: ["standFromProne"] },
         DROP_PRONE: { actions: ["dropProne"] },
