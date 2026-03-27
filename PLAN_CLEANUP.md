@@ -124,10 +124,11 @@ On Second Wind use at L5+, move up to half speed without opportunity attacks. Al
 
 ### G. Champion subclass features
 
-Passive formulas already in `class-fighter.ts:199-277`. These are query functions (crit range, inspiration, healing), not state-modifying actions. `configForLevel` already derives `critRange`. Remaining:
-- Remarkable Athlete (L3): Advantage on Initiative + Athletics — query only
-- Heroic Warrior (L10): Grant inspiration at turn start — needs state
-- Survivor (L18): Defy Death (death save advantage + threshold), Heroic Rally (heal at turn start if bloodied) — needs `doStartTurn` integration
+Passive formulas already in `class-fighter.ts:199-277`. `configForLevel` already derives `critRange`. Add new fields to `FighterState` (not top-level vars) to avoid frame condition tax. Update `VALID_FIGHTER_STATES` ranges accordingly.
+
+- G1: Heroic Warrior (L10): Grant inspiration at turn start if not already held. Add `heroicInspiration: bool` to `FighterState`, integrate into `pFighterStartTurn`.
+- G2: Survivor (L18): Defy Death (death save advantage + threshold 18→20), Heroic Rally (heal 5+CON at turn start if bloodied). Integrate into `doStartTurn` / `pStartTurnFull`.
+- Remarkable Athlete (L3): Advantage on Initiative + Athletics — query only, no state needed.
 
 ---
 
