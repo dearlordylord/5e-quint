@@ -110,9 +110,23 @@ For `fighterState` (7 fields, ~7K records), the `VALID_FIGHTER_STATES` set compr
 
 Each feature follows the same recipe: add pure functions + action wrapper in `dnd.qnt`, add driver handler in MBT bridge. The `fighterLevel` state variable and `configForLevel` infrastructure are already in place.
 
+**Dependencies:** E, F, and G are independent of each other. Within G, G1 and G2 both modify `FighterState` and `doStartTurn` — run them sequentially to avoid merge conflicts.
+
 **Caveat — `configForLevel` is Champion-only.** It hardcodes Champion subclass logic (crit range thresholds, Extra Attack tiers). When adding Battle Master or Eldritch Knight, it needs to become `configForChampionLevel` or take a subclass parameter.
 
 **Caveat — frame condition tax.** Each new state variable (e.g., `var heroicInspiration: bool`) requires adding `heroicInspiration' = heroicInspiration` to every action (~48). This is mechanical but verbose. Mitigation: bundle related fields into existing records (e.g., add `heroicInspiration` to `FighterState`) to avoid new top-level vars. See deferred item C for the eventual record-consolidation plan.
+
+### Suggested recipe (verify against current code before following)
+
+This is a starting point based on how SW/AS/Ind were added. The codebase may have changed — read the existing patterns in `dnd.qnt` and `machine.mbt.test.ts` before assuming these steps are complete or correct.
+
+1. Read the TS implementation in `class-fighter.ts` — it's the SRD-accurate reference
+2. Add Quint pure function(s) in `dnd.qnt` mirroring the TS logic
+3. Add action wrapper with nondet parameters (study `doUseSecondWind` as a template)
+4. Add action to the `step` `any { }` block
+5. Add driver schema entry + handler in `machine.mbt.test.ts` (study existing handlers)
+6. If adding fields to `FighterState`: update the type definition, `freshFighterState`, `VALID_FIGHTER_STATES` ranges, `inductiveInv` constraints, `QuintFighterState` Zod schema, `NormalizedState` interface, both conversion functions (`snapshotToNormalized`, `quintParsedToNormalized`), `DndContext` interface, machine context factory
+7. Validate: `npx quint typecheck dnd.qnt`, `npx quint test --main=dnd dnd.qnt`, `npx quint run --main=dnd --invariant=allInvariants dnd.qnt`, `npx vitest run`
 
 ### E. Tactical Mind (Level 2)
 
