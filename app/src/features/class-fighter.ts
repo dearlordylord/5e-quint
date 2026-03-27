@@ -1,5 +1,29 @@
-// Fighter class features: Second Wind, Tactical Mind, Tactical Shift, Action Surge
+// Fighter class features: Fighting Styles, Second Wind, Tactical Mind, Tactical Shift, Action Surge
 // SRD 5.2.1 Fighter
+
+// --- Fighting Style Feat Effects (SRD 5.2.1) ---
+
+export type FightingStyle = "archery" | "defense" | "greatWeaponFighting" | "twoWeaponFighting"
+
+/** Archery: +2 to attack rolls with Ranged weapons. */
+export function archeryAttackBonus(styles: ReadonlySet<FightingStyle>, isRanged: boolean): number {
+  return isRanged && styles.has("archery") ? 2 : 0
+}
+
+/** Defense: +1 AC while wearing Light, Medium, or Heavy armor. */
+export function defenseACBonus(styles: ReadonlySet<FightingStyle>, isWearingArmor: boolean): number {
+  return isWearingArmor && styles.has("defense") ? 1 : 0
+}
+
+/** Great Weapon Fighting: treat 1 or 2 on a damage die as 3. */
+export function gwfDamageDie(styles: ReadonlySet<FightingStyle>, dieResult: number): number {
+  return styles.has("greatWeaponFighting") && dieResult <= 2 ? 3 : dieResult
+}
+
+/** TWF with Fighting Style: always add ability modifier to off-hand damage. */
+export function twfOffHandDamageStyled(diceResult: number, abilityMod: number): number {
+  return Math.max(0, diceResult + abilityMod)
+}
 
 // --- Second Wind charges by level ---
 

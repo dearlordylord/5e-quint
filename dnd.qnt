@@ -315,26 +315,6 @@ module dnd {
   pure def pCanTakeEpicBoon(config: CharConfig): bool =
     config.level >= 19
 
-  // -- Fighting Style Feat Effects (SRD 5.2.1) --
-
-  /// Archery: +2 to attack rolls with Ranged weapons.
-  pure def pArcheryAttackBonus(styles: Set[FightingStyleFeat], isRanged: bool): int =
-    if (isRanged and styles.contains(FSArchery)) 2 else 0
-
-  /// Defense: +1 AC while wearing Light, Medium, or Heavy armor.
-  pure def pDefenseACBonus(styles: Set[FightingStyleFeat], isWearingArmor: bool): int =
-    if (isWearingArmor and styles.contains(FSDefense)) 1 else 0
-
-  /// Great Weapon Fighting: treat 1 or 2 on a damage die as 3.
-  /// Caller must verify weapon has Two-Handed or Versatile property.
-  pure def pGWFDamageDie(styles: Set[FightingStyleFeat], dieResult: int): int =
-    if (styles.contains(FSGreatWeaponFighting) and dieResult <= 2) 3
-    else dieResult
-
-  /// TWF off-hand damage with Fighting Style: always add ability modifier.
-  pure def pTWFOffHandDamageStyled(diceResult: int, abilityMod: int): int =
-    intMax(0, diceResult + abilityMod)
-
   // ============================================================
   // 6. EQUIPMENT (character/equipment)
   // ============================================================
