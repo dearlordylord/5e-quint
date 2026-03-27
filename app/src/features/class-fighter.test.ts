@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest"
 
 import {
   actionSurgeMaxCharges,
+  archeryAttackBonus,
   canUseActionSurge,
   canUseIndomitable,
   canUseSecondWind,
   canUseTacticalMind,
   championCritRange,
+  defenseACBonus,
   fighterLongRest,
   fighterShortRest,
+  gwfDamageDie,
   hasRemarkableAthlete,
   heroicWarriorInspiration,
   indomitableLongRest,
@@ -19,11 +22,45 @@ import {
   survivorDefyDeathAdvantage,
   survivorDefyDeathThreshold,
   survivorHeroicRally,
+  twfOffHandDamageStyled,
   useActionSurge,
   useIndomitable,
   useSecondWind,
-  useTacticalMind
+  useTacticalMind,
+  type FightingStyle
 } from "#/features/class-fighter.ts"
+
+// --- Fighting Style Feat Effects ---
+
+function styles(...s: FightingStyle[]): ReadonlySet<FightingStyle> {
+  return new Set(s)
+}
+
+describe("archeryAttackBonus", () => {
+  it("+2 for ranged with Archery", () => expect(archeryAttackBonus(styles("archery"), true)).toBe(2))
+  it("0 for melee with Archery", () => expect(archeryAttackBonus(styles("archery"), false)).toBe(0))
+  it("0 without feat", () => expect(archeryAttackBonus(styles(), true)).toBe(0))
+})
+
+describe("defenseACBonus", () => {
+  it("+1 with armor and Defense", () => expect(defenseACBonus(styles("defense"), true)).toBe(1))
+  it("0 unarmored with Defense", () => expect(defenseACBonus(styles("defense"), false)).toBe(0))
+  it("0 without feat", () => expect(defenseACBonus(styles(), true)).toBe(0))
+})
+
+describe("gwfDamageDie", () => {
+  it("treats 1 as 3", () => expect(gwfDamageDie(styles("greatWeaponFighting"), 1)).toBe(3))
+  it("treats 2 as 3", () => expect(gwfDamageDie(styles("greatWeaponFighting"), 2)).toBe(3))
+  it("leaves 3 unchanged", () => expect(gwfDamageDie(styles("greatWeaponFighting"), 3)).toBe(3))
+  it("leaves 6 unchanged", () => expect(gwfDamageDie(styles("greatWeaponFighting"), 6)).toBe(6))
+  it("no effect without feat", () => expect(gwfDamageDie(styles(), 1)).toBe(1))
+})
+
+describe("twfOffHandDamageStyled", () => {
+  it("adds positive modifier", () => expect(twfOffHandDamageStyled(4, 3)).toBe(7))
+  it("adds negative modifier", () => expect(twfOffHandDamageStyled(4, -2)).toBe(2))
+  it("floors at 0", () => expect(twfOffHandDamageStyled(1, -3)).toBe(0))
+})
 
 // --- Second Wind ---
 

@@ -3565,31 +3565,6 @@ module dndTest {
   run test_can_take_epic_boon_at_19 = assert(pCanTakeEpicBoon(TEST_WIZARD.with("level", 19)))
 
   // ==========================================================================
-  // T05 — Fighting Style Feat Effects
-  // ==========================================================================
-
-  // Archery: +2 to ranged attack rolls
-  run test_archery_ranged = assert(pArcheryAttackBonus(Set(FSArchery), true) == 2)
-  run test_archery_melee = assert(pArcheryAttackBonus(Set(FSArchery), false) == 0)
-  run test_archery_without_feat = assert(pArcheryAttackBonus(Set(), true) == 0)
-
-  // Defense: +1 AC while wearing armor
-  run test_defense_with_armor = assert(pDefenseACBonus(Set(FSDefense), true) == 1)
-  run test_defense_unarmored = assert(pDefenseACBonus(Set(FSDefense), false) == 0)
-  run test_defense_without_feat = assert(pDefenseACBonus(Set(), true) == 0)
-
-  // Great Weapon Fighting: treat 1 or 2 on damage die as 3
-  run test_gwf_die_1 = assert(pGWFDamageDie(Set(FSGreatWeaponFighting), 1) == 3)
-  run test_gwf_die_2 = assert(pGWFDamageDie(Set(FSGreatWeaponFighting), 2) == 3)
-  run test_gwf_die_3_unchanged = assert(pGWFDamageDie(Set(FSGreatWeaponFighting), 3) == 3)
-  run test_gwf_die_6 = assert(pGWFDamageDie(Set(FSGreatWeaponFighting), 6) == 6)
-  run test_gwf_without_feat = assert(pGWFDamageDie(Set(), 1) == 1)
-
-  // TWF with Fighting Style: adds ability modifier to off-hand damage
-  run test_twf_styled_positive_mod = assert(pTWFOffHandDamageStyled(4, 3) == 7)
-  run test_twf_styled_negative_mod = assert(pTWFOffHandDamageStyled(4, -2) == 2)
-  run test_twf_styled_floor_zero = assert(pTWFOffHandDamageStyled(1, -3) == 0)
-
   // Regression: base TWF does NOT add positive ability modifier
   run test_twf_base_no_positive_mod = assert(pTWFOffHandDamage(4, 3) == 4)
 
