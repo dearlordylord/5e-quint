@@ -4,7 +4,7 @@
 
 These are hacks and shortcuts taken during the Fighter Quint integration. Not blocking, but should be cleaned up.
 
-### 1. `initialFighterState` duplicates charge tables
+### ~~1. `initialFighterState` duplicates charge tables~~ DONE
 `machine-types.ts:initialFighterState()` has inline charge table logic that copies `secondWindMaxCharges`, `actionSurgeMaxCharges`, `indomitableMaxCharges` from `class-fighter.ts`. Two sources of truth.
 **Fix:** Delete the inline logic in `initialFighterState()`. Import and call `secondWindMaxCharges`, `actionSurgeMaxCharges`, `indomitableMaxCharges` from `#/features/class-fighter.ts`. The function signature and return shape stay the same.
 
@@ -20,7 +20,7 @@ All fighter actions in `dnd.qnt` use `TEST_CONFIG.level` (= 5) instead of a vari
 `fighterShortRest` and `fighterLongRest` run on every SHORT_REST/LONG_REST regardless of class. They're no-ops when maxes are 0 (capped arithmetic produces same values), so harmless.
 **Fix alongside #3** — same trigger (adding second class). When refactoring class state, conditionally apply per-class rest logic.
 
-### 5. `doUseIndomitable` missing turn phase guard — Quint↔XState divergence (BUG)
+### ~~5. `doUseIndomitable` missing turn phase guard — Quint↔XState divergence (BUG)~~ DONE
 Second Wind and Action Surge check `turnPhase != "acting"` in `dnd.qnt`, but `doUseIndomitable` doesn't (line ~2609). XState routes `USE_INDOMITABLE` only in the `acting` state (`machine-states.ts:161`), so XState is correct. This is a **parity divergence** — Quint allows Indomitable out of combat, XState doesn't.
 **Fix in `dnd.qnt` only:** Change `doUseIndomitable` from:
 ```quint

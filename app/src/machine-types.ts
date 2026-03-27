@@ -1,3 +1,4 @@
+import { actionSurgeMaxCharges, indomitableMaxCharges, secondWindMaxCharges } from "#/features/class-fighter.ts"
 import type { ConditionFlag } from "#/machine-helpers.ts"
 import type {
   ActionType,
@@ -353,9 +354,9 @@ export const INITIAL_CONDITIONS = {
 } as const
 
 export function initialFighterState(fighterLevel: number) {
-  const swMax = fighterLevel <= 0 ? 0 : fighterLevel <= 3 ? 2 : fighterLevel <= 9 ? 3 : 4
-  const asMax = fighterLevel < 2 ? 0 : fighterLevel < 17 ? 1 : 2
-  const indMax = fighterLevel < 9 ? 0 : fighterLevel < 13 ? 1 : fighterLevel < 17 ? 2 : 3
+  const swMax = secondWindMaxCharges(fighterLevel)
+  const asMax = actionSurgeMaxCharges(fighterLevel)
+  const indMax = indomitableMaxCharges(fighterLevel)
   return {
     secondWindCharges: swMax,
     secondWindMax: swMax,
