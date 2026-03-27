@@ -2,8 +2,21 @@
 
 **Generated from SRD 5.2.1 audit.** Every feature traces to a specific SRD passage.
 
+## Workflow: Quint first, then TS
+
+For features with state transitions (resource pools, toggles, one-shot resources), the implementation order is:
+
+1. **Quint spec** (`dnd.qnt`) — model the state transition as pure functions + action wrappers
+2. **MBT bridge** (`machine.mbt.test.ts`) — add driver handler, verify Quint/XState parity
+3. **TS features** (`app/src/features/`) — implement pure functions + bridge + UI wiring
+
+For passive modifiers and query-only features (no state transitions), skip step 1-2 — these only exist in TS.
+
+See **PLAN_CLEANUP.md** for the Quint-side roadmap (current Fighter parity table, migration tasks E/F/G/H, architectural constraints, Apalache status). This plan tracks TS implementation and UI wiring status.
+
 ## Legend
 
+- **Quint**: modeled in `dnd.qnt` with MBT parity (see PLAN_CLEANUP.md)
 - **Pure Fn**: exported function exists in `app/src/features/class-*.ts`
 - **Wired**: connected through feature-store → feature-bridge → useFeatures → FeaturePanel
 - **Pattern**: one-shot resource | extra action | ongoing toggle | passive modifier | reaction | conditional damage | resource pool | config-only | spell-dependent
@@ -37,25 +50,25 @@
 
 ### Fighter
 
-| Feature | Level | Task | Pure Fn | Wired | Pattern |
-|---------|-------|------|---------|-------|---------|
-| Fighting Style | 1 | T05 ✓ | ✓ | — | config-only |
-| Second Wind | 1 | T20 ✓ | ✓ | ✓ | one-shot resource |
-| Action Surge | 2 | T21 ✓ | ✓ | ✓ | extra action |
-| Tactical Mind | 2 | T20 ✓ | ✓ | — | one-shot resource |
-| Extra Attack | 5 | core | ✓ | ✓ | config-only |
-| Tactical Shift | 5 | T20 ✓ | ✓ | — | passive modifier |
-| Tactical Master | 9 | T20b | — | — | conditional damage |
-| Indomitable | 9 | T22 | ✓ | — | one-shot resource |
-| Two Extra Attacks | 11 | core | ✓ | ✓ | config-only |
-| Studied Attacks | 13 | T20b | — | — | passive modifier |
-| Three Extra Attacks | 20 | core | ✓ | ✓ | config-only |
-| **Champion: Improved Critical** | 3 | T23 ✓ | ✓ | — | passive modifier |
-| **Champion: Remarkable Athlete** | 3 | T23 ✓ | ✓ | — | passive modifier |
-| **Champion: Additional Fighting Style** | 7 | T23 ✓ | ✓ | — | config-only |
-| **Champion: Heroic Warrior** | 10 | T23 ✓ | ✓ | — | passive modifier |
-| **Champion: Superior Critical** | 15 | T23 ✓ | ✓ | — | passive modifier |
-| **Champion: Survivor** | 18 | T23 ✓ | ✓ | — | passive modifier |
+| Feature | Level | Task | Quint | Pure Fn | Wired | Pattern |
+|---------|-------|------|-------|---------|-------|---------|
+| Fighting Style | 1 | T05 ✓ | formulas | ✓ | — | config-only |
+| Second Wind | 1 | T20 ✓ | ✓ MBT | ✓ | ✓ | one-shot resource |
+| Action Surge | 2 | T21 ✓ | ✓ MBT | ✓ | ✓ | extra action |
+| Tactical Mind | 2 | T20 ✓ | — (PLAN_CLEANUP E) | ✓ | — | one-shot resource |
+| Extra Attack | 5 | core | ✓ MBT | ✓ | ✓ | config-only |
+| Tactical Shift | 5 | T20 ✓ | — (PLAN_CLEANUP F) | ✓ | — | passive modifier |
+| Tactical Master | 9 | T20b | — | — | — | conditional damage |
+| Indomitable | 9 | T22 | ✓ MBT | ✓ | — | one-shot resource |
+| Two Extra Attacks | 11 | core | ✓ MBT | ✓ | ✓ | config-only |
+| Studied Attacks | 13 | T20b | — | — | — | passive modifier |
+| Three Extra Attacks | 20 | core | ✓ MBT | ✓ | ✓ | config-only |
+| **Champion: Improved Critical** | 3 | T23 ✓ | critRange | ✓ | — | passive modifier |
+| **Champion: Remarkable Athlete** | 3 | T23 ✓ | — | ✓ | — | passive modifier |
+| **Champion: Additional Fighting Style** | 7 | T23 ✓ | — | ✓ | — | config-only |
+| **Champion: Heroic Warrior** | 10 | T23 ✓ | — (PLAN_CLEANUP G1) | ✓ | — | passive modifier |
+| **Champion: Superior Critical** | 15 | T23 ✓ | critRange | ✓ | — | passive modifier |
+| **Champion: Survivor** | 18 | T23 ✓ | — (PLAN_CLEANUP G2) | ✓ | — | passive modifier |
 
 ### Rogue
 
@@ -319,12 +332,14 @@ Examples: Action Surge, Cunning Action, Focus Actions, Thief's Reflexes
 
 ---
 
-## Recommended Wiring Order
+## Recommended Implementation Order
 
-### Batch 1: Wire existing pure functions (no new code needed)
-Features that have pure functions but aren't wired yet. Mechanical work — add to bridge/hook/panel.
+**Quint-first for state-transition features.** For each batch, model in Quint + MBT first (per PLAN_CLEANUP.md recipe), then wire the TS pure functions to the UI.
 
-1. **Fighter:** Tactical Mind, Indomitable, Champion features (T20, T22, T23) — all pure fns exist
+### Batch 1: Wire existing pure functions (no new code needed for TS)
+Features that have pure functions but aren't wired yet. For Fighter items with PLAN_CLEANUP tasks, do the Quint work first.
+
+1. **Fighter:** Tactical Mind (PLAN_CLEANUP E), Indomitable (done in Quint), Champion features (PLAN_CLEANUP G) — all pure fns exist
 2. **Rogue:** Sneak Attack, Cunning Action, Steady Aim (T30, T31) — pure fns exist
 3. **Monk:** Focus Pool, Martial Arts, Focus Actions, Stunning Strike (T40-T43) — pure fns exist
 4. **Paladin:** Lay on Hands, Smite (T60, T61) — pure fns exist
