@@ -157,7 +157,13 @@ export const dndMachine = setup({
     })),
     initTurn: assign(({ context: c, event: e }) => {
       const ev = asStartTurn(e)
-      const { conditions: conds, ...cr } = computeStartTurn(c, ev.deathSaveRoll, ev.startOfTurnEffects)
+      const { conditions: conds, ...cr } = computeStartTurn(
+        c,
+        ev.deathSaveRoll,
+        ev.startOfTurnEffects,
+        ev.deathSaveRoll2,
+        c.fighterLevel
+      )
       const speed = calculateEffectiveSpeed({
         armorPenalty: ev.armorPenalty,
         baseSpeed: ev.baseSpeed,
@@ -168,10 +174,16 @@ export const dndMachine = setup({
         isGrappling: ev.isGrappling,
         restrained: conds.restrained ?? c.restrained
       })
+      // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied at start of turn
+      let resultHp = cr.hp as number
+      if (c.fighterLevel >= 18 && resultHp > 0 && resultHp <= Math.floor(c.maxHp / 2) && ev.conMod != null) {
+        resultHp = Math.min(resultHp + 5 + ev.conMod, effectiveMaxHp(c.maxHp))
+      }
       return {
         ...conds,
         ...cr,
         ...INITIAL_TURN_STATE,
+        hp: hp(resultHp),
         effectiveSpeed: movementFeet(speed),
         extraAttacksRemaining: ev.extraAttacks,
         movementRemaining: movementFeet(speed)

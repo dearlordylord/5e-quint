@@ -31,5 +31,15 @@ export const dmgR = (c: DndContext, e: DndEvent) => {
   )
 }
 
-export const dsR = (c: DndContext, e: DndEvent) =>
-  resolveDeathSave(asDeathSave(e).d20Roll, c.deathSaves.successes, c.deathSaves.failures)
+export const dsR = (c: DndContext, e: DndEvent) => {
+  const ev = asDeathSave(e)
+  // Defy Death (Champion L18): advantage on death saves, rolls 18-20 count as 20
+  let roll = ev.d20Roll
+  if (c.fighterLevel >= 18 && ev.d20Roll2 != null) {
+    roll = Math.max(roll, ev.d20Roll2)
+  }
+  if (c.fighterLevel >= 18 && roll >= 18) {
+    roll = 20
+  }
+  return resolveDeathSave(roll, c.deathSaves.successes, c.deathSaves.failures)
+}
