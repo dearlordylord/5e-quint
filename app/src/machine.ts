@@ -330,19 +330,6 @@ export const dndMachine = setup({
       const newHp = Math.min(c.hp + healAmount, effectiveMaxHp(c.maxHp))
       return { hp: hp(newHp), secondWindCharges: c.secondWindCharges - 1, bonusActionUsed: true }
     }),
-    useSecondWindFromZero: assign(({ context: c, event: e }) => {
-      const ev = asUseSecondWind(e)
-      if (c.secondWindCharges <= 0 || c.bonusActionUsed || isIncapacitated(c)) return {}
-      const healAmount = ev.d10Roll + ev.fighterLevel
-      const newHp = Math.min(healAmount, effectiveMaxHp(c.maxHp))
-      return {
-        hp: hp(newHp),
-        secondWindCharges: c.secondWindCharges - 1,
-        bonusActionUsed: true,
-        deathSaves: DEATH_SAVES_RESET,
-        stable: false
-      }
-    }),
     useActionSurge: assign(({ context: c }) => {
       if (c.actionSurgeCharges <= 0 || c.actionSurgeUsedThisTurn || isIncapacitated(c)) return {}
       return {
