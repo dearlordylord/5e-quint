@@ -359,6 +359,7 @@ export const dndMachine = setup({
   context: ({ input: i }) => ({
     ...INITIAL_CONDITIONS,
     ...INITIAL_TURN_STATE,
+    fighterLevel: i.fighterLevel ?? 0,
     ...initialFighterState(i.fighterLevel ?? 0),
     activeEffects: [] as ReadonlyArray<ActiveEffect>,
     concentrationSpellId: "",

@@ -212,7 +212,8 @@ const QuintFullState = z.object({
   turnState: QuintTurnState,
   spellSlots: QuintSpellSlotState,
   turnPhase: z.string(),
-  fighterState: QuintFighterState
+  fighterState: QuintFighterState,
+  fighterLevel: z.bigint()
 })
 
 // ============================================================
@@ -276,6 +277,7 @@ interface NormalizedState {
   readonly actionSurgeUsedThisTurn: boolean
   readonly indomitableCharges: number
   readonly indomitableMax: number
+  readonly fighterLevel: number
 }
 
 // ============================================================
@@ -346,7 +348,8 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     actionSurgeMax: c.actionSurgeMax,
     actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
     indomitableCharges: c.indomitableCharges,
-    indomitableMax: c.indomitableMax
+    indomitableMax: c.indomitableMax,
+    fighterLevel: c.fighterLevel
   }
 }
 
@@ -405,7 +408,8 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     actionSurgeMax: Number(raw.fighterState.actionSurgeMax),
     actionSurgeUsedThisTurn: raw.fighterState.actionSurgeUsedThisTurn,
     indomitableCharges: Number(raw.fighterState.indomitableCharges),
-    indomitableMax: Number(raw.fighterState.indomitableMax)
+    indomitableMax: Number(raw.fighterState.indomitableMax),
+    fighterLevel: Number(raw.fighterLevel)
   }
 }
 
@@ -475,8 +479,7 @@ void (true as AssertAllEventsMapped)
 const ITFVariant = z.any().transform(variantToString)
 
 const driverSchema = {
-  init: { maxHp: ITFBigInt },
-  init9: { maxHp: ITFBigInt },
+  init: { l: ITFBigInt, maxHp: ITFBigInt },
   doTakeDamage: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
   doTakeDamageWithMods: {
     amount: ITFBigInt,
@@ -551,19 +554,14 @@ const driverSchema = {
   doUseSecondWind: { d10Roll: ITFBigInt },
   doUseActionSurge: {},
   doUseIndomitable: {},
-  // L9 variants — same XState events, different fighterLevel
-  doLongRestL9: {},
-  doUseSecondWindL9: { d10Roll: ITFBigInt },
-  doUseIndomitableL9: {},
-  step: {}, // dead character no-op
-  step9: {} // dead character no-op (L9)
+  step: {} // dead character no-op
 } as const
 
 function mapDamageType(s: string): DamageType {
   return QUINT_DAMAGE_TYPE_MAP[s] ?? "bludgeoning"
 }
 
-function createDndDriver(fighterLevel: number, hitDiceTotal: number) {
+function createDndDriver() {
   return defineDriver(driverSchema, () => {
     let actor: ReturnType<typeof createActor<typeof dndMachine>> | null = null
 
@@ -576,25 +574,23 @@ function createDndDriver(fighterLevel: number, hitDiceTotal: number) {
       ensureActor().send(event)
     }
 
-    function initActor(mhp: bigint | number) {
-      if (actor) actor.stop()
-      const INIT_SPEED = 30
-      actor = createActor(dndMachine, {
-        input: {
-          maxHp: Number(mhp),
-          hitDiceRemaining: hitDiceTotal,
-          effectiveSpeed: INIT_SPEED,
-          movementRemaining: INIT_SPEED,
-          extraAttacksRemaining: 1,
-          fighterLevel
-        }
-      })
-      actor.start()
-    }
-
     return {
-      init: ({ maxHp: mhp }) => initActor(mhp),
-      init9: ({ maxHp: mhp }) => initActor(mhp),
+      init: ({ l, maxHp: mhp }) => {
+        if (actor) actor.stop()
+        const INIT_SPEED = 30
+        const level = Number(l)
+        actor = createActor(dndMachine, {
+          input: {
+            maxHp: Number(mhp),
+            hitDiceRemaining: level,
+            effectiveSpeed: INIT_SPEED,
+            movementRemaining: INIT_SPEED,
+            extraAttacksRemaining: 1,
+            fighterLevel: level
+          }
+        })
+        actor.start()
+      },
       doTakeDamage: ({ amount, dt, isCrit }) => {
         send({
           type: "TAKE_DAMAGE",
@@ -783,7 +779,8 @@ function createDndDriver(fighterLevel: number, hitDiceTotal: number) {
         send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls: rolls })
       },
       doLongRest: () => {
-        send({ type: "LONG_REST", totalHitDice: hitDiceTotal })
+        const snap = ensureActor().getSnapshot()
+        send({ type: "LONG_REST", totalHitDice: snap.context.fighterLevel })
       },
       doApplyFall: ({ damageRoll }) => {
         send({
@@ -834,7 +831,8 @@ function createDndDriver(fighterLevel: number, hitDiceTotal: number) {
         send({ type: "EXIT_COMBAT" })
       },
       doUseSecondWind: ({ d10Roll }) => {
-        send({ type: "USE_SECOND_WIND", d10Roll: Number(d10Roll), fighterLevel })
+        const snap = ensureActor().getSnapshot()
+        send({ type: "USE_SECOND_WIND", d10Roll: Number(d10Roll), fighterLevel: snap.context.fighterLevel })
       },
       doUseActionSurge: () => {
         send({ type: "USE_ACTION_SURGE" })
@@ -842,18 +840,7 @@ function createDndDriver(fighterLevel: number, hitDiceTotal: number) {
       doUseIndomitable: () => {
         send({ type: "USE_INDOMITABLE" })
       },
-      // L9 variants — same XState events, uses factory fighterLevel
-      doLongRestL9: () => {
-        send({ type: "LONG_REST", totalHitDice: hitDiceTotal })
-      },
-      doUseSecondWindL9: ({ d10Roll }) => {
-        send({ type: "USE_SECOND_WIND", d10Roll: Number(d10Roll), fighterLevel })
-      },
-      doUseIndomitableL9: () => {
-        send({ type: "USE_INDOMITABLE" })
-      },
       step: () => {}, // dead character no-op
-      step9: () => {}, // dead character no-op (L9)
       getState: () => snapshotToNormalized(ensureActor().getSnapshot()),
       config: () => ({ statePath: [] })
     }
@@ -1012,23 +999,10 @@ describe("DnD MBT", () => {
   const MBT_STEP_COUNT = 30
   const specPath = path.resolve(import.meta.dirname, "../../dnd.qnt")
 
-  it("replays Quint traces against XState machine (L5)", async () => {
+  it("replays Quint traces against XState machine (L5 + L9)", async () => {
     await run({
       spec: specPath,
-      driver: createDndDriver(5, 5),
-      backend: "rust",
-      nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
-      stateCheck: mbtStateCheck
-    })
-  }, 180_000)
-
-  it("replays Quint traces against XState machine (L9 — Indomitable)", async () => {
-    await run({
-      spec: specPath,
-      init: "init9",
-      step: "step9",
-      driver: createDndDriver(9, 9),
+      driver: createDndDriver(),
       backend: "rust",
       nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
       maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
