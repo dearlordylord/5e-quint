@@ -1,8 +1,8 @@
-# D&D 5e SRD 5.2.1 — Non-Core Specification Plan
+# D&D 5e SRD 5.2.1 — Class Features, Spells, Species, Feats
 
 **Edition: SRD 5.2.1 (2024).**
 
-Class features, spell effects, species traits, and subclass mechanics. These compose on top of core primitives (PLAN.md / `dnd.qnt`) and are implemented in TypeScript (XState machine / caller side).
+Class features, spell effects, species traits, and subclass mechanics. These compose on top of core primitives (PLAN.md / `dnd.qnt`).
 
 **SRD parity:** all modeled features must trace directly to SRD text. No homebrew or interpretive extensions. Where the formalization requires choices the SRD doesn't prescribe, those are documented in `ASSUMPTIONS.md`.
 
@@ -10,6 +10,18 @@ Class features, spell effects, species traits, and subclass mechanics. These com
 > definitions listed in tasks below are *illustrative suggestions* to communicate intent and scope.
 > The implementer decides the actual design — names, decomposition, data representations —
 > and iterates freely. Treat task descriptions as "what to model," not "how to type it."
+
+## Workflow: Quint first, then TS
+
+For features with state transitions (resource pools, toggles, one-shot resources), the implementation order is:
+
+1. **Quint spec** (`dnd.qnt`) — model the state transition as pure functions + action wrappers
+2. **MBT bridge** (`machine.mbt.test.ts`) — add driver handler, verify Quint/XState parity
+3. **TS features** (`app/src/features/`) — implement pure functions + bridge + UI wiring
+
+For passive modifiers and query-only features (no state transitions), skip steps 1-2 — these only exist in TS.
+
+See **PLAN_CLEANUP.md** for the Quint-side roadmap (current Fighter parity table, migration tasks E/F/G/H, architectural constraints, Apalache status, suggested recipe for adding features to Quint).
 
 ## Relationship to Core
 
@@ -21,7 +33,7 @@ All tasks here depend on PLAN.md core being complete (TA1–TA4, T02, T10a/c/d �
 - Modifier aggregation (advantage/disadvantage sources)
 - START_TURN/END_TURN event arguments (per-effect data)
 
-No task here should require adding new fields to `CreatureState` or `TurnState` in `dnd.qnt`. All state specific to class features, spells, or species traits lives in TypeScript.
+Class feature state lives in the TS features layer (`app/src/features/`) by default. Features migrated to Quint (see PLAN_CLEANUP.md) also have state in `dnd.qnt` — currently Fighter's Second Wind, Action Surge, and Indomitable.
 
 ### Cross-file dependencies
 
@@ -748,19 +760,76 @@ Prereq: STR or DEX 13+. Attack Advantage on attacks against creature you're grap
 
 ---
 
-## Suggested Execution Order
+## Integration Pattern Groups
 
-Core is complete (PLAN.md). This file is now the active plan. All tasks are unblocked.
+### Passive Modifier (~55 features — most common)
+Examples: Danger Sense, Fast Movement, Evasion, Reliable Talent, Jack of All Trades, Unarmored Defense.
+**Machine interaction:** None. Computed at query time by bridge functions. Batch-implementable.
 
-1. ~~**[T01]** Config Identity + species~~ ✓, **[T01.5]** Multiclass Proficiency Rules
-2. ~~**[T03, T04, T06, T08]** Shared mechanics~~ ✓ (T09 dropped — not in SRD 5.2.1)
-3. ~~**[T07]** Channel Divinity (needs T01; unblocks Paladin/Cleric)~~ ✓
-4. ~~**[T201]** Feat System Framework; then **[T05]** Fighting Style Feats (needs T201)~~ ✓
-5. ~~**P1 class features** — T10 Rage, T11 Reckless, T20 Second Wind, T21 Action Surge, T30 Sneak Attack, T40 Focus Pool, T41 Martial Arts, T60 Lay on Hands, T61 Paladin's Smite, T100 Wild Shape, T110 Sorcery Points; T200 Grappler Feat~~ ✓
-6. ~~**P1 dependent** — T13 Berserker (needs T10), T23 Champion (needs T02+T05), T31 Cunning Action (needs T06), T42 Focus Actions (needs T40+T06), T43 Stunning Strike (needs T40)~~ ✓
-7. ~~**P1-P2 spells** — T150 Damage Patterns, T152 AC/Defense Buffs, T153 Condition Debuffs (all need T08)~~ ✓
-8. **P2-P3 class features, species traits, ~~T170 Weapon Mastery~~** in any order — **T20b** Fighter Base Features must follow T170 (needs T01+T170)
-9. **P2-P3 spells, remaining** in any order
+### One-Shot Resource (~29 features)
+Examples: Second Wind, Tactical Mind, Indomitable, Relentless Rage, Stroke of Luck, Arcane Recovery.
+**Machine interaction:** Sends existing events (HEAL, USE_BONUS_ACTION, etc.). Already validated (Second Wind).
+
+### Ongoing Toggle (~10 features)
+Examples: Rage, Innate Sorcery, Sacred Weapon, Wild Shape, Beast Spells, Superior Defense.
+**Machine interaction:** May send BREAK_CONCENTRATION; resistance/advantage via query. Already validated (Rage).
+
+### Reaction (~10 features)
+Examples: Uncanny Dodge, Deflect Attacks, Slow Fall, Retaliation, Countercharm, Cutting Words.
+**Machine interaction:** Sends USE_REACTION. Not yet validated as a wiring pattern.
+
+### Resource Pool (~16 features)
+Examples: Focus Points, Lay on Hands, Sorcery Points, Bardic Inspiration, Channel Divinity.
+**Machine interaction:** Various (HEAL, USE_BONUS_ACTION, conditions). Similar to Fighter charges but with multiple consumers per pool.
+
+### Conditional Damage (~11 features)
+Examples: Sneak Attack, Brutal Strike, Hunter's Prey, Stunning Strike, Divine Smite.
+**Machine interaction:** Modifies damage in TAKE_DAMAGE events. Pure fns exist but bridge needs damage composition.
+
+### Extra Action (~7 features)
+Examples: Action Surge, Cunning Action, Focus Actions, Thief's Reflexes.
+**Machine interaction:** GRANT_EXTRA_ACTION or USE_BONUS_ACTION. Already validated (Action Surge).
+
+## Recommended Implementation Order
+
+**Quint-first for state-transition features.** For each batch, model in Quint + MBT first (per PLAN_CLEANUP.md recipe), then wire the TS pure functions to the UI.
+
+### Batch 1: Wire existing pure functions
+Features that have pure functions but aren't wired yet. For Fighter items with PLAN_CLEANUP tasks, do the Quint work first.
+
+1. **Fighter:** Tactical Mind (PLAN_CLEANUP E), Indomitable (done in Quint), Champion features (PLAN_CLEANUP G)
+2. **Rogue:** Sneak Attack, Cunning Action, Steady Aim (T30, T31)
+3. **Monk:** Focus Pool, Martial Arts, Focus Actions, Stunning Strike (T40-T43)
+4. **Paladin:** Lay on Hands, Smite (T60, T61)
+5. **Barbarian:** Berserker features (T13)
+
+### Batch 2: Reactions (new integration pattern)
+6. Uncanny Dodge, Deflect Attacks, Slow Fall — validate reaction pattern
+
+### Batch 3: P2 class passives
+7. T12 Barbarian Passives, T32 Rogue Passives, T44/T45 Monk Passives/Reactions
+8. T62/T63 Paladin Passives + Oath of Devotion
+
+### Batch 4: Missing classes
+9. T80 Bard, T90 Cleric, T120 Warlock, T130 Wizard, T70 Ranger
+
+### Batch 5: Cross-cutting
+10. T140-T141 Species, T111 Metamagic, T01.5 Multiclass
+
+### Batch 6: Spells
+11. T154-T161 remaining spell effects
+
+## Summary Stats
+
+| Metric | Count |
+|--------|-------|
+| Total SRD class features | ~175 |
+| Pure functions implemented | ~170 exports across 7 files |
+| Features wired (UI integration) | 6 (Rage, Reckless, Second Wind, Action Surge + queries) |
+| Features with pure fns but not wired | ~50 |
+| Features not started | ~85 |
+| Features in Quint + MBT | 5 (SW, AS, Indomitable, Extra Attack, critRange) |
+| Classes with no implementation file | 5 (Ranger, Bard, Cleric, Warlock, Wizard) |
 
 ---
 
@@ -806,8 +875,8 @@ Found during simplify passes. Pre-existing or low-priority — not blocking.
 3. **`NOTIFY_START_TURN` as no-op sentinel** — `feature-bridge-monk.ts` and `feature-bridge.ts` dispatch `{ type: "NOTIFY_START_TURN" }` as a no-op when no feature action is needed. Fragile if `NOTIFY_START_TURN` gains side effects.
 4. **`intimidatingPresenceDC` hardcoded to 0** — `useFeatures.ts` calls `getIntimidatingPresenceDC(0, 0)`, producing meaningless DC. Needs real `strMod`/`profBonus` from config.
 5. **`useFeatures.test.tsx` requires jsdom** — Pre-existing test infrastructure gap. The hook test file fails with `ERR_MODULE_NOT_FOUND: jsdom`. Not related to feature code.
-6. **Champion `critRange: 20` in L5 test configs** — `TEST_CONFIG` and `TEST_FIGHTER_5` use `critRange: 20` but Champion gets Improved Critical at L3 (should be 19). Pre-existing; unrelated to fighter charge work.
-7. **Inductive invariants & fighter integration hacks** — See `PLAN_CLEANUP.md` for full details (6 hacks to fix + inductive invariant restoration plan with code).
+6. ~~**Champion `critRange: 20` in L5 test configs**~~ — Fixed: `TEST_CONFIG = configForLevel(5)` now derives correct `critRange: 19`.
+7. ~~**Inductive invariants & fighter integration hacks**~~ — Fixed: see PLAN_CLEANUP.md section A (fighterLevel state var, L9 dedup, unified init).
 
 ---
 
