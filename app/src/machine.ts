@@ -341,7 +341,12 @@ export const dndMachine = setup({
       if (c.secondWindCharges <= 0 || c.bonusActionUsed || isIncapacitated(c)) return {}
       const healAmount = ev.d10Roll + ev.fighterLevel
       const newHp = Math.min(c.hp + healAmount, effectiveMaxHp(c.maxHp))
-      return { hp: hp(newHp), secondWindCharges: c.secondWindCharges - 1, bonusActionUsed: true }
+      // Tactical Shift (Fighter L5): grant half-speed OA-free bonus movement
+      const bonusMove =
+        c.fighterLevel >= 5
+          ? { bonusMovementRemaining: Math.floor(c.effectiveSpeed / 2), bonusMovementOAFree: true }
+          : {}
+      return { hp: hp(newHp), secondWindCharges: c.secondWindCharges - 1, bonusActionUsed: true, ...bonusMove }
     }),
     useActionSurge: assign(({ context: c }) => {
       if (c.actionSurgeCharges <= 0 || c.actionSurgeUsedThisTurn || isIncapacitated(c)) return {}

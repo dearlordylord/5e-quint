@@ -2679,9 +2679,12 @@ module dnd {
     if (turnPhase != "acting" or not(canUseSecondWind(fighterState, turnState, state))) unchanged
     else {
       val result = pUseSecondWind(state, fighterState, d10Roll, fighterLevel)
+      // Tactical Shift (Fighter L5): on Second Wind, grant half-speed OA-free bonus movement
+      val ts1 = turnState.with("bonusActionUsed", true)
+      val ts2 = if (fighterLevel >= 5) pGrantBonusMovement(ts1, turnState.effectiveSpeed, true) else ts1
       all {
         state' = result.creature,
-        turnState' = turnState.with("bonusActionUsed", true),
+        turnState' = ts2,
         spellSlots' = spellSlots,
         turnPhase' = turnPhase,
         fighterState' = result.fighter,
