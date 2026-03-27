@@ -7,11 +7,13 @@ import {
   canApplyCunningStrike,
   canSneakAttack,
   canSteadyAim,
+  canUncannyDodge,
   canUseCunningAction,
   canUseStrokeOfLuck,
   cunningStrikeDC,
   ELUSIVE_LEVEL,
   elusiveCancelsAdvantage,
+  evasionDamage,
   hasSlipperyMind,
   maxCunningStrikeEffects,
   RELIABLE_TALENT_LEVEL,
@@ -23,6 +25,7 @@ import {
   STROKE_OF_LUCK_LEVEL,
   strokeOfLuckAbilityCheck,
   strokeOfLuckAttack,
+  uncannyDodgeDamage,
   useCunningAction
 } from "#/features/class-rogue.ts"
 
@@ -481,5 +484,63 @@ describe("strokeOfLuckAbilityCheck", () => {
     const result = strokeOfLuckAbilityCheck()
     expect(result.treatAs20).toBe(true)
     expect(result.strokeOfLuckUsed).toBe(true)
+  })
+})
+
+// --- Uncanny Dodge (L5) ---
+
+describe("uncannyDodgeDamage", () => {
+  it("halves damage (round down)", () => {
+    expect(uncannyDodgeDamage(10)).toBe(5)
+    expect(uncannyDodgeDamage(15)).toBe(7)
+    expect(uncannyDodgeDamage(1)).toBe(0)
+  })
+})
+
+describe("canUncannyDodge", () => {
+  it("requires L5+, reaction, visible attacker, not incapacitated", () => {
+    expect(canUncannyDodge({
+      rogueLevel: 5, reactionAvailable: true, attackerVisible: true, isIncapacitated: false
+    })).toBe(true)
+  })
+  it("fails below L5", () => {
+    expect(canUncannyDodge({
+      rogueLevel: 4, reactionAvailable: true, attackerVisible: true, isIncapacitated: false
+    })).toBe(false)
+  })
+  it("fails without reaction", () => {
+    expect(canUncannyDodge({
+      rogueLevel: 5, reactionAvailable: false, attackerVisible: true, isIncapacitated: false
+    })).toBe(false)
+  })
+  it("fails if attacker not visible", () => {
+    expect(canUncannyDodge({
+      rogueLevel: 5, reactionAvailable: true, attackerVisible: false, isIncapacitated: false
+    })).toBe(false)
+  })
+  it("fails if incapacitated", () => {
+    expect(canUncannyDodge({
+      rogueLevel: 5, reactionAvailable: true, attackerVisible: true, isIncapacitated: true
+    })).toBe(false)
+  })
+})
+
+// --- Evasion (L7) ---
+
+describe("evasionDamage", () => {
+  it("returns 0 on successful DEX save with evasion", () => {
+    expect(evasionDamage(true, false, true, 20)).toBe(0)
+  })
+  it("returns half on failed DEX save with evasion", () => {
+    expect(evasionDamage(true, false, false, 20)).toBe(10)
+  })
+  it("rounds down odd damage on fail", () => {
+    expect(evasionDamage(true, false, false, 15)).toBe(7)
+  })
+  it("returns full damage when incapacitated", () => {
+    expect(evasionDamage(true, true, true, 20)).toBe(20)
+  })
+  it("returns full damage without evasion feature", () => {
+    expect(evasionDamage(false, false, true, 20)).toBe(20)
   })
 })

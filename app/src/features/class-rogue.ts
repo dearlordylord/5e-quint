@@ -3,6 +3,8 @@ import type { Condition, Size } from "#/types.ts"
 
 // --- Constants ---
 
+const UNCANNY_DODGE_LEVEL = 5
+const EVASION_LEVEL = 7
 const CUNNING_ACTION_LEVEL = 2
 const STEADY_AIM_LEVEL = 3
 const CUNNING_STRIKE_LEVEL = 5
@@ -263,6 +265,43 @@ export function resetRogueTurnState(): {
     sneakAttackUsedThisTurn: false,
     steadyAimUsedThisTurn: false
   }
+}
+
+// --- Uncanny Dodge (L5) ---
+
+/** SRD 5.2.1: Halve attack damage (round down). */
+export function uncannyDodgeDamage(damage: number): number {
+  return Math.floor(damage / 2)
+}
+
+/** Gate: can use Uncanny Dodge right now? */
+export function canUncannyDodge(params: {
+  readonly rogueLevel: number
+  readonly reactionAvailable: boolean
+  readonly attackerVisible: boolean
+  readonly isIncapacitated: boolean
+}): boolean {
+  return params.rogueLevel >= UNCANNY_DODGE_LEVEL
+    && params.reactionAvailable
+    && params.attackerVisible
+    && !params.isIncapacitated
+}
+
+// --- Evasion (L7) ---
+
+/**
+ * SRD 5.2.1 Evasion (Rogue 7, Monk 7): DEX save success -> 0; fail -> half.
+ * Can't use if Incapacitated.
+ */
+export function evasionDamage(
+  hasEvasion: boolean,
+  isIncapacitated: boolean,
+  dexSaveSucceeded: boolean,
+  fullDamage: number,
+): number {
+  if (!hasEvasion || isIncapacitated) return fullDamage
+  if (dexSaveSucceeded) return 0
+  return Math.floor(fullDamage / 2)
 }
 
 // --- Passive Features (High-Level) ---

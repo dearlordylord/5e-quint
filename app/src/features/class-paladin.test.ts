@@ -23,6 +23,9 @@ import {
   pLayOnHandsCure,
   pPaladinSmiteFree,
   pRadiantStrikes,
+  expendChannelDivinity,
+  paladinChannelDivinityMax,
+  restoreChannelDivinityShort,
   useFaithfulSteed
 } from "#/features/class-paladin.ts"
 
@@ -392,5 +395,39 @@ describe("paladin long rest", () => {
     expect(result.layOnHandsPool).toBe(50)
     expect(result.paladinSmiteFreeUseAvailable).toBe(true)
     expect(result.faithfulSteedUsed).toBe(false)
+  })
+})
+
+// --- Channel Divinity Framework ---
+
+describe("paladinChannelDivinityMax", () => {
+  it("returns 0 below L3", () => {
+    expect(paladinChannelDivinityMax(2)).toBe(0)
+  })
+  it("returns 2 at L3-10", () => {
+    expect(paladinChannelDivinityMax(3)).toBe(2)
+    expect(paladinChannelDivinityMax(10)).toBe(2)
+  })
+  it("returns 3 at L11+", () => {
+    expect(paladinChannelDivinityMax(11)).toBe(3)
+  })
+})
+
+describe("expendChannelDivinity", () => {
+  it("decrements by 1", () => {
+    expect(expendChannelDivinity(3)).toBe(2)
+    expect(expendChannelDivinity(1)).toBe(0)
+  })
+  it("returns 0 when already 0", () => {
+    expect(expendChannelDivinity(0)).toBe(0)
+  })
+})
+
+describe("restoreChannelDivinityShort", () => {
+  it("restores 1 charge", () => {
+    expect(restoreChannelDivinityShort(1, 3)).toBe(2)
+  })
+  it("caps at max", () => {
+    expect(restoreChannelDivinityShort(3, 3)).toBe(3)
   })
 })
