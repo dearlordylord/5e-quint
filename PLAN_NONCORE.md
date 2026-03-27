@@ -25,6 +25,10 @@ See **PLAN_CLEANUP.md** for the Quint-side roadmap (current Fighter parity table
 
 ## Relationship to Core
 
+**Boundary rule:** if a mechanic is specific to a class, spell, species, or subclass, it belongs here. If it's a generic rule that multiple features compose (d20 resolution, conditions, action economy, damage modifiers, etc.), it belongs in `dnd.qnt` / PLAN.md.
+
+**Clarification:** Classes themselves are core — hit die tables, multiclass prerequisites, class/species/subclass enums, Extra Attack, Unarmored Defense, TWF. Only class *features* (abilities, level-specific mechanics) are non-core. Resource pools, per-turn usage flags, damage bonus composition, and temporary condition immunity are non-core — core provides the primitives, features compose them.
+
 All tasks here depend on PLAN.md core being complete (TA1–TA4, T02, T10a/c/d — all done). Each task composes core primitives:
 - Active effect lifecycle (pAddEffect/pRemoveEffect)
 - Conditions (pApplyCondition/pRemoveCondition)
