@@ -3605,6 +3605,7 @@ module dndTest {
       assert(fs.actionSurgeUsedThisTurn == false),
       assert(fs.indomitableCharges == 0),
       assert(fs.indomitableMax == 0),
+      assert(fs.heroicInspiration == false),
     }
   }
 
@@ -3617,6 +3618,7 @@ module dndTest {
     actionSurgeUsedThisTurn: false,
     indomitableCharges: 0,
     indomitableMax: 0,
+    heroicInspiration: false,
   }
 
   run test_canUseSecondWind_true = {
@@ -3762,8 +3764,27 @@ module dndTest {
   // -- pFighterStartTurn --
   run test_pFighterStartTurn_resets_surge_flag = {
     val fs = FIGHTER_FS.with("actionSurgeUsedThisTurn", true)
-    val result = pFighterStartTurn(fs)
+    val result = pFighterStartTurn(fs, 5)
     assert(result.actionSurgeUsedThisTurn == false)
+  }
+
+  // -- Heroic Warrior (Champion L10) --
+  run test_pFighterStartTurn_grants_inspiration_at_L10 = {
+    val fs = FIGHTER_FS.with("heroicInspiration", false)
+    val result = pFighterStartTurn(fs, 10)
+    assert(result.heroicInspiration == true)
+  }
+
+  run test_pFighterStartTurn_no_inspiration_below_L10 = {
+    val fs = FIGHTER_FS.with("heroicInspiration", false)
+    val result = pFighterStartTurn(fs, 9)
+    assert(result.heroicInspiration == false)
+  }
+
+  run test_pFighterStartTurn_keeps_inspiration_if_already_have = {
+    val fs = FIGHTER_FS.with("heroicInspiration", true)
+    val result = pFighterStartTurn(fs, 10)
+    assert(result.heroicInspiration == true)
   }
 
 }

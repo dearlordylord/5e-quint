@@ -114,6 +114,7 @@ module dnd {
     actionSurgeUsedThisTurn: bool,
     indomitableCharges: int,
     indomitableMax: int,
+    heroicInspiration: bool,
   }
 
   type UnarmoredDefense = NoUnarmoredDefense | BarbarianUD | MonkUD
@@ -1900,6 +1901,7 @@ module dnd {
       actionSurgeCharges: asMax, actionSurgeMax: asMax,
       actionSurgeUsedThisTurn: false,
       indomitableCharges: indMax, indomitableMax: indMax,
+      heroicInspiration: false,
     }
   }
 
@@ -1967,8 +1969,13 @@ module dnd {
   }
 
   /// Fighter start of turn: reset actionSurgeUsedThisTurn flag.
-  pure def pFighterStartTurn(fs: FighterState): FighterState = {
-    fs.with("actionSurgeUsedThisTurn", false)
+  /// Heroic Warrior (Champion L10): gain Heroic Inspiration if you don't have it.
+  pure def pFighterStartTurn(fs: FighterState, fighterLevel: int): FighterState = {
+    val fs1 = fs.with("actionSurgeUsedThisTurn", false)
+    // Heroic Warrior (Champion L10): gain Heroic Inspiration if you don't have it
+    if (fighterLevel >= 10 and not(fs1.heroicInspiration))
+      fs1.with("heroicInspiration", true)
+    else fs1
   }
 
   // ============================================================
@@ -2260,7 +2267,7 @@ module dnd {
   // -- 19.4 Action Init --
 
   action init = {
-    nondet l = Set(5, 9).oneOf()
+    nondet l = Set(5, 9, 10).oneOf()
     nondet maxHp = HP_RANGE.oneOf()
     all {
       fighterLevel' = l,
@@ -2383,7 +2390,7 @@ module dnd {
         turnState' = r.turn,
         spellSlots' = r.slots,
         turnPhase' = "acting",
-        fighterState' = pFighterStartTurn(fighterState),
+        fighterState' = pFighterStartTurn(fighterState, fighterLevel),
         fighterLevel' = fighterLevel,
       }
     }
@@ -2672,6 +2679,21 @@ module dnd {
     }
   }
 
+  /// Use Heroic Inspiration: spend inspiration (e.g. to reroll a d20).
+  /// SRD 5.2.1 Champion L10 Heroic Warrior: inspiration granted at start of turn,
+  /// consumed when used.
+  action doUseHeroicInspiration = {
+    if (not(fighterState.heroicInspiration)) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState.with("heroicInspiration", false),
+      fighterLevel' = fighterLevel,
+    }
+  }
+
   // -- 19.7 Step Action --
 
   action step = {
@@ -2724,6 +2746,7 @@ module dnd {
         doUseActionSurge,
         doUseIndomitable,
         doUseTacticalMind,
+        doUseHeroicInspiration,
       }
     }
   }
@@ -2849,13 +2872,16 @@ module dnd {
             0.to(3).map(indC =>
               0.to(3).map(indM =>
                 Set(true, false).map(asUsed =>
-                  {
-                    secondWindCharges: swC, secondWindMax: swM,
-                    actionSurgeCharges: asC, actionSurgeMax: asM,
-                    actionSurgeUsedThisTurn: asUsed,
-                    indomitableCharges: indC, indomitableMax: indM,
-                  }
-                )
+                  Set(true, false).map(hi =>
+                    {
+                      secondWindCharges: swC, secondWindMax: swM,
+                      actionSurgeCharges: asC, actionSurgeMax: asM,
+                      actionSurgeUsedThisTurn: asUsed,
+                      indomitableCharges: indC, indomitableMax: indM,
+                      heroicInspiration: hi,
+                    }
+                  )
+                ).flatten()
               ).flatten()
             ).flatten()
           ).flatten()

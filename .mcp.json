@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "quint-kb": {
+      "command": "node",
+      "args": ["/home/node/.local/quint-llm-kit/mcp-servers/kb/dist/server.js"]
+    }
+  }
+}

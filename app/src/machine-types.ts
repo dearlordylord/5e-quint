@@ -111,6 +111,7 @@ export interface DndContext {
   readonly actionSurgeUsedThisTurn: boolean
   readonly indomitableCharges: number
   readonly indomitableMax: number
+  readonly heroicInspiration: boolean
   readonly fighterLevel: number
 }
 
@@ -236,6 +237,7 @@ export type DndEvent =
   | { readonly type: "USE_ACTION_SURGE" }
   | { readonly type: "USE_INDOMITABLE" }
   | { readonly type: "USE_TACTICAL_MIND"; readonly boostedCheckSucceeds: boolean }
+  | { readonly type: "USE_HEROIC_INSPIRATION" }
 
 // --- Event extractors ---
 
@@ -371,7 +373,8 @@ export function initialFighterState(fighterLevel: number) {
     actionSurgeMax: asMax,
     actionSurgeUsedThisTurn: false,
     indomitableCharges: indMax,
-    indomitableMax: indMax
+    indomitableMax: indMax,
+    heroicInspiration: false
   }
 }
 

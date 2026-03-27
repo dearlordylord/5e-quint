@@ -203,7 +203,8 @@ const QuintFighterState = z.object({
   actionSurgeMax: z.bigint(),
   actionSurgeUsedThisTurn: z.boolean(),
   indomitableCharges: z.bigint(),
-  indomitableMax: z.bigint()
+  indomitableMax: z.bigint(),
+  heroicInspiration: z.boolean()
 })
 
 // Combined state from all Quint vars
@@ -277,6 +278,7 @@ interface NormalizedState {
   readonly actionSurgeUsedThisTurn: boolean
   readonly indomitableCharges: number
   readonly indomitableMax: number
+  readonly heroicInspiration: boolean
   readonly fighterLevel: number
 }
 
@@ -349,6 +351,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
     indomitableCharges: c.indomitableCharges,
     indomitableMax: c.indomitableMax,
+    heroicInspiration: c.heroicInspiration,
     fighterLevel: c.fighterLevel
   }
 }
@@ -409,6 +412,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     actionSurgeUsedThisTurn: raw.fighterState.actionSurgeUsedThisTurn,
     indomitableCharges: Number(raw.fighterState.indomitableCharges),
     indomitableMax: Number(raw.fighterState.indomitableMax),
+    heroicInspiration: raw.fighterState.heroicInspiration,
     fighterLevel: Number(raw.fighterLevel)
   }
 }
@@ -464,6 +468,7 @@ type EventActionMap = {
   USE_ACTION_SURGE: "doUseActionSurge"
   USE_INDOMITABLE: "doUseIndomitable"
   USE_TACTICAL_MIND: "doUseTacticalMind"
+  USE_HEROIC_INSPIRATION: "doUseHeroicInspiration"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -556,6 +561,7 @@ const driverSchema = {
   doUseActionSurge: {},
   doUseIndomitable: {},
   doUseTacticalMind: { boostedCheckSucceeds: z.boolean() },
+  doUseHeroicInspiration: {},
   step: {} // dead character no-op
 } as const
 
@@ -845,6 +851,9 @@ function createDndDriver() {
       doUseTacticalMind: ({ boostedCheckSucceeds }) => {
         send({ type: "USE_TACTICAL_MIND", boostedCheckSucceeds })
       },
+      doUseHeroicInspiration: () => {
+        send({ type: "USE_HEROIC_INSPIRATION" })
+      },
       step: () => {}, // dead character no-op
       getState: () => snapshotToNormalized(ensureActor().getSnapshot()),
       config: () => ({ statePath: [] })
@@ -1004,7 +1013,7 @@ describe("DnD MBT", () => {
   const MBT_STEP_COUNT = 30
   const specPath = path.resolve(import.meta.dirname, "../../dnd.qnt")
 
-  it("replays Quint traces against XState machine (L5 + L9)", async () => {
+  it("replays Quint traces against XState machine (L5 + L9 + L10)", async () => {
     await run({
       spec: specPath,
       driver: createDndDriver(),
