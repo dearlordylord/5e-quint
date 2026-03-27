@@ -2607,7 +2607,7 @@ module dnd {
   }
 
   action doUseIndomitable = {
-    if (not(canUseIndomitable(TEST_CONFIG.level, fighterState))) unchanged
+    if (turnPhase != "acting" or not(canUseIndomitable(TEST_CONFIG.level, fighterState))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
