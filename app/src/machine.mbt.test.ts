@@ -505,7 +505,7 @@ const driverSchema = {
   },
   doHeal: { amount: ITFBigInt },
   doGrantTempHp: { amount: ITFBigInt, keepOld: z.boolean() },
-  doDeathSave: { roll: ITFBigInt },
+  doDeathSave: { roll: ITFBigInt, roll2: ITFBigInt },
   doStabilize: {},
   doKnockOut: {},
   doApplyCondition: { c: ITFVariant },
@@ -517,6 +517,8 @@ const driverSchema = {
     isGrappling: z.boolean(),
     grappledSmall: z.boolean(),
     deathSaveRoll: ITFBigInt.optional(),
+    deathSaveRoll2: ITFBigInt.optional(),
+    conMod: ITFBigInt.optional(),
     numEffects: ITFBigInt.optional(),
     effSpellId: z.string().optional(),
     effHeal: ITFBigInt.optional(),
@@ -637,8 +639,8 @@ function createDndDriver() {
       doGrantTempHp: ({ amount, keepOld }) => {
         send({ type: "GRANT_TEMP_HP", amount: tempHp(Number(amount)), keepOld })
       },
-      doDeathSave: ({ roll }) => {
-        send({ type: "DEATH_SAVE", d20Roll: d20Roll(Number(roll)) })
+      doDeathSave: ({ roll, roll2 }) => {
+        send({ type: "DEATH_SAVE", d20Roll: d20Roll(Number(roll)), d20Roll2: d20Roll(Number(roll2)) })
       },
       doStabilize: () => {
         send({ type: "STABILIZE" })
@@ -661,6 +663,8 @@ function createDndDriver() {
       doStartTurn: ({
         callerSpeedMod,
         deathSaveRoll: dsRoll,
+        deathSaveRoll2: dsRoll2,
+        conMod,
         effConSave,
         effDmgAmount,
         effDmgType,
@@ -672,8 +676,12 @@ function createDndDriver() {
         isGrappling,
         numEffects
       }) => {
-        // Quint uses TEST_CONFIG: Walk=30, no armor penalty, extraAttack=1
+        // Quint uses configForLevel: Walk=30, no armor penalty
         const BASE_SPEED = 30
+        const snap = ensureActor().getSnapshot()
+        const fl = snap.context.fighterLevel
+        // Extra Attack tiers: L5+ = 1, L11+ = 2, L20 = 3
+        const extraAttacks = fl >= 20 ? 3 : fl >= 11 ? 2 : fl >= 5 ? 1 : 0
         const effects = !numEffects
           ? []
           : [
@@ -691,11 +699,13 @@ function createDndDriver() {
           type: "START_TURN",
           baseSpeed: BASE_SPEED,
           armorPenalty: 0,
-          extraAttacks: 1,
+          extraAttacks,
           callerSpeedModifier: Number(callerSpeedMod),
           isGrappling,
           grappledTargetTwoSizesSmaller: grappledSmall,
           deathSaveRoll: dsRoll != null ? d20Roll(Number(dsRoll)) : undefined,
+          deathSaveRoll2: dsRoll2 != null ? d20Roll(Number(dsRoll2)) : undefined,
+          conMod: conMod != null ? Number(conMod) : undefined,
           startOfTurnEffects: effects
         })
       },
@@ -1026,7 +1036,7 @@ describe("DnD MBT", () => {
   const MBT_STEP_COUNT = 30
   const specPath = path.resolve(import.meta.dirname, "../../dnd.qnt")
 
-  it("replays Quint traces against XState machine (L5 + L9 + L10)", async () => {
+  it("replays Quint traces against XState machine (L5 + L9 + L10 + L18)", async () => {
     await run({
       spec: specPath,
       driver: createDndDriver(),

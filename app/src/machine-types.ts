@@ -154,7 +154,7 @@ export type DndEvent =
     }
   | { readonly type: "HEAL"; readonly amount: HealAmount }
   | { readonly type: "GRANT_TEMP_HP"; readonly amount: TempHP; readonly keepOld: boolean }
-  | { readonly type: "DEATH_SAVE"; readonly d20Roll: D20Roll }
+  | { readonly type: "DEATH_SAVE"; readonly d20Roll: D20Roll; readonly d20Roll2?: D20Roll }
   | { readonly type: "STABILIZE" }
   | { readonly type: "KNOCK_OUT" }
   | { readonly type: "APPLY_CONDITION"; readonly condition: Condition }
@@ -170,6 +170,8 @@ export type DndEvent =
       readonly isGrappling: boolean
       readonly grappledTargetTwoSizesSmaller: boolean
       readonly deathSaveRoll?: D20Roll
+      readonly deathSaveRoll2?: D20Roll
+      readonly conMod?: number
       readonly startOfTurnEffects: ReadonlyArray<StartTurnEffect>
     }
   | {

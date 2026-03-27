@@ -1674,6 +1674,7 @@ module dnd {
     isGrappling: bool,
     grappledTargetTwoSizesSmaller: bool,
     deathSaveRoll: int,
+    deathSaveRoll2: int,
     startEffects: List[StartOfTurnEffect]
   ): StartTurnFullResult = {
     // 1. Decrement all durations
@@ -1681,9 +1682,10 @@ module dnd {
     // 2. Clear expired AtStartOfTurn
     val eff2 = pClearExpiredAtPhase(eff1, AtStartOfTurn)
     val s1 = s.with("activeEffects", eff2)
-    // 3. Death save (if applicable)
+    // 3. Death save (if applicable) — Defy Death (Champion L18) applied via pFighterDeathSaveRoll
+    val effectiveDsRoll = pFighterDeathSaveRoll(config.level, deathSaveRoll, deathSaveRoll2)
     val s2 = if (s1.hp == 0 and not(s1.stable) and not(s1.dead) and deathSaveRoll > 0)
-      pDeathSave(s1, deathSaveRoll)
+      pDeathSave(s1, effectiveDsRoll)
     else s1
     // 4. Process start-of-turn effects
     val r = pProcessStartOfTurn(s2, ss, startEffects)
@@ -1998,6 +2000,27 @@ module dnd {
     else fs1
   }
 
+  // -- 17.7 Survivor (Champion L18) --
+
+  /// Defy Death (Champion L18): advantage on death saves, rolls 18-20 count as 20.
+  /// Returns the effective roll after applying advantage and threshold.
+  pure def pFighterDeathSaveRoll(fighterLevel: int, roll1: int, roll2: int): int = {
+    val roll = if (fighterLevel >= 18) intMax(roll1, roll2) else roll1
+    if (fighterLevel >= 18 and roll >= 18) 20 else roll
+  }
+
+  /// Bloodied: at or below half max HP AND has at least 1 HP (SRD 5.2.1).
+  pure def isBloodied(s: CreatureState): bool = {
+    s.hp > 0 and s.hp <= s.maxHp / 2
+  }
+
+  /// Heroic Rally (Champion L18): heal 5 + conMod at start of turn if Bloodied.
+  pure def pHeroicRally(s: CreatureState, fighterLevel: int, conMod: int): CreatureState = {
+    if (fighterLevel >= 18 and isBloodied(s))
+      pHeal(s, 5 + conMod)
+    else s
+  }
+
   // ============================================================
   // 18. CHARACTER CONSTRUCTION & LEVELING (Phase 9)
   // ============================================================
@@ -2289,7 +2312,7 @@ module dnd {
   // -- 19.4 Action Init --
 
   action init = {
-    nondet l = Set(5, 9, 10).oneOf()
+    nondet l = Set(5, 9, 10, 18).oneOf()
     nondet maxHp = HP_RANGE.oneOf()
     all {
       fighterLevel' = l,
@@ -2335,7 +2358,9 @@ module dnd {
 
   action doDeathSave = {
     nondet roll = D20_RANGE.oneOf()
-    all { state' = pDeathSave(state, roll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel }
+    nondet roll2 = D20_RANGE.oneOf()
+    val effectiveRoll = pFighterDeathSaveRoll(fighterLevel, roll, roll2)
+    all { state' = pDeathSave(state, effectiveRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel }
   }
 
   action doStabilize = all {
@@ -2389,6 +2414,8 @@ module dnd {
     nondet isGrappling = Bool.oneOf()
     nondet grappledSmall = Bool.oneOf()
     nondet deathSaveRoll = D20_RANGE.oneOf()
+    nondet deathSaveRoll2 = D20_RANGE.oneOf()
+    nondet conMod = (-2).to(5).oneOf()
     nondet numEffects = 0.to(1).oneOf()
     nondet effSpellId = SPELL_IDS.oneOf()
     nondet effHeal = 0.to(5).oneOf()
@@ -2406,9 +2433,11 @@ module dnd {
           damageType: effDmgType, conSaveSucceeded: effConSave
         }]
       val r = pStartTurnFull(configForLevel(fighterLevel), state, spellSlots, Unarmored,
-        callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, effects)
+        callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)
+      // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied
+      val afterRally = pHeroicRally(r.creature, fighterLevel, conMod)
       all {
-        state' = r.creature,
+        state' = afterRally,
         turnState' = r.turn,
         spellSlots' = r.slots,
         turnPhase' = "acting",
