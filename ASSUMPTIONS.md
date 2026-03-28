@@ -92,3 +92,11 @@ Each entry records the assumption, rules justification, and what changed in both
 **What's not modeled:** Casting time (+10 minutes — spec doesn't model time beyond action/bonus action). Spell identity and Ritual tag (spec models slots, not individual spells). Spell preparation lists. Wizard "Ritual Adept" (class feature for `features/`).
 
 **Changes:** Removed `canRitualCast: bool` from `CharConfig` (5.2.1 made ritual casting universal). No new function needed — ritual casting is the caller choosing not to call `pExpendSlot`.
+
+## A11: Ongoing damage respects creature R/V/I
+
+**Assumption:** End-of-turn and start-of-turn ongoing damage (e.g., Heat Metal, Spirit Guardians) applies creature resistances, vulnerabilities, and immunities. The R/V/I are provided per damage entry by the caller.
+
+**Rules basis (SRD 5.2.1 "Damage Resistance/Vulnerability"):** "Resistance and then Vulnerability are applied after all other modifiers to damage." No exception is made for ongoing damage — resistances always apply unless a feature explicitly states otherwise.
+
+**Changes:** `dnd.qnt`: Added `resistances`, `vulnerabilities`, `immunities` fields to `EndOfTurnDamage` and `StartOfTurnEffect` types. `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` now pass these to `pTakeDamage` instead of empty sets. XState: matching fields added to event types and passed through in `machine-endturn.ts` and `machine-startturn.ts`.

@@ -171,7 +171,7 @@ Research during monster architecture planning (2026-03-28) revealed correctness 
 
 ### E. BUG: Ongoing damage ignores creature resistances/vulnerabilities
 
-**Status:** Not started
+**Status:** DONE (2026-03-28) — E1 and E2 both complete, A11 added to ASSUMPTIONS.md
 **Priority:** High — this is a correctness bug per RAW
 
 `pProcessEndOfTurnDamage` (dnd.qnt:~1607) and `pProcessStartOfTurn` (dnd.qnt:~1636) both call `pTakeDamage` with empty sets for R/V/I:
