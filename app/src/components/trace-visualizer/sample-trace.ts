@@ -245,7 +245,7 @@ const TRACE_EVENTS: ReadonlyArray<TraceEventDef> = [
     quintAction: "doUseMovement",
     xstateEvent: "USE_MOVEMENT",
     description: "Move 25ft toward the Ogre (5ft remaining)",
-    events: [{ type: "USE_MOVEMENT", feet: 25, movementCost: 25 }],
+    events: [{ type: "USE_MOVEMENT", feet: 25, movementCost: 1 }],
     expectedQuintState: defaultState({
       turnPhase: "acting",
       movementRemaining: 5,
