@@ -24,18 +24,18 @@ Every change must pass the scaling question: **"What happens when we have all 8+
 
 ## Current parity (Fighter)
 
-| Fighter mechanic | Quint | XState (inline) | TS features | MBT-verified |
+| Fighter mechanic | Quint | XState | TS features | MBT-verified |
 |-----------------|-------|-----------------|-------------|-------------|
-| Second Wind (charges + healing) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
-| Action Surge (charges + action grant) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
-| Indomitable (charges) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
+| Second Wind (charges + healing) | ✓ | ✓ delegates | ✓ | ✓ |
+| Action Surge (charges + action grant) | ✓ | ✓ delegates | ✓ | ✓ |
+| Indomitable (charges) | ✓ | ✓ inline | ✓ | ✓ |
 | Extra Attack tiers | ✓ | ✓ | — | ✓ |
 | Fighting Styles (passive formulas) | ✓ formulas | ✗ | ✓ | ✗ |
-| Tactical Mind (L2) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
-| Tactical Shift (L5, on SW) | ✓ via P1 | ✓ | ✓ | ✓ |
+| Tactical Mind (L2) | ✓ | ✓ inline (different interface) | ✓ | ✓ |
+| Tactical Shift (L5, on SW) | ✓ via P1 | ✓ delegates (via SW) | ✓ | ✓ |
 | Champion: Improved/Superior Critical | ✓ configForLevel | ✗ | ✓ | ✓ (via critRange) |
-| Champion: Remarkable Athlete (crit movement) | ✓ | ✓ | ✓ | ✓ |
-| Champion: Heroic Warrior (L10) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
+| Champion: Remarkable Athlete (crit movement) | ✓ | ✓ delegates | ✓ | ✓ |
+| Champion: Heroic Warrior (L10) | ✓ | ✓ delegates (start turn) / inline (use) | ✓ | ✓ |
 | Champion: Survivor/Defy Death (L18) | ✓ | ✓ | ✓ | ✓ |
 
 ## Current parity (other classes)
@@ -46,48 +46,49 @@ Every change must pass the scaling question: **"What happens when we have all 8+
 | XState | Full base rules parity (MBT-verified, 57 state fields) |
 | TS features | ALL class features (Rage, Ki/Focus, Smite, Sneak Attack, Sorcery Points, etc.) |
 
-## TODO: Eliminate XState/TS duplication (option b)
+## DONE: Eliminate XState/TS duplication (option b)
 
 Machine actions in `machine.ts` inline logic that duplicates pure functions in `class-fighter.ts`. Resolution: machine actions delegate to the TS pure functions, keeping TS features as the single source of truth while Quint remains the formal spec verified by MBT.
 
-### Why this matters
+### Why this mattered
 
-Each fighter feature currently has THREE implementations: Quint (spec), XState inline (machine.ts), and TS features (class-fighter.ts). The Quint duplication is necessary (different language, verified by MBT). The XState/TS duplication is not — machine actions can import and call the TS pure functions directly.
+Each fighter feature previously had THREE implementations: Quint (spec), XState inline (machine.ts), and TS features (class-fighter.ts). The Quint duplication is necessary (different language, verified by MBT). The XState/TS duplication was not — machine actions now import and call the TS pure functions directly.
 
 ### Action-by-action status
 
-| Machine action | TS function | Delegation difficulty | Notes |
-|---------------|-------------|----------------------|-------|
-| `useSecondWind` | `useSecondWind()` | Moderate | Returns `SecondWindResult`; machine must wrap `hp()` branded type and convert `tacticalShiftDistance` → `bonusMovementRemaining`/`bonusMovementOAFree` |
-| `useActionSurge` | `useActionSurge()` | Easy | Return shape matches context patch directly |
-| `useIndomitable` | `useIndomitable()` | Easy | TS takes extra `newRoll` param (pass 0, ignore `newSaveResult`) |
-| `useTacticalMind` | `useTacticalMind()` | Moderate | Machine receives pre-computed `boostedCheckSucceeds`; TS function does the check computation. Either pass through the boolean or add a thin wrapper |
-| `useHeroicInspiration` | ❌ doesn't exist | Trivial | One-liner boolean flip — add to `class-fighter.ts` or leave inline |
-| `scoreCriticalHit` | `remarkableAthleteCritMovement()` | Easy | TS returns distance (number); machine wraps into `bonusMovementRemaining`/`bonusMovementOAFree` |
-| `fighterStartTurn` | `heroicWarriorInspiration()` | Already done | Already imports and delegates |
-| `fighterShortRest` | `fighterShortRest()` | Easy | Return shape matches context patch directly |
-| `fighterLongRest` | `fighterLongRest()` | Easy | TS function missing `indomitableCharges` reset — add it to TS function |
+| Machine action | TS function | Status |
+|---------------|-------------|--------|
+| `useSecondWind` | `useSecondWind()` | ✓ delegates — wraps `hp()` branded type, converts `tacticalShiftDistance` → bonus movement fields |
+| `useActionSurge` | `useActionSurge()` | ✓ delegates — return shape matches context patch |
+| `useIndomitable` | — | ✓ inline — one-liner charge decrement; TS function takes `newRoll` param not needed here |
+| `useTacticalMind` | — | ✓ inline — machine receives pre-computed `boostedCheckSucceeds`, incompatible interface with TS function |
+| `useHeroicInspiration` | — | ✓ inline — one-liner boolean flip, identity function not worth extracting |
+| `scoreCriticalHit` | `remarkableAthleteCritMovement()` | ✓ delegates — wraps distance into bonus movement fields |
+| `fighterStartTurn` | `heroicWarriorInspiration()` | ✓ delegates (pre-existing) |
+| `fighterShortRest` | `fighterShortRest()` | ✓ delegates — return shape matches context patch |
+| `fighterLongRest` | `fighterLongRest()` | ✓ delegates — added `indomitableCharges` reset to TS function |
 
-### Implementation approach
+### Implementation notes
 
 1. **Guards stay in machine actions.** The `if (...) return {}` guard checks remain inline in the `assign()` — they're XState's job. The TS pure functions assume preconditions are met.
 
-2. **Branded types handled at the boundary.** `useSecondWind` returns raw `number` for HP; machine wraps with `hp()`. This is a one-line conversion, not duplicated logic.
+2. **Branded types handled at the boundary.** `useSecondWind` returns raw `number` for HP; machine wraps with `hp()`. One-line conversion, not duplicated logic.
 
-3. **Fix TS function gaps first:**
-   - Add `indomitableCharges` reset to `fighterLongRest()` return value
-   - Optionally add `useHeroicInspiration()` to `class-fighter.ts` (or leave the one-liner inline)
+3. **Three actions stayed inline** after `/simplify` convergence:
+   - `useIndomitable` — one-liner; TS function takes `newRoll` param the machine doesn't have
+   - `useTacticalMind` — machine receives pre-computed `boostedCheckSucceeds`, incompatible with TS function's computation-based interface
+   - `useHeroicInspiration` — identity function not worth extracting (tried, removed during simplify)
 
-4. **No new adapter file needed.** The delegation is thin enough to stay in `machine.ts` `assign()` bodies — extract state → call TS function → map result to context patch.
+4. **`fighterLongRest` unified** — added `indomitableCharges` to return value, removed the separate `indomitableLongRest` alias.
 
-5. **machine.ts already imports from class-fighter.ts** (`heroicWarriorInspiration`, `survivorHeroicRally`, `CHAMPION_SURVIVOR_LEVEL`). Adding more imports follows the established pattern.
+5. **No new adapter file needed.** Delegation stays in `machine.ts` `assign()` bodies — extract state → call TS function → map result to context patch.
 
-### Validation
+### Validation (completed)
 
-- All vitest tests must pass (1229 including MBT)
-- `npx quint typecheck dnd.qnt` (no Quint changes expected)
-- Update the "Current parity (Fighter)" table: change `✓ duplicate` → `✓ delegates` for each action that now delegates to TS features
-- Run `/simplify` to convergence
+- All vitest tests pass (1225 including MBT)
+- `npx quint typecheck dnd.qnt` — clean
+- Parity table updated above
+- `/simplify` converged in 2 rounds
 
 ---
 

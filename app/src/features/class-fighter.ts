@@ -187,14 +187,20 @@ export function fighterShortRest(state: FighterRestState): {
   }
 }
 
-/** Long rest: regain all Second Wind uses; regain all Action Surge uses. */
-export function fighterLongRest(state: FighterRestState): {
+export interface FighterLongRestState extends FighterRestState {
+  readonly indomitableMax: number
+}
+
+/** Long rest: regain all Second Wind uses, Action Surge uses, and Indomitable uses. */
+export function fighterLongRest(state: FighterLongRestState): {
   readonly secondWindCharges: number
   readonly actionSurgeCharges: number
+  readonly indomitableCharges: number
 } {
   return {
     secondWindCharges: state.secondWindMax,
-    actionSurgeCharges: state.actionSurgeMax
+    actionSurgeCharges: state.actionSurgeMax,
+    indomitableCharges: state.indomitableMax
   }
 }
 
@@ -334,7 +340,3 @@ export function useIndomitable(
   }
 }
 
-// --- Indomitable long rest recovery ---
-
-/** Long rest: regain all Indomitable uses for the given fighter level. */
-export const indomitableLongRest: (fighterLevel: number) => number = indomitableMaxCharges

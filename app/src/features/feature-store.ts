@@ -11,7 +11,6 @@ import {
   actionSurgeMaxCharges,
   fighterLongRest,
   fighterShortRest,
-  indomitableLongRest,
   indomitableMaxCharges,
   secondWindMaxCharges
 } from "#/features/class-fighter.ts"
@@ -274,7 +273,8 @@ function reduceFighter(state: FeatureState, action: FeatureAction, config: Featu
         secondWindCharges: f.secondWindCharges,
         secondWindMax: f.secondWindMax,
         actionSurgeCharges: f.actionSurgeCharges,
-        actionSurgeMax: f.actionSurgeMax
+        actionSurgeMax: f.actionSurgeMax,
+        indomitableMax: f.indomitableMax
       })
       return {
         ...state,
@@ -282,7 +282,7 @@ function reduceFighter(state: FeatureState, action: FeatureAction, config: Featu
           ...f,
           secondWindCharges: rest.secondWindCharges,
           actionSurgeCharges: rest.actionSurgeCharges,
-          indomitableCharges: indomitableLongRest(config.level)
+          indomitableCharges: rest.indomitableCharges
         }
       }
     }
