@@ -184,6 +184,19 @@
 | **Independent Mount** | An intelligent mount that retains its own initiative and acts freely | — |
 | **Mounting/Dismounting** | Costs half the rider's speed; can't mount if speed is 0 | — |
 
+## Creatures and Stat Blocks
+
+| Term | Definition | Aliases to avoid |
+|------|-----------|-----------------|
+| **Creature** | Any being in the game — PCs, monsters, NPCs, summoned entities. All combat rules are written in terms of creatures ("the creature's AC", "the creature has resistance to..."). The universal participant type in combat; both characters and monsters are creatures. | Character (too narrow — only PCs), monster (too narrow — only non-PCs) |
+| **Stat Block** | A rules record containing all game statistics of a **monster**: Size, Creature Type, AC, Initiative, HP (with Hit Dice), Speed, Ability Scores, Saving Throws, Skills, Resistances, Vulnerabilities, Immunities, Senses, Languages, CR, Traits, Actions, Bonus Actions, Reactions, and (for powerful monsters) Legendary Actions. Stat blocks are for monsters only — PCs use a Character Sheet instead. | Character sheet (different concept for PCs) |
+| **Character Sheet** | A record tracking a player character's information — derived from class, level, species, background, equipment, and features. Produces the same creature-level combat statistics (AC, HP, Speed, etc.) that a Stat Block provides for monsters, but through a derivation process rather than direct authoring. | Stat block (stat blocks are for monsters) |
+| **Creature Type** | The family of beings a monster belongs to: Aberration, Beast, Celestial, Construct, Dragon, Elemental, Fey, Fiend, Giant, Humanoid, Monstrosity, Ooze, Plant, or Undead. Appears in monster stat blocks. PCs are Humanoid by default. | Race (different concept — Species is the PC equivalent) |
+| **Challenge Rating (CR)** | A monster-specific rating (0 to 30) indicating the monster's threat level; determines the monster's Proficiency Bonus and XP reward. PCs do not have CR — their Proficiency Bonus is derived from level. | Level (CR and character level are distinct concepts) |
+| **Multiattack** | A stat block entry allowing a monster to make multiple attacks as part of a single Attack action. Not an extra action — it defines what constitutes the monster's Attack action. PCs gain multiple attacks through class features (e.g., Extra Attack) instead. | Extra Attack (similar effect but different mechanic — Extra Attack is a class feature, Multiattack is a stat block entry) |
+| **Legendary Action** | A special action some powerful monsters can take immediately after another creature's turn ends; limited uses per round, all regained at the start of the monster's turn. PCs cannot take Legendary Actions. | Bonus action (different mechanic), reaction (different trigger model) |
+| **Recharge** | A stat block notation (e.g., "Recharge 5-6") indicating an ability can be used once, then regains on a d6 roll of the specified range at the start of the monster's turn. Also regains after a Short or Long Rest. No PC equivalent. | — |
+
 ## Character Building
 
 | Term | Definition | Aliases to avoid |
@@ -214,6 +227,8 @@
 - A **Controlled Mount** is limited to Dash/Disengage/Dodge; an **Independent Mount** acts freely on its own initiative.
 - **Multiclassing** requires meeting **Ability Score** prerequisites (13) for both the current **Class** and the new one.
 - **Unarmored Defense** replaces the default **AC** formula; a creature can only benefit from one source of **Unarmored Defense**.
+- A **Stat Block** and a **Character Sheet** both produce creature-level combat statistics (AC, HP, Speed, Ability Scores, damage modifiers, etc.). Combat rules reference these as **creature** properties — they never distinguish between PC-derived and monster-authored values. A monster's **Stat Block** is authored directly; a PC's equivalent is derived from **Class**, level, species, and equipment via the **Character Sheet**.
+- **Legendary Actions**, **Recharge** abilities, and **Creature Type** are **Stat Block**-only concepts — PCs do not have them. Conversely, **Class**, level, **Hit Dice** recovery, and **Ability Score Improvement** are **Character Sheet**-only concepts — monsters do not have them.
 
 ## Example dialogue
 
@@ -227,6 +242,11 @@
 
 > **Dev:** "The fighter wants to grapple the ogre. Is that an **Attack Roll**?"
 > **Domain expert:** "No. A **Grapple** is a **Contest** — the fighter's Strength (Athletics) against the ogre's choice of Strength (Athletics) or Dexterity (Acrobatics). No **Attack Roll** is made, so **AC** and **Cover** are irrelevant."
+
+> **Dev:** "Should we use Stat Block as the shared type for both PCs and monsters?"
+> **Domain expert:** "No. **Stat Block** is the SRD's term specifically for monsters. PCs have a **Character Sheet**. But both produce the same creature-level combat stats — AC, HP, Speed, damage modifiers. Combat rules are written against **creature** properties, not stat blocks or character sheets. So the shared abstraction is **creature**, not stat block."
+> **Dev:** "Can a PC have Legendary Actions?"
+> **Domain expert:** "No. **Legendary Actions** are a **Stat Block**-only concept. PCs gain extra actions through class features like **Action Surge** — a different mechanic with different rules."
 
 ## Flagged ambiguities
 

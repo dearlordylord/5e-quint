@@ -165,6 +165,98 @@ Two fields on TurnState: `bonusMovementRemaining` (distance) and `bonusMovementO
 
 ---
 
+## Creature correctness hardening (universal — benefits PCs today, prerequisite for PLAN_MONSTERS.md)
+
+Research during monster architecture planning (2026-03-28) revealed correctness gaps in the current spec that affect PCs today, independent of monster support. These must be fixed regardless of whether monsters are ever implemented.
+
+### E. BUG: Ongoing damage ignores creature resistances/vulnerabilities
+
+**Status:** Not started
+**Priority:** High — this is a correctness bug per RAW
+
+`pProcessEndOfTurnDamage` (dnd.qnt:~1607) and `pProcessStartOfTurn` (dnd.qnt:~1636) both call `pTakeDamage` with empty sets for R/V/I:
+
+```quint
+val newS = pTakeDamage(acc.creature, dmg.damage, dmg.damageType, Set(), Set(), Set(), false)
+```
+
+This means a creature with fire resistance taking ongoing fire damage (e.g., from Heat Metal) takes full damage. RAW: resistances always apply unless explicitly stated otherwise.
+
+**Fix:** These call sites need to receive the creature's R/V/I from the caller. Two options:
+1. Add R/V/I parameters to `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` (passed from the event).
+2. Add R/V/I to the event types (`END_TURN` and `START_TURN`) so the caller provides them.
+
+Option (2) is more consistent with the existing "caller provides everything" pattern. The `END_TURN` event's `EndOfTurnDamage` type and the `START_TURN` event's `StartOfTurnEffect` type already carry `damageType` — they should also carry (or the event should carry) the creature's R/V/I.
+
+**ASSUMPTIONS.md entry required:** Document that ongoing damage respects creature R/V/I, which is RAW but easy to miss.
+
+**MBT impact:** The MBT `doEndTurn` and `doStartTurn` actions need to pass R/V/I. Currently they use nondeterministic damage types — they should also use nondeterministic R/V/I. Low risk since the bridge already handles `Set[DamageType]` in `doTakeDamage`.
+
+### F. Condition immunity enforcement in pApplyCondition
+
+**Status:** Not started
+**Priority:** High — prerequisite for correct creature modeling
+
+`pApplyCondition(s: CreatureState, c: Condition)` unconditionally applies any condition. It has no immunity check. This is incorrect per RAW — creatures can have condition immunities (Undead: Poisoned; Constructs: various; PCs via class features: Paladin L10 Frightened immunity from Aura of Courage).
+
+**Fix:** Add a `conditionImmunities: Set[Condition]` parameter:
+
+```quint
+pure def pApplyCondition(s: CreatureState, c: Condition, immunities: Set[Condition]): CreatureState =
+  if (immunities.contains(c)) s
+  else match c { ... }  // existing logic
+```
+
+All existing call sites pass `Set()` (no immunities) — backward compatible. When species/class features add immunities, they'll pass the relevant set.
+
+**MBT impact:** Low. Existing MBT actions that call `pApplyCondition` pass `Set()`. The parameter is additive.
+
+### G. Exhaustion immunity enforcement in pAddExhaustion
+
+**Status:** Not started
+**Priority:** High — prerequisite for correct creature modeling
+
+`pAddExhaustion(s: CreatureState, levels: int)` unconditionally adds exhaustion. Some creatures are immune (SRD: all Undead, many Constructs). Some PC effects may also grant temporary exhaustion immunity in the future.
+
+**Fix:** Add an `exhaustionImmune: bool` parameter:
+
+```quint
+pure def pAddExhaustion(s: CreatureState, levels: int, exhaustionImmune: bool): CreatureState =
+  if (exhaustionImmune) s
+  else { ... }  // existing logic
+```
+
+All existing call sites pass `false` — backward compatible.
+
+**Note:** Exhaustion is NOT one of the 14 Conditions in the SRD (it's a separate mechanic with levels 1-6). It cannot be in `conditionImmunities: Set[Condition]`. The Skeleton stat block lists "Immunities: Poison; Exhaustion, Poisoned" — Exhaustion immunity is listed alongside condition immunities but is mechanically distinct.
+
+### H2. Death saves are PC-only (documentation + guard)
+
+**Status:** Not started
+**Priority:** Medium — correctness documentation; becomes enforcement when monsters are added
+
+The SRD is explicit: "A **player character** must make a Death Saving Throw if they start their turn with 0 Hit Points." `pTakeDamage` currently enters the death-save track (unconscious, death save failures on subsequent hits) for all creatures. This is correct for PCs but wrong for monsters (who die at 0 HP).
+
+**Immediate fix (no monsters):** Add a comment to `pTakeDamage` and `pStartTurnFull` documenting that the death-save track is PC-only per RAW. No behavioral change needed while only PCs use the spec.
+
+**Future fix (with monsters):** PLAN_MONSTERS.md Phase 0 adds a `creatureKind` discriminator to gate death saves vs. instant death.
+
+### I. UBIQUITOUS_LANGUAGE.md: Creature / Stat Block / Character Sheet terms
+
+**Status:** DONE (2026-03-28)
+
+Added "Creatures and Stat Blocks" section with: Creature, Stat Block, Character Sheet, Creature Type, Challenge Rating, Multiattack, Legendary Action, Recharge. Plus relationship entries and example dialogue.
+
+### Research direction: further architecture improvements
+
+During monster research we identified that `CharConfig` mixes PC build info (class, subclass, species, level) with combat-facing stats (ability scores, size, speeds, proficiencies). This is fine while only PCs use the spec, but worth noting as a future refactor candidate when the model grows. The research showed that the SRD's own architecture separates the *derivation* (character creation) from the *combat interface* (creature properties), but there is no SRD term for a shared combat config type — the universal term is just "creature." The existing parameter-passing pattern on pure functions is the correct shared interface.
+
+**Do NOT refactor CharConfig preemptively.** The current design works. Revisit when either (a) a second class is added to Quint (see deferred item C/H above), or (b) monsters are implemented (PLAN_MONSTERS.md).
+
+**Species-derived R/V/I for PCs:** Once items F and G add immunity parameters, existing PC call sites pass empty sets / false. Populating them from species traits (e.g., Dwarf poison resistance — note: SRD 5.2.1 Dwarves get resistance, not immunity; Elves get advantage on Charmed saves, not immunity) is a separate effort. Do not bundle with F/G or with PLAN_MONSTERS.md — species feature modeling is its own scope.
+
+---
+
 ## Deferred (not blocking — do NOT implement without explicit owner request)
 
 ### C. Fighter state initializes for all characters
