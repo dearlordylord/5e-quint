@@ -46,21 +46,48 @@ Every change must pass the scaling question: **"What happens when we have all 8+
 | XState | Full base rules parity (MBT-verified, 57 state fields) |
 | TS features | ALL class features (Rage, Ki/Focus, Smite, Sneak Attack, Sorcery Points, etc.) |
 
-## The duplicate problem
+## TODO: Eliminate XState/TS duplication (option b)
 
-Second Wind, Action Surge, and Indomitable each have THREE implementations:
-1. **Quint** (`dnd.qnt`) — pure functions + action wrappers
-2. **XState inline** (`machine.ts` lines 326-354) — `assign()` actions that independently reimplement the same logic
-3. **TS features** (`class-fighter.ts`) — pure functions used by the feature bridge
+Machine actions in `machine.ts` inline logic that duplicates pure functions in `class-fighter.ts`. Resolution: machine actions delegate to the TS pure functions, keeping TS features as the single source of truth while Quint remains the formal spec verified by MBT.
 
-The XState inline implementations exist because the MBT bridge sends events directly to the machine (e.g., `USE_SECOND_WIND`), bypassing the features layer. The machine must handle these events with its own logic.
+### Why this matters
 
-**Resolution options:**
-- (a) MBT bridge routes through the features layer bridge (features layer becomes the single implementation, machine actions become thin pass-throughs)
-- (b) Machine actions delegate to the features layer functions (imports from `class-fighter.ts`)
-- (c) Accept the duplication — it's small (30 lines in machine.ts) and MBT proves they match
+Each fighter feature currently has THREE implementations: Quint (spec), XState inline (machine.ts), and TS features (class-fighter.ts). The Quint duplication is necessary (different language, verified by MBT). The XState/TS duplication is not — machine actions can import and call the TS pure functions directly.
 
-**Current default: (c).** The duplication is MBT-verified so it's not a correctness risk, just maintenance overhead. It doesn't block adding new features to Quint. Revisit when the duplication grows beyond Fighter or becomes a maintenance burden.
+### Action-by-action status
+
+| Machine action | TS function | Delegation difficulty | Notes |
+|---------------|-------------|----------------------|-------|
+| `useSecondWind` | `useSecondWind()` | Moderate | Returns `SecondWindResult`; machine must wrap `hp()` branded type and convert `tacticalShiftDistance` → `bonusMovementRemaining`/`bonusMovementOAFree` |
+| `useActionSurge` | `useActionSurge()` | Easy | Return shape matches context patch directly |
+| `useIndomitable` | `useIndomitable()` | Easy | TS takes extra `newRoll` param (pass 0, ignore `newSaveResult`) |
+| `useTacticalMind` | `useTacticalMind()` | Moderate | Machine receives pre-computed `boostedCheckSucceeds`; TS function does the check computation. Either pass through the boolean or add a thin wrapper |
+| `useHeroicInspiration` | ❌ doesn't exist | Trivial | One-liner boolean flip — add to `class-fighter.ts` or leave inline |
+| `scoreCriticalHit` | `remarkableAthleteCritMovement()` | Easy | TS returns distance (number); machine wraps into `bonusMovementRemaining`/`bonusMovementOAFree` |
+| `fighterStartTurn` | `heroicWarriorInspiration()` | Already done | Already imports and delegates |
+| `fighterShortRest` | `fighterShortRest()` | Easy | Return shape matches context patch directly |
+| `fighterLongRest` | `fighterLongRest()` | Easy | TS function missing `indomitableCharges` reset — add it to TS function |
+
+### Implementation approach
+
+1. **Guards stay in machine actions.** The `if (...) return {}` guard checks remain inline in the `assign()` — they're XState's job. The TS pure functions assume preconditions are met.
+
+2. **Branded types handled at the boundary.** `useSecondWind` returns raw `number` for HP; machine wraps with `hp()`. This is a one-line conversion, not duplicated logic.
+
+3. **Fix TS function gaps first:**
+   - Add `indomitableCharges` reset to `fighterLongRest()` return value
+   - Optionally add `useHeroicInspiration()` to `class-fighter.ts` (or leave the one-liner inline)
+
+4. **No new adapter file needed.** The delegation is thin enough to stay in `machine.ts` `assign()` bodies — extract state → call TS function → map result to context patch.
+
+5. **machine.ts already imports from class-fighter.ts** (`heroicWarriorInspiration`, `survivorHeroicRally`, `CHAMPION_SURVIVOR_LEVEL`). Adding more imports follows the established pattern.
+
+### Validation
+
+- All vitest tests must pass (1229 including MBT)
+- `npx quint typecheck dnd.qnt` (no Quint changes expected)
+- Update the "Current parity (Fighter)" table: change `✓ duplicate` → `✓ delegates` for each action that now delegates to TS features
+- Run `/simplify` to convergence
 
 ---
 
