@@ -510,7 +510,7 @@ const driverSchema = {
   doDeathSave: { roll: ITFBigInt, roll2: ITFBigInt },
   doStabilize: {},
   doKnockOut: {},
-  doApplyCondition: { c: ITFVariant },
+  doApplyCondition: { c: ITFVariant, useImmunity: z.boolean(), immuneCondition: ITFVariant },
   doRemoveCondition: { c: ITFVariant },
   doAddExhaustion: { levels: ITFBigInt },
   doReduceExhaustion: { levels: ITFBigInt },
@@ -651,8 +651,15 @@ function createDndDriver() {
       doKnockOut: () => {
         send({ type: "KNOCK_OUT" })
       },
-      doApplyCondition: ({ c }) => {
-        send({ type: "APPLY_CONDITION", condition: QUINT_CONDITION_MAP[c] ?? "blinded" })
+      doApplyCondition: ({ c, immuneCondition, useImmunity }) => {
+        const immunities = useImmunity
+          ? new Set([QUINT_CONDITION_MAP[immuneCondition] ?? "blinded"])
+          : new Set<Condition>()
+        send({
+          type: "APPLY_CONDITION",
+          condition: QUINT_CONDITION_MAP[c] ?? "blinded",
+          conditionImmunities: immunities
+        })
       },
       doRemoveCondition: ({ c }) => {
         send({ type: "REMOVE_CONDITION", condition: QUINT_CONDITION_MAP[c] ?? "blinded" })
@@ -665,9 +672,9 @@ function createDndDriver() {
       },
       doStartTurn: ({
         callerSpeedMod,
+        conMod,
         deathSaveRoll: dsRoll,
         deathSaveRoll2: dsRoll2,
-        conMod,
         effConSave,
         effDmgAmount,
         effDmgType,

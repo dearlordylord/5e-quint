@@ -202,8 +202,12 @@ interface ConditionUpdate {
 export function applyConditionUpdate(
   condition: Condition,
   currentIncapSources: ReadonlySet<IncapSource>,
-  isPetrified: boolean
+  isPetrified: boolean,
+  immunities: ReadonlySet<Condition> = new Set()
 ): ConditionUpdate {
+  if (immunities.has(condition)) {
+    return { conditionFlags: {}, incapSources: currentIncapSources }
+  }
   const incapSource = INCAP_SOURCE_MAP[condition]
   const incapSources = incapSource ? addIncapSource(currentIncapSources, incapSource) : currentIncapSources
 

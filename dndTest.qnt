@@ -447,7 +447,7 @@ module dndTest {
   // ============================================================
 
   pure val FRESH20: CreatureState = freshCreature(20)
-  pure val DYING20: CreatureState = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious)
+  pure val DYING20: CreatureState = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious, Set())
 
   // -- Fresh creature --
   run test_fresh_creature = {
@@ -466,7 +466,7 @@ module dndTest {
 
   // -- isIncapacitated --
   run test_incapacitated_none = assert(not(isIncapacitated(FRESH20)))
-  run test_incapacitated_from_paralyzed = assert(isIncapacitated(pApplyCondition(FRESH20, CParalyzed)))
+  run test_incapacitated_from_paralyzed = assert(isIncapacitated(pApplyCondition(FRESH20, CParalyzed, Set())))
 
   // ============================================================
   // Take Damage
@@ -525,7 +525,7 @@ module dndTest {
   }
 
   run test_take_damage_petrified_resistance = {
-    val s = pApplyCondition(FRESH20, CPetrified)
+    val s = pApplyCondition(FRESH20, CPetrified, Set())
     val s2 = pTakeDamage(s, 10, Fire, Set(), Set(), Set(), false)
     assert(s2.hp == 15) // 10/2 = 5 damage
   }
@@ -674,31 +674,31 @@ module dndTest {
   // Conditions
   // ============================================================
 
-  run test_apply_blinded = assert(pApplyCondition(FRESH20, CBlinded).blinded)
+  run test_apply_blinded = assert(pApplyCondition(FRESH20, CBlinded, Set()).blinded)
 
   run test_paralyzed_implies_incapacitated = {
-    val s = pApplyCondition(FRESH20, CParalyzed)
+    val s = pApplyCondition(FRESH20, CParalyzed, Set())
     all { assert(s.paralyzed), assert(isIncapacitated(s)) }
   }
 
   run test_unconscious_implies_prone_incap = {
-    val s = pApplyCondition(FRESH20, CUnconscious)
+    val s = pApplyCondition(FRESH20, CUnconscious, Set())
     all { assert(s.unconscious), assert(s.prone), assert(isIncapacitated(s)) }
   }
 
   run test_remove_paralyzed_while_stunned_incap_stays = {
-    val s = pApplyCondition(pApplyCondition(FRESH20, CParalyzed), CStunned)
+    val s = pApplyCondition(pApplyCondition(FRESH20, CParalyzed, Set()), CStunned, Set())
     val s2 = pRemoveCondition(s, CParalyzed)
     all { assert(not(s2.paralyzed)), assert(s2.stunned), assert(isIncapacitated(s2)) }
   }
 
   run test_remove_unconscious_prone_stays = {
-    val s = pRemoveCondition(pApplyCondition(FRESH20, CUnconscious), CUnconscious)
+    val s = pRemoveCondition(pApplyCondition(FRESH20, CUnconscious, Set()), CUnconscious)
     all { assert(not(s.unconscious)), assert(s.prone), assert(not(isIncapacitated(s))) }
   }
 
   run test_petrified_blocks_poison = {
-    val s = pApplyCondition(pApplyCondition(FRESH20, CPetrified), CPoisoned)
+    val s = pApplyCondition(pApplyCondition(FRESH20, CPetrified, Set()), CPoisoned, Set())
     assert(not(s.poisoned))
   }
 
@@ -946,7 +946,7 @@ module dndTest {
   run test_end_turn_save_removes_condition = {
     val s = freshCreature(20)
       .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn }))
-    val s2 = pApplyCondition(s, CParalyzed)
+    val s2 = pApplyCondition(s, CParalyzed, Set())
     val saves = [{ spellId: "hold_person", saveSucceeded: true, conditionsToRemove: Set(CParalyzed) }]
     val r = pEndTurn(s2, FRESH_SPELL_SLOTS, saves, [])
     all {
@@ -958,7 +958,7 @@ module dndTest {
   run test_end_turn_save_fail_keeps = {
     val s = freshCreature(20)
       .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn }))
-    val s2 = pApplyCondition(s, CParalyzed)
+    val s2 = pApplyCondition(s, CParalyzed, Set())
     val saves = [{ spellId: "hold_person", saveSucceeded: false, conditionsToRemove: Set(CParalyzed) }]
     val r = pEndTurn(s2, FRESH_SPELL_SLOTS, saves, [])
     all {
@@ -1007,22 +1007,22 @@ module dndTest {
   // ============================================================
 
   run test_own_attack_invisible_adv = {
-    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CInvisible), false)
+    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CInvisible, Set()), false)
     all { assert(m.hasAdvantage), assert(not(m.hasDisadvantage)) }
   }
 
   run test_own_attack_blinded_disadv = {
-    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CBlinded), false)
+    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CBlinded, Set()), false)
     all { assert(not(m.hasAdvantage)), assert(m.hasDisadvantage) }
   }
 
   run test_own_attack_frightened_in_los = {
-    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CFrightened), true)
+    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CFrightened, Set()), true)
     assert(m.hasDisadvantage)
   }
 
   run test_own_attack_frightened_not_in_los = {
-    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CFrightened), false)
+    val m = pOwnAttackModifiers(pApplyCondition(FRESH20, CFrightened, Set()), false)
     assert(not(m.hasDisadvantage))
   }
 
@@ -1031,22 +1031,22 @@ module dndTest {
   // ============================================================
 
   run test_defense_paralyzed_within_5ft = {
-    val m = pDefenseModifiers(pApplyCondition(FRESH20, CParalyzed), true)
+    val m = pDefenseModifiers(pApplyCondition(FRESH20, CParalyzed, Set()), true)
     all { assert(m.attackerAdvantage), assert(m.autoCrit) }
   }
 
   run test_defense_prone_within_5ft = {
-    val m = pDefenseModifiers(pApplyCondition(FRESH20, CProne), true)
+    val m = pDefenseModifiers(pApplyCondition(FRESH20, CProne, Set()), true)
     all { assert(m.attackerAdvantage), assert(not(m.attackerDisadvantage)) }
   }
 
   run test_defense_prone_beyond_5ft = {
-    val m = pDefenseModifiers(pApplyCondition(FRESH20, CProne), false)
+    val m = pDefenseModifiers(pApplyCondition(FRESH20, CProne, Set()), false)
     all { assert(not(m.attackerAdvantage)), assert(m.attackerDisadvantage) }
   }
 
   run test_defense_invisible_disadv = {
-    val m = pDefenseModifiers(pApplyCondition(FRESH20, CInvisible), true)
+    val m = pDefenseModifiers(pApplyCondition(FRESH20, CInvisible, Set()), true)
     assert(m.attackerDisadvantage)
   }
 
@@ -1060,17 +1060,17 @@ module dndTest {
   }
 
   run test_check_blinded_sight_autofail = {
-    val m = pCheckModifiers(pApplyCondition(FRESH20, CBlinded), true, false, false)
+    val m = pCheckModifiers(pApplyCondition(FRESH20, CBlinded, Set()), true, false, false)
     assert(m.autoFail)
   }
 
   run test_check_blinded_no_sight_ok = {
-    val m = pCheckModifiers(pApplyCondition(FRESH20, CBlinded), false, false, false)
+    val m = pCheckModifiers(pApplyCondition(FRESH20, CBlinded, Set()), false, false, false)
     assert(not(m.autoFail))
   }
 
   run test_check_deafened_hearing_autofail = {
-    val m = pCheckModifiers(pApplyCondition(FRESH20, CDeafened), false, true, false)
+    val m = pCheckModifiers(pApplyCondition(FRESH20, CDeafened, Set()), false, true, false)
     assert(m.autoFail)
   }
 
@@ -1079,17 +1079,17 @@ module dndTest {
   // ============================================================
 
   run test_save_paralyzed_str_autofail = {
-    val m = pSaveModifiers(pApplyCondition(FRESH20, CParalyzed), Str)
+    val m = pSaveModifiers(pApplyCondition(FRESH20, CParalyzed, Set()), Str)
     assert(m.autoFail)
   }
 
   run test_save_paralyzed_wis_no_autofail = {
-    val m = pSaveModifiers(pApplyCondition(FRESH20, CParalyzed), Wis)
+    val m = pSaveModifiers(pApplyCondition(FRESH20, CParalyzed, Set()), Wis)
     assert(not(m.autoFail))
   }
 
   run test_save_restrained_dex_disadv = {
-    val m = pSaveModifiers(pApplyCondition(FRESH20, CRestrained), Dex)
+    val m = pSaveModifiers(pApplyCondition(FRESH20, CRestrained, Set()), Dex)
     assert(m.hasDisadvantage)
   }
 
@@ -1112,10 +1112,10 @@ module dndTest {
   // ============================================================
 
   run test_can_act_normal = assert(pCanAct(FRESH20))
-  run test_can_act_incapacitated = assert(not(pCanAct(pApplyCondition(FRESH20, CParalyzed))))
+  run test_can_act_incapacitated = assert(not(pCanAct(pApplyCondition(FRESH20, CParalyzed, Set()))))
   run test_can_speak_normal = assert(pCanSpeak(FRESH20))
-  run test_can_speak_paralyzed = assert(not(pCanSpeak(pApplyCondition(FRESH20, CParalyzed))))
-  run test_can_speak_stunned_ok = assert(pCanSpeak(pApplyCondition(FRESH20, CStunned)))
+  run test_can_speak_paralyzed = assert(not(pCanSpeak(pApplyCondition(FRESH20, CParalyzed, Set()))))
+  run test_can_speak_stunned_ok = assert(pCanSpeak(pApplyCondition(FRESH20, CStunned, Set())))
 
   // ============================================================
   // Combined scenarios
@@ -1215,13 +1215,13 @@ module dndTest {
   }
 
   run test_speed_grappled_zero = {
-    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
+    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled, Set()), Unarmored,
       0, false, false)
     assert(t.movementRemaining == 0)
   }
 
   run test_speed_grappled_ignores_bonus = {
-    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
+    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled, Set()), Unarmored,
       10, false, false) // +10 from spell, should be ignored
     assert(t.movementRemaining == 0)
   }
@@ -1257,7 +1257,7 @@ module dndTest {
   }
 
   run test_use_action_incapacitated_noop = {
-    val s = pApplyCondition(FRESH20, CStunned)
+    val s = pApplyCondition(FRESH20, CStunned, Set())
     val t = pUseAction(BASIC_TURN, s, AAttack)
     assert(t.actionsRemaining > 0) // can't act while incapacitated
   }
@@ -1735,7 +1735,7 @@ module dndTest {
   }
 
   run test_grapple_auto_success_incapacitated = {
-    val target = pApplyCondition(FRESH20, CStunned)
+    val target = pApplyCondition(FRESH20, CStunned, Set())
     val r = pGrapple(Medium, Medium, target, false, true) // save succeeded but incapacitated
     all { assert(r.success), assert(r.targetState.grappled) }
   }
@@ -1753,7 +1753,7 @@ module dndTest {
   // -- Release Grapple --
 
   run test_release_grapple = {
-    val s = pApplyCondition(FRESH20, CGrappled)
+    val s = pApplyCondition(FRESH20, CGrappled, Set())
     val s2 = pReleaseGrapple(s)
     assert(not(s2.grappled))
   }
@@ -1761,13 +1761,13 @@ module dndTest {
   // -- Escape Grapple --
 
   run test_escape_grapple_success = {
-    val s = pApplyCondition(FRESH20, CGrappled)
+    val s = pApplyCondition(FRESH20, CGrappled, Set())
     val s2 = pEscapeGrapple(s, true) // check succeeded
     assert(not(s2.grappled))
   }
 
   run test_escape_grapple_fail = {
-    val s = pApplyCondition(FRESH20, CGrappled)
+    val s = pApplyCondition(FRESH20, CGrappled, Set())
     val s2 = pEscapeGrapple(s, false) // check failed
     assert(s2.grappled)
   }
@@ -1795,7 +1795,7 @@ module dndTest {
   }
 
   run test_shove_auto_success_incapacitated = {
-    val target = pApplyCondition(FRESH20, CParalyzed)
+    val target = pApplyCondition(FRESH20, CParalyzed, Set())
     val r = pShove(Medium, Medium, target, false, ShoveProne) // save succeeded but incapacitated
     all { assert(r.success), assert(r.targetState.prone) }
   }
@@ -1815,7 +1815,7 @@ module dndTest {
   }
 
   run test_mount_speed_zero = {
-    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
+    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled, Set()), Unarmored,
       0, false, false)
     val t2 = pMountOrDismount(t)
     assert(t2.movementRemaining == 0) // speed 0, can't mount
@@ -1889,7 +1889,7 @@ module dndTest {
   }
 
   run test_stand_from_prone_speed_zero = {
-    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled), Unarmored,
+    val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled, Set()), Unarmored,
       0, false, false)
     val t2 = pStandFromProne(t)
     assert(t2.movementRemaining == 0) // speed 0, can't stand
@@ -1916,7 +1916,7 @@ module dndTest {
   }
 
   run test_drop_prone_already_prone = {
-    val s = pDropProne(pApplyCondition(FRESH20, CProne), 30)
+    val s = pDropProne(pApplyCondition(FRESH20, CProne, Set()), 30)
     assert(s.prone) // idempotent
   }
 
@@ -1928,7 +1928,7 @@ module dndTest {
   // -- Flying Creature Falls --
 
   run test_flying_falls_prone = {
-    val s = pApplyCondition(FRESH20, CProne)
+    val s = pApplyCondition(FRESH20, CProne, Set())
     assert(pFlyingCreatureFalls(s, 30, false, false))
   }
 
@@ -1937,12 +1937,12 @@ module dndTest {
   }
 
   run test_flying_no_fall_hover = {
-    val s = pApplyCondition(FRESH20, CProne)
+    val s = pApplyCondition(FRESH20, CProne, Set())
     assert(not(pFlyingCreatureFalls(s, 30, true, false)))
   }
 
   run test_flying_no_fall_magic = {
-    val s = pApplyCondition(FRESH20, CProne)
+    val s = pApplyCondition(FRESH20, CProne, Set())
     assert(not(pFlyingCreatureFalls(s, 30, false, true)))
   }
 
@@ -2440,7 +2440,7 @@ module dndTest {
   }
 
   run test_components_no_verbal_paralyzed = {
-    val s = pApplyCondition(FRESH20, CParalyzed)
+    val s = pApplyCondition(FRESH20, CParalyzed, Set())
     assert(not(pCanProvideComponents(s, true, false, true)))
   }
 
@@ -2449,7 +2449,7 @@ module dndTest {
   }
 
   run test_components_verbal_not_required = {
-    val s = pApplyCondition(FRESH20, CParalyzed)
+    val s = pApplyCondition(FRESH20, CParalyzed, Set())
     // V not required → paralysis doesn't matter
     assert(pCanProvideComponents(s, false, false, true))
   }
@@ -2460,7 +2460,7 @@ module dndTest {
   }
 
   run test_components_unconscious_no_verbal = {
-    val s = pApplyCondition(FRESH20, CUnconscious)
+    val s = pApplyCondition(FRESH20, CUnconscious, Set())
     assert(not(pCanProvideComponents(s, true, false, true)))
   }
 
@@ -2561,7 +2561,8 @@ module dndTest {
     // 0 HP, spend HD → heals and regains consciousness
     val s = pApplyCondition(
       freshCreature(20).with("hp", 0).with("hitPointDiceRemaining", 3),
-      CUnconscious
+      CUnconscious,
+      Set()
     )
     val result = pSpendHitDie(s, FIGHTER_CON_MOD, 4)
     all {
@@ -3152,7 +3153,7 @@ module dndTest {
   }
 
   run test_inv_paralyzedImpliesIncap_via_apply = {
-    val s = pApplyCondition(freshCreature(20), CParalyzed)
+    val s = pApplyCondition(freshCreature(20), CParalyzed, Set())
     all {
       assert(s.paralyzed),
       assert(s.incapacitatedSources.contains(ISParalyzed)),
@@ -3161,7 +3162,7 @@ module dndTest {
   }
 
   run test_inv_unconsciousImpliesProne_via_apply = {
-    val s = pApplyCondition(freshCreature(20), CUnconscious)
+    val s = pApplyCondition(freshCreature(20), CUnconscious, Set())
     all {
       assert(s.unconscious),
       assert(s.prone),
@@ -3170,7 +3171,7 @@ module dndTest {
   }
 
   run test_inv_prone_not_removed_while_unconscious = {
-    val s = pApplyCondition(freshCreature(20), CUnconscious)
+    val s = pApplyCondition(freshCreature(20), CUnconscious, Set())
     val s1 = pRemoveCondition(s, CProne)
     // Prone should NOT be removed while unconscious
     assert(s1.prone)
@@ -3537,7 +3538,7 @@ module dndTest {
   }
 
   run test_bonus_action_incapacitated_noop = {
-    val s = pApplyCondition(FRESH20, CStunned)
+    val s = pApplyCondition(FRESH20, CStunned, Set())
     val tDash = pBonusActionDash(BASIC_TURN, s)
     val tDisengage = pBonusActionDisengage(BASIC_TURN, s)
     val tHide = pBonusActionHide(BASIC_TURN, s)
@@ -3639,7 +3640,7 @@ module dndTest {
   }
 
   run test_canUseSecondWind_false_incapacitated = {
-    val s = pApplyCondition(freshCreature(30), CStunned)
+    val s = pApplyCondition(freshCreature(30), CStunned, Set())
     assert(canUseSecondWind(FIGHTER_FS, FRESH_TURN, s) == false)
   }
 
@@ -3662,7 +3663,7 @@ module dndTest {
   }
 
   run test_canUseActionSurge_false_incapacitated = {
-    val s = pApplyCondition(freshCreature(30), CParalyzed)
+    val s = pApplyCondition(freshCreature(30), CParalyzed, Set())
     assert(canUseActionSurge(FIGHTER_FS, s) == false)
   }
 
@@ -3703,7 +3704,7 @@ module dndTest {
 
   run test_pUseSecondWind_at_0hp_clears_unconscious = {
     // pHeal at 0 HP clears unconscious and resets death saves
-    val s = pApplyCondition(freshCreature(30).with("hp", 0), CUnconscious)
+    val s = pApplyCondition(freshCreature(30).with("hp", 0), CUnconscious, Set())
     val result = pUseSecondWind(s, FIGHTER_FS, 5, 5)
     all {
       assert(result.creature.hp == 10),          // 0 + 5 + 5 = 10

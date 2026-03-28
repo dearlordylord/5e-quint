@@ -151,7 +151,11 @@ export const dndMachine = setup({
       deathSaves: DEATH_SAVES_RESET
     })),
     applyCondition: assign(({ context: c, event: e }) => {
-      const u = applyConditionUpdate(asCondition(e).condition, c.incapacitatedSources, c.petrified)
+      const imm =
+        "conditionImmunities" in e && e.conditionImmunities
+          ? (e.conditionImmunities as ReadonlySet<Condition>)
+          : new Set<Condition>()
+      const u = applyConditionUpdate(asCondition(e).condition, c.incapacitatedSources, c.petrified, imm)
       return {
         ...u.conditionFlags,
         incapacitatedSources: u.incapSources,
@@ -290,20 +294,25 @@ export const dndMachine = setup({
     })),
     spendHitDie: assign(({ context: c, event: e }) => {
       if (c.hitDiceRemaining <= 0) return {}
-      const ev = asSpendHitDie(e)
+      const { conMod, dieRoll } = asSpendHitDie(e)
       return {
         hitDiceRemaining: c.hitDiceRemaining - 1,
-        hp: hp(Math.min(c.hp + Math.max(0, ev.dieRoll + ev.conMod), effectiveMaxHp(c.maxHp)))
+        hp: hp(Math.min(c.hp + Math.max(0, dieRoll + conMod), effectiveMaxHp(c.maxHp)))
       }
     }),
     shortRest: assign(({ context: c, event: e }) => {
-      const ev = asShortRest(e)
-      const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
+      const r = computeShortRest(
+        c.hp,
+        c.maxHp,
+        c.hitDiceRemaining,
+        c.pactSlotsMax,
+        asShortRest(e).conMod,
+        asShortRest(e).hdRolls
+      )
       return { hitDiceRemaining: r.newHitDice, hp: hp(r.newHp), pactSlotsCurrent: r.newPactSlots }
     }),
     longRest: assign(({ context: c, event: e }) => {
-      const ev = asLongRest(e)
-      const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, ev.totalHitDice)
+      const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, asLongRest(e).totalHitDice)
       if (!r) return {}
       return {
         exhaustion: exhaustionLevel(r.newExhaustion),
@@ -343,39 +352,34 @@ export const dndMachine = setup({
     })),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
-    useSecondWind: assign(({ context: c, event: e }) => {
-      const ev = asUseSecondWind(e)
-      return secondWindUpdate(c, ev.fighterLevel, ev.d10Roll, isIncapacitated(c))
-    }),
+    useSecondWind: assign(({ context: c, event: e }) =>
+      secondWindUpdate(c, asUseSecondWind(e).fighterLevel, asUseSecondWind(e).d10Roll, isIncapacitated(c))
+    ),
     useActionSurge: assign(({ context: c }) => actionSurgeUpdate(c, isIncapacitated(c))),
     useIndomitable: assign(({ context: c }) => indomitableUpdate(c.fighterLevel, c.indomitableCharges)),
-    useTacticalMind: assign(({ context: c, event: e }) => {
-      return tacticalMindUpdate(
+    useTacticalMind: assign(({ context: c, event: e }) =>
+      tacticalMindUpdate(
         c.secondWindCharges,
         c.fighterLevel,
         asUseTacticalMind(e).boostedCheckSucceeds,
         isIncapacitated(c)
       )
-    }),
+    ),
     fighterStartTurn: assign(({ context: c }) => ({
       actionSurgeUsedThisTurn: false,
       ...(heroicWarriorInspiration(c.fighterLevel, c.heroicInspiration) ? { heroicInspiration: true } : {})
     })),
-    useHeroicInspiration: assign(({ context: c }) => {
-      if (!c.heroicInspiration) return {}
-      return { heroicInspiration: false }
-    }),
+    useHeroicInspiration: assign(({ context: c }) => (c.heroicInspiration ? { heroicInspiration: false } : {})),
     scoreCriticalHit: assign(({ context: c }) => {
       if (isIncapacitated(c)) return {}
-      const dist = remarkableAthleteCritMovement(c.fighterLevel, c.effectiveSpeed)
-      if (dist <= 0) return {}
-      return { bonusMovementRemaining: dist, bonusMovementOAFree: true }
+      const d = remarkableAthleteCritMovement(c.fighterLevel, c.effectiveSpeed)
+      return d <= 0 ? {} : { bonusMovementRemaining: d, bonusMovementOAFree: true }
     }),
-    useBonusMovement: assign(({ context: c, event: e }) => {
-      const ev = asUseBonusMovement(e)
-      if (c.bonusMovementRemaining <= 0) return {}
-      return { bonusMovementRemaining: Math.max(c.bonusMovementRemaining - ev.feet, 0) }
-    }),
+    useBonusMovement: assign(({ context: c, event: e }) =>
+      c.bonusMovementRemaining <= 0
+        ? {}
+        : { bonusMovementRemaining: Math.max(c.bonusMovementRemaining - asUseBonusMovement(e).feet, 0) }
+    ),
     fighterShortRest: assign(({ context: c }) =>
       tsFighterShortRest({
         secondWindCharges: c.secondWindCharges,
