@@ -130,6 +130,9 @@ export interface EndTurnDamage {
   readonly damage: number
   readonly damageType: DamageType
   readonly conSaveSucceeded: boolean
+  readonly resistances: ReadonlySet<DamageType>
+  readonly vulnerabilities: ReadonlySet<DamageType>
+  readonly immunities: ReadonlySet<DamageType>
 }
 
 export interface StartTurnEffect {

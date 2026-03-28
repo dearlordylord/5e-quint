@@ -969,7 +969,7 @@ module dndTest {
 
   run test_end_turn_damage_applied = {
     val s = freshCreature(20)
-    val damages = [{ spellId: "wall_of_fire", damage: 5, damageType: Fire, conSaveSucceeded: true }]
+    val damages = [{ spellId: "wall_of_fire", damage: 5, damageType: Fire, conSaveSucceeded: true, resistances: Set(), vulnerabilities: Set(), immunities: Set() }]
     val r = pEndTurn(s, FRESH_SPELL_SLOTS, [], damages)
     assert(r.creature.hp == 15)
   }
@@ -978,7 +978,7 @@ module dndTest {
     val s = freshCreature(20)
       .with("activeEffects", Set({ spellId: "bless", turnsRemaining: 5, expiresAt: AtEndOfTurn }))
     val ss = FRESH_SPELL_SLOTS.with("concentrationSpellId", "bless")
-    val damages = [{ spellId: "wall_of_fire", damage: 5, damageType: Fire, conSaveSucceeded: false }]
+    val damages = [{ spellId: "wall_of_fire", damage: 5, damageType: Fire, conSaveSucceeded: false, resistances: Set(), vulnerabilities: Set(), immunities: Set() }]
     val r = pEndTurn(s, ss, [], damages)
     all {
       assert(r.creature.hp == 15),
