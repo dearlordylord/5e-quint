@@ -98,7 +98,7 @@ For `fighterState` (7 fields, ~7K records), the `VALID_FIGHTER_STATES` set compr
 - `quint run --invariant=allInvariants` (random simulation, 50K+ traces) provides strong coverage
 - MBT (50 traces × 30 steps) proves Quint/XState field-by-field parity
 - Unit tests (672+) validate individual pure functions
-- The `inductiveInv` and `VALID_FIGHTER_STATES` remain in `dnd.qnt` — they're correct and useful for documentation. Apalache can verify them if Quint adds symbolic record set support in the future.
+- The `inductiveInv` and `VALID_FIGHTER_STATES` remain in `dnd.qnt` — they're correct and useful for documentation. Apalache could verify them if Quint added symbolic record set support, but no such feature exists or is known to be planned upstream.
 
 **What would unblock it:**
 - Quint adding a symbolic record type expression (equivalent to TLA+'s `[field: Set, ...]` function sets)
