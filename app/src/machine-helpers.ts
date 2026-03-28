@@ -55,7 +55,6 @@ export function applyDefyDeath(fighterLevel: number, roll1: number, roll2: numbe
   return roll
 }
 
-export const EMPTY_DMG_SET: ReadonlySet<DamageType> = new Set()
 export const EMPTY_CONDITION_SET: ReadonlySet<Condition> = new Set()
 
 // --- Damage computation result ---

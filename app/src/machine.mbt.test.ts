@@ -668,7 +668,7 @@ function createDndDriver() {
       doRemoveCondition: ({ c }) => {
         send({ type: "REMOVE_CONDITION", condition: QUINT_CONDITION_MAP[c] ?? "blinded" })
       },
-      doAddExhaustion: ({ levels, exhaustionImmune }) => {
+      doAddExhaustion: ({ exhaustionImmune, levels }) => {
         send({ type: "ADD_EXHAUSTION", levels: Number(levels), exhaustionImmune })
       },
       doReduceExhaustion: ({ levels }) => {
@@ -752,9 +752,9 @@ function createDndDriver() {
       doEndTurn: ({
         conSave,
         dmgAmount,
+        dmgResType,
         dmgSpellId,
         dmgType,
-        dmgResType,
         dmgVulnType,
         numDmg,
         numSaves,
@@ -780,8 +780,8 @@ function createDndDriver() {
                 damage: Number(dmgAmount ?? 0),
                 damageType: mapDamageType(dmgType ?? "Bludgeoning"),
                 conSaveSucceeded: conSave ?? false,
-                resistances: new Set([mapDamageType(dmgResType ?? "Bludgeoning")]),
-                vulnerabilities: new Set([mapDamageType(dmgVulnType ?? "Bludgeoning")]),
+                resistances: new Set(dmgResType ? [mapDamageType(dmgResType)] : []),
+                vulnerabilities: new Set(dmgVulnType ? [mapDamageType(dmgVulnType)] : []),
                 immunities: new Set<DamageType>()
               }
             ]
