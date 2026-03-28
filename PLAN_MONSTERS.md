@@ -2,16 +2,13 @@
 
 ## Status
 
-**Draft** — reviewed twice, blockers resolved. Restructured 2026-03-28: universal creature improvements moved to PLAN_CLEANUP.md (items E/F/G/H2/I).
+**Ready for implementation** — all prerequisites complete, atomic task list below. Restructured 2026-03-28: universal creature improvements moved to PLAN_CLEANUP.md (items E/F/G/H2/I).
 
-## Prerequisites
+## Prerequisites — ALL DONE
 
-This plan assumes PLAN_CLEANUP.md items E, F, G are complete:
-- **E:** Ongoing damage respects creature R/V/I (bug fix)
-- **F:** `pApplyCondition` accepts `conditionImmunities: Set[Condition]` parameter
-- **G:** `pAddExhaustion` accepts `exhaustionImmune: bool` parameter
-
-These are universal improvements that benefit PCs today. Without them, the Skeleton proof-of-concept cannot validate immunity enforcement.
+- **E:** ✅ Ongoing damage respects creature R/V/I
+- **F:** ✅ `pApplyCondition` accepts `conditionImmunities: Set[Condition]` parameter
+- **G:** ✅ `pAddExhaustion` accepts `exhaustionImmune: bool` parameter
 
 ## Motivation
 
@@ -306,7 +303,150 @@ TurnState (universal action economy — unchanged)
 
 ---
 
+## Atomic Task List
+
+Sequential execution. Each task is independently committable. Validate after each: `quint typecheck` + `quint test` + `vitest run`. Tasks marked with `quint run --invariant` also need the simulation check.
+
+### Phase 0: CreatureKind + Monster Death Track
+
+**M0.1 — Define `CreatureKind` type and state variable**
+- Add `type CreatureKind = PC | Monster` to `dnd.qnt` (near other type definitions)
+- Add `var creatureKind: CreatureKind` to the MBT state section
+- Update `init` to set `creatureKind' = PC` (default, all existing traces are PC)
+- Update ALL actions' frame conditions to include `creatureKind' = creatureKind`
+- Validate: `quint typecheck` + `quint test` + `quint run --invariant`
+
+**M0.2 — Gate death saves on `creatureKind` in `pTakeDamage`**
+- Add `creatureKind: CreatureKind` parameter to `pTakeDamage`
+- PC path: existing behavior (unconscious at 0 HP, death save failures on subsequent hits)
+- Monster path: `dead = true` at 0 HP, no unconscious, no death saves
+- Update all `pTakeDamage` call sites (pure functions + actions) to pass `creatureKind`
+- Update `dndTest.qnt` call sites to pass `PC`
+- Validate: `quint typecheck` + `quint test` + `quint run --invariant`
+
+**M0.3 — Gate death saves on `creatureKind` in `pStartTurnFull`**
+- Add `creatureKind: CreatureKind` parameter to `pStartTurnFull` (or the death-save sub-path)
+- Monster path: skip death save roll entirely
+- Update call sites to pass `creatureKind`
+- Validate: `quint typecheck` + `quint test`
+
+**M0.4 — Quint unit tests for monster death at 0 HP**
+- Test: monster at 0 HP → `dead = true`, NOT unconscious
+- Test: monster at 0 HP does NOT accumulate death save failures on further hits
+- Test: PC behavior unchanged (regression)
+- Validate: `quint test`
+
+**M0.5 — Mirror CreatureKind in XState + MBT bridge**
+- Add `creatureKind` to `DndContext` in `machine-types.ts`
+- Add `creatureKind` to machine context (default: `"PC"`)
+- Gate death-save states on `creatureKind === "PC"` in machine
+- Update MBT bridge: add `creatureKind` to `NormalizedState`, both conversion functions, Zod schema
+- Add ASSUMPTIONS.md entry: "Monsters die at 0 HP (SRD: death saves are PC-only). The spec does not model DM fiat to allow monster death saves."
+- Validate: `quint typecheck` + `quint test` + `quint run --invariant` + `vitest run`
+
+### Phase 1: StatBlock Type + Proof-of-Concept Monsters
+
+**M1.1 — Define monster-related types in Quint**
+- `CreatureType` enum (14 types: Aberration through Undead)
+- `SenseType` enum (Blindsight, Darkvision, Tremorsense, Truesight)
+- `ChallengeRating` sum type (`CR0 | CR_Eighth | CR_Quarter | CR_Half | CRN(int)`)
+- `MonsterAttack` record type
+- `MultiattackSlot` sum type (`MAttack(str) | MSpecialAbility(str)`)
+- `StatBlock` record type (all fields from the sketch in this plan)
+- Validate: `quint typecheck`
+
+**M1.2 — Define `crToProficiencyBonus` pure function**
+- Implement CR → PB lookup per Appendix B table
+- Unit tests: CR0 → +2, CR_Quarter → +2, CRN(5) → +3, CRN(9) → +4, CRN(30) → +9
+- Validate: `quint typecheck` + `quint test`
+
+**M1.3 — Author `SKELETON` stat block constant**
+- Transcribe from Appendix A (SRD 5.2.1 values)
+- Verify against `.references/srd-5.2.1/Monsters/Monsters-P-S.md`
+- Unit test: assert each field matches SRD values (AC=14, maxHp=13, vulnerabilities=Set(Bludgeoning), damageImmunities=Set(Poison), conditionImmunities=Set(Poisoned), exhaustionImmune=true, cr=CR_Quarter, proficiencyBonus=2)
+- Validate: `quint typecheck` + `quint test`
+
+**M1.4 — Author `OGRE` stat block constant**
+- Transcribe from Appendix C (SRD 5.2.1 values)
+- Verify against `.references/srd-5.2.1/Monsters/Monsters-M-O.md`
+- Unit test: assert each field matches SRD values (AC=11, maxHp=68, no R/V/I, cr=CRN(2), proficiencyBonus=2)
+- Validate: `quint typecheck` + `quint test`
+
+**M1.5 — Skeleton combat correctness tests**
+- `pTakeDamage` with Skeleton's vulnerabilities: 8 Bludgeoning → 16 damage
+- `pTakeDamage` with Skeleton's immunities: any Poison → 0 damage
+- `pApplyCondition` with Skeleton's conditionImmunities: Poisoned → rejected
+- `pAddExhaustion` with Skeleton's exhaustionImmune: no-op
+- Skeleton at 0 HP with `creatureKind = Monster`: dead immediately
+- Validate: `quint test`
+
+**M1.6 — Ogre combat correctness tests**
+- Ogre takes normal damage (no R/V/I, baseline)
+- Ogre at 0 HP with `creatureKind = Monster`: dead immediately
+- Validate: `quint test`
+
+**M1.7 — Mirror types in TypeScript**
+- Add `CreatureType`, `SenseType`, `ChallengeRating`, `MonsterAttack`, `MultiattackSlot`, `StatBlock` to `types.ts` (or a new `monster-types.ts` if `types.ts` is near its line limit)
+- Add ASSUMPTIONS.md entries for Phase 1 (monster AC as flat int, exhaustion immunity as bool, CR sum type)
+- Validate: `vitest run` (TypeScript compiles)
+
+### Phase 2: Monster Combat Integration Tests
+
+**M2.1 — Monster attack resolution tests**
+- Skeleton Shortsword through `resolveAttackRoll(d20, 5, targetAC, 0, 20)`
+- Ogre Greatclub through `resolveAttackRoll(d20, 6, targetAC, 0, 20)`
+- Validate: `quint test`
+
+**M2.2 — Monster full turn tests**
+- Skeleton turn: `doStartTurn` (extraAttacks=0) → `doUseAction(AAttack)` → `doEndTurn`
+- Ogre turn: same sequence, different stats
+- Validate: `quint test`
+
+**M2.3 — Multiattack test + ASSUMPTIONS.md entry**
+- Test with hypothetical monster: `multiattack: [MAttack("Claw"), MAttack("Claw")]`
+- Start turn with `extraAttacks = 1` (two attacks = one action + one extra)
+- `doUseAction(AAttack)` + `doUseExtraAttack` → verify action economy depleted
+- Add ASSUMPTIONS.md entry: multiattack maps to `extraAttacksRemaining = len(multiattack) - 1`
+- Validate: `quint test`
+
+### Phase 3: MBT Integration (Monster Traces)
+
+**Not yet split into atomic tasks.** Phase 3 depends on the final shapes from Phases 0-2. Split after Phase 2 is complete. High-level plan:
+1. Add `monsterStatBlock` state variable (inactive in PC mode)
+2. Update `init` to nondeterministically choose `creatureKind = PC | Monster`
+3. Update `step` to include monster-appropriate actions when `creatureKind = Monster`
+4. Update MBT bridge to map new state variables
+5. Develop incrementally: PC-only first, then mixed traces
+
+---
+
 ## Dependency Graph
+
+```
+PLAN_CLEANUP E/F/G ✅ (all done)
+  |
+  v
+Phase 0: M0.1 → M0.2 → M0.3 → M0.4 → M0.5
+  |
+  v
+Phase 1: M1.1 → M1.2 → M1.3 → M1.4 → M1.5 → M1.6 → M1.7
+  |
+  v
+Phase 2: M2.1 → M2.2 → M2.3
+  |
+  v
+Phase 3 (split after Phase 2)
+  |
+  v
+Phase L (deferred)
+  |
+  v
+Phase Lair (deferred)
+```
+
+---
+
+## Original Dependency Graph (for reference)
 
 ```
 PLAN_CLEANUP E/F/G (universal creature improvements)
