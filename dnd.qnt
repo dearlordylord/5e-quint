@@ -2312,7 +2312,7 @@ module dnd {
   // -- 19.4 Action Init --
 
   action init = {
-    nondet l = Set(5, 9, 10, 18).oneOf()
+    nondet l = Set(3, 5, 9, 10, 18).oneOf()
     nondet maxHp = HP_RANGE.oneOf()
     all {
       fighterLevel' = l,
@@ -2722,7 +2722,7 @@ module dnd {
 
   action doUseTacticalMind = {
     nondet boostedCheckSucceeds = Bool.oneOf()
-    if (turnPhase != "acting" or not(canUseTacticalMind(fighterLevel, fighterState)) or isIncapacitated(state) or state.dead) unchanged
+    if (turnPhase != "acting" or not(canUseTacticalMind(fighterLevel, fighterState)) or isIncapacitated(state)) unchanged
     else all {
       state' = state,
       turnState' = turnState,
@@ -2748,7 +2748,24 @@ module dnd {
     }
   }
 
-  // -- 19.6c Bonus Movement Action --
+  // -- 19.6c Remarkable Athlete (Champion L3) --
+
+  /// Remarkable Athlete: after scoring a Critical Hit, move up to half Speed without OAs.
+  /// SRD 5.2.1 Champion L3: "immediately after you score a Critical Hit, you can move up to
+  /// half your Speed without provoking Opportunity Attacks."
+  action doScoreCriticalHit = {
+    if (turnPhase != "acting" or fighterLevel < 3 or isIncapacitated(state)) unchanged
+    else all {
+      state' = state,
+      turnState' = pGrantBonusMovement(turnState, turnState.effectiveSpeed, true),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState,
+      fighterLevel' = fighterLevel,
+    }
+  }
+
+  // -- 19.6d Bonus Movement Action --
 
   action doUseBonusMovement = {
     nondet feet = 1.to(15).oneOf()
@@ -2816,6 +2833,7 @@ module dnd {
         doUseIndomitable,
         doUseTacticalMind,
         doUseHeroicInspiration,
+        doScoreCriticalHit,
         doUseBonusMovement,
       }
     }

@@ -363,7 +363,7 @@ export const dndMachine = setup({
     }),
     useTacticalMind: assign(({ context: c, event: e }) => {
       const ev = asUseTacticalMind(e)
-      if (c.fighterLevel < 2 || c.secondWindCharges <= 0 || isIncapacitated(c) || c.dead) return {}
+      if (c.fighterLevel < 2 || c.secondWindCharges <= 0 || isIncapacitated(c)) return {}
       if (!ev.boostedCheckSucceeds) return {}
       return { secondWindCharges: c.secondWindCharges - 1 }
     }),
@@ -374,6 +374,11 @@ export const dndMachine = setup({
     useHeroicInspiration: assign(({ context: c }) => {
       if (!c.heroicInspiration) return {}
       return { heroicInspiration: false }
+    }),
+    // Remarkable Athlete (Champion L3): after scoring a Critical Hit, grant half-speed OA-free movement
+    scoreCriticalHit: assign(({ context: c }) => {
+      if (c.fighterLevel < 3 || isIncapacitated(c)) return {}
+      return { bonusMovementRemaining: Math.floor(c.effectiveSpeed / 2), bonusMovementOAFree: true }
     }),
     useBonusMovement: assign(({ context: c, event: e }) => {
       const ev = asUseBonusMovement(e)
