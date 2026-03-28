@@ -50,7 +50,8 @@ export function useRogueFeatures(
   featureState: FeatureState,
   ctx: DndContext | null,
   level: number,
-  dispatch: (action: FeatureAction) => void
+  dispatch: (action: FeatureAction) => void,
+  isActing: boolean
 ): RogueHookResult {
   const sneakAttackDiceVal = getSneakAttackDice(level)
 
@@ -61,8 +62,8 @@ export function useRogueFeatures(
       readonly allyAdjacentAndNotIncapacitated: boolean
       readonly isFinesse: boolean
       readonly isRanged: boolean
-    }): boolean => canExecuteSneakAttack(featureState, level, params),
-    [featureState, level]
+    }): boolean => isActing && canExecuteSneakAttack(featureState, level, params),
+    [featureState, level, isActing]
   )
 
   const sneakAttackCb = useCallback((): BridgeResult | null => {
@@ -71,7 +72,7 @@ export function useRogueFeatures(
     return result
   }, [dispatch])
 
-  const canCunningActionVal = ctx ? canExecuteCunningAction(featureState, level, ctx) : false
+  const canCunningActionVal = isActing && ctx ? canExecuteCunningAction(featureState, level, ctx) : false
 
   const cunningActionCb = useCallback(
     (choice: CunningActionChoice): BridgeResult | null => {
@@ -82,7 +83,7 @@ export function useRogueFeatures(
     [dispatch]
   )
 
-  const canSteadyAimVal = ctx ? canExecuteSteadyAim(featureState, level, ctx) : false
+  const canSteadyAimVal = isActing && ctx ? canExecuteSteadyAim(featureState, level, ctx) : false
 
   const steadyAimCb = useCallback((): BridgeResult | null => {
     const result = executeSteadyAim()

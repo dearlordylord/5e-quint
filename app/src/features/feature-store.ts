@@ -127,9 +127,6 @@ export type FeatureAction =
   | { readonly type: "NOTIFY_END_TURN" }
   | { readonly type: "RESET" }
 
-
-
-
 function barbarianToRageState(b: BarbarianFeatureState): RageState {
   return {
     raging: b.raging,
@@ -233,7 +230,7 @@ export function createInitialFeatureState(config: FeatureConfig): FeatureState {
   return {}
 }
 
-function reduceFighter(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
+function reduceFighter(state: FeatureState, action: FeatureAction, _config: FeatureConfig): FeatureState {
   if (!state.fighter) return state
   const f = state.fighter
 

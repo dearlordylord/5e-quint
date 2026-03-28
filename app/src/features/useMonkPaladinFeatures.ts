@@ -136,10 +136,11 @@ export function useMonkPaladinFeatures(
   featureState: FeatureState,
   ctx: DndContext | null,
   level: number,
-  dispatch: (action: FeatureAction) => void
+  dispatch: (action: FeatureAction) => void,
+  isActing: boolean
 ): MonkPaladinHookResult {
   // Monk
-  const canFlurryOfBlowsVal = ctx ? canExecuteFlurryOfBlows(featureState, ctx) : false
+  const canFlurryOfBlowsVal = isActing && ctx ? canExecuteFlurryOfBlows(featureState, ctx) : false
 
   const flurryOfBlowsCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -148,7 +149,7 @@ export function useMonkPaladinFeatures(
     return result
   }, [ctx, dispatch])
 
-  const canPatientDefenseFreeVal = ctx ? canExecutePatientDefenseFree(featureState, ctx) : false
+  const canPatientDefenseFreeVal = isActing && ctx ? canExecutePatientDefenseFree(featureState, ctx) : false
 
   const patientDefenseFreeCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -157,7 +158,7 @@ export function useMonkPaladinFeatures(
     return result
   }, [ctx, dispatch])
 
-  const canPatientDefenseFocusVal = ctx ? canExecutePatientDefenseFocus(featureState, ctx) : false
+  const canPatientDefenseFocusVal = isActing && ctx ? canExecutePatientDefenseFocus(featureState, ctx) : false
 
   const patientDefenseFocusCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -166,7 +167,7 @@ export function useMonkPaladinFeatures(
     return result
   }, [ctx, dispatch])
 
-  const canStepOfTheWindFreeVal = ctx ? canExecuteStepOfTheWindFree(featureState, ctx) : false
+  const canStepOfTheWindFreeVal = isActing && ctx ? canExecuteStepOfTheWindFree(featureState, ctx) : false
 
   const stepOfTheWindFreeCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -175,7 +176,7 @@ export function useMonkPaladinFeatures(
     return result
   }, [ctx, dispatch])
 
-  const canStepOfTheWindFocusVal = ctx ? canExecuteStepOfTheWindFocus(featureState, ctx) : false
+  const canStepOfTheWindFocusVal = isActing && ctx ? canExecuteStepOfTheWindFocus(featureState, ctx) : false
 
   const stepOfTheWindFocusCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -185,7 +186,7 @@ export function useMonkPaladinFeatures(
   }, [ctx, dispatch])
 
   // TODO: stunningStrikeUsedThisTurn and weaponCategory should come from caller state
-  const canStunningStrikeVal = canExecuteStunningStrike(featureState, level, false, "unarmed")
+  const canStunningStrikeVal = isActing && canExecuteStunningStrike(featureState, level, false, "unarmed")
 
   const stunningStrikeCb = useCallback(
     (targetSavePassed: boolean): BridgeResult | null => {
@@ -223,7 +224,7 @@ export function useMonkPaladinFeatures(
   const hasFleetStepVal = hasFleetStep(level)
 
   // Deflect Attacks (reaction) -- default isWeaponAttack=true, caller can check canDeflectAttacks separately
-  const canDeflectAttacksVal = ctx ? canExecuteDeflectAttacks(featureState, ctx, level, true) : false
+  const canDeflectAttacksVal = isActing && ctx ? canExecuteDeflectAttacks(featureState, ctx, level, true) : false
 
   const deflectAttacksCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -233,7 +234,7 @@ export function useMonkPaladinFeatures(
   }, [ctx, dispatch])
 
   // Slow Fall (reaction)
-  const canSlowFallVal = ctx ? canExecuteSlowFall(featureState, ctx, level) : false
+  const canSlowFallVal = isActing && ctx ? canExecuteSlowFall(featureState, ctx, level) : false
 
   const slowFallCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -243,7 +244,7 @@ export function useMonkPaladinFeatures(
   }, [ctx, dispatch])
 
   // Superior Defense (action + 3 FP)
-  const canSuperiorDefenseVal = ctx ? canExecuteSuperiorDefense(featureState, ctx, level) : false
+  const canSuperiorDefenseVal = isActing && ctx ? canExecuteSuperiorDefense(featureState, ctx, level) : false
 
   const superiorDefenseCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -253,7 +254,7 @@ export function useMonkPaladinFeatures(
   }, [ctx, dispatch])
 
   // Wholeness of Body (bonus action, charges)
-  const canWholenessOfBodyVal = ctx ? canExecuteWholenessOfBody(featureState, ctx) : false
+  const canWholenessOfBodyVal = isActing && ctx ? canExecuteWholenessOfBody(featureState, ctx) : false
 
   const wholenessOfBodyCb = useCallback(
     (martialArtsDieRoll: number, wisMod: number): BridgeResult | null => {
@@ -266,7 +267,7 @@ export function useMonkPaladinFeatures(
   )
 
   // Quivering Palm (4 FP)
-  const canQuiveringPalmVal = canExecuteQuiveringPalm(featureState, level)
+  const canQuiveringPalmVal = isActing && canExecuteQuiveringPalm(featureState, level)
 
   const quiveringPalmCb = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -292,7 +293,7 @@ export function useMonkPaladinFeatures(
   }, [ctx, dispatch])
 
   // Paladin
-  const canLayOnHandsHealVal = ctx ? canExecuteLayOnHandsHeal(featureState, ctx) : false
+  const canLayOnHandsHealVal = isActing && ctx ? canExecuteLayOnHandsHeal(featureState, ctx) : false
 
   const layOnHandsHealCb = useCallback(
     (amount: number): BridgeResult | null => {
@@ -340,7 +341,7 @@ export function useMonkPaladinFeatures(
   const auraOfCourageRangeVal = getAuraOfCourageRange(level)
   const auraOfProtectionRangeVal = getAuraOfProtectionRange(level)
   const canFaithfulSteedVal = canExecuteFaithfulSteed(featureState, level)
-  const canAbjureFoesVal = ctx ? canExecuteAbjureFoes(featureState, ctx, level) : false
+  const canAbjureFoesVal = isActing && ctx ? canExecuteAbjureFoes(featureState, ctx, level) : false
   const canRestoringTouchVal = canExecuteRestoringTouch(featureState, level)
 
   const faithfulSteedCb = useCallback((): BridgeResult | null => {

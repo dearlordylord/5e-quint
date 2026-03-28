@@ -9,8 +9,8 @@ import { TraceVisualizer } from "#/components/trace-visualizer/TraceVisualizer.t
 const pathname = window.location.pathname
 
 function RootApp() {
-  if (pathname === "/trace") return <TraceVisualizer />
-  return <App />
+  if (pathname === "/simulator") return <App />
+  return <TraceVisualizer />
 }
 
 const root = document.getElementById("root")

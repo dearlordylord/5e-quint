@@ -62,14 +62,6 @@ function changedFields(prev: NormalizedState | null, curr: NormalizedState): Set
   return changed
 }
 
-/** Check if quint and xstate states match for all fields */
-function statesMatch(quint: NormalizedState, xstate: NormalizedState): boolean {
-  for (const key of Object.keys(quint) as Array<keyof NormalizedState>) {
-    if (!valuesMatch(quint[key], xstate[key])) return false
-  }
-  return true
-}
-
 /** Map from Quint action names to human-readable labels */
 const ACTION_LABELS: Record<string, string> = {
   init: "Initialize",
@@ -119,12 +111,6 @@ function StepIndicator({
   isVisited: boolean
   onClick: () => void
 }) {
-  const isHighlight =
-    step.quintAction === "doUseSecondWind" ||
-    step.quintAction === "doUseActionSurge" ||
-    step.quintAction === "doTakeDamage" ||
-    step.quintAction === "doDeathSave"
-
   return (
     <button
       onClick={onClick}
@@ -136,12 +122,8 @@ function StepIndicator({
           isCurrent
             ? "bg-amber-500 text-gray-900 outline outline-2 outline-offset-2 outline-amber-300 font-bold"
             : isVisited
-              ? isHighlight
-                ? "bg-gray-700 text-amber-400 hover:bg-gray-600 ring-1 ring-amber-700"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              : isHighlight
-                ? "bg-gray-800/50 text-amber-400/50 hover:bg-gray-700 ring-1 ring-amber-700/30"
-                : "bg-gray-800/40 text-gray-600 hover:bg-gray-700 hover:text-gray-400"
+              ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+              : "bg-gray-800/40 text-gray-600 hover:bg-gray-700 hover:text-gray-400"
         }
       `}
     >
@@ -369,7 +351,6 @@ function ConditionPills({ s }: { s: NormalizedState }) {
 }
 
 function DeathSavePips({ s }: { s: NormalizedState }) {
-  if (s.hp > 0 && s.deathSavesSuccesses === 0 && s.deathSavesFailures === 0) return null
   if (s.hp > 0) return null
   return (
     <div className="mt-2 flex items-center gap-3">
@@ -417,24 +398,6 @@ function ActionHeader({ step }: { step: TraceStep }) {
       <ConditionPills s={s} />
       <DeathSavePips s={s} />
       {snippet && <SpecPanel snippet={snippet} />}
-    </div>
-  )
-}
-
-function MatchBadge({ match }: { match: boolean }) {
-  return (
-    <div
-      className={`
-        inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium
-        ${
-          match
-            ? "bg-emerald-900/60 text-emerald-300 ring-1 ring-emerald-600"
-            : "bg-red-900/60 text-red-300 ring-1 ring-red-600"
-        }
-      `}
-    >
-      <span className="text-base">{match ? "\u2713" : "\u2717"}</span>
-      {match ? "States match" : "MISMATCH"}
     </div>
   )
 }
@@ -552,6 +515,46 @@ function GroupRows({
   )
 }
 
+const VERIFICATION_ROWS: ReadonlyArray<{ aspect: string; source: string; verified: boolean }> = [
+  { aspect: "NormalizedState shape", source: "machine.mbt.test.ts", verified: true },
+  { aspect: "State transition logic", source: "Quint spec, field-by-field", verified: true },
+  { aspect: "Fighter charge values", source: "Quint spec tables", verified: true },
+  { aspect: "Action economy rules", source: "Quint spec", verified: true },
+  { aspect: "Condition implications", source: "Quint spec", verified: true },
+  { aspect: "Death save mechanics", source: "Quint spec", verified: true },
+  { aspect: "HP/damage math", source: "Quint spec", verified: true },
+  { aspect: "XState state values (right column)", source: "Real machine replay", verified: true },
+  { aspect: "Trace sequence & dice rolls", source: "Hardcoded", verified: false },
+  { aspect: "Quint state values (left column)", source: "Hand-computed", verified: false },
+  { aspect: "Quint snippets", source: "Hand-extracted from dnd.qnt", verified: false }
+]
+
+function VerificationStatus() {
+  return (
+    <div className="mt-4 pt-3 border-t border-gray-800">
+      <h4 className="text-gray-400 font-semibold mb-2">Verification status</h4>
+      <table className="w-full text-[11px]">
+        <thead>
+          <tr className="text-gray-600 uppercase tracking-wider">
+            <th className="text-left py-1 pr-2">Aspect</th>
+            <th className="text-left py-1 pr-2">Source</th>
+            <th className="text-center py-1 w-8">MBT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {VERIFICATION_ROWS.map((row) => (
+            <tr key={row.aspect} className={row.verified ? "text-gray-500" : "text-gray-600"}>
+              <td className="py-0.5 pr-2">{row.aspect}</td>
+              <td className="py-0.5 pr-2 font-mono">{row.source}</td>
+              <td className="py-0.5 text-center">{row.verified ? "\u2713" : "\u2014"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
@@ -618,8 +621,6 @@ export function TraceVisualizer() {
 
   const currentTraceStep = trace[currentStep]
   const prevState = currentStep > 0 ? trace[currentStep - 1].quintState : null
-  const match = statesMatch(currentTraceStep.quintState, currentTraceStep.xstateState)
-
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       {/* Header */}
@@ -628,15 +629,7 @@ export function TraceVisualizer() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-amber-400">MBT Trace Replay Visualizer</h1>
-              <p className="text-xs text-gray-500 mt-0.5">
-                D&D 5e Formal Spec &mdash; Quint / XState field-by-field state comparison
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <MatchBadge match={match} />
-              <span className="text-xs text-gray-500 font-mono">
-                Step {currentStep}/{trace.length - 1}
-              </span>
+              <p className="text-xs text-gray-500 mt-0.5">D&D 5e Formal Spec &mdash; Quint / XState</p>
             </div>
           </div>
         </div>
@@ -732,6 +725,9 @@ export function TraceVisualizer() {
                   </div>
                 </div>
               </div>
+
+              {/* Verification status */}
+              <VerificationStatus />
             </div>
           </div>
 
@@ -748,8 +744,18 @@ export function TraceVisualizer() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-8 pt-4 border-t border-gray-800 text-center text-xs text-gray-600">
-          Every MBT test run replays random traces against the XState machine, comparing all state fields at each step
+        <footer className="mt-8 pt-4 border-t border-gray-800 text-center">
+          <a
+            href="https://github.com/dearlordylord/5e-quint"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 transition hover:text-gray-300"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+            GitHub
+          </a>
         </footer>
       </div>
     </div>

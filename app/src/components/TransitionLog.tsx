@@ -90,6 +90,17 @@ function formatEvent(e: DndEvent): string {
       return `ADD_EFFECT ${e.spellId}`
     case "REMOVE_EFFECT":
       return `REMOVE_EFFECT ${e.spellId}`
+    case "USE_BONUS_MOVEMENT":
+      return `BONUS_MOVE ${e.feet}ft`
+    case "USE_SECOND_WIND":
+      return `SECOND_WIND d10=${e.d10Roll}`
+    case "USE_ACTION_SURGE":
+    case "USE_INDOMITABLE":
+    case "USE_HEROIC_INSPIRATION":
+    case "SCORE_CRITICAL_HIT":
+      return e.type
+    case "USE_TACTICAL_MIND":
+      return `TACTICAL_MIND ${e.boostedCheckSucceeds ? "pass" : "fail"}`
   }
 }
 

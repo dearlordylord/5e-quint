@@ -23,7 +23,7 @@ export const getSneakAttackDice: (rogueLevel: number) => number = sneakAttackDic
 
 export function canExecuteSneakAttack(
   featureState: FeatureState,
-  rogueLevel: number,
+  _rogueLevel: number,
   params: {
     readonly hasAdvantage: boolean
     readonly hasDisadvantage: boolean

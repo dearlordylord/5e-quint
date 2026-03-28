@@ -2,14 +2,17 @@
 /**
  * Sample MBT trace data for the Trace Replay Visualizer.
  *
- * This is a hardcoded trace representing a realistic Fighter combat sequence.
- * In the real MBT pipeline, traces come from `quint run` in ITF format and are
- * replayed against the XState machine field-by-field. Here we bundle both the
- * Quint state and the (identical) XState state for each step so the visualizer
- * can show the side-by-side comparison.
+ * The Quint column contains hand-written expected values ("spec says").
+ * The XState column is generated at import time by replaying events through
+ * the real dndMachine via trace-replay.ts ("implementation produces").
  *
  * The NormalizedState shape matches machine.mbt.test.ts exactly.
  */
+
+import type { DndEvent } from "#/machine-types.ts"
+import { d20Roll } from "#/types.ts"
+
+import { replayTrace, type TraceEventDef } from "./trace-replay.ts"
 
 export interface NormalizedState {
   // CreatureState
@@ -85,9 +88,9 @@ export interface TraceStep {
   readonly xstateEvent: string
   /** Human-readable description of what happened */
   readonly description: string
-  /** Quint state after this step */
+  /** Quint state after this step (hand-written expected values) */
   readonly quintState: NormalizedState
-  /** XState state after this step (should match Quint exactly) */
+  /** XState state after this step (from real machine replay) */
   readonly xstateState: NormalizedState
 }
 
@@ -154,393 +157,553 @@ function defaultState(overrides: Partial<NormalizedState> = {}): NormalizedState
   }
 }
 
-// Helper to create a step where both states match (the normal case)
-function step(quintAction: string, xstateEvent: string, description: string, state: NormalizedState): TraceStep {
-  return { quintAction, xstateEvent, description, quintState: state, xstateState: state }
+// --- Event helpers ---
+
+const NO_RESISTANCES: ReadonlySet<never> = new Set()
+
+function damage(amount: number): DndEvent {
+  return {
+    type: "TAKE_DAMAGE",
+    amount,
+    damageType: "bludgeoning",
+    resistances: NO_RESISTANCES,
+    vulnerabilities: NO_RESISTANCES,
+    immunities: NO_RESISTANCES,
+    isCritical: false
+  }
 }
 
-// --- The sample trace: a Level 5 Champion Fighter combat sequence ---
+function critDamage(amount: number): DndEvent {
+  return {
+    type: "TAKE_DAMAGE",
+    amount,
+    damageType: "bludgeoning",
+    resistances: NO_RESISTANCES,
+    vulnerabilities: NO_RESISTANCES,
+    immunities: NO_RESISTANCES,
+    isCritical: true
+  }
+}
 
-const s0 = defaultState()
+function startTurn(): DndEvent {
+  return {
+    type: "START_TURN",
+    baseSpeed: 30,
+    armorPenalty: 0,
+    extraAttacks: 1,
+    callerSpeedModifier: 0,
+    isGrappling: false,
+    grappledTargetTwoSizesSmaller: false,
+    startOfTurnEffects: []
+  }
+}
 
-const s1 = defaultState({
-  turnPhase: "waitingForTurn"
-})
+function endTurn(): DndEvent {
+  return { type: "END_TURN", endOfTurnSaves: [], endOfTurnDamage: [] }
+}
 
-const s2 = defaultState({
-  turnPhase: "acting",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 1,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1
-})
+// --- The sample trace: event definitions + expected Quint states ---
+// Each entry defines the events to send and the expected Quint state after.
 
-const s3 = defaultState({
-  turnPhase: "acting",
-  movementRemaining: 5,
-  effectiveSpeed: 30,
-  actionsRemaining: 1,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1
-})
+const TRACE_EVENTS: ReadonlyArray<TraceEventDef> = [
+  // Step 0: init — just capture the initial machine state
+  {
+    quintAction: "init",
+    xstateEvent: "(initial)",
+    description: "Level 5 Champion Fighter initialized: 44 HP, 30ft speed",
+    events: [],
+    expectedQuintState: defaultState()
+  },
 
-const s4 = defaultState({
-  turnPhase: "acting",
-  movementRemaining: 5,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1
-})
+  // Step 1: Enter combat
+  {
+    quintAction: "doEnterCombat",
+    xstateEvent: "ENTER_COMBAT",
+    description: "Fighter enters combat, waiting for initiative",
+    events: [{ type: "ENTER_COMBAT" }],
+    expectedQuintState: defaultState({ turnPhase: "waitingForTurn" })
+  },
 
-const s5 = defaultState({
-  turnPhase: "acting",
-  movementRemaining: 5,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0
-})
+  // Step 2: Start turn 1
+  {
+    quintAction: "doStartTurn",
+    xstateEvent: "START_TURN",
+    description: "Turn 1 begins: speed set to 30ft, 1 action + 1 extra attack",
+    events: [startTurn()],
+    expectedQuintState: defaultState({
+      turnPhase: "acting",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 1,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1
+    })
+  },
 
-// End turn 1 — spec preserves turnState and fighterState unchanged
-const s7 = defaultState({
-  turnPhase: "waitingForTurn",
-  movementRemaining: 5,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0
-})
+  // Step 3: Move 25ft
+  {
+    quintAction: "doUseMovement",
+    xstateEvent: "USE_MOVEMENT",
+    description: "Move 25ft toward the Ogre (5ft remaining)",
+    events: [{ type: "USE_MOVEMENT", feet: 25, movementCost: 25 }],
+    expectedQuintState: defaultState({
+      turnPhase: "acting",
+      movementRemaining: 5,
+      effectiveSpeed: 30,
+      actionsRemaining: 1,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1
+    })
+  },
 
-// Take 18 damage between turns — turnState/fighterState unchanged
-const s8 = defaultState({
-  hp: 26,
-  turnPhase: "waitingForTurn",
-  movementRemaining: 5,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0
-})
+  // Step 4: Attack action
+  {
+    quintAction: "doUseAction",
+    xstateEvent: "USE_ACTION",
+    description: "Take the Attack action (attack type)",
+    events: [{ type: "USE_ACTION", actionType: "attack" }],
+    expectedQuintState: defaultState({
+      turnPhase: "acting",
+      movementRemaining: 5,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1
+    })
+  },
 
-// Start turn 2
-const s9 = defaultState({
-  hp: 26,
-  turnPhase: "acting",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 1,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1,
-  actionSurgeUsedThisTurn: false
-})
+  // Step 5: Extra Attack
+  {
+    quintAction: "doUseExtraAttack",
+    xstateEvent: "USE_EXTRA_ATTACK",
+    description: "Extra Attack: second strike with longsword",
+    events: [{ type: "USE_EXTRA_ATTACK" }],
+    expectedQuintState: defaultState({
+      turnPhase: "acting",
+      movementRemaining: 5,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0
+    })
+  },
 
-// Second Wind: heal 1d10(7) + 5 = 12, bonus action spent, charge 3->2
-// Tactical Shift (L5): bonus movement = effectiveSpeed/2 = 15, OA-free
-const s10 = defaultState({
-  hp: 38,
-  turnPhase: "acting",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 1,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1,
-  bonusActionUsed: true,
-  secondWindCharges: 2,
-  actionSurgeUsedThisTurn: false,
-  bonusMovementRemaining: 15,
-  bonusMovementOAFree: true
-})
+  // Step 6: End turn 1
+  {
+    quintAction: "doEndTurn",
+    xstateEvent: "END_TURN",
+    description: "End turn 1 -- action economy resets",
+    events: [endTurn()],
+    expectedQuintState: defaultState({
+      turnPhase: "waitingForTurn",
+      movementRemaining: 5,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0
+    })
+  },
 
-// Attack action
-const s11 = defaultState({
-  hp: 38,
-  turnPhase: "acting",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1,
-  bonusActionUsed: true,
-  secondWindCharges: 2,
-  actionSurgeUsedThisTurn: false,
-  bonusMovementRemaining: 15,
-  bonusMovementOAFree: true
-})
+  // Step 7: Take 18 damage between turns
+  {
+    quintAction: "doTakeDamage",
+    xstateEvent: "TAKE_DAMAGE",
+    description: "Ogre hits for 18 bludgeoning damage (44 -> 26 HP)",
+    events: [damage(18)],
+    expectedQuintState: defaultState({
+      hp: 26,
+      turnPhase: "waitingForTurn",
+      movementRemaining: 5,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0
+    })
+  },
 
-// Extra Attack
-const s12 = defaultState({
-  hp: 38,
-  turnPhase: "acting",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0,
-  bonusActionUsed: true,
-  secondWindCharges: 2,
-  actionSurgeUsedThisTurn: false,
-  bonusMovementRemaining: 15,
-  bonusMovementOAFree: true
-})
+  // Step 8: Start turn 2
+  {
+    quintAction: "doStartTurn",
+    xstateEvent: "START_TURN",
+    description: "Turn 2 begins: 26 HP, need healing",
+    events: [startTurn()],
+    expectedQuintState: defaultState({
+      hp: 26,
+      turnPhase: "acting",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 1,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1,
+      actionSurgeUsedThisTurn: false
+    })
+  },
 
-// Action Surge! Get another action
-const s13 = defaultState({
-  hp: 38,
-  turnPhase: "acting",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 1,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0,
-  bonusActionUsed: true,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0,
-  actionSurgeUsedThisTurn: true,
-  bonusMovementRemaining: 15,
-  bonusMovementOAFree: true
-})
+  // Step 9: Second Wind — heal 1d10(7) + 5 = 12, bonus action spent, charge 3->2
+  // Tactical Shift (L5): bonus movement = effectiveSpeed/2 = 15, OA-free
+  {
+    quintAction: "doUseSecondWind",
+    xstateEvent: "USE_SECOND_WIND",
+    description: "Second Wind! Roll d10(7) + 5 = heal 12 HP (26 -> 38 HP), bonus action spent",
+    events: [{ type: "USE_SECOND_WIND", d10Roll: 7, fighterLevel: 5 }],
+    expectedQuintState: defaultState({
+      hp: 38,
+      turnPhase: "acting",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 1,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1,
+      bonusActionUsed: true,
+      secondWindCharges: 2,
+      actionSurgeUsedThisTurn: false,
+      bonusMovementRemaining: 15,
+      bonusMovementOAFree: true
+    })
+  },
 
-// Attack action with surged action — extraAttacks NOT refilled by pUseAction
-const s14 = defaultState({
-  hp: 38,
-  turnPhase: "acting",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0,
-  bonusActionUsed: true,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0,
-  actionSurgeUsedThisTurn: true,
-  bonusMovementRemaining: 15,
-  bonusMovementOAFree: true
-})
+  // Step 10: Attack action
+  {
+    quintAction: "doUseAction",
+    xstateEvent: "USE_ACTION",
+    description: "Take the Attack action again",
+    events: [{ type: "USE_ACTION", actionType: "attack" }],
+    expectedQuintState: defaultState({
+      hp: 38,
+      turnPhase: "acting",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1,
+      bonusActionUsed: true,
+      secondWindCharges: 2,
+      actionSurgeUsedThisTurn: false,
+      bonusMovementRemaining: 15,
+      bonusMovementOAFree: true
+    })
+  },
 
-// End turn 2 — spec preserves turnState and fighterState
-const s16 = defaultState({
-  hp: 38,
-  turnPhase: "waitingForTurn",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0,
-  bonusActionUsed: true,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0,
-  actionSurgeUsedThisTurn: true,
-  bonusMovementRemaining: 15,
-  bonusMovementOAFree: true
-})
+  // Step 11: Extra Attack
+  {
+    quintAction: "doUseExtraAttack",
+    xstateEvent: "USE_EXTRA_ATTACK",
+    description: "Extra Attack: second strike",
+    events: [{ type: "USE_EXTRA_ATTACK" }],
+    expectedQuintState: defaultState({
+      hp: 38,
+      turnPhase: "acting",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0,
+      bonusActionUsed: true,
+      secondWindCharges: 2,
+      actionSurgeUsedThisTurn: false,
+      bonusMovementRemaining: 15,
+      bonusMovementOAFree: true
+    })
+  },
 
-// Massive damage: 50 points — turnState/fighterState preserved from s16
-const s17 = defaultState({
-  hp: 0,
-  turnPhase: "waitingForTurn",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0,
-  bonusActionUsed: true,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0,
-  actionSurgeUsedThisTurn: true,
-  bonusMovementRemaining: 15,
-  bonusMovementOAFree: true,
-  unconscious: true,
-  incapacitatedSources: ["unconscious"],
-  prone: true
-})
+  // Step 12: Action Surge! Get another action
+  {
+    quintAction: "doUseActionSurge",
+    xstateEvent: "USE_ACTION_SURGE",
+    description: "ACTION SURGE! Gain an additional action this turn",
+    events: [{ type: "USE_ACTION_SURGE" }],
+    expectedQuintState: defaultState({
+      hp: 38,
+      turnPhase: "acting",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 1,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0,
+      bonusActionUsed: true,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0,
+      actionSurgeUsedThisTurn: true,
+      bonusMovementRemaining: 15,
+      bonusMovementOAFree: true
+    })
+  },
 
-// Death save: roll 14, success — turnState/fighterState preserved
-const s18 = defaultState({
-  hp: 0,
-  turnPhase: "waitingForTurn",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0,
-  bonusActionUsed: true,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0,
-  actionSurgeUsedThisTurn: true,
-  bonusMovementRemaining: 15,
-  bonusMovementOAFree: true,
-  unconscious: true,
-  incapacitatedSources: ["unconscious"],
-  prone: true,
-  deathSavesSuccesses: 1
-})
+  // Step 13: Attack with surged action — extraAttacks NOT refilled
+  {
+    quintAction: "doUseAction",
+    xstateEvent: "USE_ACTION",
+    description: "Use the surged action: Attack again (no extra attack -- extras spent)",
+    events: [{ type: "USE_ACTION", actionType: "attack" }],
+    expectedQuintState: defaultState({
+      hp: 38,
+      turnPhase: "acting",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0,
+      bonusActionUsed: true,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0,
+      actionSurgeUsedThisTurn: true,
+      bonusMovementRemaining: 15,
+      bonusMovementOAFree: true
+    })
+  },
 
-// Death save: nat 20! Regain 1 HP, wake up — turnState/fighterState preserved
-const s19 = defaultState({
-  hp: 1,
-  turnPhase: "waitingForTurn",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 0,
-  bonusActionUsed: true,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0,
-  actionSurgeUsedThisTurn: true,
-  bonusMovementRemaining: 15,
-  bonusMovementOAFree: true,
-  unconscious: false,
-  incapacitatedSources: [],
-  prone: true,
-  deathSavesSuccesses: 0,
-  deathSavesFailures: 0
-})
+  // Step 14: End turn 2
+  {
+    quintAction: "doEndTurn",
+    xstateEvent: "END_TURN",
+    description: "End turn 2 -- all charges spent",
+    events: [endTurn()],
+    expectedQuintState: defaultState({
+      hp: 38,
+      turnPhase: "waitingForTurn",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0,
+      bonusActionUsed: true,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0,
+      actionSurgeUsedThisTurn: true,
+      bonusMovementRemaining: 15,
+      bonusMovementOAFree: true
+    })
+  },
 
-// Turn 3: stand up, finish the ogre
-// Start turn 3 — 1 HP, prone, no charges
-const s20 = defaultState({
-  hp: 1,
-  turnPhase: "acting",
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 1,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0,
-  actionSurgeUsedThisTurn: false,
-  prone: true
-})
+  // Step 15: Massive damage — 50 points
+  {
+    quintAction: "doTakeDamage",
+    xstateEvent: "TAKE_DAMAGE",
+    description: "Ogre crits for 50 bludgeoning! Fighter drops to 0 HP, falls unconscious and prone",
+    events: [critDamage(50)],
+    expectedQuintState: defaultState({
+      hp: 0,
+      turnPhase: "waitingForTurn",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0,
+      bonusActionUsed: true,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0,
+      actionSurgeUsedThisTurn: true,
+      bonusMovementRemaining: 15,
+      bonusMovementOAFree: true,
+      unconscious: true,
+      incapacitatedSources: ["unconscious"],
+      prone: true
+    })
+  },
 
-// Stand from prone — costs half speed (15 ft)
-const s21 = defaultState({
-  hp: 1,
-  turnPhase: "acting",
-  movementRemaining: 15,
-  effectiveSpeed: 30,
-  actionsRemaining: 1,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0,
-  prone: false
-})
+  // Step 16: Death save — roll 14, success
+  {
+    quintAction: "doDeathSave",
+    xstateEvent: "DEATH_SAVE",
+    description: "Death save: rolls 14 -- one success",
+    events: [{ type: "DEATH_SAVE", d20Roll: d20Roll(14) }],
+    expectedQuintState: defaultState({
+      hp: 0,
+      turnPhase: "waitingForTurn",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0,
+      bonusActionUsed: true,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0,
+      actionSurgeUsedThisTurn: true,
+      bonusMovementRemaining: 15,
+      bonusMovementOAFree: true,
+      unconscious: true,
+      incapacitatedSources: ["unconscious"],
+      prone: true,
+      deathSavesSuccesses: 1
+    })
+  },
 
-// Attack action — the killing blow
-const s22 = defaultState({
-  hp: 1,
-  turnPhase: "acting",
-  movementRemaining: 15,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0,
-  prone: false
-})
+  // Step 17: Death save — nat 20! Regain 1 HP, wake up
+  {
+    quintAction: "doDeathSave",
+    xstateEvent: "DEATH_SAVE",
+    description: "Death save: NATURAL 20! Regain 1 HP, conscious again (still prone)",
+    events: [{ type: "DEATH_SAVE", d20Roll: d20Roll(20) }],
+    expectedQuintState: defaultState({
+      hp: 1,
+      turnPhase: "waitingForTurn",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 0,
+      bonusActionUsed: true,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0,
+      actionSurgeUsedThisTurn: true,
+      bonusMovementRemaining: 15,
+      bonusMovementOAFree: true,
+      unconscious: false,
+      incapacitatedSources: [],
+      prone: true,
+      deathSavesSuccesses: 0,
+      deathSavesFailures: 0
+    })
+  },
 
-// End turn 3 — spec preserves turnState from s22
-const s23 = defaultState({
-  hp: 1,
-  turnPhase: "waitingForTurn",
-  movementRemaining: 15,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0
-})
+  // Step 18: Start turn 3 — 1 HP, prone
+  {
+    quintAction: "doStartTurn",
+    xstateEvent: "START_TURN",
+    description: "Turn 3 begins: 1 HP, still prone, no charges left. Do or die.",
+    events: [startTurn()],
+    expectedQuintState: defaultState({
+      hp: 1,
+      turnPhase: "acting",
+      movementRemaining: 30,
+      effectiveSpeed: 30,
+      actionsRemaining: 1,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0,
+      actionSurgeUsedThisTurn: false,
+      prone: true
+    })
+  },
 
-// Exit combat — turnState preserved
-const s24 = defaultState({
-  hp: 1,
-  turnPhase: "outOfCombat",
-  movementRemaining: 15,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1,
-  secondWindCharges: 2,
-  actionSurgeCharges: 0
-})
+  // Step 19: Stand from prone — costs half speed (15 ft)
+  {
+    quintAction: "doStandFromProne",
+    xstateEvent: "STAND_FROM_PRONE",
+    description: "Stand up -- costs 15ft (half speed). Ready to fight.",
+    events: [{ type: "STAND_FROM_PRONE" }],
+    expectedQuintState: defaultState({
+      hp: 1,
+      turnPhase: "acting",
+      movementRemaining: 15,
+      effectiveSpeed: 30,
+      actionsRemaining: 1,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0,
+      prone: false
+    })
+  },
 
-// Short rest — spend 3 hit dice: d10 rolls 6,8,4 + CON(2) = 8+10+6 = 24 HP healed
-// Also recover 1 Second Wind charge + all Action Surge charges
-const s25 = defaultState({
-  hp: 25,
-  turnPhase: "outOfCombat",
-  movementRemaining: 15,
-  effectiveSpeed: 30,
-  actionsRemaining: 0,
-  attackActionUsed: true,
-  reactionAvailable: true,
-  extraAttacksRemaining: 1,
-  hitPointDiceRemaining: 2,
-  secondWindCharges: 3,
-  actionSurgeCharges: 1
-})
+  // Step 20: Attack — the killing blow
+  {
+    quintAction: "doUseAction",
+    xstateEvent: "USE_ACTION",
+    description: "Attack action: longsword strikes true. The Ogre falls.",
+    events: [{ type: "USE_ACTION", actionType: "attack" }],
+    expectedQuintState: defaultState({
+      hp: 1,
+      turnPhase: "acting",
+      movementRemaining: 15,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0,
+      prone: false
+    })
+  },
 
-export const SAMPLE_TRACE: ReadonlyArray<TraceStep> = [
-  step("init", "(initial)", "Level 5 Champion Fighter initialized: 44 HP, 30ft speed", s0),
-  step("doEnterCombat", "ENTER_COMBAT", "Fighter enters combat, waiting for initiative", s1),
-  step("doStartTurn", "START_TURN", "Turn 1 begins: speed set to 30ft, 1 action + 1 extra attack", s2),
-  step("doUseMovement", "USE_MOVEMENT", "Move 25ft toward the Ogre (5ft remaining)", s3),
-  step("doUseAction", "USE_ACTION", "Take the Attack action (attack type)", s4),
-  step("doUseExtraAttack", "USE_EXTRA_ATTACK", "Extra Attack: second strike with longsword", s5),
-  step("doEndTurn", "END_TURN", "End turn 1 -- action economy resets", s7),
-  step("doTakeDamage", "TAKE_DAMAGE", "Ogre hits for 18 bludgeoning damage (44 -> 26 HP)", s8),
-  step("doStartTurn", "START_TURN", "Turn 2 begins: 26 HP, need healing", s9),
-  step(
-    "doUseSecondWind",
-    "USE_SECOND_WIND",
-    "Second Wind! Roll d10(7) + 5 = heal 12 HP (26 -> 38 HP), bonus action spent",
-    s10
-  ),
-  step("doUseAction", "USE_ACTION", "Take the Attack action again", s11),
-  step("doUseExtraAttack", "USE_EXTRA_ATTACK", "Extra Attack: second strike", s12),
-  step("doUseActionSurge", "USE_ACTION_SURGE", "ACTION SURGE! Gain an additional action this turn", s13),
-  step("doUseAction", "USE_ACTION", "Use the surged action: Attack again (no extra attack -- extras spent)", s14),
-  step("doEndTurn", "END_TURN", "End turn 2 -- all charges spent", s16),
-  step(
-    "doTakeDamage",
-    "TAKE_DAMAGE",
-    "Ogre crits for 50 bludgeoning! Fighter drops to 0 HP, falls unconscious and prone",
-    s17
-  ),
-  step("doDeathSave", "DEATH_SAVE", "Death save: rolls 14 -- one success", s18),
-  step("doDeathSave", "DEATH_SAVE", "Death save: NATURAL 20! Regain 1 HP, conscious again (still prone)", s19),
-  step("doStartTurn", "START_TURN", "Turn 3 begins: 1 HP, still prone, no charges left. Do or die.", s20),
-  step("doStandFromProne", "STAND_FROM_PRONE", "Stand up -- costs 15ft (half speed). Ready to fight.", s21),
-  step("doUseAction", "USE_ACTION", "Attack action: longsword strikes true. The Ogre falls.", s22),
-  step("doEndTurn", "END_TURN", "End turn 3 -- the Ogre is slain", s23),
-  step("doExitCombat", "EXIT_COMBAT", "Combat ends. The Fighter stands victorious at 1 HP.", s24),
-  step(
-    "doShortRest",
-    "SHORT_REST",
-    "Short rest: spend 3 hit dice (d10+2 each: 8+10+6 = 24 HP). Charges restored. 1 -> 25 HP.",
-    s25
-  )
+  // Step 21: End turn 3
+  {
+    quintAction: "doEndTurn",
+    xstateEvent: "END_TURN",
+    description: "End turn 3 -- the Ogre is slain",
+    events: [endTurn()],
+    expectedQuintState: defaultState({
+      hp: 1,
+      turnPhase: "waitingForTurn",
+      movementRemaining: 15,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0
+    })
+  },
+
+  // Step 22: Exit combat
+  {
+    quintAction: "doExitCombat",
+    xstateEvent: "EXIT_COMBAT",
+    description: "Combat ends. The Fighter stands victorious at 1 HP.",
+    events: [{ type: "EXIT_COMBAT" }],
+    expectedQuintState: defaultState({
+      hp: 1,
+      turnPhase: "outOfCombat",
+      movementRemaining: 15,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1,
+      secondWindCharges: 2,
+      actionSurgeCharges: 0
+    })
+  },
+
+  // Step 23: Short rest — spend 3 hit dice: d10 rolls 6,8,4 + CON(2) = 8+10+6 = 24 HP
+  {
+    quintAction: "doShortRest",
+    xstateEvent: "SHORT_REST",
+    description: "Short rest: spend 3 hit dice (d10+2 each: 8+10+6 = 24 HP). Charges restored. 1 -> 25 HP.",
+    events: [{ type: "SHORT_REST", conMod: 2, hdRolls: [6, 8, 4] }],
+    expectedQuintState: defaultState({
+      hp: 25,
+      turnPhase: "outOfCombat",
+      movementRemaining: 15,
+      effectiveSpeed: 30,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      reactionAvailable: true,
+      extraAttacksRemaining: 1,
+      hitPointDiceRemaining: 2,
+      secondWindCharges: 3,
+      actionSurgeCharges: 1
+    })
+  }
 ]
+
+// --- Replay events through real XState machine to generate the XState column ---
+
+const MACHINE_INPUT = {
+  maxHp: 44,
+  hitDiceRemaining: 5,
+  effectiveSpeed: 30,
+  movementRemaining: 30,
+  extraAttacksRemaining: 1,
+  fighterLevel: 5
+} as const
+
+export const SAMPLE_TRACE: ReadonlyArray<TraceStep> = replayTrace(MACHINE_INPUT, TRACE_EVENTS)
 
 /** Fields grouped by category for display */
 export const FIELD_GROUPS = {
