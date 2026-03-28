@@ -3,7 +3,6 @@ import {
   computeTakeDamage,
   type ConditionFlag,
   damageAtZeroTransition,
-  EMPTY_DMG_SET,
   removeConditionUpdate
 } from "#/machine-helpers.ts"
 import type { EndTurnDamage, EndTurnSave, TurnPhaseCtx, TurnPhaseResult } from "#/machine-types.ts"
@@ -65,9 +64,9 @@ export function computeEndTurn(
       th,
       dmg.damage,
       dmg.damageType,
-      EMPTY_DMG_SET,
-      EMPTY_DMG_SET,
-      EMPTY_DMG_SET
+      dmg.resistances,
+      dmg.vulnerabilities,
+      dmg.immunities
     )
     h = r.newHp
     th = r.newTempHp

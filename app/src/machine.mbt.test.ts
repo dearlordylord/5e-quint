@@ -546,7 +546,9 @@ const driverSchema = {
     dmgSpellId: z.string().optional(),
     dmgAmount: ITFBigInt.optional(),
     dmgType: ITFVariant.optional(),
-    conSave: z.boolean().optional()
+    conSave: z.boolean().optional(),
+    dmgResType: ITFVariant.optional(),
+    dmgVulnType: ITFVariant.optional()
   },
   doMarkBonusActionSpell: {},
   doMarkNonCantripActionSpell: {},
@@ -738,6 +740,8 @@ function createDndDriver() {
         dmgAmount,
         dmgSpellId,
         dmgType,
+        dmgResType,
+        dmgVulnType,
         numDmg,
         numSaves,
         saveCondition,
@@ -761,7 +765,10 @@ function createDndDriver() {
                 spellId: dmgSpellId ?? "",
                 damage: Number(dmgAmount ?? 0),
                 damageType: mapDamageType(dmgType ?? "Bludgeoning"),
-                conSaveSucceeded: conSave ?? false
+                conSaveSucceeded: conSave ?? false,
+                resistances: new Set([mapDamageType(dmgResType ?? "Bludgeoning")]),
+                vulnerabilities: new Set([mapDamageType(dmgVulnType ?? "Bludgeoning")]),
+                immunities: new Set<DamageType>()
               }
             ]
         send({ type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages })

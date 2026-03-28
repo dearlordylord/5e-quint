@@ -501,7 +501,7 @@ module dnd {
   type EndOfTurnSave = { spellId: str, saveSucceeded: bool, conditionsToRemove: Set[Condition] }
 
   /// End-of-turn damage: caller provides spell, amount, type, and pre-resolved concentration save.
-  type EndOfTurnDamage = { spellId: str, damage: int, damageType: DamageType, conSaveSucceeded: bool }
+  type EndOfTurnDamage = { spellId: str, damage: int, damageType: DamageType, conSaveSucceeded: bool, resistances: Set[DamageType], vulnerabilities: Set[DamageType], immunities: Set[DamageType] }
 
   /// Start-of-turn effect trigger: caller provides pre-resolved per-effect data.
   type StartOfTurnEffect = {
@@ -1604,7 +1604,7 @@ module dnd {
     s: CreatureState, ss: SpellSlotState, damages: List[EndOfTurnDamage]
   ): ConcBreakResult =
     damages.foldl({ creature: s, slots: ss }, (acc, dmg) => {
-      val newS = pTakeDamage(acc.creature, dmg.damage, dmg.damageType, Set(), Set(), Set(), false)
+      val newS = pTakeDamage(acc.creature, dmg.damage, dmg.damageType, dmg.resistances, dmg.vulnerabilities, dmg.immunities, false)
       val r = pWithConcBreak(acc.slots, acc.creature, newS)
       // If still concentrating after state-change break, check concentration save
       val r2 = if (isConcentrating(r.slots)) {
@@ -2658,8 +2658,10 @@ module dnd {
       nondet dmgAmount = DAMAGE_RANGE.oneOf()
       nondet dmgType = DAMAGE_TYPES.oneOf()
       nondet conSave = Bool.oneOf()
+      nondet dmgResType = DAMAGE_TYPES.oneOf()
+      nondet dmgVulnType = DAMAGE_TYPES.oneOf()
       val damages = if (numDmg == 0) []
-        else [{ spellId: dmgSpellId, damage: dmgAmount, damageType: dmgType, conSaveSucceeded: conSave }]
+        else [{ spellId: dmgSpellId, damage: dmgAmount, damageType: dmgType, conSaveSucceeded: conSave, resistances: Set(dmgResType), vulnerabilities: Set(dmgVulnType), immunities: Set() }]
       val result = pEndTurn(state, spellSlots, saves, damages)
       all {
         state' = result.creature,
