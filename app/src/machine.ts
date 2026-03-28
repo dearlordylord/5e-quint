@@ -43,6 +43,7 @@ import {
 } from "#/machine-states.ts"
 import {
   asAddEffect,
+  asAddExhaustion,
   asApplyCondition,
   asConcentrationCheck,
   asCondition,
@@ -172,7 +173,10 @@ export const dndMachine = setup({
       const u = removeConditionUpdate(cond, c.incapacitatedSources)
       return { ...u.conditionFlags, incapacitatedSources: u.incapSources }
     }),
-    addExhaustion: assign(({ context: c, event: e }) => exhaustionWithConcBreak(c, asExhaustion(e).levels, (e as { exhaustionImmune?: boolean }).exhaustionImmune)),
+    addExhaustion: assign(({ context: c, event: e }) => {
+      const ev = asAddExhaustion(e)
+      return exhaustionWithConcBreak(c, ev.levels, ev.exhaustionImmune)
+    }),
     reduceExhaustion: assign(({ context: c, event: e }) => ({
       exhaustion: exhaustionLevel(Math.max(0, c.exhaustion - asExhaustion(e).levels))
     })),
@@ -336,9 +340,9 @@ export const dndMachine = setup({
       const df = addDeathFailures(c.deathSaves.failures, false)
       return {
         tempHp: tempHp(r.newTempHp),
-        deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(df.newFailures) },
         prone: true,
-        stable: false
+        stable: false,
+        deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(df.newFailures) }
       }
     }),
     suffocate: assign(({ context: c }) => ({

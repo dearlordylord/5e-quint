@@ -216,7 +216,7 @@ Checklist:
 
 ### F. Condition immunity enforcement in pApplyCondition
 
-**Status:** Not started
+**Status:** DONE (2026-03-28)
 **Priority:** High — prerequisite for correct creature modeling
 
 `pApplyCondition(s: CreatureState, c: Condition)` unconditionally applies any condition. It has no immunity check. This is incorrect per RAW — creatures can have condition immunities (Undead: Poisoned; Constructs: various; PCs via class features: Paladin L10 Frightened immunity from Aura of Courage).
