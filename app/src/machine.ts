@@ -12,7 +12,9 @@ import {
   remarkableAthleteCritMovement,
   survivorHeroicRally,
   useActionSurge as tsUseActionSurge,
-  useSecondWind as tsUseSecondWind
+  useIndomitable as tsUseIndomitable,
+  useSecondWind as tsUseSecondWind,
+  useTacticalMind as tsUseTacticalMind
 } from "#/features/class-fighter.ts"
 import {
   addDeathFailures,
@@ -365,13 +367,15 @@ export const dndMachine = setup({
     }),
     useIndomitable: assign(({ context: c }) => {
       if (c.indomitableCharges <= 0) return {}
-      return { indomitableCharges: c.indomitableCharges - 1 }
+      const r = tsUseIndomitable(c.indomitableCharges, 0)
+      return { indomitableCharges: r.indomitableCharges }
     }),
     useTacticalMind: assign(({ context: c, event: e }) => {
       const ev = asUseTacticalMind(e)
       if (c.fighterLevel < 2 || c.secondWindCharges <= 0 || isIncapacitated(c)) return {}
       if (!ev.boostedCheckSucceeds) return {}
-      return { secondWindCharges: c.secondWindCharges - 1 }
+      const r = tsUseTacticalMind({ secondWindCharges: c.secondWindCharges, originalCheckTotal: 0, dc: 0, d10Roll: 0 })
+      return { secondWindCharges: r.secondWindCharges }
     }),
     fighterStartTurn: assign(({ context: c }) => ({
       actionSurgeUsedThisTurn: false,
