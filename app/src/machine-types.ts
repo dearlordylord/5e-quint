@@ -255,6 +255,7 @@ type TakeDamageEvent = Extract<DndEvent, { readonly type: "TAKE_DAMAGE" }>
 type HealEvent = Extract<DndEvent, { readonly type: "HEAL" }>
 type GrantTempHpEvent = Extract<DndEvent, { readonly type: "GRANT_TEMP_HP" }>
 type DeathSaveEvent = Extract<DndEvent, { readonly type: "DEATH_SAVE" }>
+type ApplyConditionEvent = Extract<DndEvent, { readonly type: "APPLY_CONDITION" }>
 type ConditionEvent = Extract<DndEvent, { readonly type: "APPLY_CONDITION" | "REMOVE_CONDITION" }>
 type ExhaustionEvent = Extract<DndEvent, { readonly type: "ADD_EXHAUSTION" | "REDUCE_EXHAUSTION" }>
 type StartTurnEvent = Extract<DndEvent, { readonly type: "START_TURN" }>
@@ -290,6 +291,9 @@ export function asGrantTempHp(event: DndEvent): GrantTempHpEvent {
 }
 export function asDeathSave(event: DndEvent): DeathSaveEvent {
   return event as DeathSaveEvent
+}
+export function asApplyCondition(event: DndEvent): ApplyConditionEvent {
+  return event as ApplyConditionEvent
 }
 export function asCondition(event: DndEvent): ConditionEvent {
   return event as ConditionEvent

@@ -21,6 +21,7 @@ import {
   calculateEffectiveSpeed,
   computeAddExhaustion,
   effectiveMaxHp,
+  EMPTY_CONDITION_SET,
   exhUpdate,
   indomitableUpdate,
   MAX_EXHAUSTION,
@@ -42,6 +43,7 @@ import {
 } from "#/machine-states.ts"
 import {
   asAddEffect,
+  asApplyCondition,
   asConcentrationCheck,
   asCondition,
   asEndTurn,
@@ -106,10 +108,10 @@ export const dndMachine = setup({
     markDead: assign({ dead: true }),
     enterCombat: assign({ inCombat: true }),
     exitCombat: assign({ inCombat: false }),
-    applyDamage: assign(({ context: c, event: e }) => {
-      const r = dmgR(c, e)
-      return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp) }
-    }),
+    applyDamage: assign(({ context: c, event: e }) => ({
+      hp: hp(dmgR(c, e).newHp),
+      tempHp: tempHp(dmgR(c, e).newTempHp)
+    })),
     absorbTempHpOnly: assign(({ context: c, event: e }) => ({ tempHp: tempHp(dmgR(c, e).newTempHp) })),
     applyDamageAtZeroHp: assign(({ context: c, event: e }) => {
       const { newFailures } = addDeathFailures(c.deathSaves.failures, asTakeDamage(e).isCritical)
@@ -151,11 +153,13 @@ export const dndMachine = setup({
       deathSaves: DEATH_SAVES_RESET
     })),
     applyCondition: assign(({ context: c, event: e }) => {
-      const imm =
-        "conditionImmunities" in e && e.conditionImmunities
-          ? (e.conditionImmunities as ReadonlySet<Condition>)
-          : new Set<Condition>()
-      const u = applyConditionUpdate(asCondition(e).condition, c.incapacitatedSources, c.petrified, imm)
+      const ev = asApplyCondition(e)
+      const u = applyConditionUpdate(
+        ev.condition,
+        c.incapacitatedSources,
+        c.petrified,
+        ev.conditionImmunities ?? EMPTY_CONDITION_SET
+      )
       return {
         ...u.conditionFlags,
         incapacitatedSources: u.incapSources,
@@ -301,14 +305,8 @@ export const dndMachine = setup({
       }
     }),
     shortRest: assign(({ context: c, event: e }) => {
-      const r = computeShortRest(
-        c.hp,
-        c.maxHp,
-        c.hitDiceRemaining,
-        c.pactSlotsMax,
-        asShortRest(e).conMod,
-        asShortRest(e).hdRolls
-      )
+      const ev = asShortRest(e)
+      const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
       return { hitDiceRemaining: r.newHitDice, hp: hp(r.newHp), pactSlotsCurrent: r.newPactSlots }
     }),
     longRest: assign(({ context: c, event: e }) => {
@@ -352,9 +350,10 @@ export const dndMachine = setup({
     })),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
-    useSecondWind: assign(({ context: c, event: e }) =>
-      secondWindUpdate(c, asUseSecondWind(e).fighterLevel, asUseSecondWind(e).d10Roll, isIncapacitated(c))
-    ),
+    useSecondWind: assign(({ context: c, event: e }) => {
+      const ev = asUseSecondWind(e)
+      return secondWindUpdate(c, ev.fighterLevel, ev.d10Roll, isIncapacitated(c))
+    }),
     useActionSurge: assign(({ context: c }) => actionSurgeUpdate(c, isIncapacitated(c))),
     useIndomitable: assign(({ context: c }) => indomitableUpdate(c.fighterLevel, c.indomitableCharges)),
     useTacticalMind: assign(({ context: c, event: e }) =>
