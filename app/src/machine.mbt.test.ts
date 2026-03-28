@@ -528,7 +528,9 @@ const driverSchema = {
     effSaveResult: z.boolean().optional(),
     effDmgAmount: ITFBigInt.optional(),
     effDmgType: ITFVariant.optional(),
-    effConSave: z.boolean().optional()
+    effConSave: z.boolean().optional(),
+    effResType: ITFVariant.optional(),
+    effVulnType: ITFVariant.optional()
   },
   doUseAction: { at: ITFVariant },
   doUseBonusAction: {},
@@ -665,16 +667,18 @@ function createDndDriver() {
       },
       doStartTurn: ({
         callerSpeedMod,
+        conMod,
         deathSaveRoll: dsRoll,
         deathSaveRoll2: dsRoll2,
-        conMod,
         effConSave,
         effDmgAmount,
         effDmgType,
         effHeal,
+        effResType,
         effSaveResult,
         effSpellId,
         effTempHp,
+        effVulnType,
         grappledSmall,
         isGrappling,
         numEffects
@@ -692,7 +696,10 @@ function createDndDriver() {
                 saveResult: effSaveResult ?? false,
                 damageAmount: Number(effDmgAmount ?? 0),
                 damageType: mapDamageType(effDmgType ?? "Bludgeoning"),
-                conSaveSucceeded: effConSave ?? false
+                conSaveSucceeded: effConSave ?? false,
+                resistances: new Set(effResType ? [mapDamageType(effResType)] : []),
+                vulnerabilities: new Set(effVulnType ? [mapDamageType(effVulnType)] : []),
+                immunities: new Set<DamageType>()
               }
             ]
         send({
