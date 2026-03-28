@@ -157,7 +157,11 @@ export type DndEvent =
   | { readonly type: "DEATH_SAVE"; readonly d20Roll: D20Roll; readonly d20Roll2?: D20Roll }
   | { readonly type: "STABILIZE" }
   | { readonly type: "KNOCK_OUT" }
-  | { readonly type: "APPLY_CONDITION"; readonly condition: Condition }
+  | {
+      readonly type: "APPLY_CONDITION"
+      readonly condition: Condition
+      readonly conditionImmunities?: ReadonlySet<Condition>
+    }
   | { readonly type: "REMOVE_CONDITION"; readonly condition: Condition }
   | { readonly type: "ADD_EXHAUSTION"; readonly levels: number }
   | { readonly type: "REDUCE_EXHAUSTION"; readonly levels: number }

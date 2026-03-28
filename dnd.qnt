@@ -605,7 +605,9 @@ module dnd {
   /// Paralyzed/Petrified/Stunned -> incapacitated.
   /// Unconscious -> incapacitated + prone.
   /// Petrified blocks poisoned condition.
-  pure def pApplyCondition(s: CreatureState, c: Condition): CreatureState = match c {
+  pure def pApplyCondition(s: CreatureState, c: Condition, immunities: Set[Condition]): CreatureState =
+    if (immunities.contains(c)) s
+    else match c {
     | CBlinded => s.with("blinded", true)
     | CCharmed => s.with("charmed", true)
     | CDeafened => s.with("deafened", true)
@@ -776,7 +778,7 @@ module dnd {
             val overflow = -newHp
             val s2 = s1.with("hp", 0)
             if (overflow >= effMax) s2.with("dead", true)
-            else pApplyCondition(s2, CUnconscious)
+            else pApplyCondition(s2, CUnconscious, Set())
           } else s1.with("hp", newHp)
         }
       }
@@ -845,7 +847,7 @@ module dnd {
   /// Melee attacker's choice: reduce to 1 HP + unconscious.
   /// Creature starts a Short Rest (caller responsibility).
   pure def pKnockOut(s: CreatureState): CreatureState =
-    pApplyCondition(s.with("hp", 1), CUnconscious)
+    pApplyCondition(s.with("hp", 1), CUnconscious, Set())
 
   // ============================================================
   // 11. TURN STRUCTURE & ACTION ECONOMY (combat/turn)
@@ -1228,7 +1230,7 @@ module dnd {
     if (not(pWithinOneSize(attackerSize, targetSize)) or not(attackerHasFreeHand))
       { success: false, targetState: targetState }
     else if (isIncapacitated(targetState) or targetSaveFailed)
-      { success: true, targetState: pApplyCondition(targetState, CGrappled) }
+      { success: true, targetState: pApplyCondition(targetState, CGrappled, Set()) }
     else
       { success: false, targetState: targetState }
   }
@@ -1265,7 +1267,7 @@ module dnd {
       { success: false, targetState: targetState }
     else if (isIncapacitated(targetState) or targetSaveFailed)
       match choice {
-        | ShoveProne => { success: true, targetState: pApplyCondition(targetState, CProne) }
+        | ShoveProne => { success: true, targetState: pApplyCondition(targetState, CProne, Set()) }
         | ShovePush => { success: true, targetState: targetState }
       }
     else
@@ -1321,7 +1323,7 @@ module dnd {
     if (usesReaction and t.reactionAvailable)
       { creatureState: creature, turnState: pUseReaction(t) }
     else
-      { creatureState: pApplyCondition(creature, CProne), turnState: t }
+      { creatureState: pApplyCondition(creature, CProne, Set()), turnState: t }
   }
 
   // ============================================================
@@ -1357,7 +1359,7 @@ module dnd {
   /// Drop prone. Free (0 movement cost). Can't drop prone if Speed is 0.
   pure def pDropProne(s: CreatureState, effectiveSpeed: int): CreatureState =
     if (effectiveSpeed == 0) s
-    else pApplyCondition(s, CProne)
+    else pApplyCondition(s, CProne, Set())
 
   // -- 14.3 Flying Movement --
 
@@ -1413,7 +1415,7 @@ module dnd {
     creature: CreatureState,
     checkPassed: bool
   ): CreatureState =
-    if (checkPassed) creature else pApplyCondition(creature, CProne)
+    if (checkPassed) creature else pApplyCondition(creature, CProne, Set())
 
   // -- 14.6 Movement Constraints --
 
@@ -1776,7 +1778,7 @@ module dnd {
     if (damageRoll <= 0) s
     else {
       val s1 = pTakeDamage(s, damageRoll, Bludgeoning, resistances, vulnerabilities, immunities, false)
-      if (s1 == s) s else pApplyCondition(s1, CProne)
+      if (s1 == s) s else pApplyCondition(s1, CProne, Set())
     }
   }
 
@@ -1796,7 +1798,7 @@ module dnd {
   /// Cannot regain HP or stabilize until breathing again (caller enforces).
   pure def pSuffocate(s: CreatureState): CreatureState =
     if (s.dead or s.hp == 0) s
-    else pApplyCondition(s.with("hp", 0), CUnconscious)
+    else pApplyCondition(s.with("hp", 0), CUnconscious, Set())
 
   // -- 17.3 Vision & Light --
 
@@ -2374,7 +2376,10 @@ module dnd {
 
   action doApplyCondition = {
     nondet c = CONDITIONS.oneOf()
-    val r = pWithConcBreak(spellSlots, state, pApplyCondition(state, c))
+    nondet useImmunity = Bool.oneOf()
+    nondet immuneCondition = CONDITIONS.oneOf()
+    val immunities = if (useImmunity) Set(immuneCondition) else Set()
+    val r = pWithConcBreak(spellSlots, state, pApplyCondition(state, c, immunities))
     all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel }
   }
 
