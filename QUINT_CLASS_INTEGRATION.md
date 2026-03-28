@@ -2,7 +2,7 @@
 
 How to add a new class's charge/resource state to the core Quint spec (`dnd.qnt`) with full XState MBT parity. Written after integrating Fighter (Second Wind, Action Surge, Indomitable). Follow this when adding Barbarian (rage), Monk (focus points), Paladin (lay on hands, channel divinity), etc.
 
-> **Prerequisites:** Complete `PLAN_CLEANUP.md` first. Several shortcuts were taken during the Fighter integration (duplicate charge tables, fighter state on all characters, etc.). If cleanup changes the patterns (e.g., switching to a single `classState` record or importing charge tables from `class-*.ts`), update this guide to reflect the new patterns before following it for the next class.
+> **Prerequisites:** Review `PLAN_CLEANUP.md` for context. Some shortcuts exist (fighter state on all characters, etc.) but these are accepted trade-offs — do NOT refactor them unless the project owner explicitly requests it. This guide is a reference for FUTURE class integration, not a directive to start migrating classes now.
 
 ## Architecture
 

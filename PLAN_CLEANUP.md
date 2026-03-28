@@ -222,7 +222,7 @@ Passive formulas already in `class-fighter.ts:199-277`. `configForLevel` already
 
 ---
 
-## Deferred (not blocking)
+## Deferred (not blocking — do NOT implement without explicit owner request)
 
 ### C. Fighter state initializes for all characters
 `...initialFighterState(i.fighterLevel ?? 0)` runs for every character. A Wizard gets 7 meaningless fighter fields (all 0/false). Same in Quint — every creature has a `fighterState`.
@@ -234,3 +234,5 @@ Passive formulas already in `class-fighter.ts:199-277`. `configForLevel` already
 
 ### H. Migrate other classes to Quint (eventual)
 Same pattern as Fighter: add class state var + level var, pure functions, action wrappers, MBT handlers. One class at a time. Priority order TBD based on which classes the app exercises most.
+
+**All existing TS feature files (Barbarian, Monk, Paladin, Rogue, Sorcerer, etc.) and their UI components are working implementations — they are NOT dead code and must NOT be deleted.**
