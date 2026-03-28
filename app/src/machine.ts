@@ -6,9 +6,13 @@ import { dmgR, dsR, fallR } from "#/machine-damage.ts"
 import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
 import { guards } from "#/machine-guards.ts"
 import {
-  CHAMPION_SURVIVOR_LEVEL,
+  fighterLongRest as tsFighterLongRest,
+  fighterShortRest as tsFighterShortRest,
   heroicWarriorInspiration,
-  survivorHeroicRally
+  remarkableAthleteCritMovement,
+  survivorHeroicRally,
+  useActionSurge as tsUseActionSurge,
+  useSecondWind as tsUseSecondWind
 } from "#/features/class-fighter.ts"
 import {
   addDeathFailures,
@@ -340,22 +344,24 @@ export const dndMachine = setup({
     useSecondWind: assign(({ context: c, event: e }) => {
       const ev = asUseSecondWind(e)
       if (c.secondWindCharges <= 0 || c.bonusActionUsed || isIncapacitated(c)) return {}
-      const healAmount = ev.d10Roll + ev.fighterLevel
-      const newHp = Math.min(c.hp + healAmount, effectiveMaxHp(c.maxHp))
-      // Tactical Shift (Fighter L5): grant half-speed OA-free bonus movement
+      const r = tsUseSecondWind(
+        { hp: c.hp, maxHp: effectiveMaxHp(c.maxHp), secondWindCharges: c.secondWindCharges, bonusActionUsed: c.bonusActionUsed },
+        { fighterLevel: ev.fighterLevel, d10Roll: ev.d10Roll },
+        c.effectiveSpeed
+      )
       const bonusMove =
-        c.fighterLevel >= 5
-          ? { bonusMovementRemaining: Math.floor(c.effectiveSpeed / 2), bonusMovementOAFree: true }
+        r.tacticalShiftDistance > 0
+          ? { bonusMovementRemaining: r.tacticalShiftDistance, bonusMovementOAFree: true }
           : {}
-      return { hp: hp(newHp), secondWindCharges: c.secondWindCharges - 1, bonusActionUsed: true, ...bonusMove }
+      return { hp: hp(r.hp), secondWindCharges: r.secondWindCharges, bonusActionUsed: r.bonusActionUsed, ...bonusMove }
     }),
     useActionSurge: assign(({ context: c }) => {
       if (c.actionSurgeCharges <= 0 || c.actionSurgeUsedThisTurn || isIncapacitated(c)) return {}
-      return {
-        actionsRemaining: c.actionsRemaining + 1,
-        actionSurgeCharges: c.actionSurgeCharges - 1,
-        actionSurgeUsedThisTurn: true
-      }
+      return tsUseActionSurge({
+        actionSurgeCharges: c.actionSurgeCharges,
+        actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
+        actionsRemaining: c.actionsRemaining
+      })
     }),
     useIndomitable: assign(({ context: c }) => {
       if (c.indomitableCharges <= 0) return {}
@@ -375,24 +381,29 @@ export const dndMachine = setup({
       if (!c.heroicInspiration) return {}
       return { heroicInspiration: false }
     }),
-    // Remarkable Athlete (Champion L3): after scoring a Critical Hit, grant half-speed OA-free movement
     scoreCriticalHit: assign(({ context: c }) => {
-      if (c.fighterLevel < 3 || isIncapacitated(c)) return {}
-      return { bonusMovementRemaining: Math.floor(c.effectiveSpeed / 2), bonusMovementOAFree: true }
+      if (isIncapacitated(c)) return {}
+      const dist = remarkableAthleteCritMovement(c.fighterLevel, c.effectiveSpeed)
+      if (dist <= 0) return {}
+      return { bonusMovementRemaining: dist, bonusMovementOAFree: true }
     }),
     useBonusMovement: assign(({ context: c, event: e }) => {
       const ev = asUseBonusMovement(e)
       if (c.bonusMovementRemaining <= 0) return {}
       return { bonusMovementRemaining: Math.max(c.bonusMovementRemaining - ev.feet, 0) }
     }),
-    fighterShortRest: assign(({ context: c }) => ({
-      secondWindCharges: Math.min(c.secondWindCharges + 1, c.secondWindMax),
-      actionSurgeCharges: c.actionSurgeMax
+    fighterShortRest: assign(({ context: c }) => tsFighterShortRest({
+      secondWindCharges: c.secondWindCharges,
+      secondWindMax: c.secondWindMax,
+      actionSurgeCharges: c.actionSurgeCharges,
+      actionSurgeMax: c.actionSurgeMax
     })),
-    fighterLongRest: assign(({ context: c }) => ({
-      secondWindCharges: c.secondWindMax,
-      actionSurgeCharges: c.actionSurgeMax,
-      indomitableCharges: c.indomitableMax
+    fighterLongRest: assign(({ context: c }) => tsFighterLongRest({
+      secondWindCharges: c.secondWindCharges,
+      secondWindMax: c.secondWindMax,
+      actionSurgeCharges: c.actionSurgeCharges,
+      actionSurgeMax: c.actionSurgeMax,
+      indomitableMax: c.indomitableMax
     }))
   }
 }).createMachine({

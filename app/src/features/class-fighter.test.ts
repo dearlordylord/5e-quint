@@ -14,7 +14,6 @@ import {
   gwfDamageDie,
   hasRemarkableAthlete,
   heroicWarriorInspiration,
-  indomitableLongRest,
   indomitableMaxCharges,
   isBloodied,
   remarkableAthleteCritMovement,
@@ -323,7 +322,8 @@ describe("fighterLongRest", () => {
       secondWindCharges: 0,
       secondWindMax: 3,
       actionSurgeCharges: 0,
-      actionSurgeMax: 1
+      actionSurgeMax: 1,
+      indomitableMax: 0
     })
     expect(result.secondWindCharges).toBe(3)
   })
@@ -333,9 +333,21 @@ describe("fighterLongRest", () => {
       secondWindCharges: 0,
       secondWindMax: 3,
       actionSurgeCharges: 0,
-      actionSurgeMax: 2
+      actionSurgeMax: 2,
+      indomitableMax: 0
     })
     expect(result.actionSurgeCharges).toBe(2)
+  })
+
+  it("regains all Indomitable uses", () => {
+    const result = fighterLongRest({
+      secondWindCharges: 0,
+      secondWindMax: 3,
+      actionSurgeCharges: 0,
+      actionSurgeMax: 1,
+      indomitableMax: 2
+    })
+    expect(result.indomitableCharges).toBe(2)
   })
 })
 
@@ -589,28 +601,5 @@ describe("useIndomitable", () => {
     const result = useIndomitable(3, 20)
     expect(result.newSaveResult).toBe(20)
     expect(result.indomitableCharges).toBe(2)
-  })
-})
-
-describe("indomitableLongRest", () => {
-  it("returns 0 below level 9", () => {
-    expect(indomitableLongRest(8)).toBe(0)
-    expect(indomitableLongRest(1)).toBe(0)
-  })
-
-  it("restores to 1 at level 9", () => {
-    expect(indomitableLongRest(9)).toBe(1)
-  })
-
-  it("restores to 2 at level 13", () => {
-    expect(indomitableLongRest(13)).toBe(2)
-  })
-
-  it("restores to 3 at level 17", () => {
-    expect(indomitableLongRest(17)).toBe(3)
-  })
-
-  it("restores to 3 at level 20", () => {
-    expect(indomitableLongRest(20)).toBe(3)
   })
 })
