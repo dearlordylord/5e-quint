@@ -56,7 +56,9 @@
 | **Damage Type** | One of 13 categories: Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder | Element (only partially overlaps) |
 | **Resistance** | Halves incoming damage of a specific type; applied after all other modifiers; multiple instances of same type don't stack | Damage reduction (different concept in other systems) |
 | **Vulnerability** | Doubles incoming damage of a specific type; applied after resistance | Weakness |
-| **Immunity** | Nullifies all damage of a specific type | — |
+| **Immunity** | Nullifies all damage of a specific type; also applies to conditions and exhaustion (see below) | — |
+| **Condition Immunity** | A creature immune to a condition is unaffected by it — the condition does not apply and neither do its implied side effects (e.g., Paralyzed immunity also prevents the Incapacitated that Paralyzed implies) | — |
+| **Exhaustion Immunity** | A creature immune to exhaustion does not accumulate exhaustion levels; distinct from condition immunity since Exhaustion is a separate mechanic with levels 1–6, not one of the 14 Conditions | — |
 
 ## Conditions
 
