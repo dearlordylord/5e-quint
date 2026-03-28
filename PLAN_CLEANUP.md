@@ -182,15 +182,37 @@ val newS = pTakeDamage(acc.creature, dmg.damage, dmg.damageType, Set(), Set(), S
 
 This means a creature with fire resistance taking ongoing fire damage (e.g., from Heat Metal) takes full damage. RAW: resistances always apply unless explicitly stated otherwise.
 
-**Fix:** These call sites need to receive the creature's R/V/I from the caller. Two options:
-1. Add R/V/I parameters to `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` (passed from the event).
-2. Add R/V/I to the event types (`END_TURN` and `START_TURN`) so the caller provides them.
+**Fix:** Add R/V/I to the event types (`EndOfTurnDamage` and `StartOfTurnEffect`) so the caller provides them. This is consistent with the existing "caller provides everything" pattern — both types already carry `damageType`.
 
-Option (2) is more consistent with the existing "caller provides everything" pattern. The `END_TURN` event's `EndOfTurnDamage` type and the `START_TURN` event's `StartOfTurnEffect` type already carry `damageType` — they should also carry (or the event should carry) the creature's R/V/I.
+**Nondeterministic R/V/I pattern:** Use single-element sets like `doTakeDamageWithMods` does (line ~2344): `nondet resType = DAMAGE_TYPES.oneOf()` → `Set(resType)`. Avoids `powerset()` state-space explosion.
 
-**ASSUMPTIONS.md entry required:** Document that ongoing damage respects creature R/V/I, which is RAW but easy to miss.
+**Split into two independent sub-tasks** (different types, functions, actions, MBT handlers):
 
-**MBT impact:** The MBT `doEndTurn` and `doStartTurn` actions need to pass R/V/I. Currently they use nondeterministic damage types — they should also use nondeterministic R/V/I. Low risk since the bridge already handles `Set[DamageType]` in `doTakeDamage`.
+#### E1. End-of-turn damage R/V/I
+
+Checklist:
+1. `dnd.qnt`: Add `resistances: Set[DamageType]`, `vulnerabilities: Set[DamageType]`, `immunities: Set[DamageType]` fields to `EndOfTurnDamage` type (~line 500)
+2. `dnd.qnt`: Update `pProcessEndOfTurnDamage` (~line 1607) to pass `dmg.resistances`, `dmg.vulnerabilities`, `dmg.immunities` to `pTakeDamage` instead of `Set(), Set(), Set()`
+3. `dnd.qnt`: Update `doEndTurn` action (~line 2653) — add `nondet resType/vulnType/immType = DAMAGE_TYPES.oneOf()`, include in damages list
+4. `dndTest.qnt`: Update any test calls that construct `EndOfTurnDamage` records
+5. `machine.mbt.test.ts`: Update `doEndTurn` handler to parse and pass R/V/I sets
+6. XState: Update `END_TURN` event type in `machine-types.ts` to carry R/V/I per damage entry
+7. XState: Update machine handler to pass R/V/I through to damage computation
+8. Validate: `quint typecheck` + `quint test` + `quint run --invariant` + `vitest run`
+
+#### E2. Start-of-turn damage R/V/I
+
+Checklist:
+1. `dnd.qnt`: Add `resistances: Set[DamageType]`, `vulnerabilities: Set[DamageType]`, `immunities: Set[DamageType]` fields to `StartOfTurnEffect` type (~line 505)
+2. `dnd.qnt`: Update `pProcessStartOfTurn` (~line 1651) to pass R/V/I to `pTakeDamage` instead of `Set(), Set(), Set()`
+3. `dnd.qnt`: Update `doStartTurn` action (~line 2418) — add nondeterministic R/V/I, include in effects list
+4. `dndTest.qnt`: Update any test calls that construct `StartOfTurnEffect` records
+5. `machine.mbt.test.ts`: Update `doStartTurn` handler to parse and pass R/V/I sets
+6. XState: Update `START_TURN` event type in `machine-types.ts` to carry R/V/I per effect entry
+7. XState: Update machine handler to pass R/V/I through to damage computation
+8. Validate: same pipeline
+
+**ASSUMPTIONS.md entry (after E1 or E2):** Document that ongoing damage respects creature R/V/I, which is RAW but easy to miss.
 
 ### F. Condition immunity enforcement in pApplyCondition
 
@@ -208,6 +230,16 @@ pure def pApplyCondition(s: CreatureState, c: Condition, immunities: Set[Conditi
 ```
 
 All existing call sites pass `Set()` (no immunities) — backward compatible. When species/class features add immunities, they'll pass the relevant set.
+
+Checklist:
+1. `dnd.qnt`: Change `pApplyCondition` signature (~line 613) to add `immunities: Set[Condition]`; add guard
+2. `dnd.qnt`: Update all 10 pure-function call sites to pass `Set()` (lines ~779, 848, 1231, 1268, 1324, 1360, 1416, 1779, 1799, 2383)
+3. `dnd.qnt`: Update `doApplyCondition` action (~line 2383) — add nondeterministic immunities set
+4. `dndTest.qnt`: Update all test call sites (~15) to pass `Set()`
+5. `machine.mbt.test.ts`: Update `doApplyCondition` handler to parse and pass immunities
+6. XState: Update `APPLY_CONDITION` event type to accept `conditionImmunities`
+7. XState: Update machine handler to pass immunities through
+8. Validate: `quint typecheck` + `quint test` + `quint run --invariant` + `vitest run`
 
 **MBT impact:** Low. Existing MBT actions that call `pApplyCondition` pass `Set()`. The parameter is additive.
 
@@ -228,6 +260,16 @@ pure def pAddExhaustion(s: CreatureState, levels: int, exhaustionImmune: bool): 
 
 All existing call sites pass `false` — backward compatible.
 
+Checklist:
+1. `dnd.qnt`: Change `pAddExhaustion` signature (~line 663) to add `exhaustionImmune: bool`; add guard
+2. `dnd.qnt`: Update call sites: `pApplyStarvation` (~line 1839), `pApplyDehydration` (~line 1843), `doAddExhaustion` (~line 2395)
+3. `dnd.qnt`: Update `doAddExhaustion` action — add `nondet exhaustionImmune = Bool.oneOf()`
+4. `dndTest.qnt`: Update all test call sites (~15) to pass `false`
+5. `machine.mbt.test.ts`: Update `doAddExhaustion` handler to parse and pass `exhaustionImmune`
+6. XState: Update `ADD_EXHAUSTION` event type to accept `exhaustionImmune`
+7. XState: Update machine handler to pass through
+8. Validate: `quint typecheck` + `quint test` + `quint run --invariant` + `vitest run`
+
 **Note:** Exhaustion is NOT one of the 14 Conditions in the SRD (it's a separate mechanic with levels 1-6). It cannot be in `conditionImmunities: Set[Condition]`. The Skeleton stat block lists "Immunities: Poison; Exhaustion, Poisoned" — Exhaustion immunity is listed alongside condition immunities but is mechanically distinct.
 
 ### H2. Death saves are PC-only (documentation + guard)
@@ -241,11 +283,31 @@ The SRD is explicit: "A **player character** must make a Death Saving Throw if t
 
 **Future fix (with monsters):** PLAN_MONSTERS.md Phase 0 adds a `creatureKind` discriminator to gate death saves vs. instant death.
 
+Checklist:
+1. `dnd.qnt`: Add comment to `pTakeDamage` (~line 748) noting death-save track is PC-only per RAW
+2. `dnd.qnt`: Add comment to `pStartTurnFull` (~line 1668) noting death-save roll is PC-only per RAW
+3. `ASSUMPTIONS.md`: Add entry documenting that current spec applies death saves universally (correct while only PCs use the spec)
+4. Validate: `quint typecheck` (comment-only, verify no breakage)
+
 ### I. UBIQUITOUS_LANGUAGE.md: Creature / Stat Block / Character Sheet terms
 
 **Status:** DONE (2026-03-28)
 
 Added "Creatures and Stat Blocks" section with: Creature, Stat Block, Character Sheet, Creature Type, Challenge Rating, Multiattack, Legendary Action, Recharge. Plus relationship entries and example dialogue.
+
+### Execution order
+
+Five atomic tasks, no dependencies between them except E1 before E2 (same bug, shared ASSUMPTIONS.md entry):
+
+| Order | Task | Scope | Risk |
+|-------|------|-------|------|
+| 1 | **F** | `pApplyCondition` + 10 call sites + MBT + XState | Low — additive parameter, all sites pass `Set()` |
+| 2 | **G** | `pAddExhaustion` + 5 call sites + MBT + XState | Low — additive parameter, all sites pass `false` |
+| 3 | **E1** | `EndOfTurnDamage` type + `pProcessEndOfTurnDamage` + `doEndTurn` + MBT + XState | Medium — new fields on event type, single-element nondeterministic sets |
+| 4 | **E2** | `StartOfTurnEffect` type + `pProcessStartOfTurn` + `doStartTurn` + MBT + XState | Medium — same pattern as E1 |
+| 5 | **H2** | Comments + ASSUMPTIONS.md only | None — documentation only |
+
+F and G can run in parallel (completely independent, similar pattern). E1 and E2 are independent but share the ASSUMPTIONS.md entry — do E1 first, add the entry, E2 references it.
 
 ### Research direction: further architecture improvements
 
