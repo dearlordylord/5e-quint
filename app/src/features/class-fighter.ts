@@ -1,6 +1,10 @@
 // Fighter class features: Fighting Styles, Second Wind, Tactical Mind, Tactical Shift, Action Surge
 // SRD 5.2.1 Fighter
 
+function assert(condition: boolean, msg: string): asserts condition {
+  if (!condition) throw new Error(msg)
+}
+
 // --- Fighting Style Feat Effects (SRD 5.2.1) ---
 
 export type FightingStyle = "archery" | "defense" | "greatWeaponFighting" | "twoWeaponFighting"
@@ -72,6 +76,7 @@ export function useSecondWind(
   config: SecondWindConfig,
   effectiveSpeed: number
 ): SecondWindResult {
+  assert(canUseSecondWind(state), "useSecondWind: precondition failed")
   const healAmount = config.d10Roll + config.fighterLevel
   const newHp = Math.min(state.hp + healAmount, state.maxHp)
   const tacticalShiftDistance = config.fighterLevel >= 5 ? Math.floor(effectiveSpeed / 2) : 0
@@ -110,6 +115,7 @@ export function canUseTacticalMind(secondWindCharges: number, fighterLevel: numb
  * If the check still fails, the Second Wind use is NOT expended.
  */
 export function useTacticalMind(input: TacticalMindInput): TacticalMindResult {
+  assert(input.secondWindCharges > 0, "useTacticalMind: precondition failed")
   const newCheckTotal = input.originalCheckTotal + input.d10Roll
   const success = newCheckTotal >= input.dc
 
@@ -160,6 +166,7 @@ export interface ActionSurgeResult {
  * Can only use once per turn even with 2 charges.
  */
 export function useActionSurge(state: ActionSurgeState): ActionSurgeResult {
+  assert(canUseActionSurge(state), "useActionSurge: precondition failed")
   return {
     actionsRemaining: state.actionsRemaining + 1, // grant additional action
     actionSurgeCharges: state.actionSurgeCharges - 1,
@@ -334,9 +341,9 @@ export function useIndomitable(
   readonly indomitableCharges: number
   readonly newSaveResult: number
 } {
+  assert(indomitableCharges > 0, "useIndomitable: precondition failed")
   return {
     indomitableCharges: indomitableCharges - 1,
     newSaveResult: newRoll
   }
 }
-

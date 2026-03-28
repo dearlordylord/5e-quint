@@ -1,22 +1,19 @@
 import type { SnapshotFrom } from "xstate"
 import { assign, setup } from "xstate"
 
-import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
-import { dmgR, dsR, fallR } from "#/machine-damage.ts"
-import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
-import { guards } from "#/machine-guards.ts"
 import {
   fighterLongRest as tsFighterLongRest,
   fighterShortRest as tsFighterShortRest,
   heroicWarriorInspiration,
   remarkableAthleteCritMovement,
-  survivorHeroicRally,
-  useActionSurge as tsUseActionSurge,
-  useIndomitable as tsUseIndomitable,
-  useSecondWind as tsUseSecondWind,
-  useTacticalMind as tsUseTacticalMind
+  survivorHeroicRally
 } from "#/features/class-fighter.ts"
+import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
+import { dmgR, dsR, fallR } from "#/machine-damage.ts"
+import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
+import { guards } from "#/machine-guards.ts"
 import {
+  actionSurgeUpdate,
   addDeathFailures,
   addIncapSource,
   applyConditionUpdate,
@@ -25,10 +22,13 @@ import {
   computeAddExhaustion,
   effectiveMaxHp,
   exhUpdate,
+  indomitableUpdate,
   MAX_EXHAUSTION,
   removeConditionUpdate,
   removeIncapSource,
-  spendHalfSpeed
+  secondWindUpdate,
+  spendHalfSpeed,
+  tacticalMindUpdate
 } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import { computeLongRest, computeShortRest, expendSlot } from "#/machine-spells.ts"
@@ -60,8 +60,8 @@ import {
   asStartTurn,
   asTakeDamage,
   asUseAction,
-  asUseMovement,
   asUseBonusMovement,
+  asUseMovement,
   asUseSecondWind,
   asUseTacticalMind,
   type DndContext,
@@ -190,7 +190,7 @@ export const dndMachine = setup({
         ...conds,
         ...cr,
         ...INITIAL_TURN_STATE,
-        hp: hp(resultHp as number),
+        hp: hp(resultHp),
         effectiveSpeed: movementFeet(speed),
         extraAttacksRemaining: ev.extraAttacks,
         movementRemaining: movementFeet(speed)
@@ -345,37 +345,17 @@ export const dndMachine = setup({
     applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     useSecondWind: assign(({ context: c, event: e }) => {
       const ev = asUseSecondWind(e)
-      if (c.secondWindCharges <= 0 || c.bonusActionUsed || isIncapacitated(c)) return {}
-      const r = tsUseSecondWind(
-        { hp: c.hp, maxHp: effectiveMaxHp(c.maxHp), secondWindCharges: c.secondWindCharges, bonusActionUsed: c.bonusActionUsed },
-        { fighterLevel: ev.fighterLevel, d10Roll: ev.d10Roll },
-        c.effectiveSpeed
-      )
-      const bonusMove =
-        r.tacticalShiftDistance > 0
-          ? { bonusMovementRemaining: r.tacticalShiftDistance, bonusMovementOAFree: true }
-          : {}
-      return { hp: hp(r.hp), secondWindCharges: r.secondWindCharges, bonusActionUsed: r.bonusActionUsed, ...bonusMove }
+      return secondWindUpdate(c, ev.fighterLevel, ev.d10Roll, isIncapacitated(c))
     }),
-    useActionSurge: assign(({ context: c }) => {
-      if (c.actionSurgeCharges <= 0 || c.actionSurgeUsedThisTurn || isIncapacitated(c)) return {}
-      return tsUseActionSurge({
-        actionSurgeCharges: c.actionSurgeCharges,
-        actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
-        actionsRemaining: c.actionsRemaining
-      })
-    }),
-    useIndomitable: assign(({ context: c }) => {
-      if (c.indomitableCharges <= 0) return {}
-      const r = tsUseIndomitable(c.indomitableCharges, 0)
-      return { indomitableCharges: r.indomitableCharges }
-    }),
+    useActionSurge: assign(({ context: c }) => actionSurgeUpdate(c, isIncapacitated(c))),
+    useIndomitable: assign(({ context: c }) => indomitableUpdate(c.fighterLevel, c.indomitableCharges)),
     useTacticalMind: assign(({ context: c, event: e }) => {
-      const ev = asUseTacticalMind(e)
-      if (c.fighterLevel < 2 || c.secondWindCharges <= 0 || isIncapacitated(c)) return {}
-      if (!ev.boostedCheckSucceeds) return {}
-      const r = tsUseTacticalMind({ secondWindCharges: c.secondWindCharges, originalCheckTotal: 0, dc: 0, d10Roll: 0 })
-      return { secondWindCharges: r.secondWindCharges }
+      return tacticalMindUpdate(
+        c.secondWindCharges,
+        c.fighterLevel,
+        asUseTacticalMind(e).boostedCheckSucceeds,
+        isIncapacitated(c)
+      )
     }),
     fighterStartTurn: assign(({ context: c }) => ({
       actionSurgeUsedThisTurn: false,
@@ -396,19 +376,23 @@ export const dndMachine = setup({
       if (c.bonusMovementRemaining <= 0) return {}
       return { bonusMovementRemaining: Math.max(c.bonusMovementRemaining - ev.feet, 0) }
     }),
-    fighterShortRest: assign(({ context: c }) => tsFighterShortRest({
-      secondWindCharges: c.secondWindCharges,
-      secondWindMax: c.secondWindMax,
-      actionSurgeCharges: c.actionSurgeCharges,
-      actionSurgeMax: c.actionSurgeMax
-    })),
-    fighterLongRest: assign(({ context: c }) => tsFighterLongRest({
-      secondWindCharges: c.secondWindCharges,
-      secondWindMax: c.secondWindMax,
-      actionSurgeCharges: c.actionSurgeCharges,
-      actionSurgeMax: c.actionSurgeMax,
-      indomitableMax: c.indomitableMax
-    }))
+    fighterShortRest: assign(({ context: c }) =>
+      tsFighterShortRest({
+        secondWindCharges: c.secondWindCharges,
+        secondWindMax: c.secondWindMax,
+        actionSurgeCharges: c.actionSurgeCharges,
+        actionSurgeMax: c.actionSurgeMax
+      })
+    ),
+    fighterLongRest: assign(({ context: c }) =>
+      tsFighterLongRest({
+        secondWindCharges: c.secondWindCharges,
+        secondWindMax: c.secondWindMax,
+        actionSurgeCharges: c.actionSurgeCharges,
+        actionSurgeMax: c.actionSurgeMax,
+        indomitableMax: c.indomitableMax
+      })
+    )
   }
 }).createMachine({
   id: "dnd",

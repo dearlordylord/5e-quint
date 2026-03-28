@@ -148,7 +148,7 @@ describe("useFeatures", () => {
       expect(result.current.featureState.fighter!.secondWindCharges).toBe(2)
     })
 
-    it("still returns result when charges are 0 (caller must check canSecondWind)", () => {
+    it("throws when charges are 0 (canUseSecondWind precondition enforced)", () => {
       const snap = makeActingSnapshot()
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
 
@@ -160,15 +160,12 @@ describe("useFeatures", () => {
       })
       expect(result.current.canSecondWind).toBe(false)
 
-      // Calling secondWind without checking canSecondWind still produces a result
-      // (the guard is the caller's responsibility via canSecondWind)
-      let bridgeResult: ReturnType<typeof result.current.secondWind>
-      act(() => {
-        bridgeResult = result.current.secondWind(5)
-      })
-      expect(bridgeResult!).not.toBeNull()
-      // Charges go negative — this is expected (caller should have checked canSecondWind)
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(-1)
+      // Calling secondWind without checking canSecondWind throws
+      expect(() => {
+        act(() => {
+          result.current.secondWind(5)
+        })
+      }).toThrow("useSecondWind: precondition failed")
     })
 
     it("returns null when snapshot is null", () => {
