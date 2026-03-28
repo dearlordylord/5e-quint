@@ -5,6 +5,9 @@ import { HighlightedQuint } from "#/components/demo/HighlightedQuint.tsx"
 import { type QuintSnippet, SNIPPETS } from "#/components/demo/quint-snippets.ts"
 import { dndMachine } from "#/machine.ts"
 
+import { CR_C4E04_ENCOUNTER, CR_C4E04_SUMMARY, CR_C4E04_TRACE } from "./actual-play-cr-c4e04.ts"
+import { ROLL20_ENCOUNTER, ROLL20_SUMMARY, ROLL20_TRACE } from "./actual-play-roll20.ts"
+import type { EncounterDef, EncounterSummary } from "./actual-play-types.ts"
 import { SubMachineViz } from "./MachineViz.tsx"
 import { FIELD_GROUPS, type NormalizedState, SAMPLE_TRACE, type TraceStep } from "./sample-trace.ts"
 
@@ -563,11 +566,63 @@ function VerificationStatus() {
 
 const PLAYBACK_SPEED_MS = 1200
 
+interface TraceOption {
+  readonly id: string
+  readonly label: string
+  readonly description: string
+  readonly trace: ReadonlyArray<TraceStep>
+  readonly encounter?: EncounterDef
+  readonly summary?: EncounterSummary
+}
+
+const TRACE_OPTIONS: ReadonlyArray<TraceOption> = [
+  {
+    id: "sample",
+    label: "Sample: L5 Fighter vs Ogre",
+    description:
+      "Level 5 Champion Fighter vs an Ogre: taking hits, Second Wind to heal, " +
+      "Action Surge for a four-attack turn, dropping to 0 HP, a clutch nat 20 death save, " +
+      "standing from prone, and landing the killing blow at 1 HP.",
+    trace: SAMPLE_TRACE
+  },
+  {
+    id: "roll20",
+    label: "PHB 2024: Castle Ravenloft Skeletons",
+    description:
+      "Adapted from the official PHB 2024 combat example (Roll20 Compendium). " +
+      "Shreeve the Champion Fighter vs 10 skeletons under Castle Ravenloft. " +
+      "Extended to 2 rounds to exercise Second Wind, Action Surge, and Improved Critical.",
+    trace: ROLL20_TRACE,
+    encounter: ROLL20_ENCOUNTER,
+    summary: ROLL20_SUMMARY
+  },
+  {
+    id: "cr-c4e04",
+    label: "CR C4E04: Palazzo Davinos Battle",
+    description:
+      'Adapted from Critical Role Campaign 4, Episode 4 "Stone-Faced" (Omen Archive stats). ' +
+      "Sir Julien vs ghouls, shadows, and a mage. 5-round near-TPK with paralysis, " +
+      "death saves, and a comeback at 7 HP.",
+    trace: CR_C4E04_TRACE,
+    encounter: CR_C4E04_ENCOUNTER,
+    summary: CR_C4E04_SUMMARY
+  }
+]
+
 export function TraceVisualizer() {
-  const trace = SAMPLE_TRACE
+  const [selectedTraceId, setSelectedTraceId] = useState(TRACE_OPTIONS[0].id)
+  const selectedOption = TRACE_OPTIONS.find((t) => t.id === selectedTraceId) ?? TRACE_OPTIONS[0]
+  const trace = selectedOption.trace
   const [currentStep, setCurrentStep] = useState(0)
   const [playing, setPlaying] = useState(false)
   const playRef = useRef(false)
+
+  const handleTraceChange = useCallback((id: string) => {
+    setSelectedTraceId(id)
+    setCurrentStep(0)
+    setPlaying(false)
+    playRef.current = false
+  }, [])
 
   const goTo = useCallback(
     (idx: number) => {
@@ -628,11 +683,22 @@ export function TraceVisualizer() {
       {/* Header */}
       <header className="border-b border-gray-800 bg-gray-950/95 backdrop-blur sticky top-0 z-10">
         <div className="mx-auto max-w-7xl px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-xl font-bold text-amber-400">MBT Trace Replay Visualizer</h1>
               <p className="text-xs text-gray-500 mt-0.5">D&D 5e Formal Spec &mdash; Quint / XState</p>
             </div>
+            <select
+              value={selectedTraceId}
+              onChange={(e) => handleTraceChange(e.target.value)}
+              className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+            >
+              {TRACE_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label} ({opt.trace.length} steps)
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </header>
@@ -699,11 +765,24 @@ export function TraceVisualizer() {
                 After each step, <strong className="text-gray-300">every field</strong> of the normalized state is
                 compared. A single mismatch fails the test. This is how we prove the implementation matches the spec.
               </p>
-              <p>
-                This trace shows a <strong className="text-gray-300">Level 5 Champion Fighter</strong> vs an Ogre:
-                taking hits, Second Wind to heal, Action Surge for a four-attack turn, dropping to 0 HP, a clutch nat 20
-                death save, standing from prone, and landing the killing blow at 1 HP.
-              </p>
+              <p>{selectedOption.description}</p>
+              {selectedOption.summary && (
+                <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-gray-400">
+                  <span>
+                    Kills: <strong className="text-gray-300">{selectedOption.summary.totalKills}</strong>
+                  </span>
+                  <span>
+                    Damage taken: <strong className="text-gray-300">{selectedOption.summary.totalDamageTaken}</strong>
+                  </span>
+                  <span>
+                    Rounds: <strong className="text-gray-300">{selectedOption.summary.totalRounds}</strong>
+                  </span>
+                  <span>
+                    Original: <strong className="text-gray-300">{selectedOption.summary.originalSteps}</strong> /
+                    Fabricated: <strong className="text-gray-300">{selectedOption.summary.fabricatedSteps}</strong>
+                  </span>
+                </div>
+              )}
 
               {/* Legend */}
               <div className="mt-4 pt-3 border-t border-gray-800">
