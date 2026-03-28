@@ -4,96 +4,70 @@ Formal specification of D&D 5e (SRD 5.2.1) combat and character mechanics in [Qu
 
 ## What this is
 
-The core combat rules of D&D 5e — conditions, action economy, spellcasting, attack resolution, death saves, grappling, mounted combat, resting, and more — written as a Quint specification. The spec is the source of truth. An XState state machine mirrors it exactly, and model-based testing proves they stay in sync.
+A **rules engine for a single actor**. Core combat rules of D&D 5e — conditions, action economy, spellcasting, attack resolution, death saves, grappling, mounted combat, resting — written as a Quint specification. An XState state machine mirrors it exactly, and model-based testing proves they stay in sync.
 
 ```mermaid
 graph TD
-    SRD["<a href='https://www.dndbeyond.com/resources/1781-systems-reference-document-srd'>SRD 5.2.1</a> — CC-BY-4.0 rules corpus by Wizards of the Coast"] -.->|rules trace to| SPEC
+    SRD["SRD 5.2.1"] -.->|rules trace to| SPEC
     SRD -.->|class features trace to| FEATURES
-    QA[QA corpus — community Q&A] -.->|generates assertions| TEST
-    SPEC["dnd.qnt — <a href='https://github.com/informalsystems/quint'>Quint</a> spec of core game 'physics'"] --> TEST[quint test — unit tests]
-    SPEC --> TRACES[quint run — random execution traces]
-    TRACES --> MBT["<a href='https://github.com/dearlordylord/quint-connect-ts'>MBT bridge</a>"]
-    MBT -->|field-by-field comparison| XSTATE["<a href='https://xstate.js.org/'>XState</a>"]
+    QA[QA corpus] -.->|generates assertions| TEST
+    SPEC["dnd.qnt — Quint spec"] --> TEST[quint test]
+    SPEC --> TRACES[quint run — random traces]
+    TRACES --> MBT["MBT bridge"]
+    MBT -->|field-by-field comparison| XSTATE["XState machine"]
     XSTATE --> FEATURES[class feature pure functions]
     XSTATE --> UI[React UI]
     FEATURES --> UI
 ```
 
-Core game "physics" — the foundation everything else builds on: action economy, combat mode, d20 resolution, conditions, HP and death saves, spell slots and concentration, rest and recovery, movement, attack resolution, grapple and shove.
+Each actor is an independent XState machine tracking its own HP, conditions, action economy, death saves, spell concentration, and class resource charges. The `DndEvent` union (`USE_ACTION`, `TAKE_DAMAGE`, `USE_SECOND_WIND`, ...) is the actor's API.
 
-> **Rules Aren't Physics.** The rules of the game are meant to provide a fun game experience, not to describe the laws of physics in the worlds of D&D, let alone the real world. Don't let players argue that a bucket brigade of ordinary people can accelerate a spear to light speed by all using the Ready action to pass the spear to the next person in line. The Ready action facilitates heroic action; it doesn't define the physical limitations of what can happen in a 6-second combat round.
->
-> — *Dungeon Master's Guide*
+> **Rules Aren't Physics.** The rules of the game are meant to provide a fun game experience, not to describe the laws of physics in the worlds of D&D. — *Dungeon Master's Guide*
+
+## What a game would add
+
+The engine handles rules for one actor. A game needs an **orchestration layer** on top:
+
+| Engine (exists) | Orchestrator (doesn't exist yet) |
+|---|---|
+| Action economy, HP, death saves, conditions | Multiple combatants: N machines, route events between them |
+| Class features (Second Wind, Rage, ...) | Initiative: sort actors, cycle turns |
+| Accepts dice rolls as event fields | Targeting: map/grid, route `TAKE_DAMAGE` to target's machine |
+| Spell slots, concentration, effect lifecycle | Attack resolution: d20 vs AC, compute damage |
+
+The React UI is a debugging tool — you send events by hand. A game would send the same events with real dice, real targets, and turn sequencing.
 
 ## What's covered
 
-**Core (formally specified in Quint + XState):**
+**Core (Quint + XState):** d20 resolution, advantage/disadvantage, conditions, exhaustion, action economy, attack resolution (crits, cover, underwater), grapple/shove, two-weapon fighting, mounted combat, spellcasting (slots, concentration, ritual, multiclass, pact magic), active effect lifecycle, HP/temp HP/death saves, short and long rest, character construction, combat mode gating.
 
-- d20 resolution, advantage/disadvantage, proficiency
-- Conditions and exhaustion
-- Action economy: action, bonus action, reaction, movement, free interaction, extra attack
-- Attack resolution: crits, cover, underwater combat
-- Grapple and shove (SRD 5.2.1 save-based)
-- Two-weapon fighting, mounted combat
-- Spellcasting: slots, concentration, ritual casting, multiclass slot calculation, pact magic
-- Active effect lifecycle with start-of-turn / end-of-turn expiry
-- HP, temp HP, death saves, stabilization, knock out
-- Short and long rest, hit dice recovery
-- Character construction, leveling, multiclass prerequisites
-- Combat mode separation (in-combat / out-of-combat state gating)
+**Class features (TypeScript):** Pure functions for Barbarian, Cleric, Druid, Fighter, Monk, Paladin, Rogue, Sorcerer. Fighter (Champion L1-L18) is also in Quint and MBT-verified. See `app/src/features/`.
 
-**Class features (TypeScript, composing on core):**
+**Also:** Weapon mastery (all 8), spell effect patterns, Grappler feat, QA corpus ([`scripts/qa/QA_README.md`](scripts/qa/QA_README.md)).
 
-Pure functions for Barbarian, Cleric, Druid, Fighter, Monk, Paladin, Rogue, Sorcerer. Most are TS-only; Fighter (Champion subclass L1-L18) is also formally specified in Quint and MBT-verified.
+## How the layers work
 
-See `app/src/features/` for details.
+**Quint spec** (`dnd.qnt`) — source of truth. Pure functions (`pUseAction`, `pTakeDamage`, ...) model every rule. `do*` actions compose them with nondeterministic inputs for model checking.
 
-**Also:**
+**XState machine** (`machine.ts` + satellite files) — parallel-region machine with four tracks: damageTrack, turnPhase, conditionTrack, spellcasting. Direct transliteration of the Quint spec.
 
-- Weapon mastery effects (all 8: Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex)
-- Spell effect patterns (damage, defense buffs, condition debuffs)
-- Grappler feat
-- QA corpus: community Q&A from RPG Stack Exchange and Reddit, turned into Quint test assertions. See [`scripts/qa/QA_README.md`](scripts/qa/QA_README.md).
+**Feature system** (`app/src/features/`) — class abilities as pure functions (`class-fighter.ts`, `class-barbarian.ts`, ...) adapted to XState via a bridge layer. One user action produces a `BridgeResult`: a `featureAction` for the feature reducer + `machineEvents` for XState.
 
-## Model-based testing
+**MBT bridge** (`machine.mbt.test.ts`) — correctness proof. Replays 50 Quint traces (30 steps each) against XState, compares every field after each step. Uses [`@firfi/quint-connect`](https://github.com/dearlordylord/quint-connect-ts).
 
-Quint generates random execution traces (sequences of actions like "start turn, use action, take damage, end turn, short rest..."). The bridge replays each trace against the XState machine and compares every field of the resulting state. If the XState machine disagrees with the Quint spec on any field, the test fails.
-
-Refactors, new features, and bug fixes in the TypeScript code are checked against the formal spec automatically. If the implementation diverges from the spec, you'll know.
-
-The bridge uses [`@firfi/quint-connect`](https://github.com/dearlordylord/quint-connect-ts) to parse Quint traces and map them to XState events.
+**QA pipeline** (`scripts/qa/`) — community Q&A turned into Quint test assertions by LLM. See [`scripts/qa/QA_README.md`](scripts/qa/QA_README.md).
 
 ## Running it
 
-**Quint tests:**
-
 ```sh
-quint test dndTest.qnt
+quint test dndTest.qnt          # Quint spec tests
+cd app && npm install && npm test  # XState + MBT tests (needs Quint Rust evaluator)
+cd app && npm run dev              # React UI
 ```
-
-**XState + MBT tests:**
-
-```sh
-cd app
-npm install
-npm test
-```
-
-Note: MBT tests require the Quint Rust evaluator.
-
-**React UI:**
-
-```sh
-cd app
-npm run dev
-```
-
-Opens a browser UI where you can send events to the state machine and see the state update in real time. Undo/redo via event log replay. Class features (Fighter, Barbarian) are wired into a separate panel.
 
 ## SRD parity
 
-The spec formalizes the SRD and nothing else. Core rules trace to specific SRD passages. There's no homebrew or licensed Player's Handbook or other books content. The spec also contains class-specific lookup tables (hit dice, multiclass prerequisites) as convenience — these are "fluff tables," not core rules. Where the formalization requires choices the SRD doesn't prescribe (turn boundaries, implied constraints), those are documented in [`ASSUMPTIONS.md`](ASSUMPTIONS.md).
+The spec formalizes the SRD and nothing else — no homebrew, no licensed content. Where the formalization requires choices the SRD doesn't prescribe, those are documented in [`ASSUMPTIONS.md`](ASSUMPTIONS.md).
 
 ## License
 
@@ -101,4 +75,4 @@ Licensed under the [Apache License 2.0](LICENSE).
 
 This project formalizes mechanics from the [System Reference Document 5.2.1](https://www.dndbeyond.com/resources/1781-systems-reference-document-srd), &copy; Wizards of the Coast LLC, available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See [NOTICE](NOTICE) for full attribution.
 
-The `.references/srd/` directory contains SRD text in Markdown from [DND.SRD.Wiki](https://github.com/OldManUmby/DND.SRD.Wiki) by OldManUmby, also under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), from a previous iteration over the 5e 2014 rule corpus. See [`.references/srd/ATTRIBUTION.md`](.references/srd/ATTRIBUTION.md).
+The `.references/srd/` directory contains SRD text in Markdown from [DND.SRD.Wiki](https://github.com/OldManUmby/DND.SRD.Wiki) by OldManUmby, also under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See [`.references/srd/ATTRIBUTION.md`](.references/srd/ATTRIBUTION.md).
