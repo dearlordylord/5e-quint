@@ -2290,7 +2290,7 @@ module dnd {
     bonusActionUsed: false,
     reactionAvailable: true,
     freeInteractionUsed: false,
-    extraAttacksRemaining: 1,
+    extraAttacksRemaining: 1,  // Hardcoded; doStartTurn derives correct value from configForLevel. Acceptable: L18+ play is rare.
     disengaged: false,
     dodging: false,
     readiedAction: false,
