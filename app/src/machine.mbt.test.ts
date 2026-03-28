@@ -478,6 +478,7 @@ type EventActionMap = {
   USE_INDOMITABLE: "doUseIndomitable"
   USE_TACTICAL_MIND: "doUseTacticalMind"
   USE_HEROIC_INSPIRATION: "doUseHeroicInspiration"
+  SCORE_CRITICAL_HIT: "doScoreCriticalHit"
   USE_BONUS_MOVEMENT: "doUseBonusMovement"
 }
 
@@ -574,6 +575,7 @@ const driverSchema = {
   doUseIndomitable: {},
   doUseTacticalMind: { boostedCheckSucceeds: z.boolean() },
   doUseHeroicInspiration: {},
+  doScoreCriticalHit: {},
   doUseBonusMovement: { feet: ITFBigInt },
   step: {} // dead character no-op
 } as const
@@ -872,6 +874,9 @@ function createDndDriver() {
       doUseHeroicInspiration: () => {
         send({ type: "USE_HEROIC_INSPIRATION" })
       },
+      doScoreCriticalHit: () => {
+        send({ type: "SCORE_CRITICAL_HIT" })
+      },
       doUseBonusMovement: ({ feet }) => {
         send({ type: "USE_BONUS_MOVEMENT", feet: Number(feet) })
       },
@@ -1034,7 +1039,7 @@ describe("DnD MBT", () => {
   const MBT_STEP_COUNT = 30
   const specPath = path.resolve(import.meta.dirname, "../../dnd.qnt")
 
-  it("replays Quint traces against XState machine (L5 + L9 + L10 + L18)", async () => {
+  it("replays Quint traces against XState machine (L3 + L5 + L9 + L10 + L18)", async () => {
     await run({
       spec: specPath,
       driver: createDndDriver(),

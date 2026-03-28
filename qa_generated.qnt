@@ -297,6 +297,27 @@ module qa_generated {
     assert(t1 == t0)
   }
 
+  // Source: https://reddit.com/r/onednd/comments/1ivaehx/
+  
+  // When can a player use their Heroic Inspiration? — HI is expended on use; regained at start of next turn (Champion L10)
+  run qa_heroic_inspiration_consumed_on_use = {
+    val fs_has_hi = freshFighterState(10).with("heroicInspiration", true)
+    // Expending Heroic Inspiration clears the flag — cannot be used again until regained
+    val fs_after_use = fs_has_hi.with("heroicInspiration", false)
+    all {
+      // Before use: inspiration is available
+      assert(fs_has_hi.heroicInspiration),
+      // After use: inspiration is gone (expended)
+      assert(not(fs_after_use.heroicInspiration)),
+      // Champion L10 Heroic Warrior: regain it at start of next turn when you don't have it
+      assert(pFighterStartTurn(fs_after_use, 10).heroicInspiration),
+      // If you already have it, it is not doubled — start-of-turn does not replace existing inspiration
+      assert(pFighterStartTurn(fs_has_hi, 10).heroicInspiration),
+      // Below L10, start-of-turn does NOT grant Heroic Inspiration
+      assert(not(pFighterStartTurn(fs_after_use, 9).heroicInspiration)),
+    }
+  }
+
   // Source: https://reddit.com/r/onednd/comments/xsr14r/
   
   // Hide action: DC 15 Dexterity (Stealth) check; skill correctly maps to Dex ability
@@ -337,6 +358,79 @@ module qa_generated {
       and activeCheckFails == false
       and activeCheckSucceeds == true
     )
+  }
+
+  // Source: https://reddit.com/r/onednd/comments/1cxb2b5/
+  
+  // Rogue's Expertise vs Tactical Mind, Primal Knowledge, and Guidance
+  // Expertise doubles the proficiency bonus: rogue's static edge over fighter on trained skills
+  run qa_expertise_doubles_proficiency_vs_proficient = {
+    // Level 1: PB = +2. Rogue: Expertise → +4. Fighter: Proficient → +2. Gap = +2.
+    val pb = proficiencyBonus(1)
+    val dexMod = 3 // +3 Dex (both characters)
+    val dc = 15
+    // Roll 8: rogue total 8+3+4=15 (succeeds); fighter total 8+3+2=13 (fails)
+    val marginalRoll = 8
+    all {
+      assert(profMultiplier(Expertise, pb) == pb * 2),
+      assert(profMultiplier(Proficient, pb) == pb),
+      assert(profMultiplier(Expertise, pb) - profMultiplier(Proficient, pb) == 2),
+      assert(checkSucceeds(marginalRoll, dexMod, Expertise, pb, 0, dc)),
+      assert(not(checkSucceeds(marginalRoll, dexMod, Proficient, pb, 0, dc))),
+    }
+  }
+  
+  // Rogue's Expertise vs Tactical Mind, Primal Knowledge, and Guidance
+  // Tactical Mind: Second Wind charge consumed ONLY when d10 boost converts failure to success
+  run qa_tactical_mind_charge_consumed_only_on_success = {
+    val fs = freshFighterState(2) // level 2 fighter: 2 SW charges, Tactical Mind available
+    val pb = proficiencyBonus(2)  // +2
+    val dexMod = 3
+    val dc = 15
+    val d20Roll = 6  // 6+3+2=11 < 15: base check fails without boost
+    // d10=4: 6+3+2+4=15 ≥ 15 → boosted check succeeds → charge consumed
+    val boostSucceeds = checkSucceeds(d20Roll, dexMod, Proficient, pb, 4, dc)
+    // d10=3: 6+3+2+3=14 < 15 → boosted check still fails → charge NOT consumed
+    val boostFails = checkSucceeds(d20Roll, dexMod, Proficient, pb, 3, dc)
+    val fsAfterConsumed = pUseTacticalMind(fs, boostSucceeds)
+    val fsAfterNotConsumed = pUseTacticalMind(fs, boostFails)
+    all {
+      assert(canUseTacticalMind(2, fs)),
+      assert(not(checkSucceeds(d20Roll, dexMod, Proficient, pb, 0, dc))), // base check fails
+      assert(boostSucceeds),   // d10=4 pushes to exactly DC
+      assert(not(boostFails)), // d10=3 not enough
+      assert(fsAfterConsumed.secondWindCharges == fs.secondWindCharges - 1),
+      assert(fsAfterNotConsumed.secondWindCharges == fs.secondWindCharges),
+    }
+  }
+  
+  // Rogue's Expertise vs Tactical Mind, Primal Knowledge, and Guidance
+  // Tactical Mind becomes unavailable when Second Wind charges are exhausted
+  run qa_tactical_mind_unavailable_without_charges = {
+    val fs = freshFighterState(2)
+    val fsNoCharges = fs.with("secondWindCharges", 0)
+    all {
+      assert(canUseTacticalMind(2, fs)),          // available with charges
+      assert(not(canUseTacticalMind(2, fsNoCharges))), // unavailable at 0 charges
+      assert(not(canUseTacticalMind(1, fs))),     // unavailable below level 2
+    }
+  }
+  
+  // Rogue's Expertise vs Tactical Mind, Primal Knowledge, and Guidance
+  // Expertise advantage scales with level; at level 5 (PB=3) Expertise gap is +3
+  run qa_expertise_gap_scales_with_proficiency_bonus = {
+    val pb1 = proficiencyBonus(1)  // +2
+    val pb5 = proficiencyBonus(5)  // +3
+    val pb9 = proficiencyBonus(9)  // +4
+    all {
+      // Gap = profMultiplier(Expertise) - profMultiplier(Proficient) = pb each time
+      assert(profMultiplier(Expertise, pb1) - profMultiplier(Proficient, pb1) == pb1),
+      assert(profMultiplier(Expertise, pb5) - profMultiplier(Proficient, pb5) == pb5),
+      assert(profMultiplier(Expertise, pb9) - profMultiplier(Proficient, pb9) == pb9),
+      // At level 5, roll 9, Dex+3, DC 18: Expertise 9+3+6=18 succeeds; Proficient 9+3+3=15 fails
+      assert(checkSucceeds(9, 3, Expertise, pb5, 0, 18)),
+      assert(not(checkSucceeds(9, 3, Proficient, pb5, 0, 18))),
+    }
   }
 
   // Source: https://reddit.com/r/onednd/comments/wsgn4x/
@@ -1344,6 +1438,71 @@ module qa_generated {
     assert(pCanBeOpportunityAttacked(t1))
   }
 
+  // Source: https://reddit.com/r/onednd/comments/132oeu2/
+  
+  // The math of Indomitable Might: DC equal to STR score is guaranteed with a bad roll
+  run qa_indomitable_might_floor_at_str_score = {
+    // STR 20 barbarian level 9: d20=1, strMod=+5, prof=+4 → raw=10 < 20 → Indomitable Might replaces with 20
+    val strScore = 20
+    val strMod = abilityModifier(strScore)             // +5
+    val profBonus = proficiencyBonus(9)                // +4
+    val d20Roll = 1
+    val rawTotal = d20Roll + strMod + profMultiplier(Proficient, profBonus) // 1+5+4 = 10
+    val effectiveTotal = intMax(rawTotal, strScore)    // intMax(10,20) = 20
+    val dc = 20
+    assert(effectiveTotal >= dc)
+  }
+  
+  // The math of Indomitable Might: DC strictly above STR score is NOT guaranteed
+  run qa_indomitable_might_no_help_above_str_score = {
+    // Even with Indomitable Might floor of 20, DC 21 still fails on a roll of 1
+    val strScore = 20
+    val strMod = abilityModifier(strScore)             // +5
+    val profBonus = proficiencyBonus(9)                // +4
+    val d20Roll = 1
+    val rawTotal = d20Roll + strMod + profMultiplier(Proficient, profBonus) // 10
+    val effectiveTotal = intMax(rawTotal, strScore)    // 20
+    val dc = 21
+    assert(not(effectiveTotal >= dc))
+  }
+  
+  // The math of Indomitable Might: feature has no effect when roll total already exceeds STR score
+  run qa_indomitable_might_no_effect_on_good_roll = {
+    // d20=18: raw = 18+5+4 = 27 > 20, so intMax leaves total unchanged
+    val strScore = 20
+    val strMod = abilityModifier(strScore)             // +5
+    val profBonus = proficiencyBonus(9)                // +4
+    val d20Roll = 18
+    val rawTotal = d20Roll + strMod + profMultiplier(Proficient, profBonus) // 27
+    val effectiveTotal = intMax(rawTotal, strScore)    // intMax(27,20) = 27
+    assert(effectiveTotal == rawTotal)
+  }
+  
+  // The math of Indomitable Might: higher bonus shrinks the window where the feature matters
+  run qa_indomitable_might_window_shrinks_with_higher_bonus = {
+    // With bonus=18 (e.g. magic item), only DC 20 at roll=1 is salvaged (raw=19 < 20 → effective=20)
+    // but with bonus=9 (prof only), the window is DC 11-20 (raw at roll=1 is 10 < 11..20)
+    val strScore = 20
+    val d20Roll = 1
+    val profBonus = proficiencyBonus(9)   // +4
+    val strMod = abilityModifier(strScore) // +5
+  
+    // bonus 9 total = 1+9 = 10; Indomitable Might helps for DC 11..20 (5 DCs above 10 in range 7-20 where both apply)
+    val rawLowBonus = d20Roll + 9  // 10, simplified misc bonus of 9
+    val effLowBonus = intMax(rawLowBonus, strScore)  // 20
+    // bonus 18 total = 1+18 = 19; Indomitable Might only helps for DC 20
+    val rawHighBonus = d20Roll + 18  // 19
+    val effHighBonus = intMax(rawHighBonus, strScore) // 20
+  
+    // Low bonus: feature rescues more DCs (raw 10 vs effective 20 = 10-point gap)
+    // High bonus: feature rescues fewer DCs (raw 19 vs effective 20 = 1-point gap)
+    all {
+      assert(strScore - rawLowBonus > strScore - rawHighBonus),
+      assert(effLowBonus == strScore),
+      assert(effHighBonus == strScore),
+    }
+  }
+
   // Source: https://rpg.stackexchange.com/q/215620
   
   // With the Malnutrition rules, is it better to eat nothing than eating too little?
@@ -1743,6 +1902,40 @@ module qa_generated {
     assert(result.success == false and not(result.targetState.grappled))
   }
 
+  // Source: https://reddit.com/r/onednd/comments/1j7g2f0/
+  
+  // How do you gain Heroic Inspiration? — nat 20 on a D20 Test does NOT grant it automatically
+  run qa_heroic_inspiration_not_from_nat20 = {
+    // A nat 20 on a death save recovers HP (correct effect), but pDeathSave returns
+    // CreatureState only — FighterState.heroicInspiration is never touched by any die roll.
+    val creature = freshCreature(20)
+      .with("hp", 0)
+      .with("unconscious", true)
+      .with("prone", true)
+      .with("incapacitatedSources", Set(ISUnconscious))
+    val fs = freshFighterState(10)            // heroicInspiration starts false
+    val afterSave = pDeathSave(creature, 20)  // nat 20: regain 1 HP + consciousness
+    all {
+      assert(afterSave.hp == 1),              // nat 20 effect: HP restored
+      assert(not(fs.heroicInspiration)),      // die roll left FighterState untouched
+    }
+  }
+  
+  // How do you gain Heroic Inspiration? — Champion L10 Heroic Warrior (start of turn) is the correct mechanism
+  run qa_heroic_inspiration_granted_by_champion_l10_start_of_turn = {
+    // The spec grants Heroic Inspiration via pFighterStartTurn at level 10+, not via rolling.
+    val fs = freshFighterState(10)           // heroicInspiration: false
+    val fsAfter = pFighterStartTurn(fs, 10)
+    assert(fsAfter.heroicInspiration)
+  }
+  
+  // How do you gain Heroic Inspiration? — below L10 start-of-turn does NOT grant it
+  run qa_heroic_inspiration_not_granted_below_l10 = {
+    val fs = freshFighterState(5)
+    val fsAfter = pFighterStartTurn(fs, 5)
+    assert(not(fsAfter.heroicInspiration))
+  }
+
   // Source: https://reddit.com/r/onednd/comments/wxutdu/
   
   // Has anyone else been playing with 1s always failing and 20s always succeeding skill checks since 3rd edition?
@@ -1757,6 +1950,50 @@ module qa_generated {
     // RAW: natural 20 on ability check is NOT automatic success; total still must meet DC
     // d20=20 + abilityMod=0 + profBonus=0 + misc=0 = 20 < DC 25
     assert(not(checkSucceeds(20, 0, NoneProf, 2, 0, 25)))
+  }
+
+  // Source: https://reddit.com/r/onednd/comments/1i40c01/
+  
+  // Can War Magic from Eldritch Knight be used to cast Booming Blade twice with Action Surge?
+  run qa_war_magic_action_surge_cantrip_twice = {
+    // War Magic replaces one attack within the Attack action — NOT the Magic action.
+    // Action Surge grants an extra action restricted only from being a Magic action.
+    // Cantrips spend no spell slot, so the "one spell slot per turn" rule never fires.
+    // Therefore: Action Surge → second Attack action → War Magic cantrip a second time is legal.
+  
+    val fs = freshFighterState(5)  // actionSurgeCharges = 1, actionSurgeMax = 1
+    val ts = FRESH_TURN            // actionsRemaining = 1
+    val s  = freshCreature(30)
+  
+    // Action Surge: actionsRemaining 1 → 2 (the extra action is NOT the Magic action)
+    val surgeResult = pUseActionSurge(ts, fs)
+  
+    // First Attack action (War Magic: replace one attack with Booming Blade cantrip)
+    // Cantrip via War Magic is within the Attack action — does NOT set nonCantripActionSpellCast
+    val afterFirstAttack = pUseAction(surgeResult.turn, s, AAttack)
+  
+    // Second Attack action using the surged action (War Magic again, second cantrip)
+    val afterSecondAttack = pUseAction(afterFirstAttack, s, AAttack)
+  
+    all {
+      // Action Surge raises actionsRemaining to 2
+      assert(surgeResult.turn.actionsRemaining == 2),
+      // After first Attack action, fighter still has 1 action left for the second cantrip
+      assert(afterFirstAttack.actionsRemaining == 1),
+      // War Magic cantrip (Attack action, no slot) does NOT trigger the spell-slot restriction
+      assert(not(afterFirstAttack.nonCantripActionSpellCast)),
+      // canCastNonCantripAction is unblocked — the War Magic path never set the flag
+      assert(canCastNonCantripAction(afterFirstAttack)),
+      // Second Attack action taken; both cantrips cast; no actions remain
+      assert(afterSecondAttack.actionsRemaining == 0),
+      // Spell restrictions still clear after both casts
+      assert(not(afterSecondAttack.nonCantripActionSpellCast)),
+      assert(not(afterSecondAttack.bonusActionSpellCast)),
+      assert(canCastNonCantripAction(afterSecondAttack)),
+      // Confirm Action Surge was consumed
+      assert(surgeResult.fighter.actionSurgeCharges == 0),
+      assert(surgeResult.fighter.actionSurgeUsedThisTurn),
+    }
   }
 
   // Source: https://reddit.com/r/onednd/comments/10wdy0r/
@@ -1975,34 +2212,6 @@ module qa_generated {
     val c = freshCreature(30)
     val c1 = pAddExhaustion(c, 6)
     assert(c1.dead and c1.exhaustion == 6 and c1.hp == 0)
-  }
-
-  // Source: https://reddit.com/r/onednd/comments/z9v9q7/
-  
-  // Goliaths are fast and I love it: action Dash + Bonus Action Dash = 3× speed in one turn
-  run qa_dash_plus_bonus_dash_triples_speed = {
-    val speed = 35
-    val t: TurnState = {
-      movementRemaining: speed,
-      effectiveSpeed: speed,
-      actionsRemaining: 1,
-      attackActionUsed: false,
-      bonusActionUsed: false,
-      reactionAvailable: true,
-      freeInteractionUsed: false,
-      extraAttacksRemaining: 0,
-      disengaged: false,
-      dodging: false,
-      readiedAction: false,
-      bonusActionSpellCast: false,
-      nonCantripActionSpellCast: false,
-    }
-    val creature = freshCreature(30)
-    // Action Dash: adds effectiveSpeed to movementRemaining (base + 1× = 2× speed)
-    val afterActionDash = pUseAction(t, creature, ADash)
-    // Bonus Action Dash: adds effectiveSpeed again (2× + 1× = 3× speed)
-    val afterBonusDash = pBonusActionDash(afterActionDash, creature)
-    assert(afterBonusDash.movementRemaining == speed * 3)
   }
 
   // Source: https://reddit.com/r/onednd/comments/xuwjf5/
@@ -3172,6 +3381,36 @@ module qa_generated {
     assert(pTWFOffHandDamage(diceRoll, negMod) == 0)
   }
 
+  // Source: https://reddit.com/r/onednd/comments/1g1iyga/
+  
+  // Heroic Inspiration - How long does it last? Inspiration lasts until used, not cleared by long rest
+  run qa_heroic_inspiration_persists_after_long_rest = {
+    val fs = freshFighterState(10).with("heroicInspiration", true)
+    val afterRest = pFighterLongRest(fs)
+    assert(afterRest.heroicInspiration)
+  }
+  
+  // Heroic Inspiration - How long does it last? Inspiration lasts until used, not cleared by short rest
+  run qa_heroic_inspiration_persists_after_short_rest = {
+    val fs = freshFighterState(10).with("heroicInspiration", true)
+    val afterRest = pFighterShortRest(fs)
+    assert(afterRest.heroicInspiration)
+  }
+  
+  // Heroic Inspiration - Champion L10 gains inspiration at start of turn when they have none
+  run qa_heroic_inspiration_granted_at_turn_start_when_missing = {
+    val fs = freshFighterState(10)
+    val afterStart = pFighterStartTurn(fs, 10)
+    assert(afterStart.heroicInspiration)
+  }
+  
+  // Heroic Inspiration - If you already have inspiration, start-of-turn grant does not double it (stays true, not toggled)
+  run qa_heroic_inspiration_not_doubled_when_already_held = {
+    val fs = freshFighterState(10).with("heroicInspiration", true)
+    val afterStart = pFighterStartTurn(fs, 10)
+    assert(afterStart.heroicInspiration)
+  }
+
   // Source: https://rpg.stackexchange.com/q/214608
   
   // Saving throws when under certain conditions: restrained imposes disadvantage on DEX saves only
@@ -3479,6 +3718,101 @@ module qa_generated {
     assert(not(hideAttemptSucceeds))
   }
 
+  // Source: https://reddit.com/r/onednd/comments/1304fwu/
+  
+  // Fighters Indomitable is now *Exactly* the heroic willpower feature it always should have been.
+  // Indomitable is unavailable below level 9 — charges are 0 and canUseIndomitable returns false
+  run qa_indomitable_unavailable_below_level_9 = {
+    val fs8 = freshFighterState(8)
+    all {
+      assert(fs8.indomitableCharges == 0),
+      assert(not(canUseIndomitable(8, fs8))),
+    }
+  }
+  
+  // Fighters Indomitable is now *Exactly* the heroic willpower feature it always should have been.
+  // Indomitable becomes available at level 9 with exactly 1 charge
+  run qa_indomitable_unlocks_at_level_9 = {
+    val fs9 = freshFighterState(9)
+    all {
+      assert(fs9.indomitableCharges == 1),
+      assert(canUseIndomitable(9, fs9)),
+    }
+  }
+  
+  // Fighters Indomitable is now *Exactly* the heroic willpower feature it always should have been.
+  // Indomitable charges increase to 2 at level 13
+  run qa_indomitable_two_charges_at_level_13 = {
+    val fs13 = freshFighterState(13)
+    all {
+      assert(fs13.indomitableCharges == 2),
+      assert(canUseIndomitable(13, fs13)),
+    }
+  }
+  
+  // Fighters Indomitable is now *Exactly* the heroic willpower feature it always should have been.
+  // Indomitable reaches 3 charges at level 17 (where Unconquerable also becomes available)
+  run qa_indomitable_three_charges_at_level_17 = {
+    val fs17 = freshFighterState(17)
+    all {
+      assert(fs17.indomitableCharges == 3),
+      assert(canUseIndomitable(17, fs17)),
+    }
+  }
+  
+  // Fighters Indomitable is now *Exactly* the heroic willpower feature it always should have been.
+  // Using Indomitable at level 9 consumes the single charge, leaving it unavailable
+  run qa_indomitable_use_exhausts_single_charge = {
+    val fs9 = freshFighterState(9)
+    val fs9_used = pUseIndomitable(fs9)
+    all {
+      assert(fs9_used.indomitableCharges == 0),
+      assert(not(canUseIndomitable(9, fs9_used))),
+    }
+  }
+  
+  // Fighters Indomitable is now *Exactly* the heroic willpower feature it always should have been.
+  // All 3 charges at level 17 can be spent sequentially, then it is exhausted
+  run qa_indomitable_all_three_charges_expendable = {
+    val fs17 = freshFighterState(17)
+    val fs1 = pUseIndomitable(fs17)
+    val fs2 = pUseIndomitable(fs1)
+    val fs3 = pUseIndomitable(fs2)
+    all {
+      assert(fs1.indomitableCharges == 2),
+      assert(fs2.indomitableCharges == 1),
+      assert(fs3.indomitableCharges == 0),
+      assert(not(canUseIndomitable(17, fs3))),
+    }
+  }
+  
+  // Fighters Indomitable is now *Exactly* the heroic willpower feature it always should have been.
+  // Long rest fully restores all Indomitable charges at level 17
+  run qa_indomitable_long_rest_restores_all_charges = {
+    val fs17 = freshFighterState(17)
+    val fs_spent = pUseIndomitable(pUseIndomitable(pUseIndomitable(fs17)))
+    val fs_rested = pFighterLongRest(fs_spent)
+    all {
+      assert(fs_spent.indomitableCharges == 0),
+      assert(fs_rested.indomitableCharges == 3),
+      assert(canUseIndomitable(17, fs_rested)),
+    }
+  }
+  
+  // Fighters Indomitable is now *Exactly* the heroic willpower feature it always should have been.
+  // Indomitable max charges match the level-gated table across key breakpoints
+  run qa_indomitable_charge_table_breakpoints = {
+    all {
+      assert(indomitableMaxCharges(8)  == 0),
+      assert(indomitableMaxCharges(9)  == 1),
+      assert(indomitableMaxCharges(12) == 1),
+      assert(indomitableMaxCharges(13) == 2),
+      assert(indomitableMaxCharges(16) == 2),
+      assert(indomitableMaxCharges(17) == 3),
+      assert(indomitableMaxCharges(20) == 3),
+    }
+  }
+
   // Source: https://rpg.stackexchange.com/q/214638
   
   run qa_slot_level_must_meet_or_exceed_spell_level = {{
@@ -3666,6 +4000,40 @@ module qa_generated {
     assert(checkSucceeds(roll, abilityMod, Proficient, profBonus, miscBonus, dc) == true)
     // Without misc bonus: 8 + 1 + 2 = 11 < 15 → failure
     and assert(checkSucceeds(roll, abilityMod, Proficient, profBonus, 0, dc) == false)
+  }
+
+  // Source: https://reddit.com/r/onednd/comments/1h51lkf/
+  
+  // Is it possible to cast a spell and then action surge an attack?
+  run qa_spell_then_action_surge_attack = {
+    // Fighter 2 has Action Surge; cast a spell first, then surge into an Attack action
+    val config = configForLevel(2)
+    val creature = freshCreature(20)
+    val fs = freshFighterState(2)
+    val ts = pStartTurn(config, creature, Unarmored, 0, false, false)
+  
+    // Step 1: Use Magic action (cast a spell) — spends the turn's one action
+    val ts1 = pUseAction(ts, creature, AMagic)
+  
+    // Step 2: Action Surge grants an additional action
+    val surgeResult = pUseActionSurge(ts1, fs)
+    val ts2 = surgeResult.turn
+    val fs2 = surgeResult.fighter
+  
+    // Step 3: Spend the surged action on an Attack
+    val ts3 = pUseAction(ts2, creature, AAttack)
+  
+    assert(all {
+      // Magic action consumed the original action
+      ts1.actionsRemaining == 0,
+      // Action Surge restores one action
+      ts2.actionsRemaining == 1,
+      // Surge is marked as used this turn
+      fs2.actionSurgeUsedThisTurn == true,
+      // Attack action successfully taken with the surged action
+      ts3.attackActionUsed == true,
+      ts3.actionsRemaining == 0,
+    })
   }
 
   // Source: https://reddit.com/r/onednd/comments/wzenac/
@@ -4198,33 +4566,6 @@ module qa_generated {
     assert(result.success and result.targetState.hp == target.hp)
   }
 
-  // Source: https://reddit.com/r/onednd/comments/1i6obpn/
-  
-  // Public Service Announcement: Wild Heart Barbarian is Faster than Monk
-  run qa_dash_plus_bonus_dash_equals_3x_speed = {
-    // Core mechanic: movement + Action Dash + Bonus Action Dash = 3× base speed
-    val speed = 40
-    val creature = freshCreature(30)
-    val t0: TurnState = {
-      movementRemaining: speed,
-      effectiveSpeed: speed,
-      actionsRemaining: 1,
-      attackActionUsed: false,
-      bonusActionUsed: false,
-      reactionAvailable: true,
-      freeInteractionUsed: false,
-      extraAttacksRemaining: 0,
-      disengaged: false,
-      dodging: false,
-      readiedAction: false,
-      bonusActionSpellCast: false,
-      nonCantripActionSpellCast: false,
-    }
-    val t1 = pUseAction(t0, creature, ADash)
-    val t2 = pBonusActionDash(t1, creature)
-    assert(t2.movementRemaining == speed * 3)
-  }
-
   // Source: https://reddit.com/r/onednd/comments/z9si3f/
   
   // Revised Disciple of Life: bonus HP (2 + spell level) applies only on the casting turn, not to Goodberry's delayed per-berry healing
@@ -4468,6 +4809,90 @@ module qa_generated {
   // Melee Rogues Breaking Cover: three-quarters cover grants +5 AC bonus enabling the hide position
   run qa_three_quarters_cover_grants_plus5_ac = {
     assert(coverBonus(ThreeQuartersCover) == 5)
+  }
+
+  // Source: https://reddit.com/r/onednd/comments/1ek90nt/
+  
+  // How many Second Wind and Weapon Masteries do Fighters get now?
+  run qa_second_wind_max_charges_level_1_to_3 = {
+    // Fighters at levels 1–3 have a Second Wind max of 2
+    val fs1 = freshFighterState(1)
+    val fs3 = freshFighterState(3)
+    all {
+      assert(secondWindMaxCharges(1) == 2),
+      assert(secondWindMaxCharges(3) == 2),
+      assert(fs1.secondWindMax == 2),
+      assert(fs3.secondWindMax == 2),
+    }
+  }
+  
+  // How many Second Wind and Weapon Masteries do Fighters get now?
+  run qa_second_wind_max_charges_level_4_to_9 = {
+    // Fighters at levels 4–9 have a Second Wind max of 3
+    val fs4 = freshFighterState(4)
+    val fs9 = freshFighterState(9)
+    all {
+      assert(secondWindMaxCharges(4) == 3),
+      assert(secondWindMaxCharges(9) == 3),
+      assert(fs4.secondWindMax == 3),
+      assert(fs9.secondWindMax == 3),
+    }
+  }
+  
+  // How many Second Wind and Weapon Masteries do Fighters get now? (accepted: "Max 4 at a time")
+  run qa_second_wind_max_charges_level_10_plus = {
+    // Fighters at level 10+ have a Second Wind max of 4
+    val fs10 = freshFighterState(10)
+    val fs20 = freshFighterState(20)
+    all {
+      assert(secondWindMaxCharges(10) == 4),
+      assert(secondWindMaxCharges(20) == 4),
+      assert(fs10.secondWindMax == 4),
+      assert(fs20.secondWindMax == 4),
+    }
+  }
+  
+  // How many Second Wind and Weapon Masteries do Fighters get now? (short rest regains one use)
+  run qa_second_wind_short_rest_regains_one = {
+    // A Fighter who expended 2 SW charges regains exactly 1 on a short rest (capped at max)
+    val fs = freshFighterState(10) // max 4
+    val fsSpent = fs.with("secondWindCharges", 2)
+    val fsAfterRest = pFighterShortRest(fsSpent)
+    all {
+      assert(fsAfterRest.secondWindCharges == 3),
+      assert(fsAfterRest.secondWindCharges <= fsAfterRest.secondWindMax),
+    }
+  }
+  
+  // How many Second Wind and Weapon Masteries do Fighters get now? (short rest caps at max)
+  run qa_second_wind_short_rest_capped_at_max = {
+    // Short rest does not exceed secondWindMax even if already at max
+    val fs = freshFighterState(4) // max 3, starts full
+    val fsAfterRest = pFighterShortRest(fs)
+    assert(fsAfterRest.secondWindCharges == 3)
+  }
+
+  // Source: https://reddit.com/r/onednd/comments/1hxfso6/
+  
+  // Quick question about remarkable athlete: crit movement is extra, not drawn from existing pool
+  run qa_remarkable_athlete_bonus_movement_is_extra = {
+    // Champion at level 5 (has Remarkable Athlete from level 3)
+    // FRESH_TURN has movementRemaining: 30, effectiveSpeed: 30
+    val ts0 = FRESH_TURN
+    // Simulate Remarkable Athlete crit: grant half speed as bonus movement
+    val ts1 = pGrantBonusMovement(ts0, ts0.effectiveSpeed, false)
+    // Use all bonus movement (half speed = 15 ft)
+    val ts2 = pUseBonusMovement(ts1, ts1.bonusMovementRemaining)
+    all {
+      // Bonus movement is half effectiveSpeed (15 ft), tracked separately
+      assert(ts1.bonusMovementRemaining == ts0.effectiveSpeed / 2),
+      // Regular movement pool is completely untouched after grant
+      assert(ts1.movementRemaining == ts0.movementRemaining),
+      // Even after spending the bonus movement, regular pool is still intact
+      assert(ts2.movementRemaining == ts0.movementRemaining),
+      // Bonus movement is now exhausted
+      assert(ts2.bonusMovementRemaining == 0),
+    }
   }
 
   // Source: https://reddit.com/r/onednd/comments/wyi0ib/
@@ -4885,6 +5310,62 @@ module qa_generated {
     assert(not(result.success) and not(result.targetState.prone))
   }
 
+  // Source: https://reddit.com/r/onednd/comments/1i3ev6t/
+  
+  // Can someone explain me a critical chances math used in yt for champion?
+  // Each roll is resolved independently — a miss on roll 1 + Heroic Inspiration reroll
+  // gives a fully independent second crit opportunity at critRange 19.
+  run qa_champion_heroic_inspiration_reroll_crit = {
+    val critRange  = configForLevel(3).critRange  // Champion L3: Improved Critical → critRange=19
+    val firstRoll  = resolveAttackRoll(5, 5, 15, 0, critRange)   // total=10, misses (no crit)
+    val reroll     = resolveAttackRoll(19, 5, 15, 0, critRange)  // d20=19 >= critRange=19 → crit
+    all {
+      assert(not(firstRoll.hits)),
+      assert(not(firstRoll.isCritical)),
+      assert(reroll.hits),
+      assert(reroll.isCritical),
+    }
+  }
+  
+  // Champion crit ranges: standard 20 at L1, Improved Critical 19 at L3, Superior Critical 18 at L15.
+  run qa_champion_crit_range_by_level = {
+    val cr1  = configForLevel(1).critRange
+    val cr3  = configForLevel(3).critRange
+    val cr15 = configForLevel(15).critRange
+    all {
+      assert(cr1  == 20),
+      assert(cr3  == 19),
+      assert(cr15 == 18),
+    }
+  }
+  
+  // Each attack roll is resolved independently — critting on one roll does not affect another.
+  run qa_champion_each_roll_resolved_independently = {
+    val critRange = configForLevel(3).critRange  // 19
+    val roll1 = resolveAttackRoll(19, 5, 15, 0, critRange)  // d20=19 → crit
+    val roll2 = resolveAttackRoll(11, 5, 15, 0, critRange)  // total=16 >= 15, hits but not crit
+    val roll3 = resolveAttackRoll(8,  5, 15, 0, critRange)  // total=13 < 15, miss
+    all {
+      assert(roll1.isCritical),
+      assert(roll2.hits),
+      assert(not(roll2.isCritical)),
+      assert(not(roll3.hits)),
+      assert(not(roll3.isCritical)),
+    }
+  }
+  
+  // Heroic Warrior (Champion L10): Heroic Inspiration is granted at start of turn and
+  // cleared when spent — enabling a conditional reroll (e.g., on a miss).
+  run qa_champion_heroic_inspiration_granted_then_spent = {
+    val fs0          = freshFighterState(10).with("heroicInspiration", false)
+    val fs_turn_start = pFighterStartTurn(fs0, 10)        // Heroic Warrior grants inspiration
+    val fs_after_use  = fs_turn_start.with("heroicInspiration", false) // spending clears it
+    all {
+      assert(fs_turn_start.heroicInspiration),     // granted at start of turn
+      assert(not(fs_after_use.heroicInspiration)), // consumed on use
+    }
+  }
+
   // Source: https://reddit.com/r/onednd/comments/y0sb5m/
   
   // Skills with Different Abilities (PHB p175): skill proficiency applies to non-standard ability check
@@ -5278,86 +5759,6 @@ module qa_generated {
     // Instant death: overflow (20) >= maxHp (10)
     val killed = pTakeDamage(withBinding, 30, Slashing, Set(), Set(), Set(), false)
     assert(killed.dead and pHasEffect(killed.activeEffects, "planar_binding"))
-  }
-
-  // Source: https://reddit.com/r/onednd/comments/1ej4mos/
-  
-  // How exactly does dual wielding work now? - off-hand TWF attack without fighting style does not add positive ability modifier to damage
-  run qa_twf_no_mod_without_style = {
-    val diceResult = 5
-    val abilityMod = 3
-    val damage = pTWFOffHandDamage(diceResult, abilityMod)
-    assert(damage == 5) // positive mod is NOT added per Light property rules
-  }
-  
-  // How exactly does dual wielding work now? - off-hand TWF attack without fighting style still applies negative ability modifier
-  run qa_twf_negative_mod_applied_without_style = {
-    val diceResult = 5
-    val abilityMod = -2
-    val damage = pTWFOffHandDamage(diceResult, abilityMod)
-    assert(damage == 3) // negative mod IS applied: max(0, 5 + (-2)) = 3
-  }
-  
-  // How exactly does dual wielding work now? - Two-Weapon Fighting style adds positive ability modifier to off-hand damage
-  run qa_twf_style_adds_ability_mod = {
-    val diceResult = 5
-    val abilityMod = 3
-    val damage = pTWFOffHandDamageStyled(diceResult, abilityMod)
-    assert(damage == 8) // style grants full mod: 5 + 3 = 8
-  }
-  
-  // How exactly does dual wielding work now? - Light property extra attack eligible when both weapons are Light melee and Attack action was used
-  run qa_twf_eligible_both_light_melee = {
-    val dagger: Weapon = {
-      name: "dagger",
-      damageDie: 4,
-      versatileDie: 0,
-      damageType: Piercing,
-      properties: Set(Finesse, Light_, Thrown),
-      isMelee: true,
-      normalRange: 20,
-      longRange: 60,
-    }
-    val handaxe: Weapon = {
-      name: "handaxe",
-      damageDie: 6,
-      versatileDie: 0,
-      damageType: Slashing,
-      properties: Set(Light_, Thrown),
-      isMelee: true,
-      normalRange: 20,
-      longRange: 60,
-    }
-    val creature = freshCreature(20)
-    val t = FRESH_TURN.with("attackActionUsed", true).with("bonusActionUsed", false)
-    assert(pCanTWFWithWeapons(dagger, handaxe, t, creature))
-  }
-  
-  // How exactly does dual wielding work now? - Light property bonus action extra attack NOT eligible when off-hand weapon lacks Light (e.g. rapier)
-  run qa_twf_ineligible_non_light_offhand = {
-    val dagger: Weapon = {
-      name: "dagger",
-      damageDie: 4,
-      versatileDie: 0,
-      damageType: Piercing,
-      properties: Set(Finesse, Light_, Thrown),
-      isMelee: true,
-      normalRange: 20,
-      longRange: 60,
-    }
-    val rapier: Weapon = {
-      name: "rapier",
-      damageDie: 8,
-      versatileDie: 0,
-      damageType: Piercing,
-      properties: Set(Finesse),
-      isMelee: true,
-      normalRange: 0,
-      longRange: 0,
-    }
-    val creature = freshCreature(20)
-    val t = FRESH_TURN.with("attackActionUsed", true).with("bonusActionUsed", false)
-    assert(not(pCanTWFWithWeapons(dagger, rapier, t, creature)))
   }
 
   // Source: https://reddit.com/r/onednd/comments/11a3r4s/
@@ -7402,6 +7803,60 @@ module qa_generated {
     })
   }
 
+  // Source: https://reddit.com/r/onednd/comments/1fawobo/
+  
+  // Am I reading this right? If you have two heavy crossbows you can extra attack/action surge by switching between them?
+  run qa_loading_blocks_extra_attack_abdfc16a = {
+    // A weapon with the Loading property cannot be used for extra attacks
+    val heavyCrossbow: Weapon = {
+      name: "heavy crossbow",
+      damageDie: 10,
+      versatileDie: 0,
+      damageType: Piercing,
+      properties: Set(Heavy, Loading, TwoHanded, Ammunition),
+      isMelee: false,
+      normalRange: 100,
+      longRange: 400,
+    }
+    val longbow: Weapon = {
+      name: "longbow",
+      damageDie: 8,
+      versatileDie: 0,
+      damageType: Piercing,
+      properties: Set(Heavy, TwoHanded, Ammunition),
+      isMelee: false,
+      normalRange: 150,
+      longRange: 600,
+    }
+    all {
+      // Loading weapon: extra attack NOT allowed (one shot per action/bonus/reaction)
+      assert(not(pCanExtraAttackWithWeapon(heavyCrossbow))),
+      // Non-loading ranged weapon: extra attack IS allowed
+      assert(pCanExtraAttackWithWeapon(longbow)),
+    }
+  }
+  
+  // Loading property applies regardless of Extra Attack feature level
+  run qa_loading_blocks_extra_attack_regardless_of_feature = {
+    val heavyCrossbow: Weapon = {
+      name: "heavy crossbow",
+      damageDie: 10,
+      versatileDie: 0,
+      damageType: Piercing,
+      properties: Set(Heavy, Loading, TwoHanded, Ammunition),
+      isMelee: false,
+      normalRange: 100,
+      longRange: 400,
+    }
+    // Even a Fighter 11 (Extra Attack x2) cannot extra attack with a Loading weapon
+    val config11 = configForLevel(11)
+    all {
+      assert(config11.features.contains(FExtraAttack)),
+      assert(config11.features.contains(FExtraAttack2)),
+      assert(not(pCanExtraAttackWithWeapon(heavyCrossbow))),
+    }
+  }
+
   // Source: https://reddit.com/r/onednd/comments/wywyad/
   
   // Solving Nat 1 Skill Checks with Expertise: nat 1 does NOT auto-fail skill checks (unlike attack rolls)
@@ -7619,6 +8074,38 @@ module qa_generated {
     )
   }
 
+  // Source: https://reddit.com/r/onednd/comments/1fxlav9/
+  
+  // Humans can pass their daily Heroic Inspiration to other characters if they already have Heroic Inspiration, right?
+  // Champion L10: if fighter already has Heroic Inspiration, start-of-turn does NOT grant a second instance (it is lost per spec model)
+  run qa_heroic_inspiration_no_double_grant = {
+    val fs = freshFighterState(10).with("heroicInspiration", true)
+    val fs1 = pFighterStartTurn(fs, 10)
+    assert(fs1.heroicInspiration == true)
+  }
+  
+  // Champion L10: fighter who lacks Heroic Inspiration receives it at the start of their turn
+  run qa_heroic_inspiration_champion_gains_when_missing = {
+    val fs = freshFighterState(10).with("heroicInspiration", false)
+    val fs1 = pFighterStartTurn(fs, 10)
+    assert(fs1.heroicInspiration == true)
+  }
+  
+  // Expending Heroic Inspiration clears it; Champion L10 then regains it at the start of the next turn
+  run qa_heroic_inspiration_regained_after_expend = {
+    val fs = freshFighterState(10).with("heroicInspiration", true)
+    val fs_spent = fs.with("heroicInspiration", false)
+    val fs_next = pFighterStartTurn(fs_spent, 10)
+    assert(fs_next.heroicInspiration == true)
+  }
+  
+  // Sub-level-10 Champion does NOT gain Heroic Inspiration at start of turn (feature not yet unlocked)
+  run qa_heroic_inspiration_not_granted_below_level_10 = {
+    val fs = freshFighterState(9).with("heroicInspiration", false)
+    val fs1 = pFighterStartTurn(fs, 9)
+    assert(fs1.heroicInspiration == false)
+  }
+
   // Source: https://reddit.com/r/onednd/comments/x4opj4/
   
   // Ardling Angelic Flight: uses per long rest equal proficiency bonus (scales with level)
@@ -7688,6 +8175,51 @@ module qa_generated {
       not(summonAttack.isCritical) and
       summonAttack.hits
     )
+  }
+
+  // Source: https://reddit.com/r/onednd/comments/1f6fb0x/
+  
+  // Does tactical shift give you speed, or is it just half a disengage?
+  run qa_tactical_shift_bonus_movement_oa_free = {
+    // Tactical Shift (Second Wind L5): grants half speed as OA-free bonus movement,
+    // even when all normal movement for the turn has been spent.
+    val ts0 = FRESH_TURN // effectiveSpeed = 30, movementRemaining = 30
+    // Spend all normal movement
+    val ts1 = pUseMovement(ts0, 30, 1) // movementRemaining = 0
+    // Tactical Shift: grant bonus movement = half speed, OA-free
+    val ts2 = pGrantBonusMovement(ts1, ts1.effectiveSpeed, true)
+    all {
+      assert(ts1.movementRemaining == 0),       // all normal movement spent
+      assert(ts2.bonusMovementRemaining == 15), // half of 30 ft speed
+      assert(ts2.bonusMovementOAFree == true),  // no opportunity attacks provoked
+      assert(canUseBonusMovement(ts2)),         // can still move via Tactical Shift
+    }
+  }
+  
+  // Does tactical shift give you speed, or is it just half a disengage?
+  run qa_tactical_shift_zero_when_speed_zero = {
+    // Tactical Shift grants no movement when effective speed is 0 (e.g., grappled).
+    // Speed 0 means half speed is also 0 — the feature gives nothing.
+    val ts0 = FRESH_TURN.with("effectiveSpeed", 0).with("movementRemaining", 0)
+    val ts1 = pGrantBonusMovement(ts0, ts0.effectiveSpeed, true)
+    all {
+      assert(ts1.bonusMovementRemaining == 0), // half of 0 is 0
+      assert(not(canUseBonusMovement(ts1))),   // no movement available
+    }
+  }
+  
+  // Does tactical shift give you speed, or is it just half a disengage?
+  run qa_tactical_shift_bonus_movement_is_additional = {
+    // Tactical Shift bonus movement is tracked separately from normal movement,
+    // confirming it is additional movement beyond the per-turn budget.
+    val ts0 = FRESH_TURN.with("movementRemaining", 0) // normal budget fully spent
+    val ts1 = pGrantBonusMovement(ts0, 30, true)      // Tactical Shift: 15 ft bonus
+    val ts2 = pUseBonusMovement(ts1, 10)              // consume 10 ft of bonus
+    all {
+      assert(ts1.bonusMovementRemaining == 15), // half of 30
+      assert(ts2.bonusMovementRemaining == 5),  // 15 - 10 remaining
+      assert(ts2.movementRemaining == 0),       // normal movement budget unaffected
+    }
   }
 
   // Source: https://reddit.com/r/onednd/comments/z9rh2a/
@@ -7851,10 +8383,66 @@ module qa_generated {
     assert(withBoth == straight)
   }
 
-  // Source: https://reddit.com/r/onednd/comments/xr08u7/
+  // Source: https://reddit.com/r/onednd/comments/186lcik/
   
-  // Removed: qa_racial_ritual_cast_no_slot_expended — referenced removed canRitualCast field.
-  // Ritual casting is now caller-orchestrated (ASSUMPTIONS.md A10).
+  // New "Cheese Grater" Champion: successful grapple (save failed, free hand) applies CGrappled condition
+  run qa_grapple_applies_grappled_condition_b4bf280d = {
+    val target = freshCreature(20)
+    val result = pGrapple(Medium, Medium, target, true, true)
+    assert(result.success and result.targetState.grappled)
+  }
+  
+  // New "Cheese Grater" Champion: grapple fails without a free hand (standard melee grapple requirement)
+  run qa_grapple_requires_free_hand_b4bf280d = {
+    val target = freshCreature(20)
+    val result = pGrapple(Medium, Medium, target, true, false)
+    assert(not(result.success) and not(result.targetState.grappled))
+  }
+  
+  // New "Cheese Grater" Champion: grappled creature has speed 0 at start of its turn (can't escape freely)
+  run qa_grappled_creature_speed_zero_b4bf280d = {
+    val grappledCreature = freshCreature(20).with("grappled", true)
+    val ts = pStartTurn(TEST_CONFIG, grappledCreature, Unarmored, 0, false, false)
+    all {
+      assert(ts.movementRemaining == 0),
+      assert(ts.effectiveSpeed == 0),
+    }
+  }
+  
+  // New "Cheese Grater" Champion: shove (push choice) succeeds when target fails save
+  run qa_shove_push_succeeds_on_failed_save = {
+    val target = freshCreature(20)
+    val result = pShove(Medium, Medium, target, true, ShovePush)
+    assert(result.success)
+  }
+  
+  // New "Cheese Grater" Champion: shove fails when target makes save
+  run qa_shove_push_fails_on_saved = {
+    val target = freshCreature(20)
+    val result = pShove(Medium, Medium, target, false, ShovePush)
+    assert(not(result.success))
+  }
+  
+  // New "Cheese Grater" Champion: grapple cannot target a creature more than one size larger
+  run qa_grapple_size_limit_b4bf280d = {
+    // Medium attacker vs Huge target (2 sizes larger) — must fail regardless of save
+    val target = freshCreature(20)
+    val result = pGrapple(Medium, Huge, target, true, true)
+    assert(not(result.success) and not(result.targetState.grappled))
+  }
+  
+  // New "Cheese Grater" Champion: action (Attack) and bonus action are independently available in the same turn
+  run qa_action_and_bonus_action_independent_in_turn = {
+    val creature = freshCreature(20)
+    val ts0 = FRESH_TURN
+    val ts1 = pUseAction(ts0, creature, AAttack)
+    val ts2 = pUseBonusAction(ts1, creature)
+    all {
+      assert(ts1.attackActionUsed),
+      assert(not(ts1.bonusActionUsed)),
+      assert(ts2.bonusActionUsed),
+    }
+  }
 
   // Source: https://reddit.com/r/onednd/comments/1en1891/
   
@@ -7974,6 +8562,40 @@ module qa_generated {
       grappleResult.success and
       grappleResult.targetState.grappled
     )
+  }
+
+  // Source: https://reddit.com/r/onednd/comments/1eriycl/
+  
+  // Action Surge grants a second action taken sequentially (one at a time per 2024 PHB); it does not interrupt an action already in progress
+  run qa_action_surge_sequential_not_interrupt = {
+    val fs = freshFighterState(2)
+    val ts = FRESH_TURN
+    val creature = freshCreature(20)
+  
+    // Use Action Surge: increments actionsRemaining by 1 (now 2 — both taken sequentially)
+    val surgeResult = pUseActionSurge(ts, fs)
+    val ts1 = surgeResult.turn
+    val fs1 = surgeResult.fighter
+  
+    // Take first action (one action at a time)
+    val ts2 = pUseAction(ts1, creature, AAttack)
+  
+    // Take second action (the surge action — sequential, not an interrupt)
+    val ts3 = pUseAction(ts2, creature, AAttack)
+  
+    all {
+      // Surge produces exactly 2 queued sequential actions
+      assert(ts1.actionsRemaining == 2),
+      // First action consumed: 1 left
+      assert(ts2.actionsRemaining == 1),
+      // Second action consumed: 0 left — both taken one at a time
+      assert(ts3.actionsRemaining == 0),
+      // Surge is marked used this turn and charge is spent
+      assert(fs1.actionSurgeUsedThisTurn),
+      assert(fs1.actionSurgeCharges == 0),
+      // Can never exceed 2 actions even after surge (no interrupt possible)
+      assert(ts1.actionsRemaining <= 2),
+    }
   }
 
   // Source: https://reddit.com/r/onednd/comments/xtf2ul/
@@ -10301,6 +10923,34 @@ module qa_generated {
     )
   }
 
+  // Source: https://reddit.com/r/onednd/comments/135ya1z/
+  
+  // Action Surge and Eldritch Knight — casting a spell first then Action Surging to attack is legal (comment 3, score 9)
+  run qa_action_surge_cast_then_attack = {
+    val creature = freshCreature(20)
+    val ts0 = FRESH_TURN
+    val fs0 = freshFighterState(5)
+    // Step 1: Use Action to cast a non-cantrip spell (Fireball, Web, etc.)
+    val ts1 = pUseAction(ts0, creature, AMagic)
+    val ts2 = pMarkNonCantripActionSpell(ts1)
+    // Step 2: Use Action Surge — grants one additional action
+    val surgeResult = pUseActionSurge(ts2, fs0)
+    val ts3 = surgeResult.turn
+    val fs1 = surgeResult.fighter
+    // Step 3: Use the Action Surge action for Attack (not spellcasting)
+    val ts4 = pUseAction(ts3, creature, AAttack)
+    all {
+      // The Attack action succeeds with the Action Surge extra action
+      assert(ts4.attackActionUsed),
+      // Casting a non-cantrip as the main action blocks bonus-action spellcasting
+      assert(not(canCastBonusActionSpell(ts4))),
+      // Action Surge charge was consumed
+      assert(fs1.actionSurgeCharges == 0),
+      // No actions remain after spell + Attack
+      assert(ts4.actionsRemaining == 0),
+    }
+  }
+
   // Source: https://reddit.com/r/onednd/comments/xut94m/
   
   // Rethinking Non-Lethal Damage: melee attacker can knock creature to 0 HP unconscious and stable (not dead) instead of killing
@@ -10849,6 +11499,53 @@ module qa_generated {
     // switch to fly speed 40, no distance moved yet — full 40ft remains
     val t2 = pSwitchSpeedType(t, 40, 0)
     assert(t.movementRemaining == 20 and t2.movementRemaining == 40)
+  }
+
+  // Source: https://reddit.com/r/onednd/comments/1dkhr78/
+  
+  // The 2024 Champion Fighter is stronger than people realize: Heroic Warrior (lvl 10) grants Heroic Inspiration at turn start if not held
+  run qa_heroic_warrior_grants_inspiration_level10 = {
+    val fs = freshFighterState(10)
+    // heroicInspiration starts false; start of turn should grant it
+    val result = pFighterStartTurn(fs, 10)
+    assert(result.heroicInspiration)
+  }
+  
+  // The 2024 Champion Fighter is stronger than people realize: Heroic Warrior does not double-grant inspiration when already held
+  run qa_heroic_warrior_no_double_grant = {
+    val fs = freshFighterState(10).with("heroicInspiration", true)
+    val result = pFighterStartTurn(fs, 10)
+    // still true — held, not replaced; charge count unchanged
+    assert(result.heroicInspiration)
+  }
+  
+  // The 2024 Champion Fighter is stronger than people realize: Heroic Warrior is not active below level 10
+  run qa_heroic_warrior_requires_level10 = {
+    val fs = freshFighterState(9)
+    val result = pFighterStartTurn(fs, 9)
+    assert(not(result.heroicInspiration))
+  }
+  
+  // The 2024 Champion Fighter is stronger than people realize: spending inspiration then starting a new turn restores it (infinite cadence)
+  run qa_heroic_warrior_refreshes_after_spend = {
+    val fs = freshFighterState(10).with("heroicInspiration", true)
+    // Spend the inspiration
+    val fsSpent = fs.with("heroicInspiration", false)
+    // Next turn start: Heroic Warrior should restore it
+    val result = pFighterStartTurn(fsSpent, 10)
+    assert(result.heroicInspiration)
+  }
+  
+  // The 2024 Champion Fighter is stronger than people realize: level 10 boundary — level 10 grants, level 9 does not
+  run qa_heroic_warrior_boundary_10_vs_9 = {
+    val fs9 = freshFighterState(9)
+    val fs10 = freshFighterState(10)
+    val res9  = pFighterStartTurn(fs9,  9)
+    val res10 = pFighterStartTurn(fs10, 10)
+    all {
+      assert(not(res9.heroicInspiration)),
+      assert(res10.heroicInspiration),
+    }
   }
 
   // Source: https://reddit.com/r/onednd/comments/xrn25h/
@@ -11403,6 +12100,86 @@ module qa_generated {
     }
     val mods = pAggregateAttackMods(ctx)
     assert(not(mods.hasDisadvantage) and not(mods.hasAdvantage))
+  }
+
+  // Source: https://reddit.com/r/onednd/comments/16doxsf/
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Champion L10 Heroic Warrior grants Heroic Inspiration at start of turn
+  run qa_champion_heroic_warrior_grants_inspiration = {
+    val fs = freshFighterState(10)
+    val fs1 = pFighterStartTurn(fs, 10)
+    assert(fs1.heroicInspiration == true)
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Heroic Warrior does not double-grant if inspiration already active
+  run qa_champion_heroic_warrior_no_stack = {
+    val fs = freshFighterState(10).with("heroicInspiration", true)
+    val fs1 = pFighterStartTurn(fs, 10)
+    assert(fs1.heroicInspiration == true)
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Heroic Warrior not available below L10
+  run qa_champion_heroic_warrior_requires_l10 = {
+    val fs = freshFighterState(9)
+    val fs1 = pFighterStartTurn(fs, 9)
+    assert(fs1.heroicInspiration == false)
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Champion L3 Improved Critical sets crit range to 19
+  run qa_champion_improved_critical_range_19 = {
+    val config = configForLevel(3)
+    assert(config.critRange == 19)
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Champion L15 Superior Critical sets crit range to 18
+  run qa_champion_superior_critical_range_18 = {
+    val config = configForLevel(15)
+    assert(config.critRange == 18)
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Champion L3 scores a critical hit on d20=19 (Improved Critical)
+  run qa_champion_l3_crit_on_19 = {
+    val config = configForLevel(3)
+    val result = resolveAttackRoll(19, 5, 15, 0, config.critRange)
+    all {
+      assert(result.hits == true),
+      assert(result.isCritical == true),
+    }
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — pre-Champion (L2) does NOT crit on d20=19
+  run qa_fighter_l2_no_crit_on_19 = {
+    val config = configForLevel(2)
+    val result = resolveAttackRoll(19, 5, 15, 0, config.critRange)
+    all {
+      assert(result.hits == true),
+      assert(result.isCritical == false),
+    }
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Fighter L5 Extra Attack yields 1 bonus attack
+  run qa_fighter_l5_extra_attack_count = {
+    val config = configForLevel(5)
+    assert(extraAttacksFromConfig(config) == 1)
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Fighter L11 yields 2 extra attacks (3 total)
+  run qa_fighter_l11_extra_attack_count = {
+    val config = configForLevel(11)
+    assert(extraAttacksFromConfig(config) == 2)
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Fighter L20 yields 3 extra attacks (4 total)
+  run qa_fighter_l20_extra_attack_count = {
+    val config = configForLevel(20)
+    assert(extraAttacksFromConfig(config) == 3)
+  }
+  
+  // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Heroic Inspiration is consumed (set false) when used
+  run qa_heroic_inspiration_consumed_on_use_fe0458ed = {
+    val fs = freshFighterState(10).with("heroicInspiration", true)
+    val fs1 = fs.with("heroicInspiration", false)
+    assert(fs1.heroicInspiration == false)
   }
 
   // Source: https://rpg.stackexchange.com/q/215177

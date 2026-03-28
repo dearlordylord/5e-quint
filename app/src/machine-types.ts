@@ -243,6 +243,7 @@ export type DndEvent =
   | { readonly type: "USE_INDOMITABLE" }
   | { readonly type: "USE_TACTICAL_MIND"; readonly boostedCheckSucceeds: boolean }
   | { readonly type: "USE_HEROIC_INSPIRATION" }
+  | { readonly type: "SCORE_CRITICAL_HIT" }
 
 // --- Event extractors ---
 

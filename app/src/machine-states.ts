@@ -162,6 +162,7 @@ export const turnPhaseConfig = {
         USE_INDOMITABLE: { actions: ["useIndomitable"] },
         USE_TACTICAL_MIND: { actions: ["useTacticalMind"] },
         USE_HEROIC_INSPIRATION: { actions: ["useHeroicInspiration"] },
+        SCORE_CRITICAL_HIT: { actions: ["scoreCriticalHit"] },
         MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
         MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
       }

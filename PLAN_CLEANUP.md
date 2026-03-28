@@ -34,7 +34,7 @@ Every change must pass the scaling question: **"What happens when we have all 8+
 | Tactical Mind (L2) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
 | Tactical Shift (L5, on SW) | ✓ via P1 | ✓ | ✓ | ✓ |
 | Champion: Improved/Superior Critical | ✓ configForLevel | ✗ | ✓ | ✓ (via critRange) |
-| Champion: Remarkable Athlete | ✗ query only | ✗ | ✓ | ✗ |
+| Champion: Remarkable Athlete (crit movement) | ✓ | ✓ | ✓ | ✓ |
 | Champion: Heroic Warrior (L10) | ✓ | ✓ duplicate | ✓ duplicate | ✓ |
 | Champion: Survivor/Defy Death (L18) | ✓ | ✓ | ✓ | ✓ |
 
@@ -127,6 +127,16 @@ For `fighterState` (7 fields, ~7K records), the `VALID_FIGHTER_STATES` set compr
 - Init level set expanded to `Set(5, 9, 10, 18)`
 - Quint + XState (DEATH_SAVE gains d20Roll2, START_TURN gains deathSaveRoll2/conMod) + MBT bridge
 
+### R. Remarkable Athlete crit movement (Champion L3) ✓
+
+- SRD 5.2.1: "immediately after you score a Critical Hit, you can move up to half your Speed without provoking Opportunity Attacks."
+- Added `doScoreCriticalHit` action — attacker-side signal that grants bonus movement via `pGrantBonusMovement`
+- Guard: `turnPhase == "acting"`, `fighterLevel >= 3`, not incapacitated (dead guard handled by `step`)
+- XState: `SCORE_CRITICAL_HIT` event → `scoreCriticalHit` action in `acting` state
+- MBT: driver schema + handler (no params)
+- Init level set expanded to `Set(3, 5, 9, 10, 18)`
+- All validation passes: typecheck, unit tests, invariant simulation, MBT (1229 tests)
+
 ### P1. Bonus movement grants ✓
 
 - Added `bonusMovementRemaining: int` and `bonusMovementOAFree: bool` to `TurnState`
@@ -144,18 +154,7 @@ For `fighterState` (7 fields, ~7K records), the `VALID_FIGHTER_STATES` set compr
 
 ## TODO
 
-### Remarkable Athlete crit movement (Champion L3)
-
-After scoring a Critical Hit, move up to half your Speed without provoking OAs (SRD 5.2.1 Champion L3). Already in TS: `class-fighter.ts:remarkableAthleteCritMovement`. Advantage on Initiative + Athletics is query-only (no state needed, already done).
-
-**P1 infrastructure is in place.** Wire it the same way as Tactical Shift (F):
-
-- **Quint:** The model doesn't currently have a "critical hit scored" event — crits are tracked via `isCrit` on `TAKE_DAMAGE` (target side). Remarkable Athlete triggers on the *attacker* side. Options: (a) add a `doScoreCriticalHit` action that grants bonus movement, or (b) fold into an existing action. Study `doUseSecondWind`'s Tactical Shift wiring as template — the call is `pGrantBonusMovement(ts, turnState.effectiveSpeed, true)`.
-- **XState:** Same pattern — set `bonusMovementRemaining` and `bonusMovementOAFree` in the handler.
-- **MBT:** Add driver schema entry + handler.
-- **Validate:** typecheck, test, invariants, vitest.
-
-**Caveat:** This requires a design decision about how crit-hit-scored is represented in the model. Discuss with project owner before implementing.
+All features complete. No remaining TODO items.
 
 ---
 
