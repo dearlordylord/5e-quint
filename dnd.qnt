@@ -511,7 +511,10 @@ module dnd {
     saveResult: bool,        // true = save succeeded, remove effect
     damageAmount: int,       // 0 = none
     damageType: DamageType,
-    conSaveSucceeded: bool   // for concentration check on damage
+    conSaveSucceeded: bool,  // for concentration check on damage
+    resistances: Set[DamageType],
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType]
   }
 
   type CreatureState = {
@@ -1652,7 +1655,7 @@ module dnd {
         val s3 = if (eff.tempHpAmount > 0) pGrantTempHp(s2, eff.tempHpAmount, false) else s2
         // Damage + concentration break
         if (eff.damageAmount > 0) {
-          val s4 = pTakeDamage(s3, eff.damageAmount, eff.damageType, Set(), Set(), Set(), false)
+          val s4 = pTakeDamage(s3, eff.damageAmount, eff.damageType, eff.resistances, eff.vulnerabilities, eff.immunities, false)
           val r = pWithConcBreak(acc.slots, acc.creature, s4)
           val r2 = if (isConcentrating(r.slots)) {
             val ss2 = pConcentrationCheck(r.slots, eff.conSaveSucceeded)
@@ -2439,13 +2442,16 @@ module dnd {
     nondet effDmgAmount = DAMAGE_RANGE.oneOf()
     nondet effDmgType = DAMAGE_TYPES.oneOf()
     nondet effConSave = Bool.oneOf()
+    nondet effResType = DAMAGE_TYPES.oneOf()
+    nondet effVulnType = DAMAGE_TYPES.oneOf()
     if (turnPhase != "waitingForTurn") unchanged
     else {
       val effects: List[StartOfTurnEffect] = if (numEffects == 0) []
         else [{
           spellId: effSpellId, healAmount: effHeal, tempHpAmount: effTempHp,
           saveResult: effSaveResult, damageAmount: effDmgAmount,
-          damageType: effDmgType, conSaveSucceeded: effConSave
+          damageType: effDmgType, conSaveSucceeded: effConSave,
+          resistances: Set(effResType), vulnerabilities: Set(effVulnType), immunities: Set()
         }]
       val r = pStartTurnFull(configForLevel(fighterLevel), state, spellSlots, Unarmored,
         callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)

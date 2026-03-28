@@ -143,6 +143,9 @@ export interface StartTurnEffect {
   readonly damageAmount: number
   readonly damageType: DamageType
   readonly conSaveSucceeded: boolean
+  readonly resistances: ReadonlySet<DamageType>
+  readonly vulnerabilities: ReadonlySet<DamageType>
+  readonly immunities: ReadonlySet<DamageType>
 }
 
 export type DndEvent =

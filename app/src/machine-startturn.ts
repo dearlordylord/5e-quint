@@ -5,7 +5,6 @@ import {
   type ConditionFlag,
   damageAtZeroTransition,
   effectiveMaxHp,
-  EMPTY_DMG_SET,
   removeIncapSource,
   resolveDeathSave
 } from "#/machine-helpers.ts"
@@ -104,9 +103,9 @@ export function computeStartTurn(
         th,
         eff.damageAmount,
         eff.damageType,
-        EMPTY_DMG_SET,
-        EMPTY_DMG_SET,
-        EMPTY_DMG_SET
+        eff.resistances,
+        eff.vulnerabilities,
+        eff.immunities
       )
       h = r.newHp
       th = r.newTempHp
