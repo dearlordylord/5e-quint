@@ -753,6 +753,8 @@ module dnd {
   /// Apply damage with resistance/vulnerability/immunity, temp HP absorption,
   /// instant death, and death save failures at 0 HP.
   /// Petrified auto-adds resistance to all damage types.
+  /// NOTE: Death save track (unconscious at 0 HP, failures on subsequent hits) is PC-only per RAW.
+  /// Current spec applies universally — correct while only PCs use the spec (see A12).
   pure def pTakeDamage(
     s: CreatureState,
     amount: int,
@@ -1671,6 +1673,7 @@ module dnd {
     })
 
   /// Full START_TURN orchestrator: decrement → expiry → death save → effects → turn reset.
+  /// NOTE: Death save roll at step 3 is PC-only per RAW. See A12 in ASSUMPTIONS.md.
   type StartTurnFullResult = { creature: CreatureState, slots: SpellSlotState, turn: TurnState }
 
   pure def pStartTurnFull(

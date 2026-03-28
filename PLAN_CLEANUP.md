@@ -274,7 +274,7 @@ Checklist:
 
 ### H2. Death saves are PC-only (documentation + guard)
 
-**Status:** Not started
+**Status:** DONE (2026-03-28)
 **Priority:** Medium — correctness documentation; becomes enforcement when monsters are added
 
 The SRD is explicit: "A **player character** must make a Death Saving Throw if they start their turn with 0 Hit Points." `pTakeDamage` currently enters the death-save track (unconscious, death save failures on subsequent hits) for all creatures. This is correct for PCs but wrong for monsters (who die at 0 HP).

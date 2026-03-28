@@ -100,3 +100,13 @@ Each entry records the assumption, rules justification, and what changed in both
 **Rules basis (SRD 5.2.1 "Damage Resistance/Vulnerability"):** "Resistance and then Vulnerability are applied after all other modifiers to damage." No exception is made for ongoing damage — resistances always apply unless a feature explicitly states otherwise.
 
 **Changes:** `dnd.qnt`: Added `resistances`, `vulnerabilities`, `immunities` fields to `EndOfTurnDamage` and `StartOfTurnEffect` types. `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` now pass these to `pTakeDamage` instead of empty sets. XState: matching fields added to event types and passed through in `machine-endturn.ts` and `machine-startturn.ts`.
+
+## A12: Death saves apply universally (PC-only per RAW)
+
+**Assumption:** The spec applies the death save track (unconscious at 0 HP, death save failures on subsequent hits, start-of-turn death save rolls) to all creatures. Per RAW, death saves are PC-only — monsters die at 0 HP.
+
+**Rules basis (SRD 5.2.1 Playing-the-Game, "Death Saving Throws"):** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw." The "you" refers to player characters. The Rules Glossary "Monsters and Death" section states: "Most DMs have a monster die the instant it drops to 0 Hit Points, rather than having it fall Unconscious."
+
+**Why universal for now:** The spec currently models only PCs. Gating death saves on a `creatureKind` discriminator is deferred to PLAN_MONSTERS.md Phase 0. The universal behavior is correct for PCs and the tests validate PC death save mechanics.
+
+**Changes:** Comments added to `pTakeDamage` and `pStartTurnFull` in dnd.qnt documenting the PC-only constraint.
