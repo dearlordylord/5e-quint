@@ -3,7 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { HighlightedQuint } from "#/components/demo/HighlightedQuint.tsx"
 import { type QuintSnippet, SNIPPETS } from "#/components/demo/quint-snippets.ts"
+import { dndMachine } from "#/machine.ts"
 
+import { SubMachineViz } from "./MachineViz.tsx"
 import { FIELD_GROUPS, type NormalizedState, SAMPLE_TRACE, type TraceStep } from "./sample-trace.ts"
 
 /** Map Quint action names to their spec snippets */
@@ -740,6 +742,12 @@ export function TraceVisualizer() {
               </div>
               <StateTable step={currentTraceStep} prevState={prevState} />
             </div>
+            <SubMachineViz
+              machine={dndMachine}
+              stateId="turnPhase"
+              activeStateKey={currentTraceStep.quintState.turnPhase}
+              activeEvent={currentTraceStep.xstateEvent}
+            />
           </div>
         </div>
 
