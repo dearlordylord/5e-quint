@@ -135,36 +135,15 @@ Two fields on TurnState: `bonusMovementRemaining` (distance) and `bonusMovementO
 
 ## TODO
 
-### Turn phase guard missing from TS feature preconditions
+### DONE: Turn phase guard added to TS feature preconditions
 
-The Quint spec guards ALL fighter actions with `turnPhase != "acting"` (line 2697 etc.) — you must be in combat and acting. The XState machine enforces this structurally (events only accepted in the `acting` state). But the TS pure functions (`canUseActionSurge`, `canUseSecondWind`, `canUseIndomitable`, `canUseTacticalMind` in `class-fighter.ts`) and the bridge layer (`canExecute*` in `feature-bridge.ts`) don't check turn phase. This means `useFeatures` hook reports features as available out of combat. The machine rejects the events, so it's not a correctness bug — but the UI shows enabled buttons when they can't fire.
+`useFeatures.ts` (and extracted hooks `useMonkPaladinFeatures`, `useRogueFeatures`) now gate all combat features behind `isActing = snapshot.matches({ turnPhase: "acting" })`. The UI no longer shows features as available outside the acting phase. TODO in code to eventually move gating into `canExecute*` bridge functions.
 
-**Fix:** `canExecute*` functions in `feature-bridge.ts` should check `ctx.actionsRemaining > 0` or a turn-phase indicator from the machine snapshot. The pure functions in `class-fighter.ts` shouldn't need to change (they don't have turn phase context by design).
+### DONE: Trace visualizer XState column comes from real machine
 
-### Trace visualizer: XState column should come from real machine
+`trace-replay.ts` replays events through the real `dndMachine` via `snapshotToNormalized()`. The Quint column is hand-written expected values ("spec says"). The XState column is real machine output ("implementation produces"). Mismatches are real bugs.
 
-The trace visualizer (`/trace` route, `app/src/components/trace-visualizer/`) uses a hardcoded sample trace where both Quint and XState columns are the same hand-written values. The XState column should come from actually running the XState machine.
-
-**What's verified vs hardcoded now:**
-- The NormalizedState shape, transition rules, Fighter charges, action economy, conditions, death saves, HP math are all MBT-verified at test time (real Quint traces replayed against real XState).
-- The specific trace sequence, dice rolls, damage amounts, and per-step state values are hand-computed in `sample-trace.ts`. The `step()` helper duplicates one state into both columns.
-- Quint snippets in `quint-snippets.ts` are hand-extracted from `dnd.qnt` (reviewed and corrected, but could drift).
-
-**Fix:** Generate the XState column by running a real XState actor:
-1. Define the trace as a sequence of `{ quintAction, xstateEvent, eventPayload, description, expectedQuintState }`.
-2. At component mount (or build time), create an XState actor, send each event, capture the snapshot after each step via `snapshotToNormalized()` from `machine.mbt.test.ts`.
-3. Use the captured snapshot as `xstateState` and the hand-written expected values as `quintState`.
-4. Now mismatches between columns are real bugs, and the green checkmarks are earned.
-
-**Key files:**
-- `app/src/components/trace-visualizer/sample-trace.ts` — trace data (rewrite to event sequence + expected Quint state)
-- `app/src/components/trace-visualizer/TraceVisualizer.tsx` — component (add actor setup)
-- `app/src/machine.mbt.test.ts` — has `snapshotToNormalized()` to reuse (may need to export it)
-- `app/src/machine.ts` — `dndMachine` and `DndSnapshot` exports already exist
-
-**What this does NOT do:** Run Quint in the browser. The Quint column stays as hand-written expected values (the "spec says"). The XState column becomes "implementation produces." The visualizer becomes a live proof, not a static illustration.
-
-**Current verification status (for "about" page / transparency):**
+**Verification status:**
 
 | Aspect | Source | MBT-verified? |
 |--------|--------|:---:|
@@ -176,14 +155,13 @@ The trace visualizer (`/trace` route, `app/src/components/trace-visualizer/`) us
 | Death save mechanics (nat 20 = 1 HP, success/fail counting) | Quint spec | yes |
 | HP/damage math (resistance, overflow, temp HP) | Quint spec | yes |
 | End turn preserves turnState | Quint spec (`turnState' = turnState`) | yes |
+| Per-step XState state values | Real machine replay via `trace-replay.ts` | **yes (at render time)** |
 | The specific trace (which actions, what order) | Hardcoded in `sample-trace.ts` | no |
 | Dice rolls (d10=7, death save=14, nat 20) | Hardcoded | no |
 | Damage amounts (18, 50) | Hardcoded | no |
-| Per-step state values (hp=38 after heal) | Hand-computed | **no (fix above)** |
+| Per-step Quint state values (hp=38 after heal) | Hand-computed expected values | no |
 | Descriptions ("Ogre crits for 50...") | Flavor text | no |
 | Quint snippets | Hand-extracted from dnd.qnt | no (reviewed) |
-
-After implementing the fix above, "Per-step state values" moves to the XState column (verified at render time).
 
 ---
 

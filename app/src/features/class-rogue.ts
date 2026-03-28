@@ -4,7 +4,6 @@ import type { Condition, Size } from "#/types.ts"
 // --- Constants ---
 
 const UNCANNY_DODGE_LEVEL = 5
-const EVASION_LEVEL = 7
 const CUNNING_ACTION_LEVEL = 2
 const STEADY_AIM_LEVEL = 3
 const CUNNING_STRIKE_LEVEL = 5
@@ -281,10 +280,12 @@ export function canUncannyDodge(params: {
   readonly attackerVisible: boolean
   readonly isIncapacitated: boolean
 }): boolean {
-  return params.rogueLevel >= UNCANNY_DODGE_LEVEL
-    && params.reactionAvailable
-    && params.attackerVisible
-    && !params.isIncapacitated
+  return (
+    params.rogueLevel >= UNCANNY_DODGE_LEVEL &&
+    params.reactionAvailable &&
+    params.attackerVisible &&
+    !params.isIncapacitated
+  )
 }
 
 // --- Evasion (L7) ---
@@ -297,7 +298,7 @@ export function evasionDamage(
   hasEvasion: boolean,
   isIncapacitated: boolean,
   dexSaveSucceeded: boolean,
-  fullDamage: number,
+  fullDamage: number
 ): number {
   if (!hasEvasion || isIncapacitated) return fullDamage
   if (dexSaveSucceeded) return 0

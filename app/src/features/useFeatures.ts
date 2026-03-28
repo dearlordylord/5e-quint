@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useReducer } from "react"
 
 import { canCastWhileRaging } from "#/features/class-barbarian.ts"
-import type { CunningActionChoice, StrikeEffect } from "#/features/class-rogue.ts"
 import type { AbjureFoesResult } from "#/features/class-paladin.ts"
+import type { CunningActionChoice, StrikeEffect } from "#/features/class-rogue.ts"
 import type { BridgeResult } from "#/features/feature-bridge.ts"
 import {
   canExecuteActionSurge,
@@ -222,9 +222,11 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
   }, [])
 
   const ctx = snapshot?.context ?? null
+  // TODO: extract isActing gating into canExecute* bridge functions so hooks don't repeat `isActing &&`
+  const isActing = snapshot?.matches({ turnPhase: "acting" }) ?? false
   // Fighter
-  const canSecondWind = ctx ? canExecuteSecondWind(featureState, ctx) : false
-  const canActionSurge = ctx ? canExecuteActionSurge(featureState, ctx) : false
+  const canSecondWind = isActing && ctx ? canExecuteSecondWind(featureState, ctx) : false
+  const canActionSurge = isActing && ctx ? canExecuteActionSurge(featureState, ctx) : false
 
   const secondWind = useCallback(
     (d10Roll: number): BridgeResult | null => {
@@ -244,7 +246,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
   }, [featureState, ctx])
 
   const fighterExtras = useFighterExtras(featureState, config.level, config.championLevel ?? 0, dispatch)
-  const canEnterRageVal = ctx ? canExecuteEnterRage(featureState, ctx) : false
+  const canEnterRageVal = isActing && ctx ? canExecuteEnterRage(featureState, ctx) : false
   const berserkerLevel = config.berserkerLevel ?? 0
   const enterRage = useCallback((): BridgeResult | null => {
     if (!ctx) return null
@@ -264,7 +266,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     return result
   }, [])
 
-  const canExtendRageBAVal = ctx ? canExecuteExtendRageBA(featureState, ctx) : false
+  const canExtendRageBAVal = isActing && ctx ? canExecuteExtendRageBA(featureState, ctx) : false
 
   const extendRageBA = useCallback((): BridgeResult | null => {
     const result = executeExtendRageBA()
@@ -272,7 +274,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     return result
   }, [])
 
-  const canDeclareRecklessVal = canExecuteDeclareReckless(featureState)
+  const canDeclareRecklessVal = isActing && canExecuteDeclareReckless(featureState)
 
   const declareReckless = useCallback((): BridgeResult | null => {
     const result = executeDeclareReckless()
@@ -291,7 +293,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
 
   // Berserker
   // Frenzy: isStrengthBased defaults to true (caller can check canFrenzy before calling)
-  const canFrenzyVal = canExecuteFrenzy(featureState, berserkerLevel, true)
+  const canFrenzyVal = isActing && canExecuteFrenzy(featureState, berserkerLevel, true)
 
   const frenzy = useCallback((): BridgeResult | null => {
     const result = executeFrenzy()
@@ -303,7 +305,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
 
   const mindlessImmunities = getMindlessRageImmunities(featureState, berserkerLevel)
 
-  const canRetaliationVal = ctx ? canExecuteRetaliation(featureState, ctx, berserkerLevel, false) : false
+  const canRetaliationVal = isActing && ctx ? canExecuteRetaliation(featureState, ctx, berserkerLevel, false) : false
 
   const retaliationCb = useCallback((): BridgeResult | null => {
     const result = executeRetaliation()
@@ -311,7 +313,8 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     return result
   }, [])
 
-  const canIntimidatingPresenceVal = ctx ? canExecuteIntimidatingPresence(featureState, ctx, berserkerLevel) : false
+  const canIntimidatingPresenceVal =
+    isActing && ctx ? canExecuteIntimidatingPresence(featureState, ctx, berserkerLevel) : false
 
   const intimidatingPresenceCb = useCallback((): BridgeResult | null => {
     const result = executeIntimidatingPresence()
@@ -351,10 +354,10 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
   )
 
   // Monk + Paladin (extracted to useMonkPaladinFeatures)
-  const monkPaladin = useMonkPaladinFeatures(featureState, ctx, config.level, dispatch)
+  const monkPaladin = useMonkPaladinFeatures(featureState, ctx, config.level, dispatch, isActing)
 
   // Rogue (extracted to useRogueFeatures)
-  const rogueFeatures = useRogueFeatures(featureState, ctx, config.level, dispatch)
+  const rogueFeatures = useRogueFeatures(featureState, ctx, config.level, dispatch, isActing)
 
   const resetToInitial = useCallback(() => {
     dispatch({ type: "RESET" })

@@ -105,6 +105,8 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     readiedAction: false,
     bonusActionSpellCast: false,
     nonCantripActionSpellCast: false,
+    bonusMovementRemaining: 0,
+    bonusMovementOAFree: false,
     slotsMax: EMPTY_SLOTS,
     slotsCurrent: EMPTY_SLOTS,
     pactSlotsMax: 0,
@@ -120,6 +122,8 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     actionSurgeUsedThisTurn: false,
     indomitableCharges: 0,
     indomitableMax: 0,
+    heroicInspiration: false,
+    fighterLevel: 0,
     ...overrides
   }
 }
