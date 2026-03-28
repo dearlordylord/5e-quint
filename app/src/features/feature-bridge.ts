@@ -123,6 +123,7 @@ export function executeIndomitable(): BridgeResult {
 }
 
 // --- Champion subclass queries (passive — no state) ---
+// Hardcoded to Champion — the only Fighter subclass in the SRD 5.2.1.
 
 export {
   championCritRange,

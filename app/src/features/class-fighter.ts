@@ -213,6 +213,11 @@ export function fighterLongRest(state: FighterLongRestState): {
 
 // =============================================================================
 // Champion Subclass Features (SRD 5.2.1)
+//
+// Hardcoded to Champion — the only Fighter subclass in the SRD 5.2.1.
+// Each SRD class has exactly one subclass; no others are available to model.
+// All functions take a numeric fighterLevel/championLevel and use level
+// thresholds rather than subclass enum dispatch.
 // =============================================================================
 
 // --- Constants ---

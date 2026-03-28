@@ -24,6 +24,8 @@ import { reduceRogue } from "#/features/feature-store-rogue.ts"
 export interface FeatureConfig {
   readonly className: string
   readonly level: number
+  // Subclass levels are hardcoded per-subclass because the SRD 5.2.1 provides
+  // exactly one subclass per class. No generic subclass dispatch needed.
   readonly berserkerLevel?: number
   readonly championLevel?: number
 }

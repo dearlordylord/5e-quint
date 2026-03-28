@@ -32,6 +32,8 @@ export interface FighterExtrasHookResult {
   readonly survivorHeroicRally: (currentHp: number, maxHp: number, conMod: number) => number
 }
 
+// championLevel is hardcoded because Champion is the only Fighter subclass
+// in the SRD 5.2.1. Each SRD class has exactly one subclass.
 export function useFighterExtras(
   featureState: FeatureState,
   level: number,

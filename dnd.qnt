@@ -2238,6 +2238,9 @@ module dnd {
   // -- 19.3 Config Derivation --
 
   /// Base Champion config — the 14 fields that don't change with level.
+  /// NOTE: Hardcoded to Champion because it is the only Fighter subclass in
+  /// the SRD 5.2.1. Each SRD class has exactly one subclass; no others are
+  /// available to model. Parameterize if non-SRD subclasses are ever added.
   pure val BASE_CHAMPION_CONFIG: CharConfig = {
     className: Fighter,
     subclass: Champion,
@@ -2263,6 +2266,9 @@ module dnd {
 
   /// Derive full CharConfig from level. Level-dependent fields:
   /// - level, classLevels, critRange (Champion Improved/Superior Critical), features (Extra Attack tiers)
+  /// NOTE: Hardcoded to Champion (the only Fighter subclass in SRD 5.2.1).
+  /// Crit range thresholds (L3→19, L15→18) are Champion-specific. Needs a
+  /// subclass parameter if non-SRD Fighter subclasses are ever added.
   pure def configForLevel(level: int): CharConfig = {
     val features = if (level >= 20) Set(FExtraAttack, FExtraAttack2, FExtraAttack3)
       else if (level >= 11) Set(FExtraAttack, FExtraAttack2)
