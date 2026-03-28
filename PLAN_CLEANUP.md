@@ -12,9 +12,9 @@ Every class feature that affects state tracked by the XState machine should be s
 - **XState machine** (`machine.ts`) — Quint-parity state machine, verified by MBT traces
 - **TS features layer** (`app/src/features/`) — single implementation of class features, bridges to machine events via `feature-bridge.ts`
 
-Currently only base rules (HP, damage, conditions, turns, rests, slots, grapple/shove) and 3 Fighter charge mechanics have Quint specs. The rest of Fighter and all other classes exist only in TS.
+Fighter (Champion) is fully spec'd in Quint. All other classes exist only in TS.
 
-**"Quint parity" scope:** CLAUDE.md says "never add logic to XState that diverges from Quint spec." This applies to mechanics that ARE modeled in Quint. Features not yet in Quint (Tactical Mind, Champion subclass, all other classes) live only in the TS features layer — that's the current state, not a violation. The goal is to move them into Quint over time.
+**"Quint parity" scope:** CLAUDE.md says "never add logic to XState that diverges from Quint spec." This applies to mechanics that ARE modeled in Quint. Features not yet in Quint (all other classes) live only in the TS features layer — that's the current state, not a violation. The goal is to move them into Quint over time.
 
 ## Architectural constraint
 
@@ -64,29 +64,7 @@ The XState inline implementations exist because the MBT bridge sends events dire
 
 ---
 
-## DONE
-
-### A. Make `fighterLevel` a state variable and derive config from it ✓
-
-- Added `var fighterLevel: int` with frame conditions on all ~48 actions
-- Added `BASE_CHAMPION_CONFIG` + `configForLevel(level)` deriving 4 level-dependent fields
-- Replaced all hardcoded config references (`TEST_CONFIG.level`, hardcoded `5`/`9`)
-- Unified `init` with `nondet l = Set(5, 9).oneOf()` — both levels in one run
-- Deleted all L9 duplicates: `init9`, `step9`, `doUseSecondWindL9`, `doUseIndomitableL9`, `doLongRestL9`, `TEST_CONFIG_L9`, `FRESH_FIGHTER_STATE_L9`
-- Replaced `TEST_CONFIG` literal with `configForLevel(5)` (also fixes latent `critRange: 20` bug)
-- Updated MBT bridge: `createDndDriver()` parameterless, init reads level from nondet pick, handlers read `fighterLevel` from actor snapshot, single `run()` call
-- Added `fighterLevel` to `DndContext`, `NormalizedState`, `QuintFullState`, both conversion functions
-- All validation passes: typecheck, unit tests, invariant simulation, MBT (1229 tests)
-
-### B. Move inductive invariant into `dnd.qnt` ✓ (partial)
-
-- Moved `VALID_FIGHTER_STATES` and `inductiveInv` from `dndFighterInductive.qnt` into `dnd.qnt`
-- Deleted `dndFighterInductive.qnt`
-- Updated `inductiveInv` to use `fighterLevel` state var: `fighterLevel.in(1.to(20))` + charge constraints against `fighterLevel`
-- Apalache check 1/3 passes (inductiveInv holds in init)
-- Apalache check 2/3 blocked — see "Apalache limitation" below
-
-### Apalache limitation (non-blocking)
+## Apalache limitation (non-blocking)
 
 **What we wanted:** Apalache verifies `inductiveInv` is preserved by every step — a proof that `allInvariants` holds for ALL reachable states, not just sampled traces.
 
@@ -103,58 +81,6 @@ For `fighterState` (7 fields, ~7K records), the `VALID_FIGHTER_STATES` set compr
 **What would unblock it:**
 - Quint adding a symbolic record type expression (equivalent to TLA+'s `[field: Set, ...]` function sets)
 - Or: a restricted sub-model that strips CreatureState/SpellSlotState down to just the fields Apalache needs
-
-### E. Tactical Mind (Level 2) ✓
-
-- Added `canUseTacticalMind`, `pUseTacticalMind` pure functions + `doUseTacticalMind` action
-- Quint + XState (`USE_TACTICAL_MIND`) + MBT bridge
-- Charge only consumed if boosted check succeeds (SRD 5.2.1)
-
-### G1. Heroic Warrior (Champion L10) ✓
-
-- Added `heroicInspiration: bool` to `FighterState`
-- `pFighterStartTurn` grants inspiration at L10+ if not already held
-- `doUseHeroicInspiration` action to consume inspiration
-- Updated `VALID_FIGHTER_STATES` with new bool dimension
-- Init level set expanded to `Set(5, 9, 10)`
-- Quint + XState (`USE_HEROIC_INSPIRATION`) + MBT bridge
-
-### G2. Survivor (Champion L18) ✓
-
-- **Defy Death:** `pFighterDeathSaveRoll` — advantage (two rolls, take max) + threshold (18-20 → 20). Applied to `doDeathSave` and `pStartTurnFull`.
-- **Heroic Rally:** `isBloodied`, `pHeroicRally` — heal 5+conMod at turn start if bloodied (0 < hp ≤ maxHp/2).
-- Added `deathSaveRoll2` and `conMod` nondet params to `doStartTurn`
-- Init level set expanded to `Set(5, 9, 10, 18)`
-- Quint + XState (DEATH_SAVE gains d20Roll2, START_TURN gains deathSaveRoll2/conMod) + MBT bridge
-
-### R. Remarkable Athlete crit movement (Champion L3) ✓
-
-- SRD 5.2.1: "immediately after you score a Critical Hit, you can move up to half your Speed without provoking Opportunity Attacks."
-- Added `doScoreCriticalHit` action — attacker-side signal that grants bonus movement via `pGrantBonusMovement`
-- Guard: `turnPhase == "acting"`, `fighterLevel >= 3`, not incapacitated (dead guard handled by `step`)
-- XState: `SCORE_CRITICAL_HIT` event → `scoreCriticalHit` action in `acting` state
-- MBT: driver schema + handler (no params)
-- Init level set expanded to `Set(3, 5, 9, 10, 18)`
-- All validation passes: typecheck, unit tests, invariant simulation, MBT (1229 tests)
-
-### P1. Bonus movement grants ✓
-
-- Added `bonusMovementRemaining: int` and `bonusMovementOAFree: bool` to `TurnState`
-- `pGrantBonusMovement`, `canUseBonusMovement`, `pUseBonusMovement` pure functions
-- `doUseBonusMovement` action + `bonusMovementBounded` invariant
-- Reset at turn start via `pStartTurn`
-- Quint + XState (`USE_BONUS_MOVEMENT`) + MBT bridge
-
-### F. Tactical Shift (L5) ✓
-
-- Extended `doUseSecondWind` / `useSecondWind` to call `pGrantBonusMovement(ts, effectiveSpeed, true)` at L5+
-- Uses P1 infrastructure — no new actions or state
-
----
-
-## TODO
-
-All features complete. No remaining TODO items.
 
 ---
 
@@ -175,9 +101,9 @@ All features complete. No remaining TODO items.
 6. If adding fields to `FighterState`: update the type definition, `freshFighterState`, `VALID_FIGHTER_STATES` ranges, `inductiveInv` constraints, `QuintFighterState` Zod schema, `NormalizedState` interface, both conversion functions (`snapshotToNormalized`, `quintParsedToNormalized`), `DndContext` interface, machine context factory
 7. Validate: `npx quint typecheck dnd.qnt`, `npx quint test --main=dnd dnd.qnt`, `npx quint run --main=dnd --invariant=allInvariants dnd.qnt`, `npx vitest run`
 
-### P1. Bonus movement grants (reference — implemented ✓)
+### P1. Bonus movement grants (cross-class infrastructure)
 
-Cross-class infrastructure for features that grant immediate bonus movement of `floor(Speed/2)`. Two fields on TurnState: `bonusMovementRemaining` (distance) and `bonusMovementOAFree` (OA immunity). `doUseBonusMovement` action consumes it. Reset at turn start. Used by Tactical Shift (F); available for Remarkable Athlete crit movement, Barbarian Instinctive Pounce, Rogue Withdraw.
+Two fields on TurnState: `bonusMovementRemaining` (distance) and `bonusMovementOAFree` (OA immunity). `doUseBonusMovement` action consumes it. Reset at turn start. Used by Tactical Shift (L5) and Remarkable Athlete (L3); available for Barbarian Instinctive Pounce, Rogue Withdraw.
 
 ---
 
