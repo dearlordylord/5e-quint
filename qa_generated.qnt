@@ -659,7 +659,7 @@ module qa_generated {
   // Q&A: Expert Classes UA - Exhaustion level 6 kills the creature (spec models SRD 5.2.1)
   run qa_exhaustion_level_6_death = {
     val s = freshCreature(20).with("exhaustion", 5)
-    val s2 = pAddExhaustion(s, 1)
+    val s2 = pAddExhaustion(s, 1, false)
     assert(s2.dead and s2.exhaustion == 6 and s2.hp == 0)
   }
   
@@ -1512,7 +1512,7 @@ module qa_generated {
     val creature = freshCreature(20)
     // d20=7: 7+2=9 < DC 10 → save fails → gain 1 exhaustion
     val failed = not(saveSucceeds(7, conMod, false, profBonus, 0, 10))
-    val result = if (failed) pAddExhaustion(creature, 1) else creature
+    val result = if (failed) pAddExhaustion(creature, 1, false) else creature
     assert(failed and result.exhaustion == 1)
   }
   
@@ -1523,7 +1523,7 @@ module qa_generated {
     val creature = freshCreature(20)
     // d20=10: 10+2=12 >= DC 10 → save succeeds → no exhaustion
     val succeeded = saveSucceeds(10, conMod, false, profBonus, 0, 10)
-    val result = if (not(succeeded)) pAddExhaustion(creature, 1) else creature
+    val result = if (not(succeeded)) pAddExhaustion(creature, 1, false) else creature
     assert(succeeded and result.exhaustion == 0)
   }
   
@@ -2188,21 +2188,21 @@ module qa_generated {
   // New Exhaustion Rules with Berserker: each Frenzy use adds 1 exhaustion level, penalty is -2 per level
   run qa_frenzy_one_exhaustion_gives_minus2_penalty = {
     val c = freshCreature(30)
-    val c1 = pAddExhaustion(c, 1)
+    val c1 = pAddExhaustion(c, 1, false)
     assert(exhaustionPenalty(c1) == -2)
   }
   
   // New Exhaustion Rules with Berserker: stacking two Frenzy uses gives cumulative -4 D20 penalty
   run qa_frenzy_two_exhaustion_stacks_cumulatively = {
     val c = freshCreature(30)
-    val c1 = pAddExhaustion(pAddExhaustion(c, 1), 1)
+    val c1 = pAddExhaustion(pAddExhaustion(c, 1, false), 1, false)
     assert(c1.exhaustion == 2 and exhaustionPenalty(c1) == -4)
   }
-  
+
   // New Exhaustion Rules with Berserker: long rest removes exactly 1 exhaustion level (slow recovery)
   run qa_frenzy_long_rest_removes_one_exhaustion = {
     val c = freshCreature(30)
-    val c2 = pAddExhaustion(pAddExhaustion(c, 1), 1)
+    val c2 = pAddExhaustion(pAddExhaustion(c, 1, false), 1, false)
     val c3 = pLongRest(c2, 5)
     assert(c3.exhaustion == 1)
   }
@@ -2210,7 +2210,7 @@ module qa_generated {
   // New Exhaustion Rules with Berserker: exhaustion level 6 is fatal regardless of current HP
   run qa_frenzy_exhaustion_level_6_is_fatal = {
     val c = freshCreature(30)
-    val c1 = pAddExhaustion(c, 6)
+    val c1 = pAddExhaustion(c, 6, false)
     assert(c1.dead and c1.exhaustion == 6 and c1.hp == 0)
   }
 
@@ -6194,7 +6194,7 @@ module qa_generated {
   // Level 12 Playtest: Temple on the Mountain — missing long rest causes one exhaustion level
   run qa_missing_long_rest_causes_exhaustion = {
     val creature = freshCreature(30)
-    val exhausted = pAddExhaustion(creature, 1)
+    val exhausted = pAddExhaustion(creature, 1, false)
     assert(exhausted.exhaustion == 1 and not(exhausted.dead))
   }
 
@@ -7495,7 +7495,7 @@ module qa_generated {
   run qa_fomorian_warping_hex_exhaustion_persists_until_long_rest = {
     val c = freshCreature(30)
     // Monster ability inflicts 1 exhaustion level (no duration or end condition specified)
-    val afterHex = pAddExhaustion(c, 1)
+    val afterHex = pAddExhaustion(c, 1, false)
     // Exhaustion is permanent — does not auto-expire; still present before any rest
     val stillExhausted = afterHex
     // Long rest reduces exhaustion level by exactly 1 (PHB "Long Rest" / Exhaustion glossary)
@@ -12249,12 +12249,12 @@ module qa_generated {
   run qa_suffocation_exhaustion_kills_at_6 = {
     val s = freshCreature(30)
     // Simulate suffocation: each round without air adds 1 exhaustion level after grace period expires
-    val s1 = pAddExhaustion(s, 1)
-    val s2 = pAddExhaustion(s1, 1)
-    val s3 = pAddExhaustion(s2, 1)
-    val s4 = pAddExhaustion(s3, 1)
-    val s5 = pAddExhaustion(s4, 1)
-    val s6 = pAddExhaustion(s5, 1)
+    val s1 = pAddExhaustion(s, 1, false)
+    val s2 = pAddExhaustion(s1, 1, false)
+    val s3 = pAddExhaustion(s2, 1, false)
+    val s4 = pAddExhaustion(s3, 1, false)
+    val s5 = pAddExhaustion(s4, 1, false)
+    val s6 = pAddExhaustion(s5, 1, false)
     all {
       assert(s6.exhaustion == 6),
       assert(s6.dead),

@@ -163,7 +163,7 @@ export type DndEvent =
       readonly conditionImmunities?: ReadonlySet<Condition>
     }
   | { readonly type: "REMOVE_CONDITION"; readonly condition: Condition }
-  | { readonly type: "ADD_EXHAUSTION"; readonly levels: number }
+  | { readonly type: "ADD_EXHAUSTION"; readonly levels: number; readonly exhaustionImmune?: boolean }
   | { readonly type: "REDUCE_EXHAUSTION"; readonly levels: number }
   | {
       readonly type: "START_TURN"

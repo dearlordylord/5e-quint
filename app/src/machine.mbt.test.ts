@@ -512,7 +512,7 @@ const driverSchema = {
   doKnockOut: {},
   doApplyCondition: { c: ITFVariant, useImmunity: z.boolean(), immuneCondition: ITFVariant },
   doRemoveCondition: { c: ITFVariant },
-  doAddExhaustion: { levels: ITFBigInt },
+  doAddExhaustion: { levels: ITFBigInt, exhaustionImmune: z.boolean() },
   doReduceExhaustion: { levels: ITFBigInt },
   doStartTurn: {
     callerSpeedMod: ITFBigInt,
@@ -664,8 +664,8 @@ function createDndDriver() {
       doRemoveCondition: ({ c }) => {
         send({ type: "REMOVE_CONDITION", condition: QUINT_CONDITION_MAP[c] ?? "blinded" })
       },
-      doAddExhaustion: ({ levels }) => {
-        send({ type: "ADD_EXHAUSTION", levels: Number(levels) })
+      doAddExhaustion: ({ levels, exhaustionImmune }) => {
+        send({ type: "ADD_EXHAUSTION", levels: Number(levels), exhaustionImmune })
       },
       doReduceExhaustion: ({ levels }) => {
         send({ type: "REDUCE_EXHAUSTION", levels: Number(levels) })

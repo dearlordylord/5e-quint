@@ -91,8 +91,8 @@ const concBreakFields = (c: DndContext) =>
     ? { concentrationSpellId: "", activeEffects: removeAe(c.activeEffects, c.concentrationSpellId) }
     : {}
 const concBreak = (c: DndContext) => (!isIncapacitated(c) ? concBreakFields(c) : {})
-const exhaustionWithConcBreak = (c: DndContext, levels: number) => {
-  const r = computeAddExhaustion(c.exhaustion, levels, c.hp, c.maxHp)
+const exhaustionWithConcBreak = (c: DndContext, levels: number, exhaustionImmune: boolean = false) => {
+  const r = computeAddExhaustion(c.exhaustion, levels, c.hp, c.maxHp, exhaustionImmune)
   const died = r.newExhaustion >= MAX_EXHAUSTION && c.exhaustion < MAX_EXHAUSTION
   return { ...exhUpdate(r), ...(died ? concBreakFields(c) : {}) }
 }
@@ -172,7 +172,7 @@ export const dndMachine = setup({
       const u = removeConditionUpdate(cond, c.incapacitatedSources)
       return { ...u.conditionFlags, incapacitatedSources: u.incapSources }
     }),
-    addExhaustion: assign(({ context: c, event: e }) => exhaustionWithConcBreak(c, asExhaustion(e).levels)),
+    addExhaustion: assign(({ context: c, event: e }) => exhaustionWithConcBreak(c, asExhaustion(e).levels, (e as { exhaustionImmune?: boolean }).exhaustionImmune)),
     reduceExhaustion: assign(({ context: c, event: e }) => ({
       exhaustion: exhaustionLevel(Math.max(0, c.exhaustion - asExhaustion(e).levels))
     })),
