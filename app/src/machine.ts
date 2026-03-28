@@ -177,6 +177,7 @@ export const dndMachine = setup({
         isGrappling: ev.isGrappling,
         restrained: conds.restrained ?? c.restrained
       })
+      // TODO: add unwrapHp/unwrapTempHp helpers for branded→number conversion instead of raw casts
       const rallyHeal = survivorHeroicRally(c.fighterLevel, cr.hp as number, c.maxHp, ev.conMod ?? 0)
       const resultHp = rallyHeal > 0 ? Math.min((cr.hp as number) + rallyHeal, effectiveMaxHp(c.maxHp)) : cr.hp
       return {
