@@ -1,35 +1,29 @@
 # features/
 
-Pure-function implementations of D&D 5e SRD 5.2.1 non-core mechanics: class features, feats, and (eventually) spell effects, species traits, and subclass mechanics.
+Pure functions for D&D 5e SRD 5.2.1 non-core mechanics: class features, feats, spells, weapon mastery.
 
-## Why a separate folder
+## Two layers
 
-The project has two layers:
+1. **Core** (`dnd.qnt` + `machine-*.ts` in `src/`): formally specified in Quint, MBT-verified.
+2. **Features** (this folder): composes on core primitives. Most are TS-only, tested with vitest. Exception: Fighter (Champion L1-L18) is also in the Quint spec and MBT-verified.
 
-1. **Core** (`dnd.qnt` + `machine-*.ts` in `src/`) — generic combat rules formally specified in Quint and mirrored by the XState machine (see `CLAUDE.md` for parity rules).
+## Pure-function contract
 
-2. **Features** (this folder) — class-specific and feat-specific logic that *composes on* core primitives but adds no state to the Quint spec or XState machine context.
+1. **No XState imports.** No `assign`, no machine refs, no guards/actions.
+2. **No side effects.** Input in, output out. State updates are the caller's job.
+3. **Feature state lives on the caller side** (rage charges, focus points, etc.), not in `CreatureState`/`TurnState`.
 
-These are kept separate because they have a fundamentally different contract: core is formally specified and model-checked; features are TypeScript-only, tested with vitest, and iterate freely.
+Features depend on core, never the reverse.
 
-## The pure-function contract
+## File layout
 
-Every file in this folder follows three rules:
-
-1. **No XState imports.** No `assign`, no machine references, no guards or actions. Files here are not part of the state machine.
-2. **No side effects.** Every exported function takes input, returns output. State updates are the caller's responsibility.
-3. **No new Quint state.** Feature-specific state (rage charges, focus points, sorcery points, etc.) lives on the caller side — never in `CreatureState` or `TurnState` in `dnd.qnt`.
-
-Features compose on core by calling into core utilities (e.g., importing `withinOneSize` from `machine-combat.ts`) or by producing results that the caller feeds into the XState machine as events. The dependency is one-way: features depend on core, never the reverse.
-
-## File naming
-
-- `class-<name>.ts` — a PHB class (barbarian, fighter, rogue, etc.)
-- `feats.ts` — feat implementations (currently Grappler; will grow)
-- Future: `spell-<name>.ts`, `species-<name>.ts`, `subclass-<name>.ts`
-
-Each source file has a paired `.test.ts` in the same folder.
+- `class-<name>.ts` / `.test.ts`: class implementations (Barbarian, Cleric, Druid, Fighter, Monk, Paladin, Rogue, Sorcerer)
+- `feats.ts`: feat implementations (Grappler, etc.)
+- `spell-conditions.ts`, `spell-damage.ts`, `spell-defense.ts`: spell effect patterns
+- `weapon-mastery.ts`: all 8 mastery effects
+- `feature-bridge-*.ts` / `feature-store-*.ts`: wiring layer between pure functions and the XState machine
+- `useFeatures.ts`, `useFighterExtras.ts`, etc.: React hooks
 
 ## SRD parity
 
-See `CLAUDE.md` ("SRD feature parity") for the project-wide rule. Task list and priority tiers are in `PLAN_NONCORE.md`.
+See `CLAUDE.md` ("SRD feature parity"). Task list in `PLAN_NONCORE.md`.

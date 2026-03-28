@@ -45,7 +45,7 @@ Core game "physics" — the foundation everything else builds on: action economy
 
 **Class features (TypeScript, composing on core):**
 
-Pure-function implementations for Barbarian, Fighter, Rogue, Monk, Paladin, Druid, and Sorcerer. These don't touch the Quint spec — they call core primitives and produce results that the caller feeds back into the state machine.
+Pure functions for Barbarian, Cleric, Druid, Fighter, Monk, Paladin, Rogue, Sorcerer. Most are TS-only; Fighter (Champion subclass L1-L18) is also formally specified in Quint and MBT-verified.
 
 See `app/src/features/` for details.
 
