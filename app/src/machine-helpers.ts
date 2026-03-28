@@ -235,8 +235,10 @@ export function computeAddExhaustion(
   currentExhaustion: number,
   levels: number,
   currentHp: number,
-  maxHp: number
+  maxHp: number,
+  exhaustionImmune: boolean = false
 ): { readonly newExhaustion: number; readonly newHp: number } {
+  if (exhaustionImmune) return { newExhaustion: currentExhaustion, newHp: currentHp }
   const newExhaustion = Math.min(currentExhaustion + levels, MAX_EXHAUSTION)
   if (newExhaustion >= MAX_EXHAUSTION) {
     return { newExhaustion, newHp: 0 }

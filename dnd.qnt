@@ -660,12 +660,15 @@ module dnd {
          .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISUnconscious)))
   }
 
-  /// Increment exhaustion. Level 6 = death.
-  pure def pAddExhaustion(s: CreatureState, levels: int): CreatureState = {
-    val newLevel = intMin(s.exhaustion + levels, 6)
-    val s1 = s.with("exhaustion", newLevel)
-    if (newLevel >= 6) s1.with("dead", true).with("hp", 0)
-    else s1
+  /// Increment exhaustion. Level 6 = death. If exhaustionImmune, no effect.
+  pure def pAddExhaustion(s: CreatureState, levels: int, exhaustionImmune: bool): CreatureState = {
+    if (exhaustionImmune) s
+    else {
+      val newLevel = intMin(s.exhaustion + levels, 6)
+      val s1 = s.with("exhaustion", newLevel)
+      if (newLevel >= 6) s1.with("dead", true).with("hp", 0)
+      else s1
+    }
   }
 
   /// Reduce exhaustion (min 0). HP does not auto-increase.
@@ -1836,11 +1839,11 @@ module dnd {
   pure val pStarvationThreshold: int = 5
 
   /// Apply starvation exhaustion. PHB: 1 level per day beyond threshold.
-  pure def pApplyStarvation(s: CreatureState): CreatureState = pAddExhaustion(s, 1)
+  pure def pApplyStarvation(s: CreatureState): CreatureState = pAddExhaustion(s, 1, false)
 
   /// Apply dehydration exhaustion. SRD 5.2.1 "Dehydration":
   /// Creature that drinks less than half required water gains 1 Exhaustion level.
-  pure def pApplyDehydration(s: CreatureState): CreatureState = pAddExhaustion(s, 1)
+  pure def pApplyDehydration(s: CreatureState): CreatureState = pAddExhaustion(s, 1, false)
 
   // -- 17.5 Travel & Forced March --
 
@@ -2386,7 +2389,8 @@ module dnd {
   // Exhaustion actions
   action doAddExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
-    val r = pWithConcBreak(spellSlots, state, pAddExhaustion(state, levels))
+    nondet exhaustionImmune = Bool.oneOf()
+    val r = pWithConcBreak(spellSlots, state, pAddExhaustion(state, levels, exhaustionImmune))
     all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel }
   }
 

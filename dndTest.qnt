@@ -562,7 +562,7 @@ module dndTest {
   }
 
   run test_heal_not_capped_by_exhaustion4 = {
-    val s = pAddExhaustion(FRESH20, 4).with("hp", 5) // maxHp 20, effective 20, hp 5
+    val s = pAddExhaustion(FRESH20, 4, false).with("hp", 5) // maxHp 20, effective 20, hp 5
     val s2 = pHeal(s, 20) // heal 20, capped at 20
     assert(s2.hp == 20)
   }
@@ -706,43 +706,43 @@ module dndTest {
   // Exhaustion
   // ============================================================
 
-  run test_exhaustion_add = assert(pAddExhaustion(FRESH20, 2).exhaustion == 2)
+  run test_exhaustion_add = assert(pAddExhaustion(FRESH20, 2, false).exhaustion == 2)
 
   run test_exhaustion_4_no_hp_change = {
-    val s = pAddExhaustion(FRESH20, 4)
+    val s = pAddExhaustion(FRESH20, 4, false)
     all { assert(s.exhaustion == 4), assert(effectiveMaxHp(s) == 20), assert(s.hp == 20) }
   }
 
   run test_exhaustion_6_death = {
-    val s = pAddExhaustion(FRESH20, 6)
+    val s = pAddExhaustion(FRESH20, 6, false)
     all { assert(s.dead), assert(s.hp == 0) }
   }
 
-  run test_exhaustion_reduce = assert(pReduceExhaustion(pAddExhaustion(FRESH20, 3), 1).exhaustion == 2)
+  run test_exhaustion_reduce = assert(pReduceExhaustion(pAddExhaustion(FRESH20, 3, false), 1).exhaustion == 2)
 
   // -- Exhaustion Penalty --
 
   run test_exhaustion_penalty_0 = assert(exhaustionPenalty(FRESH20) == 0)
 
   run test_exhaustion_penalty_1 = {
-    val s = pAddExhaustion(FRESH20, 1)
+    val s = pAddExhaustion(FRESH20, 1, false)
     assert(exhaustionPenalty(s) == -2)
   }
 
   run test_exhaustion_penalty_3 = {
-    val s = pAddExhaustion(FRESH20, 3)
+    val s = pAddExhaustion(FRESH20, 3, false)
     assert(exhaustionPenalty(s) == -6)
   }
 
   run test_exhaustion_penalty_5 = {
-    val s = pAddExhaustion(FRESH20, 5)
+    val s = pAddExhaustion(FRESH20, 5, false)
     assert(exhaustionPenalty(s) == -10)
   }
 
   // -- Exhaustion Speed --
 
   run test_speed_exhaustion1_reduced_by_5 = {
-    val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 1), Unarmored,
+    val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 1, false), Unarmored,
       0, false, false)
     assert(t.movementRemaining == 25) // 30 - 5*1 = 25
   }
@@ -750,7 +750,7 @@ module dndTest {
   run test_speed_exhaustion_high_clamps_to_zero = {
     // exhaustion 6 is death, but test with 5 and speed 20
     val cfg = TEST_FIGHTER_5.with("speeds", Map(Walk -> 20, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0))
-    val t = pStartTurn(cfg, pAddExhaustion(FRESH20, 5), Unarmored,
+    val t = pStartTurn(cfg, pAddExhaustion(FRESH20, 5, false), Unarmored,
       0, false, false)
     assert(t.movementRemaining == 0) // 20 - 25 → clamped to 0
   }
@@ -1055,7 +1055,7 @@ module dndTest {
   // ============================================================
 
   run test_check_exhaustion1_no_disadv = {
-    val m = pCheckModifiers(pAddExhaustion(FRESH20, 1), false, false, false)
+    val m = pCheckModifiers(pAddExhaustion(FRESH20, 1, false), false, false, false)
     assert(not(m.hasDisadvantage))
   }
 
@@ -1094,7 +1094,7 @@ module dndTest {
   }
 
   run test_save_exhaustion3_no_disadv = {
-    val m = pSaveModifiers(pAddExhaustion(FRESH20, 3), Wis)
+    val m = pSaveModifiers(pAddExhaustion(FRESH20, 3, false), Wis)
     assert(not(m.hasDisadvantage))
   }
 
@@ -1203,13 +1203,13 @@ module dndTest {
   }
 
   run test_speed_exhaustion2_reduced_by_10 = {
-    val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 2), Unarmored,
+    val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 2, false), Unarmored,
       0, false, false)
     assert(t.movementRemaining == 20) // 30 - 5*2 = 20
   }
 
   run test_speed_exhaustion5_reduced_by_25 = {
-    val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 5), Unarmored,
+    val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 5, false), Unarmored,
       0, false, false)
     assert(t.movementRemaining == 5) // 30 - 5*5 = 5
   }
@@ -3177,7 +3177,7 @@ module dndTest {
   }
 
   run test_inv_exhaustion6_implies_dead = {
-    val s = pAddExhaustion(freshCreature(20), 6)
+    val s = pAddExhaustion(freshCreature(20), 6, false)
     all { assert(s.dead), assert(s.hp == 0) }
   }
 
