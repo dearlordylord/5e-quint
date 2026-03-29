@@ -9,6 +9,7 @@ import {
   survivorHeroicRally
 } from "#/features/class-fighter.ts"
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
+import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
 import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
 import { guards } from "#/machine-guards.ts"
@@ -19,12 +20,9 @@ import {
   applyConditionUpdate,
   applyDefyDeath,
   calculateEffectiveSpeed,
-  computeAddExhaustion,
   effectiveMaxHp,
   EMPTY_CONDITION_SET,
-  exhUpdate,
   indomitableUpdate,
-  MAX_EXHAUSTION,
   removeConditionUpdate,
   removeIncapSource,
   secondWindUpdate,
@@ -87,16 +85,6 @@ import {
 } from "#/types.ts"
 
 export type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
-const concBreakFields = (c: DndContext) =>
-  c.concentrationSpellId !== ""
-    ? { concentrationSpellId: "", activeEffects: removeAe(c.activeEffects, c.concentrationSpellId) }
-    : {}
-const concBreak = (c: DndContext) => (!isIncapacitated(c) ? concBreakFields(c) : {})
-const exhaustionWithConcBreak = (c: DndContext, levels: number, exhaustionImmune: boolean = false) => {
-  const r = computeAddExhaustion(c.exhaustion, levels, c.hp, c.maxHp, exhaustionImmune)
-  const died = r.newExhaustion >= MAX_EXHAUSTION && c.exhaustion < MAX_EXHAUSTION
-  return { ...exhUpdate(r), ...(died ? concBreakFields(c) : {}) }
-}
 
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 const MT = { context: {} as DndContext, events: {} as DndEvent, input: {} as DndMachineInput }
@@ -327,11 +315,8 @@ export const dndMachine = setup({
     }),
     applyFall: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
-      return {
-        hp: hp(r.newHp),
-        tempHp: tempHp(r.newTempHp),
-        ...(r.newHp !== c.hp || r.newTempHp !== c.tempHp ? { prone: true } : {})
-      }
+      const took = r.newHp !== c.hp || r.newTempHp !== c.tempHp
+      return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp), ...(took ? { prone: true } : {}) }
     }),
     applyFallAtZeroHp: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
