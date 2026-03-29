@@ -4,6 +4,7 @@ import type {
   ActionType,
   ActiveEffect,
   Condition,
+  CreatureKind,
   D20Roll,
   DamageType,
   DeathSaves,
@@ -54,6 +55,7 @@ export interface DndMachineInput {
   readonly movementRemaining?: number
   readonly extraAttacksRemaining?: number
   readonly fighterLevel?: number
+  readonly creatureKind?: CreatureKind
 }
 
 // --- Context ---
@@ -115,6 +117,7 @@ export interface DndContext {
   readonly indomitableMax: number
   readonly heroicInspiration: boolean
   readonly fighterLevel: number
+  readonly creatureKind: CreatureKind
 }
 
 // --- Events ---

@@ -59,6 +59,8 @@ export type Size = "tiny" | "small" | "medium" | "large" | "huge" | "gargantuan"
 
 export type ShoveChoice = "prone" | "push"
 
+export type CreatureKind = "PC" | "Monster"
+
 export type UnarmoredDefense = "none" | "barbarian" | "monk"
 
 export type ExpiryPhase = "start" | "end"

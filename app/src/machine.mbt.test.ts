@@ -217,7 +217,9 @@ const QuintFullState = z.object({
   spellSlots: QuintSpellSlotState,
   turnPhase: z.string(),
   fighterState: QuintFighterState,
-  fighterLevel: z.bigint()
+  fighterLevel: z.bigint(),
+  creatureKind: z.any().transform(variantToString),
+  monsterStatBlock: z.any() // parsed but not compared field-by-field (StatBlock is config, not mutable state)
 })
 
 // ============================================================
@@ -285,6 +287,7 @@ interface NormalizedState {
   readonly indomitableMax: number
   readonly heroicInspiration: boolean
   readonly fighterLevel: number
+  readonly creatureKind: string
 }
 
 // ============================================================
@@ -359,7 +362,8 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     indomitableCharges: c.indomitableCharges,
     indomitableMax: c.indomitableMax,
     heroicInspiration: c.heroicInspiration,
-    fighterLevel: c.fighterLevel
+    fighterLevel: c.fighterLevel,
+    creatureKind: c.creatureKind
   }
 }
 
@@ -422,7 +426,8 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     indomitableCharges: Number(raw.fighterState.indomitableCharges),
     indomitableMax: Number(raw.fighterState.indomitableMax),
     heroicInspiration: raw.fighterState.heroicInspiration,
-    fighterLevel: Number(raw.fighterLevel)
+    fighterLevel: Number(raw.fighterLevel),
+    creatureKind: raw.creatureKind
   }
 }
 

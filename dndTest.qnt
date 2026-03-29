@@ -3118,13 +3118,13 @@ module dndTest {
 
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
-        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel })
+        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock })
 
   run test_invariants_10steps =
     init
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock })
 
   run test_invariants_20steps =
     init
@@ -3132,7 +3132,7 @@ module dndTest {
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock })
 
   // Individual invariant tests on known state constructions
   run test_inv_deadIsAbsorbing_construction = {

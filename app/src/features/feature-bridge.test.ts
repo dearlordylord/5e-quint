@@ -124,6 +124,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     indomitableMax: 0,
     heroicInspiration: false,
     fighterLevel: 0,
+    creatureKind: "PC",
     ...overrides
   }
 }
