@@ -1,5 +1,9 @@
 # D&D 5e PHB — project notes
 
+## Worktree agent sequencing
+
+**Never launch a worktree agent and merge a branch in the same message.** Worktrees branch from HEAD at spawn time. If a merge and an agent launch run concurrently, the agent gets pre-merge HEAD. Always: merge → confirm → then launch the next agent.
+
 ## Quint gotchas
 
 Things that cause non-obvious errors, not discoverable by reading code.
