@@ -405,7 +405,7 @@ export function secondWindUpdate(
   if (!canUseSecondWind(swState) || incapacitated) return {}
   const r = tsUseSecondWind(swState, { fighterLevel, d10Roll }, c.effectiveSpeed)
   const bonusMove =
-    r.tacticalShiftDistance > 0 ? { bonusMovementRemaining: r.tacticalShiftDistance, bonusMovementOAFree: true } : {}
+    fighterLevel >= 5 ? { bonusMovementRemaining: r.tacticalShiftDistance, bonusMovementOAFree: true } : {}
   return { hp: hp(r.hp), secondWindCharges: r.secondWindCharges, bonusActionUsed: r.bonusActionUsed, ...bonusMove }
 }
 

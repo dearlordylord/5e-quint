@@ -62,5 +62,8 @@ export const guards = {
   monsterFallDropsToZero: ({ context: c, event: e }: GuardArg) =>
     c.creatureKind === "Monster" && isDropToZero(fallR(c, e)),
   // Catch-all: if a monster is at 0 HP in dying state, it should be dead
-  monsterAtZeroHp: ({ context: c }: GuardArg) => c.creatureKind === "Monster" && c.hp === 0
+  monsterAtZeroHp: ({ context: c }: GuardArg) => c.creatureKind === "Monster" && c.hp === 0,
+  // Sync damageTrack sub-state with context when parallel branch (e.g. initTurn) changes stable/unstable
+  contextStable: ({ context: c }: GuardArg) => c.stable,
+  contextUnstable: ({ context: c }: GuardArg) => !c.stable && !c.dead && c.hp === 0
 }

@@ -131,6 +131,7 @@ export const damageTrackConfig = {
       },
       states: {
         unstable: {
+          always: { guard: "contextStable" as const, target: "stable" },
           on: {
             TAKE_DAMAGE: [...DYING_TAKE_DAMAGE_PREFIX, { actions: ["applyDamageAtZeroHp"] }],
             DEATH_SAVE: [
@@ -147,6 +148,7 @@ export const damageTrackConfig = {
           }
         },
         stable: {
+          always: { guard: "contextUnstable" as const, target: "unstable" },
           on: {
             TAKE_DAMAGE: [...DYING_TAKE_DAMAGE_PREFIX, { target: "unstable", actions: ["applyDamageAtZeroHp"] }],
             APPLY_FALL: [...DYING_FALL_PREFIX, { target: "unstable", actions: ["applyFallAtZeroHp"] }]
@@ -181,7 +183,7 @@ export const turnPhaseConfig = {
         USE_ACTION_SURGE: { actions: ["useActionSurge"] },
         USE_INDOMITABLE: { actions: ["useIndomitable"] },
         USE_TACTICAL_MIND: { actions: ["useTacticalMind"] },
-        USE_HEROIC_INSPIRATION: { actions: ["useHeroicInspiration"] },
+
         SCORE_CRITICAL_HIT: { actions: ["scoreCriticalHit"] },
         MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
         MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
@@ -243,5 +245,6 @@ export const rootEventHandlers = {
   LONG_REST: { guard: "isOutOfCombat" as const, actions: ["longRest", "fighterLongRest"] },
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },
   APPLY_STARVATION: { actions: ["applyStarvation"] },
-  APPLY_DEHYDRATION: { actions: ["applyDehydration"] }
+  APPLY_DEHYDRATION: { actions: ["applyDehydration"] },
+  USE_HEROIC_INSPIRATION: { actions: ["useHeroicInspiration"] }
 } as const
