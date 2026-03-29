@@ -65,6 +65,22 @@ cd app && npm install && npm test  # XState + MBT tests (needs Quint Rust evalua
 cd app && npm run dev              # React UI
 ```
 
+## MBT fuzzer
+
+MBT tests are nondeterministic — each seed generates different traces through the state space. The fuzzer explores seeds continuously, saving failures for reproduction:
+
+```sh
+./scripts/mbt-fuzz.sh          # run forever (Ctrl+C to stop)
+./scripts/mbt-fuzz.sh 100      # run 100 seeds
+MBT_TRACES=200 ./scripts/mbt-fuzz.sh  # deeper per seed
+```
+
+Failures are saved as structured JSONL in `mbt-failures.jsonl` with the seed, trace/step index, action, and full expected/actual state. Reproduce any failure:
+
+```sh
+QUINT_SEED=0xdeadbeef npx vitest run -t "replays Quint"
+```
+
 ## SRD parity
 
 The spec formalizes the SRD and nothing else — no homebrew, no licensed content. Where the formalization requires choices the SRD doesn't prescribe, those are documented in [`ASSUMPTIONS.md`](ASSUMPTIONS.md).
