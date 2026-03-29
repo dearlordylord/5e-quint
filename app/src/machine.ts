@@ -11,7 +11,14 @@ import {
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
-import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
+import {
+  addAe,
+  computeEndTurn,
+  concBreak,
+  concBreakFields,
+  exhaustionWithConcBreak,
+  removeAe
+} from "#/machine-endturn.ts"
 import { guards } from "#/machine-guards.ts"
 import {
   actionSurgeUpdate,
@@ -339,10 +346,9 @@ export const dndMachine = setup({
     })),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
-    useSecondWind: assign(({ context: c, event: e }) => {
-      const ev = asUseSecondWind(e)
-      return secondWindUpdate(c, ev.fighterLevel, ev.d10Roll, isIncapacitated(c))
-    }),
+    useSecondWind: assign(({ context: c, event: e }) =>
+      secondWindUpdate(c, c.fighterLevel, asUseSecondWind(e).d10Roll, isIncapacitated(c))
+    ),
     useActionSurge: assign(({ context: c }) => actionSurgeUpdate(c, isIncapacitated(c))),
     useIndomitable: assign(({ context: c }) => indomitableUpdate(c.fighterLevel, c.indomitableCharges)),
     useTacticalMind: assign(({ context: c, event: e }) =>

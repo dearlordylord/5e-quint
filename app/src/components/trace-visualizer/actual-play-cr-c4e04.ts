@@ -278,7 +278,7 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
     xstateEvent: "USE_SECOND_WIND",
     description:
       "Second Wind! d10(6) + L5 = 11 HP healed. " + "Tactical Shift: repositions 15ft away from the shadow cluster.",
-    events: [{ type: "USE_SECOND_WIND", d10Roll: 6, fighterLevel: 5 }],
+    events: [{ type: "USE_SECOND_WIND", d10Roll: 6 }],
     expectedQuintState: defaultState({
       hp: 35,
       turnPhase: "acting",

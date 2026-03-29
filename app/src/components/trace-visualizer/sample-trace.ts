@@ -349,7 +349,7 @@ const TRACE_EVENTS: ReadonlyArray<TraceEventDef> = [
     quintAction: "doUseSecondWind",
     xstateEvent: "USE_SECOND_WIND",
     description: "Second Wind! Roll d10(7) + 5 = heal 12 HP (26 -> 38 HP), bonus action spent",
-    events: [{ type: "USE_SECOND_WIND", d10Roll: 7, fighterLevel: 5 }],
+    events: [{ type: "USE_SECOND_WIND", d10Roll: 7 }],
     expectedQuintState: defaultState({
       hp: 38,
       turnPhase: "acting",

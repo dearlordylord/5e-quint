@@ -1002,8 +1002,7 @@ function createDndDriver() {
         send({ type: "EXIT_COMBAT" })
       },
       doUseSecondWind: ({ d10Roll }) => {
-        const snap = ensureActor().getSnapshot()
-        send({ type: "USE_SECOND_WIND", d10Roll: Number(d10Roll), fighterLevel: snap.context.fighterLevel })
+        send({ type: "USE_SECOND_WIND", d10Roll: Number(d10Roll) })
       },
       doUseActionSurge: () => {
         send({ type: "USE_ACTION_SURGE" })

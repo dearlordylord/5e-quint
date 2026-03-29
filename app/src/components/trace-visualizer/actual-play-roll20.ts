@@ -198,7 +198,7 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
     quintAction: "doUseSecondWind",
     xstateEvent: "USE_SECOND_WIND",
     description: "Second Wind! d10(8) + L5 = 13 HP healed. " + "Tactical Shift: 15ft OA-free bonus movement.",
-    events: [{ type: "USE_SECOND_WIND", d10Roll: 8, fighterLevel: 5 }],
+    events: [{ type: "USE_SECOND_WIND", d10Roll: 8 }],
     expectedQuintState: defaultState({
       hp: 43,
       turnPhase: "acting",

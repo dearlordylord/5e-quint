@@ -251,7 +251,7 @@ export type DndEvent =
   | { readonly type: "USE_BONUS_MOVEMENT"; readonly feet: number }
   | { readonly type: "ENTER_COMBAT" }
   | { readonly type: "EXIT_COMBAT" }
-  | { readonly type: "USE_SECOND_WIND"; readonly d10Roll: number; readonly fighterLevel: number }
+  | { readonly type: "USE_SECOND_WIND"; readonly d10Roll: number }
   | { readonly type: "USE_ACTION_SURGE" }
   | { readonly type: "USE_INDOMITABLE" }
   | { readonly type: "USE_TACTICAL_MIND"; readonly boostedCheckSucceeds: boolean }
