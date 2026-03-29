@@ -30,14 +30,16 @@ import {
   effectiveMaxHp,
   EMPTY_CONDITION_SET,
   indomitableUpdate,
+  longRestUpdate,
   removeConditionUpdate,
   removeIncapSource,
   secondWindUpdate,
   spendHalfSpeed,
+  spendHitDieUpdate,
   tacticalMindUpdate
 } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
-import { computeLongRest, computeShortRest, expendSlot } from "#/machine-spells.ts"
+import { computeShortRest, expendSlot } from "#/machine-spells.ts"
 import { computeStartTurn } from "#/machine-startturn.ts"
 import {
   conditionTrackConfig,
@@ -59,7 +61,6 @@ import {
   asGrantTempHp,
   asGrapple,
   asHeal,
-  asLongRest,
   asRemoveEffect,
   asShortRest,
   asShove,
@@ -295,31 +296,13 @@ export const dndMachine = setup({
     removeEffect: assign(({ context: c, event: e }) => ({
       activeEffects: removeAe(c.activeEffects, asRemoveEffect(e).spellId)
     })),
-    spendHitDie: assign(({ context: c, event: e }) => {
-      if (c.hitDiceRemaining <= 0) return {}
-      const { conMod, dieRoll } = asSpendHitDie(e)
-      return {
-        hitDiceRemaining: c.hitDiceRemaining - 1,
-        hp: hp(Math.min(c.hp + Math.max(0, dieRoll + conMod), effectiveMaxHp(c.maxHp)))
-      }
-    }),
+    spendHitDie: assign(({ context: c, event: e }) => spendHitDieUpdate(c, asSpendHitDie(e))),
     shortRest: assign(({ context: c, event: e }) => {
       const ev = asShortRest(e)
       const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
       return { hitDiceRemaining: r.newHitDice, hp: hp(r.newHp), pactSlotsCurrent: r.newPactSlots }
     }),
-    longRest: assign(({ context: c, event: e }) => {
-      const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, asLongRest(e).totalHitDice)
-      if (!r) return {}
-      return {
-        exhaustion: exhaustionLevel(r.newExhaustion),
-        hitDiceRemaining: r.newHitDice,
-        hp: hp(r.newHp),
-        pactSlotsCurrent: r.newPactSlots,
-        slotsCurrent: r.newSlots,
-        tempHp: tempHp(0)
-      }
-    }),
+    longRest: assign(({ context: c }) => longRestUpdate(c)),
     applyFall: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
       const took = r.newHp !== c.hp || r.newTempHp !== c.tempHp

@@ -950,8 +950,7 @@ function createDndDriver() {
         send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls: rolls })
       },
       doLongRest: () => {
-        const snap = ensureActor().getSnapshot()
-        send({ type: "LONG_REST", totalHitDice: snap.context.fighterLevel })
+        send({ type: "LONG_REST" })
       },
       doApplyFall: ({ damageRoll }) => {
         send({

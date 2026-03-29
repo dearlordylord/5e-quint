@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from "react"
 
-import { DEFAULT_HIT_DICE, DEFAULT_SPEED } from "#/components/App.tsx"
+import { DEFAULT_SPEED } from "#/components/App.tsx"
 import { useT } from "#/i18n.ts"
 import type { DndEvent, DndSnapshot } from "#/machine.ts"
 import { ALL_DAMAGE_TYPES } from "#/machine-helpers.ts"
@@ -246,7 +246,7 @@ export function EventPanel({
       <Section title={t.shortRest + " / " + t.longRest}>
         <div className="flex gap-2">
           <Btn label={t.shortRest} onClick={() => send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })} />
-          <Btn label={t.longRest} onClick={() => send({ type: "LONG_REST", totalHitDice: DEFAULT_HIT_DICE })} />
+          <Btn label={t.longRest} onClick={() => send({ type: "LONG_REST" })} />
         </div>
       </Section>
 

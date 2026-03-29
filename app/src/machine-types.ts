@@ -236,7 +236,7 @@ export type DndEvent =
   | { readonly type: "BREAK_CONCENTRATION" }
   | { readonly type: "CONCENTRATION_CHECK"; readonly conSaveSucceeded: boolean }
   | { readonly type: "SHORT_REST"; readonly conMod: number; readonly hdRolls: ReadonlyArray<number> }
-  | { readonly type: "LONG_REST"; readonly totalHitDice: number }
+  | { readonly type: "LONG_REST" }
   | { readonly type: "SPEND_HIT_DIE"; readonly conMod: number; readonly dieRoll: number }
   | {
       readonly type: "APPLY_FALL"
@@ -277,7 +277,6 @@ type ExpendSlotEvent = Extract<DndEvent, { readonly type: "EXPEND_SLOT" }>
 type StartConcentrationEvent = Extract<DndEvent, { readonly type: "START_CONCENTRATION" }>
 type ConcentrationCheckEvent = Extract<DndEvent, { readonly type: "CONCENTRATION_CHECK" }>
 type ShortRestEvent = Extract<DndEvent, { readonly type: "SHORT_REST" }>
-type LongRestEvent = Extract<DndEvent, { readonly type: "LONG_REST" }>
 type SpendHitDieEvent = Extract<DndEvent, { readonly type: "SPEND_HIT_DIE" }>
 type ShoveEvent = Extract<DndEvent, { readonly type: "SHOVE" }>
 type ApplyFallEvent = Extract<DndEvent, { readonly type: "APPLY_FALL" }>
@@ -343,9 +342,6 @@ export function asConcentrationCheck(event: DndEvent): ConcentrationCheckEvent {
 }
 export function asShortRest(event: DndEvent): ShortRestEvent {
   return event as ShortRestEvent
-}
-export function asLongRest(event: DndEvent): LongRestEvent {
-  return event as LongRestEvent
 }
 export function asSpendHitDie(event: DndEvent): SpendHitDieEvent {
   return event as SpendHitDieEvent

@@ -89,7 +89,7 @@ describe("useFeatures", () => {
       })
       expect(result.current.featureState.fighter!.secondWindCharges).toBe(0)
 
-      act(() => result.current.notify({ type: "LONG_REST", totalHitDice: 5 } as DndEvent))
+      act(() => result.current.notify({ type: "LONG_REST" } as DndEvent))
       expect(result.current.featureState.fighter!.secondWindCharges).toBe(3)
     })
 

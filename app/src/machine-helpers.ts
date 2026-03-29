@@ -10,8 +10,9 @@ import {
   useSecondWind as tsUseSecondWind,
   useTacticalMind as tsUseTacticalMind
 } from "#/features/class-fighter.ts"
-import type { Condition, DamageType, IncapSource } from "#/types.ts"
-import { exhaustionLevel, hp } from "#/types.ts"
+import { computeLongRest } from "#/machine-spells.ts"
+import type { Condition, DamageType, IncapSource, SpellSlots } from "#/types.ts"
+import { exhaustionLevel, hp, tempHp } from "#/types.ts"
 
 // --- Constants ---
 
@@ -437,5 +438,36 @@ export function tacticalMindUpdate(
   return {
     secondWindCharges: tsUseTacticalMind({ secondWindCharges, originalCheckTotal: 0, dc: 0, d10Roll: 0 })
       .secondWindCharges
+  }
+}
+
+export function spendHitDieUpdate(
+  c: { hitDiceRemaining: number; hp: number; maxHp: number },
+  roll: { conMod: number; dieRoll: number }
+): Record<string, unknown> {
+  if (c.hitDiceRemaining <= 0) return {}
+  return {
+    hitDiceRemaining: c.hitDiceRemaining - 1,
+    hp: hp(Math.min(c.hp + Math.max(0, roll.dieRoll + roll.conMod), effectiveMaxHp(c.maxHp)))
+  }
+}
+
+export function longRestUpdate(c: {
+  hp: number
+  maxHp: number
+  exhaustion: number
+  slotsMax: SpellSlots
+  pactSlotsMax: number
+  fighterLevel: number
+}): Record<string, unknown> {
+  const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, c.fighterLevel)
+  if (!r) return {}
+  return {
+    exhaustion: exhaustionLevel(r.newExhaustion),
+    hitDiceRemaining: r.newHitDice,
+    hp: hp(r.newHp),
+    pactSlotsCurrent: r.newPactSlots,
+    slotsCurrent: r.newSlots,
+    tempHp: tempHp(0)
   }
 }

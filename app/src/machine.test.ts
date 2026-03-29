@@ -1840,27 +1840,27 @@ describe("long rest", () => {
   it("restores full HP", () => {
     const a = create()
     takeDamage(a, 15)
-    a.send({ type: "LONG_REST", totalHitDice: 5 })
+    a.send({ type: "LONG_REST" })
     expect(ctx(a).hp).toBe(DEFAULT_MAX_HP)
   })
 
   it("reduces exhaustion by 1 unconditionally (SRD 5.2.1)", () => {
     const a = create()
     addExhaustion(a, 3)
-    a.send({ type: "LONG_REST", totalHitDice: 5 })
+    a.send({ type: "LONG_REST" })
     expect(ctx(a).exhaustion).toBe(2)
   })
 
   it("restores spell slots to max", () => {
     const a = create()
-    a.send({ type: "LONG_REST", totalHitDice: 5 })
+    a.send({ type: "LONG_REST" })
     expect(ctx(a).slotsCurrent).toEqual(ctx(a).slotsMax)
   })
 
   it("clears temp HP", () => {
     const a = create()
     grantTempHp(a, 10)
-    a.send({ type: "LONG_REST", totalHitDice: 5 })
+    a.send({ type: "LONG_REST" })
     expect(ctx(a).tempHp).toBe(0)
   })
 
@@ -1869,14 +1869,14 @@ describe("long rest", () => {
     takeDamage(a, DEFAULT_MAX_HP)
     expect(ctx(a).hp).toBe(0)
     const hpBefore = ctx(a).hp
-    a.send({ type: "LONG_REST", totalHitDice: 5 })
+    a.send({ type: "LONG_REST" })
     expect(ctx(a).hp).toBe(hpBefore)
   })
 
   it("restores all spent hit dice (SRD 5.2.1)", () => {
-    const a = createActor(dndMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: 2 } })
+    const a = createActor(dndMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: 2, fighterLevel: 8 } })
     a.start()
-    a.send({ type: "LONG_REST", totalHitDice: 8 })
+    a.send({ type: "LONG_REST" })
     expect(ctx(a).hitDiceRemaining).toBe(8)
   })
 })
