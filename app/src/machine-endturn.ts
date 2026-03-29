@@ -58,8 +58,9 @@ export function computeEndTurn(
     }
   }
 
+  // Quint pTakeDamage: if (s.dead) s — damage is no-op on dead creatures
   for (const dmg of damages) {
-    if (dead) break
+    if (dead) continue
     const prevHp = h
     const effResist = ctx.petrified ? ALL_DAMAGE_TYPES : dmg.resistances
     const r = computeTakeDamage(

@@ -313,7 +313,7 @@ export function spendHalfSpeed(
   effectiveSpeed: number
 ): { readonly success: boolean; readonly newMovementRemaining: number } {
   const cost = Math.floor(effectiveSpeed / HALVE_DIVISOR)
-  if (effectiveSpeed === 0 || cost > movementRemaining) {
+  if (cost <= 0 || cost > movementRemaining) {
     return { newMovementRemaining: movementRemaining, success: false }
   }
   return { newMovementRemaining: movementRemaining - cost, success: true }

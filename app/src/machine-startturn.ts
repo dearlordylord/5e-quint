@@ -72,15 +72,17 @@ export function computeStartTurn(
   }
 
   // 3. Process start-of-turn effects (surviving effects only)
+  // Quint continues the fold even after death: saves still remove effects, but
+  // pHeal/pGrantTempHp/pTakeDamage all check `if (s.dead)` and return unchanged.
   for (const eff of effects) {
-    if (dead) break
     if (!hasEffect(ae, eff.spellId)) continue
 
     if (eff.saveResult) {
       ae = removeAe(ae, eff.spellId)
     }
 
-    if (eff.healAmount > 0) {
+    // Quint pHeal: if (s.dead) s — no-op
+    if (!dead && eff.healAmount > 0) {
       const prevHp = h
       h = Math.min(h + eff.healAmount, effectiveMaxHp(ctx.maxHp))
       if (prevHp === 0 && h > 0) {
@@ -92,11 +94,13 @@ export function computeStartTurn(
       }
     }
 
+    // Quint pGrantTempHp: no dead check — tempHp set unconditionally (if !keepOld)
     if (eff.tempHpAmount > 0) {
       th = eff.tempHpAmount
     }
 
-    if (eff.damageAmount > 0) {
+    // Quint pTakeDamage: if (s.dead) s — no-op
+    if (!dead && eff.damageAmount > 0) {
       const prevHp = h
       const effResist = ctx.petrified ? ALL_DAMAGE_TYPES : eff.resistances
       const r = computeTakeDamage(
