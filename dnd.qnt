@@ -2540,18 +2540,35 @@ module dnd {
 
   // -- 19.4 Action Init --
 
+  pure val MONSTER_STAT_BLOCKS: Set[StatBlock] = Set(SKELETON, OGRE)
+
   action init = {
+    nondet kind = Set(PC, Monster).oneOf()
     nondet l = Set(3, 5, 9, 10, 18).oneOf()
     nondet maxHp = HP_RANGE.oneOf()
-    all {
-      fighterLevel' = l,
-      state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
-      fighterState' = freshFighterState(l),
-      turnState' = FRESH_TURN,
-      spellSlots' = FRESH_SPELL_SLOTS,
-      turnPhase' = "outOfCombat",
-      creatureKind' = PC,
-      monsterStatBlock' = NULL_STAT_BLOCK,
+    nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
+    if (kind == Monster) {
+      all {
+        creatureKind' = Monster,
+        monsterStatBlock' = selectedBlock,
+        state' = freshCreature(selectedBlock.maxHp),
+        fighterState' = freshFighterState(0),
+        fighterLevel' = 0,
+        turnState' = FRESH_TURN,
+        spellSlots' = FRESH_SPELL_SLOTS,
+        turnPhase' = "outOfCombat",
+      }
+    } else {
+      all {
+        creatureKind' = PC,
+        monsterStatBlock' = NULL_STAT_BLOCK,
+        fighterLevel' = l,
+        state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
+        fighterState' = freshFighterState(l),
+        turnState' = FRESH_TURN,
+        spellSlots' = FRESH_SPELL_SLOTS,
+        turnPhase' = "outOfCombat",
+      }
     }
   }
 
@@ -3083,61 +3100,72 @@ module dnd {
 
   // -- 19.7 Step Action --
 
+  /// PC-only actions: fighter features, death saves, PC damage variants
+  action stepPC = any {
+    doTakeDamage,
+    doTakeDamageWithMods,
+    doDeathSave,
+    doStabilize,
+    doKnockOut,
+    doUseSecondWind,
+    doUseActionSurge,
+    doUseIndomitable,
+    doUseTacticalMind,
+    doUseHeroicInspiration,
+    doScoreCriticalHit,
+  }
+
+  /// Monster-only actions: stat-block-sourced damage
+  action stepMonster = any {
+    doTakeDamageMonster,
+  }
+
+  /// Universal actions: shared by both PCs and monsters
+  action stepUniversal = any {
+    doHeal,
+    doGrantTempHp,
+    doApplyCondition,
+    doRemoveCondition,
+    doAddExhaustion,
+    doReduceExhaustion,
+    doStartTurn,
+    doUseAction,
+    doUseBonusAction,
+    doUseReaction,
+    doUseMovement,
+    doUseExtraAttack,
+    doStandFromProne,
+    doDropProne,
+    doMarkBonusActionSpell,
+    doMarkNonCantripActionSpell,
+    doExpendSlot,
+    doExpendPactSlot,
+    doStartConcentration,
+    doBreakConcentration,
+    doConcentrationCheck,
+    doAddEffect,
+    doRemoveEffect,
+    doSpendHitDie,
+    doShortRest,
+    doLongRest,
+    doApplyFall,
+    doSuffocate,
+    doApplyStarvation,
+    doApplyDehydration,
+    doGrapple,
+    doReleaseGrapple,
+    doEscapeGrapple,
+    doShove,
+    doEndTurn,
+    doEnterCombat,
+    doExitCombat,
+    doUseBonusMovement,
+  }
+
   action step = {
     if (state.dead) unchanged
-    else {
-      any {
-        doTakeDamage,
-        doTakeDamageWithMods,
-        doHeal,
-        doGrantTempHp,
-        doDeathSave,
-        doStabilize,
-        doKnockOut,
-        doApplyCondition,
-        doRemoveCondition,
-        doAddExhaustion,
-        doReduceExhaustion,
-        doStartTurn,
-        doUseAction,
-        doUseBonusAction,
-        doUseReaction,
-        doUseMovement,
-        doUseExtraAttack,
-        doStandFromProne,
-        doDropProne,
-        doMarkBonusActionSpell,
-        doMarkNonCantripActionSpell,
-        doExpendSlot,
-        doExpendPactSlot,
-        doStartConcentration,
-        doBreakConcentration,
-        doConcentrationCheck,
-        doAddEffect,
-        doRemoveEffect,
-        doSpendHitDie,
-        doShortRest,
-        doLongRest,
-        doApplyFall,
-        doSuffocate,
-        doApplyStarvation,
-        doApplyDehydration,
-        doGrapple,
-        doReleaseGrapple,
-        doEscapeGrapple,
-        doShove,
-        doEndTurn,
-        doEnterCombat,
-        doExitCombat,
-        doUseSecondWind,
-        doUseActionSurge,
-        doUseIndomitable,
-        doUseTacticalMind,
-        doUseHeroicInspiration,
-        doScoreCriticalHit,
-        doUseBonusMovement,
-      }
-    }
+    else if (creatureKind == Monster) any { stepMonster, stepUniversal }
+    else any { stepPC, stepUniversal }
   }
 
   // -- 19.7 Safety Invariants --
