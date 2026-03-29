@@ -953,6 +953,56 @@ module dnd {
     }
   }
 
+  /// CreatureKind-aware take damage: monsters die at 0 HP, PCs enter death save track.
+  /// SRD 5.2.1 Rules Glossary "Monsters and Death": monsters die at 0 HP.
+  pure def pTakeDamageAsCreature(
+    s: CreatureState,
+    amount: int,
+    damageType: DamageType,
+    resistances: Set[DamageType],
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType],
+    isCritical: bool,
+    kind: CreatureKind
+  ): CreatureState = {
+    if (s.dead) s
+    else {
+      val effMax = effectiveMaxHp(s)
+      val effResist = if (s.petrified) ALL_DAMAGE_TYPES else resistances
+      val effAmount = applyDamageModifiers(amount, damageType, immunities, effResist, vulnerabilities, 0)
+      if (effAmount <= 0) s
+      else {
+        val tempAbsorb = intMin(s.tempHp, effAmount)
+        val dmgThrough = effAmount - tempAbsorb
+        val s1 = s.with("tempHp", s.tempHp - tempAbsorb)
+        if (dmgThrough == 0) s1
+        else if (s1.hp == 0) {
+          // Already at 0 HP
+          match kind {
+            | Monster => s1.with("dead", true)  // Monsters: already dead, further damage is no-op
+            | PC => {
+              if (dmgThrough >= effMax) s1.with("dead", true)
+              else pAddDeathFailures(s1.with("stable", false), if (isCritical) 2 else 1)
+            }
+          }
+        } else {
+          val newHp = s1.hp - dmgThrough
+          if (newHp <= 0) {
+            val overflow = -newHp
+            val s2 = s1.with("hp", 0)
+            match kind {
+              | Monster => s2.with("dead", true)  // Monsters die at 0 HP
+              | PC => {
+                if (overflow >= effMax) s2.with("dead", true)
+                else pApplyCondition(s2, CUnconscious, Set())
+              }
+            }
+          } else s1.with("hp", newHp)
+        }
+      }
+    }
+  }
+
   /// Heal. Caps at effectiveMaxHp. At 0 HP: regain consciousness, reset death saves.
   pure def pHeal(s: CreatureState, amount: int): CreatureState = {
     if (s.dead or amount <= 0) s
@@ -2526,6 +2576,18 @@ module dnd {
     all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
   }
 
+  /// Monster take damage: R/V/I sourced from stat block, monster death at 0 HP.
+  action doTakeDamageMonster = {
+    nondet amount = DAMAGE_RANGE.oneOf()
+    nondet dt = DAMAGE_TYPES.oneOf()
+    nondet isCrit = Bool.oneOf()
+    val s1 = pTakeDamageAsCreature(state, amount, dt,
+      monsterStatBlock.resistances, monsterStatBlock.vulnerabilities,
+      monsterStatBlock.damageImmunities, isCrit, Monster)
+    val r = pWithConcBreak(spellSlots, state, s1)
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
+  }
+
   action doHeal = {
     nondet amount = HEAL_RANGE.oneOf()
     all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
@@ -2620,19 +2682,42 @@ module dnd {
           damageType: effDmgType, conSaveSucceeded: effConSave,
           resistances: Set(effResType), vulnerabilities: Set(effVulnType), immunities: Set()
         }]
-      val r = pStartTurnFull(configForLevel(fighterLevel), state, spellSlots, Unarmored,
-        callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)
-      // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied
-      val afterRally = pHeroicRally(r.creature, fighterLevel, conMod)
-      all {
-        state' = afterRally,
-        turnState' = r.turn,
-        spellSlots' = r.slots,
-        turnPhase' = "acting",
-        fighterState' = pFighterStartTurn(fighterState, fighterLevel),
-        fighterLevel' = fighterLevel,
-        creatureKind' = creatureKind,
-        monsterStatBlock' = monsterStatBlock,
+      if (creatureKind == Monster) {
+        // Monster start turn: no death saves, no fighter features, speed/attacks from stat block
+        val monsterConfig = BASE_CHAMPION_CONFIG
+          .with("level", 0)
+          .with("speeds", monsterStatBlock.speeds)
+          .with("features", Set())
+        val r = pStartTurnFull(monsterConfig, state, spellSlots, Unarmored,
+          callerSpeedMod, isGrappling, grappledSmall, 0, 0, effects)  // 0 = skip death save
+        val monsterExtraAttacks = if (monsterStatBlock.multiattack.length() > 0)
+          monsterStatBlock.multiattack.length() - 1 else 0
+        all {
+          state' = r.creature,
+          turnState' = r.turn.with("extraAttacksRemaining", monsterExtraAttacks),
+          spellSlots' = r.slots,
+          turnPhase' = "acting",
+          fighterState' = fighterState,  // unchanged for monsters
+          fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind,
+          monsterStatBlock' = monsterStatBlock,
+        }
+      } else {
+        // PC start turn: existing behavior
+        val r = pStartTurnFull(configForLevel(fighterLevel), state, spellSlots, Unarmored,
+          callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)
+        // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied
+        val afterRally = pHeroicRally(r.creature, fighterLevel, conMod)
+        all {
+          state' = afterRally,
+          turnState' = r.turn,
+          spellSlots' = r.slots,
+          turnPhase' = "acting",
+          fighterState' = pFighterStartTurn(fighterState, fighterLevel),
+          fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind,
+          monsterStatBlock' = monsterStatBlock,
+        }
       }
     }
   }
@@ -2854,8 +2939,12 @@ module dnd {
       nondet conSave = Bool.oneOf()
       nondet dmgResType = DAMAGE_TYPES.oneOf()
       nondet dmgVulnType = DAMAGE_TYPES.oneOf()
+      // Monster end-of-turn: R/V/I from stat block; PC: from nondeterministic generation
+      val dmgRes = if (creatureKind == Monster) monsterStatBlock.resistances else Set(dmgResType)
+      val dmgVuln = if (creatureKind == Monster) monsterStatBlock.vulnerabilities else Set(dmgVulnType)
+      val dmgImm = if (creatureKind == Monster) monsterStatBlock.damageImmunities else Set()
       val damages = if (numDmg == 0) []
-        else [{ spellId: dmgSpellId, damage: dmgAmount, damageType: dmgType, conSaveSucceeded: conSave, resistances: Set(dmgResType), vulnerabilities: Set(dmgVulnType), immunities: Set() }]
+        else [{ spellId: dmgSpellId, damage: dmgAmount, damageType: dmgType, conSaveSucceeded: conSave, resistances: dmgRes, vulnerabilities: dmgVuln, immunities: dmgImm }]
       val result = pEndTurn(state, spellSlots, saves, damages)
       all {
         state' = result.creature,
