@@ -1,5 +1,9 @@
 # D&D 5e PHB — project notes
 
+## Worktree agent bug
+
+Worktree creation sometimes branches from a stale ref instead of master's HEAD. When launching a worktree agent, always include in the prompt: `"Before starting, run 'git log --oneline -1 master' and verify your HEAD matches. If not, run 'git rebase master'."` This costs one command and prevents silent divergence that causes unmergeable conflicts.
+
 ## Quint gotchas
 
 Things that cause non-obvious errors, not discoverable by reading code.
