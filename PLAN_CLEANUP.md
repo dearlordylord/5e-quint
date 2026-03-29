@@ -245,7 +245,7 @@ Checklist:
 
 ### G. Exhaustion immunity enforcement in pAddExhaustion
 
-**Status:** Not started
+**Status:** DONE (2026-03-28)
 **Priority:** High — prerequisite for correct creature modeling
 
 `pAddExhaustion(s: CreatureState, levels: int)` unconditionally adds exhaustion. Some creatures are immune (SRD: all Undead, many Constructs). Some PC effects may also grant temporary exhaustion immunity in the future.

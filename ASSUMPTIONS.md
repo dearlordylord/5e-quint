@@ -101,15 +101,13 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Changes:** `dnd.qnt`: Added `resistances`, `vulnerabilities`, `immunities` fields to `EndOfTurnDamage` and `StartOfTurnEffect` types. `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` now pass these to `pTakeDamage` instead of empty sets. XState: matching fields added to event types and passed through in `machine-endturn.ts` and `machine-startturn.ts`.
 
-## A12: Death saves apply universally (PC-only per RAW)
+## A12: Monsters die at 0 HP (no death saves)
 
-**Assumption:** The spec applies the death save track (unconscious at 0 HP, death save failures on subsequent hits, start-of-turn death save rolls) to all creatures. Per RAW, death saves are PC-only — monsters die at 0 HP.
+**Assumption:** Monsters die immediately when reduced to 0 HP. They do not fall unconscious, do not make death saving throws, and do not accumulate death save failures from subsequent damage. Death saves are PC-only. The spec does not model DM fiat to allow monster death saves.
 
-**Rules basis (SRD 5.2.1 Playing-the-Game, "Death Saving Throws"):** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw." The "you" refers to player characters. The Rules Glossary "Monsters and Death" section states: "Most DMs have a monster die the instant it drops to 0 Hit Points, rather than having it fall Unconscious."
+**Rules basis (SRD 5.2.1 Playing-the-Game, "Monster Death"):** "A monster dies the instant it drops to 0 Hit Points, although a Game Master can ignore this rule for an individual monster and treat it like a character." Death saving throws ("Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw") apply to player characters only.
 
-**Status: Superseded by M3 implementation.** Monster death is now implemented via `CreatureKind` discriminator. `pTakeDamageAsCreature` branches on kind: monsters die at 0 HP, PCs enter death save track. `pMonsterDeathCheck` catches monster-at-0-HP from other damage sources (suffocation, exhaustion, falls). XState uses `monsterDropsToZeroHp` and `monsterAtZeroHp` guards to route monsters to the `dead` state.
-
-**Changes:** `dnd.qnt`: `pTakeDamageAsCreature`, `pMonsterDeathCheck`, monster-aware `doStartTurn`/`doEndTurn`/`doTakeDamageMonster`. XState: `monsterDropsToZeroHp`, `monsterFallDropsToZero`, `monsterAtZeroHp` guards in `machine-guards.ts`, transitions in `machine-states.ts`.
+**Changes:** `dnd.qnt`: `CreatureKind` discriminator (`PC | Monster`). `pTakeDamageAsCreature` branches on kind: monsters die at 0 HP, PCs enter death save track. `pMonsterDeathCheck` catches monster-at-0-HP from non-damage sources (suffocation, exhaustion, falls). Monster `doStartTurn` skips death saves. XState: `monsterDropsToZeroHp`, `monsterFallDropsToZero`, `monsterAtZeroHp` guards in `machine-guards.ts`, transitions in `machine-states.ts`.
 
 ## A13: Monster AC is a flat integer
 
