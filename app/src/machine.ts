@@ -164,8 +164,7 @@ export const dndMachine = setup({
     }),
     removeCondition: assign(({ context: c, event: e }) => {
       const cond = asCondition(e).condition
-      if (cond === "prone" && c.unconscious) return {}
-      const u = removeConditionUpdate(cond, c.incapacitatedSources)
+      const u = removeConditionUpdate(cond, c.incapacitatedSources, c.unconscious)
       return { ...u.conditionFlags, incapacitatedSources: u.incapSources }
     }),
     addExhaustion: assign(({ context: c, event: e }) => {

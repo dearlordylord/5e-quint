@@ -1,6 +1,7 @@
 import { removeAe } from "#/machine-endturn.ts"
 import {
   addIncapSource,
+  ALL_DAMAGE_TYPES,
   computeTakeDamage,
   type ConditionFlag,
   damageAtZeroTransition,
@@ -97,15 +98,16 @@ export function computeStartTurn(
 
     if (eff.damageAmount > 0) {
       const prevHp = h
+      const effResist = ctx.petrified ? ALL_DAMAGE_TYPES : eff.resistances
       const r = computeTakeDamage(
         h,
         ctx.maxHp,
         th,
         eff.damageAmount,
         eff.damageType,
-        eff.resistances,
-        eff.vulnerabilities,
-        eff.immunities
+        eff.immunities,
+        effResist,
+        eff.vulnerabilities
       )
       h = r.newHp
       th = r.newTempHp

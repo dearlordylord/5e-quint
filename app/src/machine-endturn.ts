@@ -1,5 +1,6 @@
 import {
   addIncapSource,
+  ALL_DAMAGE_TYPES,
   computeTakeDamage,
   type ConditionFlag,
   damageAtZeroTransition,
@@ -44,13 +45,15 @@ export function computeEndTurn(
   // Collect effect IDs to remove (saves + concentration break)
   const removeIds = new Set<string>()
 
+  let unconscious = ctx.unconscious
   for (const save of saves) {
     if (save.saveSucceeded) {
       removeIds.add(save.spellId)
       for (const cond of save.conditionsToRemove) {
-        const u = removeConditionUpdate(cond, incap)
+        const u = removeConditionUpdate(cond, incap, unconscious)
         Object.assign(conditions, u.conditionFlags)
         incap = u.incapSources
+        if (cond === "unconscious") unconscious = false
       }
     }
   }
@@ -58,15 +61,16 @@ export function computeEndTurn(
   for (const dmg of damages) {
     if (dead) break
     const prevHp = h
+    const effResist = ctx.petrified ? ALL_DAMAGE_TYPES : dmg.resistances
     const r = computeTakeDamage(
       h,
       ctx.maxHp,
       th,
       dmg.damage,
       dmg.damageType,
-      dmg.resistances,
-      dmg.vulnerabilities,
-      dmg.immunities
+      dmg.immunities,
+      effResist,
+      dmg.vulnerabilities
     )
     h = r.newHp
     th = r.newTempHp

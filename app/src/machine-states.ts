@@ -80,7 +80,7 @@ export const damageTrackConfig = {
           {
             guard: "monsterSuffocates" as const,
             target: "#dnd.damageTrack.dead",
-            actions: ["suffocate", "breakConcentration", "monsterDeathCleanup"]
+            actions: ["suffocate", "breakConcentration"]
           },
           {
             guard: "canSuffocate" as const,

@@ -32,6 +32,8 @@ export interface TurnPhaseCtx {
   readonly dead: boolean
   readonly stable: boolean
   readonly deathSaves: DeathSaves
+  readonly petrified: boolean
+  readonly unconscious: boolean
 }
 
 export interface TurnPhaseResult {

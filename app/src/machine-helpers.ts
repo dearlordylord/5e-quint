@@ -169,7 +169,7 @@ export function damageAtZeroTransition(
   if (dmgThrough <= 0) return { dead, stable, newDeathFailures: deathFailures }
   if (prevHp > 0 && newHp === 0) {
     if (overflow >= effMax) return { dead: true, stable, newDeathFailures: deathFailures }
-    return { dead, stable: false, newDeathFailures: deathFailures, unconscious: true, prone: true, addIncap: true }
+    return { dead, stable, newDeathFailures: deathFailures, unconscious: true, prone: true, addIncap: true }
   }
   if (prevHp === 0) {
     if (dmgThrough >= effMax) return { dead: true, stable, newDeathFailures: deathFailures }
@@ -226,11 +226,16 @@ export function applyConditionUpdate(
   return { conditionFlags: { [flag]: true }, incapSources }
 }
 
-/** Compute context updates for removing a condition. Matches Quint pRemoveCondition. */
+/** Compute context updates for removing a condition. Matches Quint pRemoveCondition.
+ *  Prone cannot be removed while unconscious (creature must stand up after regaining consciousness). */
 export function removeConditionUpdate(
   condition: Condition,
-  currentIncapSources: ReadonlySet<IncapSource>
+  currentIncapSources: ReadonlySet<IncapSource>,
+  isUnconscious: boolean = false
 ): ConditionUpdate {
+  if (condition === "prone" && isUnconscious) {
+    return { conditionFlags: {}, incapSources: currentIncapSources }
+  }
   const incapSource = INCAP_SOURCE_MAP[condition]
   const incapSources = incapSource ? removeIncapSource(currentIncapSources, incapSource) : currentIncapSources
 
