@@ -237,7 +237,7 @@ export const dndMachine = setup({
       if (!r.success) return {}
       return { movementRemaining: movementFeet(r.newMovementRemaining), ...(c.prone ? { prone: false } : {}) }
     }),
-    dropProne: assign({ prone: true }),
+    dropProne: assign(({ context: c }) => (c.effectiveSpeed === 0 ? {} : { prone: true })),
     endTurn: assign(({ context: c, event: e }) => {
       const ev = asEndTurn(e)
       const { conditions: conds, ...rest } = computeEndTurn(c, ev.endOfTurnSaves, ev.endOfTurnDamage)
@@ -347,7 +347,7 @@ export const dndMachine = setup({
     scoreCriticalHit: assign(({ context: c }) => {
       if (isIncapacitated(c)) return {}
       const d = remarkableAthleteCritMovement(c.fighterLevel, c.effectiveSpeed)
-      return d <= 0 ? {} : { bonusMovementRemaining: d, bonusMovementOAFree: true }
+      return d <= 0 ? { bonusMovementOAFree: true } : { bonusMovementRemaining: d, bonusMovementOAFree: true }
     }),
     useBonusMovement: assign(({ context: c, event: e }) =>
       c.bonusMovementRemaining <= 0
