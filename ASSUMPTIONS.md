@@ -107,6 +107,38 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (SRD 5.2.1 Playing-the-Game, "Death Saving Throws"):** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw." The "you" refers to player characters. The Rules Glossary "Monsters and Death" section states: "Most DMs have a monster die the instant it drops to 0 Hit Points, rather than having it fall Unconscious."
 
-**Why universal for now:** The spec currently models only PCs. Gating death saves on a `creatureKind` discriminator is deferred to PLAN_MONSTERS.md Phase 0. The universal behavior is correct for PCs and the tests validate PC death save mechanics.
+**Status: Superseded by M3 implementation.** Monster death is now implemented via `CreatureKind` discriminator. `pTakeDamageAsCreature` branches on kind: monsters die at 0 HP, PCs enter death save track. `pMonsterDeathCheck` catches monster-at-0-HP from other damage sources (suffocation, exhaustion, falls). XState uses `monsterDropsToZeroHp` and `monsterAtZeroHp` guards to route monsters to the `dead` state.
 
-**Changes:** Comments added to `pTakeDamage` and `pStartTurnFull` in dnd.qnt documenting the PC-only constraint.
+**Changes:** `dnd.qnt`: `pTakeDamageAsCreature`, `pMonsterDeathCheck`, monster-aware `doStartTurn`/`doEndTurn`/`doTakeDamageMonster`. XState: `monsterDropsToZeroHp`, `monsterFallDropsToZero`, `monsterAtZeroHp` guards in `machine-guards.ts`, transitions in `machine-states.ts`.
+
+## A13: Monster AC is a flat integer
+
+**Assumption:** Monster AC is a flat integer from the stat block. The spec does not model how natural armor + DEX produces that value — the SRD gives us the final number directly.
+
+**Rules basis (SRD 5.2.1 Monsters):** Monster stat blocks list AC as a single number, sometimes with a parenthetical explanation (e.g., "14 (natural armor)"). The derivation is flavor text; the value is authoritative.
+
+**Changes:** `StatBlock.ac: int` in dnd.qnt.
+
+## A14: Exhaustion immunity is separate from condition immunity
+
+**Assumption:** Exhaustion immunity is a separate boolean (`exhaustionImmune: bool`), not part of `conditionImmunities: Set[Condition]`. Exhaustion is not one of the 14 SRD Conditions — it is a leveled mechanic (1-6) stored as an integer.
+
+**Rules basis (SRD 5.2.1 Rules Glossary):** The 14 Conditions are listed separately from Exhaustion. Exhaustion has its own section with cumulative levels. Some monsters are immune to exhaustion (e.g., Skeleton stat block: "Immunities: ... Exhaustion").
+
+**Changes:** `StatBlock.exhaustionImmune: bool` in dnd.qnt; `pAddExhaustion` already accepts `exhaustionImmune` parameter.
+
+## A15: Multiattack maps to extra attacks remaining
+
+**Assumption:** Multiattack maps to `extraAttacksRemaining = length(multiattack) - 1`. The first slot uses the Attack action; remaining slots use extra attacks. Complex Multiattack with mixed attack types is supported by the `List[MultiattackSlot]` type; the caller decides which `MonsterAttack` to resolve for each slot.
+
+**Rules basis (SRD 5.2.1 Rules Glossary "Multiattack [Action]"):** "A monster that has the Multiattack action can make multiple attacks on its turn." The action economy is: one Attack action (consuming 1 action) that includes all the listed attacks. This parallels the PC Extra Attack feature.
+
+**Changes:** `doStartTurn` for monsters sets `extraAttacksRemaining = length(multiattack) - 1`.
+
+## A16: CR encoded as sum type
+
+**Assumption:** CR is encoded as `CR0 | CR_Eighth | CR_Quarter | CR_Half | CRN(int)`. Fractional CRs are special cases with specific PB/XP values that don't follow the integer formula. CR 0 XP ambiguity (0 or 10 XP) is resolved by storing XP separately if needed.
+
+**Rules basis (SRD 5.2.1 Monsters Overview):** CR values include 0, 1/8, 1/4, 1/2, and integers 1-30. Proficiency bonus is derived from CR via a table.
+
+**Changes:** `ChallengeRating` type and `crToProficiencyBonus` function in dnd.qnt.
