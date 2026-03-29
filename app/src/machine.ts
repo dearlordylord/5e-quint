@@ -95,13 +95,13 @@ export const dndMachine = setup({
   types: MT,
   guards,
   actions: {
-    markDead: assign(({ context: c }) => ({
-      dead: true,
-      // Monsters die at 0 HP — clear spurious unconscious (Quint pMonsterDeathCheck parity)
-      ...(c.creatureKind === "Monster"
+    markDead: assign({ dead: true }),
+    // Quint pMonsterDeathCheck: clear spurious unconscious when monster dies at 0 HP
+    monsterDeathCleanup: assign(({ context: c }) =>
+      c.creatureKind === "Monster"
         ? { unconscious: false, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "unconscious") }
-        : {})
-    })),
+        : {}
+    ),
     enterCombat: assign({ inCombat: true }),
     exitCombat: assign({ inCombat: false }),
     applyDamage: assign(({ context: c, event: e }) => ({
