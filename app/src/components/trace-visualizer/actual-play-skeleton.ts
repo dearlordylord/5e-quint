@@ -157,7 +157,7 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
     description:
       "A Skeleton guards the crypt beneath Castle Ravenloft. " +
       "AC 14, 13 HP (2d8+4), Shortsword +5 / Shortbow +5. " +
-      "Vulnerable to Bludgeoning. Immune to Poison damage and the Poisoned condition.",
+      "Vulnerable to Bludgeoning. Immune to Poison damage, the Poisoned condition, and Exhaustion.",
     events: [],
     expectedQuintState: skeletonState()
   },
@@ -344,7 +344,7 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
       "Shreeve switches to her warhammer. Roll 19 + 7 = 26 vs AC 14 — hit! " +
       "4 Bludgeoning damage, DOUBLED to 8 by vulnerability. " +
       "Skeleton at 5 HP takes 8 → drops to 0 HP → DEAD. " +
-      "No unconscious. No death saves. Monsters die instantly.",
+      "No unconscious. No death saves. Monsters die at 0 HP.",
     events: [skeletonDamage(4, "bludgeoning")],
     // 4 Bludgeoning → 8 after vulnerability → 5 HP - 8 = 0 → dead (monster, not PC)
     expectedQuintState: skeletonState({

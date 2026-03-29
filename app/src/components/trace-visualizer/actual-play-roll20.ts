@@ -6,6 +6,7 @@
  *
  * ORIGINAL ENCOUNTER:
  *   4 PCs vs. 10 skeletons (13 HP, AC 13, Bludgeoning vulnerability).
+ *   Note: AC 13 is from the 5.1 stat block; SRD 5.2.1 Skeleton has AC 14.
  *   Single-round combat. Extended to 2 rounds to exercise fighter features.
  *
  * ADAPTATION: Shreeve (Barbarian → Champion Fighter L5, 44 HP, 30ft speed).
