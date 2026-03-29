@@ -3788,4 +3788,241 @@ module dndTest {
     assert(result.heroicInspiration == true)
   }
 
+  // ============================================================
+  // CR -> Proficiency Bonus tests
+  // ============================================================
+
+  run test_crPB_CR0 = assert(crToProficiencyBonus(CR0) == 2)
+  run test_crPB_CR_Quarter = assert(crToProficiencyBonus(CR_Quarter) == 2)
+  run test_crPB_CRN5 = assert(crToProficiencyBonus(CRN(5)) == 3)
+  run test_crPB_CRN9 = assert(crToProficiencyBonus(CRN(9)) == 4)
+  run test_crPB_CRN13 = assert(crToProficiencyBonus(CRN(13)) == 5)
+  run test_crPB_CRN17 = assert(crToProficiencyBonus(CRN(17)) == 6)
+  run test_crPB_CRN21 = assert(crToProficiencyBonus(CRN(21)) == 7)
+  run test_crPB_CRN25 = assert(crToProficiencyBonus(CRN(25)) == 8)
+  run test_crPB_CRN30 = assert(crToProficiencyBonus(CRN(30)) == 9)
+
+  // ============================================================
+  // Skeleton Stat Block tests (SRD transcription verification)
+  // ============================================================
+
+  run test_skeleton_name = assert(SKELETON.name == "Skeleton")
+  run test_skeleton_type = assert(SKELETON.creatureType == Undead)
+  run test_skeleton_size = assert(SKELETON.creatureSize == Medium)
+  run test_skeleton_ac = assert(SKELETON.ac == 14)
+  run test_skeleton_initiative = assert(SKELETON.initiativeMod == 3)
+  run test_skeleton_hp = assert(SKELETON.maxHp == 13)
+  run test_skeleton_hitDice = assert(SKELETON.hitDice == 2)
+  run test_skeleton_hitDieType = assert(SKELETON.hitDieType == 8)
+  run test_skeleton_speed = assert(SKELETON.speeds.get(Walk) == 30)
+  run test_skeleton_str = assert(SKELETON.abilityScores.get(Str) == 10)
+  run test_skeleton_dex = assert(SKELETON.abilityScores.get(Dex) == 16)
+  run test_skeleton_con = assert(SKELETON.abilityScores.get(Con) == 15)
+  run test_skeleton_int = assert(SKELETON.abilityScores.get(Int_) == 6)
+  run test_skeleton_wis = assert(SKELETON.abilityScores.get(Wis) == 8)
+  run test_skeleton_cha = assert(SKELETON.abilityScores.get(Cha) == 5)
+  run test_skeleton_cr = assert(SKELETON.cr == CR_Quarter)
+  run test_skeleton_pb = assert(SKELETON.proficiencyBonus == 2)
+  run test_skeleton_vuln = assert(SKELETON.vulnerabilities == Set(Bludgeoning))
+  run test_skeleton_dmgImmunity = assert(SKELETON.damageImmunities == Set(Poison))
+  run test_skeleton_condImmunity = assert(SKELETON.conditionImmunities == Set(CPoisoned))
+  run test_skeleton_exhaustionImmune = assert(SKELETON.exhaustionImmune == true)
+  run test_skeleton_darkvision = assert(SKELETON.senses.get(Darkvision) == 60)
+
+  run test_skeleton_shortsword = {
+    val atk = SKELETON.attacks.get("Shortsword")
+    all {
+      assert(atk.attackBonus == 5),
+      assert(atk.reach == 5),
+      assert(atk.damageAmount == 6),
+      assert(atk.damageType == Piercing),
+      assert(atk.isRanged == false),
+    }
+  }
+
+  run test_skeleton_shortbow = {
+    val atk = SKELETON.attacks.get("Shortbow")
+    all {
+      assert(atk.attackBonus == 5),
+      assert(atk.rangeNormal == 80),
+      assert(atk.rangeLong == 320),
+      assert(atk.damageAmount == 6),
+      assert(atk.damageType == Piercing),
+      assert(atk.isRanged == true),
+    }
+  }
+
+  // ============================================================
+  // Ogre Stat Block tests (SRD transcription verification)
+  // ============================================================
+
+  run test_ogre_name = assert(OGRE.name == "Ogre")
+  run test_ogre_type = assert(OGRE.creatureType == Giant)
+  run test_ogre_size = assert(OGRE.creatureSize == Large)
+  run test_ogre_ac = assert(OGRE.ac == 11)
+  run test_ogre_initiative = assert(OGRE.initiativeMod == -1)
+  run test_ogre_hp = assert(OGRE.maxHp == 68)
+  run test_ogre_hitDice = assert(OGRE.hitDice == 8)
+  run test_ogre_hitDieType = assert(OGRE.hitDieType == 10)
+  run test_ogre_speed = assert(OGRE.speeds.get(Walk) == 40)
+  run test_ogre_str = assert(OGRE.abilityScores.get(Str) == 19)
+  run test_ogre_dex = assert(OGRE.abilityScores.get(Dex) == 8)
+  run test_ogre_con = assert(OGRE.abilityScores.get(Con) == 16)
+  run test_ogre_int = assert(OGRE.abilityScores.get(Int_) == 5)
+  run test_ogre_wis = assert(OGRE.abilityScores.get(Wis) == 7)
+  run test_ogre_cha = assert(OGRE.abilityScores.get(Cha) == 7)
+  run test_ogre_cr = assert(OGRE.cr == CRN(2))
+  run test_ogre_pb = assert(OGRE.proficiencyBonus == 2)
+  run test_ogre_no_resistances = assert(OGRE.resistances == Set())
+  run test_ogre_no_vulnerabilities = assert(OGRE.vulnerabilities == Set())
+  run test_ogre_no_immunities = assert(OGRE.damageImmunities == Set())
+  run test_ogre_no_condImmunities = assert(OGRE.conditionImmunities == Set())
+  run test_ogre_not_exhaustionImmune = assert(OGRE.exhaustionImmune == false)
+  run test_ogre_darkvision = assert(OGRE.senses.get(Darkvision) == 60)
+
+  run test_ogre_greatclub = {
+    val atk = OGRE.attacks.get("Greatclub")
+    all {
+      assert(atk.attackBonus == 6),
+      assert(atk.reach == 5),
+      assert(atk.damageAmount == 13),
+      assert(atk.damageType == Bludgeoning),
+      assert(atk.isRanged == false),
+    }
+  }
+
+  run test_ogre_javelin = {
+    val atk = OGRE.attacks.get("Javelin")
+    all {
+      assert(atk.attackBonus == 6),
+      assert(atk.reach == 5),
+      assert(atk.rangeNormal == 30),
+      assert(atk.rangeLong == 120),
+      assert(atk.damageAmount == 11),
+      assert(atk.damageType == Piercing),
+      assert(atk.isRanged == false),
+    }
+  }
+
+  // ============================================================
+  // Skeleton combat correctness tests
+  // ============================================================
+
+  // Bludgeoning vulnerability: 8 damage -> 16 after vulnerability -> kills Skeleton (maxHp=13)
+  run test_skeleton_bludgeoning_vulnerability = {
+    val s = freshCreature(SKELETON.maxHp)
+    val result = pTakeDamageAsCreature(s, 8, Bludgeoning, SKELETON.resistances, SKELETON.vulnerabilities, SKELETON.damageImmunities, false, Monster)
+    all { assert(result.hp == 0), assert(result.dead == true) }
+  }
+
+  // Poison immunity: any Poison damage -> 0 damage taken
+  run test_skeleton_poison_immunity = {
+    val s = freshCreature(SKELETON.maxHp)
+    val result = pTakeDamageAsCreature(s, 10, Poison, SKELETON.resistances, SKELETON.vulnerabilities, SKELETON.damageImmunities, false, Monster)
+    assert(result.hp == SKELETON.maxHp)
+  }
+
+  // Condition immunity: Poisoned -> rejected (no effect)
+  run test_skeleton_condition_immunity_poisoned = {
+    val s = freshCreature(SKELETON.maxHp)
+    val result = pApplyCondition(s, CPoisoned, SKELETON.conditionImmunities)
+    assert(result.poisoned == false)
+  }
+
+  // Exhaustion immunity: pAddExhaustion is no-op
+  run test_skeleton_exhaustion_immunity = {
+    val s = freshCreature(SKELETON.maxHp)
+    val result = pAddExhaustion(s, 3, SKELETON.exhaustionImmune)
+    assert(result.exhaustion == 0)
+  }
+
+  // Skeleton at 0 HP as Monster: dead immediately (SRD "Monster Death")
+  run test_skeleton_at_zero_hp_dead = {
+    val s = freshCreature(SKELETON.maxHp)
+    val result = pTakeDamageAsCreature(s, SKELETON.maxHp, Slashing, SKELETON.resistances, SKELETON.vulnerabilities, SKELETON.damageImmunities, false, Monster)
+    all { assert(result.hp == 0), assert(result.dead == true), assert(result.unconscious == false) }
+  }
+
+  // ============================================================
+  // Ogre combat correctness tests
+  // ============================================================
+
+  // Ogre takes normal damage (no R/V/I)
+  run test_ogre_normal_damage = {
+    val s = freshCreature(OGRE.maxHp)
+    val result = pTakeDamageAsCreature(s, 15, Slashing, OGRE.resistances, OGRE.vulnerabilities, OGRE.damageImmunities, false, Monster)
+    assert(result.hp == OGRE.maxHp - 15)
+  }
+
+  // Ogre at 0 HP as Monster: dead immediately
+  run test_ogre_at_zero_hp_dead = {
+    val s = freshCreature(OGRE.maxHp)
+    val result = pTakeDamageAsCreature(s, OGRE.maxHp, Bludgeoning, OGRE.resistances, OGRE.vulnerabilities, OGRE.damageImmunities, false, Monster)
+    all { assert(result.hp == 0), assert(result.dead == true), assert(result.unconscious == false) }
+  }
+
+  // ============================================================
+  // Multiattack Tests (A15)
+  // ============================================================
+  // SRD 5.2.1 (Monsters/Overview.md, "Multiattack"): a stat block entry
+  // allowing a monster to make multiple attacks as part of a single Attack
+  // action. Mapped to extraAttacksRemaining = length(multiattack) - 1.
+
+  pure def multiattackFreshTurn(speed: int, extraAttacks: int): TurnState = {
+    movementRemaining: speed,
+    effectiveSpeed: speed,
+    actionsRemaining: 1,
+    attackActionUsed: false,
+    bonusActionUsed: false,
+    reactionAvailable: true,
+    freeInteractionUsed: false,
+    extraAttacksRemaining: extraAttacks,
+    disengaged: false,
+    dodging: false,
+    readiedAction: false,
+    bonusActionSpellCast: false,
+    nonCantripActionSpellCast: false,
+    bonusMovementRemaining: 0,
+    bonusMovementOAFree: false,
+  }
+
+  // 2-attack Multiattack: Attack action -> extra attack -> depleted
+  run test_multiattack_two_attack_sequence = {
+    val t0 = multiattackFreshTurn(30, 1)
+    val creature = freshCreature(30)
+    val t1 = pUseAction(t0, creature, AAttack)
+    val t2 = pUseExtraAttack(t1)
+    all {
+      assert(t1.extraAttacksRemaining == 1),
+      assert(t2.extraAttacksRemaining == 0),
+      assert(t2.actionsRemaining == 0),
+    }
+  }
+
+  // 3-attack Multiattack: 1 action + 2 extra attacks
+  run test_multiattack_three_attack_sequence = {
+    val t0 = multiattackFreshTurn(30, 2)
+    val creature = freshCreature(50)
+    val t1 = pUseAction(t0, creature, AAttack)
+    val t2 = pUseExtraAttack(t1)
+    val t3 = pUseExtraAttack(t2)
+    all {
+      assert(t1.extraAttacksRemaining == 2),
+      assert(t2.extraAttacksRemaining == 1),
+      assert(t3.extraAttacksRemaining == 0),
+      assert(t3.actionsRemaining == 0),
+    }
+  }
+
+  // Non-Attack action: Dash does not enable extra attacks
+  run test_multiattack_non_attack_action = {
+    val t0 = multiattackFreshTurn(30, 1)
+    val creature = freshCreature(30)
+    val t1 = pUseAction(t0, creature, ADash)
+    all {
+      assert(t1.attackActionUsed == false),
+      assert(t1.extraAttacksRemaining == 1),
+    }
+  }
+
 }
