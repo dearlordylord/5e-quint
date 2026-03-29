@@ -308,6 +308,7 @@ export function movementCostMultiplier(params: {
 }
 
 /** Spend half effective speed (for standing from prone). Matches Quint pSpendHalfSpeed. */
+/** Spend half speed (e.g., standing from prone). See ASSUMPTIONS.md A17: cost must be > 0. */
 export function spendHalfSpeed(
   movementRemaining: number,
   effectiveSpeed: number

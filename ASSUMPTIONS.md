@@ -134,3 +134,19 @@ Each entry records the assumption, rules justification, and what changed in both
 **Rules basis (SRD 5.2.1 Monsters > Overview):** The CR table lists CR 0, 1/8, 1/4, 1/2 as distinct entries with specific XP values (0/10, 25, 50, 100) that don't fit the integer CR pattern. All integer CRs (1-30) follow a regular PB progression.
 
 **Changes:** `ChallengeRating` sum type in Quint (`dnd.qnt`) and discriminated union in TypeScript (`monster-types.ts`). `crToProficiencyBonus` function handles all variants.
+
+## A16: Dead creatures: effect processing continues, heal/damage are no-ops
+
+**Assumption:** When a creature dies mid-turn (e.g., from a death save during START_TURN), remaining start-of-turn and end-of-turn effects continue processing. Saves still remove effects. Temp HP grants still apply (temp HP is not HP). Healing and damage are no-ops on dead creatures.
+
+**Rules basis (SRD 5.2.1 Rules Glossary "Dead"):** "A dead creature has no Hit Points and can't regain them." The SRD does not define whether ongoing effects continue to tick on a dead creature's turn — dead creatures don't take turns in practice. This assumption makes the modeling choice explicit: the effect loop runs to completion (matching a fold over all effects), but operations that the SRD implicitly blocks (healing, damage) are skipped.
+
+**Changes:** `dnd.qnt`: `pProcessStartOfTurn` fold has no dead-break; `pHeal` and `pTakeDamage` check `s.dead` internally; `pGrantTempHp` does not check dead. XState: `computeStartTurn` (`machine-startturn.ts`) removed `if (dead) break`, guards heal/damage with `!dead`, leaves tempHp unguarded. `computeEndTurn` (`machine-endturn.ts`) uses `if (dead) continue` for damage loop.
+
+## A17: Standing from prone requires nonzero movement cost
+
+**Assumption:** Standing from prone requires spending movement equal to half your speed (round down). If this cost rounds to 0 (e.g., speed 1 → floor(1/2) = 0), the creature cannot stand — the attempt is a no-op. This is stricter than a literal reading of RAW, which only gates on "Speed is 0."
+
+**Rules basis (SRD 5.2.1 Rules Glossary "Prone"):** "spend an amount of movement equal to half your Speed (round down) to right yourself … If your Speed is 0, you can't right yourself." RAW explicitly blocks speed 0. For speed 1 (cost = 0), the SRD is silent. The spec interprets "spend movement" as requiring a nonzero expenditure — you cannot stand for free. This matches Quint's structural equality check: if no movement is spent, the turn state is unchanged, so prone persists.
+
+**Changes:** `dnd.qnt`: `doStandFromProne` uses `t1 != turnState` (structural equality) — zero-cost stand produces identical state, so prone is not removed. XState: `spendHalfSpeed` (`machine-helpers.ts`) returns `success: false` when `cost <= 0`.

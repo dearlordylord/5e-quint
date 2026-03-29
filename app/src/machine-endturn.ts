@@ -58,7 +58,7 @@ export function computeEndTurn(
     }
   }
 
-  // Quint pTakeDamage: if (s.dead) s — damage is no-op on dead creatures
+  // See ASSUMPTIONS.md A16: damage is no-op on dead creatures
   for (const dmg of damages) {
     if (dead) continue
     const prevHp = h

@@ -72,8 +72,8 @@ export function computeStartTurn(
   }
 
   // 3. Process start-of-turn effects (surviving effects only)
-  // Quint continues the fold even after death: saves still remove effects, but
-  // pHeal/pGrantTempHp/pTakeDamage all check `if (s.dead)` and return unchanged.
+  // See ASSUMPTIONS.md A16: no early exit on death. Saves still remove effects,
+  // tempHp grants still apply, but heal/damage are no-ops on dead creatures.
   for (const eff of effects) {
     if (!hasEffect(ae, eff.spellId)) continue
 
