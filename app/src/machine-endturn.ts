@@ -1,15 +1,11 @@
 import {
   addIncapSource,
-  computeAddExhaustion,
   computeTakeDamage,
   type ConditionFlag,
   damageAtZeroTransition,
-  exhUpdate,
-  MAX_EXHAUSTION,
   removeConditionUpdate
 } from "#/machine-helpers.ts"
-import { isIncapacitated } from "#/machine-queries.ts"
-import type { DndContext, EndTurnDamage, EndTurnSave, TurnPhaseCtx, TurnPhaseResult } from "#/machine-types.ts"
+import type { EndTurnDamage, EndTurnSave, TurnPhaseCtx, TurnPhaseResult } from "#/machine-types.ts"
 import type { ActiveEffect, ExpiryPhase } from "#/types.ts"
 import { deathSaveCount, hp, tempHp } from "#/types.ts"
 
@@ -26,19 +22,6 @@ export function addAe(
 
 export function removeAe(aes: ReadonlyArray<ActiveEffect>, spellId: string): ReadonlyArray<ActiveEffect> {
   return aes.filter((ae) => ae.spellId !== spellId)
-}
-
-// --- Concentration break helpers (extracted from machine.ts for max-lines) ---
-
-export const concBreakFields = (c: DndContext) =>
-  c.concentrationSpellId !== ""
-    ? { concentrationSpellId: "", activeEffects: removeAe(c.activeEffects, c.concentrationSpellId) }
-    : {}
-export const concBreak = (c: DndContext) => (!isIncapacitated(c) ? concBreakFields(c) : {})
-export const exhaustionWithConcBreak = (c: DndContext, levels: number, exhaustionImmune: boolean = false) => {
-  const r = computeAddExhaustion(c.exhaustion, levels, c.hp, c.maxHp, exhaustionImmune)
-  const died = r.newExhaustion >= MAX_EXHAUSTION && c.exhaustion < MAX_EXHAUSTION
-  return { ...exhUpdate(r), ...(died ? concBreakFields(c) : {}) }
 }
 
 // --- END_TURN processing ---
