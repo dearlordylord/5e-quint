@@ -2769,7 +2769,7 @@ module dndTest {
 
   run test_suffocate_drops_to_0 = {
     val s = freshCreature(30)
-    val s1 = pSuffocate(s)
+    val s1 = pSuffocate(s, PC)
     all {
       assert(s1.hp == 0),
       assert(s1.unconscious),
@@ -2780,13 +2780,13 @@ module dndTest {
   run test_suffocate_already_0hp = {
     // Already at 0 → no-op
     val s = freshCreature(30).with("hp", 0)
-    val s1 = pSuffocate(s)
+    val s1 = pSuffocate(s, PC)
     assert(s1 == s)
   }
 
   run test_suffocate_dead = {
     val s = freshCreature(30).with("dead", true)
-    val s1 = pSuffocate(s)
+    val s1 = pSuffocate(s, PC)
     assert(s1 == s)
   }
 

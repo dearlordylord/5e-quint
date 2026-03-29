@@ -315,9 +315,13 @@ export const dndMachine = setup({
     }),
     suffocate: assign(({ context: c }) => ({
       hp: hp(0),
-      unconscious: true,
-      prone: true,
-      incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious"),
+      ...(c.creatureKind === "Monster"
+        ? { dead: true }
+        : {
+            unconscious: true,
+            prone: true,
+            incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious")
+          }),
       ...concBreak(c)
     })),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),

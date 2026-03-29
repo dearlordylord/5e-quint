@@ -32,6 +32,7 @@ export const guards = {
     if (r.dmgThrough === 0) return false
     return addDeathFailures(c.deathSaves.failures, false).isDead
   },
+  monsterSuffocates: ({ context: c }: GuardArg) => c.hp > 0 && c.creatureKind === "Monster",
   canSuffocate: ({ context: c }: GuardArg) => c.hp > 0,
   shortRestHeals: ({ context: c, event: e }: GuardArg) => {
     if (c.inCombat) return false

@@ -76,11 +76,18 @@ export const damageTrackConfig = {
           },
           { actions: ["applyFall"] }
         ],
-        SUFFOCATE: {
-          guard: "canSuffocate" as const,
-          target: "#dnd.damageTrack.dying",
-          actions: ["suffocate"]
-        }
+        SUFFOCATE: [
+          {
+            guard: "monsterSuffocates" as const,
+            target: "#dnd.damageTrack.dead",
+            actions: ["suffocate", "breakConcentration"]
+          },
+          {
+            guard: "canSuffocate" as const,
+            target: "#dnd.damageTrack.dying",
+            actions: ["suffocate"]
+          }
+        ]
       }
     },
     dying: {
@@ -95,7 +102,7 @@ export const damageTrackConfig = {
       on: {
         HEAL: { target: "#dnd.damageTrack.alive", actions: ["applyHealFromZero", "clearUnconscious"] },
         GRANT_TEMP_HP: { actions: ["applyTempHp"] },
-        KNOCK_OUT: { target: "#dnd.damageTrack.alive", actions: ["applyKnockOut"] },
+        KNOCK_OUT: { target: "#dnd.damageTrack.alive", actions: ["applyKnockOut", "setUnconscious"] },
         APPLY_FALL: [...DYING_FALL_PREFIX, { actions: ["applyFallAtZeroHp"] }],
         SHORT_REST: [
           {

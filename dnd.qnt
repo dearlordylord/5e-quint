@@ -934,8 +934,14 @@ module dnd {
     pTakeDamageAsCreature(s, amount, damageType, resistances, vulnerabilities, immunities, isCritical, PC)
 
   /// Post-process: if monster is at 0 HP, set dead=true. Mirrors XState "always" guard.
+  /// Correct monster death after pTakeDamage(PC) path sets spurious unconscious.
+  /// Monsters die at 0 HP — they never go unconscious from the PC death-save track.
+  /// Prone is NOT cleared here — it may be legitimately set (e.g., from a fall).
   pure def pMonsterDeathCheck(s: CreatureState, kind: CreatureKind): CreatureState = {
-    if (kind == Monster and s.hp == 0 and not(s.dead)) s.with("dead", true)
+    if (kind == Monster and s.hp == 0 and not(s.dead))
+      s.with("dead", true)
+       .with("unconscious", false)
+       .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISUnconscious)))
     else s
   }
 
@@ -1999,10 +2005,11 @@ module dnd {
   pure def pSuffocationRounds(conMod: int): int =
     intMax(conMod, 1)
 
-  /// Apply suffocation death: drop to 0 HP, dying (unconscious + prone).
+  /// Apply suffocation death: drop to 0 HP, dying (unconscious + prone for PCs).
   /// Cannot regain HP or stabilize until breathing again (caller enforces).
-  pure def pSuffocate(s: CreatureState): CreatureState =
+  pure def pSuffocate(s: CreatureState, kind: CreatureKind): CreatureState =
     if (s.dead or s.hp == 0) s
+    else if (kind == Monster) s.with("hp", 0).with("dead", true)
     else pApplyCondition(s.with("hp", 0), CUnconscious, Set())
 
   // -- 17.3 Vision & Light --
@@ -2888,8 +2895,8 @@ module dnd {
   }
 
   action doSuffocate = {
-    val r = pWithConcBreak(spellSlots, state, pSuffocate(state))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
+    val r = pWithConcBreak(spellSlots, state, pSuffocate(state, creatureKind))
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
   }
 
   action doApplyStarvation = {
