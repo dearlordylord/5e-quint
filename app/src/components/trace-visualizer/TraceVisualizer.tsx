@@ -7,6 +7,7 @@ import { dndMachine } from "#/machine.ts"
 
 import { CR_C4E04_ENCOUNTER, CR_C4E04_SUMMARY, CR_C4E04_TRACE } from "./actual-play-cr-c4e04.ts"
 import { ROLL20_ENCOUNTER, ROLL20_SUMMARY, ROLL20_TRACE } from "./actual-play-roll20.ts"
+import { SKELETON_ENCOUNTER, SKELETON_SUMMARY, SKELETON_TRACE } from "./actual-play-skeleton.ts"
 import type { EncounterDef, EncounterSummary } from "./actual-play-types.ts"
 import { SubMachineViz } from "./MachineViz.tsx"
 import { FIELD_GROUPS, type NormalizedState, SAMPLE_TRACE, type TraceStep } from "./sample-trace.ts"
@@ -606,6 +607,18 @@ const TRACE_OPTIONS: ReadonlyArray<TraceOption> = [
     trace: CR_C4E04_TRACE,
     encounter: CR_C4E04_ENCOUNTER,
     summary: CR_C4E04_SUMMARY
+  },
+  {
+    id: "skeleton",
+    label: "Monster: Skeleton Perspective",
+    description:
+      "Same engine, different creature. A Skeleton defends Castle Ravenloft: " +
+      "Poison damage immunity (nullified), Bludgeoning vulnerability (doubled), " +
+      "and instant death at 0 HP — no unconscious, no death saves. " +
+      "Compare with the PC traces to see the CreatureKind difference.",
+    trace: SKELETON_TRACE,
+    encounter: SKELETON_ENCOUNTER,
+    summary: SKELETON_SUMMARY
   }
 ]
 
