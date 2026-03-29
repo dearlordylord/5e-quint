@@ -915,6 +915,7 @@ module dnd {
   /// Petrified auto-adds resistance to all damage types.
   /// NOTE: Death save track (unconscious at 0 HP, failures on subsequent hits) is PC-only per RAW.
   /// Current spec applies universally — correct while only PCs use the spec (see A12).
+  /// Take damage (PC behavior: death saves at 0 HP). Delegates to pTakeDamageAsCreature.
   pure def pTakeDamage(
     s: CreatureState,
     amount: int,
@@ -923,35 +924,8 @@ module dnd {
     vulnerabilities: Set[DamageType],
     immunities: Set[DamageType],
     isCritical: bool
-  ): CreatureState = {
-    if (s.dead) s
-    else {
-      val effMax = effectiveMaxHp(s)
-      val effResist = if (s.petrified) ALL_DAMAGE_TYPES else resistances
-      val effAmount = applyDamageModifiers(amount, damageType, immunities, effResist, vulnerabilities, 0)
-      if (effAmount <= 0) s
-      else {
-        val tempAbsorb = intMin(s.tempHp, effAmount)
-        val dmgThrough = effAmount - tempAbsorb
-        val s1 = s.with("tempHp", s.tempHp - tempAbsorb)
-        if (dmgThrough == 0) s1
-        else if (s1.hp == 0) {
-          // Already at 0 HP: death save failures or instant death
-          if (dmgThrough >= effMax) s1.with("dead", true)
-          else pAddDeathFailures(s1.with("stable", false), if (isCritical) 2 else 1)
-        } else {
-          // HP > 0: apply remaining damage
-          val newHp = s1.hp - dmgThrough
-          if (newHp <= 0) {
-            val overflow = -newHp
-            val s2 = s1.with("hp", 0)
-            if (overflow >= effMax) s2.with("dead", true)
-            else pApplyCondition(s2, CUnconscious, Set())
-          } else s1.with("hp", newHp)
-        }
-      }
-    }
-  }
+  ): CreatureState =
+    pTakeDamageAsCreature(s, amount, damageType, resistances, vulnerabilities, immunities, isCritical, PC)
 
   /// Post-process: if monster is at 0 HP, set dead=true. Mirrors XState "always" guard.
   pure def pMonsterDeathCheck(s: CreatureState, kind: CreatureKind): CreatureState = {

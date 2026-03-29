@@ -73,9 +73,9 @@ const QUINT_INCAP_SOURCE_MAP: Record<string, IncapSource> = {
   ISDirect: "direct"
 }
 
-const QUINT_CREATURE_KIND_MAP: Record<string, CreatureKind> = {
-  PC: "PC",
-  Monster: "Monster"
+// CreatureKind variants match TS values exactly — no mapping needed, just type assertion
+function mapCreatureKind(s: string): CreatureKind {
+  return s === "Monster" ? "Monster" : "PC"
 }
 
 const QUINT_DAMAGE_TYPE_MAP: Record<string, DamageType> = {
@@ -598,6 +598,11 @@ const driverSchema = {
   stepUniversal: {} // composite — framework expands to leaf actions
 } as const
 
+/** Multiattack length to extra attacks: first attack uses Attack action, rest are extra. */
+function multiattackExtraAttacks(multiattackLength: number): number {
+  return multiattackLength > 0 ? multiattackLength - 1 : 0
+}
+
 function mapDamageType(s: string): DamageType {
   return QUINT_DAMAGE_TYPE_MAP[s] ?? "bludgeoning"
 }
@@ -678,7 +683,7 @@ function createDndDriver() {
     return {
       init: ({ kind, l, maxHp: mhp, selectedBlock }) => {
         if (actor) actor.stop()
-        const creatureKind = QUINT_CREATURE_KIND_MAP[kind] ?? "PC"
+        const creatureKind = mapCreatureKind(kind)
         currentCreatureKind = creatureKind
         if (creatureKind === "Monster") {
           const sb = parseStatBlock(selectedBlock)
@@ -689,7 +694,7 @@ function createDndDriver() {
               hitDiceRemaining: 0,
               effectiveSpeed: sb.walkSpeed,
               movementRemaining: sb.walkSpeed,
-              extraAttacksRemaining: sb.multiattackLength > 0 ? sb.multiattackLength - 1 : 0,
+              extraAttacksRemaining: multiattackExtraAttacks(sb.multiattackLength),
               fighterLevel: 0,
               creatureKind: "Monster"
             }
