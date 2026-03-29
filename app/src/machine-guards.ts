@@ -54,5 +54,12 @@ export const guards = {
   hpZeroUnconscious: ({ context: c }: GuardArg) => c.hp === 0 && c.unconscious,
   isOutOfCombat: ({ context: c }: GuardArg) => !c.inCombat,
   regainedConsciousness: ({ context: c }: GuardArg) => c.hp > 0 && !c.dead,
-  canConcentrate: ({ context: c }: GuardArg) => !c.dead && !isIncapacitated(c)
+  canConcentrate: ({ context: c }: GuardArg) => !c.dead && !isIncapacitated(c),
+  // Monster death at 0 HP: SRD "Monsters and Death" — monsters die instead of entering death save track
+  monsterDropsToZeroHp: ({ context: c, event: e }: GuardArg) =>
+    c.creatureKind === "Monster" && isDropToZero(dmgR(c, e)),
+  monsterFallDropsToZero: ({ context: c, event: e }: GuardArg) =>
+    c.creatureKind === "Monster" && isDropToZero(fallR(c, e)),
+  // Catch-all: if a monster is at 0 HP in dying state, it should be dead
+  monsterAtZeroHp: ({ context: c }: GuardArg) => c.creatureKind === "Monster" && c.hp === 0
 }

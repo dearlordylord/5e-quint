@@ -12,7 +12,7 @@ import { z } from "zod"
 
 import { fighterExtraAttacks } from "#/features/class-fighter.ts"
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
-import type { ActionType, Condition, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
+import type { ActionType, Condition, CreatureKind, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
 import { d20Roll, healAmount, tempHp } from "#/types.ts"
 
 // ============================================================
@@ -71,6 +71,11 @@ const QUINT_INCAP_SOURCE_MAP: Record<string, IncapSource> = {
   ISStunned: "stunned",
   ISUnconscious: "unconscious",
   ISDirect: "direct"
+}
+
+const QUINT_CREATURE_KIND_MAP: Record<string, CreatureKind> = {
+  PC: "PC",
+  Monster: "Monster"
 }
 
 const QUINT_DAMAGE_TYPE_MAP: Record<string, DamageType> = {
@@ -501,8 +506,9 @@ void (true as AssertAllEventsMapped)
 const ITFVariant = z.any().transform(variantToString)
 
 const driverSchema = {
-  init: { l: ITFBigInt, maxHp: ITFBigInt },
+  init: { kind: ITFVariant, l: ITFBigInt, maxHp: ITFBigInt, selectedBlock: z.any() },
   doTakeDamage: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
+  doTakeDamageMonster: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
   doTakeDamageWithMods: {
     amount: ITFBigInt,
     dt: ITFVariant,
@@ -586,16 +592,79 @@ const driverSchema = {
   doUseHeroicInspiration: {},
   doScoreCriticalHit: {},
   doUseBonusMovement: { feet: ITFBigInt },
-  step: {} // dead character no-op
+  step: {}, // dead character no-op
+  stepPC: {}, // composite — framework expands to leaf actions
+  stepMonster: {}, // composite — framework expands to leaf actions
+  stepUniversal: {} // composite — framework expands to leaf actions
 } as const
 
 function mapDamageType(s: string): DamageType {
   return QUINT_DAMAGE_TYPE_MAP[s] ?? "bludgeoning"
 }
 
+/** Extract stat block fields from Quint's parsed StatBlock record. */
+function parseStatBlock(raw: unknown): {
+  resistances: Set<DamageType>
+  vulnerabilities: Set<DamageType>
+  immunities: Set<DamageType>
+  conditionImmunities: Set<Condition>
+  exhaustionImmune: boolean
+  walkSpeed: number
+  multiattackLength: number
+  maxHp: number
+} {
+  if (!raw || typeof raw !== "object") {
+    return {
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      conditionImmunities: new Set(),
+      exhaustionImmune: false,
+      walkSpeed: 30,
+      multiattackLength: 0,
+      maxHp: 10
+    }
+  }
+  const r = raw as Record<string, unknown>
+  const mapSet = (field: unknown): Set<DamageType> => {
+    if (field instanceof Set) return new Set([...field].map((v) => mapDamageType(variantToString(v))))
+    return new Set()
+  }
+  const mapCondSet = (field: unknown): Set<Condition> => {
+    if (field instanceof Set)
+      return new Set([...field].map((v) => QUINT_CONDITION_MAP[variantToString(v)] ?? "blinded"))
+    return new Set()
+  }
+  const speeds = r.speeds as Map<unknown, unknown> | undefined
+  let walkSpeed = 30
+  if (speeds instanceof Map) {
+    // Quint ITF may represent variant keys as strings or objects
+    for (const [k, v] of speeds) {
+      if (variantToString(k) === "Walk") {
+        walkSpeed = Number(v)
+        break
+      }
+    }
+  }
+  const multiattack = r.multiattack
+  const multiattackLength = Array.isArray(multiattack) ? multiattack.length : 0
+  return {
+    resistances: mapSet(r.resistances),
+    vulnerabilities: mapSet(r.vulnerabilities),
+    immunities: mapSet(r.damageImmunities),
+    conditionImmunities: mapCondSet(r.conditionImmunities),
+    exhaustionImmune: Boolean(r.exhaustionImmune),
+    walkSpeed,
+    multiattackLength,
+    maxHp: Number(r.maxHp ?? 10n)
+  }
+}
+
 function createDndDriver() {
   return defineDriver(driverSchema, () => {
     let actor: ReturnType<typeof createActor<typeof dndMachine>> | null = null
+    let currentCreatureKind: CreatureKind = "PC"
+    let currentStatBlock: ReturnType<typeof parseStatBlock> | null = null
 
     function ensureActor() {
       if (!actor) throw new Error("Actor not initialized — init must come first")
@@ -607,20 +676,40 @@ function createDndDriver() {
     }
 
     return {
-      init: ({ l, maxHp: mhp }) => {
+      init: ({ kind, l, maxHp: mhp, selectedBlock }) => {
         if (actor) actor.stop()
-        const INIT_SPEED = 30
-        const level = Number(l)
-        actor = createActor(dndMachine, {
-          input: {
-            maxHp: Number(mhp),
-            hitDiceRemaining: level,
-            effectiveSpeed: INIT_SPEED,
-            movementRemaining: INIT_SPEED,
-            extraAttacksRemaining: 1,
-            fighterLevel: level
-          }
-        })
+        const creatureKind = QUINT_CREATURE_KIND_MAP[kind] ?? "PC"
+        currentCreatureKind = creatureKind
+        if (creatureKind === "Monster") {
+          const sb = parseStatBlock(selectedBlock)
+          currentStatBlock = sb
+          actor = createActor(dndMachine, {
+            input: {
+              maxHp: sb.maxHp,
+              hitDiceRemaining: 0,
+              effectiveSpeed: sb.walkSpeed,
+              movementRemaining: sb.walkSpeed,
+              extraAttacksRemaining: sb.multiattackLength > 0 ? sb.multiattackLength - 1 : 0,
+              fighterLevel: 0,
+              creatureKind: "Monster"
+            }
+          })
+        } else {
+          currentStatBlock = null
+          const INIT_SPEED = 30
+          const level = Number(l)
+          actor = createActor(dndMachine, {
+            input: {
+              maxHp: Number(mhp),
+              hitDiceRemaining: level,
+              effectiveSpeed: INIT_SPEED,
+              movementRemaining: INIT_SPEED,
+              extraAttacksRemaining: 1,
+              fighterLevel: level,
+              creatureKind: "PC"
+            }
+          })
+        }
         actor.start()
       },
       doTakeDamage: ({ amount, dt, isCrit }) => {
@@ -631,6 +720,18 @@ function createDndDriver() {
           resistances: new Set(),
           vulnerabilities: new Set(),
           immunities: new Set(),
+          isCritical: isCrit
+        })
+      },
+      doTakeDamageMonster: ({ amount, dt, isCrit }) => {
+        const sb = currentStatBlock
+        send({
+          type: "TAKE_DAMAGE",
+          amount: Number(amount),
+          damageType: mapDamageType(dt),
+          resistances: sb?.resistances ?? new Set(),
+          vulnerabilities: sb?.vulnerabilities ?? new Set(),
+          immunities: sb?.immunities ?? new Set(),
           isCritical: isCrit
         })
       },
@@ -697,9 +798,16 @@ function createDndDriver() {
         isGrappling,
         numEffects
       }) => {
-        // Quint uses configForLevel: Walk=30, no armor penalty
-        const BASE_SPEED = 30
-        const extraAttacks = fighterExtraAttacks(ensureActor().getSnapshot().context.fighterLevel)
+        const isMonster = currentCreatureKind === "Monster"
+        const sb = currentStatBlock
+        // Monster: speed from stat block, no armor penalty; PC: Walk=30, no armor penalty
+        const BASE_SPEED = isMonster && sb ? sb.walkSpeed : 30
+        const extraAttacks =
+          isMonster && sb
+            ? sb.multiattackLength > 0
+              ? sb.multiattackLength - 1
+              : 0
+            : fighterExtraAttacks(ensureActor().getSnapshot().context.fighterLevel)
         const effects = !numEffects
           ? []
           : [
@@ -724,9 +832,10 @@ function createDndDriver() {
           callerSpeedModifier: Number(callerSpeedMod),
           isGrappling,
           grappledTargetTwoSizesSmaller: grappledSmall,
-          deathSaveRoll: dsRoll != null ? d20Roll(Number(dsRoll)) : undefined,
-          deathSaveRoll2: dsRoll2 != null ? d20Roll(Number(dsRoll2)) : undefined,
-          conMod: conMod != null ? Number(conMod) : undefined,
+          // Monsters: skip death save (pass undefined), skip Heroic Rally (conMod undefined)
+          deathSaveRoll: isMonster ? undefined : dsRoll != null ? d20Roll(Number(dsRoll)) : undefined,
+          deathSaveRoll2: isMonster ? undefined : dsRoll2 != null ? d20Roll(Number(dsRoll2)) : undefined,
+          conMod: isMonster ? undefined : conMod != null ? Number(conMod) : undefined,
           startOfTurnEffects: effects
         })
       },
@@ -777,6 +886,8 @@ function createDndDriver() {
                 conditionsToRemove: [QUINT_CONDITION_MAP[saveCondition ?? ""] ?? "blinded"]
               }
             ]
+        const isMonster = currentCreatureKind === "Monster"
+        const sb = currentStatBlock
         const damages = !numDmg
           ? []
           : [
@@ -785,9 +896,10 @@ function createDndDriver() {
                 damage: Number(dmgAmount ?? 0),
                 damageType: mapDamageType(dmgType ?? "Bludgeoning"),
                 conSaveSucceeded: conSave ?? false,
-                resistances: new Set(dmgResType ? [mapDamageType(dmgResType)] : []),
-                vulnerabilities: new Set(dmgVulnType ? [mapDamageType(dmgVulnType)] : []),
-                immunities: new Set<DamageType>()
+                resistances: isMonster && sb ? sb.resistances : new Set(dmgResType ? [mapDamageType(dmgResType)] : []),
+                vulnerabilities:
+                  isMonster && sb ? sb.vulnerabilities : new Set(dmgVulnType ? [mapDamageType(dmgVulnType)] : []),
+                immunities: isMonster && sb ? sb.immunities : new Set<DamageType>()
               }
             ]
         send({ type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages })
@@ -907,6 +1019,9 @@ function createDndDriver() {
         send({ type: "USE_BONUS_MOVEMENT", feet: Number(feet) })
       },
       step: () => {}, // dead character no-op
+      stepPC: () => {}, // composite — framework expands to leaf actions
+      stepMonster: () => {}, // composite — framework expands to leaf actions
+      stepUniversal: () => {}, // composite — framework expands to leaf actions
       getState: () => snapshotToNormalized(ensureActor().getSnapshot()),
       config: () => ({ statePath: [] })
     }

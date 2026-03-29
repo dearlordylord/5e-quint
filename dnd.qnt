@@ -953,6 +953,12 @@ module dnd {
     }
   }
 
+  /// Post-process: if monster is at 0 HP, set dead=true. Mirrors XState "always" guard.
+  pure def pMonsterDeathCheck(s: CreatureState, kind: CreatureKind): CreatureState = {
+    if (kind == Monster and s.hp == 0 and not(s.dead)) s.with("dead", true)
+    else s
+  }
+
   /// CreatureKind-aware take damage: monsters die at 0 HP, PCs enter death save track.
   /// SRD 5.2.1 Rules Glossary "Monsters and Death": monsters die at 0 HP.
   pure def pTakeDamageAsCreature(
@@ -2548,13 +2554,19 @@ module dnd {
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
     if (kind == Monster) {
+      val monsterExtraAttacks = if (selectedBlock.multiattack.length() > 0)
+        selectedBlock.multiattack.length() - 1 else 0
+      val monsterSpeed = selectedBlock.speeds.get(Walk)
       all {
         creatureKind' = Monster,
         monsterStatBlock' = selectedBlock,
         state' = freshCreature(selectedBlock.maxHp),
         fighterState' = freshFighterState(0),
         fighterLevel' = 0,
-        turnState' = FRESH_TURN,
+        turnState' = FRESH_TURN
+          .with("extraAttacksRemaining", monsterExtraAttacks)
+          .with("movementRemaining", monsterSpeed)
+          .with("effectiveSpeed", monsterSpeed),
         spellSlots' = FRESH_SPELL_SLOTS,
         turnPhase' = "outOfCombat",
       }
@@ -2651,7 +2663,7 @@ module dnd {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
     nondet exhaustionImmune = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pAddExhaustion(state, levels, exhaustionImmune))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
   }
 
   action doReduceExhaustion = {
@@ -2710,7 +2722,7 @@ module dnd {
         val monsterExtraAttacks = if (monsterStatBlock.multiattack.length() > 0)
           monsterStatBlock.multiattack.length() - 1 else 0
         all {
-          state' = r.creature,
+          state' = pMonsterDeathCheck(r.creature, creatureKind),
           turnState' = r.turn.with("extraAttacksRemaining", monsterExtraAttacks),
           spellSlots' = r.slots,
           turnPhase' = "acting",
@@ -2892,22 +2904,22 @@ module dnd {
   action doApplyFall = {
     nondet damageRoll = DAMAGE_RANGE.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyFall(state, damageRoll, Set(), Set(), Set()))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
   }
 
   action doSuffocate = {
     val r = pWithConcBreak(spellSlots, state, pSuffocate(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
   }
 
   action doApplyStarvation = {
     val r = pWithConcBreak(spellSlots, state, pApplyStarvation(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
   }
 
   action doApplyDehydration = {
     val r = pWithConcBreak(spellSlots, state, pApplyDehydration(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock }
   }
 
   // Grapple/Shove actions (applied to self as target)
@@ -2964,7 +2976,7 @@ module dnd {
         else [{ spellId: dmgSpellId, damage: dmgAmount, damageType: dmgType, conSaveSucceeded: conSave, resistances: dmgRes, vulnerabilities: dmgVuln, immunities: dmgImm }]
       val result = pEndTurn(state, spellSlots, saves, damages)
       all {
-        state' = result.creature,
+        state' = pMonsterDeathCheck(result.creature, creatureKind),
         turnState' = turnState,
         spellSlots' = result.slots,
         turnPhase' = "waitingForTurn",

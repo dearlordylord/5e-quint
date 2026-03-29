@@ -43,6 +43,12 @@ export const damageTrackConfig = {
             actions: ["applyDamage", "breakConcentration"]
           },
           {
+            // Monster death at 0 HP (SRD: monsters die, no death saves)
+            guard: "monsterDropsToZeroHp" as const,
+            target: "#dnd.damageTrack.dead",
+            actions: ["applyDamage", "breakConcentration"]
+          },
+          {
             guard: "dropsToZeroHp" as const,
             target: "#dnd.damageTrack.dying",
             actions: ["applyDamage", "setUnconscious"]
@@ -55,6 +61,11 @@ export const damageTrackConfig = {
         APPLY_FALL: [
           {
             guard: "fallInstantDeath" as const,
+            target: "#dnd.damageTrack.dead",
+            actions: ["applyFall", "breakConcentration"]
+          },
+          {
+            guard: "monsterFallDropsToZero" as const,
             target: "#dnd.damageTrack.dead",
             actions: ["applyFall", "breakConcentration"]
           },
@@ -75,6 +86,8 @@ export const damageTrackConfig = {
     dying: {
       initial: "unstable" as const,
       always: [
+        // Monster catch-all: monsters die at 0 HP, should never stay in dying state
+        { guard: "monsterAtZeroHp" as const, target: "#dnd.damageTrack.dead" },
         { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
         { guard: "contextDead" as const, target: "#dnd.damageTrack.dead" },
         { guard: "regainedConsciousness" as const, target: "#dnd.damageTrack.alive" }
