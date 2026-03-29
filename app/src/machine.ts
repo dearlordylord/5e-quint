@@ -304,7 +304,9 @@ export const dndMachine = setup({
     applyFall: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
       const took = r.newHp !== c.hp || r.newTempHp !== c.tempHp
-      return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp), ...(took ? { prone: true } : {}) }
+      // Dying instant death: HP stays 0 but dmgThrough >= maxHp kills — Quint sees state change
+      const dyingInstantDeath = c.hp === 0 && r.dmgThrough >= r.effMax
+      return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp), ...(took || dyingInstantDeath ? { prone: true } : {}) }
     }),
     applyFallAtZeroHp: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
