@@ -222,7 +222,12 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
     xstateEvent: "END_TURN",
     description: "Skeleton ends its turn. 13 HP, unscathed.",
     events: [endTurn()],
-    expectedQuintState: skeletonState(WAITING)
+    expectedQuintState: skeletonState({
+      ...WAITING,
+      movementRemaining: 10,
+      actionsRemaining: 0,
+      attackActionUsed: true
+    })
   },
 
   // ===== ROUND 1: Shreeve's turn (Skeleton takes damage) =====
@@ -236,7 +241,13 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
       "Shreeve attacks with a longsword. Roll 14 + 7 = 21 vs AC 14 — hit! " +
       "8 Slashing damage. No vulnerability or immunity. Skeleton drops to 5 HP.",
     events: [skeletonDamage(8, "slashing")],
-    expectedQuintState: skeletonState({ ...WAITING, hp: 5 })
+    expectedQuintState: skeletonState({
+      ...WAITING,
+      hp: 5,
+      movementRemaining: 10,
+      actionsRemaining: 0,
+      attackActionUsed: true
+    })
   },
 
   // ===== ROUND 1: Elara's turn (Poison — immunity showcase) =====
@@ -251,7 +262,13 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
       "12 Poison damage → 0. IMMUNE. The Skeleton is Undead; Poison does nothing.",
     events: [skeletonDamage(12, "poison")],
     // Poison immunity: 12 damage nullified entirely. HP unchanged at 5.
-    expectedQuintState: skeletonState({ ...WAITING, hp: 5 })
+    expectedQuintState: skeletonState({
+      ...WAITING,
+      hp: 5,
+      movementRemaining: 10,
+      actionsRemaining: 0,
+      attackActionUsed: true
+    })
   },
 
   {
@@ -264,7 +281,13 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
       "Skeleton's condition immunities include Poisoned. No effect.",
     events: [{ type: "APPLY_CONDITION", condition: "poisoned", conditionImmunities: new Set(["poisoned"]) }],
     // Condition immunity: Poisoned rejected. No state change.
-    expectedQuintState: skeletonState({ ...WAITING, hp: 5 })
+    expectedQuintState: skeletonState({
+      ...WAITING,
+      hp: 5,
+      movementRemaining: 10,
+      actionsRemaining: 0,
+      attackActionUsed: true
+    })
   },
 
   // ===== ROUND 2: Skeleton's last turn =====
@@ -302,7 +325,12 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
     xstateEvent: "END_TURN",
     description: "Skeleton ends its turn. 5 HP. This won't last.",
     events: [endTurn()],
-    expectedQuintState: skeletonState({ ...WAITING, hp: 5 })
+    expectedQuintState: skeletonState({
+      ...WAITING,
+      hp: 5,
+      actionsRemaining: 0,
+      attackActionUsed: true
+    })
   },
 
   // ===== ROUND 2: Shreeve finishes it (vulnerability showcase + instant death) =====
@@ -322,7 +350,9 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
     expectedQuintState: skeletonState({
       ...WAITING,
       hp: 0,
-      dead: true
+      dead: true,
+      actionsRemaining: 0,
+      attackActionUsed: true
     })
   }
 ]
