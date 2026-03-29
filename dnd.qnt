@@ -122,7 +122,11 @@ module dnd {
       else 9
   }
 
-  /// SRD: "A stat block contains the game statistics of a monster."
+  /// SRD Stat Block: "contains the game statistics of a monster." Authored
+  /// directly — the SRD gives final numbers. Distinct from Character Sheet
+  /// (PC-only, derived from class/level/species). Both produce creature-level
+  /// combat stats; the shared interface is pure function parameters, not a
+  /// shared type — the SRD has no such concept. See UBIQUITOUS_LANGUAGE.md.
   type StatBlock = {
     name: str,
     creatureType: CreatureType,
@@ -238,7 +242,9 @@ module dnd {
   // 2. CHARACTER CONFIG (character/config)
   // ============================================================
 
-  /// Immutable for the duration of the state machine.
+  /// SRD Character Sheet: tracks a PC's information, derived from class, level,
+  /// species, and equipment. Counterpart to StatBlock (monster-only). Both
+  /// produce creature-level combat stats; see StatBlock comment for design.
   // Adding a field here requires updating all CharConfig literals (BASE_CHAMPION_CONFIG in dnd.qnt; TEST_WIZARD, TEST_FIGHTER_5, TEST_BARBARIAN_ORC, TEST_CLERIC_DWARF, TEST_ROGUE_HALFLING, TEST_PALADIN_DRAGONBORN, TEST_RANGER_ELF, TEST_MONK_GNOME, TEST_SORCERER_TIEFLING, TEST_WARLOCK_GOLIATH, TEST_BARD_HUMAN, TEST_DRUID_ELF in dndTest.qnt)
   type CharConfig = {
     className: ClassName,            // primary class
