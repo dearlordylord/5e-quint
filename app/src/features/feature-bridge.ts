@@ -479,3 +479,6 @@ export {
   songOfRestDie,
   superiorInspirationRestore
 } from "#/features/feature-bridge-bard.ts"
+
+// --- Cleric (re-exported via feature-bridge-cleric.ts — not inlined here due to max-lines) ---
+export * from "#/features/feature-bridge-cleric.ts"

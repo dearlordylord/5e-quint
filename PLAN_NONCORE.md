@@ -426,8 +426,8 @@ TS-only in `class-bard.ts`. Bonus Proficiencies (L3), Cutting Words (L3, subtrac
 ## Cleric
 
 ```
-[T90] Cleric Base (P2) -> deps: [T01, T07]
-[T91] Life Domain (P2) -> deps: [T90]
+[T90] Cleric Base (P2) -> deps: [T01, T07]  ✓ done
+[T91] Life Domain (P2) -> deps: [T90]  ✓ done
 ```
 
 **[T90] Cleric Base**
