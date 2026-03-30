@@ -12,3 +12,7 @@ export const SAVE_DC_BASE = 8
 export function featureSaveDC(abilityMod: number, profBonus: number): number {
   return SAVE_DC_BASE + abilityMod + profBonus
 }
+
+/** Draconic ancestry damage types — shared by Dragonborn species and Draconic Sorcery subclass. */
+export const DRACONIC_ANCESTRY_TYPES = ["acid", "cold", "fire", "lightning", "poison"] as const
+export type DraconicAncestryType = (typeof DRACONIC_ANCESTRY_TYPES)[number]

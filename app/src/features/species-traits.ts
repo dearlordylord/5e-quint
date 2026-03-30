@@ -2,6 +2,7 @@
 // TS-only: all traits are capability flags, resource tracking, or
 // modifier functions — no Quint state transitions.
 
+import { featureSaveDC } from "#/srd-constants.ts"
 import type { DamageType } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
@@ -13,8 +14,11 @@ import type { DamageType } from "#/types.ts"
 export const GIANT_ANCESTRY_OPTIONS = ["cloud", "fire", "frost", "hill", "stone", "storm"] as const
 export type GiantAncestry = (typeof GIANT_ANCESTRY_OPTIONS)[number]
 
-export const DRAGONBORN_ANCESTRY_TYPES = ["acid", "cold", "fire", "lightning", "poison"] as const
-export type DragonbornAncestryType = (typeof DRAGONBORN_ANCESTRY_TYPES)[number]
+// DragonbornAncestryType = DraconicAncestryType (same 5 damage types, shared in srd-constants.ts)
+export {
+  DRACONIC_ANCESTRY_TYPES as DRAGONBORN_ANCESTRY_TYPES,
+  type DraconicAncestryType as DragonbornAncestryType
+} from "#/srd-constants.ts"
 
 export const TIEFLING_LEGACY_OPTIONS = ["abyssal", "chthonic", "infernal"] as const
 export type TieflingLegacy = (typeof TIEFLING_LEGACY_OPTIONS)[number]
@@ -40,9 +44,7 @@ export function breathWeaponDice(characterLevel: number): number {
 }
 
 /** Breath Weapon save DC = 8 + CON mod + prof bonus. */
-export function breathWeaponSaveDC(conMod: number, profBonus: number): number {
-  return 8 + conMod + profBonus
-}
+export const breathWeaponSaveDC: (conMod: number, profBonus: number) => number = featureSaveDC
 
 /** Draconic Flight (L5+): BA, fly = Speed, 10 min, 1/LR. */
 export function hasDraconicFlight(characterLevel: number): boolean {

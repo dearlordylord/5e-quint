@@ -353,8 +353,7 @@ export function metamagicCost(option: MetamagicOption): number {
 // resistance/damage bonus are query functions.
 // =============================================================================
 
-export const DRACONIC_ANCESTRY_TYPES = ["acid", "cold", "fire", "lightning", "poison"] as const
-export type DraconicAncestryType = (typeof DRACONIC_ANCESTRY_TYPES)[number]
+export { DRACONIC_ANCESTRY_TYPES, type DraconicAncestryType } from "#/srd-constants.ts"
 
 const DRACONIC_SUBCLASS_LEVEL = 3
 const ELEMENTAL_AFFINITY_LEVEL = 6
