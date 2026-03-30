@@ -232,7 +232,7 @@ export const PROTECTION_FROM_ENERGY_TYPES = [
 
 /** Globe of Invulnerability (SRD 5.2.1): blocks spells ≤ 5, +1 per slot above 6. */
 export function globeBlocksSpellLevel(slotLevel: number): number {
-  return 5 + (slotLevel - 6)
+  return 5 + Math.max(0, slotLevel - 6)
 }
 
 // --- Banishment (L4, Action, 30 ft, Concentration 1 min, CHA save) ---
