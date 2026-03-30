@@ -124,6 +124,16 @@
 | Term | Definition | Aliases to avoid |
 |------|-----------|-----------------|
 | **Weapon Property** | One of 10 traits on a weapon defining special mechanics: Ammunition, Finesse, Heavy, Light, Loading, Reach, Special, Thrown, Two-Handed, Versatile | Weapon tag, weapon trait |
+| **Mastery Property** | A weapon-specific combat technique (one of 8: Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex) usable only by a character with a feature that unlocks it; each weapon has exactly one mastery property. Distinct from Weapon Properties — mastery is an additional layer, not one of the 10 weapon traits | Weapon mastery (ambiguous — could mean the class feature or the property) |
+| **Weapon Mastery** | A class feature (Fighter L1, Barbarian L1, Paladin L1, Ranger L1, Rogue L1) that lets a character use mastery properties on a limited number of weapons they are proficient with. Number of mastered weapons varies by class and level; changeable on Long Rest. Barbarian restricted to melee weapons only | — |
+| **Cleave** | Mastery property: on melee hit, make a melee attack against a second creature within 5 feet of the first and within your reach; second creature takes weapon damage without ability modifier (unless negative). Once per turn | — |
+| **Graze** | Mastery property: on miss, deal damage equal to ability modifier used for the attack (minimum 1; same damage type as weapon). Damage can only be increased by increasing the ability modifier | — |
+| **Nick** | Mastery property: the Light property's extra attack can be made as part of the Attack action instead of as a Bonus Action. Once per turn | — |
+| **Push** | Mastery property: on hit, push a Large or smaller creature up to 10 feet straight away from you | — |
+| **Sap** | Mastery property: on hit, target has Disadvantage on its next attack roll before the start of your next turn | — |
+| **Slow** | Mastery property: on hit (with damage), reduce target's Speed by 10 feet until the start of your next turn; multiple Slow hits don't stack beyond 10 feet | — |
+| **Topple** | Mastery property: on hit, force a Constitution saving throw (DC 8 + ability modifier + proficiency bonus); on failure, target has the Prone condition | — |
+| **Vex** | Mastery property: on hit (with damage), gain Advantage on your next attack roll against that creature before the end of your next turn | — |
 | **Donning/Doffing** | Putting on or removing armor; time varies: Light (1 min / 1 min), Medium (5 min / 1 min), Heavy (10 min / 5 min); doffing Heavy is halved with help | — |
 
 ## Spellcasting

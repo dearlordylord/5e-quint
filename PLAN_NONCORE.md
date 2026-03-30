@@ -715,22 +715,22 @@ WIS save or transform. ALL ability scores replaced, CR cap = target level/CR, no
 ## Weapon Mastery
 
 ```
-[T170] Weapon Mastery Effects (P3) -> deps: none
+[T170] Weapon Mastery Effects (P3) -> deps: none  ✓ done
 ```
 
-**[T170] Weapon Mastery Effects**
-SRD 5.2.1: each weapon has a Mastery property. Only classes/features that grant weapon mastery can use them. Effects (TODO: implement each per SRD 5.2.1 Equipment):
-- **Cleave**: when you hit with a Slashing weapon, deal the weapon's damage die to another creature within reach (no modifier)
-- **Graze**: when you miss an attack, deal STR or DEX mod (min 1) damage of the weapon's type to the target
-- **Nick**: when you make an Extra Attack, one additional attack can be made with a Light weapon in your off-hand (extends TWF)
-- **Push**: on hit, push target up to 10ft away
-- **Sap**: on hit, target has Disadvantage on its next attack before your next turn
-- **Slow**: on hit, target's Speed reduced by 10ft until start of your next turn
-- **Topple**: on hit, STR/DEX save or Prone
-- **Vex**: when you hit a target, gain Advantage on your next attack against that target before end of your next turn
-- State: `weaponMastery: WeaponMasteryProperty option` on weapon config; `hasWeaponMastery: bool` in CharConfig
-- Functions: one per mastery effect; all pure, caller-invoked on hit/miss
-- Test: per mastery effect; can't use without weapon mastery feature; correct trigger (on hit vs on miss vs on kill)
+**[T170] Weapon Mastery Effects** *(done)*
+SRD 5.2.1: each weapon has a Mastery property. Only classes with Weapon Mastery (Fighter, Barbarian, Paladin, Ranger, Rogue) can use them. All 8 mastery effects implemented as pure functions in `weapon-mastery.ts` + full test coverage. No Quint formalization needed — all effects are caller-side composition on existing primitives (damage, conditions, action economy). No new state variables.
+- **Cleave**: on melee hit, extra attack vs second creature within 5ft/reach (weapon damage, no ability mod unless negative)
+- **Graze**: on miss, deal ability modifier damage (min 1) of weapon's type
+- **Nick**: Light property extra attack as part of Attack action instead of Bonus Action
+- **Push**: on hit, push Large or smaller target up to 10ft straight away
+- **Sap**: on hit, target has Disadvantage on next attack before start of your next turn
+- **Slow**: on hit (with damage), reduce target Speed by 10ft until start of your next turn; multiple Slow hits don't stack beyond 10ft
+- **Topple**: on hit, CON save (DC 8 + ability mod + prof bonus) or Prone
+- **Vex**: on hit (with damage), Advantage on next attack vs that target before end of your next turn
+- State: `hasWeaponMastery: bool` + `weaponMastery: WeaponMasteryProperty` — caller-provided, no machine context
+- Functions: `canX()` precondition + effect function per mastery; `WEAPON_MASTERY_MAP` constant for all SRD weapons
+- Test: per mastery effect; precondition checks; correct trigger (hit vs miss); Topple DC formula; Graze min 1
 
 ---
 

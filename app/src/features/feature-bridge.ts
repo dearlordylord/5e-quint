@@ -400,3 +400,26 @@ export {
   getReliableTalent,
   getSneakAttackDice
 } from "#/features/feature-bridge-rogue.ts"
+
+// --- Weapon Mastery (query-only — no BridgeResult, no state mutations) ---
+export {
+  canCleave,
+  canGraze,
+  canNick,
+  canPush,
+  canSap,
+  canSlow,
+  canTopple,
+  canVex,
+  cleaveExtraDamage,
+  grazeDamage,
+  masteryActive,
+  pushDistance,
+  sapResult,
+  slowSpeedReduction,
+  toppleDC,
+  toppleResult,
+  vexResult,
+  WEAPON_MASTERY_MAP,
+  type WeaponMasteryProperty
+} from "#/features/weapon-mastery.ts"
