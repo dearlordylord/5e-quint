@@ -58,13 +58,12 @@ export function rovingSpeedBonus(rangerLevel: number, isHeavyArmor: boolean): nu
   return ROVING_SPEED_BONUS
 }
 
-export function rovingClimbSpeed(rangerLevel: number, walkSpeed: number): number {
+function rovingExtraSpeed(rangerLevel: number, walkSpeed: number): number {
   return rangerLevel >= ROVING_LEVEL ? walkSpeed : 0
 }
 
-export function rovingSwimSpeed(rangerLevel: number, walkSpeed: number): number {
-  return rangerLevel >= ROVING_LEVEL ? walkSpeed : 0
-}
+export const rovingClimbSpeed: (rangerLevel: number, walkSpeed: number) => number = rovingExtraSpeed
+export const rovingSwimSpeed: (rangerLevel: number, walkSpeed: number) => number = rovingExtraSpeed
 
 // =============================================================================
 // Expertise (Level 9) — 2 more skills

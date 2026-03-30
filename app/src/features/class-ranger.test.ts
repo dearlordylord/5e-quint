@@ -139,6 +139,7 @@ describe("Nature's Veil", () => {
   it("max charges = WIS mod (min 1)", () => {
     expect(naturesVeilMaxCharges(4)).toBe(4)
     expect(naturesVeilMaxCharges(0)).toBe(1)
+    expect(naturesVeilMaxCharges(-1)).toBe(1)
   })
 })
 
