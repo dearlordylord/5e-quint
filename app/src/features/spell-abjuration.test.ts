@@ -15,6 +15,8 @@ import {
   HEAL_REMOVED_CONDITIONS,
   healAmount,
   healingWordDice,
+  HOLY_AURA_ATTACK_DISADVANTAGE,
+  HOLY_AURA_SAVE_ADVANTAGE,
   LESSER_RESTORATION_CONDITIONS,
   mageArmorAC,
   MASS_CURE_WOUNDS_TARGETS,
@@ -399,6 +401,13 @@ describe("Warding Bond", () => {
   it("grants +1 AC and +1 saves", () => {
     expect(WARDING_BOND_AC_BONUS).toBe(1)
     expect(WARDING_BOND_SAVE_BONUS).toBe(1)
+  })
+})
+
+describe("Holy Aura", () => {
+  it("grants advantage on saves and disadvantage on attacks against", () => {
+    expect(HOLY_AURA_SAVE_ADVANTAGE).toBe(true)
+    expect(HOLY_AURA_ATTACK_DISADVANTAGE).toBe(true)
   })
 })
 

@@ -635,18 +635,18 @@ All traits revised against SRD 5.2.1 text:
 ## Spell Effects
 
 ```
-[T150] Spell Data Model + Damage Patterns (P2) -> deps: [T08]
-[T151] Healing Spells (P2) -> deps: [T08]
-[T152] AC/Defense Buff Spells (P1) -> deps: [T08]
-[T153] Condition Debuff Spells (P1) -> deps: [T08]
-[T154] Condition Buff Spells (P2) -> deps: [T08]
-[T155] Condition Removal Spells (P2) -> deps: [T08]
-[T156] Stat Buff/Debuff Spells (P3) -> deps: [T08]
-[T157] Temp HP Spells (P3) -> deps: [T08]
-[T158] Revive Spells (P3) -> deps: [T08]
-[T159] Cantrip Scaling (P2) -> deps: [T08]
-[T160] Power Words (P3) -> deps: [T08]
-[T161] Polymorph (P3) -> deps: [T100]
+[T150] Spell Data Model + Damage Patterns (P2) -> deps: [T08]  ⚑ partial (missing: Flame Blade, Call Lightning, Moonbeam, Arcane Sword)
+[T151] Healing Spells (P2) -> deps: [T08]  ✓ done
+[T152] AC/Defense Buff Spells (P1) -> deps: [T08]  ✓ done
+[T153] Condition Debuff Spells (P1) -> deps: [T08]  ⚑ partial (missing: Heat Metal, Banishment, Eyebite, Befuddlement)
+[T154] Condition Buff Spells (P2) -> deps: [T08]  ⚑ partial (missing: Freedom of Movement, Mind Blank)
+[T155] Condition Removal Spells (P2) -> deps: [T08]  ✓ done
+[T156] Stat Buff/Debuff Spells (P3) -> deps: [T08]  ⚑ partial (missing: Hunter's Mark, Shining Smite)
+[T157] Temp HP Spells (P3) -> deps: [T08]  ✓ done
+[T158] Revive Spells (P3) -> deps: [T08]  ✓ done
+[T159] Cantrip Scaling (P2) -> deps: [T08]  ✓ done
+[T160] Power Words (P3) -> deps: [T08]  ⚑ partial (missing: Divine Word)
+[T161] Polymorph (P3) -> deps: [T100]  ⚑ partial (mechanics as comment only)
 ```
 
 All spell tasks implement spell-specific behavior in TypeScript. Each spell is expressed as a composition of core primitives (active effect lifecycle, conditions, damage/healing, action economy).

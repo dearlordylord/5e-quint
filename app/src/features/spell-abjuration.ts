@@ -37,6 +37,10 @@ export const WARDING_BOND_AC_BONUS = 1
 export const WARDING_BOND_SAVE_BONUS = 1
 export const WARDING_BOND_RANGE = 60
 
+/** Holy Aura: advantage on saves, disadvantage on attacks against affected creatures. */
+export const HOLY_AURA_SAVE_ADVANTAGE = true
+export const HOLY_AURA_ATTACK_DISADVANTAGE = true
+
 /** Stoneskin: resistance to B/P/S. */
 export const STONESKIN_RESISTANCES: ReadonlyArray<DamageType> = ["bludgeoning", "piercing", "slashing"]
 
