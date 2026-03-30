@@ -352,3 +352,61 @@ export function useIndomitable(
     newSaveResult: newRoll
   }
 }
+
+// =============================================================================
+// Tactical Master (Level 9 Fighter) — SRD 5.2.1
+//
+// "When you attack with a weapon whose mastery property you can use, you can
+// replace that property with the Push, Sap, or Slow property for that attack."
+// =============================================================================
+
+export const TACTICAL_MASTER_LEVEL = 9
+const TACTICAL_MASTER_SUBSTITUTIONS = new Set(["push", "sap", "slow"] as const)
+
+export type TacticalMasterSubstitution = "push" | "sap" | "slow"
+
+/** Precondition: can use Tactical Master to substitute a mastery property. */
+export function canUseTacticalMaster(fighterLevel: number, hasWeaponMastery: boolean): boolean {
+  return fighterLevel >= TACTICAL_MASTER_LEVEL && hasWeaponMastery
+}
+
+/**
+ * Returns the substituted mastery property if valid, or the original if not.
+ * The substitution must be Push, Sap, or Slow. The original property is
+ * replaced for that attack only.
+ */
+export function tacticalMasterSubstitute(
+  originalProperty: string,
+  substitute: TacticalMasterSubstitution
+): TacticalMasterSubstitution {
+  assert(TACTICAL_MASTER_SUBSTITUTIONS.has(substitute), `tacticalMasterSubstitute: invalid substitute "${substitute}"`)
+  return substitute
+}
+
+// =============================================================================
+// Studied Attacks (Level 13 Fighter) — SRD 5.2.1
+//
+// "If you make an attack roll against a creature and miss, you have Advantage
+// on your next attack roll against that creature before the end of your next
+// turn."
+// =============================================================================
+
+export const STUDIED_ATTACKS_LEVEL = 13
+
+/** Whether Studied Attacks is active (Fighter level 13+). */
+export function hasStudiedAttacks(fighterLevel: number): boolean {
+  return fighterLevel >= STUDIED_ATTACKS_LEVEL
+}
+
+/**
+ * After missing an attack, returns whether the next attack against the same
+ * target should have Advantage. Caller tracks target identity.
+ */
+export function studiedAttacksAdvantage(
+  fighterLevel: number,
+  missedTarget: boolean
+): { readonly advantageOnNextAttackVsTarget: boolean } {
+  return {
+    advantageOnNextAttackVsTarget: fighterLevel >= STUDIED_ATTACKS_LEVEL && missedTarget
+  }
+}

@@ -195,7 +195,7 @@ SRD 5.2.1: completely revised. Frenzy is now extra damage (not a bonus attack). 
 
 ```
 [T20] Second Wind (P1) -> deps: [T01]  ✓ done
-[T20b] Fighter Base Features (P2) -> deps: [T01, T170]
+[T20b] Fighter Base Features (P2) -> deps: [T01, T170]  ✓ done
 [T21] Action Surge (P1) -> deps: [T01]  ✓ done
 [T22] Indomitable (P2) -> deps: [T01]  ✓ done
 [T23] Champion (P1) -> deps: [T02, T05]  ✓ done
@@ -207,13 +207,12 @@ SRD 5.2.1: Second Wind uses scale: L1-3: 2 uses, L4-16: 3 uses, L17-20: 4 uses. 
 - Functions: `pSecondWind(state, config, d10Roll)->heal(1d10+fighterLevel), decrement charges`; `pTacticalMind(state, d10, checkResult)->add d10 to failed check, decrement charges`; `pTacticalShift(state, turnState)->move half speed without OA triggers on SW use`; preconditions: charges > 0, bonus action available
 - Test: heals correct amount; can't exceed maxHp; consumes bonus action; charges multiple at higher levels; Tactical Mind adds d10 to failed check; resets on short rest
 
-**[T20b] Fighter Base Features**
-New base Fighter features in SRD 5.2.1:
-- Tactical Master (L9): when you attack with a weapon whose mastery property you can use, you can replace that property with Push, Sap, or Slow for that attack
-- Studied Attacks (L13): if you make an attack roll against a creature and miss, you have Advantage on your next attack roll against that creature before the end of your next turn
-- State: `studiedAttackTarget: CreatureId option` (set on miss, cleared on hit or turn end)
-- Functions: `pTacticalMaster(weaponMastery, substituteChoice)->use alternate mastery effect`; `pStudiedAttack(state, missedTarget)->set advantage vs that target`
-- Test: Tactical Master substitutes mastery property; Studied Attacks advantage only vs same target, only after a miss; clears after use
+**[T20b] Fighter Base Features** *(done)*
+New base Fighter features in SRD 5.2.1, implemented as TS-only pure functions (caller-side composition, no Quint state needed — target-relative effects not trackable in single-creature model):
+- Tactical Master (L9): substitute any mastery property with Push, Sap, or Slow for one attack. `canUseTacticalMaster` + `tacticalMasterSubstitute`.
+- Studied Attacks (L13): on miss, Advantage on next attack vs same target before end of next turn. `hasStudiedAttacks` + `studiedAttacksAdvantage`.
+- Functions in `class-fighter.ts`, re-exported via `feature-bridge.ts`
+- Test: level gating, substitution validity, advantage on miss only, no advantage below L13
 
 **[T21] Action Surge** *(done)*
 - State: `actionSurgeCharges: int`

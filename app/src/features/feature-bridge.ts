@@ -14,13 +14,17 @@ import {
   canUseActionSurge,
   canUseIndomitable,
   canUseSecondWind,
+  canUseTacticalMaster,
   canUseTacticalMind,
   championCritRange,
   hasRemarkableAthlete,
+  hasStudiedAttacks,
   heroicWarriorInspiration,
   remarkableAthleteCritMovement,
+  studiedAttacksAdvantage,
   survivorDefyDeathAdvantage,
   survivorHeroicRally,
+  tacticalMasterSubstitute,
   useSecondWind as applySecondWind
 } from "#/features/class-fighter.ts"
 import type { FeatureAction, FeatureState } from "#/features/feature-store.ts"
@@ -126,12 +130,16 @@ export function executeIndomitable(): BridgeResult {
 // Hardcoded to Champion — the only Fighter subclass in the SRD 5.2.1.
 
 export {
+  canUseTacticalMaster,
   championCritRange,
   hasRemarkableAthlete,
+  hasStudiedAttacks,
   heroicWarriorInspiration,
   remarkableAthleteCritMovement,
+  studiedAttacksAdvantage,
   survivorDefyDeathAdvantage,
-  survivorHeroicRally
+  survivorHeroicRally,
+  tacticalMasterSubstitute
 }
 
 // --- Barbarian: Rage ---

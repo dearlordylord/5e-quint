@@ -6,32 +6,36 @@ import {
   canUseActionSurge,
   canUseIndomitable,
   canUseSecondWind,
+  canUseTacticalMaster,
   canUseTacticalMind,
   championCritRange,
   defenseACBonus,
   fighterLongRest,
   fighterShortRest,
+  type FightingStyle,
   gwfDamageDie,
   hasRemarkableAthlete,
+  hasStudiedAttacks,
   heroicWarriorInspiration,
   indomitableMaxCharges,
   isBloodied,
   remarkableAthleteCritMovement,
   secondWindMaxCharges,
+  studiedAttacksAdvantage,
   survivorDefyDeathAdvantage,
   survivorDefyDeathThreshold,
   survivorHeroicRally,
+  tacticalMasterSubstitute,
   twfOffHandDamageStyled,
   useActionSurge,
   useIndomitable,
   useSecondWind,
-  useTacticalMind,
-  type FightingStyle
+  useTacticalMind
 } from "#/features/class-fighter.ts"
 
 // --- Fighting Style Feat Effects ---
 
-function styles(...s: FightingStyle[]): ReadonlySet<FightingStyle> {
+function styles(...s: Array<FightingStyle>): ReadonlySet<FightingStyle> {
   return new Set(s)
 }
 
@@ -601,5 +605,81 @@ describe("useIndomitable", () => {
     const result = useIndomitable(3, 20)
     expect(result.newSaveResult).toBe(20)
     expect(result.indomitableCharges).toBe(2)
+  })
+})
+
+// =============================================================================
+// Tactical Master (Level 9)
+// =============================================================================
+
+describe("Tactical Master", () => {
+  it("canUseTacticalMaster: true at L9+ with weapon mastery", () => {
+    expect(canUseTacticalMaster(9, true)).toBe(true)
+    expect(canUseTacticalMaster(13, true)).toBe(true)
+    expect(canUseTacticalMaster(20, true)).toBe(true)
+  })
+
+  it("canUseTacticalMaster: false below L9", () => {
+    expect(canUseTacticalMaster(8, true)).toBe(false)
+    expect(canUseTacticalMaster(1, true)).toBe(false)
+  })
+
+  it("canUseTacticalMaster: false without weapon mastery", () => {
+    expect(canUseTacticalMaster(9, false)).toBe(false)
+  })
+
+  it("substitutes mastery property with Push", () => {
+    expect(tacticalMasterSubstitute("vex", "push")).toBe("push")
+  })
+
+  it("substitutes mastery property with Sap", () => {
+    expect(tacticalMasterSubstitute("cleave", "sap")).toBe("sap")
+  })
+
+  it("substitutes mastery property with Slow", () => {
+    expect(tacticalMasterSubstitute("topple", "slow")).toBe("slow")
+  })
+
+  it("works when original is already one of the substitution options", () => {
+    expect(tacticalMasterSubstitute("push", "slow")).toBe("slow")
+    expect(tacticalMasterSubstitute("sap", "push")).toBe("push")
+  })
+})
+
+// =============================================================================
+// Studied Attacks (Level 13)
+// =============================================================================
+
+describe("Studied Attacks", () => {
+  it("hasStudiedAttacks: true at L13+", () => {
+    expect(hasStudiedAttacks(13)).toBe(true)
+    expect(hasStudiedAttacks(17)).toBe(true)
+    expect(hasStudiedAttacks(20)).toBe(true)
+  })
+
+  it("hasStudiedAttacks: false below L13", () => {
+    expect(hasStudiedAttacks(12)).toBe(false)
+    expect(hasStudiedAttacks(9)).toBe(false)
+    expect(hasStudiedAttacks(1)).toBe(false)
+  })
+
+  it("grants advantage after missing target at L13+", () => {
+    const result = studiedAttacksAdvantage(13, true)
+    expect(result.advantageOnNextAttackVsTarget).toBe(true)
+  })
+
+  it("no advantage when attack hit (not a miss)", () => {
+    const result = studiedAttacksAdvantage(13, false)
+    expect(result.advantageOnNextAttackVsTarget).toBe(false)
+  })
+
+  it("no advantage below L13 even on miss", () => {
+    const result = studiedAttacksAdvantage(12, true)
+    expect(result.advantageOnNextAttackVsTarget).toBe(false)
+  })
+
+  it("no advantage below L13 and no miss", () => {
+    const result = studiedAttacksAdvantage(8, false)
+    expect(result.advantageOnNextAttackVsTarget).toBe(false)
   })
 })
