@@ -270,36 +270,77 @@ TurnState (universal action economy — unchanged)
 
 ---
 
-## Deferred Phases (documented, NOT scheduled)
-
-### Phase L: Legendary Actions, Legendary Resistance, Recharge, X/Day
+## Phase L: Legendary Actions, Legendary Resistance, Recharge, X/Day ✅
 
 **Goal:** Model monster-specific mutable resources for powerful monsters.
 
-**Requires:** Phases 0-3 complete.
+**Requires:** Phases 0-3 complete ✅. **Status: COMPLETE.**
 
-**Scope:**
-1. Define `MonsterResourceState` type:
-   - `legendaryActionsRemaining: int` — regained at start of monster's turn.
-   - `legendaryResistancesRemaining: int` — X/Day, regained on Long Rest.
-   - `rechargeAvailable: str -> bool` — ability name → currently available.
-   - `dailyUsesRemaining: str -> int` — ability name → uses left today.
-2. Pure functions: `pUseLegendaryAction`, `pRefreshLegendaryActions`, `pUseLegendaryResistance`, `pCheckRecharge`, `pUseDailyAbility`, `pRefreshDailyAbilities`.
-3. Add `legendaryActionUses: int` and `legendaryResistanceUses: int` fields to `StatBlock`.
-4. Proof-of-concept monster: one Legendary creature (e.g., Adult Red Dragon — exercises Multiattack with heterogeneous attacks, Legendary Actions, Legendary Resistance, Frightful Presence, Recharge breath weapon).
-5. MBT integration: `monsterResourceState` as state variable, monster-specific MBT actions.
+**Proof-of-concept:** Adult Red Dragon (CR 17) — exercises Legendary Actions, Legendary Resistance, Recharge breath weapon, X/Day spellcasting, Multiattack.
 
-**Why deferred:** Legendary mechanics are exclusively for high-CR monsters. The basic monster architecture (Phases 0-3) must be proven correct first. Adding Legendary too early risks over-engineering before the foundation is validated.
+**SRD 5.2.1 finding:** Lair Actions (initiative count 20) were **removed** from 5.2.1. The "in Lair" concept is now +1 to Legendary Action and Resistance uses. No Phase Lair needed. See `inLair: bool` below.
 
-### Phase Lair: Lair Actions
+### Design Decisions
 
-**Goal:** Model environment-level effects that trigger on initiative count 20.
+- **D1:** `MonsterResourceState` as separate state var (like `fighterState` for Fighter)
+- **D2:** Legendary Actions fire during `waitingForTurn` phase (between turns in single-creature model)
+- **D3:** Legendary Resistance as caller-provided `useLegendaryResistance: bool` on save events
+- **D4:** Recharge rolls as `START_TURN` event args (pre-resolved d6)
+- **D5:** Extend `StatBlock` directly with 6 new fields
+- **D6:** `inLair: bool` on StatBlock, effective uses = base + (inLair ? 1 : 0)
+- **D7:** Legendary action cooldowns ("can't take this action again until start of next turn") left to caller — spec tracks resource uses only
 
-**Requires:** Phase L complete.
+### New Types
 
-**Scope:** Lair actions are NOT creature-level state — they are environment-level effects. This fundamentally differs from everything in the current single-creature model. Modeling them requires either (a) extending the spec with an environment concept, or (b) treating them as caller-provided events (consistent with the current externalization pattern).
+```quint
+type LegendaryActionDef = { name: str, cost: int }
+type RechargeAbilityDef = { name: str, rechargeMin: int }
+type RechargeRollEvent = { abilityName: str, d6Roll: int }
+type MonsterResourceState = {
+  legendaryActionsRemaining: int,
+  legendaryResistancesRemaining: int,
+  rechargeAvailable: str -> bool,
+  dailyUsesRemaining: str -> int,
+}
+```
 
-**Why deferred:** Lair actions require architectural decisions beyond the single-creature model. Evaluate after Legendary mechanics are stable.
+### StatBlock additions
+
+`legendaryActionUses`, `legendaryResistanceUses`, `legendaryActions: str -> LegendaryActionDef`, `rechargeAbilities: str -> RechargeAbilityDef`, `dailyAbilities: str -> int`, `inLair: bool`.
+
+### Atomic Tasks
+
+**L0: Types + StatBlock Extension**
+- ML0.1 — New types in dnd.qnt + monster-types.ts
+- ML0.2 — Add 6 fields to StatBlock, update SKELETON/OGRE/NULL_STAT_BLOCK defaults
+- ML0.3 — Author ADULT_RED_DRAGON stat block + field tests
+
+**L1: MonsterResourceState Variable (highest cost — ~52 frame conditions)**
+- ML1.1 — `var monsterResourceState` + FRESH_MONSTER_RESOURCES + frame conditions on all actions
+- ML1.2 — Initialize in `init` (monster: effective uses from stat block + lair; PC: fresh)
+- ML1.3 — MBT bridge (Zod, NormalizedState, conversions, DndContext, XState context)
+
+**L2: Pure Functions (parallelizable)**
+- ML2.1 — `pUseLegendaryAction`, `pRefreshLegendaryActions`
+- ML2.2 — `pUseLegendaryResistance`
+- ML2.3 — `pProcessRechargeRolls`, `pUseRechargeAbility`
+- ML2.4 — `pUseDailyAbility`, `pRefreshDailyAbilities`
+
+**L3: Action Integration**
+- ML3.1 — Recharge + LA refresh in `doStartTurn` monster path
+- ML3.2 — LR in saves (`EndOfTurnSave` + `StartOfTurnEffect` + threading through pure fns)
+- ML3.3 — New `doUseLegendaryAction` action + `stepMonster` + XState + MBT
+- ML3.4 — New `doUseRechargeAbility` + `doUseDailyAbility` + `stepMonster` + XState + MBT
+- ML3.5 — Daily refresh in `doLongRest`, recharge refresh in `doShortRest` + `doLongRest`
+
+**L4: Validation**
+- ML4.1 — Safety invariants for monster resources
+- ML4.2 — Adult Red Dragon in MONSTER_STAT_BLOCKS, full MBT (3 monsters + PC)
+- ML4.3 — ASSUMPTIONS.md A19-A24
+
+### Phase Lair: NOT NEEDED (SRD 5.2.1)
+
+Lair Actions (initiative count 20) existed in SRD 5.1 but were removed from SRD 5.2.1. The 5.2.1 "in Lair" mechanic is just +1 to existing Legendary Action and Resistance uses, modeled via `StatBlock.inLair: bool` in Phase L above.
 
 ---
 
@@ -343,10 +384,7 @@ Phase 2 ✅ (Monster Combat Integration Tests)
 Phase 3 ✅ (MBT Integration — mixed PC/Monster traces)
   |
   v
-Phase L (deferred)
-  |
-  v
-Phase Lair (deferred)
+Phase L ✅ (Legendary Actions, Legendary Resistance, Recharge, X/Day, Adult Red Dragon)
 ```
 
 ---

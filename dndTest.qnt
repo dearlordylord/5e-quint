@@ -3118,13 +3118,13 @@ module dndTest {
 
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
-        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock })
+        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState })
 
   run test_invariants_10steps =
     init
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState })
 
   run test_invariants_20steps =
     init
@@ -3132,7 +3132,7 @@ module dndTest {
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState })
 
   // Individual invariant tests on known state constructions
   run test_inv_deadIsAbsorbing_construction = {
@@ -4184,6 +4184,145 @@ module dndTest {
          immunities: SKELETON.damageImmunities }])
     // Skeleton immune to Poison damage: HP unchanged
     assert(endResult.creature.hp == SKELETON.maxHp)
+  }
+
+  // ============================================================
+  // Phase L: Monster Resource Pure Function Tests
+  // ============================================================
+
+  pure val DRAGON_RESOURCES: MonsterResourceState = pInitMonsterResources(ADULT_RED_DRAGON)
+  pure val DRAGON_LAIR: StatBlock = ADULT_RED_DRAGON.with("inLair", true)
+  pure val DRAGON_LAIR_RESOURCES: MonsterResourceState = pInitMonsterResources(DRAGON_LAIR)
+
+  // -- ML2.1: Legendary Actions --
+
+  run test_pUseLegendaryAction_decrement = {
+    val mrs = DRAGON_RESOURCES
+    val mrs2 = pUseLegendaryAction(mrs, "Pounce", ADULT_RED_DRAGON.legendaryActions)
+    val mrs3 = pUseLegendaryAction(mrs2, "Fiery Rays", ADULT_RED_DRAGON.legendaryActions)
+    all {
+      assert(mrs.legendaryActionsRemaining == 3),
+      assert(mrs2.legendaryActionsRemaining == 2),
+      assert(mrs3.legendaryActionsRemaining == 1),
+    }
+  }
+
+  run test_pRefreshLegendaryActions = {
+    val mrs = DRAGON_RESOURCES.with("legendaryActionsRemaining", 0)
+    val mrs2 = pRefreshLegendaryActions(mrs, ADULT_RED_DRAGON.legendaryActionUses, false)
+    assert(mrs2.legendaryActionsRemaining == 3)
+  }
+
+  run test_pRefreshLegendaryActions_inLair = {
+    val mrs = DRAGON_LAIR_RESOURCES.with("legendaryActionsRemaining", 0)
+    val mrs2 = pRefreshLegendaryActions(mrs, DRAGON_LAIR.legendaryActionUses, true)
+    assert(mrs2.legendaryActionsRemaining == 4)
+  }
+
+  run test_initMonsterResources_dragon = {
+    val mrs = DRAGON_RESOURCES
+    all {
+      assert(mrs.legendaryActionsRemaining == 3),
+      assert(mrs.legendaryResistancesRemaining == 3),
+      assert(mrs.rechargeAvailable.get("Fire Breath") == false),
+      assert(mrs.dailyUsesRemaining.get("Fireball") == 1),
+    }
+  }
+
+  run test_initMonsterResources_dragonInLair = {
+    val mrs = DRAGON_LAIR_RESOURCES
+    all {
+      assert(mrs.legendaryActionsRemaining == 4),
+      assert(mrs.legendaryResistancesRemaining == 4),
+    }
+  }
+
+  run test_initMonsterResources_skeleton = {
+    val mrs = pInitMonsterResources(SKELETON)
+    all {
+      assert(mrs.legendaryActionsRemaining == 0),
+      assert(mrs.legendaryResistancesRemaining == 0),
+    }
+  }
+
+  // -- ML2.2: Legendary Resistance --
+
+  run test_pUseLR_failToSuccess = {
+    val r = pUseLegendaryResistance(DRAGON_RESOURCES, false, true)
+    all {
+      assert(r.effectiveSaveResult == true),
+      assert(r.mrs.legendaryResistancesRemaining == 2),
+    }
+  }
+
+  run test_pUseLR_alreadySucceeded = {
+    val r = pUseLegendaryResistance(DRAGON_RESOURCES, true, true)
+    all {
+      assert(r.effectiveSaveResult == true),
+      assert(r.mrs.legendaryResistancesRemaining == 3),
+    }
+  }
+
+  run test_pUseLR_depleted = {
+    val mrs = DRAGON_RESOURCES.with("legendaryResistancesRemaining", 0)
+    val r = pUseLegendaryResistance(mrs, false, true)
+    all {
+      assert(r.effectiveSaveResult == false),
+      assert(r.mrs.legendaryResistancesRemaining == 0),
+    }
+  }
+
+  run test_pUseLR_notUsed = {
+    val r = pUseLegendaryResistance(DRAGON_RESOURCES, false, false)
+    all {
+      assert(r.effectiveSaveResult == false),
+      assert(r.mrs.legendaryResistancesRemaining == 3),
+    }
+  }
+
+  // -- ML2.3: Recharge Abilities --
+
+  run test_pProcessRechargeRolls_success = {
+    val rolls = [{ abilityName: "Fire Breath", d6Roll: 5 }]
+    val mrs2 = pProcessRechargeRolls(DRAGON_RESOURCES, rolls, ADULT_RED_DRAGON.rechargeAbilities)
+    assert(mrs2.rechargeAvailable.get("Fire Breath") == true)
+  }
+
+  run test_pProcessRechargeRolls_failure = {
+    val rolls = [{ abilityName: "Fire Breath", d6Roll: 4 }]
+    val mrs2 = pProcessRechargeRolls(DRAGON_RESOURCES, rolls, ADULT_RED_DRAGON.rechargeAbilities)
+    assert(mrs2.rechargeAvailable.get("Fire Breath") == false)
+  }
+
+  run test_pUseRechargeAbility = {
+    val mrs = DRAGON_RESOURCES.with("rechargeAvailable",
+      DRAGON_RESOURCES.rechargeAvailable.set("Fire Breath", true))
+    val mrs2 = pUseRechargeAbility(mrs, "Fire Breath")
+    assert(mrs2.rechargeAvailable.get("Fire Breath") == false)
+  }
+
+  // -- ML2.4: Daily Abilities --
+
+  run test_pUseDailyAbility = {
+    val mrs2 = pUseDailyAbility(DRAGON_RESOURCES, "Fireball")
+    all {
+      assert(DRAGON_RESOURCES.dailyUsesRemaining.get("Fireball") == 1),
+      assert(mrs2.dailyUsesRemaining.get("Fireball") == 0),
+    }
+  }
+
+  run test_pRefreshDailyAbilities = {
+    val mrs = DRAGON_RESOURCES.with("dailyUsesRemaining", Map("Fireball" -> 0))
+    val mrs2 = pRefreshDailyAbilities(mrs, ADULT_RED_DRAGON.dailyAbilities)
+    assert(mrs2.dailyUsesRemaining.get("Fireball") == 1)
+  }
+
+  run test_pRefreshRechargeAbilities = {
+    val mrs2 = pRefreshRechargeAbilities(DRAGON_RESOURCES)
+    all {
+      assert(DRAGON_RESOURCES.rechargeAvailable.get("Fire Breath") == false),
+      assert(mrs2.rechargeAvailable.get("Fire Breath") == true),
+    }
   }
 
 }

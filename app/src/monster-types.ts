@@ -5,6 +5,30 @@
 
 import type { Ability, Condition, DamageType, Size } from "./types"
 
+// --- Phase L: Legendary / Recharge / X-Day types ---
+
+export interface LegendaryActionDef {
+  readonly name: string
+  readonly cost: number
+}
+
+export interface RechargeAbilityDef {
+  readonly name: string
+  readonly rechargeMin: number // min d6 roll to recharge (e.g., 5 for "Recharge 5-6")
+}
+
+export interface RechargeRollEvent {
+  readonly abilityName: string
+  readonly d6Roll: number
+}
+
+export interface MonsterResourceState {
+  readonly legendaryActionsRemaining: number
+  readonly legendaryResistancesRemaining: number
+  readonly rechargeAvailable: Readonly<Record<string, boolean>>
+  readonly dailyUsesRemaining: Readonly<Record<string, number>>
+}
+
 // --- SRD 5.2.1 Creature Types (14 types, Monsters > Overview) ---
 
 export type CreatureType =
@@ -106,4 +130,11 @@ export interface StatBlock {
   readonly senses: Readonly<Record<SenseType, number>>
   readonly attacks: Readonly<Record<string, MonsterAttack>>
   readonly multiattack: ReadonlyArray<MultiattackSlot>
+  // Phase L: Legendary / Recharge / X-Day
+  readonly legendaryActionUses: number // 0 = no legendary actions
+  readonly legendaryResistanceUses: number // 0 = no LR
+  readonly legendaryActions: Readonly<Record<string, LegendaryActionDef>>
+  readonly rechargeAbilities: Readonly<Record<string, RechargeAbilityDef>>
+  readonly dailyAbilities: Readonly<Record<string, number>> // name -> max uses/day
+  readonly inLair: boolean
 }

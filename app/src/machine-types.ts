@@ -58,6 +58,13 @@ export interface DndMachineInput {
   readonly extraAttacksRemaining?: number
   readonly fighterLevel?: number
   readonly creatureKind?: CreatureKind
+  readonly legendaryActionsMax?: number
+  readonly legendaryResistancesMax?: number
+  readonly legendaryActionsRemaining?: number
+  readonly legendaryResistancesRemaining?: number
+  readonly rechargeAvailable?: Readonly<Record<string, boolean>>
+  readonly dailyUsesRemaining?: Readonly<Record<string, number>>
+  readonly dailyUsesMax?: Readonly<Record<string, number>>
 }
 
 // --- Context ---
@@ -120,6 +127,14 @@ export interface DndContext {
   readonly heroicInspiration: boolean
   readonly fighterLevel: number
   readonly creatureKind: CreatureKind
+  // MonsterResourceState (Quint parity: monsterResourceState)
+  readonly legendaryActionsMax: number // effective max (includes lair bonus) — not compared in MBT
+  readonly legendaryResistancesMax: number // effective max — not compared in MBT
+  readonly legendaryActionsRemaining: number
+  readonly legendaryResistancesRemaining: number
+  readonly rechargeAvailable: Readonly<Record<string, boolean>>
+  readonly dailyUsesRemaining: Readonly<Record<string, number>>
+  readonly dailyUsesMax: Readonly<Record<string, number>> // not compared in MBT — derived from stat block
 }
 
 // --- Events ---
@@ -188,11 +203,13 @@ export type DndEvent =
       readonly deathSaveRoll2?: D20Roll
       readonly conMod?: number
       readonly startOfTurnEffects: ReadonlyArray<StartTurnEffect>
+      readonly rechargedAbilities?: ReadonlyArray<string> // abilities that successfully recharged this turn
     }
   | {
       readonly type: "END_TURN"
       readonly endOfTurnSaves: ReadonlyArray<EndTurnSave>
       readonly endOfTurnDamage: ReadonlyArray<EndTurnDamage>
+      readonly useLegendaryResistance?: boolean
     }
   | { readonly type: "USE_ACTION"; readonly actionType: ActionType }
   | { readonly type: "USE_BONUS_ACTION" }
@@ -259,6 +276,10 @@ export type DndEvent =
   | { readonly type: "USE_TACTICAL_MIND"; readonly boostedCheckSucceeds: boolean }
   | { readonly type: "USE_HEROIC_INSPIRATION" }
   | { readonly type: "SCORE_CRITICAL_HIT" }
+  // Phase L: Monster resource events
+  | { readonly type: "USE_LEGENDARY_ACTION"; readonly actionName: string }
+  | { readonly type: "USE_RECHARGE_ABILITY"; readonly name: string }
+  | { readonly type: "USE_DAILY_ABILITY"; readonly name: string }
 
 // --- Event extractors ---
 

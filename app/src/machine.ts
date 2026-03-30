@@ -5,8 +5,7 @@ import {
   fighterLongRest as tsFighterLongRest,
   fighterShortRest as tsFighterShortRest,
   heroicWarriorInspiration,
-  remarkableAthleteCritMovement,
-  survivorHeroicRally
+  remarkableAthleteCritMovement
 } from "#/features/class-fighter.ts"
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
@@ -18,8 +17,6 @@ import {
   addDeathFailures,
   addIncapSource,
   applyConditionUpdate,
-  applyDefyDeath,
-  calculateEffectiveSpeed,
   effectiveMaxHp,
   EMPTY_CONDITION_SET,
   indomitableUpdate,
@@ -31,9 +28,16 @@ import {
   spendHitDieUpdate,
   tacticalMindUpdate
 } from "#/machine-helpers.ts"
+import {
+  applyLegendaryResistance,
+  monsterLongRestUpdate,
+  refreshBoolRecord,
+  useDailyAbilityUpdate,
+  useRechargeAbilityUpdate
+} from "#/machine-monster.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import { computeShortRest, expendSlot } from "#/machine-spells.ts"
-import { computeStartTurn } from "#/machine-startturn.ts"
+import { computeInitTurn } from "#/machine-startturn.ts"
 import {
   conditionTrackConfig,
   damageTrackConfig,
@@ -59,7 +63,6 @@ import {
   asShove,
   asSpendHitDie,
   asStartConcentration,
-  asStartTurn,
   asTakeDamage,
   asUseAction,
   asUseBonusMovement,
@@ -174,34 +177,7 @@ export const dndMachine = setup({
     reduceExhaustion: assign(({ context: c, event: e }) => ({
       exhaustion: exhaustionLevel(Math.max(0, c.exhaustion - asExhaustion(e).levels))
     })),
-    initTurn: assign(({ context: c, event: e }) => {
-      const ev = asStartTurn(e)
-      const effectiveDsRoll =
-        ev.deathSaveRoll != null ? applyDefyDeath(c.fighterLevel, ev.deathSaveRoll, ev.deathSaveRoll2) : undefined
-      const { conditions: conds, ...cr } = computeStartTurn(c, effectiveDsRoll, ev.startOfTurnEffects)
-      const speed = calculateEffectiveSpeed({
-        armorPenalty: ev.armorPenalty,
-        baseSpeed: ev.baseSpeed,
-        callerSpeedModifier: ev.callerSpeedModifier,
-        exhaustion: c.exhaustion,
-        grappled: conds.grappled ?? c.grappled,
-        grappledTargetTwoSizesSmaller: ev.grappledTargetTwoSizesSmaller,
-        isGrappling: ev.isGrappling,
-        restrained: conds.restrained ?? c.restrained
-      })
-      // TODO: add unwrapHp/unwrapTempHp helpers for branded→number conversion instead of raw casts
-      const rallyHeal = survivorHeroicRally(c.fighterLevel, cr.hp as number, c.maxHp, ev.conMod ?? 0)
-      const resultHp = rallyHeal > 0 ? Math.min((cr.hp as number) + rallyHeal, effectiveMaxHp(c.maxHp)) : cr.hp
-      return {
-        ...conds,
-        ...cr,
-        ...INITIAL_TURN_STATE,
-        hp: hp(resultHp),
-        effectiveSpeed: movementFeet(speed),
-        extraAttacksRemaining: ev.extraAttacks,
-        movementRemaining: movementFeet(speed)
-      }
-    }),
+    initTurn: assign(({ context: c, event: e }) => computeInitTurn(c, e)),
     useAction: assign(({ context: c, event: e }) => {
       const ev = asUseAction(e)
       if (c.actionsRemaining <= 0 || isIncapacitated(c)) return {}
@@ -245,8 +221,16 @@ export const dndMachine = setup({
     dropProne: assign(({ context: c }) => (c.effectiveSpeed === 0 ? {} : { prone: true })),
     endTurn: assign(({ context: c, event: e }) => {
       const ev = asEndTurn(e)
-      const { conditions: conds, ...rest } = computeEndTurn(c, ev.endOfTurnSaves, ev.endOfTurnDamage)
-      return { ...conds, ...rest }
+      const isMonster = c.creatureKind === "Monster"
+      const lr = isMonster
+        ? applyLegendaryResistance(ev.endOfTurnSaves, ev.useLegendaryResistance, c.legendaryResistancesRemaining)
+        : { effectiveSaves: ev.endOfTurnSaves, lrUsed: false }
+      const { conditions: conds, ...rest } = computeEndTurn(c, lr.effectiveSaves, ev.endOfTurnDamage)
+      return {
+        ...conds,
+        ...rest,
+        ...(lr.lrUsed ? { legendaryResistancesRemaining: c.legendaryResistancesRemaining - 1 } : {})
+      }
     }),
     markBonusActionSpell: assign({ bonusActionSpellCast: true }),
     markNonCantripActionSpell: assign({ nonCantripActionSpellCast: true }),
@@ -298,9 +282,17 @@ export const dndMachine = setup({
     shortRest: assign(({ context: c, event: e }) => {
       const ev = asShortRest(e)
       const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
-      return { hitDiceRemaining: r.newHitDice, hp: hp(r.newHp), pactSlotsCurrent: r.newPactSlots }
+      return {
+        hitDiceRemaining: r.newHitDice,
+        hp: hp(r.newHp),
+        pactSlotsCurrent: r.newPactSlots,
+        ...(c.creatureKind === "Monster" ? { rechargeAvailable: refreshBoolRecord(c.rechargeAvailable) } : {})
+      }
     }),
-    longRest: assign(({ context: c }) => longRestUpdate(c)),
+    longRest: assign(({ context: c }) => {
+      const base = longRestUpdate(c)
+      return c.creatureKind !== "Monster" ? base : { ...base, ...monsterLongRestUpdate(c) }
+    }),
     applyFall: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
       const took = r.newHp !== c.hp || r.newTempHp !== c.tempHp
@@ -377,6 +369,21 @@ export const dndMachine = setup({
         actionSurgeMax: c.actionSurgeMax,
         indomitableMax: c.indomitableMax
       })
+    ),
+    useLegendaryAction: assign(({ context: c }) =>
+      c.creatureKind !== "Monster" || c.legendaryActionsRemaining <= 0
+        ? {}
+        : { legendaryActionsRemaining: c.legendaryActionsRemaining - 1 }
+    ),
+    useRechargeAbility: assign(({ context: c, event: e }) =>
+      c.creatureKind !== "Monster"
+        ? {}
+        : useRechargeAbilityUpdate(c.rechargeAvailable, (e as Extract<DndEvent, { type: "USE_RECHARGE_ABILITY" }>).name)
+    ),
+    useDailyAbility: assign(({ context: c, event: e }) =>
+      c.creatureKind !== "Monster"
+        ? {}
+        : useDailyAbilityUpdate(c.dailyUsesRemaining, (e as Extract<DndEvent, { type: "USE_DAILY_ABILITY" }>).name)
     )
   }
 }).createMachine({
@@ -407,7 +414,14 @@ export const dndMachine = setup({
     pactSlotsMax: 0,
     slotsCurrent: EMPTY_SLOTS,
     slotsMax: EMPTY_SLOTS,
-    tempHp: tempHp(0)
+    tempHp: tempHp(0),
+    legendaryActionsMax: i.legendaryActionsMax ?? i.legendaryActionsRemaining ?? 0,
+    legendaryResistancesMax: i.legendaryResistancesMax ?? i.legendaryResistancesRemaining ?? 0,
+    legendaryActionsRemaining: i.legendaryActionsRemaining ?? 0,
+    legendaryResistancesRemaining: i.legendaryResistancesRemaining ?? 0,
+    rechargeAvailable: i.rechargeAvailable ?? {},
+    dailyUsesRemaining: i.dailyUsesRemaining ?? {},
+    dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {}
   }),
   on: rootEventHandlers,
   states: {

@@ -163,3 +163,51 @@ Each entry records the assumption, rules justification, and what changed in both
 These distinctions are caller-side concerns (which attacks to resolve, whether grapple/shove substitution is allowed). The spec's action-economy counter treats both as "N attacks per Attack action" and leaves attack identity to the caller.
 
 **Changes:** `dnd.qnt`: `doStartTurn` computes `monsterExtraAttacks = multiattack.length() - 1` and sets `extraAttacksRemaining` on the turn state. `MultiattackSlot` sum type (`MAttack(str) | MSpecialAbility(str)`) supports heterogeneous multiattacks. `init` sets `extraAttacksRemaining` from the selected stat block's multiattack length.
+
+## A19: Legendary Action timing in single-creature model
+
+**Assumption:** Legendary Actions fire during `turnPhase == "waitingForTurn"`. In the SRD, a Legendary Action is taken "immediately after another creature's turn." Since the spec models a single creature, `waitingForTurn` represents the window between the creature's own turns — this is when other creatures would act.
+
+**Rules basis (SRD 5.2.1 Monsters > Legendary Actions):** "A Legendary Action is an action that a monster can take immediately after another creature's turn." The spec's single-creature model cannot represent interleaved turns. Using `waitingForTurn` as the proxy is the closest structural equivalent.
+
+**Changes:** `dnd.qnt`: `doUseLegendaryAction` guards on `turnPhase == "waitingForTurn"`.
+
+## A20: Legendary Resistance as caller decision
+
+**Assumption:** Whether to use Legendary Resistance on a failed save is a caller-provided boolean (`useLR`), not an automatic optimization. The spec does not decide when LR is "worth using" — that is a tactical judgment left to the caller.
+
+**Rules basis (SRD 5.2.1 Monsters > Traits, "Legendary Resistance"):** "If the dragon fails a saving throw, it can choose to succeed instead." The word "choose" makes it a tactical decision.
+
+**Changes:** `dnd.qnt`: `doEndTurn` adds `nondet useLR = Bool.oneOf()` and applies `pUseLegendaryResistance` to override the save result when the monster fails and LR is available. XState: `END_TURN` event accepts `useLegendaryResistance?: boolean`.
+
+## A21: Recharge rolls as event arguments
+
+**Assumption:** Recharge d6 rolls are nondeterministic values generated at the start of a monster's turn, not pre-computed or automatic. A single roll value is used for all unavailable recharge abilities on that turn.
+
+**Rules basis (SRD 5.2.1 Monsters > Limited Usage, "Recharge X–Y"):** "At the start of each of the monster's turns, roll 1d6." The roll is per-ability in the SRD, but using a single nondet value simplifies the spec's state space. Since the spec currently models at most one recharge ability per monster, this is equivalent.
+
+**Changes:** `dnd.qnt`: `doStartTurn` monster path adds `nondet rechargeRollVal = 1.to(6).oneOf()` and builds `RechargeRollEvent` for each unavailable ability. `pProcessRechargeRolls` checks each roll against the ability's `rechargeMin`.
+
+## A22: Resource refresh timing
+
+**Assumption:** Legendary Actions refresh at the start of the monster's turn. Legendary Resistance and daily abilities refresh on Long Rest. Recharge abilities refresh on both Short Rest and Long Rest.
+
+**Rules basis (SRD 5.2.1):** "The monster regains all expended [Legendary Action] uses at the start of each of its turns." "Legendary Resistance (3/Day)" — the "/Day" implies daily refresh. Recharge abilities have no explicit rest refresh rule in the SRD, but are conventionally available after rests.
+
+**Changes:** `dnd.qnt`: `doStartTurn` calls `pRefreshLegendaryActions`. `doShortRest` calls `pRefreshRechargeAbilities`. `doLongRest` calls `pRefreshRechargeAbilities`, `pRefreshDailyAbilities`, and resets `legendaryResistancesRemaining`.
+
+## A23: Lair bonus derivation
+
+**Assumption:** The `inLair: bool` field on `StatBlock` adds +1 to both Legendary Action and Legendary Resistance effective maximums. This bonus is applied at initialization (`pInitMonsterResources`) and at refresh time (`pRefreshLegendaryActions`, long rest LR reset). It is not dynamically toggled during combat.
+
+**Rules basis (SRD 5.2.1, Adult Red Dragon):** "Legendary Action Uses: 3 (4 in Lair)" and "Legendary Resistance (3/Day, or 4/Day in Lair)." The parenthetical suggests lair status is determined before the encounter, not mid-combat.
+
+**Changes:** `dnd.qnt`: `pInitMonsterResources` computes `base + (if inLair then 1 else 0)`. `pRefreshLegendaryActions` takes `maxUses` and `inLair` and applies the same formula.
+
+## A24: Legendary Action cooldowns left to caller
+
+**Assumption:** Per-action-name cooldowns (e.g., "The dragon can't take this action again until the start of its next turn" for Commanding Presence and Fiery Rays) are NOT modeled in the spec. The spec tracks only the global legendary action use count, not which specific actions were used this round.
+
+**Rules basis (SRD 5.2.1, Adult Red Dragon > Legendary Actions):** "The dragon can't take this action again until the start of its next turn." This is a per-action identity constraint. Modeling it would require a `Set[str]` of used action names, cleared at start of turn. Since the spec focuses on resource economy rather than tactical action selection, this constraint is left to the caller.
+
+**Changes:** None — documented as an intentional omission. See PLAN_MONSTERS.md D7.

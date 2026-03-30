@@ -125,6 +125,13 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     heroicInspiration: false,
     fighterLevel: 0,
     creatureKind: "PC",
+    legendaryActionsMax: 0,
+    legendaryResistancesMax: 0,
+    legendaryActionsRemaining: 0,
+    legendaryResistancesRemaining: 0,
+    rechargeAvailable: {},
+    dailyUsesRemaining: {},
+    dailyUsesMax: {},
     ...overrides
   }
 }

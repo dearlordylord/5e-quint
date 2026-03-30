@@ -186,13 +186,16 @@ export const turnPhaseConfig = {
 
         SCORE_CRITICAL_HIT: { actions: ["scoreCriticalHit"] },
         MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
-        MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] }
+        MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] },
+        USE_RECHARGE_ABILITY: { actions: ["useRechargeAbility"] },
+        USE_DAILY_ABILITY: { actions: ["useDailyAbility"] }
       }
     },
     waitingForTurn: {
       on: {
         START_TURN: { target: "acting" as const, actions: ["initTurn", "fighterStartTurn"] },
-        EXIT_COMBAT: { target: "outOfCombat" as const, actions: ["exitCombat"] }
+        EXIT_COMBAT: { target: "outOfCombat" as const, actions: ["exitCombat"] },
+        USE_LEGENDARY_ACTION: { actions: ["useLegendaryAction"] }
       }
     }
   }

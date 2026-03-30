@@ -110,6 +110,17 @@ function variantToString(v: unknown): string {
   return String(v)
 }
 
+/** Convert a Quint Map or plain object to a Record, applying a transform to each value. */
+function quintMapToRecord<T>(raw: unknown, transform: (v: unknown) => T): Record<string, T> {
+  const result: Record<string, T> = {}
+  if (raw instanceof Map) {
+    for (const [k, v] of raw) result[String(k)] = transform(v)
+  } else if (typeof raw === "object" && raw !== null) {
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) result[k] = transform(v)
+  }
+  return result
+}
+
 function mapExpiryPhase(s: string): "start" | "end" {
   return s === "AtStartOfTurn" ? "start" : "end"
 }
@@ -224,7 +235,13 @@ const QuintFullState = z.object({
   fighterState: QuintFighterState,
   fighterLevel: z.bigint(),
   creatureKind: z.any().transform(variantToString),
-  monsterStatBlock: z.any() // parsed but not compared field-by-field (StatBlock is config, not mutable state)
+  monsterStatBlock: z.any(), // parsed but not compared field-by-field (StatBlock is config, not mutable state)
+  monsterResourceState: z.object({
+    legendaryActionsRemaining: z.bigint(),
+    legendaryResistancesRemaining: z.bigint(),
+    rechargeAvailable: z.any().transform((raw: unknown) => quintMapToRecord(raw, Boolean)),
+    dailyUsesRemaining: z.any().transform((raw: unknown) => quintMapToRecord(raw, Number))
+  })
 })
 
 // ============================================================
@@ -293,6 +310,11 @@ interface NormalizedState {
   readonly heroicInspiration: boolean
   readonly fighterLevel: number
   readonly creatureKind: string
+  // MonsterResourceState
+  readonly legendaryActionsRemaining: number
+  readonly legendaryResistancesRemaining: number
+  readonly rechargeAvailable: Readonly<Record<string, boolean>>
+  readonly dailyUsesRemaining: Readonly<Record<string, number>>
 }
 
 // ============================================================
@@ -368,7 +390,11 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     indomitableMax: c.indomitableMax,
     heroicInspiration: c.heroicInspiration,
     fighterLevel: c.fighterLevel,
-    creatureKind: c.creatureKind
+    creatureKind: c.creatureKind,
+    legendaryActionsRemaining: c.legendaryActionsRemaining,
+    legendaryResistancesRemaining: c.legendaryResistancesRemaining,
+    rechargeAvailable: c.rechargeAvailable,
+    dailyUsesRemaining: c.dailyUsesRemaining
   }
 }
 
@@ -432,7 +458,11 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     indomitableMax: Number(raw.fighterState.indomitableMax),
     heroicInspiration: raw.fighterState.heroicInspiration,
     fighterLevel: Number(raw.fighterLevel),
-    creatureKind: raw.creatureKind
+    creatureKind: raw.creatureKind,
+    legendaryActionsRemaining: Number(raw.monsterResourceState.legendaryActionsRemaining),
+    legendaryResistancesRemaining: Number(raw.monsterResourceState.legendaryResistancesRemaining),
+    rechargeAvailable: raw.monsterResourceState.rechargeAvailable,
+    dailyUsesRemaining: raw.monsterResourceState.dailyUsesRemaining
   }
 }
 
@@ -490,6 +520,9 @@ type EventActionMap = {
   USE_HEROIC_INSPIRATION: "doUseHeroicInspiration"
   SCORE_CRITICAL_HIT: "doScoreCriticalHit"
   USE_BONUS_MOVEMENT: "doUseBonusMovement"
+  USE_LEGENDARY_ACTION: "doUseLegendaryAction"
+  USE_RECHARGE_ABILITY: "doUseRechargeAbility"
+  USE_DAILY_ABILITY: "doUseDailyAbility"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -541,7 +574,8 @@ const driverSchema = {
     effDmgType: ITFVariant.optional(),
     effConSave: z.boolean().optional(),
     effResType: ITFVariant.optional(),
-    effVulnType: ITFVariant.optional()
+    effVulnType: ITFVariant.optional(),
+    rechargeRollVal: ITFBigInt.optional()
   },
   doUseAction: { at: ITFVariant },
   doUseBonusAction: {},
@@ -561,7 +595,8 @@ const driverSchema = {
     dmgType: ITFVariant.optional(),
     conSave: z.boolean().optional(),
     dmgResType: ITFVariant.optional(),
-    dmgVulnType: ITFVariant.optional()
+    dmgVulnType: ITFVariant.optional(),
+    useLR: z.boolean().optional()
   },
   doMarkBonusActionSpell: {},
   doMarkNonCantripActionSpell: {},
@@ -575,6 +610,9 @@ const driverSchema = {
   doSpendHitDie: { conMod: ITFBigInt, dieRoll: ITFBigInt },
   doShortRest: { conMod: ITFBigInt, numDice: ITFBigInt, r1: ITFBigInt, r2: ITFBigInt, r3: ITFBigInt },
   doLongRest: {},
+  doUseLegendaryAction: { actionName: z.string().optional() },
+  doUseRechargeAbility: { name: z.string().optional() },
+  doUseDailyAbility: { name: z.string().optional() },
   doApplyFall: { damageRoll: ITFBigInt },
   doSuffocate: {},
   doApplyStarvation: {},
@@ -617,6 +655,11 @@ function parseStatBlock(raw: unknown): {
   walkSpeed: number
   multiattackLength: number
   maxHp: number
+  legendaryActionsRemaining: number
+  legendaryResistancesRemaining: number
+  rechargeAvailable: Record<string, boolean>
+  rechargeMinRolls: Record<string, number>
+  dailyUsesRemaining: Record<string, number>
 } {
   if (!raw || typeof raw !== "object") {
     return {
@@ -627,7 +670,12 @@ function parseStatBlock(raw: unknown): {
       exhaustionImmune: false,
       walkSpeed: 30,
       multiattackLength: 0,
-      maxHp: 10
+      maxHp: 10,
+      legendaryActionsRemaining: 0,
+      legendaryResistancesRemaining: 0,
+      rechargeAvailable: {},
+      rechargeMinRolls: {},
+      dailyUsesRemaining: {}
     }
   }
   const r = raw as Record<string, unknown>
@@ -653,6 +701,20 @@ function parseStatBlock(raw: unknown): {
   }
   const multiattack = r.multiattack
   const multiattackLength = Array.isArray(multiattack) ? multiattack.length : 0
+  // Phase L: extract legendary/recharge/daily config
+  const legendaryActionUses = Number(r.legendaryActionUses ?? 0n)
+  const legendaryResistanceUses = Number(r.legendaryResistanceUses ?? 0n)
+  const inLair = Boolean(r.inLair ?? false)
+  const lairBonus = inLair ? 1 : 0
+
+  // Recharge abilities: all start unavailable; extract rechargeMin per ability
+  const rechargeAvailable = quintMapToRecord(r.rechargeAbilities, () => false)
+  const rechargeMinRolls = quintMapToRecord(r.rechargeAbilities, (v) => {
+    const def = v as Record<string, unknown> | undefined
+    return Number(def?.rechargeMin ?? 5n)
+  })
+  const dailyUsesRemaining = quintMapToRecord(r.dailyAbilities, Number)
+
   return {
     resistances: mapSet(r.resistances),
     vulnerabilities: mapSet(r.vulnerabilities),
@@ -661,8 +723,28 @@ function parseStatBlock(raw: unknown): {
     exhaustionImmune: Boolean(r.exhaustionImmune),
     walkSpeed,
     multiattackLength,
-    maxHp: Number(r.maxHp ?? 10n)
+    maxHp: Number(r.maxHp ?? 10n),
+    legendaryActionsRemaining: legendaryActionUses + lairBonus,
+    legendaryResistancesRemaining: legendaryResistanceUses + lairBonus,
+    rechargeAvailable,
+    rechargeMinRolls,
+    dailyUsesRemaining
   }
+}
+
+/** Compute which recharge abilities succeed given a d6 roll (mirrors Quint's pProcessRechargeRolls). */
+function computeRechargedAbilities(
+  rollVal: number,
+  rechargeMinRolls: Record<string, number>,
+  rechargeAvailable: Readonly<Record<string, boolean>>
+): Array<string> | undefined {
+  const recharged: Array<string> = []
+  for (const [name, available] of Object.entries(rechargeAvailable)) {
+    if (!available && rollVal >= (rechargeMinRolls[name] ?? 5)) {
+      recharged.push(name)
+    }
+  }
+  return recharged.length > 0 ? recharged : undefined
 }
 
 function createDndDriver() {
@@ -696,7 +778,12 @@ function createDndDriver() {
               movementRemaining: sb.walkSpeed,
               extraAttacksRemaining: multiattackExtraAttacks(sb.multiattackLength),
               fighterLevel: 0,
-              creatureKind: "Monster"
+              creatureKind: "Monster",
+              legendaryActionsRemaining: sb.legendaryActionsRemaining,
+              legendaryResistancesRemaining: sb.legendaryResistancesRemaining,
+              rechargeAvailable: sb.rechargeAvailable,
+              dailyUsesRemaining: sb.dailyUsesRemaining,
+              dailyUsesMax: sb.dailyUsesRemaining
             }
           })
         } else {
@@ -801,7 +888,8 @@ function createDndDriver() {
         effVulnType,
         grappledSmall,
         isGrappling,
-        numEffects
+        numEffects,
+        rechargeRollVal
       }) => {
         const isMonster = currentCreatureKind === "Monster"
         const sb = currentStatBlock
@@ -841,7 +929,16 @@ function createDndDriver() {
           deathSaveRoll: isMonster ? undefined : dsRoll != null ? d20Roll(Number(dsRoll)) : undefined,
           deathSaveRoll2: isMonster ? undefined : dsRoll2 != null ? d20Roll(Number(dsRoll2)) : undefined,
           conMod: isMonster ? undefined : conMod != null ? Number(conMod) : undefined,
-          startOfTurnEffects: effects
+          startOfTurnEffects: effects,
+          // Phase L: compute which abilities recharged (mirrors Quint's pProcessRechargeRolls)
+          rechargedAbilities:
+            isMonster && sb && rechargeRollVal != null
+              ? computeRechargedAbilities(
+                  Number(rechargeRollVal),
+                  sb.rechargeMinRolls,
+                  ensureActor().getSnapshot().context.rechargeAvailable
+                )
+              : undefined
         })
       },
       doUseAction: ({ at }) => {
@@ -879,7 +976,8 @@ function createDndDriver() {
         numSaves,
         saveCondition,
         saveSpellId,
-        saveSucceeded
+        saveSucceeded,
+        useLR
       }) => {
         // When turnPhase != "acting", Quint skips nondet generation — all params are undefined (no-op path)
         const saves = !numSaves
@@ -907,7 +1005,7 @@ function createDndDriver() {
                 immunities: isMonster && sb ? sb.immunities : new Set<DamageType>()
               }
             ]
-        send({ type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages })
+        send({ type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages, useLegendaryResistance: useLR })
       },
       doMarkBonusActionSpell: () => {
         send({ type: "MARK_BONUS_ACTION_SPELL" })
@@ -1020,6 +1118,16 @@ function createDndDriver() {
       },
       doUseBonusMovement: ({ feet }) => {
         send({ type: "USE_BONUS_MOVEMENT", feet: Number(feet) })
+      },
+      // Args are undefined when Quint guard → unchanged (nondet not generated)
+      doUseLegendaryAction: ({ actionName }) => {
+        if (actionName != null) send({ type: "USE_LEGENDARY_ACTION", actionName })
+      },
+      doUseRechargeAbility: ({ name }) => {
+        if (name != null) send({ type: "USE_RECHARGE_ABILITY", name })
+      },
+      doUseDailyAbility: ({ name }) => {
+        if (name != null) send({ type: "USE_DAILY_ABILITY", name })
       },
       step: () => {}, // dead character no-op
       stepPC: () => {}, // composite — framework expands to leaf actions
@@ -1172,6 +1280,15 @@ const mbtStateCheck = stateCheck(
         if (!setsEqual(sv, iv)) return false
       } else if (Array.isArray(sv) && Array.isArray(iv)) {
         if (!arraysEqual(sv, iv)) return false
+      } else if (typeof sv === "object" && typeof iv === "object") {
+        const so = sv as Record<string, unknown>
+        const io = iv as Record<string, unknown>
+        const soKeys = Object.keys(so)
+        const ioKeys = Object.keys(io)
+        if (soKeys.length !== ioKeys.length) return false
+        for (const rk of soKeys) {
+          if (!(rk in io) || so[rk] !== io[rk]) return false
+        }
       } else if (sv !== iv) return false
     }
     return true
