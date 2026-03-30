@@ -10,19 +10,23 @@ const CUNNING_STRIKE_LEVEL = 5
 const IMPROVED_CS_LEVEL = 11
 const DEVIOUS_STRIKES_LEVEL = 14
 
-const DEVIOUS_EFFECTS = new Set(["daze", "knockOut", "obscure"] as const satisfies ReadonlyArray<StrikeEffect>)
-const TRIP_VALID_SIZES = new Set(["tiny", "small", "medium", "large"] as const satisfies ReadonlyArray<Size>)
+// --- Types (arrays first, types derived) ---
 
-// --- Types ---
+const CUNNING_STRIKE_EFFECTS = ["poison", "trip", "withdraw"] as const
+const DEVIOUS_STRIKE_EFFECTS = ["daze", "knockOut", "obscure"] as const
+export const ALL_STRIKE_EFFECTS = [...CUNNING_STRIKE_EFFECTS, ...DEVIOUS_STRIKE_EFFECTS] as const
 
 /** Cunning Strike effects available at L5 */
-export type CunningStrikeEffect = "poison" | "trip" | "withdraw"
+export type CunningStrikeEffect = (typeof CUNNING_STRIKE_EFFECTS)[number]
 
 /** Devious Strikes effects available at L14 */
-export type DeviousStrikeEffect = "daze" | "knockOut" | "obscure"
+export type DeviousStrikeEffect = (typeof DEVIOUS_STRIKE_EFFECTS)[number]
 
 /** All possible strike effects */
-export type StrikeEffect = CunningStrikeEffect | DeviousStrikeEffect
+export type StrikeEffect = (typeof ALL_STRIKE_EFFECTS)[number]
+
+const DEVIOUS_EFFECTS = new Set(DEVIOUS_STRIKE_EFFECTS)
+const TRIP_VALID_SIZES = new Set(["tiny", "small", "medium", "large"] as const satisfies ReadonlyArray<Size>)
 
 /** Cunning Action choices (L2 Rogue) */
 export type CunningActionChoice = "dash" | "disengage" | "hide"

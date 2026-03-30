@@ -57,7 +57,14 @@ The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parit
   const CHOICES = ["push", "sap", "slow"] as const
   type Choice = typeof CHOICES[number]  // "push" | "sap" | "slow"
   ```
-  Never hand-write a union type that duplicates a `const` array. If the array already has `satisfies ReadonlyArray<T>`, the derived type is automatically a subtype of `T`.
+  When subsets exist, spread them into a combined array and derive from that:
+  ```typescript
+  const BASE = ["a", "b"] as const
+  const ADVANCED = ["c", "d"] as const
+  const ALL = [...BASE, ...ADVANCED] as const
+  type Effect = typeof ALL[number]  // "a" | "b" | "c" | "d"
+  ```
+  Place these arrays in the types section (top of file, before interfaces) so the derived type is available for interface fields. Never hand-write a union type that duplicates a `const` array.
 
 ## Non-core features
 

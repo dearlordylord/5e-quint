@@ -11,11 +11,13 @@ export interface DefenseSpellInfo {
   readonly durationDescription: string
 }
 
+export const FIRE_SHIELD_CHOICES = ["warm", "chill"] as const
 /** Fire Shield warm/chill choice. */
-export type FireShieldChoice = "warm" | "chill"
+export type FireShieldChoice = (typeof FIRE_SHIELD_CHOICES)[number]
 
+const PROTECTED_CREATURE_TYPE_VALUES = ["aberration", "celestial", "elemental", "fey", "fiend", "undead"] as const
 /** Creature types warded by Protection from Evil and Good. */
-export type ProtectedCreatureType = "aberration" | "celestial" | "elemental" | "fey" | "fiend" | "undead"
+export type ProtectedCreatureType = (typeof PROTECTED_CREATURE_TYPE_VALUES)[number]
 
 /** Dice-based damage descriptor. */
 export interface DiceDamage {
@@ -237,14 +239,7 @@ export function sanctuaryBroken(wardedCreatureAttacked: boolean, wardedCreatureC
 
 // --- Protection from Evil and Good ---
 
-const PROTECTED_CREATURE_TYPES: ReadonlySet<string> = new Set<ProtectedCreatureType>([
-  "aberration",
-  "celestial",
-  "elemental",
-  "fey",
-  "fiend",
-  "undead"
-])
+const PROTECTED_CREATURE_TYPES = new Set(PROTECTED_CREATURE_TYPE_VALUES)
 
 /**
  * Protection from Evil and Good (SRD 5.2.1): returns true if the attacker's

@@ -3,8 +3,12 @@ import type { Condition, DamageType } from "#/types.ts"
 
 // --- Types ---
 
+const BRUTAL_STRIKE_BASE = ["forcefulBlow", "hamstringBlow"] as const
+const BRUTAL_STRIKE_IMPROVED = ["staggeringBlow", "sunderingBlow"] as const
+const BRUTAL_STRIKE_EFFECTS = [...BRUTAL_STRIKE_BASE, ...BRUTAL_STRIKE_IMPROVED] as const
+
 /** Brutal Strike effect options per SRD 5.2.1. */
-export type BrutalStrikeEffect = "forcefulBlow" | "hamstringBlow" | "staggeringBlow" | "sunderingBlow"
+export type BrutalStrikeEffect = (typeof BRUTAL_STRIKE_EFFECTS)[number]
 
 /** Armor weight category for rage eligibility check. */
 export type ArmorWeight = "none" | "light" | "medium" | "heavy"
@@ -63,13 +67,6 @@ const RAGE_RESISTANCE_TYPES = new Set([
   "slashing"
 ] as const satisfies ReadonlyArray<DamageType>)
 const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
-const BRUTAL_STRIKE_BASE = ["forcefulBlow", "hamstringBlow"] as const satisfies ReadonlyArray<BrutalStrikeEffect>
-const BRUTAL_STRIKE_IMPROVED = [
-  "forcefulBlow",
-  "hamstringBlow",
-  "staggeringBlow",
-  "sunderingBlow"
-] as const satisfies ReadonlyArray<BrutalStrikeEffect>
 
 // --- Rage damage bonus by level (SRD 5.2.1 table) ---
 
@@ -245,7 +242,7 @@ export function pResetReckless(): RecklessState {
 
 export function availableBrutalStrikeEffects(barbarianLevel: number): ReadonlyArray<BrutalStrikeEffect> {
   if (barbarianLevel < BRUTAL_STRIKE_LEVEL) return []
-  if (barbarianLevel >= IMPROVED_BRUTAL_STRIKE_L13) return BRUTAL_STRIKE_IMPROVED
+  if (barbarianLevel >= IMPROVED_BRUTAL_STRIKE_L13) return BRUTAL_STRIKE_EFFECTS
   return BRUTAL_STRIKE_BASE
 }
 

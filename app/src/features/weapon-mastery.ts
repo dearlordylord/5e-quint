@@ -8,8 +8,10 @@ import { featureSaveDC } from "#/srd-constants.ts"
 
 // --- Types ---
 
+export const WEAPON_MASTERY_PROPERTIES = ["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"] as const
+
 /** Weapon mastery properties per SRD 5.2.1 Equipment chapter. */
-export type WeaponMasteryProperty = "cleave" | "graze" | "nick" | "push" | "sap" | "slow" | "topple" | "vex"
+export type WeaponMasteryProperty = (typeof WEAPON_MASTERY_PROPERTIES)[number]
 
 // --- Constants ---
 
