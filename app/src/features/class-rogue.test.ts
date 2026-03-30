@@ -29,7 +29,7 @@ import {
   secondStoryClimbSpeed,
   SLIPPERY_MIND_LEVEL,
   sneakAttackDice,
-  stealthAttackDiceCost,
+  STEALTH_ATTACK_DICE_COST,
   stealthAttackPreservesInvisible,
   strikeDieCost,
   STROKE_OF_LUCK_LEVEL,
@@ -624,7 +624,7 @@ describe("Supreme Sneak — Stealth Attack", () => {
     expect(hasStealthAttack(8)).toBe(false)
   })
   it("preserves invisible behind 3/4 cover", () => {
-    expect(stealthAttackPreservesInvisible("threequarters")).toBe(true)
+    expect(stealthAttackPreservesInvisible("threeQuarters")).toBe(true)
   })
   it("preserves invisible behind total cover", () => {
     expect(stealthAttackPreservesInvisible("total")).toBe(true)
@@ -633,7 +633,7 @@ describe("Supreme Sneak — Stealth Attack", () => {
     expect(stealthAttackPreservesInvisible(null)).toBe(false)
   })
   it("costs 1d6 SA dice", () => {
-    expect(stealthAttackDiceCost()).toBe(1)
+    expect(STEALTH_ATTACK_DICE_COST).toBe(1)
   })
 })
 

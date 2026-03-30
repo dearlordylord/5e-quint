@@ -391,8 +391,6 @@ const THIEF_SUBCLASS_LEVEL = 3
 const SUPREME_SNEAK_LEVEL = 9
 const USE_MAGIC_DEVICE_LEVEL = 13
 const THIEFS_REFLEXES_LEVEL = 17
-const STEALTH_ATTACK_DICE_COST = 1
-
 // --- Fast Hands (L3) ---
 
 /**
@@ -434,20 +432,16 @@ export function hasStealthAttack(rogueLevel: number): boolean {
   return rogueLevel >= SUPREME_SNEAK_LEVEL
 }
 
-export type CoverType = "threequarters" | "total"
-
 /**
  * Returns whether the Invisible condition is preserved after a Stealth Attack.
  * Requires ending the turn behind 3/4 or Total Cover.
  */
-export function stealthAttackPreservesInvisible(behindCover: CoverType | null): boolean {
-  return behindCover === "threequarters" || behindCover === "total"
+export function stealthAttackPreservesInvisible(behindCover: string | null): boolean {
+  return behindCover === "threeQuarters" || behindCover === "total"
 }
 
-/** SA dice cost for Stealth Attack. */
-export function stealthAttackDiceCost(): 1 {
-  return STEALTH_ATTACK_DICE_COST as 1
-}
+/** SA dice cost for Stealth Attack (1d6). */
+export const STEALTH_ATTACK_DICE_COST = 1
 
 // --- Use Magic Device (L13) ---
 

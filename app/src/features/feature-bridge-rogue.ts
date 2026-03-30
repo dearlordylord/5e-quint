@@ -129,7 +129,7 @@ export {
   magicDeviceChargesSaved,
   magicDeviceScrollDC,
   secondStoryClimbSpeed,
-  stealthAttackDiceCost,
+  STEALTH_ATTACK_DICE_COST,
   stealthAttackPreservesInvisible,
   thiefsReflexesSecondInitiative
 } from "#/features/class-rogue.ts"
