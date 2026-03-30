@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  ARCANE_SWORD_DAMAGE,
   chromaticOrbDamage,
   divineSmiteDamage,
+  divineWordEffect,
   ELDRITCH_BLAST_PER_BEAM,
   FAERIE_FIRE_EFFECT,
   FIRE_SHIELD_RETALIATION,
@@ -10,8 +12,10 @@ import {
   fireBoltDamage,
   fireShieldResistance,
   fireShieldRetaliationDamageType,
+  flameBladeDamage,
   MAGIC_MISSILE_DART,
   magicMissileDarts,
+  moonbeamDamage,
   RAY_OF_FROST_SPEED_REDUCTION,
   rayOfFrostDamage,
   sacredFlameDamage,
@@ -259,5 +263,59 @@ describe("Faerie Fire", () => {
   it("grants advantage on attacks and prevents invisibility", () => {
     expect(FAERIE_FIRE_EFFECT.cantBeInvisible).toBe(true)
     expect(FAERIE_FIRE_EFFECT.attackAdvantage).toBe(true)
+  })
+})
+
+// --- New Evocation spells ---
+
+describe("Flame Blade", () => {
+  it("3d6 at L2", () => {
+    expect(flameBladeDamage(2)).toEqual({ dice: 3, dieSize: 6 })
+  })
+
+  it("scales +1d6 per slot above 2", () => {
+    expect(flameBladeDamage(4)).toEqual({ dice: 5, dieSize: 6 })
+  })
+})
+
+describe("Moonbeam", () => {
+  it("2d10 at L2", () => {
+    expect(moonbeamDamage(2)).toEqual({ dice: 2, dieSize: 10 })
+  })
+
+  it("scales +1d10 per slot above 2", () => {
+    expect(moonbeamDamage(4)).toEqual({ dice: 4, dieSize: 10 })
+  })
+})
+
+describe("Arcane Sword", () => {
+  it("4d12 Force", () => {
+    expect(ARCANE_SWORD_DAMAGE).toEqual({ dice: 4, dieSize: 12 })
+  })
+})
+
+describe("Divine Word", () => {
+  it("kills at 0-20 HP", () => {
+    expect(divineWordEffect(15)?.dies).toBe(true)
+  })
+
+  it("blinds+deafens+stuns at 21-30 HP", () => {
+    const effect = divineWordEffect(25)
+    expect(effect?.dies).toBe(false)
+    expect(effect?.conditions).toContain("stunned")
+  })
+
+  it("blinds+deafens at 31-40 HP", () => {
+    const effect = divineWordEffect(35)
+    expect(effect?.conditions).toEqual(["blinded", "deafened"])
+  })
+
+  it("deafens at 41-50 HP", () => {
+    const effect = divineWordEffect(45)
+    expect(effect?.conditions).toEqual(["deafened"])
+  })
+
+  it("no effect above 50 HP", () => {
+    expect(divineWordEffect(51)).toBeNull()
   })
 })

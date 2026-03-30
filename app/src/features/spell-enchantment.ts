@@ -221,4 +221,9 @@ export function viciousMockeryDamage(characterLevel: number): DiceDamage {
   return cantripDamage(characterLevel, 6)
 }
 
+// --- Befuddlement (L8, Action, 150 ft, INT save, instantaneous but effect persists) ---
+
+/** Befuddlement (SRD 5.2.1): 10d12 Psychic on failed save, half on success. */
+export const BEFUDDLEMENT_DAMAGE: DiceDamage = { dice: 10, dieSize: 12 }
+
 /* eslint-enable no-magic-numbers */

@@ -5,6 +5,8 @@ import {
   BESTOW_CURSE_OPTIONS,
   bestowCurseRequiresConcentration,
   chillTouchDamage,
+  EYEBITE_CHOICES,
+  eyebiteCondition,
   falseLifeTempHp,
   RAISE_DEAD_MAX_DAYS_DEAD,
   RAY_OF_ENFEEBLEMENT_REDUCTION,
@@ -132,5 +134,23 @@ describe("Bestow Curse", () => {
   it("does not require concentration at L5+", () => {
     expect(bestowCurseRequiresConcentration(5)).toBe(false)
     expect(bestowCurseRequiresConcentration(9)).toBe(false)
+  })
+})
+
+describe("Eyebite", () => {
+  it("has 3 choices: asleep, panicked, sickened", () => {
+    expect(EYEBITE_CHOICES).toHaveLength(3)
+  })
+
+  it("asleep → unconscious", () => {
+    expect(eyebiteCondition("asleep")).toBe("unconscious")
+  })
+
+  it("panicked → frightened", () => {
+    expect(eyebiteCondition("panicked")).toBe("frightened")
+  })
+
+  it("sickened → poisoned", () => {
+    expect(eyebiteCondition("sickened")).toBe("poisoned")
   })
 })

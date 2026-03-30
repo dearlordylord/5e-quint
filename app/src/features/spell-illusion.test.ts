@@ -5,6 +5,7 @@ import {
   colorSprayResult,
   FEAR_INFO,
   fearResult,
+  GREATER_INVISIBILITY_PERSISTS_THROUGH_ATTACKS,
   HYPNOTIC_PATTERN_INFO,
   hypnoticPatternResult,
   invisibilityTargets,
@@ -152,5 +153,11 @@ describe("Phantasmal Killer", () => {
   it("scales +1d10 per slot above 4", () => {
     expect(phantasmalKillerDamage(5)).toEqual({ dice: 5, dieSize: 10 })
     expect(phantasmalKillerDamage(9)).toEqual({ dice: 9, dieSize: 10 })
+  })
+})
+
+describe("Greater Invisibility", () => {
+  it("persists through attacks and spellcasting", () => {
+    expect(GREATER_INVISIBILITY_PERSISTS_THROUGH_ATTACKS).toBe(true)
   })
 })

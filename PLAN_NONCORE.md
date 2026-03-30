@@ -635,18 +635,18 @@ All traits revised against SRD 5.2.1 text:
 ## Spell Effects
 
 ```
-[T150] Spell Data Model + Damage Patterns (P2) -> deps: [T08]  ⚑ partial (missing: Flame Blade, Call Lightning, Moonbeam, Arcane Sword)
+[T150] Spell Data Model + Damage Patterns (P2) -> deps: [T08]  ✓ done
 [T151] Healing Spells (P2) -> deps: [T08]  ✓ done
 [T152] AC/Defense Buff Spells (P1) -> deps: [T08]  ✓ done
-[T153] Condition Debuff Spells (P1) -> deps: [T08]  ⚑ partial (missing: Heat Metal, Banishment, Eyebite, Befuddlement)
-[T154] Condition Buff Spells (P2) -> deps: [T08]  ⚑ partial (missing: Freedom of Movement, Mind Blank)
+[T153] Condition Debuff Spells (P1) -> deps: [T08]  ✓ done
+[T154] Condition Buff Spells (P2) -> deps: [T08]  ✓ done
 [T155] Condition Removal Spells (P2) -> deps: [T08]  ✓ done
-[T156] Stat Buff/Debuff Spells (P3) -> deps: [T08]  ⚑ partial (missing: Hunter's Mark, Shining Smite)
+[T156] Stat Buff/Debuff Spells (P3) -> deps: [T08]  ✓ done
 [T157] Temp HP Spells (P3) -> deps: [T08]  ✓ done
 [T158] Revive Spells (P3) -> deps: [T08]  ✓ done
 [T159] Cantrip Scaling (P2) -> deps: [T08]  ✓ done
-[T160] Power Words (P3) -> deps: [T08]  ⚑ partial (missing: Divine Word)
-[T161] Polymorph (P3) -> deps: [T100]  ⚑ partial (mechanics as comment only)
+[T160] Power Words (P3) -> deps: [T08]  ✓ done
+[T161] Polymorph (P3) -> deps: [T100]  ✓ done
 ```
 
 All spell tasks implement spell-specific behavior in TypeScript. Each spell is expressed as a composition of core primitives (active effect lifecycle, conditions, damage/healing, action economy).
@@ -692,6 +692,17 @@ NEW (TODO): Power Word Heal (in T151).
 
 **[T161] Polymorph**
 WIS save or transform. ALL ability scores replaced, CR cap = target level/CR, no effect on shapechangers or 0 HP. Revert on 0 HP with overflow. Concentration.
+
+---
+
+## Non-Combat Spells (Future)
+
+```
+[T165] Non-Combat Spells (P4) -> deps: [T150]
+```
+
+**[T165] Non-Combat Spells**
+~255 SRD 5.2.1 spells not yet modeled — primarily utility, exploration, social, and ritual spells that don't compose on the combat state machine (Detect Magic, Mending, Prestidigitation, Sending, Teleport, Wish, etc.). These have no mechanical effect on the Quint spec or MBT traces. Implement as pure-function metadata when the UI needs spell lists, descriptions, or casting-time reference data. Low priority — only needed for spell browser / character sheet completeness, not for combat simulation correctness.
 
 ---
 

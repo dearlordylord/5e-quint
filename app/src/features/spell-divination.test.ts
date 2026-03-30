@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { FORESIGHT_EFFECT, mindSpikeDamage } from "#/features/spell-divination.ts"
+import {
+  FORESIGHT_EFFECT,
+  HUNTERS_MARK_DAMAGE,
+  huntersMarkDuration,
+  mindSpikeDamage
+} from "#/features/spell-divination.ts"
 
 describe("Foresight", () => {
   it("grants advantage on all tests and disadvantage on attacks against", () => {
@@ -17,5 +22,25 @@ describe("Mind Spike", () => {
   it("scales +1d8 per slot above 2", () => {
     expect(mindSpikeDamage(3)).toEqual({ dice: 4, dieSize: 8 })
     expect(mindSpikeDamage(5)).toEqual({ dice: 6, dieSize: 8 })
+  })
+})
+
+describe("Hunter's Mark", () => {
+  it("deals 1d6 Force per hit", () => {
+    expect(HUNTERS_MARK_DAMAGE).toEqual({ dice: 1, dieSize: 6 })
+  })
+
+  it("1 hour at L1-L2", () => {
+    expect(huntersMarkDuration(1)).toBe(1)
+    expect(huntersMarkDuration(2)).toBe(1)
+  })
+
+  it("8 hours at L3-L4", () => {
+    expect(huntersMarkDuration(3)).toBe(8)
+    expect(huntersMarkDuration(4)).toBe(8)
+  })
+
+  it("24 hours at L5+", () => {
+    expect(huntersMarkDuration(5)).toBe(24)
   })
 })

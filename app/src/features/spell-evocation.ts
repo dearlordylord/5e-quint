@@ -166,4 +166,40 @@ export function rayOfFrostDamage(characterLevel: number): DiceDamage {
   return cantripDamage(characterLevel, 8)
 }
 
+// --- Flame Blade (L2, Bonus Action, Self, Concentration 10 min, melee spell attack) ---
+
+/** Flame Blade (SRD 5.2.1): 3d6 Fire + mod at L2, +1d6 per slot above 2. */
+export function flameBladeDamage(slotLevel: number): DiceDamage {
+  return { dice: 3 + (slotLevel - 2), dieSize: 6 }
+}
+
+// --- Moonbeam (L2, Action, 120 ft, Concentration 1 min, CON save) ---
+
+/** Moonbeam (SRD 5.2.1): 2d10 Radiant at L2, +1d10 per slot above 2. Save for half. */
+export function moonbeamDamage(slotLevel: number): DiceDamage {
+  return { dice: 2 + (slotLevel - 2), dieSize: 10 }
+}
+
+// --- Arcane Sword (L7, Action, 90 ft, Concentration 1 min, melee spell attack) ---
+
+/** Arcane Sword (SRD 5.2.1): 4d12 Force + mod. No upcast scaling. */
+export const ARCANE_SWORD_DAMAGE: DiceDamage = { dice: 4, dieSize: 12 }
+
+// --- Divine Word (L7, Bonus Action, 30 ft, CHA save) ---
+
+/** Divine Word HP thresholds and effects (SRD 5.2.1). */
+export interface DivineWordEffect {
+  readonly dies: boolean
+  readonly conditions: ReadonlyArray<string>
+  readonly duration: string
+}
+
+export function divineWordEffect(currentHp: number): DivineWordEffect | null {
+  if (currentHp > 50) return null
+  if (currentHp <= 20) return { dies: true, conditions: [], duration: "instant" }
+  if (currentHp <= 30) return { dies: false, conditions: ["blinded", "deafened", "stunned"], duration: "1 hour" }
+  if (currentHp <= 40) return { dies: false, conditions: ["blinded", "deafened"], duration: "10 minutes" }
+  return { dies: false, conditions: ["deafened"], duration: "1 minute" }
+}
+
 /* eslint-enable no-magic-numbers */

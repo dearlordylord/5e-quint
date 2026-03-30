@@ -105,4 +105,9 @@ export function phantasmalKillerDamage(slotLevel: number): DiceDamage {
   return { dice: 4 + (slotLevel - 4), dieSize: 10 }
 }
 
+// --- Greater Invisibility (L4, Action, Touch, Concentration 1 min) ---
+
+/** Greater Invisibility: Invisible condition that persists through attacks/spellcasting. */
+export const GREATER_INVISIBILITY_PERSISTS_THROUGH_ATTACKS = true
+
 /* eslint-enable no-magic-numbers */

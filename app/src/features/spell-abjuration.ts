@@ -1,7 +1,8 @@
 // Abjuration spells — SRD 5.2.1
 // Protective and warding spells.
 
-import type { DefenseSpellInfo, DiceDamage, SpellDamageInfo } from "#/features/spell-patterns.ts"
+import type { ConditionSpellResult, DefenseSpellInfo, DiceDamage, SpellDamageInfo } from "#/features/spell-patterns.ts"
+import { upcastTargets } from "#/features/spell-patterns.ts"
 import type { Condition, DamageType } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
@@ -235,5 +236,41 @@ export const PROTECTION_FROM_ENERGY_TYPES = [
 export function globeBlocksSpellLevel(slotLevel: number): number {
   return 5 + (slotLevel - 6)
 }
+
+// --- Banishment (L4, Action, 30 ft, Concentration 1 min, CHA save) ---
+
+/** Banishment targets: 1 base, +1 per slot level above 4. */
+export function banishmentTargets(slotLevel: number): number {
+  return upcastTargets(slotLevel, 4)
+}
+
+/** Banishment result: Incapacitated while banished. Permanent if extraplanar + full duration. */
+export function banishmentResult(savePassed: boolean): ConditionSpellResult {
+  return {
+    conditionApplied: savePassed ? null : "incapacitated",
+    specialEffect: savePassed
+      ? null
+      : "Transported to harmless demiplane; permanent if extraplanar and spell lasts full duration",
+    savePassed
+  }
+}
+
+/** Creature types permanently banished if spell lasts full duration. */
+export const BANISHMENT_PERMANENT_TYPES = ["aberration", "celestial", "elemental", "fey", "fiend"] as const
+
+// --- Freedom of Movement (L4, Action, Touch, 1 hour, no concentration) ---
+
+/** Freedom of Movement targets: 1 base, +1 per slot above 4. */
+export function freedomOfMovementTargets(slotLevel: number): number {
+  return upcastTargets(slotLevel, 4)
+}
+
+/** Conditions that Freedom of Movement grants immunity to (from spells/magic). */
+export const FREEDOM_OF_MOVEMENT_IMMUNITIES = ["paralyzed", "restrained"] as const satisfies ReadonlyArray<Condition>
+
+// --- Mind Blank (L8, Action, Touch, 24 hours, no concentration) ---
+
+/** Mind Blank: immunity to Psychic damage and Charmed condition. */
+export const MIND_BLANK_IMMUNITIES = { psychicDamage: true, charmed: true } as const
 
 /* eslint-enable no-magic-numbers */

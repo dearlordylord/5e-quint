@@ -11,9 +11,11 @@ import {
   ENLARGE_REDUCE_DICE,
   fleshToStoneProgress,
   HASTE_EFFECTS,
+  heatMetalDamage,
   magicWeaponBonus,
   REGENERATE_INITIAL_HEAL,
   REGENERATE_PER_ROUND,
+  shiningSmiteDamage,
   SLOW_INFO,
   SLOW_MAX_TARGETS,
   slowResult,
@@ -208,5 +210,25 @@ describe("Regenerate", () => {
 
   it("per-round heal is 1", () => {
     expect(REGENERATE_PER_ROUND).toBe(1)
+  })
+})
+
+describe("Heat Metal", () => {
+  it("2d8 at L2", () => {
+    expect(heatMetalDamage(2)).toEqual({ dice: 2, dieSize: 8 })
+  })
+
+  it("scales +1d8 per slot above 2", () => {
+    expect(heatMetalDamage(4)).toEqual({ dice: 4, dieSize: 8 })
+  })
+})
+
+describe("Shining Smite", () => {
+  it("2d6 at L2", () => {
+    expect(shiningSmiteDamage(2)).toEqual({ dice: 2, dieSize: 6 })
+  })
+
+  it("scales +1d6 per slot above 2", () => {
+    expect(shiningSmiteDamage(4)).toEqual({ dice: 4, dieSize: 6 })
   })
 })

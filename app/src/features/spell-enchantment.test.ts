@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   baneTargets,
+  BEFUDDLEMENT_DAMAGE,
   BLESS_BANE_DIE,
   blessTargets,
   CONFUSION_INFO,
@@ -298,5 +299,11 @@ describe("Vicious Mockery", () => {
     expect(viciousMockeryDamage(5)).toEqual({ dice: 2, dieSize: 6 })
     expect(viciousMockeryDamage(11)).toEqual({ dice: 3, dieSize: 6 })
     expect(viciousMockeryDamage(17)).toEqual({ dice: 4, dieSize: 6 })
+  })
+})
+
+describe("Befuddlement", () => {
+  it("deals 10d12 Psychic", () => {
+    expect(BEFUDDLEMENT_DAMAGE).toEqual({ dice: 10, dieSize: 12 })
   })
 })

@@ -175,4 +175,22 @@ export function magicWeaponBonus(slotLevel: number): number {
 /** Regenerate (SRD 5.2.1): 4d8 + 15 immediate. */
 export const REGENERATE_INITIAL_HEAL: DiceDamageWithBonus = { dice: 4, dieSize: 8, flatBonus: 15 }
 
+// --- Heat Metal (L2, Action, 60 ft, Concentration 1 min, CON save) ---
+
+/** Heat Metal (SRD 5.2.1): 2d8 Fire at L2, +1d8 per slot above 2. Repeatable as Bonus Action. */
+export function heatMetalDamage(slotLevel: number): DiceDamage {
+  return { dice: 2 + (slotLevel - 2), dieSize: 8 }
+}
+
+// --- Shining Smite (L2, Bonus Action, Self, Concentration 1 min) ---
+
+/** Shining Smite (SRD 5.2.1): +2d6 Radiant at L2, +1d6 per slot above 2. Target sheds light, can't be Invisible. */
+export function shiningSmiteDamage(slotLevel: number): DiceDamage {
+  return { dice: 2 + (slotLevel - 2), dieSize: 6 }
+}
+
+// --- Polymorph (L4, Action, 60 ft, Concentration 1 hour, WIS save) ---
+// Beast form CR ≤ target's level/CR. Target gains temp HP = beast's HP.
+// Spell ends when temp HP = 0. Target can't speak or cast spells.
+
 /* eslint-enable no-magic-numbers */

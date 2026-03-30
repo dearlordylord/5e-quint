@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest"
 import {
   AID_TARGETS,
   aidHpIncrease,
+  BANISHMENT_PERMANENT_TYPES,
+  banishmentResult,
+  banishmentTargets,
   canCastShield,
   canUseMageArmor,
   counterspellAutoSuccess,
@@ -10,6 +13,8 @@ import {
   deathWardTriggered,
   dispelMagicAutoSuccess,
   dispelMagicDC,
+  FREEDOM_OF_MOVEMENT_IMMUNITIES,
+  freedomOfMovementTargets,
   globeBlocksSpellLevel,
   GREATER_RESTORATION_EFFECTS,
   HEAL_REMOVED_CONDITIONS,
@@ -22,6 +27,7 @@ import {
   MASS_CURE_WOUNDS_TARGETS,
   MASS_HEAL_POOL,
   massCureWoundsDice,
+  MIND_BLANK_IMMUNITIES,
   PRAYER_OF_HEALING_TARGETS,
   prayerOfHealingDice,
   PROTECTION_FROM_ENERGY_TYPES,
@@ -419,5 +425,52 @@ describe("Globe of Invulnerability", () => {
   it("scales +1 per slot level above 6", () => {
     expect(globeBlocksSpellLevel(7)).toBe(6)
     expect(globeBlocksSpellLevel(9)).toBe(8)
+  })
+})
+
+// --- Banishment ---
+
+describe("Banishment", () => {
+  it("targets 1 at L4, scales +1 per upcast", () => {
+    expect(banishmentTargets(4)).toBe(1)
+    expect(banishmentTargets(5)).toBe(2)
+  })
+
+  it("incapacitates on failed save", () => {
+    const result = banishmentResult(false)
+    expect(result.conditionApplied).toBe("incapacitated")
+    expect(result.savePassed).toBe(false)
+  })
+
+  it("no effect on passed save", () => {
+    expect(banishmentResult(true).conditionApplied).toBeNull()
+  })
+
+  it("permanent types include fiend and celestial", () => {
+    expect(BANISHMENT_PERMANENT_TYPES).toContain("fiend")
+    expect(BANISHMENT_PERMANENT_TYPES).toContain("celestial")
+  })
+})
+
+// --- Freedom of Movement ---
+
+describe("Freedom of Movement", () => {
+  it("targets 1 at L4, scales +1 per upcast", () => {
+    expect(freedomOfMovementTargets(4)).toBe(1)
+    expect(freedomOfMovementTargets(6)).toBe(3)
+  })
+
+  it("grants immunity to paralyzed and restrained", () => {
+    expect(FREEDOM_OF_MOVEMENT_IMMUNITIES).toContain("paralyzed")
+    expect(FREEDOM_OF_MOVEMENT_IMMUNITIES).toContain("restrained")
+  })
+})
+
+// --- Mind Blank ---
+
+describe("Mind Blank", () => {
+  it("grants psychic damage immunity and charmed immunity", () => {
+    expect(MIND_BLANK_IMMUNITIES.psychicDamage).toBe(true)
+    expect(MIND_BLANK_IMMUNITIES.charmed).toBe(true)
   })
 })

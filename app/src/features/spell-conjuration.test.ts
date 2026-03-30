@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  callLightningDamage,
   ENTANGLE_INFO,
   entangleResult,
   GOODBERRY_COUNT,
@@ -109,5 +110,21 @@ describe("Ice Knife", () => {
   it("explosion scales +1d6 per slot above 1", () => {
     expect(iceKnifeExplosionDamage(2)).toEqual({ dice: 3, dieSize: 6 })
     expect(iceKnifeExplosionDamage(5)).toEqual({ dice: 6, dieSize: 6 })
+  })
+})
+
+// --- Call Lightning ---
+
+describe("Call Lightning", () => {
+  it("3d10 at L3", () => {
+    expect(callLightningDamage(3, false)).toEqual({ dice: 3, dieSize: 10 })
+  })
+
+  it("scales +1d10 per slot above 3", () => {
+    expect(callLightningDamage(5, false)).toEqual({ dice: 5, dieSize: 10 })
+  })
+
+  it("+1d10 outdoors in storm", () => {
+    expect(callLightningDamage(3, true)).toEqual({ dice: 4, dieSize: 10 })
   })
 })

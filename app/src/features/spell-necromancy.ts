@@ -92,4 +92,17 @@ export function bestowCurseRequiresConcentration(slotLevel: number): boolean {
   return slotLevel <= 4
 }
 
+// --- Eyebite (L6, Action, Self/60 ft, Concentration 1 min, WIS save) ---
+
+/** Eyebite effect choices (SRD 5.2.1). */
+export const EYEBITE_CHOICES = ["asleep", "panicked", "sickened"] as const
+export type EyebiteChoice = (typeof EYEBITE_CHOICES)[number]
+
+/** Map Eyebite choice to the condition applied on failed save. */
+export function eyebiteCondition(choice: EyebiteChoice): "unconscious" | "frightened" | "poisoned" {
+  if (choice === "asleep") return "unconscious"
+  if (choice === "panicked") return "frightened"
+  return "poisoned"
+}
+
 /* eslint-enable no-magic-numbers */

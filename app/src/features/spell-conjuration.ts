@@ -73,4 +73,12 @@ export function iceKnifeExplosionDamage(slotLevel: number): DiceDamage {
   return { dice: 2 + (slotLevel - 1), dieSize: 6 }
 }
 
+// --- Call Lightning (L3, Action, 120 ft, Concentration 10 min, DEX save) ---
+
+/** Call Lightning (SRD 5.2.1): 3d10 Lightning at L3, +1d10 per slot above 3. +1d10 if outdoors in storm. */
+export function callLightningDamage(slotLevel: number, outdoorsInStorm: boolean): DiceDamage {
+  const baseDice = 3 + (slotLevel - 3) + (outdoorsInStorm ? 1 : 0)
+  return { dice: baseDice, dieSize: 10 }
+}
+
 /* eslint-enable no-magic-numbers */
