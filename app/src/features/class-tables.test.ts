@@ -4,6 +4,8 @@ import {
   canMulticlass,
   classHitDie,
   meetsMulticlassPrereq,
+  multiclassProficiencies,
+  nonProficientAttackBonus
 } from "#/features/class-tables.ts"
 import type { Ability } from "#/types.ts"
 
@@ -94,5 +96,60 @@ describe("canMulticlass", () => {
   it("fails if new class prereq not met", () => {
     const s = scores({ str: 13 })
     expect(canMulticlass(s, "barbarian", "bard")).toBe(false)
+  })
+})
+
+// --- multiclassProficiencies ---
+
+describe("multiclassProficiencies", () => {
+  it("Fighter gains light/medium armor + shields + simple/martial weapons", () => {
+    const p = multiclassProficiencies("fighter")
+    expect(p.armor).toEqual(["light", "medium"])
+    expect(p.weapons).toEqual(["simple", "martial"])
+    expect(p.shields).toBe(true)
+    expect(p.skillChoices).toBe(0)
+  })
+  it("Bard gains light armor + 1 skill choice", () => {
+    const p = multiclassProficiencies("bard")
+    expect(p.armor).toEqual(["light"])
+    expect(p.weapons).toEqual([])
+    expect(p.shields).toBe(false)
+    expect(p.skillChoices).toBe(1)
+  })
+  it("Wizard gains nothing", () => {
+    const p = multiclassProficiencies("wizard")
+    expect(p.armor).toEqual([])
+    expect(p.weapons).toEqual([])
+    expect(p.shields).toBe(false)
+    expect(p.skillChoices).toBe(0)
+  })
+  it("Sorcerer gains nothing", () => {
+    const p = multiclassProficiencies("sorcerer")
+    expect(p.armor).toEqual([])
+    expect(p.weapons).toEqual([])
+    expect(p.shields).toBe(false)
+  })
+  it("Cleric gains light/medium armor + shields + simple weapons", () => {
+    const p = multiclassProficiencies("cleric")
+    expect(p.armor).toEqual(["light", "medium"])
+    expect(p.weapons).toEqual(["simple"])
+    expect(p.shields).toBe(true)
+  })
+  it("Rogue gains light armor + 1 skill choice", () => {
+    const p = multiclassProficiencies("rogue")
+    expect(p.armor).toEqual(["light"])
+    expect(p.skillChoices).toBe(1)
+  })
+  it("Warlock gains light armor + simple weapons", () => {
+    const p = multiclassProficiencies("warlock")
+    expect(p.armor).toEqual(["light"])
+    expect(p.weapons).toEqual(["simple"])
+    expect(p.shields).toBe(false)
+  })
+})
+
+describe("nonProficientAttackBonus", () => {
+  it("returns 0 (no prof bonus, not disadvantage)", () => {
+    expect(nonProficientAttackBonus()).toBe(0)
   })
 })

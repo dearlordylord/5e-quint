@@ -75,7 +75,7 @@ Experiment complete (worktree cleaned up). Wired `features/` pure functions into
 
 ```
 [T01] Config Identity Extensions (P1) -> deps: none  ✓ done
-[T01.5] Multiclass Proficiency Rules (P2) -> deps: [T01]
+[T01.5] Multiclass Proficiency Rules (P2) -> deps: [T01]  ✓ done
 ```
 
 **[T01] Config Identity Extensions** *(done)*
