@@ -358,6 +358,9 @@ export function useIndomitable(
 //
 // "When you attack with a weapon whose mastery property you can use, you can
 // replace that property with the Push, Sap, or Slow property for that attack."
+//
+// TS-only: pure value substitution with no state. Mastery effects themselves are
+// TS-only (see weapon-mastery.ts), so this stays in TS for uniformity.
 // =============================================================================
 
 export const TACTICAL_MASTER_LEVEL = 9
@@ -389,6 +392,9 @@ export function tacticalMasterSubstitute(
 // "If you make an attack roll against a creature and miss, you have Advantage
 // on your next attack roll against that creature before the end of your next
 // turn."
+//
+// TS-only: target-relative state ("that creature") not trackable in
+// single-creature Quint model. Same pattern as Vex mastery property.
 // =============================================================================
 
 export const STUDIED_ATTACKS_LEVEL = 13

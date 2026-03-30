@@ -1,5 +1,11 @@
 import { featureSaveDC } from "#/srd-constants.ts"
 
+// TS-only: mastery effects are caller-side composition on existing Quint primitives
+// (pTakeDamage, pApplyCondition, action economy). Effects like Topple (→ Prone) and
+// Graze (→ damage) could be modeled in Quint, but Vex/Sap/Slow/Studied Attacks are
+// target-relative and can't be tracked in the single-creature model. Kept uniform in
+// TS to avoid splitting the same feature across two layers.
+
 // --- Types ---
 
 /** Weapon mastery properties per SRD 5.2.1 Equipment chapter. */
