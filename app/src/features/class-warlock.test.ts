@@ -11,6 +11,7 @@ import {
   darkOnesOwnLuckMaxUses,
   eldritchSmiteDice,
   eldritchSpearBonusRange,
+  fiendishVigorTempHp,
   giftOfProtectorsMaxNames,
   hasContactPatron,
   hasDevilsSight,
@@ -212,6 +213,10 @@ describe("Passive invocations", () => {
     expect(giftOfProtectorsMaxNames(4)).toBe(4)
     expect(giftOfProtectorsMaxNames(0)).toBe(1)
     expect(giftOfProtectorsMaxNames(-1)).toBe(1)
+  })
+  it("Fiendish Vigor: max roll on temp HP die", () => {
+    expect(fiendishVigorTempHp(8)).toBe(8)
+    expect(fiendishVigorTempHp(4)).toBe(4)
   })
 })
 
