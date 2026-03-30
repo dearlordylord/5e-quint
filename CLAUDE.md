@@ -52,6 +52,13 @@ The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parit
   ```
   This catches typos and invalid values at compile time. Prefer this over plain `string[]` or unvalidated `as const`.
 
+- **Derive union types from constant arrays:** When a union type and a runtime array contain the same values, define the array first and derive the type with `typeof X[number]`. Single source of truth — no duplication:
+  ```typescript
+  const CHOICES = ["push", "sap", "slow"] as const
+  type Choice = typeof CHOICES[number]  // "push" | "sap" | "slow"
+  ```
+  Never hand-write a union type that duplicates a `const` array. If the array already has `satisfies ReadonlyArray<T>`, the derived type is automatically a subtype of `T`.
+
 ## Non-core features
 
 `app/src/features/` — pure functions for class features, feats, spells, species traits. See `features/README.md`.
