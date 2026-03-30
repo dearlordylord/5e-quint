@@ -6,6 +6,7 @@ import {
   canCastInWildShape,
   canEnterWildShape,
   canExitWildShape,
+  canNaturalRecoverSlot,
   canUsePrimalStrike,
   canUseWildCompanion,
   canUseWildResurgenceForCharge,
@@ -14,12 +15,18 @@ import {
   druidShortRest,
   enterWildShape,
   exitWildShape,
+  hasNaturesSanctuary,
+  hasNaturesWard,
   isFormEligible,
   isMagician,
   isWarden,
+  landsAidDice,
+  naturalRecoveryMaxLevels,
+  naturesWardResistance,
   potentSpellcastingBonus,
   usePrimalStrike,
   useWildCompanion,
+  validateNaturalRecovery,
   wildResurgenceGainCharge,
   wildResurgenceGainSlot,
   wildShapeCanFly,
@@ -569,5 +576,79 @@ describe("archdruidNatureMagician", () => {
 
   it("should return null if 0 uses requested", () => {
     expect(archdruidNatureMagician(4, 0)).toBeNull()
+  })
+})
+
+// =============================================================================
+// Circle of the Land
+// =============================================================================
+
+describe("Land's Aid", () => {
+  it("0 below L3", () => {
+    expect(landsAidDice(2)).toBe(0)
+  })
+  it("2d6 at L3-9", () => {
+    expect(landsAidDice(3)).toBe(2)
+    expect(landsAidDice(9)).toBe(2)
+  })
+  it("3d6 at L10-13", () => {
+    expect(landsAidDice(10)).toBe(3)
+    expect(landsAidDice(13)).toBe(3)
+  })
+  it("4d6 at L14+", () => {
+    expect(landsAidDice(14)).toBe(4)
+    expect(landsAidDice(20)).toBe(4)
+  })
+})
+
+describe("Natural Recovery", () => {
+  it("0 below L6", () => {
+    expect(naturalRecoveryMaxLevels(5)).toBe(0)
+  })
+  it("ceil(druidLevel/2) at L6+", () => {
+    expect(naturalRecoveryMaxLevels(6)).toBe(3)
+    expect(naturalRecoveryMaxLevels(10)).toBe(5)
+    expect(naturalRecoveryMaxLevels(20)).toBe(10)
+  })
+  it("can recover slots 1-5", () => {
+    expect(canNaturalRecoverSlot(1)).toBe(true)
+    expect(canNaturalRecoverSlot(5)).toBe(true)
+  })
+  it("cannot recover slots 6+", () => {
+    expect(canNaturalRecoverSlot(6)).toBe(false)
+  })
+  it("validates valid selection", () => {
+    expect(validateNaturalRecovery(6, [1, 2])).toBe(true)
+    expect(validateNaturalRecovery(6, [3])).toBe(true)
+  })
+  it("rejects over-budget", () => {
+    expect(validateNaturalRecovery(6, [2, 2])).toBe(false) // 4 > 3
+  })
+  it("rejects 6th+ slots", () => {
+    expect(validateNaturalRecovery(20, [6])).toBe(false)
+  })
+})
+
+describe("Nature's Ward", () => {
+  it("available at L10+", () => {
+    expect(hasNaturesWard(10)).toBe(true)
+  })
+  it("not available below L10", () => {
+    expect(hasNaturesWard(9)).toBe(false)
+  })
+  it("resistance by land type", () => {
+    expect(naturesWardResistance("arid")).toBe("fire")
+    expect(naturesWardResistance("polar")).toBe("cold")
+    expect(naturesWardResistance("temperate")).toBe("lightning")
+    expect(naturesWardResistance("tropical")).toBe("poison")
+  })
+})
+
+describe("Nature's Sanctuary", () => {
+  it("available at L14+", () => {
+    expect(hasNaturesSanctuary(14)).toBe(true)
+  })
+  it("not available below L14", () => {
+    expect(hasNaturesSanctuary(13)).toBe(false)
   })
 })

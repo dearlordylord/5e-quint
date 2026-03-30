@@ -453,7 +453,7 @@ Disciple of Life (L3: when a spell you cast with a spell slot restores HP, that 
 
 ```
 [T100] Wild Shape Framework (P1) -> deps: [T01]  ✓ done
-[T101] Circle of the Land (P3) -> deps: [T01]
+[T101] Circle of the Land (P3) -> deps: [T01]  ✓ done
 ```
 
 **[T100] Wild Shape Framework** *(done)*

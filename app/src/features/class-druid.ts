@@ -404,3 +404,88 @@ export function archdruidNatureMagician(
     spellSlotLevel: usesToConvert * 2
   }
 }
+
+// =============================================================================
+// Circle of the Land Subclass (SRD 5.2.1)
+//
+// The only Druid subclass in the SRD 5.2.1.
+// TS-only: all features are caller-managed resource tracking, multi-creature
+// effects (Land's Aid AoE), or config-based (land type spells).
+// =============================================================================
+
+export const LAND_TYPES = ["arid", "polar", "temperate", "tropical"] as const
+export type LandType = (typeof LAND_TYPES)[number]
+
+const LANDS_AID_BASE_DICE = 2
+const LANDS_AID_L10_DICE = 3
+const LANDS_AID_L14_DICE = 4
+const NATURAL_RECOVERY_MAX_SLOT = 5
+
+// --- Land's Aid (L3) ---
+
+/**
+ * SRD: "As a Magic action, you can expend a use of your Wild Shape... 2d6
+ * Necrotic damage on a failed save or half on success. One creature of your
+ * choice in that area regains 2d6 Hit Points."
+ * Scales: 3d6 at L10, 4d6 at L14.
+ */
+export function landsAidDice(druidLevel: number): number {
+  if (druidLevel < 3) return 0
+  if (druidLevel < 10) return LANDS_AID_BASE_DICE
+  if (druidLevel < 14) return LANDS_AID_L10_DICE
+  return LANDS_AID_L14_DICE
+}
+
+// --- Natural Recovery (L6) ---
+
+/**
+ * SRD: "you can choose expended spell slots to recover. The spell slots can
+ * have a combined level that is equal to or less than half your Druid level
+ * (round up), and none of them can be level 6+."
+ */
+export function naturalRecoveryMaxLevels(druidLevel: number): number {
+  if (druidLevel < 6) return 0
+  return Math.ceil(druidLevel / 2)
+}
+
+export function canNaturalRecoverSlot(slotLevel: number): boolean {
+  return slotLevel >= 1 && slotLevel <= NATURAL_RECOVERY_MAX_SLOT
+}
+
+export function validateNaturalRecovery(druidLevel: number, slotLevels: ReadonlyArray<number>): boolean {
+  const total = slotLevels.reduce((sum, l) => sum + l, 0)
+  if (total > naturalRecoveryMaxLevels(druidLevel)) return false
+  return slotLevels.every(canNaturalRecoverSlot)
+}
+
+// --- Nature's Ward (L10) ---
+
+const NATURES_WARD_RESISTANCE: Readonly<Record<LandType, DamageType>> = {
+  arid: "fire",
+  polar: "cold",
+  temperate: "lightning",
+  tropical: "poison"
+}
+
+/**
+ * SRD: "You are immune to the Poisoned condition, and you have Resistance
+ * to a damage type associated with your current land choice."
+ */
+export function hasNaturesWard(druidLevel: number): boolean {
+  return druidLevel >= 10
+}
+
+export function naturesWardResistance(landType: LandType): DamageType {
+  return NATURES_WARD_RESISTANCE[landType]
+}
+
+// --- Nature's Sanctuary (L14) ---
+
+/**
+ * SRD: "As a Magic action, you can expend a use of your Wild Shape and cause
+ * spectral trees and vines to appear in a 15-foot Cube... Half Cover + Ward
+ * resistance to allies."
+ */
+export function hasNaturesSanctuary(druidLevel: number): boolean {
+  return druidLevel >= 14
+}
