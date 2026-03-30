@@ -480,8 +480,9 @@ export {
   superiorInspirationRestore
 } from "#/features/feature-bridge-bard.ts"
 
-// --- Cleric / Wizard / Warlock / Druid (re-exported via sub-bridges — not inlined due to max-lines) ---
+// --- Cleric / Wizard / Warlock / Druid / Species (re-exported via sub-bridges) ---
 export * from "#/features/feature-bridge-cleric.ts"
 export * from "#/features/feature-bridge-druid.ts"
+export * from "#/features/feature-bridge-species.ts"
 export * from "#/features/feature-bridge-warlock.ts"
 export * from "#/features/feature-bridge-wizard.ts"

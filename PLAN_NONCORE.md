@@ -586,8 +586,8 @@ SRD 5.2.1 rename: Evocation subclass → Evoker. Sculpt Spells (L6): choose up t
 ## Species Traits
 
 ```
-[T140] Combat Species Traits (P2) -> deps: [T01]
-[T141] Species Save/Resistance Modifiers (P2) -> deps: [T01]
+[T140] Combat Species Traits (P2) -> deps: [T01]  ✓ done
+[T141] Species Save/Resistance Modifiers (P2) -> deps: [T01]  ✓ done
 ```
 
 SRD 5.2.1 structural changes: `race`/`subrace` → `species` (no subraces). Elf uses lineage options (Drow, High Elf, Wood Elf — not subraces in config sense). Ability score increases come from Background. **Removed species:** Half-Orc, Half-Elf. **New species:** Orc, Goliath. Subraces eliminated.

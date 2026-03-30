@@ -1,0 +1,29 @@
+// Species traits bridge — query-only re-exports
+
+export {
+  breathWeaponDice,
+  breathWeaponSaveDC,
+  canOrcRelentlessEndurance,
+  type DragonbornAncestryType,
+  dragonbornDamageResistance,
+  dwarvenResilianceDamageType,
+  dwarvenToughnessHpBonus,
+  feyAncestryAdvantageVsCharmed,
+  firesBurnDieSize,
+  frostChillDieSize,
+  type GiantAncestry,
+  gnomishCunningAdvantage,
+  goliathGiantAncestryMaxUses,
+  halflingBraveAdvantageVsFrightened,
+  halflingLuckyReroll,
+  hasDraconicFlight,
+  hasHeavyWeaponDisadvantage,
+  hasLargeForm,
+  hillsTumblePushDistance,
+  largeFormSpeedBonus,
+  orcAdrenalineRushMaxUses,
+  orcAdrenalineRushTempHp,
+  stonesEnduranceReduction,
+  stormsThunderDieSize,
+  type TieflingLegacy
+} from "#/features/species-traits.ts"
