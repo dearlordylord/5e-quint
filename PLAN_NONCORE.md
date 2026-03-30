@@ -381,41 +381,30 @@ TS-only pure functions in `class-paladin.ts`. ~~Turn the Unholy~~ not in SRD 5.2
 ## Ranger
 
 ```
-[T70] Ranger Features (P2) -> deps: [T01, T05]
-[T71] Hunter (P2) -> deps: [T01, T03, T04]
+[T70] Ranger Features (P2) -> deps: [T01, T05]  ✓ done
+[T71] Hunter (P2) -> deps: [T01, T03, T04]  ✓ done
 ```
 
-**[T70] Ranger Features**
-SRD 5.2.1: Favored Enemy and Natural Explorer replaced entirely. New base features:
-- Deft Explorer (L1): Expertise in one skill + Know one extra language; at L6 Roving (+5ft speed, climb/swim speed = walk speed); at L10 Tireless (1d8+WIS temp HP as action, uses = WIS mod/LR; reduce exhaustion 1 level on short rest)
-- Fighting Style feat (L2, [T05])
-- Nature's Veil (L14: Invisible as BA until start of your next turn, uses=WIS mod/LR)
-- Relentless Hunter (L13): taking damage can't break your Concentration on Hunter's Mark
-- Precise Hunter (L17): Advantage on attack rolls against the creature currently marked by your Hunter's Mark
-- Feral Senses (L18): Blindsight with a range of 30 feet
-- Foe Slayer (L20, revised: +WIS mod to attack or damage vs any creature, 1/turn — no longer restricted to Favored Enemy)
-- ~~Hide in Plain Sight~~ (deleted in 5.2.1, replaced by Tireless at L10)
-- ~~Vanish~~ (deleted in 5.2.1, replaced by Nature's Veil at L14)
-- State: `natureVeilCharges: int`, `tiredlessCharges: int`, `roving: bool` (derived from level)
-- Functions: `pDeftExplorer(config)->expertise + language`; `pRoving(state, config)->+5ft speed + climb/swim speeds`; `pTireless(state, config, dieRoll)->grant temp HP, consume charge`; `pNaturesVeil(state, turnState)->grant Invisible until start of next turn, consume charge`; `pFoeSlayer(config, wisMod)->+WIS to attack or damage, 1/turn`; `pRelentlessHunter->concentration on Hunter's Mark unbreakable by damage`; modify `pGetOwnAttackModifiers` for Precise Hunter (advantage vs marked target); Feral Senses = Blindsight 30ft (config flag)
-- Test: Deft Explorer expertise; Roving grants climb/swim speeds; Tireless temp HP = 1d8+WIS, resets on LR; Nature's Veil Invisible 1/turn, uses = WIS mod; Foe Slayer adds WIS mod 1/turn; Relentless Hunter blocks conc break from damage on Hunter's Mark; Precise Hunter advantage vs marked creature; Feral Senses = Blindsight 30ft
+**[T70] Ranger Features** *(done)*
+TS-only pure functions in `class-ranger.ts`. SRD 5.2.1 corrections applied (plan had stale 5.1 text):
+- Favored Enemy (L1): Hunter's Mark free casts 2/3/4/5/6 by level
+- Deft Explorer (L2): Expertise + languages (config)
+- Roving (L6): +10ft speed (not +5ft per old plan), Climb + Swim = walk speed
+- Expertise (L9): 2 more skills (config)
+- Tireless (L10): 1d8+WIS (min 1) temp HP, WIS mod charges/LR, short rest -1 exhaustion
+- Relentless Hunter (L13): damage can't break Hunter's Mark concentration
+- Nature's Veil (L14): BA → Invisible until end of next turn (not "start" per old plan), WIS mod charges/LR
+- Precise Hunter (L17): Advantage vs marked target
+- Feral Senses (L18): Blindsight 30ft
+- Foe Slayer (L20): Hunter's Mark die d10 instead of d6 (not +WIS per old plan — that was 5.1)
 
-**[T71] Hunter**
-SRD 5.2.1: tier structure revised — fewer choices per tier, some tiers replaced by base features.
-
-- Hunter's Lore (L3, base): while a creature is marked by your Hunter's Mark, you know whether it has any Immunities, Resistances, or Vulnerabilities, and if so, what they are. Passive ability, no action required.
-
-3rd — Hunter's Prey (choose ONE): Colossus Slayer (+1d8 if target < max HP, 1/turn), Horde Breaker (extra attack on different creature within 5ft of original target). ~~Giant Killer~~ not in SRD 5.2.1.
-
-7th — Defensive Tactics (choose ONE): Escape the Horde (OAs against you have disadvantage), Multiattack Defense (+4 AC after creature hits you vs subsequent attacks from same creature). ~~Steel Will~~ not in SRD 5.2.1.
-
-11th — Superior Hunter's Prey (base feature, not a choice): once per turn when you deal damage to a creature marked by Hunter's Mark, you can also deal that spell's extra damage to a different creature you can see within 30 ft of the first creature.
-
-15th — Superior Hunter's Defense (base feature, not a choice): when you take damage, you can take a Reaction to give yourself Resistance to that damage and any other damage of the same type until the end of the current turn.
-
-- State: `hunterPrey: HunterPreyChoice`, `defensiveTactic: DefensiveTacticChoice` — enums in config (L11 and L15 are base features, no choices)
-- Functions: `pColossusSlayer(targetBelowMax)->+1d8`; `pHordeBreaker(turnState)->grant one extra attack`; `pMultiattackDefense(alreadyHitBySameCreature)->+4 AC`; modify OA for Escape the Horde; `pSuperiorHuntersPrey(state)->spread Hunter's Mark damage to second target within 30ft, 1/turn`; `pSuperiorHuntersDefense(state)->Reaction, Resistance to damage type until end of turn`
-- Test: Colossus Slayer only when target < max HP, 1/turn; Multiattack Defense +4 AC after first hit from same creature; Superior Hunter's Prey spreads damage 1/turn; Superior Hunter's Defense consumes Reaction
+**[T71] Hunter** *(done)*
+TS-only pure functions in `class-ranger.ts`. SRD 5.2.1 correction: Multiattack Defense grants Disadvantage on subsequent attacks (not +4 AC per old plan — that was 5.1).
+- Hunter's Lore (L3): know marked target's R/V/I (passive)
+- Hunter's Prey (L3, choose 1, swappable on rest): Colossus Slayer (+1d8 if target < max HP) or Horde Breaker (extra attack vs different creature within 5ft)
+- Defensive Tactics (L7, choose 1, swappable on rest): Escape the Horde (OA disadvantage) or Multiattack Defense (subsequent attacks have disadvantage)
+- Superior Hunter's Prey (L11): spread Hunter's Mark damage to creature within 30ft, 1/turn
+- Superior Hunter's Defense (L15): Reaction → Resistance to damage type until end of turn
 
 ---
 

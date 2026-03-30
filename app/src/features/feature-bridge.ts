@@ -432,3 +432,32 @@ export {
   WEAPON_MASTERY_MAP,
   type WeaponMasteryProperty
 } from "#/features/weapon-mastery.ts"
+
+// --- Ranger ---
+export {
+  canColossusSlayer,
+  canHordeBreaker,
+  canUseNaturesVeil,
+  canUseSuperiorHuntersDefense,
+  canUseTireless,
+  colossusSlayerDieSize,
+  type DefensiveTacticChoice,
+  favoredEnemyFreeUses,
+  foeSlayerHuntersMarkDie,
+  hasDeftExplorer,
+  hasEscapeTheHorde,
+  hasFeralSenses,
+  hasHuntersLore,
+  hasMultiattackDefense,
+  hasPreciseHunter,
+  hasRangerExpertise,
+  hasRelentlessHunter,
+  hasSuperiorHuntersPrey,
+  type HunterPreyChoice,
+  naturesVeilMaxCharges,
+  rovingClimbSpeed,
+  rovingSpeedBonus,
+  rovingSwimSpeed,
+  tirelessMaxCharges,
+  tirelessTempHp
+} from "#/features/feature-bridge-ranger.ts"

@@ -1,0 +1,29 @@
+// Ranger feature bridge — query-only re-exports (no BridgeResult, no state mutations)
+
+export {
+  canColossusSlayer,
+  canHordeBreaker,
+  canUseNaturesVeil,
+  canUseSuperiorHuntersDefense,
+  canUseTireless,
+  colossusSlayerDieSize,
+  type DefensiveTacticChoice,
+  favoredEnemyFreeUses,
+  foeSlayerHuntersMarkDie,
+  hasDeftExplorer,
+  hasEscapeTheHorde,
+  hasFeralSenses,
+  hasHuntersLore,
+  hasMultiattackDefense,
+  hasPreciseHunter,
+  hasRangerExpertise,
+  hasRelentlessHunter,
+  hasSuperiorHuntersPrey,
+  type HunterPreyChoice,
+  naturesVeilMaxCharges,
+  rovingClimbSpeed,
+  rovingSpeedBonus,
+  rovingSwimSpeed,
+  tirelessMaxCharges,
+  tirelessTempHp
+} from "#/features/class-ranger.ts"
