@@ -4,14 +4,21 @@ import {
   canConvertPointsToSlot,
   canConvertSlotToPoints,
   canStackMetamagic,
+  canUseDragonWings,
   canUseInnateSorcery,
   canUseSorcerousRestoration,
   carefulSpellMaxCreatures,
   convertPointsToSlot,
   convertSlotToPoints,
   distantSpellRange,
+  draconicResilienceAC,
+  draconicResilienceHpBonus,
+  dragonWingsFlySpeed,
+  elementalAffinityDamageBonus,
   empoweredSpellMaxRerolls,
   extendedSpellDurationMinutes,
+  hasDragonCompanion,
+  hasElementalAffinity,
   metamagicCost,
   metamagicOptionsKnown,
   slotCreationCost,
@@ -432,5 +439,73 @@ describe("metamagicCost", () => {
     expect(metamagicCost("subtle")).toBe(1)
     expect(metamagicCost("transmuted")).toBe(1)
     expect(metamagicCost("twinned")).toBe(1)
+  })
+})
+
+// =============================================================================
+// Draconic Sorcery
+// =============================================================================
+
+describe("Draconic Resilience", () => {
+  it("AC = 10 + DEX + CHA", () => {
+    expect(draconicResilienceAC(3, 2)).toBe(15)
+    expect(draconicResilienceAC(5, 4)).toBe(19)
+    expect(draconicResilienceAC(0, 0)).toBe(10)
+    expect(draconicResilienceAC(-1, 3)).toBe(12)
+  })
+  it("HP bonus = sorcerer level at L3+", () => {
+    expect(draconicResilienceHpBonus(3)).toBe(3)
+    expect(draconicResilienceHpBonus(10)).toBe(10)
+    expect(draconicResilienceHpBonus(20)).toBe(20)
+  })
+  it("no HP bonus below L3", () => {
+    expect(draconicResilienceHpBonus(2)).toBe(0)
+    expect(draconicResilienceHpBonus(0)).toBe(0)
+  })
+})
+
+describe("Elemental Affinity", () => {
+  it("available at L6+", () => {
+    expect(hasElementalAffinity(6)).toBe(true)
+  })
+  it("not available below L6", () => {
+    expect(hasElementalAffinity(5)).toBe(false)
+  })
+  it("+CHA damage bonus at L6+", () => {
+    expect(elementalAffinityDamageBonus(6, 4)).toBe(4)
+    expect(elementalAffinityDamageBonus(20, 5)).toBe(5)
+  })
+  it("0 damage bonus below L6", () => {
+    expect(elementalAffinityDamageBonus(5, 4)).toBe(0)
+  })
+  it("negative CHA passes through", () => {
+    expect(elementalAffinityDamageBonus(6, -1)).toBe(-1)
+  })
+})
+
+describe("Dragon Wings", () => {
+  it("can use at L14+ if not used", () => {
+    expect(canUseDragonWings(14, false, 0)).toBe(true)
+  })
+  it("can use if used but has 3+ SP", () => {
+    expect(canUseDragonWings(14, true, 3)).toBe(true)
+  })
+  it("can't use if used and < 3 SP", () => {
+    expect(canUseDragonWings(14, true, 2)).toBe(false)
+  })
+  it("can't use below L14", () => {
+    expect(canUseDragonWings(13, false, 10)).toBe(false)
+  })
+  it("fly speed is 60", () => {
+    expect(dragonWingsFlySpeed()).toBe(60)
+  })
+})
+
+describe("Dragon Companion", () => {
+  it("available at L18+", () => {
+    expect(hasDragonCompanion(18)).toBe(true)
+  })
+  it("not available below L18", () => {
+    expect(hasDragonCompanion(17)).toBe(false)
   })
 })

@@ -483,8 +483,8 @@ Land's Aid (L3): Magic action, expend Wild Shape use, choose point within 60 ft.
 ```
 [T110] Sorcery Points + Flexible Casting (P1) -> deps: [T01]  ✓ done
 [T111] Metamagic (P1) -> deps: [T110]  ✓ done
-[T112] Draconic Sorcery (P2) -> deps: [T01]
-[T112b] Dragon Companion (P3) -> deps: [T112]
+[T112] Draconic Sorcery (P2) -> deps: [T01]  ✓ done
+[T112b] Dragon Companion (P3) -> deps: [T112]  ✓ done
 ```
 
 **[T110] Sorcery Points + Flexible Casting** *(done)*

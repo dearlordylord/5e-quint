@@ -344,3 +344,86 @@ export function metamagicCost(option: MetamagicOption): number {
       return 1
   }
 }
+
+// =============================================================================
+// Draconic Sorcery Subclass (SRD 5.2.1)
+//
+// The only Sorcerer subclass in the SRD 5.2.1.
+// TS-only: AC formula is caller-applied config, HP bonus is derived from level,
+// resistance/damage bonus are query functions.
+// =============================================================================
+
+export const DRACONIC_ANCESTRY_TYPES = ["acid", "cold", "fire", "lightning", "poison"] as const
+export type DraconicAncestryType = (typeof DRACONIC_ANCESTRY_TYPES)[number]
+
+const DRACONIC_SUBCLASS_LEVEL = 3
+const ELEMENTAL_AFFINITY_LEVEL = 6
+const DRAGON_WINGS_LEVEL = 14
+const DRAGON_WINGS_FLY_SPEED = 60
+const DRAGON_WINGS_SP_COST = 3
+const DRAGON_COMPANION_LEVEL = 18
+const DRACONIC_AC_BASE = 10
+
+// --- Draconic Resilience (L3) ---
+
+/**
+ * SRD: "While you aren't wearing armor, your base Armor Class equals
+ * 10 plus your Dexterity and Charisma modifiers."
+ */
+export function draconicResilienceAC(dexMod: number, chaMod: number): number {
+  return DRACONIC_AC_BASE + dexMod + chaMod
+}
+
+/**
+ * SRD: "Your Hit Point maximum increases by 3, and it increases by 1
+ * whenever you gain another Sorcerer level."
+ * Total bonus = sorcerer level (3 at L3, then +1 per level after).
+ */
+export function draconicResilienceHpBonus(sorcererLevel: number): number {
+  return sorcererLevel >= DRACONIC_SUBCLASS_LEVEL ? sorcererLevel : 0
+}
+
+// --- Elemental Affinity (L6) ---
+
+/**
+ * SRD: "You have Resistance to [chosen] damage type, and when you cast a spell
+ * that deals damage of that type, you can add your Charisma modifier to one
+ * damage roll of that spell."
+ */
+export function hasElementalAffinity(sorcererLevel: number): boolean {
+  return sorcererLevel >= ELEMENTAL_AFFINITY_LEVEL
+}
+
+export function elementalAffinityDamageBonus(sorcererLevel: number, chaMod: number): number {
+  return sorcererLevel >= ELEMENTAL_AFFINITY_LEVEL ? chaMod : 0
+}
+
+// --- Dragon Wings (L14) ---
+
+/**
+ * SRD: "As a Bonus Action, you can cause draconic wings to appear...
+ * Fly Speed of 60 feet. 1/LR or spend 3 SP to restore."
+ */
+export function canUseDragonWings(sorcererLevel: number, dragonWingsUsed: boolean, sorceryPoints: number): boolean {
+  if (sorcererLevel < DRAGON_WINGS_LEVEL) return false
+  return !dragonWingsUsed || sorceryPoints >= DRAGON_WINGS_SP_COST
+}
+
+export function dragonWingsFlySpeed(): number {
+  return DRAGON_WINGS_FLY_SPEED
+}
+
+export function dragonWingsSpCost(): number {
+  return DRAGON_WINGS_SP_COST
+}
+
+// --- Dragon Companion (L18) ---
+
+/**
+ * SRD: "You can cast Summon Dragon without a Material component. You can also
+ * cast it once without a spell slot... When you start casting, you can modify
+ * it so that it doesn't require Concentration (duration becomes 1 minute)."
+ */
+export function hasDragonCompanion(sorcererLevel: number): boolean {
+  return sorcererLevel >= DRAGON_COMPANION_LEVEL
+}
