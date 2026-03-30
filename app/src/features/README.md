@@ -19,7 +19,8 @@ Features depend on core, never the reverse.
 
 - `class-<name>.ts` / `.test.ts`: class implementations (Barbarian, Cleric, Druid, Fighter, Monk, Paladin, Rogue, Sorcerer)
 - `feats.ts`: feat implementations (Grappler, etc.)
-- `spell-conditions.ts`, `spell-damage.ts`, `spell-defense.ts`: spell effect patterns
+- `spell-patterns.ts`: shared spell types and damage pattern functions
+- `spell-abjuration.ts` through `spell-divination.ts`: spells organized by SRD 5.2.1 school
 - `weapon-mastery.ts`: all 8 mastery effects
 - `feature-bridge-*.ts` / `feature-store-*.ts`: wiring layer between pure functions and the XState machine
 - `useFeatures.ts`, `useFighterExtras.ts`, etc.: React hooks
