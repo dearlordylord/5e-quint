@@ -1,4 +1,4 @@
-// Sorcerer class features: Innate Sorcery, Font of Magic (Sorcery Points), Flexible Casting
+// Sorcerer class features: Innate Sorcery, Font of Magic (Sorcery Points), Flexible Casting, Metamagic
 // SRD 5.2.1 Sorcerer
 
 import type { SpellSlots } from "#/types.ts"
@@ -222,5 +222,125 @@ export function sorcerousRestoration(state: SorcerousRestorationState): Sorcerou
   return {
     sorceryPoints: newPoints,
     sorcerousRestorationUsed: true
+  }
+}
+
+// =============================================================================
+// Metamagic (Level 2+)
+//
+// SRD: "You can use only one Metamagic option on a spell when you cast it,
+// unless otherwise noted." Empowered Spell and Seeking Spell can stack
+// with another option.
+// =============================================================================
+
+export const METAMAGIC_OPTIONS = [
+  "careful",
+  "distant",
+  "empowered",
+  "extended",
+  "heightened",
+  "quickened",
+  "seeking",
+  "subtle",
+  "transmuted",
+  "twinned"
+] as const
+
+export type MetamagicOption = (typeof METAMAGIC_OPTIONS)[number]
+
+export const TRANSMUTABLE_DAMAGE_TYPES = ["acid", "cold", "fire", "lightning", "poison", "thunder"] as const
+
+export type TransmutableDamageType = (typeof TRANSMUTABLE_DAMAGE_TYPES)[number]
+
+/** Number of Metamagic options known at given level. */
+export function metamagicOptionsKnown(sorcererLevel: number): number {
+  if (sorcererLevel < 2) return 0
+  if (sorcererLevel < 10) return 2
+  if (sorcererLevel < 17) return 4
+  return 6
+}
+
+/** Whether a Metamagic option can be stacked with another on the same spell. */
+export function canStackMetamagic(option: MetamagicOption): boolean {
+  return option === "empowered" || option === "seeking"
+}
+
+// --- Individual Metamagic Options ---
+
+/** Careful Spell (1 SP): chosen creatures auto-succeed save, take no damage on success. */
+export function carefulSpellMaxCreatures(chaMod: number): number {
+  return Math.max(1, chaMod)
+}
+
+export function carefulSpellCost(): number {
+  return 1
+}
+
+/** Distant Spell (1 SP): double range if 5ft+, or Touch → 30ft. */
+export function distantSpellRange(baseRange: number): number {
+  if (baseRange === 0) return 30 // Touch → 30ft
+  return baseRange * 2
+}
+
+export function distantSpellCost(): number {
+  return 1
+}
+
+/** Empowered Spell (1 SP): reroll up to CHA mod damage dice (min 1). Can stack. */
+export function empoweredSpellMaxRerolls(chaMod: number): number {
+  return Math.max(1, chaMod)
+}
+
+export function empoweredSpellCost(): number {
+  return 1
+}
+
+/** Extended Spell (1 SP): double duration (max 24 hours). Advantage on conc saves. */
+export function extendedSpellDurationMinutes(baseDurationMinutes: number): number {
+  return Math.min(baseDurationMinutes * 2, 24 * 60)
+}
+
+export function extendedSpellCost(): number {
+  return 1
+}
+
+/** Heightened Spell (2 SP): one target has Disadvantage on saves vs the spell. */
+export function heightenedSpellCost(): number {
+  return 2
+}
+
+/** Quickened Spell (2 SP): action → bonus action casting time. */
+export function quickenedSpellCost(): number {
+  return 2
+}
+
+/** Seeking Spell (1 SP): reroll missed spell attack roll. Can stack. */
+export function seekingSpellCost(): number {
+  return 1
+}
+
+/** Subtle Spell (1 SP): cast without V/S/non-costly-M components. */
+export function subtleSpellCost(): number {
+  return 1
+}
+
+/** Transmuted Spell (1 SP): change damage type to one of 6 types. */
+export function transmutedSpellCost(): number {
+  return 1
+}
+
+/** Twinned Spell (1 SP): increase effective spell level by 1 (for multi-target spells). */
+export function twinnedSpellCost(): number {
+  return 1
+}
+
+/** SP cost for a given Metamagic option. */
+export function metamagicCost(option: MetamagicOption): number {
+  switch (option) {
+    case "heightened":
+    case "quickened":
+      return 2
+    default:
+      return 1
   }
 }

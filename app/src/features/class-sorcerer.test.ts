@@ -3,10 +3,17 @@ import { describe, expect, it } from "vitest"
 import {
   canConvertPointsToSlot,
   canConvertSlotToPoints,
+  canStackMetamagic,
   canUseInnateSorcery,
   canUseSorcerousRestoration,
+  carefulSpellMaxCreatures,
   convertPointsToSlot,
   convertSlotToPoints,
+  distantSpellRange,
+  empoweredSpellMaxRerolls,
+  extendedSpellDurationMinutes,
+  metamagicCost,
+  metamagicOptionsKnown,
   slotCreationCost,
   sorcererLongRest,
   sorcerousRestoration,
@@ -336,5 +343,94 @@ describe("sorcerousRestoration", () => {
       sorcerousRestorationUsed: false
     })
     expect(result.sorceryPoints).toBe(10) // floor(20/2) = 10
+  })
+})
+
+// =============================================================================
+// Metamagic
+// =============================================================================
+
+describe("metamagicOptionsKnown", () => {
+  it("0 below L2", () => {
+    expect(metamagicOptionsKnown(1)).toBe(0)
+  })
+  it("2 at L2-9", () => {
+    expect(metamagicOptionsKnown(2)).toBe(2)
+    expect(metamagicOptionsKnown(9)).toBe(2)
+  })
+  it("4 at L10-16", () => {
+    expect(metamagicOptionsKnown(10)).toBe(4)
+    expect(metamagicOptionsKnown(16)).toBe(4)
+  })
+  it("6 at L17+", () => {
+    expect(metamagicOptionsKnown(17)).toBe(6)
+    expect(metamagicOptionsKnown(20)).toBe(6)
+  })
+})
+
+describe("canStackMetamagic", () => {
+  it("empowered and seeking can stack", () => {
+    expect(canStackMetamagic("empowered")).toBe(true)
+    expect(canStackMetamagic("seeking")).toBe(true)
+  })
+  it("others cannot stack", () => {
+    expect(canStackMetamagic("quickened")).toBe(false)
+    expect(canStackMetamagic("heightened")).toBe(false)
+    expect(canStackMetamagic("subtle")).toBe(false)
+    expect(canStackMetamagic("careful")).toBe(false)
+  })
+})
+
+describe("Careful Spell", () => {
+  it("max creatures = CHA mod (min 1)", () => {
+    expect(carefulSpellMaxCreatures(3)).toBe(3)
+    expect(carefulSpellMaxCreatures(0)).toBe(1)
+    expect(carefulSpellMaxCreatures(-1)).toBe(1)
+  })
+})
+
+describe("Distant Spell", () => {
+  it("doubles range if 5ft+", () => {
+    expect(distantSpellRange(30)).toBe(60)
+    expect(distantSpellRange(120)).toBe(240)
+    expect(distantSpellRange(5)).toBe(10)
+  })
+  it("Touch (0) becomes 30ft", () => {
+    expect(distantSpellRange(0)).toBe(30)
+  })
+})
+
+describe("Empowered Spell", () => {
+  it("max rerolls = CHA mod (min 1)", () => {
+    expect(empoweredSpellMaxRerolls(4)).toBe(4)
+    expect(empoweredSpellMaxRerolls(0)).toBe(1)
+  })
+})
+
+describe("Extended Spell", () => {
+  it("doubles duration", () => {
+    expect(extendedSpellDurationMinutes(10)).toBe(20)
+    expect(extendedSpellDurationMinutes(60)).toBe(120)
+  })
+  it("caps at 24 hours (1440 minutes)", () => {
+    expect(extendedSpellDurationMinutes(800)).toBe(1440)
+    expect(extendedSpellDurationMinutes(1440)).toBe(1440)
+  })
+})
+
+describe("metamagicCost", () => {
+  it("heightened and quickened cost 2 SP", () => {
+    expect(metamagicCost("heightened")).toBe(2)
+    expect(metamagicCost("quickened")).toBe(2)
+  })
+  it("all others cost 1 SP", () => {
+    expect(metamagicCost("careful")).toBe(1)
+    expect(metamagicCost("distant")).toBe(1)
+    expect(metamagicCost("empowered")).toBe(1)
+    expect(metamagicCost("extended")).toBe(1)
+    expect(metamagicCost("seeking")).toBe(1)
+    expect(metamagicCost("subtle")).toBe(1)
+    expect(metamagicCost("transmuted")).toBe(1)
+    expect(metamagicCost("twinned")).toBe(1)
   })
 })
