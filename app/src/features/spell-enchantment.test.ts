@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  banePenaltyDie,
   baneTargets,
-  blessBonusDie,
+  BLESS_BANE_DIE,
   blessTargets,
   CONFUSION_INFO,
   confusionBehavior,
   confusionRadius,
   heroismTargets,
   heroismTempHp,
-  hexDamage,
+  HEX_DAMAGE,
   hexDuration,
   HOLD_MONSTER_INFO,
   HOLD_PERSON_INFO,
@@ -20,9 +19,9 @@ import {
   holdPersonTargets,
   irresistibleDanceResult,
   POWER_WORD_HEAL_REMOVED_CONDITIONS,
-  powerWordKillOverflowDamage,
-  powerWordKillThreshold,
-  powerWordStunThreshold,
+  POWER_WORD_KILL_OVERFLOW,
+  POWER_WORD_KILL_THRESHOLD,
+  POWER_WORD_STUN_THRESHOLD,
   SLEEP_INFO,
   sleepMaxTargets,
   sleepResult,
@@ -197,8 +196,8 @@ describe("Bless", () => {
     expect(blessTargets(5)).toBe(7)
   })
 
-  it("bonus die is d4", () => {
-    expect(blessBonusDie()).toBe(4)
+  it("bonus/penalty die is d4", () => {
+    expect(BLESS_BANE_DIE).toBe(4)
   })
 })
 
@@ -212,8 +211,8 @@ describe("Bane", () => {
     expect(baneTargets(5)).toBe(7)
   })
 
-  it("penalty die is d4", () => {
-    expect(banePenaltyDie()).toBe(4)
+  it("uses same die as Bless", () => {
+    expect(BLESS_BANE_DIE).toBe(4)
   })
 })
 
@@ -235,7 +234,7 @@ describe("Heroism", () => {
 
 describe("Hex", () => {
   it("deals 1d6 necrotic per hit", () => {
-    expect(hexDamage()).toEqual({ dice: 1, dieSize: 6 })
+    expect(HEX_DAMAGE).toEqual({ dice: 1, dieSize: 6 })
   })
 
   it("duration scales with slot level", () => {
@@ -249,17 +248,17 @@ describe("Hex", () => {
 
 describe("Power Word Kill", () => {
   it("threshold is 100 HP", () => {
-    expect(powerWordKillThreshold()).toBe(100)
+    expect(POWER_WORD_KILL_THRESHOLD).toBe(100)
   })
 
   it("overflow damage is 12d12", () => {
-    expect(powerWordKillOverflowDamage()).toEqual({ dice: 12, dieSize: 12 })
+    expect(POWER_WORD_KILL_OVERFLOW).toEqual({ dice: 12, dieSize: 12 })
   })
 })
 
 describe("Power Word Stun", () => {
   it("threshold is 150 HP", () => {
-    expect(powerWordStunThreshold()).toBe(150)
+    expect(POWER_WORD_STUN_THRESHOLD).toBe(150)
   })
 })
 

@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { foresightActive, mindSpikeDamage } from "#/features/spell-divination.ts"
+import { FORESIGHT_EFFECT, mindSpikeDamage } from "#/features/spell-divination.ts"
 
 describe("Foresight", () => {
   it("grants advantage on all tests and disadvantage on attacks against", () => {
-    const effect = foresightActive()
-    expect(effect.advantageOnAllTests).toBe(true)
-    expect(effect.attackDisadvantage).toBe(true)
+    expect(FORESIGHT_EFFECT.advantageOnAllTests).toBe(true)
+    expect(FORESIGHT_EFFECT.attackDisadvantage).toBe(true)
   })
 })
 

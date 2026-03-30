@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  blurActive,
+  BLUR_EFFECT,
   colorSprayResult,
   FEAR_INFO,
   fearResult,
@@ -114,13 +114,11 @@ describe("Mirror Image", () => {
   })
 })
 
-// =============================================================================
-// New Illusion spells
-// =============================================================================
+// --- New Illusion spells ---
 
 describe("Blur", () => {
   it("grants attack disadvantage against caster", () => {
-    expect(blurActive().attackDisadvantage).toBe(true)
+    expect(BLUR_EFFECT.attackDisadvantage).toBe(true)
   })
 })
 

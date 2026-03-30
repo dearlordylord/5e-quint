@@ -5,7 +5,7 @@
 // spells from the initial implementation. New spells go into school-based files
 // (spell-evocation.ts, spell-abjuration.ts, etc.) importing from here.
 
-import type { Ability, DamageType } from "#/types.ts"
+import type { Ability, Condition, DamageType } from "#/types.ts"
 
 // =============================================================================
 // Types
@@ -30,7 +30,7 @@ export interface ConditionSpellInfo {
   readonly level: number
   readonly concentration: boolean
   readonly saveAbility?: Ability
-  readonly conditionApplied: string
+  readonly conditionApplied: Condition | "special"
   readonly durationDescription: string
 }
 
@@ -47,6 +47,13 @@ export interface DefenseSpellInfo {
 export interface DiceDamage {
   readonly dice: number
   readonly dieSize: number
+}
+
+/** Result of applying a condition spell to a single target. */
+export interface ConditionSpellResult {
+  readonly conditionApplied: Condition | null
+  readonly specialEffect: string | null
+  readonly savePassed: boolean
 }
 
 /** Dice damage with a flat bonus (e.g. Disintegrate). */
@@ -114,5 +121,33 @@ export function cantripDamageDice(characterLevel: number): number {
  * Same scaling as cantrip damage dice.
  */
 export const eldritchBlastBeams: (characterLevel: number) => number = cantripDamageDice
+
+/**
+ * Upcast target scaling: 1 target at base level, +1 per slot level above base.
+ * Used by Hold Person (base 2), Hold Monster (base 5), Blindness/Deafness (base 2), etc.
+ */
+export function upcastTargets(slotLevel: number, baseLevel: number): number {
+  return 1 + Math.max(0, slotLevel - baseLevel)
+}
+
+/**
+ * Generic cantrip damage: scaling dice of the given die size.
+ * Used by Fire Bolt (d10), Sacred Flame (d8), Shocking Grasp (d8), etc.
+ */
+export function cantripDamage(characterLevel: number, dieSize: number): DiceDamage {
+  return { dice: cantripDamageDice(characterLevel), dieSize }
+}
+
+/**
+ * Generic save-or-condition: condition on failed save, null on success.
+ * Used by Hold Person/Monster, Entangle, Web, Color Spray, etc.
+ */
+export function saveOrCondition(savePassed: boolean, condition: Condition): ConditionSpellResult {
+  return {
+    conditionApplied: savePassed ? null : condition,
+    specialEffect: null,
+    savePassed
+  }
+}
 
 /* eslint-enable no-magic-numbers */

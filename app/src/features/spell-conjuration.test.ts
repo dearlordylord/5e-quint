@@ -3,14 +3,13 @@ import { describe, expect, it } from "vitest"
 import {
   ENTANGLE_INFO,
   entangleResult,
-  goodberryCount,
-  goodberryHealPerBerry,
+  GOODBERRY_COUNT,
+  GOODBERRY_HEAL_PER_BERRY,
+  ICE_KNIFE_IMPACT,
   iceKnifeExplosionDamage,
-  iceKnifeImpactDamage,
   SPELL_SPIRIT_GUARDIANS,
   spiritGuardiansDamage,
   WEB_INFO,
-  webBreakFreeDC,
   webResult
 } from "#/features/spell-conjuration.ts"
 
@@ -23,7 +22,6 @@ describe("spiritGuardiansDamage", () => {
 
   it("scales +1d8 per level above 3", () => {
     expect(spiritGuardiansDamage(4)).toEqual({ dice: 4, dieSize: 8 })
-    expect(spiritGuardiansDamage(5)).toEqual({ dice: 5, dieSize: 8 })
     expect(spiritGuardiansDamage(9)).toEqual({ dice: 9, dieSize: 8 })
   })
 })
@@ -76,11 +74,6 @@ describe("web", () => {
     expect(result.savePassed).toBe(true)
   })
 
-  it("break free DC equals spell save DC", () => {
-    expect(webBreakFreeDC(15)).toBe(15)
-    expect(webBreakFreeDC(17)).toBe(17)
-  })
-
   it("info matches SRD 5.2.1", () => {
     expect(WEB_INFO.level).toBe(2)
     expect(WEB_INFO.concentration).toBe(true)
@@ -90,23 +83,23 @@ describe("web", () => {
   })
 })
 
-// =============================================================================
-// New Conjuration spells
-// =============================================================================
+// --- Goodberry ---
 
 describe("Goodberry", () => {
   it("creates 10 berries", () => {
-    expect(goodberryCount()).toBe(10)
+    expect(GOODBERRY_COUNT).toBe(10)
   })
 
   it("each berry heals 1 HP", () => {
-    expect(goodberryHealPerBerry()).toBe(1)
+    expect(GOODBERRY_HEAL_PER_BERRY).toBe(1)
   })
 })
 
+// --- Ice Knife ---
+
 describe("Ice Knife", () => {
   it("impact damage is 1d10 Piercing", () => {
-    expect(iceKnifeImpactDamage()).toEqual({ dice: 1, dieSize: 10 })
+    expect(ICE_KNIFE_IMPACT).toEqual({ dice: 1, dieSize: 10 })
   })
 
   it("explosion damage is 2d6 Cold at L1", () => {

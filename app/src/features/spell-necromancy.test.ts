@@ -1,17 +1,16 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  BESTOW_CURSE_EXTRA_DAMAGE,
   BESTOW_CURSE_OPTIONS,
-  bestowCurseExtraDamage,
   bestowCurseRequiresConcentration,
   chillTouchDamage,
   falseLifeTempHp,
-  raiseDeadD20Penalty,
-  raiseDeadHp,
-  raiseDeadMaxDaysDead,
-  rayOfEnfeeblementDamageReduction,
-  revivifyHp,
-  revivifyMaxMinutesDead,
+  RAISE_DEAD_MAX_DAYS_DEAD,
+  RAY_OF_ENFEEBLEMENT_REDUCTION,
+  RESURRECTION_D20_PENALTY,
+  REVIVE_HP,
+  REVIVIFY_MAX_MINUTES_DEAD,
   spareTheDyingRange,
   SPELL_VAMPIRIC_TOUCH,
   vampiricTouchDamage,
@@ -73,22 +72,22 @@ describe("False Life", () => {
 
 describe("Revivify", () => {
   it("target returns with 1 HP", () => {
-    expect(revivifyHp()).toBe(1)
+    expect(REVIVE_HP).toBe(1)
   })
 
   it("max 1 minute dead", () => {
-    expect(revivifyMaxMinutesDead()).toBe(1)
+    expect(REVIVIFY_MAX_MINUTES_DEAD).toBe(1)
   })
 })
 
 describe("Raise Dead", () => {
   it("target returns with 1 HP and -4 penalty", () => {
-    expect(raiseDeadHp()).toBe(1)
-    expect(raiseDeadD20Penalty()).toBe(-4)
+    expect(REVIVE_HP).toBe(1)
+    expect(RESURRECTION_D20_PENALTY).toBe(-4)
   })
 
   it("max 10 days dead", () => {
-    expect(raiseDeadMaxDaysDead()).toBe(10)
+    expect(RAISE_DEAD_MAX_DAYS_DEAD).toBe(10)
   })
 })
 
@@ -112,7 +111,7 @@ describe("Spare the Dying", () => {
 
 describe("Ray of Enfeeblement", () => {
   it("reduces damage by 1d8", () => {
-    expect(rayOfEnfeeblementDamageReduction()).toEqual({ dice: 1, dieSize: 8 })
+    expect(RAY_OF_ENFEEBLEMENT_REDUCTION).toEqual({ dice: 1, dieSize: 8 })
   })
 })
 
@@ -122,7 +121,7 @@ describe("Bestow Curse", () => {
   })
 
   it("extra damage option is 1d8", () => {
-    expect(bestowCurseExtraDamage()).toEqual({ dice: 1, dieSize: 8 })
+    expect(BESTOW_CURSE_EXTRA_DAMAGE).toEqual({ dice: 1, dieSize: 8 })
   })
 
   it("requires concentration at L3-L4", () => {

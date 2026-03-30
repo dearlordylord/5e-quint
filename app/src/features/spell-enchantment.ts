@@ -1,35 +1,70 @@
 // Enchantment spells — SRD 5.2.1
 // Mind-affecting spells that influence or control creatures.
 
-import type { ConditionSpellInfo, DiceDamage } from "#/features/spell-patterns.ts"
-import { cantripDamageDice } from "#/features/spell-patterns.ts"
+import type { ConditionSpellInfo, ConditionSpellResult, DiceDamage } from "#/features/spell-patterns.ts"
+import { cantripDamage, saveOrCondition, upcastTargets } from "#/features/spell-patterns.ts"
 import type { Condition } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
 
 // --- Types ---
 
-/** Result of applying a condition debuff spell to a single target. */
-export interface ConditionSpellResult {
-  readonly conditionApplied: Condition | null
-  readonly specialEffect: string | null
-  readonly savePassed: boolean
-}
-
-/** Slow-specific result with individual effect fields per SRD 5.2.1. */
-export interface SlowResult {
-  readonly affected: boolean
-  readonly savePassed: boolean
-  readonly speedHalved: boolean
-  readonly acPenalty: number
-  readonly dexSavePenalty: number
-  readonly noReactions: boolean
-  readonly oneAttackOnly: boolean
-  readonly spellFailChance: number
-}
-
 /** Confusion behavior categories from d10 roll (SRD 5.2.1 table). */
 export type ConfusionBehavior = "moveRandom" | "doNothing" | "attackRandom" | "actNormally"
+
+/** Target type restriction for Dominate spells. */
+export type DominateTargetType = "beast" | "humanoid" | "any"
+
+/** Irresistible Dance effects on failed save (SRD 5.2.1). */
+export interface IrresistibleDanceResult {
+  readonly charmed: boolean
+  readonly mustDanceInPlace: boolean
+  readonly disadvantageOnDexSaves: boolean
+  readonly disadvantageOnAttackRolls: boolean
+  readonly advantageOnAttacksAgainst: boolean
+}
+
+// --- Constants ---
+
+/** Bless/Bane bonus/penalty die size. */
+export const BLESS_BANE_DIE = 4
+
+/** Power Word Kill HP threshold (SRD 5.2.1). */
+export const POWER_WORD_KILL_THRESHOLD = 100
+
+/** Power Word Kill overflow damage: 12d12 Psychic if target > 100 HP. */
+export const POWER_WORD_KILL_OVERFLOW: DiceDamage = { dice: 12, dieSize: 12 }
+
+/** Power Word Stun HP threshold (SRD 5.2.1). */
+export const POWER_WORD_STUN_THRESHOLD = 150
+
+/** Hex damage per hit: 1d6 Necrotic. */
+export const HEX_DAMAGE: DiceDamage = { dice: 1, dieSize: 6 }
+
+/** Conditions removed by Power Word Heal. */
+export const POWER_WORD_HEAL_REMOVED_CONDITIONS = [
+  "charmed",
+  "frightened",
+  "paralyzed",
+  "poisoned",
+  "stunned"
+] as const satisfies ReadonlyArray<Condition>
+
+const IRRESISTIBLE_DANCE_SAVED: IrresistibleDanceResult = {
+  charmed: false,
+  mustDanceInPlace: true, // dances until end of next turn even on success
+  disadvantageOnDexSaves: false,
+  disadvantageOnAttackRolls: false,
+  advantageOnAttacksAgainst: false
+}
+
+const IRRESISTIBLE_DANCE_FAILED: IrresistibleDanceResult = {
+  charmed: true,
+  mustDanceInPlace: true,
+  disadvantageOnDexSaves: true,
+  disadvantageOnAttackRolls: true,
+  advantageOnAttacksAgainst: true
+}
 
 // --- Spell Info Constants ---
 
@@ -75,64 +110,45 @@ const SLEEP_BASE_TARGETS = 5
 const CONFUSION_BASE_RADIUS = 10
 const CONFUSION_RADIUS_PER_LEVEL = 5
 
-// --- Hold Person (L2 Enchantment, WIS save, Paralyzed) ---
+// --- Hold Person / Hold Monster ---
 
 /** Number of targets for Hold Person: 1 base, +1 per slot level above 2nd. */
 export function holdPersonTargets(slotLevel: number): number {
-  return 1 + Math.max(0, slotLevel - 2)
+  return upcastTargets(slotLevel, 2)
 }
 
 /** Result of Hold Person on a single target. */
 export function holdPersonResult(savePassed: boolean): ConditionSpellResult {
-  return {
-    conditionApplied: savePassed ? null : "paralyzed",
-    specialEffect: null,
-    savePassed
-  }
+  return saveOrCondition(savePassed, "paralyzed")
 }
-
-// --- Hold Monster (L5 Enchantment, WIS save, Paralyzed) ---
 
 /** Number of targets for Hold Monster: 1 base, +1 per slot level above 5th. */
 export function holdMonsterTargets(slotLevel: number): number {
-  return 1 + Math.max(0, slotLevel - 5)
+  return upcastTargets(slotLevel, 5)
 }
 
-/** Result of Hold Monster on a single target. */
-export function holdMonsterResult(savePassed: boolean): ConditionSpellResult {
-  return {
-    conditionApplied: savePassed ? null : "paralyzed",
-    specialEffect: null,
-    savePassed
-  }
-}
+/** Result of Hold Monster on a single target (same mechanic as Hold Person). */
+export const holdMonsterResult: (savePassed: boolean) => ConditionSpellResult = holdPersonResult
 
-// --- Sleep (L1 Enchantment, WIS save, Concentration — SRD 5.2.1) ---
+// --- Sleep ---
 
-/**
- * SRD 5.2.1: Each creature in a 5ft-radius Sphere makes a WIS save.
- * Scales: +1 creature per slot level above 1st.
- */
 export function sleepMaxTargets(slotLevel: number): number {
   return SLEEP_BASE_TARGETS + Math.max(0, slotLevel - 1)
 }
 
-/**
- * Sleep result: two-phase save. First fail = Incapacitated. Second fail = Unconscious.
- * This models the initial save result.
- */
+/** Sleep first save: fail = Incapacitated until end of next turn. */
 export function sleepResult(savePassed: boolean): ConditionSpellResult {
   if (savePassed) return { conditionApplied: null, specialEffect: null, savePassed: true }
   return { conditionApplied: null, specialEffect: "incapacitatedUntilEndOfNextTurn", savePassed: false }
 }
 
-/** Sleep second save: if failed, target falls Unconscious for the duration. */
+/** Sleep second save: fail = Unconscious for duration. */
 export function sleepSecondSaveResult(savePassed: boolean): ConditionSpellResult {
   if (savePassed) return { conditionApplied: null, specialEffect: null, savePassed: true }
   return { conditionApplied: "unconscious", specialEffect: null, savePassed: false }
 }
 
-// --- Confusion (L4 Enchantment, WIS save, d10 behavior table) ---
+// --- Confusion ---
 
 /** Radius for Confusion: 10ft base, +5ft per slot level above 4th. */
 export function confusionRadius(slotLevel: number): number {
@@ -150,37 +166,19 @@ export function confusionBehavior(d10Roll: number): ConfusionBehavior {
   return "actNormally"
 }
 
-// =============================================================================
-// New Enchantment spells — Buffs / Debuffs
-// =============================================================================
+// --- Bless / Bane ---
 
-// --- Bless (L1, Action, 30 ft, Concentration 1 min) ---
-
-/** Bless (SRD 5.2.1): +1d4 to attack rolls and saving throws. 3 targets, +1 per upcast. */
+/** Bless/Bane target count: 3 base, +1 per slot level above 1. */
 export function blessTargets(slotLevel: number): number {
   return 3 + (slotLevel - 1)
 }
 
-/** Bless bonus die: always d4. */
-export function blessBonusDie(): 4 {
-  return 4
-}
+/** Bane uses the same target scaling as Bless. */
+export const baneTargets: (slotLevel: number) => number = blessTargets
 
-// --- Bane (L1, Action, 30 ft, Concentration 1 min, CHA save) ---
+// --- Heroism ---
 
-/** Bane (SRD 5.2.1): -1d4 to attack rolls and saving throws. 3 targets, +1 per upcast. */
-export function baneTargets(slotLevel: number): number {
-  return 3 + (slotLevel - 1)
-}
-
-/** Bane penalty die: always d4. */
-export function banePenaltyDie(): 4 {
-  return 4
-}
-
-// --- Heroism (L1, Action, Touch, Concentration 1 min) ---
-
-/** Heroism (SRD 5.2.1): temp HP = spellcasting mod at start of each turn. Immune to Frightened. */
+/** Heroism temp HP = spellcasting mod at start of each turn. Immune to Frightened. */
 export function heroismTempHp(spellcastingMod: number): number {
   return Math.max(0, spellcastingMod)
 }
@@ -190,12 +188,7 @@ export function heroismTargets(slotLevel: number): number {
   return 1 + (slotLevel - 1)
 }
 
-// --- Hex (L1, Bonus Action, 90 ft, Concentration) ---
-
-/** Hex (SRD 5.2.1): +1d6 Necrotic per hit. Target has disadvantage on one ability's checks. */
-export function hexDamage(): DiceDamage {
-  return { dice: 1, dieSize: 6 }
-}
+// --- Hex ---
 
 /** Hex concentration duration in hours based on slot level. */
 export function hexDuration(slotLevel: number): number {
@@ -205,14 +198,7 @@ export function hexDuration(slotLevel: number): number {
   return 24
 }
 
-// --- Compulsion (L4, Action, 30 ft, Concentration 1 min, WIS save) ---
-
-// Compulsion: Charmed, forced movement direction. Modeled as capability flag.
-
 // --- Dominate spells ---
-
-/** Target type restriction for Dominate spells. */
-export type DominateTargetType = "beast" | "humanoid" | "any"
 
 /** Dominate spell base duration in minutes based on spell and slot level. */
 export function dominateDuration(baseSpellLevel: number, slotLevel: number): { minutes: number } {
@@ -223,71 +209,16 @@ export function dominateDuration(baseSpellLevel: number, slotLevel: number): { m
   return { minutes: 480 }
 }
 
-// --- Power Word Kill (L9, Action, 60 ft, no save) ---
-
-/** Power Word Kill (SRD 5.2.1): kills if ≤ 100 HP; else 12d12 Psychic. */
-export function powerWordKillThreshold(): 100 {
-  return 100
-}
-
-/** Power Word Kill overflow damage (SRD 5.2.1): 12d12 Psychic if target > 100 HP. */
-export function powerWordKillOverflowDamage(): DiceDamage {
-  return { dice: 12, dieSize: 12 }
-}
-
-// --- Power Word Stun (L8, Action, 60 ft, no initial save) ---
-
-/** Power Word Stun (SRD 5.2.1): Stunned if ≤ 150 HP; else Speed = 0 for 1 turn. */
-export function powerWordStunThreshold(): 150 {
-  return 150
-}
-
-// --- Power Word Heal (L9, Action, 60 ft, no save) ---
-
-/** Conditions removed by Power Word Heal. */
-export const POWER_WORD_HEAL_REMOVED_CONDITIONS = [
-  "charmed",
-  "frightened",
-  "paralyzed",
-  "poisoned",
-  "stunned"
-] as const satisfies ReadonlyArray<Condition>
-
-// --- Irresistible Dance (L6, Action, 30 ft, Concentration 1 min, WIS save) ---
-
-/** Irresistible Dance effects on failed save (SRD 5.2.1). */
-export interface IrresistibleDanceResult {
-  readonly charmed: boolean
-  readonly mustDanceInPlace: boolean
-  readonly disadvantageOnDexSaves: boolean
-  readonly disadvantageOnAttackRolls: boolean
-  readonly advantageOnAttacksAgainst: boolean
-}
+// --- Irresistible Dance ---
 
 export function irresistibleDanceResult(savePassed: boolean): IrresistibleDanceResult {
-  if (savePassed) {
-    return {
-      charmed: false,
-      mustDanceInPlace: true, // dances until end of next turn even on success
-      disadvantageOnDexSaves: false,
-      disadvantageOnAttackRolls: false,
-      advantageOnAttacksAgainst: false
-    }
-  }
-  return {
-    charmed: true,
-    mustDanceInPlace: true,
-    disadvantageOnDexSaves: true,
-    disadvantageOnAttackRolls: true,
-    advantageOnAttacksAgainst: true
-  }
+  return savePassed ? IRRESISTIBLE_DANCE_SAVED : IRRESISTIBLE_DANCE_FAILED
 }
 
-// --- Vicious Mockery (Cantrip, Action, 60 ft, WIS save) ---
+// --- Vicious Mockery (Cantrip, scaling d6 Psychic, disadvantage on next attack roll) ---
 
-/** Vicious Mockery (SRD 5.2.1): scaling d6 Psychic, disadvantage on next attack roll. */
 export function viciousMockeryDamage(characterLevel: number): DiceDamage {
-  return { dice: cantripDamageDice(characterLevel), dieSize: 6 }
+  return cantripDamage(characterLevel, 6)
 }
 
 /* eslint-enable no-magic-numbers */

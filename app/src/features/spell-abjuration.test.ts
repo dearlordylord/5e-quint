@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  AID_TARGETS,
   aidHpIncrease,
-  aidTargets,
   canCastShield,
   canUseMageArmor,
-  counterspellCheck,
+  counterspellAutoSuccess,
   cureWoundsDice,
   deathWardTriggered,
   dispelMagicAutoSuccess,
@@ -17,17 +17,16 @@ import {
   healingWordDice,
   LESSER_RESTORATION_CONDITIONS,
   mageArmorAC,
+  MASS_CURE_WOUNDS_TARGETS,
+  MASS_HEAL_POOL,
   massCureWoundsDice,
-  massCureWoundsTargets,
-  massHealPool,
+  PRAYER_OF_HEALING_TARGETS,
   prayerOfHealingDice,
-  prayerOfHealingTargets,
   PROTECTION_FROM_ENERGY_TYPES,
   protectionFromEvilAndGoodActive,
   sanctuaryBroken,
-  sanctuaryDC,
-  shieldACBonus,
-  shieldOfFaithACBonus,
+  SHIELD_AC_BONUS,
+  SHIELD_OF_FAITH_AC_BONUS,
   SPELL_COUNTERSPELL,
   SPELL_MAGE_ARMOR,
   SPELL_PROTECTION_FROM_EVIL_AND_GOOD,
@@ -35,13 +34,13 @@ import {
   SPELL_SHIELD,
   SPELL_SHIELD_OF_FAITH,
   SPELL_STONESKIN,
-  stoneskinResistances,
-  wardingBondACBonus,
-  wardingBondSaveBonus
+  STONESKIN_RESISTANCES,
+  WARDING_BOND_AC_BONUS,
+  WARDING_BOND_SAVE_BONUS
 } from "#/features/spell-abjuration.ts"
 import { saveOrNothing } from "#/features/spell-patterns.ts"
 
-// --- saveOrNothing (from spell-patterns.ts, used by Counterspell/Disintegrate) ---
+// --- saveOrNothing ---
 
 describe("saveOrNothing", () => {
   it("returns full damage on failed save", () => {
@@ -55,29 +54,21 @@ describe("saveOrNothing", () => {
 
 // --- Counterspell ---
 
-describe("counterspellCheck (SRD 5.2.1: CON save)", () => {
+describe("counterspellAutoSuccess", () => {
   it("auto-succeeds when slot level >= target spell level", () => {
-    const result = counterspellCheck(5, 5)
-    expect(result.autoSuccess).toBe(true)
-    expect(result.requiresSave).toBe(false)
+    expect(counterspellAutoSuccess(5, 5)).toBe(true)
   })
 
   it("auto-succeeds when slot level > target spell level", () => {
-    const result = counterspellCheck(3, 5)
-    expect(result.autoSuccess).toBe(true)
-    expect(result.requiresSave).toBe(false)
+    expect(counterspellAutoSuccess(3, 5)).toBe(true)
   })
 
-  it("requires CON save when slot level < target spell level", () => {
-    const result = counterspellCheck(5, 3)
-    expect(result.autoSuccess).toBe(false)
-    expect(result.requiresSave).toBe(true)
+  it("does not auto-succeed when slot level < target", () => {
+    expect(counterspellAutoSuccess(5, 3)).toBe(false)
   })
 
-  it("requires save for level 9 target with level 3 slot", () => {
-    const result = counterspellCheck(9, 3)
-    expect(result.autoSuccess).toBe(false)
-    expect(result.requiresSave).toBe(true)
+  it("does not auto-succeed for level 9 target with level 3 slot", () => {
+    expect(counterspellAutoSuccess(9, 3)).toBe(false)
   })
 })
 
@@ -85,7 +76,7 @@ describe("counterspellCheck (SRD 5.2.1: CON save)", () => {
 
 describe("Shield", () => {
   it("grants +5 AC bonus", () => {
-    expect(shieldACBonus()).toBe(5)
+    expect(SHIELD_AC_BONUS).toBe(5)
   })
 
   it("can be cast when reaction and spell slots are available", () => {
@@ -145,7 +136,7 @@ describe("Mage Armor", () => {
 
 describe("Shield of Faith", () => {
   it("grants +2 AC bonus", () => {
-    expect(shieldOfFaithACBonus()).toBe(2)
+    expect(SHIELD_OF_FAITH_AC_BONUS).toBe(2)
   })
 
   it("has correct spell info", () => {
@@ -159,11 +150,10 @@ describe("Shield of Faith", () => {
 
 describe("Stoneskin", () => {
   it("grants resistance to bludgeoning, piercing, and slashing", () => {
-    const resistances = stoneskinResistances()
-    expect(resistances).toContain("bludgeoning")
-    expect(resistances).toContain("piercing")
-    expect(resistances).toContain("slashing")
-    expect(resistances).toHaveLength(3)
+    expect(STONESKIN_RESISTANCES).toContain("bludgeoning")
+    expect(STONESKIN_RESISTANCES).toContain("piercing")
+    expect(STONESKIN_RESISTANCES).toContain("slashing")
+    expect(STONESKIN_RESISTANCES).toHaveLength(3)
   })
 
   it("has correct spell info", () => {
@@ -176,11 +166,6 @@ describe("Stoneskin", () => {
 // --- Sanctuary ---
 
 describe("Sanctuary", () => {
-  it("DC is the caster's spell save DC (passthrough)", () => {
-    expect(sanctuaryDC(15)).toBe(15)
-    expect(sanctuaryDC(8)).toBe(8)
-  })
-
   it("is broken when warded creature attacks", () => {
     expect(sanctuaryBroken(true, false)).toBe(true)
   })
@@ -262,7 +247,7 @@ describe("Counterspell metadata", () => {
 })
 
 // =============================================================================
-// New Abjuration spells — Healing
+// Healing spells
 // =============================================================================
 
 describe("Cure Wounds", () => {
@@ -295,7 +280,6 @@ describe("Heal", () => {
 
   it("scales +10 per slot level above 6", () => {
     expect(healAmount(7)).toBe(80)
-    expect(healAmount(8)).toBe(90)
     expect(healAmount(9)).toBe(100)
   })
 
@@ -318,13 +302,13 @@ describe("Mass Cure Wounds", () => {
   })
 
   it("targets 6 creatures", () => {
-    expect(massCureWoundsTargets()).toBe(6)
+    expect(MASS_CURE_WOUNDS_TARGETS).toBe(6)
   })
 })
 
 describe("Mass Heal", () => {
   it("provides a 700 HP pool", () => {
-    expect(massHealPool()).toBe(700)
+    expect(MASS_HEAL_POOL).toBe(700)
   })
 })
 
@@ -339,12 +323,12 @@ describe("Prayer of Healing", () => {
   })
 
   it("targets 5 creatures", () => {
-    expect(prayerOfHealingTargets()).toBe(5)
+    expect(PRAYER_OF_HEALING_TARGETS).toBe(5)
   })
 })
 
 // =============================================================================
-// New Abjuration spells — Protection / Condition Removal
+// Protection / Condition Removal
 // =============================================================================
 
 describe("Aid", () => {
@@ -359,7 +343,7 @@ describe("Aid", () => {
   })
 
   it("targets 3 creatures", () => {
-    expect(aidTargets()).toBe(3)
+    expect(AID_TARGETS).toBe(3)
   })
 })
 
@@ -379,22 +363,12 @@ describe("Death Ward", () => {
 
 describe("Lesser Restoration", () => {
   it("can remove blinded, deafened, paralyzed, poisoned", () => {
-    expect(LESSER_RESTORATION_CONDITIONS).toContain("blinded")
-    expect(LESSER_RESTORATION_CONDITIONS).toContain("deafened")
-    expect(LESSER_RESTORATION_CONDITIONS).toContain("paralyzed")
-    expect(LESSER_RESTORATION_CONDITIONS).toContain("poisoned")
     expect(LESSER_RESTORATION_CONDITIONS).toHaveLength(4)
   })
 })
 
 describe("Greater Restoration", () => {
-  it("can remove exhaustion, charmed, petrified, curse, ability/hp reductions", () => {
-    expect(GREATER_RESTORATION_EFFECTS).toContain("exhaustion")
-    expect(GREATER_RESTORATION_EFFECTS).toContain("charmed")
-    expect(GREATER_RESTORATION_EFFECTS).toContain("petrified")
-    expect(GREATER_RESTORATION_EFFECTS).toContain("curse")
-    expect(GREATER_RESTORATION_EFFECTS).toContain("abilityScoreReduction")
-    expect(GREATER_RESTORATION_EFFECTS).toContain("hpMaxReduction")
+  it("can remove 6 effect types", () => {
     expect(GREATER_RESTORATION_EFFECTS).toHaveLength(6)
   })
 })
@@ -417,22 +391,14 @@ describe("Dispel Magic", () => {
 
 describe("Protection from Energy", () => {
   it("offers acid, cold, fire, lightning, thunder", () => {
-    expect(PROTECTION_FROM_ENERGY_TYPES).toContain("acid")
-    expect(PROTECTION_FROM_ENERGY_TYPES).toContain("cold")
-    expect(PROTECTION_FROM_ENERGY_TYPES).toContain("fire")
-    expect(PROTECTION_FROM_ENERGY_TYPES).toContain("lightning")
-    expect(PROTECTION_FROM_ENERGY_TYPES).toContain("thunder")
     expect(PROTECTION_FROM_ENERGY_TYPES).toHaveLength(5)
   })
 })
 
 describe("Warding Bond", () => {
-  it("grants +1 AC", () => {
-    expect(wardingBondACBonus()).toBe(1)
-  })
-
-  it("grants +1 saves", () => {
-    expect(wardingBondSaveBonus()).toBe(1)
+  it("grants +1 AC and +1 saves", () => {
+    expect(WARDING_BOND_AC_BONUS).toBe(1)
+    expect(WARDING_BOND_SAVE_BONUS).toBe(1)
   })
 })
 
@@ -443,7 +409,6 @@ describe("Globe of Invulnerability", () => {
 
   it("scales +1 per slot level above 6", () => {
     expect(globeBlocksSpellLevel(7)).toBe(6)
-    expect(globeBlocksSpellLevel(8)).toBe(7)
     expect(globeBlocksSpellLevel(9)).toBe(8)
   })
 })

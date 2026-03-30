@@ -1,19 +1,24 @@
 // Conjuration spells — SRD 5.2.1
 // Spells that summon creatures, objects, or transport.
 
-import type { ConditionSpellInfo, DiceDamage, SpellDamageInfo } from "#/features/spell-patterns.ts"
-import type { Condition } from "#/types.ts"
+import type {
+  ConditionSpellInfo,
+  ConditionSpellResult,
+  DiceDamage,
+  SpellDamageInfo
+} from "#/features/spell-patterns.ts"
+import { saveOrCondition } from "#/features/spell-patterns.ts"
 
 /* eslint-disable no-magic-numbers */
 
-// --- Types ---
+// --- Constants ---
 
-/** Result of applying a condition debuff spell to a single target. */
-export interface ConditionSpellResult {
-  readonly conditionApplied: Condition | null
-  readonly specialEffect: string | null
-  readonly savePassed: boolean
-}
+/** Goodberry: 10 berries, each heals 1 HP. */
+export const GOODBERRY_COUNT = 10
+export const GOODBERRY_HEAL_PER_BERRY = 1
+
+/** Ice Knife impact: 1d10 Piercing. */
+export const ICE_KNIFE_IMPACT: DiceDamage = { dice: 1, dieSize: 10 }
 
 // --- Spell Metadata ---
 
@@ -46,64 +51,24 @@ export const WEB_INFO: ConditionSpellInfo = {
 
 // --- Spirit Guardians ---
 
-/**
- * Spirit Guardians (SRD 5.2.1): 3d8 Radiant/Necrotic at L3, +1d8 per slot level above 3.
- * Save for half (WIS).
- */
+/** Spirit Guardians (SRD 5.2.1): 3d8 at L3, +1d8 per slot level above 3. */
 export function spiritGuardiansDamage(slotLevel: number): DiceDamage {
   return { dice: 3 + (slotLevel - 3), dieSize: 8 }
 }
 
-// --- Entangle (L1 Conjuration, STR save, Restrained) ---
+// --- Entangle / Web (both apply Restrained on failed save) ---
 
 /** Result of Entangle on a single target. */
 export function entangleResult(savePassed: boolean): ConditionSpellResult {
-  return {
-    conditionApplied: savePassed ? null : "restrained",
-    specialEffect: null,
-    savePassed
-  }
+  return saveOrCondition(savePassed, "restrained")
 }
 
-// --- Web (L2 Conjuration, DEX save, Restrained) ---
+/** Result of Web on a single target (same mechanic as Entangle). */
+export const webResult: (savePassed: boolean) => ConditionSpellResult = entangleResult
 
-/** Result of Web on a single target. */
-export function webResult(savePassed: boolean): ConditionSpellResult {
-  return {
-    conditionApplied: savePassed ? null : "restrained",
-    specialEffect: null,
-    savePassed
-  }
-}
+// --- Ice Knife ---
 
-/** DC to break free from Web: same as the caster's spell save DC. */
-export function webBreakFreeDC(spellSaveDC: number): number {
-  return spellSaveDC
-}
-
-// =============================================================================
-// New Conjuration spells
-// =============================================================================
-
-// --- Goodberry (L1, Action, Self, 24 hours) ---
-
-/** Goodberry (SRD 5.2.1): 10 berries, each heals 1 HP and provides a day's nourishment. */
-export function goodberryCount(): 10 {
-  return 10
-}
-
-export function goodberryHealPerBerry(): 1 {
-  return 1
-}
-
-// --- Ice Knife (L1, Action, 60 ft, ranged spell attack + DEX save) ---
-
-/** Ice Knife impact (SRD 5.2.1): 1d10 Piercing on hit. */
-export function iceKnifeImpactDamage(): DiceDamage {
-  return { dice: 1, dieSize: 10 }
-}
-
-/** Ice Knife explosion (SRD 5.2.1): 2d6 Cold at L1, +1d6 per slot above 1. DEX save. */
+/** Ice Knife explosion (SRD 5.2.1): 2d6 Cold at L1, +1d6 per slot above 1. */
 export function iceKnifeExplosionDamage(slotLevel: number): DiceDamage {
   return { dice: 2 + (slotLevel - 1), dieSize: 6 }
 }

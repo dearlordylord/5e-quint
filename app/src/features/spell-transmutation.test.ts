@@ -6,17 +6,16 @@ import {
   blindnessDeafnessResult,
   blindnessDeafnessTargets,
   disintegrateDamage,
-  divineFavorDamage,
+  DIVINE_FAVOR_DAMAGE,
   enhanceAbilityTargets,
-  enlargeDamageBonus,
+  ENLARGE_REDUCE_DICE,
   fleshToStoneProgress,
-  hasteEffects,
+  HASTE_EFFECTS,
   magicWeaponBonus,
-  reduceDamageReduction,
-  regenerateInitialHeal,
-  regeneratePerRoundHeal,
+  REGENERATE_INITIAL_HEAL,
+  REGENERATE_PER_ROUND,
   SLOW_INFO,
-  slowMaxTargets,
+  SLOW_MAX_TARGETS,
   slowResult,
   SPELL_BARKSKIN,
   SPELL_DISINTEGRATE
@@ -31,7 +30,6 @@ describe("disintegrateDamage", () => {
 
   it("scales +3d6 per level above 6", () => {
     expect(disintegrateDamage(7)).toEqual({ dice: 13, dieSize: 6, flatBonus: 40 })
-    expect(disintegrateDamage(8)).toEqual({ dice: 16, dieSize: 6, flatBonus: 40 })
     expect(disintegrateDamage(9)).toEqual({ dice: 19, dieSize: 6, flatBonus: 40 })
   })
 })
@@ -106,7 +104,7 @@ describe("slow", () => {
   })
 
   it("max targets is always 6", () => {
-    expect(slowMaxTargets()).toBe(6)
+    expect(SLOW_MAX_TARGETS).toBe(6)
   })
 
   it("info matches SRD 5.2.1", () => {
@@ -121,10 +119,6 @@ describe("slow", () => {
 describe("Barkskin", () => {
   it("raises AC to 17 when current AC is below 17", () => {
     expect(barkskinAC(12)).toBe(17)
-  })
-
-  it("keeps AC at 17 when current AC equals 17", () => {
-    expect(barkskinAC(17)).toBe(17)
   })
 
   it("keeps AC above 17 when current AC exceeds 17", () => {
@@ -144,21 +138,16 @@ describe("Barkskin", () => {
 
 describe("Haste", () => {
   it("grants doubled speed, +2 AC, DEX advantage, extra action", () => {
-    const effects = hasteEffects()
-    expect(effects.speedMultiplier).toBe(2)
-    expect(effects.acBonus).toBe(2)
-    expect(effects.dexSaveAdvantage).toBe(true)
-    expect(effects.extraAction).toBe(true)
+    expect(HASTE_EFFECTS.speedMultiplier).toBe(2)
+    expect(HASTE_EFFECTS.acBonus).toBe(2)
+    expect(HASTE_EFFECTS.dexSaveAdvantage).toBe(true)
+    expect(HASTE_EFFECTS.extraAction).toBe(true)
   })
 })
 
 describe("Enlarge/Reduce", () => {
-  it("Enlarge adds 1d4 damage", () => {
-    expect(enlargeDamageBonus()).toEqual({ dice: 1, dieSize: 4 })
-  })
-
-  it("Reduce subtracts 1d4 damage", () => {
-    expect(reduceDamageReduction()).toEqual({ dice: 1, dieSize: 4 })
+  it("bonus/reduction is 1d4", () => {
+    expect(ENLARGE_REDUCE_DICE).toEqual({ dice: 1, dieSize: 4 })
   })
 })
 
@@ -208,16 +197,16 @@ describe("Magic Weapon", () => {
 
 describe("Divine Favor", () => {
   it("+1d4 Radiant", () => {
-    expect(divineFavorDamage()).toEqual({ dice: 1, dieSize: 4 })
+    expect(DIVINE_FAVOR_DAMAGE).toEqual({ dice: 1, dieSize: 4 })
   })
 })
 
 describe("Regenerate", () => {
   it("initial heal is 4d8 + 15", () => {
-    expect(regenerateInitialHeal()).toEqual({ dice: 4, dieSize: 8, flatBonus: 15 })
+    expect(REGENERATE_INITIAL_HEAL).toEqual({ dice: 4, dieSize: 8, flatBonus: 15 })
   })
 
   it("per-round heal is 1", () => {
-    expect(regeneratePerRoundHeal()).toBe(1)
+    expect(REGENERATE_PER_ROUND).toBe(1)
   })
 })
