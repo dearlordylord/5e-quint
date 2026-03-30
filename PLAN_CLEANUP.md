@@ -333,3 +333,9 @@ During monster research we identified that `CharConfig` mixes PC build info (cla
 Same pattern as Fighter: add class state var + level var, pure functions, action wrappers, MBT handlers. One class at a time. Priority order TBD based on which classes the app exercises most.
 
 **All existing TS feature files (Barbarian, Monk, Paladin, Rogue, Sorcerer, etc.) and their UI components are working implementations — they are NOT dead code and must NOT be deleted.**
+
+**Frame condition verification recipe** (learned from Monk integration): After bulk-replacing `barbarianLevel' = barbarianLevel` → appending the new class vars, some actions get missed due to line-ending variations (single-line actions ending with bare newline before `}`, multi-line actions with different indent depths). To catch stragglers:
+```bash
+grep -n "barbarianLevel' = barbarianLevel" dnd.qnt | grep -v "newClassState'"
+```
+This finds every frame condition that has the *previous* class but is missing the *new* class. Fix all hits before typechecking. The typecheck will also catch mismatches (Quint's `any { }` requires all branches to update the same set of vars), but the grep is faster for bulk verification.

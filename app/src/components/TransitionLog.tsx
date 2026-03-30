@@ -101,6 +101,8 @@ function formatEvent(e: DndEvent): string {
       return e.type
     case "USE_TACTICAL_MIND":
       return `TACTICAL_MIND ${e.boostedCheckSucceeds ? "pass" : "fail"}`
+    default:
+      return e.type
   }
 }
 

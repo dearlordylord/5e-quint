@@ -3118,13 +3118,13 @@ module dndTest {
 
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
-        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel })
+        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel })
 
   run test_invariants_10steps =
     init
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel })
 
   run test_invariants_20steps =
     init
@@ -3132,7 +3132,7 @@ module dndTest {
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel })
 
   // Individual invariant tests on known state constructions
   run test_inv_deadIsAbsorbing_construction = {
@@ -4508,6 +4508,7 @@ module dndTest {
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
         barbarianState' = freshBarbarianState(5), barbarianLevel' = 5,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
       }
     ).then(doEnterRage)
     .then(doMarkAttackOrForcedSave)
@@ -4520,6 +4521,7 @@ module dndTest {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
     })
   }
 
@@ -4532,6 +4534,7 @@ module dndTest {
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
         barbarianState' = pEnterRage(freshBarbarianState(5)), barbarianLevel' = 5,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
       }
     ).then(all {
       // Simulate start-of-turn maintenance check (no attack, no BA extension)
@@ -4542,6 +4545,7 @@ module dndTest {
       monsterResourceState' = monsterResourceState,
       barbarianState' = pBarbarianStartTurn(barbarianState, barbarianLevel),
       barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
     })
   }
 
@@ -4554,6 +4558,7 @@ module dndTest {
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
         barbarianState' = freshBarbarianState(5), barbarianLevel' = 5,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
       }
     ).then(doDeclareReckless)
     .then(all {
@@ -4563,6 +4568,297 @@ module dndTest {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  // ============================================================
+  // Monk: M0 — Type + Constants
+  // ============================================================
+
+  run test_focusMaxForLevel_0 = assert(focusMaxForLevel(0) == 0)
+  run test_focusMaxForLevel_1 = assert(focusMaxForLevel(1) == 0)
+  run test_focusMaxForLevel_2 = assert(focusMaxForLevel(2) == 2)
+  run test_focusMaxForLevel_5 = assert(focusMaxForLevel(5) == 5)
+  run test_focusMaxForLevel_20 = assert(focusMaxForLevel(20) == 20)
+
+  run test_freshMonkState_level5 = {
+    val ms = freshMonkState(5, 3)
+    all {
+      assert(ms.focusPoints == 5),
+      assert(ms.focusMax == 5),
+      assert(ms.uncannyMetabolismUsed == false),
+      assert(ms.stunningStrikeUsedThisTurn == false),
+      assert(ms.wholenessCharges == 0),
+      assert(ms.wholenessMax == 0),
+    }
+  }
+
+  run test_freshMonkState_level6 = {
+    val ms = freshMonkState(6, 3)
+    all {
+      assert(ms.focusPoints == 6),
+      assert(ms.focusMax == 6),
+      assert(ms.wholenessCharges == 3),
+      assert(ms.wholenessMax == 3),
+    }
+  }
+
+  run test_freshMonkState_level0 = {
+    val ms = freshMonkState(0, 0)
+    all {
+      assert(ms.focusPoints == 0),
+      assert(ms.focusMax == 0),
+    }
+  }
+
+  // ============================================================
+  // Monk: M2 — Pure Functions
+  // ============================================================
+
+  pure val TEST_MONK_STATE: MonkState = freshMonkState(5, 3)
+
+  run test_canExpendFocus = {
+    all {
+      assert(canExpendFocus(TEST_MONK_STATE, 1) == true),
+      assert(canExpendFocus(TEST_MONK_STATE, 5) == true),
+      assert(canExpendFocus(TEST_MONK_STATE, 6) == false),
+      assert(canExpendFocus(TEST_MONK_STATE.with("focusPoints", 0), 1) == false),
+    }
+  }
+
+  run test_canStunningStrike = {
+    all {
+      assert(canStunningStrike(TEST_MONK_STATE, 5) == true),
+      assert(canStunningStrike(TEST_MONK_STATE, 4) == false),
+      assert(canStunningStrike(TEST_MONK_STATE.with("stunningStrikeUsedThisTurn", true), 5) == false),
+      assert(canStunningStrike(TEST_MONK_STATE.with("focusPoints", 0), 5) == false),
+    }
+  }
+
+  run test_canWholenessOfBody = {
+    val ms6 = freshMonkState(6, 3)
+    all {
+      assert(canWholenessOfBody(ms6, 6, false) == true),
+      assert(canWholenessOfBody(ms6, 5, false) == false),
+      assert(canWholenessOfBody(ms6, 6, true) == false),
+      assert(canWholenessOfBody(ms6.with("wholenessCharges", 0), 6, false) == false),
+    }
+  }
+
+  run test_canUncannyMetabolism = {
+    all {
+      assert(canUncannyMetabolism(TEST_MONK_STATE) == true),
+      assert(canUncannyMetabolism(TEST_MONK_STATE.with("uncannyMetabolismUsed", true)) == false),
+    }
+  }
+
+  run test_pFlurryOfBlows = {
+    val result = pFlurryOfBlows(TEST_MONK_STATE)
+    assert(result.focusPoints == 4)
+  }
+
+  run test_pStunningStrike = {
+    val result = pStunningStrike(TEST_MONK_STATE)
+    all {
+      assert(result.focusPoints == 4),
+      assert(result.stunningStrikeUsedThisTurn == true),
+    }
+  }
+
+  run test_pUseWholenessOfBody = {
+    val ms6 = freshMonkState(6, 3)
+    val result = pUseWholenessOfBody(ms6)
+    assert(result.wholenessCharges == 2)
+  }
+
+  run test_pUncannyMetabolism = {
+    val ms = TEST_MONK_STATE.with("focusPoints", 0)
+    val result = pUncannyMetabolism(ms, 5)
+    all {
+      assert(result.focusPoints == 5),
+      assert(result.uncannyMetabolismUsed == true),
+    }
+  }
+
+  run test_pMonkStartTurn = {
+    val ms = TEST_MONK_STATE.with("stunningStrikeUsedThisTurn", true)
+    val result = pMonkStartTurn(ms)
+    assert(result.stunningStrikeUsedThisTurn == false)
+  }
+
+  run test_pMonkShortRest = {
+    val ms = TEST_MONK_STATE.with("focusPoints", 1)
+    val result = pMonkShortRest(ms)
+    assert(result.focusPoints == 5)
+  }
+
+  run test_pMonkLongRest = {
+    val ms = TEST_MONK_STATE.with("focusPoints", 0)
+        .with("uncannyMetabolismUsed", true)
+    val result = pMonkLongRest(ms)
+    all {
+      assert(result.focusPoints == 5),
+      assert(result.uncannyMetabolismUsed == false),
+    }
+  }
+
+  run test_pMonkLongRest_wholeness = {
+    val ms = freshMonkState(6, 3).with("wholenessCharges", 0)
+    val result = pMonkLongRest(ms)
+    assert(result.wholenessCharges == 3)
+  }
+
+  // ============================================================
+  // Monk: M3 — Action Trace Tests
+  // ============================================================
+
+  /// Trace: flurry of blows → FP decremented, BA used
+  run test_trace_flurryOfBlows = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(5, 3), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doFlurryOfBlows)
+    .then(all {
+      assert(monkState.focusPoints == 4),
+      assert(turnState.bonusActionUsed == true),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  /// Trace: stunning strike → FP spent, flag set
+  run test_trace_stunningStrike = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(5, 3), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doStunningStrike)
+    .then(all {
+      assert(monkState.focusPoints == 4),
+      assert(monkState.stunningStrikeUsedThisTurn == true),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  /// Trace: uncanny metabolism restores FP + heals
+  run test_trace_uncannyMetabolism = {
+    init.then(
+      all {
+        state' = state.with("hp", 5).with("maxHp", 50),
+        turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(5, 3).with("focusPoints", 0), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doUncannyMetabolism)
+    .then(all {
+      assert(monkState.focusPoints == 5),
+      assert(monkState.uncannyMetabolismUsed == true),
+      assert(state.hp > 5),  // healed
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  /// Trace: wholeness of body heals + decrements charge
+  run test_trace_wholenessOfBody = {
+    init.then(
+      all {
+        state' = state.with("hp", 5).with("maxHp", 50),
+        turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(6, 3), monkLevel' = 6, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doWholenessOfBody)
+    .then(all {
+      assert(monkState.wholenessCharges == 2),
+      assert(turnState.bonusActionUsed == true),
+      assert(state.hp > 5),  // healed
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  /// Trace: patient defense free → disengaged, BA used, no FP spent
+  run test_trace_patientDefenseFree = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(5, 3), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doPatientDefenseFree)
+    .then(all {
+      assert(turnState.disengaged == true),
+      assert(turnState.bonusActionUsed == true),
+      assert(monkState.focusPoints == 5),  // no FP spent
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  /// Trace: step of the wind free → BA used, movement doubled, no FP spent
+  run test_trace_stepOfTheWindFree = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(5, 3), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doStepOfTheWindFree)
+    .then(all {
+      assert(turnState.bonusActionUsed == true),
+      assert(monkState.focusPoints == 5),  // no FP spent
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
     })
   }
 

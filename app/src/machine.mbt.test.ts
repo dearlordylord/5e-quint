@@ -13,6 +13,7 @@ import { z } from "zod"
 import { fighterExtraAttacks } from "#/features/class-fighter.ts"
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
 import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
+import { monkExtraAttacks } from "#/machine-monk.ts"
 import type { ActionType, Condition, CreatureKind, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
 import { d20Roll, healAmount, tempHp } from "#/types.ts"
 
@@ -240,6 +241,51 @@ const QuintBarbarianState = z.object({
   relentlessRageTimesUsed: z.bigint()
 })
 
+const QuintMonkState = z.object({
+  focusPoints: z.bigint(),
+  focusMax: z.bigint(),
+  uncannyMetabolismUsed: z.boolean(),
+  stunningStrikeUsedThisTurn: z.boolean(),
+  wholenessCharges: z.bigint(),
+  wholenessMax: z.bigint()
+})
+
+// Stub class Zod schemas (prep for parallel integration)
+const QuintPaladinState = z.object({
+  layOnHandsPool: z.bigint(),
+  layOnHandsMax: z.bigint(),
+  channelDivinityCharges: z.bigint(),
+  channelDivinityMax: z.bigint()
+})
+const QuintRogueState = z.object({
+  sneakAttackUsedThisTurn: z.boolean(),
+  steadyAimUsedThisTurn: z.boolean()
+})
+const QuintClericState = z.object({
+  channelDivinityCharges: z.bigint(),
+  channelDivinityMax: z.bigint()
+})
+const QuintDruidState = z.object({
+  wildShapeCharges: z.bigint(),
+  wildShapeMax: z.bigint(),
+  inWildShape: z.boolean()
+})
+const QuintSorcererState = z.object({
+  sorceryPoints: z.bigint(),
+  sorceryPointsMax: z.bigint()
+})
+const QuintWarlockState = z.object({
+  mysticArcanumUsed: z.any().transform((raw: unknown) => {
+    if (raw instanceof Set) return raw as Set<number>
+    if (Array.isArray(raw)) return new Set(raw.map(Number))
+    return new Set<number>()
+  }),
+  magicalCunningUsed: z.boolean()
+})
+const QuintWizardState = z.object({
+  arcaneRecoveryUsed: z.boolean()
+})
+
 // Combined state from all Quint vars
 const QuintFullState = z.object({
   state: QuintCreatureState,
@@ -250,6 +296,22 @@ const QuintFullState = z.object({
   fighterLevel: z.bigint(),
   barbarianState: QuintBarbarianState,
   barbarianLevel: z.bigint(),
+  monkState: QuintMonkState,
+  monkLevel: z.bigint(),
+  paladinState: QuintPaladinState,
+  paladinLevel: z.bigint(),
+  rogueState: QuintRogueState,
+  rogueLevel: z.bigint(),
+  clericState: QuintClericState,
+  clericLevel: z.bigint(),
+  druidState: QuintDruidState,
+  druidLevel: z.bigint(),
+  sorcererState: QuintSorcererState,
+  sorcererLevel: z.bigint(),
+  warlockState: QuintWarlockState,
+  warlockLevel: z.bigint(),
+  wizardState: QuintWizardState,
+  wizardLevel: z.bigint(),
   creatureKind: z.any().transform(variantToString),
   monsterStatBlock: z.any(), // parsed but not compared field-by-field (StatBlock is config, not mutable state)
   monsterResourceState: z.object({
@@ -343,6 +405,38 @@ interface NormalizedState {
   readonly legendaryResistancesRemaining: number
   readonly rechargeAvailable: Readonly<Record<string, boolean>>
   readonly dailyUsesRemaining: Readonly<Record<string, number>>
+  // MonkState
+  readonly monkLevel: number
+  readonly focusPoints: number
+  readonly focusMax: number
+  readonly uncannyMetabolismUsed: boolean
+  readonly stunningStrikeUsedThisTurn: boolean
+  readonly wholenessCharges: number
+  readonly wholenessMax: number
+  // Stub class states
+  readonly paladinLevel: number
+  readonly layOnHandsPool: number
+  readonly layOnHandsMax: number
+  readonly paladinChannelDivinityCharges: number
+  readonly paladinChannelDivinityMax: number
+  readonly rogueLevel: number
+  readonly sneakAttackUsedThisTurn: boolean
+  readonly steadyAimUsedThisTurn: boolean
+  readonly clericLevel: number
+  readonly clericChannelDivinityCharges: number
+  readonly clericChannelDivinityMax: number
+  readonly druidLevel: number
+  readonly wildShapeCharges: number
+  readonly wildShapeMax: number
+  readonly inWildShape: boolean
+  readonly sorcererLevel: number
+  readonly sorceryPoints: number
+  readonly sorceryPointsMax: number
+  readonly warlockLevel: number
+  readonly mysticArcanumUsed: ReadonlySet<number>
+  readonly magicalCunningUsed: boolean
+  readonly wizardLevel: number
+  readonly arcaneRecoveryUsed: boolean
 }
 
 // ============================================================
@@ -433,7 +527,37 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     legendaryActionsRemaining: c.legendaryActionsRemaining,
     legendaryResistancesRemaining: c.legendaryResistancesRemaining,
     rechargeAvailable: c.rechargeAvailable,
-    dailyUsesRemaining: c.dailyUsesRemaining
+    dailyUsesRemaining: c.dailyUsesRemaining,
+    monkLevel: c.monkLevel,
+    focusPoints: c.focusPoints,
+    focusMax: c.focusMax,
+    uncannyMetabolismUsed: c.uncannyMetabolismUsed,
+    stunningStrikeUsedThisTurn: c.stunningStrikeUsedThisTurn,
+    wholenessCharges: c.wholenessCharges,
+    wholenessMax: c.wholenessMax,
+    paladinLevel: c.paladinLevel,
+    layOnHandsPool: c.layOnHandsPool,
+    layOnHandsMax: c.layOnHandsMax,
+    paladinChannelDivinityCharges: c.paladinChannelDivinityCharges,
+    paladinChannelDivinityMax: c.paladinChannelDivinityMax,
+    rogueLevel: c.rogueLevel,
+    sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
+    steadyAimUsedThisTurn: c.steadyAimUsedThisTurn,
+    clericLevel: c.clericLevel,
+    clericChannelDivinityCharges: c.clericChannelDivinityCharges,
+    clericChannelDivinityMax: c.clericChannelDivinityMax,
+    druidLevel: c.druidLevel,
+    wildShapeCharges: c.wildShapeCharges,
+    wildShapeMax: c.wildShapeMax,
+    inWildShape: c.inWildShape,
+    sorcererLevel: c.sorcererLevel,
+    sorceryPoints: c.sorceryPoints,
+    sorceryPointsMax: c.sorceryPointsMax,
+    warlockLevel: c.warlockLevel,
+    mysticArcanumUsed: c.mysticArcanumUsed,
+    magicalCunningUsed: c.magicalCunningUsed,
+    wizardLevel: c.wizardLevel,
+    arcaneRecoveryUsed: c.arcaneRecoveryUsed
   }
 }
 
@@ -512,7 +636,37 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     legendaryActionsRemaining: Number(raw.monsterResourceState.legendaryActionsRemaining),
     legendaryResistancesRemaining: Number(raw.monsterResourceState.legendaryResistancesRemaining),
     rechargeAvailable: raw.monsterResourceState.rechargeAvailable,
-    dailyUsesRemaining: raw.monsterResourceState.dailyUsesRemaining
+    dailyUsesRemaining: raw.monsterResourceState.dailyUsesRemaining,
+    monkLevel: Number(raw.monkLevel),
+    focusPoints: Number(raw.monkState.focusPoints),
+    focusMax: Number(raw.monkState.focusMax),
+    uncannyMetabolismUsed: raw.monkState.uncannyMetabolismUsed,
+    stunningStrikeUsedThisTurn: raw.monkState.stunningStrikeUsedThisTurn,
+    wholenessCharges: Number(raw.monkState.wholenessCharges),
+    wholenessMax: Number(raw.monkState.wholenessMax),
+    paladinLevel: Number(raw.paladinLevel),
+    layOnHandsPool: Number(raw.paladinState.layOnHandsPool),
+    layOnHandsMax: Number(raw.paladinState.layOnHandsMax),
+    paladinChannelDivinityCharges: Number(raw.paladinState.channelDivinityCharges),
+    paladinChannelDivinityMax: Number(raw.paladinState.channelDivinityMax),
+    rogueLevel: Number(raw.rogueLevel),
+    sneakAttackUsedThisTurn: raw.rogueState.sneakAttackUsedThisTurn,
+    steadyAimUsedThisTurn: raw.rogueState.steadyAimUsedThisTurn,
+    clericLevel: Number(raw.clericLevel),
+    clericChannelDivinityCharges: Number(raw.clericState.channelDivinityCharges),
+    clericChannelDivinityMax: Number(raw.clericState.channelDivinityMax),
+    druidLevel: Number(raw.druidLevel),
+    wildShapeCharges: Number(raw.druidState.wildShapeCharges),
+    wildShapeMax: Number(raw.druidState.wildShapeMax),
+    inWildShape: raw.druidState.inWildShape,
+    sorcererLevel: Number(raw.sorcererLevel),
+    sorceryPoints: Number(raw.sorcererState.sorceryPoints),
+    sorceryPointsMax: Number(raw.sorcererState.sorceryPointsMax),
+    warlockLevel: Number(raw.warlockLevel),
+    mysticArcanumUsed: raw.warlockState.mysticArcanumUsed,
+    magicalCunningUsed: raw.warlockState.magicalCunningUsed,
+    wizardLevel: Number(raw.wizardLevel),
+    arcaneRecoveryUsed: raw.wizardState.arcaneRecoveryUsed
   }
 }
 
@@ -580,6 +734,14 @@ type EventActionMap = {
   DECLARE_RECKLESS: "doDeclareReckless"
   USE_INTIMIDATING_PRESENCE: "doUseIntimidatingPresence"
   RESTORE_INTIMIDATING_PRESENCE: "doRestoreIntimidatingPresence"
+  FLURRY_OF_BLOWS: "doFlurryOfBlows"
+  PATIENT_DEFENSE_FREE: "doPatientDefenseFree"
+  PATIENT_DEFENSE_FOCUS: "doPatientDefenseFocus"
+  STEP_OF_THE_WIND_FREE: "doStepOfTheWindFree"
+  STEP_OF_THE_WIND_FOCUS: "doStepOfTheWindFocus"
+  STUNNING_STRIKE: "doStunningStrike"
+  WHOLENESS_OF_BODY: "doWholenessOfBody"
+  UNCANNY_METABOLISM: "doUncannyMetabolism"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -596,7 +758,14 @@ void (true as AssertAllEventsMapped)
 const ITFVariant = z.any().transform(variantToString)
 
 const driverSchema = {
-  init: { kind: ITFVariant, l: ITFBigInt, maxHp: ITFBigInt, selectedBlock: z.any(), pcClass: z.string().optional() },
+  init: {
+    kind: ITFVariant,
+    l: ITFBigInt,
+    maxHp: ITFBigInt,
+    selectedBlock: z.any(),
+    pcClass: z.string().optional(),
+    wisMod: ITFBigInt
+  },
   doTakeDamage: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
   doTakeDamageMonster: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
   doTakeDamageWithMods: {
@@ -694,6 +863,14 @@ const driverSchema = {
   doDeclareReckless: {},
   doUseIntimidatingPresence: {},
   doRestoreIntimidatingPresence: {},
+  doFlurryOfBlows: {},
+  doPatientDefenseFree: {},
+  doPatientDefenseFocus: {},
+  doStepOfTheWindFree: {},
+  doStepOfTheWindFocus: {},
+  doStunningStrike: {},
+  doWholenessOfBody: { healRoll: ITFBigInt.optional() },
+  doUncannyMetabolism: { healRoll: ITFBigInt.optional() },
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -827,7 +1004,7 @@ function createDndDriver() {
     }
 
     return {
-      init: ({ kind, l, maxHp: mhp, pcClass, selectedBlock }) => {
+      init: ({ kind, l, maxHp: mhp, pcClass, selectedBlock, wisMod }) => {
         if (actor) actor.stop()
         const creatureKind = mapCreatureKind(kind)
         currentCreatureKind = creatureKind
@@ -843,6 +1020,14 @@ function createDndDriver() {
               extraAttacksRemaining: multiattackExtraAttacks(sb.multiattackLength),
               fighterLevel: 0,
               barbarianLevel: 0,
+              monkLevel: 0,
+              paladinLevel: 0,
+              rogueLevel: 0,
+              clericLevel: 0,
+              druidLevel: 0,
+              sorcererLevel: 0,
+              warlockLevel: 0,
+              wizardLevel: 0,
               creatureKind: "Monster",
               legendaryActionsRemaining: sb.legendaryActionsRemaining,
               legendaryResistancesRemaining: sb.legendaryResistancesRemaining,
@@ -855,9 +1040,10 @@ function createDndDriver() {
           currentStatBlock = null
           const INIT_SPEED = 30
           const level = Number(l)
-          const isBarbarian = (pcClass ?? "Fighter") === "Barbarian"
-          const fLevel = isBarbarian ? 0 : level
-          const bLevel = isBarbarian ? level : 0
+          const cls = pcClass ?? "Fighter"
+          const fLevel = cls === "Fighter" ? level : 0
+          const bLevel = cls === "Barbarian" ? level : 0
+          const mLevel = cls === "Monk" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -867,6 +1053,15 @@ function createDndDriver() {
               extraAttacksRemaining: 1,
               fighterLevel: fLevel,
               barbarianLevel: bLevel,
+              monkLevel: mLevel,
+              wholenessMax: Number(wisMod),
+              paladinLevel: 0,
+              rogueLevel: 0,
+              clericLevel: 0,
+              druidLevel: 0,
+              sorcererLevel: 0,
+              warlockLevel: 0,
+              wizardLevel: 0,
               creatureKind: "PC"
             }
           })
@@ -970,7 +1165,11 @@ function createDndDriver() {
             ? sb.multiattackLength > 0
               ? sb.multiattackLength - 1
               : 0
-            : Math.max(fighterExtraAttacks(ctx.fighterLevel), barbarianExtraAttacks(ctx.barbarianLevel))
+            : Math.max(
+                fighterExtraAttacks(ctx.fighterLevel),
+                barbarianExtraAttacks(ctx.barbarianLevel),
+                monkExtraAttacks(ctx.monkLevel)
+              )
         const effects = !numEffects
           ? []
           : [
@@ -1209,6 +1408,30 @@ function createDndDriver() {
       },
       doRestoreIntimidatingPresence: () => {
         send({ type: "RESTORE_INTIMIDATING_PRESENCE" })
+      },
+      doFlurryOfBlows: () => {
+        send({ type: "FLURRY_OF_BLOWS" })
+      },
+      doPatientDefenseFree: () => {
+        send({ type: "PATIENT_DEFENSE_FREE" })
+      },
+      doPatientDefenseFocus: () => {
+        send({ type: "PATIENT_DEFENSE_FOCUS" })
+      },
+      doStepOfTheWindFree: () => {
+        send({ type: "STEP_OF_THE_WIND_FREE" })
+      },
+      doStepOfTheWindFocus: () => {
+        send({ type: "STEP_OF_THE_WIND_FOCUS" })
+      },
+      doStunningStrike: () => {
+        send({ type: "STUNNING_STRIKE" })
+      },
+      doWholenessOfBody: ({ healRoll }) => {
+        if (healRoll != null) send({ type: "WHOLENESS_OF_BODY", healRoll: Number(healRoll) })
+      },
+      doUncannyMetabolism: ({ healRoll }) => {
+        if (healRoll != null) send({ type: "UNCANNY_METABOLISM", healRoll: Number(healRoll) })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

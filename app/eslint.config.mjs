@@ -108,6 +108,15 @@ export default [
     }
   },
 
+  // machine.ts override: action declarations must live inside setup() for XState type inference,
+  // and each class adds ~10 action lines. 550 accommodates 10 classes.
+  {
+    files: ["**/machine.ts"],
+    rules: {
+      "max-lines": ["error", { max: 550, skipBlankLines: true, skipComments: true }]
+    }
+  },
+
   // Test file overrides
   {
     files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts"],

@@ -25,8 +25,13 @@ export type DeviousStrikeEffect = (typeof DEVIOUS_STRIKE_EFFECTS)[number]
 /** All possible strike effects */
 export type StrikeEffect = (typeof ALL_STRIKE_EFFECTS)[number]
 
-const DEVIOUS_EFFECTS = new Set(DEVIOUS_STRIKE_EFFECTS)
-const TRIP_VALID_SIZES = new Set(["tiny", "small", "medium", "large"] as const satisfies ReadonlyArray<Size>)
+const DEVIOUS_EFFECTS: ReadonlySet<string> = new Set(DEVIOUS_STRIKE_EFFECTS)
+const TRIP_VALID_SIZES: ReadonlySet<string> = new Set([
+  "tiny",
+  "small",
+  "medium",
+  "large"
+] as const satisfies ReadonlyArray<Size>)
 
 /** Cunning Action choices (L2 Rogue) */
 export type CunningActionChoice = "dash" | "disengage" | "hide"

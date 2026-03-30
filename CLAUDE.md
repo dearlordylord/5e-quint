@@ -78,7 +78,7 @@ The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parit
 
 Every plan's **Verification** section must include:
 
-1. **`/simplify` convergence** — minimum 2 rounds (see below). Do not mark the plan as complete until simplify converges.
+1. **`/simplify` convergence** — minimum 2 rounds (see below). Do not mark the plan as complete until simplify converges. **Start `/simplify` immediately after implementation — do not wait for user confirmation.**
 2. **RAW agent check** — before implementing any rule, read the relevant SRD passage in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md`. Include a verification step that confirms all modeled rules trace to specific SRD text.
 
 ## /simplify convergence

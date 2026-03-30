@@ -19,7 +19,7 @@
  * Damage taken (55) exceeds Omen Archive aggregate (46) due to added rounds.
  */
 
-import { d20Roll } from "#/types.ts"
+import { d20Roll, healAmount } from "#/types.ts"
 
 import type { ActualPlayStep, EncounterDef } from "./actual-play-types.ts"
 import { damage, defaultState, endTurn, replayActualPlayTrace, startTurn } from "./actual-play-types.ts"
@@ -685,7 +685,7 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
     description:
       "Ally pours a healing potion! 7 HP restored. " +
       "Julien gasps back to consciousness. Death saves reset. Still prone.",
-    events: [{ type: "HEAL", amount: 7 }],
+    events: [{ type: "HEAL", amount: healAmount(7) }],
     expectedQuintState: defaultState({
       hp: 7,
       turnPhase: "waitingForTurn",

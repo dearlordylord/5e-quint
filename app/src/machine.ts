@@ -8,6 +8,7 @@ import {
   remarkableAthleteCritMovement
 } from "#/features/class-fighter.ts"
 import * as barb from "#/machine-barbarian.ts"
+import { initialClassStubs } from "#/machine-class-stubs.ts"
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
@@ -29,6 +30,7 @@ import {
   spendHitDieUpdate,
   tacticalMindUpdate
 } from "#/machine-helpers.ts"
+import * as monk from "#/machine-monk.ts"
 import {
   applyLegendaryResistance,
   monsterLongRestUpdate,
@@ -395,7 +397,43 @@ export const dndMachine = setup({
     restoreIntimidatingPresence: assign(({ context: c }) => barb.restoreIntimidatingPresenceUpdate(c)),
     barbarianStartTurn: assign(({ context: c }) => barb.barbarianStartTurnUpdate(c)),
     barbarianShortRest: assign(({ context: c }) => barb.barbarianShortRestUpdate(c)),
-    barbarianLongRest: assign(({ context: c }) => barb.barbarianLongRestUpdate(c))
+    barbarianLongRest: assign(({ context: c }) => barb.barbarianLongRestUpdate(c)),
+    flurryOfBlows: assign(({ context: c }) => monk.flurryOfBlowsUpdate(c)),
+    patientDefenseFree: assign(({ context: c }) => monk.patientDefenseFreeUpdate(c)),
+    patientDefenseFocus: assign(({ context: c }) => monk.patientDefenseFocusUpdate(c)),
+    stepOfTheWindFree: assign(({ context: c }) => monk.stepOfTheWindFreeUpdate(c)),
+    stepOfTheWindFocus: assign(({ context: c }) => monk.stepOfTheWindFocusUpdate(c)),
+    stunningStrike: assign(({ context: c }) => monk.stunningStrikeUpdate(c)),
+    wholenessOfBody: assign(({ context: c, event: e }) =>
+      monk.wholenessOfBodyUpdate(c, (e as Extract<DndEvent, { type: "WHOLENESS_OF_BODY" }>).healRoll)
+    ),
+    uncannyMetabolism: assign(({ context: c, event: e }) =>
+      monk.uncannyMetabolismUpdate(c, (e as Extract<DndEvent, { type: "UNCANNY_METABOLISM" }>).healRoll)
+    ),
+    monkStartTurn: assign(({ context: c }) => monk.monkStartTurnUpdate(c)),
+    monkShortRest: assign(({ context: c }) => monk.monkShortRestUpdate(c)),
+    monkLongRest: assign(({ context: c }) => monk.monkLongRestUpdate(c)),
+    paladinStartTurn: assign(() => ({})),
+    paladinShortRest: assign(() => ({})),
+    paladinLongRest: assign(() => ({})),
+    rogueStartTurn: assign(() => ({})),
+    rogueShortRest: assign(() => ({})),
+    rogueLongRest: assign(() => ({})),
+    clericStartTurn: assign(() => ({})),
+    clericShortRest: assign(() => ({})),
+    clericLongRest: assign(() => ({})),
+    druidStartTurn: assign(() => ({})),
+    druidShortRest: assign(() => ({})),
+    druidLongRest: assign(() => ({})),
+    sorcererStartTurn: assign(() => ({})),
+    sorcererShortRest: assign(() => ({})),
+    sorcererLongRest: assign(() => ({})),
+    warlockStartTurn: assign(() => ({})),
+    warlockShortRest: assign(() => ({})),
+    warlockLongRest: assign(() => ({})),
+    wizardStartTurn: assign(() => ({})),
+    wizardShortRest: assign(() => ({})),
+    wizardLongRest: assign(() => ({}))
   }
 }).createMachine({
   id: "dnd",
@@ -433,7 +471,9 @@ export const dndMachine = setup({
     rechargeAvailable: i.rechargeAvailable ?? {},
     dailyUsesRemaining: i.dailyUsesRemaining ?? {},
     dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
-    ...barb.initialBarbarianState(i.barbarianLevel ?? 0)
+    ...barb.initialBarbarianState(i.barbarianLevel ?? 0),
+    ...monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
+    ...initialClassStubs(i)
   }),
   on: rootEventHandlers,
   states: {

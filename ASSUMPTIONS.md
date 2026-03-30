@@ -245,3 +245,27 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Rules basis (SRD 5.2.1 Barbarian L15 "Persistent Rage"):** "Your Rage is so fierce that it now lasts for 10 minutes without you needing to do anything to extend it from round to round. Your Rage ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor."
 
 **Changes:** `dnd.qnt`: `pCheckRageMaintenance` returns early (no-op) when `barbarianLevel >= 15`. XState: `barbarianStartTurnUpdate` mirrors this.
+
+## A29: MonkState scope — caller-side features
+
+**Assumption:** Most Monk features are caller-side composition (D4 from plan): Martial Arts die, Unarmored Movement, Unarmored Defense AC, Evasion, Deflect Attacks damage reduction, Slow Fall, Open Hand Technique target effects (Addle/Push/Topple), Focus-Empowered Strikes, Self-Restoration, Disciplined Survivor, Perfect Focus, Fleet Step, Quivering Palm. The Quint spec only models resource tracking: Focus Points, Stunning Strike per-turn flag, Wholeness of Body charges, and Uncanny Metabolism once-per-long-rest flag.
+
+**Rules basis (SRD 5.2.1 Monk):** These features modify damage, AC, saves, or apply effects to targets — all caller-side concerns that the spec cannot observe without modeling two combatants.
+
+**Changes:** `dnd.qnt`: `MonkState` has 6 fields. `machine-monk.ts`: delegates to `class-monk.ts` and `class-monk-features.ts` for calculations.
+
+## A30: Wholeness of Body — WIS modifier range
+
+**Assumption:** Wholeness of Body max charges equal the monk's Wisdom modifier. Since the spec doesn't track ability scores, `wholenessMax` is derived from a nondeterministic `wisMod` (range 1–5) at init. The TS side uses `wholenessOfBodyMaxCharges(wisMod)` which clamps to `max(1, wisMod)`.
+
+**Rules basis (SRD 5.2.1 Warrior of the Open Hand L6 "Wholeness of Body"):** "You gain a number of uses equal to your Wisdom modifier (minimum of 1 use)."
+
+**Changes:** `dnd.qnt`: `freshMonkState` takes `wholenessMax` parameter. `init` generates `nondet wisMod = 1.to(5).oneOf()`.
+
+## A31: Uncanny Metabolism — modeled as player action, not auto-trigger
+
+**Assumption:** Uncanny Metabolism triggers "when you roll Initiative" but is modeled as an available action during the `acting` phase (player choice at initiative) rather than auto-triggering in `doStartTurn`. This preserves player agency — the player may choose not to use it if Focus Points are already full.
+
+**Rules basis (SRD 5.2.1 Monk L2 "Uncanny Metabolism"):** "When you roll Initiative, you can regain all expended Focus Points." The word "can" implies optional.
+
+**Changes:** `dnd.qnt`: `doUncannyMetabolism` is a separate action in `stepPC`, not wired into `doStartTurn`. Heal amount = `monkLevel + healRoll` (martial arts die abstracted as nondet 1–12).
