@@ -461,3 +461,21 @@ export {
   tirelessMaxCharges,
   tirelessTempHp
 } from "#/features/feature-bridge-ranger.ts"
+
+// --- Bard ---
+export {
+  bardicInspirationDie,
+  bardicInspirationMaxCharges,
+  hasCountercharm,
+  hasCuttingWords,
+  hasFontOfInspiration,
+  hasLoreBonusProficiencies,
+  hasMagicalDiscoveries,
+  hasPeerlessSkill,
+  hasWordsOfCreation,
+  jackOfAllTradesBonus,
+  type PeerlessSkillResult,
+  peerlessSkillResult,
+  songOfRestDie,
+  superiorInspirationRestore
+} from "#/features/feature-bridge-bard.ts"

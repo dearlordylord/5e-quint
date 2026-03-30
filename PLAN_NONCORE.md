@@ -411,20 +411,15 @@ TS-only pure functions in `class-ranger.ts`. SRD 5.2.1 correction: Multiattack D
 ## Bard
 
 ```
-[T80] Bardic Inspiration + Jack of All Trades (P2) -> deps: [T01]
-[T81] Lore (P3) -> deps: [T80]
+[T80] Bardic Inspiration + Jack of All Trades (P2) -> deps: [T01]  ✓ done
+[T81] Lore (P3) -> deps: [T80]  ✓ done
 ```
 
-**[T80] Bardic Inspiration + Jack of All Trades + Countercharm + Song of Rest**
-SRD 5.2.1: Font of Inspiration (L5): regain all expended Bardic Inspiration uses on Short or Long Rest; can also expend a spell slot (no action) to regain one use. Superior Inspiration (L20): regain 1 if 0 when rolling Initiative (unchanged). Words of Creation (L20): always have Power Word Heal and Power Word Kill prepared; when you cast either, can target a second creature within 10 ft of the first target.
-- State: `bardicInspirationCharges: int`
-- Functions: `pBardicInspirationDie(level)->d6/d8/d10/d12`; `pExpendInspiration(state)->decrement`; `pJackOfAllTrades(profBonus, hasProficiency)->if not proficient: +floor(profBonus/2)`; Countercharm (L6): action, advantage on saves vs charmed/frightened until end of next turn; Song of Rest (L2): `pSongOfRestDie(bardLevel)->d6/d8/d10/d12`; Superior Inspiration: regain 1 if 0 at initiative; Expertise (L3: double prof on 2 skills, 2 more at L10 — config)
-- Test: correct die at each tier; charges = max(CHA mod, 1); recharge short rest at L5+; Jack adds half prof to unproficient checks only; Superior Inspiration triggers when 0 at initiative
+**[T80] Bardic Inspiration + Jack of All Trades + Countercharm + Song of Rest** *(done)*
+TS-only pure functions in `class-bard.ts`. Bardic Inspiration die (d6/d8/d10/d12), charges = CHA mod (min 1), Jack of All Trades (+half prof to unproficient checks), Song of Rest (same die as BI), Font of Inspiration (L5, short rest recharge), Countercharm (L7, reaction reroll), Superior Inspiration (L18, restore to 2 on Initiative), Words of Creation (L20, Power Word double target). SRD correction: Superior Inspiration restores to 2 (not 1 as plan previously said).
 
-**[T81] Lore**
-Peerless Skill revised (L14: spend inspiration die on own ability check), Cutting Words revised per 5.2.1 (reaction, subtract inspiration die from enemy attack/ability/damage; immune if can't hear or charm-immune). Magical Discoveries (was Additional Magical Secrets): choose 2 spells from any list at L6.
-- Functions: `pPeerlessSkill(state, dieRoll)->add die to own check, expend charge`
-- Test: Peerless Skill adds die and expends charge; can't use at 0 charges
+**[T81] Lore** *(done)*
+TS-only in `class-bard.ts`. Bonus Proficiencies (L3), Cutting Words (L3, subtract BI die from enemy roll), Magical Discoveries (L6, config), Peerless Skill (L14, add BI die to own failed roll — BI not expended if still fails).
 
 ---
 
