@@ -2,7 +2,7 @@
 // TS-only: all traits are capability flags, resource tracking, or
 // modifier functions — no Quint state transitions.
 
-import { featureSaveDC } from "#/srd-constants.ts"
+import { type DraconicAncestryType, featureSaveDC } from "#/srd-constants.ts"
 import type { DamageType } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
@@ -163,7 +163,7 @@ export function halflingBraveAdvantageVsFrightened(): boolean {
 // --- Dragonborn ---
 
 /** Damage Resistance matching ancestry type. */
-export function dragonbornDamageResistance(ancestryType: DragonbornAncestryType): DamageType {
+export function dragonbornDamageResistance(ancestryType: DraconicAncestryType): DamageType {
   return ancestryType
 }
 
