@@ -519,6 +519,9 @@ describe("Holy Nimbus", () => {
     expect(holyNimbusRadiantDamage(5, 6)).toBe(11)
     expect(holyNimbusRadiantDamage(0, 2)).toBe(2)
   })
+  it("radiant damage can be low with negative CHA", () => {
+    expect(holyNimbusRadiantDamage(-1, 6)).toBe(5)
+  })
   it("can restore with slot only if already used", () => {
     expect(canRestoreHolyNimbusWithSlot(true)).toBe(true)
     expect(canRestoreHolyNimbusWithSlot(false)).toBe(false)
