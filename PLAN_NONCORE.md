@@ -238,7 +238,7 @@ Improved Critical (L3: critRange 19), Heroic Warrior (NEW L10: gain Heroic Inspi
 [T30] Sneak Attack + Cunning Strike (P1) -> deps: [T01]  ✓ done
 [T31] Cunning Action (P1) -> deps: [T06]  ✓ done
 [T32] Rogue Passives (P2) -> deps: [T01, T03, T04]  ✓ done
-[T33] Thief (P3) -> deps: [T31]
+[T33] Thief (P3) -> deps: [T31]  ✓ done
 ```
 
 **[T30] Sneak Attack + Cunning Strike** *(done)*
@@ -275,10 +275,14 @@ Expertise (double prof on 2 skills at 1st, 2 more at 6th), Evasion [T03], Uncann
 - Functions: `pReliableTalent(d20, isProficient)->max(10, d20) if proficient`; modify `pGetDefenseModifiers` for Elusive (no advantage on attacks against, unless incapacitated); `pStrokeOfLuck()->turn missed attack into hit, OR treat failed ability check as 20 (NOT saves)`; Slippery Mind (15th): add WIS save proficiency
 - Test: Reliable Talent replaces 9->10 but not 11->11; Elusive cancels advantage from all sources; Stroke of Luck only on missed attack or failed ability check (not saves), resets on short rest; Blindsense is config flag (caller-provided)
 
-**[T33] Thief**
-Fast Hands (Use Object, disarm trap/open lock, or Sleight of Hand check as bonus via Cunning Action), Second-Story Work (climbing free, jump +DEX), Supreme Sneak (L9: advantage Stealth if <= half speed; adds Stealth Attack Cunning Strike option — Cost: 1d6 SA dice, if you have Hide's Invisible condition, this attack doesn't end it if you end your turn behind Three-Quarters Cover or Total Cover), Use Magic Device (L13: config flag), Thief's Reflexes (L17: two turns in first round; can't use if surprised).
-- Functions: modify `pMovementCost` for climbing cost=1; modify jump distance +DEX mod; Fast Hands extends Cunning Action to include Use Object; `pStealthAttack(state, behindCover)->1d6 SA dice cost, preserve Invisible if behind 3/4+ Cover`
-- Test: climbing cost 1; jump distance +DEX mod; Fast Hands adds Use Object; Thief's Reflexes is caller-managed
+**[T33] Thief** *(done)*
+TS-only pure functions in `class-rogue.ts`. All capability flags/queries — no Quint state needed.
+- Fast Hands (L3): extends Cunning Action with Use Object/Sleight of Hand as BA
+- Second-Story Work (L3): Climb Speed = walk speed; jump distance uses DEX instead of STR
+- Supreme Sneak / Stealth Attack (L9): Cunning Strike option (1d6 SA dice cost), preserves Invisible if behind 3/4+ Cover
+- Use Magic Device (L13): attune 4 items, d6=6 saves charges, spell scroll DC = 10 + level
+- Thief's Reflexes (L17): two turns in first round, second at initiative - 10
+- Note: PLAN_NONCORE.md originally described 5.1 mechanics. Updated to match SRD 5.2.1: Second-Story Work grants Climb Speed (not "climbing free"); jump uses DEX (not "+DEX mod"); Supreme Sneak is only the Stealth Attack option (not "advantage on Stealth at half speed"); Thief's Reflexes has no "can't use if surprised" restriction
 
 ---
 
@@ -290,8 +294,8 @@ Fast Hands (Use Object, disarm trap/open lock, or Sleight of Hand check as bonus
 [T42] Focus Actions (P1) -> deps: [T40, T06]  ✓ done
 [T43] Stunning Strike (P1) -> deps: [T40]  ✓ done
 [T44] Monk Passives (P2) -> deps: [T01, T03]  ✓ done
-[T45] Monk Reactions (P2) -> deps: [T40]
-[T46] Warrior of the Open Hand (P2) -> deps: [T42]
+[T45] Monk Reactions (P2) -> deps: [T40]  ✓ done
+[T46] Warrior of the Open Hand (P2) -> deps: [T42]  ✓ done
 ```
 
 **[T40] Focus Pool** *(done)*
@@ -323,16 +327,11 @@ Note: Empty Body (old invisible + resistance option) replaced by Superior Defens
 - Functions: modify `pCalculateEffectiveSpeed` for Unarmored Movement; `pSelfRestoration(state)->remove one of Charmed/Frightened/Poisoned at end of each turn`; `pDisciplinedSurvivorReroll(state, newRoll)->precondition: save failed; expend 1 FP, use new save result`; `pSuperiorDefense(state, turnState)->3 FP + action, gain all resistance except Force for 1 min`
 - Test: speed bonus +10 at 2, +15 at 6, +20 at 10, +25 at 14, +30 at 18; Self-Restoration removes one condition per turn end automatically; Disciplined Survivor: all save prof at L14+, FP reroll after failed save; Superior Defense 3 FP + action
 
-**[T45] Monk Reactions**
-Deflect Attacks (reaction: reduce incoming damage by 1d10+DEX+level; throw back for 1 FP if reduced to 0. Base reaction [L2]: weapon attacks only. Deflect Energy [L13, passive from T44]: extends to any damage type via `hasDeflectEnergy` flag), Slow Fall (reduce fall damage by 5×level).
-- Functions: `pDeflectAttacks(state, config, d10, incomingDamage, damageType)->reduced damage (all types if hasDeflectEnergy, weapon-damage types otherwise); if 0: throw back for 1 FP`; `pSlowFall(state, config, fallDamage)->max(0, fallDamage - 5*level)`
-- Test: Deflect reduces correctly; throw-back costs 1 FP + reduces to 0; weapon attacks deflectable at L2+; all damage types deflectable at L13+ (Deflect Energy); Slow Fall at level 4 reduces by 20; both consume reaction
+**[T45] Monk Reactions** *(done)*
+Implemented in `class-monk-features.ts`. Deflect Attacks (L3): reduce incoming damage by 1d10+DEX+level; throw back for 1 FP if reduced to 0. Deflect Energy (L13 from T44) extends to any damage type. Slow Fall (L4): reduce fall damage by 5×level. Both consume reaction. Bridge wired in `feature-bridge-monk.ts`.
 
-**[T46] Warrior of the Open Hand**
-SRD 5.2.1 rename: Way of the Open Hand → Warrior of the Open Hand. Effects renamed: Addle (can't take reactions until start of your next turn), Push (push 15ft), Topple (DEX save or Prone). Wholeness of Body revised: as a Bonus Action, heal yourself for 1d8+WIS mod; uses = WIS mod (min 1)/long rest. Fleet Step (L11): when you use Step of the Wind, you can take the Dash or Disengage action as a Free Action in addition to spending 1 FP. Quivering Palm revised: 4 FP (was 3), target takes 10d12 Force damage on trigger (CON save: half on success — no longer save-or-die).
-- State: `wholenessOfBodyCharges: int`, `quiveringPalmActive: bool`
-- Functions: `pOpenHandTechnique(choice, targetSaveResult)` (Addle/Push/Topple); `pWholenessOfBody(state, config, dieRoll)->heal 1d8+WIS mod, decrement charges`; `pFleetStep(state, turnState)->when using Step of the Wind, take Dash/Disengage free`; `pQuiveringPalm(state)->expend 4 FP, mark active`; `pTriggerQuiveringPalm(targetSaveResult, d12Rolls)->10d12 Force, half on success`
-- Test: Addle blocks reactions; Push 15ft; Topple prone on fail; Wholeness heals 1d8+WIS mod, charges=WIS mod/LR; Fleet Step free Dash/Disengage with Step of Wind; Quivering Palm costs 4 FP; 10d12 Force half on save success
+**[T46] Warrior of the Open Hand** *(done)*
+Implemented in `class-monk-features.ts`. Open Hand Technique (Addle/Push/Topple on Flurry), Wholeness of Body (1d8+WIS heal, WIS mod charges/LR), Fleet Step (L11 passive), Quivering Palm (4 FP, 10d12 Force half on CON save). Bridge wired for Wholeness + Quivering Palm; Open Hand Technique and Fleet Step are passive queries.
 
 ---
 

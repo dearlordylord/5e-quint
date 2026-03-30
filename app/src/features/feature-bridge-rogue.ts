@@ -118,3 +118,18 @@ export const getHasSlipperyMind: (rogueLevel: number) => boolean = hasSlipperyMi
 
 export const getElusiveCancelsAdvantage: (rogueLevel: number, isIncapacitated: boolean) => boolean =
   elusiveCancelsAdvantage
+
+// --- Thief subclass queries (passive — no state) ---
+export {
+  hasFastHands,
+  hasStealthAttack,
+  hasThiefsReflexes,
+  hasUseMagicDevice,
+  jumpAbility,
+  magicDeviceChargesSaved,
+  magicDeviceScrollDC,
+  secondStoryClimbSpeed,
+  stealthAttackDiceCost,
+  stealthAttackPreservesInvisible,
+  thiefsReflexesSecondInitiative
+} from "#/features/class-rogue.ts"

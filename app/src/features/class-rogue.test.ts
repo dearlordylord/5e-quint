@@ -14,17 +14,28 @@ import {
   ELUSIVE_LEVEL,
   elusiveCancelsAdvantage,
   evasionDamage,
+  hasFastHands,
   hasSlipperyMind,
+  hasStealthAttack,
+  hasThiefsReflexes,
+  hasUseMagicDevice,
+  jumpAbility,
+  magicDeviceChargesSaved,
+  magicDeviceScrollDC,
   maxCunningStrikeEffects,
   RELIABLE_TALENT_LEVEL,
   reliableTalent,
   resetRogueTurnState,
+  secondStoryClimbSpeed,
   SLIPPERY_MIND_LEVEL,
   sneakAttackDice,
+  stealthAttackDiceCost,
+  stealthAttackPreservesInvisible,
   strikeDieCost,
   STROKE_OF_LUCK_LEVEL,
   strokeOfLuckAbilityCheck,
   strokeOfLuckAttack,
+  thiefsReflexesSecondInitiative,
   uncannyDodgeDamage,
   useCunningAction
 } from "#/features/class-rogue.ts"
@@ -499,29 +510,54 @@ describe("uncannyDodgeDamage", () => {
 
 describe("canUncannyDodge", () => {
   it("requires L5+, reaction, visible attacker, not incapacitated", () => {
-    expect(canUncannyDodge({
-      rogueLevel: 5, reactionAvailable: true, attackerVisible: true, isIncapacitated: false
-    })).toBe(true)
+    expect(
+      canUncannyDodge({
+        rogueLevel: 5,
+        reactionAvailable: true,
+        attackerVisible: true,
+        isIncapacitated: false
+      })
+    ).toBe(true)
   })
   it("fails below L5", () => {
-    expect(canUncannyDodge({
-      rogueLevel: 4, reactionAvailable: true, attackerVisible: true, isIncapacitated: false
-    })).toBe(false)
+    expect(
+      canUncannyDodge({
+        rogueLevel: 4,
+        reactionAvailable: true,
+        attackerVisible: true,
+        isIncapacitated: false
+      })
+    ).toBe(false)
   })
   it("fails without reaction", () => {
-    expect(canUncannyDodge({
-      rogueLevel: 5, reactionAvailable: false, attackerVisible: true, isIncapacitated: false
-    })).toBe(false)
+    expect(
+      canUncannyDodge({
+        rogueLevel: 5,
+        reactionAvailable: false,
+        attackerVisible: true,
+        isIncapacitated: false
+      })
+    ).toBe(false)
   })
   it("fails if attacker not visible", () => {
-    expect(canUncannyDodge({
-      rogueLevel: 5, reactionAvailable: true, attackerVisible: false, isIncapacitated: false
-    })).toBe(false)
+    expect(
+      canUncannyDodge({
+        rogueLevel: 5,
+        reactionAvailable: true,
+        attackerVisible: false,
+        isIncapacitated: false
+      })
+    ).toBe(false)
   })
   it("fails if incapacitated", () => {
-    expect(canUncannyDodge({
-      rogueLevel: 5, reactionAvailable: true, attackerVisible: true, isIncapacitated: true
-    })).toBe(false)
+    expect(
+      canUncannyDodge({
+        rogueLevel: 5,
+        reactionAvailable: true,
+        attackerVisible: true,
+        isIncapacitated: true
+      })
+    ).toBe(false)
   })
 })
 
@@ -542,5 +578,101 @@ describe("evasionDamage", () => {
   })
   it("returns full damage without evasion feature", () => {
     expect(evasionDamage(false, false, true, 20)).toBe(20)
+  })
+})
+
+// =============================================================================
+// Thief Subclass
+// =============================================================================
+
+describe("Fast Hands", () => {
+  it("available at L3+", () => {
+    expect(hasFastHands(3)).toBe(true)
+    expect(hasFastHands(9)).toBe(true)
+  })
+  it("not available below L3", () => {
+    expect(hasFastHands(2)).toBe(false)
+    expect(hasFastHands(0)).toBe(false)
+  })
+})
+
+describe("Second-Story Work", () => {
+  it("grants climb speed equal to walk speed at L3+", () => {
+    expect(secondStoryClimbSpeed(3, 30)).toBe(30)
+    expect(secondStoryClimbSpeed(10, 35)).toBe(35)
+  })
+  it("no climb speed below L3", () => {
+    expect(secondStoryClimbSpeed(2, 30)).toBe(0)
+    expect(secondStoryClimbSpeed(0, 30)).toBe(0)
+  })
+  it("jump uses DEX at L3+", () => {
+    expect(jumpAbility(3)).toBe("dexterity")
+    expect(jumpAbility(17)).toBe("dexterity")
+  })
+  it("jump uses STR below L3", () => {
+    expect(jumpAbility(2)).toBe("strength")
+    expect(jumpAbility(0)).toBe("strength")
+  })
+})
+
+describe("Supreme Sneak — Stealth Attack", () => {
+  it("available at L9+", () => {
+    expect(hasStealthAttack(9)).toBe(true)
+    expect(hasStealthAttack(17)).toBe(true)
+  })
+  it("not available below L9", () => {
+    expect(hasStealthAttack(8)).toBe(false)
+  })
+  it("preserves invisible behind 3/4 cover", () => {
+    expect(stealthAttackPreservesInvisible("threequarters")).toBe(true)
+  })
+  it("preserves invisible behind total cover", () => {
+    expect(stealthAttackPreservesInvisible("total")).toBe(true)
+  })
+  it("does not preserve invisible without cover", () => {
+    expect(stealthAttackPreservesInvisible(null)).toBe(false)
+  })
+  it("costs 1d6 SA dice", () => {
+    expect(stealthAttackDiceCost()).toBe(1)
+  })
+})
+
+describe("Use Magic Device", () => {
+  it("available at L13+", () => {
+    expect(hasUseMagicDevice(13)).toBe(true)
+    expect(hasUseMagicDevice(20)).toBe(true)
+  })
+  it("not available below L13", () => {
+    expect(hasUseMagicDevice(12)).toBe(false)
+    expect(hasUseMagicDevice(0)).toBe(false)
+  })
+  it("charges saved on d6 roll of 6", () => {
+    expect(magicDeviceChargesSaved(6)).toBe(true)
+  })
+  it("charges not saved on d6 roll of 1-5", () => {
+    for (let i = 1; i <= 5; i++) {
+      expect(magicDeviceChargesSaved(i)).toBe(false)
+    }
+  })
+  it("scroll DC = 10 + spell level", () => {
+    expect(magicDeviceScrollDC(1)).toBe(11)
+    expect(magicDeviceScrollDC(5)).toBe(15)
+    expect(magicDeviceScrollDC(9)).toBe(19)
+  })
+})
+
+describe("Thief's Reflexes", () => {
+  it("available at L17+", () => {
+    expect(hasThiefsReflexes(17)).toBe(true)
+    expect(hasThiefsReflexes(20)).toBe(true)
+  })
+  it("not available below L17", () => {
+    expect(hasThiefsReflexes(16)).toBe(false)
+    expect(hasThiefsReflexes(0)).toBe(false)
+  })
+  it("second initiative = normal - 10", () => {
+    expect(thiefsReflexesSecondInitiative(15)).toBe(5)
+    expect(thiefsReflexesSecondInitiative(20)).toBe(10)
+    expect(thiefsReflexesSecondInitiative(5)).toBe(-5)
   })
 })

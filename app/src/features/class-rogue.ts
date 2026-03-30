@@ -379,3 +379,110 @@ export function strokeOfLuckAttack(): StrokeOfLuckAttackResult {
 export function strokeOfLuckAbilityCheck(): StrokeOfLuckAbilityCheckResult {
   return { treatAs20: true, strokeOfLuckUsed: true }
 }
+
+// =============================================================================
+// Thief Subclass (SRD 5.2.1)
+//
+// TS-only: all features are capability flags, movement modifiers, or
+// positional checks — no state transitions trackable in Quint.
+// =============================================================================
+
+const THIEF_SUBCLASS_LEVEL = 3
+const SUPREME_SNEAK_LEVEL = 9
+const USE_MAGIC_DEVICE_LEVEL = 13
+const THIEFS_REFLEXES_LEVEL = 17
+const STEALTH_ATTACK_DICE_COST = 1
+
+// --- Fast Hands (L3) ---
+
+/**
+ * SRD: "As a Bonus Action, you can do one of the following: Sleight of Hand
+ * (pick lock, disarm trap, pick pocket) or Use an Object (Utilize or Magic action)."
+ * Extends Cunning Action options. Capability flag — caller handles the action.
+ */
+export function hasFastHands(rogueLevel: number): boolean {
+  return rogueLevel >= THIEF_SUBCLASS_LEVEL
+}
+
+// --- Second-Story Work (L3) ---
+
+/**
+ * SRD: "You gain a Climb Speed equal to your Speed."
+ * Returns the climb speed granted (equal to walk speed), or 0 if below L3.
+ */
+export function secondStoryClimbSpeed(rogueLevel: number, walkSpeed: number): number {
+  return rogueLevel >= THIEF_SUBCLASS_LEVEL ? walkSpeed : 0
+}
+
+/**
+ * SRD: "You can determine your jump distance using your Dexterity
+ * rather than your Strength."
+ * Returns which ability score to use for jump distance calculation.
+ */
+export function jumpAbility(rogueLevel: number): "dexterity" | "strength" {
+  return rogueLevel >= THIEF_SUBCLASS_LEVEL ? "dexterity" : "strength"
+}
+
+// --- Supreme Sneak (L9) — Stealth Attack Cunning Strike option ---
+
+/**
+ * SRD: "Stealth Attack (Cost: 1d6). If you have the Hide action's Invisible
+ * condition, this attack doesn't end that condition on you if you end the turn
+ * behind Three-Quarters Cover or Total Cover."
+ */
+export function hasStealthAttack(rogueLevel: number): boolean {
+  return rogueLevel >= SUPREME_SNEAK_LEVEL
+}
+
+export type CoverType = "threequarters" | "total"
+
+/**
+ * Returns whether the Invisible condition is preserved after a Stealth Attack.
+ * Requires ending the turn behind 3/4 or Total Cover.
+ */
+export function stealthAttackPreservesInvisible(behindCover: CoverType | null): boolean {
+  return behindCover === "threequarters" || behindCover === "total"
+}
+
+/** SA dice cost for Stealth Attack. */
+export function stealthAttackDiceCost(): 1 {
+  return STEALTH_ATTACK_DICE_COST as 1
+}
+
+// --- Use Magic Device (L13) ---
+
+/**
+ * SRD: Attune up to 4 items; chance to not expend charges (roll 6 on d6);
+ * can use any Spell Scroll (INT as spellcasting ability).
+ * Capability flag — caller handles attunement and scroll logic.
+ */
+export function hasUseMagicDevice(rogueLevel: number): boolean {
+  return rogueLevel >= USE_MAGIC_DEVICE_LEVEL
+}
+
+/** Roll d6; on 6, charges are not expended. Returns true if charges saved. */
+export function magicDeviceChargesSaved(d6Roll: number): boolean {
+  return d6Roll === 6
+}
+
+/** Spell Scroll DC for Use Magic Device: 10 + spell level. */
+export function magicDeviceScrollDC(spellLevel: number): number {
+  return 10 + spellLevel
+}
+
+// --- Thief's Reflexes (L17) ---
+
+/**
+ * SRD: "You can take two turns during the first round of any combat.
+ * You take your first turn at your normal Initiative and your second turn
+ * at your Initiative minus 10."
+ * Capability flag — caller manages the extra turn.
+ */
+export function hasThiefsReflexes(rogueLevel: number): boolean {
+  return rogueLevel >= THIEFS_REFLEXES_LEVEL
+}
+
+/** Returns the initiative value for the second turn. */
+export function thiefsReflexesSecondInitiative(normalInitiative: number): number {
+  return normalInitiative - 10
+}
