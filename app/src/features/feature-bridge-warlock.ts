@@ -1,0 +1,31 @@
+// Warlock feature bridge — query-only re-exports
+
+export {
+  agonizingBlastBonus,
+  canEldritchSmite,
+  canUseDarkOnesOwnLuck,
+  canUseHurlThroughHell,
+  canUseMagicalCunning,
+  canUseMysticArcanum,
+  darkOnesBlessingTempHp,
+  darkOnesOwnLuckMaxUses,
+  eldritchSmiteDice,
+  eldritchSpearBonusRange,
+  giftOfProtectorsMaxNames,
+  hasContactPatron,
+  hasDevilsSight,
+  hasDevouringBlade,
+  hasEldritchMaster,
+  hasEldritchMind,
+  hasFiendishResilience,
+  hasLifedrinker,
+  hasThirstingBlade,
+  hurlThroughHellDice,
+  invocationsKnown,
+  isValidFiendishResistanceType,
+  magicalCunningRecovery,
+  mysticArcanumLevels,
+  pactSlotCount,
+  pactSlotLevel,
+  repellingBlastDistance
+} from "#/features/class-warlock.ts"

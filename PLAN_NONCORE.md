@@ -521,9 +521,9 @@ L18 Draconic Sorcery. Cast Summon Dragon without a Material component. Cast it 1
 ## Warlock
 
 ```
-[T120] Warlock Resources (P2) -> deps: [T01]
-[T121] Invocations (P2) -> deps: [T120]
-[T122] Fiend Patron (P2) -> deps: [T120]
+[T120] Warlock Resources (P2) -> deps: [T01]  ✓ done
+[T121] Invocations (P2) -> deps: [T120]  ✓ done
+[T122] Fiend Patron (P2) -> deps: [T120]  ✓ done
 ```
 
 **[T120] Warlock Resources**
