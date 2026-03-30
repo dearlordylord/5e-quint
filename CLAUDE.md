@@ -1,5 +1,9 @@
 # D&D 5e PHB — project notes
 
+## Memory
+
+Do not write to the memory system unless explicitly asked.
+
 ## Worktree agent bug
 
 Worktree creation sometimes branches from a stale ref instead of master's HEAD. When launching a worktree agent, always include in the prompt: `"Before starting, run 'git log --oneline -1 master' and verify your HEAD matches. If not, run 'git rebase master'."` This costs one command and prevents silent divergence that causes unmergeable conflicts.
@@ -39,6 +43,14 @@ The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parit
 - **Never** "fix" XState behavior that the Quint spec models differently — update the spec or accept it as spec-level intentional.
 - **Never** remove or rename context fields that the MBT bridge maps — check `machine.mbt.test.ts` before removing anything from `DndContext`.
 - If a simplify/refactor changes behavior, the MBT tests MUST still pass. If they don't, the refactor is wrong.
+
+## TypeScript conventions
+
+- **Typed constant arrays:** When defining a fixed list of domain values (conditions, damage types, etc.), use `as const satisfies ReadonlyArray<T>` to get both literal types and compile-time validation:
+  ```typescript
+  const CURABLE = ["poisoned", "blinded", "charmed"] as const satisfies ReadonlyArray<Condition>
+  ```
+  This catches typos and invalid values at compile time. Prefer this over plain `string[]` or unvalidated `as const`.
 
 ## Non-core features
 
