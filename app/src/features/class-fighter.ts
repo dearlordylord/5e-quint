@@ -364,13 +364,13 @@ export function useIndomitable(
 // =============================================================================
 
 export const TACTICAL_MASTER_LEVEL = 9
-const TACTICAL_MASTER_SUBSTITUTIONS = new Set([
+const TACTICAL_MASTER_SUBSTITUTIONS = [
   "push",
   "sap",
   "slow"
-] as const satisfies ReadonlyArray<TacticalMasterSubstitution>)
-
-export type TacticalMasterSubstitution = "push" | "sap" | "slow"
+] as const;
+export type TacticalMasterSubstitution = typeof TACTICAL_MASTER_SUBSTITUTIONS[number];
+const TACTICAL_MASTER_SUBSTITUTIONS_S = new Set(TACTICAL_MASTER_SUBSTITUTIONS)
 
 /** Precondition: can use Tactical Master to substitute a mastery property. */
 export function canUseTacticalMaster(fighterLevel: number, hasWeaponMastery: boolean): boolean {
@@ -382,7 +382,7 @@ export function canUseTacticalMaster(fighterLevel: number, hasWeaponMastery: boo
  * The substitution must be Push, Sap, or Slow.
  */
 export function tacticalMasterSubstitute(substitute: TacticalMasterSubstitution): TacticalMasterSubstitution {
-  assert(TACTICAL_MASTER_SUBSTITUTIONS.has(substitute), `tacticalMasterSubstitute: invalid substitute "${substitute}"`)
+  assert(TACTICAL_MASTER_SUBSTITUTIONS_S.has(substitute), `tacticalMasterSubstitute: invalid substitute "${substitute}"`)
   return substitute
 }
 

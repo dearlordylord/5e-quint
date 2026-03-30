@@ -27,7 +27,7 @@ module qa_generated {
   // Restoring Touch vs Cleansing Touch: Restoring Touch removes Paralyzed (incapacitating) condition from creature
   run qa_restoring_touch_removes_paralyzed = {
     val creature = freshCreature(20)
-    val paralyzed = pApplyCondition(creature, CParalyzed, Set())
+    val paralyzed = pApplyCondition(creature, CParalyzed)
     val restored = pRemoveCondition(paralyzed, CParalyzed)
     assert(
       not(restored.paralyzed) and
@@ -38,8 +38,8 @@ module qa_generated {
   // Restoring Touch vs Cleansing Touch: Restoring Touch removes Charmed and Frightened simultaneously (multi-condition use)
   run qa_restoring_touch_removes_charmed_and_frightened = {
     val creature = freshCreature(20)
-    val c1 = pApplyCondition(creature, CCharmed, Set())
-    val c2 = pApplyCondition(c1, CFrightened, Set())
+    val c1 = pApplyCondition(creature, CCharmed)
+    val c2 = pApplyCondition(c1, CFrightened)
     val restored = pRemoveCondition(pRemoveCondition(c2, CCharmed), CFrightened)
     assert(not(restored.charmed) and not(restored.frightened))
   }
@@ -57,7 +57,7 @@ module qa_generated {
   // Restoring Touch vs Cleansing Touch: Cleansing Touch does not remove conditions — only the active spell entry
   run qa_cleansing_touch_leaves_conditions = {
     val creature = freshCreature(20)
-    val c1 = pApplyCondition(creature, CCharmed, Set())
+    val c1 = pApplyCondition(creature, CCharmed)
     val withEffect = c1.with("activeEffects",
       pAddEffect(c1.activeEffects, "dominate_person", 3, AtEndOfTurn))
     val afterCleansing = withEffect.with("activeEffects",
@@ -243,14 +243,14 @@ module qa_generated {
   
   // Is there an error in the new Carrion Crawler stat block? — Paralyzed auto-fails DEX saves, making DEX-based escape impossible
   run qa_paralyzed_autofails_dex_escape_save = {
-    val paralyzed = pApplyCondition(freshCreature(20), CParalyzed, Set())
+    val paralyzed = pApplyCondition(freshCreature(20), CParalyzed)
     val mods = pSaveModifiers(paralyzed, Dex)
     assert(mods.autoFail == true)
   }
   
   // Errata fix: CON save is not auto-failed while Paralyzed, so escape via CON save is possible
   run qa_paralyzed_con_save_not_autofail = {
-    val paralyzed = pApplyCondition(freshCreature(20), CParalyzed, Set())
+    val paralyzed = pApplyCondition(freshCreature(20), CParalyzed)
     val mods = pSaveModifiers(paralyzed, Con)
     assert(mods.autoFail == false)
   }
@@ -659,7 +659,7 @@ module qa_generated {
   // Q&A: Expert Classes UA - Exhaustion level 6 kills the creature (spec models SRD 5.2.1)
   run qa_exhaustion_level_6_death = {
     val s = freshCreature(20).with("exhaustion", 5)
-    val s2 = pAddExhaustion(s, 1, false)
+    val s2 = pAddExhaustion(s, 1)
     assert(s2.dead and s2.exhaustion == 6 and s2.hp == 0)
   }
   
@@ -793,7 +793,7 @@ module qa_generated {
   // Ring of Invisibility (2024): Invisible condition persists through attack actions, ends only on Bonus Action
   run qa_ring_of_invisibility_persists_through_attack = {
     val creature = freshCreature(30)
-    val withInvisible = pApplyCondition(creature, CInvisible, Set())
+    val withInvisible = pApplyCondition(creature, CInvisible)
     // Taking an Attack action (pUseAction operates on TurnState only, does not touch CreatureState invisible field)
     val afterAttack = pUseAction(FRESH_TURN, withInvisible, AAttack)
     // Invisible condition survives the attack — only Bonus Action (remove) or ring removal ends it
@@ -803,7 +803,7 @@ module qa_generated {
   // Ring of Invisibility (2024): Invisible condition ends when wearer uses Bonus Action to become visible
   run qa_ring_of_invisibility_ends_on_bonus_action = {
     val creature = freshCreature(30)
-    val withInvisible = pApplyCondition(creature, CInvisible, Set())
+    val withInvisible = pApplyCondition(creature, CInvisible)
     // Wearer uses Bonus Action to become visible (modeled as explicit condition removal)
     val afterBonusAction = pRemoveCondition(withInvisible, CInvisible)
     assert(afterBonusAction.invisible == false)
@@ -957,7 +957,7 @@ module qa_generated {
   // What we still need the UA to clarify regarding Hiding (RAW) - invisible defender (target of attack) imposes disadvantage on attacker
   run qa_invisible_defender_imposes_attacker_disadvantage = {
       val creature = freshCreature(20)
-      val withInvisible = pApplyCondition(creature, CInvisible, Set())
+      val withInvisible = pApplyCondition(creature, CInvisible)
       val defMods = pDefenseModifiers(withInvisible, true)
       assert(defMods.attackerDisadvantage == true and defMods.attackerAdvantage == false)
   }
@@ -1091,14 +1091,14 @@ module qa_generated {
   
   // New Death Saving throw rules — stabilize (Medicine check) keeps creature unconscious at 0 HP
   run qa_stabilize_keeps_unconscious = {
-    val dying = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious, Set())
+    val dying = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious)
     val stabilized = pStabilize(dying)
     assert(stabilized.stable and stabilized.hp == 0 and stabilized.unconscious and not(stabilized.dead))
   }
   
   // New Death Saving throw rules — three death save successes: stable but still unconscious at 0 HP
   run qa_three_death_saves_stable_still_unconscious = {
-    val dying = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious, Set())
+    val dying = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious)
     val s1 = pDeathSave(dying, 15)
     val s2 = pDeathSave(s1, 15)
     val s3 = pDeathSave(s2, 15)
@@ -1107,14 +1107,14 @@ module qa_generated {
   
   // New Death Saving throw rules — Spare the Dying equivalent (heal to 1 HP) restores consciousness
   run qa_spare_dying_heals_to_1hp_restores_consciousness = {
-    val dying = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious, Set())
+    val dying = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious)
     val saved = pHeal(dying, 1)
     assert(saved.hp == 1 and not(saved.unconscious) and not(saved.dead))
   }
   
   // New Death Saving throw rules — stable creature regains consciousness only via natural recovery (1d4 hours)
   run qa_stable_recovery_restores_consciousness = {
-    val dying = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious, Set())
+    val dying = pApplyCondition(freshCreature(20).with("hp", 0), CUnconscious)
     val stabilized = pStabilize(dying)
     val recovered = pStableRecovery(stabilized)
     assert(recovered.hp == 1 and not(recovered.unconscious) and not(recovered.stable))
@@ -1356,7 +1356,7 @@ module qa_generated {
     // RAW: CGrappled ends only if the grappled creature is moved out of range —
     // not if the grappler is pushed away. pShove(ShovePush) leaves the grappler's
     // state unchanged (no position tracking), so the grappled condition persists.
-    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
+    val grappled = pApplyCondition(freshCreature(20), CGrappled)
     val grappler = freshCreature(20)
     val shoveResult = pShove(Medium, Medium, grappler, true, ShovePush)
     assert(shoveResult.success and grappled.grappled)
@@ -1512,7 +1512,7 @@ module qa_generated {
     val creature = freshCreature(20)
     // d20=7: 7+2=9 < DC 10 → save fails → gain 1 exhaustion
     val failed = not(saveSucceeds(7, conMod, false, profBonus, 0, 10))
-    val result = if (failed) pAddExhaustion(creature, 1, false) else creature
+    val result = if (failed) pAddExhaustion(creature, 1) else creature
     assert(failed and result.exhaustion == 1)
   }
   
@@ -1523,7 +1523,7 @@ module qa_generated {
     val creature = freshCreature(20)
     // d20=10: 10+2=12 >= DC 10 → save succeeds → no exhaustion
     val succeeded = saveSucceeds(10, conMod, false, profBonus, 0, 10)
-    val result = if (not(succeeded)) pAddExhaustion(creature, 1, false) else creature
+    val result = if (not(succeeded)) pAddExhaustion(creature, 1) else creature
     assert(succeeded and result.exhaustion == 0)
   }
   
@@ -2108,7 +2108,7 @@ module qa_generated {
   run qa_item_spell_components_not_required = {
     val creature = freshCreature(20)
     // Creature is paralyzed — pCanSpeak returns false — yet item provides the components
-    val paralyzed = pApplyCondition(creature, CParalyzed, Set())
+    val paralyzed = pApplyCondition(creature, CParalyzed)
     // requiresVerbal=false, requiresSomatic=false models the item supplying all components
     val canCast = pCanProvideComponents(paralyzed, false, false, false)
     assert(canCast)
@@ -2188,21 +2188,21 @@ module qa_generated {
   // New Exhaustion Rules with Berserker: each Frenzy use adds 1 exhaustion level, penalty is -2 per level
   run qa_frenzy_one_exhaustion_gives_minus2_penalty = {
     val c = freshCreature(30)
-    val c1 = pAddExhaustion(c, 1, false)
+    val c1 = pAddExhaustion(c, 1)
     assert(exhaustionPenalty(c1) == -2)
   }
   
   // New Exhaustion Rules with Berserker: stacking two Frenzy uses gives cumulative -4 D20 penalty
   run qa_frenzy_two_exhaustion_stacks_cumulatively = {
     val c = freshCreature(30)
-    val c1 = pAddExhaustion(pAddExhaustion(c, 1, false), 1, false)
+    val c1 = pAddExhaustion(pAddExhaustion(c, 1), 1)
     assert(c1.exhaustion == 2 and exhaustionPenalty(c1) == -4)
   }
-
+  
   // New Exhaustion Rules with Berserker: long rest removes exactly 1 exhaustion level (slow recovery)
   run qa_frenzy_long_rest_removes_one_exhaustion = {
     val c = freshCreature(30)
-    val c2 = pAddExhaustion(pAddExhaustion(c, 1, false), 1, false)
+    val c2 = pAddExhaustion(pAddExhaustion(c, 1), 1)
     val c3 = pLongRest(c2, 5)
     assert(c3.exhaustion == 1)
   }
@@ -2210,7 +2210,7 @@ module qa_generated {
   // New Exhaustion Rules with Berserker: exhaustion level 6 is fatal regardless of current HP
   run qa_frenzy_exhaustion_level_6_is_fatal = {
     val c = freshCreature(30)
-    val c1 = pAddExhaustion(c, 6, false)
+    val c1 = pAddExhaustion(c, 6)
     assert(c1.dead and c1.exhaustion == 6 and c1.hp == 0)
   }
 
@@ -2856,7 +2856,7 @@ module qa_generated {
     // Warlock casting via GoTM from Rogue's space does not trigger pRemoveCondition(CInvisible) on the Rogue.
     val rogue = freshCreature(20)
     // Rogue takes the Hide action and gains the Invisible condition
-    val rogueHidden = pApplyCondition(rogue, CInvisible, Set())
+    val rogueHidden = pApplyCondition(rogue, CInvisible)
     // Warlock casts Eldritch Blast "as if in the Rogue's space" via GoTM.
     // The Rogue is not the caster, so none of the Invisible-ending triggers apply to it.
     // No pRemoveCondition(_, CInvisible) is called on the Rogue.
@@ -3309,7 +3309,7 @@ module qa_generated {
   // "Hidden" new rules for surprise? — Incapacitated when rolling Initiative grants Disadvantage on the roll
   run qa_incapacitated_disadvantage_on_initiative = {
     // Stunned implies incapacitated; initiative is a DEX check
-    val incapCreature = pApplyCondition(freshCreature(20), CStunned, Set())
+    val incapCreature = pApplyCondition(freshCreature(20), CStunned)
     val healthyCreature = freshCreature(20)
     // Disadvantage flag set iff creature is incapacitated at initiative time
     val incapAdv = resolveAdvantage({ hasAdvantage: false, hasDisadvantage: isIncapacitated(incapCreature) })
@@ -3325,7 +3325,7 @@ module qa_generated {
   // Banishment is now worse than Tasha's Hideous Laughter: end-of-turn save success removes banishment-like incapacitation
   run qa_end_of_turn_save_success_removes_banishment_effect = {
     val target = freshCreature(20)
-    val target1 = pApplyCondition(target, CIncapacitated, Set())
+    val target1 = pApplyCondition(target, CIncapacitated)
     val effects1 = pAddEffect(target1.activeEffects, "banishment", 3, AtEndOfTurn)
     val target2 = target1.with("activeEffects", effects1)
     val save = { spellId: "banishment", saveSucceeded: true, conditionsToRemove: Set(CIncapacitated) }
@@ -3336,7 +3336,7 @@ module qa_generated {
   // Banishment is now worse than Tasha's Hideous Laughter: failed end-of-turn save keeps target incapacitated
   run qa_end_of_turn_save_failure_keeps_banishment_effect = {
     val target = freshCreature(20)
-    val target1 = pApplyCondition(target, CIncapacitated, Set())
+    val target1 = pApplyCondition(target, CIncapacitated)
     val effects1 = pAddEffect(target1.activeEffects, "banishment", 3, AtEndOfTurn)
     val target2 = target1.with("activeEffects", effects1)
     val save = { spellId: "banishment", saveSucceeded: false, conditionsToRemove: Set(CIncapacitated) }
@@ -3347,7 +3347,7 @@ module qa_generated {
   // Banishment is now worse than Tasha's Hideous Laughter: THL end-of-turn save success clears both prone and incapacitated
   run qa_thl_end_of_turn_save_removes_prone_and_incapacitated = {
     val target = freshCreature(20)
-    val target1 = pApplyCondition(pApplyCondition(target, CIncapacitated, Set()), CProne, Set())
+    val target1 = pApplyCondition(pApplyCondition(target, CIncapacitated), CProne)
     val effects1 = pAddEffect(target1.activeEffects, "thl", 3, AtEndOfTurn)
     val target2 = target1.with("activeEffects", effects1)
     val save = { spellId: "thl", saveSucceeded: true, conditionsToRemove: Set(CIncapacitated, CProne) }
@@ -3415,21 +3415,21 @@ module qa_generated {
   
   // Saving throws when under certain conditions: restrained imposes disadvantage on DEX saves only
   run qa_restrained_dex_save_has_disadvantage = {
-    val c = pApplyCondition(freshCreature(10), CRestrained, Set())
+    val c = pApplyCondition(freshCreature(10), CRestrained)
     val mods = pSaveModifiers(c, Dex)
     assert(mods.hasDisadvantage and not(mods.autoFail))
   }
   
   // Saving throws when under certain conditions: restrained does NOT affect STR saves
   run qa_restrained_str_save_no_effect = {
-    val c = pApplyCondition(freshCreature(10), CRestrained, Set())
+    val c = pApplyCondition(freshCreature(10), CRestrained)
     val mods = pSaveModifiers(c, Str)
     assert(not(mods.hasDisadvantage) and not(mods.autoFail))
   }
   
   // Saving throws when under certain conditions: paralyzed causes auto-fail on both STR and DEX saves
   run qa_paralyzed_str_dex_save_autofail = {
-    val c = pApplyCondition(freshCreature(10), CParalyzed, Set())
+    val c = pApplyCondition(freshCreature(10), CParalyzed)
     val strMods = pSaveModifiers(c, Str)
     val dexMods = pSaveModifiers(c, Dex)
     assert(strMods.autoFail and dexMods.autoFail)
@@ -3437,21 +3437,21 @@ module qa_generated {
   
   // Saving throws when under certain conditions: paralyzed does NOT auto-fail WIS saves
   run qa_paralyzed_wis_save_unaffected = {
-    val c = pApplyCondition(freshCreature(10), CParalyzed, Set())
+    val c = pApplyCondition(freshCreature(10), CParalyzed)
     val mods = pSaveModifiers(c, Wis)
     assert(not(mods.autoFail) and not(mods.hasDisadvantage))
   }
   
   // Saving throws when under certain conditions: prone has no effect on DEX saves
   run qa_prone_dex_save_no_effect = {
-    val c = pApplyCondition(freshCreature(10), CProne, Set())
+    val c = pApplyCondition(freshCreature(10), CProne)
     val mods = pSaveModifiers(c, Dex)
     assert(not(mods.hasDisadvantage) and not(mods.autoFail))
   }
   
   // Saving throws when under certain conditions: stunned auto-fails STR and DEX, not CHA
   run qa_stunned_str_dex_autofail_cha_unaffected = {
-    val c = pApplyCondition(freshCreature(10), CStunned, Set())
+    val c = pApplyCondition(freshCreature(10), CStunned)
     val strMods = pSaveModifiers(c, Str)
     val dexMods = pSaveModifiers(c, Dex)
     val chaMods = pSaveModifiers(c, Cha)
@@ -3635,8 +3635,8 @@ module qa_generated {
   // The Same Condition From Two Sources? — conditions don't stack; applying the same condition twice is idempotent
   run qa_condition_no_stack_restrained = {
     val base = freshCreature(20)
-    val afterFirst  = pApplyCondition(base, CRestrained, Set())
-    val afterSecond = pApplyCondition(afterFirst, CRestrained, Set())
+    val afterFirst  = pApplyCondition(base, CRestrained)
+    val afterSecond = pApplyCondition(afterFirst, CRestrained)
     // Either you have a condition or you don't — double application changes nothing
     assert(afterSecond == afterFirst)
   }
@@ -3644,19 +3644,19 @@ module qa_generated {
   // The Same Condition From Two Sources? — creature is restrained after first application regardless of a second source
   run qa_condition_restrained_is_set_once = {
     val base = freshCreature(20)
-    val s1 = pApplyCondition(base, CRestrained, Set())
+    val s1 = pApplyCondition(base, CRestrained)
     // Restrained is on after first application
     all {
       assert(s1.restrained == true),
       // A second application leaves the flag unchanged
-      assert(pApplyCondition(s1, CRestrained, Set()).restrained == true),
+      assert(pApplyCondition(s1, CRestrained).restrained == true),
     }
   }
   
   // The Same Condition From Two Sources? — removing one effect does not automatically remove the condition (tracked independently via active effects)
   run qa_condition_effect_removal_independent = {
     val base = freshCreature(20)
-    val s1 = pApplyCondition(base, CRestrained, Set())
+    val s1 = pApplyCondition(base, CRestrained)
     // Two separate active effects represent two sources (Web, Evard's)
     val effs = pAddEffect(
       pAddEffect(Set(), "web", 5, AtEndOfTurn),
@@ -4101,7 +4101,7 @@ module qa_generated {
   run qa_prone_and_grappled_cannot_stand = {
     val target = freshCreature(30)
     val grappled = pGrapple(Medium, Medium, target, true, true).targetState
-    val grappledAndProne = pApplyCondition(grappled, CProne, Set())
+    val grappledAndProne = pApplyCondition(grappled, CProne)
     val t = pStartTurn(TEST_CONFIG, grappledAndProne, Unarmored, 0, false, false)
     val tAfterStandAttempt = pStandFromProne(t)
     assert(
@@ -4397,8 +4397,8 @@ module qa_generated {
   // Warlock Pseudodragon - Unconscious condition from Sting: implies prone and incapacitated (never self-clears without damage or waking action)
   run qa_unconscious_implies_prone_and_incap = {
     val base = freshCreature(20)
-    val poisoned = pApplyCondition(base, CPoisoned, Set())
-    val unconscious = pApplyCondition(poisoned, CUnconscious, Set())
+    val poisoned = pApplyCondition(base, CPoisoned)
+    val unconscious = pApplyCondition(poisoned, CUnconscious)
     all {
       assert(unconscious.unconscious),
       assert(unconscious.prone),
@@ -4412,8 +4412,8 @@ module qa_generated {
   // Warlock Pseudodragon - Petrified creature is immune to Poisoned (and thus immune to the unconscious side-effect)
   run qa_petrified_blocks_poisoned_no_unconscious_sting = {
     val base = freshCreature(20)
-    val petrified = pApplyCondition(base, CPetrified, Set())
-    val afterPoisonAttempt = pApplyCondition(petrified, CPoisoned, Set())
+    val petrified = pApplyCondition(base, CPetrified)
+    val afterPoisonAttempt = pApplyCondition(petrified, CPoisoned)
     all {
       assert(not(afterPoisonAttempt.poisoned)),
       assert(not(afterPoisonAttempt.unconscious)),
@@ -4423,8 +4423,8 @@ module qa_generated {
   // Paralyzed condition auto-fails DEX saving throws, blocking Dex-based save to end Poisoned
   run qa_paralyzed_autofails_dex_save_blocks_end_poisoned = {
     val creature = freshCreature(20)
-    val withParalyzed = pApplyCondition(creature, CParalyzed, Set())
-    val withBoth = pApplyCondition(withParalyzed, CPoisoned, Set())
+    val withParalyzed = pApplyCondition(creature, CParalyzed)
+    val withBoth = pApplyCondition(withParalyzed, CPoisoned)
     val saveMods = pSaveModifiers(withBoth, Dex)
     all {
       assert(withBoth.paralyzed),
@@ -4723,7 +4723,7 @@ module qa_generated {
   // Cowardly Fighter: once frightened, the creature suffers disadvantage on attacks toward the fear source in LOS
   run qa_frightened_imposes_attack_disadvantage = {
     val creature = freshCreature(30)
-    val frightened = pApplyCondition(creature, CFrightened, Set())
+    val frightened = pApplyCondition(creature, CFrightened)
     val mods = pOwnAttackModifiers(frightened, true)
     assert(mods.hasDisadvantage and not(mods.hasAdvantage))
   }
@@ -5511,7 +5511,7 @@ module qa_generated {
     // A grappled creature willingly fails the shove save (targetSaveFailed = true),
     // so the shove to prone succeeds — encoding the accepted answer that this
     // mechanic already existed via normal grapple/shove and is unchanged.
-    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
+    val grappled = pApplyCondition(freshCreature(20), CGrappled)
     val result = pShove(Medium, Medium, grappled, true, ShoveProne)
     all {
       assert(result.success == true),
@@ -5766,7 +5766,7 @@ module qa_generated {
   // Abjure Foes: failed Wisdom save applies Frightened condition to target
   run qa_abjure_foes_failed_save_applies_frightened = {
     val target = freshCreature(30)
-    val afterFailedSave = pApplyCondition(target, CFrightened, Set())
+    val afterFailedSave = pApplyCondition(target, CFrightened)
     assert(afterFailedSave.frightened)
   }
   
@@ -5780,7 +5780,7 @@ module qa_generated {
   // Abjure Foes: Frightened creature has disadvantage on attacks when fear source is in LOS
   run qa_abjure_foes_frightened_attack_disadv_in_los = {
     val target = freshCreature(30)
-    val frightened = pApplyCondition(target, CFrightened, Set())
+    val frightened = pApplyCondition(target, CFrightened)
     val mods = pOwnAttackModifiers(frightened, true)
     assert(mods.hasDisadvantage)
   }
@@ -5788,7 +5788,7 @@ module qa_generated {
   // Abjure Foes: Frightened creature has no fear-sourced disadvantage when source outside LOS
   run qa_abjure_foes_frightened_no_disadv_out_of_los = {
     val target = freshCreature(30)
-    val frightened = pApplyCondition(target, CFrightened, Set())
+    val frightened = pApplyCondition(target, CFrightened)
     val mods = pOwnAttackModifiers(frightened, false)
     assert(not(mods.hasDisadvantage))
   }
@@ -6026,7 +6026,7 @@ module qa_generated {
   // Conditions impose disadvantage or auto-fail on saving throws per condition rules
   run qa_restrained_dex_save_disadvantage = {
     val c = freshCreature(20)
-    val restrained = pApplyCondition(c, CRestrained, Set())
+    val restrained = pApplyCondition(c, CRestrained)
     val mods = pSaveModifiers(restrained, Dex)
     assert(mods.hasDisadvantage == true)
   }
@@ -6034,7 +6034,7 @@ module qa_generated {
   // Paralyzed creature auto-fails STR and DEX saving throws
   run qa_paralyzed_autofail_str_dex_saves = {
     val c = freshCreature(20)
-    val paralyzed = pApplyCondition(c, CParalyzed, Set())
+    val paralyzed = pApplyCondition(c, CParalyzed)
     val strMods = pSaveModifiers(paralyzed, Str)
     val dexMods = pSaveModifiers(paralyzed, Dex)
     all {
@@ -6046,7 +6046,7 @@ module qa_generated {
   // Stunned creature auto-fails STR and DEX saving throws
   run qa_stunned_autofail_str_dex_saves = {
     val c = freshCreature(20)
-    val stunned = pApplyCondition(c, CStunned, Set())
+    val stunned = pApplyCondition(c, CStunned)
     val strMods = pSaveModifiers(stunned, Str)
     val dexMods = pSaveModifiers(stunned, Dex)
     all {
@@ -6058,7 +6058,7 @@ module qa_generated {
   // Unconscious creature auto-fails STR and DEX saving throws
   run qa_unconscious_autofail_str_dex_saves = {
     val c = freshCreature(20)
-    val unconscious = pApplyCondition(c, CUnconscious, Set())
+    val unconscious = pApplyCondition(c, CUnconscious)
     val strMods = pSaveModifiers(unconscious, Str)
     val dexMods = pSaveModifiers(unconscious, Dex)
     all {
@@ -6070,7 +6070,7 @@ module qa_generated {
   // Petrified creature auto-fails STR and DEX saving throws
   run qa_petrified_autofail_str_dex_saves = {
     val c = freshCreature(20)
-    val petrified = pApplyCondition(c, CPetrified, Set())
+    val petrified = pApplyCondition(c, CPetrified)
     val strMods = pSaveModifiers(petrified, Str)
     val dexMods = pSaveModifiers(petrified, Dex)
     all {
@@ -6082,7 +6082,7 @@ module qa_generated {
   // Non-STR/DEX saves (e.g. CON, WIS, INT, CHA) are NOT auto-failed by paralyzed
   run qa_paralyzed_no_autofail_non_str_dex_saves = {
     val c = freshCreature(20)
-    val paralyzed = pApplyCondition(c, CParalyzed, Set())
+    val paralyzed = pApplyCondition(c, CParalyzed)
     val conMods = pSaveModifiers(paralyzed, Con)
     val wisMods = pSaveModifiers(paralyzed, Wis)
     all {
@@ -6094,7 +6094,7 @@ module qa_generated {
   // Restrained only imposes disadvantage on DEX saves, not other saves
   run qa_restrained_no_disadv_non_dex_saves = {
     val c = freshCreature(20)
-    val restrained = pApplyCondition(c, CRestrained, Set())
+    val restrained = pApplyCondition(c, CRestrained)
     val strMods = pSaveModifiers(restrained, Str)
     val conMods = pSaveModifiers(restrained, Con)
     all {
@@ -6194,7 +6194,7 @@ module qa_generated {
   // Level 12 Playtest: Temple on the Mountain — missing long rest causes one exhaustion level
   run qa_missing_long_rest_causes_exhaustion = {
     val creature = freshCreature(30)
-    val exhausted = pAddExhaustion(creature, 1, false)
+    val exhausted = pAddExhaustion(creature, 1)
     assert(exhausted.exhaustion == 1 and not(exhausted.dead))
   }
 
@@ -6255,7 +6255,7 @@ module qa_generated {
     // A non-spell magical effect (e.g. CCharmed from College of Glamour Beguiling Magic)
     // is tracked only as a condition — it is never entered into activeEffects under a spellId.
     // pRemoveEffect on a spellId that was never added leaves the condition untouched.
-    val c3 = pApplyCondition(c0, CCharmed, Set())
+    val c3 = pApplyCondition(c0, CCharmed)
     val c4 = c3.with("activeEffects", pRemoveEffect(c3.activeEffects, "beguiling_magic"))
   
     assert(
@@ -6451,11 +6451,11 @@ module qa_generated {
   run qa_sleep_first_fail_second_fail_becomes_unconscious = {
     val creature = freshCreature(20)
     // First save failed: creature gains Incapacitated
-    val afterFirstFail = pApplyCondition(creature, CIncapacitated, Set())
+    val afterFirstFail = pApplyCondition(creature, CIncapacitated)
     // Second save is only required because creature is incapacitated at end of its turn
     val secondSaveRequired = isIncapacitated(afterFirstFail)
     // Second save also failed: creature gains Unconscious
-    val afterSecondFail = pApplyCondition(afterFirstFail, CUnconscious, Set())
+    val afterSecondFail = pApplyCondition(afterFirstFail, CUnconscious)
     assert(secondSaveRequired and afterSecondFail.unconscious and isIncapacitated(afterSecondFail))
   }
   
@@ -6463,7 +6463,7 @@ module qa_generated {
   run qa_sleep_first_fail_second_success_not_unconscious = {
     val creature = freshCreature(20)
     // First save failed: creature gains Incapacitated
-    val afterFirstFail = pApplyCondition(creature, CIncapacitated, Set())
+    val afterFirstFail = pApplyCondition(creature, CIncapacitated)
     // Second save required because incapacitated
     val secondSaveRequired = isIncapacitated(afterFirstFail)
     // Second save succeeded: remove Incapacitated, no Unconscious applied
@@ -6826,8 +6826,8 @@ module qa_generated {
     // A "monster" and a "PC" are both just CreatureState — Prone applies identically to either
     val monster = freshCreature(40)
     val pc      = freshCreature(10)
-    val monsterProne = pApplyCondition(monster, CProne, Set())
-    val pcProne      = pApplyCondition(pc, CProne, Set())
+    val monsterProne = pApplyCondition(monster, CProne)
+    val pcProne      = pApplyCondition(pc, CProne)
     assert(
       monsterProne.prone and
       pcProne.prone and
@@ -7061,7 +7061,7 @@ module qa_generated {
   
   // List of spells a moon druid can cast in wild shape: paralysis (e.g. from wild shape being disrupted) blocks verbal-component spells
   run qa_moon_druid_wildshape_paralyzed_blocks_verbal_component = {
-    val creature = pApplyCondition(freshCreature(30), CParalyzed, Set())
+    val creature = pApplyCondition(freshCreature(30), CParalyzed)
     // Paralyzed creature cannot speak → V component fails → cannot cast any verbal-component abjuration spell
     val canCast = pCanProvideComponents(creature, true, false, true)
     assert(not(canCast))
@@ -7084,7 +7084,7 @@ module qa_generated {
     val d20Roll = 12 // 12 + 3 + 3 = 18 >= 15
     val hideSucceeds = checkSucceeds(d20Roll, dexMod, Proficient, profBonus, 0, 15)
     val creature = freshCreature(20)
-    val afterHide = if (hideSucceeds) pApplyCondition(creature, CInvisible, Set()) else creature
+    val afterHide = if (hideSucceeds) pApplyCondition(creature, CInvisible) else creature
     assert(hideSucceeds and afterHide.invisible)
   }
   
@@ -7095,7 +7095,7 @@ module qa_generated {
     val d20Roll = 5 // 5 + 0 + 2 = 7 < 15
     val hideSucceeds = checkSucceeds(d20Roll, dexMod, Proficient, profBonus, 0, 15)
     val creature = freshCreature(20)
-    val afterHide = if (hideSucceeds) pApplyCondition(creature, CInvisible, Set()) else creature
+    val afterHide = if (hideSucceeds) pApplyCondition(creature, CInvisible) else creature
     assert(not(hideSucceeds) and not(afterHide.invisible))
   }
   
@@ -7103,7 +7103,7 @@ module qa_generated {
   run qa_hide_found_by_perception_removes_invisible = {
     val stealthTotal = 18 // hider rolled 12 + dex 3 + prof 3
     val perceptionTotal = 20 // seeker rolled 15 + wis 2 + prof 3
-    val hidden = pApplyCondition(freshCreature(20), CInvisible, Set())
+    val hidden = pApplyCondition(freshCreature(20), CInvisible)
     val found = perceptionTotal >= stealthTotal
     val afterFound = if (found) pRemoveCondition(hidden, CInvisible) else hidden
     assert(found and not(afterFound.invisible))
@@ -7115,7 +7115,7 @@ module qa_generated {
     val wisMod = 0
     val profBonus = 2
     val passive = passiveCheck(wisMod, Proficient, profBonus, false, false) // 10+0+2 = 12
-    val hidden = pApplyCondition(freshCreature(20), CInvisible, Set())
+    val hidden = pApplyCondition(freshCreature(20), CInvisible)
     val found = passive >= stealthTotal
     val afterCheck = if (found) pRemoveCondition(hidden, CInvisible) else hidden
     assert(not(found) and afterCheck.invisible)
@@ -7128,9 +7128,9 @@ module qa_generated {
     // Rotting Claw: if target is poisoned and attack hits, it becomes paralyzed — no saving throw required
     val creature = freshCreature(20)
     // Step 1: creature is poisoned (e.g. via Quasit rend or Ray of Sickness — no save on attack hit)
-    val poisonedCreature = pApplyCondition(creature, CPoisoned, Set())
+    val poisonedCreature = pApplyCondition(creature, CPoisoned)
     // Step 2: Rotting Claw attack hits the poisoned target → paralysis applied directly, no save
-    val paralyzedCreature = pApplyCondition(poisonedCreature, CParalyzed, Set())
+    val paralyzedCreature = pApplyCondition(poisonedCreature, CParalyzed)
     all {
       assert(paralyzedCreature.poisoned),
       assert(paralyzedCreature.paralyzed),
@@ -7495,7 +7495,7 @@ module qa_generated {
   run qa_fomorian_warping_hex_exhaustion_persists_until_long_rest = {
     val c = freshCreature(30)
     // Monster ability inflicts 1 exhaustion level (no duration or end condition specified)
-    val afterHex = pAddExhaustion(c, 1, false)
+    val afterHex = pAddExhaustion(c, 1)
     // Exhaustion is permanent — does not auto-expire; still present before any rest
     val stillExhausted = afterHex
     // Long rest reduces exhaustion level by exactly 1 (PHB "Long Rest" / Exhaustion glossary)
@@ -7575,7 +7575,7 @@ module qa_generated {
   
   // Can I shove my grappled companion out of a grapple?
   run qa_shove_breaks_grapple = {
-    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
+    val grappled = pApplyCondition(freshCreature(20), CGrappled)
     // Shove (ShovePush) a grappled creature — same size, target save fails
     val result = pShove(Medium, Medium, grappled, true, ShovePush)
     // Forced movement puts target beyond grappler's reach; grappler releases
@@ -7956,7 +7956,7 @@ module qa_generated {
   // A stat-based analysis of the new grapple rules: grappled target escapes on successful end-of-turn save
   run qa_grapple_escape_on_successful_save = {
     val target = freshCreature(20)
-    val grappled = pApplyCondition(target, CGrappled, Set())
+    val grappled = pApplyCondition(target, CGrappled)
     val escaped = pEscapeGrapple(grappled, true)
     assert(not(escaped.grappled))
   }
@@ -7964,7 +7964,7 @@ module qa_generated {
   // A stat-based analysis of the new grapple rules: failed escape save leaves Grappled condition intact
   run qa_grapple_escape_fails_stays_grappled = {
     val target = freshCreature(20)
-    val grappled = pApplyCondition(target, CGrappled, Set())
+    val grappled = pApplyCondition(target, CGrappled)
     val stillGrappled = pEscapeGrapple(grappled, false)
     assert(stillGrappled.grappled)
   }
@@ -7989,7 +7989,7 @@ module qa_generated {
   
   // Point 17: Escape grapple on successful check removes the grappled condition (easier to escape)
   run qa_escape_grapple_on_success_clears_condition = {
-    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
+    val grappled = pApplyCondition(freshCreature(20), CGrappled)
     val freed = pEscapeGrapple(grappled, true)
     assert(not(freed.grappled))
   }
@@ -8067,7 +8067,7 @@ module qa_generated {
     // Wild Shape imposes no blocking condition; pCanSpeak only returns false for
     // paralyzed, petrified, or unconscious — none of which are Wild Shape itself.
     val druidInWildShape = freshCreature(20)
-    val paralyzedDruid = pApplyCondition(druidInWildShape, CParalyzed, Set())
+    val paralyzedDruid = pApplyCondition(druidInWildShape, CParalyzed)
     assert(
       pCanSpeak(druidInWildShape) and
       not(pCanSpeak(paralyzedDruid))
@@ -8660,7 +8660,7 @@ module qa_generated {
   // How does new stealth work exactly? — Hiding grants Invisible condition which gives advantage on attacks
   run qa_invisible_condition_grants_attack_advantage = {
     val creature = freshCreature(20)
-    val hidden = pApplyCondition(creature, CInvisible, Set())
+    val hidden = pApplyCondition(creature, CInvisible)
     val ownMods = pOwnAttackModifiers(hidden, false)
     assert(hidden.invisible and ownMods.hasAdvantage and not(ownMods.hasDisadvantage))
   }
@@ -8668,7 +8668,7 @@ module qa_generated {
   // How does new stealth work exactly? — Attacks against an Invisible creature have disadvantage
   run qa_invisible_condition_attackers_have_disadvantage = {
     val creature = freshCreature(20)
-    val hidden = pApplyCondition(creature, CInvisible, Set())
+    val hidden = pApplyCondition(creature, CInvisible)
     val defMods = pDefenseModifiers(hidden, true)
     assert(defMods.attackerDisadvantage and not(defMods.attackerAdvantage))
   }
@@ -8676,7 +8676,7 @@ module qa_generated {
   // How does new stealth work exactly? — Removing Invisible (spotted/out of cover) cancels both advantages
   run qa_invisible_condition_removal_cancels_benefits = {
     val creature = freshCreature(20)
-    val hidden = pApplyCondition(creature, CInvisible, Set())
+    val hidden = pApplyCondition(creature, CInvisible)
     val spotted = pRemoveCondition(hidden, CInvisible)
     val ownMods = pOwnAttackModifiers(spotted, false)
     val defMods = pDefenseModifiers(spotted, true)
@@ -8698,7 +8698,7 @@ module qa_generated {
     val sleepDC = 13                // level-1 wizard: 8 + 3 (Int mod) + 2 (PB)
     // roll 7: 7 + (-1) = 6 < 13 → fails
     val saveFailed = not(saveSucceeds(7, wisMod, false, 2, 0, sleepDC))
-    val afterFirstSave = if (saveFailed) pApplyCondition(target, CIncapacitated, Set()) else target
+    val afterFirstSave = if (saveFailed) pApplyCondition(target, CIncapacitated) else target
     assert(saveFailed and isIncapacitated(afterFirstSave))
   }
   
@@ -8708,10 +8708,10 @@ module qa_generated {
     val wisMod = abilityModifier(8)
     val sleepDC = 13
     // First save fails → Incapacitated
-    val s1 = pApplyCondition(target, CIncapacitated, Set())
+    val s1 = pApplyCondition(target, CIncapacitated)
     // Second save: roll 5, 5 + (-1) = 4 < 13 → fails → Unconscious
     val secondSaveFailed = not(saveSucceeds(5, wisMod, false, 2, 0, sleepDC))
-    val s2 = if (secondSaveFailed) pApplyCondition(s1, CUnconscious, Set()) else s1
+    val s2 = if (secondSaveFailed) pApplyCondition(s1, CUnconscious) else s1
     assert(secondSaveFailed and s2.unconscious and s2.prone and isIncapacitated(s2))
   }
   
@@ -8722,7 +8722,7 @@ module qa_generated {
     val sleepDC = 13
     // roll 18: 18 + (-1) = 17 >= 13 → succeeds
     val succeeded = saveSucceeds(18, wisMod, false, 2, 0, sleepDC)
-    val afterSave = if (not(succeeded)) pApplyCondition(target, CIncapacitated, Set()) else target
+    val afterSave = if (not(succeeded)) pApplyCondition(target, CIncapacitated) else target
     assert(succeeded and not(isIncapacitated(afterSave)))
   }
   
@@ -8735,10 +8735,10 @@ module qa_generated {
     val sleepDC = 13
     // Goblin1 rolls 4: 4 + (-1) = 3 < 13 → fails → Incapacitated
     val g1Fails = not(saveSucceeds(4, wisMod, false, 2, 0, sleepDC))
-    val goblin1After = if (g1Fails) pApplyCondition(goblin1, CIncapacitated, Set()) else goblin1
+    val goblin1After = if (g1Fails) pApplyCondition(goblin1, CIncapacitated) else goblin1
     // Goblin2 rolls 15: 15 + (-1) = 14 >= 13 → succeeds → unaffected
     val g2Succeeds = saveSucceeds(15, wisMod, false, 2, 0, sleepDC)
-    val goblin2After = if (not(g2Succeeds)) pApplyCondition(goblin2, CIncapacitated, Set()) else goblin2
+    val goblin2After = if (not(g2Succeeds)) pApplyCondition(goblin2, CIncapacitated) else goblin2
     assert(
       g1Fails and isIncapacitated(goblin1After) and
       g2Succeeds and not(isIncapacitated(goblin2After))
@@ -8754,7 +8754,7 @@ module qa_generated {
     val sleepDC = 13
     // Ogre rolls 8: 8 + (-2) = 6 < 13 → fails
     val saveFailed = not(saveSucceeds(8, wisMod, false, 2, 0, sleepDC))
-    val ogreAfter = if (saveFailed) pApplyCondition(ogre, CIncapacitated, Set()) else ogre
+    val ogreAfter = if (saveFailed) pApplyCondition(ogre, CIncapacitated) else ogre
     // HP unchanged — 2024 Sleep doesn't require HP to be low
     assert(saveFailed and isIncapacitated(ogreAfter) and ogreAfter.hp == 59)
   }
@@ -9092,7 +9092,7 @@ module qa_generated {
   // The Search Action and Surprise: successful Hide grants Invisible condition, which gives Advantage on Initiative (and attack rolls)
   run qa_hidden_creature_has_initiative_advantage = {
     val creature = freshCreature(20)
-    val hidden = pApplyCondition(creature, CInvisible, Set())
+    val hidden = pApplyCondition(creature, CInvisible)
     val mods = pOwnAttackModifiers(hidden, false)
     assert(mods.hasAdvantage)
   }
@@ -9405,7 +9405,7 @@ module qa_generated {
   
   // Druid and Paladin UA summary: Paladin Lay on Hands ends the Poisoned condition
   run qa_lay_on_hands_ends_poisoned = {
-    val c = pApplyCondition(freshCreature(20), CPoisoned, Set())
+    val c = pApplyCondition(freshCreature(20), CPoisoned)
     val healed = pRemoveCondition(c, CPoisoned)
     assert(not(healed.poisoned))
   }
@@ -9425,7 +9425,7 @@ module qa_generated {
   
   // Druid and Paladin UA summary: Abjure Foes — Frightened creature has disadv on attacks when fear source is in LOS
   run qa_abjure_foes_frightened_attack_disadv = {
-    val c = pApplyCondition(freshCreature(20), CFrightened, Set())
+    val c = pApplyCondition(freshCreature(20), CFrightened)
     val mods = pOwnAttackModifiers(c, true)
     assert(mods.hasDisadvantage)
   }
@@ -9521,7 +9521,7 @@ module qa_generated {
   run qa_prone_no_save_grants_melee_advantage = {
     val target = freshCreature(30)
     // Hill's Tumble: prone applied directly on hit, no saving throw resolved
-    val pronedTarget = pApplyCondition(target, CProne, Set())
+    val pronedTarget = pApplyCondition(target, CProne)
     val ctx: AttackContext = {
       attackerBlinded: false, attackerProne: false, attackerRestrained: false,
       attackerPoisoned: false, attackerFrightened: false, attackerFrightSourceInLOS: false,
@@ -9543,7 +9543,7 @@ module qa_generated {
   // Goliath melee warriors sound pretty fun — prone beyond 5ft gives disadvantage on ranged attacks (not advantage; melee-only benefit)
   run qa_prone_beyond_5ft_ranged_disadvantage = {
     val target = freshCreature(30)
-    val pronedTarget = pApplyCondition(target, CProne, Set())
+    val pronedTarget = pApplyCondition(target, CProne)
     val ctx: AttackContext = {
       attackerBlinded: false, attackerProne: false, attackerRestrained: false,
       attackerPoisoned: false, attackerFrightened: false, attackerFrightSourceInLOS: false,
@@ -9565,7 +9565,7 @@ module qa_generated {
   // Goliath melee warriors sound pretty fun — prone target (knocked down by Hill's Tumble) can be grappled when target fails save
   run qa_prone_grapple_combo = {
     val target = freshCreature(30)
-    val pronedTarget = pApplyCondition(target, CProne, Set())
+    val pronedTarget = pApplyCondition(target, CProne)
     // Follow-up grapple: target fails save (e.g. low STR/DEX roll)
     val result = pGrapple(Medium, Medium, pronedTarget, true, true)
     assert(result.success and result.targetState.grappled and result.targetState.prone)
@@ -9637,7 +9637,7 @@ module qa_generated {
     val casterWithEffect = caster.with("activeEffects",
       pAddEffect(Set(), "control_weather", 100, AtEndOfTurn))
     // Caster is stunned (e.g. by a nearby creature while moving)
-    val afterStun = pApplyCondition(casterWithEffect, CStunned, Set())
+    val afterStun = pApplyCondition(casterWithEffect, CStunned)
     val r = pWithConcBreak(ss, casterWithEffect, afterStun)
     assert(
       isIncapacitated(r.creature) and
@@ -9708,7 +9708,7 @@ module qa_generated {
   // How do you cure diseases? — 2024 5e removes disease mechanic; healing alone does not clear CPoisoned (closest analog)
   run qa_healing_does_not_cure_poisoned = {
     val base = freshCreature(20)
-    val withPoison = pApplyCondition(base, CPoisoned, Set())
+    val withPoison = pApplyCondition(base, CPoisoned)
     val afterHeal = pHeal(withPoison, 10)
     assert(afterHeal.poisoned == true)
   }
@@ -9761,7 +9761,7 @@ module qa_generated {
     val roll = 11 // total = 11 + 2 + 3 = 16 >= DC 15
     val succeeded = checkSucceeds(roll, dexMod, Proficient, profBonus, 0, 15)
     val creature = freshCreature(20)
-    val result = if (succeeded) pApplyCondition(creature, CInvisible, Set()) else creature
+    val result = if (succeeded) pApplyCondition(creature, CInvisible) else creature
     assert(succeeded and result.invisible)
   }
   
@@ -9782,7 +9782,7 @@ module qa_generated {
     val roll = 12 // total = 12 + 2 + 3 = 17 >= 16
     val perceiverTotal = roll + wisMod + profMultiplier(Proficient, profBonus)
     val found = perceiverTotal >= hiderStealthTotal
-    val hidden = pApplyCondition(freshCreature(20), CInvisible, Set())
+    val hidden = pApplyCondition(freshCreature(20), CInvisible)
     val result = if (found) pRemoveCondition(hidden, CInvisible) else hidden
     assert(found and not(result.invisible))
   }
@@ -9794,7 +9794,7 @@ module qa_generated {
     val passive = passiveCheck(wisMod, Proficient, profBonus, false, false) // 10+2+3 = 15
     val hiderStealthTotal = 14 // hider rolled low
     val found = passive >= hiderStealthTotal
-    val hidden = pApplyCondition(freshCreature(20), CInvisible, Set())
+    val hidden = pApplyCondition(freshCreature(20), CInvisible)
     val result = if (found) pRemoveCondition(hidden, CInvisible) else hidden
     assert(found and not(result.invisible))
   }
@@ -9955,7 +9955,7 @@ module qa_generated {
   
   // New Long Rests and New Grappling Rules: escaping grapple requires a successful check (action)
   run qa_escape_grapple_requires_successful_check = {
-    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
+    val grappled = pApplyCondition(freshCreature(20), CGrappled)
     val afterFail = pEscapeGrapple(grappled, false)
     val afterSuccess = pEscapeGrapple(grappled, true)
     assert(afterFail.grappled and not(afterSuccess.grappled))
@@ -9963,7 +9963,7 @@ module qa_generated {
   
   // New Long Rests and New Grappling Rules: incapacitated target is auto-grappled regardless of save
   run qa_grapple_auto_succeeds_vs_incapacitated = {
-    val target = pApplyCondition(freshCreature(20), CParalyzed, Set())
+    val target = pApplyCondition(freshCreature(20), CParalyzed)
     // saveFailed=false, but incapacitated overrides — grapple still succeeds
     val result = pGrapple(Medium, Medium, target, false, true)
     assert(result.success and result.targetState.grappled)
@@ -10393,7 +10393,7 @@ module qa_generated {
   run qa_restrained_target_grants_attacker_advantage = {
     // Grappler feat (2024) restrains the grappled target; restrained gives attacker advantage
     val target = freshCreature(20)
-    val targetRestrained = pApplyCondition(target, CRestrained, Set())
+    val targetRestrained = pApplyCondition(target, CRestrained)
     val defMods = pDefenseModifiers(targetRestrained, true)
     assert(defMods.attackerAdvantage)
   }
@@ -10464,8 +10464,8 @@ module qa_generated {
   // Am I reading this wrong or can you literally not escape a Mind Flayer if it hits you once?
   run qa_stunned_grappled_cannot_escape = {
     val c = freshCreature(30)
-    val grappled = pApplyCondition(c, CGrappled, Set())
-    val stunned_grappled = pApplyCondition(grappled, CStunned, Set())
+    val grappled = pApplyCondition(c, CGrappled)
+    val stunned_grappled = pApplyCondition(grappled, CStunned)
     // Stunned → incapacitated → pCanAct false → creature cannot use action to attempt grapple escape
     all {
       assert(stunned_grappled.grappled),
@@ -10479,7 +10479,7 @@ module qa_generated {
   // Am I reading this wrong or can you literally not escape a Mind Flayer if it hits you once?
   run qa_stunned_grappled_str_dex_saves_autofail = {
     val c = freshCreature(30)
-    val s = pApplyCondition(pApplyCondition(c, CGrappled, Set()), CStunned, Set())
+    val s = pApplyCondition(pApplyCondition(c, CGrappled), CStunned)
     // Stunned auto-fails STR and DEX saves, which are the ability scores used for grapple escape
     val strMods = pSaveModifiers(s, Str)
     val dexMods = pSaveModifiers(s, Dex)
@@ -11047,7 +11047,7 @@ module qa_generated {
   // Shield Master's Shield Bash Should Be Model for All Shoves and Grapples: incapacitated target auto-fails — grapple always succeeds
   run qa_grapple_auto_succeeds_vs_incapacitated_e6c2c335 = {
     val target = freshCreature(20)
-    val incapTarget = pApplyCondition(target, CUnconscious, Set())
+    val incapTarget = pApplyCondition(target, CUnconscious)
     // saveSucceeded=false doesn't matter; incapacitated triggers auto-success
     val result = pGrapple(Medium, Medium, incapTarget, false, true)
     assert(result.success == true and result.targetState.grappled == true)
@@ -12249,12 +12249,12 @@ module qa_generated {
   run qa_suffocation_exhaustion_kills_at_6 = {
     val s = freshCreature(30)
     // Simulate suffocation: each round without air adds 1 exhaustion level after grace period expires
-    val s1 = pAddExhaustion(s, 1, false)
-    val s2 = pAddExhaustion(s1, 1, false)
-    val s3 = pAddExhaustion(s2, 1, false)
-    val s4 = pAddExhaustion(s3, 1, false)
-    val s5 = pAddExhaustion(s4, 1, false)
-    val s6 = pAddExhaustion(s5, 1, false)
+    val s1 = pAddExhaustion(s, 1)
+    val s2 = pAddExhaustion(s1, 1)
+    val s3 = pAddExhaustion(s2, 1)
+    val s4 = pAddExhaustion(s3, 1)
+    val s5 = pAddExhaustion(s4, 1)
+    val s6 = pAddExhaustion(s5, 1)
     all {
       assert(s6.exhaustion == 6),
       assert(s6.dead),
