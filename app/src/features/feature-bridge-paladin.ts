@@ -120,8 +120,7 @@ export const getRadiantStrikesDice: (config: RadiantStrikesConfig) => number = p
 
 // --- Passive re-exports ---
 
-export const getCanUseAuraOfCourage: (paladinLevel: number, isConscious: boolean) => boolean =
-  canUseAuraOfCourage
+export const getCanUseAuraOfCourage: (paladinLevel: number, isConscious: boolean) => boolean = canUseAuraOfCourage
 
 export const getAuraOfCourageRange: (paladinLevel: number) => number = auraOfCourageRange
 
@@ -152,9 +151,7 @@ export function executeAbjureFoes(): BridgeResult {
   }
 }
 
-export function getAbjureFoesResult(targetSavePassed: boolean): AbjureFoesResult {
-  return abjureFoesResult(targetSavePassed)
-}
+export const getAbjureFoesResult: (targetSavePassed: boolean) => AbjureFoesResult = abjureFoesResult
 
 // --- Restoring Touch (Level 14, costs 5 from LoH pool) ---
 
@@ -173,3 +170,17 @@ export function executeRestoringTouch(featureState: FeatureState): BridgeResult 
     machineEvents: []
   }
 }
+
+// --- Oath of Devotion queries (passive — no state) ---
+export {
+  auraOfDevotionGrantsCharmedImmunity,
+  canRestoreHolyNimbusWithSlot,
+  canUseHolyNimbus,
+  canUseSacredWeapon,
+  hasAuraOfDevotion,
+  hasSmiteOfProtection,
+  holyNimbusRadiantDamage,
+  holyNimbusRestoreSlotLevel,
+  sacredWeaponAttackBonus,
+  smiteOfProtectionCoverBonus
+} from "#/features/class-paladin.ts"

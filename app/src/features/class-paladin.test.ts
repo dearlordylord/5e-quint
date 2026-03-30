@@ -4,28 +4,38 @@ import {
   ABJURE_FOES_RANGE_FEET,
   abjureFoesResult,
   auraOfCourageRange,
+  auraOfDevotionGrantsCharmedImmunity,
   auraOfProtectionBonus,
   auraOfProtectionRange,
   canAbjureFoes,
   canLayOnHandsCure,
   canLayOnHandsHeal,
   canPaladinSmiteFree,
+  canRestoreHolyNimbusWithSlot,
   canUseAuraOfCourage,
   canUseAuraOfProtection,
   canUseFaithfulSteed,
+  canUseHolyNimbus,
   canUseRestoringTouch,
+  canUseSacredWeapon,
   curableConditions,
+  expendChannelDivinity,
+  hasAuraOfDevotion,
+  hasSmiteOfProtection,
+  holyNimbusRadiantDamage,
+  holyNimbusRestoreSlotLevel,
   layOnHandsLongRest,
   layOnHandsPoolMax,
+  paladinChannelDivinityMax,
   paladinLongRest,
   pDivineSmiteDamage,
   pLayOnHands,
   pLayOnHandsCure,
   pPaladinSmiteFree,
   pRadiantStrikes,
-  expendChannelDivinity,
-  paladinChannelDivinityMax,
   restoreChannelDivinityShort,
+  sacredWeaponAttackBonus,
+  smiteOfProtectionCoverBonus,
   useFaithfulSteed
 } from "#/features/class-paladin.ts"
 
@@ -429,5 +439,91 @@ describe("restoreChannelDivinityShort", () => {
   })
   it("caps at max", () => {
     expect(restoreChannelDivinityShort(3, 3)).toBe(3)
+  })
+})
+
+// =============================================================================
+// Oath of Devotion
+// =============================================================================
+
+describe("Sacred Weapon", () => {
+  it("can use at L3+ with Channel Divinity charges", () => {
+    expect(canUseSacredWeapon(3, 1)).toBe(true)
+    expect(canUseSacredWeapon(10, 2)).toBe(true)
+  })
+  it("can't use below L3", () => {
+    expect(canUseSacredWeapon(2, 1)).toBe(false)
+    expect(canUseSacredWeapon(0, 1)).toBe(false)
+  })
+  it("can't use with 0 charges", () => {
+    expect(canUseSacredWeapon(3, 0)).toBe(false)
+  })
+  it("attack bonus = CHA mod, minimum +1", () => {
+    expect(sacredWeaponAttackBonus(3)).toBe(3)
+    expect(sacredWeaponAttackBonus(5)).toBe(5)
+    expect(sacredWeaponAttackBonus(0)).toBe(1)
+    expect(sacredWeaponAttackBonus(-1)).toBe(1)
+  })
+})
+
+describe("Aura of Devotion", () => {
+  it("available at L7+", () => {
+    expect(hasAuraOfDevotion(7)).toBe(true)
+    expect(hasAuraOfDevotion(20)).toBe(true)
+  })
+  it("not available below L7", () => {
+    expect(hasAuraOfDevotion(6)).toBe(false)
+    expect(hasAuraOfDevotion(0)).toBe(false)
+  })
+  it("grants Charmed immunity when conscious at L7+", () => {
+    expect(auraOfDevotionGrantsCharmedImmunity(7, true)).toBe(true)
+    expect(auraOfDevotionGrantsCharmedImmunity(18, true)).toBe(true)
+  })
+  it("no immunity when unconscious", () => {
+    expect(auraOfDevotionGrantsCharmedImmunity(7, false)).toBe(false)
+  })
+  it("no immunity below L7", () => {
+    expect(auraOfDevotionGrantsCharmedImmunity(6, true)).toBe(false)
+  })
+})
+
+describe("Smite of Protection", () => {
+  it("available at L15+", () => {
+    expect(hasSmiteOfProtection(15)).toBe(true)
+    expect(hasSmiteOfProtection(20)).toBe(true)
+  })
+  it("not available below L15", () => {
+    expect(hasSmiteOfProtection(14)).toBe(false)
+    expect(hasSmiteOfProtection(0)).toBe(false)
+  })
+  it("grants Half Cover bonus of +2", () => {
+    expect(smiteOfProtectionCoverBonus()).toBe(2)
+  })
+})
+
+describe("Holy Nimbus", () => {
+  it("can use at L20 with BA and not yet used", () => {
+    expect(canUseHolyNimbus(20, false, true)).toBe(true)
+  })
+  it("can't use below L20", () => {
+    expect(canUseHolyNimbus(19, false, true)).toBe(false)
+  })
+  it("can't use if already used this LR", () => {
+    expect(canUseHolyNimbus(20, true, true)).toBe(false)
+  })
+  it("can't use without bonus action", () => {
+    expect(canUseHolyNimbus(20, false, false)).toBe(false)
+  })
+  it("radiant damage = CHA mod + prof bonus", () => {
+    expect(holyNimbusRadiantDamage(4, 6)).toBe(10)
+    expect(holyNimbusRadiantDamage(5, 6)).toBe(11)
+    expect(holyNimbusRadiantDamage(0, 2)).toBe(2)
+  })
+  it("can restore with slot only if already used", () => {
+    expect(canRestoreHolyNimbusWithSlot(true)).toBe(true)
+    expect(canRestoreHolyNimbusWithSlot(false)).toBe(false)
+  })
+  it("restore requires L5 spell slot", () => {
+    expect(holyNimbusRestoreSlotLevel()).toBe(5)
   })
 })

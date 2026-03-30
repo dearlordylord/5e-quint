@@ -255,3 +255,100 @@ export function paladinLongRest(paladinLevel: number): PaladinLongRestResult {
     faithfulSteedUsed: false
   }
 }
+
+// =============================================================================
+// Oath of Devotion Subclass (SRD 5.2.1)
+//
+// The only Paladin subclass in the SRD 5.2.1.
+// TS-only: aura effects are multi-creature, toggle state is caller-tracked,
+// attack modifiers are caller-provided context.
+// =============================================================================
+
+const OATH_OF_DEVOTION_LEVEL = 3
+const AURA_OF_DEVOTION_LEVEL = 7
+const SMITE_OF_PROTECTION_LEVEL = 15
+const HOLY_NIMBUS_LEVEL = 20
+const HALF_COVER_AC_BONUS = 2
+const HOLY_NIMBUS_RESTORE_SLOT_LEVEL = 5
+
+// --- Sacred Weapon (L3 Channel Divinity) ---
+
+/**
+ * SRD: "expend one use of your Channel Divinity to imbue one Melee weapon...
+ * add your Charisma modifier to attack rolls (minimum bonus of +1), each time
+ * you hit you cause it to deal its normal damage type or Radiant damage."
+ * Duration: 10 minutes. Ends early if you choose or stop carrying the weapon.
+ */
+export function canUseSacredWeapon(paladinLevel: number, channelDivinityCharges: number): boolean {
+  return paladinLevel >= OATH_OF_DEVOTION_LEVEL && channelDivinityCharges > 0
+}
+
+/** Attack bonus while Sacred Weapon is active: +CHA mod (minimum +1). */
+export function sacredWeaponAttackBonus(chaMod: number): number {
+  return Math.max(1, chaMod)
+}
+
+// --- Aura of Devotion (L7) ---
+
+/**
+ * SRD: "You and your allies have Immunity to the Charmed condition while in
+ * your Aura of Protection."
+ * Range: same as Aura of Protection (10ft at L6, 30ft at L18).
+ */
+export function hasAuraOfDevotion(paladinLevel: number): boolean {
+  return paladinLevel >= AURA_OF_DEVOTION_LEVEL
+}
+
+/** Charmed immunity active when Paladin is conscious and L7+. */
+export function auraOfDevotionGrantsCharmedImmunity(paladinLevel: number, isConscious: boolean): boolean {
+  return paladinLevel >= AURA_OF_DEVOTION_LEVEL && isConscious
+}
+
+// --- Smite of Protection (L15) ---
+
+/**
+ * SRD: "Whenever you cast Divine Smite, you and your allies have Half Cover
+ * while in your Aura of Protection... until the start of your next turn."
+ * Replaces Purity of Spirit from 5.1.
+ */
+export function hasSmiteOfProtection(paladinLevel: number): boolean {
+  return paladinLevel >= SMITE_OF_PROTECTION_LEVEL
+}
+
+/** Half Cover bonus: +2 to AC and DEX saving throws. */
+export function smiteOfProtectionCoverBonus(): number {
+  return HALF_COVER_AC_BONUS
+}
+
+// --- Holy Nimbus (L20) ---
+
+/**
+ * SRD: "As a Bonus Action, you can imbue your Aura of Protection with holy
+ * power... Once you use this feature, you can't use it again until you finish
+ * a Long Rest. You can also restore your use of it by expending a level 5
+ * spell slot."
+ * Benefits: Holy Ward (advantage on saves vs Fiend/Undead), Radiant Damage
+ * (CHA mod + prof bonus to enemies in aura), Sunlight (bright light).
+ */
+export function canUseHolyNimbus(
+  paladinLevel: number,
+  holyNimbusUsed: boolean,
+  bonusActionAvailable: boolean
+): boolean {
+  return paladinLevel >= HOLY_NIMBUS_LEVEL && !holyNimbusUsed && bonusActionAvailable
+}
+
+/** Radiant damage dealt to enemies starting their turn in the aura. */
+export function holyNimbusRadiantDamage(chaMod: number, profBonus: number): number {
+  return chaMod + profBonus
+}
+
+/** Can restore Holy Nimbus by expending a L5 spell slot (if already used). */
+export function canRestoreHolyNimbusWithSlot(holyNimbusUsed: boolean): boolean {
+  return holyNimbusUsed
+}
+
+/** The spell slot level required to restore Holy Nimbus. */
+export function holyNimbusRestoreSlotLevel(): number {
+  return HOLY_NIMBUS_RESTORE_SLOT_LEVEL
+}

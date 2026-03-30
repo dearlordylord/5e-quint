@@ -341,7 +341,7 @@ Implemented in `class-monk-features.ts`. Open Hand Technique (Addle/Push/Topple 
 [T60] Lay on Hands (P1) -> deps: [T01]  ✓ done
 [T61] Paladin's Smite (P1) -> deps: [T01]  ✓ done
 [T62] Paladin Passives (P2) -> deps: [T01, T07]  ✓ done
-[T63] Oath of Devotion (P2) -> deps: [T07]
+[T63] Oath of Devotion (P2) -> deps: [T07]  ✓ done
 ```
 
 **[T60] Lay on Hands** *(done)*
@@ -369,11 +369,12 @@ Radiant Strikes (L11): on a hit with a melee weapon **or unarmed strike**, you c
 - Functions: `pAuraOfProtection(state, config)->+CHA mod to own saves`; `pFaithfulSteed(state)->mark used, cast Find Steed`; `pAbjureFoes(state, targetSaveResult)->expend Channel Divinity, frighten on fail`; `pRestoringTouch(state, conditionToRemove)->spend 5 LoH pool`; `pRadiantStrikes` in T61
 - Test: Aura of Protection +CHA min +1 to own saves; Faithful Steed 1/LR; Abjure Foes uses Channel Divinity; Restoring Touch costs 5 LoH; Aura Expansion at L18
 
-**[T63] Oath of Devotion**
-Sacred Weapon (L3 Channel Divinity: on Attack action, expend Channel Divinity to imbue one melee weapon for 10 min — add CHA mod to attack rolls (min +1), each hit deals normal or Radiant damage, weapon emits bright light 20ft + dim 20ft; can end early; ends if not carrying weapon), Turn the Unholy (Channel Divinity, caller-provided multi-target), Aura of Devotion (L7: self + 10ft allies can't be charmed while conscious; 30ft at L18), Smite of Protection (L15: when you cast Divine Smite, you and allies have Half Cover while in your Aura of Protection until start of your next turn). ~~Purity of Spirit~~ replaced by Smite of Protection in 5.2.1. Holy Nimbus (L20: BA, imbue Aura of Protection with holy power for 10 min; Holy Ward: Advantage on saves forced by Fiend or Undead; Radiant Damage: enemies starting turn in aura take CHA mod + Prof Bonus Radiant; Sunlight: aura filled with bright sunlight; 1/LR or restore by expending a L5 spell slot).
-- State: `sacredWeaponActive: bool`, `holyNimbusActive: bool`
-- Functions: `pSacredWeapon(state)->expend Channel Divinity, set active`; modify `pResolveAttack` for +CHA (min +1) while active; `pSmiteOfProtection(state)->on Divine Smite cast, grant Half Cover in aura`; `pHolyNimbus(state)->1/LR, activate`
-- Test: Sacred Weapon adds CHA mod to attacks; consumes Channel Divinity; Smite of Protection triggers on Divine Smite; Holy Nimbus 1/LR
+**[T63] Oath of Devotion** *(done)*
+TS-only pure functions in `class-paladin.ts`. ~~Turn the Unholy~~ not in SRD 5.2.1 Oath of Devotion (was 5.1). ~~Purity of Spirit~~ replaced by Smite of Protection.
+- Sacred Weapon (L3 CD): +CHA mod (min +1) to attacks, normal or Radiant damage, 10 min, 20ft bright/dim light
+- Aura of Devotion (L7): Charmed immunity in Aura of Protection while conscious
+- Smite of Protection (L15): Half Cover (+2 AC/DEX) on Divine Smite cast until start of next turn
+- Holy Nimbus (L20): BA, 10 min, 1/LR or restore with L5 slot; Holy Ward (adv saves vs Fiend/Undead), Radiant Damage (CHA+prof to enemies in aura), Sunlight
 
 ---
 
