@@ -83,7 +83,8 @@ export function rageMaxCharges(barbarianLevel: number): number {
   if (barbarianLevel >= 12) return 5
   if (barbarianLevel >= 6) return 4
   if (barbarianLevel >= 3) return 3
-  return 2
+  if (barbarianLevel >= 1) return 2
+  return 0
 }
 
 // --- Rage functions ---

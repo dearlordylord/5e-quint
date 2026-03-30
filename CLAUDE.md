@@ -74,6 +74,13 @@ The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parit
 
 `app/src/machine.ts` has a 420-line eslint `max-lines` limit. When adding actions, extract logic into `machine-helpers.ts` (or `machine-combat.ts`) to stay under the cap.
 
+## Plan verification requirements
+
+Every plan's **Verification** section must include:
+
+1. **`/simplify` convergence** — minimum 2 rounds (see below). Do not mark the plan as complete until simplify converges.
+2. **RAW agent check** — before implementing any rule, read the relevant SRD passage in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md`. Include a verification step that confirms all modeled rules trace to specific SRD text.
+
 ## /simplify convergence
 
 After significant changes, run `/simplify` repeatedly until it converges — i.e., each round finds fewer issues until no important fixes remain. **Do not ask between rounds** — just proceed automatically. Typical progression: round 1 catches dead code and obvious duplication; round 2 catches subtler issues (bugs, tautological invariants, missed dedup); round 3 should find nothing significant. If round N still finds real issues, keep going. **Minimum 2 rounds** — convergence cannot be measured from a single round unless the changeset is trivially small (< ~20 lines). A single round may fix the obvious issues but cannot confirm that no subtler issues remain.

@@ -7,6 +7,7 @@ import {
   heroicWarriorInspiration,
   remarkableAthleteCritMovement
 } from "#/features/class-fighter.ts"
+import * as barb from "#/machine-barbarian.ts"
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
@@ -384,7 +385,17 @@ export const dndMachine = setup({
       c.creatureKind !== "Monster"
         ? {}
         : useDailyAbilityUpdate(c.dailyUsesRemaining, (e as Extract<DndEvent, { type: "USE_DAILY_ABILITY" }>).name)
-    )
+    ),
+    enterRage: assign(({ context: c }) => barb.enterRageUpdate(c)),
+    endRage: assign(({ context: c }) => barb.endRageUpdate(c)),
+    extendRageBA: assign(({ context: c }) => barb.extendRageBAUpdate(c)),
+    markAttackOrForcedSave: assign(({ context: c }) => barb.markAttackOrForcedSaveUpdate(c)),
+    declareReckless: assign(({ context: c }) => barb.declareRecklessUpdate(c)),
+    useIntimidatingPresence: assign(({ context: c }) => barb.useIntimidatingPresenceUpdate(c)),
+    restoreIntimidatingPresence: assign(({ context: c }) => barb.restoreIntimidatingPresenceUpdate(c)),
+    barbarianStartTurn: assign(({ context: c }) => barb.barbarianStartTurnUpdate(c)),
+    barbarianShortRest: assign(({ context: c }) => barb.barbarianShortRestUpdate(c)),
+    barbarianLongRest: assign(({ context: c }) => barb.barbarianLongRestUpdate(c))
   }
 }).createMachine({
   id: "dnd",
@@ -421,7 +432,8 @@ export const dndMachine = setup({
     legendaryResistancesRemaining: i.legendaryResistancesRemaining ?? 0,
     rechargeAvailable: i.rechargeAvailable ?? {},
     dailyUsesRemaining: i.dailyUsesRemaining ?? {},
-    dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {}
+    dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
+    ...barb.initialBarbarianState(i.barbarianLevel ?? 0)
   }),
   on: rootEventHandlers,
   states: {

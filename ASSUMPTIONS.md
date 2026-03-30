@@ -211,3 +211,37 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 **Rules basis (SRD 5.2.1, Adult Red Dragon > Legendary Actions):** "The dragon can't take this action again until the start of its next turn." This is a per-action identity constraint. Modeling it would require a `Set[str]` of used action names, cleared at start of turn. Since the spec focuses on resource economy rather than tactical action selection, this constraint is left to the caller.
 
 **Changes:** None — documented as an intentional omission. See PLAN_MONSTERS.md D7.
+
+## A25: Init class selection (Fighter or Barbarian)
+
+**Assumption:** The Quint `init` action nondeterministically selects either Fighter or Barbarian as the PC's class. The selected class gets level `l` (from `Set(3, 5, 9, 10, 18)`); the other gets level 0 with zeroed charges. Monsters always have both at level 0.
+
+**Rules basis:** D&D 5e supports multiclassing, but the spec models single-class PCs for tractability. The choice is a nondeterministic parameter to exercise both class state machines in MBT traces.
+
+**Changes:** `dnd.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `machine.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
+
+## A26: Rage maintenance timing
+
+**Assumption:** Rage maintenance is checked at the start of the barbarian's next turn, using flags from the previous turn (`attackedOrForcedSaveThisTurn`, `rageExtendedWithBA`). If neither flag is set and level < 15 (Persistent Rage), rage ends.
+
+**Rules basis (SRD 5.2.1 Barbarian L1 "Rage > Duration"):** "The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following: Make an attack roll against an enemy. Force an enemy to make a saving throw. Take a Bonus Action to extend your Rage."
+
+The SRD says rage "lasts until the end of your next turn" — checking maintenance at the start of the next turn (before the turn's actions) is equivalent: if you didn't maintain it during your previous turn, it expires before you can act.
+
+**Changes:** `dnd.qnt`: `pBarbarianStartTurn` calls `pCheckRageMaintenance` before resetting per-turn flags. XState: `barbarianStartTurnUpdate` mirrors this logic.
+
+## A27: TS-only barbarian features
+
+**Assumption:** Brutal Strike effects (Forceful Blow, Hamstring Blow, Staggering Blow, Sundering Blow), Frenzy bonus damage, Danger Sense advantage, Retaliation reaction, and Relentless Rage save resolution remain TS-only features. These are caller-side composition (e.g., applying extra damage dice, granting advantage on DEX saves) rather than resource tracking, so they don't need Quint state variables.
+
+**Rules basis:** These features modify attack rolls, damage totals, or saving throws — all computed by the caller using the existing spec mechanics (damage, advantage, saves). The spec tracks only the resource charges and state flags that constrain when these features can be used.
+
+**Changes:** No Quint changes. TS implementation in `class-barbarian.ts` (526 lines, fully tested).
+
+## A28: Persistent Rage modeling
+
+**Assumption:** Persistent Rage (L15+) is modeled by skipping the rage maintenance check in `pCheckRageMaintenance`. The SRD says rage "lasts for 10 minutes without you needing to do anything to extend it" — we model this as `rageTurnsRemaining = 100` (10 min ≈ 100 rounds) with no maintenance required. Rage can still end early from Unconscious condition or donning Heavy armor (caller responsibility).
+
+**Rules basis (SRD 5.2.1 Barbarian L15 "Persistent Rage"):** "Your Rage is so fierce that it now lasts for 10 minutes without you needing to do anything to extend it from round to round. Your Rage ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor."
+
+**Changes:** `dnd.qnt`: `pCheckRageMaintenance` returns early (no-op) when `barbarianLevel >= 15`. XState: `barbarianStartTurnUpdate` mirrors this.

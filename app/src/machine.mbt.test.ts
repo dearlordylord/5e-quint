@@ -12,6 +12,7 @@ import { z } from "zod"
 
 import { fighterExtraAttacks } from "#/features/class-fighter.ts"
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
+import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
 import type { ActionType, Condition, CreatureKind, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
 import { d20Roll, healAmount, tempHp } from "#/types.ts"
 
@@ -226,6 +227,19 @@ const QuintFighterState = z.object({
   heroicInspiration: z.boolean()
 })
 
+const QuintBarbarianState = z.object({
+  raging: z.boolean(),
+  rageCharges: z.bigint(),
+  rageMaxCharges: z.bigint(),
+  rageTurnsRemaining: z.bigint(),
+  attackedOrForcedSaveThisTurn: z.boolean(),
+  rageExtendedWithBA: z.boolean(),
+  recklessThisTurn: z.boolean(),
+  frenzyUsedThisTurn: z.boolean(),
+  intimidatingPresenceUsed: z.boolean(),
+  relentlessRageTimesUsed: z.bigint()
+})
+
 // Combined state from all Quint vars
 const QuintFullState = z.object({
   state: QuintCreatureState,
@@ -234,6 +248,8 @@ const QuintFullState = z.object({
   turnPhase: z.string(),
   fighterState: QuintFighterState,
   fighterLevel: z.bigint(),
+  barbarianState: QuintBarbarianState,
+  barbarianLevel: z.bigint(),
   creatureKind: z.any().transform(variantToString),
   monsterStatBlock: z.any(), // parsed but not compared field-by-field (StatBlock is config, not mutable state)
   monsterResourceState: z.object({
@@ -309,6 +325,18 @@ interface NormalizedState {
   readonly indomitableMax: number
   readonly heroicInspiration: boolean
   readonly fighterLevel: number
+  readonly barbarianLevel: number
+  // BarbarianState
+  readonly raging: boolean
+  readonly rageCharges: number
+  readonly rageMaxCharges: number
+  readonly rageTurnsRemaining: number
+  readonly attackedOrForcedSaveThisTurn: boolean
+  readonly rageExtendedWithBA: boolean
+  readonly recklessThisTurn: boolean
+  readonly frenzyUsedThisTurn: boolean
+  readonly intimidatingPresenceUsed: boolean
+  readonly relentlessRageTimesUsed: number
   readonly creatureKind: string
   // MonsterResourceState
   readonly legendaryActionsRemaining: number
@@ -390,6 +418,17 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     indomitableMax: c.indomitableMax,
     heroicInspiration: c.heroicInspiration,
     fighterLevel: c.fighterLevel,
+    barbarianLevel: c.barbarianLevel,
+    raging: c.raging,
+    rageCharges: c.rageCharges,
+    rageMaxCharges: c.rageMaxCharges,
+    rageTurnsRemaining: c.rageTurnsRemaining,
+    attackedOrForcedSaveThisTurn: c.attackedOrForcedSaveThisTurn,
+    rageExtendedWithBA: c.rageExtendedWithBA,
+    recklessThisTurn: c.recklessThisTurn,
+    frenzyUsedThisTurn: c.frenzyUsedThisTurn,
+    intimidatingPresenceUsed: c.intimidatingPresenceUsed,
+    relentlessRageTimesUsed: c.relentlessRageTimesUsed,
     creatureKind: c.creatureKind,
     legendaryActionsRemaining: c.legendaryActionsRemaining,
     legendaryResistancesRemaining: c.legendaryResistancesRemaining,
@@ -458,6 +497,17 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     indomitableMax: Number(raw.fighterState.indomitableMax),
     heroicInspiration: raw.fighterState.heroicInspiration,
     fighterLevel: Number(raw.fighterLevel),
+    barbarianLevel: Number(raw.barbarianLevel),
+    raging: raw.barbarianState.raging,
+    rageCharges: Number(raw.barbarianState.rageCharges),
+    rageMaxCharges: Number(raw.barbarianState.rageMaxCharges),
+    rageTurnsRemaining: Number(raw.barbarianState.rageTurnsRemaining),
+    attackedOrForcedSaveThisTurn: raw.barbarianState.attackedOrForcedSaveThisTurn,
+    rageExtendedWithBA: raw.barbarianState.rageExtendedWithBA,
+    recklessThisTurn: raw.barbarianState.recklessThisTurn,
+    frenzyUsedThisTurn: raw.barbarianState.frenzyUsedThisTurn,
+    intimidatingPresenceUsed: raw.barbarianState.intimidatingPresenceUsed,
+    relentlessRageTimesUsed: Number(raw.barbarianState.relentlessRageTimesUsed),
     creatureKind: raw.creatureKind,
     legendaryActionsRemaining: Number(raw.monsterResourceState.legendaryActionsRemaining),
     legendaryResistancesRemaining: Number(raw.monsterResourceState.legendaryResistancesRemaining),
@@ -523,6 +573,13 @@ type EventActionMap = {
   USE_LEGENDARY_ACTION: "doUseLegendaryAction"
   USE_RECHARGE_ABILITY: "doUseRechargeAbility"
   USE_DAILY_ABILITY: "doUseDailyAbility"
+  ENTER_RAGE: "doEnterRage"
+  END_RAGE: "doEndRage"
+  EXTEND_RAGE_BA: "doExtendRageBA"
+  MARK_ATTACK_OR_FORCED_SAVE: "doMarkAttackOrForcedSave"
+  DECLARE_RECKLESS: "doDeclareReckless"
+  USE_INTIMIDATING_PRESENCE: "doUseIntimidatingPresence"
+  RESTORE_INTIMIDATING_PRESENCE: "doRestoreIntimidatingPresence"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -539,7 +596,7 @@ void (true as AssertAllEventsMapped)
 const ITFVariant = z.any().transform(variantToString)
 
 const driverSchema = {
-  init: { kind: ITFVariant, l: ITFBigInt, maxHp: ITFBigInt, selectedBlock: z.any() },
+  init: { kind: ITFVariant, l: ITFBigInt, maxHp: ITFBigInt, selectedBlock: z.any(), pcClass: z.string().optional() },
   doTakeDamage: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
   doTakeDamageMonster: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
   doTakeDamageWithMods: {
@@ -630,6 +687,13 @@ const driverSchema = {
   doUseHeroicInspiration: {},
   doScoreCriticalHit: {},
   doUseBonusMovement: { feet: ITFBigInt },
+  doEnterRage: {},
+  doEndRage: {},
+  doExtendRageBA: {},
+  doMarkAttackOrForcedSave: {},
+  doDeclareReckless: {},
+  doUseIntimidatingPresence: {},
+  doRestoreIntimidatingPresence: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -763,7 +827,7 @@ function createDndDriver() {
     }
 
     return {
-      init: ({ kind, l, maxHp: mhp, selectedBlock }) => {
+      init: ({ kind, l, maxHp: mhp, pcClass, selectedBlock }) => {
         if (actor) actor.stop()
         const creatureKind = mapCreatureKind(kind)
         currentCreatureKind = creatureKind
@@ -778,6 +842,7 @@ function createDndDriver() {
               movementRemaining: sb.walkSpeed,
               extraAttacksRemaining: multiattackExtraAttacks(sb.multiattackLength),
               fighterLevel: 0,
+              barbarianLevel: 0,
               creatureKind: "Monster",
               legendaryActionsRemaining: sb.legendaryActionsRemaining,
               legendaryResistancesRemaining: sb.legendaryResistancesRemaining,
@@ -790,6 +855,9 @@ function createDndDriver() {
           currentStatBlock = null
           const INIT_SPEED = 30
           const level = Number(l)
+          const isBarbarian = (pcClass ?? "Fighter") === "Barbarian"
+          const fLevel = isBarbarian ? 0 : level
+          const bLevel = isBarbarian ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -797,7 +865,8 @@ function createDndDriver() {
               effectiveSpeed: INIT_SPEED,
               movementRemaining: INIT_SPEED,
               extraAttacksRemaining: 1,
-              fighterLevel: level,
+              fighterLevel: fLevel,
+              barbarianLevel: bLevel,
               creatureKind: "PC"
             }
           })
@@ -895,12 +964,13 @@ function createDndDriver() {
         const sb = currentStatBlock
         // Monster: speed from stat block, no armor penalty; PC: Walk=30, no armor penalty
         const BASE_SPEED = isMonster && sb ? sb.walkSpeed : 30
+        const ctx = ensureActor().getSnapshot().context
         const extraAttacks =
           isMonster && sb
             ? sb.multiattackLength > 0
               ? sb.multiattackLength - 1
               : 0
-            : fighterExtraAttacks(ensureActor().getSnapshot().context.fighterLevel)
+            : Math.max(fighterExtraAttacks(ctx.fighterLevel), barbarianExtraAttacks(ctx.barbarianLevel))
         const effects = !numEffects
           ? []
           : [
@@ -1118,6 +1188,27 @@ function createDndDriver() {
       },
       doUseBonusMovement: ({ feet }) => {
         send({ type: "USE_BONUS_MOVEMENT", feet: Number(feet) })
+      },
+      doEnterRage: () => {
+        send({ type: "ENTER_RAGE" })
+      },
+      doEndRage: () => {
+        send({ type: "END_RAGE" })
+      },
+      doExtendRageBA: () => {
+        send({ type: "EXTEND_RAGE_BA" })
+      },
+      doMarkAttackOrForcedSave: () => {
+        send({ type: "MARK_ATTACK_OR_FORCED_SAVE" })
+      },
+      doDeclareReckless: () => {
+        send({ type: "DECLARE_RECKLESS" })
+      },
+      doUseIntimidatingPresence: () => {
+        send({ type: "USE_INTIMIDATING_PRESENCE" })
+      },
+      doRestoreIntimidatingPresence: () => {
+        send({ type: "RESTORE_INTIMIDATING_PRESENCE" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

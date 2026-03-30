@@ -132,6 +132,17 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     rechargeAvailable: {},
     dailyUsesRemaining: {},
     dailyUsesMax: {},
+    barbarianLevel: 0,
+    raging: false,
+    rageCharges: 0,
+    rageMaxCharges: 0,
+    rageTurnsRemaining: 0,
+    attackedOrForcedSaveThisTurn: false,
+    rageExtendedWithBA: false,
+    recklessThisTurn: false,
+    frenzyUsedThisTurn: false,
+    intimidatingPresenceUsed: false,
+    relentlessRageTimesUsed: 0,
     ...overrides
   }
 }

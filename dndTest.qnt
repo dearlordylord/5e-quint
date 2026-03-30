@@ -3118,13 +3118,13 @@ module dndTest {
 
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
-        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState })
+        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel })
 
   run test_invariants_10steps =
     init
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel })
 
   run test_invariants_20steps =
     init
@@ -3132,7 +3132,7 @@ module dndTest {
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel })
 
   // Individual invariant tests on known state constructions
   run test_inv_deadIsAbsorbing_construction = {
@@ -4323,6 +4323,247 @@ module dndTest {
       assert(DRAGON_RESOURCES.rechargeAvailable.get("Fire Breath") == false),
       assert(mrs2.rechargeAvailable.get("Fire Breath") == true),
     }
+  }
+
+  // ============================================================
+  // Barbarian: B0 — Type + Constants
+  // ============================================================
+
+  run test_rageMaxCharges_level1 = assert(rageMaxChargesForLevel(1) == 2)
+  run test_rageMaxCharges_level3 = assert(rageMaxChargesForLevel(3) == 3)
+  run test_rageMaxCharges_level6 = assert(rageMaxChargesForLevel(6) == 4)
+  run test_rageMaxCharges_level12 = assert(rageMaxChargesForLevel(12) == 5)
+  run test_rageMaxCharges_level17 = assert(rageMaxChargesForLevel(17) == 6)
+  run test_rageMaxCharges_level0 = assert(rageMaxChargesForLevel(0) == 0)
+
+  run test_freshBarbarianState_level5 = {
+    val bs = freshBarbarianState(5)
+    all {
+      assert(bs.raging == false),
+      assert(bs.rageCharges == 3),
+      assert(bs.rageMaxCharges == 3),
+      assert(bs.rageTurnsRemaining == 0),
+      assert(bs.attackedOrForcedSaveThisTurn == false),
+      assert(bs.rageExtendedWithBA == false),
+      assert(bs.recklessThisTurn == false),
+      assert(bs.frenzyUsedThisTurn == false),
+      assert(bs.intimidatingPresenceUsed == false),
+      assert(bs.relentlessRageTimesUsed == 0),
+    }
+  }
+
+  run test_freshBarbarianState_level0 = {
+    val bs = freshBarbarianState(0)
+    all {
+      assert(bs.rageCharges == 0),
+      assert(bs.rageMaxCharges == 0),
+    }
+  }
+
+  // ============================================================
+  // Barbarian: B2 — Pure Functions
+  // ============================================================
+
+  pure val TEST_BARB_STATE: BarbarianState = freshBarbarianState(5)
+
+  run test_canEnterRage_fresh = assert(canEnterRage(TEST_BARB_STATE) == true)
+  run test_canEnterRage_noCharges = assert(canEnterRage(TEST_BARB_STATE.with("rageCharges", 0)) == false)
+  run test_canEnterRage_alreadyRaging = assert(canEnterRage(TEST_BARB_STATE.with("raging", true)) == false)
+
+  run test_pEnterRage = {
+    val bs = pEnterRage(TEST_BARB_STATE)
+    all {
+      assert(bs.raging == true),
+      assert(bs.rageCharges == 2),
+      assert(bs.rageTurnsRemaining == 100),
+      assert(bs.attackedOrForcedSaveThisTurn == false),
+      assert(bs.rageExtendedWithBA == false),
+    }
+  }
+
+  run test_pEndRage = {
+    val bs = pEndRage(TEST_BARB_STATE.with("raging", true).with("rageTurnsRemaining", 50))
+    all {
+      assert(bs.raging == false),
+      assert(bs.rageTurnsRemaining == 0),
+      assert(bs.recklessThisTurn == false),
+    }
+  }
+
+  run test_pCheckRageMaintenance_attacked = {
+    val bs = TEST_BARB_STATE.with("raging", true).with("rageTurnsRemaining", 50)
+        .with("attackedOrForcedSaveThisTurn", true)
+    val result = pCheckRageMaintenance(bs, 5)
+    assert(result.raging == true)
+  }
+
+  run test_pCheckRageMaintenance_extended = {
+    val bs = TEST_BARB_STATE.with("raging", true).with("rageTurnsRemaining", 50)
+        .with("rageExtendedWithBA", true)
+    val result = pCheckRageMaintenance(bs, 5)
+    assert(result.raging == true)
+  }
+
+  run test_pCheckRageMaintenance_noAction = {
+    val bs = TEST_BARB_STATE.with("raging", true).with("rageTurnsRemaining", 50)
+    val result = pCheckRageMaintenance(bs, 5)
+    assert(result.raging == false)
+  }
+
+  run test_pCheckRageMaintenance_persistentRage = {
+    // L15+: no maintenance needed
+    val bs = TEST_BARB_STATE.with("raging", true).with("rageTurnsRemaining", 50)
+    val result = pCheckRageMaintenance(bs, 15)
+    assert(result.raging == true)
+  }
+
+  run test_pBarbarianStartTurn_resetFlags = {
+    val bs = TEST_BARB_STATE.with("raging", true).with("rageTurnsRemaining", 50)
+        .with("attackedOrForcedSaveThisTurn", true).with("recklessThisTurn", true)
+    val result = pBarbarianStartTurn(bs, 5)
+    all {
+      assert(result.raging == true),
+      assert(result.attackedOrForcedSaveThisTurn == false),
+      assert(result.recklessThisTurn == false),
+      assert(result.rageTurnsRemaining == 49),
+    }
+  }
+
+  run test_pBarbarianStartTurn_rageEnds = {
+    // No attack, no BA extension → rage ends at start of next turn
+    val bs = TEST_BARB_STATE.with("raging", true).with("rageTurnsRemaining", 50)
+    val result = pBarbarianStartTurn(bs, 5)
+    all {
+      assert(result.raging == false),
+      assert(result.rageTurnsRemaining == 0),
+    }
+  }
+
+  run test_pBarbarianShortRest = {
+    val bs = TEST_BARB_STATE.with("rageCharges", 1).with("relentlessRageTimesUsed", 2)
+    val result = pBarbarianShortRest(bs)
+    all {
+      assert(result.rageCharges == 2),
+      assert(result.relentlessRageTimesUsed == 0),
+    }
+  }
+
+  run test_pBarbarianShortRest_capped = {
+    val bs = TEST_BARB_STATE  // already at max (3)
+    val result = pBarbarianShortRest(bs)
+    assert(result.rageCharges == 3)
+  }
+
+  run test_pBarbarianLongRest = {
+    val bs = TEST_BARB_STATE.with("rageCharges", 0).with("relentlessRageTimesUsed", 3)
+        .with("intimidatingPresenceUsed", true).with("raging", true)
+    val result = pBarbarianLongRest(bs)
+    all {
+      assert(result.rageCharges == 3),
+      assert(result.relentlessRageTimesUsed == 0),
+      assert(result.intimidatingPresenceUsed == false),
+      assert(result.raging == false),
+    }
+  }
+
+  run test_canUseIntimidatingPresence = {
+    val bs = TEST_BARB_STATE
+    all {
+      assert(canUseIntimidatingPresence(bs, 14, false) == true),
+      assert(canUseIntimidatingPresence(bs, 13, false) == false),
+      assert(canUseIntimidatingPresence(bs, 14, true) == false),
+      assert(canUseIntimidatingPresence(bs.with("intimidatingPresenceUsed", true), 14, false) == false),
+    }
+  }
+
+  run test_canRestoreIntimidatingPresence = {
+    val bs = TEST_BARB_STATE.with("intimidatingPresenceUsed", true)
+    all {
+      assert(canRestoreIntimidatingPresence(bs, 14) == true),
+      assert(canRestoreIntimidatingPresence(bs, 13) == false),
+      assert(canRestoreIntimidatingPresence(bs.with("rageCharges", 0), 14) == false),
+    }
+  }
+
+  run test_pRestoreIntimidatingPresence = {
+    val bs = TEST_BARB_STATE.with("intimidatingPresenceUsed", true)
+    val result = pRestoreIntimidatingPresence(bs)
+    all {
+      assert(result.intimidatingPresenceUsed == false),
+      assert(result.rageCharges == 2),
+    }
+  }
+
+  // ============================================================
+  // Barbarian: B3 — Action Trace Tests
+  // ============================================================
+
+  /// Trace: enter rage → mark attack → start next turn → rage persists
+  run test_trace_rage_maintained = {
+    init.then(
+      // Enter rage (only valid for Barbarian PCs in acting phase)
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(5), barbarianLevel' = 5,
+      }
+    ).then(doEnterRage)
+    .then(doMarkAttackOrForcedSave)
+    .then(all {
+      // Verify rage is active and attack marked
+      assert(barbarianState.raging == true),
+      assert(barbarianState.attackedOrForcedSaveThisTurn == true),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+    })
+  }
+
+  /// Trace: enter rage → no attack → start turn → rage ends
+  run test_trace_rage_expires = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = pEnterRage(freshBarbarianState(5)), barbarianLevel' = 5,
+      }
+    ).then(all {
+      // Simulate start-of-turn maintenance check (no attack, no BA extension)
+      assert(pBarbarianStartTurn(barbarianState, barbarianLevel).raging == false),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = pBarbarianStartTurn(barbarianState, barbarianLevel),
+      barbarianLevel' = barbarianLevel,
+    })
+  }
+
+  /// Trace: declare reckless → verify flag set
+  run test_trace_reckless = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(5), barbarianLevel' = 5,
+      }
+    ).then(doDeclareReckless)
+    .then(all {
+      assert(barbarianState.recklessThisTurn == true),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+    })
   }
 
 }

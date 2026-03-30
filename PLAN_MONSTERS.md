@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phases 0–3 complete.** Next: Phase L (Legendary Actions/Resistance/Recharge) — deferred, not scheduled. Restructured 2026-03-28: universal creature improvements moved to PLAN_CLEANUP.md (items E/F/G/H2/I).
+**Phases 0–3 + L complete. Barbarian (Phase B) complete.** Restructured 2026-03-28: universal creature improvements moved to PLAN_CLEANUP.md (items E/F/G/H2/I). Barbarian integration completed 2026-03-30 (see PLAN_MONSTERS.md Phase B section below).
 
 ## Prerequisites — ALL DONE
 
@@ -547,3 +547,20 @@ Exercises: Large size, no immunities/resistances (baseline), higher speed (40 ft
 5. **Monsters don't make death saves** → `creatureKind` discriminator in Phase 0.
 6. **Missing mechanics** → Added: X/Day (Phase L), exhaustion immunity (PLAN_CLEANUP G), initiative mod, senses.
 7. **`proficiencyBonus` stored vs derived** → Stays derived for PCs; stored on StatBlock for monsters.
+
+---
+
+## Phase B: Barbarian (Path of the Berserker) — COMPLETE (2026-03-30)
+
+### What was done
+- `BarbarianState` type (10 fields) + `var barbarianState` + `var barbarianLevel` in Quint
+- `rageMaxChargesForLevel`, `freshBarbarianState` constants
+- Pure functions: guards (canEnterRage, canUseIntimidatingPresence, canRestoreIntimidatingPresence), transitions (pEnterRage, pEndRage, pExtendRageBA, pMarkAttackOrForcedSave, pDeclareReckless, pCheckRageMaintenance, pUseIntimidatingPresence, pRestoreIntimidatingPresence), lifecycle (pBarbarianStartTurn, pBarbarianShortRest, pBarbarianLongRest)
+- 7 action wrappers wired into stepPC + lifecycle hooks
+- 4 invariants: rageChargesBounded, rageTurnsNonNegative, rageConsistency, relentlessRageNonNegative
+- XState: `machine-barbarian.ts` (delegates to `class-barbarian.ts`), DndContext/DndEvent/DndMachineInput updated, event routing in machine-states.ts
+- MBT bridge: Zod schema, NormalizedState, EventActionMap, driver handlers, init class selection
+- Init nondeterministically selects Fighter OR Barbarian (A25)
+- Bugfix: `rageMaxCharges(0)` in TS returned 2 instead of 0
+- ASSUMPTIONS.md: A25-A28
+- `/simplify` convergence: 2 rounds, found+fixed spread-order bug in barbarianLongRestUpdate and raging guard parity bug in enterRageUpdate

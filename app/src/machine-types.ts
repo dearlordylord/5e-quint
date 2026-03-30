@@ -65,6 +65,7 @@ export interface DndMachineInput {
   readonly rechargeAvailable?: Readonly<Record<string, boolean>>
   readonly dailyUsesRemaining?: Readonly<Record<string, number>>
   readonly dailyUsesMax?: Readonly<Record<string, number>>
+  readonly barbarianLevel?: number
 }
 
 // --- Context ---
@@ -135,6 +136,18 @@ export interface DndContext {
   readonly rechargeAvailable: Readonly<Record<string, boolean>>
   readonly dailyUsesRemaining: Readonly<Record<string, number>>
   readonly dailyUsesMax: Readonly<Record<string, number>> // not compared in MBT — derived from stat block
+  // BarbarianState (Quint parity: barbarianState)
+  readonly barbarianLevel: number
+  readonly raging: boolean
+  readonly rageCharges: number
+  readonly rageMaxCharges: number
+  readonly rageTurnsRemaining: number
+  readonly attackedOrForcedSaveThisTurn: boolean
+  readonly rageExtendedWithBA: boolean
+  readonly recklessThisTurn: boolean
+  readonly frenzyUsedThisTurn: boolean
+  readonly intimidatingPresenceUsed: boolean
+  readonly relentlessRageTimesUsed: number
 }
 
 // --- Events ---
@@ -237,8 +250,8 @@ export type DndEvent =
       readonly choice: ShoveChoice
     }
   | { readonly type: "GRANT_EXTRA_ACTION" }
-  | { readonly type: "EXPEND_SLOT"; readonly level: number }
   | { readonly type: "EXPEND_PACT_SLOT" }
+  | { readonly type: "EXPEND_SLOT"; readonly level: number }
   | {
       readonly type: "START_CONCENTRATION"
       readonly spellId: string
@@ -280,6 +293,14 @@ export type DndEvent =
   | { readonly type: "USE_LEGENDARY_ACTION"; readonly actionName: string }
   | { readonly type: "USE_RECHARGE_ABILITY"; readonly name: string }
   | { readonly type: "USE_DAILY_ABILITY"; readonly name: string }
+  // Phase B: Barbarian events (all zero-payload)
+  | { readonly type: "ENTER_RAGE" }
+  | { readonly type: "END_RAGE" }
+  | { readonly type: "EXTEND_RAGE_BA" }
+  | { readonly type: "MARK_ATTACK_OR_FORCED_SAVE" }
+  | { readonly type: "DECLARE_RECKLESS" }
+  | { readonly type: "USE_INTIMIDATING_PRESENCE" }
+  | { readonly type: "RESTORE_INTIMIDATING_PRESENCE" }
 
 // --- Event extractors ---
 

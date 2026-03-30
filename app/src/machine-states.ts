@@ -108,17 +108,17 @@ export const damageTrackConfig = {
           {
             guard: "shortRestHeals" as const,
             target: "#dnd.damageTrack.alive",
-            actions: ["shortRest", "fighterShortRest", "clearUnconscious"]
+            actions: ["shortRest", "fighterShortRest", "barbarianShortRest", "clearUnconscious"]
           },
-          { guard: "isOutOfCombat" as const, actions: ["shortRest", "fighterShortRest"] }
+          { guard: "isOutOfCombat" as const, actions: ["shortRest", "fighterShortRest", "barbarianShortRest"] }
         ],
         LONG_REST: [
           {
             guard: "longRestHeals" as const,
             target: "#dnd.damageTrack.alive",
-            actions: ["longRest", "fighterLongRest", "clearUnconscious"]
+            actions: ["longRest", "fighterLongRest", "barbarianLongRest", "clearUnconscious"]
           },
-          { guard: "isOutOfCombat" as const, actions: ["longRest", "fighterLongRest"] }
+          { guard: "isOutOfCombat" as const, actions: ["longRest", "fighterLongRest", "barbarianLongRest"] }
         ],
         SPEND_HIT_DIE: [
           {
@@ -188,12 +188,16 @@ export const turnPhaseConfig = {
         MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
         MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] },
         USE_RECHARGE_ABILITY: { actions: ["useRechargeAbility"] },
-        USE_DAILY_ABILITY: { actions: ["useDailyAbility"] }
+        USE_DAILY_ABILITY: { actions: ["useDailyAbility"] },
+        ENTER_RAGE: { actions: ["enterRage"] },
+        EXTEND_RAGE_BA: { actions: ["extendRageBA"] },
+        DECLARE_RECKLESS: { actions: ["declareReckless"] },
+        USE_INTIMIDATING_PRESENCE: { actions: ["useIntimidatingPresence"] }
       }
     },
     waitingForTurn: {
       on: {
-        START_TURN: { target: "acting" as const, actions: ["initTurn", "fighterStartTurn"] },
+        START_TURN: { target: "acting" as const, actions: ["initTurn", "fighterStartTurn", "barbarianStartTurn"] },
         EXIT_COMBAT: { target: "outOfCombat" as const, actions: ["exitCombat"] },
         USE_LEGENDARY_ACTION: { actions: ["useLegendaryAction"] }
       }
@@ -244,10 +248,13 @@ export const rootEventHandlers = {
   SHOVE: { actions: ["applyShove"] },
   EXPEND_SLOT: { guard: "canExpendSlot" as const, actions: ["expendSlot"] },
   EXPEND_PACT_SLOT: { guard: "canExpendSlot" as const, actions: ["expendPactSlot"] },
-  SHORT_REST: { guard: "isOutOfCombat" as const, actions: ["shortRest", "fighterShortRest"] },
-  LONG_REST: { guard: "isOutOfCombat" as const, actions: ["longRest", "fighterLongRest"] },
+  SHORT_REST: { guard: "isOutOfCombat" as const, actions: ["shortRest", "fighterShortRest", "barbarianShortRest"] },
+  LONG_REST: { guard: "isOutOfCombat" as const, actions: ["longRest", "fighterLongRest", "barbarianLongRest"] },
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },
   APPLY_STARVATION: { actions: ["applyStarvation"] },
   APPLY_DEHYDRATION: { actions: ["applyDehydration"] },
-  USE_HEROIC_INSPIRATION: { actions: ["useHeroicInspiration"] }
+  USE_HEROIC_INSPIRATION: { actions: ["useHeroicInspiration"] },
+  END_RAGE: { actions: ["endRage"] },
+  MARK_ATTACK_OR_FORCED_SAVE: { actions: ["markAttackOrForcedSave"] },
+  RESTORE_INTIMIDATING_PRESENCE: { actions: ["restoreIntimidatingPresence"] }
 } as const

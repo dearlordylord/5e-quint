@@ -360,6 +360,19 @@ module dnd {
     heroicInspiration: bool,
   }
 
+  type BarbarianState = {
+    raging: bool,
+    rageCharges: int,
+    rageMaxCharges: int,
+    rageTurnsRemaining: int,        // 100 = 10 min; 0 = not raging
+    attackedOrForcedSaveThisTurn: bool,
+    rageExtendedWithBA: bool,
+    recklessThisTurn: bool,
+    frenzyUsedThisTurn: bool,
+    intimidatingPresenceUsed: bool,
+    relentlessRageTimesUsed: int,
+  }
+
   type UnarmoredDefense = NoUnarmoredDefense | BarbarianUD | MonkUD
 
   /// SRD 5.2.1 species (Character Origins chapter).
@@ -2313,6 +2326,151 @@ module dnd {
   }
 
   // ============================================================
+  // 17.B BARBARIAN FUNCTIONS (Phase B)
+  // ============================================================
+  // Pure functions for Barbarian resource tracking: Rage, Reckless
+  // Attack, Frenzy, Intimidating Presence, Relentless Rage.
+
+  // -- B0: Constants --
+
+  /// Max rage charges by barbarian level (SRD 5.2.1 Barbarian Features table).
+  pure def rageMaxChargesForLevel(barbarianLevel: int): int = {
+    if (barbarianLevel >= 17) 6
+    else if (barbarianLevel >= 12) 5
+    else if (barbarianLevel >= 6) 4
+    else if (barbarianLevel >= 3) 3
+    else if (barbarianLevel >= 1) 2
+    else 0
+  }
+
+  /// Fresh barbarian state for a given level.
+  pure def freshBarbarianState(barbarianLevel: int): BarbarianState = {
+    val maxCharges = rageMaxChargesForLevel(barbarianLevel)
+    {
+      raging: false,
+      rageCharges: maxCharges,
+      rageMaxCharges: maxCharges,
+      rageTurnsRemaining: 0,
+      attackedOrForcedSaveThisTurn: false,
+      rageExtendedWithBA: false,
+      recklessThisTurn: false,
+      frenzyUsedThisTurn: false,
+      intimidatingPresenceUsed: false,
+      relentlessRageTimesUsed: 0,
+    }
+  }
+
+  // -- B1: Guards --
+
+  /// Can enter rage: charges > 0 AND not already raging.
+  /// Armor check (no heavy armor) is a caller-side concern (D4).
+  pure def canEnterRage(bs: BarbarianState): bool = {
+    bs.rageCharges > 0 and not(bs.raging)
+  }
+
+  /// Can use Intimidating Presence: L14+, not already used, bonus action available.
+  pure def canUseIntimidatingPresence(bs: BarbarianState, barbarianLevel: int, bonusActionUsed: bool): bool = {
+    barbarianLevel >= 14 and not(bs.intimidatingPresenceUsed) and not(bonusActionUsed)
+  }
+
+  /// Can restore Intimidating Presence by expending a rage charge.
+  pure def canRestoreIntimidatingPresence(bs: BarbarianState, barbarianLevel: int): bool = {
+    barbarianLevel >= 14 and bs.intimidatingPresenceUsed and bs.rageCharges > 0
+  }
+
+  // -- B2: Transitions + Lifecycle --
+
+  /// Enter rage: set raging, decrement charge, set turns to 100 (10 min), reset flags.
+  pure def pEnterRage(bs: BarbarianState): BarbarianState = {
+    bs.with("raging", true)
+      .with("rageCharges", bs.rageCharges - 1)
+      .with("rageTurnsRemaining", 100)
+      .with("attackedOrForcedSaveThisTurn", false)
+      .with("rageExtendedWithBA", false)
+  }
+
+  /// End rage: clear raging, zero turns, reset per-turn flags.
+  pure def pEndRage(bs: BarbarianState): BarbarianState = {
+    bs.with("raging", false)
+      .with("rageTurnsRemaining", 0)
+      .with("attackedOrForcedSaveThisTurn", false)
+      .with("rageExtendedWithBA", false)
+      .with("recklessThisTurn", false)
+  }
+
+  /// Extend rage with bonus action.
+  pure def pExtendRageBA(bs: BarbarianState): BarbarianState = {
+    bs.with("rageExtendedWithBA", true)
+  }
+
+  /// Mark that an attack or forced save occurred this turn (rage maintenance).
+  pure def pMarkAttackOrForcedSave(bs: BarbarianState): BarbarianState = {
+    bs.with("attackedOrForcedSaveThisTurn", true)
+  }
+
+  /// Declare Reckless Attack this turn.
+  pure def pDeclareReckless(bs: BarbarianState): BarbarianState = {
+    bs.with("recklessThisTurn", true)
+  }
+
+  /// Check rage maintenance at start of turn.
+  /// SRD L15 Persistent Rage: rage lasts 10 min without maintenance.
+  /// Below L15: rage ends if no attack, no forced save, and no BA extension last turn.
+  pure def pCheckRageMaintenance(bs: BarbarianState, barbarianLevel: int): BarbarianState = {
+    if (not(bs.raging)) bs
+    // Persistent Rage (L15+): skip maintenance check
+    else if (barbarianLevel >= 15) bs
+    // Rage maintained if attacked, forced save, or extended with BA
+    else if (bs.attackedOrForcedSaveThisTurn or bs.rageExtendedWithBA) bs
+    // Rage ends
+    else pEndRage(bs)
+  }
+
+  /// Use Intimidating Presence: mark as used.
+  pure def pUseIntimidatingPresence(bs: BarbarianState): BarbarianState = {
+    bs.with("intimidatingPresenceUsed", true)
+  }
+
+  /// Restore Intimidating Presence by expending a rage charge.
+  pure def pRestoreIntimidatingPresence(bs: BarbarianState): BarbarianState = {
+    bs.with("rageCharges", bs.rageCharges - 1)
+      .with("intimidatingPresenceUsed", false)
+  }
+
+  // -- B2 (continued): Lifecycle --
+
+  /// Barbarian start of turn: reset per-turn flags, decrement turns, check maintenance.
+  pure def pBarbarianStartTurn(bs: BarbarianState, barbarianLevel: int): BarbarianState = {
+    // 1. Check rage maintenance (uses LAST turn's flags)
+    val bs1 = pCheckRageMaintenance(bs, barbarianLevel)
+    // 2. Reset per-turn flags for the new turn
+    val bs2 = bs1.with("attackedOrForcedSaveThisTurn", false)
+                  .with("rageExtendedWithBA", false)
+                  .with("recklessThisTurn", false)
+                  .with("frenzyUsedThisTurn", false)
+    // 3. Decrement rage turns (if still raging after maintenance)
+    if (bs2.raging and bs2.rageTurnsRemaining > 0)
+      bs2.with("rageTurnsRemaining", bs2.rageTurnsRemaining - 1)
+    else bs2
+  }
+
+  /// Barbarian short rest: regain 1 rage charge (capped), reset relentlessRageTimesUsed.
+  pure def pBarbarianShortRest(bs: BarbarianState): BarbarianState = {
+    bs.with("rageCharges", intMin(bs.rageCharges + 1, bs.rageMaxCharges))
+      .with("relentlessRageTimesUsed", 0)
+  }
+
+  /// Barbarian long rest: restore all charges, end rage, reset all flags.
+  pure def pBarbarianLongRest(bs: BarbarianState): BarbarianState = {
+    pEndRage(bs)
+      .with("rageCharges", bs.rageMaxCharges)
+      .with("relentlessRageTimesUsed", 0)
+      .with("intimidatingPresenceUsed", false)
+      .with("recklessThisTurn", false)
+      .with("frenzyUsedThisTurn", false)
+  }
+
+  // ============================================================
   // 17.L MONSTER RESOURCE FUNCTIONS (Phase L)
   // ============================================================
   // Pure functions for Legendary Actions, Legendary Resistance,
@@ -2575,6 +2733,8 @@ module dnd {
   var creatureKind: CreatureKind
   var monsterStatBlock: StatBlock
   var monsterResourceState: MonsterResourceState
+  var barbarianState: BarbarianState
+  var barbarianLevel: int
 
   /// Default (empty) monster resources — used for PCs and non-legendary monsters.
   pure val FRESH_MONSTER_RESOURCES: MonsterResourceState = {
@@ -2725,6 +2885,8 @@ module dnd {
     nondet l = Set(3, 5, 9, 10, 18).oneOf()
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
+    // A25: class selection — one of Fighter or Barbarian at level l, other at 0
+    nondet pcClass = Set("Fighter", "Barbarian").oneOf()
     if (kind == Monster) {
       val monsterExtraAttacks = if (selectedBlock.multiattack.length() > 0)
         selectedBlock.multiattack.length() - 1 else 0
@@ -2736,6 +2898,8 @@ module dnd {
         state' = freshCreature(selectedBlock.maxHp),
         fighterState' = freshFighterState(0),
         fighterLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        barbarianLevel' = 0,
         turnState' = FRESH_TURN
           .with("extraAttacksRemaining", monsterExtraAttacks)
           .with("movementRemaining", monsterSpeed)
@@ -2744,13 +2908,17 @@ module dnd {
         turnPhase' = "outOfCombat",
       }
     } else {
+      val fLevel = if (pcClass == "Fighter") l else 0
+      val bLevel = if (pcClass == "Barbarian") l else 0
       all {
         creatureKind' = PC,
         monsterStatBlock' = NULL_STAT_BLOCK,
         monsterResourceState' = FRESH_MONSTER_RESOURCES,
-        fighterLevel' = l,
+        fighterLevel' = fLevel,
+        barbarianLevel' = bLevel,
         state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
-        fighterState' = freshFighterState(l),
+        fighterState' = freshFighterState(fLevel),
+        barbarianState' = freshBarbarianState(bLevel),
         turnState' = FRESH_TURN,
         spellSlots' = FRESH_SPELL_SLOTS,
         turnPhase' = "outOfCombat",
@@ -2766,7 +2934,7 @@ module dnd {
     nondet dt = DAMAGE_TYPES.oneOf()
     nondet isCrit = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doTakeDamageWithMods = {
@@ -2776,7 +2944,7 @@ module dnd {
     nondet resType = DAMAGE_TYPES.oneOf()
     nondet vulnType = DAMAGE_TYPES.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   /// Monster take damage: R/V/I sourced from stat block, monster death at 0 HP.
@@ -2788,34 +2956,34 @@ module dnd {
       monsterStatBlock.resistances, monsterStatBlock.vulnerabilities,
       monsterStatBlock.damageImmunities, isCrit, Monster)
     val r = pWithConcBreak(spellSlots, state, s1)
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doHeal = {
     nondet amount = HEAL_RANGE.oneOf()
-    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doGrantTempHp = {
     nondet amount = TEMP_HP_RANGE.oneOf()
     nondet keepOld = Bool.oneOf()
-    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doDeathSave = {
     nondet roll = D20_RANGE.oneOf()
     nondet roll2 = D20_RANGE.oneOf()
     val effectiveRoll = pFighterDeathSaveRoll(fighterLevel, roll, roll2)
-    all { state' = pDeathSave(state, effectiveRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pDeathSave(state, effectiveRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doStabilize = all {
-    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState
+    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel
   }
 
   action doKnockOut = {
     val r = pWithConcBreak(spellSlots, state, pKnockOut(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doApplyCondition = {
@@ -2824,12 +2992,12 @@ module dnd {
     nondet immuneCondition = CONDITIONS.oneOf()
     val immunities = if (useImmunity) Set(immuneCondition) else Set()
     val r = pWithConcBreak(spellSlots, state, pApplyCondition(state, c, immunities))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doRemoveCondition = {
     nondet c = CONDITIONS.oneOf()
-    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   // Exhaustion actions
@@ -2837,26 +3005,26 @@ module dnd {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
     nondet exhaustionImmune = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pAddExhaustion(state, levels, exhaustionImmune))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doReduceExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
-    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   // Turn actions
-  action unchanged = all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+  action unchanged = all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
 
   // Combat mode transitions
   action doEnterCombat = {
     if (turnPhase != "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doExitCombat = {
     if (turnPhase == "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doStartTurn = {
@@ -2911,10 +3079,16 @@ module dnd {
           creatureKind' = creatureKind,
           monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs2,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
         }
       } else {
-        // PC start turn: existing behavior
-        val r = pStartTurnFull(configForLevel(fighterLevel), state, spellSlots, Unarmored,
+        // PC start turn: derive config from both fighter and barbarian levels
+        val baseConfig = configForLevel(fighterLevel)
+        // Barbarian Extra Attack (L5+): add FExtraAttack if barbarian qualifies and fighter doesn't already have it
+        val pcConfig = if (barbarianLevel >= 5 and not(baseConfig.features.contains(FExtraAttack)))
+          baseConfig.with("features", baseConfig.features.union(Set(FExtraAttack)))
+        else baseConfig
+        val r = pStartTurnFull(pcConfig, state, spellSlots, Unarmored,
           callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)
         // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied
         val afterRally = pHeroicRally(r.creature, fighterLevel, conMod)
@@ -2927,6 +3101,8 @@ module dnd {
           fighterLevel' = fighterLevel,
           creatureKind' = creatureKind,
           monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+          barbarianState' = pBarbarianStartTurn(barbarianState, barbarianLevel),
+          barbarianLevel' = barbarianLevel,
         }
       }
     }
@@ -2935,29 +3111,29 @@ module dnd {
   action doUseAction = {
     nondet at = ACTION_TYPES.oneOf()
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doUseBonusAction = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doUseReaction = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doUseMovement = {
     nondet feet = MOVEMENT_RANGE.oneOf()
     nondet cost = MOVE_COST_RANGE.oneOf()
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doUseExtraAttack = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doStandFromProne = {
@@ -2967,35 +3143,35 @@ module dnd {
     else {
       val t1 = pStandFromProne(turnState)
       val s1 = if (t1 != turnState) pRemoveCondition(state, CProne) else state
-      all { state' = s1, turnState' = t1, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+      all { state' = s1, turnState' = t1, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
     }
   }
 
   action doDropProne = {
     if (turnPhase != "acting") unchanged
-    else all { state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doMarkBonusActionSpell = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doMarkNonCantripActionSpell = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   // Spell slot actions (A1: requires ability to act — see ASSUMPTIONS.md)
   action doExpendSlot = {
     nondet level = SLOT_LEVEL_RANGE.oneOf()
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendSlot(spellSlots, level) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doExpendPactSlot = {
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendPactSlot(spellSlots) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doStartConcentration = {
@@ -3006,21 +3182,21 @@ module dnd {
       val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
       val effects2 = pAddEffect(effects1, spellId, duration, AtEndOfTurn)
       val ss1 = pStartConcentration(spellSlots, spellId)
-      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
     }
   }
 
   action doBreakConcentration = {
     val ss1 = pBreakConcentration(spellSlots)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doConcentrationCheck = {
     nondet saveSucceeded = Bool.oneOf()
     val ss1 = pConcentrationCheck(spellSlots, saveSucceeded)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   // Active effect actions
@@ -3028,19 +3204,19 @@ module dnd {
     nondet spellId = SPELL_IDS.oneOf()
     nondet duration = EFFECT_DURATION_RANGE.oneOf()
     nondet expiresAt = Set(AtStartOfTurn, AtEndOfTurn).oneOf()
-    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration, expiresAt)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration, expiresAt)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doRemoveEffect = {
     nondet spellId = SPELL_IDS.oneOf()
-    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   // Rest actions
   action doSpendHitDie = {
     nondet conMod = (-2).to(5).oneOf()
     nondet dieRoll = HD_ROLL_RANGE.oneOf()
-    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doShortRest = {
@@ -3064,6 +3240,8 @@ module dnd {
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = mrs1,
+        barbarianState' = pBarbarianShortRest(barbarianState),
+        barbarianLevel' = barbarianLevel,
       }
     }
   }
@@ -3086,6 +3264,8 @@ module dnd {
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = mrs3,
+        barbarianState' = pBarbarianLongRest(barbarianState),
+        barbarianLevel' = barbarianLevel,
       }
     }
   }
@@ -3094,22 +3274,22 @@ module dnd {
   action doApplyFall = {
     nondet damageRoll = DAMAGE_RANGE.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyFall(state, damageRoll, Set(), Set(), Set()))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doSuffocate = {
     val r = pWithConcBreak(spellSlots, state, pSuffocate(state, creatureKind))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doApplyStarvation = {
     val r = pWithConcBreak(spellSlots, state, pApplyStarvation(state))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doApplyDehydration = {
     val r = pWithConcBreak(spellSlots, state, pApplyDehydration(state))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   // Grapple/Shove actions (applied to self as target)
@@ -3119,16 +3299,16 @@ module dnd {
     nondet saveFailed = Bool.oneOf()
     nondet freeHand = Bool.oneOf()
     val result = pGrapple(atkSize, tgtSize, state, saveFailed, freeHand)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doReleaseGrapple = all {
-    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState
+    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel
   }
 
   action doEscapeGrapple = {
     nondet escaped = Bool.oneOf()
-    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   action doShove = {
@@ -3137,7 +3317,7 @@ module dnd {
     nondet saveFailed = Bool.oneOf()
     nondet choice = SHOVE_CHOICES.oneOf()
     val result = pShove(atkSize, tgtSize, state, saveFailed, choice)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel }
   }
 
   // -- 19.6 doEndTurn Action --
@@ -3181,6 +3361,7 @@ module dnd {
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = lrResult.mrs,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       }
     }
   }
@@ -3204,6 +3385,7 @@ module dnd {
         fighterLevel' = fighterLevel,
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       }
     }
   }
@@ -3221,6 +3403,7 @@ module dnd {
         fighterLevel' = fighterLevel,
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       }
     }
   }
@@ -3236,6 +3419,7 @@ module dnd {
       fighterLevel' = fighterLevel,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
     }
   }
 
@@ -3251,6 +3435,7 @@ module dnd {
       fighterLevel' = fighterLevel,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
     }
   }
 
@@ -3268,6 +3453,7 @@ module dnd {
       fighterLevel' = fighterLevel,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
     }
   }
 
@@ -3287,6 +3473,7 @@ module dnd {
       fighterLevel' = fighterLevel,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
     }
   }
 
@@ -3304,12 +3491,110 @@ module dnd {
       fighterLevel' = fighterLevel,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+    }
+  }
+
+  // -- 19.6f Barbarian Class Actions --
+
+  /// Enter Rage: bonus action, must have charges and not raging.
+  /// SRD L1: "You can enter it as a Bonus Action if you aren't wearing Heavy armor."
+  action doEnterRage = {
+    if (turnPhase != "acting" or turnState.bonusActionUsed or isIncapacitated(state)
+        or not(canEnterRage(barbarianState))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState.with("bonusActionUsed", true),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = pEnterRage(barbarianState), barbarianLevel' = barbarianLevel,
+    }
+  }
+
+  /// End Rage voluntarily (free action).
+  action doEndRage = {
+    if (not(barbarianState.raging)) unchanged
+    else all {
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = pEndRage(barbarianState), barbarianLevel' = barbarianLevel,
+    }
+  }
+
+  /// Extend Rage with bonus action.
+  /// SRD: "Take a Bonus Action to extend your Rage."
+  action doExtendRageBA = {
+    if (turnPhase != "acting" or not(barbarianState.raging) or turnState.bonusActionUsed) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState.with("bonusActionUsed", true),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = pExtendRageBA(barbarianState), barbarianLevel' = barbarianLevel,
+    }
+  }
+
+  /// Mark attack or forced save (bookkeeping for rage maintenance).
+  action doMarkAttackOrForcedSave = {
+    if (not(barbarianState.raging)) unchanged
+    else all {
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = pMarkAttackOrForcedSave(barbarianState), barbarianLevel' = barbarianLevel,
+    }
+  }
+
+  /// Declare Reckless Attack this turn (free, once per turn).
+  /// SRD L2: "When you make your first attack roll on your turn, you can decide to attack recklessly."
+  action doDeclareReckless = {
+    if (turnPhase != "acting" or barbarianState.recklessThisTurn or barbarianLevel < 2) unchanged
+    else all {
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = pDeclareReckless(barbarianState), barbarianLevel' = barbarianLevel,
+    }
+  }
+
+  /// Use Intimidating Presence: bonus action, L14+.
+  action doUseIntimidatingPresence = {
+    if (turnPhase != "acting" or not(canUseIntimidatingPresence(barbarianState, barbarianLevel, turnState.bonusActionUsed))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState.with("bonusActionUsed", true),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = pUseIntimidatingPresence(barbarianState), barbarianLevel' = barbarianLevel,
+    }
+  }
+
+  /// Restore Intimidating Presence by expending a rage charge (free action).
+  action doRestoreIntimidatingPresence = {
+    if (not(canRestoreIntimidatingPresence(barbarianState, barbarianLevel))) unchanged
+    else all {
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = pRestoreIntimidatingPresence(barbarianState), barbarianLevel' = barbarianLevel,
     }
   }
 
   // -- 19.7 Step Action --
 
-  /// PC-only actions: fighter features, death saves, PC damage variants
+  /// PC-only actions: fighter features, barbarian features, death saves, PC damage variants
   action stepPC = any {
     doTakeDamage,
     doTakeDamageWithMods,
@@ -3322,6 +3607,13 @@ module dnd {
     doUseTacticalMind,
     doUseHeroicInspiration,
     doScoreCriticalHit,
+    doEnterRage,
+    doEndRage,
+    doExtendRageBA,
+    doMarkAttackOrForcedSave,
+    doDeclareReckless,
+    doUseIntimidatingPresence,
+    doRestoreIntimidatingPresence,
   }
 
   // -- 19.6e Monster Resource Actions (Phase L) --
@@ -3344,6 +3636,7 @@ module dnd {
           turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs1,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
         }
       }
     }
@@ -3363,6 +3656,7 @@ module dnd {
           turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs1,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
         }
       }
     }
@@ -3382,6 +3676,7 @@ module dnd {
           turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs1,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
         }
       }
     }
@@ -3522,6 +3817,17 @@ module dnd {
 
   val bonusMovementBounded = turnState.bonusMovementRemaining >= 0
 
+  // Phase B: Barbarian resource invariants
+  val rageChargesBounded =
+    barbarianState.rageCharges >= 0 and barbarianState.rageCharges <= barbarianState.rageMaxCharges
+
+  val rageTurnsNonNegative = barbarianState.rageTurnsRemaining >= 0
+
+  val rageConsistency =
+    not(barbarianState.raging) implies barbarianState.rageTurnsRemaining == 0
+
+  val relentlessRageNonNegative = barbarianState.relentlessRageTimesUsed >= 0
+
   // Phase L: Monster resource invariants
   val legendaryActionsBounded =
     monsterResourceState.legendaryActionsRemaining >= 0
@@ -3562,6 +3868,10 @@ module dnd {
     legendaryActionsBounded,
     legendaryResistancesBounded,
     dailyUsesNonNegative,
+    rageChargesBounded,
+    rageTurnsNonNegative,
+    rageConsistency,
+    relentlessRageNonNegative,
   }
 
   // ============================================================
