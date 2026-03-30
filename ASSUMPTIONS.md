@@ -101,15 +101,13 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Changes:** `dnd.qnt`: Added `resistances`, `vulnerabilities`, `immunities` fields to `EndOfTurnDamage` and `StartOfTurnEffect` types. `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` now pass these to `pTakeDamage` instead of empty sets. XState: matching fields added to event types and passed through in `machine-endturn.ts` and `machine-startturn.ts`.
 
-## A12: Death saves apply universally (PC-only per RAW)
+## A12: Monsters die at 0 HP (death saves are PC-only per RAW)
 
-**Assumption:** The spec applies the death save track (unconscious at 0 HP, death save failures on subsequent hits, start-of-turn death save rolls) to all creatures. Per RAW, death saves are PC-only — monsters die at 0 HP.
+**Assumption:** Monsters die immediately at 0 HP. PCs enter the death save track (unconscious at 0 HP, death save failures on subsequent hits, start-of-turn death save rolls). The spec gates this on a `creatureKind` discriminator (`PC | Monster`).
 
-**Rules basis (SRD 5.2.1 Playing-the-Game, "Death Saving Throws"):** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw." The "you" refers to player characters. The Rules Glossary "Monsters and Death" section states: "Most DMs have a monster die the instant it drops to 0 Hit Points, rather than having it fall Unconscious."
+**Rules basis (SRD 5.2.1 Playing-the-Game):** "Monster Death: A monster dies the instant it drops to 0 Hit Points, although a Game Master can ignore this rule for an individual monster and treat it like a character." Death saves: "A player character must make a Death Saving Throw if they start their turn with 0 Hit Points" (Rules Glossary). The spec does not model DM fiat to allow monster death saves.
 
-**Why universal for now:** The spec currently models only PCs. Gating death saves on a `creatureKind` discriminator is deferred to PLAN_MONSTERS.md Phase 0. The universal behavior is correct for PCs and the tests validate PC death save mechanics.
-
-**Changes:** Comments added to `pTakeDamage` and `pStartTurnFull` in dnd.qnt documenting the PC-only constraint.
+**Changes:** `dnd.qnt`: `pTakeDamageAsCreature` takes a `kind: CreatureKind` parameter. PC path: existing behavior (unconscious at 0 HP, death save failures). Monster path: `dead = true` at 0 HP, no unconscious, no death saves. `pTakeDamage` wrapper passes `PC` for backward compatibility. `doStartTurn` passes `deathSaveRoll = 0` for monsters (skip). `pMonsterDeathCheck` clears spurious `unconscious` flag after monster damage.
 
 ## A13: Monster AC is a flat integer from the stat block
 
@@ -150,3 +148,18 @@ Each entry records the assumption, rules justification, and what changed in both
 **Rules basis (SRD 5.2.1 Rules Glossary "Prone"):** "spend an amount of movement equal to half your Speed (round down) to right yourself … If your Speed is 0, you can't right yourself." RAW explicitly blocks speed 0. For speed 1 (cost = 0), the SRD is silent. The spec interprets "spend movement" as requiring a nonzero expenditure — you cannot stand for free. This matches Quint's structural equality check: if no movement is spent, the turn state is unchanged, so prone persists.
 
 **Changes:** `dnd.qnt`: `doStandFromProne` uses `t1 != turnState` (structural equality) — zero-cost stand produces identical state, so prone is not removed. XState: `spendHalfSpeed` (`machine-helpers.ts`) returns `success: false` when `cost <= 0`.
+
+## A18: Multiattack maps to extraAttacksRemaining
+
+**Assumption:** A monster's Multiattack maps to `extraAttacksRemaining = length(multiattack) - 1`. The first attack consumes the Attack action; remaining attacks use extra attacks. A monster with no Multiattack has `extraAttacksRemaining = 0`.
+
+**Rules basis (SRD 5.2.1 Monsters > Overview, "Multiattack"):** "Some creatures can make more than one attack when they take the Attack action. [...] This entry details the attacks a creature can make, as well as any additional abilities it can use, as part of the Attack action." In 5.2.1, Multiattack is explicitly part of the Attack action (unlike 5.1 where it was a separate action).
+
+**Simplification:** The spec reuses the `extraAttacksRemaining` counter for both Multiattack and PC Extra Attack. This is an architectural convenience — the action economy (one action → N strikes) is structurally the same. However, the SRD mechanics differ in important ways not currently modeled:
+- **Extra Attack** (PC) allows substituting any attack for a Grapple or Shove (SRD 5.2.1 Rules Glossary: "you can replace one of your attacks" with Grapple/Shove). **Multiattack** specifies fixed attack combinations — the monster makes the listed attacks, not arbitrary substitutions.
+- **Extra Attack** scales with class level (Fighter gets 2/3/4 attacks). **Multiattack** is fixed per stat block.
+- **Extra Attack** allows free choice of weapon per attack. **Multiattack** lists specific named attacks (e.g., "two Claw attacks and one Bite").
+
+These distinctions are caller-side concerns (which attacks to resolve, whether grapple/shove substitution is allowed). The spec's action-economy counter treats both as "N attacks per Attack action" and leaves attack identity to the caller.
+
+**Changes:** `dnd.qnt`: `doStartTurn` computes `monsterExtraAttacks = multiattack.length() - 1` and sets `extraAttacksRemaining` on the turn state. `MultiattackSlot` sum type (`MAttack(str) | MSpecialAbility(str)`) supports heterogeneous multiattacks. `init` sets `extraAttacksRemaining` from the selected stat block's multiattack length.

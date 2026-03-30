@@ -2504,6 +2504,14 @@ module dnd {
 
   pure val TEST_CONFIG: CharConfig = configForLevel(5)
 
+  /// Derive a CharConfig from a StatBlock for monster start-turn processing.
+  /// Monsters don't have class features, levels, or fighting styles — only speed matters.
+  pure def monsterConfigFromStatBlock(sb: StatBlock): CharConfig =
+    BASE_CHAMPION_CONFIG
+      .with("level", 0)
+      .with("speeds", sb.speeds)
+      .with("features", Set())
+
   pure val FRESH_TURN: TurnState = {
     movementRemaining: 30,
     effectiveSpeed: 30,
@@ -2699,12 +2707,7 @@ module dnd {
           resistances: Set(effResType), vulnerabilities: Set(effVulnType), immunities: Set()
         }]
       if (creatureKind == Monster) {
-        // Monster start turn: no death saves, no fighter features, speed/attacks from stat block
-        val monsterConfig = BASE_CHAMPION_CONFIG
-          .with("level", 0)
-          .with("speeds", monsterStatBlock.speeds)
-          .with("features", Set())
-        val r = pStartTurnFull(monsterConfig, state, spellSlots, Unarmored,
+        val r = pStartTurnFull(monsterConfigFromStatBlock(monsterStatBlock), state, spellSlots, Unarmored,
           callerSpeedMod, isGrappling, grappledSmall, 0, 0, effects)  // 0 = skip death save
         val monsterExtraAttacks = if (monsterStatBlock.multiattack.length() > 0)
           monsterStatBlock.multiattack.length() - 1 else 0

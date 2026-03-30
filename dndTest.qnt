@@ -4025,4 +4025,165 @@ module dndTest {
     }
   }
 
+  // ============================================================
+  // M2.1: Monster Attack Resolution Tests
+  // ============================================================
+  // SRD 5.2.1: Attack rolls use the monster's attack bonus from the stat
+  // block against the target's AC. Same resolveAttackRoll as PCs.
+
+  // Skeleton Shortsword: +5 attack bonus (SRD: Melee Attack Roll: +5)
+  run test_skeleton_shortsword_hit = {
+    // d20=10, +5 = 15 vs AC 14 → hit
+    val r = resolveAttackRoll(10, SKELETON.attacks.get("Shortsword").attackBonus, 14, 0, 20)
+    all { assert(r.hits == true), assert(r.isCritical == false) }
+  }
+
+  run test_skeleton_shortsword_miss = {
+    // d20=7, +5 = 12 vs AC 14 → miss
+    val r = resolveAttackRoll(7, SKELETON.attacks.get("Shortsword").attackBonus, 14, 0, 20)
+    assert(r.hits == false)
+  }
+
+  run test_skeleton_shortbow_hit = {
+    // d20=15, +5 = 20 vs AC 18 → hit
+    val r = resolveAttackRoll(15, SKELETON.attacks.get("Shortbow").attackBonus, 18, 0, 20)
+    all { assert(r.hits == true), assert(r.isCritical == false) }
+  }
+
+  run test_skeleton_shortbow_miss_with_cover = {
+    // d20=12, +5 = 17 vs AC 14 + three-quarters cover 5 = 19 → miss
+    val r = resolveAttackRoll(12, SKELETON.attacks.get("Shortbow").attackBonus, 14, coverBonus(ThreeQuartersCover), 20)
+    assert(r.hits == false)
+  }
+
+  // Ogre Greatclub: +6 attack bonus (SRD: Melee Attack Roll: +6)
+  run test_ogre_greatclub_hit = {
+    // d20=8, +6 = 14 vs AC 14 → hit (equals AC)
+    val r = resolveAttackRoll(8, OGRE.attacks.get("Greatclub").attackBonus, 14, 0, 20)
+    all { assert(r.hits == true), assert(r.isCritical == false) }
+  }
+
+  run test_ogre_greatclub_miss = {
+    // d20=5, +6 = 11 vs AC 14 → miss
+    val r = resolveAttackRoll(5, OGRE.attacks.get("Greatclub").attackBonus, 14, 0, 20)
+    assert(r.hits == false)
+  }
+
+  run test_ogre_javelin_hit = {
+    // d20=12, +6 = 18 vs AC 16 → hit
+    val r = resolveAttackRoll(12, OGRE.attacks.get("Javelin").attackBonus, 16, 0, 20)
+    all { assert(r.hits == true), assert(r.isCritical == false) }
+  }
+
+  // Nat 1 always misses regardless of monster bonus
+  run test_monster_nat1_always_miss = {
+    val r = resolveAttackRoll(1, OGRE.attacks.get("Greatclub").attackBonus, 5, 0, 20)
+    all { assert(r.hits == false), assert(r.isCritical == false) }
+  }
+
+  // Nat 20 always crits regardless of AC
+  run test_monster_nat20_always_crit = {
+    val r = resolveAttackRoll(20, SKELETON.attacks.get("Shortsword").attackBonus, 30, 0, 20)
+    all { assert(r.hits == true), assert(r.isCritical == true) }
+  }
+
+  // ============================================================
+  // M2.2: Monster Full Turn Sequence Tests
+  // ============================================================
+  // SRD 5.2.1: A monster's turn follows the same structure as a PC's —
+  // start turn, take actions, end turn. Monsters use stat block values
+  // for speed, attacks, and extra attacks (via Multiattack).
+
+  // Uses monsterConfigFromStatBlock from dnd.qnt (shared with doStartTurn)
+
+  // Skeleton turn: start → Attack action (no extra attacks) → end
+  run test_skeleton_full_turn = {
+    val creature = freshCreature(SKELETON.maxHp)
+    val r = pStartTurnFull(monsterConfigFromStatBlock(SKELETON), creature, FRESH_SPELL_SLOTS, Unarmored,
+      0, false, false, 0, 0, [])
+    val t1 = pUseAction(r.turn, r.creature, AAttack)
+    val endResult = pEndTurn(r.creature, r.slots, [], [])
+    all {
+      assert(r.turn.movementRemaining == 30),
+      assert(r.turn.extraAttacksRemaining == 0),
+      assert(r.turn.actionsRemaining == 1),
+      assert(t1.actionsRemaining == 0),
+      assert(t1.attackActionUsed == true),
+      assert(endResult.creature.hp == SKELETON.maxHp),
+    }
+  }
+
+  // Ogre turn: start (speed 40) → Attack action → end
+  run test_ogre_full_turn = {
+    val creature = freshCreature(OGRE.maxHp)
+    val r = pStartTurnFull(monsterConfigFromStatBlock(OGRE), creature, FRESH_SPELL_SLOTS, Unarmored,
+      0, false, false, 0, 0, [])
+    val t1 = pUseAction(r.turn, r.creature, AAttack)
+    val endResult = pEndTurn(r.creature, r.slots, [], [])
+    all {
+      assert(r.turn.movementRemaining == 40),
+      assert(r.turn.extraAttacksRemaining == 0),
+      assert(r.turn.actionsRemaining == 1),
+      assert(t1.actionsRemaining == 0),
+      assert(t1.attackActionUsed == true),
+      assert(endResult.creature.hp == OGRE.maxHp),
+    }
+  }
+
+  // Skeleton turn with movement: start → move 20 → Attack → verify
+  run test_skeleton_turn_with_movement = {
+    val creature = freshCreature(SKELETON.maxHp)
+    val r = pStartTurnFull(monsterConfigFromStatBlock(SKELETON), creature, FRESH_SPELL_SLOTS, Unarmored,
+      0, false, false, 0, 0, [])
+    val t0 = r.turn
+    val t1 = pUseMovement(t0, 20, 1)
+    val t2 = pUseAction(t1, r.creature, AAttack)
+    all {
+      assert(t1.movementRemaining == 10),
+      assert(t1.actionsRemaining == 1),
+      assert(t2.actionsRemaining == 0),
+    }
+  }
+
+  // Hypothetical 2-attack multiattack: start → Attack → Extra Attack → end.
+  // Uses SKELETON as base config; extraAttacksRemaining overridden to simulate multiattack.
+  run test_monster_multiattack_full_turn = {
+    val creature = freshCreature(30)
+    val r = pStartTurnFull(monsterConfigFromStatBlock(SKELETON), creature, FRESH_SPELL_SLOTS, Unarmored,
+      0, false, false, 0, 0, [])
+    val t0 = r.turn.with("extraAttacksRemaining", 1)
+    val t1 = pUseAction(t0, r.creature, AAttack)
+    val t2 = pUseExtraAttack(t1)
+    all {
+      assert(t1.attackActionUsed == true),
+      assert(t1.extraAttacksRemaining == 1),
+      assert(t1.actionsRemaining == 0),
+      assert(t2.extraAttacksRemaining == 0),
+    }
+  }
+
+  // Monster taking end-of-turn damage: Skeleton with fire ongoing
+  run test_skeleton_end_turn_with_damage = {
+    val creature = freshCreature(SKELETON.maxHp) // 13 HP
+    val endResult = pEndTurn(creature, FRESH_SPELL_SLOTS, [],
+      [{ spellId: "heat_metal", damage: 6, damageType: Fire,
+         conSaveSucceeded: true,
+         resistances: SKELETON.resistances, vulnerabilities: SKELETON.vulnerabilities,
+         immunities: SKELETON.damageImmunities }])
+    // Skeleton has no fire resistance/immunity: 13 - 6 = 7
+    assert(endResult.creature.hp == 7)
+  }
+
+  // Monster taking end-of-turn poison damage (immune)
+  run test_skeleton_end_turn_poison_immune = {
+    val creature = freshCreature(SKELETON.maxHp)
+    val endResult = pEndTurn(creature, FRESH_SPELL_SLOTS, [],
+      [{ spellId: "poison_cloud", damage: 10, damageType: Poison,
+         conSaveSucceeded: true,
+         resistances: SKELETON.resistances, vulnerabilities: SKELETON.vulnerabilities,
+         immunities: SKELETON.damageImmunities }])
+    // Skeleton immune to Poison damage: HP unchanged
+    assert(endResult.creature.hp == SKELETON.maxHp)
+  }
+
 }
