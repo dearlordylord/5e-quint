@@ -7,7 +7,7 @@ import type {
   DefenseSpellInfo,
   DiceDamage
 } from "#/features/spell-patterns.ts"
-import { saveOrCondition, upcastTargets } from "#/features/spell-patterns.ts"
+import { SAVE_PASSED, saveOrCondition, upcastTargets } from "#/features/spell-patterns.ts"
 
 /* eslint-disable no-magic-numbers */
 
@@ -41,24 +41,28 @@ export const SPELL_MIRROR_IMAGE: DefenseSpellInfo = {
 
 // --- Fear ---
 
-/** Result of Fear on a single target. Forced to Dash away; repeat save end of turn only if can't see caster. */
+const FEAR_FAILED: ConditionSpellResult = {
+  conditionApplied: "frightened",
+  specialEffect: "Must Dash away from caster; repeat save only if no line of sight to caster",
+  savePassed: false
+}
+
+/** Result of Fear on a single target. */
 export function fearResult(savePassed: boolean): ConditionSpellResult {
-  return {
-    conditionApplied: savePassed ? null : "frightened",
-    specialEffect: savePassed ? null : "Must Dash away from caster; repeat save only if no line of sight to caster",
-    savePassed
-  }
+  return savePassed ? SAVE_PASSED : FEAR_FAILED
 }
 
 // --- Hypnotic Pattern ---
 
+const HYPNOTIC_PATTERN_FAILED: ConditionSpellResult = {
+  conditionApplied: "charmed",
+  specialEffect: "Incapacitated and speed 0 while charmed",
+  savePassed: false
+}
+
 /** Result of Hypnotic Pattern on a single target. */
 export function hypnoticPatternResult(savePassed: boolean): ConditionSpellResult {
-  return {
-    conditionApplied: savePassed ? null : "charmed",
-    specialEffect: savePassed ? null : "Incapacitated and speed 0 while charmed",
-    savePassed
-  }
+  return savePassed ? SAVE_PASSED : HYPNOTIC_PATTERN_FAILED
 }
 
 // --- Mirror Image ---

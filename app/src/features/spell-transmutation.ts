@@ -158,7 +158,7 @@ export function fleshToStoneProgress(failures: number, successes: number): Flesh
 // --- Enhance Ability ---
 
 export function enhanceAbilityTargets(slotLevel: number): number {
-  return 1 + (slotLevel - 2)
+  return upcastTargets(slotLevel, 2)
 }
 
 // --- Magic Weapon ---
@@ -188,9 +188,5 @@ export function heatMetalDamage(slotLevel: number): DiceDamage {
 export function shiningSmiteDamage(slotLevel: number): DiceDamage {
   return { dice: 2 + (slotLevel - 2), dieSize: 6 }
 }
-
-// --- Polymorph (L4, Action, 60 ft, Concentration 1 hour, WIS save) ---
-// Beast form CR ≤ target's level/CR. Target gains temp HP = beast's HP.
-// Spell ends when temp HP = 0. Target can't speak or cast spells.
 
 /* eslint-enable no-magic-numbers */

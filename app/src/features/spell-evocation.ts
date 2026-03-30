@@ -3,7 +3,7 @@
 
 import type { DefenseSpellInfo, DiceDamage, SpellDamageInfo } from "#/features/spell-patterns.ts"
 import { cantripDamage } from "#/features/spell-patterns.ts"
-import type { DamageType } from "#/types.ts"
+import type { Condition, DamageType } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
 
@@ -190,7 +190,7 @@ export const ARCANE_SWORD_DAMAGE: DiceDamage = { dice: 4, dieSize: 12 }
 /** Divine Word HP thresholds and effects (SRD 5.2.1). */
 export interface DivineWordEffect {
   readonly dies: boolean
-  readonly conditions: ReadonlyArray<string>
+  readonly conditions: ReadonlyArray<Condition>
   readonly duration: string
 }
 

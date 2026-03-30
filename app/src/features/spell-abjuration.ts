@@ -2,7 +2,7 @@
 // Protective and warding spells.
 
 import type { ConditionSpellResult, DefenseSpellInfo, DiceDamage, SpellDamageInfo } from "#/features/spell-patterns.ts"
-import { upcastTargets } from "#/features/spell-patterns.ts"
+import { SAVE_PASSED, upcastTargets } from "#/features/spell-patterns.ts"
 import type { Condition, DamageType } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
@@ -213,10 +213,8 @@ export const GREATER_RESTORATION_EFFECTS = [
 
 export type GreaterRestorationEffect = (typeof GREATER_RESTORATION_EFFECTS)[number]
 
-/** Dispel Magic auto-success: slot ≥ target spell level. */
-export function dispelMagicAutoSuccess(targetSpellLevel: number, slotLevel: number): boolean {
-  return slotLevel >= targetSpellLevel
-}
+/** Dispel Magic uses the same slot ≥ target auto-success as Counterspell. */
+export const dispelMagicAutoSuccess: (targetSpellLevel: number, slotLevel: number) => boolean = counterspellAutoSuccess
 
 /** Dispel Magic check DC = 10 + target spell level. */
 export function dispelMagicDC(targetSpellLevel: number): number {
@@ -244,15 +242,15 @@ export function banishmentTargets(slotLevel: number): number {
   return upcastTargets(slotLevel, 4)
 }
 
-/** Banishment result: Incapacitated while banished. Permanent if extraplanar + full duration. */
+const BANISHMENT_FAILED: ConditionSpellResult = {
+  conditionApplied: "incapacitated",
+  specialEffect: "Transported to harmless demiplane; permanent if extraplanar and spell lasts full duration",
+  savePassed: false
+}
+
+/** Banishment result: Incapacitated while banished. */
 export function banishmentResult(savePassed: boolean): ConditionSpellResult {
-  return {
-    conditionApplied: savePassed ? null : "incapacitated",
-    specialEffect: savePassed
-      ? null
-      : "Transported to harmless demiplane; permanent if extraplanar and spell lasts full duration",
-    savePassed
-  }
+  return savePassed ? SAVE_PASSED : BANISHMENT_FAILED
 }
 
 /** Creature types permanently banished if spell lasts full duration. */

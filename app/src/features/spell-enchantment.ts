@@ -2,7 +2,7 @@
 // Mind-affecting spells that influence or control creatures.
 
 import type { ConditionSpellInfo, ConditionSpellResult, DiceDamage } from "#/features/spell-patterns.ts"
-import { cantripDamage, saveOrCondition, upcastTargets } from "#/features/spell-patterns.ts"
+import { cantripDamage, SAVE_PASSED, saveOrCondition, upcastTargets } from "#/features/spell-patterns.ts"
 import type { Condition } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
@@ -136,17 +136,20 @@ export function sleepMaxTargets(slotLevel: number): number {
   return SLEEP_BASE_TARGETS + Math.max(0, slotLevel - 1)
 }
 
+const SLEEP_FIRST_FAILED: ConditionSpellResult = {
+  conditionApplied: null,
+  specialEffect: "incapacitatedUntilEndOfNextTurn",
+  savePassed: false
+}
+
 /** Sleep first save: fail = Incapacitated until end of next turn. */
 export function sleepResult(savePassed: boolean): ConditionSpellResult {
-  if (savePassed) return { conditionApplied: null, specialEffect: null, savePassed: true }
-  return { conditionApplied: null, specialEffect: "incapacitatedUntilEndOfNextTurn", savePassed: false }
+  return savePassed ? SAVE_PASSED : SLEEP_FIRST_FAILED
 }
 
 /** Sleep second save: fail = Unconscious for duration. */
-export function sleepSecondSaveResult(savePassed: boolean): ConditionSpellResult {
-  if (savePassed) return { conditionApplied: null, specialEffect: null, savePassed: true }
-  return { conditionApplied: "unconscious", specialEffect: null, savePassed: false }
-}
+export const sleepSecondSaveResult: (savePassed: boolean) => ConditionSpellResult = (savePassed) =>
+  saveOrCondition(savePassed, "unconscious")
 
 // --- Confusion ---
 
@@ -185,7 +188,7 @@ export function heroismTempHp(spellcastingMod: number): number {
 
 /** Heroism targets: 1 base, +1 per slot level above 1. */
 export function heroismTargets(slotLevel: number): number {
-  return 1 + (slotLevel - 1)
+  return upcastTargets(slotLevel, 1)
 }
 
 // --- Hex ---

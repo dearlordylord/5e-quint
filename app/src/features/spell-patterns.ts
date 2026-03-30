@@ -138,6 +138,9 @@ export function cantripDamage(characterLevel: number, dieSize: number): DiceDama
   return { dice: cantripDamageDice(characterLevel), dieSize }
 }
 
+/** Shared result for spells where the target passes the save — no condition, no special effect. */
+export const SAVE_PASSED: ConditionSpellResult = { conditionApplied: null, specialEffect: null, savePassed: true }
+
 /**
  * Generic save-or-condition: condition on failed save, null on success.
  * Used by Hold Person/Monster, Entangle, Web, Color Spray, etc.
