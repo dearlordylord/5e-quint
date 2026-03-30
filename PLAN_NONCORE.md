@@ -560,8 +560,8 @@ SRD 5.2.1 rename: The Fiend → Fiend Patron. Dark One's Blessing (revised: temp
 ## Wizard
 
 ```
-[T130] Arcane Recovery (P2) -> deps: [T01]
-[T131] Evoker (P2) -> deps: [T130]
+[T130] Arcane Recovery (P2) -> deps: [T01]  ✓ done
+[T131] Evoker (P2) -> deps: [T130]  ✓ done
 ```
 
 **[T130] Arcane Recovery**
