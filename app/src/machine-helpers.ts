@@ -338,7 +338,7 @@ export function armorSpeedPenalty(armorStrRequirement: number, strScore: number)
 }
 
 /** All D&D 5e damage types. Used for petrified resistance. */
-export const ALL_DAMAGE_TYPES: ReadonlySet<DamageType> = new Set([
+export const ALL_DAMAGE_TYPES = new Set([
   "acid",
   "bludgeoning",
   "cold",
@@ -352,7 +352,7 @@ export const ALL_DAMAGE_TYPES: ReadonlySet<DamageType> = new Set([
   "radiant",
   "slashing",
   "thunder"
-] as const)
+] as const satisfies ReadonlyArray<DamageType>)
 
 /** Compute fall damage as TakeDamageResult. Used by guards and actions. */
 export function computeFallResult(

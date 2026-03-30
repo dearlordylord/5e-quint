@@ -57,15 +57,19 @@ const FORCEFUL_BLOW_PUSH_FEET = 15
 const HAMSTRING_BLOW_SPEED_REDUCTION = 15
 const SUNDERING_BLOW_ATTACK_BONUS = 5
 
-const RAGE_RESISTANCE_TYPES: ReadonlySet<DamageType> = new Set(["bludgeoning", "piercing", "slashing"])
+const RAGE_RESISTANCE_TYPES = new Set([
+  "bludgeoning",
+  "piercing",
+  "slashing"
+] as const satisfies ReadonlyArray<DamageType>)
 const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
-const BRUTAL_STRIKE_BASE: ReadonlyArray<BrutalStrikeEffect> = ["forcefulBlow", "hamstringBlow"]
-const BRUTAL_STRIKE_IMPROVED: ReadonlyArray<BrutalStrikeEffect> = [
+const BRUTAL_STRIKE_BASE = ["forcefulBlow", "hamstringBlow"] as const satisfies ReadonlyArray<BrutalStrikeEffect>
+const BRUTAL_STRIKE_IMPROVED = [
   "forcefulBlow",
   "hamstringBlow",
   "staggeringBlow",
   "sunderingBlow"
-]
+] as const satisfies ReadonlyArray<BrutalStrikeEffect>
 
 // --- Rage damage bonus by level (SRD 5.2.1 table) ---
 
@@ -325,7 +329,7 @@ export const BERSERKER_RETALIATION_LEVEL = 10
 export const BERSERKER_INTIMIDATING_PRESENCE_LEVEL = 14
 export const INTIMIDATING_PRESENCE_RANGE_FEET = 30
 
-const MINDLESS_RAGE_IMMUNITIES: ReadonlySet<Condition> = new Set(["charmed", "frightened"])
+const MINDLESS_RAGE_IMMUNITIES = new Set(["charmed", "frightened"] as const satisfies ReadonlyArray<Condition>)
 const EMPTY_CONDITION_SET: ReadonlySet<Condition> = new Set()
 
 // --- Frenzy (L3 Berserker) ---

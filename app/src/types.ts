@@ -236,7 +236,7 @@ export type SpellSlots = ReadonlyArray<number>
 export const SPELL_SLOT_LEVELS = 9
 export const EMPTY_SLOTS: SpellSlots = new Array(SPELL_SLOT_LEVELS).fill(0) as SpellSlots
 
-export const ALL_CONDITIONS: ReadonlyArray<Condition> = [
+export const ALL_CONDITIONS = [
   "blinded",
   "charmed",
   "deafened",
@@ -251,7 +251,7 @@ export const ALL_CONDITIONS: ReadonlyArray<Condition> = [
   "restrained",
   "stunned",
   "unconscious"
-] as const
+] as const satisfies ReadonlyArray<Condition>
 
 // --- Record types ---
 

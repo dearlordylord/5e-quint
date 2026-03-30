@@ -10,8 +10,8 @@ const CUNNING_STRIKE_LEVEL = 5
 const IMPROVED_CS_LEVEL = 11
 const DEVIOUS_STRIKES_LEVEL = 14
 
-const DEVIOUS_EFFECTS: ReadonlySet<StrikeEffect> = new Set(["daze", "knockOut", "obscure"])
-const TRIP_VALID_SIZES: ReadonlySet<Size> = new Set(["tiny", "small", "medium", "large"])
+const DEVIOUS_EFFECTS = new Set(["daze", "knockOut", "obscure"] as const satisfies ReadonlyArray<StrikeEffect>)
+const TRIP_VALID_SIZES = new Set(["tiny", "small", "medium", "large"] as const satisfies ReadonlyArray<Size>)
 
 // --- Types ---
 

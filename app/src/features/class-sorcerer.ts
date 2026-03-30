@@ -6,10 +6,10 @@ import type { SpellSlots } from "#/types.ts"
 // --- Constants ---
 
 /** Sorcery Point cost to create a spell slot of a given level (1-5). */
-const SLOT_CREATION_COST: ReadonlyArray<number> = [2, 3, 5, 6, 7]
+const SLOT_CREATION_COST = [2, 3, 5, 6, 7] as const satisfies ReadonlyArray<number>
 
 /** Minimum Sorcerer level required to create a slot of a given level (1-5). */
-const SLOT_CREATION_MIN_LEVEL: ReadonlyArray<number> = [2, 3, 5, 7, 9]
+const SLOT_CREATION_MIN_LEVEL = [2, 3, 5, 7, 9] as const satisfies ReadonlyArray<number>
 
 const MAX_CREATED_SLOT_LEVEL = 5
 const INNATE_SORCERY_MAX_CHARGES = 2

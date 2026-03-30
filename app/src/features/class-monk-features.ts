@@ -58,7 +58,7 @@ export function hasFocusEmpoweredStrikes(monkLevel: number): boolean {
 
 // --- Self-Restoration (L10) ---
 
-const SELF_RESTORATION_CONDITIONS: ReadonlyArray<Condition> = ["charmed", "frightened", "poisoned"]
+const SELF_RESTORATION_CONDITIONS = ["charmed", "frightened", "poisoned"] as const satisfies ReadonlyArray<Condition>
 
 /** Returns the conditions that Self-Restoration can remove. */
 export function selfRestorationConditions(): ReadonlyArray<Condition> {

@@ -60,8 +60,8 @@ export function pLayOnHandsCure(state: LayOnHandsState, condition: Condition): L
   }
 }
 
-const POISONED_CONDITIONS: ReadonlyArray<Condition> = ["poisoned"]
-const RESTORING_TOUCH_CONDITIONS: ReadonlyArray<Condition> = [
+const POISONED_CONDITIONS = ["poisoned"] as const satisfies ReadonlyArray<Condition>
+const RESTORING_TOUCH_CONDITIONS = [
   "poisoned",
   "blinded",
   "charmed",
@@ -69,7 +69,7 @@ const RESTORING_TOUCH_CONDITIONS: ReadonlyArray<Condition> = [
   "frightened",
   "paralyzed",
   "stunned"
-]
+] as const satisfies ReadonlyArray<Condition>
 
 const RESTORING_TOUCH_LEVEL = 14
 

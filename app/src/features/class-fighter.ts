@@ -364,7 +364,11 @@ export function useIndomitable(
 // =============================================================================
 
 export const TACTICAL_MASTER_LEVEL = 9
-const TACTICAL_MASTER_SUBSTITUTIONS = new Set(["push", "sap", "slow"] as const)
+const TACTICAL_MASTER_SUBSTITUTIONS = new Set([
+  "push",
+  "sap",
+  "slow"
+] as const satisfies ReadonlyArray<TacticalMasterSubstitution>)
 
 export type TacticalMasterSubstitution = "push" | "sap" | "slow"
 
