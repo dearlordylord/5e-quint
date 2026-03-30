@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phases 0–2 complete.** Phase 3 (MBT integration with mixed PC/Monster traces) is the next step. Restructured 2026-03-28: universal creature improvements moved to PLAN_CLEANUP.md (items E/F/G/H2/I).
+**Phases 0–3 complete.** Next: Phase L (Legendary Actions/Resistance/Recharge) — deferred, not scheduled. Restructured 2026-03-28: universal creature improvements moved to PLAN_CLEANUP.md (items E/F/G/H2/I).
 
 ## Prerequisites — ALL DONE
 
@@ -318,17 +318,10 @@ All M1.1–M1.7 complete. All types defined in Quint + TypeScript (`monster-type
 ### Phase 2: Monster Combat Integration Tests ✅
 
 All M2.1–M2.3 complete. 10 attack resolution tests (Skeleton Shortsword/Shortbow, Ogre Greatclub/Javelin, nat 1/20, cover). 6 full turn sequence tests (Skeleton/Ogre basic turn, movement, multiattack, end-of-turn damage, poison immunity). ASSUMPTIONS.md A18 added. `monsterConfigFromStatBlock` extracted as shared helper.
-- Add ASSUMPTIONS.md entry: multiattack maps to `extraAttacksRemaining = len(multiattack) - 1`
-- Validate: `quint test`
 
-### Phase 3: MBT Integration (Monster Traces)
+### Phase 3: MBT Integration (Monster Traces) ✅
 
-**Not yet split into atomic tasks.** Phase 3 depends on the final shapes from Phases 0-2. Split after Phase 2 is complete. High-level plan:
-1. Add `monsterStatBlock` state variable (inactive in PC mode)
-2. Update `init` to nondeterministically choose `creatureKind = PC | Monster`
-3. Update `step` to include monster-appropriate actions when `creatureKind = Monster`
-4. Update MBT bridge to map new state variables
-5. Develop incrementally: PC-only first, then mixed traces
+All 5 deliverables complete. `monsterStatBlock` state var with frame conditions on all actions. `init` nondeterministically picks PC/Monster from `MONSTER_STAT_BLOCKS = Set(SKELETON, OGRE)`. `step` branches via `stepMonster`/`stepPC`/`stepUniversal`. MBT bridge handles `creatureKind` (field-by-field comparison), `monsterStatBlock` (parsed but not compared — static config), `doTakeDamageMonster` (R/V/I from stat block), monster-specific `doStartTurn` (stat block speed, no death saves) and `doEndTurn` (stat block R/V/I). Mixed PC/Monster traces running (50 traces × 30 steps, both creature kinds).
 
 ---
 
@@ -347,7 +340,7 @@ Phase 1 ✅ (StatBlock Type + Skeleton + Ogre)
 Phase 2 ✅ (Monster Combat Integration Tests)
   |
   v
-Phase 3 (MBT Integration — next)
+Phase 3 ✅ (MBT Integration — mixed PC/Monster traces)
   |
   v
 Phase L (deferred)
