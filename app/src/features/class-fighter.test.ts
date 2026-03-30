@@ -628,21 +628,20 @@ describe("Tactical Master", () => {
     expect(canUseTacticalMaster(9, false)).toBe(false)
   })
 
+  it("canUseTacticalMaster: false at L0", () => {
+    expect(canUseTacticalMaster(0, true)).toBe(false)
+  })
+
   it("substitutes mastery property with Push", () => {
-    expect(tacticalMasterSubstitute("vex", "push")).toBe("push")
+    expect(tacticalMasterSubstitute("push")).toBe("push")
   })
 
   it("substitutes mastery property with Sap", () => {
-    expect(tacticalMasterSubstitute("cleave", "sap")).toBe("sap")
+    expect(tacticalMasterSubstitute("sap")).toBe("sap")
   })
 
   it("substitutes mastery property with Slow", () => {
-    expect(tacticalMasterSubstitute("topple", "slow")).toBe("slow")
-  })
-
-  it("works when original is already one of the substitution options", () => {
-    expect(tacticalMasterSubstitute("push", "slow")).toBe("slow")
-    expect(tacticalMasterSubstitute("sap", "push")).toBe("push")
+    expect(tacticalMasterSubstitute("slow")).toBe("slow")
   })
 })
 
@@ -675,6 +674,11 @@ describe("Studied Attacks", () => {
 
   it("no advantage below L13 even on miss", () => {
     const result = studiedAttacksAdvantage(12, true)
+    expect(result.advantageOnNextAttackVsTarget).toBe(false)
+  })
+
+  it("no advantage at L0 even on miss", () => {
+    const result = studiedAttacksAdvantage(0, true)
     expect(result.advantageOnNextAttackVsTarget).toBe(false)
   })
 

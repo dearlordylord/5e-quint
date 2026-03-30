@@ -374,14 +374,10 @@ export function canUseTacticalMaster(fighterLevel: number, hasWeaponMastery: boo
 }
 
 /**
- * Returns the substituted mastery property if valid, or the original if not.
- * The substitution must be Push, Sap, or Slow. The original property is
- * replaced for that attack only.
+ * Validates and returns the substituted mastery property.
+ * The substitution must be Push, Sap, or Slow.
  */
-export function tacticalMasterSubstitute(
-  originalProperty: string,
-  substitute: TacticalMasterSubstitution
-): TacticalMasterSubstitution {
+export function tacticalMasterSubstitute(substitute: TacticalMasterSubstitution): TacticalMasterSubstitution {
   assert(TACTICAL_MASTER_SUBSTITUTIONS.has(substitute), `tacticalMasterSubstitute: invalid substitute "${substitute}"`)
   return substitute
 }

@@ -126,8 +126,9 @@ export function executeIndomitable(): BridgeResult {
   }
 }
 
-// --- Champion subclass queries (passive — no state) ---
-// Hardcoded to Champion — the only Fighter subclass in the SRD 5.2.1.
+// --- Fighter base features (L9+) + Champion subclass queries (passive — no state) ---
+// Tactical Master (L9) and Studied Attacks (L13) are base Fighter features.
+// Champion is the only Fighter subclass in the SRD 5.2.1.
 
 export {
   canUseTacticalMaster,
