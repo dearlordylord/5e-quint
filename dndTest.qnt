@@ -4349,6 +4349,7 @@ module dndTest {
       assert(bs.frenzyUsedThisTurn == false),
       assert(bs.intimidatingPresenceUsed == false),
       assert(bs.relentlessRageTimesUsed == 0),
+      assert(bs.brutalStrikeUsedThisTurn == false),
     }
   }
 
@@ -4513,6 +4514,75 @@ module dndTest {
       assert(rageResistances(true) == Set(Bludgeoning, Piercing, Slashing)),
       assert(rageResistances(false) == Set()),
     }
+  }
+
+  // -- Brutal Strike guards and transitions --
+
+  run test_canBrutalStrike_l9_reckless = {
+    val bs = TEST_BARB_STATE.with("recklessThisTurn", true)
+    assert(canBrutalStrike(bs, 9) == true)
+  }
+
+  run test_canBrutalStrike_below_l9 = {
+    val bs = TEST_BARB_STATE.with("recklessThisTurn", true)
+    assert(canBrutalStrike(bs, 8) == false)
+  }
+
+  run test_canBrutalStrike_not_reckless = {
+    assert(canBrutalStrike(TEST_BARB_STATE, 9) == false)
+  }
+
+  run test_canBrutalStrike_already_used = {
+    val bs = TEST_BARB_STATE.with("recklessThisTurn", true).with("brutalStrikeUsedThisTurn", true)
+    assert(canBrutalStrike(bs, 9) == false)
+  }
+
+  run test_pBrutalStrike = {
+    val bs = pBrutalStrike(TEST_BARB_STATE)
+    assert(bs.brutalStrikeUsedThisTurn == true)
+  }
+
+  // -- Relentless Rage guards and transitions --
+
+  run test_canRelentlessRage_l11_raging = {
+    val bs = TEST_BARB_STATE.with("raging", true)
+    assert(canRelentlessRage(bs, 11) == true)
+  }
+
+  run test_canRelentlessRage_below_l11 = {
+    val bs = TEST_BARB_STATE.with("raging", true)
+    assert(canRelentlessRage(bs, 10) == false)
+  }
+
+  run test_canRelentlessRage_not_raging = {
+    assert(canRelentlessRage(TEST_BARB_STATE, 11) == false)
+  }
+
+  run test_relentlessRageDC = {
+    all {
+      assert(relentlessRageDC(0) == 10),
+      assert(relentlessRageDC(1) == 15),
+      assert(relentlessRageDC(2) == 20),
+      assert(relentlessRageDC(3) == 25),
+    }
+  }
+
+  run test_pUseRelentlessRage = {
+    val bs = pUseRelentlessRage(TEST_BARB_STATE)
+    assert(bs.relentlessRageTimesUsed == 1)
+  }
+
+  run test_brutalStrike_reset_on_startTurn = {
+    val bs = TEST_BARB_STATE.with("raging", true).with("rageTurnsRemaining", 50)
+        .with("attackedOrForcedSaveThisTurn", true).with("brutalStrikeUsedThisTurn", true)
+    val result = pBarbarianStartTurn(bs, 9)
+    assert(result.brutalStrikeUsedThisTurn == false)
+  }
+
+  run test_brutalStrike_reset_on_longRest = {
+    val bs = TEST_BARB_STATE.with("brutalStrikeUsedThisTurn", true)
+    val result = pBarbarianLongRest(bs)
+    assert(result.brutalStrikeUsedThisTurn == false)
   }
 
   // ============================================================

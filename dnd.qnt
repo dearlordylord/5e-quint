@@ -371,6 +371,7 @@ module dnd {
     frenzyUsedThisTurn: bool,
     intimidatingPresenceUsed: bool,
     relentlessRageTimesUsed: int,
+    brutalStrikeUsedThisTurn: bool,
   }
 
   type MonkState = {
@@ -2418,6 +2419,7 @@ module dnd {
       frenzyUsedThisTurn: false,
       intimidatingPresenceUsed: false,
       relentlessRageTimesUsed: 0,
+      brutalStrikeUsedThisTurn: false,
     }
   }
 
@@ -2438,6 +2440,24 @@ module dnd {
   pure def canRestoreIntimidatingPresence(bs: BarbarianState, barbarianLevel: int): bool = {
     barbarianLevel >= 14 and bs.intimidatingPresenceUsed and bs.rageCharges > 0
   }
+
+  /// Brutal Strike guard: L9+, Reckless this turn, not yet used.
+  /// SRD: "If you use Reckless Attack, you can forgo any Advantage on one
+  /// Strength-based attack roll of your choice on your turn."
+  /// isStrengthBased is caller-managed in single-creature model.
+  pure def canBrutalStrike(bs: BarbarianState, barbarianLevel: int): bool = {
+    bs.recklessThisTurn and barbarianLevel >= 9 and not(bs.brutalStrikeUsedThisTurn)
+  }
+
+  /// Relentless Rage guard: L11+, must be raging.
+  /// SRD: "If you drop to 0 Hit Points while your Rage is active and don't die outright"
+  pure def canRelentlessRage(bs: BarbarianState, barbarianLevel: int): bool = {
+    bs.raging and barbarianLevel >= 11
+  }
+
+  /// Relentless Rage DC: 10 + (timesUsed * 5).
+  /// SRD: "DC increases by 5" each use, "DC resets to 10" on SR/LR.
+  pure def relentlessRageDC(timesUsed: int): int = 10 + timesUsed * 5
 
   // -- B2: Transitions + Lifecycle --
 
@@ -2498,6 +2518,16 @@ module dnd {
       .with("intimidatingPresenceUsed", false)
   }
 
+  /// Brutal Strike transition: mark used this turn.
+  pure def pBrutalStrike(bs: BarbarianState): BarbarianState = {
+    bs.with("brutalStrikeUsedThisTurn", true)
+  }
+
+  /// Relentless Rage transition: increment counter.
+  pure def pUseRelentlessRage(bs: BarbarianState): BarbarianState = {
+    bs.with("relentlessRageTimesUsed", bs.relentlessRageTimesUsed + 1)
+  }
+
   // -- B2 (continued): Lifecycle --
 
   /// Barbarian start of turn: reset per-turn flags, decrement turns, check maintenance.
@@ -2509,6 +2539,7 @@ module dnd {
                   .with("rageExtendedWithBA", false)
                   .with("recklessThisTurn", false)
                   .with("frenzyUsedThisTurn", false)
+                  .with("brutalStrikeUsedThisTurn", false)
     // 3. Decrement rage turns (if still raging after maintenance)
     if (bs2.raging and bs2.rageTurnsRemaining > 0)
       bs2.with("rageTurnsRemaining", bs2.rageTurnsRemaining - 1)
@@ -2529,6 +2560,7 @@ module dnd {
       .with("intimidatingPresenceUsed", false)
       .with("recklessThisTurn", false)
       .with("frenzyUsedThisTurn", false)
+      .with("brutalStrikeUsedThisTurn", false)
   }
 
   // -- B3: Rage Query Functions (pure, no state change) --
@@ -4257,6 +4289,61 @@ module dnd {
     }
   }
 
+  /// Brutal Strike: forgo Reckless advantage for +1d10 damage + effect.
+  /// SRD L9: "If you use Reckless Attack, you can forgo any Advantage on one
+  /// Strength-based attack roll of your choice on your turn."
+  /// Damage and effect details are caller-managed.
+  action doBrutalStrike = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canBrutalStrike(barbarianState, barbarianLevel))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = pBrutalStrike(barbarianState), barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
+  /// Relentless Rage: CON save to stay at 2×barbarianLevel HP when dropping to 0.
+  /// SRD L11: "If you drop to 0 Hit Points while your Rage is active and don't
+  /// die outright, you can make a DC 10 Constitution saving throw."
+  /// NOT gated on turnPhase — fires during damage resolution.
+  action doUseRelentlessRage = {
+    if (isIncapacitated(state)
+        or not(canRelentlessRage(barbarianState, barbarianLevel))) unchanged
+    else {
+      nondet conSaveSucceeded = Set(true, false).oneOf()
+      val bs1 = pUseRelentlessRage(barbarianState)
+      if (conSaveSucceeded) {
+        all {
+          state' = state.with("hp", 2 * barbarianLevel),
+          turnState' = turnState,
+          spellSlots' = spellSlots,
+          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+          monsterResourceState' = monsterResourceState,
+          barbarianState' = bs1, barbarianLevel' = barbarianLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        }
+      } else {
+        all {
+          state' = state,
+          turnState' = turnState,
+          spellSlots' = spellSlots,
+          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+          monsterResourceState' = monsterResourceState,
+          barbarianState' = bs1, barbarianLevel' = barbarianLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        }
+      }
+    }
+  }
+
   // -- 19.6g Monk Class Actions --
 
   /// Flurry of Blows: BA + 1 FP, L2+. Grants 2 extra unarmed strikes (caller-side).
@@ -4854,6 +4941,8 @@ module dnd {
     doDeclareReckless,
     doUseIntimidatingPresence,
     doRestoreIntimidatingPresence,
+    doBrutalStrike,
+    doUseRelentlessRage,
     doFlurryOfBlows,
     doPatientDefenseFree,
     doPatientDefenseFocus,

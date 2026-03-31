@@ -157,6 +157,7 @@ export interface DndContext {
   readonly frenzyUsedThisTurn: boolean
   readonly intimidatingPresenceUsed: boolean
   readonly relentlessRageTimesUsed: number
+  readonly brutalStrikeUsedThisTurn: boolean
   // MonkState (Quint parity: monkState)
   readonly monkLevel: number
   readonly focusPoints: number
@@ -347,6 +348,8 @@ export type DndEvent =
   | { readonly type: "DECLARE_RECKLESS" }
   | { readonly type: "USE_INTIMIDATING_PRESENCE" }
   | { readonly type: "RESTORE_INTIMIDATING_PRESENCE" }
+  | { readonly type: "USE_BRUTAL_STRIKE" }
+  | { readonly type: "USE_RELENTLESS_RAGE"; readonly conSaveSucceeded: boolean }
   // Phase P: Paladin events
   | { readonly type: "USE_LAY_ON_HANDS"; readonly amount: number }
   | { readonly type: "USE_PALADIN_CHANNEL_DIVINITY" }

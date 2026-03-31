@@ -1,18 +1,22 @@
 import type { RageState } from "#/features/class-barbarian.ts"
 import {
   canEnterRage as tsCanEnterRage,
+  canUseBrutalStrike,
   canUseIntimidatingPresence as tsCanUseIP,
+  canUseRelentlessRage,
   pCheckRageMaintenance as tsCheckMaintenance,
   pEndRage as tsPEndRage,
   pEnterRage as tsPEnterRage,
   pExtendRageWithBA as tsPExtendRageBA,
   pMarkAttackOrForcedSave as tsPMarkAttack,
   rageMaxCharges,
+  relentlessRageResult,
   restoreIntimidatingPresenceWithRage as tsRestoreIP,
   useIntimidatingPresence as tsUseIP
 } from "#/features/class-barbarian.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
+import { hp } from "#/types.ts"
 
 function toRageState(c: DndContext): RageState {
   return {
@@ -71,12 +75,33 @@ export function restoreIntimidatingPresenceUpdate(c: DndContext): Partial<DndCon
   return tsRestoreIP(c.rageCharges, c.intimidatingPresenceUsed) ?? {}
 }
 
+export function brutalStrikeUpdate(c: DndContext): Partial<DndContext> {
+  if (isIncapacitated(c) || !canUseBrutalStrike(c.recklessThisTurn, c.barbarianLevel, true)) return {}
+  if (c.brutalStrikeUsedThisTurn) return {}
+  return { brutalStrikeUsedThisTurn: true }
+}
+
+export function relentlessRageUpdate(c: DndContext, conSaveSucceeded: boolean): Partial<DndContext> {
+  if (isIncapacitated(c) || !canUseRelentlessRage(c.barbarianLevel, c.raging)) return {}
+  const result = relentlessRageResult(conSaveSucceeded, c.barbarianLevel)
+  return {
+    relentlessRageTimesUsed: c.relentlessRageTimesUsed + 1,
+    ...(result.survived ? { hp: hp(result.newHp) } : {})
+  }
+}
+
 /** Start-of-turn: check maintenance (uses LAST turn's flags), reset per-turn flags, decrement turns. */
 export function barbarianStartTurnUpdate(c: DndContext): Partial<DndContext> {
   if (c.barbarianLevel === 0) return {}
   const rs = tsCheckMaintenance(toRageState(c), c.barbarianLevel)
   const turns = rs.raging && rs.rageTurnsRemaining > 0 ? rs.rageTurnsRemaining - 1 : rs.rageTurnsRemaining
-  return { ...fromRageState(rs), rageTurnsRemaining: turns, recklessThisTurn: false, frenzyUsedThisTurn: false }
+  return {
+    ...fromRageState(rs),
+    rageTurnsRemaining: turns,
+    recklessThisTurn: false,
+    frenzyUsedThisTurn: false,
+    brutalStrikeUsedThisTurn: false
+  }
 }
 
 export function barbarianShortRestUpdate(c: DndContext): Partial<DndContext> {
@@ -92,7 +117,8 @@ export function barbarianLongRestUpdate(c: DndContext): Partial<DndContext> {
     relentlessRageTimesUsed: 0,
     intimidatingPresenceUsed: false,
     recklessThisTurn: false,
-    frenzyUsedThisTurn: false
+    frenzyUsedThisTurn: false,
+    brutalStrikeUsedThisTurn: false
   }
 }
 
@@ -109,7 +135,8 @@ export function initialBarbarianState(barbarianLevel: number) {
     recklessThisTurn: false,
     frenzyUsedThisTurn: false,
     intimidatingPresenceUsed: false,
-    relentlessRageTimesUsed: 0
+    relentlessRageTimesUsed: 0,
+    brutalStrikeUsedThisTurn: false
   }
 }
 

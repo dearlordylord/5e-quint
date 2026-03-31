@@ -249,6 +249,7 @@ export const turnPhaseConfig = {
         EXTEND_RAGE_BA: { actions: ["extendRageBA"] },
         DECLARE_RECKLESS: { actions: ["declareReckless"] },
         USE_INTIMIDATING_PRESENCE: { actions: ["useIntimidatingPresence"] },
+        USE_BRUTAL_STRIKE: { actions: ["useBrutalStrike"] },
         FLURRY_OF_BLOWS: { actions: ["flurryOfBlows"] },
         PATIENT_DEFENSE_FREE: { actions: ["patientDefenseFree"] },
         PATIENT_DEFENSE_FOCUS: { actions: ["patientDefenseFocus"] },
@@ -384,5 +385,6 @@ export const rootEventHandlers = {
   USE_HEROIC_INSPIRATION: { actions: ["useHeroicInspiration"] },
   END_RAGE: { actions: ["endRage"] },
   MARK_ATTACK_OR_FORCED_SAVE: { actions: ["markAttackOrForcedSave"] },
-  RESTORE_INTIMIDATING_PRESENCE: { actions: ["restoreIntimidatingPresence"] }
+  RESTORE_INTIMIDATING_PRESENCE: { actions: ["restoreIntimidatingPresence"] },
+  USE_RELENTLESS_RAGE: { actions: ["useRelentlessRage"] }
 } as const

@@ -401,6 +401,10 @@ export const dndMachine = setup({
     declareReckless: assign(({ context: c }) => barb.declareRecklessUpdate(c)),
     useIntimidatingPresence: assign(({ context: c }) => barb.useIntimidatingPresenceUpdate(c)),
     restoreIntimidatingPresence: assign(({ context: c }) => barb.restoreIntimidatingPresenceUpdate(c)),
+    useBrutalStrike: assign(({ context: c }) => barb.brutalStrikeUpdate(c)),
+    useRelentlessRage: assign(({ context: c, event: e }) =>
+      barb.relentlessRageUpdate(c, (e as Extract<DndEvent, { type: "USE_RELENTLESS_RAGE" }>).conSaveSucceeded)
+    ),
     barbarianStartTurn: assign(({ context: c }) => barb.barbarianStartTurnUpdate(c)),
     barbarianShortRest: assign(({ context: c }) => barb.barbarianShortRestUpdate(c)),
     barbarianLongRest: assign(({ context: c }) => barb.barbarianLongRestUpdate(c)),

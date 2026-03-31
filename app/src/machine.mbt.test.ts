@@ -238,7 +238,8 @@ const QuintBarbarianState = z.object({
   recklessThisTurn: z.boolean(),
   frenzyUsedThisTurn: z.boolean(),
   intimidatingPresenceUsed: z.boolean(),
-  relentlessRageTimesUsed: z.bigint()
+  relentlessRageTimesUsed: z.bigint(),
+  brutalStrikeUsedThisTurn: z.boolean()
 })
 
 const QuintMonkState = z.object({
@@ -404,6 +405,7 @@ interface NormalizedState {
   readonly frenzyUsedThisTurn: boolean
   readonly intimidatingPresenceUsed: boolean
   readonly relentlessRageTimesUsed: number
+  readonly brutalStrikeUsedThisTurn: boolean
   readonly creatureKind: string
   // MonsterResourceState
   readonly legendaryActionsRemaining: number
@@ -533,6 +535,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     frenzyUsedThisTurn: c.frenzyUsedThisTurn,
     intimidatingPresenceUsed: c.intimidatingPresenceUsed,
     relentlessRageTimesUsed: c.relentlessRageTimesUsed,
+    brutalStrikeUsedThisTurn: c.brutalStrikeUsedThisTurn,
     creatureKind: c.creatureKind,
     legendaryActionsRemaining: c.legendaryActionsRemaining,
     legendaryResistancesRemaining: c.legendaryResistancesRemaining,
@@ -647,6 +650,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     frenzyUsedThisTurn: raw.barbarianState.frenzyUsedThisTurn,
     intimidatingPresenceUsed: raw.barbarianState.intimidatingPresenceUsed,
     relentlessRageTimesUsed: Number(raw.barbarianState.relentlessRageTimesUsed),
+    brutalStrikeUsedThisTurn: raw.barbarianState.brutalStrikeUsedThisTurn,
     creatureKind: raw.creatureKind,
     legendaryActionsRemaining: Number(raw.monsterResourceState.legendaryActionsRemaining),
     legendaryResistancesRemaining: Number(raw.monsterResourceState.legendaryResistancesRemaining),
@@ -754,6 +758,8 @@ type EventActionMap = {
   DECLARE_RECKLESS: "doDeclareReckless"
   USE_INTIMIDATING_PRESENCE: "doUseIntimidatingPresence"
   RESTORE_INTIMIDATING_PRESENCE: "doRestoreIntimidatingPresence"
+  USE_BRUTAL_STRIKE: "doBrutalStrike"
+  USE_RELENTLESS_RAGE: "doUseRelentlessRage"
   FLURRY_OF_BLOWS: "doFlurryOfBlows"
   PATIENT_DEFENSE_FREE: "doPatientDefenseFree"
   PATIENT_DEFENSE_FOCUS: "doPatientDefenseFocus"
@@ -902,6 +908,8 @@ const driverSchema = {
   doDeclareReckless: {},
   doUseIntimidatingPresence: {},
   doRestoreIntimidatingPresence: {},
+  doBrutalStrike: {},
+  doUseRelentlessRage: { conSaveSucceeded: z.boolean().optional() },
   doFlurryOfBlows: {},
   doPatientDefenseFree: {},
   doPatientDefenseFocus: {},
@@ -1473,6 +1481,12 @@ function createDndDriver() {
       },
       doRestoreIntimidatingPresence: () => {
         send({ type: "RESTORE_INTIMIDATING_PRESENCE" })
+      },
+      doBrutalStrike: () => {
+        send({ type: "USE_BRUTAL_STRIKE" })
+      },
+      doUseRelentlessRage: ({ conSaveSucceeded }) => {
+        if (conSaveSucceeded != null) send({ type: "USE_RELENTLESS_RAGE", conSaveSucceeded })
       },
       doFlurryOfBlows: () => {
         send({ type: "FLURRY_OF_BLOWS" })
