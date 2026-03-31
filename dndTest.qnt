@@ -5315,4 +5315,152 @@ module dndTest {
     assert(cs2.channelDivinityCharges == 2)
   }
 
+  // ============================================================
+  // Druid: Wild Shape
+  // ============================================================
+
+  // -- wildShapeMaxCharges --
+  run test_wildShapeMaxCharges_L1 = assert(wildShapeMaxCharges(1) == 0)
+  run test_wildShapeMaxCharges_L2 = assert(wildShapeMaxCharges(2) == 2)
+  run test_wildShapeMaxCharges_L5 = assert(wildShapeMaxCharges(5) == 2)
+  run test_wildShapeMaxCharges_L6 = assert(wildShapeMaxCharges(6) == 3)
+  run test_wildShapeMaxCharges_L16 = assert(wildShapeMaxCharges(16) == 3)
+  run test_wildShapeMaxCharges_L17 = assert(wildShapeMaxCharges(17) == 4)
+  run test_wildShapeMaxCharges_L20 = assert(wildShapeMaxCharges(20) == 4)
+
+  // -- freshDruidState --
+  run test_freshDruidState_L1 = {
+    val ds = freshDruidState(1)
+    all {
+      assert(ds.wildShapeCharges == 0),
+      assert(ds.wildShapeMax == 0),
+      assert(ds.inWildShape == false),
+    }
+  }
+
+  run test_freshDruidState_L2 = {
+    val ds = freshDruidState(2)
+    all {
+      assert(ds.wildShapeCharges == 2),
+      assert(ds.wildShapeMax == 2),
+      assert(ds.inWildShape == false),
+    }
+  }
+
+  run test_freshDruidState_L6 = {
+    val ds = freshDruidState(6)
+    all {
+      assert(ds.wildShapeCharges == 3),
+      assert(ds.wildShapeMax == 3),
+    }
+  }
+
+  run test_freshDruidState_L17 = {
+    val ds = freshDruidState(17)
+    all {
+      assert(ds.wildShapeCharges == 4),
+      assert(ds.wildShapeMax == 4),
+    }
+  }
+
+  // -- canEnterWildShape --
+  run test_canEnterWS_true = {
+    val ds = freshDruidState(5)
+    assert(canEnterWildShape(ds, 5, false) == true)
+  }
+
+  run test_canEnterWS_false_L1 = {
+    val ds = freshDruidState(1)
+    assert(canEnterWildShape(ds, 1, false) == false)
+  }
+
+  run test_canEnterWS_false_noCharges = {
+    val ds = freshDruidState(5).with("wildShapeCharges", 0)
+    assert(canEnterWildShape(ds, 5, false) == false)
+  }
+
+  run test_canEnterWS_false_baUsed = {
+    val ds = freshDruidState(5)
+    assert(canEnterWildShape(ds, 5, true) == false)
+  }
+
+  run test_canEnterWS_false_alreadyInWS = {
+    val ds = freshDruidState(5).with("inWildShape", true)
+    assert(canEnterWildShape(ds, 5, false) == false)
+  }
+
+  // -- canExitWildShape --
+  run test_canExitWS_true = {
+    val ds = freshDruidState(5).with("inWildShape", true)
+    assert(canExitWildShape(ds, false) == true)
+  }
+
+  run test_canExitWS_false_notInWS = {
+    val ds = freshDruidState(5)
+    assert(canExitWildShape(ds, false) == false)
+  }
+
+  run test_canExitWS_false_baUsed = {
+    val ds = freshDruidState(5).with("inWildShape", true)
+    assert(canExitWildShape(ds, true) == false)
+  }
+
+  // -- pEnterWildShape --
+  run test_enterWS_decrements_and_sets_inWS = {
+    val ds = freshDruidState(5)
+    val ds2 = pEnterWildShape(ds)
+    all {
+      assert(ds2.wildShapeCharges == 1),
+      assert(ds2.inWildShape == true),
+    }
+  }
+
+  // -- pExitWildShape --
+  run test_exitWS_clears_inWS = {
+    val ds = freshDruidState(5).with("inWildShape", true).with("wildShapeCharges", 1)
+    val ds2 = pExitWildShape(ds)
+    all {
+      assert(ds2.inWildShape == false),
+      assert(ds2.wildShapeCharges == 1),
+    }
+  }
+
+  // -- pDruidShortRest restores ONE charge (SRD: "regain one expended use") --
+  run test_druidShortRest_restoresOne = {
+    val ds = freshDruidState(5).with("wildShapeCharges", 0)
+    val ds2 = pDruidShortRest(ds)
+    assert(ds2.wildShapeCharges == 1)
+  }
+
+  run test_druidShortRest_capped = {
+    val ds = freshDruidState(5)
+    val ds2 = pDruidShortRest(ds)
+    assert(ds2.wildShapeCharges == 2)
+  }
+
+  // -- pDruidLongRest restores ALL charges --
+  run test_druidLongRest_restoresAll = {
+    val ds = freshDruidState(5).with("wildShapeCharges", 0).with("inWildShape", true)
+    val ds2 = pDruidLongRest(ds)
+    all {
+      assert(ds2.wildShapeCharges == 2),
+      assert(ds2.inWildShape == false),
+    }
+  }
+
+  // -- Trace test: enter WS, exit WS, short rest --
+  run test_druid_trace_enterExit = {
+    val ds0 = freshDruidState(5)
+    val ds1 = pEnterWildShape(ds0)
+    val ds2 = pExitWildShape(ds1)
+    val ds3 = pDruidShortRest(ds2)
+    all {
+      assert(ds1.wildShapeCharges == 1),
+      assert(ds1.inWildShape == true),
+      assert(ds2.inWildShape == false),
+      assert(ds2.wildShapeCharges == 1),
+      assert(ds3.wildShapeCharges == 2),
+    }
+  }
+
 }

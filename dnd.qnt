@@ -2777,16 +2777,59 @@ module dnd {
   }
 
   // -- Druid --
+
+  /// SRD 5.2.1 Druid Features table: Wild Shape uses by level.
+  /// L2=2, L6=3, L17=4.
+  pure def wildShapeMaxCharges(druidLevel: int): int = {
+    if (druidLevel >= 17) 4
+    else if (druidLevel >= 6) 3
+    else if (druidLevel >= 2) 2
+    else 0
+  }
+
   pure def freshDruidState(druidLevel: int): DruidState = {
-    val wsMax = if (druidLevel >= 2) 2 else 0
+    val wsMax = wildShapeMaxCharges(druidLevel)
     { wildShapeCharges: wsMax, wildShapeMax: wsMax, inWildShape: false }
   }
+
   pure def pDruidStartTurn(ds: DruidState): DruidState = ds
+
+  /// SRD: "You regain one expended use when you finish a Short Rest"
   pure def pDruidShortRest(ds: DruidState): DruidState = {
-    ds.with("wildShapeCharges", ds.wildShapeMax)
+    val newCharges = if (ds.wildShapeCharges < ds.wildShapeMax)
+      ds.wildShapeCharges + 1 else ds.wildShapeCharges
+    ds.with("wildShapeCharges", newCharges)
   }
+
+  /// SRD: "you regain all expended uses when you finish a Long Rest"
   pure def pDruidLongRest(ds: DruidState): DruidState = {
     ds.with("wildShapeCharges", ds.wildShapeMax).with("inWildShape", false)
+  }
+
+  // -- D1: Guards --
+
+  /// Can enter Wild Shape: L2+, charges > 0, BA free, not already in WS.
+  /// SRD: "As a Bonus Action, you shape-shift into a Beast form"
+  pure def canEnterWildShape(ds: DruidState, druidLevel: int, bonusActionUsed: bool): bool = {
+    druidLevel >= 2 and ds.wildShapeCharges > 0 and not(bonusActionUsed) and not(ds.inWildShape)
+  }
+
+  /// Can exit Wild Shape: currently in WS, BA free.
+  /// SRD: "You can also leave the form early as a Bonus Action"
+  pure def canExitWildShape(ds: DruidState, bonusActionUsed: bool): bool = {
+    ds.inWildShape and not(bonusActionUsed)
+  }
+
+  // -- D2: Transitions --
+
+  /// Enter Wild Shape: expend charge, enter beast form.
+  pure def pEnterWildShape(ds: DruidState): DruidState = {
+    ds.with("wildShapeCharges", ds.wildShapeCharges - 1).with("inWildShape", true)
+  }
+
+  /// Exit Wild Shape: revert to normal form.
+  pure def pExitWildShape(ds: DruidState): DruidState = {
+    ds.with("inWildShape", false)
   }
 
   // -- Sorcerer --
@@ -3265,7 +3308,7 @@ module dnd {
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
     // A25: class selection — one of Fighter, Barbarian, Monk, Wizard, Rogue, Cleric, or Paladin at level l, others at 0
-    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric", "Paladin").oneOf()
+    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric", "Paladin", "Druid").oneOf()
     // D5: Wholeness of Body uses WIS mod; spec uses nondet range 1-5
     nondet wisMod = 1.to(5).oneOf()
     if (kind == Monster) {
@@ -3305,6 +3348,7 @@ module dnd {
       val rLevel = if (pcClass == "Rogue") l else 0
       val cLevel = if (pcClass == "Cleric") l else 0
       val pLevel = if (pcClass == "Paladin") l else 0
+      val dLevel = if (pcClass == "Druid") l else 0
       all {
         creatureKind' = PC,
         monsterStatBlock' = NULL_STAT_BLOCK,
@@ -3313,7 +3357,7 @@ module dnd {
         barbarianLevel' = bLevel,
         monkLevel' = mLevel,
         paladinLevel' = pLevel, rogueLevel' = rLevel, clericLevel' = cLevel,
-        druidLevel' = 0, sorcererLevel' = 0, warlockLevel' = 0, wizardLevel' = wLevel,
+        druidLevel' = dLevel, sorcererLevel' = 0, warlockLevel' = 0, wizardLevel' = wLevel,
         state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
         fighterState' = freshFighterState(fLevel),
         barbarianState' = freshBarbarianState(bLevel),
@@ -3321,7 +3365,7 @@ module dnd {
         paladinState' = freshPaladinState(pLevel),
         rogueState' = freshRogueState(rLevel),
         clericState' = freshClericState(cLevel),
-        druidState' = freshDruidState(0),
+        druidState' = freshDruidState(dLevel),
         sorcererState' = freshSorcererState(0),
         warlockState' = freshWarlockState(0),
         wizardState' = freshWizardState(wLevel),
@@ -4334,9 +4378,47 @@ module dnd {
     }
   }
 
+  /// Enter Wild Shape: BA, expend charge.
+  /// SRD: "As a Bonus Action, you shape-shift into a Beast form"
+  action doEnterWildShape = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canEnterWildShape(druidState, druidLevel, turnState.bonusActionUsed))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState.with("bonusActionUsed", true),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
+      druidState' = pEnterWildShape(druidState), druidLevel' = druidLevel,
+      sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
+  /// Exit Wild Shape: BA, revert to normal form.
+  /// SRD: "You can also leave the form early as a Bonus Action"
+  action doExitWildShape = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canExitWildShape(druidState, turnState.bonusActionUsed))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState.with("bonusActionUsed", true),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
+      druidState' = pExitWildShape(druidState), druidLevel' = druidLevel,
+      sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   // -- 19.7 Step Action --
 
-  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, paladin features, death saves, PC damage variants
+  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, paladin features, druid features, death saves, PC damage variants
   action stepPC = any {
     doTakeDamage,
     doTakeDamageWithMods,
@@ -4370,6 +4452,8 @@ module dnd {
     doUseClericChannelDivinity,
     doUseLayOnHands,
     doUsePaladinChannelDivinity,
+    doEnterWildShape,
+    doExitWildShape,
   }
 
   // -- 19.6e Monster Resource Actions (Phase L) --

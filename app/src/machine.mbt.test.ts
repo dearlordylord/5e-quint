@@ -748,6 +748,8 @@ type EventActionMap = {
   USE_CLERIC_CHANNEL_DIVINITY: "doUseClericChannelDivinity"
   USE_LAY_ON_HANDS: "doUseLayOnHands"
   USE_PALADIN_CHANNEL_DIVINITY: "doUsePaladinChannelDivinity"
+  ENTER_WILD_SHAPE: "doEnterWildShape"
+  EXIT_WILD_SHAPE: "doExitWildShape"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -883,6 +885,8 @@ const driverSchema = {
   doUseClericChannelDivinity: {},
   doUseLayOnHands: { amount: ITFBigInt.optional() },
   doUsePaladinChannelDivinity: {},
+  doEnterWildShape: {},
+  doExitWildShape: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1060,6 +1064,7 @@ function createDndDriver() {
           const rLevel = cls === "Rogue" ? level : 0
           const cLevel = cls === "Cleric" ? level : 0
           const pLevel = cls === "Paladin" ? level : 0
+          const dLevel = cls === "Druid" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1074,7 +1079,7 @@ function createDndDriver() {
               paladinLevel: pLevel,
               rogueLevel: rLevel,
               clericLevel: cLevel,
-              druidLevel: 0,
+              druidLevel: dLevel,
               sorcererLevel: 0,
               warlockLevel: 0,
               wizardLevel: wLevel,
@@ -1466,6 +1471,12 @@ function createDndDriver() {
       },
       doUsePaladinChannelDivinity: () => {
         send({ type: "USE_PALADIN_CHANNEL_DIVINITY" })
+      },
+      doEnterWildShape: () => {
+        send({ type: "ENTER_WILD_SHAPE" })
+      },
+      doExitWildShape: () => {
+        send({ type: "EXIT_WILD_SHAPE" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

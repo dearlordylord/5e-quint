@@ -361,6 +361,9 @@ export type DndEvent =
   | { readonly type: "USE_STEADY_AIM" }
   // Phase CL: Cleric events
   | { readonly type: "USE_CLERIC_CHANNEL_DIVINITY" }
+  // Phase DR: Druid events
+  | { readonly type: "ENTER_WILD_SHAPE" }
+  | { readonly type: "EXIT_WILD_SHAPE" }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines
 export {
