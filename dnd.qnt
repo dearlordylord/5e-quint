@@ -2526,6 +2526,26 @@ module dnd {
       .with("frenzyUsedThisTurn", false)
   }
 
+  // -- B3: Rage Query Functions (pure, no state change) --
+
+  /// Rage damage bonus by barbarian level (SRD 5.2.1 Barbarian Features table).
+  /// L1-8: +2, L9-15: +3, L16+: +4.
+  pure def rageDamageBonus(barbarianLevel: int): int = {
+    if (barbarianLevel >= 16) 4
+    else if (barbarianLevel >= 9) 3
+    else 2
+  }
+
+  /// Damage types resisted while raging (SRD: Bludgeoning, Piercing, Slashing).
+  val RAGE_RESISTANCE_TYPES: Set[DamageType] = Set(Bludgeoning, Piercing, Slashing)
+
+  /// Returns the set of damage types the barbarian resists while raging.
+  /// Empty set if not raging.
+  pure def rageResistances(raging: bool): Set[DamageType] = {
+    if (raging) Set(Bludgeoning, Piercing, Slashing)
+    else Set()
+  }
+
   // ============================================================
   // 17.M MONK RESOURCE FUNCTIONS
   // ============================================================

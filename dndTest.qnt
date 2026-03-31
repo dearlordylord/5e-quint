@@ -4494,6 +4494,27 @@ module dndTest {
     }
   }
 
+  // -- B3: Rage Query Functions --
+
+  run rageDamageBonusTest = {
+    // SRD table: L1-8 = +2, L9-15 = +3, L16+ = +4
+    all {
+      assert(rageDamageBonus(1) == 2),
+      assert(rageDamageBonus(8) == 2),
+      assert(rageDamageBonus(9) == 3),
+      assert(rageDamageBonus(15) == 3),
+      assert(rageDamageBonus(16) == 4),
+      assert(rageDamageBonus(20) == 4),
+    }
+  }
+
+  run rageResistancesTest = {
+    all {
+      assert(rageResistances(true) == Set(Bludgeoning, Piercing, Slashing)),
+      assert(rageResistances(false) == Set()),
+    }
+  }
+
   // ============================================================
   // Barbarian: B3 — Action Trace Tests
   // ============================================================
