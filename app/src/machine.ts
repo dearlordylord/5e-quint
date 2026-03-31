@@ -450,6 +450,10 @@ export const dndMachine = setup({
     useClericChannelDivinity: assign(({ context: c }) => cleric.clericChannelDivinityUpdate(c)),
     enterWildShape: assign(({ context: c }) => druid.enterWildShapeUpdate(c)),
     exitWildShape: assign(({ context: c }) => druid.exitWildShapeUpdate(c)),
+    wildResurgenceCharge: assign(({ context: c, event: e }) =>
+      druid.wildResurgenceChargeUpdate(c, (e as Extract<DndEvent, { type: "USE_WILD_RESURGENCE_CHARGE" }>).slotLevel)
+    ),
+    wildResurgenceSlot: assign(({ context: c }) => druid.wildResurgenceSlotUpdate(c)),
     druidStartTurn: assign(({ context: c }) => druid.druidStartTurnUpdate(c)),
     druidShortRest: assign(({ context: c }) => druid.druidShortRestUpdate(c)),
     druidLongRest: assign(({ context: c }) => druid.druidLongRestUpdate(c)),

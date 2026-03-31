@@ -184,6 +184,7 @@ export interface DndContext {
   readonly wildShapeCharges: number
   readonly wildShapeMax: number
   readonly inWildShape: boolean
+  readonly wildResurgenceSlotUsedThisLR: boolean
   readonly sorcererLevel: number
   readonly sorceryPoints: number
   readonly sorceryPointsMax: number
@@ -391,6 +392,8 @@ export type DndEvent =
   // Phase DR: Druid events
   | { readonly type: "ENTER_WILD_SHAPE" }
   | { readonly type: "EXIT_WILD_SHAPE" }
+  | { readonly type: "USE_WILD_RESURGENCE_CHARGE"; readonly slotLevel: number }
+  | { readonly type: "USE_WILD_RESURGENCE_SLOT" }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines
 export {

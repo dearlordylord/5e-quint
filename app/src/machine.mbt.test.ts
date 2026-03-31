@@ -271,7 +271,8 @@ const QuintClericState = z.object({
 const QuintDruidState = z.object({
   wildShapeCharges: z.bigint(),
   wildShapeMax: z.bigint(),
-  inWildShape: z.boolean()
+  inWildShape: z.boolean(),
+  wildResurgenceSlotUsedThisLR: z.boolean()
 })
 const QuintSorcererState = z.object({
   sorceryPoints: z.bigint(),
@@ -441,6 +442,7 @@ interface NormalizedState {
   readonly wildShapeCharges: number
   readonly wildShapeMax: number
   readonly inWildShape: boolean
+  readonly wildResurgenceSlotUsedThisLR: boolean
   readonly sorcererLevel: number
   readonly sorceryPoints: number
   readonly sorceryPointsMax: number
@@ -571,6 +573,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     wildShapeCharges: c.wildShapeCharges,
     wildShapeMax: c.wildShapeMax,
     inWildShape: c.inWildShape,
+    wildResurgenceSlotUsedThisLR: c.wildResurgenceSlotUsedThisLR,
     sorcererLevel: c.sorcererLevel,
     sorceryPoints: c.sorceryPoints,
     sorceryPointsMax: c.sorceryPointsMax,
@@ -689,6 +692,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     wildShapeCharges: Number(raw.druidState.wildShapeCharges),
     wildShapeMax: Number(raw.druidState.wildShapeMax),
     inWildShape: raw.druidState.inWildShape,
+    wildResurgenceSlotUsedThisLR: raw.druidState.wildResurgenceSlotUsedThisLR,
     sorcererLevel: Number(raw.sorcererLevel),
     sorceryPoints: Number(raw.sorcererState.sorceryPoints),
     sorceryPointsMax: Number(raw.sorcererState.sorceryPointsMax),
@@ -802,6 +806,8 @@ type EventActionMap = {
   USE_INNATE_SORCERY: "doUseInnateSorcery"
   ENTER_WILD_SHAPE: "doEnterWildShape"
   EXIT_WILD_SHAPE: "doExitWildShape"
+  USE_WILD_RESURGENCE_CHARGE: "doWildResurgenceCharge"
+  USE_WILD_RESURGENCE_SLOT: "doWildResurgenceSlot"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -955,6 +961,8 @@ const driverSchema = {
   doUseInnateSorcery: {},
   doEnterWildShape: {},
   doExitWildShape: {},
+  doWildResurgenceCharge: { slotLevel: ITFBigInt.optional() },
+  doWildResurgenceSlot: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1595,6 +1603,12 @@ function createDndDriver() {
       },
       doExitWildShape: () => {
         send({ type: "EXIT_WILD_SHAPE" })
+      },
+      doWildResurgenceCharge: ({ slotLevel }) => {
+        if (slotLevel != null) send({ type: "USE_WILD_RESURGENCE_CHARGE", slotLevel: Number(slotLevel) })
+      },
+      doWildResurgenceSlot: () => {
+        send({ type: "USE_WILD_RESURGENCE_SLOT" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {
