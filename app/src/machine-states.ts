@@ -279,7 +279,9 @@ export const turnPhaseConfig = {
         CONVERT_POINTS_TO_SLOT: { actions: ["convertPointsToSlot"] },
         USE_INNATE_SORCERY: { actions: ["useInnateSorcery"] },
         ENTER_WILD_SHAPE: { actions: ["enterWildShape"] },
-        EXIT_WILD_SHAPE: { actions: ["exitWildShape"] }
+        EXIT_WILD_SHAPE: { actions: ["exitWildShape"] },
+        USE_WILD_RESURGENCE_CHARGE: { actions: ["wildResurgenceCharge"] },
+        USE_WILD_RESURGENCE_SLOT: { actions: ["wildResurgenceSlot"] }
       }
     },
     waitingForTurn: {

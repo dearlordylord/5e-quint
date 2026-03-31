@@ -408,6 +408,7 @@ module dnd {
     wildShapeCharges: int,
     wildShapeMax: int,
     inWildShape: bool,
+    wildResurgenceSlotUsedThisLR: bool,
   }
 
   type SorcererState = {
@@ -2898,7 +2899,7 @@ module dnd {
 
   pure def freshDruidState(druidLevel: int): DruidState = {
     val wsMax = wildShapeMaxCharges(druidLevel)
-    { wildShapeCharges: wsMax, wildShapeMax: wsMax, inWildShape: false }
+    { wildShapeCharges: wsMax, wildShapeMax: wsMax, inWildShape: false, wildResurgenceSlotUsedThisLR: false }
   }
 
   pure def pDruidStartTurn(ds: DruidState): DruidState = ds
@@ -2912,7 +2913,7 @@ module dnd {
 
   /// SRD: "you regain all expended uses when you finish a Long Rest"
   pure def pDruidLongRest(ds: DruidState): DruidState = {
-    ds.with("wildShapeCharges", ds.wildShapeMax).with("inWildShape", false)
+    ds.with("wildShapeCharges", ds.wildShapeMax).with("inWildShape", false).with("wildResurgenceSlotUsedThisLR", false)
   }
 
   // -- D1: Guards --
@@ -2939,6 +2940,29 @@ module dnd {
   /// Exit Wild Shape: revert to normal form.
   pure def pExitWildShape(ds: DruidState): DruidState = {
     ds.with("inWildShape", false)
+  }
+
+  /// Wild Resurgence part 1: expend spell slot → regain WS charge.
+  /// SRD L5: "if you have no uses of Wild Shape left, you can give yourself
+  /// one use by expending a spell slot (no action required)."
+  /// Once per turn — modeled as gated on turnPhase == "acting".
+  pure def canWildResurgenceForCharge(ds: DruidState, druidLevel: int): bool = {
+    druidLevel >= 5 and ds.wildShapeCharges == 0
+  }
+
+  pure def pWildResurgenceGainCharge(ds: DruidState): DruidState = {
+    ds.with("wildShapeCharges", ds.wildShapeCharges + 1)
+  }
+
+  /// Wild Resurgence part 2: expend WS charge → regain L1 spell slot.
+  /// SRD: "you can't do so again until you finish a Long Rest."
+  pure def canWildResurgenceForSlot(ds: DruidState, druidLevel: int): bool = {
+    druidLevel >= 5 and ds.wildShapeCharges > 0 and not(ds.wildResurgenceSlotUsedThisLR)
+  }
+
+  pure def pWildResurgenceGainSlot(ds: DruidState): DruidState = {
+    ds.with("wildShapeCharges", ds.wildShapeCharges - 1)
+      .with("wildResurgenceSlotUsedThisLR", true)
   }
 
   // -- Sorcerer --
@@ -5018,6 +5042,57 @@ module dnd {
     }
   }
 
+  /// Wild Resurgence part 1: expend a spell slot → regain 1 WS charge.
+  /// SRD L5: "if you have no uses of Wild Shape left, you can give yourself
+  /// one use by expending a spell slot (no action required)."
+  action doWildResurgenceCharge = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canWildResurgenceForCharge(druidState, druidLevel))) unchanged
+    else {
+      nondet slotLevel = SLOT_LEVEL_RANGE.oneOf()
+      if (spellSlots.slotsCurrent.get(slotLevel) <= 0) unchanged
+      else {
+        val ss1 = pExpendSlot(spellSlots, slotLevel)
+        all {
+          state' = state,
+          turnState' = turnState,
+          spellSlots' = ss1,
+          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+          monsterResourceState' = monsterResourceState,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
+          druidState' = pWildResurgenceGainCharge(druidState), druidLevel' = druidLevel,
+          sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        }
+      }
+    }
+  }
+
+  /// Wild Resurgence part 2: expend WS charge → regain L1 spell slot.
+  /// SRD: "expend one use of Wild Shape (no action required) to give yourself
+  /// a level 1 spell slot … can't do so again until you finish a Long Rest."
+  action doWildResurgenceSlot = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canWildResurgenceForSlot(druidState, druidLevel))) unchanged
+    else {
+      val ss1 = pRestoreSlot(spellSlots, 1)
+      if (ss1 == spellSlots) unchanged  // L1 slot already at max
+      else all {
+        state' = state,
+        turnState' = turnState,
+        spellSlots' = ss1,
+        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
+        druidState' = pWildResurgenceGainSlot(druidState), druidLevel' = druidLevel,
+        sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      }
+    }
+  }
+
   // -- 19.7 Step Action --
 
   /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, paladin features, warlock features, sorcerer features, druid features, death saves, PC damage variants
@@ -5072,6 +5147,8 @@ module dnd {
     doUseInnateSorcery,
     doEnterWildShape,
     doExitWildShape,
+    doWildResurgenceCharge,
+    doWildResurgenceSlot,
   }
 
   // -- 19.6e Monster Resource Actions (Phase L) --

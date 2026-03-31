@@ -165,6 +165,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     wildShapeCharges: 0,
     wildShapeMax: 0,
     inWildShape: false,
+    wildResurgenceSlotUsedThisLR: false,
     sorcererLevel: 0,
     sorceryPoints: 0,
     sorceryPointsMax: 0,

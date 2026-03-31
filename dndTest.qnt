@@ -6072,6 +6072,71 @@ module dndTest {
   }
 
   // ============================================================
+  // Wild Resurgence (Druid L5+)
+  // ============================================================
+
+  // -- canWildResurgenceForCharge guards --
+  run test_wildResurgenceCharge_guard_level5_noCharges = {
+    val ds = freshDruidState(5).with("wildShapeCharges", 0)
+    assert(canWildResurgenceForCharge(ds, 5))
+  }
+
+  run test_wildResurgenceCharge_guard_level4_rejected = {
+    val ds = freshDruidState(4).with("wildShapeCharges", 0)
+    assert(not(canWildResurgenceForCharge(ds, 4)))
+  }
+
+  run test_wildResurgenceCharge_guard_hasCharges_rejected = {
+    val ds = freshDruidState(5)  // full charges
+    assert(not(canWildResurgenceForCharge(ds, 5)))
+  }
+
+  // -- pWildResurgenceGainCharge transition --
+  run test_wildResurgenceGainCharge_transition = {
+    val ds = freshDruidState(5).with("wildShapeCharges", 0)
+    val ds2 = pWildResurgenceGainCharge(ds)
+    assert(ds2.wildShapeCharges == 1)
+  }
+
+  // -- canWildResurgenceForSlot guards --
+  run test_wildResurgenceSlot_guard_level5_hasCharge = {
+    val ds = freshDruidState(5)
+    assert(canWildResurgenceForSlot(ds, 5))
+  }
+
+  run test_wildResurgenceSlot_guard_level4_rejected = {
+    val ds = freshDruidState(4)
+    assert(not(canWildResurgenceForSlot(ds, 4)))
+  }
+
+  run test_wildResurgenceSlot_guard_noCharges_rejected = {
+    val ds = freshDruidState(5).with("wildShapeCharges", 0)
+    assert(not(canWildResurgenceForSlot(ds, 5)))
+  }
+
+  run test_wildResurgenceSlot_guard_alreadyUsedThisLR = {
+    val ds = freshDruidState(5).with("wildResurgenceSlotUsedThisLR", true)
+    assert(not(canWildResurgenceForSlot(ds, 5)))
+  }
+
+  // -- pWildResurgenceGainSlot transition --
+  run test_wildResurgenceGainSlot_transition = {
+    val ds = freshDruidState(5)
+    val ds2 = pWildResurgenceGainSlot(ds)
+    all {
+      assert(ds2.wildShapeCharges == ds.wildShapeCharges - 1),
+      assert(ds2.wildResurgenceSlotUsedThisLR == true),
+    }
+  }
+
+  // -- Long rest resets wildResurgenceSlotUsedThisLR --
+  run test_wildResurgence_longRest_resets = {
+    val ds = freshDruidState(5).with("wildResurgenceSlotUsedThisLR", true)
+    val ds2 = pDruidLongRest(ds)
+    assert(ds2.wildResurgenceSlotUsedThisLR == false)
+  }
+
+  // ============================================================
   // Sorcerer: Sorcerous Restoration + Innate Sorcery
   // ============================================================
 
