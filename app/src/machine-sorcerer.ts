@@ -63,7 +63,7 @@ const INNATE_SORCERY_DURATION = 10
 export function sorcererStartTurnUpdate(c: DndContext): Partial<DndContext> {
   if (c.sorcererLevel === 0) return {}
   const metamagicReset: Partial<DndContext> = {
-    metamagicUsedThisCast: new Set<string>(),
+    metamagicUsedThisCast: new Set<MetamagicOption>(),
     apotheosisUsedThisTurn: false
   }
   if (c.innateSorceryActive && c.innateSorceryTurnsRemaining > 0) {
@@ -99,7 +99,7 @@ export function sorcererLongRestUpdate(c: DndContext): Partial<DndContext> {
     innateSorceryCharges: result.innateSorceryCharges,
     innateSorceryTurnsRemaining: 0,
     sorcerousRestorationUsed: false,
-    metamagicUsedThisCast: new Set<string>(),
+    metamagicUsedThisCast: new Set<MetamagicOption>(),
     apotheosisUsedThisTurn: false
   }
 }
@@ -162,7 +162,7 @@ export function initialSorcererState(sorcererLevel: number) {
     innateSorceryActive: false,
     innateSorceryCharges: 2,
     innateSorceryTurnsRemaining: 0,
-    metamagicUsedThisCast: new Set<string>(),
+    metamagicUsedThisCast: new Set<MetamagicOption>(),
     apotheosisUsedThisTurn: false
   }
 }

@@ -354,14 +354,14 @@ export interface UseMetamagicState {
   readonly sorceryPoints: number
   readonly bonusActionUsed: boolean
   readonly nonCantripActionSpellCast: boolean
-  readonly metamagicUsedThisCast: ReadonlySet<string>
+  readonly metamagicUsedThisCast: ReadonlySet<MetamagicOption>
   readonly apotheosisUsedThisTurn: boolean
   readonly innateSorceryActive: boolean
 }
 
 export interface UseMetamagicResult {
   readonly sorceryPoints: number
-  readonly metamagicUsedThisCast: ReadonlySet<string>
+  readonly metamagicUsedThisCast: ReadonlySet<MetamagicOption>
   readonly apotheosisUsedThisTurn: boolean
   readonly bonusActionUsed: boolean
 }
@@ -374,7 +374,7 @@ export function canUseMetamagic(state: UseMetamagicState, option: MetamagicOptio
   if (!canStackMetamagic(option)) {
     let nonStackableUsed = 0
     for (const o of state.metamagicUsedThisCast) {
-      if (!canStackMetamagic(o as MetamagicOption)) nonStackableUsed++
+      if (!canStackMetamagic(o)) nonStackableUsed++
     }
     const maxOptions = state.innateSorceryActive && state.sorcererLevel >= SORCERY_INCARNATE_LEVEL ? 2 : 1
     if (nonStackableUsed >= maxOptions) return false

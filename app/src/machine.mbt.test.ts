@@ -11,6 +11,7 @@ import { createActor } from "xstate"
 import { z } from "zod"
 
 import { fighterExtraAttacks } from "#/features/class-fighter.ts"
+import type { MetamagicOption } from "#/features/class-sorcerer.ts"
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
 import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
 import { monkExtraAttacks } from "#/machine-monk.ts"
@@ -282,9 +283,9 @@ const QuintSorcererState = z.object({
   innateSorceryCharges: z.bigint(),
   innateSorceryTurnsRemaining: z.bigint(),
   metamagicUsedThisCast: z.any().transform((raw: unknown) => {
-    if (raw instanceof Set) return raw as Set<string>
-    if (Array.isArray(raw)) return new Set(raw.map(String))
-    return new Set<string>()
+    if (raw instanceof Set) return raw as Set<MetamagicOption>
+    if (Array.isArray(raw)) return new Set(raw.map(String)) as Set<MetamagicOption>
+    return new Set<MetamagicOption>()
   }),
   apotheosisUsedThisTurn: z.boolean()
 })
@@ -456,7 +457,7 @@ interface NormalizedState {
   readonly innateSorceryActive: boolean
   readonly innateSorceryCharges: number
   readonly innateSorceryTurnsRemaining: number
-  readonly metamagicUsedThisCast: ReadonlySet<string>
+  readonly metamagicUsedThisCast: ReadonlySet<MetamagicOption>
   readonly apotheosisUsedThisTurn: boolean
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>

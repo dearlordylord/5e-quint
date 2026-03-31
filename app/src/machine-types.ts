@@ -1,4 +1,5 @@
 import { actionSurgeMaxCharges, indomitableMaxCharges, secondWindMaxCharges } from "#/features/class-fighter.ts"
+import type { MetamagicOption } from "#/features/class-sorcerer.ts"
 import type { ConditionFlag } from "#/machine-helpers.ts"
 import type {
   ActionType,
@@ -192,7 +193,7 @@ export interface DndContext {
   readonly innateSorceryActive: boolean
   readonly innateSorceryCharges: number
   readonly innateSorceryTurnsRemaining: number
-  readonly metamagicUsedThisCast: ReadonlySet<string>
+  readonly metamagicUsedThisCast: ReadonlySet<MetamagicOption>
   readonly apotheosisUsedThisTurn: boolean
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>
