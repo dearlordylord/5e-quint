@@ -367,6 +367,9 @@ export type DndEvent =
   // Phase S: Sorcerer events
   | { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: number }
   | { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: number }
+  // Phase DR: Druid events
+  | { readonly type: "ENTER_WILD_SHAPE" }
+  | { readonly type: "EXIT_WILD_SHAPE" }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines
 export {

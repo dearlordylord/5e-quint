@@ -752,6 +752,8 @@ type EventActionMap = {
   USE_MYSTIC_ARCANUM: "doUseMysticArcanum"
   CONVERT_SLOT_TO_POINTS: "doConvertSlotToPoints"
   CONVERT_POINTS_TO_SLOT: "doConvertPointsToSlot"
+  ENTER_WILD_SHAPE: "doEnterWildShape"
+  EXIT_WILD_SHAPE: "doExitWildShape"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -891,6 +893,8 @@ const driverSchema = {
   doUseMysticArcanum: { spellLevel: ITFBigInt.optional() },
   doConvertSlotToPoints: { slotLevel: ITFBigInt.optional() },
   doConvertPointsToSlot: { slotLevel: ITFBigInt.optional() },
+  doEnterWildShape: {},
+  doExitWildShape: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1070,6 +1074,7 @@ function createDndDriver() {
           const pLevel = cls === "Paladin" ? level : 0
           const wkLevel = cls === "Warlock" ? level : 0
           const sLevel = cls === "Sorcerer" ? level : 0
+          const dLevel = cls === "Druid" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1084,7 +1089,7 @@ function createDndDriver() {
               paladinLevel: pLevel,
               rogueLevel: rLevel,
               clericLevel: cLevel,
-              druidLevel: 0,
+              druidLevel: dLevel,
               sorcererLevel: sLevel,
               warlockLevel: wkLevel,
               wizardLevel: wLevel,
@@ -1488,6 +1493,12 @@ function createDndDriver() {
       },
       doConvertPointsToSlot: ({ slotLevel }) => {
         if (slotLevel != null) send({ type: "CONVERT_POINTS_TO_SLOT", slotLevel: Number(slotLevel) })
+      },
+      doEnterWildShape: () => {
+        send({ type: "ENTER_WILD_SHAPE" })
+      },
+      doExitWildShape: () => {
+        send({ type: "EXIT_WILD_SHAPE" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

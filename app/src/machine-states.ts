@@ -266,7 +266,9 @@ export const turnPhaseConfig = {
         USE_MAGICAL_CUNNING: { actions: ["useMagicalCunning"] },
         USE_MYSTIC_ARCANUM: { actions: ["useMysticArcanum"] },
         CONVERT_SLOT_TO_POINTS: { actions: ["convertSlotToPoints"] },
-        CONVERT_POINTS_TO_SLOT: { actions: ["convertPointsToSlot"] }
+        CONVERT_POINTS_TO_SLOT: { actions: ["convertPointsToSlot"] },
+        ENTER_WILD_SHAPE: { actions: ["enterWildShape"] },
+        EXIT_WILD_SHAPE: { actions: ["exitWildShape"] }
       }
     },
     waitingForTurn: {

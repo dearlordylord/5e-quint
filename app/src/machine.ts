@@ -13,6 +13,7 @@ import * as cleric from "#/machine-cleric.ts"
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
+import * as druid from "#/machine-druid.ts"
 import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
 import { guards } from "#/machine-guards.ts"
 import {
@@ -435,9 +436,11 @@ export const dndMachine = setup({
     clericShortRest: assign(({ context: c }) => cleric.clericShortRestUpdate(c)),
     clericLongRest: assign(({ context: c }) => cleric.clericLongRestUpdate(c)),
     useClericChannelDivinity: assign(({ context: c }) => cleric.clericChannelDivinityUpdate(c)),
-    druidStartTurn: assign(() => ({})),
-    druidShortRest: assign(() => ({})),
-    druidLongRest: assign(() => ({})),
+    enterWildShape: assign(({ context: c }) => druid.enterWildShapeUpdate(c)),
+    exitWildShape: assign(({ context: c }) => druid.exitWildShapeUpdate(c)),
+    druidStartTurn: assign(({ context: c }) => druid.druidStartTurnUpdate(c)),
+    druidShortRest: assign(({ context: c }) => druid.druidShortRestUpdate(c)),
+    druidLongRest: assign(({ context: c }) => druid.druidLongRestUpdate(c)),
     sorcererStartTurn: assign(({ context: c }) => sorcerer.sorcererStartTurnUpdate(c)),
     sorcererShortRest: assign(({ context: c }) => sorcerer.sorcererShortRestUpdate(c)),
     sorcererLongRest: assign(({ context: c }) => sorcerer.sorcererLongRestUpdate(c)),
@@ -505,6 +508,7 @@ export const dndMachine = setup({
     ...paladin.initialPaladinState(i.paladinLevel ?? 0),
     ...rogue.initialRogueState(i.rogueLevel ?? 0),
     ...cleric.initialClericState(i.clericLevel ?? 0),
+    ...druid.initialDruidState(i.druidLevel ?? 0),
     ...wizard.initialWizardState(i.wizardLevel ?? 0)
   }),
   on: rootEventHandlers,
