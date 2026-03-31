@@ -353,6 +353,9 @@ export type DndEvent =
   | { readonly type: "UNCANNY_METABOLISM"; readonly healRoll: number }
   // Phase W: Wizard events
   | { readonly type: "USE_ARCANE_RECOVERY"; readonly slotLevel: number }
+  // Phase R: Rogue events
+  | { readonly type: "USE_SNEAK_ATTACK" }
+  | { readonly type: "USE_STEADY_AIM" }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines
 export {

@@ -257,7 +257,9 @@ export const turnPhaseConfig = {
         STUNNING_STRIKE: { actions: ["stunningStrike"] },
         WHOLENESS_OF_BODY: { actions: ["wholenessOfBody"] },
         UNCANNY_METABOLISM: { actions: ["uncannyMetabolism"] },
-        USE_ARCANE_RECOVERY: { actions: ["useArcaneRecovery"] }
+        USE_ARCANE_RECOVERY: { actions: ["useArcaneRecovery"] },
+        USE_SNEAK_ATTACK: { actions: ["useSneakAttack"] },
+        USE_STEADY_AIM: { actions: ["useSteadyAim"] }
       }
     },
     waitingForTurn: {

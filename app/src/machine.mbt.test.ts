@@ -743,6 +743,8 @@ type EventActionMap = {
   WHOLENESS_OF_BODY: "doWholenessOfBody"
   UNCANNY_METABOLISM: "doUncannyMetabolism"
   USE_ARCANE_RECOVERY: "doUseArcaneRecovery"
+  USE_SNEAK_ATTACK: "doUseSneakAttack"
+  USE_STEADY_AIM: "doUseSteadyAim"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -873,6 +875,8 @@ const driverSchema = {
   doWholenessOfBody: { healRoll: ITFBigInt.optional() },
   doUncannyMetabolism: { healRoll: ITFBigInt.optional() },
   doUseArcaneRecovery: { slotLevel: ITFBigInt.optional() },
+  doUseSneakAttack: {},
+  doUseSteadyAim: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1047,6 +1051,7 @@ function createDndDriver() {
           const bLevel = cls === "Barbarian" ? level : 0
           const mLevel = cls === "Monk" ? level : 0
           const wLevel = cls === "Wizard" ? level : 0
+          const rLevel = cls === "Rogue" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1059,7 +1064,7 @@ function createDndDriver() {
               monkLevel: mLevel,
               wholenessMax: Number(wisMod),
               paladinLevel: 0,
-              rogueLevel: 0,
+              rogueLevel: rLevel,
               clericLevel: 0,
               druidLevel: 0,
               sorcererLevel: 0,
@@ -1438,6 +1443,12 @@ function createDndDriver() {
       },
       doUseArcaneRecovery: ({ slotLevel }) => {
         if (slotLevel != null) send({ type: "USE_ARCANE_RECOVERY", slotLevel: Number(slotLevel) })
+      },
+      doUseSneakAttack: () => {
+        send({ type: "USE_SNEAK_ATTACK" })
+      },
+      doUseSteadyAim: () => {
+        send({ type: "USE_STEADY_AIM" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {
