@@ -260,7 +260,7 @@ Devious Strikes (L14): additional Cunning Strike options:
 - **Knock Out** (6d6 cost): CON save or Unconscious for 1 minute (wakes on damage)
 - **Obscure** (3d6 cost): DEX save or Blinded until end of your next turn
 
-- State: `sneakAttackUsedThisTurn: bool`, `steadyAimUsedThisTurn: bool`
+- State: `sneakAttackUsedThisTurn: bool`, `steadyAimUsedThisTurn: bool`, `cunningStrikeUsesThisTurn: int` (max 1 at L5, 2 at L11+)
 - Functions: `pSteadyAim(turnState)->grant Advantage on next attack, set speed to 0`; `pCunningStrike(state, effect, diceForfeited, saveResult)->remove dice, apply effect on failed save`; `pCanApplyCunningStrike(sneakAttackDiceTotal, diceForfeited)->bool` (must have enough dice remaining)
 - Test: SA dice correct per level; requires finesse or ranged + advantage or adjacent ally; once per turn; Steady Aim grants advantage + zeroes speed; Cunning Strike requires sufficient dice; each effect triggers on failed save; Improved CS allows two effects; Devious Strikes options cost correctly; SA dice deducted before applying; resets on turn start
 
@@ -826,7 +826,7 @@ Features that have pure functions but aren't wired yet. For Fighter items with P
 | Features wired (UI integration) | 6 (Rage, Reckless, Second Wind, Action Surge + queries) |
 | Features with pure fns but not wired | ~50 |
 | Features not started | ~85 |
-| Features in Quint + MBT | 22 (Fighter: SW, AS, Indomitable, EA, critRange; Barbarian: Rage, Reckless, IP; Monk: Focus, Flurry, Patient Defense, Step of Wind, Stunning Strike, Wholeness, Uncanny Metabolism; Wizard: Arcane Recovery; Rogue: Sneak Attack, Steady Aim; Cleric: Channel Divinity; Paladin: LoH, CD; Warlock: Magical Cunning, Mystic Arcanum; Sorcerer: Font of Magic; Druid: Wild Shape) |
+| Features in Quint + MBT | 33 (Fighter: SW, AS, Indomitable, Tactical Mind, Heroic Inspiration, EA, critRange; Barbarian: Rage, Reckless, IP, Brutal Strike, Relentless Rage; Monk: Focus, Flurry, Patient Defense, Step of Wind, Stunning Strike, Wholeness, Uncanny Metabolism; Wizard: Arcane Recovery, Overchannel; Rogue: Sneak Attack, Steady Aim, Cunning Action, Uncanny Dodge, Cunning Strike; Cleric: CD; Paladin: LoH, CD, Divine Smite; Warlock: Magical Cunning, Mystic Arcanum, Eldritch Smite; Sorcerer: Font of Magic, Sorcerous Restoration, Innate Sorcery; Druid: Wild Shape) |
 | Classes with no `machine-*.ts` file | 2 (Ranger, Bard — TS features done, but no Quint state/MBT yet. Need prep: type def, state var, frame conditions on all ~70 actions, lifecycle hooks, MBT schema) |
 
 ---
