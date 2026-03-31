@@ -15,7 +15,6 @@ export function convertSlotToPointsUpdate(c: DndContext, slotLevel: number): Par
   const currentSlots = [...c.slotsCurrent]
   const idx = slotLevel - 1
   if (idx >= currentSlots.length || currentSlots[idx] <= 0) return {}
-  if (c.sorceryPoints >= c.sorceryPointsMax) return {}
   currentSlots[idx] = currentSlots[idx] - 1
   const newPts = Math.min(c.sorceryPoints + slotLevel, c.sorceryPointsMax)
   return {
