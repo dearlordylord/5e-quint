@@ -31,7 +31,7 @@ Lower combat frequency but fill MBT gaps.
 | Cunning Strike → Quint | L5+ mark action, int count (max 1 at L5, 2 at L11+). Effect details caller-managed. | **done** | T30 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T30 |
 | Wild Resurgence → Quint | Druid L5+: slot→charge + charge→L1 slot (1/LR). Two actions. | **done** | T100 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#druid) T100 |
 | Turn Undead / Divine Spark → Quint | Both use existing CD charge action. Effects caller-managed. | **done** | T90 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#cleric) T90 |
-| Abjure Foes / Sacred Weapon → Quint | Paladin CD options. | not done | T63 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#paladin) T63 |
+| Abjure Foes / Sacred Weapon → Quint | Both use existing CD charge action (same as Cleric). Effects caller-managed. | **done** | T63 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#paladin) T63 |
 | Overchannel → Quint | Wizard L14+: uses counter, LR reset. Damage caller-managed. | **done** | T131 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#wizard) T131 |
 | Eldritch Smite → Quint | Warlock L5+: pact slot expenditure + once/turn flag. | **done** | T121 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#warlock) T121 |
 | Brutal Strike → Quint | Barbarian L9+: once/turn flag, reckless gated. | **done** | T11 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#barbarian) T11 |
