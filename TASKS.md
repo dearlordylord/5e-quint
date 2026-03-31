@@ -57,6 +57,8 @@ Lower combat frequency but fill MBT gaps.
 | Integration bug: rogueLevel unused param | `canExecuteSneakAttack` accepts but doesn't use rogueLevel. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #2 |
 | Integration bug: NOTIFY_START_TURN sentinel | Fragile no-op dispatch pattern in bridge files. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #3 |
 | Integration bug: useFeatures.test.tsx jsdom | Test file fails with ERR_MODULE_NOT_FOUND. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #5 |
+| TS error: feature-bridge.test.ts(72) | `DndContext` type mismatch — test helper builds context with optional fields that `DndContext` requires as non-optional. Grows each time new required fields are added to `DndContext`. | not done | none | pre-existing |
+| TS error: machine-druid.ts(16) | HP/TempHP branded type mismatch — `enterWildShapeUpdate` returns `hp()` branded value where `tempHp()` is expected. Wrong brand applied. | not done | none | pre-existing |
 
 ## Priority 5: Species Traits → Quint
 
