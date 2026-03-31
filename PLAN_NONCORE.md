@@ -824,8 +824,29 @@ Features that have pure functions but aren't wired yet. For Fighter items with P
 | Features wired (UI integration) | 6 (Rage, Reckless, Second Wind, Action Surge + queries) |
 | Features with pure fns but not wired | ~50 |
 | Features not started | ~85 |
-| Features in Quint + MBT | 35 (Fighter: SW, AS, Indomitable, Tactical Mind, Heroic Inspiration, EA, critRange; Barbarian: Rage, Reckless, IP, Brutal Strike, Relentless Rage; Monk: Focus, Flurry, Patient Defense, Step of Wind, Stunning Strike, Wholeness, Uncanny Metabolism; Wizard: Arcane Recovery, Overchannel; Rogue: Sneak Attack, Steady Aim, Cunning Action, Uncanny Dodge, Cunning Strike; Cleric: CD (Turn Undead/Divine Spark); Paladin: LoH, CD, Divine Smite; Warlock: Magical Cunning, Mystic Arcanum, Eldritch Smite; Sorcerer: Font of Magic, Sorcerous Restoration, Innate Sorcery; Druid: Wild Shape, Wild Resurgence) |
-| Classes with no `machine-*.ts` file | 2 (Ranger, Bard — TS features done, but no Quint state/MBT yet. Need prep: type def, state var, frame conditions on all ~70 actions, lifecycle hooks, MBT schema) |
+| Features in Quint + MBT | ~42 across all 12 classes (see per-class inventory below) |
+| Classes with `machine-*.ts` + MBT | 12/12 — all SRD classes have Quint state, lifecycle, and MBT parity |
+
+### Per-class Quint coverage inventory
+
+Each class has TS pure functions in `features/class-*.ts` and Quint state in `dnd.qnt`. **"In Quint"** = has a Quint pure function + action wrapper + MBT handler. **"TS-only"** = implemented in TS features layer but not yet formally specified. Passive/config-only functions (no state transitions) don't need Quint modeling and are omitted.
+
+| Class | In Quint (state-transitioning) | TS-only state transitions (candidates for Quint) |
+|-------|-------------------------------|--------------------------------------------------|
+| **Fighter** | Second Wind, Action Surge, Indomitable, Tactical Mind, Heroic Inspiration, Crit (Remarkable Athlete), Heroic Rally | Tactical Master (swap mastery property), Studied Attacks (L13 advantage) |
+| **Barbarian** | Rage enter/end/extend, Reckless, Intimidating Presence, Brutal Strike, Relentless Rage, rage maintenance | Persistent Rage (L15 initiative restore), Frenzy (bonus attack), Retaliation, Indomitable Might, Primal Champion |
+| **Monk** | Focus Pool, Flurry of Blows, Patient Defense (free+focus), Step of Wind (free+focus), Stunning Strike, Wholeness of Body, Uncanny Metabolism | Deflect Attacks/Energy, Slow Fall, Self-Restoration, Superior Defense, Quivering Palm, Open Hand Technique |
+| **Wizard** | Arcane Recovery, Overchannel | Spell Mastery, Signature Spells, Sculpt Spells (Evocation), Empowered Evocation |
+| **Rogue** | Sneak Attack, Steady Aim, Cunning Action (Dash/Disengage/Hide), Uncanny Dodge, Cunning Strike | Stroke of Luck (L20), Thief's Reflexes, Stealth Attack (Assassin) |
+| **Cleric** | Channel Divinity (charge pool, Turn Undead / Divine Spark via CD) | Divine Intervention (L20), Blessed Strikes (Potent Spellcasting / Divine Strike), Sear Undead, Life Domain healing |
+| **Paladin** | Lay on Hands, Channel Divinity, Divine Smite (slot + free 1/LR) | Abjure Foes, Sacred Weapon, Aura of Protection/Courage, Holy Nimbus, Faithful Steed |
+| **Warlock** | Magical Cunning, Mystic Arcanum, Eldritch Smite | Dark One's Blessing (temp HP), Dark One's Own Luck, Hurl Through Hell, Contact Patron |
+| **Sorcerer** | Font of Magic (slot↔points), Innate Sorcery, Sorcerous Restoration, Metamagic (10 options) | Draconic Resilience, Dragon Wings, Elemental Affinity |
+| **Druid** | Wild Shape enter/exit, Wild Resurgence (slot↔charge) | Primal Strike, Nature's Sanctuary, Land's Aid (Circle of Land), Natural Recovery |
+| **Ranger** | Free Hunter's Mark, Tireless (temp HP), Nature's Veil (invisible), Extra Attack | Superior Hunter's Defense (reaction → resistance), Relentless Hunter (conc protection) |
+| **Bard** | Bardic Inspiration, Cutting Words, Font Slot Restore, Peerless Skill, Superior Inspiration | Countercharm (reaction reroll), Words of Creation (L20) |
+
+**Pattern for adding features:** Guard → pure function → action wrapper (with frame conditions) → MBT driver handler. See PLAN_CLEANUP.md "Suggested recipe" for step-by-step checklist.
 
 ---
 
