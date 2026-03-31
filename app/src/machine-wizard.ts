@@ -1,4 +1,4 @@
-import { canArcaneRecoverSlot } from "#/features/class-wizard.ts"
+import { canArcaneRecoverSlot, hasOverchannel } from "#/features/class-wizard.ts"
 import type { DndContext } from "#/machine-types.ts"
 
 // -- Action Updates --
@@ -16,6 +16,11 @@ export function arcaneRecoveryUpdate(c: DndContext, slotLevel: number): Partial<
   }
 }
 
+export function overchannelUpdate(c: DndContext): Partial<DndContext> {
+  if (!hasOverchannel(c.wizardLevel)) return {}
+  return { overchannelUsesThisLR: c.overchannelUsesThisLR + 1 }
+}
+
 // -- Lifecycle --
 
 export function wizardStartTurnUpdate(c: DndContext): Partial<DndContext> {
@@ -30,7 +35,7 @@ export function wizardShortRestUpdate(c: DndContext): Partial<DndContext> {
 
 export function wizardLongRestUpdate(c: DndContext): Partial<DndContext> {
   if (c.wizardLevel === 0) return {}
-  return { arcaneRecoveryUsed: false }
+  return { arcaneRecoveryUsed: false, overchannelUsesThisLR: 0 }
 }
 
 // -- Init --
@@ -38,6 +43,7 @@ export function wizardLongRestUpdate(c: DndContext): Partial<DndContext> {
 export function initialWizardState(wizardLevel: number) {
   return {
     wizardLevel,
-    arcaneRecoveryUsed: false
+    arcaneRecoveryUsed: false,
+    overchannelUsesThisLR: 0
   }
 }

@@ -4971,6 +4971,62 @@ module dndTest {
   }
 
   // ============================================================
+  // Wizard: Overchannel
+  // ============================================================
+
+  run test_canOverchannel_level14 = {
+    val ws = freshWizardState(14)
+    assert(canOverchannel(ws, 14))
+  }
+
+  run test_canOverchannel_level13 = {
+    val ws = freshWizardState(13)
+    assert(not(canOverchannel(ws, 13)))
+  }
+
+  run test_pOverchannel_increments = {
+    val ws = freshWizardState(14)
+    val ws2 = pOverchannel(ws)
+    all {
+      assert(ws2.overchannelUsesThisLR == 1),
+      assert(pOverchannel(ws2).overchannelUsesThisLR == 2),
+    }
+  }
+
+  run test_pWizardLongRest_resets_overchannel = {
+    val ws = freshWizardState(14).with("overchannelUsesThisLR", 3)
+    val ws2 = pWizardLongRest(ws)
+    all {
+      assert(ws2.overchannelUsesThisLR == 0),
+      assert(ws2.arcaneRecoveryUsed == false),
+    }
+  }
+
+  /// Trace: overchannel increments uses counter
+  run test_trace_overchannel = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0,
+        wizardState' = freshWizardState(14), wizardLevel' = 14,
+      }
+    ).then(doOverchannel)
+    .then(all {
+      assert(wizardState.overchannelUsesThisLR == 1),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  // ============================================================
   // Paladin: P0 — freshPaladinState
   // ============================================================
 

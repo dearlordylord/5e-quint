@@ -288,7 +288,8 @@ const QuintWarlockState = z.object({
   magicalCunningUsed: z.boolean()
 })
 const QuintWizardState = z.object({
-  arcaneRecoveryUsed: z.boolean()
+  arcaneRecoveryUsed: z.boolean(),
+  overchannelUsesThisLR: z.bigint()
 })
 
 // Combined state from all Quint vars
@@ -447,6 +448,7 @@ interface NormalizedState {
   readonly magicalCunningUsed: boolean
   readonly wizardLevel: number
   readonly arcaneRecoveryUsed: boolean
+  readonly overchannelUsesThisLR: number
 }
 
 // ============================================================
@@ -572,7 +574,8 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     mysticArcanumUsed: c.mysticArcanumUsed,
     magicalCunningUsed: c.magicalCunningUsed,
     wizardLevel: c.wizardLevel,
-    arcaneRecoveryUsed: c.arcaneRecoveryUsed
+    arcaneRecoveryUsed: c.arcaneRecoveryUsed,
+    overchannelUsesThisLR: c.overchannelUsesThisLR
   }
 }
 
@@ -686,7 +689,8 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     mysticArcanumUsed: raw.warlockState.mysticArcanumUsed,
     magicalCunningUsed: raw.warlockState.magicalCunningUsed,
     wizardLevel: Number(raw.wizardLevel),
-    arcaneRecoveryUsed: raw.wizardState.arcaneRecoveryUsed
+    arcaneRecoveryUsed: raw.wizardState.arcaneRecoveryUsed,
+    overchannelUsesThisLR: Number(raw.wizardState.overchannelUsesThisLR)
   }
 }
 
@@ -763,6 +767,7 @@ type EventActionMap = {
   WHOLENESS_OF_BODY: "doWholenessOfBody"
   UNCANNY_METABOLISM: "doUncannyMetabolism"
   USE_ARCANE_RECOVERY: "doUseArcaneRecovery"
+  USE_OVERCHANNEL: "doOverchannel"
   USE_SNEAK_ATTACK: "doUseSneakAttack"
   USE_STEADY_AIM: "doUseSteadyAim"
   CUNNING_ACTION_DASH: "doCunningActionDash"
@@ -911,6 +916,7 @@ const driverSchema = {
   doWholenessOfBody: { healRoll: ITFBigInt.optional() },
   doUncannyMetabolism: { healRoll: ITFBigInt.optional() },
   doUseArcaneRecovery: { slotLevel: ITFBigInt.optional() },
+  doOverchannel: {},
   doUseSneakAttack: {},
   doUseSteadyAim: {},
   doCunningActionDash: {},
@@ -1500,6 +1506,9 @@ function createDndDriver() {
       },
       doUseArcaneRecovery: ({ slotLevel }) => {
         if (slotLevel != null) send({ type: "USE_ARCANE_RECOVERY", slotLevel: Number(slotLevel) })
+      },
+      doOverchannel: () => {
+        send({ type: "USE_OVERCHANNEL" })
       },
       doUseSneakAttack: () => {
         send({ type: "USE_SNEAK_ATTACK" })

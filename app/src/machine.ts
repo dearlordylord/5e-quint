@@ -470,7 +470,8 @@ export const dndMachine = setup({
     wizardLongRest: assign(({ context: c }) => wizard.wizardLongRestUpdate(c)),
     useArcaneRecovery: assign(({ context: c, event: e }) =>
       wizard.arcaneRecoveryUpdate(c, (e as Extract<DndEvent, { type: "USE_ARCANE_RECOVERY" }>).slotLevel)
-    )
+    ),
+    useOverchannel: assign(({ context: c }) => wizard.overchannelUpdate(c))
   }
 }).createMachine({
   id: "dnd",
