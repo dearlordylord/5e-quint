@@ -107,7 +107,7 @@ export function canExecuteTacticalMind(
 // Only dispatch the charge-decrement action if the boosted check succeeded.
 export function executeTacticalMind(boostedCheckSucceeded: boolean): BridgeResult {
   return {
-    featureAction: boostedCheckSucceeded ? { type: "FIGHTER_USE_TACTICAL_MIND" } : { type: "NOTIFY_START_TURN" }, // no-op: charge not consumed
+    featureAction: boostedCheckSucceeded ? { type: "FIGHTER_USE_TACTICAL_MIND" } : { type: "NOOP" },
     machineEvents: []
   }
 }

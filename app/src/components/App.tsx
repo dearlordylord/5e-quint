@@ -20,7 +20,7 @@ function getClassFromUrl(): string {
   return params.get("class") ?? "fighter"
 }
 
-const FEATURE_CONFIG: FeatureConfig = { className: getClassFromUrl(), level: 5 }
+const FEATURE_CONFIG: FeatureConfig = { className: getClassFromUrl(), level: 5, strMod: 3, profBonus: 3 }
 
 const DEFAULT_INPUT: DndMachineInput = {
   maxHp: DEFAULT_MAX_HP,
@@ -67,7 +67,7 @@ export function App() {
   const logRef = useRef<Array<LogEntry>>([])
 
   const features = useFeatures(FEATURE_CONFIG, snapshot)
-  const { resetToInitial, notify: notifyFeatures, dispatch: dispatchFeature } = features
+  const { dispatch: dispatchFeature, notify: notifyFeatures, resetToInitial } = features
   // Ref breaks a circular dependency: `send` needs to call `notifyFeatures` after
   // dispatching, but `send` is defined before `useFeatures` runs. The ref lets `send`
   // call whatever `notifyFeatures` points to at invocation time.

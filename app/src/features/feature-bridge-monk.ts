@@ -55,7 +55,7 @@ const EXPEND_FOCUS_BONUS_ACTION: BridgeResult = {
 }
 
 const FREE_BONUS_ACTION: BridgeResult = {
-  featureAction: { type: "NOTIFY_START_TURN" }, // no store-side state change for free version
+  featureAction: { type: "NOOP" },
   machineEvents: [{ type: "USE_BONUS_ACTION" }]
 }
 
@@ -152,7 +152,7 @@ export function executeUncannyMetabolism(featureState: FeatureState, monkLevel: 
     d8Roll
   )
   if (!result.triggered) {
-    return { featureAction: { type: "NOTIFY_START_TURN" }, machineEvents: [] } // no-op
+    return { featureAction: { type: "NOOP" }, machineEvents: [] }
   }
   return {
     featureAction: {
@@ -231,7 +231,11 @@ export function canExecuteWholenessOfBody(featureState: FeatureState, ctx: DndCo
   return canUseWholenessOfBody(featureState.monk.wholenessOfBodyCharges, ctx.bonusActionUsed)
 }
 
-export function executeWholenessOfBody(featureState: FeatureState, martialArtsDieRoll: number, wisMod: number): BridgeResult {
+export function executeWholenessOfBody(
+  featureState: FeatureState,
+  martialArtsDieRoll: number,
+  wisMod: number
+): BridgeResult {
   if (!featureState.monk) throw new Error("executeWholenessOfBody called without monk state")
   const healAmt = Math.max(1, martialArtsDieRoll + wisMod)
   const chargesAfter = featureState.monk.wholenessOfBodyCharges - 1

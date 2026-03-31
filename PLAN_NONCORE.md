@@ -887,7 +887,7 @@ Found during Batch 1 integration validation. All fixed.
 
 Found during simplify passes. Pre-existing or low-priority — not blocking.
 
-1. **`smiteFreeUsed` missing per-turn reset** — `feature-store.ts` Paladin reducer has no `NOTIFY_START_TURN` case to reset `smiteFreeUsed`. SRD says free smite is 1/turn, but currently it locks until long rest.
+1. ~~**`smiteFreeUsed` missing per-turn reset**~~ **NOT A BUG** — SRD says free Divine Smite is 1/Long Rest ("must finish a Long Rest before you can cast it in this way again"), not 1/turn. Current behavior (reset on long rest) is correct.
 2. **Unused `rogueLevel` param** — `feature-bridge-rogue.ts:canExecuteSneakAttack` accepts `rogueLevel` but never uses it. The underlying `canSneakAttack` doesn't take level.
 3. **`NOTIFY_START_TURN` as no-op sentinel** — `feature-bridge-monk.ts` and `feature-bridge.ts` dispatch `{ type: "NOTIFY_START_TURN" }` as a no-op when no feature action is needed. Fragile if `NOTIFY_START_TURN` gains side effects.
 4. **`intimidatingPresenceDC` hardcoded to 0** — `useFeatures.ts` calls `getIntimidatingPresenceDC(0, 0)`, producing meaningless DC. Needs real `strMod`/`profBonus` from config.

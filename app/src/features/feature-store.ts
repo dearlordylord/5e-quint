@@ -28,6 +28,9 @@ export interface FeatureConfig {
   // exactly one subclass per class. No generic subclass dispatch needed.
   readonly berserkerLevel?: number
   readonly championLevel?: number
+  // Ability modifiers needed for feature DCs (e.g., Intimidating Presence = 8 + STR + prof)
+  readonly strMod?: number
+  readonly profBonus?: number
 }
 
 export interface FighterFeatureState {
@@ -127,6 +130,7 @@ export type FeatureAction =
   | { readonly type: "NOTIFY_LONG_REST" }
   | { readonly type: "NOTIFY_START_TURN" }
   | { readonly type: "NOTIFY_END_TURN" }
+  | { readonly type: "NOOP" }
   | { readonly type: "RESET" }
 
 function barbarianToRageState(b: BarbarianFeatureState): RageState {

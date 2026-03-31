@@ -322,7 +322,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     return result
   }, [])
 
-  const intimidatingDC = getIntimidatingPresenceDC(0, 0) // caller provides actual strMod/profBonus via config or UI
+  const intimidatingDC = getIntimidatingPresenceDC(config.strMod ?? 0, config.profBonus ?? 0)
 
   // Barbarian passive features
   // TODO: isIncapacitated should come from machine context when available

@@ -62,8 +62,8 @@ export function useRogueFeatures(
       readonly allyAdjacentAndNotIncapacitated: boolean
       readonly isFinesse: boolean
       readonly isRanged: boolean
-    }): boolean => isActing && canExecuteSneakAttack(featureState, level, params),
-    [featureState, level, isActing]
+    }): boolean => isActing && canExecuteSneakAttack(featureState, params),
+    [featureState, isActing]
   )
 
   const sneakAttackCb = useCallback((): BridgeResult | null => {

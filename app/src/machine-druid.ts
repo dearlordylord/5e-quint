@@ -1,7 +1,7 @@
 import { wildShapeMaxCharges } from "#/features/class-druid.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
-import { hp } from "#/types.ts"
+import { tempHp } from "#/types.ts"
 
 // -- Actions --
 
@@ -13,7 +13,7 @@ export function enterWildShapeUpdate(c: DndContext): Partial<DndContext> {
     bonusActionUsed: true,
     wildShapeCharges: c.wildShapeCharges - 1,
     inWildShape: true,
-    tempHp: hp(c.druidLevel)
+    tempHp: tempHp(c.druidLevel)
   }
 }
 

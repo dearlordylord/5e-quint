@@ -52,13 +52,13 @@ Lower combat frequency but fill MBT gaps.
 | K: Duplicate `*ExtraAttacks` | Extracted `standardExtraAttacks` in machine-helpers.ts. Barbarian/monk/ranger re-export. | **done** | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#k-duplicate-extraattacks-one-liners-across-classes) K |
 | M: `tirelessTempHp` param name | Renamed `wisMod` → `wisComponent` with JSDoc. | **done** | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#m-tirelesstempHp-parameter-name-mismatch) M |
 | C: Class state init architecture | All 12 class states init for every character (~80 unused fields). D/J lifecycle dispatch resolved; init overhead remains. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#c-all-class-states-initialize-for-all-characters) C |
-| Integration bug: smiteFreeUsed reset | Paladin feature-store missing START_TURN reset. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #1 |
-| Integration bug: intimidatingPresenceDC | Hardcoded to 0. Needs real strMod/profBonus. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #4 |
-| Integration bug: rogueLevel unused param | `canExecuteSneakAttack` accepts but doesn't use rogueLevel. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #2 |
-| Integration bug: NOTIFY_START_TURN sentinel | Fragile no-op dispatch pattern in bridge files. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #3 |
-| Integration bug: useFeatures.test.tsx jsdom | Test file fails with ERR_MODULE_NOT_FOUND. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #5 |
-| TS error: feature-bridge.test.ts(72) | `DndContext` type mismatch — test helper builds context with optional fields that `DndContext` requires as non-optional. Grows each time new required fields are added to `DndContext`. | not done | none | pre-existing |
-| TS error: machine-druid.ts(16) | HP/TempHP branded type mismatch — `enterWildShapeUpdate` returns `hp()` branded value where `tempHp()` is expected. Wrong brand applied. | not done | none | pre-existing |
+| Integration bug: smiteFreeUsed reset | NOT A BUG — SRD says free smite is 1/Long Rest, not 1/turn. Docs fixed. | **not a bug** | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #1 |
+| Integration bug: intimidatingPresenceDC | Added strMod/profBonus to FeatureConfig. useFeatures reads from config. | **done** | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #4 |
+| Integration bug: rogueLevel unused param | Removed unused `_rogueLevel` param from `canExecuteSneakAttack`. | **done** | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #2 |
+| Integration bug: NOTIFY_START_TURN sentinel | Added `NOOP` action type. Bridge no-ops use NOOP instead of abusing NOTIFY_START_TURN. | **done** | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #3 |
+| Integration bug: useFeatures.test.tsx jsdom | No longer reproduces — test passes clean. | **done** | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #5 |
+| TS error: feature-bridge.test.ts(72) | Added all missing DndContext fields to test helper. | **done** | none | pre-existing |
+| TS error: machine-druid.ts(16) | Fixed `hp()` → `tempHp()` brand. | **done** | none | pre-existing |
 
 ## Priority 5: Species Traits → Quint
 
