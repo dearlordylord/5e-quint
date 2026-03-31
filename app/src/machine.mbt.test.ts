@@ -749,6 +749,9 @@ type EventActionMap = {
   USE_ARCANE_RECOVERY: "doUseArcaneRecovery"
   USE_SNEAK_ATTACK: "doUseSneakAttack"
   USE_STEADY_AIM: "doUseSteadyAim"
+  CUNNING_ACTION_DASH: "doCunningActionDash"
+  CUNNING_ACTION_DISENGAGE: "doCunningActionDisengage"
+  CUNNING_ACTION_HIDE: "doCunningActionHide"
   USE_CLERIC_CHANNEL_DIVINITY: "doUseClericChannelDivinity"
   USE_LAY_ON_HANDS: "doUseLayOnHands"
   USE_PALADIN_CHANNEL_DIVINITY: "doUsePaladinChannelDivinity"
@@ -892,6 +895,9 @@ const driverSchema = {
   doUseArcaneRecovery: { slotLevel: ITFBigInt.optional() },
   doUseSneakAttack: {},
   doUseSteadyAim: {},
+  doCunningActionDash: {},
+  doCunningActionDisengage: {},
+  doCunningActionHide: {},
   doUseClericChannelDivinity: {},
   doUseLayOnHands: { amount: ITFBigInt.optional() },
   doUsePaladinChannelDivinity: {},
@@ -1480,6 +1486,15 @@ function createDndDriver() {
       },
       doUseSteadyAim: () => {
         send({ type: "USE_STEADY_AIM" })
+      },
+      doCunningActionDash: () => {
+        send({ type: "CUNNING_ACTION_DASH" })
+      },
+      doCunningActionDisengage: () => {
+        send({ type: "CUNNING_ACTION_DISENGAGE" })
+      },
+      doCunningActionHide: () => {
+        send({ type: "CUNNING_ACTION_HIDE" })
       },
       doUseClericChannelDivinity: () => {
         send({ type: "USE_CLERIC_CHANNEL_DIVINITY" })

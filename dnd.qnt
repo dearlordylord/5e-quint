@@ -2761,6 +2761,12 @@ module dnd {
     rogueLevel >= 3 and not(rs.steadyAimUsedThisTurn) and not(bonusActionUsed)
   }
 
+  /// Can use Cunning Action: L2+, bonus action available.
+  /// SRD L2: "you can take one of the following actions as a Bonus Action: Dash, Disengage, or Hide."
+  pure def canCunningAction(rogueLevel: int, bonusActionUsed: bool): bool = {
+    rogueLevel >= 2 and not(bonusActionUsed)
+  }
+
   // -- R2: Transitions --
 
   /// Mark Sneak Attack as used this turn.
@@ -4502,6 +4508,61 @@ module dnd {
     }
   }
 
+  /// Cunning Action: Dash as Bonus Action.
+  /// SRD L2: "Dash, Disengage, or Hide" as BA
+  action doCunningActionDash = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canCunningAction(rogueLevel, turnState.bonusActionUsed))) unchanged
+    else all {
+      state' = state,
+      turnState' = pBonusActionDash(turnState, state),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = rogueState, rogueLevel' = rogueLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
+  /// Cunning Action: Disengage as Bonus Action.
+  action doCunningActionDisengage = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canCunningAction(rogueLevel, turnState.bonusActionUsed))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState.with("bonusActionUsed", true).with("disengaged", true),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = rogueState, rogueLevel' = rogueLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
+  /// Cunning Action: Hide as Bonus Action. (Mechanical no-op in single-creature model beyond BA cost.)
+  action doCunningActionHide = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canCunningAction(rogueLevel, turnState.bonusActionUsed))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState.with("bonusActionUsed", true),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = rogueState, rogueLevel' = rogueLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   /// Use Cleric Channel Divinity: decrement charge.
   /// SRD: "You can use this class's Channel Divinity twice.
   /// You regain one of its expended uses when you finish a Short Rest,
@@ -4701,6 +4762,9 @@ module dnd {
     doUseArcaneRecovery,
     doUseSneakAttack,
     doUseSteadyAim,
+    doCunningActionDash,
+    doCunningActionDisengage,
+    doCunningActionHide,
     doUseClericChannelDivinity,
     doUseLayOnHands,
     doUsePaladinChannelDivinity,

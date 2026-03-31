@@ -1,3 +1,4 @@
+import { canUseCunningAction } from "#/features/class-rogue.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
 import { movementFeet } from "#/types.ts"
@@ -18,6 +19,26 @@ export function steadyAimUpdate(c: DndContext): Partial<DndContext> {
     effectiveSpeed: movementFeet(0),
     movementRemaining: movementFeet(0)
   }
+}
+
+// -- Cunning Action (L2+) --
+
+export function cunningActionDashUpdate(c: DndContext): Partial<DndContext> {
+  if (isIncapacitated(c) || !canUseCunningAction(c.rogueLevel, c.bonusActionUsed)) return {}
+  return {
+    bonusActionUsed: true,
+    movementRemaining: movementFeet(c.movementRemaining + c.effectiveSpeed)
+  }
+}
+
+export function cunningActionDisengageUpdate(c: DndContext): Partial<DndContext> {
+  if (isIncapacitated(c) || !canUseCunningAction(c.rogueLevel, c.bonusActionUsed)) return {}
+  return { bonusActionUsed: true, disengaged: true }
+}
+
+export function cunningActionHideUpdate(c: DndContext): Partial<DndContext> {
+  if (isIncapacitated(c) || !canUseCunningAction(c.rogueLevel, c.bonusActionUsed)) return {}
+  return { bonusActionUsed: true }
 }
 
 // -- Lifecycle --
