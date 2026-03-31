@@ -5575,6 +5575,79 @@ module dndTest {
     assert(cs2.channelDivinityCharges == 2)
   }
 
+  // -- clericChannelDivinityMax scaling --
+  // SRD: "You can use this class's Channel Divinity twice." (L2)
+  // Channel Divinity column: 2 at L2, 3 at L6, 4 at L18.
+  run test_clericCDMax_level1 = {
+    assert(clericChannelDivinityMax(1) == 0)
+  }
+
+  run test_clericCDMax_level2 = {
+    assert(clericChannelDivinityMax(2) == 2)
+  }
+
+  run test_clericCDMax_level5 = {
+    assert(clericChannelDivinityMax(5) == 2)
+  }
+
+  run test_clericCDMax_level6 = {
+    assert(clericChannelDivinityMax(6) == 3)
+  }
+
+  run test_clericCDMax_level17 = {
+    assert(clericChannelDivinityMax(17) == 3)
+  }
+
+  run test_clericCDMax_level18 = {
+    assert(clericChannelDivinityMax(18) == 4)
+  }
+
+  // -- Turn Undead + Divine Spark (Cleric CD options, L2+) --
+  // SRD: "You start with two such effects: Divine Spark and Turn Undead"
+  // Both consume one Channel Divinity charge via doUseClericChannelDivinity.
+  // Turn Undead: Frightened + Incapacitated on target (caller-managed via APPLY_CONDITION).
+  // Divine Spark: heal or damage (caller-managed via HEAL / TAKE_DAMAGE).
+  // The spec action just consumes the CD charge; effects are composed caller-side.
+
+  // Verify a L2 Cleric can use CD twice (both could be Turn Undead, Divine Spark, or mix)
+  run test_clericCD_two_uses_L2 = {
+    val cs = freshClericState(2)
+    val cs2 = pUseClericChannelDivinity(cs)
+    val cs3 = pUseClericChannelDivinity(cs2)
+    all {
+      assert(cs2.channelDivinityCharges == 1),
+      assert(cs3.channelDivinityCharges == 0),
+      assert(not(canClericChannelDivinity(cs3, 2))),
+    }
+  }
+
+  // Verify a L6 Cleric gets 3 CD uses
+  run test_clericCD_three_uses_L6 = {
+    val cs = freshClericState(6)
+    val cs2 = pUseClericChannelDivinity(cs)
+    val cs3 = pUseClericChannelDivinity(cs2)
+    val cs4 = pUseClericChannelDivinity(cs3)
+    all {
+      assert(cs.channelDivinityCharges == 3),
+      assert(cs4.channelDivinityCharges == 0),
+      assert(not(canClericChannelDivinity(cs4, 6))),
+    }
+  }
+
+  // Verify a L18 Cleric gets 4 CD uses
+  run test_clericCD_four_uses_L18 = {
+    val cs = freshClericState(18)
+    val cs2 = pUseClericChannelDivinity(cs)
+    val cs3 = pUseClericChannelDivinity(cs2)
+    val cs4 = pUseClericChannelDivinity(cs3)
+    val cs5 = pUseClericChannelDivinity(cs4)
+    all {
+      assert(cs.channelDivinityCharges == 4),
+      assert(cs5.channelDivinityCharges == 0),
+      assert(not(canClericChannelDivinity(cs5, 18))),
+    }
+  }
+
   // ===================================================================
   // Warlock tests
   // ===================================================================
