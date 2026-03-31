@@ -79,6 +79,7 @@ import {
   INITIAL_TURN_STATE,
   initialFighterState
 } from "#/machine-types.ts"
+import * as wizard from "#/machine-wizard.ts"
 import {
   type ActiveEffect,
   DEATH_SAVES_RESET,
@@ -431,9 +432,12 @@ export const dndMachine = setup({
     warlockStartTurn: assign(() => ({})),
     warlockShortRest: assign(() => ({})),
     warlockLongRest: assign(() => ({})),
-    wizardStartTurn: assign(() => ({})),
-    wizardShortRest: assign(() => ({})),
-    wizardLongRest: assign(() => ({}))
+    wizardStartTurn: assign(({ context: c }) => wizard.wizardStartTurnUpdate(c)),
+    wizardShortRest: assign(({ context: c }) => wizard.wizardShortRestUpdate(c)),
+    wizardLongRest: assign(({ context: c }) => wizard.wizardLongRestUpdate(c)),
+    useArcaneRecovery: assign(({ context: c, event: e }) =>
+      wizard.arcaneRecoveryUpdate(c, (e as Extract<DndEvent, { type: "USE_ARCANE_RECOVERY" }>).slotLevel)
+    )
   }
 }).createMachine({
   id: "dnd",
@@ -473,7 +477,8 @@ export const dndMachine = setup({
     dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
     ...barb.initialBarbarianState(i.barbarianLevel ?? 0),
     ...monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
-    ...initialClassStubs(i)
+    ...initialClassStubs(i),
+    ...wizard.initialWizardState(i.wizardLevel ?? 0)
   }),
   on: rootEventHandlers,
   states: {

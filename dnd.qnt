@@ -1802,6 +1802,14 @@ module dnd {
     else ss.with("slotsCurrent", ss.slotsCurrent.set(level, current - 1))
   }
 
+  /// Restore a regular spell slot (inverse of pExpendSlot). Capped at max.
+  pure def pRestoreSlot(ss: SpellSlotState, level: int): SpellSlotState = {
+    val current = ss.slotsCurrent.get(level)
+    val maximum = ss.slotsMax.get(level)
+    if (current >= maximum) ss
+    else ss.with("slotsCurrent", ss.slotsCurrent.set(level, current + 1))
+  }
+
   /// Expend a warlock pact slot. Returns unchanged state if no pact slots.
   pure def pExpendPactSlot(ss: SpellSlotState): SpellSlotState =
     if (ss.pactSlotsCurrent <= 0) ss
@@ -2716,6 +2724,17 @@ module dnd {
     ws.with("arcaneRecoveryUsed", false)
   }
 
+  /// Can use Arcane Recovery: L1+, not used this LR.
+  /// SRD: "When you finish a Short Rest, you can choose expended spell slots to recover."
+  pure def canArcaneRecovery(ws: WizardState, wizardLevel: int): bool = {
+    wizardLevel >= 1 and not(ws.arcaneRecoveryUsed)
+  }
+
+  /// Use Arcane Recovery: set flag. Caller handles slot restoration.
+  pure def pUseArcaneRecovery(ws: WizardState): WizardState = {
+    ws.with("arcaneRecoveryUsed", true)
+  }
+
   // ============================================================
   // 17.L MONSTER RESOURCE FUNCTIONS (Phase L)
   // ============================================================
@@ -3148,7 +3167,7 @@ module dnd {
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
     // A25: class selection — one of Fighter, Barbarian, or Monk at level l, others at 0
-    nondet pcClass = Set("Fighter", "Barbarian", "Monk").oneOf()
+    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard").oneOf()
     // D5: Wholeness of Body uses WIS mod; spec uses nondet range 1-5
     nondet wisMod = 1.to(5).oneOf()
     if (kind == Monster) {
@@ -3184,6 +3203,7 @@ module dnd {
       val fLevel = if (pcClass == "Fighter") l else 0
       val bLevel = if (pcClass == "Barbarian") l else 0
       val mLevel = if (pcClass == "Monk") l else 0
+      val wLevel = if (pcClass == "Wizard") l else 0
       // Stub: all other classes at level 0 until parallel worktree agents implement them
       all {
         creatureKind' = PC,
@@ -3193,7 +3213,7 @@ module dnd {
         barbarianLevel' = bLevel,
         monkLevel' = mLevel,
         paladinLevel' = 0, rogueLevel' = 0, clericLevel' = 0,
-        druidLevel' = 0, sorcererLevel' = 0, warlockLevel' = 0, wizardLevel' = 0,
+        druidLevel' = 0, sorcererLevel' = 0, warlockLevel' = 0, wizardLevel' = wLevel,
         state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
         fighterState' = freshFighterState(fLevel),
         barbarianState' = freshBarbarianState(bLevel),
@@ -3204,7 +3224,7 @@ module dnd {
         druidState' = freshDruidState(0),
         sorcererState' = freshSorcererState(0),
         warlockState' = freshWarlockState(0),
-        wizardState' = freshWizardState(0),
+        wizardState' = freshWizardState(wLevel),
         turnState' = FRESH_TURN,
         spellSlots' = FRESH_SPELL_SLOTS,
         turnPhase' = "outOfCombat",
@@ -4072,9 +4092,35 @@ module dnd {
     }
   }
 
+  // -- 19.6w Wizard Actions --
+
+  /// Arcane Recovery: restore a spell slot. Once per LR.
+  /// SRD: "choose expended spell slots to recover... combined level no more than
+  /// half your Wizard level (round up), and none of the slots can be level 6 or higher."
+  /// Simplified: nondet picks one slot level (1-5) — caller ensures total <= max.
+  action doUseArcaneRecovery = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canArcaneRecovery(wizardState, wizardLevel))) unchanged
+    else {
+      nondet slotLevel = 1.to(5).oneOf()
+      val ss1 = pRestoreSlot(spellSlots, slotLevel)
+      all {
+        state' = state,
+        turnState' = turnState,
+        spellSlots' = ss1,
+        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel,
+        wizardState' = pUseArcaneRecovery(wizardState), wizardLevel' = wizardLevel,
+      }
+    }
+  }
+
   // -- 19.7 Step Action --
 
-  /// PC-only actions: fighter features, barbarian features, monk features, death saves, PC damage variants
+  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, death saves, PC damage variants
   action stepPC = any {
     doTakeDamage,
     doTakeDamageWithMods,
@@ -4102,6 +4148,7 @@ module dnd {
     doStunningStrike,
     doWholenessOfBody,
     doUncannyMetabolism,
+    doUseArcaneRecovery,
   }
 
   // -- 19.6e Monster Resource Actions (Phase L) --

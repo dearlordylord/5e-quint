@@ -742,6 +742,7 @@ type EventActionMap = {
   STUNNING_STRIKE: "doStunningStrike"
   WHOLENESS_OF_BODY: "doWholenessOfBody"
   UNCANNY_METABOLISM: "doUncannyMetabolism"
+  USE_ARCANE_RECOVERY: "doUseArcaneRecovery"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -871,6 +872,7 @@ const driverSchema = {
   doStunningStrike: {},
   doWholenessOfBody: { healRoll: ITFBigInt.optional() },
   doUncannyMetabolism: { healRoll: ITFBigInt.optional() },
+  doUseArcaneRecovery: { slotLevel: ITFBigInt.optional() },
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1044,6 +1046,7 @@ function createDndDriver() {
           const fLevel = cls === "Fighter" ? level : 0
           const bLevel = cls === "Barbarian" ? level : 0
           const mLevel = cls === "Monk" ? level : 0
+          const wLevel = cls === "Wizard" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1061,7 +1064,7 @@ function createDndDriver() {
               druidLevel: 0,
               sorcererLevel: 0,
               warlockLevel: 0,
-              wizardLevel: 0,
+              wizardLevel: wLevel,
               creatureKind: "PC"
             }
           })
@@ -1432,6 +1435,9 @@ function createDndDriver() {
       },
       doUncannyMetabolism: ({ healRoll }) => {
         if (healRoll != null) send({ type: "UNCANNY_METABOLISM", healRoll: Number(healRoll) })
+      },
+      doUseArcaneRecovery: ({ slotLevel }) => {
+        if (slotLevel != null) send({ type: "USE_ARCANE_RECOVERY", slotLevel: Number(slotLevel) })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

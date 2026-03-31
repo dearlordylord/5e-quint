@@ -4862,4 +4862,91 @@ module dndTest {
     })
   }
 
+  // ============================================================
+  // Wizard: Pure Functions
+  // ============================================================
+
+  run test_freshWizardState = {
+    val ws = freshWizardState(3)
+    assert(ws.arcaneRecoveryUsed == false)
+  }
+
+  run test_canArcaneRecovery_fresh = {
+    val ws = freshWizardState(3)
+    assert(canArcaneRecovery(ws, 3))
+  }
+
+  run test_canArcaneRecovery_used = {
+    val ws = freshWizardState(3).with("arcaneRecoveryUsed", true)
+    assert(not(canArcaneRecovery(ws, 3)))
+  }
+
+  run test_canArcaneRecovery_level0 = {
+    val ws = freshWizardState(0)
+    assert(not(canArcaneRecovery(ws, 0)))
+  }
+
+  run test_pUseArcaneRecovery = {
+    val ws = freshWizardState(3)
+    val ws2 = pUseArcaneRecovery(ws)
+    assert(ws2.arcaneRecoveryUsed == true)
+  }
+
+  run test_pRestoreSlot = {
+    val ss = FRESH_SPELL_SLOTS
+      .with("slotsMax", Map(1 -> 4, 2 -> 3, 3 -> 2, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0))
+      .with("slotsCurrent", Map(1 -> 2, 2 -> 1, 3 -> 2, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0))
+    val ss2 = pRestoreSlot(ss, 1)
+    all {
+      assert(ss2.slotsCurrent.get(1) == 3),
+      assert(ss2.slotsCurrent.get(2) == 1),
+    }
+  }
+
+  run test_pRestoreSlot_at_max = {
+    val ss = FRESH_SPELL_SLOTS
+      .with("slotsMax", Map(1 -> 4, 2 -> 3, 3 -> 2, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0))
+      .with("slotsCurrent", Map(1 -> 4, 2 -> 1, 3 -> 2, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0))
+    val ss2 = pRestoreSlot(ss, 1)
+    assert(ss2.slotsCurrent.get(1) == 4) // unchanged, already at max
+  }
+
+  run test_pWizardLongRest = {
+    val ws = freshWizardState(3).with("arcaneRecoveryUsed", true)
+    val ws2 = pWizardLongRest(ws)
+    assert(ws2.arcaneRecoveryUsed == false)
+  }
+
+  // ============================================================
+  // Wizard: Trace Tests
+  // ============================================================
+
+  /// Trace: arcane recovery restores a slot and sets flag
+  run test_trace_arcaneRecovery = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState,
+        spellSlots' = FRESH_SPELL_SLOTS
+          .with("slotsMax", Map(1 -> 4, 2 -> 3, 3 -> 2, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0))
+          .with("slotsCurrent", Map(1 -> 2, 2 -> 1, 3 -> 0, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0)),
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0,
+        wizardState' = freshWizardState(5), wizardLevel' = 5,
+      }
+    ).then(doUseArcaneRecovery)
+    .then(all {
+      assert(wizardState.arcaneRecoveryUsed == true),
+      // At least one slot level should have been restored (nondet picks 1-5)
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
 }
