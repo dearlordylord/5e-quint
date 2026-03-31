@@ -426,6 +426,7 @@ module dnd {
 
   type WizardState = {
     arcaneRecoveryUsed: bool,
+    overchannelUsesThisLR: int,
   }
 
   type UnarmoredDefense = NoUnarmoredDefense | BarbarianUD | MonkUD
@@ -3071,12 +3072,12 @@ module dnd {
 
   // -- Wizard --
   pure def freshWizardState(wizardLevel: int): WizardState = {
-    { arcaneRecoveryUsed: false }
+    { arcaneRecoveryUsed: false, overchannelUsesThisLR: 0 }
   }
   pure def pWizardStartTurn(ws: WizardState): WizardState = ws
   pure def pWizardShortRest(ws: WizardState): WizardState = ws
   pure def pWizardLongRest(ws: WizardState): WizardState = {
-    ws.with("arcaneRecoveryUsed", false)
+    ws.with("arcaneRecoveryUsed", false).with("overchannelUsesThisLR", 0)
   }
 
   /// Can use Arcane Recovery: L1+, not used this LR.
@@ -3088,6 +3089,20 @@ module dnd {
   /// Use Arcane Recovery: set flag. Caller handles slot restoration.
   pure def pUseArcaneRecovery(ws: WizardState): WizardState = {
     ws.with("arcaneRecoveryUsed", true)
+  }
+
+  /// Overchannel guard: L14+.
+  /// SRD: "When you cast a Wizard spell with a spell slot of levels 1–5
+  /// that deals damage, you can deal maximum damage with that spell on
+  /// the turn you cast it."
+  /// Slot level and damage maximization are caller-managed.
+  pure def canOverchannel(ws: WizardState, wizardLevel: int): bool = {
+    wizardLevel >= 14
+  }
+
+  /// Overchannel transition: increment uses counter.
+  pure def pOverchannel(ws: WizardState): WizardState = {
+    ws.with("overchannelUsesThisLR", ws.overchannelUsesThisLR + 1)
   }
 
   // ============================================================
@@ -4533,6 +4548,26 @@ module dnd {
     }
   }
 
+  /// Overchannel: max damage on L1-5 wizard spell. First free, then escalating necrotic.
+  /// SRD L14: "When you cast a Wizard spell with a spell slot of levels 1–5 that
+  /// deals damage, you can deal maximum damage with that spell on the turn you cast it."
+  /// Self-damage and slot level are caller-managed.
+  action doOverchannel = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canOverchannel(wizardState, wizardLevel))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel,
+      wizardState' = pOverchannel(wizardState), wizardLevel' = wizardLevel,
+    }
+  }
+
   // -- 19.6d Paladin Actions (Phase P) --
 
   /// Lay on Hands: heal amount from pool. Bonus Action.
@@ -4989,6 +5024,7 @@ module dnd {
     doWholenessOfBody,
     doUncannyMetabolism,
     doUseArcaneRecovery,
+    doOverchannel,
     doUseSneakAttack,
     doUseSteadyAim,
     doCunningActionDash,

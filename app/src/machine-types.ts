@@ -196,6 +196,7 @@ export interface DndContext {
   readonly eldritchSmiteUsedThisTurn: boolean
   readonly wizardLevel: number
   readonly arcaneRecoveryUsed: boolean
+  readonly overchannelUsesThisLR: number
 }
 
 // --- Events ---
@@ -367,6 +368,7 @@ export type DndEvent =
   | { readonly type: "UNCANNY_METABOLISM"; readonly healRoll: number }
   // Phase W: Wizard events
   | { readonly type: "USE_ARCANE_RECOVERY"; readonly slotLevel: number }
+  | { readonly type: "USE_OVERCHANNEL" }
   // Phase R: Rogue events
   | { readonly type: "USE_SNEAK_ATTACK" }
   | { readonly type: "USE_STEADY_AIM" }
