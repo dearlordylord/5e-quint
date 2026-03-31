@@ -29,8 +29,8 @@ Lower combat frequency but fill MBT gaps.
 |------|-------------|--------|------|--------|
 | Uncanny Dodge → Quint | Rogue reaction: consume reaction (halving caller-managed). First reaction pattern. | **done** | T32 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T32 |
 | Cunning Strike → Quint | L5+ mark action, int count (max 1 at L5, 2 at L11+). Effect details caller-managed. | **done** | T30 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T30 |
-| Wild Resurgence → Quint | Druid L5+: slot for WS charge, or WS charge for slot. | not done | T100 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#druid) T100 |
-| Turn Undead / Divine Spark → Quint | Cleric CD options. | not done | T90 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#cleric) T90 |
+| Wild Resurgence → Quint | Druid L5+: slot→charge + charge→L1 slot (1/LR). Two actions. | **done** | T100 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#druid) T100 |
+| Turn Undead / Divine Spark → Quint | Both use existing CD charge action. Effects caller-managed. | **done** | T90 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#cleric) T90 |
 | Abjure Foes / Sacred Weapon → Quint | Paladin CD options. | not done | T63 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#paladin) T63 |
 | Overchannel → Quint | Wizard L14+: uses counter, LR reset. Damage caller-managed. | **done** | T131 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#wizard) T131 |
 | Eldritch Smite → Quint | Warlock L5+: pact slot expenditure + once/turn flag. | **done** | T121 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#warlock) T121 |
@@ -92,11 +92,11 @@ d20 resolution, conditions, exhaustion, action economy, damage/healing/temp HP, 
 | Monk | Focus Pool, Flurry/Patient Defense/Step of Wind, Stunning Strike, Wholeness of Body, Uncanny Metabolism | machine-monk.ts |
 | Wizard | Arcane Recovery, Overchannel | machine-wizard.ts |
 | Rogue | Sneak Attack, Steady Aim, Cunning Action, Uncanny Dodge, Cunning Strike | machine-rogue.ts |
-| Cleric | Channel Divinity (L2/L6/L18 scaling, SR+1) | machine-cleric.ts |
+| Cleric | Channel Divinity (Turn Undead / Divine Spark via CD charge) | machine-cleric.ts |
 | Paladin | Lay on Hands, Channel Divinity, Divine Smite (slot + free 1/LR, BA cost) | machine-paladin.ts |
 | Warlock | Magical Cunning, Mystic Arcanum, Eldritch Smite | machine-warlock.ts |
 | Sorcerer | Font of Magic, Innate Sorcery (10-round duration, 2/LR + Incarnate), Sorcerous Restoration (L5+ SR) | machine-sorcerer.ts |
-| Druid | Wild Shape enter/exit (L2/L6/L17 scaling, SR+1) | machine-druid.ts |
+| Druid | Wild Shape enter/exit, Wild Resurgence (slot↔charge) | machine-druid.ts |
 
 ### TS Feature Files (all classes + shared)
 All 12 SRD classes have complete TS pure function implementations in `app/src/features/class-*.ts`. Species traits, weapon mastery, feats, and ~200 spells also implemented.
