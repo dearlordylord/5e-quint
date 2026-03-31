@@ -418,6 +418,8 @@ module dnd {
     innateSorceryActive: bool,
     innateSorceryCharges: int,
     innateSorceryTurnsRemaining: int,
+    metamagicUsedThisCast: Set[str],
+    apotheosisUsedThisTurn: bool,
   }
 
   type WarlockState = {
@@ -2975,18 +2977,22 @@ module dnd {
       innateSorceryActive: false,
       innateSorceryCharges: 2,
       innateSorceryTurnsRemaining: 0,
+      metamagicUsedThisCast: Set(),
+      apotheosisUsedThisTurn: false,
     }
   }
 
   /// Sorcerer start of turn: decrement Innate Sorcery duration, deactivate at 0.
+  /// Also resets metamagic tracking (per-cast set + Apotheosis flag).
   pure def pSorcererStartTurn(ss: SorcererState): SorcererState = {
-    if (ss.innateSorceryActive and ss.innateSorceryTurnsRemaining > 0) {
-      val remaining = ss.innateSorceryTurnsRemaining - 1
+    val ss1 = ss.with("metamagicUsedThisCast", Set()).with("apotheosisUsedThisTurn", false)
+    if (ss1.innateSorceryActive and ss1.innateSorceryTurnsRemaining > 0) {
+      val remaining = ss1.innateSorceryTurnsRemaining - 1
       if (remaining == 0)
-        ss.with("innateSorceryTurnsRemaining", 0).with("innateSorceryActive", false)
+        ss1.with("innateSorceryTurnsRemaining", 0).with("innateSorceryActive", false)
       else
-        ss.with("innateSorceryTurnsRemaining", remaining)
-    } else ss
+        ss1.with("innateSorceryTurnsRemaining", remaining)
+    } else ss1
   }
 
   /// Sorcerer short rest: Sorcerous Restoration (L5+, 1/LR).
@@ -3006,6 +3012,8 @@ module dnd {
       .with("innateSorceryActive", false)
       .with("innateSorceryCharges", 2)
       .with("innateSorceryTurnsRemaining", 0)
+      .with("metamagicUsedThisCast", Set())
+      .with("apotheosisUsedThisTurn", false)
   }
 
   // -- S1: Sorcerer Guards --
@@ -3058,6 +3066,68 @@ module dnd {
     else
       // Sorcery Incarnate (L7+): spend 2 SP
       base.with("sorceryPoints", ss.sorceryPoints - 2)
+  }
+
+  // -- S3: Metamagic (Level 2+) --
+
+  /// All 10 Metamagic options.
+  pure val METAMAGIC_OPTIONS: Set[str] = Set("careful", "distant", "empowered", "extended", "heightened", "quickened", "seeking", "subtle", "transmuted", "twinned")
+
+  /// Options that can stack with another option on the same spell.
+  /// SRD: Empowered Spell and Seeking Spell "even if you've already used a different Metamagic option".
+  pure val STACKABLE_METAMAGIC: Set[str] = Set("empowered", "seeking")
+
+  /// SP cost for a given Metamagic option: 2 for heightened/quickened, 1 for rest.
+  pure def metamagicCost(option: str): int = {
+    if (option == "heightened" or option == "quickened") 2 else 1
+  }
+
+  /// Whether a Metamagic option bypasses the one-option-per-spell stacking limit.
+  pure def canStackWith(option: str): bool = {
+    STACKABLE_METAMAGIC.contains(option)
+  }
+
+  /// Maximum non-stackable Metamagic options allowed per spell.
+  /// SRD L2: 1 per spell. L7 Sorcery Incarnate: 2 when Innate Sorcery active.
+  pure def maxMetamagicOptions(ss: SorcererState, sorcererLevel: int): int = {
+    if (ss.innateSorceryActive and sorcererLevel >= 7) 2 else 1
+  }
+
+  /// Count of non-stackable options already used on the current spell.
+  pure def nonStackableCount(ss: SorcererState): int = {
+    ss.metamagicUsedThisCast.filter(o => not(canStackWith(o))).size()
+  }
+
+  /// Can the sorcerer use a given Metamagic option right now?
+  /// Guards: L2+, option is valid, SP sufficient (unless Apotheosis free),
+  /// stacking limit respected, Quickened requires BA free and no L1+ action spell cast.
+  pure def canUseMetamagic(ss: SorcererState, sorcererLevel: int, option: str,
+      bonusActionUsed: bool, nonCantripActionSpellCast: bool): bool = {
+    if (sorcererLevel < 2) false
+    else if (not(METAMAGIC_OPTIONS.contains(option))) false
+    else if (ss.metamagicUsedThisCast.contains(option)) false  // can't use same option twice
+    else {
+      val withinLimit = if (canStackWith(option)) true
+        else nonStackableCount(ss) < maxMetamagicOptions(ss, sorcererLevel)
+      if (not(withinLimit)) false
+      // SRD line 187: "can't modify a spell in this way if you've already cast a
+      // level 1+ spell on the current turn" + BA must be free
+      else if (option == "quickened" and (bonusActionUsed or nonCantripActionSpellCast)) false
+      // Arcane Apotheosis (L20): 1 free metamagic per turn while Innate Sorcery active
+      else if (ss.innateSorceryActive and sorcererLevel >= 20 and not(ss.apotheosisUsedThisTurn))
+        true  // free use — SP check not needed
+      else canSpendSorceryPoints(ss, metamagicCost(option))
+    }
+  }
+
+  /// Apply a Metamagic option: spend SP (or mark Apotheosis free use), add to set.
+  pure def pUseMetamagic(ss: SorcererState, sorcererLevel: int, option: str): SorcererState = {
+    val ss1 = ss.with("metamagicUsedThisCast", ss.metamagicUsedThisCast.union(Set(option)))
+    // Arcane Apotheosis (L20): free once per turn while Innate Sorcery active
+    if (ss1.innateSorceryActive and sorcererLevel >= 20 and not(ss.apotheosisUsedThisTurn))
+      ss1.with("apotheosisUsedThisTurn", true)
+    else
+      pSpendSorceryPoints(ss1, metamagicCost(option))
   }
 
   // -- Warlock --
@@ -5002,6 +5072,36 @@ module dnd {
     }
   }
 
+  /// Metamagic: apply a Metamagic option to a spell being cast.
+  /// SRD L2: "you can alter your spells to suit your needs"
+  /// One non-stackable option per spell (Empowered/Seeking bypass).
+  /// L7 Sorcery Incarnate: up to 2 non-stackable when Innate Sorcery active.
+  /// L20 Arcane Apotheosis: 1 free (no SP) per turn when Innate Sorcery active.
+  action doUseMetamagic = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or sorcererLevel < 2) unchanged
+    else {
+      nondet option = METAMAGIC_OPTIONS.oneOf()
+      if (not(canUseMetamagic(sorcererState, sorcererLevel, option, turnState.bonusActionUsed, turnState.nonCantripActionSpellCast))) unchanged
+      else {
+        val ss1 = pUseMetamagic(sorcererState, sorcererLevel, option)
+        val ts1 = if (option == "quickened") turnState.with("bonusActionUsed", true) else turnState
+        all {
+          state' = state,
+          turnState' = ts1,
+          spellSlots' = spellSlots,
+          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+          monsterResourceState' = monsterResourceState,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
+          sorcererState' = ss1, sorcererLevel' = sorcererLevel,
+          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        }
+      }
+    }
+  }
+
   // -- 19.6dr Druid Actions (Phase DR) --
 
   /// Enter Wild Shape: BA, expend charge, grant temp HP = druid level.
@@ -5147,6 +5247,7 @@ module dnd {
     doConvertSlotToPoints,
     doConvertPointsToSlot,
     doUseInnateSorcery,
+    doUseMetamagic,
     doEnterWildShape,
     doExitWildShape,
     doWildResurgenceCharge,

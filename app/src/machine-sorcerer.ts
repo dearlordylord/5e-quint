@@ -1,9 +1,13 @@
 import {
   canUseInnateSorcery,
+  canUseMetamagic,
+  METAMAGIC_OPTIONS,
+  type MetamagicOption,
   slotCreationCost,
   sorcererLongRest as tsSorcererLongRest,
   sorceryPointsMax,
-  useInnateSorcery as tsUseInnateSorcery
+  useInnateSorcery as tsUseInnateSorcery,
+  useMetamagic as tsUseMetamagic
 } from "#/features/class-sorcerer.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
@@ -58,12 +62,16 @@ const INNATE_SORCERY_DURATION = 10
 
 export function sorcererStartTurnUpdate(c: DndContext): Partial<DndContext> {
   if (c.sorcererLevel === 0) return {}
+  const metamagicReset: Partial<DndContext> = {
+    metamagicUsedThisCast: new Set<string>(),
+    apotheosisUsedThisTurn: false
+  }
   if (c.innateSorceryActive && c.innateSorceryTurnsRemaining > 0) {
     const remaining = c.innateSorceryTurnsRemaining - 1
-    if (remaining === 0) return { innateSorceryTurnsRemaining: 0, innateSorceryActive: false }
-    return { innateSorceryTurnsRemaining: remaining }
+    if (remaining === 0) return { ...metamagicReset, innateSorceryTurnsRemaining: 0, innateSorceryActive: false }
+    return { ...metamagicReset, innateSorceryTurnsRemaining: remaining }
   }
-  return {}
+  return metamagicReset
 }
 
 export function sorcererShortRestUpdate(c: DndContext): Partial<DndContext> {
@@ -90,7 +98,9 @@ export function sorcererLongRestUpdate(c: DndContext): Partial<DndContext> {
     innateSorceryActive: result.innateSorceryActive,
     innateSorceryCharges: result.innateSorceryCharges,
     innateSorceryTurnsRemaining: 0,
-    sorcerousRestorationUsed: false
+    sorcerousRestorationUsed: false,
+    metamagicUsedThisCast: new Set<string>(),
+    apotheosisUsedThisTurn: false
   }
 }
 
@@ -116,6 +126,30 @@ export function innateSorceryUpdate(c: DndContext): Partial<DndContext> {
   }
 }
 
+// -- Metamagic --
+
+export function useMetamagicUpdate(c: DndContext, option: string): Partial<DndContext> {
+  if (isIncapacitated(c)) return {}
+  if (!METAMAGIC_OPTIONS.includes(option as MetamagicOption)) return {}
+  const state = {
+    sorcererLevel: c.sorcererLevel,
+    sorceryPoints: c.sorceryPoints,
+    bonusActionUsed: c.bonusActionUsed,
+    nonCantripActionSpellCast: c.nonCantripActionSpellCast,
+    metamagicUsedThisCast: c.metamagicUsedThisCast,
+    apotheosisUsedThisTurn: c.apotheosisUsedThisTurn,
+    innateSorceryActive: c.innateSorceryActive
+  }
+  if (!canUseMetamagic(state, option as MetamagicOption)) return {}
+  const result = tsUseMetamagic(state, option as MetamagicOption)
+  return {
+    sorceryPoints: result.sorceryPoints,
+    metamagicUsedThisCast: result.metamagicUsedThisCast,
+    apotheosisUsedThisTurn: result.apotheosisUsedThisTurn,
+    bonusActionUsed: result.bonusActionUsed
+  }
+}
+
 // -- Init --
 
 export function initialSorcererState(sorcererLevel: number) {
@@ -127,6 +161,8 @@ export function initialSorcererState(sorcererLevel: number) {
     sorcerousRestorationUsed: false,
     innateSorceryActive: false,
     innateSorceryCharges: 2,
-    innateSorceryTurnsRemaining: 0
+    innateSorceryTurnsRemaining: 0,
+    metamagicUsedThisCast: new Set<string>(),
+    apotheosisUsedThisTurn: false
   }
 }

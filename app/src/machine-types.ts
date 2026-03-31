@@ -192,6 +192,8 @@ export interface DndContext {
   readonly innateSorceryActive: boolean
   readonly innateSorceryCharges: number
   readonly innateSorceryTurnsRemaining: number
+  readonly metamagicUsedThisCast: ReadonlySet<string>
+  readonly apotheosisUsedThisTurn: boolean
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>
   readonly magicalCunningUsed: boolean
@@ -389,6 +391,7 @@ export type DndEvent =
   | { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: number }
   | { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: number }
   | { readonly type: "USE_INNATE_SORCERY" }
+  | { readonly type: "USE_METAMAGIC"; readonly option: string }
   // Phase DR: Druid events
   | { readonly type: "ENTER_WILD_SHAPE" }
   | { readonly type: "EXIT_WILD_SHAPE" }

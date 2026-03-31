@@ -6307,4 +6307,191 @@ module dndTest {
     }
   }
 
+  // ============================================================
+  // Sorcerer: Metamagic
+  // ============================================================
+
+  // -- metamagicCost --
+  run test_metamagicCost_heightened = assert(metamagicCost("heightened") == 2)
+  run test_metamagicCost_quickened = assert(metamagicCost("quickened") == 2)
+  run test_metamagicCost_careful = assert(metamagicCost("careful") == 1)
+  run test_metamagicCost_distant = assert(metamagicCost("distant") == 1)
+  run test_metamagicCost_empowered = assert(metamagicCost("empowered") == 1)
+  run test_metamagicCost_extended = assert(metamagicCost("extended") == 1)
+  run test_metamagicCost_seeking = assert(metamagicCost("seeking") == 1)
+  run test_metamagicCost_subtle = assert(metamagicCost("subtle") == 1)
+  run test_metamagicCost_transmuted = assert(metamagicCost("transmuted") == 1)
+  run test_metamagicCost_twinned = assert(metamagicCost("twinned") == 1)
+
+  // -- canStackWith --
+  run test_canStackWith_empowered = assert(canStackWith("empowered"))
+  run test_canStackWith_seeking = assert(canStackWith("seeking"))
+  run test_canStackWith_careful = assert(not(canStackWith("careful")))
+  run test_canStackWith_quickened = assert(not(canStackWith("quickened")))
+
+  // -- canUseMetamagic: level gate --
+  run test_canUseMetamagic_L1_blocked = {
+    val ss = freshSorcererState(1)
+    assert(not(canUseMetamagic(ss, 1, "subtle", false, false)))
+  }
+
+  run test_canUseMetamagic_L2_allowed = {
+    val ss = freshSorcererState(2)
+    assert(canUseMetamagic(ss, 2, "subtle", false, false))
+  }
+
+  // -- canUseMetamagic: SP insufficient --
+  run test_canUseMetamagic_notEnoughSP = {
+    val ss = freshSorcererState(2).with("sorceryPoints", 0)
+    assert(not(canUseMetamagic(ss, 2, "subtle", false, false)))
+  }
+
+  run test_canUseMetamagic_notEnoughSP_heightened = {
+    val ss = freshSorcererState(2).with("sorceryPoints", 1)
+    assert(not(canUseMetamagic(ss, 2, "heightened", false, false)))
+  }
+
+  // -- canUseMetamagic: stacking --
+  run test_canUseMetamagic_nonStackable_blocks_second = {
+    val ss = freshSorcererState(5).with("metamagicUsedThisCast", Set("subtle"))
+    assert(not(canUseMetamagic(ss, 5, "heightened", false, false)))
+  }
+
+  run test_canUseMetamagic_empowered_stacks_with_nonStackable = {
+    val ss = freshSorcererState(5).with("metamagicUsedThisCast", Set("quickened"))
+    assert(canUseMetamagic(ss, 5, "empowered", false, false))
+  }
+
+  run test_canUseMetamagic_seeking_stacks_with_nonStackable = {
+    val ss = freshSorcererState(5).with("metamagicUsedThisCast", Set("subtle"))
+    assert(canUseMetamagic(ss, 5, "seeking", false, false))
+  }
+
+  run test_canUseMetamagic_duplicate_option_blocked = {
+    val ss = freshSorcererState(5).with("metamagicUsedThisCast", Set("empowered"))
+    assert(not(canUseMetamagic(ss, 5, "empowered", false, false)))
+  }
+
+  // -- Sorcery Incarnate (L7): 2 non-stackable when Innate Sorcery active --
+  run test_canUseMetamagic_incarnate_allows_two = {
+    val ss = freshSorcererState(7)
+      .with("innateSorceryActive", true)
+      .with("metamagicUsedThisCast", Set("subtle"))
+    assert(canUseMetamagic(ss, 7, "heightened", false, false))
+  }
+
+  run test_canUseMetamagic_incarnate_blocks_third = {
+    val ss = freshSorcererState(7)
+      .with("innateSorceryActive", true)
+      .with("metamagicUsedThisCast", Set("subtle", "heightened"))
+    assert(not(canUseMetamagic(ss, 7, "twinned", false, false)))
+  }
+
+  run test_canUseMetamagic_incarnate_inactive_no_bonus = {
+    val ss = freshSorcererState(7).with("metamagicUsedThisCast", Set("subtle"))
+    assert(not(canUseMetamagic(ss, 7, "heightened", false, false)))
+  }
+
+  // -- Arcane Apotheosis (L20): 1 free per turn --
+  run test_canUseMetamagic_apotheosis_free = {
+    val ss = freshSorcererState(20)
+      .with("innateSorceryActive", true)
+      .with("sorceryPoints", 0)
+    assert(canUseMetamagic(ss, 20, "subtle", false, false))
+  }
+
+  run test_canUseMetamagic_apotheosis_only_once = {
+    val ss = freshSorcererState(20)
+      .with("innateSorceryActive", true)
+      .with("sorceryPoints", 0)
+      .with("apotheosisUsedThisTurn", true)
+    assert(not(canUseMetamagic(ss, 20, "subtle", false, false)))
+  }
+
+  // -- pUseMetamagic: SP spending --
+  run test_pUseMetamagic_spends_SP = {
+    val ss = freshSorcererState(5)
+    val ss2 = pUseMetamagic(ss, 5, "subtle")
+    all {
+      assert(ss2.sorceryPoints == 4),
+      assert(ss2.metamagicUsedThisCast == Set("subtle")),
+    }
+  }
+
+  run test_pUseMetamagic_heightened_spends_2 = {
+    val ss = freshSorcererState(5)
+    val ss2 = pUseMetamagic(ss, 5, "heightened")
+    assert(ss2.sorceryPoints == 3)
+  }
+
+  // -- pUseMetamagic: Apotheosis free --
+  run test_pUseMetamagic_apotheosis_free_no_SP = {
+    val ss = freshSorcererState(20)
+      .with("innateSorceryActive", true)
+    val ss2 = pUseMetamagic(ss, 20, "subtle")
+    all {
+      assert(ss2.sorceryPoints == 20),  // no SP spent
+      assert(ss2.apotheosisUsedThisTurn),
+      assert(ss2.metamagicUsedThisCast == Set("subtle")),
+    }
+  }
+
+  run test_pUseMetamagic_apotheosis_second_costs_SP = {
+    val ss = freshSorcererState(20)
+      .with("innateSorceryActive", true)
+      .with("apotheosisUsedThisTurn", true)
+    val ss2 = pUseMetamagic(ss, 20, "subtle")
+    all {
+      assert(ss2.sorceryPoints == 19),  // SP spent for 2nd use
+      assert(ss2.metamagicUsedThisCast == Set("subtle")),
+    }
+  }
+
+  // -- Quickened: sets bonusActionUsed (tested via action) --
+  run test_canUseMetamagic_quickened_ba_blocked = {
+    val ss = freshSorcererState(5)
+    assert(not(canUseMetamagic(ss, 5, "quickened", true, false)))
+  }
+
+  run test_canUseMetamagic_quickened_ba_free = {
+    val ss = freshSorcererState(5)
+    assert(canUseMetamagic(ss, 5, "quickened", false, false))
+  }
+
+  // SRD line 187: "can't modify a spell in this way if you've already cast a level 1+ spell"
+  run test_canUseMetamagic_quickened_blocked_after_L1_action_spell = {
+    val ss = freshSorcererState(5)
+    assert(not(canUseMetamagic(ss, 5, "quickened", false, true)))
+  }
+
+  // Non-Quickened options are not affected by prior L1+ action spells
+  run test_canUseMetamagic_subtle_allowed_after_L1_action_spell = {
+    val ss = freshSorcererState(5)
+    assert(canUseMetamagic(ss, 5, "subtle", false, true))
+  }
+
+  // -- Start-turn resets metamagic tracking --
+  run test_startTurn_resets_metamagic = {
+    val ss = freshSorcererState(5)
+      .with("metamagicUsedThisCast", Set("subtle", "empowered"))
+      .with("apotheosisUsedThisTurn", true)
+    val ss2 = pSorcererStartTurn(ss)
+    all {
+      assert(ss2.metamagicUsedThisCast == Set()),
+      assert(not(ss2.apotheosisUsedThisTurn)),
+    }
+  }
+
+  // -- Long rest resets metamagic tracking --
+  run test_longRest_resets_metamagic = {
+    val ss = freshSorcererState(5)
+      .with("metamagicUsedThisCast", Set("subtle"))
+      .with("apotheosisUsedThisTurn", true)
+    val ss2 = pSorcererLongRest(ss)
+    all {
+      assert(ss2.metamagicUsedThisCast == Set()),
+      assert(not(ss2.apotheosisUsedThisTurn)),
+    }
+  }
+
 }

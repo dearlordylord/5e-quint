@@ -280,7 +280,13 @@ const QuintSorcererState = z.object({
   sorcerousRestorationUsed: z.boolean(),
   innateSorceryActive: z.boolean(),
   innateSorceryCharges: z.bigint(),
-  innateSorceryTurnsRemaining: z.bigint()
+  innateSorceryTurnsRemaining: z.bigint(),
+  metamagicUsedThisCast: z.any().transform((raw: unknown) => {
+    if (raw instanceof Set) return raw as Set<string>
+    if (Array.isArray(raw)) return new Set(raw.map(String))
+    return new Set<string>()
+  }),
+  apotheosisUsedThisTurn: z.boolean()
 })
 const QuintWarlockState = z.object({
   mysticArcanumUsed: z.any().transform((raw: unknown) => {
@@ -450,6 +456,8 @@ interface NormalizedState {
   readonly innateSorceryActive: boolean
   readonly innateSorceryCharges: number
   readonly innateSorceryTurnsRemaining: number
+  readonly metamagicUsedThisCast: ReadonlySet<string>
+  readonly apotheosisUsedThisTurn: boolean
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>
   readonly magicalCunningUsed: boolean
@@ -581,6 +589,8 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     innateSorceryActive: c.innateSorceryActive,
     innateSorceryCharges: c.innateSorceryCharges,
     innateSorceryTurnsRemaining: c.innateSorceryTurnsRemaining,
+    metamagicUsedThisCast: c.metamagicUsedThisCast,
+    apotheosisUsedThisTurn: c.apotheosisUsedThisTurn,
     warlockLevel: c.warlockLevel,
     mysticArcanumUsed: c.mysticArcanumUsed,
     magicalCunningUsed: c.magicalCunningUsed,
@@ -700,6 +710,8 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     innateSorceryActive: raw.sorcererState.innateSorceryActive,
     innateSorceryCharges: Number(raw.sorcererState.innateSorceryCharges),
     innateSorceryTurnsRemaining: Number(raw.sorcererState.innateSorceryTurnsRemaining),
+    metamagicUsedThisCast: raw.sorcererState.metamagicUsedThisCast,
+    apotheosisUsedThisTurn: raw.sorcererState.apotheosisUsedThisTurn,
     warlockLevel: Number(raw.warlockLevel),
     mysticArcanumUsed: raw.warlockState.mysticArcanumUsed,
     magicalCunningUsed: raw.warlockState.magicalCunningUsed,
@@ -804,6 +816,7 @@ type EventActionMap = {
   CONVERT_SLOT_TO_POINTS: "doConvertSlotToPoints"
   CONVERT_POINTS_TO_SLOT: "doConvertPointsToSlot"
   USE_INNATE_SORCERY: "doUseInnateSorcery"
+  USE_METAMAGIC: "doUseMetamagic"
   ENTER_WILD_SHAPE: "doEnterWildShape"
   EXIT_WILD_SHAPE: "doExitWildShape"
   USE_WILD_RESURGENCE_CHARGE: "doWildResurgenceCharge"
@@ -959,6 +972,7 @@ const driverSchema = {
   doConvertSlotToPoints: { slotLevel: ITFBigInt.optional() },
   doConvertPointsToSlot: { slotLevel: ITFBigInt.optional() },
   doUseInnateSorcery: {},
+  doUseMetamagic: { option: z.string().optional() },
   doEnterWildShape: {},
   doExitWildShape: {},
   doWildResurgenceCharge: { slotLevel: ITFBigInt.optional() },
@@ -1597,6 +1611,9 @@ function createDndDriver() {
       },
       doUseInnateSorcery: () => {
         send({ type: "USE_INNATE_SORCERY" })
+      },
+      doUseMetamagic: ({ option }) => {
+        if (option != null) send({ type: "USE_METAMAGIC", option })
       },
       doEnterWildShape: () => {
         send({ type: "ENTER_WILD_SHAPE" })

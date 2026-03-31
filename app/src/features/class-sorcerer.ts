@@ -345,6 +345,67 @@ export function metamagicCost(option: MetamagicOption): number {
   }
 }
 
+// --- Metamagic Application (guard + transition) ---
+
+const ARCANE_APOTHEOSIS_LEVEL = 20
+
+export interface UseMetamagicState {
+  readonly sorcererLevel: number
+  readonly sorceryPoints: number
+  readonly bonusActionUsed: boolean
+  readonly nonCantripActionSpellCast: boolean
+  readonly metamagicUsedThisCast: ReadonlySet<string>
+  readonly apotheosisUsedThisTurn: boolean
+  readonly innateSorceryActive: boolean
+}
+
+export interface UseMetamagicResult {
+  readonly sorceryPoints: number
+  readonly metamagicUsedThisCast: ReadonlySet<string>
+  readonly apotheosisUsedThisTurn: boolean
+  readonly bonusActionUsed: boolean
+}
+
+/** Can the sorcerer apply a Metamagic option right now? */
+export function canUseMetamagic(state: UseMetamagicState, option: MetamagicOption): boolean {
+  if (state.sorcererLevel < FONT_OF_MAGIC_LEVEL) return false
+  if (state.metamagicUsedThisCast.has(option)) return false
+
+  if (!canStackMetamagic(option)) {
+    let nonStackableUsed = 0
+    for (const o of state.metamagicUsedThisCast) {
+      if (!canStackMetamagic(o as MetamagicOption)) nonStackableUsed++
+    }
+    const maxOptions = state.innateSorceryActive && state.sorcererLevel >= SORCERY_INCARNATE_LEVEL ? 2 : 1
+    if (nonStackableUsed >= maxOptions) return false
+  }
+
+  // SRD line 187: "can't modify a spell in this way if you've already cast a
+  // level 1+ spell on the current turn" + BA must be free
+  if (option === "quickened" && (state.bonusActionUsed || state.nonCantripActionSpellCast)) return false
+
+  // Arcane Apotheosis (L20): 1 free metamagic per turn while Innate Sorcery active
+  if (state.innateSorceryActive && state.sorcererLevel >= ARCANE_APOTHEOSIS_LEVEL && !state.apotheosisUsedThisTurn) {
+    return true
+  }
+
+  return state.sorceryPoints >= metamagicCost(option)
+}
+
+/** Apply a Metamagic option: spend SP (or mark Apotheosis free use), add to set. */
+export function useMetamagic(state: UseMetamagicState, option: MetamagicOption): UseMetamagicResult {
+  const newSet = new Set([...state.metamagicUsedThisCast, option])
+  const isFreeApotheosis =
+    state.innateSorceryActive && state.sorcererLevel >= ARCANE_APOTHEOSIS_LEVEL && !state.apotheosisUsedThisTurn
+
+  return {
+    sorceryPoints: isFreeApotheosis ? state.sorceryPoints : state.sorceryPoints - metamagicCost(option),
+    metamagicUsedThisCast: newSet,
+    apotheosisUsedThisTurn: isFreeApotheosis ? true : state.apotheosisUsedThisTurn,
+    bonusActionUsed: option === "quickened" ? true : state.bonusActionUsed
+  }
+}
+
 // =============================================================================
 // Draconic Sorcery Subclass (SRD 5.2.1)
 //
