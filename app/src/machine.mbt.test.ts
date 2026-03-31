@@ -261,7 +261,8 @@ const QuintPaladinState = z.object({
 })
 const QuintRogueState = z.object({
   sneakAttackUsedThisTurn: z.boolean(),
-  steadyAimUsedThisTurn: z.boolean()
+  steadyAimUsedThisTurn: z.boolean(),
+  cunningStrikeUsedThisTurn: z.boolean()
 })
 const QuintClericState = z.object({
   channelDivinityCharges: z.bigint(),
@@ -432,6 +433,7 @@ interface NormalizedState {
   readonly rogueLevel: number
   readonly sneakAttackUsedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
+  readonly cunningStrikeUsedThisTurn: boolean
   readonly clericLevel: number
   readonly clericChannelDivinityCharges: number
   readonly clericChannelDivinityMax: number
@@ -561,6 +563,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     rogueLevel: c.rogueLevel,
     sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
     steadyAimUsedThisTurn: c.steadyAimUsedThisTurn,
+    cunningStrikeUsedThisTurn: c.cunningStrikeUsedThisTurn,
     clericLevel: c.clericLevel,
     clericChannelDivinityCharges: c.clericChannelDivinityCharges,
     clericChannelDivinityMax: c.clericChannelDivinityMax,
@@ -678,6 +681,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     rogueLevel: Number(raw.rogueLevel),
     sneakAttackUsedThisTurn: raw.rogueState.sneakAttackUsedThisTurn,
     steadyAimUsedThisTurn: raw.rogueState.steadyAimUsedThisTurn,
+    cunningStrikeUsedThisTurn: raw.rogueState.cunningStrikeUsedThisTurn,
     clericLevel: Number(raw.clericLevel),
     clericChannelDivinityCharges: Number(raw.clericState.channelDivinityCharges),
     clericChannelDivinityMax: Number(raw.clericState.channelDivinityMax),
@@ -784,6 +788,7 @@ type EventActionMap = {
   CUNNING_ACTION_DISENGAGE: "doCunningActionDisengage"
   CUNNING_ACTION_HIDE: "doCunningActionHide"
   USE_UNCANNY_DODGE: "doUseUncannyDodge"
+  USE_CUNNING_STRIKE: "doCunningStrike"
   USE_CLERIC_CHANNEL_DIVINITY: "doUseClericChannelDivinity"
   USE_LAY_ON_HANDS: "doUseLayOnHands"
   USE_PALADIN_CHANNEL_DIVINITY: "doUsePaladinChannelDivinity"
@@ -936,6 +941,7 @@ const driverSchema = {
   doCunningActionDisengage: {},
   doCunningActionHide: {},
   doUseUncannyDodge: {},
+  doCunningStrike: {},
   doUseClericChannelDivinity: {},
   doUseLayOnHands: { amount: ITFBigInt.optional() },
   doUsePaladinChannelDivinity: {},
@@ -1547,6 +1553,9 @@ function createDndDriver() {
       },
       doUseUncannyDodge: () => {
         send({ type: "USE_UNCANNY_DODGE" })
+      },
+      doCunningStrike: () => {
+        send({ type: "USE_CUNNING_STRIKE" })
       },
       doUseClericChannelDivinity: () => {
         send({ type: "USE_CLERIC_CHANNEL_DIVINITY" })

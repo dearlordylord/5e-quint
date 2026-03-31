@@ -5298,6 +5298,7 @@ module dndTest {
     all {
       assert(rs.sneakAttackUsedThisTurn == false),
       assert(rs.steadyAimUsedThisTurn == false),
+      assert(rs.cunningStrikeUsedThisTurn == false),
     }
   }
 
@@ -5306,6 +5307,7 @@ module dndTest {
     all {
       assert(rs.sneakAttackUsedThisTurn == false),
       assert(rs.steadyAimUsedThisTurn == false),
+      assert(rs.cunningStrikeUsedThisTurn == false),
     }
   }
 
@@ -5335,6 +5337,18 @@ module dndTest {
     assert(not(canCunningAction(2, true))),
   }
 
+  // Cunning Strike guards (L5+, SA used, not yet used CS)
+  run cunningStrikeGuardTest = all {
+    // Can CS: L5+, SA used this turn, CS not yet used
+    assert(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true), 5)),
+    // Can't CS: SA not used
+    assert(not(canCunningStrike(TEST_ROGUE_STATE, 5))),
+    // Can't CS: too low level
+    assert(not(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true), 4))),
+    // Can't CS: already used this turn
+    assert(not(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("cunningStrikeUsedThisTurn", true), 5))),
+  }
+
   // -- Transitions --
   run test_pUseSneakAttack = {
     val result = pUseSneakAttack(TEST_ROGUE_STATE)
@@ -5346,13 +5360,19 @@ module dndTest {
     assert(result.steadyAimUsedThisTurn == true)
   }
 
+  run test_pCunningStrike = {
+    val result = pCunningStrike(TEST_ROGUE_STATE)
+    assert(result.cunningStrikeUsedThisTurn == true)
+  }
+
   // -- Lifecycle --
   run test_pRogueStartTurn = {
-    val rs = TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("steadyAimUsedThisTurn", true)
+    val rs = TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("steadyAimUsedThisTurn", true).with("cunningStrikeUsedThisTurn", true)
     val result = pRogueStartTurn(rs)
     all {
       assert(result.sneakAttackUsedThisTurn == false),
       assert(result.steadyAimUsedThisTurn == false),
+      assert(result.cunningStrikeUsedThisTurn == false),
     }
   }
 

@@ -176,6 +176,7 @@ export interface DndContext {
   readonly rogueLevel: number
   readonly sneakAttackUsedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
+  readonly cunningStrikeUsedThisTurn: boolean
   readonly clericLevel: number
   readonly clericChannelDivinityCharges: number
   readonly clericChannelDivinityMax: number
@@ -376,6 +377,7 @@ export type DndEvent =
   | { readonly type: "CUNNING_ACTION_DISENGAGE" }
   | { readonly type: "CUNNING_ACTION_HIDE" }
   | { readonly type: "USE_UNCANNY_DODGE" }
+  | { readonly type: "USE_CUNNING_STRIKE" }
   // Phase CL: Cleric events
   | { readonly type: "USE_CLERIC_CHANNEL_DIVINITY" }
   // Phase WK: Warlock events

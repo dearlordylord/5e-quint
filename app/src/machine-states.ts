@@ -266,6 +266,7 @@ export const turnPhaseConfig = {
         CUNNING_ACTION_DISENGAGE: { actions: ["cunningActionDisengage"] },
         CUNNING_ACTION_HIDE: { actions: ["cunningActionHide"] },
         USE_UNCANNY_DODGE: { actions: ["useUncannyDodge"] },
+        USE_CUNNING_STRIKE: { actions: ["useCunningStrike"] },
         USE_CLERIC_CHANNEL_DIVINITY: { actions: ["useClericChannelDivinity"] },
         USE_LAY_ON_HANDS: { actions: ["useLayOnHands"] },
         USE_PALADIN_CHANNEL_DIVINITY: { actions: ["usePaladinChannelDivinity"] },

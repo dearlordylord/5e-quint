@@ -50,11 +50,22 @@ export function uncannyDodgeUpdate(c: DndContext): Partial<DndContext> {
   return { reactionAvailable: false }
 }
 
+// -- Cunning Strike (L5+) --
+
+/** Cunning Strike: mark that a Cunning Strike effect was applied this turn.
+ * SRD L5: "When you deal Sneak Attack damage, you can add one of the
+ * following Cunning Strike effects."
+ * Effect choice, dice cost, and condition application are caller-managed. */
+export function cunningStrikeUpdate(c: DndContext): Partial<DndContext> {
+  if (isIncapacitated(c) || c.rogueLevel < 5 || !c.sneakAttackUsedThisTurn || c.cunningStrikeUsedThisTurn) return {}
+  return { cunningStrikeUsedThisTurn: true }
+}
+
 // -- Lifecycle --
 
 export function rogueStartTurnUpdate(c: DndContext): Partial<DndContext> {
   if (c.rogueLevel === 0) return {}
-  return { sneakAttackUsedThisTurn: false, steadyAimUsedThisTurn: false }
+  return { sneakAttackUsedThisTurn: false, steadyAimUsedThisTurn: false, cunningStrikeUsedThisTurn: false }
 }
 
 export function rogueShortRestUpdate(c: DndContext): Partial<DndContext> {
@@ -73,6 +84,7 @@ export function initialRogueState(rogueLevel: number) {
   return {
     rogueLevel,
     sneakAttackUsedThisTurn: false,
-    steadyAimUsedThisTurn: false
+    steadyAimUsedThisTurn: false,
+    cunningStrikeUsedThisTurn: false
   }
 }

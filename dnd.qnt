@@ -396,6 +396,7 @@ module dnd {
   type RogueState = {
     sneakAttackUsedThisTurn: bool,
     steadyAimUsedThisTurn: bool,
+    cunningStrikeUsedThisTurn: bool,
   }
 
   type ClericState = {
@@ -2777,10 +2778,10 @@ module dnd {
 
   // -- Rogue --
   pure def freshRogueState(rogueLevel: int): RogueState = {
-    { sneakAttackUsedThisTurn: false, steadyAimUsedThisTurn: false }
+    { sneakAttackUsedThisTurn: false, steadyAimUsedThisTurn: false, cunningStrikeUsedThisTurn: false }
   }
   pure def pRogueStartTurn(rs: RogueState): RogueState = {
-    rs.with("sneakAttackUsedThisTurn", false).with("steadyAimUsedThisTurn", false)
+    rs.with("sneakAttackUsedThisTurn", false).with("steadyAimUsedThisTurn", false).with("cunningStrikeUsedThisTurn", false)
   }
   pure def pRogueShortRest(rs: RogueState): RogueState = rs
   pure def pRogueLongRest(rs: RogueState): RogueState = rs
@@ -2813,6 +2814,14 @@ module dnd {
     rogueLevel >= 5 and reactionAvailable
   }
 
+  /// Cunning Strike guard: L5+, SA used this turn (effect rides on the SA hit).
+  /// SRD: "When you deal Sneak Attack damage, you can add one of the
+  /// following Cunning Strike effects."
+  /// Dice cost and effect details are caller-managed.
+  pure def canCunningStrike(rs: RogueState, rogueLevel: int): bool = {
+    rogueLevel >= 5 and rs.sneakAttackUsedThisTurn and not(rs.cunningStrikeUsedThisTurn)
+  }
+
   // -- R2: Transitions --
 
   /// Mark Sneak Attack as used this turn.
@@ -2823,6 +2832,11 @@ module dnd {
   /// Use Steady Aim: mark used, sets speed to 0.
   pure def pUseSteadyAim(rs: RogueState): RogueState = {
     rs.with("steadyAimUsedThisTurn", true)
+  }
+
+  /// Cunning Strike transition: mark used this turn.
+  pure def pCunningStrike(rs: RogueState): RogueState = {
+    rs.with("cunningStrikeUsedThisTurn", true)
   }
 
   // -- Cleric --
@@ -4785,6 +4799,27 @@ module dnd {
     }
   }
 
+  /// Cunning Strike: mark that a Cunning Strike effect was applied this turn.
+  /// SRD L5: "When you deal Sneak Attack damage, you can add one of the
+  /// following Cunning Strike effects."
+  /// Effect choice, dice cost, and condition application are caller-managed.
+  action doCunningStrike = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canCunningStrike(rogueState, rogueLevel))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = pCunningStrike(rogueState), rogueLevel' = rogueLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   /// Use Cleric Channel Divinity: decrement charge.
   /// SRD: "You can use this class's Channel Divinity twice.
   /// You regain one of its expended uses when you finish a Short Rest,
@@ -5031,6 +5066,7 @@ module dnd {
     doCunningActionDisengage,
     doCunningActionHide,
     doUseUncannyDodge,
+    doCunningStrike,
     doUseClericChannelDivinity,
     doUseLayOnHands,
     doUsePaladinChannelDivinity,
