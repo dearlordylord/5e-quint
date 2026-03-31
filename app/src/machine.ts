@@ -9,6 +9,7 @@ import {
 } from "#/features/class-fighter.ts"
 import * as barb from "#/machine-barbarian.ts"
 import { initialClassStubs } from "#/machine-class-stubs.ts"
+import * as cleric from "#/machine-cleric.ts"
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
@@ -419,9 +420,10 @@ export const dndMachine = setup({
     rogueStartTurn: assign(() => ({})),
     rogueShortRest: assign(() => ({})),
     rogueLongRest: assign(() => ({})),
-    clericStartTurn: assign(() => ({})),
-    clericShortRest: assign(() => ({})),
-    clericLongRest: assign(() => ({})),
+    clericStartTurn: assign(({ context: c }) => cleric.clericStartTurnUpdate(c)),
+    clericShortRest: assign(({ context: c }) => cleric.clericShortRestUpdate(c)),
+    clericLongRest: assign(({ context: c }) => cleric.clericLongRestUpdate(c)),
+    useClericChannelDivinity: assign(({ context: c }) => cleric.clericChannelDivinityUpdate(c)),
     druidStartTurn: assign(() => ({})),
     druidShortRest: assign(() => ({})),
     druidLongRest: assign(() => ({})),
@@ -473,6 +475,7 @@ export const dndMachine = setup({
     dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
     ...barb.initialBarbarianState(i.barbarianLevel ?? 0),
     ...monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
+    ...cleric.initialClericState(i.clericLevel ?? 0),
     ...initialClassStubs(i)
   }),
   on: rootEventHandlers,

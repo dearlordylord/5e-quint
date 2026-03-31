@@ -10,9 +10,6 @@ export interface ClassStubContext {
   readonly rogueLevel: number
   readonly sneakAttackUsedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
-  readonly clericLevel: number
-  readonly clericChannelDivinityCharges: number
-  readonly clericChannelDivinityMax: number
   readonly druidLevel: number
   readonly wildShapeCharges: number
   readonly wildShapeMax: number
@@ -30,7 +27,6 @@ export interface ClassStubContext {
 export interface ClassStubInput {
   readonly paladinLevel?: number
   readonly rogueLevel?: number
-  readonly clericLevel?: number
   readonly druidLevel?: number
   readonly sorcererLevel?: number
   readonly warlockLevel?: number

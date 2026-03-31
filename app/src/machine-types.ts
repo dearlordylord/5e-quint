@@ -351,6 +351,8 @@ export type DndEvent =
   | { readonly type: "STUNNING_STRIKE" }
   | { readonly type: "WHOLENESS_OF_BODY"; readonly healRoll: number }
   | { readonly type: "UNCANNY_METABOLISM"; readonly healRoll: number }
+  // Phase CL: Cleric events
+  | { readonly type: "USE_CLERIC_CHANNEL_DIVINITY" }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines
 export {

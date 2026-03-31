@@ -742,6 +742,7 @@ type EventActionMap = {
   STUNNING_STRIKE: "doStunningStrike"
   WHOLENESS_OF_BODY: "doWholenessOfBody"
   UNCANNY_METABOLISM: "doUncannyMetabolism"
+  USE_CLERIC_CHANNEL_DIVINITY: "doUseClericChannelDivinity"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -871,6 +872,7 @@ const driverSchema = {
   doStunningStrike: {},
   doWholenessOfBody: { healRoll: ITFBigInt.optional() },
   doUncannyMetabolism: { healRoll: ITFBigInt.optional() },
+  doUseClericChannelDivinity: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1044,6 +1046,7 @@ function createDndDriver() {
           const fLevel = cls === "Fighter" ? level : 0
           const bLevel = cls === "Barbarian" ? level : 0
           const mLevel = cls === "Monk" ? level : 0
+          const cLevel = cls === "Cleric" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1057,7 +1060,7 @@ function createDndDriver() {
               wholenessMax: Number(wisMod),
               paladinLevel: 0,
               rogueLevel: 0,
-              clericLevel: 0,
+              clericLevel: cLevel,
               druidLevel: 0,
               sorcererLevel: 0,
               warlockLevel: 0,
@@ -1432,6 +1435,9 @@ function createDndDriver() {
       },
       doUncannyMetabolism: ({ healRoll }) => {
         if (healRoll != null) send({ type: "UNCANNY_METABOLISM", healRoll: Number(healRoll) })
+      },
+      doUseClericChannelDivinity: () => {
+        send({ type: "USE_CLERIC_CHANNEL_DIVINITY" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {
