@@ -5004,13 +5004,15 @@ module dnd {
 
   // -- 19.6dr Druid Actions (Phase DR) --
 
-  /// Enter Wild Shape: BA, expend charge.
-  /// SRD: "As a Bonus Action, you shape-shift into a Beast form"
+  /// Enter Wild Shape: BA, expend charge, grant temp HP = druid level.
+  /// SRD 5.2.1: "you retain your Hit Points" + "you gain Temporary Hit Points
+  /// equal to your Druid level." No separate beast HP pool (5.1 had one with
+  /// damage spillover on revert — removed in 5.2.1).
   action doEnterWildShape = {
     if (turnPhase != "acting" or isIncapacitated(state)
         or not(canEnterWildShape(druidState, druidLevel, turnState.bonusActionUsed))) unchanged
     else all {
-      state' = state,
+      state' = pGrantTempHp(state, druidLevel, false),
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
       turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,

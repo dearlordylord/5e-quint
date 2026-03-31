@@ -1,12 +1,20 @@
 import { wildShapeMaxCharges } from "#/features/class-druid.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
+import { hp } from "#/types.ts"
 
 // -- Actions --
 
+/** SRD 5.2.1: "you retain your Hit Points" + "you gain Temporary Hit Points equal to your
+ * Druid level." No separate beast HP pool (5.1 had one with spillover — removed in 5.2.1). */
 export function enterWildShapeUpdate(c: DndContext): Partial<DndContext> {
   if (isIncapacitated(c) || c.druidLevel < 2 || c.wildShapeCharges <= 0 || c.bonusActionUsed || c.inWildShape) return {}
-  return { bonusActionUsed: true, wildShapeCharges: c.wildShapeCharges - 1, inWildShape: true }
+  return {
+    bonusActionUsed: true,
+    wildShapeCharges: c.wildShapeCharges - 1,
+    inWildShape: true,
+    tempHp: hp(c.druidLevel)
+  }
 }
 
 export function exitWildShapeUpdate(c: DndContext): Partial<DndContext> {
