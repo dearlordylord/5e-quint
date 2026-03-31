@@ -1,4 +1,3 @@
-import { actionSurgeMaxCharges, indomitableMaxCharges, secondWindMaxCharges } from "#/features/class-fighter.ts"
 import type { MetamagicOption } from "#/features/class-sorcerer.ts"
 import type { ConditionFlag } from "#/machine-helpers.ts"
 import type {
@@ -470,22 +469,6 @@ export const INITIAL_CONDITIONS = {
   stunned: false,
   unconscious: false
 } as const
-
-export function initialFighterState(fighterLevel: number) {
-  const swMax = secondWindMaxCharges(fighterLevel)
-  const asMax = actionSurgeMaxCharges(fighterLevel)
-  const indMax = indomitableMaxCharges(fighterLevel)
-  return {
-    secondWindCharges: swMax,
-    secondWindMax: swMax,
-    actionSurgeCharges: asMax,
-    actionSurgeMax: asMax,
-    actionSurgeUsedThisTurn: false,
-    indomitableCharges: indMax,
-    indomitableMax: indMax,
-    heroicInspiration: false
-  }
-}
 
 export const INITIAL_TURN_STATE = {
   actionsRemaining: 1,

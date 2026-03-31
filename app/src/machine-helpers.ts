@@ -1,15 +1,4 @@
-import {
-  canUseActionSurge,
-  canUseIndomitable,
-  canUseSecondWind,
-  canUseTacticalMind,
-  CHAMPION_SURVIVOR_LEVEL,
-  SURVIVOR_DEFY_DEATH_THRESHOLD,
-  useActionSurge as tsUseActionSurge,
-  useIndomitable as tsUseIndomitable,
-  useSecondWind as tsUseSecondWind,
-  useTacticalMind as tsUseTacticalMind
-} from "#/features/class-fighter.ts"
+import { CHAMPION_SURVIVOR_LEVEL, SURVIVOR_DEFY_DEATH_THRESHOLD } from "#/features/class-fighter.ts"
 import { computeLongRest } from "#/machine-spells.ts"
 import type { Condition, DamageType, IncapSource, SpellSlots } from "#/types.ts"
 import { exhaustionLevel, hp, tempHp } from "#/types.ts"
@@ -399,59 +388,6 @@ export function removeIncapSource(s: ReadonlySet<IncapSource>, v: IncapSource): 
 /** Standard Extra Attack: 1 extra attack at class level 5+. Used by Barbarian, Monk, Ranger, Paladin. */
 export function standardExtraAttacks(classLevel: number): number {
   return classLevel >= 5 ? 1 : 0
-}
-
-// --- Fighter action helpers (extracted from machine.ts for max-lines) ---
-
-export function secondWindUpdate(
-  c: { hp: number; maxHp: number; secondWindCharges: number; bonusActionUsed: boolean; effectiveSpeed: number },
-  fighterLevel: number,
-  d10Roll: number,
-  incapacitated: boolean
-): Record<string, unknown> {
-  const swState = {
-    hp: c.hp,
-    maxHp: effectiveMaxHp(c.maxHp),
-    secondWindCharges: c.secondWindCharges,
-    bonusActionUsed: c.bonusActionUsed
-  }
-  if (!canUseSecondWind(swState) || incapacitated) return {}
-  const r = tsUseSecondWind(swState, { fighterLevel, d10Roll }, c.effectiveSpeed)
-  const bonusMove =
-    fighterLevel >= 5 ? { bonusMovementRemaining: r.tacticalShiftDistance, bonusMovementOAFree: true } : {}
-  return { hp: hp(r.hp), secondWindCharges: r.secondWindCharges, bonusActionUsed: r.bonusActionUsed, ...bonusMove }
-}
-
-export function actionSurgeUpdate(
-  c: { actionSurgeCharges: number; actionSurgeUsedThisTurn: boolean; actionsRemaining: number },
-  incapacitated: boolean
-): Record<string, unknown> {
-  const s = {
-    actionSurgeCharges: c.actionSurgeCharges,
-    actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
-    actionsRemaining: c.actionsRemaining
-  }
-  if (!canUseActionSurge(s) || incapacitated) return {}
-  return { ...tsUseActionSurge(s) }
-}
-
-export function indomitableUpdate(fighterLevel: number, indomitableCharges: number): Record<string, unknown> {
-  if (!canUseIndomitable(fighterLevel, indomitableCharges)) return {}
-  return { indomitableCharges: tsUseIndomitable(indomitableCharges, 0).indomitableCharges }
-}
-
-export function tacticalMindUpdate(
-  secondWindCharges: number,
-  fighterLevel: number,
-  boostedCheckSucceeds: boolean,
-  incapacitated: boolean
-): Record<string, unknown> {
-  if (!canUseTacticalMind(secondWindCharges, fighterLevel, true) || incapacitated) return {}
-  if (!boostedCheckSucceeds) return {}
-  return {
-    secondWindCharges: tsUseTacticalMind({ secondWindCharges, originalCheckTotal: 0, dc: 0, d10Roll: 0 })
-      .secondWindCharges
-  }
 }
 
 export function spendHitDieUpdate(

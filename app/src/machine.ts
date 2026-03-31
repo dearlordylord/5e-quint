@@ -13,20 +13,16 @@ import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
 import * as fighter from "#/machine-fighter.ts"
 import { guards } from "#/machine-guards.ts"
 import {
-  actionSurgeUpdate,
   addDeathFailures,
   addIncapSource,
   applyConditionUpdate,
   effectiveMaxHp,
   EMPTY_CONDITION_SET,
-  indomitableUpdate,
   longRestUpdate,
   removeConditionUpdate,
   removeIncapSource,
-  secondWindUpdate,
   spendHalfSpeed,
-  spendHitDieUpdate,
-  tacticalMindUpdate
+  spendHitDieUpdate
 } from "#/machine-helpers.ts"
 import * as monk from "#/machine-monk.ts"
 import {
@@ -78,8 +74,7 @@ import {
   type DndEvent,
   type DndMachineInput,
   INITIAL_CONDITIONS,
-  INITIAL_TURN_STATE,
-  initialFighterState
+  INITIAL_TURN_STATE
 } from "#/machine-types.ts"
 import * as warlock from "#/machine-warlock.ts"
 import * as wizard from "#/machine-wizard.ts"
@@ -332,18 +327,11 @@ export const dndMachine = setup({
     })),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
-    useSecondWind: assign(({ context: c, event: e }) =>
-      secondWindUpdate(c, c.fighterLevel, asUseSecondWind(e).d10Roll, isIncapacitated(c))
-    ),
-    useActionSurge: assign(({ context: c }) => actionSurgeUpdate(c, isIncapacitated(c))),
-    useIndomitable: assign(({ context: c }) => indomitableUpdate(c.fighterLevel, c.indomitableCharges)),
+    useSecondWind: assign(({ context: c, event: e }) => fighter.secondWindUpdate(c, asUseSecondWind(e).d10Roll)),
+    useActionSurge: assign(({ context: c }) => fighter.actionSurgeUpdate(c)),
+    useIndomitable: assign(({ context: c }) => fighter.indomitableUpdate(c)),
     useTacticalMind: assign(({ context: c, event: e }) =>
-      tacticalMindUpdate(
-        c.secondWindCharges,
-        c.fighterLevel,
-        asUseTacticalMind(e).boostedCheckSucceeds,
-        isIncapacitated(c)
-      )
+      fighter.tacticalMindUpdate(c, asUseTacticalMind(e).boostedCheckSucceeds)
     ),
     classStartTurn: assign(({ context: c }) => ({
       ...fighter.fighterStartTurnUpdate(c),
@@ -499,7 +487,7 @@ export const dndMachine = setup({
     ...INITIAL_TURN_STATE,
     creatureKind: i.creatureKind ?? "PC",
     fighterLevel: i.fighterLevel ?? 0,
-    ...initialFighterState(i.fighterLevel ?? 0),
+    ...fighter.initialFighterState(i.fighterLevel ?? 0),
     activeEffects: [] as ReadonlyArray<ActiveEffect>,
     concentrationSpellId: "",
     dead: false,
