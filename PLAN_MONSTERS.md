@@ -30,6 +30,8 @@ The existing architecture already has the right shared interface: **pure functio
 
 `CharConfig` stays as-is for PCs. `StatBlock` is a new, separate type for monsters. When calling shared functions, the caller extracts the relevant fields from whichever config type it has.
 
+**Future consideration (from PLAN_CLEANUP.md research):** `CharConfig` currently mixes PC build info (class, subclass, species, level) with combat-facing stats (ability scores, size, speeds, proficiencies). This is fine while only PCs use the spec, but worth revisiting when monsters are implemented. The SRD's own architecture separates *derivation* (character creation) from *combat interface* (creature properties). Do NOT refactor preemptively — the current design works. Also: species-derived R/V/I for PCs (e.g., Dwarf poison resistance) is a separate effort from monster support — do not bundle.
+
 ### Decision 2: R/V/I stay as function parameters, not stored on CreatureState
 
 Resistances, vulnerabilities, and immunities are **static creature properties** (come from stat block or class/species). They are NOT mutable runtime state. They stay as parameters on `pTakeDamage` and friends — the caller provides them. This preserves the clean separation and avoids the dual-path correctness landmine.

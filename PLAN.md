@@ -11,7 +11,7 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 |------|--------|-------|
 | **PLAN.md** (this file) | Done | Core Quint spec: generic rules in `dnd.qnt` (HP, damage, conditions, turns, rests, slots, grapple/shove, attack resolution, environment). The foundation everything else composes on. |
 | **PLAN_NONCORE.md** | Active | Class features, spells, species, feats — TS implementation + UI wiring + Quint migration. Per-class status tables, integration patterns, implementation order. The main active plan. |
-| **PLAN_CLEANUP.md** | Active | Quint-side roadmap: Fighter parity table, `fighterLevel` state var (done), inductive invariants (done), Apalache status, remaining Fighter→Quint migrations (E/F/G), eventual other-class migrations (H). |
+| ~~PLAN_CLEANUP.md~~ | Done (deleted) | Was: Quint-side roadmap (E/F/G/H/C/D/J/K/M). All items complete. P1 (bonus movement) moved here. |
 | **PLAN_SCRAPERS.md** | Active | QA pipeline: new data sources for the community Q&A corpus (SE tags, Sage Advice, sageadvice.eu, errata). Independent of other plans. |
 
 > **NOTE — Suggestive, not prescriptive.** Function names, signatures, state fields, and type
@@ -321,3 +321,9 @@ The core spec is complete when any SRD spell, class feature, or racial trait can
 4. Action economy (action/bonus/reaction/movement)
 5. Modifier aggregation (advantage/disadvantage/bonuses)
 6. START_TURN/END_TURN event arguments (caller-provided per-effect data)
+
+---
+
+## Open: Bonus movement grants (cross-class infrastructure)
+
+Moved from PLAN_CLEANUP.md P1. Two fields on TurnState: `bonusMovementRemaining` (distance) and `bonusMovementOAFree` (OA immunity). `doUseBonusMovement` action consumes it. Reset at turn start. Used by Tactical Shift (Fighter L5) and Remarkable Athlete (Fighter L3); available for Barbarian Instinctive Pounce, Rogue Withdraw.
