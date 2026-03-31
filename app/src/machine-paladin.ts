@@ -1,25 +1,20 @@
+import {
+  expendChannelDivinity,
+  layOnHandsPoolMax,
+  paladinChannelDivinityMax,
+  restoreChannelDivinityShort
+} from "#/features/class-paladin.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
 import { hp } from "#/types.ts"
 
-// -- P1: Guards --
-
-function canLayOnHands(c: DndContext, amount: number): boolean {
-  return c.layOnHandsPool >= amount && amount > 0
-}
-
-function canPaladinChannelDivinity(c: DndContext): boolean {
-  return c.paladinLevel >= 3 && c.paladinChannelDivinityCharges > 0
-}
-
-// -- P2: Actions --
+// -- Actions --
 
 /** Lay on Hands: heal amount from pool, costs Bonus Action.
  * SRD: "As a Bonus Action, you can touch a creature ... and draw power from the pool" */
 export function layOnHandsUpdate(c: DndContext, amount: number): Partial<DndContext> {
-  if (isIncapacitated(c) || c.bonusActionUsed || !canLayOnHands(c, amount)) return {}
-  const effMax = c.maxHp // effectiveMaxHp uses exhaustion halving but LoH heals via pHeal which caps at maxHp
-  const healedAmount = Math.min(amount, effMax - c.hp)
+  if (isIncapacitated(c) || c.bonusActionUsed || c.layOnHandsPool < amount || amount <= 0) return {}
+  const healedAmount = Math.min(amount, c.maxHp - c.hp)
   return {
     bonusActionUsed: true,
     hp: hp(c.hp + healedAmount),
@@ -27,11 +22,10 @@ export function layOnHandsUpdate(c: DndContext, amount: number): Partial<DndCont
   }
 }
 
-/** Paladin Channel Divinity: decrement charge.
- * SRD: "You can use this class's Channel Divinity twice." */
+/** Paladin Channel Divinity: decrement charge. */
 export function paladinChannelDivinityUpdate(c: DndContext): Partial<DndContext> {
-  if (isIncapacitated(c) || !canPaladinChannelDivinity(c)) return {}
-  return { paladinChannelDivinityCharges: c.paladinChannelDivinityCharges - 1 }
+  if (isIncapacitated(c) || c.paladinLevel < 3 || c.paladinChannelDivinityCharges <= 0) return {}
+  return { paladinChannelDivinityCharges: expendChannelDivinity(c.paladinChannelDivinityCharges) }
 }
 
 // -- Lifecycle --
@@ -44,8 +38,12 @@ export function paladinStartTurnUpdate(c: DndContext): Partial<DndContext> {
 /** SRD: "You regain one of its expended uses when you finish a Short Rest" */
 export function paladinShortRestUpdate(c: DndContext): Partial<DndContext> {
   if (c.paladinLevel === 0) return {}
-  const newCharges = Math.min(c.paladinChannelDivinityCharges + 1, c.paladinChannelDivinityMax)
-  return { paladinChannelDivinityCharges: newCharges }
+  return {
+    paladinChannelDivinityCharges: restoreChannelDivinityShort(
+      c.paladinChannelDivinityCharges,
+      c.paladinChannelDivinityMax
+    )
+  }
 }
 
 /** SRD: Long Rest restores full LoH pool and all CD uses. */
@@ -59,10 +57,9 @@ export function paladinLongRestUpdate(c: DndContext): Partial<DndContext> {
 
 // -- Init --
 
-/** SRD: CD uses: 2 at L3, 3 at L11. LoH pool: level * 5 at L1+. */
 export function initialPaladinState(paladinLevel: number) {
-  const lohMax = paladinLevel >= 1 ? paladinLevel * 5 : 0
-  const cdMax = paladinLevel >= 11 ? 3 : paladinLevel >= 3 ? 2 : 0
+  const lohMax = layOnHandsPoolMax(paladinLevel)
+  const cdMax = paladinChannelDivinityMax(paladinLevel)
   return {
     paladinLevel,
     layOnHandsPool: lohMax,

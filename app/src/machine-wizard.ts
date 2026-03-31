@@ -1,14 +1,14 @@
+import { canArcaneRecoverSlot } from "#/features/class-wizard.ts"
 import type { DndContext } from "#/machine-types.ts"
 
 // -- Action Updates --
 
 export function arcaneRecoveryUpdate(c: DndContext, slotLevel: number): Partial<DndContext> {
   if (c.wizardLevel < 1 || c.arcaneRecoveryUsed) return {}
-  if (slotLevel < 1 || slotLevel > 5) return {}
+  if (!canArcaneRecoverSlot(slotLevel)) return {}
   const currentSlots = [...c.slotsCurrent]
-  const maxSlots = [...c.slotsMax]
   const idx = slotLevel - 1
-  if (idx >= currentSlots.length || currentSlots[idx] >= maxSlots[idx]) return {}
+  if (idx >= currentSlots.length || currentSlots[idx] >= c.slotsMax[idx]) return {}
   currentSlots[idx] = currentSlots[idx] + 1
   return {
     slotsCurrent: currentSlots,

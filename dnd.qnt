@@ -2736,13 +2736,24 @@ module dnd {
   }
 
   // -- Cleric --
+  /// SRD: Channel Divinity uses by level: 2 at L2, 3 at L6, 4 at L18.
+  pure def clericChannelDivinityMax(clericLevel: int): int = {
+    if (clericLevel >= 18) 4
+    else if (clericLevel >= 6) 3
+    else if (clericLevel >= 2) 2
+    else 0
+  }
+
   pure def freshClericState(clericLevel: int): ClericState = {
-    val cdMax = if (clericLevel >= 2) 2 else 0
+    val cdMax = clericChannelDivinityMax(clericLevel)
     { channelDivinityCharges: cdMax, channelDivinityMax: cdMax }
   }
   pure def pClericStartTurn(cs: ClericState): ClericState = cs
+  /// SRD: "You regain one of its expended uses when you finish a Short Rest"
   pure def pClericShortRest(cs: ClericState): ClericState = {
-    cs.with("channelDivinityCharges", cs.channelDivinityMax)
+    val newCharges = if (cs.channelDivinityCharges < cs.channelDivinityMax)
+      cs.channelDivinityCharges + 1 else cs.channelDivinityCharges
+    cs.with("channelDivinityCharges", newCharges)
   }
   pure def pClericLongRest(cs: ClericState): ClericState = {
     cs.with("channelDivinityCharges", cs.channelDivinityMax)

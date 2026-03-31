@@ -5301,11 +5301,11 @@ module dndTest {
     assert(cs2.channelDivinityCharges == 1)
   }
 
-  // -- pClericShortRest restores charges --
-  run test_clericShortRest_restores = {
+  // -- pClericShortRest restores one charge (SRD: "regain one expended use") --
+  run test_clericShortRest_restoresOne = {
     val cs = freshClericState(5).with("channelDivinityCharges", 0)
     val cs2 = pClericShortRest(cs)
-    assert(cs2.channelDivinityCharges == 2)
+    assert(cs2.channelDivinityCharges == 1)
   }
 
   // -- pClericLongRest restores charges --

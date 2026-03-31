@@ -1,3 +1,4 @@
+import { clericChannelDivinityMax } from "#/features/class-cleric.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
 
@@ -13,9 +14,12 @@ export function clericStartTurnUpdate(c: DndContext): Partial<DndContext> {
   return {}
 }
 
+/** SRD: "You regain one of its expended uses when you finish a Short Rest" */
 export function clericShortRestUpdate(c: DndContext): Partial<DndContext> {
   if (c.clericLevel === 0) return {}
-  return { clericChannelDivinityCharges: c.clericChannelDivinityMax }
+  return {
+    clericChannelDivinityCharges: Math.min(c.clericChannelDivinityCharges + 1, c.clericChannelDivinityMax)
+  }
 }
 
 export function clericLongRestUpdate(c: DndContext): Partial<DndContext> {
@@ -26,7 +30,7 @@ export function clericLongRestUpdate(c: DndContext): Partial<DndContext> {
 // -- Init --
 
 export function initialClericState(clericLevel: number) {
-  const cdMax = clericLevel >= 2 ? 2 : 0
+  const cdMax = clericChannelDivinityMax(clericLevel)
   return {
     clericLevel,
     clericChannelDivinityCharges: cdMax,
