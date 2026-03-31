@@ -12,14 +12,14 @@ TS pure functions exist. Need Quint spec + MBT wiring to complete formal verific
 
 | Task | Description | Status | Deps | Origin |
 |------|-------------|--------|------|--------|
-| Divine Smite → Quint | Paladin smite: expend spell slot + extra Radiant damage. Most common damage modifier. | not done | T61 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#paladin) T61 |
-| Cunning Action → Quint | Rogue BA: Dash/Disengage/Hide. Uses existing `pBonusActionDash`. | not done | T31 (TS done), T06 | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T31 |
+| Divine Smite → Quint | Paladin smite: expend spell slot (BA cost), free 1/LR smite. | **done** | T61 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#paladin) T61 |
+| Cunning Action → Quint | Rogue BA: Dash/Disengage/Hide. Uses existing `pBonusActionDash`. | **done** | T31 (TS done), T06 | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T31 |
 | Metamagic → Quint | 10 SP-consuming spell modifiers. High complexity (10 variants). | not done | T111 (TS done), T110 | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T111 |
-| Rage damage/resistance → Quint | Rage toggle modeled but bonus damage + B/P/S resistance not in Quint. | not done | T10 (TS done, partial Quint) | [PLAN_NONCORE.md](PLAN_NONCORE.md#barbarian) T10 |
+| Rage damage/resistance → Quint | `rageDamageBonus`, `RAGE_RESISTANCE_TYPES`, `rageResistances` pure fns. | **done** | T10 (TS done, partial Quint) | [PLAN_NONCORE.md](PLAN_NONCORE.md#barbarian) T10 |
 | Pact Magic SR recovery | Warlock pact slots recover on Short Rest. Structural — pact slots in shared `SpellSlotState`. | not done | T120 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#warlock) T120 |
 | Wild Shape temp HP | Beast form HP pool. Touches `CreatureState.tempHp`. | not done | T100 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#druid) T100 |
-| Sorcerous Restoration → Quint | L5+ SR: regain floor(level/2) SP. Once per LR. | not done | T110 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T110 |
-| Innate Sorcery → Quint | L1 BA toggle: +1 spell DC, advantage on concentration checks. 2 uses/LR. | not done | T110 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T110 |
+| Sorcerous Restoration → Quint | L5+ SR: regain floor(level/2) SP. Once per LR. Integrated into `pSorcererShortRest`. | **done** | T110 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T110 |
+| Innate Sorcery → Quint | L1 BA toggle, 10-round duration, 2/LR + Sorcery Incarnate L7+ SP cost. | **done** | T110 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T110 |
 
 ## Priority 2: Widen Class Coverage (Quint actions for existing TS features)
 
@@ -27,7 +27,7 @@ Lower combat frequency but fill MBT gaps.
 
 | Task | Description | Status | Deps | Origin |
 |------|-------------|--------|------|--------|
-| Uncanny Dodge → Quint | Rogue reaction: halve attack damage. First reaction pattern in Quint. | not done | T32 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T32 |
+| Uncanny Dodge → Quint | Rogue reaction: consume reaction (halving caller-managed). First reaction pattern. | **done** | T32 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T32 |
 | Cunning Strike effects → Quint | Poison/Trip/Withdraw on SA hit (L5+). Forfeits SA dice. | not done | T30 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T30 |
 | Wild Resurgence → Quint | Druid L5+: slot for WS charge, or WS charge for slot. | not done | T100 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#druid) T100 |
 | Turn Undead / Divine Spark → Quint | Cleric CD options. | not done | T90 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#cleric) T90 |
@@ -52,7 +52,7 @@ Need full prep first (Quint type, state var, frame conditions on ~70 actions, li
 
 | Task | Description | Status | Deps | Origin |
 |------|-------------|--------|------|--------|
-| Reaction pattern validation | No reaction is in Quint yet. Uncanny Dodge would be first. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md) P1 |
+| Reaction pattern validation | Uncanny Dodge established the pattern (`pUseReaction` + `reactionAvailable` gate). | **done** | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md) P1 |
 | Integration bug: smiteFreeUsed reset | Paladin feature-store missing START_TURN reset. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #1 |
 | Integration bug: intimidatingPresenceDC | Hardcoded to 0. Needs real strMod/profBonus. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #4 |
 | Integration bug: rogueLevel unused param | `canExecuteSneakAttack` accepts but doesn't use rogueLevel. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #2 |
@@ -88,14 +88,14 @@ d20 resolution, conditions, exhaustion, action economy, damage/healing/temp HP, 
 | Class | Quint Features | machine-*.ts |
 |-------|---------------|--------------|
 | Fighter | Second Wind, Action Surge, Indomitable, Tactical Mind, Score Critical Hit | machine-fighter (inline in machine.ts) |
-| Barbarian | Rage, Reckless Attack, Intimidating Presence | machine-barbarian.ts |
+| Barbarian | Rage, Reckless Attack, Intimidating Presence, Rage damage bonus + B/P/S resistance (pure fns) | machine-barbarian.ts |
 | Monk | Focus Pool, Flurry/Patient Defense/Step of Wind, Stunning Strike, Wholeness of Body, Uncanny Metabolism | machine-monk.ts |
 | Wizard | Arcane Recovery | machine-wizard.ts |
-| Rogue | Sneak Attack, Steady Aim (with movement guard) | machine-rogue.ts |
+| Rogue | Sneak Attack, Steady Aim, Cunning Action (Dash/Disengage/Hide), Uncanny Dodge (reaction) | machine-rogue.ts |
 | Cleric | Channel Divinity (L2/L6/L18 scaling, SR+1) | machine-cleric.ts |
-| Paladin | Lay on Hands, Channel Divinity (L3/L11 scaling, SR+1) | machine-paladin.ts |
+| Paladin | Lay on Hands, Channel Divinity, Divine Smite (slot + free 1/LR, BA cost) | machine-paladin.ts |
 | Warlock | Magical Cunning (LR only), Mystic Arcanum (L11+) | machine-warlock.ts |
-| Sorcerer | Font of Magic (slot→points, points→slot) | machine-sorcerer.ts |
+| Sorcerer | Font of Magic, Innate Sorcery (10-round duration, 2/LR + Incarnate), Sorcerous Restoration (L5+ SR) | machine-sorcerer.ts |
 | Druid | Wild Shape enter/exit (L2/L6/L17 scaling, SR+1) | machine-druid.ts |
 
 ### TS Feature Files (all classes + shared)

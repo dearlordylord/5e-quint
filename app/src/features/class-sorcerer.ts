@@ -44,9 +44,9 @@ export interface InnateSorceryResult {
   readonly spellAttackAdvantage: boolean
 }
 
-/** Can the sorcerer activate Innate Sorcery? */
+/** Can the sorcerer activate Innate Sorcery? L1+ required. */
 export function canUseInnateSorcery(state: InnateSorceryState): boolean {
-  if (state.bonusActionUsed) return false
+  if (state.sorcererLevel < 1 || state.bonusActionUsed) return false
   if (state.innateSorceryCharges > 0) return true
   // Sorcery Incarnate (L7): spend 2 SP when no charges remain
   if (state.sorcererLevel >= SORCERY_INCARNATE_LEVEL && state.sorceryPoints >= SORCERY_INCARNATE_COST) return true

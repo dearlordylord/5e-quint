@@ -1,11 +1,11 @@
 import {
-  canPaladinSmiteFree,
   expendChannelDivinity,
   layOnHandsPoolMax,
   paladinChannelDivinityMax,
   restoreChannelDivinityShort
 } from "#/features/class-paladin.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
+import { expendSlot } from "#/machine-spells.ts"
 import type { DndContext } from "#/machine-types.ts"
 import { hp } from "#/types.ts"
 
@@ -29,26 +29,16 @@ export function paladinChannelDivinityUpdate(c: DndContext): Partial<DndContext>
   return { paladinChannelDivinityCharges: expendChannelDivinity(c.paladinChannelDivinityCharges) }
 }
 
-/** Divine Smite (slot-based): expend spell slot. Damage is caller-managed. */
 export function divineSmiteUpdate(c: DndContext, slotLevel: number): Partial<DndContext> {
-  if (isIncapacitated(c) || c.paladinLevel < 2) return {}
-  if (slotLevel < 1 || slotLevel > 9) return {}
-  const currentSlots = [...c.slotsCurrent]
-  const idx = slotLevel - 1
-  if (idx >= currentSlots.length || currentSlots[idx] <= 0) return {}
-  currentSlots[idx] = currentSlots[idx] - 1
-  return { slotsCurrent: currentSlots }
+  if (isIncapacitated(c) || c.paladinLevel < 2 || c.bonusActionUsed) return {}
+  const newSlots = expendSlot(c.slotsCurrent, slotLevel)
+  if (newSlots === c.slotsCurrent) return {}
+  return { bonusActionUsed: true, slotsCurrent: newSlots }
 }
 
-/** Divine Smite (free 1/LR): no slot expenditure. */
 export function divineSmiteFreeUpdate(c: DndContext): Partial<DndContext> {
-  if (
-    isIncapacitated(c) ||
-    c.paladinLevel < 2 ||
-    !canPaladinSmiteFree({ paladinSmiteFreeUseAvailable: !c.smiteFreeUsed })
-  )
-    return {}
-  return { smiteFreeUsed: true }
+  if (isIncapacitated(c) || c.paladinLevel < 2 || c.bonusActionUsed || c.smiteFreeUsed) return {}
+  return { bonusActionUsed: true, smiteFreeUsed: true }
 }
 
 // -- Lifecycle --

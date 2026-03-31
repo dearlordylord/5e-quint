@@ -414,6 +414,7 @@ module dnd {
     sorcerousRestorationUsed: bool,
     innateSorceryActive: bool,
     innateSorceryCharges: int,
+    innateSorceryTurnsRemaining: int,
   }
 
   type WarlockState = {
@@ -2896,9 +2897,20 @@ module dnd {
       sorcerousRestorationUsed: false,
       innateSorceryActive: false,
       innateSorceryCharges: 2,
+      innateSorceryTurnsRemaining: 0,
     }
   }
-  pure def pSorcererStartTurn(ss: SorcererState): SorcererState = ss
+
+  /// Sorcerer start of turn: decrement Innate Sorcery duration, deactivate at 0.
+  pure def pSorcererStartTurn(ss: SorcererState): SorcererState = {
+    if (ss.innateSorceryActive and ss.innateSorceryTurnsRemaining > 0) {
+      val remaining = ss.innateSorceryTurnsRemaining - 1
+      if (remaining == 0)
+        ss.with("innateSorceryTurnsRemaining", 0).with("innateSorceryActive", false)
+      else
+        ss.with("innateSorceryTurnsRemaining", remaining)
+    } else ss
+  }
 
   /// Sorcerer short rest: Sorcerous Restoration (L5+, 1/LR).
   /// SRD: "when you finish a Short Rest, you can regain expended Sorcery Points,
@@ -2916,6 +2928,7 @@ module dnd {
       .with("sorcerousRestorationUsed", false)
       .with("innateSorceryActive", false)
       .with("innateSorceryCharges", 2)
+      .with("innateSorceryTurnsRemaining", 0)
   }
 
   // -- S1: Sorcerer Guards --
@@ -2925,11 +2938,11 @@ module dnd {
     ss.sorceryPoints >= cost and cost > 0
   }
 
-  /// Can activate Innate Sorcery: BA free, charges > 0 OR (L7+ and SP >= 2).
+  /// Can activate Innate Sorcery: L1+, BA free, charges > 0 OR (L7+ and SP >= 2).
   /// SRD: "you can use a Bonus Action to activate your innate magic for 1 minute"
   /// L7+ Sorcery Incarnate: "spend 2 Sorcery Points when you have no uses left"
   pure def canInnateSorcery(ss: SorcererState, sorcererLevel: int, bonusActionUsed: bool): bool = {
-    if (bonusActionUsed) false
+    if (sorcererLevel < 1 or bonusActionUsed) false
     else if (ss.innateSorceryCharges > 0) true
     else sorcererLevel >= 7 and ss.sorceryPoints >= 2
   }
@@ -2959,14 +2972,15 @@ module dnd {
     else 99
   }
 
-  /// Activate Innate Sorcery: consume charge or SP.
+  /// Activate Innate Sorcery: consume charge or SP. Lasts 10 rounds (1 minute).
   /// SRD: "As a Bonus Action, you can unleash that magic for 1 minute"
   pure def pUseInnateSorcery(ss: SorcererState, sorcererLevel: int): SorcererState = {
+    val base = ss.with("innateSorceryActive", true).with("innateSorceryTurnsRemaining", 10)
     if (ss.innateSorceryCharges > 0)
-      ss.with("innateSorceryActive", true).with("innateSorceryCharges", ss.innateSorceryCharges - 1)
+      base.with("innateSorceryCharges", ss.innateSorceryCharges - 1)
     else
       // Sorcery Incarnate (L7+): spend 2 SP
-      ss.with("innateSorceryActive", true).with("sorceryPoints", ss.sorceryPoints - 2)
+      base.with("sorceryPoints", ss.sorceryPoints - 2)
   }
 
   // -- Warlock --
@@ -4467,12 +4481,12 @@ module dnd {
     }
   }
 
-  /// Divine Smite (slot-based): expend a spell slot.
-  /// SRD: "Paladin's Smite... you can also cast it by expending a spell slot"
+  /// Divine Smite (slot-based): expend a spell slot. Costs Bonus Action.
+  /// SRD 5.2.1 Divine Smite: "Casting Time: Bonus Action... trigger: you hit a creature"
   /// Damage is caller-managed (like Sneak Attack).
   action doDivineSmite = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or paladinLevel < 2) unchanged
+        or paladinLevel < 2 or turnState.bonusActionUsed) unchanged
     else {
       nondet slotLevel = SLOT_LEVEL_RANGE.oneOf()
       if (not(canDivineSmite(paladinLevel, spellSlots.slotsCurrent, slotLevel))) unchanged
@@ -4480,7 +4494,7 @@ module dnd {
         val ss1 = pExpendSlot(spellSlots, slotLevel)
         all {
           state' = state,
-          turnState' = turnState,
+          turnState' = turnState.with("bonusActionUsed", true),
           spellSlots' = ss1,
           turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
@@ -4494,14 +4508,15 @@ module dnd {
     }
   }
 
-  /// Divine Smite (free 1/LR): no slot expenditure.
+  /// Divine Smite (free 1/LR): no slot expenditure. Still costs BA.
   /// SRD: "you always have it prepared... cast without a spell slot once per Long Rest"
   action doDivineSmiteFree = {
     if (turnPhase != "acting" or isIncapacitated(state)
+        or turnState.bonusActionUsed
         or not(canDivineSmiteFree(paladinState, paladinLevel))) unchanged
     else all {
       state' = state,
-      turnState' = turnState,
+      turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
       turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,

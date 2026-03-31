@@ -188,6 +188,7 @@ export interface DndContext {
   readonly sorcerousRestorationUsed: boolean
   readonly innateSorceryActive: boolean
   readonly innateSorceryCharges: number
+  readonly innateSorceryTurnsRemaining: number
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>
   readonly magicalCunningUsed: boolean

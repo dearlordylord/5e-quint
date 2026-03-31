@@ -5901,12 +5901,32 @@ module dndTest {
   }
 
   run innateSorceryLongRestResetTest = {
-    val ss = freshSorcererState(5).with("innateSorceryCharges", 0).with("innateSorceryActive", true).with("sorcerousRestorationUsed", true)
+    val ss = freshSorcererState(5).with("innateSorceryCharges", 0).with("innateSorceryActive", true).with("innateSorceryTurnsRemaining", 5).with("sorcerousRestorationUsed", true)
     val ss2 = pSorcererLongRest(ss)
     all {
       assert(not(ss2.innateSorceryActive)),
       assert(ss2.innateSorceryCharges == 2),
+      assert(ss2.innateSorceryTurnsRemaining == 0),
       assert(not(ss2.sorcerousRestorationUsed)),
+    }
+  }
+
+  run innateSorceryDurationTest = {
+    val ss = freshSorcererState(3)
+    val ss2 = pUseInnateSorcery(ss, 3)
+    val ss3 = pSorcererStartTurn(ss2)
+    // At 1 remaining, next start-of-turn deactivates
+    val ss4 = ss2.with("innateSorceryTurnsRemaining", 1)
+    val ss5 = pSorcererStartTurn(ss4)
+    all {
+      // Activation sets 10 rounds
+      assert(ss2.innateSorceryTurnsRemaining == 10),
+      // Start-of-turn decrements
+      assert(ss3.innateSorceryTurnsRemaining == 9),
+      assert(ss3.innateSorceryActive),
+      // Expires at 0
+      assert(ss5.innateSorceryTurnsRemaining == 0),
+      assert(not(ss5.innateSorceryActive)),
     }
   }
 

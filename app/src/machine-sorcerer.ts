@@ -1,14 +1,14 @@
 import {
   canUseInnateSorcery,
-  canUseSorcerousRestoration,
   slotCreationCost,
   sorcererLongRest as tsSorcererLongRest,
-  sorcerousRestoration as tsSorcerousRestoration,
   sorceryPointsMax,
   useInnateSorcery as tsUseInnateSorcery
 } from "#/features/class-sorcerer.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
+
+const SORCEROUS_RESTORATION_LEVEL = 5
 
 // -- Action Updates --
 
@@ -54,30 +54,28 @@ export function convertPointsToSlotUpdate(c: DndContext, slotLevel: number): Par
 
 // -- Lifecycle --
 
+const INNATE_SORCERY_DURATION = 10
+
 export function sorcererStartTurnUpdate(c: DndContext): Partial<DndContext> {
   if (c.sorcererLevel === 0) return {}
+  if (c.innateSorceryActive && c.innateSorceryTurnsRemaining > 0) {
+    const remaining = c.innateSorceryTurnsRemaining - 1
+    if (remaining === 0) return { innateSorceryTurnsRemaining: 0, innateSorceryActive: false }
+    return { innateSorceryTurnsRemaining: remaining }
+  }
   return {}
 }
 
 export function sorcererShortRestUpdate(c: DndContext): Partial<DndContext> {
   if (c.sorcererLevel === 0) return {}
-  if (
-    canUseSorcerousRestoration({
-      sorceryPoints: c.sorceryPoints,
-      sorceryPointsMax: c.sorceryPointsMax,
-      sorcererLevel: c.sorcererLevel,
-      sorcerousRestorationUsed: c.sorcerousRestorationUsed
-    })
-  ) {
-    const result = tsSorcerousRestoration({
-      sorceryPoints: c.sorceryPoints,
-      sorceryPointsMax: c.sorceryPointsMax,
-      sorcererLevel: c.sorcererLevel,
-      sorcerousRestorationUsed: c.sorcerousRestorationUsed
-    })
+  // Quint parity: fire at L5+ when not yet used, even if SP is at max
+  // (canUseSorcerousRestoration has an extra SP-full guard that Quint lacks)
+  if (c.sorcererLevel >= SORCEROUS_RESTORATION_LEVEL && !c.sorcerousRestorationUsed) {
+    const HALVE = 2
+    const regain = Math.floor(c.sorcererLevel / HALVE)
     return {
-      sorceryPoints: result.sorceryPoints,
-      sorcerousRestorationUsed: result.sorcerousRestorationUsed
+      sorceryPoints: Math.min(c.sorceryPoints + regain, c.sorceryPointsMax),
+      sorcerousRestorationUsed: true
     }
   }
   return {}
@@ -91,6 +89,7 @@ export function sorcererLongRestUpdate(c: DndContext): Partial<DndContext> {
     sorceryPointsMax: result.sorceryPointsMax,
     innateSorceryActive: result.innateSorceryActive,
     innateSorceryCharges: result.innateSorceryCharges,
+    innateSorceryTurnsRemaining: 0,
     sorcerousRestorationUsed: false
   }
 }
@@ -99,27 +98,20 @@ export function sorcererLongRestUpdate(c: DndContext): Partial<DndContext> {
 
 export function innateSorceryUpdate(c: DndContext): Partial<DndContext> {
   if (isIncapacitated(c)) return {}
-  if (
-    !canUseInnateSorcery({
-      innateSorceryActive: c.innateSorceryActive,
-      innateSorceryCharges: c.innateSorceryCharges,
-      sorceryPoints: c.sorceryPoints,
-      sorcererLevel: c.sorcererLevel,
-      bonusActionUsed: c.bonusActionUsed
-    })
-  )
-    return {}
-  const result = tsUseInnateSorcery({
+  const state = {
     innateSorceryActive: c.innateSorceryActive,
     innateSorceryCharges: c.innateSorceryCharges,
     sorceryPoints: c.sorceryPoints,
     sorcererLevel: c.sorcererLevel,
     bonusActionUsed: c.bonusActionUsed
-  })
+  }
+  if (!canUseInnateSorcery(state)) return {}
+  const result = tsUseInnateSorcery(state)
   return {
     bonusActionUsed: true,
     innateSorceryActive: result.innateSorceryActive,
     innateSorceryCharges: result.innateSorceryCharges,
+    innateSorceryTurnsRemaining: INNATE_SORCERY_DURATION,
     sorceryPoints: result.sorceryPoints
   }
 }
@@ -134,6 +126,7 @@ export function initialSorcererState(sorcererLevel: number) {
     sorceryPointsMax: spMax,
     sorcerousRestorationUsed: false,
     innateSorceryActive: false,
-    innateSorceryCharges: 2
+    innateSorceryCharges: 2,
+    innateSorceryTurnsRemaining: 0
   }
 }

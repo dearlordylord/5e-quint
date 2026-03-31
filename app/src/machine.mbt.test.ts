@@ -276,7 +276,8 @@ const QuintSorcererState = z.object({
   sorceryPointsMax: z.bigint(),
   sorcerousRestorationUsed: z.boolean(),
   innateSorceryActive: z.boolean(),
-  innateSorceryCharges: z.bigint()
+  innateSorceryCharges: z.bigint(),
+  innateSorceryTurnsRemaining: z.bigint()
 })
 const QuintWarlockState = z.object({
   mysticArcanumUsed: z.any().transform((raw: unknown) => {
@@ -440,6 +441,7 @@ interface NormalizedState {
   readonly sorcerousRestorationUsed: boolean
   readonly innateSorceryActive: boolean
   readonly innateSorceryCharges: number
+  readonly innateSorceryTurnsRemaining: number
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>
   readonly magicalCunningUsed: boolean
@@ -565,6 +567,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     sorcerousRestorationUsed: c.sorcerousRestorationUsed,
     innateSorceryActive: c.innateSorceryActive,
     innateSorceryCharges: c.innateSorceryCharges,
+    innateSorceryTurnsRemaining: c.innateSorceryTurnsRemaining,
     warlockLevel: c.warlockLevel,
     mysticArcanumUsed: c.mysticArcanumUsed,
     magicalCunningUsed: c.magicalCunningUsed,
@@ -678,6 +681,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     sorcerousRestorationUsed: raw.sorcererState.sorcerousRestorationUsed,
     innateSorceryActive: raw.sorcererState.innateSorceryActive,
     innateSorceryCharges: Number(raw.sorcererState.innateSorceryCharges),
+    innateSorceryTurnsRemaining: Number(raw.sorcererState.innateSorceryTurnsRemaining),
     warlockLevel: Number(raw.warlockLevel),
     mysticArcanumUsed: raw.warlockState.mysticArcanumUsed,
     magicalCunningUsed: raw.warlockState.magicalCunningUsed,
