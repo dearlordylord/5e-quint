@@ -5045,13 +5045,11 @@ module dndTest {
   // ============================================================
 
   run test_canOverchannel_level14 = {
-    val ws = freshWizardState(14)
-    assert(canOverchannel(ws, 14))
+    assert(canOverchannel(14))
   }
 
   run test_canOverchannel_level13 = {
-    val ws = freshWizardState(13)
-    assert(not(canOverchannel(ws, 13)))
+    assert(not(canOverchannel(13)))
   }
 
   run test_pOverchannel_increments = {
@@ -5338,7 +5336,7 @@ module dndTest {
   }
 
   // Cunning Strike guards (L5+, SA used, not yet used CS)
-  run cunningStrikeGuardTest = all {
+  run test_cunningStrikeGuards = all {
     // Can CS: L5+, SA used this turn, CS not yet used
     assert(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true), 5)),
     // Can't CS: SA not used

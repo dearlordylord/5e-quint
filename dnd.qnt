@@ -3110,7 +3110,7 @@ module dnd {
   /// that deals damage, you can deal maximum damage with that spell on
   /// the turn you cast it."
   /// Slot level and damage maximization are caller-managed.
-  pure def canOverchannel(ws: WizardState, wizardLevel: int): bool = {
+  pure def canOverchannel(wizardLevel: int): bool = {
     wizardLevel >= 14
   }
 
@@ -4363,28 +4363,16 @@ module dnd {
     else {
       nondet conSaveSucceeded = Set(true, false).oneOf()
       val bs1 = pUseRelentlessRage(barbarianState)
-      if (conSaveSucceeded) {
-        all {
-          state' = state.with("hp", 2 * barbarianLevel),
-          turnState' = turnState,
-          spellSlots' = spellSlots,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
-          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
-          monsterResourceState' = monsterResourceState,
-          barbarianState' = bs1, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
-        }
-      } else {
-        all {
-          state' = state,
-          turnState' = turnState,
-          spellSlots' = spellSlots,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
-          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
-          monsterResourceState' = monsterResourceState,
-          barbarianState' = bs1, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
-        }
+      val newState = if (conSaveSucceeded) state.with("hp", 2 * barbarianLevel) else state
+      all {
+        state' = newState,
+        turnState' = turnState,
+        spellSlots' = spellSlots,
+        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = bs1, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
       }
     }
   }
@@ -4568,7 +4556,7 @@ module dnd {
   /// Self-damage and slot level are caller-managed.
   action doOverchannel = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canOverchannel(wizardState, wizardLevel))) unchanged
+        or not(canOverchannel(wizardLevel))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
