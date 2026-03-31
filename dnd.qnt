@@ -3043,9 +3043,8 @@ module dnd {
   pure def pWarlockStartTurn(ws: WarlockState): WarlockState = {
     ws.with("eldritchSmiteUsedThisTurn", false)
   }
-  /// SRD: Magical Cunning recharges on Long Rest (not Short Rest).
-  /// Pact Magic slots recover on Short Rest (handled by caller), but
-  /// magicalCunningUsed flag only resets on LR.
+  /// SRD: Pact Magic slots recover on Short Rest (via pRestorePactSlots in doShortRest).
+  /// Magical Cunning recharges on Long Rest only — no SR reset.
   pure def pWarlockShortRest(ws: WarlockState): WarlockState = ws
   pure def pWarlockLongRest(ws: WarlockState): WarlockState = {
     ws.with("mysticArcanumUsed", Set()).with("magicalCunningUsed", false).with("eldritchSmiteUsedThisTurn", false)

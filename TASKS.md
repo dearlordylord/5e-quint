@@ -16,7 +16,7 @@ TS pure functions exist. Need Quint spec + MBT wiring to complete formal verific
 | Cunning Action → Quint | Rogue BA: Dash/Disengage/Hide. Uses existing `pBonusActionDash`. | **done** | T31 (TS done), T06 | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T31 |
 | Metamagic → Quint | 10 SP-consuming spell modifiers. High complexity (10 variants). | not done | T111 (TS done), T110 | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T111 |
 | Rage damage/resistance → Quint | `rageDamageBonus`, `RAGE_RESISTANCE_TYPES`, `rageResistances` pure fns. | **done** | T10 (TS done, partial Quint) | [PLAN_NONCORE.md](PLAN_NONCORE.md#barbarian) T10 |
-| Pact Magic SR recovery | Warlock pact slots recover on Short Rest. Structural — pact slots in shared `SpellSlotState`. | not done | T120 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#warlock) T120 |
+| Pact Magic SR recovery | Warlock pact slots recover on Short Rest. `pRestorePactSlots` in Quint `doShortRest`, `computeShortRest` in TS. | **done** | T120 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#warlock) T120 |
 | Wild Shape temp HP | Beast form HP pool. Touches `CreatureState.tempHp`. | not done | T100 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#druid) T100 |
 | Sorcerous Restoration → Quint | L5+ SR: regain floor(level/2) SP. Once per LR. Integrated into `pSorcererShortRest`. | **done** | T110 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T110 |
 | Innate Sorcery → Quint | L1 BA toggle, 10-round duration, 2/LR + Sorcery Incarnate L7+ SP cost. | **done** | T110 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T110 |
