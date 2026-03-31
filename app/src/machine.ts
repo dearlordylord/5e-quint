@@ -8,7 +8,6 @@ import {
   remarkableAthleteCritMovement
 } from "#/features/class-fighter.ts"
 import * as barb from "#/machine-barbarian.ts"
-import { initialClassStubs } from "#/machine-class-stubs.ts"
 import * as cleric from "#/machine-cleric.ts"
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
@@ -502,13 +501,12 @@ export const dndMachine = setup({
     dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
     ...barb.initialBarbarianState(i.barbarianLevel ?? 0),
     ...monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
-    ...initialClassStubs(i),
-    ...sorcerer.initialSorcererState(i.sorcererLevel ?? 0),
-    ...warlock.initialWarlockState(i.warlockLevel ?? 0),
     ...paladin.initialPaladinState(i.paladinLevel ?? 0),
     ...rogue.initialRogueState(i.rogueLevel ?? 0),
     ...cleric.initialClericState(i.clericLevel ?? 0),
     ...druid.initialDruidState(i.druidLevel ?? 0),
+    ...sorcerer.initialSorcererState(i.sorcererLevel ?? 0),
+    ...warlock.initialWarlockState(i.warlockLevel ?? 0),
     ...wizard.initialWizardState(i.wizardLevel ?? 0)
   }),
   on: rootEventHandlers,
