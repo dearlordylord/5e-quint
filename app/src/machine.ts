@@ -423,6 +423,10 @@ export const dndMachine = setup({
       paladin.layOnHandsUpdate(c, (e as Extract<DndEvent, { type: "USE_LAY_ON_HANDS" }>).amount)
     ),
     usePaladinChannelDivinity: assign(({ context: c }) => paladin.paladinChannelDivinityUpdate(c)),
+    useDivineSmite: assign(({ context: c, event: e }) =>
+      paladin.divineSmiteUpdate(c, (e as Extract<DndEvent, { type: "USE_DIVINE_SMITE" }>).slotLevel)
+    ),
+    useDivineSmiteFree: assign(({ context: c }) => paladin.divineSmiteFreeUpdate(c)),
     paladinStartTurn: assign(({ context: c }) => paladin.paladinStartTurnUpdate(c)),
     paladinShortRest: assign(({ context: c }) => paladin.paladinShortRestUpdate(c)),
     paladinLongRest: assign(({ context: c }) => paladin.paladinLongRestUpdate(c)),

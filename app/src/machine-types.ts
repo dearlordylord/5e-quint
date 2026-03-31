@@ -171,6 +171,7 @@ export interface DndContext {
   readonly layOnHandsMax: number
   readonly paladinChannelDivinityCharges: number
   readonly paladinChannelDivinityMax: number
+  readonly smiteFreeUsed: boolean
   readonly rogueLevel: number
   readonly sneakAttackUsedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
@@ -345,6 +346,8 @@ export type DndEvent =
   // Phase P: Paladin events
   | { readonly type: "USE_LAY_ON_HANDS"; readonly amount: number }
   | { readonly type: "USE_PALADIN_CHANNEL_DIVINITY" }
+  | { readonly type: "USE_DIVINE_SMITE"; readonly slotLevel: number }
+  | { readonly type: "USE_DIVINE_SMITE_FREE" }
   // Phase M: Monk events
   | { readonly type: "FLURRY_OF_BLOWS" }
   | { readonly type: "PATIENT_DEFENSE_FREE" }
