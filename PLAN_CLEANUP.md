@@ -325,23 +325,11 @@ During monster research we identified that `CharConfig` mixes PC build info (cla
 Every class init (`...initialFighterState(0)`, `...initialBarbarianState(0)`, etc.) runs for every character. A Wizard gets 7 meaningless fighter fields, 11 barbarian fields, 5 ranger fields, etc. — all zero/false. Same in Quint — every creature has all 12 class state vars. With 12 classes, this is ~80 unused context fields per character.
 **Fix:** (a) Accept flat cost (each class adds ~5-10 fields), or (b) refactor to a single `classState` discriminated union or sub-record that only holds the active class. Option (b) is shared with item J (lifecycle dispatch). See also item D (rest actions).
 
-### D. Rest/lifecycle actions fire for all 12 classes regardless of active class
-`fighterShortRest`, `barbarianShortRest`, ..., `bardShortRest` all run on every SHORT_REST regardless of which class the character actually is. Same for LONG_REST (12 actions) and START_TURN (12 actions). They're no-ops when level is 0, so harmless but wasteful.
-**Fix alongside C and J** — conditional dispatch or class state consolidation eliminates all three issues together.
+### D. Rest/lifecycle actions — DONE (consolidated into composite dispatchers)
+36 individual per-class lifecycle actions consolidated into 3 composite dispatchers (`classStartTurn`, `classShortRest`, `classLongRest`). Each per-class update function has an internal `level === 0` early return. Fighter normalized to use `machine-fighter.ts` with the same `(c: DndContext) => Partial<DndContext>` signature as all other classes.
 
-### J. No-op lifecycle stubs run for every class on every turn/rest
-
-**Identified:** 2026-03-31 during Ranger + Bard /simplify review
-
-Every class has `{class}StartTurnUpdate`, `{class}ShortRestUpdate`, `{class}LongRestUpdate` as separate XState actions called unconditionally on every `START_TURN`, `SHORT_REST`, and `LONG_REST` event. When a character is NOT that class (level 0), the function does `if (c.xxxLevel === 0) return {}` — allocating an empty object and running the XState assign merge for zero effect. With 12 classes, each start-of-turn fires 12 lifecycle actions, 12 empty-object allocations, and 12 no-op merges for 11 of them.
-
-Same issue in Quint: the frame conditions update all 12 class state vars on every action (always as identity assignments for non-active classes). This is the "frame condition tax" noted in the Caveats section.
-
-**Fix:** Two options:
-- **(a) Conditional dispatch:** In `machine-states.ts`, wrap each class lifecycle call in a guard that checks `{class}Level > 0`. XState supports guards on individual actions in an action array — or use a single "dispatchClassLifecycle" action that conditionally calls only the relevant class.
-- **(b) Record consolidation (shared with C):** Bundle all class states into a single `classStates` record, dispatch to the active class only. Eliminates both the per-action overhead and the per-var frame condition tax.
-
-**When to fix:** Option (a) is cheap and standalone. Option (b) is the deeper fix shared with deferred item C. Do (a) as a quick win anytime; do (b) when refactoring class state architecture.
+### J. No-op lifecycle dispatch — DONE
+Consolidated into 3 composite actions (see D above). Remaining Quint frame condition tax is accepted — no TS-side overhead.
 
 ### K. Duplicate `*ExtraAttacks` one-liners across classes
 

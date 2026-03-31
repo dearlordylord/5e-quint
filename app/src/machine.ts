@@ -1,12 +1,7 @@
 import type { SnapshotFrom } from "xstate"
 import { assign, setup } from "xstate"
 
-import {
-  fighterLongRest as tsFighterLongRest,
-  fighterShortRest as tsFighterShortRest,
-  heroicWarriorInspiration,
-  remarkableAthleteCritMovement
-} from "#/features/class-fighter.ts"
+import { remarkableAthleteCritMovement } from "#/features/class-fighter.ts"
 import * as barb from "#/machine-barbarian.ts"
 import * as bard from "#/machine-bard.ts"
 import * as cleric from "#/machine-cleric.ts"
@@ -15,6 +10,7 @@ import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-c
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
 import * as druid from "#/machine-druid.ts"
 import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
+import * as fighter from "#/machine-fighter.ts"
 import { guards } from "#/machine-guards.ts"
 import {
   actionSurgeUpdate,
@@ -350,66 +346,46 @@ export const dndMachine = setup({
       )
     ),
     classStartTurn: assign(({ context: c }) => ({
-      ...(c.fighterLevel > 0
-        ? {
-            actionSurgeUsedThisTurn: false,
-            ...(heroicWarriorInspiration(c.fighterLevel, c.heroicInspiration) ? { heroicInspiration: true } : {})
-          }
-        : {}),
-      ...(c.barbarianLevel > 0 ? barb.barbarianStartTurnUpdate(c) : {}),
-      ...(c.monkLevel > 0 ? monk.monkStartTurnUpdate(c) : {}),
-      ...(c.paladinLevel > 0 ? paladin.paladinStartTurnUpdate(c) : {}),
-      ...(c.rogueLevel > 0 ? rogue.rogueStartTurnUpdate(c) : {}),
-      ...(c.clericLevel > 0 ? cleric.clericStartTurnUpdate(c) : {}),
-      ...(c.druidLevel > 0 ? druid.druidStartTurnUpdate(c) : {}),
-      ...(c.sorcererLevel > 0 ? sorcerer.sorcererStartTurnUpdate(c) : {}),
-      ...(c.warlockLevel > 0 ? warlock.warlockStartTurnUpdate(c) : {}),
-      ...(c.wizardLevel > 0 ? wizard.wizardStartTurnUpdate(c) : {}),
-      ...(c.rangerLevel > 0 ? ranger.rangerStartTurnUpdate(c) : {}),
-      ...(c.bardLevel > 0 ? bard.bardStartTurnUpdate(c) : {})
+      ...fighter.fighterStartTurnUpdate(c),
+      ...barb.barbarianStartTurnUpdate(c),
+      ...monk.monkStartTurnUpdate(c),
+      ...paladin.paladinStartTurnUpdate(c),
+      ...rogue.rogueStartTurnUpdate(c),
+      ...cleric.clericStartTurnUpdate(c),
+      ...druid.druidStartTurnUpdate(c),
+      ...sorcerer.sorcererStartTurnUpdate(c),
+      ...warlock.warlockStartTurnUpdate(c),
+      ...wizard.wizardStartTurnUpdate(c),
+      ...ranger.rangerStartTurnUpdate(c),
+      ...bard.bardStartTurnUpdate(c)
     })),
     classShortRest: assign(({ context: c }) => ({
-      ...(c.fighterLevel > 0
-        ? tsFighterShortRest({
-            secondWindCharges: c.secondWindCharges,
-            secondWindMax: c.secondWindMax,
-            actionSurgeCharges: c.actionSurgeCharges,
-            actionSurgeMax: c.actionSurgeMax
-          })
-        : {}),
-      ...(c.barbarianLevel > 0 ? barb.barbarianShortRestUpdate(c) : {}),
-      ...(c.monkLevel > 0 ? monk.monkShortRestUpdate(c) : {}),
-      ...(c.paladinLevel > 0 ? paladin.paladinShortRestUpdate(c) : {}),
-      ...(c.rogueLevel > 0 ? rogue.rogueShortRestUpdate(c) : {}),
-      ...(c.clericLevel > 0 ? cleric.clericShortRestUpdate(c) : {}),
-      ...(c.druidLevel > 0 ? druid.druidShortRestUpdate(c) : {}),
-      ...(c.sorcererLevel > 0 ? sorcerer.sorcererShortRestUpdate(c) : {}),
-      ...(c.warlockLevel > 0 ? warlock.warlockShortRestUpdate(c) : {}),
-      ...(c.wizardLevel > 0 ? wizard.wizardShortRestUpdate(c) : {}),
-      ...(c.rangerLevel > 0 ? ranger.rangerShortRestUpdate(c) : {}),
-      ...(c.bardLevel > 0 ? bard.bardShortRestUpdate(c) : {})
+      ...fighter.fighterShortRestUpdate(c),
+      ...barb.barbarianShortRestUpdate(c),
+      ...monk.monkShortRestUpdate(c),
+      ...paladin.paladinShortRestUpdate(c),
+      ...rogue.rogueShortRestUpdate(c),
+      ...cleric.clericShortRestUpdate(c),
+      ...druid.druidShortRestUpdate(c),
+      ...sorcerer.sorcererShortRestUpdate(c),
+      ...warlock.warlockShortRestUpdate(c),
+      ...wizard.wizardShortRestUpdate(c),
+      ...ranger.rangerShortRestUpdate(c),
+      ...bard.bardShortRestUpdate(c)
     })),
     classLongRest: assign(({ context: c }) => ({
-      ...(c.fighterLevel > 0
-        ? tsFighterLongRest({
-            secondWindCharges: c.secondWindCharges,
-            secondWindMax: c.secondWindMax,
-            actionSurgeCharges: c.actionSurgeCharges,
-            actionSurgeMax: c.actionSurgeMax,
-            indomitableMax: c.indomitableMax
-          })
-        : {}),
-      ...(c.barbarianLevel > 0 ? barb.barbarianLongRestUpdate(c) : {}),
-      ...(c.monkLevel > 0 ? monk.monkLongRestUpdate(c) : {}),
-      ...(c.paladinLevel > 0 ? paladin.paladinLongRestUpdate(c) : {}),
-      ...(c.rogueLevel > 0 ? rogue.rogueLongRestUpdate(c) : {}),
-      ...(c.clericLevel > 0 ? cleric.clericLongRestUpdate(c) : {}),
-      ...(c.druidLevel > 0 ? druid.druidLongRestUpdate(c) : {}),
-      ...(c.sorcererLevel > 0 ? sorcerer.sorcererLongRestUpdate(c) : {}),
-      ...(c.warlockLevel > 0 ? warlock.warlockLongRestUpdate(c) : {}),
-      ...(c.wizardLevel > 0 ? wizard.wizardLongRestUpdate(c) : {}),
-      ...(c.rangerLevel > 0 ? ranger.rangerLongRestUpdate(c) : {}),
-      ...(c.bardLevel > 0 ? bard.bardLongRestUpdate(c) : {})
+      ...fighter.fighterLongRestUpdate(c),
+      ...barb.barbarianLongRestUpdate(c),
+      ...monk.monkLongRestUpdate(c),
+      ...paladin.paladinLongRestUpdate(c),
+      ...rogue.rogueLongRestUpdate(c),
+      ...cleric.clericLongRestUpdate(c),
+      ...druid.druidLongRestUpdate(c),
+      ...sorcerer.sorcererLongRestUpdate(c),
+      ...warlock.warlockLongRestUpdate(c),
+      ...wizard.wizardLongRestUpdate(c),
+      ...ranger.rangerLongRestUpdate(c),
+      ...bard.bardLongRestUpdate(c)
     })),
     useHeroicInspiration: assign(({ context: c }) => (c.heroicInspiration ? { heroicInspiration: false } : {})),
     scoreCriticalHit: assign(({ context: c }) => {

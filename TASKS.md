@@ -48,10 +48,10 @@ Lower combat frequency but fill MBT gaps.
 | Task | Description | Status | Deps | Origin |
 |------|-------------|--------|------|--------|
 | Reaction pattern validation | Uncanny Dodge established the pattern (`pUseReaction` + `reactionAvailable` gate). | **done** | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md) P1 |
-| J: No-op lifecycle dispatch | 12 classes × 3 lifecycle events = 36 no-op assigns per turn/rest. Conditional dispatch or class state consolidation. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#j-no-op-lifecycle-stubs-run-for-every-class-on-every-turnrest) J |
-| K: Duplicate `*ExtraAttacks` | barbarian/monk/ranger have identical `level >= 5 ? 1 : 0`. Extract shared `standardExtraAttacks`. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#k-duplicate-extraattacks-one-liners-across-classes) K |
-| M: `tirelessTempHp` param name | `wisMod` parameter receives pre-clamped `tirelessMax`. Correct but misleading. Rename. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#m-tirelesstempHp-parameter-name-mismatch) M |
-| C+D: Class state architecture | All 12 class states init for every character (~80 unused fields). Rest/lifecycle fire for all 12. Shared root cause with J. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#c-all-class-states-initialize-for-all-characters) C/D |
+| J: No-op lifecycle dispatch | Consolidated 36 actions → 3 composite dispatchers. Fighter normalized to `machine-fighter.ts`. | **done** | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#j-no-op-lifecycle-dispatch--done) J |
+| K: Duplicate `*ExtraAttacks` | Extracted `standardExtraAttacks` in machine-helpers.ts. Barbarian/monk/ranger re-export. | **done** | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#k-duplicate-extraattacks-one-liners-across-classes) K |
+| M: `tirelessTempHp` param name | Renamed `wisMod` → `wisComponent` with JSDoc. | **done** | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#m-tirelesstempHp-parameter-name-mismatch) M |
+| C: Class state init architecture | All 12 class states init for every character (~80 unused fields). D/J lifecycle dispatch resolved; init overhead remains. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#c-all-class-states-initialize-for-all-characters) C |
 | Integration bug: smiteFreeUsed reset | Paladin feature-store missing START_TURN reset. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #1 |
 | Integration bug: intimidatingPresenceDC | Hardcoded to 0. Needs real strMod/profBonus. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #4 |
 | Integration bug: rogueLevel unused param | `canExecuteSneakAttack` accepts but doesn't use rogueLevel. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #2 |
