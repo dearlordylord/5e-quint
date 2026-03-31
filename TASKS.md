@@ -17,7 +17,7 @@ TS pure functions exist. Need Quint spec + MBT wiring to complete formal verific
 | Metamagic → Quint | 10 SP-consuming spell modifiers. High complexity (10 variants). | not done | T111 (TS done), T110 | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T111 |
 | Rage damage/resistance → Quint | `rageDamageBonus`, `RAGE_RESISTANCE_TYPES`, `rageResistances` pure fns. | **done** | T10 (TS done, partial Quint) | [PLAN_NONCORE.md](PLAN_NONCORE.md#barbarian) T10 |
 | Pact Magic SR recovery | Warlock pact slots recover on Short Rest. `pRestorePactSlots` in Quint `doShortRest`, `computeShortRest` in TS. | **done** | T120 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#warlock) T120 |
-| Wild Shape temp HP | SRD 5.2.1: NO separate beast HP pool — druid retains HP, gains temp HP = druid level on enter. 1-line fix: `pGrantTempHp(state, druidLevel, false)` in `doEnterWildShape` + TS parity. TS `class-druid.ts` has orphaned 5.1-style beast HP functions (never wired to DndContext). | not done | T100 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#druid) T100 |
+| Wild Shape temp HP | SRD 5.2.1: temp HP = druid level on enter. No beast HP pool (5.1 change). | **done** | T100 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#druid) T100 |
 | Sorcerous Restoration → Quint | L5+ SR: regain floor(level/2) SP. Once per LR. Integrated into `pSorcererShortRest`. | **done** | T110 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T110 |
 | Innate Sorcery → Quint | L1 BA toggle, 10-round duration, 2/LR + Sorcery Incarnate L7+ SP cost. | **done** | T110 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T110 |
 
