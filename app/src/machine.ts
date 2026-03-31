@@ -39,6 +39,7 @@ import {
   useRechargeAbilityUpdate
 } from "#/machine-monster.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
+import * as rogue from "#/machine-rogue.ts"
 import { computeShortRest, expendSlot } from "#/machine-spells.ts"
 import { computeInitTurn } from "#/machine-startturn.ts"
 import {
@@ -416,9 +417,11 @@ export const dndMachine = setup({
     paladinStartTurn: assign(() => ({})),
     paladinShortRest: assign(() => ({})),
     paladinLongRest: assign(() => ({})),
-    rogueStartTurn: assign(() => ({})),
-    rogueShortRest: assign(() => ({})),
-    rogueLongRest: assign(() => ({})),
+    useSneakAttack: assign(({ context: c }) => rogue.sneakAttackUpdate(c)),
+    useSteadyAim: assign(({ context: c }) => rogue.steadyAimUpdate(c)),
+    rogueStartTurn: assign(({ context: c }) => rogue.rogueStartTurnUpdate(c)),
+    rogueShortRest: assign(({ context: c }) => rogue.rogueShortRestUpdate(c)),
+    rogueLongRest: assign(({ context: c }) => rogue.rogueLongRestUpdate(c)),
     clericStartTurn: assign(() => ({})),
     clericShortRest: assign(() => ({})),
     clericLongRest: assign(() => ({})),
@@ -473,6 +476,7 @@ export const dndMachine = setup({
     dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
     ...barb.initialBarbarianState(i.barbarianLevel ?? 0),
     ...monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
+    ...rogue.initialRogueState(i.rogueLevel ?? 0),
     ...initialClassStubs(i)
   }),
   on: rootEventHandlers,

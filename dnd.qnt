@@ -2657,6 +2657,32 @@ module dnd {
   pure def pRogueShortRest(rs: RogueState): RogueState = rs
   pure def pRogueLongRest(rs: RogueState): RogueState = rs
 
+  // -- R1: Guards --
+
+  /// Can use Sneak Attack: L1+, not used this turn.
+  /// SRD L1: "Once per turn, you can deal an extra 1d6 damage..."
+  pure def canSneakAttack(rs: RogueState, rogueLevel: int): bool = {
+    rogueLevel >= 1 and not(rs.sneakAttackUsedThisTurn)
+  }
+
+  /// Can use Steady Aim: L3+, not used this turn, BA free.
+  /// SRD L3: "As a Bonus Action, you give yourself Advantage on your next attack roll..."
+  pure def canSteadyAim(rs: RogueState, rogueLevel: int, bonusActionUsed: bool): bool = {
+    rogueLevel >= 3 and not(rs.steadyAimUsedThisTurn) and not(bonusActionUsed)
+  }
+
+  // -- R2: Transitions --
+
+  /// Mark Sneak Attack as used this turn.
+  pure def pUseSneakAttack(rs: RogueState): RogueState = {
+    rs.with("sneakAttackUsedThisTurn", true)
+  }
+
+  /// Use Steady Aim: mark used, sets speed to 0.
+  pure def pUseSteadyAim(rs: RogueState): RogueState = {
+    rs.with("steadyAimUsedThisTurn", true)
+  }
+
   // -- Cleric --
   pure def freshClericState(clericLevel: int): ClericState = {
     val cdMax = if (clericLevel >= 2) 2 else 0
@@ -3148,7 +3174,7 @@ module dnd {
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
     // A25: class selection — one of Fighter, Barbarian, or Monk at level l, others at 0
-    nondet pcClass = Set("Fighter", "Barbarian", "Monk").oneOf()
+    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Rogue").oneOf()
     // D5: Wholeness of Body uses WIS mod; spec uses nondet range 1-5
     nondet wisMod = 1.to(5).oneOf()
     if (kind == Monster) {
@@ -3184,6 +3210,7 @@ module dnd {
       val fLevel = if (pcClass == "Fighter") l else 0
       val bLevel = if (pcClass == "Barbarian") l else 0
       val mLevel = if (pcClass == "Monk") l else 0
+      val rLevel = if (pcClass == "Rogue") l else 0
       // Stub: all other classes at level 0 until parallel worktree agents implement them
       all {
         creatureKind' = PC,
@@ -3192,14 +3219,14 @@ module dnd {
         fighterLevel' = fLevel,
         barbarianLevel' = bLevel,
         monkLevel' = mLevel,
-        paladinLevel' = 0, rogueLevel' = 0, clericLevel' = 0,
+        paladinLevel' = 0, rogueLevel' = rLevel, clericLevel' = 0,
         druidLevel' = 0, sorcererLevel' = 0, warlockLevel' = 0, wizardLevel' = 0,
         state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
         fighterState' = freshFighterState(fLevel),
         barbarianState' = freshBarbarianState(bLevel),
         monkState' = freshMonkState(mLevel, wisMod),
         paladinState' = freshPaladinState(0),
-        rogueState' = freshRogueState(0),
+        rogueState' = freshRogueState(rLevel),
         clericState' = freshClericState(0),
         druidState' = freshDruidState(0),
         sorcererState' = freshSorcererState(0),
@@ -4072,9 +4099,53 @@ module dnd {
     }
   }
 
+  // -- Rogue Actions --
+
+  /// Sneak Attack: mark used this turn. Damage is caller-managed.
+  /// SRD L1: "Once per turn, you can deal an extra 1d6 damage to one creature you hit
+  /// with an attack roll if you have Advantage on the roll and the attack uses a Finesse
+  /// or a Ranged weapon."
+  action doUseSneakAttack = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canSneakAttack(rogueState, rogueLevel))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = pUseSneakAttack(rogueState), rogueLevel' = rogueLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
+  /// Steady Aim: BA, grants advantage on next attack, speed becomes 0.
+  /// SRD L3: "As a Bonus Action, you give yourself Advantage on your next attack roll
+  /// on the current turn. You can use this feature only if you haven't moved during
+  /// this turn, and after you use it, your Speed is 0 until the end of the current turn."
+  action doUseSteadyAim = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canSteadyAim(rogueState, rogueLevel, turnState.bonusActionUsed))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState.with("bonusActionUsed", true).with("effectiveSpeed", 0).with("movementRemaining", 0),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = pUseSteadyAim(rogueState), rogueLevel' = rogueLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   // -- 19.7 Step Action --
 
-  /// PC-only actions: fighter features, barbarian features, monk features, death saves, PC damage variants
+  /// PC-only actions: fighter features, barbarian features, monk features, rogue features, death saves, PC damage variants
   action stepPC = any {
     doTakeDamage,
     doTakeDamageWithMods,
@@ -4102,6 +4173,8 @@ module dnd {
     doStunningStrike,
     doWholenessOfBody,
     doUncannyMetabolism,
+    doUseSneakAttack,
+    doUseSteadyAim,
   }
 
   // -- 19.6e Monster Resource Actions (Phase L) --

@@ -4862,4 +4862,136 @@ module dndTest {
     })
   }
 
+  // ============================================================
+  // Phase R: Rogue (Thief)
+  // ============================================================
+
+  pure val TEST_ROGUE_STATE: RogueState = freshRogueState(5)
+
+  run test_freshRogueState_level5 = {
+    val rs = freshRogueState(5)
+    all {
+      assert(rs.sneakAttackUsedThisTurn == false),
+      assert(rs.steadyAimUsedThisTurn == false),
+    }
+  }
+
+  run test_freshRogueState_level0 = {
+    val rs = freshRogueState(0)
+    all {
+      assert(rs.sneakAttackUsedThisTurn == false),
+      assert(rs.steadyAimUsedThisTurn == false),
+    }
+  }
+
+  // -- Sneak Attack guards --
+  run test_canSneakAttack_fresh = assert(canSneakAttack(TEST_ROGUE_STATE, 5) == true)
+  run test_canSneakAttack_alreadyUsed = assert(canSneakAttack(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true), 5) == false)
+  run test_canSneakAttack_level0 = assert(canSneakAttack(TEST_ROGUE_STATE, 0) == false)
+
+  // -- Steady Aim guards --
+  run test_canSteadyAim_fresh = assert(canSteadyAim(TEST_ROGUE_STATE, 5, false) == true)
+  run test_canSteadyAim_level2 = assert(canSteadyAim(TEST_ROGUE_STATE, 2, false) == false)
+  run test_canSteadyAim_level3 = assert(canSteadyAim(TEST_ROGUE_STATE, 3, false) == true)
+  run test_canSteadyAim_baUsed = assert(canSteadyAim(TEST_ROGUE_STATE, 5, true) == false)
+  run test_canSteadyAim_alreadyUsed = assert(canSteadyAim(TEST_ROGUE_STATE.with("steadyAimUsedThisTurn", true), 5, false) == false)
+
+  // -- Transitions --
+  run test_pUseSneakAttack = {
+    val result = pUseSneakAttack(TEST_ROGUE_STATE)
+    assert(result.sneakAttackUsedThisTurn == true)
+  }
+
+  run test_pUseSteadyAim = {
+    val result = pUseSteadyAim(TEST_ROGUE_STATE)
+    assert(result.steadyAimUsedThisTurn == true)
+  }
+
+  // -- Lifecycle --
+  run test_pRogueStartTurn = {
+    val rs = TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("steadyAimUsedThisTurn", true)
+    val result = pRogueStartTurn(rs)
+    all {
+      assert(result.sneakAttackUsedThisTurn == false),
+      assert(result.steadyAimUsedThisTurn == false),
+    }
+  }
+
+  run test_pRogueShortRest = {
+    val rs = TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true)
+    val result = pRogueShortRest(rs)
+    assert(result == rs)
+  }
+
+  run test_pRogueLongRest = {
+    val rs = TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true)
+    val result = pRogueLongRest(rs)
+    assert(result == rs)
+  }
+
+  // -- Trace: Sneak Attack --
+  run test_trace_sneakAttack = {
+    init.then(all {
+      // Setup: need a Rogue PC in acting phase
+      assert(true),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = freshRogueState(5), rogueLevel' = 5,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }).then(doEnterCombat)
+      .then(doStartTurn)
+      .then(all {
+        assert(rogueState.sneakAttackUsedThisTurn == false),
+        doUseSneakAttack
+      }).then(all {
+        assert(rogueState.sneakAttackUsedThisTurn == true),
+        // Second use should be no-op (unchanged)
+        doUseSneakAttack
+      }).then(all {
+        assert(rogueState.sneakAttackUsedThisTurn == true),
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      })
+  }
+
+  // -- Trace: Steady Aim --
+  run test_trace_steadyAim = {
+    init.then(all {
+      assert(true),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = freshRogueState(5), rogueLevel' = 5,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }).then(doEnterCombat)
+      .then(doStartTurn)
+      .then(all {
+        assert(rogueState.steadyAimUsedThisTurn == false),
+        assert(turnState.bonusActionUsed == false),
+        doUseSteadyAim
+      }).then(all {
+        assert(rogueState.steadyAimUsedThisTurn == true),
+        assert(turnState.bonusActionUsed == true),
+        assert(turnState.effectiveSpeed == 0),
+        assert(turnState.movementRemaining == 0),
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      })
+  }
+
 }

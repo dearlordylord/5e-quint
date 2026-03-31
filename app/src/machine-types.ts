@@ -351,6 +351,9 @@ export type DndEvent =
   | { readonly type: "STUNNING_STRIKE" }
   | { readonly type: "WHOLENESS_OF_BODY"; readonly healRoll: number }
   | { readonly type: "UNCANNY_METABOLISM"; readonly healRoll: number }
+  // Phase R: Rogue events
+  | { readonly type: "USE_SNEAK_ATTACK" }
+  | { readonly type: "USE_STEADY_AIM" }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines
 export {

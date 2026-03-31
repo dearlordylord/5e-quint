@@ -742,6 +742,8 @@ type EventActionMap = {
   STUNNING_STRIKE: "doStunningStrike"
   WHOLENESS_OF_BODY: "doWholenessOfBody"
   UNCANNY_METABOLISM: "doUncannyMetabolism"
+  USE_SNEAK_ATTACK: "doUseSneakAttack"
+  USE_STEADY_AIM: "doUseSteadyAim"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -871,6 +873,8 @@ const driverSchema = {
   doStunningStrike: {},
   doWholenessOfBody: { healRoll: ITFBigInt.optional() },
   doUncannyMetabolism: { healRoll: ITFBigInt.optional() },
+  doUseSneakAttack: {},
+  doUseSteadyAim: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1044,6 +1048,7 @@ function createDndDriver() {
           const fLevel = cls === "Fighter" ? level : 0
           const bLevel = cls === "Barbarian" ? level : 0
           const mLevel = cls === "Monk" ? level : 0
+          const rLevel = cls === "Rogue" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1056,7 +1061,7 @@ function createDndDriver() {
               monkLevel: mLevel,
               wholenessMax: Number(wisMod),
               paladinLevel: 0,
-              rogueLevel: 0,
+              rogueLevel: rLevel,
               clericLevel: 0,
               druidLevel: 0,
               sorcererLevel: 0,
@@ -1432,6 +1437,12 @@ function createDndDriver() {
       },
       doUncannyMetabolism: ({ healRoll }) => {
         if (healRoll != null) send({ type: "UNCANNY_METABOLISM", healRoll: Number(healRoll) })
+      },
+      doUseSneakAttack: () => {
+        send({ type: "USE_SNEAK_ATTACK" })
+      },
+      doUseSteadyAim: () => {
+        send({ type: "USE_STEADY_AIM" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

@@ -256,7 +256,9 @@ export const turnPhaseConfig = {
         STEP_OF_THE_WIND_FOCUS: { actions: ["stepOfTheWindFocus"] },
         STUNNING_STRIKE: { actions: ["stunningStrike"] },
         WHOLENESS_OF_BODY: { actions: ["wholenessOfBody"] },
-        UNCANNY_METABOLISM: { actions: ["uncannyMetabolism"] }
+        UNCANNY_METABOLISM: { actions: ["uncannyMetabolism"] },
+        USE_SNEAK_ATTACK: { actions: ["useSneakAttack"] },
+        USE_STEADY_AIM: { actions: ["useSteadyAim"] }
       }
     },
     waitingForTurn: {
