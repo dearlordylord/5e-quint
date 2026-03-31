@@ -487,10 +487,10 @@ export const dndMachine = setup({
     dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
     ...barb.initialBarbarianState(i.barbarianLevel ?? 0),
     ...monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
+    ...initialClassStubs(i),
     ...paladin.initialPaladinState(i.paladinLevel ?? 0),
     ...rogue.initialRogueState(i.rogueLevel ?? 0),
     ...cleric.initialClericState(i.clericLevel ?? 0),
-    ...initialClassStubs(i),
     ...wizard.initialWizardState(i.wizardLevel ?? 0)
   }),
   on: rootEventHandlers,
