@@ -321,9 +321,8 @@ During monster research we identified that `CharConfig` mixes PC build info (cla
 
 ## Deferred (not blocking — do NOT implement without explicit owner request)
 
-### C. All class states initialize for all characters
-Every class init (`...initialFighterState(0)`, `...initialBarbarianState(0)`, etc.) runs for every character. A Wizard gets 7 meaningless fighter fields, 11 barbarian fields, 5 ranger fields, etc. — all zero/false. Same in Quint — every creature has all 12 class state vars. With 12 classes, this is ~80 unused context fields per character.
-**Fix:** (a) Accept flat cost (each class adds ~5-10 fields), or (b) refactor to a single `classState` discriminated union or sub-record that only holds the active class. Option (b) is shared with item J (lifecycle dispatch). See also item D (rest actions).
+### C. Class state consolidation — DONE
+76 flat class-specific fields in DndContext consolidated into `classStates: Partial<ClassStateMap>` — a single field holding 12 typed per-class state interfaces (e.g., `FighterClassState`, `BarbarianClassState`). TS-only change; Quint spec unchanged (zero risk to 97 frame conditions). `updateClass` helper eliminates nested spread boilerplate. `mergeClassUpdates` handles composite lifecycle dispatchers. MBT bridge adapted with `flattenClassStates` helper. All 1664 tests pass including MBT trace replay.
 
 ### D. Rest/lifecycle actions — DONE (consolidated into composite dispatchers)
 36 individual per-class lifecycle actions consolidated into 3 composite dispatchers (`classStartTurn`, `classShortRest`, `classLongRest`). Each per-class update function has an internal `level === 0` early return. Fighter normalized to use `machine-fighter.ts` with the same `(c: DndContext) => Partial<DndContext>` signature as all other classes.

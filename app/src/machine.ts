@@ -22,7 +22,8 @@ import {
   removeConditionUpdate,
   removeIncapSource,
   spendHalfSpeed,
-  spendHitDieUpdate
+  spendHitDieUpdate,
+  updateClass
 } from "#/machine-helpers.ts"
 import * as monk from "#/machine-monk.ts"
 import {
@@ -95,6 +96,19 @@ export type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 const MT = { context: {} as DndContext, events: {} as DndEvent, input: {} as DndMachineInput }
 /* eslint-enable @typescript-eslint/consistent-type-assertions */
+
+/** Merge multiple class update results, combining classStates from each.
+ * Each class lifecycle function returns either {} (inactive) or { classStates: { ...merged } }. */
+function mergeClassUpdates(c: DndContext, updates: ReadonlyArray<Partial<DndContext>>): Partial<DndContext> {
+  let cs = c.classStates
+  let result: Partial<DndContext> = {}
+  for (const u of updates) {
+    if (u.classStates) cs = { ...cs, ...u.classStates }
+    const { classStates: _, ...rest } = u
+    if (Object.keys(rest).length > 0) result = { ...result, ...rest }
+  }
+  return cs === c.classStates ? result : { ...result, classStates: cs }
+}
 
 export const dndMachine = setup({
   types: MT,
@@ -333,52 +347,62 @@ export const dndMachine = setup({
     useTacticalMind: assign(({ context: c, event: e }) =>
       fighter.tacticalMindUpdate(c, asUseTacticalMind(e).boostedCheckSucceeds)
     ),
-    classStartTurn: assign(({ context: c }) => ({
-      ...fighter.fighterStartTurnUpdate(c),
-      ...barb.barbarianStartTurnUpdate(c),
-      ...monk.monkStartTurnUpdate(c),
-      ...paladin.paladinStartTurnUpdate(c),
-      ...rogue.rogueStartTurnUpdate(c),
-      ...cleric.clericStartTurnUpdate(c),
-      ...druid.druidStartTurnUpdate(c),
-      ...sorcerer.sorcererStartTurnUpdate(c),
-      ...warlock.warlockStartTurnUpdate(c),
-      ...wizard.wizardStartTurnUpdate(c),
-      ...ranger.rangerStartTurnUpdate(c),
-      ...bard.bardStartTurnUpdate(c)
-    })),
-    classShortRest: assign(({ context: c }) => ({
-      ...fighter.fighterShortRestUpdate(c),
-      ...barb.barbarianShortRestUpdate(c),
-      ...monk.monkShortRestUpdate(c),
-      ...paladin.paladinShortRestUpdate(c),
-      ...rogue.rogueShortRestUpdate(c),
-      ...cleric.clericShortRestUpdate(c),
-      ...druid.druidShortRestUpdate(c),
-      ...sorcerer.sorcererShortRestUpdate(c),
-      ...warlock.warlockShortRestUpdate(c),
-      ...wizard.wizardShortRestUpdate(c),
-      ...ranger.rangerShortRestUpdate(c),
-      ...bard.bardShortRestUpdate(c)
-    })),
-    classLongRest: assign(({ context: c }) => ({
-      ...fighter.fighterLongRestUpdate(c),
-      ...barb.barbarianLongRestUpdate(c),
-      ...monk.monkLongRestUpdate(c),
-      ...paladin.paladinLongRestUpdate(c),
-      ...rogue.rogueLongRestUpdate(c),
-      ...cleric.clericLongRestUpdate(c),
-      ...druid.druidLongRestUpdate(c),
-      ...sorcerer.sorcererLongRestUpdate(c),
-      ...warlock.warlockLongRestUpdate(c),
-      ...wizard.wizardLongRestUpdate(c),
-      ...ranger.rangerLongRestUpdate(c),
-      ...bard.bardLongRestUpdate(c)
-    })),
-    useHeroicInspiration: assign(({ context: c }) => (c.heroicInspiration ? { heroicInspiration: false } : {})),
+    classStartTurn: assign(({ context: c }) =>
+      mergeClassUpdates(c, [
+        fighter.fighterStartTurnUpdate(c),
+        barb.barbarianStartTurnUpdate(c),
+        monk.monkStartTurnUpdate(c),
+        paladin.paladinStartTurnUpdate(c),
+        rogue.rogueStartTurnUpdate(c),
+        cleric.clericStartTurnUpdate(c),
+        druid.druidStartTurnUpdate(c),
+        sorcerer.sorcererStartTurnUpdate(c),
+        warlock.warlockStartTurnUpdate(c),
+        wizard.wizardStartTurnUpdate(c),
+        ranger.rangerStartTurnUpdate(c),
+        bard.bardStartTurnUpdate(c)
+      ])
+    ),
+    classShortRest: assign(({ context: c }) =>
+      mergeClassUpdates(c, [
+        fighter.fighterShortRestUpdate(c),
+        barb.barbarianShortRestUpdate(c),
+        monk.monkShortRestUpdate(c),
+        paladin.paladinShortRestUpdate(c),
+        rogue.rogueShortRestUpdate(c),
+        cleric.clericShortRestUpdate(c),
+        druid.druidShortRestUpdate(c),
+        sorcerer.sorcererShortRestUpdate(c),
+        warlock.warlockShortRestUpdate(c),
+        wizard.wizardShortRestUpdate(c),
+        ranger.rangerShortRestUpdate(c),
+        bard.bardShortRestUpdate(c)
+      ])
+    ),
+    classLongRest: assign(({ context: c }) =>
+      mergeClassUpdates(c, [
+        fighter.fighterLongRestUpdate(c),
+        barb.barbarianLongRestUpdate(c),
+        monk.monkLongRestUpdate(c),
+        paladin.paladinLongRestUpdate(c),
+        rogue.rogueLongRestUpdate(c),
+        cleric.clericLongRestUpdate(c),
+        druid.druidLongRestUpdate(c),
+        sorcerer.sorcererLongRestUpdate(c),
+        warlock.warlockLongRestUpdate(c),
+        wizard.wizardLongRestUpdate(c),
+        ranger.rangerLongRestUpdate(c),
+        bard.bardLongRestUpdate(c)
+      ])
+    ),
+    useHeroicInspiration: assign(({ context: c }) => {
+      if (!c.classStates.fighter?.heroicInspiration) return {}
+      return updateClass(c, "fighter", { heroicInspiration: false })
+    }),
     scoreCriticalHit: assign(({ context: c }) => {
-      if (isIncapacitated(c) || c.fighterLevel < 3) return {}
-      const d = remarkableAthleteCritMovement(c.fighterLevel, c.effectiveSpeed)
+      const fLevel = c.classStates.fighter?.level ?? 0
+      if (isIncapacitated(c) || fLevel < 3) return {}
+      const d = remarkableAthleteCritMovement(fLevel, c.effectiveSpeed)
       return d <= 0 ? { bonusMovementOAFree: true } : { bonusMovementRemaining: d, bonusMovementOAFree: true }
     }),
     useBonusMovement: assign(({ context: c, event: e }) =>
@@ -486,8 +510,6 @@ export const dndMachine = setup({
     ...INITIAL_CONDITIONS,
     ...INITIAL_TURN_STATE,
     creatureKind: i.creatureKind ?? "PC",
-    fighterLevel: i.fighterLevel ?? 0,
-    ...fighter.initialFighterState(i.fighterLevel ?? 0),
     activeEffects: [] as ReadonlyArray<ActiveEffect>,
     concentrationSpellId: "",
     dead: false,
@@ -515,17 +537,20 @@ export const dndMachine = setup({
     rechargeAvailable: i.rechargeAvailable ?? {},
     dailyUsesRemaining: i.dailyUsesRemaining ?? {},
     dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
-    ...barb.initialBarbarianState(i.barbarianLevel ?? 0),
-    ...monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
-    ...paladin.initialPaladinState(i.paladinLevel ?? 0),
-    ...rogue.initialRogueState(i.rogueLevel ?? 0),
-    ...cleric.initialClericState(i.clericLevel ?? 0),
-    ...druid.initialDruidState(i.druidLevel ?? 0),
-    ...sorcerer.initialSorcererState(i.sorcererLevel ?? 0),
-    ...warlock.initialWarlockState(i.warlockLevel ?? 0),
-    ...wizard.initialWizardState(i.wizardLevel ?? 0),
-    ...ranger.initialRangerState(i.rangerLevel ?? 0, i.wisMod),
-    ...bard.initialBardState(i.bardLevel ?? 0, i.chaMod)
+    classStates: {
+      fighter: fighter.initialFighterState(i.fighterLevel ?? 0),
+      barbarian: barb.initialBarbarianState(i.barbarianLevel ?? 0),
+      monk: monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
+      paladin: paladin.initialPaladinState(i.paladinLevel ?? 0),
+      rogue: rogue.initialRogueState(i.rogueLevel ?? 0),
+      cleric: cleric.initialClericState(i.clericLevel ?? 0),
+      druid: druid.initialDruidState(i.druidLevel ?? 0),
+      sorcerer: sorcerer.initialSorcererState(i.sorcererLevel ?? 0),
+      warlock: warlock.initialWarlockState(i.warlockLevel ?? 0),
+      wizard: wizard.initialWizardState(i.wizardLevel ?? 0),
+      ranger: ranger.initialRangerState(i.rangerLevel ?? 0, i.wisMod),
+      bard: bard.initialBardState(i.bardLevel ?? 0, i.chaMod)
+    }
   }),
   on: rootEventHandlers,
   states: {

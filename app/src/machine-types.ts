@@ -1,4 +1,4 @@
-import type { MetamagicOption } from "#/features/class-sorcerer.ts"
+import type { ClassStateMap } from "#/machine-class-states.ts"
 import type { ConditionFlag } from "#/machine-helpers.ts"
 import type {
   ActionType,
@@ -81,6 +81,23 @@ export interface DndMachineInput {
   readonly chaMod?: number
 }
 
+// Per-class state interfaces: extracted to machine-class-states.ts for max-lines
+export type {
+  BarbarianClassState,
+  BardClassState,
+  ClassStateMap,
+  ClericClassState,
+  DruidClassState,
+  FighterClassState,
+  MonkClassState,
+  PaladinClassState,
+  RangerClassState,
+  RogueClassState,
+  SorcererClassState,
+  WarlockClassState,
+  WizardClassState
+} from "#/machine-class-states.ts"
+
 // --- Context ---
 
 export interface DndContext {
@@ -130,16 +147,6 @@ export interface DndContext {
   readonly concentrationSpellId: string
   readonly hitDiceRemaining: number
   readonly activeEffects: ReadonlyArray<ActiveEffect>
-  // Fighter charge state (Quint parity: fighterState)
-  readonly secondWindCharges: number
-  readonly secondWindMax: number
-  readonly actionSurgeCharges: number
-  readonly actionSurgeMax: number
-  readonly actionSurgeUsedThisTurn: boolean
-  readonly indomitableCharges: number
-  readonly indomitableMax: number
-  readonly heroicInspiration: boolean
-  readonly fighterLevel: number
   readonly creatureKind: CreatureKind
   // MonsterResourceState (Quint parity: monsterResourceState)
   readonly legendaryActionsMax: number // effective max (includes lair bonus) — not compared in MBT
@@ -149,73 +156,8 @@ export interface DndContext {
   readonly rechargeAvailable: Readonly<Record<string, boolean>>
   readonly dailyUsesRemaining: Readonly<Record<string, number>>
   readonly dailyUsesMax: Readonly<Record<string, number>> // not compared in MBT — derived from stat block
-  // BarbarianState (Quint parity: barbarianState)
-  readonly barbarianLevel: number
-  readonly raging: boolean
-  readonly rageCharges: number
-  readonly rageMaxCharges: number
-  readonly rageTurnsRemaining: number
-  readonly attackedOrForcedSaveThisTurn: boolean
-  readonly rageExtendedWithBA: boolean
-  readonly recklessThisTurn: boolean
-  readonly frenzyUsedThisTurn: boolean
-  readonly intimidatingPresenceUsed: boolean
-  readonly relentlessRageTimesUsed: number
-  readonly brutalStrikeUsedThisTurn: boolean
-  // MonkState (Quint parity: monkState)
-  readonly monkLevel: number
-  readonly focusPoints: number
-  readonly focusMax: number
-  readonly uncannyMetabolismUsed: boolean
-  readonly stunningStrikeUsedThisTurn: boolean
-  readonly wholenessCharges: number
-  readonly wholenessMax: number
-  // Stub class states (prep for parallel integration)
-  readonly paladinLevel: number
-  readonly layOnHandsPool: number
-  readonly layOnHandsMax: number
-  readonly paladinChannelDivinityCharges: number
-  readonly paladinChannelDivinityMax: number
-  readonly smiteFreeUsed: boolean
-  readonly rogueLevel: number
-  readonly sneakAttackUsedThisTurn: boolean
-  readonly steadyAimUsedThisTurn: boolean
-  readonly cunningStrikeUsesThisTurn: number
-  readonly clericLevel: number
-  readonly clericChannelDivinityCharges: number
-  readonly clericChannelDivinityMax: number
-  readonly druidLevel: number
-  readonly wildShapeCharges: number
-  readonly wildShapeMax: number
-  readonly inWildShape: boolean
-  readonly wildResurgenceSlotUsedThisLR: boolean
-  readonly sorcererLevel: number
-  readonly sorceryPoints: number
-  readonly sorceryPointsMax: number
-  readonly sorcerousRestorationUsed: boolean
-  readonly innateSorceryActive: boolean
-  readonly innateSorceryCharges: number
-  readonly innateSorceryTurnsRemaining: number
-  readonly metamagicUsedThisCast: ReadonlySet<MetamagicOption>
-  readonly apotheosisUsedThisTurn: boolean
-  readonly warlockLevel: number
-  readonly mysticArcanumUsed: ReadonlySet<number>
-  readonly magicalCunningUsed: boolean
-  readonly eldritchSmiteUsedThisTurn: boolean
-  readonly wizardLevel: number
-  readonly arcaneRecoveryUsed: boolean
-  readonly overchannelUsesThisLR: number
-  // RangerState (Quint parity: rangerState)
-  readonly rangerLevel: number
-  readonly huntersMarkFreeUses: number
-  readonly tirelessCharges: number
-  readonly tirelessMax: number
-  readonly naturesVeilCharges: number
-  readonly naturesVeilMax: number
-  // BardState (Quint parity: bardState)
-  readonly bardLevel: number
-  readonly bardicInspirationCharges: number
-  readonly bardicInspirationMax: number
+  // Per-class state: only active classes have entries
+  readonly classStates: Partial<ClassStateMap>
 }
 
 // --- Events ---

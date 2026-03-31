@@ -16,6 +16,7 @@ import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
 import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
 import { monkExtraAttacks } from "#/machine-monk.ts"
 import { rangerExtraAttacks } from "#/machine-ranger.ts"
+import type { ClassStateMap } from "#/machine-types.ts"
 import type { ActionType, Condition, CreatureKind, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
 import { d20Roll, healAmount, tempHp } from "#/types.ts"
 
@@ -499,6 +500,95 @@ interface NormalizedState {
 // XState snapshot → normalized state
 // ============================================================
 
+/** Flatten classStates into NormalizedState's flat fields (bridge format). */
+function flattenClassStates(cs: Partial<ClassStateMap>) {
+  const fi = cs.fighter
+  const ba = cs.barbarian
+  const mo = cs.monk
+  const pa = cs.paladin
+  const ro = cs.rogue
+  const cl = cs.cleric
+  const dr = cs.druid
+  const so = cs.sorcerer
+  const wk = cs.warlock
+  const wi = cs.wizard
+  const rn = cs.ranger
+  const bd = cs.bard
+  return {
+    secondWindCharges: fi?.secondWindCharges ?? 0,
+    secondWindMax: fi?.secondWindMax ?? 0,
+    actionSurgeCharges: fi?.actionSurgeCharges ?? 0,
+    actionSurgeMax: fi?.actionSurgeMax ?? 0,
+    actionSurgeUsedThisTurn: fi?.actionSurgeUsedThisTurn ?? false,
+    indomitableCharges: fi?.indomitableCharges ?? 0,
+    indomitableMax: fi?.indomitableMax ?? 0,
+    heroicInspiration: fi?.heroicInspiration ?? false,
+    fighterLevel: fi?.level ?? 0,
+    barbarianLevel: ba?.level ?? 0,
+    raging: ba?.raging ?? false,
+    rageCharges: ba?.rageCharges ?? 0,
+    rageMaxCharges: ba?.rageMaxCharges ?? 0,
+    rageTurnsRemaining: ba?.rageTurnsRemaining ?? 0,
+    attackedOrForcedSaveThisTurn: ba?.attackedOrForcedSaveThisTurn ?? false,
+    rageExtendedWithBA: ba?.rageExtendedWithBA ?? false,
+    recklessThisTurn: ba?.recklessThisTurn ?? false,
+    frenzyUsedThisTurn: ba?.frenzyUsedThisTurn ?? false,
+    intimidatingPresenceUsed: ba?.intimidatingPresenceUsed ?? false,
+    relentlessRageTimesUsed: ba?.relentlessRageTimesUsed ?? 0,
+    brutalStrikeUsedThisTurn: ba?.brutalStrikeUsedThisTurn ?? false,
+    monkLevel: mo?.level ?? 0,
+    focusPoints: mo?.focusPoints ?? 0,
+    focusMax: mo?.focusMax ?? 0,
+    uncannyMetabolismUsed: mo?.uncannyMetabolismUsed ?? false,
+    stunningStrikeUsedThisTurn: mo?.stunningStrikeUsedThisTurn ?? false,
+    wholenessCharges: mo?.wholenessCharges ?? 0,
+    wholenessMax: mo?.wholenessMax ?? 0,
+    paladinLevel: pa?.level ?? 0,
+    layOnHandsPool: pa?.layOnHandsPool ?? 0,
+    layOnHandsMax: pa?.layOnHandsMax ?? 0,
+    paladinChannelDivinityCharges: pa?.paladinChannelDivinityCharges ?? 0,
+    paladinChannelDivinityMax: pa?.paladinChannelDivinityMax ?? 0,
+    smiteFreeUsed: pa?.smiteFreeUsed ?? false,
+    rogueLevel: ro?.level ?? 0,
+    sneakAttackUsedThisTurn: ro?.sneakAttackUsedThisTurn ?? false,
+    steadyAimUsedThisTurn: ro?.steadyAimUsedThisTurn ?? false,
+    cunningStrikeUsesThisTurn: ro?.cunningStrikeUsesThisTurn ?? 0,
+    clericLevel: cl?.level ?? 0,
+    clericChannelDivinityCharges: cl?.clericChannelDivinityCharges ?? 0,
+    clericChannelDivinityMax: cl?.clericChannelDivinityMax ?? 0,
+    druidLevel: dr?.level ?? 0,
+    wildShapeCharges: dr?.wildShapeCharges ?? 0,
+    wildShapeMax: dr?.wildShapeMax ?? 0,
+    inWildShape: dr?.inWildShape ?? false,
+    wildResurgenceSlotUsedThisLR: dr?.wildResurgenceSlotUsedThisLR ?? false,
+    sorcererLevel: so?.level ?? 0,
+    sorceryPoints: so?.sorceryPoints ?? 0,
+    sorceryPointsMax: so?.sorceryPointsMax ?? 0,
+    sorcerousRestorationUsed: so?.sorcerousRestorationUsed ?? false,
+    innateSorceryActive: so?.innateSorceryActive ?? false,
+    innateSorceryCharges: so?.innateSorceryCharges ?? 0,
+    innateSorceryTurnsRemaining: so?.innateSorceryTurnsRemaining ?? 0,
+    metamagicUsedThisCast: so?.metamagicUsedThisCast ?? new Set<MetamagicOption>(),
+    apotheosisUsedThisTurn: so?.apotheosisUsedThisTurn ?? false,
+    warlockLevel: wk?.level ?? 0,
+    mysticArcanumUsed: wk?.mysticArcanumUsed ?? new Set<number>(),
+    magicalCunningUsed: wk?.magicalCunningUsed ?? false,
+    eldritchSmiteUsedThisTurn: wk?.eldritchSmiteUsedThisTurn ?? false,
+    wizardLevel: wi?.level ?? 0,
+    arcaneRecoveryUsed: wi?.arcaneRecoveryUsed ?? false,
+    overchannelUsesThisLR: wi?.overchannelUsesThisLR ?? 0,
+    rangerLevel: rn?.level ?? 0,
+    huntersMarkFreeUses: rn?.huntersMarkFreeUses ?? 0,
+    tirelessCharges: rn?.tirelessCharges ?? 0,
+    tirelessMax: rn?.tirelessMax ?? 0,
+    naturesVeilCharges: rn?.naturesVeilCharges ?? 0,
+    naturesVeilMax: rn?.naturesVeilMax ?? 0,
+    bardLevel: bd?.level ?? 0,
+    bardicInspirationCharges: bd?.bardicInspirationCharges ?? 0,
+    bardicInspirationMax: bd?.bardicInspirationMax ?? 0
+  }
+}
+
 function isDead(snap: DndSnapshot): boolean {
   return snap.matches({ damageTrack: "dead" })
 }
@@ -559,82 +649,13 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     pactSlotsCurrent: c.pactSlotsCurrent,
     pactSlotLevel: c.pactSlotLevel,
     concentrationSpellId: c.concentrationSpellId,
-    secondWindCharges: c.secondWindCharges,
-    secondWindMax: c.secondWindMax,
-    actionSurgeCharges: c.actionSurgeCharges,
-    actionSurgeMax: c.actionSurgeMax,
-    actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
-    indomitableCharges: c.indomitableCharges,
-    indomitableMax: c.indomitableMax,
-    heroicInspiration: c.heroicInspiration,
-    fighterLevel: c.fighterLevel,
-    barbarianLevel: c.barbarianLevel,
-    raging: c.raging,
-    rageCharges: c.rageCharges,
-    rageMaxCharges: c.rageMaxCharges,
-    rageTurnsRemaining: c.rageTurnsRemaining,
-    attackedOrForcedSaveThisTurn: c.attackedOrForcedSaveThisTurn,
-    rageExtendedWithBA: c.rageExtendedWithBA,
-    recklessThisTurn: c.recklessThisTurn,
-    frenzyUsedThisTurn: c.frenzyUsedThisTurn,
-    intimidatingPresenceUsed: c.intimidatingPresenceUsed,
-    relentlessRageTimesUsed: c.relentlessRageTimesUsed,
-    brutalStrikeUsedThisTurn: c.brutalStrikeUsedThisTurn,
     creatureKind: c.creatureKind,
     legendaryActionsRemaining: c.legendaryActionsRemaining,
     legendaryResistancesRemaining: c.legendaryResistancesRemaining,
     rechargeAvailable: c.rechargeAvailable,
     dailyUsesRemaining: c.dailyUsesRemaining,
-    monkLevel: c.monkLevel,
-    focusPoints: c.focusPoints,
-    focusMax: c.focusMax,
-    uncannyMetabolismUsed: c.uncannyMetabolismUsed,
-    stunningStrikeUsedThisTurn: c.stunningStrikeUsedThisTurn,
-    wholenessCharges: c.wholenessCharges,
-    wholenessMax: c.wholenessMax,
-    paladinLevel: c.paladinLevel,
-    layOnHandsPool: c.layOnHandsPool,
-    layOnHandsMax: c.layOnHandsMax,
-    paladinChannelDivinityCharges: c.paladinChannelDivinityCharges,
-    paladinChannelDivinityMax: c.paladinChannelDivinityMax,
-    smiteFreeUsed: c.smiteFreeUsed,
-    rogueLevel: c.rogueLevel,
-    sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
-    steadyAimUsedThisTurn: c.steadyAimUsedThisTurn,
-    cunningStrikeUsesThisTurn: c.cunningStrikeUsesThisTurn,
-    clericLevel: c.clericLevel,
-    clericChannelDivinityCharges: c.clericChannelDivinityCharges,
-    clericChannelDivinityMax: c.clericChannelDivinityMax,
-    druidLevel: c.druidLevel,
-    wildShapeCharges: c.wildShapeCharges,
-    wildShapeMax: c.wildShapeMax,
-    inWildShape: c.inWildShape,
-    wildResurgenceSlotUsedThisLR: c.wildResurgenceSlotUsedThisLR,
-    sorcererLevel: c.sorcererLevel,
-    sorceryPoints: c.sorceryPoints,
-    sorceryPointsMax: c.sorceryPointsMax,
-    sorcerousRestorationUsed: c.sorcerousRestorationUsed,
-    innateSorceryActive: c.innateSorceryActive,
-    innateSorceryCharges: c.innateSorceryCharges,
-    innateSorceryTurnsRemaining: c.innateSorceryTurnsRemaining,
-    metamagicUsedThisCast: c.metamagicUsedThisCast,
-    apotheosisUsedThisTurn: c.apotheosisUsedThisTurn,
-    warlockLevel: c.warlockLevel,
-    mysticArcanumUsed: c.mysticArcanumUsed,
-    magicalCunningUsed: c.magicalCunningUsed,
-    eldritchSmiteUsedThisTurn: c.eldritchSmiteUsedThisTurn,
-    wizardLevel: c.wizardLevel,
-    arcaneRecoveryUsed: c.arcaneRecoveryUsed,
-    overchannelUsesThisLR: c.overchannelUsesThisLR,
-    rangerLevel: c.rangerLevel,
-    huntersMarkFreeUses: c.huntersMarkFreeUses,
-    tirelessCharges: c.tirelessCharges,
-    tirelessMax: c.tirelessMax,
-    naturesVeilCharges: c.naturesVeilCharges,
-    naturesVeilMax: c.naturesVeilMax,
-    bardLevel: c.bardLevel,
-    bardicInspirationCharges: c.bardicInspirationCharges,
-    bardicInspirationMax: c.bardicInspirationMax
+    // Class states — extract locals to avoid repeated optional chains
+    ...flattenClassStates(c.classStates)
   }
 }
 
@@ -1348,10 +1369,10 @@ function createDndDriver() {
               ? sb.multiattackLength - 1
               : 0
             : Math.max(
-                fighterExtraAttacks(ctx.fighterLevel),
-                barbarianExtraAttacks(ctx.barbarianLevel),
-                monkExtraAttacks(ctx.monkLevel),
-                rangerExtraAttacks(ctx.rangerLevel)
+                fighterExtraAttacks(ctx.classStates.fighter?.level ?? 0),
+                barbarianExtraAttacks(ctx.classStates.barbarian?.level ?? 0),
+                monkExtraAttacks(ctx.classStates.monk?.level ?? 0),
+                rangerExtraAttacks(ctx.classStates.ranger?.level ?? 0)
               )
         const effects = !numEffects
           ? []

@@ -161,8 +161,9 @@ export function computeStartTurn(
 /** Full initTurn computation: death save, start-of-turn effects, speed, rally, monster resources. */
 export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unknown> {
   const ev = asStartTurn(e)
+  const fighterLevel = c.classStates.fighter?.level ?? 0
   const effectiveDsRoll =
-    ev.deathSaveRoll != null ? applyDefyDeath(c.fighterLevel, ev.deathSaveRoll, ev.deathSaveRoll2) : undefined
+    ev.deathSaveRoll != null ? applyDefyDeath(fighterLevel, ev.deathSaveRoll, ev.deathSaveRoll2) : undefined
   const { conditions: conds, ...cr } = computeStartTurn(c, effectiveDsRoll, ev.startOfTurnEffects)
   const speed = calculateEffectiveSpeed({
     armorPenalty: ev.armorPenalty,
@@ -174,7 +175,7 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
     isGrappling: ev.isGrappling,
     restrained: conds.restrained ?? c.restrained
   })
-  const rallyHeal = survivorHeroicRally(c.fighterLevel, cr.hp as number, c.maxHp, ev.conMod ?? 0)
+  const rallyHeal = survivorHeroicRally(fighterLevel, cr.hp as number, c.maxHp, ev.conMod ?? 0)
   const resultHp = rallyHeal > 0 ? Math.min((cr.hp as number) + rallyHeal, effectiveMaxHp(c.maxHp)) : cr.hp
   const mrsUpdates =
     c.creatureKind === "Monster"

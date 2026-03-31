@@ -77,15 +77,15 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     pactSlotsCurrent: c.pactSlotsCurrent,
     pactSlotLevel: c.pactSlotLevel,
     concentrationSpellId: c.concentrationSpellId,
-    secondWindCharges: c.secondWindCharges,
-    secondWindMax: c.secondWindMax,
-    actionSurgeCharges: c.actionSurgeCharges,
-    actionSurgeMax: c.actionSurgeMax,
-    actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
-    indomitableCharges: c.indomitableCharges,
-    indomitableMax: c.indomitableMax,
-    heroicInspiration: c.heroicInspiration,
-    fighterLevel: c.fighterLevel
+    secondWindCharges: c.classStates.fighter?.secondWindCharges ?? 0,
+    secondWindMax: c.classStates.fighter?.secondWindMax ?? 0,
+    actionSurgeCharges: c.classStates.fighter?.actionSurgeCharges ?? 0,
+    actionSurgeMax: c.classStates.fighter?.actionSurgeMax ?? 0,
+    actionSurgeUsedThisTurn: c.classStates.fighter?.actionSurgeUsedThisTurn ?? false,
+    indomitableCharges: c.classStates.fighter?.indomitableCharges ?? 0,
+    indomitableMax: c.classStates.fighter?.indomitableMax ?? 0,
+    heroicInspiration: c.classStates.fighter?.heroicInspiration ?? false,
+    fighterLevel: c.classStates.fighter?.level ?? 0
   }
 }
 

@@ -1,4 +1,10 @@
-import { ALL_DAMAGE_TYPES, applyDefyDeath, computeFallResult, computeTakeDamage, resolveDeathSave } from "#/machine-helpers.ts"
+import {
+  ALL_DAMAGE_TYPES,
+  applyDefyDeath,
+  computeFallResult,
+  computeTakeDamage,
+  resolveDeathSave
+} from "#/machine-helpers.ts"
 import { asApplyFall, asDeathSave, asTakeDamage, type DndContext, type DndEvent } from "#/machine-types.ts"
 import type { DamageType } from "#/types.ts"
 
@@ -33,6 +39,6 @@ export const dmgR = (c: DndContext, e: DndEvent) => {
 
 export const dsR = (c: DndContext, e: DndEvent) => {
   const ev = asDeathSave(e)
-  const roll = applyDefyDeath(c.fighterLevel, ev.d20Roll, ev.d20Roll2)
+  const roll = applyDefyDeath(c.classStates.fighter?.level ?? 0, ev.d20Roll, ev.d20Roll2)
   return resolveDeathSave(roll, c.deathSaves.successes, c.deathSaves.failures)
 }

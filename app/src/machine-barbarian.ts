@@ -14,23 +14,29 @@ import {
   restoreIntimidatingPresenceWithRage as tsRestoreIP,
   useIntimidatingPresence as tsUseIP
 } from "#/features/class-barbarian.ts"
+import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
-import type { DndContext } from "#/machine-types.ts"
+import type { BarbarianClassState, DndContext } from "#/machine-types.ts"
 import { hp } from "#/types.ts"
 
+function b(c: DndContext) {
+  return c.classStates.barbarian!
+}
+
 function toRageState(c: DndContext): RageState {
+  const bs = b(c)
   return {
-    raging: c.raging,
-    rageCharges: c.rageCharges,
-    rageMaxCharges: c.rageMaxCharges,
-    rageTurnsRemaining: c.rageTurnsRemaining,
-    attackedOrForcedSaveThisTurn: c.attackedOrForcedSaveThisTurn,
-    rageExtendedWithBA: c.rageExtendedWithBA,
+    raging: bs.raging,
+    rageCharges: bs.rageCharges,
+    rageMaxCharges: bs.rageMaxCharges,
+    rageTurnsRemaining: bs.rageTurnsRemaining,
+    attackedOrForcedSaveThisTurn: bs.attackedOrForcedSaveThisTurn,
+    rageExtendedWithBA: bs.rageExtendedWithBA,
     concentrationSpellId: c.concentrationSpellId
   }
 }
 
-function fromRageState(rs: RageState): Partial<DndContext> {
+function fromRageState(rs: RageState): Partial<BarbarianClassState> {
   return {
     raging: rs.raging,
     rageCharges: rs.rageCharges,
@@ -41,91 +47,114 @@ function fromRageState(rs: RageState): Partial<DndContext> {
 }
 
 export function enterRageUpdate(c: DndContext): Partial<DndContext> {
-  // Quint parity: canEnterRage checks charges > 0 AND not already raging
-  if (c.bonusActionUsed || isIncapacitated(c) || c.raging || !tsCanEnterRage(c.rageCharges, "none")) return {}
-  return { bonusActionUsed: true, ...fromRageState(tsPEnterRage(toRageState(c))) }
+  const bs = b(c)
+  if (c.bonusActionUsed || isIncapacitated(c) || bs.raging || !tsCanEnterRage(bs.rageCharges, "none")) return {}
+  return { bonusActionUsed: true, ...updateClass(c, "barbarian", fromRageState(tsPEnterRage(toRageState(c)))) }
 }
 
 export function endRageUpdate(c: DndContext): Partial<DndContext> {
-  if (!c.raging) return {}
-  return { ...fromRageState(tsPEndRage(toRageState(c))), recklessThisTurn: false }
+  const bs = b(c)
+  if (!bs.raging) return {}
+  return updateClass(c, "barbarian", { ...fromRageState(tsPEndRage(toRageState(c))), recklessThisTurn: false })
 }
 
 export function extendRageBAUpdate(c: DndContext): Partial<DndContext> {
-  if (!c.raging || c.bonusActionUsed) return {}
-  return { bonusActionUsed: true, ...fromRageState(tsPExtendRageBA(toRageState(c))) }
+  const bs = b(c)
+  if (!bs.raging || c.bonusActionUsed) return {}
+  return { bonusActionUsed: true, ...updateClass(c, "barbarian", fromRageState(tsPExtendRageBA(toRageState(c)))) }
 }
 
 export function markAttackOrForcedSaveUpdate(c: DndContext): Partial<DndContext> {
-  if (!c.raging) return {}
-  return fromRageState(tsPMarkAttack(toRageState(c)))
+  const bs = b(c)
+  if (!bs.raging) return {}
+  return updateClass(c, "barbarian", fromRageState(tsPMarkAttack(toRageState(c))))
 }
 
 export function declareRecklessUpdate(c: DndContext): Partial<DndContext> {
-  if (c.recklessThisTurn || c.barbarianLevel < 2) return {}
-  return { recklessThisTurn: true }
+  const bs = b(c)
+  if (bs.recklessThisTurn || bs.level < 2) return {}
+  return updateClass(c, "barbarian", { recklessThisTurn: true })
 }
 
 export function useIntimidatingPresenceUpdate(c: DndContext): Partial<DndContext> {
-  if (!tsCanUseIP(c.barbarianLevel, c.bonusActionUsed, c.intimidatingPresenceUsed)) return {}
-  return tsUseIP()
+  const bs = b(c)
+  if (!tsCanUseIP(bs.level, c.bonusActionUsed, bs.intimidatingPresenceUsed)) return {}
+  const r = tsUseIP()
+  return {
+    ...updateClass(c, "barbarian", { intimidatingPresenceUsed: r.intimidatingPresenceUsed }),
+    bonusActionUsed: r.bonusActionUsed
+  }
 }
 
 export function restoreIntimidatingPresenceUpdate(c: DndContext): Partial<DndContext> {
-  return tsRestoreIP(c.rageCharges, c.intimidatingPresenceUsed) ?? {}
+  const bs = b(c)
+  const r = tsRestoreIP(bs.rageCharges, bs.intimidatingPresenceUsed)
+  if (!r) return {}
+  return updateClass(c, "barbarian", {
+    intimidatingPresenceUsed: r.intimidatingPresenceUsed,
+    rageCharges: r.rageCharges
+  })
 }
 
 export function brutalStrikeUpdate(c: DndContext): Partial<DndContext> {
-  if (isIncapacitated(c) || !canUseBrutalStrike(c.recklessThisTurn, c.barbarianLevel, true)) return {}
-  if (c.brutalStrikeUsedThisTurn) return {}
-  return { brutalStrikeUsedThisTurn: true }
+  const bs = b(c)
+  if (isIncapacitated(c) || !canUseBrutalStrike(bs.recklessThisTurn, bs.level, true)) return {}
+  if (bs.brutalStrikeUsedThisTurn) return {}
+  return updateClass(c, "barbarian", { brutalStrikeUsedThisTurn: true })
 }
 
 export function relentlessRageUpdate(c: DndContext, conSaveSucceeded: boolean): Partial<DndContext> {
-  if (isIncapacitated(c) || !canUseRelentlessRage(c.barbarianLevel, c.raging)) return {}
-  const result = relentlessRageResult(conSaveSucceeded, c.barbarianLevel)
+  const bs = b(c)
+  if (isIncapacitated(c) || !canUseRelentlessRage(bs.level, bs.raging)) return {}
+  const result = relentlessRageResult(conSaveSucceeded, bs.level)
   return {
-    relentlessRageTimesUsed: c.relentlessRageTimesUsed + 1,
+    ...updateClass(c, "barbarian", { relentlessRageTimesUsed: bs.relentlessRageTimesUsed + 1 }),
     ...(result.survived ? { hp: hp(result.newHp) } : {})
   }
 }
 
 /** Start-of-turn: check maintenance (uses LAST turn's flags), reset per-turn flags, decrement turns. */
 export function barbarianStartTurnUpdate(c: DndContext): Partial<DndContext> {
-  if (c.barbarianLevel === 0) return {}
-  const rs = tsCheckMaintenance(toRageState(c), c.barbarianLevel)
+  const bs = c.classStates.barbarian
+  if (!bs || bs.level === 0) return {}
+  const rs = tsCheckMaintenance(toRageState(c), bs.level)
   const turns = rs.raging && rs.rageTurnsRemaining > 0 ? rs.rageTurnsRemaining - 1 : rs.rageTurnsRemaining
-  return {
+  return updateClass(c, "barbarian", {
     ...fromRageState(rs),
     rageTurnsRemaining: turns,
     recklessThisTurn: false,
     frenzyUsedThisTurn: false,
     brutalStrikeUsedThisTurn: false
-  }
+  })
 }
 
 export function barbarianShortRestUpdate(c: DndContext): Partial<DndContext> {
-  if (c.barbarianLevel === 0) return {}
-  return { rageCharges: Math.min(c.rageCharges + 1, c.rageMaxCharges), relentlessRageTimesUsed: 0 }
+  const bs = c.classStates.barbarian
+  if (!bs || bs.level === 0) return {}
+  return updateClass(c, "barbarian", {
+    rageCharges: Math.min(bs.rageCharges + 1, bs.rageMaxCharges),
+    relentlessRageTimesUsed: 0
+  })
 }
 
 export function barbarianLongRestUpdate(c: DndContext): Partial<DndContext> {
-  if (c.barbarianLevel === 0) return {}
-  return {
+  const bs = c.classStates.barbarian
+  if (!bs || bs.level === 0) return {}
+  return updateClass(c, "barbarian", {
     ...fromRageState(tsPEndRage(toRageState(c))),
-    rageCharges: c.rageMaxCharges,
+    rageCharges: bs.rageMaxCharges,
     relentlessRageTimesUsed: 0,
     intimidatingPresenceUsed: false,
     recklessThisTurn: false,
     frenzyUsedThisTurn: false,
     brutalStrikeUsedThisTurn: false
-  }
+  })
 }
 
-export function initialBarbarianState(barbarianLevel: number) {
+export function initialBarbarianState(barbarianLevel: number): BarbarianClassState {
   const maxCharges = rageMaxCharges(barbarianLevel)
   return {
-    barbarianLevel,
+    level: barbarianLevel,
     raging: false,
     rageCharges: maxCharges,
     rageMaxCharges: maxCharges,

@@ -1,5 +1,6 @@
 import { CHAMPION_SURVIVOR_LEVEL, SURVIVOR_DEFY_DEATH_THRESHOLD } from "#/features/class-fighter.ts"
 import { computeLongRest } from "#/machine-spells.ts"
+import type { ClassStateMap, DndContext } from "#/machine-types.ts"
 import type { Condition, DamageType, IncapSource, SpellSlots } from "#/types.ts"
 import { exhaustionLevel, hp, tempHp } from "#/types.ts"
 
@@ -407,9 +408,10 @@ export function longRestUpdate(c: {
   exhaustion: number
   slotsMax: SpellSlots
   pactSlotsMax: number
-  fighterLevel: number
+  classStates: Partial<ClassStateMap>
 }): Record<string, unknown> {
-  const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, c.fighterLevel)
+  const fighterLevel = c.classStates.fighter?.level ?? 0
+  const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, fighterLevel)
   if (!r) return {}
   return {
     exhaustion: exhaustionLevel(r.newExhaustion),
@@ -419,4 +421,15 @@ export function longRestUpdate(c: {
     slotsCurrent: r.newSlots,
     tempHp: tempHp(0)
   }
+}
+
+// --- Class state helper ---
+
+/** Update a single class's state within classStates, preserving other classes. */
+export function updateClass<K extends keyof ClassStateMap>(
+  c: DndContext,
+  cls: K,
+  patch: Partial<ClassStateMap[K]>
+): Pick<DndContext, "classStates"> {
+  return { classStates: { ...c.classStates, [cls]: { ...c.classStates[cls]!, ...patch } } }
 }
