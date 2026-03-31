@@ -827,7 +827,7 @@ Features that have pure functions but aren't wired yet. For Fighter items with P
 | Features with pure fns but not wired | ~50 |
 | Features not started | ~85 |
 | Features in Quint + MBT | 22 (Fighter: SW, AS, Indomitable, EA, critRange; Barbarian: Rage, Reckless, IP; Monk: Focus, Flurry, Patient Defense, Step of Wind, Stunning Strike, Wholeness, Uncanny Metabolism; Wizard: Arcane Recovery; Rogue: Sneak Attack, Steady Aim; Cleric: Channel Divinity; Paladin: LoH, CD; Warlock: Magical Cunning, Mystic Arcanum; Sorcerer: Font of Magic; Druid: Wild Shape) |
-| Classes with no implementation file | 2 (Ranger, Bard — not in SRD class list for Quint spec) |
+| Classes with no `machine-*.ts` file | 2 (Ranger, Bard — TS features done, but no Quint state/MBT yet. Need prep: type def, state var, frame conditions on all ~70 actions, lifecycle hooks, MBT schema) |
 
 ---
 
