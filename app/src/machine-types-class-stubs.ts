@@ -2,11 +2,6 @@
 // Each worktree agent will move its class fields to a dedicated types file.
 
 export interface ClassStubContext {
-  readonly paladinLevel: number
-  readonly layOnHandsPool: number
-  readonly layOnHandsMax: number
-  readonly paladinChannelDivinityCharges: number
-  readonly paladinChannelDivinityMax: number
   readonly rogueLevel: number
   readonly sneakAttackUsedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
@@ -28,7 +23,6 @@ export interface ClassStubContext {
 }
 
 export interface ClassStubInput {
-  readonly paladinLevel?: number
   readonly rogueLevel?: number
   readonly clericLevel?: number
   readonly druidLevel?: number

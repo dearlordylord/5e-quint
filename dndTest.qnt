@@ -4862,4 +4862,172 @@ module dndTest {
     })
   }
 
+  // ============================================================
+  // Paladin: P0 — freshPaladinState
+  // ============================================================
+
+  run test_freshPaladinState_level1 = {
+    val ps = freshPaladinState(1)
+    all {
+      assert(ps.layOnHandsPool == 5),
+      assert(ps.layOnHandsMax == 5),
+      assert(ps.channelDivinityCharges == 0),
+      assert(ps.channelDivinityMax == 0),
+    }
+  }
+
+  run test_freshPaladinState_level3 = {
+    val ps = freshPaladinState(3)
+    all {
+      assert(ps.layOnHandsPool == 15),
+      assert(ps.layOnHandsMax == 15),
+      assert(ps.channelDivinityCharges == 2),
+      assert(ps.channelDivinityMax == 2),
+    }
+  }
+
+  run test_freshPaladinState_level11 = {
+    val ps = freshPaladinState(11)
+    all {
+      assert(ps.layOnHandsPool == 55),
+      assert(ps.layOnHandsMax == 55),
+      assert(ps.channelDivinityCharges == 3),
+      assert(ps.channelDivinityMax == 3),
+    }
+  }
+
+  run test_freshPaladinState_level0 = {
+    val ps = freshPaladinState(0)
+    all {
+      assert(ps.layOnHandsPool == 0),
+      assert(ps.layOnHandsMax == 0),
+      assert(ps.channelDivinityCharges == 0),
+      assert(ps.channelDivinityMax == 0),
+    }
+  }
+
+  // ============================================================
+  // Paladin: P1 — Guards
+  // ============================================================
+
+  run test_canLayOnHands_has_pool = {
+    val ps = freshPaladinState(3)
+    all {
+      assert(canLayOnHands(ps, 5)),
+      assert(canLayOnHands(ps, 15)),
+      assert(not(canLayOnHands(ps, 16))),
+      assert(not(canLayOnHands(ps, 0))),
+    }
+  }
+
+  run test_canPaladinChannelDivinity_level3 = {
+    val ps = freshPaladinState(3)
+    all {
+      assert(canPaladinChannelDivinity(ps, 3)),
+      assert(not(canPaladinChannelDivinity(ps, 2))),
+    }
+  }
+
+  run test_canPaladinChannelDivinity_no_charges = {
+    val ps = freshPaladinState(3).with("channelDivinityCharges", 0)
+    assert(not(canPaladinChannelDivinity(ps, 3)))
+  }
+
+  // ============================================================
+  // Paladin: P2 — Transitions
+  // ============================================================
+
+  run test_pUseLayOnHands = {
+    val ps = freshPaladinState(3)
+    val ps1 = pUseLayOnHands(ps, 5)
+    assert(ps1.layOnHandsPool == 10)
+  }
+
+  run test_pUsePaladinChannelDivinity = {
+    val ps = freshPaladinState(3)
+    val ps1 = pUsePaladinChannelDivinity(ps)
+    assert(ps1.channelDivinityCharges == 1)
+  }
+
+  // ============================================================
+  // Paladin: Short/Long Rest
+  // ============================================================
+
+  run test_pPaladinShortRest_restores_one_cd = {
+    val ps = freshPaladinState(3).with("channelDivinityCharges", 0)
+    val ps1 = pPaladinShortRest(ps)
+    assert(ps1.channelDivinityCharges == 1)
+  }
+
+  run test_pPaladinShortRest_caps_at_max = {
+    val ps = freshPaladinState(3)
+    val ps1 = pPaladinShortRest(ps)
+    assert(ps1.channelDivinityCharges == 2)
+  }
+
+  run test_pPaladinLongRest_restores_all = {
+    val ps = freshPaladinState(5).with("layOnHandsPool", 3).with("channelDivinityCharges", 0)
+    val ps1 = pPaladinLongRest(ps)
+    all {
+      assert(ps1.layOnHandsPool == 25),
+      assert(ps1.channelDivinityCharges == 2),
+    }
+  }
+
+  // ============================================================
+  // Paladin: Trace tests (action-level)
+  // ============================================================
+
+  /// Trace: Lay on Hands heals and deducts from pool
+  run test_trace_layOnHands = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0,
+        paladinState' = freshPaladinState(5), paladinLevel' = 5,
+        rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doUseLayOnHands)
+    .then(all {
+      // Pool should have decreased by the nondet amount, BA used
+      assert(turnState.bonusActionUsed == true),
+      assert(paladinState.layOnHandsPool < 25),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  /// Trace: Channel Divinity decrements charge
+  run test_trace_paladinChannelDivinity = {
+    init.then(
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0,
+        paladinState' = freshPaladinState(5), paladinLevel' = 5,
+        rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doUsePaladinChannelDivinity)
+    .then(all {
+      assert(paladinState.channelDivinityCharges == 1),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
 }

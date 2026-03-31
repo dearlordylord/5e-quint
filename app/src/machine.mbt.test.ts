@@ -742,6 +742,8 @@ type EventActionMap = {
   STUNNING_STRIKE: "doStunningStrike"
   WHOLENESS_OF_BODY: "doWholenessOfBody"
   UNCANNY_METABOLISM: "doUncannyMetabolism"
+  USE_LAY_ON_HANDS: "doUseLayOnHands"
+  USE_PALADIN_CHANNEL_DIVINITY: "doUsePaladinChannelDivinity"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -871,6 +873,8 @@ const driverSchema = {
   doStunningStrike: {},
   doWholenessOfBody: { healRoll: ITFBigInt.optional() },
   doUncannyMetabolism: { healRoll: ITFBigInt.optional() },
+  doUseLayOnHands: { amount: ITFBigInt.optional() },
+  doUsePaladinChannelDivinity: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1044,6 +1048,7 @@ function createDndDriver() {
           const fLevel = cls === "Fighter" ? level : 0
           const bLevel = cls === "Barbarian" ? level : 0
           const mLevel = cls === "Monk" ? level : 0
+          const pLevel = cls === "Paladin" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1055,7 +1060,7 @@ function createDndDriver() {
               barbarianLevel: bLevel,
               monkLevel: mLevel,
               wholenessMax: Number(wisMod),
-              paladinLevel: 0,
+              paladinLevel: pLevel,
               rogueLevel: 0,
               clericLevel: 0,
               druidLevel: 0,
@@ -1432,6 +1437,12 @@ function createDndDriver() {
       },
       doUncannyMetabolism: ({ healRoll }) => {
         if (healRoll != null) send({ type: "UNCANNY_METABOLISM", healRoll: Number(healRoll) })
+      },
+      doUseLayOnHands: ({ amount }) => {
+        if (amount != null) send({ type: "USE_LAY_ON_HANDS", amount: Number(amount) })
+      },
+      doUsePaladinChannelDivinity: () => {
+        send({ type: "USE_PALADIN_CHANNEL_DIVINITY" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {
