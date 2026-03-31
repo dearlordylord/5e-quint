@@ -5151,6 +5151,13 @@ module dndTest {
   run test_canSteadyAim_baUsed = assert(canSteadyAim(TEST_ROGUE_STATE, 5, true) == false)
   run test_canSteadyAim_alreadyUsed = assert(canSteadyAim(TEST_ROGUE_STATE.with("steadyAimUsedThisTurn", true), 5, false) == false)
 
+  // Cunning Action guards
+  run cunningActionGuardTest = all {
+    assert(canCunningAction(2, false)),
+    assert(not(canCunningAction(1, false))),
+    assert(not(canCunningAction(2, true))),
+  }
+
   // -- Transitions --
   run test_pUseSneakAttack = {
     val result = pUseSneakAttack(TEST_ROGUE_STATE)
