@@ -4402,7 +4402,8 @@ module dnd {
   /// this turn, and after you use it, your Speed is 0 until the end of the current turn."
   action doUseSteadyAim = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canSteadyAim(rogueState, rogueLevel, turnState.bonusActionUsed))) unchanged
+        or not(canSteadyAim(rogueState, rogueLevel, turnState.bonusActionUsed))
+        or turnState.movementRemaining != turnState.effectiveSpeed) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true).with("effectiveSpeed", 0).with("movementRemaining", 0),

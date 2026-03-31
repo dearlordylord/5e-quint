@@ -5249,6 +5249,46 @@ module dndTest {
       })
   }
 
+  // -- Trace: Steady Aim blocked after movement --
+  run test_trace_steadyAim_blockedAfterMovement = {
+    init.then(all {
+      assert(true),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = freshRogueState(5), rogueLevel' = 5,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }).then(doEnterCombat)
+      .then(doStartTurn)
+      .then(all {
+        // Simulate having moved: reduce movementRemaining below effectiveSpeed
+        assert(turnState.movementRemaining == turnState.effectiveSpeed),
+        state' = state, turnState' = turnState.with("movementRemaining", turnState.effectiveSpeed - 5), spellSlots' = spellSlots,
+        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      }).then(all {
+        // Steady Aim should be blocked — creature has moved
+        assert(turnState.movementRemaining != turnState.effectiveSpeed),
+        doUseSteadyAim
+      }).then(all {
+        // Verify Steady Aim did NOT fire (unchanged)
+        assert(rogueState.steadyAimUsedThisTurn == false),
+        assert(turnState.bonusActionUsed == false),
+        state' = state, turnState' = turnState, spellSlots' = spellSlots,
+        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      })
+  }
+
   // ============================================================
   // Cleric — Channel Divinity
   // ============================================================

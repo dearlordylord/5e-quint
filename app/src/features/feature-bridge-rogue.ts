@@ -67,7 +67,7 @@ export function canExecuteSteadyAim(featureState: FeatureState, rogueLevel: numb
   return canSteadyAim({
     rogueLevel,
     bonusActionUsed: ctx.bonusActionUsed,
-    hasMovedThisTurn: false,
+    hasMovedThisTurn: ctx.movementRemaining !== ctx.effectiveSpeed,
     steadyAimUsedThisTurn: featureState.rogue.steadyAimUsed
   })
 }

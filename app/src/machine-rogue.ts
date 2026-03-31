@@ -11,6 +11,7 @@ export function sneakAttackUpdate(c: DndContext): Partial<DndContext> {
 
 export function steadyAimUpdate(c: DndContext): Partial<DndContext> {
   if (isIncapacitated(c) || c.rogueLevel < 3 || c.steadyAimUsedThisTurn || c.bonusActionUsed) return {}
+  if (c.movementRemaining !== c.effectiveSpeed) return {} // SRD: "only if you haven't moved"
   return {
     bonusActionUsed: true,
     steadyAimUsedThisTurn: true,
