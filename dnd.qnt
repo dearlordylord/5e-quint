@@ -421,6 +421,7 @@ module dnd {
   type WarlockState = {
     mysticArcanumUsed: Set[int],
     magicalCunningUsed: bool,
+    eldritchSmiteUsedThisTurn: bool,
   }
 
   type WizardState = {
@@ -3017,15 +3018,17 @@ module dnd {
 
   // -- Warlock --
   pure def freshWarlockState(warlockLevel: int): WarlockState = {
-    { mysticArcanumUsed: Set(), magicalCunningUsed: false }
+    { mysticArcanumUsed: Set(), magicalCunningUsed: false, eldritchSmiteUsedThisTurn: false }
   }
-  pure def pWarlockStartTurn(ws: WarlockState): WarlockState = ws
+  pure def pWarlockStartTurn(ws: WarlockState): WarlockState = {
+    ws.with("eldritchSmiteUsedThisTurn", false)
+  }
   /// SRD: Magical Cunning recharges on Long Rest (not Short Rest).
   /// Pact Magic slots recover on Short Rest (handled by caller), but
   /// magicalCunningUsed flag only resets on LR.
   pure def pWarlockShortRest(ws: WarlockState): WarlockState = ws
   pure def pWarlockLongRest(ws: WarlockState): WarlockState = {
-    ws.with("mysticArcanumUsed", Set()).with("magicalCunningUsed", false)
+    ws.with("mysticArcanumUsed", Set()).with("magicalCunningUsed", false).with("eldritchSmiteUsedThisTurn", false)
   }
 
   /// Can use Magical Cunning: L2+, not used this LR.
@@ -3051,6 +3054,19 @@ module dnd {
   /// Use Mystic Arcanum: mark spell level as used this LR.
   pure def pUseMysticArcanum(ws: WarlockState, spellLevel: int): WarlockState = {
     ws.with("mysticArcanumUsed", ws.mysticArcanumUsed.union(Set(spellLevel)))
+  }
+
+  /// Eldritch Smite guard: L5+, pact slot available, not used this turn.
+  /// SRD: "Once per turn when you hit a creature with your pact weapon,
+  /// you can expend a Pact Magic spell slot"
+  /// Prerequisite: Level 5+ Warlock, Pact of the Blade Invocation
+  pure def canEldritchSmite(ws: WarlockState, warlockLevel: int, pactSlotsCurrent: int): bool = {
+    warlockLevel >= 5 and pactSlotsCurrent > 0 and not(ws.eldritchSmiteUsedThisTurn)
+  }
+
+  /// Eldritch Smite transition: mark used this turn.
+  pure def pEldritchSmite(ws: WarlockState): WarlockState = {
+    ws.with("eldritchSmiteUsedThisTurn", true)
   }
 
   // -- Wizard --
@@ -4801,6 +4817,27 @@ module dnd {
     }
   }
 
+  /// Eldritch Smite: expend pact slot for Force damage on pact weapon hit.
+  /// SRD: "Once per turn when you hit a creature with your pact weapon,
+  /// you can expend a Pact Magic spell slot to deal an extra 1d8 Force damage"
+  /// Damage amount and Prone effect are caller-managed.
+  action doEldritchSmite = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canEldritchSmite(warlockState, warlockLevel, spellSlots.pactSlotsCurrent))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots.with("pactSlotsCurrent", spellSlots.pactSlotsCurrent - 1),
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel,
+      warlockState' = pEldritchSmite(warlockState), warlockLevel' = warlockLevel,
+      wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   // -- 19.6s Sorcerer Actions (Phase S) --
 
   /// Font of Magic: convert spell slot to sorcery points.
@@ -4965,6 +5002,7 @@ module dnd {
     doDivineSmiteFree,
     doUseMagicalCunning,
     doUseMysticArcanum,
+    doEldritchSmite,
     doConvertSlotToPoints,
     doConvertPointsToSlot,
     doUseInnateSorcery,

@@ -193,6 +193,7 @@ export interface DndContext {
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>
   readonly magicalCunningUsed: boolean
+  readonly eldritchSmiteUsedThisTurn: boolean
   readonly wizardLevel: number
   readonly arcaneRecoveryUsed: boolean
 }
@@ -378,6 +379,7 @@ export type DndEvent =
   // Phase WK: Warlock events
   | { readonly type: "USE_MAGICAL_CUNNING" }
   | { readonly type: "USE_MYSTIC_ARCANUM"; readonly spellLevel: number }
+  | { readonly type: "USE_ELDRITCH_SMITE" }
   // Phase S: Sorcerer events
   | { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: number }
   | { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: number }

@@ -272,6 +272,7 @@ export const turnPhaseConfig = {
         USE_DIVINE_SMITE_FREE: { actions: ["useDivineSmiteFree"] },
         USE_MAGICAL_CUNNING: { actions: ["useMagicalCunning"] },
         USE_MYSTIC_ARCANUM: { actions: ["useMysticArcanum"] },
+        USE_ELDRITCH_SMITE: { actions: ["useEldritchSmite"] },
         CONVERT_SLOT_TO_POINTS: { actions: ["convertSlotToPoints"] },
         CONVERT_POINTS_TO_SLOT: { actions: ["convertPointsToSlot"] },
         USE_INNATE_SORCERY: { actions: ["useInnateSorcery"] },

@@ -466,6 +466,7 @@ export const dndMachine = setup({
     useMysticArcanum: assign(({ context: c, event: e }) =>
       warlock.mysticArcanumUpdate(c, (e as Extract<DndEvent, { type: "USE_MYSTIC_ARCANUM" }>).spellLevel)
     ),
+    useEldritchSmite: assign(({ context: c }) => warlock.eldritchSmiteUpdate(c)),
     warlockStartTurn: assign(({ context: c }) => warlock.warlockStartTurnUpdate(c)),
     warlockShortRest: assign(({ context: c }) => warlock.warlockShortRestUpdate(c)),
     warlockLongRest: assign(({ context: c }) => warlock.warlockLongRestUpdate(c)),

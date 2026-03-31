@@ -1,4 +1,4 @@
-import { canUseMagicalCunning, canUseMysticArcanum } from "#/features/class-warlock.ts"
+import { canEldritchSmite, canUseMagicalCunning, canUseMysticArcanum } from "#/features/class-warlock.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
 
@@ -22,11 +22,20 @@ export function mysticArcanumUpdate(c: DndContext, spellLevel: number): Partial<
   return { mysticArcanumUsed: new Set([...c.mysticArcanumUsed, spellLevel]) }
 }
 
+/** Eldritch Smite: expend pact slot for Force damage on pact weapon hit.
+ * SRD: "Once per turn when you hit a creature with your pact weapon,
+ * you can expend a Pact Magic spell slot to deal an extra 1d8 Force damage" */
+export function eldritchSmiteUpdate(c: DndContext): Partial<DndContext> {
+  if (isIncapacitated(c) || !canEldritchSmite(c.warlockLevel) || c.pactSlotsCurrent <= 0 || c.eldritchSmiteUsedThisTurn)
+    return {}
+  return { eldritchSmiteUsedThisTurn: true, pactSlotsCurrent: c.pactSlotsCurrent - 1 }
+}
+
 // -- Lifecycle --
 
 export function warlockStartTurnUpdate(c: DndContext): Partial<DndContext> {
   if (c.warlockLevel === 0) return {}
-  return {}
+  return { eldritchSmiteUsedThisTurn: false }
 }
 
 /** SRD: Pact Magic slots recover on Short Rest (handled by caller).
@@ -39,7 +48,7 @@ export function warlockShortRestUpdate(c: DndContext): Partial<DndContext> {
 /** SRD: Long Rest resets Magical Cunning and all Mystic Arcanum uses. */
 export function warlockLongRestUpdate(c: DndContext): Partial<DndContext> {
   if (c.warlockLevel === 0) return {}
-  return { mysticArcanumUsed: new Set<number>(), magicalCunningUsed: false }
+  return { mysticArcanumUsed: new Set<number>(), magicalCunningUsed: false, eldritchSmiteUsedThisTurn: false }
 }
 
 // -- Init --
@@ -48,6 +57,7 @@ export function initialWarlockState(warlockLevel: number) {
   return {
     warlockLevel,
     mysticArcanumUsed: new Set<number>(),
-    magicalCunningUsed: false
+    magicalCunningUsed: false,
+    eldritchSmiteUsedThisTurn: false
   }
 }

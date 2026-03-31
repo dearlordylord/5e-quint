@@ -286,7 +286,8 @@ const QuintWarlockState = z.object({
     if (Array.isArray(raw)) return new Set(raw.map(Number))
     return new Set<number>()
   }),
-  magicalCunningUsed: z.boolean()
+  magicalCunningUsed: z.boolean(),
+  eldritchSmiteUsedThisTurn: z.boolean()
 })
 const QuintWizardState = z.object({
   arcaneRecoveryUsed: z.boolean()
@@ -447,6 +448,7 @@ interface NormalizedState {
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>
   readonly magicalCunningUsed: boolean
+  readonly eldritchSmiteUsedThisTurn: boolean
   readonly wizardLevel: number
   readonly arcaneRecoveryUsed: boolean
 }
@@ -574,6 +576,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     warlockLevel: c.warlockLevel,
     mysticArcanumUsed: c.mysticArcanumUsed,
     magicalCunningUsed: c.magicalCunningUsed,
+    eldritchSmiteUsedThisTurn: c.eldritchSmiteUsedThisTurn,
     wizardLevel: c.wizardLevel,
     arcaneRecoveryUsed: c.arcaneRecoveryUsed
   }
@@ -689,6 +692,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     warlockLevel: Number(raw.warlockLevel),
     mysticArcanumUsed: raw.warlockState.mysticArcanumUsed,
     magicalCunningUsed: raw.warlockState.magicalCunningUsed,
+    eldritchSmiteUsedThisTurn: raw.warlockState.eldritchSmiteUsedThisTurn,
     wizardLevel: Number(raw.wizardLevel),
     arcaneRecoveryUsed: raw.wizardState.arcaneRecoveryUsed
   }
@@ -782,6 +786,7 @@ type EventActionMap = {
   USE_DIVINE_SMITE_FREE: "doDivineSmiteFree"
   USE_MAGICAL_CUNNING: "doUseMagicalCunning"
   USE_MYSTIC_ARCANUM: "doUseMysticArcanum"
+  USE_ELDRITCH_SMITE: "doEldritchSmite"
   CONVERT_SLOT_TO_POINTS: "doConvertSlotToPoints"
   CONVERT_POINTS_TO_SLOT: "doConvertPointsToSlot"
   USE_INNATE_SORCERY: "doUseInnateSorcery"
@@ -932,6 +937,7 @@ const driverSchema = {
   doDivineSmiteFree: {},
   doUseMagicalCunning: {},
   doUseMysticArcanum: { spellLevel: ITFBigInt.optional() },
+  doEldritchSmite: {},
   doConvertSlotToPoints: { slotLevel: ITFBigInt.optional() },
   doConvertPointsToSlot: { slotLevel: ITFBigInt.optional() },
   doUseInnateSorcery: {},
@@ -1553,6 +1559,9 @@ function createDndDriver() {
       },
       doUseMysticArcanum: ({ spellLevel }) => {
         if (spellLevel != null) send({ type: "USE_MYSTIC_ARCANUM", spellLevel: Number(spellLevel) })
+      },
+      doEldritchSmite: () => {
+        send({ type: "USE_ELDRITCH_SMITE" })
       },
       doConvertSlotToPoints: ({ slotLevel }) => {
         if (slotLevel != null) send({ type: "CONVERT_SLOT_TO_POINTS", slotLevel: Number(slotLevel) })
