@@ -353,7 +353,7 @@ export const dndMachine = setup({
     })),
     useHeroicInspiration: assign(({ context: c }) => (c.heroicInspiration ? { heroicInspiration: false } : {})),
     scoreCriticalHit: assign(({ context: c }) => {
-      if (isIncapacitated(c)) return {}
+      if (isIncapacitated(c) || c.fighterLevel < 3) return {}
       const d = remarkableAthleteCritMovement(c.fighterLevel, c.effectiveSpeed)
       return d <= 0 ? { bonusMovementOAFree: true } : { bonusMovementRemaining: d, bonusMovementOAFree: true }
     }),
