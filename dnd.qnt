@@ -2704,6 +2704,23 @@ module dnd {
     cs.with("channelDivinityCharges", cs.channelDivinityMax)
   }
 
+  // -- C1: Guards --
+
+  /// Can use Channel Divinity: L2+, charges > 0.
+  /// SRD: "You can use this class's Channel Divinity twice." (Level 2)
+  pure def canClericChannelDivinity(cs: ClericState, clericLevel: int): bool = {
+    clericLevel >= 2 and cs.channelDivinityCharges > 0
+  }
+
+  // -- C2: Transitions --
+
+  /// Use Channel Divinity: decrement charges.
+  /// SRD: "You regain one of its expended uses when you finish a Short Rest,
+  /// and you regain all expended uses when you finish a Long Rest."
+  pure def pUseClericChannelDivinity(cs: ClericState): ClericState = {
+    cs.with("channelDivinityCharges", cs.channelDivinityCharges - 1)
+  }
+
   // -- Druid --
   pure def freshDruidState(druidLevel: int): DruidState = {
     val wsMax = if (druidLevel >= 2) 2 else 0
@@ -3193,7 +3210,7 @@ module dnd {
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
     // A25: class selection — one of Fighter, Barbarian, or Monk at level l, others at 0
-    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue").oneOf()
+    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric").oneOf()
     // D5: Wholeness of Body uses WIS mod; spec uses nondet range 1-5
     nondet wisMod = 1.to(5).oneOf()
     if (kind == Monster) {
@@ -3231,7 +3248,7 @@ module dnd {
       val mLevel = if (pcClass == "Monk") l else 0
       val wLevel = if (pcClass == "Wizard") l else 0
       val rLevel = if (pcClass == "Rogue") l else 0
-      // Stub: all other classes at level 0 until parallel worktree agents implement them
+      val cLevel = if (pcClass == "Cleric") l else 0
       all {
         creatureKind' = PC,
         monsterStatBlock' = NULL_STAT_BLOCK,
@@ -3239,7 +3256,7 @@ module dnd {
         fighterLevel' = fLevel,
         barbarianLevel' = bLevel,
         monkLevel' = mLevel,
-        paladinLevel' = 0, rogueLevel' = rLevel, clericLevel' = 0,
+        paladinLevel' = 0, rogueLevel' = rLevel, clericLevel' = cLevel,
         druidLevel' = 0, sorcererLevel' = 0, warlockLevel' = 0, wizardLevel' = wLevel,
         state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
         fighterState' = freshFighterState(fLevel),
@@ -3247,7 +3264,7 @@ module dnd {
         monkState' = freshMonkState(mLevel, wisMod),
         paladinState' = freshPaladinState(0),
         rogueState' = freshRogueState(rLevel),
-        clericState' = freshClericState(0),
+        clericState' = freshClericState(cLevel),
         druidState' = freshDruidState(0),
         sorcererState' = freshSorcererState(0),
         warlockState' = freshWarlockState(0),
@@ -4189,9 +4206,30 @@ module dnd {
     }
   }
 
+  /// Use Cleric Channel Divinity: decrement charge.
+  /// SRD: "You can use this class's Channel Divinity twice.
+  /// You regain one of its expended uses when you finish a Short Rest,
+  /// and you regain all expended uses when you finish a Long Rest."
+  action doUseClericChannelDivinity = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canClericChannelDivinity(clericState, clericLevel))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel,
+      clericState' = pUseClericChannelDivinity(clericState), clericLevel' = clericLevel,
+      druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   // -- 19.7 Step Action --
 
-  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, death saves, PC damage variants
+  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, death saves, PC damage variants
   action stepPC = any {
     doTakeDamage,
     doTakeDamageWithMods,
@@ -4222,6 +4260,7 @@ module dnd {
     doUseArcaneRecovery,
     doUseSneakAttack,
     doUseSteadyAim,
+    doUseClericChannelDivinity,
   }
 
   // -- 19.6e Monster Resource Actions (Phase L) --
@@ -4453,6 +4492,10 @@ module dnd {
   val paladinLayOnHandsBounded =
     paladinState.layOnHandsPool >= 0 and paladinState.layOnHandsPool <= paladinState.layOnHandsMax
 
+  /// Cleric CD charges bounded: 0 ≤ charges ≤ max.
+  val clericChannelDivinityBounded =
+    clericState.channelDivinityCharges >= 0 and clericState.channelDivinityCharges <= clericState.channelDivinityMax
+
   val druidWildShapeChargesBounded =
     druidState.wildShapeCharges >= 0 and druidState.wildShapeCharges <= druidState.wildShapeMax
 
@@ -4507,6 +4550,7 @@ module dnd {
     focusMaxNonNegative,
     wholenessChargesBounded,
     paladinLayOnHandsBounded,
+    clericChannelDivinityBounded,
     druidWildShapeChargesBounded,
     sorceryPointsBounded,
   }

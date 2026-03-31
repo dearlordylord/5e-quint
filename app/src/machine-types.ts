@@ -356,6 +356,8 @@ export type DndEvent =
   // Phase R: Rogue events
   | { readonly type: "USE_SNEAK_ATTACK" }
   | { readonly type: "USE_STEADY_AIM" }
+  // Phase CL: Cleric events
+  | { readonly type: "USE_CLERIC_CHANNEL_DIVINITY" }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines
 export {

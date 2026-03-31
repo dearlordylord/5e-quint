@@ -745,6 +745,7 @@ type EventActionMap = {
   USE_ARCANE_RECOVERY: "doUseArcaneRecovery"
   USE_SNEAK_ATTACK: "doUseSneakAttack"
   USE_STEADY_AIM: "doUseSteadyAim"
+  USE_CLERIC_CHANNEL_DIVINITY: "doUseClericChannelDivinity"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -877,6 +878,7 @@ const driverSchema = {
   doUseArcaneRecovery: { slotLevel: ITFBigInt.optional() },
   doUseSneakAttack: {},
   doUseSteadyAim: {},
+  doUseClericChannelDivinity: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1052,6 +1054,7 @@ function createDndDriver() {
           const mLevel = cls === "Monk" ? level : 0
           const wLevel = cls === "Wizard" ? level : 0
           const rLevel = cls === "Rogue" ? level : 0
+          const cLevel = cls === "Cleric" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1065,7 +1068,7 @@ function createDndDriver() {
               wholenessMax: Number(wisMod),
               paladinLevel: 0,
               rogueLevel: rLevel,
-              clericLevel: 0,
+              clericLevel: cLevel,
               druidLevel: 0,
               sorcererLevel: 0,
               warlockLevel: 0,
@@ -1449,6 +1452,9 @@ function createDndDriver() {
       },
       doUseSteadyAim: () => {
         send({ type: "USE_STEADY_AIM" })
+      },
+      doUseClericChannelDivinity: () => {
+        send({ type: "USE_CLERIC_CHANNEL_DIVINITY" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

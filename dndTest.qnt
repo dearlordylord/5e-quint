@@ -5081,4 +5081,70 @@ module dndTest {
       })
   }
 
+  // ============================================================
+  // Cleric — Channel Divinity
+  // ============================================================
+
+  // -- freshClericState --
+  run test_freshClericState_level1 = {
+    val cs = freshClericState(1)
+    all {
+      assert(cs.channelDivinityCharges == 0),
+      assert(cs.channelDivinityMax == 0),
+    }
+  }
+
+  run test_freshClericState_level2 = {
+    val cs = freshClericState(2)
+    all {
+      assert(cs.channelDivinityCharges == 2),
+      assert(cs.channelDivinityMax == 2),
+    }
+  }
+
+  run test_freshClericState_level5 = {
+    val cs = freshClericState(5)
+    all {
+      assert(cs.channelDivinityCharges == 2),
+      assert(cs.channelDivinityMax == 2),
+    }
+  }
+
+  // -- canClericChannelDivinity --
+  run test_canClericCD_true = {
+    val cs = freshClericState(5)
+    assert(canClericChannelDivinity(cs, 5) == true)
+  }
+
+  run test_canClericCD_false_level1 = {
+    val cs = freshClericState(1)
+    assert(canClericChannelDivinity(cs, 1) == false)
+  }
+
+  run test_canClericCD_false_no_charges = {
+    val cs = freshClericState(5).with("channelDivinityCharges", 0)
+    assert(canClericChannelDivinity(cs, 5) == false)
+  }
+
+  // -- pUseClericChannelDivinity --
+  run test_useClericCD_decrements = {
+    val cs = freshClericState(5)
+    val cs2 = pUseClericChannelDivinity(cs)
+    assert(cs2.channelDivinityCharges == 1)
+  }
+
+  // -- pClericShortRest restores charges --
+  run test_clericShortRest_restores = {
+    val cs = freshClericState(5).with("channelDivinityCharges", 0)
+    val cs2 = pClericShortRest(cs)
+    assert(cs2.channelDivinityCharges == 2)
+  }
+
+  // -- pClericLongRest restores charges --
+  run test_clericLongRest_restores = {
+    val cs = freshClericState(5).with("channelDivinityCharges", 0)
+    val cs2 = pClericLongRest(cs)
+    assert(cs2.channelDivinityCharges == 2)
+  }
+
 }
