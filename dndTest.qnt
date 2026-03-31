@@ -5422,6 +5422,7 @@ module dndTest {
     all {
       assert(ws.mysticArcanumUsed == Set()),
       assert(ws.magicalCunningUsed == false),
+      assert(ws.eldritchSmiteUsedThisTurn == false),
     }
   }
 
@@ -5553,6 +5554,82 @@ module dndTest {
     .then(all {
       // At least one spell level (6-9) should now be in the used set
       assert(warlockState.mysticArcanumUsed.size() > 0),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  // -- canEldritchSmite --
+  run test_canEldritchSmite_L5 = {
+    val ws = freshWarlockState(5)
+    assert(canEldritchSmite(ws, 5, 2))
+  }
+
+  run test_canEldritchSmite_L4_false = {
+    val ws = freshWarlockState(4)
+    assert(not(canEldritchSmite(ws, 4, 2)))
+  }
+
+  run test_canEldritchSmite_noSlots_false = {
+    val ws = freshWarlockState(5)
+    assert(not(canEldritchSmite(ws, 5, 0)))
+  }
+
+  run test_canEldritchSmite_usedThisTurn_false = {
+    val ws = freshWarlockState(5).with("eldritchSmiteUsedThisTurn", true)
+    assert(not(canEldritchSmite(ws, 5, 2)))
+  }
+
+  // -- pEldritchSmite --
+  run test_pEldritchSmite = {
+    val ws = freshWarlockState(5)
+    val ws2 = pEldritchSmite(ws)
+    assert(ws2.eldritchSmiteUsedThisTurn == true)
+  }
+
+  // -- pWarlockStartTurn resets eldritchSmiteUsedThisTurn --
+  run test_pWarlockStartTurn_resets_smite = {
+    val ws = freshWarlockState(5).with("eldritchSmiteUsedThisTurn", true)
+    val ws2 = pWarlockStartTurn(ws)
+    assert(ws2.eldritchSmiteUsedThisTurn == false)
+  }
+
+  // -- pWarlockLongRest resets eldritchSmiteUsedThisTurn --
+  run test_pWarlockLongRest_resets_smite = {
+    val ws = freshWarlockState(5).with("eldritchSmiteUsedThisTurn", true)
+    val ws2 = pWarlockLongRest(ws)
+    assert(ws2.eldritchSmiteUsedThisTurn == false)
+  }
+
+  /// Trace: Eldritch Smite expends pact slot and marks used
+  run test_trace_eldritchSmite = {
+    val pactSlots: SpellSlotState = {
+      slotsMax: EMPTY_SLOTS, slotsCurrent: EMPTY_SLOTS,
+      pactSlotsMax: 2, pactSlotsCurrent: 2, pactSlotLevel: 3,
+      concentrationSpellId: "",
+    }
+    init.then(
+      all {
+        state' = freshCreature(50),
+        turnState' = FRESH_TURN,
+        spellSlots' = pactSlots,
+        turnPhase' = "acting",
+        creatureKind' = PC, monsterStatBlock' = NULL_STAT_BLOCK,
+        monsterResourceState' = FRESH_MONSTER_RESOURCES,
+        fighterState' = freshFighterState(0), fighterLevel' = 0,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0,
+        warlockState' = freshWarlockState(5), warlockLevel' = 5,
+        wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doEldritchSmite)
+    .then(all {
+      assert(warlockState.eldritchSmiteUsedThisTurn == true),
+      assert(spellSlots.pactSlotsCurrent == 1),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
       turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
