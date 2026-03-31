@@ -262,7 +262,7 @@ const QuintPaladinState = z.object({
 const QuintRogueState = z.object({
   sneakAttackUsedThisTurn: z.boolean(),
   steadyAimUsedThisTurn: z.boolean(),
-  cunningStrikeUsedThisTurn: z.boolean()
+  cunningStrikeUsesThisTurn: z.bigint()
 })
 const QuintClericState = z.object({
   channelDivinityCharges: z.bigint(),
@@ -433,7 +433,7 @@ interface NormalizedState {
   readonly rogueLevel: number
   readonly sneakAttackUsedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
-  readonly cunningStrikeUsedThisTurn: boolean
+  readonly cunningStrikeUsesThisTurn: number
   readonly clericLevel: number
   readonly clericChannelDivinityCharges: number
   readonly clericChannelDivinityMax: number
@@ -563,7 +563,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     rogueLevel: c.rogueLevel,
     sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
     steadyAimUsedThisTurn: c.steadyAimUsedThisTurn,
-    cunningStrikeUsedThisTurn: c.cunningStrikeUsedThisTurn,
+    cunningStrikeUsesThisTurn: c.cunningStrikeUsesThisTurn,
     clericLevel: c.clericLevel,
     clericChannelDivinityCharges: c.clericChannelDivinityCharges,
     clericChannelDivinityMax: c.clericChannelDivinityMax,
@@ -681,7 +681,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     rogueLevel: Number(raw.rogueLevel),
     sneakAttackUsedThisTurn: raw.rogueState.sneakAttackUsedThisTurn,
     steadyAimUsedThisTurn: raw.rogueState.steadyAimUsedThisTurn,
-    cunningStrikeUsedThisTurn: raw.rogueState.cunningStrikeUsedThisTurn,
+    cunningStrikeUsesThisTurn: Number(raw.rogueState.cunningStrikeUsesThisTurn),
     clericLevel: Number(raw.clericLevel),
     clericChannelDivinityCharges: Number(raw.clericState.channelDivinityCharges),
     clericChannelDivinityMax: Number(raw.clericState.channelDivinityMax),

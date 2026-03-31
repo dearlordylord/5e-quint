@@ -1,4 +1,4 @@
-import { canUseCunningAction } from "#/features/class-rogue.ts"
+import { canUseCunningAction, maxCunningStrikeEffects } from "#/features/class-rogue.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
 import { movementFeet } from "#/types.ts"
@@ -52,20 +52,21 @@ export function uncannyDodgeUpdate(c: DndContext): Partial<DndContext> {
 
 // -- Cunning Strike (L5+) --
 
-/** Cunning Strike: mark that a Cunning Strike effect was applied this turn.
- * SRD L5: "When you deal Sneak Attack damage, you can add one of the
- * following Cunning Strike effects."
- * Effect choice, dice cost, and condition application are caller-managed. */
+/** Cunning Strike: increment uses counter (1 at L5, up to 2 at L11+).
+ * SRD L5: "you can add one of the following Cunning Strike effects."
+ * SRD L11: "You can use up to two Cunning Strike effects." */
 export function cunningStrikeUpdate(c: DndContext): Partial<DndContext> {
-  if (isIncapacitated(c) || c.rogueLevel < 5 || !c.sneakAttackUsedThisTurn || c.cunningStrikeUsedThisTurn) return {}
-  return { cunningStrikeUsedThisTurn: true }
+  if (isIncapacitated(c) || c.rogueLevel < 5 || !c.sneakAttackUsedThisTurn) return {}
+  const max = maxCunningStrikeEffects(c.rogueLevel)
+  if (c.cunningStrikeUsesThisTurn >= max) return {}
+  return { cunningStrikeUsesThisTurn: c.cunningStrikeUsesThisTurn + 1 }
 }
 
 // -- Lifecycle --
 
 export function rogueStartTurnUpdate(c: DndContext): Partial<DndContext> {
   if (c.rogueLevel === 0) return {}
-  return { sneakAttackUsedThisTurn: false, steadyAimUsedThisTurn: false, cunningStrikeUsedThisTurn: false }
+  return { sneakAttackUsedThisTurn: false, steadyAimUsedThisTurn: false, cunningStrikeUsesThisTurn: 0 }
 }
 
 export function rogueShortRestUpdate(c: DndContext): Partial<DndContext> {
@@ -85,6 +86,6 @@ export function initialRogueState(rogueLevel: number) {
     rogueLevel,
     sneakAttackUsedThisTurn: false,
     steadyAimUsedThisTurn: false,
-    cunningStrikeUsedThisTurn: false
+    cunningStrikeUsesThisTurn: 0
   }
 }

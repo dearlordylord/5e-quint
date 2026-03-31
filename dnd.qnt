@@ -396,7 +396,7 @@ module dnd {
   type RogueState = {
     sneakAttackUsedThisTurn: bool,
     steadyAimUsedThisTurn: bool,
-    cunningStrikeUsedThisTurn: bool,
+    cunningStrikeUsesThisTurn: int,
   }
 
   type ClericState = {
@@ -2778,10 +2778,10 @@ module dnd {
 
   // -- Rogue --
   pure def freshRogueState(rogueLevel: int): RogueState = {
-    { sneakAttackUsedThisTurn: false, steadyAimUsedThisTurn: false, cunningStrikeUsedThisTurn: false }
+    { sneakAttackUsedThisTurn: false, steadyAimUsedThisTurn: false, cunningStrikeUsesThisTurn: 0 }
   }
   pure def pRogueStartTurn(rs: RogueState): RogueState = {
-    rs.with("sneakAttackUsedThisTurn", false).with("steadyAimUsedThisTurn", false).with("cunningStrikeUsedThisTurn", false)
+    rs.with("sneakAttackUsedThisTurn", false).with("steadyAimUsedThisTurn", false).with("cunningStrikeUsesThisTurn", 0)
   }
   pure def pRogueShortRest(rs: RogueState): RogueState = rs
   pure def pRogueLongRest(rs: RogueState): RogueState = rs
@@ -2814,12 +2814,17 @@ module dnd {
     rogueLevel >= 5 and reactionAvailable
   }
 
-  /// Cunning Strike guard: L5+, SA used this turn (effect rides on the SA hit).
-  /// SRD: "When you deal Sneak Attack damage, you can add one of the
-  /// following Cunning Strike effects."
+  /// Max Cunning Strike effects per SA: 1 at L5, 2 at L11+ (Improved Cunning Strike).
+  pure def maxCunningStrikes(rogueLevel: int): int = {
+    if (rogueLevel >= 11) 2 else if (rogueLevel >= 5) 1 else 0
+  }
+
+  /// Cunning Strike guard: L5+, SA used this turn, uses below max.
+  /// SRD L5: "you can add one of the following Cunning Strike effects."
+  /// SRD L11: "You can use up to two Cunning Strike effects."
   /// Dice cost and effect details are caller-managed.
   pure def canCunningStrike(rs: RogueState, rogueLevel: int): bool = {
-    rogueLevel >= 5 and rs.sneakAttackUsedThisTurn and not(rs.cunningStrikeUsedThisTurn)
+    rogueLevel >= 5 and rs.sneakAttackUsedThisTurn and rs.cunningStrikeUsesThisTurn < maxCunningStrikes(rogueLevel)
   }
 
   // -- R2: Transitions --
@@ -2834,9 +2839,9 @@ module dnd {
     rs.with("steadyAimUsedThisTurn", true)
   }
 
-  /// Cunning Strike transition: mark used this turn.
+  /// Cunning Strike transition: increment uses counter.
   pure def pCunningStrike(rs: RogueState): RogueState = {
-    rs.with("cunningStrikeUsedThisTurn", true)
+    rs.with("cunningStrikeUsesThisTurn", rs.cunningStrikeUsesThisTurn + 1)
   }
 
   // -- Cleric --

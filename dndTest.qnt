@@ -5296,7 +5296,7 @@ module dndTest {
     all {
       assert(rs.sneakAttackUsedThisTurn == false),
       assert(rs.steadyAimUsedThisTurn == false),
-      assert(rs.cunningStrikeUsedThisTurn == false),
+      assert(rs.cunningStrikeUsesThisTurn == 0),
     }
   }
 
@@ -5305,7 +5305,7 @@ module dndTest {
     all {
       assert(rs.sneakAttackUsedThisTurn == false),
       assert(rs.steadyAimUsedThisTurn == false),
-      assert(rs.cunningStrikeUsedThisTurn == false),
+      assert(rs.cunningStrikeUsesThisTurn == 0),
     }
   }
 
@@ -5336,15 +5336,27 @@ module dndTest {
   }
 
   // Cunning Strike guards (L5+, SA used, not yet used CS)
+  run test_maxCunningStrikes = all {
+    assert(maxCunningStrikes(4) == 0),
+    assert(maxCunningStrikes(5) == 1),
+    assert(maxCunningStrikes(10) == 1),
+    assert(maxCunningStrikes(11) == 2),
+    assert(maxCunningStrikes(20) == 2),
+  }
+
   run test_cunningStrikeGuards = all {
-    // Can CS: L5+, SA used this turn, CS not yet used
+    // Can CS: L5+, SA used this turn, uses=0 < max=1
     assert(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true), 5)),
     // Can't CS: SA not used
     assert(not(canCunningStrike(TEST_ROGUE_STATE, 5))),
     // Can't CS: too low level
     assert(not(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true), 4))),
-    // Can't CS: already used this turn
-    assert(not(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("cunningStrikeUsedThisTurn", true), 5))),
+    // Can't CS: at max (1 use at L5)
+    assert(not(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("cunningStrikeUsesThisTurn", 1), 5))),
+    // Can CS at L11: uses=1 < max=2 (Improved Cunning Strike)
+    assert(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("cunningStrikeUsesThisTurn", 1), 11)),
+    // Can't CS at L11: uses=2 = max
+    assert(not(canCunningStrike(TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("cunningStrikeUsesThisTurn", 2), 11))),
   }
 
   // -- Transitions --
@@ -5360,17 +5372,23 @@ module dndTest {
 
   run test_pCunningStrike = {
     val result = pCunningStrike(TEST_ROGUE_STATE)
-    assert(result.cunningStrikeUsedThisTurn == true)
+    assert(result.cunningStrikeUsesThisTurn == 1)
+  }
+
+  run test_pCunningStrike_increments = {
+    val rs = TEST_ROGUE_STATE.with("cunningStrikeUsesThisTurn", 1)
+    val result = pCunningStrike(rs)
+    assert(result.cunningStrikeUsesThisTurn == 2)
   }
 
   // -- Lifecycle --
   run test_pRogueStartTurn = {
-    val rs = TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("steadyAimUsedThisTurn", true).with("cunningStrikeUsedThisTurn", true)
+    val rs = TEST_ROGUE_STATE.with("sneakAttackUsedThisTurn", true).with("steadyAimUsedThisTurn", true).with("cunningStrikeUsesThisTurn", 2)
     val result = pRogueStartTurn(rs)
     all {
       assert(result.sneakAttackUsedThisTurn == false),
       assert(result.steadyAimUsedThisTurn == false),
-      assert(result.cunningStrikeUsedThisTurn == false),
+      assert(result.cunningStrikeUsesThisTurn == 0),
     }
   }
 

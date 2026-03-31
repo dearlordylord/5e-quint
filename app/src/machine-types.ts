@@ -176,7 +176,7 @@ export interface DndContext {
   readonly rogueLevel: number
   readonly sneakAttackUsedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
-  readonly cunningStrikeUsedThisTurn: boolean
+  readonly cunningStrikeUsesThisTurn: number
   readonly clericLevel: number
   readonly clericChannelDivinityCharges: number
   readonly clericChannelDivinityMax: number

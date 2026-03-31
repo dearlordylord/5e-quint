@@ -269,11 +269,3 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Rules basis (SRD 5.2.1 Monk L2 "Uncanny Metabolism"):** "When you roll Initiative, you can regain all expended Focus Points." The word "can" implies optional.
 
 **Changes:** `dnd.qnt`: `doUncannyMetabolism` is a separate action in `stepPC`, not wired into `doStartTurn`. Heal amount = `monkLevel + healRoll` (martial arts die abstracted as nondet 1–12).
-
-## A32: Cunning Strike — effect details are caller-managed
-
-**Assumption:** The Quint spec and XState machine track only whether Cunning Strike was used this turn (`cunningStrikeUsedThisTurn: bool`). Effect selection, dice cost deduction, save resolution, and the L11 upgrade (2 effects per SA) are resolved at the TS feature layer and caller-managed. One `doCunningStrike` action represents the entire application — the caller invokes `applyCunningStrike` (from `class-rogue.ts`) up to `maxCunningStrikeEffects(rogueLevel)` times to resolve individual effects.
-
-**Rules basis (SRD 5.2.1 Rogue L5, L11, L14):** Effects apply conditions to the target, not the acting creature — outside the single-creature model's scope.
-
-**Changes:** `cunningStrikeUsedThisTurn: bool` on RogueState, reset each turn.
