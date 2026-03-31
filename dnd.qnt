@@ -389,6 +389,7 @@ module dnd {
     layOnHandsMax: int,
     channelDivinityCharges: int,
     channelDivinityMax: int,
+    smiteFreeUsed: bool,
   }
 
   type RogueState = {
@@ -2655,7 +2656,7 @@ module dnd {
   pure def freshPaladinState(paladinLevel: int): PaladinState = {
     val lohMax = if (paladinLevel >= 1) paladinLevel * 5 else 0
     val cdMax = pPaladinChannelDivinityMax(paladinLevel)
-    { layOnHandsPool: lohMax, layOnHandsMax: lohMax, channelDivinityCharges: cdMax, channelDivinityMax: cdMax }
+    { layOnHandsPool: lohMax, layOnHandsMax: lohMax, channelDivinityCharges: cdMax, channelDivinityMax: cdMax, smiteFreeUsed: false }
   }
 
   pure def pPaladinStartTurn(ps: PaladinState): PaladinState = ps
@@ -2669,7 +2670,7 @@ module dnd {
 
   /// SRD: Long Rest restores full LoH pool and all CD uses.
   pure def pPaladinLongRest(ps: PaladinState): PaladinState = {
-    ps.with("layOnHandsPool", ps.layOnHandsMax).with("channelDivinityCharges", ps.channelDivinityMax)
+    ps.with("layOnHandsPool", ps.layOnHandsMax).with("channelDivinityCharges", ps.channelDivinityMax).with("smiteFreeUsed", false)
   }
 
   // -- P1: Guards --
@@ -2697,6 +2698,23 @@ module dnd {
   /// Use Paladin Channel Divinity: decrement charges.
   pure def pUsePaladinChannelDivinity(ps: PaladinState): PaladinState = {
     ps.with("channelDivinityCharges", ps.channelDivinityCharges - 1)
+  }
+
+  /// Can use Divine Smite (slot-based): L2+, has a slot at the chosen level.
+  /// SRD: "Paladin's Smite... you can also cast it by expending a spell slot"
+  pure def canDivineSmite(paladinLevel: int, slotsCurrent: int -> int, slotLevel: int): bool = {
+    paladinLevel >= 2 and slotLevel >= 1 and slotLevel <= 9 and slotsCurrent.get(slotLevel) > 0
+  }
+
+  /// Can use free Divine Smite (1/LR): L2+, not yet used.
+  /// SRD: "you always have it prepared... cast without a spell slot once per LR"
+  pure def canDivineSmiteFree(ps: PaladinState, paladinLevel: int): bool = {
+    paladinLevel >= 2 and not(ps.smiteFreeUsed)
+  }
+
+  /// Use free Divine Smite: set the flag.
+  pure def pUseDivineSmiteFree(ps: PaladinState): PaladinState = {
+    ps.with("smiteFreeUsed", true)
   }
 
   // -- Rogue --
@@ -4373,6 +4391,52 @@ module dnd {
     }
   }
 
+  /// Divine Smite (slot-based): expend a spell slot.
+  /// SRD: "Paladin's Smite... you can also cast it by expending a spell slot"
+  /// Damage is caller-managed (like Sneak Attack).
+  action doDivineSmite = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or paladinLevel < 2) unchanged
+    else {
+      nondet slotLevel = SLOT_LEVEL_RANGE.oneOf()
+      if (not(canDivineSmite(paladinLevel, spellSlots.slotsCurrent, slotLevel))) unchanged
+      else {
+        val ss1 = pExpendSlot(spellSlots, slotLevel)
+        all {
+          state' = state,
+          turnState' = turnState,
+          spellSlots' = ss1,
+          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+          monsterResourceState' = monsterResourceState,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+          monkState' = monkState, monkLevel' = monkLevel,
+          paladinState' = paladinState, paladinLevel' = paladinLevel,
+          rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        }
+      }
+    }
+  }
+
+  /// Divine Smite (free 1/LR): no slot expenditure.
+  /// SRD: "you always have it prepared... cast without a spell slot once per Long Rest"
+  action doDivineSmiteFree = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canDivineSmiteFree(paladinState, paladinLevel))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel,
+      paladinState' = pUseDivineSmiteFree(paladinState), paladinLevel' = paladinLevel,
+      rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   // -- Rogue Actions --
 
   /// Sneak Attack: mark used this turn. Damage is caller-managed.
@@ -4620,6 +4684,8 @@ module dnd {
     doUseClericChannelDivinity,
     doUseLayOnHands,
     doUsePaladinChannelDivinity,
+    doDivineSmite,
+    doDivineSmiteFree,
     doUseMagicalCunning,
     doUseMysticArcanum,
     doConvertSlotToPoints,

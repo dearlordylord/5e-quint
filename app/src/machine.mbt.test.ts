@@ -255,7 +255,8 @@ const QuintPaladinState = z.object({
   layOnHandsPool: z.bigint(),
   layOnHandsMax: z.bigint(),
   channelDivinityCharges: z.bigint(),
-  channelDivinityMax: z.bigint()
+  channelDivinityMax: z.bigint(),
+  smiteFreeUsed: z.boolean()
 })
 const QuintRogueState = z.object({
   sneakAttackUsedThisTurn: z.boolean(),
@@ -419,6 +420,7 @@ interface NormalizedState {
   readonly layOnHandsMax: number
   readonly paladinChannelDivinityCharges: number
   readonly paladinChannelDivinityMax: number
+  readonly smiteFreeUsed: boolean
   readonly rogueLevel: number
   readonly sneakAttackUsedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
@@ -540,6 +542,7 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     layOnHandsMax: c.layOnHandsMax,
     paladinChannelDivinityCharges: c.paladinChannelDivinityCharges,
     paladinChannelDivinityMax: c.paladinChannelDivinityMax,
+    smiteFreeUsed: c.smiteFreeUsed,
     rogueLevel: c.rogueLevel,
     sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
     steadyAimUsedThisTurn: c.steadyAimUsedThisTurn,
@@ -649,6 +652,7 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     layOnHandsMax: Number(raw.paladinState.layOnHandsMax),
     paladinChannelDivinityCharges: Number(raw.paladinState.channelDivinityCharges),
     paladinChannelDivinityMax: Number(raw.paladinState.channelDivinityMax),
+    smiteFreeUsed: raw.paladinState.smiteFreeUsed,
     rogueLevel: Number(raw.rogueLevel),
     sneakAttackUsedThisTurn: raw.rogueState.sneakAttackUsedThisTurn,
     steadyAimUsedThisTurn: raw.rogueState.steadyAimUsedThisTurn,
@@ -748,6 +752,8 @@ type EventActionMap = {
   USE_CLERIC_CHANNEL_DIVINITY: "doUseClericChannelDivinity"
   USE_LAY_ON_HANDS: "doUseLayOnHands"
   USE_PALADIN_CHANNEL_DIVINITY: "doUsePaladinChannelDivinity"
+  USE_DIVINE_SMITE: "doDivineSmite"
+  USE_DIVINE_SMITE_FREE: "doDivineSmiteFree"
   USE_MAGICAL_CUNNING: "doUseMagicalCunning"
   USE_MYSTIC_ARCANUM: "doUseMysticArcanum"
   CONVERT_SLOT_TO_POINTS: "doConvertSlotToPoints"
@@ -889,6 +895,8 @@ const driverSchema = {
   doUseClericChannelDivinity: {},
   doUseLayOnHands: { amount: ITFBigInt.optional() },
   doUsePaladinChannelDivinity: {},
+  doDivineSmite: { slotLevel: ITFBigInt.optional() },
+  doDivineSmiteFree: {},
   doUseMagicalCunning: {},
   doUseMysticArcanum: { spellLevel: ITFBigInt.optional() },
   doConvertSlotToPoints: { slotLevel: ITFBigInt.optional() },
@@ -1481,6 +1489,12 @@ function createDndDriver() {
       },
       doUsePaladinChannelDivinity: () => {
         send({ type: "USE_PALADIN_CHANNEL_DIVINITY" })
+      },
+      doDivineSmite: ({ slotLevel }) => {
+        if (slotLevel != null) send({ type: "USE_DIVINE_SMITE", slotLevel: Number(slotLevel) })
+      },
+      doDivineSmiteFree: () => {
+        send({ type: "USE_DIVINE_SMITE_FREE" })
       },
       doUseMagicalCunning: () => {
         send({ type: "USE_MAGICAL_CUNNING" })

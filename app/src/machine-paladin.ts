@@ -1,4 +1,5 @@
 import {
+  canPaladinSmiteFree,
   expendChannelDivinity,
   layOnHandsPoolMax,
   paladinChannelDivinityMax,
@@ -28,6 +29,28 @@ export function paladinChannelDivinityUpdate(c: DndContext): Partial<DndContext>
   return { paladinChannelDivinityCharges: expendChannelDivinity(c.paladinChannelDivinityCharges) }
 }
 
+/** Divine Smite (slot-based): expend spell slot. Damage is caller-managed. */
+export function divineSmiteUpdate(c: DndContext, slotLevel: number): Partial<DndContext> {
+  if (isIncapacitated(c) || c.paladinLevel < 2) return {}
+  if (slotLevel < 1 || slotLevel > 9) return {}
+  const currentSlots = [...c.slotsCurrent]
+  const idx = slotLevel - 1
+  if (idx >= currentSlots.length || currentSlots[idx] <= 0) return {}
+  currentSlots[idx] = currentSlots[idx] - 1
+  return { slotsCurrent: currentSlots }
+}
+
+/** Divine Smite (free 1/LR): no slot expenditure. */
+export function divineSmiteFreeUpdate(c: DndContext): Partial<DndContext> {
+  if (
+    isIncapacitated(c) ||
+    c.paladinLevel < 2 ||
+    !canPaladinSmiteFree({ paladinSmiteFreeUseAvailable: !c.smiteFreeUsed })
+  )
+    return {}
+  return { smiteFreeUsed: true }
+}
+
 // -- Lifecycle --
 
 export function paladinStartTurnUpdate(c: DndContext): Partial<DndContext> {
@@ -51,7 +74,8 @@ export function paladinLongRestUpdate(c: DndContext): Partial<DndContext> {
   if (c.paladinLevel === 0) return {}
   return {
     layOnHandsPool: c.layOnHandsMax,
-    paladinChannelDivinityCharges: c.paladinChannelDivinityMax
+    paladinChannelDivinityCharges: c.paladinChannelDivinityMax,
+    smiteFreeUsed: false
   }
 }
 
@@ -65,6 +89,7 @@ export function initialPaladinState(paladinLevel: number) {
     layOnHandsPool: lohMax,
     layOnHandsMax: lohMax,
     paladinChannelDivinityCharges: cdMax,
-    paladinChannelDivinityMax: cdMax
+    paladinChannelDivinityMax: cdMax,
+    smiteFreeUsed: false
   }
 }

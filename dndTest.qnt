@@ -5118,6 +5118,29 @@ module dndTest {
   }
 
   // ============================================================
+  // Paladin: Divine Smite tests
+  // ============================================================
+
+  run divineSmiteFreeTest = {
+    val ps = freshPaladinState(5)
+    val ps2 = pUseDivineSmiteFree(ps)
+    val ps3 = pPaladinLongRest(ps2)
+    all {
+      assert(canDivineSmiteFree(ps, 5)),
+      assert(ps2.smiteFreeUsed),
+      assert(not(canDivineSmiteFree(ps2, 5))),
+      // Long rest resets
+      assert(not(ps3.smiteFreeUsed)),
+    }
+  }
+
+  run divineSmiteLevelGateTest = {
+    val ps = freshPaladinState(1)
+    // L1 can't use
+    assert(not(canDivineSmiteFree(ps, 1)))
+  }
+
+  // ============================================================
   // Phase R: Rogue (Thief)
   // ============================================================
 
