@@ -433,6 +433,19 @@ module dnd {
     overchannelUsesThisLR: int,
   }
 
+  type RangerState = {
+    huntersMarkFreeUses: int,
+    tirelessCharges: int,
+    tirelessMax: int,
+    naturesVeilCharges: int,
+    naturesVeilMax: int,
+  }
+
+  type BardState = {
+    bardicInspirationCharges: int,
+    bardicInspirationMax: int,
+  }
+
   type UnarmoredDefense = NoUnarmoredDefense | BarbarianUD | MonkUD
 
   /// SRD 5.2.1 species (Character Origins chapter).
@@ -3217,6 +3230,112 @@ module dnd {
     ws.with("overchannelUsesThisLR", ws.overchannelUsesThisLR + 1)
   }
 
+  // -- Ranger --
+
+  /// Favored Enemy free Hunter's Mark uses by ranger level.
+  /// SRD: 2 (L1-4), 3 (L5-8), 4 (L9-12), 5 (L13-16), 6 (L17-20).
+  pure def pFavoredEnemyFreeUses(rangerLevel: int): int = {
+    if (rangerLevel <= 0) 0
+    else if (rangerLevel < 5) 2
+    else if (rangerLevel < 9) 3
+    else if (rangerLevel < 13) 4
+    else if (rangerLevel < 17) 5
+    else 6
+  }
+
+  pure def freshRangerState(rangerLevel: int, wisMod: int): RangerState = {
+    {
+      huntersMarkFreeUses: pFavoredEnemyFreeUses(rangerLevel),
+      tirelessCharges: if (rangerLevel >= 10) intMax(1, wisMod) else 0,
+      tirelessMax: if (rangerLevel >= 10) intMax(1, wisMod) else 0,
+      naturesVeilCharges: if (rangerLevel >= 14) intMax(1, wisMod) else 0,
+      naturesVeilMax: if (rangerLevel >= 14) intMax(1, wisMod) else 0,
+    }
+  }
+
+  pure def pRangerStartTurn(rs: RangerState): RangerState = rs
+  pure def pRangerShortRest(rs: RangerState): RangerState = rs
+  pure def pRangerLongRest(rs: RangerState, rangerLevel: int): RangerState = {
+    { ...rs,
+      huntersMarkFreeUses: pFavoredEnemyFreeUses(rangerLevel),
+      tirelessCharges: rs.tirelessMax,
+      naturesVeilCharges: rs.naturesVeilMax,
+    }
+  }
+
+  /// Use free Hunter's Mark: decrement free uses.
+  pure def pUseFreeHuntersMark(rs: RangerState): RangerState = {
+    rs.with("huntersMarkFreeUses", rs.huntersMarkFreeUses - 1)
+  }
+
+  /// Use Tireless: spend charge, return temp HP amount.
+  /// SRD L10: "1d8 plus your Wisdom modifier (minimum of 1)."
+  /// tirelessMax encodes intMax(1, wisMod), so tempHp = d8Roll + tirelessMax.
+  pure def pUseTireless(rs: RangerState, d8Roll: int): { ranger: RangerState, tempHp: int } = {
+    { ranger: rs.with("tirelessCharges", rs.tirelessCharges - 1),
+      tempHp: d8Roll + rs.tirelessMax }
+  }
+
+  /// Use Nature's Veil: spend charge. Caller applies Invisible condition to state.
+  /// SRD L14: "As a Bonus Action, you can give yourself the Invisible condition
+  /// until the end of your next turn."
+  pure def pUseNaturesVeil(rs: RangerState): RangerState = {
+    rs.with("naturesVeilCharges", rs.naturesVeilCharges - 1)
+  }
+
+  // -- Bard --
+
+  pure def freshBardState(bardLevel: int, chaMod: int): BardState = {
+    {
+      bardicInspirationCharges: if (bardLevel >= 1) intMax(1, chaMod) else 0,
+      bardicInspirationMax: if (bardLevel >= 1) intMax(1, chaMod) else 0,
+    }
+  }
+
+  /// Superior Inspiration L18: restore charges to min 2 on initiative (start of turn).
+  pure def pBardStartTurn(bs: BardState, bardLevel: int): BardState = {
+    if (bardLevel >= 18 and bs.bardicInspirationCharges < 2)
+      bs.with("bardicInspirationCharges", 2)
+    else bs
+  }
+
+  /// Font of Inspiration L5: full recharge on short rest.
+  pure def pBardShortRest(bs: BardState, bardLevel: int): BardState = {
+    if (bardLevel >= 5) bs.with("bardicInspirationCharges", bs.bardicInspirationMax)
+    else bs
+  }
+
+  /// Long rest: full recharge.
+  pure def pBardLongRest(bs: BardState): BardState = {
+    bs.with("bardicInspirationCharges", bs.bardicInspirationMax)
+  }
+
+  /// Use Bardic Inspiration: spend 1 charge. BA cost is caller-managed.
+  /// SRD L1: "As a Bonus Action, you can inspire another creature..."
+  pure def pUseBardicInspiration(bs: BardState): BardState = {
+    bs.with("bardicInspirationCharges", bs.bardicInspirationCharges - 1)
+  }
+
+  /// Cutting Words L3 (Lore): spend 1 BI charge. Reaction cost caller-managed.
+  /// SRD: "you can take a Reaction to expend one use of your Bardic Inspiration"
+  pure def pUseCuttingWords(bs: BardState): BardState = {
+    bs.with("bardicInspirationCharges", bs.bardicInspirationCharges - 1)
+  }
+
+  /// Font of Inspiration slot restore L5: spend spell slot, regain 1 BI use. Free action.
+  /// SRD: "you can expend a spell slot (no action required) to regain one expended use"
+  pure def pUseFontSlotRestore(bs: BardState): BardState = {
+    bs.with("bardicInspirationCharges", bs.bardicInspirationCharges + 1)
+  }
+
+  /// Peerless Skill L14: on ability check/attack roll failure, add BI die.
+  /// SRD: "On a failure, the Bardic Inspiration isn't expended."
+  /// success = true means the boosted check succeeded → spend charge.
+  pure def pUsePeerlessSkill(bs: BardState, success: bool): BardState = {
+    if (success) bs.with("bardicInspirationCharges", bs.bardicInspirationCharges - 1)
+    else bs
+  }
+
   // ============================================================
   // 17.L MONSTER RESOURCE FUNCTIONS (Phase L)
   // ============================================================
@@ -3498,6 +3617,10 @@ module dnd {
   var warlockLevel: int
   var wizardState: WizardState
   var wizardLevel: int
+  var rangerState: RangerState
+  var rangerLevel: int
+  var bardState: BardState
+  var bardLevel: int
 
   /// Default (empty) monster resources — used for PCs and non-legendary monsters.
   pure val FRESH_MONSTER_RESOURCES: MonsterResourceState = {
@@ -3648,10 +3771,12 @@ module dnd {
     nondet l = Set(3, 5, 9, 10, 18).oneOf()
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
-    // A25: class selection — one of Fighter, Barbarian, Monk, Wizard, Rogue, Cleric, Paladin, Warlock, Sorcerer, or Druid at level l, others at 0
-    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric", "Paladin", "Warlock", "Sorcerer", "Druid").oneOf()
-    // D5: Wholeness of Body uses WIS mod; spec uses nondet range 1-5
+    // A25: class selection — one of 12 SRD classes at level l, others at 0
+    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric", "Paladin", "Warlock", "Sorcerer", "Druid", "Ranger", "Bard").oneOf()
+    // D5: Wholeness of Body uses WIS mod; Ranger uses WIS mod; spec uses nondet range 1-5
     nondet wisMod = 1.to(5).oneOf()
+    // Bard uses CHA mod for Bardic Inspiration charges
+    nondet chaMod = 1.to(5).oneOf()
     if (kind == Monster) {
       val monsterExtraAttacks = if (selectedBlock.multiattack.length() > 0)
         selectedBlock.multiattack.length() - 1 else 0
@@ -3674,6 +3799,8 @@ module dnd {
         sorcererState' = freshSorcererState(0), sorcererLevel' = 0,
         warlockState' = freshWarlockState(0), warlockLevel' = 0,
         wizardState' = freshWizardState(0), wizardLevel' = 0,
+        rangerState' = freshRangerState(0, 0), rangerLevel' = 0,
+        bardState' = freshBardState(0, 0), bardLevel' = 0,
         turnState' = FRESH_TURN
           .with("extraAttacksRemaining", monsterExtraAttacks)
           .with("movementRemaining", monsterSpeed)
@@ -3692,6 +3819,8 @@ module dnd {
       val wkLevel = if (pcClass == "Warlock") l else 0
       val sLevel = if (pcClass == "Sorcerer") l else 0
       val dLevel = if (pcClass == "Druid") l else 0
+      val rnLevel = if (pcClass == "Ranger") l else 0
+      val bdLevel = if (pcClass == "Bard") l else 0
       all {
         creatureKind' = PC,
         monsterStatBlock' = NULL_STAT_BLOCK,
@@ -3700,7 +3829,7 @@ module dnd {
         barbarianLevel' = bLevel,
         monkLevel' = mLevel,
         paladinLevel' = pLevel, rogueLevel' = rLevel, clericLevel' = cLevel,
-        druidLevel' = dLevel, sorcererLevel' = sLevel, warlockLevel' = wkLevel, wizardLevel' = wLevel,
+        druidLevel' = dLevel, sorcererLevel' = sLevel, warlockLevel' = wkLevel, wizardLevel' = wLevel, rangerLevel' = rnLevel, bardLevel' = bdLevel,
         state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
         fighterState' = freshFighterState(fLevel),
         barbarianState' = freshBarbarianState(bLevel),
@@ -3712,6 +3841,8 @@ module dnd {
         sorcererState' = freshSorcererState(sLevel),
         warlockState' = freshWarlockState(wkLevel),
         wizardState' = freshWizardState(wLevel),
+        rangerState' = freshRangerState(rnLevel, wisMod),
+        bardState' = freshBardState(bdLevel, chaMod),
         turnState' = FRESH_TURN,
         spellSlots' = FRESH_SPELL_SLOTS,
         turnPhase' = "outOfCombat",
@@ -3727,7 +3858,7 @@ module dnd {
     nondet dt = DAMAGE_TYPES.oneOf()
     nondet isCrit = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doTakeDamageWithMods = {
@@ -3737,7 +3868,7 @@ module dnd {
     nondet resType = DAMAGE_TYPES.oneOf()
     nondet vulnType = DAMAGE_TYPES.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   /// Monster take damage: R/V/I sourced from stat block, monster death at 0 HP.
@@ -3749,34 +3880,34 @@ module dnd {
       monsterStatBlock.resistances, monsterStatBlock.vulnerabilities,
       monsterStatBlock.damageImmunities, isCrit, Monster)
     val r = pWithConcBreak(spellSlots, state, s1)
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doHeal = {
     nondet amount = HEAL_RANGE.oneOf()
-    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doGrantTempHp = {
     nondet amount = TEMP_HP_RANGE.oneOf()
     nondet keepOld = Bool.oneOf()
-    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doDeathSave = {
     nondet roll = D20_RANGE.oneOf()
     nondet roll2 = D20_RANGE.oneOf()
     val effectiveRoll = pFighterDeathSaveRoll(fighterLevel, roll, roll2)
-    all { state' = pDeathSave(state, effectiveRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pDeathSave(state, effectiveRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doStabilize = all {
-    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel
+    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel
   }
 
   action doKnockOut = {
     val r = pWithConcBreak(spellSlots, state, pKnockOut(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doApplyCondition = {
@@ -3785,12 +3916,12 @@ module dnd {
     nondet immuneCondition = CONDITIONS.oneOf()
     val immunities = if (useImmunity) Set(immuneCondition) else Set()
     val r = pWithConcBreak(spellSlots, state, pApplyCondition(state, c, immunities))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doRemoveCondition = {
     nondet c = CONDITIONS.oneOf()
-    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   // Exhaustion actions
@@ -3798,26 +3929,26 @@ module dnd {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
     nondet exhaustionImmune = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pAddExhaustion(state, levels, exhaustionImmune))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doReduceExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
-    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   // Turn actions
-  action unchanged = all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+  action unchanged = all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
 
   // Combat mode transitions
   action doEnterCombat = {
     if (turnPhase != "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doExitCombat = {
     if (turnPhase == "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doStartTurn = {
@@ -3873,7 +4004,7 @@ module dnd {
           monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs2,
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       } else {
         // PC start turn: derive config from both fighter, barbarian, and monk levels
@@ -3883,9 +4014,13 @@ module dnd {
           baseConfig.with("features", baseConfig.features.union(Set(FExtraAttack)))
         else baseConfig
         // Monk Extra Attack (L5+): same pattern
-        val pcConfig = if (monkLevel >= 5 and not(pcConfig1.features.contains(FExtraAttack)))
+        val pcConfig2 = if (monkLevel >= 5 and not(pcConfig1.features.contains(FExtraAttack)))
           pcConfig1.with("features", pcConfig1.features.union(Set(FExtraAttack)))
         else pcConfig1
+        // Ranger Extra Attack (L5+): same pattern
+        val pcConfig = if (rangerLevel >= 5 and not(pcConfig2.features.contains(FExtraAttack)))
+          pcConfig2.with("features", pcConfig2.features.union(Set(FExtraAttack)))
+        else pcConfig2
         val r = pStartTurnFull(pcConfig, state, spellSlots, Unarmored,
           callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)
         // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied
@@ -3910,6 +4045,8 @@ module dnd {
           sorcererState' = pSorcererStartTurn(sorcererState), sorcererLevel' = sorcererLevel,
           warlockState' = pWarlockStartTurn(warlockState), warlockLevel' = warlockLevel,
           wizardState' = pWizardStartTurn(wizardState), wizardLevel' = wizardLevel,
+          rangerState' = pRangerStartTurn(rangerState), rangerLevel' = rangerLevel,
+          bardState' = pBardStartTurn(bardState, bardLevel), bardLevel' = bardLevel,
         }
       }
     }
@@ -3918,29 +4055,29 @@ module dnd {
   action doUseAction = {
     nondet at = ACTION_TYPES.oneOf()
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doUseBonusAction = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doUseReaction = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doUseMovement = {
     nondet feet = MOVEMENT_RANGE.oneOf()
     nondet cost = MOVE_COST_RANGE.oneOf()
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doUseExtraAttack = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doStandFromProne = {
@@ -3950,35 +4087,35 @@ module dnd {
     else {
       val t1 = pStandFromProne(turnState)
       val s1 = if (t1 != turnState) pRemoveCondition(state, CProne) else state
-      all { state' = s1, turnState' = t1, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+      all { state' = s1, turnState' = t1, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
     }
   }
 
   action doDropProne = {
     if (turnPhase != "acting") unchanged
-    else all { state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doMarkBonusActionSpell = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doMarkNonCantripActionSpell = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   // Spell slot actions (A1: requires ability to act — see ASSUMPTIONS.md)
   action doExpendSlot = {
     nondet level = SLOT_LEVEL_RANGE.oneOf()
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendSlot(spellSlots, level) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doExpendPactSlot = {
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendPactSlot(spellSlots) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doStartConcentration = {
@@ -3989,21 +4126,21 @@ module dnd {
       val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
       val effects2 = pAddEffect(effects1, spellId, duration, AtEndOfTurn)
       val ss1 = pStartConcentration(spellSlots, spellId)
-      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
     }
   }
 
   action doBreakConcentration = {
     val ss1 = pBreakConcentration(spellSlots)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doConcentrationCheck = {
     nondet saveSucceeded = Bool.oneOf()
     val ss1 = pConcentrationCheck(spellSlots, saveSucceeded)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   // Active effect actions
@@ -4011,19 +4148,19 @@ module dnd {
     nondet spellId = SPELL_IDS.oneOf()
     nondet duration = EFFECT_DURATION_RANGE.oneOf()
     nondet expiresAt = Set(AtStartOfTurn, AtEndOfTurn).oneOf()
-    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration, expiresAt)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration, expiresAt)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doRemoveEffect = {
     nondet spellId = SPELL_IDS.oneOf()
-    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   // Rest actions
   action doSpendHitDie = {
     nondet conMod = (-2).to(5).oneOf()
     nondet dieRoll = HD_ROLL_RANGE.oneOf()
-    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doShortRest = {
@@ -4058,6 +4195,8 @@ module dnd {
         sorcererState' = pSorcererShortRest(sorcererState, sorcererLevel), sorcererLevel' = sorcererLevel,
         warlockState' = pWarlockShortRest(warlockState), warlockLevel' = warlockLevel,
         wizardState' = pWizardShortRest(wizardState), wizardLevel' = wizardLevel,
+        rangerState' = pRangerShortRest(rangerState), rangerLevel' = rangerLevel,
+        bardState' = pBardShortRest(bardState, bardLevel), bardLevel' = bardLevel,
       }
     }
   }
@@ -4091,6 +4230,8 @@ module dnd {
         sorcererState' = pSorcererLongRest(sorcererState), sorcererLevel' = sorcererLevel,
         warlockState' = pWarlockLongRest(warlockState), warlockLevel' = warlockLevel,
         wizardState' = pWizardLongRest(wizardState), wizardLevel' = wizardLevel,
+        rangerState' = pRangerLongRest(rangerState, rangerLevel), rangerLevel' = rangerLevel,
+        bardState' = pBardLongRest(bardState), bardLevel' = bardLevel,
       }
     }
   }
@@ -4099,22 +4240,22 @@ module dnd {
   action doApplyFall = {
     nondet damageRoll = DAMAGE_RANGE.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyFall(state, damageRoll, Set(), Set(), Set()))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doSuffocate = {
     val r = pWithConcBreak(spellSlots, state, pSuffocate(state, creatureKind))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doApplyStarvation = {
     val r = pWithConcBreak(spellSlots, state, pApplyStarvation(state))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doApplyDehydration = {
     val r = pWithConcBreak(spellSlots, state, pApplyDehydration(state))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   // Grapple/Shove actions (applied to self as target)
@@ -4124,16 +4265,16 @@ module dnd {
     nondet saveFailed = Bool.oneOf()
     nondet freeHand = Bool.oneOf()
     val result = pGrapple(atkSize, tgtSize, state, saveFailed, freeHand)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doReleaseGrapple = all {
-    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel
+    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel
   }
 
   action doEscapeGrapple = {
     nondet escaped = Bool.oneOf()
-    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doShove = {
@@ -4142,7 +4283,7 @@ module dnd {
     nondet saveFailed = Bool.oneOf()
     nondet choice = SHOVE_CHOICES.oneOf()
     val result = pShove(atkSize, tgtSize, state, saveFailed, choice)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   // -- 19.6 doEndTurn Action --
@@ -4187,7 +4328,7 @@ module dnd {
         monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = lrResult.mrs,
         barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
       }
     }
   }
@@ -4212,7 +4353,7 @@ module dnd {
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
         barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
       }
     }
   }
@@ -4231,7 +4372,7 @@ module dnd {
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
         barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
       }
     }
   }
@@ -4248,7 +4389,7 @@ module dnd {
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4265,7 +4406,7 @@ module dnd {
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4284,7 +4425,7 @@ module dnd {
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4305,7 +4446,7 @@ module dnd {
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4324,7 +4465,7 @@ module dnd {
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4344,7 +4485,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = pEnterRage(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4357,7 +4498,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = pEndRage(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4373,7 +4514,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = pExtendRageBA(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4386,7 +4527,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = pMarkAttackOrForcedSave(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4400,7 +4541,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = pDeclareReckless(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4415,7 +4556,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = pUseIntimidatingPresence(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4428,7 +4569,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = pRestoreIntimidatingPresence(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4447,7 +4588,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = pBrutalStrike(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4470,7 +4611,7 @@ module dnd {
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
         barbarianState' = bs1, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
       }
     }
   }
@@ -4490,7 +4631,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = pFlurryOfBlows(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = pFlurryOfBlows(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4507,7 +4648,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4524,7 +4665,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = pPatientDefenseFocus(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = pPatientDefenseFocus(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4541,7 +4682,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4558,7 +4699,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = pStepOfTheWindFocus(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = pStepOfTheWindFocus(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4575,7 +4716,7 @@ module dnd {
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = pStunningStrike(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      monkState' = pStunningStrike(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4595,7 +4736,7 @@ module dnd {
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
         barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = pUseWholenessOfBody(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        monkState' = pUseWholenessOfBody(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
       }
     }
   }
@@ -4617,7 +4758,7 @@ module dnd {
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
         barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = pUncannyMetabolism(monkState, monkLevel), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        monkState' = pUncannyMetabolism(monkState, monkLevel), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
       }
     }
   }
@@ -4644,6 +4785,7 @@ module dnd {
         barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
         monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel,
         wizardState' = pUseArcaneRecovery(wizardState), wizardLevel' = wizardLevel,
+        rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
       }
     }
   }
@@ -4665,6 +4807,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel,
       wizardState' = pOverchannel(wizardState), wizardLevel' = wizardLevel,
+      rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4692,7 +4835,7 @@ module dnd {
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
           monkState' = monkState, monkLevel' = monkLevel,
           paladinState' = pUseLayOnHands(paladinState, amount), paladinLevel' = paladinLevel,
-          rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       }
     }
@@ -4715,7 +4858,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel,
       paladinState' = pUsePaladinChannelDivinity(paladinState), paladinLevel' = paladinLevel,
-      rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4740,7 +4883,7 @@ module dnd {
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
           monkState' = monkState, monkLevel' = monkLevel,
           paladinState' = paladinState, paladinLevel' = paladinLevel,
-          rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       }
     }
@@ -4762,7 +4905,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel,
       paladinState' = pUseDivineSmiteFree(paladinState), paladinLevel' = paladinLevel,
-      rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4785,7 +4928,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
       rogueState' = pUseSneakAttack(rogueState), rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4807,7 +4950,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
       rogueState' = pUseSteadyAim(rogueState), rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4826,7 +4969,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
       rogueState' = rogueState, rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4844,7 +4987,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
       rogueState' = rogueState, rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4862,7 +5005,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
       rogueState' = rogueState, rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4881,7 +5024,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
       rogueState' = rogueState, rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4902,7 +5045,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
       rogueState' = pCunningStrike(rogueState), rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4923,7 +5066,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel,
       clericState' = pUseClericChannelDivinity(clericState), clericLevel' = clericLevel,
-      druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4946,7 +5089,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel,
       warlockState' = pUseMagicalCunning(warlockState), warlockLevel' = warlockLevel,
-      wizardState' = wizardState, wizardLevel' = wizardLevel,
+      wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -4968,7 +5111,7 @@ module dnd {
         barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
         monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel,
         warlockState' = pUseMysticArcanum(warlockState, spellLevel), warlockLevel' = warlockLevel,
-        wizardState' = wizardState, wizardLevel' = wizardLevel,
+        wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
       }
     }
   }
@@ -4990,7 +5133,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel,
       warlockState' = pEldritchSmite(warlockState), warlockLevel' = warlockLevel,
-      wizardState' = wizardState, wizardLevel' = wizardLevel,
+      wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -5018,7 +5161,7 @@ module dnd {
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
           monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
           sorcererState' = newSorc, sorcererLevel' = sorcererLevel,
-          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       }
     }
@@ -5047,7 +5190,7 @@ module dnd {
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
           monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
           sorcererState' = pSpendSorceryPoints(sorcererState, cost), sorcererLevel' = sorcererLevel,
-          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       }
     }
@@ -5068,7 +5211,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
       sorcererState' = pUseInnateSorcery(sorcererState, sorcererLevel), sorcererLevel' = sorcererLevel,
-      warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -5096,7 +5239,7 @@ module dnd {
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
           monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
           sorcererState' = ss1, sorcererLevel' = sorcererLevel,
-          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       }
     }
@@ -5121,7 +5264,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
       druidState' = pEnterWildShape(druidState), druidLevel' = druidLevel,
-      sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -5140,7 +5283,7 @@ module dnd {
       barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
       monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
       druidState' = pExitWildShape(druidState), druidLevel' = druidLevel,
-      sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
     }
   }
 
@@ -5165,7 +5308,7 @@ module dnd {
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
           monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
           druidState' = pWildResurgenceGainCharge(druidState), druidLevel' = druidLevel,
-          sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       }
     }
@@ -5190,14 +5333,153 @@ module dnd {
         barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
         monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
         druidState' = pWildResurgenceGainSlot(druidState), druidLevel' = druidLevel,
-        sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      }
+    }
+  }
+
+  // -- 19.6f Ranger Actions --
+
+  /// Use free Hunter's Mark: decrement free uses. No action cost (SRD: free).
+  action doUseFreeHuntersMark = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or rangerLevel < 1 or rangerState.huntersMarkFreeUses <= 0) unchanged
+    else all {
+      state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase,
+      fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+      rangerState' = pUseFreeHuntersMark(rangerState), rangerLevel' = rangerLevel,
+      bardState' = bardState, bardLevel' = bardLevel,
+    }
+  }
+
+  /// Tireless: Magic action, grant temp HP. SRD L10.
+  action doUseTireless = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or rangerLevel < 10 or rangerState.tirelessCharges <= 0
+        or turnState.actionsRemaining <= 0) unchanged
+    else {
+      nondet d8Roll = 1.to(8).oneOf()
+      val result = pUseTireless(rangerState, d8Roll)
+      // Tireless uses Magic action (costs an action) + grants temp HP
+      val ts1 = pUseAction(turnState, state, AMagic)
+      val s1 = pGrantTempHp(state, result.tempHp, false)
+      all {
+        state' = s1, turnState' = ts1, spellSlots' = spellSlots, turnPhase' = turnPhase,
+        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        rangerState' = result.ranger, rangerLevel' = rangerLevel,
+        bardState' = bardState, bardLevel' = bardLevel,
+      }
+    }
+  }
+
+  /// Nature's Veil: Bonus Action, grant Invisible condition. SRD L14.
+  action doUseNaturesVeil = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or rangerLevel < 14 or rangerState.naturesVeilCharges <= 0
+        or turnState.bonusActionUsed) unchanged
+    else {
+      val ts1 = pUseBonusAction(turnState, state)
+      val s1 = pApplyCondition(state, CInvisible, Set())
+      all {
+        state' = s1, turnState' = ts1, spellSlots' = spellSlots, turnPhase' = turnPhase,
+        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        rangerState' = pUseNaturesVeil(rangerState), rangerLevel' = rangerLevel,
+        bardState' = bardState, bardLevel' = bardLevel,
+      }
+    }
+  }
+
+  // -- 19.6g Bard Actions --
+
+  /// Bardic Inspiration: Bonus Action, spend 1 BI charge. SRD L1.
+  action doUseBardicInspiration = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or bardLevel < 1 or bardState.bardicInspirationCharges <= 0
+        or turnState.bonusActionUsed) unchanged
+    else {
+      val ts1 = pUseBonusAction(turnState, state)
+      all {
+        state' = state, turnState' = ts1, spellSlots' = spellSlots, turnPhase' = turnPhase,
+        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        rangerState' = rangerState, rangerLevel' = rangerLevel,
+        bardState' = pUseBardicInspiration(bardState), bardLevel' = bardLevel,
+      }
+    }
+  }
+
+  /// Cutting Words L3 (Lore): Reaction, spend 1 BI charge. SRD L3 Lore.
+  action doUseCuttingWords = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or bardLevel < 3 or bardState.bardicInspirationCharges <= 0
+        or not(turnState.reactionAvailable)) unchanged
+    else {
+      val ts1 = pUseReaction(turnState)
+      all {
+        state' = state, turnState' = ts1, spellSlots' = spellSlots, turnPhase' = turnPhase,
+        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        rangerState' = rangerState, rangerLevel' = rangerLevel,
+        bardState' = pUseCuttingWords(bardState), bardLevel' = bardLevel,
+      }
+    }
+  }
+
+  /// Font of Inspiration slot restore L5: spend spell slot, regain 1 BI. Free action.
+  action doUseFontSlotRestore = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or bardLevel < 5
+        or bardState.bardicInspirationCharges >= bardState.bardicInspirationMax) unchanged
+    else {
+      nondet slotLevel = 1.to(5).oneOf()
+      val ss1 = pExpendSlot(spellSlots, slotLevel)
+      if (ss1 == spellSlots) unchanged  // no slot available at that level
+      else all {
+        state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase,
+        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        rangerState' = rangerState, rangerLevel' = rangerLevel,
+        bardState' = pUseFontSlotRestore(bardState), bardLevel' = bardLevel,
+      }
+    }
+  }
+
+  /// Peerless Skill L14: on failed check, add BI die. Only spends on success.
+  action doUsePeerlessSkill = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or bardLevel < 14 or bardState.bardicInspirationCharges <= 0) unchanged
+    else {
+      nondet success = Bool.oneOf()
+      all {
+        state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase,
+        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        rangerState' = rangerState, rangerLevel' = rangerLevel,
+        bardState' = pUsePeerlessSkill(bardState, success), bardLevel' = bardLevel,
       }
     }
   }
 
   // -- 19.7 Step Action --
 
-  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, paladin features, warlock features, sorcerer features, druid features, death saves, PC damage variants
+  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, paladin features, warlock features, sorcerer features, druid features, ranger features, bard features, death saves, PC damage variants
   action stepPC = any {
     doTakeDamage,
     doTakeDamageWithMods,
@@ -5252,6 +5534,13 @@ module dnd {
     doExitWildShape,
     doWildResurgenceCharge,
     doWildResurgenceSlot,
+    doUseFreeHuntersMark,
+    doUseTireless,
+    doUseNaturesVeil,
+    doUseBardicInspiration,
+    doUseCuttingWords,
+    doUseFontSlotRestore,
+    doUsePeerlessSkill,
   }
 
   // -- 19.6e Monster Resource Actions (Phase L) --
@@ -5275,7 +5564,7 @@ module dnd {
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs1,
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       }
     }
@@ -5296,7 +5585,7 @@ module dnd {
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs1,
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       }
     }
@@ -5317,7 +5606,7 @@ module dnd {
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs1,
           barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
         }
       }
     }

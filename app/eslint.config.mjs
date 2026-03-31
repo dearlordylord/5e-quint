@@ -109,20 +109,20 @@ export default [
   },
 
   // machine.ts override: action declarations must live inside setup() for XState type inference,
-  // and each class adds ~10 action lines. 550 accommodates 10 classes.
+  // and each class adds ~10 action lines. 580 accommodates 12 classes.
   {
     files: ["**/machine.ts"],
     rules: {
-      "max-lines": ["error", { max: 550, skipBlankLines: true, skipComments: true }]
+      "max-lines": ["error", { max: 580, skipBlankLines: true, skipComments: true }]
     }
   },
 
   // machine-types.ts override: DndEvent union + DndContext grow with each class.
-  // Event extractors already split out; remaining growth is ~1 line per new event type.
+  // Each class adds ~2 event types + ~3 context fields. 480 accommodates 12 classes.
   {
     files: ["**/machine-types.ts"],
     rules: {
-      "max-lines": ["error", { max: 450, skipBlankLines: true, skipComments: true }]
+      "max-lines": ["error", { max: 480, skipBlankLines: true, skipComments: true }]
     }
   },
 

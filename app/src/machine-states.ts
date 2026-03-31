@@ -120,6 +120,8 @@ export const damageTrackConfig = {
               "sorcererShortRest",
               "warlockShortRest",
               "wizardShortRest",
+              "rangerShortRest",
+              "bardShortRest",
               "clearUnconscious"
             ]
           },
@@ -136,7 +138,9 @@ export const damageTrackConfig = {
               "druidShortRest",
               "sorcererShortRest",
               "warlockShortRest",
-              "wizardShortRest"
+              "wizardShortRest",
+              "rangerShortRest",
+              "bardShortRest"
             ]
           }
         ],
@@ -156,6 +160,8 @@ export const damageTrackConfig = {
               "sorcererLongRest",
               "warlockLongRest",
               "wizardLongRest",
+              "rangerLongRest",
+              "bardLongRest",
               "clearUnconscious"
             ]
           },
@@ -172,7 +178,9 @@ export const damageTrackConfig = {
               "druidLongRest",
               "sorcererLongRest",
               "warlockLongRest",
-              "wizardLongRest"
+              "wizardLongRest",
+              "rangerLongRest",
+              "bardLongRest"
             ]
           }
         ],
@@ -282,7 +290,14 @@ export const turnPhaseConfig = {
         ENTER_WILD_SHAPE: { actions: ["enterWildShape"] },
         EXIT_WILD_SHAPE: { actions: ["exitWildShape"] },
         USE_WILD_RESURGENCE_CHARGE: { actions: ["wildResurgenceCharge"] },
-        USE_WILD_RESURGENCE_SLOT: { actions: ["wildResurgenceSlot"] }
+        USE_WILD_RESURGENCE_SLOT: { actions: ["wildResurgenceSlot"] },
+        USE_FREE_HUNTERS_MARK: { actions: ["useFreeHuntersMark"] },
+        USE_TIRELESS: { actions: ["useTireless"] },
+        USE_NATURES_VEIL: { actions: ["useNaturesVeil"] },
+        USE_BARDIC_INSPIRATION: { actions: ["useBardicInspiration"] },
+        USE_CUTTING_WORDS: { actions: ["useCuttingWords"] },
+        USE_FONT_SLOT_RESTORE: { actions: ["useFontSlotRestore"] },
+        USE_PEERLESS_SKILL: { actions: ["usePeerlessSkill"] }
       }
     },
     waitingForTurn: {
@@ -300,7 +315,9 @@ export const turnPhaseConfig = {
             "druidStartTurn",
             "sorcererStartTurn",
             "warlockStartTurn",
-            "wizardStartTurn"
+            "wizardStartTurn",
+            "rangerStartTurn",
+            "bardStartTurn"
           ]
         },
         EXIT_COMBAT: { target: "outOfCombat" as const, actions: ["exitCombat"] },
@@ -366,7 +383,9 @@ export const rootEventHandlers = {
       "druidShortRest",
       "sorcererShortRest",
       "warlockShortRest",
-      "wizardShortRest"
+      "wizardShortRest",
+      "rangerShortRest",
+      "bardShortRest"
     ]
   },
   LONG_REST: {
@@ -382,7 +401,9 @@ export const rootEventHandlers = {
       "druidLongRest",
       "sorcererLongRest",
       "warlockLongRest",
-      "wizardLongRest"
+      "wizardLongRest",
+      "rangerLongRest",
+      "bardLongRest"
     ]
   },
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },

@@ -15,6 +15,7 @@ import type { MetamagicOption } from "#/features/class-sorcerer.ts"
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
 import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
 import { monkExtraAttacks } from "#/machine-monk.ts"
+import { rangerExtraAttacks } from "#/machine-ranger.ts"
 import type { ActionType, Condition, CreatureKind, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
 import { d20Roll, healAmount, tempHp } from "#/types.ts"
 
@@ -302,6 +303,17 @@ const QuintWizardState = z.object({
   arcaneRecoveryUsed: z.boolean(),
   overchannelUsesThisLR: z.bigint()
 })
+const QuintRangerState = z.object({
+  huntersMarkFreeUses: z.bigint(),
+  tirelessCharges: z.bigint(),
+  tirelessMax: z.bigint(),
+  naturesVeilCharges: z.bigint(),
+  naturesVeilMax: z.bigint()
+})
+const QuintBardState = z.object({
+  bardicInspirationCharges: z.bigint(),
+  bardicInspirationMax: z.bigint()
+})
 
 // Combined state from all Quint vars
 const QuintFullState = z.object({
@@ -329,6 +341,10 @@ const QuintFullState = z.object({
   warlockLevel: z.bigint(),
   wizardState: QuintWizardState,
   wizardLevel: z.bigint(),
+  rangerState: QuintRangerState,
+  rangerLevel: z.bigint(),
+  bardState: QuintBardState,
+  bardLevel: z.bigint(),
   creatureKind: z.any().transform(variantToString),
   monsterStatBlock: z.any(), // parsed but not compared field-by-field (StatBlock is config, not mutable state)
   monsterResourceState: z.object({
@@ -466,6 +482,17 @@ interface NormalizedState {
   readonly wizardLevel: number
   readonly arcaneRecoveryUsed: boolean
   readonly overchannelUsesThisLR: number
+  // RangerState
+  readonly rangerLevel: number
+  readonly huntersMarkFreeUses: number
+  readonly tirelessCharges: number
+  readonly tirelessMax: number
+  readonly naturesVeilCharges: number
+  readonly naturesVeilMax: number
+  // BardState
+  readonly bardLevel: number
+  readonly bardicInspirationCharges: number
+  readonly bardicInspirationMax: number
 }
 
 // ============================================================
@@ -598,7 +625,16 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     eldritchSmiteUsedThisTurn: c.eldritchSmiteUsedThisTurn,
     wizardLevel: c.wizardLevel,
     arcaneRecoveryUsed: c.arcaneRecoveryUsed,
-    overchannelUsesThisLR: c.overchannelUsesThisLR
+    overchannelUsesThisLR: c.overchannelUsesThisLR,
+    rangerLevel: c.rangerLevel,
+    huntersMarkFreeUses: c.huntersMarkFreeUses,
+    tirelessCharges: c.tirelessCharges,
+    tirelessMax: c.tirelessMax,
+    naturesVeilCharges: c.naturesVeilCharges,
+    naturesVeilMax: c.naturesVeilMax,
+    bardLevel: c.bardLevel,
+    bardicInspirationCharges: c.bardicInspirationCharges,
+    bardicInspirationMax: c.bardicInspirationMax
   }
 }
 
@@ -719,7 +755,16 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     eldritchSmiteUsedThisTurn: raw.warlockState.eldritchSmiteUsedThisTurn,
     wizardLevel: Number(raw.wizardLevel),
     arcaneRecoveryUsed: raw.wizardState.arcaneRecoveryUsed,
-    overchannelUsesThisLR: Number(raw.wizardState.overchannelUsesThisLR)
+    overchannelUsesThisLR: Number(raw.wizardState.overchannelUsesThisLR),
+    rangerLevel: Number(raw.rangerLevel),
+    huntersMarkFreeUses: Number(raw.rangerState.huntersMarkFreeUses),
+    tirelessCharges: Number(raw.rangerState.tirelessCharges),
+    tirelessMax: Number(raw.rangerState.tirelessMax),
+    naturesVeilCharges: Number(raw.rangerState.naturesVeilCharges),
+    naturesVeilMax: Number(raw.rangerState.naturesVeilMax),
+    bardLevel: Number(raw.bardLevel),
+    bardicInspirationCharges: Number(raw.bardState.bardicInspirationCharges),
+    bardicInspirationMax: Number(raw.bardState.bardicInspirationMax)
   }
 }
 
@@ -822,6 +867,13 @@ type EventActionMap = {
   EXIT_WILD_SHAPE: "doExitWildShape"
   USE_WILD_RESURGENCE_CHARGE: "doWildResurgenceCharge"
   USE_WILD_RESURGENCE_SLOT: "doWildResurgenceSlot"
+  USE_FREE_HUNTERS_MARK: "doUseFreeHuntersMark"
+  USE_TIRELESS: "doUseTireless"
+  USE_NATURES_VEIL: "doUseNaturesVeil"
+  USE_BARDIC_INSPIRATION: "doUseBardicInspiration"
+  USE_CUTTING_WORDS: "doUseCuttingWords"
+  USE_FONT_SLOT_RESTORE: "doUseFontSlotRestore"
+  USE_PEERLESS_SKILL: "doUsePeerlessSkill"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -844,7 +896,8 @@ const driverSchema = {
     maxHp: ITFBigInt,
     selectedBlock: z.any(),
     pcClass: z.string().optional(),
-    wisMod: ITFBigInt
+    wisMod: ITFBigInt,
+    chaMod: ITFBigInt
   },
   doTakeDamage: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
   doTakeDamageMonster: { amount: ITFBigInt, dt: ITFVariant, isCrit: z.boolean() },
@@ -978,6 +1031,13 @@ const driverSchema = {
   doExitWildShape: {},
   doWildResurgenceCharge: { slotLevel: ITFBigInt.optional() },
   doWildResurgenceSlot: {},
+  doUseFreeHuntersMark: {},
+  doUseTireless: { d8Roll: ITFBigInt.optional() },
+  doUseNaturesVeil: {},
+  doUseBardicInspiration: {},
+  doUseCuttingWords: {},
+  doUseFontSlotRestore: { slotLevel: ITFBigInt.optional() },
+  doUsePeerlessSkill: { success: z.boolean().optional() },
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1111,7 +1171,7 @@ function createDndDriver() {
     }
 
     return {
-      init: ({ kind, l, maxHp: mhp, pcClass, selectedBlock, wisMod }) => {
+      init: ({ chaMod, kind, l, maxHp: mhp, pcClass, selectedBlock, wisMod }) => {
         if (actor) actor.stop()
         const creatureKind = mapCreatureKind(kind)
         currentCreatureKind = creatureKind
@@ -1135,6 +1195,8 @@ function createDndDriver() {
               sorcererLevel: 0,
               warlockLevel: 0,
               wizardLevel: 0,
+              rangerLevel: 0,
+              bardLevel: 0,
               creatureKind: "Monster",
               legendaryActionsRemaining: sb.legendaryActionsRemaining,
               legendaryResistancesRemaining: sb.legendaryResistancesRemaining,
@@ -1158,6 +1220,8 @@ function createDndDriver() {
           const wkLevel = cls === "Warlock" ? level : 0
           const sLevel = cls === "Sorcerer" ? level : 0
           const dLevel = cls === "Druid" ? level : 0
+          const rnLevel = cls === "Ranger" ? level : 0
+          const bdLevel = cls === "Bard" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1176,6 +1240,10 @@ function createDndDriver() {
               sorcererLevel: sLevel,
               warlockLevel: wkLevel,
               wizardLevel: wLevel,
+              rangerLevel: rnLevel,
+              wisMod: Number(wisMod),
+              bardLevel: bdLevel,
+              chaMod: Number(chaMod),
               creatureKind: "PC"
             }
           })
@@ -1282,7 +1350,8 @@ function createDndDriver() {
             : Math.max(
                 fighterExtraAttacks(ctx.fighterLevel),
                 barbarianExtraAttacks(ctx.barbarianLevel),
-                monkExtraAttacks(ctx.monkLevel)
+                monkExtraAttacks(ctx.monkLevel),
+                rangerExtraAttacks(ctx.rangerLevel)
               )
         const effects = !numEffects
           ? []
@@ -1627,6 +1696,27 @@ function createDndDriver() {
       },
       doWildResurgenceSlot: () => {
         send({ type: "USE_WILD_RESURGENCE_SLOT" })
+      },
+      doUseFreeHuntersMark: () => {
+        send({ type: "USE_FREE_HUNTERS_MARK" })
+      },
+      doUseTireless: ({ d8Roll }) => {
+        if (d8Roll != null) send({ type: "USE_TIRELESS", d8Roll: Number(d8Roll) })
+      },
+      doUseNaturesVeil: () => {
+        send({ type: "USE_NATURES_VEIL" })
+      },
+      doUseBardicInspiration: () => {
+        send({ type: "USE_BARDIC_INSPIRATION" })
+      },
+      doUseCuttingWords: () => {
+        send({ type: "USE_CUTTING_WORDS" })
+      },
+      doUseFontSlotRestore: ({ slotLevel }) => {
+        if (slotLevel != null) send({ type: "USE_FONT_SLOT_RESTORE", slotLevel: Number(slotLevel) })
+      },
+      doUsePeerlessSkill: ({ success }) => {
+        if (success != null) send({ type: "USE_PEERLESS_SKILL", success })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

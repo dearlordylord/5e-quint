@@ -37,22 +37,21 @@ Lower combat frequency but fill MBT gaps.
 | Brutal Strike → Quint | Barbarian L9+: once/turn flag, reckless gated. | **done** | T11 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#barbarian) T11 |
 | Relentless Rage → Quint | Barbarian L11+: CON save → HP=2×level. DC 10+5n, SR/LR reset. | **done** | T12 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#barbarian) T12 |
 
-## Priority 3: Prep + Integrate Ranger & Bard
-
-Need full prep first (Quint type, state var, frame conditions on ~70 actions, lifecycle, MBT schema).
+## Priority 3: Prep + Integrate Ranger & Bard — DONE
 
 | Task | Description | Status | Deps | Origin |
 |------|-------------|--------|------|--------|
-| Ranger Quint prep | Add RangerState type, state var, frame conditions, lifecycle, MBT schema. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md) H |
-| Ranger: Favored Enemy / Hunter's Prey → Quint | Hunter's Mark free casts + Hunter's Prey options. | not done | Ranger prep, T70-T71 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#ranger) T70-T71 |
-| Bard Quint prep | Add BardState type, state var, frame conditions, lifecycle, MBT schema. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md) H |
-| Bard: Bardic Inspiration → Quint | Inspiration die pool. CHA mod charges, d6/d8/d10/d12 scaling. | not done | Bard prep, T80 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#bard) T80 |
+| Ranger + Bard combined | RangerState (5 fields), BardState (2 fields), 7 actions, lifecycle, MBT parity. All 97 frame conditions updated. | **done** | none | [PLAN_RANBARD.md](PLAN_RANBARD.md) |
 
 ## Priority 4: Cross-Cutting & Infrastructure
 
 | Task | Description | Status | Deps | Origin |
 |------|-------------|--------|------|--------|
 | Reaction pattern validation | Uncanny Dodge established the pattern (`pUseReaction` + `reactionAvailable` gate). | **done** | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md) P1 |
+| J: No-op lifecycle dispatch | 12 classes × 3 lifecycle events = 36 no-op assigns per turn/rest. Conditional dispatch or class state consolidation. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#j-no-op-lifecycle-stubs-run-for-every-class-on-every-turnrest) J |
+| K: Duplicate `*ExtraAttacks` | barbarian/monk/ranger have identical `level >= 5 ? 1 : 0`. Extract shared `standardExtraAttacks`. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#k-duplicate-extraattacks-one-liners-across-classes) K |
+| M: `tirelessTempHp` param name | `wisMod` parameter receives pre-clamped `tirelessMax`. Correct but misleading. Rename. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#m-tirelesstempHp-parameter-name-mismatch) M |
+| C+D: Class state architecture | All 12 class states init for every character (~80 unused fields). Rest/lifecycle fire for all 12. Shared root cause with J. | not done | none | [PLAN_CLEANUP.md](PLAN_CLEANUP.md#c-all-class-states-initialize-for-all-characters) C/D |
 | Integration bug: smiteFreeUsed reset | Paladin feature-store missing START_TURN reset. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #1 |
 | Integration bug: intimidatingPresenceDC | Hardcoded to 0. Needs real strMod/profBonus. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #4 |
 | Integration bug: rogueLevel unused param | `canExecuteSneakAttack` accepts but doesn't use rogueLevel. | not done | none | [PLAN_NONCORE.md](PLAN_NONCORE.md#known-integration-layer-issues) #2 |
@@ -84,7 +83,7 @@ All TS done. Spells compose core primitives caller-side — Quint modeling optio
 ### Core Mechanics (PLAN.md) — ALL DONE
 d20 resolution, conditions, exhaustion, action economy, damage/healing/temp HP, death saves, spell slots, concentration, active effects, turn lifecycle, grapple, shove, environmental hazards, movement, bonus movement, monsters (legendary actions/resistance, recharge, X/day).
 
-### Quint + MBT Class Integration (all 10 classes)
+### Quint + MBT Class Integration (all 12 classes)
 | Class | Quint Features | machine-*.ts |
 |-------|---------------|--------------|
 | Fighter | Second Wind, Action Surge, Indomitable, Tactical Mind, Score Critical Hit | machine-fighter (inline in machine.ts) |
@@ -97,6 +96,8 @@ d20 resolution, conditions, exhaustion, action economy, damage/healing/temp HP, 
 | Warlock | Magical Cunning, Mystic Arcanum, Eldritch Smite | machine-warlock.ts |
 | Sorcerer | Font of Magic, Innate Sorcery (10-round duration, 2/LR + Incarnate), Sorcerous Restoration (L5+ SR), Metamagic (10 options, stacking, Incarnate 2/spell, Apotheosis free) | machine-sorcerer.ts |
 | Druid | Wild Shape enter/exit, Wild Resurgence (slot↔charge) | machine-druid.ts |
+| Ranger | Free Hunter's Mark, Tireless (temp HP), Nature's Veil (invisible), Extra Attack (L5+) | machine-ranger.ts |
+| Bard | Bardic Inspiration, Cutting Words, Font of Inspiration (SR recharge + slot restore), Peerless Skill, Superior Inspiration (L18) | machine-bard.ts |
 
 ### TS Feature Files (all classes + shared)
 All 12 SRD classes have complete TS pure function implementations in `app/src/features/class-*.ts`. Species traits, weapon mastery, feats, and ~200 spells also implemented.

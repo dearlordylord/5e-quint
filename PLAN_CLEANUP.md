@@ -12,7 +12,7 @@ Every class feature that affects state tracked by the XState machine should be s
 - **XState machine** (`machine.ts`) — Quint-parity state machine, verified by MBT traces
 - **TS features layer** (`app/src/features/`) — single implementation of class features, bridges to machine events via `feature-bridge.ts`
 
-All 10 SRD classes are now spec'd in Quint with MBT parity. Fighter (Champion) has the deepest coverage; other classes have 1-3 core resource mechanics each.
+All 12 SRD classes are now spec'd in Quint with MBT parity. Fighter (Champion) has the deepest coverage; other classes have 1-3 core resource mechanics each.
 
 **"Quint parity" scope:** CLAUDE.md says "never add logic to XState that diverges from Quint spec." This applies to mechanics that ARE modeled in Quint. Features not yet in Quint (all other classes) live only in the TS features layer — that's the current state, not a violation. The goal is to move them into Quint over time.
 
@@ -321,19 +321,52 @@ During monster research we identified that `CharConfig` mixes PC build info (cla
 
 ## Deferred (not blocking — do NOT implement without explicit owner request)
 
-### C. Fighter state initializes for all characters
-`...initialFighterState(i.fighterLevel ?? 0)` runs for every character. A Wizard gets 7 meaningless fighter fields (all 0/false). Same in Quint — every creature has a `fighterState`.
-**Fix when adding a second class to Quint.** At that point, decide: (a) accept flat cost (each class adds ~7 fields to every character), or (b) refactor to a single `classState` record with per-class sub-records. Do NOT fix before then — premature abstraction with only one class.
+### C. All class states initialize for all characters
+Every class init (`...initialFighterState(0)`, `...initialBarbarianState(0)`, etc.) runs for every character. A Wizard gets 7 meaningless fighter fields, 11 barbarian fields, 5 ranger fields, etc. — all zero/false. Same in Quint — every creature has all 12 class state vars. With 12 classes, this is ~80 unused context fields per character.
+**Fix:** (a) Accept flat cost (each class adds ~5-10 fields), or (b) refactor to a single `classState` discriminated union or sub-record that only holds the active class. Option (b) is shared with item J (lifecycle dispatch). See also item D (rest actions).
 
-### D. Rest actions fire fighter updates for non-fighters
-`fighterShortRest` and `fighterLongRest` run on every SHORT_REST/LONG_REST regardless of class. They're no-ops when maxes are 0 (capped arithmetic produces same values), so harmless.
-**Fix alongside C** — same trigger (adding second class). When refactoring class state, conditionally apply per-class rest logic.
+### D. Rest/lifecycle actions fire for all 12 classes regardless of active class
+`fighterShortRest`, `barbarianShortRest`, ..., `bardShortRest` all run on every SHORT_REST regardless of which class the character actually is. Same for LONG_REST (12 actions) and START_TURN (12 actions). They're no-ops when level is 0, so harmless but wasteful.
+**Fix alongside C and J** — conditional dispatch or class state consolidation eliminates all three issues together.
 
-### H. Migrate other classes to Quint — DONE (all 10 classes)
-All 10 SRD classes now have Quint state, lifecycle, guards, transitions, actions, and MBT parity.
-Completed: Fighter, Barbarian, Monk (prior), then Wizard, Rogue, Cleric, Paladin (Batch 1), then Warlock, Sorcerer, Druid (Batch 2).
+### J. No-op lifecycle stubs run for every class on every turn/rest
+
+**Identified:** 2026-03-31 during Ranger + Bard /simplify review
+
+Every class has `{class}StartTurnUpdate`, `{class}ShortRestUpdate`, `{class}LongRestUpdate` as separate XState actions called unconditionally on every `START_TURN`, `SHORT_REST`, and `LONG_REST` event. When a character is NOT that class (level 0), the function does `if (c.xxxLevel === 0) return {}` — allocating an empty object and running the XState assign merge for zero effect. With 12 classes, each start-of-turn fires 12 lifecycle actions, 12 empty-object allocations, and 12 no-op merges for 11 of them.
+
+Same issue in Quint: the frame conditions update all 12 class state vars on every action (always as identity assignments for non-active classes). This is the "frame condition tax" noted in the Caveats section.
+
+**Fix:** Two options:
+- **(a) Conditional dispatch:** In `machine-states.ts`, wrap each class lifecycle call in a guard that checks `{class}Level > 0`. XState supports guards on individual actions in an action array — or use a single "dispatchClassLifecycle" action that conditionally calls only the relevant class.
+- **(b) Record consolidation (shared with C):** Bundle all class states into a single `classStates` record, dispatch to the active class only. Eliminates both the per-action overhead and the per-var frame condition tax.
+
+**When to fix:** Option (a) is cheap and standalone. Option (b) is the deeper fix shared with deferred item C. Do (a) as a quick win anytime; do (b) when refactoring class state architecture.
+
+### K. Duplicate `*ExtraAttacks` one-liners across classes
+
+**Identified:** 2026-03-31 during Ranger + Bard /simplify review
+
+`barbarianExtraAttacks`, `monkExtraAttacks`, and `rangerExtraAttacks` are identical one-liner functions (`level >= 5 ? 1 : 0`) in three separate `machine-*.ts` files. Fighter has a different progression (3 tiers) in `features/class-fighter.ts`. Paladin also gets Extra Attack at L5 (not yet modeled in Quint extra-attack chain but should be).
+
+**Fix:** Extract a shared `standardExtraAttacks(classLevel: number): number` utility and have barbarian/monk/ranger/paladin delegate to it. Fighter keeps its own `fighterExtraAttacks` (different progression). Place in `machine-helpers.ts` or `srd-constants.ts`.
+
+**When to fix:** Low priority standalone — three one-liners is harmless. But if paladin or more classes add Extra Attack, the duplication will grow. Fix on next class integration or during a dedup sweep.
+
+### M. `tirelessTempHp` parameter name mismatch
+
+**Identified:** 2026-03-31 during Ranger + Bard /simplify review
+
+`tirelessTempHp(d8Roll: number, wisMod: number)` in `class-ranger.ts` takes a parameter named `wisMod` and applies `Math.max(1, wisMod)`. But `machine-ranger.ts` passes `c.tirelessMax` (which is already `Math.max(1, wisMod)`). The double-clamp is idempotent so the result is correct, but the parameter name is misleading — the callee thinks it's receiving a raw WIS modifier, but it's actually receiving a pre-clamped charge max.
+
+**Fix:** Either (a) rename the parameter to `wisModOrMax` with a doc comment explaining both call patterns work, or (b) add a separate `tirelessTempHpFromMax(d8Roll: number, tirelessMax: number): number` that doesn't re-clamp, or (c) just rename to `wisComponent` since that's what it semantically is — the WIS-derived part of the formula.
+
+**When to fix:** Low priority cosmetic. Fix during next ranger feature work or a naming cleanup.
+
+### H. Migrate other classes to Quint — DONE (all 12 classes)
+All 12 SRD classes now have Quint state, lifecycle, guards, transitions, actions, and MBT parity.
+Completed: Fighter, Barbarian, Monk (prior), then Wizard, Rogue, Cleric, Paladin (Batch 1), then Warlock, Sorcerer, Druid (Batch 2), then Ranger, Bard (Batch 3).
 Each class has a dedicated `machine-{class}.ts` delegating to `features/class-{class}.ts`.
-`machine-class-stubs.ts` and `machine-types-class-stubs.ts` have been deleted.
 
 **Remaining:** Each class models only 1-3 core resource mechanics. Many TS features are not yet in Quint — adding more follows the same pattern: guard → transition → action → MBT handler.
 

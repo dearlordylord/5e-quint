@@ -8,6 +8,7 @@ import {
   remarkableAthleteCritMovement
 } from "#/features/class-fighter.ts"
 import * as barb from "#/machine-barbarian.ts"
+import * as bard from "#/machine-bard.ts"
 import * as cleric from "#/machine-cleric.ts"
 import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
 import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
@@ -41,6 +42,7 @@ import {
 } from "#/machine-monster.ts"
 import * as paladin from "#/machine-paladin.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
+import * as ranger from "#/machine-ranger.ts"
 import * as rogue from "#/machine-rogue.ts"
 import * as sorcerer from "#/machine-sorcerer.ts"
 import { computeShortRest, expendSlot } from "#/machine-spells.ts"
@@ -484,7 +486,26 @@ export const dndMachine = setup({
     useArcaneRecovery: assign(({ context: c, event: e }) =>
       wizard.arcaneRecoveryUpdate(c, (e as Extract<DndEvent, { type: "USE_ARCANE_RECOVERY" }>).slotLevel)
     ),
-    useOverchannel: assign(({ context: c }) => wizard.overchannelUpdate(c))
+    useOverchannel: assign(({ context: c }) => wizard.overchannelUpdate(c)),
+    useFreeHuntersMark: assign(({ context: c }) => ranger.useFreeHuntersMarkUpdate(c)),
+    useTireless: assign(({ context: c, event: e }) =>
+      ranger.useTirelessUpdate(c, (e as Extract<DndEvent, { type: "USE_TIRELESS" }>).d8Roll)
+    ),
+    useNaturesVeil: assign(({ context: c }) => ranger.useNaturesVeilUpdate(c)),
+    rangerStartTurn: assign(({ context: c }) => ranger.rangerStartTurnUpdate(c)),
+    rangerShortRest: assign(({ context: c }) => ranger.rangerShortRestUpdate(c)),
+    rangerLongRest: assign(({ context: c }) => ranger.rangerLongRestUpdate(c)),
+    useBardicInspiration: assign(({ context: c }) => bard.useBardicInspirationUpdate(c)),
+    useCuttingWords: assign(({ context: c }) => bard.useCuttingWordsUpdate(c)),
+    useFontSlotRestore: assign(({ context: c, event: e }) =>
+      bard.useFontSlotRestoreUpdate(c, (e as Extract<DndEvent, { type: "USE_FONT_SLOT_RESTORE" }>).slotLevel)
+    ),
+    usePeerlessSkill: assign(({ context: c, event: e }) =>
+      bard.usePeerlessSkillUpdate(c, (e as Extract<DndEvent, { type: "USE_PEERLESS_SKILL" }>).success)
+    ),
+    bardStartTurn: assign(({ context: c }) => bard.bardStartTurnUpdate(c)),
+    bardShortRest: assign(({ context: c }) => bard.bardShortRestUpdate(c)),
+    bardLongRest: assign(({ context: c }) => bard.bardLongRestUpdate(c))
   }
 }).createMachine({
   id: "dnd",
@@ -530,7 +551,9 @@ export const dndMachine = setup({
     ...druid.initialDruidState(i.druidLevel ?? 0),
     ...sorcerer.initialSorcererState(i.sorcererLevel ?? 0),
     ...warlock.initialWarlockState(i.warlockLevel ?? 0),
-    ...wizard.initialWizardState(i.wizardLevel ?? 0)
+    ...wizard.initialWizardState(i.wizardLevel ?? 0),
+    ...ranger.initialRangerState(i.rangerLevel ?? 0, i.wisMod),
+    ...bard.initialBardState(i.bardLevel ?? 0, i.chaMod)
   }),
   on: rootEventHandlers,
   states: {

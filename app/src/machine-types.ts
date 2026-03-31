@@ -76,6 +76,10 @@ export interface DndMachineInput {
   readonly sorcererLevel?: number
   readonly warlockLevel?: number
   readonly wizardLevel?: number
+  readonly rangerLevel?: number
+  readonly wisMod?: number
+  readonly bardLevel?: number
+  readonly chaMod?: number
 }
 
 // --- Context ---
@@ -202,6 +206,17 @@ export interface DndContext {
   readonly wizardLevel: number
   readonly arcaneRecoveryUsed: boolean
   readonly overchannelUsesThisLR: number
+  // RangerState (Quint parity: rangerState)
+  readonly rangerLevel: number
+  readonly huntersMarkFreeUses: number
+  readonly tirelessCharges: number
+  readonly tirelessMax: number
+  readonly naturesVeilCharges: number
+  readonly naturesVeilMax: number
+  // BardState (Quint parity: bardState)
+  readonly bardLevel: number
+  readonly bardicInspirationCharges: number
+  readonly bardicInspirationMax: number
 }
 
 // --- Events ---
@@ -393,6 +408,15 @@ export type DndEvent =
   | { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: number }
   | { readonly type: "USE_INNATE_SORCERY" }
   | { readonly type: "USE_METAMAGIC"; readonly option: string }
+  // Phase RN: Ranger events
+  | { readonly type: "USE_FREE_HUNTERS_MARK" }
+  | { readonly type: "USE_TIRELESS"; readonly d8Roll: number }
+  | { readonly type: "USE_NATURES_VEIL" }
+  // Phase BD: Bard events
+  | { readonly type: "USE_BARDIC_INSPIRATION" }
+  | { readonly type: "USE_CUTTING_WORDS" }
+  | { readonly type: "USE_FONT_SLOT_RESTORE"; readonly slotLevel: number }
+  | { readonly type: "USE_PEERLESS_SKILL"; readonly success: boolean }
   // Phase DR: Druid events
   | { readonly type: "ENTER_WILD_SHAPE" }
   | { readonly type: "EXIT_WILD_SHAPE" }
