@@ -14,7 +14,7 @@ TS pure functions exist. Need Quint spec + MBT wiring to complete formal verific
 |------|-------------|--------|------|--------|
 | Divine Smite → Quint | Paladin smite: expend spell slot (BA cost), free 1/LR smite. | **done** | T61 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#paladin) T61 |
 | Cunning Action → Quint | Rogue BA: Dash/Disengage/Hide. Uses existing `pBonusActionDash`. | **done** | T31 (TS done), T06 | [PLAN_NONCORE.md](PLAN_NONCORE.md#rogue) T31 |
-| Metamagic → Quint | 10 SP-consuming spell modifiers. High complexity (10 variants). | not done | T111 (TS done), T110 | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T111 |
+| Metamagic → Quint | 10 SP-consuming spell modifiers. Stacking, Incarnate L7, Apotheosis L20, Quickened L1+ guard. | **done** | T111 (TS done), T110 | [PLAN_NONCORE.md](PLAN_NONCORE.md#sorcerer) T111 |
 | Rage damage/resistance → Quint | `rageDamageBonus`, `RAGE_RESISTANCE_TYPES`, `rageResistances` pure fns. | **done** | T10 (TS done, partial Quint) | [PLAN_NONCORE.md](PLAN_NONCORE.md#barbarian) T10 |
 | Pact Magic SR recovery | Warlock pact slots recover on Short Rest. `pRestorePactSlots` in Quint `doShortRest`, `computeShortRest` in TS. | **done** | T120 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#warlock) T120 |
 | Wild Shape temp HP | SRD 5.2.1: temp HP = druid level on enter. No beast HP pool (5.1 change). | **done** | T100 (TS done) | [PLAN_NONCORE.md](PLAN_NONCORE.md#druid) T100 |
@@ -95,7 +95,7 @@ d20 resolution, conditions, exhaustion, action economy, damage/healing/temp HP, 
 | Cleric | Channel Divinity (Turn Undead / Divine Spark via CD charge) | machine-cleric.ts |
 | Paladin | Lay on Hands, Channel Divinity, Divine Smite (slot + free 1/LR, BA cost) | machine-paladin.ts |
 | Warlock | Magical Cunning, Mystic Arcanum, Eldritch Smite | machine-warlock.ts |
-| Sorcerer | Font of Magic, Innate Sorcery (10-round duration, 2/LR + Incarnate), Sorcerous Restoration (L5+ SR) | machine-sorcerer.ts |
+| Sorcerer | Font of Magic, Innate Sorcery (10-round duration, 2/LR + Incarnate), Sorcerous Restoration (L5+ SR), Metamagic (10 options, stacking, Incarnate 2/spell, Apotheosis free) | machine-sorcerer.ts |
 | Druid | Wild Shape enter/exit, Wild Resurgence (slot↔charge) | machine-druid.ts |
 
 ### TS Feature Files (all classes + shared)

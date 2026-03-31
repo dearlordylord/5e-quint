@@ -497,14 +497,12 @@ SRD 5.2.1: subclass at L3 (was L1). New base class features:
 - Functions: `pConvertSlotToPoints(state, slotLevel)->gain 1-5 points`; `pConvertPointsToSlot(state, slotLevel)->spend 2-7 points, create slot (max 5th, vanish on LR)`; `pInnateSorcery(state, turnState)->+1 DC + concentration advantage, 1 min`
 - Test: correct costs; can't create above 5th; can't overspend; resets on LR; Innate Sorcery uses = 2/LR; +1 DC while active
 
-**[T111] Metamagic**
-SRD 5.2.1: 6 original options revised, 2 new options added. Learns 2 at L3, can gain more at higher levels. Only one per spell EXCEPT Empowered which can combine.
-- Quickened (2 SP→bonus action cast), Empowered (1 SP→reroll up to CHA mod damage dice), Heightened (3 SP→Disadvantage on first save), Subtle (1 SP→no V/S), Careful (1 SP→chosen creatures auto-succeed save), Extended (1 SP→double duration max 24h)
-- NEW: Seeking Spell (2 SP→reroll missed spell attack roll), Transmuted Spell (1 SP→change damage type to acid/cold/fire/lightning/poison/thunder)
-- Distant Spell (1 SP→double range if 5ft+, or Touch→30ft) and Twinned Spell (1 SP→increase spell's effective level by 1, for spells that target additional creatures at higher levels) both present in 5.2.1
-- State: `metamagicKnown: Set[Metamagic]`
-- Functions: one per metamagic option
-- Test: each costs correct SP; Quickened triggers bonus action spell rule; only one per spell except Empowered; Seeking Spell rerolls attack; Transmuted Spell changes type
+**[T111] Metamagic** *(done — TS + Quint + MBT)*
+SRD 5.2.1: 10 options, all SP costs modeled. Stacking: only 1 non-stackable per spell (Empowered/Seeking bypass). Sorcery Incarnate L7: 2 non-stackable when Innate Sorcery active. Arcane Apotheosis L20: 1 free/turn when Innate Sorcery active. Quickened: blocks if L1+ action spell already cast (SRD line 187).
+- Quint: `metamagicUsedThisCast: Set[str]`, `apotheosisUsedThisTurn: bool` in SorcererState. `canUseMetamagic`, `pUseMetamagic`, `doUseMetamagic` action in `stepPC`.
+- TS: `canUseMetamagic`/`useMetamagic` pure functions in `class-sorcerer.ts`, `useMetamagicUpdate` delegating in `machine-sorcerer.ts`. `ReadonlySet<MetamagicOption>` typed.
+- MBT: Set transform in Zod schema, EventActionMap, driverSchema, handler all wired.
+- 43 Quint tests. All vitest + MBT trace replay pass. RAW verified for all 10 options + Incarnate + Apotheosis.
 
 **[T112] Draconic Sorcery**
 SRD 5.2.1 rename: Draconic Bloodline → Draconic Sorcery. Draconic Resilience (L3: 13+DEX AC unarmored, +1 HP/level), Draconic Spells (L3: always prepared — L3: Alter Self, Chromatic Orb, Command, Dragon's Breath; L5: Fear, Fly; L7: Arcane Eye, Charm Monster; L9: Legend Lore, Summon Dragon), Elemental Affinity (L6: +CHA damage for ancestry type; 1 SP→resistance 1 hour), Dragon Wings (L14: BA fly at walk speed; can't in non-accommodating armor). ~~Draconic Presence~~ does not exist in SRD 5.2.1 — the L18 feature is Dragon Companion (T112b).
