@@ -764,6 +764,7 @@ type EventActionMap = {
   CUNNING_ACTION_DASH: "doCunningActionDash"
   CUNNING_ACTION_DISENGAGE: "doCunningActionDisengage"
   CUNNING_ACTION_HIDE: "doCunningActionHide"
+  USE_UNCANNY_DODGE: "doUseUncannyDodge"
   USE_CLERIC_CHANNEL_DIVINITY: "doUseClericChannelDivinity"
   USE_LAY_ON_HANDS: "doUseLayOnHands"
   USE_PALADIN_CHANNEL_DIVINITY: "doUsePaladinChannelDivinity"
@@ -911,6 +912,7 @@ const driverSchema = {
   doCunningActionDash: {},
   doCunningActionDisengage: {},
   doCunningActionHide: {},
+  doUseUncannyDodge: {},
   doUseClericChannelDivinity: {},
   doUseLayOnHands: { amount: ITFBigInt.optional() },
   doUsePaladinChannelDivinity: {},
@@ -1509,6 +1511,9 @@ function createDndDriver() {
       },
       doCunningActionHide: () => {
         send({ type: "CUNNING_ACTION_HIDE" })
+      },
+      doUseUncannyDodge: () => {
+        send({ type: "USE_UNCANNY_DODGE" })
       },
       doUseClericChannelDivinity: () => {
         send({ type: "USE_CLERIC_CHANNEL_DIVINITY" })

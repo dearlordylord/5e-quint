@@ -117,6 +117,15 @@ export default [
     }
   },
 
+  // machine-types.ts override: DndEvent union + DndContext grow with each class.
+  // Event extractors already split out; remaining growth is ~1 line per new event type.
+  {
+    files: ["**/machine-types.ts"],
+    rules: {
+      "max-lines": ["error", { max: 450, skipBlankLines: true, skipComments: true }]
+    }
+  },
+
   // Test file overrides
   {
     files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts"],

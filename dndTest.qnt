@@ -5195,6 +5195,13 @@ module dndTest {
   run test_canSteadyAim_baUsed = assert(canSteadyAim(TEST_ROGUE_STATE, 5, true) == false)
   run test_canSteadyAim_alreadyUsed = assert(canSteadyAim(TEST_ROGUE_STATE.with("steadyAimUsedThisTurn", true), 5, false) == false)
 
+  // Uncanny Dodge guards
+  run uncannyDodgeGuardTest = all {
+    assert(canUncannyDodge(5, true)),
+    assert(not(canUncannyDodge(4, true))),   // too low level
+    assert(not(canUncannyDodge(5, false))),  // no reaction
+  }
+
   // Cunning Action guards
   run cunningActionGuardTest = all {
     assert(canCunningAction(2, false)),

@@ -2770,6 +2770,14 @@ module dnd {
     rogueLevel >= 2 and not(bonusActionUsed)
   }
 
+  /// Can use Uncanny Dodge: L5+, reaction available.
+  /// SRD L5: "when an attacker that you can see hits you with an attack roll,
+  /// you can use your Reaction to halve the attack's damage against you."
+  /// Attacker visibility is a caller concern — Quint only gates on level + reaction.
+  pure def canUncannyDodge(rogueLevel: int, reactionAvailable: bool): bool = {
+    rogueLevel >= 5 and reactionAvailable
+  }
+
   // -- R2: Transitions --
 
   /// Mark Sneak Attack as used this turn.
@@ -4605,6 +4613,25 @@ module dnd {
     }
   }
 
+  /// Uncanny Dodge: use Reaction. Damage halving is caller-managed.
+  /// SRD L5: "you can use your Reaction to halve the attack's damage against you"
+  action doUseUncannyDodge = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canUncannyDodge(rogueLevel, turnState.reactionAvailable))) unchanged
+    else all {
+      state' = state,
+      turnState' = pUseReaction(turnState),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
+      rogueState' = rogueState, rogueLevel' = rogueLevel,
+      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   /// Use Cleric Channel Divinity: decrement charge.
   /// SRD: "You can use this class's Channel Divinity twice.
   /// You regain one of its expended uses when you finish a Short Rest,
@@ -4826,6 +4853,7 @@ module dnd {
     doCunningActionDash,
     doCunningActionDisengage,
     doCunningActionHide,
+    doUseUncannyDodge,
     doUseClericChannelDivinity,
     doUseLayOnHands,
     doUsePaladinChannelDivinity,

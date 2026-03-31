@@ -435,6 +435,7 @@ export const dndMachine = setup({
     cunningActionDash: assign(({ context: c }) => rogue.cunningActionDashUpdate(c)),
     cunningActionDisengage: assign(({ context: c }) => rogue.cunningActionDisengageUpdate(c)),
     cunningActionHide: assign(({ context: c }) => rogue.cunningActionHideUpdate(c)),
+    useUncannyDodge: assign(({ context: c }) => rogue.uncannyDodgeUpdate(c)),
     rogueStartTurn: assign(({ context: c }) => rogue.rogueStartTurnUpdate(c)),
     rogueShortRest: assign(({ context: c }) => rogue.rogueShortRestUpdate(c)),
     rogueLongRest: assign(({ context: c }) => rogue.rogueLongRestUpdate(c)),

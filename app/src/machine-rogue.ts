@@ -41,6 +41,15 @@ export function cunningActionHideUpdate(c: DndContext): Partial<DndContext> {
   return { bonusActionUsed: true }
 }
 
+// -- Uncanny Dodge (L5+) --
+
+/** Uncanny Dodge: consume reaction. Damage halving is caller-managed.
+ * SRD L5: "you can use your Reaction to halve the attack's damage" */
+export function uncannyDodgeUpdate(c: DndContext): Partial<DndContext> {
+  if (isIncapacitated(c) || c.rogueLevel < 5 || !c.reactionAvailable) return {}
+  return { reactionAvailable: false }
+}
+
 // -- Lifecycle --
 
 export function rogueStartTurnUpdate(c: DndContext): Partial<DndContext> {
