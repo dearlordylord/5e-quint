@@ -12,7 +12,7 @@ Every class feature that affects state tracked by the XState machine should be s
 - **XState machine** (`machine.ts`) — Quint-parity state machine, verified by MBT traces
 - **TS features layer** (`app/src/features/`) — single implementation of class features, bridges to machine events via `feature-bridge.ts`
 
-Fighter (Champion) is fully spec'd in Quint. All other classes exist only in TS.
+All 10 SRD classes are now spec'd in Quint with MBT parity. Fighter (Champion) has the deepest coverage; other classes have 1-3 core resource mechanics each.
 
 **"Quint parity" scope:** CLAUDE.md says "never add logic to XState that diverges from Quint spec." This applies to mechanics that ARE modeled in Quint. Features not yet in Quint (all other classes) live only in the TS features layer — that's the current state, not a violation. The goal is to move them into Quint over time.
 
@@ -329,8 +329,13 @@ During monster research we identified that `CharConfig` mixes PC build info (cla
 `fighterShortRest` and `fighterLongRest` run on every SHORT_REST/LONG_REST regardless of class. They're no-ops when maxes are 0 (capped arithmetic produces same values), so harmless.
 **Fix alongside C** — same trigger (adding second class). When refactoring class state, conditionally apply per-class rest logic.
 
-### H. Migrate other classes to Quint (eventual)
-Same pattern as Fighter: add class state var + level var, pure functions, action wrappers, MBT handlers. One class at a time. Priority order TBD based on which classes the app exercises most.
+### H. Migrate other classes to Quint — DONE (all 10 classes)
+All 10 SRD classes now have Quint state, lifecycle, guards, transitions, actions, and MBT parity.
+Completed: Fighter, Barbarian, Monk (prior), then Wizard, Rogue, Cleric, Paladin (Batch 1), then Warlock, Sorcerer, Druid (Batch 2).
+Each class has a dedicated `machine-{class}.ts` delegating to `features/class-{class}.ts`.
+`machine-class-stubs.ts` and `machine-types-class-stubs.ts` have been deleted.
+
+**Remaining:** Each class models only 1-3 core resource mechanics. Many TS features are not yet in Quint — adding more follows the same pattern: guard → transition → action → MBT handler.
 
 **All existing TS feature files (Barbarian, Monk, Paladin, Rogue, Sorcerer, etc.) and their UI components are working implementations — they are NOT dead code and must NOT be deleted.**
 

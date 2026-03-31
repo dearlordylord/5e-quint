@@ -826,8 +826,8 @@ Features that have pure functions but aren't wired yet. For Fighter items with P
 | Features wired (UI integration) | 6 (Rage, Reckless, Second Wind, Action Surge + queries) |
 | Features with pure fns but not wired | ~50 |
 | Features not started | ~85 |
-| Features in Quint + MBT | 5 (SW, AS, Indomitable, Extra Attack, critRange) |
-| Classes with no implementation file | 5 (Ranger, Bard, Cleric, Warlock, Wizard) |
+| Features in Quint + MBT | 22 (Fighter: SW, AS, Indomitable, EA, critRange; Barbarian: Rage, Reckless, IP; Monk: Focus, Flurry, Patient Defense, Step of Wind, Stunning Strike, Wholeness, Uncanny Metabolism; Wizard: Arcane Recovery; Rogue: Sneak Attack, Steady Aim; Cleric: Channel Divinity; Paladin: LoH, CD; Warlock: Magical Cunning, Mystic Arcanum; Sorcerer: Font of Magic; Druid: Wild Shape) |
+| Classes with no implementation file | 2 (Ranger, Bard — not in SRD class list for Quint spec) |
 
 ---
 
