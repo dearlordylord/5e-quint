@@ -2644,15 +2644,59 @@ module dnd {
   // Worktree agents will replace these with real implementations.
 
   // -- Paladin --
+
+  /// SRD: Channel Divinity uses by level: 2 at L3, 3 at L11.
+  pure def pPaladinChannelDivinityMax(paladinLevel: int): int = {
+    if (paladinLevel >= 11) 3
+    else if (paladinLevel >= 3) 2
+    else 0
+  }
+
   pure def freshPaladinState(paladinLevel: int): PaladinState = {
     val lohMax = if (paladinLevel >= 1) paladinLevel * 5 else 0
-    val cdMax = if (paladinLevel >= 3) 2 else 0
+    val cdMax = pPaladinChannelDivinityMax(paladinLevel)
     { layOnHandsPool: lohMax, layOnHandsMax: lohMax, channelDivinityCharges: cdMax, channelDivinityMax: cdMax }
   }
+
   pure def pPaladinStartTurn(ps: PaladinState): PaladinState = ps
-  pure def pPaladinShortRest(ps: PaladinState): PaladinState = ps
+
+  /// SRD: "You regain one of its expended uses when you finish a Short Rest"
+  pure def pPaladinShortRest(ps: PaladinState): PaladinState = {
+    val newCharges = if (ps.channelDivinityCharges < ps.channelDivinityMax)
+      ps.channelDivinityCharges + 1 else ps.channelDivinityCharges
+    ps.with("channelDivinityCharges", newCharges)
+  }
+
+  /// SRD: Long Rest restores full LoH pool and all CD uses.
   pure def pPaladinLongRest(ps: PaladinState): PaladinState = {
     ps.with("layOnHandsPool", ps.layOnHandsMax).with("channelDivinityCharges", ps.channelDivinityMax)
+  }
+
+  // -- P1: Guards --
+
+  /// Can use Lay on Hands: pool >= amount, amount > 0.
+  /// SRD: "restore a number of Hit Points to that creature, up to the maximum amount remaining in the pool"
+  pure def canLayOnHands(ps: PaladinState, amount: int): bool = {
+    ps.layOnHandsPool >= amount and amount > 0
+  }
+
+  /// Can use Paladin Channel Divinity: L3+, charges > 0.
+  /// SRD: "You can use this class's Channel Divinity twice" (L3+)
+  pure def canPaladinChannelDivinity(ps: PaladinState, paladinLevel: int): bool = {
+    paladinLevel >= 3 and ps.channelDivinityCharges > 0
+  }
+
+  // -- P2: Transitions --
+
+  /// Use Lay on Hands: deduct amount from pool.
+  /// SRD: "draw power from the pool of healing"
+  pure def pUseLayOnHands(ps: PaladinState, amount: int): PaladinState = {
+    ps.with("layOnHandsPool", ps.layOnHandsPool - amount)
+  }
+
+  /// Use Paladin Channel Divinity: decrement charges.
+  pure def pUsePaladinChannelDivinity(ps: PaladinState): PaladinState = {
+    ps.with("channelDivinityCharges", ps.channelDivinityCharges - 1)
   }
 
   // -- Rogue --
@@ -3209,8 +3253,8 @@ module dnd {
     nondet l = Set(3, 5, 9, 10, 18).oneOf()
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
-    // A25: class selection — one of Fighter, Barbarian, or Monk at level l, others at 0
-    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric").oneOf()
+    // A25: class selection — one of Fighter, Barbarian, Monk, Wizard, Rogue, Cleric, or Paladin at level l, others at 0
+    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric", "Paladin").oneOf()
     // D5: Wholeness of Body uses WIS mod; spec uses nondet range 1-5
     nondet wisMod = 1.to(5).oneOf()
     if (kind == Monster) {
@@ -3249,6 +3293,7 @@ module dnd {
       val wLevel = if (pcClass == "Wizard") l else 0
       val rLevel = if (pcClass == "Rogue") l else 0
       val cLevel = if (pcClass == "Cleric") l else 0
+      val pLevel = if (pcClass == "Paladin") l else 0
       all {
         creatureKind' = PC,
         monsterStatBlock' = NULL_STAT_BLOCK,
@@ -3256,13 +3301,13 @@ module dnd {
         fighterLevel' = fLevel,
         barbarianLevel' = bLevel,
         monkLevel' = mLevel,
-        paladinLevel' = 0, rogueLevel' = rLevel, clericLevel' = cLevel,
+        paladinLevel' = pLevel, rogueLevel' = rLevel, clericLevel' = cLevel,
         druidLevel' = 0, sorcererLevel' = 0, warlockLevel' = 0, wizardLevel' = wLevel,
         state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
         fighterState' = freshFighterState(fLevel),
         barbarianState' = freshBarbarianState(bLevel),
         monkState' = freshMonkState(mLevel, wisMod),
-        paladinState' = freshPaladinState(0),
+        paladinState' = freshPaladinState(pLevel),
         rogueState' = freshRogueState(rLevel),
         clericState' = freshClericState(cLevel),
         druidState' = freshDruidState(0),
@@ -4162,6 +4207,57 @@ module dnd {
     }
   }
 
+  // -- 19.6d Paladin Actions (Phase P) --
+
+  /// Lay on Hands: heal amount from pool. Bonus Action.
+  /// SRD: "As a Bonus Action, you can touch a creature (which could be yourself)
+  /// and draw power from the pool of healing to restore a number of Hit Points
+  /// to that creature, up to the maximum amount remaining in the pool."
+  action doUseLayOnHands = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or turnState.bonusActionUsed) unchanged
+    else {
+      nondet amount = 1.to(25).oneOf()
+      if (not(canLayOnHands(paladinState, amount))) unchanged
+      else {
+        val healed = pHeal(state, amount)
+        all {
+          state' = healed,
+          turnState' = turnState.with("bonusActionUsed", true),
+          spellSlots' = spellSlots,
+          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+          monsterResourceState' = monsterResourceState,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+          monkState' = monkState, monkLevel' = monkLevel,
+          paladinState' = pUseLayOnHands(paladinState, amount), paladinLevel' = paladinLevel,
+          rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        }
+      }
+    }
+  }
+
+  /// Paladin Channel Divinity: decrement charge.
+  /// SRD: "You can use this class's Channel Divinity twice. You regain one of its
+  /// expended uses when you finish a Short Rest, and you regain all expended uses
+  /// when you finish a Long Rest."
+  action doUsePaladinChannelDivinity = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canPaladinChannelDivinity(paladinState, paladinLevel))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel,
+      paladinState' = pUsePaladinChannelDivinity(paladinState), paladinLevel' = paladinLevel,
+      rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   // -- Rogue Actions --
 
   /// Sneak Attack: mark used this turn. Damage is caller-managed.
@@ -4229,7 +4325,7 @@ module dnd {
 
   // -- 19.7 Step Action --
 
-  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, death saves, PC damage variants
+  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, paladin features, death saves, PC damage variants
   action stepPC = any {
     doTakeDamage,
     doTakeDamageWithMods,
@@ -4261,6 +4357,8 @@ module dnd {
     doUseSneakAttack,
     doUseSteadyAim,
     doUseClericChannelDivinity,
+    doUseLayOnHands,
+    doUsePaladinChannelDivinity,
   }
 
   // -- 19.6e Monster Resource Actions (Phase L) --
@@ -4487,14 +4585,16 @@ module dnd {
   val wholenessChargesBounded =
     monkState.wholenessCharges >= 0 and monkState.wholenessCharges <= monkState.wholenessMax
 
-  // Stub invariants for parallel class integration (prep commit).
-  // Worktree agents will replace with real bounds.
+  // Phase P: Paladin resource invariants
   val paladinLayOnHandsBounded =
     paladinState.layOnHandsPool >= 0 and paladinState.layOnHandsPool <= paladinState.layOnHandsMax
 
   /// Cleric CD charges bounded: 0 ≤ charges ≤ max.
   val clericChannelDivinityBounded =
     clericState.channelDivinityCharges >= 0 and clericState.channelDivinityCharges <= clericState.channelDivinityMax
+
+  val paladinChannelDivinityBounded =
+    paladinState.channelDivinityCharges >= 0 and paladinState.channelDivinityCharges <= paladinState.channelDivinityMax
 
   val druidWildShapeChargesBounded =
     druidState.wildShapeCharges >= 0 and druidState.wildShapeCharges <= druidState.wildShapeMax
@@ -4551,6 +4651,7 @@ module dnd {
     wholenessChargesBounded,
     paladinLayOnHandsBounded,
     clericChannelDivinityBounded,
+    paladinChannelDivinityBounded,
     druidWildShapeChargesBounded,
     sorceryPointsBounded,
   }

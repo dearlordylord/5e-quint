@@ -10,11 +10,6 @@ import type { ClassStubContext } from "#/machine-types-class-stubs.ts"
 /** Initial stub state for all 7 pending classes (all zero/false). */
 export function initialClassStubs(i: DndMachineInput): ClassStubContext {
   return {
-    paladinLevel: i.paladinLevel ?? 0,
-    layOnHandsPool: 0,
-    layOnHandsMax: 0,
-    paladinChannelDivinityCharges: 0,
-    paladinChannelDivinityMax: 0,
     rogueLevel: i.rogueLevel ?? 0,
     sneakAttackUsedThisTurn: false,
     steadyAimUsedThisTurn: false,

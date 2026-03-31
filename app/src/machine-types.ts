@@ -342,6 +342,9 @@ export type DndEvent =
   | { readonly type: "DECLARE_RECKLESS" }
   | { readonly type: "USE_INTIMIDATING_PRESENCE" }
   | { readonly type: "RESTORE_INTIMIDATING_PRESENCE" }
+  // Phase P: Paladin events
+  | { readonly type: "USE_LAY_ON_HANDS"; readonly amount: number }
+  | { readonly type: "USE_PALADIN_CHANNEL_DIVINITY" }
   // Phase M: Monk events
   | { readonly type: "FLURRY_OF_BLOWS" }
   | { readonly type: "PATIENT_DEFENSE_FREE" }

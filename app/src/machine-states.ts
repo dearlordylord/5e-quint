@@ -260,7 +260,9 @@ export const turnPhaseConfig = {
         USE_ARCANE_RECOVERY: { actions: ["useArcaneRecovery"] },
         USE_SNEAK_ATTACK: { actions: ["useSneakAttack"] },
         USE_STEADY_AIM: { actions: ["useSteadyAim"] },
-        USE_CLERIC_CHANNEL_DIVINITY: { actions: ["useClericChannelDivinity"] }
+        USE_CLERIC_CHANNEL_DIVINITY: { actions: ["useClericChannelDivinity"] },
+        USE_LAY_ON_HANDS: { actions: ["useLayOnHands"] },
+        USE_PALADIN_CHANNEL_DIVINITY: { actions: ["usePaladinChannelDivinity"] }
       }
     },
     waitingForTurn: {

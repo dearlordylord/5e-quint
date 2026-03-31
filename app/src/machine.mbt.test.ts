@@ -746,6 +746,8 @@ type EventActionMap = {
   USE_SNEAK_ATTACK: "doUseSneakAttack"
   USE_STEADY_AIM: "doUseSteadyAim"
   USE_CLERIC_CHANNEL_DIVINITY: "doUseClericChannelDivinity"
+  USE_LAY_ON_HANDS: "doUseLayOnHands"
+  USE_PALADIN_CHANNEL_DIVINITY: "doUsePaladinChannelDivinity"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -879,6 +881,8 @@ const driverSchema = {
   doUseSneakAttack: {},
   doUseSteadyAim: {},
   doUseClericChannelDivinity: {},
+  doUseLayOnHands: { amount: ITFBigInt.optional() },
+  doUsePaladinChannelDivinity: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1055,6 +1059,7 @@ function createDndDriver() {
           const wLevel = cls === "Wizard" ? level : 0
           const rLevel = cls === "Rogue" ? level : 0
           const cLevel = cls === "Cleric" ? level : 0
+          const pLevel = cls === "Paladin" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1066,7 +1071,7 @@ function createDndDriver() {
               barbarianLevel: bLevel,
               monkLevel: mLevel,
               wholenessMax: Number(wisMod),
-              paladinLevel: 0,
+              paladinLevel: pLevel,
               rogueLevel: rLevel,
               clericLevel: cLevel,
               druidLevel: 0,
@@ -1455,6 +1460,12 @@ function createDndDriver() {
       },
       doUseClericChannelDivinity: () => {
         send({ type: "USE_CLERIC_CHANNEL_DIVINITY" })
+      },
+      doUseLayOnHands: ({ amount }) => {
+        if (amount != null) send({ type: "USE_LAY_ON_HANDS", amount: Number(amount) })
+      },
+      doUsePaladinChannelDivinity: () => {
+        send({ type: "USE_PALADIN_CHANNEL_DIVINITY" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

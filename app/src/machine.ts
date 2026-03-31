@@ -39,6 +39,7 @@ import {
   useDailyAbilityUpdate,
   useRechargeAbilityUpdate
 } from "#/machine-monster.ts"
+import * as paladin from "#/machine-paladin.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import * as rogue from "#/machine-rogue.ts"
 import { computeShortRest, expendSlot } from "#/machine-spells.ts"
@@ -416,9 +417,13 @@ export const dndMachine = setup({
     monkStartTurn: assign(({ context: c }) => monk.monkStartTurnUpdate(c)),
     monkShortRest: assign(({ context: c }) => monk.monkShortRestUpdate(c)),
     monkLongRest: assign(({ context: c }) => monk.monkLongRestUpdate(c)),
-    paladinStartTurn: assign(() => ({})),
-    paladinShortRest: assign(() => ({})),
-    paladinLongRest: assign(() => ({})),
+    useLayOnHands: assign(({ context: c, event: e }) =>
+      paladin.layOnHandsUpdate(c, (e as Extract<DndEvent, { type: "USE_LAY_ON_HANDS" }>).amount)
+    ),
+    usePaladinChannelDivinity: assign(({ context: c }) => paladin.paladinChannelDivinityUpdate(c)),
+    paladinStartTurn: assign(({ context: c }) => paladin.paladinStartTurnUpdate(c)),
+    paladinShortRest: assign(({ context: c }) => paladin.paladinShortRestUpdate(c)),
+    paladinLongRest: assign(({ context: c }) => paladin.paladinLongRestUpdate(c)),
     useSneakAttack: assign(({ context: c }) => rogue.sneakAttackUpdate(c)),
     useSteadyAim: assign(({ context: c }) => rogue.steadyAimUpdate(c)),
     rogueStartTurn: assign(({ context: c }) => rogue.rogueStartTurnUpdate(c)),
@@ -482,6 +487,7 @@ export const dndMachine = setup({
     dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
     ...barb.initialBarbarianState(i.barbarianLevel ?? 0),
     ...monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
+    ...paladin.initialPaladinState(i.paladinLevel ?? 0),
     ...rogue.initialRogueState(i.rogueLevel ?? 0),
     ...cleric.initialClericState(i.clericLevel ?? 0),
     ...initialClassStubs(i),
