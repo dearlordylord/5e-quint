@@ -5315,4 +5315,275 @@ module dndTest {
     assert(cs2.channelDivinityCharges == 2)
   }
 
+  // ===================================================================
+  // Warlock tests
+  // ===================================================================
+
+  run test_freshWarlockState = {
+    val ws = freshWarlockState(5)
+    all {
+      assert(ws.mysticArcanumUsed == Set()),
+      assert(ws.magicalCunningUsed == false),
+    }
+  }
+
+  // -- canMagicalCunning --
+  run test_canMagicalCunning_L2 = {
+    val ws = freshWarlockState(2)
+    assert(canMagicalCunning(ws, 2))
+  }
+
+  run test_canMagicalCunning_L1_false = {
+    val ws = freshWarlockState(1)
+    assert(not(canMagicalCunning(ws, 1)))
+  }
+
+  run test_canMagicalCunning_used = {
+    val ws = freshWarlockState(2).with("magicalCunningUsed", true)
+    assert(not(canMagicalCunning(ws, 2)))
+  }
+
+  // -- canMysticArcanum --
+  run test_canMysticArcanum_L11 = {
+    val ws = freshWarlockState(11)
+    assert(canMysticArcanum(ws, 11, 6))
+  }
+
+  run test_canMysticArcanum_L10_false = {
+    val ws = freshWarlockState(10)
+    assert(not(canMysticArcanum(ws, 10, 6)))
+  }
+
+  run test_canMysticArcanum_used = {
+    val ws = freshWarlockState(11).with("mysticArcanumUsed", Set(6))
+    assert(not(canMysticArcanum(ws, 11, 6)))
+  }
+
+  run test_canMysticArcanum_different_level = {
+    val ws = freshWarlockState(13).with("mysticArcanumUsed", Set(6))
+    assert(canMysticArcanum(ws, 13, 7))
+  }
+
+  // -- pUseMagicalCunning --
+  run test_pUseMagicalCunning = {
+    val ws = freshWarlockState(2)
+    val ws2 = pUseMagicalCunning(ws)
+    assert(ws2.magicalCunningUsed == true)
+  }
+
+  // -- pUseMysticArcanum --
+  run test_pUseMysticArcanum = {
+    val ws = freshWarlockState(11)
+    val ws2 = pUseMysticArcanum(ws, 6)
+    assert(ws2.mysticArcanumUsed.contains(6))
+  }
+
+  run test_pUseMysticArcanum_multiple = {
+    val ws = freshWarlockState(13)
+    val ws2 = pUseMysticArcanum(ws, 6)
+    val ws3 = pUseMysticArcanum(ws2, 7)
+    all {
+      assert(ws3.mysticArcanumUsed.contains(6)),
+      assert(ws3.mysticArcanumUsed.contains(7)),
+    }
+  }
+
+  // -- pWarlockShortRest: does NOT reset magicalCunningUsed (SRD: LR only) --
+  run test_pWarlockShortRest_no_reset = {
+    val ws = freshWarlockState(2).with("magicalCunningUsed", true)
+    val ws2 = pWarlockShortRest(ws)
+    assert(ws2.magicalCunningUsed == true)
+  }
+
+  // -- pWarlockLongRest --
+  run test_pWarlockLongRest = {
+    val ws = freshWarlockState(11)
+      .with("magicalCunningUsed", true)
+      .with("mysticArcanumUsed", Set(6, 7))
+    val ws2 = pWarlockLongRest(ws)
+    all {
+      assert(ws2.magicalCunningUsed == false),
+      assert(ws2.mysticArcanumUsed == Set()),
+    }
+  }
+
+  /// Trace: Magical Cunning sets flag
+  run test_trace_magicalCunning = {
+    init.then(
+      all {
+        state' = freshCreature(50),
+        turnState' = FRESH_TURN,
+        spellSlots' = FRESH_SPELL_SLOTS,
+        turnPhase' = "acting",
+        creatureKind' = PC, monsterStatBlock' = NULL_STAT_BLOCK,
+        monsterResourceState' = FRESH_MONSTER_RESOURCES,
+        fighterState' = freshFighterState(0), fighterLevel' = 0,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0,
+        warlockState' = freshWarlockState(5), warlockLevel' = 5,
+        wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doUseMagicalCunning)
+    .then(all {
+      assert(warlockState.magicalCunningUsed == true),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  /// Trace: Mystic Arcanum marks spell level used
+  run test_trace_mysticArcanum = {
+    init.then(
+      all {
+        state' = freshCreature(50),
+        turnState' = FRESH_TURN,
+        spellSlots' = FRESH_SPELL_SLOTS,
+        turnPhase' = "acting",
+        creatureKind' = PC, monsterStatBlock' = NULL_STAT_BLOCK,
+        monsterResourceState' = FRESH_MONSTER_RESOURCES,
+        fighterState' = freshFighterState(0), fighterLevel' = 0,
+        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
+        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0,
+        warlockState' = freshWarlockState(18), warlockLevel' = 18,
+        wizardState' = freshWizardState(0), wizardLevel' = 0,
+      }
+    ).then(doUseMysticArcanum)
+    .then(all {
+      // At least one spell level (6-9) should now be in the used set
+      assert(warlockState.mysticArcanumUsed.size() > 0),
+      state' = state, turnState' = turnState, spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    })
+  }
+
+  // ============================================================
+  // Sorcerer unit tests
+  // ============================================================
+
+  // -- freshSorcererState --
+  run test_freshSorcererState_L0 = {
+    val ss = freshSorcererState(0)
+    all { assert(ss.sorceryPoints == 0), assert(ss.sorceryPointsMax == 0) }
+  }
+
+  run test_freshSorcererState_L1 = {
+    val ss = freshSorcererState(1)
+    all { assert(ss.sorceryPoints == 0), assert(ss.sorceryPointsMax == 0) }
+  }
+
+  run test_freshSorcererState_L2 = {
+    val ss = freshSorcererState(2)
+    all { assert(ss.sorceryPoints == 2), assert(ss.sorceryPointsMax == 2) }
+  }
+
+  run test_freshSorcererState_L5 = {
+    val ss = freshSorcererState(5)
+    all { assert(ss.sorceryPoints == 5), assert(ss.sorceryPointsMax == 5) }
+  }
+
+  // -- canSpendSorceryPoints --
+  run test_canSpendSorceryPoints_enough = {
+    val ss = freshSorcererState(5)
+    assert(canSpendSorceryPoints(ss, 3))
+  }
+
+  run test_canSpendSorceryPoints_notEnough = {
+    val ss = freshSorcererState(2)
+    assert(not(canSpendSorceryPoints(ss, 3)))
+  }
+
+  run test_canSpendSorceryPoints_zero = {
+    val ss = freshSorcererState(5)
+    assert(not(canSpendSorceryPoints(ss, 0)))
+  }
+
+  // -- pSpendSorceryPoints --
+  run test_pSpendSorceryPoints = {
+    val ss = freshSorcererState(5)
+    val ss2 = pSpendSorceryPoints(ss, 3)
+    assert(ss2.sorceryPoints == 2)
+  }
+
+  // -- pRestoreSorceryPoints --
+  run test_pRestoreSorceryPoints_partial = {
+    val ss = freshSorcererState(5).with("sorceryPoints", 2)
+    val ss2 = pRestoreSorceryPoints(ss, 2)
+    assert(ss2.sorceryPoints == 4)
+  }
+
+  run test_pRestoreSorceryPoints_capped = {
+    val ss = freshSorcererState(5).with("sorceryPoints", 4)
+    val ss2 = pRestoreSorceryPoints(ss, 3)
+    assert(ss2.sorceryPoints == 5)
+  }
+
+  // -- slotCreationCost --
+  run test_slotCreationCost = {
+    all {
+      assert(slotCreationCost(1) == 2),
+      assert(slotCreationCost(2) == 3),
+      assert(slotCreationCost(3) == 5),
+      assert(slotCreationCost(4) == 6),
+      assert(slotCreationCost(5) == 7),
+    }
+  }
+
+  // -- pSorcererLongRest --
+  run test_pSorcererLongRest_restores = {
+    val ss = freshSorcererState(5).with("sorceryPoints", 1)
+    val ss2 = pSorcererLongRest(ss)
+    assert(ss2.sorceryPoints == 5)
+  }
+
+  // -- Font of Magic trace test --
+  run test_fontOfMagic_convertSlotToPoints = {
+    // Setup: L5 sorcerer with 2 SP remaining, L1 slot available
+    val ss = freshSorcererState(5).with("sorceryPoints", 2)
+    val slots: SpellSlotState = {
+      slotsMax: EMPTY_SLOTS.set(1, 4),
+      slotsCurrent: EMPTY_SLOTS.set(1, 3),
+      pactSlotsMax: 0,
+      pactSlotsCurrent: 0,
+      pactSlotLevel: 0,
+      concentrationSpellId: "",
+    }
+    // Convert L1 slot → 1 SP
+    val slots2 = pExpendSlot(slots, 1)
+    val ss2 = pRestoreSorceryPoints(ss, 1)
+    all {
+      assert(slots2.slotsCurrent.get(1) == 2),
+      assert(ss2.sorceryPoints == 3),
+    }
+  }
+
+  run test_fontOfMagic_convertPointsToSlot = {
+    // Setup: L5 sorcerer with 5 SP, L1 slot at 3/4
+    val ss = freshSorcererState(5)
+    val slots: SpellSlotState = {
+      slotsMax: EMPTY_SLOTS.set(1, 4),
+      slotsCurrent: EMPTY_SLOTS.set(1, 3),
+      pactSlotsMax: 0,
+      pactSlotsCurrent: 0,
+      pactSlotLevel: 0,
+      concentrationSpellId: "",
+    }
+    // Convert 2 SP → L1 slot
+    val cost = slotCreationCost(1)
+    val ss2 = pSpendSorceryPoints(ss, cost)
+    val slots2 = pRestoreSlot(slots, 1)
+    all {
+      assert(cost == 2),
+      assert(ss2.sorceryPoints == 3),
+      assert(slots2.slotsCurrent.get(1) == 4),
+    }
+  }
+
 }

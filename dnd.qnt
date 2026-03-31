@@ -2800,16 +2800,74 @@ module dnd {
     ss.with("sorceryPoints", ss.sorceryPointsMax)
   }
 
+  // -- S1: Sorcerer Guards --
+
+  /// Can spend sorcery points: have enough.
+  pure def canSpendSorceryPoints(ss: SorcererState, cost: int): bool = {
+    ss.sorceryPoints >= cost and cost > 0
+  }
+
+  // -- S2: Sorcerer Transitions --
+
+  /// Spend sorcery points.
+  pure def pSpendSorceryPoints(ss: SorcererState, cost: int): SorcererState = {
+    ss.with("sorceryPoints", ss.sorceryPoints - cost)
+  }
+
+  /// Restore sorcery points (capped at max).
+  pure def pRestoreSorceryPoints(ss: SorcererState, amount: int): SorcererState = {
+    val newPts = if (ss.sorceryPoints + amount > ss.sorceryPointsMax)
+      ss.sorceryPointsMax else ss.sorceryPoints + amount
+    ss.with("sorceryPoints", newPts)
+  }
+
+  /// Font of Magic slot creation cost (SRD 5.2.1 table).
+  /// L1=2, L2=3, L3=5, L4=6, L5=7.
+  pure def slotCreationCost(slotLevel: int): int = {
+    if (slotLevel == 1) 2
+    else if (slotLevel == 2) 3
+    else if (slotLevel == 3) 5
+    else if (slotLevel == 4) 6
+    else if (slotLevel == 5) 7
+    else 99
+  }
+
   // -- Warlock --
   pure def freshWarlockState(warlockLevel: int): WarlockState = {
     { mysticArcanumUsed: Set(), magicalCunningUsed: false }
   }
   pure def pWarlockStartTurn(ws: WarlockState): WarlockState = ws
-  pure def pWarlockShortRest(ws: WarlockState): WarlockState = {
-    ws.with("magicalCunningUsed", false)
-  }
+  /// SRD: Magical Cunning recharges on Long Rest (not Short Rest).
+  /// Pact Magic slots recover on Short Rest (handled by caller), but
+  /// magicalCunningUsed flag only resets on LR.
+  pure def pWarlockShortRest(ws: WarlockState): WarlockState = ws
   pure def pWarlockLongRest(ws: WarlockState): WarlockState = {
     ws.with("mysticArcanumUsed", Set()).with("magicalCunningUsed", false)
+  }
+
+  /// Can use Magical Cunning: L2+, not used this LR.
+  /// SRD: "you regain expended Pact Magic spell slots but no more than a number
+  /// equal to half your maximum (round up). Once you use this feature, you can't
+  /// do so again until you finish a Long Rest."
+  pure def canMagicalCunning(ws: WarlockState, warlockLevel: int): bool = {
+    warlockLevel >= 2 and not(ws.magicalCunningUsed)
+  }
+
+  /// Can use Mystic Arcanum: L11+, spell level not already used this LR.
+  /// SRD: "You can cast your arcanum spell once without expending a spell slot,
+  /// and you must finish a Long Rest before you can cast it in this way again."
+  pure def canMysticArcanum(ws: WarlockState, warlockLevel: int, spellLevel: int): bool = {
+    warlockLevel >= 11 and not(ws.mysticArcanumUsed.contains(spellLevel))
+  }
+
+  /// Use Magical Cunning: set flag. Pact slot recovery is caller-managed.
+  pure def pUseMagicalCunning(ws: WarlockState): WarlockState = {
+    ws.with("magicalCunningUsed", true)
+  }
+
+  /// Use Mystic Arcanum: mark spell level as used this LR.
+  pure def pUseMysticArcanum(ws: WarlockState, spellLevel: int): WarlockState = {
+    ws.with("mysticArcanumUsed", ws.mysticArcanumUsed.union(Set(spellLevel)))
   }
 
   // -- Wizard --
@@ -3264,8 +3322,8 @@ module dnd {
     nondet l = Set(3, 5, 9, 10, 18).oneOf()
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
-    // A25: class selection — one of Fighter, Barbarian, Monk, Wizard, Rogue, Cleric, or Paladin at level l, others at 0
-    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric", "Paladin").oneOf()
+    // A25: class selection — one of Fighter, Barbarian, Monk, Wizard, Rogue, Cleric, Paladin, Warlock, or Sorcerer at level l, others at 0
+    nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric", "Paladin", "Warlock", "Sorcerer").oneOf()
     // D5: Wholeness of Body uses WIS mod; spec uses nondet range 1-5
     nondet wisMod = 1.to(5).oneOf()
     if (kind == Monster) {
@@ -3305,6 +3363,8 @@ module dnd {
       val rLevel = if (pcClass == "Rogue") l else 0
       val cLevel = if (pcClass == "Cleric") l else 0
       val pLevel = if (pcClass == "Paladin") l else 0
+      val wkLevel = if (pcClass == "Warlock") l else 0
+      val sLevel = if (pcClass == "Sorcerer") l else 0
       all {
         creatureKind' = PC,
         monsterStatBlock' = NULL_STAT_BLOCK,
@@ -3313,7 +3373,7 @@ module dnd {
         barbarianLevel' = bLevel,
         monkLevel' = mLevel,
         paladinLevel' = pLevel, rogueLevel' = rLevel, clericLevel' = cLevel,
-        druidLevel' = 0, sorcererLevel' = 0, warlockLevel' = 0, wizardLevel' = wLevel,
+        druidLevel' = 0, sorcererLevel' = sLevel, warlockLevel' = wkLevel, wizardLevel' = wLevel,
         state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
         fighterState' = freshFighterState(fLevel),
         barbarianState' = freshBarbarianState(bLevel),
@@ -3322,8 +3382,8 @@ module dnd {
         rogueState' = freshRogueState(rLevel),
         clericState' = freshClericState(cLevel),
         druidState' = freshDruidState(0),
-        sorcererState' = freshSorcererState(0),
-        warlockState' = freshWarlockState(0),
+        sorcererState' = freshSorcererState(sLevel),
+        warlockState' = freshWarlockState(wkLevel),
         wizardState' = freshWizardState(wLevel),
         turnState' = FRESH_TURN,
         spellSlots' = FRESH_SPELL_SLOTS,
@@ -4334,9 +4394,114 @@ module dnd {
     }
   }
 
+  // -- 19.6wk Warlock Actions --
+
+  /// Magical Cunning: regain pact slots. Once per LR.
+  /// SRD: "you regain expended Pact Magic spell slots but no more than a number
+  /// equal to half your maximum (round up)"
+  /// Simplified: just sets the flag. Pact slot recovery is caller-managed.
+  action doUseMagicalCunning = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canMagicalCunning(warlockState, warlockLevel))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState,
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel,
+      warlockState' = pUseMagicalCunning(warlockState), warlockLevel' = warlockLevel,
+      wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
+  /// Mystic Arcanum: cast a high-level spell once per LR.
+  /// SRD: "You can cast your arcanum spell once without expending a spell slot,
+  /// and you must finish a Long Rest before you can cast it in this way again."
+  action doUseMysticArcanum = {
+    if (turnPhase != "acting" or isIncapacitated(state)) unchanged
+    else {
+      nondet spellLevel = Set(6, 7, 8, 9).oneOf()
+      if (not(canMysticArcanum(warlockState, warlockLevel, spellLevel))) unchanged
+      else all {
+        state' = state,
+        turnState' = turnState,
+        spellSlots' = spellSlots,
+        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+        monsterResourceState' = monsterResourceState,
+        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel,
+        warlockState' = pUseMysticArcanum(warlockState, spellLevel), warlockLevel' = warlockLevel,
+        wizardState' = wizardState, wizardLevel' = wizardLevel,
+      }
+    }
+  }
+
+  // -- 19.6s Sorcerer Actions (Phase S) --
+
+  /// Font of Magic: convert spell slot to sorcery points.
+  /// SRD: "You can expend a spell slot to gain a number of Sorcery Points
+  /// equal to the slot's level (no action required)."
+  action doConvertSlotToPoints = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or sorcererLevel < 2) unchanged
+    else {
+      nondet slotLevel = SLOT_LEVEL_RANGE.oneOf()
+      val ss1 = pExpendSlot(spellSlots, slotLevel)
+      if (ss1 == spellSlots) unchanged
+      else {
+        val newSorc = pRestoreSorceryPoints(sorcererState, slotLevel)
+        all {
+          state' = state,
+          turnState' = turnState,
+          spellSlots' = ss1,
+          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+          monsterResourceState' = monsterResourceState,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
+          sorcererState' = newSorc, sorcererLevel' = sorcererLevel,
+          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        }
+      }
+    }
+  }
+
+  /// Font of Magic: convert sorcery points to spell slot.
+  /// SRD: "As a Bonus Action, you can transform unexpended Sorcery Points
+  /// into one spell slot." Max slot level 5. Cost: L1=2, L2=3, L3=5, L4=6, L5=7.
+  action doConvertPointsToSlot = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or sorcererLevel < 2 or turnState.bonusActionUsed) unchanged
+    else {
+      nondet slotLevel = 1.to(5).oneOf()
+      val cost = slotCreationCost(slotLevel)
+      if (not(canSpendSorceryPoints(sorcererState, cost))) unchanged
+      else {
+        val ss1 = pRestoreSlot(spellSlots, slotLevel)
+        if (ss1 == spellSlots) unchanged
+        else all {
+          state' = state,
+          turnState' = turnState.with("bonusActionUsed", true),
+          spellSlots' = ss1,
+          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+          monsterResourceState' = monsterResourceState,
+          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
+          sorcererState' = pSpendSorceryPoints(sorcererState, cost), sorcererLevel' = sorcererLevel,
+          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+        }
+      }
+    }
+  }
+
   // -- 19.7 Step Action --
 
-  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, paladin features, death saves, PC damage variants
+  /// PC-only actions: fighter features, barbarian features, monk features, wizard features, rogue features, cleric features, paladin features, warlock features, sorcerer features, death saves, PC damage variants
   action stepPC = any {
     doTakeDamage,
     doTakeDamageWithMods,
@@ -4370,6 +4535,10 @@ module dnd {
     doUseClericChannelDivinity,
     doUseLayOnHands,
     doUsePaladinChannelDivinity,
+    doUseMagicalCunning,
+    doUseMysticArcanum,
+    doConvertSlotToPoints,
+    doConvertPointsToSlot,
   }
 
   // -- 19.6e Monster Resource Actions (Phase L) --

@@ -42,6 +42,7 @@ import {
 import * as paladin from "#/machine-paladin.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import * as rogue from "#/machine-rogue.ts"
+import * as sorcerer from "#/machine-sorcerer.ts"
 import { computeShortRest, expendSlot } from "#/machine-spells.ts"
 import { computeInitTurn } from "#/machine-startturn.ts"
 import {
@@ -82,6 +83,7 @@ import {
   INITIAL_TURN_STATE,
   initialFighterState
 } from "#/machine-types.ts"
+import * as warlock from "#/machine-warlock.ts"
 import * as wizard from "#/machine-wizard.ts"
 import {
   type ActiveEffect,
@@ -436,12 +438,22 @@ export const dndMachine = setup({
     druidStartTurn: assign(() => ({})),
     druidShortRest: assign(() => ({})),
     druidLongRest: assign(() => ({})),
-    sorcererStartTurn: assign(() => ({})),
-    sorcererShortRest: assign(() => ({})),
-    sorcererLongRest: assign(() => ({})),
-    warlockStartTurn: assign(() => ({})),
-    warlockShortRest: assign(() => ({})),
-    warlockLongRest: assign(() => ({})),
+    sorcererStartTurn: assign(({ context: c }) => sorcerer.sorcererStartTurnUpdate(c)),
+    sorcererShortRest: assign(({ context: c }) => sorcerer.sorcererShortRestUpdate(c)),
+    sorcererLongRest: assign(({ context: c }) => sorcerer.sorcererLongRestUpdate(c)),
+    convertSlotToPoints: assign(({ context: c, event: e }) =>
+      sorcerer.convertSlotToPointsUpdate(c, (e as Extract<DndEvent, { type: "CONVERT_SLOT_TO_POINTS" }>).slotLevel)
+    ),
+    convertPointsToSlot: assign(({ context: c, event: e }) =>
+      sorcerer.convertPointsToSlotUpdate(c, (e as Extract<DndEvent, { type: "CONVERT_POINTS_TO_SLOT" }>).slotLevel)
+    ),
+    useMagicalCunning: assign(({ context: c }) => warlock.magicalCunningUpdate(c)),
+    useMysticArcanum: assign(({ context: c, event: e }) =>
+      warlock.mysticArcanumUpdate(c, (e as Extract<DndEvent, { type: "USE_MYSTIC_ARCANUM" }>).spellLevel)
+    ),
+    warlockStartTurn: assign(({ context: c }) => warlock.warlockStartTurnUpdate(c)),
+    warlockShortRest: assign(({ context: c }) => warlock.warlockShortRestUpdate(c)),
+    warlockLongRest: assign(({ context: c }) => warlock.warlockLongRestUpdate(c)),
     wizardStartTurn: assign(({ context: c }) => wizard.wizardStartTurnUpdate(c)),
     wizardShortRest: assign(({ context: c }) => wizard.wizardShortRestUpdate(c)),
     wizardLongRest: assign(({ context: c }) => wizard.wizardLongRestUpdate(c)),
@@ -488,6 +500,8 @@ export const dndMachine = setup({
     ...barb.initialBarbarianState(i.barbarianLevel ?? 0),
     ...monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
     ...initialClassStubs(i),
+    ...sorcerer.initialSorcererState(i.sorcererLevel ?? 0),
+    ...warlock.initialWarlockState(i.warlockLevel ?? 0),
     ...paladin.initialPaladinState(i.paladinLevel ?? 0),
     ...rogue.initialRogueState(i.rogueLevel ?? 0),
     ...cleric.initialClericState(i.clericLevel ?? 0),

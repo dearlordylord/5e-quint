@@ -361,6 +361,12 @@ export type DndEvent =
   | { readonly type: "USE_STEADY_AIM" }
   // Phase CL: Cleric events
   | { readonly type: "USE_CLERIC_CHANNEL_DIVINITY" }
+  // Phase WK: Warlock events
+  | { readonly type: "USE_MAGICAL_CUNNING" }
+  | { readonly type: "USE_MYSTIC_ARCANUM"; readonly spellLevel: number }
+  // Phase S: Sorcerer events
+  | { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: number }
+  | { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: number }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines
 export {

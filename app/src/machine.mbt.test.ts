@@ -748,6 +748,10 @@ type EventActionMap = {
   USE_CLERIC_CHANNEL_DIVINITY: "doUseClericChannelDivinity"
   USE_LAY_ON_HANDS: "doUseLayOnHands"
   USE_PALADIN_CHANNEL_DIVINITY: "doUsePaladinChannelDivinity"
+  USE_MAGICAL_CUNNING: "doUseMagicalCunning"
+  USE_MYSTIC_ARCANUM: "doUseMysticArcanum"
+  CONVERT_SLOT_TO_POINTS: "doConvertSlotToPoints"
+  CONVERT_POINTS_TO_SLOT: "doConvertPointsToSlot"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -883,6 +887,10 @@ const driverSchema = {
   doUseClericChannelDivinity: {},
   doUseLayOnHands: { amount: ITFBigInt.optional() },
   doUsePaladinChannelDivinity: {},
+  doUseMagicalCunning: {},
+  doUseMysticArcanum: { spellLevel: ITFBigInt.optional() },
+  doConvertSlotToPoints: { slotLevel: ITFBigInt.optional() },
+  doConvertPointsToSlot: { slotLevel: ITFBigInt.optional() },
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -1060,6 +1068,8 @@ function createDndDriver() {
           const rLevel = cls === "Rogue" ? level : 0
           const cLevel = cls === "Cleric" ? level : 0
           const pLevel = cls === "Paladin" ? level : 0
+          const wkLevel = cls === "Warlock" ? level : 0
+          const sLevel = cls === "Sorcerer" ? level : 0
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -1075,8 +1085,8 @@ function createDndDriver() {
               rogueLevel: rLevel,
               clericLevel: cLevel,
               druidLevel: 0,
-              sorcererLevel: 0,
-              warlockLevel: 0,
+              sorcererLevel: sLevel,
+              warlockLevel: wkLevel,
               wizardLevel: wLevel,
               creatureKind: "PC"
             }
@@ -1466,6 +1476,18 @@ function createDndDriver() {
       },
       doUsePaladinChannelDivinity: () => {
         send({ type: "USE_PALADIN_CHANNEL_DIVINITY" })
+      },
+      doUseMagicalCunning: () => {
+        send({ type: "USE_MAGICAL_CUNNING" })
+      },
+      doUseMysticArcanum: ({ spellLevel }) => {
+        if (spellLevel != null) send({ type: "USE_MYSTIC_ARCANUM", spellLevel: Number(spellLevel) })
+      },
+      doConvertSlotToPoints: ({ slotLevel }) => {
+        if (slotLevel != null) send({ type: "CONVERT_SLOT_TO_POINTS", slotLevel: Number(slotLevel) })
+      },
+      doConvertPointsToSlot: ({ slotLevel }) => {
+        if (slotLevel != null) send({ type: "CONVERT_POINTS_TO_SLOT", slotLevel: Number(slotLevel) })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

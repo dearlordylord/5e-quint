@@ -262,7 +262,11 @@ export const turnPhaseConfig = {
         USE_STEADY_AIM: { actions: ["useSteadyAim"] },
         USE_CLERIC_CHANNEL_DIVINITY: { actions: ["useClericChannelDivinity"] },
         USE_LAY_ON_HANDS: { actions: ["useLayOnHands"] },
-        USE_PALADIN_CHANNEL_DIVINITY: { actions: ["usePaladinChannelDivinity"] }
+        USE_PALADIN_CHANNEL_DIVINITY: { actions: ["usePaladinChannelDivinity"] },
+        USE_MAGICAL_CUNNING: { actions: ["useMagicalCunning"] },
+        USE_MYSTIC_ARCANUM: { actions: ["useMysticArcanum"] },
+        CONVERT_SLOT_TO_POINTS: { actions: ["convertSlotToPoints"] },
+        CONVERT_POINTS_TO_SLOT: { actions: ["convertPointsToSlot"] }
       }
     },
     waitingForTurn: {
