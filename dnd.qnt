@@ -411,6 +411,9 @@ module dnd {
   type SorcererState = {
     sorceryPoints: int,
     sorceryPointsMax: int,
+    sorcerousRestorationUsed: bool,
+    innateSorceryActive: bool,
+    innateSorceryCharges: int,
   }
 
   type WarlockState = {
@@ -2879,12 +2882,32 @@ module dnd {
   // -- Sorcerer --
   pure def freshSorcererState(sorcererLevel: int): SorcererState = {
     val spMax = if (sorcererLevel >= 2) sorcererLevel else 0
-    { sorceryPoints: spMax, sorceryPointsMax: spMax }
+    {
+      sorceryPoints: spMax,
+      sorceryPointsMax: spMax,
+      sorcerousRestorationUsed: false,
+      innateSorceryActive: false,
+      innateSorceryCharges: 2,
+    }
   }
   pure def pSorcererStartTurn(ss: SorcererState): SorcererState = ss
-  pure def pSorcererShortRest(ss: SorcererState): SorcererState = ss
+
+  /// Sorcerer short rest: Sorcerous Restoration (L5+, 1/LR).
+  /// SRD: "when you finish a Short Rest, you can regain expended Sorcery Points,
+  /// but no more than a number equal to half your Sorcerer level (round down)"
+  pure def pSorcererShortRest(ss: SorcererState, sorcererLevel: int): SorcererState = {
+    if (sorcererLevel >= 5 and not(ss.sorcerousRestorationUsed)) {
+      val regain = sorcererLevel / 2
+      val newPts = intMin(ss.sorceryPoints + regain, ss.sorceryPointsMax)
+      ss.with("sorceryPoints", newPts).with("sorcerousRestorationUsed", true)
+    } else ss
+  }
+
   pure def pSorcererLongRest(ss: SorcererState): SorcererState = {
     ss.with("sorceryPoints", ss.sorceryPointsMax)
+      .with("sorcerousRestorationUsed", false)
+      .with("innateSorceryActive", false)
+      .with("innateSorceryCharges", 2)
   }
 
   // -- S1: Sorcerer Guards --
@@ -2892,6 +2915,15 @@ module dnd {
   /// Can spend sorcery points: have enough.
   pure def canSpendSorceryPoints(ss: SorcererState, cost: int): bool = {
     ss.sorceryPoints >= cost and cost > 0
+  }
+
+  /// Can activate Innate Sorcery: BA free, charges > 0 OR (L7+ and SP >= 2).
+  /// SRD: "you can use a Bonus Action to activate your innate magic for 1 minute"
+  /// L7+ Sorcery Incarnate: "spend 2 Sorcery Points when you have no uses left"
+  pure def canInnateSorcery(ss: SorcererState, sorcererLevel: int, bonusActionUsed: bool): bool = {
+    if (bonusActionUsed) false
+    else if (ss.innateSorceryCharges > 0) true
+    else sorcererLevel >= 7 and ss.sorceryPoints >= 2
   }
 
   // -- S2: Sorcerer Transitions --
@@ -2917,6 +2949,16 @@ module dnd {
     else if (slotLevel == 4) 6
     else if (slotLevel == 5) 7
     else 99
+  }
+
+  /// Activate Innate Sorcery: consume charge or SP.
+  /// SRD: "As a Bonus Action, you can unleash that magic for 1 minute"
+  pure def pUseInnateSorcery(ss: SorcererState, sorcererLevel: int): SorcererState = {
+    if (ss.innateSorceryCharges > 0)
+      ss.with("innateSorceryActive", true).with("innateSorceryCharges", ss.innateSorceryCharges - 1)
+    else
+      // Sorcery Incarnate (L7+): spend 2 SP
+      ss.with("innateSorceryActive", true).with("sorceryPoints", ss.sorceryPoints - 2)
   }
 
   // -- Warlock --
@@ -3816,7 +3858,7 @@ module dnd {
         rogueState' = pRogueShortRest(rogueState), rogueLevel' = rogueLevel,
         clericState' = pClericShortRest(clericState), clericLevel' = clericLevel,
         druidState' = pDruidShortRest(druidState), druidLevel' = druidLevel,
-        sorcererState' = pSorcererShortRest(sorcererState), sorcererLevel' = sorcererLevel,
+        sorcererState' = pSorcererShortRest(sorcererState, sorcererLevel), sorcererLevel' = sorcererLevel,
         warlockState' = pWarlockShortRest(warlockState), warlockLevel' = warlockLevel,
         wizardState' = pWizardShortRest(wizardState), wizardLevel' = wizardLevel,
       }
@@ -4689,6 +4731,25 @@ module dnd {
     }
   }
 
+  /// Innate Sorcery: BA, activate innate magic.
+  /// SRD: "As a Bonus Action, you can unleash that magic for 1 minute"
+  action doUseInnateSorcery = {
+    if (turnPhase != "acting" or isIncapacitated(state)
+        or not(canInnateSorcery(sorcererState, sorcererLevel, turnState.bonusActionUsed))) unchanged
+    else all {
+      state' = state,
+      turnState' = turnState.with("bonusActionUsed", true),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+      monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
+      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
+      sorcererState' = pUseInnateSorcery(sorcererState, sorcererLevel), sorcererLevel' = sorcererLevel,
+      warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
+    }
+  }
+
   // -- 19.6dr Druid Actions (Phase DR) --
 
   /// Enter Wild Shape: BA, expend charge.
@@ -4774,6 +4835,7 @@ module dnd {
     doUseMysticArcanum,
     doConvertSlotToPoints,
     doConvertPointsToSlot,
+    doUseInnateSorcery,
     doEnterWildShape,
     doExitWildShape,
   }

@@ -456,6 +456,7 @@ export const dndMachine = setup({
     convertPointsToSlot: assign(({ context: c, event: e }) =>
       sorcerer.convertPointsToSlotUpdate(c, (e as Extract<DndEvent, { type: "CONVERT_POINTS_TO_SLOT" }>).slotLevel)
     ),
+    useInnateSorcery: assign(({ context: c }) => sorcerer.innateSorceryUpdate(c)),
     useMagicalCunning: assign(({ context: c }) => warlock.magicalCunningUpdate(c)),
     useMysticArcanum: assign(({ context: c, event: e }) =>
       warlock.mysticArcanumUpdate(c, (e as Extract<DndEvent, { type: "USE_MYSTIC_ARCANUM" }>).spellLevel)

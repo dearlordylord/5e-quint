@@ -185,6 +185,9 @@ export interface DndContext {
   readonly sorcererLevel: number
   readonly sorceryPoints: number
   readonly sorceryPointsMax: number
+  readonly sorcerousRestorationUsed: boolean
+  readonly innateSorceryActive: boolean
+  readonly innateSorceryCharges: number
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>
   readonly magicalCunningUsed: boolean
@@ -373,6 +376,7 @@ export type DndEvent =
   // Phase S: Sorcerer events
   | { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: number }
   | { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: number }
+  | { readonly type: "USE_INNATE_SORCERY" }
   // Phase DR: Druid events
   | { readonly type: "ENTER_WILD_SHAPE" }
   | { readonly type: "EXIT_WILD_SHAPE" }

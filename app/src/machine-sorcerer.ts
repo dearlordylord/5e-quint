@@ -1,4 +1,12 @@
-import { slotCreationCost, sorceryPointsMax } from "#/features/class-sorcerer.ts"
+import {
+  canUseInnateSorcery,
+  canUseSorcerousRestoration,
+  slotCreationCost,
+  sorcererLongRest as tsSorcererLongRest,
+  sorcerousRestoration as tsSorcerousRestoration,
+  sorceryPointsMax,
+  useInnateSorcery as tsUseInnateSorcery
+} from "#/features/class-sorcerer.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
 
@@ -53,13 +61,67 @@ export function sorcererStartTurnUpdate(c: DndContext): Partial<DndContext> {
 
 export function sorcererShortRestUpdate(c: DndContext): Partial<DndContext> {
   if (c.sorcererLevel === 0) return {}
+  if (
+    canUseSorcerousRestoration({
+      sorceryPoints: c.sorceryPoints,
+      sorceryPointsMax: c.sorceryPointsMax,
+      sorcererLevel: c.sorcererLevel,
+      sorcerousRestorationUsed: c.sorcerousRestorationUsed
+    })
+  ) {
+    const result = tsSorcerousRestoration({
+      sorceryPoints: c.sorceryPoints,
+      sorceryPointsMax: c.sorceryPointsMax,
+      sorcererLevel: c.sorcererLevel,
+      sorcerousRestorationUsed: c.sorcerousRestorationUsed
+    })
+    return {
+      sorceryPoints: result.sorceryPoints,
+      sorcerousRestorationUsed: result.sorcerousRestorationUsed
+    }
+  }
   return {}
 }
 
 export function sorcererLongRestUpdate(c: DndContext): Partial<DndContext> {
   if (c.sorcererLevel === 0) return {}
-  const spMax = sorceryPointsMax(c.sorcererLevel)
-  return { sorceryPoints: spMax, sorceryPointsMax: spMax }
+  const result = tsSorcererLongRest({ sorcererLevel: c.sorcererLevel })
+  return {
+    sorceryPoints: result.sorceryPoints,
+    sorceryPointsMax: result.sorceryPointsMax,
+    innateSorceryActive: result.innateSorceryActive,
+    innateSorceryCharges: result.innateSorceryCharges,
+    sorcerousRestorationUsed: false
+  }
+}
+
+// -- Innate Sorcery --
+
+export function innateSorceryUpdate(c: DndContext): Partial<DndContext> {
+  if (isIncapacitated(c)) return {}
+  if (
+    !canUseInnateSorcery({
+      innateSorceryActive: c.innateSorceryActive,
+      innateSorceryCharges: c.innateSorceryCharges,
+      sorceryPoints: c.sorceryPoints,
+      sorcererLevel: c.sorcererLevel,
+      bonusActionUsed: c.bonusActionUsed
+    })
+  )
+    return {}
+  const result = tsUseInnateSorcery({
+    innateSorceryActive: c.innateSorceryActive,
+    innateSorceryCharges: c.innateSorceryCharges,
+    sorceryPoints: c.sorceryPoints,
+    sorcererLevel: c.sorcererLevel,
+    bonusActionUsed: c.bonusActionUsed
+  })
+  return {
+    bonusActionUsed: true,
+    innateSorceryActive: result.innateSorceryActive,
+    innateSorceryCharges: result.innateSorceryCharges,
+    sorceryPoints: result.sorceryPoints
+  }
 }
 
 // -- Init --
@@ -69,6 +131,9 @@ export function initialSorcererState(sorcererLevel: number) {
   return {
     sorcererLevel,
     sorceryPoints: spMax,
-    sorceryPointsMax: spMax
+    sorceryPointsMax: spMax,
+    sorcerousRestorationUsed: false,
+    innateSorceryActive: false,
+    innateSorceryCharges: 2
   }
 }

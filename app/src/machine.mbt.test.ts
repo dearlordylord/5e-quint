@@ -273,7 +273,10 @@ const QuintDruidState = z.object({
 })
 const QuintSorcererState = z.object({
   sorceryPoints: z.bigint(),
-  sorceryPointsMax: z.bigint()
+  sorceryPointsMax: z.bigint(),
+  sorcerousRestorationUsed: z.boolean(),
+  innateSorceryActive: z.boolean(),
+  innateSorceryCharges: z.bigint()
 })
 const QuintWarlockState = z.object({
   mysticArcanumUsed: z.any().transform((raw: unknown) => {
@@ -434,6 +437,9 @@ interface NormalizedState {
   readonly sorcererLevel: number
   readonly sorceryPoints: number
   readonly sorceryPointsMax: number
+  readonly sorcerousRestorationUsed: boolean
+  readonly innateSorceryActive: boolean
+  readonly innateSorceryCharges: number
   readonly warlockLevel: number
   readonly mysticArcanumUsed: ReadonlySet<number>
   readonly magicalCunningUsed: boolean
@@ -556,6 +562,9 @@ function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     sorcererLevel: c.sorcererLevel,
     sorceryPoints: c.sorceryPoints,
     sorceryPointsMax: c.sorceryPointsMax,
+    sorcerousRestorationUsed: c.sorcerousRestorationUsed,
+    innateSorceryActive: c.innateSorceryActive,
+    innateSorceryCharges: c.innateSorceryCharges,
     warlockLevel: c.warlockLevel,
     mysticArcanumUsed: c.mysticArcanumUsed,
     magicalCunningUsed: c.magicalCunningUsed,
@@ -666,6 +675,9 @@ function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): Normalize
     sorcererLevel: Number(raw.sorcererLevel),
     sorceryPoints: Number(raw.sorcererState.sorceryPoints),
     sorceryPointsMax: Number(raw.sorcererState.sorceryPointsMax),
+    sorcerousRestorationUsed: raw.sorcererState.sorcerousRestorationUsed,
+    innateSorceryActive: raw.sorcererState.innateSorceryActive,
+    innateSorceryCharges: Number(raw.sorcererState.innateSorceryCharges),
     warlockLevel: Number(raw.warlockLevel),
     mysticArcanumUsed: raw.warlockState.mysticArcanumUsed,
     magicalCunningUsed: raw.warlockState.magicalCunningUsed,
@@ -761,6 +773,7 @@ type EventActionMap = {
   USE_MYSTIC_ARCANUM: "doUseMysticArcanum"
   CONVERT_SLOT_TO_POINTS: "doConvertSlotToPoints"
   CONVERT_POINTS_TO_SLOT: "doConvertPointsToSlot"
+  USE_INNATE_SORCERY: "doUseInnateSorcery"
   ENTER_WILD_SHAPE: "doEnterWildShape"
   EXIT_WILD_SHAPE: "doExitWildShape"
 }
@@ -907,6 +920,7 @@ const driverSchema = {
   doUseMysticArcanum: { spellLevel: ITFBigInt.optional() },
   doConvertSlotToPoints: { slotLevel: ITFBigInt.optional() },
   doConvertPointsToSlot: { slotLevel: ITFBigInt.optional() },
+  doUseInnateSorcery: {},
   doEnterWildShape: {},
   doExitWildShape: {},
   step: {}, // dead character no-op
@@ -1522,6 +1536,9 @@ function createDndDriver() {
       },
       doConvertPointsToSlot: ({ slotLevel }) => {
         if (slotLevel != null) send({ type: "CONVERT_POINTS_TO_SLOT", slotLevel: Number(slotLevel) })
+      },
+      doUseInnateSorcery: () => {
+        send({ type: "USE_INNATE_SORCERY" })
       },
       doEnterWildShape: () => {
         send({ type: "ENTER_WILD_SHAPE" })

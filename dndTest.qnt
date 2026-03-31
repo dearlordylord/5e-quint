@@ -5825,4 +5825,82 @@ module dndTest {
     }
   }
 
+  // ============================================================
+  // Sorcerer: Sorcerous Restoration + Innate Sorcery
+  // ============================================================
+
+  // -- Sorcerous Restoration --
+  run sorcerousRestorationTest = {
+    // L5 sorcerer, SP at 0
+    val ss = freshSorcererState(5).with("sorceryPoints", 0)
+    val ss2 = pSorcererShortRest(ss, 5)
+    // Should regain floor(5/2) = 2 SP
+    all {
+      assert(ss2.sorceryPoints == 2),
+      assert(ss2.sorcerousRestorationUsed),
+    }
+  }
+
+  run sorcerousRestorationCapTest = {
+    // SP near max, regain capped
+    val ss = freshSorcererState(5).with("sorceryPoints", 4)
+    val ss2 = pSorcererShortRest(ss, 5)
+    assert(ss2.sorceryPoints == 5)  // capped at max
+  }
+
+  run sorcerousRestorationOncePerLRTest = {
+    val ss = freshSorcererState(5).with("sorceryPoints", 0)
+    val ss2 = pSorcererShortRest(ss, 5)
+    // Second short rest: no more restoration
+    val ss3 = ss2.with("sorceryPoints", 0)
+    val ss4 = pSorcererShortRest(ss3, 5)
+    assert(ss4.sorceryPoints == 0)
+  }
+
+  run sorcerousRestorationLevelGateTest = {
+    // L4 can't use
+    val ss = freshSorcererState(4).with("sorceryPoints", 0)
+    val ss2 = pSorcererShortRest(ss, 4)
+    assert(ss2.sorceryPoints == 0)
+  }
+
+  // -- Innate Sorcery --
+  run innateSorceryTest = {
+    val ss = freshSorcererState(3)
+    all {
+      assert(canInnateSorcery(ss, 3, false)),
+      assert(not(canInnateSorcery(ss, 3, true))),  // BA used
+    }
+  }
+
+  run innateSorceryChargeTest = {
+    val ss = freshSorcererState(3)
+    val ss2 = pUseInnateSorcery(ss, 3)
+    val ss3 = pUseInnateSorcery(ss2, 3)
+    all {
+      assert(ss2.innateSorceryActive),
+      assert(ss2.innateSorceryCharges == 1),
+      assert(ss3.innateSorceryCharges == 0),
+      assert(not(canInnateSorcery(ss3, 3, false))),  // no charges, L3 can't use SP
+    }
+  }
+
+  run innateSorceryIncarnateTest = {
+    // L7+ with 0 charges can spend 2 SP
+    val ss = freshSorcererState(7).with("innateSorceryCharges", 0)
+    all {
+      assert(canInnateSorcery(ss, 7, false)),
+    }
+  }
+
+  run innateSorceryLongRestResetTest = {
+    val ss = freshSorcererState(5).with("innateSorceryCharges", 0).with("innateSorceryActive", true).with("sorcerousRestorationUsed", true)
+    val ss2 = pSorcererLongRest(ss)
+    all {
+      assert(not(ss2.innateSorceryActive)),
+      assert(ss2.innateSorceryCharges == 2),
+      assert(not(ss2.sorcerousRestorationUsed)),
+    }
+  }
+
 }

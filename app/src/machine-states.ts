@@ -272,6 +272,7 @@ export const turnPhaseConfig = {
         USE_MYSTIC_ARCANUM: { actions: ["useMysticArcanum"] },
         CONVERT_SLOT_TO_POINTS: { actions: ["convertSlotToPoints"] },
         CONVERT_POINTS_TO_SLOT: { actions: ["convertPointsToSlot"] },
+        USE_INNATE_SORCERY: { actions: ["useInnateSorcery"] },
         ENTER_WILD_SHAPE: { actions: ["enterWildShape"] },
         EXIT_WILD_SHAPE: { actions: ["exitWildShape"] }
       }
