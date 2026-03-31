@@ -85,8 +85,9 @@ export function canUseTireless(rangerLevel: number, tirelessCharges: number): bo
   return rangerLevel >= TIRELESS_LEVEL && tirelessCharges > 0
 }
 
-export function tirelessTempHp(d8Roll: number, wisMod: number): number {
-  return d8Roll + Math.max(1, wisMod)
+/** @param wisComponent - WIS modifier or tirelessMax (both work; clamped to min 1 per SRD). */
+export function tirelessTempHp(d8Roll: number, wisComponent: number): number {
+  return d8Roll + Math.max(1, wisComponent)
 }
 
 export function tirelessMaxCharges(wisMod: number): number {

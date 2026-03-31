@@ -349,9 +349,67 @@ export const dndMachine = setup({
         isIncapacitated(c)
       )
     ),
-    fighterStartTurn: assign(({ context: c }) => ({
-      actionSurgeUsedThisTurn: false,
-      ...(heroicWarriorInspiration(c.fighterLevel, c.heroicInspiration) ? { heroicInspiration: true } : {})
+    classStartTurn: assign(({ context: c }) => ({
+      ...(c.fighterLevel > 0
+        ? {
+            actionSurgeUsedThisTurn: false,
+            ...(heroicWarriorInspiration(c.fighterLevel, c.heroicInspiration) ? { heroicInspiration: true } : {})
+          }
+        : {}),
+      ...(c.barbarianLevel > 0 ? barb.barbarianStartTurnUpdate(c) : {}),
+      ...(c.monkLevel > 0 ? monk.monkStartTurnUpdate(c) : {}),
+      ...(c.paladinLevel > 0 ? paladin.paladinStartTurnUpdate(c) : {}),
+      ...(c.rogueLevel > 0 ? rogue.rogueStartTurnUpdate(c) : {}),
+      ...(c.clericLevel > 0 ? cleric.clericStartTurnUpdate(c) : {}),
+      ...(c.druidLevel > 0 ? druid.druidStartTurnUpdate(c) : {}),
+      ...(c.sorcererLevel > 0 ? sorcerer.sorcererStartTurnUpdate(c) : {}),
+      ...(c.warlockLevel > 0 ? warlock.warlockStartTurnUpdate(c) : {}),
+      ...(c.wizardLevel > 0 ? wizard.wizardStartTurnUpdate(c) : {}),
+      ...(c.rangerLevel > 0 ? ranger.rangerStartTurnUpdate(c) : {}),
+      ...(c.bardLevel > 0 ? bard.bardStartTurnUpdate(c) : {})
+    })),
+    classShortRest: assign(({ context: c }) => ({
+      ...(c.fighterLevel > 0
+        ? tsFighterShortRest({
+            secondWindCharges: c.secondWindCharges,
+            secondWindMax: c.secondWindMax,
+            actionSurgeCharges: c.actionSurgeCharges,
+            actionSurgeMax: c.actionSurgeMax
+          })
+        : {}),
+      ...(c.barbarianLevel > 0 ? barb.barbarianShortRestUpdate(c) : {}),
+      ...(c.monkLevel > 0 ? monk.monkShortRestUpdate(c) : {}),
+      ...(c.paladinLevel > 0 ? paladin.paladinShortRestUpdate(c) : {}),
+      ...(c.rogueLevel > 0 ? rogue.rogueShortRestUpdate(c) : {}),
+      ...(c.clericLevel > 0 ? cleric.clericShortRestUpdate(c) : {}),
+      ...(c.druidLevel > 0 ? druid.druidShortRestUpdate(c) : {}),
+      ...(c.sorcererLevel > 0 ? sorcerer.sorcererShortRestUpdate(c) : {}),
+      ...(c.warlockLevel > 0 ? warlock.warlockShortRestUpdate(c) : {}),
+      ...(c.wizardLevel > 0 ? wizard.wizardShortRestUpdate(c) : {}),
+      ...(c.rangerLevel > 0 ? ranger.rangerShortRestUpdate(c) : {}),
+      ...(c.bardLevel > 0 ? bard.bardShortRestUpdate(c) : {})
+    })),
+    classLongRest: assign(({ context: c }) => ({
+      ...(c.fighterLevel > 0
+        ? tsFighterLongRest({
+            secondWindCharges: c.secondWindCharges,
+            secondWindMax: c.secondWindMax,
+            actionSurgeCharges: c.actionSurgeCharges,
+            actionSurgeMax: c.actionSurgeMax,
+            indomitableMax: c.indomitableMax
+          })
+        : {}),
+      ...(c.barbarianLevel > 0 ? barb.barbarianLongRestUpdate(c) : {}),
+      ...(c.monkLevel > 0 ? monk.monkLongRestUpdate(c) : {}),
+      ...(c.paladinLevel > 0 ? paladin.paladinLongRestUpdate(c) : {}),
+      ...(c.rogueLevel > 0 ? rogue.rogueLongRestUpdate(c) : {}),
+      ...(c.clericLevel > 0 ? cleric.clericLongRestUpdate(c) : {}),
+      ...(c.druidLevel > 0 ? druid.druidLongRestUpdate(c) : {}),
+      ...(c.sorcererLevel > 0 ? sorcerer.sorcererLongRestUpdate(c) : {}),
+      ...(c.warlockLevel > 0 ? warlock.warlockLongRestUpdate(c) : {}),
+      ...(c.wizardLevel > 0 ? wizard.wizardLongRestUpdate(c) : {}),
+      ...(c.rangerLevel > 0 ? ranger.rangerLongRestUpdate(c) : {}),
+      ...(c.bardLevel > 0 ? bard.bardLongRestUpdate(c) : {})
     })),
     useHeroicInspiration: assign(({ context: c }) => (c.heroicInspiration ? { heroicInspiration: false } : {})),
     scoreCriticalHit: assign(({ context: c }) => {
@@ -363,23 +421,6 @@ export const dndMachine = setup({
       c.bonusMovementRemaining <= 0
         ? {}
         : { bonusMovementRemaining: Math.max(c.bonusMovementRemaining - asUseBonusMovement(e).feet, 0) }
-    ),
-    fighterShortRest: assign(({ context: c }) =>
-      tsFighterShortRest({
-        secondWindCharges: c.secondWindCharges,
-        secondWindMax: c.secondWindMax,
-        actionSurgeCharges: c.actionSurgeCharges,
-        actionSurgeMax: c.actionSurgeMax
-      })
-    ),
-    fighterLongRest: assign(({ context: c }) =>
-      tsFighterLongRest({
-        secondWindCharges: c.secondWindCharges,
-        secondWindMax: c.secondWindMax,
-        actionSurgeCharges: c.actionSurgeCharges,
-        actionSurgeMax: c.actionSurgeMax,
-        indomitableMax: c.indomitableMax
-      })
     ),
     useLegendaryAction: assign(({ context: c }) =>
       c.creatureKind !== "Monster" || c.legendaryActionsRemaining <= 0
@@ -407,9 +448,6 @@ export const dndMachine = setup({
     useRelentlessRage: assign(({ context: c, event: e }) =>
       barb.relentlessRageUpdate(c, (e as Extract<DndEvent, { type: "USE_RELENTLESS_RAGE" }>).conSaveSucceeded)
     ),
-    barbarianStartTurn: assign(({ context: c }) => barb.barbarianStartTurnUpdate(c)),
-    barbarianShortRest: assign(({ context: c }) => barb.barbarianShortRestUpdate(c)),
-    barbarianLongRest: assign(({ context: c }) => barb.barbarianLongRestUpdate(c)),
     flurryOfBlows: assign(({ context: c }) => monk.flurryOfBlowsUpdate(c)),
     patientDefenseFree: assign(({ context: c }) => monk.patientDefenseFreeUpdate(c)),
     patientDefenseFocus: assign(({ context: c }) => monk.patientDefenseFocusUpdate(c)),
@@ -422,9 +460,6 @@ export const dndMachine = setup({
     uncannyMetabolism: assign(({ context: c, event: e }) =>
       monk.uncannyMetabolismUpdate(c, (e as Extract<DndEvent, { type: "UNCANNY_METABOLISM" }>).healRoll)
     ),
-    monkStartTurn: assign(({ context: c }) => monk.monkStartTurnUpdate(c)),
-    monkShortRest: assign(({ context: c }) => monk.monkShortRestUpdate(c)),
-    monkLongRest: assign(({ context: c }) => monk.monkLongRestUpdate(c)),
     useLayOnHands: assign(({ context: c, event: e }) =>
       paladin.layOnHandsUpdate(c, (e as Extract<DndEvent, { type: "USE_LAY_ON_HANDS" }>).amount)
     ),
@@ -433,9 +468,6 @@ export const dndMachine = setup({
       paladin.divineSmiteUpdate(c, (e as Extract<DndEvent, { type: "USE_DIVINE_SMITE" }>).slotLevel)
     ),
     useDivineSmiteFree: assign(({ context: c }) => paladin.divineSmiteFreeUpdate(c)),
-    paladinStartTurn: assign(({ context: c }) => paladin.paladinStartTurnUpdate(c)),
-    paladinShortRest: assign(({ context: c }) => paladin.paladinShortRestUpdate(c)),
-    paladinLongRest: assign(({ context: c }) => paladin.paladinLongRestUpdate(c)),
     useSneakAttack: assign(({ context: c }) => rogue.sneakAttackUpdate(c)),
     useSteadyAim: assign(({ context: c }) => rogue.steadyAimUpdate(c)),
     cunningActionDash: assign(({ context: c }) => rogue.cunningActionDashUpdate(c)),
@@ -443,12 +475,6 @@ export const dndMachine = setup({
     cunningActionHide: assign(({ context: c }) => rogue.cunningActionHideUpdate(c)),
     useUncannyDodge: assign(({ context: c }) => rogue.uncannyDodgeUpdate(c)),
     useCunningStrike: assign(({ context: c }) => rogue.cunningStrikeUpdate(c)),
-    rogueStartTurn: assign(({ context: c }) => rogue.rogueStartTurnUpdate(c)),
-    rogueShortRest: assign(({ context: c }) => rogue.rogueShortRestUpdate(c)),
-    rogueLongRest: assign(({ context: c }) => rogue.rogueLongRestUpdate(c)),
-    clericStartTurn: assign(({ context: c }) => cleric.clericStartTurnUpdate(c)),
-    clericShortRest: assign(({ context: c }) => cleric.clericShortRestUpdate(c)),
-    clericLongRest: assign(({ context: c }) => cleric.clericLongRestUpdate(c)),
     useClericChannelDivinity: assign(({ context: c }) => cleric.clericChannelDivinityUpdate(c)),
     enterWildShape: assign(({ context: c }) => druid.enterWildShapeUpdate(c)),
     exitWildShape: assign(({ context: c }) => druid.exitWildShapeUpdate(c)),
@@ -456,12 +482,6 @@ export const dndMachine = setup({
       druid.wildResurgenceChargeUpdate(c, (e as Extract<DndEvent, { type: "USE_WILD_RESURGENCE_CHARGE" }>).slotLevel)
     ),
     wildResurgenceSlot: assign(({ context: c }) => druid.wildResurgenceSlotUpdate(c)),
-    druidStartTurn: assign(({ context: c }) => druid.druidStartTurnUpdate(c)),
-    druidShortRest: assign(({ context: c }) => druid.druidShortRestUpdate(c)),
-    druidLongRest: assign(({ context: c }) => druid.druidLongRestUpdate(c)),
-    sorcererStartTurn: assign(({ context: c }) => sorcerer.sorcererStartTurnUpdate(c)),
-    sorcererShortRest: assign(({ context: c }) => sorcerer.sorcererShortRestUpdate(c)),
-    sorcererLongRest: assign(({ context: c }) => sorcerer.sorcererLongRestUpdate(c)),
     convertSlotToPoints: assign(({ context: c, event: e }) =>
       sorcerer.convertSlotToPointsUpdate(c, (e as Extract<DndEvent, { type: "CONVERT_SLOT_TO_POINTS" }>).slotLevel)
     ),
@@ -477,12 +497,6 @@ export const dndMachine = setup({
       warlock.mysticArcanumUpdate(c, (e as Extract<DndEvent, { type: "USE_MYSTIC_ARCANUM" }>).spellLevel)
     ),
     useEldritchSmite: assign(({ context: c }) => warlock.eldritchSmiteUpdate(c)),
-    warlockStartTurn: assign(({ context: c }) => warlock.warlockStartTurnUpdate(c)),
-    warlockShortRest: assign(({ context: c }) => warlock.warlockShortRestUpdate(c)),
-    warlockLongRest: assign(({ context: c }) => warlock.warlockLongRestUpdate(c)),
-    wizardStartTurn: assign(({ context: c }) => wizard.wizardStartTurnUpdate(c)),
-    wizardShortRest: assign(({ context: c }) => wizard.wizardShortRestUpdate(c)),
-    wizardLongRest: assign(({ context: c }) => wizard.wizardLongRestUpdate(c)),
     useArcaneRecovery: assign(({ context: c, event: e }) =>
       wizard.arcaneRecoveryUpdate(c, (e as Extract<DndEvent, { type: "USE_ARCANE_RECOVERY" }>).slotLevel)
     ),
@@ -492,9 +506,6 @@ export const dndMachine = setup({
       ranger.useTirelessUpdate(c, (e as Extract<DndEvent, { type: "USE_TIRELESS" }>).d8Roll)
     ),
     useNaturesVeil: assign(({ context: c }) => ranger.useNaturesVeilUpdate(c)),
-    rangerStartTurn: assign(({ context: c }) => ranger.rangerStartTurnUpdate(c)),
-    rangerShortRest: assign(({ context: c }) => ranger.rangerShortRestUpdate(c)),
-    rangerLongRest: assign(({ context: c }) => ranger.rangerLongRestUpdate(c)),
     useBardicInspiration: assign(({ context: c }) => bard.useBardicInspirationUpdate(c)),
     useCuttingWords: assign(({ context: c }) => bard.useCuttingWordsUpdate(c)),
     useFontSlotRestore: assign(({ context: c, event: e }) =>
@@ -502,10 +513,7 @@ export const dndMachine = setup({
     ),
     usePeerlessSkill: assign(({ context: c, event: e }) =>
       bard.usePeerlessSkillUpdate(c, (e as Extract<DndEvent, { type: "USE_PEERLESS_SKILL" }>).success)
-    ),
-    bardStartTurn: assign(({ context: c }) => bard.bardStartTurnUpdate(c)),
-    bardShortRest: assign(({ context: c }) => bard.bardShortRestUpdate(c)),
-    bardLongRest: assign(({ context: c }) => bard.bardLongRestUpdate(c))
+    )
   }
 }).createMachine({
   id: "dnd",

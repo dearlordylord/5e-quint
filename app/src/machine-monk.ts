@@ -122,6 +122,4 @@ export function initialMonkState(monkLevel: number, wholenessMax?: number) {
   }
 }
 
-export function monkExtraAttacks(monkLevel: number): number {
-  return monkLevel >= 5 ? 1 : 0
-}
+export { standardExtraAttacks as monkExtraAttacks } from "#/machine-helpers.ts"

@@ -140,6 +140,4 @@ export function initialBarbarianState(barbarianLevel: number) {
   }
 }
 
-export function barbarianExtraAttacks(barbarianLevel: number): number {
-  return barbarianLevel >= 5 ? 1 : 0
-}
+export { standardExtraAttacks as barbarianExtraAttacks } from "#/machine-helpers.ts"

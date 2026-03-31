@@ -394,6 +394,13 @@ export function removeIncapSource(s: ReadonlySet<IncapSource>, v: IncapSource): 
   return n
 }
 
+// --- Shared class helpers ---
+
+/** Standard Extra Attack: 1 extra attack at class level 5+. Used by Barbarian, Monk, Ranger, Paladin. */
+export function standardExtraAttacks(classLevel: number): number {
+  return classLevel >= 5 ? 1 : 0
+}
+
 // --- Fighter action helpers (extracted from machine.ts for max-lines) ---
 
 export function secondWindUpdate(

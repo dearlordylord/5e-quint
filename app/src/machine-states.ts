@@ -108,80 +108,22 @@ export const damageTrackConfig = {
           {
             guard: "shortRestHeals" as const,
             target: "#dnd.damageTrack.alive",
-            actions: [
-              "shortRest",
-              "fighterShortRest",
-              "barbarianShortRest",
-              "monkShortRest",
-              "paladinShortRest",
-              "rogueShortRest",
-              "clericShortRest",
-              "druidShortRest",
-              "sorcererShortRest",
-              "warlockShortRest",
-              "wizardShortRest",
-              "rangerShortRest",
-              "bardShortRest",
-              "clearUnconscious"
-            ]
+            actions: ["shortRest", "classShortRest", "clearUnconscious"]
           },
           {
             guard: "isOutOfCombat" as const,
-            actions: [
-              "shortRest",
-              "fighterShortRest",
-              "barbarianShortRest",
-              "monkShortRest",
-              "paladinShortRest",
-              "rogueShortRest",
-              "clericShortRest",
-              "druidShortRest",
-              "sorcererShortRest",
-              "warlockShortRest",
-              "wizardShortRest",
-              "rangerShortRest",
-              "bardShortRest"
-            ]
+            actions: ["shortRest", "classShortRest"]
           }
         ],
         LONG_REST: [
           {
             guard: "longRestHeals" as const,
             target: "#dnd.damageTrack.alive",
-            actions: [
-              "longRest",
-              "fighterLongRest",
-              "barbarianLongRest",
-              "monkLongRest",
-              "paladinLongRest",
-              "rogueLongRest",
-              "clericLongRest",
-              "druidLongRest",
-              "sorcererLongRest",
-              "warlockLongRest",
-              "wizardLongRest",
-              "rangerLongRest",
-              "bardLongRest",
-              "clearUnconscious"
-            ]
+            actions: ["longRest", "classLongRest", "clearUnconscious"]
           },
           {
             guard: "isOutOfCombat" as const,
-            actions: [
-              "longRest",
-              "fighterLongRest",
-              "barbarianLongRest",
-              "monkLongRest",
-              "paladinLongRest",
-              "rogueLongRest",
-              "clericLongRest",
-              "druidLongRest",
-              "sorcererLongRest",
-              "warlockLongRest",
-              "wizardLongRest",
-              "rangerLongRest",
-              "bardLongRest"
-            ]
+            actions: ["longRest", "classLongRest"]
           }
         ],
         SPEND_HIT_DIE: [
@@ -304,21 +246,7 @@ export const turnPhaseConfig = {
       on: {
         START_TURN: {
           target: "acting" as const,
-          actions: [
-            "initTurn",
-            "fighterStartTurn",
-            "barbarianStartTurn",
-            "monkStartTurn",
-            "paladinStartTurn",
-            "rogueStartTurn",
-            "clericStartTurn",
-            "druidStartTurn",
-            "sorcererStartTurn",
-            "warlockStartTurn",
-            "wizardStartTurn",
-            "rangerStartTurn",
-            "bardStartTurn"
-          ]
+          actions: ["initTurn", "classStartTurn"]
         },
         EXIT_COMBAT: { target: "outOfCombat" as const, actions: ["exitCombat"] },
         USE_LEGENDARY_ACTION: { actions: ["useLegendaryAction"] }
@@ -372,39 +300,11 @@ export const rootEventHandlers = {
   EXPEND_PACT_SLOT: { guard: "canExpendSlot" as const, actions: ["expendPactSlot"] },
   SHORT_REST: {
     guard: "isOutOfCombat" as const,
-    actions: [
-      "shortRest",
-      "fighterShortRest",
-      "barbarianShortRest",
-      "monkShortRest",
-      "paladinShortRest",
-      "rogueShortRest",
-      "clericShortRest",
-      "druidShortRest",
-      "sorcererShortRest",
-      "warlockShortRest",
-      "wizardShortRest",
-      "rangerShortRest",
-      "bardShortRest"
-    ]
+    actions: ["shortRest", "classShortRest"]
   },
   LONG_REST: {
     guard: "isOutOfCombat" as const,
-    actions: [
-      "longRest",
-      "fighterLongRest",
-      "barbarianLongRest",
-      "monkLongRest",
-      "paladinLongRest",
-      "rogueLongRest",
-      "clericLongRest",
-      "druidLongRest",
-      "sorcererLongRest",
-      "warlockLongRest",
-      "wizardLongRest",
-      "rangerLongRest",
-      "bardLongRest"
-    ]
+    actions: ["longRest", "classLongRest"]
   },
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },
   APPLY_STARVATION: { actions: ["applyStarvation"] },

@@ -10,9 +10,7 @@ import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext } from "#/machine-types.ts"
 import { tempHp } from "#/types.ts"
 
-export function rangerExtraAttacks(rangerLevel: number): number {
-  return rangerLevel >= 5 ? 1 : 0
-}
+export { standardExtraAttacks as rangerExtraAttacks } from "#/machine-helpers.ts"
 
 // -- Action Updates --
 
