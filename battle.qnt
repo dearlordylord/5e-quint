@@ -209,12 +209,6 @@ module battle {
   // 3. HELPERS
   // ============================================================
 
-  pure def listToSet(l: List[CreatureId]): Set[CreatureId] =
-    l.foldl(Set(), (acc, x) => acc.union(Set(x)))
-
-  pure def getC(cs: CreatureId -> Combatant, id: CreatureId): Combatant =
-    cs.get(id)
-
   pure def setCreature(
     cs: CreatureId -> Combatant, id: CreatureId, c: CreatureState
   ): (CreatureId -> Combatant) =
@@ -282,7 +276,7 @@ module battle {
     cs: CreatureId -> Combatant, targetId: CreatureId,
     dmg: int, dt: DamageType, crit: bool
   ): (CreatureId -> Combatant) = {
-    val t = getC(cs, targetId)
+    val t = cs.get(targetId)
     val nc = pTakeDamageAsCreature(t.creature, dmg, dt, Set(), Set(), Set(), crit, t.kind)
     setCreature(cs, targetId, nc)
   }
@@ -296,18 +290,17 @@ module battle {
   /// Break concentration for a caster and propagate: remove all effects
   /// cast by this caster from ALL creatures in the battle.
   pure def breakConcentrationAndPropagate(
-    cs: CreatureId -> Combatant, allIds: Set[CreatureId], casterId: CreatureId
+    cs: CreatureId -> Combatant, casterId: CreatureId
   ): (CreatureId -> Combatant) = {
-    val caster = getC(cs, casterId)
+    val caster = cs.get(casterId)
     val spellId = caster.slots.concentrationSpellId
     if (spellId == "") cs  // not concentrating
     else {
       val newSlots = pBreakConcentration(caster.slots)
       val newCreature = caster.creature.with("activeEffects", pRemoveEffect(caster.creature.activeEffects, spellId))
       val cs1 = setSlots(setCreature(cs, casterId, newCreature), casterId, newSlots)
-      // Remove effects from all other creatures that were cast by this caster
-      allIds.exclude(Set(casterId)).fold(cs1, (acc, id) =>
-        val c = getC(acc, id)
+      cs.keys().exclude(Set(casterId)).fold(cs1, (acc, id) =>
+        val c = acc.get(id)
         val cleaned = removeEffectsByCaster(c.creature, casterId)
         if (cleaned == c.creature) acc else setCreature(acc, id, cleaned)
       )
@@ -316,12 +309,11 @@ module battle {
 
 
   /// Eligible reactors: everyone except excludeId who has reaction + alive.
-  /// Used for hit-reactions (exclude attacker) and Counterspell (exclude caster).
   pure def eligibleExcluding(
-    cs: CreatureId -> Combatant, allIds: Set[CreatureId], excludeId: CreatureId
+    cs: CreatureId -> Combatant, excludeId: CreatureId
   ): Set[CreatureId] =
-    allIds.exclude(Set(excludeId)).filter(id =>
-      hasReaction(cs, id) and not(getC(cs, id).creature.dead)
+    cs.keys().exclude(Set(excludeId)).filter(id =>
+      hasReaction(cs, id) and not(cs.get(id).creature.dead)
     )
 
   /// Eligible single-target reactor: target alone if it has reaction + alive.
@@ -329,7 +321,7 @@ module battle {
   pure def eligibleTarget(
     cs: CreatureId -> Combatant, targetId: CreatureId
   ): Set[CreatureId] =
-    if (hasReaction(cs, targetId) and not(getC(cs, targetId).creature.dead))
+    if (hasReaction(cs, targetId) and not(cs.get(targetId).creature.dead))
       Set(targetId)
     else
       Set()
@@ -337,14 +329,14 @@ module battle {
   /// Does the creature have a spell slot of level 3 or higher?
   /// Required for Counterspell (level 3 Abjuration).
   pure def hasCounterspellSlot(cs: CreatureId -> Combatant, id: CreatureId): bool =
-    val slots = getC(cs, id).slots.slotsCurrent
+    val slots = cs.get(id).slots.slotsCurrent
     3.to(9).exists(lvl => slots.get(lvl) > 0)
 
   /// Eligible Counterspell reactors: base eligible + has level 3+ slot.
   pure def eligibleForCounterspell(
-    cs: CreatureId -> Combatant, allIds: Set[CreatureId], excludeId: CreatureId
+    cs: CreatureId -> Combatant, excludeId: CreatureId
   ): Set[CreatureId] =
-    eligibleExcluding(cs, allIds, excludeId).filter(id => hasCounterspellSlot(cs, id))
+    eligibleExcluding(cs, excludeId).filter(id => hasCounterspellSlot(cs, id))
 
   /// Pop the top entry from a spell stack.
   pure def popStack(s: List[SpellStackEntry]): { top: SpellStackEntry, rest: List[SpellStackEntry] } =
@@ -370,7 +362,7 @@ module battle {
   /// Returns new creatures + phase. If an eligible reactor exists, enters
   /// BPAwaitingReaction(PIAfterDamage); otherwise returns the given returnPhase.
   pure def dealDamageWithAfterReactions(
-    cs: CreatureId -> Combatant, allIds: Set[CreatureId],
+    cs: CreatureId -> Combatant,
     targetId: CreatureId, sourceId: CreatureId,
     dmg: int, dt: DamageType, crit: bool,
     returnTo: AfterDamageReturn
@@ -397,14 +389,10 @@ module battle {
       | ADRResolvingMovement(mv) => BPResolvingMovement(mv)
     }
 
-  action keepBattleNoStack = all {
+  action keepBattle = all {
     bInitiative' = bInitiative,
     bTurnIndex' = bTurnIndex,
     bRound' = bRound,
-  }
-
-  action keepBattle = all {
-    keepBattleNoStack,
     bSpellStack' = bSpellStack,
   }
 
@@ -438,7 +426,7 @@ module battle {
 
   action bStartTurn = {
     val activeId = bInitiative[bTurnIndex]
-    val c = getC(bCreatures, activeId)
+    val c = bCreatures.get(activeId)
     all {
       bPhase == BPActiveTurn,
       // Fresh turn + refresh LA at start of monster's own turn (R7)
@@ -446,7 +434,7 @@ module battle {
       val cs2 = if (c.kind == Monster) {
         // Simplified: maxUses=3, inLair=false. Full version reads from stat block.
         val newMR = pRefreshLegendaryActions(c.monsterResources, 3, false)
-        cs1.set(activeId, getC(cs1, activeId).with("monsterResources", newMR))
+        cs1.set(activeId, cs1.get(activeId).with("monsterResources", newMR))
       } else cs1
       all {
         bCreatures' = cs2,
@@ -460,15 +448,15 @@ module battle {
 
   action bAttack = {
     val activeId = bInitiative[bTurnIndex]
-    val allIds = listToSet(bInitiative)
-    val ac = getC(bCreatures, activeId)
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet attackRoll = 1.to(20).oneOf()
     nondet dmg = 1.to(12).oneOf()
     nondet dt = Set(Slashing, Piercing, Bludgeoning).oneOf()
     nondet crit = Bool.oneOf()
     nondet tAc = 10.to(20).oneOf()
-    val tc = getC(bCreatures, targetId)
+    val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
       ac.turn.actionsRemaining > 0 or ac.turn.extraAttacksRemaining > 0,
@@ -489,7 +477,7 @@ module battle {
           damage: dmg, damageType: dt, isCritical: crit,
           atkReturnTo: ADRActiveTurn,
         }
-        val elig = eligibleExcluding(cs1, allIds, activeId)
+        val elig = eligibleExcluding(cs1, activeId)
         if (elig.size() > 0) {
           all {
             bCreatures' = cs1,
@@ -497,7 +485,7 @@ module battle {
             keepBattle,
           }
         } else {
-          val result = dealDamageWithAfterReactions(cs1, allIds, targetId, activeId, dmg, dt, crit, ADRActiveTurn)
+          val result = dealDamageWithAfterReactions(cs1, targetId, activeId, dmg, dt, crit, ADRActiveTurn)
           all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       }
@@ -505,7 +493,7 @@ module battle {
   }
 
   pure def advanceFromHitPhase(
-    cs: CreatureId -> Combatant, allIds: Set[CreatureId], atk: AttackHitCtx
+    cs: CreatureId -> Combatant, atk: AttackHitCtx
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     val stillHit = atk.attackRoll >= atk.targetAc or atk.attackRoll == 20
     if (not(stillHit)) {
@@ -521,7 +509,7 @@ module battle {
         { creatures: cs, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, dmgElig)) }
       } else {
         // No damage-phase reactions — deal damage and check for after-damage reactions (R10.4)
-        dealDamageWithAfterReactions(cs, allIds, atk.target, atk.attacker,
+        dealDamageWithAfterReactions(cs, atk.target, atk.attacker,
           atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo)
       }
     }
@@ -534,7 +522,7 @@ module battle {
           | PIAttackHit(atk) =>
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
-              val result = advanceFromHitPhase(bCreatures, listToSet(bInitiative), atk)
+              val result = advanceFromHitPhase(bCreatures, atk)
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
               nondet reactorId = remaining.oneOf()
@@ -584,7 +572,7 @@ module battle {
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
               // All damage reactions resolved — deal damage and check after-damage (R10.4)
-              val result = dealDamageWithAfterReactions(bCreatures, listToSet(bInitiative),
+              val result = dealDamageWithAfterReactions(bCreatures,
                 atk.target, atk.attacker, atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo)
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
@@ -652,7 +640,6 @@ module battle {
   }
 
   action bAfterDamageHellishRebuke = {
-    val allIds = listToSet(bInitiative)
     nondet rebukeDmg = 2.to(20).oneOf()
     nondet rebukeSaved = Bool.oneOf()
     match bPhase {
@@ -667,7 +654,7 @@ module battle {
               val cs1 = spendReaction(bCreatures, reactorId)
               val actualDmg = if (rebukeSaved) rebukeDmg / 2 else rebukeDmg
               val result = dealDamageWithAfterReactions(
-                cs1, allIds, ad.damageSource, reactorId,
+                cs1, ad.damageSource, reactorId,
                 actualDmg, Fire, false, ad.returnTo
               )
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
@@ -679,7 +666,6 @@ module battle {
   }
 
   action bAfterDamageRetaliation = {
-    val allIds = listToSet(bInitiative)
     nondet retAtkRoll = 1.to(20).oneOf()
     nondet retDmg = 1.to(12).oneOf()
     nondet retDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
@@ -705,7 +691,7 @@ module battle {
                 }
               } else {
                 val result = dealDamageWithAfterReactions(
-                  cs1, allIds, ad.damageSource, reactorId,
+                  cs1, ad.damageSource, reactorId,
                   retDmg, retDt, retCrit, ad.returnTo
                 )
                 all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
@@ -723,8 +709,8 @@ module battle {
 
   action bCastSaveSpell = {
     val activeId = bInitiative[bTurnIndex]
-    val allIds = listToSet(bInitiative)
-    val ac = getC(bCreatures, activeId)
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet saveDC = 10.to(18).oneOf()
     nondet saveRoll = 1.to(20).oneOf()
@@ -734,7 +720,7 @@ module battle {
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
     nondet slotLvl = 1.to(3).oneOf()
-    val tc = getC(bCreatures, targetId)
+    val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
       ac.turn.actionsRemaining > 0,
@@ -759,7 +745,7 @@ module battle {
         postCast: PCESave(saveCtx),
       }
       // Check for Counterspell (must have reaction + alive + level 3+ slot)
-      val csElig = eligibleForCounterspell(cs1, allIds, activeId)
+      val csElig = eligibleForCounterspell(cs1, activeId)
       if (csElig.size() > 0) {
         all {
           bCreatures' = cs1,
@@ -822,7 +808,7 @@ module battle {
         dealDamage(cs, ctx.target, ctx.damageOnFail, ctx.damageType, false)
       else cs
       if (ctx.applyCondition) {
-        val t = getC(cs1, ctx.target)
+        val t = cs1.get(ctx.target)
         val nc = pApplyCondition(t.creature, ctx.conditionOnFail, Set())
         setCreature(cs1, ctx.target, nc)
       } else cs1
@@ -858,10 +844,10 @@ module battle {
   /// Quint does not support recursive pure def, so at most one extra pop is done
   /// (handles chains of depth ≤ 3, which covers all possible states with 3 creatures).
   pure def returnToCSWindow(
-    cs: CreatureId -> Combatant, allIds: Set[CreatureId],
+    cs: CreatureId -> Combatant,
     entry: SpellStackEntry, stack: List[SpellStackEntry]
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase, stack: List[SpellStackEntry] } = {
-    val freshElig = eligibleForCounterspell(cs, allIds, entry.spellCasterId)
+    val freshElig = eligibleForCounterspell(cs, entry.spellCasterId)
     val remaining = freshElig.exclude(entry.offered)
     if (remaining.size() > 0) {
       val spell: SpellCastCtx = { caster: entry.spellCasterId, postCast: entry.spellPostCast }
@@ -890,7 +876,7 @@ module battle {
                     { creatures: cs, phase: BPActiveTurn, stack: popped.rest }
                   } else {
                     val gp = popStack(popped.rest)
-                    val freshElig2 = eligibleForCounterspell(cs, allIds, gp.top.spellCasterId)
+                    val freshElig2 = eligibleForCounterspell(cs, gp.top.spellCasterId)
                     val remaining2 = freshElig2.exclude(gp.top.offered)
                     if (remaining2.size() > 0) {
                       val spell2: SpellCastCtx = { caster: gp.top.spellCasterId, postCast: gp.top.spellPostCast }
@@ -911,7 +897,7 @@ module battle {
               }
             } else {
               // CS fails → interrupted spell continues; return to its CS window.
-              val freshElig2 = eligibleForCounterspell(cs, allIds, popped.top.spellCasterId)
+              val freshElig2 = eligibleForCounterspell(cs, popped.top.spellCasterId)
               val remaining2 = freshElig2.exclude(popped.top.offered)
               if (remaining2.size() > 0) {
                 val spell2: SpellCastCtx = { caster: popped.top.spellCasterId, postCast: popped.top.spellPostCast }
@@ -936,7 +922,7 @@ module battle {
   /// B5: Counterspell is itself a spell → pushes to bSpellStack and enters
   /// recursive PISpellCast. Chain unwinds via stack when spells resolve.
   action bResolveCounterspell = {
-    val allIds = listToSet(bInitiative)
+    val allIds = bCreatures.keys()
     match bPhase {
       | BPAwaitingReaction(ctx) =>
         match ctx.interrupt {
@@ -962,20 +948,20 @@ module battle {
                         | PCECounterspell(_) =>
                           // Fizzled spell was a CS → its target spell continues
                           if (popped.rest.length() == 0) {
-                            all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattleNoStack, bSpellStack' = popped.rest }
+                            all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest }
                           } else {
                             val gp = popStack(popped.rest)
-                            val result = returnToCSWindow(bCreatures, allIds, gp.top, gp.rest)
-                            all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattleNoStack, bSpellStack' = result.stack }
+                            val result = returnToCSWindow(bCreatures, gp.top, gp.rest)
+                            all { bCreatures' = result.creatures, bPhase' = result.phase, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = result.stack }
                           }
                         | _ =>
                           // Original spell fizzled
-                          all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattleNoStack, bSpellStack' = popped.rest }
+                          all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest }
                       }
                     } else {
                       // CS fails → countered spell continues
-                      val result = returnToCSWindow(bCreatures, allIds, popped.top, popped.rest)
-                      all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattleNoStack, bSpellStack' = result.stack }
+                      val result = returnToCSWindow(bCreatures, popped.top, popped.rest)
+                      all { bCreatures' = result.creatures, bPhase' = result.phase, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = result.stack }
                     }
                   }
                 | _ => all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattle }
@@ -993,10 +979,10 @@ module battle {
                   }
                 | RCounterspell(conSaveSucceeded) => all {
                     // Guard: reactor must have a slot of level csSlotLvl
-                    getC(bCreatures, reactorId).slots.slotsCurrent.get(csSlotLvl) > 0,
+                    bCreatures.get(reactorId).slots.slotsCurrent.get(csSlotLvl) > 0,
                     // Spend reaction + slot
                     val cs1 = spendReaction(bCreatures, reactorId)
-                    val cs2 = setSlots(cs1, reactorId, pExpendSlot(getC(cs1, reactorId).slots, csSlotLvl))
+                    val cs2 = setSlots(cs1, reactorId, pExpendSlot(cs1.get(reactorId).slots, csSlotLvl))
                     // Push current spell context onto stack
                     val stackEntry: SpellStackEntry = {
                       spellCasterId: spell.caster,
@@ -1014,11 +1000,11 @@ module battle {
                       postCast: PCECounterspell(csEffect),
                     }
                     // Enter CS window for the Counterspell (empty eligible → resolves next step)
-                    val csElig = eligibleForCounterspell(cs2, allIds, reactorId)
+                    val csElig = eligibleForCounterspell(cs2, reactorId)
                     all {
                       bCreatures' = cs2,
                       bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(csSpell), TSpellBeingCast, csElig)),
-                      keepBattleNoStack, bSpellStack' = newStack,
+                      bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = newStack,
                     }
                   }
                 | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -1113,15 +1099,15 @@ module battle {
 
   action bCastConcentrationSpell = {
     val activeId = bInitiative[bTurnIndex]
-    val allIds = listToSet(bInitiative)
-    val ac = getC(bCreatures, activeId)
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet slotLvl = 1.to(3).oneOf()
     nondet duration = 1.to(10).oneOf()
     nondet spellId = Set("hold_person", "bless", "haste", "spirit_guardians").oneOf()
     nondet cond = Set(CParalyzed, CCharmed, CRestrained).oneOf()
     nondet applyCond = Bool.oneOf()
-    val tc = getC(bCreatures, targetId)
+    val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
       ac.turn.actionsRemaining > 0,
@@ -1133,18 +1119,18 @@ module battle {
       val newSlots = pExpendSlot(ac.slots, slotLvl)
       // If already concentrating, break old concentration first (propagate)
       val cs1 = if (ac.slots.concentrationSpellId != "")
-        breakConcentrationAndPropagate(bCreatures, allIds, activeId)
+        breakConcentrationAndPropagate(bCreatures, activeId)
       else bCreatures
       val concSlots = pStartConcentration(newSlots, spellId)
       val cs2 = setTurn(cs1, activeId, newTurn).setSlots(activeId, concSlots)
       // Add effect to target with casterId pointing back to caster
-      val targetC = getC(cs2, targetId)
+      val targetC = cs2.get(targetId)
       val newEffects = pAddEffect(targetC.creature.activeEffects, spellId, duration, AtEndOfTurn, activeId)
       val targetWithEffect = targetC.creature.with("activeEffects", newEffects)
       val cs3 = setCreature(cs2, targetId, targetWithEffect)
       // Apply condition to target if applicable
       val cs4 = if (applyCond) {
-        val t = getC(cs3, targetId)
+        val t = cs3.get(targetId)
         setCreature(cs3, targetId, pApplyCondition(t.creature, cond, Set()))
       } else cs3
       all {
@@ -1158,10 +1144,10 @@ module battle {
   // Concentration check: a concentrating creature took damage.
   // CON save result is pre-resolved. On failure, break and propagate.
   action bConcentrationCheck = {
-    val allIds = listToSet(bInitiative)
+    val allIds = bCreatures.keys()
     nondet targetId = allIds.oneOf()
     nondet conSaveSucceeded = Bool.oneOf()
-    val tc = getC(bCreatures, targetId)
+    val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
       not(tc.creature.dead),
@@ -1172,7 +1158,7 @@ module battle {
       } else {
         // Save failed — break concentration and propagate
         all {
-          bCreatures' = breakConcentrationAndPropagate(bCreatures, allIds, targetId),
+          bCreatures' = breakConcentrationAndPropagate(bCreatures, targetId),
           bPhase' = BPActiveTurn,
           keepBattle,
         }
@@ -1187,11 +1173,11 @@ module battle {
 
   action bCastAoE = {
     val activeId = bInitiative[bTurnIndex]
-    val allIds = listToSet(bInitiative)
-    val ac = getC(bCreatures, activeId)
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
     // AoE hits all live non-caster creatures. Spatial filtering is external (O2).
     val liveTargets = allIds.exclude(Set(activeId)).filter(id =>
-      not(getC(bCreatures, id).creature.dead)
+      not(bCreatures.get(id).creature.dead)
     )
     nondet saveDC = 10.to(18).oneOf()
     nondet dmgOnFail = 1.to(20).oneOf()
@@ -1222,7 +1208,7 @@ module battle {
         postCast: PCEAoE(aoeCtx),
       }
       // Counterspell interrupt — if countered, entire AoE fizzles
-      val csElig = eligibleForCounterspell(cs1, allIds, activeId)
+      val csElig = eligibleForCounterspell(cs1, activeId)
       if (csElig.size() > 0) {
         all {
           bCreatures' = cs1,
@@ -1259,7 +1245,7 @@ module battle {
             // Save succeeded — half damage if applicable, no condition
             if (aoe.halfOnSuccess and aoe.damageOnFail > 0) {
               val halfDmg = aoe.damageOnFail / 2
-              val result = dealDamageWithAfterReactions(bCreatures, listToSet(bInitiative),
+              val result = dealDamageWithAfterReactions(bCreatures,
                 targetId, aoe.caster, halfDmg, aoe.damageType, false, aoeReturn)
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
@@ -1302,8 +1288,8 @@ module battle {
 
   action bMove = {
     val activeId = bInitiative[bTurnIndex]
-    val allIds = listToSet(bInitiative)
-    val ac = getC(bCreatures, activeId)
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
     // Caller provides which creatures' reach the mover is leaving (spatial concern per O2)
     nondet threatened = allIds.exclude(Set(activeId)).powerset().oneOf()
     all {
@@ -1320,7 +1306,7 @@ module battle {
       } else {
         // Filter threatened to those with reaction + alive + can see mover
         val oaEligible = threatened.filter(id =>
-          hasReaction(cs1, id) and not(getC(cs1, id).creature.dead)
+          hasReaction(cs1, id) and not(cs1.get(id).creature.dead)
         )
         if (oaEligible.size() == 0) {
           all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
@@ -1351,7 +1337,7 @@ module battle {
   /// Movement OA: threatened creature takes an opportunity attack.
   /// OA is a full attack → enters R20 chain (hit reactions, damage reactions, after-damage).
   action bMovementOAAttack = {
-    val allIds = listToSet(bInitiative)
+    val allIds = bCreatures.keys()
     nondet oaAtkRoll = 1.to(20).oneOf()
     nondet oaDmg = 1.to(12).oneOf()
     nondet oaDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
@@ -1376,7 +1362,7 @@ module battle {
             damage: oaDmg, damageType: oaDt, isCritical: oaCrit,
             atkReturnTo: ADRResolvingMovement(updatedMv),
           }
-          val hitElig = eligibleExcluding(cs1, allIds, reactorId)
+          val hitElig = eligibleExcluding(cs1, reactorId)
           if (hitElig.size() > 0) {
             all {
               bCreatures' = cs1,
@@ -1384,7 +1370,7 @@ module battle {
               keepBattle,
             }
           } else {
-            val result = advanceFromHitPhase(cs1, allIds, atkCtx)
+            val result = advanceFromHitPhase(cs1, atkCtx)
             all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
           }
         }
@@ -1396,13 +1382,13 @@ module battle {
   // --- End turn / Heal ---
 
   action bEndTurn = {
-    val allIds = listToSet(bInitiative)
+    val allIds = bCreatures.keys()
     val activeId = bInitiative[bTurnIndex]
     all {
       bPhase == BPActiveTurn,
       // Check for monsters with LA remaining (R7: "at the end of another creature's turn")
       val laEligible = allIds.exclude(Set(activeId)).filter(id =>
-        val c = getC(bCreatures, id)
+        val c = bCreatures.get(id)
         c.kind == Monster and
         c.monsterResources.legendaryActionsRemaining > 0 and
         not(c.creature.dead) and
@@ -1442,7 +1428,7 @@ module battle {
   /// LA window: monster uses a legendary attack action.
   /// Separate action from bLegendaryPass to avoid exploring attack nondets on pass.
   action bLegendaryAttack = {
-    val allIds = listToSet(bInitiative)
+    val allIds = bCreatures.keys()
     val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
     match bPhase {
       | BPAwaitingLegendaryAction(laCtx) =>
@@ -1453,7 +1439,7 @@ module battle {
         nondet laDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
         nondet laCrit = Bool.oneOf()
         nondet laTgtAc = 10.to(20).oneOf()
-        val m = getC(bCreatures, monsterId)
+        val m = bCreatures.get(monsterId)
         val newMR = m.monsterResources.with("legendaryActionsRemaining",
           m.monsterResources.legendaryActionsRemaining - 1)
         val cs1 = bCreatures.set(monsterId, m.with("monsterResources", newMR))
@@ -1470,11 +1456,11 @@ module battle {
 
   action bHeal = {
     val activeId = bInitiative[bTurnIndex]
-    val allIds = listToSet(bInitiative)
-    val ac = getC(bCreatures, activeId)
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
     nondet targetId = allIds.oneOf()
     nondet amount = 1.to(20).oneOf()
-    val tc = getC(bCreatures, targetId)
+    val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
       ac.turn.actionsRemaining > 0,
@@ -1505,13 +1491,13 @@ module battle {
     bHeal, bEndTurn, bStartTurn,
   }
 
-  val allHpBounded = listToSet(bInitiative).forall(id =>
-    val c = getC(bCreatures, id)
+  val allHpBounded = bCreatures.keys().forall(id =>
+    val c = bCreatures.get(id)
     c.creature.hp >= 0 and c.creature.hp <= c.creature.maxHp
   )
 
-  val allDeadImpliesHp0 = listToSet(bInitiative).forall(id =>
-    val c = getC(bCreatures, id)
+  val allDeadImpliesHp0 = bCreatures.keys().forall(id =>
+    val c = bCreatures.get(id)
     c.creature.dead implies c.creature.hp == 0
   )
 

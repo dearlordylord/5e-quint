@@ -2,7 +2,7 @@ import { useT } from "#/i18n.ts"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
 import { DEATH_SAVE_THRESHOLD, MAX_EXHAUSTION } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
-import { ALL_CONDITIONS, SPELL_SLOT_LEVELS } from "#/types.ts"
+import { CONDITIONS, SPELL_SLOT_LEVELS } from "#/types.ts"
 
 type TrackLabel = "alive" | "stable" | "unstable" | "dead"
 
@@ -82,7 +82,7 @@ function ConditionBadges({ ctx }: { readonly ctx: DndContext }) {
     <div>
       <h3 className="text-sm text-gray-400 mb-1">{t.conditions}</h3>
       <div className="flex flex-wrap gap-1">
-        {ALL_CONDITIONS.map((c) => {
+        {CONDITIONS.map((c) => {
           const active = c === "incapacitated" ? isIncap : ctx[c as keyof DndContext] === true
           return (
             <span

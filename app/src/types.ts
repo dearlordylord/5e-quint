@@ -257,9 +257,6 @@ export type SpellSlots = ReadonlyArray<number>
 export const SPELL_SLOT_LEVELS = 9
 export const EMPTY_SLOTS: SpellSlots = new Array(SPELL_SLOT_LEVELS).fill(0) as SpellSlots
 
-/** @deprecated Use CONDITIONS instead */
-export const ALL_CONDITIONS = CONDITIONS
-
 // --- Record types ---
 
 export interface DeathSaves {

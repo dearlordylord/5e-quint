@@ -5,7 +5,7 @@ import { useT } from "#/i18n.ts"
 import type { DndEvent, DndSnapshot } from "#/machine.ts"
 import { ALL_DAMAGE_TYPES } from "#/machine-helpers.ts"
 import type { Condition, DamageType } from "#/types.ts"
-import { ALL_CONDITIONS, d20Roll, healAmount, tempHp } from "#/types.ts"
+import { CONDITIONS, d20Roll, healAmount, tempHp } from "#/types.ts"
 
 const DAMAGE_TYPES: ReadonlyArray<DamageType> = Array.from(ALL_DAMAGE_TYPES)
 const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
@@ -180,7 +180,7 @@ export function EventPanel({
             onChange={(e) => setCondition(e.target.value as Condition)}
             className="bg-gray-700 rounded px-2 py-1 text-white"
           >
-            {ALL_CONDITIONS.map((c) => (
+            {CONDITIONS.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
