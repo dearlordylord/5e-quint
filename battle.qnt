@@ -104,7 +104,6 @@ module battle {
     | PIAttackDamage(AttackDamageCtx)
     | PISpellCast(SpellCastCtx)
     | PISaveFailed(SaveFailedCtx)
-    | PIResolved
 
   type AwaitCtx = {
     interrupt: PendingInterrupt,
@@ -189,23 +188,19 @@ module battle {
     setCreature(cs, targetId, nc)
   }
 
-  // Apply non-crit, non-resistance damage (for spell damage)
-  pure def dealSpellDamage(
-    cs: CreatureId -> Combatant, targetId: CreatureId,
-    dmg: int, dt: DamageType
-  ): (CreatureId -> Combatant) =
-    dealDamage(cs, targetId, dmg, dt, false)
 
-  /// Eligible for hit-reaction: anyone except attacker with reaction + alive
-  pure def eligibleForHitReaction(
-    cs: CreatureId -> Combatant, allIds: Set[CreatureId], attackerId: CreatureId
+  /// Eligible reactors: everyone except excludeId who has reaction + alive.
+  /// Used for hit-reactions (exclude attacker) and Counterspell (exclude caster).
+  pure def eligibleExcluding(
+    cs: CreatureId -> Combatant, allIds: Set[CreatureId], excludeId: CreatureId
   ): Set[CreatureId] =
-    allIds.exclude(Set(attackerId)).filter(id =>
+    allIds.exclude(Set(excludeId)).filter(id =>
       hasReaction(cs, id) and not(getC(cs, id).creature.dead)
     )
 
-  /// Eligible for damage-reaction: only the target (Uncanny Dodge, Deflect Attacks)
-  pure def eligibleForDmgReaction(
+  /// Eligible single-target reactor: target alone if it has reaction + alive.
+  /// Used for damage-reactions (Uncanny Dodge) and save-failed (Legendary Resistance).
+  pure def eligibleTarget(
     cs: CreatureId -> Combatant, targetId: CreatureId
   ): Set[CreatureId] =
     if (hasReaction(cs, targetId) and not(getC(cs, targetId).creature.dead))
@@ -213,24 +208,9 @@ module battle {
     else
       Set()
 
-  /// Eligible for Counterspell: anyone except the caster with reaction + alive
-  pure def eligibleForCounterspell(
-    cs: CreatureId -> Combatant, allIds: Set[CreatureId], casterId: CreatureId
-  ): Set[CreatureId] =
-    allIds.exclude(Set(casterId)).filter(id =>
-      hasReaction(cs, id) and not(getC(cs, id).creature.dead)
-    )
-
-  /// Eligible for save-failed reactions: only the target (Legendary Resistance)
-  pure def eligibleForSaveFailedReaction(
-    cs: CreatureId -> Combatant, targetId: CreatureId
-  ): Set[CreatureId] =
-    // For now: any alive creature with reaction can use LR (simplified)
-    // Full version: only creatures with Legendary Resistance charges
-    if (hasReaction(cs, targetId) and not(getC(cs, targetId).creature.dead))
-      Set(targetId)
-    else
-      Set()
+  /// Build an AwaitCtx with empty offered set.
+  pure def mkAwait(pi: PendingInterrupt, tt: TriggerType, elig: Set[CreatureId]): AwaitCtx =
+    { interrupt: pi, trigger: tt, eligible: elig, offered: Set() }
 
   action keepBattle = all {
     bInitiative' = bInitiative,
@@ -273,8 +253,9 @@ module battle {
 
   action bAttack = {
     val activeId = bInitiative[bTurnIndex]
+    val allIds = listToSet(bInitiative)
     val ac = getC(bCreatures, activeId)
-    nondet targetId = listToSet(bInitiative).exclude(Set(activeId)).oneOf()
+    nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet attackRoll = 1.to(20).oneOf()
     nondet dmg = 1.to(12).oneOf()
     nondet dt = Set(Slashing, Piercing, Bludgeoning).oneOf()
@@ -300,14 +281,11 @@ module battle {
           attackRoll: attackRoll, targetAc: tAc,
           damage: dmg, damageType: dt, isCritical: crit,
         }
-        val elig = eligibleForHitReaction(cs1, listToSet(bInitiative), activeId)
+        val elig = eligibleExcluding(cs1, allIds, activeId)
         if (elig.size() > 0) {
           all {
             bCreatures' = cs1,
-            bPhase' = BPAwaitingReaction({
-              interrupt: PIAttackHit(atkCtx), trigger: TAttackHits,
-              eligible: elig, offered: Set(),
-            }),
+            bPhase' = BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, elig)),
             keepBattle,
           }
         } else {
@@ -328,17 +306,14 @@ module battle {
     if (not(stillHit)) {
       { creatures: cs, phase: BPActiveTurn }
     } else {
-      val dmgElig = eligibleForDmgReaction(cs, atk.target)
+      val dmgElig = eligibleTarget(cs, atk.target)
       if (dmgElig.size() > 0) {
         val dmgCtx: AttackDamageCtx = {
           attacker: atk.attacker, target: atk.target,
           damage: atk.damage, damageType: atk.damageType,
           isCritical: atk.isCritical,
         }
-        { creatures: cs, phase: BPAwaitingReaction({
-          interrupt: PIAttackDamage(dmgCtx), trigger: TAttackDamages,
-          eligible: dmgElig, offered: Set(),
-        })}
+        { creatures: cs, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, dmgElig)) }
       } else {
         { creatures: dealDamage(cs, atk.target, atk.damage, atk.damageType, atk.isCritical),
           phase: BPActiveTurn }
@@ -436,8 +411,9 @@ module battle {
 
   action bCastSaveSpell = {
     val activeId = bInitiative[bTurnIndex]
+    val allIds = listToSet(bInitiative)
     val ac = getC(bCreatures, activeId)
-    nondet targetId = listToSet(bInitiative).exclude(Set(activeId)).oneOf()
+    nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet saveDC = 10.to(18).oneOf()
     nondet saveRoll = 1.to(20).oneOf()
     nondet dmgOnFail = 0.to(20).oneOf()
@@ -471,14 +447,11 @@ module battle {
         postCast: PCESave(saveCtx),
       }
       // Check for Counterspell
-      val csElig = eligibleForCounterspell(cs1, listToSet(bInitiative), activeId)
+      val csElig = eligibleExcluding(cs1, allIds, activeId)
       if (csElig.size() > 0) {
         all {
           bCreatures' = cs1,
-          bPhase' = BPAwaitingReaction({
-            interrupt: PISpellCast(spellCtx), trigger: TSpellBeingCast,
-            eligible: csElig, offered: Set(),
-          }),
+          bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(spellCtx), TSpellBeingCast, csElig)),
           keepBattle,
         }
       } else {
@@ -498,14 +471,14 @@ module battle {
       // Save succeeded — half damage if applicable, no condition
       if (save.halfOnSuccess and save.damageOnFail > 0) {
         val halfDmg = save.damageOnFail / 2
-        { creatures: dealSpellDamage(cs, save.target, halfDmg, save.damageType),
+        { creatures: dealDamage(cs, save.target, halfDmg, save.damageType, false),
           phase: BPActiveTurn }
       } else {
         { creatures: cs, phase: BPActiveTurn }
       }
     } else {
       // Save failed — check for Legendary Resistance / Countercharm
-      val elig = eligibleForSaveFailedReaction(cs, save.target)
+      val elig = eligibleTarget(cs, save.target)
       val failCtx: SaveFailedCtx = {
         caster: save.caster, target: save.target,
         damageOnFail: save.damageOnFail, halfOnSuccess: save.halfOnSuccess,
@@ -514,10 +487,7 @@ module battle {
         saveSucceeded: false,
       }
       if (elig.size() > 0) {
-        { creatures: cs, phase: BPAwaitingReaction({
-          interrupt: PISaveFailed(failCtx), trigger: TSaveFailed,
-          eligible: elig, offered: Set(),
-        })}
+        { creatures: cs, phase: BPAwaitingReaction(mkAwait(PISaveFailed(failCtx), TSaveFailed, elig)) }
       } else {
         // No reactions — apply fail effects directly
         { creatures: applyFailEffects(cs, failCtx), phase: BPActiveTurn }
@@ -532,14 +502,14 @@ module battle {
     if (ctx.saveSucceeded) {
       // LR flipped the save — apply half damage if applicable
       if (ctx.halfOnSuccess and ctx.damageOnFail > 0) {
-        dealSpellDamage(cs, ctx.target, ctx.damageOnFail / 2, ctx.damageType)
+        dealDamage(cs, ctx.target, ctx.damageOnFail / 2, ctx.damageType, false)
       } else {
         cs
       }
     } else {
       // Full fail: damage + condition
       val cs1 = if (ctx.damageOnFail > 0)
-        dealSpellDamage(cs, ctx.target, ctx.damageOnFail, ctx.damageType)
+        dealDamage(cs, ctx.target, ctx.damageOnFail, ctx.damageType, false)
       else cs
       if (ctx.applyCondition) {
         val t = getC(cs1, ctx.target)
@@ -664,8 +634,9 @@ module battle {
 
   action bHeal = {
     val activeId = bInitiative[bTurnIndex]
+    val allIds = listToSet(bInitiative)
     val ac = getC(bCreatures, activeId)
-    nondet targetId = listToSet(bInitiative).oneOf()
+    nondet targetId = allIds.oneOf()
     nondet amount = 1.to(20).oneOf()
     val tc = getC(bCreatures, targetId)
     all {
