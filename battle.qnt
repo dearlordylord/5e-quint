@@ -4,7 +4,6 @@
 /// Composes on top of dnd.qnt pure functions.
 ///
 /// SIMPLIFICATIONS (each is a planned incremental improvement, see PLAN_BATTLE.md):
-/// - No concentration links. Full version: casterId on effects, propagation (R33)
 /// - No class states in Combatant. Full version: ClassStateMap
 /// - Limited reactions (Shield, Uncanny Dodge, Counterspell). Full version: all 26 from R10
 /// These are simplifications of a correct structure, not structural gaps.
@@ -188,6 +187,49 @@ module battle {
     setCreature(cs, targetId, nc)
   }
 
+
+  /// Remove all active effects with the given casterId from a creature.
+  /// Used for concentration break propagation (R33).
+  pure def removeEffectsByCaster(creature: CreatureState, cId: CreatureId): CreatureState =
+    creature.with("activeEffects", creature.activeEffects.filter(e => e.casterId != cId))
+
+  /// Break concentration for a caster and propagate: remove all effects
+  /// cast by this caster from ALL creatures in the battle.
+  pure def breakConcentrationAndPropagate(
+    cs: CreatureId -> Combatant, allIds: Set[CreatureId], casterId: CreatureId
+  ): (CreatureId -> Combatant) = {
+    val caster = getC(cs, casterId)
+    val spellId = caster.slots.concentrationSpellId
+    if (spellId == "") cs  // not concentrating
+    else {
+      // Break caster's concentration
+      val newSlots = pBreakConcentration(caster.slots)
+      val newEffects = pRemoveEffect(caster.creature.activeEffects, spellId)
+      val cs1 = cs.set(casterId, caster
+        .with("slots", newSlots)
+        .with("creature", caster.creature.with("activeEffects", newEffects)))
+      // Remove effects from all other creatures that were cast by this caster
+      allIds.exclude(Set(casterId)).fold(cs1, (acc, id) =>
+        val c = getC(acc, id)
+        val cleaned = removeEffectsByCaster(c.creature, casterId)
+        if (cleaned == c.creature) acc else setCreature(acc, id, cleaned)
+      )
+    }
+  }
+
+  /// Deal damage to target. If target is concentrating, check CON save.
+  /// On failed save, break concentration and propagate to all creatures.
+  pure def dealDamageWithConc(
+    cs: CreatureId -> Combatant, allIds: Set[CreatureId],
+    targetId: CreatureId, dmg: int, dt: DamageType, crit: bool,
+    conSaveSucceeded: bool
+  ): (CreatureId -> Combatant) = {
+    val cs1 = dealDamage(cs, targetId, dmg, dt, crit)
+    val target = getC(cs1, targetId)
+    if (target.slots.concentrationSpellId != "" and not(conSaveSucceeded)) {
+      breakConcentrationAndPropagate(cs1, allIds, targetId)
+    } else cs1
+  }
 
   /// Eligible reactors: everyone except excludeId who has reaction + alive.
   /// Used for hit-reactions (exclude attacker) and Counterspell (exclude caster).
@@ -617,6 +659,82 @@ module battle {
     }
   }
 
+  // --- Concentration spell transaction (B4) ---
+  // Caster starts concentrating on a spell, target gets an effect linked back to caster.
+  // When caster's concentration breaks (damage + failed CON save, or new concentration spell),
+  // effects are removed from all targets.
+
+  action bCastConcentrationSpell = {
+    val activeId = bInitiative[bTurnIndex]
+    val allIds = listToSet(bInitiative)
+    val ac = getC(bCreatures, activeId)
+    nondet targetId = allIds.exclude(Set(activeId)).oneOf()
+    nondet slotLvl = 1.to(3).oneOf()
+    nondet duration = 1.to(10).oneOf()
+    nondet spellId = Set("hold_person", "bless", "haste", "spirit_guardians").oneOf()
+    nondet cond = Set(CParalyzed, CCharmed, CRestrained).oneOf()
+    nondet applyCond = Bool.oneOf()
+    val tc = getC(bCreatures, targetId)
+    all {
+      bPhase == BPActiveTurn,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(tc.creature.dead),
+      ac.slots.slotsCurrent.get(slotLvl) > 0,
+      // Spend action + slot, start concentration
+      val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
+      val newSlots = pExpendSlot(ac.slots, slotLvl)
+      // If already concentrating, break old concentration first (propagate)
+      val cs1 = if (ac.slots.concentrationSpellId != "")
+        breakConcentrationAndPropagate(bCreatures, allIds, activeId)
+      else bCreatures
+      // Start new concentration on caster
+      val casterAfterBreak = getC(cs1, activeId)
+      val concSlots = pStartConcentration(newSlots, spellId)
+      val cs2 = setTurn(cs1, activeId, newTurn).setSlots(activeId, concSlots)
+      // Add effect to target with casterId pointing back to caster
+      val targetC = getC(cs2, targetId)
+      val newEffects = pAddEffect(targetC.creature.activeEffects, spellId, duration, AtEndOfTurn, activeId)
+      val targetWithEffect = targetC.creature.with("activeEffects", newEffects)
+      val cs3 = setCreature(cs2, targetId, targetWithEffect)
+      // Apply condition to target if applicable
+      val cs4 = if (applyCond) {
+        val t = getC(cs3, targetId)
+        setCreature(cs3, targetId, pApplyCondition(t.creature, cond, Set()))
+      } else cs3
+      all {
+        bCreatures' = cs4,
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  // Concentration check: a concentrating creature took damage.
+  // CON save result is pre-resolved. On failure, break and propagate.
+  action bConcentrationCheck = {
+    val allIds = listToSet(bInitiative)
+    nondet targetId = allIds.oneOf()
+    nondet conSaveSucceeded = Bool.oneOf()
+    val tc = getC(bCreatures, targetId)
+    all {
+      bPhase == BPActiveTurn,
+      not(tc.creature.dead),
+      tc.slots.concentrationSpellId != "",  // must be concentrating
+      if (conSaveSucceeded) {
+        // Save passed — concentration holds
+        all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattle }
+      } else {
+        // Save failed — break concentration and propagate
+        all {
+          bCreatures' = breakConcentrationAndPropagate(bCreatures, allIds, targetId),
+          bPhase' = BPActiveTurn,
+          keepBattle,
+        }
+      }
+    }
+  }
+
   // --- End turn / Heal ---
 
   action bEndTurn = {
@@ -661,6 +779,7 @@ module battle {
   action battleStep = any {
     bAttack, bResolveHitReaction, bResolveDmgReaction,
     bCastSaveSpell, bResolveCounterspell, bResolveSaveFailedReaction,
+    bCastConcentrationSpell, bConcentrationCheck,
     bHeal, bEndTurn, bStartTurn,
   }
 
