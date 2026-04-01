@@ -42,7 +42,7 @@ Corpus (SE, Reddit, Sage Advice, sageadvice.eu, Errata)
 
 **Classification** asks Haiku whether each entry is a Rules As Written mechanics question and what category it falls into (combat, conditions, spellcasting, movement, etc.). Non-mechanics questions are filtered out.
 
-**Assertion generation** gives Sonnet the full `dnd.qnt` spec (~4000 lines) as context and asks it to write a Quint `run` test encoding the accepted answer. Every generated fragment is typechecked before caching — if the LLM invents a function or uses wrong types, it's rejected. About 40% of generation attempts fail and are retried on the next run.
+**Assertion generation** gives Sonnet the full `creature.qnt` spec (~4000 lines) as context and asks it to write a Quint `run` test encoding the accepted answer. Every generated fragment is typechecked before caching — if the LLM invents a function or uses wrong types, it's rejected. About 40% of generation attempts fail and are retried on the next run.
 
 If a ruling can't be encoded with the spec's existing functions (e.g., Wild Shape isn't modeled), Sonnet outputs `// SKIP: <reason>` instead of a fake test.
 
@@ -59,7 +59,7 @@ Assertion generation:
 ```
 claude -p --tools "" --model sonnet --no-session-persistence \
   --disable-slash-commands --permission-mode bypassPermissions \
-  --system-prompt "<full dnd.qnt spec + instructions>" "<Q&A content>"
+  --system-prompt "<full creature.qnt spec + instructions>" "<Q&A content>"
 ```
 
 OpenCode is also supported as an alternative agent (`--agent opencode`).
@@ -108,7 +108,7 @@ python3 scripts/qa/generate_assertions.py --rebuild
 ```
 
 **Assertion fails (spec disagrees with community)** — Three possibilities:
-1. Spec bug → fix `dnd.qnt`
+1. Spec bug → fix `creature.qnt`
 2. Community answer is wrong → delete the cache entry
 3. LLM misinterpreted the Q&A → delete cache entry, it regenerates on next run
 

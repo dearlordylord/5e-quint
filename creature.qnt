@@ -4,7 +4,7 @@
 /// Formal specification of foundational mechanics.
 /// All dice rolls pre-resolved: callers pass results as arguments.
 
-module dnd {
+module creature {
 
   // ============================================================
   // 1. TYPES (core/types)
@@ -322,7 +322,7 @@ module dnd {
   /// SRD Character Sheet: tracks a PC's information, derived from class, level,
   /// species, and equipment. Counterpart to StatBlock (monster-only). Both
   /// produce creature-level combat stats; see StatBlock comment for design.
-  // Adding a field here requires updating all CharConfig literals (BASE_CHAMPION_CONFIG in dnd.qnt; TEST_WIZARD, TEST_FIGHTER_5, TEST_BARBARIAN_ORC, TEST_CLERIC_DWARF, TEST_ROGUE_HALFLING, TEST_PALADIN_DRAGONBORN, TEST_RANGER_ELF, TEST_MONK_GNOME, TEST_SORCERER_TIEFLING, TEST_WARLOCK_GOLIATH, TEST_BARD_HUMAN, TEST_DRUID_ELF in dndTest.qnt)
+  // Adding a field here requires updating all CharConfig literals (BASE_CHAMPION_CONFIG in creature.qnt; TEST_WIZARD, TEST_FIGHTER_5, TEST_BARBARIAN_ORC, TEST_CLERIC_DWARF, TEST_ROGUE_HALFLING, TEST_PALADIN_DRAGONBORN, TEST_RANGER_ELF, TEST_MONK_GNOME, TEST_SORCERER_TIEFLING, TEST_WARLOCK_GOLIATH, TEST_BARD_HUMAN, TEST_DRUID_ELF in dndTest.qnt)
   type CharConfig = {
     className: ClassName,            // primary class
     subclass: SubclassName,          // SRD 5.2.1: one subclass per class
@@ -1252,7 +1252,7 @@ module dnd {
 
   /// Extra attacks from config features. Default 0.
   /// Fighter 5: 1, Fighter 11: 2, Fighter 20: 3
-  pure def extraAttacksFromConfig(config: CharConfig): int = {
+  pure def extraAttacks(config: CharConfig): int = {
     if (config.features.contains(FExtraAttack3)) 3
     else if (config.features.contains(FExtraAttack2)) 2
     else if (config.features.contains(FExtraAttack)) 1
@@ -1290,7 +1290,7 @@ module dnd {
       bonusActionUsed: false,
       reactionAvailable: true,
       freeInteractionUsed: false,
-      extraAttacksRemaining: extraAttacksFromConfig(config),
+      extraAttacksRemaining: extraAttacks(config),
       disengaged: false,
       dodging: false,
       readiedAction: false,

@@ -1,5 +1,5 @@
 // Quint spec snippets for the demo spec mirror panel.
-// Extracted from dnd.qnt — Fighter/Champion pure functions.
+// Extracted from creature.qnt — Fighter/Champion pure functions.
 
 export interface QuintSnippet {
   readonly name: string

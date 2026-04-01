@@ -9,10 +9,10 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 
 | Plan | Status | Scope |
 |------|--------|-------|
-| **PLAN.md** (this file) | Done | Core Quint spec: generic rules in `dnd.qnt` (HP, damage, conditions, turns, rests, slots, grapple/shove, attack resolution, environment). The foundation everything else composes on. |
+| **PLAN.md** (this file) | Done | Core Quint spec: generic rules in `creature.qnt` (HP, damage, conditions, turns, rests, slots, grapple/shove, attack resolution, environment). The foundation everything else composes on. |
 | **PLAN_NONCORE.md** | Active | Class features, spells, species, feats — TS implementation + UI wiring + Quint migration. Per-class status tables, integration patterns, implementation order. The main active plan. |
 | ~~PLAN_CLEANUP.md~~ | Done (deleted) | Was: Quint-side roadmap (E/F/G/H/C/D/J/K/M). All items complete. P1 (bonus movement) moved here. |
-| **PLAN_BATTLE.md** | Active | Multi-creature battle state. `battle.qnt` composing `dnd.qnt`. Transactions, reaction interrupts, concentration links, MBT bridge. Spike done (B0), iterating. |
+| **PLAN_BATTLE.md** | Active | Multi-creature battle state. `battle.qnt` composing `creature.qnt`. Transactions, reaction interrupts, concentration links, MBT bridge. Spike done (B0), iterating. |
 | **PLAN_SCRAPERS.md** | Active | QA pipeline: new data sources for the community Q&A corpus (SE tags, Sage Advice, sageadvice.eu, errata). Independent of other plans. |
 
 > **NOTE — Suggestive, not prescriptive.** Function names, signatures, state fields, and type
@@ -22,7 +22,7 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 
 ## Scope
 
-This plan covers **core mechanics only** — generic rules modeled in `dnd.qnt` that any class, spell, or racial feature composes on top of. Class features, spell effects, racial traits, and subclass mechanics live in `PLAN_NONCORE.md` (TS/caller side).
+This plan covers **core mechanics only** — generic rules modeled in `creature.qnt` that any class, spell, or racial feature composes on top of. Class features, spell effects, racial traits, and subclass mechanics live in `PLAN_NONCORE.md` (TS/caller side).
 
 **Boundary rule:** if a mechanic is specific to a class, spell, species, or subclass, it belongs in PLAN_NONCORE.md. If it's a generic rule that multiple features compose (d20 resolution, conditions, action economy, damage modifiers, etc.), it belongs here.
 
@@ -122,7 +122,7 @@ Absorbed from PLAN_APPENDIX.md. These are foundational changes to turn structure
 
 **[TA1] Active Effect Lifecycle** *(done)*
 
-Core spec (`dnd.qnt`) owns the lifecycle: add, remove, decrement, expiry. Knows nothing about what specific spells do. Spell-specific behavior lives in TypeScript (caller).
+Core spec (`creature.qnt`) owns the lifecycle: add, remove, decrement, expiry. Knows nothing about what specific spells do. Spell-specific behavior lives in TypeScript (caller).
 
 **Design note — clock first, wiring later.** TA1 intentionally builds only the duration clock. Spell→condition linkage (e.g., Hold Person → Paralyzed) is caller-side (PLAN_NONCORE). The clock must exist before anything can use it.
 
@@ -313,7 +313,7 @@ All core tasks and 5.2.1 revision complete. Next: PLAN_NONCORE.md.
 
 Class features, spell effects, racial traits, subclass mechanics, and feat implementations are in `PLAN_NONCORE.md`. They compose on top of the core primitives defined here and are implemented in TypeScript (caller side).
 
-**Note:** `dnd.qnt` section 18 currently contains class-specific lookup tables (`pClassHitDie`, `pMeetsMulticlassPrereq`, `pCanMulticlass`) that are technically non-core "fluff tables" by the boundary rule. They work fine for now; consider extracting them during the 5.2.1 migration.
+**Note:** `creature.qnt` section 18 currently contains class-specific lookup tables (`pClassHitDie`, `pMeetsMulticlassPrereq`, `pCanMulticlass`) that are technically non-core "fluff tables" by the boundary rule. They work fine for now; consider extracting them during the 5.2.1 migration.
 
 The core spec is complete when any SRD spell, class feature, or racial trait can be expressed as a composition of:
 1. Active effect lifecycle (add/remove/decrement/expire)

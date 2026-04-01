@@ -2,7 +2,7 @@
 
 **Edition: SRD 5.2.1 (2024).**
 
-Class features, spell effects, species traits, and subclass mechanics. These compose on top of core primitives (PLAN.md / `dnd.qnt`).
+Class features, spell effects, species traits, and subclass mechanics. These compose on top of core primitives (PLAN.md / `creature.qnt`).
 
 **SRD parity:** all modeled features must trace directly to SRD text. No homebrew or interpretive extensions. Where the formalization requires choices the SRD doesn't prescribe, those are documented in `ASSUMPTIONS.md`.
 
@@ -15,7 +15,7 @@ Class features, spell effects, species traits, and subclass mechanics. These com
 
 For features with state transitions (resource pools, toggles, one-shot resources), the implementation order is:
 
-1. **Quint spec** (`dnd.qnt`) — model the state transition as pure functions + action wrappers
+1. **Quint spec** (`creature.qnt`) — model the state transition as pure functions + action wrappers
 2. **MBT bridge** (`machine.mbt.test.ts`) — add driver handler, verify Quint/XState parity
 3. **TS features** (`app/src/features/`) — implement pure functions + bridge + UI wiring
 
@@ -25,7 +25,7 @@ See **PLAN_CLEANUP.md** for the Quint-side roadmap (current Fighter parity table
 
 ## Relationship to Core
 
-**Boundary rule:** if a mechanic is specific to a class, spell, species, or subclass, it belongs here. If it's a generic rule that multiple features compose (d20 resolution, conditions, action economy, damage modifiers, etc.), it belongs in `dnd.qnt` / PLAN.md.
+**Boundary rule:** if a mechanic is specific to a class, spell, species, or subclass, it belongs here. If it's a generic rule that multiple features compose (d20 resolution, conditions, action economy, damage modifiers, etc.), it belongs in `creature.qnt` / PLAN.md.
 
 **Clarification:** Classes themselves are core — hit die tables, multiclass prerequisites, class/species/subclass enums, Extra Attack, Unarmored Defense, TWF. Only class *features* (abilities, level-specific mechanics) are non-core. Resource pools, per-turn usage flags, damage bonus composition, and temporary condition immunity are non-core — core provides the primitives, features compose them.
 
@@ -37,7 +37,7 @@ All tasks here depend on PLAN.md core being complete (TA1–TA4, T02, T10a/c/d �
 - Modifier aggregation (advantage/disadvantage sources)
 - START_TURN/END_TURN event arguments (per-effect data)
 
-Class feature state lives in the TS features layer (`app/src/features/`) by default. Features migrated to Quint (see PLAN_CLEANUP.md) also have state in `dnd.qnt` — currently Fighter's Second Wind, Action Surge, and Indomitable.
+Class feature state lives in the TS features layer (`app/src/features/`) by default. Features migrated to Quint (see PLAN_CLEANUP.md) also have state in `creature.qnt` — currently Fighter's Second Wind, Action Surge, and Indomitable.
 
 ### Cross-file dependencies
 
@@ -89,7 +89,7 @@ Extend `Feature` sum type or replace with `(class, level)` derivation. Note: SRD
 When multiclassing into a non-starting class, only partial proficiencies are gained (varies per class: Fighter gets armor/weapons/shields, Wizard gets nothing, etc.). Attacking with a non-proficient weapon: no proficiency bonus added to attack roll (NOT disadvantage). Druid restriction: will not wear metal armor or shields (config flag).
 - State: `startingClass: ClassName` in config; per-class multiclass proficiency table as pure lookup
 - Functions: `pMulticlassProficiencies(className) -> Set[Proficiency]`; modify attack resolution to omit proficiency bonus for non-proficient weapons (caller-side, attackBonus already pre-computed)
-- Constraint: Unarmored Defense stacking (`pCanGainUnarmoredDefense`) and Extra Attack stacking (`pExtraAttackStacks`) already implemented in `dnd.qnt` section 18. Thirsting Blade doesn't add to Extra Attack (warlock-specific, enforced here)
+- Constraint: Unarmored Defense stacking (`pCanGainUnarmoredDefense`) and Extra Attack stacking (`pExtraAttackStacks`) already implemented in `creature.qnt` section 18. Thirsting Blade doesn't add to Extra Attack (warlock-specific, enforced here)
 - Test: Wizard multiclass gains no new proficiencies; Fighter multiclass gains light/medium armor + shields + simple/martial weapons; Bard multiclass gains light armor + 1 skill; attack with non-proficient weapon has no prof bonus (not disadvantage); Barbarian/Monk multiclass doesn't grant second Unarmored Defense
 
 ---
@@ -354,7 +354,7 @@ SRD 5.2.1: Divine Smite is now the Paladin's Smite class feature — the spell D
 Radiant Strikes (L11): on a hit with a melee weapon **or unarmed strike**, you can deal +1d8 Radiant damage (free, no slot required). Replaces Improved Divine Smite.
 
 **Naming in the spec:**
-- `dnd.qnt` has no smite-specific code — correct per architecture. Divine Smite is caller-side composition of `pExpendSlot` + damage.
+- `creature.qnt` has no smite-specific code — correct per architecture. Divine Smite is caller-side composition of `pExpendSlot` + damage.
 - TypeScript class feature: `PaladinsSmite` (the L1 class feature granting free cast + always-prepared)
 - spellId string for `pAddEffect` / effect tracking: `"divine_smite"` (the spell itself)
 - `qa_generated.qnt` uses "Improved Divine Smite" in comments (5.1 era term). This is auto-generated; fixed when M6 regenerates the QA pipeline against 5.2.1. Note also: 5.2.1 Radiant Strikes explicitly includes unarmed strikes, so the 5.1-era QA assertion "unarmed strikes do not qualify" is *wrong* for 5.2.1 and must be updated in M6.
@@ -506,7 +506,7 @@ SRD 5.2.1: 10 options, all SP costs modeled. Stacking: only 1 non-stackable per 
 
 **[T112] Draconic Sorcery**
 SRD 5.2.1 rename: Draconic Bloodline → Draconic Sorcery. Draconic Resilience (L3: 13+DEX AC unarmored, +1 HP/level), Draconic Spells (L3: always prepared — L3: Alter Self, Chromatic Orb, Command, Dragon's Breath; L5: Fear, Fly; L7: Arcane Eye, Charm Monster; L9: Legend Lore, Summon Dragon), Elemental Affinity (L6: +CHA damage for ancestry type; 1 SP→resistance 1 hour), Dragon Wings (L14: BA fly at walk speed; can't in non-accommodating armor). ~~Draconic Presence~~ does not exist in SRD 5.2.1 — the L18 feature is Dragon Companion (T112b).
-- **Core dependency:** Draconic Resilience requires `DraconicUD` variant in `UnarmoredDefense` type in `dnd.qnt` and case in `calculateAC`.
+- **Core dependency:** Draconic Resilience requires `DraconicUD` variant in `UnarmoredDefense` type in `creature.qnt` and case in `calculateAC`.
 - State: `draconicAncestryType: DamageType`, `dragonWingsActive: bool`
 - Functions: modify AC for Draconic Resilience (13+DEX); modify max HP; `pElementalAffinity(config, spellDamageType)->+CHA if match`; `pDragonWings->set fly speed = walk speed`
 - Test: AC = 13+DEX without armor; +1 HP per sorcerer level; Elemental Affinity only matching type; Dragon Wings blocked by non-accommodating armor
@@ -829,7 +829,7 @@ Features that have pure functions but aren't wired yet. For Fighter items with P
 
 ### Per-class Quint coverage inventory
 
-Each class has TS pure functions in `features/class-*.ts` and Quint state in `dnd.qnt`. **"In Quint"** = has a Quint pure function + action wrapper + MBT handler. **"TS-only"** = implemented in TS features layer but not yet formally specified. Passive/config-only functions (no state transitions) don't need Quint modeling and are omitted.
+Each class has TS pure functions in `features/class-*.ts` and Quint state in `creature.qnt`. **"In Quint"** = has a Quint pure function + action wrapper + MBT handler. **"TS-only"** = implemented in TS features layer but not yet formally specified. Passive/config-only functions (no state transitions) don't need Quint modeling and are omitted.
 
 | Class | In Quint (state-transitioning) | TS-only state transitions (candidates for Quint) |
 |-------|-------------------------------|--------------------------------------------------|

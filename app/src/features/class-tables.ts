@@ -1,4 +1,4 @@
-// Cross-class reference tables extracted from dnd.qnt (non-core)
+// Cross-class reference tables extracted from creature.qnt (non-core)
 // SRD 5.2.1 class hit dice and multiclass prerequisites
 
 import type { Ability } from "#/types.ts"

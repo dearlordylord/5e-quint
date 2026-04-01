@@ -1,6 +1,6 @@
 # M2.5 Revision Research: SRD 5.1 vs 5.2.1 Deltas
 
-Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for Completed Features." Each item compares SRD 5.1, SRD 5.2.1, and current `dnd.qnt` to determine what (if anything) needs changing.
+Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for Completed Features." Each item compares SRD 5.1, SRD 5.2.1, and current `creature.qnt` to determine what (if anything) needs changing.
 
 ---
 
@@ -10,7 +10,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1** (Rules-Glossary.md "Exhaustion [Condition]"): Cumulative levels, death at 6. D20 Tests reduced by 2 x level. Speed reduced by 5 x level ft. Long Rest removes 1 level.
 
-**dnd.qnt:** Already uses -2 x level penalty (`exhaustionPenalty`), -5 x level speed, death at 6. Core mechanic is 5.2.1 compliant.
+**creature.qnt:** Already uses -2 x level penalty (`exhaustionPenalty`), -5 x level speed, death at 6. Core mechanic is 5.2.1 compliant.
 
 **Delta: Core exhaustion — none.** Already migrated.
 
@@ -26,7 +26,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1** (Rules-Glossary.md "Stunned [Condition]"): Incapacitated, auto-fail STR/DEX saves, advantage on attacks against. **No speed/movement restriction, no speech restriction.**
 
-**dnd.qnt:** Models Incapacitated + auto-fail STR/DEX + attacker advantage. Does not model speed 0 (movement not tracked per-condition). Does not model speech.
+**creature.qnt:** Models Incapacitated + auto-fail STR/DEX + attacker advantage. Does not model speed 0 (movement not tracked per-condition). Does not model speech.
 
 **Delta: None.** The spec never implemented the 5.1 "can't move" bullet, and 5.2.1 dropped it. Already aligned.
 
@@ -38,7 +38,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1** (Rules-Glossary.md "Grappled [Condition]"): Speed 0, can't increase. **Disadvantage on attack rolls against any target other than the grappler.** Dragging costs 1 extra foot per foot (not "speed halved" on dragger).
 
-**dnd.qnt:** Models speed 0, disadvantage vs non-grappler (`disadv_grappled`), drag cost via `grappledTargetTwoSizesSmaller`. Already 5.2.1.
+**creature.qnt:** Models speed 0, disadvantage vs non-grappler (`disadv_grappled`), drag cost via `grappledTargetTwoSizesSmaller`. Already 5.2.1.
 
 **Delta: None.** Already migrated.
 
@@ -50,7 +50,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1** (Rules-Glossary.md "Unarmed Strike"): Options within Unarmed Strike. Target makes STR or DEX save (target's choice) vs DC 8 + attacker STR mod + PB. Escape: flat DC check (same formula), not contested.
 
-**dnd.qnt:** Uses save-DC model (`pGrappleShoveDC = 8 + strMod + profBonus`), target save, flat escape DC. Already 5.2.1.
+**creature.qnt:** Uses save-DC model (`pGrappleShoveDC = 8 + strMod + profBonus`), target save, flat escape DC. Already 5.2.1.
 
 **Delta: None.** Already migrated. Minor note: spec doesn't explicitly model grapple/shove as Unarmed Strike options (structural), but the mechanical logic is correct.
 
@@ -62,7 +62,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1** (Rules-Glossary.md "Surprise", Playing-the-Game.md "Initiative"): Surprised = Disadvantage on Initiative roll. No turn restriction. Not a named condition.
 
-**dnd.qnt:** Surprise is completely absent from the spec.
+**creature.qnt:** Surprise is completely absent from the spec.
 
 **Delta: None needed in spec.** Initiative is pre-combat and caller-provided. The spec models a single creature's turn; initiative order is external. Surprise = disadvantage on initiative is resolved before the state machine starts. PLAN.md TA3 already notes: "No surprised sub-state; no END_SURPRISE_TURN transition."
 
@@ -74,7 +74,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1** (Rules-Glossary.md "Knocking Out a Creature"): Reduce to **1 HP**, creature is Unconscious, starts a Short Rest. Unconscious ends when: Short Rest completes, creature regains HP, or DC 10 Medicine check (first aid).
 
-**dnd.qnt:** `pKnockOut` sets HP to 1 and applies Unconscious. Comment notes Short Rest is caller responsibility.
+**creature.qnt:** `pKnockOut` sets HP to 1 and applies Unconscious. Comment notes Short Rest is caller responsibility.
 
 **Delta: None in spec.** Core mechanic (1 HP + Unconscious) is correct. Recovery paths (Short Rest ending condition, first aid DC 10) are caller-side concerns.
 
@@ -86,7 +86,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1** (Rules-Glossary.md "Concentration"): DC = max(10, floor(damage/2)), **capped at 30**.
 
-**dnd.qnt:** `pConcentrationDC` returns `intMin(intMax(half, 10), 30)`. Cap at 30 present.
+**creature.qnt:** `pConcentrationDC` returns `intMin(intMax(half, 10), 30)`. Cap at 30 present.
 
 **Delta: None.** Already migrated.
 
@@ -98,7 +98,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1** (Equipment.md "Light" property): Rule moved into Light property definition. Text says "a different Light weapon" — **silent on melee-only requirement**. Still no ability mod to damage unless negative.
 
-**dnd.qnt:** `pCanTWFWithWeapons` requires both weapons be Light AND melee. Damage modifier logic defers to caller.
+**creature.qnt:** `pCanTWFWithWeapons` requires both weapons be Light AND melee. Damage modifier logic defers to caller.
 
 **Delta: Ambiguous.** The melee-only constraint matches 5.1 explicitly but 5.2.1 is silent on it. Worth documenting in ASSUMPTIONS.md whether to keep or drop the melee requirement. Nick mastery (bonus attack as part of Attack action) is not modeled — that's a Weapon Mastery system feature, out of current scope.
 
@@ -110,7 +110,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1** (Playing-the-Game.md "Impeded Weapons"): Disadvantage unless weapon deals **Piercing damage** (damage-type filter).
 
-**dnd.qnt:** Uses `isUnderwaterMeleePiercing` flag — damage-type approach.
+**creature.qnt:** Uses `isUnderwaterMeleePiercing` flag — damage-type approach.
 
 **Delta: None.** Already migrated.
 
@@ -122,7 +122,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 
 **SRD 5.2.1:** **Absent.** Rule does not exist.
 
-**dnd.qnt:** Partially modeled — `AttackContext.squeezing` (attacker disadvantage), `isSqueezing` in `pMovementCost` (+1 ft cost). Missing: DEX save disadvantage, incoming attack advantage.
+**creature.qnt:** Partially modeled — `AttackContext.squeezing` (attacker disadvantage), `isSqueezing` in `pMovementCost` (+1 ft cost). Missing: DEX save disadvantage, incoming attack advantage.
 
 **Delta: Remove squeezing.** The entire mechanic has no SRD 5.2.1 basis. Remove `squeezing` from `AttackContext`, `disadv_squeezing`, and `isSqueezing` from `pMovementCost`.
 
@@ -136,7 +136,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 - Hit Dice -> Hit Point Dice
 - New actions: Study, Influence
 
-**dnd.qnt:** Already uses `AMagic`, `AUtilize`, `AStudy`, `AInfluence`, `hitPointDiceRemaining`.
+**creature.qnt:** Already uses `AMagic`, `AUtilize`, `AStudy`, `AInfluence`, `hitPointDiceRemaining`.
 
 **Delta: None.** Already migrated.
 

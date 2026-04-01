@@ -1,6 +1,6 @@
 # QA Validation Pipeline — How It Works
 
-This pipeline validates the formal D&D 5e spec ([dnd.qnt](dnd.qnt)) against community-agreed rule interpretations sourced from RPG Stack Exchange and Reddit.
+This pipeline validates the formal D&D 5e spec ([creature.qnt](creature.qnt)) against community-agreed rule interpretations sourced from RPG Stack Exchange and Reddit.
 
 ## The Big Picture
 
@@ -17,7 +17,7 @@ Classification          ← Haiku labels each as "RAW mechanics?" + category
 Quint Assertions        ← Sonnet translates RAW Q&A into run tests
     │
     ▼
-quint test              ← assertions run against dnd.qnt
+quint test              ← assertions run against creature.qnt
     │
     ▼
 Pass/Fail               ← spec agrees or disagrees with community
@@ -126,17 +126,17 @@ python3 scripts/qa/classify.py --rebuild  # rebuild from cache, no API calls
 
 ## Stage 4: Generate Quint Assertions
 
-[scripts/qa/generate_assertions.py](scripts/qa/generate_assertions.py) takes classified RAW entries and asks Claude Sonnet to write Quint `run` tests that encode the community-agreed answer as an assertion against [dnd.qnt](dnd.qnt).
+[scripts/qa/generate_assertions.py](scripts/qa/generate_assertions.py) takes classified RAW entries and asks Claude Sonnet to write Quint `run` tests that encode the community-agreed answer as an assertion against [creature.qnt](creature.qnt).
 
 ### How it calls Claude
 
 ```
 claude -p --tools "" --model sonnet --no-session-persistence \
   --disable-slash-commands --permission-mode bypassPermissions \
-  --system-prompt "<full dnd.qnt spec + instructions>" "<formatted Q&A>"
+  --system-prompt "<full creature.qnt spec + instructions>" "<formatted Q&A>"
 ```
 
-The entire spec (~2200 lines of [dnd.qnt](dnd.qnt)) is included in the system prompt so Sonnet knows every type, function, and state transition available.
+The entire spec (~2200 lines of [creature.qnt](creature.qnt)) is included in the system prompt so Sonnet knows every type, function, and state transition available.
 
 ### What each cached assertion looks like
 
@@ -258,7 +258,7 @@ Understand what the community says the rule should be.
 
 **A. Spec bug** — the spec doesn't match the PHB rule.
 ```bash
-# Fix dnd.qnt, then verify:
+# Fix creature.qnt, then verify:
 quint test dndTest.qnt --main dndTest      # existing tests still pass
 python3 scripts/qa/run_tests.py            # the QA test now passes too
 ```
@@ -297,7 +297,7 @@ python3 scripts/qa/run_tests.py
 
 | Cause | Action on cache file | Then |
 |-------|---------------------|------|
-| Spec bug | Keep as-is | Fix `dnd.qnt`, rerun tests |
+| Spec bug | Keep as-is | Fix `creature.qnt`, rerun tests |
 | Bad Q&A | Overwrite with `// SKIP: reason` | `--rebuild` |
 | LLM wrong, retry | `rm {hash}.qnt` | `--limit 1` to regenerate |
 | LLM wrong, manual fix | Edit `{hash}.qnt` directly | `--rebuild`, rerun tests |
@@ -308,7 +308,7 @@ python3 scripts/qa/run_tests.py
 
 | File | Role |
 |------|------|
-| [dnd.qnt](dnd.qnt) | The spec being validated |
+| [creature.qnt](creature.qnt) | The spec being validated |
 | [dndTest.qnt](dndTest.qnt) | Hand-written unit tests |
 | [qa_generated.qnt](qa_generated.qnt) | Auto-generated QA tests (gitignored) |
 | [scripts/qa/download_se.py](scripts/qa/download_se.py) | Download SE dump |
@@ -347,7 +347,7 @@ python3 scripts/qa/generate_assertions.py --limit 10 --workers 3
 python3 scripts/qa/run_tests.py --rebuild
 
 # Review failures (see Stage 6 above for full workflow)
-# Spec bug:    fix dnd.qnt, rerun
+# Spec bug:    fix creature.qnt, rerun
 # Bad Q&A:     echo '// SKIP: reason' > .references/qa2014/cache/assertions/{hash}.qnt
 # LLM wrong:   rm .references/qa2014/cache/assertions/{hash}.qnt  (auto-retries)
 # LLM wrong:   edit .references/qa2014/cache/assertions/{hash}.qnt (manual fix)

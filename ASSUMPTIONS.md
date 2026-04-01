@@ -1,6 +1,6 @@
 # Modeling Assumptions
 
-The spec (`dnd.qnt`) maintains direct feature parity with the SRD. Formalizing prose rules into a state machine sometimes requires making explicit what the SRD leaves implicit — adding events the rules assume (END_TURN), connecting constraints that follow logically but aren't stated verbatim (slot expenditure requires ability to act), or choosing a formalization where the architecture demands one (single-creature time tracking). These modeling decisions are documented here. They are curated by the project owner, kept minimal, and stay close to RAW.
+The spec (`creature.qnt`) maintains direct feature parity with the SRD. Formalizing prose rules into a state machine sometimes requires making explicit what the SRD leaves implicit — adding events the rules assume (END_TURN), connecting constraints that follow logically but aren't stated verbatim (slot expenditure requires ability to act), or choosing a formalization where the architecture demands one (single-creature time tracking). These modeling decisions are documented here. They are curated by the project owner, kept minimal, and stay close to RAW.
 
 Each entry records the assumption, rules justification, and what changed in both Quint and XState.
 
@@ -11,7 +11,7 @@ Each entry records the assumption, rules justification, and what changed in both
 **Rules basis (PHB Ch. 10, Ch. 12):** Casting a spell requires an action or bonus action. The Incapacitated condition (PHB Ch. 12) prevents taking actions or reactions. Multiple conditions impose Incapacitated: Unconscious (from dropping to 0 HP), Paralyzed, Petrified, Stunned, and direct Incapacitated. Any of these should block slot expenditure.
 
 **Changes:**
-- `dnd.qnt`: `doExpendSlot` and `doExpendPactSlot` guarded by `isConscious(state) and pCanAct(state)`
+- `creature.qnt`: `doExpendSlot` and `doExpendPactSlot` guarded by `isConscious(state) and pCanAct(state)`
 - `machine-states.ts`: `EXPEND_SLOT` and `EXPEND_PACT_SLOT` given `canExpendSlot` guard
 - `machine.ts`: added `canExpendSlot` guard (`c.hp > 0 && !isIncapacitated(c)`)
 
@@ -21,7 +21,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (PHB Ch. 9):** D&D 5e has no explicit "end turn" action. Turns proceed through initiative order implicitly. However, "at the end of your turn" is a pervasive trigger point in the rules (repeated saves for condition spells, ongoing damage, effect expiry). At the table, players universally say "I end my turn." The state machine needs a discrete transition to prevent START_TURN spam and to process end-of-turn triggers.
 
-**Changes:** Implemented in TA2. `dnd.qnt`: added `turnPhase` state variable (`"outOfCombat"` | `"acting"` | `"waitingForTurn"`), `doEndTurn` action processing end-of-turn saves (remove effect + conditions on success), end-of-turn damage (with concentration checks), and clearing expired `AtEndOfTurn` effects. XState: `END_TURN` event on `acting` state transitions to `waitingForTurn`. MBT bridge maps `turnPhase` field-by-field.
+**Changes:** Implemented in TA2. `creature.qnt`: added `turnPhase` state variable (`"outOfCombat"` | `"acting"` | `"waitingForTurn"`), `doEndTurn` action processing end-of-turn saves (remove effect + conditions on success), end-of-turn damage (with concentration checks), and clearing expired `AtEndOfTurn` effects. XState: `END_TURN` event on `acting` state transitions to `waitingForTurn`. MBT bridge maps `turnPhase` field-by-field.
 
 ## A3: Damage track state names
 
@@ -31,7 +31,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Changes:**
 - `machine-states.ts`: `damageTrack` states named `alive` / `dying.unstable` / `dying.stable` / `dead`
-- `dnd.qnt`: predicate `isConscious(s)` = `s.hp > 0 and not(s.dead)` (Quint predates this assumption; name kept for spec continuity)
+- `creature.qnt`: predicate `isConscious(s)` = `s.hp > 0 and not(s.dead)` (Quint predates this assumption; name kept for spec continuity)
 
 ## A4: Round = 6 seconds as atomic time unit
 
@@ -47,7 +47,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis:** This is a simplification. In multi-creature combat, a round is one full pass through the initiative order. An effect cast mid-round by another creature would technically expire at that creature's turn N rounds later, not at our turn. In a single-creature model we only observe our own turns, so each turn = 1 round is the only tractable approach. The caller is responsible for providing correct initial duration values accounting for initiative-order offset if needed.
 
-**Changes:** Implemented in TA4. `dnd.qnt`: `pStartTurnFull` decrements durations and clears expired effects per cycle. XState: `computeStartTurn` in `machine-startturn.ts` mirrors this.
+**Changes:** Implemented in TA4. `creature.qnt`: `pStartTurnFull` decrements durations and clears expired effects per cycle. XState: `computeStartTurn` in `machine-startturn.ts` mirrors this.
 
 ## A6: Death save precedes start-of-turn effect processing
 
@@ -55,7 +55,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (SRD 5.2.1 Rules-Glossary "Death Saving Throw"):** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw." This is a mandatory, first-order rule. Start-of-turn spell effects (e.g., Regenerate's heal, Searing Smite's burn) trigger "at the start of your turn" at the same timing point but are optional/conditional. The death save resolves first because: (a) it is mandatory, (b) a natural 20 changes the creature's conscious state (hp 0→1), which affects subsequent processing, (c) death from 3 failures makes subsequent effects irrelevant.
 
-**Changes:** Implemented in TA4. `dnd.qnt`: `pStartTurnFull` calls `pDeathSave` (step 3) before `pProcessStartOfTurn` (step 4). XState: `computeStartTurn` follows the same order.
+**Changes:** Implemented in TA4. `creature.qnt`: `pStartTurnFull` calls `pDeathSave` (step 3) before `pProcessStartOfTurn` (step 4). XState: `computeStartTurn` follows the same order.
 
 ## A7: Incapacitated creatures cannot start concentration
 
@@ -63,7 +63,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (SRD 5.2.1 Rules-Glossary "Incapacitated [Condition]"):** "An Incapacitated creature can't take any action, Bonus Action, or Reaction." Casting a spell (which starts concentration) requires an action or bonus action. Therefore incapacitated creatures cannot start new concentration.
 
-**Changes:** Implemented in TA4. `dnd.qnt`: `doStartConcentration` guarded by `not(isIncapacitated(state))`. XState: `canConcentrate` guard on both START_CONCENTRATION handlers in `machine-states.ts`.
+**Changes:** Implemented in TA4. `creature.qnt`: `doStartConcentration` guarded by `not(isIncapacitated(state))`. XState: `canConcentrate` guard on both START_CONCENTRATION handlers in `machine-states.ts`.
 
 ## A8: Two-Weapon Fighting requires melee weapons
 
@@ -71,7 +71,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (Equipment.md "Light [Weapon Property]"):** SRD 5.2.1 says "when you take the Attack action on your turn and attack with a Light weapon, you can make one extra attack as a Bonus Action later on the same turn with a different Light weapon." The 5.2.1 text is silent on whether the weapons must be melee. SRD 5.1 explicitly required "light melee weapon." We retain the melee-only requirement because: (a) all Light weapons in the SRD equipment tables are melee weapons (Hand Crossbow is Light but one-handed, and TWF requires a weapon "in the other hand"), (b) removing the constraint would allow dual-wielding hand crossbows RAW, which contradicts the Ammunition property's "one hand free to load" requirement, and (c) the constraint is strictly more conservative than the SRD text.
 
-**Changes:** No code changes. Documents existing `pCanTWFWithWeapons` behavior in `dnd.qnt` and `canTwoWeaponFight` in XState.
+**Changes:** No code changes. Documents existing `pCanTWFWithWeapons` behavior in `creature.qnt` and `canTwoWeaponFight` in XState.
 
 ## A9: Multiclass Channel Divinity — additive per-class pools
 
@@ -79,7 +79,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis:** SRD 5.2.1 Cleric (L2) and Paladin (L3) both say "this class's Channel Divinity," implying per-class tracking. However, the SRD 5.2.1 does not include explicit multiclass rules for Channel Divinity. The 5.1 PHB multiclass rules stated that gaining Channel Divinity from a second class does not grant additional uses — only additional effect options. We model additive pools as a permissive interpretation of 5.2.1's per-class language, which diverges from 5.1 intent (5.1 said no extra uses). This assumption can be revised if official 5.2.1 multiclass guidance clarifies.
 
-**Changes:** `dnd.qnt`: `pChannelDivinityMax` sums per-class max functions. No XState changes (framework only).
+**Changes:** `creature.qnt`: `pChannelDivinityMax` sums per-class max functions. No XState changes (framework only).
 
 ## A10: Ritual casting — caller-orchestrated, no slot expenditure
 
@@ -99,7 +99,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (SRD 5.2.1 "Damage Resistance/Vulnerability"):** "Resistance and then Vulnerability are applied after all other modifiers to damage." No exception is made for ongoing damage — resistances always apply unless a feature explicitly states otherwise.
 
-**Changes:** `dnd.qnt`: Added `resistances`, `vulnerabilities`, `immunities` fields to `EndOfTurnDamage` and `StartOfTurnEffect` types. `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` now pass these to `pTakeDamage` instead of empty sets. XState: matching fields added to event types and passed through in `machine-endturn.ts` and `machine-startturn.ts`.
+**Changes:** `creature.qnt`: Added `resistances`, `vulnerabilities`, `immunities` fields to `EndOfTurnDamage` and `StartOfTurnEffect` types. `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` now pass these to `pTakeDamage` instead of empty sets. XState: matching fields added to event types and passed through in `machine-endturn.ts` and `machine-startturn.ts`.
 
 ## A12: Monsters die at 0 HP (death saves are PC-only per RAW)
 
@@ -107,7 +107,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (SRD 5.2.1 Playing-the-Game):** "Monster Death: A monster dies the instant it drops to 0 Hit Points, although a Game Master can ignore this rule for an individual monster and treat it like a character." Death saves: "A player character must make a Death Saving Throw if they start their turn with 0 Hit Points" (Rules Glossary). The spec does not model DM fiat to allow monster death saves.
 
-**Changes:** `dnd.qnt`: `pTakeDamageAsCreature` takes a `kind: CreatureKind` parameter. PC path: existing behavior (unconscious at 0 HP, death save failures). Monster path: `dead = true` at 0 HP, no unconscious, no death saves. `pTakeDamage` wrapper passes `PC` for backward compatibility. `doStartTurn` passes `deathSaveRoll = 0` for monsters (skip). `pMonsterDeathCheck` clears spurious `unconscious` flag after monster damage.
+**Changes:** `creature.qnt`: `pTakeDamageAsCreature` takes a `kind: CreatureKind` parameter. PC path: existing behavior (unconscious at 0 HP, death save failures). Monster path: `dead = true` at 0 HP, no unconscious, no death saves. `pTakeDamage` wrapper passes `PC` for backward compatibility. `doStartTurn` passes `deathSaveRoll = 0` for monsters (skip). `pMonsterDeathCheck` clears spurious `unconscious` flag after monster damage.
 
 ## A13: Monster AC is a flat integer from the stat block
 
@@ -131,7 +131,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (SRD 5.2.1 Monsters > Overview):** The CR table lists CR 0, 1/8, 1/4, 1/2 as distinct entries with specific XP values (0/10, 25, 50, 100) that don't fit the integer CR pattern. All integer CRs (1-30) follow a regular PB progression.
 
-**Changes:** `ChallengeRating` sum type in Quint (`dnd.qnt`) and discriminated union in TypeScript (`monster-types.ts`). `crToProficiencyBonus` function handles all variants.
+**Changes:** `ChallengeRating` sum type in Quint (`creature.qnt`) and discriminated union in TypeScript (`monster-types.ts`). `crToProficiencyBonus` function handles all variants.
 
 ## A16: Dead creatures: effect processing continues, heal/damage are no-ops
 
@@ -139,7 +139,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (SRD 5.2.1 Rules Glossary "Dead"):** "A dead creature has no Hit Points and can't regain them." The SRD does not define whether ongoing effects continue to tick on a dead creature's turn — dead creatures don't take turns in practice. This assumption makes the modeling choice explicit: the effect loop runs to completion (matching a fold over all effects), but operations that the SRD implicitly blocks (healing, damage) are skipped.
 
-**Changes:** `dnd.qnt`: `pProcessStartOfTurn` fold has no dead-break; `pHeal` and `pTakeDamage` check `s.dead` internally; `pGrantTempHp` does not check dead. XState: `computeStartTurn` (`machine-startturn.ts`) removed `if (dead) break`, guards heal/damage with `!dead`, leaves tempHp unguarded. `computeEndTurn` (`machine-endturn.ts`) uses `if (dead) continue` for damage loop.
+**Changes:** `creature.qnt`: `pProcessStartOfTurn` fold has no dead-break; `pHeal` and `pTakeDamage` check `s.dead` internally; `pGrantTempHp` does not check dead. XState: `computeStartTurn` (`machine-startturn.ts`) removed `if (dead) break`, guards heal/damage with `!dead`, leaves tempHp unguarded. `computeEndTurn` (`machine-endturn.ts`) uses `if (dead) continue` for damage loop.
 
 ## A17: Standing from prone requires nonzero movement cost
 
@@ -147,7 +147,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Rules basis (SRD 5.2.1 Rules Glossary "Prone"):** "spend an amount of movement equal to half your Speed (round down) to right yourself … If your Speed is 0, you can't right yourself." RAW explicitly blocks speed 0. For speed 1 (cost = 0), the SRD is silent. The spec interprets "spend movement" as requiring a nonzero expenditure — you cannot stand for free. This matches Quint's structural equality check: if no movement is spent, the turn state is unchanged, so prone persists.
 
-**Changes:** `dnd.qnt`: `doStandFromProne` uses `t1 != turnState` (structural equality) — zero-cost stand produces identical state, so prone is not removed. XState: `spendHalfSpeed` (`machine-helpers.ts`) returns `success: false` when `cost <= 0`.
+**Changes:** `creature.qnt`: `doStandFromProne` uses `t1 != turnState` (structural equality) — zero-cost stand produces identical state, so prone is not removed. XState: `spendHalfSpeed` (`machine-helpers.ts`) returns `success: false` when `cost <= 0`.
 
 ## A18: Multiattack maps to extraAttacksRemaining
 
@@ -162,7 +162,7 @@ Each entry records the assumption, rules justification, and what changed in both
 
 These distinctions are caller-side concerns (which attacks to resolve, whether grapple/shove substitution is allowed). The spec's action-economy counter treats both as "N attacks per Attack action" and leaves attack identity to the caller.
 
-**Changes:** `dnd.qnt`: `doStartTurn` computes `monsterExtraAttacks = multiattack.length() - 1` and sets `extraAttacksRemaining` on the turn state. `MultiattackSlot` sum type (`MAttack(str) | MSpecialAbility(str)`) supports heterogeneous multiattacks. `init` sets `extraAttacksRemaining` from the selected stat block's multiattack length.
+**Changes:** `creature.qnt`: `doStartTurn` computes `monsterExtraAttacks = multiattack.length() - 1` and sets `extraAttacksRemaining` on the turn state. `MultiattackSlot` sum type (`MAttack(str) | MSpecialAbility(str)`) supports heterogeneous multiattacks. `init` sets `extraAttacksRemaining` from the selected stat block's multiattack length.
 
 ## A19: Legendary Action timing in single-creature model
 
@@ -170,7 +170,7 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Rules basis (SRD 5.2.1 Monsters > Legendary Actions):** "A Legendary Action is an action that a monster can take immediately after another creature's turn." The spec's single-creature model cannot represent interleaved turns. Using `waitingForTurn` as the proxy is the closest structural equivalent.
 
-**Changes:** `dnd.qnt`: `doUseLegendaryAction` guards on `turnPhase == "waitingForTurn"`.
+**Changes:** `creature.qnt`: `doUseLegendaryAction` guards on `turnPhase == "waitingForTurn"`.
 
 ## A20: Legendary Resistance as caller decision
 
@@ -178,7 +178,7 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Rules basis (SRD 5.2.1 Monsters > Traits, "Legendary Resistance"):** "If the dragon fails a saving throw, it can choose to succeed instead." The word "choose" makes it a tactical decision.
 
-**Changes:** `dnd.qnt`: `doEndTurn` adds `nondet useLR = Bool.oneOf()` and applies `pUseLegendaryResistance` to override the save result when the monster fails and LR is available. XState: `END_TURN` event accepts `useLegendaryResistance?: boolean`.
+**Changes:** `creature.qnt`: `doEndTurn` adds `nondet useLR = Bool.oneOf()` and applies `pUseLegendaryResistance` to override the save result when the monster fails and LR is available. XState: `END_TURN` event accepts `useLegendaryResistance?: boolean`.
 
 ## A21: Recharge rolls as event arguments
 
@@ -186,7 +186,7 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Rules basis (SRD 5.2.1 Monsters > Limited Usage, "Recharge X–Y"):** "At the start of each of the monster's turns, roll 1d6." The roll is per-ability in the SRD, but using a single nondet value simplifies the spec's state space. Since the spec currently models at most one recharge ability per monster, this is equivalent.
 
-**Changes:** `dnd.qnt`: `doStartTurn` monster path adds `nondet rechargeRollVal = 1.to(6).oneOf()` and builds `RechargeRollEvent` for each unavailable ability. `pProcessRechargeRolls` checks each roll against the ability's `rechargeMin`.
+**Changes:** `creature.qnt`: `doStartTurn` monster path adds `nondet rechargeRollVal = 1.to(6).oneOf()` and builds `RechargeRollEvent` for each unavailable ability. `pProcessRechargeRolls` checks each roll against the ability's `rechargeMin`.
 
 ## A22: Resource refresh timing
 
@@ -194,7 +194,7 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Rules basis (SRD 5.2.1):** "The monster regains all expended [Legendary Action] uses at the start of each of its turns." "Legendary Resistance (3/Day)" — the "/Day" implies daily refresh. Recharge abilities have no explicit rest refresh rule in the SRD, but are conventionally available after rests.
 
-**Changes:** `dnd.qnt`: `doStartTurn` calls `pRefreshLegendaryActions`. `doShortRest` calls `pRefreshRechargeAbilities`. `doLongRest` calls `pRefreshRechargeAbilities`, `pRefreshDailyAbilities`, and resets `legendaryResistancesRemaining`.
+**Changes:** `creature.qnt`: `doStartTurn` calls `pRefreshLegendaryActions`. `doShortRest` calls `pRefreshRechargeAbilities`. `doLongRest` calls `pRefreshRechargeAbilities`, `pRefreshDailyAbilities`, and resets `legendaryResistancesRemaining`.
 
 ## A23: Lair bonus derivation
 
@@ -202,7 +202,7 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Rules basis (SRD 5.2.1, Adult Red Dragon):** "Legendary Action Uses: 3 (4 in Lair)" and "Legendary Resistance (3/Day, or 4/Day in Lair)." The parenthetical suggests lair status is determined before the encounter, not mid-combat.
 
-**Changes:** `dnd.qnt`: `pInitMonsterResources` computes `base + (if inLair then 1 else 0)`. `pRefreshLegendaryActions` takes `maxUses` and `inLair` and applies the same formula.
+**Changes:** `creature.qnt`: `pInitMonsterResources` computes `base + (if inLair then 1 else 0)`. `pRefreshLegendaryActions` takes `maxUses` and `inLair` and applies the same formula.
 
 ## A24: Legendary Action cooldowns left to caller
 
@@ -218,7 +218,7 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Rules basis:** D&D 5e supports multiclassing, but the spec models single-class PCs for tractability. The choice is a nondeterministic parameter to exercise both class state machines in MBT traces.
 
-**Changes:** `dnd.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `machine.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
+**Changes:** `creature.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `machine.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
 
 ## A26: Rage maintenance timing
 
@@ -228,7 +228,7 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 The SRD says rage "lasts until the end of your next turn" — checking maintenance at the start of the next turn (before the turn's actions) is equivalent: if you didn't maintain it during your previous turn, it expires before you can act.
 
-**Changes:** `dnd.qnt`: `pBarbarianStartTurn` calls `pCheckRageMaintenance` before resetting per-turn flags. XState: `barbarianStartTurnUpdate` mirrors this logic.
+**Changes:** `creature.qnt`: `pBarbarianStartTurn` calls `pCheckRageMaintenance` before resetting per-turn flags. XState: `barbarianStartTurnUpdate` mirrors this logic.
 
 ## A27: TS-only barbarian features
 
@@ -244,7 +244,7 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 **Rules basis (SRD 5.2.1 Barbarian L15 "Persistent Rage"):** "Your Rage is so fierce that it now lasts for 10 minutes without you needing to do anything to extend it from round to round. Your Rage ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor."
 
-**Changes:** `dnd.qnt`: `pCheckRageMaintenance` returns early (no-op) when `barbarianLevel >= 15`. XState: `barbarianStartTurnUpdate` mirrors this.
+**Changes:** `creature.qnt`: `pCheckRageMaintenance` returns early (no-op) when `barbarianLevel >= 15`. XState: `barbarianStartTurnUpdate` mirrors this.
 
 ## A29: MonkState scope — caller-side features
 
@@ -252,7 +252,7 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 **Rules basis (SRD 5.2.1 Monk):** These features modify damage, AC, saves, or apply effects to targets — all caller-side concerns that the spec cannot observe without modeling two combatants.
 
-**Changes:** `dnd.qnt`: `MonkState` has 6 fields. `machine-monk.ts`: delegates to `class-monk.ts` and `class-monk-features.ts` for calculations.
+**Changes:** `creature.qnt`: `MonkState` has 6 fields. `machine-monk.ts`: delegates to `class-monk.ts` and `class-monk-features.ts` for calculations.
 
 ## A30: Wholeness of Body — WIS modifier range
 
@@ -260,7 +260,7 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 **Rules basis (SRD 5.2.1 Warrior of the Open Hand L6 "Wholeness of Body"):** "You gain a number of uses equal to your Wisdom modifier (minimum of 1 use)."
 
-**Changes:** `dnd.qnt`: `freshMonkState` takes `wholenessMax` parameter. `init` generates `nondet wisMod = 1.to(5).oneOf()`.
+**Changes:** `creature.qnt`: `freshMonkState` takes `wholenessMax` parameter. `init` generates `nondet wisMod = 1.to(5).oneOf()`.
 
 ## A31: Uncanny Metabolism — modeled as player action, not auto-trigger
 
@@ -268,7 +268,7 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 **Rules basis (SRD 5.2.1 Monk L2 "Uncanny Metabolism"):** "When you roll Initiative, you can regain all expended Focus Points." The word "can" implies optional.
 
-**Changes:** `dnd.qnt`: `doUncannyMetabolism` is a separate action in `stepPC`, not wired into `doStartTurn`. Heal amount = `monkLevel + healRoll` (martial arts die abstracted as nondet 1–12).
+**Changes:** `creature.qnt`: `doUncannyMetabolism` is a separate action in `stepPC`, not wired into `doStartTurn`. Heal amount = `monkLevel + healRoll` (martial arts die abstracted as nondet 1–12).
 
 ## A32: Trigger taxonomy — inferred from reaction catalog (battle layer)
 

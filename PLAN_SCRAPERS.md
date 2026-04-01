@@ -377,7 +377,7 @@ def main():
 
 **Effort:** New script (~100 lines). **Yield:** +10-40 entries (low volume, high specificity). **Risk:** Medium (errata format may be hard to parse; entries need Q&A conversion).
 
-Errata entries aren't Q&A pairs — they're "before/after" corrections. But they're extremely valuable for catching cases where `dnd.qnt` models the pre-errata (incorrect) version of a rule.
+Errata entries aren't Q&A pairs — they're "before/after" corrections. But they're extremely valuable for catching cases where `creature.qnt` models the pre-errata (incorrect) version of a rule.
 
 ### Files to create
 
@@ -477,7 +477,7 @@ def main():
     print(f"Wrote {count} errata entries to {OUTPUT}")
 ```
 
-3. **Q&A conversion.** The synthetic Q&A format ("Does X apply?" / "No, errata changed it to Y") is designed to trigger the classifier to mark these as `is_raw: true`. The assertion generator will then try to write a test that checks the corrected (current) rule — if `dnd.qnt` still models the old rule, the test will fail, which is exactly what we want.
+3. **Q&A conversion.** The synthetic Q&A format ("Does X apply?" / "No, errata changed it to Y") is designed to trigger the classifier to mark these as `is_raw: true`. The assertion generator will then try to write a test that checks the corrected (current) rule — if `creature.qnt` still models the old rule, the test will fail, which is exactly what we want.
 
 ### Pipeline integration
 

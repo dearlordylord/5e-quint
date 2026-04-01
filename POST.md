@@ -46,7 +46,7 @@ Formal methods don't need exotic tools. You can get a chain from formal spec to 
 SRD 5.2.1 (rules text)
     |
     v
-dnd.qnt (Quint spec — 3,362 lines, 238 pure functions, 56 actions)
+creature.qnt (Quint spec — 3,362 lines, 238 pure functions, 56 actions)
     |  ^
     |  | QA corpus validates spec against community domain knowledge
     |  | (12.7K entries from Reddit, StackExchange, Sage Advice)
@@ -81,7 +81,7 @@ Each layer checks the one above it. The UI is the last link — it can't render 
 
 | File | What it contains |
 |------|-----------------|
-| `dnd.qnt` | The Quint spec itself (3,362 lines) |
+| `creature.qnt` | The Quint spec itself (3,362 lines) |
 | `app/src/machine.ts` | XState machine (~420 lines, logic extracted to helpers) |
 | `app/src/machine.mbt.test.ts` | MBT bridge — how Quint traces replay against XState |
 | `PROCESS_README.md` | QA pipeline architecture (6 stages) |
@@ -110,7 +110,7 @@ Each layer checks the one above it. The UI is the last link — it can't render 
 
 Quint exhaustively explores reachable states and checks invariants (e.g., "dead is absorbing," "HP never exceeds max"). This is proof by exhaustive enumeration, not testing.
 
-**Writer reference:** `dnd.qnt` invariants, `dndTest.qnt` unit tests
+**Writer reference:** `creature.qnt` invariants, `dndTest.qnt` unit tests
 
 ### 2. Model-based conformance testing (MBT)
 

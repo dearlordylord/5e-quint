@@ -24,7 +24,7 @@ QA_DIR = os.path.join(BASE_DIR, ".references/qa")
 CACHE_DIR = os.path.join(QA_DIR, "cache/assertions")
 CLASSIFIED = os.path.join(QA_DIR, "classified.jsonl")
 OUTPUT_QNT = os.path.join(BASE_DIR, "qa_generated.qnt")
-SPEC_PATH = os.path.join(BASE_DIR, "dnd.qnt")
+SPEC_PATH = os.path.join(BASE_DIR, "creature.qnt")
 
 SYSTEM_PROMPT_TEMPLATE = """You are a Quint formal specification test writer for D&D 5e rules.
 
@@ -292,7 +292,7 @@ def rebuild_qnt():
         if not fname.endswith(".qnt"):
             continue
         h = fname[:-4]
-        # Skip non-hash files (e.g. dnd.qnt symlink)
+        # Skip non-hash files (e.g. creature.qnt symlink)
         if not re.match(r'^[0-9a-f]+$', h):
             continue
         with open(os.path.join(CACHE_DIR, fname)) as f:

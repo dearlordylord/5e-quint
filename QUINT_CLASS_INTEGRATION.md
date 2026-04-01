@@ -1,12 +1,12 @@
 # Quint Class State Integration Guide
 
-How to add a new class's charge/resource state to the core Quint spec (`dnd.qnt`) with full XState MBT parity. Written after integrating Fighter (Second Wind, Action Surge, Indomitable). Follow this when adding Barbarian (rage), Monk (focus points), Paladin (lay on hands, channel divinity), etc.
+How to add a new class's charge/resource state to the core Quint spec (`creature.qnt`) with full XState MBT parity. Written after integrating Fighter (Second Wind, Action Surge, Indomitable). Follow this when adding Barbarian (rage), Monk (focus points), Paladin (lay on hands, channel divinity), etc.
 
 > **Prerequisites:** Review `PLAN_CLEANUP.md` for context. Some shortcuts exist (fighter state on all characters, etc.) but these are accepted trade-offs — do NOT refactor them unless the project owner explicitly requests it. This guide is a reference for FUTURE class integration, not a directive to start migrating classes now.
 
 ## Architecture
 
-Class resources live as a **separate state variable** in `dnd.qnt`, not inside `CreatureState` or `TurnState`. This matches how `SpellSlotState` is separate — class charges aren't generic creature properties.
+Class resources live as a **separate state variable** in `creature.qnt`, not inside `CreatureState` or `TurnState`. This matches how `SpellSlotState` is separate — class charges aren't generic creature properties.
 
 ```
 var state: CreatureState        -- HP, conditions, death saves
@@ -22,14 +22,14 @@ Every action must assign **all** state variables. Adding a new var means touchin
 
 ### 1. Write a standalone POC first
 
-Before touching `dnd.qnt`, create `dndClassName.qnt` with simplified proxy state (`hp`, `maxHp`, `inCombat`, etc.). This lets you:
+Before touching `creature.qnt`, create `dndClassName.qnt` with simplified proxy state (`hp`, `maxHp`, `inCombat`, etc.). This lets you:
 
 - Validate the TS-to-Quint transliteration
 - Write and debug invariants without fighting 2800+ lines of core spec
 - Test Apalache inductive checking (see below) in isolation
 - Iterate fast — `quint test` on a 400-line file is instant
 
-The POC pure functions will copy directly into `dnd.qnt` with minimal changes.
+The POC pure functions will copy directly into `creature.qnt` with minimal changes.
 
 ### 2. Port pure functions from TypeScript
 
@@ -37,7 +37,7 @@ The `class-*.ts` files map 1:1 to Quint `pure def`. Translation rules:
 
 | TypeScript | Quint |
 |---|---|
-| `Math.min(a, b)` | `intMin(a, b)` (already in dnd.qnt) |
+| `Math.min(a, b)` | `intMin(a, b)` (already in creature.qnt) |
 | `Math.max(a, b)` | `intMax(a, b)` |
 | `Math.floor(a / b)` | `a / b` (Quint truncates toward zero) |
 | `if (x) return y` | `if (x) y else ...` (must have else) |
@@ -46,7 +46,7 @@ The `class-*.ts` files map 1:1 to Quint `pure def`. Translation rules:
 
 **Critical: use `pHeal` for healing, not raw HP math.** The POC did `intMin(hp + heal, maxHp)` but the real `pHeal` (line ~776) handles unconsciousness recovery, death save resets, and stable flag clearing. If your class feature heals, it must go through `pHeal` in the core spec.
 
-### 3. Add to `dnd.qnt`
+### 3. Add to `creature.qnt`
 
 **Type** — after the existing type definitions (~line 110):
 ```quint
@@ -133,10 +133,10 @@ The `EventActionMap` type check is your friend — if you add an event to `DndEv
 Run in this order:
 
 ```bash
-npx quint typecheck dnd.qnt
+npx quint typecheck creature.qnt
 npx quint typecheck dndTest.qnt
 npx quint test dndTest.qnt --match "test_rage"    # spot-check new tests
-npx quint run --main=dnd --invariant=allInvariants --max-samples=10000 dnd.qnt
+npx quint run --main=dnd --invariant=allInvariants --max-samples=10000 creature.qnt
 cd app && npx vitest run                           # all tests including MBT
 ```
 
@@ -178,7 +178,7 @@ export PATH="$HOME/.local/java/jdk-17.0.18+8-jre/bin:$PATH"
 npx quint verify --main=dnd \
   --invariant=allInvariants \
   --inductive-invariant=inductiveInv \
-  dnd.qnt
+  creature.qnt
 ```
 
 Apalache checks three things: (1) init implies inductiveInv, (2) step preserves inductiveInv, (3) inductiveInv implies allInvariants. All three must pass.
@@ -214,7 +214,7 @@ This migration is NOT required when adding a new class to Quint. It's a follow-u
 
 ## MBT coverage limitations
 
-`TEST_CONFIG` in `dnd.qnt` is a **level 5 Fighter, Champion subclass**. All MBT traces run against this specific config. This means:
+`TEST_CONFIG` in `creature.qnt` is a **level 5 Fighter, Champion subclass**. All MBT traces run against this specific config. This means:
 
 - Second Wind max=3 (L4-9 range) — tested by MBT
 - Action Surge max=1 (L2-16 range) — tested by MBT

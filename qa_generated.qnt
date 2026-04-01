@@ -4,7 +4,7 @@
 /// Do not edit — regenerate with scripts/qa/generate_assertions.py
 
 module qa_generated {
-  import dnd.* from "./dnd"
+  import creature.* from "./creature"
 
   // Source: https://rpg.stackexchange.com/q/214536
   
@@ -6972,7 +6972,7 @@ module qa_generated {
   // Clerics are Better at Smiting: Extra Attack feature gives paladin 1 additional attack per turn
   run qa_extra_attack_feature_count = {
     // TEST_CONFIG has FExtraAttack (level 5 fighter-equivalent)
-    val extra = extraAttacksFromConfig(TEST_CONFIG)
+    val extra = extraAttacks(TEST_CONFIG)
     assert(extra == 1)
   }
   
@@ -9420,7 +9420,7 @@ module qa_generated {
   // Druid and Paladin UA summary: Paladin gains Extra Attack at level 5
   run qa_paladin_extra_attack_level5 = {
     val config = TEST_CONFIG.with("features", Set(FExtraAttack)).with("level", 5)
-    assert(extraAttacksFromConfig(config) == 1)
+    assert(extraAttacks(config) == 1)
   }
   
   // Druid and Paladin UA summary: Abjure Foes — Frightened creature has disadv on attacks when fear source is in LOS
@@ -12160,19 +12160,19 @@ module qa_generated {
   // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Fighter L5 Extra Attack yields 1 bonus attack
   run qa_fighter_l5_extra_attack_count = {
     val config = configForLevel(5)
-    assert(extraAttacksFromConfig(config) == 1)
+    assert(extraAttacks(config) == 1)
   }
   
   // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Fighter L11 yields 2 extra attacks (3 total)
   run qa_fighter_l11_extra_attack_count = {
     val config = configForLevel(11)
-    assert(extraAttacksFromConfig(config) == 2)
+    assert(extraAttacks(config) == 2)
   }
   
   // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Fighter L20 yields 3 extra attacks (4 total)
   run qa_fighter_l20_extra_attack_count = {
     val config = configForLevel(20)
-    assert(extraAttacksFromConfig(config) == 3)
+    assert(extraAttacks(config) == 3)
   }
   
   // UA7 Science: Fighter (Champion) vs. Warlock (Blade) — Heroic Inspiration is consumed (set false) when used

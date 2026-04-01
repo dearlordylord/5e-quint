@@ -11,7 +11,7 @@ graph TD
     SRD["SRD 5.2.1"] -.->|rules trace to| SPEC
     SRD -.->|class features trace to| FEATURES
     QA[QA corpus] -.->|generates assertions| TEST
-    SPEC["dnd.qnt — Quint spec"] --> TEST[quint test]
+    SPEC["creature.qnt — Quint spec"] --> TEST[quint test]
     SPEC --> TRACES[quint run — random traces]
     TRACES --> MBT["MBT bridge"]
     MBT -->|field-by-field comparison| XSTATE["XState machine"]
@@ -47,7 +47,7 @@ The React UI is a debugging tool — you send events by hand. A game would send 
 
 ## How the layers work
 
-**Quint spec** (`dnd.qnt`) — source of truth. Pure functions (`pUseAction`, `pTakeDamage`, ...) model every rule. `do*` actions compose them with nondeterministic inputs for model checking.
+**Quint spec** (`creature.qnt`) — source of truth. Pure functions (`pUseAction`, `pTakeDamage`, ...) model every rule. `do*` actions compose them with nondeterministic inputs for model checking.
 
 **XState machine** (`machine.ts` + satellite files) — parallel-region machine with four tracks: damageTrack, turnPhase, conditionTrack, spellcasting. Direct transliteration of the Quint spec.
 

@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module dndTest {
-  import dnd.* from "./dnd"
+  import creature.* from "./creature"
 
   // ============================================================
   // Ability Modifier tests
@@ -1180,17 +1180,17 @@ module dndTest {
 
   run test_extra_attacks_none = {
     val cfg = TEST_FIGHTER_5.with("features", Set())
-    assert(extraAttacksFromConfig(cfg) == 0)
+    assert(extraAttacks(cfg) == 0)
   }
 
   run test_extra_attacks_fighter11 = {
     val cfg = TEST_FIGHTER_5.with("features", Set(FExtraAttack2))
-    assert(extraAttacksFromConfig(cfg) == 2)
+    assert(extraAttacks(cfg) == 2)
   }
 
   run test_extra_attacks_fighter20 = {
     val cfg = TEST_FIGHTER_5.with("features", Set(FExtraAttack3))
-    assert(extraAttacksFromConfig(cfg) == 3)
+    assert(extraAttacks(cfg) == 3)
   }
 
   // -- Speed modifiers --
@@ -3437,19 +3437,19 @@ module dndTest {
     hasFightingStyleFeature: false,
   }
 
-  run test_config_barbarian_extra_attacks = assert(extraAttacksFromConfig(TEST_BARBARIAN_ORC) == 1)
-  run test_config_fighter_extra_attacks = assert(extraAttacksFromConfig(TEST_FIGHTER_5) == 1)
-  run test_config_paladin_extra_attacks = assert(extraAttacksFromConfig(TEST_PALADIN_DRAGONBORN) == 1)
-  run test_config_ranger_extra_attacks = assert(extraAttacksFromConfig(TEST_RANGER_ELF) == 1)
-  run test_config_monk_extra_attacks = assert(extraAttacksFromConfig(TEST_MONK_GNOME) == 1)
+  run test_config_barbarian_extra_attacks = assert(extraAttacks(TEST_BARBARIAN_ORC) == 1)
+  run test_config_fighter_extra_attacks = assert(extraAttacks(TEST_FIGHTER_5) == 1)
+  run test_config_paladin_extra_attacks = assert(extraAttacks(TEST_PALADIN_DRAGONBORN) == 1)
+  run test_config_ranger_extra_attacks = assert(extraAttacks(TEST_RANGER_ELF) == 1)
+  run test_config_monk_extra_attacks = assert(extraAttacks(TEST_MONK_GNOME) == 1)
 
-  run test_config_wizard_no_extra_attacks = assert(extraAttacksFromConfig(TEST_WIZARD) == 0)
-  run test_config_cleric_no_extra_attacks = assert(extraAttacksFromConfig(TEST_CLERIC_DWARF) == 0)
-  run test_config_rogue_no_extra_attacks = assert(extraAttacksFromConfig(TEST_ROGUE_HALFLING) == 0)
-  run test_config_sorcerer_no_extra_attacks = assert(extraAttacksFromConfig(TEST_SORCERER_TIEFLING) == 0)
-  run test_config_warlock_no_extra_attacks = assert(extraAttacksFromConfig(TEST_WARLOCK_GOLIATH) == 0)
-  run test_config_bard_no_extra_attacks = assert(extraAttacksFromConfig(TEST_BARD_HUMAN) == 0)
-  run test_config_druid_no_extra_attacks = assert(extraAttacksFromConfig(TEST_DRUID_ELF) == 0)
+  run test_config_wizard_no_extra_attacks = assert(extraAttacks(TEST_WIZARD) == 0)
+  run test_config_cleric_no_extra_attacks = assert(extraAttacks(TEST_CLERIC_DWARF) == 0)
+  run test_config_rogue_no_extra_attacks = assert(extraAttacks(TEST_ROGUE_HALFLING) == 0)
+  run test_config_sorcerer_no_extra_attacks = assert(extraAttacks(TEST_SORCERER_TIEFLING) == 0)
+  run test_config_warlock_no_extra_attacks = assert(extraAttacks(TEST_WARLOCK_GOLIATH) == 0)
+  run test_config_bard_no_extra_attacks = assert(extraAttacks(TEST_BARD_HUMAN) == 0)
+  run test_config_druid_no_extra_attacks = assert(extraAttacks(TEST_DRUID_ELF) == 0)
 
   run test_config_single_class_levels = {
     val levels = singleClassLevels(Fighter, 5)
@@ -3491,7 +3491,7 @@ module dndTest {
       .with("level", 11)
       .with("classLevels", singleClassLevels(Fighter, 11))
       .with("features", Set(FExtraAttack2))
-    assert(extraAttacksFromConfig(cfg) == 2)
+    assert(extraAttacks(cfg) == 2)
   }
 
   run test_config_fighter20_extra_attacks = {
@@ -3499,7 +3499,7 @@ module dndTest {
       .with("level", 20)
       .with("classLevels", singleClassLevels(Fighter, 20))
       .with("features", Set(FExtraAttack3))
-    assert(extraAttacksFromConfig(cfg) == 3)
+    assert(extraAttacks(cfg) == 3)
   }
 
   run test_config_cleric_spell_save_dc = {
@@ -4094,7 +4094,7 @@ module dndTest {
   // start turn, take actions, end turn. Monsters use stat block values
   // for speed, attacks, and extra attacks (via Multiattack).
 
-  // Uses monsterConfigFromStatBlock from dnd.qnt (shared with doStartTurn)
+  // Uses monsterConfigFromStatBlock from creature.qnt (shared with doStartTurn)
 
   // Skeleton turn: start → Attack action (no extra attacks) → end
   run test_skeleton_full_turn = {

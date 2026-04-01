@@ -532,7 +532,7 @@ const VERIFICATION_ROWS: ReadonlyArray<{ aspect: string; source: string; verifie
   { aspect: "XState state values (right column)", source: "Real machine replay", verified: true },
   { aspect: "Trace sequence & dice rolls", source: "Hardcoded", verified: false },
   { aspect: "Quint state values (left column)", source: "Hand-computed", verified: false },
-  { aspect: "Quint snippets", source: "Hand-extracted from dnd.qnt", verified: false }
+  { aspect: "Quint snippets", source: "Hand-extracted from creature.qnt", verified: false }
 ]
 
 function VerificationStatus() {

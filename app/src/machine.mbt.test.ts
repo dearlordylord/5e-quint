@@ -1820,7 +1820,7 @@ const QuintTypedef = Schema.Struct({
 function parseQuintTypeFields(typeName: string): Array<string> {
   const tmpFile = path.join(os.tmpdir(), `quint_ast_${process.pid}.json`)
   try {
-    execSync(`quint parse ${path.resolve(import.meta.dirname, "../../dnd.qnt")} --out ${tmpFile}`)
+    execSync(`quint parse ${path.resolve(import.meta.dirname, "../../creature.qnt")} --out ${tmpFile}`)
     const raw = JSON.parse(fs.readFileSync(tmpFile, "utf8")) as {
       modules: Array<{ declarations: Array<Record<string, unknown>> }>
     }
@@ -1918,7 +1918,7 @@ const mbtStateCheck = stateCheck(
 describe("DnD MBT", () => {
   const MBT_TRACE_COUNT = 50
   const MBT_STEP_COUNT = 30
-  const specPath = path.resolve(import.meta.dirname, "../../dnd.qnt")
+  const specPath = path.resolve(import.meta.dirname, "../../creature.qnt")
 
   it("replays Quint traces against XState machine (L3 + L5 + L9 + L10 + L18)", async () => {
     await run({

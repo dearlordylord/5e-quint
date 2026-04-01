@@ -997,7 +997,7 @@ XState v5 + `@xstate/react` + TanStack Start + Tailwind 4 + Paraglide i18n (EN/R
 
 ## D&D domain types (Quint → TypeScript)
 
-### Quint types in dnd.qnt that need TypeScript equivalents
+### Quint types in creature.qnt that need TypeScript equivalents
 
 **Sum types** (Quint enum → TS string union or branded type):
 
@@ -1083,11 +1083,11 @@ Same as savage: **single-creature state machine**. Models one creature's mutable
 - Multiattack sequencing beyond extra attack count
 - Class/race features beyond what's encoded in event parameters
 
-The Quint spec (`dnd.qnt`) has identical scope. Both receive pre-computed values from the caller.
+The Quint spec (`creature.qnt`) has identical scope. Both receive pre-computed values from the caller.
 
 ### Source of truth
 
-`dnd.qnt`. XState machine produces identical state transitions for all inputs. Verified by MBT (50 traces × 30 steps).
+`creature.qnt`. XState machine produces identical state transitions for all inputs. Verified by MBT (50 traces × 30 steps).
 
 ### Quint state → XState mapping
 
@@ -1236,7 +1236,7 @@ function calculateAC(snap, config): number
 
 ### Phase 10: Quint Actions & Invariants
 
-dnd.qnt currently has pure functions and tests but no thin actions, no `step`, no formal invariants. MBT needs these. Savage pattern:
+creature.qnt currently has pure functions and tests but no thin actions, no `step`, no formal invariants. MBT needs these. Savage pattern:
 
 - `var state: CreatureState` + `var turnState: TurnState` + `var spellSlots: SpellSlotState`
 - `action init`: nondeterministic creature creation

@@ -2,7 +2,7 @@
 
 **Edition: SRD 5.2.1 (2024).**
 
-Multi-creature battle state. Composes on top of the single-creature spec (`dnd.qnt`) and its TS implementation. Requirements, domain language, and architecture options live in `battle/`.
+Multi-creature battle state. Composes on top of the single-creature spec (`creature.qnt`) and its TS implementation. Requirements, domain language, and architecture options live in `battle/`.
 
 **SRD parity:** same rule as the core spec — every modeled rule must trace to a specific SRD passage. No homebrew. Modeling decisions documented in `ASSUMPTIONS.md`.
 
@@ -16,7 +16,7 @@ Multi-creature battle state. Composes on top of the single-creature spec (`dnd.q
 | `battle/DOMAIN.md` | Battle-layer terminology and transaction shapes |
 | `battle/OPTIONS.md` | Architecture options (layered arch, interrupt model, MBT strategy) |
 | `battle.qnt` | Battle spec (Quint) — iterating from spike |
-| `dnd.qnt` | Single-creature spec (Quint) — used as library |
+| `creature.qnt` | Single-creature spec (Quint) — used as library |
 
 ## Architecture (agreed direction)
 
@@ -30,7 +30,7 @@ BATTLE MACHINE (battle.qnt + TS battle machine)
   └── cross-creature transactions with interrupt points
   └── BattlePhase state machine: BPActiveTurn ↔ BPAwaitingReaction
 
-CREATURE MACHINES (dnd.qnt + existing TS machine)
+CREATURE MACHINES (creature.qnt + existing TS machine)
   └── single-creature state, composed via pure functions
 ```
 
@@ -40,14 +40,21 @@ CREATURE MACHINES (dnd.qnt + existing TS machine)
 [B0] Spike — battle.qnt                                           ✓ done
 [B1] Multi-reactor interrupt (P1)                                  ✓ done
 [B2] Save transactions (P1)                                        ✓ done
+[B3] AoE / 1-to-many (P1)                                          ✓ done
+  New BPResolvingAoE phase processes targets one by one.
+  Per-target save rolls (nondeterministic at resolution time).
+  Per-target LR interrupt via PISaveFailedAoE with AoE continuation.
+  Counterspell interrupt at cast time (reuses PISpellCast + PCEAoE).
+  mkSaveFailedCtx helper deduplicates SaveFailedCtx construction.
+  Removed tautological offeredAreValid invariant.
 [B4] Concentration links (P1)                                      ✓ done
-  ActiveEffect gained casterId field in dnd.qnt.
+  ActiveEffect gained casterId field in creature.qnt.
   breakConcentrationAndPropagate removes effects from all creatures.
   bCastConcentrationSpell + bConcentrationCheck actions.
 ```
 
 **[B0] Spike** *(done)*
-2 creatures, attack with Shield/Uncanny Dodge reaction interrupts, heal, initiative cycling. 4 invariants verified. Composes `dnd.qnt` pure functions. See comment block at top of `battle.qnt` for documented simplifications.
+2 creatures, attack with Shield/Uncanny Dodge reaction interrupts, heal, initiative cycling. 4 invariants verified. Composes `creature.qnt` pure functions. See comment block at top of `battle.qnt` for documented simplifications.
 
 ---
 
@@ -58,10 +65,10 @@ CREATURE MACHINES (dnd.qnt + existing TS machine)
 Flesh out the battle spec to handle all major transaction shapes. Each task is a diff on `battle.qnt`.
 
 ```
-[B1] Multi-reactor interrupt (P1) -> deps: [B0]
-[B2] Save transactions (P1) -> deps: [B0]
-[B3] AoE / 1-to-many (P1) -> deps: [B2]
-[B4] Concentration links (P1) -> deps: [B0]
+[B1] Multi-reactor interrupt (P1) -> deps: [B0]          ✓ done
+[B2] Save transactions (P1) -> deps: [B0]                ✓ done
+[B3] AoE / 1-to-many (P1) -> deps: [B2]                  ✓ done
+[B4] Concentration links (P1) -> deps: [B0]               ✓ done
 [B5] Counterspell chain (P2) -> deps: [B2]
 ```
 
@@ -87,7 +94,7 @@ Caster takes one action, multiple targets each save and take damage independentl
 **[B4] Concentration links**
 Track which creature cast an effect on which target(s). When caster's concentration breaks, propagate: remove effects from all targets. Requires `casterId` field on `ActiveEffect` (or a separate link registry in battle state).
 - Ref: R33 (concentration links)
-- Change to `dnd.qnt`: add `casterId: str` to `ActiveEffect` type (default "" for self-effects)
+- Change to `creature.qnt`: add `casterId: str` to `ActiveEffect` type (default "" for self-effects)
 - New battle action: `bBreakConcentration(casterId)` → finds all creatures with effects from that caster → removes them
 - Test: A concentrates on Bless targeting B and C. A takes damage, fails CON save → concentration breaks → Bless removed from both B and C.
 

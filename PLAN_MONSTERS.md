@@ -12,7 +12,7 @@
 
 ## Motivation
 
-The spec (`dnd.qnt`) and XState machine model a single creature's combat state. The core pure functions (`pTakeDamage`, `resolveAttackRoll`, `applyDamageModifiers`, conditions, action economy) are already creature-agnostic — they operate on flat values. However, the configuration layer (`CharConfig`) is PC-only, and there is no data type for monster stat blocks.
+The spec (`creature.qnt`) and XState machine model a single creature's combat state. The core pure functions (`pTakeDamage`, `resolveAttackRoll`, `applyDamageModifiers`, conditions, action economy) are already creature-agnostic — they operate on flat values. However, the configuration layer (`CharConfig`) is PC-only, and there is no data type for monster stat blocks.
 
 To support monsters, we need:
 1. A `StatBlock` type for authoring monster data directly (SRD term, monster-only).
@@ -60,9 +60,9 @@ Together they cover the spectrum from immune/vulnerable to baseline, Small-Mediu
 
 ### Already creature-agnostic (no changes needed)
 
-- **`CreatureState`** (dnd.qnt:517-541) — HP, 14 conditions, exhaustion (int), death saves, active effects. Zero PC-specific fields.
-- **`TurnState`** (dnd.qnt:855-871) — action economy: actions, bonus action, reaction, movement, extra attacks. Universal.
-- **`SpellSlotState`** (dnd.qnt:1432-1439) — slot tracking, concentration. Monsters with Spellcasting use the same mechanics.
+- **`CreatureState`** (creature.qnt:517-541) — HP, 14 conditions, exhaustion (int), death saves, active effects. Zero PC-specific fields.
+- **`TurnState`** (creature.qnt:855-871) — action economy: actions, bonus action, reaction, movement, extra attacks. Universal.
+- **`SpellSlotState`** (creature.qnt:1432-1439) — slot tracking, concentration. Monsters with Spellcasting use the same mechanics.
 - **`pTakeDamage`** — takes R/V/I as `Set[DamageType]` parameters.
 - **`resolveAttackRoll`** — takes flat values (d20, attackBonus, targetAC, critRange).
 - **`applyDamageModifiers`** — pure function on damage type sets.
@@ -70,10 +70,10 @@ Together they cover the spectrum from immune/vulnerable to baseline, Small-Mediu
 
 ### PC-specific (stays PC-specific)
 
-- **`CharConfig`** (dnd.qnt:83-105) — className, subclass, species, level, hitDieType, etc.
-- **`FighterState`** (dnd.qnt:109-118) — Second Wind, Action Surge, Indomitable charges.
-- **`configForLevel`** (dnd.qnt:2272-2285) — hardcoded to Champion Fighter.
-- **`proficiencyBonus(level)`** (dnd.qnt:152-153) — pure function of PC level. Monsters use a different CR-based table.
+- **`CharConfig`** (creature.qnt:83-105) — className, subclass, species, level, hitDieType, etc.
+- **`FighterState`** (creature.qnt:109-118) — Second Wind, Action Surge, Indomitable charges.
+- **`configForLevel`** (creature.qnt:2272-2285) — hardcoded to Champion Fighter.
+- **`proficiencyBonus(level)`** (creature.qnt:152-153) — pure function of PC level. Monsters use a different CR-based table.
 
 ### What monsters need that doesn't exist yet
 
@@ -313,7 +313,7 @@ type MonsterResourceState = {
 ### Atomic Tasks
 
 **L0: Types + StatBlock Extension**
-- ML0.1 — New types in dnd.qnt + monster-types.ts
+- ML0.1 — New types in creature.qnt + monster-types.ts
 - ML0.2 — Add 6 fields to StatBlock, update SKELETON/OGRE/NULL_STAT_BLOCK defaults
 - ML0.3 — Author ADULT_RED_DRAGON stat block + field tests
 
@@ -445,7 +445,7 @@ Monsters die at 0 HP. `pTakeDamage` currently enters the death-save track uncond
 
 ### CharConfig Field Changes (LOW)
 
-Phase 0 adds `creatureKind` parameter to `pTakeDamage`. The manifest at dnd.qnt:82 lists all CharConfig literals. Existing PC call sites pass `PC` — mechanical change only.
+Phase 0 adds `creatureKind` parameter to `pTakeDamage`. The manifest at creature.qnt:82 lists all CharConfig literals. Existing PC call sites pass `PC` — mechanical change only.
 
 ---
 
@@ -533,12 +533,12 @@ Exercises: Large size, no immunities/resistances (baseline), higher speed (40 ft
 ## Appendix D: Review Log
 
 ### Re-research findings (verified against code, 2026-03-28)
-- CharConfig mixing confirmed (dnd.qnt:83-105)
-- CreatureState is fully creature-agnostic (dnd.qnt:517-541) — confirmed
-- CharConfig literal manifest exists at dnd.qnt:82 — confirmed
-- `proficiencyBonus(level)` exists as pure function (dnd.qnt:152) — stays for PCs; monsters use CR-based lookup
+- CharConfig mixing confirmed (creature.qnt:83-105)
+- CreatureState is fully creature-agnostic (creature.qnt:517-541) — confirmed
+- CharConfig literal manifest exists at creature.qnt:82 — confirmed
+- `proficiencyBonus(level)` exists as pure function (creature.qnt:152) — stays for PCs; monsters use CR-based lookup
 - Exhaustion is NOT one of the 14 Conditions — separate int field, handled correctly
-- `pTakeDamage` signature confirmed: R/V/I as `Set[DamageType]` parameters (dnd.qnt:748-756)
+- `pTakeDamage` signature confirmed: R/V/I as `Set[DamageType]` parameters (creature.qnt:748-756)
 - `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` pass `Set()` for R/V/I — bug, moved to PLAN_CLEANUP E
 
 ### Independent review blockers (all resolved)

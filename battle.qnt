@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 /// Battle State — Multi-creature combat orchestration.
-/// Composes on top of dnd.qnt pure functions.
+/// Composes on top of creature.qnt pure functions.
 ///
 /// SIMPLIFICATIONS (each is a planned incremental improvement, see PLAN_BATTLE.md):
 /// - No class states in Combatant. Full version: ClassStateMap
@@ -10,7 +10,7 @@
 
 module battle {
 
-  import dnd.* from "./dnd"
+  import creature.* from "./creature"
 
   // ============================================================
   // 1. BATTLE TYPES
@@ -69,7 +69,8 @@ module battle {
   // What happens after a spell resolves (not countered).
   // Each variant is a different spell shape.
   type PostCastEffect =
-    | PCESave(SaveSpellCtx)       // save-or-suck spell
+    | PCESave(SaveSpellCtx)       // save-or-suck spell (single target)
+    | PCEAoE(AoESpellCtx)        // AoE spell (multiple targets, R32)
     | PCEDone                     // placeholder for future spell types
 
   // Context for a save-based spell targeting one creature.
@@ -98,11 +99,30 @@ module battle {
     saveSucceeded: bool,       // mutable — LR can flip this to true
   }
 
+  // Context for an AoE spell affecting multiple targets (R32).
+  // Save rolls generated per-target at resolution time (not pre-resolved).
+  type AoESpellCtx = {
+    caster: CreatureId,
+    saveDC: int,
+    damageOnFail: int,
+    halfOnSuccess: bool,       // true for Fireball (half damage on save)
+    damageType: DamageType,
+    conditionOnFail: Condition,
+    applyCondition: bool,
+    remaining: Set[CreatureId], // targets not yet resolved
+  }
+
   type PendingInterrupt =
     | PIAttackHit(AttackHitCtx)
     | PIAttackDamage(AttackDamageCtx)
     | PISpellCast(SpellCastCtx)
     | PISaveFailed(SaveFailedCtx)
+    | PISaveFailedAoE(AoESaveFailedCtx)  // save failed during AoE, with continuation
+
+  type AoESaveFailedCtx = {
+    sf: SaveFailedCtx,
+    aoe: AoESpellCtx,
+  }
 
   type AwaitCtx = {
     interrupt: PendingInterrupt,
@@ -114,6 +134,7 @@ module battle {
   type BattlePhase =
     | BPActiveTurn
     | BPAwaitingReaction(AwaitCtx)
+    | BPResolvingAoE(AoESpellCtx)  // processing AoE targets one by one (R32)
 
   // ============================================================
   // 2. STATE VARIABLES
@@ -237,6 +258,18 @@ module battle {
   /// Build an AwaitCtx with empty offered set.
   pure def mkAwait(pi: PendingInterrupt, tt: TriggerType, elig: Set[CreatureId]): AwaitCtx =
     { interrupt: pi, trigger: tt, eligible: elig, offered: Set() }
+
+  /// Build a SaveFailedCtx from spell effect fields. Used by resolveSave and bResolveAoETarget.
+  pure def mkSaveFailedCtx(
+    casterId: CreatureId, targetId: CreatureId,
+    dmg: int, half: bool, dt: DamageType,
+    cond: Condition, applyCond: bool
+  ): SaveFailedCtx = {
+    caster: casterId, target: targetId,
+    damageOnFail: dmg, halfOnSuccess: half, damageType: dt,
+    conditionOnFail: cond, applyCondition: applyCond,
+    saveSucceeded: false,
+  }
 
   action keepBattle = all {
     bInitiative' = bInitiative,
@@ -505,13 +538,11 @@ module battle {
     } else {
       // Save failed — check for Legendary Resistance / Countercharm
       val elig = eligibleTarget(cs, save.target)
-      val failCtx: SaveFailedCtx = {
-        caster: save.caster, target: save.target,
-        damageOnFail: save.damageOnFail, halfOnSuccess: save.halfOnSuccess,
-        damageType: save.damageType,
-        conditionOnFail: save.conditionOnFail, applyCondition: save.applyCondition,
-        saveSucceeded: false,
-      }
+      val failCtx = mkSaveFailedCtx(
+        save.caster, save.target,
+        save.damageOnFail, save.halfOnSuccess, save.damageType,
+        save.conditionOnFail, save.applyCondition
+      )
       if (elig.size() > 0) {
         { creatures: cs, phase: BPAwaitingReaction(mkAwait(PISaveFailed(failCtx), TSaveFailed, elig)) }
       } else {
@@ -558,6 +589,9 @@ module battle {
                 | PCESave(save) =>
                   val result = resolveSave(bCreatures, save)
                   all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+                | PCEAoE(aoe) =>
+                  // Not countered — enter AoE target resolution
+                  all { bCreatures' = bCreatures, bPhase' = BPResolvingAoE(aoe), keepBattle }
                 | _ => all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattle }
               }
             } else {
@@ -627,6 +661,38 @@ module battle {
                   all {
                     bCreatures' = applyFailEffects(cs1, newSf),
                     bPhase' = BPActiveTurn,
+                    keepBattle,
+                  }
+                }
+                | _ => all {
+                    bCreatures' = bCreatures,
+                    bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
+                    keepBattle,
+                  }
+              }
+            }
+          | PISaveFailedAoE(combo) =>
+            val sf = combo.sf
+            val aoe = combo.aoe
+            val nextPhase = if (aoe.remaining.size() > 0) BPResolvingAoE(aoe) else BPActiveTurn
+            val remaining = ctx.eligible.exclude(ctx.offered)
+            if (remaining.size() == 0) {
+              all {
+                bCreatures' = applyFailEffects(bCreatures, sf),
+                bPhase' = nextPhase,
+                keepBattle,
+              }
+            } else {
+              nondet reactorId = remaining.oneOf()
+              nondet decision = Set(RPass, RLegendaryResistance).oneOf()
+              val newOffered = ctx.offered.union(Set(reactorId))
+              match decision {
+                | RLegendaryResistance => {
+                  val cs1 = spendReaction(bCreatures, reactorId)
+                  val newSf = sf.with("saveSucceeded", true)
+                  all {
+                    bCreatures' = applyFailEffects(cs1, newSf),
+                    bPhase' = nextPhase,
                     keepBattle,
                   }
                 }
@@ -717,6 +783,115 @@ module battle {
     }
   }
 
+  // --- AoE spell transaction (B3, R32) ---
+  // Caster takes one action, multiple targets each save independently.
+  // Flow: cast → Counterspell interrupt → resolve targets one by one →
+  //       per-target save-failed interrupt (LR) → apply effects → next target.
+
+  action bCastAoE = {
+    val activeId = bInitiative[bTurnIndex]
+    val allIds = listToSet(bInitiative)
+    val ac = getC(bCreatures, activeId)
+    // AoE hits all live non-caster creatures. Spatial filtering is external (O2).
+    val liveTargets = allIds.exclude(Set(activeId)).filter(id =>
+      not(getC(bCreatures, id).creature.dead)
+    )
+    nondet saveDC = 10.to(18).oneOf()
+    nondet dmgOnFail = 1.to(20).oneOf()
+    nondet halfOnSave = Bool.oneOf()
+    nondet dt = ALL_DAMAGE_TYPES.oneOf()
+    nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
+    nondet applyCond = Bool.oneOf()
+    nondet slotLvl = 1.to(3).oneOf()
+    all {
+      bPhase == BPActiveTurn,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      liveTargets.size() >= 2,
+      ac.slots.slotsCurrent.get(slotLvl) > 0,
+      // Spend action + slot (caster pays once, not per-target)
+      val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
+      val newSlots = pExpendSlot(ac.slots, slotLvl)
+      val cs1 = setTurn(bCreatures, activeId, newTurn).setSlots(activeId, newSlots)
+      val aoeCtx: AoESpellCtx = {
+        caster: activeId, saveDC: saveDC,
+        damageOnFail: dmgOnFail, halfOnSuccess: halfOnSave,
+        damageType: dt,
+        conditionOnFail: cond, applyCondition: applyCond,
+        remaining: liveTargets,
+      }
+      val spellCtx: SpellCastCtx = {
+        caster: activeId,
+        postCast: PCEAoE(aoeCtx),
+      }
+      // Counterspell interrupt — if countered, entire AoE fizzles
+      val csElig = eligibleExcluding(cs1, allIds, activeId)
+      if (csElig.size() > 0) {
+        all {
+          bCreatures' = cs1,
+          bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(spellCtx), TSpellBeingCast, csElig)),
+          keepBattle,
+        }
+      } else {
+        // No Counterspell — enter AoE resolution directly
+        all {
+          bCreatures' = cs1,
+          bPhase' = BPResolvingAoE(aoeCtx),
+          keepBattle,
+        }
+      }
+    }
+  }
+
+  /// Resolve one AoE target. Picks a remaining target, rolls save, applies result.
+  /// If save fails and target can use LR, enters PISaveFailedAoE interrupt.
+  action bResolveAoETarget = {
+    match bPhase {
+      | BPResolvingAoE(aoe) =>
+        if (aoe.remaining.size() == 0) {
+          // All targets processed — back to active turn
+          all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattle }
+        } else {
+          nondet targetId = aoe.remaining.oneOf()
+          nondet saveRoll = 1.to(20).oneOf()
+          val newRemaining = aoe.remaining.exclude(Set(targetId))
+          val updatedAoe = aoe.with("remaining", newRemaining)
+          val saved = saveRoll >= aoe.saveDC
+          if (saved) {
+            // Save succeeded — half damage if applicable, no condition
+            val cs1 = if (aoe.halfOnSuccess and aoe.damageOnFail > 0)
+              dealDamage(bCreatures, targetId, aoe.damageOnFail / 2, aoe.damageType, false)
+            else bCreatures
+            all { bCreatures' = cs1, bPhase' = BPResolvingAoE(updatedAoe), keepBattle }
+          } else {
+            // Save failed — check for LR
+            val sfCtx = mkSaveFailedCtx(
+              aoe.caster, targetId,
+              aoe.damageOnFail, aoe.halfOnSuccess, aoe.damageType,
+              aoe.conditionOnFail, aoe.applyCondition
+            )
+            val elig = eligibleTarget(bCreatures, targetId)
+            if (elig.size() > 0) {
+              // Enter save-failed interrupt with AoE continuation
+              all {
+                bCreatures' = bCreatures,
+                bPhase' = BPAwaitingReaction(mkAwait(PISaveFailedAoE({ sf: sfCtx, aoe: updatedAoe }), TSaveFailed, elig)),
+                keepBattle,
+              }
+            } else {
+              // No LR — apply fail effects and continue to next target
+              all {
+                bCreatures' = applyFailEffects(bCreatures, sfCtx),
+                bPhase' = BPResolvingAoE(updatedAoe),
+                keepBattle,
+              }
+            }
+          }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
   // --- End turn / Heal ---
 
   action bEndTurn = {
@@ -761,6 +936,7 @@ module battle {
   action battleStep = any {
     bAttack, bResolveHitReaction, bResolveDmgReaction,
     bCastSaveSpell, bResolveCounterspell, bResolveSaveFailedReaction,
+    bCastAoE, bResolveAoETarget,
     bCastConcentrationSpell, bConcentrationCheck,
     bHeal, bEndTurn, bStartTurn,
   }
@@ -779,9 +955,7 @@ module battle {
 
   val turnIndexValid = bTurnIndex >= 0 and bTurnIndex < bInitiative.length()
 
-  val offeredAreValid = match bPhase {
-    | BPAwaitingReaction(ctx) =>
-      ctx.eligible.exclude(ctx.offered).intersect(ctx.offered) == Set()
-    | _ => true
-  }
+  // Note: offered ⊄ eligible is expected — reactors who spend their reaction
+  // are removed from eligible but remain in offered. No useful state invariant
+  // on offered/eligible beyond what the loop structure already guarantees.
 }

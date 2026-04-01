@@ -1,5 +1,5 @@
 /**
- * Monster-related types mirroring the Quint spec (dnd.qnt).
+ * Monster-related types mirroring the Quint spec (creature.qnt).
  * SRD 5.2.1: Stat blocks contain the game statistics of a monster.
  */
 

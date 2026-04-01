@@ -1,6 +1,6 @@
 # MBT Parity Fix Report
 
-**Methodology:** Seed-deterministic model-based conformance testing. Quint spec (`dnd.qnt`) is the formal model / test oracle; XState machine is the SUT. `@firfi/quint-connect` replays Quint-generated traces step-by-step against XState, comparing state field-by-field. Each trace is fully determined by a seed (`QUINT_SEED`), making failures reproducible.
+**Methodology:** Seed-deterministic model-based conformance testing. Quint spec (`creature.qnt`) is the formal model / test oracle; XState machine is the SUT. `@firfi/quint-connect` replays Quint-generated traces step-by-step against XState, comparing state field-by-field. Each trace is fully determined by a seed (`QUINT_SEED`), making failures reproducible.
 
 Fixes applied during the 2026-03-28/29 fuzzer session. All bugs were XState divergences from the Quint spec.
 

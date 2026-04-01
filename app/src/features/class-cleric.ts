@@ -1,4 +1,4 @@
-// Cleric class features extracted from dnd.qnt (non-core)
+// Cleric class features extracted from creature.qnt (non-core)
 // SRD 5.2.1 Cleric
 
 import { paladinChannelDivinityMax } from "#/features/class-paladin.ts"

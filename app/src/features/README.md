@@ -4,7 +4,7 @@ Pure functions for D&D 5e SRD 5.2.1 non-core mechanics: class features, feats, s
 
 ## Two layers
 
-1. **Core** (`dnd.qnt` + `machine-*.ts` in `src/`): formally specified in Quint, MBT-verified.
+1. **Core** (`creature.qnt` + `machine-*.ts` in `src/`): formally specified in Quint, MBT-verified.
 2. **Features** (this folder): composes on core primitives. Most are TS-only, tested with vitest. Exception: Fighter (Champion L1-L18) is also in the Quint spec and MBT-verified.
 
 ## Pure-function contract
