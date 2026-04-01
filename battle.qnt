@@ -202,12 +202,9 @@ module battle {
     val spellId = caster.slots.concentrationSpellId
     if (spellId == "") cs  // not concentrating
     else {
-      // Break caster's concentration
       val newSlots = pBreakConcentration(caster.slots)
-      val newEffects = pRemoveEffect(caster.creature.activeEffects, spellId)
-      val cs1 = cs.set(casterId, caster
-        .with("slots", newSlots)
-        .with("creature", caster.creature.with("activeEffects", newEffects)))
+      val newCreature = caster.creature.with("activeEffects", pRemoveEffect(caster.creature.activeEffects, spellId))
+      val cs1 = setSlots(setCreature(cs, casterId, newCreature), casterId, newSlots)
       // Remove effects from all other creatures that were cast by this caster
       allIds.exclude(Set(casterId)).fold(cs1, (acc, id) =>
         val c = getC(acc, id)
@@ -217,19 +214,6 @@ module battle {
     }
   }
 
-  /// Deal damage to target. If target is concentrating, check CON save.
-  /// On failed save, break concentration and propagate to all creatures.
-  pure def dealDamageWithConc(
-    cs: CreatureId -> Combatant, allIds: Set[CreatureId],
-    targetId: CreatureId, dmg: int, dt: DamageType, crit: bool,
-    conSaveSucceeded: bool
-  ): (CreatureId -> Combatant) = {
-    val cs1 = dealDamage(cs, targetId, dmg, dt, crit)
-    val target = getC(cs1, targetId)
-    if (target.slots.concentrationSpellId != "" and not(conSaveSucceeded)) {
-      breakConcentrationAndPropagate(cs1, allIds, targetId)
-    } else cs1
-  }
 
   /// Eligible reactors: everyone except excludeId who has reaction + alive.
   /// Used for hit-reactions (exclude attacker) and Counterspell (exclude caster).
@@ -688,8 +672,6 @@ module battle {
       val cs1 = if (ac.slots.concentrationSpellId != "")
         breakConcentrationAndPropagate(bCreatures, allIds, activeId)
       else bCreatures
-      // Start new concentration on caster
-      val casterAfterBreak = getC(cs1, activeId)
       val concSlots = pStartConcentration(newSlots, spellId)
       val cs2 = setTurn(cs1, activeId, newTurn).setSlots(activeId, concSlots)
       // Add effect to target with casterId pointing back to caster
