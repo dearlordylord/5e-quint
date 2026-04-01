@@ -191,7 +191,9 @@ export function applySlowFall(fallDamage: number, monkLevel: number): number {
 
 // --- Warrior of the Open Hand (T46) ---
 
-export type OpenHandTechniqueChoice = "addle" | "push" | "topple"
+export const OPEN_HAND_TECHNIQUE_CHOICES = ["addle", "push", "topple"] as const
+
+export type OpenHandTechniqueChoice = (typeof OPEN_HAND_TECHNIQUE_CHOICES)[number]
 
 export interface OpenHandTechniqueResult {
   readonly effectApplied: boolean

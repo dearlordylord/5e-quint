@@ -10,10 +10,14 @@ import type { Condition } from "#/types.ts"
 // --- Types ---
 
 /** Confusion behavior categories from d10 roll (SRD 5.2.1 table). */
-export type ConfusionBehavior = "moveRandom" | "doNothing" | "attackRandom" | "actNormally"
+export const CONFUSION_BEHAVIORS = ["moveRandom", "doNothing", "attackRandom", "actNormally"] as const
+
+export type ConfusionBehavior = (typeof CONFUSION_BEHAVIORS)[number]
 
 /** Target type restriction for Dominate spells. */
-export type DominateTargetType = "beast" | "humanoid" | "any"
+export const DOMINATE_TARGET_TYPES = ["beast", "humanoid", "any"] as const
+
+export type DominateTargetType = (typeof DOMINATE_TARGET_TYPES)[number]
 
 /** Irresistible Dance effects on failed save (SRD 5.2.1). */
 export interface IrresistibleDanceResult {

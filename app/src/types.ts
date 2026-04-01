@@ -1,69 +1,89 @@
 import { Schema } from "effect"
 
-// --- Sum types (string unions) ---
+// --- Domain constants + derived types ---
+// Convention: define const array first, derive union type with typeof X[number].
+// See CLAUDE.md "Typed constant arrays" and "Derive union types from constant arrays".
 
-export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha"
+export const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const
+export type Ability = (typeof ABILITIES)[number]
 
-export type DamageType =
-  | "acid"
-  | "bludgeoning"
-  | "cold"
-  | "fire"
-  | "force"
-  | "lightning"
-  | "necrotic"
-  | "piercing"
-  | "poison"
-  | "psychic"
-  | "radiant"
-  | "slashing"
-  | "thunder"
+export const DAMAGE_TYPES = [
+  "acid",
+  "bludgeoning",
+  "cold",
+  "fire",
+  "force",
+  "lightning",
+  "necrotic",
+  "piercing",
+  "poison",
+  "psychic",
+  "radiant",
+  "slashing",
+  "thunder"
+] as const
+export type DamageType = (typeof DAMAGE_TYPES)[number]
 
-export type Condition =
-  | "blinded"
-  | "charmed"
-  | "deafened"
-  | "frightened"
-  | "grappled"
-  | "incapacitated"
-  | "invisible"
-  | "paralyzed"
-  | "petrified"
-  | "poisoned"
-  | "prone"
-  | "restrained"
-  | "stunned"
-  | "unconscious"
+export const CONDITIONS = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "frightened",
+  "grappled",
+  "incapacitated",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious"
+] as const
+export type Condition = (typeof CONDITIONS)[number]
 
-export type IncapSource = "paralyzed" | "petrified" | "stunned" | "unconscious" | "direct"
+export const INCAP_SOURCES = ["paralyzed", "petrified", "stunned", "unconscious", "direct"] as const
+export type IncapSource = (typeof INCAP_SOURCES)[number]
 
-export type ActionType =
-  | "attack"
-  | "magic"
-  | "dash"
-  | "disengage"
-  | "dodge"
-  | "help"
-  | "hide"
-  | "influence"
-  | "ready"
-  | "search"
-  | "study"
-  | "utilize"
+export const ACTION_TYPES = [
+  "attack",
+  "magic",
+  "dash",
+  "disengage",
+  "dodge",
+  "help",
+  "hide",
+  "influence",
+  "ready",
+  "search",
+  "study",
+  "utilize"
+] as const
+export type ActionType = (typeof ACTION_TYPES)[number]
 
-export type CoverType = "none" | "half" | "threeQuarters" | "total"
+export const COVER_TYPES = ["none", "half", "threeQuarters", "total"] as const
+export type CoverType = (typeof COVER_TYPES)[number]
 
-export type ArmorCategory = "light" | "medium" | "heavy"
+export const ARMOR_CATEGORIES = ["light", "medium", "heavy"] as const
+export type ArmorCategory = (typeof ARMOR_CATEGORIES)[number]
 
-export type Size = "tiny" | "small" | "medium" | "large" | "huge" | "gargantuan"
+export const ARMOR_WEIGHTS = ["none", "light", "medium", "heavy"] as const
+export type ArmorWeight = (typeof ARMOR_WEIGHTS)[number]
 
-export type ShoveChoice = "prone" | "push"
+export const SIZES = ["tiny", "small", "medium", "large", "huge", "gargantuan"] as const
+export type Size = (typeof SIZES)[number]
 
-export type CreatureKind = "PC" | "Monster"
+export const SHOVE_CHOICES = ["prone", "push"] as const
+export type ShoveChoice = (typeof SHOVE_CHOICES)[number]
 
-export type UnarmoredDefense = "none" | "barbarian" | "monk"
+export const CREATURE_KINDS = ["PC", "Monster"] as const
+export type CreatureKind = (typeof CREATURE_KINDS)[number]
 
-export type ExpiryPhase = "start" | "end"
+export const UNARMORED_DEFENSES = ["none", "barbarian", "monk"] as const
+export type UnarmoredDefense = (typeof UNARMORED_DEFENSES)[number]
+
+export const EXPIRY_PHASES = ["start", "end"] as const
+export type ExpiryPhase = (typeof EXPIRY_PHASES)[number]
 
 export interface ActiveEffect {
   readonly spellId: string
@@ -229,29 +249,16 @@ export function movementFeet(n: number): MovementFeet {
 }
 export type { MovementFeet }
 
-export type CasterType = "full" | "half" | "third"
+export const CASTER_TYPES = ["full", "half", "third"] as const
+export type CasterType = (typeof CASTER_TYPES)[number]
 
 export type SpellSlots = ReadonlyArray<number>
 
 export const SPELL_SLOT_LEVELS = 9
 export const EMPTY_SLOTS: SpellSlots = new Array(SPELL_SLOT_LEVELS).fill(0) as SpellSlots
 
-export const ALL_CONDITIONS = [
-  "blinded",
-  "charmed",
-  "deafened",
-  "frightened",
-  "grappled",
-  "incapacitated",
-  "invisible",
-  "paralyzed",
-  "petrified",
-  "poisoned",
-  "prone",
-  "restrained",
-  "stunned",
-  "unconscious"
-] as const satisfies ReadonlyArray<Condition>
+/** @deprecated Use CONDITIONS instead */
+export const ALL_CONDITIONS = CONDITIONS
 
 // --- Record types ---
 

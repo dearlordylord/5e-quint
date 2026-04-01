@@ -6,9 +6,13 @@ import type { DamageType } from "#/types.ts"
 
 // --- Types ---
 
-export type PrimalOrderChoice = "magician" | "warden"
+export const PRIMAL_ORDER_CHOICES = ["magician", "warden"] as const
 
-export type ElementalFuryChoice = "potentSpellcasting" | "primalStrike"
+export type PrimalOrderChoice = (typeof PRIMAL_ORDER_CHOICES)[number]
+
+export const ELEMENTAL_FURY_CHOICES = ["potentSpellcasting", "primalStrike"] as const
+
+export type ElementalFuryChoice = (typeof ELEMENTAL_FURY_CHOICES)[number]
 
 export type PrimalStrikeDamageType = Extract<DamageType, "cold" | "fire" | "lightning" | "thunder">
 

@@ -7,7 +7,9 @@ function assert(condition: boolean, msg: string): asserts condition {
 
 // --- Fighting Style Feat Effects (SRD 5.2.1) ---
 
-export type FightingStyle = "archery" | "defense" | "greatWeaponFighting" | "twoWeaponFighting"
+export const FIGHTING_STYLES = ["archery", "defense", "greatWeaponFighting", "twoWeaponFighting"] as const
+
+export type FightingStyle = (typeof FIGHTING_STYLES)[number]
 
 /** Archery: +2 to attack rolls with Ranged weapons. */
 export function archeryAttackBonus(styles: ReadonlySet<FightingStyle>, isRanged: boolean): number {
@@ -364,12 +366,8 @@ export function useIndomitable(
 // =============================================================================
 
 export const TACTICAL_MASTER_LEVEL = 9
-const TACTICAL_MASTER_SUBSTITUTIONS = [
-  "push",
-  "sap",
-  "slow"
-] as const;
-export type TacticalMasterSubstitution = typeof TACTICAL_MASTER_SUBSTITUTIONS[number];
+const TACTICAL_MASTER_SUBSTITUTIONS = ["push", "sap", "slow"] as const
+export type TacticalMasterSubstitution = (typeof TACTICAL_MASTER_SUBSTITUTIONS)[number]
 const TACTICAL_MASTER_SUBSTITUTIONS_S = new Set(TACTICAL_MASTER_SUBSTITUTIONS)
 
 /** Precondition: can use Tactical Master to substitute a mastery property. */
@@ -382,7 +380,10 @@ export function canUseTacticalMaster(fighterLevel: number, hasWeaponMastery: boo
  * The substitution must be Push, Sap, or Slow.
  */
 export function tacticalMasterSubstitute(substitute: TacticalMasterSubstitution): TacticalMasterSubstitution {
-  assert(TACTICAL_MASTER_SUBSTITUTIONS_S.has(substitute), `tacticalMasterSubstitute: invalid substitute "${substitute}"`)
+  assert(
+    TACTICAL_MASTER_SUBSTITUTIONS_S.has(substitute),
+    `tacticalMasterSubstitute: invalid substitute "${substitute}"`
+  )
   return substitute
 }
 

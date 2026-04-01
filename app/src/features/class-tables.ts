@@ -5,19 +5,22 @@ import type { Ability } from "#/types.ts"
 
 // --- Types ---
 
-export type ClassName =
-  | "barbarian"
-  | "bard"
-  | "cleric"
-  | "druid"
-  | "fighter"
-  | "monk"
-  | "paladin"
-  | "ranger"
-  | "rogue"
-  | "sorcerer"
-  | "warlock"
-  | "wizard"
+export const CLASS_NAMES = [
+  "barbarian",
+  "bard",
+  "cleric",
+  "druid",
+  "fighter",
+  "monk",
+  "paladin",
+  "ranger",
+  "rogue",
+  "sorcerer",
+  "warlock",
+  "wizard"
+] as const
+
+export type ClassName = (typeof CLASS_NAMES)[number]
 
 // --- Hit Dice (PHB class tables) ---
 
@@ -82,8 +85,11 @@ export function canMulticlass(scores: Record<Ability, number>, currentClass: Cla
 // When multiclassing INTO a class (not starting class), you gain only
 // partial proficiencies. Attacking without proficiency: no prof bonus (NOT disadvantage).
 
-export type ArmorTraining = "light" | "medium"
-export type WeaponTraining = "simple" | "martial"
+export const ARMOR_TRAININGS = ["light", "medium"] as const
+export type ArmorTraining = (typeof ARMOR_TRAININGS)[number]
+
+export const WEAPON_TRAININGS = ["simple", "martial"] as const
+export type WeaponTraining = (typeof WEAPON_TRAININGS)[number]
 
 export interface MulticlassProficiencyGains {
   readonly armor: ReadonlyArray<ArmorTraining>

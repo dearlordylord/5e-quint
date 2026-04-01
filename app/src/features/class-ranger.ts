@@ -160,8 +160,11 @@ export function foeSlayerHuntersMarkDie(rangerLevel: number): number {
 // flags. No state transitions trackable in single-creature Quint model.
 // =============================================================================
 
-export type HunterPreyChoice = "colossusSlayer" | "hordeBreaker"
-export type DefensiveTacticChoice = "escapeTheHorde" | "multiattackDefense"
+export const HUNTER_PREY_CHOICES = ["colossusSlayer", "hordeBreaker"] as const
+export type HunterPreyChoice = (typeof HUNTER_PREY_CHOICES)[number]
+
+export const DEFENSIVE_TACTIC_CHOICES = ["escapeTheHorde", "multiattackDefense"] as const
+export type DefensiveTacticChoice = (typeof DEFENSIVE_TACTIC_CHOICES)[number]
 
 // --- Hunter's Lore (L3, passive) ---
 

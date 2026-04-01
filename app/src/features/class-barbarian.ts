@@ -1,5 +1,5 @@
 import { featureSaveDC } from "#/srd-constants.ts"
-import type { Condition, DamageType } from "#/types.ts"
+import type { ArmorWeight, Condition, DamageType } from "#/types.ts"
 
 // --- Types ---
 
@@ -9,9 +9,6 @@ const BRUTAL_STRIKE_EFFECTS = [...BRUTAL_STRIKE_BASE, ...BRUTAL_STRIKE_IMPROVED]
 
 /** Brutal Strike effect options per SRD 5.2.1. */
 export type BrutalStrikeEffect = (typeof BRUTAL_STRIKE_EFFECTS)[number]
-
-/** Armor weight category for rage eligibility check. */
-export type ArmorWeight = "none" | "light" | "medium" | "heavy"
 
 /** Rage state tracked on a barbarian character. */
 export interface RageState {

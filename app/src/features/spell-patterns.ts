@@ -12,7 +12,9 @@ import type { Ability, Condition, DamageType } from "#/types.ts"
 // =============================================================================
 
 /** Damage pattern used by a spell. */
-export type SpellDamagePattern = "saveForHalf" | "attackRoll" | "autoHit" | "saveOrNothing"
+export const SPELL_DAMAGE_PATTERNS = ["saveForHalf", "attackRoll", "autoHit", "saveOrNothing"] as const
+
+export type SpellDamagePattern = (typeof SPELL_DAMAGE_PATTERNS)[number]
 
 /** Metadata for a damage-dealing spell (SRD 5.2.1). */
 export interface SpellDamageInfo {

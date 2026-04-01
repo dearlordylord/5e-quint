@@ -31,25 +31,30 @@ export interface MonsterResourceState {
 
 // --- SRD 5.2.1 Creature Types (14 types, Monsters > Overview) ---
 
-export type CreatureType =
-  | "aberration"
-  | "beast"
-  | "celestial"
-  | "construct"
-  | "dragon"
-  | "elemental"
-  | "fey"
-  | "fiend"
-  | "giant"
-  | "humanoid"
-  | "monstrosity"
-  | "ooze"
-  | "plant"
-  | "undead"
+export const CREATURE_TYPES = [
+  "aberration",
+  "beast",
+  "celestial",
+  "construct",
+  "dragon",
+  "elemental",
+  "fey",
+  "fiend",
+  "giant",
+  "humanoid",
+  "monstrosity",
+  "ooze",
+  "plant",
+  "undead"
+] as const
+
+export type CreatureType = (typeof CREATURE_TYPES)[number]
 
 // --- SRD 5.2.1 Senses ---
 
-export type SenseType = "blindsight" | "darkvision" | "tremorsense" | "truesight"
+export const SENSE_TYPES = ["blindsight", "darkvision", "tremorsense", "truesight"] as const
+
+export type SenseType = (typeof SENSE_TYPES)[number]
 
 // --- Challenge Rating (sum type: fractional CRs are special cases) ---
 
@@ -81,29 +86,34 @@ export type MultiattackSlot =
 
 // --- Speed Types ---
 
-export type SpeedType = "walk" | "fly" | "swim" | "climb" | "burrow"
+export const SPEED_TYPES = ["walk", "fly", "swim", "climb", "burrow"] as const
+
+export type SpeedType = (typeof SPEED_TYPES)[number]
 
 // --- Skill (18 SRD skills) ---
 
-export type Skill =
-  | "acrobatics"
-  | "animalHandling"
-  | "arcana"
-  | "athletics"
-  | "deception"
-  | "history"
-  | "insight"
-  | "intimidation"
-  | "investigation"
-  | "medicine"
-  | "nature"
-  | "perception"
-  | "performance"
-  | "persuasion"
-  | "religion"
-  | "sleightOfHand"
-  | "stealth"
-  | "survival"
+export const SKILLS = [
+  "acrobatics",
+  "animalHandling",
+  "arcana",
+  "athletics",
+  "deception",
+  "history",
+  "insight",
+  "intimidation",
+  "investigation",
+  "medicine",
+  "nature",
+  "perception",
+  "performance",
+  "persuasion",
+  "religion",
+  "sleightOfHand",
+  "stealth",
+  "survival"
+] as const
+
+export type Skill = (typeof SKILLS)[number]
 
 // --- Stat Block (SRD 5.2.1: "contains the game statistics of a monster") ---
 

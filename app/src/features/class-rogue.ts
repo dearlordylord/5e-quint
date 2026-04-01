@@ -34,7 +34,9 @@ const TRIP_VALID_SIZES: ReadonlySet<string> = new Set([
 ] as const satisfies ReadonlyArray<Size>)
 
 /** Cunning Action choices (L2 Rogue) */
-export type CunningActionChoice = "dash" | "disengage" | "hide"
+export const CUNNING_ACTION_CHOICES = ["dash", "disengage", "hide"] as const
+
+export type CunningActionChoice = (typeof CUNNING_ACTION_CHOICES)[number]
 
 /** Result of using Cunning Action */
 export interface CunningActionResult {

@@ -29,7 +29,9 @@ export function channelDivinityMax(classLevels: {
 // SRD: Choose Protector or Thaumaturge.
 // =============================================================================
 
-export type DivineOrderChoice = "protector" | "thaumaturge"
+export const DIVINE_ORDER_CHOICES = ["protector", "thaumaturge"] as const
+
+export type DivineOrderChoice = (typeof DIVINE_ORDER_CHOICES)[number]
 
 /** Thaumaturge: bonus to Arcana/Religion checks = WIS mod (min +1). */
 export function thaumaturgeBonus(wisMod: number): number {
@@ -78,7 +80,9 @@ export function searUndeadDice(wisMod: number): number {
 // Blessed Strikes (Level 7, choose one)
 // =============================================================================
 
-export type BlessedStrikesChoice = "divineStrike" | "potentSpellcasting"
+export const BLESSED_STRIKES_CHOICES = ["divineStrike", "potentSpellcasting"] as const
+
+export type BlessedStrikesChoice = (typeof BLESSED_STRIKES_CHOICES)[number]
 
 /** Divine Strike: +1d8 at L7, +2d8 at L14 (Improved Blessed Strikes). */
 export function divineStrikeDice(clericLevel: number): number {

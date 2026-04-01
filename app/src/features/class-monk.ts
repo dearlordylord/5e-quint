@@ -7,9 +7,13 @@ import { featureSaveDC } from "#/srd-constants.ts"
 
 export type MartialArtsDie = 6 | 8 | 10 | 12
 
-export type WeaponCategory = "unarmed" | "monkWeapon" | "other"
+export const WEAPON_CATEGORIES = ["unarmed", "monkWeapon", "other"] as const
 
-export type AttackAbility = "str" | "dex"
+export type WeaponCategory = (typeof WEAPON_CATEGORIES)[number]
+
+export const ATTACK_ABILITIES = ["str", "dex"] as const
+
+export type AttackAbility = (typeof ATTACK_ABILITIES)[number]
 
 export interface FocusPoolState {
   readonly focusPoints: number
