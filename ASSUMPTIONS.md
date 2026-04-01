@@ -269,3 +269,23 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Rules basis (SRD 5.2.1 Monk L2 "Uncanny Metabolism"):** "When you roll Initiative, you can regain all expended Focus Points." The word "can" implies optional.
 
 **Changes:** `dnd.qnt`: `doUncannyMetabolism` is a separate action in `stepPC`, not wired into `doStartTurn`. Heal amount = `monkLevel + healRoll` (martial arts die abstracted as nondet 1–12).
+
+## A32: Trigger taxonomy — inferred from reaction catalog (battle layer)
+
+**Assumption:** The SRD does not define a closed set of "trigger types." Each reaction specifies its trigger in natural language (e.g., "when you are hit by an attack roll"). The battle layer infers 11 trigger categories by grouping reactions that fire at the same game moment. This taxonomy is a modeling decision — the SRD does not name or enumerate these categories.
+
+**Rules basis:** Every reaction trigger phrase in SRD 5.2.1 maps to exactly one of: ATTACK_HITS, ATTACK_DAMAGES, DAMAGE_TAKEN, SPELL_BEING_CAST, LEAVES_REACH, FALLS, SAVE_FAILED, TURN_STARTS, TURN_ENDS, MOVE_ENDS, ALLY_TAKES_ATTACK_ACTION. See `battle/REQUIREMENTS.md` R50 for the full mapping with SRD references.
+
+**Why this matters:** The battle machine needs a finite set of interrupt points to check for eligible reactions. Without this taxonomy, the machine would need to pattern-match on natural language trigger descriptions. The taxonomy collapses 26+ reaction trigger phrases into 11 categories with identical game-moment semantics.
+
+## A33: Mid-combat creature roster changes — DM discretion
+
+**Assumption:** Creatures can enter and leave combat at any time. Reinforcements arrive, creatures flee, summons appear. The SRD does not prescribe rules for when or how this happens — it is DM discretion. The battle spec models a mutable creature set (insert/remove operations on the creature map).
+
+**Initiative for new arrivals:** The SRD does not specify how a creature joining mid-combat enters the initiative order. The spec treats this as caller-provided: the caller supplies the initiative count when inserting a new creature.
+
+**Dead/unconscious creatures in initiative:** The SRD does not explicitly remove dead or unconscious creatures from initiative order. Dead monsters are implicitly removed (they cease to exist). Unconscious PCs remain in initiative but are Incapacitated (can't act, speed 0). The spec keeps dead/unconscious creatures in the initiative list until explicitly removed by the caller.
+
+**Summoned creature initiative:** Varies by spell. Find Familiar: rolls own initiative. Find Steed / Summon Dragon: shares caster's initiative count, acts on caster's turn or immediately after. Conjure spells (Animals, Elemental, etc.): no independent turn — act as effects under caster control.
+
+**Rules basis:** Playing-the-Game.md states "Everyone involved in the combat encounter rolls Initiative" at start, and "The Initiative order remains the same from round to round." No rules for mid-combat changes. Combat ends "when one side or the other is defeated, which can mean the creatures are killed or knocked out or have surrendered or fled" — but no explicit removal from initiative on individual death/flee.
