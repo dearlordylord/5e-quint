@@ -38,6 +38,9 @@ CREATURE MACHINES (dnd.qnt + existing TS machine)
 
 ```
 [B0] Spike — battle.qnt                                           ✓ done
+[B1] Multi-reactor interrupt (P1)                                  ✓ done
+[B2] Save transactions (P1)                                        ✓ done
+[B4] Concentration links (P1)                                      ✓ done
 ```
 
 **[B0] Spike** *(done)*
