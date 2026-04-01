@@ -311,6 +311,106 @@ Rules where one creature's state affects another creature's state or rolls.
 | Healing an unconscious ally | Playing-the-Game.md | Any healing on a creature at 0 HP restores them to consciousness. Cross-creature transaction. |
 | Grapple | Playing-the-Game.md | Grappler and target are linked — grappler's speed affects target's ability to move. Grapple ends if either is incapacitated or moved out of reach. |
 
+## R31: Saving Throw Transactions
+
+**Source:** Playing-the-Game.md (Spellcasting), Rules-Glossary.md (Saving Throw), spell entries
+
+Most offensive spells don't use attack rolls — they force saving throws. The caster's spell save DC depends on the caster's stats (8 + proficiency + spellcasting ability modifier). The target rolls against it.
+
+This is a cross-creature transaction distinct from attacks:
+
+```
+Caster A casts Hold Person on Target B:
+  A: USE_ACTION, EXPEND_SLOT, START_CONCENTRATION
+  B: rolls WIS save vs A's spell save DC
+     fail → APPLY_CONDITION(paralyzed)
+     succeed → no effect
+```
+
+Key differences from attack transactions:
+- No attack roll — the target rolls (save), not the caster
+- The DC comes from the caster's state, not caller-provided AC
+- No hit/miss interrupt point — reactions like Shield don't apply to saves
+- Save-specific reactions exist: Countercharm (reroll save vs charm/fright), Legendary Resistance (auto-succeed)
+- Evasion class feature: DEX save success → no damage (not half)
+
+Interrupt points for save transactions:
+```
+Phase 1: Caster declares spell
+  ── INTERRUPT: SPELL_BEING_CAST (Counterspell) ──
+Phase 2: Targets make saving throws
+  ── INTERRUPT: SAVE_FAILED (Countercharm, Legendary Resistance) ──
+Phase 3: Apply effects (damage, conditions) to failed saves
+  ── INTERRUPT: DAMAGE_TAKEN (if spell deals damage — Hellish Rebuke, etc.) ──
+```
+
+## R32: Area of Effect (1-to-Many Transactions)
+
+**Source:** Playing-the-Game.md (Areas of Effect), Rules-Glossary.md, spell entries
+
+AoE spells affect multiple creatures simultaneously. The caster takes one action; each target is affected independently.
+
+```
+Caster A casts Fireball (20ft radius):
+  A: USE_ACTION, EXPEND_SLOT
+  For each target in area {B, C, D}:
+    target: DEX save vs A's spell save DC
+    fail → full damage (TAKE_DAMAGE)
+    succeed → half damage (TAKE_DAMAGE)
+```
+
+AoE shapes (SRD, Rules Glossary "Areas of Effect"):
+- **Cone**: origin at caster, width at distance
+- **Cube**: origin at a point, extends in all directions
+- **Cylinder**: origin at a point, radius + height
+- **Emanation**: origin centered on a point (often the caster)
+- **Line**: origin at caster, width 5ft
+- **Sphere**: origin at a point, radius
+
+Which creatures are "in the area" is a spatial/distance question — caller-provided per our O2 decision. The battle machine receives the set of affected creatures as input.
+
+Key properties:
+- Each target saves/takes damage independently
+- Each target's damage may trigger independent reactions
+- The caster spends resources once, not per-target
+- Friendly fire: AoE can hit allies unless the spell says otherwise (Evocation Wizard's Sculpt Spells exempts allies)
+
+## R33: Concentration Links (Cross-Creature Effect Tracking)
+
+**Source:** Playing-the-Game.md (Concentration), Rules-Glossary.md
+
+Many spells create a **link** between caster and one or more targets:
+- Caster concentrates on the spell
+- Target(s) have an active effect (buff, debuff, condition) from that spell
+- When the caster's concentration breaks, ALL linked effects end on ALL targets
+
+Current single-creature spec tracks:
+- `concentrationSpellId`: which spell THIS creature concentrates on
+- `activeEffects`: which effects are on THIS creature (with spellId and duration)
+
+For multi-creature, the missing information is **who cast the effect**. When caster A's concentration breaks, the battle machine must find all creatures whose `activeEffects` include an effect with `spellId == A's concentrationSpellId` and remove those effects.
+
+Examples of concentration links:
+| Spell | Caster Effect | Target Effect | Link |
+|-------|---------------|---------------|------|
+| Hold Person | concentrationSpellId = "hold_person" | APPLY_CONDITION(paralyzed) + activeEffect | Break conc → remove paralyzed from target |
+| Bless | concentrationSpellId = "bless" | +1d4 to attacks/saves (up to 3 targets) | Break conc → all 3 targets lose bonus |
+| Haste | concentrationSpellId = "haste" | extra action, +2 AC, adv DEX saves | Break conc → target incapacitated + speed 0 for 1 turn |
+| Spirit Guardians | concentrationSpellId = "spirit_guardians" | damage to enemies in aura each turn | Break conc → aura ends |
+
+This implies `ActiveEffect` needs a `casterId` field in multi-creature context, or the battle state needs a separate link registry.
+
+## R34: Help Action as Transaction
+
+**Source:** Rules-Glossary.md, "Help [Action]"
+
+The Help action is a cross-creature transaction with no resource cost beyond the action itself:
+- Helper uses their action
+- Ally gains advantage on next attack roll or ability check against a specific target
+- Requires: helper can see both the ally and the target, helper within 5ft of target (for attack help)
+
+Already listed in R30 but not described as a transaction shape. It creates a temporary cross-creature link (helper → beneficiary) that expires on the beneficiary's next relevant roll.
+
 ---
 
 ## R40: Distances and Spatial Rules

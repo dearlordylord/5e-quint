@@ -34,6 +34,14 @@ Examples:
 
 A transaction may touch 1 creature (self-buff), 2 creatures (attack), or N creatures (Fireball, aura).
 
+Transaction shapes:
+- **1-to-1 attack**: attacker rolls, target may react, damage applied. (R20)
+- **1-to-1 save**: caster's DC, target rolls save, effect on fail. (R31)
+- **1-to-many AoE**: caster acts once, each target saves/takes damage independently. (R32)
+- **1-to-1 heal**: healer spends resource, target gains HP. No interrupt points.
+- **1-to-1 buff/debuff**: caster concentrates, target gains/loses effect. Creates a concentration link. (R33)
+- **1-to-1 help**: helper spends action, ally gains advantage on next roll vs a target. (R34)
+
 ## Interrupts and Reactions
 
 **Trigger** — A game event that allows one or more creatures to react. Triggers arise from actions, movement, damage, spellcasting, and other events. See `REQUIREMENTS.md` R10 for the full catalog.
@@ -75,6 +83,12 @@ Reactions have four distinct timing relationships to their triggers (derived fro
 
 **Aura** — A persistent effect centered on a creature that affects other creatures within a radius. Example: Paladin Aura of Protection (10ft/30ft). The aura's benefit depends on the source creature's state (alive, conscious, not incapacitated).
 
-**Link** — A persistent connection between two creatures' states. Example: grapple (grappler + target), concentration (caster + affected targets). Breaking the link (incapacitation, distance, death) affects both sides.
+**Link** — A persistent connection between two creatures' states. Breaking the link (incapacitation, distance, death) affects both sides. Links are the mechanism for concentration break propagation.
+
+Link types:
+- **Concentration link**: caster concentrates on spell → target(s) have effect. Caster's concentration breaks → effects end on all targets. One-to-many.
+- **Grapple link**: grappler and target. Grappler's speed halved, target's speed 0. Ends if either is incapacitated or moved out of reach. One-to-one, bidirectional.
+- **Help link**: helper → beneficiary. Expires on beneficiary's next relevant roll. One-to-one, ephemeral.
+- **Mount link**: rider and mount share initiative. Mount death → rider falls. Controlled mount: rider directs movement. One-to-one, bidirectional.
 
 **Concentration Break Propagation** — When a creature's concentration breaks (from damage, incapacitation, death, or casting another concentration spell), the concentrated spell's effects end on ALL affected creatures. Example: caster takes damage → fails CON save → concentration breaks → spell effect ends → conditions imposed by that spell are removed from all targets. In rare edge cases this can chain (creature A's concentration break removes a buff from B, causing B to drop to 0 HP, breaking B's own concentration), but the common case is a single propagation from concentrator to affected creatures.
