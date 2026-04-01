@@ -311,6 +311,22 @@ Rules where one creature's state affects another creature's state or rolls.
 | Healing an unconscious ally | Playing-the-Game.md | Any healing on a creature at 0 HP restores them to consciousness. Cross-creature transaction. |
 | Grapple | Playing-the-Game.md | Grappler and target are linked — grappler's speed affects target's ability to move. Grapple ends if either is incapacitated or moved out of reach. |
 
+## R30.1: Multiple Reactors at One Interrupt Point
+
+**Source:** Implicit from R2 — each creature has its own reaction, independently.
+
+At any interrupt point, multiple creatures may be eligible to react — not just the target. Each creature that reacts spends its own reaction. Multiple reactions to the same trigger are legal as long as each reactor has their reaction available.
+
+Examples:
+- Attack hits B → B can Shield, AND Paladin P (within 5ft of B) can use Protection, AND Bard (within 60ft) can use Cutting Words. Each spends their own reaction.
+- Creature moves away from A and B → both A and B can take Opportunity Attacks (each spending their reaction).
+
+**Who decides order?** Per R4 (Simultaneous Effects): "the person whose turn it is decides the order." So if it's creature A's turn and A's attack triggers reactions from B, C, and D — A's player decides the order in which B, C, D react.
+
+**Interaction with nesting:** If Paladin reacts with Protection (adding AC), that may turn the hit into a miss. If it's still a hit, the target can still react with their own Shield or Uncanny Dodge. Reactions at the same interrupt point are sequential, not simultaneous.
+
+---
+
 ## R31: Saving Throw Transactions
 
 **Source:** Playing-the-Game.md (Spellcasting), Rules-Glossary.md (Saving Throw), spell entries
