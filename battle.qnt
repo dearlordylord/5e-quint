@@ -4,10 +4,9 @@
 /// Composes on top of dnd.qnt pure functions.
 ///
 /// SIMPLIFICATIONS (each is a planned incremental improvement, see PLAN_BATTLE.md):
-/// - Attack transactions only. Full version: save transactions (R31), AoE (R32)
 /// - No concentration links. Full version: casterId on effects, propagation (R33)
 /// - No class states in Combatant. Full version: ClassStateMap
-/// - 2 reactions only (Shield, Uncanny Dodge). Full version: all 26 from R10 catalog
+/// - Limited reactions (Shield, Uncanny Dodge, Counterspell). Full version: all 26 from R10
 /// These are simplifications of a correct structure, not structural gaps.
 
 module battle {
@@ -28,15 +27,24 @@ module battle {
     kind: CreatureKind,
   }
 
-  type TriggerType = TAttackHits | TAttackDamages
+  type TriggerType =
+    | TAttackHits       // "when hit by attack roll" — Shield, Parry
+    | TAttackDamages    // "when you take damage from attack" — Uncanny Dodge
+    | TSpellBeingCast   // "see creature casting a spell" — Counterspell
+    | TSaveFailed       // "fails a saving throw" — Legendary Resistance, Countercharm
 
-  type ReactionDecision = RPass | RShield | RUncannyDodge
+  type ReactionDecision =
+    | RPass
+    | RShield
+    | RUncannyDodge
+    | RCounterspell(bool)   // bool = target CON save succeeded (5.2.1 Counterspell)
+    | RLegendaryResistance  // auto-succeed the save
 
   type AttackHitCtx = {
     attacker: CreatureId,
     target: CreatureId,
     attackRoll: int,
-    targetAc: int,       // may be modified by reactions (Shield, Parry)
+    targetAc: int,
     damage: int,
     damageType: DamageType,
     isCritical: bool,
@@ -45,25 +53,64 @@ module battle {
   type AttackDamageCtx = {
     attacker: CreatureId,
     target: CreatureId,
-    damage: int,          // may be modified by reactions (Uncanny Dodge)
+    damage: int,
     damageType: DamageType,
     isCritical: bool,
+  }
+
+  // Context for a spell being cast (Counterspell interrupt)
+  type SpellCastCtx = {
+    caster: CreatureId,
+    // The rest of the spell resolution lives in the post-cast context.
+    // This just tracks who is casting, so Counterspell knows the target.
+    // postCast describes what happens if the spell is NOT countered.
+    postCast: PostCastEffect,
+  }
+
+  // What happens after a spell resolves (not countered).
+  // Each variant is a different spell shape.
+  type PostCastEffect =
+    | PCESave(SaveSpellCtx)       // save-or-suck spell
+    | PCEDone                     // placeholder for future spell types
+
+  // Context for a save-based spell targeting one creature.
+  type SaveSpellCtx = {
+    caster: CreatureId,
+    target: CreatureId,
+    saveDC: int,               // caller-provided (8 + prof + ability mod)
+    saveRoll: int,             // pre-resolved save roll
+    damageOnFail: int,         // 0 if no damage
+    halfOnSuccess: bool,       // true for spells like Fireball (half damage on save)
+    damageType: DamageType,
+    conditionOnFail: Condition, // CBlinded etc. Use CBlinded as "none" placeholder
+    applyCondition: bool,       // true if spell actually applies a condition on fail
+    slotLevel: int,             // for slot expenditure
+  }
+
+  // Context for a failed save (Legendary Resistance / Countercharm interrupt)
+  type SaveFailedCtx = {
+    caster: CreatureId,
+    target: CreatureId,
+    damageOnFail: int,
+    halfOnSuccess: bool,
+    damageType: DamageType,
+    conditionOnFail: Condition,
+    applyCondition: bool,
+    saveSucceeded: bool,       // mutable — LR can flip this to true
   }
 
   type PendingInterrupt =
     | PIAttackHit(AttackHitCtx)
     | PIAttackDamage(AttackDamageCtx)
+    | PISpellCast(SpellCastCtx)
+    | PISaveFailed(SaveFailedCtx)
     | PIResolved
 
-  // Reaction window: tracks who can react and who already decided.
-  // At each interrupt point, creatures in `eligible` are offered the chance
-  // to react one at a time. Each react-or-pass is one battleStep.
-  // Active player decides the order (R4) — modeled as nondeterministic choice.
   type AwaitCtx = {
     interrupt: PendingInterrupt,
     trigger: TriggerType,
-    eligible: Set[CreatureId],   // who can still react (has reaction + valid for trigger)
-    offered: Set[CreatureId],    // who already decided (react or pass)
+    eligible: Set[CreatureId],
+    offered: Set[CreatureId],
   }
 
   type BattlePhase =
@@ -100,6 +147,11 @@ module battle {
   ): (CreatureId -> Combatant) =
     cs.set(id, cs.get(id).with("turn", t))
 
+  pure def setSlots(
+    cs: CreatureId -> Combatant, id: CreatureId, s: SpellSlotState
+  ): (CreatureId -> Combatant) =
+    cs.set(id, cs.get(id).with("slots", s))
+
   pure def hasReaction(cs: CreatureId -> Combatant, id: CreatureId): bool =
     cs.get(id).turn.reactionAvailable
 
@@ -115,6 +167,19 @@ module battle {
     kind: k,
   }
 
+  // Combatant with spell slots (for casters in battle)
+  pure def mkCaster(maxHp: int, k: CreatureKind): Combatant = {
+    creature: freshCreature(maxHp),
+    turn: FRESH_TURN,
+    slots: {
+      slotsMax: EMPTY_SLOTS.set(1, 4).set(2, 3).set(3, 2),
+      slotsCurrent: EMPTY_SLOTS.set(1, 4).set(2, 3).set(3, 2),
+      pactSlotsMax: 0, pactSlotsCurrent: 0, pactSlotLevel: 0,
+      concentrationSpellId: "",
+    },
+    kind: k,
+  }
+
   pure def dealDamage(
     cs: CreatureId -> Combatant, targetId: CreatureId,
     dmg: int, dt: DamageType, crit: bool
@@ -124,13 +189,14 @@ module battle {
     setCreature(cs, targetId, nc)
   }
 
-  /// Compute who can react at an attack-hit interrupt point.
-  /// Currently: target (Shield) + any bystander with reaction available.
-  /// In the full version, each creature's eligible reactions depend on
-  /// their class features, prepared spells, and spatial position (caller-provided).
-  /// For now: any creature except the attacker who has their reaction available
-  /// and is not dead. This is a simplification — the full version will filter
-  /// by "has a valid reaction for this trigger type" which is class/spell-dependent.
+  // Apply non-crit, non-resistance damage (for spell damage)
+  pure def dealSpellDamage(
+    cs: CreatureId -> Combatant, targetId: CreatureId,
+    dmg: int, dt: DamageType
+  ): (CreatureId -> Combatant) =
+    dealDamage(cs, targetId, dmg, dt, false)
+
+  /// Eligible for hit-reaction: anyone except attacker with reaction + alive
   pure def eligibleForHitReaction(
     cs: CreatureId -> Combatant, allIds: Set[CreatureId], attackerId: CreatureId
   ): Set[CreatureId] =
@@ -138,9 +204,7 @@ module battle {
       hasReaction(cs, id) and not(getC(cs, id).creature.dead)
     )
 
-  /// Compute who can react at an attack-damage interrupt point.
-  /// Only the target can use damage-reduction reactions (Uncanny Dodge, Deflect Attacks).
-  /// Bystanders have no damage-reduction reactions in the SRD.
+  /// Eligible for damage-reaction: only the target (Uncanny Dodge, Deflect Attacks)
   pure def eligibleForDmgReaction(
     cs: CreatureId -> Combatant, targetId: CreatureId
   ): Set[CreatureId] =
@@ -149,7 +213,25 @@ module battle {
     else
       Set()
 
-  // Frame condition: keep non-creature battle vars unchanged
+  /// Eligible for Counterspell: anyone except the caster with reaction + alive
+  pure def eligibleForCounterspell(
+    cs: CreatureId -> Combatant, allIds: Set[CreatureId], casterId: CreatureId
+  ): Set[CreatureId] =
+    allIds.exclude(Set(casterId)).filter(id =>
+      hasReaction(cs, id) and not(getC(cs, id).creature.dead)
+    )
+
+  /// Eligible for save-failed reactions: only the target (Legendary Resistance)
+  pure def eligibleForSaveFailedReaction(
+    cs: CreatureId -> Combatant, targetId: CreatureId
+  ): Set[CreatureId] =
+    // For now: any alive creature with reaction can use LR (simplified)
+    // Full version: only creatures with Legendary Resistance charges
+    if (hasReaction(cs, targetId) and not(getC(cs, targetId).creature.dead))
+      Set(targetId)
+    else
+      Set()
+
   action keepBattle = all {
     bInitiative' = bInitiative,
     bTurnIndex' = bTurnIndex,
@@ -166,8 +248,8 @@ module battle {
     nondet hp3 = 10.to(30).oneOf()
     all {
       bCreatures' = Map(
-        "A" -> mkCombatant(hp1, PC),
-        "B" -> mkCombatant(hp2, PC),
+        "A" -> mkCaster(hp1, PC),
+        "B" -> mkCaster(hp2, PC),
         "C" -> mkCombatant(hp3, PC)
       ),
       bInitiative' = ["A", "B", "C"],
@@ -186,6 +268,8 @@ module battle {
       keepBattle,
     }
   }
+
+  // --- Attack transaction (B0/B1) ---
 
   action bAttack = {
     val activeId = bInitiative[bTurnIndex]
@@ -209,7 +293,6 @@ module battle {
       val cs1 = setTurn(bCreatures, activeId, newTurn)
       val hit = attackRoll >= tAc or attackRoll == 20
       if (not(hit)) {
-        // Miss — no interrupt
         all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
       } else {
         val atkCtx: AttackHitCtx = {
@@ -219,7 +302,6 @@ module battle {
         }
         val elig = eligibleForHitReaction(cs1, listToSet(bInitiative), activeId)
         if (elig.size() > 0) {
-          // Enter hit-reaction interrupt — eligible creatures will be offered one by one
           all {
             bCreatures' = cs1,
             bPhase' = BPAwaitingReaction({
@@ -229,7 +311,6 @@ module battle {
             keepBattle,
           }
         } else {
-          // No one can react — apply damage directly
           all {
             bCreatures' = dealDamage(cs1, targetId, dmg, dt, crit),
             bPhase' = BPActiveTurn,
@@ -240,18 +321,13 @@ module battle {
     }
   }
 
-  /// Advance from hit-interrupt to damage-interrupt or apply damage.
-  /// Called when all eligible hit-reactors have been offered.
   pure def advanceFromHitPhase(
     cs: CreatureId -> Combatant, atk: AttackHitCtx
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
-    // Check if attack still hits (AC may have changed from reactions)
     val stillHit = atk.attackRoll >= atk.targetAc or atk.attackRoll == 20
     if (not(stillHit)) {
-      // Reactions turned hit into miss
       { creatures: cs, phase: BPActiveTurn }
     } else {
-      // Still a hit — check for damage reactions
       val dmgElig = eligibleForDmgReaction(cs, atk.target)
       if (dmgElig.size() > 0) {
         val dmgCtx: AttackDamageCtx = {
@@ -264,15 +340,12 @@ module battle {
           eligible: dmgElig, offered: Set(),
         })}
       } else {
-        // No damage reactions — apply damage
         { creatures: dealDamage(cs, atk.target, atk.damage, atk.damageType, atk.isCritical),
           phase: BPActiveTurn }
       }
     }
   }
 
-  /// One creature resolves their reaction at a hit-interrupt point.
-  /// Nondeterministically picks one eligible creature, they react or pass.
   action bResolveHitReaction = {
     match bPhase {
       | BPAwaitingReaction(ctx) =>
@@ -280,33 +353,21 @@ module battle {
           | PIAttackHit(atk) =>
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
-              // Everyone offered — advance to damage phase or apply
               val result = advanceFromHitPhase(bCreatures, atk)
-              all {
-                bCreatures' = result.creatures,
-                bPhase' = result.phase,
-                keepBattle,
-              }
+              all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
-              // Pick next creature to offer (nondeterministic — active player decides order per R4)
               nondet reactorId = remaining.oneOf()
               nondet decision = Set(RPass, RShield).oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
               match decision {
-                | RPass => {
-                  // Pass — don't spend reaction, continue to next eligible
-                  all {
+                | RPass => all {
                     bCreatures' = bCreatures,
                     bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
                     keepBattle,
                   }
-                }
                 | RShield => {
-                  // Shield: +5 AC retroactively. Spend reaction.
                   val cs1 = spendReaction(bCreatures, reactorId)
-                  // Update the attack context with new AC
                   val newAtk = atk.with("targetAc", atk.targetAc + 5)
-                  // Remove this creature from eligible (reaction spent)
                   val newElig = ctx.eligible.exclude(Set(reactorId))
                   all {
                     bCreatures' = cs1,
@@ -326,7 +387,6 @@ module battle {
     }
   }
 
-  /// One creature resolves their reaction at a damage-interrupt point.
   action bResolveDmgReaction = {
     match bPhase {
       | BPAwaitingReaction(ctx) =>
@@ -334,7 +394,6 @@ module battle {
           | PIAttackDamage(atk) =>
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
-              // Everyone offered — apply final damage
               all {
                 bCreatures' = dealDamage(bCreatures, atk.target, atk.damage, atk.damageType, atk.isCritical),
                 bPhase' = BPActiveTurn,
@@ -358,14 +417,11 @@ module battle {
                     keepBattle,
                   }
                 }
-                | _ => {
-                  // Pass
-                  all {
+                | _ => all {
                     bCreatures' = bCreatures,
                     bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
                     keepBattle,
                   }
-                }
               }
             }
           | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -373,6 +429,225 @@ module battle {
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
   }
+
+  // --- Save spell transaction (B2) ---
+  // Caster casts a save-or-suck spell on a target.
+  // Flow: cast → Counterspell interrupt → resolve save → save-failed interrupt → apply effects.
+
+  action bCastSaveSpell = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = getC(bCreatures, activeId)
+    nondet targetId = listToSet(bInitiative).exclude(Set(activeId)).oneOf()
+    nondet saveDC = 10.to(18).oneOf()
+    nondet saveRoll = 1.to(20).oneOf()
+    nondet dmgOnFail = 0.to(20).oneOf()
+    nondet halfOnSave = Bool.oneOf()
+    nondet dt = ALL_DAMAGE_TYPES.oneOf()
+    nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
+    nondet applyCond = Bool.oneOf()
+    nondet slotLvl = 1.to(3).oneOf()
+    val tc = getC(bCreatures, targetId)
+    all {
+      bPhase == BPActiveTurn,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(tc.creature.dead),
+      // Must have a slot of the required level
+      ac.slots.slotsCurrent.get(slotLvl) > 0,
+      // Spend action + slot
+      val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
+      val newSlots = pExpendSlot(ac.slots, slotLvl)
+      val cs1 = setTurn(bCreatures, activeId, newTurn).setSlots(activeId, newSlots)
+      val saveCtx: SaveSpellCtx = {
+        caster: activeId, target: targetId,
+        saveDC: saveDC, saveRoll: saveRoll,
+        damageOnFail: dmgOnFail, halfOnSuccess: halfOnSave,
+        damageType: dt,
+        conditionOnFail: cond, applyCondition: applyCond,
+        slotLevel: slotLvl,
+      }
+      val spellCtx: SpellCastCtx = {
+        caster: activeId,
+        postCast: PCESave(saveCtx),
+      }
+      // Check for Counterspell
+      val csElig = eligibleForCounterspell(cs1, listToSet(bInitiative), activeId)
+      if (csElig.size() > 0) {
+        all {
+          bCreatures' = cs1,
+          bPhase' = BPAwaitingReaction({
+            interrupt: PISpellCast(spellCtx), trigger: TSpellBeingCast,
+            eligible: csElig, offered: Set(),
+          }),
+          keepBattle,
+        }
+      } else {
+        // No Counterspell possible — resolve save immediately
+        val result = resolveSave(cs1, saveCtx)
+        all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+      }
+    }
+  }
+
+  /// Resolve a save: check save roll vs DC, apply effects or enter save-failed interrupt.
+  pure def resolveSave(
+    cs: CreatureId -> Combatant, save: SaveSpellCtx
+  ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
+    val saved = save.saveRoll >= save.saveDC
+    if (saved) {
+      // Save succeeded — half damage if applicable, no condition
+      if (save.halfOnSuccess and save.damageOnFail > 0) {
+        val halfDmg = save.damageOnFail / 2
+        { creatures: dealSpellDamage(cs, save.target, halfDmg, save.damageType),
+          phase: BPActiveTurn }
+      } else {
+        { creatures: cs, phase: BPActiveTurn }
+      }
+    } else {
+      // Save failed — check for Legendary Resistance / Countercharm
+      val elig = eligibleForSaveFailedReaction(cs, save.target)
+      val failCtx: SaveFailedCtx = {
+        caster: save.caster, target: save.target,
+        damageOnFail: save.damageOnFail, halfOnSuccess: save.halfOnSuccess,
+        damageType: save.damageType,
+        conditionOnFail: save.conditionOnFail, applyCondition: save.applyCondition,
+        saveSucceeded: false,
+      }
+      if (elig.size() > 0) {
+        { creatures: cs, phase: BPAwaitingReaction({
+          interrupt: PISaveFailed(failCtx), trigger: TSaveFailed,
+          eligible: elig, offered: Set(),
+        })}
+      } else {
+        // No reactions — apply fail effects directly
+        { creatures: applyFailEffects(cs, failCtx), phase: BPActiveTurn }
+      }
+    }
+  }
+
+  /// Apply the effects of a failed save: damage + condition.
+  pure def applyFailEffects(
+    cs: CreatureId -> Combatant, ctx: SaveFailedCtx
+  ): (CreatureId -> Combatant) = {
+    if (ctx.saveSucceeded) {
+      // LR flipped the save — apply half damage if applicable
+      if (ctx.halfOnSuccess and ctx.damageOnFail > 0) {
+        dealSpellDamage(cs, ctx.target, ctx.damageOnFail / 2, ctx.damageType)
+      } else {
+        cs
+      }
+    } else {
+      // Full fail: damage + condition
+      val cs1 = if (ctx.damageOnFail > 0)
+        dealSpellDamage(cs, ctx.target, ctx.damageOnFail, ctx.damageType)
+      else cs
+      if (ctx.applyCondition) {
+        val t = getC(cs1, ctx.target)
+        val nc = pApplyCondition(t.creature, ctx.conditionOnFail, Set())
+        setCreature(cs1, ctx.target, nc)
+      } else cs1
+    }
+  }
+
+  /// Resolve Counterspell interrupt.
+  action bResolveCounterspell = {
+    match bPhase {
+      | BPAwaitingReaction(ctx) =>
+        match ctx.interrupt {
+          | PISpellCast(spell) =>
+            val remaining = ctx.eligible.exclude(ctx.offered)
+            if (remaining.size() == 0) {
+              // No one countered — spell resolves
+              match spell.postCast {
+                | PCESave(save) =>
+                  val result = resolveSave(bCreatures, save)
+                  all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+                | _ => all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattle }
+              }
+            } else {
+              nondet reactorId = remaining.oneOf()
+              nondet decision = Set(RPass, RCounterspell(true), RCounterspell(false)).oneOf()
+              val newOffered = ctx.offered.union(Set(reactorId))
+              match decision {
+                | RPass => all {
+                    bCreatures' = bCreatures,
+                    bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
+                    keepBattle,
+                  }
+                | RCounterspell(conSaveSucceeded) => {
+                  val cs1 = spendReaction(bCreatures, reactorId)
+                  if (not(conSaveSucceeded)) {
+                    // Counterspell succeeds — spell fizzles, back to active turn
+                    // Note: in full version, the Counterspell itself could be Counterspelled
+                    // (recursive PISpellCast). Deferred to B5.
+                    all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
+                  } else {
+                    // Caster made CON save — Counterspell fails, continue offering
+                    val newElig = ctx.eligible.exclude(Set(reactorId))
+                    all {
+                      bCreatures' = cs1,
+                      bPhase' = BPAwaitingReaction({
+                        interrupt: ctx.interrupt, trigger: ctx.trigger,
+                        eligible: newElig, offered: newOffered,
+                      }),
+                      keepBattle,
+                    }
+                  }
+                }
+                | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+              }
+            }
+          | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  /// Resolve save-failed interrupt (Legendary Resistance).
+  action bResolveSaveFailedReaction = {
+    match bPhase {
+      | BPAwaitingReaction(ctx) =>
+        match ctx.interrupt {
+          | PISaveFailed(sf) =>
+            val remaining = ctx.eligible.exclude(ctx.offered)
+            if (remaining.size() == 0) {
+              // All offered — apply effects
+              all {
+                bCreatures' = applyFailEffects(bCreatures, sf),
+                bPhase' = BPActiveTurn,
+                keepBattle,
+              }
+            } else {
+              nondet reactorId = remaining.oneOf()
+              nondet decision = Set(RPass, RLegendaryResistance).oneOf()
+              val newOffered = ctx.offered.union(Set(reactorId))
+              match decision {
+                | RLegendaryResistance => {
+                  // LR: auto-succeed the save. Spend reaction.
+                  // Full version: spend LR charge (monsterResourceState), not reaction.
+                  val cs1 = spendReaction(bCreatures, reactorId)
+                  val newSf = sf.with("saveSucceeded", true)
+                  // Apply as if saved (may still get half damage)
+                  all {
+                    bCreatures' = applyFailEffects(cs1, newSf),
+                    bPhase' = BPActiveTurn,
+                    keepBattle,
+                  }
+                }
+                | _ => all {
+                    bCreatures' = bCreatures,
+                    bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
+                    keepBattle,
+                  }
+              }
+            }
+          | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  // --- End turn / Heal ---
 
   action bEndTurn = {
     val nextIdx = if (bTurnIndex + 1 < bInitiative.length()) bTurnIndex + 1 else 0
@@ -414,6 +689,7 @@ module battle {
 
   action battleStep = any {
     bAttack, bResolveHitReaction, bResolveDmgReaction,
+    bCastSaveSpell, bResolveCounterspell, bResolveSaveFailedReaction,
     bHeal, bEndTurn, bStartTurn,
   }
 
@@ -431,12 +707,8 @@ module battle {
 
   val turnIndexValid = bTurnIndex >= 0 and bTurnIndex < bInitiative.length()
 
-  // B1 invariant: offered creatures are never re-offered
-  // (remaining = eligible \ offered is always shrinking)
   val offeredAreValid = match bPhase {
     | BPAwaitingReaction(ctx) =>
-      // every offered creature must have originally been eligible OR been a reactor
-      // simpler check: offered and remaining are disjoint
       ctx.eligible.exclude(ctx.offered).intersect(ctx.offered) == Set()
     | _ => true
   }
