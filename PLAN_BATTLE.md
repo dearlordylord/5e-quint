@@ -41,6 +41,9 @@ CREATURE MACHINES (dnd.qnt + existing TS machine)
 [B1] Multi-reactor interrupt (P1)                                  ✓ done
 [B2] Save transactions (P1)                                        ✓ done
 [B4] Concentration links (P1)                                      ✓ done
+  ActiveEffect gained casterId field in dnd.qnt.
+  breakConcentrationAndPropagate removes effects from all creatures.
+  bCastConcentrationSpell + bConcentrationCheck actions.
 ```
 
 **[B0] Spike** *(done)*
