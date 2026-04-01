@@ -71,6 +71,7 @@ module battle {
   type PostCastEffect =
     | PCESave(SaveSpellCtx)       // save-or-suck spell (single target)
     | PCEAoE(AoESpellCtx)        // AoE spell (multiple targets, R32)
+    | PCECounterspell(CounterspellEffect)  // Counterspell (R3, R10.2, R21)
     | PCEDone                     // placeholder for future spell types
 
   // Context for a save-based spell targeting one creature.
@@ -112,6 +113,22 @@ module battle {
     remaining: Set[CreatureId], // targets not yet resolved
   }
 
+  // Counterspell effect: what happens when a Counterspell resolves.
+  // Flat type — no reference to SpellCastCtx (avoids type cycle).
+  // The chain context is tracked via bSpellStack state variable.
+  type CounterspellEffect = {
+    targetCasterId: CreatureId,    // caster of the countered spell (makes CON save)
+    conSaveSucceeded: bool,        // pre-resolved CON save result
+  }
+
+  // Entry in the Counterspell chain stack. Captures the interrupted spell's
+  // context so we can return to its reaction loop after chain resolution.
+  type SpellStackEntry = {
+    spellCasterId: CreatureId,     // who cast the interrupted spell
+    spellPostCast: PostCastEffect, // frozen snapshot at push time — not updated during chain
+    offered: Set[CreatureId],      // offered set when the CS window was interrupted
+  }
+
   type PendingInterrupt =
     | PIAttackHit(AttackHitCtx)
     | PIAttackDamage(AttackDamageCtx)
@@ -145,6 +162,7 @@ module battle {
   var bTurnIndex: int
   var bRound: int
   var bPhase: BattlePhase
+  var bSpellStack: List[SpellStackEntry]  // Counterspell chain stack (B5)
 
   // ============================================================
   // 3. HELPERS
@@ -255,6 +273,22 @@ module battle {
     else
       Set()
 
+  /// Does the creature have a spell slot of level 3 or higher?
+  /// Required for Counterspell (level 3 Abjuration).
+  pure def hasCounterspellSlot(cs: CreatureId -> Combatant, id: CreatureId): bool =
+    val slots = getC(cs, id).slots.slotsCurrent
+    3.to(9).exists(lvl => slots.get(lvl) > 0)
+
+  /// Eligible Counterspell reactors: base eligible + has level 3+ slot.
+  pure def eligibleForCounterspell(
+    cs: CreatureId -> Combatant, allIds: Set[CreatureId], excludeId: CreatureId
+  ): Set[CreatureId] =
+    eligibleExcluding(cs, allIds, excludeId).filter(id => hasCounterspellSlot(cs, id))
+
+  /// Pop the top entry from a spell stack.
+  pure def popStack(s: List[SpellStackEntry]): { top: SpellStackEntry, rest: List[SpellStackEntry] } =
+    { top: s[s.length() - 1], rest: s.slice(0, s.length() - 1) }
+
   /// Build an AwaitCtx with empty offered set.
   pure def mkAwait(pi: PendingInterrupt, tt: TriggerType, elig: Set[CreatureId]): AwaitCtx =
     { interrupt: pi, trigger: tt, eligible: elig, offered: Set() }
@@ -271,10 +305,15 @@ module battle {
     saveSucceeded: false,
   }
 
-  action keepBattle = all {
+  action keepBattleNoStack = all {
     bInitiative' = bInitiative,
     bTurnIndex' = bTurnIndex,
     bRound' = bRound,
+  }
+
+  action keepBattle = all {
+    keepBattleNoStack,
+    bSpellStack' = bSpellStack,
   }
 
   // ============================================================
@@ -295,6 +334,7 @@ module battle {
       bTurnIndex' = 0,
       bRound' = 1,
       bPhase' = BPActiveTurn,
+      bSpellStack' = List(),
     }
   }
 
@@ -505,8 +545,8 @@ module battle {
         caster: activeId,
         postCast: PCESave(saveCtx),
       }
-      // Check for Counterspell
-      val csElig = eligibleExcluding(cs1, allIds, activeId)
+      // Check for Counterspell (must have reaction + alive + level 3+ slot)
+      val csElig = eligibleForCounterspell(cs1, allIds, activeId)
       if (csElig.size() > 0) {
         all {
           bCreatures' = cs1,
@@ -576,27 +616,161 @@ module battle {
     }
   }
 
-  /// Resolve Counterspell interrupt.
+  // --- Counterspell chain helpers (B5, R3) ---
+
+  /// Terminal resolution for a spell entry: match its postCast and return
+  /// the resulting creatures/phase. Stack is the already-correct remainder.
+  /// Does NOT handle PCECounterspell — caller must handle that variant before
+  /// invoking this helper (PCECounterspell requires stack unwinding logic).
+  pure def resolveSpellEntry(
+    cs: CreatureId -> Combatant,
+    postCast: PostCastEffect,
+    stack: List[SpellStackEntry]
+  ): { creatures: CreatureId -> Combatant, phase: BattlePhase, stack: List[SpellStackEntry] } =
+    match postCast {
+      | PCESave(save) =>
+        val result = resolveSave(cs, save)
+        { creatures: result.creatures, phase: result.phase, stack: stack }
+      | PCEAoE(aoe) => { creatures: cs, phase: BPResolvingAoE(aoe), stack: stack }
+      | _ => { creatures: cs, phase: BPActiveTurn, stack: stack }
+    }
+
+  /// Return to an interrupted spell's Counterspell window.
+  /// Recomputes eligible from current creature state (reactions may have been
+  /// spent during recursive Counterspell chains).
+  /// If no remaining eligible, resolves the spell directly (no spurious state).
+  ///
+  /// PCECounterspell entries: when a CS resolves here (no remaining reactors),
+  /// we pop the stack to find the interrupted spell and apply the CS outcome.
+  /// Quint does not support recursive pure def, so at most one extra pop is done
+  /// (handles chains of depth ≤ 3, which covers all possible states with 3 creatures).
+  pure def returnToCSWindow(
+    cs: CreatureId -> Combatant, allIds: Set[CreatureId],
+    entry: SpellStackEntry, stack: List[SpellStackEntry]
+  ): { creatures: CreatureId -> Combatant, phase: BattlePhase, stack: List[SpellStackEntry] } = {
+    val freshElig = eligibleForCounterspell(cs, allIds, entry.spellCasterId)
+    val remaining = freshElig.exclude(entry.offered)
+    if (remaining.size() > 0) {
+      val spell: SpellCastCtx = { caster: entry.spellCasterId, postCast: entry.spellPostCast }
+      { creatures: cs,
+        phase: BPAwaitingReaction({
+          interrupt: PISpellCast(spell), trigger: TSpellBeingCast,
+          eligible: freshElig, offered: entry.offered,
+        }),
+        stack: stack,
+      }
+    } else {
+      match entry.spellPostCast {
+        | PCECounterspell(csEffect) =>
+          // This CS resolved with no reactors. Apply its outcome to the spell below it.
+          if (stack.length() == 0) {
+            // Defensive: CS on the stack with nothing below it — drop to active turn.
+            { creatures: cs, phase: BPActiveTurn, stack: stack }
+          } else {
+            val popped = popStack(stack)
+            if (not(csEffect.conSaveSucceeded)) {
+              // CS succeeds → interrupted spell (popped.top) fizzles.
+              match popped.top.spellPostCast {
+                | PCECounterspell(_) =>
+                  // Fizzled spell was itself a CS → skip it, let grandparent continue.
+                  if (popped.rest.length() == 0) {
+                    { creatures: cs, phase: BPActiveTurn, stack: popped.rest }
+                  } else {
+                    val gp = popStack(popped.rest)
+                    val freshElig2 = eligibleForCounterspell(cs, allIds, gp.top.spellCasterId)
+                    val remaining2 = freshElig2.exclude(gp.top.offered)
+                    if (remaining2.size() > 0) {
+                      val spell2: SpellCastCtx = { caster: gp.top.spellCasterId, postCast: gp.top.spellPostCast }
+                      { creatures: cs,
+                        phase: BPAwaitingReaction({
+                          interrupt: PISpellCast(spell2), trigger: TSpellBeingCast,
+                          eligible: freshElig2, offered: gp.top.offered,
+                        }),
+                        stack: gp.rest,
+                      }
+                    } else {
+                      resolveSpellEntry(cs, gp.top.spellPostCast, gp.rest)
+                    }
+                  }
+                | _ =>
+                  // Original non-CS spell fizzled → active turn.
+                  { creatures: cs, phase: BPActiveTurn, stack: popped.rest }
+              }
+            } else {
+              // CS fails → interrupted spell continues; return to its CS window.
+              val freshElig2 = eligibleForCounterspell(cs, allIds, popped.top.spellCasterId)
+              val remaining2 = freshElig2.exclude(popped.top.offered)
+              if (remaining2.size() > 0) {
+                val spell2: SpellCastCtx = { caster: popped.top.spellCasterId, postCast: popped.top.spellPostCast }
+                { creatures: cs,
+                  phase: BPAwaitingReaction({
+                    interrupt: PISpellCast(spell2), trigger: TSpellBeingCast,
+                    eligible: freshElig2, offered: popped.top.offered,
+                  }),
+                  stack: popped.rest,
+                }
+              } else {
+                resolveSpellEntry(cs, popped.top.spellPostCast, popped.rest)
+              }
+            }
+          }
+        | _ => resolveSpellEntry(cs, entry.spellPostCast, stack)
+      }
+    }
+  }
+
+  /// Resolve spell-cast interrupt (Counterspell window).
+  /// B5: Counterspell is itself a spell → pushes to bSpellStack and enters
+  /// recursive PISpellCast. Chain unwinds via stack when spells resolve.
   action bResolveCounterspell = {
+    val allIds = listToSet(bInitiative)
     match bPhase {
       | BPAwaitingReaction(ctx) =>
         match ctx.interrupt {
           | PISpellCast(spell) =>
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
-              // No one countered — spell resolves
+              // All offered — spell resolves
               match spell.postCast {
                 | PCESave(save) =>
                   val result = resolveSave(bCreatures, save)
                   all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
                 | PCEAoE(aoe) =>
-                  // Not countered — enter AoE target resolution
                   all { bCreatures' = bCreatures, bPhase' = BPResolvingAoE(aoe), keepBattle }
+                | PCECounterspell(csEffect) =>
+                  if (bSpellStack.length() == 0) {
+                    // Defensive: stack empty shouldn't happen for PCECounterspell
+                    all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattle }
+                  } else {
+                    val popped = popStack(bSpellStack)
+                    if (not(csEffect.conSaveSucceeded)) {
+                      // CS succeeds → countered spell (popped.top) fizzles
+                      match popped.top.spellPostCast {
+                        | PCECounterspell(_) =>
+                          // Fizzled spell was a CS → its target spell continues
+                          if (popped.rest.length() == 0) {
+                            all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattleNoStack, bSpellStack' = popped.rest }
+                          } else {
+                            val gp = popStack(popped.rest)
+                            val result = returnToCSWindow(bCreatures, allIds, gp.top, gp.rest)
+                            all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattleNoStack, bSpellStack' = result.stack }
+                          }
+                        | _ =>
+                          // Original spell fizzled
+                          all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattleNoStack, bSpellStack' = popped.rest }
+                      }
+                    } else {
+                      // CS fails → countered spell continues
+                      val result = returnToCSWindow(bCreatures, allIds, popped.top, popped.rest)
+                      all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattleNoStack, bSpellStack' = result.stack }
+                    }
+                  }
                 | _ => all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattle }
               }
             } else {
               nondet reactorId = remaining.oneOf()
               nondet decision = Set(RPass, RCounterspell(true), RCounterspell(false)).oneOf()
+              nondet csSlotLvl = 3.to(9).oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
               match decision {
                 | RPass => all {
@@ -604,26 +778,36 @@ module battle {
                     bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
                     keepBattle,
                   }
-                | RCounterspell(conSaveSucceeded) => {
-                  val cs1 = spendReaction(bCreatures, reactorId)
-                  if (not(conSaveSucceeded)) {
-                    // Counterspell succeeds — spell fizzles, back to active turn
-                    // Note: in full version, the Counterspell itself could be Counterspelled
-                    // (recursive PISpellCast). Deferred to B5.
-                    all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
-                  } else {
-                    // Caster made CON save — Counterspell fails, continue offering
-                    val newElig = ctx.eligible.exclude(Set(reactorId))
+                | RCounterspell(conSaveSucceeded) => all {
+                    // Guard: reactor must have a slot of level csSlotLvl
+                    getC(bCreatures, reactorId).slots.slotsCurrent.get(csSlotLvl) > 0,
+                    // Spend reaction + slot
+                    val cs1 = spendReaction(bCreatures, reactorId)
+                    val cs2 = setSlots(cs1, reactorId, pExpendSlot(getC(cs1, reactorId).slots, csSlotLvl))
+                    // Push current spell context onto stack
+                    val stackEntry: SpellStackEntry = {
+                      spellCasterId: spell.caster,
+                      spellPostCast: spell.postCast,
+                      offered: newOffered,
+                    }
+                    val newStack = bSpellStack.append(stackEntry)
+                    // Create Counterspell as a new spell cast
+                    val csEffect: CounterspellEffect = {
+                      targetCasterId: spell.caster,
+                      conSaveSucceeded: conSaveSucceeded,
+                    }
+                    val csSpell: SpellCastCtx = {
+                      caster: reactorId,
+                      postCast: PCECounterspell(csEffect),
+                    }
+                    // Enter CS window for the Counterspell (empty eligible → resolves next step)
+                    val csElig = eligibleForCounterspell(cs2, allIds, reactorId)
                     all {
-                      bCreatures' = cs1,
-                      bPhase' = BPAwaitingReaction({
-                        interrupt: ctx.interrupt, trigger: ctx.trigger,
-                        eligible: newElig, offered: newOffered,
-                      }),
-                      keepBattle,
+                      bCreatures' = cs2,
+                      bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(csSpell), TSpellBeingCast, csElig)),
+                      keepBattleNoStack, bSpellStack' = newStack,
                     }
                   }
-                }
                 | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
               }
             }
@@ -825,7 +1009,7 @@ module battle {
         postCast: PCEAoE(aoeCtx),
       }
       // Counterspell interrupt — if countered, entire AoE fizzles
-      val csElig = eligibleExcluding(cs1, allIds, activeId)
+      val csElig = eligibleForCounterspell(cs1, allIds, activeId)
       if (csElig.size() > 0) {
         all {
           bCreatures' = cs1,
@@ -904,6 +1088,7 @@ module battle {
       bTurnIndex' = nextIdx,
       bRound' = nextRound,
       bPhase' = BPActiveTurn,
+      bSpellStack' = bSpellStack,
     }
   }
 

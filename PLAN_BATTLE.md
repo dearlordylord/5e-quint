@@ -51,6 +51,13 @@ CREATURE MACHINES (creature.qnt + existing TS machine)
   ActiveEffect gained casterId field in creature.qnt.
   breakConcentrationAndPropagate removes effects from all creatures.
   bCastConcentrationSpell + bConcentrationCheck actions.
+[B5] Counterspell chain (P2)                                        ✓ done
+  Stack-based chain: bSpellStack tracks interrupted spell contexts.
+  PCECounterspell(CounterspellEffect) — flat type, no recursive cycle.
+  eligibleForCounterspell gates on level 3+ spell slot.
+  Slot expenditure on Counterspell cast (nondet level 3–9).
+  returnToCSWindow recomputes eligible after chain (reactions spent).
+  resolveSpellEntry helper for terminal spell resolution.
 ```
 
 **[B0] Spike** *(done)*
@@ -69,7 +76,7 @@ Flesh out the battle spec to handle all major transaction shapes. Each task is a
 [B2] Save transactions (P1) -> deps: [B0]                ✓ done
 [B3] AoE / 1-to-many (P1) -> deps: [B2]                  ✓ done
 [B4] Concentration links (P1) -> deps: [B0]               ✓ done
-[B5] Counterspell chain (P2) -> deps: [B2]
+[B5] Counterspell chain (P2) -> deps: [B2]                ✓ done
 ```
 
 **[B1] Multi-reactor interrupt**
