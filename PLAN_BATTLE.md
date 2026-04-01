@@ -58,6 +58,33 @@ CREATURE MACHINES (creature.qnt + existing TS machine)
   Slot expenditure on Counterspell cast (nondet level 3–9).
   returnToCSWindow recomputes eligible after chain (reactions spent).
   resolveSpellEntry helper for terminal spell resolution.
+[B6] Retroactive reactions (P2)                                     ✓ done
+  RParry(int) covers +2/+3/+4/+5 AC variants (R10.1).
+  RCuttingWords(int) subtracts from attack roll (Bardic Inspiration die).
+  Unified retroactive pattern: compute modified atk, flag isRetroactive, single branch.
+[B7] Damage reduction reactions (P2)                                ✓ done
+  RDamageReduction(int) covers Deflect Attacks, Storm Giant Deflect (R10.3).
+  Unified damage-reduction pattern alongside RUncannyDodge.
+[B8] After-damage reactions (P2)                                    ✓ done
+  New TDamageTaken trigger, PIAfterDamage(AfterDamageCtx) interrupt.
+  AfterDamageReturn type breaks BattlePhase↔PendingInterrupt cycle.
+  dealDamageWithAfterReactions helper at attack + AoE damage sites.
+  RHellishRebuke(HellishRebukeCtx) — fire damage back, DEX save for half.
+  RRetaliation(RetaliationCtx) — melee attack back at damage source.
+  Chain: Hellish Rebuke damage can trigger Retaliation (bounded by reactions).
+[B9] Movement reactions / OA (P2)                                   ✓ done
+  New bMove action with caller-provided threatenedBy set (O2).
+  BPResolvingMovement(MovementCtx) processes OAs one by one.
+  ROpportunityAttack(OACtx) enters full R20 attack chain.
+  atkReturnTo field in AttackHitCtx/AttackDamageCtx threads return context.
+  Disengage check skips OA entirely.
+[B10] Legendary Actions (P2)                                        ✓ done
+  MonsterResourceState added to Combatant type.
+  mkMonster helper creates monster with LA + LR counts.
+  BPAwaitingLegendaryAction(LAWindowCtx) phase at end of turn.
+  bEndTurn checks for LA-eligible monsters before advancing.
+  bStartTurn refreshes LA for monsters.
+  LAAttack deals damage (simplified — no interrupt chain for LA attacks).
 ```
 
 **[B0] Spike** *(done)*
@@ -117,11 +144,11 @@ When a creature casts a spell (including Counterspell), others can Counterspell 
 Expand the reaction set from 2 to full SRD catalog.
 
 ```
-[B6] Retroactive reactions (P2) -> deps: [B1]
-[B7] Damage reduction reactions (P2) -> deps: [B1]
-[B8] After-damage reactions (P2) -> deps: [B1]
-[B9] Movement reactions / OA (P2) -> deps: [B0]
-[B10] Legendary Actions (P2) -> deps: [B0]
+[B6] Retroactive reactions (P2) -> deps: [B1]          ✓ done
+[B7] Damage reduction reactions (P2) -> deps: [B1]     ✓ done
+[B8] After-damage reactions (P2) -> deps: [B1]         ✓ done
+[B9] Movement reactions / OA (P2) -> deps: [B0]        ✓ done
+[B10] Legendary Actions (P2) -> deps: [B0]             ✓ done
 ```
 
 **[B6] Retroactive reactions** — Parry (×4 monsters), Cutting Words, Shield Guardian Protection, Mummy Whirlwind. All use the same `PIAttackHit` interrupt point, just different AC modifiers. Ref: R10.1.

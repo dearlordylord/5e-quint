@@ -5,7 +5,7 @@
 ///
 /// SIMPLIFICATIONS (each is a planned incremental improvement, see PLAN_BATTLE.md):
 /// - No class states in Combatant. Full version: ClassStateMap
-/// - Limited reactions (Shield, Uncanny Dodge, Counterspell). Full version: all 26 from R10
+/// - Limited reactions (retroactive AC/roll mods, damage reduction, Counterspell, LR). Full version: all 26 from R10
 /// These are simplifications of a correct structure, not structural gaps.
 
 module battle {
@@ -24,6 +24,7 @@ module battle {
     turn: TurnState,
     slots: SpellSlotState,
     kind: CreatureKind,
+    monsterResources: MonsterResourceState,  // legendary actions/resistances (B10)
   }
 
   type TriggerType =
@@ -31,13 +32,25 @@ module battle {
     | TAttackDamages    // "when you take damage from attack" — Uncanny Dodge
     | TSpellBeingCast   // "see creature casting a spell" — Counterspell
     | TSaveFailed       // "fails a saving throw" — Legendary Resistance, Countercharm
+    | TDamageTaken      // "after taking damage" — Hellish Rebuke, Retaliation (R10.4)
 
   type ReactionDecision =
     | RPass
     | RShield
     | RUncannyDodge
-    | RCounterspell(bool)   // bool = target CON save succeeded (5.2.1 Counterspell)
-    | RLegendaryResistance  // auto-succeed the save
+    | RParry(int)            // +AC bonus (2–5); covers Parry variants, Shield Guardian Protection (R10.1)
+    | RCuttingWords(int)     // subtract from attack roll (Bardic Inspiration die, R10.1)
+    | RCounterspell(bool)    // bool = target CON save succeeded (5.2.1 Counterspell)
+    | RLegendaryResistance   // auto-succeed the save
+    | RDamageReduction(int)  // flat damage reduction (Deflect Attacks, Storm Giant Deflect, R10.3)
+
+  // Movement context: mover and who they're leaving the reach of.
+  // threatenedBy is caller-provided (spatial concern per O2).
+  type MovementCtx = {
+    mover: CreatureId,
+    threatenedBy: Set[CreatureId],  // creatures whose reach the mover is leaving
+    processed: Set[CreatureId],      // already offered OA
+  }
 
   type AttackHitCtx = {
     attacker: CreatureId,
@@ -47,6 +60,7 @@ module battle {
     damage: int,
     damageType: DamageType,
     isCritical: bool,
+    atkReturnTo: AfterDamageReturn,  // where to go after entire attack chain resolves
   }
 
   type AttackDamageCtx = {
@@ -55,6 +69,7 @@ module battle {
     damage: int,
     damageType: DamageType,
     isCritical: bool,
+    atkReturnTo: AfterDamageReturn,
   }
 
   // Context for a spell being cast (Counterspell interrupt)
@@ -129,12 +144,30 @@ module battle {
     offered: Set[CreatureId],      // offered set when the CS window was interrupted
   }
 
+  // Where to return after resolving an after-damage reaction.
+  // Separate from BattlePhase to avoid a type cycle (AfterDamageCtx → BattlePhase → PendingInterrupt → AfterDamageCtx).
+  type AfterDamageReturn =
+    | ADRActiveTurn
+    | ADRResolvingAoE(AoESpellCtx)
+    | ADRResolvingMovement(MovementCtx)
+
+  // Context for after-damage reactions (R10.4, R20 Phase 4).
+  // Tracks who dealt damage and to whom, so reactions like Hellish Rebuke know the attacker.
+  type AfterDamageCtx = {
+    damageSource: CreatureId,     // who dealt the damage
+    damagedCreature: CreatureId,  // who took the damage
+    damageDealt: int,
+    damageType: DamageType,
+    returnTo: AfterDamageReturn,  // phase to return to after resolving
+  }
+
   type PendingInterrupt =
     | PIAttackHit(AttackHitCtx)
     | PIAttackDamage(AttackDamageCtx)
     | PISpellCast(SpellCastCtx)
     | PISaveFailed(SaveFailedCtx)
     | PISaveFailedAoE(AoESaveFailedCtx)  // save failed during AoE, with continuation
+    | PIAfterDamage(AfterDamageCtx)      // after damage applied (R10.4)
 
   type AoESaveFailedCtx = {
     sf: SaveFailedCtx,
@@ -148,10 +181,18 @@ module battle {
     offered: Set[CreatureId],
   }
 
+  // Context for legendary action window at end of turn (R7).
+  type LAWindowCtx = {
+    eligibleMonsters: Set[CreatureId],  // monsters with LA remaining + not incapacitated
+    endingTurnIndex: int,                // turn index that just ended (for advancing)
+  }
+
   type BattlePhase =
     | BPActiveTurn
     | BPAwaitingReaction(AwaitCtx)
-    | BPResolvingAoE(AoESpellCtx)  // processing AoE targets one by one (R32)
+    | BPResolvingAoE(AoESpellCtx)       // processing AoE targets one by one (R32)
+    | BPResolvingMovement(MovementCtx)   // processing OAs one by one (R5, R22)
+    | BPAwaitingLegendaryAction(LAWindowCtx)  // LA window at end of turn (R7)
 
   // ============================================================
   // 2. STATE VARIABLES
@@ -197,11 +238,19 @@ module battle {
   ): (CreatureId -> Combatant) =
     setTurn(cs, id, pUseReaction(cs.get(id).turn))
 
+  val EMPTY_MONSTER_RESOURCES: MonsterResourceState = {
+    legendaryActionsRemaining: 0,
+    legendaryResistancesRemaining: 0,
+    rechargeAvailable: Map(),
+    dailyUsesRemaining: Map(),
+  }
+
   pure def mkCombatant(maxHp: int, k: CreatureKind): Combatant = {
     creature: freshCreature(maxHp),
     turn: FRESH_TURN,
     slots: FRESH_SPELL_SLOTS,
     kind: k,
+    monsterResources: EMPTY_MONSTER_RESOURCES,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -215,6 +264,18 @@ module battle {
       concentrationSpellId: "",
     },
     kind: k,
+    monsterResources: EMPTY_MONSTER_RESOURCES,
+  }
+
+  // Monster with legendary actions and resistances
+  pure def mkMonster(maxHp: int, laUses: int, lrUses: int): Combatant = {
+    creature: freshCreature(maxHp),
+    turn: FRESH_TURN,
+    slots: FRESH_SPELL_SLOTS,
+    kind: Monster,
+    monsterResources: EMPTY_MONSTER_RESOURCES
+      .with("legendaryActionsRemaining", laUses)
+      .with("legendaryResistancesRemaining", lrUses),
   }
 
   pure def dealDamage(
@@ -305,6 +366,37 @@ module battle {
     saveSucceeded: false,
   }
 
+  /// Apply damage and check for after-damage reactions (R10.4).
+  /// Returns new creatures + phase. If an eligible reactor exists, enters
+  /// BPAwaitingReaction(PIAfterDamage); otherwise returns the given returnPhase.
+  pure def dealDamageWithAfterReactions(
+    cs: CreatureId -> Combatant, allIds: Set[CreatureId],
+    targetId: CreatureId, sourceId: CreatureId,
+    dmg: int, dt: DamageType, crit: bool,
+    returnTo: AfterDamageReturn
+  ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
+    val cs1 = dealDamage(cs, targetId, dmg, dt, crit)
+    // After damage: damaged creature can react (Hellish Rebuke, Retaliation)
+    val elig = eligibleTarget(cs1, targetId)
+    if (dmg > 0 and elig.size() > 0) {
+      val adCtx: AfterDamageCtx = {
+        damageSource: sourceId, damagedCreature: targetId,
+        damageDealt: dmg, damageType: dt, returnTo: returnTo,
+      }
+      { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAfterDamage(adCtx), TDamageTaken, elig)) }
+    } else {
+      { creatures: cs1, phase: returnToPhase(returnTo) }
+    }
+  }
+
+  /// Convert AfterDamageReturn to BattlePhase.
+  pure def returnToPhase(r: AfterDamageReturn): BattlePhase =
+    match r {
+      | ADRActiveTurn => BPActiveTurn
+      | ADRResolvingAoE(aoe) => BPResolvingAoE(aoe)
+      | ADRResolvingMovement(mv) => BPResolvingMovement(mv)
+    }
+
   action keepBattleNoStack = all {
     bInitiative' = bInitiative,
     bTurnIndex' = bTurnIndex,
@@ -316,6 +408,12 @@ module battle {
     bSpellStack' = bSpellStack,
   }
 
+  /// Compute next turn index and round number.
+  pure def nextTurn(turnIndex: int, initLen: int, round: int): { idx: int, round: int } = {
+    val nextIdx = if (turnIndex + 1 < initLen) turnIndex + 1 else 0
+    { idx: nextIdx, round: if (nextIdx == 0) round + 1 else round }
+  }
+
   // ============================================================
   // 4. BATTLE ACTIONS
   // ============================================================
@@ -323,12 +421,12 @@ module battle {
   action bInit = {
     nondet hp1 = 10.to(30).oneOf()
     nondet hp2 = 10.to(30).oneOf()
-    nondet hp3 = 10.to(30).oneOf()
+    nondet hp3 = 20.to(50).oneOf()
     all {
       bCreatures' = Map(
         "A" -> mkCaster(hp1, PC),
         "B" -> mkCaster(hp2, PC),
-        "C" -> mkCombatant(hp3, PC)
+        "C" -> mkMonster(hp3, 3, 3)  // monster with 3 LA and 3 LR
       ),
       bInitiative' = ["A", "B", "C"],
       bTurnIndex' = 0,
@@ -340,11 +438,21 @@ module battle {
 
   action bStartTurn = {
     val activeId = bInitiative[bTurnIndex]
+    val c = getC(bCreatures, activeId)
     all {
       bPhase == BPActiveTurn,
-      bCreatures' = setTurn(bCreatures, activeId, FRESH_TURN),
-      bPhase' = BPActiveTurn,
-      keepBattle,
+      // Fresh turn + refresh LA at start of monster's own turn (R7)
+      val cs1 = setTurn(bCreatures, activeId, FRESH_TURN)
+      val cs2 = if (c.kind == Monster) {
+        // Simplified: maxUses=3, inLair=false. Full version reads from stat block.
+        val newMR = pRefreshLegendaryActions(c.monsterResources, 3, false)
+        cs1.set(activeId, getC(cs1, activeId).with("monsterResources", newMR))
+      } else cs1
+      all {
+        bCreatures' = cs2,
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
     }
   }
 
@@ -379,6 +487,7 @@ module battle {
           attacker: activeId, target: targetId,
           attackRoll: attackRoll, targetAc: tAc,
           damage: dmg, damageType: dt, isCritical: crit,
+          atkReturnTo: ADRActiveTurn,
         }
         val elig = eligibleExcluding(cs1, allIds, activeId)
         if (elig.size() > 0) {
@@ -388,34 +497,32 @@ module battle {
             keepBattle,
           }
         } else {
-          all {
-            bCreatures' = dealDamage(cs1, targetId, dmg, dt, crit),
-            bPhase' = BPActiveTurn,
-            keepBattle,
-          }
+          val result = dealDamageWithAfterReactions(cs1, allIds, targetId, activeId, dmg, dt, crit, ADRActiveTurn)
+          all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       }
     }
   }
 
   pure def advanceFromHitPhase(
-    cs: CreatureId -> Combatant, atk: AttackHitCtx
+    cs: CreatureId -> Combatant, allIds: Set[CreatureId], atk: AttackHitCtx
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     val stillHit = atk.attackRoll >= atk.targetAc or atk.attackRoll == 20
     if (not(stillHit)) {
-      { creatures: cs, phase: BPActiveTurn }
+      { creatures: cs, phase: returnToPhase(atk.atkReturnTo) }
     } else {
       val dmgElig = eligibleTarget(cs, atk.target)
       if (dmgElig.size() > 0) {
         val dmgCtx: AttackDamageCtx = {
           attacker: atk.attacker, target: atk.target,
           damage: atk.damage, damageType: atk.damageType,
-          isCritical: atk.isCritical,
+          isCritical: atk.isCritical, atkReturnTo: atk.atkReturnTo,
         }
         { creatures: cs, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, dmgElig)) }
       } else {
-        { creatures: dealDamage(cs, atk.target, atk.damage, atk.damageType, atk.isCritical),
-          phase: BPActiveTurn }
+        // No damage-phase reactions — deal damage and check for after-damage reactions (R10.4)
+        dealDamageWithAfterReactions(cs, allIds, atk.target, atk.attacker,
+          atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo)
       }
     }
   }
@@ -427,32 +534,40 @@ module battle {
           | PIAttackHit(atk) =>
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
-              val result = advanceFromHitPhase(bCreatures, atk)
+              val result = advanceFromHitPhase(bCreatures, listToSet(bInitiative), atk)
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
               nondet reactorId = remaining.oneOf()
-              nondet decision = Set(RPass, RShield).oneOf()
+              nondet parryBonus = 2.to(5).oneOf()
+              nondet cwReduction = 1.to(12).oneOf()
+              nondet decision = Set(RPass, RShield, RParry(parryBonus), RCuttingWords(cwReduction)).oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
-              match decision {
-                | RPass => all {
-                    bCreatures' = bCreatures,
-                    bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
-                    keepBattle,
-                  }
-                | RShield => {
-                  val cs1 = spendReaction(bCreatures, reactorId)
-                  val newAtk = atk.with("targetAc", atk.targetAc + 5)
-                  val newElig = ctx.eligible.exclude(Set(reactorId))
-                  all {
-                    bCreatures' = cs1,
-                    bPhase' = BPAwaitingReaction({
-                      interrupt: PIAttackHit(newAtk), trigger: TAttackHits,
-                      eligible: newElig, offered: newOffered,
-                    }),
-                    keepBattle,
-                  }
+              val newElig = ctx.eligible.exclude(Set(reactorId))
+              // Retroactive reactions: spend reaction, modify atk, stay in hit phase.
+              // RPass leaves atk unchanged; retroactive reactions modify it.
+              val retroAtk = match decision {
+                | RShield => atk.with("targetAc", atk.targetAc + 5)
+                | RParry(bonus) => atk.with("targetAc", atk.targetAc + bonus)
+                | RCuttingWords(reduction) => atk.with("attackRoll", atk.attackRoll - reduction)
+                | _ => atk
+              }
+              if (retroAtk != atk) {
+                val cs1 = spendReaction(bCreatures, reactorId)
+                all {
+                  bCreatures' = cs1,
+                  bPhase' = BPAwaitingReaction({
+                    interrupt: PIAttackHit(retroAtk), trigger: TAttackHits,
+                    eligible: newElig, offered: newOffered,
+                  }),
+                  keepBattle,
                 }
-                | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+              } else {
+                // RPass (or unhandled)
+                all {
+                  bCreatures' = bCreatures,
+                  bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
+                  keepBattle,
+                }
               }
             }
           | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -468,34 +583,132 @@ module battle {
           | PIAttackDamage(atk) =>
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
-              all {
-                bCreatures' = dealDamage(bCreatures, atk.target, atk.damage, atk.damageType, atk.isCritical),
-                bPhase' = BPActiveTurn,
-                keepBattle,
-              }
+              // All damage reactions resolved — deal damage and check after-damage (R10.4)
+              val result = dealDamageWithAfterReactions(bCreatures, listToSet(bInitiative),
+                atk.target, atk.attacker, atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo)
+              all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
               nondet reactorId = remaining.oneOf()
-              nondet decision = Set(RPass, RUncannyDodge).oneOf()
+              nondet reductionAmt = 1.to(20).oneOf()
+              nondet decision = Set(RPass, RUncannyDodge, RDamageReduction(reductionAmt)).oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
-              match decision {
-                | RUncannyDodge => {
-                  val cs1 = spendReaction(bCreatures, reactorId)
-                  val newAtk = atk.with("damage", atk.damage / 2)
-                  val newElig = ctx.eligible.exclude(Set(reactorId))
-                  all {
-                    bCreatures' = cs1,
-                    bPhase' = BPAwaitingReaction({
-                      interrupt: PIAttackDamage(newAtk), trigger: TAttackDamages,
-                      eligible: newElig, offered: newOffered,
-                    }),
-                    keepBattle,
-                  }
+              val newElig = ctx.eligible.exclude(Set(reactorId))
+              // Damage-reduction reactions: compute new damage, stay in damage phase.
+              // RPass leaves damage unchanged; reduction reactions lower it.
+              val newDmg = match decision {
+                | RUncannyDodge => atk.damage / 2
+                | RDamageReduction(amount) => if (atk.damage - amount > 0) atk.damage - amount else 0
+                | _ => atk.damage
+              }
+              if (newDmg != atk.damage) {
+                val cs1 = spendReaction(bCreatures, reactorId)
+                all {
+                  bCreatures' = cs1,
+                  bPhase' = BPAwaitingReaction({
+                    interrupt: PIAttackDamage(atk.with("damage", newDmg)), trigger: TAttackDamages,
+                    eligible: newElig, offered: newOffered,
+                  }),
+                  keepBattle,
                 }
-                | _ => all {
-                    bCreatures' = bCreatures,
-                    bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
-                    keepBattle,
-                  }
+              } else {
+                // RPass
+                all {
+                  bCreatures' = bCreatures,
+                  bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
+                  keepBattle,
+                }
+              }
+            }
+          | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  // --- After-damage reactions (B8, R10.4) ---
+  // Fires after damage is applied. Split into separate actions per reaction type
+  // to avoid exploring unused nondets (e.g., Hellish Rebuke nondets on Pass path).
+
+  action bAfterDamagePass = {
+    match bPhase {
+      | BPAwaitingReaction(ctx) =>
+        match ctx.interrupt {
+          | PIAfterDamage(ad) =>
+            val remaining = ctx.eligible.exclude(ctx.offered)
+            if (remaining.size() == 0) {
+              all { bCreatures' = bCreatures, bPhase' = returnToPhase(ad.returnTo), keepBattle }
+            } else {
+              nondet reactorId = remaining.oneOf()
+              all {
+                bCreatures' = bCreatures,
+                bPhase' = BPAwaitingReaction(ctx.with("offered", ctx.offered.union(Set(reactorId)))),
+                keepBattle,
+              }
+            }
+          | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  action bAfterDamageHellishRebuke = {
+    val allIds = listToSet(bInitiative)
+    nondet rebukeDmg = 2.to(20).oneOf()
+    nondet rebukeSaved = Bool.oneOf()
+    match bPhase {
+      | BPAwaitingReaction(ctx) =>
+        match ctx.interrupt {
+          | PIAfterDamage(ad) =>
+            val remaining = ctx.eligible.exclude(ctx.offered)
+            if (remaining.size() == 0) {
+              all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+            } else {
+              nondet reactorId = remaining.oneOf()
+              val cs1 = spendReaction(bCreatures, reactorId)
+              val actualDmg = if (rebukeSaved) rebukeDmg / 2 else rebukeDmg
+              val result = dealDamageWithAfterReactions(
+                cs1, allIds, ad.damageSource, reactorId,
+                actualDmg, Fire, false, ad.returnTo
+              )
+              all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+            }
+          | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  action bAfterDamageRetaliation = {
+    val allIds = listToSet(bInitiative)
+    nondet retAtkRoll = 1.to(20).oneOf()
+    nondet retDmg = 1.to(12).oneOf()
+    nondet retDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
+    nondet retCrit = Bool.oneOf()
+    nondet retTgtAc = 10.to(20).oneOf()
+    match bPhase {
+      | BPAwaitingReaction(ctx) =>
+        match ctx.interrupt {
+          | PIAfterDamage(ad) =>
+            val remaining = ctx.eligible.exclude(ctx.offered)
+            if (remaining.size() == 0) {
+              all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+            } else {
+              nondet reactorId = remaining.oneOf()
+              val cs1 = spendReaction(bCreatures, reactorId)
+              val newOffered = ctx.offered.union(Set(reactorId))
+              val hit = retAtkRoll >= retTgtAc or retAtkRoll == 20
+              if (not(hit)) {
+                all {
+                  bCreatures' = cs1,
+                  bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
+                  keepBattle,
+                }
+              } else {
+                val result = dealDamageWithAfterReactions(
+                  cs1, allIds, ad.damageSource, reactorId,
+                  retDmg, retDt, retCrit, ad.returnTo
+                )
+                all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
               }
             }
           | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -1041,12 +1254,17 @@ module battle {
           val newRemaining = aoe.remaining.exclude(Set(targetId))
           val updatedAoe = aoe.with("remaining", newRemaining)
           val saved = saveRoll >= aoe.saveDC
+          val aoeReturn = ADRResolvingAoE(updatedAoe)
           if (saved) {
             // Save succeeded — half damage if applicable, no condition
-            val cs1 = if (aoe.halfOnSuccess and aoe.damageOnFail > 0)
-              dealDamage(bCreatures, targetId, aoe.damageOnFail / 2, aoe.damageType, false)
-            else bCreatures
-            all { bCreatures' = cs1, bPhase' = BPResolvingAoE(updatedAoe), keepBattle }
+            if (aoe.halfOnSuccess and aoe.damageOnFail > 0) {
+              val halfDmg = aoe.damageOnFail / 2
+              val result = dealDamageWithAfterReactions(bCreatures, listToSet(bInitiative),
+                targetId, aoe.caster, halfDmg, aoe.damageType, false, aoeReturn)
+              all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+            } else {
+              all { bCreatures' = bCreatures, bPhase' = BPResolvingAoE(updatedAoe), keepBattle }
+            }
           } else {
             // Save failed — check for LR
             val sfCtx = mkSaveFailedCtx(
@@ -1076,19 +1294,177 @@ module battle {
     }
   }
 
+  // --- Movement / Opportunity Attacks (B9, R5, R22) ---
+  // Active creature moves, leaving the reach of one or more enemies.
+  // Each enemy with an unused reaction can take an OA (one melee attack).
+  // OA fires "right before" leaving reach (BEFORE timing).
+  // Disengage prevents OA entirely.
+
+  action bMove = {
+    val activeId = bInitiative[bTurnIndex]
+    val allIds = listToSet(bInitiative)
+    val ac = getC(bCreatures, activeId)
+    // Caller provides which creatures' reach the mover is leaving (spatial concern per O2)
+    nondet threatened = allIds.exclude(Set(activeId)).powerset().oneOf()
+    all {
+      bPhase == BPActiveTurn,
+      not(ac.creature.dead),
+      ac.turn.movementRemaining > 0,
+      threatened.size() > 0,
+      // Spend some movement (simplified: 5ft per move action)
+      val newTurn = pUseMovement(ac.turn, 5, 1)
+      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      // If disengaged, no OA triggers
+      if (ac.turn.disengaged) {
+        all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
+      } else {
+        // Filter threatened to those with reaction + alive + can see mover
+        val oaEligible = threatened.filter(id =>
+          hasReaction(cs1, id) and not(getC(cs1, id).creature.dead)
+        )
+        if (oaEligible.size() == 0) {
+          all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
+        } else {
+          val mvCtx: MovementCtx = { mover: activeId, threatenedBy: oaEligible, processed: Set() }
+          all { bCreatures' = cs1, bPhase' = BPResolvingMovement(mvCtx), keepBattle }
+        }
+      }
+    }
+  }
+
+  /// Movement OA: threatened creature passes or all processed → movement completes.
+  action bMovementOAPass = {
+    match bPhase {
+      | BPResolvingMovement(mv) =>
+        val remaining = mv.threatenedBy.exclude(mv.processed)
+        if (remaining.size() == 0) {
+          all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattle }
+        } else {
+          nondet reactorId = remaining.oneOf()
+          val updatedMv = mv.with("processed", mv.processed.union(Set(reactorId)))
+          all { bCreatures' = bCreatures, bPhase' = BPResolvingMovement(updatedMv), keepBattle }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  /// Movement OA: threatened creature takes an opportunity attack.
+  /// OA is a full attack → enters R20 chain (hit reactions, damage reactions, after-damage).
+  action bMovementOAAttack = {
+    val allIds = listToSet(bInitiative)
+    nondet oaAtkRoll = 1.to(20).oneOf()
+    nondet oaDmg = 1.to(12).oneOf()
+    nondet oaDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
+    nondet oaCrit = Bool.oneOf()
+    nondet oaTgtAc = 10.to(20).oneOf()
+    match bPhase {
+      | BPResolvingMovement(mv) =>
+        val remaining = mv.threatenedBy.exclude(mv.processed)
+        if (remaining.size() == 0) {
+          all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+        } else {
+        nondet reactorId = remaining.oneOf()
+        val updatedMv = mv.with("processed", mv.processed.union(Set(reactorId)))
+        val cs1 = spendReaction(bCreatures, reactorId)
+        val hit = oaAtkRoll >= oaTgtAc or oaAtkRoll == 20
+        if (not(hit)) {
+          all { bCreatures' = cs1, bPhase' = BPResolvingMovement(updatedMv), keepBattle }
+        } else {
+          val atkCtx: AttackHitCtx = {
+            attacker: reactorId, target: mv.mover,
+            attackRoll: oaAtkRoll, targetAc: oaTgtAc,
+            damage: oaDmg, damageType: oaDt, isCritical: oaCrit,
+            atkReturnTo: ADRResolvingMovement(updatedMv),
+          }
+          val hitElig = eligibleExcluding(cs1, allIds, reactorId)
+          if (hitElig.size() > 0) {
+            all {
+              bCreatures' = cs1,
+              bPhase' = BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, hitElig)),
+              keepBattle,
+            }
+          } else {
+            val result = advanceFromHitPhase(cs1, allIds, atkCtx)
+            all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+          }
+        }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
   // --- End turn / Heal ---
 
   action bEndTurn = {
-    val nextIdx = if (bTurnIndex + 1 < bInitiative.length()) bTurnIndex + 1 else 0
-    val nextRound = if (nextIdx == 0) bRound + 1 else bRound
+    val allIds = listToSet(bInitiative)
+    val activeId = bInitiative[bTurnIndex]
     all {
       bPhase == BPActiveTurn,
-      bCreatures' = bCreatures,
-      bInitiative' = bInitiative,
-      bTurnIndex' = nextIdx,
-      bRound' = nextRound,
-      bPhase' = BPActiveTurn,
-      bSpellStack' = bSpellStack,
+      // Check for monsters with LA remaining (R7: "at the end of another creature's turn")
+      val laEligible = allIds.exclude(Set(activeId)).filter(id =>
+        val c = getC(bCreatures, id)
+        c.kind == Monster and
+        c.monsterResources.legendaryActionsRemaining > 0 and
+        not(c.creature.dead) and
+        c.creature.incapacitatedSources.size() == 0
+      )
+      if (laEligible.size() > 0) {
+        val laCtx: LAWindowCtx = { eligibleMonsters: laEligible, endingTurnIndex: bTurnIndex }
+        all {
+          bCreatures' = bCreatures,
+          bPhase' = BPAwaitingLegendaryAction(laCtx),
+          keepBattle,
+        }
+      } else {
+        val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+        all {
+          bCreatures' = bCreatures, bInitiative' = bInitiative,
+          bTurnIndex' = nt.idx, bRound' = nt.round,
+          bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
+        }
+      }
+    }
+  }
+
+  /// LA window: monster passes — advance to next turn.
+  action bLegendaryPass = {
+    val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+    match bPhase {
+      | BPAwaitingLegendaryAction(_) => all {
+          bCreatures' = bCreatures, bInitiative' = bInitiative,
+          bTurnIndex' = nt.idx, bRound' = nt.round,
+          bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  /// LA window: monster uses a legendary attack action.
+  /// Separate action from bLegendaryPass to avoid exploring attack nondets on pass.
+  action bLegendaryAttack = {
+    val allIds = listToSet(bInitiative)
+    val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+    match bPhase {
+      | BPAwaitingLegendaryAction(laCtx) =>
+        nondet monsterId = laCtx.eligibleMonsters.oneOf()
+        nondet laTarget = allIds.exclude(Set(monsterId)).oneOf()
+        nondet laAtkRoll = 1.to(20).oneOf()
+        nondet laDmg = 1.to(20).oneOf()
+        nondet laDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
+        nondet laCrit = Bool.oneOf()
+        nondet laTgtAc = 10.to(20).oneOf()
+        val m = getC(bCreatures, monsterId)
+        val newMR = m.monsterResources.with("legendaryActionsRemaining",
+          m.monsterResources.legendaryActionsRemaining - 1)
+        val cs1 = bCreatures.set(monsterId, m.with("monsterResources", newMR))
+        val hit = laAtkRoll >= laTgtAc or laAtkRoll == 20
+        val finalCs = if (hit) dealDamage(cs1, laTarget, laDmg, laDt, laCrit) else cs1
+        all {
+          bCreatures' = finalCs, bInitiative' = bInitiative,
+          bTurnIndex' = nt.idx, bRound' = nt.round,
+          bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
   }
 
@@ -1120,9 +1496,12 @@ module battle {
 
   action battleStep = any {
     bAttack, bResolveHitReaction, bResolveDmgReaction,
+    bAfterDamagePass, bAfterDamageHellishRebuke, bAfterDamageRetaliation,
     bCastSaveSpell, bResolveCounterspell, bResolveSaveFailedReaction,
     bCastAoE, bResolveAoETarget,
     bCastConcentrationSpell, bConcentrationCheck,
+    bMove, bMovementOAPass, bMovementOAAttack,
+    bLegendaryPass, bLegendaryAttack,
     bHeal, bEndTurn, bStartTurn,
   }
 
