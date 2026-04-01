@@ -1,8 +1,15 @@
 // -*- mode: Bluespec; -*-
 
 /// Battle State — Multi-creature combat orchestration.
-/// Spike: 2 creatures, attack with Shield reaction interrupt.
 /// Composes on top of dnd.qnt pure functions.
+///
+/// SIMPLIFICATIONS (each is a planned incremental improvement, see PLAN_BATTLE.md):
+/// - Single reactor per interrupt point. Full version: eligible set + iteration (R30.1)
+/// - Attack transactions only. Full version: save transactions (R31), AoE (R32)
+/// - No concentration links. Full version: casterId on effects, propagation (R33)
+/// - No class states in Combatant. Full version: ClassStateMap
+/// - 2 reactions only (Shield, Uncanny Dodge). Full version: all 26 from R10 catalog
+/// These are simplifications of a correct structure, not structural gaps.
 
 module battle {
 
