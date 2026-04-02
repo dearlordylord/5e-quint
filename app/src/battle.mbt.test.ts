@@ -1656,17 +1656,29 @@ describe("Battle Projection MBT", () => {
   const specPath = path.resolve(import.meta.dirname, "../../battle.qnt")
 
   it("replays battle traces per-creature against dndMachine actors", async () => {
-    const result = await run({
-      spec: specPath,
-      init: "bInit",
-      step: "battleStep",
-      driver: createBattleProjectionDriver(),
-      backend: "rust",
-      nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
-      maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
-      stateCheck: battleStateCheck
-    })
-    logMbtSeed("battle MBT", result)
+    const dir = process.env["MBT_REPLAY_DIR"]
+    if (dir) {
+      // Replay from pre-generated ITF files (skips Quint evaluator).
+      const { replayFromDir } = await import("./mbt-replay.js")
+      const result = await replayFromDir({
+        dir,
+        driver: createBattleProjectionDriver(),
+        stateCheck: battleStateCheck
+      })
+      console.log(`[battle MBT] replayed ${result.tracesReplayed} traces from ${dir}`)
+    } else {
+      const result = await run({
+        spec: specPath,
+        init: "bInit",
+        step: "battleStep",
+        driver: createBattleProjectionDriver(),
+        backend: "rust",
+        nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
+        maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
+        maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
+        stateCheck: battleStateCheck
+      })
+      logMbtSeed("battle MBT", result)
+    }
   }, 300_000)
 })
