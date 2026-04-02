@@ -1021,25 +1021,9 @@ export function computeRechargedAbilities(
 // MBT seed helpers
 // ============================================================
 
-/**
- * Resolve MBT seed. In dev mode (MBT_DEV=1), generates and forces a seed for
- * reproducibility. In CI/default mode, returns undefined so quint uses fresh
- * random seeds per sample (better coverage). Always respects QUINT_SEED env var.
- */
-export function resolveTestSeed(label: string): string | undefined {
-  const explicit = process.env["QUINT_SEED"]
-  if (explicit !== undefined) {
-    console.log(`[${label}] seed: ${explicit}`)
-    return explicit
-  }
-  if (process.env["MBT_DEV"] === "1") {
-    const seed = `0x${Math.floor(Math.random() * 0xffffffff)
-      .toString(16)
-      .padStart(8, "0")}`
-    console.log(`[${label}] seed: ${seed}`)
-    return seed
-  }
-  return undefined
+/** Log the seed from a completed MBT run for reproducibility. */
+export function logMbtSeed(label: string, result: { seed: string }): void {
+  console.log(`[${label}] seed: ${result.seed}`)
 }
 
 // ============================================================

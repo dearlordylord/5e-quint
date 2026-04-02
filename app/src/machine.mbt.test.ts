@@ -19,6 +19,7 @@ import {
   computeRechargedAbilities,
   ITFBigInt,
   ITFVariant,
+  logMbtSeed,
   mapCreatureKind,
   mapDamageType,
   mapExpiryPhase,
@@ -33,7 +34,6 @@ import {
   quintParsedToNormalized,
   QuintSpellSlotState,
   QuintTurnState,
-  resolveTestSeed,
   snapshotToNormalized
 } from "#/mbt-shared.ts"
 import type { ActionType, Condition, CreatureKind, DamageType } from "#/types.ts"
@@ -1005,15 +1005,14 @@ describe("DnD MBT", () => {
   const specPath = path.resolve(import.meta.dirname, "../../creature.qnt")
 
   it("replays Quint traces against XState machine (L3 + L5 + L9 + L10 + L18)", async () => {
-    const seed = resolveTestSeed("creature MBT")
-    await run({
+    const result = await run({
       spec: specPath,
       driver: createDndDriver(),
       backend: "rust",
-      seed,
       nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
       maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
       stateCheck: mbtStateCheck
     })
+    logMbtSeed("creature MBT", result)
   }, 180_000)
 })

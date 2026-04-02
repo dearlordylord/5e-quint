@@ -17,6 +17,7 @@ import {
   ITFBigInt,
   ITFVariant,
   ITFVariantWithValue,
+  logMbtSeed,
   mapDamageType,
   multiattackExtraAttacks,
   type NormalizedState,
@@ -25,7 +26,6 @@ import {
   QuintMonsterResourceState,
   QuintSpellSlotState,
   QuintTurnState,
-  resolveTestSeed,
   snapshotToNormalized,
   variantToString
 } from "#/mbt-shared.ts"
@@ -1489,18 +1489,17 @@ describe("Battle Projection MBT", () => {
   const specPath = path.resolve(import.meta.dirname, "../../battle.qnt")
 
   it("replays battle traces per-creature against dndMachine actors", async () => {
-    const seed = resolveTestSeed("battle MBT")
-    await run({
+    const result = await run({
       spec: specPath,
       init: "bInit",
       step: "battleStep",
       driver: createBattleProjectionDriver(),
       backend: "rust",
-      seed,
       nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
       maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
       maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
       stateCheck: battleStateCheck
     })
+    logMbtSeed("battle MBT", result)
   }, 300_000)
 })
