@@ -1,4 +1,7 @@
 *.pdf
+TWEETS.md
+CODEX_REVIEW.md
+LESSONS.md
 node_modules/
 .references/*
 !.references/srd/
