@@ -5822,6 +5822,17 @@ module creature {
 
   val bonusMovementBounded = turnState.bonusMovementRemaining >= 0
 
+  // movementRemaining <= effectiveSpeed is NOT a valid invariant.
+  // Multiple SRD mechanisms let total movement exceed base Speed on a turn:
+  //   - Dash (Rules-Glossary): adds Speed to movement budget (stackable via
+  //     Cunning Action, Step of the Wind, Haste action, Expeditious Retreat)
+  //   - Mid-turn movement grants: Barbarian Rage entry ("move up to half your Speed"),
+  //     Fighter Second Wind/Tactical Mind, Rogue Withdraw — immediate movement
+  //     outside the normal budget
+  //   - Speed-modifying effects (Longstrider +10ft, Haste doubles, Boots of Speed
+  //     doubles, Fast Movement +10ft, Unarmored Movement +10-30ft) if effectiveSpeed
+  //     doesn't account for them
+
   // Phase B: Barbarian resource invariants
   val rageChargesBounded =
     barbarianState.rageCharges >= 0 and barbarianState.rageCharges <= barbarianState.rageMaxCharges
@@ -5870,6 +5881,29 @@ module creature {
     monsterResourceState.dailyUsesRemaining.keys().forall(name =>
       monsterResourceState.dailyUsesRemaining.get(name) >= 0)
 
+  // Phase P0: Turn resource bounds
+  val actionsRemainingNonNeg = turnState.actionsRemaining >= 0
+  val actionsRemainingBounded = turnState.actionsRemaining <= 2
+  val movementRemainingNonNeg = turnState.movementRemaining >= 0
+  val extraAttacksNonNeg = turnState.extraAttacksRemaining >= 0
+
+  // Phase P0: Stability invariants
+  val stableImpliesZeroHp = state.stable implies state.hp == 0
+  val stableImpliesUnconscious = state.stable implies state.unconscious
+
+  // Phase P0: Active effect durations
+  val activeEffectDurationsNonNeg = state.activeEffects.forall(e => e.turnsRemaining >= 0)
+
+  // Phase P1: Death save state machine
+  val hpPositiveImpliesNoDeathSaves =
+    state.hp > 0 implies (state.deathSaves.successes == 0 and state.deathSaves.failures == 0)
+
+  val zeroHpNotDeadNotStableImpliesUnconscious =
+    (state.hp == 0 and not(state.dead) and not(state.stable)) implies state.unconscious
+
+  val threeDeathFailuresImpliesDead =
+    state.deathSaves.failures >= 3 implies state.dead
+
   /// Combined invariant for all safety properties.
   val allInvariants = and {
     hpBounded,
@@ -5911,6 +5945,16 @@ module creature {
     paladinChannelDivinityBounded,
     druidWildShapeChargesBounded,
     sorceryPointsBounded,
+    actionsRemainingNonNeg,
+    actionsRemainingBounded,
+    movementRemainingNonNeg,
+    extraAttacksNonNeg,
+    stableImpliesZeroHp,
+    stableImpliesUnconscious,
+    activeEffectDurationsNonNeg,
+    hpPositiveImpliesNoDeathSaves,
+    zeroHpNotDeadNotStableImpliesUnconscious,
+    threeDeathFailuresImpliesDead,
   }
 
   // ============================================================

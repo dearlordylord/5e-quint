@@ -116,6 +116,10 @@ Every plan's **Verification** section must include:
 
 After significant changes, run `/simplify` repeatedly until it converges — i.e., each round finds fewer issues until no important fixes remain. **Do not ask between rounds** — just proceed automatically. Typical progression: round 1 catches dead code and obvious duplication; round 2 catches subtler issues (bugs, tautological invariants, missed dedup); round 3 should find nothing significant. If round N still finds real issues, keep going. **Minimum 2 rounds** — convergence cannot be measured from a single round unless the changeset is trivially small (< ~20 lines). A single round may fix the obvious issues but cannot confirm that no subtler issues remain.
 
+## Invariant scenario tests
+
+`npx quint test --match "inv_" dndTest.qnt` — deterministic pure-function tests for creature-level invariant edge cases (death saves, stability, concentration, conditions, effects, exhaustion, HP).
+
 ## QA pipeline
 
 Community Q&A corpus used to generate Quint test assertions against the spec. Full docs: `scripts/qa/QA_README.md`.

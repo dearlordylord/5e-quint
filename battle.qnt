@@ -15,6 +15,10 @@ module battle {
   // 1. BATTLE TYPES
   // ============================================================
 
+  /// Convert a list to a set.
+  pure def listToSet(lst: List[a]): Set[a] =
+    lst.foldl(Set(), (s, e) => s.union(Set(e)))
+
   type CreatureId = str
 
   // Per-creature bundle.
@@ -210,6 +214,8 @@ module battle {
     | BPActiveTurn
     | BPAwaitingReaction(AwaitCtx)
     | BPResolvingAoE(AoESpellCtx)       // processing AoE targets one by one (R32)
+    // Note: AoE with zero remaining targets is valid per RAW ("Each creature in the area"
+    // applies to an empty set — the spell still occurs, it just affects no creatures).
     | BPResolvingMovement(MovementCtx)   // processing OAs one by one (R5, R22)
     | BPAwaitingLegendaryAction(LAWindowCtx)  // LA window at end of turn (R7)
 
@@ -502,6 +508,8 @@ module battle {
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
         "D" -> mkCaster(hp4, PC)  // 4th creature for CS chain depth ≥ 2
       ),
+      // Modeling assumption: battle requires >= 2 combatants. SRD says combat is
+      // "a clash between two sides" but does not state an explicit minimum count.
       bInitiative' = ["A", "B", "C", "D"],
       bTurnIndex' = 0,
       bRound' = 1,
@@ -1756,6 +1764,100 @@ module battle {
   val roundPositive = bRound >= 1
 
   val turnIndexValid = bTurnIndex >= 0 and bTurnIndex < bInitiative.length()
+
+  // Phase 3: Structural invariants
+
+  /// Initiative list contains exactly the creature ids.
+  val initiativeMatchesCreatures = listToSet(bInitiative) == bCreatures.keys()
+
+  /// No duplicate entries in initiative order.
+  val initiativeNoDuplicates = bInitiative.length() == listToSet(bInitiative).size()
+
+  /// Dead creatures are not concentrating.
+  val allDeadNotConcentrating = bCreatures.keys().forall(id =>
+    val c = bCreatures.get(id)
+    c.creature.dead implies c.slots.concentrationSpellId == ""
+  )
+
+  /// If awaiting reaction, eligible reactors have their reaction available.
+  val reactorHasReaction = match bPhase {
+    | BPAwaitingReaction(ctx) =>
+      ctx.eligible.forall(id => hasReaction(bCreatures, id))
+    | _ => true
+  }
+
+  /// Spell stack entries have distinct casters.
+  val spellStackDistinctCasters =
+    listToSet(bSpellStack).forall(e1 =>
+      listToSet(bSpellStack).forall(e2 =>
+        (e1.spellCasterId == e2.spellCasterId) implies (e1 == e2)
+      )
+    )
+
+  /// Legendary action window does not include the creature whose turn just ended.
+  val legendaryActionNotOnOwnTurn = match bPhase {
+    | BPAwaitingLegendaryAction(ctx) =>
+      val activeId = bInitiative[bTurnIndex]
+      ctx.eligibleMonsters.forall(mid => mid != activeId)
+    | _ => true
+  }
+
+  // Phase 4: Cross-creature invariants
+
+  /// Concentration implies an active effect exists on some creature.
+  val concentrationImpliesEffect = bCreatures.keys().forall(casterId =>
+    val caster = bCreatures.get(casterId)
+    (caster.slots.concentrationSpellId != "") implies bCreatures.keys().exists(targetId =>
+      bCreatures.get(targetId).creature.activeEffects.exists(e =>
+        e.spellId == caster.slots.concentrationSpellId and e.casterId == casterId
+      )
+    )
+  )
+
+  /// Every concentration effect has a living, concentrating caster.
+  val concentrationEffectHasLivingCaster = bCreatures.keys().forall(targetId =>
+    bCreatures.get(targetId).creature.activeEffects.forall(e =>
+      bCreatures.keys().exists(casterId =>
+        val caster = bCreatures.get(casterId)
+        e.casterId == casterId
+        and not(caster.creature.dead)
+        and caster.slots.concentrationSpellId == e.spellId
+      )
+    )
+  )
+
+  /// Active effects have unique spellIds per creature (battle-level lift).
+  val allActiveEffectsUnique = bCreatures.keys().forall(id =>
+    val ae = bCreatures.get(id).creature.activeEffects
+    ae.forall(e1 => ae.forall(e2 =>
+      (e1.spellId == e2.spellId) implies (e1 == e2)
+    ))
+  )
+
+  /// Reaction window has at least one eligible reactor.
+  val reactionWindowHasEligible = match bPhase {
+    | BPAwaitingReaction(ctx) => ctx.eligible.size() > 0
+    | _ => true
+  }
+
+  // Phase 5: Aggregate
+
+  val allBattleInvariants = and {
+    roundPositive,
+    turnIndexValid,
+    allHpBounded,
+    allDeadImpliesHp0,
+    initiativeMatchesCreatures,
+    initiativeNoDuplicates,
+    allDeadNotConcentrating,
+    reactorHasReaction,
+    spellStackDistinctCasters,
+    legendaryActionNotOnOwnTurn,
+    concentrationImpliesEffect,
+    concentrationEffectHasLivingCaster,
+    allActiveEffectsUnique,
+    reactionWindowHasEligible,
+  }
 
   // Note: offered ⊄ eligible is expected — reactors who spend their reaction
   // are removed from eligible but remain in offered. No useful state invariant

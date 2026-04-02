@@ -6687,4 +6687,445 @@ module dndTest {
     assert(bs2.bardicInspirationCharges == 3) // full recharge on LR
   }
 
+  // ============================================================
+  // Invariant Scenario Tests
+  // ============================================================
+
+  // Helpers: creature at 0 HP (PC death-save track)
+  pure val INV_CREATURE_0HP: CreatureState =
+    pApplyCondition(freshCreature(50).with("hp", 0), CUnconscious, Set())
+
+  // Creature concentrating on a spell with active effect
+  pure val INV_CONC_SLOTS: SpellSlotState =
+    FRESH_SPELL_SLOTS.with("concentrationSpellId", "spell1")
+
+  pure val INV_CONC_EFFECT: ActiveEffect = {
+    spellId: "spell1", turnsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster1",
+    grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
+  }
+
+  // ---- Group 1: Death Save State Machine ----
+
+  // Nat 1 at 2 failures → 3 failures → dead
+  run inv_deathSave_nat1_at2failures = {
+    val s = INV_CREATURE_0HP.with("deathSaves", { successes: 0, failures: 2 })
+    val s1 = pDeathSave(s, 1)
+    all {
+      assert(s1.deathSaves.failures >= 3),
+      assert(s1.dead),
+      assert(s1.hp == 0),
+    }
+  }
+
+  // Nat 20 → regain 1 HP, no longer unconscious, death saves reset
+  run inv_deathSave_nat20_recovery = {
+    val s = INV_CREATURE_0HP.with("deathSaves", { successes: 1, failures: 2 })
+    val s1 = pDeathSave(s, 20)
+    all {
+      assert(s1.hp == 1),
+      assert(not(s1.unconscious)),
+      assert(s1.deathSaves.successes == 0),
+      assert(s1.deathSaves.failures == 0),
+      assert(not(s1.dead)),
+      assert(not(s1.stable)),
+    }
+  }
+
+  // Overflow instant death: damage >= maxHp while at 0 HP
+  run inv_overflowInstantDeath = {
+    val s = INV_CREATURE_0HP  // maxHp=50, hp=0
+    val s1 = pTakeDamage(s, 50, Slashing, Set(), Set(), Set(), false)
+    all {
+      assert(s1.dead),
+      assert(s1.hp == 0),
+    }
+  }
+
+  // Dead creature absorbs damage, healing, and death saves
+  run inv_deadIsAbsorbing = {
+    val s = freshCreature(50).with("hp", 0).with("dead", true)
+    all {
+      assert(pTakeDamage(s, 10, Slashing, Set(), Set(), Set(), false) == s),
+      assert(pHeal(s, 10) == s),
+      assert(pDeathSave(s, 15) == s),
+    }
+  }
+
+  // Damage at 0 HP adds death failures (not dead yet, just 1 failure)
+  run inv_damageAt0HP_addsFailures = {
+    val s = INV_CREATURE_0HP
+    val s1 = pTakeDamage(s, 5, Slashing, Set(), Set(), Set(), false)
+    all {
+      assert(s1.hp == 0),
+      assert(s1.deathSaves.failures == 1),
+      assert(not(s1.dead)),
+    }
+  }
+
+  // Critical damage at 0 HP adds 2 failures
+  run inv_critDamageAt0HP_adds2Failures = {
+    val s = INV_CREATURE_0HP
+    val s1 = pTakeDamage(s, 5, Slashing, Set(), Set(), Set(), true)
+    all {
+      assert(s1.hp == 0),
+      assert(s1.deathSaves.failures == 2),
+      assert(not(s1.dead)),
+    }
+  }
+
+  // hp > 0 implies no death saves
+  run inv_hpPositive_noDeathSaves = {
+    val s = freshCreature(50)  // hp=50
+    all {
+      assert(s.hp > 0),
+      assert(s.deathSaves.successes == 0),
+      assert(s.deathSaves.failures == 0),
+    }
+  }
+
+  // ---- Group 2: Stable / Unconscious Transitions ----
+
+  // 3 successes → stable, death saves reset, still at 0 HP, still unconscious
+  run inv_threeSuccesses_stable = {
+    val s = INV_CREATURE_0HP.with("deathSaves", { successes: 2, failures: 1 })
+    val s1 = pDeathSave(s, 15)  // success
+    all {
+      assert(s1.stable),
+      assert(s1.hp == 0),
+      assert(s1.unconscious),
+      assert(s1.deathSaves.successes == 0),
+      assert(s1.deathSaves.failures == 0),
+    }
+  }
+
+  // Heal from stable → conscious, not stable, death saves reset
+  run inv_healFromStable = {
+    val s = INV_CREATURE_0HP.with("stable", true)
+    val s1 = pHeal(s, 5)
+    all {
+      assert(s1.hp == 5),
+      assert(not(s1.unconscious)),
+      assert(not(s1.stable)),
+      assert(s1.deathSaves.successes == 0),
+      assert(s1.deathSaves.failures == 0),
+    }
+  }
+
+  // pStabilize: sets stable, resets death saves, stays at 0 HP
+  run inv_stabilize = {
+    val s = INV_CREATURE_0HP.with("deathSaves", { successes: 1, failures: 2 })
+    val s1 = pStabilize(s)
+    all {
+      assert(s1.stable),
+      assert(s1.hp == 0),
+      assert(s1.unconscious),
+      assert(s1.deathSaves.successes == 0),
+      assert(s1.deathSaves.failures == 0),
+    }
+  }
+
+  // Damage while stable: resets stable flag, adds failures
+  run inv_damageWhileStable = {
+    val s = INV_CREATURE_0HP.with("stable", true)
+    val s1 = pTakeDamage(s, 5, Slashing, Set(), Set(), Set(), false)
+    all {
+      assert(not(s1.stable)),
+      assert(s1.hp == 0),
+      assert(s1.deathSaves.failures >= 1),
+    }
+  }
+
+  // Stable recovery: regain 1 HP → conscious
+  run inv_stableRecovery = {
+    val s = INV_CREATURE_0HP.with("stable", true)
+    val s1 = pStableRecovery(s)
+    all {
+      assert(s1.hp == 1),
+      assert(not(s1.unconscious)),
+      assert(not(s1.stable)),
+    }
+  }
+
+  // At 0 HP, not dead, not stable → must be unconscious
+  run inv_zeroHp_notDead_notStable_isUnconscious = {
+    val s = INV_CREATURE_0HP
+    all {
+      assert(s.hp == 0),
+      assert(not(s.dead)),
+      assert(not(s.stable)),
+      assert(s.unconscious),
+    }
+  }
+
+  // ---- Group 3: Concentration Breaking on State Change ----
+
+  // Death while concentrating → concentration breaks, active effect removed
+  run inv_deathBreaksConcentration = {
+    val s = freshCreature(50).with("activeEffects", Set(INV_CONC_EFFECT))
+    val ss = INV_CONC_SLOTS
+    val s1 = pTakeDamage(s, 999, Slashing, Set(), Set(), Set(), false)
+    val r = pWithConcBreak(ss, s, s1)
+    all {
+      assert(r.creature.dead),
+      assert(r.slots.concentrationSpellId == ""),
+      assert(not(r.creature.activeEffects.exists(e => e.spellId == "spell1"))),
+    }
+  }
+
+  // Incapacitation while concentrating → concentration breaks
+  run inv_incapBreaksConcentration = {
+    val s = freshCreature(50).with("activeEffects", Set(INV_CONC_EFFECT))
+    val ss = INV_CONC_SLOTS
+    val s1 = pApplyCondition(s, CStunned, Set())
+    val r = pWithConcBreak(ss, s, s1)
+    all {
+      assert(isIncapacitated(r.creature)),
+      assert(r.slots.concentrationSpellId == ""),
+      assert(not(r.creature.activeEffects.exists(e => e.spellId == "spell1"))),
+    }
+  }
+
+  // Already incapacitated + apply another incap condition → no double break
+  run inv_alreadyIncap_noDoubleBreak = {
+    val s = pApplyCondition(freshCreature(50), CStunned, Set())
+    val ss = INV_CONC_SLOTS  // still "concentrating" (hypothetical state)
+    val s1 = pApplyCondition(s, CParalyzed, Set())
+    val r = pWithConcBreak(ss, s, s1)
+    // Both old and new are incapacitated → no state change → concentration preserved
+    all {
+      assert(r.slots.concentrationSpellId == "spell1"),
+    }
+  }
+
+  // Failed concentration save → breaks concentration
+  run inv_failedConcSave = {
+    val ss = INV_CONC_SLOTS
+    val ss1 = pConcentrationCheck(ss, false)
+    assert(ss1.concentrationSpellId == "")
+  }
+
+  // Passed concentration save → keeps concentration
+  run inv_passedConcSave = {
+    val ss = INV_CONC_SLOTS
+    val ss1 = pConcentrationCheck(ss, true)
+    assert(ss1.concentrationSpellId == "spell1")
+  }
+
+  // ---- Group 4: Condition ↔ Incapacitated Sync ----
+
+  // Apply Paralyzed → incapacitated source tracked
+  run inv_paralyzed_addsIncapSource = {
+    val s = pApplyCondition(freshCreature(50), CParalyzed, Set())
+    all {
+      assert(s.paralyzed),
+      assert(s.incapacitatedSources.contains(ISParalyzed)),
+    }
+  }
+
+  // Remove Paralyzed → source removed
+  run inv_removeParalyzed_removesIncapSource = {
+    val s = pApplyCondition(freshCreature(50), CParalyzed, Set())
+    val s1 = pRemoveCondition(s, CParalyzed)
+    all {
+      assert(not(s1.paralyzed)),
+      assert(not(s1.incapacitatedSources.contains(ISParalyzed))),
+    }
+  }
+
+  // Apply Stunned + Paralyzed, remove Stunned → Paralyzed source remains
+  run inv_multipleIncapSources_removeOne = {
+    val s = pApplyCondition(pApplyCondition(freshCreature(50), CStunned, Set()), CParalyzed, Set())
+    val s1 = pRemoveCondition(s, CStunned)
+    all {
+      assert(not(s1.stunned)),
+      assert(not(s1.incapacitatedSources.contains(ISStunned))),
+      assert(s1.paralyzed),
+      assert(s1.incapacitatedSources.contains(ISParalyzed)),
+      assert(isIncapacitated(s1)),
+    }
+  }
+
+  // Unconscious → prone + incapacitated; remove unconscious → stays prone
+  run inv_unconscious_prone_persists = {
+    val s = pApplyCondition(freshCreature(50), CUnconscious, Set())
+    all {
+      assert(s.unconscious),
+      assert(s.prone),
+      assert(s.incapacitatedSources.contains(ISUnconscious)),
+    }
+  }
+
+  run inv_removeUnconscious_staysProne = {
+    val s = pApplyCondition(freshCreature(50), CUnconscious, Set())
+    val s1 = pRemoveCondition(s, CUnconscious)
+    all {
+      assert(not(s1.unconscious)),
+      assert(s1.prone),  // prone persists
+      assert(not(s1.incapacitatedSources.contains(ISUnconscious))),
+    }
+  }
+
+  // Petrified blocks Poisoned
+  run inv_petrified_blocksPoisoned = {
+    val s = pApplyCondition(freshCreature(50), CPetrified, Set())
+    val s1 = pApplyCondition(s, CPoisoned, Set())
+    assert(not(s1.poisoned))
+  }
+
+  // ---- Group 5: Active Effect Lifecycle ----
+
+  // Duplicate spellId → replaced, not stacked
+  run inv_activeEffect_duplicateReplaced = {
+    val e1 = pAddEffectSimple(Set(), "spell1", 3, AtEndOfTurn, "c1")
+    val e2 = pAddEffectSimple(e1, "spell1", 5, AtEndOfTurn, "c1")
+    all {
+      assert(e2.size() == 1),
+      assert(e2.forall(e => e.turnsRemaining == 5)),
+    }
+  }
+
+  // Two different spellIds coexist
+  run inv_activeEffect_twoDistinct = {
+    val e1 = pAddEffectSimple(Set(), "spell1", 3, AtEndOfTurn, "c1")
+    val e2 = pAddEffectSimple(e1, "spell2", 5, AtEndOfTurn, "c1")
+    all {
+      assert(e2.size() == 2),
+      assert(e2.forall(e1x => e2.forall(e2x =>
+        (e1x.spellId == e2x.spellId) implies (e1x == e2x)
+      ))),
+    }
+  }
+
+  // Decrement durations: 1 → 0 (not negative)
+  run inv_activeEffect_decrementToZero = {
+    val effects = Set(INV_CONC_EFFECT.with("turnsRemaining", 1))
+    val decremented = pDecrementDurations(effects)
+    assert(decremented.forall(e => e.turnsRemaining == 0))
+  }
+
+  // clearExpiredAtPhase only clears matching phase
+  run inv_activeEffect_expiryPhaseSpecific = {
+    val eEnd: ActiveEffect = {
+      spellId: "endSpell", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "c1",
+      grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
+    }
+    val eStart: ActiveEffect = {
+      spellId: "startSpell", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "c1",
+      grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
+    }
+    val effects = Set(eEnd, eStart)
+    val cleared = pClearExpiredAtPhase(effects, AtEndOfTurn)
+    all {
+      assert(cleared.size() == 1),
+      assert(cleared.exists(e => e.spellId == "startSpell")),
+    }
+  }
+
+  // pTickEffects with large N clears all
+  run inv_activeEffect_tickLargeN = {
+    val effects = pAddEffectSimple(
+      pAddEffectSimple(Set(), "s1", 5, AtEndOfTurn, "c1"),
+      "s2", 10, AtStartOfTurn, "c1"
+    )
+    val ticked = pTickEffects(effects, 100)
+    assert(ticked.size() == 0)
+  }
+
+  // ---- Group 6: Exhaustion Boundaries ----
+
+  // Exhaustion 5 + 1 = 6 → dead, hp=0
+  run inv_exhaustion6_dead = {
+    val s = freshCreature(50).with("exhaustion", 5)
+    val s1 = pAddExhaustion(s, 1, false)
+    all {
+      assert(s1.exhaustion == 6),
+      assert(s1.dead),
+      assert(s1.hp == 0),
+    }
+  }
+
+  // Exhaustion 5 + 2 → caps at 6
+  run inv_exhaustion_capsAt6 = {
+    val s = freshCreature(50).with("exhaustion", 5)
+    val s1 = pAddExhaustion(s, 2, false)
+    all {
+      assert(s1.exhaustion == 6),
+      assert(s1.dead),
+    }
+  }
+
+  // Reduce exhaustion from 2 by 10 → caps at 0
+  run inv_exhaustion_reduceFloor = {
+    val s = freshCreature(50).with("exhaustion", 2)
+    val s1 = pReduceExhaustion(s, 10)
+    assert(s1.exhaustion == 0)
+  }
+
+  // Exhaustion immune → no change
+  run inv_exhaustion_immune = {
+    val s = freshCreature(50)
+    val s1 = pAddExhaustion(s, 3, true)
+    assert(s1.exhaustion == 0)
+  }
+
+  // ---- Group 7: HP / Temp HP Boundaries ----
+
+  // Temp HP absorbs damage, remainder hits real HP
+  run inv_tempHp_absorbs = {
+    val s = freshCreature(50).with("tempHp", 10)
+    val s1 = pTakeDamage(s, 25, Slashing, Set(), Set(), Set(), false)
+    all {
+      assert(s1.tempHp == 0),
+      assert(s1.hp == 35),
+    }
+  }
+
+  // Exact temp HP absorption — real HP untouched
+  run inv_tempHp_exactAbsorption = {
+    val s = freshCreature(50).with("tempHp", 10)
+    val s1 = pTakeDamage(s, 10, Slashing, Set(), Set(), Set(), false)
+    all {
+      assert(s1.tempHp == 0),
+      assert(s1.hp == 50),
+    }
+  }
+
+  // Heal caps at maxHp
+  run inv_heal_capsAtMax = {
+    val s = freshCreature(50).with("hp", 45)
+    val s1 = pHeal(s, 100)
+    assert(s1.hp == 50)
+  }
+
+  // Heal from 0 HP: resets death saves, removes unconscious
+  run inv_healFrom0_resetsDeathSaves = {
+    val s = INV_CREATURE_0HP.with("deathSaves", { successes: 2, failures: 1 })
+    val s1 = pHeal(s, 1)
+    all {
+      assert(s1.hp == 1),
+      assert(not(s1.unconscious)),
+      assert(s1.deathSaves.successes == 0),
+      assert(s1.deathSaves.failures == 0),
+      assert(not(s1.stable)),
+    }
+  }
+
+  // Temp HP at 0 HP does NOT restore consciousness
+  run inv_tempHpAt0HP_noConsciousness = {
+    val s = INV_CREATURE_0HP
+    val s1 = pGrantTempHp(s, 10, false)
+    all {
+      assert(s1.hp == 0),
+      assert(s1.tempHp == 10),
+      assert(s1.unconscious),
+    }
+  }
+
+  // Damage immunity → no HP lost
+  run inv_damageImmunity = {
+    val s = freshCreature(50)
+    val s1 = pTakeDamage(s, 100, Fire, Set(), Set(), Set(Fire), false)
+    assert(s1.hp == 50)
+  }
+
 }
