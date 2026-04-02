@@ -1004,10 +1004,17 @@ describe("DnD MBT", () => {
   const specPath = path.resolve(import.meta.dirname, "../../creature.qnt")
 
   it("replays Quint traces against XState machine (L3 + L5 + L9 + L10 + L18)", async () => {
+    const seed =
+      process.env["QUINT_SEED"] ??
+      `0x${Math.floor(Math.random() * 0xffffffff)
+        .toString(16)
+        .padStart(8, "0")}`
+    console.log(`[creature MBT] seed: ${seed}`)
     await run({
       spec: specPath,
       driver: createDndDriver(),
       backend: "rust",
+      seed,
       nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
       maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
       stateCheck: mbtStateCheck

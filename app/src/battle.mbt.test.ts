@@ -1489,12 +1489,19 @@ describe("Battle Projection MBT", () => {
   const specPath = path.resolve(import.meta.dirname, "../../battle.qnt")
 
   it("replays battle traces per-creature against dndMachine actors", async () => {
+    const seed =
+      process.env["QUINT_SEED"] ??
+      `0x${Math.floor(Math.random() * 0xffffffff)
+        .toString(16)
+        .padStart(8, "0")}`
+    console.log(`[battle MBT] seed: ${seed}`)
     await run({
       spec: specPath,
       init: "bInit",
       step: "battleStep",
       driver: createBattleProjectionDriver(),
       backend: "rust",
+      seed,
       nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
       maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
       maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
