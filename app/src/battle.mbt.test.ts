@@ -19,7 +19,6 @@ import {
   ITFVariantWithValue,
   logMbtSeed,
   mapDamageType,
-  multiattackExtraAttacks,
   type NormalizedState,
   QUINT_CONDITION_MAP,
   QuintCreatureState,
@@ -576,7 +575,7 @@ function createBattleProjectionDriver() {
         type: "START_TURN",
         baseSpeed: 30,
         armorPenalty: 0,
-        extraAttacks: isMonster && sb ? multiattackExtraAttacks(sb.multiattackLength) : 1,
+        extraAttacks: 1, // FRESH_TURN.extraAttacksRemaining is always 1 in the Quint spec
         callerSpeedModifier: 0,
         isGrappling: false,
         grappledTargetTwoSizesSmaller: false,
@@ -811,6 +810,28 @@ function createBattleProjectionDriver() {
     /** Track after-damage context for Hellish Rebuke / Retaliation */
     let pendingAfterDamage: { damageSource: string; damagedCreature: string } | null = null
 
+    /** Track deferred save-failed context for LR interrupt (PISaveFailed / PISaveFailedAoE).
+     *  When a save fails and the target has reaction available (LR eligible),
+     *  effects are NOT applied immediately — they're deferred until bResolveSaveFailedReaction. */
+    let pendingSaveFailed: {
+      target: string
+      caster: string
+      damageOnFail: number
+      halfOnSuccess: boolean
+      damageType: DamageType
+      conditionOnFail: Condition
+      applyCondition: boolean
+      saveSucceeded: boolean // flipped to true by LR
+    } | null = null
+
+    /** Check if target creature has reaction available (eligible for LR). */
+    function hasLRReactor(targetId: CreatureId): boolean {
+      const actor = actors.get(targetId)
+      if (!actor) return false
+      const snap = actor.getSnapshot()
+      return snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })
+    }
+
     function handleBCastSaveSpell(picks: ReadonlyMap<string, unknown>) {
       const id = activeId()
       const targetId = pickString(picks, "targetId") ?? ""
@@ -888,6 +909,12 @@ function createBattleProjectionDriver() {
       slotLvl: number
     } | null = null
 
+    /** CS chain: tracks nested Counterspell-on-Counterspell outcomes.
+     *  Each entry is true if the CS at that depth SUCCEEDED (fizzles its target).
+     *  When the chain unwinds, we walk from top to bottom to determine
+     *  whether the original spell is ultimately fizzled. */
+    const csChain: Array<boolean> = []
+
     function resolveSpellSave(spell: NonNullable<typeof pendingSpell>) {
       const saved = spell.saveRoll >= spell.saveDC
       if (saved) {
@@ -905,26 +932,60 @@ function createBattleProjectionDriver() {
           pendingAfterDamage = { damageSource: spell.caster, damagedCreature: spell.target }
         }
       } else {
-        // Save failed — apply condition + damage
-        if (spell.applyCondition) {
-          send(spell.target, {
-            type: "APPLY_CONDITION",
-            condition: spell.conditionOnFail,
-            conditionImmunities: EMPTY_CONDITION_IMMUNITIES
-          })
-        }
-        if (spell.damageOnFail > 0) {
-          send(spell.target, {
-            type: "TAKE_DAMAGE",
-            amount: spell.damageOnFail,
+        // Save failed — check for LR-eligible reactor before applying effects
+        if (hasLRReactor(spell.target)) {
+          // Defer effects until bResolveSaveFailedReaction
+          pendingSaveFailed = {
+            target: spell.target,
+            caster: spell.caster,
+            damageOnFail: spell.damageOnFail,
+            halfOnSuccess: spell.halfOnSuccess,
             damageType: spell.damageType,
-            resistances: new Set<DamageType>(),
-            vulnerabilities: new Set<DamageType>(),
-            immunities: new Set<DamageType>(),
-            isCritical: false
-          })
-          pendingAfterDamage = { damageSource: spell.caster, damagedCreature: spell.target }
+            conditionOnFail: spell.conditionOnFail,
+            applyCondition: spell.applyCondition,
+            saveSucceeded: false
+          }
+        } else {
+          // No LR — apply fail effects immediately
+          applyFailEffects(
+            spell.target,
+            spell.caster,
+            spell.damageOnFail,
+            spell.damageType,
+            spell.conditionOnFail,
+            spell.applyCondition
+          )
         }
+      }
+    }
+
+    /** Apply fail effects: condition + damage. Shared by resolveSpellSave and bResolveSaveFailedReaction. */
+    function applyFailEffects(
+      target: string,
+      caster: string,
+      damageOnFail: number,
+      damageType: DamageType,
+      conditionOnFail: Condition,
+      applyCondition: boolean
+    ) {
+      if (applyCondition) {
+        send(target, {
+          type: "APPLY_CONDITION",
+          condition: conditionOnFail,
+          conditionImmunities: EMPTY_CONDITION_IMMUNITIES
+        })
+      }
+      if (damageOnFail > 0) {
+        send(target, {
+          type: "TAKE_DAMAGE",
+          amount: damageOnFail,
+          damageType,
+          resistances: new Set<DamageType>(),
+          vulnerabilities: new Set<DamageType>(),
+          immunities: new Set<DamageType>(),
+          isCritical: false
+        })
+        pendingAfterDamage = { damageSource: caster, damagedCreature: target }
       }
     }
 
@@ -933,7 +994,34 @@ function createBattleProjectionDriver() {
       const decision = picks.get("decision") as { tag: string; value: unknown } | undefined
       const csSlotLvl = pickBigInt(picks, "csSlotLvl") ?? 3
       if (!reactorId) {
-        // No remaining reactors — spell resolves. Expend deferred slot.
+        // No remaining reactors — spell resolves.
+        if (csChain.length > 0) {
+          // Quint unwinds the entire CS chain in one step.
+          // Walk from top (innermost CS) to bottom (closest to original)
+          // to determine if original spell is ultimately fizzled.
+          let fizzleBelow = false
+          for (let i = csChain.length - 1; i >= 0; i--) {
+            if (fizzleBelow) {
+              // This level was fizzled by the level above — its outcome is irrelevant.
+              // Its target (level below) is unaffected.
+              fizzleBelow = false
+            } else if (csChain[i]) {
+              // This level's CS succeeded → fizzles the level below
+              fizzleBelow = true
+            }
+            // CS failed → target continues, fizzleBelow stays false
+          }
+          csChain.length = 0
+          if (fizzleBelow) {
+            // Original spell was ultimately fizzled by the chain.
+            pendingSpell = null
+            pendingAoE = null
+            pendingConcentration = null
+            return
+          }
+          // Original spell NOT fizzled — fall through to resolve it.
+        }
+        // Depth 0: original spell resolves. Expend deferred slot.
         if (pendingSpell) {
           send(pendingSpell.caster, { type: "EXPEND_SLOT", level: pendingSpell.slotLvl })
           resolveSpellSave(pendingSpell)
@@ -945,7 +1033,6 @@ function createBattleProjectionDriver() {
           resolveConcentrationSpell(pendingConcentration)
           pendingConcentration = null
         }
-        // For Counterspell-on-Counterspell: handled by stack
         return
       }
 
@@ -955,14 +1042,9 @@ function createBattleProjectionDriver() {
         send(reactorId, { type: "EXPEND_SLOT", level: csSlotLvl })
 
         const conSaveSucceeded = Boolean(decision.value)
-
-        if (!conSaveSucceeded) {
-          // CS succeeds — original spell fizzles, slot NOT expended
-          pendingSpell = null
-          pendingAoE = null
-          pendingConcentration = null
-        }
-        // If CS fails, spell continues — will resolve when all remaining reactors are processed
+        // Track whether this CS succeeded (fizzles its target).
+        // conSaveSucceeded=false means the CS succeeds (target's concentration save failed).
+        csChain.push(!conSaveSucceeded)
       }
       // RPass: do nothing, keep pending
     }
@@ -973,26 +1055,65 @@ function createBattleProjectionDriver() {
       const decision = variantToString(decisionRaw)
 
       if (!reactorId) {
-        // No remaining — effects already applied via resolveSpellSave or similar
+        // No remaining reactors — apply deferred effects based on saveSucceeded flag
+        if (pendingSaveFailed) {
+          const sf = pendingSaveFailed
+          pendingSaveFailed = null
+          if (sf.saveSucceeded) {
+            // LR flipped save to succeeded — half damage if applicable, no condition
+            if (sf.halfOnSuccess && sf.damageOnFail > 0) {
+              const halfDmg = Math.floor(sf.damageOnFail / 2)
+              send(sf.target, {
+                type: "TAKE_DAMAGE",
+                amount: halfDmg,
+                damageType: sf.damageType,
+                resistances: new Set<DamageType>(),
+                vulnerabilities: new Set<DamageType>(),
+                immunities: new Set<DamageType>(),
+                isCritical: false
+              })
+              pendingAfterDamage = { damageSource: sf.caster, damagedCreature: sf.target }
+            }
+          } else {
+            // No LR used — full fail effects
+            applyFailEffects(
+              sf.target,
+              sf.caster,
+              sf.damageOnFail,
+              sf.damageType,
+              sf.conditionOnFail,
+              sf.applyCondition
+            )
+          }
+        }
         return
       }
 
       if (decision === "RLegendaryResistance") {
-        // LR: spend reaction (simplified), auto-succeed save
+        // LR: spend reaction, flip save to succeeded
         send(reactorId, { type: "USE_REACTION" })
-        // The save is now succeeded — if pending spell, modify it
-        // In the Quint spec, LR sets saveSucceeded=true, then applyFailEffects checks it
-        // For the projection, we need to undo the fail effects...
-        // Actually, LR fires BEFORE applyFailEffects in the remaining=0 branch.
-        // The projection handles this differently — when remaining=0 with LR used,
-        // applyFailEffects sees saveSucceeded=true and applies half damage.
-        // This is already handled by Quint — we just need to match the final state.
-        //
-        // For PISaveFailed: LR flips save to succeeded, then applyFailEffects runs.
-        // We need to track that the save succeeded for the final resolution.
-        // LR flips the save to succeeded — tracked by Quint, not projected to XState
+        if (pendingSaveFailed) {
+          pendingSaveFailed.saveSucceeded = true
+          // Effects applied when remaining==0 (reactorId is null)
+          // But in Quint, LR immediately resolves — apply now
+          const sf = pendingSaveFailed
+          pendingSaveFailed = null
+          if (sf.halfOnSuccess && sf.damageOnFail > 0) {
+            const halfDmg = Math.floor(sf.damageOnFail / 2)
+            send(sf.target, {
+              type: "TAKE_DAMAGE",
+              amount: halfDmg,
+              damageType: sf.damageType,
+              resistances: new Set<DamageType>(),
+              vulnerabilities: new Set<DamageType>(),
+              immunities: new Set<DamageType>(),
+              isCritical: false
+            })
+            pendingAfterDamage = { damageSource: sf.caster, damagedCreature: sf.target }
+          }
+        }
       }
-      // RPass: do nothing
+      // RPass: do nothing, keep pending for next reactor
     }
 
     function handleBCastConcentrationSpell(picks: ReadonlyMap<string, unknown>) {
@@ -1154,25 +1275,29 @@ function createBattleProjectionDriver() {
           pendingAfterDamage = { damageSource: pendingAoE.caster, damagedCreature: targetId }
         }
       } else {
-        // Failed save
-        if (pendingAoE.applyCondition) {
-          send(targetId, {
-            type: "APPLY_CONDITION",
-            condition: pendingAoE.conditionOnFail,
-            conditionImmunities: EMPTY_CONDITION_IMMUNITIES
-          })
-        }
-        if (pendingAoE.damageOnFail > 0) {
-          send(targetId, {
-            type: "TAKE_DAMAGE",
-            amount: pendingAoE.damageOnFail,
+        // Failed save — check for LR-eligible reactor before applying effects
+        if (hasLRReactor(targetId)) {
+          // Defer effects until bResolveSaveFailedReaction (PISaveFailedAoE path)
+          pendingSaveFailed = {
+            target: targetId,
+            caster: pendingAoE.caster,
+            damageOnFail: pendingAoE.damageOnFail,
+            halfOnSuccess: pendingAoE.halfOnSuccess,
             damageType: pendingAoE.damageType,
-            resistances: new Set<DamageType>(),
-            vulnerabilities: new Set<DamageType>(),
-            immunities: new Set<DamageType>(),
-            isCritical: false
-          })
-          pendingAfterDamage = { damageSource: pendingAoE.caster, damagedCreature: targetId }
+            conditionOnFail: pendingAoE.conditionOnFail,
+            applyCondition: pendingAoE.applyCondition,
+            saveSucceeded: false
+          }
+        } else {
+          // No LR — apply fail effects immediately
+          applyFailEffects(
+            targetId,
+            pendingAoE.caster,
+            pendingAoE.damageOnFail,
+            pendingAoE.damageType,
+            pendingAoE.conditionOnFail,
+            pendingAoE.applyCondition
+          )
         }
       }
     }

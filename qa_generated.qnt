@@ -10774,11 +10774,11 @@ module qa_generated {
     }
     // Parent A: Medium humanoid, 30ft walk (e.g. human)
     val cfgParentA = TEST_CONFIG
-      .with("size", Medium)
+      .with("creatureSize", Medium)
       .with("speeds", Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0))
     // Parent B: Small humanoid, 25ft walk (e.g. halfling)
     val cfgParentB = TEST_CONFIG
-      .with("size", Small)
+      .with("creatureSize", Small)
       .with("speeds", Map(Walk -> 25, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0))
     val child = freshCreature(20)
     val turnA = pStartTurn(cfgParentA, child, Unarmored, 0, false, false)
@@ -10788,8 +10788,8 @@ module qa_generated {
     val speedFromParentB = turnB.movementRemaining == 25
     val notAveraged = turnA.movementRemaining != 27 and turnB.movementRemaining != 27
     // Size-dependent rule: picking Small parent means heavy weapon disadvantage; Medium does not
-    val mediumNoHeavyDisadv = not(heavyWeaponDisadvantage(greatsword, cfgParentA.size))
-    val smallHasHeavyDisadv = heavyWeaponDisadvantage(greatsword, cfgParentB.size)
+    val mediumNoHeavyDisadv = not(heavyWeaponDisadvantage(greatsword, cfgParentA.creatureSize))
+    val smallHasHeavyDisadv = heavyWeaponDisadvantage(greatsword, cfgParentB.creatureSize)
     assert(speedFromParentA and speedFromParentB and notAveraged and mediumNoHeavyDisadv and smallHasHeavyDisadv)
   }
 
