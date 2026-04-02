@@ -1018,6 +1018,21 @@ export function computeRechargedAbilities(
 }
 
 // ============================================================
+// MBT seed helpers
+// ============================================================
+
+/** Generate a deterministic seed for MBT runs. Respects QUINT_SEED env var. */
+export function resolveTestSeed(label: string): string {
+  const seed =
+    process.env["QUINT_SEED"] ??
+    `0x${Math.floor(Math.random() * 0xffffffff)
+      .toString(16)
+      .padStart(8, "0")}`
+  console.log(`[${label}] seed: ${seed}`)
+  return seed
+}
+
+// ============================================================
 // Shared event construction helpers
 // ============================================================
 

@@ -33,6 +33,7 @@ import {
   quintParsedToNormalized,
   QuintSpellSlotState,
   QuintTurnState,
+  resolveTestSeed,
   snapshotToNormalized
 } from "#/mbt-shared.ts"
 import type { ActionType, Condition, CreatureKind, DamageType } from "#/types.ts"
@@ -1004,12 +1005,7 @@ describe("DnD MBT", () => {
   const specPath = path.resolve(import.meta.dirname, "../../creature.qnt")
 
   it("replays Quint traces against XState machine (L3 + L5 + L9 + L10 + L18)", async () => {
-    const seed =
-      process.env["QUINT_SEED"] ??
-      `0x${Math.floor(Math.random() * 0xffffffff)
-        .toString(16)
-        .padStart(8, "0")}`
-    console.log(`[creature MBT] seed: ${seed}`)
+    const seed = resolveTestSeed("creature MBT")
     await run({
       spec: specPath,
       driver: createDndDriver(),
