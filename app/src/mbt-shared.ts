@@ -134,6 +134,12 @@ export function mapDamageType(s: string): DamageType {
 
 export const ITFVariant = z.any().transform(variantToString)
 
+/** Variant that preserves the parameter value (for parameterized variants like RCounterspell(bool)). */
+export const ITFVariantWithValue = z.any().transform((v: unknown) => ({
+  tag: variantToString(v),
+  value: typeof v === "object" && v !== null ? Object.values(v as Record<string, unknown>)[0] : undefined
+}))
+
 // ============================================================
 // Quint state schemas (all ints are bigint from ITF)
 // ============================================================

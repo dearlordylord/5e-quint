@@ -16,6 +16,7 @@ import {
   EMPTY_DAMAGE_MODS,
   ITFBigInt,
   ITFVariant,
+  ITFVariantWithValue,
   mapDamageType,
   multiattackExtraAttacks,
   type NormalizedState,
@@ -341,7 +342,7 @@ const battleDriverSchema = {
     applyCond: OB,
     slotLvl: OI
   },
-  bResolveCounterspell: { reactorId: OS, decision: z.any().optional(), csSlotLvl: OI },
+  bResolveCounterspell: { reactorId: OS, decision: ITFVariantWithValue.optional(), csSlotLvl: OI },
   bResolveSaveFailedReaction: { reactorId: OS, decision: OV },
   bCastConcentrationSpell: { targetId: OS, slotLvl: OI, duration: OI, spellId: OS, cond: OV, applyCond: OB },
   bConcentrationCheck: { targetId: OS, conSaveSucceeded: OB },
@@ -928,8 +929,7 @@ function createBattleProjectionDriver() {
 
     function handleBResolveCounterspell(picks: ReadonlyMap<string, unknown>) {
       const reactorId = pickString(picks, "reactorId")
-      const decisionRaw = picks.get("decision")
-      const decision = variantToString(decisionRaw)
+      const decision = picks.get("decision") as { tag: string; value: unknown } | undefined
       const csSlotLvl = pickBigInt(picks, "csSlotLvl") ?? 3
       if (!reactorId) {
         // No remaining reactors — spell resolves. Expend deferred slot.
@@ -948,16 +948,12 @@ function createBattleProjectionDriver() {
         return
       }
 
-      if (decision.startsWith("RCounterspell")) {
+      if (decision?.tag.startsWith("RCounterspell")) {
         // Reactor casts Counterspell: spend reaction + slot
         send(reactorId, { type: "USE_REACTION" })
         send(reactorId, { type: "EXPEND_SLOT", level: csSlotLvl })
 
-        // Extract boolean from raw ITF variant: { "RCounterspell": true/false }
-        const conSaveSucceeded =
-          typeof decisionRaw === "object" && decisionRaw !== null
-            ? Boolean((decisionRaw as Record<string, unknown>)["RCounterspell"])
-            : false
+        const conSaveSucceeded = Boolean(decision.value)
 
         if (!conSaveSucceeded) {
           // CS succeeds — original spell fizzles, slot NOT expended
