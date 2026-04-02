@@ -203,3 +203,11 @@ Expand the reaction set from 2 to full SRD catalog.
 **[B14] Per-creature projection MBT** — Project battle traces per-creature, replay against existing creature XState machines. Validates that the battle spec's per-creature effects match existing creature machine behavior. Ref: O4.1.B.
 
 **[B15] Battle-level XState machine** — Full battle XState machine (possibly using XState actor model). Battle-level MBT parity with `battle.qnt`. Ref: O4.1.A.
+
+### Phase 5: Initiative & Surprise
+
+```
+[B16] Surprise (P1) -> deps: [B15]
+```
+
+**[B16] Surprise** — SRD 5.2.1: "If a combatant is surprised by combat starting, that combatant has Disadvantage on their Initiative roll." No lost turn, no surprised condition — purely disadvantage on the initiative d20 roll. Requires initiative to be a d20 roll (currently hardcoded order). Scope: add `surprised: bool` per combatant to `bInit`, apply disadvantage to initiative roll, no further mechanical effect after initiative is resolved.
