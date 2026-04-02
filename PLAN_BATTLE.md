@@ -103,6 +103,14 @@ CREATURE MACHINES (creature.qnt + existing TS machine)
     after-damage reactions via dealDamageWithAfterReactions.
   resolveSave threaded with returnTo: AfterDamageReturn.
   propagateIfConcBroken helper deduplicates conc break pattern.
+[B14] Per-creature projection MBT (P2)                        ✓ done
+  battle.mbt.test.ts projects battle traces per-creature against
+  existing dndMachine XState actors. Driver translates Quint actions
+  to XState events. Field-by-field state comparison after each step.
+  Covers: LR deferral, CS chain stack-based unwinding, ritual flag,
+  AoE target resolution, extraAttacks, save-failed reactions.
+  ITF trace replay from pre-generated files (mbt-replay.ts).
+  Validated: 18+ seeds, zero driver mismatches.
 ```
 
 **[B0] Spike** *(done)*
@@ -196,7 +204,7 @@ Expand the reaction set from 2 to full SRD catalog.
 ### Phase 4: MBT Bridge
 
 ```
-[B14] Per-creature projection MBT (P2) -> deps: [B13]
+[B14] Per-creature projection MBT (P2) -> deps: [B13]   ✓ done
 [B15] Battle-level XState machine (P3) -> deps: [B14]
 ```
 
