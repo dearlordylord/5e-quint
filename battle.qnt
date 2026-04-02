@@ -301,9 +301,15 @@ module battle {
     dmg: int, dt: DamageType, crit: bool
   ): (CreatureId -> Combatant) = {
     val t = cs.get(targetId)
-    val nc = pTakeDamageAsCreature(t.creature, dmg, dt,
-      t.statBlock.resistances, t.statBlock.vulnerabilities, t.statBlock.damageImmunities,
-      crit, t.kind)
+    // Merge stat block R/V/I with active effect granted R/V/I (single pass)
+    val merged = t.creature.activeEffects.fold(
+      { r: Set(), v: Set(), i: Set() },
+      (acc, e) => { r: acc.r.union(e.grantedResistances), v: acc.v.union(e.grantedVulnerabilities), i: acc.i.union(e.grantedImmunities) }
+    )
+    val totalR = t.statBlock.resistances.union(merged.r)
+    val totalV = t.statBlock.vulnerabilities.union(merged.v)
+    val totalI = t.statBlock.damageImmunities.union(merged.i)
+    val nc = pTakeDamageAsCreature(t.creature, dmg, dt, totalR, totalV, totalI, crit, t.kind)
     setCreature(cs, targetId, nc)
   }
 
@@ -469,13 +475,15 @@ module battle {
     nondet hp1 = 10.to(30).oneOf()
     nondet hp2 = 10.to(30).oneOf()
     nondet hp3 = 20.to(50).oneOf()
+    nondet hp4 = 10.to(30).oneOf()
     all {
       bCreatures' = Map(
         "A" -> mkCaster(hp1, PC).with("rogueLevel", 5),  // B11: rogue 5 for Uncanny Dodge testing
         "B" -> mkCaster(hp2, PC),
-        "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK)
+        "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
+        "D" -> mkCaster(hp4, PC)  // 4th creature for CS chain depth ≥ 2
       ),
-      bInitiative' = ["A", "B", "C"],
+      bInitiative' = ["A", "B", "C", "D"],
       bTurnIndex' = 0,
       bRound' = 1,
       bPhase' = BPActiveTurn,
@@ -945,11 +953,11 @@ module battle {
     val cs2 = setSlots(cs1, conc.caster, concSlots)
     // Add effect to caster
     val casterC = cs2.get(conc.caster)
-    val casterEffects = pAddEffect(casterC.creature.activeEffects, conc.spellId, conc.duration, AtEndOfTurn, conc.caster)
+    val casterEffects = pAddEffectSimple(casterC.creature.activeEffects, conc.spellId, conc.duration, AtEndOfTurn, conc.caster)
     val cs3 = setCreature(cs2, conc.caster, casterC.creature.with("activeEffects", casterEffects))
     // Add effect to target with casterId pointing back to caster
     val targetC = cs3.get(conc.target)
-    val newEffects = pAddEffect(targetC.creature.activeEffects, conc.spellId, conc.duration, AtEndOfTurn, conc.caster)
+    val newEffects = pAddEffectSimple(targetC.creature.activeEffects, conc.spellId, conc.duration, AtEndOfTurn, conc.caster)
     val cs4 = setCreature(cs3, conc.target, targetC.creature.with("activeEffects", newEffects))
     // Apply condition to target if applicable
     if (conc.applyCondition) {
@@ -1666,6 +1674,10 @@ module battle {
   // 5. STEP + INVARIANTS
   // ============================================================
 
+  // NOTE: Every match arm must be wrapped in `any { action, }` (even single-action arms).
+  // The Rust backend only reports leaf action names for `any` branches; bare actions
+  // inside `match` are reported as the composite name ("battleStep"), causing the
+  // MBT driver to dispatch a no-op instead of the leaf handler.
   action battleStep = match bPhase {
     | BPActiveTurn => any {
         bStartTurn, bAttack, bCastSaveSpell, bCastAoE,
@@ -1673,15 +1685,15 @@ module battle {
         bMove, bHeal, bEndTurn,
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {
-        | PIAttackHit(_) => bResolveHitReaction
-        | PIAttackDamage(_) => bResolveDmgReaction
+        | PIAttackHit(_) => any { bResolveHitReaction, }
+        | PIAttackDamage(_) => any { bResolveDmgReaction, }
         | PIAfterDamage(_) => any {
             bAfterDamagePass, bAfterDamageHellishRebuke, bAfterDamageRetaliation,
           }
-        | PISpellCast(_) => bResolveCounterspell
-        | _ => bResolveSaveFailedReaction
+        | PISpellCast(_) => any { bResolveCounterspell, }
+        | _ => any { bResolveSaveFailedReaction, }
       }
-    | BPResolvingAoE(_) => bResolveAoETarget
+    | BPResolvingAoE(_) => any { bResolveAoETarget, }
     | BPResolvingMovement(_) => any { bMovementOAPass, bMovementOAAttack }
     | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bLegendaryAttack }
   }

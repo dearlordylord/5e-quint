@@ -278,6 +278,9 @@ export type DndEvent =
       readonly durationTurns: number
       readonly expiresAt: ExpiryPhase
       readonly casterId: string
+      readonly grantedResistances?: ReadonlySet<DamageType>
+      readonly grantedVulnerabilities?: ReadonlySet<DamageType>
+      readonly grantedImmunities?: ReadonlySet<DamageType>
     }
   | { readonly type: "REMOVE_EFFECT"; readonly spellId: string }
   | { readonly type: "BREAK_CONCENTRATION" }

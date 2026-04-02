@@ -824,7 +824,10 @@ module creature {
   /// Instant spells (Fireball, Healing Word) don't create an ActiveEffect —
   /// they just apply damage/healing/conditions directly.
   /// Core spec owns lifecycle only; spell-specific behavior lives in caller.
-  type ActiveEffect = { spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase, casterId: str }
+  type ActiveEffect = {
+    spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase, casterId: str,
+    grantedResistances: Set[DamageType], grantedVulnerabilities: Set[DamageType], grantedImmunities: Set[DamageType],
+  }
 
   /// End-of-turn save: caller provides spell, result, and conditions to remove on success.
   type EndOfTurnSave = { spellId: str, saveSucceeded: bool, conditionsToRemove: Set[Condition] }
@@ -902,8 +905,20 @@ module creature {
   // Core owns add/remove/decrement/expire. Spell-specific behavior is caller's job.
 
   /// Add an effect, replacing any existing with the same spellId (no stacking).
-  pure def pAddEffect(effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str): Set[ActiveEffect] =
-    effects.filter(e => e.spellId != spellId).union(Set({ spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId }))
+  pure def pAddEffect(
+    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
+  ): Set[ActiveEffect] =
+    effects.filter(e => e.spellId != spellId).union(Set({
+      spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
+    }))
+
+  /// Convenience wrapper: add effect with no granted R/V/I.
+  pure def pAddEffectSimple(
+    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str
+  ): Set[ActiveEffect] =
+    pAddEffect(effects, spellId, durationTurns, expiresAt, casterId, Set(), Set(), Set())
 
   /// Remove an effect by spellId (dispel, concentration break, etc.).
   pure def pRemoveEffect(effects: Set[ActiveEffect], spellId: str): Set[ActiveEffect] =
@@ -4139,7 +4154,7 @@ module creature {
     if (state.dead or isIncapacitated(state)) unchanged
     else {
       val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
-      val effects2 = pAddEffect(effects1, spellId, duration, AtEndOfTurn, "")
+      val effects2 = pAddEffectSimple(effects1, spellId, duration, AtEndOfTurn, "")
       val ss1 = pStartConcentration(spellSlots, spellId)
       all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
     }
@@ -4163,7 +4178,7 @@ module creature {
     nondet spellId = SPELL_IDS.oneOf()
     nondet duration = EFFECT_DURATION_RANGE.oneOf()
     nondet expiresAt = Set(AtStartOfTurn, AtEndOfTurn).oneOf()
-    all { state' = state.with("activeEffects", pAddEffect(state.activeEffects, spellId, duration, expiresAt, "")), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = state.with("activeEffects", pAddEffectSimple(state.activeEffects, spellId, duration, expiresAt, "")), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
   }
 
   action doRemoveEffect = {

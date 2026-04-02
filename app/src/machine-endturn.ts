@@ -7,7 +7,7 @@ import {
   removeConditionUpdate
 } from "#/machine-helpers.ts"
 import type { EndTurnDamage, EndTurnSave, TurnPhaseCtx, TurnPhaseResult } from "#/machine-types.ts"
-import type { ActiveEffect, ExpiryPhase } from "#/types.ts"
+import type { ActiveEffect, DamageType, ExpiryPhase } from "#/types.ts"
 import { deathSaveCount, hp, tempHp } from "#/types.ts"
 
 // --- Active effect helpers ---
@@ -17,9 +17,15 @@ export function addAe(
   spellId: string,
   turnsRemaining: number,
   expiresAt: ExpiryPhase,
-  casterId: string
+  casterId: string,
+  grantedResistances?: ReadonlySet<DamageType>,
+  grantedVulnerabilities?: ReadonlySet<DamageType>,
+  grantedImmunities?: ReadonlySet<DamageType>
 ): ReadonlyArray<ActiveEffect> {
-  return [...aes.filter((ae) => ae.spellId !== spellId), { spellId, turnsRemaining, expiresAt, casterId }]
+  return [
+    ...aes.filter((ae) => ae.spellId !== spellId),
+    { spellId, turnsRemaining, expiresAt, casterId, grantedResistances, grantedVulnerabilities, grantedImmunities }
+  ]
 }
 
 export function removeAe(aes: ReadonlyArray<ActiveEffect>, spellId: string): ReadonlyArray<ActiveEffect> {

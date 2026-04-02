@@ -90,6 +90,9 @@ export interface ActiveEffect {
   readonly turnsRemaining: number
   readonly expiresAt: ExpiryPhase
   readonly casterId: string
+  readonly grantedResistances?: ReadonlySet<DamageType>
+  readonly grantedVulnerabilities?: ReadonlySet<DamageType>
+  readonly grantedImmunities?: ReadonlySet<DamageType>
 }
 
 export interface Armor {

@@ -87,6 +87,14 @@ export const QUINT_DAMAGE_TYPE_MAP: Record<string, DamageType> = {
 // Mapping helpers
 // ============================================================
 
+/** Parse a Quint Set[DamageType] (ITF Set of variants) into a JS Set of mapped damage type strings. */
+function parseDamageTypeSet(raw: unknown): ReadonlySet<string> {
+  if (!(raw instanceof Set)) return new Set<string>()
+  const result = new Set<string>()
+  for (const item of raw) result.add(mapDamageType(variantToString(item)))
+  return result
+}
+
 export function variantToString(v: unknown): string {
   if (typeof v === "string") return v
   if (typeof v === "object" && v !== null) {
@@ -163,7 +171,15 @@ export const QuintCreatureState = z.object({
   incapacitatedSources: QuintIncapSourceSet,
   hitPointDiceRemaining: z.bigint(),
   activeEffects: z.any().transform((raw: unknown) => {
-    const items: Array<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }> = []
+    const items: Array<{
+      spellId: string
+      turnsRemaining: number
+      expiresAt: string
+      casterId: string
+      grantedResistances: ReadonlySet<string>
+      grantedVulnerabilities: ReadonlySet<string>
+      grantedImmunities: ReadonlySet<string>
+    }> = []
     if (raw instanceof Set) {
       for (const e of raw) {
         const r = e as Record<string, unknown>
@@ -171,7 +187,10 @@ export const QuintCreatureState = z.object({
           spellId: String(r.spellId ?? ""),
           turnsRemaining: Number(r.turnsRemaining ?? r.remainingTurns ?? 0),
           expiresAt: mapExpiryPhase(variantToString(r.expiresAt)),
-          casterId: String(r.casterId ?? "")
+          casterId: String(r.casterId ?? ""),
+          grantedResistances: parseDamageTypeSet(r.grantedResistances),
+          grantedVulnerabilities: parseDamageTypeSet(r.grantedVulnerabilities),
+          grantedImmunities: parseDamageTypeSet(r.grantedImmunities)
         })
       }
     }
@@ -404,6 +423,9 @@ export interface NormalizedState {
     turnsRemaining: number
     expiresAt: string
     casterId: string
+    grantedResistances: ReadonlySet<string>
+    grantedVulnerabilities: ReadonlySet<string>
+    grantedImmunities: ReadonlySet<string>
   }>
   // TurnState
   readonly movementRemaining: number
@@ -640,7 +662,17 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     unconscious: c.unconscious,
     incapacitatedSources: c.incapacitatedSources,
     hitPointDiceRemaining: c.hitDiceRemaining,
-    activeEffects: [...c.activeEffects].sort((a, b) => a.spellId.localeCompare(b.spellId)),
+    activeEffects: [...c.activeEffects]
+      .map((ae) => ({
+        spellId: ae.spellId,
+        turnsRemaining: ae.turnsRemaining,
+        expiresAt: ae.expiresAt,
+        casterId: ae.casterId,
+        grantedResistances: ae.grantedResistances ?? EMPTY_STRING_SET,
+        grantedVulnerabilities: ae.grantedVulnerabilities ?? EMPTY_STRING_SET,
+        grantedImmunities: ae.grantedImmunities ?? EMPTY_STRING_SET
+      }))
+      .sort((a, b) => a.spellId.localeCompare(b.spellId)),
     movementRemaining: c.movementRemaining,
     effectiveSpeed: c.effectiveSpeed,
     actionsRemaining: c.actionsRemaining,
@@ -824,17 +856,19 @@ export function arraysEqual(a: ReadonlyArray<number>, b: ReadonlyArray<number>):
   return true
 }
 
-export function activeEffectsEqual(
-  a: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }>,
-  b: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }>
-): boolean {
+type NormalizedEffect = NormalizedState["activeEffects"][number]
+
+export function activeEffectsEqual(a: ReadonlyArray<NormalizedEffect>, b: ReadonlyArray<NormalizedEffect>): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
     if (
       a[i].spellId !== b[i].spellId ||
       a[i].turnsRemaining !== b[i].turnsRemaining ||
       a[i].expiresAt !== b[i].expiresAt ||
-      a[i].casterId !== b[i].casterId
+      a[i].casterId !== b[i].casterId ||
+      !setsEqual(a[i].grantedResistances, b[i].grantedResistances) ||
+      !setsEqual(a[i].grantedVulnerabilities, b[i].grantedVulnerabilities) ||
+      !setsEqual(a[i].grantedImmunities, b[i].grantedImmunities)
     )
       return false
   }
@@ -849,12 +883,7 @@ export function compareNormalizedStates(spec: any, impl: any): boolean {
     const sv = spec[k]
     const iv = impl[k]
     if (k === "activeEffects") {
-      if (
-        !activeEffectsEqual(
-          sv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }>,
-          iv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }>
-        )
-      )
+      if (!activeEffectsEqual(sv as ReadonlyArray<NormalizedEffect>, iv as ReadonlyArray<NormalizedEffect>))
         return false
     } else if (sv instanceof Set && iv instanceof Set) {
       if (!setsEqual(sv, iv)) return false
@@ -986,6 +1015,7 @@ export function computeRechargedAbilities(
 // Shared event construction helpers
 // ============================================================
 
+const EMPTY_STRING_SET: ReadonlySet<string> = new Set<string>()
 const EMPTY_DAMAGE_SET = new Set<DamageType>()
 
 /** Shared empty damage modifier sets — reused across all TAKE_DAMAGE events. */

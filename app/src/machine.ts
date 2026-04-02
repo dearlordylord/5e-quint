@@ -293,7 +293,18 @@ export const dndMachine = setup({
     ),
     addEffect: assign(({ context: c, event: e }) => {
       const ev = asAddEffect(e)
-      return { activeEffects: addAe(c.activeEffects, ev.spellId, ev.durationTurns, ev.expiresAt, ev.casterId) }
+      return {
+        activeEffects: addAe(
+          c.activeEffects,
+          ev.spellId,
+          ev.durationTurns,
+          ev.expiresAt,
+          ev.casterId,
+          ev.grantedResistances,
+          ev.grantedVulnerabilities,
+          ev.grantedImmunities
+        )
+      }
     }),
     removeEffect: assign(({ context: c, event: e }) => ({
       activeEffects: removeAe(c.activeEffects, asRemoveEffect(e).spellId)

@@ -26,6 +26,20 @@ Worktree creation sometimes branches from a stale ref instead of master's HEAD. 
 
 MBT traces are generated with random seeds. Failures may not reproduce on the next run. When an MBT test fails, the error includes the seed (e.g., `seed: 0xfa2124eb`). **Always reproduce before fixing:** `QUINT_SEED=0xfa2124eb npx vitest run -t "replays Quint"`. Do not dismiss MBT failures as flaky — reproduce with the seed, diagnose, and fix unless the user explicitly says otherwise.
 
+## MBT runs are expensive
+
+Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.**
+
+- Never run battle MBT for exploratory questions (checking a variable shape, confirming a format). Answer those by reading source code, quint-connect internals, ITF docs, or writing a focused unit test.
+- Only run battle MBT for actual end-to-end validation after code changes are complete.
+- One MBT run at a time, always. Never launch a second instance without confirming the first is dead (`ps aux | grep vitest`).
+- If a command gets backgrounded, wait for the task completion notification — do not re-issue.
+- **Debug without re-running when possible:** Once you have a failing trace (seed + action sequence), prefer these over re-running MBT:
+  1. Write a focused TS unit test that replays the specific event sequence against XState actors directly (milliseconds, no Quint).
+  2. Read the ITF trace JSON offline to inspect Quint state at each step.
+  3. Trace through the Quint spec logic manually by reading the code.
+- **Dev mode for faster runs:** `MBT_DEV=1 npx vitest run src/battle.mbt.test.ts` — reduces `maxSamples` (50→10) and step count (10→5). Use for quick "did I break something?" feedback during development. Full runs for CI / final validation.
+
 ## Quint gotchas
 
 Things that cause non-obvious errors, not discoverable by reading code.

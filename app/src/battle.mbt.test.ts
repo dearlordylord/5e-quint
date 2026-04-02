@@ -322,7 +322,7 @@ const OB = z.boolean().optional()
 const OS = z.string().optional()
 
 const battleDriverSchema = {
-  bInit: { hp1: OI, hp2: OI, hp3: OI },
+  bInit: { hp1: OI, hp2: OI, hp3: OI, hp4: OI },
   bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
   bAttack: { targetId: OS, attackRoll: OI, dmg: OI, dt: OV, crit: OB, tAc: OI },
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
@@ -341,7 +341,7 @@ const battleDriverSchema = {
     applyCond: OB,
     slotLvl: OI
   },
-  bResolveCounterspell: { reactorId: OS, decision: OV, csSlotLvl: OI },
+  bResolveCounterspell: { reactorId: OS, decision: z.any().optional(), csSlotLvl: OI },
   bResolveSaveFailedReaction: { reactorId: OS, decision: OV },
   bCastConcentrationSpell: { targetId: OS, slotLvl: OI, duration: OI, spellId: OS, cond: OV, applyCond: OB },
   bConcentrationCheck: { targetId: OS, conSaveSucceeded: OB },
@@ -431,11 +431,12 @@ function createBattleProjectionDriver() {
     // ============================================================
 
     function handleBInit(picks: ReadonlyMap<string, unknown>) {
-      // bInit creates 3 creatures with nondeterministic HP.
-      // We know the shape from battle.qnt: A=PC caster rogue5, B=PC caster, C=Monster
+      // bInit creates 4 creatures with nondeterministic HP.
+      // A=PC caster rogue5, B=PC caster, C=Monster, D=PC caster (CS chain depth)
       const hp1 = pickBigInt(picks, "hp1") ?? 20
       const hp2 = pickBigInt(picks, "hp2") ?? 20
       const hp3 = pickBigInt(picks, "hp3") ?? 35
+      const hp4 = pickBigInt(picks, "hp4") ?? 20
 
       // Spell slot config for mkCaster: slots 1:4, 2:3, 3:2
       const casterSlots = [4, 3, 2, 0, 0, 0, 0, 0, 0]
@@ -495,7 +496,24 @@ function createBattleProjectionDriver() {
       actors.set("C", actorC)
       creatureKinds.set("C", "Monster")
 
-      initiative = ["A", "B", "C"]
+      // D: PC caster, no class levels (enables CS chain depth >= 2)
+      const actorD = createActor(dndMachine, {
+        input: {
+          maxHp: hp4,
+          effectiveSpeed: 30,
+          movementRemaining: 30,
+          extraAttacksRemaining: 1,
+          creatureKind: "PC",
+          slotsMax: casterSlots,
+          slotsCurrent: casterSlots
+        }
+      })
+      actorD.start()
+      actorD.send({ type: "ENTER_COMBAT" })
+      actors.set("D", actorD)
+      creatureKinds.set("D", "PC")
+
+      initiative = ["A", "B", "C", "D"]
       turnIndex = 0
       turnStarted.clear()
 
@@ -608,7 +626,7 @@ function createBattleProjectionDriver() {
             immunities: new Set<DamageType>(),
             isCritical: crit
           })
-          // Concentration check is handled by the creature machine
+          pendingAfterDamage = { damageSource: id, damagedCreature: targetId }
         } else {
           // Damage deferred — will be applied on resolution
           pendingAttack = {
@@ -655,6 +673,7 @@ function createBattleProjectionDriver() {
 
           if (!targetHasReaction) {
             // No damage reactions — apply damage immediately
+            const atk = pendingAttack
             send(pendingAttack.target, {
               type: "TAKE_DAMAGE",
               amount: pendingAttack.damage,
@@ -664,6 +683,7 @@ function createBattleProjectionDriver() {
               immunities: new Set<DamageType>(),
               isCritical: pendingAttack.isCritical
             })
+            pendingAfterDamage = { damageSource: atk.attacker, damagedCreature: atk.target }
             pendingAttack = null
           }
           // If target has reaction, leave pendingAttack for bResolveDmgReaction
@@ -698,6 +718,7 @@ function createBattleProjectionDriver() {
 
       if (!reactorId) {
         // remaining == 0: all reactors offered, deal damage
+        const atk = pendingAttack
         send(pendingAttack.target, {
           type: "TAKE_DAMAGE",
           amount: pendingAttack.damage,
@@ -705,6 +726,7 @@ function createBattleProjectionDriver() {
           ...EMPTY_DAMAGE_MODS,
           isCritical: pendingAttack.isCritical
         })
+        pendingAfterDamage = { damageSource: atk.attacker, damagedCreature: atk.target }
         pendingAttack = null
         return
       }
@@ -720,14 +742,21 @@ function createBattleProjectionDriver() {
       // RPass: no change
     }
 
-    function handleBAfterDamagePass(_picks: ReadonlyMap<string, unknown>) {
-      // Pass — no events to send. After-damage reactions don't affect creature state
-      // beyond reaction spending (which happens in Hellish Rebuke / Retaliation).
+    function handleBAfterDamagePass(picks: ReadonlyMap<string, unknown>) {
+      const reactorId = pickString(picks, "reactorId")
+      if (!reactorId) {
+        // remaining == 0: after-damage window closed
+        pendingAfterDamage = null
+      }
     }
 
     function handleBAfterDamageHellishRebuke(picks: ReadonlyMap<string, unknown>) {
       const reactorId = pickString(picks, "reactorId")
-      if (!reactorId) return // remaining == 0, nothing to do
+      if (!reactorId) {
+        // remaining == 0: after-damage window closed
+        pendingAfterDamage = null
+        return
+      }
 
       const rebukeDmg = pickBigInt(picks, "rebukeDmg") ?? 10
       const rebukeSaved = pickBool(picks, "rebukeSaved") ?? false
@@ -736,19 +765,25 @@ function createBattleProjectionDriver() {
       // Damage source tracked in pendingAfterDamage (set when damage is applied).
       if (pendingAfterDamage) {
         const actualDmg = rebukeSaved ? Math.floor(rebukeDmg / 2) : rebukeDmg
-        send(pendingAfterDamage.damageSource, {
+        const target = pendingAfterDamage.damageSource
+        send(target, {
           type: "TAKE_DAMAGE",
           amount: actualDmg,
           damageType: "fire" as DamageType,
           ...EMPTY_DAMAGE_MODS,
           isCritical: false
         })
+        pendingAfterDamage = { damageSource: reactorId, damagedCreature: target }
       }
     }
 
     function handleBAfterDamageRetaliation(picks: ReadonlyMap<string, unknown>) {
       const reactorId = pickString(picks, "reactorId")
-      if (!reactorId) return
+      if (!reactorId) {
+        // remaining == 0: after-damage window closed
+        pendingAfterDamage = null
+        return
+      }
 
       const retAtkRoll = pickBigInt(picks, "retAtkRoll") ?? 10
       const retDmg = pickBigInt(picks, "retDmg") ?? 5
@@ -759,18 +794,20 @@ function createBattleProjectionDriver() {
       send(reactorId, { type: "USE_REACTION" })
       const hit = retAtkRoll >= retTgtAc || retAtkRoll === 20
       if (hit && pendingAfterDamage) {
-        send(pendingAfterDamage.damageSource, {
+        const target = pendingAfterDamage.damageSource
+        send(target, {
           type: "TAKE_DAMAGE",
           amount: retDmg,
           damageType: mapDamageType(retDt),
           ...EMPTY_DAMAGE_MODS,
           isCritical: retCrit
         })
+        pendingAfterDamage = { damageSource: reactorId, damagedCreature: target }
       }
     }
 
     /** Track after-damage context for Hellish Rebuke / Retaliation */
-    const pendingAfterDamage: { damageSource: string; damagedCreature: string } | null = null
+    let pendingAfterDamage: { damageSource: string; damagedCreature: string } | null = null
 
     function handleBCastSaveSpell(picks: ReadonlyMap<string, unknown>) {
       const id = activeId()
@@ -863,6 +900,7 @@ function createBattleProjectionDriver() {
             immunities: new Set<DamageType>(),
             isCritical: false
           })
+          pendingAfterDamage = { damageSource: spell.caster, damagedCreature: spell.target }
         }
       } else {
         // Save failed — apply condition + damage
@@ -883,6 +921,7 @@ function createBattleProjectionDriver() {
             immunities: new Set<DamageType>(),
             isCritical: false
           })
+          pendingAfterDamage = { damageSource: spell.caster, damagedCreature: spell.target }
         }
       }
     }
@@ -892,7 +931,6 @@ function createBattleProjectionDriver() {
       const decisionRaw = picks.get("decision")
       const decision = variantToString(decisionRaw)
       const csSlotLvl = pickBigInt(picks, "csSlotLvl") ?? 3
-
       if (!reactorId) {
         // No remaining reactors — spell resolves. Expend deferred slot.
         if (pendingSpell) {
@@ -915,8 +953,11 @@ function createBattleProjectionDriver() {
         send(reactorId, { type: "USE_REACTION" })
         send(reactorId, { type: "EXPEND_SLOT", level: csSlotLvl })
 
-        // Parse CS outcome from decision variant
-        const conSaveSucceeded = decision === "RCounterspell(true)" || decision.includes("true")
+        // Extract boolean from raw ITF variant: { "RCounterspell": true/false }
+        const conSaveSucceeded =
+          typeof decisionRaw === "object" && decisionRaw !== null
+            ? Boolean((decisionRaw as Record<string, unknown>)["RCounterspell"])
+            : false
 
         if (!conSaveSucceeded) {
           // CS succeeds — original spell fizzles, slot NOT expended
@@ -1114,6 +1155,7 @@ function createBattleProjectionDriver() {
             immunities: new Set<DamageType>(),
             isCritical: false
           })
+          pendingAfterDamage = { damageSource: pendingAoE.caster, damagedCreature: targetId }
         }
       } else {
         // Failed save
@@ -1134,6 +1176,7 @@ function createBattleProjectionDriver() {
             immunities: new Set<DamageType>(),
             isCritical: false
           })
+          pendingAfterDamage = { damageSource: pendingAoE.caster, damagedCreature: targetId }
         }
       }
     }
@@ -1182,6 +1225,7 @@ function createBattleProjectionDriver() {
             immunities: new Set<DamageType>(),
             isCritical: oaCrit
           })
+          pendingAfterDamage = { damageSource: reactorId, damagedCreature: moverId }
         } else {
           pendingAttack = {
             attacker: reactorId,
@@ -1278,6 +1322,7 @@ function createBattleProjectionDriver() {
           ...EMPTY_DAMAGE_MODS,
           isCritical: laCrit
         })
+        pendingAfterDamage = { damageSource: monsterId, damagedCreature: laTarget }
       }
 
       advanceTurn()
@@ -1439,12 +1484,12 @@ const battleStateCheck = stateCheck(
 // ============================================================
 
 describe("Battle Projection MBT", () => {
-  // battleStep uses phase-nested match — only phase-valid actions are tried,
-  // so trace generation is much faster than the old flat any{21}. However, richer
-  // traces expose pre-existing driver parity bugs (reaction tracking, counterspell
-  // slot spending, bStartTurn turnPhase reset). Keep traces short until fixed.
+  // MBT_DEV=1: fast dev feedback (fewer samples, shorter traces).
+  // Default: comprehensive run for CI / perpetual background validation.
+  const isDev = process.env["MBT_DEV"] === "1"
   const MBT_TRACE_COUNT = 1
-  const MBT_STEP_COUNT = 10
+  const MBT_STEP_COUNT = isDev ? 5 : 10
+  const MBT_MAX_SAMPLES = isDev ? 10 : 50
   const specPath = path.resolve(import.meta.dirname, "../../battle.qnt")
 
   it("replays battle traces per-creature against dndMachine actors", async () => {
@@ -1456,7 +1501,7 @@ describe("Battle Projection MBT", () => {
       backend: "rust",
       nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
       maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
-      maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? 50),
+      maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
       stateCheck: battleStateCheck
     })
   }, 300_000)

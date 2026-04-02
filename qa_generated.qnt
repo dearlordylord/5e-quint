@@ -48,7 +48,7 @@ module qa_generated {
   run qa_cleansing_touch_removes_spell_effect = {
     val creature = freshCreature(20)
     val withEffect = creature.with("activeEffects",
-      pAddEffect(creature.activeEffects, "dominate_person", 3, AtEndOfTurn))
+      pAddEffectSimple(creature.activeEffects, "dominate_person", 3, AtEndOfTurn, ""))
     val cleaned = withEffect.with("activeEffects",
       pRemoveEffect(withEffect.activeEffects, "dominate_person"))
     assert(not(pHasEffect(cleaned.activeEffects, "dominate_person")))
@@ -59,7 +59,7 @@ module qa_generated {
     val creature = freshCreature(20)
     val c1 = pApplyCondition(creature, CCharmed)
     val withEffect = c1.with("activeEffects",
-      pAddEffect(c1.activeEffects, "dominate_person", 3, AtEndOfTurn))
+      pAddEffectSimple(c1.activeEffects, "dominate_person", 3, AtEndOfTurn, ""))
     val afterCleansing = withEffect.with("activeEffects",
       pRemoveEffect(withEffect.activeEffects, "dominate_person"))
     // Cleansing Touch ended the spell but the Charmed condition remains (separate removal needed)
@@ -233,7 +233,7 @@ module qa_generated {
   // Source: https://rpg.stackexchange.com/q/214593
   
   run qa_suppressed_spell_duration_continues_counting_down = {{
-    val effects0 = pAddEffect(Set(), "haste", 10, AtEndOfTurn)
+    val effects0 = pAddEffectSimple(Set(), "haste", 10, AtEndOfTurn, "")
     val effectsAfterSuppressedTime = pTickEffects(effects0, 3)
     val effectsAfterFullDuration = pTickEffects(effects0, 10)
     assert(pHasEffect(effectsAfterSuppressedTime, "haste") and not(pHasEffect(effectsAfterFullDuration, "haste")))
@@ -3326,7 +3326,7 @@ module qa_generated {
   run qa_end_of_turn_save_success_removes_banishment_effect = {
     val target = freshCreature(20)
     val target1 = pApplyCondition(target, CIncapacitated)
-    val effects1 = pAddEffect(target1.activeEffects, "banishment", 3, AtEndOfTurn)
+    val effects1 = pAddEffectSimple(target1.activeEffects, "banishment", 3, AtEndOfTurn, "")
     val target2 = target1.with("activeEffects", effects1)
     val save = { spellId: "banishment", saveSucceeded: true, conditionsToRemove: Set(CIncapacitated) }
     val target3 = pProcessEndOfTurnSaves(target2, [save])
@@ -3337,7 +3337,7 @@ module qa_generated {
   run qa_end_of_turn_save_failure_keeps_banishment_effect = {
     val target = freshCreature(20)
     val target1 = pApplyCondition(target, CIncapacitated)
-    val effects1 = pAddEffect(target1.activeEffects, "banishment", 3, AtEndOfTurn)
+    val effects1 = pAddEffectSimple(target1.activeEffects, "banishment", 3, AtEndOfTurn, "")
     val target2 = target1.with("activeEffects", effects1)
     val save = { spellId: "banishment", saveSucceeded: false, conditionsToRemove: Set(CIncapacitated) }
     val target3 = pProcessEndOfTurnSaves(target2, [save])
@@ -3348,7 +3348,7 @@ module qa_generated {
   run qa_thl_end_of_turn_save_removes_prone_and_incapacitated = {
     val target = freshCreature(20)
     val target1 = pApplyCondition(pApplyCondition(target, CIncapacitated), CProne)
-    val effects1 = pAddEffect(target1.activeEffects, "thl", 3, AtEndOfTurn)
+    val effects1 = pAddEffectSimple(target1.activeEffects, "thl", 3, AtEndOfTurn, "")
     val target2 = target1.with("activeEffects", effects1)
     val save = { spellId: "thl", saveSucceeded: true, conditionsToRemove: Set(CIncapacitated, CProne) }
     val target3 = pProcessEndOfTurnSaves(target2, [save])
@@ -3658,8 +3658,8 @@ module qa_generated {
     val base = freshCreature(20)
     val s1 = pApplyCondition(base, CRestrained)
     // Two separate active effects represent two sources (Web, Evard's)
-    val effs = pAddEffect(
-      pAddEffect(Set(), "web", 5, AtEndOfTurn),
+    val effs = pAddEffectSimple(
+      pAddEffectSimple(Set(), "web", 5, AtEndOfTurn, ""),
       "evards", 3, AtEndOfTurn
     )
     val s2 = s1.with("activeEffects", effs)
@@ -3926,7 +3926,7 @@ module qa_generated {
   run qa_enlarge_reduce_persists_through_wild_shape = {
     // Druid concentrating on Enlarge/Reduce before shapeshifting into beast form
     val c0 = freshCreature(30).with("hp", 25)
-    val effects0 = pAddEffect(c0.activeEffects, "enlarge_reduce", 10, AtEndOfTurn)
+    val effects0 = pAddEffectSimple(c0.activeEffects, "enlarge_reduce", 10, AtEndOfTurn, "")
     val c1 = c0.with("activeEffects", effects0)
     val ss = FRESH_SPELL_SLOTS.with("concentrationSpellId", "enlarge_reduce")
   
@@ -4118,7 +4118,7 @@ module qa_generated {
   run qa_dispel_magic_indirect_target = {
     // Daylight was cast on Marie (direct target); effect lives on her activeEffects
     val marie = freshCreature(30).with("activeEffects",
-      pAddEffect(Set(), "daylight", 5, AtEndOfTurn))
+      pAddEffectSimple(Set(), "daylight", 5, AtEndOfTurn, ""))
     // Bob is merely inside the emanation — daylight was never cast on him
     val bob = freshCreature(30)
     // Dispel Magic on Bob: pRemoveEffect models "remove spell that is ON this creature"
@@ -5755,7 +5755,7 @@ module qa_generated {
   run qa_active_effect_persists_through_death = {
     val creature = freshCreature(10)
     val withBinding = creature.with("activeEffects",
-      pAddEffect(creature.activeEffects, "planar_binding", 10, AtEndOfTurn))
+      pAddEffectSimple(creature.activeEffects, "planar_binding", 10, AtEndOfTurn, ""))
     // Instant death: overflow (20) >= maxHp (10)
     val killed = pTakeDamage(withBinding, 30, Slashing, Set(), Set(), Set(), false)
     assert(killed.dead and pHasEffect(killed.activeEffects, "planar_binding"))
@@ -6249,7 +6249,7 @@ module qa_generated {
   
     // A spell effect (e.g. Bless) is tracked in activeEffects keyed by spellId.
     // Dispel Magic is modeled as pRemoveEffect — it ends the ongoing spell.
-    val c1 = c0.with("activeEffects", pAddEffect(c0.activeEffects, "bless", 5, AtEndOfTurn))
+    val c1 = c0.with("activeEffects", pAddEffectSimple(c0.activeEffects, "bless", 5, AtEndOfTurn, ""))
     val c2 = c1.with("activeEffects", pRemoveEffect(c1.activeEffects, "bless"))
   
     // A non-spell magical effect (e.g. CCharmed from College of Glamour Beguiling Magic)
@@ -6277,7 +6277,7 @@ module qa_generated {
   
   // Does innate sorcery apply to every attack from storm sphere? - Innate Sorcery modeled as active effect expires after its 1-minute (10-round) duration
   run qa_innate_sorcery_expires_after_ten_rounds = {
-    val effects = pAddEffect(Set(), "innate_sorcery", 10, AtEndOfTurn)
+    val effects = pAddEffectSimple(Set(), "innate_sorcery", 10, AtEndOfTurn, "")
     val stillActive = pTickEffects(effects, 9)
     val expired    = pTickEffects(effects, 10)
     assert(
@@ -8023,7 +8023,7 @@ module qa_generated {
     // Rule: movable spell effects are not restricted by casting range unless spell says so (PHB spell range rules)
     // Spiritual Weapon stays active regardless of distance from caster — no range expiry mechanism exists
     val effects0: Set[ActiveEffect] = Set()
-    val effects1 = pAddEffect(effects0, "spell_a", 10, AtEndOfTurn)
+    val effects1 = pAddEffectSimple(effects0, "spell_a", 10, AtEndOfTurn, "")
     // After being "moved" any distance, effect is still active — no range-based removal
     assert(pHasEffect(effects1, "spell_a"))
   }
@@ -8787,7 +8787,7 @@ module qa_generated {
   // Breaking concentration on Hex or SW removes its active effect from the creature
   run qa_concentration_break_removes_active_effect = {
       val s0 = freshCreature(30)
-      val effects1 = pAddEffect(s0.activeEffects, "hex", 10, AtEndOfTurn)
+      val effects1 = pAddEffectSimple(s0.activeEffects, "hex", 10, AtEndOfTurn, "")
       val s1 = s0.with("activeEffects", effects1)
       val ss1 = pStartConcentration(FRESH_SPELL_SLOTS, "hex")
       val ss2 = pBreakConcentration(ss1)
@@ -9619,7 +9619,7 @@ module qa_generated {
     val caster = freshCreature(40)
     val ss = FRESH_SPELL_SLOTS.with("concentrationSpellId", "control_weather")
     val casterWithEffect = caster.with("activeEffects",
-      pAddEffect(Set(), "control_weather", 100, AtEndOfTurn))
+      pAddEffectSimple(Set(), "control_weather", 100, AtEndOfTurn, ""))
     // Caster takes 20 damage (concentration DC = max(10, 20/2) = 10) and fails the save
     val afterDamage = pTakeDamage(casterWithEffect, 20, Fire, Set(), Set(), Set(), false)
     val ssAfter = pConcentrationCheck(ss, false)
@@ -9635,7 +9635,7 @@ module qa_generated {
     val caster = freshCreature(40)
     val ss = FRESH_SPELL_SLOTS.with("concentrationSpellId", "control_weather")
     val casterWithEffect = caster.with("activeEffects",
-      pAddEffect(Set(), "control_weather", 100, AtEndOfTurn))
+      pAddEffectSimple(Set(), "control_weather", 100, AtEndOfTurn, ""))
     // Caster is stunned (e.g. by a nearby creature while moving)
     val afterStun = pApplyCondition(casterWithEffect, CStunned)
     val r = pWithConcBreak(ss, casterWithEffect, afterStun)
@@ -9660,10 +9660,10 @@ module qa_generated {
     val caster = freshCreature(40)
     val ss = FRESH_SPELL_SLOTS.with("concentrationSpellId", "control_weather")
     val casterWithEffect = caster.with("activeEffects",
-      pAddEffect(Set(), "control_weather", 100, AtEndOfTurn))
+      pAddEffectSimple(Set(), "control_weather", 100, AtEndOfTurn, ""))
     // Caster starts concentrating on a different spell (replaces Control Weather)
     val effects1 = pRemoveEffect(casterWithEffect.activeEffects, "control_weather")
-    val effects2 = pAddEffect(effects1, "fog_cloud", 10, AtEndOfTurn)
+    val effects2 = pAddEffectSimple(effects1, "fog_cloud", 10, AtEndOfTurn, "")
     val ssAfter = pStartConcentration(ss, "fog_cloud")
     assert(
       isConcentrating(ssAfter) and
@@ -10279,7 +10279,7 @@ module qa_generated {
   run qa_armor_of_agathys_temp_hp_persist_after_spell_ends = {{
     val s0 = freshCreature(20)
     val s1 = pGrantTempHp(s0, 5, false)
-    val s2 = s1.with("activeEffects", pAddEffect(s1.activeEffects, "armor_of_agathys", 1, AtEndOfTurn))
+    val s2 = s1.with("activeEffects", pAddEffectSimple(s1.activeEffects, "armor_of_agathys", 1, AtEndOfTurn, ""))
     val s3 = s2.with("activeEffects", pTickEffects(s2.activeEffects, 1))
     assert(s3.tempHp == 5 and not(pHasEffect(s3.activeEffects, "armor_of_agathys")))
   }}
@@ -10836,12 +10836,12 @@ module qa_generated {
   // Concentration: Spiritual Weapon requiring concentration cannot be stacked with Bless or other concentration spells
   run qa_spiritual_weapon_concentration_replaces_existing = {
     // Cleric is concentrating on Bless with an active effect
-    val effects0 = pAddEffect(Set(), "bless", 5, AtEndOfTurn)
+    val effects0 = pAddEffectSimple(Set(), "bless", 5, AtEndOfTurn, "")
     val ss0 = pStartConcentration(FRESH_SPELL_SLOTS, "bless")
     // Cleric casts Spiritual Weapon (now requiring concentration):
     // old concentration (Bless) is dropped, its active effect removed, SW's effect added
     val effects1 = pRemoveEffect(effects0, ss0.concentrationSpellId)
-    val effects2 = pAddEffect(effects1, "spiritual_weapon", 10, AtEndOfTurn)
+    val effects2 = pAddEffectSimple(effects1, "spiritual_weapon", 10, AtEndOfTurn, "")
     val ss1 = pStartConcentration(ss0, "spiritual_weapon")
     assert(
       ss1.concentrationSpellId == "spiritual_weapon"
