@@ -224,7 +224,23 @@ Context: the battle MBT test (`battle.mbt.test.ts`) generates random combat trac
 
 **Spell-granted resistances/vulnerabilities/immunities — FIXED** — `ActiveEffect` now carries `grantedResistances`, `grantedVulnerabilities`, `grantedImmunities` (all `Set[DamageType]`). `dealDamage` merges active effect R/V/I with stat block R/V/I in a single fold. `pAddEffectSimple` convenience wrapper handles the common case (no granted R/V/I). Wired through all layers: Quint spec, TS types, XState machine, MBT bridge/comparison. Petrified and underwater resistance remain handled separately.
 
-**`bResolveAoETarget` driver mismatch** — Seed `0x12345678`, step 5, action `bResolveAoETarget`. Not yet investigated. Different subsystem from the CS/reaction bugs — likely an AoE target resolution or damage application issue in the driver.
+**`bResolveAoETarget` driver mismatch — FIXED** — Three driver bugs found and fixed:
+
+1. **LR deferral** (AoE + save spells): When a save fails and the target has reaction available (LR eligible), the driver was immediately applying condition+damage. Quint defers effects to `bResolveSaveFailedReaction`. Added `pendingSaveFailed` tracking, `hasLRReactor()` check, shared `applyFailEffects()` helper. Same fix applied to `resolveSpellSave` (non-AoE path). Reproducer: `QUINT_SEED=0x12345678` (original trace).
+
+2. **`bStartTurn` extraAttacks**: Driver derived `extraAttacks` from `multiattackExtraAttacks(sb.multiattackLength)` for monsters, returning 0 for monster C (multiattackLength=0). Quint's `FRESH_TURN` always sets `extraAttacksRemaining: 1`. Fixed to always send 1. Reproducer: `QUINT_SEED=0xa8b9e773` (original trace).
+
+3. **CS chain tracking**: Driver didn't handle Counterspell-on-Counterspell chains correctly. Multiple sub-issues fixed:
+   - Slot expenditure: `reactorId=null` at CS depth expended original slot prematurely.
+   - Fizzle computation: stack-based unwinding (`csChain[]`) correctly handles reversal cases (e.g., C counterspells B's CS which was fizzling A's spell → A continues). Simple boolean flip was wrong for chains where a failed CS is itself fizzled.
+   - Remaining-reactor check: when CS chain unwinds, each intermediate level checks `hasEligibleCSReactors` to determine if Quint re-enters a parent CS window or resolves atomically. Tracks `csWindowOffered` (depth-0 offered set) and `csCaster`/`interruptedCaster` per chain entry.
+   - Reproducers: `0x0e6643d4`, `0x99aabbcc`, `0xa8b9e773` (post-multiclass traces).
+
+4. **Ritual flag**: Spell identity merge added `ritual: bool` to `SpellCastCtx`. Ritual spells skip slot expenditure (SRD 5.2.1). Driver schema and all three pending spell types updated to track and respect the ritual flag.
+
+Validated with 6 known seeds + 12 random seeds. All passing seeds show zero mismatches; all failures are Quint evaluator timeouts (300s), not driver bugs.
 
 **Reaction audit (done)** — All reaction paths in the spec (`bResolveHitReaction`, `bResolveDmgReaction`, `bAfterDamage*`, `bResolveCounterspell`, `bResolveSaveFailedReaction`, `bMovementOAAttack`) were audited to confirm they correctly call `spendReaction` (Quint) and the driver correctly sends `USE_REACTION` (TS). No gaps found.
+
+**Quint evaluator timeouts** — Some seeds cause the Rust evaluator to exceed the 300s vitest timeout during trace generation. Root cause: expanded nondeterministic search space from `preparedSpells`, `ritual`, `spellName` fields. Not a driver bug. Mitigation options: constrain test-creature `preparedSpells` sets, or pre-generate traces to files for replay.
 
