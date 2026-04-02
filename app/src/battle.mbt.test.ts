@@ -87,84 +87,7 @@ const QuintBattleState = z.object({
  */
 
 /** Battle comparison excludes class states and turnPhase (not tracked by battle Combatant). */
-type BattleExcludedKeys =
-  | "turnPhase"
-  | "hitPointDiceRemaining"
-  | "secondWindCharges"
-  | "secondWindMax"
-  | "actionSurgeCharges"
-  | "actionSurgeMax"
-  | "actionSurgeUsedThisTurn"
-  | "indomitableCharges"
-  | "indomitableMax"
-  | "heroicInspiration"
-  | "fighterLevel"
-  | "barbarianLevel"
-  | "raging"
-  | "rageCharges"
-  | "rageMaxCharges"
-  | "rageTurnsRemaining"
-  | "attackedOrForcedSaveThisTurn"
-  | "rageExtendedWithBA"
-  | "recklessThisTurn"
-  | "frenzyUsedThisTurn"
-  | "intimidatingPresenceUsed"
-  | "relentlessRageTimesUsed"
-  | "brutalStrikeUsedThisTurn"
-  | "monkLevel"
-  | "focusPoints"
-  | "focusMax"
-  | "uncannyMetabolismUsed"
-  | "stunningStrikeUsedThisTurn"
-  | "wholenessCharges"
-  | "wholenessMax"
-  | "paladinLevel"
-  | "layOnHandsPool"
-  | "layOnHandsMax"
-  | "paladinChannelDivinityCharges"
-  | "paladinChannelDivinityMax"
-  | "smiteFreeUsed"
-  | "rogueLevel"
-  | "sneakAttackUsedThisTurn"
-  | "steadyAimUsedThisTurn"
-  | "cunningStrikeUsesThisTurn"
-  | "clericLevel"
-  | "clericChannelDivinityCharges"
-  | "clericChannelDivinityMax"
-  | "druidLevel"
-  | "wildShapeCharges"
-  | "wildShapeMax"
-  | "inWildShape"
-  | "wildResurgenceSlotUsedThisLR"
-  | "sorcererLevel"
-  | "sorceryPoints"
-  | "sorceryPointsMax"
-  | "sorcerousRestorationUsed"
-  | "innateSorceryActive"
-  | "innateSorceryCharges"
-  | "innateSorceryTurnsRemaining"
-  | "metamagicUsedThisCast"
-  | "apotheosisUsedThisTurn"
-  | "warlockLevel"
-  | "mysticArcanumUsed"
-  | "magicalCunningUsed"
-  | "eldritchSmiteUsedThisTurn"
-  | "wizardLevel"
-  | "arcaneRecoveryUsed"
-  | "overchannelUsesThisLR"
-  | "rangerLevel"
-  | "huntersMarkFreeUses"
-  | "tirelessCharges"
-  | "tirelessMax"
-  | "naturesVeilCharges"
-  | "naturesVeilMax"
-  | "bardLevel"
-  | "bardicInspirationCharges"
-  | "bardicInspirationMax"
-
-type BattleCreatureState = Omit<NormalizedState, BattleExcludedKeys>
-
-const BATTLE_EXCLUDED_KEYS = new Set<string>([
+const BATTLE_EXCLUDED_KEYS_ARRAY = [
   "turnPhase",
   "hitPointDiceRemaining",
   "secondWindCharges",
@@ -238,7 +161,11 @@ const BATTLE_EXCLUDED_KEYS = new Set<string>([
   "bardLevel",
   "bardicInspirationCharges",
   "bardicInspirationMax"
-])
+] as const satisfies ReadonlyArray<keyof NormalizedState>
+
+type BattleExcludedKeys = (typeof BATTLE_EXCLUDED_KEYS_ARRAY)[number]
+type BattleCreatureState = Omit<NormalizedState, BattleExcludedKeys>
+const BATTLE_EXCLUDED_KEYS = new Set<string>(BATTLE_EXCLUDED_KEYS_ARRAY)
 
 /** Project NormalizedState to BattleCreatureState by dropping class/turnPhase fields. */
 function projectToBattle(full: NormalizedState): BattleCreatureState {
@@ -914,15 +841,11 @@ function createBattleProjectionDriver() {
     /** CS chain: tracks nested Counterspell-on-Counterspell outcomes.
      *  Each entry records whether the CS succeeded and the interrupted spell's caster
      *  (needed to check remaining reactors when returning to that window during unwinding). */
-    const csChain: Array<{ succeeded: boolean; interruptedCaster: string; csCaster: string }> = []
+    const csChain: Array<{ succeeded: boolean; csCaster: string }> = []
 
     /** Reactors already offered in the original spell's CS window.
      *  Used to determine if remaining reactors exist when CS chain unwinds. */
     const csWindowOffered = new Set<string>()
-
-    /** The caster of the spell in the current CS window.
-     *  At depth 0: the original spell's caster. After D casts CS: D. After B casts CS on D's CS: B. */
-    let csCurrentWindowCaster = ""
 
     function resolveSpellSave(spell: NonNullable<typeof pendingSpell>) {
       const saved = spell.saveRoll >= spell.saveDC
@@ -1043,7 +966,7 @@ function createBattleProjectionDriver() {
             pendingAoE = null
             pendingConcentration = null
             csWindowOffered.clear()
-            csCurrentWindowCaster = ""
+
             return
           }
           csWindowOffered.clear()
@@ -1060,7 +983,6 @@ function createBattleProjectionDriver() {
           pendingConcentration = null
         }
         csWindowOffered.clear()
-        csCurrentWindowCaster = ""
         return
       }
 
@@ -1073,10 +995,7 @@ function createBattleProjectionDriver() {
         send(reactorId, { type: "USE_REACTION" })
         send(reactorId, { type: "EXPEND_SLOT", level: csSlotLvl })
         const conSaveSucceeded = Boolean(decision.value)
-        // interruptedCaster = caster of the spell in the current window (being interrupted).
-        const interruptedCaster = csCurrentWindowCaster || originalCasterId()
-        csChain.push({ succeeded: !conSaveSucceeded, interruptedCaster, csCaster: reactorId })
-        csCurrentWindowCaster = reactorId
+        csChain.push({ succeeded: !conSaveSucceeded, csCaster: reactorId })
       }
     }
 
