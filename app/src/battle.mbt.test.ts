@@ -340,13 +340,22 @@ const battleDriverSchema = {
     dt: OV,
     cond: OV,
     applyCond: OB,
-    slotLvl: OI
+    slotLvl: OI,
+    ritual: OB
   },
   bResolveCounterspell: { reactorId: OS, decision: ITFVariantWithValue.optional(), csSlotLvl: OI },
   bResolveSaveFailedReaction: { reactorId: OS, decision: OV },
-  bCastConcentrationSpell: { targetId: OS, slotLvl: OI, duration: OI, spellId: OS, cond: OV, applyCond: OB },
+  bCastConcentrationSpell: {
+    targetId: OS,
+    slotLvl: OI,
+    duration: OI,
+    spellId: OS,
+    cond: OV,
+    applyCond: OB,
+    ritual: OB
+  },
   bConcentrationCheck: { targetId: OS, conSaveSucceeded: OB },
-  bCastAoE: { saveDC: OI, dmgOnFail: OI, halfOnSave: OB, dt: OV, cond: OV, applyCond: OB, slotLvl: OI },
+  bCastAoE: { saveDC: OI, dmgOnFail: OI, halfOnSave: OB, dt: OV, cond: OV, applyCond: OB, slotLvl: OI, ritual: OB },
   bResolveAoETarget: { targetId: OS, saveRoll: OI },
   bMove: { threatened: z.any().optional() },
   bMovementOAPass: { reactorId: OS },
@@ -843,11 +852,11 @@ function createBattleProjectionDriver() {
       const cond = pickVariant(picks, "cond") ?? "CBlinded"
       const applyCond = pickBool(picks, "applyCond") ?? false
       const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
+      const ritual = pickBool(picks, "ritual") ?? false
 
       // Spend action only — slot deferred until CS resolves (SRD 5.2.1)
       send(id, { type: "USE_ACTION", actionType: "magic" })
 
-      // Store pending spell for later resolution (includes slotLvl for deferred expenditure)
       pendingSpell = {
         caster: id,
         target: targetId,
@@ -858,18 +867,18 @@ function createBattleProjectionDriver() {
         damageType: mapDamageType(dt),
         conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
         applyCondition: applyCond,
-        slotLvl
+        slotLvl,
+        ritual
       }
 
       const hasCSReactors = hasCounterspellReactors(id)
 
       if (!hasCSReactors) {
-        // Resolve save immediately — expend deferred slot
-        send(id, { type: "EXPEND_SLOT", level: slotLvl })
+        // Resolve save immediately — expend deferred slot (ritual skips expenditure)
+        if (!ritual) send(id, { type: "EXPEND_SLOT", level: slotLvl })
         resolveSpellSave(pendingSpell)
         pendingSpell = null
       }
-      // Otherwise, wait for bResolveCounterspell
     }
 
     /** Pending spell context (slot deferred until CS resolves) */
@@ -884,6 +893,7 @@ function createBattleProjectionDriver() {
       conditionOnFail: Condition
       applyCondition: boolean
       slotLvl: number
+      ritual: boolean
     } | null = null
 
     /** Pending AoE context (slot deferred until CS resolves) */
@@ -895,6 +905,7 @@ function createBattleProjectionDriver() {
       damageType: DamageType
       conditionOnFail: Condition
       applyCondition: boolean
+      ritual: boolean
       slotLvl: number
     } | null = null
 
@@ -907,13 +918,21 @@ function createBattleProjectionDriver() {
       conditionOnFail: Condition
       applyCondition: boolean
       slotLvl: number
+      ritual: boolean
     } | null = null
 
     /** CS chain: tracks nested Counterspell-on-Counterspell outcomes.
-     *  Each entry is true if the CS at that depth SUCCEEDED (fizzles its target).
-     *  When the chain unwinds, we walk from top to bottom to determine
-     *  whether the original spell is ultimately fizzled. */
-    const csChain: Array<boolean> = []
+     *  Each entry records whether the CS succeeded and the interrupted spell's caster
+     *  (needed to check remaining reactors when returning to that window during unwinding). */
+    const csChain: Array<{ succeeded: boolean; interruptedCaster: string; csCaster: string }> = []
+
+    /** Reactors already offered in the original spell's CS window.
+     *  Used to determine if remaining reactors exist when CS chain unwinds. */
+    const csWindowOffered = new Set<string>()
+
+    /** The caster of the spell in the current CS window.
+     *  At depth 0: the original spell's caster. After D casts CS: D. After B casts CS on D's CS: B. */
+    let csCurrentWindowCaster = ""
 
     function resolveSpellSave(spell: NonNullable<typeof pendingSpell>) {
       const saved = spell.saveRoll >= spell.saveDC
@@ -989,64 +1008,86 @@ function createBattleProjectionDriver() {
       }
     }
 
+    /** Check if there are eligible CS reactors excluding a caster and offered set. */
+    function hasEligibleCSReactors(casterId: CreatureId, offered: ReadonlySet<string>): boolean {
+      return [...actors.entries()].some(([cid, actor]) => {
+        if (cid === casterId || offered.has(cid)) return false
+        const snap = actor.getSnapshot()
+        if (!snap.context.reactionAvailable || snap.matches({ damageTrack: "dead" })) return false
+        return snap.context.slotsCurrent.slice(2).some((s) => s > 0)
+      })
+    }
+
+    function originalCasterId(): string {
+      return pendingSpell?.caster ?? pendingAoE?.caster ?? pendingConcentration?.caster ?? ""
+    }
+
     function handleBResolveCounterspell(picks: ReadonlyMap<string, unknown>) {
       const reactorId = pickString(picks, "reactorId")
       const decision = picks.get("decision") as { tag: string; value: unknown } | undefined
       const csSlotLvl = pickBigInt(picks, "csSlotLvl") ?? 3
       if (!reactorId) {
-        // No remaining reactors — spell resolves.
         if (csChain.length > 0) {
-          // Quint unwinds the entire CS chain in one step.
-          // Walk from top (innermost CS) to bottom (closest to original)
-          // to determine if original spell is ultimately fizzled.
+          // CS chain unwinding. Walk level by level, checking remaining at each.
           let fizzleBelow = false
-          for (let i = csChain.length - 1; i >= 0; i--) {
+          while (csChain.length > 0) {
+            const entry = csChain.pop()!
             if (fizzleBelow) {
-              // This level was fizzled by the level above — its outcome is irrelevant.
-              // Its target (level below) is unaffected.
+              // This level was fizzled → its target is unaffected.
               fizzleBelow = false
-            } else if (csChain[i]) {
-              // This level's CS succeeded → fizzles the level below
+            } else if (entry.succeeded) {
               fizzleBelow = true
+              continue // Don't check remaining yet — need to see what's below
             }
-            // CS failed → target continues, fizzleBelow stays false
+            // CS failed or was fizzled. Check remaining at the returned-to window.
+            // The returned-to window's caster is the CS caster of the entry we just popped
+            // (we're returning to THEIR CS window). At depth 0, it's the original caster.
+            const parentCaster = csChain.length > 0 ? csChain[csChain.length - 1].csCaster : originalCasterId()
+            const offered = csChain.length === 0 ? csWindowOffered : new Set<string>()
+            if (hasEligibleCSReactors(parentCaster, offered)) {
+              return // Quint re-enters this window — more bResolveCounterspell steps coming
+            }
           }
-          csChain.length = 0
           if (fizzleBelow) {
-            // Original spell was ultimately fizzled by the chain.
             pendingSpell = null
             pendingAoE = null
             pendingConcentration = null
+            csWindowOffered.clear()
+            csCurrentWindowCaster = ""
             return
           }
-          // Original spell NOT fizzled — fall through to resolve it.
+          csWindowOffered.clear()
         }
-        // Depth 0: original spell resolves. Expend deferred slot.
+        // Depth 0: resolve original spell.
         if (pendingSpell) {
-          send(pendingSpell.caster, { type: "EXPEND_SLOT", level: pendingSpell.slotLvl })
+          if (!pendingSpell.ritual) send(pendingSpell.caster, { type: "EXPEND_SLOT", level: pendingSpell.slotLvl })
           resolveSpellSave(pendingSpell)
           pendingSpell = null
         } else if (pendingAoE) {
-          send(pendingAoE.caster, { type: "EXPEND_SLOT", level: pendingAoE.slotLvl })
-          // pendingAoE stays set — bResolveAoETarget needs it for per-target resolution
+          if (!pendingAoE.ritual) send(pendingAoE.caster, { type: "EXPEND_SLOT", level: pendingAoE.slotLvl })
         } else if (pendingConcentration) {
           resolveConcentrationSpell(pendingConcentration)
           pendingConcentration = null
         }
+        csWindowOffered.clear()
+        csCurrentWindowCaster = ""
         return
       }
 
+      // Track offered reactors at original window depth.
+      if (csChain.length === 0) {
+        csWindowOffered.add(reactorId)
+      }
+
       if (decision?.tag.startsWith("RCounterspell")) {
-        // Reactor casts Counterspell: spend reaction + slot
         send(reactorId, { type: "USE_REACTION" })
         send(reactorId, { type: "EXPEND_SLOT", level: csSlotLvl })
-
         const conSaveSucceeded = Boolean(decision.value)
-        // Track whether this CS succeeded (fizzles its target).
-        // conSaveSucceeded=false means the CS succeeds (target's concentration save failed).
-        csChain.push(!conSaveSucceeded)
+        // interruptedCaster = caster of the spell in the current window (being interrupted).
+        const interruptedCaster = csCurrentWindowCaster || originalCasterId()
+        csChain.push({ succeeded: !conSaveSucceeded, interruptedCaster, csCaster: reactorId })
+        csCurrentWindowCaster = reactorId
       }
-      // RPass: do nothing, keep pending
     }
 
     function handleBResolveSaveFailedReaction(picks: ReadonlyMap<string, unknown>) {
@@ -1124,6 +1165,7 @@ function createBattleProjectionDriver() {
       const spellId = pickString(picks, "spellId") ?? "hold_person"
       const cond = pickVariant(picks, "cond") ?? "CParalyzed"
       const applyCond = pickBool(picks, "applyCond") ?? false
+      const ritual = pickBool(picks, "ritual") ?? false
 
       // Spend action only — slot + concentration deferred until CS resolves (SRD 5.2.1)
       send(id, { type: "USE_ACTION", actionType: "magic" })
@@ -1135,7 +1177,8 @@ function createBattleProjectionDriver() {
         duration,
         conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "paralyzed",
         applyCondition: applyCond,
-        slotLvl
+        slotLvl,
+        ritual
       }
 
       const hasCSReactors = hasCounterspellReactors(id)
@@ -1143,12 +1186,11 @@ function createBattleProjectionDriver() {
         resolveConcentrationSpell(pendingConcentration)
         pendingConcentration = null
       }
-      // Otherwise, wait for bResolveCounterspell
     }
 
     /** Resolve a concentration spell: expend slot, start concentration, add effects. */
     function resolveConcentrationSpell(conc: NonNullable<typeof pendingConcentration>) {
-      send(conc.caster, { type: "EXPEND_SLOT", level: conc.slotLvl })
+      if (!conc.ritual) send(conc.caster, { type: "EXPEND_SLOT", level: conc.slotLvl })
 
       // If already concentrating, break old concentration
       const ctx = getSnap(conc.caster).context
@@ -1223,6 +1265,7 @@ function createBattleProjectionDriver() {
       const cond = pickVariant(picks, "cond") ?? "CBlinded"
       const applyCond = pickBool(picks, "applyCond") ?? false
       const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
+      const ritual = pickBool(picks, "ritual") ?? false
 
       // Spend action only — slot deferred until CS resolves (SRD 5.2.1)
       send(id, { type: "USE_ACTION", actionType: "magic" })
@@ -1235,15 +1278,14 @@ function createBattleProjectionDriver() {
         slotLvl,
         damageType: mapDamageType(dt),
         conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
-        applyCondition: applyCond
+        applyCondition: applyCond,
+        ritual
       }
 
       const hasCSReactors = hasCounterspellReactors(id)
 
       if (!hasCSReactors) {
-        // No Counterspell — expend deferred slot, AoE resolves via bResolveAoETarget
-        send(id, { type: "EXPEND_SLOT", level: slotLvl })
-        // pendingAoE stays set for target resolution
+        if (!ritual) send(id, { type: "EXPEND_SLOT", level: slotLvl })
       }
     }
 
