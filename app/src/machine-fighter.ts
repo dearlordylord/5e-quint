@@ -57,6 +57,7 @@ export function actionSurgeUpdate(c: DndContext): Partial<DndContext> {
   const r = tsUseActionSurge(s)
   return {
     actionsRemaining: r.actionsRemaining,
+    actionSurgeActionPending: true,
     ...updateClass(c, "fighter", {
       actionSurgeCharges: r.actionSurgeCharges,
       actionSurgeUsedThisTurn: r.actionSurgeUsedThisTurn

@@ -291,6 +291,7 @@ function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
     nonCantripActionSpellCast: t.nonCantripActionSpellCast,
     bonusMovementRemaining: Number(t.bonusMovementRemaining),
     bonusMovementOAFree: t.bonusMovementOAFree,
+    actionSurgeActionPending: t.actionSurgeActionPending,
     slotsMax: ss.slotsMax,
     slotsCurrent: ss.slotsCurrent,
     pactSlotsMax: Number(ss.pactSlotsMax),
@@ -413,6 +414,16 @@ function createBattleProjectionDriver() {
 
     function activeId(): CreatureId {
       return initiative[turnIndex]
+    }
+
+    /** Check if any creature (excluding casterId) can cast Counterspell. */
+    function hasCounterspellReactors(casterId: CreatureId): boolean {
+      return [...actors.entries()].some(([cid, actor]) => {
+        if (cid === casterId) return false
+        const snap = actor.getSnapshot()
+        if (!snap.context.reactionAvailable || snap.matches({ damageTrack: "dead" })) return false
+        return snap.context.slotsCurrent.slice(2).some((s) => s > 0) // indices 2+ = levels 3+
+      })
     }
 
     // ============================================================
@@ -773,11 +784,10 @@ function createBattleProjectionDriver() {
       const applyCond = pickBool(picks, "applyCond") ?? false
       const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
 
-      // Spend action + slot
+      // Spend action only — slot deferred until CS resolves (SRD 5.2.1)
       send(id, { type: "USE_ACTION", actionType: "magic" })
-      send(id, { type: "EXPEND_SLOT", level: slotLvl })
 
-      // Store pending spell for later resolution
+      // Store pending spell for later resolution (includes slotLvl for deferred expenditure)
       pendingSpell = {
         caster: id,
         target: targetId,
@@ -787,27 +797,22 @@ function createBattleProjectionDriver() {
         halfOnSuccess: halfOnSave,
         damageType: mapDamageType(dt),
         conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
-        applyCondition: applyCond
+        applyCondition: applyCond,
+        slotLvl
       }
 
-      // Check if Counterspell reactors exist
-      const hasCSReactors = [...actors.entries()].some(([cid, actor]) => {
-        if (cid === id) return false
-        const snap = actor.getSnapshot()
-        if (!snap.context.reactionAvailable || snap.matches({ damageTrack: "dead" })) return false
-        // Must have level 3+ slot
-        return snap.context.slotsCurrent.slice(2).some((s) => s > 0) // indices 2+ = levels 3+
-      })
+      const hasCSReactors = hasCounterspellReactors(id)
 
       if (!hasCSReactors) {
-        // Resolve save immediately
+        // Resolve save immediately — expend deferred slot
+        send(id, { type: "EXPEND_SLOT", level: slotLvl })
         resolveSpellSave(pendingSpell)
         pendingSpell = null
       }
       // Otherwise, wait for bResolveCounterspell
     }
 
-    /** Pending spell context */
+    /** Pending spell context (slot deferred until CS resolves) */
     let pendingSpell: {
       caster: string
       target: string
@@ -818,9 +823,10 @@ function createBattleProjectionDriver() {
       damageType: DamageType
       conditionOnFail: Condition
       applyCondition: boolean
+      slotLvl: number
     } | null = null
 
-    /** Pending AoE context */
+    /** Pending AoE context (slot deferred until CS resolves) */
     let pendingAoE: {
       caster: string
       saveDC: number
@@ -829,6 +835,18 @@ function createBattleProjectionDriver() {
       damageType: DamageType
       conditionOnFail: Condition
       applyCondition: boolean
+      slotLvl: number
+    } | null = null
+
+    /** Pending concentration context (slot + effects deferred until CS resolves) */
+    let pendingConcentration: {
+      caster: string
+      target: string
+      spellId: string
+      duration: number
+      conditionOnFail: Condition
+      applyCondition: boolean
+      slotLvl: number
     } | null = null
 
     function resolveSpellSave(spell: NonNullable<typeof pendingSpell>) {
@@ -876,12 +894,18 @@ function createBattleProjectionDriver() {
       const csSlotLvl = pickBigInt(picks, "csSlotLvl") ?? 3
 
       if (!reactorId) {
-        // No remaining reactors — spell resolves
+        // No remaining reactors — spell resolves. Expend deferred slot.
         if (pendingSpell) {
+          send(pendingSpell.caster, { type: "EXPEND_SLOT", level: pendingSpell.slotLvl })
           resolveSpellSave(pendingSpell)
           pendingSpell = null
+        } else if (pendingAoE) {
+          send(pendingAoE.caster, { type: "EXPEND_SLOT", level: pendingAoE.slotLvl })
+          // pendingAoE stays set — bResolveAoETarget needs it for per-target resolution
+        } else if (pendingConcentration) {
+          resolveConcentrationSpell(pendingConcentration)
+          pendingConcentration = null
         }
-        // For AoE: phase transitions to BPResolvingAoE — handled by bResolveAoETarget
         // For Counterspell-on-Counterspell: handled by stack
         return
       }
@@ -895,9 +919,10 @@ function createBattleProjectionDriver() {
         const conSaveSucceeded = decision === "RCounterspell(true)" || decision.includes("true")
 
         if (!conSaveSucceeded) {
-          // CS succeeds — original spell fizzles
+          // CS succeeds — original spell fizzles, slot NOT expended
           pendingSpell = null
           pendingAoE = null
+          pendingConcentration = null
         }
         // If CS fails, spell continues — will resolve when all remaining reactors are processed
       }
@@ -941,27 +966,61 @@ function createBattleProjectionDriver() {
       const cond = pickVariant(picks, "cond") ?? "CParalyzed"
       const applyCond = pickBool(picks, "applyCond") ?? false
 
-      // Spend action + slot
+      // Spend action only — slot + concentration deferred until CS resolves (SRD 5.2.1)
       send(id, { type: "USE_ACTION", actionType: "magic" })
-      send(id, { type: "EXPEND_SLOT", level: slotLvl })
+
+      pendingConcentration = {
+        caster: id,
+        target: targetId,
+        spellId,
+        duration,
+        conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "paralyzed",
+        applyCondition: applyCond,
+        slotLvl
+      }
+
+      const hasCSReactors = hasCounterspellReactors(id)
+
+      if (!hasCSReactors) {
+        resolveConcentrationSpell(pendingConcentration)
+        pendingConcentration = null
+      }
+      // Otherwise, wait for bResolveCounterspell
+    }
+
+    /** Resolve a concentration spell: expend slot, start concentration, add effects. */
+    function resolveConcentrationSpell(conc: NonNullable<typeof pendingConcentration>) {
+      send(conc.caster, { type: "EXPEND_SLOT", level: conc.slotLvl })
 
       // If already concentrating, break old concentration
-      const ctx = getSnap(id).context
+      const ctx = getSnap(conc.caster).context
       if (ctx.concentrationSpellId !== "") {
-        breakConcentrationAndPropagate(id)
+        breakConcentrationAndPropagate(conc.caster)
       }
 
       // Start concentration
-      send(id, { type: "START_CONCENTRATION", spellId, durationTurns: duration, expiresAt: "end", casterId: id })
+      send(conc.caster, {
+        type: "START_CONCENTRATION",
+        spellId: conc.spellId,
+        durationTurns: conc.duration,
+        expiresAt: "end",
+        casterId: conc.caster
+      })
 
       // Add effect to target
-      send(targetId, { type: "ADD_EFFECT", spellId, durationTurns: duration, expiresAt: "end", casterId: id })
+      send(conc.target, {
+        type: "ADD_EFFECT",
+        spellId: conc.spellId,
+        durationTurns: conc.duration,
+        expiresAt: "end",
+        casterId: conc.caster
+      })
 
       // Apply condition to target
-      if (applyCond) {
-        send(targetId, {
+      if (conc.applyCondition) {
+        send(conc.target, {
           type: "APPLY_CONDITION",
-          condition: QUINT_CONDITION_MAP[cond] ?? "paralyzed",
+          condition: conc.conditionOnFail,
           conditionImmunities: EMPTY_CONDITION_IMMUNITIES
         })
       }
@@ -1007,30 +1066,25 @@ function createBattleProjectionDriver() {
       const applyCond = pickBool(picks, "applyCond") ?? false
       const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
 
-      // Spend action + slot
+      // Spend action only — slot deferred until CS resolves (SRD 5.2.1)
       send(id, { type: "USE_ACTION", actionType: "magic" })
-      send(id, { type: "EXPEND_SLOT", level: slotLvl })
 
       pendingAoE = {
         caster: id,
         saveDC,
         damageOnFail: dmgOnFail,
         halfOnSuccess: halfOnSave,
+        slotLvl,
         damageType: mapDamageType(dt),
         conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
         applyCondition: applyCond
       }
 
-      // Counterspell check — similar to bCastSaveSpell
-      const hasCSReactors = [...actors.entries()].some(([cid, actor]) => {
-        if (cid === id) return false
-        const snap = actor.getSnapshot()
-        if (!snap.context.reactionAvailable || snap.matches({ damageTrack: "dead" })) return false
-        return snap.context.slotsCurrent.slice(2).some((s) => s > 0)
-      })
+      const hasCSReactors = hasCounterspellReactors(id)
 
       if (!hasCSReactors) {
-        // No Counterspell — AoE resolves via bResolveAoETarget
+        // No Counterspell — expend deferred slot, AoE resolves via bResolveAoETarget
+        send(id, { type: "EXPEND_SLOT", level: slotLvl })
         // pendingAoE stays set for target resolution
       }
     }

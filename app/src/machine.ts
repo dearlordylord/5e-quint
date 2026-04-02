@@ -197,7 +197,11 @@ export const dndMachine = setup({
     useAction: assign(({ context: c, event: e }) => {
       const ev = asUseAction(e)
       if (c.actionsRemaining <= 0 || isIncapacitated(c)) return {}
-      const base = { actionsRemaining: c.actionsRemaining - 1 }
+      // SRD 5.2.1: Action Surge "except the Magic action." XState can't prevent events
+      // from arriving, so reject here. See actionSurgeActionPending in creature.qnt for full design.
+      if (c.actionSurgeActionPending && ev.actionType === "magic") return {}
+      const pending = c.actionSurgeActionPending ? { actionSurgeActionPending: false } : {}
+      const base = { actionsRemaining: c.actionsRemaining - 1, ...pending }
       switch (ev.actionType) {
         case "attack":
           return { ...base, attackActionUsed: true }

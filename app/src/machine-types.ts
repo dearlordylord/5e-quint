@@ -141,6 +141,7 @@ export interface DndContext {
   readonly nonCantripActionSpellCast: boolean
   readonly bonusMovementRemaining: number
   readonly bonusMovementOAFree: boolean
+  readonly actionSurgeActionPending: boolean
   readonly slotsMax: SpellSlots
   readonly slotsCurrent: SpellSlots
   readonly pactSlotsMax: number
@@ -429,5 +430,6 @@ export const INITIAL_TURN_STATE = {
   readiedAction: false,
   reactionAvailable: true,
   bonusMovementRemaining: 0,
-  bonusMovementOAFree: false
+  bonusMovementOAFree: false,
+  actionSurgeActionPending: false
 } as const

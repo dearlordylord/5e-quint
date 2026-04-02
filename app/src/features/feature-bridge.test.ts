@@ -107,6 +107,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     nonCantripActionSpellCast: false,
     bonusMovementRemaining: 0,
     bonusMovementOAFree: false,
+    actionSurgeActionPending: false,
     slotsMax: EMPTY_SLOTS,
     slotsCurrent: EMPTY_SLOTS,
     pactSlotsMax: 0,

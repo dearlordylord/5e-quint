@@ -1243,6 +1243,15 @@ module creature {
     nonCantripActionSpellCast: bool,
     bonusMovementRemaining: int,
     bonusMovementOAFree: bool,
+    // SRD 5.2.1 Action Surge: extra action "except the Magic action."
+    // Enforced at two layers:
+    //   Quint: battle magic actions guard with not(actionSurgeActionPending).
+    //          pUseAction also rejects AMagic when pending (defense-in-depth).
+    //   XState: useAction in machine.ts returns {} for magic when pending —
+    //           XState can't prevent events from arriving, must reject internally.
+    // When adding new magic battle actions: add the Quint guard.
+    // XState covers all magic centrally via actionType check.
+    actionSurgeActionPending: bool,
   }
 
   /// Action types for pUseAction
@@ -1298,14 +1307,16 @@ module creature {
       nonCantripActionSpellCast: false,
       bonusMovementRemaining: 0,
       bonusMovementOAFree: false,
+      actionSurgeActionPending: false,
     }
   }
 
   /// Use the action for this turn. Returns updated TurnState.
   /// Precondition: action not yet used, creature can act.
-  /// Side effects depend on action type.
+  /// SRD 5.2.1 Action Surge: "except the Magic action" — reject Magic if pending.
   pure def pUseAction(t: TurnState, creature: CreatureState, actionType: ActionType): TurnState = {
     if (t.actionsRemaining <= 0 or isIncapacitated(creature)) t
+    else if (t.actionSurgeActionPending and actionType == AMagic) t  // Action Surge cannot be Magic
     else {
       val t1 = t.with("actionsRemaining", t.actionsRemaining - 1)
       val t2 = match actionType {
@@ -1316,7 +1327,8 @@ module creature {
         | AReady => t1.with("readiedAction", true)
         | _ => t1
       }
-      t2
+      // Clear pending flag after consuming the Action Surge action
+      if (t.actionSurgeActionPending) t2.with("actionSurgeActionPending", false) else t2
     }
   }
 
@@ -2332,9 +2344,11 @@ module creature {
   }
 
   /// Use Action Surge: grant +1 action, decrement charge, mark used.
+  /// SRD 5.2.1: "except the Magic action" — set pending flag to gate Magic.
   pure def pUseActionSurge(ts: TurnState, fs: FighterState): { turn: TurnState, fighter: FighterState } = {
     {
-      turn: ts.with("actionsRemaining", ts.actionsRemaining + 1),
+      turn: ts.with("actionsRemaining", ts.actionsRemaining + 1)
+              .with("actionSurgeActionPending", true),
       fighter: fs.with("actionSurgeCharges", fs.actionSurgeCharges - 1)
                 .with("actionSurgeUsedThisTurn", true),
     }
@@ -3751,6 +3765,7 @@ module creature {
     nonCantripActionSpellCast: false,
     bonusMovementRemaining: 0,
     bonusMovementOAFree: false,
+    actionSurgeActionPending: false,
   }
 
   pure val FRESH_SPELL_SLOTS: SpellSlotState = {
