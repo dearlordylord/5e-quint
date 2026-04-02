@@ -397,6 +397,14 @@ function createBattleProjectionDriver() {
       actor.send(event)
     }
 
+    /** Transition creature to waitingForTurn if still acting (XState lifecycle). */
+    function ensureWaitingForTurn(id: CreatureId) {
+      const snap = getSnap(id)
+      if (snap.matches({ turnPhase: "acting" })) {
+        send(id, { type: "END_TURN", endOfTurnSaves: [], endOfTurnDamage: [] })
+      }
+    }
+
     function getSnap(id: CreatureId): DndSnapshot {
       const actor = actors.get(id)
       if (!actor) throw new Error(`No actor for ${id}`)
@@ -502,6 +510,8 @@ function createBattleProjectionDriver() {
       const id = activeId()
       const isMonster = creatureKinds.get(id) === "Monster"
       const sb = statBlocks.get(id)
+
+      ensureWaitingForTurn(id)
       const ctx = getSnap(id).context
 
       const rechargeD6 = pickBigInt(picks, "rechargeD6") ?? 3
@@ -535,7 +545,7 @@ function createBattleProjectionDriver() {
         type: "START_TURN",
         baseSpeed: 30,
         armorPenalty: 0,
-        extraAttacks: isMonster && sb ? multiattackExtraAttacks(sb.multiattackLength) : 0,
+        extraAttacks: isMonster && sb ? multiattackExtraAttacks(sb.multiattackLength) : 1,
         callerSpeedModifier: 0,
         isGrappling: false,
         grappledTargetTwoSizesSmaller: false,
@@ -942,10 +952,10 @@ function createBattleProjectionDriver() {
       }
 
       // Start concentration
-      send(id, { type: "START_CONCENTRATION", spellId, durationTurns: duration, expiresAt: "end" })
+      send(id, { type: "START_CONCENTRATION", spellId, durationTurns: duration, expiresAt: "end", casterId: id })
 
       // Add effect to target
-      send(targetId, { type: "ADD_EFFECT", spellId, durationTurns: duration, expiresAt: "end" })
+      send(targetId, { type: "ADD_EFFECT", spellId, durationTurns: duration, expiresAt: "end", casterId: id })
 
       // Apply condition to target
       if (applyCond) {
@@ -975,14 +985,13 @@ function createBattleProjectionDriver() {
       send(casterId, { type: "BREAK_CONCENTRATION" })
       send(casterId, { type: "REMOVE_EFFECT", spellId })
 
-      // Remove effects from other creatures (effects cast by this caster)
-      // The TS ActiveEffect doesn't have casterId, so we match by spellId
+      // Remove effects from other creatures cast by this caster (match by casterId)
       for (const [cid, actor] of actors) {
         if (cid === casterId) continue
         const snap = actor.getSnapshot()
         for (const eff of snap.context.activeEffects) {
-          if (eff.spellId === spellId) {
-            send(cid, { type: "REMOVE_EFFECT", spellId })
+          if (eff.casterId === casterId) {
+            send(cid, { type: "REMOVE_EFFECT", spellId: eff.spellId })
           }
         }
       }
@@ -1201,6 +1210,8 @@ function createBattleProjectionDriver() {
       const laCrit = pickBool(picks, "laCrit") ?? false
       const laTgtAc = pickBigInt(picks, "laTgtAc") ?? 15
 
+      ensureWaitingForTurn(monsterId)
+
       // Spend LA
       send(monsterId, { type: "USE_LEGENDARY_ACTION", actionName: "tail_attack" })
 
@@ -1374,9 +1385,10 @@ const battleStateCheck = stateCheck(
 // ============================================================
 
 describe("Battle Projection MBT", () => {
-  // battle.qnt has 21 phase-guarded actions — most random samples fail guards.
-  // Keep maxSamples bounded to avoid quint spinning. Trace generation is the
-  // bottleneck, not replay.
+  // battleStep uses phase-nested match — only phase-valid actions are tried,
+  // so trace generation is much faster than the old flat any{21}. However, richer
+  // traces expose pre-existing driver parity bugs (reaction tracking, counterspell
+  // slot spending, bStartTurn turnPhase reset). Keep traces short until fixed.
   const MBT_TRACE_COUNT = 1
   const MBT_STEP_COUNT = 10
   const specPath = path.resolve(import.meta.dirname, "../../battle.qnt")

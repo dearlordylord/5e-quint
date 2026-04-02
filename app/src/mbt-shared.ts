@@ -163,14 +163,15 @@ export const QuintCreatureState = z.object({
   incapacitatedSources: QuintIncapSourceSet,
   hitPointDiceRemaining: z.bigint(),
   activeEffects: z.any().transform((raw: unknown) => {
-    const items: Array<{ spellId: string; turnsRemaining: number; expiresAt: string }> = []
+    const items: Array<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }> = []
     if (raw instanceof Set) {
       for (const e of raw) {
         const r = e as Record<string, unknown>
         items.push({
           spellId: String(r.spellId ?? ""),
           turnsRemaining: Number(r.turnsRemaining ?? r.remainingTurns ?? 0),
-          expiresAt: mapExpiryPhase(variantToString(r.expiresAt))
+          expiresAt: mapExpiryPhase(variantToString(r.expiresAt)),
+          casterId: String(r.casterId ?? "")
         })
       }
     }
@@ -397,7 +398,12 @@ export interface NormalizedState {
   readonly unconscious: boolean
   readonly incapacitatedSources: ReadonlySet<string>
   readonly hitPointDiceRemaining: number
-  readonly activeEffects: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>
+  readonly activeEffects: ReadonlyArray<{
+    spellId: string
+    turnsRemaining: number
+    expiresAt: string
+    casterId: string
+  }>
   // TurnState
   readonly movementRemaining: number
   readonly effectiveSpeed: number
@@ -632,9 +638,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     unconscious: c.unconscious,
     incapacitatedSources: c.incapacitatedSources,
     hitPointDiceRemaining: c.hitDiceRemaining,
-    activeEffects: [...c.activeEffects]
-      .sort((a, b) => a.spellId.localeCompare(b.spellId))
-      .map((ae) => ({ spellId: ae.spellId, turnsRemaining: ae.turnsRemaining, expiresAt: ae.expiresAt })),
+    activeEffects: [...c.activeEffects].sort((a, b) => a.spellId.localeCompare(b.spellId)),
     movementRemaining: c.movementRemaining,
     effectiveSpeed: c.effectiveSpeed,
     actionsRemaining: c.actionsRemaining,
@@ -817,15 +821,16 @@ export function arraysEqual(a: ReadonlyArray<number>, b: ReadonlyArray<number>):
 }
 
 export function activeEffectsEqual(
-  a: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>,
-  b: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>
+  a: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }>,
+  b: ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }>
 ): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
     if (
       a[i].spellId !== b[i].spellId ||
       a[i].turnsRemaining !== b[i].turnsRemaining ||
-      a[i].expiresAt !== b[i].expiresAt
+      a[i].expiresAt !== b[i].expiresAt ||
+      a[i].casterId !== b[i].casterId
     )
       return false
   }
@@ -842,8 +847,8 @@ export function compareNormalizedStates(spec: any, impl: any): boolean {
     if (k === "activeEffects") {
       if (
         !activeEffectsEqual(
-          sv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>,
-          iv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string }>
+          sv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }>,
+          iv as ReadonlyArray<{ spellId: string; turnsRemaining: number; expiresAt: string; casterId: string }>
         )
       )
         return false

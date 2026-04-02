@@ -4,7 +4,6 @@
 /// Composes on top of creature.qnt pure functions.
 ///
 /// SIMPLIFICATIONS (each is a planned incremental improvement, see PLAN_BATTLE.md):
-/// - No class states in Combatant. Full version: ClassStateMap
 /// - Limited reactions (retroactive AC/roll mods, damage reduction, Counterspell, LR). Full version: all 26 from R10
 /// These are simplifications of a correct structure, not structural gaps.
 
@@ -18,13 +17,16 @@ module battle {
 
   type CreatureId = str
 
-  // Per-creature bundle. Simplified — no class states yet.
+  // Per-creature bundle.
   type Combatant = {
     creature: CreatureState,
     turn: TurnState,
     slots: SpellSlotState,
     kind: CreatureKind,
     monsterResources: MonsterResourceState,  // legendary actions/resistances (B10)
+    statBlock: StatBlock,                    // stat block for reading LA uses, recharge, etc. (B12)
+    rogueLevel: int,                         // 0 = not a rogue (B11)
+    monkLevel: int,                          // 0 = not a monk (B11)
   }
 
   type TriggerType =
@@ -239,12 +241,29 @@ module battle {
     dailyUsesRemaining: Map(),
   }
 
+  val EMPTY_STAT_BLOCK: StatBlock = {
+    name: "", creatureType: Humanoid, creatureSize: Medium,
+    ac: 10, initiativeMod: 0, maxHp: 0, hitDice: 0, hitDieType: 8,
+    speeds: Map(), abilityScores: Map(),
+    saveProficiencies: Set(), skillBonuses: Map(),
+    cr: CR0, proficiencyBonus: 2,
+    resistances: Set(), vulnerabilities: Set(),
+    damageImmunities: Set(), conditionImmunities: Set(),
+    exhaustionImmune: false, senses: Map(),
+    attacks: Map(), multiattack: List(),
+    legendaryActionUses: 0, legendaryResistanceUses: 0,
+    legendaryActions: Map(), rechargeAbilities: Map(),
+    dailyAbilities: Map(), inLair: false,
+  }
+
   pure def mkCombatant(maxHp: int, k: CreatureKind): Combatant = {
     creature: freshCreature(maxHp),
     turn: FRESH_TURN,
     slots: FRESH_SPELL_SLOTS,
     kind: k,
     monsterResources: EMPTY_MONSTER_RESOURCES,
+    statBlock: EMPTY_STAT_BLOCK,
+    rogueLevel: 0, monkLevel: 0,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -259,17 +278,21 @@ module battle {
     },
     kind: k,
     monsterResources: EMPTY_MONSTER_RESOURCES,
+    statBlock: EMPTY_STAT_BLOCK,
+    rogueLevel: 0, monkLevel: 0,
   }
 
   // Monster with legendary actions and resistances
-  pure def mkMonster(maxHp: int, laUses: int, lrUses: int): Combatant = {
+  pure def mkMonster(maxHp: int, sb: StatBlock): Combatant = {
     creature: freshCreature(maxHp),
     turn: FRESH_TURN,
     slots: FRESH_SPELL_SLOTS,
     kind: Monster,
     monsterResources: EMPTY_MONSTER_RESOURCES
-      .with("legendaryActionsRemaining", laUses)
-      .with("legendaryResistancesRemaining", lrUses),
+      .with("legendaryActionsRemaining", sb.legendaryActionUses)
+      .with("legendaryResistancesRemaining", sb.legendaryResistanceUses),
+    statBlock: sb,
+    rogueLevel: 0, monkLevel: 0,
   }
 
   pure def dealDamage(
@@ -308,6 +331,16 @@ module battle {
   }
 
 
+  /// Propagate concentration break if slots show concentration was lost.
+  /// Compares old slots to new slots; if concentration broke, propagates removal.
+  pure def propagateIfConcBroken(
+    cs: CreatureId -> Combatant, id: CreatureId,
+    oldSlots: SpellSlotState, newSlots: SpellSlotState
+  ): (CreatureId -> Combatant) =
+    if (oldSlots.concentrationSpellId != "" and newSlots.concentrationSpellId == "")
+      breakConcentrationAndPropagate(cs, id)
+    else cs
+
   /// Eligible reactors: everyone except excludeId who has reaction + alive.
   pure def eligibleExcluding(
     cs: CreatureId -> Combatant, excludeId: CreatureId
@@ -337,6 +370,14 @@ module battle {
     cs: CreatureId -> Combatant, excludeId: CreatureId
   ): Set[CreatureId] =
     eligibleExcluding(cs, excludeId).filter(id => hasCounterspellSlot(cs, id))
+
+  /// Eligible for Uncanny Dodge: rogue level >= 5.
+  pure def eligibleForUncannyDodge(cs: CreatureId -> Combatant, id: CreatureId): bool =
+    cs.get(id).rogueLevel >= 5
+
+  /// Eligible for Deflect Attacks: monk level >= 3.
+  pure def eligibleForDeflect(cs: CreatureId -> Combatant, id: CreatureId): bool =
+    cs.get(id).monkLevel >= 3
 
   /// Pop the top entry from a spell stack.
   pure def popStack(s: List[SpellStackEntry]): { top: SpellStackEntry, rest: List[SpellStackEntry] } =
@@ -406,15 +447,23 @@ module battle {
   // 4. BATTLE ACTIONS
   // ============================================================
 
+  // Stat block for test monster "C": 3 LA, 3 LR, one recharge ability.
+  val TEST_MONSTER_STAT_BLOCK: StatBlock = EMPTY_STAT_BLOCK
+    .with("name", "TestMonster")
+    .with("legendaryActionUses", 3)
+    .with("legendaryResistanceUses", 3)
+    .with("legendaryActions", Map("tail_attack" -> { name: "Tail Attack", cost: 1 }))
+    .with("rechargeAbilities", Map("breath_weapon" -> { name: "Breath Weapon", rechargeMin: 5 }))
+
   action bInit = {
     nondet hp1 = 10.to(30).oneOf()
     nondet hp2 = 10.to(30).oneOf()
     nondet hp3 = 20.to(50).oneOf()
     all {
       bCreatures' = Map(
-        "A" -> mkCaster(hp1, PC),
+        "A" -> mkCaster(hp1, PC).with("rogueLevel", 5),  // B11: rogue 5 for Uncanny Dodge testing
         "B" -> mkCaster(hp2, PC),
-        "C" -> mkMonster(hp3, 3, 3)  // monster with 3 LA and 3 LR
+        "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK)
       ),
       bInitiative' = ["A", "B", "C"],
       bTurnIndex' = 0,
@@ -427,17 +476,57 @@ module battle {
   action bStartTurn = {
     val activeId = bInitiative[bTurnIndex]
     val c = bCreatures.get(activeId)
+    // Nondeterministic inputs for start-of-turn processing
+    nondet rechargeD6 = 1.to(6).oneOf()
+    nondet sotDmg = 0.to(10).oneOf()
+    nondet sotDt = ALL_DAMAGE_TYPES.oneOf()
+    nondet sotHeal = 0.to(5).oneOf()
+    nondet sotSaveResult = Bool.oneOf()
+    nondet sotConSave = Bool.oneOf()
     all {
       bPhase == BPActiveTurn,
-      // Fresh turn + refresh LA at start of monster's own turn (R7)
-      val cs1 = setTurn(bCreatures, activeId, FRESH_TURN)
-      val cs2 = if (c.kind == Monster) {
-        // Simplified: maxUses=3, inLair=false. Full version reads from stat block.
-        val newMR = pRefreshLegendaryActions(c.monsterResources, 3, false)
-        cs1.set(activeId, cs1.get(activeId).with("monsterResources", newMR))
-      } else cs1
+      // 1. Decrement effect durations for active creature
+      val eff1 = pDecrementDurations(c.creature.activeEffects)
+      // 2. Clear expired AtStartOfTurn effects
+      val eff2 = pClearExpiredAtPhase(eff1, AtStartOfTurn)
+      val cs0 = setCreature(bCreatures, activeId, c.creature.with("activeEffects", eff2))
+      // 3. Process start-of-turn effects (simplified: one aggregate effect)
+      val hasEffects = eff2.size() > 0 and (sotDmg > 0 or sotHeal > 0)
+      val cs1 = if (hasEffects) {
+        val startEff: StartOfTurnEffect = {
+          spellId: "", healAmount: sotHeal, tempHpAmount: 0,
+          saveResult: sotSaveResult, damageAmount: sotDmg, damageType: sotDt,
+          conSaveSucceeded: sotConSave,
+          resistances: Set(), vulnerabilities: Set(), immunities: Set(),
+        }
+        val ac0 = cs0.get(activeId)
+        val r = pProcessStartOfTurn(ac0.creature, ac0.slots, [startEff])
+        // Propagate concentration break across all creatures
+        val cs1a = setCreature(cs0, activeId, r.creature).setSlots(activeId, r.slots)
+        propagateIfConcBroken(cs1a, activeId, ac0.slots, r.slots)
+      } else cs0
+      // 4. Fresh turn state
+      val cs2 = setTurn(cs1, activeId, FRESH_TURN)
+      // 5. Monster-specific: refresh LA + recharge rolls
+      val cs3 = if (c.kind == Monster) {
+        val sb = c.statBlock
+        val mr0 = cs2.get(activeId).monsterResources
+        // Refresh legendary actions (R7)
+        val mr1 = pRefreshLegendaryActions(mr0, sb.legendaryActionUses, sb.inLair)
+        // Recharge rolls: each unavailable ability gets the same d6 roll (simplification)
+        val unavailable = sb.rechargeAbilities.keys().filter(name =>
+          mr1.rechargeAvailable.keys().contains(name) and not(mr1.rechargeAvailable.get(name))
+        )
+        val rollList = unavailable.fold(List(), (acc, name) =>
+          acc.append({ abilityName: name, d6Roll: rechargeD6 })
+        )
+        val mr2 = if (rollList.length() > 0)
+          pProcessRechargeRolls(mr1, rollList, sb.rechargeAbilities)
+        else mr1
+        cs2.set(activeId, cs2.get(activeId).with("monsterResources", mr2))
+      } else cs2
       all {
-        bCreatures' = cs2,
+        bCreatures' = cs3,
         bPhase' = BPActiveTurn,
         keepBattle,
       }
@@ -583,9 +672,14 @@ module battle {
               val newElig = ctx.eligible.exclude(Set(reactorId))
               // Damage-reduction reactions: compute new damage, stay in damage phase.
               // RPass leaves damage unchanged; reduction reactions lower it.
+              // Gated on class level: Uncanny Dodge requires rogue 5+, Deflect Attacks requires monk 3+.
               val newDmg = match decision {
-                | RUncannyDodge => atk.damage / 2
-                | RDamageReduction(amount) => if (atk.damage - amount > 0) atk.damage - amount else 0
+                | RUncannyDodge =>
+                  if (eligibleForUncannyDodge(bCreatures, reactorId)) atk.damage / 2 else atk.damage
+                | RDamageReduction(amount) =>
+                  if (eligibleForDeflect(bCreatures, reactorId)) {
+                    if (atk.damage - amount > 0) atk.damage - amount else 0
+                  } else atk.damage
                 | _ => atk.damage
               }
               if (newDmg != atk.damage) {
@@ -754,25 +848,26 @@ module battle {
         }
       } else {
         // No Counterspell possible — resolve save immediately
-        val result = resolveSave(cs1, saveCtx)
+        val result = resolveSave(cs1, saveCtx, ADRActiveTurn)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       }
     }
   }
 
   /// Resolve a save: check save roll vs DC, apply effects or enter save-failed interrupt.
+  /// returnTo: where to go after damage-triggered reactions resolve.
   pure def resolveSave(
-    cs: CreatureId -> Combatant, save: SaveSpellCtx
+    cs: CreatureId -> Combatant, save: SaveSpellCtx, returnTo: AfterDamageReturn
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     val saved = save.saveRoll >= save.saveDC
     if (saved) {
       // Save succeeded — half damage if applicable, no condition
       if (save.halfOnSuccess and save.damageOnFail > 0) {
         val halfDmg = save.damageOnFail / 2
-        { creatures: dealDamage(cs, save.target, halfDmg, save.damageType, false),
-          phase: BPActiveTurn }
+        dealDamageWithAfterReactions(cs, save.target, save.caster,
+          halfDmg, save.damageType, false, returnTo)
       } else {
-        { creatures: cs, phase: BPActiveTurn }
+        { creatures: cs, phase: returnToPhase(returnTo) }
       }
     } else {
       // Save failed — check for Legendary Resistance / Countercharm
@@ -786,32 +881,37 @@ module battle {
         { creatures: cs, phase: BPAwaitingReaction(mkAwait(PISaveFailed(failCtx), TSaveFailed, elig)) }
       } else {
         // No reactions — apply fail effects directly
-        { creatures: applyFailEffects(cs, failCtx), phase: BPActiveTurn }
+        applyFailEffects(cs, failCtx, returnTo)
       }
     }
   }
 
   /// Apply the effects of a failed save: damage + condition.
+  /// Returns { creatures, phase } because save damage can trigger after-damage reactions.
   pure def applyFailEffects(
-    cs: CreatureId -> Combatant, ctx: SaveFailedCtx
-  ): (CreatureId -> Combatant) = {
+    cs: CreatureId -> Combatant, ctx: SaveFailedCtx, returnTo: AfterDamageReturn
+  ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     if (ctx.saveSucceeded) {
       // LR flipped the save — apply half damage if applicable
       if (ctx.halfOnSuccess and ctx.damageOnFail > 0) {
-        dealDamage(cs, ctx.target, ctx.damageOnFail / 2, ctx.damageType, false)
+        dealDamageWithAfterReactions(cs, ctx.target, ctx.caster,
+          ctx.damageOnFail / 2, ctx.damageType, false, returnTo)
       } else {
-        cs
+        { creatures: cs, phase: returnToPhase(returnTo) }
       }
     } else {
-      // Full fail: damage + condition
-      val cs1 = if (ctx.damageOnFail > 0)
-        dealDamage(cs, ctx.target, ctx.damageOnFail, ctx.damageType, false)
-      else cs
-      if (ctx.applyCondition) {
-        val t = cs1.get(ctx.target)
-        val nc = pApplyCondition(t.creature, ctx.conditionOnFail, Set())
-        setCreature(cs1, ctx.target, nc)
-      } else cs1
+      // Full fail: condition first, then damage (condition applied before damage so
+      // after-damage reactions see the updated state).
+      val cs1 = if (ctx.applyCondition) {
+        val t = cs.get(ctx.target)
+        setCreature(cs, ctx.target, pApplyCondition(t.creature, ctx.conditionOnFail, Set()))
+      } else cs
+      if (ctx.damageOnFail > 0) {
+        dealDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
+          ctx.damageOnFail, ctx.damageType, false, returnTo)
+      } else {
+        { creatures: cs1, phase: returnToPhase(returnTo) }
+      }
     }
   }
 
@@ -828,7 +928,7 @@ module battle {
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase, stack: List[SpellStackEntry] } =
     match postCast {
       | PCESave(save) =>
-        val result = resolveSave(cs, save)
+        val result = resolveSave(cs, save, ADRActiveTurn)
         { creatures: result.creatures, phase: result.phase, stack: stack }
       | PCEAoE(aoe) => { creatures: cs, phase: BPResolvingAoE(aoe), stack: stack }
       | _ => { creatures: cs, phase: BPActiveTurn, stack: stack }
@@ -922,7 +1022,6 @@ module battle {
   /// B5: Counterspell is itself a spell → pushes to bSpellStack and enters
   /// recursive PISpellCast. Chain unwinds via stack when spells resolve.
   action bResolveCounterspell = {
-    val allIds = bCreatures.keys()
     match bPhase {
       | BPAwaitingReaction(ctx) =>
         match ctx.interrupt {
@@ -932,7 +1031,7 @@ module battle {
               // All offered — spell resolves
               match spell.postCast {
                 | PCESave(save) =>
-                  val result = resolveSave(bCreatures, save)
+                  val result = resolveSave(bCreatures, save, ADRActiveTurn)
                   all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
                 | PCEAoE(aoe) =>
                   all { bCreatures' = bCreatures, bPhase' = BPResolvingAoE(aoe), keepBattle }
@@ -1024,10 +1123,11 @@ module battle {
           | PISaveFailed(sf) =>
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
-              // All offered — apply effects
+              // All offered — apply effects (save damage can trigger after-damage reactions)
+              val result = applyFailEffects(bCreatures, sf, ADRActiveTurn)
               all {
-                bCreatures' = applyFailEffects(bCreatures, sf),
-                bPhase' = BPActiveTurn,
+                bCreatures' = result.creatures,
+                bPhase' = result.phase,
                 keepBattle,
               }
             } else {
@@ -1041,9 +1141,10 @@ module battle {
                   val cs1 = spendReaction(bCreatures, reactorId)
                   val newSf = sf.with("saveSucceeded", true)
                   // Apply as if saved (may still get half damage)
+                  val result = applyFailEffects(cs1, newSf, ADRActiveTurn)
                   all {
-                    bCreatures' = applyFailEffects(cs1, newSf),
-                    bPhase' = BPActiveTurn,
+                    bCreatures' = result.creatures,
+                    bPhase' = result.phase,
                     keepBattle,
                   }
                 }
@@ -1057,12 +1158,13 @@ module battle {
           | PISaveFailedAoE(combo) =>
             val sf = combo.sf
             val aoe = combo.aoe
-            val nextPhase = if (aoe.remaining.size() > 0) BPResolvingAoE(aoe) else BPActiveTurn
+            val aoeReturn = if (aoe.remaining.size() > 0) ADRResolvingAoE(aoe) else ADRActiveTurn
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
+              val result = applyFailEffects(bCreatures, sf, aoeReturn)
               all {
-                bCreatures' = applyFailEffects(bCreatures, sf),
-                bPhase' = nextPhase,
+                bCreatures' = result.creatures,
+                bPhase' = result.phase,
                 keepBattle,
               }
             } else {
@@ -1073,9 +1175,10 @@ module battle {
                 | RLegendaryResistance => {
                   val cs1 = spendReaction(bCreatures, reactorId)
                   val newSf = sf.with("saveSucceeded", true)
+                  val result = applyFailEffects(cs1, newSf, aoeReturn)
                   all {
-                    bCreatures' = applyFailEffects(cs1, newSf),
-                    bPhase' = nextPhase,
+                    bCreatures' = result.creatures,
+                    bPhase' = result.phase,
                     keepBattle,
                   }
                 }
@@ -1123,11 +1226,15 @@ module battle {
       else bCreatures
       val concSlots = pStartConcentration(newSlots, spellId)
       val cs2 = setTurn(cs1, activeId, newTurn).setSlots(activeId, concSlots)
+      // Add effect to caster (creature-level parity: startConcentration + addEffect)
+      val casterC = cs2.get(activeId)
+      val casterEffects = pAddEffect(casterC.creature.activeEffects, spellId, duration, AtEndOfTurn, activeId)
+      val cs2b = setCreature(cs2, activeId, casterC.creature.with("activeEffects", casterEffects))
       // Add effect to target with casterId pointing back to caster
-      val targetC = cs2.get(targetId)
+      val targetC = cs2b.get(targetId)
       val newEffects = pAddEffect(targetC.creature.activeEffects, spellId, duration, AtEndOfTurn, activeId)
       val targetWithEffect = targetC.creature.with("activeEffects", newEffects)
-      val cs3 = setCreature(cs2, targetId, targetWithEffect)
+      val cs3 = setCreature(cs2b, targetId, targetWithEffect)
       // Apply condition to target if applicable
       val cs4 = if (applyCond) {
         val t = cs3.get(targetId)
@@ -1268,9 +1375,10 @@ module battle {
               }
             } else {
               // No LR — apply fail effects and continue to next target
+              val result = applyFailEffects(bCreatures, sfCtx, ADRResolvingAoE(updatedAoe))
               all {
-                bCreatures' = applyFailEffects(bCreatures, sfCtx),
-                bPhase' = BPResolvingAoE(updatedAoe),
+                bCreatures' = result.creatures,
+                bPhase' = result.phase,
                 keepBattle,
               }
             }
@@ -1337,7 +1445,6 @@ module battle {
   /// Movement OA: threatened creature takes an opportunity attack.
   /// OA is a full attack → enters R20 chain (hit reactions, damage reactions, after-damage).
   action bMovementOAAttack = {
-    val allIds = bCreatures.keys()
     nondet oaAtkRoll = 1.to(20).oneOf()
     nondet oaDmg = 1.to(12).oneOf()
     nondet oaDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
@@ -1384,27 +1491,50 @@ module battle {
   action bEndTurn = {
     val allIds = bCreatures.keys()
     val activeId = bInitiative[bTurnIndex]
+    // Nondeterministic inputs for end-of-turn processing
+    nondet eotSaveSucceeded = Bool.oneOf()
+    nondet eotDmg = 0.to(10).oneOf()
+    nondet eotDt = ALL_DAMAGE_TYPES.oneOf()
+    nondet eotConSave = Bool.oneOf()
     all {
       bPhase == BPActiveTurn,
-      // Check for monsters with LA remaining (R7: "at the end of another creature's turn")
+      val c = bCreatures.get(activeId)
+      // 1. Build end-of-turn save/damage lists from active effects
+      val hasEotEffects = c.creature.activeEffects.size() > 0
+      val eotSaves: List[EndOfTurnSave] = if (hasEotEffects and eotSaveSucceeded) {
+        val eotEffects = c.creature.activeEffects.filter(e => e.expiresAt == AtEndOfTurn)
+        eotEffects.fold(List(), (acc, e) =>
+          acc.append({ spellId: e.spellId, saveSucceeded: true, conditionsToRemove: Set() })
+        )
+      } else List()
+      val eotDamages: List[EndOfTurnDamage] = if (hasEotEffects and eotDmg > 0) {
+        [{ spellId: "", damage: eotDmg, damageType: eotDt, conSaveSucceeded: eotConSave,
+           resistances: Set(), vulnerabilities: Set(), immunities: Set() }]
+      } else List()
+      // 2. Use pEndTurn orchestrator: saves → damage → clear expired AtEndOfTurn
+      val r = pEndTurn(c.creature, c.slots, eotSaves, eotDamages)
+      val cs1 = setCreature(bCreatures, activeId, r.creature).setSlots(activeId, r.slots)
+      // 3. Propagate concentration break across all creatures
+      val cs2 = propagateIfConcBroken(cs1, activeId, c.slots, r.slots)
+      // 4. Check for LA window (R7: "at the end of another creature's turn")
       val laEligible = allIds.exclude(Set(activeId)).filter(id =>
-        val c = bCreatures.get(id)
-        c.kind == Monster and
-        c.monsterResources.legendaryActionsRemaining > 0 and
-        not(c.creature.dead) and
-        c.creature.incapacitatedSources.size() == 0
+        val mc = cs2.get(id)
+        mc.kind == Monster and
+        mc.monsterResources.legendaryActionsRemaining > 0 and
+        not(mc.creature.dead) and
+        mc.creature.incapacitatedSources.size() == 0
       )
       if (laEligible.size() > 0) {
         val laCtx: LAWindowCtx = { eligibleMonsters: laEligible, endingTurnIndex: bTurnIndex }
         all {
-          bCreatures' = bCreatures,
+          bCreatures' = cs2,
           bPhase' = BPAwaitingLegendaryAction(laCtx),
           keepBattle,
         }
       } else {
         val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
         all {
-          bCreatures' = bCreatures, bInitiative' = bInitiative,
+          bCreatures' = cs2, bInitiative' = bInitiative,
           bTurnIndex' = nt.idx, bRound' = nt.round,
           bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
         }
@@ -1480,15 +1610,24 @@ module battle {
   // 5. STEP + INVARIANTS
   // ============================================================
 
-  action battleStep = any {
-    bAttack, bResolveHitReaction, bResolveDmgReaction,
-    bAfterDamagePass, bAfterDamageHellishRebuke, bAfterDamageRetaliation,
-    bCastSaveSpell, bResolveCounterspell, bResolveSaveFailedReaction,
-    bCastAoE, bResolveAoETarget,
-    bCastConcentrationSpell, bConcentrationCheck,
-    bMove, bMovementOAPass, bMovementOAAttack,
-    bLegendaryPass, bLegendaryAttack,
-    bHeal, bEndTurn, bStartTurn,
+  action battleStep = match bPhase {
+    | BPActiveTurn => any {
+        bStartTurn, bAttack, bCastSaveSpell, bCastAoE,
+        bCastConcentrationSpell, bConcentrationCheck,
+        bMove, bHeal, bEndTurn,
+      }
+    | BPAwaitingReaction(ctx) => match ctx.interrupt {
+        | PIAttackHit(_) => bResolveHitReaction
+        | PIAttackDamage(_) => bResolveDmgReaction
+        | PIAfterDamage(_) => any {
+            bAfterDamagePass, bAfterDamageHellishRebuke, bAfterDamageRetaliation,
+          }
+        | PISpellCast(_) => bResolveCounterspell
+        | _ => bResolveSaveFailedReaction
+      }
+    | BPResolvingAoE(_) => bResolveAoETarget
+    | BPResolvingMovement(_) => any { bMovementOAPass, bMovementOAAttack }
+    | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bLegendaryAttack }
   }
 
   val allHpBounded = bCreatures.keys().forall(id =>

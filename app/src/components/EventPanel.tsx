@@ -236,7 +236,9 @@ export function EventPanel({
           <div className="flex gap-2 mt-1">
             <Btn
               label={t.startConcentration}
-              onClick={() => send({ type: "START_CONCENTRATION", spellId, durationTurns: 10, expiresAt: "end" })}
+              onClick={() =>
+                send({ type: "START_CONCENTRATION", spellId, durationTurns: 10, expiresAt: "end", casterId: "" })
+              }
             />
             <Btn label={t.breakConcentration} onClick={() => send({ type: "BREAK_CONCENTRATION" })} />
           </div>

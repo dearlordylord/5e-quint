@@ -8,6 +8,12 @@ Do not treat internal boundaries as walls. When a lower layer needs a change to 
 
 Concretely: adding a field to `ActiveEffect`, renaming a type in the spec, restructuring `DndContext` — all fine. Update the bridge, run MBT, move on.
 
+## No redundant state (CRITICAL)
+
+Never duplicate data that already exists in another layer. Before adding a field to any type, **search for existing fields that carry the same data** across the entire codebase. If found: reference, project, or re-export — don't copy. The cost of threading existing data through a layer boundary is always less than the cost of maintaining two copies that can diverge.
+
+This applies across all layers — Quint spec, XState context, TS types, React state. If a plan proposes adding fields, verify they don't already exist somewhere before implementing.
+
 ## Memory
 
 Do not write to the memory system unless explicitly asked.

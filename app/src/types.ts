@@ -89,6 +89,7 @@ export interface ActiveEffect {
   readonly spellId: string
   readonly turnsRemaining: number
   readonly expiresAt: ExpiryPhase
+  readonly casterId: string
 }
 
 export interface Armor {

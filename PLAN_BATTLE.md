@@ -85,6 +85,24 @@ CREATURE MACHINES (creature.qnt + existing TS machine)
   bEndTurn checks for LA-eligible monsters before advancing.
   bStartTurn refreshes LA for monsters.
   LAAttack deals damage (simplified — no interrupt chain for LA attacks).
+[B11] Class levels in Combatant (P3)                                  ✓ done
+  Flat rogueLevel/monkLevel fields on Combatant (not full ClassStateMap).
+  eligibleForUncannyDodge (rogue 5+), eligibleForDeflect (monk 3+).
+  Reactions gated on class level in bResolveDmgReaction.
+[B12] StatBlock in Combatant (P3)                                     ✓ done
+  StatBlock wired into Combatant, mkMonster takes StatBlock param.
+  bStartTurn reads real LA uses + inLair from stat block.
+  Recharge rolls via pProcessRechargeRolls for unavailable abilities.
+  EMPTY_STAT_BLOCK + TEST_MONSTER_STAT_BLOCK constants.
+[B13] Full start/end turn (P3)                                        ✓ done
+  bStartTurn: decrement durations, clear AtStartOfTurn, process effects
+    via pProcessStartOfTurn, propagate concentration breaks.
+  bEndTurn: end-of-turn saves/damage via pEndTurn orchestrator,
+    propagate concentration breaks, then check LA window.
+  applyFailEffects returns {creatures, phase} — save damage triggers
+    after-damage reactions via dealDamageWithAfterReactions.
+  resolveSave threaded with returnTo: AfterDamageReturn.
+  propagateIfConcBroken helper deduplicates conc break pattern.
 ```
 
 **[B0] Spike** *(done)*
@@ -164,16 +182,16 @@ Expand the reaction set from 2 to full SRD catalog.
 ### Phase 3: Full Combatant
 
 ```
-[B11] Class states in Combatant (P2) -> deps: [B1]
-[B12] Monster state in Combatant (P2) -> deps: [B10]
-[B13] Full start/end turn (P2) -> deps: [B4, B10]
+[B11] Class levels in Combatant (P3) -> deps: [B1]       ✓ done
+[B12] StatBlock in Combatant (P3) -> deps: [B10]         ✓ done
+[B13] Full start/end turn (P3) -> deps: [B4, B10]        ✓ done
 ```
 
-**[B11] Class states in Combatant** — Add `ClassStateMap` (or equivalent) to the `Combatant` record. Wire class-specific reactions (Uncanny Dodge gated on rogueLevel, Deflect Attacks on monkLevel, etc.).
+**[B11] Class levels in Combatant** — Flat per-class level fields (rogueLevel, monkLevel) on Combatant. Reactions gated on class level: Uncanny Dodge requires rogue 5+, Deflect Attacks requires monk 3+. Eligibility helpers: `eligibleForUncannyDodge`, `eligibleForDeflect`.
 
-**[B12] Monster state in Combatant** — Add `MonsterResourceState` and `StatBlock` to `Combatant`. Wire recharge, X/day, legendary resources.
+**[B12] StatBlock in Combatant** — `StatBlock` wired into Combatant. `mkMonster` takes StatBlock param. `bStartTurn` reads real `legendaryActionUses`, `inLair` from stat block. Recharge rolls via `pProcessRechargeRolls`.
 
-**[B13] Full start/end turn** — Replace simplified `bStartTurn`/`bEndTurn` with full turn lifecycle: effect duration ticking, effect expiry, recharge rolls, start-of-turn damage/healing, end-of-turn saves, concentration break propagation.
+**[B13] Full start/end turn** — `bStartTurn`: duration decrement, `AtStartOfTurn` expiry, start-of-turn effects via `pProcessStartOfTurn`, concentration break propagation. `bEndTurn`: end-of-turn saves/damage via `pEndTurn` orchestrator, `AtEndOfTurn` expiry, concentration break propagation. `applyFailEffects` threaded through `dealDamageWithAfterReactions` so save-spell damage triggers after-damage reactions.
 
 ### Phase 4: MBT Bridge
 

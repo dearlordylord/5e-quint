@@ -269,12 +269,14 @@ export type DndEvent =
       readonly spellId: string
       readonly durationTurns: number
       readonly expiresAt: ExpiryPhase
+      readonly casterId: string
     }
   | {
       readonly type: "ADD_EFFECT"
       readonly spellId: string
       readonly durationTurns: number
       readonly expiresAt: ExpiryPhase
+      readonly casterId: string
     }
   | { readonly type: "REMOVE_EFFECT"; readonly spellId: string }
   | { readonly type: "BREAK_CONCENTRATION" }

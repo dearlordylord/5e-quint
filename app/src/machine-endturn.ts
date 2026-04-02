@@ -16,9 +16,10 @@ export function addAe(
   aes: ReadonlyArray<ActiveEffect>,
   spellId: string,
   turnsRemaining: number,
-  expiresAt: ExpiryPhase
+  expiresAt: ExpiryPhase,
+  casterId: string
 ): ReadonlyArray<ActiveEffect> {
-  return [...aes.filter((ae) => ae.spellId !== spellId), { spellId, turnsRemaining, expiresAt }]
+  return [...aes.filter((ae) => ae.spellId !== spellId), { spellId, turnsRemaining, expiresAt, casterId }]
 }
 
 export function removeAe(aes: ReadonlyArray<ActiveEffect>, spellId: string): ReadonlyArray<ActiveEffect> {

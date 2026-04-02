@@ -633,14 +633,21 @@ function createDndDriver() {
           type: "START_CONCENTRATION",
           spellId,
           durationTurns: Number(duration),
-          expiresAt: mapExpiryPhase(expiresAt)
+          expiresAt: mapExpiryPhase(expiresAt),
+          casterId: ""
         })
       },
       doBreakConcentration: () => {
         send({ type: "BREAK_CONCENTRATION" })
       },
       doAddEffect: ({ duration, expiresAt, spellId }) => {
-        send({ type: "ADD_EFFECT", spellId, durationTurns: Number(duration), expiresAt: mapExpiryPhase(expiresAt) })
+        send({
+          type: "ADD_EFFECT",
+          spellId,
+          durationTurns: Number(duration),
+          expiresAt: mapExpiryPhase(expiresAt),
+          casterId: ""
+        })
       },
       doRemoveEffect: ({ spellId }) => {
         send({ type: "REMOVE_EFFECT", spellId })

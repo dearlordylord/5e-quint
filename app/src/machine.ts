@@ -280,7 +280,7 @@ export const dndMachine = setup({
       const base = c.concentrationSpellId ? removeAe(c.activeEffects, c.concentrationSpellId) : c.activeEffects
       return {
         concentrationSpellId: ev.spellId,
-        activeEffects: addAe(base, ev.spellId, ev.durationTurns, ev.expiresAt)
+        activeEffects: addAe(base, ev.spellId, ev.durationTurns, ev.expiresAt, ev.casterId)
       }
     }),
     breakConcentration: assign(({ context: c }) => concBreakFields(c)),
@@ -289,7 +289,7 @@ export const dndMachine = setup({
     ),
     addEffect: assign(({ context: c, event: e }) => {
       const ev = asAddEffect(e)
-      return { activeEffects: addAe(c.activeEffects, ev.spellId, ev.durationTurns, ev.expiresAt) }
+      return { activeEffects: addAe(c.activeEffects, ev.spellId, ev.durationTurns, ev.expiresAt, ev.casterId) }
     }),
     removeEffect: assign(({ context: c, event: e }) => ({
       activeEffects: removeAe(c.activeEffects, asRemoveEffect(e).spellId)

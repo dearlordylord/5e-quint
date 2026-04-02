@@ -1714,22 +1714,22 @@ function isSpellIdle(s: DndSnapshot) {
 describe("concentration", () => {
   it("at most one concentration spell active", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
     expect(isConcentrating(snap(a))).toBe(true)
     expect(ctx(a).concentrationSpellId).toBe("bless")
   })
 
   it("new concentration spell replaces old", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
-    a.send({ type: "START_CONCENTRATION", spellId: "haste", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
+    a.send({ type: "START_CONCENTRATION", spellId: "haste", durationTurns: 10, expiresAt: "end", casterId: "" })
     expect(ctx(a).concentrationSpellId).toBe("haste")
     expect(isConcentrating(snap(a))).toBe(true)
   })
 
   it("break concentration explicitly", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
     a.send({ type: "BREAK_CONCENTRATION" })
     expect(ctx(a).concentrationSpellId).toBe("")
     expect(isSpellIdle(snap(a))).toBe(true)
@@ -1737,7 +1737,7 @@ describe("concentration", () => {
 
   it("damage does not auto-break concentration (needs Con save)", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
     takeDamage(a, 5)
     expect(ctx(a).concentrationSpellId).toBe("bless")
     expect(isConcentrating(snap(a))).toBe(true)
@@ -1746,7 +1746,7 @@ describe("concentration", () => {
   it("temp HP absorption does not auto-break concentration", () => {
     const a = create()
     grantTempHp(a, 10)
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
     takeDamage(a, 5)
     expect(ctx(a).concentrationSpellId).toBe("bless")
     expect(isConcentrating(snap(a))).toBe(true)
@@ -1754,7 +1754,7 @@ describe("concentration", () => {
 
   it("dropping to 0 HP breaks concentration (incapacitation)", () => {
     const a = create(20)
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
     takeDamage(a, 20)
     expect(isUnstable(snap(a))).toBe(true)
     expect(ctx(a).concentrationSpellId).toBe("")
@@ -1763,7 +1763,7 @@ describe("concentration", () => {
 
   it("concentration check: save succeeded keeps concentration", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
     a.send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: true })
     expect(ctx(a).concentrationSpellId).toBe("bless")
     expect(isConcentrating(snap(a))).toBe(true)
@@ -1771,7 +1771,7 @@ describe("concentration", () => {
 
   it("concentration check: save failed breaks concentration", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
     a.send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: false })
     expect(ctx(a).concentrationSpellId).toBe("")
     expect(isSpellIdle(snap(a))).toBe(true)
@@ -1779,7 +1779,7 @@ describe("concentration", () => {
 
   it("concentration broken by incapacitation", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
     applyCondition(a, "paralyzed")
     expect(ctx(a).concentrationSpellId).toBe("")
     expect(isSpellIdle(snap(a))).toBe(true)
@@ -1787,7 +1787,7 @@ describe("concentration", () => {
 
   it("concentration broken by death", () => {
     const a = create(10)
-    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end" })
+    a.send({ type: "START_CONCENTRATION", spellId: "bless", durationTurns: 10, expiresAt: "end", casterId: "" })
     takeDamage(a, 20)
     expect(isDead(snap(a))).toBe(true)
     expect(ctx(a).concentrationSpellId).toBe("")
