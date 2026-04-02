@@ -18,8 +18,8 @@ importers:
   app:
     dependencies:
       '@firfi/quint-connect':
-        specifier: ^0.7.2
-        version: 0.7.2(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
+        specifier: ^0.7.3
+        version: 0.7.3(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
       '@statelyai/graph':
         specifier: ^0.8.0
         version: 0.8.0(zod@4.3.6)
@@ -567,8 +567,8 @@ packages:
       zod:
         optional: true
 
-  '@firfi/quint-connect@0.7.2':
-    resolution: {integrity: sha512-1BQw0rxKpLUVhK3rgEs8eWFPHCgTPAKJzUcyRCjv2FOnEKGtCIbqkubE5Ty8IztUqJF1ksV33pSk1G32MIC+EQ==}
+  '@firfi/quint-connect@0.7.3':
+    resolution: {integrity: sha512-YWOzAUpJwmXSz3qQ18P0NM3ewYCx+qqglNsdw09PADk9AsN6gRYYfsTH/WYHpG5rSbdM0vUopqOx+WiRy3Cv9Q==}
     hasBin: true
     peerDependencies:
       effect: ^3.0.0
@@ -4300,7 +4300,7 @@ snapshots:
       effect: 3.21.0
       zod: 4.3.6
 
-  '@firfi/quint-connect@0.7.2(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)':
+  '@firfi/quint-connect@0.7.3(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)':
     dependencies:
       '@firfi/itf-trace-parser': 0.1.2(effect@3.21.0)(zod@4.3.6)
       '@standard-schema/spec': 1.1.0
