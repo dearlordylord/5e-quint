@@ -137,7 +137,7 @@ export const ITFVariant = z.any().transform(variantToString)
 /** Variant that preserves the parameter value (for parameterized variants like RCounterspell(bool)). */
 export const ITFVariantWithValue = z.any().transform((v: unknown) => ({
   tag: variantToString(v),
-  value: typeof v === "object" && v !== null ? Object.values(v as Record<string, unknown>)[0] : undefined
+  value: typeof v === "object" && v !== null && "value" in v ? (v as Record<string, unknown>).value : undefined
 }))
 
 // ============================================================
@@ -1021,15 +1021,25 @@ export function computeRechargedAbilities(
 // MBT seed helpers
 // ============================================================
 
-/** Generate a deterministic seed for MBT runs. Respects QUINT_SEED env var. */
-export function resolveTestSeed(label: string): string {
-  const seed =
-    process.env["QUINT_SEED"] ??
-    `0x${Math.floor(Math.random() * 0xffffffff)
+/**
+ * Resolve MBT seed. In dev mode (MBT_DEV=1), generates and forces a seed for
+ * reproducibility. In CI/default mode, returns undefined so quint uses fresh
+ * random seeds per sample (better coverage). Always respects QUINT_SEED env var.
+ */
+export function resolveTestSeed(label: string): string | undefined {
+  const explicit = process.env["QUINT_SEED"]
+  if (explicit !== undefined) {
+    console.log(`[${label}] seed: ${explicit}`)
+    return explicit
+  }
+  if (process.env["MBT_DEV"] === "1") {
+    const seed = `0x${Math.floor(Math.random() * 0xffffffff)
       .toString(16)
       .padStart(8, "0")}`
-  console.log(`[${label}] seed: ${seed}`)
-  return seed
+    console.log(`[${label}] seed: ${seed}`)
+    return seed
+  }
+  return undefined
 }
 
 // ============================================================

@@ -1018,7 +1018,6 @@ function createBattleProjectionDriver() {
       }
 
       const hasCSReactors = hasCounterspellReactors(id)
-
       if (!hasCSReactors) {
         resolveConcentrationSpell(pendingConcentration)
         pendingConcentration = null
