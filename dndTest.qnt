@@ -386,8 +386,7 @@ module dndTest {
   // ============================================================
 
   run test_don_heavy = assert(donTime(HeavyArmor) == 10)
-  run test_doff_heavy = assert(doffTime(HeavyArmor, false) == 5)
-  run test_doff_heavy_help = assert(doffTime(HeavyArmor, true) == 2)
+  run test_doff_heavy = assert(doffTime(HeavyArmor) == 5)
 
   // ============================================================
   // Skill -> Ability mapping
@@ -413,7 +412,7 @@ module dndTest {
     fightingStyles: Set(),
     abilityScores: Map(Str -> 8, Dex -> 14, Con -> 12, Int_ -> 18, Wis -> 10, Cha -> 10),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Int_, Wis),
     skillProficiencies: Set(Arcana, Investigation),
@@ -1148,7 +1147,7 @@ module dndTest {
     fightingStyles: Set(FSDefense),
     abilityScores: Map(Str -> 16, Dex -> 14, Con -> 14, Int_ -> 10, Wis -> 12, Cha -> 8),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Str, Con),
     skillProficiencies: Set(Athletics, Perception),
@@ -3118,13 +3117,13 @@ module dndTest {
 
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
-        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel })
+        .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState })
 
   run test_invariants_10steps =
     init
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState })
 
   run test_invariants_20steps =
     init
@@ -3132,7 +3131,7 @@ module dndTest {
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
       .then(step).then(step).then(step).then(step).then(step)
-      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel })
+      .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState })
 
   // Individual invariant tests on known state constructions
   run test_inv_deadIsAbsorbing_construction = {
@@ -3206,7 +3205,7 @@ module dndTest {
     fightingStyles: Set(),
     abilityScores: Map(Str -> 16, Dex -> 14, Con -> 16, Int_ -> 8, Wis -> 12, Cha -> 10),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Str, Con),
     skillProficiencies: Set(Athletics, Perception),
@@ -3230,7 +3229,7 @@ module dndTest {
     fightingStyles: Set(),
     abilityScores: Map(Str -> 14, Dex -> 10, Con -> 14, Int_ -> 10, Wis -> 18, Cha -> 12),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Wis, Cha),
     skillProficiencies: Set(Medicine, Religion),
@@ -3254,7 +3253,7 @@ module dndTest {
     fightingStyles: Set(),
     abilityScores: Map(Str -> 8, Dex -> 18, Con -> 12, Int_ -> 14, Wis -> 10, Cha -> 12),
     level: 5,
-    size: Small,
+    creatureSize: Small,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Dex, Int_),
     skillProficiencies: Set(Stealth, Acrobatics, SleightOfHand, Perception),
@@ -3277,7 +3276,7 @@ module dndTest {
     fightingStyles: Set(FSDefense),
     abilityScores: Map(Str -> 16, Dex -> 10, Con -> 14, Int_ -> 8, Wis -> 12, Cha -> 16),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Wis, Cha),
     skillProficiencies: Set(Athletics, Religion),
@@ -3301,7 +3300,7 @@ module dndTest {
     fightingStyles: Set(FSArchery),
     abilityScores: Map(Str -> 12, Dex -> 16, Con -> 14, Int_ -> 10, Wis -> 14, Cha -> 8),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Str, Dex),
     skillProficiencies: Set(Stealth, Perception, Survival),
@@ -3325,7 +3324,7 @@ module dndTest {
     fightingStyles: Set(),
     abilityScores: Map(Str -> 10, Dex -> 18, Con -> 14, Int_ -> 12, Wis -> 16, Cha -> 8),
     level: 5,
-    size: Small,
+    creatureSize: Small,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Str, Dex),
     skillProficiencies: Set(Acrobatics, Stealth),
@@ -3349,7 +3348,7 @@ module dndTest {
     fightingStyles: Set(),
     abilityScores: Map(Str -> 8, Dex -> 14, Con -> 14, Int_ -> 10, Wis -> 10, Cha -> 18),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Con, Cha),
     skillProficiencies: Set(Arcana, Persuasion),
@@ -3373,7 +3372,7 @@ module dndTest {
     fightingStyles: Set(),
     abilityScores: Map(Str -> 14, Dex -> 12, Con -> 14, Int_ -> 10, Wis -> 10, Cha -> 16),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: Map(Walk -> 35, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0), // Goliath: 35 ft base
     saveProficiencies: Set(Wis, Cha),
     skillProficiencies: Set(Arcana, Deception),
@@ -3397,7 +3396,7 @@ module dndTest {
     fightingStyles: Set(),
     abilityScores: Map(Str -> 8, Dex -> 14, Con -> 14, Int_ -> 12, Wis -> 10, Cha -> 18),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Dex, Cha),
     skillProficiencies: Set(Performance, Persuasion, Deception),
@@ -3421,7 +3420,7 @@ module dndTest {
     fightingStyles: Set(),
     abilityScores: Map(Str -> 10, Dex -> 14, Con -> 14, Int_ -> 12, Wis -> 18, Cha -> 8),
     level: 5,
-    size: Medium,
+    creatureSize: Medium,
     speeds: STD_SPEEDS,
     saveProficiencies: Set(Int_, Wis),
     skillProficiencies: Set(Nature, Perception),
@@ -3984,6 +3983,7 @@ module dndTest {
     nonCantripActionSpellCast: false,
     bonusMovementRemaining: 0,
     bonusMovementOAFree: false,
+    actionSurgeActionPending: false,
   }
 
   // 2-attack Multiattack: Attack action -> extra attack -> depleted
@@ -4595,11 +4595,11 @@ module dndTest {
       // Enter rage (only valid for Barbarian PCs in acting phase)
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(5), barbarianLevel' = 5,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(5), classLevels' = singleClassLevels(Barbarian, 5),
+        monkState' = freshMonkState(0, 0), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doEnterRage)
     .then(doMarkAttackOrForcedSave)
@@ -4608,11 +4608,11 @@ module dndTest {
       assert(barbarianState.raging == true),
       assert(barbarianState.attackedOrForcedSaveThisTurn == true),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -4621,22 +4621,21 @@ module dndTest {
     init.then(
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = pEnterRage(freshBarbarianState(5)), barbarianLevel' = 5,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = pEnterRage(freshBarbarianState(5)), classLevels' = singleClassLevels(Barbarian, 5),
+        monkState' = freshMonkState(0, 0), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(all {
       // Simulate start-of-turn maintenance check (no attack, no BA extension)
-      assert(pBarbarianStartTurn(barbarianState, barbarianLevel).raging == false),
+      assert(pBarbarianStartTurn(barbarianState, classLevels.get(Barbarian)).raging == false),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = pBarbarianStartTurn(barbarianState, barbarianLevel),
-      barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = pBarbarianStartTurn(barbarianState, classLevels.get(Barbarian)),
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -4645,21 +4644,21 @@ module dndTest {
     init.then(
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(5), barbarianLevel' = 5,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(5), classLevels' = singleClassLevels(Barbarian, 5),
+        monkState' = freshMonkState(0, 0), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doDeclareReckless)
     .then(all {
       assert(barbarianState.recklessThisTurn == true),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -4809,22 +4808,22 @@ module dndTest {
     init.then(
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(5, 3), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(5, 3), classLevels' = singleClassLevels(Monk, 5), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doFlurryOfBlows)
     .then(all {
       assert(monkState.focusPoints == 4),
       assert(turnState.bonusActionUsed == true),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -4833,22 +4832,22 @@ module dndTest {
     init.then(
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(5, 3), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(5, 3), classLevels' = singleClassLevels(Monk, 5), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doStunningStrike)
     .then(all {
       assert(monkState.focusPoints == 4),
       assert(monkState.stunningStrikeUsedThisTurn == true),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -4858,11 +4857,11 @@ module dndTest {
       all {
         state' = state.with("hp", 5).with("maxHp", 50),
         turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(5, 3).with("focusPoints", 0), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(5, 3).with("focusPoints", 0), classLevels' = singleClassLevels(Monk, 5), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doUncannyMetabolism)
     .then(all {
@@ -4870,11 +4869,11 @@ module dndTest {
       assert(monkState.uncannyMetabolismUsed == true),
       assert(state.hp > 5),  // healed
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -4884,11 +4883,11 @@ module dndTest {
       all {
         state' = state.with("hp", 5).with("maxHp", 50),
         turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(6, 3), monkLevel' = 6, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(6, 3), classLevels' = singleClassLevels(Monk, 6), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doWholenessOfBody)
     .then(all {
@@ -4896,11 +4895,11 @@ module dndTest {
       assert(turnState.bonusActionUsed == true),
       assert(state.hp > 5),  // healed
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -4909,11 +4908,11 @@ module dndTest {
     init.then(
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(5, 3), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(5, 3), classLevels' = singleClassLevels(Monk, 5), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doPatientDefenseFree)
     .then(all {
@@ -4921,11 +4920,11 @@ module dndTest {
       assert(turnState.bonusActionUsed == true),
       assert(monkState.focusPoints == 5),  // no FP spent
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -4934,22 +4933,22 @@ module dndTest {
     init.then(
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(5, 3), monkLevel' = 5, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(5, 3), classLevels' = singleClassLevels(Monk, 5), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doStepOfTheWindFree)
     .then(all {
       assert(turnState.bonusActionUsed == true),
       assert(monkState.focusPoints == 5),  // no FP spent
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -5020,23 +5019,23 @@ module dndTest {
         spellSlots' = FRESH_SPELL_SLOTS
           .with("slotsMax", Map(1 -> 4, 2 -> 3, 3 -> 2, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0))
           .with("slotsCurrent", Map(1 -> 2, 2 -> 1, 3 -> 0, 4 -> 0, 5 -> 0, 6 -> 0, 7 -> 0, 8 -> 0, 9 -> 0)),
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0,
-        wizardState' = freshWizardState(5), wizardLevel' = 5, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(0, 0), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0),
+        wizardState' = freshWizardState(5), classLevels' = singleClassLevels(Wizard, 5), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doUseArcaneRecovery)
     .then(all {
       assert(wizardState.arcaneRecoveryUsed == true),
       // At least one slot level should have been restored (nondet picks 1-5)
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -5075,22 +5074,22 @@ module dndTest {
     init.then(
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0,
-        wizardState' = freshWizardState(14), wizardLevel' = 14, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(0, 0), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0),
+        wizardState' = freshWizardState(14), classLevels' = singleClassLevels(Wizard, 14), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doOverchannel)
     .then(all {
       assert(wizardState.overchannelUsesThisLR == 1),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -5215,13 +5214,13 @@ module dndTest {
     init.then(
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0,
-        paladinState' = freshPaladinState(5), paladinLevel' = 5,
-        rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(0, 0),
+        paladinState' = freshPaladinState(5), classLevels' = singleClassLevels(Paladin, 5),
+        rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doUseLayOnHands)
     .then(all {
@@ -5229,11 +5228,11 @@ module dndTest {
       assert(turnState.bonusActionUsed == true),
       assert(paladinState.layOnHandsPool < 25),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -5242,23 +5241,23 @@ module dndTest {
     init.then(
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = "acting", fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = "acting", fighterState' = fighterState,
         creatureKind' = PC, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0,
-        paladinState' = freshPaladinState(5), paladinLevel' = 5,
-        rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0, warlockState' = freshWarlockState(0), warlockLevel' = 0, wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(0, 0),
+        paladinState' = freshPaladinState(5), classLevels' = singleClassLevels(Paladin, 5),
+        rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0), warlockState' = freshWarlockState(0), wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doUsePaladinChannelDivinity)
     .then(all {
       assert(paladinState.channelDivinityCharges == 1),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -5410,13 +5409,13 @@ module dndTest {
       // Setup: need a Rogue PC in acting phase
       assert(true),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = freshRogueState(5), rogueLevel' = 5,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = freshRogueState(5), classLevels' = singleClassLevels(Rogue, 5),
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }).then(doEnterCombat)
       .then(doStartTurn)
       .then(all {
@@ -5429,11 +5428,11 @@ module dndTest {
       }).then(all {
         assert(rogueState.sneakAttackUsedThisTurn == true),
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       })
   }
 
@@ -5442,13 +5441,13 @@ module dndTest {
     init.then(all {
       assert(true),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = freshRogueState(5), rogueLevel' = 5,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = freshRogueState(5), classLevels' = singleClassLevels(Rogue, 5),
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }).then(doEnterCombat)
       .then(doStartTurn)
       .then(all {
@@ -5461,11 +5460,11 @@ module dndTest {
         assert(turnState.effectiveSpeed == 0),
         assert(turnState.movementRemaining == 0),
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       })
   }
 
@@ -5474,24 +5473,24 @@ module dndTest {
     init.then(all {
       assert(true),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = freshRogueState(5), rogueLevel' = 5,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = freshRogueState(5), classLevels' = singleClassLevels(Rogue, 5),
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }).then(doEnterCombat)
       .then(doStartTurn)
       .then(all {
         // Simulate having moved: reduce movementRemaining below effectiveSpeed
         assert(turnState.movementRemaining == turnState.effectiveSpeed),
         state' = state, turnState' = turnState.with("movementRemaining", turnState.effectiveSpeed - 5), spellSlots' = spellSlots,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       }).then(all {
         // Steady Aim should be blocked — creature has moved
         assert(turnState.movementRemaining != turnState.effectiveSpeed),
@@ -5501,11 +5500,11 @@ module dndTest {
         assert(rogueState.steadyAimUsedThisTurn == false),
         assert(turnState.bonusActionUsed == false),
         state' = state, turnState' = turnState, spellSlots' = spellSlots,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       })
   }
 
@@ -5751,21 +5750,21 @@ module dndTest {
         turnPhase' = "acting",
         creatureKind' = PC, monsterStatBlock' = NULL_STAT_BLOCK,
         monsterResourceState' = FRESH_MONSTER_RESOURCES,
-        fighterState' = freshFighterState(0), fighterLevel' = 0,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0,
-        warlockState' = freshWarlockState(5), warlockLevel' = 5,
-        wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        fighterState' = freshFighterState(0),
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(0, 0), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0),
+        warlockState' = freshWarlockState(5), classLevels' = singleClassLevels(Warlock, 5),
+        wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doUseMagicalCunning)
     .then(all {
       assert(warlockState.magicalCunningUsed == true),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -5779,22 +5778,22 @@ module dndTest {
         turnPhase' = "acting",
         creatureKind' = PC, monsterStatBlock' = NULL_STAT_BLOCK,
         monsterResourceState' = FRESH_MONSTER_RESOURCES,
-        fighterState' = freshFighterState(0), fighterLevel' = 0,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0,
-        warlockState' = freshWarlockState(18), warlockLevel' = 18,
-        wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        fighterState' = freshFighterState(0),
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(0, 0), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0),
+        warlockState' = freshWarlockState(18), classLevels' = singleClassLevels(Warlock, 18),
+        wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doUseMysticArcanum)
     .then(all {
       // At least one spell level (6-9) should now be in the used set
       assert(warlockState.mysticArcanumUsed.size() > 0),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 
@@ -5855,22 +5854,22 @@ module dndTest {
         turnPhase' = "acting",
         creatureKind' = PC, monsterStatBlock' = NULL_STAT_BLOCK,
         monsterResourceState' = FRESH_MONSTER_RESOURCES,
-        fighterState' = freshFighterState(0), fighterLevel' = 0,
-        barbarianState' = freshBarbarianState(0), barbarianLevel' = 0,
-        monkState' = freshMonkState(0, 0), monkLevel' = 0, paladinState' = freshPaladinState(0), paladinLevel' = 0, rogueState' = freshRogueState(0), rogueLevel' = 0, clericState' = freshClericState(0), clericLevel' = 0, druidState' = freshDruidState(0), druidLevel' = 0, sorcererState' = freshSorcererState(0), sorcererLevel' = 0,
-        warlockState' = freshWarlockState(5), warlockLevel' = 5,
-        wizardState' = freshWizardState(0), wizardLevel' = 0, rangerState' = freshRangerState(0, 0), rangerLevel' = 0, bardState' = freshBardState(0, 0), bardLevel' = 0,
+        fighterState' = freshFighterState(0),
+        barbarianState' = freshBarbarianState(0),
+        monkState' = freshMonkState(0, 0), paladinState' = freshPaladinState(0), rogueState' = freshRogueState(0), clericState' = freshClericState(0), druidState' = freshDruidState(0), sorcererState' = freshSorcererState(0),
+        warlockState' = freshWarlockState(5), classLevels' = singleClassLevels(Warlock, 5),
+        wizardState' = freshWizardState(0), rangerState' = freshRangerState(0, 0), bardState' = freshBardState(0, 0),
       }
     ).then(doEldritchSmite)
     .then(all {
       assert(warlockState.eldritchSmiteUsedThisTurn == true),
       assert(spellSlots.pactSlotsCurrent == 1),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     })
   }
 

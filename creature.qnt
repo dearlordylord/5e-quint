@@ -327,11 +327,11 @@ module creature {
     className: ClassName,            // primary class
     subclass: SubclassName,          // SRD 5.2.1: one subclass per class
     species: Species,                // SRD 5.2.1 species (replaces 5.1 "race")
-    classLevels: ClassName -> int,   // scaffold: populated but not yet read — reserved for multiclass support (T01.5)
+    classLevels: ClassName -> int,   // multiclass: maps each class to its level (0 = not taken); source of truth for class-level dispatch
     fightingStyles: Set[FightingStyleFeat], // Fighting Style feats chosen (Fighter/Paladin/Ranger)
     abilityScores: Ability -> int,   // 1-30
     level: int,                      // 1-20
-    size: Size,
+    creatureSize: Size,
     speeds: SpeedType -> int,        // base speeds; 0 = no such speed
     saveProficiencies: Set[Ability],
     skillProficiencies: Set[Skill],
@@ -790,15 +790,13 @@ module creature {
     | HeavyArmor => 10
   }
 
-  /// Doffing time in minutes (can be halved with help)
-  pure def doffTime(category: ArmorCategory, hasHelp: bool): int = {
-    val base = match category {
+  /// Doffing time in minutes
+  pure def doffTime(category: ArmorCategory): int =
+    match category {
       | LightArmor => 1
       | MediumArmor => 1
       | HeavyArmor => 5
     }
-    if (hasHelp) base / 2 else base
-  }
   // Shield: 1 action don, 1 action doff (handled in turn/action economy)
 
   // ============================================================
@@ -1950,6 +1948,52 @@ module creature {
       8 -> pSlotsPerLevel(casterLevel, 8),
       9 -> pSlotsPerLevel(casterLevel, 9)
     )
+
+  /// Compute effective caster level from classLevels map (SRD 5.2.1 Multiclassing).
+  /// Full casters: Bard, Cleric, Druid, Sorcerer, Wizard (all levels).
+  /// Half casters: Paladin, Ranger (half levels, truncated per Quint integer division).
+  /// Warlock: excluded (Pact Magic is separate). Fighter/Barbarian/Monk/Rogue: 0.
+  /// Third casters (Eldritch Knight, Arcane Trickster) not modeled — SRD only has Champion/Thief.
+  pure def pEffectiveCasterLevel(cl: ClassName -> int): int = {
+    val full = cl.get(Bard) + cl.get(Cleric) + cl.get(Druid) + cl.get(Sorcerer) + cl.get(Wizard)
+    val half = cl.get(Paladin) + cl.get(Ranger)
+    pMulticlassCasterLevel(full, half, 0)
+  }
+
+  /// Warlock pact slot count by level (SRD 5.2.1 Warlock table).
+  pure def pWarlockPactSlotCount(warlockLevel: int): int = {
+    if (warlockLevel >= 17) 4
+    else if (warlockLevel >= 11) 3
+    else if (warlockLevel >= 2) 2
+    else if (warlockLevel >= 1) 1
+    else 0
+  }
+
+  /// Warlock pact slot level by class level (SRD 5.2.1 Warlock table).
+  pure def pWarlockPactSlotLevel(warlockLevel: int): int = {
+    if (warlockLevel >= 9) 5
+    else if (warlockLevel >= 7) 4
+    else if (warlockLevel >= 5) 3
+    else if (warlockLevel >= 3) 2
+    else if (warlockLevel >= 1) 1
+    else 0
+  }
+
+  /// Build initial SpellSlotState from classLevels.
+  /// Regular slots from multiclass caster level; pact slots from warlock level.
+  pure def pInitSpellSlots(cl: ClassName -> int): SpellSlotState = {
+    val casterLvl = pEffectiveCasterLevel(cl)
+    val slotMap = pBuildSlotMap(casterLvl)
+    val wkLevel = cl.get(Warlock)
+    {
+      slotsMax: slotMap,
+      slotsCurrent: slotMap,
+      pactSlotsMax: pWarlockPactSlotCount(wkLevel),
+      pactSlotsCurrent: pWarlockPactSlotCount(wkLevel),
+      pactSlotLevel: pWarlockPactSlotLevel(wkLevel),
+      concentrationSpellId: "",
+    }
+  }
 
   // -- 15.4 Concentration --
 
@@ -3456,14 +3500,14 @@ module creature {
     | Barbarian | Bard | Cleric | Druid | Fighter | Monk
     | Paladin | Ranger | Rogue | Sorcerer | Warlock | Wizard
 
-  /// Zero-level map for all classes (scaffold for classLevels — not yet read by any pure def).
+  /// Zero-level map for all classes.
   pure val ZERO_CLASS_LEVELS: ClassName -> int = Map(
     Barbarian -> 0, Bard -> 0, Cleric -> 0, Druid -> 0,
     Fighter -> 0, Monk -> 0, Paladin -> 0, Ranger -> 0,
     Rogue -> 0, Sorcerer -> 0, Warlock -> 0, Wizard -> 0
   )
 
-  /// Create classLevels map for a single-class character (scaffold — see classLevels field doc).
+  /// Create classLevels map for a single-class character.
   pure def singleClassLevels(c: ClassName, level: int): ClassName -> int =
     ZERO_CLASS_LEVELS.set(c, level)
 
@@ -3576,6 +3620,12 @@ module creature {
   pure def pConModHpAdjustment(oldConMod: int, newConMod: int, totalLevel: int): int =
     (newConMod - oldConMod) * totalLevel
 
+  /// Sum all class levels to get total character level.
+  pure def pTotalLevel(cl: ClassName -> int): int =
+    cl.get(Barbarian) + cl.get(Bard) + cl.get(Cleric) + cl.get(Druid)
+    + cl.get(Fighter) + cl.get(Monk) + cl.get(Paladin) + cl.get(Ranger)
+    + cl.get(Rogue) + cl.get(Sorcerer) + cl.get(Warlock) + cl.get(Wizard)
+
   // -- 18.4 Multiclassing --
 
   pure def pMeetsMulticlassPrereq(scores: Ability -> int, c: ClassName): bool = match c {
@@ -3624,32 +3674,21 @@ module creature {
   var spellSlots: SpellSlotState
   var turnPhase: str  // "outOfCombat" | "acting" | "waitingForTurn"
   var fighterState: FighterState
-  var fighterLevel: int
+  var classLevels: ClassName -> int   // multiclass: maps each class to its level (0 = not taken)
   var creatureKind: CreatureKind
   var monsterStatBlock: StatBlock
   var monsterResourceState: MonsterResourceState
   var barbarianState: BarbarianState
-  var barbarianLevel: int
   var monkState: MonkState
-  var monkLevel: int
   var paladinState: PaladinState
-  var paladinLevel: int
   var rogueState: RogueState
-  var rogueLevel: int
   var clericState: ClericState
-  var clericLevel: int
   var druidState: DruidState
-  var druidLevel: int
   var sorcererState: SorcererState
-  var sorcererLevel: int
   var warlockState: WarlockState
-  var warlockLevel: int
   var wizardState: WizardState
-  var wizardLevel: int
   var rangerState: RangerState
-  var rangerLevel: int
   var bardState: BardState
-  var bardLevel: int
 
   /// Default (empty) monster resources — used for PCs and non-legendary monsters.
   pure val FRESH_MONSTER_RESOURCES: MonsterResourceState = {
@@ -3717,7 +3756,7 @@ module creature {
     fightingStyles: Set(FSDefense),
     abilityScores: Map(Str -> 14, Dex -> 12, Con -> 14, Int_ -> 10, Wis -> 13, Cha -> 8),
     level: 1,
-    size: Medium,
+    creatureSize: Medium,
     speeds: Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0),
     saveProficiencies: Set(Str, Con),
     skillProficiencies: Set(Athletics, Perception),
@@ -3732,22 +3771,38 @@ module creature {
     hasFightingStyleFeature: true,
   }
 
-  /// Derive full CharConfig from level. Level-dependent fields:
+  /// Derive full CharConfig from level (single-class Fighter/Champion convenience).
+  /// Level-dependent fields:
   /// - level, classLevels, critRange (Champion Improved/Superior Critical), features (Extra Attack tiers)
   /// NOTE: Hardcoded to Champion (the only Fighter subclass in SRD 5.2.1).
-  /// Crit range thresholds (L3→19, L15→18) are Champion-specific. Needs a
-  /// subclass parameter if non-SRD Fighter subclasses are ever added.
-  pure def configForLevel(level: int): CharConfig = {
-    val features = if (level >= 20) Set(FExtraAttack, FExtraAttack2, FExtraAttack3)
-      else if (level >= 11) Set(FExtraAttack, FExtraAttack2)
-      else if (level >= 5) Set(FExtraAttack)
+  pure def configForLevel(level: int): CharConfig =
+    configFromClassLevels(singleClassLevels(Fighter, level))
+
+  /// Derive full CharConfig from classLevels map. Combines features from all classes.
+  /// Champion crit range, Fighter Extra Attack tiers, and single Extra Attack from
+  /// Barbarian/Monk/Paladin/Ranger L5+ are all computed.
+  pure def configFromClassLevels(cl: ClassName -> int): CharConfig = {
+    val totalLvl = pTotalLevel(cl)
+    val fLevel = cl.get(Fighter)
+    // Fighter Extra Attack tiers (Champion-only for SRD)
+    val fighterFeatures = if (fLevel >= 20) Set(FExtraAttack, FExtraAttack2, FExtraAttack3)
+      else if (fLevel >= 11) Set(FExtraAttack, FExtraAttack2)
+      else if (fLevel >= 5) Set(FExtraAttack)
       else Set()
-    val cr = if (level >= 15) 18
-      else if (level >= 3) 19
+    // Other classes that grant Extra Attack at L5: Barbarian, Monk, Paladin, Ranger
+    val hasExtraAttack = fighterFeatures.contains(FExtraAttack)
+      or cl.get(Barbarian) >= 5 or cl.get(Monk) >= 5
+      or cl.get(Paladin) >= 5 or cl.get(Ranger) >= 5
+    val features = if (hasExtraAttack)
+      fighterFeatures.union(Set(FExtraAttack))
+    else fighterFeatures
+    // Champion Improved/Superior Critical (Fighter subclass)
+    val cr = if (fLevel >= 15) 18
+      else if (fLevel >= 3) 19
       else 20
     BASE_CHAMPION_CONFIG
-      .with("level", level)
-      .with("classLevels", singleClassLevels(Fighter, level))
+      .with("level", totalLvl)
+      .with("classLevels", cl)
       .with("critRange", cr)
       .with("features", features)
   }
@@ -3816,21 +3871,19 @@ module creature {
         monsterStatBlock' = selectedBlock,
         monsterResourceState' = pInitMonsterResources(selectedBlock),
         state' = freshCreature(selectedBlock.maxHp),
+        classLevels' = ZERO_CLASS_LEVELS,
         fighterState' = freshFighterState(0),
-        fighterLevel' = 0,
         barbarianState' = freshBarbarianState(0),
-        barbarianLevel' = 0,
         monkState' = freshMonkState(0, 0),
-        monkLevel' = 0,
-        paladinState' = freshPaladinState(0), paladinLevel' = 0,
-        rogueState' = freshRogueState(0), rogueLevel' = 0,
-        clericState' = freshClericState(0), clericLevel' = 0,
-        druidState' = freshDruidState(0), druidLevel' = 0,
-        sorcererState' = freshSorcererState(0), sorcererLevel' = 0,
-        warlockState' = freshWarlockState(0), warlockLevel' = 0,
-        wizardState' = freshWizardState(0), wizardLevel' = 0,
-        rangerState' = freshRangerState(0, 0), rangerLevel' = 0,
-        bardState' = freshBardState(0, 0), bardLevel' = 0,
+        paladinState' = freshPaladinState(0),
+        rogueState' = freshRogueState(0),
+        clericState' = freshClericState(0),
+        druidState' = freshDruidState(0),
+        sorcererState' = freshSorcererState(0),
+        warlockState' = freshWarlockState(0),
+        wizardState' = freshWizardState(0),
+        rangerState' = freshRangerState(0, 0),
+        bardState' = freshBardState(0, 0),
         turnState' = FRESH_TURN
           .with("extraAttacksRemaining", monsterExtraAttacks)
           .with("movementRemaining", monsterSpeed)
@@ -3851,15 +3904,16 @@ module creature {
       val dLevel = if (pcClass == "Druid") l else 0
       val rnLevel = if (pcClass == "Ranger") l else 0
       val bdLevel = if (pcClass == "Bard") l else 0
+      val pcClassLevels = ZERO_CLASS_LEVELS
+        .set(Fighter, fLevel).set(Barbarian, bLevel).set(Monk, mLevel)
+        .set(Wizard, wLevel).set(Rogue, rLevel).set(Cleric, cLevel)
+        .set(Paladin, pLevel).set(Warlock, wkLevel).set(Sorcerer, sLevel)
+        .set(Druid, dLevel).set(Ranger, rnLevel).set(Bard, bdLevel)
       all {
         creatureKind' = PC,
         monsterStatBlock' = NULL_STAT_BLOCK,
         monsterResourceState' = FRESH_MONSTER_RESOURCES,
-        fighterLevel' = fLevel,
-        barbarianLevel' = bLevel,
-        monkLevel' = mLevel,
-        paladinLevel' = pLevel, rogueLevel' = rLevel, clericLevel' = cLevel,
-        druidLevel' = dLevel, sorcererLevel' = sLevel, warlockLevel' = wkLevel, wizardLevel' = wLevel, rangerLevel' = rnLevel, bardLevel' = bdLevel,
+        classLevels' = pcClassLevels,
         state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
         fighterState' = freshFighterState(fLevel),
         barbarianState' = freshBarbarianState(bLevel),
@@ -3874,7 +3928,7 @@ module creature {
         rangerState' = freshRangerState(rnLevel, wisMod),
         bardState' = freshBardState(bdLevel, chaMod),
         turnState' = FRESH_TURN,
-        spellSlots' = FRESH_SPELL_SLOTS,
+        spellSlots' = pInitSpellSlots(pcClassLevels),
         turnPhase' = "outOfCombat",
       }
     }
@@ -3888,7 +3942,7 @@ module creature {
     nondet dt = DAMAGE_TYPES.oneOf()
     nondet isCrit = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doTakeDamageWithMods = {
@@ -3898,7 +3952,7 @@ module creature {
     nondet resType = DAMAGE_TYPES.oneOf()
     nondet vulnType = DAMAGE_TYPES.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   /// Monster take damage: R/V/I sourced from stat block, monster death at 0 HP.
@@ -3910,34 +3964,34 @@ module creature {
       monsterStatBlock.resistances, monsterStatBlock.vulnerabilities,
       monsterStatBlock.damageImmunities, isCrit, Monster)
     val r = pWithConcBreak(spellSlots, state, s1)
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doHeal = {
     nondet amount = HEAL_RANGE.oneOf()
-    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doGrantTempHp = {
     nondet amount = TEMP_HP_RANGE.oneOf()
     nondet keepOld = Bool.oneOf()
-    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pGrantTempHp(state, amount, keepOld), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doDeathSave = {
     nondet roll = D20_RANGE.oneOf()
     nondet roll2 = D20_RANGE.oneOf()
-    val effectiveRoll = pFighterDeathSaveRoll(fighterLevel, roll, roll2)
-    all { state' = pDeathSave(state, effectiveRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    val effectiveRoll = pFighterDeathSaveRoll(classLevels.get(Fighter), roll, roll2)
+    all { state' = pDeathSave(state, effectiveRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doStabilize = all {
-    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel
+    state' = pStabilize(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState
   }
 
   action doKnockOut = {
     val r = pWithConcBreak(spellSlots, state, pKnockOut(state))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doApplyCondition = {
@@ -3946,12 +4000,12 @@ module creature {
     nondet immuneCondition = CONDITIONS.oneOf()
     val immunities = if (useImmunity) Set(immuneCondition) else Set()
     val r = pWithConcBreak(spellSlots, state, pApplyCondition(state, c, immunities))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doRemoveCondition = {
     nondet c = CONDITIONS.oneOf()
-    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pRemoveCondition(state, c), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   // Exhaustion actions
@@ -3959,26 +4013,26 @@ module creature {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
     nondet exhaustionImmune = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pAddExhaustion(state, levels, exhaustionImmune))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doReduceExhaustion = {
     nondet levels = EXHAUSTION_ADD_RANGE.oneOf()
-    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pReduceExhaustion(state, levels), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   // Turn actions
-  action unchanged = all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+  action unchanged = all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
 
   // Combat mode transitions
   action doEnterCombat = {
     if (turnPhase != "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn", fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doExitCombat = {
     if (turnPhase == "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat", fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat", fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doStartTurn = {
@@ -4029,54 +4083,42 @@ module creature {
           spellSlots' = r.slots,
           turnPhase' = "acting",
           fighterState' = fighterState,  // unchanged for monsters
-          fighterLevel' = fighterLevel,
+          classLevels' = classLevels,
           creatureKind' = creatureKind,
           monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs2,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       } else {
-        // PC start turn: derive config from both fighter, barbarian, and monk levels
-        val baseConfig = configForLevel(fighterLevel)
-        // Barbarian Extra Attack (L5+): add FExtraAttack if barbarian qualifies and fighter doesn't already have it
-        val pcConfig1 = if (barbarianLevel >= 5 and not(baseConfig.features.contains(FExtraAttack)))
-          baseConfig.with("features", baseConfig.features.union(Set(FExtraAttack)))
-        else baseConfig
-        // Monk Extra Attack (L5+): same pattern
-        val pcConfig2 = if (monkLevel >= 5 and not(pcConfig1.features.contains(FExtraAttack)))
-          pcConfig1.with("features", pcConfig1.features.union(Set(FExtraAttack)))
-        else pcConfig1
-        // Ranger Extra Attack (L5+): same pattern
-        val pcConfig = if (rangerLevel >= 5 and not(pcConfig2.features.contains(FExtraAttack)))
-          pcConfig2.with("features", pcConfig2.features.union(Set(FExtraAttack)))
-        else pcConfig2
+        // PC start turn: derive config from classLevels (multiclass-aware)
+        val pcConfig = configFromClassLevels(classLevels)
         val r = pStartTurnFull(pcConfig, state, spellSlots, Unarmored,
           callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)
         // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied
-        val afterRally = pHeroicRally(r.creature, fighterLevel, conMod)
+        val afterRally = pHeroicRally(r.creature, classLevels.get(Fighter), conMod)
         all {
           state' = afterRally,
           turnState' = r.turn,
           spellSlots' = r.slots,
           turnPhase' = "acting",
-          fighterState' = pFighterStartTurn(fighterState, fighterLevel),
-          fighterLevel' = fighterLevel,
+          fighterState' = pFighterStartTurn(fighterState, classLevels.get(Fighter)),
+          classLevels' = classLevels,
           creatureKind' = creatureKind,
           monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-          barbarianState' = pBarbarianStartTurn(barbarianState, barbarianLevel),
-          barbarianLevel' = barbarianLevel,
+          barbarianState' = pBarbarianStartTurn(barbarianState, classLevels.get(Barbarian)),
+         
           monkState' = pMonkStartTurn(monkState),
-          monkLevel' = monkLevel,
-          paladinState' = pPaladinStartTurn(paladinState), paladinLevel' = paladinLevel,
-          rogueState' = pRogueStartTurn(rogueState), rogueLevel' = rogueLevel,
-          clericState' = pClericStartTurn(clericState), clericLevel' = clericLevel,
-          druidState' = pDruidStartTurn(druidState), druidLevel' = druidLevel,
-          sorcererState' = pSorcererStartTurn(sorcererState), sorcererLevel' = sorcererLevel,
-          warlockState' = pWarlockStartTurn(warlockState), warlockLevel' = warlockLevel,
-          wizardState' = pWizardStartTurn(wizardState), wizardLevel' = wizardLevel,
-          rangerState' = pRangerStartTurn(rangerState), rangerLevel' = rangerLevel,
-          bardState' = pBardStartTurn(bardState, bardLevel), bardLevel' = bardLevel,
+         
+          paladinState' = pPaladinStartTurn(paladinState),
+          rogueState' = pRogueStartTurn(rogueState),
+          clericState' = pClericStartTurn(clericState),
+          druidState' = pDruidStartTurn(druidState),
+          sorcererState' = pSorcererStartTurn(sorcererState),
+          warlockState' = pWarlockStartTurn(warlockState),
+          wizardState' = pWizardStartTurn(wizardState),
+          rangerState' = pRangerStartTurn(rangerState),
+          bardState' = pBardStartTurn(bardState, classLevels.get(Bard)),
         }
       }
     }
@@ -4085,29 +4127,29 @@ module creature {
   action doUseAction = {
     nondet at = ACTION_TYPES.oneOf()
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = state, turnState' = pUseAction(turnState, state, at), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doUseBonusAction = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = state, turnState' = pUseBonusAction(turnState, state), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doUseReaction = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = state, turnState' = pUseReaction(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doUseMovement = {
     nondet feet = MOVEMENT_RANGE.oneOf()
     nondet cost = MOVE_COST_RANGE.oneOf()
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = state, turnState' = pUseMovement(turnState, feet, cost), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doUseExtraAttack = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = state, turnState' = pUseExtraAttack(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doStandFromProne = {
@@ -4117,35 +4159,35 @@ module creature {
     else {
       val t1 = pStandFromProne(turnState)
       val s1 = if (t1 != turnState) pRemoveCondition(state, CProne) else state
-      all { state' = s1, turnState' = t1, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+      all { state' = s1, turnState' = t1, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
     }
   }
 
   action doDropProne = {
     if (turnPhase != "acting") unchanged
-    else all { state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = pDropProne(state, turnState.effectiveSpeed), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doMarkBonusActionSpell = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = state, turnState' = pMarkBonusActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doMarkNonCantripActionSpell = {
     if (turnPhase != "acting") unchanged
-    else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   // Spell slot actions (A1: requires ability to act — see ASSUMPTIONS.md)
   action doExpendSlot = {
     nondet level = SLOT_LEVEL_RANGE.oneOf()
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendSlot(spellSlots, level) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doExpendPactSlot = {
     val ss1 = if (isConscious(state) and pCanAct(state)) pExpendPactSlot(spellSlots) else spellSlots
-    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doStartConcentration = {
@@ -4156,21 +4198,21 @@ module creature {
       val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
       val effects2 = pAddEffectSimple(effects1, spellId, duration, AtEndOfTurn, "")
       val ss1 = pStartConcentration(spellSlots, spellId)
-      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+      all { state' = state.with("activeEffects", effects2), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
     }
   }
 
   action doBreakConcentration = {
     val ss1 = pBreakConcentration(spellSlots)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doConcentrationCheck = {
     nondet saveSucceeded = Bool.oneOf()
     val ss1 = pConcentrationCheck(spellSlots, saveSucceeded)
     val effects1 = pEffectsOnConcBreak(spellSlots, ss1, state.activeEffects)
-    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = state.with("activeEffects", effects1), turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   // Active effect actions
@@ -4178,19 +4220,19 @@ module creature {
     nondet spellId = SPELL_IDS.oneOf()
     nondet duration = EFFECT_DURATION_RANGE.oneOf()
     nondet expiresAt = Set(AtStartOfTurn, AtEndOfTurn).oneOf()
-    all { state' = state.with("activeEffects", pAddEffectSimple(state.activeEffects, spellId, duration, expiresAt, "")), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = state.with("activeEffects", pAddEffectSimple(state.activeEffects, spellId, duration, expiresAt, "")), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doRemoveEffect = {
     nondet spellId = SPELL_IDS.oneOf()
-    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = state.with("activeEffects", pRemoveEffect(state.activeEffects, spellId)), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   // Rest actions
   action doSpendHitDie = {
     nondet conMod = (-2).to(5).oneOf()
     nondet dieRoll = HD_ROLL_RANGE.oneOf()
-    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doShortRest = {
@@ -4210,23 +4252,23 @@ module creature {
         spellSlots' = pRestorePactSlots(spellSlots),
         turnPhase' = turnPhase,
         fighterState' = pFighterShortRest(fighterState),
-        fighterLevel' = fighterLevel,
+        classLevels' = classLevels,
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = mrs1,
         barbarianState' = pBarbarianShortRest(barbarianState),
-        barbarianLevel' = barbarianLevel,
+       
         monkState' = pMonkShortRest(monkState),
-        monkLevel' = monkLevel,
-        paladinState' = pPaladinShortRest(paladinState), paladinLevel' = paladinLevel,
-        rogueState' = pRogueShortRest(rogueState), rogueLevel' = rogueLevel,
-        clericState' = pClericShortRest(clericState), clericLevel' = clericLevel,
-        druidState' = pDruidShortRest(druidState), druidLevel' = druidLevel,
-        sorcererState' = pSorcererShortRest(sorcererState, sorcererLevel), sorcererLevel' = sorcererLevel,
-        warlockState' = pWarlockShortRest(warlockState), warlockLevel' = warlockLevel,
-        wizardState' = pWizardShortRest(wizardState), wizardLevel' = wizardLevel,
-        rangerState' = pRangerShortRest(rangerState), rangerLevel' = rangerLevel,
-        bardState' = pBardShortRest(bardState, bardLevel), bardLevel' = bardLevel,
+       
+        paladinState' = pPaladinShortRest(paladinState),
+        rogueState' = pRogueShortRest(rogueState),
+        clericState' = pClericShortRest(clericState),
+        druidState' = pDruidShortRest(druidState),
+        sorcererState' = pSorcererShortRest(sorcererState, classLevels.get(Sorcerer)),
+        warlockState' = pWarlockShortRest(warlockState),
+        wizardState' = pWizardShortRest(wizardState),
+        rangerState' = pRangerShortRest(rangerState),
+        bardState' = pBardShortRest(bardState, classLevels.get(Bard)),
       }
     }
   }
@@ -4239,29 +4281,32 @@ module creature {
       val mrs2 = pRefreshDailyAbilities(mrs1, monsterStatBlock.dailyAbilities)
       val mrs3 = mrs2.with("legendaryResistancesRemaining",
         monsterStatBlock.legendaryResistanceUses + (if (monsterStatBlock.inLair) 1 else 0))
+      // Restore slots: recompute max from multiclass caster level, then fill to max
+      val freshSlots = pInitSpellSlots(classLevels)
       all {
-        state' = pLongRest(state, fighterLevel),
+        state' = pLongRest(state, pTotalLevel(classLevels)),
         turnState' = turnState,
-        spellSlots' = pRestoreAllSlots(spellSlots),
+        // Long rest restores all slots to multiclass-computed max; preserve concentration
+        spellSlots' = freshSlots.with("concentrationSpellId", spellSlots.concentrationSpellId),
         turnPhase' = turnPhase,
         fighterState' = pFighterLongRest(fighterState),
-        fighterLevel' = fighterLevel,
+        classLevels' = classLevels,
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = mrs3,
         barbarianState' = pBarbarianLongRest(barbarianState),
-        barbarianLevel' = barbarianLevel,
+       
         monkState' = pMonkLongRest(monkState),
-        monkLevel' = monkLevel,
-        paladinState' = pPaladinLongRest(paladinState), paladinLevel' = paladinLevel,
-        rogueState' = pRogueLongRest(rogueState), rogueLevel' = rogueLevel,
-        clericState' = pClericLongRest(clericState), clericLevel' = clericLevel,
-        druidState' = pDruidLongRest(druidState), druidLevel' = druidLevel,
-        sorcererState' = pSorcererLongRest(sorcererState), sorcererLevel' = sorcererLevel,
-        warlockState' = pWarlockLongRest(warlockState), warlockLevel' = warlockLevel,
-        wizardState' = pWizardLongRest(wizardState), wizardLevel' = wizardLevel,
-        rangerState' = pRangerLongRest(rangerState, rangerLevel), rangerLevel' = rangerLevel,
-        bardState' = pBardLongRest(bardState), bardLevel' = bardLevel,
+       
+        paladinState' = pPaladinLongRest(paladinState),
+        rogueState' = pRogueLongRest(rogueState),
+        clericState' = pClericLongRest(clericState),
+        druidState' = pDruidLongRest(druidState),
+        sorcererState' = pSorcererLongRest(sorcererState),
+        warlockState' = pWarlockLongRest(warlockState),
+        wizardState' = pWizardLongRest(wizardState),
+        rangerState' = pRangerLongRest(rangerState, classLevels.get(Ranger)),
+        bardState' = pBardLongRest(bardState),
       }
     }
   }
@@ -4270,22 +4315,22 @@ module creature {
   action doApplyFall = {
     nondet damageRoll = DAMAGE_RANGE.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyFall(state, damageRoll, Set(), Set(), Set()))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doSuffocate = {
     val r = pWithConcBreak(spellSlots, state, pSuffocate(state, creatureKind))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doApplyStarvation = {
     val r = pWithConcBreak(spellSlots, state, pApplyStarvation(state))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doApplyDehydration = {
     val r = pWithConcBreak(spellSlots, state, pApplyDehydration(state))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   // Grapple/Shove actions (applied to self as target)
@@ -4295,16 +4340,16 @@ module creature {
     nondet saveFailed = Bool.oneOf()
     nondet freeHand = Bool.oneOf()
     val result = pGrapple(atkSize, tgtSize, state, saveFailed, freeHand)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doReleaseGrapple = all {
-    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel
+    state' = pReleaseGrapple(state), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState
   }
 
   action doEscapeGrapple = {
     nondet escaped = Bool.oneOf()
-    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = pEscapeGrapple(state, escaped), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doShove = {
@@ -4313,7 +4358,7 @@ module creature {
     nondet saveFailed = Bool.oneOf()
     nondet choice = SHOVE_CHOICES.oneOf()
     val result = pShove(atkSize, tgtSize, state, saveFailed, choice)
-    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, barbarianLevel' = barbarianLevel, monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel }
+    all { state' = result.targetState, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   // -- 19.6 doEndTurn Action --
@@ -4353,12 +4398,12 @@ module creature {
         spellSlots' = result.slots,
         turnPhase' = "waitingForTurn",
         fighterState' = fighterState,
-        fighterLevel' = fighterLevel,
+        classLevels' = classLevels,
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = lrResult.mrs,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       }
     }
   }
@@ -4369,21 +4414,21 @@ module creature {
     nondet d10Roll = 1.to(10).oneOf()
     if (turnPhase != "acting" or not(canUseSecondWind(fighterState, turnState, state))) unchanged
     else {
-      val result = pUseSecondWind(state, fighterState, d10Roll, fighterLevel)
+      val result = pUseSecondWind(state, fighterState, d10Roll, classLevels.get(Fighter))
       // Tactical Shift (Fighter L5): on Second Wind, grant half-speed OA-free bonus movement
       val ts1 = turnState.with("bonusActionUsed", true)
-      val ts2 = if (fighterLevel >= 5) pGrantBonusMovement(ts1, turnState.effectiveSpeed, true) else ts1
+      val ts2 = if (classLevels.get(Fighter) >= 5) pGrantBonusMovement(ts1, turnState.effectiveSpeed, true) else ts1
       all {
         state' = result.creature,
         turnState' = ts2,
         spellSlots' = spellSlots,
         turnPhase' = turnPhase,
         fighterState' = result.fighter,
-        fighterLevel' = fighterLevel,
+        classLevels' = classLevels,
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       }
     }
   }
@@ -4398,45 +4443,45 @@ module creature {
         spellSlots' = spellSlots,
         turnPhase' = turnPhase,
         fighterState' = result.fighter,
-        fighterLevel' = fighterLevel,
+        classLevels' = classLevels,
         creatureKind' = creatureKind,
         monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       }
     }
   }
 
   action doUseIndomitable = {
-    if (turnPhase != "acting" or not(canUseIndomitable(fighterLevel, fighterState))) unchanged
+    if (turnPhase != "acting" or not(canUseIndomitable(classLevels.get(Fighter), fighterState))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
       turnPhase' = turnPhase,
       fighterState' = pUseIndomitable(fighterState),
-      fighterLevel' = fighterLevel,
+      classLevels' = classLevels,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
   action doUseTacticalMind = {
     nondet boostedCheckSucceeds = Bool.oneOf()
-    if (turnPhase != "acting" or not(canUseTacticalMind(fighterLevel, fighterState)) or isIncapacitated(state)) unchanged
+    if (turnPhase != "acting" or not(canUseTacticalMind(classLevels.get(Fighter), fighterState)) or isIncapacitated(state)) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
       turnPhase' = turnPhase,
       fighterState' = pUseTacticalMind(fighterState, boostedCheckSucceeds),
-      fighterLevel' = fighterLevel,
+      classLevels' = classLevels,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4451,11 +4496,11 @@ module creature {
       spellSlots' = spellSlots,
       turnPhase' = turnPhase,
       fighterState' = fighterState.with("heroicInspiration", false),
-      fighterLevel' = fighterLevel,
+      classLevels' = classLevels,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4465,18 +4510,18 @@ module creature {
   /// SRD 5.2.1 Champion L3: "immediately after you score a Critical Hit, you can move up to
   /// half your Speed without provoking Opportunity Attacks."
   action doScoreCriticalHit = {
-    if (turnPhase != "acting" or fighterLevel < 3 or isIncapacitated(state)) unchanged
+    if (turnPhase != "acting" or classLevels.get(Fighter) < 3 or isIncapacitated(state)) unchanged
     else all {
       state' = state,
       turnState' = pGrantBonusMovement(turnState, turnState.effectiveSpeed, true),
       spellSlots' = spellSlots,
       turnPhase' = turnPhase,
       fighterState' = fighterState,
-      fighterLevel' = fighterLevel,
+      classLevels' = classLevels,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4491,11 +4536,11 @@ module creature {
       spellSlots' = spellSlots,
       turnPhase' = turnPhase,
       fighterState' = fighterState,
-      fighterLevel' = fighterLevel,
+      classLevels' = classLevels,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4511,11 +4556,11 @@ module creature {
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
       turnPhase' = turnPhase,
-      fighterState' = fighterState, fighterLevel' = fighterLevel,
+      fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = pEnterRage(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = pEnterRage(barbarianState),
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4524,11 +4569,11 @@ module creature {
     if (not(barbarianState.raging)) unchanged
     else all {
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = pEndRage(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = pEndRage(barbarianState),
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4540,11 +4585,11 @@ module creature {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = pExtendRageBA(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = pExtendRageBA(barbarianState),
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4553,53 +4598,53 @@ module creature {
     if (not(barbarianState.raging)) unchanged
     else all {
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = pMarkAttackOrForcedSave(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = pMarkAttackOrForcedSave(barbarianState),
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
   /// Declare Reckless Attack this turn (free, once per turn).
   /// SRD L2: "When you make your first attack roll on your turn, you can decide to attack recklessly."
   action doDeclareReckless = {
-    if (turnPhase != "acting" or barbarianState.recklessThisTurn or barbarianLevel < 2) unchanged
+    if (turnPhase != "acting" or barbarianState.recklessThisTurn or classLevels.get(Barbarian) < 2) unchanged
     else all {
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = pDeclareReckless(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = pDeclareReckless(barbarianState),
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
   /// Use Intimidating Presence: bonus action, L14+.
   action doUseIntimidatingPresence = {
-    if (turnPhase != "acting" or not(canUseIntimidatingPresence(barbarianState, barbarianLevel, turnState.bonusActionUsed))) unchanged
+    if (turnPhase != "acting" or not(canUseIntimidatingPresence(barbarianState, classLevels.get(Barbarian), turnState.bonusActionUsed))) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = pUseIntimidatingPresence(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = pUseIntimidatingPresence(barbarianState),
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
   /// Restore Intimidating Presence by expending a rage charge (free action).
   action doRestoreIntimidatingPresence = {
-    if (not(canRestoreIntimidatingPresence(barbarianState, barbarianLevel))) unchanged
+    if (not(canRestoreIntimidatingPresence(barbarianState, classLevels.get(Barbarian)))) unchanged
     else all {
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = pRestoreIntimidatingPresence(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = pRestoreIntimidatingPresence(barbarianState),
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4609,39 +4654,39 @@ module creature {
   /// Damage and effect details are caller-managed.
   action doBrutalStrike = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canBrutalStrike(barbarianState, barbarianLevel))) unchanged
+        or not(canBrutalStrike(barbarianState, classLevels.get(Barbarian)))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = pBrutalStrike(barbarianState), barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = pBrutalStrike(barbarianState),
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
-  /// Relentless Rage: CON save to stay at 2×barbarianLevel HP when dropping to 0.
+  /// Relentless Rage: CON save to stay at 2×classLevels.get(Barbarian) HP when dropping to 0.
   /// SRD L11: "If you drop to 0 Hit Points while your Rage is active and don't
   /// die outright, you can make a DC 10 Constitution saving throw."
   /// NOT gated on turnPhase — fires during damage resolution.
   action doUseRelentlessRage = {
     if (isIncapacitated(state)
-        or not(canRelentlessRage(barbarianState, barbarianLevel))) unchanged
+        or not(canRelentlessRage(barbarianState, classLevels.get(Barbarian)))) unchanged
     else {
       nondet conSaveSucceeded = Set(true, false).oneOf()
       val bs1 = pUseRelentlessRage(barbarianState)
-      val newState = if (conSaveSucceeded) state.with("hp", 2 * barbarianLevel) else state
+      val newState = if (conSaveSucceeded) state.with("hp", 2 * classLevels.get(Barbarian)) else state
       all {
         state' = newState,
         turnState' = turnState,
         spellSlots' = spellSlots,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = bs1, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = bs1,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       }
     }
   }
@@ -4652,16 +4697,16 @@ module creature {
   /// SRD L2: "you can spend 1 Focus Point and make two Unarmed Strikes as a Bonus Action."
   action doFlurryOfBlows = {
     if (turnPhase != "acting" or turnState.bonusActionUsed or isIncapacitated(state)
-        or monkLevel < 2 or not(canExpendFocus(monkState, 1))) unchanged
+        or classLevels.get(Monk) < 2 or not(canExpendFocus(monkState, 1))) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = pFlurryOfBlows(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = pFlurryOfBlows(monkState), paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4669,16 +4714,16 @@ module creature {
   /// SRD L2: "you can take the Disengage action as a Bonus Action."
   action doPatientDefenseFree = {
     if (turnPhase != "acting" or turnState.bonusActionUsed or isIncapacitated(state)
-        or monkLevel < 2) unchanged
+        or classLevels.get(Monk) < 2) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true).with("disengaged", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4686,16 +4731,16 @@ module creature {
   /// SRD L2: "you can spend 1 Focus Point to also take the Dodge action."
   action doPatientDefenseFocus = {
     if (turnPhase != "acting" or turnState.bonusActionUsed or isIncapacitated(state)
-        or monkLevel < 2 or not(canExpendFocus(monkState, 1))) unchanged
+        or classLevels.get(Monk) < 2 or not(canExpendFocus(monkState, 1))) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true).with("dodging", true).with("disengaged", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = pPatientDefenseFocus(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = pPatientDefenseFocus(monkState), paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4703,16 +4748,16 @@ module creature {
   /// SRD L2: "you can take the Dash action as a Bonus Action."
   action doStepOfTheWindFree = {
     if (turnPhase != "acting" or turnState.bonusActionUsed or isIncapacitated(state)
-        or monkLevel < 2) unchanged
+        or classLevels.get(Monk) < 2) unchanged
     else all {
       state' = state,
       turnState' = pBonusActionDash(turnState, state),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4720,16 +4765,16 @@ module creature {
   /// SRD L2: "you can spend 1 Focus Point to also take the Disengage action."
   action doStepOfTheWindFocus = {
     if (turnPhase != "acting" or turnState.bonusActionUsed or isIncapacitated(state)
-        or monkLevel < 2 or not(canExpendFocus(monkState, 1))) unchanged
+        or classLevels.get(Monk) < 2 or not(canExpendFocus(monkState, 1))) unchanged
     else all {
       state' = state,
       turnState' = pBonusActionDash(turnState, state).with("disengaged", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = pStepOfTheWindFocus(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = pStepOfTheWindFocus(monkState), paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4737,16 +4782,16 @@ module creature {
   /// SRD L5: "once per turn, you can spend 1 Focus Point to attempt to stun."
   action doStunningStrike = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canStunningStrike(monkState, monkLevel))) unchanged
+        or not(canStunningStrike(monkState, classLevels.get(Monk)))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = pStunningStrike(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = pStunningStrike(monkState), paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4755,18 +4800,18 @@ module creature {
   /// You regain a number of Hit Points equal to the number rolled plus your Wisdom modifier."
   action doWholenessOfBody = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canWholenessOfBody(monkState, monkLevel, turnState.bonusActionUsed))) unchanged
+        or not(canWholenessOfBody(monkState, classLevels.get(Monk), turnState.bonusActionUsed))) unchanged
     else {
       nondet healRoll = 1.to(12).oneOf()
       all {
         state' = pHeal(state, healRoll),
         turnState' = turnState.with("bonusActionUsed", true),
         spellSlots' = spellSlots,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = pUseWholenessOfBody(monkState), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = pUseWholenessOfBody(monkState), paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       }
     }
   }
@@ -4777,18 +4822,18 @@ module creature {
   /// Modeled as available during acting (player choice).
   action doUncannyMetabolism = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canUncannyMetabolism(monkState)) or monkLevel < 2) unchanged
+        or not(canUncannyMetabolism(monkState)) or classLevels.get(Monk) < 2) unchanged
     else {
       nondet healRoll = 1.to(12).oneOf()
       all {
-        state' = pHeal(state, monkLevel + healRoll),
+        state' = pHeal(state, classLevels.get(Monk) + healRoll),
         turnState' = turnState,
         spellSlots' = spellSlots,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = pUncannyMetabolism(monkState, monkLevel), monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = pUncannyMetabolism(monkState, classLevels.get(Monk)), paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       }
     }
   }
@@ -4801,7 +4846,7 @@ module creature {
   /// Simplified: nondet picks one slot level (1-5) — caller ensures total <= max.
   action doUseArcaneRecovery = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canArcaneRecovery(wizardState, wizardLevel))) unchanged
+        or not(canArcaneRecovery(wizardState, classLevels.get(Wizard)))) unchanged
     else {
       nondet slotLevel = 1.to(5).oneOf()
       val ss1 = pRestoreSlot(spellSlots, slotLevel)
@@ -4809,13 +4854,13 @@ module creature {
         state' = state,
         turnState' = turnState,
         spellSlots' = ss1,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel,
-        wizardState' = pUseArcaneRecovery(wizardState), wizardLevel' = wizardLevel,
-        rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState,
+        wizardState' = pUseArcaneRecovery(wizardState),
+        rangerState' = rangerState, bardState' = bardState,
       }
     }
   }
@@ -4826,18 +4871,18 @@ module creature {
   /// Self-damage and slot level are caller-managed.
   action doOverchannel = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canOverchannel(wizardLevel))) unchanged
+        or not(canOverchannel(classLevels.get(Wizard)))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel,
-      wizardState' = pOverchannel(wizardState), wizardLevel' = wizardLevel,
-      rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState,
+      wizardState' = pOverchannel(wizardState),
+      rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4859,13 +4904,13 @@ module creature {
           state' = healed,
           turnState' = turnState.with("bonusActionUsed", true),
           spellSlots' = spellSlots,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = monsterResourceState,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel,
-          paladinState' = pUseLayOnHands(paladinState, amount), paladinLevel' = paladinLevel,
-          rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState,
+          paladinState' = pUseLayOnHands(paladinState, amount),
+          rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       }
     }
@@ -4877,18 +4922,18 @@ module creature {
   /// when you finish a Long Rest."
   action doUsePaladinChannelDivinity = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canPaladinChannelDivinity(paladinState, paladinLevel))) unchanged
+        or not(canPaladinChannelDivinity(paladinState, classLevels.get(Paladin)))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel,
-      paladinState' = pUsePaladinChannelDivinity(paladinState), paladinLevel' = paladinLevel,
-      rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState,
+      paladinState' = pUsePaladinChannelDivinity(paladinState),
+      rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4897,23 +4942,23 @@ module creature {
   /// Damage is caller-managed (like Sneak Attack).
   action doDivineSmite = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or paladinLevel < 2 or turnState.bonusActionUsed) unchanged
+        or classLevels.get(Paladin) < 2 or turnState.bonusActionUsed) unchanged
     else {
       nondet slotLevel = SLOT_LEVEL_RANGE.oneOf()
-      if (not(canDivineSmite(paladinLevel, spellSlots.slotsCurrent, slotLevel))) unchanged
+      if (not(canDivineSmite(classLevels.get(Paladin), spellSlots.slotsCurrent, slotLevel))) unchanged
       else {
         val ss1 = pExpendSlot(spellSlots, slotLevel)
         all {
           state' = state,
           turnState' = turnState.with("bonusActionUsed", true),
           spellSlots' = ss1,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = monsterResourceState,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel,
-          paladinState' = paladinState, paladinLevel' = paladinLevel,
-          rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState,
+          paladinState' = paladinState,
+          rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       }
     }
@@ -4924,18 +4969,18 @@ module creature {
   action doDivineSmiteFree = {
     if (turnPhase != "acting" or isIncapacitated(state)
         or turnState.bonusActionUsed
-        or not(canDivineSmiteFree(paladinState, paladinLevel))) unchanged
+        or not(canDivineSmiteFree(paladinState, classLevels.get(Paladin)))) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel,
-      paladinState' = pUseDivineSmiteFree(paladinState), paladinLevel' = paladinLevel,
-      rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState,
+      paladinState' = pUseDivineSmiteFree(paladinState),
+      rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4947,18 +4992,18 @@ module creature {
   /// or a Ranged weapon."
   action doUseSneakAttack = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canSneakAttack(rogueState, rogueLevel))) unchanged
+        or not(canSneakAttack(rogueState, classLevels.get(Rogue)))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = pUseSneakAttack(rogueState), rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = pUseSneakAttack(rogueState),
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4968,19 +5013,19 @@ module creature {
   /// this turn, and after you use it, your Speed is 0 until the end of the current turn."
   action doUseSteadyAim = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canSteadyAim(rogueState, rogueLevel, turnState.bonusActionUsed))
+        or not(canSteadyAim(rogueState, classLevels.get(Rogue), turnState.bonusActionUsed))
         or turnState.movementRemaining != turnState.effectiveSpeed) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true).with("effectiveSpeed", 0).with("movementRemaining", 0),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = pUseSteadyAim(rogueState), rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = pUseSteadyAim(rogueState),
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -4988,54 +5033,54 @@ module creature {
   /// SRD L2: "Dash, Disengage, or Hide" as BA
   action doCunningActionDash = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canCunningAction(rogueLevel, turnState.bonusActionUsed))) unchanged
+        or not(canCunningAction(classLevels.get(Rogue), turnState.bonusActionUsed))) unchanged
     else all {
       state' = state,
       turnState' = pBonusActionDash(turnState, state),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = rogueState, rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = rogueState,
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
   /// Cunning Action: Disengage as Bonus Action.
   action doCunningActionDisengage = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canCunningAction(rogueLevel, turnState.bonusActionUsed))) unchanged
+        or not(canCunningAction(classLevels.get(Rogue), turnState.bonusActionUsed))) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true).with("disengaged", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = rogueState, rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = rogueState,
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
   /// Cunning Action: Hide as Bonus Action. (Mechanical no-op in single-creature model beyond BA cost.)
   action doCunningActionHide = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canCunningAction(rogueLevel, turnState.bonusActionUsed))) unchanged
+        or not(canCunningAction(classLevels.get(Rogue), turnState.bonusActionUsed))) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = rogueState, rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = rogueState,
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5043,18 +5088,18 @@ module creature {
   /// SRD L5: "you can use your Reaction to halve the attack's damage against you"
   action doUseUncannyDodge = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canUncannyDodge(rogueLevel, turnState.reactionAvailable))) unchanged
+        or not(canUncannyDodge(classLevels.get(Rogue), turnState.reactionAvailable))) unchanged
     else all {
       state' = state,
       turnState' = pUseReaction(turnState),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = rogueState, rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = rogueState,
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5064,18 +5109,18 @@ module creature {
   /// Effect choice, dice cost, and condition application are caller-managed.
   action doCunningStrike = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canCunningStrike(rogueState, rogueLevel))) unchanged
+        or not(canCunningStrike(rogueState, classLevels.get(Rogue)))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel,
-      rogueState' = pCunningStrike(rogueState), rogueLevel' = rogueLevel,
-      clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState,
+      rogueState' = pCunningStrike(rogueState),
+      clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5085,18 +5130,18 @@ module creature {
   /// and you regain all expended uses when you finish a Long Rest."
   action doUseClericChannelDivinity = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canClericChannelDivinity(clericState, clericLevel))) unchanged
+        or not(canClericChannelDivinity(clericState, classLevels.get(Cleric)))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel,
-      clericState' = pUseClericChannelDivinity(clericState), clericLevel' = clericLevel,
-      druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState,
+      clericState' = pUseClericChannelDivinity(clericState),
+      druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5108,18 +5153,18 @@ module creature {
   /// Simplified: just sets the flag. Pact slot recovery is caller-managed.
   action doUseMagicalCunning = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canMagicalCunning(warlockState, warlockLevel))) unchanged
+        or not(canMagicalCunning(warlockState, classLevels.get(Warlock)))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel,
-      warlockState' = pUseMagicalCunning(warlockState), warlockLevel' = warlockLevel,
-      wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState,
+      warlockState' = pUseMagicalCunning(warlockState),
+      wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5130,18 +5175,18 @@ module creature {
     if (turnPhase != "acting" or isIncapacitated(state)) unchanged
     else {
       nondet spellLevel = Set(6, 7, 8, 9).oneOf()
-      if (not(canMysticArcanum(warlockState, warlockLevel, spellLevel))) unchanged
+      if (not(canMysticArcanum(warlockState, classLevels.get(Warlock), spellLevel))) unchanged
       else all {
         state' = state,
         turnState' = turnState,
         spellSlots' = spellSlots,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel,
-        warlockState' = pUseMysticArcanum(warlockState, spellLevel), warlockLevel' = warlockLevel,
-        wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState,
+        warlockState' = pUseMysticArcanum(warlockState, spellLevel),
+        wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       }
     }
   }
@@ -5152,18 +5197,18 @@ module creature {
   /// Damage amount and Prone effect are caller-managed.
   action doEldritchSmite = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canEldritchSmite(warlockState, warlockLevel, spellSlots.pactSlotsCurrent))) unchanged
+        or not(canEldritchSmite(warlockState, classLevels.get(Warlock), spellSlots.pactSlotsCurrent))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
       spellSlots' = spellSlots.with("pactSlotsCurrent", spellSlots.pactSlotsCurrent - 1),
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel,
-      warlockState' = pEldritchSmite(warlockState), warlockLevel' = warlockLevel,
-      wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState,
+      warlockState' = pEldritchSmite(warlockState),
+      wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5174,7 +5219,7 @@ module creature {
   /// equal to the slot's level (no action required)."
   action doConvertSlotToPoints = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or sorcererLevel < 2) unchanged
+        or classLevels.get(Sorcerer) < 2) unchanged
     else {
       nondet slotLevel = SLOT_LEVEL_RANGE.oneOf()
       val ss1 = pExpendSlot(spellSlots, slotLevel)
@@ -5185,13 +5230,13 @@ module creature {
           state' = state,
           turnState' = turnState,
           spellSlots' = ss1,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = monsterResourceState,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
-          sorcererState' = newSorc, sorcererLevel' = sorcererLevel,
-          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState,
+          sorcererState' = newSorc,
+          warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       }
     }
@@ -5202,7 +5247,7 @@ module creature {
   /// into one spell slot." Max slot level 5. Cost: L1=2, L2=3, L3=5, L4=6, L5=7.
   action doConvertPointsToSlot = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or sorcererLevel < 2 or turnState.bonusActionUsed) unchanged
+        or classLevels.get(Sorcerer) < 2 or turnState.bonusActionUsed) unchanged
     else {
       nondet slotLevel = 1.to(5).oneOf()
       val cost = slotCreationCost(slotLevel)
@@ -5214,13 +5259,13 @@ module creature {
           state' = state,
           turnState' = turnState.with("bonusActionUsed", true),
           spellSlots' = ss1,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = monsterResourceState,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
-          sorcererState' = pSpendSorceryPoints(sorcererState, cost), sorcererLevel' = sorcererLevel,
-          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState,
+          sorcererState' = pSpendSorceryPoints(sorcererState, cost),
+          warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       }
     }
@@ -5230,18 +5275,18 @@ module creature {
   /// SRD: "As a Bonus Action, you can unleash that magic for 1 minute"
   action doUseInnateSorcery = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canInnateSorcery(sorcererState, sorcererLevel, turnState.bonusActionUsed))) unchanged
+        or not(canInnateSorcery(sorcererState, classLevels.get(Sorcerer), turnState.bonusActionUsed))) unchanged
     else all {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
-      sorcererState' = pUseInnateSorcery(sorcererState, sorcererLevel), sorcererLevel' = sorcererLevel,
-      warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState,
+      sorcererState' = pUseInnateSorcery(sorcererState, classLevels.get(Sorcerer)),
+      warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5252,24 +5297,24 @@ module creature {
   /// L20 Arcane Apotheosis: 1 free (no SP) per turn when Innate Sorcery active.
   action doUseMetamagic = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or sorcererLevel < 2) unchanged
+        or classLevels.get(Sorcerer) < 2) unchanged
     else {
       nondet option = METAMAGIC_OPTIONS.oneOf()
-      if (not(canUseMetamagic(sorcererState, sorcererLevel, option, turnState.bonusActionUsed, turnState.nonCantripActionSpellCast))) unchanged
+      if (not(canUseMetamagic(sorcererState, classLevels.get(Sorcerer), option, turnState.bonusActionUsed, turnState.nonCantripActionSpellCast))) unchanged
       else {
-        val ss1 = pUseMetamagic(sorcererState, sorcererLevel, option)
+        val ss1 = pUseMetamagic(sorcererState, classLevels.get(Sorcerer), option)
         val ts1 = if (option == "quickened") turnState.with("bonusActionUsed", true) else turnState
         all {
           state' = state,
           turnState' = ts1,
           spellSlots' = spellSlots,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = monsterResourceState,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel,
-          sorcererState' = ss1, sorcererLevel' = sorcererLevel,
-          warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState,
+          sorcererState' = ss1,
+          warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       }
     }
@@ -5283,18 +5328,18 @@ module creature {
   /// damage spillover on revert — removed in 5.2.1).
   action doEnterWildShape = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canEnterWildShape(druidState, druidLevel, turnState.bonusActionUsed))) unchanged
+        or not(canEnterWildShape(druidState, classLevels.get(Druid), turnState.bonusActionUsed))) unchanged
     else all {
-      state' = pGrantTempHp(state, druidLevel, false),
+      state' = pGrantTempHp(state, classLevels.get(Druid), false),
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
-      druidState' = pEnterWildShape(druidState), druidLevel' = druidLevel,
-      sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState,
+      druidState' = pEnterWildShape(druidState),
+      sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5307,13 +5352,13 @@ module creature {
       state' = state,
       turnState' = turnState.with("bonusActionUsed", true),
       spellSlots' = spellSlots,
-      turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+      turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
-      druidState' = pExitWildShape(druidState), druidLevel' = druidLevel,
-      sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState,
+      druidState' = pExitWildShape(druidState),
+      sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5322,7 +5367,7 @@ module creature {
   /// one use by expending a spell slot (no action required)."
   action doWildResurgenceCharge = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canWildResurgenceForCharge(druidState, druidLevel))) unchanged
+        or not(canWildResurgenceForCharge(druidState, classLevels.get(Druid)))) unchanged
     else {
       nondet slotLevel = SLOT_LEVEL_RANGE.oneOf()
       if (spellSlots.slotsCurrent.get(slotLevel) <= 0) unchanged
@@ -5332,13 +5377,13 @@ module creature {
           state' = state,
           turnState' = turnState,
           spellSlots' = ss1,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = monsterResourceState,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
-          druidState' = pWildResurgenceGainCharge(druidState), druidLevel' = druidLevel,
-          sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState,
+          druidState' = pWildResurgenceGainCharge(druidState),
+          sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       }
     }
@@ -5349,7 +5394,7 @@ module creature {
   /// a level 1 spell slot … can't do so again until you finish a Long Rest."
   action doWildResurgenceSlot = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canWildResurgenceForSlot(druidState, druidLevel))) unchanged
+        or not(canWildResurgenceForSlot(druidState, classLevels.get(Druid)))) unchanged
     else {
       val ss1 = pRestoreSlot(spellSlots, 1)
       if (ss1 == spellSlots) unchanged  // L1 slot already at max
@@ -5357,13 +5402,13 @@ module creature {
         state' = state,
         turnState' = turnState,
         spellSlots' = ss1,
-        turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
         monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel,
-        druidState' = pWildResurgenceGainSlot(druidState), druidLevel' = druidLevel,
-        sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState,
+        druidState' = pWildResurgenceGainSlot(druidState),
+        sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
       }
     }
   }
@@ -5373,22 +5418,22 @@ module creature {
   /// Use free Hunter's Mark: decrement free uses. No action cost (SRD: free).
   action doUseFreeHuntersMark = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or rangerLevel < 1 or rangerState.huntersMarkFreeUses <= 0) unchanged
+        or classLevels.get(Ranger) < 1 or rangerState.huntersMarkFreeUses <= 0) unchanged
     else all {
       state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase,
-      fighterState' = fighterState, fighterLevel' = fighterLevel,
+      fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-      barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-      monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
-      rangerState' = pUseFreeHuntersMark(rangerState), rangerLevel' = rangerLevel,
-      bardState' = bardState, bardLevel' = bardLevel,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+      rangerState' = pUseFreeHuntersMark(rangerState),
+      bardState' = bardState,
     }
   }
 
   /// Tireless: Magic action, grant temp HP. SRD L10.
   action doUseTireless = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or rangerLevel < 10 or rangerState.tirelessCharges <= 0
+        or classLevels.get(Ranger) < 10 or rangerState.tirelessCharges <= 0
         or turnState.actionsRemaining <= 0) unchanged
     else {
       nondet d8Roll = 1.to(8).oneOf()
@@ -5398,12 +5443,12 @@ module creature {
       val s1 = pGrantTempHp(state, result.tempHp, false)
       all {
         state' = s1, turnState' = ts1, spellSlots' = spellSlots, turnPhase' = turnPhase,
-        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
-        rangerState' = result.ranger, rangerLevel' = rangerLevel,
-        bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+        rangerState' = result.ranger,
+        bardState' = bardState,
       }
     }
   }
@@ -5411,19 +5456,19 @@ module creature {
   /// Nature's Veil: Bonus Action, grant Invisible condition. SRD L14.
   action doUseNaturesVeil = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or rangerLevel < 14 or rangerState.naturesVeilCharges <= 0
+        or classLevels.get(Ranger) < 14 or rangerState.naturesVeilCharges <= 0
         or turnState.bonusActionUsed) unchanged
     else {
       val ts1 = pUseBonusAction(turnState, state)
       val s1 = pApplyCondition(state, CInvisible, Set())
       all {
         state' = s1, turnState' = ts1, spellSlots' = spellSlots, turnPhase' = turnPhase,
-        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
-        rangerState' = pUseNaturesVeil(rangerState), rangerLevel' = rangerLevel,
-        bardState' = bardState, bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+        rangerState' = pUseNaturesVeil(rangerState),
+        bardState' = bardState,
       }
     }
   }
@@ -5433,18 +5478,18 @@ module creature {
   /// Bardic Inspiration: Bonus Action, spend 1 BI charge. SRD L1.
   action doUseBardicInspiration = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or bardLevel < 1 or bardState.bardicInspirationCharges <= 0
+        or classLevels.get(Bard) < 1 or bardState.bardicInspirationCharges <= 0
         or turnState.bonusActionUsed) unchanged
     else {
       val ts1 = pUseBonusAction(turnState, state)
       all {
         state' = state, turnState' = ts1, spellSlots' = spellSlots, turnPhase' = turnPhase,
-        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
-        rangerState' = rangerState, rangerLevel' = rangerLevel,
-        bardState' = pUseBardicInspiration(bardState), bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+        rangerState' = rangerState,
+        bardState' = pUseBardicInspiration(bardState),
       }
     }
   }
@@ -5452,18 +5497,18 @@ module creature {
   /// Cutting Words L3 (Lore): Reaction, spend 1 BI charge. SRD L3 Lore.
   action doUseCuttingWords = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or bardLevel < 3 or bardState.bardicInspirationCharges <= 0
+        or classLevels.get(Bard) < 3 or bardState.bardicInspirationCharges <= 0
         or not(turnState.reactionAvailable)) unchanged
     else {
       val ts1 = pUseReaction(turnState)
       all {
         state' = state, turnState' = ts1, spellSlots' = spellSlots, turnPhase' = turnPhase,
-        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
-        rangerState' = rangerState, rangerLevel' = rangerLevel,
-        bardState' = pUseCuttingWords(bardState), bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+        rangerState' = rangerState,
+        bardState' = pUseCuttingWords(bardState),
       }
     }
   }
@@ -5471,7 +5516,7 @@ module creature {
   /// Font of Inspiration slot restore L5: spend spell slot, regain 1 BI. Free action.
   action doUseFontSlotRestore = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or bardLevel < 5
+        or classLevels.get(Bard) < 5
         or bardState.bardicInspirationCharges >= bardState.bardicInspirationMax) unchanged
     else {
       nondet slotLevel = 1.to(5).oneOf()
@@ -5479,12 +5524,12 @@ module creature {
       if (ss1 == spellSlots) unchanged  // no slot available at that level
       else all {
         state' = state, turnState' = turnState, spellSlots' = ss1, turnPhase' = turnPhase,
-        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
-        rangerState' = rangerState, rangerLevel' = rangerLevel,
-        bardState' = pUseFontSlotRestore(bardState), bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+        rangerState' = rangerState,
+        bardState' = pUseFontSlotRestore(bardState),
       }
     }
   }
@@ -5492,17 +5537,17 @@ module creature {
   /// Peerless Skill L14: on failed check, add BI die. Only spends on success.
   action doUsePeerlessSkill = {
     if (turnPhase != "acting" or isIncapacitated(state)
-        or bardLevel < 14 or bardState.bardicInspirationCharges <= 0) unchanged
+        or classLevels.get(Bard) < 14 or bardState.bardicInspirationCharges <= 0) unchanged
     else {
       nondet success = Bool.oneOf()
       all {
         state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase,
-        fighterState' = fighterState, fighterLevel' = fighterLevel,
+        fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-        monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel,
-        rangerState' = rangerState, rangerLevel' = rangerLevel,
-        bardState' = pUsePeerlessSkill(bardState, success), bardLevel' = bardLevel,
+        barbarianState' = barbarianState,
+        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+        rangerState' = rangerState,
+        bardState' = pUsePeerlessSkill(bardState, success),
       }
     }
   }
@@ -5590,11 +5635,11 @@ module creature {
         val mrs1 = pUseLegendaryAction(monsterResourceState, actionName, monsterStatBlock.legendaryActions)
         all {
           state' = state, turnState' = turnState, spellSlots' = spellSlots,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs1,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       }
     }
@@ -5611,11 +5656,11 @@ module creature {
         val mrs1 = pUseRechargeAbility(monsterResourceState, name)
         all {
           state' = state, turnState' = turnState, spellSlots' = spellSlots,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs1,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       }
     }
@@ -5632,11 +5677,11 @@ module creature {
         val mrs1 = pUseDailyAbility(monsterResourceState, name)
         all {
           state' = state, turnState' = turnState, spellSlots' = spellSlots,
-          turnPhase' = turnPhase, fighterState' = fighterState, fighterLevel' = fighterLevel,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
           creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
           monsterResourceState' = mrs1,
-          barbarianState' = barbarianState, barbarianLevel' = barbarianLevel,
-          monkState' = monkState, monkLevel' = monkLevel, paladinState' = paladinState, paladinLevel' = paladinLevel, rogueState' = rogueState, rogueLevel' = rogueLevel, clericState' = clericState, clericLevel' = clericLevel, druidState' = druidState, druidLevel' = druidLevel, sorcererState' = sorcererState, sorcererLevel' = sorcererLevel, warlockState' = warlockState, warlockLevel' = warlockLevel, wizardState' = wizardState, wizardLevel' = wizardLevel, rangerState' = rangerState, rangerLevel' = rangerLevel, bardState' = bardState, bardLevel' = bardLevel,
+          barbarianState' = barbarianState,
+          monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
         }
       }
     }
@@ -5909,7 +5954,7 @@ module creature {
 
   val inductiveInv = and {
     // Fighter level must be a valid D&D level (1-20)
-    fighterLevel.in(1.to(20)),
+    classLevels.get(Fighter).in(1.to(20)),
 
     // Fighter state must be a structurally valid record
     fighterState.in(VALID_FIGHTER_STATES),
@@ -5918,9 +5963,9 @@ module creature {
     turnPhase.in(Set("outOfCombat", "acting", "waitingForTurn")),
 
     // Level-to-max charge relationships (established by init, preserved by step).
-    fighterState.secondWindMax == secondWindMaxCharges(fighterLevel),
-    fighterState.actionSurgeMax == actionSurgeMaxCharges(fighterLevel),
-    fighterState.indomitableMax == indomitableMaxCharges(fighterLevel),
+    fighterState.secondWindMax == secondWindMaxCharges(classLevels.get(Fighter)),
+    fighterState.actionSurgeMax == actionSurgeMaxCharges(classLevels.get(Fighter)),
+    fighterState.indomitableMax == indomitableMaxCharges(classLevels.get(Fighter)),
 
     // Action economy coupling: actionsRemaining starts at 1 (from pStartTurn),
     // Action Surge adds 1 (once per turn). So max is 2.
