@@ -5881,20 +5881,20 @@ module creature {
     monsterResourceState.dailyUsesRemaining.keys().forall(name =>
       monsterResourceState.dailyUsesRemaining.get(name) >= 0)
 
-  // Phase P0: Turn resource bounds
+  // Turn resource bounds
   val actionsRemainingNonNeg = turnState.actionsRemaining >= 0
   val actionsRemainingBounded = turnState.actionsRemaining <= 2
   val movementRemainingNonNeg = turnState.movementRemaining >= 0
   val extraAttacksNonNeg = turnState.extraAttacksRemaining >= 0
 
-  // Phase P0: Stability invariants
+  // Stability invariants
   val stableImpliesZeroHp = state.stable implies state.hp == 0
   val stableImpliesUnconscious = state.stable implies state.unconscious
 
-  // Phase P0: Active effect durations
+  // Active effect durations
   val activeEffectDurationsNonNeg = state.activeEffects.forall(e => e.turnsRemaining >= 0)
 
-  // Phase P1: Death save state machine
+  // Death save state machine
   val hpPositiveImpliesNoDeathSaves =
     state.hp > 0 implies (state.deathSaves.successes == 0 and state.deathSaves.failures == 0)
 

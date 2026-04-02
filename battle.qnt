@@ -1788,8 +1788,9 @@ module battle {
 
   /// Spell stack entries have distinct casters.
   val spellStackDistinctCasters =
-    listToSet(bSpellStack).forall(e1 =>
-      listToSet(bSpellStack).forall(e2 =>
+    val stackSet = listToSet(bSpellStack)
+    stackSet.forall(e1 =>
+      stackSet.forall(e2 =>
         (e1.spellCasterId == e2.spellCasterId) implies (e1 == e2)
       )
     )
