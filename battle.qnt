@@ -27,6 +27,7 @@ module battle {
     statBlock: StatBlock,                    // stat block for reading LA uses, recharge, etc. (B12)
     rogueLevel: int,                         // 0 = not a rogue (B11)
     monkLevel: int,                          // 0 = not a monk (B11)
+    preparedSpells: Set[str],                // spells this creature has prepared (SRD 5.2.1 Gaining Spells)
   }
 
   type TriggerType =
@@ -77,11 +78,13 @@ module battle {
   // Context for a spell being cast (Counterspell interrupt)
   type SpellCastCtx = {
     caster: CreatureId,
+    spellName: str,  // identity of the spell being cast (for test clarity / debuggability)
     // The rest of the spell resolution lives in the post-cast context.
     // This just tracks who is casting, so Counterspell knows the target.
     // postCast describes what happens if the spell is NOT countered.
     postCast: PostCastEffect,
     slotLvl: int,  // deferred slot expenditure (SRD 5.2.1: slot not spent if countered)
+    ritual: bool,  // SRD 5.2.1: ritual casting skips slot expenditure, requires spell prepared
   }
 
   // What happens after a spell resolves (not countered).
@@ -156,6 +159,8 @@ module battle {
     spellPostCast: PostCastEffect, // frozen snapshot at push time — not updated during chain
     offered: Set[CreatureId],      // offered set when the CS window was interrupted
     slotLvl: int,                  // deferred slot level for expenditure on resolve
+    spellName: str,                // spell identity preserved through CS chain
+    ritual: bool,                  // ritual flag preserved through CS chain
   }
 
   // Where to return after resolving an after-damage reaction.
@@ -257,6 +262,15 @@ module battle {
   // Stat block sentinel for PCs (all fields zero/empty — never read in PC mode).
   // Imported from creature.qnt as NULL_STAT_BLOCK.
 
+  // Default prepared spell list for test casters. Covers all spell shapes used
+  // by bCastSaveSpell, bCastAoE, bCastConcentrationSpell, and Counterspell.
+  val CASTER_PREPARED_SPELLS: Set[str] = Set(
+    "hold_person", "bless", "haste", "spirit_guardians",  // concentration spells
+    "fireball", "burning_hands",                           // AoE / save spells
+    "guiding_bolt", "inflict_wounds",                      // single-target save spells
+    "counterspell"                                         // reaction spell (CS chain)
+  )
+
   pure def mkCombatant(maxHp: int, k: CreatureKind): Combatant = {
     creature: freshCreature(maxHp),
     turn: FRESH_TURN,
@@ -265,6 +279,7 @@ module battle {
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0,
+    preparedSpells: Set(),
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -281,6 +296,7 @@ module battle {
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0,
+    preparedSpells: CASTER_PREPARED_SPELLS,
   }
 
   // Monster with legendary actions and resistances
@@ -294,6 +310,7 @@ module battle {
       .with("legendaryResistancesRemaining", sb.legendaryResistanceUses),
     statBlock: sb,
     rogueLevel: 0, monkLevel: 0,
+    preparedSpells: Set(),
   }
 
   pure def dealDamage(
@@ -374,11 +391,13 @@ module battle {
     val slots = cs.get(id).slots.slotsCurrent
     3.to(9).exists(lvl => slots.get(lvl) > 0)
 
-  /// Eligible Counterspell reactors: base eligible + has level 3+ slot.
+  /// Eligible Counterspell reactors: base eligible + has level 3+ slot + counterspell prepared.
   pure def eligibleForCounterspell(
     cs: CreatureId -> Combatant, excludeId: CreatureId
   ): Set[CreatureId] =
-    eligibleExcluding(cs, excludeId).filter(id => hasCounterspellSlot(cs, id))
+    eligibleExcluding(cs, excludeId).filter(id =>
+      hasCounterspellSlot(cs, id) and cs.get(id).preparedSpells.contains("counterspell")
+    )
 
   /// Eligible for Uncanny Dodge: rogue level >= 5.
   pure def eligibleForUncannyDodge(cs: CreatureId -> Combatant, id: CreatureId): bool =
@@ -838,6 +857,8 @@ module battle {
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
     nondet slotLvl = 1.to(3).oneOf()
+    nondet spellName = ac.preparedSpells.oneOf()
+    nondet ritual = Bool.oneOf()
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -845,7 +866,9 @@ module battle {
       not(ac.creature.dead),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
-      ac.slots.slotsCurrent.get(slotLvl) > 0,
+      ac.preparedSpells.size() > 0,           // must have at least one prepared spell
+      // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
+      if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
       val saveCtx: SaveSpellCtx = {
@@ -857,8 +880,10 @@ module battle {
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
+        spellName: spellName,
         postCast: PCESave(saveCtx),
         slotLvl: slotLvl,
+        ritual: ritual,
       }
       // Check for Counterspell (must have reaction + alive + level 3+ slot)
       val csElig = eligibleForCounterspell(cs1, activeId)
@@ -869,8 +894,9 @@ module battle {
           keepBattle,
         }
       } else {
-        // No Counterspell possible — expend slot and resolve save immediately
-        val cs2 = setSlots(cs1, activeId, pExpendSlot(cs1.get(activeId).slots, slotLvl))
+        // No Counterspell possible — expend slot (unless ritual) and resolve save immediately
+        val cs2 = if (ritual) cs1
+                  else setSlots(cs1, activeId, pExpendSlot(cs1.get(activeId).slots, slotLvl))
         val result = resolveSave(cs2, saveCtx, ADRActiveTurn)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       }
@@ -969,14 +995,16 @@ module battle {
   /// Terminal resolution for a spell entry: expend slot, then resolve effects.
   /// Does NOT handle PCECounterspell — caller must handle that variant before
   /// invoking this helper (PCECounterspell requires stack unwinding logic).
+  /// ritual=true skips slot expenditure (SRD 5.2.1: ritual casting doesn't expend a slot).
   pure def resolveSpellEntry(
     cs: CreatureId -> Combatant,
-    casterId: CreatureId, slotLvl: int,
+    casterId: CreatureId, slotLvl: int, isRitual: bool,
     postCast: PostCastEffect,
     stack: List[SpellStackEntry]
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase, stack: List[SpellStackEntry] } = {
-    // Expend slot now that spell resolved (not countered). slotLvl 0 = already spent (CS reaction).
-    val cs1 = if (slotLvl > 0) setSlots(cs, casterId, pExpendSlot(cs.get(casterId).slots, slotLvl))
+    // Expend slot now that spell resolved (not countered).
+    // slotLvl 0 = already spent (CS reaction). Ritual = no slot expenditure.
+    val cs1 = if (not(isRitual) and slotLvl > 0) setSlots(cs, casterId, pExpendSlot(cs.get(casterId).slots, slotLvl))
               else cs
     match postCast {
       | PCESave(save) =>
@@ -1006,7 +1034,7 @@ module battle {
     val freshElig = eligibleForCounterspell(cs, entry.spellCasterId)
     val remaining = freshElig.exclude(entry.offered)
     if (remaining.size() > 0) {
-      val spell: SpellCastCtx = { caster: entry.spellCasterId, postCast: entry.spellPostCast, slotLvl: entry.slotLvl }
+      val spell: SpellCastCtx = { caster: entry.spellCasterId, spellName: entry.spellName, postCast: entry.spellPostCast, slotLvl: entry.slotLvl, ritual: entry.ritual }
       { creatures: cs,
         phase: BPAwaitingReaction({
           interrupt: PISpellCast(spell), trigger: TSpellBeingCast,
@@ -1035,7 +1063,7 @@ module battle {
                     val freshElig2 = eligibleForCounterspell(cs, gp.top.spellCasterId)
                     val remaining2 = freshElig2.exclude(gp.top.offered)
                     if (remaining2.size() > 0) {
-                      val spell2: SpellCastCtx = { caster: gp.top.spellCasterId, postCast: gp.top.spellPostCast, slotLvl: gp.top.slotLvl }
+                      val spell2: SpellCastCtx = { caster: gp.top.spellCasterId, spellName: gp.top.spellName, postCast: gp.top.spellPostCast, slotLvl: gp.top.slotLvl, ritual: gp.top.ritual }
                       { creatures: cs,
                         phase: BPAwaitingReaction({
                           interrupt: PISpellCast(spell2), trigger: TSpellBeingCast,
@@ -1044,7 +1072,7 @@ module battle {
                         stack: gp.rest,
                       }
                     } else {
-                      resolveSpellEntry(cs, gp.top.spellCasterId, gp.top.slotLvl, gp.top.spellPostCast, gp.rest)
+                      resolveSpellEntry(cs, gp.top.spellCasterId, gp.top.slotLvl, gp.top.ritual, gp.top.spellPostCast, gp.rest)
                     }
                   }
                 | _ =>
@@ -1056,7 +1084,7 @@ module battle {
               val freshElig2 = eligibleForCounterspell(cs, popped.top.spellCasterId)
               val remaining2 = freshElig2.exclude(popped.top.offered)
               if (remaining2.size() > 0) {
-                val spell2: SpellCastCtx = { caster: popped.top.spellCasterId, postCast: popped.top.spellPostCast, slotLvl: popped.top.slotLvl }
+                val spell2: SpellCastCtx = { caster: popped.top.spellCasterId, spellName: popped.top.spellName, postCast: popped.top.spellPostCast, slotLvl: popped.top.slotLvl, ritual: popped.top.ritual }
                 { creatures: cs,
                   phase: BPAwaitingReaction({
                     interrupt: PISpellCast(spell2), trigger: TSpellBeingCast,
@@ -1065,11 +1093,11 @@ module battle {
                   stack: popped.rest,
                 }
               } else {
-                resolveSpellEntry(cs, popped.top.spellCasterId, popped.top.slotLvl, popped.top.spellPostCast, popped.rest)
+                resolveSpellEntry(cs, popped.top.spellCasterId, popped.top.slotLvl, popped.top.ritual, popped.top.spellPostCast, popped.rest)
               }
             }
           }
-        | _ => resolveSpellEntry(cs, entry.spellCasterId, entry.slotLvl, entry.spellPostCast, stack)
+        | _ => resolveSpellEntry(cs, entry.spellCasterId, entry.slotLvl, entry.ritual, entry.spellPostCast, stack)
       }
     }
   }
@@ -1116,7 +1144,7 @@ module battle {
                   }
                 | _ =>
                   // Non-CS spell resolves: expend slot + dispatch via resolveSpellEntry
-                  val result = resolveSpellEntry(bCreatures, spell.caster, spell.slotLvl, spell.postCast, bSpellStack)
+                  val result = resolveSpellEntry(bCreatures, spell.caster, spell.slotLvl, spell.ritual, spell.postCast, bSpellStack)
                   all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
               }
             } else {
@@ -1142,6 +1170,8 @@ module battle {
                       spellPostCast: spell.postCast,
                       offered: newOffered,
                       slotLvl: spell.slotLvl,
+                      spellName: spell.spellName,
+                      ritual: spell.ritual,
                     }
                     val newStack = bSpellStack.append(stackEntry)
                     // Create Counterspell as a new spell cast
@@ -1151,8 +1181,10 @@ module battle {
                     }
                     val csSpell: SpellCastCtx = {
                       caster: reactorId,
+                      spellName: "counterspell",
                       postCast: PCECounterspell(csEffect),
                       slotLvl: 0,  // CS slot already spent at cast time (reaction)
+                      ritual: false,  // Counterspell is a reaction, never ritual
                     }
                     // Enter CS window for the Counterspell (empty eligible → resolves next step)
                     val csElig = eligibleForCounterspell(cs2, reactorId)
@@ -1266,6 +1298,7 @@ module battle {
     nondet spellId = Set("hold_person", "bless", "haste", "spirit_guardians").oneOf()
     nondet cond = Set(CParalyzed, CCharmed, CRestrained).oneOf()
     nondet applyCond = Bool.oneOf()
+    nondet ritual = Bool.oneOf()
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -1273,7 +1306,9 @@ module battle {
       not(ac.creature.dead),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
-      ac.slots.slotsCurrent.get(slotLvl) > 0,
+      ac.preparedSpells.contains(spellId),    // SRD 5.2.1: must have spell prepared
+      // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
+      if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
       val concCtx: ConcentrationCtx = {
@@ -1283,8 +1318,10 @@ module battle {
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
+        spellName: spellId,
         postCast: PCEConcentration(concCtx),
         slotLvl: slotLvl,
+        ritual: ritual,
       }
       // Counterspell interrupt — if countered, concentration never starts
       val csElig = eligibleForCounterspell(cs1, activeId)
@@ -1295,8 +1332,9 @@ module battle {
           keepBattle,
         }
       } else {
-        // No Counterspell — expend slot and resolve concentration immediately
-        val cs2 = setSlots(cs1, activeId, pExpendSlot(cs1.get(activeId).slots, slotLvl))
+        // No Counterspell — expend slot (unless ritual) and resolve concentration immediately
+        val cs2 = if (ritual) cs1
+                  else setSlots(cs1, activeId, pExpendSlot(cs1.get(activeId).slots, slotLvl))
         val resolved = resolveConcentration(cs2, concCtx)
         all {
           bCreatures' = resolved,
@@ -1352,13 +1390,17 @@ module battle {
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
     nondet slotLvl = 1.to(3).oneOf()
+    nondet spellName = ac.preparedSpells.oneOf()
+    nondet ritual = Bool.oneOf()
     all {
       bPhase == BPActiveTurn,
       ac.turn.actionsRemaining > 0,
       not(ac.creature.dead),
       liveTargets.size() >= 2,
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
-      ac.slots.slotsCurrent.get(slotLvl) > 0,
+      ac.preparedSpells.size() > 0,           // must have at least one prepared spell
+      // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
+      if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
       val aoeCtx: AoESpellCtx = {
@@ -1370,8 +1412,10 @@ module battle {
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
+        spellName: spellName,
         postCast: PCEAoE(aoeCtx),
         slotLvl: slotLvl,
+        ritual: ritual,
       }
       // Counterspell interrupt — if countered, entire AoE fizzles
       val csElig = eligibleForCounterspell(cs1, activeId)
@@ -1382,8 +1426,9 @@ module battle {
           keepBattle,
         }
       } else {
-        // No Counterspell — expend slot and enter AoE resolution
-        val cs2 = setSlots(cs1, activeId, pExpendSlot(cs1.get(activeId).slots, slotLvl))
+        // No Counterspell — expend slot (unless ritual) and enter AoE resolution
+        val cs2 = if (ritual) cs1
+                  else setSlots(cs1, activeId, pExpendSlot(cs1.get(activeId).slots, slotLvl))
         all {
           bCreatures' = cs2,
           bPhase' = BPResolvingAoE(aoeCtx),
