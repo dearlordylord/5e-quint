@@ -25,11 +25,9 @@ export interface ItfTraceRaw {
 export async function loadTracesFromDir(dir: string): Promise<ReadonlyArray<ItfTraceRaw>> {
   const files = await readdir(dir)
   const itfFiles = files.filter((f) => f.endsWith(".itf.json")).sort()
-  const traces: Array<ItfTraceRaw> = []
-  for (const file of itfFiles) {
-    const content = await readFile(join(dir, file), "utf-8")
-    traces.push(JSON.parse(content) as ItfTraceRaw)
-  }
+  const traces = await Promise.all(
+    itfFiles.map(async (file) => JSON.parse(await readFile(join(dir, file), "utf-8")) as ItfTraceRaw)
+  )
   return traces
 }
 
@@ -73,9 +71,7 @@ export async function replayFromDir<S, Actions extends SimpleActionMap>(opts: {
           picks?: Record<string, { "~standard": { validate: (v: unknown) => { value: unknown } } }>
           handler: (picks: Record<string, unknown>) => void | Promise<void>
         }
-        // Decode picks through the action's schema (mirrors quint-connect's buildPicksDecoder)
-        // Decode picks: unwrap ITF Option (Some/None), then validate through schema.
-        // MBT traces wrap nondet picks in Option: {tag:"Some",value:X} or {tag:"None",...}.
+        // Unwrap ITF Option (Some/None) and validate through the action's schema.
         const picksObj: Record<string, unknown> = {}
         if (actionDef.picks) {
           for (const [k, schema] of Object.entries(actionDef.picks)) {
@@ -121,9 +117,4 @@ export async function replayFromDir<S, Actions extends SimpleActionMap>(opts: {
   }
 
   return { tracesReplayed: traces.length }
-}
-
-/** Check if replay mode is active. */
-export function replayDir(): string | undefined {
-  return process.env["MBT_REPLAY_DIR"]
 }

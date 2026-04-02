@@ -426,16 +426,6 @@ function createBattleProjectionDriver() {
       return initiative[turnIndex]
     }
 
-    /** Check if any creature (excluding casterId) can cast Counterspell. */
-    function hasCounterspellReactors(casterId: CreatureId): boolean {
-      return [...actors.entries()].some(([cid, actor]) => {
-        if (cid === casterId) return false
-        const snap = actor.getSnapshot()
-        if (!snap.context.reactionAvailable || snap.matches({ damageTrack: "dead" })) return false
-        return snap.context.slotsCurrent.slice(2).some((s) => s > 0) // indices 2+ = levels 3+
-      })
-    }
-
     // ============================================================
     // Action projection mapping (B14.4)
     // ============================================================
@@ -871,7 +861,7 @@ function createBattleProjectionDriver() {
         ritual
       }
 
-      const hasCSReactors = hasCounterspellReactors(id)
+      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
 
       if (!hasCSReactors) {
         // Resolve save immediately — expend deferred slot (ritual skips expenditure)
@@ -1181,7 +1171,7 @@ function createBattleProjectionDriver() {
         ritual
       }
 
-      const hasCSReactors = hasCounterspellReactors(id)
+      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
       if (!hasCSReactors) {
         resolveConcentrationSpell(pendingConcentration)
         pendingConcentration = null
@@ -1282,7 +1272,7 @@ function createBattleProjectionDriver() {
         ritual
       }
 
-      const hasCSReactors = hasCounterspellReactors(id)
+      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
 
       if (!hasCSReactors) {
         if (!ritual) send(id, { type: "EXPEND_SLOT", level: slotLvl })
