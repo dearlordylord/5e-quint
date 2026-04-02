@@ -18,8 +18,8 @@ importers:
   app:
     dependencies:
       '@firfi/quint-connect':
-        specifier: ^0.7.1
-        version: 0.7.1(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
+        specifier: ^0.7.2
+        version: 0.7.2(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
       '@statelyai/graph':
         specifier: ^0.8.0
         version: 0.8.0(zod@4.3.6)
@@ -567,8 +567,8 @@ packages:
       zod:
         optional: true
 
-  '@firfi/quint-connect@0.7.1':
-    resolution: {integrity: sha512-McaW+bFK1EHp1zTqfq4yJLB5WJVcFgCh3IphwHO0b9U3JZ796846Oh4RNDHkjJv8kw87tssipwDCJbLJZ7i4hg==}
+  '@firfi/quint-connect@0.7.2':
+    resolution: {integrity: sha512-1BQw0rxKpLUVhK3rgEs8eWFPHCgTPAKJzUcyRCjv2FOnEKGtCIbqkubE5Ty8IztUqJF1ksV33pSk1G32MIC+EQ==}
     hasBin: true
     peerDependencies:
       effect: ^3.0.0
@@ -3436,6 +3436,11 @@ packages:
     engines: {node: '>=20.16.0'}
     hasBin: true
 
+  srvx@0.11.14:
+    resolution: {integrity: sha512-mx+pKrWJCzo5m6uXqyB7n4VA81mpdFRroSWsVTQTYqCZE65hFJ+jtVIeyhtL2/kvtDMrHdbA0hWEUh/vu0+Viw==}
+    engines: {node: '>=20.16.0'}
+    hasBin: true
+
   stable-hash-x@0.2.0:
     resolution: {integrity: sha512-o3yWv49B/o4QZk5ZcsALc6t0+eCelPc44zZsLtCQnZPDwFpDYSWcDnrv2TtMmMbQ7uKo3J0HTURCqckw23czNQ==}
     engines: {node: '>=12.0.0'}
@@ -4295,7 +4300,7 @@ snapshots:
       effect: 3.21.0
       zod: 4.3.6
 
-  '@firfi/quint-connect@0.7.1(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)':
+  '@firfi/quint-connect@0.7.2(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)':
     dependencies:
       '@firfi/itf-trace-parser': 0.1.2(effect@3.21.0)(zod@4.3.6)
       '@standard-schema/spec': 1.1.0
@@ -6322,7 +6327,7 @@ snapshots:
   h3@2.0.1-rc.16:
     dependencies:
       rou3: 0.8.1
-      srvx: 0.11.12
+      srvx: 0.11.14
 
   has-bigints@1.1.0: {}
 
@@ -7440,6 +7445,8 @@ snapshots:
   spark-md5@3.0.2: {}
 
   srvx@0.11.12: {}
+
+  srvx@0.11.14: {}
 
   stable-hash-x@0.2.0: {}
 

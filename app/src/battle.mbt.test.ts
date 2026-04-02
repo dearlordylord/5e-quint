@@ -1374,10 +1374,9 @@ const battleStateCheck = stateCheck(
 // ============================================================
 
 describe("Battle Projection MBT", () => {
-  // WORKAROUND: quint-connect forces --seed + --max-samples 10000, causing the Rust
-  // evaluator to spin on bad seeds for specs with high guard failure rates (battle.qnt
-  // has 21 phase-guarded actions). Keep nTraces=1 and maxSamples=50 until quint-connect
-  // is fixed to not force --seed. See: https://github.com/anthropics/claude-code/issues/TBD
+  // battle.qnt has 21 phase-guarded actions — most random samples fail guards.
+  // Keep maxSamples bounded to avoid quint spinning. Trace generation is the
+  // bottleneck, not replay.
   const MBT_TRACE_COUNT = 1
   const MBT_STEP_COUNT = 10
   const specPath = path.resolve(import.meta.dirname, "../../battle.qnt")
@@ -1391,7 +1390,6 @@ describe("Battle Projection MBT", () => {
       backend: "rust",
       nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
       maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
-      // Battle state space is large — limit samples to avoid quint hanging on seed exhaustion.
       maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? 50),
       stateCheck: battleStateCheck
     })
