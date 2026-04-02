@@ -126,9 +126,9 @@ export default [
     }
   },
 
-  // Test file overrides
+  // Test file + MBT infrastructure overrides
   {
-    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts"],
+    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/mbt-shared.ts"],
     rules: {
       "max-lines": "off",
       "no-magic-numbers": "off",

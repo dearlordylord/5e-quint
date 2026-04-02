@@ -79,6 +79,8 @@ export interface DndMachineInput {
   readonly wisMod?: number
   readonly bardLevel?: number
   readonly chaMod?: number
+  readonly slotsMax?: ReadonlyArray<number>
+  readonly slotsCurrent?: ReadonlyArray<number>
 }
 
 // Per-class state interfaces: extracted to machine-class-states.ts for max-lines
