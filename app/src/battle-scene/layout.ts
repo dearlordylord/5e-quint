@@ -246,12 +246,10 @@ export function computeLayout(
 
 function computeCastLine(snapshot: SceneSnapshot, cues: VisualCueState, config: LayoutConfig): CastLineLayout | null {
   const { castBar } = cues
-  if (!castBar) return null
-  if (snapshot.aoeZones.length === 0) return null
+  if (!castBar || !snapshot.aoeTargetPoint) return null
   const caster = snapshot.creatures.find((c) => c.id === castBar.casterId)
   if (!caster) return null
-  const zone = snapshot.aoeZones[0]
   const from = gridToPixel(caster.gridPos.row, caster.gridPos.col, config.cellSize)
-  const to = gridToPixel(zone.centerGridPos.row, zone.centerGridPos.col, config.cellSize)
+  const to = gridToPixel(snapshot.aoeTargetPoint.row, snapshot.aoeTargetPoint.col, config.cellSize)
   return { x1: from.cx, y1: from.cy, x2: to.cx, y2: to.cy, color: "#a78bfa" }
 }

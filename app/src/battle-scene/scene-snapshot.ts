@@ -66,6 +66,7 @@ export interface SceneSnapshot {
   creatures: ReadonlyArray<CreatureSnapshot>
   phase: PhaseSnapshot
   aoeZones: ReadonlyArray<AoEZoneSnapshot>
+  aoeTargetPoint: { row: number; col: number } | null
   round: number
   activeCreatureId: string | null
 }
@@ -200,6 +201,7 @@ export function deriveSnapshot(
     creatures,
     phase: derivePhase(ctx.phase),
     aoeZones: deriveAoEZones(ctx.phase, meta, aoeEventIndex),
+    aoeTargetPoint: aoeEventIndex != null ? (meta.aoeTargetPoints[aoeEventIndex] ?? null) : null,
     round: ctx.round,
     activeCreatureId: activeId
   }
