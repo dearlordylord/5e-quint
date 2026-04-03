@@ -6,6 +6,7 @@ import { z } from "zod"
 
 import type { MetamagicOption } from "#/features/class-sorcerer.ts"
 import type { ClassName } from "#/features/class-tables.ts"
+import { CLASS_NAMES } from "#/features/class-tables.ts"
 import type { DndSnapshot } from "#/machine.ts"
 import type { ClassStateMap } from "#/machine-types.ts"
 import type { Condition, CreatureKind, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
@@ -91,6 +92,21 @@ export const QUINT_DAMAGE_TYPE_MAP: Record<string, DamageType> = {
 
 // Quint variant tags are Capitalized by convention; TS ClassName is lowercase.
 export type QuintClassName = Capitalize<ClassName>
+
+const QUINT_CLASS_NAME_SET: ReadonlySet<string> = new Set(
+  CLASS_NAMES.map((n) => n.charAt(0).toUpperCase() + n.slice(1))
+)
+
+/** Zod schema: parse a Quint ClassName→int Map into Record<QuintClassName, number>. */
+export const QuintClassLevelMap = z.any().transform((raw) => {
+  const record = quintMapToRecord(raw, Number, variantToString)
+  for (const key of Object.keys(record)) {
+    if (!QUINT_CLASS_NAME_SET.has(key)) {
+      throw new Error(`Unknown Quint class name: "${key}"`)
+    }
+  }
+  return record as Record<QuintClassName, number>
+})
 
 export function quintClassToTs(quintName: QuintClassName): ClassName {
   return quintName.toLowerCase() as ClassName
@@ -211,9 +227,7 @@ export const QuintCreatureState = z.object({
   stunned: z.boolean(),
   unconscious: z.boolean(),
   incapacitatedSources: QuintIncapSourceSet,
-  hitDiceRemaining: z
-    .any()
-    .transform((raw) => quintMapToRecord(raw, Number, variantToString) as Record<QuintClassName, number>),
+  hitDiceRemaining: QuintClassLevelMap,
   activeEffects: z.any().transform((raw: unknown) => {
     const items: Array<{
       spellId: string
