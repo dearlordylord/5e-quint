@@ -120,3 +120,23 @@ Summary: 3 fixed (slotsMax, pactSlots, hitDice), 1 new (extraAttacksRemaining)
   Already-tracked (not re-counted): extraAttacksRemaining, slotsMax/pactSlots/hitDice (fixed)
 
 Summary: 0 fixed, 2 new logged-for-review (deathSaves + arcaneRecovery)
+
+2026-04-02T22:02:00 — Cron check #4
+  MBT failures: 15 new since last check (now running fixed code)
+  Invariant failures: 6 new (same spellStackDistinctCasters)
+  
+  Pattern breakdown (post-fix code):
+    8x extraAttacksRemaining (already tracked)
+    5x slotsCurrent (new — runtime slot divergence, not init)
+    1x pactSlotsCurrent (new — runtime pact slot divergence)
+    1x deathSaves (already tracked)
+  
+  New: slotsCurrent runtime divergence
+    Seed: 0xdeb7687e, trace 22, step 27, action "doLongRest"
+    slotsMax matches ([4,3,2,...]) but after long rest XState slotsCurrent=[4,2,2,...]
+    instead of [4,3,2,...]. Long rest should restore all slots.
+    computeLongRest returns slotsMax directly. Either the creature was at 0 HP
+    (guard returns null → no-op) or the assign didn't apply properly.
+    Needs full trace replay to determine pre-long-rest state.
+
+Summary: 0 fixed, 1 new logged (slotsCurrent runtime), rest already tracked
