@@ -43,13 +43,14 @@ describe("diffSnapshots", () => {
     expect(delta.becameUnconscious).toHaveLength(0)
   })
 
-  it("detects damage across full scenario", () => {
+  it("detects damage and KOs across full scenario", () => {
     const before = snapshotAt(2) // all healthy
     const after = snapshotAt(FIREBALL_BATTLE.length)
     const delta = diffSnapshots(before, after)
-    // Everyone took damage, nobody unconscious
     expect(Object.keys(delta.damageTaken).length).toBeGreaterThan(0)
-    expect(delta.becameUnconscious).toHaveLength(0)
+    expect(delta.becameUnconscious).toContain("D")
+    expect(delta.becameUnconscious).toContain("F")
+    expect(delta.becameUnconscious).not.toContain("A")
   })
 
   it("detects new AoE zones", () => {

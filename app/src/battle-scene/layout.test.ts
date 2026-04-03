@@ -29,11 +29,11 @@ describe("computeLayout", () => {
     expect(a.teamColor).toBe("#3b82f6")
   })
 
-  it("all creatures alive with full opacity after scenario", () => {
+  it("unconscious creatures have reduced opacity", () => {
     const layout = computeLayout(snapshotAt(FIREBALL_BATTLE.length), EMPTY_CUES, CFG)
-    for (const c of layout.creatures) {
-      expect(c.opacity).toBe(1)
-    }
+    expect(layout.creatures.find((c) => c.id === "A")!.opacity).toBe(1)
+    expect(layout.creatures.find((c) => c.id === "D")!.opacity).toBe(0.3)
+    expect(layout.creatures.find((c) => c.id === "F")!.opacity).toBe(0.3)
   })
 
   it("HP bar fill scales with hpRatio", () => {

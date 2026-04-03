@@ -44,18 +44,15 @@ describe("deriveSnapshot", () => {
     expect(snap.aoeZones[0].radiusFeet).toBe(20)
   })
 
-  it("correct HP after full scenario (two fireballs, everyone alive)", () => {
+  it("correct HP after full scenario — D and F KO'd", () => {
     const snap = deriveSnapshot(replayTo(FIREBALL_BATTLE.length), META)
-    // A saved D's fireball: 50-14=36
     expect(snap.creatures.find((c) => c.id === "A")!.currentHp).toBe(36)
-    // D failed A's fireball: 50-28=22
-    expect(snap.creatures.find((c) => c.id === "D")!.currentHp).toBe(22)
-    // E saved A's fireball: 50-14=36
-    expect(snap.creatures.find((c) => c.id === "E")!.currentHp).toBe(36)
-    // Nobody unconscious
-    for (const c of snap.creatures) {
-      expect(c.unconscious).toBe(false)
-    }
+    expect(snap.creatures.find((c) => c.id === "B")!.currentHp).toBe(22)
+    expect(snap.creatures.find((c) => c.id === "C")!.currentHp).toBe(22)
+    expect(snap.creatures.find((c) => c.id === "D")!.currentHp).toBe(0)
+    expect(snap.creatures.find((c) => c.id === "D")!.unconscious).toBe(true)
+    expect(snap.creatures.find((c) => c.id === "E")!.currentHp).toBe(22)
+    expect(snap.creatures.find((c) => c.id === "F")!.unconscious).toBe(true)
   })
 
   it("assigns teams correctly", () => {

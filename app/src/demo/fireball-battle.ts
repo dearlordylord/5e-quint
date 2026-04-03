@@ -137,7 +137,72 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
   aoeTarget("C", 7), // C fails (50→22), no reaction (spent on CS)
   aoeTarget(null, 0), // AoE complete
 
-  endTurn // end D's turn
+  endTurn, // end D's turn
+
+  // === Turns B, E, C, F: pass (no actions, reactions reset) ===
+  startTurn,
+  endTurn, // B
+  startTurn,
+  endTurn, // E
+  startTurn,
+  endTurn, // C
+  startTurn,
+  endTurn, // F
+
+  // === ROUND 2 ===
+
+  // === Turn A: Fireball #2 at red team (D=22, E=36, F=22) ===
+  startTurn,
+  castFireball, // event index 36
+
+  // CS chain again: E→B→F→C (everyone has 1 level-3 slot left)
+  cs("E", false),
+  cs("B", false),
+  cs("F", false),
+  cs("C", false),
+  cs(null, false), // chain resolves, Fireball proceeds
+
+  // AoE resolves
+  aoeTarget("D", 3), // D fails (22→0) — KO!
+  // D has reaction → save-failed + after-damage windows
+  sfPass("D"),
+  sfPass(null),
+  adPass("D"),
+  adPass(null),
+  aoeTarget("E", 18), // E saves (36→22, half=14)
+  aoeTarget("F", 6), // F fails (22→0) — KO! No reaction (spent on CS)
+  aoeTarget(null, 0),
+
+  endTurn, // end A's turn — D and F unconscious, E alone at 22 HP
+
+  // === Turn D: unconscious, death save ===
+  // D fails death save (sotSaveResult=false)
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true
+  },
+  endTurn,
+
+  // === Turn E: last wizard standing for red team, no slots for fireball ===
+  startTurn,
+  endTurn,
+
+  // === Turn F: unconscious, death save (fails) ===
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true
+  },
+  endTurn
 ]
 
 /** Metadata for game engine rendering — not consumed by the battle machine. */
@@ -161,10 +226,12 @@ export const FIREBALL_BATTLE_META = {
   },
   aoeTargetPoints: {
     "2": { row: 5, col: 8 },
-    "18": { row: 5, col: 2 }
+    "18": { row: 5, col: 2 },
+    "36": { row: 5, col: 8 }
   },
   spellAnnotations: {
     "2": "Fireball",
-    "18": "Fireball"
+    "18": "Fireball",
+    "36": "Fireball"
   }
 } satisfies ScenarioMeta
