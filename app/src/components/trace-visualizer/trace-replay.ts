@@ -48,7 +48,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     stunned: c.stunned,
     unconscious: c.unconscious,
     incapacitatedSources: [...c.incapacitatedSources].sort(),
-    hitPointDiceRemaining: c.hitDiceRemaining,
+    hitPointDiceRemaining: Object.values(c.hitDiceRemaining).reduce((a, b) => a + b, 0),
     activeEffects: [...c.activeEffects]
       .sort((a, b) => a.spellId.localeCompare(b.spellId))
       .map((ae) => ({ spellId: ae.spellId, turnsRemaining: ae.turnsRemaining, expiresAt: ae.expiresAt })),
