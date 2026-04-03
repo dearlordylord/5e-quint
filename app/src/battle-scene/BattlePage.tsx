@@ -112,7 +112,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   )
 
   return (
-    <PageShell title="Battle Visualizer" centered>
+    <PageShell title="Battle Visualizer">
       <div className="flex flex-col items-center">
         <PlaybackControls
           cursor={cursor}
