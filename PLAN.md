@@ -328,6 +328,10 @@ The core spec is complete when any SRD spell, class feature, or racial trait can
 
 Moved from PLAN_CLEANUP.md P1. Two fields on TurnState: `bonusMovementRemaining` (distance) and `bonusMovementOAFree` (OA immunity). `doUseBonusMovement` action consumes it. Reset at turn start. Used by Tactical Shift (Fighter L5) and Remarkable Athlete (Fighter L3); available for Barbarian Instinctive Pounce, Rogue Withdraw.
 
+## Open: Battle — 5+ deep CS chain unwind bug
+
+`returnToCSWindow` calls `resolveSpellEntry` on intermediate CS stack entries when no remaining reactors exist. `resolveSpellEntry` doesn't handle `PCECounterspell` — falls through to `default → BPActiveTurn`, leaving the stack partially unwound. Only triggers with 5+ deep chains where the terminal CS fails. 4-deep chains work because the grandparent skip always lands on the original (non-CS) spell. Fix: `returnToCSWindow` should continue unwinding CS entries instead of delegating to `resolveSpellEntry`. Affects both Quint (`battle.qnt`) and TS (`battle-machine-spells.ts`).
+
 ## Open: Battle — Surprise (B16)
 
 Moved from PLAN_BATTLE.md. SRD 5.2.1: "If a combatant is surprised by combat starting, that combatant has Disadvantage on their Initiative roll." No lost turn, no surprised condition — purely disadvantage on the initiative d20 roll. Requires initiative to be a d20 roll (currently hardcoded order). Scope: add `surprised: bool` per combatant to `bInit`, apply disadvantage to initiative roll, no further mechanical effect after initiative is resolved. Deps: B15 (done).
