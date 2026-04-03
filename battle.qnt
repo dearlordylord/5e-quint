@@ -408,8 +408,7 @@ module battle {
 
   /// Eligible Counterspell reactors: base eligible + has level 3+ slot + counterspell prepared
   /// + hasn't already expended a spell slot this turn (SRD 5.2.1 "One Spell with a Spell Slot per Turn").
-  /// TODO: guard is sufficient today (action economy prevents double-action casting). When bonus-action
-  /// spells or other multi-cast paths are added, move guard to expenditure boundary (expendSlot).
+  /// All spell-casting actions also guard on slotExpendedThisTurn at the action level.
   pure def eligibleForCounterspell(
     cs: CreatureId -> Combatant, excludeId: CreatureId
   ): Set[CreatureId] =
@@ -893,6 +892,7 @@ module battle {
       not(ac.creature.dead),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
+      not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       ac.preparedSpells.size() > 0,           // must have at least one prepared spell
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
@@ -1333,6 +1333,7 @@ module battle {
       not(ac.creature.dead),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
+      not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       ac.preparedSpells.contains(spellId),    // SRD 5.2.1: must have spell prepared
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
@@ -1425,6 +1426,7 @@ module battle {
       not(ac.creature.dead),
       liveTargets.size() >= 2,
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
+      not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       ac.preparedSpells.size() > 0,           // must have at least one prepared spell
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
@@ -1742,6 +1744,65 @@ module battle {
     }
   }
 
+  /// Cast a save spell using bonus action (e.g., Spiritual Weapon attack, Healing Word).
+  /// Same as bCastSaveSpell but uses bonus action instead of action.
+  /// SRD 5.2.1: bonus action spells still cost a slot and are subject to one-slot-per-turn.
+  action bCastBonusActionSpell = {
+    val activeId = bInitiative[bTurnIndex]
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
+    nondet targetId = allIds.exclude(Set(activeId)).oneOf()
+    nondet saveDC = 10.to(18).oneOf()
+    nondet saveRoll = 1.to(20).oneOf()
+    nondet dmgOnFail = 0.to(20).oneOf()
+    nondet halfOnSave = Bool.oneOf()
+    nondet dt = ALL_DAMAGE_TYPES.oneOf()
+    nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
+    nondet applyCond = Bool.oneOf()
+    nondet slotLvl = 1.to(3).oneOf()
+    nondet spellName = ac.preparedSpells.oneOf()
+    val tc = bCreatures.get(targetId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      not(ac.creature.dead),
+      not(tc.creature.dead),
+      not(ac.turn.bonusActionUsed),
+      not(ac.turn.slotExpendedThisTurn),        // SRD 5.2.1 one slot per turn
+      ac.preparedSpells.size() > 0,
+      ac.slots.slotsCurrent.get(slotLvl) > 0,   // BA spells cannot be rituals
+      val newTurn = pUseBonusAction(ac.turn, ac.creature)
+                      .with("bonusActionSpellCast", true)
+      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val saveCtx: SaveSpellCtx = {
+        caster: activeId, target: targetId,
+        saveDC: saveDC, saveRoll: saveRoll,
+        damageOnFail: dmgOnFail, halfOnSuccess: halfOnSave,
+        damageType: dt,
+        conditionOnFail: cond, applyCondition: applyCond,
+      }
+      val spellCtx: SpellCastCtx = {
+        caster: activeId,
+        spellName: spellName,
+        postCast: PCESave(saveCtx),
+        slotLvl: slotLvl,
+        ritual: false,
+      }
+      val csElig = eligibleForCounterspell(cs1, activeId)
+      if (csElig.size() > 0) {
+        all {
+          bCreatures' = cs1,
+          bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(spellCtx), TSpellBeingCast, csElig)),
+          keepBattle,
+        }
+      } else {
+        val cs2 = expendSlot(cs1, activeId, slotLvl)
+        val result = resolveSave(cs2, saveCtx, ADRActiveTurn)
+        all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+      }
+    }
+  }
+
   // ============================================================
   // 5. STEP + INVARIANTS
   // ============================================================
@@ -1753,7 +1814,7 @@ module battle {
   action battleStep = match bPhase {
     | BPActiveTurn => any {
         bStartTurn, bAttack, bCastSaveSpell, bCastAoE,
-        bCastConcentrationSpell, bConcentrationCheck,
+        bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
         bMove, bHeal, bEndTurn,
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {

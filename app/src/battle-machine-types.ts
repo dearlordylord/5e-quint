@@ -306,6 +306,7 @@ export type BattleEvent =
       readonly slotLvl: number
       readonly spellName: string
       readonly ritual: boolean
+      readonly bonusAction?: boolean
     }
   | {
       readonly type: "BATTLE_RESOLVE_COUNTERSPELL"

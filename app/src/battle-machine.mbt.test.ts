@@ -324,6 +324,18 @@ const battleDriverSchema = {
   bLegendaryPass: {},
   bLegendaryAttack: { monsterId: OS, laTarget: OS, laAtkRoll: OI, laDmg: OI, laDt: OV, laCrit: OB, laTgtAc: OI },
   bHeal: { targetId: OS, amount: OI },
+  bCastBonusActionSpell: {
+    targetId: OS,
+    saveDC: OI,
+    saveRoll: OI,
+    dmgOnFail: OI,
+    halfOnSave: OB,
+    dt: OV,
+    cond: OV,
+    applyCond: OB,
+    slotLvl: OI,
+    spellName: OS
+  },
   battleStep: {}
 } as const
 
@@ -577,6 +589,23 @@ function createBattleMachineDriver() {
       },
       bHeal: (picks: Record<string, unknown>) => {
         send({ type: "BATTLE_HEAL", targetId: ps(picks, "targetId", ""), amount: p(picks, "amount", 5) })
+      },
+      bCastBonusActionSpell: (picks: Record<string, unknown>) => {
+        send({
+          type: "BATTLE_CAST_SAVE_SPELL",
+          targetId: ps(picks, "targetId", ""),
+          saveDC: p(picks, "saveDC", 15),
+          saveRoll: p(picks, "saveRoll", 10),
+          dmgOnFail: p(picks, "dmgOnFail", 10),
+          halfOnSave: pb(picks, "halfOnSave", false),
+          dt: mapDamageType(ps(picks, "dt", "Fire")),
+          cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CBlinded")] ?? "blinded",
+          applyCond: pb(picks, "applyCond", false),
+          slotLvl: p(picks, "slotLvl", 1),
+          spellName: ps(picks, "spellName", "guiding_bolt"),
+          ritual: false,
+          bonusAction: true
+        })
       },
       battleStep: () => {},
       getState: (): BattleCompareState => {

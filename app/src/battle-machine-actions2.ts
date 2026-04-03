@@ -47,8 +47,15 @@ export function battleCastSaveSpell({ context: c, event: e }: Args): Partial<Bat
   if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
-  if (ac.dead || ac.actionsRemaining <= 0) return {}
-  let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
+  if (e.bonusAction) {
+    if (ac.dead || ac.bonusActionUsed || ac.slotExpendedThisTurn) return {}
+  } else {
+    if (ac.dead || ac.actionsRemaining <= 0) return {}
+    if (ac.slotExpendedThisTurn && !e.ritual) return {}
+  }
+  let cs = e.bonusAction
+    ? setCreature(c.creatures, id, { ...ac, bonusActionUsed: true, bonusActionSpellCast: true })
+    : setCreature(c.creatures, id, spendAction(ac, "magic"))
   const saveCtx = {
     caster: id,
     target: e.targetId,
@@ -183,6 +190,7 @@ export function battleCastConcentrationSpell({ context: c, event: e }: Args): Pa
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || ac.actionsRemaining <= 0) return {}
+  if (ac.slotExpendedThisTurn && !e.ritual) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
   const concCtx = {
     caster: id,
@@ -227,6 +235,7 @@ export function battleCastAoE({ context: c, event: e }: Args): Partial<BattleCon
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || ac.actionsRemaining <= 0) return {}
+  if (ac.slotExpendedThisTurn && !e.ritual) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
   const liveTargets = new Set<CreatureId>()
   for (const [cid, cr] of cs) {
