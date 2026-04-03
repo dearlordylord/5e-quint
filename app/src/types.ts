@@ -254,8 +254,6 @@ export function movementFeet(n: number): MovementFeet {
 }
 export type { MovementFeet }
 
-// --- Branded numeric types ---
-
 const ClassLevel = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),

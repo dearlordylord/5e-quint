@@ -1,3 +1,4 @@
+import { Option } from "effect"
 import { describe, expect, it } from "vitest"
 import { createActor } from "xstate"
 
@@ -32,8 +33,6 @@ import {
   saveMods
 } from "#/machine-queries.ts"
 import { calculateMulticlassSlots, concentrationDC, expendSlot, slotsPerLevel } from "#/machine-spells.ts"
-import { Option } from "effect"
-
 import type { ActionType, ArmorState, AttackContext, Condition, DamageType } from "#/types.ts"
 import {
   abilityScore,
