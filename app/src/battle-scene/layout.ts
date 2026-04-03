@@ -70,11 +70,20 @@ export interface AoELayout {
   spellName: string
 }
 
+export interface CastLineLayout {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  color: string
+}
+
 export interface LayoutState {
   viewBox: { width: number; height: number }
   gridLines: ReadonlyArray<{ x1: number; y1: number; x2: number; y2: number }>
   creatures: ReadonlyArray<CreatureLayout>
   aoeZones: ReadonlyArray<AoELayout>
+  castLine: CastLineLayout | null
   interruptOverlay: { opacity: number; label: string | null }
   spellAnnouncement: { spellName: string; casterId: string } | null
 }
@@ -226,10 +235,23 @@ export function computeLayout(
       computeCreatureLayout(c, cues, config, snapshot.phase.type === "interrupt" ? snapshot.phase.reactorId : undefined)
     ),
     aoeZones: snapshot.aoeZones.map((z) => computeAoELayout(z, config)),
+    castLine: computeCastLine(snapshot, cues, config),
     interruptOverlay: {
       opacity: cues.interruptOverlay.opacity,
       label: cues.interruptOverlay.label || null
     },
     spellAnnouncement: cues.spellAnnouncement
   }
+}
+
+function computeCastLine(snapshot: SceneSnapshot, cues: VisualCueState, config: LayoutConfig): CastLineLayout | null {
+  const { castBar } = cues
+  if (!castBar) return null
+  if (snapshot.aoeZones.length === 0) return null
+  const caster = snapshot.creatures.find((c) => c.id === castBar.casterId)
+  if (!caster) return null
+  const zone = snapshot.aoeZones[0]
+  const from = gridToPixel(caster.gridPos.row, caster.gridPos.col, config.cellSize)
+  const to = gridToPixel(zone.centerGridPos.row, zone.centerGridPos.col, config.cellSize)
+  return { x1: from.cx, y1: from.cy, x2: to.cx, y2: to.cy, color: "#a78bfa" }
 }

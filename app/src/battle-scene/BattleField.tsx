@@ -1,4 +1,5 @@
 import { AoEZone } from "./AoEZone.tsx"
+import { CastLine } from "./CastLine.tsx"
 import { CreatureToken } from "./CreatureToken.tsx"
 import { GridOverlay } from "./GridOverlay.tsx"
 import { InterruptOverlay } from "./InterruptOverlay.tsx"
@@ -15,6 +16,7 @@ export function BattleField({ layout }: { layout: LayoutState }) {
       {layout.aoeZones.map((z) => (
         <AoEZone key={z.zoneId} {...z} />
       ))}
+      <CastLine line={layout.castLine} />
       {layout.creatures.map((c) => (
         <CreatureToken key={c.id} {...c} />
       ))}
