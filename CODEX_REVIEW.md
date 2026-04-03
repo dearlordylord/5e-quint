@@ -1,130 +1,326 @@
-# Codex Review: Spend-then-Refund Counterspell Slot Logic
+# Architecture Review: Battle Visualizer Rendering Layer
 
-## Question
+## Request
 
-We implemented a "spend-then-refund" pattern for spell slot expenditure in the battle spec (`battle.qnt`). Please review the following changes for correctness against SRD 5.2.1 rules:
-
-### SRD 5.2.1 Rules (exact quotes)
-
-**One Spell with a Spell Slot per Turn** (Spells/Gaining-and-Casting.md):
-> On a turn, you can expend only one spell slot to cast a spell.
-
-**Counterspell** (Spells/Descriptions-A-D.md):
-> You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted. If that spell was cast with a spell slot, the slot isn't expended.
-
-**Reaction** (Rules-Glossary.md):
-> You can take a Reaction on another creature's turn, and if you take it on your own turn, you can do so even if you also take an action, a Bonus Action, or both.
-
-### Design Decision
-
-**Old pattern (deferred expenditure):** Slot was not spent until the spell resolved. If countered, the slot was never spent (implicit refund). Problem: at the time the Counterspell reaction window opens, the caster's `slotExpendedThisTurn` is still `false`, allowing them to counter-counterspell on the same turn (2 slot expenditures).
-
-**New pattern (spend-then-refund):** Slot is spent immediately when the spell is cast (sets `slotExpendedThisTurn = true`). If the spell is countered, the slot is refunded via `refundSlot` (restores slot count) but `slotExpendedThisTurn` stays `true` -- the one-slot-per-turn quota was used.
-
-### Specific Questions
-
-1. Is it correct that a caster who had their spell countered (slot refunded) cannot cast another leveled spell on the same turn? (We believe yes -- the "one slot per turn" quota is consumed by the act of casting, not by whether the slot remains spent.)
-
-2. Is `refundSlot` correctly restoring only the slot count without clearing the per-turn flag? This models "the slot isn't expended" (Counterspell text) while maintaining "you can expend only one spell slot" (one-slot-per-turn rule).
-
-3. The `spellStackDistinctCasters` invariant was weakened to exclude ritual entries. Rituals don't expend slots, so a ritual caster can Counterspell on the same turn. But ritual casting takes 10 extra minutes per SRD -- is it even possible to ritual-cast in combat? Our battle model allows `ritual: true` on cast actions, which is somewhat abstract.
-
-4. When a Counterspell is itself countered (counter-counterspelled), the CS's slot should also be refunded per the same Counterspell text. We carry `slotLvl: csSlotLvl` on CS stack entries for this purpose. Is this correct?
+Review the proposed architecture for a D&D 5e battle visualizer that renders an SVG+Motion (animation library) scene driven by an XState state machine. Critique the abstraction layers, identify coupling risks, and suggest improvements.
 
 ---
 
-## Changed Code (battle.qnt)
+## Project Context
 
-### New helper: `refundSlot`
+This is a D&D 5e combat simulator with a formally verified Quint specification (`battle.qnt`) and a TypeScript XState state machine (`battleMachine`) validated against the spec via model-based testing (MBT). The battle machine handles multi-creature combat: attacks, spellcasting, reaction interrupts (counterspell chains), AoE resolution, concentration, legendary actions, movement with opportunity attacks.
 
-```quint
-/// Refund a spell slot without clearing slotExpendedThisTurn.
-/// SRD 5.2.1 Counterspell: "If that spell was cast with a spell slot, the slot isn't expended."
-/// But "One Spell with a Spell Slot per Turn" still applies -- the caster used their
-/// one-slot-per-turn quota even though the slot is returned. slotExpendedThisTurn stays true.
-pure def refundSlot(
-  cs: CreatureId -> Combatant, id: CreatureId, level: int
-): (CreatureId -> Combatant) = {
-  setSlots(cs, id, pRestoreSlot(cs.get(id).slots, level))
+**What exists:**
+- Quint spec (`battle.qnt`) — formal model of battle rules
+- XState battle machine (`battle-machine.ts`) — TS implementation, MBT-validated against Quint
+- Scripted demo scenario (`fireball-selfishness.ts`) — 16-event sequence: 6 wizards, Fireball + 4-deep counterspell chain + AoE resolution
+- Creature-level XState machine (`machine.ts`) — single-creature state (HP, conditions, action economy, spell slots)
+- Feature layer (`features/`) — class abilities, spell catalog (pure functions)
+
+**What we're building:**
+A visual rendering of the battle — 6 wizard tokens on a grid field, spell cast bars, HP bars, AoE zones, interrupt overlays, unconscious states. Driven by stepping through `BattleEvent[]` and reading `BattleContext` snapshots.
+
+**Chosen renderer:** SVG-in-React + Motion (Framer Motion successor) — selected for maximum testability (SVG elements are DOM nodes, RTL-testable, vitest-compatible without browser).
+
+---
+
+## Demo Scenario: "Fireball Selfishness"
+
+6 wizards (A,B,C blue team vs D,E,F red team). All 25 HP casters.
+
+1. A casts Fireball (AoE, 28 fire damage, DEX save DC 15, half on success)
+2. Counterspell chain: D counterspells -> B counter-counterspells -> E counter-counterspells -> C counter-counterspells
+3. Chain resolves: Fireball goes through
+4. AoE resolves per-target: B,C,D,E fail saves -> 28 damage -> unconscious. F saves -> 14 damage -> alive at 11 HP.
+5. F's after-damage reaction window (game engine renders as "Absorb Elements")
+
+Visual elements needed:
+- **Grid field** — 5ft per square, ~10x8 grid
+- **Creature tokens** — circle/sprite per creature, team-colored
+- **HP bars** — horizontal bar per token showing current/max HP ratio
+- **Cast bars** — animated bar above caster's head during spell casting (Ragnarok Online style — fills up during cast, not a game-state concept, purely visual)
+- **AoE zone** — circle overlay for Fireball's 20ft-radius sphere centered on a target POINT (not on creatures — AoE targets a location, creatures in the zone are affected)
+- **Interrupt overlay** — full-field dimming + "INTERRUPT" text during reaction phases (counterspell chain)
+- **Spell slot indicators** — per-creature pips/dots showing remaining slots
+- **Unconscious state** — visual indication (greyed out, fallen token)
+
+Key D&D distinction: **AoE vs multi-target**. Fireball targets a POINT and everything in the radius is affected. Magic Missile targets individual CREATURES. This matters for rendering — AoE shows a zone, multi-target shows individual targeting lines.
+
+---
+
+## Proposed Architecture: Three Abstraction Layers
+
+### Layer 1: Scene Model (pure business logic -> testable in vitest, no DOM)
+
+```
+(BattleContext, ScenarioMeta) -> SceneState
+```
+
+Pure function. Maps battle machine state to a renderer-agnostic scene description. NO coordinates, NO pixel values. Uses grid positions (row, col) and normalized ratios (0-1).
+
+```typescript
+interface SceneState {
+  creatures: ReadonlyArray<CreatureSceneState>
+  phase: PhaseInfo
+  aoeZones: ReadonlyArray<AoEZoneInfo>
+  castBars: ReadonlyArray<CastBarInfo>
+  interruptActive: boolean
+  interruptLabel: string | null
+}
+
+interface CreatureSceneState {
+  id: string
+  name: string
+  team: "blue" | "red"
+  gridPos: { row: number; col: number }  // grid coordinates, NOT pixels
+  hpRatio: number        // 0-1, derived from hp/maxHp
+  maxHp: number
+  currentHp: number
+  alive: boolean
+  unconscious: boolean
+  reactionAvailable: boolean
+  slotsRemaining: number  // total remaining across all levels
+  slotsMax: number        // total max across all levels
+  isActiveCreature: boolean
+  conditions: ReadonlyArray<string>
+}
+
+interface PhaseInfo {
+  type: "activeTurn" | "interrupt" | "aoeResolving" | "movement" | "legendaryAction"
+  activeCreatureId: string
+  interruptType?: string  // "counterspell", "shield", "absorb_elements", etc.
+  reactorId?: string
+}
+
+interface AoEZoneInfo {
+  center: { row: number; col: number }  // target POINT on grid
+  radiusInSquares: number               // 4 for fireball (20ft / 5ft)
+  damageType: string                    // for color: "fire" -> red/orange
+  active: boolean
+}
+
+interface CastBarInfo {
+  casterId: string
+  spellName: string
+  progress: number  // 0-1, driven by animation/playback timing
 }
 ```
 
-### Cast actions (4 total, same pattern -- shown for bCastSaveSpell)
+**Key principle:** SceneState is a pure data structure derived from BattleContext. It adds rendering-relevant semantic info (grid positions from scenario meta, HP ratios, phase labels) but NO layout math, NO pixel coordinates. Fully testable: assert creature positions, HP ratios, phase transitions, AoE zones.
 
-Before:
-```quint
-val cs1 = setTurn(bCreatures, activeId, newTurn)
-// ... build spell context ...
-val csElig = eligibleForCounterspell(cs1, activeId)  // cs1 has NO slot spent
-if (csElig.size() > 0) {
-  bCreatures' = cs1,  // enter CS window without spending
-} else {
-  val cs2 = expendSlot(cs1, activeId, slotLvl)  // spend only if no CS possible
+### Layer 2: Layout (coordinate math -> testable in vitest, no DOM)
+
+```
+(SceneState, LayoutConfig) -> LayoutState
+```
+
+Pure function. Converts grid positions to pixel coordinates, computes bar dimensions, AoE circle radii. This layer knows about pixels but not about SVG or React.
+
+```typescript
+interface LayoutConfig {
+  cellSize: number        // pixels per grid square (e.g., 60)
+  gridCols: number
+  gridRows: number
+  tokenRadius: number     // pixels (e.g., 22)
+  hpBarWidth: number      // pixels
+  hpBarHeight: number     // pixels
+  castBarWidth: number
+  castBarHeight: number
+}
+
+// LayoutState: everything the SVG layer needs as pixel coordinates
+interface LayoutState {
+  viewBox: { width: number; height: number }
+  grid: {
+    lines: ReadonlyArray<{ x1: number; y1: number; x2: number; y2: number }>
+  }
+  creatures: ReadonlyArray<CreatureLayout>
+  aoeZones: ReadonlyArray<{ cx: number; cy: number; r: number; fill: string; opacity: number }>
+  interruptOverlay: { visible: boolean; label: string | null; opacity: number }
+}
+
+interface CreatureLayout {
+  id: string
+  // Token
+  cx: number; cy: number        // center pixel coordinates
+  tokenRadius: number
+  teamColor: string             // "#3b82f6" (blue) or "#ef4444" (red)
+  opacity: number               // 1 alive, 0.3 unconscious
+  label: string
+  // HP bar
+  hpBar: { x: number; y: number; totalWidth: number; fillWidth: number; height: number }
+  // Cast bar (null if not casting)
+  castBar: { x: number; y: number; totalWidth: number; fillWidth: number; height: number } | null
+  // Slot indicator
+  slots: { x: number; y: number; filled: number; total: number }
 }
 ```
 
-After:
-```quint
-val cs1 = setTurn(bCreatures, activeId, newTurn)
-// Spend-then-refund: expend slot immediately (sets slotExpendedThisTurn = true).
-val cs2 = if (ritual) cs1 else expendSlot(cs1, activeId, slotLvl)
-// ... build spell context ...
-val csElig = eligibleForCounterspell(cs2, activeId)  // cs2 has slot spent
-if (csElig.size() > 0) {
-  bCreatures' = cs2,  // enter CS window with slot already spent
-} else {
-  // slot already spent, resolve immediately
+**Key principle:** Pure math. `cellSize * col + cellSize/2 = cx`. No React, no SVG, no animation. Testable: assert creature at grid (3,2) with cellSize=60 has cx=210, cy=150. Assert HP bar fillWidth = totalWidth * hpRatio.
+
+### Layer 3: SVG Components (rendering -> testable with RTL)
+
+Thin React components. Receive LayoutState as props, return SVG + Motion elements. Minimal logic — just JSX mapping.
+
+```tsx
+<svg viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height}`}>
+  <GridOverlay lines={layout.grid.lines} />
+  {layout.aoeZones.map(z => <AoEZone key={...} {...z} />)}
+  {layout.creatures.map(c => <CreatureToken key={c.id} {...c} />)}
+  {layout.interruptOverlay.visible && <InterruptOverlay {...layout.interruptOverlay} />}
+</svg>
+```
+
+Each sub-component uses `<motion.circle>`, `<motion.rect>`, `<motion.text>` for animated transitions. Props change -> Motion animates. RTL-testable: `getByTestId("creature-A")`, assert `cx` attribute equals expected value.
+
+### Data Flow
+
+```
+FIREBALL_SELFISHNESS events (scripted BattleEvent[])
+    | step one at a time
+    v
+battleMachine actor (XState)
+    | snapshot subscription
+    v
+BattleContext
+    | deriveSceneState() — pure function (Layer 1)
+    v
+SceneState
+    | computeLayout() — pure function (Layer 2)
+    v
+LayoutState
+    | React props
+    v
+<BattleField> (SVG + Motion) (Layer 3)
+    | DOM
+    v
+Browser / RTL test
+```
+
+### File Structure
+
+```
+src/battle-scene/
+  scene-state.ts           # Layer 1: (BattleContext, Meta) -> SceneState
+  scene-state.test.ts      # Pure vitest tests — no DOM
+  layout.ts                # Layer 2: (SceneState, LayoutConfig) -> LayoutState
+  layout.test.ts           # Pure vitest tests — no DOM
+  BattlePage.tsx           # Route entry — actor + stepping + timeline
+  BattleField.tsx          # <svg> root — renders LayoutState
+  GridOverlay.tsx          # Grid lines
+  CreatureToken.tsx        # Token circle + HP bar + cast bar + name + slots
+  AoEZone.tsx             # AoE circle/rect overlay
+  InterruptOverlay.tsx     # Dimming rect + label text
+  BattleLog.tsx            # Transition log adapted for BattleEvent
+```
+
+---
+
+## Questions for Review
+
+1. **Layer boundaries:** Is the 3-layer split (scene model / layout / SVG) the right granularity? Should layout be folded into scene-state, or split further?
+
+2. **Animation state:** Cast bars and interrupt overlays are temporal (fill over 500ms, fade in/out). These don't correspond to game state — casting is instantaneous in the machine. Should animation timing live in:
+   - The scene model (explicit progress values)?
+   - A separate animation controller between layout and SVG?
+   - Purely in the SVG components (Motion handles it via prop transitions)?
+
+3. **Stepping model:** The demo steps through events one at a time. Visually, some events should auto-advance (the 4 CS chain events play as a rapid sequence). Should stepping logic be manual (click), auto-play with delays, or both? Where does the delay-per-event-type mapping live?
+
+4. **AoE target point:** Fireball targets a POINT, not creatures. Our `BATTLE_CAST_AOE` event doesn't carry a target point (the machine doesn't model space). For rendering, should we:
+   - Add `targetPoint` to scenario metadata?
+   - Derive it (center of all affected creatures)?
+   - Add it to `BATTLE_CAST_AOE` event as an optional field?
+
+5. **Spell visual catalog:** The machine knows `spellName: "fireball"` but not its visual properties (color, shape, icon). Where should the mapping `spellName -> visual properties` live?
+
+6. **Grid positions:** BattleContext has no spatial state (by design — Quint spec decision O2). Initial creature positions must come from somewhere for rendering. Options:
+   - Scenario metadata (hardcoded per demo)
+   - A separate spatial state managed alongside the battle actor
+   - Derived from team assignment (blue team left side, red team right side)
+
+7. **Cast bar semantics:** In D&D, some spells have "1 action" casting time, others "1 minute." In the battle machine, all casts are one event. The cast bar is purely visual feedback. Should it be modeled in scene state at all, or entirely in the animation layer?
+
+---
+
+## Appendix: Key Types
+
+### BattleContext (state machine output)
+
+```typescript
+interface BattleContext {
+  readonly creatures: ReadonlyMap<CreatureId, BattleCreatureState>
+  readonly initiative: ReadonlyArray<CreatureId>
+  readonly turnIndex: number
+  readonly round: number
+  readonly turnStarted: boolean
+  readonly phase: BattlePhase
+  readonly spellStack: ReadonlyArray<SpellStackEntry>
+}
+
+type BattlePhase =
+  | { tag: "BPActiveTurn" }
+  | { tag: "BPAwaitingReaction"; ctx: AwaitCtx }
+  | { tag: "BPResolvingAoE"; aoe: AoESpellCtx }
+  | { tag: "BPResolvingMovement"; mv: MovementCtx }
+  | { tag: "BPAwaitingLegendaryAction"; la: LAWindowCtx }
+
+type PendingInterrupt =
+  | { tag: "PIAttackHit"; ctx: AttackHitCtx }
+  | { tag: "PIAttackDamage"; ctx: AttackDamageCtx }
+  | { tag: "PISpellCast"; ctx: SpellCastCtx }
+  | { tag: "PISaveFailed"; ctx: SaveFailedCtx }
+  | { tag: "PISaveFailedAoE"; sf: SaveFailedCtx; aoe: AoESpellCtx }
+  | { tag: "PIAfterDamage"; ctx: AfterDamageCtx }
+```
+
+### BattleCreatureState (68 fields, key subset)
+
+```typescript
+interface BattleCreatureState {
+  hp: number; maxHp: number; tempHp: number
+  dead: boolean; unconscious: boolean
+  // 14 condition booleans (blinded, charmed, etc.)
+  reactionAvailable: boolean
+  actionsRemaining: number; bonusActionUsed: boolean
+  slotsCurrent: ReadonlyArray<number>  // 9 levels
+  slotsMax: ReadonlyArray<number>
+  concentrationSpellId: string
+  slotExpendedThisTurn: boolean
+  creatureKind: "PC" | "Monster"
+  preparedSpells: ReadonlySet<string>
 }
 ```
 
-### resolveSpellEntry -- no more deferred expenditure
+### Demo Scenario Event Types Used
 
-Before:
-```quint
-val cs1 = if (not(isRitual) and slotLvl > 0) expendSlot(cs, casterId, slotLvl) else cs
+```typescript
+BATTLE_INIT          — creates 6 creatures with InitCreatureConfig[]
+BATTLE_START_TURN    — begins A's turn
+BATTLE_CAST_AOE      — A casts Fireball (spellName, dmg, dt, saveDC, halfOnSave)
+BATTLE_RESOLVE_COUNTERSPELL — D/B/E/C counterspell chain + null to resolve
+BATTLE_RESOLVE_AOE_TARGET   — per-target save resolution (saveRoll vs saveDC)
+BATTLE_AFTER_DAMAGE_PASS    — F's after-damage reaction window
 ```
 
-After:
-```quint
-// Slot already spent at cast time (spend-then-refund pattern).
-val cs1 = cs
-```
+### AoE Rules (SRD 5.2.1)
 
-### CS succeeds paths -- refund added
+Six shapes: Cone, Cube, Cylinder, Emanation, Line, Sphere. Grid = 5ft squares. Fireball = 20ft-radius Sphere ~ 48 squares. Grid discretization not in SRD — we use "center of square within radius." Medium creatures = 1 square.
 
-When a spell is successfully countered, the fizzled spell's slot is refunded:
+### Ubiquitous Language (excerpt)
 
-```quint
-// Original spell fizzled -> refund slot (SRD 5.2.1 Counterspell: "the slot isn't expended").
-// slotExpendedThisTurn stays true (one-slot-per-turn quota used).
-val csRefund = if (not(popped.top.ritual) and popped.top.slotLvl > 0)
-  refundSlot(cs, popped.top.spellCasterId, popped.top.slotLvl) else cs
-{ creatures: csRefund, phase: BPActiveTurn, stack: popped.rest }
-```
+- **Hit Points (HP)** — current health, 0 to max. NOT the same as Temporary Hit Points (separate buffer).
+- **Condition** — one of 14 named status effects (Blinded, Charmed, ..., Unconscious). Each has specific mechanical and visual implications.
+- **Incapacitated** — meta-condition: can't take actions/reactions. Implied by Paralyzed, Petrified, Stunned, Unconscious.
+- **AoE (Area of Effect)** — targets a POINT or area. Distinct from multi-target spells (which target individual creatures).
+- **Reaction** — one per round (refreshes on your turn). Used for Counterspell, Opportunity Attack, Shield, etc.
+- **Concentration** — maintaining a spell. One at a time. Broken by damage (CON save), incapacitation, or casting another concentration spell.
 
-Same pattern for CS-fizzled (counter-counterspelled) entries.
+### Project Conventions (from CLAUDE.md)
 
-### CS stack entry -- slotLvl carries refund level
-
-Before:
-```quint
-slotLvl: 0,  // CS slot already spent at cast time (reaction)
-```
-
-After:
-```quint
-slotLvl: csSlotLvl,  // CS slot spent at cast time; carried for refund if counter-counterspelled
-```
-
-### Updated invariant
-
-```quint
-/// Non-ritual spell stack entries have distinct casters.
-val spellStackDistinctCasters =
-  val nonRitual = listToSet(bSpellStack).filter(e => not(e.ritual))
-  nonRitual.forall(e1 =>
-    nonRitual.forall(e2 =>
-      (e1.spellCasterId == e2.spellCasterId) implies (e1 == e2)
-    )
-  )
-```
+- No external consumers — greenfield project, any layer can change
+- No redundant state — never duplicate data across layers
+- SRD feature parity — every rule traces to specific SRD text
+- Quint parity — XState must match Quint spec, validated by MBT
+- TypeScript: `as const satisfies ReadonlyArray<T>` for typed constant arrays
+- ESLint max-lines: 420 per file
