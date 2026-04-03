@@ -33,7 +33,17 @@ import {
 } from "#/machine-queries.ts"
 import { calculateMulticlassSlots, concentrationDC, expendSlot, slotsPerLevel } from "#/machine-spells.ts"
 import type { ActionType, ArmorState, AttackContext, Condition, DamageType } from "#/types.ts"
-import { abilityScore, d20Roll, damageAmount, healAmount, hp, proficiencyBonus, tempHp } from "#/types.ts"
+import {
+  abilityScore,
+  armorClass,
+  d20Roll,
+  damageAmount,
+  exhaustionLevel,
+  healAmount,
+  hp,
+  proficiencyBonus,
+  tempHp
+} from "#/types.ts"
 
 // --- Helpers ---
 
@@ -1430,7 +1440,7 @@ describe("calculateAC", () => {
   it("light armor: base + DEX", () => {
     const studded: ArmorState = {
       type: "wearingArmor",
-      armor: { category: "light", baseAC: 12, strRequirement: 0, stealthDisadvantage: false }
+      armor: { category: "light", baseAC: armorClass(12), strRequirement: abilityScore(1), stealthDisadvantage: false }
     }
     expect(calculateAC({ ...baseParams, armorState: studded })).toBe(14)
   })
@@ -1438,7 +1448,7 @@ describe("calculateAC", () => {
   it("medium armor: base + min(DEX, 2)", () => {
     const breastplate: ArmorState = {
       type: "wearingArmor",
-      armor: { category: "medium", baseAC: 14, strRequirement: 0, stealthDisadvantage: false }
+      armor: { category: "medium", baseAC: armorClass(14), strRequirement: abilityScore(1), stealthDisadvantage: false }
     }
     expect(calculateAC({ ...baseParams, armorState: breastplate, dexMod: 4 })).toBe(16)
   })
@@ -1446,7 +1456,7 @@ describe("calculateAC", () => {
   it("heavy armor: base only, no DEX", () => {
     const plate: ArmorState = {
       type: "wearingArmor",
-      armor: { category: "heavy", baseAC: 18, strRequirement: 15, stealthDisadvantage: true }
+      armor: { category: "heavy", baseAC: armorClass(18), strRequirement: abilityScore(15), stealthDisadvantage: true }
     }
     expect(calculateAC({ ...baseParams, armorState: plate, dexMod: 5 })).toBe(18)
   })
@@ -1608,7 +1618,7 @@ describe("aggregateAttackMods", () => {
   const baseCtx: AttackContext = {
     attackerBlinded: false,
     attackerCanSeeTarget: true,
-    attackerExhaustion: 0,
+    attackerExhaustion: exhaustionLevel(0),
     attackerFrightSourceInLOS: false,
     attackerFrightened: false,
     attackerHasSwimSpeed: false,
@@ -2092,7 +2102,7 @@ describe("aggregateAttackMods additional branches", () => {
   const baseCtx: AttackContext = {
     attackerBlinded: false,
     attackerCanSeeTarget: true,
-    attackerExhaustion: 0,
+    attackerExhaustion: exhaustionLevel(0),
     attackerFrightSourceInLOS: false,
     attackerFrightened: false,
     attackerHasSwimSpeed: false,

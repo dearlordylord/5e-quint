@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Brand, Schema } from "effect"
 
 // --- Domain constants + derived types ---
 // Convention: define const array first, derive union type with typeof X[number].
@@ -97,8 +97,8 @@ export interface ActiveEffect {
 
 export interface Armor {
   readonly category: ArmorCategory
-  readonly baseAC: number
-  readonly strRequirement: number
+  readonly baseAC: ArmorClass
+  readonly strRequirement: AbilityScore
   readonly stealthDisadvantage: boolean
 }
 
@@ -142,7 +142,7 @@ export interface AttackContext {
   readonly attackerPoisoned: boolean
   readonly attackerFrightened: boolean
   readonly attackerFrightSourceInLOS: boolean
-  readonly attackerExhaustion: number
+  readonly attackerExhaustion: ExhaustionLevel
   readonly targetBlinded: boolean
   readonly targetParalyzed: boolean
   readonly targetPetrified: boolean
@@ -166,6 +166,7 @@ export interface AttackContext {
 }
 
 // --- Branded numeric types ---
+/* eslint-disable no-magic-numbers -- Schema constraints and literal types use domain-specific constants */
 
 const HP = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0), Schema.brand("HP"))
 type HP = typeof HP.Type
@@ -252,6 +253,132 @@ export function movementFeet(n: number): MovementFeet {
   return MovementFeet.make(Math.max(0, Math.floor(n)))
 }
 export type { MovementFeet }
+
+// --- Branded numeric types (new) ---
+
+const ClassLevel = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.lessThanOrEqualTo(20),
+  Schema.brand("ClassLevel")
+)
+type ClassLevel = typeof ClassLevel.Type
+export function classLevel(n: number): ClassLevel {
+  const MAX = 20
+  return ClassLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))))
+}
+export type { ClassLevel }
+
+const CharacterLevel = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.lessThanOrEqualTo(20),
+  Schema.brand("CharacterLevel")
+)
+type CharacterLevel = typeof CharacterLevel.Type
+export function characterLevel(n: number): CharacterLevel {
+  const MAX = 20
+  return CharacterLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))))
+}
+export type { CharacterLevel }
+
+const ArmorClass = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1), Schema.brand("ArmorClass"))
+type ArmorClass = typeof ArmorClass.Type
+export function armorClass(n: number): ArmorClass {
+  return ArmorClass.make(Math.max(1, Math.floor(n)))
+}
+export type { ArmorClass }
+
+const DifficultyClass = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.brand("DifficultyClass")
+)
+type DifficultyClass = typeof DifficultyClass.Type
+export function difficultyClass(n: number): DifficultyClass {
+  return DifficultyClass.make(Math.max(1, Math.floor(n)))
+}
+export type { DifficultyClass }
+
+const AbilityModifier = Schema.Number.pipe(Schema.int(), Schema.brand("AbilityModifier"))
+type AbilityModifier = typeof AbilityModifier.Type
+export function abilityModifier(n: number): AbilityModifier {
+  return AbilityModifier.make(Math.floor(n))
+}
+export type { AbilityModifier }
+
+const SpellSlotLevel = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.lessThanOrEqualTo(9),
+  Schema.brand("SpellSlotLevel")
+)
+type SpellSlotLevel = typeof SpellSlotLevel.Type
+export function spellSlotLevel(n: number): SpellSlotLevel {
+  const MAX = 9
+  return SpellSlotLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))))
+}
+export type { SpellSlotLevel }
+
+const ResourceCount = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0), Schema.brand("ResourceCount"))
+type ResourceCount = typeof ResourceCount.Type
+export function resourceCount(n: number): ResourceCount {
+  return ResourceCount.make(Math.max(0, Math.floor(n)))
+}
+export type { ResourceCount }
+
+/* eslint-enable no-magic-numbers */
+
+// --- Branded string types (nominal — IDs) ---
+
+type CreatureId = string & Brand.Brand<"CreatureId">
+const CreatureId = Brand.nominal<CreatureId>()
+export { CreatureId }
+
+type SpellId = string & Brand.Brand<"SpellId">
+const SpellId = Brand.nominal<SpellId>()
+export const spellId: (s: string) => SpellId = SpellId
+export type { SpellId }
+export { SpellId as SpellIdConstructor }
+
+// --- Branded string types (extendable — SRD defaults + open extension) ---
+// Pattern: SRDFoo | (string & Brand.Brand<"Foo"> & {})
+// SRD literal type provides autocomplete; branded string allows extension.
+
+type NonEmptyString = string & Brand.Brand<"NonEmptyString">
+
+export type SpellName = SRDSpellName | (NonEmptyString & {})
+export type SRDSpellName =
+  | "hold_person"
+  | "bless"
+  | "haste"
+  | "spirit_guardians"
+  | "fireball"
+  | "burning_hands"
+  | "guiding_bolt"
+  | "inflict_wounds"
+  | "counterspell"
+  | "shield"
+  | "hellish_rebuke"
+  | "bestow_curse"
+  | "eyebite"
+  | "fire_shield"
+  | "chromatic_orb"
+  | "greater_restoration"
+  | "dominate_person"
+  | "dominate_monster"
+  | "dominate_beast"
+  | "confusion"
+  | "protection_from_evil_and_good"
+
+export type CreatureName = SRDCreatureName | (NonEmptyString & {})
+export type SRDCreatureName = string & Brand.Brand<"SRDCreatureName">
+
+export type AttackName = SRDAttackName | (NonEmptyString & {})
+export type SRDAttackName = string & Brand.Brand<"SRDAttackName">
+
+export type MonsterAbilityName = SRDMonsterAbilityName | (NonEmptyString & {})
+export type SRDMonsterAbilityName = string & Brand.Brand<"SRDMonsterAbilityName">
 
 export const CASTER_TYPES = ["full", "half", "third"] as const
 export type CasterType = (typeof CASTER_TYPES)[number]
