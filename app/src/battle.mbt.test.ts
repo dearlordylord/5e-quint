@@ -923,9 +923,8 @@ function createBattleProjectionDriver() {
 
     /** Check if there are eligible CS reactors excluding a caster and offered set. */
     function hasEligibleCSReactors(casterId: string, offered: ReadonlySet<string>): boolean {
-      return [...actors.entries()].some(([cidBranded, actor]) => {
-        const c = cidBranded as string
-        if (c === casterId || offered.has(c)) return false
+      return [...actors.entries()].some(([c, actor]) => {
+        if (c === casterId || offered.has(c as string)) return false
         const snap = actor.getSnapshot()
         if (!snap.context.reactionAvailable || snap.matches({ damageTrack: "dead" })) return false
         return snap.context.slotsCurrent.slice(2).some((s) => s > 0)

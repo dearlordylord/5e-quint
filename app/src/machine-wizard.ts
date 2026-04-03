@@ -2,7 +2,7 @@ import { canArcaneRecoverSlot, hasOverchannel } from "#/features/class-wizard.ts
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, WizardClassState } from "#/machine-types.ts"
-import type { ClassLevel } from "#/types.ts"
+import type { ClassLevel, SpellSlotLevel } from "#/types.ts"
 
 function w(c: DndContext) {
   return c.classStates.wizard!
@@ -10,7 +10,7 @@ function w(c: DndContext) {
 
 // -- Action Updates --
 
-export function arcaneRecoveryUpdate(c: DndContext, slotLevel: number): Partial<DndContext> {
+export function arcaneRecoveryUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ws = w(c)
   if (ws.level < 1 || ws.arcaneRecoveryUsed) return {}
   // Quint always marks arcaneRecoveryUsed even if slot is full or invalid level.

@@ -12,7 +12,7 @@ import {
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, SorcererClassState } from "#/machine-types.ts"
-import type { ClassLevel } from "#/types.ts"
+import type { ClassLevel, SpellSlotLevel } from "#/types.ts"
 import { resourceCount } from "#/types.ts"
 
 const SORCEROUS_RESTORATION_LEVEL = 5
@@ -28,7 +28,7 @@ function s(c: DndContext) {
  * SRD: "You can expend a spell slot to gain a number of Sorcery Points
  * equal to the slot's level (no action required)."
  */
-export function convertSlotToPointsUpdate(c: DndContext, slotLevel: number): Partial<DndContext> {
+export function convertSlotToPointsUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ss = s(c)
   if (isIncapacitated(c) || ss.level < 2) return {}
   if (slotLevel < 1 || slotLevel > 9) return {}
@@ -48,7 +48,7 @@ export function convertSlotToPointsUpdate(c: DndContext, slotLevel: number): Par
  * SRD: "As a Bonus Action, you can transform unexpended Sorcery Points
  * into one spell slot." Max slot level 5.
  */
-export function convertPointsToSlotUpdate(c: DndContext, slotLevel: number): Partial<DndContext> {
+export function convertPointsToSlotUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ss = s(c)
   if (isIncapacitated(c) || ss.level < 2 || c.bonusActionUsed) return {}
   if (slotLevel < 1 || slotLevel > 5) return {}
