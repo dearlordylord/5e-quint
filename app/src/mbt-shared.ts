@@ -105,13 +105,18 @@ export function variantToString(v: unknown): string {
   return String(v)
 }
 
-/** Convert a Quint Map or plain object to a Record, applying a transform to each value. */
-export function quintMapToRecord<T>(raw: unknown, transform: (v: unknown) => T): Record<string, T> {
+/** Convert a Quint Map or plain object to a Record, applying a transform to each value.
+ *  When keys are Quint variants (e.g. ClassName), pass `variantToString` as keyTransform. */
+export function quintMapToRecord<T>(
+  raw: unknown,
+  transform: (v: unknown) => T,
+  keyTransform: (k: unknown) => string = String
+): Record<string, T> {
   const result: Record<string, T> = {}
   if (raw instanceof Map) {
-    for (const [k, v] of raw) result[String(k)] = transform(v)
+    for (const [k, v] of raw) result[keyTransform(k)] = transform(v)
   } else if (typeof raw === "object" && raw !== null) {
-    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) result[k] = transform(v)
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) result[keyTransform(k)] = transform(v)
   }
   return result
 }
@@ -175,7 +180,7 @@ export const QuintCreatureState = z.object({
   stunned: z.boolean(),
   unconscious: z.boolean(),
   incapacitatedSources: QuintIncapSourceSet,
-  hitPointDiceRemaining: z.bigint(),
+  hitDiceRemaining: z.any().transform((raw) => quintMapToRecord(raw, Number, variantToString)),
   activeEffects: z.any().transform((raw: unknown) => {
     const items: Array<{
       spellId: string
@@ -380,15 +385,7 @@ export const QuintFullState = z.object({
   rangerState: QuintRangerState,
   bardState: QuintBardState,
   // z.any() because Quint Maps arrive as JS Map (Rust backend) or plain object (JSON-parsed ITF)
-  classLevels: z.any().transform((raw) => {
-    const result: Record<string, number> = {}
-    if (raw instanceof Map) {
-      for (const [k, v] of raw) result[variantToString(k)] = Number(v)
-    } else if (typeof raw === "object" && raw !== null) {
-      for (const [k, v] of Object.entries(raw)) result[variantToString(k)] = Number(v)
-    }
-    return result
-  }),
+  classLevels: z.any().transform((raw) => quintMapToRecord(raw, Number, variantToString)),
   creatureKind: z.any().transform(variantToString),
   monsterStatBlock: z.any(),
   monsterResourceState: QuintMonsterResourceState
@@ -422,7 +419,7 @@ export interface NormalizedState {
   readonly stunned: boolean
   readonly unconscious: boolean
   readonly incapacitatedSources: ReadonlySet<string>
-  readonly hitPointDiceRemaining: number
+  readonly hitDiceRemaining: Record<string, number>
   readonly activeEffects: ReadonlyArray<{
     spellId: string
     turnsRemaining: number
@@ -667,7 +664,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     stunned: c.stunned,
     unconscious: c.unconscious,
     incapacitatedSources: c.incapacitatedSources,
-    hitPointDiceRemaining: c.hitDiceRemaining,
+    hitDiceRemaining: c.hitDiceRemaining as Record<string, number>,
     activeEffects: [...c.activeEffects]
       .map((ae) => ({
         spellId: ae.spellId,
@@ -745,7 +742,7 @@ export function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): No
     stunned: s.stunned,
     unconscious: s.unconscious,
     incapacitatedSources: s.incapacitatedSources,
-    hitPointDiceRemaining: Number(s.hitPointDiceRemaining),
+    hitDiceRemaining: s.hitDiceRemaining,
     activeEffects: s.activeEffects,
     movementRemaining: Number(t.movementRemaining),
     effectiveSpeed: Number(t.effectiveSpeed),

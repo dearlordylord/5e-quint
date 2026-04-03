@@ -437,12 +437,12 @@ module qa_generated {
   
   // Changes to Long Rests: interrupted long rest (≥1hr) grants short rest benefits — partial healing via hit dice, not full recovery
   run qa_interrupted_long_rest_gives_short_rest_benefits = {
-    val c = freshCreature(20).with("hp", 5).with("hitPointDiceRemaining", 3)
+    val c = freshCreature(20).with("hp", 5).with("hitDiceRemaining", singleClassLevels(Fighter, 3))
     val conMod = 2
     // interrupted ≥1hr → short rest benefits: spend hit dice (roll 6 + conMod 2 = 8 HP)
-    val afterInterrupted = pShortRest(c, conMod, [6])
+    val afterInterrupted = pShortRest(c, conMod, [(Fighter, 6)])
     // uninterrupted → full long rest
-    val afterFull = pLongRest(c, 3)
+    val afterFull = pLongRest(c, singleClassLevels(Fighter, 3))
     assert(
       // interrupted rest heals partially (5 + 6 + 2 = 13), not to max
       afterInterrupted.hp == 13 and
@@ -450,20 +450,20 @@ module qa_generated {
       // full long rest restores to max HP
       afterFull.hp == 20 and
       // interrupted rest consumes a hit die
-      afterInterrupted.hitPointDiceRemaining == 2 and
+      afterInterrupted.hitDiceRemaining.get(Fighter) == 2 and
       // full long rest restores all hit dice
-      afterFull.hitPointDiceRemaining == 3
+      afterFull.hitDiceRemaining.get(Fighter) == 3
     )
   }
   
   // Changes to Long Rests: long rest interrupted before 1 hour yields no benefit (state unchanged — rest must be restarted)
   run qa_long_rest_interrupted_before_1hr_no_benefit = {
-    val c = freshCreature(20).with("hp", 5).with("hitPointDiceRemaining", 3)
+    val c = freshCreature(20).with("hp", 5).with("hitDiceRemaining", singleClassLevels(Fighter, 3))
     // interrupted <1hr → no benefit: model as short rest with no dice spent
     val afterInterrupted = pShortRest(c, 2, [])
     assert(
       afterInterrupted.hp == 5 and
-      afterInterrupted.hitPointDiceRemaining == 3
+      afterInterrupted.hitDiceRemaining.get(Fighter) == 3
     )
   }
 
@@ -666,7 +666,7 @@ module qa_generated {
   // Q&A: Expert Classes UA - Long rest reduces exhaustion by 1 with no food/drink requirement
   run qa_long_rest_reduces_exhaustion_unconditionally = {
     val s = freshCreature(20).with("exhaustion", 2)
-    val s2 = pLongRest(s, 5)
+    val s2 = pLongRest(s, singleClassLevels(Fighter, 5))
     assert(s2.exhaustion == 1)
   }
   
@@ -1356,7 +1356,7 @@ module qa_generated {
     // RAW: CGrappled ends only if the grappled creature is moved out of range —
     // not if the grappler is pushed away. pShove(ShovePush) leaves the grappler's
     // state unchanged (no position tracking), so the grappled condition persists.
-    val grappled = pApplyCondition(freshCreature(20), CGrappled)
+    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
     val grappler = freshCreature(20)
     val shoveResult = pShove(Medium, Medium, grappler, true, ShovePush)
     assert(shoveResult.success and grappled.grappled)
@@ -2203,7 +2203,7 @@ module qa_generated {
   run qa_frenzy_long_rest_removes_one_exhaustion = {
     val c = freshCreature(30)
     val c2 = pAddExhaustion(pAddExhaustion(c, 1), 1)
-    val c3 = pLongRest(c2, 5)
+    val c3 = pLongRest(c2, singleClassLevels(Fighter, 5))
     assert(c3.exhaustion == 1)
   }
   
@@ -4731,10 +4731,10 @@ module qa_generated {
   // Exhaustion inflicted by monster abilities persists indefinitely until reduced by finishing a long rest
   run qa_exhaustion_persists_until_long_rest = {
     // A creature gains 2 exhaustion levels (e.g. from a monster ability)
-    val start = freshCreature(30).with("exhaustion", 2).with("hitPointDiceRemaining", 5)
+    val start = freshCreature(30).with("exhaustion", 2).with("hitDiceRemaining", singleClassLevels(Fighter, 5))
   
     // After a long rest, exhaustion decreases by exactly 1 (not cleared entirely)
-    val afterRest = pLongRest(start, 5)
+    val afterRest = pLongRest(start, singleClassLevels(Fighter, 5))
   
     assert(afterRest.exhaustion == 1)
   }
@@ -5500,7 +5500,7 @@ module qa_generated {
   // Long rests restore exactly one level of exhaustion (SRD 5.2.1), not all levels
   run qa_long_rest_restores_one_exhaustion_level = {
     val c = freshCreature(20).with("exhaustion", 3)
-    val afterRest = pLongRest(c, 5)
+    val afterRest = pLongRest(c, singleClassLevels(Fighter, 5))
     assert(afterRest.exhaustion == 2)
   }
 
@@ -5511,7 +5511,7 @@ module qa_generated {
     // A grappled creature willingly fails the shove save (targetSaveFailed = true),
     // so the shove to prone succeeds — encoding the accepted answer that this
     // mechanic already existed via normal grapple/shove and is unchanged.
-    val grappled = pApplyCondition(freshCreature(20), CGrappled)
+    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
     val result = pShove(Medium, Medium, grappled, true, ShoveProne)
     all {
       assert(result.success == true),
@@ -5916,20 +5916,20 @@ module qa_generated {
       .with("prone", true)
       .with("incapacitatedSources", Set(ISUnconscious))
       .with("exhaustion", 2)
-      .with("hitPointDiceRemaining", 1)
+      .with("hitDiceRemaining", singleClassLevels(Fighter, 1))
   
     val ally = freshCreature(20)
       .with("hp", 7)
       .with("exhaustion", 1)
-      .with("hitPointDiceRemaining", 0)
+      .with("hitDiceRemaining", ZERO_CLASS_LEVELS)
   
-    val fallenAfter = pLongRest(fallen, 5)
-    val allyAfter = pLongRest(ally, 5)
+    val fallenAfter = pLongRest(fallen, singleClassLevels(Fighter, 5))
+    val allyAfter = pLongRest(ally, singleClassLevels(Fighter, 5))
   
     assert(
       fallenAfter == fallen
       and allyAfter.hp == 20
-      and allyAfter.hitPointDiceRemaining == 5
+      and allyAfter.hitDiceRemaining.get(Fighter) == 5
       and allyAfter.exhaustion == 0
     )
   }}
@@ -5947,16 +5947,16 @@ module qa_generated {
   
     val ally = freshCreature(20)
       .with("hp", 5)
-      .with("hitPointDiceRemaining", 2)
+      .with("hitDiceRemaining", singleClassLevels(Fighter, 2))
   
-    val allyAfterWhenFallenAt0 = pShortRest(ally, 2, [6])
-    val allyAfterWhenNoOneDown = pShortRest(ally, 2, [6])
+    val allyAfterWhenFallenAt0 = pShortRest(ally, 2, [(Fighter, 6)])
+    val allyAfterWhenNoOneDown = pShortRest(ally, 2, [(Fighter, 6)])
   
     assert(
       fallenStable0.hp == 0
       and allyAfterWhenFallenAt0 == allyAfterWhenNoOneDown
       and allyAfterWhenFallenAt0.hp == 13
-      and allyAfterWhenFallenAt0.hitPointDiceRemaining == 1
+      and allyAfterWhenFallenAt0.hitDiceRemaining.get(Fighter) == 1
       and fallenHealthy.hp == 20
     )
   }}
@@ -7499,7 +7499,7 @@ module qa_generated {
     // Exhaustion is permanent — does not auto-expire; still present before any rest
     val stillExhausted = afterHex
     // Long rest reduces exhaustion level by exactly 1 (PHB "Long Rest" / Exhaustion glossary)
-    val afterLongRest = pLongRest(stillExhausted, 5)
+    val afterLongRest = pLongRest(stillExhausted, singleClassLevels(Fighter, 5))
     assert(
       // Hex applied 1 exhaustion
       afterHex.exhaustion == 1
@@ -7514,16 +7514,16 @@ module qa_generated {
   
   // Healer and short rests: Healer feat heals HP without spending hit dice, unlike short rest hit die spending
   run qa_healer_heals_without_consuming_hit_dice = {
-    val wounded = freshCreature(20).with("hp", 5).with("hitPointDiceRemaining", 3)
+    val wounded = freshCreature(20).with("hp", 5).with("hitDiceRemaining", singleClassLevels(Fighter, 3))
     // Healer feat modeled as pHeal: restores HP without touching hit dice
     val afterHealerFeat = pHeal(wounded, 9)
     // Short rest HD spend: same HP restored but consumes a hit die
-    val afterSpendHD = pSpendHitDie(wounded, 2, 7) // dieRoll=7 + conMod=2 = 9 healing
+    val afterSpendHD = pSpendHitDie(wounded, Fighter, 2, 7) // dieRoll=7 + conMod=2 = 9 healing
     assert(
       afterHealerFeat.hp == 14
-      and afterHealerFeat.hitPointDiceRemaining == 3
+      and afterHealerFeat.hitDiceRemaining.get(Fighter) == 3
       and afterSpendHD.hp == 14
-      and afterSpendHD.hitPointDiceRemaining == 2
+      and afterSpendHD.hitDiceRemaining.get(Fighter) == 2
     )
   }
 
@@ -7575,7 +7575,7 @@ module qa_generated {
   
   // Can I shove my grappled companion out of a grapple?
   run qa_shove_breaks_grapple = {
-    val grappled = pApplyCondition(freshCreature(20), CGrappled)
+    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
     // Shove (ShovePush) a grappled creature — same size, target save fails
     val result = pShove(Medium, Medium, grappled, true, ShovePush)
     // Forced movement puts target beyond grappler's reach; grappler releases
@@ -7989,7 +7989,7 @@ module qa_generated {
   
   // Point 17: Escape grapple on successful check removes the grappled condition (easier to escape)
   run qa_escape_grapple_on_success_clears_condition = {
-    val grappled = pApplyCondition(freshCreature(20), CGrappled)
+    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
     val freed = pEscapeGrapple(grappled, true)
     assert(not(freed.grappled))
   }
@@ -9156,36 +9156,36 @@ module qa_generated {
   
   // Long Rest: At least 16 hours + at least 8 hours = sleep disorders
   run qa_long_rest_restores_all_hit_dice = {
-    val start = freshCreature(20).with("hitPointDiceRemaining", 2)
-    val afterRest = pLongRest(start, 5)
-    assert(afterRest.hitPointDiceRemaining == 5)
+    val start = freshCreature(20).with("hitDiceRemaining", singleClassLevels(Fighter, 2))
+    val afterRest = pLongRest(start, singleClassLevels(Fighter, 5))
+    assert(afterRest.hitDiceRemaining.get(Fighter) == 5)
   }
   
   // Long Rest: At least 16 hours + at least 8 hours = sleep disorders
   run qa_long_rest_restores_hp_to_max = {
     val start = freshCreature(20).with("hp", 7)
-    val afterRest = pLongRest(start, 5)
+    val afterRest = pLongRest(start, singleClassLevels(Fighter, 5))
     assert(afterRest.hp == 20)
   }
   
   // Long Rest: At least 16 hours + at least 8 hours = sleep disorders
   run qa_long_rest_clears_temp_hp = {
     val start = freshCreature(20).with("tempHp", 10)
-    val afterRest = pLongRest(start, 5)
+    val afterRest = pLongRest(start, singleClassLevels(Fighter, 5))
     assert(afterRest.tempHp == 0)
   }
   
   // Long Rest: At least 16 hours + at least 8 hours = sleep disorders
   run qa_long_rest_no_benefit_at_0_hp = {
-    val start = freshCreature(20).with("hp", 0).with("hitPointDiceRemaining", 2)
-    val afterRest = pLongRest(start, 5)
-    assert(afterRest.hp == 0 and afterRest.hitPointDiceRemaining == 2)
+    val start = freshCreature(20).with("hp", 0).with("hitDiceRemaining", singleClassLevels(Fighter, 2))
+    val afterRest = pLongRest(start, singleClassLevels(Fighter, 5))
+    assert(afterRest.hp == 0 and afterRest.hitDiceRemaining.get(Fighter) == 2)
   }
   
   // Long Rest: At least 16 hours + at least 8 hours = sleep disorders
   run qa_long_rest_reduces_exhaustion_by_1 = {
     val start = freshCreature(20).with("exhaustion", 3)
-    val afterRest = pLongRest(start, 5)
+    val afterRest = pLongRest(start, singleClassLevels(Fighter, 5))
     assert(afterRest.exhaustion == 2)
   }
 
@@ -9955,7 +9955,7 @@ module qa_generated {
   
   // New Long Rests and New Grappling Rules: escaping grapple requires a successful check (action)
   run qa_escape_grapple_requires_successful_check = {
-    val grappled = pApplyCondition(freshCreature(20), CGrappled)
+    val grappled = pApplyCondition(freshCreature(20), CGrappled, Set())
     val afterFail = pEscapeGrapple(grappled, false)
     val afterSuccess = pEscapeGrapple(grappled, true)
     assert(afterFail.grappled and not(afterSuccess.grappled))
@@ -10105,12 +10105,12 @@ module qa_generated {
   // Combat now hard interrupts Long Rests totally resetting your long rest
   // Interrupted after ≥1h: only short rest benefits, not full long rest restoration
   run qa_interrupted_long_rest_at_least_1h_short_rest_only = {
-    val c = freshCreature(20).with("hp", 6).with("hitPointDiceRemaining", 3)
+    val c = freshCreature(20).with("hp", 6).with("hitDiceRemaining", singleClassLevels(Fighter, 3))
     val conMod = 1
     // Caller applies short rest only (1 HD roll of 5 → 6 HP gained, total 12)
-    val shortResult = pShortRest(c, conMod, [5])
+    val shortResult = pShortRest(c, conMod, [(Fighter, 5)])
     // Full long rest would restore all 20 HP
-    val longResult = pLongRest(c, 3)
+    val longResult = pLongRest(c, singleClassLevels(Fighter, 3))
     assert(
       shortResult.hp == 12 and
       shortResult.hp < shortResult.maxHp and
@@ -10122,17 +10122,17 @@ module qa_generated {
   // Combat now hard interrupts Long Rests totally resetting your long rest
   // Interrupted before 1h: no benefit at all — caller invokes no rest function
   run qa_interrupted_long_rest_before_1h_no_benefit = {
-    val c = freshCreature(20).with("hp", 6).with("hitPointDiceRemaining", 3)
+    val c = freshCreature(20).with("hp", 6).with("hitDiceRemaining", singleClassLevels(Fighter, 3))
     // No pLongRest or pShortRest called; state must be identical to pre-rest state
-    assert(c.hp == 6 and c.hitPointDiceRemaining == 3 and c.hp < c.maxHp)
+    assert(c.hp == 6 and c.hitDiceRemaining.get(Fighter) == 3 and c.hp < c.maxHp)
   }
   
   // Combat now hard interrupts Long Rests totally resetting your long rest
   // Uninterrupted long rest still restores full HP and all hit dice
   run qa_uninterrupted_long_rest_full_benefit = {
-    val c = freshCreature(20).with("hp", 1).with("hitPointDiceRemaining", 0)
-    val after = pLongRest(c, 5)
-    assert(after.hp == after.maxHp and after.hitPointDiceRemaining == 5)
+    val c = freshCreature(20).with("hp", 1).with("hitDiceRemaining", ZERO_CLASS_LEVELS)
+    val after = pLongRest(c, singleClassLevels(Fighter, 5))
+    assert(after.hp == after.maxHp and after.hitDiceRemaining.get(Fighter) == 5)
   }
 
   // Source: https://reddit.com/r/onednd/comments/xrhouq/
@@ -10288,7 +10288,7 @@ module qa_generated {
   run qa_temp_hp_end_on_long_rest_not_spell_duration = {{
     val s0 = freshCreature(20)
     val s1 = pGrantTempHp(s0, 5, false)
-    val s2 = pLongRest(s1, 5)
+    val s2 = pLongRest(s1, singleClassLevels(Fighter, 5))
     assert(s2.tempHp == 0)
   }}
 
@@ -10706,13 +10706,13 @@ module qa_generated {
     val level = 5
     val pb = proficiencyBonus(level) // 3
     val dieRoll = 6
-    val target = freshCreature(20).with("hp", 8).with("hitPointDiceRemaining", 2)
+    val target = freshCreature(20).with("hp", 8).with("hitDiceRemaining", singleClassLevels(Fighter, 2))
     // Battle Medic: ally expends 1 Hit Die, regains dieRoll + profBonus (not + CON mod)
-    val s1 = target.with("hitPointDiceRemaining", target.hitPointDiceRemaining - 1)
+    val s1 = target.with("hitDiceRemaining", target.hitDiceRemaining.setBy(Fighter, (n) => n - 1))
     val s2 = pHeal(s1, dieRoll + pb)
     assert(
       s2.hp == 8 + dieRoll + pb
-      and s2.hitPointDiceRemaining == 1
+      and s2.hitDiceRemaining.get(Fighter) == 1
     )
   }
   
@@ -10722,11 +10722,11 @@ module qa_generated {
     val pb = proficiencyBonus(level) // 3
     val conMod = 5 // high CON exceeds pb
     val dieRoll = 4
-    val target = freshCreature(30).with("hp", 10).with("hitPointDiceRemaining", 2)
+    val target = freshCreature(30).with("hp", 10).with("hitDiceRemaining", singleClassLevels(Fighter, 2))
     // Short Rest path: pSpendHitDie adds conMod
-    val shortRestResult = pSpendHitDie(target, conMod, dieRoll)
+    val shortRestResult = pSpendHitDie(target, Fighter, conMod, dieRoll)
     // Battle Medic path: adds profBonus only
-    val s1 = target.with("hitPointDiceRemaining", target.hitPointDiceRemaining - 1)
+    val s1 = target.with("hitDiceRemaining", target.hitDiceRemaining.setBy(Fighter, (n) => n - 1))
     val battleMedicResult = pHeal(s1, dieRoll + pb)
     assert(
       shortRestResult.hp == 10 + dieRoll + conMod  // 19
@@ -10742,8 +10742,8 @@ module qa_generated {
     val level = 3
     val pb = proficiencyBonus(level) // 2
     val rerollResult = 5
-    val target = freshCreature(20).with("hp", 4).with("hitPointDiceRemaining", 1)
-    val s1 = target.with("hitPointDiceRemaining", 0)
+    val target = freshCreature(20).with("hp", 4).with("hitDiceRemaining", singleClassLevels(Fighter, 1))
+    val s1 = target.with("hitDiceRemaining", ZERO_CLASS_LEVELS)
     val s2 = pHeal(s1, rerollResult + pb)
     // Final healing = reroll (5) + pb (2) = 7; hp 4 -> 11 (not 4 + 1 + pb = 7)
     assert(
@@ -10757,8 +10757,8 @@ module qa_generated {
     val level = 5
     val pb = proficiencyBonus(level) // 3
     val dieRoll = 12
-    val target = freshCreature(20).with("hp", 18).with("hitPointDiceRemaining", 1)
-    val s1 = target.with("hitPointDiceRemaining", 0)
+    val target = freshCreature(20).with("hp", 18).with("hitDiceRemaining", singleClassLevels(Fighter, 1))
+    val s1 = target.with("hitDiceRemaining", ZERO_CLASS_LEVELS)
     val s2 = pHeal(s1, dieRoll + pb) // 12 + 3 = 15, but only 2 HP missing
     assert(s2.hp == target.maxHp)
   }

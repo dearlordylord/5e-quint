@@ -2493,11 +2493,11 @@ module dndTest {
 
   /// Fighter at level 5, 30 max HP, taken 15 damage, 3 of 5 HD remaining
   pure val WOUNDED_FIGHTER: CreatureState =
-    freshCreature(30).with("hp", 15).with("hitPointDiceRemaining", 3)
+    freshCreature(30).with("hp", 15).with("hitDiceRemaining", singleClassLevels(Fighter, 3))
 
   /// Fighter at level 5, full HP, all 5 HD available
   pure val RESTED_FIGHTER: CreatureState =
-    freshCreature(30).with("hitPointDiceRemaining", 5)
+    freshCreature(30).with("hitDiceRemaining", singleClassLevels(Fighter, 5))
 
   // CON mod for fighter (Con 14 → +2)
   pure val FIGHTER_CON_MOD: int = 2
@@ -2506,68 +2506,68 @@ module dndTest {
 
   run test_spend_hd_basic = {
     // Roll 6 + CON mod 2 = 8 healing. HP 15 → 23. HD 3 → 2.
-    val s = pSpendHitDie(WOUNDED_FIGHTER, FIGHTER_CON_MOD, 6)
+    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, FIGHTER_CON_MOD, 6)
     all {
       assert(s.hp == 23),
-      assert(s.hitPointDiceRemaining == 2),
+      assert(s.hitDiceRemaining.get(Fighter) == 2),
     }
   }
 
   run test_spend_hd_caps_at_max = {
     // Roll 10 + 2 = 12 healing. HP 15 + 12 = 27, capped at maxHp 30. HD 3 → 2.
-    val s = pSpendHitDie(WOUNDED_FIGHTER, FIGHTER_CON_MOD, 10)
+    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, FIGHTER_CON_MOD, 10)
     all {
       assert(s.hp == 27),
-      assert(s.hitPointDiceRemaining == 2),
+      assert(s.hitDiceRemaining.get(Fighter) == 2),
     }
   }
 
   run test_spend_hd_no_dice_remaining = {
     // 0 HD remaining → no-op
-    val s = WOUNDED_FIGHTER.with("hitPointDiceRemaining", 0)
-    val result = pSpendHitDie(s, FIGHTER_CON_MOD, 8)
+    val s = WOUNDED_FIGHTER.with("hitDiceRemaining", ZERO_CLASS_LEVELS)
+    val result = pSpendHitDie(s, Fighter, FIGHTER_CON_MOD, 8)
     all {
       assert(result.hp == 15),
-      assert(result.hitPointDiceRemaining == 0),
+      assert(result.hitDiceRemaining.get(Fighter) == 0),
     }
   }
 
   run test_spend_hd_dead_noop = {
     val s = WOUNDED_FIGHTER.with("dead", true)
-    val result = pSpendHitDie(s, FIGHTER_CON_MOD, 6)
+    val result = pSpendHitDie(s, Fighter, FIGHTER_CON_MOD, 6)
     assert(result.hp == 15)
   }
 
   run test_spend_hd_negative_con_mod = {
     // CON mod -1, roll 2 → 2 + (-1) = 1 healing. HP 15 → 16.
-    val s = pSpendHitDie(WOUNDED_FIGHTER, -1, 2)
+    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, -1, 2)
     all {
       assert(s.hp == 16),
-      assert(s.hitPointDiceRemaining == 2),
+      assert(s.hitDiceRemaining.get(Fighter) == 2),
     }
   }
 
   run test_spend_hd_negative_total_floors_to_zero = {
     // CON mod -3, roll 1 → 1 + (-3) = -2 → min 0 → no healing
-    val s = pSpendHitDie(WOUNDED_FIGHTER, -3, 1)
+    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, -3, 1)
     all {
       assert(s.hp == 15),
-      assert(s.hitPointDiceRemaining == 2),
+      assert(s.hitDiceRemaining.get(Fighter) == 2),
     }
   }
 
   run test_spend_hd_at_0hp_regains_consciousness = {
     // 0 HP, spend HD → heals and regains consciousness
     val s = pApplyCondition(
-      freshCreature(20).with("hp", 0).with("hitPointDiceRemaining", 3),
+      freshCreature(20).with("hp", 0).with("hitDiceRemaining", singleClassLevels(Fighter, 3)),
       CUnconscious,
       Set()
     )
-    val result = pSpendHitDie(s, FIGHTER_CON_MOD, 4)
+    val result = pSpendHitDie(s, Fighter, FIGHTER_CON_MOD, 4)
     all {
       assert(result.hp == 6),
       assert(not(result.unconscious)),
-      assert(result.hitPointDiceRemaining == 2),
+      assert(result.hitDiceRemaining.get(Fighter) == 2),
     }
   }
 
@@ -2575,10 +2575,10 @@ module dndTest {
 
   run test_short_rest_multiple_rolls = {
     // 3 HD remaining. Spend 2: roll 5 (+2=7), roll 3 (+2=5). HP 15 → 27. HD 3 → 1.
-    val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [5, 3])
+    val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [(Fighter, 5), (Fighter, 3)])
     all {
       assert(s.hp == 27),
-      assert(s.hitPointDiceRemaining == 1),
+      assert(s.hitDiceRemaining.get(Fighter) == 1),
     }
   }
 
@@ -2587,65 +2587,65 @@ module dndTest {
     val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [])
     all {
       assert(s.hp == 15),
-      assert(s.hitPointDiceRemaining == 3),
+      assert(s.hitDiceRemaining.get(Fighter) == 3),
     }
   }
 
   run test_short_rest_exceeds_hd = {
     // 3 HD remaining, try to spend 5 → only first 3 take effect
-    val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [4, 4, 4, 4, 4])
+    val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [(Fighter, 4), (Fighter, 4), (Fighter, 4), (Fighter, 4), (Fighter, 4)])
     // 3 rolls of 4+2=6 each → 18 healing. HP 15 → 30 (capped). HD 3 → 0.
     all {
       assert(s.hp == 30),
-      assert(s.hitPointDiceRemaining == 0),
+      assert(s.hitDiceRemaining.get(Fighter) == 0),
     }
   }
 
   run test_short_rest_caps_hp = {
     // Nearly full HP, one roll: 28 HP, roll 8 + 2 = 10 → cap at 30
     val s = WOUNDED_FIGHTER.with("hp", 28)
-    val result = pShortRest(s, FIGHTER_CON_MOD, [8])
+    val result = pShortRest(s, FIGHTER_CON_MOD, [(Fighter, 8)])
     assert(result.hp == 30)
   }
 
   // -- pLongRest --
 
   run test_long_rest_full_hp = {
-    val s = pLongRest(WOUNDED_FIGHTER, 5)
+    val s = pLongRest(WOUNDED_FIGHTER, singleClassLevels(Fighter, 5))
     assert(s.hp == 30)
   }
 
   run test_long_rest_hd_recovery_all = {
-    val s = pLongRest(WOUNDED_FIGHTER, 5)
-    assert(s.hitPointDiceRemaining == 5)
+    val s = pLongRest(WOUNDED_FIGHTER, singleClassLevels(Fighter, 5))
+    assert(s.hitDiceRemaining.get(Fighter) == 5)
   }
 
   run test_long_rest_hd_recovery_from_zero = {
     // 0 of 5 HD remaining → all recovered
-    val s0 = WOUNDED_FIGHTER.with("hitPointDiceRemaining", 0)
-    val s = pLongRest(s0, 5)
-    assert(s.hitPointDiceRemaining == 5)
+    val s0 = WOUNDED_FIGHTER.with("hitDiceRemaining", ZERO_CLASS_LEVELS)
+    val s = pLongRest(s0, singleClassLevels(Fighter, 5))
+    assert(s.hitDiceRemaining.get(Fighter) == 5)
   }
 
   run test_long_rest_clears_temp_hp = {
     val s0 = WOUNDED_FIGHTER.with("tempHp", 10)
-    val s = pLongRest(s0, 5)
+    val s = pLongRest(s0, singleClassLevels(Fighter, 5))
     assert(s.tempHp == 0)
   }
 
   run test_long_rest_exhaustion_reduces = {
     val s0 = WOUNDED_FIGHTER.with("exhaustion", 2)
-    val s = pLongRest(s0, 5)
+    val s = pLongRest(s0, singleClassLevels(Fighter, 5))
     assert(s.exhaustion == 1)
   }
 
   run test_long_rest_0hp_noop = {
     // Must have >= 1 HP to benefit
     val s0 = WOUNDED_FIGHTER.with("hp", 0)
-    val s = pLongRest(s0, 5)
+    val s = pLongRest(s0, singleClassLevels(Fighter, 5))
     all {
       assert(s.hp == 0),
-      assert(s.hitPointDiceRemaining == 3),
+      assert(s.hitDiceRemaining.get(Fighter) == 3),
     }
   }
 
@@ -2653,7 +2653,7 @@ module dndTest {
     // Exhaustion 4 → after rest: exhaustion drops to 3,
     // effectiveMaxHp = 30, HP restored to 30.
     val s0 = WOUNDED_FIGHTER.with("exhaustion", 4)
-    val s = pLongRest(s0, 5)
+    val s = pLongRest(s0, singleClassLevels(Fighter, 5))
     all {
       assert(s.exhaustion == 3),
       assert(s.hp == 30),
@@ -2663,10 +2663,10 @@ module dndTest {
   run test_long_rest_already_full = {
     // Already at full HP and HD → no change (besides temp HP clear + exhaustion reduction)
     val s0 = RESTED_FIGHTER.with("tempHp", 5)
-    val s = pLongRest(s0, 5)
+    val s = pLongRest(s0, singleClassLevels(Fighter, 5))
     all {
       assert(s.hp == 30),
-      assert(s.hitPointDiceRemaining == 5),
+      assert(s.hitDiceRemaining.get(Fighter) == 5),
       assert(s.tempHp == 0),
     }
   }

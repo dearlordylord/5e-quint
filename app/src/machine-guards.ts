@@ -42,8 +42,8 @@ export const guards = {
   },
   longRestHeals: ({ context: c }: GuardArg) => !c.inCombat && c.hp >= 1,
   hitDieHeals: ({ context: c, event: e }: GuardArg) => {
-    if (c.hitDiceRemaining <= 0) return false
     const ev = asSpendHitDie(e)
+    if (c.hitDiceRemaining[ev.className] <= 0) return false
     return c.hp === 0 && Math.max(0, ev.dieRoll + ev.conMod) > 0
   },
   exhaustionDeath: ({ context: c }: GuardArg) => c.exhaustion >= MAX_EXHAUSTION,

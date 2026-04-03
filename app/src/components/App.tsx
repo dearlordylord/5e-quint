@@ -5,6 +5,7 @@ import { EventPanel } from "#/components/EventPanel.tsx"
 import { FeaturePanel } from "#/components/FeaturePanel.tsx"
 import { StatePanel } from "#/components/StatePanel.tsx"
 import { type LogEntry, stateKey, TransitionLog } from "#/components/TransitionLog.tsx"
+import { CLASS_NAMES, type ClassName, singleClassHitDice } from "#/features/class-tables.ts"
 import type { BridgeResult } from "#/features/feature-bridge.ts"
 import { type FeatureConfig, useFeatures } from "#/features/useFeatures.ts"
 import { I18nContext, type Locale, LocaleContext, messages, useLocale, useT } from "#/i18n.ts"
@@ -13,12 +14,13 @@ import type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
 
 const DEFAULT_MAX_HP = 20
 export const DEFAULT_SPEED = 30
-export const DEFAULT_HIT_DICE = 5
 
-function getClassFromUrl(): string {
-  const params = new URLSearchParams(window.location.search)
-  return params.get("class") ?? "fighter"
+function getClassFromUrl(): ClassName {
+  const raw = new URLSearchParams(window.location.search).get("class") ?? "fighter"
+  return CLASS_NAMES.includes(raw as ClassName) ? (raw as ClassName) : "fighter"
 }
+
+export const DEFAULT_HIT_DICE = singleClassHitDice(getClassFromUrl(), 5)
 
 const FEATURE_CONFIG: FeatureConfig = { className: getClassFromUrl(), level: 5, strMod: 3, profBonus: 3 }
 

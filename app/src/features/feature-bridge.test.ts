@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { singleClassHitDice } from "#/features/class-tables.ts"
 import {
   canExecuteActionSurge,
   canExecuteDeclareReckless,
@@ -114,7 +115,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     pactSlotsCurrent: 0,
     pactSlotLevel: 0,
     concentrationSpellId: "",
-    hitDiceRemaining: 5,
+    hitDiceRemaining: singleClassHitDice("fighter", 5),
     activeEffects: [],
     creatureKind: "PC",
     legendaryActionsMax: 0,

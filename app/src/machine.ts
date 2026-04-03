@@ -2,6 +2,7 @@ import type { SnapshotFrom } from "xstate"
 import { assign, setup } from "xstate"
 
 import { remarkableAthleteCritMovement } from "#/features/class-fighter.ts"
+import { ZERO_HIT_DICE } from "#/features/class-tables.ts"
 import * as barb from "#/machine-barbarian.ts"
 import * as bard from "#/machine-bard.ts"
 import * as cleric from "#/machine-cleric.ts"
@@ -546,7 +547,7 @@ export const dndMachine = setup({
       effectiveSpeed: movementFeet(i.effectiveSpeed ?? 0),
       exhaustion: exhaustionLevel(0),
       extraAttacksRemaining: i.extraAttacksRemaining ?? 0,
-      hitDiceRemaining: i.hitDiceRemaining ?? 0,
+      hitDiceRemaining: i.hitDiceRemaining ?? ZERO_HIT_DICE,
       hp: hp(i.maxHp),
       incapacitatedSources: new Set<IncapSource>(),
       maxHp: hp(i.maxHp),

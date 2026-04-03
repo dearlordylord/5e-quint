@@ -56,7 +56,7 @@ function formatEvent(e: DndEvent): string {
     case "LONG_REST":
       return "LONG_REST"
     case "SPEND_HIT_DIE":
-      return `SPEND_HD roll=${e.dieRoll}`
+      return `SPEND_HD ${e.className} roll=${e.dieRoll}`
     case "APPLY_FALL":
       return `FALL ${e.damageRoll}`
     case "GRAPPLE":

@@ -2189,15 +2189,6 @@ module creature {
       pHeal(s, healing).with("hitDiceRemaining", s.hitDiceRemaining.setBy(className, (n) => n - 1))
     }
 
-  /// Total remaining hit dice across all classes.
-  pure def pTotalHitDiceRemaining(s: CreatureState): int =
-    s.hitDiceRemaining.get(Barbarian) + s.hitDiceRemaining.get(Bard)
-    + s.hitDiceRemaining.get(Cleric) + s.hitDiceRemaining.get(Druid)
-    + s.hitDiceRemaining.get(Fighter) + s.hitDiceRemaining.get(Monk)
-    + s.hitDiceRemaining.get(Paladin) + s.hitDiceRemaining.get(Ranger)
-    + s.hitDiceRemaining.get(Rogue) + s.hitDiceRemaining.get(Sorcerer)
-    + s.hitDiceRemaining.get(Warlock) + s.hitDiceRemaining.get(Wizard)
-
   /// Short rest: spend hit dice from a list of pre-resolved (class, roll) pairs, then return state.
   /// Caller also calls pRestorePactSlots on SpellSlotState if applicable.
   pure def pShortRest(s: CreatureState, conMod: int, hdRolls: List[(ClassName, int)]): CreatureState = {

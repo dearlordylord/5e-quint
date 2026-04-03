@@ -1,3 +1,4 @@
+import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts"
 import type { ClassStateMap } from "#/machine-class-states.ts"
 import type { ConditionFlag } from "#/machine-helpers.ts"
 import type {
@@ -52,7 +53,7 @@ export interface TurnPhaseResult {
 
 export interface DndMachineInput {
   readonly maxHp: number
-  readonly hitDiceRemaining?: number
+  readonly hitDiceRemaining?: HitDiceRemaining
   readonly effectiveSpeed?: number
   readonly movementRemaining?: number
   readonly extraAttacksRemaining?: number
@@ -148,7 +149,7 @@ export interface DndContext {
   readonly pactSlotsCurrent: number
   readonly pactSlotLevel: number
   readonly concentrationSpellId: string
-  readonly hitDiceRemaining: number
+  readonly hitDiceRemaining: HitDiceRemaining
   readonly activeEffects: ReadonlyArray<ActiveEffect>
   readonly creatureKind: CreatureKind
   // MonsterResourceState (Quint parity: monsterResourceState)
@@ -285,9 +286,13 @@ export type DndEvent =
   | { readonly type: "REMOVE_EFFECT"; readonly spellId: string }
   | { readonly type: "BREAK_CONCENTRATION" }
   | { readonly type: "CONCENTRATION_CHECK"; readonly conSaveSucceeded: boolean }
-  | { readonly type: "SHORT_REST"; readonly conMod: number; readonly hdRolls: ReadonlyArray<number> }
+  | {
+      readonly type: "SHORT_REST"
+      readonly conMod: number
+      readonly hdRolls: ReadonlyArray<{ readonly className: ClassName; readonly roll: number }>
+    }
   | { readonly type: "LONG_REST" }
-  | { readonly type: "SPEND_HIT_DIE"; readonly conMod: number; readonly dieRoll: number }
+  | { readonly type: "SPEND_HIT_DIE"; readonly className: ClassName; readonly conMod: number; readonly dieRoll: number }
   | {
       readonly type: "APPLY_FALL"
       readonly damageRoll: number

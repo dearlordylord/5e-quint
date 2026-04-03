@@ -321,7 +321,10 @@ function FighterCharges({ s }: { s: NormalizedState }) {
           HD
         </span>
         <span className="text-[10px] text-gray-400">
-          {s.hitPointDiceRemaining}/{5}
+          {typeof s.hitPointDiceRemaining === "number"
+            ? s.hitPointDiceRemaining
+            : Object.values(s.hitPointDiceRemaining).reduce((a, b) => a + b, 0)}
+          /{5}
         </span>
       </div>
     </div>

@@ -16,6 +16,7 @@
  * Fabricated encounter inspired by the PHB 2024 Ravenloft example.
  */
 
+import { singleClassHitDice } from "#/features/class-tables.ts"
 import type { DndEvent } from "#/machine-types.ts"
 import type { DamageType } from "#/types.ts"
 
@@ -131,7 +132,7 @@ const ENCOUNTER: EncounterDef = {
   },
   machineInput: {
     maxHp: 13,
-    hitDiceRemaining: 2,
+    hitDiceRemaining: singleClassHitDice("fighter", 2),
     effectiveSpeed: 30,
     movementRemaining: 30,
     extraAttacksRemaining: 0,

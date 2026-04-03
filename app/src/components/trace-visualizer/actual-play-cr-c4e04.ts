@@ -19,6 +19,7 @@
  * Damage taken (55) exceeds Omen Archive aggregate (46) due to added rounds.
  */
 
+import { singleClassHitDice } from "#/features/class-tables.ts"
 import { d20Roll, healAmount } from "#/types.ts"
 
 import type { ActualPlayStep, EncounterDef } from "./actual-play-types.ts"
@@ -46,7 +47,7 @@ const ENCOUNTER: EncounterDef = {
   },
   machineInput: {
     maxHp: 44,
-    hitDiceRemaining: 5,
+    hitDiceRemaining: singleClassHitDice("fighter", 5),
     effectiveSpeed: 30,
     movementRemaining: 30,
     extraAttacksRemaining: 1,
@@ -827,7 +828,17 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
     description:
       "Short rest in the palazzo ruins. Spend 3 hit dice: d10 rolls 7, 5, 9 + CON(3) each. " +
       "10 + 8 + 12 = 30 HP recovered. Charges restored.",
-    events: [{ type: "SHORT_REST", conMod: 3, hdRolls: [7, 5, 9] }],
+    events: [
+      {
+        type: "SHORT_REST",
+        conMod: 3,
+        hdRolls: [
+          { className: "fighter" as const, roll: 7 },
+          { className: "fighter" as const, roll: 5 },
+          { className: "fighter" as const, roll: 9 }
+        ]
+      }
+    ],
     expectedQuintState: defaultState({
       hp: 37,
       turnPhase: "outOfCombat",

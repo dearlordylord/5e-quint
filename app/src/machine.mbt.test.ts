@@ -10,6 +10,8 @@ import { createActor } from "xstate"
 import { z } from "zod"
 
 import { fighterExtraAttacks } from "#/features/class-fighter.ts"
+import type { ClassName } from "#/features/class-tables.ts"
+import { singleClassHitDice } from "#/features/class-tables.ts"
 import { type DndEvent, dndMachine } from "#/machine.ts"
 import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
 import { monkExtraAttacks } from "#/machine-monk.ts"
@@ -236,8 +238,17 @@ const driverSchema = {
   doAddEffect: { spellId: z.string(), duration: ITFBigInt, expiresAt: ITFVariant },
   doRemoveEffect: { spellId: z.string() },
   doConcentrationCheck: { saveSucceeded: z.boolean() },
-  doSpendHitDie: { conMod: ITFBigInt, dieRoll: ITFBigInt },
-  doShortRest: { conMod: ITFBigInt, numDice: ITFBigInt, r1: ITFBigInt, r2: ITFBigInt, r3: ITFBigInt },
+  doSpendHitDie: { className: ITFVariant, conMod: ITFBigInt, dieRoll: ITFBigInt },
+  doShortRest: {
+    conMod: ITFBigInt,
+    numDice: ITFBigInt,
+    c1: ITFVariant,
+    c2: ITFVariant,
+    c3: ITFVariant,
+    r1: ITFBigInt,
+    r2: ITFBigInt,
+    r3: ITFBigInt
+  },
   doLongRest: {},
   doUseLegendaryAction: { actionName: z.string().optional() },
   doUseRechargeAbility: { name: z.string().optional() },
@@ -340,7 +351,7 @@ function createDndDriver() {
           actor = createActor(dndMachine, {
             input: {
               maxHp: sb.maxHp,
-              hitDiceRemaining: 0,
+              hitDiceRemaining: undefined,
               effectiveSpeed: sb.walkSpeed,
               movementRemaining: sb.walkSpeed,
               extraAttacksRemaining: multiattackExtraAttacks(sb.multiattackLength),
@@ -384,7 +395,7 @@ function createDndDriver() {
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
-              hitDiceRemaining: level,
+              hitDiceRemaining: singleClassHitDice(cls.toLowerCase() as ClassName, level),
               effectiveSpeed: INIT_SPEED,
               movementRemaining: INIT_SPEED,
               extraAttacksRemaining: 1,
@@ -658,13 +669,20 @@ function createDndDriver() {
       doConcentrationCheck: ({ saveSucceeded }) => {
         send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: saveSucceeded })
       },
-      doSpendHitDie: ({ conMod, dieRoll }) => {
-        send({ type: "SPEND_HIT_DIE", conMod: Number(conMod), dieRoll: Number(dieRoll) })
+      doSpendHitDie: ({ className, conMod, dieRoll }) => {
+        send({
+          type: "SPEND_HIT_DIE",
+          className: className.toLowerCase() as ClassName,
+          conMod: Number(conMod),
+          dieRoll: Number(dieRoll)
+        })
       },
-      doShortRest: ({ conMod, numDice, r1, r2, r3 }) => {
+      doShortRest: ({ c1, c2, c3, conMod, numDice, r1, r2, r3 }) => {
         const n = Number(numDice)
+        const classes = [c1, c2, c3].slice(0, n)
         const rolls = [Number(r1), Number(r2), Number(r3)].slice(0, n)
-        send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls: rolls })
+        const hdRolls = classes.map((c, i) => ({ className: c.toLowerCase() as ClassName, roll: rolls[i] }))
+        send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls })
       },
       doLongRest: () => {
         send({ type: "LONG_REST" })

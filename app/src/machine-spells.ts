@@ -1,3 +1,4 @@
+import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts"
 import { effectiveMaxHp } from "#/machine-helpers.ts"
 import type { CasterType, SpellSlots } from "#/types.ts"
 import { EMPTY_SLOTS, SPELL_SLOT_LEVELS } from "#/types.ts"
@@ -111,36 +112,36 @@ export function initSpellSlotsFromLevels(levels: {
   }
 }
 
-/** Compute short rest results: spend hit dice, restore pact slots. */
+/** Compute short rest results: spend hit dice per class, restore pact slots. */
 export function computeShortRest(
   currentHp: number,
   maxHp: number,
-  hitDiceRemaining: number,
+  hitDiceRemaining: HitDiceRemaining,
   pactSlotsMax: number,
   conMod: number,
-  hdRolls: ReadonlyArray<number>
-): { readonly newHp: number; readonly newHitDice: number; readonly newPactSlots: number } {
+  hdRolls: ReadonlyArray<{ readonly className: ClassName; readonly roll: number }>
+): { readonly newHp: number; readonly newHitDice: HitDiceRemaining; readonly newPactSlots: number } {
   const effMax = effectiveMaxHp(maxHp)
-  const cap = Math.min(hitDiceRemaining, hdRolls.length)
   let curHp = currentHp
-  for (let i = 0; i < cap; i++) {
-    curHp = Math.min(curHp + Math.max(0, hdRolls[i] + conMod), effMax)
+  const hd = { ...hitDiceRemaining }
+  for (const { className, roll } of hdRolls) {
+    if (hd[className] <= 0) continue
+    hd[className]--
+    curHp = Math.min(curHp + Math.max(0, roll + conMod), effMax)
   }
-  return { newHitDice: hitDiceRemaining - cap, newHp: curHp, newPactSlots: pactSlotsMax }
+  return { newHitDice: hd, newHp: curHp, newPactSlots: pactSlotsMax }
 }
 
-/** Compute long rest results. */
+/** Compute long rest results. Hit dice restoration handled by caller (per-class). */
 export function computeLongRest(
   currentHp: number,
   maxHp: number,
   exhaustion: number,
   slotsMax: SpellSlots,
-  pactSlotsMax: number,
-  totalHitDice: number
+  pactSlotsMax: number
 ): {
   readonly newExhaustion: number
   readonly newHp: number
-  readonly newHitDice: number
   readonly newSlots: SpellSlots
   readonly newPactSlots: number
 } | null {
@@ -149,7 +150,6 @@ export function computeLongRest(
   const effMax = effectiveMaxHp(maxHp)
   return {
     newExhaustion,
-    newHitDice: totalHitDice,
     newHp: effMax,
     newPactSlots: pactSlotsMax,
     newSlots: slotsMax

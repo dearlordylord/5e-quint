@@ -44,7 +44,7 @@
 | **Hit Points (HP)** | Current health of a creature; ranges from 0 to the creature's hit point maximum | Health, life |
 | **Hit Point Maximum** | Upper bound on HP; derived from class, level, and Constitution; can be reduced by effects (e.g., Exhaustion level 4 halves it) | Max HP (acceptable shorthand), max health |
 | **Temporary Hit Points** | A damage buffer separate from HP; absorbed first; cannot be healed; do not stack (keep higher); can exceed hit point maximum | Temp HP (acceptable shorthand), shield |
-| **Hit Die** | A class-based die (d6-d12), one per level; spent during short rest to recover HP (roll + CON modifier); half recovered on long rest | Recovery die |
+| **Hit Die** | A class-based die (d6-d12), one per level; spent during short rest to recover HP (roll + CON modifier); all recovered on long rest (SRD 5.2.1); multiclass characters track remaining dice per class separately | Recovery die |
 | **Death Saving Throw** | A special d20 save at 0 HP with no ability modifier; 10+ = success, <10 = failure; nat 20 = regain 1 HP; nat 1 = two failures; three successes = **Stable**; three failures = death | Death save (acceptable shorthand) |
 | **Stable** | A creature at 0 HP that is no longer making death saving throws; remains unconscious; regains 1 HP after 1d4 hours if not healed | Stabilized |
 | **Instant Death** | When damage reduces a creature to 0 HP and the remaining damage equals or exceeds its hit point maximum | Overkill |
@@ -160,7 +160,7 @@
 | Term | Definition | Aliases to avoid |
 |------|-----------|-----------------|
 | **Short Rest** | A downtime period of at least 1 hour; creatures can spend Hit Dice to recover HP; Warlock pact slots recover | — |
-| **Long Rest** | A downtime period of at least 8 hours (6 sleeping, 2 light activity); restores all HP, up to half total Hit Dice, all spell slots; reduces Exhaustion by 1 (if creature has eaten); at most one per 24 hours | Full rest, overnight rest |
+| **Long Rest** | A downtime period of at least 8 hours (6 sleeping, 2 light activity); restores all HP, all spent Hit Dice (SRD 5.2.1), all spell slots; reduces Exhaustion by 1; at most one per 24 hours | Full rest, overnight rest |
 
 ## Vision and Light
 
@@ -233,7 +233,7 @@
 - A **Grapple** and a **Shove** are special melee attacks resolved as a **Contest**, not an **Attack Roll**.
 - **Resistance**, **Vulnerability**, and **Immunity** are applied in order: immunity first, then resistance (halve), then vulnerability (double).
 - **Exhaustion** level 1+ imposes **Disadvantage** on **Ability Checks**; level 3+ adds **Disadvantage** on **Attack Rolls** and **Saving Throws**; level 4+ halves **Hit Point Maximum**; level 6 = death.
-- A **Short Rest** allows spending **Hit Dice** and recovers **Pact Slots**; a **Long Rest** restores all **HP**, recovers half **Hit Dice**, restores all **Spell Slots**, and reduces **Exhaustion** by 1.
+- A **Short Rest** allows spending **Hit Dice** and recovers **Pact Slots**; a **Long Rest** restores all **HP**, all spent **Hit Dice** (SRD 5.2.1), all **Spell Slots**, and reduces **Exhaustion** by 1.
 - **Illumination** determines **Obscurement**: Bright → Unobscured, Dim → Lightly Obscured, Darkness → Heavily Obscured. **Darkvision** shifts each category one step better.
 - **Heavily Obscured** areas effectively impose the **Blinded** condition; **Lightly Obscured** areas impose **Disadvantage** on sight-based Perception checks.
 - A **Controlled Mount** is limited to Dash/Disengage/Dodge; an **Independent Mount** acts freely on its own initiative.

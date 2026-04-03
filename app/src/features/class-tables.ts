@@ -43,6 +43,24 @@ export function classHitDie(className: ClassName): number {
   return HIT_DIE[className]
 }
 
+// --- Hit Dice Remaining (per-class tracking, SRD 5.2.1 multiclass) ---
+
+export type HitDiceRemaining = Readonly<Record<ClassName, number>>
+
+export const ZERO_HIT_DICE: HitDiceRemaining = Object.fromEntries(CLASS_NAMES.map((c) => [c, 0])) as HitDiceRemaining
+
+export function singleClassHitDice(className: ClassName, count: number): HitDiceRemaining {
+  return { ...ZERO_HIT_DICE, [className]: count }
+}
+
+export function hitDiceFromClassLevels(classStates: Partial<Record<ClassName, { level: number }>>): HitDiceRemaining {
+  const result = { ...ZERO_HIT_DICE }
+  for (const c of CLASS_NAMES) {
+    result[c] = classStates[c]?.level ?? 0
+  }
+  return result
+}
+
 // --- Multiclass Prerequisites (PHB Ch6) ---
 
 const MULTICLASS_THRESHOLD = 13

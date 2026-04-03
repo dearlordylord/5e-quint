@@ -9,6 +9,7 @@
  * The NormalizedState shape matches machine.mbt.test.ts exactly.
  */
 
+import { singleClassHitDice } from "#/features/class-tables.ts"
 import type { DndEvent } from "#/machine-types.ts"
 import { d20Roll } from "#/types.ts"
 
@@ -38,7 +39,7 @@ export interface NormalizedState {
   readonly stunned: boolean
   readonly unconscious: boolean
   readonly incapacitatedSources: ReadonlyArray<string>
-  readonly hitPointDiceRemaining: number
+  readonly hitPointDiceRemaining: number | Record<string, number>
   readonly activeEffects: ReadonlyArray<{
     spellId: string
     turnsRemaining: number
@@ -675,7 +676,17 @@ const TRACE_EVENTS: ReadonlyArray<TraceEventDef> = [
     quintAction: "doShortRest",
     xstateEvent: "SHORT_REST",
     description: "Short rest: spend 3 hit dice (d10+2 each: 8+10+6 = 24 HP). Charges restored. 1 -> 25 HP.",
-    events: [{ type: "SHORT_REST", conMod: 2, hdRolls: [6, 8, 4] }],
+    events: [
+      {
+        type: "SHORT_REST",
+        conMod: 2,
+        hdRolls: [
+          { className: "fighter" as const, roll: 6 },
+          { className: "fighter" as const, roll: 8 },
+          { className: "fighter" as const, roll: 4 }
+        ]
+      }
+    ],
     expectedQuintState: defaultState({
       hp: 25,
       turnPhase: "outOfCombat",
@@ -696,7 +707,7 @@ const TRACE_EVENTS: ReadonlyArray<TraceEventDef> = [
 
 const MACHINE_INPUT = {
   maxHp: 44,
-  hitDiceRemaining: 5,
+  hitDiceRemaining: singleClassHitDice("fighter", 5),
   effectiveSpeed: 30,
   movementRemaining: 30,
   extraAttacksRemaining: 1,

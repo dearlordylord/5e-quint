@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { createActor } from "xstate"
 
+import { singleClassHitDice, ZERO_HIT_DICE } from "#/features/class-tables.ts"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
 import { dndMachine } from "#/machine.ts"
 import {
@@ -1051,31 +1052,31 @@ describe("combat mode separation (TA3)", () => {
   })
 
   it("SHORT_REST ignored when acting", () => {
-    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: 3 } })
+    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
     a.start()
     startTurn(a)
     takeDamage(a, 5)
     const hpBefore = ctx(a).hp
-    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })
+    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [{ className: "fighter", roll: 4 }] })
     expect(ctx(a).hp).toBe(hpBefore)
   })
 
   it("SHORT_REST ignored when waitingForTurn", () => {
-    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: 3 } })
+    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
     a.start()
     startTurn(a)
     takeDamage(a, 5)
     endTurn(a)
     const hpBefore = ctx(a).hp
-    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })
+    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [{ className: "fighter", roll: 4 }] })
     expect(ctx(a).hp).toBe(hpBefore)
   })
 
   it("SHORT_REST works when outOfCombat", () => {
-    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: 3 } })
+    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
     a.start()
     takeDamage(a, 5)
-    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [4] })
+    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [{ className: "fighter", roll: 4 }] })
     expect(ctx(a).hp).toBe(20)
   })
 })
@@ -1824,7 +1825,14 @@ describe("short rest", () => {
     const a = create()
     takeDamage(a, 15)
     // Can't spend HD when hitDiceRemaining is 0
-    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [5, 3] })
+    a.send({
+      type: "SHORT_REST",
+      conMod: 2,
+      hdRolls: [
+        { className: "fighter", roll: 5 },
+        { className: "fighter", roll: 3 }
+      ]
+    })
     expect(ctx(a).hp).toBe(5)
   })
 
@@ -1874,10 +1882,12 @@ describe("long rest", () => {
   })
 
   it("restores all spent hit dice (SRD 5.2.1)", () => {
-    const a = createActor(dndMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: 2, fighterLevel: 8 } })
+    const a = createActor(dndMachine, {
+      input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: singleClassHitDice("fighter", 2), fighterLevel: 8 }
+    })
     a.start()
     a.send({ type: "LONG_REST" })
-    expect(ctx(a).hitDiceRemaining).toBe(8)
+    expect(ctx(a).hitDiceRemaining).toEqual(singleClassHitDice("fighter", 8))
   })
 })
 
@@ -2170,9 +2180,9 @@ describe("machine action edge cases", () => {
   })
 
   it("spend hit die with 0 remaining is no-op", () => {
-    const a = createActor(dndMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: 0 } })
+    const a = createActor(dndMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: ZERO_HIT_DICE } })
     a.start()
-    a.send({ type: "SPEND_HIT_DIE", conMod: 2, dieRoll: 4 })
+    a.send({ type: "SPEND_HIT_DIE", className: "fighter", conMod: 2, dieRoll: 4 })
     expect(ctx(a).hp).toBe(DEFAULT_MAX_HP) // unchanged
   })
 

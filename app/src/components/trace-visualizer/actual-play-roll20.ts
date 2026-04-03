@@ -16,6 +16,8 @@
  * Kill count, damage budget, and provenance tracked via ActualPlayStep annotations.
  */
 
+import { singleClassHitDice } from "#/features/class-tables.ts"
+
 import type { ActualPlayStep, EncounterDef } from "./actual-play-types.ts"
 import { damage, defaultState, endTurn, replayActualPlayTrace, startTurn } from "./actual-play-types.ts"
 import type { TraceStep } from "./sample-trace.ts"
@@ -36,7 +38,7 @@ const ENCOUNTER: EncounterDef = {
   },
   machineInput: {
     maxHp: 44,
-    hitDiceRemaining: 5,
+    hitDiceRemaining: singleClassHitDice("fighter", 5),
     effectiveSpeed: 30,
     movementRemaining: 30,
     extraAttacksRemaining: 1,
