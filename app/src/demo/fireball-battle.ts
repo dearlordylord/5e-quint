@@ -102,13 +102,13 @@ const castFireball: BattleEvent = {
 
 const sfPass = (reactorId: string | null): BattleEvent => ({
   type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
-  reactorId,
+  reactorId: reactorId != null ? cid(reactorId) : null,
   decision: { tag: "RPass" as const }
 })
 
 const adPass = (reactorId: string | null): BattleEvent => ({
   type: "BATTLE_AFTER_DAMAGE_PASS",
-  reactorId
+  reactorId: reactorId != null ? cid(reactorId) : null
 })
 
 export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
