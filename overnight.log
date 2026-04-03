@@ -161,3 +161,19 @@ Summary: 0 fixed, 0 new (all failures are known tracked issues)
   Fuzzers restarted with fix.
 
 Summary: 1 fixed (extraAttacksRemaining), 0 new
+
+2026-04-02T23:36:00 — Cron check #7
+  MBT failures: 2 new (both slotsCurrent at long rest with 0 HP)
+  Invariant failures: 6 new (same pattern)
+
+2026-04-02T23:36:00 — FIXED: long rest spell slot restoration at 0 HP
+  Quint's doLongRest restores spell slots unconditionally (pInitSpellSlots runs
+  regardless of HP), but only restores creature state if alive. XState's
+  longRestUpdate returned {} when hp < 1, skipping slot restoration entirely.
+  Fix: slot restoration is now unconditional; only hp/exhaustion/hitDice gated on alive.
+  This also fixes the arcaneRecoveryUsed and pactSlotsCurrent runtime divergences
+  (both were downstream of slots not being restored after dying and resting).
+  Fuzzers restarted.
+
+Summary: 1 fixed (long rest slots at 0 HP), 0 new
+Running total tonight: 5 fixed, 4 logged-for-review
