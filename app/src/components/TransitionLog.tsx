@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react"
 
+import { BTN_SM } from "#/components/styles.ts"
 import type { FeatureAction } from "#/features/feature-store.ts"
 import { useT } from "#/i18n.ts"
 import type { DndEvent, DndSnapshot } from "#/machine.ts"
@@ -106,8 +107,7 @@ function formatEvent(e: DndEvent): string {
   }
 }
 
-const logBtnClass =
-  "rounded border border-gray-600 px-2 py-0.5 text-xs font-semibold text-gray-400 transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
+const logBtnClass = BTN_SM
 
 export const TransitionLog = memo(function TransitionLog({
   cursor,

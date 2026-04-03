@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { BTN } from "./styles.ts"
+
 interface PlaybackControlsData {
   cursor: number
   total: number
@@ -10,8 +12,6 @@ export interface PlaybackControlsProps extends PlaybackControlsData {
   onStepTo: (index: number) => void
 }
 
-const BTN =
-  "rounded border border-gray-600 px-3 py-1 text-sm font-semibold text-gray-300 transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
 const DEFAULT_AUTO_PLAY_MS = 800
 
 export function PlaybackControls({ autoAdvanceDelayMs, cursor, onStepTo, total }: PlaybackControlsProps) {
