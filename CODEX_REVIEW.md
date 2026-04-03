@@ -63,13 +63,14 @@ Key D&D distinction: **AoE targets a POINT** (Fireball). **Multi-target targets 
 Maps battle machine output to a renderer-agnostic scene description. NO coordinates, NO time, NO animation. Grid positions and ratios only.
 
 ```typescript
-/** Scenario-provided data not in BattleContext (spatial, visual, identity). */
+/** Scenario-provided data not in BattleContext (spatial, visual, identity).
+ *  Keyed by stable eventId (not array index) to survive scenario edits. */
 interface ScenarioMeta {
-  names: Record<string, string>          // id -> display name
+  names: Record<string, string>          // creatureId -> display name
   teams: { blue: string[]; red: string[] }
-  gridPositions: Record<string, { row: number; col: number }>  // id -> grid pos
-  aoeTargetPoints: Record<number, { row: number; col: number }>  // event index -> grid point
-  spellAnnotations: Record<number, string>  // event index -> spell name for renderer
+  gridPositions: Record<string, { row: number; col: number }>  // creatureId -> grid pos
+  aoeTargetPoints: Record<string, { row: number; col: number }>  // eventId -> grid point
+  spellAnnotations: Record<string, string>  // eventId -> spell name for renderer
 }
 
 /** Deterministic projection of BattleContext. No time, no animation. */
@@ -99,7 +100,7 @@ interface CreatureSnapshot {
   totalSlotsRemaining: number  // sum of slotsCurrent
   totalSlotsMax: number        // sum of slotsMax
   isActive: boolean         // is it this creature's turn
-  conditions: ReadonlyArray<string>  // active condition names
+  conditions: ReadonlyArray<Condition>  // typed, mapped to labels at render edge
 }
 
 // Derived from BattlePhase + PendingInterrupt tags — no loose strings
@@ -114,12 +115,15 @@ type PhaseSnapshot =
   | { type: "legendaryAction" }
 
 interface AoEZoneSnapshot {
+  zoneId: string           // stable identity for React keys and transitions
   centerGridPos: { row: number; col: number }  // from scenario metadata
   radiusInSquares: number
-  damageType: string       // for visual catalog color lookup
+  damageType: DamageType   // typed, for visual catalog color lookup
   spellName: string
 }
 ```
+
+**Ordering:** `creatures` array always in initiative order (deterministic, avoids test diffs from Map iteration).
 
 **Testing:** Pure vitest. Assert creature HP ratios, phase types, AoE zone positions. No DOM, no time.
 
@@ -135,7 +139,8 @@ Delta computed by a separate pure function, NOT by the Director:
 function diffSnapshots(prev: SceneSnapshot, curr: SceneSnapshot): SnapshotDelta
 
 interface SnapshotDelta {
-  hpChanges: Record<string, number>          // id -> damage dealt (negative) or healing
+  damageTaken: Record<string, number>        // id -> positive damage amount
+  healingReceived: Record<string, number>    // id -> positive healing amount
   knockedOut: ReadonlyArray<string>          // ids that went alive -> unconscious
   reactionsSpent: ReadonlyArray<string>      // ids that lost reaction
   slotsExpended: ReadonlyArray<string>       // ids that spent a slot
@@ -305,6 +310,11 @@ src/battle-scene/
 | 13 | R2 | Typed timing config | `Partial<Record<BattleEvent["type"], number>>` — can't drift from event union |
 | 14 | R2 | InterruptType typing | Derived from `PendingInterrupt["tag"]` — no loose strings |
 | 15 | R2 | activeCreatureId | `string \| null` — null during init/edge transitions |
+| 16 | R3 | Event-index metadata | Keyed by stable `eventId`, not array index. Survives scenario edits. |
+| 17 | R3 | HP change sign convention | Split into `damageTaken` (positive) and `healingReceived` (positive). No sign bugs. |
+| 18 | R3 | Creature ordering | `creatures` array in initiative order. Deterministic for tests. |
+| 19 | R3 | Conditions typing | `ReadonlyArray<Condition>` (typed), labels at render edge only. |
+| 20 | R3 | AoE zone identity | `zoneId: string` on AoEZoneSnapshot for React keys and transitions. |
 
 ---
 
