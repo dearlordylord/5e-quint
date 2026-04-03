@@ -195,8 +195,8 @@ export function expendSlot(c: BattleCreatureState, level: number): BattleCreatur
   return { ...c, slotsCurrent: newSlots }
 }
 
-/** Expend a spell slot and mark "slot expended this turn" (SRD 5.2.1). */
-export function expendSlotAndMark(c: BattleCreatureState, level: number): BattleCreatureState {
+/** Battle-level expendSlot: also marks "slot expended this turn" (SRD 5.2.1). */
+export function battleExpendSlot(c: BattleCreatureState, level: number): BattleCreatureState {
   return { ...expendSlot(c, level), slotExpendedThisTurn: true }
 }
 

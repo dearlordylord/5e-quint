@@ -7,7 +7,7 @@ import {
   applyCondition,
   breakConcentrationAndPropagate,
   eligibleForCounterspell,
-  expendSlotAndMark,
+  expendSlot,
   resolveSave,
   setCreature,
   setDifference
@@ -45,7 +45,7 @@ export function resolveSpellEntry(
   stack: ReadonlyArray<SpellStackEntry>
 ): { creatures: Map<CreatureId, BattleCreatureState>; phase: BattlePhase; stack: ReadonlyArray<SpellStackEntry> } {
   let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs)
-  if (!isRitual && slotLvl > 0) cs1 = setCreature(cs1, casterId, expendSlotAndMark(cs1.get(casterId)!, slotLvl))
+  if (!isRitual && slotLvl > 0) cs1 = setCreature(cs1, casterId, expendSlot(cs1.get(casterId)!, slotLvl))
   switch (postCast.tag) {
     case "PCESave": {
       const r = resolveSave(cs1, postCast.save, ADR_ACTIVE_TURN)

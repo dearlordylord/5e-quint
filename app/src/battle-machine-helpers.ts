@@ -29,11 +29,11 @@ import type {
 import { BP_ACTIVE_TURN, FRESH_TURN_STATE } from "#/battle-machine-types.ts"
 import type { DamageType } from "#/types.ts"
 
-// Re-export creature-level functions used by actions
+// Re-export creature-level functions used by actions.
+// battleExpendSlot re-exported as expendSlot — battle callers always mark "slot expended this turn".
 export {
   applyCondition,
-  expendSlot,
-  expendSlotAndMark,
+  battleExpendSlot as expendSlot,
   heal,
   spendAction,
   spendExtraAttack,
@@ -364,7 +364,7 @@ export function processStartTurn(
     c = { ...c, rechargeAvailable: newRecharge }
   }
   result = setCreature(result, activeId, c)
-  // Reset slotExpendedThisTurn for ALL creatures (SRD 5.2.1 "One Spell with a Spell Slot per Turn")
+  // Reset slotExpendedThisTurn for non-active creatures (active already reset by FRESH_TURN_STATE)
   for (const [cid, cr] of result) {
     if (cid !== activeId && cr.slotExpendedThisTurn) result.set(cid, { ...cr, slotExpendedThisTurn: false })
   }

@@ -251,7 +251,7 @@ module battle {
     cs.set(id, cs.get(id).with("slots", s))
 
   /// Expend a spell slot and mark "slot expended this turn" (SRD 5.2.1).
-  pure def expendSlotAndMark(
+  pure def expendSlot(
     cs: CreatureId -> Combatant, id: CreatureId, level: int
   ): (CreatureId -> Combatant) = {
     val cs1 = setSlots(cs, id, pExpendSlot(cs.get(id).slots, level))
@@ -921,7 +921,7 @@ module battle {
       } else {
         // No Counterspell possible — expend slot (unless ritual) and resolve save immediately
         val cs2 = if (ritual) cs1
-                  else expendSlotAndMark(cs1, activeId, slotLvl)
+                  else expendSlot(cs1, activeId, slotLvl)
         val result = resolveSave(cs2, saveCtx, ADRActiveTurn)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       }
@@ -1029,7 +1029,7 @@ module battle {
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase, stack: List[SpellStackEntry] } = {
     // Expend slot now that spell resolved (not countered).
     // slotLvl 0 = already spent (CS reaction). Ritual = no slot expenditure.
-    val cs1 = if (not(isRitual) and slotLvl > 0) expendSlotAndMark(cs, casterId, slotLvl)
+    val cs1 = if (not(isRitual) and slotLvl > 0) expendSlot(cs, casterId, slotLvl)
               else cs
     match postCast {
       | PCESave(save) =>
@@ -1188,7 +1188,7 @@ module battle {
                     bCreatures.get(reactorId).slots.slotsCurrent.get(csSlotLvl) > 0,
                     // Spend reaction + slot
                     val cs1 = spendReaction(bCreatures, reactorId)
-                    val cs2 = expendSlotAndMark(cs1, reactorId, csSlotLvl)
+                    val cs2 = expendSlot(cs1, reactorId, csSlotLvl)
                     // Push current spell context onto stack
                     val stackEntry: SpellStackEntry = {
                       spellCasterId: spell.caster,
@@ -1359,7 +1359,7 @@ module battle {
       } else {
         // No Counterspell — expend slot (unless ritual) and resolve concentration immediately
         val cs2 = if (ritual) cs1
-                  else expendSlotAndMark(cs1, activeId, slotLvl)
+                  else expendSlot(cs1, activeId, slotLvl)
         val resolved = resolveConcentration(cs2, concCtx)
         all {
           bCreatures' = resolved,
@@ -1453,7 +1453,7 @@ module battle {
       } else {
         // No Counterspell — expend slot (unless ritual) and enter AoE resolution
         val cs2 = if (ritual) cs1
-                  else expendSlotAndMark(cs1, activeId, slotLvl)
+                  else expendSlot(cs1, activeId, slotLvl)
         all {
           bCreatures' = cs2,
           bPhase' = BPResolvingAoE(aoeCtx),
