@@ -1,5 +1,7 @@
 # D&D 5e SRD 5.2.1 — Class Features, Spells, Species, Feats
 
+**Status: Done.** All combat-relevant tasks (T01–T161, T170, T200–T201) complete. Only T165 (Non-Combat Spells, P4) remains — ~255 utility/ritual spells with no combat mechanics, needed only for spell browser UI completeness.
+
 **Edition: SRD 5.2.1 (2024).**
 
 Class features, spell effects, species traits, and subclass mechanics. These compose on top of core primitives (PLAN.md / `creature.qnt`).
