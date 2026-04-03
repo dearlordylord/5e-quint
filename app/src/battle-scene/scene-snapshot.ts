@@ -142,13 +142,23 @@ function derivePhase(phase: BattlePhase): PhaseSnapshot {
   }
 }
 
+function extractAoECtx(phase: BattlePhase): AoESpellCtx | null {
+  if (phase.tag === "BPResolvingAoE") return phase.aoe
+  if (phase.tag === "BPAwaitingReaction") {
+    const pi = phase.ctx.interrupt
+    if (pi.tag === "PISaveFailedAoE") return pi.aoe
+    if (pi.tag === "PIAfterDamage" && pi.ctx.returnTo.tag === "ADRResolvingAoE") return pi.ctx.returnTo.aoe
+  }
+  return null
+}
+
 function deriveAoEZones(
   phase: BattlePhase,
   meta: ScenarioMeta,
   eventIndex: string | null
 ): ReadonlyArray<AoEZoneSnapshot> {
-  if (phase.tag !== "BPResolvingAoE") return []
-  const aoe: AoESpellCtx = phase.aoe
+  const aoe = extractAoECtx(phase)
+  if (!aoe) return []
   const centerGridPos =
     eventIndex != null ? (meta.aoeTargetPoints[eventIndex] ?? { row: 0, col: 0 }) : { row: 0, col: 0 }
   const spellName = eventIndex != null ? (meta.spellAnnotations[eventIndex] ?? "AoE") : "AoE"
