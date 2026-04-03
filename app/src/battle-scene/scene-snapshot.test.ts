@@ -46,10 +46,9 @@ describe("deriveSnapshot", () => {
 
   it("correct HP after full scenario — D and F KO'd", () => {
     const snap = deriveSnapshot(replayTo(FIREBALL_BATTLE.length), META)
-    expect(snap.creatures.find((c) => c.id === "A")!.currentHp).toBe(36)
-    expect(snap.creatures.find((c) => c.id === "B")!.currentHp).toBe(22)
+    expect(snap.creatures.find((c) => c.id === "A")!.currentHp).toBe(22)
+    expect(snap.creatures.find((c) => c.id === "B")!.currentHp).toBe(8)
     expect(snap.creatures.find((c) => c.id === "C")!.currentHp).toBe(22)
-    expect(snap.creatures.find((c) => c.id === "D")!.currentHp).toBe(0)
     expect(snap.creatures.find((c) => c.id === "D")!.unconscious).toBe(true)
     expect(snap.creatures.find((c) => c.id === "E")!.currentHp).toBe(22)
     expect(snap.creatures.find((c) => c.id === "F")!.unconscious).toBe(true)

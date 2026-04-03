@@ -24,6 +24,7 @@ export interface ConditionVisual {
 export const spellVisuals: Record<string, SpellVisual> = {
   fireball: { color: "#f97316", aoeShape: "circle", castDurationMs: 500, label: "Fireball" },
   counterspell: { color: "#8b5cf6", castDurationMs: 300, label: "Counterspell" },
+  shatter: { color: "#93c5fd", aoeShape: "circle", castDurationMs: 400, label: "Shatter" },
   hold_person: { color: "#eab308", castDurationMs: 400, label: "Hold Person" },
   bless: { color: "#fbbf24", castDurationMs: 400, label: "Bless" },
   guiding_bolt: { color: "#facc15", castDurationMs: 350, label: "Guiding Bolt" },

@@ -70,6 +70,22 @@ const endTurn: BattleEvent = {
   eotConSave: true
 }
 
+const SHATTER_DMG = 14
+const SHATTER_DC = 15
+
+const castShatter: BattleEvent = {
+  type: "BATTLE_CAST_AOE",
+  saveDC: SHATTER_DC,
+  dmgOnFail: SHATTER_DMG,
+  halfOnSave: true,
+  dt: "thunder" as DamageType,
+  cond: "deafened",
+  applyCond: false,
+  slotLvl: 2,
+  spellName: "shatter",
+  ritual: false
+}
+
 const castFireball: BattleEvent = {
   type: "BATTLE_CAST_AOE",
   saveDC: FIREBALL_DC,
@@ -139,21 +155,37 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
 
   endTurn, // end D's turn
 
-  // === Turns B, E, C, F: pass (no actions, reactions reset) ===
+  // === Turns B, E, C, F ===
   startTurn,
-  endTurn, // B
+  endTurn, // B: pass (no useful action)
+
+  // === Turn E (Gray Elf): Shatter at A+B (10ft radius, level 2 slot) ===
   startTurn,
+  castShatter, // targets A and B
+  cs(null, false), // no CS eligible
+  aoeTarget("A", 8), // A fails CON save (36→22). A has reaction.
+  sfPass("A"),
+  sfPass(null),
+  adPass("A"),
+  adPass(null),
+  aoeTarget("B", 6), // B fails CON save (22→8). B has reaction (reset on B's turn).
+  sfPass("B"),
+  sfPass(null),
+  adPass("B"),
+  adPass(null),
+  aoeTarget(null, 0), // Shatter complete
   endTurn, // E
+
   startTurn,
-  endTurn, // C
+  endTurn, // C: pass
   startTurn,
-  endTurn, // F
+  endTurn, // F: pass
 
   // === ROUND 2 ===
 
   // === Turn A: Fireball #2 at red team (D=22, E=36, F=22) ===
   startTurn,
-  castFireball, // event index 36
+  castFireball, // event index 49
 
   // CS chain again: E→B→F→C (everyone has 1 level-3 slot left)
   cs("E", false),
@@ -227,11 +259,13 @@ export const FIREBALL_BATTLE_META = {
   aoeTargetPoints: {
     "2": { row: 5, col: 8 },
     "18": { row: 5, col: 2 },
-    "36": { row: 5, col: 8 }
+    "30": { row: 4, col: 2 },
+    "49": { row: 5, col: 8 }
   },
   spellAnnotations: {
     "2": "Fireball",
     "18": "Fireball",
-    "36": "Fireball"
+    "30": "Shatter",
+    "49": "Fireball"
   }
 } satisfies ScenarioMeta
