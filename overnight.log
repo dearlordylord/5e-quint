@@ -33,3 +33,22 @@ Summary: 1 fixed, 1 logged-for-review
   Recommend option (b) or (c). Human judgment needed on which invariant is correct.
 
 Summary: 0 fixed, 2 logged-for-review (slotsMax already tracked + spellStackDistinctCasters new)
+
+2026-04-02T21:02:00 — Cron check #2
+  MBT failures: 111 new since last check
+  Invariant failures: 13 new since last check (same spellStackDistinctCasters pattern)
+  
+  New MBT failure patterns discovered:
+    - (slotsCurrent, slotsMax): same as before, class spell slots not initialized
+    - (pactSlotLevel, pactSlotsCurrent, pactSlotsMax): Warlock pact slots not initialized
+      from warlock level. Quint calls pInitSpellSlots → pWarlockPactSlotCount/Level.
+      seed: 0x19f22518, exp pactMax=2 pactLvl=5, act all=0
+    - (hitPointDiceRemaining): Monster stat blocks get hitDice=0 in bridge but Quint
+      derives a nonzero value. seed: 0xc391da73, exp=18 act=0
+    - (parse_error): seeds where error extraction regex failed (trace/step/action all null)
+
+  All 3 new patterns are sub-symptoms of the same root cause: XState machine / MBT bridge
+  doesn't derive init values from class levels the way Quint's pInitSpellSlots does.
+  Covered by the Option 1 fix proposed for slotsMax.
+
+Summary: 0 fixed, 0 new issues (all are variants of already-tracked slotsMax init problem)
