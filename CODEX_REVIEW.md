@@ -76,9 +76,9 @@ interface ScenarioMeta {
 interface SceneSnapshot {
   creatures: ReadonlyArray<CreatureSnapshot>
   phase: PhaseSnapshot
-  aoeZone: AoEZoneSnapshot | null
+  aoeZones: ReadonlyArray<AoEZoneSnapshot>  // array — supports overlapping effects
   round: number
-  activeCreatureId: string
+  activeCreatureId: string | null  // null during init / edge transitions
 }
 
 interface CreatureSnapshot {
@@ -102,13 +102,16 @@ interface CreatureSnapshot {
   conditions: ReadonlyArray<string>  // active condition names
 }
 
-interface PhaseSnapshot {
-  type: "activeTurn" | "interrupt" | "aoeResolving" | "movement" | "legendaryAction"
-  // Interrupt-specific (when type === "interrupt")
-  interruptType?: string   // "counterspell", "shield", "absorb_elements"
-  reactorId?: string       // who is reacting
-  targetId?: string        // who/what is being reacted to
-}
+// Derived from BattlePhase + PendingInterrupt tags — no loose strings
+type InterruptKind = "PIAttackHit" | "PIAttackDamage" | "PISpellCast"
+  | "PISaveFailed" | "PISaveFailedAoE" | "PIAfterDamage"
+
+type PhaseSnapshot =
+  | { type: "activeTurn" }
+  | { type: "interrupt"; interruptKind: InterruptKind; reactorId?: string; targetId?: string }
+  | { type: "aoeResolving"; spellName: string; remainingCount: number }
+  | { type: "movement" }
+  | { type: "legendaryAction" }
 
 interface AoEZoneSnapshot {
   centerGridPos: { row: number; col: number }  // from scenario metadata
@@ -123,10 +126,25 @@ interface AoEZoneSnapshot {
 ### Layer B: Director / Playback (owns time, testable with fake timers)
 
 ```
-(currentEventIndex, SceneSnapshot, prevSnapshot, clock, playbackMode) -> VisualCueState
+(event, SceneSnapshot, SnapshotDelta, clock, playbackMode) -> VisualCueState
 ```
 
-Owns ALL temporal/transient state that doesn't exist in the battle machine: cast bar fill progress, interrupt fade opacity, auto-advance delays, "just took damage" flash timers.
+Delta computed by a separate pure function, NOT by the Director:
+```typescript
+/** Pure, deterministic, unit-testable. */
+function diffSnapshots(prev: SceneSnapshot, curr: SceneSnapshot): SnapshotDelta
+
+interface SnapshotDelta {
+  hpChanges: Record<string, number>          // id -> damage dealt (negative) or healing
+  knockedOut: ReadonlyArray<string>          // ids that went alive -> unconscious
+  reactionsSpent: ReadonlyArray<string>      // ids that lost reaction
+  slotsExpended: ReadonlyArray<string>       // ids that spent a slot
+  phaseChanged: boolean
+  newAoeZones: ReadonlyArray<AoEZoneSnapshot>
+}
+```
+
+Director owns ALL temporal/transient state that doesn't exist in the battle machine: cast bar fill progress, interrupt fade opacity, auto-advance delays, "just took damage" flash timers.
 
 ```typescript
 interface VisualCueState {
@@ -142,10 +160,10 @@ interface CreatureCue {
   castingGlow: boolean    // true while casting
 }
 
-/** Per-event-type timing config. Lives in Director, not in React. */
+/** Per-event-type timing config. Uses BattleEvent["type"] union — can't drift. */
 interface PlaybackTiming {
   defaultDelayMs: number
-  overrides: Partial<Record<string, number>>  // event type -> delay
+  overrides: Partial<Record<BattleEvent["type"], number>>
   // e.g., { BATTLE_RESOLVE_COUNTERSPELL: 800, BATTLE_RESOLVE_AOE_TARGET: 1200 }
 }
 ```
@@ -174,7 +192,7 @@ interface LayoutState {
   viewBox: { width: number; height: number }
   gridLines: ReadonlyArray<{ x1: number; y1: number; x2: number; y2: number }>
   creatures: ReadonlyArray<CreatureLayout>
-  aoeZone: { cx: number; cy: number; r: number; color: string } | null
+  aoeZones: ReadonlyArray<{ cx: number; cy: number; r: number; color: string }>
   interruptOverlay: { opacity: number; label: string | null }
 }
 
@@ -209,7 +227,7 @@ Receives LayoutState as props, returns SVG with Motion animations. Minimal logic
 ```tsx
 <svg viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height}`}>
   <GridOverlay lines={layout.gridLines} />
-  {layout.aoeZone && <AoEZone {...layout.aoeZone} />}
+  {layout.aoeZones.map(z => <AoEZone key={...} {...z} />)}
   {layout.creatures.map(c => <CreatureToken key={c.id} {...c} />)}
   {layout.interruptOverlay.opacity > 0 && <InterruptOverlay {...layout.interruptOverlay} />}
 </svg>
@@ -231,7 +249,8 @@ BattleContext ──────────────────────
     v                                               |
 SceneSnapshot (deterministic, no time)              |
     |                                               |
-    + Director(eventIdx, snapshot, clock) — Layer B  |
+    + diffSnapshots(prev, curr) — pure delta          |
+    + Director(event, snapshot, delta, clock) — Layer B
     |                                               |
     v                                               |
 SceneSnapshot + VisualCueState                      |
@@ -249,7 +268,9 @@ LayoutState (pixels)
 src/battle-scene/
   scene-snapshot.ts          # Layer A: (BattleContext, Meta) -> SceneSnapshot
   scene-snapshot.test.ts     # Pure vitest
-  director.ts                # Layer B: playback timing, visual cues
+  snapshot-diff.ts           # diffSnapshots(prev, curr) -> SnapshotDelta
+  snapshot-diff.test.ts      # Pure vitest
+  director.ts                # Layer B: playback timing, visual cues (injectable clock)
   director.test.ts           # Fake timers vitest
   layout.ts                  # Layer C: (Snapshot, Cues, Config) -> LayoutState
   layout.test.ts             # Pure vitest
@@ -265,32 +286,25 @@ src/battle-scene/
 
 ---
 
-## Resolved Questions (from Round 1)
+## Resolved Questions
 
-| # | Question | Resolution |
-|---|----------|------------|
-| 1 | Layer boundaries | 4 layers: projection / director / geometry / SVG. Director is the new addition. |
-| 2 | Animation state | Director layer. Emits VisualCueState. Testable with fake timers. |
-| 3 | Stepping model | Both manual + auto-play. Delay-per-event-type in Director config. |
-| 4 | AoE target point | Scenario metadata `aoeTargetPoints`. Not derived from creatures. |
-| 5 | Spell visual catalog | Separate `visual-catalog.ts`. spellName -> visual properties. |
-| 6 | Grid positions | Scenario metadata `gridPositions`. Explicit, deterministic. |
-| 7 | Cast bar | Director owns progress. SceneSnapshot has casting intent only. |
-
-## New Questions for Round 2
-
-1. **Director as hook vs module:** Should the Director be a React hook (`useDirector`) with `useEffect` timers, or a plain class/module with injectable clock? Hook is simpler for React integration but couples to React lifecycle. Module is more testable but needs manual wiring.
-
-2. **Derived vs referenced:** Round 1 feedback said "derive once, don't persist duplicates." My `CreatureSnapshot` has `hpRatio`, `alive`, `unconscious`, `totalSlotsRemaining` — all derivable from `BattleCreatureState`. Options:
-   - Keep the derived fields (snapshot is the API boundary; consumers don't reach into BattleContext)
-   - Pass `BattleCreatureState` through and let layout derive what it needs (fewer fields, but layout knows about battle types)
-   - Hybrid: snapshot has creature ID + derived rendering-relevant subset only
-
-3. **Visual catalog scope:** Should the catalog cover only spells (fireball -> red circle) or also reactions (counterspell -> purple spark), conditions (unconscious -> grey tint), damage types (fire -> orange flash)? How granular?
-
-4. **Multiple AoE zones:** Current design has one `aoeZone`. What about overlapping effects (Spirit Guardians + Fireball)? Array of zones, or wait until needed?
-
-5. **Transition between SceneSnapshots:** When stepping forward, some visual transitions need the PREVIOUS snapshot to compute deltas (HP dropped by X, creature went from alive to unconscious). Should the Director receive both current and previous snapshots, or compute deltas internally?
+| # | Round | Question | Resolution |
+|---|-------|----------|------------|
+| 1 | R1 | Layer boundaries | 4 layers: projection / director / geometry / SVG |
+| 2 | R1 | Animation state | Director layer with injectable clock |
+| 3 | R1 | Stepping model | Both manual + auto-play. Delay config typed as `Partial<Record<BattleEvent["type"], number>>` |
+| 4 | R1 | AoE target point | Scenario metadata `aoeTargetPoints` |
+| 5 | R1 | Spell visual catalog | `visual-catalog.ts` with sub-catalogs: spells, damageTypes, conditions |
+| 6 | R1 | Grid positions | Scenario metadata `gridPositions` |
+| 7 | R1 | Cast bar | Director owns progress. SceneSnapshot has casting intent only |
+| 8 | R2 | Director as hook vs module | Module/core with injectable clock + thin `useDirector` React wrapper |
+| 9 | R2 | Derived vs referenced | Hybrid: CreatureSnapshot is the API boundary with derived rendering-relevant fields. Layout never touches BattleCreatureState. |
+| 10 | R2 | Visual catalog scope | 3 sub-catalogs: spellVisuals, damageTypeVisuals, conditionVisuals |
+| 11 | R2 | Multiple AoE zones | Array now (`aoeZones: ReadonlyArray<...>`). Prevents future refactor. |
+| 12 | R2 | Snapshot deltas | Separate pure `diffSnapshots(prev, curr) -> SnapshotDelta`. Director receives delta, doesn't compute it. |
+| 13 | R2 | Typed timing config | `Partial<Record<BattleEvent["type"], number>>` — can't drift from event union |
+| 14 | R2 | InterruptType typing | Derived from `PendingInterrupt["tag"]` — no loose strings |
+| 15 | R2 | activeCreatureId | `string \| null` — null during init/edge transitions |
 
 ---
 
