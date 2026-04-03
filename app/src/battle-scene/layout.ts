@@ -3,7 +3,7 @@
  * Grid positions to pixels, feet to squares to pixels, bar dimensions, AoE circle radii.
  */
 import { type CreatureCue, EMPTY_CUE, type VisualCueState } from "./director.ts"
-import type { AoEZoneSnapshot, CreatureSnapshot, SceneSnapshot } from "./scene-snapshot.ts"
+import type { AoEZoneSnapshot, CreatureSnapshot, SceneSnapshot, SpriteRect } from "./scene-snapshot.ts"
 import { damageTypeVisuals } from "./visual-catalog.ts"
 
 // --- Config ---
@@ -37,23 +37,13 @@ export interface BarLayout {
   color: string
 }
 
-export interface SpriteLayout {
-  url: string
-  sx: number
-  sy: number
-  sw: number
-  sh: number
-  imgW: number
-  imgH: number
-}
-
 export interface CreatureLayout {
   id: string
   cx: number
   cy: number
   tokenRadius: number
   teamColor: string
-  sprite: SpriteLayout | null
+  sprite: SpriteRect | null
   opacity: number
   label: string
   hpBar: BarLayout
@@ -178,17 +168,7 @@ function computeCreatureLayout(
     }
   }
 
-  const sprite: SpriteLayout | null = creature.sprite
-    ? {
-        url: creature.sprite.url,
-        sx: creature.sprite.x,
-        sy: creature.sprite.y,
-        sw: creature.sprite.w,
-        sh: creature.sprite.h,
-        imgW: creature.sprite.imgW,
-        imgH: creature.sprite.imgH
-      }
-    : null
+  const { sprite } = creature
 
   return {
     id: creature.id,

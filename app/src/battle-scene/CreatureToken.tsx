@@ -63,8 +63,8 @@ export function CreatureToken(props: CreatureLayout) {
                 width: r * 2,
                 height: r * 2,
                 backgroundImage: `url(${props.sprite.url})`,
-                backgroundPosition: `-${(props.sprite.sx * (r * 2)) / props.sprite.sw}px -${(props.sprite.sy * (r * 2)) / props.sprite.sw}px`,
-                backgroundSize: `${(props.sprite.imgW * (r * 2)) / props.sprite.sw}px auto`,
+                backgroundPosition: `-${(props.sprite.x * (r * 2)) / props.sprite.w}px -${(props.sprite.y * (r * 2)) / props.sprite.w}px`,
+                backgroundSize: `${(props.sprite.imgW * (r * 2)) / props.sprite.w}px auto`,
                 backgroundRepeat: "no-repeat",
                 borderRadius: "50%",
                 overflow: "hidden"

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 interface PlaybackControlsData {
   cursor: number
   total: number
+  autoAdvanceDelayMs?: number
 }
 
 export interface PlaybackControlsProps extends PlaybackControlsData {
@@ -11,9 +12,10 @@ export interface PlaybackControlsProps extends PlaybackControlsData {
 
 const BTN =
   "rounded border border-gray-600 px-3 py-1 text-sm font-semibold text-gray-300 transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
-const AUTO_PLAY_MS = 800
+const DEFAULT_AUTO_PLAY_MS = 800
 
-export function PlaybackControls({ cursor, onStepTo, total }: PlaybackControlsProps) {
+export function PlaybackControls({ autoAdvanceDelayMs, cursor, onStepTo, total }: PlaybackControlsProps) {
+  const delayMs = autoAdvanceDelayMs ?? DEFAULT_AUTO_PLAY_MS
   const [autoPlay, setAutoPlay] = useState(false)
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -46,11 +48,11 @@ export function PlaybackControls({ cursor, onStepTo, total }: PlaybackControlsPr
       setAutoPlay(false)
       return
     }
-    autoPlayRef.current = setTimeout(() => onStepTo(cursor + 1), AUTO_PLAY_MS)
+    autoPlayRef.current = setTimeout(() => onStepTo(cursor + 1), delayMs)
     return () => {
       if (autoPlayRef.current) clearTimeout(autoPlayRef.current)
     }
-  }, [autoPlay, cursor, total, onStepTo])
+  }, [autoPlay, cursor, total, onStepTo, delayMs])
 
   // Cleanup on unmount
   useEffect(() => {

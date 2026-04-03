@@ -114,7 +114,12 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   return (
     <PageShell title="Battle Visualizer">
       <div className="flex flex-col items-center">
-        <PlaybackControls cursor={cursor} total={events.length} onStepTo={stepTo} />
+        <PlaybackControls
+          cursor={cursor}
+          total={events.length}
+          onStepTo={stepTo}
+          autoAdvanceDelayMs={cues.autoAdvanceDelay}
+        />
 
         <div className="w-full max-w-3xl mt-3 mb-3 px-4 py-2 rounded-xl border border-gray-700 bg-gray-800 text-sm text-gray-200 text-center min-h-[2.5rem] flex items-center justify-center">
           {snapshot?.activeCreatureId && (
