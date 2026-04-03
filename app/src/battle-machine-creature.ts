@@ -1,0 +1,237 @@
+/**
+ * Battle machine creature-level pure functions — ports creature.qnt pure functions.
+ * All functions are pure (no XState imports, no side effects).
+ */
+import type { BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
+import { addIncapSource, ALL_DAMAGE_TYPES, removeIncapSource } from "#/machine-helpers.ts"
+import type { ActionType, ActiveEffect, Condition, DamageType, ExpiryPhase } from "#/types.ts"
+
+function applyDamageModifiers(
+  amount: number,
+  damageType: DamageType,
+  immunities: ReadonlySet<DamageType>,
+  resistances: ReadonlySet<DamageType>,
+  vulnerabilities: ReadonlySet<DamageType>,
+  flatModifier: number
+): number {
+  if (immunities.has(damageType)) return 0
+  const afterFlat = Math.max(0, amount - flatModifier)
+  const afterResist = resistances.has(damageType) ? Math.trunc(afterFlat / 2) : afterFlat
+  return vulnerabilities.has(damageType) ? afterResist * 2 : afterResist
+}
+
+export function isIncapacitated(c: BattleCreatureState): boolean {
+  return c.incapacitatedSources.size > 0
+}
+
+export function applyCondition(c: BattleCreatureState, cond: Condition): BattleCreatureState {
+  switch (cond) {
+    case "blinded":
+      return { ...c, blinded: true }
+    case "charmed":
+      return { ...c, charmed: true }
+    case "deafened":
+      return { ...c, deafened: true }
+    case "frightened":
+      return { ...c, frightened: true }
+    case "grappled":
+      return { ...c, grappled: true }
+    case "incapacitated":
+      return { ...c, incapacitatedSources: addIncapSource(c.incapacitatedSources, "direct") }
+    case "invisible":
+      return { ...c, invisible: true }
+    case "paralyzed":
+      return { ...c, paralyzed: true, incapacitatedSources: addIncapSource(c.incapacitatedSources, "paralyzed") }
+    case "petrified":
+      return { ...c, petrified: true, incapacitatedSources: addIncapSource(c.incapacitatedSources, "petrified") }
+    case "poisoned":
+      return c.petrified ? c : { ...c, poisoned: true }
+    case "prone":
+      return { ...c, prone: true }
+    case "restrained":
+      return { ...c, restrained: true }
+    case "stunned":
+      return { ...c, stunned: true, incapacitatedSources: addIncapSource(c.incapacitatedSources, "stunned") }
+    case "unconscious":
+      return {
+        ...c,
+        unconscious: true,
+        prone: true,
+        incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious")
+      }
+    default:
+      return c
+  }
+}
+
+function removeCondition(c: BattleCreatureState, cond: Condition): BattleCreatureState {
+  switch (cond) {
+    case "blinded":
+      return { ...c, blinded: false }
+    case "charmed":
+      return { ...c, charmed: false }
+    case "deafened":
+      return { ...c, deafened: false }
+    case "frightened":
+      return { ...c, frightened: false }
+    case "grappled":
+      return { ...c, grappled: false }
+    case "incapacitated":
+      return { ...c, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "direct") }
+    case "invisible":
+      return { ...c, invisible: false }
+    case "paralyzed":
+      return { ...c, paralyzed: false, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "paralyzed") }
+    case "petrified":
+      return { ...c, petrified: false, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "petrified") }
+    case "poisoned":
+      return { ...c, poisoned: false }
+    case "prone":
+      return { ...c, prone: false }
+    case "restrained":
+      return { ...c, restrained: false }
+    case "stunned":
+      return { ...c, stunned: false, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "stunned") }
+    case "unconscious":
+      return {
+        ...c,
+        unconscious: false,
+        incapacitatedSources: removeIncapSource(c.incapacitatedSources, "unconscious")
+      }
+    default:
+      return c
+  }
+}
+
+function addDeathFailures(c: BattleCreatureState, count: number): BattleCreatureState {
+  const newFails = Math.min(c.deathSaves.failures + count, 3)
+  const c1 = { ...c, deathSaves: { successes: c.deathSaves.successes, failures: newFails } }
+  return newFails >= 3 ? { ...c1, dead: true } : c1
+}
+
+export function takeDamage(
+  c: BattleCreatureState,
+  amount: number,
+  damageType: DamageType,
+  isCritical: boolean
+): BattleCreatureState {
+  if (c.dead) return c
+  const effResist = c.petrified ? ALL_DAMAGE_TYPES : new Set<DamageType>()
+  // Merge active effect granted R/V/I
+  const totalR = new Set(effResist)
+  const totalV = new Set<DamageType>()
+  const totalI = new Set<DamageType>()
+  for (const e of c.activeEffects) {
+    if (e.grantedResistances) for (const r of e.grantedResistances) totalR.add(r)
+    if (e.grantedVulnerabilities) for (const v of e.grantedVulnerabilities) totalV.add(v)
+    if (e.grantedImmunities) for (const i of e.grantedImmunities) totalI.add(i)
+  }
+  const effAmount = applyDamageModifiers(amount, damageType, totalI, totalR, totalV, 0)
+  if (effAmount <= 0) return c
+  const tempAbsorb = Math.min(c.tempHp, effAmount)
+  const dmgThrough = effAmount - tempAbsorb
+  const c1 = { ...c, tempHp: c.tempHp - tempAbsorb }
+  if (dmgThrough === 0) return c1
+  if (c1.hp === 0) {
+    if (c.creatureKind === "Monster") return { ...c1, dead: true }
+    if (dmgThrough >= c.maxHp) return { ...c1, dead: true }
+    return addDeathFailures({ ...c1, stable: false }, isCritical ? 2 : 1)
+  }
+  const newHp = c1.hp - dmgThrough
+  if (newHp <= 0) {
+    const overflow = -newHp
+    const c2 = { ...c1, hp: 0 }
+    if (c.creatureKind === "Monster") return { ...c2, dead: true }
+    if (overflow >= c.maxHp) return { ...c2, dead: true }
+    return applyCondition(c2, "unconscious")
+  }
+  return { ...c1, hp: newHp }
+}
+
+export function heal(c: BattleCreatureState, amount: number): BattleCreatureState {
+  if (c.dead || amount <= 0) return c
+  const newHp = Math.min(c.hp + amount, c.maxHp)
+  const c1 = { ...c, hp: newHp }
+  if (c.hp === 0 && newHp > 0) {
+    return { ...removeCondition(c1, "unconscious"), deathSaves: { successes: 0, failures: 0 }, stable: false }
+  }
+  return c1
+}
+
+export function spendAction(c: BattleCreatureState, actionType: ActionType): BattleCreatureState {
+  if (c.actionsRemaining <= 0 || isIncapacitated(c)) return c
+  if (c.actionSurgeActionPending && actionType === "magic") return c
+  let c1 = { ...c, actionsRemaining: c.actionsRemaining - 1 }
+  if (actionType === "attack") c1 = { ...c1, attackActionUsed: true }
+  else if (actionType === "disengage") c1 = { ...c1, disengaged: true }
+  else if (actionType === "dodge") c1 = { ...c1, dodging: true }
+  else if (actionType === "dash") c1 = { ...c1, movementRemaining: c1.movementRemaining + c1.effectiveSpeed }
+  else if (actionType === "ready") c1 = { ...c1, readiedAction: true }
+  if (c.actionSurgeActionPending) c1 = { ...c1, actionSurgeActionPending: false }
+  return c1
+}
+
+export function spendReaction(c: BattleCreatureState): BattleCreatureState {
+  return c.reactionAvailable ? { ...c, reactionAvailable: false } : c
+}
+
+export function spendMovement(c: BattleCreatureState, feet: number, cost: number): BattleCreatureState {
+  const totalCost = feet * cost
+  if (totalCost > c.movementRemaining || totalCost < 0) return c
+  return { ...c, movementRemaining: c.movementRemaining - totalCost }
+}
+
+export function spendExtraAttack(c: BattleCreatureState): BattleCreatureState {
+  return c.extraAttacksRemaining > 0 ? { ...c, extraAttacksRemaining: c.extraAttacksRemaining - 1 } : c
+}
+
+export function expendSlot(c: BattleCreatureState, level: number): BattleCreatureState {
+  const idx = level - 1
+  if (idx < 0 || idx >= c.slotsCurrent.length) return c
+  const current = c.slotsCurrent[idx]
+  if (current <= 0) return c
+  const newSlots = [...c.slotsCurrent]
+  newSlots[idx] = current - 1
+  return { ...c, slotsCurrent: newSlots }
+}
+
+export function breakConcentration(c: BattleCreatureState): BattleCreatureState {
+  if (c.concentrationSpellId === "") return c
+  const spellId = c.concentrationSpellId
+  return { ...c, concentrationSpellId: "", activeEffects: c.activeEffects.filter((e) => e.spellId !== spellId) }
+}
+
+export function startConcentration(c: BattleCreatureState, spellId: string): BattleCreatureState {
+  return { ...c, concentrationSpellId: spellId }
+}
+
+export function addEffect(
+  c: BattleCreatureState,
+  spellId: string,
+  duration: number,
+  expiresAt: ExpiryPhase,
+  casterId: string
+): BattleCreatureState {
+  const newEffect: ActiveEffect = { spellId, turnsRemaining: duration, expiresAt, casterId }
+  return { ...c, activeEffects: [...c.activeEffects, newEffect] }
+}
+
+export function removeEffect(c: BattleCreatureState, spellId: string): BattleCreatureState {
+  return { ...c, activeEffects: c.activeEffects.filter((e) => e.spellId !== spellId) }
+}
+
+export function removeEffectsByCaster(c: BattleCreatureState, casterId: CreatureId): BattleCreatureState {
+  const filtered = c.activeEffects.filter((e) => e.casterId !== casterId)
+  return filtered.length === c.activeEffects.length ? c : { ...c, activeEffects: filtered }
+}
+
+export function decrementDurations(effects: ReadonlyArray<ActiveEffect>): ReadonlyArray<ActiveEffect> {
+  return effects.map((e) => ({ ...e, turnsRemaining: e.turnsRemaining - 1 }))
+}
+
+export function clearExpiredAtPhase(
+  effects: ReadonlyArray<ActiveEffect>,
+  phase: ExpiryPhase
+): ReadonlyArray<ActiveEffect> {
+  return effects.filter((e) => !(e.turnsRemaining <= 0 && e.expiresAt === phase))
+}
