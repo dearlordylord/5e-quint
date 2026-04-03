@@ -205,12 +205,12 @@ Expand the reaction set from 2 to full SRD catalog.
 
 ```
 [B14] Per-creature projection MBT (P2) -> deps: [B13]   ✓ done
-[B15] Battle-level XState machine (P3) -> deps: [B14]
+[B15] Battle-level XState machine (P3) -> deps: [B14]   ✓ done
 ```
 
 **[B14] Per-creature projection MBT** — Project battle traces per-creature, replay against existing creature XState machines. Validates that the battle spec's per-creature effects match existing creature machine behavior. Ref: O4.1.B.
 
-**[B15] Battle-level XState machine** — Full battle XState machine (possibly using XState actor model). Battle-level MBT parity with `battle.qnt`. Ref: O4.1.A.
+**[B15] Battle-level XState machine** — Monolithic `battleMachine` with flat context mirroring battle.qnt's 7 state variables. 22 events 1:1 with Quint actions. MBT validates battle-level state (turnIndex, round, turnStarted) + per-creature fields. No actor model — flat Map matches Quint's flat Map. Ref: O4.1.A.
 
 ### Phase 5: Initiative & Surprise
 
