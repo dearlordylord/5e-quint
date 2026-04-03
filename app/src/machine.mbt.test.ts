@@ -13,6 +13,7 @@ import { fighterExtraAttacks } from "#/features/class-fighter.ts"
 import { type DndEvent, dndMachine } from "#/machine.ts"
 import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
 import { monkExtraAttacks } from "#/machine-monk.ts"
+import { paladinExtraAttacks } from "#/machine-paladin.ts"
 import { rangerExtraAttacks } from "#/machine-ranger.ts"
 import {
   compareNormalizedStates,
@@ -509,6 +510,7 @@ function createDndDriver() {
                 fighterExtraAttacks(ctx.classStates.fighter?.level ?? 0),
                 barbarianExtraAttacks(ctx.classStates.barbarian?.level ?? 0),
                 monkExtraAttacks(ctx.classStates.monk?.level ?? 0),
+                paladinExtraAttacks(ctx.classStates.paladin?.level ?? 0),
                 rangerExtraAttacks(ctx.classStates.ranger?.level ?? 0)
               )
         const effects = !numEffects

@@ -4,11 +4,13 @@ import {
   paladinChannelDivinityMax,
   restoreChannelDivinityShort
 } from "#/features/class-paladin.ts"
-import { updateClass } from "#/machine-helpers.ts"
+import { standardExtraAttacks, updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import { expendSlot } from "#/machine-spells.ts"
 import type { DndContext, PaladinClassState } from "#/machine-types.ts"
 import { hp } from "#/types.ts"
+
+export { standardExtraAttacks as paladinExtraAttacks }
 
 function p(c: DndContext) {
   return c.classStates.paladin!
