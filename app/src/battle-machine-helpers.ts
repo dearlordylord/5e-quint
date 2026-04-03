@@ -3,17 +3,14 @@
  * Creature-level pure functions are in battle-machine-creature.ts.
  */
 import {
-  addEffect,
   applyCondition,
   breakConcentration,
   clearExpiredAtPhase,
   decrementDurations,
-  expendSlot,
   heal,
   isIncapacitated,
   removeEffect,
   removeEffectsByCaster,
-  startConcentration,
   takeDamage
 } from "#/battle-machine-creature.ts"
 import type {
@@ -23,17 +20,13 @@ import type {
   BattleContext,
   BattleCreatureState,
   BattlePhase,
-  ConcentrationCtx,
   CreatureId,
   PendingInterrupt,
-  PostCastEffect,
   SaveFailedCtx,
   SaveSpellCtx,
-  SpellCastCtx,
-  SpellStackEntry,
   TriggerType
 } from "#/battle-machine-types.ts"
-import { ADR_ACTIVE_TURN, BP_ACTIVE_TURN, FRESH_TURN_STATE } from "#/battle-machine-types.ts"
+import { BP_ACTIVE_TURN, FRESH_TURN_STATE } from "#/battle-machine-types.ts"
 import type { DamageType } from "#/types.ts"
 
 // Re-export creature-level functions used by actions
@@ -310,143 +303,30 @@ export function applyFailEffects(
   return { creatures: cs1, phase: returnToPhase(returnTo) }
 }
 
-export function resolveConcentration(cs: Creatures, conc: ConcentrationCtx): Map<CreatureId, BattleCreatureState> {
-  let cs1: Map<CreatureId, BattleCreatureState> =
-    cs.get(conc.caster)!.concentrationSpellId !== "" ? breakConcentrationAndPropagate(cs, conc.caster) : new Map(cs)
-  let c = startConcentration(cs1.get(conc.caster)!, conc.spellId)
-  c = addEffect(c, conc.spellId, conc.duration, "end", conc.caster)
-  cs1 = setCreature(cs1, conc.caster, c)
-  let t = addEffect(cs1.get(conc.target)!, conc.spellId, conc.duration, "end", conc.caster)
-  if (conc.applyCondition) t = applyCondition(t, conc.conditionOnFail)
-  return setCreature(cs1, conc.target, t)
-}
-
-export function resolveSpellEntry(
-  cs: Creatures,
-  casterId: CreatureId,
-  slotLvl: number,
-  isRitual: boolean,
-  postCast: PostCastEffect,
-  stack: ReadonlyArray<SpellStackEntry>
-): { creatures: Map<CreatureId, BattleCreatureState>; phase: BattlePhase; stack: ReadonlyArray<SpellStackEntry> } {
-  let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs)
-  if (!isRitual && slotLvl > 0) cs1 = setCreature(cs1, casterId, expendSlot(cs1.get(casterId)!, slotLvl))
-  switch (postCast.tag) {
-    case "PCESave": {
-      const r = resolveSave(cs1, postCast.save, ADR_ACTIVE_TURN)
-      return { creatures: r.creatures, phase: r.phase, stack }
-    }
-    case "PCEAoE":
-      return { creatures: cs1, phase: { tag: "BPResolvingAoE", aoe: postCast.aoe }, stack }
-    case "PCEConcentration":
-      return { creatures: resolveConcentration(cs1, postCast.conc), phase: BP_ACTIVE_TURN, stack }
-    default:
-      return { creatures: cs1, phase: BP_ACTIVE_TURN, stack }
-  }
-}
-
-export function returnToCSWindow(
-  cs: Creatures,
-  entry: SpellStackEntry,
-  stack: ReadonlyArray<SpellStackEntry>
-): { creatures: Map<CreatureId, BattleCreatureState>; phase: BattlePhase; stack: ReadonlyArray<SpellStackEntry> } {
-  const freshElig = eligibleForCounterspell(cs, entry.spellCasterId)
-  const remaining = setDifference(freshElig, entry.offered)
-  if (remaining.size > 0) {
-    const spell: SpellCastCtx = {
-      caster: entry.spellCasterId,
-      spellName: entry.spellName,
-      postCast: entry.spellPostCast,
-      slotLvl: entry.slotLvl,
-      ritual: entry.ritual
-    }
-    return {
-      creatures: new Map(cs),
-      stack,
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: {
-          interrupt: { tag: "PISpellCast", ctx: spell },
-          trigger: "TSpellBeingCast",
-          eligible: freshElig,
-          offered: entry.offered
-        }
-      }
-    }
-  }
-  if (entry.spellPostCast.tag === "PCECounterspell") {
-    const csEffect = entry.spellPostCast.cs
-    if (stack.length === 0) return { creatures: new Map(cs), phase: BP_ACTIVE_TURN, stack }
-    const popped = { top: stack[stack.length - 1], rest: stack.slice(0, -1) }
-    if (!csEffect.conSaveSucceeded) {
-      if (popped.top.spellPostCast.tag === "PCECounterspell") {
-        if (popped.rest.length === 0) return { creatures: new Map(cs), phase: BP_ACTIVE_TURN, stack: popped.rest }
-        const gp = { top: popped.rest[popped.rest.length - 1], rest: popped.rest.slice(0, -1) }
-        const fe2 = eligibleForCounterspell(cs, gp.top.spellCasterId)
-        if (setDifference(fe2, gp.top.offered).size > 0) {
-          const sp2: SpellCastCtx = {
-            caster: gp.top.spellCasterId,
-            spellName: gp.top.spellName,
-            postCast: gp.top.spellPostCast,
-            slotLvl: gp.top.slotLvl,
-            ritual: gp.top.ritual
-          }
-          return {
-            creatures: new Map(cs),
-            stack: gp.rest,
-            phase: {
-              tag: "BPAwaitingReaction",
-              ctx: {
-                interrupt: { tag: "PISpellCast", ctx: sp2 },
-                trigger: "TSpellBeingCast",
-                eligible: fe2,
-                offered: gp.top.offered
-              }
-            }
-          }
-        }
-        return resolveSpellEntry(cs, gp.top.spellCasterId, gp.top.slotLvl, gp.top.ritual, gp.top.spellPostCast, gp.rest)
-      }
-      return { creatures: new Map(cs), phase: BP_ACTIVE_TURN, stack: popped.rest }
-    }
-    const fe2 = eligibleForCounterspell(cs, popped.top.spellCasterId)
-    if (setDifference(fe2, popped.top.offered).size > 0) {
-      const sp2: SpellCastCtx = {
-        caster: popped.top.spellCasterId,
-        spellName: popped.top.spellName,
-        postCast: popped.top.spellPostCast,
-        slotLvl: popped.top.slotLvl,
-        ritual: popped.top.ritual
-      }
-      return {
-        creatures: new Map(cs),
-        stack: popped.rest,
-        phase: {
-          tag: "BPAwaitingReaction",
-          ctx: {
-            interrupt: { tag: "PISpellCast", ctx: sp2 },
-            trigger: "TSpellBeingCast",
-            eligible: fe2,
-            offered: popped.top.offered
-          }
-        }
-      }
-    }
-    return resolveSpellEntry(
-      cs,
-      popped.top.spellCasterId,
-      popped.top.slotLvl,
-      popped.top.ritual,
-      popped.top.spellPostCast,
-      popped.rest
-    )
-  }
-  return resolveSpellEntry(cs, entry.spellCasterId, entry.slotLvl, entry.ritual, entry.spellPostCast, stack)
-}
-
 export function nextTurn(turnIndex: number, initLen: number, round: number): { idx: number; round: number } {
   const nextIdx = turnIndex + 1 < initLen ? turnIndex + 1 : 0
   return { idx: nextIdx, round: nextIdx === 0 ? round + 1 : round }
+}
+
+/** Apply damage to a creature and handle concentration break + propagation in one step. */
+function applyDamageWithConcBreak(
+  cs: Creatures,
+  id: CreatureId,
+  creature: BattleCreatureState,
+  dmg: number,
+  dt: DamageType,
+  conSaveSucceeded: boolean
+): { creatures: Map<CreatureId, BattleCreatureState>; creature: BattleCreatureState } {
+  const hadConc = creature.concentrationSpellId !== ""
+  let c = takeDamage(creature, dmg, dt, false)
+  if (hadConc && (c.dead || isIncapacitated(c))) c = breakConcentration(c)
+  if (c.concentrationSpellId !== "" && !conSaveSucceeded) c = breakConcentration(c)
+  let result = setCreature(cs, id, c)
+  if (hadConc && c.concentrationSpellId === "") {
+    result = breakConcentrationAndPropagate(result, id)
+    c = result.get(id)!
+  }
+  return { creatures: result, creature: c }
 }
 
 export function processStartTurn(
@@ -468,19 +348,9 @@ export function processStartTurn(
   if (hasEffects) {
     if (sotHeal > 0) c = heal(c, sotHeal)
     if (sotDmg > 0) {
-      const oldConcId = c.concentrationSpellId
-      c = takeDamage(c, sotDmg, sotDt, false)
-      if (oldConcId !== "" && (c.dead || isIncapacitated(c)))
-        c = { ...c, concentrationSpellId: "", activeEffects: c.activeEffects.filter((e) => e.spellId !== oldConcId) }
-      if (c.concentrationSpellId !== "" && !sotConSave) {
-        const sid = c.concentrationSpellId
-        c = { ...c, concentrationSpellId: "", activeEffects: c.activeEffects.filter((e) => e.spellId !== sid) }
-      }
-      result = setCreature(result, activeId, c)
-      if (oldConcId !== "" && c.concentrationSpellId === "") {
-        result = breakConcentrationAndPropagate(result, activeId)
-        c = result.get(activeId)!
-      }
+      const r = applyDamageWithConcBreak(result, activeId, c, sotDmg, sotDt, sotConSave)
+      result = r.creatures
+      c = r.creature
     } else {
       result = setCreature(result, activeId, c)
     }
@@ -512,20 +382,18 @@ export function processEndTurn(
     }
     if (idsToRemove.size > 0) c = { ...c, activeEffects: c.activeEffects.filter((ae) => !idsToRemove.has(ae.spellId)) }
   }
+  let result: Map<CreatureId, BattleCreatureState>
   if (hasEotEffects && eotDmg > 0) {
-    const oldConcId = c.concentrationSpellId
-    c = takeDamage(c, eotDmg, eotDt, false)
-    if (oldConcId !== "" && (c.dead || isIncapacitated(c)))
-      c = { ...c, concentrationSpellId: "", activeEffects: c.activeEffects.filter((e) => e.spellId !== oldConcId) }
-    if (c.concentrationSpellId !== "" && !eotConSave) {
-      const sid = c.concentrationSpellId
-      c = { ...c, concentrationSpellId: "", activeEffects: c.activeEffects.filter((e) => e.spellId !== sid) }
-    }
+    const r = applyDamageWithConcBreak(cs, activeId, c, eotDmg, eotDt, eotConSave)
+    c = r.creature
+    c = { ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") }
+    result = setCreature(r.creatures, activeId, c)
+  } else {
+    c = { ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") }
+    result = setCreature(cs, activeId, c)
+    const oldConcId = cs.get(activeId)!.concentrationSpellId
+    if (oldConcId !== "" && result.get(activeId)!.concentrationSpellId === "")
+      result = breakConcentrationAndPropagate(result, activeId)
   }
-  c = { ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") }
-  let result = setCreature(cs, activeId, c)
-  const oldConcId = cs.get(activeId)!.concentrationSpellId
-  if (oldConcId !== "" && result.get(activeId)!.concentrationSpellId === "")
-    result = breakConcentrationAndPropagate(result, activeId)
   return result
 }

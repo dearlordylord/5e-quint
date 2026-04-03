@@ -392,20 +392,33 @@ function createBattleMachineDriver() {
         })
       },
       bResolveHitReaction: (picks: Record<string, unknown>) => {
+        const tag = ps(picks, "decision", "RPass")
+        const decision =
+          tag === "RShield"
+            ? ({ tag: "RShield" } as const)
+            : tag === "RParry"
+              ? ({ tag: "RParry", bonus: p(picks, "parryBonus", 3) } as const)
+              : tag === "RCuttingWords"
+                ? ({ tag: "RCuttingWords", reduction: p(picks, "cwReduction", 6) } as const)
+                : ({ tag: "RPass" } as const)
         send({
           type: "BATTLE_RESOLVE_HIT_REACTION",
           reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
-          parryBonus: p(picks, "parryBonus", 3),
-          cwReduction: p(picks, "cwReduction", 6),
-          decision: ps(picks, "decision", "RPass")
+          decision
         })
       },
       bResolveDmgReaction: (picks: Record<string, unknown>) => {
+        const tag = ps(picks, "decision", "RPass")
+        const decision =
+          tag === "RUncannyDodge"
+            ? ({ tag: "RUncannyDodge" } as const)
+            : tag === "RDamageReduction"
+              ? ({ tag: "RDamageReduction", amount: p(picks, "reductionAmt", 5) } as const)
+              : ({ tag: "RPass" } as const)
         send({
           type: "BATTLE_RESOLVE_DMG_REACTION",
           reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
-          reductionAmt: p(picks, "reductionAmt", 5),
-          decision: ps(picks, "decision", "RPass")
+          decision
         })
       },
       bAfterDamagePass: (picks: Record<string, unknown>) => {
@@ -450,19 +463,29 @@ function createBattleMachineDriver() {
         })
       },
       bResolveCounterspell: (picks: Record<string, unknown>) => {
-        const decision = picks["decision"] as { tag: string; value: unknown } | undefined
+        const raw = picks["decision"] as { tag: string; value: unknown } | undefined
+        const tag = raw ? variantToString(raw) : undefined
+        const decision =
+          tag === "RCounterspell"
+            ? ({ tag: "RCounterspell", saveSucceeded: Boolean(raw!.value) } as const)
+            : tag === "RPass"
+              ? ({ tag: "RPass" } as const)
+              : null
         send({
           type: "BATTLE_RESOLVE_COUNTERSPELL",
           reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
-          decision: decision ?? null,
+          decision,
           csSlotLvl: p(picks, "csSlotLvl", 3)
         })
       },
       bResolveSaveFailedReaction: (picks: Record<string, unknown>) => {
+        const tag = ps(picks, "decision", "RPass")
+        const decision =
+          tag === "RLegendaryResistance" ? ({ tag: "RLegendaryResistance" } as const) : ({ tag: "RPass" } as const)
         send({
           type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
           reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
-          decision: ps(picks, "decision", "RPass")
+          decision
         })
       },
       bCastConcentrationSpell: (picks: Record<string, unknown>) => {

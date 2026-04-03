@@ -194,6 +194,25 @@ export interface AwaitCtx {
 
 export type TriggerType = "TAttackHits" | "TAttackDamages" | "TSpellBeingCast" | "TSaveFailed" | "TDamageTaken"
 
+// Reaction decision unions — one per interrupt point, mirroring Quint's ReactionDecision
+export type HitReactionDecision =
+  | { readonly tag: "RPass" }
+  | { readonly tag: "RShield" }
+  | { readonly tag: "RParry"; readonly bonus: number }
+  | { readonly tag: "RCuttingWords"; readonly reduction: number }
+
+export type DmgReactionDecision =
+  | { readonly tag: "RPass" }
+  | { readonly tag: "RUncannyDodge" }
+  | { readonly tag: "RDamageReduction"; readonly amount: number }
+
+export type CSDecision =
+  | { readonly tag: "RPass" }
+  | { readonly tag: "RCounterspell"; readonly saveSucceeded: boolean }
+  | null
+
+export type SaveFailedDecision = { readonly tag: "RPass" } | { readonly tag: "RLegendaryResistance" }
+
 export type PendingInterrupt =
   | { readonly tag: "PIAttackHit"; readonly ctx: AttackHitCtx }
   | { readonly tag: "PIAttackDamage"; readonly ctx: AttackDamageCtx }
@@ -250,15 +269,12 @@ export type BattleEvent =
   | {
       readonly type: "BATTLE_RESOLVE_HIT_REACTION"
       readonly reactorId: CreatureId | null
-      readonly parryBonus: number
-      readonly cwReduction: number
-      readonly decision: string
+      readonly decision: HitReactionDecision
     }
   | {
       readonly type: "BATTLE_RESOLVE_DMG_REACTION"
       readonly reactorId: CreatureId | null
-      readonly reductionAmt: number
-      readonly decision: string
+      readonly decision: DmgReactionDecision
     }
   | { readonly type: "BATTLE_AFTER_DAMAGE_PASS"; readonly reactorId: CreatureId | null }
   | {
@@ -293,13 +309,13 @@ export type BattleEvent =
   | {
       readonly type: "BATTLE_RESOLVE_COUNTERSPELL"
       readonly reactorId: CreatureId | null
-      readonly decision: { tag: string; value: unknown } | null
+      readonly decision: CSDecision
       readonly csSlotLvl: number
     }
   | {
       readonly type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION"
       readonly reactorId: CreatureId | null
-      readonly decision: string
+      readonly decision: SaveFailedDecision
     }
   | {
       readonly type: "BATTLE_CAST_CONCENTRATION_SPELL"

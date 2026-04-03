@@ -132,9 +132,19 @@ export function battleResolveHitReaction({ context: c, event: e }: Args): Partia
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
   let retroAtk = atk
-  if (e.decision === "RShield") retroAtk = { ...atk, targetAc: atk.targetAc + 5 }
-  else if (e.decision.startsWith("RParry")) retroAtk = { ...atk, targetAc: atk.targetAc + e.parryBonus }
-  else if (e.decision.startsWith("RCuttingWords")) retroAtk = { ...atk, attackRoll: atk.attackRoll - e.cwReduction }
+  switch (e.decision.tag) {
+    case "RShield":
+      retroAtk = { ...atk, targetAc: atk.targetAc + 5 }
+      break
+    case "RParry":
+      retroAtk = { ...atk, targetAc: atk.targetAc + e.decision.bonus }
+      break
+    case "RCuttingWords":
+      retroAtk = { ...atk, attackRoll: atk.attackRoll - e.decision.reduction }
+      break
+    case "RPass":
+      break
+  }
   if (retroAtk !== atk) {
     const cs = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
     const newElig = new Set(aw.eligible)
@@ -178,9 +188,16 @@ export function battleResolveDmgReaction({ context: c, event: e }: Args): Partia
   newOffered.add(e.reactorId)
   const reactor = c.creatures.get(e.reactorId)!
   let newDmg = atk.damage
-  if (e.decision === "RUncannyDodge" && reactor.rogueLevel >= 5) newDmg = Math.trunc(atk.damage / 2)
-  else if (e.decision.startsWith("RDamageReduction") && reactor.monkLevel >= 3)
-    newDmg = Math.max(0, atk.damage - e.reductionAmt)
+  switch (e.decision.tag) {
+    case "RUncannyDodge":
+      if (reactor.rogueLevel >= 5) newDmg = Math.trunc(atk.damage / 2)
+      break
+    case "RDamageReduction":
+      if (reactor.monkLevel >= 3) newDmg = Math.max(0, atk.damage - e.decision.amount)
+      break
+    case "RPass":
+      break
+  }
   if (newDmg !== atk.damage) {
     const cs = setCreature(c.creatures, e.reactorId, spendReaction(reactor))
     const newElig = new Set(aw.eligible)

@@ -21,16 +21,14 @@ import {
   piSaveFailedAoE,
   piSpellCast,
   processEndTurn,
-  resolveConcentration,
   resolveSave,
-  resolveSpellEntry,
-  returnToCSWindow,
   setCreature,
   setDifference,
   spendAction,
   spendMovement,
   spendReaction
 } from "#/battle-machine-helpers.ts"
+import { resolveConcentration, resolveSpellEntry, returnToCSWindow } from "#/battle-machine-spells.ts"
 import type {
   AoESpellCtx,
   BattleContext,
@@ -124,37 +122,35 @@ export function battleResolveCounterspell({ context: c, event: e }: Args): Parti
   if (!e.decision || e.decision.tag === "RPass") {
     return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw, offered: newOffered } } }
   }
-  if (e.decision.tag.startsWith("RCounterspell")) {
-    const reactor = c.creatures.get(e.reactorId)!
-    let cs = setCreature(c.creatures, e.reactorId, spendReaction(reactor))
-    cs = setCreature(cs, e.reactorId, expendSlot(cs.get(e.reactorId)!, e.csSlotLvl))
-    const conSaveSucceeded = Boolean(e.decision.value)
-    const stackEntry: SpellStackEntry = {
-      spellCasterId: spell.caster,
-      spellPostCast: spell.postCast,
-      offered: newOffered,
-      slotLvl: spell.slotLvl,
-      spellName: spell.spellName,
-      ritual: spell.ritual
-    }
-    const csSpell: SpellCastCtx = {
-      caster: e.reactorId,
-      spellName: "counterspell",
-      postCast: { tag: "PCECounterspell", cs: { targetCasterId: spell.caster, conSaveSucceeded } },
-      slotLvl: 0,
-      ritual: false
-    }
-    const csElig = eligibleForCounterspell(cs, e.reactorId)
-    return {
-      creatures: cs,
-      spellStack: [...c.spellStack, stackEntry],
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: mkAwait({ tag: "PISpellCast", ctx: csSpell }, "TSpellBeingCast", csElig)
-      }
+  // Only remaining variant after null/RPass check above
+  const reactor = c.creatures.get(e.reactorId)!
+  let cs = setCreature(c.creatures, e.reactorId, spendReaction(reactor))
+  cs = setCreature(cs, e.reactorId, expendSlot(cs.get(e.reactorId)!, e.csSlotLvl))
+  const conSaveSucceeded = e.decision.saveSucceeded
+  const stackEntry: SpellStackEntry = {
+    spellCasterId: spell.caster,
+    spellPostCast: spell.postCast,
+    offered: newOffered,
+    slotLvl: spell.slotLvl,
+    spellName: spell.spellName,
+    ritual: spell.ritual
+  }
+  const csSpell: SpellCastCtx = {
+    caster: e.reactorId,
+    spellName: "counterspell",
+    postCast: { tag: "PCECounterspell", cs: { targetCasterId: spell.caster, conSaveSucceeded } },
+    slotLvl: 0,
+    ritual: false
+  }
+  const csElig = eligibleForCounterspell(cs, e.reactorId)
+  return {
+    creatures: cs,
+    spellStack: [...c.spellStack, stackEntry],
+    phase: {
+      tag: "BPAwaitingReaction",
+      ctx: mkAwait({ tag: "PISpellCast", ctx: csSpell }, "TSpellBeingCast", csElig)
     }
   }
-  return {}
 }
 
 export function battleResolveSaveFailedReaction({ context: c, event: e }: Args): Partial<BattleContext> {
@@ -171,7 +167,7 @@ export function battleResolveSaveFailedReaction({ context: c, event: e }: Args):
     const result = applyFailEffects(c.creatures, sf, returnTo)
     return { creatures: result.creatures, phase: result.phase }
   }
-  if (e.decision === "RLegendaryResistance") {
+  if (e.decision.tag === "RLegendaryResistance") {
     const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
     const result = applyFailEffects(cs1, { ...sf, saveSucceeded: true }, returnTo)
     return { creatures: result.creatures, phase: result.phase }
