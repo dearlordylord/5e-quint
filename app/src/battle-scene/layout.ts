@@ -48,7 +48,8 @@ export interface CreatureLayout {
   hpBar: BarLayout
   tempHpBar: BarLayout | null
   castBar: BarLayout | null
-  slotPips: { x: number; y: number; filled: number; total: number }
+  slotRows: ReadonlyArray<{ x: number; y: number; level: number; filled: number; total: number }>
+  deathSaves: { x: number; y: number; successes: number; failures: number } | null
   damageFlash: boolean
   castingGlow: boolean
   justBecameUnconscious: boolean
@@ -168,12 +169,21 @@ function computeCreatureLayout(
     hpBar,
     tempHpBar,
     castBar,
-    slotPips: {
+    slotRows: creature.slotsByLevel.map((s, i) => ({
       x: barX,
-      y: hpBarY + config.barHeight + (tempHpBar ? config.barHeight + 4 : 2),
-      filled: creature.totalSlotsRemaining,
-      total: creature.totalSlotsMax
-    },
+      y: hpBarY + config.barHeight + (tempHpBar ? config.barHeight + 4 : 2) + i * 6,
+      level: i + 1,
+      filled: s.current,
+      total: s.max
+    })),
+    deathSaves: creature.unconscious
+      ? {
+          x: barX,
+          y: hpBarY + config.barHeight + 2,
+          successes: creature.deathSaves.successes,
+          failures: creature.deathSaves.failures
+        }
+      : null,
     damageFlash: cue.damageFlash,
     castingGlow: cue.castingGlow,
     justBecameUnconscious: cue.justBecameUnconscious,

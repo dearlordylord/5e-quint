@@ -67,7 +67,9 @@ export function diffSnapshots(prev: SceneSnapshot, curr: SceneSnapshot): Snapsho
     }
 
     // Slots expended
-    if (curr_c.totalSlotsRemaining < prev_c.totalSlotsRemaining) {
+    const prevSlots = prev_c.slotsByLevel.reduce((s, l) => s + l.current, 0)
+    const currSlots = curr_c.slotsByLevel.reduce((s, l) => s + l.current, 0)
+    if (currSlots < prevSlots) {
       slotsExpended.push(curr_c.id)
     }
   }

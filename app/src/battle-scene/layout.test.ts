@@ -32,6 +32,7 @@ describe("computeLayout", () => {
   it("unconscious creatures have reduced opacity", () => {
     const layout = computeLayout(snapshotAt(FIREBALL_BATTLE.length), EMPTY_CUES, CFG)
     expect(layout.creatures.find((c) => c.id === "A")!.opacity).toBe(1)
+    expect(layout.creatures.find((c) => c.id === "B")!.opacity).toBe(0.3)
     expect(layout.creatures.find((c) => c.id === "D")!.opacity).toBe(0.3)
     expect(layout.creatures.find((c) => c.id === "F")!.opacity).toBe(0.3)
   })
@@ -52,10 +53,13 @@ describe("computeLayout", () => {
     expect(zone.r).toBe(240)
   })
 
-  it("slot pips reflect total slots", () => {
+  it("slot rows reflect per-level slots", () => {
     const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG)
     const a = layout.creatures.find((c) => c.id === "A")!
-    expect(a.slotPips.total).toBe(9)
-    expect(a.slotPips.filled).toBe(9)
+    // Caster slots: [4,3,2] = 3 levels
+    expect(a.slotRows).toHaveLength(3)
+    expect(a.slotRows[0]).toMatchObject({ level: 1, filled: 4, total: 4 })
+    expect(a.slotRows[1]).toMatchObject({ level: 2, filled: 3, total: 3 })
+    expect(a.slotRows[2]).toMatchObject({ level: 3, filled: 2, total: 2 })
   })
 })

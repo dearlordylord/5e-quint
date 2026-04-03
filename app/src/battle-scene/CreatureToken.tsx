@@ -154,17 +154,20 @@ export function CreatureToken(props: CreatureLayout) {
         </>
       )}
 
-      {/* Slot pips — flash when just spent */}
-      {props.slotPips.total > 0 && (
-        <g>
-          {Array.from({ length: Math.min(props.slotPips.total, 9) }, (_, i) => {
-            const filled = i < props.slotPips.filled
-            const justLost = props.slotJustSpent && i === props.slotPips.filled
+      {/* Slot pips per level */}
+      {props.slotRows.map((row) => (
+        <g key={row.level}>
+          <text x={row.x - 3} y={row.y + 4} fontSize={7} fill="#9ca3af" textAnchor="end" fontFamily="monospace">
+            {row.level}
+          </text>
+          {Array.from({ length: row.total }, (_, i) => {
+            const filled = i < row.filled
+            const justLost = props.slotJustSpent && i === row.filled
             return (
               <motion.circle
                 key={i}
-                cx={props.slotPips.x + 3 + i * 5}
-                cy={props.slotPips.y + 3}
+                cx={row.x + 3 + i * 5}
+                cy={row.y + 3}
                 r={2}
                 fill={filled ? "#a78bfa" : "#374151"}
                 animate={justLost ? { fill: ["#a78bfa", "#ef4444", "#374151"] } : {}}
@@ -172,6 +175,34 @@ export function CreatureToken(props: CreatureLayout) {
               />
             )
           })}
+        </g>
+      ))}
+
+      {/* Death saves */}
+      {props.deathSaves && (
+        <g>
+          {Array.from({ length: 3 }, (_, i) => (
+            <circle
+              key={`s${i}`}
+              cx={props.deathSaves!.x + 3 + i * 6}
+              cy={props.deathSaves!.y + 3}
+              r={2.5}
+              fill={i < props.deathSaves!.successes ? "#22c55e" : "#374151"}
+              stroke="#22c55e"
+              strokeWidth={0.5}
+            />
+          ))}
+          {Array.from({ length: 3 }, (_, i) => (
+            <circle
+              key={`f${i}`}
+              cx={props.deathSaves!.x + 22 + i * 6}
+              cy={props.deathSaves!.y + 3}
+              r={2.5}
+              fill={i < props.deathSaves!.failures ? "#ef4444" : "#374151"}
+              stroke="#ef4444"
+              strokeWidth={0.5}
+            />
+          ))}
         </g>
       )}
     </motion.g>

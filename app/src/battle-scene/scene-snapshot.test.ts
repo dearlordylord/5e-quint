@@ -44,10 +44,10 @@ describe("deriveSnapshot", () => {
     expect(snap.aoeZones[0].radiusFeet).toBe(20)
   })
 
-  it("correct HP after full scenario — D and F KO'd", () => {
+  it("correct HP after full scenario — B, D, F KO'd", () => {
     const snap = deriveSnapshot(replayTo(FIREBALL_BATTLE.length), META)
-    expect(snap.creatures.find((c) => c.id === "A")!.currentHp).toBe(22)
-    expect(snap.creatures.find((c) => c.id === "B")!.currentHp).toBe(8)
+    expect(snap.creatures.find((c) => c.id === "A")!.currentHp).toBe(8)
+    expect(snap.creatures.find((c) => c.id === "B")!.unconscious).toBe(true)
     expect(snap.creatures.find((c) => c.id === "C")!.currentHp).toBe(22)
     expect(snap.creatures.find((c) => c.id === "D")!.unconscious).toBe(true)
     expect(snap.creatures.find((c) => c.id === "E")!.currentHp).toBe(22)
@@ -61,11 +61,14 @@ describe("deriveSnapshot", () => {
     expect(snap.creatures.find((c) => c.id === "F")!.team).toBe("red")
   })
 
-  it("tracks slot totals", () => {
+  it("tracks per-level slots", () => {
     const snap = deriveSnapshot(replayTo(2), META)
     for (const c of snap.creatures) {
-      expect(c.totalSlotsMax).toBe(9)
-      expect(c.totalSlotsRemaining).toBe(9)
+      // Caster slots: [4,3,2] → 3 levels with all full
+      expect(c.slotsByLevel).toHaveLength(3)
+      expect(c.slotsByLevel[0]).toEqual({ current: 4, max: 4 })
+      expect(c.slotsByLevel[1]).toEqual({ current: 3, max: 3 })
+      expect(c.slotsByLevel[2]).toEqual({ current: 2, max: 2 })
     }
   })
 

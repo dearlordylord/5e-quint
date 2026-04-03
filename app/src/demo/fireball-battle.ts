@@ -220,8 +220,21 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
   },
   endTurn,
 
-  // === Turn E: last wizard standing for red team, no slots for fireball ===
+  // === Turn E: Shatter #2 at A+B (A=22, B=8) ===
   startTurn,
+  castShatter,
+  cs(null, false), // no CS eligible
+  aoeTarget("A", 10), // A fails CON save (22→8)
+  sfPass("A"),
+  sfPass(null),
+  adPass("A"),
+  adPass(null),
+  aoeTarget("B", 3), // B fails CON save (8→0) — KO!
+  sfPass("B"),
+  sfPass(null),
+  adPass("B"),
+  adPass(null),
+  aoeTarget(null, 0),
   endTurn,
 
   // === Turn F: unconscious, death save (fails) ===
@@ -260,12 +273,14 @@ export const FIREBALL_BATTLE_META = {
     "2": { row: 5, col: 8 },
     "18": { row: 5, col: 2 },
     "30": { row: 4, col: 2 },
-    "49": { row: 5, col: 8 }
+    "49": { row: 5, col: 8 },
+    "67": { row: 4, col: 2 }
   },
   spellAnnotations: {
     "2": "Fireball",
     "18": "Fireball",
     "30": "Shatter",
-    "49": "Fireball"
+    "49": "Fireball",
+    "67": "Shatter"
   }
 } satisfies ScenarioMeta

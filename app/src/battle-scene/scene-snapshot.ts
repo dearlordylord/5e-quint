@@ -48,8 +48,8 @@ export interface CreatureSnapshot {
   reactionAvailable: boolean
   concentrating: boolean
   exhaustion: number
-  totalSlotsRemaining: number
-  totalSlotsMax: number
+  slotsByLevel: ReadonlyArray<{ current: number; max: number }>
+  deathSaves: { successes: number; failures: number }
   isActive: boolean
   conditions: ReadonlyArray<Condition>
 }
@@ -84,12 +84,6 @@ function extractConditions(cs: BattleCreatureState): ReadonlyArray<Condition> {
   return result
 }
 
-function sumSlots(slots: ReadonlyArray<number>): number {
-  let total = 0
-  for (const s of slots) total += s
-  return total
-}
-
 function deriveCreature(
   id: string,
   cs: BattleCreatureState,
@@ -111,8 +105,8 @@ function deriveCreature(
     reactionAvailable: cs.reactionAvailable,
     concentrating: cs.concentrationSpellId !== "",
     exhaustion: cs.exhaustion,
-    totalSlotsRemaining: sumSlots(cs.slotsCurrent) + cs.pactSlotsCurrent,
-    totalSlotsMax: sumSlots(cs.slotsMax) + cs.pactSlotsMax,
+    slotsByLevel: cs.slotsMax.map((max, i) => ({ current: cs.slotsCurrent[i] ?? 0, max })).filter((s) => s.max > 0),
+    deathSaves: cs.deathSaves,
     isActive: id === activeId,
     conditions: extractConditions(cs)
   }
