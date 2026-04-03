@@ -211,7 +211,9 @@ export const QuintCreatureState = z.object({
   stunned: z.boolean(),
   unconscious: z.boolean(),
   incapacitatedSources: QuintIncapSourceSet,
-  hitDiceRemaining: z.any().transform((raw) => quintMapToRecord(raw, Number, variantToString)),
+  hitDiceRemaining: z
+    .any()
+    .transform((raw) => quintMapToRecord(raw, Number, variantToString) as Record<QuintClassName, number>),
   activeEffects: z.any().transform((raw: unknown) => {
     const items: Array<{
       spellId: string
@@ -449,7 +451,7 @@ export interface NormalizedState {
   readonly stunned: boolean
   readonly unconscious: boolean
   readonly incapacitatedSources: ReadonlySet<string>
-  readonly hitDiceRemaining: Record<string, number>
+  readonly hitDiceRemaining: Record<ClassName, number>
   readonly activeEffects: ReadonlyArray<{
     spellId: string
     turnsRemaining: number
@@ -694,7 +696,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     stunned: c.stunned,
     unconscious: c.unconscious,
     incapacitatedSources: c.incapacitatedSources,
-    hitDiceRemaining: c.hitDiceRemaining as Record<string, number>,
+    hitDiceRemaining: c.hitDiceRemaining,
     activeEffects: [...c.activeEffects]
       .map((ae) => ({
         spellId: ae.spellId,
@@ -772,7 +774,7 @@ export function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): No
     stunned: s.stunned,
     unconscious: s.unconscious,
     incapacitatedSources: s.incapacitatedSources,
-    hitDiceRemaining: quintClassKeysToTs(s.hitDiceRemaining as Record<QuintClassName, number>),
+    hitDiceRemaining: quintClassKeysToTs(s.hitDiceRemaining),
     activeEffects: s.activeEffects,
     movementRemaining: Number(t.movementRemaining),
     effectiveSpeed: Number(t.effectiveSpeed),
