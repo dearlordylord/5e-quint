@@ -61,6 +61,7 @@ export interface AoELayout {
   r: number
   color: string
   opacity: number
+  spellName: string
 }
 
 export interface LayoutState {
@@ -180,7 +181,8 @@ function computeAoELayout(zone: AoEZoneSnapshot, config: LayoutConfig): AoELayou
     cy,
     r,
     color: visual.aoeColor,
-    opacity: 0.25
+    opacity: 0.25,
+    spellName: zone.spellName
   }
 }
 
