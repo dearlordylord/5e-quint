@@ -67,7 +67,7 @@ const afterDmgPass = (reactorId: string | null): BattleEvent => ({
   reactorId
 })
 
-export const WIZARD_DUEL: ReadonlyArray<BattleEvent> = [
+export const FIREBALL_SELFISHNESS: ReadonlyArray<BattleEvent> = [
   // --- Init & turn start ---
   { type: "BATTLE_INIT", creatures: CREATURES },
   {
@@ -128,7 +128,7 @@ export const WIZARD_DUEL: ReadonlyArray<BattleEvent> = [
 ]
 
 /** Metadata for game engine rendering — not consumed by the battle machine. */
-export const WIZARD_DUEL_META = {
+export const FIREBALL_SELFISHNESS_META = {
   teams: { blue: ["A", "B", "C"], red: ["D", "E", "F"] },
   names: { A: "Aldric", B: "Brynn", C: "Cassia", D: "Dorian", E: "Elara", F: "Felix" },
   spellAnnotations: {
