@@ -3,7 +3,7 @@
  * Grid positions to pixels, feet to squares to pixels, bar dimensions, AoE circle radii.
  */
 import { type CreatureCue, EMPTY_CUE, type VisualCueState } from "./director.ts"
-import type { AoEZoneSnapshot, CreatureSnapshot, ScenarioMeta, SceneSnapshot } from "./scene-snapshot.ts"
+import type { AoEZoneSnapshot, CreatureSnapshot, SceneSnapshot } from "./scene-snapshot.ts"
 import { damageTypeVisuals } from "./visual-catalog.ts"
 
 // --- Config ---
@@ -43,8 +43,6 @@ export interface SpriteLayout {
   sy: number
   sw: number
   sh: number
-  totalWidth: number
-  totalHeight: number
 }
 
 export interface CreatureLayout {
@@ -134,8 +132,7 @@ function computeCreatureLayout(
   creature: CreatureSnapshot,
   cues: VisualCueState,
   config: LayoutConfig,
-  reactorId: string | undefined,
-  spriteSheet?: ScenarioMeta["spriteSheet"]
+  reactorId: string | undefined
 ): CreatureLayout {
   const { cx, cy } = gridToPixel(creature.gridPos.row, creature.gridPos.col, config.cellSize)
   const cue = lookupCue(cues.creatureCues, creature.id)
@@ -179,19 +176,15 @@ function computeCreatureLayout(
     }
   }
 
-  let sprite: SpriteLayout | null = null
-  if (spriteSheet && creature.spriteIndex != null) {
-    const col = creature.spriteIndex % spriteSheet.cols
-    sprite = {
-      url: spriteSheet.url,
-      sx: col * spriteSheet.spriteWidth,
-      sy: 0,
-      sw: spriteSheet.spriteWidth,
-      sh: spriteSheet.spriteHeight,
-      totalWidth: spriteSheet.cols * spriteSheet.spriteWidth,
-      totalHeight: spriteSheet.spriteHeight
-    }
-  }
+  const sprite: SpriteLayout | null = creature.sprite
+    ? {
+        url: creature.sprite.url,
+        sx: creature.sprite.x,
+        sy: creature.sprite.y,
+        sw: creature.sprite.w,
+        sh: creature.sprite.h
+      }
+    : null
 
   return {
     id: creature.id,
@@ -250,8 +243,7 @@ function computeAoELayout(zone: AoEZoneSnapshot, config: LayoutConfig): AoELayou
 export function computeLayout(
   snapshot: SceneSnapshot,
   cues: VisualCueState,
-  config: LayoutConfig = DEFAULT_LAYOUT_CONFIG,
-  spriteSheet?: ScenarioMeta["spriteSheet"]
+  config: LayoutConfig = DEFAULT_LAYOUT_CONFIG
 ): LayoutState {
   return {
     viewBox: {
@@ -260,13 +252,7 @@ export function computeLayout(
     },
     gridLines: computeGridLines(config),
     creatures: snapshot.creatures.map((c) =>
-      computeCreatureLayout(
-        c,
-        cues,
-        config,
-        snapshot.phase.type === "interrupt" ? snapshot.phase.reactorId : undefined,
-        spriteSheet
-      )
+      computeCreatureLayout(c, cues, config, snapshot.phase.type === "interrupt" ? snapshot.phase.reactorId : undefined)
     ),
     aoeZones: snapshot.aoeZones.map((z) => computeAoELayout(z, config)),
     castLine: computeCastLine(snapshot, cues, config),

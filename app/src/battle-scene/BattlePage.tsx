@@ -94,8 +94,8 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
 
   const layout = useMemo(() => {
     if (!snapshot) return null
-    return computeLayout(snapshot, activeCues, undefined, meta.spriteSheet)
-  }, [snapshot, activeCues, meta.spriteSheet])
+    return computeLayout(snapshot, activeCues)
+  }, [snapshot, activeCues])
 
   const stepTo = useCallback(
     (index: number) => {

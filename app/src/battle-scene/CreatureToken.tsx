@@ -13,15 +13,15 @@ export function CreatureToken(props: CreatureLayout) {
           ? "#f8fafc"
           : "#1e293b"
   const strokeWidth = props.damageFlash || props.castingGlow || props.isReacting ? 3 : props.isActive ? 2.5 : 1.5
+  const r = props.tokenRadius
 
   return (
     <motion.g initial={{ opacity: 0 }} animate={{ opacity: props.opacity }} transition={{ duration: 0.3 }}>
-      {/* Active creature pulsing ring */}
       {props.isActive && (
         <motion.circle
           cx={props.cx}
           cy={props.cy}
-          r={props.tokenRadius + 4}
+          r={r + 4}
           fill="none"
           stroke="#f8fafc"
           strokeWidth={1}
@@ -31,12 +31,11 @@ export function CreatureToken(props: CreatureLayout) {
         />
       )}
 
-      {/* Reacting creature highlight ring */}
       {props.isReacting && (
         <motion.circle
           cx={props.cx}
           cy={props.cy}
-          r={props.tokenRadius + 4}
+          r={r + 4}
           fill="none"
           stroke="#fbbf24"
           strokeWidth={2}
@@ -49,40 +48,28 @@ export function CreatureToken(props: CreatureLayout) {
         <>
           <defs>
             <clipPath id={`clip-${props.id}`}>
-              <circle cx={props.cx} cy={props.cy} r={props.tokenRadius} />
+              <circle cx={props.cx} cy={props.cy} r={r} />
             </clipPath>
           </defs>
-          <circle cx={props.cx} cy={props.cy} r={props.tokenRadius} fill={props.teamColor} opacity={0.3} />
+          <circle cx={props.cx} cy={props.cy} r={r} fill="#1e293b" />
           <svg
-            x={props.cx - props.tokenRadius}
-            y={props.cy - props.tokenRadius}
-            width={props.tokenRadius * 2}
-            height={props.tokenRadius * 2}
+            x={props.cx - r}
+            y={props.cy - r}
+            width={r * 2}
+            height={r * 2}
             viewBox={`${props.sprite.sx} ${props.sprite.sy} ${props.sprite.sw} ${props.sprite.sh}`}
             clipPath={`url(#clip-${props.id})`}
+            preserveAspectRatio="xMidYMid slice"
           >
-            <image
-              href={props.sprite.url}
-              x={0}
-              y={0}
-              width={props.sprite.totalWidth}
-              height={props.sprite.totalHeight}
-            />
+            <image href={props.sprite.url} x={0} y={0} />
           </svg>
-          <circle
-            cx={props.cx}
-            cy={props.cy}
-            r={props.tokenRadius}
-            fill="none"
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
-          />
+          <circle cx={props.cx} cy={props.cy} r={r} fill="none" stroke={strokeColor} strokeWidth={strokeWidth} />
         </>
       ) : (
         <motion.circle
           cx={props.cx}
           cy={props.cy}
-          r={props.tokenRadius}
+          r={r}
           fill={props.teamColor}
           stroke={strokeColor}
           strokeWidth={strokeWidth}
@@ -91,24 +78,16 @@ export function CreatureToken(props: CreatureLayout) {
         />
       )}
 
-      <text
-        x={props.cx}
-        y={props.cy + props.tokenRadius + 14}
-        textAnchor="middle"
-        fill="#94a3b8"
-        fontSize={8}
-        pointerEvents="none"
-      >
+      <text x={props.cx} y={props.cy + r + 14} textAnchor="middle" fill="#94a3b8" fontSize={8} pointerEvents="none">
         {props.label}
       </text>
 
-      {/* Floating decision/save label */}
       <AnimatePresence>
         {props.floatingLabel && (
           <motion.text
             key={props.floatingLabel}
             x={props.cx}
-            y={props.cy - props.tokenRadius - 14}
+            y={props.cy - r - 14}
             textAnchor="middle"
             fill={props.labelTone === "negative" ? "#ef4444" : "#fbbf24"}
             fontSize={12}
@@ -123,7 +102,6 @@ export function CreatureToken(props: CreatureLayout) {
         )}
       </AnimatePresence>
 
-      {/* HP bar */}
       <rect
         x={props.hpBar.x}
         y={props.hpBar.y}
@@ -187,7 +165,6 @@ export function CreatureToken(props: CreatureLayout) {
         </>
       )}
 
-      {/* Slot pips per level */}
       {props.slotRows.map((row) => (
         <g key={row.level}>
           <text x={row.x - 3} y={row.y + 4} fontSize={7} fill="#9ca3af" textAnchor="end" fontFamily="monospace">
@@ -211,7 +188,6 @@ export function CreatureToken(props: CreatureLayout) {
         </g>
       ))}
 
-      {/* Death saves */}
       {props.deathSaves && (
         <g>
           {Array.from({ length: 3 }, (_, i) => (

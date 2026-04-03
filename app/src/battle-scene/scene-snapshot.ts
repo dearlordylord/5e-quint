@@ -22,13 +22,7 @@ export interface ScenarioMeta {
   gridPositions: Record<string, { row: number; col: number }>
   aoeTargetPoints: Record<string, { row: number; col: number }>
   spellAnnotations: Record<string, string>
-  spriteSheet?: {
-    url: string
-    cols: number
-    spriteWidth: number
-    spriteHeight: number
-    assignments: Record<string, number>
-  }
+  sprites?: Record<string, { url: string; x: number; y: number; w: number; h: number }>
 }
 
 /** Everything needed to play back a battle scenario. */
@@ -52,7 +46,7 @@ export interface CreatureSnapshot {
   id: string
   name: string
   team: "blue" | "red"
-  spriteIndex: number | null
+  sprite: { url: string; x: number; y: number; w: number; h: number } | null
   gridPos: { row: number; col: number }
   hpRatio: number
   currentHp: number
@@ -111,7 +105,7 @@ function deriveCreature(
     id,
     name: meta.names[id] ?? id,
     team: blueSet.has(id) ? "blue" : "red",
-    spriteIndex: meta.spriteSheet?.assignments[id] ?? null,
+    sprite: meta.sprites?.[id] ?? null,
     gridPos: meta.gridPositions[id] ?? { row: 0, col: 0 },
     hpRatio: cs.maxHp > 0 ? cs.hp / cs.maxHp : 0,
     currentHp: cs.hp,
