@@ -1,4 +1,6 @@
 import { CHAMPION_SURVIVOR_LEVEL, SURVIVOR_DEFY_DEATH_THRESHOLD } from "#/features/class-fighter.ts"
+import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts"
+import { hitDiceFromClassLevels } from "#/features/class-tables.ts"
 import { computeLongRest } from "#/machine-spells.ts"
 import type { ClassStateMap, DndContext } from "#/machine-types.ts"
 import type { Condition, DamageType, IncapSource, SpellSlots } from "#/types.ts"
@@ -392,12 +394,12 @@ export function standardExtraAttacks(classLevel: number): number {
 }
 
 export function spendHitDieUpdate(
-  c: { hitDiceRemaining: number; hp: number; maxHp: number },
-  roll: { conMod: number; dieRoll: number }
+  c: { hitDiceRemaining: HitDiceRemaining; hp: number; maxHp: number },
+  roll: { className: ClassName; conMod: number; dieRoll: number }
 ): Record<string, unknown> {
-  if (c.hitDiceRemaining <= 0) return {}
+  if (c.hitDiceRemaining[roll.className] <= 0) return {}
   return {
-    hitDiceRemaining: c.hitDiceRemaining - 1,
+    hitDiceRemaining: { ...c.hitDiceRemaining, [roll.className]: c.hitDiceRemaining[roll.className] - 1 },
     hp: hp(Math.min(c.hp + Math.max(0, roll.dieRoll + roll.conMod), effectiveMaxHp(c.maxHp)))
   }
 }
@@ -410,32 +412,13 @@ export function longRestUpdate(c: {
   pactSlotsMax: number
   classStates: Partial<ClassStateMap>
 }): Record<string, unknown> {
-  const cs = c.classStates
-  // Total character level = sum of all class levels. Matches Quint pTotalLevel.
-  const totalLevel =
-    (cs.fighter?.level ?? 0) +
-    (cs.barbarian?.level ?? 0) +
-    (cs.monk?.level ?? 0) +
-    (cs.paladin?.level ?? 0) +
-    (cs.rogue?.level ?? 0) +
-    (cs.cleric?.level ?? 0) +
-    (cs.druid?.level ?? 0) +
-    (cs.sorcerer?.level ?? 0) +
-    (cs.warlock?.level ?? 0) +
-    (cs.wizard?.level ?? 0) +
-    (cs.ranger?.level ?? 0) +
-    (cs.bard?.level ?? 0)
-  // Spell slots restore unconditionally (Quint: pInitSpellSlots runs regardless of HP).
-  // Creature state (hp, exhaustion, hitDice) only restores if alive.
-  const slotUpdates = {
-    slotsCurrent: c.slotsMax,
-    pactSlotsCurrent: c.pactSlotsMax
-  }
-  const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, totalLevel)
-  if (!r) return slotUpdates
+  // SRD 5.2.1: "To start a Long Rest, you must have at least 1 Hit Point."
+  // computeLongRest returns null when hp < 1 → no-op.
+  const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax)
+  if (!r) return {}
   return {
     exhaustion: exhaustionLevel(r.newExhaustion),
-    hitDiceRemaining: r.newHitDice,
+    hitDiceRemaining: hitDiceFromClassLevels(c.classStates),
     hp: hp(r.newHp),
     pactSlotsCurrent: r.newPactSlots,
     slotsCurrent: r.newSlots,

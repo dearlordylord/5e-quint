@@ -869,7 +869,7 @@ module creature {
     stunned: bool,
     unconscious: bool,
     incapacitatedSources: Set[IncapSource],
-    hitPointDiceRemaining: int,         // how many HD available to spend (total = level)
+    hitDiceRemaining: ClassName -> int,  // per-class remaining HD (total per class = class level)
     activeEffects: Set[ActiveEffect],   // timed effects (spells, abilities); lifecycle only
   }
 
@@ -887,7 +887,7 @@ module creature {
     poisoned: false, prone: false, restrained: false,
     stunned: false, unconscious: false,
     incapacitatedSources: Set(),
-    hitPointDiceRemaining: 0,
+    hitDiceRemaining: ZERO_CLASS_LEVELS,
     activeEffects: Set(),
   }
 
@@ -2179,21 +2179,29 @@ module creature {
 
   // -- 16.1 Short Rest: Hit Die Spending --
 
-  /// Spend one hit die. Heals dieRoll + conMod (min 0). Decrements hitPointDiceRemaining.
-  /// No-op if no HD remaining or creature is dead.
-  pure def pSpendHitDie(s: CreatureState, conMod: int, dieRoll: int): CreatureState =
-    if (s.hitPointDiceRemaining <= 0 or s.dead) s
+  /// Spend one hit die from a specific class pool. Heals dieRoll + conMod (min 0).
+  /// No-op if no HD remaining for that class or creature is dead.
+  pure def pSpendHitDie(s: CreatureState, className: ClassName, conMod: int, dieRoll: int): CreatureState =
+    if (s.hitDiceRemaining.get(className) <= 0 or s.dead) s
     else {
       val raw = dieRoll + conMod
       val healing = intMax(0, raw)
-      pHeal(s, healing).with("hitPointDiceRemaining", s.hitPointDiceRemaining - 1)
+      pHeal(s, healing).with("hitDiceRemaining", s.hitDiceRemaining.setBy(className, (n) => n - 1))
     }
 
-  /// Short rest: spend hit dice from a list of pre-resolved rolls, then return state.
+  /// Total remaining hit dice across all classes.
+  pure def pTotalHitDiceRemaining(s: CreatureState): int =
+    s.hitDiceRemaining.get(Barbarian) + s.hitDiceRemaining.get(Bard)
+    + s.hitDiceRemaining.get(Cleric) + s.hitDiceRemaining.get(Druid)
+    + s.hitDiceRemaining.get(Fighter) + s.hitDiceRemaining.get(Monk)
+    + s.hitDiceRemaining.get(Paladin) + s.hitDiceRemaining.get(Ranger)
+    + s.hitDiceRemaining.get(Rogue) + s.hitDiceRemaining.get(Sorcerer)
+    + s.hitDiceRemaining.get(Warlock) + s.hitDiceRemaining.get(Wizard)
+
+  /// Short rest: spend hit dice from a list of pre-resolved (class, roll) pairs, then return state.
   /// Caller also calls pRestorePactSlots on SpellSlotState if applicable.
-  pure def pShortRest(s: CreatureState, conMod: int, hdRolls: List[int]): CreatureState = {
-    val cap = intMin(s.hitPointDiceRemaining, hdRolls.length())
-    hdRolls.slice(0, cap).foldl(s, (acc, roll) => pSpendHitDie(acc, conMod, roll))
+  pure def pShortRest(s: CreatureState, conMod: int, hdRolls: List[(ClassName, int)]): CreatureState = {
+    hdRolls.foldl(s, (acc, pair) => pSpendHitDie(acc, pair._1, conMod, pair._2))
   }
 
   // -- 16.2 Long Rest --
@@ -2204,12 +2212,12 @@ module creature {
   /// - Exhaustion level decreases by 1 (unconditional, no food requirement)
   /// - Clear temp HP
   /// Caller also calls pRestoreAllSlots on SpellSlotState.
-  pure def pLongRest(s: CreatureState, totalHitPointDice: int): CreatureState =
+  pure def pLongRest(s: CreatureState, classLevels: ClassName -> int): CreatureState =
     if (s.hp < 1) s
     else {
       val s1 = pReduceExhaustion(s, 1)
       val s2 = s1.with("hp", effectiveMaxHp(s1))
-      s2.with("hitPointDiceRemaining", totalHitPointDice)
+      s2.with("hitDiceRemaining", classLevels)
         .with("tempHp", 0)
     }
 
@@ -3921,7 +3929,7 @@ module creature {
         monsterStatBlock' = NULL_STAT_BLOCK,
         monsterResourceState' = FRESH_MONSTER_RESOURCES,
         classLevels' = pcClassLevels,
-        state' = freshCreature(maxHp).with("hitPointDiceRemaining", l),
+        state' = freshCreature(maxHp).with("hitDiceRemaining", pcClassLevels),
         fighterState' = freshFighterState(fLevel),
         barbarianState' = freshBarbarianState(bLevel),
         monkState' = freshMonkState(mLevel, wisMod),
@@ -4237,20 +4245,24 @@ module creature {
 
   // Rest actions
   action doSpendHitDie = {
+    nondet className = Set(Barbarian, Bard, Cleric, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard).oneOf()
     nondet conMod = (-2).to(5).oneOf()
     nondet dieRoll = HD_ROLL_RANGE.oneOf()
-    all { state' = pSpendHitDie(state, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
+    all { state' = pSpendHitDie(state, className, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doShortRest = {
     nondet conMod = (-2).to(5).oneOf()
     nondet numDice = 0.to(3).oneOf()
+    nondet c1 = Set(Barbarian, Bard, Cleric, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard).oneOf()
+    nondet c2 = Set(Barbarian, Bard, Cleric, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard).oneOf()
+    nondet c3 = Set(Barbarian, Bard, Cleric, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard).oneOf()
     nondet r1 = HD_ROLL_RANGE.oneOf()
     nondet r2 = HD_ROLL_RANGE.oneOf()
     nondet r3 = HD_ROLL_RANGE.oneOf()
     if (turnPhase != "outOfCombat") unchanged
     else {
-      val rolls = [r1, r2, r3].slice(0, numDice)
+      val rolls = [(c1, r1), (c2, r2), (c3, r3)].slice(0, numDice)
       // Phase L: recharge abilities refresh on short rest
       val mrs1 = pRefreshRechargeAbilities(monsterResourceState)
       all {
@@ -4281,7 +4293,8 @@ module creature {
   }
 
   action doLongRest = {
-    if (turnPhase != "outOfCombat") unchanged
+    // SRD 5.2.1: "To start a Long Rest, you must have at least 1 Hit Point."
+    if (turnPhase != "outOfCombat" or state.hp < 1) unchanged
     else {
       // Phase L: refresh recharge, daily, and legendary resistance on long rest
       val mrs1 = pRefreshRechargeAbilities(monsterResourceState)
@@ -4291,7 +4304,7 @@ module creature {
       // Restore slots: recompute max from multiclass caster level, then fill to max
       val freshSlots = pInitSpellSlots(classLevels)
       all {
-        state' = pLongRest(state, pTotalLevel(classLevels)),
+        state' = pLongRest(state, classLevels),
         turnState' = turnState,
         // Long rest restores all slots to multiclass-computed max; preserve concentration
         spellSlots' = freshSlots.with("concentrationSpellId", spellSlots.concentrationSpellId),
@@ -5806,7 +5819,19 @@ module creature {
     spellSlots.pactSlotsCurrent >= 0
     and spellSlots.pactSlotsCurrent <= spellSlots.pactSlotsMax
 
-  val hitDiceNonNegative = state.hitPointDiceRemaining >= 0
+  val hitDiceNonNegative =
+    state.hitDiceRemaining.get(Barbarian) >= 0
+    and state.hitDiceRemaining.get(Bard) >= 0
+    and state.hitDiceRemaining.get(Cleric) >= 0
+    and state.hitDiceRemaining.get(Druid) >= 0
+    and state.hitDiceRemaining.get(Fighter) >= 0
+    and state.hitDiceRemaining.get(Monk) >= 0
+    and state.hitDiceRemaining.get(Paladin) >= 0
+    and state.hitDiceRemaining.get(Ranger) >= 0
+    and state.hitDiceRemaining.get(Rogue) >= 0
+    and state.hitDiceRemaining.get(Sorcerer) >= 0
+    and state.hitDiceRemaining.get(Warlock) >= 0
+    and state.hitDiceRemaining.get(Wizard) >= 0
 
   /// No two active effects share the same spellId.
   val activeEffectsUniqueSpellIds =
@@ -6036,7 +6061,18 @@ module creature {
     state.deathSaves.successes <= 3,
     state.deathSaves.failures >= 0,
     state.deathSaves.failures <= 3,
-    state.hitPointDiceRemaining >= 0,
+    state.hitDiceRemaining.get(Barbarian) >= 0,
+    state.hitDiceRemaining.get(Bard) >= 0,
+    state.hitDiceRemaining.get(Cleric) >= 0,
+    state.hitDiceRemaining.get(Druid) >= 0,
+    state.hitDiceRemaining.get(Fighter) >= 0,
+    state.hitDiceRemaining.get(Monk) >= 0,
+    state.hitDiceRemaining.get(Paladin) >= 0,
+    state.hitDiceRemaining.get(Ranger) >= 0,
+    state.hitDiceRemaining.get(Rogue) >= 0,
+    state.hitDiceRemaining.get(Sorcerer) >= 0,
+    state.hitDiceRemaining.get(Warlock) >= 0,
+    state.hitDiceRemaining.get(Wizard) >= 0,
 
     // Turn state bounds
     turnState.movementRemaining >= 0,
