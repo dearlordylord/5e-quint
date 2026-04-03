@@ -30,7 +30,7 @@ export type InterruptKind = PendingInterrupt["tag"]
 export type PhaseSnapshot =
   | { type: "activeTurn" }
   | { type: "interrupt"; interruptKind: InterruptKind; reactorId?: string }
-  | { type: "aoeResolving"; spellName: string; remainingCount: number }
+  | { type: "aoeResolving"; spellName: string; remainingCount: number; saveDC: number }
   | { type: "movement" }
   | { type: "legendaryAction" }
 
@@ -134,7 +134,8 @@ function derivePhase(phase: BattlePhase): PhaseSnapshot {
       return {
         type: "aoeResolving",
         spellName: "AoE",
-        remainingCount: phase.aoe.remaining.size
+        remainingCount: phase.aoe.remaining.size,
+        saveDC: phase.aoe.saveDC
       }
     case "BPResolvingMovement":
       return { type: "movement" }

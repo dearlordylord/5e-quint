@@ -77,7 +77,7 @@ export function CreatureToken(props: CreatureLayout) {
             x={props.cx}
             y={props.cy - props.tokenRadius - 14}
             textAnchor="middle"
-            fill={props.floatingLabel === "Fail!" || props.floatingLabel === "KO!" ? "#ef4444" : "#fbbf24"}
+            fill={props.labelTone === "negative" ? "#ef4444" : "#fbbf24"}
             fontSize={12}
             fontWeight="bold"
             initial={{ opacity: 0, y: 6 }}

@@ -55,6 +55,7 @@ export interface CreatureLayout {
   isActive: boolean
   isReacting: boolean
   floatingLabel: string | null
+  labelTone: "negative" | "positive"
   slotJustSpent: boolean
 }
 
@@ -179,6 +180,7 @@ function computeCreatureLayout(
     isActive: creature.isActive,
     isReacting: creature.id === reactorId,
     floatingLabel: cue.floatingLabel,
+    labelTone: cue.labelTone,
     slotJustSpent: cue.slotJustSpent
   }
 }
