@@ -249,14 +249,24 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
   aoeTarget(null, 0),
   endTurn,
 
-  // === Turn C (Bufo): Fireball at E (E=22, last red standing) ===
+  // === Turn C (Bufo): Fireball at red team (D=0☠, E=22, F=0☠) ===
   startTurn,
   castFireball,
   cs(null, false), // E has no level-3 slots for CS
+  aoeTarget("D", 1), // D unconscious, auto-fail DEX → death save failure
+  sfPass("D"),
+  sfPass(null),
+  adPass("D"),
+  adPass(null),
   aoeTarget("E", 7), // E fails DEX save (22→0) — KO!
   sfPass("E"),
   sfPass(null),
   adPass("E"),
+  adPass(null),
+  aoeTarget("F", 1), // F unconscious, auto-fail DEX → death save failure
+  sfPass("F"),
+  sfPass(null),
+  adPass("F"),
   adPass(null),
   aoeTarget(null, 0),
   endTurn,

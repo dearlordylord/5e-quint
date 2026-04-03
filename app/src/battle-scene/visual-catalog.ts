@@ -48,7 +48,7 @@ export const damageTypeVisuals: Record<DamageType, DamageTypeVisual> = {
   psychic: { flashColor: "#e879f9", aoeColor: "#c026d3" },
   radiant: { flashColor: "#fef08a", aoeColor: "#fde047" },
   slashing: { flashColor: "#e5e5e5", aoeColor: "#d4d4d4" },
-  thunder: { flashColor: "#93c5fd", aoeColor: "#3b82f6" }
+  thunder: { flashColor: "#93c5fd", aoeColor: "#dc2626" }
 }
 
 export const conditionVisuals: Record<Condition, ConditionVisual> = {
