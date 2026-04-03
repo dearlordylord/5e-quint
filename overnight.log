@@ -93,3 +93,30 @@ Summary: 0 fixed, 0 new issues (all are variants of already-tracked slotsMax ini
   Likely the XState machine doesn't reset extraAttacksRemaining at turn start.
 
 Summary: 3 fixed (slotsMax, pactSlots, hitDice), 1 new (extraAttacksRemaining)
+
+2026-04-02T21:32:00 — Cron check #3
+  MBT failures: 14 new since last check (fuzzers still running old code for most)
+  Invariant failures: 5 new (same spellStackDistinctCasters pattern)
+  Fuzzers restarted with fixed code at 21:32.
+
+  New MBT failure patterns (reproducible with fixed code):
+  
+  1. deathSavesFailures/Successes/hp/unconscious divergence
+     Seed: 0x24c580d4, trace 28, step 25, action "doStartTurn", Monk 18
+     Quint: hp=1, unconscious=false, deathSaves=(0,0) — creature recovered
+     XState: hp=0, unconscious=true, deathSaves=(1,1) — creature still dying
+     Likely: turn-start death save or nat-20 recovery logic differs between spec and XState.
+     Complex turn-boundary issue, needs careful review.
+
+  2. arcaneRecoveryUsed mismatch  
+     Seed: 0xa1acda7f, trace 17, step 24, action "doUseArcaneRecovery"
+     Quint: arcaneRecoveryUsed=true (recovery succeeded)
+     XState: arcaneRecoveryUsed=false (recovery no-oped)
+     The XState guard at machine-wizard.ts:18 checks currentSlots[idx] >= slotsMax[idx].
+     With correct slotsMax now derived, this guard should pass. But the action still no-ops.
+     Needs investigation: may be a slot level mismatch between what Quint sends and what
+     XState receives, or the slot was already recovered by a prior action in the same rest.
+
+  Already-tracked (not re-counted): extraAttacksRemaining, slotsMax/pactSlots/hitDice (fixed)
+
+Summary: 0 fixed, 2 new logged-for-review (deathSaves + arcaneRecovery)
