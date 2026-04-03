@@ -379,12 +379,12 @@ export const QuintFullState = z.object({
   wizardState: QuintWizardState,
   rangerState: QuintRangerState,
   bardState: QuintBardState,
-  classLevels: z.any().transform((raw: unknown) => {
+  classLevels: z.any().transform((raw) => {
     const result: Record<string, number> = {}
     if (raw instanceof Map) {
       for (const [k, v] of raw) result[variantToString(k)] = Number(v)
     } else if (typeof raw === "object" && raw !== null) {
-      for (const [k, v] of Object.entries(raw as Record<string, unknown>)) result[variantToString(k)] = Number(v)
+      for (const [k, v] of Object.entries(raw)) result[variantToString(k)] = Number(v)
     }
     return result
   }),
