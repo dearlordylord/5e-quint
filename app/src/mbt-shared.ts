@@ -5,6 +5,8 @@
 import { z } from "zod"
 
 import type { MetamagicOption } from "#/features/class-sorcerer.ts"
+import type { ClassName } from "#/features/class-tables.ts"
+import { CLASS_NAMES } from "#/features/class-tables.ts"
 import type { DndSnapshot } from "#/machine.ts"
 import type { ClassStateMap } from "#/machine-types.ts"
 import type { Condition, CreatureKind, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
@@ -88,24 +90,37 @@ export const QUINT_DAMAGE_TYPE_MAP: Record<string, DamageType> = {
 // TS uses lowercase ClassName ("fighter"). Two-way isomorphism.
 // ============================================================
 
+/** Quint's capitalized class name (e.g. "Fighter", "Barbarian") */
+export type QuintClassName = Capitalize<ClassName>
+
+/** Runtime array of Quint class names, derived from CLASS_NAMES */
+export const QUINT_CLASS_NAMES = CLASS_NAMES.map((n) => (n.charAt(0).toUpperCase() + n.slice(1)) as QuintClassName)
+
 /** Quint ClassName variant → TS ClassName (e.g. "Fighter" → "fighter") */
-export function quintClassToTs(quintName: string): string {
-  return quintName.toLowerCase()
+export function quintClassToTs(quintName: QuintClassName): ClassName {
+  return quintName.toLowerCase() as ClassName
 }
 
 /** TS ClassName → Quint ClassName variant (e.g. "fighter" → "Fighter") */
-export function tsClassToQuint(tsName: string): string {
-  return tsName.charAt(0).toUpperCase() + tsName.slice(1)
+export function tsClassToQuint(tsName: ClassName): QuintClassName {
+  return (tsName.charAt(0).toUpperCase() + tsName.slice(1)) as QuintClassName
 }
 
-/** Convert a Record with Quint-cased class keys to TS-cased keys. */
-export function quintClassKeysToTs<T>(record: Record<string, T>): Record<string, T> {
-  return Object.fromEntries(Object.entries(record).map(([k, v]) => [quintClassToTs(k), v]))
+/** Convert a Record with Quint-cased class keys to TS-cased keys.
+ *  Input is Record<string, T> because Quint Maps deserialize with untyped keys. */
+export function quintClassKeysToTs<T>(record: Readonly<Record<string, T>>): Record<ClassName, T> {
+  return Object.fromEntries(Object.entries(record).map(([k, v]) => [quintClassToTs(k as QuintClassName), v])) as Record<
+    ClassName,
+    T
+  >
 }
 
 /** Convert a Record with TS-cased class keys to Quint-cased keys. */
-export function tsClassKeysToQuint<T>(record: Record<string, T>): Record<string, T> {
-  return Object.fromEntries(Object.entries(record).map(([k, v]) => [tsClassToQuint(k), v]))
+export function tsClassKeysToQuint<T>(record: Readonly<Record<string, T>>): Record<QuintClassName, T> {
+  return Object.fromEntries(Object.entries(record).map(([k, v]) => [tsClassToQuint(k as ClassName), v])) as Record<
+    QuintClassName,
+    T
+  >
 }
 
 // ============================================================

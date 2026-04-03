@@ -10,7 +10,6 @@ import { createActor } from "xstate"
 import { z } from "zod"
 
 import { fighterExtraAttacks } from "#/features/class-fighter.ts"
-import type { ClassName } from "#/features/class-tables.ts"
 import { singleClassHitDice } from "#/features/class-tables.ts"
 import { type DndEvent, dndMachine } from "#/machine.ts"
 import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
@@ -32,6 +31,7 @@ import {
   QUINT_CONDITION_MAP,
   QUINT_SHOVE_MAP,
   QUINT_SIZE_MAP,
+  type QuintClassName,
   quintClassToTs,
   QuintCreatureState,
   QuintFullState,
@@ -396,7 +396,7 @@ function createDndDriver() {
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
-              hitDiceRemaining: singleClassHitDice(quintClassToTs(cls) as ClassName, level),
+              hitDiceRemaining: singleClassHitDice(quintClassToTs(cls as QuintClassName), level),
               effectiveSpeed: INIT_SPEED,
               movementRemaining: INIT_SPEED,
               extraAttacksRemaining: 1,
@@ -673,7 +673,7 @@ function createDndDriver() {
       doSpendHitDie: ({ className, conMod, dieRoll }) => {
         send({
           type: "SPEND_HIT_DIE",
-          className: quintClassToTs(className) as ClassName,
+          className: quintClassToTs(className as QuintClassName),
           conMod: Number(conMod),
           dieRoll: Number(dieRoll)
         })
@@ -682,7 +682,7 @@ function createDndDriver() {
         const n = Number(numDice)
         const classes = [c1, c2, c3].slice(0, n)
         const rolls = [Number(r1), Number(r2), Number(r3)].slice(0, n)
-        const hdRolls = classes.map((c, i) => ({ className: quintClassToTs(c) as ClassName, roll: rolls[i] }))
+        const hdRolls = classes.map((c, i) => ({ className: quintClassToTs(c as QuintClassName), roll: rolls[i] }))
         send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls })
       },
       doLongRest: () => {
