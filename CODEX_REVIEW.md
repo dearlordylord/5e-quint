@@ -1,26 +1,24 @@
-# Architecture Review: Battle Visualizer Rendering Layer
+# Architecture Review: Battle Visualizer Rendering Layer (Round 2)
 
 ## Request
 
-Review the proposed architecture for a D&D 5e battle visualizer that renders an SVG+Motion (animation library) scene driven by an XState state machine. Critique the abstraction layers, identify coupling risks, and suggest improvements.
+Review the refined 4-layer architecture for a D&D 5e battle visualizer. Round 1 feedback identified coupling risks (temporal state mixed with game state, AoE semantics, state duplication). This revision incorporates those fixes. Please critique for remaining issues.
 
 ---
 
 ## Project Context
 
-This is a D&D 5e combat simulator with a formally verified Quint specification (`battle.qnt`) and a TypeScript XState state machine (`battleMachine`) validated against the spec via model-based testing (MBT). The battle machine handles multi-creature combat: attacks, spellcasting, reaction interrupts (counterspell chains), AoE resolution, concentration, legendary actions, movement with opportunity attacks.
+D&D 5e combat simulator with formally verified Quint specification (`battle.qnt`) and TypeScript XState state machine (`battleMachine`) validated via model-based testing. The battle machine handles multi-creature combat: attacks, spellcasting, reaction interrupts (counterspell chains up to 4 deep), AoE resolution, concentration, legendary actions, movement with opportunity attacks.
 
 **What exists:**
 - Quint spec (`battle.qnt`) — formal model of battle rules
-- XState battle machine (`battle-machine.ts`) — TS implementation, MBT-validated against Quint
-- Scripted demo scenario (`fireball-selfishness.ts`) — 16-event sequence: 6 wizards, Fireball + 4-deep counterspell chain + AoE resolution
-- Creature-level XState machine (`machine.ts`) — single-creature state (HP, conditions, action economy, spell slots)
-- Feature layer (`features/`) — class abilities, spell catalog (pure functions)
+- XState battle machine (`battle-machine.ts`) — MBT-validated against Quint
+- Scripted demo (`fireball-selfishness.ts`) — 16-event sequence: 6 wizards, Fireball + counterspell chain + AoE
+- Creature-level machine (`machine.ts`) — single-creature state
+- Feature/spell catalog (`features/spell-*.ts`) — pure functions for spell mechanics
 
 **What we're building:**
-A visual rendering of the battle — 6 wizard tokens on a grid field, spell cast bars, HP bars, AoE zones, interrupt overlays, unconscious states. Driven by stepping through `BattleEvent[]` and reading `BattleContext` snapshots.
-
-**Chosen renderer:** SVG-in-React + Motion (Framer Motion successor) — selected for maximum testability (SVG elements are DOM nodes, RTL-testable, vitest-compatible without browser).
+Visual rendering of the demo — wizard tokens on a grid, cast bars, HP bars, AoE zones, interrupt overlays, unconscious states. Driven by stepping through `BattleEvent[]` and reading `BattleContext` snapshots. Chosen renderer: SVG-in-React + Motion (animation library) for maximum testability.
 
 ---
 
@@ -28,224 +26,277 @@ A visual rendering of the battle — 6 wizard tokens on a grid field, spell cast
 
 6 wizards (A,B,C blue team vs D,E,F red team). All 25 HP casters.
 
-1. A casts Fireball (AoE, 28 fire damage, DEX save DC 15, half on success)
-2. Counterspell chain: D counterspells -> B counter-counterspells -> E counter-counterspells -> C counter-counterspells
+1. A casts Fireball — AoE targets a POINT on the grid, 20ft-radius sphere, 28 fire damage, DEX save DC 15, half on success
+2. Counterspell chain: D -> B -> E -> C (4 deep)
 3. Chain resolves: Fireball goes through
-4. AoE resolves per-target: B,C,D,E fail saves -> 28 damage -> unconscious. F saves -> 14 damage -> alive at 11 HP.
-5. F's after-damage reaction window (game engine renders as "Absorb Elements")
+4. AoE resolves per-target: B,C,D,E fail saves -> unconscious. F saves -> 11 HP.
+5. F's after-damage reaction window (renderer shows "Absorb Elements")
 
-Visual elements needed:
-- **Grid field** — 5ft per square, ~10x8 grid
-- **Creature tokens** — circle/sprite per creature, team-colored
-- **HP bars** — horizontal bar per token showing current/max HP ratio
-- **Cast bars** — animated bar above caster's head during spell casting (Ragnarok Online style — fills up during cast, not a game-state concept, purely visual)
-- **AoE zone** — circle overlay for Fireball's 20ft-radius sphere centered on a target POINT (not on creatures — AoE targets a location, creatures in the zone are affected)
-- **Interrupt overlay** — full-field dimming + "INTERRUPT" text during reaction phases (counterspell chain)
-- **Spell slot indicators** — per-creature pips/dots showing remaining slots
-- **Unconscious state** — visual indication (greyed out, fallen token)
+Visual elements:
+- **Grid field** — 5ft per square
+- **Creature tokens** — team-colored circles (sprites later)
+- **HP bars** — per-token, showing current/max ratio. Temp HP visually distinct from HP.
+- **Cast bars** — animated bar above caster during casting (Ragnarok Online style). Purely visual — casting is instantaneous in the machine.
+- **AoE zone** — circle overlay on target POINT (not on creatures). AoE targets a location; creatures in the zone are affected.
+- **Interrupt overlay** — full-field dimming + "INTERRUPT" label during reaction phases
+- **Spell slot indicators** — per-creature pips showing remaining slots
+- **Unconscious state** — greyed out / fallen token
 
-Key D&D distinction: **AoE vs multi-target**. Fireball targets a POINT and everything in the radius is affected. Magic Missile targets individual CREATURES. This matters for rendering — AoE shows a zone, multi-target shows individual targeting lines.
+Key D&D distinction: **AoE targets a POINT** (Fireball). **Multi-target targets CREATURES** (Magic Missile). Visually different — AoE shows a zone, multi-target shows targeting indicators per creature.
 
 ---
 
-## Proposed Architecture: Three Abstraction Layers
+## Revised Architecture: Four Layers
 
-### Layer 1: Scene Model (pure business logic -> testable in vitest, no DOM)
+### Round 1 feedback incorporated:
+- **Split time from state** — new Director layer owns animation timing, separate from deterministic snapshot
+- **AoE target point** in scenario metadata, not derived from creatures
+- **Spell visual catalog** — separate from mechanical catalog
+- **No state duplication** — derive, don't copy. SceneSnapshot references BattleContext data, doesn't persist copies.
+
+### Layer A: Domain Projection (pure, deterministic, frame-invariant)
 
 ```
-(BattleContext, ScenarioMeta) -> SceneState
+(BattleContext, ScenarioMeta) -> SceneSnapshot
 ```
 
-Pure function. Maps battle machine state to a renderer-agnostic scene description. NO coordinates, NO pixel values. Uses grid positions (row, col) and normalized ratios (0-1).
+Maps battle machine output to a renderer-agnostic scene description. NO coordinates, NO time, NO animation. Grid positions and ratios only.
 
 ```typescript
-interface SceneState {
-  creatures: ReadonlyArray<CreatureSceneState>
-  phase: PhaseInfo
-  aoeZones: ReadonlyArray<AoEZoneInfo>
-  castBars: ReadonlyArray<CastBarInfo>
-  interruptActive: boolean
-  interruptLabel: string | null
+/** Scenario-provided data not in BattleContext (spatial, visual, identity). */
+interface ScenarioMeta {
+  names: Record<string, string>          // id -> display name
+  teams: { blue: string[]; red: string[] }
+  gridPositions: Record<string, { row: number; col: number }>  // id -> grid pos
+  aoeTargetPoints: Record<number, { row: number; col: number }>  // event index -> grid point
+  spellAnnotations: Record<number, string>  // event index -> spell name for renderer
 }
 
-interface CreatureSceneState {
+/** Deterministic projection of BattleContext. No time, no animation. */
+interface SceneSnapshot {
+  creatures: ReadonlyArray<CreatureSnapshot>
+  phase: PhaseSnapshot
+  aoeZone: AoEZoneSnapshot | null
+  round: number
+  activeCreatureId: string
+}
+
+interface CreatureSnapshot {
   id: string
   name: string
   team: "blue" | "red"
-  gridPos: { row: number; col: number }  // grid coordinates, NOT pixels
-  hpRatio: number        // 0-1, derived from hp/maxHp
-  maxHp: number
+  gridPos: { row: number; col: number }
+  // Derived from BattleCreatureState — NOT copied
+  hpRatio: number           // hp / maxHp
   currentHp: number
-  alive: boolean
+  maxHp: number
+  tempHp: number            // separate from HP per ubiquitous language
+  alive: boolean            // !dead && !unconscious
   unconscious: boolean
+  dead: boolean
   reactionAvailable: boolean
-  slotsRemaining: number  // total remaining across all levels
-  slotsMax: number        // total max across all levels
-  isActiveCreature: boolean
-  conditions: ReadonlyArray<string>
+  concentrating: boolean    // concentrationSpellId !== ""
+  totalSlotsRemaining: number  // sum of slotsCurrent
+  totalSlotsMax: number        // sum of slotsMax
+  isActive: boolean         // is it this creature's turn
+  conditions: ReadonlyArray<string>  // active condition names
 }
 
-interface PhaseInfo {
+interface PhaseSnapshot {
   type: "activeTurn" | "interrupt" | "aoeResolving" | "movement" | "legendaryAction"
-  activeCreatureId: string
-  interruptType?: string  // "counterspell", "shield", "absorb_elements", etc.
-  reactorId?: string
+  // Interrupt-specific (when type === "interrupt")
+  interruptType?: string   // "counterspell", "shield", "absorb_elements"
+  reactorId?: string       // who is reacting
+  targetId?: string        // who/what is being reacted to
 }
 
-interface AoEZoneInfo {
-  center: { row: number; col: number }  // target POINT on grid
-  radiusInSquares: number               // 4 for fireball (20ft / 5ft)
-  damageType: string                    // for color: "fire" -> red/orange
-  active: boolean
-}
-
-interface CastBarInfo {
-  casterId: string
+interface AoEZoneSnapshot {
+  centerGridPos: { row: number; col: number }  // from scenario metadata
+  radiusInSquares: number
+  damageType: string       // for visual catalog color lookup
   spellName: string
-  progress: number  // 0-1, driven by animation/playback timing
 }
 ```
 
-**Key principle:** SceneState is a pure data structure derived from BattleContext. It adds rendering-relevant semantic info (grid positions from scenario meta, HP ratios, phase labels) but NO layout math, NO pixel coordinates. Fully testable: assert creature positions, HP ratios, phase transitions, AoE zones.
+**Testing:** Pure vitest. Assert creature HP ratios, phase types, AoE zone positions. No DOM, no time.
 
-### Layer 2: Layout (coordinate math -> testable in vitest, no DOM)
+### Layer B: Director / Playback (owns time, testable with fake timers)
 
 ```
-(SceneState, LayoutConfig) -> LayoutState
+(currentEventIndex, SceneSnapshot, prevSnapshot, clock, playbackMode) -> VisualCueState
 ```
 
-Pure function. Converts grid positions to pixel coordinates, computes bar dimensions, AoE circle radii. This layer knows about pixels but not about SVG or React.
+Owns ALL temporal/transient state that doesn't exist in the battle machine: cast bar fill progress, interrupt fade opacity, auto-advance delays, "just took damage" flash timers.
+
+```typescript
+interface VisualCueState {
+  castBar: { casterId: string; spellName: string; progress: number } | null
+  interruptOverlay: { opacity: number; label: string }  // 0 = hidden, 1 = full
+  creatureCues: Record<string, CreatureCue>
+  autoAdvanceDelay: number  // ms until next auto-step (0 = manual mode)
+}
+
+interface CreatureCue {
+  damageFlash: boolean    // briefly true after taking damage
+  justKnockedOut: boolean // briefly true after going unconscious
+  castingGlow: boolean    // true while casting
+}
+
+/** Per-event-type timing config. Lives in Director, not in React. */
+interface PlaybackTiming {
+  defaultDelayMs: number
+  overrides: Partial<Record<string, number>>  // event type -> delay
+  // e.g., { BATTLE_RESOLVE_COUNTERSPELL: 800, BATTLE_RESOLVE_AOE_TARGET: 1200 }
+}
+```
+
+**Testing:** `vi.useFakeTimers()`. Advance clock, assert cast bar progress, interrupt fade, auto-advance triggers. No DOM.
+
+### Layer C: Layout / Geometry (pure math)
+
+```
+(SceneSnapshot, VisualCueState, LayoutConfig) -> LayoutState
+```
+
+Converts grid positions to pixel coordinates. Computes bar dimensions, AoE circle radii. Pure math — no React, no SVG.
 
 ```typescript
 interface LayoutConfig {
-  cellSize: number        // pixels per grid square (e.g., 60)
+  cellSize: number          // px per grid square (e.g., 60)
   gridCols: number
   gridRows: number
-  tokenRadius: number     // pixels (e.g., 22)
-  hpBarWidth: number      // pixels
-  hpBarHeight: number     // pixels
-  castBarWidth: number
-  castBarHeight: number
+  tokenRadius: number       // px
+  barWidth: number          // px (shared by HP bar and cast bar)
+  barHeight: number         // px
 }
 
-// LayoutState: everything the SVG layer needs as pixel coordinates
 interface LayoutState {
   viewBox: { width: number; height: number }
-  grid: {
-    lines: ReadonlyArray<{ x1: number; y1: number; x2: number; y2: number }>
-  }
+  gridLines: ReadonlyArray<{ x1: number; y1: number; x2: number; y2: number }>
   creatures: ReadonlyArray<CreatureLayout>
-  aoeZones: ReadonlyArray<{ cx: number; cy: number; r: number; fill: string; opacity: number }>
-  interruptOverlay: { visible: boolean; label: string | null; opacity: number }
+  aoeZone: { cx: number; cy: number; r: number; color: string } | null
+  interruptOverlay: { opacity: number; label: string | null }
 }
 
 interface CreatureLayout {
   id: string
-  // Token
-  cx: number; cy: number        // center pixel coordinates
+  cx: number; cy: number          // token center px
   tokenRadius: number
-  teamColor: string             // "#3b82f6" (blue) or "#ef4444" (red)
-  opacity: number               // 1 alive, 0.3 unconscious
+  teamColor: string               // hex
+  opacity: number                 // 1 alive, 0.3 unconscious, 0 dead
   label: string
-  // HP bar
-  hpBar: { x: number; y: number; totalWidth: number; fillWidth: number; height: number }
-  // Cast bar (null if not casting)
-  castBar: { x: number; y: number; totalWidth: number; fillWidth: number; height: number } | null
-  // Slot indicator
-  slots: { x: number; y: number; filled: number; total: number }
+  hpBar: BarLayout
+  tempHpBar: BarLayout | null     // visually distinct from HP
+  castBar: BarLayout | null       // null if not casting
+  slotPips: { x: number; y: number; filled: number; total: number }
+  damageFlash: boolean
+  castingGlow: boolean
+}
+
+interface BarLayout {
+  x: number; y: number
+  totalWidth: number; fillWidth: number; height: number
+  color: string
 }
 ```
 
-**Key principle:** Pure math. `cellSize * col + cellSize/2 = cx`. No React, no SVG, no animation. Testable: assert creature at grid (3,2) with cellSize=60 has cx=210, cy=150. Assert HP bar fillWidth = totalWidth * hpRatio.
+**Testing:** Pure vitest. Assert pixel coordinates from grid positions. Assert bar dimensions from ratios.
 
-### Layer 3: SVG Components (rendering -> testable with RTL)
+### Layer D: SVG + Motion Components (thin rendering)
 
-Thin React components. Receive LayoutState as props, return SVG + Motion elements. Minimal logic — just JSX mapping.
+Receives LayoutState as props, returns SVG with Motion animations. Minimal logic.
 
 ```tsx
 <svg viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height}`}>
-  <GridOverlay lines={layout.grid.lines} />
-  {layout.aoeZones.map(z => <AoEZone key={...} {...z} />)}
+  <GridOverlay lines={layout.gridLines} />
+  {layout.aoeZone && <AoEZone {...layout.aoeZone} />}
   {layout.creatures.map(c => <CreatureToken key={c.id} {...c} />)}
-  {layout.interruptOverlay.visible && <InterruptOverlay {...layout.interruptOverlay} />}
+  {layout.interruptOverlay.opacity > 0 && <InterruptOverlay {...layout.interruptOverlay} />}
 </svg>
 ```
 
-Each sub-component uses `<motion.circle>`, `<motion.rect>`, `<motion.text>` for animated transitions. Props change -> Motion animates. RTL-testable: `getByTestId("creature-A")`, assert `cx` attribute equals expected value.
+**Testing:** RTL. `getByTestId("creature-A")`, assert `cx`, `opacity`. Snapshot tests for SVG structure.
 
 ### Data Flow
 
 ```
-FIREBALL_SELFISHNESS events (scripted BattleEvent[])
+FIREBALL_SELFISHNESS events (BattleEvent[])
     | step one at a time
     v
 battleMachine actor (XState)
-    | snapshot subscription
+    | snapshot
     v
-BattleContext
-    | deriveSceneState() — pure function (Layer 1)
+BattleContext ─────────────────────────────────────┐
+    | deriveSnapshot(ctx, meta) — Layer A           |
+    v                                               |
+SceneSnapshot (deterministic, no time)              |
+    |                                               |
+    + Director(eventIdx, snapshot, clock) — Layer B  |
+    |                                               |
+    v                                               |
+SceneSnapshot + VisualCueState                      |
+    | computeLayout(snapshot, cues, config) — Layer C
     v
-SceneState
-    | computeLayout() — pure function (Layer 2)
+LayoutState (pixels)
+    | React props — Layer D
     v
-LayoutState
-    | React props
-    v
-<BattleField> (SVG + Motion) (Layer 3)
-    | DOM
-    v
-Browser / RTL test
+<BattleField> SVG + Motion
 ```
 
 ### File Structure
 
 ```
 src/battle-scene/
-  scene-state.ts           # Layer 1: (BattleContext, Meta) -> SceneState
-  scene-state.test.ts      # Pure vitest tests — no DOM
-  layout.ts                # Layer 2: (SceneState, LayoutConfig) -> LayoutState
-  layout.test.ts           # Pure vitest tests — no DOM
-  BattlePage.tsx           # Route entry — actor + stepping + timeline
-  BattleField.tsx          # <svg> root — renders LayoutState
-  GridOverlay.tsx          # Grid lines
-  CreatureToken.tsx        # Token circle + HP bar + cast bar + name + slots
-  AoEZone.tsx             # AoE circle/rect overlay
-  InterruptOverlay.tsx     # Dimming rect + label text
-  BattleLog.tsx            # Transition log adapted for BattleEvent
+  scene-snapshot.ts          # Layer A: (BattleContext, Meta) -> SceneSnapshot
+  scene-snapshot.test.ts     # Pure vitest
+  director.ts                # Layer B: playback timing, visual cues
+  director.test.ts           # Fake timers vitest
+  layout.ts                  # Layer C: (Snapshot, Cues, Config) -> LayoutState
+  layout.test.ts             # Pure vitest
+  visual-catalog.ts          # spellName -> { color, shape, castDurationMs, aoeStyle }
+  BattlePage.tsx             # Route: actor + Director + stepping
+  BattleField.tsx            # <svg> root
+  GridOverlay.tsx            # Grid lines
+  CreatureToken.tsx          # Token + HP bar + cast bar + name + slots
+  AoEZone.tsx               # Circle overlay
+  InterruptOverlay.tsx       # Dimming rect + label
+  BattleLog.tsx              # Event timeline (reuse TransitionLog pattern)
 ```
 
 ---
 
-## Questions for Review
+## Resolved Questions (from Round 1)
 
-1. **Layer boundaries:** Is the 3-layer split (scene model / layout / SVG) the right granularity? Should layout be folded into scene-state, or split further?
+| # | Question | Resolution |
+|---|----------|------------|
+| 1 | Layer boundaries | 4 layers: projection / director / geometry / SVG. Director is the new addition. |
+| 2 | Animation state | Director layer. Emits VisualCueState. Testable with fake timers. |
+| 3 | Stepping model | Both manual + auto-play. Delay-per-event-type in Director config. |
+| 4 | AoE target point | Scenario metadata `aoeTargetPoints`. Not derived from creatures. |
+| 5 | Spell visual catalog | Separate `visual-catalog.ts`. spellName -> visual properties. |
+| 6 | Grid positions | Scenario metadata `gridPositions`. Explicit, deterministic. |
+| 7 | Cast bar | Director owns progress. SceneSnapshot has casting intent only. |
 
-2. **Animation state:** Cast bars and interrupt overlays are temporal (fill over 500ms, fade in/out). These don't correspond to game state — casting is instantaneous in the machine. Should animation timing live in:
-   - The scene model (explicit progress values)?
-   - A separate animation controller between layout and SVG?
-   - Purely in the SVG components (Motion handles it via prop transitions)?
+## New Questions for Round 2
 
-3. **Stepping model:** The demo steps through events one at a time. Visually, some events should auto-advance (the 4 CS chain events play as a rapid sequence). Should stepping logic be manual (click), auto-play with delays, or both? Where does the delay-per-event-type mapping live?
+1. **Director as hook vs module:** Should the Director be a React hook (`useDirector`) with `useEffect` timers, or a plain class/module with injectable clock? Hook is simpler for React integration but couples to React lifecycle. Module is more testable but needs manual wiring.
 
-4. **AoE target point:** Fireball targets a POINT, not creatures. Our `BATTLE_CAST_AOE` event doesn't carry a target point (the machine doesn't model space). For rendering, should we:
-   - Add `targetPoint` to scenario metadata?
-   - Derive it (center of all affected creatures)?
-   - Add it to `BATTLE_CAST_AOE` event as an optional field?
+2. **Derived vs referenced:** Round 1 feedback said "derive once, don't persist duplicates." My `CreatureSnapshot` has `hpRatio`, `alive`, `unconscious`, `totalSlotsRemaining` — all derivable from `BattleCreatureState`. Options:
+   - Keep the derived fields (snapshot is the API boundary; consumers don't reach into BattleContext)
+   - Pass `BattleCreatureState` through and let layout derive what it needs (fewer fields, but layout knows about battle types)
+   - Hybrid: snapshot has creature ID + derived rendering-relevant subset only
 
-5. **Spell visual catalog:** The machine knows `spellName: "fireball"` but not its visual properties (color, shape, icon). Where should the mapping `spellName -> visual properties` live?
+3. **Visual catalog scope:** Should the catalog cover only spells (fireball -> red circle) or also reactions (counterspell -> purple spark), conditions (unconscious -> grey tint), damage types (fire -> orange flash)? How granular?
 
-6. **Grid positions:** BattleContext has no spatial state (by design — Quint spec decision O2). Initial creature positions must come from somewhere for rendering. Options:
-   - Scenario metadata (hardcoded per demo)
-   - A separate spatial state managed alongside the battle actor
-   - Derived from team assignment (blue team left side, red team right side)
+4. **Multiple AoE zones:** Current design has one `aoeZone`. What about overlapping effects (Spirit Guardians + Fireball)? Array of zones, or wait until needed?
 
-7. **Cast bar semantics:** In D&D, some spells have "1 action" casting time, others "1 minute." In the battle machine, all casts are one event. The cast bar is purely visual feedback. Should it be modeled in scene state at all, or entirely in the animation layer?
+5. **Transition between SceneSnapshots:** When stepping forward, some visual transitions need the PREVIOUS snapshot to compute deltas (HP dropped by X, creature went from alive to unconscious). Should the Director receive both current and previous snapshots, or compute deltas internally?
 
 ---
 
-## Appendix: Key Types
+## Appendix: Key Types (unchanged from Round 1)
 
-### BattleContext (state machine output)
+### BattleContext
 
 ```typescript
 interface BattleContext {
@@ -274,53 +325,53 @@ type PendingInterrupt =
   | { tag: "PIAfterDamage"; ctx: AfterDamageCtx }
 ```
 
-### BattleCreatureState (68 fields, key subset)
+### BattleCreatureState (key rendering-relevant fields)
 
 ```typescript
 interface BattleCreatureState {
   hp: number; maxHp: number; tempHp: number
   dead: boolean; unconscious: boolean
-  // 14 condition booleans (blinded, charmed, etc.)
+  blinded: boolean; charmed: boolean; frightened: boolean
+  paralyzed: boolean; petrified: boolean; poisoned: boolean
+  prone: boolean; restrained: boolean; stunned: boolean
+  // ... more conditions
   reactionAvailable: boolean
-  actionsRemaining: number; bonusActionUsed: boolean
   slotsCurrent: ReadonlyArray<number>  // 9 levels
   slotsMax: ReadonlyArray<number>
   concentrationSpellId: string
   slotExpendedThisTurn: boolean
   creatureKind: "PC" | "Monster"
-  preparedSpells: ReadonlySet<string>
 }
 ```
 
-### Demo Scenario Event Types Used
+### Demo Events Used
 
-```typescript
-BATTLE_INIT          — creates 6 creatures with InitCreatureConfig[]
-BATTLE_START_TURN    — begins A's turn
-BATTLE_CAST_AOE      — A casts Fireball (spellName, dmg, dt, saveDC, halfOnSave)
-BATTLE_RESOLVE_COUNTERSPELL — D/B/E/C counterspell chain + null to resolve
-BATTLE_RESOLVE_AOE_TARGET   — per-target save resolution (saveRoll vs saveDC)
-BATTLE_AFTER_DAMAGE_PASS    — F's after-damage reaction window
+```
+BATTLE_INIT                   — 6 creatures via InitCreatureConfig[]
+BATTLE_START_TURN             — begins A's turn
+BATTLE_CAST_AOE               — Fireball (spellName, dmg, dt, saveDC, halfOnSave)
+BATTLE_RESOLVE_COUNTERSPELL   — CS chain (4 deep) + null to resolve
+BATTLE_RESOLVE_AOE_TARGET     — per-target save (saveRoll vs saveDC)
+BATTLE_AFTER_DAMAGE_PASS      — F's reaction window
 ```
 
-### AoE Rules (SRD 5.2.1)
+### AoE (SRD 5.2.1)
 
-Six shapes: Cone, Cube, Cylinder, Emanation, Line, Sphere. Grid = 5ft squares. Fireball = 20ft-radius Sphere ~ 48 squares. Grid discretization not in SRD — we use "center of square within radius." Medium creatures = 1 square.
+Shapes: Cone, Cube, Cylinder, Emanation, Line, Sphere. Grid = 5ft squares. Fireball = 20ft-radius Sphere ~ 48 squares. Grid discretization: "center of square within radius."
 
-### Ubiquitous Language (excerpt)
+### Ubiquitous Language (rendering-relevant)
 
-- **Hit Points (HP)** — current health, 0 to max. NOT the same as Temporary Hit Points (separate buffer).
-- **Condition** — one of 14 named status effects (Blinded, Charmed, ..., Unconscious). Each has specific mechanical and visual implications.
-- **Incapacitated** — meta-condition: can't take actions/reactions. Implied by Paralyzed, Petrified, Stunned, Unconscious.
-- **AoE (Area of Effect)** — targets a POINT or area. Distinct from multi-target spells (which target individual creatures).
-- **Reaction** — one per round (refreshes on your turn). Used for Counterspell, Opportunity Attack, Shield, etc.
-- **Concentration** — maintaining a spell. One at a time. Broken by damage (CON save), incapacitation, or casting another concentration spell.
+- **HP** and **Temporary HP** are distinct (separate bars/indicators)
+- **Condition** — 14 named status effects, each with visual implications
+- **Incapacitated** — implied by Paralyzed, Petrified, Stunned, Unconscious
+- **Reaction** — one per round, refreshes on your turn
+- **Concentration** — one spell at a time, broken by damage/incapacitation
+- **AoE** — targets a POINT/area, not creatures. Distinct from multi-target.
 
-### Project Conventions (from CLAUDE.md)
+### Project Conventions
 
-- No external consumers — greenfield project, any layer can change
-- No redundant state — never duplicate data across layers
-- SRD feature parity — every rule traces to specific SRD text
-- Quint parity — XState must match Quint spec, validated by MBT
+- No redundant state across layers — derive, don't copy
+- SRD feature parity — every rule traces to SRD text
 - TypeScript: `as const satisfies ReadonlyArray<T>` for typed constant arrays
 - ESLint max-lines: 420 per file
+- Existing routing: pathname-based (`/simulator`, `/machine-viz`, `/`). Battle viz = new route.
