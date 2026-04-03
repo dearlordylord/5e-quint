@@ -120,18 +120,9 @@ After significant changes, run `/simplify` repeatedly until it converges — i.e
 
 `npx quint test --match "inv_" dndTest.qnt` — deterministic pure-function tests for creature-level invariant edge cases (death saves, stability, concentration, conditions, effects, exhaustion, HP).
 
-## Invariant fuzzing
+## Fuzzing
 
-`./scripts/fuzz-all.sh` — runs both fuzzers in parallel (Ctrl+C stops both):
-- **MBT parity** (`mbt-fuzz.sh`): random seeds → Quint-vs-XState field-by-field comparison. Failures → `mbt-failures.jsonl`.
-- **Invariant** (`invariant-fuzz.sh`): random seeds → `quint run --invariant=allBattleInvariants`. Failures → `invariant-failures.jsonl`.
-
-Run overnight: `./scripts/fuzz-all.sh` (infinite) or `./scripts/fuzz-all.sh 200` (200 seeds each).
-
-**Known excluded invariants** (documented in `battle.qnt` and `PLAN_BATTLE.md`):
-- `spellStackDistinctCasters` — needs "one slot per turn" guard in `eligibleForCounterspell`
-- `reactionWindowHasEligible` — transient empty-eligible in CS chains is by design
-- `concentrationImpliesEffect` / `concentrationEffectHasLivingCaster` — CS chain transient state, needs investigation
+`./scripts/fuzz-all.sh [N]` — runs MBT parity + invariant fuzzers in parallel. Failures → `mbt-failures.jsonl` / `invariant-failures.jsonl`.
 
 ## QA pipeline
 
