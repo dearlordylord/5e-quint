@@ -5,7 +5,7 @@ import { useT } from "#/i18n.ts"
 import type { DndEvent, DndSnapshot } from "#/machine.ts"
 import { ALL_DAMAGE_TYPES } from "#/machine-helpers.ts"
 import type { Condition, DamageType } from "#/types.ts"
-import { CONDITIONS, CreatureId, d20Roll, healAmount, spellId as mkSpellId, tempHp } from "#/types.ts"
+import { CONDITIONS, CreatureId, d20Roll, healAmount, spellId as mkSpellId, spellSlotLevel, tempHp } from "#/types.ts"
 
 const DAMAGE_TYPES: ReadonlyArray<DamageType> = Array.from(ALL_DAMAGE_TYPES)
 const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
@@ -223,8 +223,8 @@ export function EventPanel({
         <NumInput label={t.level} value={slotLevel} onChange={setSlotLevel} min={1} max={9} />
         <Btn
           label={t.expendSlot}
-          disabled={!snapshot.can({ type: "EXPEND_SLOT", level: slotLevel })}
-          onClick={() => send({ type: "EXPEND_SLOT", level: slotLevel })}
+          disabled={!snapshot.can({ type: "EXPEND_SLOT", level: spellSlotLevel(slotLevel) })}
+          onClick={() => send({ type: "EXPEND_SLOT", level: spellSlotLevel(slotLevel) })}
         />
         <div className="mt-2">
           <input

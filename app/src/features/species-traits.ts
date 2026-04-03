@@ -3,7 +3,7 @@
 // modifier functions — no Quint state transitions.
 
 import { type DraconicAncestryType, featureSaveDC } from "#/srd-constants.ts"
-import type { DamageType } from "#/types.ts"
+import type { AbilityModifier, DamageType, DifficultyClass } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
 
@@ -44,7 +44,7 @@ export function breathWeaponDice(characterLevel: number): number {
 }
 
 /** Breath Weapon save DC = 8 + CON mod + prof bonus. */
-export const breathWeaponSaveDC: (conMod: number, profBonus: number) => number = featureSaveDC
+export const breathWeaponSaveDC: (conMod: AbilityModifier, profBonus: number) => DifficultyClass = featureSaveDC
 
 /** Draconic Flight (L5+): BA, fly = Speed, 10 min, 1/LR. */
 export function hasDraconicFlight(characterLevel: number): boolean {

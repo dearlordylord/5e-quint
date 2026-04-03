@@ -30,7 +30,7 @@ import {
   variantToString
 } from "#/mbt-shared.ts"
 import type { Condition, CreatureId, CreatureKind, DamageType } from "#/types.ts"
-import { CreatureId as mkCreatureId, healAmount, spellId as mkSpellId } from "#/types.ts"
+import { classLevel, CreatureId as mkCreatureId, healAmount, resourceCount, spellId as mkSpellId, spellSlotLevel } from "#/types.ts"
 
 // ============================================================
 // Battle-level Zod schemas (B14.2)
@@ -375,7 +375,7 @@ function createBattleProjectionDriver() {
           effectiveSpeed: 30,
           movementRemaining: 30,
           extraAttacksRemaining: 1,
-          rogueLevel: 5,
+          rogueLevel: classLevel(5),
           creatureKind: "PC",
           slotsMax: casterSlots,
           slotsCurrent: casterSlots
@@ -412,8 +412,8 @@ function createBattleProjectionDriver() {
           movementRemaining: 30,
           extraAttacksRemaining: 1,
           creatureKind: "Monster",
-          legendaryActionsRemaining: 3,
-          legendaryResistancesRemaining: 3,
+          legendaryActionsRemaining: resourceCount(3),
+          legendaryResistancesRemaining: resourceCount(3),
           rechargeAvailable: {},
           dailyUsesRemaining: {}
         }
@@ -792,7 +792,7 @@ function createBattleProjectionDriver() {
 
       if (!hasCSReactors) {
         // Resolve save immediately — expend deferred slot (ritual skips expenditure)
-        if (!ritual) send(id, { type: "EXPEND_SLOT", level: slotLvl })
+        if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
         resolveSpellSave(pendingSpell)
         pendingSpell = null
       }
@@ -974,11 +974,11 @@ function createBattleProjectionDriver() {
         }
         // Depth 0: resolve original spell.
         if (pendingSpell) {
-          if (!pendingSpell.ritual) send(pendingSpell.caster, { type: "EXPEND_SLOT", level: pendingSpell.slotLvl })
+          if (!pendingSpell.ritual) send(pendingSpell.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(pendingSpell.slotLvl) })
           resolveSpellSave(pendingSpell)
           pendingSpell = null
         } else if (pendingAoE) {
-          if (!pendingAoE.ritual) send(pendingAoE.caster, { type: "EXPEND_SLOT", level: pendingAoE.slotLvl })
+          if (!pendingAoE.ritual) send(pendingAoE.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(pendingAoE.slotLvl) })
         } else if (pendingConcentration) {
           resolveConcentrationSpell(pendingConcentration)
           pendingConcentration = null
@@ -994,7 +994,7 @@ function createBattleProjectionDriver() {
 
       if (decision?.tag.startsWith("RCounterspell")) {
         send(reactorId, { type: "USE_REACTION" })
-        send(reactorId, { type: "EXPEND_SLOT", level: csSlotLvl })
+        send(reactorId, { type: "EXPEND_SLOT", level: spellSlotLevel(csSlotLvl) })
         const conSaveSucceeded = Boolean(decision.value)
         csChain.push({ succeeded: !conSaveSucceeded, csCaster: reactorId })
       }
@@ -1100,7 +1100,7 @@ function createBattleProjectionDriver() {
 
     /** Resolve a concentration spell: expend slot, start concentration, add effects. */
     function resolveConcentrationSpell(conc: NonNullable<typeof pendingConcentration>) {
-      if (!conc.ritual) send(conc.caster, { type: "EXPEND_SLOT", level: conc.slotLvl })
+      if (!conc.ritual) send(conc.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(conc.slotLvl) })
 
       // If already concentrating, break old concentration
       const ctx = getSnap(conc.caster).context
@@ -1196,7 +1196,7 @@ function createBattleProjectionDriver() {
       const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
 
       if (!hasCSReactors) {
-        if (!ritual) send(id, { type: "EXPEND_SLOT", level: slotLvl })
+        if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
       }
     }
 

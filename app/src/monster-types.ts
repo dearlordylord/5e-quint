@@ -3,7 +3,7 @@
  * SRD 5.2.1: Stat blocks contain the game statistics of a monster.
  */
 
-import type { Ability, Condition, DamageType, Size } from "./types"
+import type { Ability, AbilityModifier, ArmorClass, Condition, DamageType, ResourceCount, Size } from "./types"
 
 // --- Phase L: Legendary / Recharge / X-Day types ---
 
@@ -23,8 +23,8 @@ export interface RechargeRollEvent {
 }
 
 export interface MonsterResourceState {
-  readonly legendaryActionsRemaining: number
-  readonly legendaryResistancesRemaining: number
+  readonly legendaryActionsRemaining: ResourceCount
+  readonly legendaryResistancesRemaining: ResourceCount
   readonly rechargeAvailable: Readonly<Record<string, boolean>>
   readonly dailyUsesRemaining: Readonly<Record<string, number>>
 }
@@ -121,8 +121,8 @@ export interface StatBlock {
   readonly name: string
   readonly creatureType: CreatureType
   readonly creatureSize: Size
-  readonly ac: number
-  readonly initiativeMod: number
+  readonly ac: ArmorClass
+  readonly initiativeMod: AbilityModifier
   readonly maxHp: number
   readonly hitDice: number
   readonly hitDieType: number

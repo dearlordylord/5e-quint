@@ -12,6 +12,8 @@ import {
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, SorcererClassState } from "#/machine-types.ts"
+import type { ClassLevel } from "#/types.ts"
+import { resourceCount } from "#/types.ts"
 
 const SORCEROUS_RESTORATION_LEVEL = 5
 
@@ -37,7 +39,7 @@ export function convertSlotToPointsUpdate(c: DndContext, slotLevel: number): Par
   const newPts = Math.min(ss.sorceryPoints + slotLevel, ss.sorceryPointsMax)
   return {
     slotsCurrent: currentSlots,
-    ...updateClass(c, "sorcerer", { sorceryPoints: newPts })
+    ...updateClass(c, "sorcerer", { sorceryPoints: resourceCount(newPts) })
   }
 }
 
@@ -59,7 +61,7 @@ export function convertPointsToSlotUpdate(c: DndContext, slotLevel: number): Par
   return {
     bonusActionUsed: true,
     slotsCurrent: currentSlots,
-    ...updateClass(c, "sorcerer", { sorceryPoints: ss.sorceryPoints - cost })
+    ...updateClass(c, "sorcerer", { sorceryPoints: resourceCount(ss.sorceryPoints - cost) })
   }
 }
 
@@ -94,7 +96,7 @@ export function sorcererShortRestUpdate(c: DndContext): Partial<DndContext> {
     const HALVE = 2
     const regain = Math.floor(ss.level / HALVE)
     return updateClass(c, "sorcerer", {
-      sorceryPoints: Math.min(ss.sorceryPoints + regain, ss.sorceryPointsMax),
+      sorceryPoints: resourceCount(Math.min(ss.sorceryPoints + regain, ss.sorceryPointsMax)),
       sorcerousRestorationUsed: true
     })
   }
@@ -106,10 +108,10 @@ export function sorcererLongRestUpdate(c: DndContext): Partial<DndContext> {
   if (!ss || ss.level === 0) return {}
   const result = tsSorcererLongRest({ sorcererLevel: ss.level })
   return updateClass(c, "sorcerer", {
-    sorceryPoints: result.sorceryPoints,
-    sorceryPointsMax: result.sorceryPointsMax,
+    sorceryPoints: resourceCount(result.sorceryPoints),
+    sorceryPointsMax: resourceCount(result.sorceryPointsMax),
     innateSorceryActive: result.innateSorceryActive,
-    innateSorceryCharges: result.innateSorceryCharges,
+    innateSorceryCharges: resourceCount(result.innateSorceryCharges),
     innateSorceryTurnsRemaining: 0,
     sorcerousRestorationUsed: false,
     metamagicUsedThisCast: new Set<MetamagicOption>(),
@@ -135,9 +137,9 @@ export function innateSorceryUpdate(c: DndContext): Partial<DndContext> {
     bonusActionUsed: true,
     ...updateClass(c, "sorcerer", {
       innateSorceryActive: result.innateSorceryActive,
-      innateSorceryCharges: result.innateSorceryCharges,
+      innateSorceryCharges: resourceCount(result.innateSorceryCharges),
       innateSorceryTurnsRemaining: INNATE_SORCERY_DURATION,
-      sorceryPoints: result.sorceryPoints
+      sorceryPoints: resourceCount(result.sorceryPoints)
     })
   }
 }
@@ -162,7 +164,7 @@ export function useMetamagicUpdate(c: DndContext, option: string): Partial<DndCo
   return {
     bonusActionUsed: result.bonusActionUsed,
     ...updateClass(c, "sorcerer", {
-      sorceryPoints: result.sorceryPoints,
+      sorceryPoints: resourceCount(result.sorceryPoints),
       metamagicUsedThisCast: result.metamagicUsedThisCast,
       apotheosisUsedThisTurn: result.apotheosisUsedThisTurn
     })
@@ -171,15 +173,15 @@ export function useMetamagicUpdate(c: DndContext, option: string): Partial<DndCo
 
 // -- Init --
 
-export function initialSorcererState(sorcererLevel: number): SorcererClassState {
-  const spMax = sorceryPointsMax(sorcererLevel)
+export function initialSorcererState(sorcererLevel: ClassLevel): SorcererClassState {
+  const spMax = resourceCount(sorceryPointsMax(sorcererLevel))
   return {
     level: sorcererLevel,
     sorceryPoints: spMax,
     sorceryPointsMax: spMax,
     sorcerousRestorationUsed: false,
     innateSorceryActive: false,
-    innateSorceryCharges: 2,
+    innateSorceryCharges: resourceCount(2),
     innateSorceryTurnsRemaining: 0,
     metamagicUsedThisCast: new Set<MetamagicOption>(),
     apotheosisUsedThisTurn: false

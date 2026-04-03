@@ -2,6 +2,7 @@ import { canEldritchSmite, canUseMagicalCunning, canUseMysticArcanum } from "#/f
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, WarlockClassState } from "#/machine-types.ts"
+import type { ClassLevel } from "#/types.ts"
 
 function w(c: DndContext) {
   return c.classStates.warlock!
@@ -68,7 +69,7 @@ export function warlockLongRestUpdate(c: DndContext): Partial<DndContext> {
 
 // -- Init --
 
-export function initialWarlockState(warlockLevel: number): WarlockClassState {
+export function initialWarlockState(warlockLevel: ClassLevel): WarlockClassState {
   return {
     level: warlockLevel,
     mysticArcanumUsed: new Set<number>(),

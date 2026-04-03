@@ -2,6 +2,7 @@ import { canUseCunningAction, maxCunningStrikeEffects } from "#/features/class-r
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, RogueClassState } from "#/machine-types.ts"
+import type { ClassLevel } from "#/types.ts"
 import { movementFeet } from "#/types.ts"
 
 function r(c: DndContext) {
@@ -96,7 +97,7 @@ export function rogueLongRestUpdate(c: DndContext): Partial<DndContext> {
 
 // -- Init --
 
-export function initialRogueState(rogueLevel: number): RogueClassState {
+export function initialRogueState(rogueLevel: ClassLevel): RogueClassState {
   return {
     level: rogueLevel,
     sneakAttackUsedThisTurn: false,

@@ -37,6 +37,7 @@ import type { ActionType, ArmorState, AttackContext, Condition, DamageType } fro
 import {
   abilityScore,
   armorClass,
+  classLevel,
   CreatureId,
   d20Roll,
   damageAmount,
@@ -45,6 +46,7 @@ import {
   hp,
   proficiencyBonus,
   spellId as mkSpellId,
+  spellSlotLevel,
   tempHp
 } from "#/types.ts"
 
@@ -1821,7 +1823,7 @@ describe("spell slot expenditure", () => {
   it("expend slot from 0 is no-op", () => {
     const a = create()
     expect(ctx(a).slotsCurrent).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0])
-    a.send({ type: "EXPEND_SLOT", level: 1 })
+    a.send({ type: "EXPEND_SLOT", level: spellSlotLevel(1) })
     expect(ctx(a).slotsCurrent[0]).toBe(0)
   })
 
@@ -1896,7 +1898,7 @@ describe("long rest", () => {
 
   it("restores all spent hit dice (SRD 5.2.1)", () => {
     const a = createActor(dndMachine, {
-      input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: singleClassHitDice("fighter", 2), fighterLevel: 8 }
+      input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: singleClassHitDice("fighter", 2), fighterLevel: classLevel(8) }
     })
     a.start()
     a.send({ type: "LONG_REST" })
@@ -2166,7 +2168,7 @@ describe("branded type clamping", () => {
 describe("expendSlot helper", () => {
   it("deducts one slot at given level", () => {
     const slots = [2, 1, 0, 0, 0, 0, 0, 0, 0]
-    const result = expendSlot(slots, 1)
+    const result = expendSlot(slots, spellSlotLevel(1))
     expect(result[0]).toBe(1)
     expect(result[1]).toBe(1)
   })

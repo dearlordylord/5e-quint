@@ -1,7 +1,7 @@
 import { Option } from "effect"
 
 import { featureSaveDC } from "#/srd-constants.ts"
-import type { ArmorWeight, Condition, DamageType, SpellId } from "#/types.ts"
+import type { AbilityModifier, ArmorWeight, Condition, DamageType, DifficultyClass, SpellId } from "#/types.ts"
 
 // --- Types ---
 
@@ -397,7 +397,7 @@ export function canRetaliate(
 // --- Intimidating Presence (L14 Berserker) ---
 
 /** Returns the DC for Intimidating Presence: 8 + STR mod + proficiency bonus. */
-export const intimidatingPresenceDC: (strMod: number, profBonus: number) => number = featureSaveDC
+export const intimidatingPresenceDC: (strMod: AbilityModifier, profBonus: number) => DifficultyClass = featureSaveDC
 
 /** Check if Intimidating Presence can be used. */
 export function canUseIntimidatingPresence(

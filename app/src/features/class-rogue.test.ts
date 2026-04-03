@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { abilityModifier } from "#/types.ts"
 import {
   applyCunningStrike,
   applySneakAttack,
@@ -215,9 +216,9 @@ describe("strikeDieCost", () => {
 
 describe("cunningStrikeDC", () => {
   it("computes 8 + dex mod + prof bonus", () => {
-    expect(cunningStrikeDC(3, 3)).toBe(14)
-    expect(cunningStrikeDC(5, 2)).toBe(15)
-    expect(cunningStrikeDC(0, 2)).toBe(10)
+    expect(cunningStrikeDC(abilityModifier(3), 3)).toBe(14)
+    expect(cunningStrikeDC(abilityModifier(5), 2)).toBe(15)
+    expect(cunningStrikeDC(abilityModifier(0), 2)).toBe(10)
   })
 })
 

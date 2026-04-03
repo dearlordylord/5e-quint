@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { abilityModifier } from "#/types.ts"
 import {
   canCleave,
   canGraze,
@@ -191,9 +192,9 @@ describe("topple", () => {
   })
 
   it("toppleDC equals 8 + ability mod + proficiency bonus", () => {
-    expect(toppleDC(3, 2)).toBe(13) // 8 + 3 + 2
-    expect(toppleDC(5, 6)).toBe(19) // 8 + 5 + 6
-    expect(toppleDC(0, 2)).toBe(10) // 8 + 0 + 2
+    expect(toppleDC(abilityModifier(3), 2)).toBe(13) // 8 + 3 + 2
+    expect(toppleDC(abilityModifier(5), 6)).toBe(19) // 8 + 5 + 6
+    expect(toppleDC(abilityModifier(0), 2)).toBe(10) // 8 + 0 + 2
   })
 
   it("toppleResult returns prone on failed save", () => {

@@ -1,5 +1,5 @@
 import { featureSaveDC } from "#/srd-constants.ts"
-import type { Condition, Size } from "#/types.ts"
+import type { AbilityModifier, Condition, DifficultyClass, Size } from "#/types.ts"
 
 // --- Constants ---
 
@@ -199,7 +199,7 @@ export function maxCunningStrikeEffects(rogueLevel: number): number {
 }
 
 /** SRD: DC = 8 + Dexterity modifier + Proficiency Bonus. */
-export const cunningStrikeDC: (dexModifier: number, profBonus: number) => number = featureSaveDC
+export const cunningStrikeDC: (dexModifier: AbilityModifier, profBonus: number) => DifficultyClass = featureSaveDC
 
 /**
  * Apply a Cunning Strike effect. Deducts dice cost and applies the effect if save fails.

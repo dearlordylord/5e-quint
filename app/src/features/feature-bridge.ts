@@ -30,7 +30,7 @@ import {
 } from "#/features/class-fighter.ts"
 import type { FeatureAction, FeatureState } from "#/features/feature-store.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
-import type { Condition, DamageType } from "#/types.ts"
+import type { AbilityModifier, Condition, DamageType, DifficultyClass } from "#/types.ts"
 import { healAmount } from "#/types.ts"
 
 export interface BridgeResult {
@@ -315,7 +315,7 @@ export function executeIntimidatingPresence(): BridgeResult {
   }
 }
 
-export const getIntimidatingPresenceDC: (strMod: number, profBonus: number) => number = intimidatingPresenceDC
+export const getIntimidatingPresenceDC: (strMod: AbilityModifier, profBonus: number) => DifficultyClass = intimidatingPresenceDC
 
 // --- Barbarian passives: extracted to feature-bridge-barbarian.ts to stay under max-lines ---
 export {

@@ -2,7 +2,7 @@ import { Option } from "effect"
 import { describe, expect, it } from "vitest"
 
 import type { RageState } from "#/features/class-barbarian.ts"
-import { spellId } from "#/types.ts"
+import { abilityModifier, spellId } from "#/types.ts"
 import {
   applyForcefulBlow,
   applyFrenzy,
@@ -606,9 +606,9 @@ describe("retaliation (L10 Berserker)", () => {
 
 describe("intimidating presence (L14 Berserker)", () => {
   it("should compute DC as 8 + STR mod + proficiency bonus", () => {
-    expect(intimidatingPresenceDC(4, 5)).toBe(17) // 8 + 4 + 5
-    expect(intimidatingPresenceDC(3, 2)).toBe(13) // 8 + 3 + 2
-    expect(intimidatingPresenceDC(5, 5)).toBe(18) // 8 + 5 + 5
+    expect(intimidatingPresenceDC(abilityModifier(4), 5)).toBe(17) // 8 + 4 + 5
+    expect(intimidatingPresenceDC(abilityModifier(3), 2)).toBe(13) // 8 + 3 + 2
+    expect(intimidatingPresenceDC(abilityModifier(5), 5)).toBe(18) // 8 + 5 + 5
   })
 
   it("should allow use at L14+ with bonus action and not yet used", () => {

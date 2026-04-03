@@ -89,6 +89,7 @@ import {
   hp,
   type IncapSource,
   movementFeet,
+  resourceCount,
   tempHp
 } from "#/types.ts"
 
@@ -250,7 +251,7 @@ export const dndMachine = setup({
       return {
         ...conds,
         ...rest,
-        ...(lr.lrUsed ? { legendaryResistancesRemaining: c.legendaryResistancesRemaining - 1 } : {})
+        ...(lr.lrUsed ? { legendaryResistancesRemaining: resourceCount(c.legendaryResistancesRemaining - 1) } : {})
       }
     }),
     markBonusActionSpell: assign({ bonusActionSpellCast: true }),
@@ -431,7 +432,7 @@ export const dndMachine = setup({
     useLegendaryAction: assign(({ context: c }) =>
       c.creatureKind !== "Monster" || c.legendaryActionsRemaining <= 0
         ? {}
-        : { legendaryActionsRemaining: c.legendaryActionsRemaining - 1 }
+        : { legendaryActionsRemaining: resourceCount(c.legendaryActionsRemaining - 1) }
     ),
     useRechargeAbility: assign(({ context: c, event: e }) =>
       c.creatureKind !== "Monster"
@@ -561,26 +562,26 @@ export const dndMachine = setup({
       slotsCurrent: i.slotsCurrent ?? derivedSlots.slotsCurrent,
       slotsMax: i.slotsMax ?? derivedSlots.slotsMax,
       tempHp: tempHp(0),
-      legendaryActionsMax: i.legendaryActionsMax ?? i.legendaryActionsRemaining ?? 0,
-      legendaryResistancesMax: i.legendaryResistancesMax ?? i.legendaryResistancesRemaining ?? 0,
-      legendaryActionsRemaining: i.legendaryActionsRemaining ?? 0,
-      legendaryResistancesRemaining: i.legendaryResistancesRemaining ?? 0,
+      legendaryActionsMax: i.legendaryActionsMax ?? i.legendaryActionsRemaining ?? resourceCount(0),
+      legendaryResistancesMax: i.legendaryResistancesMax ?? i.legendaryResistancesRemaining ?? resourceCount(0),
+      legendaryActionsRemaining: i.legendaryActionsRemaining ?? resourceCount(0),
+      legendaryResistancesRemaining: i.legendaryResistancesRemaining ?? resourceCount(0),
       rechargeAvailable: i.rechargeAvailable ?? {},
       dailyUsesRemaining: i.dailyUsesRemaining ?? {},
       dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
       classStates: {
-        fighter: fighter.initialFighterState(i.fighterLevel ?? 0),
-        barbarian: barb.initialBarbarianState(i.barbarianLevel ?? 0),
-        monk: monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
-        paladin: paladin.initialPaladinState(i.paladinLevel ?? 0),
-        rogue: rogue.initialRogueState(i.rogueLevel ?? 0),
-        cleric: cleric.initialClericState(i.clericLevel ?? 0),
-        druid: druid.initialDruidState(i.druidLevel ?? 0),
-        sorcerer: sorcerer.initialSorcererState(i.sorcererLevel ?? 0),
-        warlock: warlock.initialWarlockState(i.warlockLevel ?? 0),
-        wizard: wizard.initialWizardState(i.wizardLevel ?? 0),
-        ranger: ranger.initialRangerState(i.rangerLevel ?? 0, i.wisMod),
-        bard: bard.initialBardState(i.bardLevel ?? 0, i.chaMod)
+        ...(i.fighterLevel ? { fighter: fighter.initialFighterState(i.fighterLevel) } : {}),
+        ...(i.barbarianLevel ? { barbarian: barb.initialBarbarianState(i.barbarianLevel) } : {}),
+        ...(i.monkLevel ? { monk: monk.initialMonkState(i.monkLevel, i.wholenessMax) } : {}),
+        ...(i.paladinLevel ? { paladin: paladin.initialPaladinState(i.paladinLevel) } : {}),
+        ...(i.rogueLevel ? { rogue: rogue.initialRogueState(i.rogueLevel) } : {}),
+        ...(i.clericLevel ? { cleric: cleric.initialClericState(i.clericLevel) } : {}),
+        ...(i.druidLevel ? { druid: druid.initialDruidState(i.druidLevel) } : {}),
+        ...(i.sorcererLevel ? { sorcerer: sorcerer.initialSorcererState(i.sorcererLevel) } : {}),
+        ...(i.warlockLevel ? { warlock: warlock.initialWarlockState(i.warlockLevel) } : {}),
+        ...(i.wizardLevel ? { wizard: wizard.initialWizardState(i.wizardLevel) } : {}),
+        ...(i.rangerLevel ? { ranger: ranger.initialRangerState(i.rangerLevel, i.wisMod) } : {}),
+        ...(i.bardLevel ? { bard: bard.initialBardState(i.bardLevel, i.chaMod) } : {})
       }
     }
   },

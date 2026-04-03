@@ -3,8 +3,10 @@ import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts"
 import type { ClassStateMap } from "#/machine-class-states.ts"
 import type { ConditionFlag } from "#/machine-helpers.ts"
 import type {
+  AbilityModifier,
   ActionType,
   ActiveEffect,
+  ClassLevel,
   Condition,
   CreatureId,
   CreatureKind,
@@ -17,9 +19,11 @@ import type {
   HP,
   IncapSource,
   MovementFeet,
+  ResourceCount,
   ShoveChoice,
   Size,
   SpellId,
+  SpellSlotLevel,
   SpellSlots,
   TempHP
 } from "#/types.ts"
@@ -60,29 +64,29 @@ export interface DndMachineInput {
   readonly effectiveSpeed?: number
   readonly movementRemaining?: number
   readonly extraAttacksRemaining?: number
-  readonly fighterLevel?: number
+  readonly fighterLevel?: ClassLevel | undefined
   readonly creatureKind?: CreatureKind
-  readonly legendaryActionsMax?: number
-  readonly legendaryResistancesMax?: number
-  readonly legendaryActionsRemaining?: number
-  readonly legendaryResistancesRemaining?: number
+  readonly legendaryActionsMax?: ResourceCount
+  readonly legendaryResistancesMax?: ResourceCount
+  readonly legendaryActionsRemaining?: ResourceCount
+  readonly legendaryResistancesRemaining?: ResourceCount
   readonly rechargeAvailable?: Readonly<Record<string, boolean>>
   readonly dailyUsesRemaining?: Readonly<Record<string, number>>
   readonly dailyUsesMax?: Readonly<Record<string, number>>
-  readonly barbarianLevel?: number
-  readonly monkLevel?: number
-  readonly wholenessMax?: number
-  readonly paladinLevel?: number
-  readonly rogueLevel?: number
-  readonly clericLevel?: number
-  readonly druidLevel?: number
-  readonly sorcererLevel?: number
-  readonly warlockLevel?: number
-  readonly wizardLevel?: number
-  readonly rangerLevel?: number
-  readonly wisMod?: number
-  readonly bardLevel?: number
-  readonly chaMod?: number
+  readonly barbarianLevel?: ClassLevel | undefined
+  readonly monkLevel?: ClassLevel | undefined
+  readonly wholenessMax?: ResourceCount
+  readonly paladinLevel?: ClassLevel | undefined
+  readonly rogueLevel?: ClassLevel | undefined
+  readonly clericLevel?: ClassLevel | undefined
+  readonly druidLevel?: ClassLevel | undefined
+  readonly sorcererLevel?: ClassLevel | undefined
+  readonly warlockLevel?: ClassLevel | undefined
+  readonly wizardLevel?: ClassLevel | undefined
+  readonly rangerLevel?: ClassLevel | undefined
+  readonly wisMod?: AbilityModifier
+  readonly bardLevel?: ClassLevel | undefined
+  readonly chaMod?: AbilityModifier
   readonly slotsMax?: ReadonlyArray<number>
   readonly slotsCurrent?: ReadonlyArray<number>
 }
@@ -156,10 +160,10 @@ export interface DndContext {
   readonly activeEffects: ReadonlyArray<ActiveEffect>
   readonly creatureKind: CreatureKind
   // MonsterResourceState (Quint parity: monsterResourceState)
-  readonly legendaryActionsMax: number // effective max (includes lair bonus) — not compared in MBT
-  readonly legendaryResistancesMax: number // effective max — not compared in MBT
-  readonly legendaryActionsRemaining: number
-  readonly legendaryResistancesRemaining: number
+  readonly legendaryActionsMax: ResourceCount // effective max (includes lair bonus) — not compared in MBT
+  readonly legendaryResistancesMax: ResourceCount // effective max — not compared in MBT
+  readonly legendaryActionsRemaining: ResourceCount
+  readonly legendaryResistancesRemaining: ResourceCount
   readonly rechargeAvailable: Readonly<Record<string, boolean>>
   readonly dailyUsesRemaining: Readonly<Record<string, number>>
   readonly dailyUsesMax: Readonly<Record<string, number>> // not compared in MBT — derived from stat block
@@ -268,7 +272,7 @@ export type DndEvent =
     }
   | { readonly type: "GRANT_EXTRA_ACTION" }
   | { readonly type: "EXPEND_PACT_SLOT" }
-  | { readonly type: "EXPEND_SLOT"; readonly level: number }
+  | { readonly type: "EXPEND_SLOT"; readonly level: SpellSlotLevel }
   | {
       readonly type: "START_CONCENTRATION"
       readonly spellId: SpellId
@@ -332,7 +336,7 @@ export type DndEvent =
   // Phase P: Paladin events
   | { readonly type: "USE_LAY_ON_HANDS"; readonly amount: number }
   | { readonly type: "USE_PALADIN_CHANNEL_DIVINITY" }
-  | { readonly type: "USE_DIVINE_SMITE"; readonly slotLevel: number }
+  | { readonly type: "USE_DIVINE_SMITE"; readonly slotLevel: SpellSlotLevel }
   | { readonly type: "USE_DIVINE_SMITE_FREE" }
   // Phase M: Monk events
   | { readonly type: "FLURRY_OF_BLOWS" }
@@ -344,7 +348,7 @@ export type DndEvent =
   | { readonly type: "WHOLENESS_OF_BODY"; readonly healRoll: number }
   | { readonly type: "UNCANNY_METABOLISM"; readonly healRoll: number }
   // Phase W: Wizard events
-  | { readonly type: "USE_ARCANE_RECOVERY"; readonly slotLevel: number }
+  | { readonly type: "USE_ARCANE_RECOVERY"; readonly slotLevel: SpellSlotLevel }
   | { readonly type: "USE_OVERCHANNEL" }
   // Phase R: Rogue events
   | { readonly type: "USE_SNEAK_ATTACK" }
@@ -358,11 +362,11 @@ export type DndEvent =
   | { readonly type: "USE_CLERIC_CHANNEL_DIVINITY" }
   // Phase WK: Warlock events
   | { readonly type: "USE_MAGICAL_CUNNING" }
-  | { readonly type: "USE_MYSTIC_ARCANUM"; readonly spellLevel: number }
+  | { readonly type: "USE_MYSTIC_ARCANUM"; readonly spellLevel: SpellSlotLevel }
   | { readonly type: "USE_ELDRITCH_SMITE" }
   // Phase S: Sorcerer events
-  | { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: number }
-  | { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: number }
+  | { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: SpellSlotLevel }
+  | { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: SpellSlotLevel }
   | { readonly type: "USE_INNATE_SORCERY" }
   | { readonly type: "USE_METAMAGIC"; readonly option: string }
   // Phase RN: Ranger events
@@ -372,12 +376,12 @@ export type DndEvent =
   // Phase BD: Bard events
   | { readonly type: "USE_BARDIC_INSPIRATION" }
   | { readonly type: "USE_CUTTING_WORDS" }
-  | { readonly type: "USE_FONT_SLOT_RESTORE"; readonly slotLevel: number }
+  | { readonly type: "USE_FONT_SLOT_RESTORE"; readonly slotLevel: SpellSlotLevel }
   | { readonly type: "USE_PEERLESS_SKILL"; readonly success: boolean }
   // Phase DR: Druid events
   | { readonly type: "ENTER_WILD_SHAPE" }
   | { readonly type: "EXIT_WILD_SHAPE" }
-  | { readonly type: "USE_WILD_RESURGENCE_CHARGE"; readonly slotLevel: number }
+  | { readonly type: "USE_WILD_RESURGENCE_CHARGE"; readonly slotLevel: SpellSlotLevel }
   | { readonly type: "USE_WILD_RESURGENCE_SLOT" }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines

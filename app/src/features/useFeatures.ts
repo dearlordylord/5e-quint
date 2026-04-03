@@ -53,6 +53,7 @@ import { useRogueFeatures } from "#/features/useRogueFeatures.ts"
 import type { DndSnapshot } from "#/machine.ts"
 import type { DndEvent } from "#/machine-types.ts"
 import type { Condition, DamageType } from "#/types.ts"
+import { abilityModifier } from "#/types.ts"
 
 export type { FeatureConfig } from "#/features/feature-store.ts"
 
@@ -322,7 +323,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
     return result
   }, [])
 
-  const intimidatingDC = getIntimidatingPresenceDC(config.strMod ?? 0, config.profBonus ?? 0)
+  const intimidatingDC = getIntimidatingPresenceDC(abilityModifier(config.strMod ?? 0), config.profBonus ?? 0)
 
   // Barbarian passive features
   // TODO: isIncapacitated should come from machine context when available

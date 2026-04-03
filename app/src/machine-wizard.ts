@@ -2,6 +2,7 @@ import { canArcaneRecoverSlot, hasOverchannel } from "#/features/class-wizard.ts
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, WizardClassState } from "#/machine-types.ts"
+import type { ClassLevel } from "#/types.ts"
 
 function w(c: DndContext) {
   return c.classStates.wizard!
@@ -53,7 +54,7 @@ export function wizardLongRestUpdate(c: DndContext): Partial<DndContext> {
 
 // -- Init --
 
-export function initialWizardState(wizardLevel: number): WizardClassState {
+export function initialWizardState(wizardLevel: ClassLevel): WizardClassState {
   return {
     level: wizardLevel,
     arcaneRecoveryUsed: false,

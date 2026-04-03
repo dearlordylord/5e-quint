@@ -11,7 +11,7 @@
 
 import { singleClassHitDice } from "#/features/class-tables.ts"
 import type { DndEvent } from "#/machine-types.ts"
-import { d20Roll } from "#/types.ts"
+import { classLevel, d20Roll } from "#/types.ts"
 
 import { replayTrace, type TraceEventDef } from "./trace-replay.ts"
 
@@ -711,7 +711,7 @@ const MACHINE_INPUT = {
   effectiveSpeed: 30,
   movementRemaining: 30,
   extraAttacksRemaining: 1,
-  fighterLevel: 5
+  fighterLevel: classLevel(5)
 } as const
 
 export const SAMPLE_TRACE: ReadonlyArray<TraceStep> = replayTrace(MACHINE_INPUT, TRACE_EVENTS)

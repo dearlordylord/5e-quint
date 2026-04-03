@@ -32,6 +32,7 @@ import type {
   CreatureId
 } from "#/battle-machine-types.ts"
 import { ADR_ACTIVE_TURN, BP_ACTIVE_TURN, freshCaster, freshCreature } from "#/battle-machine-types.ts"
+import { armorClass } from "#/types.ts"
 
 type Args = { context: BattleContext; event: BattleEvent }
 
@@ -140,8 +141,8 @@ export function battleResolveHitReaction({ context: c, event: e }: Args): Partia
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
   const retroAtk = Match.value(e.decision).pipe(
-    byTag("RShield", () => ({ ...atk, targetAc: atk.targetAc + 5 })),
-    byTag("RParry", (d) => ({ ...atk, targetAc: atk.targetAc + d.bonus })),
+    byTag("RShield", () => ({ ...atk, targetAc: armorClass(atk.targetAc + 5) })),
+    byTag("RParry", (d) => ({ ...atk, targetAc: armorClass(atk.targetAc + d.bonus) })),
     byTag("RCuttingWords", (d) => ({ ...atk, attackRoll: atk.attackRoll - d.reduction })),
     byTag("RPass", () => atk),
     Match.exhaustive

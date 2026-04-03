@@ -17,7 +17,8 @@ import {
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { BarbarianClassState, DndContext } from "#/machine-types.ts"
-import { hp } from "#/types.ts"
+import type { ClassLevel } from "#/types.ts"
+import { hp, resourceCount } from "#/types.ts"
 
 function b(c: DndContext) {
   return c.classStates.barbarian!
@@ -39,7 +40,7 @@ function toRageState(c: DndContext): RageState {
 function fromRageState(rs: RageState): Partial<BarbarianClassState> {
   return {
     raging: rs.raging,
-    rageCharges: rs.rageCharges,
+    rageCharges: resourceCount(rs.rageCharges),
     rageTurnsRemaining: rs.rageTurnsRemaining,
     attackedOrForcedSaveThisTurn: rs.attackedOrForcedSaveThisTurn,
     rageExtendedWithBA: rs.rageExtendedWithBA
@@ -92,7 +93,7 @@ export function restoreIntimidatingPresenceUpdate(c: DndContext): Partial<DndCon
   if (!r) return {}
   return updateClass(c, "barbarian", {
     intimidatingPresenceUsed: r.intimidatingPresenceUsed,
-    rageCharges: r.rageCharges
+    rageCharges: resourceCount(r.rageCharges)
   })
 }
 
@@ -132,7 +133,7 @@ export function barbarianShortRestUpdate(c: DndContext): Partial<DndContext> {
   const bs = c.classStates.barbarian
   if (!bs || bs.level === 0) return {}
   return updateClass(c, "barbarian", {
-    rageCharges: Math.min(bs.rageCharges + 1, bs.rageMaxCharges),
+    rageCharges: resourceCount(Math.min(bs.rageCharges + 1, bs.rageMaxCharges)),
     relentlessRageTimesUsed: 0
   })
 }
@@ -151,8 +152,8 @@ export function barbarianLongRestUpdate(c: DndContext): Partial<DndContext> {
   })
 }
 
-export function initialBarbarianState(barbarianLevel: number): BarbarianClassState {
-  const maxCharges = rageMaxCharges(barbarianLevel)
+export function initialBarbarianState(barbarianLevel: ClassLevel): BarbarianClassState {
+  const maxCharges = resourceCount(rageMaxCharges(barbarianLevel))
   return {
     level: barbarianLevel,
     raging: false,

@@ -1,20 +1,20 @@
 import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts"
 import { pactSlotCount, pactSlotLevel } from "#/features/class-warlock.ts"
 import { effectiveMaxHp } from "#/machine-helpers.ts"
-import type { CasterType, SpellSlots } from "#/types.ts"
-import { EMPTY_SLOTS, SPELL_SLOT_LEVELS } from "#/types.ts"
+import type { CasterType, DifficultyClass, SpellSlotLevel, SpellSlots } from "#/types.ts"
+import { difficultyClass, EMPTY_SLOTS, SPELL_SLOT_LEVELS } from "#/types.ts"
 
 const HALVE_DIVISOR = 2
 const CONCENTRATION_DC_MIN = 10
 const THIRD_CASTER_DIVISOR = 3
 
 /** Concentration save DC. Matches Quint pConcentrationDC. */
-export function concentrationDC(damageTaken: number): number {
-  return Math.max(CONCENTRATION_DC_MIN, Math.floor(damageTaken / HALVE_DIVISOR))
+export function concentrationDC(damageTaken: number): DifficultyClass {
+  return difficultyClass(Math.max(CONCENTRATION_DC_MIN, Math.floor(damageTaken / HALVE_DIVISOR)))
 }
 
 /** Expend a spell slot at the given level (1-9). Returns new slotsCurrent. */
-export function expendSlot(slotsCurrent: SpellSlots, level: number): SpellSlots {
+export function expendSlot(slotsCurrent: SpellSlots, level: SpellSlotLevel): SpellSlots {
   const idx = level - 1
   if (idx < 0 || idx >= slotsCurrent.length || slotsCurrent[idx] <= 0) return slotsCurrent
   return slotsCurrent.map((v, i) => (i === idx ? v - 1 : v))

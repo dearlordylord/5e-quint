@@ -20,7 +20,7 @@
  */
 
 import { singleClassHitDice } from "#/features/class-tables.ts"
-import { d20Roll, healAmount } from "#/types.ts"
+import { classLevel, d20Roll, healAmount } from "#/types.ts"
 
 import type { ActualPlayStep, EncounterDef } from "./actual-play-types.ts"
 import { damage, defaultState, endTurn, replayActualPlayTrace, startTurn } from "./actual-play-types.ts"
@@ -51,7 +51,7 @@ const ENCOUNTER: EncounterDef = {
     effectiveSpeed: 30,
     movementRemaining: 30,
     extraAttacksRemaining: 1,
-    fighterLevel: 5
+    fighterLevel: classLevel(5)
   }
 }
 

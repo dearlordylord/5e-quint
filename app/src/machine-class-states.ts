@@ -1,24 +1,25 @@
 import type { MetamagicOption } from "#/features/class-sorcerer.ts"
+import type { ClassLevel, ResourceCount } from "#/types.ts"
 
 // --- Per-class state interfaces ---
 
 export interface FighterClassState {
-  readonly level: number
-  readonly secondWindCharges: number
-  readonly secondWindMax: number
-  readonly actionSurgeCharges: number
-  readonly actionSurgeMax: number
+  readonly level: ClassLevel
+  readonly secondWindCharges: ResourceCount
+  readonly secondWindMax: ResourceCount
+  readonly actionSurgeCharges: ResourceCount
+  readonly actionSurgeMax: ResourceCount
   readonly actionSurgeUsedThisTurn: boolean
-  readonly indomitableCharges: number
-  readonly indomitableMax: number
+  readonly indomitableCharges: ResourceCount
+  readonly indomitableMax: ResourceCount
   readonly heroicInspiration: boolean
 }
 
 export interface BarbarianClassState {
-  readonly level: number
+  readonly level: ClassLevel
   readonly raging: boolean
-  readonly rageCharges: number
-  readonly rageMaxCharges: number
+  readonly rageCharges: ResourceCount
+  readonly rageMaxCharges: ResourceCount
   readonly rageTurnsRemaining: number
   readonly attackedOrForcedSaveThisTurn: boolean
   readonly rageExtendedWithBA: boolean
@@ -30,83 +31,83 @@ export interface BarbarianClassState {
 }
 
 export interface MonkClassState {
-  readonly level: number
-  readonly focusPoints: number
-  readonly focusMax: number
+  readonly level: ClassLevel
+  readonly focusPoints: ResourceCount
+  readonly focusMax: ResourceCount
   readonly uncannyMetabolismUsed: boolean
   readonly stunningStrikeUsedThisTurn: boolean
-  readonly wholenessCharges: number
-  readonly wholenessMax: number
+  readonly wholenessCharges: ResourceCount
+  readonly wholenessMax: ResourceCount
 }
 
 export interface PaladinClassState {
-  readonly level: number
-  readonly layOnHandsPool: number
-  readonly layOnHandsMax: number
-  readonly paladinChannelDivinityCharges: number
-  readonly paladinChannelDivinityMax: number
+  readonly level: ClassLevel
+  readonly layOnHandsPool: ResourceCount
+  readonly layOnHandsMax: ResourceCount
+  readonly paladinChannelDivinityCharges: ResourceCount
+  readonly paladinChannelDivinityMax: ResourceCount
   readonly smiteFreeUsed: boolean
 }
 
 export interface RogueClassState {
-  readonly level: number
+  readonly level: ClassLevel
   readonly sneakAttackUsedThisTurn: boolean
   readonly steadyAimUsedThisTurn: boolean
   readonly cunningStrikeUsesThisTurn: number
 }
 
 export interface ClericClassState {
-  readonly level: number
-  readonly clericChannelDivinityCharges: number
-  readonly clericChannelDivinityMax: number
+  readonly level: ClassLevel
+  readonly clericChannelDivinityCharges: ResourceCount
+  readonly clericChannelDivinityMax: ResourceCount
 }
 
 export interface DruidClassState {
-  readonly level: number
-  readonly wildShapeCharges: number
-  readonly wildShapeMax: number
+  readonly level: ClassLevel
+  readonly wildShapeCharges: ResourceCount
+  readonly wildShapeMax: ResourceCount
   readonly inWildShape: boolean
   readonly wildResurgenceSlotUsedThisLR: boolean
 }
 
 export interface SorcererClassState {
-  readonly level: number
-  readonly sorceryPoints: number
-  readonly sorceryPointsMax: number
+  readonly level: ClassLevel
+  readonly sorceryPoints: ResourceCount
+  readonly sorceryPointsMax: ResourceCount
   readonly sorcerousRestorationUsed: boolean
   readonly innateSorceryActive: boolean
-  readonly innateSorceryCharges: number
+  readonly innateSorceryCharges: ResourceCount
   readonly innateSorceryTurnsRemaining: number
   readonly metamagicUsedThisCast: ReadonlySet<MetamagicOption>
   readonly apotheosisUsedThisTurn: boolean
 }
 
 export interface WarlockClassState {
-  readonly level: number
+  readonly level: ClassLevel
   readonly mysticArcanumUsed: ReadonlySet<number>
   readonly magicalCunningUsed: boolean
   readonly eldritchSmiteUsedThisTurn: boolean
 }
 
 export interface WizardClassState {
-  readonly level: number
+  readonly level: ClassLevel
   readonly arcaneRecoveryUsed: boolean
   readonly overchannelUsesThisLR: number
 }
 
 export interface RangerClassState {
-  readonly level: number
-  readonly huntersMarkFreeUses: number
-  readonly tirelessCharges: number
-  readonly tirelessMax: number
-  readonly naturesVeilCharges: number
-  readonly naturesVeilMax: number
+  readonly level: ClassLevel
+  readonly huntersMarkFreeUses: ResourceCount
+  readonly tirelessCharges: ResourceCount
+  readonly tirelessMax: ResourceCount
+  readonly naturesVeilCharges: ResourceCount
+  readonly naturesVeilMax: ResourceCount
 }
 
 export interface BardClassState {
-  readonly level: number
-  readonly bardicInspirationCharges: number
-  readonly bardicInspirationMax: number
+  readonly level: ClassLevel
+  readonly bardicInspirationCharges: ResourceCount
+  readonly bardicInspirationMax: ResourceCount
 }
 
 export interface ClassStateMap {

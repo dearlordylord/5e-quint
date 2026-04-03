@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { FocusPoolState } from "#/features/class-monk.ts"
+import { abilityModifier } from "#/types.ts"
 import {
   canFlurryOfBlows,
   canPatientDefenseFocus,
@@ -274,9 +275,9 @@ describe("Focus Pool", () => {
 
   describe("pFocusSaveDC", () => {
     it("computes 8 + WIS mod + proficiency bonus", () => {
-      expect(pFocusSaveDC(3, 2)).toBe(13)
-      expect(pFocusSaveDC(5, 4)).toBe(17)
-      expect(pFocusSaveDC(0, 2)).toBe(10)
+      expect(pFocusSaveDC(abilityModifier(3), 2)).toBe(13)
+      expect(pFocusSaveDC(abilityModifier(5), 4)).toBe(17)
+      expect(pFocusSaveDC(abilityModifier(0), 2)).toBe(10)
     })
   })
 })

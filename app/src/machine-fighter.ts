@@ -17,7 +17,8 @@ import {
 import { effectiveMaxHp, updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, FighterClassState } from "#/machine-types.ts"
-import { hp } from "#/types.ts"
+import type { ClassLevel } from "#/types.ts"
+import { hp, resourceCount } from "#/types.ts"
 
 // -- Convenience accessor --
 
@@ -40,7 +41,7 @@ export function secondWindUpdate(c: DndContext, d10Roll: number): Partial<DndCon
   const bonusMove = fs.level >= 5 ? { bonusMovementRemaining: r.tacticalShiftDistance, bonusMovementOAFree: true } : {}
   return {
     hp: hp(r.hp),
-    ...updateClass(c, "fighter", { secondWindCharges: r.secondWindCharges }),
+    ...updateClass(c, "fighter", { secondWindCharges: resourceCount(r.secondWindCharges) }),
     bonusActionUsed: r.bonusActionUsed,
     ...bonusMove
   }
@@ -59,7 +60,7 @@ export function actionSurgeUpdate(c: DndContext): Partial<DndContext> {
     actionsRemaining: r.actionsRemaining,
     actionSurgeActionPending: true,
     ...updateClass(c, "fighter", {
-      actionSurgeCharges: r.actionSurgeCharges,
+      actionSurgeCharges: resourceCount(r.actionSurgeCharges),
       actionSurgeUsedThisTurn: r.actionSurgeUsedThisTurn
     })
   }
@@ -69,7 +70,7 @@ export function indomitableUpdate(c: DndContext): Partial<DndContext> {
   const fs = f(c)
   if (!canUseIndomitable(fs.level, fs.indomitableCharges)) return {}
   return updateClass(c, "fighter", {
-    indomitableCharges: tsUseIndomitable(fs.indomitableCharges, 0).indomitableCharges
+    indomitableCharges: resourceCount(tsUseIndomitable(fs.indomitableCharges, 0).indomitableCharges)
   })
 }
 
@@ -78,12 +79,12 @@ export function tacticalMindUpdate(c: DndContext, boostedCheckSucceeds: boolean)
   if (!canUseTacticalMind(fs.secondWindCharges, fs.level, true) || isIncapacitated(c)) return {}
   if (!boostedCheckSucceeds) return {}
   return updateClass(c, "fighter", {
-    secondWindCharges: tsUseTacticalMind({
+    secondWindCharges: resourceCount(tsUseTacticalMind({
       secondWindCharges: fs.secondWindCharges,
       originalCheckTotal: 0,
       dc: 0,
       d10Roll: 0
-    }).secondWindCharges
+    }).secondWindCharges)
   })
 }
 
@@ -107,7 +108,10 @@ export function fighterShortRestUpdate(c: DndContext): Partial<DndContext> {
     actionSurgeCharges: fs.actionSurgeCharges,
     actionSurgeMax: fs.actionSurgeMax
   })
-  return updateClass(c, "fighter", r)
+  return updateClass(c, "fighter", {
+    secondWindCharges: resourceCount(r.secondWindCharges),
+    actionSurgeCharges: resourceCount(r.actionSurgeCharges)
+  })
 }
 
 export function fighterLongRestUpdate(c: DndContext): Partial<DndContext> {
@@ -120,15 +124,19 @@ export function fighterLongRestUpdate(c: DndContext): Partial<DndContext> {
     actionSurgeMax: fs.actionSurgeMax,
     indomitableMax: fs.indomitableMax
   })
-  return updateClass(c, "fighter", r)
+  return updateClass(c, "fighter", {
+    secondWindCharges: resourceCount(r.secondWindCharges),
+    actionSurgeCharges: resourceCount(r.actionSurgeCharges),
+    indomitableCharges: resourceCount(r.indomitableCharges)
+  })
 }
 
 // -- Init --
 
-export function initialFighterState(fighterLevel: number): FighterClassState {
-  const swMax = secondWindMaxCharges(fighterLevel)
-  const asMax = actionSurgeMaxCharges(fighterLevel)
-  const indMax = indomitableMaxCharges(fighterLevel)
+export function initialFighterState(fighterLevel: ClassLevel): FighterClassState {
+  const swMax = resourceCount(secondWindMaxCharges(fighterLevel))
+  const asMax = resourceCount(actionSurgeMaxCharges(fighterLevel))
+  const indMax = resourceCount(indomitableMaxCharges(fighterLevel))
   return {
     level: fighterLevel,
     secondWindCharges: swMax,

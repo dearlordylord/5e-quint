@@ -146,7 +146,7 @@ export function battleResolveCounterspell({ context: c, event: e }: Args): Parti
     caster: e.reactorId,
     spellName: "counterspell",
     postCast: { tag: "PCECounterspell", cs: { targetCasterId: spell.caster, conSaveSucceeded } },
-    slotLvl: 0,
+    slotLvl: e.csSlotLvl,
     ritual: false
   }
   const csElig = eligibleForCounterspell(cs, e.reactorId)

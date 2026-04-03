@@ -2,6 +2,7 @@
 // Pure functions for SRD 5.2.1 Monk class features.
 
 import { featureSaveDC } from "#/srd-constants.ts"
+import type { AbilityModifier, DifficultyClass } from "#/types.ts"
 
 // --- Types ---
 
@@ -203,7 +204,7 @@ export function pBonusUnarmedStrikeEligible(
 }
 
 /** SRD: DC = 8 + Wisdom modifier + Proficiency Bonus. */
-export const pFocusSaveDC: (wisMod: number, profBonus: number) => number = featureSaveDC
+export const pFocusSaveDC: (wisMod: AbilityModifier, profBonus: number) => DifficultyClass = featureSaveDC
 
 // --- Focus Actions (T42) ---
 

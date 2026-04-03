@@ -10,7 +10,8 @@ import { wholenessOfBodyMaxCharges } from "#/features/class-monk-features.ts"
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, MonkClassState } from "#/machine-types.ts"
-import { hp, movementFeet } from "#/types.ts"
+import type { ClassLevel, ResourceCount } from "#/types.ts"
+import { hp, movementFeet, resourceCount } from "#/types.ts"
 
 function m(c: DndContext) {
   return c.classStates.monk!
@@ -32,7 +33,7 @@ export function flurryOfBlowsUpdate(c: DndContext): Partial<DndContext> {
   if (c.bonusActionUsed || isIncapacitated(c) || ms.level < 2) return {}
   const r = tsExpendFocus(toFocusPool(c), 1)
   if (!r.success) return {}
-  return { bonusActionUsed: true, ...updateClass(c, "monk", { focusPoints: r.focusPoints }) }
+  return { bonusActionUsed: true, ...updateClass(c, "monk", { focusPoints: resourceCount(r.focusPoints) }) }
 }
 
 export function patientDefenseFreeUpdate(c: DndContext): Partial<DndContext> {
@@ -48,7 +49,7 @@ export function patientDefenseFocusUpdate(c: DndContext): Partial<DndContext> {
     bonusActionUsed: true,
     dodging: true,
     disengaged: true,
-    ...updateClass(c, "monk", { focusPoints: r.focusPoints })
+    ...updateClass(c, "monk", { focusPoints: resourceCount(r.focusPoints) })
   }
 }
 
@@ -65,14 +66,14 @@ export function stepOfTheWindFocusUpdate(c: DndContext): Partial<DndContext> {
     bonusActionUsed: true,
     disengaged: true,
     movementRemaining: movementFeet(c.movementRemaining + c.effectiveSpeed),
-    ...updateClass(c, "monk", { focusPoints: r.focusPoints })
+    ...updateClass(c, "monk", { focusPoints: resourceCount(r.focusPoints) })
   }
 }
 
 export function stunningStrikeUpdate(c: DndContext): Partial<DndContext> {
   const ms = m(c)
   if (isIncapacitated(c) || ms.level < 5 || ms.stunningStrikeUsedThisTurn || ms.focusPoints < 1) return {}
-  return updateClass(c, "monk", { focusPoints: ms.focusPoints - 1, stunningStrikeUsedThisTurn: true })
+  return updateClass(c, "monk", { focusPoints: resourceCount(ms.focusPoints - 1), stunningStrikeUsedThisTurn: true })
 }
 
 export function wholenessOfBodyUpdate(c: DndContext, healRoll: number): Partial<DndContext> {
@@ -82,7 +83,7 @@ export function wholenessOfBodyUpdate(c: DndContext, healRoll: number): Partial<
   return {
     bonusActionUsed: true,
     hp: hp(Math.min(c.hp + healAmount, c.maxHp)),
-    ...updateClass(c, "monk", { wholenessCharges: ms.wholenessCharges - 1 })
+    ...updateClass(c, "monk", { wholenessCharges: resourceCount(ms.wholenessCharges - 1) })
   }
 }
 
@@ -93,7 +94,7 @@ export function uncannyMetabolismUpdate(c: DndContext, healRoll: number): Partia
   if (!r.triggered) return {}
   return {
     hp: hp(Math.min(c.hp + r.hpHealed, c.maxHp)),
-    ...updateClass(c, "monk", { focusPoints: r.focusPoints, uncannyMetabolismUsed: true })
+    ...updateClass(c, "monk", { focusPoints: resourceCount(r.focusPoints), uncannyMetabolismUsed: true })
   }
 }
 
@@ -109,7 +110,7 @@ export function monkShortRestUpdate(c: DndContext): Partial<DndContext> {
   const ms = c.classStates.monk
   if (!ms || ms.level === 0) return {}
   const pool = pRestoreFocus(toFocusPool(c))
-  return updateClass(c, "monk", { focusPoints: pool.focusPoints })
+  return updateClass(c, "monk", { focusPoints: resourceCount(pool.focusPoints) })
 }
 
 export function monkLongRestUpdate(c: DndContext): Partial<DndContext> {
@@ -117,7 +118,7 @@ export function monkLongRestUpdate(c: DndContext): Partial<DndContext> {
   if (!ms || ms.level === 0) return {}
   const pool = pRestoreFocusLongRest(toFocusPool(c))
   return updateClass(c, "monk", {
-    focusPoints: pool.focusPoints,
+    focusPoints: resourceCount(pool.focusPoints),
     uncannyMetabolismUsed: false,
     wholenessCharges: ms.wholenessMax
   })
@@ -125,9 +126,9 @@ export function monkLongRestUpdate(c: DndContext): Partial<DndContext> {
 
 // -- Init --
 
-export function initialMonkState(monkLevel: number, wholenessMax?: number): MonkClassState {
-  const fm = pFocusMax(monkLevel)
-  const wMax = monkLevel >= 6 ? wholenessOfBodyMaxCharges(wholenessMax ?? 0) : 0
+export function initialMonkState(monkLevel: ClassLevel, wholenessMax?: ResourceCount): MonkClassState {
+  const fm = resourceCount(pFocusMax(monkLevel))
+  const wMax = resourceCount(monkLevel >= 6 ? wholenessOfBodyMaxCharges(wholenessMax ?? 0) : 0)
   return {
     level: monkLevel,
     focusPoints: fm,

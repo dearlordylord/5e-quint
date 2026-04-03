@@ -14,7 +14,7 @@
 import type { BattleEvent, InitCreatureConfig } from "#/battle-machine-types.ts"
 import type { ScenarioMeta } from "#/battle-scene/scene-snapshot.ts"
 import type { DamageType } from "#/types.ts"
-import { CreatureId as cid } from "#/types.ts"
+import { CreatureId as cid, difficultyClass, spellSlotLevel } from "#/types.ts"
 
 const WIZARD_HP = 50
 const FIREBALL_DMG = 28
@@ -40,7 +40,7 @@ const CREATURES: ReadonlyArray<InitCreatureConfig> = [
   { id: cid("F"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS }
 ]
 
-const cs = (reactorId: string | null, saveSucceeded: boolean, slotLvl = 3): BattleEvent => ({
+const cs = (reactorId: string | null, saveSucceeded: boolean, slotLvl = spellSlotLevel(3)): BattleEvent => ({
   type: "BATTLE_RESOLVE_COUNTERSPELL",
   reactorId: reactorId != null ? cid(reactorId) : null,
   decision: reactorId != null ? { tag: "RCounterspell" as const, saveSucceeded } : null,
@@ -76,26 +76,26 @@ const SHATTER_DC = 15
 
 const castShatter: BattleEvent = {
   type: "BATTLE_CAST_AOE",
-  saveDC: SHATTER_DC,
+  saveDC: difficultyClass(SHATTER_DC),
   dmgOnFail: SHATTER_DMG,
   halfOnSave: true,
   dt: "thunder" as DamageType,
   cond: "deafened",
   applyCond: false,
-  slotLvl: 2,
+  slotLvl: spellSlotLevel(2),
   spellName: "shatter",
   ritual: false
 }
 
 const castFireball: BattleEvent = {
   type: "BATTLE_CAST_AOE",
-  saveDC: FIREBALL_DC,
+  saveDC: difficultyClass(FIREBALL_DC),
   dmgOnFail: FIREBALL_DMG,
   halfOnSave: true,
   dt: "fire" as DamageType,
   cond: "blinded",
   applyCond: false,
-  slotLvl: 3,
+  slotLvl: spellSlotLevel(3),
   spellName: "fireball",
   ritual: false
 }

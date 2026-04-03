@@ -136,7 +136,6 @@ const ENCOUNTER: EncounterDef = {
     effectiveSpeed: 30,
     movementRemaining: 30,
     extraAttacksRemaining: 0,
-    fighterLevel: 0,
     creatureKind: "Monster"
   }
 }

@@ -19,7 +19,7 @@ import {
 } from "#/features/feature-bridge.ts"
 import type { BarbarianFeatureState, FeatureState } from "#/features/feature-store.ts"
 import type { DndContext } from "#/machine-types.ts"
-import { DEATH_SAVES_RESET, EMPTY_SLOTS, exhaustionLevel, hp, movementFeet, tempHp } from "#/types.ts"
+import { DEATH_SAVES_RESET, EMPTY_SLOTS, exhaustionLevel, hp, movementFeet, resourceCount, tempHp } from "#/types.ts"
 
 function makeFighterState(charges: number, max: number = 3): FeatureState {
   return {
@@ -120,10 +120,10 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     hitDiceRemaining: singleClassHitDice("fighter", 5),
     activeEffects: [],
     creatureKind: "PC",
-    legendaryActionsMax: 0,
-    legendaryResistancesMax: 0,
-    legendaryActionsRemaining: 0,
-    legendaryResistancesRemaining: 0,
+    legendaryActionsMax: resourceCount(0),
+    legendaryResistancesMax: resourceCount(0),
+    legendaryActionsRemaining: resourceCount(0),
+    legendaryResistancesRemaining: resourceCount(0),
     rechargeAvailable: {},
     dailyUsesRemaining: {},
     dailyUsesMax: {},

@@ -9,7 +9,8 @@ import {
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, RangerClassState } from "#/machine-types.ts"
-import { tempHp } from "#/types.ts"
+import type { AbilityModifier, ClassLevel } from "#/types.ts"
+import { resourceCount, tempHp } from "#/types.ts"
 
 export { standardExtraAttacks as rangerExtraAttacks } from "#/machine-helpers.ts"
 
@@ -22,7 +23,7 @@ function r(c: DndContext) {
 export function useFreeHuntersMarkUpdate(c: DndContext): Partial<DndContext> {
   const rs = r(c)
   if (isIncapacitated(c) || rs.level < 1 || rs.huntersMarkFreeUses <= 0) return {}
-  return updateClass(c, "ranger", { huntersMarkFreeUses: rs.huntersMarkFreeUses - 1 })
+  return updateClass(c, "ranger", { huntersMarkFreeUses: resourceCount(rs.huntersMarkFreeUses - 1) })
 }
 
 export function useTirelessUpdate(c: DndContext, d8Roll: number): Partial<DndContext> {
@@ -33,7 +34,7 @@ export function useTirelessUpdate(c: DndContext, d8Roll: number): Partial<DndCon
   return {
     actionsRemaining: c.actionsRemaining - 1,
     tempHp: tempHp(thp),
-    ...updateClass(c, "ranger", { tirelessCharges: rs.tirelessCharges - 1 })
+    ...updateClass(c, "ranger", { tirelessCharges: resourceCount(rs.tirelessCharges - 1) })
   }
 }
 
@@ -43,7 +44,7 @@ export function useNaturesVeilUpdate(c: DndContext): Partial<DndContext> {
   return {
     bonusActionUsed: true,
     invisible: true,
-    ...updateClass(c, "ranger", { naturesVeilCharges: rs.naturesVeilCharges - 1 })
+    ...updateClass(c, "ranger", { naturesVeilCharges: resourceCount(rs.naturesVeilCharges - 1) })
   }
 }
 
@@ -65,7 +66,7 @@ export function rangerLongRestUpdate(c: DndContext): Partial<DndContext> {
   const rs = c.classStates.ranger
   if (!rs || rs.level === 0) return {}
   return updateClass(c, "ranger", {
-    huntersMarkFreeUses: favoredEnemyFreeUses(rs.level),
+    huntersMarkFreeUses: resourceCount(favoredEnemyFreeUses(rs.level)),
     tirelessCharges: rs.tirelessMax,
     naturesVeilCharges: rs.naturesVeilMax
   })
@@ -73,13 +74,13 @@ export function rangerLongRestUpdate(c: DndContext): Partial<DndContext> {
 
 // -- Init --
 
-export function initialRangerState(rangerLevel: number, wisMod?: number): RangerClassState {
+export function initialRangerState(rangerLevel: ClassLevel, wisMod?: AbilityModifier): RangerClassState {
   const wm = wisMod ?? 0
-  const tMax = rangerLevel >= 10 ? tirelessMaxCharges(wm) : 0
-  const nvMax = rangerLevel >= 14 ? naturesVeilMaxCharges(wm) : 0
+  const tMax = resourceCount(rangerLevel >= 10 ? tirelessMaxCharges(wm) : 0)
+  const nvMax = resourceCount(rangerLevel >= 14 ? naturesVeilMaxCharges(wm) : 0)
   return {
     level: rangerLevel,
-    huntersMarkFreeUses: favoredEnemyFreeUses(rangerLevel),
+    huntersMarkFreeUses: resourceCount(favoredEnemyFreeUses(rangerLevel)),
     tirelessCharges: tMax,
     tirelessMax: tMax,
     naturesVeilCharges: nvMax,

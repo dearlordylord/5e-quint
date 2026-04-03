@@ -2,7 +2,8 @@ import { wildShapeMaxCharges } from "#/features/class-druid.ts"
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, DruidClassState } from "#/machine-types.ts"
-import { tempHp } from "#/types.ts"
+import type { ClassLevel, SpellSlotLevel } from "#/types.ts"
+import { resourceCount, tempHp } from "#/types.ts"
 
 function d(c: DndContext) {
   return c.classStates.druid!
@@ -18,7 +19,7 @@ export function enterWildShapeUpdate(c: DndContext): Partial<DndContext> {
   return {
     bonusActionUsed: true,
     tempHp: tempHp(ds.level),
-    ...updateClass(c, "druid", { wildShapeCharges: ds.wildShapeCharges - 1, inWildShape: true })
+    ...updateClass(c, "druid", { wildShapeCharges: resourceCount(ds.wildShapeCharges - 1), inWildShape: true })
   }
 }
 
@@ -31,14 +32,14 @@ export function exitWildShapeUpdate(c: DndContext): Partial<DndContext> {
 /** Wild Resurgence part 1: expend spell slot → regain WS charge.
  * SRD L5: "if you have no uses of Wild Shape left, you can give yourself
  * one use by expending a spell slot (no action required)." */
-export function wildResurgenceChargeUpdate(c: DndContext, slotLevel: number): Partial<DndContext> {
+export function wildResurgenceChargeUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ds = d(c)
   if (isIncapacitated(c) || ds.level < 5 || ds.wildShapeCharges !== 0) return {}
   const idx = slotLevel - 1
   if (idx < 0 || idx >= c.slotsCurrent.length || c.slotsCurrent[idx] <= 0) return {}
   const newSlots = [...c.slotsCurrent]
   newSlots[idx] = newSlots[idx] - 1
-  return { slotsCurrent: newSlots, ...updateClass(c, "druid", { wildShapeCharges: ds.wildShapeCharges + 1 }) }
+  return { slotsCurrent: newSlots, ...updateClass(c, "druid", { wildShapeCharges: resourceCount(ds.wildShapeCharges + 1) }) }
 }
 
 /** Wild Resurgence part 2: expend WS charge → regain L1 spell slot.
@@ -51,7 +52,7 @@ export function wildResurgenceSlotUpdate(c: DndContext): Partial<DndContext> {
   newSlots[0] = newSlots[0] + 1
   return {
     slotsCurrent: newSlots,
-    ...updateClass(c, "druid", { wildShapeCharges: ds.wildShapeCharges - 1, wildResurgenceSlotUsedThisLR: true })
+    ...updateClass(c, "druid", { wildShapeCharges: resourceCount(ds.wildShapeCharges - 1), wildResurgenceSlotUsedThisLR: true })
   }
 }
 
@@ -67,7 +68,7 @@ export function druidStartTurnUpdate(c: DndContext): Partial<DndContext> {
 export function druidShortRestUpdate(c: DndContext): Partial<DndContext> {
   const ds = c.classStates.druid
   if (!ds || ds.level === 0) return {}
-  return updateClass(c, "druid", { wildShapeCharges: Math.min(ds.wildShapeCharges + 1, ds.wildShapeMax) })
+  return updateClass(c, "druid", { wildShapeCharges: resourceCount(Math.min(ds.wildShapeCharges + 1, ds.wildShapeMax)) })
 }
 
 /** SRD: "you regain all expended uses when you finish a Long Rest" */
@@ -83,8 +84,8 @@ export function druidLongRestUpdate(c: DndContext): Partial<DndContext> {
 
 // -- Init --
 
-export function initialDruidState(druidLevel: number): DruidClassState {
-  const wsMax = wildShapeMaxCharges(druidLevel)
+export function initialDruidState(druidLevel: ClassLevel): DruidClassState {
+  const wsMax = resourceCount(wildShapeMaxCharges(druidLevel))
   return {
     level: druidLevel,
     wildShapeCharges: wsMax,

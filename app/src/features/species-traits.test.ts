@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { abilityModifier } from "#/types.ts"
 import {
   breathWeaponDice,
   breathWeaponSaveDC,
@@ -48,8 +49,8 @@ describe("Dragonborn Breath Weapon", () => {
     expect(breathWeaponDice(17)).toBe(4)
   })
   it("save DC = 8 + CON + prof", () => {
-    expect(breathWeaponSaveDC(2, 2)).toBe(12)
-    expect(breathWeaponSaveDC(3, 4)).toBe(15)
+    expect(breathWeaponSaveDC(abilityModifier(2), 2)).toBe(12)
+    expect(breathWeaponSaveDC(abilityModifier(3), 4)).toBe(15)
   })
   it("Draconic Flight at L5+", () => {
     expect(hasDraconicFlight(5)).toBe(true)

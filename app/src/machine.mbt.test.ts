@@ -41,7 +41,7 @@ import {
   snapshotToNormalized
 } from "#/mbt-shared.ts"
 import type { ActionType, Condition, CreatureKind, DamageType } from "#/types.ts"
-import { CreatureId, d20Roll, healAmount, spellId, tempHp } from "#/types.ts"
+import { abilityModifier, classLevel, CreatureId, d20Roll, healAmount, resourceCount, spellId, spellSlotLevel, tempHp } from "#/types.ts"
 
 // ============================================================
 // ENFORCEMENT: every DndEvent type must have a driver action
@@ -356,21 +356,21 @@ function createDndDriver() {
               effectiveSpeed: sb.walkSpeed,
               movementRemaining: sb.walkSpeed,
               extraAttacksRemaining: multiattackExtraAttacks(sb.multiattackLength),
-              fighterLevel: 0,
-              barbarianLevel: 0,
-              monkLevel: 0,
-              paladinLevel: 0,
-              rogueLevel: 0,
-              clericLevel: 0,
-              druidLevel: 0,
-              sorcererLevel: 0,
-              warlockLevel: 0,
-              wizardLevel: 0,
-              rangerLevel: 0,
-              bardLevel: 0,
+              fighterLevel: undefined,
+              barbarianLevel: undefined,
+              monkLevel: undefined,
+              paladinLevel: undefined,
+              rogueLevel: undefined,
+              clericLevel: undefined,
+              druidLevel: undefined,
+              sorcererLevel: undefined,
+              warlockLevel: undefined,
+              wizardLevel: undefined,
+              rangerLevel: undefined,
+              bardLevel: undefined,
               creatureKind: "Monster",
-              legendaryActionsRemaining: sb.legendaryActionsRemaining,
-              legendaryResistancesRemaining: sb.legendaryResistancesRemaining,
+              legendaryActionsRemaining: resourceCount(sb.legendaryActionsRemaining),
+              legendaryResistancesRemaining: resourceCount(sb.legendaryResistancesRemaining),
               rechargeAvailable: sb.rechargeAvailable,
               dailyUsesRemaining: sb.dailyUsesRemaining,
               dailyUsesMax: sb.dailyUsesRemaining
@@ -381,18 +381,19 @@ function createDndDriver() {
           const INIT_SPEED = 30
           const level = Number(l)
           const cls = pcClass ?? "Fighter"
-          const fLevel = cls === "Fighter" ? level : 0
-          const bLevel = cls === "Barbarian" ? level : 0
-          const mLevel = cls === "Monk" ? level : 0
-          const wLevel = cls === "Wizard" ? level : 0
-          const rLevel = cls === "Rogue" ? level : 0
-          const cLevel = cls === "Cleric" ? level : 0
-          const pLevel = cls === "Paladin" ? level : 0
-          const wkLevel = cls === "Warlock" ? level : 0
-          const sLevel = cls === "Sorcerer" ? level : 0
-          const dLevel = cls === "Druid" ? level : 0
-          const rnLevel = cls === "Ranger" ? level : 0
-          const bdLevel = cls === "Bard" ? level : 0
+          const cl = (n: number) => (n > 0 ? classLevel(n) : undefined)
+          const fLevel = cls === "Fighter" ? cl(level) : undefined
+          const bLevel = cls === "Barbarian" ? cl(level) : undefined
+          const mLevel = cls === "Monk" ? cl(level) : undefined
+          const wLevel = cls === "Wizard" ? cl(level) : undefined
+          const rLevel = cls === "Rogue" ? cl(level) : undefined
+          const cLevel = cls === "Cleric" ? cl(level) : undefined
+          const pLevel = cls === "Paladin" ? cl(level) : undefined
+          const wkLevel = cls === "Warlock" ? cl(level) : undefined
+          const sLevel = cls === "Sorcerer" ? cl(level) : undefined
+          const dLevel = cls === "Druid" ? cl(level) : undefined
+          const rnLevel = cls === "Ranger" ? cl(level) : undefined
+          const bdLevel = cls === "Bard" ? cl(level) : undefined
           actor = createActor(dndMachine, {
             input: {
               maxHp: Number(mhp),
@@ -403,7 +404,7 @@ function createDndDriver() {
               fighterLevel: fLevel,
               barbarianLevel: bLevel,
               monkLevel: mLevel,
-              wholenessMax: Number(wisMod),
+              wholenessMax: resourceCount(Number(wisMod)),
               paladinLevel: pLevel,
               rogueLevel: rLevel,
               clericLevel: cLevel,
@@ -412,9 +413,9 @@ function createDndDriver() {
               warlockLevel: wkLevel,
               wizardLevel: wLevel,
               rangerLevel: rnLevel,
-              wisMod: Number(wisMod),
+              wisMod: abilityModifier(Number(wisMod)),
               bardLevel: bdLevel,
-              chaMod: Number(chaMod),
+              chaMod: abilityModifier(Number(chaMod)),
               creatureKind: "PC"
             }
           })
@@ -638,7 +639,7 @@ function createDndDriver() {
         send({ type: "MARK_NON_CANTRIP_ACTION_SPELL" })
       },
       doExpendSlot: ({ level }) => {
-        send({ type: "EXPEND_SLOT", level: Number(level) })
+        send({ type: "EXPEND_SLOT", level: spellSlotLevel(Number(level)) })
       },
       doExpendPactSlot: () => {
         send({ type: "EXPEND_PACT_SLOT" })
@@ -809,7 +810,7 @@ function createDndDriver() {
         if (healRoll != null) send({ type: "UNCANNY_METABOLISM", healRoll: Number(healRoll) })
       },
       doUseArcaneRecovery: ({ slotLevel }) => {
-        if (slotLevel != null) send({ type: "USE_ARCANE_RECOVERY", slotLevel: Number(slotLevel) })
+        if (slotLevel != null) send({ type: "USE_ARCANE_RECOVERY", slotLevel: spellSlotLevel(Number(slotLevel)) })
       },
       doOverchannel: () => {
         send({ type: "USE_OVERCHANNEL" })
@@ -845,7 +846,7 @@ function createDndDriver() {
         send({ type: "USE_PALADIN_CHANNEL_DIVINITY" })
       },
       doDivineSmite: ({ slotLevel }) => {
-        if (slotLevel != null) send({ type: "USE_DIVINE_SMITE", slotLevel: Number(slotLevel) })
+        if (slotLevel != null) send({ type: "USE_DIVINE_SMITE", slotLevel: spellSlotLevel(Number(slotLevel)) })
       },
       doDivineSmiteFree: () => {
         send({ type: "USE_DIVINE_SMITE_FREE" })
@@ -854,16 +855,16 @@ function createDndDriver() {
         send({ type: "USE_MAGICAL_CUNNING" })
       },
       doUseMysticArcanum: ({ spellLevel }) => {
-        if (spellLevel != null) send({ type: "USE_MYSTIC_ARCANUM", spellLevel: Number(spellLevel) })
+        if (spellLevel != null) send({ type: "USE_MYSTIC_ARCANUM", spellLevel: spellSlotLevel(Number(spellLevel)) })
       },
       doEldritchSmite: () => {
         send({ type: "USE_ELDRITCH_SMITE" })
       },
       doConvertSlotToPoints: ({ slotLevel }) => {
-        if (slotLevel != null) send({ type: "CONVERT_SLOT_TO_POINTS", slotLevel: Number(slotLevel) })
+        if (slotLevel != null) send({ type: "CONVERT_SLOT_TO_POINTS", slotLevel: spellSlotLevel(Number(slotLevel)) })
       },
       doConvertPointsToSlot: ({ slotLevel }) => {
-        if (slotLevel != null) send({ type: "CONVERT_POINTS_TO_SLOT", slotLevel: Number(slotLevel) })
+        if (slotLevel != null) send({ type: "CONVERT_POINTS_TO_SLOT", slotLevel: spellSlotLevel(Number(slotLevel)) })
       },
       doUseInnateSorcery: () => {
         send({ type: "USE_INNATE_SORCERY" })
@@ -878,7 +879,7 @@ function createDndDriver() {
         send({ type: "EXIT_WILD_SHAPE" })
       },
       doWildResurgenceCharge: ({ slotLevel }) => {
-        if (slotLevel != null) send({ type: "USE_WILD_RESURGENCE_CHARGE", slotLevel: Number(slotLevel) })
+        if (slotLevel != null) send({ type: "USE_WILD_RESURGENCE_CHARGE", slotLevel: spellSlotLevel(Number(slotLevel)) })
       },
       doWildResurgenceSlot: () => {
         send({ type: "USE_WILD_RESURGENCE_SLOT" })
@@ -899,7 +900,7 @@ function createDndDriver() {
         send({ type: "USE_CUTTING_WORDS" })
       },
       doUseFontSlotRestore: ({ slotLevel }) => {
-        if (slotLevel != null) send({ type: "USE_FONT_SLOT_RESTORE", slotLevel: Number(slotLevel) })
+        if (slotLevel != null) send({ type: "USE_FONT_SLOT_RESTORE", slotLevel: spellSlotLevel(Number(slotLevel)) })
       },
       doUsePeerlessSkill: ({ success }) => {
         if (success != null) send({ type: "USE_PEERLESS_SKILL", success })

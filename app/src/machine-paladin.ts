@@ -8,7 +8,8 @@ import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import { expendSlot } from "#/machine-spells.ts"
 import type { DndContext, PaladinClassState } from "#/machine-types.ts"
-import { hp } from "#/types.ts"
+import type { ClassLevel, SpellSlotLevel } from "#/types.ts"
+import { hp, resourceCount } from "#/types.ts"
 
 export { standardExtraAttacks as paladinExtraAttacks } from "#/machine-helpers.ts"
 
@@ -27,7 +28,7 @@ export function layOnHandsUpdate(c: DndContext, amount: number): Partial<DndCont
   return {
     bonusActionUsed: true,
     hp: hp(c.hp + healedAmount),
-    ...updateClass(c, "paladin", { layOnHandsPool: ps.layOnHandsPool - amount })
+    ...updateClass(c, "paladin", { layOnHandsPool: resourceCount(ps.layOnHandsPool - amount) })
   }
 }
 
@@ -36,11 +37,11 @@ export function paladinChannelDivinityUpdate(c: DndContext): Partial<DndContext>
   const ps = p(c)
   if (isIncapacitated(c) || ps.level < 3 || ps.paladinChannelDivinityCharges <= 0) return {}
   return updateClass(c, "paladin", {
-    paladinChannelDivinityCharges: expendChannelDivinity(ps.paladinChannelDivinityCharges)
+    paladinChannelDivinityCharges: resourceCount(expendChannelDivinity(ps.paladinChannelDivinityCharges))
   })
 }
 
-export function divineSmiteUpdate(c: DndContext, slotLevel: number): Partial<DndContext> {
+export function divineSmiteUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ps = p(c)
   if (isIncapacitated(c) || ps.level < 2 || c.bonusActionUsed) return {}
   const newSlots = expendSlot(c.slotsCurrent, slotLevel)
@@ -67,10 +68,10 @@ export function paladinShortRestUpdate(c: DndContext): Partial<DndContext> {
   const ps = c.classStates.paladin
   if (!ps || ps.level === 0) return {}
   return updateClass(c, "paladin", {
-    paladinChannelDivinityCharges: restoreChannelDivinityShort(
+    paladinChannelDivinityCharges: resourceCount(restoreChannelDivinityShort(
       ps.paladinChannelDivinityCharges,
       ps.paladinChannelDivinityMax
-    )
+    ))
   })
 }
 
@@ -87,9 +88,9 @@ export function paladinLongRestUpdate(c: DndContext): Partial<DndContext> {
 
 // -- Init --
 
-export function initialPaladinState(paladinLevel: number): PaladinClassState {
-  const lohMax = layOnHandsPoolMax(paladinLevel)
-  const cdMax = paladinChannelDivinityMax(paladinLevel)
+export function initialPaladinState(paladinLevel: ClassLevel): PaladinClassState {
+  const lohMax = resourceCount(layOnHandsPoolMax(paladinLevel))
+  const cdMax = resourceCount(paladinChannelDivinityMax(paladinLevel))
   return {
     level: paladinLevel,
     layOnHandsPool: lohMax,

@@ -14,7 +14,7 @@ import { z } from "zod"
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleContext, BattleCreatureState, BattleEvent } from "#/battle-machine-types.ts"
 import type { CreatureId } from "#/types.ts"
-import { CreatureId as mkCreatureId, spellId as mkSpellId } from "#/types.ts"
+import { armorClass, CreatureId as mkCreatureId, difficultyClass, spellId as mkSpellId, spellSlotLevel } from "#/types.ts"
 import {
   compareNormalizedStates,
   ITFBigInt,
@@ -416,7 +416,7 @@ function createBattleMachineDriver() {
           dmg: p(picks, "dmg", 5),
           dt: mapDamageType(ps(picks, "dt", "Slashing")),
           crit: pb(picks, "crit", false),
-          tAc: p(picks, "tAc", 15)
+          tAc: armorClass(p(picks, "tAc", 15))
         })
       },
       bResolveHitReaction: (picks: Record<string, unknown>) => {
@@ -471,21 +471,21 @@ function createBattleMachineDriver() {
           retDmg: p(picks, "retDmg", 5),
           retDt: mapDamageType(ps(picks, "retDt", "Slashing")),
           retCrit: pb(picks, "retCrit", false),
-          retTgtAc: p(picks, "retTgtAc", 15)
+          retTgtAc: armorClass(p(picks, "retTgtAc", 15))
         })
       },
       bCastSaveSpell: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_CAST_SAVE_SPELL",
           targetId: pc(picks, "targetId", ""),
-          saveDC: p(picks, "saveDC", 15),
+          saveDC: difficultyClass(p(picks, "saveDC", 15)),
           saveRoll: p(picks, "saveRoll", 10),
           dmgOnFail: p(picks, "dmgOnFail", 10),
           halfOnSave: pb(picks, "halfOnSave", false),
           dt: mapDamageType(ps(picks, "dt", "Fire")),
           cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CBlinded")] ?? "blinded",
           applyCond: pb(picks, "applyCond", false),
-          slotLvl: p(picks, "slotLvl", 1),
+          slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           spellName: ps(picks, "spellName", "guiding_bolt"),
           ritual: pb(picks, "ritual", false)
         })
@@ -503,7 +503,7 @@ function createBattleMachineDriver() {
           type: "BATTLE_RESOLVE_COUNTERSPELL",
           reactorId: pcn(picks, "reactorId"),
           decision,
-          csSlotLvl: p(picks, "csSlotLvl", 3)
+          csSlotLvl: spellSlotLevel(p(picks, "csSlotLvl", 3))
         })
       },
       bResolveSaveFailedReaction: (picks: Record<string, unknown>) => {
@@ -520,7 +520,7 @@ function createBattleMachineDriver() {
         send({
           type: "BATTLE_CAST_CONCENTRATION_SPELL",
           targetId: pc(picks, "targetId", ""),
-          slotLvl: p(picks, "slotLvl", 1),
+          slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           duration: p(picks, "duration", 5),
           spellId: mkSpellId(ps(picks, "spellId", "hold_person")),
           cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CParalyzed")] ?? "paralyzed",
@@ -538,13 +538,13 @@ function createBattleMachineDriver() {
       bCastAoE: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_CAST_AOE",
-          saveDC: p(picks, "saveDC", 15),
+          saveDC: difficultyClass(p(picks, "saveDC", 15)),
           dmgOnFail: p(picks, "dmgOnFail", 10),
           halfOnSave: pb(picks, "halfOnSave", false),
           dt: mapDamageType(ps(picks, "dt", "Fire")),
           cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CBlinded")] ?? "blinded",
           applyCond: pb(picks, "applyCond", false),
-          slotLvl: p(picks, "slotLvl", 1),
+          slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           spellName: ps(picks, "spellName", "fireball"),
           ritual: pb(picks, "ritual", false)
         })
@@ -573,7 +573,7 @@ function createBattleMachineDriver() {
           oaDmg: p(picks, "oaDmg", 5),
           oaDt: mapDamageType(ps(picks, "oaDt", "Slashing")),
           oaCrit: pb(picks, "oaCrit", false),
-          oaTgtAc: p(picks, "oaTgtAc", 15)
+          oaTgtAc: armorClass(p(picks, "oaTgtAc", 15))
         })
       },
       bEndTurn: (picks: Record<string, unknown>) => {
@@ -597,7 +597,7 @@ function createBattleMachineDriver() {
           laDmg: p(picks, "laDmg", 10),
           laDt: mapDamageType(ps(picks, "laDt", "Slashing")),
           laCrit: pb(picks, "laCrit", false),
-          laTgtAc: p(picks, "laTgtAc", 15)
+          laTgtAc: armorClass(p(picks, "laTgtAc", 15))
         })
       },
       bHeal: (picks: Record<string, unknown>) => {
@@ -607,14 +607,14 @@ function createBattleMachineDriver() {
         send({
           type: "BATTLE_CAST_SAVE_SPELL",
           targetId: pc(picks, "targetId", ""),
-          saveDC: p(picks, "saveDC", 15),
+          saveDC: difficultyClass(p(picks, "saveDC", 15)),
           saveRoll: p(picks, "saveRoll", 10),
           dmgOnFail: p(picks, "dmgOnFail", 10),
           halfOnSave: pb(picks, "halfOnSave", false),
           dt: mapDamageType(ps(picks, "dt", "Fire")),
           cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CBlinded")] ?? "blinded",
           applyCond: pb(picks, "applyCond", false),
-          slotLvl: p(picks, "slotLvl", 1),
+          slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           spellName: ps(picks, "spellName", "guiding_bolt"),
           ritual: false,
           bonusAction: true

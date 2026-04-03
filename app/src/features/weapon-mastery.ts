@@ -1,4 +1,5 @@
 import { featureSaveDC } from "#/srd-constants.ts"
+import type { AbilityModifier, DifficultyClass } from "#/types.ts"
 
 // TS-only: mastery effects are caller-side composition on existing Quint primitives
 // (pTakeDamage, pApplyCondition, action economy). Effects like Topple (→ Prone) and
@@ -215,7 +216,7 @@ export function canTopple(
 }
 
 /** Returns the Topple saving throw DC: 8 + ability modifier + proficiency bonus. */
-export const toppleDC: (abilityMod: number, profBonus: number) => number = featureSaveDC
+export const toppleDC: (abilityMod: AbilityModifier, profBonus: number) => DifficultyClass = featureSaveDC
 
 /** Returns the Topple result: target falls Prone on failed save. */
 export function toppleResult(savePassed: boolean): { readonly targetProne: boolean } {

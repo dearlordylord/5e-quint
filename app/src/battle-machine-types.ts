@@ -4,7 +4,18 @@
  */
 import { Option } from "effect"
 
-import type { ActiveEffect, Condition, CreatureId, CreatureKind, DamageType, IncapSource, SpellId } from "#/types.ts"
+import type {
+  ActiveEffect,
+  ArmorClass,
+  Condition,
+  CreatureId,
+  CreatureKind,
+  DamageType,
+  DifficultyClass,
+  IncapSource,
+  SpellId,
+  SpellSlotLevel
+} from "#/types.ts"
 
 export type { CreatureId } from "#/types.ts"
 
@@ -74,7 +85,7 @@ export interface AttackHitCtx {
   readonly attacker: CreatureId
   readonly target: CreatureId
   readonly attackRoll: number
-  readonly targetAc: number
+  readonly targetAc: ArmorClass
   readonly damage: number
   readonly damageType: DamageType
   readonly isCritical: boolean
@@ -108,7 +119,7 @@ export const ADR_ACTIVE_TURN: AfterDamageReturn = { tag: "ADRActiveTurn" }
 export interface SaveSpellCtx {
   readonly caster: CreatureId
   readonly target: CreatureId
-  readonly saveDC: number
+  readonly saveDC: DifficultyClass
   readonly saveRoll: number
   readonly damageOnFail: number
   readonly halfOnSuccess: boolean
@@ -130,7 +141,7 @@ export interface SaveFailedCtx {
 
 export interface AoESpellCtx {
   readonly caster: CreatureId
-  readonly saveDC: number
+  readonly saveDC: DifficultyClass
   readonly damageOnFail: number
   readonly halfOnSuccess: boolean
   readonly damageType: DamageType
@@ -152,7 +163,7 @@ export interface SpellCastCtx {
   readonly caster: CreatureId
   readonly spellName: string
   readonly postCast: PostCastEffect
-  readonly slotLvl: number
+  readonly slotLvl: SpellSlotLevel
   readonly ritual: boolean
 }
 
@@ -172,7 +183,7 @@ export interface SpellStackEntry {
   readonly spellCasterId: CreatureId
   readonly spellPostCast: PostCastEffect
   readonly offered: ReadonlySet<CreatureId>
-  readonly slotLvl: number
+  readonly slotLvl: SpellSlotLevel
   readonly spellName: string
   readonly ritual: boolean
 }
@@ -274,7 +285,7 @@ export type BattleEvent =
       readonly dmg: number
       readonly dt: DamageType
       readonly crit: boolean
-      readonly tAc: number
+      readonly tAc: ArmorClass
     }
   | {
       readonly type: "BATTLE_RESOLVE_HIT_REACTION"
@@ -300,19 +311,19 @@ export type BattleEvent =
       readonly retDmg: number
       readonly retDt: DamageType
       readonly retCrit: boolean
-      readonly retTgtAc: number
+      readonly retTgtAc: ArmorClass
     }
   | {
       readonly type: "BATTLE_CAST_SAVE_SPELL"
       readonly targetId: CreatureId
-      readonly saveDC: number
+      readonly saveDC: DifficultyClass
       readonly saveRoll: number
       readonly dmgOnFail: number
       readonly halfOnSave: boolean
       readonly dt: DamageType
       readonly cond: Condition
       readonly applyCond: boolean
-      readonly slotLvl: number
+      readonly slotLvl: SpellSlotLevel
       readonly spellName: string
       readonly ritual: boolean
       readonly bonusAction?: boolean
@@ -321,7 +332,7 @@ export type BattleEvent =
       readonly type: "BATTLE_RESOLVE_COUNTERSPELL"
       readonly reactorId: CreatureId | null
       readonly decision: CSDecision
-      readonly csSlotLvl: number
+      readonly csSlotLvl: SpellSlotLevel
     }
   | {
       readonly type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION"
@@ -331,7 +342,7 @@ export type BattleEvent =
   | {
       readonly type: "BATTLE_CAST_CONCENTRATION_SPELL"
       readonly targetId: CreatureId
-      readonly slotLvl: number
+      readonly slotLvl: SpellSlotLevel
       readonly duration: number
       readonly spellId: SpellId
       readonly cond: Condition
@@ -341,13 +352,13 @@ export type BattleEvent =
   | { readonly type: "BATTLE_CONCENTRATION_CHECK"; readonly targetId: CreatureId; readonly conSaveSucceeded: boolean }
   | {
       readonly type: "BATTLE_CAST_AOE"
-      readonly saveDC: number
+      readonly saveDC: DifficultyClass
       readonly dmgOnFail: number
       readonly halfOnSave: boolean
       readonly dt: DamageType
       readonly cond: Condition
       readonly applyCond: boolean
-      readonly slotLvl: number
+      readonly slotLvl: SpellSlotLevel
       readonly spellName: string
       readonly ritual: boolean
     }
@@ -361,7 +372,7 @@ export type BattleEvent =
       readonly oaDmg: number
       readonly oaDt: DamageType
       readonly oaCrit: boolean
-      readonly oaTgtAc: number
+      readonly oaTgtAc: ArmorClass
     }
   | {
       readonly type: "BATTLE_END_TURN"
@@ -379,7 +390,7 @@ export type BattleEvent =
       readonly laDmg: number
       readonly laDt: DamageType
       readonly laCrit: boolean
-      readonly laTgtAc: number
+      readonly laTgtAc: ArmorClass
     }
   | { readonly type: "BATTLE_HEAL"; readonly targetId: CreatureId; readonly amount: number }
 
