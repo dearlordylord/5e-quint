@@ -3,6 +3,7 @@ import { createActor } from "xstate"
 
 import { EventPanel } from "#/components/EventPanel.tsx"
 import { FeaturePanel } from "#/components/FeaturePanel.tsx"
+import { PageShell } from "#/components/PageShell.tsx"
 import { StatePanel } from "#/components/StatePanel.tsx"
 import { type LogEntry, stateKey, TransitionLog } from "#/components/TransitionLog.tsx"
 import { CLASS_NAMES, type ClassName, singleClassHitDice } from "#/features/class-tables.ts"
@@ -180,18 +181,14 @@ export function App() {
   return (
     <LocaleContext value={localeValue}>
       <I18nContext value={messages[locale]}>
-        <div className="min-h-screen bg-gray-900 text-gray-100 p-4">
-          <header className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-amber-400">{messages[locale].title}</h1>
-            <LangToggle />
-          </header>
+        <PageShell title={messages[locale].title} actions={<LangToggle />}>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <StatePanel snapshot={snapshot} ctx={ctx} />
             <MemoEventPanel send={send} snapshot={snapshot} rageResistances={features.rageResistances} />
             <FeaturePanel features={features} config={FEATURE_CONFIG} onFeatureAction={onFeatureAction} />
             <TransitionLog log={log} cursor={cursor} onJumpTo={jumpTo} onClear={onClear} />
           </div>
-        </div>
+        </PageShell>
       </I18nContext>
     </LocaleContext>
   )

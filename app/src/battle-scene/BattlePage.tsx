@@ -4,6 +4,7 @@ import { createActor } from "xstate"
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleEvent } from "#/battle-machine-types.ts"
 import { EventLog, type EventLogEntry } from "#/components/EventLog.tsx"
+import { PageShell } from "#/components/PageShell.tsx"
 import { PlaybackControls } from "#/components/PlaybackControls.tsx"
 
 import { BattleField } from "./BattleField.tsx"
@@ -111,23 +112,23 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   )
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center p-8">
-      <h1 className="text-2xl font-bold text-amber-400 mb-4">Battle Visualizer</h1>
+    <PageShell title="Battle Visualizer">
+      <div className="flex flex-col items-center">
+        <PlaybackControls cursor={cursor} total={events.length} onStepTo={stepTo} />
 
-      <PlaybackControls cursor={cursor} total={events.length} onStepTo={stepTo} />
+        <div className="w-full max-w-3xl mt-3 mb-3 px-4 py-2 rounded-xl border border-gray-700 bg-gray-800 text-sm text-gray-200 text-center min-h-[2.5rem] flex items-center justify-center">
+          {snapshot?.activeCreatureId && (
+            <span className="text-amber-400 font-semibold mr-2">
+              {meta.names[snapshot.activeCreatureId] ?? snapshot.activeCreatureId}:
+            </span>
+          )}
+          {narrate(events[cursor], meta)}
+        </div>
 
-      <div className="w-full max-w-3xl mt-3 mb-3 px-4 py-2 rounded-xl border border-gray-700 bg-gray-800 text-sm text-gray-200 text-center min-h-[2.5rem] flex items-center justify-center">
-        {snapshot?.activeCreatureId && (
-          <span className="text-amber-400 font-semibold mr-2">
-            {meta.names[snapshot.activeCreatureId] ?? snapshot.activeCreatureId}:
-          </span>
-        )}
-        {narrate(events[cursor], meta)}
+        {layout && <BattleField layout={layout} />}
+
+        <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
       </div>
-
-      {layout && <BattleField layout={layout} />}
-
-      <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
-    </div>
+    </PageShell>
   )
 }
