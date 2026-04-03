@@ -330,7 +330,7 @@ Moved from PLAN_CLEANUP.md P1. Two fields on TurnState: `bonusMovementRemaining`
 
 ## Resolved: Battle — 5+ deep CS chain unwind bug *(done)*
 
-Exhaustive matching refactor + bug fix complete. All 6 `switch` statements in `battle-machine-*.ts` replaced with `effect/Match` + `Match.exhaustive`. The CS chain bug was fixed: `returnToCSWindow` now recursively unwinds CS entries instead of delegating to `resolveSpellEntry` (which throws on `PCECounterspell`). Convention added to CLAUDE.md. Quint-side fix (`battle.qnt`) still needed separately.
+Exhaustive matching refactor + bug fix complete. All 6 `switch` statements in `battle-machine-*.ts` replaced with `effect/Match` + `Match.exhaustive`. The CS chain bug was fixed in both TS (`returnToCSWindow` recursively unwinds) and Quint (`battle.qnt` inlines one extra unwind level, depth 5 coverage). Convention added to CLAUDE.md.
 
 ## Open: Battle — Surprise (B16)
 
