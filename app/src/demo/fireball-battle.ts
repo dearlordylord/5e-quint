@@ -319,12 +319,16 @@ export const FIREBALL_BATTLE_META = {
     "69": "Shatter",
     "84": "Fireball"
   },
-  sprites: {
-    A: { url: "/sprites/wizards.png", x: 70, y: 180, w: 170, h: 420, imgW: 1408, imgH: 768 },
-    B: { url: "/sprites/wizards.png", x: 720, y: 150, w: 180, h: 450, imgW: 1408, imgH: 768 },
-    C: { url: "/sprites/wizards.png", x: 500, y: 180, w: 190, h: 420, imgW: 1408, imgH: 768 },
-    D: { url: "/sprites/wizards.png", x: 280, y: 160, w: 180, h: 440, imgW: 1408, imgH: 768 },
-    E: { url: "/sprites/wizards.png", x: 940, y: 150, w: 170, h: 450, imgW: 1408, imgH: 768 },
-    F: { url: "/sprites/wizards.png", x: 1150, y: 220, w: 160, h: 380, imgW: 1408, imgH: 768 }
-  }
+  sprites: (() => {
+    const url = "/sprites/wizards.png"
+    const colW = 235
+    const y = 220
+    const h = 280
+    const imgW = 1408
+    const imgH = 768
+    // Wizard order in image: 0=blue-staff, 1=red-torch, 2=green-shield, 3=purple-staff, 4=skull, 5=boy-wand
+    // Assignment: A=0, D=1, C=2, B=3, E=4, F=5
+    const sprite = (col: number) => ({ url, x: col * colW, y, w: colW, h, imgW, imgH })
+    return { A: sprite(0), D: sprite(1), C: sprite(2), B: sprite(3), E: sprite(4), F: sprite(5) }
+  })()
 } satisfies ScenarioMeta
