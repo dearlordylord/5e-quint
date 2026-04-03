@@ -51,18 +51,26 @@ export function CreatureToken(props: CreatureLayout) {
               <circle cx={props.cx} cy={props.cy} r={r} />
             </clipPath>
           </defs>
-          <circle cx={props.cx} cy={props.cy} r={r} fill="#1e293b" />
-          <svg
+          <foreignObject
             x={props.cx - r}
             y={props.cy - r}
             width={r * 2}
             height={r * 2}
-            viewBox={`${props.sprite.sx} ${props.sprite.sy} ${props.sprite.sw} ${props.sprite.sh}`}
             clipPath={`url(#clip-${props.id})`}
-            preserveAspectRatio="xMidYMid slice"
           >
-            <image href={props.sprite.url} x={0} y={0} width={props.sprite.imgW} height={props.sprite.imgH} />
-          </svg>
+            <div
+              style={{
+                width: r * 2,
+                height: r * 2,
+                backgroundImage: `url(${props.sprite.url})`,
+                backgroundPosition: `-${(props.sprite.sx * (r * 2)) / props.sprite.sw}px -${(props.sprite.sy * (r * 2)) / props.sprite.sw}px`,
+                backgroundSize: `${(props.sprite.imgW * (r * 2)) / props.sprite.sw}px auto`,
+                backgroundRepeat: "no-repeat",
+                borderRadius: "50%",
+                overflow: "hidden"
+              }}
+            />
+          </foreignObject>
           <circle cx={props.cx} cy={props.cy} r={r} fill="none" stroke={strokeColor} strokeWidth={strokeWidth} />
         </>
       ) : (
