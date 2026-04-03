@@ -1,19 +1,21 @@
 /**
- * Scripted 6-wizard battle demo: Fireball + Counterspell chain.
+ * Scripted 6-wizard battle demo: two fireballs, one CS chain.
  *
- * Teams: A,B,C (blue) vs D,E,F (red).
- * A and F don't have Counterspell prepared (A is the caster, F didn't prepare it).
- * Sequence:
- *   1. A casts Fireball (AoE, fire, 28 dmg, DEX DC 15, half on save)
- *   2. D counterspells → B counter-CS → E counter-CS → C counter-CS (4 deep)
- *   3. Chain resolves: C beats E, B's CS stands, D's CS countered → Fireball proceeds
- *   4. AoE resolves: B,C,D,E,F all fail saves (28 dmg → unconscious). A untouched.
+ * Teams: A,B,C (blue) vs D,E,F (red). 50 HP each.
+ * A and D: no Counterspell (fireball slingers).
+ * B,C,E,F: have Counterspell.
+ * Initiative: A, D, B, E, C, F (alternating teams).
+ *
+ * Turn A: Fireball at red team. 4-deep CS chain (E→B→F→C), all reactions spent.
+ *   D fails (50→22), E saves (50→36), F fails (50→22).
+ * Turn D: Fireball at blue team. No counterspellers (all spent reactions).
+ *   A saves (50→36), B fails (50→22), C fails (50→22).
  */
 import type { BattleEvent, InitCreatureConfig } from "#/battle-machine-types.ts"
 import type { ScenarioMeta } from "#/battle-scene/scene-snapshot.ts"
 import type { DamageType } from "#/types.ts"
 
-const WIZARD_HP = 25
+const WIZARD_HP = 50
 const FIREBALL_DMG = 28
 const FIREBALL_DC = 15
 
@@ -30,11 +32,11 @@ const NO_CS: ReadonlySet<string> = new Set(["hold_person", "bless", "fireball", 
 
 const CREATURES: ReadonlyArray<InitCreatureConfig> = [
   { id: "A", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: NO_CS },
+  { id: "D", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: NO_CS },
   { id: "B", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
-  { id: "C", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
-  { id: "D", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
   { id: "E", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
-  { id: "F", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: NO_CS }
+  { id: "C", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
+  { id: "F", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS }
 ]
 
 const cs = (reactorId: string | null, saveSucceeded: boolean, slotLvl = 3): BattleEvent => ({
@@ -50,66 +52,92 @@ const aoeTarget = (targetId: string | null, saveRoll: number): BattleEvent => ({
   saveRoll
 })
 
+const startTurn: BattleEvent = {
+  type: "BATTLE_START_TURN",
+  rechargeD6: 1,
+  sotDmg: 0,
+  sotDt: "fire" as DamageType,
+  sotHeal: 0,
+  sotSaveResult: true,
+  sotConSave: true
+}
+
+const endTurn: BattleEvent = {
+  type: "BATTLE_END_TURN",
+  eotSaveSucceeded: true,
+  eotDmg: 0,
+  eotDt: "fire" as DamageType,
+  eotConSave: true
+}
+
+const castFireball: BattleEvent = {
+  type: "BATTLE_CAST_AOE",
+  saveDC: FIREBALL_DC,
+  dmgOnFail: FIREBALL_DMG,
+  halfOnSave: true,
+  dt: "fire" as DamageType,
+  cond: "blinded",
+  applyCond: false,
+  slotLvl: 3,
+  spellName: "fireball",
+  ritual: false
+}
+
+const sfPass = (reactorId: string | null): BattleEvent => ({
+  type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
+  reactorId,
+  decision: { tag: "RPass" as const }
+})
+
+const adPass = (reactorId: string | null): BattleEvent => ({
+  type: "BATTLE_AFTER_DAMAGE_PASS",
+  reactorId
+})
+
 export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
-  // --- Init & turn start ---
+  // === Init ===
   { type: "BATTLE_INIT", creatures: CREATURES },
-  {
-    type: "BATTLE_START_TURN",
-    rechargeD6: 1,
-    sotDmg: 0,
-    sotDt: "fire" as DamageType,
-    sotHeal: 0,
-    sotSaveResult: true,
-    sotConSave: true
-  },
 
-  // --- A casts Fireball ---
-  {
-    type: "BATTLE_CAST_AOE",
-    saveDC: FIREBALL_DC,
-    dmgOnFail: FIREBALL_DMG,
-    halfOnSave: true,
-    dt: "fire" as DamageType,
-    cond: "blinded",
-    applyCond: false,
-    slotLvl: 3,
-    spellName: "fireball",
-    ritual: false
-  },
+  // === Turn A (Laser Wizard): Fireball at red team ===
+  startTurn,
+  castFireball, // event index 2
 
-  // --- Counterspell chain (4 deep) ---
-  // Eligible: B,C,D,E (A and F don't have counterspell prepared)
-  cs("D", false), // D counterspells A's Fireball (succeeds)
-  cs("B", false), // B counter-counterspells D's CS (succeeds)
-  cs("E", false), // E counter-counterspells B's CS (succeeds)
-  cs("C", false), // C counter-counterspells E's CS (succeeds)
-  // No reactors left (all spent reactions, A and F ineligible)
-  // Chain resolves: C beats E → E fizzles → B stands → B beats D → D fizzles → Fireball proceeds
-  cs(null, false),
+  // CS chain: E→B→F→C (4 deep, all succeed at base level)
+  cs("E", false), // E counterspells A's Fireball
+  cs("B", false), // B counter-CS E
+  cs("F", false), // F counter-CS B
+  cs("C", false), // C counter-CS F
+  cs(null, false), // chain resolves: C>F, B stands, E fizzles → Fireball proceeds
 
-  // --- AoE resolves: all 5 targets fail saves → 28 damage → unconscious ---
-  aoeTarget("B", 5),
-  aoeTarget("C", 5),
-  aoeTarget("D", 5),
-  aoeTarget("E", 5),
-  aoeTarget("F", 5),
-  // F has reaction available (didn't counterspell) → save-failed LR window opens
-  {
-    type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
-    reactorId: "F",
-    decision: { tag: "RPass" as const }
-  } satisfies BattleEvent,
-  {
-    type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
-    reactorId: null,
-    decision: { tag: "RPass" as const }
-  } satisfies BattleEvent,
-  // After damage applied, after-damage reaction window opens (F had reaction)
-  { type: "BATTLE_AFTER_DAMAGE_PASS", reactorId: "F" } satisfies BattleEvent,
-  { type: "BATTLE_AFTER_DAMAGE_PASS", reactorId: null } satisfies BattleEvent,
+  // AoE resolves on red team
+  aoeTarget("D", 5), // D fails (50→22)
+  // D has reaction (no CS prepared, didn't counterspell) → save-failed window
+  sfPass("D"),
+  sfPass(null),
+  adPass("D"),
+  adPass(null),
+  aoeTarget("E", 17), // E saves (50→36, half=14)
+  aoeTarget("F", 8), // F fails (50→22), no reaction (spent on CS)
+  aoeTarget(null, 0), // AoE complete
 
-  // --- AoE complete → back to active turn ---
-  aoeTarget(null, 0)
+  endTurn, // end A's turn
+
+  // === Turn D (Mud Scamp): Fireball at blue team ===
+  startTurn, // D's turn starts, D's reaction resets
+  castFireball, // event index 18
+
+  // No eligible counterspellers: B,C,E,F spent reactions; A has no CS; D is caster
+  cs(null, false), // no CS window
+
+  // AoE resolves on blue team
+  aoeTarget("A", 16), // A saves (50→36, half=14). A has reaction → after-damage window
+  adPass("A"),
+  adPass(null),
+  aoeTarget("B", 4), // B fails (50→22), no reaction (spent on CS)
+  aoeTarget("C", 7), // C fails (50→22), no reaction (spent on CS)
+  aoeTarget(null, 0), // AoE complete
+
+  endTurn // end D's turn
 ]
 
 /** Metadata for game engine rendering — not consumed by the battle machine. */
@@ -132,9 +160,11 @@ export const FIREBALL_BATTLE_META = {
     F: { row: 7, col: 8 }
   },
   aoeTargetPoints: {
-    "2": { row: 5, col: 5 }
+    "2": { row: 5, col: 8 },
+    "18": { row: 5, col: 2 }
   },
   spellAnnotations: {
-    "2": "Fireball"
+    "2": "Fireball",
+    "18": "Fireball"
   }
 } satisfies ScenarioMeta

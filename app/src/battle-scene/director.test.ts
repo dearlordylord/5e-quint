@@ -24,11 +24,12 @@ describe("directorStep", () => {
   })
 
   it("produces cast bar for counterspell reaction", () => {
+    // Event 3 = E counterspells A's Fireball
     const { curr, event, prev } = pairAt(3)
     const delta = diffSnapshots(prev, curr)
     const cues = directorStep(event, curr, delta)
     expect(cues.castBar).not.toBeNull()
-    expect(cues.castBar!.casterId).toBe("D")
+    expect(cues.castBar!.casterId).toBe("E")
     expect(cues.castBar!.spellName).toBe("Counterspell")
   })
 
@@ -43,18 +44,19 @@ describe("directorStep", () => {
   })
 
   it("produces damage flash when creature takes damage", () => {
-    const { curr, event, prev } = pairAt(8)
+    // D's damage applies when save-failed window closes (event 10→11 transition)
+    const { curr, event, prev } = pairAt(10)
     const delta = diffSnapshots(prev, curr)
     const cues = directorStep(event, curr, delta)
-    expect(cues.creatureCues["B"].damageFlash).toBe(true)
-    expect(cues.creatureCues["B"].justBecameUnconscious).toBe(true)
+    expect(cues.creatureCues["D"].damageFlash).toBe(true)
   })
 
   it("marks reaction used when reaction is spent", () => {
+    // Event 3 = E counterspells
     const { curr, event, prev } = pairAt(3)
     const delta = diffSnapshots(prev, curr)
     const cues = directorStep(event, curr, delta)
-    expect(cues.creatureCues["D"].reactionUsed).toBe(true)
+    expect(cues.creatureCues["E"].reactionUsed).toBe(true)
   })
 
   it("auto-advance delay uses event-type override", () => {

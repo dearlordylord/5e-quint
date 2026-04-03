@@ -26,33 +26,34 @@ describe("diffSnapshots", () => {
   })
 
   it("detects reactions spent during CS chain", () => {
-    const before = snapshotAt(3) // after CAST_AOE (D has reaction)
-    const after = snapshotAt(4) // after D counterspells
+    // Event 3 = E counterspells A's Fireball
+    const before = snapshotAt(3)
+    const after = snapshotAt(4) // after E counterspells
     const delta = diffSnapshots(before, after)
-    expect(delta.reactionsSpent).toContain("D")
-    expect(delta.slotsExpended).toContain("D")
+    expect(delta.reactionsSpent).toContain("E")
+    expect(delta.slotsExpended).toContain("E")
   })
 
-  it("detects damage and unconscious after AoE target resolution", () => {
-    const before = snapshotAt(8)
-    const after = snapshotAt(9) // B resolved
+  it("detects damage after AoE save-failed reaction resolves", () => {
+    // D's damage (50→22) applies when save-failed reaction window closes (event 10)
+    const before = snapshotAt(9)
+    const after = snapshotAt(11)
     const delta = diffSnapshots(before, after)
-    // Effective HP loss is 25 (HP clamped at 0, not raw 28 damage)
-    expect(delta.damageTaken["B"]).toBe(25)
-    expect(delta.becameUnconscious).toContain("B")
+    expect(delta.damageTaken["D"]).toBe(28)
+    expect(delta.becameUnconscious).toHaveLength(0)
   })
 
-  it("detects all 5 creatures unconscious after full resolution", () => {
+  it("detects damage across full scenario", () => {
     const before = snapshotAt(2) // all healthy
-    const after = snapshotAt(FIREBALL_BATTLE.length) // all resolved
+    const after = snapshotAt(FIREBALL_BATTLE.length)
     const delta = diffSnapshots(before, after)
-    expect(delta.becameUnconscious).toHaveLength(5)
-    expect(delta.becameUnconscious).toContain("B")
-    expect(delta.becameUnconscious).toContain("F")
-    expect(delta.becameUnconscious).not.toContain("A")
+    // Everyone took damage, nobody unconscious
+    expect(Object.keys(delta.damageTaken).length).toBeGreaterThan(0)
+    expect(delta.becameUnconscious).toHaveLength(0)
   })
 
   it("detects new AoE zones", () => {
+    // Event 8 = CS chain resolves, AoE resolution starts at event 9
     const before = snapshotAt(2) // no AoE
     const after = snapshotAt(8, "2") // AoE resolving
     const delta = diffSnapshots(before, after)

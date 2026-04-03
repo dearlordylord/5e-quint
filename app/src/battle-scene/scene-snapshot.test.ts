@@ -9,7 +9,8 @@ describe("deriveSnapshot", () => {
   it("returns 6 creatures in initiative order after BATTLE_INIT", () => {
     const snap = deriveSnapshot(replayTo(1), META)
     expect(snap.creatures).toHaveLength(6)
-    expect(snap.creatures.map((c) => c.id)).toEqual(["A", "B", "C", "D", "E", "F"])
+    // Initiative order matches CREATURES array order: A,D,B,E,C,F
+    expect(snap.creatures.map((c) => c.id)).toEqual(["A", "D", "B", "E", "C", "F"])
   })
 
   it("marks creature A as active after START_TURN", () => {
@@ -25,35 +26,35 @@ describe("deriveSnapshot", () => {
     const snap = deriveSnapshot(replayTo(2), META)
     for (const c of snap.creatures) {
       expect(c.hpRatio).toBe(1)
-      expect(c.currentHp).toBe(25)
-      expect(c.maxHp).toBe(25)
+      expect(c.currentHp).toBe(50)
+      expect(c.maxHp).toBe(50)
       expect(c.unconscious).toBe(false)
       expect(c.dead).toBe(false)
     }
   })
 
   it("shows AoE resolving phase during AoE resolution", () => {
+    // After INIT + START + CAST_AOE + 5 CS events = 8 events, AoE starts at event 8
     const snap = deriveSnapshot(replayTo(8), META, "2")
     expect(snap.phase.type).toBe("aoeResolving")
     expect(snap.aoeZones).toHaveLength(1)
     expect(snap.aoeZones[0].spellName).toBe("Fireball")
     expect(snap.aoeZones[0].damageType).toBe("fire")
-    expect(snap.aoeZones[0].centerGridPos).toEqual({ row: 5, col: 5 })
+    expect(snap.aoeZones[0].centerGridPos).toEqual({ row: 5, col: 8 })
     expect(snap.aoeZones[0].radiusFeet).toBe(20)
   })
 
-  it("creatures become unconscious after full AoE resolution", () => {
+  it("correct HP after full scenario (two fireballs, everyone alive)", () => {
     const snap = deriveSnapshot(replayTo(FIREBALL_BATTLE.length), META)
-    const a = snap.creatures.find((c) => c.id === "A")!
-    expect(a.currentHp).toBe(25)
-    expect(a.unconscious).toBe(false)
-    expect(a.hpRatio).toBe(1)
-
-    for (const id of ["B", "C", "D", "E", "F"]) {
-      const c = snap.creatures.find((cr) => cr.id === id)!
-      expect(c.currentHp).toBe(0)
-      expect(c.unconscious).toBe(true)
-      expect(c.hpRatio).toBe(0)
+    // A saved D's fireball: 50-14=36
+    expect(snap.creatures.find((c) => c.id === "A")!.currentHp).toBe(36)
+    // D failed A's fireball: 50-28=22
+    expect(snap.creatures.find((c) => c.id === "D")!.currentHp).toBe(22)
+    // E saved A's fireball: 50-14=36
+    expect(snap.creatures.find((c) => c.id === "E")!.currentHp).toBe(36)
+    // Nobody unconscious
+    for (const c of snap.creatures) {
+      expect(c.unconscious).toBe(false)
     }
   })
 

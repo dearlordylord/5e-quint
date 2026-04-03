@@ -29,12 +29,11 @@ describe("computeLayout", () => {
     expect(a.teamColor).toBe("#3b82f6")
   })
 
-  it("unconscious creatures have reduced opacity", () => {
+  it("all creatures alive with full opacity after scenario", () => {
     const layout = computeLayout(snapshotAt(FIREBALL_BATTLE.length), EMPTY_CUES, CFG)
-    const a = layout.creatures.find((c) => c.id === "A")!
-    expect(a.opacity).toBe(1)
-    const b = layout.creatures.find((c) => c.id === "B")!
-    expect(b.opacity).toBe(0.3)
+    for (const c of layout.creatures) {
+      expect(c.opacity).toBe(1)
+    }
   })
 
   it("HP bar fill scales with hpRatio", () => {
@@ -47,7 +46,8 @@ describe("computeLayout", () => {
     const layout = computeLayout(snapshotAt(8, "2"), EMPTY_CUES, CFG)
     expect(layout.aoeZones).toHaveLength(1)
     const zone = layout.aoeZones[0]
-    expect(zone.cx).toBe(330)
+    // AoE center at grid (5,8) → pixel (8*60+30, 5*60+30) = (510, 330)
+    expect(zone.cx).toBe(510)
     expect(zone.cy).toBe(330)
     expect(zone.r).toBe(240)
   })
