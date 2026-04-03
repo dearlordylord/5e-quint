@@ -1,0 +1,15 @@
+2026-04-02T20:06:00 — Overnight fuzzing started
+2026-04-02T20:06:00 — FIXED: classLevels deserialization (mbt-shared.ts)
+  Quint spec refactored individual *Level vars into single `classLevels: ClassName -> int` map.
+  MBT bridge QuintFullState still expected 12 separate bigint fields → Zod parse failed on every seed.
+  Fix: replaced 12 individual fields with single classLevels transform using variantToString for map keys.
+  All 1447 prior failures in mbt-failures.jsonl were caused by this single bug.
+
+2026-04-02T20:06:00 — NEEDS REVIEW: slotsMax mismatch (seed 0xb0715bd5)
+  After classLevels fix, new mismatch: Quint expects slotsMax=[4,2,0,...] but XState has [0,0,0,...].
+  Likely cause: XState machine doesn't initialize spell slot maximums from class level at actor creation.
+  The Quint spec probably derives slotsMax from classLevels but the XState input doesn't compute this.
+  SRD rule: spellcasting class tables define slots per level.
+  Seed: 0xb0715bd5 (MBT_DEV=1 for quick repro)
+
+Summary: 1 fixed, 1 logged-for-review
