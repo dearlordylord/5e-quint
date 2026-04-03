@@ -38,6 +38,7 @@
     "@xstate/react": "^6.1.0",
     "effect": "^3.21.0",
     "lucide-react": "^0.545.0",
+    "motion": "^12.38.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwindcss": "^4.1.18",

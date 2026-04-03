@@ -10,6 +10,7 @@
  *   4. AoE resolves: B,C,D,E,F all fail saves (28 dmg → unconscious). A untouched.
  */
 import type { BattleEvent, InitCreatureConfig } from "#/battle-machine-types.ts"
+import type { ScenarioMeta } from "#/battle-scene/scene-snapshot.ts"
 import type { DamageType } from "#/types.ts"
 
 const WIZARD_HP = 25
@@ -114,5 +115,26 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
 /** Metadata for game engine rendering — not consumed by the battle machine. */
 export const FIREBALL_BATTLE_META = {
   teams: { blue: ["A", "B", "C"], red: ["D", "E", "F"] },
-  names: { A: "Aldric", B: "Brynn", C: "Cassia", D: "Dorian", E: "Elara", F: "Felix" }
-} as const
+  names: {
+    A: "Laser Wizard",
+    B: "Forest Wizard",
+    C: "Bufo",
+    D: "Mud Scamp",
+    E: "Gray Elf",
+    F: "Ritual Wizard"
+  },
+  gridPositions: {
+    A: { row: 3, col: 2 },
+    B: { row: 5, col: 2 },
+    C: { row: 7, col: 2 },
+    D: { row: 3, col: 8 },
+    E: { row: 5, col: 8 },
+    F: { row: 7, col: 8 }
+  },
+  aoeTargetPoints: {
+    "2": { row: 5, col: 5 }
+  },
+  spellAnnotations: {
+    "2": "Fireball"
+  }
+} satisfies ScenarioMeta

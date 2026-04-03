@@ -302,21 +302,20 @@ T3 ──→ T4
 ```
 
 ```
-[T1] scene-snapshot.ts + test    deps: none         (Layer A — pure functions)
-[T2] snapshot-diff.ts + test     deps: T1           (needs SceneSnapshot types)
-[T3] visual-catalog.ts           deps: none         (pure data, no logic)
-[T4] layout.ts + test            deps: T1, T3       (needs SceneSnapshot + visual catalog + LayoutState defined here)
-[T5] director.ts + test          deps: T1, T2       (needs SceneSnapshot + SnapshotDelta)
-[T6] BattlePage.tsx              deps: T1, T4, T5   (route entry, wires actor + director + layout)
-[T7] SVG components              deps: T4, T6       (BattleField, CreatureToken, AoEZone, etc.)
-[T8] wire /battle route          deps: T6, T7       (add to entry.tsx)
+[T0] update demo metadata         DONE  (gridPositions, aoeTargetPoints, spellAnnotations + satisfies ScenarioMeta)
+[T1] scene-snapshot.ts + test     DONE  9 tests (Layer A — pure projection)
+[T2] snapshot-diff.ts + test      DONE  6 tests (delta between snapshots)
+[T3] visual-catalog.ts            DONE  (spell/damage/condition visual data)
+[T4] layout.ts + test             DONE  7 tests (Layer C — grid→pixel math)
+[T5] director.ts + test           DONE  7 tests (Layer B — visual cues per event)
+[T6] BattlePage.tsx               DONE  (route entry, wires actor + director + layout)
+[T7] SVG components               DONE  (BattleField, CreatureToken, AoEZone, GridOverlay, InterruptOverlay, BattleLog)
+[T8] wire /battle route           DONE  (entry.tsx)
 ```
 
-**Parallelism:** T1 and T3 can run concurrently. T2 and T4 can run concurrently once T1 is done. T5 needs T1+T2. Tasks T1-T5 are pure TS with vitest (no React, no DOM, no animation library). Tasks T6-T8 are React/SVG and require `motion` installed.
+**All tasks complete.** 30 tests (29 battle-scene + 1 demo). 3 rounds of /simplify convergence applied.
 
-**Each task is atomic:** produces files, has tests (where applicable), can be verified independently with `npx vitest run`.
-
-**Pre-task: update demo metadata.** `FIREBALL_BATTLE_META` needs `gridPositions` and `aoeTargetPoints` added, and keys changed from numeric indices to stable event IDs. Do this before T1 so tests can use the real demo data.
+**Bonus:** shared `assert.ts` extracted (was local to class-fighter.ts). Safe `lookupCue()` pattern for Record index access without `!` or `?.`.
 
 ## Resolved Design Decisions (25)
 
