@@ -328,9 +328,18 @@ The core spec is complete when any SRD spell, class feature, or racial trait can
 
 Moved from PLAN_CLEANUP.md P1. Two fields on TurnState: `bonusMovementRemaining` (distance) and `bonusMovementOAFree` (OA immunity). `doUseBonusMovement` action consumes it. Reset at turn start. Used by Tactical Shift (Fighter L5) and Remarkable Athlete (Fighter L3); available for Barbarian Instinctive Pounce, Rogue Withdraw.
 
-## Open: Battle — 5+ deep CS chain unwind bug
+## Open: Battle — 5+ deep CS chain unwind bug (CRITICAL: requires exhaustive matching first)
 
 `returnToCSWindow` calls `resolveSpellEntry` on intermediate CS stack entries when no remaining reactors exist. `resolveSpellEntry` doesn't handle `PCECounterspell` — falls through to `default → BPActiveTurn`, leaving the stack partially unwound. Only triggers with 5+ deep chains where the terminal CS fails. 4-deep chains work because the grandparent skip always lands on the original (non-CS) spell. Fix: `returnToCSWindow` should continue unwinding CS entries instead of delegating to `resolveSpellEntry`. Affects both Quint (`battle.qnt`) and TS (`battle-machine-spells.ts`).
+
+**Before fixing this bug:** Refactor all discriminated union switches/matches that assume exhaustiveness to use `effect/Match` (https://effect.website/docs/code-style/pattern-matching/). The `default` branch that silently swallowed `PCECounterspell` is how this bug hid. `Match.exhaustive` would have caught it at compile time. This should be adopted as project code style — add to CLAUDE.md TypeScript conventions.
+
+Scope of the refactor:
+1. Add `effect/Match` as the standard pattern for discriminated union matching (already in deps: `effect` v3.21.0)
+2. Audit all `switch` on discriminated unions in `battle-machine-*.ts` and `battle-machine-spells.ts`
+3. Replace with `Match.type(...).pipe(Match.tag(...), ..., Match.exhaustive)` or equivalent
+4. TypeScript compiler will then catch any unhandled variant at build time
+5. Then fix the CS chain bug (the missing `PCECounterspell` case will be forced by the exhaustive match)
 
 ## Open: Battle — Surprise (B16)
 
