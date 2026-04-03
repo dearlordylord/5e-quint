@@ -2,6 +2,7 @@
  * Shared MBT utilities — Quint→TS enum maps, Zod schemas, normalization,
  * and comparison helpers used by both creature and battle MBT tests.
  */
+import { Option } from "effect"
 import { z } from "zod"
 
 import type { MetamagicOption } from "#/features/class-sorcerer.ts"
@@ -749,7 +750,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     pactSlotsMax: c.pactSlotsMax,
     pactSlotsCurrent: c.pactSlotsCurrent,
     pactSlotLevel: c.pactSlotLevel,
-    concentrationSpellId: c.concentrationSpellId,
+    concentrationSpellId: Option.getOrElse(c.concentrationSpellId, () => ""),
     creatureKind: c.creatureKind,
     legendaryActionsRemaining: c.legendaryActionsRemaining,
     legendaryResistancesRemaining: c.legendaryResistancesRemaining,

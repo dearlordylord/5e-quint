@@ -5,7 +5,7 @@ import { useT } from "#/i18n.ts"
 import type { DndEvent, DndSnapshot } from "#/machine.ts"
 import { ALL_DAMAGE_TYPES } from "#/machine-helpers.ts"
 import type { Condition, DamageType } from "#/types.ts"
-import { CONDITIONS, d20Roll, healAmount, tempHp } from "#/types.ts"
+import { CONDITIONS, CreatureId, d20Roll, healAmount, spellId as mkSpellId, tempHp } from "#/types.ts"
 
 const DAMAGE_TYPES: ReadonlyArray<DamageType> = Array.from(ALL_DAMAGE_TYPES)
 const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
@@ -237,7 +237,7 @@ export function EventPanel({
             <Btn
               label={t.startConcentration}
               onClick={() =>
-                send({ type: "START_CONCENTRATION", spellId, durationTurns: 10, expiresAt: "end", casterId: "" })
+                send({ type: "START_CONCENTRATION", spellId: mkSpellId(spellId), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
               }
             />
             <Btn label={t.breakConcentration} onClick={() => send({ type: "BREAK_CONCENTRATION" })} />

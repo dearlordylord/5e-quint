@@ -1,5 +1,7 @@
+import { Option } from "effect"
+
 import { featureSaveDC } from "#/srd-constants.ts"
-import type { ArmorWeight, Condition, DamageType } from "#/types.ts"
+import type { ArmorWeight, Condition, DamageType, SpellId } from "#/types.ts"
 
 // --- Types ---
 
@@ -18,7 +20,7 @@ export interface RageState {
   readonly rageTurnsRemaining: number
   readonly attackedOrForcedSaveThisTurn: boolean
   readonly rageExtendedWithBA: boolean
-  readonly concentrationSpellId: string
+  readonly concentrationSpellId: Option.Option<SpellId>
 }
 
 /** Reckless Attack / Brutal Strike state. */
@@ -98,7 +100,7 @@ export function pEnterRage(state: RageState): RageState {
     rageTurnsRemaining: RAGE_DURATION_TURNS,
     attackedOrForcedSaveThisTurn: false,
     rageExtendedWithBA: false,
-    concentrationSpellId: "" // entering rage breaks concentration
+    concentrationSpellId: Option.none() // entering rage breaks concentration
   }
 }
 

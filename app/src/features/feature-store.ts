@@ -1,3 +1,5 @@
+import { Option } from "effect"
+
 import {
   pCheckRageMaintenance,
   pEndRage,
@@ -141,7 +143,7 @@ function barbarianToRageState(b: BarbarianFeatureState): RageState {
     rageTurnsRemaining: b.rageTurnsRemaining,
     attackedOrForcedSaveThisTurn: b.attackedOrForcedSaveThisTurn,
     rageExtendedWithBA: b.rageExtendedWithBA,
-    concentrationSpellId: ""
+    concentrationSpellId: Option.none()
   }
 }
 

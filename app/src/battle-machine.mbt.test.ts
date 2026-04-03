@@ -5,6 +5,7 @@
  */
 import * as path from "node:path"
 
+import { Option } from "effect"
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect"
 import { describe, it } from "vitest"
 import { createActor } from "xstate"
@@ -12,6 +13,8 @@ import { z } from "zod"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleContext, BattleCreatureState, BattleEvent } from "#/battle-machine-types.ts"
+import type { CreatureId, SpellId } from "#/types.ts"
+import { CreatureId as mkCreatureId, spellId as mkSpellId } from "#/types.ts"
 import {
   compareNormalizedStates,
   ITFBigInt,
@@ -253,7 +256,7 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     pactSlotsMax: c.pactSlotsMax,
     pactSlotsCurrent: c.pactSlotsCurrent,
     pactSlotLevel: c.pactSlotLevel,
-    concentrationSpellId: c.concentrationSpellId,
+    concentrationSpellId: Option.getOrElse(c.concentrationSpellId, () => ""),
     legendaryActionsRemaining: c.legendaryActionsRemaining,
     legendaryResistancesRemaining: c.legendaryResistancesRemaining,
     rechargeAvailable: c.rechargeAvailable,
@@ -347,6 +350,14 @@ function ps(picks: Record<string, unknown>, key: string, fallback: string): stri
   const v = picks[key]
   return v != null ? String(v) : fallback
 }
+/** Pick a string and brand as CreatureId (MBT boundary). */
+function pc(picks: Record<string, unknown>, key: string, fallback: string): CreatureId {
+  return mkCreatureId(ps(picks, key, fallback))
+}
+/** Pick a nullable string and brand as CreatureId | null (MBT boundary). */
+function pcn(picks: Record<string, unknown>, key: string): CreatureId | null {
+  return picks[key] != null ? mkCreatureId(String(picks[key])) : null
+}
 function pb(picks: Record<string, unknown>, key: string, fallback: boolean): boolean {
   const v = picks[key]
   return typeof v === "boolean" ? v : fallback
@@ -366,9 +377,14 @@ function createBattleMachineDriver() {
       return actor.getSnapshot().context
     }
 
-    function parseThreatenedSet(raw: unknown): Set<string> {
-      if (raw instanceof Set) return new Set([...raw].map(String))
-      if (Array.isArray(raw)) return new Set(raw.map(String))
+    /** Brand a raw string as CreatureId (MBT boundary). */
+    const cid = (s: string): CreatureId => mkCreatureId(s)
+    /** Brand a raw string as SpellId (MBT boundary). */
+    const sid = (s: string): SpellId => mkSpellId(s)
+
+    function parseThreatenedSet(raw: unknown): Set<CreatureId> {
+      if (raw instanceof Set) return new Set([...raw].map((x) => cid(String(x))))
+      if (Array.isArray(raw)) return new Set(raw.map((x) => cid(String(x))))
       return new Set()
     }
 
@@ -379,10 +395,10 @@ function createBattleMachineDriver() {
         send({
           type: "BATTLE_INIT",
           creatures: [
-            { id: "A", maxHp: p(picks, "hp1", 20), kind: "PC", caster: true, rogueLevel: 5 },
-            { id: "B", maxHp: p(picks, "hp2", 20), kind: "PC", caster: true },
-            { id: "C", maxHp: p(picks, "hp3", 35), kind: "Monster", legendaryActions: 3, legendaryResistances: 3 },
-            { id: "D", maxHp: p(picks, "hp4", 20), kind: "PC", caster: true }
+            { id: cid("A"), maxHp: p(picks, "hp1", 20), kind: "PC", caster: true, rogueLevel: 5 },
+            { id: cid("B"), maxHp: p(picks, "hp2", 20), kind: "PC", caster: true },
+            { id: cid("C"), maxHp: p(picks, "hp3", 35), kind: "Monster", legendaryActions: 3, legendaryResistances: 3 },
+            { id: cid("D"), maxHp: p(picks, "hp4", 20), kind: "PC", caster: true }
           ]
         })
       },
@@ -400,7 +416,7 @@ function createBattleMachineDriver() {
       bAttack: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_ATTACK",
-          targetId: ps(picks, "targetId", ""),
+          targetId: pc(picks, "targetId", ""),
           attackRoll: p(picks, "attackRoll", 10),
           dmg: p(picks, "dmg", 5),
           dt: mapDamageType(ps(picks, "dt", "Slashing")),
@@ -420,7 +436,7 @@ function createBattleMachineDriver() {
                 : ({ tag: "RPass" } as const)
         send({
           type: "BATTLE_RESOLVE_HIT_REACTION",
-          reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
+          reactorId: pcn(picks, "reactorId"),
           decision
         })
       },
@@ -434,20 +450,20 @@ function createBattleMachineDriver() {
               : ({ tag: "RPass" } as const)
         send({
           type: "BATTLE_RESOLVE_DMG_REACTION",
-          reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
+          reactorId: pcn(picks, "reactorId"),
           decision
         })
       },
       bAfterDamagePass: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_AFTER_DAMAGE_PASS",
-          reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null
+          reactorId: pcn(picks, "reactorId")
         })
       },
       bAfterDamageHellishRebuke: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_AFTER_DAMAGE_HELLISH_REBUKE",
-          reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
+          reactorId: pcn(picks, "reactorId"),
           rebukeDmg: p(picks, "rebukeDmg", 10),
           rebukeSaved: pb(picks, "rebukeSaved", false)
         })
@@ -455,7 +471,7 @@ function createBattleMachineDriver() {
       bAfterDamageRetaliation: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_AFTER_DAMAGE_RETALIATION",
-          reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
+          reactorId: pcn(picks, "reactorId"),
           retAtkRoll: p(picks, "retAtkRoll", 10),
           retDmg: p(picks, "retDmg", 5),
           retDt: mapDamageType(ps(picks, "retDt", "Slashing")),
@@ -466,7 +482,7 @@ function createBattleMachineDriver() {
       bCastSaveSpell: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_CAST_SAVE_SPELL",
-          targetId: ps(picks, "targetId", ""),
+          targetId: pc(picks, "targetId", ""),
           saveDC: p(picks, "saveDC", 15),
           saveRoll: p(picks, "saveRoll", 10),
           dmgOnFail: p(picks, "dmgOnFail", 10),
@@ -490,7 +506,7 @@ function createBattleMachineDriver() {
               : null
         send({
           type: "BATTLE_RESOLVE_COUNTERSPELL",
-          reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
+          reactorId: pcn(picks, "reactorId"),
           decision,
           csSlotLvl: p(picks, "csSlotLvl", 3)
         })
@@ -501,17 +517,17 @@ function createBattleMachineDriver() {
           tag === "RLegendaryResistance" ? ({ tag: "RLegendaryResistance" } as const) : ({ tag: "RPass" } as const)
         send({
           type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
-          reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
+          reactorId: pcn(picks, "reactorId"),
           decision
         })
       },
       bCastConcentrationSpell: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_CAST_CONCENTRATION_SPELL",
-          targetId: ps(picks, "targetId", ""),
+          targetId: pc(picks, "targetId", ""),
           slotLvl: p(picks, "slotLvl", 1),
           duration: p(picks, "duration", 5),
-          spellId: ps(picks, "spellId", "hold_person"),
+          spellId: sid(ps(picks, "spellId", "hold_person")),
           cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CParalyzed")] ?? "paralyzed",
           applyCond: pb(picks, "applyCond", false),
           ritual: pb(picks, "ritual", false)
@@ -520,7 +536,7 @@ function createBattleMachineDriver() {
       bConcentrationCheck: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_CONCENTRATION_CHECK",
-          targetId: ps(picks, "targetId", ""),
+          targetId: pc(picks, "targetId", ""),
           conSaveSucceeded: pb(picks, "conSaveSucceeded", false)
         })
       },
@@ -541,7 +557,7 @@ function createBattleMachineDriver() {
       bResolveAoETarget: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_RESOLVE_AOE_TARGET",
-          targetId: picks["targetId"] != null ? String(picks["targetId"]) : null,
+          targetId: pcn(picks, "targetId"),
           saveRoll: p(picks, "saveRoll", 10)
         })
       },
@@ -551,13 +567,13 @@ function createBattleMachineDriver() {
       bMovementOAPass: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_MOVEMENT_OA_PASS",
-          reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null
+          reactorId: pcn(picks, "reactorId")
         })
       },
       bMovementOAAttack: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_MOVEMENT_OA_ATTACK",
-          reactorId: picks["reactorId"] != null ? String(picks["reactorId"]) : null,
+          reactorId: pcn(picks, "reactorId"),
           oaAtkRoll: p(picks, "oaAtkRoll", 10),
           oaDmg: p(picks, "oaDmg", 5),
           oaDt: mapDamageType(ps(picks, "oaDt", "Slashing")),
@@ -580,8 +596,8 @@ function createBattleMachineDriver() {
       bLegendaryAttack: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_LEGENDARY_ATTACK",
-          monsterId: ps(picks, "monsterId", ""),
-          laTarget: ps(picks, "laTarget", ""),
+          monsterId: pc(picks, "monsterId", ""),
+          laTarget: pc(picks, "laTarget", ""),
           laAtkRoll: p(picks, "laAtkRoll", 10),
           laDmg: p(picks, "laDmg", 10),
           laDt: mapDamageType(ps(picks, "laDt", "Slashing")),
@@ -590,12 +606,12 @@ function createBattleMachineDriver() {
         })
       },
       bHeal: (picks: Record<string, unknown>) => {
-        send({ type: "BATTLE_HEAL", targetId: ps(picks, "targetId", ""), amount: p(picks, "amount", 5) })
+        send({ type: "BATTLE_HEAL", targetId: pc(picks, "targetId", ""), amount: p(picks, "amount", 5) })
       },
       bCastBonusActionSpell: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_CAST_SAVE_SPELL",
-          targetId: ps(picks, "targetId", ""),
+          targetId: pc(picks, "targetId", ""),
           saveDC: p(picks, "saveDC", 15),
           saveRoll: p(picks, "saveRoll", 10),
           dmgOnFail: p(picks, "dmgOnFail", 10),

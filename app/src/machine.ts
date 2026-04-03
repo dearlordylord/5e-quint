@@ -1,3 +1,4 @@
+import { Option } from "effect"
 import type { SnapshotFrom } from "xstate"
 import { assign, setup } from "xstate"
 
@@ -281,15 +282,17 @@ export const dndMachine = setup({
     ),
     startConcentration: assign(({ context: c, event: e }) => {
       const ev = asStartConcentration(e)
-      const base = c.concentrationSpellId ? removeAe(c.activeEffects, c.concentrationSpellId) : c.activeEffects
+      const base = Option.isSome(c.concentrationSpellId)
+        ? removeAe(c.activeEffects, c.concentrationSpellId.value)
+        : c.activeEffects
       return {
-        concentrationSpellId: ev.spellId,
+        concentrationSpellId: Option.some(ev.spellId),
         activeEffects: addAe(base, ev.spellId, ev.durationTurns, ev.expiresAt, ev.casterId)
       }
     }),
     breakConcentration: assign(({ context: c }) => concBreakFields(c)),
     concentrationCheck: assign(({ context: c, event: e }) =>
-      c.concentrationSpellId === "" || asConcentrationCheck(e).conSaveSucceeded ? {} : concBreakFields(c)
+      Option.isNone(c.concentrationSpellId) || asConcentrationCheck(e).conSaveSucceeded ? {} : concBreakFields(c)
     ),
     addEffect: assign(({ context: c, event: e }) => {
       const ev = asAddEffect(e)
@@ -539,7 +542,7 @@ export const dndMachine = setup({
       ...INITIAL_TURN_STATE,
       creatureKind: i.creatureKind ?? "PC",
       activeEffects: [] as ReadonlyArray<ActiveEffect>,
-      concentrationSpellId: "",
+      concentrationSpellId: Option.none(),
       dead: false,
       inCombat: false,
       deathSaves: DEATH_SAVES_RESET,

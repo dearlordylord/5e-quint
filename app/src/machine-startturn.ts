@@ -1,3 +1,5 @@
+import { Option } from "effect"
+
 import { survivorHeroicRally } from "#/features/class-fighter.ts"
 import { removeAe } from "#/machine-endturn.ts"
 import {
@@ -22,7 +24,7 @@ import {
   type TurnPhaseCtx,
   type TurnPhaseResult
 } from "#/machine-types.ts"
-import type { ActiveEffect } from "#/types.ts"
+import type { ActiveEffect, SpellId } from "#/types.ts"
 import { deathSaveCount, hp, movementFeet, tempHp } from "#/types.ts"
 
 function decrementDurations(aes: ReadonlyArray<ActiveEffect>): ReadonlyArray<ActiveEffect> {
@@ -33,7 +35,7 @@ function clearExpiredStart(aes: ReadonlyArray<ActiveEffect>): ReadonlyArray<Acti
   return aes.filter((a) => !(a.expiresAt === "start" && a.turnsRemaining <= 0))
 }
 
-function hasEffect(aes: ReadonlyArray<ActiveEffect>, spellId: string): boolean {
+function hasEffect(aes: ReadonlyArray<ActiveEffect>, spellId: SpellId): boolean {
   return aes.some((a) => a.spellId === spellId && a.turnsRemaining > 0)
 }
 
@@ -77,9 +79,9 @@ export function computeStartTurn(
       dsSucc = ds.newSuccesses
       dsFail = ds.newFailures
     }
-    if (dead && conc) {
-      ae = removeAe(ae, conc)
-      conc = ""
+    if (dead && Option.isSome(conc)) {
+      ae = removeAe(ae, conc.value)
+      conc = Option.none()
     }
   }
 
@@ -138,9 +140,9 @@ export function computeStartTurn(
       }
       if (dz.addIncap) incap = addIncapSource(incap, "unconscious")
 
-      if (conc && (dead || (h === 0 && prevHp > 0) || !eff.conSaveSucceeded)) {
-        ae = removeAe(ae, conc)
-        conc = ""
+      if (Option.isSome(conc) && (dead || (h === 0 && prevHp > 0) || !eff.conSaveSucceeded)) {
+        ae = removeAe(ae, conc.value)
+        conc = Option.none()
       }
     }
   }

@@ -1,3 +1,5 @@
+import { Option } from "effect"
+
 import { useT } from "#/i18n.ts"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
 import { DEATH_SAVE_THRESHOLD, MAX_EXHAUSTION } from "#/machine-helpers.ts"
@@ -157,9 +159,9 @@ function SpellSlotGrid({ ctx }: { readonly ctx: DndContext }) {
           {t.pactSlots}: {ctx.pactSlotsCurrent}/{ctx.pactSlotsMax} (L{ctx.pactSlotLevel})
         </div>
       )}
-      {ctx.concentrationSpellId && (
+      {Option.isSome(ctx.concentrationSpellId) && (
         <div className="text-sm mt-1 text-yellow-400">
-          {t.concentration}: {ctx.concentrationSpellId}
+          {t.concentration}: {ctx.concentrationSpellId.value}
         </div>
       )}
     </div>

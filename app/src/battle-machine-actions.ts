@@ -37,8 +37,8 @@ type Args = { context: BattleContext; event: BattleEvent }
 
 export function battleInit({ event: e }: Args): Partial<BattleContext> {
   if (e.type !== "BATTLE_INIT") return {}
-  const creatures = new Map<string, BattleCreatureState>()
-  const initiative: Array<string> = []
+  const creatures = new Map<CreatureId, BattleCreatureState>()
+  const initiative: Array<CreatureId> = []
   for (const cfg of e.creatures) {
     const base = cfg.caster ? freshCaster(cfg.maxHp, cfg.kind) : freshCreature(cfg.maxHp, cfg.kind)
     creatures.set(cfg.id, {

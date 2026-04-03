@@ -2,7 +2,7 @@
  * Spell resolution helpers — concentration, spell entry, counterspell window.
  * Split from battle-machine-helpers.ts for eslint max-lines compliance.
  */
-import { Match } from "effect"
+import { Match, Option } from "effect"
 
 import { addEffect, startConcentration } from "#/battle-machine-creature.ts"
 import {
@@ -30,7 +30,7 @@ type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>
 
 export function resolveConcentration(cs: Creatures, conc: ConcentrationCtx): Map<CreatureId, BattleCreatureState> {
   let cs1: Map<CreatureId, BattleCreatureState> =
-    cs.get(conc.caster)!.concentrationSpellId !== "" ? breakConcentrationAndPropagate(cs, conc.caster) : new Map(cs)
+    Option.isSome(cs.get(conc.caster)!.concentrationSpellId) ? breakConcentrationAndPropagate(cs, conc.caster) : new Map(cs)
   let c = startConcentration(cs1.get(conc.caster)!, conc.spellId)
   c = addEffect(c, conc.spellId, conc.duration, "end", conc.caster)
   cs1 = setCreature(cs1, conc.caster, c)

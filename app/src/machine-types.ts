@@ -1,3 +1,4 @@
+import type { Option } from "effect"
 import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts"
 import type { ClassStateMap } from "#/machine-class-states.ts"
 import type { ConditionFlag } from "#/machine-helpers.ts"
@@ -5,6 +6,7 @@ import type {
   ActionType,
   ActiveEffect,
   Condition,
+  CreatureId,
   CreatureKind,
   D20Roll,
   DamageType,
@@ -17,6 +19,7 @@ import type {
   MovementFeet,
   ShoveChoice,
   Size,
+  SpellId,
   SpellSlots,
   TempHP
 } from "#/types.ts"
@@ -27,7 +30,7 @@ export interface TurnPhaseCtx {
   readonly hp: number
   readonly maxHp: number
   readonly tempHp: number
-  readonly concentrationSpellId: string
+  readonly concentrationSpellId: Option.Option<SpellId>
   readonly activeEffects: ReadonlyArray<ActiveEffect>
   readonly incapacitatedSources: ReadonlySet<IncapSource>
   readonly dead: boolean
@@ -40,7 +43,7 @@ export interface TurnPhaseCtx {
 export interface TurnPhaseResult {
   readonly conditions: Readonly<Partial<Record<ConditionFlag, boolean>>>
   readonly activeEffects: ReadonlyArray<ActiveEffect>
-  readonly concentrationSpellId: string
+  readonly concentrationSpellId: Option.Option<SpellId>
   readonly hp: HP
   readonly incapacitatedSources: ReadonlySet<IncapSource>
   readonly tempHp: TempHP
@@ -148,7 +151,7 @@ export interface DndContext {
   readonly pactSlotsMax: number
   readonly pactSlotsCurrent: number
   readonly pactSlotLevel: number
-  readonly concentrationSpellId: string
+  readonly concentrationSpellId: Option.Option<SpellId>
   readonly hitDiceRemaining: HitDiceRemaining
   readonly activeEffects: ReadonlyArray<ActiveEffect>
   readonly creatureKind: CreatureKind
@@ -167,13 +170,13 @@ export interface DndContext {
 // --- Events ---
 
 export interface EndTurnSave {
-  readonly spellId: string
+  readonly spellId: SpellId
   readonly saveSucceeded: boolean
   readonly conditionsToRemove: ReadonlyArray<Condition>
 }
 
 export interface EndTurnDamage {
-  readonly spellId: string
+  readonly spellId: SpellId
   readonly damage: number
   readonly damageType: DamageType
   readonly conSaveSucceeded: boolean
@@ -183,7 +186,7 @@ export interface EndTurnDamage {
 }
 
 export interface StartTurnEffect {
-  readonly spellId: string
+  readonly spellId: SpellId
   readonly healAmount: number
   readonly tempHpAmount: number
   readonly saveResult: boolean
@@ -268,22 +271,22 @@ export type DndEvent =
   | { readonly type: "EXPEND_SLOT"; readonly level: number }
   | {
       readonly type: "START_CONCENTRATION"
-      readonly spellId: string
+      readonly spellId: SpellId
       readonly durationTurns: number
       readonly expiresAt: ExpiryPhase
-      readonly casterId: string
+      readonly casterId: CreatureId
     }
   | {
       readonly type: "ADD_EFFECT"
-      readonly spellId: string
+      readonly spellId: SpellId
       readonly durationTurns: number
       readonly expiresAt: ExpiryPhase
-      readonly casterId: string
+      readonly casterId: CreatureId
       readonly grantedResistances?: ReadonlySet<DamageType>
       readonly grantedVulnerabilities?: ReadonlySet<DamageType>
       readonly grantedImmunities?: ReadonlySet<DamageType>
     }
-  | { readonly type: "REMOVE_EFFECT"; readonly spellId: string }
+  | { readonly type: "REMOVE_EFFECT"; readonly spellId: SpellId }
   | { readonly type: "BREAK_CONCENTRATION" }
   | { readonly type: "CONCENTRATION_CHECK"; readonly conSaveSucceeded: boolean }
   | {

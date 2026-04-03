@@ -2,11 +2,11 @@
  * Battle machine creature-level pure functions — ports creature.qnt pure functions.
  * All functions are pure (no XState imports, no side effects).
  */
-import { Match } from "effect"
+import { Match, Option } from "effect"
 
 import type { BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
 import { addIncapSource, ALL_DAMAGE_TYPES, removeIncapSource } from "#/machine-helpers.ts"
-import type { ActionType, ActiveEffect, Condition, DamageType, ExpiryPhase } from "#/types.ts"
+import type { ActionType, ActiveEffect, Condition, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
 
 function applyDamageModifiers(
   amount: number,
@@ -203,27 +203,27 @@ export function battleExpendSlot(c: BattleCreatureState, level: number): BattleC
 }
 
 export function breakConcentration(c: BattleCreatureState): BattleCreatureState {
-  if (c.concentrationSpellId === "") return c
-  const spellId = c.concentrationSpellId
-  return { ...c, concentrationSpellId: "", activeEffects: c.activeEffects.filter((e) => e.spellId !== spellId) }
+  if (Option.isNone(c.concentrationSpellId)) return c
+  const sid = c.concentrationSpellId.value
+  return { ...c, concentrationSpellId: Option.none(), activeEffects: c.activeEffects.filter((e) => e.spellId !== sid) }
 }
 
-export function startConcentration(c: BattleCreatureState, spellId: string): BattleCreatureState {
-  return { ...c, concentrationSpellId: spellId }
+export function startConcentration(c: BattleCreatureState, spellId: SpellId): BattleCreatureState {
+  return { ...c, concentrationSpellId: Option.some(spellId) }
 }
 
 export function addEffect(
   c: BattleCreatureState,
-  spellId: string,
+  spellId: SpellId,
   duration: number,
   expiresAt: ExpiryPhase,
-  casterId: string
+  casterId: CreatureId
 ): BattleCreatureState {
   const newEffect: ActiveEffect = { spellId, turnsRemaining: duration, expiresAt, casterId }
   return { ...c, activeEffects: [...c.activeEffects, newEffect] }
 }
 
-export function removeEffect(c: BattleCreatureState, spellId: string): BattleCreatureState {
+export function removeEffect(c: BattleCreatureState, spellId: SpellId): BattleCreatureState {
   return { ...c, activeEffects: c.activeEffects.filter((e) => e.spellId !== spellId) }
 }
 

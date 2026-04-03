@@ -1,3 +1,5 @@
+import { Option } from "effect"
+
 import {
   addIncapSource,
   ALL_DAMAGE_TYPES,
@@ -7,17 +9,17 @@ import {
   removeConditionUpdate
 } from "#/machine-helpers.ts"
 import type { EndTurnDamage, EndTurnSave, TurnPhaseCtx, TurnPhaseResult } from "#/machine-types.ts"
-import type { ActiveEffect, DamageType, ExpiryPhase } from "#/types.ts"
+import type { ActiveEffect, CreatureId, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
 import { deathSaveCount, hp, tempHp } from "#/types.ts"
 
 // --- Active effect helpers ---
 
 export function addAe(
   aes: ReadonlyArray<ActiveEffect>,
-  spellId: string,
+  spellId: SpellId,
   turnsRemaining: number,
   expiresAt: ExpiryPhase,
-  casterId: string,
+  casterId: CreatureId,
   grantedResistances?: ReadonlySet<DamageType>,
   grantedVulnerabilities?: ReadonlySet<DamageType>,
   grantedImmunities?: ReadonlySet<DamageType>
@@ -28,7 +30,7 @@ export function addAe(
   ]
 }
 
-export function removeAe(aes: ReadonlyArray<ActiveEffect>, spellId: string): ReadonlyArray<ActiveEffect> {
+export function removeAe(aes: ReadonlyArray<ActiveEffect>, spellId: SpellId): ReadonlyArray<ActiveEffect> {
   return aes.filter((ae) => ae.spellId !== spellId)
 }
 
@@ -50,7 +52,7 @@ export function computeEndTurn(
   const deathSuccesses = ctx.deathSaves.successes
 
   // Collect effect IDs to remove (saves + concentration break)
-  const removeIds = new Set<string>()
+  const removeIds = new Set<SpellId>()
 
   let unconscious = ctx.unconscious
   for (const save of saves) {
@@ -94,9 +96,9 @@ export function computeEndTurn(
     if (dz.addIncap) incap = addIncapSource(incap, "unconscious")
 
     // Concentration handling
-    if (conc && (dead || (h === 0 && prevHp > 0) || !dmg.conSaveSucceeded)) {
-      removeIds.add(conc)
-      conc = ""
+    if (Option.isSome(conc) && (dead || (h === 0 && prevHp > 0) || !dmg.conSaveSucceeded)) {
+      removeIds.add(conc.value)
+      conc = Option.none()
     }
   }
 

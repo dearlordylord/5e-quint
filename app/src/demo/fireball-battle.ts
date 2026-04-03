@@ -14,6 +14,7 @@
 import type { BattleEvent, InitCreatureConfig } from "#/battle-machine-types.ts"
 import type { ScenarioMeta } from "#/battle-scene/scene-snapshot.ts"
 import type { DamageType } from "#/types.ts"
+import { CreatureId as cid } from "#/types.ts"
 
 const WIZARD_HP = 50
 const FIREBALL_DMG = 28
@@ -31,24 +32,24 @@ const WITH_CS: ReadonlySet<string> = new Set([
 const NO_CS: ReadonlySet<string> = new Set(["hold_person", "bless", "fireball", "guiding_bolt", "shield"])
 
 const CREATURES: ReadonlyArray<InitCreatureConfig> = [
-  { id: "A", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: NO_CS },
-  { id: "D", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: NO_CS },
-  { id: "B", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
-  { id: "E", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
-  { id: "C", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
-  { id: "F", maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS }
+  { id: cid("A"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: NO_CS },
+  { id: cid("D"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: NO_CS },
+  { id: cid("B"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
+  { id: cid("E"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
+  { id: cid("C"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
+  { id: cid("F"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS }
 ]
 
 const cs = (reactorId: string | null, saveSucceeded: boolean, slotLvl = 3): BattleEvent => ({
   type: "BATTLE_RESOLVE_COUNTERSPELL",
-  reactorId,
+  reactorId: reactorId != null ? cid(reactorId) : null,
   decision: reactorId != null ? { tag: "RCounterspell" as const, saveSucceeded } : null,
   csSlotLvl: slotLvl
 })
 
 const aoeTarget = (targetId: string | null, saveRoll: number): BattleEvent => ({
   type: "BATTLE_RESOLVE_AOE_TARGET",
-  targetId,
+  targetId: targetId != null ? cid(targetId) : null,
   saveRoll
 })
 

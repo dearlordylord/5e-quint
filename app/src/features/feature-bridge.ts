@@ -28,6 +28,8 @@ import {
   useSecondWind as applySecondWind
 } from "#/features/class-fighter.ts"
 import type { FeatureAction, FeatureState } from "#/features/feature-store.ts"
+import { Option } from "effect"
+
 import type { DndContext, DndEvent } from "#/machine-types.ts"
 import type { Condition, DamageType } from "#/types.ts"
 import { healAmount } from "#/types.ts"
@@ -156,7 +158,7 @@ export function canExecuteEnterRage(featureState: FeatureState, ctx: DndContext)
 export function executeEnterRage(_featureState: FeatureState, ctx: DndContext): BridgeResult {
   // Entering rage costs a Bonus Action and breaks concentration if active
   const machineEvents: ReadonlyArray<DndEvent> =
-    ctx.concentrationSpellId !== ""
+    Option.isSome(ctx.concentrationSpellId)
       ? [{ type: "USE_BONUS_ACTION" }, { type: "BREAK_CONCENTRATION" }]
       : [{ type: "USE_BONUS_ACTION" }]
   return {

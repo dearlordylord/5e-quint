@@ -7,6 +7,7 @@
  * shows what the real machine produces ("implementation does").
  */
 
+import { Option } from "effect"
 import { createActor } from "xstate"
 
 import { dndMachine, type DndSnapshot } from "#/machine.ts"
@@ -76,7 +77,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     pactSlotsMax: c.pactSlotsMax,
     pactSlotsCurrent: c.pactSlotsCurrent,
     pactSlotLevel: c.pactSlotLevel,
-    concentrationSpellId: c.concentrationSpellId,
+    concentrationSpellId: Option.getOrElse(c.concentrationSpellId, () => ""),
     secondWindCharges: c.classStates.fighter?.secondWindCharges ?? 0,
     secondWindMax: c.classStates.fighter?.secondWindMax ?? 0,
     actionSurgeCharges: c.classStates.fighter?.actionSurgeCharges ?? 0,

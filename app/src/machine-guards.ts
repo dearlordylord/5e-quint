@@ -1,3 +1,5 @@
+import { Option } from "effect"
+
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
 import { addDeathFailures, MAX_EXHAUSTION, spendHalfSpeed, type TakeDamageResult } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
@@ -49,7 +51,7 @@ export const guards = {
   exhaustionDeath: ({ context: c }: GuardArg) => c.exhaustion >= MAX_EXHAUSTION,
   canStandFromProne: ({ context: c }: GuardArg) =>
     !isIncapacitated(c) && c.effectiveSpeed > 0 && spendHalfSpeed(c.movementRemaining, c.effectiveSpeed).success,
-  shouldBreakConcentration: ({ context: c }: GuardArg) => c.concentrationSpellId === "",
+  shouldBreakConcentration: ({ context: c }: GuardArg) => Option.isNone(c.concentrationSpellId),
   canExpendSlot: ({ context: c }: GuardArg) => c.hp > 0 && !isIncapacitated(c),
   contextDead: ({ context: c }: GuardArg) => c.dead,
   hpZeroUnconscious: ({ context: c }: GuardArg) => c.hp === 0 && c.unconscious,

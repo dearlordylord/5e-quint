@@ -1,6 +1,8 @@
+import { Option } from "effect"
 import { describe, expect, it } from "vitest"
 
 import { singleClassHitDice } from "#/features/class-tables.ts"
+import { spellId } from "#/types.ts"
 import {
   canExecuteActionSurge,
   canExecuteDeclareReckless,
@@ -114,7 +116,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     pactSlotsMax: 0,
     pactSlotsCurrent: 0,
     pactSlotLevel: 0,
-    concentrationSpellId: "",
+    concentrationSpellId: Option.none(),
     hitDiceRemaining: singleClassHitDice("fighter", 5),
     activeEffects: [],
     creatureKind: "PC",
@@ -228,7 +230,7 @@ describe("canExecuteEnterRage", () => {
 
 describe("executeEnterRage", () => {
   it("sends USE_BONUS_ACTION + BREAK_CONCENTRATION when concentrating", () => {
-    const result = executeEnterRage(makeBarbarianState(), makeCtx({ concentrationSpellId: "spell_x" }))
+    const result = executeEnterRage(makeBarbarianState(), makeCtx({ concentrationSpellId: Option.some(spellId("spell_x")) }))
     expect(result.machineEvents).toHaveLength(2)
     expect(result.machineEvents[0].type).toBe("USE_BONUS_ACTION")
     expect(result.machineEvents[1].type).toBe("BREAK_CONCENTRATION")
@@ -236,7 +238,7 @@ describe("executeEnterRage", () => {
   })
 
   it("sends USE_BONUS_ACTION only when not concentrating", () => {
-    const result = executeEnterRage(makeBarbarianState(), makeCtx({ concentrationSpellId: "" }))
+    const result = executeEnterRage(makeBarbarianState(), makeCtx({ concentrationSpellId: Option.none() }))
     expect(result.machineEvents).toHaveLength(1)
     expect(result.machineEvents[0].type).toBe("USE_BONUS_ACTION")
     expect(result.featureAction).toEqual({ type: "BARBARIAN_ENTER_RAGE" })

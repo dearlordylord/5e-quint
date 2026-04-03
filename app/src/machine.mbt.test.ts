@@ -41,7 +41,7 @@ import {
   snapshotToNormalized
 } from "#/mbt-shared.ts"
 import type { ActionType, Condition, CreatureKind, DamageType } from "#/types.ts"
-import { d20Roll, healAmount, tempHp } from "#/types.ts"
+import { CreatureId, d20Roll, healAmount, spellId, tempHp } from "#/types.ts"
 
 // ============================================================
 // ENFORCEMENT: every DndEvent type must have a driver action
@@ -529,7 +529,7 @@ function createDndDriver() {
           ? []
           : [
               {
-                spellId: effSpellId ?? "",
+                spellId: spellId(effSpellId ?? ""),
                 healAmount: Number(effHeal ?? 0),
                 tempHpAmount: Number(effTempHp ?? 0),
                 saveResult: effSaveResult ?? false,
@@ -608,7 +608,7 @@ function createDndDriver() {
           ? []
           : [
               {
-                spellId: saveSpellId ?? "",
+                spellId: spellId(saveSpellId ?? ""),
                 saveSucceeded: saveSucceeded ?? false,
                 conditionsToRemove: [QUINT_CONDITION_MAP[saveCondition ?? ""] ?? "blinded"]
               }
@@ -619,7 +619,7 @@ function createDndDriver() {
           ? []
           : [
               {
-                spellId: dmgSpellId ?? "",
+                spellId: spellId(dmgSpellId ?? ""),
                 damage: Number(dmgAmount ?? 0),
                 damageType: mapDamageType(dmgType ?? "Bludgeoning"),
                 conSaveSucceeded: conSave ?? false,
@@ -643,29 +643,29 @@ function createDndDriver() {
       doExpendPactSlot: () => {
         send({ type: "EXPEND_PACT_SLOT" })
       },
-      doStartConcentration: ({ duration, expiresAt, spellId }) => {
+      doStartConcentration: ({ duration, expiresAt, spellId: sid }) => {
         send({
           type: "START_CONCENTRATION",
-          spellId,
+          spellId: spellId(sid),
           durationTurns: Number(duration),
           expiresAt: mapExpiryPhase(expiresAt),
-          casterId: ""
+          casterId: CreatureId("")
         })
       },
       doBreakConcentration: () => {
         send({ type: "BREAK_CONCENTRATION" })
       },
-      doAddEffect: ({ duration, expiresAt, spellId }) => {
+      doAddEffect: ({ duration, expiresAt, spellId: sid }) => {
         send({
           type: "ADD_EFFECT",
-          spellId,
+          spellId: spellId(sid),
           durationTurns: Number(duration),
           expiresAt: mapExpiryPhase(expiresAt),
-          casterId: ""
+          casterId: CreatureId("")
         })
       },
-      doRemoveEffect: ({ spellId }) => {
-        send({ type: "REMOVE_EFFECT", spellId })
+      doRemoveEffect: ({ spellId: sid }) => {
+        send({ type: "REMOVE_EFFECT", spellId: spellId(sid) })
       },
       doConcentrationCheck: ({ saveSucceeded }) => {
         send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: saveSucceeded })

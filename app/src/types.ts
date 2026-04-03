@@ -86,10 +86,10 @@ export const EXPIRY_PHASES = ["start", "end"] as const
 export type ExpiryPhase = (typeof EXPIRY_PHASES)[number]
 
 export interface ActiveEffect {
-  readonly spellId: string
+  readonly spellId: SpellId
   readonly turnsRemaining: number
   readonly expiresAt: ExpiryPhase
-  readonly casterId: string
+  readonly casterId: CreatureId
   readonly grantedResistances?: ReadonlySet<DamageType>
   readonly grantedVulnerabilities?: ReadonlySet<DamageType>
   readonly grantedImmunities?: ReadonlySet<DamageType>

@@ -4,6 +4,7 @@
  */
 import * as path from "node:path"
 
+import { Option } from "effect"
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect"
 import { describe, it } from "vitest"
 import { createActor } from "xstate"
@@ -28,8 +29,8 @@ import {
   snapshotToNormalized,
   variantToString
 } from "#/mbt-shared.ts"
-import type { Condition, CreatureKind, DamageType } from "#/types.ts"
-import { healAmount } from "#/types.ts"
+import type { Condition, CreatureId, CreatureKind, DamageType } from "#/types.ts"
+import { CreatureId as mkCreatureId, healAmount, spellId as mkSpellId } from "#/types.ts"
 
 // ============================================================
 // Battle-level Zod schemas (B14.2)
@@ -239,7 +240,6 @@ function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
 // Battle projection driver
 // ============================================================
 
-type CreatureId = string
 type Actor = ReturnType<typeof createActor<typeof dndMachine>>
 const EMPTY_CONDITION_IMMUNITIES = new Set<Condition>()
 
@@ -299,18 +299,18 @@ function createBattleProjectionDriver() {
   return defineDriver(battleDriverSchema, () => {
     const actors = new Map<CreatureId, Actor>()
     const statBlocks = new Map<
-      CreatureId,
+      string,
       {
         multiattackLength: number
         rechargeMinRolls: Record<string, number>
       }
     >()
-    const creatureKinds = new Map<CreatureId, CreatureKind>()
+    const creatureKinds = new Map<string, CreatureKind>()
     let initiative: Array<string> = []
     let turnIndex = 0
 
     // Track who has been initialized with START_TURN
-    const turnStarted = new Set<CreatureId>()
+    const turnStarted = new Set<string>()
 
     // Pick helpers: values are already parsed by schema (number, string, boolean)
     function pickBigInt(picks: ReadonlyMap<string, unknown>, key: string): number | undefined {
@@ -329,28 +329,30 @@ function createBattleProjectionDriver() {
       const v = picks.get(key)
       return v != null ? String(v) : undefined
     }
+    /** Brand a raw string as CreatureId (MBT boundary). */
+    function cid(s: string): CreatureId { return mkCreatureId(s) }
 
-    function send(id: CreatureId, event: DndEvent) {
-      const actor = actors.get(id)
+    function send(id: string, event: DndEvent) {
+      const actor = actors.get(cid(id))
       if (!actor) throw new Error(`No actor for ${id}`)
       actor.send(event)
     }
 
     /** Transition creature to waitingForTurn if still acting (XState lifecycle). */
-    function ensureWaitingForTurn(id: CreatureId) {
+    function ensureWaitingForTurn(id: string) {
       const snap = getSnap(id)
       if (snap.matches({ turnPhase: "acting" })) {
         send(id, { type: "END_TURN", endOfTurnSaves: [], endOfTurnDamage: [] })
       }
     }
 
-    function getSnap(id: CreatureId): DndSnapshot {
-      const actor = actors.get(id)
+    function getSnap(id: string): DndSnapshot {
+      const actor = actors.get(cid(id))
       if (!actor) throw new Error(`No actor for ${id}`)
       return actor.getSnapshot()
     }
 
-    function activeId(): CreatureId {
+    function activeId(): string {
       return initiative[turnIndex]
     }
 
@@ -384,7 +386,7 @@ function createBattleProjectionDriver() {
       })
       actorA.start()
       actorA.send({ type: "ENTER_COMBAT" })
-      actors.set("A", actorA)
+      actors.set(cid("A"), actorA)
       creatureKinds.set("A", "PC")
 
       // B: PC caster, no class levels
@@ -401,7 +403,7 @@ function createBattleProjectionDriver() {
       })
       actorB.start()
       actorB.send({ type: "ENTER_COMBAT" })
-      actors.set("B", actorB)
+      actors.set(cid("B"), actorB)
       creatureKinds.set("B", "PC")
 
       // C: Monster with TEST_MONSTER_STAT_BLOCK (3 LA, 3 LR, breath_weapon recharge 5)
@@ -421,7 +423,7 @@ function createBattleProjectionDriver() {
       })
       actorC.start()
       actorC.send({ type: "ENTER_COMBAT" })
-      actors.set("C", actorC)
+      actors.set(cid("C"), actorC)
       creatureKinds.set("C", "Monster")
 
       // D: PC caster, no class levels (enables CS chain depth >= 2)
@@ -438,7 +440,7 @@ function createBattleProjectionDriver() {
       })
       actorD.start()
       actorD.send({ type: "ENTER_COMBAT" })
-      actors.set("D", actorD)
+      actors.set(cid("D"), actorD)
       creatureKinds.set("D", "PC")
 
       initiative = ["A", "B", "C", "D"]
@@ -484,7 +486,7 @@ function createBattleProjectionDriver() {
       const effects = hasEffects
         ? [
             {
-              spellId: "",
+              spellId: mkSpellId(""),
               healAmount: sotHeal,
               tempHpAmount: 0,
               saveResult: sotSaveResult,
@@ -752,8 +754,8 @@ function createBattleProjectionDriver() {
     } | null = null
 
     /** Check if target creature has reaction available (eligible for LR). */
-    function hasLRReactor(targetId: CreatureId): boolean {
-      const actor = actors.get(targetId)
+    function hasLRReactor(targetId: string): boolean {
+      const actor = actors.get(cid(targetId))
       if (!actor) return false
       const snap = actor.getSnapshot()
       return snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })
@@ -923,9 +925,10 @@ function createBattleProjectionDriver() {
     }
 
     /** Check if there are eligible CS reactors excluding a caster and offered set. */
-    function hasEligibleCSReactors(casterId: CreatureId, offered: ReadonlySet<string>): boolean {
-      return [...actors.entries()].some(([cid, actor]) => {
-        if (cid === casterId || offered.has(cid)) return false
+    function hasEligibleCSReactors(casterId: string, offered: ReadonlySet<string>): boolean {
+      return [...actors.entries()].some(([cidBranded, actor]) => {
+        const c = cidBranded as string
+        if (c === casterId || offered.has(c)) return false
         const snap = actor.getSnapshot()
         if (!snap.context.reactionAvailable || snap.matches({ damageTrack: "dead" })) return false
         return snap.context.slotsCurrent.slice(2).some((s) => s > 0)
@@ -1104,26 +1107,26 @@ function createBattleProjectionDriver() {
 
       // If already concentrating, break old concentration
       const ctx = getSnap(conc.caster).context
-      if (ctx.concentrationSpellId !== "") {
+      if (Option.isSome(ctx.concentrationSpellId)) {
         breakConcentrationAndPropagate(conc.caster)
       }
 
       // Start concentration
       send(conc.caster, {
         type: "START_CONCENTRATION",
-        spellId: conc.spellId,
+        spellId: mkSpellId(conc.spellId),
         durationTurns: conc.duration,
         expiresAt: "end",
-        casterId: conc.caster
+        casterId: mkCreatureId(conc.caster)
       })
 
       // Add effect to target
       send(conc.target, {
         type: "ADD_EFFECT",
-        spellId: conc.spellId,
+        spellId: mkSpellId(conc.spellId),
         durationTurns: conc.duration,
         expiresAt: "end",
-        casterId: conc.caster
+        casterId: mkCreatureId(conc.caster)
       })
 
       // Apply condition to target
@@ -1146,13 +1149,14 @@ function createBattleProjectionDriver() {
     }
 
     /** Break concentration for a caster and remove effects from all creatures. */
-    function breakConcentrationAndPropagate(casterId: CreatureId) {
+    function breakConcentrationAndPropagate(casterId: string) {
       const casterSnap = getSnap(casterId)
-      const spellId = casterSnap.context.concentrationSpellId
-      if (spellId === "") return
+      const concOpt = casterSnap.context.concentrationSpellId
+      if (Option.isNone(concOpt)) return
+      const sid = concOpt.value
 
       send(casterId, { type: "BREAK_CONCENTRATION" })
-      send(casterId, { type: "REMOVE_EFFECT", spellId })
+      send(casterId, { type: "REMOVE_EFFECT", spellId: sid })
 
       // Remove effects from other creatures cast by this caster (match by casterId)
       for (const [cid, actor] of actors) {
@@ -1340,7 +1344,7 @@ function createBattleProjectionDriver() {
         hasEotEffects && eotDmg > 0
           ? [
               {
-                spellId: "",
+                spellId: mkSpellId(""),
                 damage: eotDmg,
                 damageType: mapDamageType(eotDt),
                 conSaveSucceeded: eotConSave,

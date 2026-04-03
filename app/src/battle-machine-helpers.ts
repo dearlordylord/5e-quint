@@ -2,7 +2,7 @@
  * Battle-level helpers (ported from battle.qnt section 3).
  * Creature-level pure functions are in battle-machine-creature.ts.
  */
-import { Match } from "effect"
+import { Match, Option } from "effect"
 
 import {
   applyCondition,
@@ -29,7 +29,7 @@ import type {
   TriggerType
 } from "#/battle-machine-types.ts"
 import { BP_ACTIVE_TURN, FRESH_TURN_STATE } from "#/battle-machine-types.ts"
-import type { DamageType } from "#/types.ts"
+import type { DamageType, SpellId } from "#/types.ts"
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
 export const byTag = Match.discriminator("tag")
@@ -114,8 +114,9 @@ export function breakConcentrationAndPropagate(
   casterId: CreatureId
 ): Map<CreatureId, BattleCreatureState> {
   const caster = cs.get(casterId)!
-  const spellId = caster.concentrationSpellId
-  if (spellId === "") return new Map(cs)
+  const concOpt = caster.concentrationSpellId
+  if (Option.isNone(concOpt)) return new Map(cs)
+  const spellId = concOpt.value
   const result = setCreature(cs, casterId, breakConcentration(removeEffect(caster, spellId)))
   for (const [cid, c] of result) {
     if (cid === casterId) continue
@@ -323,12 +324,12 @@ function applyDamageWithConcBreak(
   dt: DamageType,
   conSaveSucceeded: boolean
 ): { creatures: Map<CreatureId, BattleCreatureState>; creature: BattleCreatureState } {
-  const hadConc = creature.concentrationSpellId !== ""
+  const hadConc = Option.isSome(creature.concentrationSpellId)
   let c = takeDamage(creature, dmg, dt, false)
   if (hadConc && (c.dead || isIncapacitated(c))) c = breakConcentration(c)
-  if (c.concentrationSpellId !== "" && !conSaveSucceeded) c = breakConcentration(c)
+  if (Option.isSome(c.concentrationSpellId) && !conSaveSucceeded) c = breakConcentration(c)
   let result = setCreature(cs, id, c)
-  if (hadConc && c.concentrationSpellId === "") {
+  if (hadConc && Option.isNone(c.concentrationSpellId)) {
     result = breakConcentrationAndPropagate(result, id)
     c = result.get(id)!
   }
@@ -387,7 +388,7 @@ export function processEndTurn(
   let c = cs.get(activeId)!
   const hasEotEffects = c.activeEffects.length > 0
   if (hasEotEffects && eotSaveSucceeded) {
-    const idsToRemove = new Set<string>()
+    const idsToRemove = new Set<SpellId>()
     for (const ae of c.activeEffects) {
       if (ae.expiresAt === "end") idsToRemove.add(ae.spellId)
     }
@@ -403,7 +404,7 @@ export function processEndTurn(
     c = { ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") }
     result = setCreature(cs, activeId, c)
     const oldConcId = cs.get(activeId)!.concentrationSpellId
-    if (oldConcId !== "" && result.get(activeId)!.concentrationSpellId === "")
+    if (Option.isSome(oldConcId) && Option.isNone(result.get(activeId)!.concentrationSpellId))
       result = breakConcentrationAndPropagate(result, activeId)
   }
   return result

@@ -2,9 +2,11 @@
  * Battle-level XState machine types — mirrors battle.qnt state variables and types.
  * Flat context with Map<CreatureId, BattleCreature>, phase as discriminated union.
  */
-import type { ActiveEffect, Condition, CreatureKind, DamageType, IncapSource } from "#/types.ts"
+import { Option } from "effect"
 
-export type CreatureId = string
+import type { ActiveEffect, Condition, CreatureId, CreatureKind, DamageType, IncapSource, SpellId } from "#/types.ts"
+
+export type { CreatureId } from "#/types.ts"
 
 export interface BattleCreatureState {
   readonly hp: number
@@ -53,7 +55,7 @@ export interface BattleCreatureState {
   readonly pactSlotsMax: number
   readonly pactSlotsCurrent: number
   readonly pactSlotLevel: number
-  readonly concentrationSpellId: string
+  readonly concentrationSpellId: Option.Option<SpellId>
   // MonsterResourceState
   readonly legendaryActionsRemaining: number
   readonly legendaryResistancesRemaining: number
@@ -140,7 +142,7 @@ export interface AoESpellCtx {
 export interface ConcentrationCtx {
   readonly caster: CreatureId
   readonly target: CreatureId
-  readonly spellId: string
+  readonly spellId: SpellId
   readonly duration: number
   readonly conditionOnFail: Condition
   readonly applyCondition: boolean
@@ -331,7 +333,7 @@ export type BattleEvent =
       readonly targetId: CreatureId
       readonly slotLvl: number
       readonly duration: number
-      readonly spellId: string
+      readonly spellId: SpellId
       readonly cond: Condition
       readonly applyCond: boolean
       readonly ritual: boolean
@@ -447,7 +449,7 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     pactSlotsMax: 0,
     pactSlotsCurrent: 0,
     pactSlotLevel: 0,
-    concentrationSpellId: "",
+    concentrationSpellId: Option.none(),
     legendaryActionsRemaining: 0,
     legendaryResistancesRemaining: 0,
     rechargeAvailable: {},

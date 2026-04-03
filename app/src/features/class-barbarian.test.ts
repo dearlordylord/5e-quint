@@ -1,6 +1,8 @@
+import { Option } from "effect"
 import { describe, expect, it } from "vitest"
 
 import type { RageState } from "#/features/class-barbarian.ts"
+import { spellId } from "#/types.ts"
 import {
   applyForcefulBlow,
   applyFrenzy,
@@ -61,7 +63,7 @@ function makeRageState(overrides?: Partial<RageState>): RageState {
     rageTurnsRemaining: 0,
     attackedOrForcedSaveThisTurn: false,
     rageExtendedWithBA: false,
-    concentrationSpellId: "",
+    concentrationSpellId: Option.none(),
     ...overrides
   }
 }
@@ -97,9 +99,9 @@ describe("rage", () => {
   })
 
   it("should break concentration when entering rage", () => {
-    const state = makeRageState({ concentrationSpellId: "bless" })
+    const state = makeRageState({ concentrationSpellId: Option.some(spellId("bless")) })
     const result = pEnterRage(state)
-    expect(result.concentrationSpellId).toBe("")
+    expect(Option.isNone(result.concentrationSpellId)).toBe(true)
   })
 
   it("should end rage explicitly", () => {
