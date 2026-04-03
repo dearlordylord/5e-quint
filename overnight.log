@@ -148,3 +148,16 @@ Summary: 0 fixed, 1 new logged (slotsCurrent runtime), rest already tracked
   No new bug patterns. Failure rate down significantly: ~6/30min vs 100% pre-fix.
 
 Summary: 0 fixed, 0 new (all failures are known tracked issues)
+
+2026-04-02T23:07:00 — Cron check #6
+  MBT failures: 6 new (5x extraAttacksRemaining, 1x slotsCurrent)
+  Invariant failures: 8 new (same pattern)
+
+2026-04-02T23:07:00 — FIXED: paladin Extra Attack missing from MBT bridge
+  All extraAttacksRemaining failures were Paladin PCs (level 5+).
+  The bridge computed extra attacks from Fighter/Barbarian/Monk/Ranger but not Paladin.
+  Added paladinExtraAttacks to the Math.max() in doStartTurn.
+  SRD 5.2.1: Paladin gets Extra Attack at level 5.
+  Fuzzers restarted with fix.
+
+Summary: 1 fixed (extraAttacksRemaining), 0 new
