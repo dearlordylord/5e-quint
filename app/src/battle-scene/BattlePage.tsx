@@ -3,9 +3,10 @@ import { createActor } from "xstate"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleEvent } from "#/battle-machine-types.ts"
+import { EventLog, type EventLogEntry } from "#/components/EventLog.tsx"
+import { PlaybackControls } from "#/components/PlaybackControls.tsx"
 
 import { BattleField } from "./BattleField.tsx"
-import { BattleLog } from "./BattleLog.tsx"
 import { directorStep, EMPTY_CUES } from "./director.ts"
 import { computeLayout } from "./layout.ts"
 import { narrate } from "./narrate.ts"
@@ -36,8 +37,6 @@ const SPELL_NAME_FADE_MS = 800
 export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   const { events, meta } = scenario
   const [cursor, setCursor] = useState(0)
-  const [autoPlay, setAutoPlay] = useState(false)
-  const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [castBarFaded, setCastBarFaded] = useState(false)
   const [spellFaded, setSpellFaded] = useState(false)
   const castBarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -106,104 +105,18 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
     [events.length]
   )
 
-  const stepForward = useCallback(() => {
-    setCursor((prev) => (prev + 1 < events.length ? prev + 1 : prev))
-  }, [events.length])
-
-  const toggleAutoPlay = useCallback(() => {
-    setAutoPlay((prev) => {
-      if (prev) {
-        if (autoPlayRef.current) clearTimeout(autoPlayRef.current)
-        autoPlayRef.current = null
-        return false
-      }
-      const advance = () => {
-        setCursor((c) => {
-          const next = c + 1
-          if (next >= events.length) {
-            setAutoPlay(false)
-            return c
-          }
-          autoPlayRef.current = setTimeout(advance, 800)
-          return next
-        })
-      }
-      advance()
-      return true
-    })
-  }, [events.length])
-
-  useEffect(() => {
-    return () => {
-      if (autoPlayRef.current) clearTimeout(autoPlayRef.current)
-    }
-  }, [])
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") {
-        e.preventDefault()
-        setCursor((prev) => (prev + 1 < events.length ? prev + 1 : prev))
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault()
-        setCursor((prev) => (prev > 0 ? prev - 1 : prev))
-      } else if (e.key === " ") {
-        e.preventDefault()
-        toggleAutoPlay()
-      }
-    }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, [toggleAutoPlay, events.length])
+  const logEntries: ReadonlyArray<EventLogEntry> = useMemo(
+    () => events.map((ev) => ({ label: ev.type.replace("BATTLE_", ""), detail: narrate(ev, meta) })),
+    [events, meta]
+  )
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center p-8">
-      <h1 className="text-2xl font-bold mb-4">Battle Visualizer</h1>
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center p-8">
+      <h1 className="text-2xl font-bold text-amber-400 mb-4">Battle Visualizer</h1>
 
-      <div className="flex gap-3 mb-4">
-        <button
-          onClick={() => stepTo(0)}
-          disabled={cursor <= 0}
-          className="px-3 py-1 bg-slate-700 rounded hover:bg-slate-600 disabled:opacity-40"
-        >
-          Reset
-        </button>
-        <button
-          onClick={() => stepTo(Math.max(0, cursor - 1))}
-          disabled={cursor <= 0}
-          className="px-3 py-1 bg-slate-700 rounded hover:bg-slate-600 disabled:opacity-40"
-        >
-          Prev
-        </button>
-        <button
-          onClick={stepForward}
-          disabled={cursor >= events.length - 1}
-          className="px-3 py-1 bg-slate-700 rounded hover:bg-slate-600 disabled:opacity-40"
-        >
-          Next
-        </button>
-        <button
-          onClick={toggleAutoPlay}
-          disabled={!autoPlay && cursor >= events.length - 1}
-          className={`px-3 py-1 rounded disabled:opacity-40 ${autoPlay ? "bg-amber-600 hover:bg-amber-500" : "bg-slate-700 hover:bg-slate-600"}`}
-        >
-          {autoPlay ? "Pause" : "Play"}
-        </button>
-        <span className="text-sm text-slate-400 self-center">
-          Step {cursor + 1} / {events.length}
-        </span>
-      </div>
+      <PlaybackControls cursor={cursor} total={events.length} onStepTo={stepTo} />
 
-      <input
-        type="range"
-        min={0}
-        max={events.length - 1}
-        value={cursor}
-        onChange={(e) => stepTo(Number(e.target.value))}
-        className="w-full max-w-3xl mb-3 accent-amber-500"
-      />
-
-      <div className="w-full max-w-3xl mb-3 px-4 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-slate-200 text-center min-h-[2.5rem] flex items-center justify-center">
+      <div className="w-full max-w-3xl mt-3 mb-3 px-4 py-2 rounded-xl border border-gray-700 bg-gray-800 text-sm text-gray-200 text-center min-h-[2.5rem] flex items-center justify-center">
         {snapshot?.activeCreatureId && (
           <span className="text-amber-400 font-semibold mr-2">
             {meta.names[snapshot.activeCreatureId] ?? snapshot.activeCreatureId}:
@@ -214,7 +127,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
 
       {layout && <BattleField layout={layout} />}
 
-      <BattleLog events={events} cursor={cursor} onJumpTo={stepTo} />
+      <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
     </div>
   )
 }

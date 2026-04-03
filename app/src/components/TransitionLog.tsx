@@ -143,6 +143,16 @@ export const TransitionLog = memo(function TransitionLog({
           </div>
         )}
       </div>
+      {log.length > 0 && (
+        <input
+          type="range"
+          min={-1}
+          max={log.length - 1}
+          value={cursor}
+          onChange={(e) => onJumpTo(Number(e.target.value))}
+          className="mb-3 w-full accent-amber-500"
+        />
+      )}
       {log.length === 0 ? (
         <p className="text-xs text-gray-500">{t.logNoEvents}</p>
       ) : (
