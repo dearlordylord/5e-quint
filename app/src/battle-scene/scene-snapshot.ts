@@ -3,6 +3,7 @@
  * No coordinates (pixels), no time, no animation. Grid positions and game-unit measurements only.
  */
 import { Option } from "effect"
+
 import { isIncapacitated } from "#/battle-machine-creature.ts"
 import type {
   AoESpellCtx,
@@ -34,6 +35,8 @@ export interface SpriteRect {
   h: number
   imgW: number
   imgH: number
+  /** Zoom factor for the sprite within the token circle (default 1). */
+  scale?: number
 }
 
 /** Everything needed to play back a battle scenario. */

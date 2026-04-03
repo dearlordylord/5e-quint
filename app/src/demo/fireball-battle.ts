@@ -321,14 +321,13 @@ export const FIREBALL_BATTLE_META = {
     "84": "Fireball"
   },
   sprites: (() => {
-    const url = "/sprites/wizards.png"
-    const imgW = 1408
-    const imgH = 768
-    const colW = 235
-    const y = 220
-    const h = 280
-    // Wizard order in image: 0=blue-staff, 1=red-torch, 2=green-shield, 3=purple-staff, 4=skull, 5=boy-wand
-    const sprite = (col: number) => ({ url, x: col * colW, y, w: colW, h, imgW, imgH })
-    return { A: sprite(0), D: sprite(1), B: sprite(2), C: sprite(3), E: sprite(4), F: sprite(5) }
+    const imgW = 384
+    const imgH = 448
+    const w = 64
+    const h = 64
+    const scale = 1.8
+    // Idle frame: row 0, col 0 of each wizard_pack sheet
+    const sprite = (file: number) => ({ url: `/sprites/${file}.png`, x: 0, y: 0, w, h, imgW, imgH, scale })
+    return { A: sprite(5), B: sprite(1), C: sprite(3), D: sprite(4), E: sprite(2), F: sprite(6) }
   })()
 } satisfies ScenarioMeta

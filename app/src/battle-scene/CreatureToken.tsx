@@ -1,6 +1,26 @@
 import { AnimatePresence, motion } from "motion/react"
 
 import type { CreatureLayout } from "./layout.ts"
+import type { SpriteRect } from "./scene-snapshot.ts"
+
+/**
+ * Compute background-position and background-size for a SpriteRect inside a
+ * square token of `size` px.  `row` selects which animation row to display
+ * (0 = idle, 1 = cast, 2 = death, 3 = attack).  `scale` zooms in while
+ * keeping the frame centered.
+ */
+function spriteBackgroundStyle(s: SpriteRect, size: number, row: number, col = 0, xBias = 0, yBias = 0) {
+  const scale = s.scale ?? 1
+  const unit = (size * scale) / s.w
+  const overflowX = s.w * unit - size
+  const overflowY = s.h * unit - size
+  const frameX = s.x + col * s.w
+  const frameY = s.y + row * s.h
+  return {
+    backgroundPosition: `-${frameX * unit + overflowX / 2 + xBias * unit}px -${frameY * unit + overflowY / 2 + yBias * unit}px`,
+    backgroundSize: `${s.imgW * unit}px ${s.imgH * unit}px`
+  }
+}
 
 export function CreatureToken(props: CreatureLayout) {
   const strokeColor = props.damageFlash
@@ -52,6 +72,7 @@ export function CreatureToken(props: CreatureLayout) {
             </clipPath>
           </defs>
           <foreignObject
+            key={props.unconscious ? "death" : props.castingGlow ? "cast" : "idle"}
             x={props.cx - r}
             y={props.cy - r}
             width={r * 2}
@@ -63,9 +84,16 @@ export function CreatureToken(props: CreatureLayout) {
                 width: r * 2,
                 height: r * 2,
                 backgroundImage: `url(${props.sprite.url})`,
-                backgroundPosition: `-${(props.sprite.x * (r * 2)) / props.sprite.w}px -${(props.sprite.y * (r * 2)) / props.sprite.w}px`,
-                backgroundSize: `${(props.sprite.imgW * (r * 2)) / props.sprite.w}px auto`,
+                ...spriteBackgroundStyle(
+                  props.sprite,
+                  r * 2,
+                  props.unconscious ? 2 : props.castingGlow ? 1 : 0,
+                  props.unconscious ? 5 : 0,
+                  props.unconscious ? 6 : 0,
+                  props.unconscious ? 6 : 0
+                ),
                 backgroundRepeat: "no-repeat",
+                imageRendering: "pixelated",
                 borderRadius: "50%",
                 overflow: "hidden"
               }}
@@ -86,7 +114,7 @@ export function CreatureToken(props: CreatureLayout) {
         />
       )}
 
-      <text x={props.cx} y={props.cy + r + 14} textAnchor="middle" fill="#9ca3af" fontSize={8} pointerEvents="none">
+      <text x={props.cx} y={props.labelY} textAnchor="middle" fill="#9ca3af" fontSize={8} pointerEvents="none">
         {props.label}
       </text>
 

@@ -46,11 +46,13 @@ export interface CreatureLayout {
   sprite: SpriteRect | null
   opacity: number
   label: string
+  labelY: number
   hpBar: BarLayout
   tempHpBar: BarLayout | null
   castBar: BarLayout | null
   slotRows: ReadonlyArray<{ x: number; y: number; level: number; filled: number; total: number }>
   deathSaves: { x: number; y: number; successes: number; failures: number } | null
+  unconscious: boolean
   damageFlash: boolean
   castingGlow: boolean
   justBecameUnconscious: boolean
@@ -179,12 +181,13 @@ function computeCreatureLayout(
     sprite,
     opacity,
     label: creature.name,
+    labelY: hpBarY + config.barHeight + (tempHpBar ? config.barHeight + 4 : 2) + 8,
     hpBar,
     tempHpBar,
     castBar,
     slotRows: creature.slotsByLevel.map((s, i) => ({
       x: barX,
-      y: hpBarY + config.barHeight + (tempHpBar ? config.barHeight + 4 : 2) + i * 6,
+      y: hpBarY + config.barHeight + (tempHpBar ? config.barHeight + 4 : 2) + 13 + i * 6,
       level: i + 1,
       filled: s.current,
       total: s.max
@@ -197,6 +200,7 @@ function computeCreatureLayout(
           failures: creature.deathSaves.failures
         }
       : null,
+    unconscious: creature.unconscious,
     damageFlash: cue.damageFlash,
     castingGlow: cue.castingGlow,
     justBecameUnconscious: cue.justBecameUnconscious,
