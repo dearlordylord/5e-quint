@@ -21,7 +21,7 @@ export const DEFAULT_LAYOUT_CONFIG: LayoutConfig = {
   cellSize: 60,
   gridCols: 11,
   gridRows: 11,
-  tokenRadius: 22,
+  tokenRadius: 26,
   barWidth: 44,
   barHeight: 5
 }
@@ -43,6 +43,8 @@ export interface SpriteLayout {
   sy: number
   sw: number
   sh: number
+  imgW: number
+  imgH: number
 }
 
 export interface CreatureLayout {
@@ -182,7 +184,9 @@ function computeCreatureLayout(
         sx: creature.sprite.x,
         sy: creature.sprite.y,
         sw: creature.sprite.w,
-        sh: creature.sprite.h
+        sh: creature.sprite.h,
+        imgW: creature.sprite.imgW,
+        imgH: creature.sprite.imgH
       }
     : null
 

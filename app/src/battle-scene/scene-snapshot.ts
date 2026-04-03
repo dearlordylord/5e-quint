@@ -22,7 +22,7 @@ export interface ScenarioMeta {
   gridPositions: Record<string, { row: number; col: number }>
   aoeTargetPoints: Record<string, { row: number; col: number }>
   spellAnnotations: Record<string, string>
-  sprites?: Record<string, { url: string; x: number; y: number; w: number; h: number }>
+  sprites?: Record<string, { url: string; x: number; y: number; w: number; h: number; imgW: number; imgH: number }>
 }
 
 /** Everything needed to play back a battle scenario. */
@@ -46,7 +46,7 @@ export interface CreatureSnapshot {
   id: string
   name: string
   team: "blue" | "red"
-  sprite: { url: string; x: number; y: number; w: number; h: number } | null
+  sprite: { url: string; x: number; y: number; w: number; h: number; imgW: number; imgH: number } | null
   gridPos: { row: number; col: number }
   hpRatio: number
   currentHp: number

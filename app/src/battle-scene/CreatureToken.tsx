@@ -61,7 +61,7 @@ export function CreatureToken(props: CreatureLayout) {
             clipPath={`url(#clip-${props.id})`}
             preserveAspectRatio="xMidYMid slice"
           >
-            <image href={props.sprite.url} x={0} y={0} />
+            <image href={props.sprite.url} x={0} y={0} width={props.sprite.imgW} height={props.sprite.imgH} />
           </svg>
           <circle cx={props.cx} cy={props.cy} r={r} fill="none" stroke={strokeColor} strokeWidth={strokeWidth} />
         </>
