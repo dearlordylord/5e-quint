@@ -741,7 +741,7 @@ export function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): No
     stunned: s.stunned,
     unconscious: s.unconscious,
     incapacitatedSources: s.incapacitatedSources,
-    hitDiceRemaining: s.hitDiceRemaining,
+    hitDiceRemaining: Object.fromEntries(Object.entries(s.hitDiceRemaining).map(([k, v]) => [k.toLowerCase(), v])),
     activeEffects: s.activeEffects,
     movementRemaining: Number(t.movementRemaining),
     effectiveSpeed: Number(t.effectiveSpeed),
