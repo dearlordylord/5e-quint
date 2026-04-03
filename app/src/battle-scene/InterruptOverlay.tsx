@@ -12,7 +12,7 @@ export function InterruptOverlay({ label, opacity, viewBox }: Props) {
       {label && (
         <text
           x={viewBox.width / 2}
-          y={36}
+          y={viewBox.height * 0.055}
           textAnchor="middle"
           dominantBaseline="central"
           fill="#fbbf24"
