@@ -269,6 +269,15 @@ module battle {
     setSlots(cs, id, pRestoreSlot(cs.get(id).slots, level))
   }
 
+  /// Conditionally refund a fizzled spell's slot from a stack entry.
+  /// No-op for rituals (no slot to refund) or slotLvl 0.
+  pure def maybeRefundEntry(
+    cs: CreatureId -> Combatant, entry: SpellStackEntry
+  ): (CreatureId -> Combatant) = {
+    if (not(entry.ritual) and entry.slotLvl > 0) refundSlot(cs, entry.spellCasterId, entry.slotLvl)
+    else cs
+  }
+
   pure def hasReaction(cs: CreatureId -> Combatant, id: CreatureId): bool =
     cs.get(id).turn.reactionAvailable
 
@@ -1093,9 +1102,7 @@ module battle {
               match popped.top.spellPostCast {
                 | PCECounterspell(_) =>
                   // Fizzled spell was itself a CS → refund its slot, let grandparent continue.
-                  // CS slot was spent at cast time (line ~1205); refund per SRD 5.2.1.
-                  val csRefundCS = if (popped.top.slotLvl > 0)
-                    refundSlot(cs, popped.top.spellCasterId, popped.top.slotLvl) else cs
+                  val csRefundCS = maybeRefundEntry(cs, popped.top)
                   if (popped.rest.length() == 0) {
                     { creatures: csRefundCS, phase: BPActiveTurn, stack: popped.rest }
                   } else {
@@ -1116,11 +1123,8 @@ module battle {
                     }
                   }
                 | _ =>
-                  // Original spell fizzled → refund slot (SRD 5.2.1 Counterspell: "the slot isn't expended").
-                  // slotExpendedThisTurn stays true (one-slot-per-turn quota used).
-                  val csRefund = if (not(popped.top.ritual) and popped.top.slotLvl > 0)
-                    refundSlot(cs, popped.top.spellCasterId, popped.top.slotLvl) else cs
-                  { creatures: csRefund, phase: BPActiveTurn, stack: popped.rest }
+                  // Original spell fizzled → refund slot (SRD 5.2.1: "the slot isn't expended").
+                  { creatures: maybeRefundEntry(cs, popped.top), phase: BPActiveTurn, stack: popped.rest }
               }
             } else {
               // CS fails → interrupted spell continues; return to its CS window.
@@ -1168,8 +1172,7 @@ module battle {
                       match popped.top.spellPostCast {
                         | PCECounterspell(_) =>
                           // Fizzled spell was a CS → refund CS slot, its target spell continues
-                          val csRef2 = if (popped.top.slotLvl > 0)
-                            refundSlot(bCreatures, popped.top.spellCasterId, popped.top.slotLvl) else bCreatures
+                          val csRef2 = maybeRefundEntry(bCreatures, popped.top)
                           if (popped.rest.length() == 0) {
                             all { bCreatures' = csRef2, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted }
                           } else {
@@ -1179,8 +1182,7 @@ module battle {
                           }
                         | _ =>
                           // Original spell fizzled → refund slot
-                          val csRef3 = if (not(popped.top.ritual) and popped.top.slotLvl > 0)
-                            refundSlot(bCreatures, popped.top.spellCasterId, popped.top.slotLvl) else bCreatures
+                          val csRef3 = maybeRefundEntry(bCreatures, popped.top)
                           all { bCreatures' = csRef3, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted }
                       }
                     } else {
