@@ -1,8 +1,9 @@
 /* eslint-disable max-lines */
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useState } from "react"
 
 import { HighlightedQuint } from "#/components/demo/HighlightedQuint.tsx"
 import { type QuintSnippet, SNIPPETS } from "#/components/demo/quint-snippets.ts"
+import { PlaybackControls } from "#/components/PlaybackControls.tsx"
 import { dndMachine } from "#/machine.ts"
 
 import { CR_C4E04_ENCOUNTER, CR_C4E04_SUMMARY, CR_C4E04_TRACE } from "./actual-play-cr-c4e04.ts"
@@ -568,8 +569,6 @@ function VerificationStatus() {
 // Main component
 // ---------------------------------------------------------------------------
 
-const PLAYBACK_SPEED_MS = 1200
-
 interface TraceOption {
   readonly id: string
   readonly label: string
@@ -630,14 +629,10 @@ export function TraceVisualizer() {
   const selectedOption = TRACE_OPTIONS.find((t) => t.id === selectedTraceId) ?? TRACE_OPTIONS[0]
   const trace = selectedOption.trace
   const [currentStep, setCurrentStep] = useState(0)
-  const [playing, setPlaying] = useState(false)
-  const playRef = useRef(false)
 
   const handleTraceChange = useCallback((id: string) => {
     setSelectedTraceId(id)
     setCurrentStep(0)
-    setPlaying(false)
-    playRef.current = false
   }, [])
 
   const goTo = useCallback(
@@ -646,51 +641,6 @@ export function TraceVisualizer() {
     },
     [trace.length]
   )
-
-  const goBack = useCallback(() => goTo(currentStep - 1), [goTo, currentStep])
-  const goForward = useCallback(() => goTo(currentStep + 1), [goTo, currentStep])
-
-  const togglePlay = useCallback(() => {
-    setPlaying((prev) => {
-      playRef.current = !prev
-      return !prev
-    })
-  }, [])
-
-  // Auto-advance
-  useEffect(() => {
-    if (!playing) return
-    const timer = setInterval(() => {
-      if (!playRef.current) return
-      setCurrentStep((prev) => {
-        if (prev >= trace.length - 1) {
-          setPlaying(false)
-          playRef.current = false
-          return prev
-        }
-        return prev + 1
-      })
-    }, PLAYBACK_SPEED_MS)
-    return () => clearInterval(timer)
-  }, [playing, trace.length])
-
-  // Keyboard navigation
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-        e.preventDefault()
-        setCurrentStep((prev) => Math.max(0, prev - 1))
-      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-        e.preventDefault()
-        setCurrentStep((prev) => Math.min(trace.length - 1, prev + 1))
-      } else if (e.key === " ") {
-        e.preventDefault()
-        togglePlay()
-      }
-    }
-    window.addEventListener("keydown", handleKey)
-    return () => window.removeEventListener("keydown", handleKey)
-  }, [trace.length, togglePlay])
 
   const currentTraceStep = trace[currentStep]
   const prevState = currentStep > 0 ? trace[currentStep - 1].quintState : null
@@ -722,33 +672,7 @@ export function TraceVisualizer() {
       <div className="mx-auto max-w-7xl px-4 py-6">
         {/* Timeline strip */}
         <div className="mb-6">
-          <div className="flex items-center gap-4 mb-3">
-            <button
-              onClick={goBack}
-              disabled={currentStep === 0}
-              className="rounded bg-gray-800 px-3 py-1.5 text-sm font-mono text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
-            >
-              &larr; Prev
-            </button>
-            <button
-              onClick={togglePlay}
-              className={`rounded px-3 py-1.5 text-sm font-mono transition ${
-                playing
-                  ? "bg-red-700 text-red-100 hover:bg-red-600"
-                  : "bg-emerald-700 text-emerald-100 hover:bg-emerald-600"
-              }`}
-            >
-              {playing ? "Pause" : "Play"}
-            </button>
-            <button
-              onClick={goForward}
-              disabled={currentStep === trace.length - 1}
-              className="rounded bg-gray-800 px-3 py-1.5 text-sm font-mono text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
-            >
-              Next &rarr;
-            </button>
-            <span className="text-[10px] text-gray-600 ml-2">Arrow keys to navigate, Space to play/pause</span>
-          </div>
+          <PlaybackControls cursor={currentStep} total={trace.length} onStepTo={goTo} />
           <div className="flex flex-wrap items-center gap-1.5 py-2 px-1">
             {trace.map((s, i) => (
               <StepIndicator
