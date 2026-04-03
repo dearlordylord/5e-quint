@@ -210,7 +210,7 @@ Expand the reaction set from 2 to full SRD catalog.
 
 **[B14] Per-creature projection MBT** — Project battle traces per-creature, replay against existing creature XState machines. Validates that the battle spec's per-creature effects match existing creature machine behavior. Ref: O4.1.B.
 
-**[B15] Battle-level XState machine** — Monolithic `battleMachine` with flat context mirroring battle.qnt's 7 state variables. 22 events 1:1 with Quint actions. MBT validates battle-level state (turnIndex, round, turnStarted) + per-creature fields. No actor model — flat Map matches Quint's flat Map. Ref: O4.1.A.
+**[B15] Battle-level XState machine** — Monolithic `battleMachine` with flat context mirroring battle.qnt's 7 state variables. 22 events 1:1 with Quint actions. MBT validates battle-level state (turnIndex, round, turnStarted) + per-creature fields. No actor model — flat Map matches Quint's flat Map. `ended` state is scaffolding — battle-over is a DM decision (external `BATTLE_END` event), not an auto-guard. Ref: O4.1.A.
 
 ### Phase 5: Initiative & Surprise
 
@@ -253,4 +253,8 @@ Validated with 6 known seeds + 12 random seeds. All passing seeds show zero mism
 **Quint evaluator timeouts** — Some seeds cause the Rust evaluator to exceed the 300s vitest timeout during trace generation. Root cause: expanded nondeterministic search space from `preparedSpells`, `ritual`, `spellName` fields. Not a driver bug. Mitigation options: constrain test-creature `preparedSpells` sets, or pre-generate traces to files for replay.
 
 **`eligibleForCounterspell` missing "one slot per turn" guard** — SRD 5.2.1 "One Spell with a Spell Slot per Turn" (Spells/Gaining-and-Casting.md L94-96): "On a turn, you can expend only one spell slot to cast a spell." `eligibleForCounterspell` only checks `hasCounterspellSlot` (has a level 3+ slot) — it doesn't check whether the creature already expended a slot this turn. This allows a caster to cast a spell (expending slot) then counterspell a counterspell (expending a second slot on the same turn). Detected by `spellStackDistinctCasters` invariant (currently excluded from `allBattleInvariants`). Fix: track "slot expended this turn" per creature (likely a `TurnState` bool) and add it as a guard in `eligibleForCounterspell`. Reproducer: `npx quint run --seed=0x7e658cb2 --invariant=spellStackDistinctCasters --init=bInit --step=battleStep --main=battle battle.qnt`.
+
+**B15 tech debt: concentration-break dedup** — `processStartTurn` and `processEndTurn` in `battle-machine-helpers.ts` both inline the same concentration-break-on-damage pattern: check old conc ID, take damage, check dead/incap for state-change break, check con save for damage break, filter effects, propagate. Extract a shared `applyDamageWithConcBreak(c, dmg, dt, conSave)` helper. Low urgency — only matters if these functions grow.
+
+**B15 tech debt: stringly-typed reaction decisions** — Reaction decisions (`"RShield"`, `"RPass"`, `"RUncannyDodge"`, etc.) arrive as raw strings from ITF variants and flow through the battle machine as `string`. The XState machine's public API (`BattleEvent` types) should use a discriminated union for decisions, with string parsing isolated to the MBT driver. Low urgency — current code is correct, just not type-safe at the boundary.
 
