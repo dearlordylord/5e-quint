@@ -216,3 +216,12 @@ Running total tonight: 6 fixed, 4 logged-for-review
 
 Summary: 1 fixed (Defy Death spec bug), 0 new
 Running total tonight: 7 fixed, 4 logged-for-review (spellStackDistinctCasters is spec-level)
+
+2026-04-03T01:38:00 — Cron check #11
+  MBT failures: 0 new — CLEAN
+  Invariant failures: 1 new (spellStackDistinctCasters — tracked spec-level issue)
+  
+  First clean MBT cycle since overnight fuzzing started.
+
+Summary: 0 fixed, 0 new
+Running total tonight: 7 fixed, 4 logged-for-review
