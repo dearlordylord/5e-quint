@@ -69,6 +69,7 @@ export interface LayoutState {
   creatures: ReadonlyArray<CreatureLayout>
   aoeZones: ReadonlyArray<AoELayout>
   interruptOverlay: { opacity: number; label: string | null }
+  spellAnnouncement: { spellName: string; casterId: string } | null
 }
 
 // --- Pure computation ---
@@ -199,6 +200,7 @@ export function computeLayout(
     interruptOverlay: {
       opacity: cues.interruptOverlay.opacity,
       label: cues.interruptOverlay.label || null
-    }
+    },
+    spellAnnouncement: cues.spellAnnouncement
   }
 }

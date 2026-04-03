@@ -3,6 +3,7 @@ import { CreatureToken } from "./CreatureToken.tsx"
 import { GridOverlay } from "./GridOverlay.tsx"
 import { InterruptOverlay } from "./InterruptOverlay.tsx"
 import type { LayoutState } from "./layout.ts"
+import { SpellAnnouncement } from "./SpellAnnouncement.tsx"
 
 export function BattleField({ layout }: { layout: LayoutState }) {
   return (
@@ -17,6 +18,7 @@ export function BattleField({ layout }: { layout: LayoutState }) {
       {layout.creatures.map((c) => (
         <CreatureToken key={c.id} {...c} />
       ))}
+      <SpellAnnouncement announcement={layout.spellAnnouncement} viewBox={layout.viewBox} />
       <InterruptOverlay {...layout.interruptOverlay} viewBox={layout.viewBox} />
     </svg>
   )

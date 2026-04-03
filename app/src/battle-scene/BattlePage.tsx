@@ -34,10 +34,14 @@ function replayPair(upTo: number) {
   return { prevCtx, currCtx: actor.getSnapshot().context }
 }
 
+const FADE_DELAY_MS = 1200
+
 export function BattlePage() {
   const [cursor, setCursor] = useState(-1)
   const [autoPlay, setAutoPlay] = useState(false)
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [transientFaded, setTransientFaded] = useState(false)
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Derive snapshot + cues from cursor in a single pass (one replay, not three)
   const { cues, snapshot } = useMemo(() => {
@@ -64,10 +68,27 @@ export function BattlePage() {
     }
   }, [cursor])
 
+  // Clear transient cues (castBar, spellAnnouncement) after a delay
+  useEffect(() => {
+    setTransientFaded(false)
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current)
+    if (cues.castBar || cues.spellAnnouncement) {
+      fadeTimerRef.current = setTimeout(() => setTransientFaded(true), FADE_DELAY_MS)
+    }
+    return () => {
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current)
+    }
+  }, [cues])
+
+  const activeCues = useMemo(() => {
+    if (!transientFaded) return cues
+    return { ...cues, castBar: null, spellAnnouncement: null }
+  }, [cues, transientFaded])
+
   const layout = useMemo(() => {
     if (!snapshot) return null
-    return computeLayout(snapshot, cues)
-  }, [snapshot, cues])
+    return computeLayout(snapshot, activeCues)
+  }, [snapshot, activeCues])
 
   const stepTo = useCallback((index: number) => {
     if (index < 0 || index >= EVENTS.length) return
@@ -107,6 +128,24 @@ export function BattlePage() {
       if (autoPlayRef.current) clearTimeout(autoPlayRef.current)
     }
   }, [])
+
+  // Keyboard controls: left/right arrows + space for play/pause
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") {
+        e.preventDefault()
+        setCursor((prev) => (prev + 1 < EVENTS.length ? prev + 1 : prev))
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault()
+        setCursor((prev) => (prev > 0 ? prev - 1 : prev))
+      } else if (e.key === " ") {
+        e.preventDefault()
+        toggleAutoPlay()
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [toggleAutoPlay])
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center p-8">

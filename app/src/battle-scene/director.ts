@@ -21,6 +21,7 @@ export interface CreatureCue {
 
 export interface VisualCueState {
   castBar: { casterId: string; spellName: string; progress: number } | null
+  spellAnnouncement: { spellName: string; casterId: string } | null
   interruptOverlay: { opacity: number; label: string }
   creatureCues: Record<string, CreatureCue>
   autoAdvanceDelay: number
@@ -47,6 +48,7 @@ export const DEFAULT_TIMING: PlaybackTiming = {
 
 export const EMPTY_CUES: VisualCueState = {
   castBar: null,
+  spellAnnouncement: null,
   interruptOverlay: { opacity: 0, label: "" },
   creatureCues: {},
   autoAdvanceDelay: 0
@@ -113,7 +115,10 @@ export function directorStep(
   const interruptOverlay =
     snapshot.phase.type === "interrupt" ? { opacity: 0.6, label: "INTERRUPT" } : { opacity: 0, label: "" }
 
+  // Spell announcement — shown for any spell cast event
+  const spellAnnouncement = castBar ? { spellName: castBar.spellName, casterId: castBar.casterId } : null
+
   const autoAdvanceDelay = timing.overrides[event.type] ?? timing.defaultDelayMs
 
-  return { castBar, interruptOverlay, creatureCues, autoAdvanceDelay }
+  return { castBar, spellAnnouncement, interruptOverlay, creatureCues, autoAdvanceDelay }
 }
