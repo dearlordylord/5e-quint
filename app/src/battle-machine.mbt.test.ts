@@ -13,7 +13,7 @@ import { z } from "zod"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleContext, BattleCreatureState, BattleEvent } from "#/battle-machine-types.ts"
-import type { CreatureId, SpellId } from "#/types.ts"
+import type { CreatureId } from "#/types.ts"
 import { CreatureId as mkCreatureId, spellId as mkSpellId } from "#/types.ts"
 import {
   compareNormalizedStates,
@@ -377,14 +377,9 @@ function createBattleMachineDriver() {
       return actor.getSnapshot().context
     }
 
-    /** Brand a raw string as CreatureId (MBT boundary). */
-    const cid = (s: string): CreatureId => mkCreatureId(s)
-    /** Brand a raw string as SpellId (MBT boundary). */
-    const sid = (s: string): SpellId => mkSpellId(s)
-
     function parseThreatenedSet(raw: unknown): Set<CreatureId> {
-      if (raw instanceof Set) return new Set([...raw].map((x) => cid(String(x))))
-      if (Array.isArray(raw)) return new Set(raw.map((x) => cid(String(x))))
+      if (raw instanceof Set) return new Set([...raw].map((x) => mkCreatureId(String(x))))
+      if (Array.isArray(raw)) return new Set(raw.map((x) => mkCreatureId(String(x))))
       return new Set()
     }
 
@@ -395,10 +390,10 @@ function createBattleMachineDriver() {
         send({
           type: "BATTLE_INIT",
           creatures: [
-            { id: cid("A"), maxHp: p(picks, "hp1", 20), kind: "PC", caster: true, rogueLevel: 5 },
-            { id: cid("B"), maxHp: p(picks, "hp2", 20), kind: "PC", caster: true },
-            { id: cid("C"), maxHp: p(picks, "hp3", 35), kind: "Monster", legendaryActions: 3, legendaryResistances: 3 },
-            { id: cid("D"), maxHp: p(picks, "hp4", 20), kind: "PC", caster: true }
+            { id: mkCreatureId("A"), maxHp: p(picks, "hp1", 20), kind: "PC", caster: true, rogueLevel: 5 },
+            { id: mkCreatureId("B"), maxHp: p(picks, "hp2", 20), kind: "PC", caster: true },
+            { id: mkCreatureId("C"), maxHp: p(picks, "hp3", 35), kind: "Monster", legendaryActions: 3, legendaryResistances: 3 },
+            { id: mkCreatureId("D"), maxHp: p(picks, "hp4", 20), kind: "PC", caster: true }
           ]
         })
       },
@@ -527,7 +522,7 @@ function createBattleMachineDriver() {
           targetId: pc(picks, "targetId", ""),
           slotLvl: p(picks, "slotLvl", 1),
           duration: p(picks, "duration", 5),
-          spellId: sid(ps(picks, "spellId", "hold_person")),
+          spellId: mkSpellId(ps(picks, "spellId", "hold_person")),
           cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CParalyzed")] ?? "paralyzed",
           applyCond: pb(picks, "applyCond", false),
           ritual: pb(picks, "ritual", false)

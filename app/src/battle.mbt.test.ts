@@ -329,11 +329,8 @@ function createBattleProjectionDriver() {
       const v = picks.get(key)
       return v != null ? String(v) : undefined
     }
-    /** Brand a raw string as CreatureId (MBT boundary). */
-    function cid(s: string): CreatureId { return mkCreatureId(s) }
-
     function send(id: string, event: DndEvent) {
-      const actor = actors.get(cid(id))
+      const actor = actors.get(mkCreatureId(id))
       if (!actor) throw new Error(`No actor for ${id}`)
       actor.send(event)
     }
@@ -347,7 +344,7 @@ function createBattleProjectionDriver() {
     }
 
     function getSnap(id: string): DndSnapshot {
-      const actor = actors.get(cid(id))
+      const actor = actors.get(mkCreatureId(id))
       if (!actor) throw new Error(`No actor for ${id}`)
       return actor.getSnapshot()
     }
@@ -386,7 +383,7 @@ function createBattleProjectionDriver() {
       })
       actorA.start()
       actorA.send({ type: "ENTER_COMBAT" })
-      actors.set(cid("A"), actorA)
+      actors.set(mkCreatureId("A"), actorA)
       creatureKinds.set("A", "PC")
 
       // B: PC caster, no class levels
@@ -403,7 +400,7 @@ function createBattleProjectionDriver() {
       })
       actorB.start()
       actorB.send({ type: "ENTER_COMBAT" })
-      actors.set(cid("B"), actorB)
+      actors.set(mkCreatureId("B"), actorB)
       creatureKinds.set("B", "PC")
 
       // C: Monster with TEST_MONSTER_STAT_BLOCK (3 LA, 3 LR, breath_weapon recharge 5)
@@ -423,7 +420,7 @@ function createBattleProjectionDriver() {
       })
       actorC.start()
       actorC.send({ type: "ENTER_COMBAT" })
-      actors.set(cid("C"), actorC)
+      actors.set(mkCreatureId("C"), actorC)
       creatureKinds.set("C", "Monster")
 
       // D: PC caster, no class levels (enables CS chain depth >= 2)
@@ -440,7 +437,7 @@ function createBattleProjectionDriver() {
       })
       actorD.start()
       actorD.send({ type: "ENTER_COMBAT" })
-      actors.set(cid("D"), actorD)
+      actors.set(mkCreatureId("D"), actorD)
       creatureKinds.set("D", "PC")
 
       initiative = ["A", "B", "C", "D"]
@@ -755,7 +752,7 @@ function createBattleProjectionDriver() {
 
     /** Check if target creature has reaction available (eligible for LR). */
     function hasLRReactor(targetId: string): boolean {
-      const actor = actors.get(cid(targetId))
+      const actor = actors.get(mkCreatureId(targetId))
       if (!actor) return false
       const snap = actor.getSnapshot()
       return snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })

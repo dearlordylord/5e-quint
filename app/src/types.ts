@@ -254,7 +254,7 @@ export function movementFeet(n: number): MovementFeet {
 }
 export type { MovementFeet }
 
-// --- Branded numeric types (new) ---
+// --- Branded numeric types ---
 
 const ClassLevel = Schema.Number.pipe(
   Schema.int(),
@@ -339,7 +339,6 @@ type SpellId = string & Brand.Brand<"SpellId">
 const SpellId = Brand.nominal<SpellId>()
 export const spellId: (s: string) => SpellId = SpellId
 export type { SpellId }
-export { SpellId as SpellIdConstructor }
 
 // --- Branded string types (extendable — SRD defaults + open extension) ---
 // Pattern: SRDFoo | (string & Brand.Brand<"Foo"> & {})

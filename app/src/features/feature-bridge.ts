@@ -1,3 +1,4 @@
+import { Option } from "effect"
 import {
   canApplyFrenzy,
   canEnterRage,
@@ -28,8 +29,6 @@ import {
   useSecondWind as applySecondWind
 } from "#/features/class-fighter.ts"
 import type { FeatureAction, FeatureState } from "#/features/feature-store.ts"
-import { Option } from "effect"
-
 import type { DndContext, DndEvent } from "#/machine-types.ts"
 import type { Condition, DamageType } from "#/types.ts"
 import { healAmount } from "#/types.ts"
