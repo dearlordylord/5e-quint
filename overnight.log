@@ -13,3 +13,23 @@
   Seed: 0xb0715bd5 (MBT_DEV=1 for quick repro)
 
 Summary: 1 fixed, 1 logged-for-review
+
+2026-04-02T20:30:00 — Cron check #1
+  MBT failures: 74 new (all same slotsMax/slotsCurrent mismatch — already logged, no new pattern)
+  Invariant failures: 6 new (all same root cause)
+
+2026-04-02T20:30:00 — NEEDS REVIEW: spellStackDistinctCasters invariant too strict
+  Seeds: 0x1e4e0cea, 0xaa35cc2c, 0x2e7721b6, 0x42b324d5, 0xfc289896, 0xd4a42686
+  The invariant requires all spell stack entries to have distinct casterIds.
+  But SRD allows: A casts fireball → D counterspells → A counter-counterspells.
+  This creates stack with caster A at positions 1 and 3 — violating the invariant.
+  This is legal per SRD: counterspell is a reaction, and the original caster can
+  use their reaction to counter a counterspell targeting their spell.
+  Fix options:
+    a) Remove spellStackDistinctCasters from allBattleInvariants (with comment)
+    b) Weaken to: adjacent stack entries have distinct casters (no self-counter)
+    c) Weaken to: only non-counterspell entries must have distinct casters
+  SRD rule: "Casting in Response" / Counterspell — PHB spell description.
+  Recommend option (b) or (c). Human judgment needed on which invariant is correct.
+
+Summary: 0 fixed, 2 logged-for-review (slotsMax already tracked + spellStackDistinctCasters new)
