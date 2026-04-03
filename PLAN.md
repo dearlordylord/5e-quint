@@ -10,7 +10,6 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 | Plan | Status | Scope |
 |------|--------|-------|
 | **PLAN.md** (this file) | Done | Core Quint spec: generic rules in `creature.qnt` (HP, damage, conditions, turns, rests, slots, grapple/shove, attack resolution, environment). The foundation everything else composes on. |
-| **PLAN_NONCORE.md** | Active | Class features, spells, species, feats — TS implementation + UI wiring + Quint migration. Per-class status tables, integration patterns, implementation order. The main active plan. |
 | **PLAN_SCRAPERS.md** | Active | QA pipeline: new data sources for the community Q&A corpus (SE tags, Sage Advice, sageadvice.eu, errata). Independent of other plans. |
 
 ## Known Spec Gaps (Battle Machine)

@@ -210,7 +210,7 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Rules basis (SRD 5.2.1, Adult Red Dragon > Legendary Actions):** "The dragon can't take this action again until the start of its next turn." This is a per-action identity constraint. Modeling it would require a `Set[str]` of used action names, cleared at start of turn. Since the spec focuses on resource economy rather than tactical action selection, this constraint is left to the caller.
 
-**Changes:** None — documented as an intentional omission. See PLAN_MONSTERS.md D7.
+**Changes:** None — documented as an intentional omission.
 
 ## A25: Init class selection (Fighter or Barbarian)
 

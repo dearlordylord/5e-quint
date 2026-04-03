@@ -1,5 +1,7 @@
 import { Brand, Schema } from "effect"
 
+import type { ClassName } from "#/features/class-tables.ts"
+
 // --- Domain constants + derived types ---
 // Convention: define const array first, derive union type with typeof X[number].
 // See CLAUDE.md "Typed constant arrays" and "Derive union types from constant arrays".
@@ -84,6 +86,30 @@ export type UnarmoredDefense = (typeof UNARMORED_DEFENSES)[number]
 
 export const EXPIRY_PHASES = ["start", "end"] as const
 export type ExpiryPhase = (typeof EXPIRY_PHASES)[number]
+
+export const SPELL_SCHOOLS = [
+  "abjuration",
+  "conjuration",
+  "divination",
+  "enchantment",
+  "evocation",
+  "illusion",
+  "necromancy",
+  "transmutation"
+] as const
+export type SpellSchool = (typeof SPELL_SCHOOLS)[number]
+
+export const CASTER_CLASSES = [
+  "bard",
+  "cleric",
+  "druid",
+  "paladin",
+  "ranger",
+  "sorcerer",
+  "warlock",
+  "wizard"
+] as const satisfies ReadonlyArray<ClassName>
+export type CasterClass = (typeof CASTER_CLASSES)[number]
 
 export interface ActiveEffect {
   readonly spellId: SpellId

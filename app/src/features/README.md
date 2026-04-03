@@ -27,4 +27,4 @@ Features depend on core, never the reverse.
 
 ## SRD parity
 
-See `CLAUDE.md` ("SRD feature parity"). Task list in `PLAN_NONCORE.md`.
+See `CLAUDE.md` ("SRD feature parity").
