@@ -410,8 +410,22 @@ export function longRestUpdate(c: {
   pactSlotsMax: number
   classStates: Partial<ClassStateMap>
 }): Record<string, unknown> {
-  const fighterLevel = c.classStates.fighter?.level ?? 0
-  const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, fighterLevel)
+  const cs = c.classStates
+  // Total character level = sum of all class levels. Matches Quint pTotalLevel.
+  const totalLevel =
+    (cs.fighter?.level ?? 0) +
+    (cs.barbarian?.level ?? 0) +
+    (cs.monk?.level ?? 0) +
+    (cs.paladin?.level ?? 0) +
+    (cs.rogue?.level ?? 0) +
+    (cs.cleric?.level ?? 0) +
+    (cs.druid?.level ?? 0) +
+    (cs.sorcerer?.level ?? 0) +
+    (cs.warlock?.level ?? 0) +
+    (cs.wizard?.level ?? 0) +
+    (cs.ranger?.level ?? 0) +
+    (cs.bard?.level ?? 0)
+  const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, totalLevel)
   if (!r) return {}
   return {
     exhaustion: exhaustionLevel(r.newExhaustion),

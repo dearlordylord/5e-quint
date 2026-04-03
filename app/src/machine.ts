@@ -38,7 +38,7 @@ import { isIncapacitated } from "#/machine-queries.ts"
 import * as ranger from "#/machine-ranger.ts"
 import * as rogue from "#/machine-rogue.ts"
 import * as sorcerer from "#/machine-sorcerer.ts"
-import { computeShortRest, expendSlot } from "#/machine-spells.ts"
+import { computeShortRest, expendSlot, initSpellSlotsFromLevels } from "#/machine-spells.ts"
 import { computeInitTurn } from "#/machine-startturn.ts"
 import {
   conditionTrackConfig,
@@ -83,7 +83,6 @@ import {
   type ActiveEffect,
   DEATH_SAVES_RESET,
   deathSaveCount,
-  EMPTY_SLOTS,
   exhaustionLevel,
   hp,
   type IncapSource,
@@ -521,52 +520,66 @@ export const dndMachine = setup({
 }).createMachine({
   id: "dnd",
   type: "parallel",
-  context: ({ input: i }) => ({
-    ...INITIAL_CONDITIONS,
-    ...INITIAL_TURN_STATE,
-    creatureKind: i.creatureKind ?? "PC",
-    activeEffects: [] as ReadonlyArray<ActiveEffect>,
-    concentrationSpellId: "",
-    dead: false,
-    inCombat: false,
-    deathSaves: DEATH_SAVES_RESET,
-    stable: false,
-    effectiveSpeed: movementFeet(i.effectiveSpeed ?? 0),
-    exhaustion: exhaustionLevel(0),
-    extraAttacksRemaining: i.extraAttacksRemaining ?? 0,
-    hitDiceRemaining: i.hitDiceRemaining ?? 0,
-    hp: hp(i.maxHp),
-    incapacitatedSources: new Set<IncapSource>(),
-    maxHp: hp(i.maxHp),
-    movementRemaining: movementFeet(i.movementRemaining ?? 0),
-    pactSlotLevel: 0,
-    pactSlotsCurrent: 0,
-    pactSlotsMax: 0,
-    slotsCurrent: i.slotsCurrent ?? EMPTY_SLOTS,
-    slotsMax: i.slotsMax ?? EMPTY_SLOTS,
-    tempHp: tempHp(0),
-    legendaryActionsMax: i.legendaryActionsMax ?? i.legendaryActionsRemaining ?? 0,
-    legendaryResistancesMax: i.legendaryResistancesMax ?? i.legendaryResistancesRemaining ?? 0,
-    legendaryActionsRemaining: i.legendaryActionsRemaining ?? 0,
-    legendaryResistancesRemaining: i.legendaryResistancesRemaining ?? 0,
-    rechargeAvailable: i.rechargeAvailable ?? {},
-    dailyUsesRemaining: i.dailyUsesRemaining ?? {},
-    dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
-    classStates: {
-      fighter: fighter.initialFighterState(i.fighterLevel ?? 0),
-      barbarian: barb.initialBarbarianState(i.barbarianLevel ?? 0),
-      monk: monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
-      paladin: paladin.initialPaladinState(i.paladinLevel ?? 0),
-      rogue: rogue.initialRogueState(i.rogueLevel ?? 0),
-      cleric: cleric.initialClericState(i.clericLevel ?? 0),
-      druid: druid.initialDruidState(i.druidLevel ?? 0),
-      sorcerer: sorcerer.initialSorcererState(i.sorcererLevel ?? 0),
-      warlock: warlock.initialWarlockState(i.warlockLevel ?? 0),
-      wizard: wizard.initialWizardState(i.wizardLevel ?? 0),
-      ranger: ranger.initialRangerState(i.rangerLevel ?? 0, i.wisMod),
-      bard: bard.initialBardState(i.bardLevel ?? 0, i.chaMod)
+  context: ({ input: i }) => {
+    // Derive spell slots from class levels if not explicitly provided (matches Quint pInitSpellSlots).
+    // Explicit slotsMax/slotsCurrent override (for monster stat blocks or test fixtures).
+    const derivedSlots = initSpellSlotsFromLevels({
+      bardLevel: i.bardLevel ?? 0,
+      clericLevel: i.clericLevel ?? 0,
+      druidLevel: i.druidLevel ?? 0,
+      sorcererLevel: i.sorcererLevel ?? 0,
+      wizardLevel: i.wizardLevel ?? 0,
+      paladinLevel: i.paladinLevel ?? 0,
+      rangerLevel: i.rangerLevel ?? 0,
+      warlockLevel: i.warlockLevel ?? 0
+    })
+    return {
+      ...INITIAL_CONDITIONS,
+      ...INITIAL_TURN_STATE,
+      creatureKind: i.creatureKind ?? "PC",
+      activeEffects: [] as ReadonlyArray<ActiveEffect>,
+      concentrationSpellId: "",
+      dead: false,
+      inCombat: false,
+      deathSaves: DEATH_SAVES_RESET,
+      stable: false,
+      effectiveSpeed: movementFeet(i.effectiveSpeed ?? 0),
+      exhaustion: exhaustionLevel(0),
+      extraAttacksRemaining: i.extraAttacksRemaining ?? 0,
+      hitDiceRemaining: i.hitDiceRemaining ?? 0,
+      hp: hp(i.maxHp),
+      incapacitatedSources: new Set<IncapSource>(),
+      maxHp: hp(i.maxHp),
+      movementRemaining: movementFeet(i.movementRemaining ?? 0),
+      pactSlotLevel: i.slotsMax ? 0 : derivedSlots.pactSlotLevel,
+      pactSlotsCurrent: i.slotsMax ? 0 : derivedSlots.pactSlotsCurrent,
+      pactSlotsMax: i.slotsMax ? 0 : derivedSlots.pactSlotsMax,
+      slotsCurrent: i.slotsCurrent ?? derivedSlots.slotsCurrent,
+      slotsMax: i.slotsMax ?? derivedSlots.slotsMax,
+      tempHp: tempHp(0),
+      legendaryActionsMax: i.legendaryActionsMax ?? i.legendaryActionsRemaining ?? 0,
+      legendaryResistancesMax: i.legendaryResistancesMax ?? i.legendaryResistancesRemaining ?? 0,
+      legendaryActionsRemaining: i.legendaryActionsRemaining ?? 0,
+      legendaryResistancesRemaining: i.legendaryResistancesRemaining ?? 0,
+      rechargeAvailable: i.rechargeAvailable ?? {},
+      dailyUsesRemaining: i.dailyUsesRemaining ?? {},
+      dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
+      classStates: {
+        fighter: fighter.initialFighterState(i.fighterLevel ?? 0),
+        barbarian: barb.initialBarbarianState(i.barbarianLevel ?? 0),
+        monk: monk.initialMonkState(i.monkLevel ?? 0, i.wholenessMax),
+        paladin: paladin.initialPaladinState(i.paladinLevel ?? 0),
+        rogue: rogue.initialRogueState(i.rogueLevel ?? 0),
+        cleric: cleric.initialClericState(i.clericLevel ?? 0),
+        druid: druid.initialDruidState(i.druidLevel ?? 0),
+        sorcerer: sorcerer.initialSorcererState(i.sorcererLevel ?? 0),
+        warlock: warlock.initialWarlockState(i.warlockLevel ?? 0),
+        wizard: wizard.initialWizardState(i.wizardLevel ?? 0),
+        ranger: ranger.initialRangerState(i.rangerLevel ?? 0, i.wisMod),
+        bard: bard.initialBardState(i.bardLevel ?? 0, i.chaMod)
+      }
     }
-  }),
+  },
   on: rootEventHandlers,
   states: {
     damageTrack: damageTrackConfig,

@@ -47,6 +47,70 @@ export function calculateMulticlassSlots(
   return Array.from({ length: SPELL_SLOT_LEVELS }, (_, i) => slotsPerLevel(casterLevel, i + 1))
 }
 
+/* eslint-disable no-magic-numbers */
+
+/** Warlock pact slot count by level. Matches Quint pWarlockPactSlotCount. */
+export function warlockPactSlotCount(warlockLevel: number): number {
+  if (warlockLevel >= 17) return 4
+  if (warlockLevel >= 11) return 3
+  if (warlockLevel >= 2) return 2
+  if (warlockLevel >= 1) return 1
+  return 0
+}
+
+/** Warlock pact slot level by class level. Matches Quint pWarlockPactSlotLevel. */
+export function warlockPactSlotLevel(warlockLevel: number): number {
+  if (warlockLevel >= 9) return 5
+  if (warlockLevel >= 7) return 4
+  if (warlockLevel >= 5) return 3
+  if (warlockLevel >= 3) return 2
+  if (warlockLevel >= 1) return 1
+  return 0
+}
+
+/* eslint-enable no-magic-numbers */
+
+/**
+ * Derive initial spell slot state from class levels. Matches Quint pInitSpellSlots.
+ * Full casters: Bard, Cleric, Druid, Sorcerer, Wizard.
+ * Half casters: Paladin, Ranger.
+ * Warlock: pact slots (separate from multiclass table).
+ */
+export function initSpellSlotsFromLevels(levels: {
+  readonly bardLevel: number
+  readonly clericLevel: number
+  readonly druidLevel: number
+  readonly sorcererLevel: number
+  readonly wizardLevel: number
+  readonly paladinLevel: number
+  readonly rangerLevel: number
+  readonly warlockLevel: number
+}): {
+  readonly slotsMax: SpellSlots
+  readonly slotsCurrent: SpellSlots
+  readonly pactSlotsMax: number
+  readonly pactSlotsCurrent: number
+  readonly pactSlotLevel: number
+} {
+  const slots = calculateMulticlassSlots([
+    { type: "full", level: levels.bardLevel },
+    { type: "full", level: levels.clericLevel },
+    { type: "full", level: levels.druidLevel },
+    { type: "full", level: levels.sorcererLevel },
+    { type: "full", level: levels.wizardLevel },
+    { type: "half", level: levels.paladinLevel },
+    { type: "half", level: levels.rangerLevel }
+  ])
+  const pactMax = warlockPactSlotCount(levels.warlockLevel)
+  return {
+    slotsMax: slots,
+    slotsCurrent: slots,
+    pactSlotsMax: pactMax,
+    pactSlotsCurrent: pactMax,
+    pactSlotLevel: warlockPactSlotLevel(levels.warlockLevel)
+  }
+}
+
 /** Compute short rest results: spend hit dice, restore pact slots. */
 export function computeShortRest(
   currentHp: number,
