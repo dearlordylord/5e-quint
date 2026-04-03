@@ -1,4 +1,5 @@
 import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts"
+import { pactSlotCount, pactSlotLevel } from "#/features/class-warlock.ts"
 import { effectiveMaxHp } from "#/machine-helpers.ts"
 import type { CasterType, SpellSlots } from "#/types.ts"
 import { EMPTY_SLOTS, SPELL_SLOT_LEVELS } from "#/types.ts"
@@ -48,29 +49,6 @@ export function calculateMulticlassSlots(
   return Array.from({ length: SPELL_SLOT_LEVELS }, (_, i) => slotsPerLevel(casterLevel, i + 1))
 }
 
-/* eslint-disable no-magic-numbers */
-
-/** Warlock pact slot count by level. Matches Quint pWarlockPactSlotCount. */
-export function warlockPactSlotCount(warlockLevel: number): number {
-  if (warlockLevel >= 17) return 4
-  if (warlockLevel >= 11) return 3
-  if (warlockLevel >= 2) return 2
-  if (warlockLevel >= 1) return 1
-  return 0
-}
-
-/** Warlock pact slot level by class level. Matches Quint pWarlockPactSlotLevel. */
-export function warlockPactSlotLevel(warlockLevel: number): number {
-  if (warlockLevel >= 9) return 5
-  if (warlockLevel >= 7) return 4
-  if (warlockLevel >= 5) return 3
-  if (warlockLevel >= 3) return 2
-  if (warlockLevel >= 1) return 1
-  return 0
-}
-
-/* eslint-enable no-magic-numbers */
-
 /**
  * Derive initial spell slot state from class levels. Matches Quint pInitSpellSlots.
  * Full casters: Bard, Cleric, Druid, Sorcerer, Wizard.
@@ -102,13 +80,13 @@ export function initSpellSlotsFromLevels(levels: {
     { type: "half", level: levels.paladinLevel },
     { type: "half", level: levels.rangerLevel }
   ])
-  const pactMax = warlockPactSlotCount(levels.warlockLevel)
+  const pactMax = pactSlotCount(levels.warlockLevel)
   return {
     slotsMax: slots,
     slotsCurrent: slots,
     pactSlotsMax: pactMax,
     pactSlotsCurrent: pactMax,
-    pactSlotLevel: warlockPactSlotLevel(levels.warlockLevel)
+    pactSlotLevel: pactSlotLevel(levels.warlockLevel)
   }
 }
 
