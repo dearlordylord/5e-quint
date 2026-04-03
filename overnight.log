@@ -262,3 +262,10 @@ Running total tonight: 7 fixed, 5 logged-for-review
 
 Summary: 0 fixed, 0 new
 Running total tonight: 7 fixed, 5 logged-for-review
+
+2026-04-03T04:03:00 — Cron check #16
+  MBT failures: 0 new — CLEAN (5th consecutive)
+  Invariant failures: 7 new (same spellStackDistinctCasters)
+
+Summary: 0 fixed, 0 new
+Running total overnight: 7 fixed, 5 logged-for-review
