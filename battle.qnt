@@ -1071,8 +1071,9 @@ module battle {
   ///
   /// PCECounterspell entries: when a CS resolves here (no remaining reactors),
   /// we pop the stack to find the interrupted spell and apply the CS outcome.
-  /// Quint does not support recursive pure def, so at most one extra pop is done
-  /// (handles chains of depth ≤ 3, which covers all possible states with 3 creatures).
+  /// Quint does not support recursive pure def, so CS unwinding is inlined to
+  /// depth 5 (covers up to 5 casters in the chain). Deeper chains fall through
+  /// to resolveSpellEntry which will hit the non-CS fallback.
   pure def returnToCSWindow(
     cs: CreatureId -> Combatant,
     entry: SpellStackEntry, stack: List[SpellStackEntry]
@@ -1119,7 +1120,21 @@ module battle {
                         stack: gp.rest,
                       }
                     } else {
-                      resolveSpellEntry(csRefundCS, gp.top.spellCasterId, gp.top.slotLvl, gp.top.ritual, gp.top.spellPostCast, gp.rest)
+                      // gp may itself be a CS (depth 5+ chain) — inline one more unwind level
+                      match gp.top.spellPostCast {
+                        | PCECounterspell(csEff3) =>
+                          if (gp.rest.length() == 0) {
+                            { creatures: csRefundCS, phase: BPActiveTurn, stack: gp.rest }
+                          } else {
+                            val ggp = popStack(gp.rest)
+                            if (not(csEff3.conSaveSucceeded)) {
+                              { creatures: maybeRefundEntry(csRefundCS, ggp.top), phase: BPActiveTurn, stack: ggp.rest }
+                            } else {
+                              resolveSpellEntry(csRefundCS, ggp.top.spellCasterId, ggp.top.slotLvl, ggp.top.ritual, ggp.top.spellPostCast, ggp.rest)
+                            }
+                          }
+                        | _ => resolveSpellEntry(csRefundCS, gp.top.spellCasterId, gp.top.slotLvl, gp.top.ritual, gp.top.spellPostCast, gp.rest)
+                      }
                     }
                   }
                 | _ =>
@@ -1140,7 +1155,21 @@ module battle {
                   stack: popped.rest,
                 }
               } else {
-                resolveSpellEntry(cs, popped.top.spellCasterId, popped.top.slotLvl, popped.top.ritual, popped.top.spellPostCast, popped.rest)
+                // popped.top may itself be a CS (depth 5+ chain) — inline one more unwind level
+                match popped.top.spellPostCast {
+                  | PCECounterspell(csEff3) =>
+                    if (popped.rest.length() == 0) {
+                      { creatures: cs, phase: BPActiveTurn, stack: popped.rest }
+                    } else {
+                      val pp2 = popStack(popped.rest)
+                      if (not(csEff3.conSaveSucceeded)) {
+                        { creatures: maybeRefundEntry(cs, pp2.top), phase: BPActiveTurn, stack: pp2.rest }
+                      } else {
+                        resolveSpellEntry(cs, pp2.top.spellCasterId, pp2.top.slotLvl, pp2.top.ritual, pp2.top.spellPostCast, pp2.rest)
+                      }
+                    }
+                  | _ => resolveSpellEntry(cs, popped.top.spellCasterId, popped.top.slotLvl, popped.top.ritual, popped.top.spellPostCast, popped.rest)
+                }
               }
             }
           }
