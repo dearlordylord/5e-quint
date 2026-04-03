@@ -133,6 +133,10 @@ export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<Creatur
   return t.reactionAvailable && !t.dead ? new Set([targetId]) : new Set()
 }
 
+// TODO: slotExpendedThisTurn guard here is sufficient today (action economy prevents
+// double-action casting, Action Surge blocks Magic). When bonus-action spells or other
+// multi-cast paths are added, move the guard to the expenditure boundary (expendSlot)
+// so ALL spell-casting is gated, not just Counterspell eligibility.
 export function eligibleForCounterspell(cs: Creatures, excludeId: CreatureId): Set<CreatureId> {
   const result = new Set<CreatureId>()
   for (const [id, c] of cs) {

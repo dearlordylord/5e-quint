@@ -408,6 +408,8 @@ module battle {
 
   /// Eligible Counterspell reactors: base eligible + has level 3+ slot + counterspell prepared
   /// + hasn't already expended a spell slot this turn (SRD 5.2.1 "One Spell with a Spell Slot per Turn").
+  /// TODO: guard is sufficient today (action economy prevents double-action casting). When bonus-action
+  /// spells or other multi-cast paths are added, move guard to expenditure boundary (expendSlot).
   pure def eligibleForCounterspell(
     cs: CreatureId -> Combatant, excludeId: CreatureId
   ): Set[CreatureId] =
