@@ -17,6 +17,8 @@ export interface CreatureCue {
   castingGlow: boolean
   reactionUsed: boolean
   conditionGained: boolean
+  floatingLabel: string | null
+  slotJustSpent: boolean
 }
 
 export interface VisualCueState {
@@ -59,7 +61,9 @@ export const EMPTY_CUE: CreatureCue = {
   justBecameUnconscious: false,
   castingGlow: false,
   reactionUsed: false,
-  conditionGained: false
+  conditionGained: false,
+  floatingLabel: null,
+  slotJustSpent: false
 }
 
 function applyCue(cues: Record<string, CreatureCue>, id: string, patch: Partial<CreatureCue>): void {
@@ -87,13 +91,16 @@ export function directorStep(
     applyCue(creatureCues, id, { damageFlash: true })
   }
   for (const id of delta.becameUnconscious) {
-    applyCue(creatureCues, id, { justBecameUnconscious: true })
+    applyCue(creatureCues, id, { justBecameUnconscious: true, floatingLabel: "KO!" })
   }
   for (const id of delta.reactionsSpent) {
     applyCue(creatureCues, id, { reactionUsed: true })
   }
   for (const id of Object.keys(delta.conditionsGained)) {
     applyCue(creatureCues, id, { conditionGained: true })
+  }
+  for (const id of delta.slotsExpended) {
+    applyCue(creatureCues, id, { slotJustSpent: true })
   }
 
   let castBar: VisualCueState["castBar"] = null
@@ -102,22 +109,59 @@ export function directorStep(
     if (casterId) {
       const visual = getSpellVisual(event.spellName)
       castBar = { casterId, spellName: visual.label, progress: 1 }
-      applyCue(creatureCues, casterId, { castingGlow: true })
+      applyCue(creatureCues, casterId, { castingGlow: true, slotJustSpent: true })
     }
   }
 
   if (event.type === "BATTLE_RESOLVE_COUNTERSPELL" && event.reactorId) {
     const visual = getSpellVisual("counterspell")
     castBar = { casterId: event.reactorId, spellName: visual.label, progress: 1 }
-    applyCue(creatureCues, event.reactorId, { castingGlow: true })
+    applyCue(creatureCues, event.reactorId, { castingGlow: true, slotJustSpent: true })
   }
 
-  const interruptOverlay =
-    snapshot.phase.type === "interrupt" ? { opacity: 0.6, label: "INTERRUPT" } : { opacity: 0, label: "" }
+  // Decision / save labels on individual creatures
+  if (event.type === "BATTLE_RESOLVE_AOE_TARGET" && event.targetId) {
+    const saved = event.saveRoll >= 15 // TODO: derive from actual DC
+    applyCue(creatureCues, event.targetId, {
+      floatingLabel: saved ? "Save!" : "Fail!"
+    })
+  }
+  if (event.type === "BATTLE_RESOLVE_SAVE_FAILED_REACTION" && event.reactorId) {
+    const label = event.decision.tag === "RPass" ? "Pass" : "Legendary Resistance!"
+    applyCue(creatureCues, event.reactorId, { floatingLabel: label })
+  }
+  if (event.type === "BATTLE_AFTER_DAMAGE_PASS" && event.reactorId) {
+    applyCue(creatureCues, event.reactorId, { floatingLabel: "Pass" })
+  }
+  if (event.type === "BATTLE_RESOLVE_HIT_REACTION" && event.reactorId) {
+    const label =
+      event.decision.tag === "RShield" ? "Shield!" : event.decision.tag === "RPass" ? "Pass" : event.decision.tag
+    applyCue(creatureCues, event.reactorId, { floatingLabel: label })
+  }
+  if (event.type === "BATTLE_RESOLVE_DMG_REACTION" && event.reactorId) {
+    const label =
+      event.decision.tag === "RUncannyDodge" ? "Uncanny Dodge!" : event.decision.tag === "RPass" ? "Pass" : "Reduce"
+    applyCue(creatureCues, event.reactorId, { floatingLabel: label })
+  }
 
-  // Spell announcement — shown for any spell cast event
+  // Interrupt overlay — show specific kind
+  let interruptOverlay = { opacity: 0, label: "" }
+  if (snapshot.phase.type === "interrupt") {
+    const kindLabels: Record<string, string> = {
+      PISpellCast: "COUNTERSPELL WINDOW",
+      PISaveFailed: "SAVE FAILED — REACTION",
+      PISaveFailedAoE: "SAVE FAILED — REACTION",
+      PIAttackHit: "ATTACK HIT — REACTION",
+      PIAttackDamage: "DAMAGE — REACTION",
+      PIAfterDamage: "AFTER DAMAGE — REACTION"
+    }
+    interruptOverlay = {
+      opacity: 0.6,
+      label: kindLabels[snapshot.phase.interruptKind] ?? "INTERRUPT"
+    }
+  }
+
   const spellAnnouncement = castBar ? { spellName: castBar.spellName, casterId: castBar.casterId } : null
-
   const autoAdvanceDelay = timing.overrides[event.type] ?? timing.defaultDelayMs
 
   return { castBar, spellAnnouncement, interruptOverlay, creatureCues, autoAdvanceDelay }

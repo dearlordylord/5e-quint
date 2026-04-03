@@ -38,7 +38,7 @@ describe("directorStep", () => {
     const cues = directorStep(event, curr, delta)
     if (curr.phase.type === "interrupt") {
       expect(cues.interruptOverlay.opacity).toBe(0.6)
-      expect(cues.interruptOverlay.label).toBe("INTERRUPT")
+      expect(cues.interruptOverlay.label).toBe("COUNTERSPELL WINDOW")
     }
   })
 

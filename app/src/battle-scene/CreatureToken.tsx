@@ -1,20 +1,58 @@
-import { motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 
 import type { CreatureLayout } from "./layout.ts"
 
 export function CreatureToken(props: CreatureLayout) {
+  const strokeColor = props.damageFlash
+    ? "#ef4444"
+    : props.castingGlow
+      ? "#a78bfa"
+      : props.isReacting
+        ? "#fbbf24"
+        : props.isActive
+          ? "#f8fafc"
+          : "#1e293b"
+  const strokeWidth = props.damageFlash || props.castingGlow || props.isReacting ? 3 : props.isActive ? 2.5 : 1.5
+
   return (
     <motion.g initial={{ opacity: 0 }} animate={{ opacity: props.opacity }} transition={{ duration: 0.3 }}>
+      {/* Active creature pulsing ring */}
+      {props.isActive && (
+        <motion.circle
+          cx={props.cx}
+          cy={props.cy}
+          r={props.tokenRadius + 4}
+          fill="none"
+          stroke="#f8fafc"
+          strokeWidth={1}
+          strokeDasharray="4 3"
+          animate={{ opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+      )}
+
+      {/* Reacting creature highlight ring */}
+      {props.isReacting && (
+        <motion.circle
+          cx={props.cx}
+          cy={props.cy}
+          r={props.tokenRadius + 4}
+          fill="none"
+          stroke="#fbbf24"
+          strokeWidth={2}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 0.8, repeat: Infinity }}
+        />
+      )}
+
       <motion.circle
         cx={props.cx}
         cy={props.cy}
         r={props.tokenRadius}
         fill={props.teamColor}
-        stroke={props.damageFlash ? "#ef4444" : props.castingGlow ? "#a78bfa" : "#1e293b"}
-        strokeWidth={props.damageFlash || props.castingGlow ? 3 : 1.5}
-        animate={{
-          scale: props.justBecameUnconscious ? [1, 1.2, 0.8, 1] : 1
-        }}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        animate={{ scale: props.justBecameUnconscious ? [1, 1.2, 0.8, 1] : 1 }}
         transition={{ duration: 0.4 }}
       />
 
@@ -31,6 +69,28 @@ export function CreatureToken(props: CreatureLayout) {
         {props.label}
       </text>
 
+      {/* Floating decision/save label */}
+      <AnimatePresence>
+        {props.floatingLabel && (
+          <motion.text
+            key={props.floatingLabel}
+            x={props.cx}
+            y={props.cy - props.tokenRadius - 14}
+            textAnchor="middle"
+            fill={props.floatingLabel === "Fail!" || props.floatingLabel === "KO!" ? "#ef4444" : "#fbbf24"}
+            fontSize={12}
+            fontWeight="bold"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+          >
+            {props.floatingLabel}
+          </motion.text>
+        )}
+      </AnimatePresence>
+
+      {/* HP bar */}
       <rect
         x={props.hpBar.x}
         y={props.hpBar.y}
@@ -94,17 +154,24 @@ export function CreatureToken(props: CreatureLayout) {
         </>
       )}
 
+      {/* Slot pips — flash when just spent */}
       {props.slotPips.total > 0 && (
         <g>
-          {Array.from({ length: Math.min(props.slotPips.total, 9) }, (_, i) => (
-            <circle
-              key={i}
-              cx={props.slotPips.x + 3 + i * 5}
-              cy={props.slotPips.y + 3}
-              r={2}
-              fill={i < props.slotPips.filled ? "#a78bfa" : "#374151"}
-            />
-          ))}
+          {Array.from({ length: Math.min(props.slotPips.total, 9) }, (_, i) => {
+            const filled = i < props.slotPips.filled
+            const justLost = props.slotJustSpent && i === props.slotPips.filled
+            return (
+              <motion.circle
+                key={i}
+                cx={props.slotPips.x + 3 + i * 5}
+                cy={props.slotPips.y + 3}
+                r={2}
+                fill={filled ? "#a78bfa" : "#374151"}
+                animate={justLost ? { fill: ["#a78bfa", "#ef4444", "#374151"] } : {}}
+                transition={{ duration: 0.4 }}
+              />
+            )
+          })}
         </g>
       )}
     </motion.g>

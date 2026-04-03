@@ -52,6 +52,10 @@ export interface CreatureLayout {
   damageFlash: boolean
   castingGlow: boolean
   justBecameUnconscious: boolean
+  isActive: boolean
+  isReacting: boolean
+  floatingLabel: string | null
+  slotJustSpent: boolean
 }
 
 export interface AoELayout {
@@ -104,7 +108,12 @@ function computeGridLines(config: LayoutConfig): LayoutState["gridLines"] {
   return lines
 }
 
-function computeCreatureLayout(creature: CreatureSnapshot, cues: VisualCueState, config: LayoutConfig): CreatureLayout {
+function computeCreatureLayout(
+  creature: CreatureSnapshot,
+  cues: VisualCueState,
+  config: LayoutConfig,
+  reactorId: string | undefined
+): CreatureLayout {
   const { cx, cy } = gridToPixel(creature.gridPos.row, creature.gridPos.col, config.cellSize)
   const cue = lookupCue(cues.creatureCues, creature.id)
 
@@ -166,7 +175,11 @@ function computeCreatureLayout(creature: CreatureSnapshot, cues: VisualCueState,
     },
     damageFlash: cue.damageFlash,
     castingGlow: cue.castingGlow,
-    justBecameUnconscious: cue.justBecameUnconscious
+    justBecameUnconscious: cue.justBecameUnconscious,
+    isActive: creature.isActive,
+    isReacting: creature.id === reactorId,
+    floatingLabel: cue.floatingLabel,
+    slotJustSpent: cue.slotJustSpent
   }
 }
 
@@ -197,7 +210,9 @@ export function computeLayout(
       height: config.gridRows * config.cellSize
     },
     gridLines: computeGridLines(config),
-    creatures: snapshot.creatures.map((c) => computeCreatureLayout(c, cues, config)),
+    creatures: snapshot.creatures.map((c) =>
+      computeCreatureLayout(c, cues, config, snapshot.phase.type === "interrupt" ? snapshot.phase.reactorId : undefined)
+    ),
     aoeZones: snapshot.aoeZones.map((z) => computeAoELayout(z, config)),
     interruptOverlay: {
       opacity: cues.interruptOverlay.opacity,

@@ -9,6 +9,7 @@ import { BattleField } from "./BattleField.tsx"
 import { BattleLog } from "./BattleLog.tsx"
 import { directorStep, EMPTY_CUES } from "./director.ts"
 import { computeLayout } from "./layout.ts"
+import { narrate } from "./narrate.ts"
 import { deriveSnapshot, type ScenarioMeta } from "./scene-snapshot.ts"
 import { diffSnapshots } from "./snapshot-diff.ts"
 
@@ -195,6 +196,18 @@ export function BattlePage() {
           Step {cursor + 1} / {EVENTS.length}
         </span>
       </div>
+
+      {/* Narration bar */}
+      {cursor >= 0 && (
+        <div className="w-full max-w-3xl mb-3 px-4 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-slate-200 text-center min-h-[2.5rem] flex items-center justify-center">
+          {snapshot?.activeCreatureId && (
+            <span className="text-amber-400 font-semibold mr-2">
+              {META.names[snapshot.activeCreatureId] ?? snapshot.activeCreatureId}:
+            </span>
+          )}
+          {narrate(EVENTS[cursor], META)}
+        </div>
+      )}
 
       {layout ? (
         <BattleField layout={layout} />
