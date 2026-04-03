@@ -28,23 +28,23 @@ export function narrate(event: BattleEvent, meta: ScenarioMeta): string {
       return `${name(event.targetId, meta)} rolls ${event.saveRoll} on the save.`
     case "BATTLE_RESOLVE_SAVE_FAILED_REACTION":
       if (!event.reactorId) return "No more save-failed reactions."
-      if (event.decision.tag === "RPass") return `${name(event.reactorId, meta)} passes on reaction.`
+      if (event.decision.tag === "RPass") return `${name(event.reactorId, meta)} skips reaction.`
       return `${name(event.reactorId, meta)} uses Legendary Resistance!`
     case "BATTLE_AFTER_DAMAGE_PASS":
       if (!event.reactorId) return "No more after-damage reactions."
-      return `${name(event.reactorId, meta)} passes on after-damage reaction.`
+      return `${name(event.reactorId, meta)} skips after-damage reaction.`
     case "BATTLE_ATTACK":
       return `Attacks ${name(event.targetId, meta)} — rolls ${event.attackRoll} vs AC ${event.tAc}.`
     case "BATTLE_RESOLVE_HIT_REACTION":
       if (!event.reactorId) return "No hit reactions."
       if (event.decision.tag === "RShield") return `${name(event.reactorId, meta)} casts Shield!`
-      if (event.decision.tag === "RPass") return `${name(event.reactorId, meta)} passes.`
+      if (event.decision.tag === "RPass") return `${name(event.reactorId, meta)} skips.`
       return `${name(event.reactorId, meta)} reacts: ${event.decision.tag}.`
     case "BATTLE_RESOLVE_DMG_REACTION":
       if (!event.reactorId) return "No damage reactions."
       if (event.decision.tag === "RUncannyDodge")
         return `${name(event.reactorId, meta)} uses Uncanny Dodge — halves damage!`
-      if (event.decision.tag === "RPass") return `${name(event.reactorId, meta)} passes.`
+      if (event.decision.tag === "RPass") return `${name(event.reactorId, meta)} skips.`
       return `${name(event.reactorId, meta)} reduces damage.`
     case "BATTLE_END_TURN":
       return "Turn ends."

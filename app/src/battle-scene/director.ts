@@ -144,19 +144,19 @@ export function directorStep(
   }
   if (event.type === "BATTLE_RESOLVE_SAVE_FAILED_REACTION" && event.reactorId) {
     const isLR = event.decision.tag !== "RPass"
-    applyCue(creatureCues, event.reactorId, label(isLR ? "Legendary Resistance!" : "Pass", "positive"))
+    applyCue(creatureCues, event.reactorId, label(isLR ? "Legendary Resistance!" : "Skip", "positive"))
   }
   if (event.type === "BATTLE_AFTER_DAMAGE_PASS" && event.reactorId) {
-    applyCue(creatureCues, event.reactorId, label("Pass", "positive"))
+    applyCue(creatureCues, event.reactorId, label("Skip", "positive"))
   }
   if (event.type === "BATTLE_RESOLVE_HIT_REACTION" && event.reactorId) {
     const text =
-      event.decision.tag === "RShield" ? "Shield!" : event.decision.tag === "RPass" ? "Pass" : event.decision.tag
+      event.decision.tag === "RShield" ? "Shield!" : event.decision.tag === "RPass" ? "Skip" : event.decision.tag
     applyCue(creatureCues, event.reactorId, label(text, "positive"))
   }
   if (event.type === "BATTLE_RESOLVE_DMG_REACTION" && event.reactorId) {
     const text =
-      event.decision.tag === "RUncannyDodge" ? "Uncanny Dodge!" : event.decision.tag === "RPass" ? "Pass" : "Reduce"
+      event.decision.tag === "RUncannyDodge" ? "Uncanny Dodge!" : event.decision.tag === "RPass" ? "Skip" : "Reduce"
     applyCue(creatureCues, event.reactorId, label(text, "positive"))
   }
 
