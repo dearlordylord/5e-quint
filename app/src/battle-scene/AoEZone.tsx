@@ -17,7 +17,7 @@ export function AoEZone(props: AoELayout) {
         textAnchor="middle"
         dominantBaseline="central"
         fill="#f8fafc"
-        fontSize={14}
+        fontSize={24}
         fontWeight="bold"
         opacity={0.6}
         pointerEvents="none"
