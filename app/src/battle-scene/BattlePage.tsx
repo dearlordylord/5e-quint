@@ -34,14 +34,17 @@ function replayPair(upTo: number) {
   return { prevCtx, currCtx: actor.getSnapshot().context }
 }
 
-const FADE_DELAY_MS = 1200
+const CAST_BAR_FADE_MS = 550
+const SPELL_NAME_FADE_MS = 800
 
 export function BattlePage() {
   const [cursor, setCursor] = useState(-1)
   const [autoPlay, setAutoPlay] = useState(false)
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [transientFaded, setTransientFaded] = useState(false)
-  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [castBarFaded, setCastBarFaded] = useState(false)
+  const [spellFaded, setSpellFaded] = useState(false)
+  const castBarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const spellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Derive snapshot + cues from cursor in a single pass (one replay, not three)
   const { cues, snapshot } = useMemo(() => {
@@ -68,22 +71,31 @@ export function BattlePage() {
     }
   }, [cursor])
 
-  // Clear transient cues (castBar, spellAnnouncement) after a delay
   useEffect(() => {
-    setTransientFaded(false)
-    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current)
-    if (cues.castBar || cues.spellAnnouncement) {
-      fadeTimerRef.current = setTimeout(() => setTransientFaded(true), FADE_DELAY_MS)
+    setCastBarFaded(false)
+    setSpellFaded(false)
+    if (castBarTimerRef.current) clearTimeout(castBarTimerRef.current)
+    if (spellTimerRef.current) clearTimeout(spellTimerRef.current)
+    if (cues.castBar) {
+      castBarTimerRef.current = setTimeout(() => setCastBarFaded(true), CAST_BAR_FADE_MS)
+    }
+    if (cues.spellAnnouncement) {
+      spellTimerRef.current = setTimeout(() => setSpellFaded(true), SPELL_NAME_FADE_MS)
     }
     return () => {
-      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current)
+      if (castBarTimerRef.current) clearTimeout(castBarTimerRef.current)
+      if (spellTimerRef.current) clearTimeout(spellTimerRef.current)
     }
   }, [cues])
 
   const activeCues = useMemo(() => {
-    if (!transientFaded) return cues
-    return { ...cues, castBar: null, spellAnnouncement: null }
-  }, [cues, transientFaded])
+    if (!castBarFaded && !spellFaded) return cues
+    return {
+      ...cues,
+      castBar: castBarFaded ? null : cues.castBar,
+      spellAnnouncement: spellFaded ? null : cues.spellAnnouncement
+    }
+  }, [cues, castBarFaded, spellFaded])
 
   const layout = useMemo(() => {
     if (!snapshot) return null
