@@ -2,6 +2,7 @@
  * Layer A: Scene Snapshot — pure deterministic projection of BattleContext.
  * No coordinates (pixels), no time, no animation. Grid positions and game-unit measurements only.
  */
+import { Option } from "effect"
 import { isIncapacitated } from "#/battle-machine-creature.ts"
 import type {
   AoESpellCtx,
@@ -124,7 +125,7 @@ function deriveCreature(
     unconscious: cs.unconscious,
     dead: cs.dead,
     reactionAvailable: cs.reactionAvailable,
-    concentrating: cs.concentrationSpellId !== "",
+    concentrating: Option.isSome(cs.concentrationSpellId),
     exhaustion: cs.exhaustion,
     slotsByLevel: cs.slotsMax.map((max, i) => ({ current: cs.slotsCurrent[i] ?? 0, max })).filter((s) => s.max > 0),
     deathSaves: cs.deathSaves,
