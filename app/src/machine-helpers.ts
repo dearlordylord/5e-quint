@@ -425,8 +425,14 @@ export function longRestUpdate(c: {
     (cs.wizard?.level ?? 0) +
     (cs.ranger?.level ?? 0) +
     (cs.bard?.level ?? 0)
+  // Spell slots restore unconditionally (Quint: pInitSpellSlots runs regardless of HP).
+  // Creature state (hp, exhaustion, hitDice) only restores if alive.
+  const slotUpdates = {
+    slotsCurrent: c.slotsMax,
+    pactSlotsCurrent: c.pactSlotsMax
+  }
   const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax, totalLevel)
-  if (!r) return {}
+  if (!r) return slotUpdates
   return {
     exhaustion: exhaustionLevel(r.newExhaustion),
     hitDiceRemaining: r.newHitDice,
