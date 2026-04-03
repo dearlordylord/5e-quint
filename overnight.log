@@ -199,3 +199,20 @@ Running total tonight: 5 fixed, 4 logged-for-review
 
 Summary: 1 fixed (arcaneRecoveryUsed), 0 new
 Running total tonight: 6 fixed, 4 logged-for-review
+
+2026-04-03T01:08:00 — Cron check #10
+  MBT failures: 1 new (deathSaves — the last recurring pattern)
+  Invariant failures: 14 new (same spellStackDistinctCasters)
+
+2026-04-03T01:08:00 — FIXED: Defy Death applied to non-Fighters (SPEC BUG)
+  Root cause of ALL death save divergences. pStartTurnFull in creature.qnt passed
+  config.level (total character level) to pFighterDeathSaveRoll, which checks
+  fighterLevel >= 18 for Defy Death. A Barbarian 18 (or any L18+ non-Fighter)
+  would incorrectly get Defy Death, promoting rolls 18-19 to nat 20.
+  XState correctly used c.classStates.fighter?.level (fighter class level = 0).
+  Fix: changed to config.classLevels.get(Fighter) in the Quint spec.
+  Full MBT dev run passes (random seed).
+  Fuzzers restarted.
+
+Summary: 1 fixed (Defy Death spec bug), 0 new
+Running total tonight: 7 fixed, 4 logged-for-review (spellStackDistinctCasters is spec-level)
