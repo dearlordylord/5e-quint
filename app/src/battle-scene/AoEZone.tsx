@@ -16,7 +16,7 @@ export function AoEZone(props: AoELayout) {
         y={props.cy}
         textAnchor="middle"
         dominantBaseline="central"
-        fill="#f8fafc"
+        fill="#f9fafb"
         fontSize={24}
         fontWeight="bold"
         opacity={0.6}

@@ -17,7 +17,7 @@ export function SpellAnnouncement({ announcement, viewBox }: Props) {
           y={viewBox.height / 2 - 40}
           textAnchor="middle"
           dominantBaseline="central"
-          fill="#f8fafc"
+          fill="#f9fafb"
           fontSize={32}
           fontWeight="bold"
           style={{ textShadow: "0 0 12px rgba(167,139,250,0.8)" }}

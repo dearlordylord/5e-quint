@@ -10,7 +10,7 @@ export function BattleField({ layout }: { layout: LayoutState }) {
   return (
     <svg
       viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height}`}
-      className="w-full max-w-3xl border border-slate-700 rounded bg-slate-900"
+      className="w-full max-w-3xl rounded-xl border border-gray-700 bg-gray-900"
     >
       <GridOverlay lines={layout.gridLines} />
       {layout.aoeZones.map((z) => (

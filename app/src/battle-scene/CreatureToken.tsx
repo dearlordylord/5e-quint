@@ -10,8 +10,8 @@ export function CreatureToken(props: CreatureLayout) {
       : props.isReacting
         ? "#fbbf24"
         : props.isActive
-          ? "#f8fafc"
-          : "#1e293b"
+          ? "#f9fafb"
+          : "#1f2937"
   const strokeWidth = props.damageFlash || props.castingGlow || props.isReacting ? 3 : props.isActive ? 2.5 : 1.5
   const r = props.tokenRadius
 
@@ -23,7 +23,7 @@ export function CreatureToken(props: CreatureLayout) {
           cy={props.cy}
           r={r + 4}
           fill="none"
-          stroke="#f8fafc"
+          stroke="#f9fafb"
           strokeWidth={1}
           strokeDasharray="4 3"
           animate={{ opacity: [0.3, 0.8, 0.3] }}
@@ -86,7 +86,7 @@ export function CreatureToken(props: CreatureLayout) {
         />
       )}
 
-      <text x={props.cx} y={props.cy + r + 14} textAnchor="middle" fill="#94a3b8" fontSize={8} pointerEvents="none">
+      <text x={props.cx} y={props.cy + r + 14} textAnchor="middle" fill="#9ca3af" fontSize={8} pointerEvents="none">
         {props.label}
       </text>
 
@@ -115,7 +115,7 @@ export function CreatureToken(props: CreatureLayout) {
         y={props.hpBar.y}
         width={props.hpBar.totalWidth}
         height={props.hpBar.height}
-        fill="#1e293b"
+        fill="#1f2937"
         rx={1}
       />
       <motion.rect
@@ -136,7 +136,7 @@ export function CreatureToken(props: CreatureLayout) {
             y={props.tempHpBar.y}
             width={props.tempHpBar.totalWidth}
             height={props.tempHpBar.height}
-            fill="#1e293b"
+            fill="#1f2937"
             rx={1}
           />
           <rect
@@ -157,7 +157,7 @@ export function CreatureToken(props: CreatureLayout) {
             y={props.castBar.y}
             width={props.castBar.totalWidth}
             height={props.castBar.height}
-            fill="#1e293b"
+            fill="#1f2937"
             rx={1}
           />
           <motion.rect
