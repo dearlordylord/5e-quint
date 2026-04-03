@@ -225,3 +225,19 @@ Running total tonight: 7 fixed, 4 logged-for-review (spellStackDistinctCasters i
 
 Summary: 0 fixed, 0 new
 Running total tonight: 7 fixed, 4 logged-for-review
+
+2026-04-03T02:08:00 — Cron check #12
+  MBT failures: 1 new (mysticArcanumUsed — NEW pattern, Warlock 18)
+  Invariant failures: 8 new (same spellStackDistinctCasters)
+
+  New: mysticArcanumUsed mismatch
+    Seed: 0xc42270e2, trace 28, step 9, action "doUseMysticArcanum", Warlock 18
+    Quint sets mysticArcanumUsed to include the spell level; XState doesn't.
+    Both states serialize as {} in JSON (Set serialization issue — real diff in Set comparison).
+    XState handler (mysticArcanumUpdate) checks isIncapacitated + level >= 11 + not-already-used.
+    Creature is not incapacitated, warlock 18. Guards should pass.
+    Needs deeper investigation — possibly the event isn't reaching the handler, or
+    a subtle guard mismatch. Rare: 1 occurrence in many cycles.
+
+Summary: 0 fixed, 1 new logged (mysticArcanumUsed)
+Running total tonight: 7 fixed, 5 logged-for-review
