@@ -1192,7 +1192,7 @@ module battle {
                     }
                   }
                 | _ =>
-                  // Non-CS spell resolves: expend slot + dispatch via resolveSpellEntry
+                  // Non-CS spell resolves: dispatch via resolveSpellEntry (slot already spent at cast time)
                   val result = resolveSpellEntry(bCreatures, spell.caster, spell.slotLvl, spell.ritual, spell.postCast, bSpellStack)
                   all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
               }
