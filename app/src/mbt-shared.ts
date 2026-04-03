@@ -84,6 +84,31 @@ export const QUINT_DAMAGE_TYPE_MAP: Record<string, DamageType> = {
 }
 
 // ============================================================
+// Class name casing: Quint uses capitalized variants ("Fighter"),
+// TS uses lowercase ClassName ("fighter"). Two-way isomorphism.
+// ============================================================
+
+/** Quint ClassName variant → TS ClassName (e.g. "Fighter" → "fighter") */
+export function quintClassToTs(quintName: string): string {
+  return quintName.toLowerCase()
+}
+
+/** TS ClassName → Quint ClassName variant (e.g. "fighter" → "Fighter") */
+export function tsClassToQuint(tsName: string): string {
+  return tsName.charAt(0).toUpperCase() + tsName.slice(1)
+}
+
+/** Convert a Record with Quint-cased class keys to TS-cased keys. */
+export function quintClassKeysToTs<T>(record: Record<string, T>): Record<string, T> {
+  return Object.fromEntries(Object.entries(record).map(([k, v]) => [quintClassToTs(k), v]))
+}
+
+/** Convert a Record with TS-cased class keys to Quint-cased keys. */
+export function tsClassKeysToQuint<T>(record: Record<string, T>): Record<string, T> {
+  return Object.fromEntries(Object.entries(record).map(([k, v]) => [tsClassToQuint(k), v]))
+}
+
+// ============================================================
 // Mapping helpers
 // ============================================================
 
@@ -741,7 +766,7 @@ export function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): No
     stunned: s.stunned,
     unconscious: s.unconscious,
     incapacitatedSources: s.incapacitatedSources,
-    hitDiceRemaining: Object.fromEntries(Object.entries(s.hitDiceRemaining).map(([k, v]) => [k.toLowerCase(), v])),
+    hitDiceRemaining: quintClassKeysToTs(s.hitDiceRemaining),
     activeEffects: s.activeEffects,
     movementRemaining: Number(t.movementRemaining),
     effectiveSpeed: Number(t.effectiveSpeed),
