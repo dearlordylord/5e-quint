@@ -241,3 +241,10 @@ Running total tonight: 7 fixed, 4 logged-for-review
 
 Summary: 0 fixed, 1 new logged (mysticArcanumUsed)
 Running total tonight: 7 fixed, 5 logged-for-review
+
+2026-04-03T02:36:00 — Cron check #13
+  MBT failures: 0 new — CLEAN
+  Invariant failures: 3 new (same spellStackDistinctCasters)
+
+Summary: 0 fixed, 0 new
+Running total tonight: 7 fixed, 5 logged-for-review
