@@ -3,18 +3,14 @@ import { createActor } from "xstate"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleEvent } from "#/battle-machine-types.ts"
-import { FIREBALL_BATTLE, FIREBALL_BATTLE_META } from "#/demo/fireball-battle.ts"
 
 import { BattleField } from "./BattleField.tsx"
 import { BattleLog } from "./BattleLog.tsx"
 import { directorStep, EMPTY_CUES } from "./director.ts"
 import { computeLayout } from "./layout.ts"
 import { narrate } from "./narrate.ts"
-import { deriveSnapshot, type ScenarioMeta } from "./scene-snapshot.ts"
+import { type BattleScenario, deriveSnapshot } from "./scene-snapshot.ts"
 import { diffSnapshots } from "./snapshot-diff.ts"
-
-const META: ScenarioMeta = FIREBALL_BATTLE_META
-const EVENTS: ReadonlyArray<BattleEvent> = FIREBALL_BATTLE
 
 function findAoEEventIndex(events: ReadonlyArray<BattleEvent>, upTo: number): string | null {
   for (let i = upTo - 1; i >= 0; i--) {
@@ -23,14 +19,13 @@ function findAoEEventIndex(events: ReadonlyArray<BattleEvent>, upTo: number): st
   return null
 }
 
-/** Replay events 0..upTo through a fresh actor, returning contexts at upTo-1 and upTo. */
-function replayPair(upTo: number) {
+function replayPair(events: ReadonlyArray<BattleEvent>, upTo: number) {
   const actor = createActor(battleMachine)
   actor.start()
   let prevCtx = actor.getSnapshot().context
   for (let i = 0; i <= upTo; i++) {
     if (i === upTo) prevCtx = actor.getSnapshot().context
-    actor.send(EVENTS[i])
+    actor.send(events[i])
   }
   return { prevCtx, currCtx: actor.getSnapshot().context }
 }
@@ -38,7 +33,8 @@ function replayPair(upTo: number) {
 const CAST_BAR_FADE_MS = 550
 const SPELL_NAME_FADE_MS = 800
 
-export function BattlePage() {
+export function BattlePage({ scenario }: { scenario: BattleScenario }) {
+  const { events, meta } = scenario
   const [cursor, setCursor] = useState(-1)
   const [autoPlay, setAutoPlay] = useState(false)
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -47,30 +43,29 @@ export function BattlePage() {
   const castBarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const spellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Derive snapshot + cues from cursor in a single pass (one replay, not three)
   const { cues, snapshot } = useMemo(() => {
     if (cursor < 0) return { snapshot: null, cues: EMPTY_CUES }
-    const aoeIdx = findAoEEventIndex(EVENTS, cursor + 1)
+    const aoeIdx = findAoEEventIndex(events, cursor + 1)
 
     if (cursor === 0) {
       const actor = createActor(battleMachine)
       actor.start()
-      actor.send(EVENTS[0])
+      actor.send(events[0])
       return {
-        snapshot: deriveSnapshot(actor.getSnapshot().context, META, aoeIdx),
+        snapshot: deriveSnapshot(actor.getSnapshot().context, meta, aoeIdx),
         cues: EMPTY_CUES
       }
     }
 
-    const { currCtx, prevCtx } = replayPair(cursor)
-    const prevSnap = deriveSnapshot(prevCtx, META, aoeIdx)
-    const currSnap = deriveSnapshot(currCtx, META, aoeIdx)
+    const { currCtx, prevCtx } = replayPair(events, cursor)
+    const prevSnap = deriveSnapshot(prevCtx, meta, aoeIdx)
+    const currSnap = deriveSnapshot(currCtx, meta, aoeIdx)
     const delta = diffSnapshots(prevSnap, currSnap)
     return {
       snapshot: currSnap,
-      cues: directorStep(EVENTS[cursor], currSnap, delta)
+      cues: directorStep(events[cursor], currSnap, delta)
     }
-  }, [cursor])
+  }, [cursor, events, meta])
 
   useEffect(() => {
     setCastBarFaded(false)
@@ -103,14 +98,17 @@ export function BattlePage() {
     return computeLayout(snapshot, activeCues)
   }, [snapshot, activeCues])
 
-  const stepTo = useCallback((index: number) => {
-    if (index < 0 || index >= EVENTS.length) return
-    setCursor(index)
-  }, [])
+  const stepTo = useCallback(
+    (index: number) => {
+      if (index < 0 || index >= events.length) return
+      setCursor(index)
+    },
+    [events.length]
+  )
 
   const stepForward = useCallback(() => {
-    setCursor((prev) => (prev + 1 < EVENTS.length ? prev + 1 : prev))
-  }, [])
+    setCursor((prev) => (prev + 1 < events.length ? prev + 1 : prev))
+  }, [events.length])
 
   const toggleAutoPlay = useCallback(() => {
     setAutoPlay((prev) => {
@@ -122,7 +120,7 @@ export function BattlePage() {
       const advance = () => {
         setCursor((c) => {
           const next = c + 1
-          if (next >= EVENTS.length) {
+          if (next >= events.length) {
             setAutoPlay(false)
             return c
           }
@@ -133,21 +131,19 @@ export function BattlePage() {
       advance()
       return true
     })
-  }, [])
+  }, [events.length])
 
-  // Cleanup autoplay timer on unmount
   useEffect(() => {
     return () => {
       if (autoPlayRef.current) clearTimeout(autoPlayRef.current)
     }
   }, [])
 
-  // Keyboard controls: left/right arrows + space for play/pause
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") {
         e.preventDefault()
-        setCursor((prev) => (prev + 1 < EVENTS.length ? prev + 1 : prev))
+        setCursor((prev) => (prev + 1 < events.length ? prev + 1 : prev))
       } else if (e.key === "ArrowLeft") {
         e.preventDefault()
         setCursor((prev) => (prev > 0 ? prev - 1 : prev))
@@ -158,7 +154,7 @@ export function BattlePage() {
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [toggleAutoPlay])
+  }, [toggleAutoPlay, events.length])
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center p-8">
@@ -181,32 +177,31 @@ export function BattlePage() {
         </button>
         <button
           onClick={stepForward}
-          disabled={cursor >= EVENTS.length - 1}
+          disabled={cursor >= events.length - 1}
           className="px-3 py-1 bg-slate-700 rounded hover:bg-slate-600 disabled:opacity-40"
         >
           Next
         </button>
         <button
           onClick={toggleAutoPlay}
-          disabled={!autoPlay && cursor >= EVENTS.length - 1}
+          disabled={!autoPlay && cursor >= events.length - 1}
           className={`px-3 py-1 rounded disabled:opacity-40 ${autoPlay ? "bg-amber-600 hover:bg-amber-500" : "bg-slate-700 hover:bg-slate-600"}`}
         >
           {autoPlay ? "Pause" : "Play"}
         </button>
         <span className="text-sm text-slate-400 self-center">
-          Step {cursor + 1} / {EVENTS.length}
+          Step {cursor + 1} / {events.length}
         </span>
       </div>
 
-      {/* Narration bar */}
       {cursor >= 0 && (
         <div className="w-full max-w-3xl mb-3 px-4 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-slate-200 text-center min-h-[2.5rem] flex items-center justify-center">
           {snapshot?.activeCreatureId && (
             <span className="text-amber-400 font-semibold mr-2">
-              {META.names[snapshot.activeCreatureId] ?? snapshot.activeCreatureId}:
+              {meta.names[snapshot.activeCreatureId] ?? snapshot.activeCreatureId}:
             </span>
           )}
-          {narrate(EVENTS[cursor], META)}
+          {narrate(events[cursor], meta)}
         </div>
       )}
 
@@ -216,7 +211,7 @@ export function BattlePage() {
         <div className="text-slate-500 italic">Press Next or Play to start the battle.</div>
       )}
 
-      <BattleLog events={EVENTS} cursor={cursor} onJumpTo={stepTo} />
+      <BattleLog events={events} cursor={cursor} onJumpTo={stepTo} />
     </div>
   )
 }

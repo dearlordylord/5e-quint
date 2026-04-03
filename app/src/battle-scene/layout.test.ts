@@ -32,8 +32,10 @@ describe("computeLayout", () => {
   it("unconscious creatures have reduced opacity", () => {
     const layout = computeLayout(snapshotAt(FIREBALL_BATTLE.length), EMPTY_CUES, CFG)
     expect(layout.creatures.find((c) => c.id === "A")!.opacity).toBe(1)
+    expect(layout.creatures.find((c) => c.id === "C")!.opacity).toBe(1)
     expect(layout.creatures.find((c) => c.id === "B")!.opacity).toBe(0.3)
     expect(layout.creatures.find((c) => c.id === "D")!.opacity).toBe(0.3)
+    expect(layout.creatures.find((c) => c.id === "E")!.opacity).toBe(0.3)
     expect(layout.creatures.find((c) => c.id === "F")!.opacity).toBe(0.3)
   })
 

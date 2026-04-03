@@ -7,6 +7,7 @@ import type {
   AoESpellCtx,
   BattleContext,
   BattleCreatureState,
+  BattleEvent,
   BattlePhase,
   PendingInterrupt
 } from "#/battle-machine-types.ts"
@@ -21,6 +22,12 @@ export interface ScenarioMeta {
   gridPositions: Record<string, { row: number; col: number }>
   aoeTargetPoints: Record<string, { row: number; col: number }>
   spellAnnotations: Record<string, string>
+}
+
+/** Everything needed to play back a battle scenario. */
+export interface BattleScenario {
+  events: ReadonlyArray<BattleEvent>
+  meta: ScenarioMeta
 }
 
 // --- Snapshot types ---

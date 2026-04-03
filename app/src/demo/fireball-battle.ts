@@ -185,7 +185,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
 
   // === Turn A: Fireball #2 at red team (D=22, E=36, F=22) ===
   startTurn,
-  castFireball, // event index 49
+  castFireball,
 
   // CS chain again: E→B→F→C (everyone has 1 level-3 slot left)
   cs("E", false),
@@ -220,7 +220,19 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
   },
   endTurn,
 
-  // === Turn E: Shatter #2 at A+B (A=22, B=8) ===
+  // === Turn B: unconscious, death save (fails) ===
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true
+  },
+  endTurn,
+
+  // === Turn E: Shatter at A+B (A=22, B=8) ===
   startTurn,
   castShatter,
   cs(null, false), // no CS eligible
@@ -229,10 +241,22 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
   sfPass(null),
   adPass("A"),
   adPass(null),
-  aoeTarget("B", 3), // B fails CON save (8→0) — KO!
+  aoeTarget("B", 3), // B fails CON save (8→0) — KO! B has reaction.
   sfPass("B"),
   sfPass(null),
   adPass("B"),
+  adPass(null),
+  aoeTarget(null, 0),
+  endTurn,
+
+  // === Turn C (Bufo): Fireball at E (E=22, last red standing) ===
+  startTurn,
+  castFireball,
+  cs(null, false), // E has no level-3 slots for CS
+  aoeTarget("E", 7), // E fails DEX save (22→0) — KO!
+  sfPass("E"),
+  sfPass(null),
+  adPass("E"),
   adPass(null),
   aoeTarget(null, 0),
   endTurn,
@@ -274,13 +298,15 @@ export const FIREBALL_BATTLE_META = {
     "18": { row: 5, col: 2 },
     "30": { row: 4, col: 2 },
     "49": { row: 5, col: 8 },
-    "67": { row: 4, col: 2 }
+    "69": { row: 4, col: 2 },
+    "84": { row: 5, col: 8 }
   },
   spellAnnotations: {
     "2": "Fireball",
     "18": "Fireball",
     "30": "Shatter",
     "49": "Fireball",
-    "67": "Shatter"
+    "69": "Shatter",
+    "84": "Fireball"
   }
 } satisfies ScenarioMeta

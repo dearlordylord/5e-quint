@@ -44,13 +44,13 @@ describe("deriveSnapshot", () => {
     expect(snap.aoeZones[0].radiusFeet).toBe(20)
   })
 
-  it("correct HP after full scenario — B, D, F KO'd", () => {
+  it("correct HP after full scenario — blue wins, all red KO'd", () => {
     const snap = deriveSnapshot(replayTo(FIREBALL_BATTLE.length), META)
     expect(snap.creatures.find((c) => c.id === "A")!.currentHp).toBe(8)
     expect(snap.creatures.find((c) => c.id === "B")!.unconscious).toBe(true)
     expect(snap.creatures.find((c) => c.id === "C")!.currentHp).toBe(22)
     expect(snap.creatures.find((c) => c.id === "D")!.unconscious).toBe(true)
-    expect(snap.creatures.find((c) => c.id === "E")!.currentHp).toBe(22)
+    expect(snap.creatures.find((c) => c.id === "E")!.unconscious).toBe(true)
     expect(snap.creatures.find((c) => c.id === "F")!.unconscious).toBe(true)
   })
 
