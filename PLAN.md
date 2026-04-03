@@ -16,7 +16,7 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 ## Known Spec Gaps (Battle Machine)
 
 - **Death saves at turn start:** The battle machine's `BATTLE_START_TURN` does not trigger death saves for unconscious creatures. The creature-level machine handles death saves, but the battle machine doesn't wire `sotSaveResult` to death save logic for unconscious creatures. Unconscious creatures' turns currently pass without death save processing.
-- **Damage at 0 HP → death save failures:** When an unconscious creature takes damage (e.g., AoE), the battle machine applies 0 effective HP damage but only records 1 death save failure instead of the RAW-required 2 failures per hit. Critical hits should cause 2 failures as well.
+- **Damage at 0 HP → death save failures:** Implemented correctly (1 failure per hit, 2 for crits). However, the battle machine opens reaction windows for unconscious creatures (who shouldn't have reactions). This is cosmetic — the scenario just passes through them — but the machine could skip them.
 - **Instant death from massive damage at 0 HP:** Not modeled. RAW: if remaining damage after dropping to 0 HP equals or exceeds max HP, the creature dies instantly.
 
 > **NOTE — Suggestive, not prescriptive.** Function names, signatures, state fields, and type
