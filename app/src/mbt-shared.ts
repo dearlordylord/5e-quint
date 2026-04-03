@@ -379,6 +379,7 @@ export const QuintFullState = z.object({
   wizardState: QuintWizardState,
   rangerState: QuintRangerState,
   bardState: QuintBardState,
+  // z.any() because Quint Maps arrive as JS Map (Rust backend) or plain object (JSON-parsed ITF)
   classLevels: z.any().transform((raw) => {
     const result: Record<string, number> = {}
     if (raw instanceof Map) {
