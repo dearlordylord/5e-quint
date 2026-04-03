@@ -87,7 +87,7 @@ module battle {
     // This just tracks who is casting, so Counterspell knows the target.
     // postCast describes what happens if the spell is NOT countered.
     postCast: PostCastEffect,
-    slotLvl: int,  // deferred slot expenditure (SRD 5.2.1: slot not spent if countered)
+    slotLvl: int,  // slot level to refund if countered (0 = ritual/no slot; SRD 5.2.1 Counterspell: "the slot isn't expended")
     ritual: bool,  // SRD 5.2.1: ritual casting skips slot expenditure, requires spell prepared
   }
 
@@ -257,6 +257,16 @@ module battle {
     val cs1 = setSlots(cs, id, pExpendSlot(cs.get(id).slots, level))
     val cb = cs1.get(id)
     cs1.set(id, cb.with("turn", cb.turn.with("slotExpendedThisTurn", true)))
+  }
+
+  /// Refund a spell slot without clearing slotExpendedThisTurn.
+  /// SRD 5.2.1 Counterspell: "If that spell was cast with a spell slot, the slot isn't expended."
+  /// But "One Spell with a Spell Slot per Turn" still applies — the caster used their
+  /// one-slot-per-turn quota even though the slot is returned. slotExpendedThisTurn stays true.
+  pure def refundSlot(
+    cs: CreatureId -> Combatant, id: CreatureId, level: int
+  ): (CreatureId -> Combatant) = {
+    setSlots(cs, id, pRestoreSlot(cs.get(id).slots, level))
   }
 
   pure def hasReaction(cs: CreatureId -> Combatant, id: CreatureId): bool =
@@ -898,6 +908,10 @@ module battle {
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
+      // Spend-then-refund: expend slot immediately (sets slotExpendedThisTurn = true).
+      // SRD 5.2.1 Counterspell: "the slot isn't expended" → refunded in bResolveCounterspell.
+      // SRD 5.2.1 "One Spell with a Spell Slot per Turn" → flag stays true even after refund.
+      val cs2 = if (ritual) cs1 else expendSlot(cs1, activeId, slotLvl)
       val saveCtx: SaveSpellCtx = {
         caster: activeId, target: targetId,
         saveDC: saveDC, saveRoll: saveRoll,
@@ -913,17 +927,15 @@ module battle {
         ritual: ritual,
       }
       // Check for Counterspell (must have reaction + alive + level 3+ slot)
-      val csElig = eligibleForCounterspell(cs1, activeId)
+      val csElig = eligibleForCounterspell(cs2, activeId)
       if (csElig.size() > 0) {
         all {
-          bCreatures' = cs1,
+          bCreatures' = cs2,
           bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(spellCtx), TSpellBeingCast, csElig)),
           keepBattle,
         }
       } else {
-        // No Counterspell possible — expend slot (unless ritual) and resolve save immediately
-        val cs2 = if (ritual) cs1
-                  else expendSlot(cs1, activeId, slotLvl)
+        // No Counterspell possible — slot already spent, resolve immediately
         val result = resolveSave(cs2, saveCtx, ADRActiveTurn)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       }
@@ -1029,10 +1041,8 @@ module battle {
     postCast: PostCastEffect,
     stack: List[SpellStackEntry]
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase, stack: List[SpellStackEntry] } = {
-    // Expend slot now that spell resolved (not countered).
-    // slotLvl 0 = already spent (CS reaction). Ritual = no slot expenditure.
-    val cs1 = if (not(isRitual) and slotLvl > 0) expendSlot(cs, casterId, slotLvl)
-              else cs
+    // Slot already spent at cast time (spend-then-refund pattern).
+    val cs1 = cs
     match postCast {
       | PCESave(save) =>
         val result = resolveSave(cs1, save, ADRActiveTurn)
@@ -1082,16 +1092,19 @@ module battle {
               // CS succeeds → interrupted spell (popped.top) fizzles.
               match popped.top.spellPostCast {
                 | PCECounterspell(_) =>
-                  // Fizzled spell was itself a CS → skip it, let grandparent continue.
+                  // Fizzled spell was itself a CS → refund its slot, let grandparent continue.
+                  // CS slot was spent at cast time (line ~1205); refund per SRD 5.2.1.
+                  val csRefundCS = if (popped.top.slotLvl > 0)
+                    refundSlot(cs, popped.top.spellCasterId, popped.top.slotLvl) else cs
                   if (popped.rest.length() == 0) {
-                    { creatures: cs, phase: BPActiveTurn, stack: popped.rest }
+                    { creatures: csRefundCS, phase: BPActiveTurn, stack: popped.rest }
                   } else {
                     val gp = popStack(popped.rest)
-                    val freshElig2 = eligibleForCounterspell(cs, gp.top.spellCasterId)
+                    val freshElig2 = eligibleForCounterspell(csRefundCS, gp.top.spellCasterId)
                     val remaining2 = freshElig2.exclude(gp.top.offered)
                     if (remaining2.size() > 0) {
                       val spell2: SpellCastCtx = { caster: gp.top.spellCasterId, spellName: gp.top.spellName, postCast: gp.top.spellPostCast, slotLvl: gp.top.slotLvl, ritual: gp.top.ritual }
-                      { creatures: cs,
+                      { creatures: csRefundCS,
                         phase: BPAwaitingReaction({
                           interrupt: PISpellCast(spell2), trigger: TSpellBeingCast,
                           eligible: freshElig2, offered: gp.top.offered,
@@ -1099,12 +1112,15 @@ module battle {
                         stack: gp.rest,
                       }
                     } else {
-                      resolveSpellEntry(cs, gp.top.spellCasterId, gp.top.slotLvl, gp.top.ritual, gp.top.spellPostCast, gp.rest)
+                      resolveSpellEntry(csRefundCS, gp.top.spellCasterId, gp.top.slotLvl, gp.top.ritual, gp.top.spellPostCast, gp.rest)
                     }
                   }
                 | _ =>
-                  // Original non-CS spell fizzled → slot not expended, active turn.
-                  { creatures: cs, phase: BPActiveTurn, stack: popped.rest }
+                  // Original spell fizzled → refund slot (SRD 5.2.1 Counterspell: "the slot isn't expended").
+                  // slotExpendedThisTurn stays true (one-slot-per-turn quota used).
+                  val csRefund = if (not(popped.top.ritual) and popped.top.slotLvl > 0)
+                    refundSlot(cs, popped.top.spellCasterId, popped.top.slotLvl) else cs
+                  { creatures: csRefund, phase: BPActiveTurn, stack: popped.rest }
               }
             } else {
               // CS fails → interrupted spell continues; return to its CS window.
@@ -1151,17 +1167,21 @@ module battle {
                       // CS succeeds → countered spell (popped.top) fizzles
                       match popped.top.spellPostCast {
                         | PCECounterspell(_) =>
-                          // Fizzled spell was a CS → its target spell continues
+                          // Fizzled spell was a CS → refund CS slot, its target spell continues
+                          val csRef2 = if (popped.top.slotLvl > 0)
+                            refundSlot(bCreatures, popped.top.spellCasterId, popped.top.slotLvl) else bCreatures
                           if (popped.rest.length() == 0) {
-                            all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted }
+                            all { bCreatures' = csRef2, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted }
                           } else {
                             val gp = popStack(popped.rest)
-                            val result = returnToCSWindow(bCreatures, gp.top, gp.rest)
+                            val result = returnToCSWindow(csRef2, gp.top, gp.rest)
                             all { bCreatures' = result.creatures, bPhase' = result.phase, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = result.stack, bTurnStarted' = bTurnStarted }
                           }
                         | _ =>
-                          // Original spell fizzled
-                          all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted }
+                          // Original spell fizzled → refund slot
+                          val csRef3 = if (not(popped.top.ritual) and popped.top.slotLvl > 0)
+                            refundSlot(bCreatures, popped.top.spellCasterId, popped.top.slotLvl) else bCreatures
+                          all { bCreatures' = csRef3, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted }
                       }
                     } else {
                       // CS fails → countered spell continues
@@ -1210,7 +1230,7 @@ module battle {
                       caster: reactorId,
                       spellName: "counterspell",
                       postCast: PCECounterspell(csEffect),
-                      slotLvl: 0,  // CS slot already spent at cast time (reaction)
+                      slotLvl: csSlotLvl,  // CS slot spent at cast time; carried for refund if counter-counterspelled
                       ritual: false,  // Counterspell is a reaction, never ritual
                     }
                     // Enter CS window for the Counterspell (empty eligible → resolves next step)
@@ -1339,6 +1359,8 @@ module battle {
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
+      // Spend-then-refund (see bCastSaveSpell comment for rationale)
+      val cs2 = if (ritual) cs1 else expendSlot(cs1, activeId, slotLvl)
       val concCtx: ConcentrationCtx = {
         caster: activeId, target: targetId,
         spellId: spellId, duration: duration,
@@ -1352,17 +1374,15 @@ module battle {
         ritual: ritual,
       }
       // Counterspell interrupt — if countered, concentration never starts
-      val csElig = eligibleForCounterspell(cs1, activeId)
+      val csElig = eligibleForCounterspell(cs2, activeId)
       if (csElig.size() > 0) {
         all {
-          bCreatures' = cs1,
+          bCreatures' = cs2,
           bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(spellCtx), TSpellBeingCast, csElig)),
           keepBattle,
         }
       } else {
-        // No Counterspell — expend slot (unless ritual) and resolve concentration immediately
-        val cs2 = if (ritual) cs1
-                  else expendSlot(cs1, activeId, slotLvl)
+        // No Counterspell — slot already spent, resolve concentration immediately
         val resolved = resolveConcentration(cs2, concCtx)
         all {
           bCreatures' = resolved,
@@ -1432,6 +1452,8 @@ module battle {
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
+      // Spend-then-refund (see bCastSaveSpell comment for rationale)
+      val cs2 = if (ritual) cs1 else expendSlot(cs1, activeId, slotLvl)
       val aoeCtx: AoESpellCtx = {
         caster: activeId, saveDC: saveDC,
         damageOnFail: dmgOnFail, halfOnSuccess: halfOnSave,
@@ -1447,17 +1469,15 @@ module battle {
         ritual: ritual,
       }
       // Counterspell interrupt — if countered, entire AoE fizzles
-      val csElig = eligibleForCounterspell(cs1, activeId)
+      val csElig = eligibleForCounterspell(cs2, activeId)
       if (csElig.size() > 0) {
         all {
-          bCreatures' = cs1,
+          bCreatures' = cs2,
           bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(spellCtx), TSpellBeingCast, csElig)),
           keepBattle,
         }
       } else {
-        // No Counterspell — expend slot (unless ritual) and enter AoE resolution
-        val cs2 = if (ritual) cs1
-                  else expendSlot(cs1, activeId, slotLvl)
+        // No Counterspell — slot already spent, enter AoE resolution
         all {
           bCreatures' = cs2,
           bPhase' = BPResolvingAoE(aoeCtx),
@@ -1774,6 +1794,8 @@ module battle {
       val newTurn = pUseBonusAction(ac.turn, ac.creature)
                       .with("bonusActionSpellCast", true)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
+      // Spend-then-refund (see bCastSaveSpell comment for rationale). No ritual for BA spells.
+      val cs2 = expendSlot(cs1, activeId, slotLvl)
       val saveCtx: SaveSpellCtx = {
         caster: activeId, target: targetId,
         saveDC: saveDC, saveRoll: saveRoll,
@@ -1788,15 +1810,15 @@ module battle {
         slotLvl: slotLvl,
         ritual: false,
       }
-      val csElig = eligibleForCounterspell(cs1, activeId)
+      val csElig = eligibleForCounterspell(cs2, activeId)
       if (csElig.size() > 0) {
         all {
-          bCreatures' = cs1,
+          bCreatures' = cs2,
           bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(spellCtx), TSpellBeingCast, csElig)),
           keepBattle,
         }
       } else {
-        val cs2 = expendSlot(cs1, activeId, slotLvl)
+        // Slot already spent, resolve immediately
         val result = resolveSave(cs2, saveCtx, ADRActiveTurn)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       }
@@ -1866,12 +1888,14 @@ module battle {
     | _ => true
   }
 
-  /// Spell stack entries have distinct casters.
+  /// Non-ritual spell stack entries have distinct casters.
   /// Enforced by eligibleForCounterspell's slotExpendedThisTurn guard (SRD 5.2.1).
+  /// Ritual casters are excluded: rituals don't expend a slot, so the caster
+  /// can still Counterspell (1 slot expenditure total) on the same turn.
   val spellStackDistinctCasters =
-    val stackSet = listToSet(bSpellStack)
-    stackSet.forall(e1 =>
-      stackSet.forall(e2 =>
+    val nonRitual = listToSet(bSpellStack).filter(e => not(e.ritual))
+    nonRitual.forall(e1 =>
+      nonRitual.forall(e2 =>
         (e1.spellCasterId == e2.spellCasterId) implies (e1 == e2)
       )
     )
