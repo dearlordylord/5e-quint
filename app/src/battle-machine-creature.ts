@@ -2,6 +2,8 @@
  * Battle machine creature-level pure functions — ports creature.qnt pure functions.
  * All functions are pure (no XState imports, no side effects).
  */
+import { Match } from "effect"
+
 import type { BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
 import { addIncapSource, ALL_DAMAGE_TYPES, removeIncapSource } from "#/machine-helpers.ts"
 import type { ActionType, ActiveEffect, Condition, DamageType, ExpiryPhase } from "#/types.ts"
@@ -25,82 +27,82 @@ export function isIncapacitated(c: BattleCreatureState): boolean {
 }
 
 export function applyCondition(c: BattleCreatureState, cond: Condition): BattleCreatureState {
-  switch (cond) {
-    case "blinded":
-      return { ...c, blinded: true }
-    case "charmed":
-      return { ...c, charmed: true }
-    case "deafened":
-      return { ...c, deafened: true }
-    case "frightened":
-      return { ...c, frightened: true }
-    case "grappled":
-      return { ...c, grappled: true }
-    case "incapacitated":
-      return { ...c, incapacitatedSources: addIncapSource(c.incapacitatedSources, "direct") }
-    case "invisible":
-      return { ...c, invisible: true }
-    case "paralyzed":
-      return { ...c, paralyzed: true, incapacitatedSources: addIncapSource(c.incapacitatedSources, "paralyzed") }
-    case "petrified":
-      return { ...c, petrified: true, incapacitatedSources: addIncapSource(c.incapacitatedSources, "petrified") }
-    case "poisoned":
-      return c.petrified ? c : { ...c, poisoned: true }
-    case "prone":
-      return { ...c, prone: true }
-    case "restrained":
-      return { ...c, restrained: true }
-    case "stunned":
-      return { ...c, stunned: true, incapacitatedSources: addIncapSource(c.incapacitatedSources, "stunned") }
-    case "unconscious":
-      return {
-        ...c,
-        unconscious: true,
-        prone: true,
-        incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious")
-      }
-    default:
-      return c
-  }
+  return Match.value(cond).pipe(
+    Match.when("blinded", () => ({ ...c, blinded: true })),
+    Match.when("charmed", () => ({ ...c, charmed: true })),
+    Match.when("deafened", () => ({ ...c, deafened: true })),
+    Match.when("frightened", () => ({ ...c, frightened: true })),
+    Match.when("grappled", () => ({ ...c, grappled: true })),
+    Match.when("incapacitated", () => ({
+      ...c,
+      incapacitatedSources: addIncapSource(c.incapacitatedSources, "direct")
+    })),
+    Match.when("invisible", () => ({ ...c, invisible: true })),
+    Match.when("paralyzed", () => ({
+      ...c,
+      paralyzed: true,
+      incapacitatedSources: addIncapSource(c.incapacitatedSources, "paralyzed")
+    })),
+    Match.when("petrified", () => ({
+      ...c,
+      petrified: true,
+      incapacitatedSources: addIncapSource(c.incapacitatedSources, "petrified")
+    })),
+    Match.when("poisoned", () => (c.petrified ? c : { ...c, poisoned: true })),
+    Match.when("prone", () => ({ ...c, prone: true })),
+    Match.when("restrained", () => ({ ...c, restrained: true })),
+    Match.when("stunned", () => ({
+      ...c,
+      stunned: true,
+      incapacitatedSources: addIncapSource(c.incapacitatedSources, "stunned")
+    })),
+    Match.when("unconscious", () => ({
+      ...c,
+      unconscious: true,
+      prone: true,
+      incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious")
+    })),
+    Match.exhaustive
+  )
 }
 
 function removeCondition(c: BattleCreatureState, cond: Condition): BattleCreatureState {
-  switch (cond) {
-    case "blinded":
-      return { ...c, blinded: false }
-    case "charmed":
-      return { ...c, charmed: false }
-    case "deafened":
-      return { ...c, deafened: false }
-    case "frightened":
-      return { ...c, frightened: false }
-    case "grappled":
-      return { ...c, grappled: false }
-    case "incapacitated":
-      return { ...c, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "direct") }
-    case "invisible":
-      return { ...c, invisible: false }
-    case "paralyzed":
-      return { ...c, paralyzed: false, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "paralyzed") }
-    case "petrified":
-      return { ...c, petrified: false, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "petrified") }
-    case "poisoned":
-      return { ...c, poisoned: false }
-    case "prone":
-      return { ...c, prone: false }
-    case "restrained":
-      return { ...c, restrained: false }
-    case "stunned":
-      return { ...c, stunned: false, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "stunned") }
-    case "unconscious":
-      return {
-        ...c,
-        unconscious: false,
-        incapacitatedSources: removeIncapSource(c.incapacitatedSources, "unconscious")
-      }
-    default:
-      return c
-  }
+  return Match.value(cond).pipe(
+    Match.when("blinded", () => ({ ...c, blinded: false })),
+    Match.when("charmed", () => ({ ...c, charmed: false })),
+    Match.when("deafened", () => ({ ...c, deafened: false })),
+    Match.when("frightened", () => ({ ...c, frightened: false })),
+    Match.when("grappled", () => ({ ...c, grappled: false })),
+    Match.when("incapacitated", () => ({
+      ...c,
+      incapacitatedSources: removeIncapSource(c.incapacitatedSources, "direct")
+    })),
+    Match.when("invisible", () => ({ ...c, invisible: false })),
+    Match.when("paralyzed", () => ({
+      ...c,
+      paralyzed: false,
+      incapacitatedSources: removeIncapSource(c.incapacitatedSources, "paralyzed")
+    })),
+    Match.when("petrified", () => ({
+      ...c,
+      petrified: false,
+      incapacitatedSources: removeIncapSource(c.incapacitatedSources, "petrified")
+    })),
+    Match.when("poisoned", () => ({ ...c, poisoned: false })),
+    Match.when("prone", () => ({ ...c, prone: false })),
+    Match.when("restrained", () => ({ ...c, restrained: false })),
+    Match.when("stunned", () => ({
+      ...c,
+      stunned: false,
+      incapacitatedSources: removeIncapSource(c.incapacitatedSources, "stunned")
+    })),
+    Match.when("unconscious", () => ({
+      ...c,
+      unconscious: false,
+      incapacitatedSources: removeIncapSource(c.incapacitatedSources, "unconscious")
+    })),
+    Match.exhaustive
+  )
 }
 
 function addDeathFailures(c: BattleCreatureState, count: number): BattleCreatureState {

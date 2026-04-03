@@ -97,6 +97,16 @@ The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parit
   ```
   Place these arrays in the types section (top of file, before interfaces) so the derived type is available for interface fields. Never hand-write a union type that duplicates a `const` array.
 
+- **Exhaustive matching with `effect/Match`:** All `switch` statements on discriminated unions or literal unions must use `effect/Match` with `Match.exhaustive`. Never use `default` branches — they silently swallow new variants and hide bugs. For tagged unions (discriminant field `tag`), use the shared `byTag` helper from `battle-machine-helpers.ts`. For string literal unions, use `Match.when`:
+  ```typescript
+  import { Match } from "effect"
+  import { byTag } from "#/battle-machine-helpers.ts"
+  // Tagged union:
+  Match.value(postCast).pipe(byTag("PCESave", (v) => ...), byTag("PCEDone", () => ...), Match.exhaustive)
+  // String literal union:
+  Match.value(cond).pipe(Match.when("blinded", () => ...), Match.when("prone", () => ...), Match.exhaustive)
+  ```
+
 ## Non-core features
 
 `app/src/features/` — pure functions for class features, feats, spells, species traits. See `features/README.md`.

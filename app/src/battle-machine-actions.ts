@@ -2,10 +2,13 @@
  * Battle machine actions part 1 — init, start turn, attack, reaction phases.
  * Each function takes {context, event} and returns Partial<BattleContext>.
  */
+import { Match } from "effect"
+
 import {
   activeId,
   advanceFromHitPhase,
   awaitingReaction,
+  byTag,
   dealDamageWithAfterReactions,
   eligibleExcluding,
   isHit,
@@ -136,20 +139,13 @@ export function battleResolveHitReaction({ context: c, event: e }: Args): Partia
   }
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
-  let retroAtk = atk
-  switch (e.decision.tag) {
-    case "RShield":
-      retroAtk = { ...atk, targetAc: atk.targetAc + 5 }
-      break
-    case "RParry":
-      retroAtk = { ...atk, targetAc: atk.targetAc + e.decision.bonus }
-      break
-    case "RCuttingWords":
-      retroAtk = { ...atk, attackRoll: atk.attackRoll - e.decision.reduction }
-      break
-    case "RPass":
-      break
-  }
+  const retroAtk = Match.value(e.decision).pipe(
+    byTag("RShield", () => ({ ...atk, targetAc: atk.targetAc + 5 })),
+    byTag("RParry", (d) => ({ ...atk, targetAc: atk.targetAc + d.bonus })),
+    byTag("RCuttingWords", (d) => ({ ...atk, attackRoll: atk.attackRoll - d.reduction })),
+    byTag("RPass", () => atk),
+    Match.exhaustive
+  )
   if (retroAtk !== atk) {
     const cs = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
     const newElig = new Set(aw.eligible)
@@ -192,17 +188,12 @@ export function battleResolveDmgReaction({ context: c, event: e }: Args): Partia
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
   const reactor = c.creatures.get(e.reactorId)!
-  let newDmg = atk.damage
-  switch (e.decision.tag) {
-    case "RUncannyDodge":
-      if (reactor.rogueLevel >= 5) newDmg = Math.trunc(atk.damage / 2)
-      break
-    case "RDamageReduction":
-      if (reactor.monkLevel >= 3) newDmg = Math.max(0, atk.damage - e.decision.amount)
-      break
-    case "RPass":
-      break
-  }
+  const newDmg = Match.value(e.decision).pipe(
+    byTag("RUncannyDodge", () => (reactor.rogueLevel >= 5 ? Math.trunc(atk.damage / 2) : atk.damage)),
+    byTag("RDamageReduction", (d) => (reactor.monkLevel >= 3 ? Math.max(0, atk.damage - d.amount) : atk.damage)),
+    byTag("RPass", () => atk.damage),
+    Match.exhaustive
+  )
   if (newDmg !== atk.damage) {
     const cs = setCreature(c.creatures, e.reactorId, spendReaction(reactor))
     const newElig = new Set(aw.eligible)

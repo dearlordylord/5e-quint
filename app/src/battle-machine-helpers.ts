@@ -2,6 +2,8 @@
  * Battle-level helpers (ported from battle.qnt section 3).
  * Creature-level pure functions are in battle-machine-creature.ts.
  */
+import { Match } from "effect"
+
 import {
   applyCondition,
   breakConcentration,
@@ -28,6 +30,9 @@ import type {
 } from "#/battle-machine-types.ts"
 import { BP_ACTIVE_TURN, FRESH_TURN_STATE } from "#/battle-machine-types.ts"
 import type { DamageType } from "#/types.ts"
+
+/** Exhaustive discriminator for tagged unions using `tag` field. */
+export const byTag = Match.discriminator("tag")
 
 // Re-export creature-level functions used by actions.
 // battleExpendSlot re-exported as expendSlot — battle callers always mark "slot expended this turn".
@@ -156,14 +161,12 @@ export function mkAwait(pi: PendingInterrupt, tt: TriggerType, elig: Set<Creatur
 }
 
 export function returnToPhase(r: AfterDamageReturn): BattlePhase {
-  switch (r.tag) {
-    case "ADRActiveTurn":
-      return BP_ACTIVE_TURN
-    case "ADRResolvingAoE":
-      return { tag: "BPResolvingAoE", aoe: r.aoe }
-    case "ADRResolvingMovement":
-      return { tag: "BPResolvingMovement", mv: r.mv }
-  }
+  return Match.value(r).pipe(
+    byTag("ADRActiveTurn", () => BP_ACTIVE_TURN),
+    byTag("ADRResolvingAoE", (v) => ({ tag: "BPResolvingAoE" as const, aoe: v.aoe })),
+    byTag("ADRResolvingMovement", (v) => ({ tag: "BPResolvingMovement" as const, mv: v.mv })),
+    Match.exhaustive
+  )
 }
 
 export function dealDamageWithAfterReactions(

@@ -2,10 +2,13 @@
  * Spell resolution helpers — concentration, spell entry, counterspell window.
  * Split from battle-machine-helpers.ts for eslint max-lines compliance.
  */
+import { Match } from "effect"
+
 import { addEffect, startConcentration } from "#/battle-machine-creature.ts"
 import {
   applyCondition,
   breakConcentrationAndPropagate,
+  byTag,
   eligibleForCounterspell,
   expendSlot,
   resolveSave,
@@ -46,18 +49,20 @@ export function resolveSpellEntry(
 ): { creatures: Map<CreatureId, BattleCreatureState>; phase: BattlePhase; stack: ReadonlyArray<SpellStackEntry> } {
   let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs)
   if (!isRitual && slotLvl > 0) cs1 = setCreature(cs1, casterId, expendSlot(cs1.get(casterId)!, slotLvl))
-  switch (postCast.tag) {
-    case "PCESave": {
-      const r = resolveSave(cs1, postCast.save, ADR_ACTIVE_TURN)
-      return { creatures: r.creatures, phase: r.phase, stack }
-    }
-    case "PCEAoE":
-      return { creatures: cs1, phase: { tag: "BPResolvingAoE", aoe: postCast.aoe }, stack }
-    case "PCEConcentration":
-      return { creatures: resolveConcentration(cs1, postCast.conc), phase: BP_ACTIVE_TURN, stack }
-    default:
-      return { creatures: cs1, phase: BP_ACTIVE_TURN, stack }
-  }
+  const result = Match.value(postCast).pipe(
+    byTag("PCESave", (pc) => {
+      const r = resolveSave(cs1, pc.save, ADR_ACTIVE_TURN)
+      return { creatures: r.creatures, phase: r.phase }
+    }),
+    byTag("PCEAoE", (pc) => ({ creatures: cs1, phase: { tag: "BPResolvingAoE" as const, aoe: pc.aoe } })),
+    byTag("PCEConcentration", (pc) => ({ creatures: resolveConcentration(cs1, pc.conc), phase: BP_ACTIVE_TURN })),
+    byTag("PCEDone", () => ({ creatures: cs1, phase: BP_ACTIVE_TURN })),
+    byTag("PCECounterspell", () => {
+      throw new Error("resolveSpellEntry called with PCECounterspell — should be handled by returnToCSWindow")
+    }),
+    Match.exhaustive
+  )
+  return { ...result, stack }
 }
 
 export function returnToCSWindow(
@@ -120,7 +125,7 @@ export function returnToCSWindow(
             }
           }
         }
-        return resolveSpellEntry(cs, gp.top.spellCasterId, gp.top.slotLvl, gp.top.ritual, gp.top.spellPostCast, gp.rest)
+        return returnToCSWindow(cs, gp.top, gp.rest)
       }
       return { creatures: new Map(cs), phase: BP_ACTIVE_TURN, stack: popped.rest }
     }
@@ -147,14 +152,7 @@ export function returnToCSWindow(
         }
       }
     }
-    return resolveSpellEntry(
-      cs,
-      popped.top.spellCasterId,
-      popped.top.slotLvl,
-      popped.top.ritual,
-      popped.top.spellPostCast,
-      popped.rest
-    )
+    return returnToCSWindow(cs, popped.top, popped.rest)
   }
   return resolveSpellEntry(cs, entry.spellCasterId, entry.slotLvl, entry.ritual, entry.spellPostCast, stack)
 }
