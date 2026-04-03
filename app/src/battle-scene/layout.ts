@@ -131,7 +131,7 @@ function computeCreatureLayout(
   const { cx, cy } = gridToPixel(creature.gridPos.row, creature.gridPos.col, config.cellSize)
   const cue = lookupCue(cues.creatureCues, creature.id)
 
-  const opacity = creature.dead ? 0 : creature.unconscious ? 0.3 : 1
+  const opacity = creature.dead ? 0 : creature.unconscious ? 0.7 : 1
 
   const barX = cx - config.barWidth / 2
   const hpBarY = cy + config.tokenRadius + 4
