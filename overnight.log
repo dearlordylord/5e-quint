@@ -140,3 +140,11 @@ Summary: 0 fixed, 2 new logged-for-review (deathSaves + arcaneRecovery)
     Needs full trace replay to determine pre-long-rest state.
 
 Summary: 0 fixed, 1 new logged (slotsCurrent runtime), rest already tracked
+
+2026-04-02T22:30:00 — Cron check #5
+  Fuzzers restarted with latest code at 22:15.
+  MBT failures: 6 new (5x extraAttacksRemaining, 1x slotsCurrent runtime — all tracked)
+  Invariant failures: 8 new (same spellStackDistinctCasters — tracked)
+  No new bug patterns. Failure rate down significantly: ~6/30min vs 100% pre-fix.
+
+Summary: 0 fixed, 0 new (all failures are known tracked issues)
