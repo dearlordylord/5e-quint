@@ -318,5 +318,12 @@ export const FIREBALL_BATTLE_META = {
     "49": "Fireball",
     "69": "Shatter",
     "84": "Fireball"
+  },
+  spriteSheet: {
+    url: "/sprites/wizards.png",
+    cols: 6,
+    spriteWidth: 235,
+    spriteHeight: 768,
+    assignments: { A: 0, B: 3, C: 2, D: 1, E: 4, F: 5 }
   }
 } satisfies ScenarioMeta

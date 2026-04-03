@@ -35,7 +35,7 @@ const SPELL_NAME_FADE_MS = 800
 
 export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   const { events, meta } = scenario
-  const [cursor, setCursor] = useState(-1)
+  const [cursor, setCursor] = useState(0)
   const [autoPlay, setAutoPlay] = useState(false)
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [castBarFaded, setCastBarFaded] = useState(false)
@@ -95,8 +95,8 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
 
   const layout = useMemo(() => {
     if (!snapshot) return null
-    return computeLayout(snapshot, activeCues)
-  }, [snapshot, activeCues])
+    return computeLayout(snapshot, activeCues, undefined, meta.spriteSheet)
+  }, [snapshot, activeCues, meta.spriteSheet])
 
   const stepTo = useCallback(
     (index: number) => {
@@ -194,22 +194,25 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
         </span>
       </div>
 
-      {cursor >= 0 && (
-        <div className="w-full max-w-3xl mb-3 px-4 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-slate-200 text-center min-h-[2.5rem] flex items-center justify-center">
-          {snapshot?.activeCreatureId && (
-            <span className="text-amber-400 font-semibold mr-2">
-              {meta.names[snapshot.activeCreatureId] ?? snapshot.activeCreatureId}:
-            </span>
-          )}
-          {narrate(events[cursor], meta)}
-        </div>
-      )}
+      <input
+        type="range"
+        min={0}
+        max={events.length - 1}
+        value={cursor}
+        onChange={(e) => stepTo(Number(e.target.value))}
+        className="w-full max-w-3xl mb-3 accent-amber-500"
+      />
 
-      {layout ? (
-        <BattleField layout={layout} />
-      ) : (
-        <div className="text-slate-500 italic">Press Next or Play to start the battle.</div>
-      )}
+      <div className="w-full max-w-3xl mb-3 px-4 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-slate-200 text-center min-h-[2.5rem] flex items-center justify-center">
+        {snapshot?.activeCreatureId && (
+          <span className="text-amber-400 font-semibold mr-2">
+            {meta.names[snapshot.activeCreatureId] ?? snapshot.activeCreatureId}:
+          </span>
+        )}
+        {narrate(events[cursor], meta)}
+      </div>
+
+      {layout && <BattleField layout={layout} />}
 
       <BattleLog events={events} cursor={cursor} onJumpTo={stepTo} />
     </div>

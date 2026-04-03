@@ -45,25 +45,58 @@ export function CreatureToken(props: CreatureLayout) {
         />
       )}
 
-      <motion.circle
-        cx={props.cx}
-        cy={props.cy}
-        r={props.tokenRadius}
-        fill={props.teamColor}
-        stroke={strokeColor}
-        strokeWidth={strokeWidth}
-        animate={{ scale: props.justBecameUnconscious ? [1, 1.2, 0.8, 1] : 1 }}
-        transition={{ duration: 0.4 }}
-      />
+      {props.sprite ? (
+        <>
+          <defs>
+            <clipPath id={`clip-${props.id}`}>
+              <circle cx={props.cx} cy={props.cy} r={props.tokenRadius} />
+            </clipPath>
+          </defs>
+          <circle cx={props.cx} cy={props.cy} r={props.tokenRadius} fill={props.teamColor} opacity={0.3} />
+          <svg
+            x={props.cx - props.tokenRadius}
+            y={props.cy - props.tokenRadius}
+            width={props.tokenRadius * 2}
+            height={props.tokenRadius * 2}
+            viewBox={`${props.sprite.sx} ${props.sprite.sy} ${props.sprite.sw} ${props.sprite.sh}`}
+            clipPath={`url(#clip-${props.id})`}
+          >
+            <image
+              href={props.sprite.url}
+              x={0}
+              y={0}
+              width={props.sprite.totalWidth}
+              height={props.sprite.totalHeight}
+            />
+          </svg>
+          <circle
+            cx={props.cx}
+            cy={props.cy}
+            r={props.tokenRadius}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        </>
+      ) : (
+        <motion.circle
+          cx={props.cx}
+          cy={props.cy}
+          r={props.tokenRadius}
+          fill={props.teamColor}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          animate={{ scale: props.justBecameUnconscious ? [1, 1.2, 0.8, 1] : 1 }}
+          transition={{ duration: 0.4 }}
+        />
+      )}
 
       <text
         x={props.cx}
-        y={props.cy}
+        y={props.cy + props.tokenRadius + 14}
         textAnchor="middle"
-        dominantBaseline="central"
-        fill="#fff"
-        fontSize={10}
-        fontWeight="bold"
+        fill="#94a3b8"
+        fontSize={8}
         pointerEvents="none"
       >
         {props.label}
