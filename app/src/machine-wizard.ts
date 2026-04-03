@@ -12,14 +12,16 @@ function w(c: DndContext) {
 export function arcaneRecoveryUpdate(c: DndContext, slotLevel: number): Partial<DndContext> {
   const ws = w(c)
   if (ws.level < 1 || ws.arcaneRecoveryUsed) return {}
-  if (!canArcaneRecoverSlot(slotLevel)) return {}
+  // Quint always marks arcaneRecoveryUsed even if slot is full or invalid level.
+  const flagUpdate = updateClass(c, "wizard", { arcaneRecoveryUsed: true })
+  if (!canArcaneRecoverSlot(slotLevel)) return flagUpdate
   const currentSlots = [...c.slotsCurrent]
   const idx = slotLevel - 1
-  if (idx >= currentSlots.length || currentSlots[idx] >= c.slotsMax[idx]) return {}
+  if (idx >= currentSlots.length || currentSlots[idx] >= c.slotsMax[idx]) return flagUpdate
   currentSlots[idx] = currentSlots[idx] + 1
   return {
     slotsCurrent: currentSlots,
-    ...updateClass(c, "wizard", { arcaneRecoveryUsed: true })
+    ...flagUpdate
   }
 }
 
