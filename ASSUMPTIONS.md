@@ -289,3 +289,11 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Summoned creature initiative:** Varies by spell. Find Familiar: rolls own initiative. Find Steed / Summon Dragon: shares caster's initiative count, acts on caster's turn or immediately after. Conjure spells (Animals, Elemental, etc.): no independent turn — act as effects under caster control.
 
 **Rules basis:** Playing-the-Game.md states "Everyone involved in the combat encounter rolls Initiative" at start, and "The Initiative order remains the same from round to round." No rules for mid-combat changes. Combat ends "when one side or the other is defeated, which can mean the creatures are killed or knocked out or have surrendered or fled" — but no explicit removal from initiative on individual death/flee.
+
+## A34: Spell durations are non-negative
+
+**Assumption:** Spell effect durations (tracked as `turnsRemaining` on `ActiveEffect`) are non-negative integers. When a duration reaches 0, the effect ends and is removed. Negative durations do not exist. (This note does not imply that other non-mentioned durations are negative.)
+
+**Rules basis:** The SRD describes durations as positive time spans ("1 minute," "Concentration, up to 10 minutes," etc.) that simply end when expired. No SRD passage addresses negative durations because the concept does not exist in the rules.
+
+**Changes:** Invariant `turnsRemaining >= 0` added to safety invariants (see PLAN_INVARIANTS.md L2).
