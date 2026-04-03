@@ -177,3 +177,12 @@ Summary: 1 fixed (extraAttacksRemaining), 0 new
 
 Summary: 1 fixed (long rest slots at 0 HP), 0 new
 Running total tonight: 5 fixed, 4 logged-for-review
+
+2026-04-03T00:06:00 — Cron check #8
+  MBT failures: 1 new (deathSaves recovery — already tracked)
+  Invariant failures: 6 new (same spellStackDistinctCasters — tracked)
+  No new patterns. Failure rate: ~1 MBT per 30min cycle.
+  Remaining known issues: deathSaves turn-start recovery, spellStackDistinctCasters spec bug.
+
+Summary: 0 fixed, 0 new
+Running total tonight: 5 fixed, 4 logged-for-review
