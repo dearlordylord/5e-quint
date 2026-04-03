@@ -26,6 +26,7 @@ export interface CreatureCue {
 
 export interface VisualCueState {
   castBar: { casterId: string; spellName: string; progress: number } | null
+  castLineTargetId: string | null
   spellAnnouncement: { spellName: string; casterId: string } | null
   interruptOverlay: { opacity: number; label: string }
   creatureCues: Record<string, CreatureCue>
@@ -53,6 +54,7 @@ export const DEFAULT_TIMING: PlaybackTiming = {
 
 export const EMPTY_CUES: VisualCueState = {
   castBar: null,
+  castLineTargetId: null,
   spellAnnouncement: null,
   interruptOverlay: { opacity: 0, label: "" },
   creatureCues: {},
@@ -96,6 +98,7 @@ function label(text: string, tone: LabelTone): Pick<CreatureCue, "floatingLabel"
 export function directorStep(
   event: BattleEvent,
   snapshot: SceneSnapshot,
+  prevSnapshot: SceneSnapshot,
   delta: SnapshotDelta,
   timing: PlaybackTiming = DEFAULT_TIMING
 ): VisualCueState {
@@ -129,6 +132,12 @@ export function directorStep(
       applyCue(creatureCues, casterId, { castingGlow: true, slotJustSpent: true })
     }
   }
+
+  // Cast line target: any reaction to a spell targets that spell's caster
+  const castLineTargetId: string | null =
+    prevSnapshot.phase.type === "interrupt" && prevSnapshot.phase.spellCasterId
+      ? prevSnapshot.phase.spellCasterId
+      : null
 
   if (event.type === "BATTLE_RESOLVE_COUNTERSPELL" && event.reactorId) {
     const visual = getSpellVisual("counterspell")
@@ -172,5 +181,5 @@ export function directorStep(
   const spellAnnouncement = castBar ? { spellName: castBar.spellName, casterId: castBar.casterId } : null
   const autoAdvanceDelay = timing.overrides[event.type] ?? timing.defaultDelayMs
 
-  return { castBar, spellAnnouncement, interruptOverlay, creatureCues, autoAdvanceDelay }
+  return { castBar, castLineTargetId, spellAnnouncement, interruptOverlay, creatureCues, autoAdvanceDelay }
 }

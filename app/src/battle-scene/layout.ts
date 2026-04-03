@@ -246,10 +246,25 @@ export function computeLayout(
 
 function computeCastLine(snapshot: SceneSnapshot, cues: VisualCueState, config: LayoutConfig): CastLineLayout | null {
   const { castBar } = cues
-  if (!castBar || !snapshot.aoeTargetPoint) return null
+  if (!castBar) return null
   const caster = snapshot.creatures.find((c) => c.id === castBar.casterId)
   if (!caster) return null
   const from = gridToPixel(caster.gridPos.row, caster.gridPos.col, config.cellSize)
-  const to = gridToPixel(snapshot.aoeTargetPoint.row, snapshot.aoeTargetPoint.col, config.cellSize)
-  return { x1: from.cx, y1: from.cy, x2: to.cx, y2: to.cy, color: "#a78bfa" }
+
+  // Creature-to-creature line (counterspell, single-target spells)
+  if (cues.castLineTargetId) {
+    const target = snapshot.creatures.find((c) => c.id === cues.castLineTargetId)
+    if (target) {
+      const to = gridToPixel(target.gridPos.row, target.gridPos.col, config.cellSize)
+      return { x1: from.cx, y1: from.cy, x2: to.cx, y2: to.cy, color: "#a78bfa" }
+    }
+  }
+
+  // Caster-to-AoE-point line (fireball, shatter)
+  if (snapshot.aoeTargetPoint) {
+    const to = gridToPixel(snapshot.aoeTargetPoint.row, snapshot.aoeTargetPoint.col, config.cellSize)
+    return { x1: from.cx, y1: from.cy, x2: to.cx, y2: to.cy, color: "#a78bfa" }
+  }
+
+  return null
 }

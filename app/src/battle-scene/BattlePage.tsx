@@ -63,7 +63,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
     const delta = diffSnapshots(prevSnap, currSnap)
     return {
       snapshot: currSnap,
-      cues: directorStep(events[cursor], currSnap, delta)
+      cues: directorStep(events[cursor], currSnap, prevSnap, delta)
     }
   }, [cursor, events, meta])
 

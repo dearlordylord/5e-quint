@@ -16,7 +16,7 @@ describe("directorStep", () => {
   it("produces cast bar for BATTLE_CAST_AOE (fireball)", () => {
     const { curr, event, prev } = pairAt(2)
     const delta = diffSnapshots(prev, curr)
-    const cues = directorStep(event, curr, delta)
+    const cues = directorStep(event, curr, prev, delta)
     expect(cues.castBar).not.toBeNull()
     expect(cues.castBar!.casterId).toBe("A")
     expect(cues.castBar!.spellName).toBe("Fireball")
@@ -27,16 +27,16 @@ describe("directorStep", () => {
     // Event 3 = E counterspells A's Fireball
     const { curr, event, prev } = pairAt(3)
     const delta = diffSnapshots(prev, curr)
-    const cues = directorStep(event, curr, delta)
+    const cues = directorStep(event, curr, prev, delta)
     expect(cues.castBar).not.toBeNull()
     expect(cues.castBar!.casterId).toBe("E")
     expect(cues.castBar!.spellName).toBe("Counterspell")
   })
 
   it("shows interrupt overlay during interrupt phase", () => {
-    const { curr, event } = pairAt(2)
+    const { curr, event, prev } = pairAt(2)
     const delta = diffSnapshots(curr, curr)
-    const cues = directorStep(event, curr, delta)
+    const cues = directorStep(event, curr, prev, delta)
     if (curr.phase.type === "interrupt") {
       expect(cues.interruptOverlay.opacity).toBe(0.6)
       expect(cues.interruptOverlay.label).toBe("COUNTERSPELL WINDOW")
@@ -47,7 +47,7 @@ describe("directorStep", () => {
     // D's damage applies when save-failed window closes (event 10→11 transition)
     const { curr, event, prev } = pairAt(10)
     const delta = diffSnapshots(prev, curr)
-    const cues = directorStep(event, curr, delta)
+    const cues = directorStep(event, curr, prev, delta)
     expect(cues.creatureCues["D"].damageFlash).toBe(true)
   })
 
@@ -55,21 +55,21 @@ describe("directorStep", () => {
     // Event 3 = E counterspells
     const { curr, event, prev } = pairAt(3)
     const delta = diffSnapshots(prev, curr)
-    const cues = directorStep(event, curr, delta)
+    const cues = directorStep(event, curr, prev, delta)
     expect(cues.creatureCues["E"].reactionUsed).toBe(true)
   })
 
   it("auto-advance delay uses event-type override", () => {
     const { curr, event, prev } = pairAt(2)
     const delta = diffSnapshots(prev, curr)
-    const cues = directorStep(event, curr, delta)
+    const cues = directorStep(event, curr, prev, delta)
     expect(cues.autoAdvanceDelay).toBe(DEFAULT_TIMING.overrides.BATTLE_CAST_AOE)
   })
 
   it("auto-advance delay falls back to default", () => {
     const { curr, event, prev } = pairAt(1)
     const delta = diffSnapshots(prev, curr)
-    const cues = directorStep(event, curr, delta)
+    const cues = directorStep(event, curr, prev, delta)
     expect(cues.autoAdvanceDelay).toBe(DEFAULT_TIMING.overrides.BATTLE_START_TURN)
   })
 })

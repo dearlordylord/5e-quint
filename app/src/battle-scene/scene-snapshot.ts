@@ -36,7 +36,7 @@ export type InterruptKind = PendingInterrupt["tag"]
 
 export type PhaseSnapshot =
   | { type: "activeTurn" }
-  | { type: "interrupt"; interruptKind: InterruptKind; reactorId?: string }
+  | { type: "interrupt"; interruptKind: InterruptKind; reactorId?: string; spellCasterId?: string }
   | { type: "aoeResolving"; spellName: string; remainingCount: number; saveDC: number }
   | { type: "movement" }
   | { type: "legendaryAction" }
@@ -129,7 +129,8 @@ function derivePhase(phase: BattlePhase): PhaseSnapshot {
       return {
         type: "interrupt",
         interruptKind: phase.ctx.interrupt.tag,
-        reactorId: firstEligible
+        reactorId: firstEligible,
+        spellCasterId: phase.ctx.interrupt.tag === "PISpellCast" ? phase.ctx.interrupt.ctx.caster : undefined
       }
     }
     case "BPResolvingAoE":
