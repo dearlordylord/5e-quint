@@ -2143,7 +2143,8 @@ module creature {
     val eff2 = pClearExpiredAtPhase(eff1, AtStartOfTurn)
     val s1 = s.with("activeEffects", eff2)
     // 3. Death save (if applicable) — Defy Death (Champion L18) applied via pFighterDeathSaveRoll
-    val effectiveDsRoll = pFighterDeathSaveRoll(config.level, deathSaveRoll, deathSaveRoll2)
+    val fighterLvl = config.classLevels.get(Fighter)
+    val effectiveDsRoll = pFighterDeathSaveRoll(fighterLvl, deathSaveRoll, deathSaveRoll2)
     val s2 = if (s1.hp == 0 and not(s1.stable) and not(s1.dead) and deathSaveRoll > 0)
       pDeathSave(s1, effectiveDsRoll)
     else s1
