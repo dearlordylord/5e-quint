@@ -187,6 +187,31 @@ src/battle-scene/
   BattleLog.tsx                # Event timeline
 ```
 
+## Build Order (Task DAG)
+
+```
+T1 ──→ T2 ──→ T5 ──→ T6 ──→ T8
+ │              ↑      ↑
+ ├──→ T4 ──────┘──→ T7 ┘
+ │
+T3 ──→ T4
+```
+
+```
+[T1] scene-snapshot.ts + test    deps: none         (Layer A — pure functions)
+[T2] snapshot-diff.ts + test     deps: T1           (needs SceneSnapshot types)
+[T3] visual-catalog.ts           deps: none         (pure data, no logic)
+[T4] layout.ts + test            deps: T1, T3       (needs SceneSnapshot + visual catalog)
+[T5] director.ts + test          deps: T1, T2       (needs SceneSnapshot + SnapshotDelta)
+[T6] BattlePage.tsx              deps: T1, T4, T5   (route entry, wires actor + director + layout)
+[T7] SVG components              deps: T4, T6       (BattleField, CreatureToken, AoEZone, etc.)
+[T8] wire /battle route          deps: T6, T7       (add to entry.tsx)
+```
+
+**Parallelism:** T1 and T3 can run concurrently. T2 and T4 can run concurrently once T1 is done. T5 needs T1+T2. Tasks T1–T5 are pure TS with vitest (no React, no DOM, no animation library). Tasks T6–T8 are React/SVG and require `motion` installed.
+
+**Each task is atomic:** produces files, has tests (where applicable), can be verified independently with `npx vitest run`.
+
 ## Resolved Design Decisions (20)
 
 | # | Decision |
