@@ -121,6 +121,7 @@ interface NormalizedBattleCreature {
   bonusMovementRemaining: number
   bonusMovementOAFree: boolean
   actionSurgeActionPending: boolean
+  slotExpendedThisTurn: boolean
   slotsMax: ReadonlyArray<number>
   slotsCurrent: ReadonlyArray<number>
   pactSlotsMax: number
@@ -178,6 +179,7 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     bonusMovementRemaining: Number(t.bonusMovementRemaining),
     bonusMovementOAFree: t.bonusMovementOAFree,
     actionSurgeActionPending: t.actionSurgeActionPending,
+    slotExpendedThisTurn: t.slotExpendedThisTurn,
     slotsMax: ss.slotsMax,
     slotsCurrent: ss.slotsCurrent,
     pactSlotsMax: Number(ss.pactSlotsMax),
@@ -245,6 +247,7 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     bonusMovementRemaining: c.bonusMovementRemaining,
     bonusMovementOAFree: c.bonusMovementOAFree,
     actionSurgeActionPending: c.actionSurgeActionPending,
+    slotExpendedThisTurn: c.slotExpendedThisTurn,
     slotsMax: [...c.slotsMax],
     slotsCurrent: [...c.slotsCurrent],
     pactSlotsMax: c.pactSlotsMax,

@@ -33,6 +33,7 @@ import type { DamageType } from "#/types.ts"
 export {
   applyCondition,
   expendSlot,
+  expendSlotAndMark,
   heal,
   spendAction,
   spendExtraAttack,
@@ -143,7 +144,7 @@ export function eligibleForCounterspell(cs: Creatures, excludeId: CreatureId): S
         break
       }
     }
-    if (hasSlot && c.preparedSpells.has("counterspell")) result.add(id)
+    if (hasSlot && c.preparedSpells.has("counterspell") && !c.slotExpendedThisTurn) result.add(id)
   }
   return result
 }
@@ -362,7 +363,12 @@ export function processStartTurn(
     for (const name of rechargedAbilities) newRecharge[name] = true
     c = { ...c, rechargeAvailable: newRecharge }
   }
-  return setCreature(result, activeId, c)
+  result = setCreature(result, activeId, c)
+  // Reset slotExpendedThisTurn for ALL creatures (SRD 5.2.1 "One Spell with a Spell Slot per Turn")
+  for (const [cid, cr] of result) {
+    if (cid !== activeId && cr.slotExpendedThisTurn) result.set(cid, { ...cr, slotExpendedThisTurn: false })
+  }
+  return result
 }
 
 export function processEndTurn(

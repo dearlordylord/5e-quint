@@ -250,6 +250,15 @@ module battle {
   ): (CreatureId -> Combatant) =
     cs.set(id, cs.get(id).with("slots", s))
 
+  /// Expend a spell slot and mark "slot expended this turn" (SRD 5.2.1).
+  pure def expendSlotAndMark(
+    cs: CreatureId -> Combatant, id: CreatureId, level: int
+  ): (CreatureId -> Combatant) = {
+    val cs1 = setSlots(cs, id, pExpendSlot(cs.get(id).slots, level))
+    val cb = cs1.get(id)
+    cs1.set(id, cb.with("turn", cb.turn.with("slotExpendedThisTurn", true)))
+  }
+
   pure def hasReaction(cs: CreatureId -> Combatant, id: CreatureId): bool =
     cs.get(id).turn.reactionAvailable
 
@@ -397,12 +406,15 @@ module battle {
     val slots = cs.get(id).slots.slotsCurrent
     3.to(9).exists(lvl => slots.get(lvl) > 0)
 
-  /// Eligible Counterspell reactors: base eligible + has level 3+ slot + counterspell prepared.
+  /// Eligible Counterspell reactors: base eligible + has level 3+ slot + counterspell prepared
+  /// + hasn't already expended a spell slot this turn (SRD 5.2.1 "One Spell with a Spell Slot per Turn").
   pure def eligibleForCounterspell(
     cs: CreatureId -> Combatant, excludeId: CreatureId
   ): Set[CreatureId] =
     eligibleExcluding(cs, excludeId).filter(id =>
-      hasCounterspellSlot(cs, id) and cs.get(id).preparedSpells.contains("counterspell")
+      hasCounterspellSlot(cs, id)
+      and cs.get(id).preparedSpells.contains("counterspell")
+      and not(cs.get(id).turn.slotExpendedThisTurn)
     )
 
   /// Eligible for Uncanny Dodge: rogue level >= 5.
@@ -572,8 +584,13 @@ module battle {
         else mr1
         cs2.set(activeId, cs2.get(activeId).with("monsterResources", mr2))
       } else cs2
+      // 6. Reset slotExpendedThisTurn for ALL creatures (SRD 5.2.1 "One Spell with a Spell Slot per Turn")
+      val cs4 = cs3.keys().fold(cs3, (acc, cid) =>
+        val cb = acc.get(cid)
+        acc.set(cid, cb.with("turn", cb.turn.with("slotExpendedThisTurn", false)))
+      )
       all {
-        bCreatures' = cs3,
+        bCreatures' = cs4,
         bPhase' = BPActiveTurn,
         bInitiative' = bInitiative,
         bTurnIndex' = bTurnIndex,
@@ -904,7 +921,7 @@ module battle {
       } else {
         // No Counterspell possible — expend slot (unless ritual) and resolve save immediately
         val cs2 = if (ritual) cs1
-                  else setSlots(cs1, activeId, pExpendSlot(cs1.get(activeId).slots, slotLvl))
+                  else expendSlotAndMark(cs1, activeId, slotLvl)
         val result = resolveSave(cs2, saveCtx, ADRActiveTurn)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       }
@@ -1012,7 +1029,7 @@ module battle {
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase, stack: List[SpellStackEntry] } = {
     // Expend slot now that spell resolved (not countered).
     // slotLvl 0 = already spent (CS reaction). Ritual = no slot expenditure.
-    val cs1 = if (not(isRitual) and slotLvl > 0) setSlots(cs, casterId, pExpendSlot(cs.get(casterId).slots, slotLvl))
+    val cs1 = if (not(isRitual) and slotLvl > 0) expendSlotAndMark(cs, casterId, slotLvl)
               else cs
     match postCast {
       | PCESave(save) =>
@@ -1171,7 +1188,7 @@ module battle {
                     bCreatures.get(reactorId).slots.slotsCurrent.get(csSlotLvl) > 0,
                     // Spend reaction + slot
                     val cs1 = spendReaction(bCreatures, reactorId)
-                    val cs2 = setSlots(cs1, reactorId, pExpendSlot(cs1.get(reactorId).slots, csSlotLvl))
+                    val cs2 = expendSlotAndMark(cs1, reactorId, csSlotLvl)
                     // Push current spell context onto stack
                     val stackEntry: SpellStackEntry = {
                       spellCasterId: spell.caster,
@@ -1342,7 +1359,7 @@ module battle {
       } else {
         // No Counterspell — expend slot (unless ritual) and resolve concentration immediately
         val cs2 = if (ritual) cs1
-                  else setSlots(cs1, activeId, pExpendSlot(cs1.get(activeId).slots, slotLvl))
+                  else expendSlotAndMark(cs1, activeId, slotLvl)
         val resolved = resolveConcentration(cs2, concCtx)
         all {
           bCreatures' = resolved,
@@ -1436,7 +1453,7 @@ module battle {
       } else {
         // No Counterspell — expend slot (unless ritual) and enter AoE resolution
         val cs2 = if (ritual) cs1
-                  else setSlots(cs1, activeId, pExpendSlot(cs1.get(activeId).slots, slotLvl))
+                  else expendSlotAndMark(cs1, activeId, slotLvl)
         all {
           bCreatures' = cs2,
           bPhase' = BPResolvingAoE(aoeCtx),
@@ -1787,10 +1804,7 @@ module battle {
   }
 
   /// Spell stack entries have distinct casters.
-  /// KNOWN BUG: currently violated because eligibleForCounterspell doesn't
-  /// enforce SRD 5.2.1 "One Spell with a Spell Slot per Turn" — a caster
-  /// who already expended a slot can counterspell back in the same turn.
-  /// Excluded from allBattleInvariants until the eligibility guard is fixed.
+  /// Enforced by eligibleForCounterspell's slotExpendedThisTurn guard (SRD 5.2.1).
   val spellStackDistinctCasters =
     val stackSet = listToSet(bSpellStack)
     stackSet.forall(e1 =>
@@ -1867,7 +1881,7 @@ module battle {
     reactorHasReaction,
     legendaryActionNotOnOwnTurn,
     allActiveEffectsUnique,
-    // Excluded: spellStackDistinctCasters (needs "one slot per turn" guard)
+    spellStackDistinctCasters,
     // Excluded: reactionWindowHasEligible (transient empty-eligible is by design)
     // Excluded: concentrationImpliesEffect (CS chain transient state)
     // Excluded: concentrationEffectHasLivingCaster (CS chain transient state)

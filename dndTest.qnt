@@ -3984,6 +3984,7 @@ module dndTest {
     bonusMovementRemaining: 0,
     bonusMovementOAFree: false,
     actionSurgeActionPending: false,
+    slotExpendedThisTurn: false,
   }
 
   // 2-attack Multiattack: Attack action -> extra attack -> depleted

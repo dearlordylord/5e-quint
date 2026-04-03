@@ -12,7 +12,7 @@ import {
   eligibleExcluding,
   eligibleForCounterspell,
   eligibleTarget,
-  expendSlot,
+  expendSlotAndMark,
   heal,
   isHit,
   mkAwait,
@@ -77,7 +77,7 @@ export function battleCastSaveSpell({ context: c, event: e }: Args): Partial<Bat
       }
     }
   }
-  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
+  if (!e.ritual) cs = setCreature(cs, id, expendSlotAndMark(cs.get(id)!, e.slotLvl))
   const result = resolveSave(cs, saveCtx, ADR_ACTIVE_TURN)
   return { creatures: result.creatures, phase: result.phase }
 }
@@ -125,7 +125,7 @@ export function battleResolveCounterspell({ context: c, event: e }: Args): Parti
   // Only remaining variant after null/RPass check above
   const reactor = c.creatures.get(e.reactorId)!
   let cs = setCreature(c.creatures, e.reactorId, spendReaction(reactor))
-  cs = setCreature(cs, e.reactorId, expendSlot(cs.get(e.reactorId)!, e.csSlotLvl))
+  cs = setCreature(cs, e.reactorId, expendSlotAndMark(cs.get(e.reactorId)!, e.csSlotLvl))
   const conSaveSucceeded = e.decision.saveSucceeded
   const stackEntry: SpellStackEntry = {
     spellCasterId: spell.caster,
@@ -209,7 +209,7 @@ export function battleCastConcentrationSpell({ context: c, event: e }: Args): Pa
       }
     }
   }
-  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
+  if (!e.ritual) cs = setCreature(cs, id, expendSlotAndMark(cs.get(id)!, e.slotLvl))
   return { creatures: resolveConcentration(cs, concCtx), phase: BP_ACTIVE_TURN }
 }
 
@@ -259,7 +259,7 @@ export function battleCastAoE({ context: c, event: e }: Args): Partial<BattleCon
       }
     }
   }
-  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
+  if (!e.ritual) cs = setCreature(cs, id, expendSlotAndMark(cs.get(id)!, e.slotLvl))
   return { creatures: cs, phase: { tag: "BPResolvingAoE", aoe: aoeCtx } }
 }
 

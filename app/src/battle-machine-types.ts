@@ -46,6 +46,7 @@ export interface BattleCreatureState {
   readonly bonusMovementRemaining: number
   readonly bonusMovementOAFree: boolean
   readonly actionSurgeActionPending: boolean
+  readonly slotExpendedThisTurn: boolean
   // SpellSlotState
   readonly slotsMax: ReadonlyArray<number>
   readonly slotsCurrent: ReadonlyArray<number>
@@ -388,7 +389,8 @@ export const FRESH_TURN_STATE = {
   nonCantripActionSpellCast: false,
   bonusMovementRemaining: 0,
   bonusMovementOAFree: false,
-  actionSurgeActionPending: false
+  actionSurgeActionPending: false,
+  slotExpendedThisTurn: false
 } as const
 
 export const EMPTY_SLOTS: ReadonlyArray<number> = [0, 0, 0, 0, 0, 0, 0, 0, 0]

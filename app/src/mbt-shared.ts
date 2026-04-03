@@ -220,7 +220,8 @@ export const QuintTurnState = z.object({
   nonCantripActionSpellCast: z.boolean(),
   bonusMovementRemaining: z.bigint(),
   bonusMovementOAFree: z.boolean(),
-  actionSurgeActionPending: z.boolean()
+  actionSurgeActionPending: z.boolean(),
+  slotExpendedThisTurn: z.boolean()
 })
 
 export const QuintSlotMap = z.any().transform((raw: unknown) => {
@@ -450,6 +451,7 @@ export interface NormalizedState {
   readonly bonusMovementRemaining: number
   readonly bonusMovementOAFree: boolean
   readonly actionSurgeActionPending: boolean
+  readonly slotExpendedThisTurn: boolean
   // turnPhase
   readonly turnPhase: string
   // SpellSlotState
@@ -695,6 +697,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     bonusMovementRemaining: c.bonusMovementRemaining,
     bonusMovementOAFree: c.bonusMovementOAFree,
     actionSurgeActionPending: c.actionSurgeActionPending,
+    slotExpendedThisTurn: false, // battle-level only, not tracked by creature machine
     turnPhase: snap.matches({ turnPhase: "acting" })
       ? "acting"
       : snap.matches({ turnPhase: "waitingForTurn" })
@@ -760,6 +763,7 @@ export function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): No
     bonusMovementRemaining: Number(t.bonusMovementRemaining),
     bonusMovementOAFree: t.bonusMovementOAFree,
     actionSurgeActionPending: t.actionSurgeActionPending,
+    slotExpendedThisTurn: t.slotExpendedThisTurn,
     turnPhase: raw.turnPhase,
     slotsMax: ss.slotsMax,
     slotsCurrent: ss.slotsCurrent,

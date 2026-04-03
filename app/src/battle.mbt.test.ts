@@ -160,7 +160,8 @@ const BATTLE_EXCLUDED_KEYS_ARRAY = [
   "naturesVeilMax",
   "bardLevel",
   "bardicInspirationCharges",
-  "bardicInspirationMax"
+  "bardicInspirationMax",
+  "slotExpendedThisTurn"
 ] as const satisfies ReadonlyArray<keyof NormalizedState>
 
 type BattleExcludedKeys = (typeof BATTLE_EXCLUDED_KEYS_ARRAY)[number]

@@ -1265,6 +1265,10 @@ module creature {
     // When adding new magic battle actions: add the Quint guard.
     // XState covers all magic centrally via actionType check.
     actionSurgeActionPending: bool,
+    // SRD 5.2.1 "One Spell with a Spell Slot per Turn": on a turn, you can
+    // expend only one spell slot to cast a spell. Reset for ALL creatures at
+    // start of each turn (not just the active creature). Gates eligibleForCounterspell.
+    slotExpendedThisTurn: bool,
   }
 
   /// Action types for pUseAction
@@ -1321,6 +1325,7 @@ module creature {
       bonusMovementRemaining: 0,
       bonusMovementOAFree: false,
       actionSurgeActionPending: false,
+      slotExpendedThisTurn: false,
     }
   }
 
@@ -3836,6 +3841,7 @@ module creature {
     bonusMovementRemaining: 0,
     bonusMovementOAFree: false,
     actionSurgeActionPending: false,
+    slotExpendedThisTurn: false,
   }
 
   pure val FRESH_SPELL_SLOTS: SpellSlotState = {
