@@ -378,10 +378,12 @@ function createBattleMachineDriver() {
         actor.start()
         send({
           type: "BATTLE_INIT",
-          hp1: p(picks, "hp1", 20),
-          hp2: p(picks, "hp2", 20),
-          hp3: p(picks, "hp3", 35),
-          hp4: p(picks, "hp4", 20)
+          creatures: [
+            { id: "A", maxHp: p(picks, "hp1", 20), kind: "PC", caster: true, rogueLevel: 5 },
+            { id: "B", maxHp: p(picks, "hp2", 20), kind: "PC", caster: true },
+            { id: "C", maxHp: p(picks, "hp3", 35), kind: "Monster", legendaryActions: 3, legendaryResistances: 3 },
+            { id: "D", maxHp: p(picks, "hp4", 20), kind: "PC", caster: true }
+          ]
         })
       },
       bStartTurn: (picks: Record<string, unknown>) => {

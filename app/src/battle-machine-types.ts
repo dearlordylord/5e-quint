@@ -241,14 +241,21 @@ export interface BattleContext {
   readonly spellStack: ReadonlyArray<SpellStackEntry>
 }
 
+/** Creature config for BATTLE_INIT — determines initial state per combatant. */
+export interface InitCreatureConfig {
+  readonly id: CreatureId
+  readonly maxHp: number
+  readonly kind: CreatureKind
+  readonly caster?: boolean
+  readonly rogueLevel?: number
+  readonly monkLevel?: number
+  readonly legendaryActions?: number
+  readonly legendaryResistances?: number
+  readonly preparedSpells?: ReadonlySet<string>
+}
+
 export type BattleEvent =
-  | {
-      readonly type: "BATTLE_INIT"
-      readonly hp1: number
-      readonly hp2: number
-      readonly hp3: number
-      readonly hp4: number
-    }
+  | { readonly type: "BATTLE_INIT"; readonly creatures: ReadonlyArray<InitCreatureConfig> }
   | {
       readonly type: "BATTLE_START_TURN"
       readonly rechargeD6: number

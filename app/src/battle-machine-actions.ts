@@ -35,17 +35,22 @@ type Args = { context: BattleContext; event: BattleEvent }
 export function battleInit({ event: e }: Args): Partial<BattleContext> {
   if (e.type !== "BATTLE_INIT") return {}
   const creatures = new Map<string, BattleCreatureState>()
-  creatures.set("A", { ...freshCaster(e.hp1, "PC"), rogueLevel: 5 })
-  creatures.set("B", freshCaster(e.hp2, "PC"))
-  creatures.set("C", {
-    ...freshCreature(e.hp3, "Monster"),
-    legendaryActionsRemaining: 3,
-    legendaryResistancesRemaining: 3
-  })
-  creatures.set("D", freshCaster(e.hp4, "PC"))
+  const initiative: Array<string> = []
+  for (const cfg of e.creatures) {
+    const base = cfg.caster ? freshCaster(cfg.maxHp, cfg.kind) : freshCreature(cfg.maxHp, cfg.kind)
+    creatures.set(cfg.id, {
+      ...base,
+      ...(cfg.rogueLevel != null ? { rogueLevel: cfg.rogueLevel } : {}),
+      ...(cfg.monkLevel != null ? { monkLevel: cfg.monkLevel } : {}),
+      ...(cfg.legendaryActions != null ? { legendaryActionsRemaining: cfg.legendaryActions } : {}),
+      ...(cfg.legendaryResistances != null ? { legendaryResistancesRemaining: cfg.legendaryResistances } : {}),
+      ...(cfg.preparedSpells != null ? { preparedSpells: cfg.preparedSpells } : {})
+    })
+    initiative.push(cfg.id)
+  }
   return {
     creatures,
-    initiative: ["A", "B", "C", "D"],
+    initiative,
     turnIndex: 0,
     round: 1,
     phase: BP_ACTIVE_TURN,
