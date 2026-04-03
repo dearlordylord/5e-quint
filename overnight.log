@@ -52,3 +52,29 @@ Summary: 0 fixed, 2 logged-for-review (slotsMax already tracked + spellStackDist
   Covered by the Option 1 fix proposed for slotsMax.
 
 Summary: 0 fixed, 0 new issues (all are variants of already-tracked slotsMax init problem)
+
+2026-04-02T21:10:00 — SPEC BUG: deferred slot expenditure allows double-spend via counter-counterspell
+  Root cause of spellStackDistinctCasters violations.
+  
+  The spec defers fireball's slot expenditure until resolution (line 926 else-branch).
+  This means at the time the CS reaction window opens (line 916), the caster's
+  slotExpendedThisTurn is still false. So in a chain:
+    1. A casts fireball → slot NOT yet spent (deferred), slotExpendedThisTurn = false
+    2. D counterspells A → D's slot spent, D's slotExpendedThisTurn = true
+    3. Nested CS window → A eligible because slotExpendedThisTurn = false!
+    4. A counter-counterspells D → A's slot spent now (line 1193)
+    5. Fireball resolves → fireball's deferred slot spent too (line 1034)
+  
+  Result: A spends TWO slots in one turn (counterspell + fireball), violating
+  SRD 5.2.1 "One Spell with a Spell Slot per Turn."
+  
+  Fix: when entering the CS reaction window for the initial spell cast, mark the
+  caster's slotExpendedThisTurn = true BEFORE computing eligibleForCounterspell,
+  even though the actual slot expenditure is deferred. This prevents the caster
+  from being eligible to counter-counterspell on their own turn. The flag should
+  be cleared if the spell is successfully countered (no slot spent).
+  
+  Alternative: don't defer slot expenditure at all — spend immediately, refund if countered.
+  
+  SRD rule: "One Spell with a Spell Slot per Turn" (Spells/Gaining-and-Casting.md:94-96)
+  Needs human judgment on which fix approach is correct.
