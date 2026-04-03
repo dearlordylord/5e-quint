@@ -78,3 +78,18 @@ Summary: 0 fixed, 0 new issues (all are variants of already-tracked slotsMax ini
   
   SRD rule: "One Spell with a Spell Slot per Turn" (Spells/Gaining-and-Casting.md:94-96)
   Needs human judgment on which fix approach is correct.
+
+2026-04-02T21:16:00 — FIXED: spell slots + pact slots + hit dice init (machine.ts, machine-spells.ts, machine-helpers.ts)
+  - machine.ts: context init now calls initSpellSlotsFromLevels() to derive
+    slotsMax/slotsCurrent/pactSlots from class levels. Explicit slotsMax overrides (monsters).
+  - machine-spells.ts: added initSpellSlotsFromLevels, warlockPactSlotCount, warlockPactSlotLevel
+  - machine-helpers.ts: longRestUpdate now uses total character level (sum of all classes)
+    instead of just fighter level for hit dice restoration.
+  All three previously-distinct MBT failure patterns (slotsMax, pactSlots, hitDice) now pass.
+
+2026-04-02T21:16:00 — NEW ISSUE: extraAttacksRemaining mismatch at doStartTurn
+  Seed: 0x385310e0 (MBT_DEV=1), trace 19, step 8, action "doStartTurn"
+  exp=1 act=0. Pre-existing, not caused by tonight's changes.
+  Likely the XState machine doesn't reset extraAttacksRemaining at turn start.
+
+Summary: 3 fixed (slotsMax, pactSlots, hitDice), 1 new (extraAttacksRemaining)
