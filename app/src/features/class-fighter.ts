@@ -1,9 +1,7 @@
 // Fighter class features: Fighting Styles, Second Wind, Tactical Mind, Tactical Shift, Action Surge
 // SRD 5.2.1 Fighter
 
-function assert(condition: boolean, msg: string): asserts condition {
-  if (!condition) throw new Error(msg)
-}
+import { assert } from "#/assert.ts"
 
 // --- Fighting Style Feat Effects (SRD 5.2.1) ---
 

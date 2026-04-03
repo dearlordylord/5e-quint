@@ -2,7 +2,7 @@
  * Layer C: Layout — pure math converting SceneSnapshot + VisualCueState to pixel coordinates.
  * Grid positions to pixels, feet to squares to pixels, bar dimensions, AoE circle radii.
  */
-import type { VisualCueState } from "./director.ts"
+import { type CreatureCue, EMPTY_CUE, type VisualCueState } from "./director.ts"
 import type { AoEZoneSnapshot, CreatureSnapshot, SceneSnapshot } from "./scene-snapshot.ts"
 import { damageTypeVisuals } from "./visual-catalog.ts"
 
@@ -75,6 +75,11 @@ export interface LayoutState {
 
 const TEAM_COLORS = { blue: "#3b82f6", red: "#ef4444" } as const
 
+/** Safe Record lookup — returns EMPTY_CUE if key is missing (noUncheckedIndexedAccess is off). */
+function lookupCue(cues: Record<string, CreatureCue>, id: string): CreatureCue {
+  return (cues as Partial<Record<string, CreatureCue>>)[id] ?? EMPTY_CUE
+}
+
 function gridToPixel(row: number, col: number, cellSize: number): { cx: number; cy: number } {
   return {
     cx: col * cellSize + cellSize / 2,
@@ -99,7 +104,7 @@ function computeGridLines(config: LayoutConfig): LayoutState["gridLines"] {
 
 function computeCreatureLayout(creature: CreatureSnapshot, cues: VisualCueState, config: LayoutConfig): CreatureLayout {
   const { cx, cy } = gridToPixel(creature.gridPos.row, creature.gridPos.col, config.cellSize)
-  const cue = cues.creatureCues[creature.id]
+  const cue = lookupCue(cues.creatureCues, creature.id)
 
   const opacity = creature.dead ? 0 : creature.unconscious ? 0.3 : 1
 

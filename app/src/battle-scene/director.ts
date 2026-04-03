@@ -52,7 +52,7 @@ export const EMPTY_CUES: VisualCueState = {
   autoAdvanceDelay: 0
 }
 
-const EMPTY_CUE: CreatureCue = {
+export const EMPTY_CUE: CreatureCue = {
   damageFlash: false,
   justBecameUnconscious: false,
   castingGlow: false,
@@ -61,7 +61,9 @@ const EMPTY_CUE: CreatureCue = {
 }
 
 function applyCue(cues: Record<string, CreatureCue>, id: string, patch: Partial<CreatureCue>): void {
-  Object.assign(cues[id], patch)
+  const cue = cues[id]
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Record index access can be undefined at runtime
+  if (cue) Object.assign(cue, patch)
 }
 
 /**
