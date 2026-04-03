@@ -188,7 +188,8 @@ export function BattlePage() {
         </button>
         <button
           onClick={toggleAutoPlay}
-          className={`px-3 py-1 rounded ${autoPlay ? "bg-amber-600 hover:bg-amber-500" : "bg-slate-700 hover:bg-slate-600"}`}
+          disabled={!autoPlay && cursor >= EVENTS.length - 1}
+          className={`px-3 py-1 rounded disabled:opacity-40 ${autoPlay ? "bg-amber-600 hover:bg-amber-500" : "bg-slate-700 hover:bg-slate-600"}`}
         >
           {autoPlay ? "Pause" : "Play"}
         </button>
