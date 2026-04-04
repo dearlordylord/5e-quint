@@ -95,6 +95,7 @@ export function useIntimidatingPresenceUpdate(c: DndContext): Partial<DndContext
 }
 
 export function restoreIntimidatingPresenceUpdate(c: DndContext): Partial<DndContext> {
+  if (!c.classStates.barbarian) return {}
   const bs = b(c)
   const r = tsRestoreIP(bs.rageCharges, bs.intimidatingPresenceUsed)
   if (!r) return {}
