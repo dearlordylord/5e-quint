@@ -2,6 +2,7 @@
 
 /// Auto-generated from community Q&A corpus.
 /// Do not edit — regenerate with scripts/qa/generate_assertions.py
+/// NOTE: Only relevant for QA pipeline, not development. May have pre-existing typecheck errors.
 
 module qa_generated {
   import creature.* from "./creature"

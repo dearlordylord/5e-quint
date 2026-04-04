@@ -360,16 +360,24 @@ module dndTest {
     assert(weaponAttackAbility(LONGBOW, 3, 1) == 1)
   }
 
-  run test_heavy_small_disadv = {
-    assert(heavyWeaponDisadvantage(GREATSWORD, Small) == true)
+  run test_heavy_low_str_disadv = {
+    // Melee heavy weapon with STR < 13 → disadvantage
+    assert(heavyWeaponDisadvantage(GREATSWORD, 12, 14) == true)
   }
 
-  run test_heavy_tiny_disadv = {
-    assert(heavyWeaponDisadvantage(GREATSWORD, Tiny) == true)
+  run test_heavy_high_str_no_disadv = {
+    // Melee heavy weapon with STR >= 13 → no disadvantage
+    assert(heavyWeaponDisadvantage(GREATSWORD, 13, 14) == false)
   }
 
-  run test_heavy_medium_no_disadv = {
-    assert(heavyWeaponDisadvantage(GREATSWORD, Medium) == false)
+  run test_heavy_ranged_low_dex_disadv = {
+    // Ranged heavy weapon with DEX < 13 → disadvantage
+    assert(heavyWeaponDisadvantage(LONGBOW, 14, 12) == true)
+  }
+
+  run test_heavy_ranged_high_dex_no_disadv = {
+    // Ranged heavy weapon with DEX >= 13 → no disadvantage
+    assert(heavyWeaponDisadvantage(LONGBOW, 14, 13) == false)
   }
 
   // ============================================================

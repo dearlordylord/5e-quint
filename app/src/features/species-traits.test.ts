@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 
-import { abilityModifier } from "#/types.ts"
 import {
   breathWeaponDice,
   breathWeaponSaveDC,
@@ -25,19 +24,30 @@ import {
   stonesEnduranceReduction,
   stormsThunderDieSize
 } from "#/features/species-traits.ts"
+import { abilityModifier } from "#/types.ts"
 
 // =============================================================================
 // T140: Combat Species Traits
 // =============================================================================
 
-describe("Heavy Weapon Disadvantage", () => {
-  it("small and tiny have disadvantage", () => {
-    expect(hasHeavyWeaponDisadvantage("small")).toBe(true)
-    expect(hasHeavyWeaponDisadvantage("tiny")).toBe(true)
+describe("Heavy Weapon Disadvantage (SRD 5.2.1)", () => {
+  const meleeHeavy = { isMelee: true, isHeavy: true }
+  const rangedHeavy = { isMelee: false, isHeavy: true }
+  const meleeLight = { isMelee: true, isHeavy: false }
+  it("melee heavy + STR < 13 → disadvantage", () => {
+    expect(hasHeavyWeaponDisadvantage(meleeHeavy, 12, 14)).toBe(true)
   })
-  it("medium and larger do not", () => {
-    expect(hasHeavyWeaponDisadvantage("medium")).toBe(false)
-    expect(hasHeavyWeaponDisadvantage("large")).toBe(false)
+  it("melee heavy + STR >= 13 → no disadvantage", () => {
+    expect(hasHeavyWeaponDisadvantage(meleeHeavy, 13, 14)).toBe(false)
+  })
+  it("ranged heavy + DEX < 13 → disadvantage", () => {
+    expect(hasHeavyWeaponDisadvantage(rangedHeavy, 14, 12)).toBe(true)
+  })
+  it("ranged heavy + DEX >= 13 → no disadvantage", () => {
+    expect(hasHeavyWeaponDisadvantage(rangedHeavy, 14, 13)).toBe(false)
+  })
+  it("non-heavy weapon → no disadvantage regardless of scores", () => {
+    expect(hasHeavyWeaponDisadvantage(meleeLight, 8, 8)).toBe(false)
   })
 })
 

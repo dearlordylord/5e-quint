@@ -5,7 +5,7 @@ import {
   breakConcentrationAndPropagate,
   dealDamageWithAfterReactions,
   eligibleForCounterspell,
-  eligibleTarget,
+  eligibleForLR,
   expendSlot,
   mkAwait,
   piSaveFailed,
@@ -15,6 +15,7 @@ import {
   setCreature,
   setDifference,
   spendAction,
+  spendLR,
   spendReaction
 } from "#/battle-machine-helpers.ts"
 import { resolveConcentration, resolveSpellEntry, returnToCSWindow } from "#/battle-machine-spells.ts"
@@ -167,7 +168,7 @@ export function battleResolveSaveFailedReaction({
     }
   }
   if (e.decision.tag === "RLegendaryResistance") {
-    const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
+    const cs1 = spendLR(c.creatures, e.reactorId)
     const result = applyFailEffects(cs1, { ...sf, saveSucceeded: true }, returnTo)
     return {
       creatures: result.creatures,
@@ -307,7 +308,7 @@ export function battleResolveAoETarget({
     applyCondition: aoe.applyCondition,
     saveSucceeded: false
   }
-  const elig = eligibleTarget(c.creatures, e.targetId)
+  const elig = eligibleForLR(c.creatures, e.targetId)
   if (elig.size > 0) {
     return {
       ...phaseAwaitReaction(mkAwait({ tag: "PISaveFailedAoE", sf: sfCtx, aoe: updatedAoe }, "TSaveFailed", elig))

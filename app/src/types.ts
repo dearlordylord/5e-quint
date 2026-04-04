@@ -184,7 +184,8 @@ export interface AttackContext {
   readonly beyondNormalRange: boolean
   readonly hostileWithin5ft: boolean
   readonly isHeavyWeapon: boolean
-  readonly wielderSizeSmallOrTiny: boolean
+  readonly wielderStrScore: number
+  readonly wielderDexScore: number
   readonly underwater: boolean
   readonly attackerHasSwimSpeed: boolean
   readonly isUnderwaterMeleeException: boolean

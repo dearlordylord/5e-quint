@@ -1647,7 +1647,8 @@ describe("aggregateAttackMods", () => {
     targetStunned: false,
     targetUnconscious: false,
     underwater: false,
-    wielderSizeSmallOrTiny: false
+    wielderStrScore: 16,
+    wielderDexScore: 14
   }
 
   it("no conditions: no mods", () => {
@@ -1694,10 +1695,19 @@ describe("aggregateAttackMods", () => {
     ).toBe(true)
   })
 
-  it("heavy weapon + small creature: disadv", () => {
-    expect(aggregateAttackMods({ ...baseCtx, isHeavyWeapon: true, wielderSizeSmallOrTiny: true }).hasDisadvantage).toBe(
-      true
-    )
+  it("heavy melee weapon + STR < 13: disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, isHeavyWeapon: true, wielderStrScore: 12 }).hasDisadvantage).toBe(true)
+  })
+
+  it("heavy melee weapon + STR >= 13: no disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, isHeavyWeapon: true, wielderStrScore: 13 }).hasDisadvantage).toBe(false)
+  })
+
+  it("heavy ranged weapon + DEX < 13: disadv", () => {
+    expect(
+      aggregateAttackMods({ ...baseCtx, isHeavyWeapon: true, isRangedAttack: true, wielderDexScore: 12 })
+        .hasDisadvantage
+    ).toBe(true)
   })
 
   it("underwater melee without swim speed: disadv", () => {
@@ -1730,22 +1740,46 @@ function isSpellIdle(s: DndSnapshot) {
 describe("concentration", () => {
   it("at most one concentration spell active", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     expect(isConcentrating(snap(a))).toBe(true)
     expect(Option.getOrElse(ctx(a).concentrationSpellId, () => "")).toBe("bless")
   })
 
   it("new concentration spell replaces old", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("haste"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("haste"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     expect(Option.getOrElse(ctx(a).concentrationSpellId, () => "")).toBe("haste")
     expect(isConcentrating(snap(a))).toBe(true)
   })
 
   it("break concentration explicitly", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     a.send({ type: "BREAK_CONCENTRATION" })
     expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true)
     expect(isSpellIdle(snap(a))).toBe(true)
@@ -1753,7 +1787,13 @@ describe("concentration", () => {
 
   it("damage does not auto-break concentration (needs Con save)", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     takeDamage(a, 5)
     expect(Option.getOrElse(ctx(a).concentrationSpellId, () => "")).toBe("bless")
     expect(isConcentrating(snap(a))).toBe(true)
@@ -1762,7 +1802,13 @@ describe("concentration", () => {
   it("temp HP absorption does not auto-break concentration", () => {
     const a = create()
     grantTempHp(a, 10)
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     takeDamage(a, 5)
     expect(Option.getOrElse(ctx(a).concentrationSpellId, () => "")).toBe("bless")
     expect(isConcentrating(snap(a))).toBe(true)
@@ -1770,7 +1816,13 @@ describe("concentration", () => {
 
   it("dropping to 0 HP breaks concentration (incapacitation)", () => {
     const a = create(20)
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     takeDamage(a, 20)
     expect(isUnstable(snap(a))).toBe(true)
     expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true)
@@ -1779,7 +1831,13 @@ describe("concentration", () => {
 
   it("concentration check: save succeeded keeps concentration", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     a.send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: true })
     expect(Option.getOrElse(ctx(a).concentrationSpellId, () => "")).toBe("bless")
     expect(isConcentrating(snap(a))).toBe(true)
@@ -1787,7 +1845,13 @@ describe("concentration", () => {
 
   it("concentration check: save failed breaks concentration", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     a.send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: false })
     expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true)
     expect(isSpellIdle(snap(a))).toBe(true)
@@ -1795,7 +1859,13 @@ describe("concentration", () => {
 
   it("concentration broken by incapacitation", () => {
     const a = create()
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     applyCondition(a, "paralyzed")
     expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true)
     expect(isSpellIdle(snap(a))).toBe(true)
@@ -1803,7 +1873,13 @@ describe("concentration", () => {
 
   it("concentration broken by death", () => {
     const a = create(10)
-    a.send({ type: "START_CONCENTRATION", spellId: mkSpellId("bless"), durationTurns: 10, expiresAt: "end", casterId: CreatureId("") })
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
     takeDamage(a, 20)
     expect(isDead(snap(a))).toBe(true)
     expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true)
@@ -2131,7 +2207,8 @@ describe("aggregateAttackMods additional branches", () => {
     targetStunned: false,
     targetUnconscious: false,
     underwater: false,
-    wielderSizeSmallOrTiny: false
+    wielderStrScore: 16,
+    wielderDexScore: 14
   }
 
   it("frightened + source in LOS: disadv", () => {

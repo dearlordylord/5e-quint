@@ -410,7 +410,7 @@ module battle {
     )
 
   /// Eligible single-target reactor: target alone if it has reaction + alive + conscious.
-  /// Used for damage-reactions (Uncanny Dodge) and save-failed (Legendary Resistance).
+  /// Used for damage-reactions (Uncanny Dodge).
   pure def eligibleTarget(
     cs: CreatureId -> Combatant, targetId: CreatureId
   ): Set[CreatureId] =
@@ -418,6 +418,24 @@ module battle {
       Set(targetId)
     else
       Set()
+
+  /// Eligible for Legendary Resistance: target alive + conscious + has LR charges remaining.
+  /// LR is a per-day resource, NOT reaction-based.
+  pure def eligibleForLR(
+    cs: CreatureId -> Combatant, targetId: CreatureId
+  ): Set[CreatureId] =
+    val c = cs.get(targetId)
+    if (not(c.creature.dead) and not(c.creature.unconscious) and c.monsterResources.legendaryResistancesRemaining > 0)
+      Set(targetId)
+    else
+      Set()
+
+  /// Spend one Legendary Resistance charge on the given creature.
+  pure def spendLR(cs: CreatureId -> Combatant, id: CreatureId): CreatureId -> Combatant =
+    val c = cs.get(id)
+    val newMR = c.monsterResources.with("legendaryResistancesRemaining",
+      c.monsterResources.legendaryResistancesRemaining - 1)
+    cs.set(id, c.with("monsterResources", newMR))
 
   /// Does the creature have a spell slot of level 3 or higher?
   /// Required for Counterspell (level 3 Abjuration).
@@ -1020,8 +1038,8 @@ module battle {
         { creatures: cs, phase: returnToPhase(returnTo) }
       }
     } else {
-      // Save failed — check for Legendary Resistance / Countercharm
-      val elig = eligibleTarget(cs, save.target)
+      // Save failed — check for Legendary Resistance
+      val elig = eligibleForLR(cs, save.target)
       val failCtx = mkSaveFailedCtx(
         save.caster, save.target,
         save.damageOnFail, save.halfOnSuccess, save.damageType,
@@ -1357,9 +1375,8 @@ module battle {
               val newOffered = ctx.offered.union(Set(reactorId))
               match decision {
                 | RLegendaryResistance => {
-                  // LR: auto-succeed the save. Spend reaction.
-                  // Full version: spend LR charge (monsterResourceState), not reaction.
-                  val cs1 = spendReaction(bCreatures, reactorId)
+                  // LR: auto-succeed the save. Spend LR charge (per-day resource).
+                  val cs1 = spendLR(bCreatures, reactorId)
                   val newSf = sf.with("saveSucceeded", true)
                   // Apply as if saved (may still get half damage)
                   val result = applyFailEffects(cs1, newSf, ADRActiveTurn)
@@ -1394,7 +1411,7 @@ module battle {
               val newOffered = ctx.offered.union(Set(reactorId))
               match decision {
                 | RLegendaryResistance => {
-                  val cs1 = spendReaction(bCreatures, reactorId)
+                  val cs1 = spendLR(bCreatures, reactorId)
                   val newSf = sf.with("saveSucceeded", true)
                   val result = applyFailEffects(cs1, newSf, aoeReturn)
                   all {
@@ -1605,7 +1622,7 @@ module battle {
               aoe.damageOnFail, aoe.halfOnSuccess, aoe.damageType,
               aoe.conditionOnFail, aoe.applyCondition
             )
-            val elig = eligibleTarget(bCreatures, targetId)
+            val elig = eligibleForLR(bCreatures, targetId)
             if (elig.size() > 0) {
               // Enter save-failed interrupt with AoE continuation
               all {
@@ -1652,7 +1669,7 @@ module battle {
       if (ac.turn.disengaged) {
         all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
       } else {
-        // Filter threatened to those with reaction + alive + can see mover
+        // Filter threatened to those with reaction + alive (visibility is a spatial concern, not modeled)
         val oaEligible = threatened.filter(id =>
           hasReaction(cs1, id) and not(cs1.get(id).creature.dead)
         )

@@ -707,7 +707,8 @@ module creature {
       | Unarmored => match unarmoredDef {
         | NoUnarmoredDefense => 10 + dexMod
         | BarbarianUD => 10 + dexMod + conMod
-        | MonkUD => 10 + dexMod + wisMod
+        // SRD 5.2.1 Monk L1: "While you aren't wearing armor *or wielding a Shield*"
+        | MonkUD => if (hasShield) 10 + dexMod else 10 + dexMod + wisMod
       }
     }
     baseAC + shieldBonus
@@ -755,9 +756,11 @@ module creature {
     }
   }
 
-  /// Heavy weapon penalty: Small/Tiny creatures have disadvantage
-  pure def heavyWeaponDisadvantage(weapon: Weapon, wielderSize: Size): bool = {
-    weapon.properties.contains(Heavy) and (wielderSize == Tiny or wielderSize == Small)
+  /// Heavy weapon penalty (SRD 5.2.1): Disadvantage if melee + STR < 13, or ranged + DEX < 13.
+  pure def heavyWeaponDisadvantage(weapon: Weapon, strScore: int, dexScore: int): bool = {
+    weapon.properties.contains(Heavy) and (
+      (weapon.isMelee and strScore < 13) or (not(weapon.isMelee) and dexScore < 13)
+    )
   }
 
   /// Carrying capacity: STR x 15 lbs

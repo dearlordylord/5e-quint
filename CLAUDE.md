@@ -136,7 +136,7 @@ After significant changes, run `/simplify` repeatedly until it converges — i.e
 
 ## QA pipeline
 
-Community Q&A corpus used to generate Quint test assertions against the spec. Full docs: `scripts/qa/QA_README.md`.
+Community Q&A corpus used to generate Quint test assertions against the spec. Full docs: `scripts/qa/QA_README.md`. `qa_generated.qnt` is only relevant for the QA pipeline — it is not part of the development verification workflow and may have pre-existing typecheck errors. Do not fix or update it during normal development.
 
 ## Rules reference
 

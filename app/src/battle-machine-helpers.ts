@@ -140,6 +140,18 @@ export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<Creatur
   return t.reactionAvailable && !t.dead && !t.unconscious ? new Set([targetId]) : new Set()
 }
 
+/** Eligible for Legendary Resistance: alive + conscious + has LR charges remaining. */
+export function eligibleForLR(cs: Creatures, targetId: CreatureId): Set<CreatureId> {
+  const t = cs.get(targetId)!
+  return !t.dead && !t.unconscious && t.legendaryResistancesRemaining > 0 ? new Set([targetId]) : new Set()
+}
+
+/** Spend one Legendary Resistance charge. */
+export function spendLR(cs: Creatures, id: CreatureId): Creatures {
+  const c = cs.get(id)!
+  return setCreature(cs, id, { ...c, legendaryResistancesRemaining: c.legendaryResistancesRemaining - 1 })
+}
+
 // slotExpendedThisTurn is guarded both here (for reactions) and at all spell-casting
 // actions (for action/BA spells). SRD 5.2.1 "One Spell with a Spell Slot per Turn".
 export function eligibleForCounterspell(cs: Creatures, excludeId: CreatureId): Set<CreatureId> {
@@ -263,7 +275,7 @@ export function resolveSave(
     }
     return { creatures: new Map(cs), ...returnToState(returnTo) }
   }
-  const elig = eligibleTarget(cs, save.target)
+  const elig = eligibleForLR(cs, save.target)
   const failCtx: SaveFailedCtx = {
     caster: save.caster,
     target: save.target,

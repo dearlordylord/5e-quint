@@ -27,10 +27,14 @@ export type TieflingLegacy = (typeof TIEFLING_LEGACY_OPTIONS)[number]
 // T140: Combat Species Traits
 // =============================================================================
 
-// --- Small species Heavy Weapon Disadvantage ---
+// --- Heavy Weapon Disadvantage (SRD 5.2.1 Equipment.md) ---
 
-export function hasHeavyWeaponDisadvantage(size: string): boolean {
-  return size === "small" || size === "tiny"
+export function hasHeavyWeaponDisadvantage(
+  weapon: { isMelee: boolean; isHeavy: boolean },
+  strScore: number,
+  dexScore: number
+): boolean {
+  return weapon.isHeavy && (weapon.isMelee ? strScore < 13 : dexScore < 13)
 }
 
 // --- Dragonborn ---

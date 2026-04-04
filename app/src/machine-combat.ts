@@ -76,7 +76,8 @@ export function calculateAC(params: {
   } else if (params.unarmoredDef === "barbarian") {
     baseAC = BASE_AC + params.dexMod + params.conMod
   } else if (params.unarmoredDef === "monk") {
-    baseAC = BASE_AC + params.dexMod + params.wisMod
+    // SRD 5.2.1 Monk L1: "While you aren't wearing armor *or wielding a Shield*"
+    baseAC = params.hasShield ? BASE_AC + params.dexMod : BASE_AC + params.dexMod + params.wisMod
   } else {
     baseAC = BASE_AC + params.dexMod
   }
@@ -115,7 +116,7 @@ export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
     (ctx.isRangedAttack && ctx.beyondNormalRange) ||
     (ctx.isRangedAttack && ctx.hostileWithin5ft) ||
     !ctx.attackerCanSeeTarget ||
-    (ctx.isHeavyWeapon && ctx.wielderSizeSmallOrTiny) ||
+    (ctx.isHeavyWeapon && (!ctx.isRangedAttack ? ctx.wielderStrScore < 13 : ctx.wielderDexScore < 13)) ||
     (ctx.underwater && !ctx.isRangedAttack && !ctx.attackerHasSwimSpeed && !ctx.isUnderwaterMeleeException) ||
     (ctx.underwater && ctx.isRangedAttack && !ctx.beyondNormalRange && !ctx.isUnderwaterRangedException) ||
     (ctx.targetDodging && ctx.targetCanSeeAttacker)
