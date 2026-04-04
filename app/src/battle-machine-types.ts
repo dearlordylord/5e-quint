@@ -265,6 +265,12 @@ export interface InitCreatureConfig {
   readonly legendaryActions?: number
   readonly legendaryResistances?: number
   readonly preparedSpells?: ReadonlySet<string>
+  /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */
+  readonly initiativeRoll?: number
+  /** Second d20 for Disadvantage. Required when surprised=true; defaults to initiativeRoll (no effect). */
+  readonly initiativeRollB?: number
+  /** SRD 5.2.1: surprised combatant has Disadvantage on Initiative roll. Defaults to false. */
+  readonly surprised?: boolean
 }
 
 export type BattleEvent =

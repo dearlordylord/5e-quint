@@ -90,7 +90,7 @@
 | **Action** | The primary activity a creature can perform on its turn; one per turn; the 10 standard types are: Attack, Cast a Spell, Dash, Disengage, Dodge, Help, Hide, Ready, Search, Use an Object | — |
 | **Bonus Action** | A secondary activity on a turn, available only when explicitly granted by a feature or spell; one per turn | Swift action, minor action |
 | **Reaction** | An instant response to a trigger, usable on any turn; one per round; resets at the start of the creature's next turn | — |
-| **Surprise** | A state at the start of combat; surprised creatures can't move or take actions on their first turn and can't take reactions until that turn ends | Ambush (ambush is a narrative situation that may cause surprise) |
+| **Surprise** | A determination at the start of combat; a surprised combatant has Disadvantage on their Initiative roll (SRD 5.2.1); no lost turn, no restricted reactions — purely affects the Initiative d20 roll | Ambush (ambush is a narrative situation that may cause surprise), Surprised condition (there is no "surprised condition" in 5.2.1) |
 | **Opportunity Attack** | A reaction melee attack triggered when a hostile creature moves out of the attacker's reach; avoided by the Disengage action | Attack of opportunity, AoO |
 
 ## Combat

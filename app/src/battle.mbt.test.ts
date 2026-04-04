@@ -29,6 +29,7 @@ import {
   snapshotToNormalized,
   variantToString
 } from "#/mbt-shared.ts"
+import { effectiveInitRoll } from "#/battle-machine-actions.ts"
 import type { Condition, CreatureId, CreatureKind, DamageType } from "#/types.ts"
 import { classLevel, CreatureId as mkCreatureId, healAmount, resourceCount, spellId as mkSpellId, spellSlotLevel } from "#/types.ts"
 
@@ -251,7 +252,12 @@ const OB = z.boolean().optional()
 const OS = z.string().optional()
 
 const battleDriverSchema = {
-  bInit: { hp1: OI, hp2: OI, hp3: OI, hp4: OI },
+  bInit: {
+    hp1: OI, hp2: OI, hp3: OI, hp4: OI,
+    initRoll1: OI, initRoll2: OI, initRoll3: OI, initRoll4: OI,
+    initRoll1b: OI, initRoll2b: OI, initRoll3b: OI, initRoll4b: OI,
+    surprised1: OB, surprised2: OB, surprised3: OB, surprised4: OB,
+  },
   bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
   bAttack: { targetId: OS, attackRoll: OI, dmg: OI, dt: OV, crit: OB, tAc: OI },
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
@@ -440,7 +446,15 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("D"), actorD)
       creatureKinds.set("D", "PC")
 
-      initiative = ["A", "B", "C", "D"]
+      const initEntries = [
+        { id: "A", score: effectiveInitRoll(pickBigInt(picks, "initRoll1") ?? 10, pickBigInt(picks, "initRoll1b") ?? 10, pickBool(picks, "surprised1") ?? false) },
+        { id: "B", score: effectiveInitRoll(pickBigInt(picks, "initRoll2") ?? 10, pickBigInt(picks, "initRoll2b") ?? 10, pickBool(picks, "surprised2") ?? false) },
+        { id: "C", score: effectiveInitRoll(pickBigInt(picks, "initRoll3") ?? 10, pickBigInt(picks, "initRoll3b") ?? 10, pickBool(picks, "surprised3") ?? false) },
+        { id: "D", score: effectiveInitRoll(pickBigInt(picks, "initRoll4") ?? 10, pickBigInt(picks, "initRoll4b") ?? 10, pickBool(picks, "surprised4") ?? false) },
+      ]
+      // Stable sort descending (matches Quint's selection sort: ties preserve input order)
+      initEntries.sort((a, b) => b.score - a.score)
+      initiative = initEntries.map(e => e.id)
       turnIndex = 0
       turnStarted.clear()
 

@@ -516,6 +516,22 @@ module battle {
     { idx: nextIdx, round: if (nextIdx == 0) round + 1 else round }
   }
 
+  /// Effective initiative roll: surprised creatures have Disadvantage (min of two d20s).
+  /// SRD 5.2.1 Rules-Glossary "Surprise": Disadvantage on Initiative roll.
+  pure def effectiveInitRoll(roll1: int, roll2: int, surprised: bool): int =
+    if (surprised) (if (roll1 < roll2) roll1 else roll2) else roll1
+
+  /// Sort initiative entries by score descending (highest goes first).
+  /// Ties preserve input order (stable selection sort).
+  pure def sortInitDesc(entries: List[{ id: CreatureId, score: int }]): List[CreatureId] = {
+    0.to(entries.length() - 1).fold(List(), (sorted, _) => {
+      val placedIds = listToSet(sorted)
+      val remaining = entries.select(e => not(placedIds.contains(e.id)))
+      val best = remaining.foldl(remaining[0], (b, e) => if (e.score > b.score) e else b)
+      sorted.append(best.id)
+    })
+  }
+
   // ============================================================
   // 4. BATTLE ACTIONS
   // ============================================================
@@ -533,6 +549,21 @@ module battle {
     nondet hp2 = 10.to(30).oneOf()
     nondet hp3 = 20.to(50).oneOf()
     nondet hp4 = 10.to(30).oneOf()
+    // Initiative: d20 roll per creature. SRD 5.2.1: "every participant rolls Initiative"
+    nondet initRoll1 = 1.to(20).oneOf()
+    nondet initRoll2 = 1.to(20).oneOf()
+    nondet initRoll3 = 1.to(20).oneOf()
+    nondet initRoll4 = 1.to(20).oneOf()
+    // Second d20 for Disadvantage (surprised). Always rolled; ignored if not surprised.
+    nondet initRoll1b = 1.to(20).oneOf()
+    nondet initRoll2b = 1.to(20).oneOf()
+    nondet initRoll3b = 1.to(20).oneOf()
+    nondet initRoll4b = 1.to(20).oneOf()
+    // Surprise flags. SRD 5.2.1: "surprised … has Disadvantage on their Initiative roll"
+    nondet surprised1 = Bool.oneOf()
+    nondet surprised2 = Bool.oneOf()
+    nondet surprised3 = Bool.oneOf()
+    nondet surprised4 = Bool.oneOf()
     all {
       bCreatures' = Map(
         "A" -> mkCaster(hp1, PC).with("rogueLevel", 5),  // B11: rogue 5 for Uncanny Dodge testing
@@ -540,9 +571,14 @@ module battle {
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
         "D" -> mkCaster(hp4, PC)  // 4th creature for CS chain depth ≥ 2
       ),
-      // Modeling assumption: battle requires >= 2 combatants. SRD says combat is
-      // "a clash between two sides" but does not state an explicit minimum count.
-      bInitiative' = ["A", "B", "C", "D"],
+      // Initiative order: sorted by effective roll descending (highest first).
+      // SRD 5.2.1: "Disadvantage on their Initiative roll" for surprised combatants.
+      bInitiative' = sortInitDesc([
+        { id: "A", score: effectiveInitRoll(initRoll1, initRoll1b, surprised1) },
+        { id: "B", score: effectiveInitRoll(initRoll2, initRoll2b, surprised2) },
+        { id: "C", score: effectiveInitRoll(initRoll3, initRoll3b, surprised3) },
+        { id: "D", score: effectiveInitRoll(initRoll4, initRoll4b, surprised4) },
+      ]),
       bTurnIndex' = 0,
       bRound' = 1,
       bPhase' = BPActiveTurn,
