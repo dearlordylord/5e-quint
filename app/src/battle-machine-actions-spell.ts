@@ -71,13 +71,7 @@ export function battleCastSaveSpell({
   }
   if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
   const result = resolveSave(cs, saveCtx, ADR_ACTIVE_TURN)
-  return {
-    creatures: result.creatures,
-    awaitCtx: result.awaitCtx,
-    aoeCtx: result.aoeCtx,
-    movementCtx: result.movementCtx,
-    laCtx: result.laCtx
-  }
+  return { ...result }
 }
 
 export function battleResolveCounterspell({
@@ -99,26 +93,12 @@ export function battleResolveCounterspell({
           if (popped.rest.length === 0) return { ...PHASE_ACTIVE, spellStack: popped.rest }
           const gp = { top: popped.rest[popped.rest.length - 1], rest: popped.rest.slice(0, -1) }
           const result = returnToCSWindow(c.creatures, gp.top, gp.rest)
-          return {
-            creatures: result.creatures,
-            awaitCtx: result.awaitCtx,
-            aoeCtx: result.aoeCtx,
-            movementCtx: result.movementCtx,
-            laCtx: result.laCtx,
-            spellStack: result.stack
-          }
+          return { ...result, spellStack: result.stack }
         }
         return { ...PHASE_ACTIVE, spellStack: popped.rest }
       }
       const result = returnToCSWindow(c.creatures, popped.top, popped.rest)
-      return {
-        creatures: result.creatures,
-        awaitCtx: result.awaitCtx,
-        aoeCtx: result.aoeCtx,
-        movementCtx: result.movementCtx,
-        laCtx: result.laCtx,
-        spellStack: result.stack
-      }
+      return { ...result, spellStack: result.stack }
     }
     const result = resolveSpellEntry(
       c.creatures,
@@ -128,14 +108,7 @@ export function battleResolveCounterspell({
       spell.postCast,
       c.spellStack
     )
-    return {
-      creatures: result.creatures,
-      awaitCtx: result.awaitCtx,
-      aoeCtx: result.aoeCtx,
-      movementCtx: result.movementCtx,
-      laCtx: result.laCtx,
-      spellStack: result.stack
-    }
+    return { ...result, spellStack: result.stack }
   }
 
   const newOffered = new Set(aw.offered)
@@ -341,11 +314,5 @@ export function battleResolveAoETarget({
     }
   }
   const result = applyFailEffects(c.creatures, sfCtx, aoeReturn)
-  return {
-    creatures: result.creatures,
-    awaitCtx: result.awaitCtx,
-    aoeCtx: result.aoeCtx,
-    movementCtx: result.movementCtx,
-    laCtx: result.laCtx
-  }
+  return { ...result }
 }

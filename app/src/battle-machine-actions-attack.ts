@@ -51,13 +51,7 @@ export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_
     }
   }
   const result = dealDamageWithAfterReactions(cs, e.targetId, id, e.dmg, e.dt, e.crit, ADR_ACTIVE_TURN)
-  return {
-    creatures: result.creatures,
-    awaitCtx: result.awaitCtx,
-    aoeCtx: result.aoeCtx,
-    movementCtx: result.movementCtx,
-    laCtx: result.laCtx
-  }
+  return { ...result }
 }
 
 export function battleResolveHitReaction({
@@ -187,13 +181,7 @@ export function battleAfterDamageHellishRebuke({
   const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
   const actualDmg = e.rebukeSaved ? Math.trunc(e.rebukeDmg / 2) : e.rebukeDmg
   const result = dealDamageWithAfterReactions(cs1, ad.damageSource, e.reactorId, actualDmg, "fire", false, ad.returnTo)
-  return {
-    creatures: result.creatures,
-    awaitCtx: result.awaitCtx,
-    aoeCtx: result.aoeCtx,
-    movementCtx: result.movementCtx,
-    laCtx: result.laCtx
-  }
+  return { ...result }
 }
 
 export function battleAfterDamageRetaliation({
@@ -219,11 +207,5 @@ export function battleAfterDamageRetaliation({
     e.retCrit,
     ad.returnTo
   )
-  return {
-    creatures: result.creatures,
-    awaitCtx: result.awaitCtx,
-    aoeCtx: result.aoeCtx,
-    movementCtx: result.movementCtx,
-    laCtx: result.laCtx
-  }
+  return { ...result }
 }

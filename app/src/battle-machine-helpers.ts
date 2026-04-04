@@ -67,7 +67,6 @@ export function activeId(c: BattleContext): CreatureId {
   return c.initiative[c.turnIndex]
 }
 
-/** Extract awaiting-reaction context from nullable field. */
 export function awaitingReaction(c: BattleContext): AwaitCtx | null {
   return c.awaitCtx
 }

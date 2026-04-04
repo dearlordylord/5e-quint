@@ -73,11 +73,5 @@ export function battleMovementOAAttack({
     }
   }
   const result = advanceFromHitPhase(cs1, atkCtx)
-  return {
-    creatures: result.creatures,
-    awaitCtx: result.awaitCtx,
-    aoeCtx: result.aoeCtx,
-    movementCtx: result.movementCtx,
-    laCtx: result.laCtx
-  }
+  return { ...result }
 }
