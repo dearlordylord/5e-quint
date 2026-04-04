@@ -1,10 +1,5 @@
-/**
- * Battle machine actions part 1 — init, start turn, attack, reaction phases.
- * Each function takes {context, event} and returns Partial<BattleContext>.
- */
 import { Match } from "effect"
 
-import { freshCaster, freshCreature } from "#/battle-machine-creature.ts"
 import {
   activeId,
   advanceFromHitPhase,
@@ -17,7 +12,6 @@ import {
   piAfterDamage,
   piAttackDamage,
   piAttackHit,
-  processStartTurn,
   returnToPhase,
   setCreature,
   setDifference,
@@ -25,79 +19,11 @@ import {
   spendExtraAttack,
   spendReaction
 } from "#/battle-machine-helpers.ts"
-import type {
-  AttackHitCtx,
-  BattleContext,
-  BattleCreatureState,
-  BattleEvent,
-  CreatureId
-} from "#/battle-machine-types.ts"
-import { ADR_ACTIVE_TURN, BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
+import type { AttackHitCtx, BattleActionArgs, BattleContext } from "#/battle-machine-types.ts"
+import { ADR_ACTIVE_TURN } from "#/battle-machine-types.ts"
 import { armorClass } from "#/types.ts"
 
-type Args = { context: BattleContext; event: BattleEvent }
-
-export function battleInit({ event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_INIT") return {}
-  const creatures = new Map<CreatureId, BattleCreatureState>()
-  const initiative: Array<CreatureId> = []
-  for (const cfg of e.creatures) {
-    const base = cfg.caster ? freshCaster(cfg.maxHp, cfg.kind) : freshCreature(cfg.maxHp, cfg.kind)
-    creatures.set(cfg.id, {
-      ...base,
-      ...(cfg.rogueLevel != null ? { rogueLevel: cfg.rogueLevel } : {}),
-      ...(cfg.monkLevel != null ? { monkLevel: cfg.monkLevel } : {}),
-      ...(cfg.legendaryActions != null ? { legendaryActionsRemaining: cfg.legendaryActions } : {}),
-      ...(cfg.legendaryResistances != null ? { legendaryResistancesRemaining: cfg.legendaryResistances } : {}),
-      ...(cfg.preparedSpells != null ? { preparedSpells: cfg.preparedSpells } : {})
-    })
-    initiative.push(cfg.id)
-  }
-  return {
-    creatures,
-    initiative,
-    turnIndex: 0,
-    round: 1,
-    phase: BP_ACTIVE_TURN,
-    spellStack: [],
-    turnStarted: false
-  }
-}
-
-export function battleStartTurn({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_START_TURN") return {}
-  if (c.phase.tag !== "BPActiveTurn" || c.turnStarted) return {}
-  const id = activeId(c)
-  const creature = c.creatures.get(id)!
-  let cs: Map<CreatureId, BattleCreatureState> = new Map(c.creatures)
-  if (creature.creatureKind === "Monster") {
-    cs = setCreature(cs, id, { ...creature, legendaryActionsRemaining: 3 })
-  }
-  let rechargedAbilities: ReadonlyArray<string> | undefined
-  if (creature.creatureKind === "Monster") {
-    const minRolls: Record<string, number> = { breath_weapon: 5 }
-    const recharged: Array<string> = []
-    for (const [name, available] of Object.entries(cs.get(id)!.rechargeAvailable)) {
-      if (!available && e.rechargeD6 >= (minRolls[name] ?? 5)) recharged.push(name)
-    }
-    if (recharged.length > 0) rechargedAbilities = recharged
-  }
-  const result = processStartTurn(
-    cs,
-    id,
-    e.sotDmg,
-    e.sotDt,
-    e.sotHeal,
-    e.sotSaveResult,
-    e.sotConSave,
-    rechargedAbilities,
-    e.deathSaveRoll
-  )
-  return { creatures: result, turnStarted: true }
-}
-
-export function battleAttack({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_ATTACK") return {}
+export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_ATTACK">): Partial<BattleContext> {
   if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
@@ -129,8 +55,10 @@ export function battleAttack({ context: c, event: e }: Args): Partial<BattleCont
   return { creatures: result.creatures, phase: result.phase }
 }
 
-export function battleResolveHitReaction({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_RESOLVE_HIT_REACTION") return {}
+export function battleResolveHitReaction({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_RESOLVE_HIT_REACTION">): Partial<BattleContext> {
   const aw = awaitingReaction(c)
   if (!aw) return {}
   const pi = piAttackHit(aw.interrupt)
@@ -169,8 +97,10 @@ export function battleResolveHitReaction({ context: c, event: e }: Args): Partia
   return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw, offered: newOffered } } }
 }
 
-export function battleResolveDmgReaction({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_RESOLVE_DMG_REACTION") return {}
+export function battleResolveDmgReaction({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_RESOLVE_DMG_REACTION">): Partial<BattleContext> {
   const aw = awaitingReaction(c)
   if (!aw) return {}
   const pi = piAttackDamage(aw.interrupt)
@@ -217,8 +147,10 @@ export function battleResolveDmgReaction({ context: c, event: e }: Args): Partia
   return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw, offered: newOffered } } }
 }
 
-export function battleAfterDamagePass({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_AFTER_DAMAGE_PASS") return {}
+export function battleAfterDamagePass({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_AFTER_DAMAGE_PASS">): Partial<BattleContext> {
   const aw = awaitingReaction(c)
   if (!aw) return {}
   const pi = piAfterDamage(aw.interrupt)
@@ -231,8 +163,10 @@ export function battleAfterDamagePass({ context: c, event: e }: Args): Partial<B
   return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw, offered: newOffered } } }
 }
 
-export function battleAfterDamageHellishRebuke({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_AFTER_DAMAGE_HELLISH_REBUKE") return {}
+export function battleAfterDamageHellishRebuke({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_AFTER_DAMAGE_HELLISH_REBUKE">): Partial<BattleContext> {
   const aw = awaitingReaction(c)
   if (!aw) return {}
   const pi = piAfterDamage(aw.interrupt)
@@ -245,8 +179,10 @@ export function battleAfterDamageHellishRebuke({ context: c, event: e }: Args): 
   return { creatures: result.creatures, phase: result.phase }
 }
 
-export function battleAfterDamageRetaliation({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_AFTER_DAMAGE_RETALIATION") return {}
+export function battleAfterDamageRetaliation({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_AFTER_DAMAGE_RETALIATION">): Partial<BattleContext> {
   const aw = awaitingReaction(c)
   if (!aw) return {}
   const pi = piAfterDamage(aw.interrupt)

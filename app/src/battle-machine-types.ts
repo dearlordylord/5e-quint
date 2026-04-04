@@ -394,3 +394,9 @@ export type BattleEvent =
       readonly laTgtAc: ArmorClass
     }
   | { readonly type: "BATTLE_HEAL"; readonly targetId: CreatureId; readonly amount: number }
+
+/** Narrows BattleEvent to a specific type member for action functions. */
+export type BattleActionArgs<T extends BattleEvent["type"]> = {
+  context: BattleContext
+  event: Extract<BattleEvent, { type: T }>
+}

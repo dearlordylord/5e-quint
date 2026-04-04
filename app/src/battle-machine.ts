@@ -2,38 +2,52 @@
  * Battle-level XState machine — mirrors battle.qnt's full state.
  * Three states: idle → running → ended. All events handled in `running`,
  * routed by context.phase guards.
+ *
+ * Creatures are stored as flat context (Map<CreatureId, BattleCreatureState>),
+ * NOT as spawned dndMachine child actors. D&D combat requires atomic
+ * cross-creature updates (attacker + target in one assign) and sequential
+ * phase coordination (attack → reaction → damage → after-damage) that would
+ * become async choreography with actors. The creature machine's logic is
+ * reused via pure functions in battle-machine-creature.ts.
  */
-import type { SnapshotFrom } from "xstate"
-import { assign, setup } from "xstate"
+import { assign, setup, type SnapshotFrom } from "xstate"
 
 import {
   battleAfterDamageHellishRebuke,
   battleAfterDamagePass,
   battleAfterDamageRetaliation,
   battleAttack,
-  battleInit,
   battleResolveDmgReaction,
-  battleResolveHitReaction,
-  battleStartTurn
-} from "#/battle-machine-actions.ts"
+  battleResolveHitReaction
+} from "#/battle-machine-actions-attack.ts"
+import { battleMove, battleMovementOAAttack, battleMovementOAPass } from "#/battle-machine-actions-movement.ts"
 import {
   battleCastAoE,
   battleCastConcentrationSpell,
   battleCastSaveSpell,
   battleConcentrationCheck,
-  battleEndTurn,
-  battleHeal,
-  battleLegendaryAttack,
-  battleLegendaryPass,
-  battleMove,
-  battleMovementOAAttack,
-  battleMovementOAPass,
   battleResolveAoETarget,
   battleResolveCounterspell,
   battleResolveSaveFailedReaction
-} from "#/battle-machine-actions2.ts"
+} from "#/battle-machine-actions-spell.ts"
+import {
+  battleEndTurn,
+  battleHeal,
+  battleInit,
+  battleLegendaryAttack,
+  battleLegendaryPass,
+  battleStartTurn
+} from "#/battle-machine-actions-turn.ts"
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
 import { BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
+
+// Action functions take a narrowed event (BattleActionArgs<T>), but XState's assign()
+// expects the full BattleEvent union. Two casts required: input (contravariance) and
+// output (XState phantom type). Safe: the machine's on: { EVENT: actions } mapping
+// guarantees the correct event at runtime, and each action is typed at its definition site.
+type WideActionFn = (args: { context: BattleContext; event: BattleEvent }) => Partial<BattleContext>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const narrow = (fn: (args: any) => Partial<BattleContext>) => assign(fn as WideActionFn) as any
 
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 const MT = {
@@ -55,28 +69,28 @@ const INITIAL_CONTEXT: BattleContext = {
 export const battleMachine = setup({
   types: MT,
   actions: {
-    battleInit: assign(battleInit),
-    battleStartTurn: assign(battleStartTurn),
-    battleAttack: assign(battleAttack),
-    battleResolveHitReaction: assign(battleResolveHitReaction),
-    battleResolveDmgReaction: assign(battleResolveDmgReaction),
-    battleAfterDamagePass: assign(battleAfterDamagePass),
-    battleAfterDamageHellishRebuke: assign(battleAfterDamageHellishRebuke),
-    battleAfterDamageRetaliation: assign(battleAfterDamageRetaliation),
-    battleCastSaveSpell: assign(battleCastSaveSpell),
-    battleResolveCounterspell: assign(battleResolveCounterspell),
-    battleResolveSaveFailedReaction: assign(battleResolveSaveFailedReaction),
-    battleCastConcentrationSpell: assign(battleCastConcentrationSpell),
-    battleConcentrationCheck: assign(battleConcentrationCheck),
-    battleCastAoE: assign(battleCastAoE),
-    battleResolveAoETarget: assign(battleResolveAoETarget),
-    battleMove: assign(battleMove),
-    battleMovementOAPass: assign(battleMovementOAPass),
-    battleMovementOAAttack: assign(battleMovementOAAttack),
-    battleEndTurn: assign(battleEndTurn),
-    battleLegendaryPass: assign(battleLegendaryPass),
-    battleLegendaryAttack: assign(battleLegendaryAttack),
-    battleHeal: assign(battleHeal)
+    battleInit: narrow(battleInit),
+    battleStartTurn: narrow(battleStartTurn),
+    battleAttack: narrow(battleAttack),
+    battleResolveHitReaction: narrow(battleResolveHitReaction),
+    battleResolveDmgReaction: narrow(battleResolveDmgReaction),
+    battleAfterDamagePass: narrow(battleAfterDamagePass),
+    battleAfterDamageHellishRebuke: narrow(battleAfterDamageHellishRebuke),
+    battleAfterDamageRetaliation: narrow(battleAfterDamageRetaliation),
+    battleCastSaveSpell: narrow(battleCastSaveSpell),
+    battleResolveCounterspell: narrow(battleResolveCounterspell),
+    battleResolveSaveFailedReaction: narrow(battleResolveSaveFailedReaction),
+    battleCastConcentrationSpell: narrow(battleCastConcentrationSpell),
+    battleConcentrationCheck: narrow(battleConcentrationCheck),
+    battleCastAoE: narrow(battleCastAoE),
+    battleResolveAoETarget: narrow(battleResolveAoETarget),
+    battleMove: narrow(battleMove),
+    battleMovementOAPass: narrow(battleMovementOAPass),
+    battleMovementOAAttack: narrow(battleMovementOAAttack),
+    battleEndTurn: narrow(battleEndTurn),
+    battleLegendaryPass: narrow(battleLegendaryPass),
+    battleLegendaryAttack: narrow(battleLegendaryAttack),
+    battleHeal: narrow(battleHeal)
   }
 }).createMachine({
   id: "battle",

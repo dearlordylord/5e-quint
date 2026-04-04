@@ -1,38 +1,27 @@
-/**
- * Battle machine actions part 2 — spellcasting, movement, end turn, legendary, heal.
- */
 import {
   activeId,
-  advanceFromHitPhase,
   applyFailEffects,
   awaitingReaction,
   breakConcentrationAndPropagate,
-  dealDamage,
   dealDamageWithAfterReactions,
-  eligibleExcluding,
   eligibleForCounterspell,
   eligibleTarget,
   expendSlot,
-  heal,
-  isHit,
   mkAwait,
-  nextTurn,
   piSaveFailed,
   piSaveFailedAoE,
   piSpellCast,
-  processEndTurn,
   resolveSave,
   setCreature,
   setDifference,
   spendAction,
-  spendMovement,
   spendReaction
 } from "#/battle-machine-helpers.ts"
 import { resolveConcentration, resolveSpellEntry, returnToCSWindow } from "#/battle-machine-spells.ts"
 import type {
   AoESpellCtx,
+  BattleActionArgs,
   BattleContext,
-  BattleEvent,
   CreatureId,
   SaveFailedCtx,
   SpellCastCtx,
@@ -40,10 +29,10 @@ import type {
 } from "#/battle-machine-types.ts"
 import { ADR_ACTIVE_TURN, BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
 
-type Args = { context: BattleContext; event: BattleEvent }
-
-export function battleCastSaveSpell({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_CAST_SAVE_SPELL") return {}
+export function battleCastSaveSpell({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_CAST_SAVE_SPELL">): Partial<BattleContext> {
   if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
@@ -89,8 +78,10 @@ export function battleCastSaveSpell({ context: c, event: e }: Args): Partial<Bat
   return { creatures: result.creatures, phase: result.phase }
 }
 
-export function battleResolveCounterspell({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_RESOLVE_COUNTERSPELL") return {}
+export function battleResolveCounterspell({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_RESOLVE_COUNTERSPELL">): Partial<BattleContext> {
   const aw = awaitingReaction(c)
   if (!aw) return {}
   const piSC = piSpellCast(aw.interrupt)
@@ -160,8 +151,10 @@ export function battleResolveCounterspell({ context: c, event: e }: Args): Parti
   }
 }
 
-export function battleResolveSaveFailedReaction({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_RESOLVE_SAVE_FAILED_REACTION") return {}
+export function battleResolveSaveFailedReaction({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_RESOLVE_SAVE_FAILED_REACTION">): Partial<BattleContext> {
   const aw2 = awaitingReaction(c)
   if (!aw2) return {}
   const piSF = piSaveFailed(aw2.interrupt)
@@ -184,8 +177,10 @@ export function battleResolveSaveFailedReaction({ context: c, event: e }: Args):
   return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw2, offered: newOff } } }
 }
 
-export function battleCastConcentrationSpell({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_CAST_CONCENTRATION_SPELL") return {}
+export function battleCastConcentrationSpell({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_CAST_CONCENTRATION_SPELL">): Partial<BattleContext> {
   if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
@@ -221,16 +216,17 @@ export function battleCastConcentrationSpell({ context: c, event: e }: Args): Pa
   return { creatures: resolveConcentration(cs, concCtx), phase: BP_ACTIVE_TURN }
 }
 
-export function battleConcentrationCheck({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_CONCENTRATION_CHECK") return {}
+export function battleConcentrationCheck({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_CONCENTRATION_CHECK">): Partial<BattleContext> {
   if (c.phase.tag !== "BPActiveTurn") return {}
   if (e.conSaveSucceeded) return {}
   const cs = breakConcentrationAndPropagate(c.creatures, e.targetId)
   return { creatures: cs }
 }
 
-export function battleCastAoE({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_CAST_AOE") return {}
+export function battleCastAoE({ context: c, event: e }: BattleActionArgs<"BATTLE_CAST_AOE">): Partial<BattleContext> {
   if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
@@ -272,8 +268,10 @@ export function battleCastAoE({ context: c, event: e }: Args): Partial<BattleCon
   return { creatures: cs, phase: { tag: "BPResolvingAoE", aoe: aoeCtx } }
 }
 
-export function battleResolveAoETarget({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_RESOLVE_AOE_TARGET") return {}
+export function battleResolveAoETarget({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_RESOLVE_AOE_TARGET">): Partial<BattleContext> {
   if (c.phase.tag !== "BPResolvingAoE") return {}
   const aoe = c.phase.aoe
   if (aoe.remaining.size === 0 || e.targetId === null) return { phase: BP_ACTIVE_TURN }
@@ -318,119 +316,4 @@ export function battleResolveAoETarget({ context: c, event: e }: Args): Partial<
   }
   const result = applyFailEffects(c.creatures, sfCtx, aoeReturn)
   return { creatures: result.creatures, phase: result.phase }
-}
-
-export function battleMove({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_MOVE") return {}
-  if (c.phase.tag !== "BPActiveTurn") return {}
-  const id = activeId(c)
-  const ac = c.creatures.get(id)!
-  if (ac.dead || ac.movementRemaining <= 0) return {}
-  const cs = setCreature(c.creatures, id, spendMovement(ac, 5, 1))
-  if (ac.disengaged) return { creatures: cs }
-  const oaEligible = new Set(
-    [...e.threatened].filter((tid) => {
-      const t = cs.get(tid)
-      return t && t.reactionAvailable && !t.dead
-    })
-  )
-  if (oaEligible.size === 0) return { creatures: cs }
-  return {
-    creatures: cs,
-    phase: { tag: "BPResolvingMovement", mv: { mover: id, threatenedBy: oaEligible, processed: new Set() } }
-  }
-}
-
-export function battleMovementOAPass({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_MOVEMENT_OA_PASS") return {}
-  if (c.phase.tag !== "BPResolvingMovement") return {}
-  const mv = c.phase.mv
-  if (setDifference(mv.threatenedBy, mv.processed).size === 0 || e.reactorId === null) return { phase: BP_ACTIVE_TURN }
-  const newProcessed = new Set(mv.processed)
-  newProcessed.add(e.reactorId)
-  return { phase: { tag: "BPResolvingMovement", mv: { ...mv, processed: newProcessed } } }
-}
-
-export function battleMovementOAAttack({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_MOVEMENT_OA_ATTACK") return {}
-  if (c.phase.tag !== "BPResolvingMovement") return {}
-  const mv = c.phase.mv
-  if (e.reactorId === null) return {}
-  const newProc = new Set(mv.processed)
-  newProc.add(e.reactorId)
-  const updatedMv = { ...mv, processed: newProc }
-  const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
-  if (!isHit(e.oaAtkRoll, e.oaTgtAc)) return { creatures: cs1, phase: { tag: "BPResolvingMovement", mv: updatedMv } }
-  const atkCtx = {
-    attacker: e.reactorId,
-    target: mv.mover,
-    attackRoll: e.oaAtkRoll,
-    targetAc: e.oaTgtAc,
-    damage: e.oaDmg,
-    damageType: e.oaDt,
-    isCritical: e.oaCrit,
-    atkReturnTo: { tag: "ADRResolvingMovement" as const, mv: updatedMv }
-  }
-  const hitElig = eligibleExcluding(cs1, e.reactorId)
-  if (hitElig.size > 0) {
-    return {
-      creatures: cs1,
-      phase: { tag: "BPAwaitingReaction", ctx: mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", hitElig) }
-    }
-  }
-  const result = advanceFromHitPhase(cs1, atkCtx)
-  return { creatures: result.creatures, phase: result.phase }
-}
-
-export function battleEndTurn({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_END_TURN") return {}
-  if (c.phase.tag !== "BPActiveTurn") return {}
-  const id = activeId(c)
-  const cs = processEndTurn(c.creatures, id, e.eotSaveSucceeded, e.eotDmg, e.eotDt, e.eotConSave)
-  const laEligible = new Set<CreatureId>()
-  for (const [cid, cr] of cs) {
-    if (
-      cid !== id &&
-      cr.creatureKind === "Monster" &&
-      cr.legendaryActionsRemaining > 0 &&
-      !cr.dead &&
-      cr.incapacitatedSources.size === 0
-    )
-      laEligible.add(cid)
-  }
-  if (laEligible.size > 0) {
-    return {
-      creatures: cs,
-      phase: { tag: "BPAwaitingLegendaryAction", la: { eligibleMonsters: laEligible, endingTurnIndex: c.turnIndex } }
-    }
-  }
-  const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
-  return { creatures: cs, turnIndex: nt.idx, round: nt.round, phase: BP_ACTIVE_TURN, turnStarted: false }
-}
-
-export function battleLegendaryPass({ context: c }: Args): Partial<BattleContext> {
-  if (c.phase.tag !== "BPAwaitingLegendaryAction") return {}
-  const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
-  return { turnIndex: nt.idx, round: nt.round, phase: BP_ACTIVE_TURN, turnStarted: false }
-}
-
-export function battleLegendaryAttack({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_LEGENDARY_ATTACK") return {}
-  if (c.phase.tag !== "BPAwaitingLegendaryAction") return {}
-  const m = c.creatures.get(e.monsterId)!
-  let cs = setCreature(c.creatures, e.monsterId, { ...m, legendaryActionsRemaining: m.legendaryActionsRemaining - 1 })
-  if (isHit(e.laAtkRoll, e.laTgtAc)) cs = dealDamage(cs, e.laTarget, e.laDmg, e.laDt, e.laCrit)
-  const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
-  return { creatures: cs, turnIndex: nt.idx, round: nt.round, phase: BP_ACTIVE_TURN, turnStarted: false }
-}
-
-export function battleHeal({ context: c, event: e }: Args): Partial<BattleContext> {
-  if (e.type !== "BATTLE_HEAL") return {}
-  if (c.phase.tag !== "BPActiveTurn") return {}
-  const id = activeId(c)
-  const ac = c.creatures.get(id)!
-  if (ac.dead || ac.actionsRemaining <= 0) return {}
-  let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
-  cs = setCreature(cs, e.targetId, heal(cs.get(e.targetId)!, e.amount))
-  return { creatures: cs }
 }
