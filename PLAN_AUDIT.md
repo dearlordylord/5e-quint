@@ -368,17 +368,12 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 1. ~~**C1** (LR bug)~~ DONE
 2. ~~**C9** (Monk UD + Shield)~~ DONE
 3. ~~**C10** (Heavy Weapon 5.1->5.2.1)~~ DONE
-4. **C6 + F2** (Dodge/Dash/Disengage) -- low complexity, high value batch
-5. **C3** (Evasion) -- correctness, moderate complexity
-6. **F3** (Action Surge) -- completes existing phantom infrastructure
-7. **F4** (class features) -- incremental, start with Rage/Reckless
-8. **S1** (unify attack pipeline) -- enables F5, reduces duplication
-9. **F5** (LA reaction chain) -- moderate complexity, unlocked by S1
-10. **F10** (spell slot cap 1-3 -> 1-9) -- coverage gap, small fix
-11. **F9** (grapple/shove/TWF in battle) -- medium complexity
-12. **C8** (Ready) -- high complexity, significant new mechanics
-13. **F7** (Aura of Protection) -- requires spatial abstraction design
-14. **F1** (more reactions) -- incremental, add as needed
+4. ~~**C6 + F2 + F10** (Dodge/Dash/Disengage + spell slot cap)~~ DONE
+5. **C3** (Evasion) -- correctness, needs PRD 3 (passive modifier system)
+6. **PRD 1** (attack pipeline + class features) -- covers S1, F3, F4, F5, F9
+7. **PRD 3** (passive modifier system) -- covers C3, F7, and future passives
+8. **PRD 2** (Ready action) -- covers C8
+9. **F1** (more reactions) -- incremental, add as needed
 15. ~~**S2** (fix OA comment)~~ DONE
 16. **S3** (investigate excluded invariants) -- quality-of-proof
 17. **C2** (Arcane Recovery) -- minor
