@@ -1,62 +1,38 @@
-import { useEffect, useRef, useState } from "react"
-import type { Observer } from "xstate"
+import { useMemo } from "react"
 import { createActor } from "xstate"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleEvent } from "#/battle-machine-types.ts"
+import { SubMachineViz } from "#/components/trace-visualizer/MachineViz.tsx"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, functional/no-mixed-types
-type InspectorHandle = { readonly inspect: Observer<any>; readonly stop: () => void }
+function replayState(events: ReadonlyArray<BattleEvent>, upTo: number) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  for (let i = 0; i <= upTo && i < events.length; i++) {
+    actor.send(events[i])
+  }
+  const snap = actor.getSnapshot()
+  actor.stop()
+  return snap
+}
 
 export function BattleInspector({ cursor, events }: { events: ReadonlyArray<BattleEvent>; cursor: number }) {
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  const inspectorRef = useRef<InspectorHandle | null>(null)
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    const iframe = iframeRef.current
-    void import("@statelyai/inspect").then(({ createBrowserInspector }) => {
-      if (cancelled || !iframe) return
-      const handle = createBrowserInspector({ iframe })
-      inspectorRef.current = handle
-      // createBrowserInspector sets iframe src and waits for load internally,
-      // but doesn't expose that promise. Wait for iframe load so the inspector's
-      // targetWindow is set before we send any actor events.
-      iframe.addEventListener(
-        "load",
-        () => {
-          if (!cancelled) setReady(true)
-        },
-        { once: true }
-      )
-    })
-    return () => {
-      cancelled = true
-      inspectorRef.current?.stop()
-      inspectorRef.current = null
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!ready || !inspectorRef.current) return
-    const actor = createActor(battleMachine, { inspect: inspectorRef.current.inspect })
-    actor.start()
-    for (let i = 0; i <= cursor && i < events.length; i++) {
-      actor.send(events[i])
-    }
-    return () => {
-      actor.stop()
-    }
-  }, [ready, cursor, events])
+  const { activeEvent, activeStateKey } = useMemo(() => {
+    const snap = replayState(events, cursor)
+    const value = snap.value
+    // value is "idle" | "ended" | { running: "activeTurn" | ... }
+    const stateKey = typeof value === "string" ? value : (Object.values(value)[0] as string)
+    return { activeStateKey: stateKey, activeEvent: events[cursor]?.type ?? "" }
+  }, [events, cursor])
 
   return (
-    <iframe
-      ref={iframeRef}
-      data-xstate
-      title="XState Inspector"
-      className="w-full mt-4 border border-gray-700 rounded-lg bg-gray-900"
-      style={{ height: "600px" }}
-    />
+    <div className="w-full max-w-3xl">
+      <SubMachineViz
+        machine={battleMachine}
+        stateId="battle"
+        activeStateKey={activeStateKey}
+        activeEvent={activeEvent}
+      />
+    </div>
   )
 }
