@@ -381,7 +381,7 @@ export const QuintSorcererState = z.object({
 
 export const QuintWarlockState = z.object({
   mysticArcanumUsed: z.any().transform((raw: unknown) => {
-    if (raw instanceof Set) return raw as Set<number>
+    if (raw instanceof Set) return new Set([...raw].map(Number))
     if (Array.isArray(raw)) return new Set(raw.map(Number))
     return new Set<number>()
   }),
