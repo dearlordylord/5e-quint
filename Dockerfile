@@ -1,19 +1,22 @@
 FROM node:22-alpine AS build
 
-WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-COPY app/package.json app/package-lock.json ./
-RUN npm ci
+WORKDIR /workspace
 
-COPY app/ ./
-RUN npm run build
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY app/package.json app/
+RUN pnpm install --frozen-lockfile
+
+COPY app/ app/
+RUN pnpm --filter app run build
 
 FROM node:22-alpine
 
-WORKDIR /app
+RUN npm install -g serve
 
-COPY --from=build /app ./
+COPY --from=build /workspace/app/dist /app
 
 EXPOSE 5000
 
-CMD ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["serve", "-s", "/app", "-l", "5000"]
