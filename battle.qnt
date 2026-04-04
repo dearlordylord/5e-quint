@@ -1965,10 +1965,11 @@ module battle {
     c.creature.dead implies c.slots.concentrationSpellId == ""
   )
 
-  /// If awaiting reaction, eligible reactors have their reaction available.
+  /// If awaiting reaction, un-offered eligible reactors have their reaction available.
+  /// Reactors already in `offered` may have spent their reaction (e.g., missed retaliation).
   val reactorHasReaction = match bPhase {
     | BPAwaitingReaction(ctx) =>
-      ctx.eligible.forall(id => hasReaction(bCreatures, id))
+      ctx.eligible.exclude(ctx.offered).forall(id => hasReaction(bCreatures, id))
     | _ => true
   }
 
