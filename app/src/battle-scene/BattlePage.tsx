@@ -172,7 +172,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
           </>
         )}
         {activeTab === "machine" && <BattleInspector events={events} cursor={cursor} meta={meta} />}
-        {activeTab === "xstate" && <BattleIframeInspector events={events} cursor={cursor} />}
+        {activeTab === "xstate" && <BattleIframeInspector events={events} cursor={cursor} meta={meta} />}
       </div>
     </PageShell>
   )
