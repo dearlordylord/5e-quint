@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { Observer } from "xstate"
 import { createActor } from "xstate"
 
@@ -11,12 +11,14 @@ type InspectorHandle = { readonly inspect: Observer<any>; readonly stop: () => v
 export function BattleInspector({ cursor, events }: { events: ReadonlyArray<BattleEvent>; cursor: number }) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const inspectorRef = useRef<InspectorHandle | null>(null)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     void import("@statelyai/inspect").then(({ createBrowserInspector }) => {
       if (cancelled || !iframeRef.current) return
       inspectorRef.current = createBrowserInspector({ iframe: iframeRef.current })
+      setReady(true)
     })
     return () => {
       cancelled = true
@@ -26,14 +28,14 @@ export function BattleInspector({ cursor, events }: { events: ReadonlyArray<Batt
   }, [])
 
   useEffect(() => {
-    if (!inspectorRef.current) return
+    if (!ready || !inspectorRef.current) return
     const actor = createActor(battleMachine, { inspect: inspectorRef.current.inspect })
     actor.start()
     for (let i = 0; i <= cursor && i < events.length; i++) {
       actor.send(events[i])
     }
     actor.stop()
-  }, [cursor, events])
+  }, [ready, cursor, events])
 
   return (
     <iframe
