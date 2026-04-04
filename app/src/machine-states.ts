@@ -255,15 +255,6 @@ export const turnPhaseConfig = {
   }
 } as const
 
-export const conditionTrackConfig = {
-  initial: "tracking" as const,
-  states: {
-    tracking: {
-      on: { APPLY_CONDITION: { actions: ["applyCondition"] }, REMOVE_CONDITION: { actions: ["removeCondition"] } }
-    }
-  }
-} as const
-
 export const spellcastingConfig = {
   initial: "idle" as const,
   states: {
@@ -288,6 +279,8 @@ export const spellcastingConfig = {
 } as const
 
 export const rootEventHandlers = {
+  APPLY_CONDITION: { actions: ["applyCondition"] },
+  REMOVE_CONDITION: { actions: ["removeCondition"] },
   ADD_EFFECT: { actions: ["addEffect"] },
   REMOVE_EFFECT: { actions: ["removeEffect"] },
   ADD_EXHAUSTION: { actions: ["addExhaustion"] },

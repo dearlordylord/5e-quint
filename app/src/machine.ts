@@ -42,13 +42,7 @@ import * as rogue from "#/machine-rogue.ts"
 import * as sorcerer from "#/machine-sorcerer.ts"
 import { computeShortRest, expendSlot, initSpellSlotsFromLevels } from "#/machine-spells.ts"
 import { computeInitTurn } from "#/machine-startturn.ts"
-import {
-  conditionTrackConfig,
-  damageTrackConfig,
-  rootEventHandlers,
-  spellcastingConfig,
-  turnPhaseConfig
-} from "#/machine-states.ts"
+import { damageTrackConfig, rootEventHandlers, spellcastingConfig, turnPhaseConfig } from "#/machine-states.ts"
 import {
   asAddEffect,
   asAddExhaustion,
@@ -588,7 +582,6 @@ export const dndMachine = setup({
   on: rootEventHandlers,
   states: {
     damageTrack: damageTrackConfig,
-    conditionTrack: conditionTrackConfig,
     turnPhase: turnPhaseConfig,
     spellcasting: spellcastingConfig
   }

@@ -2,7 +2,7 @@ import { dndMachine } from "#/machine.ts"
 
 import { SubMachineViz } from "./MachineViz.tsx"
 
-const REGIONS = ["damageTrack", "turnPhase", "conditionTrack", "spellcasting"] as const
+const REGIONS = ["damageTrack", "turnPhase", "spellcasting"] as const
 
 export function MachineVizPage() {
   return (
