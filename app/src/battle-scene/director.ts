@@ -223,6 +223,11 @@ function deriveDiceRolls(event: BattleEvent): ReadonlyArray<DiceRollCue> {
     }
   }
 
+  if (event.type === "BATTLE_ATTACK") {
+    const results = decomposeDice(event.dmg, event.diceCount, event.dieSize)
+    if (results) cues.push({ sides: event.dieSize, results, color: DAMAGE_COLOR })
+  }
+
   // TODO: show spell reaction dice once event carries a spell identifier for lookup
 
   const d20 = deriveD20Roll(event)
