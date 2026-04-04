@@ -124,7 +124,7 @@ export const damageTrackConfig = {
             actions: ["longRest", "classLongRest", "clearUnconscious"]
           },
           {
-            guard: "isOutOfCombat" as const,
+            guard: "longRestHeals" as const,
             actions: ["longRest", "classLongRest"]
           }
         ],
@@ -304,7 +304,7 @@ export const rootEventHandlers = {
     actions: ["shortRest", "classShortRest"]
   },
   LONG_REST: {
-    guard: "isOutOfCombat" as const,
+    guard: "longRestHeals" as const,
     actions: ["longRest", "classLongRest"]
   },
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },
