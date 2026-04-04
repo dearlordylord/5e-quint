@@ -8,7 +8,6 @@ import { PageShell } from "#/components/PageShell.tsx"
 import { PlaybackControls } from "#/components/PlaybackControls.tsx"
 
 import { BattleField } from "./BattleField.tsx"
-import { BattleIframeInspector } from "./BattleIframeInspector.tsx"
 import { BattleInspector } from "./BattleInspector.tsx"
 import type { DiceRollCue } from "./director.ts"
 import { directorStep, EMPTY_CUES, EMPTY_DICE_ROLLS } from "./director.ts"
@@ -48,7 +47,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   const castBarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const spellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [diceCues, setDiceCues] = useState<ReadonlyArray<DiceRollCue>>([])
-  const [activeTab, setActiveTab] = useState<"field" | "machine" | "xstate">(() =>
+  const [activeTab, setActiveTab] = useState<"field" | "machine">(() =>
     new URLSearchParams(window.location.search).has("inspect") ? "machine" : "field"
   )
 
@@ -143,7 +142,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
         </div>
 
         <div className="flex gap-2 mb-2">
-          {(["field", "machine", "xstate"] as const).map((tab) => (
+          {(["field", "machine"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -153,7 +152,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
                   : "border-gray-600 text-gray-400 hover:text-gray-200"
               }`}
             >
-              {tab === "field" ? "Field" : tab === "machine" ? "Machine" : "XState Inspector"}
+              {tab === "field" ? "Field" : "Machine"}
             </button>
           ))}
         </div>
@@ -172,7 +171,6 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
           </>
         )}
         {activeTab === "machine" && <BattleInspector events={events} cursor={cursor} meta={meta} />}
-        {activeTab === "xstate" && <BattleIframeInspector events={events} cursor={cursor} meta={meta} />}
       </div>
     </PageShell>
   )
