@@ -1,3 +1,4 @@
+import { isIncapacitated } from "#/battle-machine-creature.ts"
 import {
   activeId,
   applyFailEffects,
@@ -36,10 +37,11 @@ export function battleCastSaveSpell({
 }: BattleActionArgs<"BATTLE_CAST_SAVE_SPELL">): Partial<BattleContext> {
   const id = activeId(c)
   const ac = c.creatures.get(id)!
+  if (ac.dead || isIncapacitated(ac)) return {}
   if (e.bonusAction) {
-    if (ac.dead || ac.bonusActionUsed || ac.slotExpendedThisTurn) return {}
+    if (ac.bonusActionUsed || ac.slotExpendedThisTurn) return {}
   } else {
-    if (ac.dead || ac.actionsRemaining <= 0) return {}
+    if (ac.actionsRemaining <= 0) return {}
     if (ac.slotExpendedThisTurn && !e.ritual) return {}
   }
   let cs = e.bonusAction
@@ -189,7 +191,7 @@ export function battleCastConcentrationSpell({
 }: BattleActionArgs<"BATTLE_CAST_CONCENTRATION_SPELL">): Partial<BattleContext> {
   const id = activeId(c)
   const ac = c.creatures.get(id)!
-  if (ac.dead || ac.actionsRemaining <= 0) return {}
+  if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
   if (ac.slotExpendedThisTurn && !e.ritual) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
   const concCtx = {
@@ -230,7 +232,7 @@ export function battleConcentrationCheck({
 export function battleCastAoE({ context: c, event: e }: BattleActionArgs<"BATTLE_CAST_AOE">): Partial<BattleContext> {
   const id = activeId(c)
   const ac = c.creatures.get(id)!
-  if (ac.dead || ac.actionsRemaining <= 0) return {}
+  if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
   if (ac.slotExpendedThisTurn && !e.ritual) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
   const liveTargets = new Set<CreatureId>()

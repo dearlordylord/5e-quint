@@ -393,7 +393,7 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 2. ~~**C9** (Monk UD + Shield)~~ DONE
 3. ~~**C10** (Heavy Weapon 5.1->5.2.1)~~ DONE
 4. ~~**C6 + F2 + F10** (Dodge/Dash/Disengage + spell slot cap)~~ DONE
-5. **C11** (missing isIncapacitated + bTurnStarted guards on 7 battle actions) -- small, uniform fix
+5. ~~**C11** (missing isIncapacitated + bTurnStarted guards on 7 battle actions)~~ DONE
 6. **C3** (Evasion) -- correctness, needs PRD 3 (passive modifier system)
 7. **PRD 1** (attack pipeline + class features) -- covers S1, F3, F4, F5, F9
 8. **PRD 3** (passive modifier system) -- covers C3, F7, and future passives

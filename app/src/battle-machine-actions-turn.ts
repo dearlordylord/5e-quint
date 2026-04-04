@@ -1,4 +1,4 @@
-import { freshCaster, freshCreature } from "#/battle-machine-creature.ts"
+import { freshCaster, freshCreature, isIncapacitated } from "#/battle-machine-creature.ts"
 import {
   activeId,
   dealDamage,
@@ -131,7 +131,7 @@ export function battleLegendaryAttack({
 export function battleHeal({ context: c, event: e }: BattleActionArgs<"BATTLE_HEAL">): Partial<BattleContext> {
   const id = activeId(c)
   const ac = c.creatures.get(id)!
-  if (ac.dead || ac.actionsRemaining <= 0) return {}
+  if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
   cs = setCreature(cs, e.targetId, heal(cs.get(e.targetId)!, e.amount))
   return { creatures: cs }
@@ -142,7 +142,7 @@ type SimpleActionType = "dash" | "disengage" | "dodge"
 function simpleAction(c: BattleContext, actionType: SimpleActionType): Partial<BattleContext> {
   const id = activeId(c)
   const ac = c.creatures.get(id)!
-  if (ac.dead || ac.actionsRemaining <= 0) return {}
+  if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
   return { creatures: setCreature(c.creatures, id, spendAction(ac, actionType)) }
 }
 

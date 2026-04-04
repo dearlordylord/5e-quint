@@ -1,3 +1,4 @@
+import { isIncapacitated } from "#/battle-machine-creature.ts"
 import {
   activeId,
   advanceFromHitPhase,
@@ -15,7 +16,7 @@ import { PHASE_ACTIVE, phaseAwaitReaction, phaseResolvingMovement } from "#/batt
 export function battleMove({ context: c, event: e }: BattleActionArgs<"BATTLE_MOVE">): Partial<BattleContext> {
   const id = activeId(c)
   const ac = c.creatures.get(id)!
-  if (ac.dead || ac.movementRemaining <= 0) return {}
+  if (ac.dead || isIncapacitated(ac) || ac.movementRemaining <= 0) return {}
   const cs = setCreature(c.creatures, id, spendMovement(ac, 5, 1))
   if (ac.disengaged) return { creatures: cs }
   const oaEligible = new Set(

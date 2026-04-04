@@ -1,5 +1,6 @@
 import { Match } from "effect"
 
+import { isIncapacitated } from "#/battle-machine-creature.ts"
 import {
   activeId,
   advanceFromHitPhase,
@@ -27,7 +28,7 @@ export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   const tc = c.creatures.get(e.targetId)!
-  if (ac.dead || tc.dead) return {}
+  if (ac.dead || isIncapacitated(ac) || tc.dead) return {}
   if (ac.actionsRemaining <= 0 && ac.extraAttacksRemaining <= 0) return {}
   const updatedAc =
     ac.attackActionUsed && ac.extraAttacksRemaining > 0 ? spendExtraAttack(ac) : spendAction(ac, "attack")

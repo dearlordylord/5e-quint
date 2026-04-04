@@ -700,8 +700,10 @@ module battle {
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
+      bTurnStarted,
       ac.turn.actionsRemaining > 0 or ac.turn.extraAttacksRemaining > 0,
       not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
       val newTurn = if (ac.turn.attackActionUsed and ac.turn.extraAttacksRemaining > 0)
         ac.turn.with("extraAttacksRemaining", ac.turn.extraAttacksRemaining - 1)
@@ -978,8 +980,10 @@ module battle {
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
+      bTurnStarted,
       ac.turn.actionsRemaining > 0,
       not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
@@ -1452,8 +1456,10 @@ module battle {
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
+      bTurnStarted,
       ac.turn.actionsRemaining > 0,
       not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
@@ -1545,8 +1551,10 @@ module battle {
     nondet ritual = Bool.oneOf()
     all {
       bPhase == BPActiveTurn,
+      bTurnStarted,
       ac.turn.actionsRemaining > 0,
       not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
       liveTargets.size() >= 2,
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
@@ -1659,7 +1667,9 @@ module battle {
     nondet threatened = allIds.exclude(Set(activeId)).powerset().oneOf()
     all {
       bPhase == BPActiveTurn,
+      bTurnStarted,
       not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
       ac.turn.movementRemaining > 0,
       threatened.size() > 0,
       // Spend some movement (simplified: 5ft per move action)
@@ -1907,8 +1917,10 @@ module battle {
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
+      bTurnStarted,
       ac.turn.actionsRemaining > 0,
       not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
       val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
@@ -1943,6 +1955,7 @@ module battle {
       bPhase == BPActiveTurn,
       bTurnStarted,
       not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
       not(ac.turn.bonusActionUsed),
       not(ac.turn.slotExpendedThisTurn),        // SRD 5.2.1 one slot per turn
