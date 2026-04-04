@@ -32,7 +32,7 @@ export const damageTrackConfig = {
     alive: {
       tags: ["alive"],
       always: [
-        { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead", actions: ["monsterDeathCleanup"] },
+        { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
         { guard: "contextDead" as const, target: "#dnd.damageTrack.dead" },
         { guard: "hpZeroUnconscious" as const, target: "#dnd.damageTrack.dying" }
       ],
@@ -97,7 +97,7 @@ export const damageTrackConfig = {
       always: [
         // Monster catch-all: monsters die at 0 HP, should never stay in dying state
         { guard: "monsterAtZeroHp" as const, target: "#dnd.damageTrack.dead", actions: ["monsterDeathCleanup"] },
-        { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead", actions: ["monsterDeathCleanup"] },
+        { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead" },
         { guard: "contextDead" as const, target: "#dnd.damageTrack.dead" },
         { guard: "regainedConsciousness" as const, target: "#dnd.damageTrack.alive" }
       ],
