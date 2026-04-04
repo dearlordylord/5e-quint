@@ -30,6 +30,7 @@ export const damageTrackConfig = {
   initial: "alive" as const,
   states: {
     alive: {
+      tags: ["alive"],
       always: [
         { guard: "exhaustionDeath" as const, target: "#dnd.damageTrack.dead", actions: ["monsterDeathCleanup"] },
         { guard: "contextDead" as const, target: "#dnd.damageTrack.dead" },
@@ -91,6 +92,7 @@ export const damageTrackConfig = {
       }
     },
     dying: {
+      tags: ["incapacitated", "dying"],
       initial: "unstable" as const,
       always: [
         // Monster catch-all: monsters die at 0 HP, should never stay in dying state
@@ -137,6 +139,7 @@ export const damageTrackConfig = {
       },
       states: {
         unstable: {
+          tags: ["unstable"],
           always: { guard: "contextStable" as const, target: "stable" },
           on: {
             TAKE_DAMAGE: [...DYING_TAKE_DAMAGE_PREFIX, { actions: ["applyDamageAtZeroHp"] }],
@@ -154,6 +157,7 @@ export const damageTrackConfig = {
           }
         },
         stable: {
+          tags: ["stable"],
           always: { guard: "contextUnstable" as const, target: "unstable" },
           on: {
             TAKE_DAMAGE: [...DYING_TAKE_DAMAGE_PREFIX, { target: "unstable", actions: ["applyDamageAtZeroHp"] }],
@@ -162,7 +166,7 @@ export const damageTrackConfig = {
         }
       }
     },
-    dead: { entry: "markDead" as const }
+    dead: { tags: ["dead"], entry: "markDead" as const }
   }
 } as const
 
@@ -170,9 +174,11 @@ export const turnPhaseConfig = {
   initial: "outOfCombat" as const,
   states: {
     outOfCombat: {
+      tags: ["outOfCombat"],
       on: { ENTER_COMBAT: { target: "waitingForTurn" as const, actions: ["enterCombat"] } }
     },
     acting: {
+      tags: ["canAct"],
       on: {
         END_TURN: { target: "waitingForTurn" as const, actions: ["endTurn"] },
         EXIT_COMBAT: { target: "outOfCombat" as const, actions: ["exitCombat"] },
@@ -243,6 +249,7 @@ export const turnPhaseConfig = {
       }
     },
     waitingForTurn: {
+      tags: ["inCombat"],
       on: {
         START_TURN: {
           target: "acting" as const,
@@ -268,6 +275,7 @@ export const spellcastingConfig = {
       }
     },
     concentrating: {
+      tags: ["concentrating"],
       always: { guard: "shouldBreakConcentration" as const, target: "idle", actions: ["breakConcentration"] },
       on: {
         BREAK_CONCENTRATION: { target: "idle", actions: ["breakConcentration"] },

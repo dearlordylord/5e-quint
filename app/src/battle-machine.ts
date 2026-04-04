@@ -121,6 +121,7 @@ export const battleMachine = setup({
       initial: "activeTurn",
       states: {
         activeTurn: {
+          tags: ["playerTurn"],
           always: [
             { guard: "hasAwaitCtx", target: "awaitingReaction" },
             { guard: "hasAoeCtx", target: "resolvingAoE" },
@@ -140,6 +141,7 @@ export const battleMachine = setup({
           }
         },
         awaitingReaction: {
+          tags: ["reactionWindow"],
           always: [{ guard: "noAwaitCtx", target: "activeTurn" }],
           on: {
             BATTLE_RESOLVE_HIT_REACTION: { actions: "battleResolveHitReaction" },
@@ -152,12 +154,14 @@ export const battleMachine = setup({
           }
         },
         resolvingAoE: {
+          tags: ["resolving"],
           always: [{ guard: "noAoeCtx", target: "activeTurn" }],
           on: {
             BATTLE_RESOLVE_AOE_TARGET: { actions: "battleResolveAoETarget" }
           }
         },
         resolvingMovement: {
+          tags: ["resolving"],
           always: [{ guard: "noMovementCtx", target: "activeTurn" }],
           on: {
             BATTLE_MOVEMENT_OA_PASS: { actions: "battleMovementOAPass" },
@@ -165,6 +169,7 @@ export const battleMachine = setup({
           }
         },
         awaitingLegendaryAction: {
+          tags: ["legendaryWindow"],
           always: [{ guard: "noLaCtx", target: "activeTurn" }],
           on: {
             BATTLE_LEGENDARY_PASS: { actions: "battleLegendaryPass" },
