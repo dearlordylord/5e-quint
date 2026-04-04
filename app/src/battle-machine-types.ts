@@ -121,6 +121,7 @@ export type AfterDamageReturn =
   | { readonly tag: "ADRActiveTurn" }
   | { readonly tag: "ADRResolvingAoE"; readonly aoe: AoESpellCtx }
   | { readonly tag: "ADRResolvingMovement"; readonly mv: MovementCtx }
+  | { readonly tag: "ADRAwaitingLegendaryAction"; readonly la: LAWindowCtx }
 
 export const ADR_ACTIVE_TURN: AfterDamageReturn = { tag: "ADRActiveTurn" }
 

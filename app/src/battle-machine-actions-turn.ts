@@ -1,9 +1,8 @@
+import { resolveAttack } from "#/battle-machine-actions-attack.ts"
 import { freshCaster, freshCreature, isIncapacitated } from "#/battle-machine-creature.ts"
 import {
   activeId,
-  dealDamage,
   heal,
-  isHit,
   nextTurn,
   processEndTurn,
   processStartTurn,
@@ -125,10 +124,20 @@ export function battleLegendaryAttack({
   event: e
 }: BattleActionArgs<"BATTLE_LEGENDARY_ATTACK">): Partial<BattleContext> {
   const m = c.creatures.get(e.monsterId)!
-  let cs = setCreature(c.creatures, e.monsterId, { ...m, legendaryActionsRemaining: m.legendaryActionsRemaining - 1 })
-  if (isHit(e.laAtkRoll, e.laTgtAc)) cs = dealDamage(cs, e.laTarget, e.laDmg, e.laDt, e.laCrit)
-  const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
-  return { creatures: cs, turnIndex: nt.idx, round: nt.round, ...PHASE_ACTIVE, turnStarted: false }
+  const cs = setCreature(c.creatures, e.monsterId, { ...m, legendaryActionsRemaining: m.legendaryActionsRemaining - 1 })
+  const laReturn = { tag: "ADRAwaitingLegendaryAction" as const, la: c.laCtx! }
+  return resolveAttack(
+    cs,
+    e.monsterId,
+    e.laTarget,
+    e.laAtkRoll,
+    e.laTgtAc,
+    e.laDmg,
+    e.laDt,
+    e.laCrit,
+    m.critRange,
+    laReturn
+  )
 }
 
 export function battleHeal({ context: c, event: e }: BattleActionArgs<"BATTLE_HEAL">): Partial<BattleContext> {

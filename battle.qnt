@@ -179,6 +179,7 @@ module battle {
     | ADRActiveTurn
     | ADRResolvingAoE(AoESpellCtx)
     | ADRResolvingMovement(MovementCtx)
+    | ADRAwaitingLegendaryAction(LAWindowCtx)
 
   // Context for after-damage reactions (R10.4, R20 Phase 4).
   // Tracks who dealt damage and to whom, so reactions like Hellish Rebuke know the attacker.
@@ -531,6 +532,7 @@ module battle {
       | ADRActiveTurn => BPActiveTurn
       | ADRResolvingAoE(aoe) => BPResolvingAoE(aoe)
       | ADRResolvingMovement(mv) => BPResolvingMovement(mv)
+      | ADRAwaitingLegendaryAction(la) => BPAwaitingLegendaryAction(la)
     }
 
   // Frame condition for battle vars not changed by this action.
@@ -1856,10 +1858,10 @@ module battle {
   }
 
   /// LA window: monster uses a legendary attack action.
-  /// Separate action from bLegendaryPass to avoid exploring attack nondets on pass.
+  /// Enters the full hit-reaction → damage-reaction → after-damage chain via resolveAttack.
+  /// After chain resolves, returns to BPAwaitingLegendaryAction for remaining LA.
   action bLegendaryAttack = {
     val allIds = bCreatures.keys()
-    val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
     match bPhase {
       | BPAwaitingLegendaryAction(laCtx) =>
         nondet monsterId = laCtx.eligibleMonsters.oneOf()
@@ -1873,14 +1875,9 @@ module battle {
         val newMR = m.monsterResources.with("legendaryActionsRemaining",
           m.monsterResources.legendaryActionsRemaining - 1)
         val cs1 = bCreatures.set(monsterId, m.with("monsterResources", newMR))
-        val hit = laAtkRoll >= laTgtAc or laAtkRoll == 20
-        val finalCs = if (hit) dealDamage(cs1, laTarget, laDmg, laDt, laCrit) else cs1
-        all {
-          bCreatures' = finalCs, bInitiative' = bInitiative,
-          bTurnIndex' = nt.idx, bRound' = nt.round,
-          bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
-          bTurnStarted' = false,
-        }
+        val laReturn = ADRAwaitingLegendaryAction(laCtx)
+        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn)
+        all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
   }

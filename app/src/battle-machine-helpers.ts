@@ -31,7 +31,13 @@ import type {
   SaveSpellCtx,
   TriggerType
 } from "#/battle-machine-types.ts"
-import { PHASE_ACTIVE, phaseAwaitReaction, phaseResolvingAoE, phaseResolvingMovement } from "#/battle-machine-types.ts"
+import {
+  PHASE_ACTIVE,
+  phaseAwaitingLegendary,
+  phaseAwaitReaction,
+  phaseResolvingAoE,
+  phaseResolvingMovement
+} from "#/battle-machine-types.ts"
 import type { DamageType, SpellId } from "#/types.ts"
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
@@ -180,6 +186,7 @@ export function returnToState(r: AfterDamageReturn): PhaseFields {
     byTag("ADRActiveTurn", () => PHASE_ACTIVE),
     byTag("ADRResolvingAoE", (v) => phaseResolvingAoE(v.aoe)),
     byTag("ADRResolvingMovement", (v) => phaseResolvingMovement(v.mv)),
+    byTag("ADRAwaitingLegendaryAction", (v) => phaseAwaitingLegendary(v.la)),
     Match.exhaustive
   )
 }
