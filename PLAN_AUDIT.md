@@ -365,9 +365,9 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 
 ## Priority Order
 
-1. **C1** (LR bug) -- correctness, critical severity, small fix
-2. **C9** (Monk UD + Shield) -- correctness, critical, small fix
-3. **C10** (Heavy Weapon 5.1→5.2.1) -- correctness, major, small fix
+1. ~~**C1** (LR bug)~~ DONE
+2. ~~**C9** (Monk UD + Shield)~~ DONE
+3. ~~**C10** (Heavy Weapon 5.1->5.2.1)~~ DONE
 4. **C6 + F2** (Dodge/Dash/Disengage) -- low complexity, high value batch
 5. **C3** (Evasion) -- correctness, moderate complexity
 6. **F3** (Action Surge) -- completes existing phantom infrastructure
@@ -379,7 +379,7 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 12. **C8** (Ready) -- high complexity, significant new mechanics
 13. **F7** (Aura of Protection) -- requires spatial abstraction design
 14. **F1** (more reactions) -- incremental, add as needed
-15. **S2** (fix OA comment) -- trivial cleanup
+15. ~~**S2** (fix OA comment)~~ DONE
 16. **S3** (investigate excluded invariants) -- quality-of-proof
 17. **C2** (Arcane Recovery) -- minor
 18. **C5** (Knock Out) -- minor
