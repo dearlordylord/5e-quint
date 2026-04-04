@@ -10,10 +10,9 @@ import {
   spendReaction
 } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext } from "#/battle-machine-types.ts"
-import { BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
+import { PHASE_ACTIVE, phaseAwaitReaction, phaseResolvingMovement } from "#/battle-machine-types.ts"
 
 export function battleMove({ context: c, event: e }: BattleActionArgs<"BATTLE_MOVE">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || ac.movementRemaining <= 0) return {}
@@ -28,7 +27,7 @@ export function battleMove({ context: c, event: e }: BattleActionArgs<"BATTLE_MO
   if (oaEligible.size === 0) return { creatures: cs }
   return {
     creatures: cs,
-    phase: { tag: "BPResolvingMovement", mv: { mover: id, threatenedBy: oaEligible, processed: new Set() } }
+    ...phaseResolvingMovement({ mover: id, threatenedBy: oaEligible, processed: new Set() })
   }
 }
 
@@ -36,26 +35,26 @@ export function battleMovementOAPass({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_MOVEMENT_OA_PASS">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPResolvingMovement") return {}
-  const mv = c.phase.mv
-  if (setDifference(mv.threatenedBy, mv.processed).size === 0 || e.reactorId === null) return { phase: BP_ACTIVE_TURN }
+  const mv = c.movementCtx
+  if (!mv) return {}
+  if (setDifference(mv.threatenedBy, mv.processed).size === 0 || e.reactorId === null) return { ...PHASE_ACTIVE }
   const newProcessed = new Set(mv.processed)
   newProcessed.add(e.reactorId)
-  return { phase: { tag: "BPResolvingMovement", mv: { ...mv, processed: newProcessed } } }
+  return { ...phaseResolvingMovement({ ...mv, processed: newProcessed }) }
 }
 
 export function battleMovementOAAttack({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_MOVEMENT_OA_ATTACK">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPResolvingMovement") return {}
-  const mv = c.phase.mv
+  const mv = c.movementCtx
+  if (!mv) return {}
   if (e.reactorId === null) return {}
   const newProc = new Set(mv.processed)
   newProc.add(e.reactorId)
   const updatedMv = { ...mv, processed: newProc }
   const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
-  if (!isHit(e.oaAtkRoll, e.oaTgtAc)) return { creatures: cs1, phase: { tag: "BPResolvingMovement", mv: updatedMv } }
+  if (!isHit(e.oaAtkRoll, e.oaTgtAc)) return { creatures: cs1, ...phaseResolvingMovement(updatedMv) }
   const atkCtx = {
     attacker: e.reactorId,
     target: mv.mover,
@@ -70,9 +69,15 @@ export function battleMovementOAAttack({
   if (hitElig.size > 0) {
     return {
       creatures: cs1,
-      phase: { tag: "BPAwaitingReaction", ctx: mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", hitElig) }
+      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", hitElig))
     }
   }
   const result = advanceFromHitPhase(cs1, atkCtx)
-  return { creatures: result.creatures, phase: result.phase }
+  return {
+    creatures: result.creatures,
+    awaitCtx: result.awaitCtx,
+    aoeCtx: result.aoeCtx,
+    movementCtx: result.movementCtx,
+    laCtx: result.laCtx
+  }
 }

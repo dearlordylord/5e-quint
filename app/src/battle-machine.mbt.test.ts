@@ -280,6 +280,7 @@ interface BattleCompareState {
   turnIndex: number
   round: number
   turnStarted: boolean
+  phase: string
 }
 
 // ============================================================
@@ -638,7 +639,11 @@ function createBattleMachineDriver() {
         const c = ctx()
         const creatures = new Map<string, NormalizedBattleCreature>()
         for (const [id, cr] of c.creatures) creatures.set(id, xstateCreatureToNormalized(cr))
-        return { creatures, turnIndex: c.turnIndex, round: c.round, turnStarted: c.turnStarted }
+        // Extract XState phase from hierarchical state value
+        const snap = actor!.getSnapshot()
+        const stateVal = snap.value as Record<string, string> | string
+        const phase = typeof stateVal === "object" && "running" in stateVal ? stateVal.running : "idle"
+        return { creatures, turnIndex: c.turnIndex, round: c.round, turnStarted: c.turnStarted, phase }
       },
       config: () => ({ statePath: [] as Array<string> })
     }
@@ -649,6 +654,25 @@ function createBattleMachineDriver() {
 // State comparison
 // ============================================================
 
+/** Map Quint bPhase variant tag to XState child state name. */
+function normalizeQuintPhase(raw: unknown): string {
+  const tag = variantToString(raw)
+  switch (tag) {
+    case "BPActiveTurn":
+      return "activeTurn"
+    case "BPAwaitingReaction":
+      return "awaitingReaction"
+    case "BPResolvingAoE":
+      return "resolvingAoE"
+    case "BPResolvingMovement":
+      return "resolvingMovement"
+    case "BPAwaitingLegendaryAction":
+      return "awaitingLegendaryAction"
+    default:
+      return `unknown(${tag})`
+  }
+}
+
 const battleMachineStateCheck = stateCheck(
   (raw: unknown) => {
     const parsed = QuintBattleState.parse(raw)
@@ -658,13 +682,16 @@ const battleMachineStateCheck = stateCheck(
       creatures,
       turnIndex: Number(parsed.bTurnIndex),
       round: Number(parsed.bRound),
-      turnStarted: parsed.bTurnStarted
+      turnStarted: parsed.bTurnStarted,
+      phase: normalizeQuintPhase(parsed.bPhase)
     } satisfies BattleCompareState
   },
   (spec: BattleCompareState, impl: BattleCompareState) => {
     // Compare battle-level fields
     if (spec.turnIndex !== impl.turnIndex || spec.round !== impl.round || spec.turnStarted !== impl.turnStarted)
       return false
+    // Compare phase
+    if (spec.phase !== impl.phase) return false
     // Compare per-creature fields
     for (const [id, specState] of spec.creatures) {
       const implState = impl.creatures.get(id)

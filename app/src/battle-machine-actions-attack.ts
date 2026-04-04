@@ -12,7 +12,7 @@ import {
   piAfterDamage,
   piAttackDamage,
   piAttackHit,
-  returnToPhase,
+  returnToState,
   setCreature,
   setDifference,
   spendAction,
@@ -20,11 +20,10 @@ import {
   spendReaction
 } from "#/battle-machine-helpers.ts"
 import type { AttackHitCtx, BattleActionArgs, BattleContext } from "#/battle-machine-types.ts"
-import { ADR_ACTIVE_TURN } from "#/battle-machine-types.ts"
+import { ADR_ACTIVE_TURN, phaseAwaitReaction } from "#/battle-machine-types.ts"
 import { armorClass } from "#/types.ts"
 
 export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_ATTACK">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   const tc = c.creatures.get(e.targetId)!
@@ -48,11 +47,17 @@ export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_
   if (elig.size > 0) {
     return {
       creatures: cs,
-      phase: { tag: "BPAwaitingReaction", ctx: mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", elig) }
+      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", elig))
     }
   }
   const result = dealDamageWithAfterReactions(cs, e.targetId, id, e.dmg, e.dt, e.crit, ADR_ACTIVE_TURN)
-  return { creatures: result.creatures, phase: result.phase }
+  return {
+    creatures: result.creatures,
+    awaitCtx: result.awaitCtx,
+    aoeCtx: result.aoeCtx,
+    movementCtx: result.movementCtx,
+    laCtx: result.laCtx
+  }
 }
 
 export function battleResolveHitReaction({
@@ -66,7 +71,13 @@ export function battleResolveHitReaction({
   const atk = pi.ctx
   if (setDifference(aw.eligible, aw.offered).size === 0 || e.reactorId === null) {
     const result = advanceFromHitPhase(c.creatures, atk)
-    return { creatures: result.creatures, phase: result.phase }
+    return {
+      creatures: result.creatures,
+      awaitCtx: result.awaitCtx,
+      aoeCtx: result.aoeCtx,
+      movementCtx: result.movementCtx,
+      laCtx: result.laCtx
+    }
   }
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
@@ -83,18 +94,15 @@ export function battleResolveHitReaction({
     newElig.delete(e.reactorId)
     return {
       creatures: cs,
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: {
-          interrupt: { tag: "PIAttackHit", ctx: retroAtk },
-          trigger: "TAttackHits",
-          eligible: newElig,
-          offered: newOffered
-        }
-      }
+      ...phaseAwaitReaction({
+        interrupt: { tag: "PIAttackHit", ctx: retroAtk },
+        trigger: "TAttackHits",
+        eligible: newElig,
+        offered: newOffered
+      })
     }
   }
-  return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw, offered: newOffered } } }
+  return { ...phaseAwaitReaction({ ...aw, offered: newOffered }) }
 }
 
 export function battleResolveDmgReaction({
@@ -116,7 +124,13 @@ export function battleResolveDmgReaction({
       atk.isCritical,
       atk.atkReturnTo
     )
-    return { creatures: result.creatures, phase: result.phase }
+    return {
+      creatures: result.creatures,
+      awaitCtx: result.awaitCtx,
+      aoeCtx: result.aoeCtx,
+      movementCtx: result.movementCtx,
+      laCtx: result.laCtx
+    }
   }
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
@@ -133,18 +147,15 @@ export function battleResolveDmgReaction({
     newElig.delete(e.reactorId)
     return {
       creatures: cs,
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: {
-          interrupt: { tag: "PIAttackDamage", ctx: { ...atk, damage: newDmg } },
-          trigger: "TAttackDamages",
-          eligible: newElig,
-          offered: newOffered
-        }
-      }
+      ...phaseAwaitReaction({
+        interrupt: { tag: "PIAttackDamage", ctx: { ...atk, damage: newDmg } },
+        trigger: "TAttackDamages",
+        eligible: newElig,
+        offered: newOffered
+      })
     }
   }
-  return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw, offered: newOffered } } }
+  return { ...phaseAwaitReaction({ ...aw, offered: newOffered }) }
 }
 
 export function battleAfterDamagePass({
@@ -157,10 +168,10 @@ export function battleAfterDamagePass({
   if (!pi) return {}
   const ad = pi.ctx
   if (setDifference(aw.eligible, aw.offered).size === 0 || e.reactorId === null)
-    return { phase: returnToPhase(ad.returnTo) }
+    return { ...returnToState(ad.returnTo) }
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
-  return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw, offered: newOffered } } }
+  return { ...phaseAwaitReaction({ ...aw, offered: newOffered }) }
 }
 
 export function battleAfterDamageHellishRebuke({
@@ -176,7 +187,13 @@ export function battleAfterDamageHellishRebuke({
   const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
   const actualDmg = e.rebukeSaved ? Math.trunc(e.rebukeDmg / 2) : e.rebukeDmg
   const result = dealDamageWithAfterReactions(cs1, ad.damageSource, e.reactorId, actualDmg, "fire", false, ad.returnTo)
-  return { creatures: result.creatures, phase: result.phase }
+  return {
+    creatures: result.creatures,
+    awaitCtx: result.awaitCtx,
+    aoeCtx: result.aoeCtx,
+    movementCtx: result.movementCtx,
+    laCtx: result.laCtx
+  }
 }
 
 export function battleAfterDamageRetaliation({
@@ -192,8 +209,7 @@ export function battleAfterDamageRetaliation({
   const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
-  if (!isHit(e.retAtkRoll, e.retTgtAc))
-    return { creatures: cs1, phase: { tag: "BPAwaitingReaction", ctx: { ...aw, offered: newOffered } } }
+  if (!isHit(e.retAtkRoll, e.retTgtAc)) return { creatures: cs1, ...phaseAwaitReaction({ ...aw, offered: newOffered }) }
   const result = dealDamageWithAfterReactions(
     cs1,
     ad.damageSource,
@@ -203,5 +219,11 @@ export function battleAfterDamageRetaliation({
     e.retCrit,
     ad.returnTo
   )
-  return { creatures: result.creatures, phase: result.phase }
+  return {
+    creatures: result.creatures,
+    awaitCtx: result.awaitCtx,
+    aoeCtx: result.aoeCtx,
+    movementCtx: result.movementCtx,
+    laCtx: result.laCtx
+  }
 }
