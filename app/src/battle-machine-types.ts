@@ -420,6 +420,9 @@ export type BattleEvent =
       readonly laTgtAc: ArmorClass
     }
   | { readonly type: "BATTLE_HEAL"; readonly targetId: CreatureId; readonly amount: number }
+  | { readonly type: "BATTLE_DASH" }
+  | { readonly type: "BATTLE_DISENGAGE" }
+  | { readonly type: "BATTLE_DODGE" }
 
 /** Narrows BattleEvent to a specific type member for action functions. */
 export type BattleActionArgs<T extends BattleEvent["type"]> = {

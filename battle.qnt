@@ -972,7 +972,7 @@ module battle {
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
-    nondet slotLvl = 1.to(3).oneOf()
+    nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
     val tc = bCreatures.get(targetId)
@@ -1443,7 +1443,7 @@ module battle {
     val allIds = bCreatures.keys()
     val ac = bCreatures.get(activeId)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
-    nondet slotLvl = 1.to(3).oneOf()
+    nondet slotLvl = 1.to(9).oneOf()
     nondet duration = 1.to(10).oneOf()
     nondet spellId = Set("hold_person", "bless", "haste", "spirit_guardians").oneOf()
     nondet cond = Set(CParalyzed, CCharmed, CRestrained).oneOf()
@@ -1540,7 +1540,7 @@ module battle {
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
-    nondet slotLvl = 1.to(3).oneOf()
+    nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
     all {
@@ -1844,6 +1844,60 @@ module battle {
     }
   }
 
+  action bDash = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      val newTurn = pUseAction(ac.turn, ac.creature, ADash)
+      all {
+        bCreatures' = setTurn(bCreatures, activeId, newTurn),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  action bDisengage = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      val newTurn = pUseAction(ac.turn, ac.creature, ADisengage)
+      all {
+        bCreatures' = setTurn(bCreatures, activeId, newTurn),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  action bDodge = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      val newTurn = pUseAction(ac.turn, ac.creature, ADodge)
+      all {
+        bCreatures' = setTurn(bCreatures, activeId, newTurn),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
   action bHeal = {
     val activeId = bInitiative[bTurnIndex]
     val allIds = bCreatures.keys()
@@ -1882,7 +1936,7 @@ module battle {
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
-    nondet slotLvl = 1.to(3).oneOf()
+    nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     val tc = bCreatures.get(targetId)
     all {
@@ -1940,7 +1994,7 @@ module battle {
     | BPActiveTurn => any {
         bStartTurn, bAttack, bCastSaveSpell, bCastAoE,
         bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
-        bMove, bHeal, bEndTurn,
+        bMove, bHeal, bDash, bDisengage, bDodge, bEndTurn,
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {
         | PIAttackHit(_) => any { bResolveHitReaction, }

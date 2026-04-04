@@ -31,6 +31,9 @@ import {
   battleResolveSaveFailedReaction
 } from "#/battle-machine-actions-spell.ts"
 import {
+  battleDash,
+  battleDisengage,
+  battleDodge,
   battleEndTurn,
   battleHeal,
   battleInit,
@@ -105,7 +108,10 @@ export const battleMachine = setup({
     battleEndTurn: narrow(battleEndTurn),
     battleLegendaryPass: narrow(battleLegendaryPass),
     battleLegendaryAttack: narrow(battleLegendaryAttack),
-    battleHeal: narrow(battleHeal)
+    battleHeal: narrow(battleHeal),
+    battleDash: narrow(battleDash),
+    battleDisengage: narrow(battleDisengage),
+    battleDodge: narrow(battleDodge)
   }
 }).createMachine({
   id: "battle",
@@ -137,7 +143,10 @@ export const battleMachine = setup({
             BATTLE_CAST_AOE: { actions: "battleCastAoE" },
             BATTLE_MOVE: { actions: "battleMove" },
             BATTLE_END_TURN: { actions: "battleEndTurn" },
-            BATTLE_HEAL: { actions: "battleHeal" }
+            BATTLE_HEAL: { actions: "battleHeal" },
+            BATTLE_DASH: { actions: "battleDash" },
+            BATTLE_DISENGAGE: { actions: "battleDisengage" },
+            BATTLE_DODGE: { actions: "battleDodge" }
           }
         },
         awaitingReaction: {

@@ -136,3 +136,24 @@ export function battleHeal({ context: c, event: e }: BattleActionArgs<"BATTLE_HE
   cs = setCreature(cs, e.targetId, heal(cs.get(e.targetId)!, e.amount))
   return { creatures: cs }
 }
+
+type SimpleActionType = "dash" | "disengage" | "dodge"
+
+function simpleAction(c: BattleContext, actionType: SimpleActionType): Partial<BattleContext> {
+  const id = activeId(c)
+  const ac = c.creatures.get(id)!
+  if (ac.dead || ac.actionsRemaining <= 0) return {}
+  return { creatures: setCreature(c.creatures, id, spendAction(ac, actionType)) }
+}
+
+export function battleDash({ context: c }: BattleActionArgs<"BATTLE_DASH">): Partial<BattleContext> {
+  return simpleAction(c, "dash")
+}
+
+export function battleDisengage({ context: c }: BattleActionArgs<"BATTLE_DISENGAGE">): Partial<BattleContext> {
+  return simpleAction(c, "disengage")
+}
+
+export function battleDodge({ context: c }: BattleActionArgs<"BATTLE_DODGE">): Partial<BattleContext> {
+  return simpleAction(c, "dodge")
+}

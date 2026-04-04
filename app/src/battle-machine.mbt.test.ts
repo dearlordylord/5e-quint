@@ -351,6 +351,9 @@ const battleDriverSchema = {
   bLegendaryPass: {},
   bLegendaryAttack: { monsterId: OS, laTarget: OS, laAtkRoll: OI, laDmg: OI, laDt: OV, laCrit: OB, laTgtAc: OI },
   bHeal: { targetId: OS, amount: OI },
+  bDash: {},
+  bDisengage: {},
+  bDodge: {},
   bCastBonusActionSpell: {
     targetId: OS,
     saveDC: OI,
@@ -664,6 +667,15 @@ function createBattleMachineDriver() {
       },
       bHeal: (picks: Record<string, unknown>) => {
         send({ type: "BATTLE_HEAL", targetId: pc(picks, "targetId", ""), amount: p(picks, "amount", 5) })
+      },
+      bDash: () => {
+        send({ type: "BATTLE_DASH" })
+      },
+      bDisengage: () => {
+        send({ type: "BATTLE_DISENGAGE" })
+      },
+      bDodge: () => {
+        send({ type: "BATTLE_DODGE" })
       },
       bCastBonusActionSpell: (picks: Record<string, unknown>) => {
         send({
