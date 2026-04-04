@@ -105,7 +105,10 @@ export function DiceOverlay({ cues, onComplete }: { cues: ReadonlyArray<DiceRoll
       s.animId = requestAnimationFrame(loop)
       const meshes = s.meshes
 
-      if (meshes.length === 0) return
+      if (meshes.length === 0) {
+        renderer.render(scene, camera)
+        return
+      }
 
       if (s.phase === "spinning") {
         const spd = 12

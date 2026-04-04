@@ -141,9 +141,11 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
 
         <div className="relative w-full max-w-3xl">
           {layout && <BattleField layout={layout} />}
-          <Suspense fallback={null}>
-            <DiceOverlay cues={diceCues} onComplete={handleDiceComplete} />
-          </Suspense>
+          {diceCues.length > 0 && (
+            <Suspense fallback={null}>
+              <DiceOverlay cues={diceCues} onComplete={handleDiceComplete} />
+            </Suspense>
+          )}
         </div>
 
         <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
