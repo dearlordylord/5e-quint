@@ -168,10 +168,10 @@ export function battleAfterDamagePass({
   return { ...phaseAwaitReaction({ ...aw, offered: newOffered }) }
 }
 
-export function battleAfterDamageHellishRebuke({
+export function battleAfterDamageSpellReaction({
   context: c,
   event: e
-}: BattleActionArgs<"BATTLE_AFTER_DAMAGE_HELLISH_REBUKE">): Partial<BattleContext> {
+}: BattleActionArgs<"BATTLE_AFTER_DAMAGE_SPELL_REACTION">): Partial<BattleContext> {
   const aw = awaitingReaction(c)
   if (!aw) return {}
   const pi = piAfterDamage(aw.interrupt)
@@ -179,8 +179,16 @@ export function battleAfterDamageHellishRebuke({
   const ad = pi.ctx
   if (e.reactorId === null) return {}
   const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
-  const actualDmg = e.rebukeSaved ? Math.trunc(e.rebukeDmg / 2) : e.rebukeDmg
-  const result = dealDamageWithAfterReactions(cs1, ad.damageSource, e.reactorId, actualDmg, "fire", false, ad.returnTo)
+  const actualDmg = e.reactionSaved ? Math.trunc(e.reactionDmg / 2) : e.reactionDmg
+  const result = dealDamageWithAfterReactions(
+    cs1,
+    ad.damageSource,
+    e.reactorId,
+    actualDmg,
+    e.reactionDt,
+    false,
+    ad.returnTo
+  )
   return { ...result }
 }
 

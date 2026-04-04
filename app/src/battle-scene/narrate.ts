@@ -66,9 +66,9 @@ export function narrate(event: BattleEvent, meta: ScenarioMeta): string {
       return `Concentrates on spell targeting ${name(event.targetId, meta)}.`
     case "BATTLE_CONCENTRATION_CHECK":
       return `${name(event.targetId, meta)} makes a concentration check — ${event.conSaveSucceeded ? "holds" : "breaks"}!`
-    case "BATTLE_AFTER_DAMAGE_HELLISH_REBUKE":
-      if (!event.reactorId) return "No Hellish Rebuke."
-      return `${name(event.reactorId, meta)} retaliates with Hellish Rebuke!`
+    case "BATTLE_AFTER_DAMAGE_SPELL_REACTION":
+      if (!event.reactorId) return "No spell reaction."
+      return `${name(event.reactorId, meta)} retaliates with a spell!`
     case "BATTLE_AFTER_DAMAGE_RETALIATION":
       if (!event.reactorId) return "No retaliation."
       return `${name(event.reactorId, meta)} retaliates!`

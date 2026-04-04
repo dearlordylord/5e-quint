@@ -213,11 +213,7 @@ function deriveDiceRoll(event: BattleEvent): DiceRollCue | null {
     }
   }
 
-  // 2. Hellish Rebuke (known 2d10, event doesn't carry slotLvl)
-  if (event.type === "BATTLE_AFTER_DAMAGE_HELLISH_REBUKE" && event.reactorId) {
-    const results = decomposeDice(event.rebukeDmg, 2, 10)
-    if (results) return { sides: 10, results, color: DAMAGE_COLOR }
-  }
+  // 2. Spell reactions — TODO: show dice once event carries spell identifier
 
   // 3. Fall back to d20 roll detection
   return deriveD20Roll(event)
@@ -280,12 +276,20 @@ Three spells have spell-specific mechanics baked into the Quint spec
 instead of using the generic parameterized framework. These should be
 moved to TS features over time.
 
-**Hellish Rebuke** (`bAfterDamageHellishRebuke`, line ~830):
-- Hardcodes `2.to(20)` (2d10 range), `Fire` damage type, save-for-half.
-- To genericize: add `nondet rebukeSlotLvl` (or `rebukeDiceCount`) to
-  the action so the event carries enough info for TS to derive dice.
-  Then `spell-dice-lookup.ts` handles it like any other spell.
-- Minimal spec change: one new nondet field threaded to the event.
+**Hellish Rebuke** (done — `bAfterDamageSpellReaction`, line ~866):
+- Was the only action in the spec named after a specific spell.
+  Replaced with generic `bAfterDamageSpellReaction` taking
+  `nondet reactionDmg = 1.to(40)`, `nondet reactionSaved`,
+  `nondet reactionDt = ALL_DAMAGE_TYPES.oneOf()`.
+- Spec: spell identity uninterpreted; `reactionSaved` drives
+  save-for-half; dmg and dt are opaque.
+- TS: event renamed to `BATTLE_AFTER_DAMAGE_SPELL_REACTION` with
+  `reactionDmg`, `reactionSaved`, `reactionDt` fields. Handler
+  uses `e.reactionDt` instead of hardcoded `"fire"`.
+- Director: dice display removed (TODO: restore once event carries
+  a spell identifier for dice lookup via `spell-dice-lookup.ts`).
+- Enables adding other after-damage spell reactions (e.g., Fire
+  Shield retaliation) without new dedicated actions.
 
 **Shield** (`RShield` reaction, line ~720):
 - Hardcodes `targetAc + 5`. Should parameterize the AC bonus so TS
