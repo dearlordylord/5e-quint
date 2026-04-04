@@ -36,6 +36,9 @@ module battle {
     saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
     critRange: int,                          // natural roll >= critRange is a critical hit (default 20, Champion 19/18)
     fighterState: FighterState,              // fighter class state (non-fighters carry freshFighterState(0))
+    meleeDamageBonus: int,                   // rage damage bonus (0 if not raging)
+    recklessThisTurn: bool,                  // Reckless Attack declared this turn
+    ragingBlocksSpells: bool,                // rage blocks spell casting
   }
 
   type TriggerType =
@@ -326,6 +329,9 @@ module battle {
     saveMiscBonus: 0,
     critRange: 20,
     fighterState: freshFighterState(0),
+    meleeDamageBonus: 0,
+    recklessThisTurn: false,
+    ragingBlocksSpells: false,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -347,6 +353,9 @@ module battle {
     saveMiscBonus: 0,
     critRange: 20,
     fighterState: freshFighterState(0),
+    meleeDamageBonus: 0,
+    recklessThisTurn: false,
+    ragingBlocksSpells: false,
   }
 
   // Monster with legendary actions and resistances
@@ -365,6 +374,9 @@ module battle {
     saveMiscBonus: 0,
     critRange: 20,
     fighterState: freshFighterState(0),
+    meleeDamageBonus: 0,
+    recklessThisTurn: false,
+    ragingBlocksSpells: false,
   }
 
   pure def dealDamage(
@@ -606,7 +618,7 @@ module battle {
     all {
       bCreatures' = Map(
         "A" -> mkCaster(hp1, PC).with("rogueLevel", 5).with("hasEvasion", true),  // B11: rogue 5 + Evasion
-        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", 3),  // Paladin Aura-like bonus
+        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", 3).with("meleeDamageBonus", 2),  // Paladin Aura + barbarian rage bonus
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
         "D" -> mkCaster(hp4, PC).with("critRange", 19).with("fighterState", freshFighterState(5))  // Champion fighter 5
       ),
@@ -669,7 +681,8 @@ module battle {
       val cs2 = setTurn(cs1, activeId, FRESH_TURN)
       // 4b. Fighter start-of-turn: reset actionSurgeUsedThisTurn
       val ac4 = cs2.get(activeId)
-      val cs2b = cs2.set(activeId, ac4.with("fighterState", pFighterStartTurn(ac4.fighterState, 0)))
+      val cs2b = cs2.set(activeId, ac4.with("fighterState", pFighterStartTurn(ac4.fighterState, 0))
+                                            .with("recklessThisTurn", false))
       // 5. Monster-specific: refresh LA + recharge rolls
       val cs3 = if (c.kind == Monster) {
         val sb = c.statBlock
@@ -721,10 +734,12 @@ module battle {
     if (not(hit)) {
       { creatures: cs, phase: returnToPhase(returnTo) }
     } else {
+      val atk = cs.get(attackerId)
+      val totalDmg = damage + atk.meleeDamageBonus  // rage bonus (0 if not raging)
       val atkCtx: AttackHitCtx = {
         attacker: attackerId, target: targetId,
         attackRoll: attackRoll, targetAc: targetAc,
-        damage: damage, damageType: damageType, isCritical: isCritical,
+        damage: totalDmg, damageType: damageType, isCritical: isCritical,
         critRange: critRange,
         atkReturnTo: returnTo,
       }
@@ -732,7 +747,7 @@ module battle {
       if (elig.size() > 0) {
         { creatures: cs, phase: BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, elig)) }
       } else {
-        dealDamageWithAfterReactions(cs, targetId, attackerId, damage, damageType, isCritical, returnTo)
+        dealDamageWithAfterReactions(cs, targetId, attackerId, totalDmg, damageType, isCritical, returnTo)
       }
     }
   }
@@ -1021,6 +1036,7 @@ module battle {
       not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
+      not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       ac.preparedSpells.size() > 0,           // must have at least one prepared spell
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
@@ -1509,6 +1525,7 @@ module battle {
       not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
+      not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       ac.preparedSpells.contains(spellId),    // SRD 5.2.1: must have spell prepared
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
@@ -1605,6 +1622,7 @@ module battle {
       not(isIncapacitated(ac.creature)),
       liveTargets.size() >= 2,
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
+      not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       ac.preparedSpells.size() > 0,           // must have at least one prepared spell
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
@@ -1961,6 +1979,53 @@ module battle {
     }
   }
 
+  /// Enter Rage: costs bonus action, sets meleeDamageBonus and ragingBlocksSpells.
+  /// SRD 5.2.1 Barbarian: "you gain Rage Damage bonus to melee attacks,
+  /// and you can't cast or concentrate on Spells."
+  action bEnterRage = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    nondet rageBonus = Set(2, 3, 4).oneOf()  // rageDamageBonus(barbarianLevel)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      not(ac.turn.bonusActionUsed),
+      not(ac.ragingBlocksSpells),  // can't rage while already raging
+      val newTurn = pUseBonusAction(ac.turn, ac.creature)
+      val updatedC = ac.with("turn", newTurn)
+                       .with("meleeDamageBonus", rageBonus)
+                       .with("ragingBlocksSpells", true)
+      all {
+        bCreatures' = bCreatures.set(activeId, updatedC),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  /// Declare Reckless Attack: grants advantage on melee attacks this turn,
+  /// but attackers have advantage against you until your next turn.
+  /// SRD 5.2.1: "When you make your first attack on your turn..."
+  action bDeclareReckless = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      not(ac.recklessThisTurn),  // can only declare once per turn
+      val updatedC = ac.with("recklessThisTurn", true)
+      all {
+        bCreatures' = bCreatures.set(activeId, updatedC),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
   action bHeal = {
     val activeId = bInitiative[bTurnIndex]
     val allIds = bCreatures.keys()
@@ -1976,6 +2041,7 @@ module battle {
       not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
+      not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
       val healed = pHeal(tc.creature, amount)
       all {
@@ -2062,7 +2128,8 @@ module battle {
     | BPActiveTurn => any {
         bStartTurn, bAttack, bCastSaveSpell, bCastAoE,
         bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
-        bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge, bEndTurn,
+        bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge,
+        bEnterRage, bDeclareReckless, bEndTurn,
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {
         | PIAttackHit(_) => any { bResolveHitReaction, }

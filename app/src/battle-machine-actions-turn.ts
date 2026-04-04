@@ -45,7 +45,8 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
       ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
       ...(cfg.fighterLevel != null && actionSurgeMaxCharges(cfg.fighterLevel) > 0
         ? { actionSurgeCharges: actionSurgeMaxCharges(cfg.fighterLevel), actionSurgeUsedThisTurn: false }
-        : {})
+        : {}),
+      ...(cfg.meleeDamageBonus != null ? { meleeDamageBonus: cfg.meleeDamageBonus } : {})
     })
     initiative.push(cfg.id)
   }
@@ -93,7 +94,7 @@ export function battleStartTurn({
   )
   // Reset fighter per-turn state
   const afterFs = result.get(id)!
-  const resetResult = setCreature(result, id, { ...afterFs, actionSurgeUsedThisTurn: false })
+  const resetResult = setCreature(result, id, { ...afterFs, actionSurgeUsedThisTurn: false, recklessThisTurn: false })
   return { creatures: resetResult, turnStarted: true }
 }
 
@@ -189,5 +190,33 @@ export function battleActionSurge({ context: c }: BattleActionArgs<"BATTLE_ACTIO
       actionSurgeCharges: ac.actionSurgeCharges - 1,
       actionSurgeUsedThisTurn: true
     })
+  }
+}
+
+export function battleEnterRage({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_ENTER_RAGE">): Partial<BattleContext> {
+  const id = activeId(c)
+  const ac = c.creatures.get(id)!
+  if (ac.dead || isIncapacitated(ac) || ac.bonusActionUsed || ac.ragingBlocksSpells) return {}
+  return {
+    creatures: setCreature(c.creatures, id, {
+      ...ac,
+      bonusActionUsed: true,
+      meleeDamageBonus: e.rageBonus,
+      ragingBlocksSpells: true
+    })
+  }
+}
+
+export function battleDeclareReckless({
+  context: c
+}: BattleActionArgs<"BATTLE_DECLARE_RECKLESS">): Partial<BattleContext> {
+  const id = activeId(c)
+  const ac = c.creatures.get(id)!
+  if (ac.dead || isIncapacitated(ac) || ac.recklessThisTurn) return {}
+  return {
+    creatures: setCreature(c.creatures, id, { ...ac, recklessThisTurn: true })
   }
 }

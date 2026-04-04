@@ -187,6 +187,7 @@ export function heal(c: BattleCreatureState, amount: number): BattleCreatureStat
 export function spendAction(c: BattleCreatureState, actionType: ActionType): BattleCreatureState {
   if (c.actionsRemaining <= 0 || isIncapacitated(c)) return c
   if (c.actionSurgeActionPending && actionType === "magic") return c
+  if (c.ragingBlocksSpells && actionType === "magic") return c
   let c1 = { ...c, actionsRemaining: c.actionsRemaining - 1 }
   if (actionType === "attack") c1 = { ...c1, attackActionUsed: true }
   else if (actionType === "disengage") c1 = { ...c1, disengaged: true }
@@ -348,7 +349,10 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     saveMiscBonus: 0,
     critRange: 20,
     actionSurgeCharges: 0,
-    actionSurgeUsedThisTurn: false
+    actionSurgeUsedThisTurn: false,
+    meleeDamageBonus: 0,
+    recklessThisTurn: false,
+    ragingBlocksSpells: false
   }
 }
 

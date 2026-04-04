@@ -52,12 +52,14 @@ export function resolveAttack(
   if (!isHit(attackRoll, targetAc, critRange)) {
     return { creatures: new Map(cs), ...returnToState(returnTo) }
   }
+  const atk = cs.get(attackerId)!
+  const totalDmg = damage + atk.meleeDamageBonus
   const atkCtx: AttackHitCtx = {
     attacker: attackerId,
     target: targetId,
     attackRoll,
     targetAc: armorClass(targetAc),
-    damage,
+    damage: totalDmg,
     damageType,
     isCritical,
     critRange,
@@ -70,7 +72,7 @@ export function resolveAttack(
       ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", elig))
     }
   }
-  return dealDamageWithAfterReactions(cs, targetId, attackerId, damage, damageType, isCritical, returnTo)
+  return dealDamageWithAfterReactions(cs, targetId, attackerId, totalDmg, damageType, isCritical, returnTo)
 }
 
 export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_ATTACK">): Partial<BattleContext> {

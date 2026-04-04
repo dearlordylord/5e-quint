@@ -89,6 +89,10 @@ export interface BattleCreatureState {
   // Fighter state
   readonly actionSurgeCharges: number
   readonly actionSurgeUsedThisTurn: boolean
+  // Barbarian state
+  readonly meleeDamageBonus: number
+  readonly recklessThisTurn: boolean
+  readonly ragingBlocksSpells: boolean
 }
 
 export interface AttackHitCtx {
@@ -300,6 +304,7 @@ export interface InitCreatureConfig {
   readonly saveMiscBonus?: number
   readonly critRange?: number
   readonly fighterLevel?: number
+  readonly meleeDamageBonus?: number
   /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */
   readonly initiativeRoll?: number
   /** Second d20 for Disadvantage. Required when surprised=true; defaults to initiativeRoll (no effect). */
@@ -444,6 +449,8 @@ export type BattleEvent =
   | { readonly type: "BATTLE_DISENGAGE" }
   | { readonly type: "BATTLE_DODGE" }
   | { readonly type: "BATTLE_ACTION_SURGE" }
+  | { readonly type: "BATTLE_ENTER_RAGE"; readonly rageBonus: number }
+  | { readonly type: "BATTLE_DECLARE_RECKLESS" }
 
 /** Narrows BattleEvent to a specific type member for action functions. */
 export type BattleActionArgs<T extends BattleEvent["type"]> = {

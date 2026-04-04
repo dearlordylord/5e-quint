@@ -33,9 +33,11 @@ import {
 import {
   battleActionSurge,
   battleDash,
+  battleDeclareReckless,
   battleDisengage,
   battleDodge,
   battleEndTurn,
+  battleEnterRage,
   battleHeal,
   battleInit,
   battleLegendaryAttack,
@@ -113,7 +115,9 @@ export const battleMachine = setup({
     battleDash: narrow(battleDash),
     battleDisengage: narrow(battleDisengage),
     battleDodge: narrow(battleDodge),
-    battleActionSurge: narrow(battleActionSurge)
+    battleActionSurge: narrow(battleActionSurge),
+    battleEnterRage: narrow(battleEnterRage),
+    battleDeclareReckless: narrow(battleDeclareReckless)
   }
 }).createMachine({
   id: "battle",
@@ -149,7 +153,9 @@ export const battleMachine = setup({
             BATTLE_DASH: { actions: "battleDash" },
             BATTLE_DISENGAGE: { actions: "battleDisengage" },
             BATTLE_DODGE: { actions: "battleDodge" },
-            BATTLE_ACTION_SURGE: { actions: "battleActionSurge" }
+            BATTLE_ACTION_SURGE: { actions: "battleActionSurge" },
+            BATTLE_ENTER_RAGE: { actions: "battleEnterRage" },
+            BATTLE_DECLARE_RECKLESS: { actions: "battleDeclareReckless" }
           }
         },
         awaitingReaction: {

@@ -58,7 +58,10 @@ const QuintCombatant = z.object({
       actionSurgeCharges: z.bigint(),
       actionSurgeUsedThisTurn: z.boolean()
     })
-    .passthrough()
+    .passthrough(),
+  meleeDamageBonus: z.bigint(),
+  recklessThisTurn: z.boolean(),
+  ragingBlocksSpells: z.boolean()
 })
 
 type ParsedCombatant = z.infer<typeof QuintCombatant>
@@ -157,6 +160,9 @@ interface NormalizedBattleCreature {
   critRange: number
   actionSurgeCharges: number
   actionSurgeUsedThisTurn: boolean
+  meleeDamageBonus: number
+  recklessThisTurn: boolean
+  ragingBlocksSpells: boolean
 }
 
 function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreature {
@@ -219,7 +225,10 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     saveMiscBonus: Number(c.saveMiscBonus),
     critRange: Number(c.critRange),
     actionSurgeCharges: Number(c.fighterState.actionSurgeCharges),
-    actionSurgeUsedThisTurn: c.fighterState.actionSurgeUsedThisTurn
+    actionSurgeUsedThisTurn: c.fighterState.actionSurgeUsedThisTurn,
+    meleeDamageBonus: Number(c.meleeDamageBonus),
+    recklessThisTurn: c.recklessThisTurn,
+    ragingBlocksSpells: c.ragingBlocksSpells
   }
 }
 
@@ -292,7 +301,10 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     saveMiscBonus: c.saveMiscBonus,
     critRange: c.critRange,
     actionSurgeCharges: c.actionSurgeCharges,
-    actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn
+    actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
+    meleeDamageBonus: c.meleeDamageBonus,
+    recklessThisTurn: c.recklessThisTurn,
+    ragingBlocksSpells: c.ragingBlocksSpells
   }
 }
 
@@ -459,6 +471,7 @@ function createBattleMachineDriver() {
               kind: "PC",
               caster: true,
               saveMiscBonus: 3,
+              meleeDamageBonus: 2,
               initiativeRoll: p(picks, "initRoll2", 10),
               initiativeRollB: p(picks, "initRoll2b", 10),
               surprised: pb(picks, "surprised2", false)
@@ -710,6 +723,12 @@ function createBattleMachineDriver() {
       },
       bActionSurge: () => {
         send({ type: "BATTLE_ACTION_SURGE" })
+      },
+      bEnterRage: (picks: Record<string, unknown>) => {
+        send({ type: "BATTLE_ENTER_RAGE", rageBonus: p(picks, "rageBonus", 2) })
+      },
+      bDeclareReckless: () => {
+        send({ type: "BATTLE_DECLARE_RECKLESS" })
       },
       bCastBonusActionSpell: (picks: Record<string, unknown>) => {
         send({
