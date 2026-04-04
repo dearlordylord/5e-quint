@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createActor } from "xstate"
 
 import { battleMachine } from "#/battle-machine.ts"
@@ -8,11 +8,14 @@ import { PageShell } from "#/components/PageShell.tsx"
 import { PlaybackControls } from "#/components/PlaybackControls.tsx"
 
 import { BattleField } from "./BattleField.tsx"
+import type { DiceRollCue } from "./director.ts"
 import { directorStep, EMPTY_CUES } from "./director.ts"
 import { computeLayout } from "./layout.ts"
 import { narrate } from "./narrate.ts"
 import { type BattleScenario, deriveSnapshot } from "./scene-snapshot.ts"
 import { diffSnapshots } from "./snapshot-diff.ts"
+
+const DiceOverlay = lazy(() => import("./dice3d/DiceOverlay.tsx").then((m) => ({ default: m.DiceOverlay })))
 
 function findAoEEventIndex(events: ReadonlyArray<BattleEvent>, upTo: number): string | null {
   for (let i = upTo - 1; i >= 0; i--) {
@@ -42,6 +45,8 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   const [spellFaded, setSpellFaded] = useState(false)
   const castBarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const spellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [activeDiceCue, setActiveDiceCue] = useState<{ cue: DiceRollCue; key: number } | null>(null)
+  const diceKeyRef = useRef(0)
 
   const { cues, snapshot } = useMemo(() => {
     if (cursor < 0) return { snapshot: null, cues: EMPTY_CUES }
@@ -77,6 +82,13 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
     }
     if (cues.spellAnnouncement) {
       spellTimerRef.current = setTimeout(() => setSpellFaded(true), SPELL_NAME_FADE_MS)
+    }
+    if (cues.diceRoll) {
+      // eslint-disable-next-line functional/immutable-data -- React ref mutation
+      diceKeyRef.current += 1
+      setActiveDiceCue({ cue: cues.diceRoll, key: diceKeyRef.current })
+    } else {
+      setActiveDiceCue(null)
     }
     return () => {
       if (castBarTimerRef.current) clearTimeout(castBarTimerRef.current)
@@ -130,7 +142,14 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
           {narrate(events[cursor], meta)}
         </div>
 
-        {layout && <BattleField layout={layout} />}
+        <div className="relative w-full max-w-3xl">
+          {layout && <BattleField layout={layout} />}
+          {activeDiceCue && (
+            <Suspense fallback={null}>
+              <DiceOverlay key={activeDiceCue.key} cue={activeDiceCue.cue} onComplete={() => setActiveDiceCue(null)} />
+            </Suspense>
+          )}
+        </div>
 
         <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
       </div>

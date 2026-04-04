@@ -24,6 +24,15 @@ export interface CreatureCue {
   slotJustSpent: boolean
 }
 
+export interface DiceRollCue {
+  /** Die type: 4, 6, 8, 10, 12, 20 */
+  readonly sides: number
+  /** Pre-determined results (one per die) */
+  readonly results: ReadonlyArray<number>
+  /** Hex color for the dice */
+  readonly color: number
+}
+
 export interface VisualCueState {
   castBar: { casterId: string; spellName: string; progress: number } | null
   castLineTargetId: string | null
@@ -31,6 +40,7 @@ export interface VisualCueState {
   interruptOverlay: { opacity: number; label: string }
   creatureCues: Record<string, CreatureCue>
   autoAdvanceDelay: number
+  diceRoll: DiceRollCue | null
 }
 
 export interface PlaybackTiming {
@@ -58,7 +68,8 @@ export const EMPTY_CUES: VisualCueState = {
   spellAnnouncement: null,
   interruptOverlay: { opacity: 0, label: "" },
   creatureCues: {},
-  autoAdvanceDelay: 0
+  autoAdvanceDelay: 0,
+  diceRoll: null
 }
 
 export const EMPTY_CUE: CreatureCue = {
@@ -181,5 +192,39 @@ export function directorStep(
   const spellAnnouncement = castBar ? { spellName: castBar.spellName, casterId: castBar.casterId } : null
   const autoAdvanceDelay = timing.overrides[event.type] ?? timing.defaultDelayMs
 
-  return { castBar, castLineTargetId, spellAnnouncement, interruptOverlay, creatureCues, autoAdvanceDelay }
+  // Dice roll cue — show 3D dice for attacks, saves, and damage
+  const diceRoll = deriveDiceRoll(event)
+
+  return { castBar, castLineTargetId, spellAnnouncement, interruptOverlay, creatureCues, autoAdvanceDelay, diceRoll }
+}
+
+// --- Dice roll cue derivation ---
+
+/** Field name suffixes that indicate a d20 roll value (1–20). */
+const D20_SUFFIXES = ["Roll", "AtkRoll", "SaveRoll"] as const
+
+const ATTACK_COLOR = 0x3b82f6 // blue — attack rolls
+const SAVE_COLOR = 0x22c55e // green — saving throws
+
+/**
+ * Universal dice-roll extractor. Scans every field on the event for
+ * d20-range values (1–20) whose key ends in a known roll suffix.
+ * This catches attacks, saves, counterspell checks, concentration checks,
+ * opportunity attacks, legendary attacks, retaliation — anything that
+ * carries a roll field, present or future.
+ */
+function deriveDiceRoll(event: BattleEvent): DiceRollCue | null {
+  const D20_MAX = 20
+  const entries = Object.entries(event).filter(
+    (entry): entry is [string, number] =>
+      typeof entry[1] === "number" &&
+      D20_SUFFIXES.some((s) => entry[0].endsWith(s)) &&
+      entry[1] >= 1 &&
+      entry[1] <= D20_MAX
+  )
+
+  if (entries.length === 0) return null
+  const results = entries.map(([, val]) => val)
+  const isSave = entries.some(([key]) => key.toLowerCase().includes("save"))
+  return { sides: D20_MAX, results, color: isSave ? SAVE_COLOR : ATTACK_COLOR }
 }
