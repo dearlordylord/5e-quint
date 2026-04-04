@@ -88,7 +88,21 @@ This boundary is practical, not architectural. The SRD is freely available under
 
 **Key constraint:** Dice rolls are pre-resolved -- callers pass results as arguments. The spec never generates random numbers; it receives them as nondeterministic inputs.
 
-**Modeling frontier:** The spec abstracts away spatial concerns (cover, distance, line of sight, movement geometry). These are treated as caller-provided inputs. For example, `bMove`'s threatened set is a nondeterministic powerset -- the spec tests "given any set of threatening creatures, does the OA pipeline work correctly?" without knowing *which* creatures are actually in reach.
+**Modeling frontier:** The spec abstracts away two categories of concerns:
+
+1. **Spatial concerns** (cover, distance, line of sight, movement geometry). These are treated as caller-provided inputs. For example, `bMove`'s threatened set is a nondeterministic powerset -- the spec tests "given any set of threatening creatures, does the OA pipeline work correctly?" without knowing *which* creatures are actually in reach.
+
+2. **DM rulings.** D&D is a tabletop game where the DM (Dungeon Master) has final authority over many decisions that RAW leaves open. The spec models what RAW *prescribes* -- mechanical rules with deterministic outcomes. When RAW says "the DM decides," that decision is a **caller-provided input**, not something the spec resolves. The spec proves that *given any DM decision*, the mechanical consequences are correct.
+
+Examples of DM rulings treated as caller inputs:
+- **Battle start/end**: The DM decides when combat begins and ends (not all creatures need to be dead; sides aren't defined in RAW).
+- **Ready action triggers**: The DM confirms when a trigger circumstance occurs ("the zombie steps next to me"). The spec models the action/reaction economy of readying and releasing; the trigger itself is DM agenda.
+- **Surprise**: The DM determines who is surprised (the spec receives surprise as an initiative modifier).
+- **Cover level**: The DM judges cover from geometry (the spec receives cover as a typed input).
+- **Threatened creatures for OA**: The DM determines who is in reach (the spec receives the set nondeterministically).
+- **Initiative tie-breaking**: The DM decides ties (the spec receives the sorted order).
+
+This is not a limitation — it is the correct modeling boundary. The spec's value is proving that the *mechanical* rules are correct. DM rulings are the interface between the spec and the human game.
 
 ---
 
