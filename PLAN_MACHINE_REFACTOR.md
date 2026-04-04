@@ -8,7 +8,7 @@
 
 ---
 
-## Phase 0: conditionTrack Elimination (trivial, do first)
+## Phase 0: conditionTrack Elimination (trivial, do first) ✅ DONE
 
 **Vertical slice:** Remove an empty parallel region. End-to-end: delete config → move events → update machine → update viz → pass MBT.
 
@@ -27,11 +27,13 @@
 
 ---
 
-## Phase 1: Battle Machine — Phase States
+## Phase 1: Battle Machine — Phase States ✅ DONE
 
 **Vertical slice:** Refactor the flat `running` state into 5 child states. One phase at a time, each delivering a testable state boundary. End-to-end per slice: add state to machine definition → move events into it → update action functions to remove phase check → update MBT bridge → pass battle MBT.
 
 **Architecture decision:** `context.phase: BattlePhase` is replaced by XState state hierarchy. Phase-associated data moves to nullable context fields (`awaitCtx`, `aoeCtx`, `movementCtx`, `laCtx`), set on transition entry. The `BattlePhase` discriminated union and `BP_ACTIVE_TURN` constant are deleted at the end.
+
+**Implementation notes:** All 5 child states extracted in one pass using `always` transitions driven by nullable context fields. Actions set the relevant field; the machine follows via `always`. Phase constructors (`phaseAwaitReaction`, `phaseResolvingAoE`, etc.) ensure mutual exclusivity. MBT bridge validates Quint `bPhase` ↔ XState state value. `/simplify` converged in 2 rounds.
 
 **Key complexity:** 14 action functions conditionally set different phase targets. These become guarded transition arrays in the machine definition. The three helper functions (`returnToPhase`, `advanceFromHitPhase`, `dealDamageWithAfterReactions`) currently return `BattlePhase` values — they must return target state strings instead.
 
@@ -159,7 +161,7 @@
 
 ---
 
-## Phase 3: XState Inspector Integration
+## Phase 3: XState Inspector Integration ✅ DONE
 
 **Vertical slice:** Add `@statelyai/inspect` as a tab on `/battle` for live state observation during battle playback. End-to-end: install package → wire inspector to battle actor → add tab UI → verify live state diagram appears.
 
@@ -181,7 +183,7 @@
 
 ---
 
-## Phase 4: State Tags for UI Decoupling
+## Phase 4: State Tags for UI Decoupling ✅ DONE (R4.0 + R4.1; R4.2 hasTag() adoption deferred)
 
 **Vertical slice:** Add semantic tags to creature and battle machine states. End-to-end: define tag type → add tags to state configs → use `hasTag()` in battle UI → verify tags visible in inspector.
 
