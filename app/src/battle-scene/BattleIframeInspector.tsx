@@ -83,6 +83,8 @@ export function BattleIframeInspector({
     void import("@statelyai/inspect").then(({ createBrowserInspector }) => {
       if (cancelled || !iframe) return
       inspectorRef.current = createBrowserInspector({ iframe })
+      // createBrowserInspector sets iframe.src to stately.ai/inspect (async navigation).
+      // Listen for load to know when the inspector UI is ready to receive events.
       iframe.addEventListener(
         "load",
         () => {
@@ -90,6 +92,11 @@ export function BattleIframeInspector({
         },
         { once: true }
       )
+      // Timeout fallback: if stately.ai is unreachable, proceed anyway after 8s.
+      // Events will be lost but at least the UI won't hang forever.
+      setTimeout(() => {
+        if (!cancelled) setReady(true)
+      }, 8000)
     })
     return () => {
       cancelled = true
@@ -142,12 +149,19 @@ export function BattleIframeInspector({
   }, [ready, cursor, events, meta])
 
   return (
-    <iframe
-      ref={iframeRef}
-      data-xstate
-      title="XState Inspector"
-      className="w-full max-w-4xl mt-4 border border-gray-700 rounded-lg bg-gray-900"
-      style={{ height: "600px" }}
-    />
+    <div className="relative w-full max-w-4xl">
+      {!ready && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 rounded-lg border border-gray-700 z-10">
+          <span className="text-gray-400 text-sm">Loading stately.ai inspector...</span>
+        </div>
+      )}
+      <iframe
+        ref={iframeRef}
+        data-xstate
+        title="XState Inspector"
+        className="w-full border border-gray-700 rounded-lg bg-gray-900"
+        style={{ height: "600px" }}
+      />
+    </div>
   )
 }
