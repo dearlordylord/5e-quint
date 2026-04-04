@@ -52,7 +52,13 @@ const QuintCombatant = z.object({
   monkLevel: z.bigint(),
   hasEvasion: z.boolean(),
   saveMiscBonus: z.bigint(),
-  critRange: z.bigint()
+  critRange: z.bigint(),
+  fighterState: z
+    .object({
+      actionSurgeCharges: z.bigint(),
+      actionSurgeUsedThisTurn: z.boolean()
+    })
+    .passthrough()
 })
 
 type ParsedCombatant = z.infer<typeof QuintCombatant>
@@ -149,6 +155,8 @@ interface NormalizedBattleCreature {
   hasEvasion: boolean
   saveMiscBonus: number
   critRange: number
+  actionSurgeCharges: number
+  actionSurgeUsedThisTurn: boolean
 }
 
 function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreature {
@@ -209,7 +217,9 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     creatureKind: c.kind,
     hasEvasion: c.hasEvasion,
     saveMiscBonus: Number(c.saveMiscBonus),
-    critRange: Number(c.critRange)
+    critRange: Number(c.critRange),
+    actionSurgeCharges: Number(c.fighterState.actionSurgeCharges),
+    actionSurgeUsedThisTurn: c.fighterState.actionSurgeUsedThisTurn
   }
 }
 
@@ -280,7 +290,9 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     creatureKind: c.creatureKind,
     hasEvasion: c.hasEvasion,
     saveMiscBonus: c.saveMiscBonus,
-    critRange: c.critRange
+    critRange: c.critRange,
+    actionSurgeCharges: c.actionSurgeCharges,
+    actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn
   }
 }
 
@@ -467,6 +479,7 @@ function createBattleMachineDriver() {
               kind: "PC",
               caster: true,
               critRange: 19,
+              fighterLevel: 5,
               initiativeRoll: p(picks, "initRoll4", 10),
               initiativeRollB: p(picks, "initRoll4b", 10),
               surprised: pb(picks, "surprised4", false)
@@ -694,6 +707,9 @@ function createBattleMachineDriver() {
       },
       bDodge: () => {
         send({ type: "BATTLE_DODGE" })
+      },
+      bActionSurge: () => {
+        send({ type: "BATTLE_ACTION_SURGE" })
       },
       bCastBonusActionSpell: (picks: Record<string, unknown>) => {
         send({

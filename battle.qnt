@@ -35,6 +35,7 @@ module battle {
     hasEvasion: bool,                        // Evasion feature (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
     saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
     critRange: int,                          // natural roll >= critRange is a critical hit (default 20, Champion 19/18)
+    fighterState: FighterState,              // fighter class state (non-fighters carry freshFighterState(0))
   }
 
   type TriggerType =
@@ -324,6 +325,7 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    fighterState: freshFighterState(0),
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -344,6 +346,7 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    fighterState: freshFighterState(0),
   }
 
   // Monster with legendary actions and resistances
@@ -361,6 +364,7 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    fighterState: freshFighterState(0),
   }
 
   pure def dealDamage(
@@ -604,7 +608,7 @@ module battle {
         "A" -> mkCaster(hp1, PC).with("rogueLevel", 5).with("hasEvasion", true),  // B11: rogue 5 + Evasion
         "B" -> mkCaster(hp2, PC).with("saveMiscBonus", 3),  // Paladin Aura-like bonus
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
-        "D" -> mkCaster(hp4, PC).with("critRange", 19)  // Champion fighter (Improved Critical)
+        "D" -> mkCaster(hp4, PC).with("critRange", 19).with("fighterState", freshFighterState(5))  // Champion fighter 5
       ),
       // Initiative order: sorted by effective roll descending (highest first).
       // SRD 5.2.1: "Disadvantage on their Initiative roll" for surprised combatants.
@@ -663,10 +667,13 @@ module battle {
       } else cs0
       // 4. Fresh turn state
       val cs2 = setTurn(cs1, activeId, FRESH_TURN)
+      // 4b. Fighter start-of-turn: reset actionSurgeUsedThisTurn
+      val ac4 = cs2.get(activeId)
+      val cs2b = cs2.set(activeId, ac4.with("fighterState", pFighterStartTurn(ac4.fighterState, 0)))
       // 5. Monster-specific: refresh LA + recharge rolls
       val cs3 = if (c.kind == Monster) {
         val sb = c.statBlock
-        val mr0 = cs2.get(activeId).monsterResources
+        val mr0 = cs2b.get(activeId).monsterResources
         // Refresh legendary actions (R7)
         val mr1 = pRefreshLegendaryActions(mr0, sb.legendaryActionUses, sb.inLair)
         // Recharge rolls: each unavailable ability gets the same d6 roll (simplification)
@@ -679,8 +686,8 @@ module battle {
         val mr2 = if (rollList.length() > 0)
           pProcessRechargeRolls(mr1, rollList, sb.rechargeAbilities)
         else mr1
-        cs2.set(activeId, cs2.get(activeId).with("monsterResources", mr2))
-      } else cs2
+        cs2b.set(activeId, cs2b.get(activeId).with("monsterResources", mr2))
+      } else cs2b
       // 6. Reset slotExpendedThisTurn for ALL creatures (SRD 5.2.1 "One Spell with a Spell Slot per Turn")
       val cs4 = cs3.keys().fold(cs3, (acc, cid) =>
         val cb = acc.get(cid)
@@ -1936,6 +1943,24 @@ module battle {
     }
   }
 
+  /// Action Surge: spend charge, gain extra action. SRD 5.2.1 Fighter feature.
+  action bActionSurge = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      canUseActionSurge(ac.fighterState, ac.creature),
+      val result = pUseActionSurge(ac.turn, ac.fighterState)
+      val updatedC = ac.with("turn", result.turn).with("fighterState", result.fighter)
+      all {
+        bCreatures' = bCreatures.set(activeId, updatedC),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
   action bHeal = {
     val activeId = bInitiative[bTurnIndex]
     val allIds = bCreatures.keys()
@@ -2037,7 +2062,7 @@ module battle {
     | BPActiveTurn => any {
         bStartTurn, bAttack, bCastSaveSpell, bCastAoE,
         bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
-        bMove, bHeal, bDash, bDisengage, bDodge, bEndTurn,
+        bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge, bEndTurn,
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {
         | PIAttackHit(_) => any { bResolveHitReaction, }

@@ -31,6 +31,7 @@ import {
   battleResolveSaveFailedReaction
 } from "#/battle-machine-actions-spell.ts"
 import {
+  battleActionSurge,
   battleDash,
   battleDisengage,
   battleDodge,
@@ -111,7 +112,8 @@ export const battleMachine = setup({
     battleHeal: narrow(battleHeal),
     battleDash: narrow(battleDash),
     battleDisengage: narrow(battleDisengage),
-    battleDodge: narrow(battleDodge)
+    battleDodge: narrow(battleDodge),
+    battleActionSurge: narrow(battleActionSurge)
   }
 }).createMachine({
   id: "battle",
@@ -146,7 +148,8 @@ export const battleMachine = setup({
             BATTLE_HEAL: { actions: "battleHeal" },
             BATTLE_DASH: { actions: "battleDash" },
             BATTLE_DISENGAGE: { actions: "battleDisengage" },
-            BATTLE_DODGE: { actions: "battleDodge" }
+            BATTLE_DODGE: { actions: "battleDodge" },
+            BATTLE_ACTION_SURGE: { actions: "battleActionSurge" }
           }
         },
         awaitingReaction: {

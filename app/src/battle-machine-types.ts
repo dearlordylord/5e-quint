@@ -86,6 +86,9 @@ export interface BattleCreatureState {
   readonly saveMiscBonus: number
   // Natural roll >= critRange is a critical hit (default 20, Champion 19/18)
   readonly critRange: number
+  // Fighter state
+  readonly actionSurgeCharges: number
+  readonly actionSurgeUsedThisTurn: boolean
 }
 
 export interface AttackHitCtx {
@@ -296,6 +299,7 @@ export interface InitCreatureConfig {
   readonly hasEvasion?: boolean
   readonly saveMiscBonus?: number
   readonly critRange?: number
+  readonly fighterLevel?: number
   /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */
   readonly initiativeRoll?: number
   /** Second d20 for Disadvantage. Required when surprised=true; defaults to initiativeRoll (no effect). */
@@ -439,6 +443,7 @@ export type BattleEvent =
   | { readonly type: "BATTLE_DASH" }
   | { readonly type: "BATTLE_DISENGAGE" }
   | { readonly type: "BATTLE_DODGE" }
+  | { readonly type: "BATTLE_ACTION_SURGE" }
 
 /** Narrows BattleEvent to a specific type member for action functions. */
 export type BattleActionArgs<T extends BattleEvent["type"]> = {

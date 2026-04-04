@@ -346,7 +346,9 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     preparedSpells: new Set(),
     hasEvasion: false,
     saveMiscBonus: 0,
-    critRange: 20
+    critRange: 20,
+    actionSurgeCharges: 0,
+    actionSurgeUsedThisTurn: false
   }
 }
 

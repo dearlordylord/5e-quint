@@ -41,7 +41,10 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
       ...(cfg.preparedSpells != null ? { preparedSpells: cfg.preparedSpells } : {}),
       ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
       ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
-      ...(cfg.critRange != null ? { critRange: cfg.critRange } : {})
+      ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
+      ...(cfg.fighterLevel != null && cfg.fighterLevel >= 2
+        ? { actionSurgeCharges: cfg.fighterLevel >= 17 ? 2 : 1, actionSurgeUsedThisTurn: false }
+        : {})
     })
     initiative.push(cfg.id)
   }
@@ -87,7 +90,10 @@ export function battleStartTurn({
     rechargedAbilities,
     e.deathSaveRoll
   )
-  return { creatures: result, turnStarted: true }
+  // Reset fighter per-turn state
+  const afterFs = result.get(id)!
+  const resetResult = setCreature(result, id, { ...afterFs, actionSurgeUsedThisTurn: false })
+  return { creatures: resetResult, turnStarted: true }
 }
 
 export function battleEndTurn({ context: c, event: e }: BattleActionArgs<"BATTLE_END_TURN">): Partial<BattleContext> {
@@ -168,4 +174,19 @@ export function battleDisengage({ context: c }: BattleActionArgs<"BATTLE_DISENGA
 
 export function battleDodge({ context: c }: BattleActionArgs<"BATTLE_DODGE">): Partial<BattleContext> {
   return simpleAction(c, "dodge")
+}
+
+export function battleActionSurge({ context: c }: BattleActionArgs<"BATTLE_ACTION_SURGE">): Partial<BattleContext> {
+  const id = activeId(c)
+  const ac = c.creatures.get(id)!
+  if (isIncapacitated(ac) || ac.actionSurgeCharges <= 0 || ac.actionSurgeUsedThisTurn) return {}
+  return {
+    creatures: setCreature(c.creatures, id, {
+      ...ac,
+      actionsRemaining: ac.actionsRemaining + 1,
+      actionSurgeActionPending: true,
+      actionSurgeCharges: ac.actionSurgeCharges - 1,
+      actionSurgeUsedThisTurn: true
+    })
+  }
 }
