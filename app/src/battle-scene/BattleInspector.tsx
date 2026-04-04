@@ -34,7 +34,7 @@ export function BattleInspector({ cursor, events }: { events: ReadonlyArray<Batt
     for (let i = 0; i <= cursor && i < events.length; i++) {
       actor.send(events[i])
     }
-    actor.stop()
+    return () => actor.stop()
   }, [ready, cursor, events])
 
   return (
