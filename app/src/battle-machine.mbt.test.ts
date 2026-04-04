@@ -316,7 +316,7 @@ const battleDriverSchema = {
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
   bAfterDamagePass: { reactorId: OS },
-  bAfterDamageHellishRebuke: { rebukeDmg: OI, rebukeSaved: OB, reactorId: OS },
+  bAfterDamageSpellReaction: { reactionDmg: OI, reactionSaved: OB, reactionDt: OV, reactorId: OS },
   bAfterDamageRetaliation: { retAtkRoll: OI, retDmg: OI, retDt: OV, retCrit: OB, retTgtAc: OI, reactorId: OS },
   bCastSaveSpell: {
     targetId: OS,
@@ -514,12 +514,13 @@ function createBattleMachineDriver() {
           reactorId: pcn(picks, "reactorId")
         })
       },
-      bAfterDamageHellishRebuke: (picks: Record<string, unknown>) => {
+      bAfterDamageSpellReaction: (picks: Record<string, unknown>) => {
         send({
-          type: "BATTLE_AFTER_DAMAGE_HELLISH_REBUKE",
+          type: "BATTLE_AFTER_DAMAGE_SPELL_REACTION",
           reactorId: pcn(picks, "reactorId"),
-          rebukeDmg: p(picks, "rebukeDmg", 10),
-          rebukeSaved: pb(picks, "rebukeSaved", false)
+          reactionDmg: p(picks, "reactionDmg", 10),
+          reactionSaved: pb(picks, "reactionSaved", false),
+          reactionDt: mapDamageType(ps(picks, "reactionDt", "Fire"))
         })
       },
       bAfterDamageRetaliation: (picks: Record<string, unknown>) => {

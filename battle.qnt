@@ -863,9 +863,16 @@ module battle {
     }
   }
 
-  action bAfterDamageHellishRebuke = {
-    nondet rebukeDmg = 2.to(20).oneOf()
-    nondet rebukeSaved = Bool.oneOf()
+  // Generic after-damage spell reaction (e.g., Hellish Rebuke, Fire Shield).
+  // Spell identity is uninterpreted — the TS side supplies dice and display info.
+  // reactionSaved drives save-for-half logic; dmg and dt are opaque to the spec.
+  // NOTE: Currently all users (Hellish Rebuke, Fire Shield) always deal damage,
+  // so dmg is always positive. If a non-damage spell reaction is needed, add a
+  // separate action rather than making dmg optional here.
+  action bAfterDamageSpellReaction = {
+    nondet reactionDmg = 1.to(40).oneOf()
+    nondet reactionSaved = Bool.oneOf()
+    nondet reactionDt = ALL_DAMAGE_TYPES.oneOf()
     match bPhase {
       | BPAwaitingReaction(ctx) =>
         match ctx.interrupt {
@@ -876,10 +883,10 @@ module battle {
             } else {
               nondet reactorId = remaining.oneOf()
               val cs1 = spendReaction(bCreatures, reactorId)
-              val actualDmg = if (rebukeSaved) rebukeDmg / 2 else rebukeDmg
+              val actualDmg = if (reactionSaved) reactionDmg / 2 else reactionDmg
               val result = dealDamageWithAfterReactions(
                 cs1, ad.damageSource, reactorId,
-                actualDmg, Fire, false, ad.returnTo
+                actualDmg, reactionDt, false, ad.returnTo
               )
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             }
@@ -1916,7 +1923,7 @@ module battle {
         | PIAttackHit(_) => any { bResolveHitReaction, }
         | PIAttackDamage(_) => any { bResolveDmgReaction, }
         | PIAfterDamage(_) => any {
-            bAfterDamagePass, bAfterDamageHellishRebuke, bAfterDamageRetaliation,
+            bAfterDamagePass, bAfterDamageSpellReaction, bAfterDamageRetaliation,
           }
         | PISpellCast(_) => any { bResolveCounterspell, }
         | _ => any { bResolveSaveFailedReaction, }

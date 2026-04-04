@@ -13,9 +13,9 @@
 import { assign, setup, type SnapshotFrom } from "xstate"
 
 import {
-  battleAfterDamageHellishRebuke,
   battleAfterDamagePass,
   battleAfterDamageRetaliation,
+  battleAfterDamageSpellReaction,
   battleAttack,
   battleResolveDmgReaction,
   battleResolveHitReaction
@@ -90,7 +90,7 @@ export const battleMachine = setup({
     battleResolveHitReaction: narrow(battleResolveHitReaction),
     battleResolveDmgReaction: narrow(battleResolveDmgReaction),
     battleAfterDamagePass: narrow(battleAfterDamagePass),
-    battleAfterDamageHellishRebuke: narrow(battleAfterDamageHellishRebuke),
+    battleAfterDamageSpellReaction: narrow(battleAfterDamageSpellReaction),
     battleAfterDamageRetaliation: narrow(battleAfterDamageRetaliation),
     battleCastSaveSpell: narrow(battleCastSaveSpell),
     battleResolveCounterspell: narrow(battleResolveCounterspell),
@@ -147,7 +147,7 @@ export const battleMachine = setup({
             BATTLE_RESOLVE_HIT_REACTION: { actions: "battleResolveHitReaction" },
             BATTLE_RESOLVE_DMG_REACTION: { actions: "battleResolveDmgReaction" },
             BATTLE_AFTER_DAMAGE_PASS: { actions: "battleAfterDamagePass" },
-            BATTLE_AFTER_DAMAGE_HELLISH_REBUKE: { actions: "battleAfterDamageHellishRebuke" },
+            BATTLE_AFTER_DAMAGE_SPELL_REACTION: { actions: "battleAfterDamageSpellReaction" },
             BATTLE_AFTER_DAMAGE_RETALIATION: { actions: "battleAfterDamageRetaliation" },
             BATTLE_RESOLVE_COUNTERSPELL: { actions: "battleResolveCounterspell" },
             BATTLE_RESOLVE_SAVE_FAILED_REACTION: { actions: "battleResolveSaveFailedReaction" }

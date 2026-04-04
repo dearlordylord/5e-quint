@@ -282,7 +282,7 @@ const battleDriverSchema = {
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
   bAfterDamagePass: { reactorId: OS },
-  bAfterDamageHellishRebuke: { rebukeDmg: OI, rebukeSaved: OB, reactorId: OS },
+  bAfterDamageSpellReaction: { reactionDmg: OI, reactionSaved: OB, reactionDt: OV, reactorId: OS },
   bAfterDamageRetaliation: { retAtkRoll: OI, retDmg: OI, retDt: OV, retCrit: OB, retTgtAc: OI, reactorId: OS },
   bCastSaveSpell: {
     targetId: OS,
@@ -738,7 +738,7 @@ function createBattleProjectionDriver() {
       }
     }
 
-    function handleBAfterDamageHellishRebuke(picks: ReadonlyMap<string, unknown>) {
+    function handleBAfterDamageSpellReaction(picks: ReadonlyMap<string, unknown>) {
       const reactorId = pickString(picks, "reactorId")
       if (!reactorId) {
         // remaining == 0: after-damage window closed
@@ -746,18 +746,19 @@ function createBattleProjectionDriver() {
         return
       }
 
-      const rebukeDmg = pickBigInt(picks, "rebukeDmg") ?? 10
-      const rebukeSaved = pickBool(picks, "rebukeSaved") ?? false
+      const reactionDmg = pickBigInt(picks, "reactionDmg") ?? 10
+      const reactionSaved = pickBool(picks, "reactionSaved") ?? false
+      const reactionDt = pickVariant(picks, "reactionDt") ?? "Fire"
 
       send(reactorId, { type: "USE_REACTION" })
       // Damage source tracked in pendingAfterDamage (set when damage is applied).
       if (pendingAfterDamage) {
-        const actualDmg = rebukeSaved ? Math.floor(rebukeDmg / 2) : rebukeDmg
+        const actualDmg = reactionSaved ? Math.floor(reactionDmg / 2) : reactionDmg
         const target = pendingAfterDamage.damageSource
         send(target, {
           type: "TAKE_DAMAGE",
           amount: actualDmg,
-          damageType: "fire" as DamageType,
+          damageType: mapDamageType(reactionDt),
           ...EMPTY_DAMAGE_MODS,
           isCritical: false
         })
@@ -1513,9 +1514,9 @@ function createBattleProjectionDriver() {
         before("bAfterDamagePass")
         handleBAfterDamagePass(toMap(p))
       },
-      bAfterDamageHellishRebuke: (p: Record<string, unknown>) => {
-        before("bAfterDamageHellishRebuke")
-        handleBAfterDamageHellishRebuke(toMap(p))
+      bAfterDamageSpellReaction: (p: Record<string, unknown>) => {
+        before("bAfterDamageSpellReaction")
+        handleBAfterDamageSpellReaction(toMap(p))
       },
       bAfterDamageRetaliation: (p: Record<string, unknown>) => {
         before("bAfterDamageRetaliation")

@@ -323,10 +323,11 @@ export type BattleEvent =
     }
   | { readonly type: "BATTLE_AFTER_DAMAGE_PASS"; readonly reactorId: CreatureId | null }
   | {
-      readonly type: "BATTLE_AFTER_DAMAGE_HELLISH_REBUKE"
+      readonly type: "BATTLE_AFTER_DAMAGE_SPELL_REACTION"
       readonly reactorId: CreatureId | null
-      readonly rebukeDmg: number
-      readonly rebukeSaved: boolean
+      readonly reactionDmg: number
+      readonly reactionSaved: boolean
+      readonly reactionDt: DamageType
     }
   | {
       readonly type: "BATTLE_AFTER_DAMAGE_RETALIATION"

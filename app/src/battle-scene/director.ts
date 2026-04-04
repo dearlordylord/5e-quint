@@ -223,10 +223,7 @@ function deriveDiceRolls(event: BattleEvent): ReadonlyArray<DiceRollCue> {
     }
   }
 
-  if (event.type === "BATTLE_AFTER_DAMAGE_HELLISH_REBUKE" && event.reactorId) {
-    const results = decomposeDice(event.rebukeDmg, 2, 10)
-    if (results) cues.push({ sides: 10, results, color: DAMAGE_COLOR })
-  }
+  // TODO: show spell reaction dice once event carries a spell identifier for lookup
 
   const d20 = deriveD20Roll(event)
   if (d20) cues.push(d20)
