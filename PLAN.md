@@ -338,6 +338,6 @@ Moved from PLAN_CLEANUP.md P1. Two fields on TurnState: `bonusMovementRemaining`
 
 Exhaustive matching refactor + bug fix complete. All 6 `switch` statements in `battle-machine-*.ts` replaced with `effect/Match` + `Match.exhaustive`. The CS chain bug was fixed in both TS (`returnToCSWindow` recursively unwinds) and Quint (`battle.qnt` inlines one extra unwind level, depth 5 coverage). Convention added to CLAUDE.md.
 
-## Open: Battle — Surprise (B16)
+## Resolved: Battle — Surprise (B16) *(done)*
 
-Moved from PLAN_BATTLE.md. SRD 5.2.1: "If a combatant is surprised by combat starting, that combatant has Disadvantage on their Initiative roll." No lost turn, no surprised condition — purely disadvantage on the initiative d20 roll. Requires initiative to be a d20 roll (currently hardcoded order). Scope: add `surprised: bool` per combatant to `bInit`, apply disadvantage to initiative roll, no further mechanical effect after initiative is resolved. Deps: B15 (done).
+Initiative is now a d20 roll per combatant (previously hardcoded order). Surprised combatants get Disadvantage on their Initiative roll (min of two d20s). Initiative order sorted descending by effective roll. No further mechanical effect after initiative is resolved (SRD 5.2.1). Updated in Quint (`bInit`), TS (`battleInit`), both MBT bridges, and `UBIQUITOUS_LANGUAGE.md`.

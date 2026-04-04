@@ -13,10 +13,25 @@ import {
 import type { BattleActionArgs, BattleContext, BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
 import { BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
 
+/** Effective initiative roll: surprised = Disadvantage (min of two d20s). */
+export function effectiveInitRoll(roll1: number, roll2: number, surprised: boolean): number {
+  return surprised ? Math.min(roll1, roll2) : roll1
+}
+
 export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Partial<BattleContext> {
   const creatures = new Map<CreatureId, BattleCreatureState>()
+  const scored = e.creatures.map((cfg) => ({
+    cfg,
+    score: effectiveInitRoll(
+      cfg.initiativeRoll ?? 10,
+      cfg.initiativeRollB ?? cfg.initiativeRoll ?? 10,
+      cfg.surprised ?? false
+    )
+  }))
+  // Stable sort: ES2019+ guarantees Array.sort stability.
+  const sorted = [...scored].sort((a, b) => b.score - a.score)
   const initiative: Array<CreatureId> = []
-  for (const cfg of e.creatures) {
+  for (const { cfg } of sorted) {
     const base = cfg.caster ? freshCaster(cfg.maxHp, cfg.kind) : freshCreature(cfg.maxHp, cfg.kind)
     creatures.set(cfg.id, {
       ...base,

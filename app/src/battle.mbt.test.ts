@@ -4,12 +4,13 @@
  */
 import * as path from "node:path"
 
-import { Option } from "effect"
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect"
+import { Option } from "effect"
 import { describe, it } from "vitest"
 import { createActor } from "xstate"
 import { z } from "zod"
 
+import { effectiveInitRoll } from "#/battle-machine-actions-turn.ts"
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
 import {
   compareNormalizedStates,
@@ -30,7 +31,14 @@ import {
   variantToString
 } from "#/mbt-shared.ts"
 import type { Condition, CreatureId, CreatureKind, DamageType } from "#/types.ts"
-import { classLevel, CreatureId as mkCreatureId, healAmount, resourceCount, spellId as mkSpellId, spellSlotLevel } from "#/types.ts"
+import {
+  classLevel,
+  CreatureId as mkCreatureId,
+  healAmount,
+  resourceCount,
+  spellId as mkSpellId,
+  spellSlotLevel
+} from "#/types.ts"
 
 // ============================================================
 // Battle-level Zod schemas (B14.2)
@@ -251,7 +259,24 @@ const OB = z.boolean().optional()
 const OS = z.string().optional()
 
 const battleDriverSchema = {
-  bInit: { hp1: OI, hp2: OI, hp3: OI, hp4: OI },
+  bInit: {
+    hp1: OI,
+    hp2: OI,
+    hp3: OI,
+    hp4: OI,
+    initRoll1: OI,
+    initRoll2: OI,
+    initRoll3: OI,
+    initRoll4: OI,
+    initRoll1b: OI,
+    initRoll2b: OI,
+    initRoll3b: OI,
+    initRoll4b: OI,
+    surprised1: OB,
+    surprised2: OB,
+    surprised3: OB,
+    surprised4: OB
+  },
   bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
   bAttack: { targetId: OS, attackRoll: OI, dmg: OI, dt: OV, crit: OB, tAc: OI },
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
@@ -440,7 +465,43 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("D"), actorD)
       creatureKinds.set("D", "PC")
 
-      initiative = ["A", "B", "C", "D"]
+      const initEntries = [
+        {
+          id: "A",
+          score: effectiveInitRoll(
+            pickBigInt(picks, "initRoll1") ?? 10,
+            pickBigInt(picks, "initRoll1b") ?? 10,
+            pickBool(picks, "surprised1") ?? false
+          )
+        },
+        {
+          id: "B",
+          score: effectiveInitRoll(
+            pickBigInt(picks, "initRoll2") ?? 10,
+            pickBigInt(picks, "initRoll2b") ?? 10,
+            pickBool(picks, "surprised2") ?? false
+          )
+        },
+        {
+          id: "C",
+          score: effectiveInitRoll(
+            pickBigInt(picks, "initRoll3") ?? 10,
+            pickBigInt(picks, "initRoll3b") ?? 10,
+            pickBool(picks, "surprised3") ?? false
+          )
+        },
+        {
+          id: "D",
+          score: effectiveInitRoll(
+            pickBigInt(picks, "initRoll4") ?? 10,
+            pickBigInt(picks, "initRoll4b") ?? 10,
+            pickBool(picks, "surprised4") ?? false
+          )
+        }
+      ]
+      // Stable sort descending (matches Quint's selection sort: ties preserve input order)
+      initEntries.sort((a, b) => b.score - a.score)
+      initiative = initEntries.map((e) => e.id)
       turnIndex = 0
       turnStarted.clear()
 
@@ -973,11 +1034,13 @@ function createBattleProjectionDriver() {
         }
         // Depth 0: resolve original spell.
         if (pendingSpell) {
-          if (!pendingSpell.ritual) send(pendingSpell.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(pendingSpell.slotLvl) })
+          if (!pendingSpell.ritual)
+            send(pendingSpell.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(pendingSpell.slotLvl) })
           resolveSpellSave(pendingSpell)
           pendingSpell = null
         } else if (pendingAoE) {
-          if (!pendingAoE.ritual) send(pendingAoE.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(pendingAoE.slotLvl) })
+          if (!pendingAoE.ritual)
+            send(pendingAoE.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(pendingAoE.slotLvl) })
         } else if (pendingConcentration) {
           resolveConcentrationSpell(pendingConcentration)
           pendingConcentration = null

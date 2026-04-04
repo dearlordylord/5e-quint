@@ -292,7 +292,24 @@ const OB = z.boolean().optional()
 const OS = z.string().optional()
 
 const battleDriverSchema = {
-  bInit: { hp1: OI, hp2: OI, hp3: OI, hp4: OI },
+  bInit: {
+    hp1: OI,
+    hp2: OI,
+    hp3: OI,
+    hp4: OI,
+    initRoll1: OI,
+    initRoll2: OI,
+    initRoll3: OI,
+    initRoll4: OI,
+    initRoll1b: OI,
+    initRoll2b: OI,
+    initRoll3b: OI,
+    initRoll4b: OI,
+    surprised1: OB,
+    surprised2: OB,
+    surprised3: OB,
+    surprised4: OB
+  },
   bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
   bAttack: { targetId: OS, attackRoll: OI, dmg: OI, dt: OV, crit: OB, tAc: OI },
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
@@ -396,16 +413,44 @@ function createBattleMachineDriver() {
         send({
           type: "BATTLE_INIT",
           creatures: [
-            { id: mkCreatureId("A"), maxHp: p(picks, "hp1", 20), kind: "PC", caster: true, rogueLevel: 5 },
-            { id: mkCreatureId("B"), maxHp: p(picks, "hp2", 20), kind: "PC", caster: true },
+            {
+              id: mkCreatureId("A"),
+              maxHp: p(picks, "hp1", 20),
+              kind: "PC",
+              caster: true,
+              rogueLevel: 5,
+              initiativeRoll: p(picks, "initRoll1", 10),
+              initiativeRollB: p(picks, "initRoll1b", 10),
+              surprised: pb(picks, "surprised1", false)
+            },
+            {
+              id: mkCreatureId("B"),
+              maxHp: p(picks, "hp2", 20),
+              kind: "PC",
+              caster: true,
+              initiativeRoll: p(picks, "initRoll2", 10),
+              initiativeRollB: p(picks, "initRoll2b", 10),
+              surprised: pb(picks, "surprised2", false)
+            },
             {
               id: mkCreatureId("C"),
               maxHp: p(picks, "hp3", 35),
               kind: "Monster",
               legendaryActions: 3,
-              legendaryResistances: 3
+              legendaryResistances: 3,
+              initiativeRoll: p(picks, "initRoll3", 10),
+              initiativeRollB: p(picks, "initRoll3b", 10),
+              surprised: pb(picks, "surprised3", false)
             },
-            { id: mkCreatureId("D"), maxHp: p(picks, "hp4", 20), kind: "PC", caster: true }
+            {
+              id: mkCreatureId("D"),
+              maxHp: p(picks, "hp4", 20),
+              kind: "PC",
+              caster: true,
+              initiativeRoll: p(picks, "initRoll4", 10),
+              initiativeRollB: p(picks, "initRoll4b", 10),
+              surprised: pb(picks, "surprised4", false)
+            }
           ]
         })
       },
