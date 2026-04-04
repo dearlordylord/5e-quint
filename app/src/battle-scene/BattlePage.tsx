@@ -47,7 +47,9 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   const castBarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const spellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [diceCues, setDiceCues] = useState<ReadonlyArray<DiceRollCue>>([])
-  const [showInspector, setShowInspector] = useState(() => new URLSearchParams(window.location.search).has("inspect"))
+  const [activeTab, setActiveTab] = useState<"field" | "machine">(() =>
+    new URLSearchParams(window.location.search).has("inspect") ? "machine" : "field"
+  )
 
   const { cues, snapshot } = useMemo(() => {
     if (cursor < 0) return { snapshot: null, cues: EMPTY_CUES }
@@ -139,24 +141,37 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
           {narrate(events[cursor], meta)}
         </div>
 
-        <div className="relative w-full max-w-3xl">
-          {layout && <BattleField layout={layout} />}
-          {diceCues.length > 0 && (
-            <Suspense fallback={null}>
-              <DiceOverlay cues={diceCues} onComplete={handleDiceComplete} />
-            </Suspense>
-          )}
+        <div className="flex gap-2 mb-2">
+          {(["field", "machine"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3 py-1 text-xs rounded border ${
+                activeTab === tab
+                  ? "border-amber-500 text-amber-400 bg-gray-800"
+                  : "border-gray-600 text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              {tab === "field" ? "Field" : "Machine"}
+            </button>
+          ))}
         </div>
 
-        <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
-
-        <button
-          onClick={() => setShowInspector((v) => !v)}
-          className="mt-4 px-3 py-1 text-xs rounded border border-gray-600 text-gray-400 hover:text-gray-200"
-        >
-          {showInspector ? "Hide Inspector" : "Show Inspector"}
-        </button>
-        {showInspector && <BattleInspector events={events} cursor={cursor} />}
+        {activeTab === "field" ? (
+          <>
+            <div className="relative w-full max-w-3xl">
+              {layout && <BattleField layout={layout} />}
+              {diceCues.length > 0 && (
+                <Suspense fallback={null}>
+                  <DiceOverlay cues={diceCues} onComplete={handleDiceComplete} />
+                </Suspense>
+              )}
+            </div>
+            <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
+          </>
+        ) : (
+          <BattleInspector events={events} cursor={cursor} />
+        )}
       </div>
     </PageShell>
   )
