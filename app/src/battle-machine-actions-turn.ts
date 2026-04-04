@@ -11,7 +11,7 @@ import {
   spendAction
 } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext, BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
-import { BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
+import { PHASE_ACTIVE, phaseAwaitingLegendary } from "#/battle-machine-types.ts"
 
 /** Effective initiative roll: surprised = Disadvantage (min of two d20s). */
 export function effectiveInitRoll(roll1: number, roll2: number, surprised: boolean): number {
@@ -48,7 +48,7 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
     initiative,
     turnIndex: 0,
     round: 1,
-    phase: BP_ACTIVE_TURN,
+    ...PHASE_ACTIVE,
     spellStack: [],
     turnStarted: false
   }
@@ -58,7 +58,7 @@ export function battleStartTurn({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_START_TURN">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPActiveTurn" || c.turnStarted) return {}
+  if (c.turnStarted) return {}
   const id = activeId(c)
   const creature = c.creatures.get(id)!
   let cs: Map<CreatureId, BattleCreatureState> = new Map(c.creatures)
@@ -89,7 +89,6 @@ export function battleStartTurn({
 }
 
 export function battleEndTurn({ context: c, event: e }: BattleActionArgs<"BATTLE_END_TURN">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const cs = processEndTurn(c.creatures, id, e.eotSaveSucceeded, e.eotDmg, e.eotDt, e.eotConSave)
   const laEligible = new Set<CreatureId>()
@@ -106,33 +105,30 @@ export function battleEndTurn({ context: c, event: e }: BattleActionArgs<"BATTLE
   if (laEligible.size > 0) {
     return {
       creatures: cs,
-      phase: { tag: "BPAwaitingLegendaryAction", la: { eligibleMonsters: laEligible, endingTurnIndex: c.turnIndex } }
+      ...phaseAwaitingLegendary({ eligibleMonsters: laEligible, endingTurnIndex: c.turnIndex })
     }
   }
   const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
-  return { creatures: cs, turnIndex: nt.idx, round: nt.round, phase: BP_ACTIVE_TURN, turnStarted: false }
+  return { creatures: cs, turnIndex: nt.idx, round: nt.round, ...PHASE_ACTIVE, turnStarted: false }
 }
 
 export function battleLegendaryPass({ context: c }: BattleActionArgs<"BATTLE_LEGENDARY_PASS">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPAwaitingLegendaryAction") return {}
   const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
-  return { turnIndex: nt.idx, round: nt.round, phase: BP_ACTIVE_TURN, turnStarted: false }
+  return { turnIndex: nt.idx, round: nt.round, ...PHASE_ACTIVE, turnStarted: false }
 }
 
 export function battleLegendaryAttack({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_LEGENDARY_ATTACK">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPAwaitingLegendaryAction") return {}
   const m = c.creatures.get(e.monsterId)!
   let cs = setCreature(c.creatures, e.monsterId, { ...m, legendaryActionsRemaining: m.legendaryActionsRemaining - 1 })
   if (isHit(e.laAtkRoll, e.laTgtAc)) cs = dealDamage(cs, e.laTarget, e.laDmg, e.laDt, e.laCrit)
   const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
-  return { creatures: cs, turnIndex: nt.idx, round: nt.round, phase: BP_ACTIVE_TURN, turnStarted: false }
+  return { creatures: cs, turnIndex: nt.idx, round: nt.round, ...PHASE_ACTIVE, turnStarted: false }
 }
 
 export function battleHeal({ context: c, event: e }: BattleActionArgs<"BATTLE_HEAL">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || ac.actionsRemaining <= 0) return {}

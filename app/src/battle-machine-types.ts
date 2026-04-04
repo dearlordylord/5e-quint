@@ -235,23 +235,40 @@ export type PendingInterrupt =
   | { readonly tag: "PISaveFailedAoE"; readonly sf: SaveFailedCtx; readonly aoe: AoESpellCtx }
   | { readonly tag: "PIAfterDamage"; readonly ctx: AfterDamageCtx }
 
-export type BattlePhase =
-  | { readonly tag: "BPActiveTurn" }
-  | { readonly tag: "BPAwaitingReaction"; readonly ctx: AwaitCtx }
-  | { readonly tag: "BPResolvingAoE"; readonly aoe: AoESpellCtx }
-  | { readonly tag: "BPResolvingMovement"; readonly mv: MovementCtx }
-  | { readonly tag: "BPAwaitingLegendaryAction"; readonly la: LAWindowCtx }
-
-export const BP_ACTIVE_TURN: BattlePhase = { tag: "BPActiveTurn" }
-
 export interface BattleContext {
   readonly creatures: ReadonlyMap<CreatureId, BattleCreatureState>
   readonly initiative: ReadonlyArray<CreatureId>
   readonly turnIndex: number
   readonly round: number
   readonly turnStarted: boolean
-  readonly phase: BattlePhase
+  readonly awaitCtx: AwaitCtx | null
+  readonly aoeCtx: AoESpellCtx | null
+  readonly movementCtx: MovementCtx | null
+  readonly laCtx: LAWindowCtx | null
   readonly spellStack: ReadonlyArray<SpellStackEntry>
+}
+
+/** All phase fields nulled — machine is in activeTurn. */
+export const PHASE_ACTIVE: Pick<BattleContext, "awaitCtx" | "aoeCtx" | "movementCtx" | "laCtx"> = {
+  awaitCtx: null,
+  aoeCtx: null,
+  movementCtx: null,
+  laCtx: null
+}
+
+export type PhaseFields = typeof PHASE_ACTIVE
+
+export function phaseAwaitReaction(ctx: AwaitCtx): PhaseFields {
+  return { awaitCtx: ctx, aoeCtx: null, movementCtx: null, laCtx: null }
+}
+export function phaseResolvingAoE(aoe: AoESpellCtx): PhaseFields {
+  return { awaitCtx: null, aoeCtx: aoe, movementCtx: null, laCtx: null }
+}
+export function phaseResolvingMovement(mv: MovementCtx): PhaseFields {
+  return { awaitCtx: null, aoeCtx: null, movementCtx: mv, laCtx: null }
+}
+export function phaseAwaitingLegendary(la: LAWindowCtx): PhaseFields {
+  return { awaitCtx: null, aoeCtx: null, movementCtx: null, laCtx: la }
 }
 
 /** Creature config for BATTLE_INIT — determines initial state per combatant. */

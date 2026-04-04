@@ -27,13 +27,12 @@ import type {
   SpellCastCtx,
   SpellStackEntry
 } from "#/battle-machine-types.ts"
-import { ADR_ACTIVE_TURN, BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
+import { ADR_ACTIVE_TURN, PHASE_ACTIVE, phaseAwaitReaction, phaseResolvingAoE } from "#/battle-machine-types.ts"
 
 export function battleCastSaveSpell({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_CAST_SAVE_SPELL">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (e.bonusAction) {
@@ -67,15 +66,12 @@ export function battleCastSaveSpell({
   if (csElig.size > 0) {
     return {
       creatures: cs,
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig)
-      }
+      ...phaseAwaitReaction(mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig))
     }
   }
   if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
   const result = resolveSave(cs, saveCtx, ADR_ACTIVE_TURN)
-  return { creatures: result.creatures, phase: result.phase }
+  return { ...result }
 }
 
 export function battleResolveCounterspell({
@@ -90,19 +86,19 @@ export function battleResolveCounterspell({
   if (setDifference(aw.eligible, aw.offered).size === 0 || e.reactorId === null) {
     if (spell.postCast.tag === "PCECounterspell") {
       const csEffect = spell.postCast.cs
-      if (c.spellStack.length === 0) return { phase: BP_ACTIVE_TURN }
+      if (c.spellStack.length === 0) return { ...PHASE_ACTIVE }
       const popped = { top: c.spellStack[c.spellStack.length - 1], rest: c.spellStack.slice(0, -1) }
       if (!csEffect.conSaveSucceeded) {
         if (popped.top.spellPostCast.tag === "PCECounterspell") {
-          if (popped.rest.length === 0) return { phase: BP_ACTIVE_TURN, spellStack: popped.rest }
+          if (popped.rest.length === 0) return { ...PHASE_ACTIVE, spellStack: popped.rest }
           const gp = { top: popped.rest[popped.rest.length - 1], rest: popped.rest.slice(0, -1) }
           const result = returnToCSWindow(c.creatures, gp.top, gp.rest)
-          return { creatures: result.creatures, phase: result.phase, spellStack: result.stack }
+          return { ...result, spellStack: result.stack }
         }
-        return { phase: BP_ACTIVE_TURN, spellStack: popped.rest }
+        return { ...PHASE_ACTIVE, spellStack: popped.rest }
       }
       const result = returnToCSWindow(c.creatures, popped.top, popped.rest)
-      return { creatures: result.creatures, phase: result.phase, spellStack: result.stack }
+      return { ...result, spellStack: result.stack }
     }
     const result = resolveSpellEntry(
       c.creatures,
@@ -112,13 +108,13 @@ export function battleResolveCounterspell({
       spell.postCast,
       c.spellStack
     )
-    return { creatures: result.creatures, phase: result.phase, spellStack: result.stack }
+    return { ...result, spellStack: result.stack }
   }
 
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
   if (!e.decision || e.decision.tag === "RPass") {
-    return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw, offered: newOffered } } }
+    return { ...phaseAwaitReaction({ ...aw, offered: newOffered }) }
   }
   // Only remaining variant after null/RPass check above
   const reactor = c.creatures.get(e.reactorId)!
@@ -144,10 +140,7 @@ export function battleResolveCounterspell({
   return {
     creatures: cs,
     spellStack: [...c.spellStack, stackEntry],
-    phase: {
-      tag: "BPAwaitingReaction",
-      ctx: mkAwait({ tag: "PISpellCast", ctx: csSpell }, "TSpellBeingCast", csElig)
-    }
+    ...phaseAwaitReaction(mkAwait({ tag: "PISpellCast", ctx: csSpell }, "TSpellBeingCast", csElig))
   }
 }
 
@@ -165,23 +158,34 @@ export function battleResolveSaveFailedReaction({
   const returnTo = aoe && aoe.remaining.size > 0 ? { tag: "ADRResolvingAoE" as const, aoe } : ADR_ACTIVE_TURN
   if (setDifference(aw2.eligible, aw2.offered).size === 0 || e.reactorId === null) {
     const result = applyFailEffects(c.creatures, sf, returnTo)
-    return { creatures: result.creatures, phase: result.phase }
+    return {
+      creatures: result.creatures,
+      awaitCtx: result.awaitCtx,
+      aoeCtx: result.aoeCtx,
+      movementCtx: result.movementCtx,
+      laCtx: result.laCtx
+    }
   }
   if (e.decision.tag === "RLegendaryResistance") {
     const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
     const result = applyFailEffects(cs1, { ...sf, saveSucceeded: true }, returnTo)
-    return { creatures: result.creatures, phase: result.phase }
+    return {
+      creatures: result.creatures,
+      awaitCtx: result.awaitCtx,
+      aoeCtx: result.aoeCtx,
+      movementCtx: result.movementCtx,
+      laCtx: result.laCtx
+    }
   }
   const newOff = new Set(aw2.offered)
   newOff.add(e.reactorId)
-  return { phase: { tag: "BPAwaitingReaction", ctx: { ...aw2, offered: newOff } } }
+  return { ...phaseAwaitReaction({ ...aw2, offered: newOff }) }
 }
 
 export function battleCastConcentrationSpell({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_CAST_CONCENTRATION_SPELL">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || ac.actionsRemaining <= 0) return {}
@@ -206,28 +210,23 @@ export function battleCastConcentrationSpell({
   if (csElig.size > 0) {
     return {
       creatures: cs,
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig)
-      }
+      ...phaseAwaitReaction(mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig))
     }
   }
   if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
-  return { creatures: resolveConcentration(cs, concCtx), phase: BP_ACTIVE_TURN }
+  return { creatures: resolveConcentration(cs, concCtx), ...PHASE_ACTIVE }
 }
 
 export function battleConcentrationCheck({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_CONCENTRATION_CHECK">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPActiveTurn") return {}
   if (e.conSaveSucceeded) return {}
   const cs = breakConcentrationAndPropagate(c.creatures, e.targetId)
   return { creatures: cs }
 }
 
 export function battleCastAoE({ context: c, event: e }: BattleActionArgs<"BATTLE_CAST_AOE">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPActiveTurn") return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || ac.actionsRemaining <= 0) return {}
@@ -258,23 +257,20 @@ export function battleCastAoE({ context: c, event: e }: BattleActionArgs<"BATTLE
   if (csElig.size > 0) {
     return {
       creatures: cs,
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig)
-      }
+      ...phaseAwaitReaction(mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig))
     }
   }
   if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
-  return { creatures: cs, phase: { tag: "BPResolvingAoE", aoe: aoeCtx } }
+  return { creatures: cs, ...phaseResolvingAoE(aoeCtx) }
 }
 
 export function battleResolveAoETarget({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_RESOLVE_AOE_TARGET">): Partial<BattleContext> {
-  if (c.phase.tag !== "BPResolvingAoE") return {}
-  const aoe = c.phase.aoe
-  if (aoe.remaining.size === 0 || e.targetId === null) return { phase: BP_ACTIVE_TURN }
+  const aoe = c.aoeCtx
+  if (!aoe) return {}
+  if (aoe.remaining.size === 0 || e.targetId === null) return { ...PHASE_ACTIVE }
   const newRemaining = new Set(aoe.remaining)
   newRemaining.delete(e.targetId)
   const updatedAoe = { ...aoe, remaining: newRemaining }
@@ -291,9 +287,15 @@ export function battleResolveAoETarget({
         false,
         aoeReturn
       )
-      return { creatures: result.creatures, phase: result.phase }
+      return {
+        creatures: result.creatures,
+        awaitCtx: result.awaitCtx,
+        aoeCtx: result.aoeCtx,
+        movementCtx: result.movementCtx,
+        laCtx: result.laCtx
+      }
     }
-    return { phase: { tag: "BPResolvingAoE", aoe: updatedAoe } }
+    return { ...phaseResolvingAoE(updatedAoe) }
   }
   const sfCtx: SaveFailedCtx = {
     caster: aoe.caster,
@@ -308,12 +310,9 @@ export function battleResolveAoETarget({
   const elig = eligibleTarget(c.creatures, e.targetId)
   if (elig.size > 0) {
     return {
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: mkAwait({ tag: "PISaveFailedAoE", sf: sfCtx, aoe: updatedAoe }, "TSaveFailed", elig)
-      }
+      ...phaseAwaitReaction(mkAwait({ tag: "PISaveFailedAoE", sf: sfCtx, aoe: updatedAoe }, "TSaveFailed", elig))
     }
   }
   const result = applyFailEffects(c.creatures, sfCtx, aoeReturn)
-  return { creatures: result.creatures, phase: result.phase }
+  return { ...result }
 }

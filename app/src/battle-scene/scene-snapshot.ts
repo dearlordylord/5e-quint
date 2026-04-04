@@ -10,7 +10,6 @@ import type {
   BattleContext,
   BattleCreatureState,
   BattleEvent,
-  BattlePhase,
   PendingInterrupt
 } from "#/battle-machine-types.ts"
 import type { Condition, DamageType } from "#/types.ts"
@@ -137,41 +136,34 @@ function deriveCreature(
   }
 }
 
-function derivePhase(phase: BattlePhase): PhaseSnapshot {
-  switch (phase.tag) {
-    case "BPActiveTurn":
-      return { type: "activeTurn" }
-    case "BPAwaitingReaction": {
-      const firstEligible = phase.ctx.eligible.size > 0 ? [...phase.ctx.eligible][0] : undefined
-      return {
-        type: "interrupt",
-        interruptKind: phase.ctx.interrupt.tag,
-        reactorId: firstEligible,
-        spellCasterId: phase.ctx.interrupt.tag === "PISpellCast" ? phase.ctx.interrupt.ctx.caster : undefined
-      }
-    }
-    case "BPResolvingAoE":
-      return {
-        type: "aoeResolving",
-        spellName: "AoE",
-        remainingCount: phase.aoe.remaining.size,
-        saveDC: phase.aoe.saveDC
-      }
-    case "BPResolvingMovement":
-      return { type: "movement" }
-    case "BPAwaitingLegendaryAction":
-      return { type: "legendaryAction" }
-    default: {
-      const _exhaustive: never = phase
-      throw new Error(`Unhandled phase: ${(_exhaustive as { tag: string }).tag}`)
+function derivePhase(ctx: BattleContext): PhaseSnapshot {
+  if (ctx.awaitCtx) {
+    const aw = ctx.awaitCtx
+    const firstEligible = aw.eligible.size > 0 ? [...aw.eligible][0] : undefined
+    return {
+      type: "interrupt",
+      interruptKind: aw.interrupt.tag,
+      reactorId: firstEligible,
+      spellCasterId: aw.interrupt.tag === "PISpellCast" ? aw.interrupt.ctx.caster : undefined
     }
   }
+  if (ctx.aoeCtx) {
+    return {
+      type: "aoeResolving",
+      spellName: "AoE",
+      remainingCount: ctx.aoeCtx.remaining.size,
+      saveDC: ctx.aoeCtx.saveDC
+    }
+  }
+  if (ctx.movementCtx) return { type: "movement" }
+  if (ctx.laCtx) return { type: "legendaryAction" }
+  return { type: "activeTurn" }
 }
 
-function extractAoECtx(phase: BattlePhase): AoESpellCtx | null {
-  if (phase.tag === "BPResolvingAoE") return phase.aoe
-  if (phase.tag === "BPAwaitingReaction") {
-    const pi = phase.ctx.interrupt
+function extractAoECtx(ctx: BattleContext): AoESpellCtx | null {
+  if (ctx.aoeCtx) return ctx.aoeCtx
+  if (ctx.awaitCtx) {
+    const pi = ctx.awaitCtx.interrupt
     if (pi.tag === "PISaveFailedAoE") return pi.aoe
     if (pi.tag === "PIAfterDamage" && pi.ctx.returnTo.tag === "ADRResolvingAoE") return pi.ctx.returnTo.aoe
   }
@@ -179,11 +171,11 @@ function extractAoECtx(phase: BattlePhase): AoESpellCtx | null {
 }
 
 function deriveAoEZones(
-  phase: BattlePhase,
+  ctx: BattleContext,
   meta: ScenarioMeta,
   eventIndex: string | null
 ): ReadonlyArray<AoEZoneSnapshot> {
-  const aoe = extractAoECtx(phase)
+  const aoe = extractAoECtx(ctx)
   if (!aoe) return []
   const centerGridPos =
     eventIndex != null ? (meta.aoeTargetPoints[eventIndex] ?? { row: 0, col: 0 }) : { row: 0, col: 0 }
@@ -224,8 +216,8 @@ export function deriveSnapshot(
 
   return {
     creatures,
-    phase: derivePhase(ctx.phase),
-    aoeZones: deriveAoEZones(ctx.phase, meta, aoeEventIndex),
+    phase: derivePhase(ctx),
+    aoeZones: deriveAoEZones(ctx, meta, aoeEventIndex),
     aoeTargetPoint: aoeEventIndex != null ? (meta.aoeTargetPoints[aoeEventIndex] ?? null) : null,
     round: ctx.round,
     activeCreatureId: activeId

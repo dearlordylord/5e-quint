@@ -23,14 +23,14 @@ import type {
   AwaitCtx,
   BattleContext,
   BattleCreatureState,
-  BattlePhase,
   CreatureId,
   PendingInterrupt,
+  PhaseFields,
   SaveFailedCtx,
   SaveSpellCtx,
   TriggerType
 } from "#/battle-machine-types.ts"
-import { BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
+import { PHASE_ACTIVE, phaseAwaitReaction, phaseResolvingAoE, phaseResolvingMovement } from "#/battle-machine-types.ts"
 import type { DamageType, SpellId } from "#/types.ts"
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
@@ -67,9 +67,8 @@ export function activeId(c: BattleContext): CreatureId {
   return c.initiative[c.turnIndex]
 }
 
-/** Extract awaiting-reaction context from phase, or null. */
 export function awaitingReaction(c: BattleContext): AwaitCtx | null {
-  return c.phase.tag === "BPAwaitingReaction" ? c.phase.ctx : null
+  return c.awaitCtx
 }
 
 export function piAttackHit(pi: PendingInterrupt) {
@@ -163,11 +162,11 @@ export function mkAwait(pi: PendingInterrupt, tt: TriggerType, elig: Set<Creatur
   return { interrupt: pi, trigger: tt, eligible: elig, offered: new Set() }
 }
 
-export function returnToPhase(r: AfterDamageReturn): BattlePhase {
+export function returnToState(r: AfterDamageReturn): PhaseFields {
   return Match.value(r).pipe(
-    byTag("ADRActiveTurn", () => BP_ACTIVE_TURN),
-    byTag("ADRResolvingAoE", (v) => ({ tag: "BPResolvingAoE" as const, aoe: v.aoe })),
-    byTag("ADRResolvingMovement", (v) => ({ tag: "BPResolvingMovement" as const, mv: v.mv })),
+    byTag("ADRActiveTurn", () => PHASE_ACTIVE),
+    byTag("ADRResolvingAoE", (v) => phaseResolvingAoE(v.aoe)),
+    byTag("ADRResolvingMovement", (v) => phaseResolvingMovement(v.mv)),
     Match.exhaustive
   )
 }
@@ -180,7 +179,7 @@ export function dealDamageWithAfterReactions(
   dt: DamageType,
   crit: boolean,
   returnTo: AfterDamageReturn
-): { creatures: Map<CreatureId, BattleCreatureState>; phase: BattlePhase } {
+): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const oldT = cs.get(targetId)!
   const cs1 = dealDamage(cs, targetId, dmg, dt, crit)
   const newT = cs1.get(targetId)!
@@ -189,9 +188,8 @@ export function dealDamageWithAfterReactions(
   if (actualDmg > 0 && elig.size > 0) {
     return {
       creatures: cs1,
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: mkAwait(
+      ...phaseAwaitReaction(
+        mkAwait(
           {
             tag: "PIAfterDamage",
             ctx: { damageSource: sourceId, damagedCreature: targetId, damageDealt: actualDmg, damageType: dt, returnTo }
@@ -199,25 +197,24 @@ export function dealDamageWithAfterReactions(
           "TDamageTaken",
           elig
         )
-      }
+      )
     }
   }
-  return { creatures: cs1, phase: returnToPhase(returnTo) }
+  return { creatures: cs1, ...returnToState(returnTo) }
 }
 
 export function advanceFromHitPhase(
   cs: Creatures,
   atk: AttackHitCtx
-): { creatures: Map<CreatureId, BattleCreatureState>; phase: BattlePhase } {
+): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const stillHit = isHit(atk.attackRoll, atk.targetAc)
-  if (!stillHit) return { creatures: new Map(cs), phase: returnToPhase(atk.atkReturnTo) }
+  if (!stillHit) return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) }
   const dmgElig = eligibleTarget(cs, atk.target)
   if (dmgElig.size > 0) {
     return {
       creatures: new Map(cs),
-      phase: {
-        tag: "BPAwaitingReaction",
-        ctx: mkAwait(
+      ...phaseAwaitReaction(
+        mkAwait(
           {
             tag: "PIAttackDamage",
             ctx: {
@@ -232,7 +229,7 @@ export function advanceFromHitPhase(
           "TAttackDamages",
           dmgElig
         )
-      }
+      )
     }
   }
   return dealDamageWithAfterReactions(
@@ -250,7 +247,7 @@ export function resolveSave(
   cs: Creatures,
   save: SaveSpellCtx,
   returnTo: AfterDamageReturn
-): { creatures: Map<CreatureId, BattleCreatureState>; phase: BattlePhase } {
+): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const saved = save.saveRoll >= save.saveDC
   if (saved) {
     if (save.halfOnSuccess && save.damageOnFail > 0) {
@@ -264,7 +261,7 @@ export function resolveSave(
         returnTo
       )
     }
-    return { creatures: new Map(cs), phase: returnToPhase(returnTo) }
+    return { creatures: new Map(cs), ...returnToState(returnTo) }
   }
   const elig = eligibleTarget(cs, save.target)
   const failCtx: SaveFailedCtx = {
@@ -280,7 +277,7 @@ export function resolveSave(
   if (elig.size > 0) {
     return {
       creatures: new Map(cs),
-      phase: { tag: "BPAwaitingReaction", ctx: mkAwait({ tag: "PISaveFailed", ctx: failCtx }, "TSaveFailed", elig) }
+      ...phaseAwaitReaction(mkAwait({ tag: "PISaveFailed", ctx: failCtx }, "TSaveFailed", elig))
     }
   }
   return applyFailEffects(cs, failCtx, returnTo)
@@ -290,7 +287,7 @@ export function applyFailEffects(
   cs: Creatures,
   ctx: SaveFailedCtx,
   returnTo: AfterDamageReturn
-): { creatures: Map<CreatureId, BattleCreatureState>; phase: BattlePhase } {
+): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   if (ctx.saveSucceeded) {
     if (ctx.halfOnSuccess && ctx.damageOnFail > 0) {
       return dealDamageWithAfterReactions(
@@ -303,13 +300,13 @@ export function applyFailEffects(
         returnTo
       )
     }
-    return { creatures: new Map(cs), phase: returnToPhase(returnTo) }
+    return { creatures: new Map(cs), ...returnToState(returnTo) }
   }
   let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs)
   if (ctx.applyCondition) cs1 = setCreature(cs1, ctx.target, applyCondition(cs1.get(ctx.target)!, ctx.conditionOnFail))
   if (ctx.damageOnFail > 0)
     return dealDamageWithAfterReactions(cs1, ctx.target, ctx.caster, ctx.damageOnFail, ctx.damageType, false, returnTo)
-  return { creatures: cs1, phase: returnToPhase(returnTo) }
+  return { creatures: cs1, ...returnToState(returnTo) }
 }
 
 export function nextTurn(turnIndex: number, initLen: number, round: number): { idx: number; round: number } {

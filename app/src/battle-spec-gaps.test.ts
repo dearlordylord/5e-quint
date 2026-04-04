@@ -74,9 +74,9 @@ function endTurn(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
 /** Pass through all pending reaction windows (pass on every reactor). */
 function passReactions(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   for (let i = 0; i < 20; i++) {
-    const phase = ctx(actor).phase
-    if (phase.tag !== "BPAwaitingReaction") return
-    const pi = phase.ctx.interrupt
+    const aw = ctx(actor).awaitCtx
+    if (!aw) return
+    const pi = aw.interrupt
     if (pi.tag === "PIAttackHit") {
       send(actor, { type: "BATTLE_RESOLVE_HIT_REACTION", reactorId: null, decision: { tag: "RPass" } })
     } else if (pi.tag === "PIAttackDamage") {
@@ -177,10 +177,10 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
       crit: false,
       tAc: armorClass(10)
     })
-    const phase = ctx(actor).phase
-    expect(phase.tag).toBe("BPAwaitingReaction")
-    if (phase.tag === "BPAwaitingReaction") {
-      expect(phase.ctx.eligible.has(CreatureId("B"))).toBe(true)
+    const aw = ctx(actor).awaitCtx
+    expect(aw).not.toBeNull()
+    if (aw) {
+      expect(aw.eligible.has(CreatureId("B"))).toBe(true)
     }
   })
 
@@ -201,13 +201,13 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
       crit: false,
       tAc: armorClass(10)
     })
-    const phase = ctx(actor).phase
+    const aw = ctx(actor).awaitCtx
     // Attack hit => reaction window opens. B must NOT be in the eligible set.
-    expect(phase.tag).toBe("BPAwaitingReaction")
-    if (phase.tag === "BPAwaitingReaction") {
-      expect(phase.ctx.eligible.has(CreatureId("B"))).toBe(false)
+    expect(aw).not.toBeNull()
+    if (aw) {
+      expect(aw.eligible.has(CreatureId("B"))).toBe(false)
       // C (the target) should still be eligible via eligibleExcluding
-      expect(phase.ctx.eligible.has(CreatureId("C"))).toBe(true)
+      expect(aw.eligible.has(CreatureId("C"))).toBe(true)
     }
   })
 })
