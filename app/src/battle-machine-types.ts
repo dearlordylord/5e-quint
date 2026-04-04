@@ -306,6 +306,8 @@ export type BattleEvent =
       readonly type: "BATTLE_ATTACK"
       readonly targetId: CreatureId
       readonly attackRoll: number
+      readonly diceCount: number
+      readonly dieSize: number
       readonly dmg: number
       readonly dt: DamageType
       readonly crit: boolean

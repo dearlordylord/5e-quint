@@ -312,7 +312,7 @@ const battleDriverSchema = {
     surprised4: OB
   },
   bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
-  bAttack: { targetId: OS, attackRoll: OI, dmg: OI, dt: OV, crit: OB, tAc: OI },
+  bAttack: { targetId: OS, attackRoll: OI, diceCount: OI, dieSize: OI, dmg: OI, dt: OV, crit: OB, tAc: OI },
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
   bAfterDamagePass: { reactorId: OS },
@@ -472,6 +472,8 @@ function createBattleMachineDriver() {
           type: "BATTLE_ATTACK",
           targetId: pc(picks, "targetId", ""),
           attackRoll: p(picks, "attackRoll", 10),
+          diceCount: p(picks, "diceCount", 1),
+          dieSize: p(picks, "dieSize", 8),
           dmg: p(picks, "dmg", 5),
           dt: mapDamageType(ps(picks, "dt", "Slashing")),
           crit: pb(picks, "crit", false),

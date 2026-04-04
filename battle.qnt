@@ -671,7 +671,11 @@ module battle {
     val ac = bCreatures.get(activeId)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet attackRoll = 1.to(20).oneOf()
-    nondet dmg = 1.to(12).oneOf()
+    // Weapon dice for 3D overlay. Models uniform dice (e.g., 2d6 greatsword).
+    // Does NOT model mixed-die weapons (e.g., 1d6+1d4) — would need per-die nondets.
+    nondet diceCount = Set(1, 2).oneOf()
+    nondet dieSize = Set(4, 6, 8, 10, 12).oneOf()
+    nondet dmg = diceCount.to(diceCount * dieSize).oneOf()
     nondet dt = Set(Slashing, Piercing, Bludgeoning).oneOf()
     nondet crit = Bool.oneOf()
     nondet tAc = 10.to(20).oneOf()
