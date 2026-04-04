@@ -11,8 +11,6 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 |------|--------|-------|
 | **PLAN.md** (this file) | Done | Core Quint spec: generic rules in `creature.qnt` (HP, damage, conditions, turns, rests, slots, grapple/shove, attack resolution, environment). The foundation everything else composes on. |
 | **PLAN_SCRAPERS.md** | Active | QA pipeline: new data sources for the community Q&A corpus (SE tags, Sage Advice, sageadvice.eu, errata). Independent of other plans. |
-| **PLAN_DICE.md** | Active | 3D dice overlay for battle visualizer. |
-| **PLAN_MACHINE_REFACTOR.md** | Planned | XState structural refactor: battle phase states, creature ability guards, conditionTrack elimination. PRD: `PRD_BATTLE_MACHINE_REFACTOR.md`. |
 
 ## Known Spec Gaps (Battle Machine) — all resolved
 
