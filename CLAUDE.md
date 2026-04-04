@@ -1,5 +1,9 @@
 # D&D 5e PHB — project notes
 
+## Package manager
+
+pnpm workspace. Never use npm.
+
 ## No external consumers (CRITICAL)
 
 This is a greenfield project with no users, no published API, no downstream dependencies. **We own the entire stack — Quint spec, XState machine, TS features, MBT bridge, React UI.** Any layer can change to serve any other layer.
