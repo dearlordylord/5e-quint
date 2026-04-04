@@ -866,6 +866,9 @@ module battle {
   // Generic after-damage spell reaction (e.g., Hellish Rebuke, Fire Shield).
   // Spell identity is uninterpreted — the TS side supplies dice and display info.
   // reactionSaved drives save-for-half logic; dmg and dt are opaque to the spec.
+  // NOTE: Currently all users (Hellish Rebuke, Fire Shield) always deal damage,
+  // so dmg is always positive. If a non-damage spell reaction is needed, add a
+  // separate action rather than making dmg optional here.
   action bAfterDamageSpellReaction = {
     nondet reactionDmg = 1.to(40).oneOf()
     nondet reactionSaved = Bool.oneOf()
