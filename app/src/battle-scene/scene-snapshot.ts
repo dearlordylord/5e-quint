@@ -74,6 +74,7 @@ export interface CreatureSnapshot {
   deathSaves: { successes: number; failures: number }
   isActive: boolean
   conditions: ReadonlyArray<Condition>
+  preparedSpells: ReadonlyArray<string>
 }
 
 export interface AoEZoneSnapshot {
@@ -132,7 +133,8 @@ function deriveCreature(
     slotsByLevel: cs.slotsMax.map((max, i) => ({ current: cs.slotsCurrent[i] ?? 0, max })).filter((s) => s.max > 0),
     deathSaves: cs.deathSaves,
     isActive: id === activeId,
-    conditions: extractConditions(cs)
+    conditions: extractConditions(cs),
+    preparedSpells: [...cs.preparedSpells].sort()
   }
 }
 
