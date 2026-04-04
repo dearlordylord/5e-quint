@@ -150,6 +150,22 @@
 
 ---
 
+### C11. Missing `isIncapacitated` and `bTurnStarted` guards on battle actions [Major]
+
+**SRD Reference:** Rules-Glossary "Incapacitated [Condition]": "An Incapacitated creature can't take any action, Bonus Action, or Reaction."
+
+**Spec Location:** `battle.qnt` — `bAttack`, `bHeal`, `bCastSaveSpell`, `bCastAoE`, `bCastConcentrationSpell`, `bCastBonusActionSpell`, `bMove`
+
+**Current Behavior:** These 7 battle actions guard on `not(ac.creature.dead)` and `ac.turn.actionsRemaining > 0` but do **not** check `not(isIncapacitated(ac.creature))` or `bTurnStarted`. The newly added `bDash`, `bDisengage`, `bDodge` correctly include both guards.
+
+**Expected Behavior:** All action-spending battle actions should guard on:
+1. `not(isIncapacitated(ac.creature))` — SRD requires this for any action
+2. `bTurnStarted` — ensures `bStartTurn` has run (ticking effects, resetting turn state) before any action is taken
+
+**Fix:** Add `not(isIncapacitated(ac.creature))` and `bTurnStarted` guards to all 7 existing actions. Update corresponding TS action functions with an `isIncapacitated` check (already available in `battle-machine-creature.ts`). MBT will verify parity.
+
+---
+
 ### ~~C4. Concentration DC cap at 30~~ [Not a bug]
 
 Validated: `pConcentrationDC` at `creature.qnt:2005-2009` already caps at 30 via `intMin(intMax(half, 10), 30)`. Matches RAW exactly.
@@ -369,11 +385,12 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 2. ~~**C9** (Monk UD + Shield)~~ DONE
 3. ~~**C10** (Heavy Weapon 5.1->5.2.1)~~ DONE
 4. ~~**C6 + F2 + F10** (Dodge/Dash/Disengage + spell slot cap)~~ DONE
-5. **C3** (Evasion) -- correctness, needs PRD 3 (passive modifier system)
-6. **PRD 1** (attack pipeline + class features) -- covers S1, F3, F4, F5, F9
-7. **PRD 3** (passive modifier system) -- covers C3, F7, and future passives
-8. **PRD 2** (Ready action) -- covers C8
-9. **F1** (more reactions) -- incremental, add as needed
+5. **C11** (missing isIncapacitated + bTurnStarted guards on 7 battle actions) -- small, uniform fix
+6. **C3** (Evasion) -- correctness, needs PRD 3 (passive modifier system)
+7. **PRD 1** (attack pipeline + class features) -- covers S1, F3, F4, F5, F9
+8. **PRD 3** (passive modifier system) -- covers C3, F7, and future passives
+9. **PRD 2** (Ready action) -- covers C8
+10. **F1** (more reactions) -- incremental, add as needed
 15. ~~**S2** (fix OA comment)~~ DONE
 16. **S3** (investigate excluded invariants) -- quality-of-proof
 17. **C2** (Arcane Recovery) -- minor
