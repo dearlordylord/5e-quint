@@ -7,7 +7,7 @@ import type {
   DefenseSpellInfo,
   DiceDamage
 } from "#/features/spell-patterns.ts"
-import { SAVE_PASSED, saveOrCondition, upcastTargets } from "#/features/spell-patterns.ts"
+import { SAVE_PASSED, saveOrCondition, scalingDice, upcastTargets } from "#/features/spell-patterns.ts"
 
 /* eslint-disable no-magic-numbers */
 
@@ -106,7 +106,7 @@ export function colorSprayResult(savePassed: boolean): ConditionSpellResult {
 
 /** Phantasmal Killer (SRD 5.2.1): 4d10 Psychic at L4, +1d10 per slot above 4. */
 export function phantasmalKillerDamage(slotLevel: number): DiceDamage {
-  return { dice: 4 + (slotLevel - 4), dieSize: 10 }
+  return scalingDice(4, 4, 10, slotLevel)
 }
 
 // --- Greater Invisibility (L4, Action, Touch, Concentration 1 min) ---

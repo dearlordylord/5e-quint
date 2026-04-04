@@ -36,7 +36,7 @@ function disposeMesh(scene: THREE.Scene, mesh: THREE.Mesh): void {
   })
 }
 
-export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onComplete: () => void }) {
+export function DiceOverlay({ cues, onComplete }: { cues: ReadonlyArray<DiceRollCue>; onComplete: () => void }) {
   const mountRef = useRef<HTMLDivElement>(null)
   const onCompleteRef = useRef(onComplete)
   onCompleteRef.current = onComplete
@@ -164,11 +164,10 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
     s.gridPos = []
     s.settleData = []
 
-    if (!cue) return
+    const dice = cues.flatMap(({ color, results, sides }) => results.map((result) => ({ sides, color, result })))
+    if (dice.length === 0) return
 
-    const { color, results, sides } = cue
-    const count = results.length
-    if (count === 0) return
+    const count = dice.length
 
     // Build meshes on a grid
     const cols = Math.min(count, 5)
@@ -176,7 +175,8 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
     const spacing = 2.8
 
     for (let i = 0; i < count; i++) {
-      const mesh = buildDieMesh(sides, color)
+      const d = dice[i]
+      const mesh = buildDieMesh(d.sides, d.color)
       const row = Math.floor(i / cols)
       const inRow = i - row * cols
       const rowItems = row === rows - 1 ? count - row * cols : cols
@@ -210,16 +210,15 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
 
     s.phase = "spinning"
 
-    const isNumbered = FACE_LABELED.has(sides)
-
     const settleTimer = setTimeout(() => {
       s.phase = "settling"
       s.settleStart = performance.now()
       s.settleData = s.meshes.map((m, i) => {
         const from = m.quaternion.clone()
+        const d = dice[i]
         let to: THREE.Quaternion | null = null
-        if (isNumbered && m.userData.faces) {
-          to = settleQuat(m, results[i], sides)
+        if (d && FACE_LABELED.has(d.sides) && m.userData.faces) {
+          to = settleQuat(m, d.result, d.sides)
         }
         if (!to) {
           to = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random() * 0.3, Math.random() * 0.3, 0))
@@ -238,7 +237,7 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
       clearTimeout(settleTimer)
       clearTimeout(hideTimer)
     }
-  }, [cue])
+  }, [cues])
 
   return (
     <div

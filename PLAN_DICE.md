@@ -263,9 +263,43 @@ weapon damage dice requires threading metadata through events:
 
 Deferred until the spell path proves the visual works.
 
-### Additional spell coverage
+### Additional spell coverage (done)
 
-The Phase 2 lookup only covers battle.qnt's `CASTER_PREPARED_SPELLS`.
-As more spells are added to battle scenarios, add entries to the switch
-in `spell-dice-lookup.ts`. The pattern is mechanical: import the damage
-function, add a case.
+`spell-dice-lookup.ts` now covers 18 spells across all schools:
+fireball, burning_hands, guiding_bolt, chromatic_orb, spiritual_weapon,
+searing_smite, moonbeam, flame_blade, vitriolic_sphere, spirit_guardians,
+ice_knife, call_lightning, inflict_wounds, vampiric_touch,
+phantasmal_killer, mind_spike, heat_metal, shining_smite.
+
+Not included (special return types): disintegrate (DiceDamageWithBonus
+with flatBonus — decomposeDice doesn't handle flat bonus yet).
+
+### Generalize hardcoded spells in battle.qnt
+
+Three spells have spell-specific mechanics baked into the Quint spec
+instead of using the generic parameterized framework. These should be
+moved to TS features over time.
+
+**Hellish Rebuke** (`bAfterDamageHellishRebuke`, line ~830):
+- Hardcodes `2.to(20)` (2d10 range), `Fire` damage type, save-for-half.
+- To genericize: add `nondet rebukeSlotLvl` (or `rebukeDiceCount`) to
+  the action so the event carries enough info for TS to derive dice.
+  Then `spell-dice-lookup.ts` handles it like any other spell.
+- Minimal spec change: one new nondet field threaded to the event.
+
+**Shield** (`RShield` reaction, line ~720):
+- Hardcodes `targetAc + 5`. Should parameterize the AC bonus so TS
+  features supply it (e.g., `nondet shieldAcBonus`).
+
+**Counterspell** (~200 lines, `bSpellStack`, chain/recursion):
+- Deeply structural — controls spell resolution flow, slot refund,
+  recursive CS-on-CS. Hardest to genericize. The spell stack and
+  interrupt chain are fundamental control flow, not just parameters.
+- Likely stays in .qnt long-term; the framework *is* Counterspell's
+  mechanic. Could parameterize the ability check DC formula.
+
+### Return multiple dice rolls per event (done)
+
+Implemented: `VisualCueState.diceRolls` is `ReadonlyArray<DiceRollCue>`.
+`deriveDiceRolls` collects damage + d20 cues. `DiceOverlay` flattens
+and renders mixed groups.

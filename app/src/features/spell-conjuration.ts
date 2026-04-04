@@ -7,7 +7,7 @@ import type {
   DiceDamage,
   SpellDamageInfo
 } from "#/features/spell-patterns.ts"
-import { saveOrCondition } from "#/features/spell-patterns.ts"
+import { saveOrCondition, scalingDice } from "#/features/spell-patterns.ts"
 
 /* eslint-disable no-magic-numbers */
 
@@ -53,7 +53,7 @@ export const WEB_INFO: ConditionSpellInfo = {
 
 /** Spirit Guardians (SRD 5.2.1): 3d8 at L3, +1d8 per slot level above 3. */
 export function spiritGuardiansDamage(slotLevel: number): DiceDamage {
-  return { dice: 3 + (slotLevel - 3), dieSize: 8 }
+  return scalingDice(3, 3, 8, slotLevel)
 }
 
 // --- Entangle / Web (both apply Restrained on failed save) ---
@@ -70,7 +70,7 @@ export const webResult: (savePassed: boolean) => ConditionSpellResult = entangle
 
 /** Ice Knife explosion (SRD 5.2.1): 2d6 Cold at L1, +1d6 per slot above 1. */
 export function iceKnifeExplosionDamage(slotLevel: number): DiceDamage {
-  return { dice: 2 + (slotLevel - 1), dieSize: 6 }
+  return scalingDice(2, 1, 6, slotLevel)
 }
 
 // --- Call Lightning (L3, Action, 120 ft, Concentration 10 min, DEX save) ---

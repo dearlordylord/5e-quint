@@ -9,7 +9,7 @@ import type {
   DiceDamageWithBonus,
   SpellDamageInfo
 } from "#/features/spell-patterns.ts"
-import { saveOrCondition, upcastTargets } from "#/features/spell-patterns.ts"
+import { saveOrCondition, scalingDice, upcastTargets } from "#/features/spell-patterns.ts"
 
 /* eslint-disable no-magic-numbers */
 
@@ -179,14 +179,14 @@ export const REGENERATE_INITIAL_HEAL: DiceDamageWithBonus = { dice: 4, dieSize: 
 
 /** Heat Metal (SRD 5.2.1): 2d8 Fire at L2, +1d8 per slot above 2. Repeatable as Bonus Action. */
 export function heatMetalDamage(slotLevel: number): DiceDamage {
-  return { dice: 2 + (slotLevel - 2), dieSize: 8 }
+  return scalingDice(2, 2, 8, slotLevel)
 }
 
 // --- Shining Smite (L2, Bonus Action, Self, Concentration 1 min) ---
 
 /** Shining Smite (SRD 5.2.1): +2d6 Radiant at L2, +1d6 per slot above 2. Target sheds light, can't be Invisible. */
 export function shiningSmiteDamage(slotLevel: number): DiceDamage {
-  return { dice: 2 + (slotLevel - 2), dieSize: 6 }
+  return scalingDice(2, 2, 6, slotLevel)
 }
 
 /* eslint-enable no-magic-numbers */
