@@ -15,10 +15,21 @@ export function BattleInspector({ cursor, events }: { events: ReadonlyArray<Batt
 
   useEffect(() => {
     let cancelled = false
+    const iframe = iframeRef.current
     void import("@statelyai/inspect").then(({ createBrowserInspector }) => {
-      if (cancelled || !iframeRef.current) return
-      inspectorRef.current = createBrowserInspector({ iframe: iframeRef.current })
-      setReady(true)
+      if (cancelled || !iframe) return
+      const handle = createBrowserInspector({ iframe })
+      inspectorRef.current = handle
+      // createBrowserInspector sets iframe src and waits for load internally,
+      // but doesn't expose that promise. Wait for iframe load so the inspector's
+      // targetWindow is set before we send any actor events.
+      iframe.addEventListener(
+        "load",
+        () => {
+          if (!cancelled) setReady(true)
+        },
+        { once: true }
+      )
     })
     return () => {
       cancelled = true
@@ -34,7 +45,9 @@ export function BattleInspector({ cursor, events }: { events: ReadonlyArray<Batt
     for (let i = 0; i <= cursor && i < events.length; i++) {
       actor.send(events[i])
     }
-    return () => actor.stop()
+    return () => {
+      actor.stop()
+    }
   }, [ready, cursor, events])
 
   return (
