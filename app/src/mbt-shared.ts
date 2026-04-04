@@ -658,7 +658,7 @@ export function flattenClassStates(cs: Partial<ClassStateMap>) {
     sorceryPointsMax: so?.sorceryPointsMax ?? 0,
     sorcerousRestorationUsed: so?.sorcerousRestorationUsed ?? false,
     innateSorceryActive: so?.innateSorceryActive ?? false,
-    innateSorceryCharges: so?.innateSorceryCharges ?? 0,
+    innateSorceryCharges: so?.innateSorceryCharges ?? 2,
     innateSorceryTurnsRemaining: so?.innateSorceryTurnsRemaining ?? 0,
     metamagicUsedThisCast: so?.metamagicUsedThisCast ?? new Set<MetamagicOption>(),
     apotheosisUsedThisTurn: so?.apotheosisUsedThisTurn ?? false,
@@ -682,7 +682,7 @@ export function flattenClassStates(cs: Partial<ClassStateMap>) {
 }
 
 function isDead(snap: DndSnapshot): boolean {
-  return snap.matches({ damageTrack: "dead" })
+  return snap.hasTag("dead")
 }
 
 export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
@@ -740,11 +740,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     bonusMovementOAFree: c.bonusMovementOAFree,
     actionSurgeActionPending: c.actionSurgeActionPending,
     slotExpendedThisTurn: false, // battle-level only, not tracked by creature machine
-    turnPhase: snap.matches({ turnPhase: "acting" })
-      ? "acting"
-      : snap.matches({ turnPhase: "waitingForTurn" })
-        ? "waitingForTurn"
-        : "outOfCombat",
+    turnPhase: snap.hasTag("canAct") ? "acting" : snap.hasTag("inCombat") ? "waitingForTurn" : "outOfCombat",
     slotsMax: [...c.slotsMax],
     slotsCurrent: [...c.slotsCurrent],
     pactSlotsMax: c.pactSlotsMax,

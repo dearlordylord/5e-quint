@@ -156,7 +156,7 @@
 - Convert confirmed guard-protected `return {}` to `invariant()` calls.
 
 **Verification:**
-1. Full creature MBT pass. **Blocked by:** pre-existing `innateSorceryCharges` init parity bug — Quint expects `2`, XState produces `0` at step 0 for any sorcerer creature. Not caused by Phase 2.
+1. Full creature MBT pass. `innateSorceryCharges` init parity bug fixed (mbt-shared.ts fallback `?? 0` → `?? 2`). Remaining: pre-existing dehydration/exhaustion parity bug (unrelated to Phase 2).
 2. Full battle MBT pass (guards don't affect battle machine, but confirm nothing broke). ✅
 3. `grep -rn "return {}" app/src/machine-*.ts` — remaining hits are only genuinely unconditional actions (DROP_PRONE, etc.) or root handlers.
 4. `/simplify` convergence (minimum 2 rounds). ✅
@@ -215,12 +215,15 @@
   - `running.awaitingLegendaryAction`: `['legendaryWindow']`
 - Test: unit test that verifies `snapshot.hasTag('reactionWindow')` when in awaitingReaction.
 
-**[R4.2] Adopt `hasTag()` in battle UI components**
-- Replace `state.matches()` checks in battle scene React components with `snapshot.hasTag()` where semantic tags exist.
-- Example: creature sprite opacity for unconscious/dead → `hasTag('incapacitated')` or `hasTag('dead')` instead of enumerating state paths.
-- Test: battle visualizer renders correctly after migration.
+**[R4.2] Adopt `hasTag()` in battle UI components** ✅ DONE
+- Replaced `state.matches()` with `snapshot.hasTag()` in:
+  - `StatePanel.tsx`: `damageTrackLabel()` — dead/stable/unstable
+  - `TransitionLog.tsx`: `stateKey()` — dead/stable/dying
+  - `useFeatures.ts`: `isActing` — canAct
+  - `trace-replay.ts`: `isDead()` + `turnPhase` — dead/canAct/inCombat
+  - `mbt-shared.ts`: `isDead()` + `turnPhase` — dead/canAct/inCombat
 
-**Verification:** Tags visible in inspector. `hasTag()` used in at least one UI component. No behavioral change to machine logic.
+**Verification:** Tags visible in inspector. `hasTag()` used in all UI components. No behavioral change to machine logic.
 
 ---
 

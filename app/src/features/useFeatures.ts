@@ -224,7 +224,7 @@ export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null)
 
   const ctx = snapshot?.context ?? null
   // TODO: extract isActing gating into canExecute* bridge functions so hooks don't repeat `isActing &&`
-  const isActing = snapshot?.matches({ turnPhase: "acting" }) ?? false
+  const isActing = snapshot?.hasTag("canAct") ?? false
   // Fighter
   const canSecondWind = isActing && ctx ? canExecuteSecondWind(featureState, ctx) : false
   const canActionSurge = isActing && ctx ? canExecuteActionSurge(featureState, ctx) : false

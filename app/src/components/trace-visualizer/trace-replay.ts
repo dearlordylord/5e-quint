@@ -19,7 +19,7 @@ import type { NormalizedState, TraceStep } from "./sample-trace.ts"
 // for incapacitatedSources, matching the visualizer's NormalizedState type.
 
 function isDead(snap: DndSnapshot): boolean {
-  return snap.matches({ damageTrack: "dead" })
+  return snap.hasTag("dead")
 }
 
 export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
@@ -67,11 +67,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     nonCantripActionSpellCast: c.nonCantripActionSpellCast,
     bonusMovementRemaining: c.bonusMovementRemaining,
     bonusMovementOAFree: c.bonusMovementOAFree,
-    turnPhase: snap.matches({ turnPhase: "acting" })
-      ? "acting"
-      : snap.matches({ turnPhase: "waitingForTurn" })
-        ? "waitingForTurn"
-        : "outOfCombat",
+    turnPhase: snap.hasTag("canAct") ? "acting" : snap.hasTag("inCombat") ? "waitingForTurn" : "outOfCombat",
     slotsMax: [...c.slotsMax],
     slotsCurrent: [...c.slotsCurrent],
     pactSlotsMax: c.pactSlotsMax,

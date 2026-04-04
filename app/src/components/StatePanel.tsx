@@ -9,9 +9,9 @@ import { CONDITIONS, SPELL_SLOT_LEVELS } from "#/types.ts"
 type TrackLabel = "alive" | "stable" | "unstable" | "dead"
 
 function damageTrackLabel(snap: DndSnapshot): TrackLabel {
-  if (snap.matches({ damageTrack: "dead" })) return "dead"
-  if (snap.matches({ damageTrack: { dying: "stable" } })) return "stable"
-  if (snap.matches({ damageTrack: { dying: "unstable" } })) return "unstable"
+  if (snap.hasTag("dead")) return "dead"
+  if (snap.hasTag("stable")) return "stable"
+  if (snap.hasTag("unstable")) return "unstable"
   return "alive"
 }
 

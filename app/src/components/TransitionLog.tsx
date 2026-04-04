@@ -16,9 +16,9 @@ export interface LogEntry {
 }
 
 export function stateKey(snap: DndSnapshot): StateKey {
-  if (snap.matches({ damageTrack: "dead" })) return "dead"
-  if (snap.matches({ damageTrack: { dying: "stable" } })) return "stable"
-  if (snap.matches({ damageTrack: "dying" })) return "dying"
+  if (snap.hasTag("dead")) return "dead"
+  if (snap.hasTag("stable")) return "stable"
+  if (snap.hasTag("dying")) return "dying"
   return "alive"
 }
 
