@@ -199,37 +199,80 @@ This boundary is practical, not architectural. The SRD is freely available under
 
 ---
 
-## Why Abstract Ranges, Not Real Content?
+## The Quint/TS Frontier
 
-The Quint spec models **mechanics**, not **content**. `DAMAGE_RANGE = 0.to(60)` doesn't represent a weapon -- it says "throw any damage value at the pipeline and verify invariants hold."
+The frontier between what lives in Quint and what lives in TS is not "generic vs specific." It is: **Quint models anything that affects state machine correctness.** This produces three categories of features:
 
-Modeling all SRD content in Quint would cause combinatorial explosion (37 weapons x 6 abilities x 20 AC values x conditions x advantage = billions). Quint's value is proving **"the rules engine is correct regardless of which weapon you use"**, not **"all 37 weapons have the right stats."**
+### Flow features (Quint, specific and named)
 
-The abstract ranges also *intentionally* cover corners that real content rarely hits. A Longsword doing 4-11 damage won't trigger massive-damage instant death against a 50 HP creature. `DAMAGE_RANGE = 0.to(60)` will.
+Features that create new battle phases, interrupt chains, or state machine transitions. The correctness of their interaction patterns is what Quint proves.
+
+Examples already in battle.qnt: Counterspell (recursive stack with slot refund), Shield (+5 AC mid-resolution), Uncanny Dodge (halve damage as reaction), Retaliation (counter-attack after damage), Legendary Resistance (auto-succeed save).
+
+These are named and specific because the *flow* matters. Counterspell's nesting can deadlock, orphan effects, or double-spend slots. Shield changes the hit/miss branch mid-resolution. Quint proves these interactions are safe.
+
+Each flow feature uses a **common facility** -- a reusable battle mechanism:
+- Shield, Parry, Cutting Words use the `PIAttackHit` reaction facility
+- Uncanny Dodge, Deflect Attacks use the `PIAttackDamage` reaction facility
+- Counterspell uses the `PISpellCast` + `bSpellStack` facility
+- Hellish Rebuke, Retaliation use the `PIAfterDamage` facility
+
+Future features (from new books, homebrew, etc.) that need reactions plug into the same facilities by adding a `ReactionDecision` variant. The facility is generic; the feature using it is specific; both live in Quint.
+
+### Modifier features (Quint generic fields + TS specific computation)
+
+Features that modify a value in an existing pipeline without creating new flow. Quint models the **mechanic shape** via generic modifier fields on `Combatant` (e.g., `hasEvasion: bool`, `saveMiscBonus: int`). TS computes the **specific values** (e.g., "Rogue 7 gets Evasion", "Paladin aura gives +CHA to saves").
+
+This separation means:
+- Quint proves "the save-bonus pipeline is correct under all inputs" without knowing about Paladins
+- TS proves "Paladin L6 with CHA 16 gives +3" via unit tests
+- A homebrew class with a similar aura just sets the same `saveMiscBonus` field -- no Quint changes
+
+### Content (TS only)
+
+Specific numbers, data, stat blocks. Invariants don't depend on them. "Fireball does 8d6 Fire in a 20ft sphere" is pure content -- Quint models "some spell does N damage of type T with a DEX save" and proves the pipeline handles it correctly regardless of N and T.
+
+### Why abstract ranges?
+
+`DAMAGE_RANGE = 0.to(60)` doesn't represent a weapon. It says "throw any damage value at the pipeline and verify invariants hold." The abstract ranges *intentionally* cover corners that real content rarely hits. A Longsword doing 4-11 damage won't trigger massive-damage instant death against a 50 HP creature. `DAMAGE_RANGE = 0.to(60)` will.
+
+### Promotion path
+
+A feature starts in TS (specific, unit-tested). If it has subtle interaction bugs with the state machine, it gets promoted to Quint. This happened implicitly with the current reaction types -- they started as "the TS battle machine needs Shield" and became Quint-modeled flow features because their correctness depends on interaction patterns that unit tests can't cover.
 
 ---
 
-## Modeling Frontier: What's In vs Out
+## Modeling Frontier: Current State
 
-| Modeled (Quint + XState) | Modeled (TS features only) | Not modeled |
-|--------------------------|---------------------------|-------------|
-| Damage pipeline (R/V/I, temp HP, death) | Specific weapon stats | Positions / distances |
-| 14 conditions + exhaustion | Specific spell effects | Cover geometry |
-| Spell slot economy (multiclass) | Specific feat behavior | Line of sight |
-| Turn structure (action economy) | AC from specific armor | Difficult terrain mapping |
-| Class resource pools (all 12 classes) | Weapon mastery effects | Social / exploration |
-| Attack/reaction chains (8 reaction types) | Aura of Protection bonus | Mounted combat details |
-| Counterspell stack (depth 5) | Evasion damage halving | Ready action triggers |
-| AoE resolution | Sneak Attack dice count | Lair actions |
-| Legendary actions/resistance | Divine Smite damage | Multi-target concentration |
-| Movement / opportunity attacks | Rage damage bonus | Grapple/shove in battle |
-| Death saves / stabilization | Bardic Inspiration | TWF in battle |
-| Concentration (start/break/check) | Level-up HP calculation | Environmental hazards |
+| Flow features (Quint, named) | Modifier features (Quint generic + TS specific) | Content (TS only) | Not modeled |
+|------------------------------|--------------------------------------------------|-------------------|-------------|
+| Attack/reaction chains (10 reaction types) | *Planned: hasEvasion, saveMiscBonus* | Specific weapon stats | Positions / distances |
+| Counterspell stack (depth 5) | *Planned: conditionImmunities (external)* | Specific spell effects | Cover geometry |
+| Legendary actions/resistance | | Specific feat behavior | Line of sight |
+| AoE resolution | | AC from specific armor | Difficult terrain |
+| Movement / opportunity attacks | | Weapon mastery effects | Social / exploration |
+| Damage pipeline (R/V/I, temp HP, death) | | Sneak Attack dice count | Mounted combat |
+| 14 conditions + exhaustion | | Divine Smite damage | Ready action triggers |
+| Spell slot economy (multiclass) | | Rage damage bonus | Lair actions |
+| Turn structure (action economy) | | Evasion damage halving | Multi-target conc. |
+| Class resource pools (creature.qnt, all 12) | | Aura of Protection bonus | Grapple/shove in battle |
+| Death saves / stabilization | | Bardic Inspiration | TWF in battle |
+| Concentration (start/break/check) | | Level-up HP calculation | Environmental hazards |
 
-The left column has both Quint invariant coverage AND XState implementation. The middle column has TS implementations with unit tests but no formal verification. The right column is acknowledged as out of scope.
+Items in *italics* are planned (see PLAN_AUDIT.md, PRD 3).
+
+---
+
+## Deferred Design Work
+
+The following items are scoped but deferred. See `PLAN_AUDIT.md` for full context.
+
+- **Aura of Courage** (Paladin L10): Frightened immunity within Aura of Protection. Would use a `conditionImmunities: Set[Condition]` modifier field on Combatant, following the same generic-field pattern as `saveMiscBonus`. Deferred until the modifier pattern is validated by PRD 3.
+- **Additional passive modifiers** (Danger Sense, Elusive, etc.): Each is a new field or modifier on Combatant. Deferred until the modifier pattern is validated. Danger Sense = advantage on DEX saves (needs `dexSaveAdvantage: bool`). Elusive = no advantage on attacks against you (needs `attacksCannotHaveAdvantage: bool`).
+- **Class state in battle Combatant**: Currently `Combatant` has no `FighterState`, `BarbarianState`, etc. Adding class state to battle is required for Action Surge, Rage damage, Sneak Attack, etc. Scoped in PRD 1 (attack pipeline + class features).
 
 ---
 
 ## Future: Generator Pattern
 
-The [generator/contract/spec pattern](https://github.com/informalsystems/emerald/pull/236) from Emerald could bridge the gap between abstract Quint ranges and specific TS content. Instead of `DAMAGE_RANGE = 0.to(60)`, a Quint generator would produce SRD-realistic parameter combinations (e.g., "L3 spell, 8d6 Fire, DEX save, DC 15") without enumerating all 300+ spells. This constrains the state space to realistic inputs while maintaining invariant coverage -- better exploration efficiency without losing edge-case testing.
+The [generator/contract/spec pattern](https://github.com/informalsystems/emerald/pull/236) from Emerald could bridge modifier features and content. Instead of `DAMAGE_RANGE = 0.to(60)`, a Quint generator would produce SRD-realistic parameter combinations (e.g., "L3 spell, 8d6 Fire, DEX save, DC 15") without enumerating all 300+ spells. This constrains the state space to realistic inputs while maintaining invariant coverage -- better exploration efficiency without losing edge-case testing.
