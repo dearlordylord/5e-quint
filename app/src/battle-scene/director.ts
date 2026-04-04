@@ -4,6 +4,8 @@
  * Temporal animations (cast bar fill, damage flash) are handled by Motion in Layer D.
  */
 import type { BattleEvent } from "#/battle-machine-types.ts"
+import { decomposeDice } from "#/features/decompose-dice.ts"
+import { getSpellDamageDice } from "#/features/spell-dice-lookup.ts"
 
 import type { InterruptKind, SceneSnapshot } from "./scene-snapshot.ts"
 import type { SnapshotDelta } from "./snapshot-diff.ts"
@@ -40,7 +42,7 @@ export interface VisualCueState {
   interruptOverlay: { opacity: number; label: string }
   creatureCues: Record<string, CreatureCue>
   autoAdvanceDelay: number
-  diceRoll: DiceRollCue | null
+  diceRolls: ReadonlyArray<DiceRollCue>
 }
 
 export interface PlaybackTiming {
@@ -62,6 +64,9 @@ export const DEFAULT_TIMING: PlaybackTiming = {
   }
 }
 
+/** Stable empty array — avoids fresh `[]` allocations triggering React re-renders. */
+export const EMPTY_DICE_ROLLS: ReadonlyArray<DiceRollCue> = []
+
 export const EMPTY_CUES: VisualCueState = {
   castBar: null,
   castLineTargetId: null,
@@ -69,7 +74,7 @@ export const EMPTY_CUES: VisualCueState = {
   interruptOverlay: { opacity: 0, label: "" },
   creatureCues: {},
   autoAdvanceDelay: 0,
-  diceRoll: null
+  diceRolls: EMPTY_DICE_ROLLS
 }
 
 export const EMPTY_CUE: CreatureCue = {
@@ -192,10 +197,9 @@ export function directorStep(
   const spellAnnouncement = castBar ? { spellName: castBar.spellName, casterId: castBar.casterId } : null
   const autoAdvanceDelay = timing.overrides[event.type] ?? timing.defaultDelayMs
 
-  // Dice roll cue — show 3D dice for attacks, saves, and damage
-  const diceRoll = deriveDiceRoll(event)
+  const diceRolls = deriveDiceRolls(event)
 
-  return { castBar, castLineTargetId, spellAnnouncement, interruptOverlay, creatureCues, autoAdvanceDelay, diceRoll }
+  return { castBar, castLineTargetId, spellAnnouncement, interruptOverlay, creatureCues, autoAdvanceDelay, diceRolls }
 }
 
 // --- Dice roll cue derivation ---
@@ -205,9 +209,33 @@ const D20_SUFFIXES = ["Roll", "AtkRoll"] as const
 
 const ATTACK_COLOR = 0x3b82f6 // blue
 const SAVE_COLOR = 0x22c55e // green
+const DAMAGE_COLOR = 0xef4444 // red
+
+/** Collect all dice roll cues for an event: damage dice + d20 rolls. */
+function deriveDiceRolls(event: BattleEvent): ReadonlyArray<DiceRollCue> {
+  const cues: Array<DiceRollCue> = []
+
+  if (event.type === "BATTLE_CAST_AOE" || event.type === "BATTLE_CAST_SAVE_SPELL") {
+    const expr = getSpellDamageDice(event.spellName, event.slotLvl)
+    if (expr) {
+      const results = decomposeDice(event.dmgOnFail, expr.dice, expr.dieSize)
+      if (results) cues.push({ sides: expr.dieSize, results, color: DAMAGE_COLOR })
+    }
+  }
+
+  if (event.type === "BATTLE_AFTER_DAMAGE_HELLISH_REBUKE" && event.reactorId) {
+    const results = decomposeDice(event.rebukeDmg, 2, 10)
+    if (results) cues.push({ sides: 10, results, color: DAMAGE_COLOR })
+  }
+
+  const d20 = deriveD20Roll(event)
+  if (d20) cues.push(d20)
+
+  return cues.length > 0 ? cues : EMPTY_DICE_ROLLS
+}
 
 /** Extract d20 roll cue from event fields ending in known suffixes. */
-function deriveDiceRoll(event: BattleEvent): DiceRollCue | null {
+function deriveD20Roll(event: BattleEvent): DiceRollCue | null {
   const D20_MAX = 20
   const entries = Object.entries(event).filter(
     (entry): entry is [string, number] =>

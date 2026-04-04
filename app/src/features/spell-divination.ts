@@ -2,6 +2,7 @@
 // Spells that reveal information or grant insight.
 
 import type { DiceDamage } from "#/features/spell-patterns.ts"
+import { scalingDice } from "#/features/spell-patterns.ts"
 
 /* eslint-disable no-magic-numbers */
 
@@ -10,7 +11,7 @@ export const FORESIGHT_EFFECT = { advantageOnAllTests: true, attackDisadvantage:
 
 /** Mind Spike (SRD 5.2.1): 3d8 Psychic at L2, +1d8 per slot above 2. Half on save. */
 export function mindSpikeDamage(slotLevel: number): DiceDamage {
-  return { dice: 3 + (slotLevel - 2), dieSize: 8 }
+  return scalingDice(3, 2, 8, slotLevel)
 }
 
 // --- Hunter's Mark (L1, Bonus Action, 90 ft, Concentration) ---

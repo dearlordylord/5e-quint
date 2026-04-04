@@ -2,7 +2,7 @@
 // Protective and warding spells.
 
 import type { ConditionSpellResult, DefenseSpellInfo, DiceDamage, SpellDamageInfo } from "#/features/spell-patterns.ts"
-import { SAVE_PASSED, upcastTargets } from "#/features/spell-patterns.ts"
+import { SAVE_PASSED, scalingDice, upcastTargets } from "#/features/spell-patterns.ts"
 import type { Condition, DamageType } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
@@ -171,12 +171,12 @@ export const HEAL_REMOVED_CONDITIONS = ["blinded", "deafened", "poisoned"] as co
 
 /** Mass Cure Wounds (SRD 5.2.1): 5d8 + mod at L5, +1d8 per slot level above 5. */
 export function massCureWoundsDice(slotLevel: number): DiceDamage {
-  return { dice: 5 + (slotLevel - 5), dieSize: 8 }
+  return scalingDice(5, 5, 8, slotLevel)
 }
 
 /** Prayer of Healing (SRD 5.2.1): 2d8 at L2, +1d8 per slot level above 2. */
 export function prayerOfHealingDice(slotLevel: number): DiceDamage {
-  return { dice: 2 + (slotLevel - 2), dieSize: 8 }
+  return scalingDice(2, 2, 8, slotLevel)
 }
 
 // =============================================================================

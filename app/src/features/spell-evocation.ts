@@ -2,7 +2,7 @@
 // Damage-dealing spells that channel magical energy.
 
 import type { DefenseSpellInfo, DiceDamage, SpellDamageInfo } from "#/features/spell-patterns.ts"
-import { cantripDamage } from "#/features/spell-patterns.ts"
+import { cantripDamage, scalingDice } from "#/features/spell-patterns.ts"
 import type { Condition, DamageType } from "#/types.ts"
 
 /* eslint-disable no-magic-numbers */
@@ -81,11 +81,25 @@ export const SPELL_FIRE_SHIELD: DefenseSpellInfo = {
   durationDescription: "10 minutes"
 }
 
+// --- Burning Hands ---
+
+/** Burning Hands (SRD 5.2.1): 3d6 Fire at L1, +1d6 per slot level above 1. */
+export function burningHandsDamage(slotLevel: number): DiceDamage {
+  return scalingDice(3, 1, 6, slotLevel)
+}
+
+// --- Guiding Bolt ---
+
+/** Guiding Bolt (SRD 5.2.1): 4d6 Radiant at L1, +1d6 per slot level above 1. */
+export function guidingBoltDamage(slotLevel: number): DiceDamage {
+  return scalingDice(4, 1, 6, slotLevel)
+}
+
 // --- Fireball ---
 
 /** Fireball (SRD 5.2.1): 8d6 Fire at L3, +1d6 per slot level above 3. */
 export function fireballDamage(slotLevel: number): DiceDamage {
-  return { dice: 8 + (slotLevel - 3), dieSize: 6 }
+  return scalingDice(8, 3, 6, slotLevel)
 }
 
 // --- Magic Missile ---
@@ -99,7 +113,7 @@ export function magicMissileDarts(slotLevel: number): number {
 
 /** Spiritual Weapon (SRD 5.2.1): 1d8 Force at L2, +1d8 per slot level above 2. */
 export function spiritualWeaponDamage(slotLevel: number): DiceDamage {
-  return { dice: 1 + (slotLevel - 2), dieSize: 8 }
+  return scalingDice(1, 2, 8, slotLevel)
 }
 
 // --- Fire Shield ---
@@ -116,14 +130,14 @@ export function fireShieldRetaliationDamageType(choice: FireShieldChoice): Damag
 
 /** Chromatic Orb (SRD 5.2.1): 3d8 at L1, +1d8 per slot level above 1. */
 export function chromaticOrbDamage(slotLevel: number): DiceDamage {
-  return { dice: 3 + (slotLevel - 1), dieSize: 8 }
+  return scalingDice(3, 1, 8, slotLevel)
 }
 
 // --- Searing Smite ---
 
 /** Searing Smite (SRD 5.2.1): slotLevel d6 Fire on hit + per turn (CON save ends). */
 export function searingSmiteDamage(slotLevel: number): DiceDamage {
-  return { dice: slotLevel, dieSize: 6 }
+  return scalingDice(1, 1, 6, slotLevel)
 }
 
 // --- Vitriolic Sphere ---
@@ -170,14 +184,14 @@ export function rayOfFrostDamage(characterLevel: number): DiceDamage {
 
 /** Flame Blade (SRD 5.2.1): 3d6 Fire + mod at L2, +1d6 per slot above 2. */
 export function flameBladeDamage(slotLevel: number): DiceDamage {
-  return { dice: 3 + (slotLevel - 2), dieSize: 6 }
+  return scalingDice(3, 2, 6, slotLevel)
 }
 
 // --- Moonbeam (L2, Action, 120 ft, Concentration 1 min, CON save) ---
 
 /** Moonbeam (SRD 5.2.1): 2d10 Radiant at L2, +1d10 per slot above 2. Save for half. */
 export function moonbeamDamage(slotLevel: number): DiceDamage {
-  return { dice: 2 + (slotLevel - 2), dieSize: 10 }
+  return scalingDice(2, 2, 10, slotLevel)
 }
 
 // --- Arcane Sword (L7, Action, 90 ft, Concentration 1 min, melee spell attack) ---

@@ -2,7 +2,7 @@
 // Life-draining and undeath spells.
 
 import type { DiceDamage, DiceDamageWithBonus, SpellDamageInfo } from "#/features/spell-patterns.ts"
-import { cantripDamage } from "#/features/spell-patterns.ts"
+import { cantripDamage, scalingDice } from "#/features/spell-patterns.ts"
 
 /* eslint-disable no-magic-numbers */
 
@@ -47,6 +47,13 @@ export const SPELL_VAMPIRIC_TOUCH: SpellDamageInfo = {
   damageType: "necrotic",
   pattern: "attackRoll",
   concentration: true
+}
+
+// --- Inflict Wounds ---
+
+/** Inflict Wounds (SRD 5.2.1): 2d10 Necrotic at L1, +1d10 per slot level above 1. */
+export function inflictWoundsDamage(slotLevel: number): DiceDamage {
+  return scalingDice(2, 1, 10, slotLevel)
 }
 
 // --- Vampiric Touch ---

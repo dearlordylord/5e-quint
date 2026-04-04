@@ -140,6 +140,14 @@ export function cantripDamage(characterLevel: number, dieSize: number): DiceDama
   return { dice: cantripDamageDice(characterLevel), dieSize }
 }
 
+/**
+ * Standard upcast damage: baseDice at baseLevel, +1 die per slot level above base.
+ * Covers the most common SRD scaling pattern (Fireball, Guiding Bolt, Spirit Guardians, etc.).
+ */
+export function scalingDice(baseDice: number, baseLevel: number, dieSize: number, slotLevel: number): DiceDamage {
+  return { dice: baseDice + (slotLevel - baseLevel), dieSize }
+}
+
 /** Shared result for spells where the target passes the save — no condition, no special effect. */
 export const SAVE_PASSED: ConditionSpellResult = { conditionApplied: null, specialEffect: null, savePassed: true }
 
