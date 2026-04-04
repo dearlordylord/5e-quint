@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import {
   bardicInspirationMaxCharges,
   hasFontOfInspiration,
@@ -19,7 +20,10 @@ function bd(c: DndContext) {
 
 export function useBardicInspirationUpdate(c: DndContext): Partial<DndContext> {
   const bs = bd(c)
-  if (isIncapacitated(c) || bs.level < 1 || bs.bardicInspirationCharges <= 0 || c.bonusActionUsed) return {}
+  assert(
+    !isIncapacitated(c) && bs.level >= 1 && bs.bardicInspirationCharges > 0 && !c.bonusActionUsed,
+    "guard: canBardicInspiration should have prevented this"
+  )
   return {
     bonusActionUsed: true,
     ...updateClass(c, "bard", { bardicInspirationCharges: resourceCount(bs.bardicInspirationCharges - 1) })
@@ -28,7 +32,10 @@ export function useBardicInspirationUpdate(c: DndContext): Partial<DndContext> {
 
 export function useCuttingWordsUpdate(c: DndContext): Partial<DndContext> {
   const bs = bd(c)
-  if (isIncapacitated(c) || bs.level < 3 || bs.bardicInspirationCharges <= 0 || !c.reactionAvailable) return {}
+  assert(
+    !isIncapacitated(c) && bs.level >= 3 && bs.bardicInspirationCharges > 0 && c.reactionAvailable,
+    "guard: canCuttingWords should have prevented this"
+  )
   return {
     reactionAvailable: false,
     ...updateClass(c, "bard", { bardicInspirationCharges: resourceCount(bs.bardicInspirationCharges - 1) })
@@ -37,10 +44,12 @@ export function useCuttingWordsUpdate(c: DndContext): Partial<DndContext> {
 
 export function useFontSlotRestoreUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const bs = bd(c)
-  if (isIncapacitated(c) || !hasFontOfInspiration(bs.level)) return {}
-  if (bs.bardicInspirationCharges >= bs.bardicInspirationMax) return {}
+  assert(
+    !isIncapacitated(c) && hasFontOfInspiration(bs.level) && bs.bardicInspirationCharges < bs.bardicInspirationMax,
+    "guard: canFontSlotRestore should have prevented this"
+  )
   const newSlots = expendSlot(c.slotsCurrent, slotLevel)
-  if (newSlots === c.slotsCurrent) return {} // no slot available
+  if (newSlots === c.slotsCurrent) return {} // no slot available at requested level
   return {
     slotsCurrent: newSlots,
     ...updateClass(c, "bard", { bardicInspirationCharges: resourceCount(bs.bardicInspirationCharges + 1) })
@@ -49,9 +58,13 @@ export function useFontSlotRestoreUpdate(c: DndContext, slotLevel: SpellSlotLeve
 
 export function usePeerlessSkillUpdate(c: DndContext, success: boolean): Partial<DndContext> {
   const bs = bd(c)
-  if (isIncapacitated(c) || !hasPeerlessSkill(bs.level) || bs.bardicInspirationCharges <= 0) return {}
+  assert(
+    !isIncapacitated(c) && hasPeerlessSkill(bs.level) && bs.bardicInspirationCharges > 0,
+    "guard: canPeerlessSkill should have prevented this"
+  )
   // Only spend charge on success
-  if (success) return updateClass(c, "bard", { bardicInspirationCharges: resourceCount(bs.bardicInspirationCharges - 1) })
+  if (success)
+    return updateClass(c, "bard", { bardicInspirationCharges: resourceCount(bs.bardicInspirationCharges - 1) })
   return {}
 }
 

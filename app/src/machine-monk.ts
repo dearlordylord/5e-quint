@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import type { FocusPoolState } from "#/features/class-monk.ts"
 import {
   pExpendFocus as tsExpendFocus,
@@ -30,21 +31,27 @@ function toFocusPool(c: DndContext): FocusPoolState {
 
 export function flurryOfBlowsUpdate(c: DndContext): Partial<DndContext> {
   const ms = m(c)
-  if (c.bonusActionUsed || isIncapacitated(c) || ms.level < 2) return {}
+  assert(!c.bonusActionUsed && !isIncapacitated(c) && ms.level >= 2, "guard: canMonkFocusBA should have prevented this")
   const r = tsExpendFocus(toFocusPool(c), 1)
-  if (!r.success) return {}
+  assert(r.success, "guard: canMonkFocusBA should have checked focus points")
   return { bonusActionUsed: true, ...updateClass(c, "monk", { focusPoints: resourceCount(r.focusPoints) }) }
 }
 
 export function patientDefenseFreeUpdate(c: DndContext): Partial<DndContext> {
-  if (c.bonusActionUsed || isIncapacitated(c) || m(c).level < 2) return {}
+  assert(
+    !c.bonusActionUsed && !isIncapacitated(c) && m(c).level >= 2,
+    "guard: canMonkFreeBA should have prevented this"
+  )
   return { bonusActionUsed: true, disengaged: true }
 }
 
 export function patientDefenseFocusUpdate(c: DndContext): Partial<DndContext> {
-  if (c.bonusActionUsed || isIncapacitated(c) || m(c).level < 2) return {}
+  assert(
+    !c.bonusActionUsed && !isIncapacitated(c) && m(c).level >= 2,
+    "guard: canMonkFocusBA should have prevented this"
+  )
   const r = tsExpendFocus(toFocusPool(c), 1)
-  if (!r.success) return {}
+  assert(r.success, "guard: canMonkFocusBA should have checked focus points")
   return {
     bonusActionUsed: true,
     dodging: true,
@@ -54,14 +61,20 @@ export function patientDefenseFocusUpdate(c: DndContext): Partial<DndContext> {
 }
 
 export function stepOfTheWindFreeUpdate(c: DndContext): Partial<DndContext> {
-  if (c.bonusActionUsed || isIncapacitated(c) || m(c).level < 2) return {}
+  assert(
+    !c.bonusActionUsed && !isIncapacitated(c) && m(c).level >= 2,
+    "guard: canMonkFreeBA should have prevented this"
+  )
   return { bonusActionUsed: true, movementRemaining: movementFeet(c.movementRemaining + c.effectiveSpeed) }
 }
 
 export function stepOfTheWindFocusUpdate(c: DndContext): Partial<DndContext> {
-  if (c.bonusActionUsed || isIncapacitated(c) || m(c).level < 2) return {}
+  assert(
+    !c.bonusActionUsed && !isIncapacitated(c) && m(c).level >= 2,
+    "guard: canMonkFocusBA should have prevented this"
+  )
   const r = tsExpendFocus(toFocusPool(c), 1)
-  if (!r.success) return {}
+  assert(r.success, "guard: canMonkFocusBA should have checked focus points")
   return {
     bonusActionUsed: true,
     disengaged: true,
@@ -72,13 +85,19 @@ export function stepOfTheWindFocusUpdate(c: DndContext): Partial<DndContext> {
 
 export function stunningStrikeUpdate(c: DndContext): Partial<DndContext> {
   const ms = m(c)
-  if (isIncapacitated(c) || ms.level < 5 || ms.stunningStrikeUsedThisTurn || ms.focusPoints < 1) return {}
+  assert(
+    !isIncapacitated(c) && ms.level >= 5 && !ms.stunningStrikeUsedThisTurn && ms.focusPoints >= 1,
+    "guard: canStunningStrike should have prevented this"
+  )
   return updateClass(c, "monk", { focusPoints: resourceCount(ms.focusPoints - 1), stunningStrikeUsedThisTurn: true })
 }
 
 export function wholenessOfBodyUpdate(c: DndContext, healRoll: number): Partial<DndContext> {
   const ms = m(c)
-  if (isIncapacitated(c) || ms.level < 6 || ms.wholenessCharges <= 0 || c.bonusActionUsed) return {}
+  assert(
+    !isIncapacitated(c) && ms.level >= 6 && ms.wholenessCharges > 0 && !c.bonusActionUsed,
+    "guard: canWholenessOfBody should have prevented this"
+  )
   const healAmount = Math.max(1, healRoll)
   return {
     bonusActionUsed: true,
@@ -89,7 +108,10 @@ export function wholenessOfBodyUpdate(c: DndContext, healRoll: number): Partial<
 
 export function uncannyMetabolismUpdate(c: DndContext, healRoll: number): Partial<DndContext> {
   const ms = m(c)
-  if (isIncapacitated(c) || ms.level < 2 || ms.uncannyMetabolismUsed) return {}
+  assert(
+    !isIncapacitated(c) && ms.level >= 2 && !ms.uncannyMetabolismUsed,
+    "guard: canUncannyMetabolism should have prevented this"
+  )
   const r = tsUncannyMetabolism(toFocusPool(c), ms.level, healRoll)
   if (!r.triggered) return {}
   return {

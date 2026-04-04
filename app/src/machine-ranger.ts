@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import {
   canUseNaturesVeil,
   canUseTireless,
@@ -22,14 +23,19 @@ function r(c: DndContext) {
 
 export function useFreeHuntersMarkUpdate(c: DndContext): Partial<DndContext> {
   const rs = r(c)
-  if (isIncapacitated(c) || rs.level < 1 || rs.huntersMarkFreeUses <= 0) return {}
+  assert(
+    !isIncapacitated(c) && rs.level >= 1 && rs.huntersMarkFreeUses > 0,
+    "guard: canFreeHuntersMark should have prevented this"
+  )
   return updateClass(c, "ranger", { huntersMarkFreeUses: resourceCount(rs.huntersMarkFreeUses - 1) })
 }
 
 export function useTirelessUpdate(c: DndContext, d8Roll: number): Partial<DndContext> {
   const rs = r(c)
-  if (isIncapacitated(c) || !canUseTireless(rs.level, rs.tirelessCharges)) return {}
-  if (c.actionsRemaining <= 0) return {}
+  assert(
+    !isIncapacitated(c) && canUseTireless(rs.level, rs.tirelessCharges) && c.actionsRemaining > 0,
+    "guard: canTireless should have prevented this"
+  )
   const thp = tirelessTempHp(d8Roll, rs.tirelessMax)
   return {
     actionsRemaining: c.actionsRemaining - 1,
@@ -40,7 +46,10 @@ export function useTirelessUpdate(c: DndContext, d8Roll: number): Partial<DndCon
 
 export function useNaturesVeilUpdate(c: DndContext): Partial<DndContext> {
   const rs = r(c)
-  if (isIncapacitated(c) || !canUseNaturesVeil(rs.level, rs.naturesVeilCharges, !c.bonusActionUsed)) return {}
+  assert(
+    !isIncapacitated(c) && canUseNaturesVeil(rs.level, rs.naturesVeilCharges, !c.bonusActionUsed),
+    "guard: canNaturesVeil should have prevented this"
+  )
   return {
     bonusActionUsed: true,
     invisible: true,

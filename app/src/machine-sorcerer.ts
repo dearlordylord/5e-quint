@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import {
   canUseInnateSorcery,
   canUseMetamagic,
@@ -30,7 +31,7 @@ function s(c: DndContext) {
  */
 export function convertSlotToPointsUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ss = s(c)
-  if (isIncapacitated(c) || ss.level < 2) return {}
+  assert(!isIncapacitated(c) && ss.level >= 2, "guard: canConvertSlotToPoints should have prevented this")
   if (slotLevel < 1 || slotLevel > 9) return {}
   const currentSlots = [...c.slotsCurrent]
   const idx = slotLevel - 1
@@ -50,7 +51,10 @@ export function convertSlotToPointsUpdate(c: DndContext, slotLevel: SpellSlotLev
  */
 export function convertPointsToSlotUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ss = s(c)
-  if (isIncapacitated(c) || ss.level < 2 || c.bonusActionUsed) return {}
+  assert(
+    !isIncapacitated(c) && ss.level >= 2 && !c.bonusActionUsed,
+    "guard: canConvertPointsToSlot should have prevented this"
+  )
   if (slotLevel < 1 || slotLevel > 5) return {}
   const cost = slotCreationCost(slotLevel)
   if (cost === 0 || ss.sorceryPoints < cost) return {}
@@ -122,7 +126,6 @@ export function sorcererLongRestUpdate(c: DndContext): Partial<DndContext> {
 // -- Innate Sorcery --
 
 export function innateSorceryUpdate(c: DndContext): Partial<DndContext> {
-  if (isIncapacitated(c)) return {}
   const ss = s(c)
   const state = {
     innateSorceryActive: ss.innateSorceryActive,
@@ -131,7 +134,7 @@ export function innateSorceryUpdate(c: DndContext): Partial<DndContext> {
     sorcererLevel: ss.level,
     bonusActionUsed: c.bonusActionUsed
   }
-  if (!canUseInnateSorcery(state)) return {}
+  assert(!isIncapacitated(c) && canUseInnateSorcery(state), "guard: canInnateSorcery should have prevented this")
   const result = tsUseInnateSorcery(state)
   return {
     bonusActionUsed: true,
@@ -147,7 +150,7 @@ export function innateSorceryUpdate(c: DndContext): Partial<DndContext> {
 // -- Metamagic --
 
 export function useMetamagicUpdate(c: DndContext, option: string): Partial<DndContext> {
-  if (isIncapacitated(c)) return {}
+  assert(!isIncapacitated(c) && s(c).level >= 2, "guard: canMetamagic should have prevented this")
   if (!METAMAGIC_OPTIONS.includes(option as MetamagicOption)) return {}
   const ss = s(c)
   const state = {

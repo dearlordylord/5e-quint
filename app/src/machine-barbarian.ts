@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import type { RageState } from "#/features/class-barbarian.ts"
 import {
   canEnterRage as tsCanEnterRage,
@@ -49,37 +50,43 @@ function fromRageState(rs: RageState): Partial<BarbarianClassState> {
 
 export function enterRageUpdate(c: DndContext): Partial<DndContext> {
   const bs = b(c)
-  if (c.bonusActionUsed || isIncapacitated(c) || bs.raging || !tsCanEnterRage(bs.rageCharges, "none")) return {}
+  assert(
+    !c.bonusActionUsed && !isIncapacitated(c) && !bs.raging && tsCanEnterRage(bs.rageCharges, "none"),
+    "guard: canEnterRage should have prevented this"
+  )
   return { bonusActionUsed: true, ...updateClass(c, "barbarian", fromRageState(tsPEnterRage(toRageState(c)))) }
 }
 
 export function endRageUpdate(c: DndContext): Partial<DndContext> {
   const bs = b(c)
-  if (!bs.raging) return {}
+  assert(bs.raging, "guard: isRaging should have prevented this")
   return updateClass(c, "barbarian", { ...fromRageState(tsPEndRage(toRageState(c))), recklessThisTurn: false })
 }
 
 export function extendRageBAUpdate(c: DndContext): Partial<DndContext> {
   const bs = b(c)
-  if (!bs.raging || c.bonusActionUsed) return {}
+  assert(bs.raging && !c.bonusActionUsed, "guard: canExtendRageBA should have prevented this")
   return { bonusActionUsed: true, ...updateClass(c, "barbarian", fromRageState(tsPExtendRageBA(toRageState(c)))) }
 }
 
 export function markAttackOrForcedSaveUpdate(c: DndContext): Partial<DndContext> {
   const bs = b(c)
-  if (!bs.raging) return {}
+  assert(bs.raging, "guard: isRaging should have prevented this")
   return updateClass(c, "barbarian", fromRageState(tsPMarkAttack(toRageState(c))))
 }
 
 export function declareRecklessUpdate(c: DndContext): Partial<DndContext> {
   const bs = b(c)
-  if (bs.recklessThisTurn || bs.level < 2) return {}
+  assert(!bs.recklessThisTurn && bs.level >= 2, "guard: canDeclareReckless should have prevented this")
   return updateClass(c, "barbarian", { recklessThisTurn: true })
 }
 
 export function useIntimidatingPresenceUpdate(c: DndContext): Partial<DndContext> {
   const bs = b(c)
-  if (!tsCanUseIP(bs.level, c.bonusActionUsed, bs.intimidatingPresenceUsed)) return {}
+  assert(
+    tsCanUseIP(bs.level, c.bonusActionUsed, bs.intimidatingPresenceUsed),
+    "guard: canIntimidatingPresence should have prevented this"
+  )
   const r = tsUseIP()
   return {
     ...updateClass(c, "barbarian", { intimidatingPresenceUsed: r.intimidatingPresenceUsed }),
@@ -99,14 +106,19 @@ export function restoreIntimidatingPresenceUpdate(c: DndContext): Partial<DndCon
 
 export function brutalStrikeUpdate(c: DndContext): Partial<DndContext> {
   const bs = b(c)
-  if (isIncapacitated(c) || !canUseBrutalStrike(bs.recklessThisTurn, bs.level, true)) return {}
-  if (bs.brutalStrikeUsedThisTurn) return {}
+  assert(
+    !isIncapacitated(c) && canUseBrutalStrike(bs.recklessThisTurn, bs.level, true) && !bs.brutalStrikeUsedThisTurn,
+    "guard: canBrutalStrike should have prevented this"
+  )
   return updateClass(c, "barbarian", { brutalStrikeUsedThisTurn: true })
 }
 
 export function relentlessRageUpdate(c: DndContext, conSaveSucceeded: boolean): Partial<DndContext> {
   const bs = b(c)
-  if (isIncapacitated(c) || !canUseRelentlessRage(bs.level, bs.raging)) return {}
+  assert(
+    !isIncapacitated(c) && canUseRelentlessRage(bs.level, bs.raging),
+    "guard: canRelentlessRage should have prevented this"
+  )
   const result = relentlessRageResult(conSaveSucceeded, bs.level)
   return {
     ...updateClass(c, "barbarian", { relentlessRageTimesUsed: bs.relentlessRageTimesUsed + 1 }),

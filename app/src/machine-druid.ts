@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import { wildShapeMaxCharges } from "#/features/class-druid.ts"
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
@@ -15,7 +16,10 @@ function d(c: DndContext) {
  * Druid level." No separate beast HP pool (5.1 had one with spillover — removed in 5.2.1). */
 export function enterWildShapeUpdate(c: DndContext): Partial<DndContext> {
   const ds = d(c)
-  if (isIncapacitated(c) || ds.level < 2 || ds.wildShapeCharges <= 0 || c.bonusActionUsed || ds.inWildShape) return {}
+  assert(
+    !isIncapacitated(c) && ds.level >= 2 && ds.wildShapeCharges > 0 && !c.bonusActionUsed && !ds.inWildShape,
+    "guard: canEnterWildShape should have prevented this"
+  )
   return {
     bonusActionUsed: true,
     tempHp: tempHp(ds.level),
@@ -25,7 +29,10 @@ export function enterWildShapeUpdate(c: DndContext): Partial<DndContext> {
 
 export function exitWildShapeUpdate(c: DndContext): Partial<DndContext> {
   const ds = d(c)
-  if (isIncapacitated(c) || !ds.inWildShape || c.bonusActionUsed) return {}
+  assert(
+    !isIncapacitated(c) && ds.inWildShape && !c.bonusActionUsed,
+    "guard: canExitWildShape should have prevented this"
+  )
   return { bonusActionUsed: true, ...updateClass(c, "druid", { inWildShape: false }) }
 }
 
@@ -34,25 +41,37 @@ export function exitWildShapeUpdate(c: DndContext): Partial<DndContext> {
  * one use by expending a spell slot (no action required)." */
 export function wildResurgenceChargeUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ds = d(c)
-  if (isIncapacitated(c) || ds.level < 5 || ds.wildShapeCharges !== 0) return {}
+  assert(
+    !isIncapacitated(c) && ds.level >= 5 && ds.wildShapeCharges === 0,
+    "guard: canWildResurgenceCharge should have prevented this"
+  )
   const idx = slotLevel - 1
   if (idx < 0 || idx >= c.slotsCurrent.length || c.slotsCurrent[idx] <= 0) return {}
   const newSlots = [...c.slotsCurrent]
   newSlots[idx] = newSlots[idx] - 1
-  return { slotsCurrent: newSlots, ...updateClass(c, "druid", { wildShapeCharges: resourceCount(ds.wildShapeCharges + 1) }) }
+  return {
+    slotsCurrent: newSlots,
+    ...updateClass(c, "druid", { wildShapeCharges: resourceCount(ds.wildShapeCharges + 1) })
+  }
 }
 
 /** Wild Resurgence part 2: expend WS charge → regain L1 spell slot.
  * SRD: "you can't do so again until you finish a Long Rest." */
 export function wildResurgenceSlotUpdate(c: DndContext): Partial<DndContext> {
   const ds = d(c)
-  if (isIncapacitated(c) || ds.level < 5 || ds.wildShapeCharges <= 0 || ds.wildResurgenceSlotUsedThisLR) return {}
+  assert(
+    !isIncapacitated(c) && ds.level >= 5 && ds.wildShapeCharges > 0 && !ds.wildResurgenceSlotUsedThisLR,
+    "guard: canWildResurgenceSlot should have prevented this"
+  )
   if (c.slotsCurrent[0] >= c.slotsMax[0]) return {}
   const newSlots = [...c.slotsCurrent]
   newSlots[0] = newSlots[0] + 1
   return {
     slotsCurrent: newSlots,
-    ...updateClass(c, "druid", { wildShapeCharges: resourceCount(ds.wildShapeCharges - 1), wildResurgenceSlotUsedThisLR: true })
+    ...updateClass(c, "druid", {
+      wildShapeCharges: resourceCount(ds.wildShapeCharges - 1),
+      wildResurgenceSlotUsedThisLR: true
+    })
   }
 }
 
@@ -68,7 +87,9 @@ export function druidStartTurnUpdate(c: DndContext): Partial<DndContext> {
 export function druidShortRestUpdate(c: DndContext): Partial<DndContext> {
   const ds = c.classStates.druid
   if (!ds || ds.level === 0) return {}
-  return updateClass(c, "druid", { wildShapeCharges: resourceCount(Math.min(ds.wildShapeCharges + 1, ds.wildShapeMax)) })
+  return updateClass(c, "druid", {
+    wildShapeCharges: resourceCount(Math.min(ds.wildShapeCharges + 1, ds.wildShapeMax))
+  })
 }
 
 /** SRD: "you regain all expended uses when you finish a Long Rest" */

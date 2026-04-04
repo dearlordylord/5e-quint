@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import {
   actionSurgeMaxCharges,
   canUseActionSurge,
@@ -36,7 +37,7 @@ export function secondWindUpdate(c: DndContext, d10Roll: number): Partial<DndCon
     secondWindCharges: fs.secondWindCharges,
     bonusActionUsed: c.bonusActionUsed
   }
-  if (!canUseSecondWind(swState) || isIncapacitated(c)) return {}
+  assert(canUseSecondWind(swState) && !isIncapacitated(c), "guard: canSecondWind should have prevented this")
   const r = tsUseSecondWind(swState, { fighterLevel: fs.level, d10Roll }, c.effectiveSpeed)
   const bonusMove = fs.level >= 5 ? { bonusMovementRemaining: r.tacticalShiftDistance, bonusMovementOAFree: true } : {}
   return {
@@ -54,7 +55,7 @@ export function actionSurgeUpdate(c: DndContext): Partial<DndContext> {
     actionSurgeUsedThisTurn: fs.actionSurgeUsedThisTurn,
     actionsRemaining: c.actionsRemaining
   }
-  if (!canUseActionSurge(s) || isIncapacitated(c)) return {}
+  assert(canUseActionSurge(s) && !isIncapacitated(c), "guard: canActionSurge should have prevented this")
   const r = tsUseActionSurge(s)
   return {
     actionsRemaining: r.actionsRemaining,
@@ -68,7 +69,7 @@ export function actionSurgeUpdate(c: DndContext): Partial<DndContext> {
 
 export function indomitableUpdate(c: DndContext): Partial<DndContext> {
   const fs = f(c)
-  if (!canUseIndomitable(fs.level, fs.indomitableCharges)) return {}
+  assert(canUseIndomitable(fs.level, fs.indomitableCharges), "guard: canIndomitable should have prevented this")
   return updateClass(c, "fighter", {
     indomitableCharges: resourceCount(tsUseIndomitable(fs.indomitableCharges, 0).indomitableCharges)
   })
@@ -76,15 +77,20 @@ export function indomitableUpdate(c: DndContext): Partial<DndContext> {
 
 export function tacticalMindUpdate(c: DndContext, boostedCheckSucceeds: boolean): Partial<DndContext> {
   const fs = f(c)
-  if (!canUseTacticalMind(fs.secondWindCharges, fs.level, true) || isIncapacitated(c)) return {}
+  assert(
+    canUseTacticalMind(fs.secondWindCharges, fs.level, true) && !isIncapacitated(c),
+    "guard: canTacticalMind should have prevented this"
+  )
   if (!boostedCheckSucceeds) return {}
   return updateClass(c, "fighter", {
-    secondWindCharges: resourceCount(tsUseTacticalMind({
-      secondWindCharges: fs.secondWindCharges,
-      originalCheckTotal: 0,
-      dc: 0,
-      d10Roll: 0
-    }).secondWindCharges)
+    secondWindCharges: resourceCount(
+      tsUseTacticalMind({
+        secondWindCharges: fs.secondWindCharges,
+        originalCheckTotal: 0,
+        dc: 0,
+        d10Roll: 0
+      }).secondWindCharges
+    )
   })
 }
 

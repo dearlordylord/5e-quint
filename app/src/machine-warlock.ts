@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import { canEldritchSmite, canUseMagicalCunning, canUseMysticArcanum } from "#/features/class-warlock.ts"
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
@@ -16,7 +17,10 @@ function w(c: DndContext) {
  * do so again until you finish a Long Rest." */
 export function magicalCunningUpdate(c: DndContext): Partial<DndContext> {
   const ws = w(c)
-  if (isIncapacitated(c) || !canUseMagicalCunning(ws.level, ws.magicalCunningUsed)) return {}
+  assert(
+    !isIncapacitated(c) && canUseMagicalCunning(ws.level, ws.magicalCunningUsed),
+    "guard: canMagicalCunning should have prevented this"
+  )
   return updateClass(c, "warlock", { magicalCunningUsed: true })
 }
 
@@ -25,7 +29,7 @@ export function magicalCunningUpdate(c: DndContext): Partial<DndContext> {
  * and you must finish a Long Rest before you can cast it in this way again." */
 export function mysticArcanumUpdate(c: DndContext, spellLevel: number): Partial<DndContext> {
   const ws = w(c)
-  if (isIncapacitated(c) || ws.level < 11) return {}
+  assert(!isIncapacitated(c) && ws.level >= 11, "guard: canMysticArcanum should have prevented this")
   if (!canUseMysticArcanum(spellLevel, ws.mysticArcanumUsed)) return {}
   return updateClass(c, "warlock", { mysticArcanumUsed: new Set([...ws.mysticArcanumUsed, spellLevel]) })
 }
@@ -35,8 +39,10 @@ export function mysticArcanumUpdate(c: DndContext, spellLevel: number): Partial<
  * you can expend a Pact Magic spell slot to deal an extra 1d8 Force damage" */
 export function eldritchSmiteUpdate(c: DndContext): Partial<DndContext> {
   const ws = w(c)
-  if (isIncapacitated(c) || !canEldritchSmite(ws.level) || c.pactSlotsCurrent <= 0 || ws.eldritchSmiteUsedThisTurn)
-    return {}
+  assert(
+    !isIncapacitated(c) && canEldritchSmite(ws.level) && c.pactSlotsCurrent > 0 && !ws.eldritchSmiteUsedThisTurn,
+    "guard: canEldritchSmite should have prevented this"
+  )
   return { pactSlotsCurrent: c.pactSlotsCurrent - 1, ...updateClass(c, "warlock", { eldritchSmiteUsedThisTurn: true }) }
 }
 

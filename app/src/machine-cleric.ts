@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import { clericChannelDivinityMax } from "#/features/class-cleric.ts"
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
@@ -7,7 +8,10 @@ import { resourceCount } from "#/types.ts"
 
 export function clericChannelDivinityUpdate(c: DndContext): Partial<DndContext> {
   const cs = c.classStates.cleric!
-  if (isIncapacitated(c) || cs.level < 2 || cs.clericChannelDivinityCharges <= 0) return {}
+  assert(
+    !isIncapacitated(c) && cs.level >= 2 && cs.clericChannelDivinityCharges > 0,
+    "guard: canClericCD should have prevented this"
+  )
   return updateClass(c, "cleric", { clericChannelDivinityCharges: resourceCount(cs.clericChannelDivinityCharges - 1) })
 }
 
@@ -24,7 +28,9 @@ export function clericShortRestUpdate(c: DndContext): Partial<DndContext> {
   const cs = c.classStates.cleric
   if (!cs || cs.level === 0) return {}
   return updateClass(c, "cleric", {
-    clericChannelDivinityCharges: resourceCount(Math.min(cs.clericChannelDivinityCharges + 1, cs.clericChannelDivinityMax))
+    clericChannelDivinityCharges: resourceCount(
+      Math.min(cs.clericChannelDivinityCharges + 1, cs.clericChannelDivinityMax)
+    )
   })
 }
 

@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import { canArcaneRecoverSlot, hasOverchannel } from "#/features/class-wizard.ts"
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
@@ -12,7 +13,7 @@ function w(c: DndContext) {
 
 export function arcaneRecoveryUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ws = w(c)
-  if (ws.level < 1 || ws.arcaneRecoveryUsed) return {}
+  assert(ws.level >= 1 && !ws.arcaneRecoveryUsed, "guard: canArcaneRecovery should have prevented this")
   // Quint always marks arcaneRecoveryUsed even if slot is full or invalid level.
   const flagUpdate = updateClass(c, "wizard", { arcaneRecoveryUsed: true })
   if (!canArcaneRecoverSlot(slotLevel)) return flagUpdate
@@ -28,7 +29,7 @@ export function arcaneRecoveryUpdate(c: DndContext, slotLevel: SpellSlotLevel): 
 
 export function overchannelUpdate(c: DndContext): Partial<DndContext> {
   const ws = w(c)
-  if (isIncapacitated(c) || !hasOverchannel(ws.level)) return {}
+  assert(!isIncapacitated(c) && hasOverchannel(ws.level), "guard: canOverchannel should have prevented this")
   return updateClass(c, "wizard", { overchannelUsesThisLR: ws.overchannelUsesThisLR + 1 })
 }
 

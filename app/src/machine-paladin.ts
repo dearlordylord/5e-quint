@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import {
   expendChannelDivinity,
   layOnHandsPoolMax,
@@ -23,7 +24,11 @@ function p(c: DndContext) {
  * SRD: "As a Bonus Action, you can touch a creature ... and draw power from the pool" */
 export function layOnHandsUpdate(c: DndContext, amount: number): Partial<DndContext> {
   const ps = p(c)
-  if (isIncapacitated(c) || c.bonusActionUsed || ps.layOnHandsPool < amount || amount <= 0) return {}
+  assert(
+    !isIncapacitated(c) && !c.bonusActionUsed && ps.layOnHandsPool > 0,
+    "guard: canLayOnHands should have prevented this"
+  )
+  if (ps.layOnHandsPool < amount || amount <= 0) return {}
   const healedAmount = Math.min(amount, c.maxHp - c.hp)
   return {
     bonusActionUsed: true,
@@ -35,7 +40,10 @@ export function layOnHandsUpdate(c: DndContext, amount: number): Partial<DndCont
 /** Paladin Channel Divinity: decrement charge. */
 export function paladinChannelDivinityUpdate(c: DndContext): Partial<DndContext> {
   const ps = p(c)
-  if (isIncapacitated(c) || ps.level < 3 || ps.paladinChannelDivinityCharges <= 0) return {}
+  assert(
+    !isIncapacitated(c) && ps.level >= 3 && ps.paladinChannelDivinityCharges > 0,
+    "guard: canPaladinCD should have prevented this"
+  )
   return updateClass(c, "paladin", {
     paladinChannelDivinityCharges: resourceCount(expendChannelDivinity(ps.paladinChannelDivinityCharges))
   })
@@ -43,7 +51,7 @@ export function paladinChannelDivinityUpdate(c: DndContext): Partial<DndContext>
 
 export function divineSmiteUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ps = p(c)
-  if (isIncapacitated(c) || ps.level < 2 || c.bonusActionUsed) return {}
+  assert(!isIncapacitated(c) && ps.level >= 2 && !c.bonusActionUsed, "guard: canDivineSmite should have prevented this")
   const newSlots = expendSlot(c.slotsCurrent, slotLevel)
   if (newSlots === c.slotsCurrent) return {}
   return { bonusActionUsed: true, slotsCurrent: newSlots }
@@ -51,7 +59,10 @@ export function divineSmiteUpdate(c: DndContext, slotLevel: SpellSlotLevel): Par
 
 export function divineSmiteFreeUpdate(c: DndContext): Partial<DndContext> {
   const ps = p(c)
-  if (isIncapacitated(c) || ps.level < 2 || c.bonusActionUsed || ps.smiteFreeUsed) return {}
+  assert(
+    !isIncapacitated(c) && ps.level >= 2 && !c.bonusActionUsed && !ps.smiteFreeUsed,
+    "guard: canDivineSmiteFree should have prevented this"
+  )
   return { bonusActionUsed: true, ...updateClass(c, "paladin", { smiteFreeUsed: true }) }
 }
 
@@ -68,10 +79,9 @@ export function paladinShortRestUpdate(c: DndContext): Partial<DndContext> {
   const ps = c.classStates.paladin
   if (!ps || ps.level === 0) return {}
   return updateClass(c, "paladin", {
-    paladinChannelDivinityCharges: resourceCount(restoreChannelDivinityShort(
-      ps.paladinChannelDivinityCharges,
-      ps.paladinChannelDivinityMax
-    ))
+    paladinChannelDivinityCharges: resourceCount(
+      restoreChannelDivinityShort(ps.paladinChannelDivinityCharges, ps.paladinChannelDivinityMax)
+    )
   })
 }
 

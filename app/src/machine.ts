@@ -192,7 +192,6 @@ export const dndMachine = setup({
     initTurn: assign(({ context: c, event: e }) => computeInitTurn(c, e)),
     useAction: assign(({ context: c, event: e }) => {
       const ev = asUseAction(e)
-      if (c.actionsRemaining <= 0 || isIncapacitated(c)) return {}
       // SRD 5.2.1: Action Surge "except the Magic action." XState can't prevent events
       // from arriving, so reject here. See actionSurgeActionPending in creature.qnt for full design.
       if (c.actionSurgeActionPending && ev.actionType === "magic") return {}
@@ -213,19 +212,15 @@ export const dndMachine = setup({
           return base
       }
     }),
-    useBonusAction: assign(({ context: c }) =>
-      c.bonusActionUsed || isIncapacitated(c) ? {} : { bonusActionUsed: true }
-    ),
-    useReaction: assign(({ context: c }) => (c.reactionAvailable ? { reactionAvailable: false } : {})),
+    useBonusAction: assign(() => ({ bonusActionUsed: true })),
+    useReaction: assign(() => ({ reactionAvailable: false })),
     useMovement: assign(({ context: c, event: e }) => {
       const cost = asUseMovement(e).feet * asUseMovement(e).movementCost
       return cost > c.movementRemaining || cost < 0
         ? {}
         : { movementRemaining: movementFeet(c.movementRemaining - cost) }
     }),
-    useExtraAttack: assign(({ context: c }) =>
-      c.extraAttacksRemaining <= 0 ? {} : { extraAttacksRemaining: c.extraAttacksRemaining - 1 }
-    ),
+    useExtraAttack: assign(({ context: c }) => ({ extraAttacksRemaining: c.extraAttacksRemaining - 1 })),
     grantExtraAction: assign(({ context: c }) => ({
       actionsRemaining: c.actionsRemaining + 1
     })),
@@ -414,15 +409,12 @@ export const dndMachine = setup({
     }),
     scoreCriticalHit: assign(({ context: c }) => {
       const fLevel = c.classStates.fighter?.level ?? 0
-      if (isIncapacitated(c) || fLevel < 3) return {}
       const d = remarkableAthleteCritMovement(fLevel, c.effectiveSpeed)
       return d <= 0 ? { bonusMovementOAFree: true } : { bonusMovementRemaining: d, bonusMovementOAFree: true }
     }),
-    useBonusMovement: assign(({ context: c, event: e }) =>
-      c.bonusMovementRemaining <= 0
-        ? {}
-        : { bonusMovementRemaining: Math.max(c.bonusMovementRemaining - asUseBonusMovement(e).feet, 0) }
-    ),
+    useBonusMovement: assign(({ context: c, event: e }) => ({
+      bonusMovementRemaining: Math.max(c.bonusMovementRemaining - asUseBonusMovement(e).feet, 0)
+    })),
     useLegendaryAction: assign(({ context: c }) =>
       c.creatureKind !== "Monster" || c.legendaryActionsRemaining <= 0
         ? {}

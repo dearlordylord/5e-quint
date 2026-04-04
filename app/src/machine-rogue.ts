@@ -1,3 +1,4 @@
+import { assert } from "#/assert.ts"
 import { canUseCunningAction, maxCunningStrikeEffects } from "#/features/class-rogue.ts"
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
@@ -13,14 +14,23 @@ function r(c: DndContext) {
 
 export function sneakAttackUpdate(c: DndContext): Partial<DndContext> {
   const rs = r(c)
-  if (isIncapacitated(c) || rs.level < 1 || rs.sneakAttackUsedThisTurn) return {}
+  assert(
+    !isIncapacitated(c) && rs.level >= 1 && !rs.sneakAttackUsedThisTurn,
+    "guard: canSneakAttack should have prevented this"
+  )
   return updateClass(c, "rogue", { sneakAttackUsedThisTurn: true })
 }
 
 export function steadyAimUpdate(c: DndContext): Partial<DndContext> {
   const rs = r(c)
-  if (isIncapacitated(c) || rs.level < 3 || rs.steadyAimUsedThisTurn || c.bonusActionUsed) return {}
-  if (c.movementRemaining !== c.effectiveSpeed) return {} // SRD: "only if you haven't moved"
+  assert(
+    !isIncapacitated(c) &&
+      rs.level >= 3 &&
+      !rs.steadyAimUsedThisTurn &&
+      !c.bonusActionUsed &&
+      c.movementRemaining === c.effectiveSpeed,
+    "guard: canSteadyAim should have prevented this"
+  )
   return {
     bonusActionUsed: true,
     effectiveSpeed: movementFeet(0),
@@ -32,7 +42,10 @@ export function steadyAimUpdate(c: DndContext): Partial<DndContext> {
 // -- Cunning Action (L2+) --
 
 export function cunningActionDashUpdate(c: DndContext): Partial<DndContext> {
-  if (isIncapacitated(c) || !canUseCunningAction(r(c).level, c.bonusActionUsed)) return {}
+  assert(
+    !isIncapacitated(c) && canUseCunningAction(r(c).level, c.bonusActionUsed),
+    "guard: canCunningAction should have prevented this"
+  )
   return {
     bonusActionUsed: true,
     movementRemaining: movementFeet(c.movementRemaining + c.effectiveSpeed)
@@ -40,12 +53,18 @@ export function cunningActionDashUpdate(c: DndContext): Partial<DndContext> {
 }
 
 export function cunningActionDisengageUpdate(c: DndContext): Partial<DndContext> {
-  if (isIncapacitated(c) || !canUseCunningAction(r(c).level, c.bonusActionUsed)) return {}
+  assert(
+    !isIncapacitated(c) && canUseCunningAction(r(c).level, c.bonusActionUsed),
+    "guard: canCunningAction should have prevented this"
+  )
   return { bonusActionUsed: true, disengaged: true }
 }
 
 export function cunningActionHideUpdate(c: DndContext): Partial<DndContext> {
-  if (isIncapacitated(c) || !canUseCunningAction(r(c).level, c.bonusActionUsed)) return {}
+  assert(
+    !isIncapacitated(c) && canUseCunningAction(r(c).level, c.bonusActionUsed),
+    "guard: canCunningAction should have prevented this"
+  )
   return { bonusActionUsed: true }
 }
 
@@ -54,7 +73,10 @@ export function cunningActionHideUpdate(c: DndContext): Partial<DndContext> {
 /** Uncanny Dodge: consume reaction. Damage halving is caller-managed.
  * SRD L5: "you can use your Reaction to halve the attack's damage" */
 export function uncannyDodgeUpdate(c: DndContext): Partial<DndContext> {
-  if (isIncapacitated(c) || r(c).level < 5 || !c.reactionAvailable) return {}
+  assert(
+    !isIncapacitated(c) && r(c).level >= 5 && c.reactionAvailable,
+    "guard: canUncannyDodge should have prevented this"
+  )
   return { reactionAvailable: false }
 }
 
@@ -65,9 +87,13 @@ export function uncannyDodgeUpdate(c: DndContext): Partial<DndContext> {
  * SRD L11: "You can use up to two Cunning Strike effects." */
 export function cunningStrikeUpdate(c: DndContext): Partial<DndContext> {
   const rs = r(c)
-  if (isIncapacitated(c) || rs.level < 5 || !rs.sneakAttackUsedThisTurn) return {}
-  const max = maxCunningStrikeEffects(rs.level)
-  if (rs.cunningStrikeUsesThisTurn >= max) return {}
+  assert(
+    !isIncapacitated(c) &&
+      rs.level >= 5 &&
+      rs.sneakAttackUsedThisTurn &&
+      rs.cunningStrikeUsesThisTurn < maxCunningStrikeEffects(rs.level),
+    "guard: canCunningStrike should have prevented this"
+  )
   return updateClass(c, "rogue", { cunningStrikeUsesThisTurn: rs.cunningStrikeUsesThisTurn + 1 })
 }
 

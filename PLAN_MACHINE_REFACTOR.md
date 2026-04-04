@@ -106,11 +106,13 @@
 
 ---
 
-## Phase 2: Creature Machine — Ability Guards
+## Phase 2: Creature Machine — Ability Guards ✅ DONE
 
 **Vertical slice:** Add guards to one class at a time. Each class is independently testable via creature MBT. End-to-end per slice: extract guard from action function → add to machine-guards.ts → wire into machine-states.ts → creature MBT passes.
 
-**Architecture decision:** Guards mirror Quint preconditions exactly. After a guard is wired, the `if (!valid) return {}` in the action function is replaced with `invariant(valid, "guard: canX should have prevented this")` — converting silent no-ops into loud assertion failures that indicate a guard/spec mismatch.
+**Architecture decision:** Guards mirror Quint preconditions exactly. After a guard is wired, the `if (!valid) return {}` in the action function is replaced with `assert(valid, "guard: canX should have prevented this")` — converting silent no-ops into loud assertion failures that indicate a guard/spec mismatch. Uses existing `assert` from `#/assert.ts`.
+
+**Implementation notes:** ~45 guards added covering all class abilities + resource economy. Duplicate guards merged during `/simplify` convergence: `isRaging` (shared by END_RAGE + MARK_ATTACK_OR_FORCED_SAVE), `canCunningAction` (shared by 3 cunning action events), `canMonkFreeBA`/`canMonkFocusBA` (shared by patient defense + step of the wind variants). Battle MBT passes. Creature MBT has pre-existing `innateSorceryCharges` init parity bug (see Known Issues).
 
 ### Tasks
 
@@ -154,10 +156,10 @@
 - Convert confirmed guard-protected `return {}` to `invariant()` calls.
 
 **Verification:**
-1. Full creature MBT pass.
-2. Full battle MBT pass (guards don't affect battle machine, but confirm nothing broke).
+1. Full creature MBT pass. **Blocked by:** pre-existing `innateSorceryCharges` init parity bug — Quint expects `2`, XState produces `0` at step 0 for any sorcerer creature. Not caused by Phase 2.
+2. Full battle MBT pass (guards don't affect battle machine, but confirm nothing broke). ✅
 3. `grep -rn "return {}" app/src/machine-*.ts` — remaining hits are only genuinely unconditional actions (DROP_PRONE, etc.) or root handlers.
-4. `/simplify` convergence (minimum 2 rounds).
+4. `/simplify` convergence (minimum 2 rounds). ✅
 
 ---
 
