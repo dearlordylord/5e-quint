@@ -111,6 +111,45 @@
 
 ---
 
+### C9. Monk Unarmored Defense improperly stacks with shields [Critical]
+
+*Source: Gemini audit of CODEX_QUERY.md*
+
+**SRD Reference:** `Classes/Monk.md:72-74`: "While you aren't wearing armor **or wielding a Shield**, your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers."
+
+**Spec Location:** `creature.qnt:707-713` (`calculateAC`)
+
+**Current Behavior:** `calculateAC` computes MonkUD as `10 + dexMod + wisMod`, then unconditionally adds `shieldBonus` (+2) at line 713. A Monk with a shield gets `10 + DEX + WIS + 2`.
+
+**Expected Behavior:** MonkUD deactivates when wielding a shield. A Monk with a shield should use standard unarmored AC (`10 + dexMod + 2 = 12 + DEX`), not MonkUD.
+
+**Fix:**
+- In the `Unarmored` branch of `calculateAC`, when `unarmoredDef == MonkUD` and `hasShield == true`, fall back to `NoUnarmoredDefense` formula (`10 + dexMod`)
+- Alternatively: compute MonkUD AC without shield AND standard AC with shield, take higher (player's choice)
+- Mirror in TS: check `calculateAC` in the XState machine
+
+---
+
+### C10. Heavy Weapon uses 5.1 size check instead of 5.2.1 STR threshold [Major]
+
+*Source: Gemini audit of CODEX_QUERY.md*
+
+**SRD Reference:** `Equipment.md:52`: "You have Disadvantage on attack rolls with a Heavy weapon if it's a Melee weapon and your Strength score isn't at least 13 or if it's a Ranged weapon and your Dexterity score isn't at least 13."
+
+**Spec Location:** `creature.qnt:759-761` (`heavyWeaponDisadvantage`)
+
+**Current Behavior:** Checks `wielderSize == Tiny or wielderSize == Small` -- this is the **SRD 5.1 (2014)** rule.
+
+**Expected Behavior:** SRD 5.2.1 changed Heavy to an ability score threshold: STR 13 for melee, DEX 13 for ranged. Size is no longer relevant.
+
+**Fix:**
+- Change signature to `heavyWeaponDisadvantage(weapon: Weapon, strScore: int, dexScore: int): bool`
+- Check `weapon.properties.contains(Heavy) and ((weapon.isMelee and strScore < 13) or (not(weapon.isMelee) and dexScore < 13))`
+- Remove size parameter
+- Update all callers
+
+---
+
 ### ~~C4. Concentration DC cap at 30~~ [Not a bug]
 
 Validated: `pConcentrationDC` at `creature.qnt:2005-2009` already caps at 30 via `intMin(intMax(half, 10), 30)`. Matches RAW exactly.
@@ -240,6 +279,54 @@ Validated: `pTakeDamageAsCreature` at `creature.qnt:1126-1172` correctly handles
 
 ---
 
+### F9. Grapple/Shove/TWF disconnected from battle [Medium Impact]
+
+*Source: Codex audit of CODEX_QUERY.md*
+
+**SRD Reference:** Unarmed Strike offers damage/grapple/shove choice. Two-Weapon Fighting grants BA extra attack with Light weapons.
+
+**Spec Location:** `creature.qnt` has `pGrapple` (L1617), `pShove` (L1634), `pCanTWFWithWeapons` (L1575), `pTWFOffHandDamage` (L1590). Zero references in `battle.qnt`.
+
+**Current Behavior:** `bAttack` models a single generic attack with nondeterministic weapon parameters. No unarmed strike choice, no grapple/shove saves, no TWF bonus attack.
+
+**Approach:** Add `bUnarmedStrike` (with damage/grapple/shove choice via sum type) and `bTWFAttack` (BA extra attack) to battle. Grapple/shove need the save-failed reaction path (`PISaveFailed`).
+
+---
+
+### F10. Battle spell slot level capped at 1-3 [Medium Impact]
+
+*Source: Codex audit of CODEX_QUERY.md*
+
+**Spec Location:** All four spell actions (`bCastSaveSpell:957`, `bCastAoE:1526`, `bCastConcentrationSpell:1429`, `bCastBonusActionSpell:1868`) use `nondet slotLvl = 1.to(3).oneOf()`.
+
+**Current Behavior:** L4-9 spells are unreachable in battle MBT. This limits coverage of high-level spell interactions (Counterspell at L4+, upcasting, Mystic Arcanum).
+
+**Fix:** Expand to `1.to(9)` or derive from caster's actual available slot levels. Guard with `pCanCastAtLevel`.
+
+---
+
+## Structural Notes
+
+### S1. Unify attack transaction pipeline [Medium]
+
+*Source: Codex audit*
+
+`bAttack` (L668) and `bMovementOAAttack` (L1687) share ~15 lines of identical hit-resolution logic (construct `AttackHitCtx`, check eligible reactors, branch to `BPAwaitingReaction` or direct damage). Extractable to `resolveAttackHit(cs, atkCtx)` returning `{ creatures, phase }`. Would also enable F5 fix (routing LA attacks through the same chain).
+
+### S2. Fix misleading OA "can see" comment [Trivial]
+
+*Source: Codex audit*
+
+`battle.qnt:1655` comment says "Filter threatened to those with reaction + alive + can see mover" but the code only checks reaction + alive. The "can see" check is not implemented (spatial/visibility is out of scope). Fix the comment to match reality.
+
+### S3. Investigate excluded concentration invariants [Minor]
+
+*Source: Codex audit*
+
+Three invariants are excluded from `allBattleInvariants` due to transient CS chain states. The two concentration invariants could be phase-scoped with `bSpellStack == []` as a tighter guard (only check when no pending spell resolutions). `concentrationEffectHasLivingCaster` has a note "may be a real spec bug" -- investigate root cause before phase-scoping.
+
+---
+
 ## Performance Notes
 
 ### P1. Overly broad nondeterministic spell parameters
@@ -262,6 +349,12 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 
 `bResolveAoETarget` processes targets one at a time from `remaining: Set[CreatureId]`, iterating the full creature map each step. O(n^2) for full AoE at scale. Precomputing as an ordered list at cast time would make each step O(1).
 
+### P6. OA powerset branching
+
+*Source: Codex audit*
+
+`bMove` at line 1642 uses `allIds.exclude(Set(activeId)).powerset().oneOf()` -- full powerset of opponent IDs. With 3 opponents: 2^3=8 subsets (manageable). With P3 expansion to 6+ creatures: 2^5=32+ subsets per move step. Would need constrained nondet if creature count grows.
+
 ---
 
 ## Verification
@@ -273,13 +366,20 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 ## Priority Order
 
 1. **C1** (LR bug) -- correctness, critical severity, small fix
-2. **C6 + F2** (Dodge/Dash/Disengage) -- low complexity, high value batch
-3. **C3** (Evasion) -- correctness, moderate complexity
-4. **F3** (Action Surge) -- completes existing phantom infrastructure
-5. **F4** (class features) -- incremental, start with Rage/Reckless
-6. **C8** (Ready) -- high complexity, significant new mechanics
-7. **F5** (LA reaction chain) -- moderate complexity
-8. **F7** (Aura of Protection) -- requires spatial abstraction design
-9. **F1** (more reactions) -- incremental, add as needed
-10. **C2** (Arcane Recovery) -- minor
-11. **C5** (Knock Out) -- minor
+2. **C9** (Monk UD + Shield) -- correctness, critical, small fix
+3. **C10** (Heavy Weapon 5.1→5.2.1) -- correctness, major, small fix
+4. **C6 + F2** (Dodge/Dash/Disengage) -- low complexity, high value batch
+5. **C3** (Evasion) -- correctness, moderate complexity
+6. **F3** (Action Surge) -- completes existing phantom infrastructure
+7. **F4** (class features) -- incremental, start with Rage/Reckless
+8. **S1** (unify attack pipeline) -- enables F5, reduces duplication
+9. **F5** (LA reaction chain) -- moderate complexity, unlocked by S1
+10. **F10** (spell slot cap 1-3 -> 1-9) -- coverage gap, small fix
+11. **F9** (grapple/shove/TWF in battle) -- medium complexity
+12. **C8** (Ready) -- high complexity, significant new mechanics
+13. **F7** (Aura of Protection) -- requires spatial abstraction design
+14. **F1** (more reactions) -- incremental, add as needed
+15. **S2** (fix OA comment) -- trivial cleanup
+16. **S3** (investigate excluded invariants) -- quality-of-proof
+17. **C2** (Arcane Recovery) -- minor
+18. **C5** (Knock Out) -- minor
