@@ -240,17 +240,25 @@ Validated: `pTakeDamageAsCreature` at `creature.qnt:1126-1172` correctly handles
 
 **Spec Location:** All exist in `creature.qnt` as pure functions. Zero called from `battle.qnt`'s `bAttack`.
 
-| Feature | Class | Level | Effect | Complexity |
-|---------|-------|-------|--------|-----------|
-| **Sneak Attack** | Rogue | 1+ | +Nd6 damage (once/turn, needs Advantage or ally) | Medium |
-| **Rage damage bonus** | Barbarian | 1+ | +2/+3/+4 melee damage while raging | Low |
-| **Divine Smite** | Paladin | 2+ | +Nd8 radiant on hit (spend slot, BA) | Medium |
-| **Stunning Strike** | Monk | 5+ | 1 FP on hit -> CON save or Stunned | Medium |
-| **Second Wind** | Fighter | 1+ | BA -> heal 1d10+fighter level | Low |
-| **Reckless Attack** | Barbarian | 2+ | Advantage on STR attacks, enemies get Advantage on you | Low |
-| **Brutal Strike** | Barbarian | 9+ | Replace Advantage -> extra d10 + push/slow | Medium |
+| Feature | Class | Level | Effect | Category | PRD |
+|---------|-------|-------|--------|----------|-----|
+| **Action Surge** | Fighter | 2+ | Extra action (not Magic) | Flow (changes action economy) | PRD 1 |
+| **Rage damage bonus** | Barbarian | 1+ | +2/+3/+4 melee damage while raging | Modifier (via `meleeDamageBonus`) + Action (`bEnterRage`) | PRD 1 |
+| **Reckless Attack** | Barbarian | 2+ | Advantage on STR attacks, enemies get Advantage on you | Modifier (`recklessThisTurn: bool`) + Action (`bDeclareReckless`) | PRD 1 |
+| **Sneak Attack** | Rogue | 1+ | +Nd6 damage (once/turn, needs Advantage or ally) | Modifier (`sneakAttackEligible: bool`, extra damage is +N) | Deferred |
+| **Stunning Strike** | Monk | 5+ | 1 FP on hit -> CON save or Stunned | Flow (new save -> condition interrupt) | Deferred |
+| **Paladin's Smite** | Paladin | 2+ | Grants Divine Smite spell + 1 free cast/LR | Class feature (spell access) | Deferred |
+| **Divine Smite** | Paladin | -- | Spell: BA + slot, extra radiant on hit, Counterspellable | Flow (spell cast -> CS window -> slot economy) | Deferred |
+| **Second Wind** | Fighter | 1+ | BA -> heal 1d10+fighter level | Flow (BA + resource) | Deferred |
+| **Brutal Strike** | Barbarian | 9+ | Replace Advantage -> extra d10 + push/slow | Modifier (forgo dice for effect) | Deferred |
+| **Cunning Strike** | Rogue | 5+ | Forgo SA dice for Poison/Trip/Withdraw | Modifier (forgo dice for effect) | Deferred |
 
-**Approach:** Incremental. Start with Rage damage bonus and Reckless Attack (lowest complexity), then Sneak Attack and Divine Smite.
+**Categorization rationale (see ARCHITECTURE.md "The Quint/TS Frontier"):**
+- *Modifier features* modify a value in an existing pipeline. Quint models them via generic fields on Combatant; TS computes the specific values. The damage pipeline already handles arbitrary amounts, so +N from rage adds no new correctness concern.
+- *Flow features* create new phases, interrupt points, or change action economy. Quint proves their multi-step interaction patterns are safe.
+- Modifiers that need *dynamic toggling* (rage starts/ends, reckless declared per turn) require battle actions, making them flow-adjacent.
+
+**Approach:** PRD 1 covers S1 (attack pipeline unification) + F5 (LA reaction chain) + F3 (Action Surge) + rage/reckless (modifier + action). Deferred items tracked here with category assignments.
 
 ---
 
