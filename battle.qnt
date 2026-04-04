@@ -1127,6 +1127,8 @@ module battle {
   /// Quint does not support recursive pure def, so CS unwinding is inlined to
   /// depth 5 (covers up to 5 casters in the chain). Deeper chains fall through
   /// to resolveSpellEntry which will hit the non-CS fallback.
+  /// Future: the generator/contract/spec pattern from Emerald could replace this
+  /// inlining — see https://github.com/informalsystems/emerald/pull/236
   pure def returnToCSWindow(
     cs: CreatureId -> Combatant,
     entry: SpellStackEntry, stack: List[SpellStackEntry]
