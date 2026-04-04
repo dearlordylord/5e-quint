@@ -5,16 +5,14 @@
  */
 import * as path from "node:path"
 
-import { Option } from "effect"
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect"
+import { Option } from "effect"
 import { describe, it } from "vitest"
 import { createActor } from "xstate"
 import { z } from "zod"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleContext, BattleCreatureState, BattleEvent } from "#/battle-machine-types.ts"
-import type { CreatureId } from "#/types.ts"
-import { armorClass, CreatureId as mkCreatureId, difficultyClass, spellId as mkSpellId, spellSlotLevel } from "#/types.ts"
 import {
   compareNormalizedStates,
   ITFBigInt,
@@ -29,6 +27,14 @@ import {
   QuintTurnState,
   variantToString
 } from "#/mbt-shared.ts"
+import type { CreatureId } from "#/types.ts"
+import {
+  armorClass,
+  CreatureId as mkCreatureId,
+  difficultyClass,
+  spellId as mkSpellId,
+  spellSlotLevel
+} from "#/types.ts"
 
 // ============================================================
 // Quint state parsing (reuse battle-level schemas from B14)
@@ -392,7 +398,13 @@ function createBattleMachineDriver() {
           creatures: [
             { id: mkCreatureId("A"), maxHp: p(picks, "hp1", 20), kind: "PC", caster: true, rogueLevel: 5 },
             { id: mkCreatureId("B"), maxHp: p(picks, "hp2", 20), kind: "PC", caster: true },
-            { id: mkCreatureId("C"), maxHp: p(picks, "hp3", 35), kind: "Monster", legendaryActions: 3, legendaryResistances: 3 },
+            {
+              id: mkCreatureId("C"),
+              maxHp: p(picks, "hp3", 35),
+              kind: "Monster",
+              legendaryActions: 3,
+              legendaryResistances: 3
+            },
             { id: mkCreatureId("D"), maxHp: p(picks, "hp4", 20), kind: "PC", caster: true }
           ]
         })
@@ -405,7 +417,8 @@ function createBattleMachineDriver() {
           sotDt: mapDamageType(ps(picks, "sotDt", "Bludgeoning")),
           sotHeal: p(picks, "sotHeal", 0),
           sotSaveResult: pb(picks, "sotSaveResult", false),
-          sotConSave: pb(picks, "sotConSave", false)
+          sotConSave: pb(picks, "sotConSave", false),
+          deathSaveRoll: p(picks, "deathSaveRoll", 0)
         })
       },
       bAttack: (picks: Record<string, unknown>) => {

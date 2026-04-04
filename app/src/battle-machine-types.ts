@@ -277,6 +277,7 @@ export type BattleEvent =
       readonly sotHeal: number
       readonly sotSaveResult: boolean
       readonly sotConSave: boolean
+      readonly deathSaveRoll: number
     }
   | {
       readonly type: "BATTLE_ATTACK"

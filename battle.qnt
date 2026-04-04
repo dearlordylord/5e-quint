@@ -406,15 +406,15 @@ module battle {
     cs: CreatureId -> Combatant, excludeId: CreatureId
   ): Set[CreatureId] =
     cs.keys().exclude(Set(excludeId)).filter(id =>
-      hasReaction(cs, id) and not(cs.get(id).creature.dead)
+      hasReaction(cs, id) and not(cs.get(id).creature.dead) and not(cs.get(id).creature.unconscious)
     )
 
-  /// Eligible single-target reactor: target alone if it has reaction + alive.
+  /// Eligible single-target reactor: target alone if it has reaction + alive + conscious.
   /// Used for damage-reactions (Uncanny Dodge) and save-failed (Legendary Resistance).
   pure def eligibleTarget(
     cs: CreatureId -> Combatant, targetId: CreatureId
   ): Set[CreatureId] =
-    if (hasReaction(cs, targetId) and not(cs.get(targetId).creature.dead))
+    if (hasReaction(cs, targetId) and not(cs.get(targetId).creature.dead) and not(cs.get(targetId).creature.unconscious))
       Set(targetId)
     else
       Set()
@@ -561,6 +561,7 @@ module battle {
     nondet sotHeal = 0.to(5).oneOf()
     nondet sotSaveResult = Bool.oneOf()
     nondet sotConSave = Bool.oneOf()
+    nondet deathSaveRoll = 0.to(20).oneOf()
     all {
       bPhase == BPActiveTurn,
       not(bTurnStarted),
@@ -568,7 +569,12 @@ module battle {
       val eff1 = pDecrementDurations(c.creature.activeEffects)
       // 2. Clear expired AtStartOfTurn effects
       val eff2 = pClearExpiredAtPhase(eff1, AtStartOfTurn)
-      val cs0 = setCreature(bCreatures, activeId, c.creature.with("activeEffects", eff2))
+      val s0 = c.creature.with("activeEffects", eff2)
+      // 2b. Death save (if applicable): hp == 0, not stable, not dead, roll provided
+      val s1 = if (s0.hp == 0 and not(s0.stable) and not(s0.dead) and deathSaveRoll > 0)
+        pDeathSave(s0, deathSaveRoll)
+      else s0
+      val cs0 = setCreature(bCreatures, activeId, s1)
       // 3. Process start-of-turn effects (simplified: one aggregate effect)
       val hasEffects = eff2.size() > 0 and (sotDmg > 0 or sotHeal > 0)
       val cs1 = if (hasEffects) {

@@ -89,7 +89,8 @@ export function battleStartTurn({ context: c, event: e }: Args): Partial<BattleC
     e.sotHeal,
     e.sotSaveResult,
     e.sotConSave,
-    rechargedAbilities
+    rechargedAbilities,
+    e.deathSaveRoll
   )
   return { creatures: result, turnStarted: true }
 }

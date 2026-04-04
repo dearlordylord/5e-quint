@@ -12,11 +12,11 @@ Single-creature state machine. All dice pre-resolved. Multi-creature interaction
 | **PLAN.md** (this file) | Done | Core Quint spec: generic rules in `creature.qnt` (HP, damage, conditions, turns, rests, slots, grapple/shove, attack resolution, environment). The foundation everything else composes on. |
 | **PLAN_SCRAPERS.md** | Active | QA pipeline: new data sources for the community Q&A corpus (SE tags, Sage Advice, sageadvice.eu, errata). Independent of other plans. |
 
-## Known Spec Gaps (Battle Machine)
+## Known Spec Gaps (Battle Machine) — all resolved
 
-- **Death saves at turn start:** The battle machine's `BATTLE_START_TURN` does not trigger death saves for unconscious creatures. The creature-level machine handles death saves, but the battle machine doesn't wire `sotSaveResult` to death save logic for unconscious creatures. Unconscious creatures' turns currently pass without death save processing.
-- **Damage at 0 HP → death save failures:** Implemented correctly (1 failure per hit, 2 for crits). However, the battle machine opens reaction windows for unconscious creatures (who shouldn't have reactions). This is cosmetic — the scenario just passes through them — but the machine could skip them.
-- **Instant death from massive damage at 0 HP:** Not modeled. RAW: if remaining damage after dropping to 0 HP equals or exceeds max HP, the creature dies instantly.
+- **Death saves at turn start:** *(resolved)* `BATTLE_START_TURN` now accepts `deathSaveRoll` and wires `pDeathSave`/`deathSave()` for unconscious PCs. Both Quint (`bStartTurn`) and TS (`processStartTurn`) updated.
+- **Reaction windows for unconscious creatures:** *(resolved)* `eligibleExcluding`, `eligibleTarget`, and `eligibleForCounterspell` now check `!unconscious` in both Quint and TS.
+- **Instant death from massive damage at 0 HP:** *(resolved)* Already implemented in both `pTakeDamageAsCreature` (Quint) and `takeDamage` (TS). Verified with tests.
 
 > **NOTE — Suggestive, not prescriptive.** Function names, signatures, state fields, and type
 > definitions listed in tasks below are *illustrative suggestions* to communicate intent and scope.

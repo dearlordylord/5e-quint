@@ -60,7 +60,8 @@ const startTurn: BattleEvent = {
   sotDt: "fire" as DamageType,
   sotHeal: 0,
   sotSaveResult: true,
-  sotConSave: true
+  sotConSave: true,
+  deathSaveRoll: 0
 }
 
 const endTurn: BattleEvent = {
@@ -209,7 +210,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
   endTurn, // end A's turn — D and F unconscious, E alone at 22 HP
 
   // === Turn D: unconscious, death save ===
-  // D fails death save (sotSaveResult=false)
+  // D fails death save (roll 5 < 10)
   {
     type: "BATTLE_START_TURN",
     rechargeD6: 1,
@@ -217,11 +218,12 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotDt: "fire" as DamageType,
     sotHeal: 0,
     sotSaveResult: false,
-    sotConSave: true
+    sotConSave: true,
+    deathSaveRoll: 5
   },
   endTurn,
 
-  // === Turn B: unconscious, death save (fails) ===
+  // === Turn B: unconscious, death save (fails, roll 5)
   {
     type: "BATTLE_START_TURN",
     rechargeD6: 1,
@@ -229,7 +231,8 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotDt: "fire" as DamageType,
     sotHeal: 0,
     sotSaveResult: false,
-    sotConSave: true
+    sotConSave: true,
+    deathSaveRoll: 5
   },
   endTurn,
 
@@ -272,7 +275,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
   aoeTarget(null, 0),
   endTurn,
 
-  // === Turn F: unconscious, death save (fails) ===
+  // === Turn F: unconscious, death save (fails, roll 5)
   {
     type: "BATTLE_START_TURN",
     rechargeD6: 1,
@@ -280,7 +283,8 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotDt: "fire" as DamageType,
     sotHeal: 0,
     sotSaveResult: false,
-    sotConSave: true
+    sotConSave: true,
+    deathSaveRoll: 5
   },
   endTurn
 ]

@@ -8,6 +8,7 @@ import {
   applyCondition,
   breakConcentration,
   clearExpiredAtPhase,
+  deathSave,
   decrementDurations,
   heal,
   isIncapacitated,
@@ -129,14 +130,14 @@ export function breakConcentrationAndPropagate(
 export function eligibleExcluding(cs: Creatures, excludeId: CreatureId): Set<CreatureId> {
   const result = new Set<CreatureId>()
   for (const [id, c] of cs) {
-    if (id !== excludeId && c.reactionAvailable && !c.dead) result.add(id)
+    if (id !== excludeId && c.reactionAvailable && !c.dead && !c.unconscious) result.add(id)
   }
   return result
 }
 
 export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<CreatureId> {
   const t = cs.get(targetId)!
-  return t.reactionAvailable && !t.dead ? new Set([targetId]) : new Set()
+  return t.reactionAvailable && !t.dead && !t.unconscious ? new Set([targetId]) : new Set()
 }
 
 // slotExpendedThisTurn is guarded both here (for reactions) and at all spell-casting
@@ -144,7 +145,7 @@ export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<Creatur
 export function eligibleForCounterspell(cs: Creatures, excludeId: CreatureId): Set<CreatureId> {
   const result = new Set<CreatureId>()
   for (const [id, c] of cs) {
-    if (id === excludeId || !c.reactionAvailable || c.dead) continue
+    if (id === excludeId || !c.reactionAvailable || c.dead || c.unconscious) continue
     let hasSlot = false
     for (let i = 2; i < c.slotsCurrent.length; i++) {
       if (c.slotsCurrent[i] > 0) {
@@ -344,12 +345,17 @@ export function processStartTurn(
   sotHeal: number,
   _sotSaveResult: boolean,
   sotConSave: boolean,
-  rechargedAbilities: ReadonlyArray<string> | undefined
+  rechargedAbilities: ReadonlyArray<string> | undefined,
+  deathSaveRoll: number
 ): Map<CreatureId, BattleCreatureState> {
   let c = cs.get(activeId)!
   let effs = decrementDurations(c.activeEffects)
   effs = clearExpiredAtPhase(effs, "start")
   c = { ...c, activeEffects: effs }
+  // Death save: if at 0 HP, not stable, not dead, and roll provided
+  if (c.hp === 0 && !c.stable && !c.dead && deathSaveRoll > 0) {
+    c = deathSave(c, deathSaveRoll)
+  }
   let result = setCreature(cs, activeId, c)
   const hasEffects = effs.length > 0 && (sotDmg > 0 || sotHeal > 0)
   if (hasEffects) {

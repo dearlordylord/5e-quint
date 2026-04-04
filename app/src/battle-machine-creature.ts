@@ -5,7 +5,7 @@
 import { Match, Option } from "effect"
 
 import type { BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
-import { addIncapSource, ALL_DAMAGE_TYPES, removeIncapSource } from "#/machine-helpers.ts"
+import { addIncapSource, ALL_DAMAGE_TYPES, removeIncapSource, resolveDeathSave } from "#/machine-helpers.ts"
 import type { ActionType, ActiveEffect, Condition, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
 
 function applyDamageModifiers(
@@ -109,6 +109,19 @@ function addDeathFailures(c: BattleCreatureState, count: number): BattleCreature
   const newFails = Math.min(c.deathSaves.failures + count, 3)
   const c1 = { ...c, deathSaves: { successes: c.deathSaves.successes, failures: newFails } }
   return newFails >= 3 ? { ...c1, dead: true } : c1
+}
+
+/** Death saving throw at start of turn. Delegates to resolveDeathSave for d20 logic. */
+export function deathSave(c: BattleCreatureState, d20Roll: number): BattleCreatureState {
+  if (c.dead || c.hp > 0 || c.stable) return c
+  const r = resolveDeathSave(d20Roll, c.deathSaves.successes, c.deathSaves.failures)
+  if (r.regainsConsciousness) {
+    return removeCondition({ ...c, hp: 1, deathSaves: { successes: 0, failures: 0 } }, "unconscious")
+  }
+  const c1 = { ...c, deathSaves: { successes: r.newSuccesses, failures: r.newFailures } }
+  if (r.isDead) return { ...c1, dead: true }
+  if (r.isStabilized) return { ...c1, stable: true, deathSaves: { successes: 0, failures: 0 } }
+  return c1
 }
 
 export function takeDamage(
