@@ -2,7 +2,7 @@
  * Battle-level XState machine types — mirrors battle.qnt state variables and types.
  * Flat context with Map<CreatureId, BattleCreature>, phase as discriminated union.
  */
-import { Option } from "effect"
+import type { Option } from "effect"
 
 import type {
   ActiveEffect,
@@ -394,90 +394,3 @@ export type BattleEvent =
       readonly laTgtAc: ArmorClass
     }
   | { readonly type: "BATTLE_HEAL"; readonly targetId: CreatureId; readonly amount: number }
-
-export const FRESH_TURN_STATE = {
-  movementRemaining: 30,
-  effectiveSpeed: 30,
-  actionsRemaining: 1,
-  attackActionUsed: false,
-  bonusActionUsed: false,
-  reactionAvailable: true,
-  freeInteractionUsed: false,
-  extraAttacksRemaining: 1,
-  disengaged: false,
-  dodging: false,
-  readiedAction: false,
-  bonusActionSpellCast: false,
-  nonCantripActionSpellCast: false,
-  bonusMovementRemaining: 0,
-  bonusMovementOAFree: false,
-  actionSurgeActionPending: false,
-  slotExpendedThisTurn: false
-} as const
-
-export const EMPTY_SLOTS: ReadonlyArray<number> = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-export const CASTER_SLOTS: ReadonlyArray<number> = [4, 3, 2, 0, 0, 0, 0, 0, 0]
-
-export const CASTER_PREPARED_SPELLS: ReadonlySet<string> = new Set([
-  "hold_person",
-  "bless",
-  "haste",
-  "spirit_guardians",
-  "fireball",
-  "burning_hands",
-  "guiding_bolt",
-  "inflict_wounds",
-  "counterspell"
-])
-
-export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreatureState {
-  return {
-    hp: maxHp,
-    maxHp,
-    tempHp: 0,
-    deathSaves: { successes: 0, failures: 0 },
-    stable: false,
-    dead: false,
-    blinded: false,
-    charmed: false,
-    deafened: false,
-    exhaustion: 0,
-    frightened: false,
-    grappled: false,
-    invisible: false,
-    paralyzed: false,
-    petrified: false,
-    poisoned: false,
-    prone: false,
-    restrained: false,
-    stunned: false,
-    unconscious: false,
-    incapacitatedSources: new Set(),
-    activeEffects: [],
-    ...FRESH_TURN_STATE,
-    slotsMax: EMPTY_SLOTS,
-    slotsCurrent: EMPTY_SLOTS,
-    pactSlotsMax: 0,
-    pactSlotsCurrent: 0,
-    pactSlotLevel: 0,
-    concentrationSpellId: Option.none(),
-    legendaryActionsRemaining: 0,
-    legendaryResistancesRemaining: 0,
-    rechargeAvailable: {},
-    dailyUsesRemaining: {},
-    creatureKind: kind,
-    rogueLevel: 0,
-    monkLevel: 0,
-    preparedSpells: new Set()
-  }
-}
-
-export function freshCaster(maxHp: number, kind: CreatureKind): BattleCreatureState {
-  return {
-    ...freshCreature(maxHp, kind),
-    slotsMax: CASTER_SLOTS,
-    slotsCurrent: CASTER_SLOTS,
-    preparedSpells: CASTER_PREPARED_SPELLS
-  }
-}

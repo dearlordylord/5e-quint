@@ -6,7 +6,7 @@ import { Match, Option } from "effect"
 
 import type { BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
 import { addIncapSource, ALL_DAMAGE_TYPES, removeIncapSource, resolveDeathSave } from "#/machine-helpers.ts"
-import type { ActionType, ActiveEffect, Condition, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
+import type { ActionType, ActiveEffect, Condition, CreatureKind, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
 
 function applyDamageModifiers(
   amount: number,
@@ -254,4 +254,93 @@ export function clearExpiredAtPhase(
   phase: ExpiryPhase
 ): ReadonlyArray<ActiveEffect> {
   return effects.filter((e) => !(e.turnsRemaining <= 0 && e.expiresAt === phase))
+}
+
+// --- Constants & factories (moved from battle-machine-types.ts) ---
+
+export const FRESH_TURN_STATE = {
+  movementRemaining: 30,
+  effectiveSpeed: 30,
+  actionsRemaining: 1,
+  attackActionUsed: false,
+  bonusActionUsed: false,
+  reactionAvailable: true,
+  freeInteractionUsed: false,
+  extraAttacksRemaining: 1,
+  disengaged: false,
+  dodging: false,
+  readiedAction: false,
+  bonusActionSpellCast: false,
+  nonCantripActionSpellCast: false,
+  bonusMovementRemaining: 0,
+  bonusMovementOAFree: false,
+  actionSurgeActionPending: false,
+  slotExpendedThisTurn: false
+} as const
+
+const EMPTY_SLOTS: ReadonlyArray<number> = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+const CASTER_SLOTS: ReadonlyArray<number> = [4, 3, 2, 0, 0, 0, 0, 0, 0]
+
+const CASTER_PREPARED_SPELLS: ReadonlySet<string> = new Set([
+  "hold_person",
+  "bless",
+  "haste",
+  "spirit_guardians",
+  "fireball",
+  "burning_hands",
+  "guiding_bolt",
+  "inflict_wounds",
+  "counterspell"
+])
+
+export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreatureState {
+  return {
+    hp: maxHp,
+    maxHp,
+    tempHp: 0,
+    deathSaves: { successes: 0, failures: 0 },
+    stable: false,
+    dead: false,
+    blinded: false,
+    charmed: false,
+    deafened: false,
+    exhaustion: 0,
+    frightened: false,
+    grappled: false,
+    invisible: false,
+    paralyzed: false,
+    petrified: false,
+    poisoned: false,
+    prone: false,
+    restrained: false,
+    stunned: false,
+    unconscious: false,
+    incapacitatedSources: new Set(),
+    activeEffects: [],
+    ...FRESH_TURN_STATE,
+    slotsMax: EMPTY_SLOTS,
+    slotsCurrent: EMPTY_SLOTS,
+    pactSlotsMax: 0,
+    pactSlotsCurrent: 0,
+    pactSlotLevel: 0,
+    concentrationSpellId: Option.none(),
+    legendaryActionsRemaining: 0,
+    legendaryResistancesRemaining: 0,
+    rechargeAvailable: {},
+    dailyUsesRemaining: {},
+    creatureKind: kind,
+    rogueLevel: 0,
+    monkLevel: 0,
+    preparedSpells: new Set()
+  }
+}
+
+export function freshCaster(maxHp: number, kind: CreatureKind): BattleCreatureState {
+  return {
+    ...freshCreature(maxHp, kind),
+    slotsMax: CASTER_SLOTS,
+    slotsCurrent: CASTER_SLOTS,
+    preparedSpells: CASTER_PREPARED_SPELLS
+  }
 }

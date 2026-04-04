@@ -4,6 +4,7 @@
  */
 import { Match } from "effect"
 
+import { freshCaster, freshCreature } from "#/battle-machine-creature.ts"
 import {
   activeId,
   advanceFromHitPhase,
@@ -31,7 +32,7 @@ import type {
   BattleEvent,
   CreatureId
 } from "#/battle-machine-types.ts"
-import { ADR_ACTIVE_TURN, BP_ACTIVE_TURN, freshCaster, freshCreature } from "#/battle-machine-types.ts"
+import { ADR_ACTIVE_TURN, BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
 import { armorClass } from "#/types.ts"
 
 type Args = { context: BattleContext; event: BattleEvent }

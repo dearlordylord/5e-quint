@@ -126,15 +126,6 @@ export default [
     }
   },
 
-  // battle-machine-types.ts override: BattleEvent union + phase types grow with each
-  // reaction point / spell interaction. 500 accommodates current event count.
-  {
-    files: ["**/battle-machine-types.ts"],
-    rules: {
-      "max-lines": ["error", { max: 500, skipBlankLines: true, skipComments: true }]
-    }
-  },
-
   // Test file + MBT infrastructure overrides
   {
     files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/mbt-shared.ts"],

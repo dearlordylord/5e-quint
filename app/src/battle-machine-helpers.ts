@@ -10,6 +10,7 @@ import {
   clearExpiredAtPhase,
   deathSave,
   decrementDurations,
+  FRESH_TURN_STATE,
   heal,
   isIncapacitated,
   removeEffect,
@@ -29,7 +30,7 @@ import type {
   SaveSpellCtx,
   TriggerType
 } from "#/battle-machine-types.ts"
-import { BP_ACTIVE_TURN, FRESH_TURN_STATE } from "#/battle-machine-types.ts"
+import { BP_ACTIVE_TURN } from "#/battle-machine-types.ts"
 import type { DamageType, SpellId } from "#/types.ts"
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
