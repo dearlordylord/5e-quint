@@ -45,8 +45,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   const [spellFaded, setSpellFaded] = useState(false)
   const castBarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const spellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [activeDiceCue, setActiveDiceCue] = useState<{ cue: DiceRollCue; key: number } | null>(null)
-  const diceKeyRef = useRef(0)
+  const [diceCue, setDiceCue] = useState<DiceRollCue | null>(null)
 
   const { cues, snapshot } = useMemo(() => {
     if (cursor < 0) return { snapshot: null, cues: EMPTY_CUES }
@@ -83,13 +82,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
     if (cues.spellAnnouncement) {
       spellTimerRef.current = setTimeout(() => setSpellFaded(true), SPELL_NAME_FADE_MS)
     }
-    if (cues.diceRoll) {
-      // eslint-disable-next-line functional/immutable-data -- React ref mutation
-      diceKeyRef.current += 1
-      setActiveDiceCue({ cue: cues.diceRoll, key: diceKeyRef.current })
-    } else {
-      setActiveDiceCue(null)
-    }
+    setDiceCue(cues.diceRoll)
     return () => {
       if (castBarTimerRef.current) clearTimeout(castBarTimerRef.current)
       if (spellTimerRef.current) clearTimeout(spellTimerRef.current)
@@ -123,6 +116,8 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
     [events, meta]
   )
 
+  const handleDiceComplete = useCallback(() => setDiceCue(null), [])
+
   return (
     <PageShell title="Battle Visualizer">
       <div className="flex flex-col items-center">
@@ -144,11 +139,9 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
 
         <div className="relative w-full max-w-3xl">
           {layout && <BattleField layout={layout} />}
-          {activeDiceCue && (
-            <Suspense fallback={null}>
-              <DiceOverlay key={activeDiceCue.key} cue={activeDiceCue.cue} onComplete={() => setActiveDiceCue(null)} />
-            </Suspense>
-          )}
+          <Suspense fallback={null}>
+            <DiceOverlay cue={diceCue} onComplete={handleDiceComplete} />
+          </Suspense>
         </div>
 
         <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />

@@ -1,24 +1,13 @@
 /* eslint-disable functional/immutable-data, no-magic-numbers, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-non-null-assertion */
 /**
  * 3D dice overlay for the battle field.
- * Renders a Three.js canvas that floats over the SVG battlefield,
- * showing animated dice rolls for attacks, saves, and damage.
- *
  * Vendored from react-3d-dice v0.1.0 (MIT) — adapted for our overlay use case.
  */
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import * as THREE from "three"
 
+import type { DiceRollCue } from "../director.ts"
 import { buildDieMesh, FACE_LABELED, SETTLE_SECS, settleQuat } from "./diceEngine.ts"
-
-export interface DiceRollCue {
-  /** Die type: 4, 6, 8, 10, 12, 20 */
-  readonly sides: number
-  /** Pre-determined results (one per die) */
-  readonly results: ReadonlyArray<number>
-  /** Hex color for the dice */
-  readonly color: number
-}
 
 const SPIN_DURATION_MS = 600
 const SETTLE_DURATION_MS = SETTLE_SECS * 1000
@@ -37,8 +26,20 @@ interface InternalState {
   frustumHalf: number
 }
 
+function disposeMesh(scene: THREE.Scene, mesh: THREE.Mesh): void {
+  scene.remove(mesh)
+  mesh.traverse((ch) => {
+    if (ch instanceof THREE.Mesh) {
+      ch.geometry?.dispose()
+      if (ch.material instanceof THREE.Material) ch.material.dispose()
+    }
+  })
+}
+
 export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onComplete: () => void }) {
   const mountRef = useRef<HTMLDivElement>(null)
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
   const S = useRef<InternalState>({
     scene: null,
     camera: null,
@@ -51,7 +52,6 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
     settleData: [],
     frustumHalf: 2.5
   })
-  const [visible, setVisible] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Init Three.js scene (once)
@@ -105,6 +105,8 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
       s.animId = requestAnimationFrame(loop)
       const meshes = s.meshes
 
+      if (meshes.length === 0) return
+
       if (s.phase === "spinning") {
         const spd = 12
         meshes.forEach((m, i) => {
@@ -115,13 +117,13 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
       } else if (s.phase === "settling") {
         const elapsed = (time - s.settleStart) / 1000
         const p = Math.min(elapsed / SETTLE_SECS, 1)
-        const e = 1 - Math.pow(1 - p, 3) // ease-out cubic
+        const e = 1 - Math.pow(1 - p, 3)
         meshes.forEach((m, i) => {
           const d = s.settleData[i]
           if (d) m.quaternion.slerpQuaternions(d.from, d.to, e)
         })
         if (p >= 1) s.phase = "idle"
-      } else if (s.phase === "idle" && meshes.length > 0) {
+      } else if (s.phase === "idle") {
         const t = time / 1000
         meshes.forEach((m, i) => {
           if (s.settleData[i]) {
@@ -143,50 +145,30 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
     return () => {
       ro.disconnect()
       if (s.animId) cancelAnimationFrame(s.animId)
-      s.meshes.forEach((m) => {
-        scene.remove(m)
-        m.traverse((ch) => {
-          if (ch instanceof THREE.Mesh) {
-            ch.geometry?.dispose()
-            if (ch.material instanceof THREE.Material) ch.material.dispose()
-          }
-        })
-      })
+      s.meshes.forEach((m) => disposeMesh(scene, m))
       renderer.dispose()
       if (renderer.domElement.parentNode === el) el.removeChild(renderer.domElement)
     }
   }, [])
 
-  // React to cue changes — build meshes, trigger spin → settle → hide
+  // React to cue changes — build meshes, trigger spin → settle → notify
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
 
     const s = S.current
-    if (!s.scene || !cue) {
-      setVisible(false)
-      return
-    }
+    if (!s.scene) return
 
     // Clear old meshes
-    s.meshes.forEach((m) => {
-      s.scene!.remove(m)
-      m.traverse((ch) => {
-        if (ch instanceof THREE.Mesh) {
-          ch.geometry?.dispose()
-          if (ch.material instanceof THREE.Material) ch.material.dispose()
-        }
-      })
-    })
+    s.meshes.forEach((m) => disposeMesh(s.scene!, m))
     s.meshes = []
     s.gridPos = []
     s.settleData = []
 
+    if (!cue) return
+
     const { color, results, sides } = cue
     const count = results.length
-    if (count === 0) {
-      setVisible(false)
-      return
-    }
+    if (count === 0) return
 
     // Build meshes on a grid
     const cols = Math.min(count, 5)
@@ -226,13 +208,10 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
       s.camera.updateProjectionMatrix()
     }
 
-    // Start spinning
     s.phase = "spinning"
-    setVisible(true)
 
     const isNumbered = FACE_LABELED.has(sides)
 
-    // After spin duration, settle
     const settleTimer = setTimeout(() => {
       s.phase = "settling"
       s.settleStart = performance.now()
@@ -249,10 +228,8 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
       })
     }, SPIN_DURATION_MS)
 
-    // After total duration, hide and notify
     const hideTimer = setTimeout(() => {
-      setVisible(false)
-      onComplete()
+      onCompleteRef.current()
     }, TOTAL_DURATION_MS)
 
     timerRef.current = hideTimer
@@ -261,7 +238,7 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
       clearTimeout(settleTimer)
       clearTimeout(hideTimer)
     }
-  }, [cue, onComplete])
+  }, [cue])
 
   return (
     <div
@@ -273,8 +250,6 @@ export function DiceOverlay({ cue, onComplete }: { cue: DiceRollCue | null; onCo
         width: 120,
         height: 120,
         pointerEvents: "none",
-        opacity: visible ? 1 : 0,
-        transition: "opacity 0.3s ease-out",
         zIndex: 10
       }}
     />

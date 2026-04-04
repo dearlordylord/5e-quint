@@ -201,18 +201,12 @@ export function directorStep(
 // --- Dice roll cue derivation ---
 
 /** Field name suffixes that indicate a d20 roll value (1–20). */
-const D20_SUFFIXES = ["Roll", "AtkRoll", "SaveRoll"] as const
+const D20_SUFFIXES = ["Roll", "AtkRoll"] as const
 
-const ATTACK_COLOR = 0x3b82f6 // blue — attack rolls
-const SAVE_COLOR = 0x22c55e // green — saving throws
+const ATTACK_COLOR = 0x3b82f6 // blue
+const SAVE_COLOR = 0x22c55e // green
 
-/**
- * Universal dice-roll extractor. Scans every field on the event for
- * d20-range values (1–20) whose key ends in a known roll suffix.
- * This catches attacks, saves, counterspell checks, concentration checks,
- * opportunity attacks, legendary attacks, retaliation — anything that
- * carries a roll field, present or future.
- */
+/** Extract d20 roll cue from event fields ending in known suffixes. */
 function deriveDiceRoll(event: BattleEvent): DiceRollCue | null {
   const D20_MAX = 20
   const entries = Object.entries(event).filter(
