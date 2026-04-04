@@ -11,6 +11,7 @@ import { BattleField } from "./BattleField.tsx"
 import { BattleInspector } from "./BattleInspector.tsx"
 import type { DiceRollCue } from "./director.ts"
 import { directorStep, EMPTY_CUES, EMPTY_DICE_ROLLS } from "./director.ts"
+import { InitiativeTracker } from "./InitiativeTracker.tsx"
 import { computeLayout } from "./layout.ts"
 import { narrate } from "./narrate.ts"
 import { type BattleScenario, deriveSnapshot } from "./scene-snapshot.ts"
@@ -165,6 +166,11 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
                 <Suspense fallback={null}>
                   <DiceOverlay cues={diceCues} onComplete={handleDiceComplete} />
                 </Suspense>
+              )}
+              {snapshot && (
+                <div className="absolute top-2 right-2 z-10">
+                  <InitiativeTracker creatures={snapshot.creatures} round={snapshot.round} />
+                </div>
               )}
             </div>
             <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
