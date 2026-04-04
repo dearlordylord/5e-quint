@@ -10,7 +10,7 @@ import type { ClassName } from "#/features/class-tables.ts"
 import { CLASS_NAMES } from "#/features/class-tables.ts"
 import type { DndSnapshot } from "#/machine.ts"
 import type { ClassStateMap } from "#/machine-types.ts"
-import type { Condition, CreatureKind, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
+import type { Ability, Condition, CreatureKind, DamageType, IncapSource, ShoveChoice, Size } from "#/types.ts"
 
 // ============================================================
 // Quint → TS enum mappings
@@ -179,6 +179,19 @@ export function mapCreatureKind(s: string): CreatureKind {
 
 export function mapDamageType(s: string): DamageType {
   return QUINT_DAMAGE_TYPE_MAP[s] ?? "bludgeoning"
+}
+
+const QUINT_ABILITY_MAP: Record<string, Ability> = {
+  Str: "str",
+  Dex: "dex",
+  Con: "con",
+  Int_: "int",
+  Wis: "wis",
+  Cha: "cha"
+}
+
+export function mapAbility(s: string): Ability {
+  return QUINT_ABILITY_MAP[s] ?? "str"
 }
 
 // ============================================================

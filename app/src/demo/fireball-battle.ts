@@ -83,6 +83,7 @@ const castShatter: BattleEvent = {
   dt: "thunder" as DamageType,
   cond: "deafened",
   applyCond: false,
+  saveAbility: "con",
   slotLvl: spellSlotLevel(2),
   spellName: "shatter",
   ritual: false
@@ -96,6 +97,7 @@ const castFireball: BattleEvent = {
   dt: "fire" as DamageType,
   cond: "blinded",
   applyCond: false,
+  saveAbility: "dex",
   slotLvl: spellSlotLevel(3),
   spellName: "fireball",
   ritual: false

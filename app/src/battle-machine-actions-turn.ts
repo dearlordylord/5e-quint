@@ -39,7 +39,10 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
       ...(cfg.monkLevel != null ? { monkLevel: cfg.monkLevel } : {}),
       ...(cfg.legendaryActions != null ? { legendaryActionsRemaining: cfg.legendaryActions } : {}),
       ...(cfg.legendaryResistances != null ? { legendaryResistancesRemaining: cfg.legendaryResistances } : {}),
-      ...(cfg.preparedSpells != null ? { preparedSpells: cfg.preparedSpells } : {})
+      ...(cfg.preparedSpells != null ? { preparedSpells: cfg.preparedSpells } : {}),
+      ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
+      ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
+      ...(cfg.critRange != null ? { critRange: cfg.critRange } : {})
     })
     initiative.push(cfg.id)
   }

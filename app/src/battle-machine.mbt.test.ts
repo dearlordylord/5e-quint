@@ -19,6 +19,7 @@ import {
   ITFVariant,
   ITFVariantWithValue,
   logMbtSeed,
+  mapAbility,
   mapDamageType,
   QUINT_CONDITION_MAP,
   QuintCreatureState,
@@ -48,7 +49,10 @@ const QuintCombatant = z.object({
   monsterResources: QuintMonsterResourceState,
   statBlock: z.any(),
   rogueLevel: z.bigint(),
-  monkLevel: z.bigint()
+  monkLevel: z.bigint(),
+  hasEvasion: z.boolean(),
+  saveMiscBonus: z.bigint(),
+  critRange: z.bigint()
 })
 
 type ParsedCombatant = z.infer<typeof QuintCombatant>
@@ -142,6 +146,9 @@ interface NormalizedBattleCreature {
   rechargeAvailable: Readonly<Record<string, boolean>>
   dailyUsesRemaining: Readonly<Record<string, number>>
   creatureKind: string
+  hasEvasion: boolean
+  saveMiscBonus: number
+  critRange: number
 }
 
 function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreature {
@@ -199,7 +206,10 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     legendaryResistancesRemaining: Number(c.monsterResources.legendaryResistancesRemaining),
     rechargeAvailable: c.monsterResources.rechargeAvailable,
     dailyUsesRemaining: c.monsterResources.dailyUsesRemaining,
-    creatureKind: c.kind
+    creatureKind: c.kind,
+    hasEvasion: c.hasEvasion,
+    saveMiscBonus: Number(c.saveMiscBonus),
+    critRange: Number(c.critRange)
   }
 }
 
@@ -267,7 +277,10 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     legendaryResistancesRemaining: c.legendaryResistancesRemaining,
     rechargeAvailable: c.rechargeAvailable,
     dailyUsesRemaining: c.dailyUsesRemaining,
-    creatureKind: c.creatureKind
+    creatureKind: c.creatureKind,
+    hasEvasion: c.hasEvasion,
+    saveMiscBonus: c.saveMiscBonus,
+    critRange: c.critRange
   }
 }
 
@@ -423,6 +436,7 @@ function createBattleMachineDriver() {
               kind: "PC",
               caster: true,
               rogueLevel: 5,
+              hasEvasion: true,
               initiativeRoll: p(picks, "initRoll1", 10),
               initiativeRollB: p(picks, "initRoll1b", 10),
               surprised: pb(picks, "surprised1", false)
@@ -432,6 +446,7 @@ function createBattleMachineDriver() {
               maxHp: p(picks, "hp2", 20),
               kind: "PC",
               caster: true,
+              saveMiscBonus: 3,
               initiativeRoll: p(picks, "initRoll2", 10),
               initiativeRollB: p(picks, "initRoll2b", 10),
               surprised: pb(picks, "surprised2", false)
@@ -451,6 +466,7 @@ function createBattleMachineDriver() {
               maxHp: p(picks, "hp4", 20),
               kind: "PC",
               caster: true,
+              critRange: 19,
               initiativeRoll: p(picks, "initRoll4", 10),
               initiativeRollB: p(picks, "initRoll4b", 10),
               surprised: pb(picks, "surprised4", false)
@@ -550,6 +566,7 @@ function createBattleMachineDriver() {
           dt: mapDamageType(ps(picks, "dt", "Fire")),
           cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CBlinded")] ?? "blinded",
           applyCond: pb(picks, "applyCond", false),
+          saveAbility: mapAbility(ps(picks, "saveAb", "Con")),
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           spellName: ps(picks, "spellName", "guiding_bolt"),
           ritual: pb(picks, "ritual", false)
@@ -609,6 +626,7 @@ function createBattleMachineDriver() {
           dt: mapDamageType(ps(picks, "dt", "Fire")),
           cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CBlinded")] ?? "blinded",
           applyCond: pb(picks, "applyCond", false),
+          saveAbility: mapAbility(ps(picks, "saveAb", "Dex")),
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           spellName: ps(picks, "spellName", "fireball"),
           ritual: pb(picks, "ritual", false)
@@ -688,6 +706,7 @@ function createBattleMachineDriver() {
           dt: mapDamageType(ps(picks, "dt", "Fire")),
           cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CBlinded")] ?? "blinded",
           applyCond: pb(picks, "applyCond", false),
+          saveAbility: mapAbility(ps(picks, "saveAb", "Con")),
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           spellName: ps(picks, "spellName", "guiding_bolt"),
           ritual: false,

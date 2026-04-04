@@ -20,9 +20,56 @@ import {
   spendExtraAttack,
   spendReaction
 } from "#/battle-machine-helpers.ts"
-import type { AttackHitCtx, BattleActionArgs, BattleContext } from "#/battle-machine-types.ts"
+import type {
+  AfterDamageReturn,
+  AttackHitCtx,
+  BattleActionArgs,
+  BattleContext,
+  BattleCreatureState,
+  PhaseFields
+} from "#/battle-machine-types.ts"
 import { ADR_ACTIVE_TURN, phaseAwaitReaction } from "#/battle-machine-types.ts"
+import type { CreatureId, DamageType } from "#/types.ts"
 import { armorClass } from "#/types.ts"
+
+type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>
+
+/** Shared attack resolution: determines hit, enters reaction chain or deals damage. */
+export function resolveAttack(
+  cs: Creatures,
+  attackerId: CreatureId,
+  targetId: CreatureId,
+  attackRoll: number,
+  targetAc: number,
+  damage: number,
+  damageType: DamageType,
+  isCritical: boolean,
+  critRange: number,
+  returnTo: AfterDamageReturn
+): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
+  if (!isHit(attackRoll, targetAc, critRange)) {
+    return { creatures: new Map(cs), ...returnToState(returnTo) }
+  }
+  const atkCtx: AttackHitCtx = {
+    attacker: attackerId,
+    target: targetId,
+    attackRoll,
+    targetAc: armorClass(targetAc),
+    damage,
+    damageType,
+    isCritical,
+    critRange,
+    atkReturnTo: returnTo
+  }
+  const elig = eligibleExcluding(cs, attackerId)
+  if (elig.size > 0) {
+    return {
+      creatures: new Map(cs),
+      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", elig))
+    }
+  }
+  return dealDamageWithAfterReactions(cs, targetId, attackerId, damage, damageType, isCritical, returnTo)
+}
 
 export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_ATTACK">): Partial<BattleContext> {
   const id = activeId(c)
@@ -33,26 +80,7 @@ export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_
   const updatedAc =
     ac.attackActionUsed && ac.extraAttacksRemaining > 0 ? spendExtraAttack(ac) : spendAction(ac, "attack")
   const cs = setCreature(c.creatures, id, updatedAc)
-  if (!isHit(e.attackRoll, e.tAc)) return { creatures: cs }
-  const atkCtx: AttackHitCtx = {
-    attacker: id,
-    target: e.targetId,
-    attackRoll: e.attackRoll,
-    targetAc: e.tAc,
-    damage: e.dmg,
-    damageType: e.dt,
-    isCritical: e.crit,
-    atkReturnTo: ADR_ACTIVE_TURN
-  }
-  const elig = eligibleExcluding(cs, id)
-  if (elig.size > 0) {
-    return {
-      creatures: cs,
-      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", elig))
-    }
-  }
-  const result = dealDamageWithAfterReactions(cs, e.targetId, id, e.dmg, e.dt, e.crit, ADR_ACTIVE_TURN)
-  return { ...result }
+  return resolveAttack(cs, id, e.targetId, e.attackRoll, e.tAc, e.dmg, e.dt, e.crit, ac.critRange, ADR_ACTIVE_TURN)
 }
 
 export function battleResolveHitReaction({

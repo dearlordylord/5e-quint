@@ -32,6 +32,9 @@ module battle {
     rogueLevel: int,                         // 0 = not a rogue (B11)
     monkLevel: int,                          // 0 = not a monk (B11)
     preparedSpells: Set[str],                // spells this creature has prepared (SRD 5.2.1 Gaining Spells)
+    hasEvasion: bool,                        // Evasion feature (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
+    saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
+    critRange: int,                          // natural roll >= critRange is a critical hit (default 20, Champion 19/18)
   }
 
   type TriggerType =
@@ -67,6 +70,7 @@ module battle {
     damage: int,
     damageType: DamageType,
     isCritical: bool,
+    critRange: int,                  // natural roll >= critRange is a critical hit
     atkReturnTo: AfterDamageReturn,  // where to go after entire attack chain resolves
   }
 
@@ -111,6 +115,7 @@ module battle {
     damageType: DamageType,
     conditionOnFail: Condition, // CBlinded etc. Use CBlinded as "none" placeholder
     applyCondition: bool,       // true if spell actually applies a condition on fail
+    saveAbility: Ability,       // which ability the save targets (Dex, Con, etc.)
   }
 
   // Context for a failed save (Legendary Resistance / Countercharm interrupt)
@@ -136,6 +141,7 @@ module battle {
     conditionOnFail: Condition,
     applyCondition: bool,
     remaining: Set[CreatureId], // targets not yet resolved
+    saveAbility: Ability,       // which ability the save targets (Dex for Fireball, etc.)
   }
 
   // Context for a concentration spell (deferred until CS resolves).
@@ -314,6 +320,9 @@ module battle {
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0,
     preparedSpells: Set(),
+    hasEvasion: false,
+    saveMiscBonus: 0,
+    critRange: 20,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -331,6 +340,9 @@ module battle {
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0,
     preparedSpells: CASTER_PREPARED_SPELLS,
+    hasEvasion: false,
+    saveMiscBonus: 0,
+    critRange: 20,
   }
 
   // Monster with legendary actions and resistances
@@ -345,6 +357,9 @@ module battle {
     statBlock: sb,
     rogueLevel: 0, monkLevel: 0,
     preparedSpells: Set(),
+    hasEvasion: false,
+    saveMiscBonus: 0,
+    critRange: 20,
   }
 
   pure def dealDamage(
@@ -584,10 +599,10 @@ module battle {
     nondet surprised4 = Bool.oneOf()
     all {
       bCreatures' = Map(
-        "A" -> mkCaster(hp1, PC).with("rogueLevel", 5),  // B11: rogue 5 for Uncanny Dodge testing
-        "B" -> mkCaster(hp2, PC),
+        "A" -> mkCaster(hp1, PC).with("rogueLevel", 5).with("hasEvasion", true),  // B11: rogue 5 + Evasion
+        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", 3),  // Paladin Aura-like bonus
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
-        "D" -> mkCaster(hp4, PC)  // 4th creature for CS chain depth ≥ 2
+        "D" -> mkCaster(hp4, PC).with("critRange", 19)  // Champion fighter (Improved Critical)
       ),
       // Initiative order: sorted by effective roll descending (highest first).
       // SRD 5.2.1: "Disadvantage on their Initiative roll" for surprised combatants.
@@ -683,6 +698,36 @@ module battle {
 
   // --- Attack transaction (B0/B1) ---
 
+  /// Shared attack resolution: determines hit, enters reaction chain or deals damage.
+  /// Called by bAttack, bMovementOAAttack, and (future) bLegendaryAttack, bReadyRelease.
+  pure def resolveAttack(
+    cs: CreatureId -> Combatant,
+    attackerId: CreatureId, targetId: CreatureId,
+    attackRoll: int, targetAc: int,
+    damage: int, damageType: DamageType, isCritical: bool,
+    critRange: int,
+    returnTo: AfterDamageReturn
+  ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
+    val hit = attackRoll >= targetAc or attackRoll >= critRange
+    if (not(hit)) {
+      { creatures: cs, phase: returnToPhase(returnTo) }
+    } else {
+      val atkCtx: AttackHitCtx = {
+        attacker: attackerId, target: targetId,
+        attackRoll: attackRoll, targetAc: targetAc,
+        damage: damage, damageType: damageType, isCritical: isCritical,
+        critRange: critRange,
+        atkReturnTo: returnTo,
+      }
+      val elig = eligibleExcluding(cs, attackerId)
+      if (elig.size() > 0) {
+        { creatures: cs, phase: BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, elig)) }
+      } else {
+        dealDamageWithAfterReactions(cs, targetId, attackerId, damage, damageType, isCritical, returnTo)
+      }
+    }
+  }
+
   action bAttack = {
     val activeId = bInitiative[bTurnIndex]
     val allIds = bCreatures.keys()
@@ -710,35 +755,15 @@ module battle {
       else
         pUseAction(ac.turn, ac.creature, AAttack)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
-      val hit = attackRoll >= tAc or attackRoll == 20
-      if (not(hit)) {
-        all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
-      } else {
-        val atkCtx: AttackHitCtx = {
-          attacker: activeId, target: targetId,
-          attackRoll: attackRoll, targetAc: tAc,
-          damage: dmg, damageType: dt, isCritical: crit,
-          atkReturnTo: ADRActiveTurn,
-        }
-        val elig = eligibleExcluding(cs1, activeId)
-        if (elig.size() > 0) {
-          all {
-            bCreatures' = cs1,
-            bPhase' = BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, elig)),
-            keepBattle,
-          }
-        } else {
-          val result = dealDamageWithAfterReactions(cs1, targetId, activeId, dmg, dt, crit, ADRActiveTurn)
-          all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
-        }
-      }
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn)
+      all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
     }
   }
 
   pure def advanceFromHitPhase(
     cs: CreatureId -> Combatant, atk: AttackHitCtx
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
-    val stillHit = atk.attackRoll >= atk.targetAc or atk.attackRoll == 20
+    val stillHit = atk.attackRoll >= atk.targetAc or atk.attackRoll >= atk.critRange
     if (not(stillHit)) {
       { creatures: cs, phase: returnToPhase(atk.atkReturnTo) }
     } else {
@@ -974,6 +999,7 @@ module battle {
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
+    nondet saveAb = Set(Str, Dex, Con, Int_, Wis, Cha).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
@@ -1002,6 +1028,7 @@ module battle {
         damageOnFail: dmgOnFail, halfOnSuccess: halfOnSave,
         damageType: dt,
         conditionOnFail: cond, applyCondition: applyCond,
+        saveAbility: saveAb,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
@@ -1031,22 +1058,33 @@ module battle {
   pure def resolveSave(
     cs: CreatureId -> Combatant, save: SaveSpellCtx, returnTo: AfterDamageReturn
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
-    val saved = save.saveRoll >= save.saveDC
+    val tgt = cs.get(save.target)
+    val saved = (save.saveRoll + tgt.saveMiscBonus) >= save.saveDC
+    val isDex = save.saveAbility == Dex
+    val tgtIncap = isIncapacitated(tgt.creature)
     if (saved) {
       // Save succeeded — half damage if applicable, no condition
       if (save.halfOnSuccess and save.damageOnFail > 0) {
         val halfDmg = save.damageOnFail / 2
-        dealDamageWithAfterReactions(cs, save.target, save.caster,
-          halfDmg, save.damageType, false, returnTo)
+        // Evasion on DEX save success: 0 damage
+        val evDmg = if (isDex) pApplyEvasion(halfDmg, true, tgt.hasEvasion, tgtIncap) else halfDmg
+        if (evDmg == 0) {
+          { creatures: cs, phase: returnToPhase(returnTo) }
+        } else {
+          dealDamageWithAfterReactions(cs, save.target, save.caster,
+            evDmg, save.damageType, false, returnTo)
+        }
       } else {
         { creatures: cs, phase: returnToPhase(returnTo) }
       }
     } else {
-      // Save failed — check for Legendary Resistance
+      // Save failed — Evasion on DEX save fail: half damage
+      val evDmgOnFail = if (isDex) pApplyEvasion(save.damageOnFail, false, tgt.hasEvasion, tgtIncap) else save.damageOnFail
+      // Check for Legendary Resistance
       val elig = eligibleForLR(cs, save.target)
       val failCtx = mkSaveFailedCtx(
         save.caster, save.target,
-        save.damageOnFail, save.halfOnSuccess, save.damageType,
+        evDmgOnFail, save.halfOnSuccess, save.damageType,
         save.conditionOnFail, save.applyCondition
       )
       if (elig.size() > 0) {
@@ -1546,6 +1584,7 @@ module battle {
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
+    nondet saveAb = Set(Str, Dex, Con, Int_, Wis, Cha).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
@@ -1571,6 +1610,7 @@ module battle {
         damageType: dt,
         conditionOnFail: cond, applyCondition: applyCond,
         remaining: liveTargets,
+        saveAbility: saveAb,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
@@ -1611,23 +1651,33 @@ module battle {
           nondet saveRoll = 1.to(20).oneOf()
           val newRemaining = aoe.remaining.exclude(Set(targetId))
           val updatedAoe = aoe.with("remaining", newRemaining)
-          val saved = saveRoll >= aoe.saveDC
+          val tgt = bCreatures.get(targetId)
+          val tgtIncap = isIncapacitated(tgt.creature)
+          val isDex = aoe.saveAbility == Dex
+          val saved = (saveRoll + tgt.saveMiscBonus) >= aoe.saveDC
           val aoeReturn = ADRResolvingAoE(updatedAoe)
           if (saved) {
             // Save succeeded — half damage if applicable, no condition
             if (aoe.halfOnSuccess and aoe.damageOnFail > 0) {
               val halfDmg = aoe.damageOnFail / 2
-              val result = dealDamageWithAfterReactions(bCreatures,
-                targetId, aoe.caster, halfDmg, aoe.damageType, false, aoeReturn)
-              all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+              // Evasion on DEX save success: 0 damage
+              val evDmg = if (isDex) pApplyEvasion(halfDmg, true, tgt.hasEvasion, tgtIncap) else halfDmg
+              if (evDmg == 0) {
+                all { bCreatures' = bCreatures, bPhase' = BPResolvingAoE(updatedAoe), keepBattle }
+              } else {
+                val result = dealDamageWithAfterReactions(bCreatures,
+                  targetId, aoe.caster, evDmg, aoe.damageType, false, aoeReturn)
+                all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+              }
             } else {
               all { bCreatures' = bCreatures, bPhase' = BPResolvingAoE(updatedAoe), keepBattle }
             }
           } else {
-            // Save failed — check for LR
+            // Save failed — Evasion on DEX save fail: half damage
+            val evDmgOnFail = if (isDex) pApplyEvasion(aoe.damageOnFail, false, tgt.hasEvasion, tgtIncap) else aoe.damageOnFail
             val sfCtx = mkSaveFailedCtx(
               aoe.caster, targetId,
-              aoe.damageOnFail, aoe.halfOnSuccess, aoe.damageType,
+              evDmgOnFail, aoe.halfOnSuccess, aoe.damageType,
               aoe.conditionOnFail, aoe.applyCondition
             )
             val elig = eligibleForLR(bCreatures, targetId)
@@ -1725,29 +1775,10 @@ module battle {
         } else {
         nondet reactorId = remaining.oneOf()
         val updatedMv = mv.with("processed", mv.processed.union(Set(reactorId)))
+        val reactor = bCreatures.get(reactorId)
         val cs1 = spendReaction(bCreatures, reactorId)
-        val hit = oaAtkRoll >= oaTgtAc or oaAtkRoll == 20
-        if (not(hit)) {
-          all { bCreatures' = cs1, bPhase' = BPResolvingMovement(updatedMv), keepBattle }
-        } else {
-          val atkCtx: AttackHitCtx = {
-            attacker: reactorId, target: mv.mover,
-            attackRoll: oaAtkRoll, targetAc: oaTgtAc,
-            damage: oaDmg, damageType: oaDt, isCritical: oaCrit,
-            atkReturnTo: ADRResolvingMovement(updatedMv),
-          }
-          val hitElig = eligibleExcluding(cs1, reactorId)
-          if (hitElig.size() > 0) {
-            all {
-              bCreatures' = cs1,
-              bPhase' = BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, hitElig)),
-              keepBattle,
-            }
-          } else {
-            val result = advanceFromHitPhase(cs1, atkCtx)
-            all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
-          }
-        }
+        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv))
+        all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
@@ -1948,6 +1979,7 @@ module battle {
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
+    nondet saveAb = Set(Str, Dex, Con, Int_, Wis, Cha).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     val tc = bCreatures.get(targetId)
@@ -1972,6 +2004,7 @@ module battle {
         damageOnFail: dmgOnFail, halfOnSuccess: halfOnSave,
         damageType: dt,
         conditionOnFail: cond, applyCondition: applyCond,
+        saveAbility: saveAb,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,

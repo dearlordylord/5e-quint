@@ -552,6 +552,18 @@ module creature {
     d20Roll + abilityMod + prof + miscBonus >= dc
   }
 
+  /// Evasion (Rogue 7, Monk 7): on DEX save, success = 0 damage, fail = half damage.
+  /// SRD 5.2.1: "If [the creature] isn't Incapacitated … takes no damage on a successful save
+  /// and only half damage on a failed one."
+  pure def pApplyEvasion(damage: int, saveSucceeded: bool, hasEvasion: bool, incapacitated: bool): int = {
+    if (not(hasEvasion) or incapacitated) {
+      damage
+    } else {
+      if (saveSucceeded) 0
+      else damage / 2
+    }
+  }
+
   type ContestResult = AWins | BWins | Tie
 
   /// Contest: higher total wins; tie = status quo (no change)

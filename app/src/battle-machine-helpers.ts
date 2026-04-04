@@ -6,6 +6,7 @@ import { Match, Option } from "effect"
 
 import {
   applyCondition,
+  applyEvasion,
   breakConcentration,
   clearExpiredAtPhase,
   deathSave,
@@ -59,8 +60,8 @@ export function setDifference<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> {
   return result
 }
 
-export function isHit(roll: number, ac: number): boolean {
-  return roll >= ac || roll === 20
+export function isHit(roll: number, ac: number, critRange = 20): boolean {
+  return roll >= ac || roll >= critRange
 }
 
 export function activeId(c: BattleContext): CreatureId {
@@ -219,7 +220,7 @@ export function advanceFromHitPhase(
   cs: Creatures,
   atk: AttackHitCtx
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
-  const stillHit = isHit(atk.attackRoll, atk.targetAc)
+  const stillHit = isHit(atk.attackRoll, atk.targetAc, atk.critRange)
   if (!stillHit) return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) }
   const dmgElig = eligibleTarget(cs, atk.target)
   if (dmgElig.size > 0) {
@@ -260,26 +261,27 @@ export function resolveSave(
   save: SaveSpellCtx,
   returnTo: AfterDamageReturn
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
-  const saved = save.saveRoll >= save.saveDC
+  const tgt = cs.get(save.target)!
+  const saved = save.saveRoll + tgt.saveMiscBonus >= save.saveDC
+  const isDex = save.saveAbility === "dex"
+  const tgtIncap = isIncapacitated(tgt)
   if (saved) {
     if (save.halfOnSuccess && save.damageOnFail > 0) {
-      return dealDamageWithAfterReactions(
-        cs,
-        save.target,
-        save.caster,
-        Math.trunc(save.damageOnFail / 2),
-        save.damageType,
-        false,
-        returnTo
-      )
+      const halfDmg = Math.trunc(save.damageOnFail / 2)
+      const evDmg = isDex ? applyEvasion(halfDmg, true, tgt.hasEvasion, tgtIncap) : halfDmg
+      if (evDmg === 0) {
+        return { creatures: new Map(cs), ...returnToState(returnTo) }
+      }
+      return dealDamageWithAfterReactions(cs, save.target, save.caster, evDmg, save.damageType, false, returnTo)
     }
     return { creatures: new Map(cs), ...returnToState(returnTo) }
   }
+  const evDmgOnFail = isDex ? applyEvasion(save.damageOnFail, false, tgt.hasEvasion, tgtIncap) : save.damageOnFail
   const elig = eligibleForLR(cs, save.target)
   const failCtx: SaveFailedCtx = {
     caster: save.caster,
     target: save.target,
-    damageOnFail: save.damageOnFail,
+    damageOnFail: evDmgOnFail,
     halfOnSuccess: save.halfOnSuccess,
     damageType: save.damageType,
     conditionOnFail: save.conditionOnFail,

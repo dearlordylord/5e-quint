@@ -5,6 +5,7 @@
 import type { Option } from "effect"
 
 import type {
+  Ability,
   ActiveEffect,
   ArmorClass,
   Condition,
@@ -79,6 +80,12 @@ export interface BattleCreatureState {
   readonly monkLevel: number
   // Prepared spells (for CS eligibility)
   readonly preparedSpells: ReadonlySet<string>
+  // Evasion (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
+  readonly hasEvasion: boolean
+  // Misc save bonus (Paladin Aura, Ring of Protection, etc.)
+  readonly saveMiscBonus: number
+  // Natural roll >= critRange is a critical hit (default 20, Champion 19/18)
+  readonly critRange: number
 }
 
 export interface AttackHitCtx {
@@ -89,6 +96,7 @@ export interface AttackHitCtx {
   readonly damage: number
   readonly damageType: DamageType
   readonly isCritical: boolean
+  readonly critRange: number
   readonly atkReturnTo: AfterDamageReturn
 }
 
@@ -126,6 +134,7 @@ export interface SaveSpellCtx {
   readonly damageType: DamageType
   readonly conditionOnFail: Condition
   readonly applyCondition: boolean
+  readonly saveAbility: Ability
 }
 
 export interface SaveFailedCtx {
@@ -148,6 +157,7 @@ export interface AoESpellCtx {
   readonly conditionOnFail: Condition
   readonly applyCondition: boolean
   readonly remaining: ReadonlySet<CreatureId>
+  readonly saveAbility: Ability
 }
 
 export interface ConcentrationCtx {
@@ -282,6 +292,9 @@ export interface InitCreatureConfig {
   readonly legendaryActions?: number
   readonly legendaryResistances?: number
   readonly preparedSpells?: ReadonlySet<string>
+  readonly hasEvasion?: boolean
+  readonly saveMiscBonus?: number
+  readonly critRange?: number
   /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */
   readonly initiativeRoll?: number
   /** Second d20 for Disadvantage. Required when surprised=true; defaults to initiativeRoll (no effect). */
@@ -350,6 +363,7 @@ export type BattleEvent =
       readonly dt: DamageType
       readonly cond: Condition
       readonly applyCond: boolean
+      readonly saveAbility: Ability
       readonly slotLvl: SpellSlotLevel
       readonly spellName: string
       readonly ritual: boolean
@@ -385,6 +399,7 @@ export type BattleEvent =
       readonly dt: DamageType
       readonly cond: Condition
       readonly applyCond: boolean
+      readonly saveAbility: Ability
       readonly slotLvl: SpellSlotLevel
       readonly spellName: string
       readonly ritual: boolean

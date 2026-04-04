@@ -1,4 +1,4 @@
-import { isIncapacitated } from "#/battle-machine-creature.ts"
+import { applyEvasion, isIncapacitated } from "#/battle-machine-creature.ts"
 import {
   activeId,
   applyFailEffects,
@@ -56,7 +56,8 @@ export function battleCastSaveSpell({
     halfOnSuccess: e.halfOnSave,
     damageType: e.dt,
     conditionOnFail: e.cond,
-    applyCondition: e.applyCond
+    applyCondition: e.applyCond,
+    saveAbility: e.saveAbility
   }
   const spellCtx: SpellCastCtx = {
     caster: id,
@@ -247,7 +248,8 @@ export function battleCastAoE({ context: c, event: e }: BattleActionArgs<"BATTLE
     damageType: e.dt,
     conditionOnFail: e.cond,
     applyCondition: e.applyCond,
-    remaining: liveTargets
+    remaining: liveTargets,
+    saveAbility: e.saveAbility
   }
   const spellCtx: SpellCastCtx = {
     caster: id,
@@ -277,15 +279,24 @@ export function battleResolveAoETarget({
   const newRemaining = new Set(aoe.remaining)
   newRemaining.delete(e.targetId)
   const updatedAoe = { ...aoe, remaining: newRemaining }
-  const saved = e.saveRoll >= aoe.saveDC
+  const tgt = c.creatures.get(e.targetId)!
+  const tgtIncap = isIncapacitated(tgt)
+  const isDex = aoe.saveAbility === "dex"
+  const saved = e.saveRoll + tgt.saveMiscBonus >= aoe.saveDC
   const aoeReturn = { tag: "ADRResolvingAoE" as const, aoe: updatedAoe }
   if (saved) {
     if (aoe.halfOnSuccess && aoe.damageOnFail > 0) {
+      const halfDmg = Math.trunc(aoe.damageOnFail / 2)
+      // Evasion on DEX save success: 0 damage
+      const evDmg = isDex ? applyEvasion(halfDmg, true, tgt.hasEvasion, tgtIncap) : halfDmg
+      if (evDmg === 0) {
+        return { ...phaseResolvingAoE(updatedAoe) }
+      }
       const result = dealDamageWithAfterReactions(
         c.creatures,
         e.targetId,
         aoe.caster,
-        Math.trunc(aoe.damageOnFail / 2),
+        evDmg,
         aoe.damageType,
         false,
         aoeReturn
@@ -300,10 +311,12 @@ export function battleResolveAoETarget({
     }
     return { ...phaseResolvingAoE(updatedAoe) }
   }
+  // Save failed — Evasion on DEX save fail: half damage
+  const evDmgOnFail = isDex ? applyEvasion(aoe.damageOnFail, false, tgt.hasEvasion, tgtIncap) : aoe.damageOnFail
   const sfCtx: SaveFailedCtx = {
     caster: aoe.caster,
     target: e.targetId,
-    damageOnFail: aoe.damageOnFail,
+    damageOnFail: evDmgOnFail,
     halfOnSuccess: aoe.halfOnSuccess,
     damageType: aoe.damageType,
     conditionOnFail: aoe.conditionOnFail,

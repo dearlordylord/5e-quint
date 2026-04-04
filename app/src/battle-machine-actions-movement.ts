@@ -1,17 +1,8 @@
+import { resolveAttack } from "#/battle-machine-actions-attack.ts"
 import { isIncapacitated } from "#/battle-machine-creature.ts"
-import {
-  activeId,
-  advanceFromHitPhase,
-  eligibleExcluding,
-  isHit,
-  mkAwait,
-  setCreature,
-  setDifference,
-  spendMovement,
-  spendReaction
-} from "#/battle-machine-helpers.ts"
+import { activeId, setCreature, setDifference, spendMovement, spendReaction } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext } from "#/battle-machine-types.ts"
-import { PHASE_ACTIVE, phaseAwaitReaction, phaseResolvingMovement } from "#/battle-machine-types.ts"
+import { PHASE_ACTIVE, phaseResolvingMovement } from "#/battle-machine-types.ts"
 
 export function battleMove({ context: c, event: e }: BattleActionArgs<"BATTLE_MOVE">): Partial<BattleContext> {
   const id = activeId(c)
@@ -54,25 +45,18 @@ export function battleMovementOAAttack({
   const newProc = new Set(mv.processed)
   newProc.add(e.reactorId)
   const updatedMv = { ...mv, processed: newProc }
-  const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
-  if (!isHit(e.oaAtkRoll, e.oaTgtAc)) return { creatures: cs1, ...phaseResolvingMovement(updatedMv) }
-  const atkCtx = {
-    attacker: e.reactorId,
-    target: mv.mover,
-    attackRoll: e.oaAtkRoll,
-    targetAc: e.oaTgtAc,
-    damage: e.oaDmg,
-    damageType: e.oaDt,
-    isCritical: e.oaCrit,
-    atkReturnTo: { tag: "ADRResolvingMovement" as const, mv: updatedMv }
-  }
-  const hitElig = eligibleExcluding(cs1, e.reactorId)
-  if (hitElig.size > 0) {
-    return {
-      creatures: cs1,
-      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", hitElig))
-    }
-  }
-  const result = advanceFromHitPhase(cs1, atkCtx)
-  return { ...result }
+  const reactor = c.creatures.get(e.reactorId)!
+  const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(reactor))
+  return resolveAttack(
+    cs1,
+    e.reactorId,
+    mv.mover,
+    e.oaAtkRoll,
+    e.oaTgtAc,
+    e.oaDmg,
+    e.oaDt,
+    e.oaCrit,
+    reactor.critRange,
+    { tag: "ADRResolvingMovement", mv: updatedMv }
+  )
 }
