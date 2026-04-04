@@ -11,6 +11,7 @@ import {
 } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext, BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
 import { PHASE_ACTIVE, phaseAwaitingLegendary } from "#/battle-machine-types.ts"
+import { actionSurgeMaxCharges } from "#/features/class-fighter.ts"
 
 /** Effective initiative roll: surprised = Disadvantage (min of two d20s). */
 export function effectiveInitRoll(roll1: number, roll2: number, surprised: boolean): number {
@@ -42,8 +43,8 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
       ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
       ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
       ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
-      ...(cfg.fighterLevel != null && cfg.fighterLevel >= 2
-        ? { actionSurgeCharges: cfg.fighterLevel >= 17 ? 2 : 1, actionSurgeUsedThisTurn: false }
+      ...(cfg.fighterLevel != null && actionSurgeMaxCharges(cfg.fighterLevel) > 0
+        ? { actionSurgeCharges: actionSurgeMaxCharges(cfg.fighterLevel), actionSurgeUsedThisTurn: false }
         : {})
     })
     initiative.push(cfg.id)

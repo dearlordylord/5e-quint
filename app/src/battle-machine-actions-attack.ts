@@ -29,6 +29,8 @@ import type {
   PhaseFields
 } from "#/battle-machine-types.ts"
 import { ADR_ACTIVE_TURN, phaseAwaitReaction } from "#/battle-machine-types.ts"
+import { deflectAttacksResult } from "#/features/class-monk-features.ts"
+import { uncannyDodgeDamage } from "#/features/class-rogue.ts"
 import type { CreatureId, DamageType } from "#/types.ts"
 import { armorClass } from "#/types.ts"
 
@@ -159,8 +161,8 @@ export function battleResolveDmgReaction({
   newOffered.add(e.reactorId)
   const reactor = c.creatures.get(e.reactorId)!
   const newDmg = Match.value(e.decision).pipe(
-    byTag("RUncannyDodge", () => (reactor.rogueLevel >= 5 ? Math.trunc(atk.damage / 2) : atk.damage)),
-    byTag("RDamageReduction", (d) => (reactor.monkLevel >= 3 ? Math.max(0, atk.damage - d.amount) : atk.damage)),
+    byTag("RUncannyDodge", () => uncannyDodgeDamage(atk.damage)),
+    byTag("RDamageReduction", (d) => deflectAttacksResult(atk.damage, d.amount).damageTaken),
     byTag("RPass", () => atk.damage),
     Match.exhaustive
   )
