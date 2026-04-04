@@ -8,6 +8,7 @@ import { PageShell } from "#/components/PageShell.tsx"
 import { PlaybackControls } from "#/components/PlaybackControls.tsx"
 
 import { BattleField } from "./BattleField.tsx"
+import { BattleInspector } from "./BattleInspector.tsx"
 import type { DiceRollCue } from "./director.ts"
 import { directorStep, EMPTY_CUES, EMPTY_DICE_ROLLS } from "./director.ts"
 import { computeLayout } from "./layout.ts"
@@ -46,6 +47,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   const castBarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const spellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [diceCues, setDiceCues] = useState<ReadonlyArray<DiceRollCue>>([])
+  const [showInspector, setShowInspector] = useState(() => new URLSearchParams(window.location.search).has("inspect"))
 
   const { cues, snapshot } = useMemo(() => {
     if (cursor < 0) return { snapshot: null, cues: EMPTY_CUES }
@@ -145,6 +147,14 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
         </div>
 
         <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
+
+        <button
+          onClick={() => setShowInspector((v) => !v)}
+          className="mt-4 px-3 py-1 text-xs rounded border border-gray-600 text-gray-400 hover:text-gray-200"
+        >
+          {showInspector ? "Hide Inspector" : "Show Inspector"}
+        </button>
+        {showInspector && <BattleInspector events={events} cursor={cursor} />}
       </div>
     </PageShell>
   )
