@@ -24,6 +24,8 @@ Three changes, ordered by impact:
 6. As a developer reading creature machine transitions, I want guards on class abilities to indicate which class and resource they require, so that preconditions are documented in the machine definition.
 7. As a developer running MBT tests, I want the Quint-XState bridge to continue passing after the refactor, so that behavioral parity is preserved.
 8. As a developer maintaining the machine, I want `conditionTrack` eliminated as a parallel region, so that the machine has fewer regions to reason about and conditions are handled the same way as effects and exhaustion (via root handlers).
+9. As a developer debugging a battle, I want a live XState inspector showing state transitions and event sequences as the battle plays out, so that I can trace phase transitions and diagnose issues without reading context dumps.
+10. As a developer building battle UI components, I want creature states to have semantic tags (e.g., `incapacitated`, `canAct`, `concentrating`), so that UI rendering logic doesn't need to enumerate state paths and is stable across machine refactors.
 
 ## Implementation Decisions
 
@@ -122,6 +124,53 @@ Add guards to ~43 events in `turnPhase.acting` that currently validate inside ac
 - Update `MachineVizPage` and `FullMachineVizPage` to remove the `conditionTrack` region.
 - Update MBT bridge state mapping if it references `conditionTrack` state.
 
+### Module 4: XState Inspector Integration
+
+Add the official `@statelyai/inspect` inspector as a tab on the `/battle` page for live state observation during battle playback.
+
+**Interface:** `createBrowserInspector({ iframe: iframeRef.current })` renders the Stately inspector inside an iframe. The inspector receives state transitions, events, and actor snapshots via `postMessage`. Wire it to the battle machine actor's `inspect` option.
+
+**Tab layout:** The `/battle` page gains two tabs: "Battle" (existing visualizer) and "Inspector" (iframe rendering `stately.ai/inspect`). The inspector shows:
+- Live statechart diagram with active state highlighted
+- Event sequence diagram (chronological list of events sent to the machine)
+- Context snapshot at each step
+
+**Dependency:** `@statelyai/inspect` npm package. The iframe loads `https://stately.ai/inspect` — requires network access at runtime (not bundled).
+
+**Note:** The inspector is a development/debugging tool. It can be conditionally loaded (e.g., behind a query param `?inspect=true` or a UI toggle) to avoid the iframe cost in normal usage.
+
+### Module 5: State Tags for UI Decoupling
+
+Add semantic tags to creature machine states so React components can query creature status without coupling to state path names.
+
+**Interface:** Tags are string arrays on state node definitions, queried via `snapshot.hasTag('tag')`. Type-safe via `setup({ types: { tags: {} as TagUnion } })`.
+
+**Tag assignments:**
+
+| State | Tags |
+|---|---|
+| `damageTrack.alive` | `alive` |
+| `damageTrack.dying` | `incapacitated`, `dying` |
+| `damageTrack.dying.unstable` | `unstable` |
+| `damageTrack.dying.stable` | `stable` |
+| `damageTrack.dead` | `dead` |
+| `turnPhase.acting` | `canAct` |
+| `turnPhase.waitingForTurn` | `inCombat` |
+| `turnPhase.outOfCombat` | `outOfCombat` |
+| `spellcasting.concentrating` | `concentrating` |
+
+**Usage in React:** Replace `state.matches({ damageTrack: 'dying' })` with `snapshot.hasTag('incapacitated')`. This is stable across refactors — if states are renamed or restructured, only the tag assignments in the machine definition need updating, not every component.
+
+**Battle machine tags (after Module 1):**
+
+| State | Tags |
+|---|---|
+| `running.activeTurn` | `playerTurn` |
+| `running.awaitingReaction` | `reactionWindow` |
+| `running.resolvingAoE` | `resolving` |
+| `running.resolvingMovement` | `resolving` |
+| `running.awaitingLegendaryAction` | `legendaryWindow` |
+
 ## Testing Decisions
 
 **Primary correctness proof: MBT parity tests.** All three modules must pass the existing MBT bridge (`machine.mbt.test.ts`) — 50 traces x 30 steps comparing Quint and XState field-by-field. If MBT passes, behavioral parity is preserved.
@@ -140,13 +189,24 @@ Add guards to ~43 events in `turnPhase.acting` that currently validate inside ac
 - MBT bridge state comparison must be updated to not check `conditionTrack` state (since it's always `tracking`, this may already be a no-op).
 - Verify `APPLY_CONDITION` and `REMOVE_CONDITION` still work from any machine state (they should, since root handlers are state-agnostic).
 
+**Inspector module:**
+- Verify the inspector iframe loads and receives state transitions during battle playback.
+- Verify the inspector shows correct state hierarchy after Module 1 (5 child states under `running`).
+
+**Tags module:**
+- Verify `snapshot.hasTag('incapacitated')` returns true when in `dying` state, false when in `alive`.
+- Verify tags are visible in the inspector.
+- No MBT impact — tags are read-side metadata, they don't affect transitions or context.
+
 ## Out of Scope
 
 - **Splitting `turnPhase.acting` into sub-states.** D&D turns are free-form (interleave actions, movement, bonus actions in any order). Forcing sequential sub-states would fight the domain. Guards are the right tool here; sub-states are not.
 - **Spawning `dndMachine` actors per creature in battle.** The battle machine manages creature state as context (`Map<CreatureId, BattleCreatureState>`), not as child actors. Changing this would be a much larger architectural change affecting the MBT bridge, creature state extraction, and event routing. The phase-to-states refactor is independent of this.
-- **Refactoring creature state out of battle context.** Related to the above — creature fields are flattened into `BattleCreatureState`, not modeled as running `dndMachine` instances. This is a separate, larger discussion.
 - **Adding guards to battle machine events.** Battle events don't have the same "wrong class" problem — each event is already scoped to a phase. The phase-to-state refactor handles the gating; further guards within a phase are a future consideration.
 - **Quint spec changes.** This refactor is XState-only. The Quint spec remains the source of truth; we're aligning XState structure to better match what Quint already enforces.
+- **History states for dying/alive recovery.** Researched and rejected — parallel regions already preserve `turnPhase` independently when `damageTrack` transitions. History states would be redundant.
+- **`invoke` for concentration duration tracking.** Researched and rejected — `invoke` is designed for async I/O, not discrete event counting. It hides state from the MBT bridge (callback closure, not context) and adds complexity for a simple counter. Keep `turnsRemaining` in context.
+- **Stately Studio embed.** Requires manual re-import on every machine change. The custom viz + inspector iframe provide better observability without the maintenance burden.
 
 ## Further Notes
 

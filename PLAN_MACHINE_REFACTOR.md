@@ -159,17 +159,78 @@
 
 ---
 
+## Phase 3: XState Inspector Integration
+
+**Vertical slice:** Add `@statelyai/inspect` as a tab on `/battle` for live state observation during battle playback. End-to-end: install package → wire inspector to battle actor → add tab UI → verify live state diagram appears.
+
+### Tasks
+
+**[R3.0] Install `@statelyai/inspect` and wire to battle actor**
+- `pnpm add @statelyai/inspect` in the app package.
+- In `BattlePage.tsx` (or wherever the battle actor is created): add `inspect` option via `createBrowserInspector({ iframe: iframeRef.current })`.
+- The inspector iframe loads `https://stately.ai/inspect` and receives state transitions via `postMessage`.
+- Test: inspector iframe renders and shows the battle machine's state diagram.
+
+**[R3.1] Tab layout on `/battle`**
+- Add two tabs to the battle page: "Battle" (existing visualizer) and "Inspector" (iframe).
+- The inspector tab renders the iframe; the battle tab renders the existing `BattlePage` content.
+- Optional: gate inspector behind `?inspect=true` query param or a UI toggle to avoid iframe overhead in normal usage.
+- Test: tab switching works, inspector shows live state transitions during battle playback. After R1 (battle phase states), the inspector shows the 5-state compound `running` hierarchy.
+
+**Verification:** Inspector iframe loads, shows state diagram, highlights active state during battle step-through.
+
+---
+
+## Phase 4: State Tags for UI Decoupling
+
+**Vertical slice:** Add semantic tags to creature and battle machine states. End-to-end: define tag type → add tags to state configs → use `hasTag()` in battle UI → verify tags visible in inspector.
+
+### Tasks
+
+**[R4.0] Add tags to creature machine states**
+- In `machine.ts` `setup()`: add `types: { tags: {} as CreatureTag }` with tag union.
+- In `machine-states.ts`: add `tags` arrays to state definitions:
+  - `damageTrack.alive`: `['alive']`
+  - `damageTrack.dying`: `['incapacitated', 'dying']`
+  - `damageTrack.dying.unstable`: `['unstable']`
+  - `damageTrack.dying.stable`: `['stable']`
+  - `damageTrack.dead`: `['dead']`
+  - `turnPhase.acting`: `['canAct']`
+  - `turnPhase.waitingForTurn`: `['inCombat']`
+  - `turnPhase.outOfCombat`: `['outOfCombat']`
+  - `spellcasting.concentrating`: `['concentrating']`
+- No behavioral change — tags are read-side metadata.
+- Test: unit test that creates actor, transitions to dying, verifies `snapshot.hasTag('incapacitated')`.
+
+**[R4.1] Add tags to battle machine states (depends on R1)**
+- After R1 completes, add tags to battle phase states:
+  - `running.activeTurn`: `['playerTurn']`
+  - `running.awaitingReaction`: `['reactionWindow']`
+  - `running.resolvingAoE`: `['resolving']`
+  - `running.resolvingMovement`: `['resolving']`
+  - `running.awaitingLegendaryAction`: `['legendaryWindow']`
+- Test: unit test that verifies `snapshot.hasTag('reactionWindow')` when in awaitingReaction.
+
+**[R4.2] Adopt `hasTag()` in battle UI components**
+- Replace `state.matches()` checks in battle scene React components with `snapshot.hasTag()` where semantic tags exist.
+- Example: creature sprite opacity for unconscious/dead → `hasTag('incapacitated')` or `hasTag('dead')` instead of enumerating state paths.
+- Test: battle visualizer renders correctly after migration.
+
+**Verification:** Tags visible in inspector. `hasTag()` used in at least one UI component. No behavioral change to machine logic.
+
+---
+
 ## Phase dependencies
 
 ```
 [R0.1] conditionTrack elimination
   └── [R0.2] viz update
-        (independent of R1/R2)
+        (independent of R1/R2/R3/R4)
 
 [R1.0] scaffold compound running
-  └── [R1.1] awaitingReaction
-  └── [R1.2] resolvingAoE
-  └── [R1.3] resolvingMovement
+  ├── [R1.1] awaitingReaction
+  ├── [R1.2] resolvingAoE
+  ├── [R1.3] resolvingMovement
   └── [R1.4] awaitingLegendaryAction
         └── [R1.5] delete BattlePhase + cleanup
 
@@ -180,9 +241,16 @@
   ├── [R2.4] rogue guards
   └── [R2.5] spellcaster guards
         └── [R2.6] full validation + cleanup
+
+[R3.0] install inspector + wire to actor
+  └── [R3.1] tab layout on /battle
+
+[R4.0] creature machine tags (independent)
+[R4.1] battle machine tags (depends on R1)
+  └── [R4.2] adopt hasTag() in UI
 ```
 
-R0, R1, R2 are independent tracks. R1.1-R1.4 are independent of each other (all depend on R1.0). R2.1-R2.5 are independent of each other (all depend on R2.0).
+R0, R1, R2, R3 are independent tracks. R4.0 is independent; R4.1 depends on R1 (needs phase states to exist before tagging them). R4.2 depends on R4.0 + R4.1.
 
 ---
 
@@ -195,3 +263,5 @@ R0, R1, R2 are independent tracks. R1.1-R1.4 are independent of each other (all 
 | `returnToPhase` / `advanceFromHitPhase` / `dealDamageWithAfterReactions` return nested phase logic | Refactor these helpers first in R1.1 (they're used across all phases). Once helpers return target strings, remaining phases are mechanical. |
 | Battle MBT currently doesn't validate phase → refactored machine could have phase bugs MBT misses | R1.5 adds explicit phase↔state validation to MBT bridge. Until then, rely on the action-level behavioral tests (same events, same context changes). |
 | Large guard count (~35) increases machine-guards.ts size | Guards are small (1-3 line checks). Group by class. Consider splitting into `machine-guards-barbarian.ts` etc. if file exceeds lint limit. |
+| Inspector iframe loads `stately.ai/inspect` at runtime — requires network | Gate behind toggle/query param. Dev-only tool, not critical path. |
+| Tag assignments drift from actual state semantics after future refactors | Tags are co-located with state definitions in `machine-states.ts`. Any state change forces reviewing tags in the same file. |
