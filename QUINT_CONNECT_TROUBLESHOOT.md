@@ -222,20 +222,16 @@ killall -9 quint_evaluator
 
 ## Quint Version Notes
 
-- **Working evaluator:** v0.5.0 (in `~/.quint/rust-evaluator-v0.5.0/`)
 - **Quint CLI:** v0.31.0 (compile script uses its JS API)
-- **v0.6.0 evaluator is a REGRESSION:** tested 2026-04-05 with both mismatched and matched
-  version pairs. v0.6.0 takes 42s+ for the same single-sample run that v0.5.0 completes in <1s.
-  - Tested: quint 0.31.0 compile + v0.6.0 evaluator → slow (rules out version mismatch)
-  - Tested: quint 0.32.0 compile + v0.6.0 evaluator (matched pair) → **still slow**
-  - Conclusion: genuine v0.6.0 evaluator regression, not a format mismatch
-  - The v0.6.0 binary is functionally correct (produces valid traces) but ~40x slower
-  - Likely cause: internal simulation algorithm change (parallelization refactor, lazy eval changes)
-- If both v0.5.0 and v0.6.0 exist in `~/.quint/`, **delete v0.6.0** — quint-connect picks
-  the latest alphabetically. Or set `QUINT_EVALUATOR_VERSION=v0.5.0` env var.
-- **Do not upgrade quint CLI to 0.32.0** — it auto-downloads v0.6.0 evaluator on `--backend rust`.
-- Worth filing as a Quint issue with reproduction steps (battle.qnt spec, 1 sample, 5 steps,
-  v0.5.0 <1s vs v0.6.0 42s).
+- **Evaluator:** v0.5.0 and v0.6.0 have **identical source code** (1 irrelevant line change).
+  Both produce identical performance. Earlier reports of v0.6.0 regression were caused by
+  zombie evaluator processes consuming CPU during testing.
+- **Upgrading is safe:** `npm i -g @informalsystems/quint@0.32.0` + `./scripts/build-quint-evaluator.sh`
+  (source build needed for GLIBC 2.36 compat).
+- **The performance bottleneck** is the `compile-battle-spec.cjs` format (Finding 6), not the
+  evaluator version. The fast ~1s dev runs were achieved with a `tee`-captured format from
+  `quint run`, which differs subtly from `toExpr()` output. Fixing the compile script to
+  produce the exact same format as `quint run` is the remaining TODO.
 
 ## Quint GitHub Research (2026-04-05)
 
@@ -249,11 +245,11 @@ killall -9 quint_evaluator
 
 ## Future Work
 
-1. **File Quint issue: evaluator v0.6.0 performance regression** — battle spec 1 sample
-   takes <1s on v0.5.0 but 42s+ on v0.6.0. Tested with matched (0.32.0+v0.6.0) and
-   mismatched (0.31.0+v0.6.0) pairs — both slow. Include `battle.qnt` + `creature.qnt` as repro.
-2. **File Quint issue: json-bigint round-trip sensitivity** — the evaluator should not
-   hang when receiving standard JSON numbers instead of json-bigint-produced numbers
-3. **File Quint issue: `nthreads=1` deadlock** (if still present in v0.6.0)
-4. **Publish quint-connect** with `compiledInput` option (patch version, non-breaking)
+1. ~~**Publish quint-connect**~~ DONE — v0.8.1 with `compiledInput` option
+2. **Fix `compile-battle-spec.cjs` format** — the `toExpr()` output differs from what `quint run`
+   produces internally. The `tee`-capture approach works (~1s) but the JS API approach is slow.
+   Need to understand the exact AST difference and fix `toExpr()` usage.
+3. **File Quint issue: json-bigint round-trip sensitivity** — the evaluator should not
+   be sensitive to whether integers were serialized by json-bigint vs JSON.stringify
+4. **File Quint issue: `nthreads=1` deadlock** (if still present in latest version)
 5. **Investigate evaluator `run <file>` command** — may bypass stdin pipe issues entirely
