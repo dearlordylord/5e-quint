@@ -224,11 +224,18 @@ killall -9 quint_evaluator
 
 - **Working evaluator:** v0.5.0 (in `~/.quint/rust-evaluator-v0.5.0/`)
 - **Quint CLI:** v0.31.0 (compile script uses its JS API)
-- **v0.6.0 evaluator is a REGRESSION:** tested 2026-04-05, v0.6.0 takes 42s+ for the same
-  single-sample run that v0.5.0 completes in <1s. Do not upgrade until this is investigated.
-- If both v0.5.0 and v0.6.0 exist in `~/.quint/`, set `QUINT_EVALUATOR_VERSION=v0.5.0`
-  to force quint-connect to use the working version.
+- **v0.6.0 evaluator is a REGRESSION:** tested 2026-04-05 with both mismatched and matched
+  version pairs. v0.6.0 takes 42s+ for the same single-sample run that v0.5.0 completes in <1s.
+  - Tested: quint 0.31.0 compile + v0.6.0 evaluator → slow (rules out version mismatch)
+  - Tested: quint 0.32.0 compile + v0.6.0 evaluator (matched pair) → **still slow**
+  - Conclusion: genuine v0.6.0 evaluator regression, not a format mismatch
+  - The v0.6.0 binary is functionally correct (produces valid traces) but ~40x slower
+  - Likely cause: internal simulation algorithm change (parallelization refactor, lazy eval changes)
+- If both v0.5.0 and v0.6.0 exist in `~/.quint/`, **delete v0.6.0** — quint-connect picks
+  the latest alphabetically. Or set `QUINT_EVALUATOR_VERSION=v0.5.0` env var.
 - **Do not upgrade quint CLI to 0.32.0** — it auto-downloads v0.6.0 evaluator on `--backend rust`.
+- Worth filing as a Quint issue with reproduction steps (battle.qnt spec, 1 sample, 5 steps,
+  v0.5.0 <1s vs v0.6.0 42s).
 
 ## Quint GitHub Research (2026-04-05)
 
@@ -242,7 +249,9 @@ killall -9 quint_evaluator
 
 ## Future Work
 
-1. **Upgrade to Quint v0.32.0 / evaluator v0.6.0** — may fix deadlock + improve perf
+1. **File Quint issue: evaluator v0.6.0 performance regression** — battle spec 1 sample
+   takes <1s on v0.5.0 but 42s+ on v0.6.0. Tested with matched (0.32.0+v0.6.0) and
+   mismatched (0.31.0+v0.6.0) pairs — both slow. Include `battle.qnt` + `creature.qnt` as repro.
 2. **File Quint issue: json-bigint round-trip sensitivity** — the evaluator should not
    hang when receiving standard JSON numbers instead of json-bigint-produced numbers
 3. **File Quint issue: `nthreads=1` deadlock** (if still present in v0.6.0)
