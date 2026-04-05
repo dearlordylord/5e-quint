@@ -11,7 +11,7 @@ import {
 } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext, BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
 import { PHASE_ACTIVE, phaseAwaitingLegendary, phaseAwaitingReady } from "#/battle-machine-types.ts"
-import { rageDamageBonus } from "#/features/class-barbarian.ts"
+import { rageDamageBonus, rageResistances } from "#/features/class-barbarian.ts"
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts"
 
 // TODO style: combinators
@@ -69,12 +69,13 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
       ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
       ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
       ...(cfg.fighterLevel != null
-        ? {
-            fighterLevel: cfg.fighterLevel,
-            ...(actionSurgeMaxCharges(cfg.fighterLevel) > 0
-              ? { actionSurgeCharges: actionSurgeMaxCharges(cfg.fighterLevel), actionSurgeUsedThisTurn: false }
-              : {})
-          }
+        ? (() => {
+            const asCharges = actionSurgeMaxCharges(cfg.fighterLevel)
+            return {
+              fighterLevel: cfg.fighterLevel,
+              ...(asCharges > 0 ? { actionSurgeCharges: asCharges, actionSurgeUsedThisTurn: false } : {})
+            }
+          })()
         : {}),
       ...(cfg.barbarianLevel != null ? { barbarianLevel: cfg.barbarianLevel } : {}),
       ...(cfg.meleeDamageBonus != null ? { meleeDamageBonus: cfg.meleeDamageBonus } : {})
@@ -262,7 +263,7 @@ export function battleEnterRage({ context: c }: BattleActionArgs<"BATTLE_ENTER_R
       bonusActionUsed: true,
       meleeDamageBonus: rageDamageBonus(ac.barbarianLevel),
       ragingBlocksSpells: true,
-      combatantResistances: new Set(["bludgeoning", "piercing", "slashing"] as const)
+      combatantResistances: rageResistances(true)
     })
   }
 }
