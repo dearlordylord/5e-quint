@@ -1,4 +1,4 @@
-import { applyEvasion, isIncapacitated } from "#/battle-machine-creature.ts"
+import { isIncapacitated } from "#/battle-machine-creature.ts"
 import {
   activeId,
   applyFailEffects,
@@ -30,6 +30,7 @@ import type {
   SpellStackEntry
 } from "#/battle-machine-types.ts"
 import { ADR_ACTIVE_TURN, PHASE_ACTIVE, phaseAwaitReaction, phaseResolvingAoE } from "#/battle-machine-types.ts"
+import { evasionDamage } from "#/features/class-rogue.ts"
 
 export function battleCastSaveSpell({
   context: c,
@@ -288,7 +289,7 @@ export function battleResolveAoETarget({
     if (aoe.halfOnSuccess && aoe.damageOnFail > 0) {
       const halfDmg = Math.trunc(aoe.damageOnFail / 2)
       // Evasion on DEX save success: 0 damage
-      const evDmg = isDex ? applyEvasion(halfDmg, true, tgt.hasEvasion, tgtIncap) : halfDmg
+      const evDmg = isDex ? evasionDamage(tgt.hasEvasion, tgtIncap, true, halfDmg) : halfDmg
       if (evDmg === 0) {
         return { ...phaseResolvingAoE(updatedAoe) }
       }
@@ -301,18 +302,12 @@ export function battleResolveAoETarget({
         false,
         aoeReturn
       )
-      return {
-        creatures: result.creatures,
-        awaitCtx: result.awaitCtx,
-        aoeCtx: result.aoeCtx,
-        movementCtx: result.movementCtx,
-        laCtx: result.laCtx
-      }
+      return { ...result }
     }
     return { ...phaseResolvingAoE(updatedAoe) }
   }
   // Save failed — Evasion on DEX save fail: half damage
-  const evDmgOnFail = isDex ? applyEvasion(aoe.damageOnFail, false, tgt.hasEvasion, tgtIncap) : aoe.damageOnFail
+  const evDmgOnFail = isDex ? evasionDamage(tgt.hasEvasion, tgtIncap, false, aoe.damageOnFail) : aoe.damageOnFail
   const sfCtx: SaveFailedCtx = {
     caster: aoe.caster,
     target: e.targetId,

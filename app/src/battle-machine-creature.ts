@@ -26,17 +26,6 @@ export function isIncapacitated(c: BattleCreatureState): boolean {
   return c.incapacitatedSources.size > 0
 }
 
-/** Evasion (Rogue 7, Monk 7): save success = 0 dmg, fail = half dmg. No effect if incapacitated. */
-export function applyEvasion(
-  damage: number,
-  saveSucceeded: boolean,
-  hasEvasion: boolean,
-  incapacitated: boolean
-): number {
-  if (!hasEvasion || incapacitated) return damage
-  return saveSucceeded ? 0 : Math.floor(damage / 2)
-}
-
 export function applyCondition(c: BattleCreatureState, cond: Condition): BattleCreatureState {
   return Match.value(cond).pipe(
     Match.when("blinded", () => ({ ...c, blinded: true })),

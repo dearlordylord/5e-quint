@@ -1950,7 +1950,6 @@ module battle {
         nondet crit = Bool.oneOf()
         nondet tgtAc = 10.to(20).oneOf()
         val releaser = bCreatures.get(releaserId)
-        // Spend reaction and clear readiedAction
         val updatedTurn = releaser.turn.with("reactionAvailable", false).with("readiedAction", false)
         val cs1 = bCreatures.set(releaserId, releaser.with("turn", updatedTurn))
         val readyReturn = ADRAwaitingReadiedAction(readyCtx)

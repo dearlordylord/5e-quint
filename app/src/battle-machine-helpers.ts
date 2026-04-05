@@ -6,7 +6,6 @@ import { Match, Option } from "effect"
 
 import {
   applyCondition,
-  applyEvasion,
   breakConcentration,
   clearExpiredAtPhase,
   deathSave,
@@ -39,6 +38,7 @@ import {
   phaseResolvingAoE,
   phaseResolvingMovement
 } from "#/battle-machine-types.ts"
+import { evasionDamage } from "#/features/class-rogue.ts"
 import type { DamageType, SpellId } from "#/types.ts"
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
@@ -277,7 +277,7 @@ export function resolveSave(
   if (saved) {
     if (save.halfOnSuccess && save.damageOnFail > 0) {
       const halfDmg = Math.trunc(save.damageOnFail / 2)
-      const evDmg = isDex ? applyEvasion(halfDmg, true, tgt.hasEvasion, tgtIncap) : halfDmg
+      const evDmg = isDex ? evasionDamage(tgt.hasEvasion, tgtIncap, true, halfDmg) : halfDmg
       if (evDmg === 0) {
         return { creatures: new Map(cs), ...returnToState(returnTo) }
       }
@@ -285,7 +285,7 @@ export function resolveSave(
     }
     return { creatures: new Map(cs), ...returnToState(returnTo) }
   }
-  const evDmgOnFail = isDex ? applyEvasion(save.damageOnFail, false, tgt.hasEvasion, tgtIncap) : save.damageOnFail
+  const evDmgOnFail = isDex ? evasionDamage(tgt.hasEvasion, tgtIncap, false, save.damageOnFail) : save.damageOnFail
   const elig = eligibleForLR(cs, save.target)
   const failCtx: SaveFailedCtx = {
     caster: save.caster,
