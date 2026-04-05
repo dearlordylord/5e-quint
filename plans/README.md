@@ -82,11 +82,4 @@ npx vitest run src/battle.mbt.test.ts
 
 ## What's NOT in these plans
 
-Tracked in `PLAN_AUDIT.md` with category analysis:
-
-- **Deferred flow features**: Stunning Strike, Divine Smite (spell), Grapple/Shove, TWF
-- **Deferred modifiers**: Sneak Attack, Brutal Strike, Cunning Strike
-- **Deferred passives**: Aura of Courage, Danger Sense, Elusive
-- **Deferred Ready extensions**: readied movement, readied spells (Concentration)
-- **Performance**: P1-P6 (tech debt, do when painful)
-- **Minor fixes**: C2 (Arcane Recovery), C5 (Knock Out)
+All deferred features, correctness fixes, and performance items tracked in `PLAN_AUDIT.md` (F1-F14, C1-C11, P1-P6, D1-D4).

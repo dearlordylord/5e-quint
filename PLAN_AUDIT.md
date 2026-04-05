@@ -260,6 +260,38 @@ Implemented in attack-pipeline plan Phase 2. `bLegendaryAttack` uses `resolveAtt
 
 ---
 
+### F11. Readied movement [Low Impact — Deferred]
+
+*Source: PRD_READY_ACTION.md*
+
+Release grants Speed worth of movement instead of an attack. Simpler than readied attacks (no reaction chain). New `bReadyReleaseMove` action. Phase 1-2 (ready + release as attack) are implemented.
+
+---
+
+### F12. Readied spells with Concentration [Medium Impact — Deferred]
+
+*Source: PRD_READY_ACTION.md Phase 2*
+
+Slot spent on ready, Concentration held until release. If Concentration breaks, spell fizzles (slot lost). On release, spell enters normal resolution (Counterspellable). Needs `readiedSpellParams` on Combatant to track spell parameters between ready and release.
+
+---
+
+### F13. Danger Sense [Low Impact — Deferred]
+
+*Source: PRD_PASSIVE_MODIFIERS.md*
+
+Barbarian L2: Advantage on DEX saves against effects you can see (not blinded/deafened/incapacitated). Same modifier-field pattern as Evasion/saveMiscBonus. Would need a `hasDangerSense: bool` on Combatant and advantage aggregation in save resolution.
+
+---
+
+### F14. Elusive [Low Impact — Deferred]
+
+*Source: PRD_PASSIVE_MODIFIERS.md*
+
+Rogue L18: No attack roll has Advantage against you unless you're Incapacitated. Would need an `isElusive: bool` on Combatant, checked in attack advantage aggregation.
+
+---
+
 ## Structural Notes
 
 ### ~~S1. Unify attack transaction pipeline~~ [Implemented]
