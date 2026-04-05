@@ -359,9 +359,9 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 7. ~~**PRD 1** (attack pipeline + class features)~~ DONE -- covers S1, F3, F5, rage/reckless
 8. ~~**PRD 3** (passive modifier system, Evasion)~~ DONE -- covers C3
 9. ~~**PRD 2** (Ready action, Phase 1)~~ DONE -- covers C8
-10. **PRD 4** (attack type + advantage + Sneak Attack) -- covers D1, F4(SA), wires advantage pipeline
-11. **PRD 3 continuation** (saveMiscBonus for Aura of Protection) -- covers F7
-12. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12
+10. **PRD 4** (attack type + advantage + Sneak Attack) -- covers D1, F4(SA), wires advantage pipeline. PRD: `PRD_ATTACK_TYPE_AND_ADVANTAGE.md`, Plan: `PLAN_PRD4_ATTACK_TYPE_ADVANTAGE_SA.md`
+11. **PRD 3 continuation** (saveMiscBonus for Aura of Protection) -- covers F7. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 1
+12. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 2
 13. **F1** (more reactions) -- incremental, add as needed
 14. ~~**S2** (fix OA comment)~~ DONE
 15. ~~**S3** (investigate excluded invariants)~~ DONE (phase-scoped, added to allBattleInvariants)
