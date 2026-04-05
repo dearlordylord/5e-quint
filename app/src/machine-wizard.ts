@@ -1,5 +1,5 @@
 import { assert } from "#/assert.ts"
-import { canArcaneRecoverSlot, hasOverchannel } from "#/features/class-wizard.ts"
+import { arcaneRecoveryMaxLevels, canArcaneRecoverSlot, hasOverchannel } from "#/features/class-wizard.ts"
 import { updateClass } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
 import type { DndContext, WizardClassState } from "#/machine-types.ts"
@@ -14,9 +14,11 @@ function w(c: DndContext) {
 export function arcaneRecoveryUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
   const ws = w(c)
   assert(ws.level >= 1 && !ws.arcaneRecoveryUsed, "guard: canArcaneRecovery should have prevented this")
-  // Quint always marks arcaneRecoveryUsed even if slot is full or invalid level.
   const flagUpdate = updateClass(c, "wizard", { arcaneRecoveryUsed: true })
-  if (!canArcaneRecoverSlot(slotLevel)) return flagUpdate
+  // SRD: slot level <= 5 AND slot level <= budget (half wizard level, round up)
+  // AND slot must be expended (current < max).
+  const budget = arcaneRecoveryMaxLevels(ws.level)
+  if (!canArcaneRecoverSlot(slotLevel) || slotLevel > budget) return flagUpdate
   const currentSlots = [...c.slotsCurrent]
   const idx = slotLevel - 1
   if (idx >= currentSlots.length || currentSlots[idx] >= c.slotsMax[idx]) return flagUpdate

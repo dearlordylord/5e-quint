@@ -79,6 +79,7 @@ module battle {
     isCritical: bool,
     critRange: int,                  // natural roll >= critRange is a critical hit
     atkReturnTo: AfterDamageReturn,  // where to go after entire attack chain resolves
+    knockOut: bool,                  // SRD 5.2.1 "Knocking Out a Creature" — attacker's choice
   }
 
   type AttackDamageCtx = {
@@ -88,6 +89,7 @@ module battle {
     damageType: DamageType,
     isCritical: bool,
     atkReturnTo: AfterDamageReturn,
+    knockOut: bool,                  // propagated from AttackHitCtx
   }
 
   // Context for a spell being cast (Counterspell interrupt)
@@ -399,9 +401,14 @@ module battle {
     combatantResistances: Set(),
   }
 
+  /// Deal damage to a target. When knockOut=true and the hit would reduce a PC to 0 HP,
+  /// the attacker instead knocks out the target (SRD 5.2.1 "Knocking Out a Creature").
+  /// NOTE: knockOut currently ignores melee-only guard — no melee/ranged distinction yet (see D1).
+  /// NOTE: concentration break from knockOut-induced Unconscious is handled by the
+  /// separate bConcentrationCheck action, not inline — consistent with all battle damage paths.
   pure def dealDamage(
     cs: CreatureId -> Combatant, targetId: CreatureId,
-    dmg: int, dt: DamageType, crit: bool
+    dmg: int, dt: DamageType, crit: bool, knockOut: bool
   ): (CreatureId -> Combatant) = {
     val t = cs.get(targetId)
     // Merge stat block R/V/I with active effect granted R/V/I (single pass)
@@ -413,7 +420,15 @@ module battle {
     val totalV = t.statBlock.vulnerabilities.union(merged.v)
     val totalI = t.statBlock.damageImmunities.union(merged.i)
     val nc = pTakeDamageAsCreature(t.creature, dmg, dt, totalR, totalV, totalI, crit, t.kind)
-    setCreature(cs, targetId, nc)
+    // SRD: knock-out only if damage would reduce to exactly 0 HP (not instant death).
+    // pKnockOut operates on original state — sets HP to 1 + Unconscious, bypassing
+    // the computed damage result. This is correct: the attacker's choice replaces
+    // the "reduce to 0" outcome entirely.
+    if (knockOut and t.kind == PC and t.creature.hp > 0 and nc.hp == 0 and not(nc.dead)) {
+      setCreature(cs, targetId, pKnockOut(t.creature))
+    } else {
+      setCreature(cs, targetId, nc)
+    }
   }
 
 
@@ -542,10 +557,11 @@ module battle {
     cs: CreatureId -> Combatant,
     targetId: CreatureId, sourceId: CreatureId,
     dmg: int, dt: DamageType, crit: bool,
-    returnTo: AfterDamageReturn
+    returnTo: AfterDamageReturn,
+    knockOut: bool
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     val oldT = cs.get(targetId)
-    val cs1 = dealDamage(cs, targetId, dmg, dt, crit)
+    val cs1 = dealDamage(cs, targetId, dmg, dt, crit, knockOut)
     val newT = cs1.get(targetId)
     // Actual damage after resistance/vulnerability/immunity and temp HP absorption
     val actualDmg = (oldT.creature.hp + oldT.creature.tempHp) - (newT.creature.hp + newT.creature.tempHp)
@@ -756,7 +772,8 @@ module battle {
     attackRoll: int, targetAc: int,
     damage: int, damageType: DamageType, isCritical: bool,
     critRange: int,
-    returnTo: AfterDamageReturn
+    returnTo: AfterDamageReturn,
+    knockOut: bool
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     val hit = attackRoll >= targetAc or attackRoll >= critRange
     if (not(hit)) {
@@ -770,12 +787,13 @@ module battle {
         damage: totalDmg, damageType: damageType, isCritical: isCritical,
         critRange: critRange,
         atkReturnTo: returnTo,
+        knockOut: knockOut,
       }
       val elig = eligibleExcluding(cs, attackerId)
       if (elig.size() > 0) {
         { creatures: cs, phase: BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, elig)) }
       } else {
-        dealDamageWithAfterReactions(cs, targetId, attackerId, totalDmg, damageType, isCritical, returnTo)
+        dealDamageWithAfterReactions(cs, targetId, attackerId, totalDmg, damageType, isCritical, returnTo, knockOut)
       }
     }
   }
@@ -794,6 +812,9 @@ module battle {
     nondet dt = Set(Slashing, Piercing, Bludgeoning).oneOf()
     nondet crit = Bool.oneOf()
     nondet tAc = 10.to(20).oneOf()
+    // SRD 5.2.1 "Knocking Out a Creature": melee attacker can choose knock out.
+    // NOTE: no melee/ranged distinction yet (see D1), so choice is always offered.
+    nondet knockOut = Bool.oneOf()
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -807,7 +828,7 @@ module battle {
       else
         pUseAction(ac.turn, ac.creature, AAttack)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
-      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn)
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut)
       all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
     }
   }
@@ -825,12 +846,13 @@ module battle {
           attacker: atk.attacker, target: atk.target,
           damage: atk.damage, damageType: atk.damageType,
           isCritical: atk.isCritical, atkReturnTo: atk.atkReturnTo,
+          knockOut: atk.knockOut,
         }
         { creatures: cs, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, dmgElig)) }
       } else {
         // No damage-phase reactions — deal damage and check for after-damage reactions (R10.4)
         dealDamageWithAfterReactions(cs, atk.target, atk.attacker,
-          atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo)
+          atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo, atk.knockOut)
       }
     }
   }
@@ -893,7 +915,7 @@ module battle {
             if (remaining.size() == 0) {
               // All damage reactions resolved — deal damage and check after-damage (R10.4)
               val result = dealDamageWithAfterReactions(bCreatures,
-                atk.target, atk.attacker, atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo)
+                atk.target, atk.attacker, atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo, atk.knockOut)
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
               nondet reactorId = remaining.oneOf()
@@ -987,7 +1009,7 @@ module battle {
               val actualDmg = if (reactionSaved) reactionDmg / 2 else reactionDmg
               val result = dealDamageWithAfterReactions(
                 cs1, ad.damageSource, reactorId,
-                actualDmg, reactionDt, false, ad.returnTo
+                actualDmg, reactionDt, false, ad.returnTo, false
               )
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             }
@@ -1024,7 +1046,7 @@ module battle {
               } else {
                 val result = dealDamageWithAfterReactions(
                   cs1, ad.damageSource, reactorId,
-                  retDmg, retDt, retCrit, ad.returnTo
+                  retDmg, retDt, retCrit, ad.returnTo, false
                 )
                 all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
               }
@@ -1127,7 +1149,7 @@ module battle {
           { creatures: cs, phase: returnToPhase(returnTo) }
         } else {
           dealDamageWithAfterReactions(cs, save.target, save.caster,
-            evDmg, save.damageType, false, returnTo)
+            evDmg, save.damageType, false, returnTo, false)
         }
       } else {
         { creatures: cs, phase: returnToPhase(returnTo) }
@@ -1160,7 +1182,7 @@ module battle {
       // LR flipped the save — apply half damage if applicable
       if (ctx.halfOnSuccess and ctx.damageOnFail > 0) {
         dealDamageWithAfterReactions(cs, ctx.target, ctx.caster,
-          ctx.damageOnFail / 2, ctx.damageType, false, returnTo)
+          ctx.damageOnFail / 2, ctx.damageType, false, returnTo, false)
       } else {
         { creatures: cs, phase: returnToPhase(returnTo) }
       }
@@ -1173,7 +1195,7 @@ module battle {
       } else cs
       if (ctx.damageOnFail > 0) {
         dealDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
-          ctx.damageOnFail, ctx.damageType, false, returnTo)
+          ctx.damageOnFail, ctx.damageType, false, returnTo, false)
       } else {
         { creatures: cs1, phase: returnToPhase(returnTo) }
       }
@@ -1725,7 +1747,7 @@ module battle {
                 all { bCreatures' = bCreatures, bPhase' = BPResolvingAoE(updatedAoe), keepBattle }
               } else {
                 val result = dealDamageWithAfterReactions(bCreatures,
-                  targetId, aoe.caster, evDmg, aoe.damageType, false, aoeReturn)
+                  targetId, aoe.caster, evDmg, aoe.damageType, false, aoeReturn, false)
                 all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
               }
             } else {
@@ -1826,6 +1848,7 @@ module battle {
     nondet oaDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
     nondet oaCrit = Bool.oneOf()
     nondet oaTgtAc = 10.to(20).oneOf()
+    nondet oaKnockOut = Bool.oneOf()
     match bPhase {
       | BPResolvingMovement(mv) =>
         val remaining = mv.threatenedBy.exclude(mv.processed)
@@ -1836,7 +1859,7 @@ module battle {
         val updatedMv = mv.with("processed", mv.processed.union(Set(reactorId)))
         val reactor = bCreatures.get(reactorId)
         val cs1 = spendReaction(bCreatures, reactorId)
-        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv))
+        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -1965,11 +1988,12 @@ module battle {
         nondet dt = Set(Slashing, Piercing, Bludgeoning).oneOf()
         nondet crit = Bool.oneOf()
         nondet tgtAc = 10.to(20).oneOf()
+        nondet readyKnockOut = Bool.oneOf()
         val releaser = bCreatures.get(releaserId)
         val updatedTurn = releaser.turn.with("reactionAvailable", false).with("readiedAction", false)
         val cs1 = bCreatures.set(releaserId, releaser.with("turn", updatedTurn))
         val readyReturn = ADRAwaitingReadiedAction(readyCtx)
-        val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn)
+        val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
@@ -1989,12 +2013,13 @@ module battle {
         nondet laDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
         nondet laCrit = Bool.oneOf()
         nondet laTgtAc = 10.to(20).oneOf()
+        nondet laKnockOut = Bool.oneOf()
         val m = bCreatures.get(monsterId)
         val newMR = m.monsterResources.with("legendaryActionsRemaining",
           m.monsterResources.legendaryActionsRemaining - 1)
         val cs1 = bCreatures.set(monsterId, m.with("monsterResources", newMR))
         val laReturn = ADRAwaitingLegendaryAction(laCtx)
-        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn)
+        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
@@ -2323,31 +2348,36 @@ module battle {
   // Phase 4: Cross-creature invariants
 
   /// Concentration implies an active effect exists on some creature.
-  /// NOT included in allBattleInvariants: same CS chain transient-state
-  /// concern as concentrationEffectHasLivingCaster.
-  val concentrationImpliesEffect = bCreatures.keys().forall(casterId =>
-    val caster = bCreatures.get(casterId)
-    (caster.slots.concentrationSpellId != "") implies bCreatures.keys().exists(targetId =>
-      bCreatures.get(targetId).creature.activeEffects.exists(e =>
-        e.spellId == caster.slots.concentrationSpellId and e.casterId == casterId
+  /// Phase-scoped: only checked when spell stack is empty (CS chain resolved)
+  /// to avoid transient out-of-sync states during Counterspell resolution.
+  val concentrationImpliesEffect =
+    (bSpellStack.length() > 0) or bCreatures.keys().forall(casterId =>
+      val caster = bCreatures.get(casterId)
+      (caster.slots.concentrationSpellId != "") implies bCreatures.keys().exists(targetId =>
+        bCreatures.get(targetId).creature.activeEffects.exists(e =>
+          e.spellId == caster.slots.concentrationSpellId and e.casterId == casterId
+        )
       )
     )
-  )
 
   /// Every concentration effect has a living, concentrating caster.
-  /// NOT included in allBattleInvariants: violated during CS chain resolution
-  /// when concentration state and active effects are temporarily out of sync.
-  /// Needs investigation — may be a real spec bug or a transient-state issue.
-  val concentrationEffectHasLivingCaster = bCreatures.keys().forall(targetId =>
-    bCreatures.get(targetId).creature.activeEffects.forall(e =>
-      bCreatures.keys().exists(casterId =>
-        val caster = bCreatures.get(casterId)
-        e.casterId == casterId
-        and not(caster.creature.dead)
-        and caster.slots.concentrationSpellId == e.spellId
+  /// Phase-scoped: only checked when spell stack is empty (CS chain resolved).
+  /// Root cause of transient violations: during CS chain resolution,
+  /// breakConcentrationAndPropagate removes the caster's concentrationSpellId
+  /// before removing effects from all targets. Between these two operations,
+  /// effects reference a caster that is no longer concentrating. This is a
+  /// transient state within the CS resolution step, not a spec bug.
+  val concentrationEffectHasLivingCaster =
+    (bSpellStack.length() > 0) or bCreatures.keys().forall(targetId =>
+      bCreatures.get(targetId).creature.activeEffects.forall(e =>
+        bCreatures.keys().exists(casterId =>
+          val caster = bCreatures.get(casterId)
+          e.casterId == casterId
+          and not(caster.creature.dead)
+          and caster.slots.concentrationSpellId == e.spellId
+        )
       )
     )
-  )
 
   /// Active effects have unique spellIds per creature (battle-level lift).
   val allActiveEffectsUnique = bCreatures.keys().forall(id =>
@@ -2381,9 +2411,9 @@ module battle {
     legendaryActionNotOnOwnTurn,
     allActiveEffectsUnique,
     spellStackDistinctCasters,
-    // Excluded: reactionWindowHasEligible (transient empty-eligible is by design)
-    // Excluded: concentrationImpliesEffect (CS chain transient state)
-    // Excluded: concentrationEffectHasLivingCaster (CS chain transient state)
+    concentrationImpliesEffect,
+    concentrationEffectHasLivingCaster,
+    // Excluded: reactionWindowHasEligible (transient empty-eligible is by design in CS chains)
   }
 
   // Note: offered ⊄ eligible is expected — reactors who spend their reaction

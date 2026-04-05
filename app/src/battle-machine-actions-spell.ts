@@ -36,6 +36,7 @@ export function battleCastSaveSpell({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_CAST_SAVE_SPELL">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac)) return {}
@@ -193,6 +194,7 @@ export function battleCastConcentrationSpell({
   context: c,
   event: e
 }: BattleActionArgs<"BATTLE_CAST_CONCENTRATION_SPELL">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
@@ -235,6 +237,7 @@ export function battleConcentrationCheck({
 }
 
 export function battleCastAoE({ context: c, event: e }: BattleActionArgs<"BATTLE_CAST_AOE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}

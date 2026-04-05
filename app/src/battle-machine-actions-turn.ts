@@ -208,6 +208,7 @@ export function battleLegendaryAttack({
 }
 
 export function battleHeal({ context: c, event: e }: BattleActionArgs<"BATTLE_HEAL">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
@@ -220,6 +221,7 @@ export function battleHeal({ context: c, event: e }: BattleActionArgs<"BATTLE_HE
 type SimpleActionType = "dash" | "disengage" | "dodge" | "ready"
 
 function simpleAction(c: BattleContext, actionType: SimpleActionType): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
@@ -239,6 +241,7 @@ export function battleDodge({ context: c }: BattleActionArgs<"BATTLE_DODGE">): P
 }
 
 export function battleActionSurge({ context: c }: BattleActionArgs<"BATTLE_ACTION_SURGE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (isIncapacitated(ac) || ac.actionSurgeCharges <= 0 || ac.actionSurgeUsedThisTurn) return {}
@@ -254,6 +257,7 @@ export function battleActionSurge({ context: c }: BattleActionArgs<"BATTLE_ACTIO
 }
 
 export function battleEnterRage({ context: c }: BattleActionArgs<"BATTLE_ENTER_RAGE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.bonusActionUsed || ac.ragingBlocksSpells || ac.barbarianLevel <= 0) return {}
@@ -275,6 +279,7 @@ export function battleReady({ context: c }: BattleActionArgs<"BATTLE_READY">): P
 export function battleDeclareReckless({
   context: c
 }: BattleActionArgs<"BATTLE_DECLARE_RECKLESS">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.recklessThisTurn) return {}

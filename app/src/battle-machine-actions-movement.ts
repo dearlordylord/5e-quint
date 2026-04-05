@@ -5,6 +5,7 @@ import type { BattleActionArgs, BattleContext } from "#/battle-machine-types.ts"
 import { PHASE_ACTIVE, phaseResolvingMovement } from "#/battle-machine-types.ts"
 
 export function battleMove({ context: c, event: e }: BattleActionArgs<"BATTLE_MOVE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.movementRemaining <= 0) return {}

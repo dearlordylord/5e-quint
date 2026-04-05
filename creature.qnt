@@ -4869,24 +4869,33 @@ module creature {
   /// Arcane Recovery: restore a spell slot. Once per LR.
   /// SRD: "choose expended spell slots to recover... combined level no more than
   /// half your Wizard level (round up), and none of the slots can be level 6 or higher."
-  /// Simplified: nondet picks one slot level (1-5) — caller ensures total <= max.
+  /// Simplified: single slot recovery — slotLevel <= budget AND <= 5 AND slot is expended.
   action doUseArcaneRecovery = {
+    val wLvl = classLevels.get(Wizard)
     if (turnPhase != "acting" or isIncapacitated(state)
-        or not(canArcaneRecovery(wizardState, classLevels.get(Wizard)))) unchanged
+        or not(canArcaneRecovery(wizardState, wLvl))) unchanged
     else {
+      // Budget: half wizard level, round up. E.g., L1→1, L2→1, L3→2, L5→3, L9→5.
+      val budget = (wLvl + 1) / 2
       nondet slotLevel = 1.to(5).oneOf()
-      val ss1 = pRestoreSlot(spellSlots, slotLevel)
       all {
-        state' = state,
-        turnState' = turnState,
-        spellSlots' = ss1,
-        turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
-        creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
-        monsterResourceState' = monsterResourceState,
-        barbarianState' = barbarianState,
-        monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState,
-        wizardState' = pUseArcaneRecovery(wizardState),
-        rangerState' = rangerState, bardState' = bardState,
+        // SRD: combined level <= half wizard level (round up)
+        slotLevel <= budget,
+        // SRD: slot must be expended (current < max)
+        spellSlots.slotsCurrent.get(slotLevel) < spellSlots.slotsMax.get(slotLevel),
+        val ss1 = pRestoreSlot(spellSlots, slotLevel)
+        all {
+          state' = state,
+          turnState' = turnState,
+          spellSlots' = ss1,
+          turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
+          creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
+          monsterResourceState' = monsterResourceState,
+          barbarianState' = barbarianState,
+          monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState,
+          wizardState' = pUseArcaneRecovery(wizardState),
+          rangerState' = rangerState, bardState' = bardState,
+        }
       }
     }
   }

@@ -76,6 +76,7 @@ export function resolveAttack(
 }
 
 export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_ATTACK">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   const tc = c.creatures.get(e.targetId)!
