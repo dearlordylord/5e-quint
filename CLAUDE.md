@@ -44,10 +44,11 @@ Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.** See `QUI
   2. Read the ITF trace JSON offline to inspect Quint state at each step.
   3. Trace through the Quint spec logic manually by reading the code.
 - **MBT run tiers (choose the right one!):**
-  - **Tier 1 — Dev feedback (~1s):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=10 npx vitest run src/battle.mbt.test.ts` — requires compiled cache (`node scripts/compile-battle-spec.cjs`). **Use this for iterative development.** One trace, one sample, catches most state mismatches.
-  - **Tier 2 — Pre-commit (~5 min):** `MBT_DEV=1 npx vitest run src/battle.mbt.test.ts` — 10 samples × 5 steps. Run before committing. Background it.
-  - **Tier 3 — Full validation (20-30 min):** `MBT_TRACES=1 MBT_MAX_SAMPLES=50 MBT_STEPS=10 npx vitest run src/battle.mbt.test.ts` — overnight / CI only. Use `nohup ... &` and check results later.
-  - **Default to Tier 1.** Never run Tier 2/3 for exploratory work — it will appear to hang (it's just slow). See `QUINT_CONNECT_TROUBLESHOOT.md` for why.
+  - **Tier 1 — Battle dev (~1s with compiled cache):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle.mbt.test.ts` — **Use this for iterative development.** Requires compiled cache (`node scripts/compile-battle-spec.cjs`). ~265ms evaluator time per step when no zombie evaluators are present.
+  - **Tier 1b — Creature MBT (~20s):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/machine.mbt.test.ts` — creature-level parity only (no battle.qnt). Use when changes are purely creature-level.
+  - **Tier 2 — Pre-commit (5–30 min):** `MBT_DEV=1 npx vitest run src/battle.mbt.test.ts` — 10 samples × 5 steps. Background it.
+  - **Tier 3 — Full validation (30+ min):** `MBT_TRACES=1 MBT_MAX_SAMPLES=50 MBT_STEPS=10 npx vitest run src/battle.mbt.test.ts` — overnight / CI only.
+  - **Default to Tier 1.** Never run Tier 2/3 for exploratory work. See `QUINT_CONNECT_TROUBLESHOOT.md` for why.
 
 ## Quint gotchas
 

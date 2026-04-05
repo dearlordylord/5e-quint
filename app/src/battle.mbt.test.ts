@@ -6,12 +6,13 @@ import * as path from "node:path"
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect"
 import { Option } from "effect"
-import { describe, it } from "vitest"
+import { afterAll, beforeAll, describe, it } from "vitest"
 import { createActor } from "xstate"
 import { z } from "zod"
 
 import { effectiveInitRoll } from "#/battle-machine-actions-turn.ts"
 import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
+import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
 import {
   compareNormalizedStates,
   computeRechargedAbilities,
@@ -1682,6 +1683,16 @@ const battleStateCheck = stateCheck(
 // ============================================================
 
 describe("Battle Projection MBT", () => {
+  // Kill zombie evaluators before starting and after finishing.
+  // Zombies from prior runs at 100% CPU cause 40x slowdowns (Finding 12).
+  beforeAll(() => {
+    killZombieEvaluators()
+    registerEvaluatorCleanup()
+  })
+  afterAll(() => {
+    killZombieEvaluators()
+  })
+
   // MBT_DEV=1: fast dev feedback (fewer samples, shorter traces).
   // Default: comprehensive run for CI / perpetual background validation.
   const isDev = process.env["MBT_DEV"] === "1"

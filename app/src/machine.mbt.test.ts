@@ -5,7 +5,7 @@ import * as path from "node:path"
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect"
 import { Schema } from "effect"
-import { describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { createActor } from "xstate"
 import { z } from "zod"
 
@@ -16,6 +16,7 @@ import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
 import { monkExtraAttacks } from "#/machine-monk.ts"
 import { paladinExtraAttacks } from "#/machine-paladin.ts"
 import { rangerExtraAttacks } from "#/machine-ranger.ts"
+import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
 import {
   compareNormalizedStates,
   computeRechargedAbilities,
@@ -41,7 +42,17 @@ import {
   snapshotToNormalized
 } from "#/mbt-shared.ts"
 import type { ActionType, Condition, CreatureKind, DamageType } from "#/types.ts"
-import { abilityModifier, classLevel, CreatureId, d20Roll, healAmount, resourceCount, spellId, spellSlotLevel, tempHp } from "#/types.ts"
+import {
+  abilityModifier,
+  classLevel,
+  CreatureId,
+  d20Roll,
+  healAmount,
+  resourceCount,
+  spellId,
+  spellSlotLevel,
+  tempHp
+} from "#/types.ts"
 
 // ============================================================
 // ENFORCEMENT: every DndEvent type must have a driver action
@@ -879,7 +890,8 @@ function createDndDriver() {
         send({ type: "EXIT_WILD_SHAPE" })
       },
       doWildResurgenceCharge: ({ slotLevel }) => {
-        if (slotLevel != null) send({ type: "USE_WILD_RESURGENCE_CHARGE", slotLevel: spellSlotLevel(Number(slotLevel)) })
+        if (slotLevel != null)
+          send({ type: "USE_WILD_RESURGENCE_CHARGE", slotLevel: spellSlotLevel(Number(slotLevel)) })
       },
       doWildResurgenceSlot: () => {
         send({ type: "USE_WILD_RESURGENCE_SLOT" })
@@ -1022,6 +1034,14 @@ describe("MBT driver sync", () => {
 const mbtStateCheck = stateCheck((raw) => quintParsedToNormalized(QuintFullState.parse(raw)), compareNormalizedStates)
 
 describe("DnD MBT", () => {
+  beforeAll(() => {
+    killZombieEvaluators()
+    registerEvaluatorCleanup()
+  })
+  afterAll(() => {
+    killZombieEvaluators()
+  })
+
   const MBT_TRACE_COUNT = 50
   const MBT_STEP_COUNT = 30
   const specPath = path.resolve(import.meta.dirname, "../../creature.qnt")

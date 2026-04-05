@@ -7,12 +7,13 @@ import * as path from "node:path"
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect"
 import { Option } from "effect"
-import { describe, it } from "vitest"
+import { afterAll, beforeAll, describe, it } from "vitest"
 import { createActor } from "xstate"
 import { z } from "zod"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleContext, BattleCreatureState, BattleEvent } from "#/battle-machine-types.ts"
+import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
 import {
   compareNormalizedStates,
   ITFBigInt,
@@ -962,6 +963,14 @@ const battleMachineStateCheck = stateCheck(
 // ============================================================
 
 describe("Battle Machine MBT", () => {
+  beforeAll(() => {
+    killZombieEvaluators()
+    registerEvaluatorCleanup()
+  })
+  afterAll(() => {
+    killZombieEvaluators()
+  })
+
   const isDev = process.env["MBT_DEV"] === "1"
   const MBT_TRACE_COUNT = 1
   const MBT_STEP_COUNT = isDev ? 5 : 10
@@ -979,6 +988,9 @@ describe("Battle Machine MBT", () => {
       })
       console.log(`[battle machine MBT] replayed ${result.tracesReplayed} traces from ${dir}`)
     } else {
+      // Use pre-compiled spec cache if available (skip 15s+ parse/typecheck).
+      // Generate with: node scripts/compile-battle-spec.cjs
+      const compiledInputPath = path.resolve(import.meta.dirname, "../../.quint-cache/battle-compiled.json")
       const result = await run({
         spec: specPath,
         init: "bInit",
@@ -988,9 +1000,10 @@ describe("Battle Machine MBT", () => {
         nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
         maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
         maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
-        stateCheck: battleMachineStateCheck
+        stateCheck: battleMachineStateCheck,
+        compiledInput: compiledInputPath
       })
       logMbtSeed("battle machine MBT", result)
     }
-  }, 300_000)
+  }, 600_000)
 })

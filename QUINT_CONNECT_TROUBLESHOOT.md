@@ -1,13 +1,23 @@
 # MBT Performance: Findings, Changes, and Recommendations
 
-> Research conducted 2026-04-04/05. All measurements on the battle.qnt spec
-> with 4 creatures, 17 actions in `battleStep`, original master nondet ranges.
+> Research conducted 2026-04-04/05, updated 2026-04-05.
+> All measurements on the battle.qnt spec with 4 creatures, 17 actions in `battleStep`.
 
 ## TL;DR
 
-Battle MBT is **inherently slow** (~4 minutes for 10 samples × 5 steps) because the Rust evaluator
-is slow with the battle spec's large state (4 creatures × 25+ fields). The only viable optimization
-is caching the 15s parse/typecheck overhead, which brings single-sample dev runs to **~2s**.
+Battle MBT is **inherently slow** (10s–180s+ per sample depending on random seed) because of
+two factors: (1) **seed-dependent action path length** — how many `actionAny` branches the
+evaluator tries (with snapshot/restore) before finding an enabled one, and (2) **winning action
+body complexity** — deep call chains doing many `imbl` persistent map operations. The compile-
+script cache saves the 15s parse/typecheck overhead but cannot help with the evaluator's
+simulation time.
+
+**Key insight from source code analysis (evaluator/src/):** The evaluator uses a compile-then-
+execute architecture. All 13K+ definitions are resolved into `Rc<RefCell<>>` closures at compile
+time — zero table lookups happen per step. The imported definition count does NOT affect per-step
+cost; it only affects the one-time compile phase (~5-7s).
+
+**Fastest reliable feedback:** creature-level MBT (`machine.mbt.test.ts`) completes in ~20s.
 
 ---
 
@@ -45,14 +55,18 @@ The PLAN_AUDIT.md P1 note about "constraining to SRD-realistic ranges" is about 
 **Tested:** Trimmed `battleStep` from 17 actions to 7.
 **Result:** 39s vs 41s — within noise.
 
-The evaluator's cost is dominated by state evaluation (reading/writing 100+ fields across 4 creatures),
-not by guard checking. Each step evaluates the full state regardless of how many actions are offered.
+**Confirmed by source code:** `actionAny` (`builtins.rs`) uses Fisher-Yates shuffle + short-circuit
+(PR #1582). It tries actions in random order and stops at the first enabled one. With 17 vs 7
+actions, the worst case is 17 vs 7 snapshot/restore cycles — but each cycle is O(state variables),
+not O(definitions), so the difference is small. The dominant cost is the *winning action's body
+evaluation*, not how many branches exist.
 
 ### Finding 3: The Rust evaluator is genuinely slow with battle state
 
 `quint run battle.qnt --backend rust --init bInit --step battleStep --max-samples 10 --max-steps 5`
-takes **~4 minutes** (1125s user time at 484% CPU). This is the evaluator processing complex
-record types (4 creatures × CreatureState + TurnState + SpellSlotState + MonsterResources + ...).
+takes **~4 minutes** (1125s user time at 484% CPU). This is the evaluator executing complex
+action bodies — deep call chains (`resolveAttack → dealDamage → pTakeDamage → condition
+application`) doing many `imbl` persistent map operations (O(log n) per get/set).
 
 This is NOT the parse/typecheck overhead — it's the actual simulation. Not fixable from our side.
 
@@ -105,6 +119,67 @@ kill the entire process group.
 
 **Manual cleanup:** `killall -9 quint_evaluator`
 
+### Finding 8: Three distinct cost layers — compile, action path, action body (2026-04-05)
+
+Systematic scaling tests with isolated perf specs show:
+
+| Test | Spec | Result |
+|------|------|--------|
+| Self-contained, 5 fields × 2 creatures, 3 actions | No imports | **1s** (26ms evaluator) |
+| Self-contained, 15 fields × 2 creatures, 3 actions | No imports | **1s** (24ms evaluator) |
+| Self-contained, 25 fields × 2 creatures, 3 actions | No imports | **1s** (26ms evaluator) |
+| Self-contained, 25 fields × 4 creatures, 3 actions | No imports | **1s** (32ms evaluator) |
+| Import creature.qnt, simple types, 2 creatures | 6K lines imported | **7s** (195ms evaluator) |
+| Import creature.qnt + CreatureState, 2 creatures | 6K lines imported | **6s** (198ms evaluator) |
+| Import creature.qnt + pTakeDamage calls | 6K lines imported | **7s** (225ms evaluator) |
+| Full battle.qnt, 1 step (lucky seed) | creature.qnt + battle.qnt | **10s** (313ms evaluator) |
+| Full battle.qnt, 1 step (unlucky seed) | creature.qnt + battle.qnt | **30s+** (timeout) |
+| Full battle.qnt, 2 steps | creature.qnt + battle.qnt | **180s+** (timeout) |
+
+**Key findings (validated against evaluator source code `evaluator/src/`):**
+
+1. **Record size is irrelevant:** 5 fields vs 25 fields, 2 creatures vs 4 creatures — all ~1s when self-contained. The evaluator uses `imbl` persistent data structures with structural sharing; record clone/update is O(log n).
+
+2. **Import overhead is COMPILE TIME, not per-step:** Importing creature.qnt (6000 lines, 13K definitions) adds ~5-7s to the evaluator's **compilation phase** (walking the IR, resolving names via `LookupTable<FxHashMap<u64, LookupDefinition>>`, producing `Rc<RefCell<>>` closures). This is a one-time cost. At runtime, all definitions are pre-resolved into closures — zero table lookups happen per step.
+
+3. **Per-step cost has two components:**
+   - **Action path length (seed-dependent):** `actionAny` (`builtins.rs`) shuffles 17 branches and tries them in order. Each failed branch costs one snapshot/restore cycle (O(state variables) via `Storage::take_snapshot`). An unlucky seed that puts the spec in a state where most actions are disabled means 10+ snapshot/restore cycles before finding an enabled one.
+   - **Winning action body complexity:** The enabled action's execution cost — deep call chains like `resolveAttack → dealDamage → pTakeDamage → applyCondition`, each doing `imbl::HashMap` get/set operations (O(log n) per operation). AoE targeting 4 creatures with concentration checks, condition applications, and death saves is the most expensive path.
+
+4. **Seed-dependent variance is extreme:** The same spec with 1 step can take 10s or 30s+ depending on the random seed. This is because different seeds produce different initial states, which enable different subsets of `battleStep` actions, leading to different action path lengths and different winning action complexities.
+
+**Corrects earlier interpretation:** Finding 2 ("number of actions doesn't affect performance") is actually correct — the `actionAny` lazy evaluation means branch count has at most linear effect. Finding 3's attribution to "record types" was imprecise — the cost is in the action body's map operations, not record size per se. The earlier claim that "per-step cost grows non-linearly with imported definition count" was wrong — definitions are resolved at compile time and have zero per-step cost.
+
+### Finding 9: Compile script format is identical to quint run (2026-04-05)
+
+The `compile-battle-spec.cjs` output is **byte-identical** to a fresh `toExpr()` serialization.
+Verified by running `toExpr()` + `json-bigint.stringify()` on the same spec and comparing the
+7.3MB output byte-by-byte. The "format difference" noted in earlier versions of this document
+was a false finding, similar to the v0.6.0 regression attribution.
+
+The compile-script cache saves the ~15s parse/typecheck overhead but cannot help with the
+evaluator's simulation time, which is 10s–180s+ per step for the full battle spec.
+
+### Finding 10: Battle MBT with compiled cache — bimodal timing (2026-04-05)
+
+5 runs of `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=1` with compiled cache:
+
+| Run | Seed | Time |
+|-----|------|------|
+| 1 | (timeout) | 60s+ |
+| 2 | 0x689d4239 | 1s |
+| 3 | (timeout) | 60s+ |
+| 4 | 0xad9e6bc3 | 2s |
+| 5 | 0x60f1f603 | 2s |
+
+**3/5 runs complete in 1-2s, 2/5 timeout at 60s.** The compiled cache works perfectly when
+the evaluator finds a viable trace quickly. Some seeds cause the evaluator to explore
+exponentially long paths. The bimodal distribution (fast vs hang) suggests the evaluator
+sometimes enters states where no `battleStep` action is enabled and it exhausts all branches.
+
+**Creature-level MBT (`machine.mbt.test.ts`) is consistently 17-18s** across all seeds.
+This is the reliable fast-feedback path.
+
 ---
 
 ## Changes Made
@@ -156,7 +231,10 @@ in constant time regardless of range cardinality. Shrinking ranges only reduces 
 ### Do NOT reduce actions in `battleStep` for performance
 
 The number of actions in the `any { }` block has negligible impact on per-step cost.
-The bottleneck is state evaluation (reading/writing the full creature state), not guard checking.
+`actionAny` (`builtins.rs`) uses lazy evaluation with Fisher-Yates shuffle — it tries branches
+in random order and short-circuits on the first enabled one. The per-branch cost is one
+snapshot/restore cycle (O(state variables)), and the dominant cost is the winning action's
+body evaluation (deep call chains, `imbl` map operations), not branch count.
 
 ### Do NOT read the cache file with JSON.parse()
 
@@ -179,12 +257,19 @@ the input to the evaluator and receiving the result. It does NOT include:
 
 ### Dev workflow (fast feedback)
 
+**Use creature-level MBT for iterative development (~20s):**
 ```bash
-# One-time: compile the spec cache (~60s)
+# Creature MBT — always the fastest feedback (no battle.qnt complexity)
+MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/machine.mbt.test.ts
+```
+
+**Battle MBT is slow and seed-dependent (10s–180s+ per step):**
+```bash
+# One-time: compile the spec cache (~60s), saves 15s parse/typecheck per run
 node scripts/compile-battle-spec.cjs
 
-# Fast MBT run (~2s): 1 trace, 1 sample, configurable steps
-MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=10 npx vitest run src/battle.mbt.test.ts
+# Battle MBT: 1 trace, 1 sample, few steps. Expect 30s–300s depending on seed.
+MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle.mbt.test.ts
 ```
 
 ### After editing battle.qnt or creature.qnt
@@ -200,10 +285,10 @@ node scripts/compile-battle-spec.cjs
 ### Multi-sample (MBT_DEV)
 
 ```bash
-# With cache (~2-5 min depending on trace complexity):
+# With cache (~5-30 min depending on seed luck):
 MBT_DEV=1 npx vitest run src/battle.mbt.test.ts
 
-# Without cache (~4+ min — adds 15s parse/typecheck overhead):
+# Without cache: adds 15s parse/typecheck overhead per invocation
 # (automatically falls back to quint run when no cache exists)
 ```
 
@@ -228,10 +313,57 @@ killall -9 quint_evaluator
   zombie evaluator processes consuming CPU during testing.
 - **Upgrading is safe:** `npm i -g @informalsystems/quint@0.32.0` + `./scripts/build-quint-evaluator.sh`
   (source build needed for GLIBC 2.36 compat).
-- **The performance bottleneck** is the `compile-battle-spec.cjs` format (Finding 6), not the
-  evaluator version. The fast ~1s dev runs were achieved with a `tee`-captured format from
-  `quint run`, which differs subtly from `toExpr()` output. Fixing the compile script to
-  produce the exact same format as `quint run` is the remaining TODO.
+- **The performance bottleneck** is seed-dependent action path length and action body complexity
+  (Finding 8), not format differences or definition count. The compile-script cache saves the
+  ~15s parse/typecheck overhead. The evaluator's per-step cost is inherent to the spec's action
+  logic — confirmed by source code analysis of the evaluator's compile-then-execute architecture.
+
+## Evaluator Source Code Analysis (2026-04-05)
+
+Analysis of `informalsystems/quint` `evaluator/src/` to validate performance claims.
+
+### Architecture: Compile-then-Execute
+
+The Rust evaluator (`evaluator.rs`) compiles Quint IR into closures (`CompiledExpr`) in a
+one-time compile phase, then executes those closures at runtime. All name resolution happens
+at compile time via `LookupTable` (`ir.rs:61`) — an `IndexMap<u64, LookupDefinition>` with
+`FxHasher` (O(1) amortized lookup). At runtime, compiled closures reference pre-resolved
+`Rc<RefCell<>>` registers directly — zero table lookups per step.
+
+### `actionAny` — Lazy with Short-Circuit (`builtins.rs:80-109`)
+
+1. Snapshot `next_vars` via `Storage::take_snapshot` (O(state variables))
+2. Fisher-Yates shuffle of branch indices (O(n), trivial for 17 branches)
+3. Try each branch in shuffled order; short-circuit on first `true`
+4. On `false`, restore snapshot and try next branch
+
+Cost: best case = 1 action evaluated; worst case = all N actions with N snapshot/restore cycles.
+Each snapshot/restore is O(state variables) using `imbl::HashMap` structural sharing.
+
+### `normalize()` (`normalizer.rs`) — Only on Map Key Access
+
+Called in `builtins.rs` at `get`/`set`/`put`/`setBy`/`mapBy` — per map key operation, not per
+step or per definition. For `Int`/`Bool`/`Str` keys, it's a no-op passthrough. Only expensive
+for complex keys (sets, records used as map keys). Our creature ID keys (integers) are free.
+
+### Caching (`evaluator.rs:473-478`, `storage.rs:184-187`)
+
+- `Cache::Forever` — `pure val` at depth 0. Computed once, never cleared.
+- `Cache::ForState` — `val` at depth 0. Cleared per step via `clear_caches` (O(cached vals), sub-µs).
+- `Cache::None` — actions, parameterized defs. Re-executed each time.
+
+### Per-Step Cost Breakdown (Where Time Actually Goes)
+
+1. **`actionAny` branch search** — snapshot/restore per failed branch (seed-dependent)
+2. **Winning action body** — closure execution with `imbl` map operations (O(log n) per get/set)
+3. **`clear_caches`** — O(number of `val` definitions), sub-microsecond
+4. **No cost proportional to total definition count** at runtime
+
+### What Does NOT Affect Per-Step Cost
+
+- Total number of definitions in the spec (resolved at compile time)
+- Number of imported modules (compile-time only)
+- `LookupTable` size (not consulted at runtime)
 
 ## Quint GitHub Research (2026-04-05)
 
@@ -246,10 +378,224 @@ killall -9 quint_evaluator
 ## Future Work
 
 1. ~~**Publish quint-connect**~~ DONE — v0.8.1 with `compiledInput` option
-2. **Fix `compile-battle-spec.cjs` format** — the `toExpr()` output differs from what `quint run`
-   produces internally. The `tee`-capture approach works (~1s) but the JS API approach is slow.
-   Need to understand the exact AST difference and fix `toExpr()` usage.
+2. ~~**Fix compile-battle-spec.cjs format**~~ NOT NEEDED — format is byte-identical to `quint run`
+   (see Finding 9). The evaluator is slow because of action complexity, not format differences.
 3. **File Quint issue: json-bigint round-trip sensitivity** — the evaluator should not
    be sensitive to whether integers were serialized by json-bigint vs JSON.stringify
 4. **File Quint issue: `nthreads=1` deadlock** (if still present in latest version)
 5. **Investigate evaluator `run <file>` command** — may bypass stdin pipe issues entirely
+6. ~~**Investigate evaluator per-step cost**~~ RESOLVED — source code analysis of `evaluator/src/`
+   confirmed the evaluator architecture is sound (compile-then-execute, O(1) runtime lookups via
+   `Rc<RefCell<>>` closures). The per-step cost difference between simple and complex actions is
+   inherent to action body complexity (deep call chains, `imbl` map operations) and seed-dependent
+   action path length (`actionAny` snapshot/restore cycles), not definition count scaling.
+   Not an evaluator bug — not worth filing upstream.
+7. **Add seed logging before evaluator start** — for the compiled-input path, generate a random
+   seed upfront and patch it in, so the seed is known even if the evaluator times out or hangs.
+8. **Add compiledInput to battle-machine.mbt.test.ts** — currently only battle.mbt.test.ts
+   uses the compiled cache; the battle-machine test still goes through `quint run`.
+
+---
+
+## Spec-Level Optimization Opportunities
+
+Based on evaluator source code analysis (`evaluator/src/`), per-step cost comes from two things:
+1. **Snapshot/restore cost per failed `actionAny` branch** — O(state variables). Every failed
+   branch clones the `imbl::HashMap<next_vars>` and `HashMap<nondet_picks>` in `Storage::take_snapshot`.
+2. **Winning action body evaluation** — deep call chains doing `imbl` map operations (O(log n) per get/set).
+
+Current spec stats:
+- **27 state variables** (7 battle-level + 20 per-creature × 4 creatures in the map)
+- **16 actions** in the active-turn `any { }` block
+- **13 class-specific vars** per creature (`barbarianState`, `fighterState`, `paladinState`, `bardState`, ...)
+  — most creatures use only 1-2, but all 13 are snapshot/restored on every failed branch
+
+### Opportunity 1: Consolidate class state vars into a single map
+
+**Impact: ~44% reduction in snapshot/restore cost. No SRD fidelity loss.**
+**Effort: Medium (spec refactor + MBT bridge update).**
+
+Replace 13 separate class-specific vars per creature:
+```quint
+var barbarianState: BarbarianState
+var fighterState: FighterState
+var paladinState: PaladinState
+var bardState: BardState
+// ... 9 more
+```
+
+With 1 map var:
+```quint
+var classStates: ClassName -> ClassState  // ClassState is a tagged union
+```
+
+This eliminates 12 vars per creature × 4 creatures = **48 fewer variables per snapshot/restore**.
+Total vars drop from ~27 to ~15. Every failed `actionAny` branch becomes ~44% cheaper.
+
+Requires: a `ClassState` sum type (tagged union of all class-specific states), updating every
+action that reads/writes class state, and updating the MBT bridge mappings in `mbt-shared.ts`.
+Mechanically straightforward but touches many lines.
+
+### Opportunity 2: Parameterize creature count for dev runs
+
+**Impact: ~22% faster on fast seeds. Does NOT fix slow-seed timeouts.**
+**Effort: Trivial (parameterize `bInit`).**
+
+**Experimental data (2026-04-05) was confounded by zombie evaluators** — the "slow seeds"
+and "bimodal timing" observed during 2-creature vs 4-creature testing were caused by zombie
+evaluator processes consuming CPU, not by creature count or seed variance (see Finding 12).
+
+The experiment is worth re-running with proper zombie cleanup before each trial. Expected
+benefit: fewer map operations and smaller snapshot/restore per step, but this is a minor
+optimization (~20-30%) compared to the 40x slowdown from zombie evaluators.
+
+### Opportunity 3: Limit counterspell chain depth
+
+**Impact: Eliminates the single most expensive code path.**
+**Effort: Easy (remove 2-3 levels of unrolled CS code).**
+
+`returnToCSWindow` (battle.qnt) manually unrolls counterspell chains to depth 5 (~200 lines
+of near-duplicate code, Quint lacks recursion). Each level recomputes `eligibleForCounterspell`
+— an O(n) filter over all creatures checking 3+ conditions per creature.
+
+Depth 3+ counterspells are vanishingly rare in real gameplay. Limiting to depth 2 would:
+- Remove ~130 lines of near-duplicate spec code
+- Eliminate the most expensive action body evaluation path
+- Marginally reduce SRD fidelity (depth 3+ is legal RAW but almost never occurs)
+
+### Opportunity 4: Split active-turn `any` into sub-phases
+
+**Impact: Fewer failed branches per step → fewer snapshot/restore cycles.**
+**Effort: Medium (spec restructure, new phase variants).**
+
+The 16-action active-turn `any { }` means up to 15 failed branches before one succeeds.
+Splitting into sub-phases (e.g., `BPActionPhase` with 8 attack/spell actions, `BPBonusPhase`
+with 4 bonus actions, `BPMovementPhase` with movement/disengage) would:
+- Reduce worst-case failed branches from 15 to ~7 per sub-phase
+- Make phase transitions more explicit (cleaner spec)
+- No SRD fidelity loss (D&D turns already have this structure conceptually)
+
+Trade-off: More phase variants = more `match` arms in `battleStep`, and the evaluator's
+`match` evaluation has its own (small) per-arm cost. Net effect should still be positive.
+
+### Finding 11: Nondets execute BEFORE guards — wasted work on failed branches (2026-04-05)
+
+**144 nondet declarations** across battle.qnt actions execute before their `all { }` guard block.
+When an `actionAny` branch fails its guard, all the nondets and val computations preceding the
+guard are wasted. Example — `bAttack` (lines 875-918):
+```
+val activeId = bInitiative[bTurnIndex]      ← map lookup (always runs)
+val ac = bCreatures.get(activeId)           ← map lookup (always runs)
+nondet targetId = ...                       ← 18 nondet picks (always run)
+nondet attackRoll = ...
+... (18 more nondets) ...
+val tc = bCreatures.get(targetId)           ← map lookup (always runs)
+all {
+  bPhase == BPActiveTurn,                   ← cheap
+  bTurnStarted,                             ← THIS IS THE GUARD — fails if turn not started
+  ...
+}
+```
+
+Nondet counts per active-turn action (all before guard):
+| Action | Nondets before guard | Val computations before guard |
+|--------|---------------------|------------------------------|
+| bAttack | 18 | 4 (2 map lookups, 1 set op, 1 field read) |
+| bCastSaveSpell | 12 | 4 |
+| bCastBonusActionSpell | 11 | 4 |
+| bCastAoE | 10 | 4 |
+| bStartTurn | 7 | 2 |
+| bCastConcentrationSpell | 7 | 4 |
+| bEndTurn | 4 | 2 |
+| bConcentrationCheck | 2 | 2 |
+| bHeal | 2 | 2 |
+| bMove | 1 | 2 |
+| Others (bDash, etc.) | 0 | 2 |
+
+**However, this alone does NOT explain the 30s hangs.** Nondet picks are O(1) random samples,
+and val map lookups are O(log n) on `imbl` structures. Even 130 wasted nondets + 50 map
+lookups across 15 failed branches should be milliseconds.
+
+### Finding 12: Zombie evaluators are the dominant performance confound (2026-04-05)
+
+Rigorous A/B testing with instrumented quint-connect revealed:
+
+| Condition | Time |
+|-----------|------|
+| Compiled-input path, **no zombies** | **1.5s total** (265ms evaluator) |
+| Compiled-input path, **zombies present** (1-3 at 100% CPU) | **13s** (11.9s evaluator) |
+| `quint run` (standard path, no cache) | **24s** (22s including 15s parse/typecheck) |
+| Direct `quint_evaluator simulate-from-stdin` via shell pipe | **>60s** (shell pipe issues, see below) |
+
+**The compiled-input path works correctly and is fast** — ~265ms evaluator time for 1 step
+with 4 creatures on seed `0x689d4239`. It saves the 15s parse/typecheck overhead from `quint run`.
+
+**The earlier experimental data (Finding 10's bimodal timing, "trimodal" claim) was confounded
+by zombie evaluator processes.** When zombies from prior test runs consume CPU (each at 100%),
+the current evaluator is starved and takes 10-40x longer. Killing zombies before each run
+produces consistent ~265ms evaluator times.
+
+**Direct shell pipe tests were also confounded.** The `sed ... | quint_evaluator` approach
+suffers from two issues: (1) zombie evaluators from `timeout`-killed prior runs consuming all
+CPU, and (2) broken pipe state after `timeout` kills the shell, causing subsequent evaluator
+invocations to receive corrupted/partial input. These produced the false "all seeds are slow"
+and "trimodal 278ms/12s/>30s" data.
+
+**CRITICAL: The zombie prevention in quint-connect (Finding 7) only works when quint-connect
+itself exits cleanly.** External `timeout`, vitest timeout, or SIGKILL from the test runner
+leave orphaned evaluator processes. Manual cleanup (`killall -9 quint_evaluator`) before
+each experiment is essential for valid timing data.
+
+### The dominant problem: zombie evaluator processes
+
+**The compiled-input path is fast (~265ms per step) when no zombie evaluators are present.**
+The bimodal/trimodal timing observed throughout this investigation was caused by zombie
+evaluator processes consuming CPU, not by evaluator input format, seed variance, action
+complexity, or definition count.
+
+**The zombie problem is worse than Finding 7 addressed.** Finding 7 fixed zombies when
+quint-connect exits cleanly (detached process group kill). But zombies still accumulate when:
+- Tests timeout (vitest's 10-minute timeout kills the test, not the evaluator)
+- Shell `timeout` command is used to cap experiment duration
+- The user kills a long-running test with Ctrl+C
+- Multiple MBT runs are accidentally launched simultaneously
+
+**Recommended operational discipline:**
+1. Before EVERY MBT run: `ps aux | grep quint_evaluator | grep -v grep` — kill any found
+2. After ANY MBT run that was killed/timed-out: `killall -9 quint_evaluator`
+3. Never trust MBT timing data without first confirming zero zombie evaluators
+4. The CLAUDE.md instructions about zombie checking are not just cosmetic — they are the
+   single most important factor for consistent MBT performance
+
+### Summary
+
+| Optimization | Effort | Speed impact | SRD fidelity |
+|---|---|---|---|
+| **Kill zombie evaluators before every run** | **None** | **40x speedup (265ms vs 12s)** | **N/A** |
+| Consolidate 13 class vars → 1 map | Medium | ~20-30% cheaper snapshots | No loss |
+| 2-creature dev runs | Trivial | ~20-30% (needs clean re-test) | Reduced coverage |
+| Limit counterspell to depth 2 | Easy | Eliminates worst-case action body path | Minor |
+| Split 16-action `any` into sub-phases | Medium | Fewer failed branches per step | No loss |
+
+**Recommended priority:** The single most important "optimization" is killing zombie evaluator
+processes. With zero zombies, the compiled-input path completes in ~265ms per step — fast
+enough that the spec-level optimizations (1-4) are nice-to-have, not urgent. The CLAUDE.md
+zombie-checking instructions are the critical performance discipline.
+
+### Scope estimate: Opportunity 1 (class state consolidation)
+
+**~741 references across 57 files, ~1,350-1,800 lines changed.**
+
+| Layer | Refs | Files | Est. Lines |
+|-------|------|-------|-----------|
+| creature.qnt (type defs) | 12 types, 59 fields | 1 | Type defs only |
+| battle.qnt (actions) | 71 | 1 | 200-250 |
+| TS machine + features | 538 | 50 | 800-1,000 |
+| MBT bridge + tests | 120+ | 5 | 350-550 |
+
+**Dependency chain:** creature.qnt → battle.qnt → battle-machine-types.ts → mbt-shared.ts →
+machine-*.ts + features/*.ts → *.mbt.test.ts
+
+**Verdict: NOT recommended for performance.** The ~44% snapshot/restore reduction only helps
+fast seeds. The bimodal seed problem (2/5 runs timeout) is unaffected. The refactor is only
+justified if it improves spec readability or enables other work.
