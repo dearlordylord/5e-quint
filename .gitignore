@@ -27,3 +27,8 @@ POST_DRAFT.md
 BLOG_QA_EXAMPLES.md
 mbt-fuzz.log
 mbt-failures.jsonl
+fuzz-console.log
+invariant-fuzz.log
+invariant-failure-*.log
+invariant-failures.jsonl
+traces/
