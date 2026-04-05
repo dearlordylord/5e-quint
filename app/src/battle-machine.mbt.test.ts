@@ -379,6 +379,7 @@ const battleDriverSchema = {
     dt: OV,
     crit: OB,
     tAc: OI,
+    knockOut: OB,
     isMelee: OB,
     isFinesse: OB,
     attackerWithin5ft: OB,
@@ -429,6 +430,7 @@ const battleDriverSchema = {
     oaCrit: OB,
     oaTgtAc: OI,
     reactorId: OS,
+    knockOut: OB,
     isFinesse: OB,
     hostileWithin5ft: OB,
     targetCanSeeAttacker: OB,
@@ -447,6 +449,7 @@ const battleDriverSchema = {
     laDt: OV,
     laCrit: OB,
     laTgtAc: OI,
+    knockOut: OB,
     isMelee: OB,
     isFinesse: OB,
     attackerWithin5ft: OB,
@@ -461,6 +464,30 @@ const battleDriverSchema = {
   bDash: {},
   bDisengage: {},
   bDodge: {},
+  bActionSurge: {},
+  bEnterRage: {},
+  bDeclareReckless: {},
+  bReady: {},
+  bReadyPass: {},
+  bReadyRelease: {
+    releaserId: OS,
+    targetId: OS,
+    atkRoll: OI,
+    dmg: OI,
+    dt: OV,
+    crit: OB,
+    tgtAc: OI,
+    knockOut: OB,
+    isMelee: OB,
+    isFinesse: OB,
+    attackerWithin5ft: OB,
+    hostileWithin5ft: OB,
+    targetCanSeeAttacker: OB,
+    attackerCanSeeTarget: OB,
+    frightSourceInLOS: OB,
+    hasAllyAdjacentToTarget: OB,
+    saDmg: OI
+  },
   bCastBonusActionSpell: {
     targetId: OS,
     saveDC: OI,
@@ -607,6 +634,7 @@ function createBattleMachineDriver() {
           dt: mapDamageType(ps(picks, "dt", "Slashing")),
           crit: pb(picks, "crit", false),
           tAc: armorClass(p(picks, "tAc", 15)),
+          knockOut: pb(picks, "knockOut", false),
           isMelee: pb(picks, "isMelee", true),
           ...attackContextPicks(picks)
         })
@@ -769,6 +797,7 @@ function createBattleMachineDriver() {
           oaDt: mapDamageType(ps(picks, "oaDt", "Slashing")),
           oaCrit: pb(picks, "oaCrit", false),
           oaTgtAc: armorClass(p(picks, "oaTgtAc", 15)),
+          knockOut: pb(picks, "knockOut", false),
           isMelee: true as const,
           ...attackContextPicks(picks)
         })
@@ -795,6 +824,7 @@ function createBattleMachineDriver() {
           laDt: mapDamageType(ps(picks, "laDt", "Slashing")),
           laCrit: pb(picks, "laCrit", false),
           laTgtAc: armorClass(p(picks, "laTgtAc", 15)),
+          knockOut: pb(picks, "knockOut", false),
           isMelee: pb(picks, "isMelee", true),
           ...attackContextPicks(picks)
         })
@@ -836,6 +866,7 @@ function createBattleMachineDriver() {
           dt: mapDamageType(ps(picks, "dt", "Slashing")),
           crit: pb(picks, "crit", false),
           tgtAc: armorClass(p(picks, "tgtAc", 15)),
+          knockOut: pb(picks, "knockOut", false),
           isMelee: pb(picks, "isMelee", true),
           ...attackContextPicks(picks)
         })

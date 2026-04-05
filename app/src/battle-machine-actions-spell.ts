@@ -307,6 +307,7 @@ export function battleResolveAoETarget({
         evDmg,
         aoe.damageType,
         false,
+        false,
         aoeReturn
       )
       return { ...result }

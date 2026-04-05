@@ -113,9 +113,17 @@ export function dealDamage(
   targetId: CreatureId,
   dmg: number,
   dt: DamageType,
-  crit: boolean
+  crit: boolean,
+  knockOut: boolean
 ): Map<CreatureId, BattleCreatureState> {
-  return setCreature(cs, targetId, takeDamage(cs.get(targetId)!, dmg, dt, crit))
+  const old = cs.get(targetId)!
+  const nc = takeDamage(old, dmg, dt, crit)
+  // SRD 5.2.1 "Knocking Out a Creature": melee attacker's choice when damage
+  // would reduce a PC to 0 HP (not instant death). Sets HP to 1 + Unconscious.
+  if (knockOut && old.creatureKind === "PC" && old.hp > 0 && nc.hp === 0 && !nc.dead) {
+    return setCreature(cs, targetId, applyCondition({ ...old, hp: 1 }, "unconscious"))
+  }
+  return setCreature(cs, targetId, nc)
 }
 
 export function breakConcentrationAndPropagate(
@@ -200,10 +208,11 @@ export function dealDamageWithAfterReactions(
   dmg: number,
   dt: DamageType,
   crit: boolean,
+  knockOut: boolean,
   returnTo: AfterDamageReturn
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const oldT = cs.get(targetId)!
-  const cs1 = dealDamage(cs, targetId, dmg, dt, crit)
+  const cs1 = dealDamage(cs, targetId, dmg, dt, crit, knockOut)
   const newT = cs1.get(targetId)!
   const actualDmg = oldT.hp + oldT.tempHp - (newT.hp + newT.tempHp)
   const elig = eligibleTarget(cs1, targetId)
@@ -245,7 +254,8 @@ export function advanceFromHitPhase(
               damage: atk.damage,
               damageType: atk.damageType,
               isCritical: atk.isCritical,
-              atkReturnTo: atk.atkReturnTo
+              atkReturnTo: atk.atkReturnTo,
+              knockOut: atk.knockOut
             }
           },
           "TAttackDamages",
@@ -261,6 +271,7 @@ export function advanceFromHitPhase(
     atk.damage,
     atk.damageType,
     atk.isCritical,
+    atk.knockOut,
     atk.atkReturnTo
   )
 }
@@ -281,7 +292,7 @@ export function resolveSave(
       if (evDmg === 0) {
         return { creatures: new Map(cs), ...returnToState(returnTo) }
       }
-      return dealDamageWithAfterReactions(cs, save.target, save.caster, evDmg, save.damageType, false, returnTo)
+      return dealDamageWithAfterReactions(cs, save.target, save.caster, evDmg, save.damageType, false, false, returnTo)
     }
     return { creatures: new Map(cs), ...returnToState(returnTo) }
   }
@@ -320,6 +331,7 @@ export function applyFailEffects(
         Math.trunc(ctx.damageOnFail / 2),
         ctx.damageType,
         false,
+        false,
         returnTo
       )
     }
@@ -328,7 +340,16 @@ export function applyFailEffects(
   let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs)
   if (ctx.applyCondition) cs1 = setCreature(cs1, ctx.target, applyCondition(cs1.get(ctx.target)!, ctx.conditionOnFail))
   if (ctx.damageOnFail > 0)
-    return dealDamageWithAfterReactions(cs1, ctx.target, ctx.caster, ctx.damageOnFail, ctx.damageType, false, returnTo)
+    return dealDamageWithAfterReactions(
+      cs1,
+      ctx.target,
+      ctx.caster,
+      ctx.damageOnFail,
+      ctx.damageType,
+      false,
+      false,
+      returnTo
+    )
   return { creatures: cs1, ...returnToState(returnTo) }
 }
 

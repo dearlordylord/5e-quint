@@ -360,12 +360,12 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 8. ~~**PRD 3** (passive modifier system, Evasion)~~ DONE -- covers C3
 9. ~~**PRD 2** (Ready action, Phase 1)~~ DONE -- covers C8
 10. ~~**PRD 4** (attack type + advantage + Sneak Attack)~~ DONE -- covers D1, F4(SA), wires advantage pipeline. PRD: `PRD_ATTACK_TYPE_AND_ADVANTAGE.md`, Plan: `PLAN_PRD4_ATTACK_TYPE_ADVANTAGE_SA.md`
-11. **D8** (Battle MBT broken on master — `Unknown action: bDash`) -- Critical, blocks MBT parity verification
-12. **D7** (MBT bridge schema gaps — `bReadyRelease` etc. missing from `battleDriverSchema`) -- High, MBT fidelity
+11. ~~**D8** (Battle MBT broken on master — `Unknown action: bDash`)~~ DONE -- added schema + dispatch handlers for bDash/bDisengage/bDodge/bActionSurge/bEnterRage/bDeclareReckless/bReady/bReadyPass/bReadyRelease/bCastBonusActionSpell to both MBT bridges
+12. ~~**D7** (MBT bridge schema gaps — `bReadyRelease` etc. missing from `battleDriverSchema`)~~ DONE -- added missing schema entries to battle-machine.mbt.test.ts
 13. **D5** (AttackContext divergence Quint↔TS — heavy weapon, grapple, exhaustion) -- High, pre-existing
 14. **PRD 3 continuation** (saveMiscBonus for Aura of Protection) -- covers F7. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 1
 15. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 2
-16. **D6** (knockOut has no TS implementation) -- Medium, Quint-only feature
+16. ~~**D6** (knockOut has no TS implementation)~~ DONE -- added `knockOut: boolean` to dealDamage, dealDamageWithAfterReactions, AttackHitCtx, AttackDamageCtx, all attack events (BATTLE_ATTACK, BATTLE_LEGENDARY_ATTACK, BATTLE_READY_RELEASE, BATTLE_MOVEMENT_OA_ATTACK), resolveAttack, and both MBT bridge schemas
 17. **F1** (more reactions) -- incremental, add as needed
 18. ~~**S2** (fix OA comment)~~ DONE
 19. ~~**S3** (investigate excluded invariants)~~ DONE (phase-scoped, added to allBattleInvariants)
@@ -406,7 +406,7 @@ Currently harmless — both `buildAttackContext` (Quint) and `buildBattleAttackC
 
 **Fix:** Align Quint `AttackContext` to 5.2.1 (add `wielderStrScore`/`wielderDexScore`, drop `wielderSizeSmallOrTiny`; add `attackerExhaustion`). Update `pAggregateAttackMods` to match TS `aggregateAttackMods`.
 
-### D6. `knockOut` has no TS battle machine implementation [Medium — Pre-existing]
+### ~~D6. `knockOut` has no TS battle machine implementation~~ [Implemented]
 
 *Source: PRD 4 implementation*
 
@@ -414,7 +414,7 @@ Quint `dealDamage` (`battle.qnt:409`) has full knockOut logic (checks `knockOut 
 
 **Fix:** Add `knockOut: boolean` parameter to TS `dealDamage` and `dealDamageWithAfterReactions`. Thread from `resolveAttack` (already has it in Quint). Add to `AttackHitCtx` (already there in Quint). Map in MBT bridge.
 
-### D7. `bReadyRelease` and other actions missing from `battleDriverSchema` [High — Pre-existing]
+### ~~D7. `bReadyRelease` and other actions missing from `battleDriverSchema`~~ [Implemented]
 
 *Source: PRD 4 MBT investigation*
 
@@ -422,7 +422,7 @@ Quint `dealDamage` (`battle.qnt:409`) has full knockOut logic (checks `knockOut 
 
 **Fix:** Add schema entries for all dispatch-only actions.
 
-### D8. Battle MBT broken on master (`Unknown action: bDash`) [Critical — Pre-existing]
+### ~~D8. Battle MBT broken on master (`Unknown action: bDash`)~~ [Implemented]
 
 *Source: PRD 4 verification*
 

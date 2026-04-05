@@ -72,6 +72,7 @@ export function battleMovementOAAttack({
     e.oaCrit,
     reactor.critRange,
     { tag: "ADRResolvingMovement", mv: updatedMv },
+    e.knockOut,
     true,
     mods,
     e.isFinesse,

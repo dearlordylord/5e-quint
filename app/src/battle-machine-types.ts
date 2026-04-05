@@ -113,6 +113,7 @@ export interface AttackHitCtx {
   readonly isCritical: boolean
   readonly critRange: number
   readonly atkReturnTo: AfterDamageReturn
+  readonly knockOut: boolean
 }
 
 export interface AttackDamageCtx {
@@ -122,6 +123,7 @@ export interface AttackDamageCtx {
   readonly damageType: DamageType
   readonly isCritical: boolean
   readonly atkReturnTo: AfterDamageReturn
+  readonly knockOut: boolean
 }
 
 export interface AfterDamageCtx {

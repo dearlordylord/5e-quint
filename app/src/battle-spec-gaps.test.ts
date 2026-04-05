@@ -16,6 +16,7 @@ function send(actor: ReturnType<typeof createActor<typeof battleMachine>>, ...ev
 }
 
 const DEFAULT_ATTACK_CONTEXT = {
+  knockOut: false,
   isMelee: true,
   isFinesse: false,
   attackerWithin5ft: true,

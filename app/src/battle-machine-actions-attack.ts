@@ -97,6 +97,7 @@ export function resolveAttack(
   isCritical: boolean,
   critRange: number,
   returnTo: AfterDamageReturn,
+  knockOut: boolean,
   isMelee: boolean,
   mods: FullAttackMods,
   isFinesse: boolean,
@@ -119,6 +120,7 @@ export function resolveAttack(
   const effectiveSaDmg = saEligible ? saDmg : 0
   const totalDmg = damage + meleeDmgBonus + effectiveSaDmg
   const effectiveCrit = isCritical || mods.autoCrit
+  const effectiveKnockOut = knockOut && isMelee // SRD: knock out is melee only
   const cs1 = saEligible ? setCreature(cs, attackerId, { ...atk, sneakAttackUsedThisTurn: true }) : cs
   const atkCtx: AttackHitCtx = {
     attacker: attackerId,
@@ -129,7 +131,8 @@ export function resolveAttack(
     damageType,
     isCritical: effectiveCrit,
     critRange,
-    atkReturnTo: returnTo
+    atkReturnTo: returnTo,
+    knockOut: effectiveKnockOut
   }
   const elig = eligibleExcluding(cs1, attackerId)
   if (elig.size > 0) {
@@ -138,7 +141,16 @@ export function resolveAttack(
       ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", elig))
     }
   }
-  return dealDamageWithAfterReactions(cs1, targetId, attackerId, totalDmg, damageType, effectiveCrit, returnTo)
+  return dealDamageWithAfterReactions(
+    cs1,
+    targetId,
+    attackerId,
+    totalDmg,
+    damageType,
+    effectiveCrit,
+    effectiveKnockOut,
+    returnTo
+  )
 }
 
 export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_ATTACK">): Partial<BattleContext> {
@@ -174,6 +186,7 @@ export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_
     e.crit,
     ac.critRange,
     ADR_ACTIVE_TURN,
+    e.knockOut,
     e.isMelee,
     mods,
     e.isFinesse,
@@ -244,6 +257,7 @@ export function battleResolveDmgReaction({
       atk.damage,
       atk.damageType,
       atk.isCritical,
+      atk.knockOut,
       atk.atkReturnTo
     )
     return {
@@ -315,6 +329,7 @@ export function battleAfterDamageSpellReaction({
     actualDmg,
     e.reactionDt,
     false,
+    false,
     ad.returnTo
   )
   return { ...result }
@@ -341,6 +356,7 @@ export function battleAfterDamageRetaliation({
     e.retDmg,
     e.retDt,
     e.retCrit,
+    false,
     ad.returnTo
   )
   return { ...result }

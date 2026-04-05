@@ -317,6 +317,34 @@ const battleDriverSchema = {
   bLegendaryPass: {},
   bLegendaryAttack: { monsterId: OS, laTarget: OS, laAtkRoll: OI, laDmg: OI, laDt: OV, laCrit: OB, laTgtAc: OI },
   bHeal: { targetId: OS, amount: OI },
+  bDash: {},
+  bDisengage: {},
+  bDodge: {},
+  bActionSurge: {},
+  bEnterRage: {},
+  bDeclareReckless: {},
+  bReady: {},
+  bReadyPass: {},
+  bReadyRelease: {
+    releaserId: OS,
+    targetId: OS,
+    atkRoll: OI,
+    dmg: OI,
+    dt: OV,
+    crit: OB,
+    tgtAc: OI
+  },
+  bCastBonusActionSpell: {
+    targetId: OS,
+    saveDC: OI,
+    saveRoll: OI,
+    dmgOnFail: OI,
+    halfOnSave: OB,
+    dt: OV,
+    cond: OV,
+    applyCond: OB,
+    slotLvl: OI
+  },
   battleStep: {} // composite — framework expands to leaf actions
 } as const
 
@@ -585,49 +613,13 @@ function createBattleProjectionDriver() {
       const tAc = pickBigInt(picks, "tAc") ?? 15
 
       const ctx = getSnap(id).context
-
-      // Determine if using extra attack or action
       if (ctx.attackActionUsed && ctx.extraAttacksRemaining > 0) {
         send(id, { type: "USE_EXTRA_ATTACK" })
       } else {
         send(id, { type: "USE_ACTION", actionType: "attack" })
       }
 
-      // Check if hit
-      const hit = attackRoll >= tAc || attackRoll === 20
-      if (hit) {
-        // Defer damage if any reactor can interrupt; apply immediately otherwise.
-        const hasEligibleReactors = [...actors.entries()].some(([cid, actor]) => {
-          if (cid === id) return false
-          const snap = actor.getSnapshot()
-          return snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })
-        })
-
-        if (!hasEligibleReactors) {
-          // No reactors — damage applied immediately (same as Quint path)
-          send(targetId, {
-            type: "TAKE_DAMAGE",
-            amount: dmg,
-            damageType: mapDamageType(dt),
-            resistances: new Set<DamageType>(),
-            vulnerabilities: new Set<DamageType>(),
-            immunities: new Set<DamageType>(),
-            isCritical: crit
-          })
-          pendingAfterDamage = { damageSource: id, damagedCreature: targetId }
-        } else {
-          // Damage deferred — will be applied on resolution
-          pendingAttack = {
-            attacker: id,
-            target: targetId,
-            damage: dmg,
-            damageType: mapDamageType(dt),
-            isCritical: crit,
-            attackRoll,
-            targetAc: tAc
-          }
-        }
-      }
+      resolveAttackHit(id, targetId, attackRoll, tAc, dmg, dt, crit)
     }
 
     /** Pending attack state for deferred damage */
@@ -821,43 +813,8 @@ function createBattleProjectionDriver() {
     }
 
     function handleBCastSaveSpell(picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
-      const targetId = pickString(picks, "targetId") ?? ""
-      const saveDC = pickBigInt(picks, "saveDC") ?? 15
-      const saveRoll = pickBigInt(picks, "saveRoll") ?? 10
-      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10
-      const halfOnSave = pickBool(picks, "halfOnSave") ?? false
-      const dt = pickVariant(picks, "dt") ?? "Fire"
-      const cond = pickVariant(picks, "cond") ?? "CBlinded"
-      const applyCond = pickBool(picks, "applyCond") ?? false
-      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
-      const ritual = pickBool(picks, "ritual") ?? false
-
-      // Spend action only — slot deferred until CS resolves (SRD 5.2.1)
-      send(id, { type: "USE_ACTION", actionType: "magic" })
-
-      pendingSpell = {
-        caster: id,
-        target: targetId,
-        saveDC,
-        saveRoll,
-        damageOnFail: dmgOnFail,
-        halfOnSuccess: halfOnSave,
-        damageType: mapDamageType(dt),
-        conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
-        applyCondition: applyCond,
-        slotLvl,
-        ritual
-      }
-
-      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
-
-      if (!hasCSReactors) {
-        // Resolve save immediately — expend deferred slot (ritual skips expenditure)
-        if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
-        resolveSpellSave(pendingSpell)
-        pendingSpell = null
-      }
+      send(activeId(), { type: "USE_ACTION", actionType: "magic" })
+      castSaveSpell(picks, pickBool(picks, "ritual") ?? false)
     }
 
     /** Pending spell context (slot deferred until CS resolves) */
@@ -1339,42 +1296,7 @@ function createBattleProjectionDriver() {
       const oaTgtAc = pickBigInt(picks, "oaTgtAc") ?? 15
 
       send(reactorId, { type: "USE_REACTION" })
-
-      const hit = oaAtkRoll >= oaTgtAc || oaAtkRoll === 20
-      if (hit) {
-        const moverId = activeId()
-        // OA hits during movement — may enter hit reaction chain
-        // For simplicity in the projection, apply damage directly
-        // The reaction chain is handled by subsequent bResolveHitReaction/bResolveDmgReaction steps
-        const hasHitReactors = [...actors.entries()].some(([cid, actor]) => {
-          if (cid === reactorId) return false
-          const snap = actor.getSnapshot()
-          return snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })
-        })
-
-        if (!hasHitReactors) {
-          send(moverId, {
-            type: "TAKE_DAMAGE",
-            amount: oaDmg,
-            damageType: mapDamageType(oaDt),
-            resistances: new Set<DamageType>(),
-            vulnerabilities: new Set<DamageType>(),
-            immunities: new Set<DamageType>(),
-            isCritical: oaCrit
-          })
-          pendingAfterDamage = { damageSource: reactorId, damagedCreature: moverId }
-        } else {
-          pendingAttack = {
-            attacker: reactorId,
-            target: moverId,
-            damage: oaDmg,
-            damageType: mapDamageType(oaDt),
-            isCritical: oaCrit,
-            attackRoll: oaAtkRoll,
-            targetAc: oaTgtAc
-          }
-        }
-      }
+      resolveAttackHit(reactorId, activeId(), oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit)
     }
 
     function handleBEndTurn(picks: ReadonlyMap<string, unknown>) {
@@ -1474,6 +1396,103 @@ function createBattleProjectionDriver() {
       send(targetId, { type: "HEAL", amount: healAmount(amount) })
     }
 
+    /** Shared hit resolution: checks reactors, applies or defers damage. */
+    function resolveAttackHit(
+      attackerId: string,
+      targetId: string,
+      atkRoll: number,
+      tgtAc: number,
+      dmg: number,
+      dt: string,
+      crit: boolean
+    ) {
+      const hit = atkRoll >= tgtAc || atkRoll === 20
+      if (!hit) return
+      const hasHitReactors = [...actors.entries()].some(([cid, actor]) => {
+        if (cid === attackerId) return false
+        const snap = actor.getSnapshot()
+        return snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })
+      })
+      if (!hasHitReactors) {
+        send(targetId, {
+          type: "TAKE_DAMAGE",
+          amount: dmg,
+          damageType: mapDamageType(dt),
+          ...EMPTY_DAMAGE_MODS,
+          isCritical: crit
+        })
+        pendingAfterDamage = { damageSource: attackerId, damagedCreature: targetId }
+      } else {
+        pendingAttack = {
+          attacker: attackerId,
+          target: targetId,
+          damage: dmg,
+          damageType: mapDamageType(dt),
+          isCritical: crit,
+          attackRoll: atkRoll,
+          targetAc: tgtAc
+        }
+      }
+    }
+
+    /** Shared save-spell resolution: parses picks, sets pendingSpell, resolves or defers to CS. */
+    function castSaveSpell(picks: ReadonlyMap<string, unknown>, ritual: boolean) {
+      const id = activeId()
+      const targetId = pickString(picks, "targetId") ?? ""
+      const saveDC = pickBigInt(picks, "saveDC") ?? 15
+      const saveRoll = pickBigInt(picks, "saveRoll") ?? 10
+      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10
+      const halfOnSave = pickBool(picks, "halfOnSave") ?? false
+      const dt = pickVariant(picks, "dt") ?? "Fire"
+      const cond = pickVariant(picks, "cond") ?? "CBlinded"
+      const applyCond = pickBool(picks, "applyCond") ?? false
+      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
+
+      pendingSpell = {
+        caster: id,
+        target: targetId,
+        saveDC,
+        saveRoll,
+        damageOnFail: dmgOnFail,
+        halfOnSuccess: halfOnSave,
+        damageType: mapDamageType(dt),
+        conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
+        applyCondition: applyCond,
+        slotLvl,
+        ritual
+      }
+
+      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
+
+      if (!hasCSReactors) {
+        if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
+        resolveSpellSave(pendingSpell)
+        pendingSpell = null
+      }
+    }
+
+    function handleBReadyPass() {
+      if (pendingEndTurn) advanceTurn()
+    }
+
+    function handleBReadyRelease(picks: ReadonlyMap<string, unknown>) {
+      if (!pendingEndTurn) return
+      const releaserId = pickString(picks, "releaserId") ?? ""
+      const targetId = pickString(picks, "targetId") ?? ""
+      const atkRoll = pickBigInt(picks, "atkRoll") ?? 10
+      const dmg = pickBigInt(picks, "dmg") ?? 5
+      const dt = pickVariant(picks, "dt") ?? "Slashing"
+      const crit = pickBool(picks, "crit") ?? false
+      const tgtAc = pickBigInt(picks, "tgtAc") ?? 15
+      send(releaserId, { type: "USE_REACTION" })
+      resolveAttackHit(releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit)
+    }
+
+    function handleBCastBonusActionSpell(picks: ReadonlyMap<string, unknown>) {
+      send(activeId(), { type: "USE_BONUS_ACTION" })
+      castSaveSpell(picks, false)
+    }
+
     // ============================================================
     // Schema-based handler dispatch
     // ============================================================
@@ -1483,8 +1502,10 @@ function createBattleProjectionDriver() {
       return new Map(Object.entries(p))
     }
 
+    const BETWEEN_TURN_ACTIONS = new Set(["bLegendaryPass", "bLegendaryAttack", "bReadyPass", "bReadyRelease"])
+
     function before(action: string) {
-      if (pendingEndTurn && action !== "bLegendaryPass" && action !== "bLegendaryAttack") {
+      if (pendingEndTurn && !BETWEEN_TURN_ACTIONS.has(action)) {
         advanceTurn()
       }
     }
@@ -1577,6 +1598,46 @@ function createBattleProjectionDriver() {
       bHeal: (p: Record<string, unknown>) => {
         before("bHeal")
         handleBHeal(toMap(p))
+      },
+      bDash: () => {
+        before("bDash")
+        send(activeId(), { type: "USE_ACTION", actionType: "dash" })
+      },
+      bDisengage: () => {
+        before("bDisengage")
+        send(activeId(), { type: "USE_ACTION", actionType: "disengage" })
+      },
+      bDodge: () => {
+        before("bDodge")
+        send(activeId(), { type: "USE_ACTION", actionType: "dodge" })
+      },
+      bActionSurge: () => {
+        before("bActionSurge")
+        send(activeId(), { type: "USE_ACTION_SURGE" })
+      },
+      bEnterRage: () => {
+        before("bEnterRage")
+        send(activeId(), { type: "ENTER_RAGE" })
+      },
+      bDeclareReckless: () => {
+        before("bDeclareReckless")
+        send(activeId(), { type: "DECLARE_RECKLESS" })
+      },
+      bReady: () => {
+        before("bReady")
+        send(activeId(), { type: "USE_ACTION", actionType: "ready" })
+      },
+      bReadyPass: () => {
+        before("bReadyPass")
+        handleBReadyPass()
+      },
+      bReadyRelease: (p: Record<string, unknown>) => {
+        before("bReadyRelease")
+        handleBReadyRelease(toMap(p))
+      },
+      bCastBonusActionSpell: (p: Record<string, unknown>) => {
+        before("bCastBonusActionSpell")
+        handleBCastBonusActionSpell(toMap(p))
       },
       battleStep: () => {}, // composite — framework expands to leaf actions
       getState: () => {

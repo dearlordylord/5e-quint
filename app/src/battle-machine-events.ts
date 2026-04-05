@@ -74,6 +74,7 @@ export type BattleEvent =
       readonly dt: DamageType
       readonly crit: boolean
       readonly tAc: ArmorClass
+      readonly knockOut: boolean
       readonly isMelee: boolean
       readonly isFinesse: boolean
       readonly attackerWithin5ft: boolean
@@ -173,6 +174,7 @@ export type BattleEvent =
       readonly oaDt: DamageType
       readonly oaCrit: boolean
       readonly oaTgtAc: ArmorClass
+      readonly knockOut: boolean
       readonly isMelee: true // OA attacks are always melee per RAW
       readonly isFinesse: boolean
       readonly hostileWithin5ft: boolean
@@ -199,6 +201,7 @@ export type BattleEvent =
       readonly laDt: DamageType
       readonly laCrit: boolean
       readonly laTgtAc: ArmorClass
+      readonly knockOut: boolean
       readonly isMelee: boolean
       readonly isFinesse: boolean
       readonly attackerWithin5ft: boolean
@@ -227,6 +230,7 @@ export type BattleEvent =
       readonly dt: DamageType
       readonly crit: boolean
       readonly tgtAc: ArmorClass
+      readonly knockOut: boolean
       readonly isMelee: boolean
       readonly isFinesse: boolean
       readonly attackerWithin5ft: boolean
