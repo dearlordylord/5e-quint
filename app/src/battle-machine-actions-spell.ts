@@ -39,9 +39,11 @@ export function battleCastSaveSpell({
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac)) return {}
+  if (ac.ragingBlocksSpells) return {}
   if (e.bonusAction) {
     if (ac.bonusActionUsed || ac.slotExpendedThisTurn) return {}
   } else {
+    if (ac.actionSurgeActionPending) return {}
     if (ac.actionsRemaining <= 0) return {}
     if (ac.slotExpendedThisTurn && !e.ritual) return {}
   }
@@ -194,6 +196,7 @@ export function battleCastConcentrationSpell({
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
+  if (ac.actionSurgeActionPending || ac.ragingBlocksSpells) return {}
   if (ac.slotExpendedThisTurn && !e.ritual) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
   const concCtx = {
@@ -235,6 +238,7 @@ export function battleCastAoE({ context: c, event: e }: BattleActionArgs<"BATTLE
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
+  if (ac.actionSurgeActionPending || ac.ragingBlocksSpells) return {}
   if (ac.slotExpendedThisTurn && !e.ritual) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
   const liveTargets = new Set<CreatureId>()

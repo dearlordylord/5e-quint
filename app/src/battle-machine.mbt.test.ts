@@ -21,6 +21,7 @@ import {
   logMbtSeed,
   mapAbility,
   mapDamageType,
+  parseDamageTypeSet,
   QUINT_CONDITION_MAP,
   QuintCreatureState,
   QuintMonsterResourceState,
@@ -59,9 +60,12 @@ const QuintCombatant = z.object({
       actionSurgeUsedThisTurn: z.boolean()
     })
     .passthrough(),
+  fighterLevel: z.bigint(),
+  barbarianLevel: z.bigint(),
   meleeDamageBonus: z.bigint(),
   recklessThisTurn: z.boolean(),
-  ragingBlocksSpells: z.boolean()
+  ragingBlocksSpells: z.boolean(),
+  combatantResistances: z.any()
 })
 
 type ParsedCombatant = z.infer<typeof QuintCombatant>
@@ -160,9 +164,12 @@ interface NormalizedBattleCreature {
   critRange: number
   actionSurgeCharges: number
   actionSurgeUsedThisTurn: boolean
+  fighterLevel: number
+  barbarianLevel: number
   meleeDamageBonus: number
   recklessThisTurn: boolean
   ragingBlocksSpells: boolean
+  combatantResistances: ReadonlySet<string>
 }
 
 function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreature {
@@ -226,9 +233,12 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     critRange: Number(c.critRange),
     actionSurgeCharges: Number(c.fighterState.actionSurgeCharges),
     actionSurgeUsedThisTurn: c.fighterState.actionSurgeUsedThisTurn,
+    fighterLevel: Number(c.fighterLevel),
+    barbarianLevel: Number(c.barbarianLevel),
     meleeDamageBonus: Number(c.meleeDamageBonus),
     recklessThisTurn: c.recklessThisTurn,
-    ragingBlocksSpells: c.ragingBlocksSpells
+    ragingBlocksSpells: c.ragingBlocksSpells,
+    combatantResistances: parseDamageTypeSet(c.combatantResistances)
   }
 }
 
@@ -302,9 +312,12 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     critRange: c.critRange,
     actionSurgeCharges: c.actionSurgeCharges,
     actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
+    fighterLevel: c.fighterLevel,
+    barbarianLevel: c.barbarianLevel,
     meleeDamageBonus: c.meleeDamageBonus,
     recklessThisTurn: c.recklessThisTurn,
-    ragingBlocksSpells: c.ragingBlocksSpells
+    ragingBlocksSpells: c.ragingBlocksSpells,
+    combatantResistances: c.combatantResistances
   }
 }
 
@@ -471,7 +484,7 @@ function createBattleMachineDriver() {
               kind: "PC",
               caster: true,
               saveMiscBonus: 3,
-              meleeDamageBonus: 2,
+              barbarianLevel: 5,
               initiativeRoll: p(picks, "initRoll2", 10),
               initiativeRollB: p(picks, "initRoll2b", 10),
               surprised: pb(picks, "surprised2", false)
@@ -724,8 +737,8 @@ function createBattleMachineDriver() {
       bActionSurge: () => {
         send({ type: "BATTLE_ACTION_SURGE" })
       },
-      bEnterRage: (picks: Record<string, unknown>) => {
-        send({ type: "BATTLE_ENTER_RAGE", rageBonus: p(picks, "rageBonus", 2) })
+      bEnterRage: () => {
+        send({ type: "BATTLE_ENTER_RAGE" })
       },
       bDeclareReckless: () => {
         send({ type: "BATTLE_DECLARE_RECKLESS" })

@@ -136,7 +136,7 @@ export function tsClassKeysToQuint<T>(record: Readonly<Record<ClassName, T>>): R
 // ============================================================
 
 /** Parse a Quint Set[DamageType] (ITF Set of variants) into a JS Set of mapped damage type strings. */
-function parseDamageTypeSet(raw: unknown): ReadonlySet<string> {
+export function parseDamageTypeSet(raw: unknown): ReadonlySet<string> {
   if (!(raw instanceof Set)) return new Set<string>()
   const result = new Set<string>()
   for (const item of raw) result.add(mapDamageType(variantToString(item)))

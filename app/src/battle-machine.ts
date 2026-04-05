@@ -88,6 +88,7 @@ export const battleMachine = setup({
     hasAoeCtx: ({ context }: { context: BattleContext }) => context.aoeCtx !== null,
     hasMovementCtx: ({ context }: { context: BattleContext }) => context.movementCtx !== null,
     hasLaCtx: ({ context }: { context: BattleContext }) => context.laCtx !== null,
+    hasReadyCtx: ({ context }: { context: BattleContext }) => context.readyCtx !== null,
     noAwaitCtx: ({ context }: { context: BattleContext }) => context.awaitCtx === null,
     noAoeCtx: ({ context }: { context: BattleContext }) => context.aoeCtx === null,
     noMovementCtx: ({ context }: { context: BattleContext }) => context.movementCtx === null,
@@ -146,7 +147,8 @@ export const battleMachine = setup({
             { guard: "hasAwaitCtx", target: "awaitingReaction" },
             { guard: "hasAoeCtx", target: "resolvingAoE" },
             { guard: "hasMovementCtx", target: "resolvingMovement" },
-            { guard: "hasLaCtx", target: "awaitingLegendaryAction" }
+            { guard: "hasLaCtx", target: "awaitingLegendaryAction" },
+            { guard: "hasReadyCtx", target: "awaitingReadiedAction" }
           ],
           on: {
             BATTLE_START_TURN: { actions: "battleStartTurn" },

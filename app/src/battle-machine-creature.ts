@@ -132,8 +132,9 @@ export function takeDamage(
 ): BattleCreatureState {
   if (c.dead) return c
   const effResist = c.petrified ? ALL_DAMAGE_TYPES : new Set<DamageType>()
-  // Merge active effect granted R/V/I
+  // Merge active effect granted R/V/I + combatant-level resistances (rage etc.)
   const totalR = new Set(effResist)
+  for (const r of c.combatantResistances) totalR.add(r)
   const totalV = new Set<DamageType>()
   const totalI = new Set<DamageType>()
   for (const e of c.activeEffects) {
@@ -337,11 +338,14 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    fighterLevel: 0,
     actionSurgeCharges: 0,
     actionSurgeUsedThisTurn: false,
+    barbarianLevel: 0,
     meleeDamageBonus: 0,
     recklessThisTurn: false,
-    ragingBlocksSpells: false
+    ragingBlocksSpells: false,
+    combatantResistances: new Set()
   }
 }
 

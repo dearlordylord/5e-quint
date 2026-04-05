@@ -35,10 +35,13 @@ module battle {
     hasEvasion: bool,                        // Evasion feature (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
     saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
     critRange: int,                          // natural roll >= critRange is a critical hit (default 20, Champion 19/18)
+    fighterLevel: int,                       // 0 = not a fighter
     fighterState: FighterState,              // fighter class state (non-fighters carry freshFighterState(0))
+    barbarianLevel: int,                     // 0 = not a barbarian
     meleeDamageBonus: int,                   // rage damage bonus (0 if not raging)
     recklessThisTurn: bool,                  // Reckless Attack declared this turn
     ragingBlocksSpells: bool,                // rage blocks spell casting
+    combatantResistances: Set[DamageType],   // runtime resistances (rage B/P/S, Bear Totem all, etc.)
   }
 
   type TriggerType =
@@ -336,10 +339,13 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    fighterLevel: 0,
     fighterState: freshFighterState(0),
+    barbarianLevel: 0,
     meleeDamageBonus: 0,
     recklessThisTurn: false,
     ragingBlocksSpells: false,
+    combatantResistances: Set(),
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -360,10 +366,13 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    fighterLevel: 0,
     fighterState: freshFighterState(0),
+    barbarianLevel: 0,
     meleeDamageBonus: 0,
     recklessThisTurn: false,
     ragingBlocksSpells: false,
+    combatantResistances: Set(),
   }
 
   // Monster with legendary actions and resistances
@@ -381,10 +390,13 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    fighterLevel: 0,
     fighterState: freshFighterState(0),
+    barbarianLevel: 0,
     meleeDamageBonus: 0,
     recklessThisTurn: false,
     ragingBlocksSpells: false,
+    combatantResistances: Set(),
   }
 
   pure def dealDamage(
@@ -397,7 +409,7 @@ module battle {
       { r: Set(), v: Set(), i: Set() },
       (acc, e) => { r: acc.r.union(e.grantedResistances), v: acc.v.union(e.grantedVulnerabilities), i: acc.i.union(e.grantedImmunities) }
     )
-    val totalR = t.statBlock.resistances.union(merged.r)
+    val totalR = t.statBlock.resistances.union(merged.r).union(t.combatantResistances)
     val totalV = t.statBlock.vulnerabilities.union(merged.v)
     val totalI = t.statBlock.damageImmunities.union(merged.i)
     val nc = pTakeDamageAsCreature(t.creature, dmg, dt, totalR, totalV, totalI, crit, t.kind)
@@ -634,9 +646,9 @@ module battle {
     all {
       bCreatures' = Map(
         "A" -> mkCaster(hp1, PC).with("rogueLevel", 5).with("hasEvasion", true),  // B11: rogue 5 + Evasion
-        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", 3).with("meleeDamageBonus", 2),  // Paladin Aura + barbarian rage bonus
+        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", 3).with("barbarianLevel", 5),  // Paladin Aura + barbarian 5
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
-        "D" -> mkCaster(hp4, PC).with("critRange", 19).with("fighterState", freshFighterState(5))  // Champion fighter 5
+        "D" -> mkCaster(hp4, PC).with("critRange", 19).with("fighterLevel", 5).with("fighterState", freshFighterState(5))  // Champion fighter 5
       ),
       // Initiative order: sorted by effective roll descending (highest first).
       // SRD 5.2.1: "Disadvantage on their Initiative roll" for surprised combatants.
@@ -697,7 +709,7 @@ module battle {
       val cs2 = setTurn(cs1, activeId, FRESH_TURN)
       // 4b. Fighter start-of-turn: reset actionSurgeUsedThisTurn
       val ac4 = cs2.get(activeId)
-      val cs2b = cs2.set(activeId, ac4.with("fighterState", pFighterStartTurn(ac4.fighterState, 0))
+      val cs2b = cs2.set(activeId, ac4.with("fighterState", pFighterStartTurn(ac4.fighterState, ac4.fighterLevel))
                                             .with("recklessThisTurn", false))
       // 5. Monster-specific: refresh LA + recharge rolls
       val cs3 = if (c.kind == Monster) {
@@ -1039,7 +1051,9 @@ module battle {
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
-    nondet saveAb = Set(Str, Dex, Con, Int_, Wis, Cha).oneOf()
+    // Only Dex and Con matter for behavior (Evasion checks == Dex); others are identical.
+    // Full 6-way set would multiply state space 3x for no coverage gain.
+    nondet saveAb = Set(Dex, Con).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
@@ -1626,7 +1640,9 @@ module battle {
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
-    nondet saveAb = Set(Str, Dex, Con, Int_, Wis, Cha).oneOf()
+    // Only Dex and Con matter for behavior (Evasion checks == Dex); others are identical.
+    // Full 6-way set would multiply state space 3x for no coverage gain.
+    nondet saveAb = Set(Dex, Con).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
@@ -2082,7 +2098,6 @@ module battle {
   action bEnterRage = {
     val activeId = bInitiative[bTurnIndex]
     val ac = bCreatures.get(activeId)
-    nondet rageBonus = Set(2, 3, 4).oneOf()  // rageDamageBonus(barbarianLevel)
     all {
       bPhase == BPActiveTurn,
       bTurnStarted,
@@ -2090,10 +2105,13 @@ module battle {
       not(isIncapacitated(ac.creature)),
       not(ac.turn.bonusActionUsed),
       not(ac.ragingBlocksSpells),  // can't rage while already raging
+      ac.barbarianLevel > 0,       // must be a barbarian
+      val rageBonus = rageDamageBonus(ac.barbarianLevel)
       val newTurn = pUseBonusAction(ac.turn, ac.creature)
       val updatedC = ac.with("turn", newTurn)
                        .with("meleeDamageBonus", rageBonus)
                        .with("ragingBlocksSpells", true)
+                       .with("combatantResistances", Set(Bludgeoning, Piercing, Slashing))
       all {
         bCreatures' = bCreatures.set(activeId, updatedC),
         bPhase' = BPActiveTurn,
@@ -2164,7 +2182,9 @@ module battle {
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
     nondet applyCond = Bool.oneOf()
-    nondet saveAb = Set(Str, Dex, Con, Int_, Wis, Cha).oneOf()
+    // Only Dex and Con matter for behavior (Evasion checks == Dex); others are identical.
+    // Full 6-way set would multiply state space 3x for no coverage gain.
+    nondet saveAb = Set(Dex, Con).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     val tc = bCreatures.get(targetId)
@@ -2175,6 +2195,7 @@ module battle {
       not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
       not(ac.turn.bonusActionUsed),
+      not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn),        // SRD 5.2.1 one slot per turn
       ac.preparedSpells.size() > 0,
       ac.slots.slotsCurrent.get(slotLvl) > 0,   // BA spells cannot be rituals

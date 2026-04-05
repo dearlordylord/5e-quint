@@ -11,6 +11,7 @@ import {
 } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext, BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
 import { PHASE_ACTIVE, phaseAwaitingLegendary, phaseAwaitingReady } from "#/battle-machine-types.ts"
+import { rageDamageBonus } from "#/features/class-barbarian.ts"
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts"
 
 // TODO style: combinators
@@ -67,9 +68,15 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
       ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
       ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
       ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
-      ...(cfg.fighterLevel != null && actionSurgeMaxCharges(cfg.fighterLevel) > 0
-        ? { actionSurgeCharges: actionSurgeMaxCharges(cfg.fighterLevel), actionSurgeUsedThisTurn: false }
+      ...(cfg.fighterLevel != null
+        ? {
+            fighterLevel: cfg.fighterLevel,
+            ...(actionSurgeMaxCharges(cfg.fighterLevel) > 0
+              ? { actionSurgeCharges: actionSurgeMaxCharges(cfg.fighterLevel), actionSurgeUsedThisTurn: false }
+              : {})
+          }
         : {}),
+      ...(cfg.barbarianLevel != null ? { barbarianLevel: cfg.barbarianLevel } : {}),
       ...(cfg.meleeDamageBonus != null ? { meleeDamageBonus: cfg.meleeDamageBonus } : {})
     })
     initiative.push(cfg.id)
@@ -203,6 +210,7 @@ export function battleHeal({ context: c, event: e }: BattleActionArgs<"BATTLE_HE
   const id = activeId(c)
   const ac = c.creatures.get(id)!
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
+  if (ac.actionSurgeActionPending || ac.ragingBlocksSpells) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
   cs = setCreature(cs, e.targetId, heal(cs.get(e.targetId)!, e.amount))
   return { creatures: cs }
@@ -244,19 +252,17 @@ export function battleActionSurge({ context: c }: BattleActionArgs<"BATTLE_ACTIO
   }
 }
 
-export function battleEnterRage({
-  context: c,
-  event: e
-}: BattleActionArgs<"BATTLE_ENTER_RAGE">): Partial<BattleContext> {
+export function battleEnterRage({ context: c }: BattleActionArgs<"BATTLE_ENTER_RAGE">): Partial<BattleContext> {
   const id = activeId(c)
   const ac = c.creatures.get(id)!
-  if (ac.dead || isIncapacitated(ac) || ac.bonusActionUsed || ac.ragingBlocksSpells) return {}
+  if (ac.dead || isIncapacitated(ac) || ac.bonusActionUsed || ac.ragingBlocksSpells || ac.barbarianLevel <= 0) return {}
   return {
     creatures: setCreature(c.creatures, id, {
       ...ac,
       bonusActionUsed: true,
-      meleeDamageBonus: e.rageBonus,
-      ragingBlocksSpells: true
+      meleeDamageBonus: rageDamageBonus(ac.barbarianLevel),
+      ragingBlocksSpells: true,
+      combatantResistances: new Set(["bludgeoning", "piercing", "slashing"] as const)
     })
   }
 }
