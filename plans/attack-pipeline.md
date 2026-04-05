@@ -4,9 +4,9 @@
 
 ## Architectural decisions
 
-- **Shared resolution**: A pure function in battle.qnt parameterized by attacker, target, damage, crit range, and `AfterDamageReturn`. Called by all three attack entry points.
-- **FighterState on Combatant**: Full `FighterState` record from creature.qnt, reusing existing pure functions (`canUseActionSurge`, `pUseActionSurge`, `pFighterStartTurn`). Non-fighters carry `freshFighterState(0)`.
-- **Generic modifier fields for Barbarian**: `meleeDamageBonus: int`, `recklessThisTurn: bool`, `ragingBlocksSpells: bool` on Combatant. NOT full BarbarianState.
+- **Shared resolution**: A pure function in battle.qnt parameterized by attacker, target, damage, crit range, and `AfterDamageReturn`. Called by all four attack entry points (bAttack, bMovementOAAttack, bLegendaryAttack, bReadyRelease).
+- **FighterState on Combatant**: Full `FighterState` record from creature.qnt, reusing existing pure functions (`canUseActionSurge`, `pUseActionSurge`, `pFighterStartTurn`). Non-fighters carry `freshFighterState(0)`. `fighterLevel` stored for `pFighterStartTurn`.
+- **Generic modifier fields for Barbarian**: `meleeDamageBonus: int`, `recklessThisTurn: bool`, `ragingBlocksSpells: bool`, `combatantResistances: Set[DamageType]`, `barbarianLevel: int` on Combatant. NOT full BarbarianState. Rage bonus derived from `rageDamageBonus(barbarianLevel)`.
 - **critRange on Combatant**: `critRange: int` (default 20, Champion 19/18). Static, set at init.
 - **New AfterDamageReturn variants**: `ADRAwaitingLegendaryAction(LAWindowCtx)` for LA attacks.
 
@@ -22,11 +22,11 @@ Extract the hit-resolution logic shared between `bAttack` and `bMovementOAAttack
 
 ### Acceptance criteria
 
-- [ ] Pure function extracted, called by both `bAttack` and `bMovementOAAttack`
-- [ ] `critRange: int` on Combatant, used in hit determination (replaces hardcoded nat-20 check)
-- [ ] `bInit` sets `critRange` (default 20, nondeterministically 19 for some creatures)
-- [ ] No behavioral change — MBT traces produce identical results
-- [ ] All verification passes
+- [x] Pure function extracted, called by both `bAttack` and `bMovementOAAttack`
+- [x] `critRange: int` on Combatant, used in hit determination (replaces hardcoded nat-20 check)
+- [x] `bInit` sets `critRange` (default 20, nondeterministically 19 for some creatures)
+- [x] No behavioral change — MBT traces produce identical results
+- [x] All verification passes
 
 ---
 
@@ -40,11 +40,11 @@ Add `ADRAwaitingLegendaryAction(LAWindowCtx)` to `AfterDamageReturn`. Refactor `
 
 ### Acceptance criteria
 
-- [ ] `bLegendaryAttack` enters the hit-reaction -> damage-reaction -> after-damage chain
-- [ ] After resolution, control returns to `BPAwaitingLegendaryAction` (not `BPActiveTurn`)
-- [ ] Creatures can Shield/Uncanny Dodge/Hellish Rebuke against legendary attacks
-- [ ] MBT bridge handles the new return variant
-- [ ] All verification passes
+- [x] `bLegendaryAttack` enters the hit-reaction -> damage-reaction -> after-damage chain
+- [x] After resolution, control returns to `BPAwaitingLegendaryAction` (not `BPActiveTurn`)
+- [x] Creatures can Shield/Uncanny Dodge/Hellish Rebuke against legendary attacks
+- [x] MBT bridge handles the new return variant
+- [x] All verification passes
 
 ---
 
@@ -58,13 +58,13 @@ Add `fighterState: FighterState` to Combatant. Add `bActionSurge` battle action 
 
 ### Acceptance criteria
 
-- [ ] `fighterState: FighterState` on Combatant, defaulting to `freshFighterState(0)`
-- [ ] `bActionSurge` action: spends charge, increments `actionsRemaining`, sets `actionSurgeActionPending`
-- [ ] Magic actions blocked when `actionSurgeActionPending` (existing guards now functional)
-- [ ] `bStartTurn` resets fighter per-turn state
-- [ ] `bInit` includes a fighter creature in the nondeterministic setup
-- [ ] MBT bridge maps `fighterState` fields
-- [ ] All verification passes
+- [x] `fighterState: FighterState` on Combatant, defaulting to `freshFighterState(0)`
+- [x] `bActionSurge` action: spends charge, increments `actionsRemaining`, sets `actionSurgeActionPending`
+- [x] Magic actions blocked when `actionSurgeActionPending` (existing guards now functional)
+- [x] `bStartTurn` resets fighter per-turn state
+- [x] `bInit` includes a fighter creature in the nondeterministic setup
+- [x] MBT bridge maps `fighterState` fields
+- [x] All verification passes
 
 ---
 
@@ -78,11 +78,13 @@ Add `meleeDamageBonus: int`, `recklessThisTurn: bool`, `ragingBlocksSpells: bool
 
 ### Acceptance criteria
 
-- [ ] `meleeDamageBonus`, `recklessThisTurn`, `ragingBlocksSpells` on Combatant
-- [ ] `bEnterRage` sets damage bonus, spell block, and resistance flags
-- [ ] `bDeclareReckless` sets advantage flag (resets at start of next turn)
-- [ ] Shared attack resolution applies `meleeDamageBonus`
-- [ ] Spell actions guarded by `not(ragingBlocksSpells)`
-- [ ] `bInit` includes a barbarian creature
-- [ ] MBT bridge maps new fields
-- [ ] All verification passes
+- [x] `meleeDamageBonus`, `recklessThisTurn`, `ragingBlocksSpells` on Combatant
+- [x] `bEnterRage` sets damage bonus, spell block, and resistance flags
+- [x] `bDeclareReckless` sets advantage flag (resets at start of next turn)
+- [x] Shared attack resolution applies `meleeDamageBonus`
+- [x] Spell actions guarded by `not(ragingBlocksSpells)` — including bonus-action spells
+- [x] `bInit` includes a barbarian creature (B, barbarianLevel 5)
+- [x] MBT bridge maps new fields
+- [x] All verification passes
+
+**Note:** `meleeDamageBonus` currently applies to all attacks unconditionally — no melee/ranged distinction in spec yet. See PLAN_AUDIT.md D1.

@@ -174,6 +174,8 @@ export function heal(c: BattleCreatureState, amount: number): BattleCreatureStat
   return c1
 }
 
+/** Spend an action. Returns creature UNCHANGED (silent no-op) when blocked by actionSurgeActionPending
+ *  or ragingBlocksSpells for magic actions. Callers MUST guard explicitly — this is not a guard. */
 export function spendAction(c: BattleCreatureState, actionType: ActionType): BattleCreatureState {
   if (c.actionsRemaining <= 0 || isIncapacitated(c)) return c
   if (c.actionSurgeActionPending && actionType === "magic") return c

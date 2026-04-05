@@ -43,21 +43,9 @@
 
 ---
 
-### C3. Evasion not modeled in Quint spec [Major]
+### ~~C3. Evasion not modeled in Quint spec~~ [Implemented]
 
-**SRD Reference:** `Classes/Rogue.md:113` and `Classes/Monk.md:132`: "When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail. You can't use this feature if you have the Incapacitated condition."
-
-**Spec Location:** Missing entirely from both `creature.qnt` and `battle.qnt`. TS feature layer has `evasionDamage()` in `app/src/features/class-rogue.ts:308`.
-
-**Current Behavior:** `bResolveAoETarget` applies standard half-on-success. No Evasion check. All AoE save-for-half damage against Rogue/Monk L7+ is overstated.
-
-**Fix:**
-- Add `hasEvasion: bool` to `Combatant` (derived from rogueLevel >= 7 or monkLevel >= 7)
-- In `bResolveAoETarget`: if `hasEvasion` and not incapacitated:
-  - Save success: 0 damage (instead of half)
-  - Save fail: half damage (instead of full)
-- Add corresponding pure function `pEvasionDamage` to `creature.qnt`
-- Wire into `bCastSaveSpell` for single-target DEX-save spells too
+Implemented in passive-modifiers plan (Phases 1-3). `hasEvasion` on Combatant, `pApplyEvasion` in creature.qnt, `evasionDamage` in class-rogue.ts, gated on `saveAbility == Dex`.
 
 ---
 
@@ -76,38 +64,13 @@
 
 ---
 
-### C6. Dodge action not wired in battle [Major]
-
-**SRD Reference:** Playing the Game, "Dodge": "Until the start of your next turn, any attack roll made against you has Disadvantage if you can see the attacker, and you make Dexterity saving throws with Advantage."
-
-**Spec Location:** `creature.qnt:1253` has `dodging: bool`, `creature.qnt:1343` sets it via `ADodge`. No `bDodge` in `battle.qnt`.
-
-**Current Behavior:** Dodge flag exists and is checked during attack modifier aggregation (`creature.qnt:1526`), but no battle action ever sets it. Creatures cannot Dodge during combat.
-
-**Fix:**
-- Add `bDodge` action to `battle.qnt`:
-  - Guard: active creature, `actionsRemaining > 0`, `pCanAct`
-  - Call `pUseAction(turn, creature, ADodge)` on active creature's turn state
-  - Keep `bPhase' = BPActiveTurn`
-- Add to `battleStep` dispatcher under `BPActiveTurn`
+### ~~C6. Dodge action not wired in battle~~ [Pre-existing, already implemented before this work]
 
 ---
 
-### C8. Ready action not modeled in battle [Major]
+### ~~C8. Ready action not modeled in battle~~ [Implemented]
 
-**SRD Reference:** Playing the Game, "Ready": "You take the Ready action to wait for a particular trigger before acting. When the trigger occurs, you can either take your response right after the trigger finishes or ignore the trigger. Readied spells require Concentration."
-
-**Spec Location:** `creature.qnt:1254` has `readiedAction: bool`, `creature.qnt:1345` sets it via `AReady`. Not called from `battle.qnt`.
-
-**Current Behavior:** Ready is fully modeled at creature level (action cost, flag) but absent from battle. Creatures can't prepare held actions.
-
-**Fix:**
-- Add `bReady` action to `battle.qnt`:
-  - Guard: active creature, `actionsRemaining > 0`, `pCanAct`
-  - Call `pUseAction(turn, creature, AReady)` -- sets `readiedAction: true`
-  - Readied spell variant: also call `pStartConcentration` on the prepared spell
-- Add reaction trigger: when `readiedAction` is true and trigger fires, creature can use reaction to execute
-- This is the most complex addition -- the trigger system needs a new `PendingInterrupt` variant
+Implemented in ready-action plan (Phases 1-2). `bReady`, `bReadyPass`, `bReadyRelease` actions. `BPAwaitingReadiedAction` phase. Between-turns window after LA. Readied spells deferred (see plan).
 
 ---
 
@@ -199,38 +162,15 @@ Validated: `pTakeDamageAsCreature` at `creature.qnt:1126-1172` correctly handles
 
 ---
 
-### F2. No Dash/Disengage/Dodge/Help/Hide in battle [High Impact]
+### ~~F2. No Dash/Disengage/Dodge/Help/Hide in battle~~ [Partially implemented]
 
-**SRD Reference:** Playing the Game, "Actions" section.
-
-**Spec Location:** `battle.qnt:1921-1925` (BPActiveTurn action list). Only Attack, Magic (4 spell variants), Move, Heal, ConcentrationCheck, Start/End Turn.
-
-| Action | Impact | Complexity | Notes |
-|--------|--------|-----------|-------|
-| **Dash** | High | Low | Grant extra movement = effectiveSpeed. Pure function exists in creature.qnt. |
-| **Disengage** | High | Low | Set `disengaged: true`. Pure function exists. Blocks OAs. |
-| **Dodge** | High | Low | Set `dodging: true`. Pure function exists. See C6. |
-| **Help** | Medium | Medium | Grant Advantage on next attack vs target. Needs target tracking. |
-| **Hide** | Medium | High | DC 15 Stealth -> Invisible. Needs obscurement/cover model. |
-
-**Approach:** Dash, Disengage, Dodge are low-hanging fruit -- pure functions exist. Wire as `bDash`, `bDisengage`, `bDodge`.
+Dash, Disengage, Dodge, Ready implemented (pre-existing + ready-action plan). Help and Hide remain deferred.
 
 ---
 
-### F3. Action Surge not executed in battle [High Impact]
+### ~~F3. Action Surge not executed in battle~~ [Implemented]
 
-**SRD Reference:** `Classes/Fighter.md`: "You can take one additional action on your turn. This action can't be the Magic action. You can use this feature only once per turn."
-
-**Spec Location:** `creature.qnt:2407-2417` (`pUseActionSurge`). `battle.qnt` has 4 guard clauses checking `actionSurgeActionPending` (lines 966, 1439, 1532, 1840) but never triggers the feature.
-
-**Current Behavior:** Battle prevents Magic during Action Surge (defensive guards) but never grants the extra action. The feature is phantom infrastructure.
-
-**Fix:**
-- Add `bActionSurge` battle action:
-  - Guard: active creature, fighter with charges, `pCanAct`, not used this turn
-  - Call `pUseActionSurge` -- increments `actionsRemaining`, sets `actionSurgeActionPending`
-  - Keep `bPhase' = BPActiveTurn`
-- Existing Magic-prevention guards become active and meaningful
+Implemented in attack-pipeline plan Phase 3. `bActionSurge` action, `fighterState` + `fighterLevel` on Combatant.
 
 ---
 
@@ -242,9 +182,9 @@ Validated: `pTakeDamageAsCreature` at `creature.qnt:1126-1172` correctly handles
 
 | Feature | Class | Level | Effect | Category | PRD |
 |---------|-------|-------|--------|----------|-----|
-| **Action Surge** | Fighter | 2+ | Extra action (not Magic) | Flow (changes action economy) | PRD 1 |
-| **Rage damage bonus** | Barbarian | 1+ | +2/+3/+4 melee damage while raging | Modifier (via `meleeDamageBonus`) + Action (`bEnterRage`) | PRD 1 |
-| **Reckless Attack** | Barbarian | 2+ | Advantage on STR attacks, enemies get Advantage on you | Modifier (`recklessThisTurn: bool`) + Action (`bDeclareReckless`) | PRD 1 |
+| ~~**Action Surge**~~ | Fighter | 2+ | Extra action (not Magic) | Flow (changes action economy) | ~~PRD 1~~ **Done** |
+| ~~**Rage damage bonus**~~ | Barbarian | 1+ | +2/+3/+4 melee damage while raging | Modifier (via `meleeDamageBonus`) + Action (`bEnterRage`) | ~~PRD 1~~ **Done** |
+| ~~**Reckless Attack**~~ | Barbarian | 2+ | Advantage on STR attacks, enemies get Advantage on you | Modifier (`recklessThisTurn: bool`) + Action (`bDeclareReckless`) | ~~PRD 1~~ **Done** |
 | **Sneak Attack** | Rogue | 1+ | +Nd6 damage (once/turn, needs Advantage or ally) | Modifier (`sneakAttackEligible: bool`, extra damage is +N) | Deferred |
 | **Stunning Strike** | Monk | 5+ | 1 FP on hit -> CON save or Stunned | Flow (new save -> condition interrupt) | Deferred |
 | **Paladin's Smite** | Paladin | 2+ | Grants Divine Smite spell + 1 free cast/LR | Class feature (spell access) | Deferred |
@@ -262,18 +202,9 @@ Validated: `pTakeDamageAsCreature` at `creature.qnt:1126-1172` correctly handles
 
 ---
 
-### F5. Legendary attacks bypass reaction chain [Medium Impact]
+### ~~F5. Legendary attacks bypass reaction chain~~ [Implemented]
 
-**SRD Reference:** No rule exempts Legendary Actions from triggering reactions.
-
-**Spec Location:** `battle.qnt:1800-1826` (`bLegendaryAttack`). Calls `dealDamage` directly, transitions to `BPActiveTurn`.
-
-**Current Behavior:** Damage applied with no hit-reaction, damage-reaction, or after-damage window. Shield, Uncanny Dodge, etc. cannot respond to LA attacks.
-
-**Fix:**
-- Refactor `bLegendaryAttack` to enter the same reaction chain as `bAttack`
-- On hit: `BPAwaitingReaction(PIAttackHit(...))` with `atkReturnTo` pointing back to LA window
-- Needs new `AfterDamageReturn` variant: `ADRAwaitingLegendaryAction(LAWindowCtx)`
+Implemented in attack-pipeline plan Phase 2. `bLegendaryAttack` uses `resolveAttack` with `ADRAwaitingLegendaryAction` return.
 
 ---
 
@@ -331,11 +262,9 @@ Validated: `pTakeDamageAsCreature` at `creature.qnt:1126-1172` correctly handles
 
 ## Structural Notes
 
-### S1. Unify attack transaction pipeline [Medium]
+### ~~S1. Unify attack transaction pipeline~~ [Implemented]
 
-*Source: Codex audit*
-
-`bAttack` (L668) and `bMovementOAAttack` (L1687) share ~15 lines of identical hit-resolution logic (construct `AttackHitCtx`, check eligible reactors, branch to `BPAwaitingReaction` or direct damage). Extractable to `resolveAttackHit(cs, atkCtx)` returning `{ creatures, phase }`. Would also enable F5 fix (routing LA attacks through the same chain).
+Implemented in attack-pipeline plan Phase 1. `resolveAttack` shared pure fn used by `bAttack`, `bMovementOAAttack`, `bLegendaryAttack`, `bReadyRelease`.
 
 ### S2. Fix misleading OA "can see" comment [Trivial]
 
@@ -403,3 +332,23 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 16. **S3** (investigate excluded invariants) -- quality-of-proof
 17. **C2** (Arcane Recovery) -- minor
 18. **C5** (Knock Out) -- minor
+
+---
+
+## Discovered During Implementation (plans/README.md execution)
+
+### D1. `meleeDamageBonus` applies to all attacks, not just melee [Medium]
+
+Plan says "add `meleeDamageBonus` to damage **for melee attacks**." Implementation applies it unconditionally in `resolveAttack` because the spec has no melee/ranged distinction. When melee vs ranged is modeled, `meleeDamageBonus` must be gated on `isMelee`.
+
+### D2. TS battle actions don't check `turnStarted` [Pre-existing tech debt]
+
+Every Quint active-turn action guards on `bTurnStarted`. No TS action function checks `c.turnStarted`. If a caller sends `BATTLE_ATTACK` before `BATTLE_START_TURN`, TS proceeds while Quint blocks. MBT always sends start-turn first so this doesn't cause failures. Pre-existing across all actions, not introduced by this work. Related to C11.
+
+### D3. `pFighterStartTurn` heroic inspiration untested — no L10+ fighter in `bInit` [Low]
+
+`pFighterStartTurn(fs, fighterLevel)` now receives the correct level, so heroic inspiration (L10+) logic is wired correctly. But `bInit` creature D is fighter 5, so the L10+ path is never exercised by MBT. Add a L10+ fighter to `bInit` when fighter features expand.
+
+### D4. `spendAction("magic")` is a silent no-op when blocked [Architectural note]
+
+`spendAction` in `battle-machine-creature.ts` returns the creature unchanged (no error, no signal) when `actionSurgeActionPending` or `ragingBlocksSpells` blocks a magic action. Callers MUST guard explicitly before calling — the function is not a guard, just a state mutator. Found when raging creatures could cast spells through the no-op.

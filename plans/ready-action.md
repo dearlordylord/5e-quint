@@ -22,13 +22,13 @@ Add `bReady` to the active-turn action menu: spends action via `pUseAction(ARead
 
 ### Acceptance criteria
 
-- [ ] `bReady` action available during `BPActiveTurn` (costs action, sets `readiedAction`)
-- [ ] `BPAwaitingReadiedAction` phase entered after LA window when eligible creatures exist
-- [ ] `bReadyPass` advances to next turn
-- [ ] `readiedAction` clears at start of next turn
-- [ ] Turn advancement flow: endTurn -> LA window -> ready window -> next turn
-- [ ] MBT bridge maps new phase and actions
-- [ ] All verification passes
+- [x] `bReady` action available during `BPActiveTurn` (costs action, sets `readiedAction`)
+- [x] `BPAwaitingReadiedAction` phase entered after LA window when eligible creatures exist
+- [x] `bReadyPass` advances to next turn
+- [x] `readiedAction` clears at start of next turn
+- [x] Turn advancement flow: endTurn -> LA window -> ready window -> next turn
+- [x] MBT bridge maps new phase and actions
+- [x] All verification passes
 
 ---
 
@@ -42,13 +42,13 @@ Add `bReadyRelease` action in the ready window. The releasing creature spends re
 
 ### Acceptance criteria
 
-- [ ] `bReadyRelease` spends reaction and enters shared attack resolution
-- [ ] Released attack goes through hit-reaction -> damage-reaction -> after-damage chain
-- [ ] After resolution, returns to ready window (not active turn)
-- [ ] Creature's `reactionAvailable` is false after release
-- [ ] A creature that already used its reaction cannot release
-- [ ] MBT bridge maps `bReadyRelease` with attack parameters
-- [ ] All verification passes
+- [x] `bReadyRelease` spends reaction and enters shared attack resolution
+- [x] Released attack goes through hit-reaction -> damage-reaction -> after-damage chain
+- [x] After resolution, returns to ready window (not active turn)
+- [x] Creature's `reactionAvailable` is false after release
+- [x] A creature that already used its reaction cannot release
+- [x] MBT bridge maps `bReadyRelease` with attack parameters
+- [x] All verification passes
 
 ---
 

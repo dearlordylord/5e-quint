@@ -21,15 +21,15 @@ Add `hasEvasion: bool` to Combatant and BattleCreatureState. Add `pApplyEvasion`
 
 ### Acceptance criteria
 
-- [ ] `hasEvasion: bool` on Combatant (battle.qnt) and BattleCreatureState (TS)
-- [ ] `pApplyEvasion` pure function with unit tests in dndTest.qnt (success=0, fail=half, incapacitated=no effect, no evasion=no change)
-- [ ] `bResolveAoETarget` applies Evasion after LR resolution
-- [ ] TS `battleResolveAoETarget` mirrors the check
-- [ ] MBT bridge maps `hasEvasion`
-- [ ] `quint typecheck battle.qnt` passes
-- [ ] `quint test --match "inv_" dndTest.qnt` passes
-- [ ] `npx tsc --noEmit` passes
-- [ ] `vitest run machine.test.ts` passes
+- [x] `hasEvasion: bool` on Combatant (battle.qnt) and BattleCreatureState (TS)
+- [x] `pApplyEvasion` pure function with unit tests in dndTest.qnt (success=0, fail=half, incapacitated=no effect, no evasion=no change)
+- [x] `bResolveAoETarget` applies Evasion after LR resolution
+- [x] TS `battleResolveAoETarget` mirrors the check (uses `evasionDamage` from class-rogue.ts)
+- [x] MBT bridge maps `hasEvasion`
+- [x] `quint typecheck battle.qnt` passes
+- [x] `quint test --match "inv_" dndTest.qnt` passes
+- [x] `npx tsc --noEmit` passes
+- [x] `vitest run machine.test.ts` passes
 
 ---
 
@@ -43,12 +43,12 @@ Add `saveMiscBonus: int` to Combatant and BattleCreatureState. In all save-resol
 
 ### Acceptance criteria
 
-- [ ] `saveMiscBonus: int` on Combatant and BattleCreatureState
-- [ ] All save-resolution paths in battle.qnt add `saveMiscBonus` to the save roll
-- [ ] TS mirrors the bonus application
-- [ ] MBT bridge maps `saveMiscBonus`
-- [ ] A creature with `saveMiscBonus: 3` and save roll 8 vs DC 10 succeeds (8+3=11 >= 10)
-- [ ] All verification passes (typecheck, invariants, tsc, vitest)
+- [x] `saveMiscBonus: int` on Combatant and BattleCreatureState
+- [x] All save-resolution paths in battle.qnt add `saveMiscBonus` to the save roll
+- [x] TS mirrors the bonus application
+- [x] MBT bridge maps `saveMiscBonus`
+- [x] A creature with `saveMiscBonus: 3` and save roll 8 vs DC 10 succeeds (8+3=11 >= 10)
+- [x] All verification passes (typecheck, invariants, tsc, vitest)
 
 ---
 
@@ -62,7 +62,7 @@ Extend the Evasion check from Phase 1 to `bCastSaveSpell` for single-target DEX-
 
 ### Acceptance criteria
 
-- [ ] `bCastSaveSpell` applies Evasion when the save is DEX-based
-- [ ] Non-DEX saves (CON, WIS, etc.) are unaffected by Evasion
-- [ ] TS mirrors the check
-- [ ] All verification passes
+- [x] `bCastSaveSpell` applies Evasion when the save is DEX-based
+- [x] Non-DEX saves (CON, WIS, etc.) are unaffected by Evasion
+- [x] TS mirrors the check
+- [x] All verification passes
