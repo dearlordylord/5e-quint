@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@firfi/quint-connect':
-        specifier: link:../quint-connect
-        version: link:../quint-connect
     devDependencies:
       husky:
         specifier: ^9.1.7
@@ -22,8 +18,8 @@ importers:
   app:
     dependencies:
       '@firfi/quint-connect':
-        specifier: ^0.8.1
-        version: 0.8.1(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
+        specifier: ^0.8.2
+        version: 0.8.2(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
       '@statelyai/graph':
         specifier: ^0.8.0
         version: 0.8.0(zod@4.3.6)
@@ -586,8 +582,8 @@ packages:
       zod:
         optional: true
 
-  '@firfi/quint-connect@0.8.1':
-    resolution: {integrity: sha512-Mfe3YmyPZgead7KfsI/5SF9r0ac3D0fhWratbYkeaCWtJRImHqDtGEs5vTln+bIe+Sm2q53QEY57Jm69sXf3fQ==}
+  '@firfi/quint-connect@0.8.2':
+    resolution: {integrity: sha512-ghBJdsJ+2rwcAalBwS1hxC3OtiLJxO4rR/VXMLoBQm2Kim7xu+dcU4mkvU37Calj62Jn7i2CmIE6EI198JIYkA==}
     hasBin: true
     peerDependencies:
       effect: ^3.0.0
@@ -3457,8 +3453,18 @@ packages:
     peerDependencies:
       seroval: ^1.0
 
+  seroval-plugins@1.5.2:
+    resolution: {integrity: sha512-qpY0Cl+fKYFn4GOf3cMiq6l72CpuVaawb6ILjubOQ+diJ54LfOWaSSPsaswN8DRPIPW4Yq+tE1k5aKd7ILyaFg==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      seroval: ^1.0
+
   seroval@1.5.1:
     resolution: {integrity: sha512-OwrZRZAfhHww0WEnKHDY8OM0U/Qs8OTfIDWhUD4BLpNJUfXK4cGmjiagGze086m+mhI+V2nD0gfbHEnJjb9STA==}
+    engines: {node: '>=10'}
+
+  seroval@1.5.2:
+    resolution: {integrity: sha512-xcRN39BdsnO9Tf+VzsE7b3JyTJASItIV1FVFewJKCFcW4s4haIKS3e6vj8PGB9qBwC7tnuOywQMdv5N4qkzi7Q==}
     engines: {node: '>=10'}
 
   set-function-length@1.2.2:
@@ -3542,8 +3548,8 @@ packages:
     engines: {node: '>=20.16.0'}
     hasBin: true
 
-  srvx@0.11.14:
-    resolution: {integrity: sha512-mx+pKrWJCzo5m6uXqyB7n4VA81mpdFRroSWsVTQTYqCZE65hFJ+jtVIeyhtL2/kvtDMrHdbA0hWEUh/vu0+Viw==}
+  srvx@0.11.15:
+    resolution: {integrity: sha512-iXsux0UcOjdvs0LCMa2Ws3WwcDUozA3JN3BquNXkaFPP7TpRqgunKdEgoZ/uwb1J6xaYHfxtz9Twlh6yzwM6Tg==}
     engines: {node: '>=20.16.0'}
     hasBin: true
 
@@ -4419,7 +4425,7 @@ snapshots:
       effect: 3.21.0
       zod: 4.3.6
 
-  '@firfi/quint-connect@0.8.1(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)':
+  '@firfi/quint-connect@0.8.2(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)':
     dependencies:
       '@firfi/itf-trace-parser': 0.1.2(effect@3.21.0)(zod@4.3.6)
       '@standard-schema/spec': 1.1.0
@@ -6495,7 +6501,7 @@ snapshots:
   h3@2.0.1-rc.16:
     dependencies:
       rou3: 0.8.1
-      srvx: 0.11.14
+      srvx: 0.11.15
 
   has-bigints@1.1.0: {}
 
@@ -7550,7 +7556,13 @@ snapshots:
     dependencies:
       seroval: 1.5.1
 
+  seroval-plugins@1.5.2(seroval@1.5.2):
+    dependencies:
+      seroval: 1.5.2
+
   seroval@1.5.1: {}
+
+  seroval@1.5.2: {}
 
   set-function-length@1.2.2:
     dependencies:
@@ -7629,8 +7641,8 @@ snapshots:
   solid-js@1.9.11:
     dependencies:
       csstype: 3.2.3
-      seroval: 1.5.1
-      seroval-plugins: 1.5.1(seroval@1.5.1)
+      seroval: 1.5.2
+      seroval-plugins: 1.5.2(seroval@1.5.2)
 
   source-map-js@1.2.1: {}
 
@@ -7642,7 +7654,7 @@ snapshots:
 
   srvx@0.11.12: {}
 
-  srvx@0.11.14: {}
+  srvx@0.11.15: {}
 
   stable-hash-x@0.2.0: {}
 
