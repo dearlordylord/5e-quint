@@ -427,6 +427,14 @@ Quint `dealDamage` (`battle.qnt:409`) has full knockOut logic (checks `knockOut 
 
 **Fix:** Add schema entries for all dispatch-only actions.
 
+### D9. `bLegendaryAttack` — legendaryActionsRemaining off by 1 [Pre-existing]
+
+*Source: MBT perf research (2026-04-05)*
+
+Quint `bLegendaryAttack` decrements `legendaryActionsRemaining` before `resolveAttack`. TS `battleLegendaryAttack` may decrement at a different point in the pipeline. MBT trace replay shows `legendaryActionsRemaining: 1` (Quint) vs `2` (TS) after a `bLegendaryAttack` action. Seed: `0x71d322b2`, step 3.
+
+**Fix:** Align TS legendary action decrement timing with Quint's `bLegendaryAttack` (line ~2134 in `battle.qnt`). Check `battle-machine-actions-turn.ts` or equivalent.
+
 ### ~~D8. Battle MBT broken on master (`Unknown action: bDash`)~~ [Implemented]
 
 *Source: PRD 4 verification*
