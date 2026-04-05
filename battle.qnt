@@ -806,8 +806,9 @@ module battle {
       isRangedAttack: not(isMelee),
       beyondNormalRange: false,       // range modeling deferred
       hostileWithin5ft: hostileWithin5ft,
-      isHeavyWeapon: false,           // handled separately by C10 fix
-      wielderSizeSmallOrTiny: false,   // handled separately by C10 fix
+      isHeavyWeapon: false,           // weapon properties not modeled in battle yet
+      wielderStrScore: 16,            // safe default; not modeled in battle
+      wielderDexScore: 14,            // safe default; not modeled in battle
       attackerGrappled: false,        // grapple not in battle yet (F9)
       targetIsGrappler: false,
       underwater: false,              // environmental, deferred

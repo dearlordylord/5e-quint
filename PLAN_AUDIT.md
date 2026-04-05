@@ -362,7 +362,7 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 10. ~~**PRD 4** (attack type + advantage + Sneak Attack)~~ DONE -- covers D1, F4(SA), wires advantage pipeline. PRD: `PRD_ATTACK_TYPE_AND_ADVANTAGE.md`, Plan: `PLAN_PRD4_ATTACK_TYPE_ADVANTAGE_SA.md`
 11. ~~**D8** (Battle MBT broken on master — `Unknown action: bDash`)~~ DONE -- added schema + dispatch handlers for bDash/bDisengage/bDodge/bActionSurge/bEnterRage/bDeclareReckless/bReady/bReadyPass/bReadyRelease/bCastBonusActionSpell to both MBT bridges
 12. ~~**D7** (MBT bridge schema gaps — `bReadyRelease` etc. missing from `battleDriverSchema`)~~ DONE -- added missing schema entries to battle-machine.mbt.test.ts
-13. **D5** (AttackContext divergence Quint↔TS — heavy weapon, grapple, exhaustion) -- High, pre-existing
+13. ~~**D5** (AttackContext divergence Quint↔TS — heavy weapon, grapple, exhaustion)~~ DONE -- aligned Quint AttackContext to 5.2.1 (wielderStrScore/wielderDexScore replace wielderSizeSmallOrTiny); added attackerGrappled/targetIsGrappler to TS; removed 5.1 exhaustion disadvantage from both TS and Quint (5.2.1 uses flat -2*level penalty, already in exhaustionPenalty)
 14. **PRD 3 continuation** (saveMiscBonus for Aura of Protection) -- covers F7. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 1
 15. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 2
 16. ~~**D6** (knockOut has no TS implementation)~~ DONE -- added `knockOut: boolean` to dealDamage, dealDamageWithAfterReactions, AttackHitCtx, AttackDamageCtx, all attack events (BATTLE_ATTACK, BATTLE_LEGENDARY_ATTACK, BATTLE_READY_RELEASE, BATTLE_MOVEMENT_OA_ATTACK), resolveAttack, and both MBT bridge schemas
@@ -392,7 +392,7 @@ Added `if (!c.turnStarted) return {}` guard to 10 TS battle action functions.
 
 `spendAction` in `battle-machine-creature.ts` returns the creature unchanged (no error, no signal) when `actionSurgeActionPending` or `ragingBlocksSpells` blocks a magic action. Callers MUST guard explicitly before calling — the function is not a guard, just a state mutator. Found when raging creatures could cast spells through the no-op.
 
-### D5. `AttackContext` divergence between Quint and TS [High — Pre-existing]
+### ~~D5. `AttackContext` divergence between Quint and TS~~ [Implemented]
 
 *Source: PRD 4 /simplify round 2*
 

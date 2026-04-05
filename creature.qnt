@@ -1488,9 +1488,10 @@ module creature {
     isRangedAttack: bool,
     beyondNormalRange: bool,
     hostileWithin5ft: bool,
-    // Weapon
+    // Weapon / wielder stats
     isHeavyWeapon: bool,
-    wielderSizeSmallOrTiny: bool,
+    wielderStrScore: int,   // SRD 5.2.1: Heavy melee disadv if STR < 13
+    wielderDexScore: int,   // SRD 5.2.1: Heavy ranged disadv if DEX < 13
     attackerGrappled: bool,
     targetIsGrappler: bool,
     // Environment
@@ -1540,7 +1541,10 @@ module creature {
     val disadv_rangedBeyondNormal = ctx.isRangedAttack and ctx.beyondNormalRange
     val disadv_rangedCloseQuarters = ctx.isRangedAttack and ctx.hostileWithin5ft
     val disadv_cantSeeTarget = not(ctx.attackerCanSeeTarget)
-    val disadv_heavySmall = ctx.isHeavyWeapon and ctx.wielderSizeSmallOrTiny
+    val disadv_heavy = ctx.isHeavyWeapon and (
+      (not(ctx.isRangedAttack) and ctx.wielderStrScore < 13) or
+      (ctx.isRangedAttack and ctx.wielderDexScore < 13)
+    )
     val disadv_grappled = ctx.attackerGrappled and not(ctx.targetIsGrappler)
     val disadv_underwaterMelee = ctx.underwater and not(ctx.isRangedAttack)
       and not(ctx.attackerHasSwimSpeed) and not(ctx.isUnderwaterMeleeException)
@@ -1552,7 +1556,7 @@ module creature {
       or disadv_attackerProne or disadv_attackerRestrained or disadv_attackerPoisoned
       or disadv_attackerFrightened or disadv_targetProneBeyond5ft
       or disadv_rangedBeyondNormal or disadv_rangedCloseQuarters or disadv_cantSeeTarget
-      or disadv_heavySmall or disadv_grappled or disadv_underwaterMelee
+      or disadv_heavy or disadv_grappled or disadv_underwaterMelee
       or disadv_underwaterRanged or disadv_dodging
 
     // --- Auto-crit ---

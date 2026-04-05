@@ -33,7 +33,7 @@ import { deflectAttacksResult } from "#/features/class-monk-features.ts"
 import { uncannyDodgeDamage } from "#/features/class-rogue.ts"
 import { aggregateAttackMods } from "#/machine-combat.ts"
 import type { AttackContext, CreatureId, DamageType, FullAttackMods } from "#/types.ts"
-import { armorClass, exhaustionLevel } from "#/types.ts"
+import { armorClass } from "#/types.ts"
 
 type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>
 
@@ -58,7 +58,6 @@ export function buildBattleAttackContext(
     attackerPoisoned: atk.poisoned,
     attackerFrightened: atk.frightened,
     attackerFrightSourceInLOS: frightSourceInLOS,
-    attackerExhaustion: exhaustionLevel(atk.exhaustion),
     targetBlinded: tgt.blinded,
     targetParalyzed: tgt.paralyzed,
     targetPetrified: tgt.petrified,
@@ -76,6 +75,8 @@ export function buildBattleAttackContext(
     isHeavyWeapon: false,
     wielderStrScore: 16, // not modeled in battle; safe default
     wielderDexScore: 14,
+    attackerGrappled: false, // grapple not in battle yet (F9)
+    targetIsGrappler: false,
     underwater: false,
     attackerHasSwimSpeed: false,
     isUnderwaterMeleeException: false,

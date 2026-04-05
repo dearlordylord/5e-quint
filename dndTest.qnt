@@ -1444,7 +1444,7 @@ module dndTest {
     attackerWithin5ft: true, targetDodging: false, targetCanSeeAttacker: true,
     attackerCanSeeTarget: true,
     isRangedAttack: false, beyondNormalRange: false, hostileWithin5ft: false,
-    isHeavyWeapon: false, wielderSizeSmallOrTiny: false,
+    isHeavyWeapon: false, wielderStrScore: 16, wielderDexScore: 14,
     attackerGrappled: false, targetIsGrappler: false,
     underwater: false, attackerHasSwimSpeed: false,
     isUnderwaterMeleeException: false, isUnderwaterRangedException: false,
@@ -1537,9 +1537,23 @@ module dndTest {
     assert(m.hasDisadvantage)
   }
 
-  // Heavy weapon + small creature: disadvantage
-  run test_aggregate_heavy_small = {
-    val ctx = BASE_ATTACK_CTX.with("isHeavyWeapon", true).with("wielderSizeSmallOrTiny", true)
+  // Heavy melee weapon + STR < 13: disadvantage (SRD 5.2.1)
+  run test_aggregate_heavy_melee_low_str = {
+    val ctx = BASE_ATTACK_CTX.with("isHeavyWeapon", true).with("wielderStrScore", 12)
+    val m = pAggregateAttackMods(ctx)
+    assert(m.hasDisadvantage)
+  }
+
+  // Heavy melee weapon + STR >= 13: no disadvantage
+  run test_aggregate_heavy_melee_ok_str = {
+    val ctx = BASE_ATTACK_CTX.with("isHeavyWeapon", true).with("wielderStrScore", 13)
+    val m = pAggregateAttackMods(ctx)
+    assert(not(m.hasDisadvantage))
+  }
+
+  // Heavy ranged weapon + DEX < 13: disadvantage
+  run test_aggregate_heavy_ranged_low_dex = {
+    val ctx = BASE_ATTACK_CTX.with("isHeavyWeapon", true).with("isRangedAttack", true).with("wielderDexScore", 12)
     val m = pAggregateAttackMods(ctx)
     assert(m.hasDisadvantage)
   }

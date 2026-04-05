@@ -168,7 +168,6 @@ export interface AttackContext {
   readonly attackerPoisoned: boolean
   readonly attackerFrightened: boolean
   readonly attackerFrightSourceInLOS: boolean
-  readonly attackerExhaustion: ExhaustionLevel
   readonly targetBlinded: boolean
   readonly targetParalyzed: boolean
   readonly targetPetrified: boolean
@@ -186,6 +185,8 @@ export interface AttackContext {
   readonly isHeavyWeapon: boolean
   readonly wielderStrScore: number
   readonly wielderDexScore: number
+  readonly attackerGrappled: boolean
+  readonly targetIsGrappler: boolean
   readonly underwater: boolean
   readonly attackerHasSwimSpeed: boolean
   readonly isUnderwaterMeleeException: boolean

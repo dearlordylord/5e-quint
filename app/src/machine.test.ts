@@ -41,7 +41,6 @@ import {
   CreatureId,
   d20Roll,
   damageAmount,
-  exhaustionLevel,
   healAmount,
   hp,
   proficiencyBonus,
@@ -764,10 +763,10 @@ describe("modifier aggregation - own attack mods", () => {
     expect(ownAttackMods(ctx(a), false).hasDisadvantage).toBe(true)
   })
 
-  it("exhaustion 3 gives disadv on own attacks", () => {
+  it("exhaustion 3 does NOT give disadv on own attacks (5.2.1: flat penalty, not disadv)", () => {
     const a = create()
     addExhaustion(a, 3)
-    expect(ownAttackMods(ctx(a), false).hasDisadvantage).toBe(true)
+    expect(ownAttackMods(ctx(a), false).hasDisadvantage).toBe(false)
   })
 })
 
@@ -825,10 +824,10 @@ describe("modifier aggregation - defense mods", () => {
 })
 
 describe("modifier aggregation - check mods", () => {
-  it("exhaustion 1 gives disadv on ability checks", () => {
+  it("exhaustion 1 does NOT give disadv on ability checks (5.2.1: flat penalty, not disadv)", () => {
     const a = create()
     addExhaustion(a, 1)
-    expect(checkMods(ctx(a), false, false, false).hasDisadvantage).toBe(true)
+    expect(checkMods(ctx(a), false, false, false).hasDisadvantage).toBe(false)
   })
 
   it("poisoned gives disadv on ability checks", () => {
@@ -860,10 +859,10 @@ describe("modifier aggregation - check mods", () => {
 })
 
 describe("modifier aggregation - save mods", () => {
-  it("exhaustion 3 gives disadv on saves", () => {
+  it("exhaustion 3 does NOT give disadv on saves (5.2.1: flat penalty, not disadv)", () => {
     const a = create()
     addExhaustion(a, 3)
-    expect(saveMods(ctx(a), "con").hasDisadvantage).toBe(true)
+    expect(saveMods(ctx(a), "con").hasDisadvantage).toBe(false)
   })
 
   it("restrained gives disadv on DEX saves", () => {
@@ -1623,7 +1622,6 @@ describe("aggregateAttackMods", () => {
   const baseCtx: AttackContext = {
     attackerBlinded: false,
     attackerCanSeeTarget: true,
-    attackerExhaustion: exhaustionLevel(0),
     attackerFrightSourceInLOS: false,
     attackerFrightened: false,
     attackerHasSwimSpeed: false,
@@ -1649,6 +1647,8 @@ describe("aggregateAttackMods", () => {
     underwater: false,
     wielderStrScore: 16,
     wielderDexScore: 14,
+    attackerGrappled: false,
+    targetIsGrappler: false,
     attackerReckless: false,
     targetReckless: false
   }
@@ -2185,7 +2185,6 @@ describe("aggregateAttackMods additional branches", () => {
   const baseCtx: AttackContext = {
     attackerBlinded: false,
     attackerCanSeeTarget: true,
-    attackerExhaustion: exhaustionLevel(0),
     attackerFrightSourceInLOS: false,
     attackerFrightened: false,
     attackerHasSwimSpeed: false,
@@ -2211,6 +2210,8 @@ describe("aggregateAttackMods additional branches", () => {
     underwater: false,
     wielderStrScore: 16,
     wielderDexScore: 14,
+    attackerGrappled: false,
+    targetIsGrappler: false,
     attackerReckless: false,
     targetReckless: false
   }
@@ -2228,6 +2229,16 @@ describe("aggregateAttackMods additional branches", () => {
   })
   it("underwater ranged within normal range: disadv", () => {
     expect(aggregateAttackMods({ ...baseCtx, underwater: true, isRangedAttack: true }).hasDisadvantage).toBe(true)
+  })
+  it("grappled attacking non-grappler: disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, attackerGrappled: true, targetIsGrappler: false }).hasDisadvantage).toBe(
+      true
+    )
+  })
+  it("grappled attacking grappler: no disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, attackerGrappled: true, targetIsGrappler: true }).hasDisadvantage).toBe(
+      false
+    )
   })
 })
 

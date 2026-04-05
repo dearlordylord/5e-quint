@@ -1,5 +1,4 @@
 import { NAT_1, NAT_20 } from "#/machine-helpers.ts"
-import { EXHAUSTION_DISADV_THRESHOLD } from "#/machine-queries.ts"
 import { SIZE_ORDER } from "#/srd-constants.ts"
 import type {
   AdvState,
@@ -113,12 +112,12 @@ export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
     ctx.attackerRestrained ||
     ctx.attackerPoisoned ||
     (ctx.attackerFrightened && ctx.attackerFrightSourceInLOS) ||
-    ctx.attackerExhaustion >= EXHAUSTION_DISADV_THRESHOLD ||
     (ctx.targetProne && !ctx.attackerWithin5ft) ||
     (ctx.isRangedAttack && ctx.beyondNormalRange) ||
     (ctx.isRangedAttack && ctx.hostileWithin5ft) ||
     !ctx.attackerCanSeeTarget ||
     (ctx.isHeavyWeapon && (!ctx.isRangedAttack ? ctx.wielderStrScore < 13 : ctx.wielderDexScore < 13)) ||
+    (ctx.attackerGrappled && !ctx.targetIsGrappler) ||
     (ctx.underwater && !ctx.isRangedAttack && !ctx.attackerHasSwimSpeed && !ctx.isUnderwaterMeleeException) ||
     (ctx.underwater && ctx.isRangedAttack && !ctx.beyondNormalRange && !ctx.isUnderwaterRangedException) ||
     (ctx.targetDodging && ctx.targetCanSeeAttacker)

@@ -1,11 +1,6 @@
 import type { DndContext } from "#/machine-types.ts"
 import type { Ability, AdvState, D20Mods, DefenseMods } from "#/types.ts"
 
-// --- Constants ---
-
-const EXHAUSTION_CHECK_DISADV_THRESHOLD = 1
-export const EXHAUSTION_DISADV_THRESHOLD = 3
-
 // --- Derived state queries ---
 
 /** Incapacitated is derived from source tracking, not a stored flag. */
@@ -25,17 +20,12 @@ export function canSpeak(ctx: DndContext): boolean {
 
 // --- Modifier aggregation (matches Quint pure functions) ---
 
-/** Own attack modifiers from conditions. Matches Quint pOwnAttackModifiers. */
+/** Own attack modifiers from conditions. Matches Quint pOwnAttackModifiers.
+ *  Exhaustion flat penalty (-2*level) applied separately via exhaustionPenalty. */
 export function ownAttackMods(ctx: DndContext, frightSourceInLOS: boolean): AdvState {
   return {
     hasAdvantage: ctx.invisible,
-    hasDisadvantage:
-      ctx.blinded ||
-      ctx.prone ||
-      ctx.restrained ||
-      ctx.poisoned ||
-      (ctx.frightened && frightSourceInLOS) ||
-      ctx.exhaustion >= EXHAUSTION_DISADV_THRESHOLD
+    hasDisadvantage: ctx.blinded || ctx.prone || ctx.restrained || ctx.poisoned || (ctx.frightened && frightSourceInLOS)
   }
 }
 
@@ -55,7 +45,8 @@ export function defenseMods(ctx: DndContext, attackerWithin5ft: boolean): Defens
   }
 }
 
-/** Ability check modifiers. Matches Quint pCheckModifiers. */
+/** Ability check modifiers. Matches Quint pCheckModifiers.
+ *  Exhaustion flat penalty (-2*level) applied separately via exhaustionPenalty. */
 export function checkMods(
   ctx: DndContext,
   requiresSight: boolean,
@@ -64,18 +55,18 @@ export function checkMods(
 ): D20Mods {
   return {
     hasAdvantage: false,
-    hasDisadvantage:
-      ctx.exhaustion >= EXHAUSTION_CHECK_DISADV_THRESHOLD || ctx.poisoned || (ctx.frightened && frightSourceInLOS),
+    hasDisadvantage: ctx.poisoned || (ctx.frightened && frightSourceInLOS),
     autoFail: (ctx.blinded && requiresSight) || (ctx.deafened && requiresHearing)
   }
 }
 
-/** Saving throw modifiers. Matches Quint pSaveModifiers. */
+/** Saving throw modifiers. Matches Quint pSaveModifiers.
+ *  Exhaustion flat penalty (-2*level) applied separately via exhaustionPenalty. */
 export function saveMods(ctx: DndContext, ability: Ability): D20Mods {
   const isStrOrDex = ability === "str" || ability === "dex"
   return {
     hasAdvantage: false,
-    hasDisadvantage: ctx.exhaustion >= EXHAUSTION_DISADV_THRESHOLD || (ctx.restrained && ability === "dex"),
+    hasDisadvantage: ctx.restrained && ability === "dex",
     autoFail: isStrOrDex && (ctx.paralyzed || ctx.petrified || ctx.stunned || ctx.unconscious)
   }
 }
