@@ -1741,5 +1741,5 @@ describe("Battle Projection MBT", () => {
       })
       logMbtSeed("battle MBT", result)
     }
-  }, 300_000)
+  }, 600_000) // 10 min — Tier 2 (MBT_DEV) needs ~5 min, Tier 3 needs nohup
 })
