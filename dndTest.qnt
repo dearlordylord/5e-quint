@@ -1447,7 +1447,8 @@ module dndTest {
     isHeavyWeapon: false, wielderSizeSmallOrTiny: false,
     attackerGrappled: false, targetIsGrappler: false,
     underwater: false, attackerHasSwimSpeed: false,
-    isUnderwaterMeleePiercing: false, isUnderwaterRangedException: false,
+    isUnderwaterMeleeException: false, isUnderwaterRangedException: false,
+    attackerReckless: false, targetReckless: false,
   }
 
   // Clean attack: no modifiers
@@ -1551,7 +1552,7 @@ module dndTest {
   }
 
   run test_aggregate_underwater_melee_piercing = {
-    val ctx = BASE_ATTACK_CTX.with("underwater", true).with("isUnderwaterMeleePiercing", true)
+    val ctx = BASE_ATTACK_CTX.with("underwater", true).with("isUnderwaterMeleeException", true)
     val m = pAggregateAttackMods(ctx)
     assert(not(m.hasDisadvantage))
   }

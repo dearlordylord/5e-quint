@@ -1496,8 +1496,11 @@ module creature {
     // Environment
     underwater: bool,
     attackerHasSwimSpeed: bool,
-    isUnderwaterMeleePiercing: bool,
+    isUnderwaterMeleeException: bool,
     isUnderwaterRangedException: bool,
+    // Reckless Attack (Barbarian)
+    attackerReckless: bool,  // attacker declared Reckless Attack this turn (advantage on melee)
+    targetReckless: bool,    // target declared Reckless Attack (enemies get advantage)
   }
 
   type FullAttackMods = {
@@ -1518,9 +1521,14 @@ module creature {
     // PHB p.195: "When a creature can't see you, you have advantage on attack rolls against it."
     // Subsumes invisible, hidden, darkness, etc.
     val adv_unseenAttacker = not(ctx.targetCanSeeAttacker)
+    // Reckless Attack: attacker gets advantage on melee attacks
+    val adv_attackerReckless = ctx.attackerReckless and not(ctx.isRangedAttack)
+    // RAW: "attack rolls against you have Advantage" when reckless
+    val adv_targetReckless = ctx.targetReckless
 
     val anyAdvantage = adv_targetBlinded or adv_targetIncap
       or adv_targetProne5ft or adv_targetRestrained or adv_unseenAttacker
+      or adv_attackerReckless or adv_targetReckless
 
     // --- Disadvantage sources ---
     val disadv_attackerBlinded = ctx.attackerBlinded
@@ -1535,7 +1543,7 @@ module creature {
     val disadv_heavySmall = ctx.isHeavyWeapon and ctx.wielderSizeSmallOrTiny
     val disadv_grappled = ctx.attackerGrappled and not(ctx.targetIsGrappler)
     val disadv_underwaterMelee = ctx.underwater and not(ctx.isRangedAttack)
-      and not(ctx.attackerHasSwimSpeed) and not(ctx.isUnderwaterMeleePiercing)
+      and not(ctx.attackerHasSwimSpeed) and not(ctx.isUnderwaterMeleeException)
     val disadv_underwaterRanged = ctx.underwater and ctx.isRangedAttack
       and not(ctx.beyondNormalRange) and not(ctx.isUnderwaterRangedException)
     val disadv_dodging = ctx.targetDodging and ctx.targetCanSeeAttacker

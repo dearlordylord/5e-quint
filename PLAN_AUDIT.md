@@ -359,14 +359,18 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 7. ~~**PRD 1** (attack pipeline + class features)~~ DONE -- covers S1, F3, F5, rage/reckless
 8. ~~**PRD 3** (passive modifier system, Evasion)~~ DONE -- covers C3
 9. ~~**PRD 2** (Ready action, Phase 1)~~ DONE -- covers C8
-10. **PRD 4** (attack type + advantage + Sneak Attack) -- covers D1, F4(SA), wires advantage pipeline. PRD: `PRD_ATTACK_TYPE_AND_ADVANTAGE.md`, Plan: `PLAN_PRD4_ATTACK_TYPE_ADVANTAGE_SA.md`
-11. **PRD 3 continuation** (saveMiscBonus for Aura of Protection) -- covers F7. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 1
-12. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 2
-13. **F1** (more reactions) -- incremental, add as needed
-14. ~~**S2** (fix OA comment)~~ DONE
-15. ~~**S3** (investigate excluded invariants)~~ DONE (phase-scoped, added to allBattleInvariants)
-16. ~~**C2** (Arcane Recovery)~~ DONE (budget constraint added)
-17. ~~**C5** (Knock Out)~~ DONE (melee guard deferred to PRD 4)
+10. ~~**PRD 4** (attack type + advantage + Sneak Attack)~~ DONE -- covers D1, F4(SA), wires advantage pipeline. PRD: `PRD_ATTACK_TYPE_AND_ADVANTAGE.md`, Plan: `PLAN_PRD4_ATTACK_TYPE_ADVANTAGE_SA.md`
+11. **D8** (Battle MBT broken on master — `Unknown action: bDash`) -- Critical, blocks MBT parity verification
+12. **D7** (MBT bridge schema gaps — `bReadyRelease` etc. missing from `battleDriverSchema`) -- High, MBT fidelity
+13. **D5** (AttackContext divergence Quint↔TS — heavy weapon, grapple, exhaustion) -- High, pre-existing
+14. **PRD 3 continuation** (saveMiscBonus for Aura of Protection) -- covers F7. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 1
+15. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 2
+16. **D6** (knockOut has no TS implementation) -- Medium, Quint-only feature
+17. **F1** (more reactions) -- incremental, add as needed
+18. ~~**S2** (fix OA comment)~~ DONE
+19. ~~**S3** (investigate excluded invariants)~~ DONE (phase-scoped, added to allBattleInvariants)
+20. ~~**C2** (Arcane Recovery)~~ DONE (budget constraint added)
+21. ~~**C5** (Knock Out)~~ DONE (melee guard deferred to PRD 4)
 
 ---
 
@@ -387,3 +391,41 @@ Added `if (!c.turnStarted) return {}` guard to 10 TS battle action functions.
 ### D4. `spendAction("magic")` is a silent no-op when blocked [Architectural note]
 
 `spendAction` in `battle-machine-creature.ts` returns the creature unchanged (no error, no signal) when `actionSurgeActionPending` or `ragingBlocksSpells` blocks a magic action. Callers MUST guard explicitly before calling — the function is not a guard, just a state mutator. Found when raging creatures could cast spells through the no-op.
+
+### D5. `AttackContext` divergence between Quint and TS [High — Pre-existing]
+
+*Source: PRD 4 /simplify round 2*
+
+Quint's `AttackContext` (`creature.qnt`) and TS's `AttackContext` (`types.ts`) have structurally diverged:
+
+- Quint has `wielderSizeSmallOrTiny` (5.1 rule); TS has `wielderStrScore`/`wielderDexScore` (5.2.1 C10 fix). Different logic for heavy weapon disadvantage.
+- Quint has `attackerGrappled`/`targetIsGrappler`; TS has neither. Grapple disadvantage path exists only in Quint.
+- TS has `attackerExhaustion`; Quint has no equivalent. Exhaustion disadvantage only in TS.
+
+Currently harmless — both `buildAttackContext` (Quint) and `buildBattleAttackContext` (TS) hardcode the divergent fields to safe defaults. Will bite when grapple or heavy weapons are activated in battle.
+
+**Fix:** Align Quint `AttackContext` to 5.2.1 (add `wielderStrScore`/`wielderDexScore`, drop `wielderSizeSmallOrTiny`; add `attackerExhaustion`). Update `pAggregateAttackMods` to match TS `aggregateAttackMods`.
+
+### D6. `knockOut` has no TS battle machine implementation [Medium — Pre-existing]
+
+*Source: PRD 4 implementation*
+
+Quint `dealDamage` (`battle.qnt:409`) has full knockOut logic (checks `knockOut and kind == PC and hp > 0 and newHp == 0 and not(dead)`, calls `pKnockOut`). The TS `dealDamage` (`battle-machine-helpers.ts:111`) has no `knockOut` parameter — it always applies normal damage. The MBT bridge doesn't map `knockOut`. PRD 4 gates `knockOut` on `isMelee` in Quint but the TS gap remains.
+
+**Fix:** Add `knockOut: boolean` parameter to TS `dealDamage` and `dealDamageWithAfterReactions`. Thread from `resolveAttack` (already has it in Quint). Add to `AttackHitCtx` (already there in Quint). Map in MBT bridge.
+
+### D7. `bReadyRelease` and other actions missing from `battleDriverSchema` [High — Pre-existing]
+
+*Source: PRD 4 MBT investigation*
+
+`bReadyRelease`, `bActionSurge`, `bEnterRage`, `bDeclareReckless`, `bReady`, `bReadyPass` are in the MBT bridge dispatch but NOT in `battleDriverSchema`. This means their nondeterministic picks are not parsed from ITF traces — the bridge sends default fallback values instead of the actual Quint-chosen values. MBT fidelity is compromised for any trace that includes these actions.
+
+**Fix:** Add schema entries for all dispatch-only actions.
+
+### D8. Battle MBT broken on master (`Unknown action: bDash`) [Critical — Pre-existing]
+
+*Source: PRD 4 verification*
+
+`MBT_DEV=1 npx vitest run src/battle.mbt.test.ts` fails with `TraceReplayError: Unknown action: bDash` on master (confirmed by stashing PRD 4 changes). The `bDash` action is in both `battleDriverSchema` and the dispatch handler, so the issue is in `@firfi/quint-connect`'s action name resolution — likely the `match bPhase` in `battleStep` reports the composite name for some actions despite the `any { }` wrapper.
+
+**Fix:** Investigate `quint-connect` action name resolution for `match` arms. May need to wrap the `BPActiveTurn` arm differently, or update `quint-connect` to handle nested `match` → `any` patterns.

@@ -42,6 +42,8 @@ module battle {
     recklessThisTurn: bool,                  // Reckless Attack declared this turn
     ragingBlocksSpells: bool,                // rage blocks spell casting
     combatantResistances: Set[DamageType],   // runtime resistances (rage B/P/S, Bear Totem all, etc.)
+    sneakAttackDice: int,                    // Sneak Attack d6 count (0 = not a rogue; ceil(rogueLevel/2))
+    sneakAttackUsedThisTurn: bool,           // SA once per turn (SRD 5.2.1 Rogue "Sneak Attack")
   }
 
   type TriggerType =
@@ -348,6 +350,8 @@ module battle {
     recklessThisTurn: false,
     ragingBlocksSpells: false,
     combatantResistances: Set(),
+    sneakAttackDice: 0,
+    sneakAttackUsedThisTurn: false,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -375,6 +379,8 @@ module battle {
     recklessThisTurn: false,
     ragingBlocksSpells: false,
     combatantResistances: Set(),
+    sneakAttackDice: 0,
+    sneakAttackUsedThisTurn: false,
   }
 
   // Monster with legendary actions and resistances
@@ -399,6 +405,8 @@ module battle {
     recklessThisTurn: false,
     ragingBlocksSpells: false,
     combatantResistances: Set(),
+    sneakAttackDice: 0,
+    sneakAttackUsedThisTurn: false,
   }
 
   /// Deal damage to a target. When knockOut=true and the hit would reduce a PC to 0 HP,
@@ -661,7 +669,7 @@ module battle {
     nondet surprised4 = Bool.oneOf()
     all {
       bCreatures' = Map(
-        "A" -> mkCaster(hp1, PC).with("rogueLevel", 5).with("hasEvasion", true),  // B11: rogue 5 + Evasion
+        "A" -> mkCaster(hp1, PC).with("rogueLevel", 5).with("hasEvasion", true).with("sneakAttackDice", 3),  // B11: rogue 5, Evasion, SA 3d6
         "B" -> mkCaster(hp2, PC).with("saveMiscBonus", 3).with("barbarianLevel", 5),  // Paladin Aura + barbarian 5
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
         "D" -> mkCaster(hp4, PC).with("critRange", 19).with("fighterLevel", 5).with("fighterState", freshFighterState(5))  // Champion fighter 5
@@ -726,7 +734,8 @@ module battle {
       // 4b. Fighter start-of-turn: reset actionSurgeUsedThisTurn
       val ac4 = cs2.get(activeId)
       val cs2b = cs2.set(activeId, ac4.with("fighterState", pFighterStartTurn(ac4.fighterState, ac4.fighterLevel))
-                                            .with("recklessThisTurn", false))
+                                            .with("recklessThisTurn", false)
+                                            .with("sneakAttackUsedThisTurn", false))
       // 5. Monster-specific: refresh LA + recharge rolls
       val cs3 = if (c.kind == Monster) {
         val sb = c.statBlock
@@ -764,8 +773,54 @@ module battle {
 
   // --- Attack transaction (B0/B1) ---
 
+  /// Build AttackContext from Combatant state + per-attack parameters.
+  /// Spatial/visibility booleans are caller-provided (nondeterministic in spec).
+  pure def buildAttackContext(
+    cs: CreatureId -> Combatant,
+    attackerId: CreatureId, targetId: CreatureId,
+    isMelee: bool,
+    attackerWithin5ft: bool, hostileWithin5ft: bool,
+    targetCanSeeAttacker: bool, attackerCanSeeTarget: bool,
+    frightSourceInLOS: bool,
+  ): AttackContext = {
+    val atk = cs.get(attackerId)
+    val tgt = cs.get(targetId)
+    {
+      attackerBlinded: atk.creature.blinded,
+      attackerProne: atk.creature.prone,
+      attackerRestrained: atk.creature.restrained,
+      attackerPoisoned: atk.creature.poisoned,
+      attackerFrightened: atk.creature.frightened,
+      attackerFrightSourceInLOS: frightSourceInLOS,
+      targetBlinded: tgt.creature.blinded,
+      targetParalyzed: tgt.creature.paralyzed,
+      targetPetrified: tgt.creature.petrified,
+      targetStunned: tgt.creature.stunned,
+      targetUnconscious: tgt.creature.unconscious,
+      targetRestrained: tgt.creature.restrained,
+      targetProne: tgt.creature.prone,
+      attackerWithin5ft: attackerWithin5ft,
+      targetDodging: tgt.turn.dodging,
+      targetCanSeeAttacker: targetCanSeeAttacker,
+      attackerCanSeeTarget: attackerCanSeeTarget,
+      isRangedAttack: not(isMelee),
+      beyondNormalRange: false,       // range modeling deferred
+      hostileWithin5ft: hostileWithin5ft,
+      isHeavyWeapon: false,           // handled separately by C10 fix
+      wielderSizeSmallOrTiny: false,   // handled separately by C10 fix
+      attackerGrappled: false,        // grapple not in battle yet (F9)
+      targetIsGrappler: false,
+      underwater: false,              // environmental, deferred
+      attackerHasSwimSpeed: false,
+      isUnderwaterMeleeException: false,
+      isUnderwaterRangedException: false,
+      attackerReckless: atk.recklessThisTurn,
+      targetReckless: tgt.recklessThisTurn,
+    }
+  }
+
   /// Shared attack resolution: determines hit, enters reaction chain or deals damage.
-  /// Called by bAttack, bMovementOAAttack, and (future) bLegendaryAttack, bReadyRelease.
+  /// Called by bAttack, bMovementOAAttack, bLegendaryAttack, bReadyRelease.
   pure def resolveAttack(
     cs: CreatureId -> Combatant,
     attackerId: CreatureId, targetId: CreatureId,
@@ -773,27 +828,45 @@ module battle {
     damage: int, damageType: DamageType, isCritical: bool,
     critRange: int,
     returnTo: AfterDamageReturn,
-    knockOut: bool
+    knockOut: bool,
+    isMelee: bool,
+    mods: FullAttackMods,
+    isFinesse: bool,
+    hasAllyAdjacentToTarget: bool,
+    saDmg: int,
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
-    val hit = attackRoll >= targetAc or attackRoll >= critRange
+    // autoMiss forces miss; otherwise normal hit check
+    val hit = not(mods.autoMiss) and (attackRoll >= targetAc or attackRoll >= critRange)
     if (not(hit)) {
       { creatures: cs, phase: returnToPhase(returnTo) }
     } else {
       val atk = cs.get(attackerId)
-      val totalDmg = damage + atk.meleeDamageBonus  // rage bonus (0 if not raging)
+      val meleeDmgBonus = if (isMelee) atk.meleeDamageBonus else 0  // rage bonus: melee only (D1 fix)
+      // Sneak Attack eligibility (SRD 5.2.1 Rogue "Sneak Attack")
+      val eligibleWeapon = isFinesse or not(isMelee)  // finesse or ranged weapon
+      val saEligible = atk.sneakAttackDice > 0
+        and not(atk.sneakAttackUsedThisTurn)
+        and eligibleWeapon
+        and (mods.hasAdvantage or (hasAllyAdjacentToTarget and not(mods.hasDisadvantage)))
+      val effectiveSaDmg = if (saEligible) saDmg else 0
+      val totalDmg = damage + meleeDmgBonus + effectiveSaDmg
+      val effectiveKnockOut = knockOut and isMelee  // SRD: knock out is melee only
+      val effectiveCrit = isCritical or mods.autoCrit  // Paralyzed/Unconscious within 5ft = auto-crit
+      // Mark SA used on attacker if SA fired
+      val cs1 = if (saEligible) cs.set(attackerId, atk.with("sneakAttackUsedThisTurn", true)) else cs
       val atkCtx: AttackHitCtx = {
         attacker: attackerId, target: targetId,
         attackRoll: attackRoll, targetAc: targetAc,
-        damage: totalDmg, damageType: damageType, isCritical: isCritical,
+        damage: totalDmg, damageType: damageType, isCritical: effectiveCrit,
         critRange: critRange,
         atkReturnTo: returnTo,
-        knockOut: knockOut,
+        knockOut: effectiveKnockOut,
       }
-      val elig = eligibleExcluding(cs, attackerId)
+      val elig = eligibleExcluding(cs1, attackerId)
       if (elig.size() > 0) {
-        { creatures: cs, phase: BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, elig)) }
+        { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, elig)) }
       } else {
-        dealDamageWithAfterReactions(cs, targetId, attackerId, totalDmg, damageType, isCritical, returnTo, knockOut)
+        dealDamageWithAfterReactions(cs1, targetId, attackerId, totalDmg, damageType, effectiveCrit, returnTo, knockOut)
       }
     }
   }
@@ -812,9 +885,18 @@ module battle {
     nondet dt = Set(Slashing, Piercing, Bludgeoning).oneOf()
     nondet crit = Bool.oneOf()
     nondet tAc = 10.to(20).oneOf()
-    // SRD 5.2.1 "Knocking Out a Creature": melee attacker can choose knock out.
-    // NOTE: no melee/ranged distinction yet (see D1), so choice is always offered.
     nondet knockOut = Bool.oneOf()
+    nondet isMelee = Bool.oneOf()
+    nondet isFinesse = Bool.oneOf()  // SRD: only melee weapons have Finesse, except Dart (Simple Ranged)
+    // Spatial/visibility nondets (caller-provided facts)
+    nondet attackerWithin5ft = Bool.oneOf()
+    nondet hostileWithin5ft = Bool.oneOf()
+    nondet targetCanSeeAttacker = Bool.oneOf()
+    nondet attackerCanSeeTarget = Bool.oneOf()
+    nondet frightSourceInLOS = Bool.oneOf()
+    nondet hasAllyAdjacentToTarget = Bool.oneOf()
+    // SA damage: nondeterministic within Nd6 range (0 if not eligible — resolved in resolveAttack)
+    nondet saDmg = ac.sneakAttackDice.to(ac.sneakAttackDice * 6).oneOf()
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -828,7 +910,9 @@ module battle {
       else
         pUseAction(ac.turn, ac.creature, AAttack)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
-      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut)
+      val atkCtx = buildAttackContext(cs1, activeId, targetId, isMelee, attackerWithin5ft, hostileWithin5ft, targetCanSeeAttacker, attackerCanSeeTarget, frightSourceInLOS)
+      val atkMods = pAggregateAttackMods(atkCtx)
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, atkMods, isFinesse, hasAllyAdjacentToTarget, saDmg)
       all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
     }
   }
@@ -1849,6 +1933,13 @@ module battle {
     nondet oaCrit = Bool.oneOf()
     nondet oaTgtAc = 10.to(20).oneOf()
     nondet oaKnockOut = Bool.oneOf()
+    nondet oaIsFinesse = Bool.oneOf()
+    // OA spatial: always within 5ft, visibility nondeterministic
+    nondet oaHostileWithin5ft = Bool.oneOf()
+    nondet oaTargetCanSeeAttacker = Bool.oneOf()
+    nondet oaAttackerCanSeeTarget = Bool.oneOf()
+    nondet oaFrightSourceInLOS = Bool.oneOf()
+    nondet oaHasAllyAdjacent = Bool.oneOf()
     match bPhase {
       | BPResolvingMovement(mv) =>
         val remaining = mv.threatenedBy.exclude(mv.processed)
@@ -1858,8 +1949,12 @@ module battle {
         nondet reactorId = remaining.oneOf()
         val updatedMv = mv.with("processed", mv.processed.union(Set(reactorId)))
         val reactor = bCreatures.get(reactorId)
+        nondet oaSaDmg = reactor.sneakAttackDice.to(reactor.sneakAttackDice * 6).oneOf()
         val cs1 = spendReaction(bCreatures, reactorId)
-        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut)
+        // OA: always melee, always within 5ft
+        val oaCtx = buildAttackContext(cs1, reactorId, mv.mover, true, true, oaHostileWithin5ft, oaTargetCanSeeAttacker, oaAttackerCanSeeTarget, oaFrightSourceInLOS)
+        val oaMods = pAggregateAttackMods(oaCtx)
+        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaMods, oaIsFinesse, oaHasAllyAdjacent, oaSaDmg)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -1989,11 +2084,22 @@ module battle {
         nondet crit = Bool.oneOf()
         nondet tgtAc = 10.to(20).oneOf()
         nondet readyKnockOut = Bool.oneOf()
+        nondet readyIsMelee = Bool.oneOf()
+        nondet readyIsFinesse = Bool.oneOf()
+        nondet readyAtkWithin5ft = Bool.oneOf()
+        nondet readyHostileWithin5ft = Bool.oneOf()
+        nondet readyTgtCanSee = Bool.oneOf()
+        nondet readyAtkCanSee = Bool.oneOf()
+        nondet readyFrightLOS = Bool.oneOf()
+        nondet readyHasAllyAdjacent = Bool.oneOf()
         val releaser = bCreatures.get(releaserId)
+        nondet readySaDmg = releaser.sneakAttackDice.to(releaser.sneakAttackDice * 6).oneOf()
         val updatedTurn = releaser.turn.with("reactionAvailable", false).with("readiedAction", false)
         val cs1 = bCreatures.set(releaserId, releaser.with("turn", updatedTurn))
         val readyReturn = ADRAwaitingReadiedAction(readyCtx)
-        val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut)
+        val readyAtkCtx = buildAttackContext(cs1, releaserId, targetId, readyIsMelee, readyAtkWithin5ft, readyHostileWithin5ft, readyTgtCanSee, readyAtkCanSee, readyFrightLOS)
+        val readyMods = pAggregateAttackMods(readyAtkCtx)
+        val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
@@ -2014,12 +2120,23 @@ module battle {
         nondet laCrit = Bool.oneOf()
         nondet laTgtAc = 10.to(20).oneOf()
         nondet laKnockOut = Bool.oneOf()
+        nondet laIsMelee = Bool.oneOf()
+        nondet laIsFinesse = Bool.oneOf()
+        nondet laAtkWithin5ft = Bool.oneOf()
+        nondet laHostileWithin5ft = Bool.oneOf()
+        nondet laTgtCanSee = Bool.oneOf()
+        nondet laAtkCanSee = Bool.oneOf()
+        nondet laFrightLOS = Bool.oneOf()
+        nondet laHasAllyAdjacent = Bool.oneOf()
         val m = bCreatures.get(monsterId)
+        nondet laSaDmg = m.sneakAttackDice.to(m.sneakAttackDice * 6).oneOf()
         val newMR = m.monsterResources.with("legendaryActionsRemaining",
           m.monsterResources.legendaryActionsRemaining - 1)
         val cs1 = bCreatures.set(monsterId, m.with("monsterResources", newMR))
         val laReturn = ADRAwaitingLegendaryAction(laCtx)
-        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut)
+        val laAtkCtx = buildAttackContext(cs1, monsterId, laTarget, laIsMelee, laAtkWithin5ft, laHostileWithin5ft, laTgtCanSee, laAtkCanSee, laFrightLOS)
+        val laMods = pAggregateAttackMods(laAtkCtx)
+        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laMods, laIsFinesse, laHasAllyAdjacent, laSaDmg)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }

@@ -74,6 +74,15 @@ export type BattleEvent =
       readonly dt: DamageType
       readonly crit: boolean
       readonly tAc: ArmorClass
+      readonly isMelee: boolean
+      readonly isFinesse: boolean
+      readonly attackerWithin5ft: boolean
+      readonly hostileWithin5ft: boolean
+      readonly targetCanSeeAttacker: boolean
+      readonly attackerCanSeeTarget: boolean
+      readonly frightSourceInLOS: boolean
+      readonly hasAllyAdjacentToTarget: boolean
+      readonly saDmg: number
     }
   | {
       readonly type: "BATTLE_RESOLVE_HIT_REACTION"
@@ -164,6 +173,14 @@ export type BattleEvent =
       readonly oaDt: DamageType
       readonly oaCrit: boolean
       readonly oaTgtAc: ArmorClass
+      readonly isMelee: true // OA attacks are always melee per RAW
+      readonly isFinesse: boolean
+      readonly hostileWithin5ft: boolean
+      readonly targetCanSeeAttacker: boolean
+      readonly attackerCanSeeTarget: boolean
+      readonly frightSourceInLOS: boolean
+      readonly hasAllyAdjacentToTarget: boolean
+      readonly saDmg: number
     }
   | {
       readonly type: "BATTLE_END_TURN"
@@ -182,6 +199,15 @@ export type BattleEvent =
       readonly laDt: DamageType
       readonly laCrit: boolean
       readonly laTgtAc: ArmorClass
+      readonly isMelee: boolean
+      readonly isFinesse: boolean
+      readonly attackerWithin5ft: boolean
+      readonly hostileWithin5ft: boolean
+      readonly targetCanSeeAttacker: boolean
+      readonly attackerCanSeeTarget: boolean
+      readonly frightSourceInLOS: boolean
+      readonly hasAllyAdjacentToTarget: boolean
+      readonly saDmg: number
     }
   | { readonly type: "BATTLE_HEAL"; readonly targetId: CreatureId; readonly amount: number }
   | { readonly type: "BATTLE_DASH" }
@@ -201,6 +227,15 @@ export type BattleEvent =
       readonly dt: DamageType
       readonly crit: boolean
       readonly tgtAc: ArmorClass
+      readonly isMelee: boolean
+      readonly isFinesse: boolean
+      readonly attackerWithin5ft: boolean
+      readonly hostileWithin5ft: boolean
+      readonly targetCanSeeAttacker: boolean
+      readonly attackerCanSeeTarget: boolean
+      readonly frightSourceInLOS: boolean
+      readonly hasAllyAdjacentToTarget: boolean
+      readonly saDmg: number
     }
 
 /** Narrows BattleEvent to a specific type member for action functions. */

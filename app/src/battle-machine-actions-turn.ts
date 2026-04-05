@@ -1,4 +1,4 @@
-import { resolveAttack } from "#/battle-machine-actions-attack.ts"
+import { buildBattleAttackContext, resolveAttack } from "#/battle-machine-actions-attack.ts"
 import { freshCaster, freshCreature, isIncapacitated } from "#/battle-machine-creature.ts"
 import {
   activeId,
@@ -13,6 +13,7 @@ import type { BattleActionArgs, BattleContext, BattleCreatureState, CreatureId }
 import { PHASE_ACTIVE, phaseAwaitingLegendary, phaseAwaitingReady } from "#/battle-machine-types.ts"
 import { rageDamageBonus, rageResistances } from "#/features/class-barbarian.ts"
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts"
+import { aggregateAttackMods } from "#/machine-combat.ts"
 
 // TODO style: combinators
 function readyEligible(cs: ReadonlyMap<CreatureId, BattleCreatureState>): ReadonlySet<CreatureId> {
@@ -78,7 +79,8 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
           })()
         : {}),
       ...(cfg.barbarianLevel != null ? { barbarianLevel: cfg.barbarianLevel } : {}),
-      ...(cfg.meleeDamageBonus != null ? { meleeDamageBonus: cfg.meleeDamageBonus } : {})
+      ...(cfg.meleeDamageBonus != null ? { meleeDamageBonus: cfg.meleeDamageBonus } : {}),
+      ...(cfg.sneakAttackDice != null ? { sneakAttackDice: cfg.sneakAttackDice } : {})
     })
     initiative.push(cfg.id)
   }
@@ -125,7 +127,12 @@ export function battleStartTurn({
     e.deathSaveRoll
   )
   const afterFs = result.get(id)!
-  const resetResult = setCreature(result, id, { ...afterFs, actionSurgeUsedThisTurn: false, recklessThisTurn: false })
+  const resetResult = setCreature(result, id, {
+    ...afterFs,
+    actionSurgeUsedThisTurn: false,
+    recklessThisTurn: false,
+    sneakAttackUsedThisTurn: false
+  })
   return { creatures: resetResult, turnStarted: true }
 }
 
@@ -172,6 +179,18 @@ export function battleReadyRelease({
     readiedAction: false
   })
   const readyReturn = { tag: "ADRAwaitingReadiedAction" as const, ready: c.readyCtx! }
+  const readyCtx = buildBattleAttackContext(
+    cs,
+    e.releaserId,
+    e.targetId,
+    e.isMelee,
+    e.attackerWithin5ft,
+    e.hostileWithin5ft,
+    e.targetCanSeeAttacker,
+    e.attackerCanSeeTarget,
+    e.frightSourceInLOS
+  )
+  const readyMods = aggregateAttackMods(readyCtx)
   return resolveAttack(
     cs,
     e.releaserId,
@@ -182,7 +201,12 @@ export function battleReadyRelease({
     e.dt,
     e.crit,
     releaser.critRange,
-    readyReturn
+    readyReturn,
+    e.isMelee,
+    readyMods,
+    e.isFinesse,
+    e.hasAllyAdjacentToTarget,
+    e.saDmg
   )
 }
 
@@ -193,6 +217,18 @@ export function battleLegendaryAttack({
   const m = c.creatures.get(e.monsterId)!
   const cs = setCreature(c.creatures, e.monsterId, { ...m, legendaryActionsRemaining: m.legendaryActionsRemaining - 1 })
   const laReturn = { tag: "ADRAwaitingLegendaryAction" as const, la: c.laCtx! }
+  const laCtx = buildBattleAttackContext(
+    cs,
+    e.monsterId,
+    e.laTarget,
+    e.isMelee,
+    e.attackerWithin5ft,
+    e.hostileWithin5ft,
+    e.targetCanSeeAttacker,
+    e.attackerCanSeeTarget,
+    e.frightSourceInLOS
+  )
+  const laMods = aggregateAttackMods(laCtx)
   return resolveAttack(
     cs,
     e.monsterId,
@@ -203,7 +239,12 @@ export function battleLegendaryAttack({
     e.laDt,
     e.laCrit,
     m.critRange,
-    laReturn
+    laReturn,
+    e.isMelee,
+    laMods,
+    e.isFinesse,
+    e.hasAllyAdjacentToTarget,
+    e.saDmg
   )
 }
 

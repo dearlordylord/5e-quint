@@ -103,7 +103,9 @@ export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
     ctx.targetUnconscious ||
     (ctx.targetProne && ctx.attackerWithin5ft) ||
     ctx.targetRestrained ||
-    !ctx.targetCanSeeAttacker
+    !ctx.targetCanSeeAttacker ||
+    (ctx.attackerReckless && !ctx.isRangedAttack) || // Reckless Attack: advantage on melee
+    ctx.targetReckless // RAW: attacks against reckless creature have Advantage
 
   const anyDisadvantage =
     ctx.attackerBlinded ||

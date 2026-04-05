@@ -1,8 +1,9 @@
-import { resolveAttack } from "#/battle-machine-actions-attack.ts"
+import { buildBattleAttackContext, resolveAttack } from "#/battle-machine-actions-attack.ts"
 import { isIncapacitated } from "#/battle-machine-creature.ts"
 import { activeId, setCreature, setDifference, spendMovement, spendReaction } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext } from "#/battle-machine-types.ts"
 import { PHASE_ACTIVE, phaseResolvingMovement } from "#/battle-machine-types.ts"
+import { aggregateAttackMods } from "#/machine-combat.ts"
 
 export function battleMove({ context: c, event: e }: BattleActionArgs<"BATTLE_MOVE">): Partial<BattleContext> {
   if (!c.turnStarted) return {}
@@ -48,6 +49,18 @@ export function battleMovementOAAttack({
   const updatedMv = { ...mv, processed: newProc }
   const reactor = c.creatures.get(e.reactorId)!
   const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(reactor))
+  const ctx = buildBattleAttackContext(
+    cs1,
+    e.reactorId,
+    mv.mover,
+    true,
+    true,
+    e.hostileWithin5ft,
+    e.targetCanSeeAttacker,
+    e.attackerCanSeeTarget,
+    e.frightSourceInLOS
+  )
+  const mods = aggregateAttackMods(ctx)
   return resolveAttack(
     cs1,
     e.reactorId,
@@ -58,6 +71,11 @@ export function battleMovementOAAttack({
     e.oaDt,
     e.oaCrit,
     reactor.critRange,
-    { tag: "ADRResolvingMovement", mv: updatedMv }
+    { tag: "ADRResolvingMovement", mv: updatedMv },
+    true,
+    mods,
+    e.isFinesse,
+    e.hasAllyAdjacentToTarget,
+    e.saDmg
   )
 }

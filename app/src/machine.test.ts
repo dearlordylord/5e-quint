@@ -1648,7 +1648,9 @@ describe("aggregateAttackMods", () => {
     targetUnconscious: false,
     underwater: false,
     wielderStrScore: 16,
-    wielderDexScore: 14
+    wielderDexScore: 14,
+    attackerReckless: false,
+    targetReckless: false
   }
 
   it("no conditions: no mods", () => {
@@ -2208,7 +2210,9 @@ describe("aggregateAttackMods additional branches", () => {
     targetUnconscious: false,
     underwater: false,
     wielderStrScore: 16,
-    wielderDexScore: 14
+    wielderDexScore: 14,
+    attackerReckless: false,
+    targetReckless: false
   }
 
   it("frightened + source in LOS: disadv", () => {

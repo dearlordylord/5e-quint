@@ -65,7 +65,9 @@ const QuintCombatant = z.object({
   meleeDamageBonus: z.bigint(),
   recklessThisTurn: z.boolean(),
   ragingBlocksSpells: z.boolean(),
-  combatantResistances: z.any()
+  combatantResistances: z.any(),
+  sneakAttackDice: z.bigint(),
+  sneakAttackUsedThisTurn: z.boolean()
 })
 
 type ParsedCombatant = z.infer<typeof QuintCombatant>
@@ -170,6 +172,8 @@ interface NormalizedBattleCreature {
   recklessThisTurn: boolean
   ragingBlocksSpells: boolean
   combatantResistances: ReadonlySet<string>
+  sneakAttackDice: number
+  sneakAttackUsedThisTurn: boolean
 }
 
 function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreature {
@@ -238,7 +242,9 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     meleeDamageBonus: Number(c.meleeDamageBonus),
     recklessThisTurn: c.recklessThisTurn,
     ragingBlocksSpells: c.ragingBlocksSpells,
-    combatantResistances: parseDamageTypeSet(c.combatantResistances)
+    combatantResistances: parseDamageTypeSet(c.combatantResistances),
+    sneakAttackDice: Number(c.sneakAttackDice),
+    sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn
   }
 }
 
@@ -317,7 +323,9 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     meleeDamageBonus: c.meleeDamageBonus,
     recklessThisTurn: c.recklessThisTurn,
     ragingBlocksSpells: c.ragingBlocksSpells,
-    combatantResistances: c.combatantResistances
+    combatantResistances: c.combatantResistances,
+    sneakAttackDice: c.sneakAttackDice,
+    sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn
   }
 }
 
@@ -362,7 +370,25 @@ const battleDriverSchema = {
     surprised4: OB
   },
   bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
-  bAttack: { targetId: OS, attackRoll: OI, diceCount: OI, dieSize: OI, dmg: OI, dt: OV, crit: OB, tAc: OI },
+  bAttack: {
+    targetId: OS,
+    attackRoll: OI,
+    diceCount: OI,
+    dieSize: OI,
+    dmg: OI,
+    dt: OV,
+    crit: OB,
+    tAc: OI,
+    isMelee: OB,
+    isFinesse: OB,
+    attackerWithin5ft: OB,
+    hostileWithin5ft: OB,
+    targetCanSeeAttacker: OB,
+    attackerCanSeeTarget: OB,
+    frightSourceInLOS: OB,
+    hasAllyAdjacentToTarget: OB,
+    saDmg: OI
+  },
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
   bAfterDamagePass: { reactorId: OS },
@@ -396,10 +422,41 @@ const battleDriverSchema = {
   bResolveAoETarget: { targetId: OS, saveRoll: OI },
   bMove: { threatened: z.any().optional() },
   bMovementOAPass: { reactorId: OS },
-  bMovementOAAttack: { oaAtkRoll: OI, oaDmg: OI, oaDt: OV, oaCrit: OB, oaTgtAc: OI, reactorId: OS },
+  bMovementOAAttack: {
+    oaAtkRoll: OI,
+    oaDmg: OI,
+    oaDt: OV,
+    oaCrit: OB,
+    oaTgtAc: OI,
+    reactorId: OS,
+    isFinesse: OB,
+    hostileWithin5ft: OB,
+    targetCanSeeAttacker: OB,
+    attackerCanSeeTarget: OB,
+    frightSourceInLOS: OB,
+    hasAllyAdjacentToTarget: OB,
+    saDmg: OI
+  },
   bEndTurn: { eotSaveSucceeded: OB, eotDmg: OI, eotDt: OV, eotConSave: OB },
   bLegendaryPass: {},
-  bLegendaryAttack: { monsterId: OS, laTarget: OS, laAtkRoll: OI, laDmg: OI, laDt: OV, laCrit: OB, laTgtAc: OI },
+  bLegendaryAttack: {
+    monsterId: OS,
+    laTarget: OS,
+    laAtkRoll: OI,
+    laDmg: OI,
+    laDt: OV,
+    laCrit: OB,
+    laTgtAc: OI,
+    isMelee: OB,
+    isFinesse: OB,
+    attackerWithin5ft: OB,
+    hostileWithin5ft: OB,
+    targetCanSeeAttacker: OB,
+    attackerCanSeeTarget: OB,
+    frightSourceInLOS: OB,
+    hasAllyAdjacentToTarget: OB,
+    saDmg: OI
+  },
   bHeal: { targetId: OS, amount: OI },
   bDash: {},
   bDisengage: {},
@@ -439,6 +496,19 @@ function pb(picks: Record<string, unknown>, key: string, fallback: boolean): boo
   const v = picks[key]
   return typeof v === "boolean" ? v : fallback
 }
+/** Common spatial/visibility/SA fields for attack event dispatch. */
+function attackContextPicks(picks: Record<string, unknown>) {
+  return {
+    isFinesse: pb(picks, "isFinesse", false),
+    attackerWithin5ft: pb(picks, "attackerWithin5ft", true),
+    hostileWithin5ft: pb(picks, "hostileWithin5ft", false),
+    targetCanSeeAttacker: pb(picks, "targetCanSeeAttacker", true),
+    attackerCanSeeTarget: pb(picks, "attackerCanSeeTarget", true),
+    frightSourceInLOS: pb(picks, "frightSourceInLOS", false),
+    hasAllyAdjacentToTarget: pb(picks, "hasAllyAdjacentToTarget", false),
+    saDmg: p(picks, "saDmg", 0)
+  }
+}
 
 function createBattleMachineDriver() {
   return defineDriver(battleDriverSchema, () => {
@@ -474,6 +544,7 @@ function createBattleMachineDriver() {
               caster: true,
               rogueLevel: 5,
               hasEvasion: true,
+              sneakAttackDice: 3,
               initiativeRoll: p(picks, "initRoll1", 10),
               initiativeRollB: p(picks, "initRoll1b", 10),
               surprised: pb(picks, "surprised1", false)
@@ -535,7 +606,9 @@ function createBattleMachineDriver() {
           dmg: p(picks, "dmg", 5),
           dt: mapDamageType(ps(picks, "dt", "Slashing")),
           crit: pb(picks, "crit", false),
-          tAc: armorClass(p(picks, "tAc", 15))
+          tAc: armorClass(p(picks, "tAc", 15)),
+          isMelee: pb(picks, "isMelee", true),
+          ...attackContextPicks(picks)
         })
       },
       bResolveHitReaction: (picks: Record<string, unknown>) => {
@@ -695,7 +768,9 @@ function createBattleMachineDriver() {
           oaDmg: p(picks, "oaDmg", 5),
           oaDt: mapDamageType(ps(picks, "oaDt", "Slashing")),
           oaCrit: pb(picks, "oaCrit", false),
-          oaTgtAc: armorClass(p(picks, "oaTgtAc", 15))
+          oaTgtAc: armorClass(p(picks, "oaTgtAc", 15)),
+          isMelee: true as const,
+          ...attackContextPicks(picks)
         })
       },
       bEndTurn: (picks: Record<string, unknown>) => {
@@ -719,7 +794,9 @@ function createBattleMachineDriver() {
           laDmg: p(picks, "laDmg", 10),
           laDt: mapDamageType(ps(picks, "laDt", "Slashing")),
           laCrit: pb(picks, "laCrit", false),
-          laTgtAc: armorClass(p(picks, "laTgtAc", 15))
+          laTgtAc: armorClass(p(picks, "laTgtAc", 15)),
+          isMelee: pb(picks, "isMelee", true),
+          ...attackContextPicks(picks)
         })
       },
       bHeal: (picks: Record<string, unknown>) => {
@@ -758,7 +835,9 @@ function createBattleMachineDriver() {
           dmg: p(picks, "dmg", 5),
           dt: mapDamageType(ps(picks, "dt", "Slashing")),
           crit: pb(picks, "crit", false),
-          tgtAc: armorClass(p(picks, "tgtAc", 15))
+          tgtAc: armorClass(p(picks, "tgtAc", 15)),
+          isMelee: pb(picks, "isMelee", true),
+          ...attackContextPicks(picks)
         })
       },
       bCastBonusActionSpell: (picks: Record<string, unknown>) => {

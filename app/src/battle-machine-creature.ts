@@ -347,7 +347,9 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     meleeDamageBonus: 0,
     recklessThisTurn: false,
     ragingBlocksSpells: false,
-    combatantResistances: new Set()
+    combatantResistances: new Set(),
+    sneakAttackDice: 0,
+    sneakAttackUsedThisTurn: false
   }
 }
 

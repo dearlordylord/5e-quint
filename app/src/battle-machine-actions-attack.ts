@@ -31,10 +31,59 @@ import type {
 import { ADR_ACTIVE_TURN, phaseAwaitReaction } from "#/battle-machine-types.ts"
 import { deflectAttacksResult } from "#/features/class-monk-features.ts"
 import { uncannyDodgeDamage } from "#/features/class-rogue.ts"
-import type { CreatureId, DamageType } from "#/types.ts"
-import { armorClass } from "#/types.ts"
+import { aggregateAttackMods } from "#/machine-combat.ts"
+import type { AttackContext, CreatureId, DamageType, FullAttackMods } from "#/types.ts"
+import { armorClass, exhaustionLevel } from "#/types.ts"
 
 type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>
+
+/** Build AttackContext from battle creature state + per-attack parameters. */
+export function buildBattleAttackContext(
+  cs: Creatures,
+  attackerId: CreatureId,
+  targetId: CreatureId,
+  isMelee: boolean,
+  attackerWithin5ft: boolean,
+  hostileWithin5ft: boolean,
+  targetCanSeeAttacker: boolean,
+  attackerCanSeeTarget: boolean,
+  frightSourceInLOS: boolean
+): AttackContext {
+  const atk = cs.get(attackerId)!
+  const tgt = cs.get(targetId)!
+  return {
+    attackerBlinded: atk.blinded,
+    attackerProne: atk.prone,
+    attackerRestrained: atk.restrained,
+    attackerPoisoned: atk.poisoned,
+    attackerFrightened: atk.frightened,
+    attackerFrightSourceInLOS: frightSourceInLOS,
+    attackerExhaustion: exhaustionLevel(atk.exhaustion),
+    targetBlinded: tgt.blinded,
+    targetParalyzed: tgt.paralyzed,
+    targetPetrified: tgt.petrified,
+    targetStunned: tgt.stunned,
+    targetUnconscious: tgt.unconscious,
+    targetRestrained: tgt.restrained,
+    targetProne: tgt.prone,
+    attackerWithin5ft,
+    targetDodging: tgt.dodging,
+    targetCanSeeAttacker,
+    attackerCanSeeTarget,
+    isRangedAttack: !isMelee,
+    beyondNormalRange: false,
+    hostileWithin5ft,
+    isHeavyWeapon: false,
+    wielderStrScore: 16, // not modeled in battle; safe default
+    wielderDexScore: 14,
+    underwater: false,
+    attackerHasSwimSpeed: false,
+    isUnderwaterMeleeException: false,
+    isUnderwaterRangedException: false,
+    attackerReckless: atk.recklessThisTurn,
+    targetReckless: tgt.recklessThisTurn
+  }
+}
 
 /** Shared attack resolution: determines hit, enters reaction chain or deals damage. */
 export function resolveAttack(
@@ -47,13 +96,30 @@ export function resolveAttack(
   damageType: DamageType,
   isCritical: boolean,
   critRange: number,
-  returnTo: AfterDamageReturn
+  returnTo: AfterDamageReturn,
+  isMelee: boolean,
+  mods: FullAttackMods,
+  isFinesse: boolean,
+  hasAllyAdjacentToTarget: boolean,
+  saDmg: number
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
-  if (!isHit(attackRoll, targetAc, critRange)) {
+  const hit = !mods.autoMiss && isHit(attackRoll, targetAc, critRange)
+  if (!hit) {
     return { creatures: new Map(cs), ...returnToState(returnTo) }
   }
   const atk = cs.get(attackerId)!
-  const totalDmg = damage + atk.meleeDamageBonus
+  const meleeDmgBonus = isMelee ? atk.meleeDamageBonus : 0 // rage bonus: melee only (D1 fix)
+  // Sneak Attack eligibility (SRD 5.2.1 Rogue "Sneak Attack")
+  const eligibleWeapon = isFinesse || !isMelee
+  const saEligible =
+    atk.sneakAttackDice > 0 &&
+    !atk.sneakAttackUsedThisTurn &&
+    eligibleWeapon &&
+    (mods.hasAdvantage || (hasAllyAdjacentToTarget && !mods.hasDisadvantage))
+  const effectiveSaDmg = saEligible ? saDmg : 0
+  const totalDmg = damage + meleeDmgBonus + effectiveSaDmg
+  const effectiveCrit = isCritical || mods.autoCrit
+  const cs1 = saEligible ? setCreature(cs, attackerId, { ...atk, sneakAttackUsedThisTurn: true }) : cs
   const atkCtx: AttackHitCtx = {
     attacker: attackerId,
     target: targetId,
@@ -61,18 +127,18 @@ export function resolveAttack(
     targetAc: armorClass(targetAc),
     damage: totalDmg,
     damageType,
-    isCritical,
+    isCritical: effectiveCrit,
     critRange,
     atkReturnTo: returnTo
   }
-  const elig = eligibleExcluding(cs, attackerId)
+  const elig = eligibleExcluding(cs1, attackerId)
   if (elig.size > 0) {
     return {
-      creatures: new Map(cs),
+      creatures: new Map(cs1),
       ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", elig))
     }
   }
-  return dealDamageWithAfterReactions(cs, targetId, attackerId, totalDmg, damageType, isCritical, returnTo)
+  return dealDamageWithAfterReactions(cs1, targetId, attackerId, totalDmg, damageType, effectiveCrit, returnTo)
 }
 
 export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_ATTACK">): Partial<BattleContext> {
@@ -85,7 +151,35 @@ export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_
   const updatedAc =
     ac.attackActionUsed && ac.extraAttacksRemaining > 0 ? spendExtraAttack(ac) : spendAction(ac, "attack")
   const cs = setCreature(c.creatures, id, updatedAc)
-  return resolveAttack(cs, id, e.targetId, e.attackRoll, e.tAc, e.dmg, e.dt, e.crit, ac.critRange, ADR_ACTIVE_TURN)
+  const ctx = buildBattleAttackContext(
+    cs,
+    id,
+    e.targetId,
+    e.isMelee,
+    e.attackerWithin5ft,
+    e.hostileWithin5ft,
+    e.targetCanSeeAttacker,
+    e.attackerCanSeeTarget,
+    e.frightSourceInLOS
+  )
+  const mods = aggregateAttackMods(ctx)
+  return resolveAttack(
+    cs,
+    id,
+    e.targetId,
+    e.attackRoll,
+    e.tAc,
+    e.dmg,
+    e.dt,
+    e.crit,
+    ac.critRange,
+    ADR_ACTIVE_TURN,
+    e.isMelee,
+    mods,
+    e.isFinesse,
+    e.hasAllyAdjacentToTarget,
+    e.saDmg
+  )
 }
 
 export function battleResolveHitReaction({

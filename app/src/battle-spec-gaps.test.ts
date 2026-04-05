@@ -15,6 +15,18 @@ function send(actor: ReturnType<typeof createActor<typeof battleMachine>>, ...ev
   for (const e of events) actor.send(e)
 }
 
+const DEFAULT_ATTACK_CONTEXT = {
+  isMelee: true,
+  isFinesse: false,
+  attackerWithin5ft: true,
+  hostileWithin5ft: false,
+  targetCanSeeAttacker: true,
+  attackerCanSeeTarget: true,
+  frightSourceInLOS: false,
+  hasAllyAdjacentToTarget: false,
+  saDmg: 0
+} as const
+
 function ctx(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   return actor.getSnapshot().context
 }
@@ -100,7 +112,8 @@ function attackB(actor: ReturnType<typeof createActor<typeof battleMachine>>, dm
     dmg,
     dt: "bludgeoning",
     crit,
-    tAc: armorClass(10)
+    tAc: armorClass(10),
+    ...DEFAULT_ATTACK_CONTEXT
   })
   passReactions(actor)
 }
@@ -144,10 +157,11 @@ describe("Spec Gap 3: Instant death from massive damage at 0 HP", () => {
     const actor = initTwoPC()
     startTurn(actor)
     knockOutB(actor)
-    // Hit B with 5 damage at 0 HP < 20 maxHp => 1 death save failure
+    // Hit B with 5 damage at 0 HP < 20 maxHp.
+    // Auto-crit (unconscious + within 5ft) => 2 death save failures per RAW.
     attackB(actor, 5)
     expect(creature(actor, "B").dead).toBe(false)
-    expect(creature(actor, "B").deathSaves.failures).toBe(1)
+    expect(creature(actor, "B").deathSaves.failures).toBe(2)
   })
 })
 
@@ -179,7 +193,8 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
       dmg: 5,
       dt: "bludgeoning",
       crit: false,
-      tAc: armorClass(10)
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
     })
     const aw = ctx(actor).awaitCtx
     expect(aw).not.toBeNull()
@@ -205,7 +220,8 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
       dmg: 5,
       dt: "bludgeoning",
       crit: false,
-      tAc: armorClass(10)
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
     })
     const aw = ctx(actor).awaitCtx
     // Attack hit => reaction window opens. B must NOT be in the eligible set.

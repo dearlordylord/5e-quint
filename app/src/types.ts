@@ -190,6 +190,8 @@ export interface AttackContext {
   readonly attackerHasSwimSpeed: boolean
   readonly isUnderwaterMeleeException: boolean
   readonly isUnderwaterRangedException: boolean
+  readonly attackerReckless: boolean
+  readonly targetReckless: boolean
 }
 
 // --- Branded numeric types ---

@@ -98,6 +98,9 @@ export interface BattleCreatureState {
   readonly recklessThisTurn: boolean
   readonly ragingBlocksSpells: boolean
   readonly combatantResistances: ReadonlySet<DamageType>
+  // Rogue state
+  readonly sneakAttackDice: number
+  readonly sneakAttackUsedThisTurn: boolean
 }
 
 export interface AttackHitCtx {
@@ -303,6 +306,7 @@ export interface InitCreatureConfig {
   readonly fighterLevel?: number
   readonly barbarianLevel?: number
   readonly meleeDamageBonus?: number
+  readonly sneakAttackDice?: number
   /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */
   readonly initiativeRoll?: number
   /** Second d20 for Disadvantage. Required when surprised=true; defaults to initiativeRoll (no effect). */
