@@ -34,6 +34,7 @@ import type {
 import {
   PHASE_ACTIVE,
   phaseAwaitingLegendary,
+  phaseAwaitingReady,
   phaseAwaitReaction,
   phaseResolvingAoE,
   phaseResolvingMovement
@@ -187,6 +188,7 @@ export function returnToState(r: AfterDamageReturn): PhaseFields {
     byTag("ADRResolvingAoE", (v) => phaseResolvingAoE(v.aoe)),
     byTag("ADRResolvingMovement", (v) => phaseResolvingMovement(v.mv)),
     byTag("ADRAwaitingLegendaryAction", (v) => phaseAwaitingLegendary(v.la)),
+    byTag("ADRAwaitingReadiedAction", (v) => phaseAwaitingReady(v.ready)),
     Match.exhaustive
   )
 }

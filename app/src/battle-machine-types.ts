@@ -129,6 +129,7 @@ export type AfterDamageReturn =
   | { readonly tag: "ADRResolvingAoE"; readonly aoe: AoESpellCtx }
   | { readonly tag: "ADRResolvingMovement"; readonly mv: MovementCtx }
   | { readonly tag: "ADRAwaitingLegendaryAction"; readonly la: LAWindowCtx }
+  | { readonly tag: "ADRAwaitingReadiedAction"; readonly ready: ReadyWindowCtx }
 
 export const ADR_ACTIVE_TURN: AfterDamageReturn = { tag: "ADRActiveTurn" }
 
@@ -463,6 +464,16 @@ export type BattleEvent =
   | { readonly type: "BATTLE_DECLARE_RECKLESS" }
   | { readonly type: "BATTLE_READY" }
   | { readonly type: "BATTLE_READY_PASS" }
+  | {
+      readonly type: "BATTLE_READY_RELEASE"
+      readonly releaserId: CreatureId
+      readonly targetId: CreatureId
+      readonly atkRoll: number
+      readonly dmg: number
+      readonly dt: DamageType
+      readonly crit: boolean
+      readonly tgtAc: ArmorClass
+    }
 
 /** Narrows BattleEvent to a specific type member for action functions. */
 export type BattleActionArgs<T extends BattleEvent["type"]> = {

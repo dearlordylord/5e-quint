@@ -184,6 +184,7 @@ module battle {
     | ADRResolvingAoE(AoESpellCtx)
     | ADRResolvingMovement(MovementCtx)
     | ADRAwaitingLegendaryAction(LAWindowCtx)
+    | ADRAwaitingReadiedAction(ReadyWindowCtx)
 
   // Context for after-damage reactions (R10.4, R20 Phase 4).
   // Tracks who dealt damage and to whom, so reactions like Hellish Rebuke know the attacker.
@@ -556,6 +557,7 @@ module battle {
       | ADRResolvingAoE(aoe) => BPResolvingAoE(aoe)
       | ADRResolvingMovement(mv) => BPResolvingMovement(mv)
       | ADRAwaitingLegendaryAction(la) => BPAwaitingLegendaryAction(la)
+      | ADRAwaitingReadiedAction(r) => BPAwaitingReadiedAction(r)
     }
 
   // Frame condition for battle vars not changed by this action.
@@ -1934,6 +1936,30 @@ module battle {
     }
   }
 
+  /// Ready window: creature releases readied attack.
+  /// Spends reaction, clears readiedAction, enters shared attack resolution.
+  action bReadyRelease = {
+    match bPhase {
+      | BPAwaitingReadiedAction(readyCtx) =>
+        nondet releaserId = readyCtx.eligibleCreatures.oneOf()
+        val allIds = bCreatures.keys()
+        nondet targetId = allIds.exclude(Set(releaserId)).oneOf()
+        nondet atkRoll = 1.to(20).oneOf()
+        nondet dmg = 1.to(12).oneOf()
+        nondet dt = Set(Slashing, Piercing, Bludgeoning).oneOf()
+        nondet crit = Bool.oneOf()
+        nondet tgtAc = 10.to(20).oneOf()
+        val releaser = bCreatures.get(releaserId)
+        // Spend reaction and clear readiedAction
+        val updatedTurn = releaser.turn.with("reactionAvailable", false).with("readiedAction", false)
+        val cs1 = bCreatures.set(releaserId, releaser.with("turn", updatedTurn))
+        val readyReturn = ADRAwaitingReadiedAction(readyCtx)
+        val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn)
+        all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
   /// LA window: monster uses a legendary attack action.
   /// Enters the full hit-reaction → damage-reaction → after-damage chain via resolveAttack.
   /// After chain resolves, returns to BPAwaitingLegendaryAction for remaining LA.
@@ -2215,7 +2241,7 @@ module battle {
     | BPResolvingAoE(_) => any { bResolveAoETarget, }
     | BPResolvingMovement(_) => any { bMovementOAPass, bMovementOAAttack }
     | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bLegendaryAttack }
-    | BPAwaitingReadiedAction(_) => any { bReadyPass, }
+    | BPAwaitingReadiedAction(_) => any { bReadyPass, bReadyRelease, }
   }
 
   val allHpBounded = bCreatures.keys().forall(id =>

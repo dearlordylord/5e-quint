@@ -44,6 +44,7 @@ import {
   battleLegendaryPass,
   battleReady,
   battleReadyPass,
+  battleReadyRelease,
   battleStartTurn
 } from "#/battle-machine-actions-turn.ts"
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
@@ -123,7 +124,8 @@ export const battleMachine = setup({
     battleEnterRage: narrow(battleEnterRage),
     battleDeclareReckless: narrow(battleDeclareReckless),
     battleReady: narrow(battleReady),
-    battleReadyPass: narrow(battleReadyPass)
+    battleReadyPass: narrow(battleReadyPass),
+    battleReadyRelease: narrow(battleReadyRelease)
   }
 }).createMachine({
   id: "battle",
@@ -205,7 +207,8 @@ export const battleMachine = setup({
           tags: ["readyWindow"],
           always: [{ guard: "noReadyCtx", target: "activeTurn" }],
           on: {
-            BATTLE_READY_PASS: { actions: "battleReadyPass" }
+            BATTLE_READY_PASS: { actions: "battleReadyPass" },
+            BATTLE_READY_RELEASE: { actions: "battleReadyRelease" }
           }
         }
       }

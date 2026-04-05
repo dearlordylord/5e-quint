@@ -736,6 +736,18 @@ function createBattleMachineDriver() {
       bReadyPass: () => {
         send({ type: "BATTLE_READY_PASS" })
       },
+      bReadyRelease: (picks: Record<string, unknown>) => {
+        send({
+          type: "BATTLE_READY_RELEASE",
+          releaserId: pc(picks, "releaserId", ""),
+          targetId: pc(picks, "targetId", ""),
+          atkRoll: p(picks, "atkRoll", 10),
+          dmg: p(picks, "dmg", 5),
+          dt: mapDamageType(ps(picks, "dt", "Slashing")),
+          crit: pb(picks, "crit", false),
+          tgtAc: armorClass(p(picks, "tgtAc", 15))
+        })
+      },
       bCastBonusActionSpell: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_CAST_SAVE_SPELL",

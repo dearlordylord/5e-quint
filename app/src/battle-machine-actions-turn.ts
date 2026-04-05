@@ -154,6 +154,31 @@ export function battleReadyPass({ context: c }: BattleActionArgs<"BATTLE_READY_P
   return { turnIndex: nt.idx, round: nt.round, ...PHASE_ACTIVE, turnStarted: false }
 }
 
+export function battleReadyRelease({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_READY_RELEASE">): Partial<BattleContext> {
+  const releaser = c.creatures.get(e.releaserId)!
+  const cs = setCreature(c.creatures, e.releaserId, {
+    ...releaser,
+    reactionAvailable: false,
+    readiedAction: false
+  })
+  const readyReturn = { tag: "ADRAwaitingReadiedAction" as const, ready: c.readyCtx! }
+  return resolveAttack(
+    cs,
+    e.releaserId,
+    e.targetId,
+    e.atkRoll,
+    e.tgtAc,
+    e.dmg,
+    e.dt,
+    e.crit,
+    releaser.critRange,
+    readyReturn
+  )
+}
+
 export function battleLegendaryAttack({
   context: c,
   event: e
