@@ -58,7 +58,8 @@ export function resolveSpellEntry(
         awaitCtx: r.awaitCtx,
         aoeCtx: r.aoeCtx,
         movementCtx: r.movementCtx,
-        laCtx: r.laCtx
+        laCtx: r.laCtx,
+        readyCtx: r.readyCtx
       }
     }),
     byTag("PCEAoE", (pc) => ({ creatures: cs1, ...phaseResolvingAoE(pc.aoe) })),

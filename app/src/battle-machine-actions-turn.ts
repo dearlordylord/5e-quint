@@ -10,8 +10,17 @@ import {
   spendAction
 } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext, BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
-import { PHASE_ACTIVE, phaseAwaitingLegendary } from "#/battle-machine-types.ts"
+import { PHASE_ACTIVE, phaseAwaitingLegendary, phaseAwaitingReady } from "#/battle-machine-types.ts"
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts"
+
+// TODO style: combinators
+function readyEligible(cs: ReadonlyMap<CreatureId, BattleCreatureState>): ReadonlySet<CreatureId> {
+  const result = new Set<CreatureId>()
+  for (const [id, c] of cs) {
+    if (c.readiedAction && c.reactionAvailable && !c.dead && !isIncapacitated(c)) result.add(id)
+  }
+  return result
+}
 
 /** Effective initiative roll: surprised = Disadvantage (min of two d20s). */
 export function effectiveInitRoll(roll1: number, roll2: number, surprised: boolean): number {
@@ -118,11 +127,29 @@ export function battleEndTurn({ context: c, event: e }: BattleActionArgs<"BATTLE
       ...phaseAwaitingLegendary({ eligibleMonsters: laEligible, endingTurnIndex: c.turnIndex })
     }
   }
+  // No LA — check for readied action window
+  const rElig = readyEligible(cs)
+  if (rElig.size > 0) {
+    return {
+      creatures: cs,
+      ...phaseAwaitingReady({ eligibleCreatures: rElig, endingTurnIndex: c.turnIndex })
+    }
+  }
   const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
   return { creatures: cs, turnIndex: nt.idx, round: nt.round, ...PHASE_ACTIVE, turnStarted: false }
 }
 
 export function battleLegendaryPass({ context: c }: BattleActionArgs<"BATTLE_LEGENDARY_PASS">): Partial<BattleContext> {
+  // After LA window, check for readied action window
+  const rElig = readyEligible(c.creatures)
+  if (rElig.size > 0) {
+    return { ...phaseAwaitingReady({ eligibleCreatures: rElig, endingTurnIndex: c.turnIndex }) }
+  }
+  const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
+  return { turnIndex: nt.idx, round: nt.round, ...PHASE_ACTIVE, turnStarted: false }
+}
+
+export function battleReadyPass({ context: c }: BattleActionArgs<"BATTLE_READY_PASS">): Partial<BattleContext> {
   const nt = nextTurn(c.turnIndex, c.initiative.length, c.round)
   return { turnIndex: nt.idx, round: nt.round, ...PHASE_ACTIVE, turnStarted: false }
 }
@@ -157,7 +184,7 @@ export function battleHeal({ context: c, event: e }: BattleActionArgs<"BATTLE_HE
   return { creatures: cs }
 }
 
-type SimpleActionType = "dash" | "disengage" | "dodge"
+type SimpleActionType = "dash" | "disengage" | "dodge" | "ready"
 
 function simpleAction(c: BattleContext, actionType: SimpleActionType): Partial<BattleContext> {
   const id = activeId(c)
@@ -208,6 +235,10 @@ export function battleEnterRage({
       ragingBlocksSpells: true
     })
   }
+}
+
+export function battleReady({ context: c }: BattleActionArgs<"BATTLE_READY">): Partial<BattleContext> {
+  return simpleAction(c, "ready")
 }
 
 export function battleDeclareReckless({

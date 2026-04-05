@@ -221,6 +221,12 @@ module battle {
     endingTurnIndex: int,                // turn index that just ended (for advancing)
   }
 
+  // Context for readied action window between turns.
+  type ReadyWindowCtx = {
+    eligibleCreatures: Set[CreatureId],  // creatures with readiedAction + reactionAvailable
+    endingTurnIndex: int,
+  }
+
   type BattlePhase =
     | BPActiveTurn
     | BPAwaitingReaction(AwaitCtx)
@@ -229,6 +235,7 @@ module battle {
     // applies to an empty set — the spell still occurs, it just affects no creatures).
     | BPResolvingMovement(MovementCtx)   // processing OAs one by one (R5, R22)
     | BPAwaitingLegendaryAction(LAWindowCtx)  // LA window at end of turn (R7)
+    | BPAwaitingReadiedAction(ReadyWindowCtx)  // readied action window after LA (R-ready)
 
   // ============================================================
   // 2. STATE VARIABLES
@@ -566,6 +573,13 @@ module battle {
     val nextIdx = if (turnIndex + 1 < initLen) turnIndex + 1 else 0
     { idx: nextIdx, round: if (nextIdx == 0) round + 1 else round }
   }
+
+  /// Creatures eligible to release a readied action: readiedAction == true, reactionAvailable, alive, not incapacitated.
+  pure def readyEligible(cs: CreatureId -> Combatant): Set[CreatureId] =
+    cs.keys().filter(id =>
+      val c = cs.get(id)
+      c.turn.readiedAction and c.turn.reactionAvailable and not(c.creature.dead) and not(isIncapacitated(c.creature))
+    )
 
   /// Effective initiative roll: surprised creatures have Disadvantage (min of two d20s).
   /// SRD 5.2.1 Rules-Glossary "Surprise": Disadvantage on Initiative roll.
@@ -1857,12 +1871,23 @@ module battle {
           keepBattle,
         }
       } else {
-        val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
-        all {
-          bCreatures' = cs2, bInitiative' = bInitiative,
-          bTurnIndex' = nt.idx, bRound' = nt.round,
-          bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
-          bTurnStarted' = false,
+        // No LA — check for readied action window
+        val readyElig = readyEligible(cs2)
+        if (readyElig.size() > 0) {
+          val readyCtx: ReadyWindowCtx = { eligibleCreatures: readyElig, endingTurnIndex: bTurnIndex }
+          all {
+            bCreatures' = cs2,
+            bPhase' = BPAwaitingReadiedAction(readyCtx),
+            keepBattle,
+          }
+        } else {
+          val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+          all {
+            bCreatures' = cs2, bInitiative' = bInitiative,
+            bTurnIndex' = nt.idx, bRound' = nt.round,
+            bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
+            bTurnStarted' = false,
+          }
         }
       }
     }
@@ -1870,9 +1895,36 @@ module battle {
 
   /// LA window: monster passes — advance to next turn.
   action bLegendaryPass = {
-    val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
     match bPhase {
-      | BPAwaitingLegendaryAction(_) => all {
+      | BPAwaitingLegendaryAction(_) =>
+        // After LA window, check for readied action window
+        val readyElig = readyEligible(bCreatures)
+        if (readyElig.size() > 0) {
+          val readyCtx: ReadyWindowCtx = { eligibleCreatures: readyElig, endingTurnIndex: bTurnIndex }
+          all {
+            bCreatures' = bCreatures,
+            bPhase' = BPAwaitingReadiedAction(readyCtx),
+            keepBattle,
+          }
+        } else {
+          val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+          all {
+            bCreatures' = bCreatures, bInitiative' = bInitiative,
+            bTurnIndex' = nt.idx, bRound' = nt.round,
+            bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
+            bTurnStarted' = false,
+          }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  /// Ready window: all eligible pass — advance to next turn.
+  action bReadyPass = {
+    match bPhase {
+      | BPAwaitingReadiedAction(_) =>
+        val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+        all {
           bCreatures' = bCreatures, bInitiative' = bInitiative,
           bTurnIndex' = nt.idx, bRound' = nt.round,
           bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
@@ -1953,6 +2005,26 @@ module battle {
       not(ac.creature.dead),
       not(isIncapacitated(ac.creature)),
       val newTurn = pUseAction(ac.turn, ac.creature, ADodge)
+      all {
+        bCreatures' = setTurn(bCreatures, activeId, newTurn),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  /// Ready action: spend action, prepare to react later.
+  /// SRD 5.2.1: "you take the Ready action ... you prepare to act later in the round using your Reaction"
+  action bReady = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      val newTurn = pUseAction(ac.turn, ac.creature, AReady)
       all {
         bCreatures' = setTurn(bCreatures, activeId, newTurn),
         bPhase' = BPActiveTurn,
@@ -2129,7 +2201,7 @@ module battle {
         bStartTurn, bAttack, bCastSaveSpell, bCastAoE,
         bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
         bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge,
-        bEnterRage, bDeclareReckless, bEndTurn,
+        bEnterRage, bDeclareReckless, bReady, bEndTurn,
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {
         | PIAttackHit(_) => any { bResolveHitReaction, }
@@ -2143,6 +2215,7 @@ module battle {
     | BPResolvingAoE(_) => any { bResolveAoETarget, }
     | BPResolvingMovement(_) => any { bMovementOAPass, bMovementOAAttack }
     | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bLegendaryAttack }
+    | BPAwaitingReadiedAction(_) => any { bReadyPass, }
   }
 
   val allHpBounded = bCreatures.keys().forall(id =>

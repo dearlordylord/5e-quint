@@ -217,6 +217,11 @@ export interface LAWindowCtx {
   readonly endingTurnIndex: number
 }
 
+export interface ReadyWindowCtx {
+  readonly eligibleCreatures: ReadonlySet<CreatureId>
+  readonly endingTurnIndex: number
+}
+
 export interface AwaitCtx {
   readonly interrupt: PendingInterrupt
   readonly trigger: TriggerType
@@ -263,30 +268,35 @@ export interface BattleContext {
   readonly aoeCtx: AoESpellCtx | null
   readonly movementCtx: MovementCtx | null
   readonly laCtx: LAWindowCtx | null
+  readonly readyCtx: ReadyWindowCtx | null
   readonly spellStack: ReadonlyArray<SpellStackEntry>
 }
 
 /** All phase fields nulled — machine is in activeTurn. */
-export const PHASE_ACTIVE: Pick<BattleContext, "awaitCtx" | "aoeCtx" | "movementCtx" | "laCtx"> = {
+export const PHASE_ACTIVE: Pick<BattleContext, "awaitCtx" | "aoeCtx" | "movementCtx" | "laCtx" | "readyCtx"> = {
   awaitCtx: null,
   aoeCtx: null,
   movementCtx: null,
-  laCtx: null
+  laCtx: null,
+  readyCtx: null
 }
 
 export type PhaseFields = typeof PHASE_ACTIVE
 
 export function phaseAwaitReaction(ctx: AwaitCtx): PhaseFields {
-  return { awaitCtx: ctx, aoeCtx: null, movementCtx: null, laCtx: null }
+  return { awaitCtx: ctx, aoeCtx: null, movementCtx: null, laCtx: null, readyCtx: null }
 }
 export function phaseResolvingAoE(aoe: AoESpellCtx): PhaseFields {
-  return { awaitCtx: null, aoeCtx: aoe, movementCtx: null, laCtx: null }
+  return { awaitCtx: null, aoeCtx: aoe, movementCtx: null, laCtx: null, readyCtx: null }
 }
 export function phaseResolvingMovement(mv: MovementCtx): PhaseFields {
-  return { awaitCtx: null, aoeCtx: null, movementCtx: mv, laCtx: null }
+  return { awaitCtx: null, aoeCtx: null, movementCtx: mv, laCtx: null, readyCtx: null }
 }
 export function phaseAwaitingLegendary(la: LAWindowCtx): PhaseFields {
-  return { awaitCtx: null, aoeCtx: null, movementCtx: null, laCtx: la }
+  return { awaitCtx: null, aoeCtx: null, movementCtx: null, laCtx: la, readyCtx: null }
+}
+export function phaseAwaitingReady(ready: ReadyWindowCtx): PhaseFields {
+  return { awaitCtx: null, aoeCtx: null, movementCtx: null, laCtx: null, readyCtx: ready }
 }
 
 /** Creature config for BATTLE_INIT — determines initial state per combatant. */
@@ -451,6 +461,8 @@ export type BattleEvent =
   | { readonly type: "BATTLE_ACTION_SURGE" }
   | { readonly type: "BATTLE_ENTER_RAGE"; readonly rageBonus: number }
   | { readonly type: "BATTLE_DECLARE_RECKLESS" }
+  | { readonly type: "BATTLE_READY" }
+  | { readonly type: "BATTLE_READY_PASS" }
 
 /** Narrows BattleEvent to a specific type member for action functions. */
 export type BattleActionArgs<T extends BattleEvent["type"]> = {

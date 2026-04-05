@@ -42,6 +42,8 @@ import {
   battleInit,
   battleLegendaryAttack,
   battleLegendaryPass,
+  battleReady,
+  battleReadyPass,
   battleStartTurn
 } from "#/battle-machine-actions-turn.ts"
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
@@ -71,6 +73,7 @@ const INITIAL_CONTEXT: BattleContext = {
   aoeCtx: null,
   movementCtx: null,
   laCtx: null,
+  readyCtx: null,
   spellStack: []
 }
 
@@ -87,7 +90,8 @@ export const battleMachine = setup({
     noAwaitCtx: ({ context }: { context: BattleContext }) => context.awaitCtx === null,
     noAoeCtx: ({ context }: { context: BattleContext }) => context.aoeCtx === null,
     noMovementCtx: ({ context }: { context: BattleContext }) => context.movementCtx === null,
-    noLaCtx: ({ context }: { context: BattleContext }) => context.laCtx === null
+    noLaCtx: ({ context }: { context: BattleContext }) => context.laCtx === null,
+    noReadyCtx: ({ context }: { context: BattleContext }) => context.readyCtx === null
   },
   actions: {
     battleInit: narrow(battleInit),
@@ -117,7 +121,9 @@ export const battleMachine = setup({
     battleDodge: narrow(battleDodge),
     battleActionSurge: narrow(battleActionSurge),
     battleEnterRage: narrow(battleEnterRage),
-    battleDeclareReckless: narrow(battleDeclareReckless)
+    battleDeclareReckless: narrow(battleDeclareReckless),
+    battleReady: narrow(battleReady),
+    battleReadyPass: narrow(battleReadyPass)
   }
 }).createMachine({
   id: "battle",
@@ -155,7 +161,8 @@ export const battleMachine = setup({
             BATTLE_DODGE: { actions: "battleDodge" },
             BATTLE_ACTION_SURGE: { actions: "battleActionSurge" },
             BATTLE_ENTER_RAGE: { actions: "battleEnterRage" },
-            BATTLE_DECLARE_RECKLESS: { actions: "battleDeclareReckless" }
+            BATTLE_DECLARE_RECKLESS: { actions: "battleDeclareReckless" },
+            BATTLE_READY: { actions: "battleReady" }
           }
         },
         awaitingReaction: {
@@ -192,6 +199,13 @@ export const battleMachine = setup({
           on: {
             BATTLE_LEGENDARY_PASS: { actions: "battleLegendaryPass" },
             BATTLE_LEGENDARY_ATTACK: { actions: "battleLegendaryAttack" }
+          }
+        },
+        awaitingReadiedAction: {
+          tags: ["readyWindow"],
+          always: [{ guard: "noReadyCtx", target: "activeTurn" }],
+          on: {
+            BATTLE_READY_PASS: { actions: "battleReadyPass" }
           }
         }
       }

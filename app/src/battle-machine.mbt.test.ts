@@ -730,6 +730,12 @@ function createBattleMachineDriver() {
       bDeclareReckless: () => {
         send({ type: "BATTLE_DECLARE_RECKLESS" })
       },
+      bReady: () => {
+        send({ type: "BATTLE_READY" })
+      },
+      bReadyPass: () => {
+        send({ type: "BATTLE_READY_PASS" })
+      },
       bCastBonusActionSpell: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_CAST_SAVE_SPELL",
