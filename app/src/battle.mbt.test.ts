@@ -1702,6 +1702,31 @@ describe("Battle Projection MBT", () => {
       })
       console.log(`[battle MBT] replayed ${result.tracesReplayed} traces from ${dir}`)
     } else {
+      // Use pre-compiled spec cache if available (skip 15s+ parse/typecheck).
+      // Generate with: node scripts/compile-battle-spec.cjs
+      // WARNING: Cache becomes stale when battle.qnt or creature.qnt change.
+      // The compile script writes a .hash file for staleness detection.
+      // See QUINT_CONNECT_TROUBLESHOOT.md for full context.
+      const compiledInputPath = path.resolve(import.meta.dirname, "../../.quint-cache/battle-compiled.json")
+      const hashPath = compiledInputPath.replace(/\.json$/, ".hash")
+      if (compiledInputPath) {
+        const { existsSync, readFileSync } = await import("node:fs")
+        const crypto = await import("node:crypto")
+        if (existsSync(hashPath)) {
+          const cachedHash = readFileSync(hashPath, "utf-8").trim()
+          const hash = crypto.createHash("sha256")
+          const specDir = path.resolve(import.meta.dirname, "../..")
+          for (const f of ["battle.qnt", "creature.qnt"]) {
+            const fp = path.join(specDir, f)
+            if (existsSync(fp)) hash.update(readFileSync(fp))
+          }
+          if (hash.digest("hex") !== cachedHash) {
+            console.warn(
+              "[battle MBT] WARNING: compiled spec cache is STALE. Run: node scripts/compile-battle-spec.cjs"
+            )
+          }
+        }
+      }
       const result = await run({
         spec: specPath,
         init: "bInit",
@@ -1711,7 +1736,8 @@ describe("Battle Projection MBT", () => {
         nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
         maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
         maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
-        stateCheck: battleStateCheck
+        stateCheck: battleStateCheck,
+        compiledInput: compiledInputPath
       })
       logMbtSeed("battle MBT", result)
     }

@@ -32,3 +32,4 @@ invariant-fuzz.log
 invariant-failure-*.log
 invariant-failures.jsonl
 traces/
+.quint-cache/

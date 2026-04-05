@@ -32,17 +32,22 @@ MBT traces are generated with random seeds. Failures may not reproduce on the ne
 
 ## MBT runs are expensive
 
-Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.**
+Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.** See `QUINT_CONNECT_TROUBLESHOOT.md` for performance analysis.
 
 - Never run battle MBT for exploratory questions (checking a variable shape, confirming a format). Answer those by reading source code, quint-connect internals, ITF docs, or writing a focused unit test.
 - Only run battle MBT for actual end-to-end validation after code changes are complete.
-- One MBT run at a time, always. Never launch a second instance without confirming the first is dead (`ps aux | grep vitest`).
+- One MBT run at a time, always. Never launch a second instance without confirming the first is dead (`ps aux | grep vitest`). **Also check for zombie evaluators:** `ps aux | grep quint_evaluator | grep -v grep` — kill with `killall -9 quint_evaluator` if any exist from prior runs.
 - If a command gets backgrounded, wait for the task completion notification — do not re-issue.
+- **MBT run observation protocol (MANDATORY):** Always run MBT with `run_in_background`. Wrap the command in a timing shell: `START=$(date +%s); <cmd> 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"`. For runs expected >60s, add a 1-minute progress reporter alongside it.
 - **Debug without re-running when possible:** Once you have a failing trace (seed + action sequence), prefer these over re-running MBT:
   1. Write a focused TS unit test that replays the specific event sequence against XState actors directly (milliseconds, no Quint).
   2. Read the ITF trace JSON offline to inspect Quint state at each step.
   3. Trace through the Quint spec logic manually by reading the code.
-- **Dev mode for faster runs:** `MBT_DEV=1 npx vitest run src/battle.mbt.test.ts` — reduces `maxSamples` (50→10) and step count (10→5). Use for quick "did I break something?" feedback during development. Full runs for CI / final validation.
+- **MBT run tiers (choose the right one!):**
+  - **Tier 1 — Dev feedback (~1s):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=10 npx vitest run src/battle.mbt.test.ts` — requires compiled cache (`node scripts/compile-battle-spec.cjs`). **Use this for iterative development.** One trace, one sample, catches most state mismatches.
+  - **Tier 2 — Pre-commit (~5 min):** `MBT_DEV=1 npx vitest run src/battle.mbt.test.ts` — 10 samples × 5 steps. Run before committing. Background it.
+  - **Tier 3 — Full validation (20-30 min):** `MBT_TRACES=1 MBT_MAX_SAMPLES=50 MBT_STEPS=10 npx vitest run src/battle.mbt.test.ts` — overnight / CI only. Use `nohup ... &` and check results later.
+  - **Default to Tier 1.** Never run Tier 2/3 for exploratory work — it will appear to hang (it's just slow). See `QUINT_CONNECT_TROUBLESHOOT.md` for why.
 
 ## Quint gotchas
 

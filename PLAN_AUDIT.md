@@ -314,9 +314,14 @@ Three invariants are excluded from `allBattleInvariants` due to transient CS cha
 
 ## Performance Notes
 
+> **IMPORTANT:** Nondet range sizes and action count in `battleStep` do NOT affect MBT performance.
+> The Rust evaluator samples randomly in constant time — range cardinality is irrelevant.
+> The bottleneck is the evaluator's per-step state evaluation cost with complex record types.
+> See `QUINT_CONNECT_TROUBLESHOOT.md` for full analysis and measurements.
+
 ### P1. Overly broad nondeterministic spell parameters
 
-Spell actions in `creature.qnt` nondet over raw ranges (e.g., `1.to(20)` for d20, `1.to(40)` for damage). Most parameter combinations are unrealistic (L1 spell dealing 39 damage, save DC of 3). Constraining to SRD-realistic ranges per spell level would reduce state space without losing meaningful coverage.
+Spell actions in `creature.qnt` nondet over raw ranges (e.g., `1.to(20)` for d20, `1.to(40)` for damage). Most parameter combinations are unrealistic (L1 spell dealing 39 damage, save DC of 3). Constraining to SRD-realistic ranges per spell level would reduce state space without losing meaningful **coverage** (not performance — see note above).
 
 ### P2. Counterspell chain inlined to depth 5
 
