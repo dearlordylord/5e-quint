@@ -185,7 +185,7 @@ Implemented in attack-pipeline plan Phase 3. `bActionSurge` action, `fighterStat
 | ~~**Action Surge**~~ | Fighter | 2+ | Extra action (not Magic) | Flow (changes action economy) | ~~PRD 1~~ **Done** |
 | ~~**Rage damage bonus**~~ | Barbarian | 1+ | +2/+3/+4 melee damage while raging | Modifier (via `meleeDamageBonus`) + Action (`bEnterRage`) | ~~PRD 1~~ **Done** |
 | ~~**Reckless Attack**~~ | Barbarian | 2+ | Advantage on STR attacks, enemies get Advantage on you | Modifier (`recklessThisTurn: bool`) + Action (`bDeclareReckless`) | ~~PRD 1~~ **Done** |
-| **Sneak Attack** | Rogue | 1+ | +Nd6 damage (once/turn, needs Advantage or ally) | Modifier (`sneakAttackEligible: bool`, extra damage is +N) | Deferred |
+| **Sneak Attack** | Rogue | 1+ | +Nd6 damage (once/turn, needs Advantage or ally) | Flow (eligibility + once-per-turn tracking) | PRD 4 |
 | **Stunning Strike** | Monk | 5+ | 1 FP on hit -> CON save or Stunned | Flow (new save -> condition interrupt) | Deferred |
 | **Paladin's Smite** | Paladin | 2+ | Grants Divine Smite spell + 1 free cast/LR | Class feature (spell access) | Deferred |
 | **Divine Smite** | Paladin | -- | Spell: BA + slot, extra radiant on hit, Counterspellable | Flow (spell cast -> CS window -> slot economy) | Deferred |
@@ -270,7 +270,7 @@ Release grants Speed worth of movement instead of an attack. Simpler than readie
 
 ### F12. Readied spells with Concentration [Medium Impact — Deferred]
 
-*Source: PRD_READY_ACTION.md Phase 2*
+*Source: PRD_READY_ACTION.md Phase 2 (to be expanded as Phase 2 addendum)*
 
 Slot spent on ready, Concentration held until release. If Concentration breaks, spell fizzles (slot lost). On release, spell enters normal resolution (Counterspellable). Needs `readiedSpellParams` on Combatant to track spell parameters between ready and release.
 
@@ -355,27 +355,30 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 3. ~~**C10** (Heavy Weapon 5.1->5.2.1)~~ DONE
 4. ~~**C6 + F2 + F10** (Dodge/Dash/Disengage + spell slot cap)~~ DONE
 5. ~~**C11** (missing isIncapacitated + bTurnStarted guards on 7 battle actions)~~ DONE
-6. **C3** (Evasion) -- correctness, needs PRD 3 (passive modifier system)
-7. **PRD 1** (attack pipeline + class features) -- covers S1, F3, F4, F5, F9
-8. **PRD 3** (passive modifier system) -- covers C3, F7, and future passives
-9. **PRD 2** (Ready action) -- covers C8
-10. **F1** (more reactions) -- incremental, add as needed
-15. ~~**S2** (fix OA comment)~~ DONE
-16. **S3** (investigate excluded invariants) -- quality-of-proof
-17. **C2** (Arcane Recovery) -- minor
-18. **C5** (Knock Out) -- minor
+6. ~~**C3** (Evasion)~~ DONE (PRD 3 passive modifier system, Phases 1-3)
+7. ~~**PRD 1** (attack pipeline + class features)~~ DONE -- covers S1, F3, F5, rage/reckless
+8. ~~**PRD 3** (passive modifier system, Evasion)~~ DONE -- covers C3
+9. ~~**PRD 2** (Ready action, Phase 1)~~ DONE -- covers C8
+10. **PRD 4** (attack type + advantage + Sneak Attack) -- covers D1, F4(SA), wires advantage pipeline
+11. **PRD 3 continuation** (saveMiscBonus for Aura of Protection) -- covers F7
+12. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12
+13. **F1** (more reactions) -- incremental, add as needed
+14. ~~**S2** (fix OA comment)~~ DONE
+15. ~~**S3** (investigate excluded invariants)~~ DONE (phase-scoped, added to allBattleInvariants)
+16. ~~**C2** (Arcane Recovery)~~ DONE (budget constraint added)
+17. ~~**C5** (Knock Out)~~ DONE (melee guard deferred to PRD 4)
 
 ---
 
 ## Discovered During Implementation (plans/README.md execution)
 
-### D1. `meleeDamageBonus` applies to all attacks, not just melee [Medium]
+### D1. `meleeDamageBonus` applies to all attacks, not just melee [Medium — PRD 4]
 
-Plan says "add `meleeDamageBonus` to damage **for melee attacks**." Implementation applies it unconditionally in `resolveAttack` because the spec has no melee/ranged distinction. When melee vs ranged is modeled, `meleeDamageBonus` must be gated on `isMelee`.
+Plan says "add `meleeDamageBonus` to damage **for melee attacks**." Implementation applies it unconditionally in `resolveAttack` because the spec has no melee/ranged distinction. PRD 4 adds `isMelee: bool` and gates `meleeDamageBonus` on it.
 
-### D2. TS battle actions don't check `turnStarted` [Pre-existing tech debt]
+### ~~D2. TS battle actions don't check `turnStarted`~~ [Fixed]
 
-Every Quint active-turn action guards on `bTurnStarted`. No TS action function checks `c.turnStarted`. If a caller sends `BATTLE_ATTACK` before `BATTLE_START_TURN`, TS proceeds while Quint blocks. MBT always sends start-turn first so this doesn't cause failures. Pre-existing across all actions, not introduced by this work. Related to C11.
+Added `if (!c.turnStarted) return {}` guard to 10 TS battle action functions.
 
 ### D3. `pFighterStartTurn` heroic inspiration untested — no L10+ fighter in `bInit` [Low]
 
