@@ -368,7 +368,7 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 11. ~~**D8** (Battle MBT broken on master — `Unknown action: bDash`)~~ DONE -- added schema + dispatch handlers for bDash/bDisengage/bDodge/bActionSurge/bEnterRage/bDeclareReckless/bReady/bReadyPass/bReadyRelease/bCastBonusActionSpell to both MBT bridges
 12. ~~**D7** (MBT bridge schema gaps — `bReadyRelease` etc. missing from `battleDriverSchema`)~~ DONE -- added missing schema entries to battle-machine.mbt.test.ts
 13. ~~**D5** (AttackContext divergence Quint↔TS — heavy weapon, grapple, exhaustion)~~ DONE -- aligned Quint AttackContext to 5.2.1 (wielderStrScore/wielderDexScore replace wielderSizeSmallOrTiny); added attackerGrappled/targetIsGrappler to TS; removed 5.1 exhaustion disadvantage from both TS and Quint (5.2.1 uses flat -2*level penalty, already in exhaustionPenalty)
-14. **PRD 3 continuation** (saveMiscBonus for Aura of Protection) -- covers F7. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 1
+14. ~~**PRD 3 continuation** (saveMiscBonus for Aura of Protection)~~ DONE -- covers F7. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 1
 15. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 2
 16. ~~**D6** (knockOut has no TS implementation)~~ DONE -- added `knockOut: boolean` to dealDamage, dealDamageWithAfterReactions, AttackHitCtx, AttackDamageCtx, all attack events (BATTLE_ATTACK, BATTLE_LEGENDARY_ATTACK, BATTLE_READY_RELEASE, BATTLE_MOVEMENT_OA_ATTACK), resolveAttack, and both MBT bridge schemas
 17. **F1** (more reactions) -- incremental, add as needed
@@ -427,13 +427,11 @@ Quint `dealDamage` (`battle.qnt:409`) has full knockOut logic (checks `knockOut 
 
 **Fix:** Add schema entries for all dispatch-only actions.
 
-### D9. `bLegendaryAttack` — legendaryActionsRemaining off by 1 [Pre-existing]
+### ~~D9. `bLegendaryAttack` — legendaryActionsRemaining off by 1~~ [Cannot Reproduce]
 
 *Source: MBT perf research (2026-04-05)*
 
-Quint `bLegendaryAttack` decrements `legendaryActionsRemaining` before `resolveAttack`. TS `battleLegendaryAttack` may decrement at a different point in the pipeline. MBT trace replay shows `legendaryActionsRemaining: 1` (Quint) vs `2` (TS) after a `bLegendaryAttack` action. Seed: `0x71d322b2`, step 3.
-
-**Fix:** Align TS legendary action decrement timing with Quint's `bLegendaryAttack` (line ~2134 in `battle.qnt`). Check `battle-machine-actions-turn.ts` or equivalent.
+Cannot reproduce with seed `0x71d322b2` at 3 and 5 steps on both MBT bridges. Code inspection confirms both Quint and TS decrement `legendaryActionsRemaining` before `resolveAttack` identically. Likely fixed as a side effect of D5 (AttackContext alignment), D6 (knockOut wiring), or PRD 4 (attack pipeline).
 
 ### ~~D8. Battle MBT broken on master (`Unknown action: bDash`)~~ [Implemented]
 
