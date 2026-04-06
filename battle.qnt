@@ -1347,10 +1347,8 @@ module battle {
   /// PCECounterspell entries: when a CS resolves here (no remaining reactors),
   /// we pop the stack to find the interrupted spell and apply the CS outcome.
   /// Quint does not support recursive pure def, so CS unwinding is inlined to
-  /// depth 5 (covers up to 5 casters in the chain). Deeper chains fall through
-  /// to resolveSpellEntry which will hit the non-CS fallback.
-  /// Future: the generator/contract/spec pattern from Emerald could replace this
-  /// inlining — see https://github.com/informalsystems/emerald/pull/236
+  /// depth 2 (original spell + one counterspell; depth 3+ is vanishingly rare
+  /// in real gameplay — see ASSUMPTIONS.md and QUINT_CONNECT_TROUBLESHOOT.md Opportunity 3).
   pure def returnToCSWindow(
     cs: CreatureId -> Combatant,
     entry: SpellStackEntry, stack: List[SpellStackEntry]
@@ -1397,21 +1395,8 @@ module battle {
                         stack: gp.rest,
                       }
                     } else {
-                      // gp may itself be a CS (depth 5+ chain) — inline one more unwind level
-                      match gp.top.spellPostCast {
-                        | PCECounterspell(csEff3) =>
-                          if (gp.rest.length() == 0) {
-                            { creatures: csRefundCS, phase: BPActiveTurn, stack: gp.rest }
-                          } else {
-                            val ggp = popStack(gp.rest)
-                            if (not(csEff3.conSaveSucceeded)) {
-                              { creatures: maybeRefundEntry(csRefundCS, ggp.top), phase: BPActiveTurn, stack: ggp.rest }
-                            } else {
-                              resolveSpellEntry(csRefundCS, ggp.top.spellCasterId, ggp.top.slotLvl, ggp.top.ritual, ggp.top.spellPostCast, ggp.rest)
-                            }
-                          }
-                        | _ => resolveSpellEntry(csRefundCS, gp.top.spellCasterId, gp.top.slotLvl, gp.top.ritual, gp.top.spellPostCast, gp.rest)
-                      }
+                      // Depth limited to 2 — grandparent is always the original spell.
+                      resolveSpellEntry(csRefundCS, gp.top.spellCasterId, gp.top.slotLvl, gp.top.ritual, gp.top.spellPostCast, gp.rest)
                     }
                   }
                 | _ =>
@@ -1432,21 +1417,8 @@ module battle {
                   stack: popped.rest,
                 }
               } else {
-                // popped.top may itself be a CS (depth 5+ chain) — inline one more unwind level
-                match popped.top.spellPostCast {
-                  | PCECounterspell(csEff3) =>
-                    if (popped.rest.length() == 0) {
-                      { creatures: cs, phase: BPActiveTurn, stack: popped.rest }
-                    } else {
-                      val pp2 = popStack(popped.rest)
-                      if (not(csEff3.conSaveSucceeded)) {
-                        { creatures: maybeRefundEntry(cs, pp2.top), phase: BPActiveTurn, stack: pp2.rest }
-                      } else {
-                        resolveSpellEntry(cs, pp2.top.spellCasterId, pp2.top.slotLvl, pp2.top.ritual, pp2.top.spellPostCast, pp2.rest)
-                      }
-                    }
-                  | _ => resolveSpellEntry(cs, popped.top.spellCasterId, popped.top.slotLvl, popped.top.ritual, popped.top.spellPostCast, popped.rest)
-                }
+                // Depth limited to 2 — popped entry is always the original spell.
+                resolveSpellEntry(cs, popped.top.spellCasterId, popped.top.slotLvl, popped.top.ritual, popped.top.spellPostCast, popped.rest)
               }
             }
           }
@@ -1514,6 +1486,9 @@ module battle {
                     keepBattle,
                   }
                 | RCounterspell(conSaveSucceeded) => all {
+                    // Guard: CS chain depth limited to 2 (depth 3+ vanishingly rare in play).
+                    // See ASSUMPTIONS.md and QUINT_CONNECT_TROUBLESHOOT.md Opportunity 3.
+                    bSpellStack.length() < 2,
                     // Guard: reactor must have a slot of level csSlotLvl
                     bCreatures.get(reactorId).slots.slotsCurrent.get(csSlotLvl) > 0,
                     // Spend reaction + slot
