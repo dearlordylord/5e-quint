@@ -168,25 +168,35 @@ function getSubGraph(machine: AnyStateMachine, stateId: string): MachineGraph | 
 
 // --- React components ---
 
-function TransitionRow({ edge, isActive }: { edge: GraphEdge<TransitionData>; isActive: boolean }) {
+function TransitionRow({
+  dense,
+  edge,
+  isActive
+}: {
+  edge: GraphEdge<TransitionData>
+  isActive: boolean
+  dense?: boolean
+}) {
   const targetKey = edge.targetId.split(".").pop() ?? edge.targetId
   const isSelfTransition = edge.sourceId === edge.targetId
 
   return (
     <div
-      className={`flex items-center gap-1.5 px-2 py-1 text-[11px] border-t border-gray-800 ${isActive ? "bg-amber-500/10" : ""}`}
+      className={`flex items-center border-t border-gray-800 ${isActive ? "bg-amber-500/10" : ""} ${
+        dense ? "gap-0.5 px-1 py-0 text-[8px] leading-tight" : "gap-1.5 px-2 py-1 text-[11px]"
+      }`}
     >
-      <span className={`font-mono font-semibold ${isActive ? "text-amber-300" : "text-gray-400"}`}>
+      <span className={`font-mono font-semibold truncate ${isActive ? "text-amber-300" : "text-gray-400"}`}>
         {edge.data.eventType}
       </span>
-      {!isSelfTransition && !edge.data.isTargetless && (
+      {!dense && !isSelfTransition && !edge.data.isTargetless && (
         <>
           <span className="text-gray-600">&rarr;</span>
           <span className={`font-mono ${isActive ? "text-amber-400" : "text-sky-400"}`}>{targetKey}</span>
         </>
       )}
-      {edge.data.guard && <span className="text-violet-400 font-mono text-[10px]">[{edge.data.guard}]</span>}
-      {edge.data.actions.length > 0 && (
+      {!dense && edge.data.guard && <span className="text-violet-400 font-mono text-[10px]">[{edge.data.guard}]</span>}
+      {!dense && edge.data.actions.length > 0 && (
         <span className="text-gray-600 font-mono text-[10px]">/ {edge.data.actions.join(", ")}</span>
       )}
     </div>
@@ -198,6 +208,7 @@ function StateCard({
   activeStateKey,
   graph,
   isInitial,
+  maxTransitions,
   node
 }: {
   node: GraphNode<StateNodeData>
@@ -205,10 +216,15 @@ function StateCard({
   isInitial: boolean
   activeStateKey: string
   activeEvent: string
+  maxTransitions?: number
 }) {
   const isActive = node.data.key === activeStateKey
   const children = getChildren(graph, node.id)
   const outEdges = getOutEdges(graph, node.id)
+
+  const visibleEdges =
+    maxTransitions != null && outEdges.length > maxTransitions ? outEdges.slice(0, maxTransitions) : outEdges
+  const hiddenCount = outEdges.length - visibleEdges.length
 
   return (
     <div className="flex min-w-[130px] flex-col">
@@ -223,6 +239,9 @@ function StateCard({
         <div className="flex items-center gap-1 px-2 py-1.5">
           {isInitial && <span className="text-gray-500 text-[10px]">&raquo;</span>}
           <span className={`font-semibold ${isActive ? "text-amber-300" : "text-gray-300"}`}>{node.data.key}</span>
+          {outEdges.length > 0 && maxTransitions != null && (
+            <span className="ml-auto text-[9px] text-gray-600">{outEdges.length}</span>
+          )}
         </div>
 
         {/* Entry/exit actions */}
@@ -242,10 +261,18 @@ function StateCard({
         )}
 
         {/* Transitions */}
-        {outEdges.length > 0 &&
-          outEdges.map((edge) => (
-            <TransitionRow key={edge.id} edge={edge} isActive={isActive && edge.data.eventType === activeEvent} />
+        {visibleEdges.length > 0 &&
+          visibleEdges.map((edge) => (
+            <TransitionRow
+              key={edge.id}
+              edge={edge}
+              isActive={isActive && edge.data.eventType === activeEvent}
+              dense={maxTransitions != null}
+            />
           ))}
+        {hiddenCount > 0 && (
+          <div className="px-2 py-0.5 text-[10px] text-gray-600 border-t border-gray-800">+{hiddenCount} more</div>
+        )}
 
         {/* Children */}
         {children.length > 0 && (
@@ -258,6 +285,7 @@ function StateCard({
                 isInitial={node.data.initialId === child.id}
                 activeStateKey={activeStateKey}
                 activeEvent={activeEvent}
+                maxTransitions={maxTransitions}
               />
             ))}
           </div>
@@ -273,12 +301,14 @@ export function SubMachineViz({
   activeEvent,
   activeStateKey,
   machine,
+  maxTransitions,
   stateId
 }: {
   machine: AnyStateMachine
   stateId: string
   activeStateKey: string
   activeEvent: string
+  maxTransitions?: number
 }) {
   const graph = getSubGraph(machine, stateId)
   if (!graph) return null
@@ -306,6 +336,7 @@ export function SubMachineViz({
             isInitial={root.data.initialId === child.id}
             activeStateKey={activeStateKey}
             activeEvent={activeEvent}
+            maxTransitions={maxTransitions}
           />
         ))}
       </div>

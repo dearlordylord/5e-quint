@@ -45,7 +45,8 @@ function RootApp() {
   if (pathname === "/simulator") return <App />
   if (pathname === "/machines") return <FullMachineVizPage />
   if (pathname === "/machine-viz") return <MachineVizPage />
-  if (pathname === "/battle") return <BattlePage scenario={{ events: FIREBALL_BATTLE, meta: FIREBALL_BATTLE_META }} />
+  if (pathname === "/battle" || pathname === "/battle/machine" || pathname === "/battle/interrupts")
+    return <BattlePage scenario={{ events: FIREBALL_BATTLE, meta: FIREBALL_BATTLE_META }} />
   if (pathname === "/trace") return <TraceVisualizer />
   return <HomePage />
 }
