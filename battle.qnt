@@ -2368,6 +2368,9 @@ module battle {
     | BPActiveTurn => if (not(bTurnStarted)) any { bStartTurn, } else {
         // Capability-split: hoist cheap checks to eliminate branches that can't fire,
         // saving 41+ wasted nondets + snapshot/restore cycles per disabled spell action.
+        // Caveat 1: innate/racial spellcasting (no prepared spells) is out of spec scope.
+        // Caveat 2: Rage blocks spell casting but not all Magic actions (non-spell magic
+        // items are out of spec scope). Both safe within current modeled domain.
         val turnAc = bCreatures.get(bInitiative[bTurnIndex])
         val canCastSpells = turnAc.preparedSpells.size() > 0 and not(turnAc.ragingBlocksSpells)
         if (canCastSpells) any {
