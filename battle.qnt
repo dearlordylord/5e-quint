@@ -2365,11 +2365,20 @@ module battle {
   // branch evaluations (Finding 13: branch count IS the dominant perf factor).
   // See QUINT_CONNECT_TROUBLESHOOT.md Finding 14.
   action battleStep = match bPhase {
-    | BPActiveTurn => if (not(bTurnStarted)) any { bStartTurn, } else any {
-        bAttack, bCastSaveSpell, bCastAoE,
-        bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
-        bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge,
-        bEnterRage, bDeclareReckless, bReady, bEndTurn,
+    | BPActiveTurn => if (not(bTurnStarted)) any { bStartTurn, } else {
+        // Capability-split: hoist cheap checks to eliminate branches that can't fire,
+        // saving 41+ wasted nondets + snapshot/restore cycles per disabled spell action.
+        val _ac = bCreatures.get(bInitiative[bTurnIndex])
+        val _canCastSpells = _ac.preparedSpells.size() > 0 and not(_ac.ragingBlocksSpells)
+        if (_canCastSpells) any {
+          bAttack, bCastSaveSpell, bCastAoE,
+          bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
+          bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge,
+          bEnterRage, bDeclareReckless, bReady, bEndTurn,
+        } else any {
+          bAttack, bConcentrationCheck, bMove, bDash, bDisengage, bDodge,
+          bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
+        }
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {
         | PIAttackHit(_) => any { bResolveHitReaction, }
