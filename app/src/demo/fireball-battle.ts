@@ -288,7 +288,207 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotConSave: true,
     deathSaveRoll: 5
   },
+  endTurn,
+
+  // === ROUND 3 ===
+  // Death save tallies entering R3: D(0s/2f), B(0s/0f), E(0s/0f), F(0s/2f)
+
+  // Turn A: alive (8 HP), passes
+  startTurn,
+  endTurn,
+
+  // Turn D: dying (0s/2f), rolls 4 → 3rd failure → DEAD
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 4
+  },
+  endTurn,
+
+  // Turn B: dying (0s/0f), rolls 12 → 1st success (1s/0f)
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 12
+  },
+  endTurn,
+
+  // Turn E: dying (0s/0f), rolls 8 → 1st failure (0s/1f)
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 8
+  },
+  endTurn,
+
+  // Turn C: alive (22 HP), passes
+  startTurn,
+  endTurn,
+
+  // Turn F: dying (0s/2f), rolls 14 → 1st success (1s/2f)
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 14
+  },
+  endTurn,
+
+  // === ROUND 4 ===
+  // Tallies: D=DEAD, B(1s/0f), E(0s/1f), F(1s/2f)
+
+  // Turn A: passes
+  startTurn,
+  endTurn,
+
+  // Turn D: dead — no-op turn
+  startTurn,
+  endTurn,
+
+  // Turn B: dying (1s/0f), rolls 1 → nat 1 = TWO failures (1s/2f)
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 1
+  },
+  endTurn,
+
+  // Turn E: dying (0s/1f), rolls 15 → 1st success (1s/1f)
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 15
+  },
+  endTurn,
+
+  // Turn C: passes
+  startTurn,
+  endTurn,
+
+  // Turn F: dying (1s/2f), rolls 11 → 2nd success (2s/2f)
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 11
+  },
+  endTurn,
+
+  // === ROUND 5 ===
+  // Tallies: D=DEAD, B(1s/2f), E(1s/1f), F(2s/2f)
+
+  // Turn A: passes
+  startTurn,
+  endTurn,
+
+  // Turn D: dead — no-op
+  startTurn,
+  endTurn,
+
+  // Turn B: dying (1s/2f), rolls 3 → 3rd failure → DEAD
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 3
+  },
+  endTurn,
+
+  // Turn E: dying (1s/1f), rolls 14 → 2nd success (2s/1f)
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 14
+  },
+  endTurn,
+
+  // Turn C: passes
+  startTurn,
+  endTurn,
+
+  // Turn F: dying (2s/2f), rolls 15 → 3rd success → STABLE
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 15
+  },
+  endTurn,
+
+  // === ROUND 6 ===
+  // D=DEAD, B=DEAD, F=STABLE. Only E still dying (2s/1f).
+
+  // Turn A: passes
+  startTurn,
+  endTurn,
+
+  // Turn D: dead — no-op
+  startTurn,
+  endTurn,
+
+  // Turn B: dead — no-op
+  startTurn,
+  endTurn,
+
+  // Turn E: dying (2s/1f), rolls 12 → 3rd success → STABLE
+  {
+    type: "BATTLE_START_TURN",
+    rechargeD6: 1,
+    sotDmg: 0,
+    sotDt: "fire" as DamageType,
+    sotHeal: 0,
+    sotSaveResult: false,
+    sotConSave: true,
+    deathSaveRoll: 12
+  },
   endTurn
+  // Final state: D=DEAD, B=DEAD, E=STABLE, F=STABLE. A(8HP) and C(22HP) alive.
 ]
 
 /** Metadata for game engine rendering — not consumed by the battle machine. */

@@ -203,6 +203,13 @@ function TransitionRow({
   )
 }
 
+function hasActiveDescendant(graph: MachineGraph, nodeId: string, activeKey: string): boolean {
+  for (const child of getChildren(graph, nodeId)) {
+    if (child.data.key === activeKey || hasActiveDescendant(graph, child.id, activeKey)) return true
+  }
+  return false
+}
+
 function StateCard({
   activeEvent,
   activeStateKey,
@@ -218,8 +225,8 @@ function StateCard({
   activeEvent: string
   maxTransitions?: number
 }) {
-  const isActive = node.data.key === activeStateKey
   const children = getChildren(graph, node.id)
+  const isActive = node.data.key === activeStateKey || hasActiveDescendant(graph, node.id, activeStateKey)
   const outEdges = getOutEdges(graph, node.id)
 
   const visibleEdges =
