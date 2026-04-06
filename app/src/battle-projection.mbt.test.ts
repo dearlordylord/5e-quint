@@ -1881,5 +1881,5 @@ describe("Battle Projection MBT", () => {
       })
       logMbtSeed("battle MBT", result)
     }
-  }, 600_000) // 10 min — Tier 2 (MBT_DEV) needs ~5 min, Tier 3 needs nohup
+  }, 600_000) // 10 min — sufficient for Tier 1/2; Tier 3 uses mbt-fuzz.sh (per-seed isolation)
 })
