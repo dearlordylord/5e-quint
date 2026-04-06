@@ -385,10 +385,16 @@ for complex keys (sets, records used as map keys). Our creature ID keys (integer
 1. ~~**Publish quint-connect**~~ DONE — v0.8.1 with `compiledInput` option
 2. ~~**Fix compile-battle-spec.cjs format**~~ NOT NEEDED — format is byte-identical to `quint run`
    (see Finding 9). The evaluator is slow because of action complexity, not format differences.
-3. **File Quint issue: json-bigint round-trip sensitivity** — the evaluator should not
-   be sensitive to whether integers were serialized by json-bigint vs JSON.stringify
-4. **File Quint issue: `nthreads=1` deadlock** (if still present in latest version)
-5. **Investigate evaluator `run <file>` command** — may bypass stdin pipe issues entirely
+3. ~~**File Quint issue: json-bigint round-trip sensitivity**~~ WON'T FILE — the evaluator
+   expects its own serialization format (json-bigint). Feeding it `JSON.parse`→`JSON.stringify`
+   output loses BigInt precision — that's caller error, not an evaluator bug.
+   **Workaround:** always pass the compiled cache as a raw string (no `JSON.parse` round-trip).
+   See Finding 6.
+4. ~~**File Quint issue: `nthreads=1` deadlock**~~ WON'T FILE — we're on Quint 0.31.0
+   (latest: 0.32.0). The deadlock is reproducible but trivially worked around.
+   **Workaround:** `nthreads = Math.max(2, ...)` in quint-connect. See Finding 5.
+5. ~~**Investigate evaluator `run <file>` command**~~ MOOT — the compiled-input path via
+   `proc.stdin.write()` works correctly and is fast (~265ms per step). No need for alternatives.
 6. ~~**Investigate evaluator per-step cost**~~ RESOLVED — source code analysis of `evaluator/src/`
    confirmed the evaluator architecture is sound (compile-then-execute, O(1) runtime lookups via
    `Rc<RefCell<>>` closures). The per-step cost difference between simple and complex actions is
@@ -403,10 +409,12 @@ for complex keys (sets, records used as map keys). Our creature ID keys (integer
    `if (not(bTurnStarted))` guard. 1-step: 40% → 100% seed success rate.
 10. ~~**Further sub-phase splits**~~ REJECTED — violates SRD RAW (D&D 5e allows interleaving
     actions, bonus actions, and movement in any order within a turn).
-11. **File Quint issue: `actionAny` per-branch cost** — the evaluator's per-branch cost is
-    far higher than expected for complex state. A 17-branch `any { }` with 5 nondets per branch
-    and 2 state vars takes ~6s through `quint run`. This may be an evaluator performance bug
-    worth reporting upstream.
+11. ~~**File Quint issue: `actionAny` per-branch cost**~~ WON'T FILE — the per-branch cost
+    is inherent to snapshot/restore of complex state (`imbl` persistent maps with 4 creatures
+    × 20+ fields). Not a bug — it's the expected cost of the evaluator's architecture.
+    **Workaround:** reduce branch count via capability-split and phase-split guards in the
+    spec (Findings 14, 16). Remaining slow seeds (~13% at 3 steps) are an inherent cost
+    of caster turns with all 16 branches enabled.
 12. ~~**Limit counterspell depth to 2 (Opportunity 3)**~~ DONE — Finding 15. Guard
     `bSpellStack.length() < 2` + removed ~30 lines of depth 3+ unwind code. See inline comments in battle.qnt.
 13. ~~**Capability-split by spell availability**~~ DONE — Finding 16. Hoist
