@@ -49,6 +49,9 @@ Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.** See `QUI
   - **Tier 2 — Pre-commit (5–30 min):** `MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts` — 10 samples × 5 steps. Background it.
   - **Tier 3 — Full validation (30+ min):** `MBT_TRACES=1 MBT_MAX_SAMPLES=50 MBT_STEPS=10 npx vitest run src/battle-projection.mbt.test.ts` — overnight / CI only.
   - **Default to Tier 1.** Never run Tier 2/3 for exploratory work. See `QUINT_CONNECT_TROUBLESHOOT.md` for why.
+- **Seed-dependent slowness:** ~13% of seeds take 10-25s at 3+ steps (caster turns with all 16 branches enabled). If a seed is slow, re-run without `QUINT_SEED` for a fresh one. This is an inherent evaluator cost, not a bug.
+- **Do NOT remove the `if` guards in `battleStep`** (phase-split, capability-split). They look like unnecessary complexity but prevent 60%+ of seeds from timing out. See inline comments in `battle.qnt` and `QUINT_CONNECT_TROUBLESHOOT.md` Findings 13-16.
+- **Do NOT `JSON.parse` the compiled cache** (`.quint-cache/battle-compiled.json`). It must be passed as a raw string to preserve json-bigint precision. See `scripts/compile-battle-spec.cjs` header.
 
 ## Quint gotchas
 
