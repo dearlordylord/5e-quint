@@ -29,12 +29,15 @@ cleanup() {
 trap cleanup INT TERM EXIT
 
 echo "Starting combined fuzzer (max_seeds=${MAX_SEEDS:-∞})"
-echo "  MBT parity  → mbt-failures.jsonl"
-echo "  Invariants   → invariant-failures.jsonl"
+echo "  Battle MBT  → mbt-failures.jsonl"
+echo "  Invariants  → invariant-failures.jsonl"
+echo ""
+echo "WARNING: Running both fuzzers needs ~12GB+ RAM."
+echo "On constrained containers (<16GB), run them separately."
 echo ""
 
-# MBT parity fuzzer
-./scripts/mbt-fuzz.sh "$MAX_SEEDS" &
+# Battle MBT parity fuzzer (default: battle, not creature)
+MBT_TEST="${MBT_TEST:-battle}" ./scripts/mbt-fuzz.sh "$MAX_SEEDS" &
 PIDS+=($!)
 
 # Invariant fuzzer

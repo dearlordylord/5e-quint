@@ -2637,15 +2637,22 @@ module battle {
 
   // Phase 4: Cross-creature invariants
 
-  /// Concentration implies an active effect exists on some creature.
+  /// Concentration implies either an active effect exists OR the caster is holding
+  /// a readied spell (SRD 5.2.1: "holding the spell's magic requires Concentration"
+  /// — the effect doesn't exist yet because the spell hasn't resolved).
   /// Phase-scoped: only checked when spell stack is empty (CS chain resolved)
   /// to avoid transient out-of-sync states during Counterspell resolution.
   val concentrationImpliesEffect =
     (bSpellStack.length() > 0) or bCreatures.keys().forall(casterId =>
       val caster = bCreatures.get(casterId)
-      (caster.slots.concentrationSpellId != "") implies bCreatures.keys().exists(targetId =>
-        bCreatures.get(targetId).creature.activeEffects.exists(e =>
-          e.spellId == caster.slots.concentrationSpellId and e.casterId == casterId
+      (caster.slots.concentrationSpellId != "") implies (
+        // Case 1: readied spell held with Concentration (no effect yet)
+        hasReadiedSpell(caster) or
+        // Case 2: resolved spell — effect exists on some creature
+        bCreatures.keys().exists(targetId =>
+          bCreatures.get(targetId).creature.activeEffects.exists(e =>
+            e.spellId == caster.slots.concentrationSpellId and e.casterId == casterId
+          )
         )
       )
     )

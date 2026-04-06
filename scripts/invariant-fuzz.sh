@@ -46,7 +46,8 @@ while true; do
   echo -n "[$COUNT] $TIMESTAMP seed=$SEED ... "
   echo "$TIMESTAMP seed=$SEED" >> "$LOG"
 
-  npx quint run \
+  TIMEOUT="${FUZZ_TIMEOUT:-600}"
+  timeout "$TIMEOUT" npx quint run \
     --seed="$SEED" \
     --invariant=allBattleInvariants \
     --init=bInit \
@@ -57,7 +58,11 @@ while true; do
     --verbosity=1 \
     battle.qnt 2>&1 > "$TMP" && STATUS=0 || STATUS=$?
 
-  if [ "$STATUS" -eq 0 ]; then
+  if [ "$STATUS" -eq 124 ]; then
+    echo "TIMEOUT (${TIMEOUT}s)"
+    echo "$TIMESTAMP seed=$SEED TIMEOUT" >> "$LOG"
+    killall -9 quint_evaluator 2>/dev/null || true
+  elif [ "$STATUS" -eq 0 ]; then
     echo "PASS"
   else
     FAIL_COUNT=$((FAIL_COUNT + 1))

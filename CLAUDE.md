@@ -43,13 +43,13 @@ Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.** See `QUI
   1. Write a focused TS unit test that replays the specific event sequence against XState actors directly (milliseconds, no Quint).
   2. Read the ITF trace JSON offline to inspect Quint state at each step.
   3. Trace through the Quint spec logic manually by reading the code.
-- **MBT run tiers (choose the right one!):**
-  - **Tier 1 — Battle dev (~1s with compiled cache):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle-projection.mbt.test.ts` — **Use this for iterative development.** Requires compiled cache (`node scripts/compile-battle-spec.cjs`). ~265ms evaluator time per step when no zombie evaluators are present.
-  - **Tier 1b — Creature MBT (~20s):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts` — creature-level parity only (no battle.qnt). Use when changes are purely creature-level.
-  - **Tier 2 — Pre-commit (1–10+ min, often times out):** `MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts` — 10 samples × 5 steps. Background it. Frequently hits slow seeds that exceed the 10-min timeout (confirmed on master as of 2026-04-05). When it times out, re-run with a fresh seed — a fast seed completes in <5s.
+- **MBT run tiers (choose the right one!):** Wall-clock times include vitest startup (~8–10s overhead). See `BENCHMARK_METHODOLOGY.md` for full measurement data (Night 1, 2026-04-05).
+  - **Tier 1 — Battle dev (~15s wall-clock):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle-projection.mbt.test.ts` — **Use this for iterative development.** Requires compiled cache (`node scripts/compile-battle-spec.cjs`). Vitest overhead dominates; 3-step and 5-step are the same wall-clock (~14s median). Evaluator-only time is ~5–8s.
+  - **Tier 1b — Creature MBT (~17s wall-clock):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts` — creature-level parity only (no battle.qnt). Use when changes are purely creature-level.
+  - **Tier 2 — Pre-commit (~25s wall-clock, p90 ~35s):** `MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts` — 10 samples × 5 steps. Background it. Occasional OOM on containers with <16GB RAM.
   - **Tier 3 — Full validation (30+ min):** `MBT_TRACES=1 MBT_MAX_SAMPLES=50 MBT_STEPS=10 npx vitest run src/battle-projection.mbt.test.ts` — overnight / CI only.
   - **Default to Tier 1.** Never run Tier 2/3 for exploratory work. See `QUINT_CONNECT_TROUBLESHOOT.md` for why.
-- **If a seed is slow** (~13% at 3+ steps), re-run without `QUINT_SEED` for a fresh one. TODO: measure actual slow-seed percentage and characterize slow-seed patterns with an overnight run across many seeds.
+- **If a seed is slow**, re-run without `QUINT_SEED` for a fresh one. Slow-seed rate measured at ~49% for invariant fuzzer (5 samples × 5 steps, 120s timeout) and 0% for battle MBT Tier 1 (10 seeds). Slow seeds are caused by branch count (Finding 14), not nondet range sizes.
 - **Slow evaluator? Try different seeds first.** Slow seeds are caused by branch count (Finding 14), not nondet range sizes. Re-run with fresh seeds before considering range narrowing. If narrowing is truly necessary, keep domain-correct ranges as comments and document the narrowing rationale in the code.
 
 ## Quint gotchas
@@ -144,7 +144,12 @@ After significant changes, run `/simplify` repeatedly until it converges — i.e
 
 ## Fuzzing
 
-`./scripts/fuzz-all.sh [N]` — runs MBT parity + invariant fuzzers in parallel. Failures → `mbt-failures.jsonl` / `invariant-failures.jsonl`.
+`./scripts/fuzz-all.sh [N]` — runs battle MBT parity + invariant fuzzers in parallel. Failures → `mbt-failures.jsonl` / `invariant-failures.jsonl`. **Needs ~12GB+ RAM** — on constrained containers (<16GB), run them separately.
+
+- `./scripts/mbt-fuzz.sh [N]` — battle MBT fuzzer (default). Set `MBT_TEST=creature` for creature MBT. Includes per-seed timeout (180s default, set `MBT_TIMEOUT`), timing data (`mbt-timing.jsonl`), and structured error extraction.
+- `./scripts/invariant-fuzz.sh [N]` — invariant fuzzer. Per-seed timeout (120s default, set `FUZZ_TIMEOUT`). ~49% of seeds timeout at 5 samples × 5 steps.
+- `./scripts/fuzz-monitor.sh` — health checker: kills zombie evaluators, analyzes failure patterns, reports timing stats. Designed for cron.
+- `./scripts/measure-tier-timing.sh [N]` — benchmarks MBT tier wall-clock times. Results in `tier-timing.jsonl`. See `BENCHMARK_METHODOLOGY.md`.
 
 ## QA pipeline
 
