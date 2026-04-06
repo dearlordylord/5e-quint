@@ -209,6 +209,7 @@ export interface SpellCastCtx {
   readonly caster: CreatureId
   readonly spellName: string
   readonly postCast: PostCastEffect
+  // TODO encode readied spell release more properly
   readonly slotLvl: SpellSlotLevel | 0 // 0 = slot already spent (readied spell release)
   readonly ritual: boolean
 }
@@ -229,6 +230,7 @@ export interface SpellStackEntry {
   readonly spellCasterId: CreatureId
   readonly spellPostCast: PostCastEffect
   readonly offered: ReadonlySet<CreatureId>
+  // TODO encode readied spell release more properly
   readonly slotLvl: SpellSlotLevel | 0 // 0 = slot already spent (readied spell release)
   readonly spellName: string
   readonly ritual: boolean
