@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # MBT Fuzzer — continuously explores Quint state space with random seeds.
 # Runs battle MBT by default (battle-projection.mbt.test.ts).
+# Default: Tier 2 (10 samples × 5 steps). Needs ~2GB+ free RAM.
+# Skips seeds automatically when available memory < 1.5GB.
 #
 # Usage:
 #   ./scripts/mbt-fuzz.sh              # run until killed (Ctrl+C)
 #   ./scripts/mbt-fuzz.sh 100          # run 100 seeds then stop
-#   MBT_TRACES=1 MBT_MAX_SAMPLES=3 MBT_STEPS=5 ./scripts/mbt-fuzz.sh
+#   MBT_MAX_SAMPLES=3 ./scripts/mbt-fuzz.sh   # Tier 1 (low-memory containers)
 #   MBT_TEST=creature ./scripts/mbt-fuzz.sh   # creature MBT instead
 #
 # Output:
@@ -22,7 +24,7 @@ cd "$(dirname "$0")/../app"
 
 MAX_SEEDS="${1:-0}"  # 0 = infinite
 TRACES="${MBT_TRACES:-1}"
-SAMPLES="${MBT_MAX_SAMPLES:-3}"
+SAMPLES="${MBT_MAX_SAMPLES:-10}"
 STEPS="${MBT_STEPS:-5}"
 TIMEOUT="${MBT_TIMEOUT:-180}"
 TEST_KIND="${MBT_TEST:-battle}"  # "battle" or "creature"
@@ -60,6 +62,15 @@ while true; do
   # Kill any zombie evaluators before each run
   killall -9 quint_evaluator 2>/dev/null || true
 
+  # Check available memory — skip if too low (evaluator needs ~2GB for 10 samples)
+  AVAIL_MB=$(awk '/MemAvailable/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 9999)
+  if [ "$AVAIL_MB" -lt 1500 ]; then
+    echo "[$COUNT] $TIMESTAMP seed=$SEED ... SKIP (low memory: ${AVAIL_MB}MB available)"
+    echo "$TIMESTAMP seed=$SEED kind=$TEST_KIND elapsed=0s SKIP low_memory=${AVAIL_MB}MB" >> "$LOG"
+    sleep 5  # wait for memory to free up
+    continue
+  fi
+
   echo -n "[$COUNT] $TIMESTAMP seed=$SEED ... "
 
   START_SEC=$(date +%s)
@@ -89,11 +100,13 @@ while true; do
              grep -oP 'action: \K\w+' "$TMP" | head -1 || true)
     STEP_NUM=$(grep -oP 'step \K\d+' "$TMP" | head -1 || true)
 
-    echo "FAIL (${ELAPSED}s, action=${ACTION:-?}, field=${DIFF_FIELD:-?})"
+    echo "FAIL (${ELAPSED}s, seed=$SEED, action=${ACTION:-?}, field=${DIFF_FIELD:-?})"
+    [ -n "$ERROR_LINE" ] && echo "  error: $(echo "$ERROR_LINE" | cut -c1-200)"
     echo "$TIMESTAMP seed=$SEED kind=$TEST_KIND elapsed=${ELAPSED}s FAIL action=${ACTION:-?} field=${DIFF_FIELD:-?}" >> "$LOG"
 
     # Save full output for debugging
     cp "$TMP" "../mbt-failure-${TEST_KIND}-${SEED}.log"
+    echo "  saved: mbt-failure-${TEST_KIND}-${SEED}.log"
 
     # Write structured failure record — use jq-safe escaping
     ERROR_SHORT=$(echo "$ERROR_LINE" | tr '\n' ' ' | cut -c1-500 | sed 's/"/\\"/g')

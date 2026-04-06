@@ -33,3 +33,5 @@ invariant-failure-*.log
 invariant-failures.jsonl
 traces/
 .quint-cache/
+mbt-timing.jsonl
+tier-timing.jsonl
