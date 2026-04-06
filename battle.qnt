@@ -2386,12 +2386,12 @@ module battle {
   // inside `match` are reported as the composite name ("battleStep"), causing the
   // MBT driver to dispatch a no-op instead of the leaf handler.
   //
-  // PERF NOTE: The number of actions here does NOT affect MBT performance.
-  // The evaluator's cost is dominated by state evaluation (4 creatures × 25+ fields),
-  // not guard checking. See QUINT_CONNECT_TROUBLESHOOT.md.
+  // Phase-split: bStartTurn is isolated when bTurnStarted==false to avoid 16 wasted
+  // branch evaluations (Finding 13: branch count IS the dominant perf factor).
+  // See QUINT_CONNECT_TROUBLESHOOT.md Finding 14.
   action battleStep = match bPhase {
-    | BPActiveTurn => any {
-        bStartTurn, bAttack, bCastSaveSpell, bCastAoE,
+    | BPActiveTurn => if (not(bTurnStarted)) any { bStartTurn, } else any {
+        bAttack, bCastSaveSpell, bCastAoE,
         bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
         bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge,
         bEnterRage, bDeclareReckless, bReady, bEndTurn,
