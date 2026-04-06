@@ -1348,7 +1348,7 @@ module battle {
   /// we pop the stack to find the interrupted spell and apply the CS outcome.
   /// Quint does not support recursive pure def, so CS unwinding is inlined to
   /// depth 2 (original spell + one counterspell; depth 3+ is vanishingly rare
-  /// in real gameplay — see ASSUMPTIONS.md and QUINT_CONNECT_TROUBLESHOOT.md Opportunity 3).
+  /// in real gameplay — see QUINT_CONNECT_TROUBLESHOOT.md Opportunity 3).
   pure def returnToCSWindow(
     cs: CreatureId -> Combatant,
     entry: SpellStackEntry, stack: List[SpellStackEntry]
@@ -1487,7 +1487,7 @@ module battle {
                   }
                 | RCounterspell(conSaveSucceeded) => all {
                     // Guard: CS chain depth limited to 2 (depth 3+ vanishingly rare in play).
-                    // See ASSUMPTIONS.md and QUINT_CONNECT_TROUBLESHOOT.md Opportunity 3.
+                    // See QUINT_CONNECT_TROUBLESHOOT.md Opportunity 3.
                     bSpellStack.length() < 2,
                     // Guard: reactor must have a slot of level csSlotLvl
                     bCreatures.get(reactorId).slots.slotsCurrent.get(csSlotLvl) > 0,

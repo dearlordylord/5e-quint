@@ -408,7 +408,7 @@ for complex keys (sets, records used as map keys). Our creature ID keys (integer
     and 2 state vars takes ~6s through `quint run`. This may be an evaluator performance bug
     worth reporting upstream.
 12. ~~**Limit counterspell depth to 2 (Opportunity 3)**~~ DONE — Finding 15. Guard
-    `bSpellStack.length() < 2` + removed ~30 lines of depth 3+ unwind code. Documented as A35.
+    `bSpellStack.length() < 2` + removed ~30 lines of depth 3+ unwind code. See inline comments in battle.qnt.
 13. ~~**Capability-split by spell availability**~~ DONE — Finding 16. Hoist
     `preparedSpells.size() > 0 and not(ragingBlocksSpells)` into `battleStep` dispatch.
     3-step: 4/8 slow → 1/8 slow.
@@ -469,7 +469,7 @@ optimization (~20-30%) compared to the 40x slowdown from zombie evaluators.
 
 ### ~~Opportunity 3: Limit counterspell chain depth~~ — DONE (Finding 15)
 
-Depth limited to 2, ~30 lines removed, documented as A35 in ASSUMPTIONS.md.
+Depth limited to 2, ~30 lines removed, see inline comments in battle.qnt.
 See Finding 15 for benchmark results.
 
 ### ~~Opportunity 4: Split active-turn `any` into sub-phases~~ — REJECTED
@@ -760,8 +760,7 @@ With the phase-split fix, the MBT tier system should be updated:
 ## Finding 15: Counterspell depth limit — eliminates worst action body (2026-04-05)
 
 Guard `bSpellStack.length() < 2` in `bResolveCounterspell` prevents depth 3+ CS chains.
-~30 lines of depth 3+ unwind code removed from `returnToCSWindow`. Documented as A35 in
-ASSUMPTIONS.md (minor RAW deviation — depth 3+ is legal but vanishingly rare).
+~30 lines of depth 3+ unwind code removed from `returnToCSWindow` (minor RAW deviation — depth 3+ is legal but vanishingly rare).
 
 **3-step results (8 seeds, 30s timeout):**
 - Before: 7/8 complete, 1 timeout. Slow seeds: 9-16s.
@@ -793,7 +792,7 @@ known fast seeds include: `0x689d4239`, `0xad9e6bc3`, `0x12345678`, `0xabcdef01`
 |---|---|---|---|---|
 | Kill zombie evaluators | None | 40x when zombies present | N/A | **Done** |
 | **Phase-split bStartTurn** | **Trivial** | **40% → 100% seed success (1-step)** | **No loss** | **Done** |
-| **Limit counterspell to depth 2** | **Easy** | **Eliminates worst action body path, timeout→complete** | **Minor (A35)** | **Done** |
+| **Limit counterspell to depth 2** | **Easy** | **Eliminates worst action body path, timeout→complete** | **Minor** | **Done** |
 | **Capability-split (spell check)** | **Trivial** | **3-step: 4/8 slow → 1/8 slow** | **No loss** | **Done** |
 | ~~Further sub-phase splits~~ | ~~Medium~~ | ~~Reduce p90 from 6.4s to ~1-2s~~ | **RAW violation** | **Rejected** |
 | Consolidate 13 class vars → 1 map | Medium | ~20-30% cheaper snapshots | No loss | Not recommended |

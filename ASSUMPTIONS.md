@@ -297,11 +297,3 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Rules basis:** The SRD describes durations as positive time spans ("1 minute," "Concentration, up to 10 minutes," etc.) that simply end when expired. No SRD passage addresses negative durations because the concept does not exist in the rules.
 
 **Changes:** Invariant `turnsRemaining >= 0` added to safety invariants (see PLAN_INVARIANTS.md L2).
-
-## A35: Counterspell chain depth limited to 2
-
-**Assumption:** The spec limits counterspell chains to depth 2 (original spell + one counterspell). A counterspell-of-a-counterspell (depth 2) is modeled; depth 3+ chains are not generated. This is a deliberate simplification for evaluator performance — depth 3+ chains are vanishingly rare in actual play (requiring 3+ casters with reactions, 3rd-level+ slots, and line of sight).
-
-**Rules basis (SRD 5.2.1 Spells — Counterspell):** RAW permits unbounded counterspell chains — any creature that can see a spell being cast may use its reaction to counterspell it, including counterspelling a counterspell. The depth-2 limit is a modeling choice, not RAW.
-
-**Changes:** Guard `bSpellStack.length() < 2` added to `bResolveCounterspell`. Depth 3+ unwind code removed from `returnToCSWindow`. See QUINT_CONNECT_TROUBLESHOOT.md Opportunity 3.
