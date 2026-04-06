@@ -667,12 +667,15 @@ module battle {
     nondet surprised2 = Bool.oneOf()
     nondet surprised3 = Bool.oneOf()
     nondet surprised4 = Bool.oneOf()
+    // Aura of Protection bonus (Paladin L6+: CHA mod, min +1, range 0-5)
+    nondet smb2 = 0.to(5).oneOf()
+    nondet smb4 = 0.to(5).oneOf()
     all {
       bCreatures' = Map(
         "A" -> mkCaster(hp1, PC).with("rogueLevel", 5).with("hasEvasion", true).with("sneakAttackDice", 3),  // B11: rogue 5, Evasion, SA 3d6
-        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", 3).with("barbarianLevel", 5),  // Paladin Aura + barbarian 5
+        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", smb2).with("barbarianLevel", 5),  // Paladin Aura + barbarian 5
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
-        "D" -> mkCaster(hp4, PC).with("critRange", 19).with("fighterLevel", 5).with("fighterState", freshFighterState(5))  // Champion fighter 5
+        "D" -> mkCaster(hp4, PC).with("critRange", 19).with("fighterLevel", 5).with("fighterState", freshFighterState(5)).with("saveMiscBonus", smb4)  // Champion fighter 5
       ),
       // Initiative order: sorted by effective roll descending (highest first).
       // SRD 5.2.1: "Disadvantage on their Initiative roll" for surprised combatants.

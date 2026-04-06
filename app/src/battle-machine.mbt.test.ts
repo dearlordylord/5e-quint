@@ -369,7 +369,9 @@ const battleDriverSchema = {
     surprised1: OB,
     surprised2: OB,
     surprised3: OB,
-    surprised4: OB
+    surprised4: OB,
+    smb2: OI,
+    smb4: OI
   },
   bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
   bAttack: {
@@ -583,7 +585,7 @@ function createBattleMachineDriver() {
               maxHp: p(picks, "hp2", 20),
               kind: "PC",
               caster: true,
-              saveMiscBonus: 3,
+              saveMiscBonus: p(picks, "smb2", 0),
               barbarianLevel: 5,
               initiativeRoll: p(picks, "initRoll2", 10),
               initiativeRollB: p(picks, "initRoll2b", 10),
@@ -606,6 +608,7 @@ function createBattleMachineDriver() {
               caster: true,
               critRange: 19,
               fighterLevel: 5,
+              saveMiscBonus: p(picks, "smb4", 0),
               initiativeRoll: p(picks, "initRoll4", 10),
               initiativeRollB: p(picks, "initRoll4b", 10),
               surprised: pb(picks, "surprised4", false)
