@@ -1,5 +1,5 @@
 /**
- * Replays a sequence of XState events through the real dndMachine,
+ * Replays a sequence of XState events through the real creatureMachine,
  * capturing NormalizedState at each step via snapshotToNormalized().
  *
  * This turns the trace visualizer into a live proof: the Quint column
@@ -10,7 +10,7 @@
 import { Option } from "effect"
 import { createActor } from "xstate"
 
-import { dndMachine, type DndSnapshot } from "#/machine.ts"
+import { creatureMachine, type DndSnapshot } from "#/machine.ts"
 import type { DndEvent, DndMachineInput } from "#/machine-types.ts"
 
 import type { NormalizedState, TraceStep } from "./sample-trace.ts"
@@ -95,7 +95,7 @@ export interface TraceEventDef {
 }
 
 export function replayTrace(input: DndMachineInput, defs: ReadonlyArray<TraceEventDef>): ReadonlyArray<TraceStep> {
-  const actor = createActor(dndMachine, { input })
+  const actor = createActor(creatureMachine, { input })
   actor.start()
 
   const steps: Array<TraceStep> = []

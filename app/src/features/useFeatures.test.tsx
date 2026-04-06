@@ -6,7 +6,7 @@ import { createActor } from "xstate"
 import type { FeatureConfig } from "#/features/feature-store.ts"
 import { useFeatures } from "#/features/useFeatures.ts"
 import type { DndSnapshot } from "#/machine.ts"
-import { dndMachine } from "#/machine.ts"
+import { creatureMachine } from "#/machine.ts"
 import type { DndEvent } from "#/machine-types.ts"
 
 const FIGHTER_L5: FeatureConfig = { className: "fighter", level: 5 }
@@ -14,7 +14,7 @@ const BARBARIAN_L5: FeatureConfig = { className: "barbarian", level: 5 }
 const WIZARD_L5: FeatureConfig = { className: "wizard", level: 5 }
 
 function makeSnapshot(input = { maxHp: 20 }): DndSnapshot {
-  const actor = createActor(dndMachine, { input })
+  const actor = createActor(creatureMachine, { input })
   actor.start()
   const snap = actor.getSnapshot()
   actor.stop()
@@ -22,7 +22,7 @@ function makeSnapshot(input = { maxHp: 20 }): DndSnapshot {
 }
 
 function makeActingSnapshot(): DndSnapshot {
-  const actor = createActor(dndMachine, { input: { maxHp: 20 } })
+  const actor = createActor(creatureMachine, { input: { maxHp: 20 } })
   actor.start()
   actor.send({ type: "ENTER_COMBAT" })
   actor.send({

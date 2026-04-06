@@ -4,7 +4,7 @@ import { createActor } from "xstate"
 
 import { singleClassHitDice, ZERO_HIT_DICE } from "#/features/class-tables.ts"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
-import { dndMachine } from "#/machine.ts"
+import { creatureMachine } from "#/machine.ts"
 import {
   aggregateAttackMods,
   calculateAC,
@@ -55,7 +55,7 @@ const DEFAULT_MAX_HP = 20
 const INSTANT_DEATH_HP = 10
 
 function create(maxHp = DEFAULT_MAX_HP) {
-  const actor = createActor(dndMachine, { input: { maxHp } })
+  const actor = createActor(creatureMachine, { input: { maxHp } })
   actor.start()
   return actor
 }
@@ -1066,7 +1066,7 @@ describe("combat mode separation (TA3)", () => {
   })
 
   it("SHORT_REST ignored when acting", () => {
-    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
+    const a = createActor(creatureMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
     a.start()
     startTurn(a)
     takeDamage(a, 5)
@@ -1076,7 +1076,7 @@ describe("combat mode separation (TA3)", () => {
   })
 
   it("SHORT_REST ignored when waitingForTurn", () => {
-    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
+    const a = createActor(creatureMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
     a.start()
     startTurn(a)
     takeDamage(a, 5)
@@ -1087,7 +1087,7 @@ describe("combat mode separation (TA3)", () => {
   })
 
   it("SHORT_REST works when outOfCombat", () => {
-    const a = createActor(dndMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
+    const a = createActor(creatureMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
     a.start()
     takeDamage(a, 5)
     a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [{ className: "fighter", roll: 4 }] })
@@ -1975,7 +1975,7 @@ describe("long rest", () => {
   })
 
   it("restores all spent hit dice (SRD 5.2.1)", () => {
-    const a = createActor(dndMachine, {
+    const a = createActor(creatureMachine, {
       input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: singleClassHitDice("fighter", 2), fighterLevel: classLevel(8) }
     })
     a.start()
@@ -2287,7 +2287,7 @@ describe("machine action edge cases", () => {
   })
 
   it("spend hit die with 0 remaining is no-op", () => {
-    const a = createActor(dndMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: ZERO_HIT_DICE } })
+    const a = createActor(creatureMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: ZERO_HIT_DICE } })
     a.start()
     a.send({ type: "SPEND_HIT_DIE", className: "fighter", conMod: 2, dieRoll: 4 })
     expect(ctx(a).hp).toBe(DEFAULT_MAX_HP) // unchanged

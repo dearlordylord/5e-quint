@@ -218,7 +218,7 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Rules basis:** D&D 5e supports multiclassing, but the spec models single-class PCs for tractability. The choice is a nondeterministic parameter to exercise both class state machines in MBT traces.
 
-**Changes:** `creature.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `machine.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
+**Changes:** `creature.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `creature.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
 
 ## A26: Rage maintenance timing
 

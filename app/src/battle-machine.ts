@@ -4,7 +4,7 @@
  * routed by child states under `running` with `always` transitions.
  *
  * Creatures are stored as flat context (Map<CreatureId, BattleCreatureState>),
- * NOT as spawned dndMachine child actors. D&D combat requires atomic
+ * NOT as spawned creatureMachine child actors. D&D combat requires atomic
  * cross-creature updates (attacker + target in one assign) and sequential
  * phase coordination (attack → reaction → damage → after-damage) that would
  * become async choreography with actors. The creature machine's logic is

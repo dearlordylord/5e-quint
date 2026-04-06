@@ -1,4 +1,3 @@
-// TODO: rename dndMachine → creatureMachine, then rename this file to creature.mbt.test.ts
 import { execSync } from "node:child_process"
 import * as fs from "node:fs"
 import * as os from "node:os"
@@ -12,7 +11,7 @@ import { z } from "zod"
 
 import { fighterExtraAttacks } from "#/features/class-fighter.ts"
 import { singleClassHitDice } from "#/features/class-tables.ts"
-import { type DndEvent, dndMachine } from "#/machine.ts"
+import { creatureMachine, type DndEvent } from "#/machine.ts"
 import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
 import { monkExtraAttacks } from "#/machine-monk.ts"
 import { paladinExtraAttacks } from "#/machine-paladin.ts"
@@ -340,7 +339,7 @@ const driverSchema = {
 
 function createDndDriver() {
   return defineDriver(driverSchema, () => {
-    let actor: ReturnType<typeof createActor<typeof dndMachine>> | null = null
+    let actor: ReturnType<typeof createActor<typeof creatureMachine>> | null = null
     let currentCreatureKind: CreatureKind = "PC"
     let currentStatBlock: ReturnType<typeof parseStatBlock> | null = null
 
@@ -361,7 +360,7 @@ function createDndDriver() {
         if (creatureKind === "Monster") {
           const sb = parseStatBlock(selectedBlock)
           currentStatBlock = sb
-          actor = createActor(dndMachine, {
+          actor = createActor(creatureMachine, {
             input: {
               maxHp: sb.maxHp,
               hitDiceRemaining: undefined,
@@ -406,7 +405,7 @@ function createDndDriver() {
           const dLevel = cls === "Druid" ? cl(level) : undefined
           const rnLevel = cls === "Ranger" ? cl(level) : undefined
           const bdLevel = cls === "Bard" ? cl(level) : undefined
-          actor = createActor(dndMachine, {
+          actor = createActor(creatureMachine, {
             input: {
               maxHp: Number(mhp),
               hitDiceRemaining: singleClassHitDice(quintClassToTs(cls as QuintClassName), level),

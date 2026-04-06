@@ -1,10 +1,7 @@
 /**
  * Battle Projection MBT — generates traces from battle.qnt and replays
- * per-creature state against existing dndMachine XState actors.
+ * per-creature state against existing creatureMachine XState actors.
  *
- * TODO: rename dndMachine → creatureMachine globally (45 refs, 13 files),
- * then rename this file to battle-projection.mbt.test.ts (tests creature machine,
- * not battle machine — current name is misleading).
  */
 import * as path from "node:path"
 
@@ -15,7 +12,7 @@ import { createActor } from "xstate"
 import { z } from "zod"
 
 import { effectiveInitRoll } from "#/battle-machine-actions-turn.ts"
-import { type DndEvent, dndMachine, type DndSnapshot } from "#/machine.ts"
+import { creatureMachine, type DndEvent, type DndSnapshot } from "#/machine.ts"
 import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
 import {
   compareNormalizedStates,
@@ -96,7 +93,7 @@ const QuintBattleState = z.object({
 // ============================================================
 
 /**
- * Fields to compare between Quint Combatant and XState dndMachine.
+ * Fields to compare between Quint Combatant and XState creatureMachine.
  * Excludes class state fields (battle Combatant only tracks rogueLevel/monkLevel).
  */
 
@@ -253,7 +250,7 @@ function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
 // Battle projection driver
 // ============================================================
 
-type Actor = ReturnType<typeof createActor<typeof dndMachine>>
+type Actor = ReturnType<typeof createActor<typeof creatureMachine>>
 const EMPTY_CONDITION_IMMUNITIES = new Set<Condition>()
 
 // Battle driver schema: all fields optional because battleStep = any { ... }
@@ -427,7 +424,7 @@ function createBattleProjectionDriver() {
       const casterSlots = [4, 3, 2, 0, 0, 0, 0, 0, 0]
 
       // A: PC caster with rogueLevel=5
-      const actorA = createActor(dndMachine, {
+      const actorA = createActor(creatureMachine, {
         input: {
           maxHp: hp1,
           effectiveSpeed: 30,
@@ -445,7 +442,7 @@ function createBattleProjectionDriver() {
       creatureKinds.set("A", "PC")
 
       // B: PC caster, no class levels
-      const actorB = createActor(dndMachine, {
+      const actorB = createActor(creatureMachine, {
         input: {
           maxHp: hp2,
           effectiveSpeed: 30,
@@ -463,7 +460,7 @@ function createBattleProjectionDriver() {
 
       // C: Monster with TEST_MONSTER_STAT_BLOCK (3 LA, 3 LR, breath_weapon recharge 5)
       statBlocks.set("C", { multiattackLength: 0, rechargeMinRolls: { breath_weapon: 5 } })
-      const actorC = createActor(dndMachine, {
+      const actorC = createActor(creatureMachine, {
         input: {
           maxHp: hp3,
           effectiveSpeed: 30,
@@ -482,7 +479,7 @@ function createBattleProjectionDriver() {
       creatureKinds.set("C", "Monster")
 
       // D: PC caster, no class levels (enables CS chain depth >= 2)
-      const actorD = createActor(dndMachine, {
+      const actorD = createActor(creatureMachine, {
         input: {
           maxHp: hp4,
           effectiveSpeed: 30,
@@ -1705,7 +1702,7 @@ describe("Battle Projection MBT", () => {
   const MBT_MAX_SAMPLES = isDev ? 10 : 50
   const specPath = path.resolve(import.meta.dirname, "../../battle.qnt")
 
-  it("replays battle traces per-creature against dndMachine actors", async () => {
+  it("replays battle traces per-creature against creatureMachine actors", async () => {
     const dir = process.env["MBT_REPLAY_DIR"]
     if (dir) {
       // Replay from pre-generated ITF files (skips Quint evaluator).

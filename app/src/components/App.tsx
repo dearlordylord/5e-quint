@@ -10,7 +10,7 @@ import { CLASS_NAMES, type ClassName, singleClassHitDice } from "#/features/clas
 import type { BridgeResult } from "#/features/feature-bridge.ts"
 import { type FeatureConfig, useFeatures } from "#/features/useFeatures.ts"
 import { I18nContext, type Locale, LocaleContext, messages, useLocale, useT } from "#/i18n.ts"
-import { dndMachine, type DndSnapshot } from "#/machine.ts"
+import { creatureMachine, type DndSnapshot } from "#/machine.ts"
 import type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
 
 const DEFAULT_MAX_HP = 20
@@ -36,8 +36,8 @@ const DEFAULT_INPUT: DndMachineInput = {
 function replayEvents(
   input: DndMachineInput,
   events: ReadonlyArray<DndEvent>
-): { actor: ReturnType<typeof createActor<typeof dndMachine>>; snapshot: DndSnapshot } {
-  const actor = createActor(dndMachine, { input })
+): { actor: ReturnType<typeof createActor<typeof creatureMachine>>; snapshot: DndSnapshot } {
+  const actor = createActor(creatureMachine, { input })
   actor.start()
   for (const ev of events) {
     actor.send(ev)
@@ -61,7 +61,7 @@ function LangToggle() {
 export function App() {
   const [locale, setLocale] = useState<Locale>("en")
 
-  const actorRef = useRef<ReturnType<typeof createActor<typeof dndMachine>> | null>(null)
+  const actorRef = useRef<ReturnType<typeof createActor<typeof creatureMachine>> | null>(null)
   const [snapshot, setSnapshot] = useState<DndSnapshot | null>(null)
   const [log, setLog] = useState<Array<LogEntry>>([])
   const [cursor, setCursor] = useState(-1)
@@ -86,7 +86,7 @@ export function App() {
   const initActor = useCallback(
     (input: DndMachineInput) => {
       actorRef.current?.stop()
-      const actor = createActor(dndMachine, { input })
+      const actor = createActor(creatureMachine, { input })
       actor.subscribe(setSnapshot)
       actor.start()
       actorRef.current = actor

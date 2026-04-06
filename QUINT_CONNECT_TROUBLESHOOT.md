@@ -17,7 +17,7 @@ execute architecture. All 13K+ definitions are resolved into `Rc<RefCell<>>` clo
 time — zero table lookups happen per step. The imported definition count does NOT affect per-step
 cost; it only affects the one-time compile phase (~5-7s).
 
-**Fastest reliable feedback:** creature-level MBT (`machine.mbt.test.ts`) completes in ~20s.
+**Fastest reliable feedback:** creature-level MBT (`creature.mbt.test.ts`) completes in ~20s.
 
 ---
 
@@ -177,7 +177,7 @@ the evaluator finds a viable trace quickly. Some seeds cause the evaluator to ex
 exponentially long paths. The bimodal distribution (fast vs hang) suggests the evaluator
 sometimes enters states where no `battleStep` action is enabled and it exhausts all branches.
 
-**Creature-level MBT (`machine.mbt.test.ts`) is consistently 17-18s** across all seeds.
+**Creature-level MBT (`creature.mbt.test.ts`) is consistently 17-18s** across all seeds.
 This is the reliable fast-feedback path.
 
 ---
@@ -208,7 +208,7 @@ This is the reliable fast-feedback path.
 - Auto-skips when cache is fresh
 - Run after editing `battle.qnt` or `creature.qnt`
 
-**`app/src/battle.mbt.test.ts`**:
+**`app/src/battle-projection.mbt.test.ts`**:
 - Passes `compiledInput` path to `run()`
 - Warns when cache is stale (hash mismatch)
 
@@ -260,7 +260,7 @@ the input to the evaluator and receiving the result. It does NOT include:
 **Use creature-level MBT for iterative development (~20s):**
 ```bash
 # Creature MBT — always the fastest feedback (no battle.qnt complexity)
-MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/machine.mbt.test.ts
+MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts
 ```
 
 **Battle MBT with compiled cache (typically <1s, some seeds still slow):**
@@ -270,7 +270,7 @@ node scripts/compile-battle-spec.cjs
 
 # Battle MBT: 1 trace, 1 sample, few steps.
 # 1-step: all seeds <300ms. 3-step: ~87% of seeds <300ms, ~13% take 10-25s.
-MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle.mbt.test.ts
+MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle-projection.mbt.test.ts
 
 # If a seed is slow, re-run without QUINT_SEED to get a fresh random seed.
 # Known slow seeds at 3 steps: 0xfeedface (~23s). Most seeds are fast.
@@ -290,7 +290,7 @@ node scripts/compile-battle-spec.cjs
 
 ```bash
 # With cache (~5-30 min depending on seed luck):
-MBT_DEV=1 npx vitest run src/battle.mbt.test.ts
+MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts
 
 # Without cache: adds 15s parse/typecheck overhead per invocation
 # (automatically falls back to quint run when no cache exists)

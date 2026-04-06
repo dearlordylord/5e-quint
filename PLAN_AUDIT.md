@@ -439,6 +439,6 @@ Quint `bLegendaryAttack` decrements `legendaryActionsRemaining` before `resolveA
 
 *Source: PRD 4 verification*
 
-`MBT_DEV=1 npx vitest run src/battle.mbt.test.ts` fails with `TraceReplayError: Unknown action: bDash` on master (confirmed by stashing PRD 4 changes). The `bDash` action is in both `battleDriverSchema` and the dispatch handler, so the issue is in `@firfi/quint-connect`'s action name resolution — likely the `match bPhase` in `battleStep` reports the composite name for some actions despite the `any { }` wrapper.
+`MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts` fails with `TraceReplayError: Unknown action: bDash` on master (confirmed by stashing PRD 4 changes). The `bDash` action is in both `battleDriverSchema` and the dispatch handler, so the issue is in `@firfi/quint-connect`'s action name resolution — likely the `match bPhase` in `battleStep` reports the composite name for some actions despite the `any { }` wrapper.
 
 **Fix:** Investigate `quint-connect` action name resolution for `match` arms. May need to wrap the `BPActiveTurn` arm differently, or update `quint-connect` to handle nested `match` → `any` patterns.

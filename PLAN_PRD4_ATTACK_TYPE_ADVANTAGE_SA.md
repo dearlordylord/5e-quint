@@ -39,7 +39,7 @@
 - `quint typecheck battle.qnt`
 - Invariant tests: `quint test --match "inv_" dndTest.qnt`
 - TS typecheck + unit tests
-- MBT (dev mode): `MBT_DEV=1 npx vitest run src/battle.mbt.test.ts`
+- MBT (dev mode): `MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts`
 
 ### Acceptance criteria
 
@@ -147,7 +147,7 @@
   - SA once per turn → second attack gets no SA
   - SA + crit → damage includes SA dice in doubled total
 - Battle invariants: `sneakAttackUsedThisTurn implies sneakAttackDice > 0`.
-- MBT (full run): `npx vitest run src/battle.mbt.test.ts`
+- MBT (full run): `npx vitest run src/battle-projection.mbt.test.ts`
 
 ### Acceptance criteria
 

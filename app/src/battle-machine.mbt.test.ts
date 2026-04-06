@@ -2,8 +2,7 @@
  * Battle Machine MBT — battle-level state comparison against battleMachine.
  * One createActor(battleMachine), each Quint action maps to one actor.send() call.
  *
- * TODO: after dndMachine → creatureMachine rename, rename battle.mbt.test.ts →
- * battle-projection.mbt.test.ts (keep both explicit: battle-machine / battle-projection).
+ * Complements battle-projection.mbt.test.ts (per-creature projection against creatureMachine).
  */
 import * as path from "node:path"
 

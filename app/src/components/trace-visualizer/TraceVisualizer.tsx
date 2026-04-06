@@ -5,7 +5,7 @@ import { HighlightedQuint } from "#/components/demo/HighlightedQuint.tsx"
 import { type QuintSnippet, SNIPPETS } from "#/components/demo/quint-snippets.ts"
 import { PageShell } from "#/components/PageShell.tsx"
 import { PlaybackControls } from "#/components/PlaybackControls.tsx"
-import { dndMachine } from "#/machine.ts"
+import { creatureMachine } from "#/machine.ts"
 
 import { CR_C4E04_ENCOUNTER, CR_C4E04_SUMMARY, CR_C4E04_TRACE } from "./actual-play-cr-c4e04.ts"
 import { ROLL20_ENCOUNTER, ROLL20_SUMMARY, ROLL20_TRACE } from "./actual-play-roll20.ts"
@@ -754,7 +754,7 @@ export function TraceVisualizer() {
               <StateTable step={currentTraceStep} prevState={prevState} />
             </div>
             <SubMachineViz
-              machine={dndMachine}
+              machine={creatureMachine}
               stateId="turnPhase"
               activeStateKey={currentTraceStep.quintState.turnPhase}
               activeEvent={currentTraceStep.xstateEvent}

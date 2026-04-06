@@ -44,10 +44,10 @@ Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.** See `QUI
   2. Read the ITF trace JSON offline to inspect Quint state at each step.
   3. Trace through the Quint spec logic manually by reading the code.
 - **MBT run tiers (choose the right one!):**
-  - **Tier 1 — Battle dev (~1s with compiled cache):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle.mbt.test.ts` — **Use this for iterative development.** Requires compiled cache (`node scripts/compile-battle-spec.cjs`). ~265ms evaluator time per step when no zombie evaluators are present.
-  - **Tier 1b — Creature MBT (~20s):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/machine.mbt.test.ts` — creature-level parity only (no battle.qnt). Use when changes are purely creature-level.
-  - **Tier 2 — Pre-commit (5–30 min):** `MBT_DEV=1 npx vitest run src/battle.mbt.test.ts` — 10 samples × 5 steps. Background it.
-  - **Tier 3 — Full validation (30+ min):** `MBT_TRACES=1 MBT_MAX_SAMPLES=50 MBT_STEPS=10 npx vitest run src/battle.mbt.test.ts` — overnight / CI only.
+  - **Tier 1 — Battle dev (~1s with compiled cache):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle-projection.mbt.test.ts` — **Use this for iterative development.** Requires compiled cache (`node scripts/compile-battle-spec.cjs`). ~265ms evaluator time per step when no zombie evaluators are present.
+  - **Tier 1b — Creature MBT (~20s):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts` — creature-level parity only (no battle.qnt). Use when changes are purely creature-level.
+  - **Tier 2 — Pre-commit (5–30 min):** `MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts` — 10 samples × 5 steps. Background it.
+  - **Tier 3 — Full validation (30+ min):** `MBT_TRACES=1 MBT_MAX_SAMPLES=50 MBT_STEPS=10 npx vitest run src/battle-projection.mbt.test.ts` — overnight / CI only.
   - **Default to Tier 1.** Never run Tier 2/3 for exploratory work. See `QUINT_CONNECT_TROUBLESHOOT.md` for why.
 
 ## Quint gotchas
@@ -78,11 +78,11 @@ The spec (`creature.qnt`) is a **direct formalization of the SRD** — nothing m
 
 ## Quint parity (CRITICAL)
 
-The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parity with the Quint spec (`creature.qnt`). The MBT bridge (`machine.mbt.test.ts`) via `@firfi/quint-connect` is the correctness proof — 50 traces × 30 steps comparing Quint and XState state field-by-field.
+The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parity with the Quint spec (`creature.qnt`). The MBT bridge (`creature.mbt.test.ts`) via `@firfi/quint-connect` is the correctness proof — 50 traces × 30 steps comparing Quint and XState state field-by-field.
 
 - **Never** add logic to the XState machine that diverges from the Quint spec without updating the spec first.
 - **Never** "fix" XState behavior that the Quint spec models differently — update the spec or accept it as spec-level intentional.
-- **Never** remove or rename context fields that the MBT bridge maps — check `machine.mbt.test.ts` before removing anything from `DndContext`.
+- **Never** remove or rename context fields that the MBT bridge maps — check `creature.mbt.test.ts` before removing anything from `DndContext`.
 - If a simplify/refactor changes behavior, the MBT tests MUST still pass. If they don't, the refactor is wrong.
 
 ## TypeScript conventions

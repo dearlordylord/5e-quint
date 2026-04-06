@@ -124,7 +124,7 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 - Content data (delegated to TS features)
 - Rendering (delegated to React)
 
-**Correctness mechanism:** Model-Based Testing (MBT) via `@firfi/quint-connect`. The Quint spec generates ITF (Intermediate Trace Format) traces -- sequences of (action, state) pairs. The MBT bridge (`machine.mbt.test.ts`, `battle-machine.mbt.test.ts`) replays each trace against the XState machine, comparing state field-by-field after every step. 50 traces x 30 steps for creature; 50 traces x 10 steps for battle.
+**Correctness mechanism:** Model-Based Testing (MBT) via `@firfi/quint-connect`. The Quint spec generates ITF (Intermediate Trace Format) traces -- sequences of (action, state) pairs. The MBT bridge (`creature.mbt.test.ts`, `battle-machine.mbt.test.ts`) replays each trace against the XState machine, comparing state field-by-field after every step. 50 traces x 30 steps for creature; 50 traces x 10 steps for battle.
 
 **Key constraint:** The creature machine and battle machine use completely different architectures. The creature machine has parallel states (damageTrack, turnPhase, spellcasting). The battle machine is flat with context-driven phase routing (nullable context fields trigger `always` transitions). Creatures in battle are a `Map<CreatureId, BattleCreatureState>` in context, NOT spawned child actors -- D&D combat requires atomic cross-creature updates.
 

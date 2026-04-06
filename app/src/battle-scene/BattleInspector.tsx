@@ -5,7 +5,7 @@ import { createActor } from "xstate"
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleCreatureState, BattleEvent } from "#/battle-machine-types.ts"
 import { SubMachineViz } from "#/components/trace-visualizer/MachineViz.tsx"
-import { dndMachine } from "#/machine.ts"
+import { creatureMachine } from "#/machine.ts"
 
 import type { ScenarioMeta } from "./scene-snapshot.ts"
 
@@ -73,7 +73,7 @@ function CreatureStateCard({
           return (
             <SubMachineViz
               key={region}
-              machine={dndMachine}
+              machine={creatureMachine}
               stateId={region}
               activeStateKey={activeKey}
               activeEvent={isActive ? activeEvent : ""}

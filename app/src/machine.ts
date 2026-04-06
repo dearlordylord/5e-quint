@@ -106,7 +106,7 @@ function mergeClassUpdates(c: DndContext, updates: ReadonlyArray<Partial<DndCont
   return cs === c.classStates ? result : { ...result, classStates: cs }
 }
 
-export const dndMachine = setup({
+export const creatureMachine = setup({
   types: MT,
   guards,
   actions: {
@@ -578,4 +578,4 @@ export const dndMachine = setup({
     spellcasting: spellcastingConfig
   }
 })
-export type DndSnapshot = SnapshotFrom<typeof dndMachine>
+export type DndSnapshot = SnapshotFrom<typeof creatureMachine>

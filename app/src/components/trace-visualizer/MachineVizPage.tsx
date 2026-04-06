@@ -1,4 +1,4 @@
-import { dndMachine } from "#/machine.ts"
+import { creatureMachine } from "#/machine.ts"
 
 import { SubMachineViz } from "./MachineViz.tsx"
 
@@ -10,12 +10,12 @@ export function MachineVizPage() {
       <h1 className="text-lg font-bold text-gray-200 mb-4">XState Machine — All Regions</h1>
       <div className="flex flex-col gap-4">
         {REGIONS.map((region) => (
-          <SubMachineViz key={region} machine={dndMachine} stateId={region} activeStateKey="" activeEvent="" />
+          <SubMachineViz key={region} machine={creatureMachine} stateId={region} activeStateKey="" activeEvent="" />
         ))}
       </div>
 
       <h1 className="text-lg font-bold text-gray-200 mt-12 mb-4">damageTrack — Isolated</h1>
-      <SubMachineViz machine={dndMachine} stateId="damageTrack" activeStateKey="" activeEvent="" />
+      <SubMachineViz machine={creatureMachine} stateId="damageTrack" activeStateKey="" activeEvent="" />
     </div>
   )
 }

@@ -53,7 +53,7 @@ The React UI is a debugging tool — you send events by hand. A game would send 
 
 **Feature system** (`app/src/features/`) — class abilities as pure functions (`class-fighter.ts`, `class-barbarian.ts`, ...) adapted to XState via a bridge layer. One user action produces a `BridgeResult`: a `featureAction` for the feature reducer + `machineEvents` for XState.
 
-**MBT bridge** (`machine.mbt.test.ts`) — correctness proof. Replays 50 Quint traces (30 steps each) against XState, compares every field after each step. Uses [`@firfi/quint-connect`](https://github.com/dearlordylord/quint-connect-ts).
+**MBT bridge** (`creature.mbt.test.ts`) — correctness proof. Replays 50 Quint traces (30 steps each) against XState, compares every field after each step. Uses [`@firfi/quint-connect`](https://github.com/dearlordylord/quint-connect-ts).
 
 **QA pipeline** (`scripts/qa/`) — community Q&A turned into Quint test assertions by LLM. See [`scripts/qa/QA_README.md`](scripts/qa/QA_README.md).
 

@@ -1,6 +1,6 @@
 import { battleMachine } from "#/battle-machine.ts"
 import { PageShell } from "#/components/PageShell.tsx"
-import { dndMachine } from "#/machine.ts"
+import { creatureMachine } from "#/machine.ts"
 
 import { SubMachineViz } from "./MachineViz.tsx"
 
@@ -29,7 +29,7 @@ export function FullMachineVizPage() {
           {CREATURE_REGIONS.map((region) => (
             <div key={region}>
               <h3 className="text-sm font-semibold text-gray-300 mb-1">{region}</h3>
-              <SubMachineViz machine={dndMachine} stateId={region} activeStateKey="" activeEvent="" />
+              <SubMachineViz machine={creatureMachine} stateId={region} activeStateKey="" activeEvent="" />
             </div>
           ))}
         </div>

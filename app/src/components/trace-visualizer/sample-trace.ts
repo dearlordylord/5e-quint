@@ -4,7 +4,7 @@
  *
  * The Quint column contains hand-written expected values ("spec says").
  * The XState column is generated at import time by replaying events through
- * the real dndMachine via trace-replay.ts ("implementation produces").
+ * the real creatureMachine via trace-replay.ts ("implementation produces").
  *
  * The NormalizedState shape matches machine.mbt.test.ts exactly.
  */
