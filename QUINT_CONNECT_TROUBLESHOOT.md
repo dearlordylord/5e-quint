@@ -397,8 +397,8 @@ for complex keys (sets, records used as map keys). Our creature ID keys (integer
    Not an evaluator bug — not worth filing upstream.
 7. **Add seed logging before evaluator start** — for the compiled-input path, generate a random
    seed upfront and patch it in, so the seed is known even if the evaluator times out or hangs.
-8. **Add compiledInput to battle-machine.mbt.test.ts** — currently only battle.mbt.test.ts
-   uses the compiled cache; the battle-machine test still goes through `quint run`.
+8. ~~**Add compiledInput to battle-machine.mbt.test.ts**~~ DONE — both test files already
+   use `compiledInput`.
 9. ~~**Apply phase-split fix (Finding 14)**~~ DONE — `bStartTurn` isolated behind
    `if (not(bTurnStarted))` guard. 1-step: 40% → 100% seed success rate.
 10. ~~**Further sub-phase splits**~~ REJECTED — violates SRD RAW (D&D 5e allows interleaving
