@@ -412,6 +412,11 @@ for complex keys (sets, records used as map keys). Our creature ID keys (integer
 13. ~~**Capability-split by spell availability**~~ DONE — Finding 16. Hoist
     `preparedSpells.size() > 0 and not(ragingBlocksSpells)` into `battleStep` dispatch.
     3-step: 4/8 slow → 1/8 slow.
+14. ~~**Economy-split by action/bonus/free**~~ REJECTED — tested hoisting
+    `actionsRemaining > 0`, `bonusActionUsed`, `extraAttacksRemaining > 0` into
+    `battleStep` dispatch (6 `any {}` blocks). No measurable gain: the slow seed
+    (0xfeedface) bottlenecks on step 2 where all resources are full (all 16 branches
+    enabled), so the economy split can't eliminate any branches. Reverted.
 
 ---
 
