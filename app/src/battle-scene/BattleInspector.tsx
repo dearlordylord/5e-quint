@@ -142,7 +142,7 @@ export function BattleInspector({
   events: ReadonlyArray<BattleEvent>
   cursor: number
   meta: ScenarioMeta
-  creatureCues: Record<string, CreatureCue>
+  creatureCues: Partial<Record<string, CreatureCue>>
 }) {
   const { activeEvent, battleCtx, battleStateKey } = useMemo(() => {
     const snap = replayState(events, cursor)
@@ -190,7 +190,7 @@ export function BattleInspector({
                 activeEvent={activeEvent}
                 compact
                 sprite={meta.sprites?.[id]}
-                casting={creatureCues[id].castingGlow}
+                casting={creatureCues[id]?.castingGlow ?? false}
               />
             )
           })}
@@ -208,7 +208,7 @@ export function BattleInspector({
               isActive={isActive}
               activeEvent={activeEvent}
               sprite={meta.sprites?.[id]}
-              casting={creatureCues[id].castingGlow}
+              casting={creatureCues[id]?.castingGlow ?? false}
             />
           )
         })
