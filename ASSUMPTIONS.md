@@ -51,6 +51,8 @@ Each entry records the assumption, rules justification, and what changed in both
 
 ## A6: Death save precedes start-of-turn effect processing
 
+> **TODO: RAW violation.** The SRD 5.2.1 Simultaneous Effects rule (Rules-Glossary) explicitly states: "If two or more things happen at the same time on a turn, the person at the game table — player or GM — whose turn it is decides the order in which those things happen." This means the player should be able to choose whether the death save or start-of-turn effects resolve first. The current fixed ordering violates RAW. Fix: model this as a caller-provided input (the player's choice of ordering), not a hardcoded sequence.
+
 **Assumption:** At the start of a turn, the death save (if applicable) resolves before any start-of-turn spell effects (heals, damage, temp HP, saves).
 
 **Rules basis (SRD 5.2.1 Rules-Glossary "Death Saving Throw"):** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw." This is a mandatory, first-order rule. Start-of-turn spell effects (e.g., Regenerate's heal, Searing Smite's burn) trigger "at the start of your turn" at the same timing point but are optional/conditional. The death save resolves first because: (a) it is mandatory, (b) a natural 20 changes the creature's conscious state (hp 0→1), which affects subsequent processing, (c) death from 3 failures makes subsequent effects irrelevant.
@@ -289,6 +291,14 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Summoned creature initiative:** Varies by spell. Find Familiar: rolls own initiative. Find Steed / Summon Dragon: shares caster's initiative count, acts on caster's turn or immediately after. Conjure spells (Animals, Elemental, etc.): no independent turn — act as effects under caster control.
 
 **Rules basis:** Playing-the-Game.md states "Everyone involved in the combat encounter rolls Initiative" at start, and "The Initiative order remains the same from round to round." No rules for mid-combat changes. Combat ends "when one side or the other is defeated, which can mean the creatures are killed or knocked out or have surrendered or fled" — but no explicit removal from initiative on individual death/flee.
+
+## A35: Environmental hazards beyond falling/underwater — DM agenda
+
+**Assumption:** Lava, extreme weather, traps, and similar environmental hazards are not modeled. The SRD describes these as DM-narrated events with DM-set DCs and damage. The spec models the *mechanical consequences* (damage, conditions) as caller-provided inputs; the hazard itself is DM agenda.
+
+## A36: Summoned creature stat blocks — content layer
+
+**Assumption:** The battle spec models adding/removing creatures mid-combat (A33) but does not model summoning *spell effects* (specific stat blocks, durations, caster-control rules). These belong in `features/spell-*.ts` as content, not in the Quint spec.
 
 ## A34: Spell durations are non-negative
 

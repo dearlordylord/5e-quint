@@ -625,22 +625,122 @@ const TRACE_OPTIONS: ReadonlyArray<TraceOption> = [
   }
 ]
 
-export function TraceVisualizer() {
-  const [selectedTraceId, setSelectedTraceId] = useState(TRACE_OPTIONS[0].id)
+function getInitialParams() {
+  const params = new URLSearchParams(window.location.search)
+  const traceId = params.get("trace")
+  const step = params.get("step")
+  return { traceId, step: step != null ? Number(step) : null }
+}
+
+function syncUrl(traceId: string, step: number) {
+  const url = new URL(window.location.href)
+  if (traceId === TRACE_OPTIONS[0].id) url.searchParams.delete("trace")
+  else url.searchParams.set("trace", traceId)
+  if (step === 0) url.searchParams.delete("step")
+  else url.searchParams.set("step", String(step))
+  window.history.replaceState(null, "", url)
+}
+
+export function EmbedTraceVisualizer() {
+  const [selectedTraceId, setSelectedTraceId] = useState(() => {
+    const { traceId } = getInitialParams()
+    return TRACE_OPTIONS.find((t) => t.id === traceId)?.id ?? TRACE_OPTIONS[0].id
+  })
   const selectedOption = TRACE_OPTIONS.find((t) => t.id === selectedTraceId) ?? TRACE_OPTIONS[0]
   const trace = selectedOption.trace
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = useState(() => {
+    const { step } = getInitialParams()
+    return step != null && Number.isFinite(step) && step >= 0 && step < trace.length ? step : 0
+  })
 
   const handleTraceChange = useCallback((id: string) => {
     setSelectedTraceId(id)
     setCurrentStep(0)
+    syncUrl(id, 0)
   }, [])
 
   const goTo = useCallback(
     (idx: number) => {
-      setCurrentStep(Math.max(0, Math.min(idx, trace.length - 1)))
+      const clamped = Math.max(0, Math.min(idx, trace.length - 1))
+      setCurrentStep(clamped)
+      syncUrl(selectedTraceId, clamped)
     },
-    [trace.length]
+    [trace.length, selectedTraceId]
+  )
+
+  const currentTraceStep = trace[currentStep]
+  const prevState = currentStep > 0 ? trace[currentStep - 1].quintState : null
+
+  return (
+    <div className="min-h-screen bg-gray-950 text-gray-100 p-4">
+      <div className="mx-auto max-w-7xl">
+        {/* Trace selector + playback */}
+        <div className="mb-4">
+          <select
+            value={selectedTraceId}
+            onChange={(e) => handleTraceChange(e.target.value)}
+            className="mb-2 rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+          >
+            {TRACE_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.label} ({opt.trace.length} steps)
+              </option>
+            ))}
+          </select>
+          <PlaybackControls cursor={currentStep} total={trace.length} onStepTo={goTo} />
+        </div>
+
+        {/* Main content — no explanation panels */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-3">
+            <ActionHeader step={currentTraceStep} />
+          </div>
+          <div className="lg:col-span-2">
+            <div className="rounded-lg bg-gray-900 border border-gray-800 overflow-hidden">
+              <div className="border-b border-gray-800 px-4 py-2.5 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-gray-300">State Comparison</h2>
+                <span className="text-[10px] text-gray-600 font-mono">NormalizedState</span>
+              </div>
+              <StateTable step={currentTraceStep} prevState={prevState} />
+            </div>
+            <SubMachineViz
+              machine={creatureMachine}
+              stateId="turnPhase"
+              activeStateKey={currentTraceStep.quintState.turnPhase}
+              activeEvent={currentTraceStep.xstateEvent}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function TraceVisualizer() {
+  const [selectedTraceId, setSelectedTraceId] = useState(() => {
+    const { traceId } = getInitialParams()
+    return TRACE_OPTIONS.find((t) => t.id === traceId)?.id ?? TRACE_OPTIONS[0].id
+  })
+  const selectedOption = TRACE_OPTIONS.find((t) => t.id === selectedTraceId) ?? TRACE_OPTIONS[0]
+  const trace = selectedOption.trace
+  const [currentStep, setCurrentStep] = useState(() => {
+    const { step } = getInitialParams()
+    return step != null && Number.isFinite(step) && step >= 0 && step < trace.length ? step : 0
+  })
+
+  const handleTraceChange = useCallback((id: string) => {
+    setSelectedTraceId(id)
+    setCurrentStep(0)
+    syncUrl(id, 0)
+  }, [])
+
+  const goTo = useCallback(
+    (idx: number) => {
+      const clamped = Math.max(0, Math.min(idx, trace.length - 1))
+      setCurrentStep(clamped)
+      syncUrl(selectedTraceId, clamped)
+    },
+    [trace.length, selectedTraceId]
   )
 
   const currentTraceStep = trace[currentStep]

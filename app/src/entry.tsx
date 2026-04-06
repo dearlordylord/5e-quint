@@ -4,11 +4,13 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 
 import { BattlePage } from "#/battle-scene/BattlePage.tsx"
+import { EmbedBattlePage } from "#/battle-scene/EmbedBattlePage.tsx"
 import { App } from "#/components/App.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
+import { EmbedMachineVizPage } from "#/components/trace-visualizer/EmbedMachineVizPage.tsx"
 import { FullMachineVizPage } from "#/components/trace-visualizer/FullMachineVizPage.tsx"
 import { MachineVizPage } from "#/components/trace-visualizer/MachineVizPage.tsx"
-import { TraceVisualizer } from "#/components/trace-visualizer/TraceVisualizer.tsx"
+import { EmbedTraceVisualizer, TraceVisualizer } from "#/components/trace-visualizer/TraceVisualizer.tsx"
 import { FIREBALL_BATTLE, FIREBALL_BATTLE_META } from "#/demo/fireball-battle.ts"
 
 const pathname = window.location.pathname
@@ -45,6 +47,10 @@ function RootApp() {
   if (pathname === "/simulator") return <App />
   if (pathname === "/machines") return <FullMachineVizPage />
   if (pathname === "/machine-viz") return <MachineVizPage />
+  if (pathname === "/embed/battle")
+    return <EmbedBattlePage scenario={{ events: FIREBALL_BATTLE, meta: FIREBALL_BATTLE_META }} />
+  if (pathname === "/embed/trace") return <EmbedTraceVisualizer />
+  if (pathname === "/embed/machine-viz") return <EmbedMachineVizPage />
   if (pathname === "/battle" || pathname === "/battle/machine" || pathname === "/battle/interrupts")
     return <BattlePage scenario={{ events: FIREBALL_BATTLE, meta: FIREBALL_BATTLE_META }} />
   if (pathname === "/trace") return <TraceVisualizer />

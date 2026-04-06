@@ -41,9 +41,16 @@ function replayPair(events: ReadonlyArray<BattleEvent>, upTo: number) {
 const CAST_BAR_FADE_MS = 550
 const SPELL_NAME_FADE_MS = 800
 
+function getInitialStep(max: number): number {
+  const raw = new URLSearchParams(window.location.search).get("step")
+  if (raw == null) return 0
+  const n = Number(raw)
+  return Number.isFinite(n) && n >= 0 && n < max ? n : 0
+}
+
 export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   const { events, meta } = scenario
-  const [cursor, setCursor] = useState(0)
+  const [cursor, setCursor] = useState(() => getInitialStep(events.length))
   const [castBarFaded, setCastBarFaded] = useState(false)
   const [spellFaded, setSpellFaded] = useState(false)
   const castBarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -148,6 +155,10 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
     (index: number) => {
       if (index < 0 || index >= events.length) return
       setCursor(index)
+      const url = new URL(window.location.href)
+      if (index === 0) url.searchParams.delete("step")
+      else url.searchParams.set("step", String(index))
+      window.history.replaceState(null, "", url)
     },
     [events.length]
   )
