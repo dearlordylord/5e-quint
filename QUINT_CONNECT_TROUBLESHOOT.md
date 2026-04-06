@@ -263,13 +263,17 @@ the input to the evaluator and receiving the result. It does NOT include:
 MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/machine.mbt.test.ts
 ```
 
-**Battle MBT is slow and seed-dependent (10s–180s+ per step):**
+**Battle MBT with compiled cache (typically <1s, some seeds still slow):**
 ```bash
-# One-time: compile the spec cache (~60s), saves 15s parse/typecheck per run
+# One-time: compile the spec cache (~10s), saves 15s parse/typecheck per run
 node scripts/compile-battle-spec.cjs
 
-# Battle MBT: 1 trace, 1 sample, few steps. Expect 30s–300s depending on seed.
+# Battle MBT: 1 trace, 1 sample, few steps.
+# 1-step: all seeds <300ms. 3-step: ~87% of seeds <300ms, ~13% take 10-25s.
 MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle.mbt.test.ts
+
+# If a seed is slow, re-run without QUINT_SEED to get a fresh random seed.
+# Known slow seeds at 3 steps: 0xfeedface (~23s). Most seeds are fast.
 ```
 
 ### After editing battle.qnt or creature.qnt
@@ -292,9 +296,10 @@ MBT_DEV=1 npx vitest run src/battle.mbt.test.ts
 # (automatically falls back to quint run when no cache exists)
 ```
 
-**Note:** Multi-sample runs are slow regardless of caching because the Rust evaluator takes
-~30-60s per sample for the battle spec. The cache saves only the 15s parse/typecheck overhead.
-For dev feedback, use `MBT_MAX_SAMPLES=1` which completes in ~3s.
+**Note:** Multi-sample runs use multiple seeds, so some samples may hit slow seeds.
+With the phase-split and capability-split optimizations, most samples complete in <1s,
+but occasional slow seeds (caster turns with many enabled branches) can take 10-25s.
+For dev feedback, use `MBT_MAX_SAMPLES=1`.
 
 ### Zombie cleanup
 
@@ -394,15 +399,19 @@ for complex keys (sets, records used as map keys). Our creature ID keys (integer
    seed upfront and patch it in, so the seed is known even if the evaluator times out or hangs.
 8. **Add compiledInput to battle-machine.mbt.test.ts** — currently only battle.mbt.test.ts
    uses the compiled cache; the battle-machine test still goes through `quint run`.
-9. **Apply phase-split fix (Finding 14)** — separate `bStartTurn` from the 16 combat actions
-   in `battleStep` with an `if (not(bTurnStarted))` guard. Validated: 40% → 100% seed success
-   rate for 1-step, 97% for 3-5 steps. Trivial 1-line spec change, no MBT bridge changes.
+9. ~~**Apply phase-split fix (Finding 14)**~~ DONE — `bStartTurn` isolated behind
+   `if (not(bTurnStarted))` guard. 1-step: 40% → 100% seed success rate.
 10. ~~**Further sub-phase splits**~~ REJECTED — violates SRD RAW (D&D 5e allows interleaving
     actions, bonus actions, and movement in any order within a turn).
 11. **File Quint issue: `actionAny` per-branch cost** — the evaluator's per-branch cost is
     far higher than expected for complex state. A 17-branch `any { }` with 5 nondets per branch
     and 2 state vars takes ~6s through `quint run`. This may be an evaluator performance bug
     worth reporting upstream.
+12. ~~**Limit counterspell depth to 2 (Opportunity 3)**~~ DONE — Finding 15. Guard
+    `bSpellStack.length() < 2` + removed ~30 lines of depth 3+ unwind code. Documented as A35.
+13. ~~**Capability-split by spell availability**~~ DONE — Finding 16. Hoist
+    `preparedSpells.size() > 0 and not(ragingBlocksSpells)` into `battleStep` dispatch.
+    3-step: 4/8 slow → 1/8 slow.
 
 ---
 
@@ -458,19 +467,10 @@ The experiment is worth re-running with proper zombie cleanup before each trial.
 benefit: fewer map operations and smaller snapshot/restore per step, but this is a minor
 optimization (~20-30%) compared to the 40x slowdown from zombie evaluators.
 
-### Opportunity 3: Limit counterspell chain depth
+### ~~Opportunity 3: Limit counterspell chain depth~~ — DONE (Finding 15)
 
-**Impact: Eliminates the single most expensive code path.**
-**Effort: Easy (remove 2-3 levels of unrolled CS code).**
-
-`returnToCSWindow` (battle.qnt) manually unrolls counterspell chains to depth 5 (~200 lines
-of near-duplicate code, Quint lacks recursion). Each level recomputes `eligibleForCounterspell`
-— an O(n) filter over all creatures checking 3+ conditions per creature.
-
-Depth 3+ counterspells are vanishingly rare in real gameplay. Limiting to depth 2 would:
-- Remove ~130 lines of near-duplicate spec code
-- Eliminate the most expensive action body evaluation path
-- Marginally reduce SRD fidelity (depth 3+ is legal RAW but almost never occurs)
+Depth limited to 2, ~30 lines removed, documented as A35 in ASSUMPTIONS.md.
+See Finding 15 for benchmark results.
 
 ### ~~Opportunity 4: Split active-turn `any` into sub-phases~~ — REJECTED
 
@@ -757,18 +757,51 @@ With the phase-split fix, the MBT tier system should be updated:
 
 ---
 
+## Finding 15: Counterspell depth limit — eliminates worst action body (2026-04-05)
+
+Guard `bSpellStack.length() < 2` in `bResolveCounterspell` prevents depth 3+ CS chains.
+~30 lines of depth 3+ unwind code removed from `returnToCSWindow`. Documented as A35 in
+ASSUMPTIONS.md (minor RAW deviation — depth 3+ is legal but vanishingly rare).
+
+**3-step results (8 seeds, 30s timeout):**
+- Before: 7/8 complete, 1 timeout. Slow seeds: 9-16s.
+- After: 8/8 complete, 0 timeouts. Slow seeds: 6-13s (21-55% improvement).
+
+## Finding 16: Capability-split by spell availability (2026-04-05)
+
+Hoist `preparedSpells.size() > 0 and not(ragingBlocksSpells)` check into `battleStep` dispatch.
+When false, exclude 4 spell-casting actions (41+ nondets) from the `any {}` block. Pure perf
+optimization — no behavioral change (pruned actions would fail their own guards anyway).
+
+**3-step results (8 seeds, 45s timeout):**
+- Before (with phase-split + CS limit): 4/8 fast, 4/8 slow (6-23s).
+- After: 7/8 fast (<330ms), 1/8 slow (~23s on seed 0xfeedface).
+
+The remaining slow seed hits the caster `any {}` branch where all 16 actions are enabled.
+This is the evaluator's inherent cost for complex caster turns — not optimizable without
+sub-phase splits (RAW violation) or upstream evaluator improvements.
+
+**Seed guidance:** ~87% of seeds complete 3 steps in <330ms. If a specific seed is slow,
+re-run without `QUINT_SEED` to get a fresh random seed. For reproducible benchmarking,
+known fast seeds include: `0x689d4239`, `0xad9e6bc3`, `0x12345678`, `0xabcdef01`.
+
+---
+
 ## Updated Summary Table
 
 | Optimization | Effort | Speed impact | SRD fidelity | Status |
 |---|---|---|---|---|
 | Kill zombie evaluators | None | 40x when zombies present | N/A | **Done** |
-| **Phase-split bStartTurn** | **Trivial** | **40% → 100% seed success (1-step)** | **No loss** | **Validated** |
+| **Phase-split bStartTurn** | **Trivial** | **40% → 100% seed success (1-step)** | **No loss** | **Done** |
+| **Limit counterspell to depth 2** | **Easy** | **Eliminates worst action body path, timeout→complete** | **Minor (A35)** | **Done** |
+| **Capability-split (spell check)** | **Trivial** | **3-step: 4/8 slow → 1/8 slow** | **No loss** | **Done** |
 | ~~Further sub-phase splits~~ | ~~Medium~~ | ~~Reduce p90 from 6.4s to ~1-2s~~ | **RAW violation** | **Rejected** |
 | Consolidate 13 class vars → 1 map | Medium | ~20-30% cheaper snapshots | No loss | Not recommended |
 | 2-creature dev runs | Trivial | ~20-30% | Reduced coverage | Needs clean re-test |
-| Limit counterspell to depth 2 | Easy | Eliminates worst action body path | Minor | Not yet tested |
 
-**Recommended priority:** Apply the phase-split fix (Finding 14) immediately. It is a
-single-line spec change with no downsides that transforms Tier 1 MBT from "unreliable"
-to "consistently <1s". The zombie discipline (Finding 12) remains important but is no
-longer the dominant factor.
+**Current state after all optimizations:**
+- **1-step:** 8/8 seeds complete in <300ms (was: 40% timeout).
+- **3-step:** 7/8 seeds complete in <330ms, 1/8 slow at ~23s (caster turn with all 16 branches).
+- The remaining slow seeds hit the 16-branch caster `any {}` where all actions are enabled.
+  Further optimization would require sub-phase splits (RAW violation, rejected) or upstream
+  evaluator improvements. **If a seed is slow, re-run without `QUINT_SEED` for a fresh seed.**

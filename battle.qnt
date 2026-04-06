@@ -2368,16 +2368,16 @@ module battle {
     | BPActiveTurn => if (not(bTurnStarted)) any { bStartTurn, } else {
         // Capability-split: hoist cheap checks to eliminate branches that can't fire,
         // saving 41+ wasted nondets + snapshot/restore cycles per disabled spell action.
-        val _ac = bCreatures.get(bInitiative[bTurnIndex])
-        val _canCastSpells = _ac.preparedSpells.size() > 0 and not(_ac.ragingBlocksSpells)
-        if (_canCastSpells) any {
+        val turnAc = bCreatures.get(bInitiative[bTurnIndex])
+        val canCastSpells = turnAc.preparedSpells.size() > 0 and not(turnAc.ragingBlocksSpells)
+        if (canCastSpells) any {
           bAttack, bCastSaveSpell, bCastAoE,
           bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
           bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge,
           bEnterRage, bDeclareReckless, bReady, bEndTurn,
         } else any {
-          bAttack, bConcentrationCheck, bMove, bDash, bDisengage, bDodge,
-          bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
+          bAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage,
+          bDodge, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
         }
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {
