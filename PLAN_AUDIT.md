@@ -450,3 +450,31 @@ Seed `0x1a3c4179` produces a state mismatch on `bEnterRage` (step 3). Confirmed 
 **Reproduce:** `QUINT_SEED=0x1a3c4179 MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=4 npx vitest run src/battle-projection.mbt.test.ts`
 
 **Fix:** Debug the seed's action sequence to identify where HP diverges. Likely in the `bEnterRage` handler's `combatantResistances` mapping or the damage pipeline's resistance application.
+
+### D12. Creature machine `START_CONCENTRATION` couples concentration with active effects — Quint does not
+
+*Source: PRD 2 Phase 2 MBT bridge implementation (2026-04-05)*
+
+**The problem:** The creature machine's `startConcentration` action (machine.ts line 273) does two things atomically:
+1. Sets `concentrationSpellId` to the spell ID
+2. Adds an `activeEffect` for the spell (via `addAe`)
+
+Quint's `pStartConcentration` (creature.qnt) only does step 1 — it sets `concentrationSpellId`. Active effects are added separately by the caller (e.g., `resolveConcentration` adds effects to both caster and target as a distinct step).
+
+**How we found it:** During MBT bridge implementation for `bReadySpell`, the bridge sent `START_CONCENTRATION` to start holding the readied spell with Concentration. This caused the creature machine to add a phantom `activeEffect` that Quint didn't have — the readied spell hasn't resolved yet, so no effect should exist. MBT failed with an `activeEffects` mismatch (Quint: `[]`, XState: `[{spellId: "inflict_wounds", ...}]`).
+
+**Current workaround:** The MBT bridge sends `START_CONCENTRATION` followed by `REMOVE_EFFECT` to undo the phantom effect. This is brittle — it relies on the effect being removable and leaves a window where the creature machine has incorrect state between the two events.
+
+**What it affects:** Any future feature that needs to start Concentration without immediately applying spell effects will hit the same issue. The creature machine has no way to express "concentrating but no active effect yet." The Quint spec correctly separates these concerns.
+
+**Proper fix:** Split the creature machine's `START_CONCENTRATION` into two operations:
+1. `START_CONCENTRATION` — only sets `concentrationSpellId` (matching Quint's `pStartConcentration`)
+2. The caller adds effects via `ADD_EFFECT` (already exists as a separate event)
+
+This would require updating `resolveConcentrationSpell` in the MBT bridge (and any direct callers) to send both events, but would eliminate the coupling and make the creature machine match Quint's separation of concerns. The `startConcentration` action in machine.ts would shrink to just `{ concentrationSpellId: Option.some(ev.spellId) }`.
+
+### D11. `SpellSlotLevel` brand too narrow — cannot represent "no slot" (0)
+
+*Source: PRD 2 Phase 2 implementation (2026-04-05)*
+
+`SpellSlotLevel` is branded 1-9. `SpellCastCtx.slotLvl` and `SpellStackEntry.slotLvl` need to represent "no slot to spend/refund" (readied spell release: slot already spent at ready time). Current workaround: widened types to `SpellSlotLevel | 0`. Proper fix: make `SpellSlotLevel` a union that represents valid states — either a slot level (1-9) for a spell being cast, or 0 for a spell whose slot was pre-spent (readied spell release). This should be a branded union or a discriminated type that captures the domain semantics rather than a bare `| 0` escape hatch.
