@@ -46,6 +46,10 @@ import {
 // Battle-level Zod schemas (B14.2)
 // ============================================================
 
+const QuintReadiedSpellParams = z.object({
+  slotLvl: z.bigint()
+})
+
 const QuintCombatant = z.object({
   creature: QuintCreatureState,
   turn: QuintTurnState,
@@ -54,7 +58,8 @@ const QuintCombatant = z.object({
   monsterResources: QuintMonsterResourceState,
   statBlock: z.any(),
   rogueLevel: z.bigint(),
-  monkLevel: z.bigint()
+  monkLevel: z.bigint(),
+  readiedSpellParams: QuintReadiedSpellParams
 })
 
 type ParsedCombatant = z.infer<typeof QuintCombatant>
@@ -326,6 +331,18 @@ const battleDriverSchema = {
   bEnterRage: {},
   bDeclareReckless: {},
   bReady: {},
+  bReadySpell: {
+    targetId: OS,
+    saveDC: OI,
+    dmgOnFail: OI,
+    halfOnSave: OB,
+    dt: OV,
+    cond: OV,
+    applyCond: OB,
+    saveAb: OV,
+    slotLvl: OI,
+    spellName: OS
+  },
   bReadyPass: {},
   bReadyRelease: {
     releaserId: OS,
@@ -335,6 +352,10 @@ const battleDriverSchema = {
     dt: OV,
     crit: OB,
     tgtAc: OI
+  },
+  bReadySpellRelease: {
+    releaserId: OS,
+    saveRoll: OI
   },
   bCastBonusActionSpell: {
     targetId: OS,
@@ -1490,6 +1511,99 @@ function createBattleProjectionDriver() {
       resolveAttackHit(releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit)
     }
 
+    /** Stored readied spell params, set at bReadySpell, consumed at bReadySpellRelease. */
+    let storedReadiedSpellParams: {
+      caster: string
+      target: string
+      saveDC: number
+      damageOnFail: number
+      halfOnSuccess: boolean
+      damageType: DamageType
+      conditionOnFail: Condition
+      applyCondition: boolean
+    } | null = null
+
+    function handleBReadySpell(picks: ReadonlyMap<string, unknown>) {
+      const id = activeId()
+      const targetId = pickString(picks, "targetId") ?? ""
+      const saveDC = pickBigInt(picks, "saveDC") ?? 13
+      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10
+      const halfOnSave = pickBool(picks, "halfOnSave") ?? false
+      const dt = pickVariant(picks, "dt") ?? "Fire"
+      const cond = pickVariant(picks, "cond") ?? "CBlinded"
+      const applyCond = pickBool(picks, "applyCond") ?? false
+      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
+      const spellName = pickString(picks, "spellName") ?? "hold_person"
+
+      // Spend action as Ready
+      send(id, { type: "USE_ACTION", actionType: "ready" })
+      // Spend slot
+      send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
+      // Break existing concentration if any
+      const ctx = getSnap(id).context
+      if (Option.isSome(ctx.concentrationSpellId)) {
+        breakConcentrationAndPropagate(id)
+      }
+      // Start concentration for the readied spell. The creature machine's START_CONCENTRATION
+      // also adds an activeEffect, but Quint's bReadySpell only sets concentrationSpellId
+      // (no effect — the spell hasn't resolved yet). Remove the unwanted effect immediately.
+      send(id, {
+        type: "START_CONCENTRATION",
+        spellId: mkSpellId(spellName),
+        durationTurns: 1,
+        expiresAt: "end",
+        casterId: mkCreatureId(id)
+      })
+      send(id, { type: "REMOVE_EFFECT", spellId: mkSpellId(spellName) })
+      // Store params for release
+      storedReadiedSpellParams = {
+        caster: id,
+        target: targetId,
+        saveDC,
+        damageOnFail: dmgOnFail,
+        halfOnSuccess: halfOnSave,
+        damageType: mapDamageType(dt),
+        conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
+        applyCondition: applyCond
+      }
+    }
+
+    function handleBReadySpellRelease(picks: ReadonlyMap<string, unknown>) {
+      if (!pendingEndTurn) return
+      const releaserId = pickString(picks, "releaserId") ?? ""
+      const saveRoll = pickBigInt(picks, "saveRoll") ?? 10
+
+      // Spend reaction
+      send(releaserId, { type: "USE_REACTION" })
+      // Break concentration (spell energy discharged)
+      breakConcentrationAndPropagate(releaserId)
+
+      if (!storedReadiedSpellParams) return
+      const rsp = storedReadiedSpellParams
+      storedReadiedSpellParams = null
+
+      // Create pendingSpell for CS window / immediate resolution
+      pendingSpell = {
+        caster: rsp.caster,
+        target: rsp.target,
+        saveDC: rsp.saveDC,
+        saveRoll,
+        damageOnFail: rsp.damageOnFail,
+        halfOnSuccess: rsp.halfOnSuccess,
+        damageType: rsp.damageType,
+        conditionOnFail: rsp.conditionOnFail,
+        applyCondition: rsp.applyCondition,
+        slotLvl: 0, // slot already spent at ready time — 0 skips expenditure in resolveSpellEntry
+        ritual: false
+      }
+
+      const hasCSReactors = hasEligibleCSReactors(releaserId, csWindowOffered)
+      if (!hasCSReactors) {
+        resolveSpellSave(pendingSpell)
+        pendingSpell = null
+      }
+    }
+
     function handleBCastBonusActionSpell(picks: ReadonlyMap<string, unknown>) {
       send(activeId(), { type: "USE_BONUS_ACTION" })
       castSaveSpell(picks, false)
@@ -1504,7 +1618,13 @@ function createBattleProjectionDriver() {
       return new Map(Object.entries(p))
     }
 
-    const BETWEEN_TURN_ACTIONS = new Set(["bLegendaryPass", "bLegendaryAttack", "bReadyPass", "bReadyRelease"])
+    const BETWEEN_TURN_ACTIONS = new Set([
+      "bLegendaryPass",
+      "bLegendaryAttack",
+      "bReadyPass",
+      "bReadyRelease",
+      "bReadySpellRelease"
+    ])
 
     function before(action: string) {
       if (pendingEndTurn && !BETWEEN_TURN_ACTIONS.has(action)) {
@@ -1629,6 +1749,10 @@ function createBattleProjectionDriver() {
         before("bReady")
         send(activeId(), { type: "USE_ACTION", actionType: "ready" })
       },
+      bReadySpell: (p: Record<string, unknown>) => {
+        before("bReadySpell")
+        handleBReadySpell(toMap(p))
+      },
       bReadyPass: () => {
         before("bReadyPass")
         handleBReadyPass()
@@ -1636,6 +1760,10 @@ function createBattleProjectionDriver() {
       bReadyRelease: (p: Record<string, unknown>) => {
         before("bReadyRelease")
         handleBReadyRelease(toMap(p))
+      },
+      bReadySpellRelease: (p: Record<string, unknown>) => {
+        before("bReadySpellRelease")
+        handleBReadySpellRelease(toMap(p))
       },
       bCastBonusActionSpell: (p: Record<string, unknown>) => {
         before("bCastBonusActionSpell")

@@ -222,7 +222,12 @@ export function battleExpendSlot(c: BattleCreatureState, level: number): BattleC
 export function breakConcentration(c: BattleCreatureState): BattleCreatureState {
   if (Option.isNone(c.concentrationSpellId)) return c
   const sid = c.concentrationSpellId.value
-  return { ...c, concentrationSpellId: Option.none(), activeEffects: c.activeEffects.filter((e) => e.spellId !== sid) }
+  return {
+    ...c,
+    concentrationSpellId: Option.none(),
+    activeEffects: c.activeEffects.filter((e) => e.spellId !== sid),
+    readiedSpellParams: null // SRD 5.2.1: concentration break = readied spell fizzles
+  }
 }
 
 export function startConcentration(c: BattleCreatureState, spellId: SpellId): BattleCreatureState {
@@ -349,7 +354,8 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     ragingBlocksSpells: false,
     combatantResistances: new Set(),
     sneakAttackDice: 0,
-    sneakAttackUsedThisTurn: false
+    sneakAttackUsedThisTurn: false,
+    readiedSpellParams: null
   }
 }
 

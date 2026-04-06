@@ -45,6 +45,8 @@ import {
   battleReady,
   battleReadyPass,
   battleReadyRelease,
+  battleReadySpell,
+  battleReadySpellRelease,
   battleStartTurn
 } from "#/battle-machine-actions-turn.ts"
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
@@ -125,8 +127,10 @@ export const battleMachine = setup({
     battleEnterRage: narrow(battleEnterRage),
     battleDeclareReckless: narrow(battleDeclareReckless),
     battleReady: narrow(battleReady),
+    battleReadySpell: narrow(battleReadySpell),
     battleReadyPass: narrow(battleReadyPass),
-    battleReadyRelease: narrow(battleReadyRelease)
+    battleReadyRelease: narrow(battleReadyRelease),
+    battleReadySpellRelease: narrow(battleReadySpellRelease)
   }
 }).createMachine({
   id: "battle",
@@ -166,7 +170,8 @@ export const battleMachine = setup({
             BATTLE_ACTION_SURGE: { actions: "battleActionSurge" },
             BATTLE_ENTER_RAGE: { actions: "battleEnterRage" },
             BATTLE_DECLARE_RECKLESS: { actions: "battleDeclareReckless" },
-            BATTLE_READY: { actions: "battleReady" }
+            BATTLE_READY: { actions: "battleReady" },
+            BATTLE_READY_SPELL: { actions: "battleReadySpell" }
           }
         },
         awaitingReaction: {
@@ -210,7 +215,8 @@ export const battleMachine = setup({
           always: [{ guard: "noReadyCtx", target: "activeTurn" }],
           on: {
             BATTLE_READY_PASS: { actions: "battleReadyPass" },
-            BATTLE_READY_RELEASE: { actions: "battleReadyRelease" }
+            BATTLE_READY_RELEASE: { actions: "battleReadyRelease" },
+            BATTLE_READY_SPELL_RELEASE: { actions: "battleReadySpellRelease" }
           }
         }
       }

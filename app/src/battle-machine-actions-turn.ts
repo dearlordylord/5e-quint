@@ -1,19 +1,30 @@
 import { buildBattleAttackContext, resolveAttack } from "#/battle-machine-actions-attack.ts"
-import { freshCaster, freshCreature, isIncapacitated } from "#/battle-machine-creature.ts"
+import {
+  battleExpendSlot,
+  freshCaster,
+  freshCreature,
+  isIncapacitated,
+  startConcentration
+} from "#/battle-machine-creature.ts"
 import {
   activeId,
+  breakConcentrationAndPropagate,
+  eligibleForCounterspell,
   heal,
+  mkAwait,
   nextTurn,
   processEndTurn,
   processStartTurn,
+  resolveSave,
   setCreature,
   spendAction
 } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext, BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
-import { PHASE_ACTIVE, phaseAwaitingLegendary, phaseAwaitingReady } from "#/battle-machine-types.ts"
+import { PHASE_ACTIVE, phaseAwaitingLegendary, phaseAwaitingReady, phaseAwaitReaction } from "#/battle-machine-types.ts"
 import { rageDamageBonus, rageResistances } from "#/features/class-barbarian.ts"
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts"
 import { aggregateAttackMods } from "#/machine-combat.ts"
+import { spellId as mkSpellId } from "#/types.ts"
 
 // TODO style: combinators
 function readyEligible(cs: ReadonlyMap<CreatureId, BattleCreatureState>): ReadonlySet<CreatureId> {
@@ -127,11 +138,19 @@ export function battleStartTurn({
     e.deathSaveRoll
   )
   const afterFs = result.get(id)!
-  const resetResult = setCreature(result, id, {
-    ...afterFs,
+  // If creature had a readied spell, break its concentration (SRD 5.2.1:
+  // "Concentration, which you can maintain up to the start of your next turn")
+  const afterReadyClear =
+    afterFs.readiedSpellParams != null
+      ? breakConcentrationAndPropagate(setCreature(result, id, { ...afterFs, readiedSpellParams: null }), id)
+      : result
+  const afterConc = afterReadyClear.get(id)!
+  const resetResult = setCreature(afterReadyClear, id, {
+    ...afterConc,
     actionSurgeUsedThisTurn: false,
     recklessThisTurn: false,
-    sneakAttackUsedThisTurn: false
+    sneakAttackUsedThisTurn: false,
+    readiedSpellParams: null
   })
   return { creatures: resetResult, turnStarted: true }
 }
@@ -317,6 +336,89 @@ export function battleEnterRage({ context: c }: BattleActionArgs<"BATTLE_ENTER_R
 
 export function battleReady({ context: c }: BattleActionArgs<"BATTLE_READY">): Partial<BattleContext> {
   return simpleAction(c, "ready")
+}
+
+/** Ready a spell: spend action + slot, start Concentration, store spell params. */
+export function battleReadySpell({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_READY_SPELL">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
+  const id = activeId(c)
+  const ac = c.creatures.get(id)!
+  if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {}
+  if (ac.actionSurgeActionPending || ac.ragingBlocksSpells || ac.slotExpendedThisTurn) return {}
+  if (ac.preparedSpells.size === 0) return {}
+  const afterAction = spendAction(ac, "ready")
+  let cs = setCreature(c.creatures, id, battleExpendSlot(afterAction, e.slotLvl))
+  // Break existing concentration (must happen on full map for cross-creature propagation)
+  cs = breakConcentrationAndPropagate(cs, id)
+  // Start concentration + store params in one setCreature
+  cs = setCreature(cs, id, {
+    ...startConcentration(cs.get(id)!, mkSpellId(e.spellName)),
+    readiedSpellParams: {
+      caster: id,
+      target: e.targetId,
+      saveDC: e.saveDC,
+      damageOnFail: e.dmgOnFail,
+      halfOnSuccess: e.halfOnSave,
+      damageType: e.dt,
+      conditionOnFail: e.cond,
+      applyCondition: e.applyCond,
+      saveAbility: e.saveAbility,
+      spellName: e.spellName,
+      slotLvl: e.slotLvl
+    }
+  })
+  return { creatures: cs }
+}
+
+/** Ready window: release readied spell → Counterspell window → save resolution. */
+export function battleReadySpellRelease({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_READY_SPELL_RELEASE">): Partial<BattleContext> {
+  const releaser = c.creatures.get(e.releaserId)!
+  const rsp = releaser.readiedSpellParams
+  if (!rsp) return {} // no readied spell
+  // Spend reaction, clear readiedAction and readiedSpellParams
+  let cs = setCreature(c.creatures, e.releaserId, {
+    ...releaser,
+    reactionAvailable: false,
+    readiedAction: false,
+    readiedSpellParams: null
+  })
+  // Break concentration (spell energy discharged)
+  cs = breakConcentrationAndPropagate(cs, e.releaserId)
+  const readyReturn = { tag: "ADRAwaitingReadiedAction" as const, ready: c.readyCtx! }
+  const saveCtx = {
+    caster: rsp.caster,
+    target: rsp.target,
+    saveDC: rsp.saveDC,
+    saveRoll: e.saveRoll,
+    damageOnFail: rsp.damageOnFail,
+    halfOnSuccess: rsp.halfOnSuccess,
+    damageType: rsp.damageType,
+    conditionOnFail: rsp.conditionOnFail,
+    applyCondition: rsp.applyCondition,
+    saveAbility: rsp.saveAbility
+  }
+  const spellCtx = {
+    caster: rsp.caster,
+    spellName: rsp.spellName,
+    postCast: { tag: "PCESave" as const, save: saveCtx },
+    slotLvl: 0 as const, // slot already spent at ready time — 0 skips expenditure in resolveSpellEntry
+    ritual: false
+  }
+  const csElig = eligibleForCounterspell(cs, e.releaserId)
+  if (csElig.size > 0) {
+    return {
+      creatures: cs,
+      ...phaseAwaitReaction(mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig))
+    }
+  }
+  const result = resolveSave(cs, saveCtx, readyReturn)
+  return { ...result }
 }
 
 export function battleDeclareReckless({

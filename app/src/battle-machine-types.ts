@@ -101,6 +101,23 @@ export interface BattleCreatureState {
   // Rogue state
   readonly sneakAttackDice: number
   readonly sneakAttackUsedThisTurn: boolean
+  // Readied spell (SRD 5.2.1 Ready action)
+  readonly readiedSpellParams: ReadiedSpellParams | null
+}
+
+/** Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready). */
+export interface ReadiedSpellParams {
+  readonly caster: CreatureId
+  readonly target: CreatureId
+  readonly saveDC: DifficultyClass
+  readonly damageOnFail: number
+  readonly halfOnSuccess: boolean
+  readonly damageType: DamageType
+  readonly conditionOnFail: Condition
+  readonly applyCondition: boolean
+  readonly saveAbility: Ability
+  readonly spellName: string
+  readonly slotLvl: SpellSlotLevel
 }
 
 export interface AttackHitCtx {
@@ -192,7 +209,7 @@ export interface SpellCastCtx {
   readonly caster: CreatureId
   readonly spellName: string
   readonly postCast: PostCastEffect
-  readonly slotLvl: SpellSlotLevel
+  readonly slotLvl: SpellSlotLevel | 0 // 0 = slot already spent (readied spell release)
   readonly ritual: boolean
 }
 
@@ -212,7 +229,7 @@ export interface SpellStackEntry {
   readonly spellCasterId: CreatureId
   readonly spellPostCast: PostCastEffect
   readonly offered: ReadonlySet<CreatureId>
-  readonly slotLvl: SpellSlotLevel
+  readonly slotLvl: SpellSlotLevel | 0 // 0 = slot already spent (readied spell release)
   readonly spellName: string
   readonly ritual: boolean
 }

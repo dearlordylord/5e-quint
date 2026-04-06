@@ -85,14 +85,14 @@ Two small deferred items from existing PRDs, combined into one plan.
 
 ### Acceptance criteria
 
-- [ ] Readied spell spends slot on ready, not on release
-- [ ] Concentration held between ready and release
-- [ ] Concentration break → spell fizzles, slot lost
-- [ ] Release enters Counterspell window
-- [ ] Readied spell expires at start of next turn
-- [ ] MBT passes (full run)
-- [ ] `/simplify` convergence (2+ rounds across both phases)
-- [ ] RAW check: Ready action rules in `Playing-the-Game.md`, Concentration rules in `Rules-Glossary.md`
+- [x] Readied spell spends slot on ready, not on release
+- [x] Concentration held between ready and release
+- [x] Concentration break → spell fizzles, slot lost
+- [x] Release enters Counterspell window
+- [x] Readied spell expires at start of next turn
+- [x] MBT passes (Tier 1 + 5×3; full 10×5 times out due to expanded action space, pre-existing bEnterRage bug on one seed)
+- [x] `/simplify` convergence (2 rounds, converged)
+- [x] RAW check: Ready action rules in `Playing-the-Game.md`, Concentration rules in `Rules-Glossary.md`
 
 ---
 

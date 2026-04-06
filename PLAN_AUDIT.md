@@ -440,3 +440,13 @@ Cannot reproduce with seed `0x71d322b2` at 3 and 5 steps on both MBT bridges. Co
 `MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts` fails with `TraceReplayError: Unknown action: bDash` on master (confirmed by stashing PRD 4 changes). The `bDash` action is in both `battleDriverSchema` and the dispatch handler, so the issue is in `@firfi/quint-connect`'s action name resolution — likely the `match bPhase` in `battleStep` reports the composite name for some actions despite the `any { }` wrapper.
 
 **Fix:** Investigate `quint-connect` action name resolution for `match` arms. May need to wrap the `BPActiveTurn` arm differently, or update `quint-connect` to handle nested `match` → `any` patterns.
+
+### D10. `bEnterRage` — HP mismatch on Tier 2 MBT (pre-existing)
+
+*Source: PRD 2 Phase 2 verification (2026-04-05)*
+
+Seed `0x1a3c4179` produces a state mismatch on `bEnterRage` (step 3). Confirmed pre-existing: same seed, same failure on master with all PRD 2 Phase 2 changes stashed. The mismatch is an HP divergence (Quint expects full HP, XState shows damage taken). Likely a barbarian-specific issue — possibly rage resistance not being applied correctly in the MBT bridge, or a `combatantResistances` mapping gap.
+
+**Reproduce:** `QUINT_SEED=0x1a3c4179 MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=4 npx vitest run src/battle-projection.mbt.test.ts`
+
+**Fix:** Debug the seed's action sequence to identify where HP diverges. Likely in the `bEnterRage` handler's `combatantResistances` mapping or the damage pipeline's resistance application.

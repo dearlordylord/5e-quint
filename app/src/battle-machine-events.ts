@@ -220,6 +220,19 @@ export type BattleEvent =
   | { readonly type: "BATTLE_ENTER_RAGE" }
   | { readonly type: "BATTLE_DECLARE_RECKLESS" }
   | { readonly type: "BATTLE_READY" }
+  | {
+      readonly type: "BATTLE_READY_SPELL"
+      readonly targetId: CreatureId
+      readonly saveDC: DifficultyClass
+      readonly dmgOnFail: number
+      readonly halfOnSave: boolean
+      readonly dt: DamageType
+      readonly cond: Condition
+      readonly applyCond: boolean
+      readonly saveAbility: Ability
+      readonly slotLvl: SpellSlotLevel
+      readonly spellName: string
+    }
   | { readonly type: "BATTLE_READY_PASS" }
   | {
       readonly type: "BATTLE_READY_RELEASE"
@@ -240,6 +253,11 @@ export type BattleEvent =
       readonly frightSourceInLOS: boolean
       readonly hasAllyAdjacentToTarget: boolean
       readonly saDmg: number
+    }
+  | {
+      readonly type: "BATTLE_READY_SPELL_RELEASE"
+      readonly releaserId: CreatureId
+      readonly saveRoll: number
     }
 
 /** Narrows BattleEvent to a specific type member for action functions. */

@@ -44,7 +44,34 @@ module battle {
     combatantResistances: Set[DamageType],   // runtime resistances (rage B/P/S, Bear Totem all, etc.)
     sneakAttackDice: int,                    // Sneak Attack d6 count (0 = not a rogue; ceil(rogueLevel/2))
     sneakAttackUsedThisTurn: bool,           // SA once per turn (SRD 5.2.1 Rogue "Sneak Attack")
+    readiedSpellParams: ReadiedSpellParams,  // readied spell params (SRD 5.2.1 Ready action); slotLvl==0 = no spell
   }
+
+  /// Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready action).
+  /// slotLvl == 0 is the sentinel for "no readied spell".
+  type ReadiedSpellParams = {
+    caster: CreatureId,
+    target: CreatureId,
+    saveDC: int,
+    damageOnFail: int,
+    halfOnSuccess: bool,
+    damageType: DamageType,
+    conditionOnFail: Condition,
+    applyCondition: bool,
+    saveAbility: Ability,
+    spellName: str,
+    slotLvl: int,
+  }
+
+  val NO_READIED_SPELL: ReadiedSpellParams = {
+    caster: "", target: "", saveDC: 0, damageOnFail: 0,
+    halfOnSuccess: false, damageType: Slashing,
+    conditionOnFail: CBlinded, applyCondition: false,
+    saveAbility: Dex, spellName: "", slotLvl: 0,
+  }
+
+  /// Check if a combatant has a readied spell.
+  pure def hasReadiedSpell(c: Combatant): bool = c.readiedSpellParams.slotLvl > 0
 
   type TriggerType =
     | TAttackHits       // "when hit by attack roll" — Shield, Parry
@@ -352,6 +379,7 @@ module battle {
     combatantResistances: Set(),
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
+    readiedSpellParams: NO_READIED_SPELL,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -381,6 +409,7 @@ module battle {
     combatantResistances: Set(),
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
+    readiedSpellParams: NO_READIED_SPELL,
   }
 
   // Monster with legendary actions and resistances
@@ -407,6 +436,7 @@ module battle {
     combatantResistances: Set(),
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
+    readiedSpellParams: NO_READIED_SPELL,
   }
 
   /// Deal damage to a target. When knockOut=true and the hit would reduce a PC to 0 HP,
@@ -447,6 +477,8 @@ module battle {
 
   /// Break concentration for a caster and propagate: remove all effects
   /// cast by this caster from ALL creatures in the battle.
+  /// Also clears readiedSpellParams (SRD 5.2.1: "If your Concentration is broken,
+  /// the spell dissipates without taking effect" — readied spell fizzles, slot lost).
   pure def breakConcentrationAndPropagate(
     cs: CreatureId -> Combatant, casterId: CreatureId
   ): (CreatureId -> Combatant) = {
@@ -457,7 +489,12 @@ module battle {
       val newSlots = pBreakConcentration(caster.slots)
       val newCreature = caster.creature.with("activeEffects", pRemoveEffect(caster.creature.activeEffects, spellId))
       val cs1 = setSlots(setCreature(cs, casterId, newCreature), casterId, newSlots)
-      cs.keys().exclude(Set(casterId)).fold(cs1, (acc, id) =>
+      // Clear readied spell params (concentration break = spell fizzles)
+      val caster1 = cs1.get(casterId)
+      val cs1b = if (hasReadiedSpell(caster1))
+        cs1.set(casterId, caster1.with("readiedSpellParams", NO_READIED_SPELL))
+      else cs1
+      cs.keys().exclude(Set(casterId)).fold(cs1b, (acc, id) =>
         val c = acc.get(id)
         val cleaned = removeEffectsByCaster(c.creature, casterId)
         if (cleaned == c.creature) acc else setCreature(acc, id, cleaned)
@@ -736,9 +773,16 @@ module battle {
       val cs2 = setTurn(cs1, activeId, FRESH_TURN)
       // 4b. Fighter start-of-turn: reset actionSurgeUsedThisTurn
       val ac4 = cs2.get(activeId)
-      val cs2b = cs2.set(activeId, ac4.with("fighterState", pFighterStartTurn(ac4.fighterState, ac4.fighterLevel))
+      // 4c. Clear readied spell; if one was held, break its concentration (SRD 5.2.1:
+      // "Concentration, which you can maintain up to the start of your next turn")
+      val cs2a = if (hasReadiedSpell(ac4))
+        breakConcentrationAndPropagate(cs2.set(activeId, ac4.with("readiedSpellParams", NO_READIED_SPELL)), activeId)
+      else cs2
+      val ac4b = cs2a.get(activeId)
+      val cs2b = cs2a.set(activeId, ac4b.with("fighterState", pFighterStartTurn(ac4b.fighterState, ac4b.fighterLevel))
                                             .with("recklessThisTurn", false)
-                                            .with("sneakAttackUsedThisTurn", false))
+                                            .with("sneakAttackUsedThisTurn", false)
+                                            .with("readiedSpellParams", NO_READIED_SPELL))
       // 5. Monster-specific: refresh LA + recharge rolls
       val cs3 = if (c.kind == Monster) {
         val sb = c.statBlock
@@ -2049,7 +2093,7 @@ module battle {
     }
   }
 
-  /// Ready window: creature releases readied attack.
+  /// Ready window: creature releases readied attack (non-spell).
   /// Spends reaction, clears readiedAction, enters shared attack resolution.
   action bReadyRelease = {
     match bPhase {
@@ -2073,13 +2117,69 @@ module battle {
         nondet readyHasAllyAdjacent = Bool.oneOf()
         val releaser = bCreatures.get(releaserId)
         nondet readySaDmg = releaser.sneakAttackDice.to(releaser.sneakAttackDice * 6).oneOf()
-        val updatedTurn = releaser.turn.with("reactionAvailable", false).with("readiedAction", false)
-        val cs1 = bCreatures.set(releaserId, releaser.with("turn", updatedTurn))
-        val readyReturn = ADRAwaitingReadiedAction(readyCtx)
-        val readyAtkCtx = buildAttackContext(cs1, releaserId, targetId, readyIsMelee, readyAtkWithin5ft, readyHostileWithin5ft, readyTgtCanSee, readyAtkCanSee, readyFrightLOS)
-        val readyMods = pAggregateAttackMods(readyAtkCtx)
-        val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg)
-        all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+        all {
+          not(hasReadiedSpell(releaser)),  // attack release only for non-spell readied actions
+          val updatedTurn = releaser.turn.with("reactionAvailable", false).with("readiedAction", false)
+          val cs1 = bCreatures.set(releaserId, releaser.with("turn", updatedTurn))
+          val readyReturn = ADRAwaitingReadiedAction(readyCtx)
+          val readyAtkCtx = buildAttackContext(cs1, releaserId, targetId, readyIsMelee, readyAtkWithin5ft, readyHostileWithin5ft, readyTgtCanSee, readyAtkCanSee, readyFrightLOS)
+          val readyMods = pAggregateAttackMods(readyAtkCtx)
+          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg)
+          all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  /// Ready window: creature releases readied spell.
+  /// SRD 5.2.1: spell was cast at ready time (slot spent, concentration started).
+  /// Release enters Counterspell window, then resolves as save spell.
+  /// Concentration ends after release (spell energy discharged).
+  action bReadySpellRelease = {
+    match bPhase {
+      | BPAwaitingReadiedAction(readyCtx) =>
+        nondet releaserId = readyCtx.eligibleCreatures.oneOf()
+        nondet saveRoll = 1.to(20).oneOf()
+        val releaser = bCreatures.get(releaserId)
+        all {
+          hasReadiedSpell(releaser),  // spell release only
+          val rsp = releaser.readiedSpellParams
+          // Spend reaction, clear readiedAction and readiedSpellParams
+          val updatedTurn = releaser.turn.with("reactionAvailable", false).with("readiedAction", false)
+          val cs1 = bCreatures.set(releaserId,
+            releaser.with("turn", updatedTurn).with("readiedSpellParams", NO_READIED_SPELL))
+          // Break concentration (spell energy is being released)
+          val cs2 = breakConcentrationAndPropagate(cs1, releaserId)
+          val readyReturn = ADRAwaitingReadiedAction(readyCtx)
+          val saveCtx: SaveSpellCtx = {
+            caster: rsp.caster, target: rsp.target,
+            saveDC: rsp.saveDC, saveRoll: saveRoll,
+            damageOnFail: rsp.damageOnFail, halfOnSuccess: rsp.halfOnSuccess,
+            damageType: rsp.damageType,
+            conditionOnFail: rsp.conditionOnFail, applyCondition: rsp.applyCondition,
+            saveAbility: rsp.saveAbility,
+          }
+          val spellCtx: SpellCastCtx = {
+            caster: rsp.caster,
+            spellName: rsp.spellName,
+            postCast: PCESave(saveCtx),
+            slotLvl: 0,   // slot already spent at ready time — no refund on counterspell
+            ritual: false, // readied spells cannot be rituals
+          }
+          // Counterspell window for the released spell
+          val csElig = eligibleForCounterspell(cs2, releaserId)
+          if (csElig.size() > 0) {
+            all {
+              bCreatures' = cs2,
+              bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(spellCtx), TSpellBeingCast, csElig)),
+              keepBattle,
+            }
+          } else {
+            // No Counterspell — resolve save immediately
+            val result = resolveSave(cs2, saveCtx, readyReturn)
+            all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+          }
+        }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
   }
@@ -2189,6 +2289,71 @@ module battle {
       val newTurn = pUseAction(ac.turn, ac.creature, AReady)
       all {
         bCreatures' = setTurn(bCreatures, activeId, newTurn),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  /// Ready a spell: spend action + slot, start Concentration, store spell params.
+  /// SRD 5.2.1 Ready: "you cast it as normal (expending any resources used to cast it)
+  /// but hold its energy, which you release with your Reaction when the trigger occurs.
+  /// To be readied, a spell must have a casting time of an action, and holding on to
+  /// the spell's magic requires Concentration."
+  action bReadySpell = {
+    val activeId = bInitiative[bTurnIndex]
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
+    nondet targetId = allIds.exclude(Set(activeId)).oneOf()
+    // Spell params are pass-through storage (resolved at release, not here).
+    // Domain-correct ranges matching bCastSaveSpell, narrowed where the value
+    // doesn't affect guard or resolution logic to keep evaluator perf manageable
+    // (Finding 14: each nondet costs a snapshot/restore even when guards fail).
+    nondet saveDC = 10.to(18).oneOf()
+    nondet dmgOnFail = 0.to(20).oneOf()
+    nondet halfOnSave = Bool.oneOf()
+    nondet dt = ALL_DAMAGE_TYPES.oneOf()
+    nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
+    nondet applyCond = Bool.oneOf()
+    // Only Dex and Con matter for behavior (Evasion checks == Dex); others are identical.
+    nondet saveAb = Set(Dex, Con).oneOf()
+    nondet slotLvl = 1.to(9).oneOf()
+    nondet spellName = ac.preparedSpells.oneOf()
+    val tc = bCreatures.get(targetId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      not(tc.creature.dead),
+      not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be used for spell-readying
+      not(ac.ragingBlocksSpells),
+      not(ac.turn.slotExpendedThisTurn),  // readied spells cost a slot
+      ac.preparedSpells.size() > 0,
+      ac.slots.slotsCurrent.get(slotLvl) > 0,
+      val newTurn = pUseAction(ac.turn, ac.creature, AReady)
+      // Spend slot immediately (SRD 5.2.1: "expending any resources")
+      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val cs2 = expendSlot(cs1, activeId, slotLvl)
+      // Break existing concentration if any, then start new concentration for the readied spell
+      val cs3 = if (ac.slots.concentrationSpellId != "")
+        breakConcentrationAndPropagate(cs2, activeId)
+      else cs2
+      val concSlots = pStartConcentration(cs3.get(activeId).slots, spellName)
+      val cs4 = setSlots(cs3, activeId, concSlots)
+      // Store readied spell params
+      val rsp: ReadiedSpellParams = {
+        caster: activeId, target: targetId,
+        saveDC: saveDC, damageOnFail: dmgOnFail,
+        halfOnSuccess: halfOnSave, damageType: dt,
+        conditionOnFail: cond, applyCondition: applyCond,
+        saveAbility: saveAb, spellName: spellName,
+        slotLvl: slotLvl,
+      }
+      val cs5 = cs4.set(activeId, cs4.get(activeId).with("readiedSpellParams", rsp))
+      all {
+        bCreatures' = cs5,
         bPhase' = BPActiveTurn,
         keepBattle,
       }
@@ -2380,7 +2545,7 @@ module battle {
           bAttack, bCastSaveSpell, bCastAoE,
           bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
           bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge,
-          bEnterRage, bDeclareReckless, bReady, bEndTurn,
+          bEnterRage, bDeclareReckless, bReady, bReadySpell, bEndTurn,
         } else any {
           bAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage,
           bDodge, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
@@ -2398,7 +2563,7 @@ module battle {
     | BPResolvingAoE(_) => any { bResolveAoETarget, }
     | BPResolvingMovement(_) => any { bMovementOAPass, bMovementOAAttack }
     | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bLegendaryAttack }
-    | BPAwaitingReadiedAction(_) => any { bReadyPass, bReadyRelease, }
+    | BPAwaitingReadiedAction(_) => any { bReadyPass, bReadyRelease, bReadySpellRelease, }
   }
 
   val allHpBounded = bCreatures.keys().forall(id =>
@@ -2427,6 +2592,19 @@ module battle {
   val allDeadNotConcentrating = bCreatures.keys().forall(id =>
     val c = bCreatures.get(id)
     c.creature.dead implies c.slots.concentrationSpellId == ""
+  )
+
+  /// Readied spell implies readied action is true (SRD 5.2.1: Ready action required).
+  val readiedSpellImpliesReadiedAction = bCreatures.keys().forall(id =>
+    val c = bCreatures.get(id)
+    hasReadiedSpell(c) implies c.turn.readiedAction
+  )
+
+  /// Readied spell implies concentrating (SRD 5.2.1: "holding on to the spell's
+  /// magic requires Concentration").
+  val readiedSpellImpliesConcentrating = bCreatures.keys().forall(id =>
+    val c = bCreatures.get(id)
+    hasReadiedSpell(c) implies c.slots.concentrationSpellId != ""
   )
 
   /// If awaiting reaction, un-offered eligible reactors have their reaction available.
