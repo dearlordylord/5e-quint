@@ -2,8 +2,9 @@
  * Battle Projection MBT — generates traces from battle.qnt and replays
  * per-creature state against existing dndMachine XState actors.
  *
- * TODO: rename to battle-projection.mbt.test.ts (this file tests dndMachine,
- * not battleMachine — current name is misleading).
+ * TODO: rename dndMachine → creatureMachine globally (45 refs, 13 files),
+ * then rename this file to battle-projection.mbt.test.ts (tests creature machine,
+ * not battle machine — current name is misleading).
  */
 import * as path from "node:path"
 
