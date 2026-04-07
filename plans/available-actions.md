@@ -7,6 +7,7 @@
 Durable decisions that apply across all phases:
 
 - **Action token schema**: Command-with-holes pattern. Serializable JSON. Same structure for query (`get_available_actions` returns tokens with choice holes) and execution (`execute_action` accepts tokens with holes filled). Cost is always populated; choice holes are typed with valid options enumerated.
+- **`execute_action` MCP input schema is static**: A flat, dumb envelope — `{ type: string, slotLevel?: number, choice?: string, ... }`. Does NOT dynamically reflect available tokens or valid enum values. Claude reads `get_available_actions` output to know what's valid; the schema just declares the shape. Validation happens server-side. Rationale: a dynamic `oneOf` with 50+ discriminated token variants is noise Claude must parse and wastes context.
 - **MCP tool surface**: Three tools — `get_state`, `get_available_actions`, `execute_action`. Independent process from React app, instantiates its own XState actor.
 - **Event type catalog**: `const EVENT_TYPES = [...] as const satisfies ReadonlyArray<DndEvent["type"]>` — runtime-iterable, compile-time validated against the event union.
 - **Grouping axis**: Actions grouped by resource cost (action, bonus action, reaction, free/movement). No ordering within groups. Permanent — we do not rank by tactical value or optimality.
