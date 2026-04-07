@@ -307,3 +307,13 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Rules basis:** The SRD describes durations as positive time spans ("1 minute," "Concentration, up to 10 minutes," etc.) that simply end when expired. No SRD passage addresses negative durations because the concept does not exist in the rules.
 
 **Changes:** Invariant `turnsRemaining >= 0` added to safety invariants (see PLAN_INVARIANTS.md L2).
+
+## A37: Grapple Movable cost modeled as speed halving
+
+**Assumption:** The SRD 5.2.1 Grappled condition's Movable property says "every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it." The spec models this as halving `effectiveSpeed` at start-of-turn (`pStartTurn`) rather than tracking a per-foot movement cost multiplier.
+
+**Rules basis:** The result is identical for all movement cases — 30 ft speed with double cost yields 15 ft of dragging, same as 15 ft effective speed. This holds through Dash (which adds `effectiveSpeed` to `movementRemaining`), difficult terrain stacking, and all other movement modifiers. The representation differs from RAW language but produces the same mechanical outcome.
+
+**Rationale:** The spec tracks movement as a budget (`movementRemaining`) decremented by 1 per foot, not as a cost-per-foot system. Modeling Movable as a cost multiplier would require changing the movement system to track per-foot costs for grappling, difficult terrain, squeezing, etc. Halving speed is the simplest representation that preserves correctness.
+
+**Changes:** `pStartTurn` in `creature.qnt` applies `afterExhaustion / 2` when `isGrappling and not(grappledTargetTwoSizesSmaller)`.
