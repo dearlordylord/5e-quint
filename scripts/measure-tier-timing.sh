@@ -26,8 +26,8 @@ echo ""
 # Ensure compiled cache (must run from project root)
 node scripts/compile-battle-spec.cjs 2>&1
 
-# Switch to app/ for vitest
-cd app
+# Switch to packages/core/ for vitest (MBT tests live in core)
+cd packages/core
 
 run_tier() {
   local TIER="$1"

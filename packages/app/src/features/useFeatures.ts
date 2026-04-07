@@ -1,0 +1,421 @@
+import { canCastWhileRaging } from "@dnd/core/features/class-barbarian.ts"
+import type { AbjureFoesResult } from "@dnd/core/features/class-paladin.ts"
+import type { CunningActionChoice, StrikeEffect } from "@dnd/core/features/class-rogue.ts"
+import type { BridgeResult } from "@dnd/core/features/feature-bridge.ts"
+import {
+  canExecuteActionSurge,
+  canExecuteDeclareReckless,
+  canExecuteEndRage,
+  canExecuteEnterRage,
+  canExecuteExtendRageBA,
+  canExecuteFrenzy,
+  canExecuteIntimidatingPresence,
+  canExecuteRelentlessRage,
+  canExecuteRetaliation,
+  canExecuteSecondWind,
+  canUseDangerSense,
+  executeActionSurge,
+  executeDeclareReckless,
+  executeEndRage,
+  executeEnterRage,
+  executeEnterRageWithMindlessRage,
+  executeExtendRageBA,
+  executeFrenzy,
+  executeIntimidatingPresence,
+  executeRelentlessRage,
+  executeRetaliation,
+  executeSecondWind,
+  fastMovementBonus,
+  getFrenzyDamageDice,
+  getIntimidatingPresenceDC,
+  getIsRaging,
+  getMindlessRageImmunities,
+  getRageDamageBonus,
+  getRageResistances,
+  getRelentlessRageDC,
+  hasFeralInstinct,
+  indomitableMight,
+  instinctivePounceDistance,
+  primalChampionBonus
+} from "@dnd/core/features/feature-bridge.ts"
+import {
+  createInitialFeatureState,
+  type FeatureAction,
+  type FeatureConfig,
+  featureReducer,
+  type FeatureState
+} from "@dnd/core/features/feature-store.ts"
+import type { DndSnapshot } from "@dnd/core/machine.ts"
+import type { DndEvent } from "@dnd/core/machine-types.ts"
+import type { Condition, DamageType } from "@dnd/core/types.ts"
+import { abilityModifier } from "@dnd/core/types.ts"
+import { useCallback, useMemo, useReducer } from "react"
+
+import { useFighterExtras } from "#/features/useFighterExtras.ts"
+import { useMonkPaladinFeatures } from "#/features/useMonkPaladinFeatures.ts"
+import { useRogueFeatures } from "#/features/useRogueFeatures.ts"
+
+export type { FeatureConfig } from "@dnd/core/features/feature-store.ts"
+
+// eslint-disable-next-line functional/no-mixed-types -- hook return bundles state + methods by design
+export interface UseFeatures {
+  readonly featureState: FeatureState
+  // Fighter
+  readonly canSecondWind: boolean
+  readonly canActionSurge: boolean
+  readonly secondWind: (d10Roll: number) => BridgeResult | null
+  readonly actionSurge: () => BridgeResult | null
+  readonly canTacticalMind: (checkFailed: boolean) => boolean
+  readonly tacticalMind: (boostedCheckSucceeded: boolean) => BridgeResult | null
+  readonly canIndomitable: boolean
+  readonly indomitable: () => BridgeResult | null
+  // Champion
+  readonly championCritRange: number
+  readonly hasRemarkableAthlete: boolean
+  readonly remarkableAthleteCritMovement: (effectiveSpeed: number) => number
+  readonly heroicWarriorInspiration: (hasHeroicInspiration: boolean) => boolean
+  readonly survivorDefyDeathAdvantage: boolean
+  readonly survivorHeroicRally: (currentHp: number, maxHp: number, conMod: number) => number
+  // Barbarian
+  readonly canEnterRage: boolean
+  readonly enterRage: () => BridgeResult | null
+  readonly canEndRage: boolean
+  readonly endRage: () => BridgeResult | null
+  readonly canExtendRageBA: boolean
+  readonly extendRageBA: () => BridgeResult | null
+  readonly canDeclareReckless: boolean
+  readonly declareReckless: () => BridgeResult | null
+  readonly markAttackOrSave: () => void
+  readonly isRaging: boolean
+  readonly rageResistances: ReadonlySet<DamageType>
+  readonly rageDamageBonus: number
+  readonly canCastSpells: boolean
+  readonly berserkerLevel: number
+  // Barbarian passive features
+  readonly dangerSenseActive: boolean
+  readonly fastMovementBonus: number
+  readonly hasFeralInstinct: boolean
+  readonly instinctivePounceDistance: number
+  readonly canRelentlessRage: boolean
+  readonly relentlessRageDC: number
+  readonly relentlessRage: (conSaveSucceeded: boolean) => BridgeResult | null
+  readonly indomitableMightFn: (checkTotal: number, strScore: number) => number
+  readonly primalChampionBonus: { readonly strBonus: number; readonly conBonus: number; readonly maxScore: number }
+  // Berserker
+  readonly canFrenzy: boolean
+  readonly frenzy: () => BridgeResult | null
+  readonly frenzyDamageDice: number
+  readonly mindlessRageImmunities: ReadonlySet<Condition>
+  readonly canRetaliation: boolean
+  readonly retaliation: () => BridgeResult | null
+  readonly canIntimidatingPresence: boolean
+  readonly intimidatingPresence: () => BridgeResult | null
+  readonly intimidatingPresenceDC: number
+  // Monk
+  readonly canFlurryOfBlows: boolean
+  readonly flurryOfBlows: () => BridgeResult | null
+  readonly canPatientDefenseFree: boolean
+  readonly patientDefenseFree: () => BridgeResult | null
+  readonly canPatientDefenseFocus: boolean
+  readonly patientDefenseFocus: () => BridgeResult | null
+  readonly canStepOfTheWindFree: boolean
+  readonly stepOfTheWindFree: () => BridgeResult | null
+  readonly canStepOfTheWindFocus: boolean
+  readonly stepOfTheWindFocus: () => BridgeResult | null
+  readonly canStunningStrike: boolean
+  readonly stunningStrike: (targetSavePassed: boolean) => BridgeResult | null
+  readonly canUncannyMetabolism: boolean
+  readonly uncannyMetabolism: (d8Roll: number) => BridgeResult | null
+  readonly martialArtsDie: number
+  readonly bonusUnarmedStrikeEligible: boolean
+  // Monk passives
+  readonly unarmoredMovementBonus: number
+  readonly hasFocusEmpoweredStrikes: boolean
+  readonly canSelfRestore: boolean
+  readonly selfRestorationConditions: ReadonlyArray<Condition>
+  readonly hasDeflectEnergy: boolean
+  readonly hasDisciplinedSurvivor: boolean
+  readonly hasFleetStep: boolean
+  // Monk active features
+  readonly canDeflectAttacks: boolean
+  readonly deflectAttacks: () => BridgeResult | null
+  readonly canSlowFall: boolean
+  readonly slowFall: () => BridgeResult | null
+  readonly canSuperiorDefense: boolean
+  readonly superiorDefense: () => BridgeResult | null
+  readonly canWholenessOfBody: boolean
+  readonly wholenessOfBody: (martialArtsDieRoll: number, wisMod: number) => BridgeResult | null
+  readonly canQuiveringPalm: boolean
+  readonly quiveringPalm: () => BridgeResult | null
+  readonly triggerQuiveringPalm: () => BridgeResult | null
+  readonly canDisciplinedSurvivorReroll: boolean
+  readonly disciplinedSurvivorReroll: () => BridgeResult | null
+  // Paladin
+  readonly canLayOnHandsHeal: boolean
+  readonly layOnHandsHeal: (amount: number) => BridgeResult | null
+  readonly canLayOnHandsCure: (condition: Condition, currentConditions: ReadonlyArray<Condition>) => boolean
+  readonly layOnHandsCure: (condition: Condition) => BridgeResult | null
+  readonly canPaladinSmiteFree: boolean
+  readonly paladinSmiteFree: () => BridgeResult | null
+  readonly divineSmiteDamage: (slotLevel: number, isUndeadOrFiend: boolean) => number
+  readonly auraOfProtectionBonus: number
+  readonly canUseAuraOfProtection: boolean
+  readonly radiantStrikesDice: number
+  // Paladin passives
+  readonly canUseAuraOfCourage: boolean
+  readonly auraOfCourageRange: number
+  readonly auraOfProtectionRange: number
+  readonly canFaithfulSteed: boolean
+  readonly faithfulSteed: () => BridgeResult | null
+  readonly canAbjureFoes: boolean
+  readonly abjureFoes: () => BridgeResult | null
+  readonly abjureFoesResult: (targetSavePassed: boolean) => AbjureFoesResult
+  readonly canRestoringTouch: boolean
+  readonly restoringTouch: () => BridgeResult | null
+  // Rogue
+  readonly sneakAttackDice: number
+  readonly canSneakAttack: (params: {
+    readonly hasAdvantage: boolean
+    readonly hasDisadvantage: boolean
+    readonly allyAdjacentAndNotIncapacitated: boolean
+    readonly isFinesse: boolean
+    readonly isRanged: boolean
+  }) => boolean
+  readonly sneakAttack: () => BridgeResult | null
+  readonly canCunningAction: boolean
+  readonly cunningAction: (choice: CunningActionChoice) => BridgeResult | null
+  readonly canSteadyAim: boolean
+  readonly steadyAim: () => BridgeResult | null
+  readonly canCunningStrike: (sneakAttackDiceUsed: number, effect: StrikeEffect) => boolean
+  readonly canStrokeOfLuck: boolean
+  readonly strokeOfLuck: () => BridgeResult | null
+  readonly reliableTalent: (d20Roll: number, isProficient: boolean) => number
+  readonly hasSlipperyMind: boolean
+  readonly elusiveCancelsAdvantage: (isIncapacitated: boolean) => boolean
+  // Shared
+  readonly notify: (event: DndEvent) => void
+  readonly resetToInitial: () => void
+  readonly dispatch: (action: FeatureAction) => void
+}
+
+export function useFeatures(config: FeatureConfig, snapshot: DndSnapshot | null): UseFeatures {
+  const initialState = useMemo(() => createInitialFeatureState(config), [config])
+  const [featureState, dispatch] = useReducer(
+    (state: FeatureState, action: FeatureAction) => featureReducer(state, action, config),
+    initialState
+  )
+
+  const notify = useCallback((event: DndEvent) => {
+    switch (event.type) {
+      case "SHORT_REST":
+        dispatch({ type: "NOTIFY_SHORT_REST" })
+        break
+      case "LONG_REST":
+        dispatch({ type: "NOTIFY_LONG_REST" })
+        break
+      case "START_TURN":
+        dispatch({ type: "NOTIFY_START_TURN" })
+        break
+      case "END_TURN":
+        dispatch({ type: "NOTIFY_END_TURN" })
+        break
+    }
+  }, [])
+
+  const ctx = snapshot?.context ?? null
+  // TODO: extract isActing gating into canExecute* bridge functions so hooks don't repeat `isActing &&`
+  const isActing = snapshot?.hasTag("canAct") ?? false
+  // Fighter
+  const canSecondWind = isActing && ctx ? canExecuteSecondWind(featureState, ctx) : false
+  const canActionSurge = isActing && ctx ? canExecuteActionSurge(featureState, ctx) : false
+
+  const secondWind = useCallback(
+    (d10Roll: number): BridgeResult | null => {
+      if (!ctx) return null
+      const result = executeSecondWind(featureState, ctx, d10Roll, config.level)
+      dispatch(result.featureAction)
+      return result
+    },
+    [featureState, ctx, config.level]
+  )
+
+  const actionSurge = useCallback((): BridgeResult | null => {
+    if (!ctx) return null
+    const result = executeActionSurge(featureState)
+    dispatch(result.featureAction)
+    return result
+  }, [featureState, ctx])
+
+  const fighterExtras = useFighterExtras(featureState, config.level, config.championLevel ?? 0, dispatch)
+  const canEnterRageVal = isActing && ctx ? canExecuteEnterRage(featureState, ctx) : false
+  const berserkerLevel = config.berserkerLevel ?? 0
+  const enterRage = useCallback((): BridgeResult | null => {
+    if (!ctx) return null
+    const result =
+      berserkerLevel >= 6
+        ? executeEnterRageWithMindlessRage(featureState, ctx, berserkerLevel, [])
+        : executeEnterRage(featureState, ctx)
+    dispatch(result.featureAction)
+    return result
+  }, [featureState, ctx, berserkerLevel])
+
+  const canEndRageVal = canExecuteEndRage(featureState)
+
+  const endRage = useCallback((): BridgeResult | null => {
+    const result = executeEndRage()
+    dispatch(result.featureAction)
+    return result
+  }, [])
+
+  const canExtendRageBAVal = isActing && ctx ? canExecuteExtendRageBA(featureState, ctx) : false
+
+  const extendRageBA = useCallback((): BridgeResult | null => {
+    const result = executeExtendRageBA()
+    dispatch(result.featureAction)
+    return result
+  }, [])
+
+  const canDeclareRecklessVal = isActing && canExecuteDeclareReckless(featureState)
+
+  const declareReckless = useCallback((): BridgeResult | null => {
+    const result = executeDeclareReckless()
+    dispatch(result.featureAction)
+    return result
+  }, [])
+
+  const markAttackOrSave = useCallback(() => {
+    dispatch({ type: "BARBARIAN_MARK_ATTACK_OR_SAVE" })
+  }, [])
+
+  const isRaging = getIsRaging(featureState)
+  const rageRes = getRageResistances(featureState)
+  const rageDmgBonus = getRageDamageBonus(featureState, config.level)
+  const canCastSpells = featureState.barbarian ? canCastWhileRaging(featureState.barbarian.raging) : true
+
+  // Berserker
+  // Frenzy: isStrengthBased defaults to true (caller can check canFrenzy before calling)
+  const canFrenzyVal = isActing && canExecuteFrenzy(featureState, berserkerLevel, true)
+
+  const frenzy = useCallback((): BridgeResult | null => {
+    const result = executeFrenzy()
+    dispatch(result.featureAction)
+    return result
+  }, [])
+
+  const frenzyDice = getFrenzyDamageDice(featureState, config.level)
+
+  const mindlessImmunities = getMindlessRageImmunities(featureState, berserkerLevel)
+
+  const canRetaliationVal = isActing && ctx ? canExecuteRetaliation(featureState, ctx, berserkerLevel, false) : false
+
+  const retaliationCb = useCallback((): BridgeResult | null => {
+    const result = executeRetaliation()
+    dispatch(result.featureAction)
+    return result
+  }, [])
+
+  const canIntimidatingPresenceVal =
+    isActing && ctx ? canExecuteIntimidatingPresence(featureState, ctx, berserkerLevel) : false
+
+  const intimidatingPresenceCb = useCallback((): BridgeResult | null => {
+    const result = executeIntimidatingPresence()
+    dispatch(result.featureAction)
+    return result
+  }, [])
+
+  const intimidatingDC = getIntimidatingPresenceDC(abilityModifier(config.strMod ?? 0), config.profBonus ?? 0)
+
+  // Barbarian passive features
+  // TODO: isIncapacitated should come from machine context when available
+  const dangerSenseActiveVal = canUseDangerSense(config.level, /* isIncapacitated */ false)
+  // TODO: armorWeight should come from context/config, not hardcoded
+  const fastMovementBonusVal = fastMovementBonus(config.level, /* armorWeight */ "light")
+  const hasFeralInstinctVal = hasFeralInstinct(config.level)
+  // TODO: effectiveSpeed should come from machine context when available
+  const instinctivePounceDistanceVal = instinctivePounceDistance(config.level, /* effectiveSpeed */ 30)
+  const canRelentlessRageVal = canExecuteRelentlessRage(featureState, config.level)
+  const relentlessRageDCVal = getRelentlessRageDC(featureState)
+  const primalChampionBonusVal = primalChampionBonus(config.level)
+
+  const relentlessRageFn = useCallback(
+    (_conSaveSucceeded: boolean): BridgeResult | null => {
+      if (!canExecuteRelentlessRage(featureState, config.level)) return null
+      const result = executeRelentlessRage()
+      dispatch(result.featureAction)
+      return result
+    },
+    [featureState, config.level]
+  )
+
+  const indomitableMightFn = useCallback(
+    (checkTotal: number, strScore: number): number => {
+      return indomitableMight(config.level, checkTotal, strScore)
+    },
+    [config.level]
+  )
+
+  // Monk + Paladin (extracted to useMonkPaladinFeatures)
+  const monkPaladin = useMonkPaladinFeatures(featureState, ctx, config.level, dispatch, isActing)
+
+  // Rogue (extracted to useRogueFeatures)
+  const rogueFeatures = useRogueFeatures(featureState, ctx, config.level, dispatch, isActing)
+
+  const resetToInitial = useCallback(() => {
+    dispatch({ type: "RESET" })
+  }, [])
+
+  return {
+    featureState,
+    canSecondWind,
+    canActionSurge,
+    secondWind,
+    actionSurge,
+    canTacticalMind: fighterExtras.canTacticalMind,
+    tacticalMind: fighterExtras.tacticalMind,
+    canIndomitable: fighterExtras.canIndomitable,
+    indomitable: fighterExtras.indomitable,
+    championCritRange: fighterExtras.championCritRange,
+    hasRemarkableAthlete: fighterExtras.hasRemarkableAthlete,
+    remarkableAthleteCritMovement: fighterExtras.remarkableAthleteCritMovement,
+    heroicWarriorInspiration: fighterExtras.heroicWarriorInspiration,
+    survivorDefyDeathAdvantage: fighterExtras.survivorDefyDeathAdvantage,
+    survivorHeroicRally: fighterExtras.survivorHeroicRally,
+    canEnterRage: canEnterRageVal,
+    enterRage,
+    canEndRage: canEndRageVal,
+    endRage,
+    canExtendRageBA: canExtendRageBAVal,
+    extendRageBA,
+    canDeclareReckless: canDeclareRecklessVal,
+    declareReckless,
+    markAttackOrSave,
+    isRaging,
+    rageResistances: rageRes,
+    rageDamageBonus: rageDmgBonus,
+    canCastSpells,
+    berserkerLevel,
+    canFrenzy: canFrenzyVal,
+    frenzy,
+    frenzyDamageDice: frenzyDice,
+    mindlessRageImmunities: mindlessImmunities,
+    canRetaliation: canRetaliationVal,
+    retaliation: retaliationCb,
+    canIntimidatingPresence: canIntimidatingPresenceVal,
+    intimidatingPresence: intimidatingPresenceCb,
+    intimidatingPresenceDC: intimidatingDC,
+    dangerSenseActive: dangerSenseActiveVal,
+    fastMovementBonus: fastMovementBonusVal,
+    hasFeralInstinct: hasFeralInstinctVal,
+    instinctivePounceDistance: instinctivePounceDistanceVal,
+    canRelentlessRage: canRelentlessRageVal,
+    relentlessRageDC: relentlessRageDCVal,
+    relentlessRage: relentlessRageFn,
+    indomitableMightFn,
+    primalChampionBonus: primalChampionBonusVal,
+    ...monkPaladin,
+    ...rogueFeatures,
+    notify,
+    resetToInitial,
+    dispatch
+  }
+}

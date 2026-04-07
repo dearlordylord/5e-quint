@@ -1,7 +1,7 @@
 set -e
 
 echo "Running lint-staged..."
-(cd app && npx lint-staged)
+(cd packages/app && npx lint-staged)
 
 echo "Running gitleaks to check for secrets..."
 gitleaks protect --verbose --staged

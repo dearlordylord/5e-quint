@@ -2,10 +2,14 @@
   "private": true,
   "packageManager": "pnpm@10.29.3",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev": "turbo dev --filter=@dnd/app",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test"
   },
   "devDependencies": {
     "husky": "^9.1.7",
+    "turbo": "latest",
     "typescript": "^5.9.3"
   },
   "pnpm": {

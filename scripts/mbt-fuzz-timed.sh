@@ -11,7 +11,7 @@
 #   mbt-timing.jsonl        — per-seed timing data for tier analysis
 
 set -euo pipefail
-cd "$(dirname "$0")/../app"
+cd "$(dirname "$0")/../packages/core"
 
 MAX_SEEDS="${1:-0}"
 CREATURE_TRACES="${MBT_TRACES:-50}"
@@ -19,9 +19,9 @@ CREATURE_STEPS="${MBT_STEPS:-30}"
 BATTLE_TRACES="${BATTLE_MBT_TRACES:-1}"
 BATTLE_STEPS="${BATTLE_MBT_STEPS:-5}"
 BATTLE_SAMPLES="${BATTLE_MBT_SAMPLES:-3}"
-LOG="../mbt-fuzz.log"
-FAILURES="../mbt-failures.jsonl"
-TIMING="../mbt-timing.jsonl"
+LOG="../../mbt-fuzz.log"
+FAILURES="../../mbt-failures.jsonl"
+TIMING="../../mbt-timing.jsonl"
 TMP="/tmp/mbt-fuzz-$$.out"
 COUNT=0
 FAIL_COUNT=0
@@ -78,7 +78,7 @@ run_seed() {
     DIFF_FIELD=$(grep -oP 'field "\K[^"]+' "$TMP" | head -1 || echo "unknown")
 
     # Save full output for later analysis
-    cp "$TMP" "../mbt-failure-${KIND}-${SEED}.log"
+    cp "$TMP" "../../mbt-failure-${KIND}-${SEED}.log"
 
     cat >> "$FAILURES" <<JSONEOF
 {"timestamp":"$TIMESTAMP","seed":"$SEED","kind":"$KIND","elapsed_s":$ELAPSED,"field":"$DIFF_FIELD","error":"$(echo "$ERROR_MSG" | tr '\n' ' ' | sed 's/"/\\"/g' | head -c 500)"}
