@@ -1877,7 +1877,8 @@ describe("Battle Projection MBT", () => {
         maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
         maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
         stateCheck: battleStateCheck,
-        compiledInput: compiledInputPath
+        compiledInput: compiledInputPath,
+        ...(process.env["MBT_TRACE_DIR"] ? { traceDir: process.env["MBT_TRACE_DIR"] } : {})
       })
       logMbtSeed("battle MBT", result)
     }

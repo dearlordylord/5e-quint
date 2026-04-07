@@ -28,12 +28,16 @@ SAMPLES="${MBT_MAX_SAMPLES:-10}"
 STEPS="${MBT_STEPS:-5}"
 TIMEOUT="${MBT_TIMEOUT:-180}"
 TEST_KIND="${MBT_TEST:-battle}"  # "battle" or "creature"
+SAVE_TRACES="${MBT_SAVE_TRACES:-0}"  # 1 = save ITF traces to ../fat-traces/<seed>/
 LOG="../mbt-fuzz.log"
 FAILURES="../mbt-failures.jsonl"
 TIMING="../mbt-timing.jsonl"
+BLACKLIST="../mbt-seed-blacklist.txt"
 TMP="/tmp/mbt-fuzz-$$.out"
 COUNT=0
 FAIL_COUNT=0
+TIMEOUT_COUNT=0
+SKIP_COUNT=0
 
 if [ "$TEST_KIND" = "battle" ]; then
   TEST_FILE="src/battle-projection.mbt.test.ts"
@@ -44,7 +48,7 @@ fi
 cleanup() {
   rm -f "$TMP"
   echo ""
-  echo "=== MBT Fuzz complete: $COUNT seeds explored, $FAIL_COUNT failures ==="
+  echo "=== MBT Fuzz complete: $COUNT seeds explored, $FAIL_COUNT failures, $TIMEOUT_COUNT timeouts, $SKIP_COUNT blacklisted ==="
 }
 trap cleanup EXIT
 
@@ -58,6 +62,13 @@ while true; do
   SEED="0x$(head -c4 /dev/urandom | od -An -tx4 | tr -d ' ')"
   TIMESTAMP=$(date -Iseconds)
   COUNT=$((COUNT + 1))
+
+  # Skip blacklisted seeds (previously timed out)
+  if [ -f "$BLACKLIST" ] && grep -qF "$SEED" "$BLACKLIST" 2>/dev/null; then
+    SKIP_COUNT=$((SKIP_COUNT + 1))
+    echo "[$COUNT] $TIMESTAMP seed=$SEED ... SKIP (blacklisted)"
+    continue
+  fi
 
   # Kill any zombie evaluators before each run
   killall -9 quint_evaluator 2>/dev/null || true
@@ -73,8 +84,15 @@ while true; do
 
   echo -n "[$COUNT] $TIMESTAMP seed=$SEED ... "
 
+  TRACE_DIR_ARG=""
+  if [ "$SAVE_TRACES" = "1" ]; then
+    TRACE_DIR="../fat-traces/${SEED}"
+    mkdir -p "$TRACE_DIR"
+    TRACE_DIR_ARG="MBT_TRACE_DIR=$TRACE_DIR"
+  fi
+
   START_SEC=$(date +%s)
-  timeout "$TIMEOUT" env QUINT_SEED="$SEED" MBT_TRACES="$TRACES" MBT_MAX_SAMPLES="$SAMPLES" MBT_STEPS="$STEPS" \
+  timeout "$TIMEOUT" env QUINT_SEED="$SEED" MBT_TRACES="$TRACES" MBT_MAX_SAMPLES="$SAMPLES" MBT_STEPS="$STEPS" $TRACE_DIR_ARG \
     npx vitest run -t "replays Quint" -- "$TEST_FILE" 2>&1 > "$TMP" && STATUS=0 || STATUS=$?
   END_SEC=$(date +%s)
   ELAPSED=$(( END_SEC - START_SEC ))
@@ -83,8 +101,10 @@ while true; do
   echo "{\"timestamp\":\"$TIMESTAMP\",\"seed\":\"$SEED\",\"kind\":\"$TEST_KIND\",\"elapsed_s\":$ELAPSED,\"status\":\"$([ $STATUS -eq 0 ] && echo pass || [ $STATUS -eq 124 ] && echo timeout || echo fail)\"}" >> "$TIMING"
 
   if [ "$STATUS" -eq 124 ]; then
-    echo "TIMEOUT (${ELAPSED}s)"
+    TIMEOUT_COUNT=$((TIMEOUT_COUNT + 1))
+    echo "TIMEOUT (${ELAPSED}s) — blacklisted"
     echo "$TIMESTAMP seed=$SEED kind=$TEST_KIND elapsed=${ELAPSED}s TIMEOUT" >> "$LOG"
+    echo "$SEED" >> "$BLACKLIST"
     killall -9 quint_evaluator 2>/dev/null || true
   elif [ "$STATUS" -eq 0 ]; then
     echo "PASS (${ELAPSED}s)"
