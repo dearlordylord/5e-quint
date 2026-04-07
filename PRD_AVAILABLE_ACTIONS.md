@@ -160,10 +160,72 @@ Deliverables:
 An action token is a **command with choice holes** — a structured description of one available action, its costs, its effects, and the choices the consumer must fill before execution.
 
 - **Resource cost** is always known and fully populated: which action economy slot it uses (action, bonus action, reaction, movement, free), plus any resource expenditure (spell slot level, class feature charges).
-- **Choice holes** represent decisions the consumer must make: which spell, which slot level (including upcasts), which target. These are typed with their valid options enumerated. For milestone 1 (character-only), target choices are omitted (optional field, not populated).
+- **Choice holes** represent decisions the consumer must make: which slot level (for spells that support higher-level casting), which target. These are typed with their valid options enumerated. For milestone 1 (character-only), target choices are omitted (optional field, not populated).
 - **Outcome description** states what the action does: cost + what changes. For deterministic actions (Dash, Dodge, Disengage), a single effect description. For nondeterministic actions (attack, saving throw spells), the possible effects and damage/healing ranges. No probability scores — we don't rank outcomes.
 - **Grouping**: Actions are grouped by resource cost (action, bonus action, reaction, free/movement). Within groups, no ordering. Spells sharing a slot level or feature charges may be grouped into a single token with a spell choice hole, avoiding combinatorial explosion of spell x slot permutations.
 - **Serializable**: The token is a plain JSON-serializable structure. The same structure is returned by `get_available_actions` and accepted by `execute_action` (with choice holes filled).
+
+### Action Token Type Design
+
+The token type system uses a `Hole<T>` wrapper to distinguish open choices from filled values. A single type-level mapping `FillHoles<T>` converts an `ActionToken` (with holes) into an `ActionTokenInstance` (all holes filled):
+
+```typescript
+// A choice the consumer must fill — lists valid options
+type Hole<T> = { readonly options: ReadonlyArray<T> }
+
+// Type-level mapping: Hole<T> → T, everything else passes through
+type FillHoles<T> = {
+  readonly [K in keyof T]: T[K] extends Hole<infer V> ? V : T[K]
+}
+```
+
+**Key design rules:**
+
+- **One token per spell.** `spell` is never a hole — each known spell gets its own token. This keeps outcome descriptions specific (Fireball's outcome differs from Shield's).
+- **Slot level is a hole only when casting at a higher level is possible.** A spell with only one valid slot level (e.g., Shield at level 1 when only level-1 slots remain) has `slot` as a concrete value, not a `Hole`. `Hole` only appears when there are 2+ valid options. See `MaybeHole<T>` below.
+- **`FillHoles` distributes over unions.** `FillHoles<CastSpellToken | SecondWindToken>` produces the instance union automatically — no hand-written instance types.
+
+```typescript
+// Fields that may or may not require a choice
+type MaybeHole<T> = T | Hole<T>
+
+// Spell token: slot is a hole only when higher-level casting is available
+type CastSpellToken = {
+  readonly type: "CAST_SPELL"
+  readonly cost: ResourceCost
+  readonly spell: SpellId              // concrete — one token per spell
+  readonly slot: MaybeHole<SlotLevel>  // Hole if multiple valid levels, concrete if only one
+  readonly outcome: OutcomeDescription
+}
+
+// No-choice token: no holes at all
+type SecondWindToken = {
+  readonly type: "USE_SECOND_WIND"
+  readonly cost: ResourceCost
+  readonly outcome: OutcomeDescription
+}
+```
+
+**Spell slot terminology** (see `UBIQUITOUS_LANGUAGE.md`): A spell's **base spell level** is the minimum slot required (Fireball = 3). The **cast level** is the slot actually used. "Using a higher-level spell slot" is the RAW phrasing (not "upcast"). The `slot` hole in a spell token lists available cast levels >= base spell level.
+
+**Examples at runtime:**
+
+```
+// Shield: base level 1, only level-1 slots available → no hole
+{ type: "CAST_SPELL", cost: { reaction: true }, spell: "shield",
+  slot: 1, outcome: "AC +5 until next turn" }
+
+// Fireball: base level 3, slots at 3, 4, 5 available → hole
+{ type: "CAST_SPELL", cost: { action: 1 }, spell: "fireball",
+  slot: { options: [3, 4, 5] }, outcome: "8d6 fire, +1d6 per level above 3" }
+
+// Second Wind: no holes
+{ type: "USE_SECOND_WIND", cost: { bonusAction: true, charge: "secondWind" },
+  outcome: "heal 1d10 + fighter level" }
+
+// Dash: no holes
+{ type: "DASH", cost: { action: 1 }, outcome: "movement +30ft" }
+```
 
 ### Available Actions Module
 

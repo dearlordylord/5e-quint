@@ -148,6 +148,9 @@
 | **Ritual** | A spell cast with 10 extra minutes of casting time, without expending a spell slot; requires a feature that allows ritual casting | — |
 | **Spell Component** | A physical requirement to cast a spell: Verbal (V) = spoken words; Somatic (S) = gestures, requires a free hand; Material (M) = specific objects, replaceable by a focus unless the component has a cost | Ingredient (only partially overlaps with Material) |
 | **Spell Level** | A measure of a spell's power, ranging from 0 (cantrip) to 9; distinct from character level — a 5th-level character can cast 3rd-level spells | Character level (different concept; spell level 5 ≠ character level 5) |
+| **Base Spell Level** | The minimum spell slot level required to cast a spell; e.g., Fireball's base spell level is 3 | Spell level (ambiguous — could mean the level it's being cast at) |
+| **Cast Level** | The spell slot level actually used to cast a spell; equals the base spell level or higher when using a higher-level spell slot | Upcast level |
+| **Using a Higher-Level Spell Slot** | Casting a spell with a spell slot above its base spell level; many spells gain enhanced effects (extra damage dice, longer duration, more targets) as described in their "Using a Higher-Level Spell Slot" section | Upcast, upcasting (player slang, not RAW; the SRD says "using a higher-level spell slot") |
 | **Spell Attack** | An attack roll using spellcasting ability modifier + proficiency bonus; subject to advantage, disadvantage, and cover like any attack roll | — |
 | **Casting Time** | How long it takes to cast a spell: 1 action (most common), 1 bonus action, 1 reaction, or extended (minutes/hours); extended casting requires concentration | — |
 | **Duration** | How long a spell's effect persists: Instantaneous (one-time effect), Concentration (up to a stated maximum), or fixed (specific time without concentration) | — |

@@ -36,7 +36,7 @@ Pick one action type — Second Wind is a good candidate (bonus action, has a gu
 ### Acceptance criteria
 
 - [ ] Event type catalog exists as a const array with `satisfies` validation (may be partial — full catalog is phase 4)
-- [ ] Action token type is defined: resource cost, choice holes (typed), outcome description
+- [ ] Action token type is defined with `Hole<T>`, `MaybeHole<T>`, `FillHoles<T>` mapping (see PRD "Action Token Type Design")
 - [ ] Available actions module returns Second Wind token when `canSecondWind` guard passes, omits it when guard fails
 - [ ] MCP server runs as an independent process with its own XState actor
 - [ ] `get_state` returns current DndContext as JSON
