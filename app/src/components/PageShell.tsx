@@ -28,6 +28,20 @@ export function PageShell({ actions, children, title }: { title: string; childre
           </svg>
           GitHub
         </a>
+        <span className="block mt-1 text-[10px] text-gray-600">
+          d20 icon by{" "}
+          <a href="https://delapouite.com/" className="hover:text-gray-400">
+            Delapouite
+          </a>{" "}
+          under{" "}
+          <a href="https://creativecommons.org/licenses/by/3.0/" className="hover:text-gray-400">
+            CC BY 3.0
+          </a>{" "}
+          via{" "}
+          <a href="https://game-icons.net/" className="hover:text-gray-400">
+            game-icons.net
+          </a>
+        </span>
       </footer>
     </div>
   )
