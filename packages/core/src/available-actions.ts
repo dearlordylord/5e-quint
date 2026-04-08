@@ -1,6 +1,11 @@
 import { Match, Schema } from "effect"
 
-import { guards } from "#/machine-guards.ts"
+import {
+  METAMAGIC_OPTIONS,
+  MetamagicOptionSchema,
+  type MetamagicOption,
+} from "#/features/class-sorcerer.ts"
+import { canUseHeroicInspirationNow, guards, legalMetamagicOptions } from "#/machine-guards.ts"
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
 import type { D20Roll } from "#/types.ts"
@@ -32,7 +37,9 @@ const guardArgs = (context: DndContext): { context: DndContext; event: DndEvent 
 
 export const SUPPORTED_ACTION_TYPES = [
   "ENTER_COMBAT",
+  "USE_HEROIC_INSPIRATION",
   "START_TURN",
+  "USE_METAMAGIC",
   "USE_SECOND_WIND",
   "EXIT_COMBAT",
 ] as const
@@ -46,7 +53,11 @@ type SimpleToken<T extends SupportedActionType> = {
 
 type TokenByType = {
   readonly ENTER_COMBAT: SimpleToken<"ENTER_COMBAT">
+  readonly USE_HEROIC_INSPIRATION: SimpleToken<"USE_HEROIC_INSPIRATION">
   readonly START_TURN: SimpleToken<"START_TURN">
+  readonly USE_METAMAGIC: SimpleToken<"USE_METAMAGIC"> & {
+    readonly option: Hole<MetamagicOption>
+  }
   readonly USE_SECOND_WIND: SimpleToken<"USE_SECOND_WIND">
   readonly EXIT_COMBAT: SimpleToken<"EXIT_COMBAT">
 }
@@ -60,8 +71,15 @@ export type ResolvedActionToken = ResolvedTokenByType[SupportedActionType]
 const EnterCombatResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("ENTER_COMBAT"),
 })
+const UseHeroicInspirationResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_HEROIC_INSPIRATION"),
+})
 const StartTurnResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("START_TURN"),
+})
+const UseMetamagicResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_METAMAGIC"),
+  option: MetamagicOptionSchema,
 })
 const UseSecondWindResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_SECOND_WIND"),
@@ -72,7 +90,9 @@ const ExitCombatResolvedActionSchema = Schema.Struct({
 
 export const RESOLVED_ACTION_SCHEMAS = [
   EnterCombatResolvedActionSchema,
+  UseHeroicInspirationResolvedActionSchema,
   StartTurnResolvedActionSchema,
+  UseMetamagicResolvedActionSchema,
   UseSecondWindResolvedActionSchema,
   ExitCombatResolvedActionSchema,
 ] as const
@@ -98,9 +118,21 @@ export type ResolutionRequest =
       readonly event: Extract<DndEvent, { readonly type: "ENTER_COMBAT" }>
     }
   | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_HEROIC_INSPIRATION" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_HEROIC_INSPIRATION" }>
+    }
+  | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "START_TURN" }>
       readonly outcome: string
       readonly runtime: "startTurn"
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_METAMAGIC" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_METAMAGIC" }>
     }
   | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_SECOND_WIND" }>
@@ -149,6 +181,16 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
           }
         : null,
   },
+  USE_HEROIC_INSPIRATION: {
+    buildToken: (context) =>
+      canUseHeroicInspirationNow(context)
+        ? {
+            type: "USE_HEROIC_INSPIRATION",
+            cost: {},
+            outcome: { summary: "Spend Heroic Inspiration to reroll a die and use the new roll" },
+          }
+        : null,
+  },
   START_TURN: {
     buildToken: (context) =>
       context.inCombat
@@ -158,6 +200,23 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
             outcome: { summary: "Start your turn (reset action economy, process start-of-turn effects)" },
           }
         : null,
+  },
+  USE_METAMAGIC: {
+    buildToken: (context) => {
+      const currentlyLegal = new Set(legalMetamagicOptions(context))
+      const legalOptions = METAMAGIC_OPTIONS.filter((option) => currentlyLegal.has(option))
+      // Presence of the token means "there is at least one legal option right now".
+      // If legality shrinks to zero during the current cast (for example after using
+      // a non-stackable Metamagic option), omit the whole token rather than returning
+      // an empty hole payload that the caller could not execute.
+      if (legalOptions.length === 0) return null
+      return {
+        type: "USE_METAMAGIC",
+        option: { options: legalOptions },
+        cost: { charge: "sorceryPoints" },
+        outcome: { summary: "Apply a currently legal known Metamagic option to the spell you are casting" },
+      }
+    },
   },
   USE_SECOND_WIND: {
     buildToken: (context) =>
@@ -242,11 +301,32 @@ export function resolveAction(
       runtime: "none" as const,
       event: { type: "ENTER_COMBAT" as const },
     })),
+    Match.when({ type: "USE_HEROIC_INSPIRATION" }, (resolved) => ({
+      token: resolved,
+      outcome: available.outcome.summary,
+      runtime: "none" as const,
+      event: { type: "USE_HEROIC_INSPIRATION" as const },
+    })),
     Match.when({ type: "START_TURN" }, (resolved) => ({
       token: resolved,
       outcome: available.outcome.summary,
       runtime: "startTurn" as const,
     })),
+    Match.when({ type: "USE_METAMAGIC" }, (resolved) => {
+      const legalOptions = legalMetamagicOptions(context)
+      if (!legalOptions.includes(resolved.option)) {
+        return {
+          code: "ACTION_NOT_AVAILABLE" as const,
+          message: `${resolved.option} Metamagic is not currently available in this state.`,
+        }
+      }
+      return {
+        token: resolved,
+        outcome: `Apply ${resolved.option} Metamagic`,
+        runtime: "none" as const,
+        event: { type: "USE_METAMAGIC" as const, option: resolved.option },
+      }
+    }),
     Match.when({ type: "USE_SECOND_WIND" }, (resolved) => ({
       token: resolved,
       outcome: available.outcome.summary,

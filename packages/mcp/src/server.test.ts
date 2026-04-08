@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest"
 
+import { classLevel } from "@dnd/core/types.ts"
+
 import { createDemoActor, handleToolCall } from "./server.ts"
 
 function readPayload(response: ReturnType<typeof handleToolCall>) {
@@ -59,5 +61,66 @@ describe("MCP server adapter", () => {
       error: "START_TURN is not currently available in this state.",
       details: "ACTION_NOT_AVAILABLE",
     })
+  })
+
+  test("execute_action supports USE_HEROIC_INSPIRATION when the fighter has it", () => {
+    const actor = createDemoActor({
+      maxHp: 44,
+      fighterLevel: classLevel(10),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_HEROIC_INSPIRATION",
+      cost: {},
+      outcome: { summary: "Spend Heroic Inspiration to reroll a die and use the new roll" },
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_HEROIC_INSPIRATION" })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.classStates.fighter.heroicInspiration).toBe(false)
+  })
+
+  test("execute_action supports USE_METAMAGIC with filtered legal options", () => {
+    const actor = createDemoActor({
+      maxHp: 30,
+      sorcererLevel: classLevel(5),
+      knownMetamagicOptions: ["careful", "subtle"],
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_METAMAGIC",
+      option: { options: ["careful", "subtle"] },
+      cost: { charge: "sorceryPoints" },
+      outcome: { summary: "Apply a currently legal known Metamagic option to the spell you are casting" },
+    })
+
+    const illegalBeforeUse = handleToolCall(actor, "execute_action", { type: "USE_METAMAGIC", option: "quickened" })
+    expect("isError" in illegalBeforeUse && illegalBeforeUse.isError).toBe(true)
+    expect(readPayload(illegalBeforeUse)).toEqual({
+      error: "quickened Metamagic is not currently available in this state.",
+      details: "ACTION_NOT_AVAILABLE",
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_METAMAGIC", option: "careful" })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.classStates.sorcerer.sorceryPoints).toBe(4)
+    expect(payload.state.classStates.sorcerer.metamagicUsedThisCast).toEqual(["careful"])
+    expect(
+      readPayload(handleToolCall(actor, "get_available_actions", {})).free.map((token: { readonly type: string }) => token.type),
+    ).not.toContain("USE_METAMAGIC")
   })
 })

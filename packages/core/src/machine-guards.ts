@@ -25,12 +25,38 @@ import {
 import { isIncapacitated } from "#/machine-queries.ts"
 import { computeShortRest } from "#/machine-spells.ts"
 import { asShortRest, asSpendHitDie, asTakeDamage, type DndContext, type DndEvent } from "#/machine-types.ts"
+import type { MetamagicOption } from "#/features/class-sorcerer.ts"
 
 type GuardArg = { context: DndContext; event: DndEvent }
 
 const isInstantDeath = (r: TakeDamageResult) => r.dmgThrough > 0 && r.newHp === 0 && r.overflow >= r.effMax
 const isDropToZero = (r: TakeDamageResult) => r.dmgThrough > 0 && r.newHp === 0 && r.overflow < r.effMax
 const isInstantDeathFromDying = (r: TakeDamageResult) => r.dmgThrough > 0 && r.dmgThrough >= r.effMax
+
+export function canUseHeroicInspirationNow(context: DndContext): boolean {
+  return context.classStates.fighter?.heroicInspiration ?? false
+}
+
+export function legalMetamagicOptions(context: DndContext): ReadonlyArray<MetamagicOption> {
+  const ss = context.classStates.sorcerer
+  if (!ss) return []
+  if (isIncapacitated(context) || ss.level < 2) return []
+  // Query-time legality mirrors the same core-owned rules as execution.
+  // This can legitimately become empty mid-cast after a non-stackable option
+  // has already been applied, which means the query surface should omit
+  // USE_METAMAGIC entirely rather than advertising an empty/invalid choice set.
+  const state = {
+    sorcererLevel: ss.level,
+    sorceryPoints: ss.sorceryPoints,
+    bonusActionUsed: context.bonusActionUsed,
+    nonCantripActionSpellCast: context.nonCantripActionSpellCast,
+    knownMetamagicOptions: ss.knownMetamagicOptions,
+    metamagicUsedThisCast: ss.metamagicUsedThisCast,
+    apotheosisUsedThisTurn: ss.apotheosisUsedThisTurn,
+    innateSorceryActive: ss.innateSorceryActive
+  }
+  return [...ss.knownMetamagicOptions].filter((option) => canUseMetamagic(state, option))
+}
 
 export const guards = {
   instantDeathFromAlive: ({ context: c, event: e }: GuardArg) => isInstantDeath(dmgR(c, e)),
@@ -337,6 +363,7 @@ export const guards = {
     if (!ss) return false
     return !isIncapacitated(c) && ss.level >= 2 && !c.bonusActionUsed
   },
+  canHeroicInspiration: ({ context: c }: GuardArg) => canUseHeroicInspirationNow(c),
   canInnateSorcery: ({ context: c }: GuardArg) => {
     const ss = c.classStates.sorcerer
     if (!ss) return false
@@ -350,23 +377,7 @@ export const guards = {
     })
   },
   canMetamagic: ({ context: c }: GuardArg) => {
-    const ss = c.classStates.sorcerer
-    if (!ss) return false
-    if (isIncapacitated(c) || ss.level < 2) return false
-    const state = {
-      sorcererLevel: ss.level,
-      sorceryPoints: ss.sorceryPoints,
-      bonusActionUsed: c.bonusActionUsed,
-      nonCantripActionSpellCast: c.nonCantripActionSpellCast,
-      knownMetamagicOptions: ss.knownMetamagicOptions,
-      metamagicUsedThisCast: ss.metamagicUsedThisCast,
-      apotheosisUsedThisTurn: ss.apotheosisUsedThisTurn,
-      innateSorceryActive: ss.innateSorceryActive
-    }
-    for (const option of ss.knownMetamagicOptions) {
-      if (canUseMetamagic(state, option)) return true
-    }
-    return false
+    return legalMetamagicOptions(c).length > 0
   },
 
   // Druid
