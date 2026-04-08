@@ -14,6 +14,7 @@ import {
   type ResourceCost,
   type ResolutionRuntimeInputs,
 } from "@dnd/core/available-actions.ts"
+import { pMartialArtsDie } from "@dnd/core/features/class-monk.ts"
 import { classLevel } from "@dnd/core/types.ts"
 
 export const DEMO_ACTOR_INPUT: DndMachineInput = {
@@ -111,7 +112,7 @@ function snapshotFingerprint(snapshot: DndSnapshot): string {
   })
 }
 
-function buildRuntimeInputs(request: ResolutionRequest): Effect.Effect<ResolutionRuntimeInputs> {
+function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["context"]): Effect.Effect<ResolutionRuntimeInputs> {
   return Match.value(request).pipe(
     Match.when({ runtime: "none" }, () => Effect.succeed({ runtime: "none" as const })),
     Match.when({ runtime: "startTurn" }, () =>
@@ -120,10 +121,33 @@ function buildRuntimeInputs(request: ResolutionRequest): Effect.Effect<Resolutio
         values: {},
       }),
     ),
+    Match.when({ runtime: "wholenessOfBody" }, () => {
+      const monk = context.classStates.monk
+      const dieSize = pMartialArtsDie(monk?.level ?? 0)
+      const wisMod = monk?.wholenessMax ?? 0
+      return Effect.map(Random.nextIntBetween(1, dieSize + 1), (dieRoll) => ({
+        runtime: "wholenessOfBody" as const,
+        values: { healRoll: Math.max(1, dieRoll + wisMod) },
+      }))
+    }),
+    Match.when({ runtime: "uncannyMetabolism" }, () => {
+      const monk = context.classStates.monk
+      const dieSize = pMartialArtsDie(monk?.level ?? 0)
+      return Effect.map(Random.nextIntBetween(1, dieSize + 1), (healRoll) => ({
+        runtime: "uncannyMetabolism" as const,
+        values: { healRoll },
+      }))
+    }),
     Match.when({ runtime: "secondWind" }, () =>
       Effect.map(Random.nextIntBetween(1, 11), (d10Roll) => ({
         runtime: "secondWind" as const,
         values: { d10Roll },
+      })),
+    ),
+    Match.when({ runtime: "tireless" }, () =>
+      Effect.map(Random.nextIntBetween(1, 9), (d8Roll) => ({
+        runtime: "tireless" as const,
+        values: { d8Roll },
       })),
     ),
     Match.exhaustive,
@@ -142,7 +166,7 @@ function executeResolvedAction(actor: DndActor, args: unknown) {
     return errorContent(resolution.message, resolution.code)
   }
 
-  const runtimeInputs = Effect.runSync(buildRuntimeInputs(resolution))
+  const runtimeInputs = Effect.runSync(buildRuntimeInputs(resolution, before.context))
   const finalized = finalizeResolution(resolution, runtimeInputs, before.context)
   if (!finalized.ok) {
     return errorContent(finalized.error.message, finalized.error.code)

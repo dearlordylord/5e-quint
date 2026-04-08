@@ -123,4 +123,66 @@ describe("MCP server adapter", () => {
       readPayload(handleToolCall(actor, "get_available_actions", {})).free.map((token: { readonly type: string }) => token.type),
     ).not.toContain("USE_METAMAGIC")
   })
+
+  test("execute_action supports a dice-roll runtime action with USE_TIRELESS", () => {
+    const actor = createDemoActor({
+      maxHp: 32,
+      rangerLevel: classLevel(10),
+      wisMod: 3,
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.action).toContainEqual({
+      type: "USE_TIRELESS",
+      cost: { action: true, charge: "tireless" },
+      outcome: { summary: "Gain 1d8 + 3 temporary HP (minimum 1)" },
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_TIRELESS" })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.tempHp).toBeGreaterThanOrEqual(2)
+    expect(payload.state.tempHp).toBeLessThanOrEqual(11)
+    expect(payload.state.actionsRemaining).toBe(0)
+  })
+
+  test("execute_action supports a hole pass-through action with USE_ARCANE_RECOVERY", () => {
+    const actor = createDemoActor({
+      maxHp: 24,
+      wizardLevel: classLevel(4),
+      slotsMax: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+      slotsCurrent: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_ARCANE_RECOVERY",
+      slotLevel: { options: [2] },
+      cost: { charge: "arcaneRecovery" },
+      outcome: { summary: "Recover one expended spell slot of the chosen level and use Arcane Recovery" },
+    })
+
+    const illegal = handleToolCall(actor, "execute_action", { type: "USE_ARCANE_RECOVERY", slotLevel: 1 })
+    expect("isError" in illegal && illegal.isError).toBe(true)
+    expect(readPayload(illegal)).toEqual({
+      error: "Arcane Recovery for a level 1 slot is not currently available in this state.",
+      details: "ACTION_NOT_AVAILABLE",
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_ARCANE_RECOVERY", slotLevel: 2 })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.slotsCurrent).toEqual([4, 3, 0, 0, 0, 0, 0, 0, 0])
+    expect(payload.state.classStates.wizard.arcaneRecoveryUsed).toBe(true)
+  })
 })

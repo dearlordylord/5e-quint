@@ -152,12 +152,70 @@ Items discovered during implementation that need resolution before Phase 1 is co
     - `USE_TIRELESS` uses `d8Roll`
     - `WHOLENESS_OF_BODY` uses `healRoll`
     - `UNCANNY_METABOLISM` uses `healRoll`
+    - Status: completed in the available-actions/MCP surface.
+    - Runtime-owned inputs stay in MCP:
+      - `USE_TIRELESS` prerolls `d8Roll`
+      - `UNCANNY_METABOLISM` prerolls the Martial Arts die
+      - `WHOLENESS_OF_BODY` prerolls the Martial Arts die and converts it to the final heal amount expected by the current machine event
+    - Caveat:
+      - the current single-creature monk state stores `wholenessMax` (charge max), not the exact Wisdom modifier
+      - that is exact for `WIS >= 1`, but low-WIS monks lose precision after the `minimum 1` clamp
+      - if exact Wholeness text/runtime behavior for low-WIS monks matters, the machine/spec state should own explicit Wisdom-modifier information instead of reconstructing from `wholenessMax`
   - **Hole pass-through family** already has direct machine events with scalar payloads:
     - `slotLevel`, `spellLevel`, or `amount`
+    - Status: completed in the available-actions/MCP surface for:
+      - `CONVERT_SLOT_TO_POINTS`
+      - `CONVERT_POINTS_TO_SLOT`
+      - `USE_ARCANE_RECOVERY`
+      - `USE_MYSTIC_ARCANUM`
+      - `USE_FONT_SLOT_RESTORE`
+      - `USE_WILD_RESURGENCE_CHARGE`
+      - `USE_DIVINE_SMITE`
+      - `USE_LAY_ON_HANDS`
+    - Important query-surface rule:
+      - do not rely only on the coarse top-level machine guard for these actions
+      - hole options must be filtered from the update-path legality, or the MCP query surface will advertise no-op or resource-wasting choices
   - **Battle-context family** already has direct machine events with boolean payloads:
     - `conSaveSucceeded`
     - `boostedCheckSucceeds`
     - `success`
+    - Status: not yet exposed.
+    - Blocker:
+      - the single-creature machine does not currently own enough trigger state to know that a failed check / failed attack roll / Relentless Rage 0-HP trigger is actually pending
+      - exposing these actions now would over-suggest them because the existing guards are too broad
+    - Required follow-up before rollout:
+      - add authoritative pending-result state (for example failed-check pending / Relentless Rage trigger pending), then expose these actions through the same resolved-token/runtime-input contract
+    - Pre-research for the next session:
+      - `USE_TACTICAL_MIND`
+        - current machine guard is effectively `fighter level >= 2 && secondWindCharges > 0`, because it hardcodes `checkFailed = true`
+        - the real rule needs a pending failed ability check context before the action should be suggested
+        - current machine event only wants `{ boostedCheckSucceeds: boolean }`, which should remain runtime-owned once the trigger state exists
+      - `USE_PEERLESS_SKILL`
+        - current machine guard is effectively `bard level >= 14 && bardicInspirationCharges > 0`
+        - the real rule needs a pending failed ability check or attack roll context before the action should be suggested
+        - current machine event only wants `{ success: boolean }`, which should remain runtime-owned once the trigger state exists
+      - `USE_RELENTLESS_RAGE`
+        - current machine guard is effectively `barbarian level >= 11 && raging`
+        - the real rule needs a pending “dropped to 0 HP while raging and not dead outright” trigger before the action should be suggested
+        - current machine event only wants `{ conSaveSucceeded: boolean }`, which should remain runtime-owned once the trigger state exists
+    - Recommended ownership direction:
+      - do not solve this by making MCP remember that a failed check or Relentless Rage trigger happened
+      - add authoritative pending-trigger state to the machine/spec first, then project the zero-hole action token from that state
+      - after that, keep the boolean payload in runtime inputs, not in the public resolved token
+    - Likely shape of the missing state:
+      - a small pending-resolution object in context, not duplicated booleans spread across the adapter
+      - examples:
+        - pending failed ability-check context for Tactical Mind
+        - pending failed ability-check/attack-roll context for Peerless Skill
+        - pending Relentless Rage trigger context including current DC
+      - once that state exists, the token summary can be specific without MCP fabrication
+    - Important non-goal:
+      - do not expose these actions just because the coarse guard passes
+      - a false-positive suggestion here is worse than an omitted action, because it teaches the wrong ownership model
+    - Verification target for that future batch:
+      - focused core tests proving tokens appear only when the pending trigger exists
+      - MCP tests proving callers send zero-hole resolved tokens and runtime injects only the final boolean
+      - if the new pending-trigger state changes Quint-visible semantics, run the appropriate MBT tier after implementation
   - `SHORT_REST` is intentionally separate and should stay out of the first orchestrated parallel batch because it has a compound payload (`conMod`, `hdRolls`) and is a larger design surface than the other remaining items.
 - **Recommended implementation order for the orchestrator**:
   1. integrate the dice-roll family first

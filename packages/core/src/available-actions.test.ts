@@ -9,7 +9,7 @@ import {
 } from "#/available-actions.ts"
 import { creatureMachine } from "#/machine.ts"
 import type { DndMachineInput } from "#/machine-types.ts"
-import { classLevel } from "#/types.ts"
+import { classLevel, spellSlotLevel } from "#/types.ts"
 
 const FIGHTER_5_INPUT: DndMachineInput = {
   maxHp: 44,
@@ -53,6 +53,66 @@ const SORCERER_5_INPUT: DndMachineInput = {
   maxHp: 30,
   sorcererLevel: classLevel(5),
   knownMetamagicOptions: ["careful", "subtle"],
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const MONK_6_INPUT: DndMachineInput = {
+  maxHp: 30,
+  monkLevel: classLevel(6),
+  wholenessMax: 3,
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const RANGER_10_INPUT: DndMachineInput = {
+  maxHp: 32,
+  rangerLevel: classLevel(10),
+  wisMod: 3,
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const WIZARD_4_INPUT: DndMachineInput = {
+  maxHp: 24,
+  wizardLevel: classLevel(4),
+  slotsMax: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+  slotsCurrent: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const WARLOCK_13_INPUT: DndMachineInput = {
+  maxHp: 28,
+  warlockLevel: classLevel(13),
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const PALADIN_2_INPUT: DndMachineInput = {
+  maxHp: 28,
+  paladinLevel: classLevel(2),
+  slotsMax: [2, 0, 0, 0, 0, 0, 0, 0, 0],
+  slotsCurrent: [2, 0, 0, 0, 0, 0, 0, 0, 0],
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const BARD_5_INPUT: DndMachineInput = {
+  maxHp: 26,
+  bardLevel: classLevel(5),
+  chaMod: 3,
+  slotsMax: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+  slotsCurrent: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const DRUID_5_INPUT: DndMachineInput = {
+  maxHp: 28,
+  druidLevel: classLevel(5),
+  slotsMax: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+  slotsCurrent: [4, 3, 2, 0, 0, 0, 0, 0, 0],
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 }
@@ -202,5 +262,198 @@ describe("available actions contract", () => {
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).not.toContain(
       "USE_METAMAGIC",
     )
+  })
+
+  test("exposes and executes the dice-roll family through runtime inputs", () => {
+    const monk = makeActorWithInput(MONK_6_INPUT)
+    monk.send({ type: "TAKE_DAMAGE", amount: 10, damageType: "slashing", resistances: new Set(), vulnerabilities: new Set(), immunities: new Set(), isCritical: false })
+    monk.send({ type: "ENTER_COMBAT" })
+    monk.send({ type: "START_TURN" })
+
+    expect(getAvailableActions(monk.getSnapshot().context, monk.getSnapshot().tags)).toContainEqual({
+      type: "WHOLENESS_OF_BODY",
+      cost: { bonusAction: true, charge: "wholenessOfBody" },
+      outcome: { summary: "Heal 1d8 + 3 HP (minimum 1)" },
+    })
+    expect(getAvailableActions(monk.getSnapshot().context, monk.getSnapshot().tags)).toContainEqual({
+      type: "UNCANNY_METABOLISM",
+      cost: { charge: "uncannyMetabolism" },
+      outcome: { summary: "Regain all expended Focus Points and heal 1d8 + 6 HP" },
+    })
+
+    const wholenessRequest = expectRequest(
+      resolveAction(monk.getSnapshot().context, monk.getSnapshot().tags, { type: "WHOLENESS_OF_BODY" }),
+    )
+    const wholenessFinalized = finalizeResolution(
+      wholenessRequest,
+      { runtime: "wholenessOfBody", values: { healRoll: 8 } },
+      monk.getSnapshot().context,
+    )
+    expect(wholenessFinalized).toEqual({
+      ok: true,
+      event: { type: "WHOLENESS_OF_BODY", healRoll: 8 },
+      outcome: "Healed 8 HP with Wholeness of Body",
+    })
+    if (!wholenessFinalized.ok) throw new Error("expected WHOLENESS_OF_BODY finalization to succeed")
+    monk.send(wholenessFinalized.event)
+    expect(monk.getSnapshot().context.hp).toBe(28)
+
+    const monk2 = makeActorWithInput(MONK_6_INPUT)
+    monk2.send({ type: "TAKE_DAMAGE", amount: 10, damageType: "slashing", resistances: new Set(), vulnerabilities: new Set(), immunities: new Set(), isCritical: false })
+    monk2.send({ type: "ENTER_COMBAT" })
+    monk2.send({ type: "START_TURN" })
+    const uncannyRequest = expectRequest(
+      resolveAction(monk2.getSnapshot().context, monk2.getSnapshot().tags, { type: "UNCANNY_METABOLISM" }),
+    )
+    const uncannyFinalized = finalizeResolution(
+      uncannyRequest,
+      { runtime: "uncannyMetabolism", values: { healRoll: 5 } },
+      monk2.getSnapshot().context,
+    )
+    expect(uncannyFinalized).toEqual({
+      ok: true,
+      event: { type: "UNCANNY_METABOLISM", healRoll: 5 },
+      outcome: "Regained all Focus Points and healed 1d8(5) + 6 = 11 HP",
+    })
+    if (!uncannyFinalized.ok) throw new Error("expected UNCANNY_METABOLISM finalization to succeed")
+    monk2.send(uncannyFinalized.event)
+    expect(monk2.getSnapshot().context.hp).toBe(30)
+    expect(monk2.getSnapshot().context.classStates.monk?.uncannyMetabolismUsed).toBe(true)
+
+    const ranger = makeActorWithInput(RANGER_10_INPUT)
+    ranger.send({ type: "ENTER_COMBAT" })
+    ranger.send({ type: "START_TURN" })
+    expect(getAvailableActions(ranger.getSnapshot().context, ranger.getSnapshot().tags)).toContainEqual({
+      type: "USE_TIRELESS",
+      cost: { action: true, charge: "tireless" },
+      outcome: { summary: "Gain 1d8 + 3 temporary HP (minimum 1)" },
+    })
+    const tirelessRequest = expectRequest(
+      resolveAction(ranger.getSnapshot().context, ranger.getSnapshot().tags, { type: "USE_TIRELESS" }),
+    )
+    const tirelessFinalized = finalizeResolution(
+      tirelessRequest,
+      { runtime: "tireless", values: { d8Roll: 4 } },
+      ranger.getSnapshot().context,
+    )
+    expect(tirelessFinalized).toEqual({
+      ok: true,
+      event: { type: "USE_TIRELESS", d8Roll: 4 },
+      outcome: "Gained 1d8(4) + 3 = 7 temporary HP",
+    })
+    if (!tirelessFinalized.ok) throw new Error("expected USE_TIRELESS finalization to succeed")
+    ranger.send(tirelessFinalized.event)
+    expect(ranger.getSnapshot().context.tempHp).toBe(7)
+    expect(ranger.getSnapshot().context.actionsRemaining).toBe(0)
+  })
+
+  test("exposes and executes scalar slot and amount actions with legality-filtered holes", () => {
+    const wizard = makeActorWithInput(WIZARD_4_INPUT)
+    wizard.send({ type: "ENTER_COMBAT" })
+    wizard.send({ type: "START_TURN" })
+    expect(getAvailableActions(wizard.getSnapshot().context, wizard.getSnapshot().tags)).toContainEqual({
+      type: "USE_ARCANE_RECOVERY",
+      slotLevel: { options: [spellSlotLevel(2)] },
+      cost: { charge: "arcaneRecovery" },
+      outcome: { summary: "Recover one expended spell slot of the chosen level and use Arcane Recovery" },
+    })
+    expect(
+      resolveAction(wizard.getSnapshot().context, wizard.getSnapshot().tags, {
+        type: "USE_ARCANE_RECOVERY",
+        slotLevel: spellSlotLevel(1),
+      }),
+    ).toEqual({
+      code: "ACTION_NOT_AVAILABLE",
+      message: "Arcane Recovery for a level 1 slot is not currently available in this state.",
+    })
+
+    const warlock = makeActorWithInput(WARLOCK_13_INPUT)
+    warlock.send({ type: "ENTER_COMBAT" })
+    warlock.send({ type: "START_TURN" })
+    expect(getAvailableActions(warlock.getSnapshot().context, warlock.getSnapshot().tags)).toContainEqual({
+      type: "USE_MYSTIC_ARCANUM",
+      spellLevel: { options: [spellSlotLevel(6), spellSlotLevel(7)] },
+      cost: { charge: "mysticArcanum" },
+      outcome: { summary: "Cast an unused Mystic Arcanum spell of the chosen level without expending a slot" },
+    })
+
+    const paladin = makeActorWithInput(PALADIN_2_INPUT)
+    paladin.send({ type: "ENTER_COMBAT" })
+    paladin.send({ type: "START_TURN" })
+    expect(getAvailableActions(paladin.getSnapshot().context, paladin.getSnapshot().tags)).toContainEqual({
+      type: "USE_LAY_ON_HANDS",
+      amount: { options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+      cost: { bonusAction: true, charge: "layOnHandsPool" },
+      outcome: { summary: "Spend Lay on Hands points to restore up to that many HP" },
+    })
+    expect(getAvailableActions(paladin.getSnapshot().context, paladin.getSnapshot().tags)).toContainEqual({
+      type: "USE_DIVINE_SMITE",
+      slotLevel: { options: [spellSlotLevel(1)] },
+      cost: { bonusAction: true, charge: "spellSlot" },
+      outcome: { summary: "Expend a spell slot of the chosen level to use Divine Smite" },
+    })
+    const layOnHandsRequest = expectRequest(
+      resolveAction(paladin.getSnapshot().context, paladin.getSnapshot().tags, { type: "USE_LAY_ON_HANDS", amount: 3 }),
+    )
+    const layOnHandsFinalized = finalizeResolution(layOnHandsRequest, { runtime: "none" }, paladin.getSnapshot().context)
+    expect(layOnHandsFinalized).toEqual({
+      ok: true,
+      event: { type: "USE_LAY_ON_HANDS", amount: 3 },
+      outcome: "Spend 3 Lay on Hands points to restore up to 3 HP",
+    })
+
+    const bard = makeActorWithInput(BARD_5_INPUT)
+    bard.send({ type: "ENTER_COMBAT" })
+    bard.send({ type: "START_TURN" })
+    bard.send({ type: "USE_BARDIC_INSPIRATION" })
+    expect(getAvailableActions(bard.getSnapshot().context, bard.getSnapshot().tags)).toContainEqual({
+      type: "USE_FONT_SLOT_RESTORE",
+      slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
+      cost: { charge: "spellSlot" },
+      outcome: { summary: "Expend a spell slot to regain one Bardic Inspiration use" },
+    })
+
+    const sorcerer = makeActorWithInput({
+      ...SORCERER_5_INPUT,
+      slotsMax: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+      slotsCurrent: [3, 3, 2, 0, 0, 0, 0, 0, 0],
+    })
+    sorcerer.send({ type: "ENTER_COMBAT" })
+    sorcerer.send({ type: "START_TURN" })
+    sorcerer.send({ type: "USE_METAMAGIC", option: "careful" })
+    expect(getAvailableActions(sorcerer.getSnapshot().context, sorcerer.getSnapshot().tags)).toContainEqual({
+      type: "CONVERT_SLOT_TO_POINTS",
+      slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
+      cost: { charge: "spellSlot" },
+      outcome: { summary: "Expend a spell slot to gain sorcery points equal to its level" },
+    })
+    expect(getAvailableActions(sorcerer.getSnapshot().context, sorcerer.getSnapshot().tags)).toContainEqual({
+      type: "CONVERT_POINTS_TO_SLOT",
+      slotLevel: { options: [spellSlotLevel(1)] },
+      cost: { bonusAction: true, charge: "sorceryPoints" },
+      outcome: { summary: "Spend sorcery points to create a spell slot of the chosen level" },
+    })
+  })
+
+  test("surfaces Wild Resurgence charge recovery only after Wild Shape charges are depleted", () => {
+    const actor = makeActorWithInput(DRUID_5_INPUT)
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+    actor.send({ type: "ENTER_WILD_SHAPE" })
+    actor.send({ type: "END_TURN" })
+    actor.send({ type: "START_TURN" })
+    actor.send({ type: "EXIT_WILD_SHAPE" })
+    actor.send({ type: "END_TURN" })
+    actor.send({ type: "START_TURN" })
+    actor.send({ type: "ENTER_WILD_SHAPE" })
+    actor.send({ type: "END_TURN" })
+    actor.send({ type: "START_TURN" })
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "USE_WILD_RESURGENCE_CHARGE",
+      slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
+      cost: { charge: "spellSlot" },
+      outcome: { summary: "Expend a spell slot to regain one Wild Shape use" },
+    })
   })
 })

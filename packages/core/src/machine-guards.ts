@@ -10,10 +10,14 @@ import { hasFontOfInspiration, hasPeerlessSkill } from "#/features/class-bard.ts
 import { canUseActionSurge, canUseIndomitable, canUseSecondWind, canUseTacticalMind } from "#/features/class-fighter.ts"
 import { canUseNaturesVeil, canUseTireless } from "#/features/class-ranger.ts"
 import { canUseCunningAction, maxCunningStrikeEffects } from "#/features/class-rogue.ts"
-import { canUseInnateSorcery } from "#/features/class-sorcerer.ts"
-import { canUseMetamagic } from "#/features/class-sorcerer.ts"
-import { canEldritchSmite, canUseMagicalCunning } from "#/features/class-warlock.ts"
-import { hasOverchannel } from "#/features/class-wizard.ts"
+import {
+  canConvertPointsToSlot,
+  canConvertSlotToPoints,
+  canUseInnateSorcery,
+  canUseMetamagic,
+} from "#/features/class-sorcerer.ts"
+import { canEldritchSmite, canUseMagicalCunning, mysticArcanumLevels } from "#/features/class-warlock.ts"
+import { arcaneRecoveryMaxLevels, canArcaneRecoverSlot, hasOverchannel } from "#/features/class-wizard.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
 import {
   addDeathFailures,
@@ -26,6 +30,8 @@ import { isIncapacitated } from "#/machine-queries.ts"
 import { computeShortRest } from "#/machine-spells.ts"
 import { asShortRest, asSpendHitDie, asTakeDamage, type DndContext, type DndEvent } from "#/machine-types.ts"
 import type { MetamagicOption } from "#/features/class-sorcerer.ts"
+import type { SpellSlotLevel } from "#/types.ts"
+import { spellSlotLevel } from "#/types.ts"
 
 type GuardArg = { context: DndContext; event: DndEvent }
 
@@ -56,6 +62,96 @@ export function legalMetamagicOptions(context: DndContext): ReadonlyArray<Metama
     innateSorceryActive: ss.innateSorceryActive
   }
   return [...ss.knownMetamagicOptions].filter((option) => canUseMetamagic(state, option))
+}
+
+function legalPreparedSlotLevels(
+  slotsCurrent: ReadonlyArray<number>,
+  predicate: (slotLevel: number) => boolean,
+): ReadonlyArray<SpellSlotLevel> {
+  return slotsCurrent.flatMap((count, index) => {
+    const level = index + 1
+    return count > 0 && predicate(level) ? [spellSlotLevel(level)] : []
+  })
+}
+
+export function legalConvertSlotToPointsLevels(context: DndContext): ReadonlyArray<SpellSlotLevel> {
+  const ss = context.classStates.sorcerer
+  if (!ss || isIncapacitated(context) || ss.level < 2) return []
+  return legalPreparedSlotLevels(
+    context.slotsCurrent,
+    (slotLevel) =>
+      canConvertSlotToPoints(
+        {
+          sorceryPoints: ss.sorceryPoints,
+          sorceryPointsMax: ss.sorceryPointsMax,
+          slotsCurrent: context.slotsCurrent,
+        },
+        slotLevel,
+      ),
+  )
+}
+
+export function legalConvertPointsToSlotLevels(context: DndContext): ReadonlyArray<SpellSlotLevel> {
+  const ss = context.classStates.sorcerer
+  if (!ss || isIncapacitated(context) || ss.level < 2 || context.bonusActionUsed) return []
+  return [1, 2, 3, 4, 5].flatMap((slotLevel) => {
+    const idx = slotLevel - 1
+    if (idx >= context.slotsCurrent.length || context.slotsCurrent[idx] >= context.slotsMax[idx]) return []
+    return canConvertPointsToSlot(
+      {
+        sorceryPoints: ss.sorceryPoints,
+        slotsCurrent: context.slotsCurrent,
+        sorcererLevel: ss.level,
+        bonusActionUsed: context.bonusActionUsed,
+      },
+      slotLevel,
+    )
+      ? [spellSlotLevel(slotLevel)]
+      : []
+  })
+}
+
+export function legalArcaneRecoveryLevels(context: DndContext): ReadonlyArray<SpellSlotLevel> {
+  const ws = context.classStates.wizard
+  if (!ws || ws.level < 1 || ws.arcaneRecoveryUsed) return []
+  const budget = arcaneRecoveryMaxLevels(ws.level)
+  return context.slotsCurrent.flatMap((count, index) => {
+    const level = index + 1
+    if (count >= context.slotsMax[index]) return []
+    return canArcaneRecoverSlot(level) && level <= budget ? [spellSlotLevel(level)] : []
+  })
+}
+
+export function legalMysticArcanumLevels(context: DndContext): ReadonlyArray<SpellSlotLevel> {
+  const ws = context.classStates.warlock
+  if (!ws || isIncapacitated(context) || ws.level < 11) return []
+  return mysticArcanumLevels(ws.level)
+    .filter((level) => !ws.mysticArcanumUsed.has(level))
+    .map((level) => spellSlotLevel(level))
+}
+
+export function legalFontSlotRestoreLevels(context: DndContext): ReadonlyArray<SpellSlotLevel> {
+  const bs = context.classStates.bard
+  if (!bs || isIncapacitated(context) || bs.level < 5 || bs.bardicInspirationCharges >= bs.bardicInspirationMax) return []
+  return legalPreparedSlotLevels(context.slotsCurrent, () => true)
+}
+
+export function legalWildResurgenceChargeLevels(context: DndContext): ReadonlyArray<SpellSlotLevel> {
+  const ds = context.classStates.druid
+  if (!ds || isIncapacitated(context) || ds.level < 5 || ds.wildShapeCharges !== 0) return []
+  return legalPreparedSlotLevels(context.slotsCurrent, () => true)
+}
+
+export function legalDivineSmiteLevels(context: DndContext): ReadonlyArray<SpellSlotLevel> {
+  const ps = context.classStates.paladin
+  if (!ps || isIncapacitated(context) || ps.level < 2 || context.bonusActionUsed) return []
+  return legalPreparedSlotLevels(context.slotsCurrent, () => true)
+}
+
+export function legalLayOnHandsAmounts(context: DndContext): ReadonlyArray<number> {
+  const ps = context.classStates.paladin
+  if (!ps || isIncapacitated(context) || context.bonusActionUsed || ps.layOnHandsPool <= 0) return []
+  return Array.from({ length: ps.layOnHandsPool }, (_value, index) => index + 1)
 }
 
 export const guards = {
