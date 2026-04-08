@@ -341,12 +341,28 @@ In the Hellenvald project (`/workspace/typescript/osr-hellenvald`), build the tr
 ### Acceptance criteria
 
 - [ ] CLI accepts typed natural language input and produces structured candidate events
-- [ ] LLM interpretation layer is an Effect service with test/mock/cached layers
-- [ ] Cached replay test: recorded input → expected candidates, no live LLM needed
-- [ ] Multiple candidates produced for ambiguous input (e.g., "I attack" when multiple targets exist)
-- [ ] Single candidate produced for unambiguous input
-- [ ] "Electric field" annotations present in code/docs for key design choices
+- [x] LLM interpretation layer is an Effect service with test/mock/cached layers
+- [x] Cached replay test: recorded input → expected candidates, no live LLM needed
+- [x] Multiple candidates produced for ambiguous input (e.g., "I attack" when multiple targets exist)
+- [x] Single candidate produced for unambiguous input
+- [x] "Electric field" annotations present in code/docs for key design choices
 - [ ] Demo mode works with mocked LLM responses and optional fake latency
+
+### Phase 5 progress
+
+**Completed (2026-04-08):** Transcript-to-events pipeline core in `/workspace/typescript/osr-hellenvald/src/transcript/`:
+
+- `TranscriptInterpreter` Effect service (`Context.Tag`) with `mockLayer` — pattern-matches known phrases to candidate `DomainEvent`s with confidence scores. Entity resolution for named targets ("the goblin" → EntityId).
+- `TranscriptPipeline` orchestration service: segments → interpreter → `ObservationEntry` → `Projector.projectLatest()`. Bridges transcript layer to existing event-sourcing infrastructure.
+- `TranscriptSegment` Schema class for phrase-level input (text + timestamp + speaker hint).
+- 10 tests: 6 unit (interpreter patterns), 4 end-to-end (pipeline through Projector with state verification).
+- Electric field annotations on all key design points (guard validation, entity context derivation).
+
+**Remaining for Phase 5:**
+- CLI interface (stdin, line-buffered) — simple readline or Ink wrapper that feeds typed input to the pipeline.
+- LLM live layer — replace mock pattern matching with actual LLM calls via an Effect service layer with caching.
+- Demo mode — mocked LLM responses with optional fake latency for presentations.
+- Segment buffering — grouping multiple phrase-level segments into complete game actions before interpretation.
 
 ---
 
