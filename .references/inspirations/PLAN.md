@@ -750,8 +750,39 @@ Verification:
 
 What is next now:
 
-- scout the next small deterministic inspiration batch outside grapple, since the main grapple lifecycle slice is now explicitly covered
+- `Action Surge` battle coverage is now in inspiration form, so do not re-pick it as the next batch
+- the `Ray of Frost` + `Dash` follow-up is now covered in inspiration form, so do not re-pick it as the next batch
+- scout the next small deterministic inspiration batch outside grapple and outside the already-covered `Ray of Frost`/`Dash` interaction
 - if you resume in a fresh session, start from this file and [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts), then pick the next `natural_20`-style scenario that fits current battle state without reopening architecture
+
+Batch 14 result:
+
+1. Added explicit battle coverage that `Dash` uses modified Speed, not base Speed.
+   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves a `Ray of Frost`-slowed creature gains only 20 extra feet from `BATTLE_DASH`, reaching 40 movement rather than 60
+2. Confirmed the existing implementation already matched RAW.
+   - no production TS or Quint changes were required
+   - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
+
+Batch 15 result:
+
+1. Added explicit battle coverage for Fighter `Action Surge`.
+   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves:
+     - a Fighter can take one additional non-Magic action on the same turn,
+     - a level-17 Fighter still cannot use `Action Surge` twice on the same turn,
+     - the surge-granted action cannot be the Magic action
+2. Confirmed the existing implementation already matched RAW.
+   - no production TS or Quint changes were required
+   - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
 
 ## If You Continue This Work Next Time
 

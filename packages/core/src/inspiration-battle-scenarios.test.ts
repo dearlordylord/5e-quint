@@ -70,6 +70,39 @@ function initTwoCasterBattle() {
   return actor
 }
 
+function initFighterBattle(fighterLevel: number) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", fighterLevel },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC" }
+    ]
+  })
+  return actor
+}
+
+function initFighterCasterBattle(fighterLevel: number) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        fighterLevel,
+        preparedSpells: new Set(["hold_person"])
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]) }
+    ]
+  })
+  return actor
+}
+
 function initSneakAttackBattle() {
   const actor = createActor(battleMachine)
   actor.start()
@@ -273,6 +306,91 @@ describe("inspiration-sourced battle regressions", () => {
 
     expect(ctx(actor).movementCtx).not.toBeNull()
     expect(ctx(actor).movementCtx?.threatenedBy.has(CreatureId("B"))).toBe(true)
+  })
+
+  it("natural_20: Action Surge grants one additional non-Magic action on the same turn", () => {
+    const actor = initFighterBattle(2)
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 5,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(20),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+    expect(creature(actor, "A").attackActionUsed).toBe(true)
+
+    send(actor, { type: "BATTLE_ACTION_SURGE" })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1)
+    expect(creature(actor, "A").actionSurgeCharges).toBe(0)
+    expect(creature(actor, "A").actionSurgeUsedThisTurn).toBe(true)
+    expect(creature(actor, "A").actionSurgeActionPending).toBe(true)
+
+    send(actor, { type: "BATTLE_DASH" })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+    expect(creature(actor, "A").movementRemaining).toBe(60)
+    expect(creature(actor, "A").actionSurgeActionPending).toBe(false)
+  })
+
+  it("natural_20: Action Surge can be used only once on a turn even if two charges remain", () => {
+    const actor = initFighterBattle(17)
+    startTurn(actor)
+
+    expect(creature(actor, "A").actionSurgeCharges).toBe(2)
+
+    send(actor, { type: "BATTLE_ACTION_SURGE" })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(2)
+    expect(creature(actor, "A").actionSurgeCharges).toBe(1)
+    expect(creature(actor, "A").actionSurgeUsedThisTurn).toBe(true)
+
+    send(actor, { type: "BATTLE_ACTION_SURGE" })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(2)
+    expect(creature(actor, "A").actionSurgeCharges).toBe(1)
+    expect(creature(actor, "A").actionSurgeUsedThisTurn).toBe(true)
+  })
+
+  it("natural_20: Action Surge does not allow the extra action to be the Magic action", () => {
+    const actor = initFighterCasterBattle(2)
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_ACTION_SURGE" })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(2)
+    expect(creature(actor, "A").slotExpendedThisTurn).toBe(false)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person",
+      ritual: false
+    })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(2)
+    expect(creature(actor, "A").actionSurgeActionPending).toBe(true)
+    expect(creature(actor, "A").slotExpendedThisTurn).toBe(false)
+    expect(creature(actor, "A").slotsCurrent[0]).toBe(4)
+    expect(creature(actor, "B").paralyzed).toBe(false)
   })
 
   it("natural_20: Disengage prevents opportunity attacks for the rest of the turn", () => {
@@ -833,6 +951,53 @@ describe("inspiration-sourced battle regressions", () => {
 
     expect(creature(actor, "B").effectiveSpeed).toBe(30)
     expect(creature(actor, "B").movementRemaining).toBe(30)
+  })
+
+  it("foundryvtt-dnd5e: Dash uses the reduced Speed from Ray of Frost on the slowed turn", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 16,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "cold",
+      crit: false,
+      tAc: armorClass(12),
+      onHitEffect: {
+        spellId: spellId("ray_of_frost"),
+        turnsRemaining: 1,
+        expiresAt: "start",
+        casterId: CreatureId("A"),
+        expiryOwnerId: CreatureId("A"),
+        speedDeltaFeet: -10
+      },
+      ...DEFAULT_ATTACK_CONTEXT,
+      isMelee: false,
+      attackerWithin5ft: false
+    })
+    resolveAttackWindows(actor)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "B").effectiveSpeed).toBe(20)
+    expect(creature(actor, "B").movementRemaining).toBe(20)
+
+    send(actor, { type: "BATTLE_DASH" })
+
+    expect(creature(actor, "B").actionsRemaining).toBe(0)
+    expect(creature(actor, "B").effectiveSpeed).toBe(20)
+    expect(creature(actor, "B").movementRemaining).toBe(40)
   })
 
   it("natural_20: a readied spell releases with a reaction and applies its effect", () => {
