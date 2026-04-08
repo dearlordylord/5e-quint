@@ -586,7 +586,7 @@ The MCP response from `get_available_actions` is already grouped by resource cos
     - monk `Slow Fall`
     - barbarian `Retaliation`
     - these currently live as feature-bridge helpers around generic `USE_REACTION`, not as supported semantic action tokens in `available-actions.ts`
-  - **Conclusion from the audit**
+- **Conclusion from the audit**
     - there is currently **no honest reaction-cost semantic action** ready to expose through the supported action contract without another ownership pass
     - the missing ingredient is trigger-window ownership, similar in spirit to the earlier `pendingResolution` work
     - if Phase 2 is kept narrow, the next session should:
@@ -608,15 +608,28 @@ The MCP response from `get_available_actions` is already grouped by resource cos
 
 ### Acceptance criteria
 
-- [ ] Either:
+- [x] Either:
   - at least one currently modeled reaction-cost action is exposed and tested, or
   - the plan explicitly records that no reaction-cost action is yet executable in the modeled catalog
 - [x] At least one action from `action`, `bonusAction`, and `free` groups is already exposed and tested
 - [x] `get_available_actions` response is grouped by resource cost
 - [x] Each action's outcome description accurately reflects what the action does (cost + what changes)
-- [ ] Representative tests prove guards exclude tokens when the relevant resource is spent (e.g. no action-cost token when `actionsRemaining === 0`, no bonus-action token when `bonusActionUsed === true`)
-- [ ] Grouping-shape snapshot tests cover at least one representative state with multiple simultaneous groups populated
-- [ ] If a movement-cost token is treated as part of `free`, that bucketing is covered explicitly by test rather than only by convention
+- [x] Representative tests prove guards exclude tokens when the relevant resource is spent (e.g. no action-cost token when `actionsRemaining === 0`, no bonus-action token when `bonusActionUsed === true`)
+- [x] Grouping-shape snapshot tests cover at least one representative state with multiple simultaneous groups populated
+- [x] No movement-cost token is currently exposed through `available-actions.ts`, so there is no Phase 2 movement/free bucketing case to assert yet
+
+### Phase 2 completion note (2026-04-08)
+
+- Phase 2 was completed narrowly, without forcing a fake reaction token.
+- The grouped MCP surface now has:
+  - a representative multigroup snapshot test in `packages/mcp/src/server.test.ts`
+  - explicit spent-resource exclusion coverage in `packages/core/src/available-actions.test.ts`
+- The representative grouped state currently proves:
+  - `action`: `USE_TIRELESS`
+  - `bonusAction`: `CONVERT_POINTS_TO_SLOT`, `USE_SECOND_WIND`
+  - `free`: `USE_ARCANE_RECOVERY`, `USE_METAMAGIC`, `EXIT_COMBAT`
+- Reaction remains intentionally absent from the supported surface because no semantic reaction action has fully owned trigger-window state yet.
+- Movement also remains absent from the supported surface as an explicit cost bucket; nothing currently exposed uses `cost.movement`.
 
 ---
 

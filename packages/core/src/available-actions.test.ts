@@ -66,6 +66,35 @@ const SORCERER_5_INPUT: DndMachineInput = {
   effectiveSpeed: 30,
 }
 
+const PHASE_2_MULTIGROUP_INPUT: DndMachineInput = {
+  maxHp: 44,
+  conMod: abilityModifier(2),
+  fighterLevel: classLevel(10),
+  rangerLevel: classLevel(10),
+  sorcererLevel: classLevel(5),
+  knownMetamagicOptions: ["careful", "subtle"],
+  wizardLevel: classLevel(4),
+  wisMod: abilityModifier(3),
+  slotsMax: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+  slotsCurrent: [3, 2, 0, 0, 0, 0, 0, 0, 0],
+  hitDiceRemaining: {
+    barbarian: 0,
+    bard: 0,
+    cleric: 0,
+    druid: 0,
+    fighter: 2,
+    monk: 0,
+    paladin: 0,
+    ranger: 0,
+    rogue: 0,
+    sorcerer: 0,
+    warlock: 0,
+    wizard: 0,
+  },
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
 const MONK_6_INPUT: DndMachineInput = {
   maxHp: 30,
   monkLevel: classLevel(6),
@@ -651,5 +680,51 @@ describe("available actions contract", () => {
       cost: { charge: "spellSlot" },
       outcome: { summary: "Expend a spell slot to regain one Wild Shape use" },
     })
+  })
+
+  test("spent resources remove action, bonus-action, and charge-gated free tokens from the grouped surface", () => {
+    const actor = makeActorWithInput(PHASE_2_MULTIGROUP_INPUT)
+    actor.send({
+      type: "TAKE_DAMAGE",
+      amount: 10,
+      damageType: "slashing",
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false,
+    })
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).toEqual([
+      "CONVERT_POINTS_TO_SLOT",
+      "USE_ARCANE_RECOVERY",
+      "USE_METAMAGIC",
+      "USE_SECOND_WIND",
+      "USE_TIRELESS",
+      "EXIT_COMBAT",
+    ])
+
+    actor.send({ type: "USE_TIRELESS", d8Roll: 4 })
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).toEqual([
+      "CONVERT_POINTS_TO_SLOT",
+      "USE_ARCANE_RECOVERY",
+      "USE_METAMAGIC",
+      "USE_SECOND_WIND",
+      "EXIT_COMBAT",
+    ])
+
+    actor.send({ type: "USE_SECOND_WIND", d10Roll: 3 })
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).toEqual([
+      "USE_ARCANE_RECOVERY",
+      "USE_METAMAGIC",
+      "EXIT_COMBAT",
+    ])
+
+    actor.send({ type: "USE_ARCANE_RECOVERY", slotLevel: spellSlotLevel(2) })
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).toEqual([
+      "USE_METAMAGIC",
+      "EXIT_COMBAT",
+    ])
   })
 })

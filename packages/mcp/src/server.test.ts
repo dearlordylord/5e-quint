@@ -327,4 +327,122 @@ describe("MCP server adapter", () => {
     expect(payload.state.classStates.barbarian.relentlessRageTimesUsed).toBe(1)
     expect(payload.state.pendingResolution).toBeNull()
   })
+
+  test("get_available_actions groups a representative multigroup state stably", () => {
+    const actor = createDemoActor({
+      maxHp: 44,
+      conMod: abilityModifier(2),
+      fighterLevel: classLevel(10),
+      rangerLevel: classLevel(10),
+      sorcererLevel: classLevel(5),
+      knownMetamagicOptions: ["careful", "subtle"],
+      wizardLevel: classLevel(4),
+      wisMod: abilityModifier(3),
+      slotsMax: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+      slotsCurrent: [3, 2, 0, 0, 0, 0, 0, 0, 0],
+      hitDiceRemaining: {
+        barbarian: 0,
+        bard: 0,
+        cleric: 0,
+        druid: 0,
+        fighter: 2,
+        monk: 0,
+        paladin: 0,
+        ranger: 0,
+        rogue: 0,
+        sorcerer: 0,
+        warlock: 0,
+        wizard: 0,
+      },
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+
+    expect(readPayload(handleToolCall(actor, "get_available_actions", {}))).toMatchInlineSnapshot(`
+      {
+        "action": [
+          {
+            "cost": {
+              "action": true,
+              "charge": "tireless",
+            },
+            "outcome": {
+              "summary": "Gain 1d8 + 3 temporary HP (minimum 1)",
+            },
+            "type": "USE_TIRELESS",
+          },
+        ],
+        "bonusAction": [
+          {
+            "cost": {
+              "bonusAction": true,
+              "charge": "sorceryPoints",
+            },
+            "outcome": {
+              "summary": "Spend sorcery points to create a spell slot of the chosen level",
+            },
+            "slotLevel": {
+              "options": [
+                1,
+                2,
+              ],
+            },
+            "type": "CONVERT_POINTS_TO_SLOT",
+          },
+          {
+            "cost": {
+              "bonusAction": true,
+              "charge": "secondWind",
+            },
+            "outcome": {
+              "summary": "Heal 1d10 + 10 HP",
+            },
+            "type": "USE_SECOND_WIND",
+          },
+        ],
+        "free": [
+          {
+            "cost": {
+              "charge": "arcaneRecovery",
+            },
+            "outcome": {
+              "summary": "Recover one expended spell slot of the chosen level and use Arcane Recovery",
+            },
+            "slotLevel": {
+              "options": [
+                1,
+                2,
+              ],
+            },
+            "type": "USE_ARCANE_RECOVERY",
+          },
+          {
+            "cost": {
+              "charge": "sorceryPoints",
+            },
+            "option": {
+              "options": [
+                "careful",
+                "subtle",
+              ],
+            },
+            "outcome": {
+              "summary": "Apply a currently legal known Metamagic option to the spell you are casting",
+            },
+            "type": "USE_METAMAGIC",
+          },
+          {
+            "cost": {},
+            "outcome": {
+              "summary": "Leave combat (stop tracking turns)",
+            },
+            "type": "EXIT_COMBAT",
+          },
+        ],
+        "reaction": [],
+      }
+    `)
+  })
 })
