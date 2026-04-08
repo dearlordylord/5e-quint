@@ -257,6 +257,17 @@ function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
 
 type Actor = ReturnType<typeof createActor<typeof creatureMachine>>
 const EMPTY_CONDITION_IMMUNITIES = new Set<Condition>()
+const SHOCKING_GRASP_ID = "shocking_grasp"
+const RAY_OF_FROST_ID = "ray_of_frost"
+
+interface ProjectedEffect {
+  readonly spellId: string
+  readonly turnsRemaining: number
+  readonly expiresAt: "start" | "end"
+  readonly casterId: string
+  readonly expiryOwnerId: string
+  readonly speedDeltaFeet?: number
+}
 
 // Battle driver schema: all fields optional because battleStep = any { ... }
 // generates nondets for ALL actions — unused actions have None picks.
@@ -285,7 +296,7 @@ const battleDriverSchema = {
     surprised4: OB
   },
   bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
-  bAttack: { targetId: OS, attackRoll: OI, dmg: OI, dt: OV, crit: OB, tAc: OI },
+  bAttack: { targetId: OS, attackRoll: OI, dmg: OI, dt: OV, hitRider: OV, crit: OB, tAc: OI },
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
   bAfterDamagePass: { reactorId: OS },
@@ -382,6 +393,8 @@ function createBattleProjectionDriver() {
       }
     >()
     const creatureKinds = new Map<string, CreatureKind>()
+    const projectedEffects = new Map<string, ReadonlyArray<ProjectedEffect>>()
+    const speedOverrides = new Map<string, number>()
     let initiative: Array<string> = []
     let turnIndex = 0
 
@@ -429,11 +442,67 @@ function createBattleProjectionDriver() {
       return initiative[turnIndex]
     }
 
+    function getProjectedEffects(id: string): ReadonlyArray<ProjectedEffect> {
+      return projectedEffects.get(id) ?? []
+    }
+
+    function setProjectedEffects(id: string, effects: ReadonlyArray<ProjectedEffect>) {
+      if (effects.length === 0) projectedEffects.delete(id)
+      else projectedEffects.set(id, effects)
+    }
+
+    function projectedSpeedDelta(id: string): number {
+      return getProjectedEffects(id).reduce((total, effect) => total + (effect.speedDeltaFeet ?? 0), 0)
+    }
+
+    function advanceProjectedStartEffects(ownerId: string) {
+      for (const [holderId, effects] of projectedEffects) {
+        const next = effects.flatMap((effect) => {
+          if (effect.expiryOwnerId !== ownerId) return [effect]
+          const turnsRemaining = effect.turnsRemaining - 1
+          if (turnsRemaining <= 0 && effect.expiresAt === "start") return []
+          return [{ ...effect, turnsRemaining }]
+        })
+        setProjectedEffects(holderId, next)
+      }
+    }
+
+    function applyProjectedHitRider(attackerId: string, targetId: string, hitRider: string) {
+      if (hitRider === "AHRShockingGrasp") {
+        send(targetId, {
+          type: "ADD_EFFECT",
+          spellId: mkSpellId(SHOCKING_GRASP_ID),
+          durationTurns: 1,
+          expiresAt: "start",
+          casterId: mkCreatureId(attackerId),
+          expiryOwnerId: mkCreatureId(targetId),
+          blocksOpportunityAttacks: true
+        })
+        return
+      }
+      if (hitRider === "AHRRayOfFrost") {
+        const filtered = getProjectedEffects(targetId).filter((effect) => effect.spellId !== RAY_OF_FROST_ID)
+        setProjectedEffects(targetId, [
+          ...filtered,
+          {
+            spellId: RAY_OF_FROST_ID,
+            turnsRemaining: 1,
+            expiresAt: "start",
+            casterId: attackerId,
+            expiryOwnerId: attackerId,
+            speedDeltaFeet: -10
+          }
+        ])
+      }
+    }
+
     // ============================================================
     // Action projection mapping (B14.4)
     // ============================================================
 
     function handleBInit(picks: ReadonlyMap<string, unknown>) {
+      projectedEffects.clear()
+      speedOverrides.clear()
       // bInit creates 4 creatures with nondeterministic HP.
       // A=PC caster rogue5, B=PC caster, C=Monster, D=PC caster (CS chain depth)
       const hp1 = pickBigInt(picks, "hp1") ?? 20
@@ -575,6 +644,7 @@ function createBattleProjectionDriver() {
       const sb = statBlocks.get(id)
 
       ensureWaitingForTurn(id)
+      advanceProjectedStartEffects(id)
       const ctx = getSnap(id).context
 
       const rechargeD6 = pickBigInt(picks, "rechargeD6") ?? 3
@@ -584,7 +654,7 @@ function createBattleProjectionDriver() {
       const sotConSave = pickBool(picks, "sotConSave") ?? false
 
       // Check if creature has active effects (for start-of-turn processing)
-      const hasEffects = ctx.activeEffects.length > 0 && (sotDmg > 0 || sotHeal > 0)
+      const hasEffects = (ctx.activeEffects.length > 0 || getProjectedEffects(id).length > 0) && (sotDmg > 0 || sotHeal > 0)
 
       const effectResolutions = hasEffects
         ? [
@@ -605,6 +675,14 @@ function createBattleProjectionDriver() {
             ? computeRechargedAbilities(rechargeD6, sb.rechargeMinRolls, ctx.rechargeAvailable)
             : undefined
       })
+      const speedDelta = projectedSpeedDelta(id)
+      if (speedDelta < 0) {
+        send(id, { type: "USE_MOVEMENT", feet: -speedDelta, movementCost: 1 })
+      }
+      const started = getSnap(id).context
+      const projectedSpeed = Math.max(0, started.effectiveSpeed + speedDelta)
+      if (projectedSpeed === started.effectiveSpeed) speedOverrides.delete(id)
+      else speedOverrides.set(id, projectedSpeed)
       turnStarted.add(id)
     }
 
@@ -614,6 +692,7 @@ function createBattleProjectionDriver() {
       const attackRoll = pickBigInt(picks, "attackRoll") ?? 10
       const dmg = pickBigInt(picks, "dmg") ?? 5
       const dt = pickVariant(picks, "dt") ?? "Slashing"
+      const hitRider = pickVariant(picks, "hitRider") ?? "NoAttackHitRider"
       const crit = pickBool(picks, "crit") ?? false
       const tAc = pickBigInt(picks, "tAc") ?? 15
 
@@ -624,7 +703,7 @@ function createBattleProjectionDriver() {
         send(id, { type: "USE_ACTION", actionType: "attack" })
       }
 
-      resolveAttackHit(id, targetId, attackRoll, tAc, dmg, dt, crit)
+      resolveAttackHit(id, targetId, attackRoll, tAc, dmg, dt, hitRider, crit)
     }
 
     /** Pending attack state for deferred damage */
@@ -636,6 +715,7 @@ function createBattleProjectionDriver() {
       isCritical: boolean
       attackRoll: number
       targetAc: number
+      hitRider: string
     } | null = null
 
     function handleBResolveHitReaction(picks: ReadonlyMap<string, unknown>) {
@@ -652,6 +732,7 @@ function createBattleProjectionDriver() {
         // Check if the attack still hits after AC modifications
         const stillHit = pendingAttack.attackRoll >= pendingAttack.targetAc || pendingAttack.attackRoll === 20
         if (stillHit) {
+          applyProjectedHitRider(pendingAttack.attacker, pendingAttack.target, pendingAttack.hitRider)
           // Check if target has damage-phase reaction available
           const targetSnap = getSnap(pendingAttack.target)
           const targetHasReaction = targetSnap.context.reactionAvailable && !targetSnap.matches({ damageTrack: "dead" })
@@ -997,13 +1078,9 @@ function createBattleProjectionDriver() {
         }
         // Depth 0: resolve original spell.
         if (pendingSpell) {
-          if (!pendingSpell.ritual)
-            send(pendingSpell.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(pendingSpell.slotLvl) })
           resolveSpellSave(pendingSpell)
           pendingSpell = null
         } else if (pendingAoE) {
-          if (!pendingAoE.ritual)
-            send(pendingAoE.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(pendingAoE.slotLvl) })
         } else if (pendingConcentration) {
           resolveConcentrationSpell(pendingConcentration)
           pendingConcentration = null
@@ -1102,8 +1179,9 @@ function createBattleProjectionDriver() {
       const applyCond = pickBool(picks, "applyCond") ?? false
       const ritual = pickBool(picks, "ritual") ?? false
 
-      // Spend action only — slot + concentration deferred until CS resolves (SRD 5.2.1)
+      // Spend action, then expend slot immediately (spend-then-refund parity with battle.qnt).
       send(id, { type: "USE_ACTION", actionType: "magic" })
+      if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
 
       pendingConcentration = {
         caster: id,
@@ -1123,10 +1201,8 @@ function createBattleProjectionDriver() {
       }
     }
 
-    /** Resolve a concentration spell: expend slot, start concentration, add effects. */
+    /** Resolve a concentration spell: start concentration, add effects. Slot already spent. */
     function resolveConcentrationSpell(conc: NonNullable<typeof pendingConcentration>) {
-      if (!conc.ritual) send(conc.caster, { type: "EXPEND_SLOT", level: spellSlotLevel(conc.slotLvl) })
-
       // If already concentrating, break old concentration
       const ctx = getSnap(conc.caster).context
       if (Option.isSome(ctx.concentrationSpellId)) {
@@ -1203,8 +1279,9 @@ function createBattleProjectionDriver() {
       const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
       const ritual = pickBool(picks, "ritual") ?? false
 
-      // Spend action only — slot deferred until CS resolves (SRD 5.2.1)
+      // Spend action, then expend slot immediately (spend-then-refund parity with battle.qnt).
       send(id, { type: "USE_ACTION", actionType: "magic" })
+      if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
 
       pendingAoE = {
         caster: id,
@@ -1220,9 +1297,7 @@ function createBattleProjectionDriver() {
 
       const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
 
-      if (!hasCSReactors) {
-        if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
-      }
+      if (!hasCSReactors) {}
     }
 
     function handleBResolveAoETarget(picks: ReadonlyMap<string, unknown>) {
@@ -1300,8 +1375,10 @@ function createBattleProjectionDriver() {
       const oaCrit = pickBool(picks, "oaCrit") ?? false
       const oaTgtAc = pickBigInt(picks, "oaTgtAc") ?? 15
 
+      const reactorSnap = getSnap(reactorId)
+      if (reactorSnap.context.activeEffects.some((effect) => effect.blocksOpportunityAttacks === true)) return
       send(reactorId, { type: "USE_REACTION" })
-      resolveAttackHit(reactorId, activeId(), oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit)
+      resolveAttackHit(reactorId, activeId(), oaAtkRoll, oaTgtAc, oaDmg, oaDt, "NoAttackHitRider", oaCrit)
     }
 
     function handleBEndTurn(picks: ReadonlyMap<string, unknown>) {
@@ -1397,6 +1474,7 @@ function createBattleProjectionDriver() {
       tgtAc: number,
       dmg: number,
       dt: string,
+      hitRider: string,
       crit: boolean
     ) {
       const hit = atkRoll >= tgtAc || atkRoll === 20
@@ -1407,6 +1485,7 @@ function createBattleProjectionDriver() {
         return snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })
       })
       if (!hasHitReactors) {
+        applyProjectedHitRider(attackerId, targetId, hitRider)
         send(targetId, {
           type: "TAKE_DAMAGE",
           amount: dmg,
@@ -1423,7 +1502,8 @@ function createBattleProjectionDriver() {
           damageType: mapDamageType(dt),
           isCritical: crit,
           attackRoll: atkRoll,
-          targetAc: tgtAc
+          targetAc: tgtAc,
+          hitRider
         }
       }
     }
@@ -1455,10 +1535,10 @@ function createBattleProjectionDriver() {
         ritual
       }
 
+      if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
       const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
 
       if (!hasCSReactors) {
-        if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
         resolveSpellSave(pendingSpell)
         pendingSpell = null
       }
@@ -1478,7 +1558,7 @@ function createBattleProjectionDriver() {
       const crit = pickBool(picks, "crit") ?? false
       const tgtAc = pickBigInt(picks, "tgtAc") ?? 15
       send(releaserId, { type: "USE_REACTION" })
-      resolveAttackHit(releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit)
+      resolveAttackHit(releaserId, targetId, atkRoll, tgtAc, dmg, dt, "NoAttackHitRider", crit)
     }
 
     /** Stored readied spell params, set at bReadySpell, consumed at bReadySpellRelease. */
@@ -1575,7 +1655,9 @@ function createBattleProjectionDriver() {
     }
 
     function handleBCastBonusActionSpell(picks: ReadonlyMap<string, unknown>) {
-      send(activeId(), { type: "USE_BONUS_ACTION" })
+      const id = activeId()
+      send(id, { type: "USE_BONUS_ACTION" })
+      send(id, { type: "MARK_BONUS_ACTION_SPELL" })
       castSaveSpell(picks, false)
     }
 
@@ -1693,7 +1775,12 @@ function createBattleProjectionDriver() {
       },
       bDash: () => {
         before("bDash")
-        send(activeId(), { type: "USE_ACTION", actionType: "dash" })
+        const id = activeId()
+        send(id, { type: "USE_ACTION", actionType: "dash" })
+        const speedDelta = projectedSpeedDelta(id)
+        if (speedDelta < 0) {
+          send(id, { type: "USE_MOVEMENT", feet: -speedDelta, movementCost: 1 })
+        }
       },
       bDisengage: () => {
         before("bDisengage")
@@ -1743,7 +1830,21 @@ function createBattleProjectionDriver() {
       getState: () => {
         const result = new Map<string, BattleCreatureState>()
         for (const [id, actor] of actors) {
-          result.set(id, projectToBattle(snapshotToNormalized(actor.getSnapshot())))
+          const base = projectToBattle(snapshotToNormalized(actor.getSnapshot()))
+          const projected = getProjectedEffects(id).map((effect) => ({
+            spellId: effect.spellId,
+            turnsRemaining: effect.turnsRemaining,
+            expiresAt: effect.expiresAt,
+            casterId: effect.casterId,
+            grantedResistances: new Set<string>(),
+            grantedVulnerabilities: new Set<string>(),
+            grantedImmunities: new Set<string>()
+          }))
+          result.set(id, {
+            ...base,
+            activeEffects: [...base.activeEffects, ...projected].sort((a, b) => a.spellId.localeCompare(b.spellId)),
+            effectiveSpeed: speedOverrides.get(id) ?? base.effectiveSpeed
+          })
         }
         return result
       },

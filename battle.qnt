@@ -110,6 +110,7 @@ module battle {
     critRange: int,                  // natural roll >= critRange is a critical hit
     atkReturnTo: AfterDamageReturn,  // where to go after entire attack chain resolves
     knockOut: bool,                  // SRD 5.2.1 "Knocking Out a Creature" — attacker's choice
+    hitRider: AttackHitRider,
   }
 
   type AttackDamageCtx = {
@@ -121,6 +122,14 @@ module battle {
     atkReturnTo: AfterDamageReturn,
     knockOut: bool,                  // propagated from AttackHitCtx
   }
+
+  type AttackHitRider =
+    | NoAttackHitRider
+    | AHRShockingGrasp
+    | AHRRayOfFrost
+
+  pure val SHOCKING_GRASP_SPELL_ID = "shocking_grasp"
+  pure val RAY_OF_FROST_SPELL_ID = "ray_of_frost"
 
   // Context for a spell being cast (Counterspell interrupt)
   type SpellCastCtx = {
@@ -540,6 +549,52 @@ module battle {
     else
       Set()
 
+  pure def effectExpiryOwner(holderId: CreatureId, effect: ActiveEffect): CreatureId =
+    if (effect.spellId == RAY_OF_FROST_SPELL_ID) effect.casterId
+    else holderId
+
+  pure def blocksOpportunityAttacks(effects: Set[ActiveEffect]): bool =
+    effects.exists(e => e.spellId == SHOCKING_GRASP_SPELL_ID and e.turnsRemaining > 0)
+
+  pure def speedDeltaFromEffects(effects: Set[ActiveEffect]): int =
+    if (effects.exists(e => e.spellId == RAY_OF_FROST_SPELL_ID and e.turnsRemaining > 0)) -10
+    else 0
+
+  pure def advanceStartEffectsForOwner(
+    cs: CreatureId -> Combatant, ownerId: CreatureId
+  ): (CreatureId -> Combatant) =
+    cs.keys().fold(cs, (acc, holderId) =>
+      val cb = acc.get(holderId)
+      val advanced = cb.creature.activeEffects.map(e =>
+        if (effectExpiryOwner(holderId, e) == ownerId)
+          e.with("turnsRemaining", e.turnsRemaining - 1)
+        else e
+      )
+      val cleared = pClearExpiredAtPhase(advanced, AtStartOfTurn)
+      val slots1 = pAutoBreakExpiredConcentration(cb.slots, cleared)
+      val creature1 = cb.creature.with("activeEffects", cleared)
+      val acc1 = setSlots(setCreature(acc, holderId, creature1), holderId, slots1)
+      propagateIfConcBroken(acc1, holderId, cb.slots, slots1)
+    )
+
+  pure def applyAttackHitRider(
+    cs: CreatureId -> Combatant,
+    attackerId: CreatureId,
+    targetId: CreatureId,
+    hitRider: AttackHitRider
+  ): (CreatureId -> Combatant) = {
+    val target = cs.get(targetId)
+    val effects = match hitRider {
+      | AHRShockingGrasp =>
+        pAddEffectSimple(target.creature.activeEffects, SHOCKING_GRASP_SPELL_ID, 1, AtStartOfTurn, attackerId)
+      | AHRRayOfFrost =>
+        pAddEffectSimple(target.creature.activeEffects, RAY_OF_FROST_SPELL_ID, 1, AtStartOfTurn, attackerId)
+      | _ => target.creature.activeEffects
+    }
+    if (effects == target.creature.activeEffects) cs
+    else setCreature(cs, targetId, target.creature.with("activeEffects", effects))
+  }
+
   /// Eligible for Legendary Resistance: target alive + conscious + has LR charges remaining.
   /// LR is a per-day resource, NOT reaction-based.
   pure def eligibleForLR(
@@ -742,7 +797,6 @@ module battle {
 
   action bStartTurn = {
     val activeId = bInitiative[bTurnIndex]
-    val c = bCreatures.get(activeId)
     // Nondeterministic inputs for start-of-turn processing
     nondet rechargeD6 = 1.to(6).oneOf()
     nondet sotDmg = 0.to(10).oneOf()
@@ -754,21 +808,16 @@ module battle {
     all {
       bPhase == BPActiveTurn,
       not(bTurnStarted),
-      // 1. Decrement effect durations for active creature
-      val eff1 = pDecrementDurations(c.creature.activeEffects)
-      // 2. Clear expired AtStartOfTurn effects
-      val eff2 = pClearExpiredAtPhase(eff1, AtStartOfTurn)
-      // 2a. Auto-break concentration if the concentrated spell's effect expired
-      val ss0 = pAutoBreakExpiredConcentration(c.slots, eff2)
-      val s0 = c.creature.with("activeEffects", eff2)
+      // 1. Advance all start-of-turn owned effects across the battle state.
+      val cs0a = advanceStartEffectsForOwner(bCreatures, activeId)
+      val c0 = cs0a.get(activeId)
       // 2b. Death save (if applicable): hp == 0, not stable, not dead, roll provided
-      val s1 = if (s0.hp == 0 and not(s0.stable) and not(s0.dead) and deathSaveRoll > 0)
-        pDeathSave(s0, deathSaveRoll)
-      else s0
-      val cs0pre = setCreature(bCreatures, activeId, s1).setSlots(activeId, ss0)
-      val cs0 = propagateIfConcBroken(cs0pre, activeId, c.slots, ss0)
+      val s1 = if (c0.creature.hp == 0 and not(c0.creature.stable) and not(c0.creature.dead) and deathSaveRoll > 0)
+        pDeathSave(c0.creature, deathSaveRoll)
+      else c0.creature
+      val cs0 = setCreature(cs0a, activeId, s1)
       // 3. Process start-of-turn effects (simplified: one aggregate effect)
-      val hasEffects = eff2.size() > 0 and (sotDmg > 0 or sotHeal > 0)
+      val hasEffects = cs0.get(activeId).creature.activeEffects.size() > 0 and (sotDmg > 0 or sotHeal > 0)
       val cs1 = if (hasEffects) {
         val startEff: StartOfTurnEffect = {
           spellId: "", healAmount: sotHeal, tempHpAmount: 0,
@@ -784,8 +833,9 @@ module battle {
       } else cs0
       // 4. Fresh turn state
       val ac1 = cs1.get(activeId)
+      val adjustedBaseSpeed = intMax(0, ac1.baseWalkSpeed + speedDeltaFromEffects(ac1.creature.activeEffects))
       val speed = pComputeEffectiveSpeed(
-        ac1.baseWalkSpeed, ac1.creature.exhaustion,
+        adjustedBaseSpeed, ac1.creature.exhaustion,
         ac1.creature.grappled, ac1.creature.restrained,
         0, false, false  // armor/grappling: not modeled at battle level
       )
@@ -805,8 +855,8 @@ module battle {
                                             .with("sneakAttackUsedThisTurn", false)
                                             .with("readiedSpellParams", NO_READIED_SPELL))
       // 5. Monster-specific: refresh LA + recharge rolls
-      val cs3 = if (c.kind == Monster) {
-        val sb = c.statBlock
+      val cs3 = if (c0.kind == Monster) {
+        val sb = c0.statBlock
         val mr0 = cs2b.get(activeId).monsterResources
         // Refresh legendary actions (R7)
         val mr1 = pRefreshLegendaryActions(mr0, sb.legendaryActionUses, sb.inLair)
@@ -903,6 +953,7 @@ module battle {
     isFinesse: bool,
     hasAllyAdjacentToTarget: bool,
     saDmg: int,
+    hitRider: AttackHitRider,
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     // autoMiss forces miss; otherwise normal hit check
     val hit = not(mods.autoMiss) and (attackRoll >= targetAc or attackRoll >= critRange)
@@ -930,6 +981,7 @@ module battle {
         critRange: critRange,
         atkReturnTo: returnTo,
         knockOut: effectiveKnockOut,
+        hitRider: hitRider,
       }
       val elig = eligibleExcluding(cs1, attackerId)
       if (elig.size() > 0) {
@@ -951,7 +1003,7 @@ module battle {
     nondet diceCount = Set(1, 2).oneOf()
     nondet dieSize = Set(4, 6, 8, 10, 12).oneOf()
     nondet dmg = diceCount.to(diceCount * dieSize).oneOf()
-    nondet dt = Set(Slashing, Piercing, Bludgeoning).oneOf()
+    nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet crit = Bool.oneOf()
     nondet tAc = 10.to(20).oneOf()
     nondet knockOut = Bool.oneOf()
@@ -964,6 +1016,7 @@ module battle {
     nondet attackerCanSeeTarget = Bool.oneOf()
     nondet frightSourceInLOS = Bool.oneOf()
     nondet hasAllyAdjacentToTarget = Bool.oneOf()
+    nondet hitRider = Set(NoAttackHitRider, AHRShockingGrasp, AHRRayOfFrost).oneOf()
     // SA damage: nondeterministic within Nd6 range (0 if not eligible — resolved in resolveAttack)
     nondet saDmg = ac.sneakAttackDice.to(ac.sneakAttackDice * 6).oneOf()
     val tc = bCreatures.get(targetId)
@@ -974,6 +1027,8 @@ module battle {
       not(ac.creature.dead),
       not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
+      (hitRider != AHRShockingGrasp) or (isMelee and dt == Lightning),
+      (hitRider != AHRRayOfFrost) or (not(isMelee) and dt == Cold),
       val newTurn = if (ac.turn.attackActionUsed and ac.turn.extraAttacksRemaining > 0)
         ac.turn.with("extraAttacksRemaining", ac.turn.extraAttacksRemaining - 1)
       else
@@ -981,7 +1036,7 @@ module battle {
       val cs1 = setTurn(bCreatures, activeId, newTurn)
       val atkCtx = buildAttackContext(cs1, activeId, targetId, isMelee, attackerWithin5ft, hostileWithin5ft, targetCanSeeAttacker, attackerCanSeeTarget, frightSourceInLOS)
       val atkMods = pAggregateAttackMods(atkCtx)
-      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, atkMods, isFinesse, hasAllyAdjacentToTarget, saDmg)
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, atkMods, isFinesse, hasAllyAdjacentToTarget, saDmg, hitRider)
       all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
     }
   }
@@ -993,7 +1048,8 @@ module battle {
     if (not(stillHit)) {
       { creatures: cs, phase: returnToPhase(atk.atkReturnTo) }
     } else {
-      val dmgElig = eligibleTarget(cs, atk.target)
+      val cs1 = applyAttackHitRider(cs, atk.attacker, atk.target, atk.hitRider)
+      val dmgElig = eligibleTarget(cs1, atk.target)
       if (dmgElig.size() > 0) {
         val dmgCtx: AttackDamageCtx = {
           attacker: atk.attacker, target: atk.target,
@@ -1001,10 +1057,10 @@ module battle {
           isCritical: atk.isCritical, atkReturnTo: atk.atkReturnTo,
           knockOut: atk.knockOut,
         }
-        { creatures: cs, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, dmgElig)) }
+        { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, dmgElig)) }
       } else {
         // No damage-phase reactions — deal damage and check for after-damage reactions (R10.4)
-        dealDamageWithAfterReactions(cs, atk.target, atk.attacker,
+        dealDamageWithAfterReactions(cs1, atk.target, atk.attacker,
           atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo, atk.knockOut)
       }
     }
@@ -1940,7 +1996,10 @@ module battle {
       } else {
         // Filter threatened to those with reaction + alive (visibility is a spatial concern, not modeled)
         val oaEligible = threatened.filter(id =>
-          hasReaction(cs1, id) and not(cs1.get(id).creature.dead)
+          hasReaction(cs1, id)
+          and not(cs1.get(id).creature.dead)
+          and not(isIncapacitated(cs1.get(id).creature))
+          and not(blocksOpportunityAttacks(cs1.get(id).creature.activeEffects))
         )
         if (oaEligible.size() == 0) {
           all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
@@ -1998,7 +2057,7 @@ module battle {
         // OA: always melee, always within 5ft
         val oaCtx = buildAttackContext(cs1, reactorId, mv.mover, true, true, oaHostileWithin5ft, oaTargetCanSeeAttacker, oaAttackerCanSeeTarget, oaFrightSourceInLOS)
         val oaMods = pAggregateAttackMods(oaCtx)
-        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaMods, oaIsFinesse, oaHasAllyAdjacent, oaSaDmg)
+        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaMods, oaIsFinesse, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -2145,7 +2204,7 @@ module battle {
           val readyReturn = ADRAwaitingReadiedAction(readyCtx)
           val readyAtkCtx = buildAttackContext(cs1, releaserId, targetId, readyIsMelee, readyAtkWithin5ft, readyHostileWithin5ft, readyTgtCanSee, readyAtkCanSee, readyFrightLOS)
           val readyMods = pAggregateAttackMods(readyAtkCtx)
-          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg)
+          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg, NoAttackHitRider)
           all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -2236,7 +2295,7 @@ module battle {
         val laReturn = ADRAwaitingLegendaryAction(laCtx)
         val laAtkCtx = buildAttackContext(cs1, monsterId, laTarget, laIsMelee, laAtkWithin5ft, laHostileWithin5ft, laTgtCanSee, laAtkCanSee, laFrightLOS)
         val laMods = pAggregateAttackMods(laAtkCtx)
-        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laMods, laIsFinesse, laHasAllyAdjacent, laSaDmg)
+        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laMods, laIsFinesse, laHasAllyAdjacent, laSaDmg, NoAttackHitRider)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
@@ -2688,7 +2747,8 @@ module battle {
   val concentrationEffectHasLivingCaster =
     (bSpellStack.length() > 0) or bCreatures.keys().forall(targetId =>
       bCreatures.get(targetId).creature.activeEffects.forall(e =>
-        bCreatures.keys().exists(casterId =>
+        (e.spellId == SHOCKING_GRASP_SPELL_ID or e.spellId == RAY_OF_FROST_SPELL_ID)
+        or bCreatures.keys().exists(casterId =>
           val caster = bCreatures.get(casterId)
           e.casterId == casterId
           and not(caster.creature.dead)

@@ -159,11 +159,23 @@ The runtime layer now also supports:
 - effect-driven temporary speed reduction,
 - mixed expiry ownership for temporary attack riders.
 
-The next missing capability is no longer the runtime model. It is:
+Batch 4 completed the missing proof layer:
 
-- spec-level and MBT-generated coverage for these attack-hit riders.
+- `battle.qnt` now generates attack-hit riders for `Shocking Grasp` and `Ray of Frost`,
+- battle MBT now maps Quint rider choices into battle-machine attack events,
+- battle projection MBT now replays the same rider path against creature actors,
+- start-of-turn ownership semantics are now exercised end to end for these cases.
 
-That is the real next frontier now, not more runtime-only battle tests.
+Important implementation note:
+
+- Quint battle spec did not need a shared-effect shape change to express owner-relative expiry.
+- The TS bridge in this worktree did need to align to the shared effect contract so MBT could replay the same semantics without projection-only effect payloads.
+- That alignment added generic turn-hook support in the worktree TS effect model.
+
+Current remaining caveat:
+
+- the projection harness still carries a small local shim for `Ray of Frost` expiry ownership, because the single-creature actor still has no creature identity and cannot decide "whose turn owns this expiry" from local state alone.
+- This is a bridge limitation, not a battle-spec limitation.
 
 ## Verification Already Completed
 
@@ -215,49 +227,81 @@ Batch-3 verification completed in this worktree:
   - seed: `0xafdde94b`
   - total: `12s`
 
+Batch-4 verification completed in this worktree:
+
+- battle spec typecheck:
+  - command: `pnpm exec quint typecheck battle.qnt`
+  - passed
+- focused battle regressions:
+  - command: `pnpm exec vitest run src/competitor-battle-scenarios.test.ts`
+  - passed: 4 tests
+- package typecheck:
+  - command: `pnpm --filter @dnd/core typecheck`
+  - passed
+- battle machine MBT Tier 1:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts`
+  - seed: `0xe186be24`
+  - total: `16s`
+- battle projection MBT Tier 1, reproduced failing seed after projection fixes:
+  - command: `QUINT_SEED=0x6c82836d MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
+  - seed: `0x6c82836d`
+  - total: `16s`
+- battle projection MBT Tier 1, fresh run:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
+  - seed: `0xf151cb03`
+  - total: `14s`
+
 ## Current Worktree State
 
-This worktree now contains both regression tests and runtime battle-state changes.
+This worktree now contains:
 
-That means the next step is no longer "start the spell-rider batch." The runtime spell-rider batch is already done.
+- competitor-driven creature regressions,
+- competitor-driven battle regressions,
+- runtime rider support,
+- spec-level rider generation,
+- MBT coverage for the rider path,
+- and a small TS effect-contract alignment to support owned-effect replay.
+
+The next step is not "add rider proof coverage." That work is now done in this worktree.
 
 ## Next Step Options
 
-### Option A: Add Quint / MBT Coverage For Attack-Hit Riders
+### Option A: Reconcile This Branch With Main-Branch Effect Ownership Work
 
 Recommended next step.
 
 Goal:
 
-- make the spec and model-based bridge actually exercise the new `Shocking Grasp` / `Ray of Frost` rider path.
+- merge or rebase this worktree onto the main-branch authoritative `ActiveEffect` ownership changes,
+- remove any duplicated compatibility logic introduced here while preserving the now-green battle/spec MBT path,
+- decide whether the projection `Ray of Frost` ownership shim can disappear once creature actors carry enough identity to own expiry decisions locally.
 
 Scope:
 
-- extend [battle.qnt](/workspace/typescript/dnd-competitor-tests-batch-1/battle.qnt) and the MBT bridge so `bAttack` can nondeterministically attach attack-hit riders,
-- add the corresponding mapping in [packages/core/src/battle-machine.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine.mbt.test.ts),
-- update [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-projection.mbt.test.ts) if needed so the projected creature-machine replay understands expiry ownership and rider effects,
-- extend normalization in [packages/core/src/mbt-shared.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/mbt-shared.ts) if new state fields are added to Quint effects,
-- only after that, rely on MBT to validate these mechanics instead of just deterministic runtime tests.
+- re-read the parallel effect-ownership branch before changing the shared effect files,
+- compare [packages/core/src/types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/types.ts), [packages/core/src/machine-types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine-types.ts), [packages/core/src/machine.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine.ts), [packages/core/src/machine-startturn.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine-startturn.ts), and [packages/core/src/machine-endturn.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine-endturn.ts) against `master`,
+- keep [battle.qnt](/workspace/typescript/dnd-competitor-tests-batch-1/battle.qnt), [packages/core/src/battle-machine.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine.mbt.test.ts), and [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-projection.mbt.test.ts) as the behavioral reference,
+- rerun the same Tier 1 MBT checks after reconciliation.
 
 Why this is next:
 
-- the runtime behavior is implemented and tested,
-- the remaining gap is proof coverage, not local mechanics,
-- this is the shortest path back to the project's actual goal: Quint parity.
+- the battle/spec proof work is done here,
+- the main branch is now evolving the shared effect contract in the same direction,
+- the highest-value remaining task is to converge the two branches instead of letting them drift.
 
-### Option B: Add More Test-Only Battle Regressions
+### Option B: Replace The Projection Ownership Shim
 
-Only do this if avoiding architecture work.
+Only do this if main-branch effect ownership work is blocked.
 
-Candidates:
+Goal:
 
-- more Shield cases around hit thresholds,
-- additional OA sequencing variants,
-- more reaction-availability edge cases.
+- remove the battle-projection local `Ray of Frost` ownership helper by giving the replay layer enough identity/context to derive expiry ownership from actor state alone.
 
 Why this is weaker:
 
-- the clearest runtime wins are already captured,
+- it is a bridge clean-up, not a new proof win,
+- it may be superseded by the main-branch effect work,
+- it should not be done in isolation if the shared effect contract is changing under it.
 - more tests without spec/MBT uplift increase the proof gap rather than shrinking it.
 
 ## If You Continue This Work Next Time

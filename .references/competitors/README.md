@@ -22,15 +22,17 @@ Current implementation artifacts from this worktree:
 
 - [packages/core/src/competitor-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-scenarios.test.ts)
 - [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts)
+- [battle.qnt](/workspace/typescript/dnd-competitor-tests-batch-1/battle.qnt)
+- [packages/core/src/battle-machine.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine.mbt.test.ts)
+- [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-projection.mbt.test.ts)
 - [packages/core/src/types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/types.ts)
-- [packages/core/src/battle-machine-creature.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-creature.ts)
-- [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-helpers.ts)
-- [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-attack.ts)
-- [packages/core/src/battle-machine-actions-movement.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-movement.ts)
-- [packages/core/src/battle-machine-actions-turn.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-turn.ts)
+- [packages/core/src/machine-types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine-types.ts)
+- [packages/core/src/machine.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine.ts)
+- [packages/core/src/machine-startturn.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine-startturn.ts)
+- [packages/core/src/machine-endturn.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine-endturn.ts)
 
 Important context:
 
 - This branch started from `master`, so the broader research notes from the earlier competitor-analysis branch are not present here.
 - This directory is the local replacement for that missing context.
-- The next session should start from [PLAN.md](/workspace/typescript/dnd-competitor-tests-batch-1/.references/competitors/PLAN.md), then take the current recommended next step there: add Quint/MBT coverage for attack-hit riders.
+- The next session should start from [PLAN.md](/workspace/typescript/dnd-competitor-tests-batch-1/.references/competitors/PLAN.md), then take the current recommended next step there: reconcile this worktree with the main-branch authoritative effect-ownership work.

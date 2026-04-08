@@ -385,6 +385,7 @@ const battleDriverSchema = {
     dieSize: OI,
     dmg: OI,
     dt: OV,
+    hitRider: OV,
     crit: OB,
     tAc: OI,
     knockOut: OB,
@@ -476,6 +477,18 @@ const battleDriverSchema = {
   bEnterRage: {},
   bDeclareReckless: {},
   bReady: {},
+  bReadySpell: {
+    targetId: OS,
+    saveDC: OI,
+    dmgOnFail: OI,
+    halfOnSave: OB,
+    dt: OV,
+    cond: OV,
+    applyCond: OB,
+    saveAb: OV,
+    slotLvl: OI,
+    spellName: OS
+  },
   bReadyPass: {},
   bReadyRelease: {
     releaserId: OS,
@@ -495,6 +508,10 @@ const battleDriverSchema = {
     frightSourceInLOS: OB,
     hasAllyAdjacentToTarget: OB,
     saDmg: OI
+  },
+  bReadySpellRelease: {
+    releaserId: OS,
+    saveRoll: OI
   },
   bCastBonusActionSpell: {
     targetId: OS,
@@ -543,6 +560,39 @@ function attackContextPicks(picks: Record<string, unknown>) {
     hasAllyAdjacentToTarget: pb(picks, "hasAllyAdjacentToTarget", false),
     saDmg: p(picks, "saDmg", 0)
   }
+}
+
+function currentTurnCreatureId(context: BattleContext): CreatureId {
+  return context.initiative[context.turnIndex]!
+}
+
+function onHitEffectFromPicks(
+  picks: Record<string, unknown>,
+  attackerId: CreatureId,
+  targetId: CreatureId
+) {
+  const hitRider = ps(picks, "hitRider", "NoAttackHitRider")
+  if (hitRider === "AHRShockingGrasp") {
+    return {
+      spellId: mkSpellId("shocking_grasp"),
+      turnsRemaining: 1,
+      expiresAt: "start" as const,
+      casterId: attackerId,
+      expiryOwnerId: targetId,
+      blocksOpportunityAttacks: true
+    }
+  }
+  if (hitRider === "AHRRayOfFrost") {
+    return {
+      spellId: mkSpellId("ray_of_frost"),
+      turnsRemaining: 1,
+      expiresAt: "start" as const,
+      casterId: attackerId,
+      expiryOwnerId: attackerId,
+      speedDeltaFeet: -10
+    }
+  }
+  return undefined
 }
 
 function createBattleMachineDriver() {
@@ -635,9 +685,11 @@ function createBattleMachineDriver() {
         })
       },
       bAttack: (picks: Record<string, unknown>) => {
+        const battleCtx = ctx()
+        const targetId = pc(picks, "targetId", "")
         send({
           type: "BATTLE_ATTACK",
-          targetId: pc(picks, "targetId", ""),
+          targetId,
           attackRoll: p(picks, "attackRoll", 10),
           diceCount: p(picks, "diceCount", 1),
           dieSize: p(picks, "dieSize", 8),
@@ -647,6 +699,7 @@ function createBattleMachineDriver() {
           tAc: armorClass(p(picks, "tAc", 15)),
           knockOut: pb(picks, "knockOut", false),
           isMelee: pb(picks, "isMelee", true),
+          onHitEffect: onHitEffectFromPicks(picks, currentTurnCreatureId(battleCtx), targetId),
           ...attackContextPicks(picks)
         })
       },
@@ -864,6 +917,21 @@ function createBattleMachineDriver() {
       bReady: () => {
         send({ type: "BATTLE_READY" })
       },
+      bReadySpell: (picks: Record<string, unknown>) => {
+        send({
+          type: "BATTLE_READY_SPELL",
+          targetId: pc(picks, "targetId", ""),
+          saveDC: difficultyClass(p(picks, "saveDC", 15)),
+          dmgOnFail: p(picks, "dmgOnFail", 10),
+          halfOnSave: pb(picks, "halfOnSave", false),
+          dt: mapDamageType(ps(picks, "dt", "Fire")),
+          cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CBlinded")] ?? "blinded",
+          applyCond: pb(picks, "applyCond", false),
+          saveAbility: mapAbility(ps(picks, "saveAb", "Con")),
+          slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
+          spellName: ps(picks, "spellName", "guiding_bolt")
+        })
+      },
       bReadyPass: () => {
         send({ type: "BATTLE_READY_PASS" })
       },
@@ -898,6 +966,13 @@ function createBattleMachineDriver() {
           spellName: ps(picks, "spellName", "guiding_bolt"),
           ritual: false,
           bonusAction: true
+        })
+      },
+      bReadySpellRelease: (picks: Record<string, unknown>) => {
+        send({
+          type: "BATTLE_READY_SPELL_RELEASE",
+          releaserId: pc(picks, "releaserId", ""),
+          saveRoll: p(picks, "saveRoll", 10)
         })
       },
       battleStep: () => {},
