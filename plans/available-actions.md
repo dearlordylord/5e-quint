@@ -6,16 +6,18 @@
 
 Durable decisions that apply across all phases:
 
-- **Action token schema**: Command-with-holes pattern. Serializable JSON. Same structure for query (`get_available_actions` returns tokens with choice holes) and execution (`execute_action` accepts tokens with holes filled). Cost is always populated; choice holes are typed with valid options enumerated.
-- **`execute_action` MCP input schema is a discriminated union**: Effect Schema `Schema.Union` with one variant per exposed action type, discriminated on `type`. Each variant declares exactly the fields it requires (no optional soup). `JSONSchema.make()` generates standard JSON Schema for the MCP tool definition. Validation via `Schema.decodeUnknownEither`.
+- **Three-step execution contract**: `get_available_actions` returns `ActionToken` values (query-time shape). `execute_action` accepts `ResolvedActionToken` values (user-facing holes filled, no engine-only fields). Core then resolves that token into a `ResolutionRequest`, and the runtime layer supplies engine-only inputs (dice rolls, turn-start runtime facts) to produce the final `DndEvent`.
+- **`execute_action` MCP input schema is derived from `ResolvedActionToken`**: Effect Schema `Schema.Union`, discriminated on `type`, generated from the supported resolved-token variants rather than hand-writing a union over all machine event types. `JSONSchema.make()` generates the MCP tool schema. Validation via `Schema.decodeUnknownEither`.
 - **MCP tool surface**: Three tools — `get_state`, `get_available_actions`, `execute_action`. Independent process from React app, instantiates its own XState actor. Low-level MCP SDK (`Server` + `setRequestHandler`), not the high-level `McpServer` class (which is zod-only).
-- **No hand-curated event type catalog**: `TOKEN_BUILDERS` keys are the single source of truth for exposed actions. State topology (which events the machine accepts in which state) is derived from `rootEventHandlers` + `turnPhaseConfig` — no separate hand-written list. Adding a new action = add a token builder + the machine config already handles it.
+- **Supported action spec is the source of truth for the executable surface**: The available-actions module owns the supported action registry. For each supported action, the registry defines the query token, resolved execute shape, runtime-input requirements, and final `DndEvent` mapping. State topology (which events the machine accepts in which state) is still derived from `rootEventHandlers` + `turnPhaseConfig`.
 - **Grouping axis**: Actions grouped by resource cost (action, bonus action, reaction, free/movement). No ordering within groups. Permanent — we do not rank by tactical value or optimality.
 - **No confidence scoring**: Permanent design decision. Player goals are opaque; we present options, never rank them.
 - **Cacheability**: Every layer boundary is an Effect service with test/mock/cached layers. Audio segments, transcript text, LLM calls, candidate events — all cacheable and replayable.
 - **Module placement**: Available actions is a pure function `(DndContext, machineState) → ActionToken[]` in `packages/core/src/available-actions.ts`. Not inside the machine (projection, not transition). `packages/mcp/` is the MCP server process; it imports `@dnd/core`. `packages/app/` is the React demo; it also imports `@dnd/core`. Neither app nor mcp duplicates logic — both consume from core.
 - **Package layout**: `packages/core/` holds ActionToken types, available-actions module, and all machine logic. `packages/mcp/` is the MCP server process. `packages/app/` is the React demo. MCP imports `@dnd/core`; app imports `@dnd/core`.
 - **Legality from guards**: The available actions module queries the same XState guards that MBT validates against the Quint spec. No redundant legality logic.
+- **Engine-only inputs are runtime-owned**: Dice rolls, turn-start runtime facts, and similar non-user inputs are supplied after token resolution by the runtime layer (MCP for now, later possibly a session/battle manager). The MCP caller never provides those directly.
+- **Executable surface stays narrow until coverage is complete**: Do not expose actions through `get_available_actions` unless the full path exists and is tested: action token → resolved action token → runtime inputs → `DndEvent` → accepted machine transition.
 - **Multi-creature forward compatibility**: Target and trigger fields are optional in the token schema from phase 1. Not populated until battle-level phases. No character-only code to erase later.
 
 ---
@@ -26,30 +28,33 @@ Durable decisions that apply across all phases:
 
 ### What to build
 
-Pick one action type — Second Wind is a good candidate (bonus action, has a guard `canSecondWind`, costs a class resource charge, produces a healing outcome with a dice range). Build the thinnest possible end-to-end path:
+Pick one action type — Second Wind is a good candidate (bonus action, has a guard `canSecondWind`, costs a class resource charge, produces a healing outcome with a dice range). Build the thinnest possible end-to-end path around the new three-step contract:
 
-- Add the event type catalog (can start with a subset, just enough entries to exercise the pattern).
-- Define the action token schema type — cost, choice holes, outcome description.
-- Implement the available actions module returning just this one action token when the guard passes.
-- Stand up the MCP server with all three tools. `get_state` returns DndContext. `get_available_actions` returns the single token (or empty if guard fails). `execute_action` accepts the filled token, sends the event, returns new state.
-- Verify: connect Claude Desktop to the MCP server. Ask "what can my character do?" — get Second Wind back. Execute it — see HP change.
+- Define the query-time `ActionToken` schema and execute-time `ResolvedActionToken` schema.
+- Implement the available actions module returning only supported action tokens when guards and state topology allow them.
+- Implement core action resolution: resolved token → runtime-input request → final `DndEvent`.
+- Stand up the MCP server with all three tools. `get_state` returns DndContext. `get_available_actions` returns the supported token set grouped by cost. `execute_action` accepts a resolved token, runtime-resolves engine-only fields, sends the event, and returns the new state.
+- Verify: connect Claude Desktop to the MCP server. Ask "what can my character do?" — get the supported action set back. Execute one — see state change.
 
 ### Acceptance criteria
 
-- [ ] Event type catalog exists as a const array with `satisfies` validation (may be partial — full catalog is phase 4)
-- [ ] Action token type is defined with `Hole<T>`, `MaybeHole<T>`, `FillHoles<T>` mapping (see PRD "Action Token Type Design")
-- [ ] Available actions module returns Second Wind token when `canSecondWind` guard passes, omits it when guard fails
+- [x] Action token utilities are defined with `Hole<T>`, `MaybeHole<T>`, `FillHoles<T>` mapping (see PRD "Action Token Type Design")
+- [x] Core distinguishes `ActionToken`, `ResolvedActionToken`, and runtime resolution to `DndEvent`
+- [x] Available actions module returns only the supported executable action subset, including Second Wind when `canSecondWind` passes
 - [ ] MCP server runs as an independent process with its own XState actor
 - [ ] `get_state` returns current DndContext as JSON
 - [ ] `get_available_actions` returns action tokens grouped by resource cost
-- [ ] `execute_action` accepts a filled token, applies the event, returns new state + description
-- [ ] Round-trip integration test: get actions → fill token → execute → verify state changed
+- [x] `execute_action` accepts a resolved token, runtime-resolves engine-only inputs, applies the event, and returns new state + description
+- [x] Round-trip integration test: get actions → resolve token → execute → verify state changed
+- [x] Focused creature MBT confirmation passes after the contract redesign
 
 ### Phase 1 TODOs
 
 Items discovered during implementation that need resolution before Phase 1 is complete:
 
-**START_TURN payload redesign**: `START_TURN` requires `baseSpeed`, `armorPenalty`, `extraAttacks`, `callerSpeedModifier`, `isGrappling`, `grappledTargetTwoSizesSmaller`, `startOfTurnEffects` — these are battle-context fields that the MCP consumer shouldn't provide. Currently hardcoded for Phase 1 Fighter 5 demo. Fix: derive from creature state or a session/battle manager. MCP `START_TURN` should be zero-payload from the consumer's perspective.
+**Turn-start runtime facts ownership**: `START_TURN` is now zero-payload at the consumer boundary, but the runtime layer still supplies placeholder values for `isGrappling`, `grappledTargetTwoSizesSmaller`, and `startOfTurnEffects`. Fix: derive these from authoritative domain state or a session/battle manager. The MCP caller should not provide or remember them.
+
+**Broaden the supported executable surface gradually**: the current implementation intentionally exposes only a narrow supported subset (`ENTER_COMBAT`, `START_TURN`, `USE_SECOND_WIND`, `EXIT_COMBAT`). Each new action must add all of: query token, resolved token schema, runtime-input requirements, final `DndEvent` mapping, and focused tests.
 
 **`USE_HEROIC_INSPIRATION` guard**: Token builder is missing because the guard isn't wired in `machine-guards.ts`. Need to add the guard, then add the token builder.
 
@@ -62,6 +67,29 @@ Items discovered during implementation that need resolution before Phase 1 is co
 - Battle-context actions: `USE_RELENTLESS_RAGE` (conSaveSucceeded), `USE_TACTICAL_MIND` (boostedCheckSucceeds), `USE_PEERLESS_SKILL` (success)
 - Hole-field pass-throughs: `CONVERT_SLOT_TO_POINTS`, `CONVERT_POINTS_TO_SLOT`, `USE_ARCANE_RECOVERY`, `USE_MYSTIC_ARCANUM`, `USE_FONT_SLOT_RESTORE`, `USE_WILD_RESURGENCE_CHARGE`, `USE_DIVINE_SMITE`, `USE_LAY_ON_HANDS`, `USE_METAMAGIC` (all slotLevel/amount/option)
 - Complex payload: `SHORT_REST` (conMod, hdRolls)
+
+---
+
+## Phase 1.5: Turn-start and grapple-state ownership
+
+**User stories**: 1, 4, 5, 9
+
+### What to build
+
+Make `START_TURN` runtime facts come from authoritative domain state rather than MCP placeholders, with grapple as the first concrete case.
+
+- Keep `START_TURN` zero-payload at the consumer boundary.
+- Move `isGrappling` and `grappledTargetTwoSizesSmaller` out of MCP-owned placeholder logic and into spec/machine/session-owned state.
+- Model grapple as persistent combat state, not caller memory. User-supplied grapple events should establish or remove grapple state; subsequent turn-start logic should derive from that owned state.
+- Move `startOfTurnEffects` to the same ownership pattern: derive from authoritative effect/session state rather than fabricating `[]` in the adapter.
+
+### Acceptance criteria
+
+- [ ] `START_TURN` consumer input remains `{ type: "START_TURN" }`
+- [ ] Runtime derives grapple-related turn-start inputs from authoritative domain state
+- [ ] MCP no longer hardcodes grapple booleans
+- [ ] Focused tests confirm that grapple-establishing events affect later `START_TURN` behavior without caller bookkeeping
+- [ ] Creature/battle parity still holds after the grapple-state ownership change
 
 ---
 
@@ -102,13 +130,13 @@ Add spell casting — the first action type with non-trivial choice holes. A spe
 - Multiple spells at the same slot level may be grouped.
 - The consumer picks spell + slot, fills the holes, sends the token back to `execute_action`.
 
-This exercises the full command-with-holes pattern: `get_available_actions` returns tokens with typed choice slots, the consumer fills them, `execute_action` validates and applies.
+This exercises the full command-with-holes pattern under the new contract: `get_available_actions` returns `ActionToken` values with typed choice slots, the consumer fills them into `ResolvedActionToken` values, `execute_action` validates them, the runtime layer supplies engine-only inputs, and the machine applies the resulting event.
 
 ### Acceptance criteria
 
 - [ ] Spell tokens include `choose: { slot: [...available levels...] }` with valid upcast options
 - [ ] No combinatorial explosion — spells are not multiplied by slot levels into separate tokens
-- [ ] Filling a spell token with a valid slot level and calling `execute_action` succeeds
+- [ ] Filling a spell token with a valid slot level and calling `execute_action` succeeds via the resolved-token/runtime-input pipeline
 - [ ] Filling with an invalid slot level (e.g., no slots remaining at that level) is rejected
 - [ ] Spell tokens only appear when the character has the relevant spell slots and meets casting prerequisites (action/bonus action available, not incapacitated)
 
@@ -123,7 +151,7 @@ This exercises the full command-with-holes pattern: `get_available_actions` retu
 Extend the event type catalog and available actions module to cover every event type in the `DndEvent` union. This is the breadth pass after phases 1-3 proved the depth.
 
 - Complete the `EVENT_TYPES` const array — every event type in the union is listed.
-- The available actions module queries guards for all event types and builds tokens for each legal one.
+- The available actions module queries guards for all event types and builds tokens for each legal one, but only exposes actions whose full execute contract is implemented.
 - Optional multi-creature fields (target, trigger context) are present in the token schema but not populated — forward compatibility for battle-level phases.
 - Property-based testing validates the contract: every returned token is executable, every omitted event type is actually illegal in the current state.
 
@@ -131,7 +159,7 @@ Extend the event type catalog and available actions module to cover every event 
 
 - [ ] `EVENT_TYPES` array includes every member of the `DndEvent["type"]` union — compile error if any are missing
 - [ ] Available actions module returns tokens for all legal actions in a given state, not just the representative subset from phases 1-3
-- [ ] Property-based test: for any generated DndContext, every returned token (filled with any valid choice) is accepted by `execute_action`
+- [ ] Property-based test: for any generated DndContext, every returned token (filled with any valid choice) resolves through the supported execution contract and is accepted by the machine
 - [ ] Property-based test: for any generated DndContext, no event type absent from the result is accepted by the machine in that state
 - [ ] Multi-creature fields (target, trigger) exist as optional in token schema, are not populated
 - [ ] Snapshot tests for multiple character archetypes (Fighter, Wizard, multiclass) confirm expected token sets
@@ -223,7 +251,7 @@ Port the proven transcript pipeline from Hellenvald into the D&D project. Replac
 - Candidate events validated against XState guards. Legal candidates are applied. Illegal candidates trigger warnings (using `DM_OVERRIDE` from phase 6 if the table insists).
 - MBT verification: transcript-derived events produce correct state transitions matching the Quint spec.
 - Full pipeline cacheability: audio → transcript → LLM → candidates → spec validation → state.
-- MCP integration: the transcript pipeline feeds into the same `get_available_actions` / `execute_action` interface.
+- MCP integration: the transcript pipeline feeds into the same `get_available_actions` / resolved-token `execute_action` interface.
 
 ### Acceptance criteria
 
