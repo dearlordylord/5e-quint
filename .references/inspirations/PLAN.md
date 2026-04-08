@@ -374,6 +374,135 @@ Why this is weaker:
 - the main battle proof path is already green,
 - it is best treated as local hardening, not as the primary next milestone.
 
+## Parallel Pre-Research
+
+If this work is resumed with subagents, they can scout these in parallel before implementation. All of them fit the current battle/runtime surface and avoid new battle state.
+
+### Candidate 1: Disengage Suppresses Opportunity Attacks For The Rest Of The Turn
+
+Why it is small:
+
+- the battle machine already tracks `disengaged`,
+- movement OA offering already goes through a single eligibility gate,
+- and the expected behavior is a deterministic yes/no regression.
+
+Likely files:
+
+- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
+- [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
+
+RAW anchors:
+
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Disengage [Action]`
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Reaction`
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Opportunity Attacks`
+- [battle/REQUIREMENTS.md](../../battle/REQUIREMENTS.md) `R2`, `R5`
+
+### Candidate 2: Dodge Applies Attack Disadvantage Until The Start Of The Dodger's Next Turn
+
+Why it is small:
+
+- `dodging` already exists on battle creature state,
+- attack-mod aggregation already consumes `targetDodging`,
+- and turn-start reset behavior is already part of the battle start-turn pipeline.
+
+Likely files:
+
+- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts)
+- [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
+
+RAW anchors:
+
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Dodge [Action]`
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Reaction`
+- [battle/REQUIREMENTS.md](../../battle/REQUIREMENTS.md) `R1`, `R2`
+
+### Candidate 3: A Spent Reaction Refreshes At The Start Of The Creature's Next Turn
+
+Why it is small:
+
+- the battle layer already spends reactions for Shield, Opportunity Attacks, and readied actions,
+- existing inspiration tests cover "no second reaction before next turn" but not the explicit refresh boundary,
+- and the check is deterministic with current turn sequencing.
+
+Likely files:
+
+- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts)
+- [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
+
+RAW anchors:
+
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Reaction`
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Opportunity Attacks`
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Ready [Action]`
+- [battle/REQUIREMENTS.md](../../battle/REQUIREMENTS.md) `R2`, `R5`
+
+### Parallel Audit: Grapple Readiness Check
+
+This is a separate subagent task, not an implementation target.
+
+Goal:
+
+- determine whether `master` has gained battle-layer grappler identity/link state beyond a bare `grappled: boolean`,
+- and answer whether "grappler incapacitation auto-releases target" is now a small deterministic batch or still an architectural batch.
+
+Files to inspect:
+
+- [battle.qnt](../../battle.qnt)
+- [battle-machine-types.ts](../../packages/core/src/battle-machine-types.ts)
+- [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
+- [battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
+
+## Parallel Pre-Research For A Later Session
+
+If you want to fan this work out with subagents later, this is the clean split.
+
+### Subagent 1: Option A Candidate Scout
+
+Goal:
+
+- read the inspiration handoff, current inspiration tests, and the SRD passages already listed here,
+- return 2-3 deterministic scenario candidates that fit the current battle/runtime surface without adding new battle state.
+
+Initial constraint:
+
+- avoid grapple-link scenarios for now; the battle layer still exposes only bare `grappled: boolean` in [battle-machine-types.ts](../../packages/core/src/battle-machine-types.ts),
+- and [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts) still contains `attackerGrappled: false // grapple not in battle yet (F9)`.
+
+### Subagent 2: Grapple Readiness Check
+
+Goal:
+
+- answer whether grappler incapacitation auto-release is now actually small on `master`.
+
+Current answer:
+
+- not yet,
+- battle-layer grappler identity/link state is still missing,
+- so the preferred grapple scenario remains architectural rather than test-first.
+
+### Subagent 3: Option B Local Hardening
+
+Goal:
+
+- add direct creature-level tests for owner-relative effect timing in the single-creature machine.
+
+Best first test cases:
+
+- `START_TURN` decrements and expires only start-owned effects whose `expiryOwnerId` matches `selfId`; foreign-owned start effects remain untouched.
+- `START_TURN` processes only self-owned `startOfTurnHook` payloads; foreign-owned start hooks do not heal, damage, or clear effects on this actor's turn.
+- `END_TURN` ignores foreign-owned end hooks, matching the owner filter in [machine-endturn.ts](../../packages/core/src/machine-endturn.ts).
+- `START_TURN` recalculates `effectiveSpeed` and `movementRemaining` from `speedDeltaFeet`, proving the `ActiveEffect` speed path directly.
+
+Implementation anchors:
+
+- owner filtering at [machine-startturn.ts](../../packages/core/src/machine-startturn.ts),
+- end-turn owner filtering at [machine-endturn.ts](../../packages/core/src/machine-endturn.ts),
+- effect payload wiring at [machine.ts](../../packages/core/src/machine.ts).
+
 ## Parallel Pre-Research Plan
 
 When returning to this workstream later, pre-research can be split cleanly before implementation.
