@@ -159,6 +159,7 @@ const BATTLE_EXCLUDED_KEYS_ARRAY = [
   "innateSorceryActive",
   "innateSorceryCharges",
   "innateSorceryTurnsRemaining",
+  "knownMetamagicOptions",
   "metamagicUsedThisCast",
   "apotheosisUsedThisTurn",
   "warlockLevel",

@@ -78,6 +78,7 @@ export interface SorcererClassState {
   readonly innateSorceryActive: boolean
   readonly innateSorceryCharges: ResourceCount
   readonly innateSorceryTurnsRemaining: number
+  readonly knownMetamagicOptions: ReadonlySet<MetamagicOption>
   readonly metamagicUsedThisCast: ReadonlySet<MetamagicOption>
   readonly apotheosisUsedThisTurn: boolean
 }

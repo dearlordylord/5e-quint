@@ -2,8 +2,10 @@ import { assert } from "#/assert.ts"
 import {
   canUseInnateSorcery,
   canUseMetamagic,
+  defaultKnownMetamagicOptions,
   METAMAGIC_OPTIONS,
   type MetamagicOption,
+  normalizeKnownMetamagicOptions,
   slotCreationCost,
   sorcererLongRest as tsSorcererLongRest,
   sorceryPointsMax,
@@ -158,6 +160,7 @@ export function useMetamagicUpdate(c: DndContext, option: string): Partial<DndCo
     sorceryPoints: ss.sorceryPoints,
     bonusActionUsed: c.bonusActionUsed,
     nonCantripActionSpellCast: c.nonCantripActionSpellCast,
+    knownMetamagicOptions: ss.knownMetamagicOptions,
     metamagicUsedThisCast: ss.metamagicUsedThisCast,
     apotheosisUsedThisTurn: ss.apotheosisUsedThisTurn,
     innateSorceryActive: ss.innateSorceryActive
@@ -176,7 +179,10 @@ export function useMetamagicUpdate(c: DndContext, option: string): Partial<DndCo
 
 // -- Init --
 
-export function initialSorcererState(sorcererLevel: ClassLevel): SorcererClassState {
+export function initialSorcererState(
+  sorcererLevel: ClassLevel,
+  knownMetamagicOptions: ReadonlyArray<MetamagicOption> = defaultKnownMetamagicOptions(sorcererLevel),
+): SorcererClassState {
   const spMax = resourceCount(sorceryPointsMax(sorcererLevel))
   return {
     level: sorcererLevel,
@@ -186,6 +192,7 @@ export function initialSorcererState(sorcererLevel: ClassLevel): SorcererClassSt
     innateSorceryActive: false,
     innateSorceryCharges: resourceCount(2),
     innateSorceryTurnsRemaining: 0,
+    knownMetamagicOptions: normalizeKnownMetamagicOptions(sorcererLevel, knownMetamagicOptions),
     metamagicUsedThisCast: new Set<MetamagicOption>(),
     apotheosisUsedThisTurn: false
   }

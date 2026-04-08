@@ -384,6 +384,11 @@ export const QuintSorcererState = z.object({
   innateSorceryActive: z.boolean(),
   innateSorceryCharges: z.bigint(),
   innateSorceryTurnsRemaining: z.bigint(),
+  knownMetamagicOptions: z.any().transform((raw: unknown) => {
+    if (raw instanceof Set) return raw as Set<MetamagicOption>
+    if (Array.isArray(raw)) return new Set(raw.map(String)) as Set<MetamagicOption>
+    return new Set<MetamagicOption>()
+  }),
   metamagicUsedThisCast: z.any().transform((raw: unknown) => {
     if (raw instanceof Set) return raw as Set<MetamagicOption>
     if (Array.isArray(raw)) return new Set(raw.map(String)) as Set<MetamagicOption>
@@ -579,6 +584,7 @@ export interface NormalizedState {
   readonly innateSorceryActive: boolean
   readonly innateSorceryCharges: number
   readonly innateSorceryTurnsRemaining: number
+  readonly knownMetamagicOptions: ReadonlySet<MetamagicOption>
   readonly metamagicUsedThisCast: ReadonlySet<MetamagicOption>
   readonly apotheosisUsedThisTurn: boolean
   readonly warlockLevel: number
@@ -673,6 +679,7 @@ export function flattenClassStates(cs: Partial<ClassStateMap>) {
     innateSorceryActive: so?.innateSorceryActive ?? false,
     innateSorceryCharges: so?.innateSorceryCharges ?? 2,
     innateSorceryTurnsRemaining: so?.innateSorceryTurnsRemaining ?? 0,
+    knownMetamagicOptions: so?.knownMetamagicOptions ?? new Set<MetamagicOption>(),
     metamagicUsedThisCast: so?.metamagicUsedThisCast ?? new Set<MetamagicOption>(),
     apotheosisUsedThisTurn: so?.apotheosisUsedThisTurn ?? false,
     warlockLevel: wk?.level ?? 0,
@@ -882,6 +889,7 @@ export function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): No
     innateSorceryActive: raw.sorcererState.innateSorceryActive,
     innateSorceryCharges: Number(raw.sorcererState.innateSorceryCharges),
     innateSorceryTurnsRemaining: Number(raw.sorcererState.innateSorceryTurnsRemaining),
+    knownMetamagicOptions: raw.sorcererState.knownMetamagicOptions,
     metamagicUsedThisCast: raw.sorcererState.metamagicUsedThisCast,
     apotheosisUsedThisTurn: raw.sorcererState.apotheosisUsedThisTurn,
     warlockLevel: lvl("Warlock"),

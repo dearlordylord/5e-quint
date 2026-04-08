@@ -577,7 +577,9 @@ export const creatureMachine = setup({
         ...(i.rogueLevel ? { rogue: rogue.initialRogueState(i.rogueLevel) } : {}),
         ...(i.clericLevel ? { cleric: cleric.initialClericState(i.clericLevel) } : {}),
         ...(i.druidLevel ? { druid: druid.initialDruidState(i.druidLevel) } : {}),
-        ...(i.sorcererLevel ? { sorcerer: sorcerer.initialSorcererState(i.sorcererLevel) } : {}),
+        ...(i.sorcererLevel
+          ? { sorcerer: sorcerer.initialSorcererState(i.sorcererLevel, i.knownMetamagicOptions) }
+          : {}),
         ...(i.warlockLevel ? { warlock: warlock.initialWarlockState(i.warlockLevel) } : {}),
         ...(i.wizardLevel ? { wizard: wizard.initialWizardState(i.wizardLevel) } : {}),
         ...(i.rangerLevel ? { ranger: ranger.initialRangerState(i.rangerLevel, i.wisMod) } : {}),

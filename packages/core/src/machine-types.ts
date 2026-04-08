@@ -1,6 +1,7 @@
 import type { Option } from "effect"
 import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts"
 import type { ClassStateMap } from "#/machine-class-states.ts"
+import type { MetamagicOption } from "#/features/class-sorcerer.ts"
 import type { ConditionFlag } from "#/machine-helpers.ts"
 import type {
   AbilityModifier,
@@ -83,6 +84,7 @@ export interface DndMachineInput {
   readonly clericLevel?: ClassLevel | undefined
   readonly druidLevel?: ClassLevel | undefined
   readonly sorcererLevel?: ClassLevel | undefined
+  readonly knownMetamagicOptions?: ReadonlyArray<MetamagicOption>
   readonly warlockLevel?: ClassLevel | undefined
   readonly wizardLevel?: ClassLevel | undefined
   readonly rangerLevel?: ClassLevel | undefined

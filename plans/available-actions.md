@@ -61,7 +61,27 @@ Items discovered during implementation that need resolution before Phase 1 is co
 
 **`USE_HEROIC_INSPIRATION` guard**: Token builder is missing because the guard isn't wired in `machine-guards.ts`. Need to add the guard, then add the token builder.
 
-**`knownMetamagicOptions` in `SorcererClassState`**: `USE_METAMAGIC` token currently offers all 10 metamagic options. Should filter to character's known options (2-6 depending on level). Requires adding the field to class state and Quint spec.
+**`knownMetamagicOptions` in `SorcererClassState`**: the authoritative-state and legality parts are now implemented. Remaining work is only the available-actions hole filtering when `USE_METAMAGIC` is added to the supported executable surface.
+
+- **SRD basis**: Sorcerers choose 2 Metamagic options at level 2, gain 2 more at level 10, and 2 more at level 17. Whenever they gain a Sorcerer level, they can replace one Metamagic option with one they do not know. That means the actual known subset is character-specific and cannot be derived from level alone; level only determines the allowed count (`2`, `4`, `6`).
+- **Implemented**:
+  - `knownMetamagicOptions: ReadonlySet<MetamagicOption>` now exists in `SorcererClassState`.
+  - Quint `SorcererState` now owns the same chosen-subset field.
+  - Machine input can initialize a sorcerer with an explicit known subset.
+  - Initialization validates that the chosen subset size matches `metamagicOptionsKnown(level)`.
+  - `canMetamagic` / `useMetamagicUpdate` / Quint `canUseMetamagic` now reject unknown options even when the option name is globally valid.
+  - MBT bridge and normalized-state comparison include the new field.
+- **Current implementation caveat**:
+  - Internal initialization still uses a deterministic default subset when explicit input is omitted (`careful`, `distant`, then `empowered`, `extended`, then `heightened`, `quickened`) so existing internal fixtures can construct sorcerers without a second config step.
+  - This is an internal stopgap for repo-owned callers and parity fixtures, not the ideal long-term character-build model. If/when a richer character-construction path exists, it should provide the chosen subset explicitly.
+- **Remaining projection change**:
+  - When `USE_METAMAGIC` is added to the available-actions surface, its `option` hole must be filtered to `knownMetamagicOptions`, not `METAMAGIC_OPTIONS`.
+  - The execution/update path already enforces the same known-option constraint, so the remaining work is query-surface narrowing rather than legality ownership.
+- **Verification completed**:
+  - Unit tests for count validation by sorcerer level (`2`/`4`/`6`).
+  - Unit tests proving unknown options are rejected in the machine update path.
+  - Unit tests proving known options are accepted when other Metamagic constraints pass.
+  - Creature MBT passed after the spec/bridge update.
 
 **Context serialization**: Replace `JSON.stringify` replacer with Effect Schema transforms (`Option` -> `null`, `Set` -> `array`). Define a `DndContextEncoded` schema in core using `Schema.OptionFromNullOr` and `Schema.ReadonlySet`.
 

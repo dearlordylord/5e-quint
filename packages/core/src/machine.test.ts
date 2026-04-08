@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import { createActor } from "xstate"
 
 import { singleClassHitDice, ZERO_HIT_DICE } from "#/features/class-tables.ts"
+import { defaultKnownMetamagicOptions } from "#/features/class-sorcerer.ts"
 import type { DndContext, DndSnapshot } from "#/machine.ts"
 import { creatureMachine } from "#/machine.ts"
 import {
@@ -2091,6 +2092,52 @@ describe("multiclass slot calculation", () => {
   it("no caster levels returns empty", () => {
     const slots = calculateMulticlassSlots([])
     expect(slots).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0])
+  })
+})
+
+describe("sorcerer metamagic ownership", () => {
+  it("stores knownMetamagicOptions in authoritative class state", () => {
+    const a = createActor(creatureMachine, {
+      input: {
+        maxHp: DEFAULT_MAX_HP,
+        sorcererLevel: classLevel(10),
+        knownMetamagicOptions: ["careful", "subtle", "twinned", "quickened"]
+      }
+    })
+    a.start()
+    expect(ctx(a).classStates.sorcerer?.knownMetamagicOptions).toEqual(
+      new Set(["careful", "subtle", "twinned", "quickened"])
+    )
+  })
+
+  it("rejects direct USE_METAMAGIC events for options the sorcerer does not know", () => {
+    const a = createActor(creatureMachine, {
+      input: {
+        maxHp: DEFAULT_MAX_HP,
+        sorcererLevel: classLevel(5),
+        knownMetamagicOptions: ["careful", "subtle"]
+      }
+    })
+    a.start()
+    const before = ctx(a).classStates.sorcerer
+    a.send({ type: "USE_METAMAGIC", option: "quickened" })
+    expect(ctx(a).classStates.sorcerer).toEqual(before)
+  })
+
+  it("accepts direct USE_METAMAGIC events for known options", () => {
+    const a = createActor(creatureMachine, {
+      input: {
+        maxHp: DEFAULT_MAX_HP,
+        sorcererLevel: classLevel(5),
+        knownMetamagicOptions: defaultKnownMetamagicOptions(5)
+      }
+    })
+    a.start()
+    a.send({ type: "ENTER_COMBAT" })
+    a.send({ type: "START_TURN" })
+    a.send({ type: "USE_METAMAGIC", option: "careful" })
+    expect(ctx(a).classStates.sorcerer?.metamagicUsedThisCast).toEqual(new Set(["careful"]))
+    expect(ctx(a).classStates.sorcerer?.sorceryPoints).toBe(4)
   })
 })
 

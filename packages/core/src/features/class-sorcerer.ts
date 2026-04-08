@@ -263,6 +263,27 @@ export function metamagicOptionsKnown(sorcererLevel: number): number {
   return 6
 }
 
+/** Deterministic default subset used for internal initialization/parity fixtures. */
+export function defaultKnownMetamagicOptions(sorcererLevel: number): ReadonlyArray<MetamagicOption> {
+  return METAMAGIC_OPTIONS.slice(0, metamagicOptionsKnown(sorcererLevel))
+}
+
+/** Validate and normalize the chosen Metamagic subset for a sorcerer level. */
+export function normalizeKnownMetamagicOptions(
+  sorcererLevel: number,
+  options: ReadonlyArray<MetamagicOption>,
+): ReadonlySet<MetamagicOption> {
+  const known = new Set(options)
+  if (known.size !== options.length) {
+    throw new Error("knownMetamagicOptions must not contain duplicates")
+  }
+  const expected = metamagicOptionsKnown(sorcererLevel)
+  if (known.size !== expected) {
+    throw new Error(`knownMetamagicOptions must contain exactly ${expected} option(s) at sorcerer level ${sorcererLevel}`)
+  }
+  return known
+}
+
 /** Whether a Metamagic option can be stacked with another on the same spell. */
 export function canStackMetamagic(option: MetamagicOption): boolean {
   return option === "empowered" || option === "seeking"
@@ -357,6 +378,7 @@ export interface UseMetamagicState {
   readonly sorceryPoints: number
   readonly bonusActionUsed: boolean
   readonly nonCantripActionSpellCast: boolean
+  readonly knownMetamagicOptions: ReadonlySet<MetamagicOption>
   readonly metamagicUsedThisCast: ReadonlySet<MetamagicOption>
   readonly apotheosisUsedThisTurn: boolean
   readonly innateSorceryActive: boolean
@@ -372,6 +394,7 @@ export interface UseMetamagicResult {
 /** Can the sorcerer apply a Metamagic option right now? */
 export function canUseMetamagic(state: UseMetamagicState, option: MetamagicOption): boolean {
   if (state.sorcererLevel < FONT_OF_MAGIC_LEVEL) return false
+  if (!state.knownMetamagicOptions.has(option)) return false
   if (state.metamagicUsedThisCast.has(option)) return false
 
   if (!canStackMetamagic(option)) {

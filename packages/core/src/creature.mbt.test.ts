@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { createActor } from "xstate"
 import { z } from "zod"
 
+import { defaultKnownMetamagicOptions } from "#/features/class-sorcerer.ts"
 import { singleClassHitDice } from "#/features/class-tables.ts"
 import { creatureMachine, type DndEvent } from "#/machine.ts"
 import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
@@ -417,6 +418,7 @@ function createDndDriver() {
               clericLevel: cLevel,
               druidLevel: dLevel,
               sorcererLevel: sLevel,
+              knownMetamagicOptions: sLevel ? defaultKnownMetamagicOptions(level) : undefined,
               warlockLevel: wkLevel,
               wizardLevel: wLevel,
               rangerLevel: rnLevel,

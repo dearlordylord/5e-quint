@@ -11,6 +11,7 @@ import { canUseActionSurge, canUseIndomitable, canUseSecondWind, canUseTacticalM
 import { canUseNaturesVeil, canUseTireless } from "#/features/class-ranger.ts"
 import { canUseCunningAction, maxCunningStrikeEffects } from "#/features/class-rogue.ts"
 import { canUseInnateSorcery } from "#/features/class-sorcerer.ts"
+import { canUseMetamagic } from "#/features/class-sorcerer.ts"
 import { canEldritchSmite, canUseMagicalCunning } from "#/features/class-warlock.ts"
 import { hasOverchannel } from "#/features/class-wizard.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
@@ -351,7 +352,21 @@ export const guards = {
   canMetamagic: ({ context: c }: GuardArg) => {
     const ss = c.classStates.sorcerer
     if (!ss) return false
-    return !isIncapacitated(c) && ss.level >= 2
+    if (isIncapacitated(c) || ss.level < 2) return false
+    const state = {
+      sorcererLevel: ss.level,
+      sorceryPoints: ss.sorceryPoints,
+      bonusActionUsed: c.bonusActionUsed,
+      nonCantripActionSpellCast: c.nonCantripActionSpellCast,
+      knownMetamagicOptions: ss.knownMetamagicOptions,
+      metamagicUsedThisCast: ss.metamagicUsedThisCast,
+      apotheosisUsedThisTurn: ss.apotheosisUsedThisTurn,
+      innateSorceryActive: ss.innateSorceryActive
+    }
+    for (const option of ss.knownMetamagicOptions) {
+      if (canUseMetamagic(state, option)) return true
+    }
+    return false
   },
 
   // Druid

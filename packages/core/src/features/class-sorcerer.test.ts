@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  canUseMetamagic,
   canConvertPointsToSlot,
   canConvertSlotToPoints,
   canStackMetamagic,
@@ -10,6 +11,7 @@ import {
   carefulSpellMaxCreatures,
   convertPointsToSlot,
   convertSlotToPoints,
+  defaultKnownMetamagicOptions,
   distantSpellRange,
   draconicResilienceAC,
   draconicResilienceHpBonus,
@@ -21,12 +23,14 @@ import {
   hasElementalAffinity,
   metamagicCost,
   metamagicOptionsKnown,
+  normalizeKnownMetamagicOptions,
   slotCreationCost,
   sorcererLongRest,
   sorcerousRestoration,
   sorceryPointsMax,
   useInnateSorcery
 } from "#/features/class-sorcerer.ts"
+import type { MetamagicOption } from "#/features/class-sorcerer.ts"
 
 // --- Sorcery Points Max ---
 
@@ -375,6 +379,40 @@ describe("metamagicOptionsKnown", () => {
   })
 })
 
+describe("defaultKnownMetamagicOptions", () => {
+  it("returns deterministic subsets by level band", () => {
+    expect(defaultKnownMetamagicOptions(1)).toEqual([])
+    expect(defaultKnownMetamagicOptions(2)).toEqual(["careful", "distant"])
+    expect(defaultKnownMetamagicOptions(10)).toEqual(["careful", "distant", "empowered", "extended"])
+    expect(defaultKnownMetamagicOptions(17)).toEqual([
+      "careful",
+      "distant",
+      "empowered",
+      "extended",
+      "heightened",
+      "quickened"
+    ])
+  })
+})
+
+describe("normalizeKnownMetamagicOptions", () => {
+  it("accepts exact-count unique options", () => {
+    expect(normalizeKnownMetamagicOptions(2, ["careful", "twinned"])).toEqual(new Set(["careful", "twinned"]))
+  })
+
+  it("rejects duplicate options", () => {
+    expect(() => normalizeKnownMetamagicOptions(2, ["careful", "careful"])).toThrow(
+      "knownMetamagicOptions must not contain duplicates"
+    )
+  })
+
+  it("rejects wrong option count for level", () => {
+    expect(() => normalizeKnownMetamagicOptions(10, ["careful", "distant"])).toThrow(
+      "knownMetamagicOptions must contain exactly 4 option(s) at sorcerer level 10"
+    )
+  })
+})
+
 describe("canStackMetamagic", () => {
   it("empowered and seeking can stack", () => {
     expect(canStackMetamagic("empowered")).toBe(true)
@@ -439,6 +477,27 @@ describe("metamagicCost", () => {
     expect(metamagicCost("subtle")).toBe(1)
     expect(metamagicCost("transmuted")).toBe(1)
     expect(metamagicCost("twinned")).toBe(1)
+  })
+})
+
+describe("canUseMetamagic", () => {
+  const base = {
+    sorcererLevel: 5,
+    sorceryPoints: 5,
+    bonusActionUsed: false,
+    nonCantripActionSpellCast: false,
+    knownMetamagicOptions: new Set(["careful", "subtle"] as const),
+    metamagicUsedThisCast: new Set<MetamagicOption>(),
+    apotheosisUsedThisTurn: false,
+    innateSorceryActive: false
+  }
+
+  it("rejects a globally valid option the sorcerer does not know", () => {
+    expect(canUseMetamagic(base, "quickened")).toBe(false)
+  })
+
+  it("accepts a known option when other constraints pass", () => {
+    expect(canUseMetamagic(base, "careful")).toBe(true)
   })
 })
 

@@ -418,6 +418,7 @@ module creature {
     innateSorceryActive: bool,
     innateSorceryCharges: int,
     innateSorceryTurnsRemaining: int,
+    knownMetamagicOptions: Set[str],
     metamagicUsedThisCast: Set[str],
     apotheosisUsedThisTurn: bool,
   }
@@ -3111,6 +3112,10 @@ module creature {
   // -- Sorcerer --
   pure def freshSorcererState(sorcererLevel: int): SorcererState = {
     val spMax = if (sorcererLevel >= 2) sorcererLevel else 0
+    val known = if (sorcererLevel < 2) Set()
+      else if (sorcererLevel < 10) Set("careful", "distant")
+      else if (sorcererLevel < 17) Set("careful", "distant", "empowered", "extended")
+      else Set("careful", "distant", "empowered", "extended", "heightened", "quickened")
     {
       sorceryPoints: spMax,
       sorceryPointsMax: spMax,
@@ -3118,6 +3123,7 @@ module creature {
       innateSorceryActive: false,
       innateSorceryCharges: 2,
       innateSorceryTurnsRemaining: 0,
+      knownMetamagicOptions: known,
       metamagicUsedThisCast: Set(),
       apotheosisUsedThisTurn: false,
     }
@@ -3246,6 +3252,7 @@ module creature {
       bonusActionUsed: bool, nonCantripActionSpellCast: bool): bool = {
     if (sorcererLevel < 2) false
     else if (not(METAMAGIC_OPTIONS.contains(option))) false
+    else if (not(ss.knownMetamagicOptions.contains(option))) false
     else if (ss.metamagicUsedThisCast.contains(option)) false  // can't use same option twice
     else {
       val withinLimit = if (canStackWith(option)) true
@@ -5368,7 +5375,7 @@ module creature {
     if (turnPhase != "acting" or isIncapacitated(state)
         or classLevels.get(Sorcerer) < 2) unchanged
     else {
-      nondet option = METAMAGIC_OPTIONS.oneOf()
+      nondet option = sorcererState.knownMetamagicOptions.oneOf()
       if (not(canUseMetamagic(sorcererState, classLevels.get(Sorcerer), option, turnState.bonusActionUsed, turnState.nonCantripActionSpellCast))) unchanged
       else {
         val ss1 = pUseMetamagic(sorcererState, classLevels.get(Sorcerer), option)
