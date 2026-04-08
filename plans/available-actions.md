@@ -484,6 +484,88 @@ So the first step in this phase is a code-reading pass, not blind new implementa
 
 The MCP response from `get_available_actions` is already grouped by resource cost. Phase 2 now exists to prove that grouping is complete and stable for the current modeled catalog.
 
+### Research and current findings
+
+- **Current exposed cost groups in `available-actions.ts`**
+  - `action`:
+    - `USE_TIRELESS`
+  - `bonusAction`:
+    - `CONVERT_POINTS_TO_SLOT`
+    - `USE_LAY_ON_HANDS`
+    - `USE_DIVINE_SMITE`
+    - `WHOLENESS_OF_BODY`
+    - `USE_SECOND_WIND`
+  - `free`:
+    - `ENTER_COMBAT`
+    - `EXIT_COMBAT`
+    - `START_TURN`
+    - `SHORT_REST`
+    - `USE_HEROIC_INSPIRATION`
+    - `USE_TACTICAL_MIND`
+    - `USE_PEERLESS_SKILL`
+    - `USE_RELENTLESS_RAGE`
+    - `UNCANNY_METABOLISM`
+    - `USE_ARCANE_RECOVERY`
+    - `USE_METAMAGIC`
+    - `USE_MYSTIC_ARCANUM`
+    - `CONVERT_SLOT_TO_POINTS`
+    - `USE_FONT_SLOT_RESTORE`
+    - `USE_WILD_RESURGENCE_CHARGE`
+- **Current explicit gap**
+  - No exposed token in `packages/core/src/available-actions.ts` currently uses `cost: { reaction: true }`.
+  - So the old Phase 2 placeholder “add one reaction example” is now a concrete missing seam, not a hypothetical one.
+- **Why this gap exists**
+  - The machine has a generic `USE_REACTION` event and `reactionAvailable` state, but the current available-actions surface does not yet project a semantic reaction action.
+  - Several reaction-capable features exist elsewhere in the repo, but mostly in feature bridges or helper modules rather than the current available-actions registry.
+  - Examples found during code reading:
+    - Rogue reaction logic:
+      - `packages/core/src/machine-rogue.ts`
+      - `packages/core/src/features/class-rogue.ts`
+    - Monk bridge reactions:
+      - `packages/core/src/features/feature-bridge-monk.ts`
+      - `Deflect Attacks`
+      - `Slow Fall`
+    - Barbarian Retaliation helper:
+      - `packages/core/src/features/class-barbarian.ts`
+      - `packages/core/src/features/feature-bridge.ts`
+    - Ranger reaction helper:
+      - `packages/core/src/features/class-ranger.ts`
+  - Those are signals that reaction semantics exist in parts of the system, but they have not yet been turned into a supported `ActionToken` / `ResolvedActionToken` / runtime-input path in `packages/core/src/available-actions.ts`.
+- **Important distinction for the next session**
+  - Do not expose bare `USE_REACTION` as the Phase 2 fix.
+  - Phase 2 needs a semantic action token with real user meaning and outcome text, not a generic “spend your reaction” token.
+  - If no semantic reaction action is sufficiently modeled end-to-end yet, the correct outcome is to document that explicitly and defer the reaction representative rather than exposing a meaningless placeholder.
+- **Likely first file map for a fresh session**
+  - `packages/core/src/available-actions.ts`
+  - `packages/core/src/available-actions.test.ts`
+  - `packages/mcp/src/server.test.ts`
+  - likely one of:
+    - `packages/core/src/machine-rogue.ts`
+    - `packages/core/src/machine-bard.ts`
+    - `packages/core/src/features/feature-bridge-monk.ts`
+    - `packages/core/src/features/feature-bridge.ts`
+    - `packages/core/src/machine-guards.ts`
+- **Likely candidate directions**
+  - Find the smallest reaction feature whose legality is already fully owned by state and whose event/result shape is not battle-scene-dependent.
+  - Prefer a reaction action that already has:
+    - machine-owned legality
+    - a single semantic meaning
+    - no hidden target graph requirement
+  - Avoid forcing battle-only or UI-only reaction concepts into MCP just to satisfy the grouping bucket.
+- **What is still missing even if no new reaction action lands**
+  - grouping-shape snapshot tests are still absent
+  - explicit spent-resource exclusion tests for the grouped surface are still weaker than they should be
+  - the next session should add those regardless of whether a reaction representative is found
+
+### Recommended next-session order
+
+1. Audit the current modeled reaction candidates and choose one only if it is already semantically owned enough for the supported action contract.
+2. If a viable reaction candidate exists, expose it through `available-actions.ts`, MCP, and focused tests.
+3. If not, record that Phase 2 has no reaction-ready semantic action yet and proceed with:
+   - grouping-shape snapshot tests
+   - explicit spent-resource exclusion tests for `action`, `bonusAction`, and `free`
+4. Only then reopen whether a movement-cost token should be represented explicitly in the grouped MCP surface.
+
 ### Acceptance criteria
 
 - [ ] Either:
