@@ -22,6 +22,7 @@ export const DEMO_ACTOR_INPUT: DndMachineInput = {
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 }
+const DEMO_STARTING_DAMAGE = 10
 
 export type DndActor = ActorRefFrom<typeof creatureMachine>
 type DndSnapshot = SnapshotFrom<typeof creatureMachine>
@@ -29,6 +30,15 @@ type DndSnapshot = SnapshotFrom<typeof creatureMachine>
 export function createDemoActor(input: DndMachineInput = DEMO_ACTOR_INPUT): DndActor {
   const actor = createActor(creatureMachine, { input })
   actor.start()
+  actor.send({
+    type: "TAKE_DAMAGE",
+    amount: DEMO_STARTING_DAMAGE,
+    damageType: "slashing",
+    resistances: new Set(),
+    vulnerabilities: new Set(),
+    immunities: new Set(),
+    isCritical: false,
+  })
   return actor
 }
 

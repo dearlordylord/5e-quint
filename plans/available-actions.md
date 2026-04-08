@@ -41,12 +41,13 @@ Pick one action type — Second Wind is a good candidate (bonus action, has a gu
 - [x] Action token utilities are defined with `Hole<T>`, `MaybeHole<T>`, `FillHoles<T>` mapping (see PRD "Action Token Type Design")
 - [x] Core distinguishes `ActionToken`, `ResolvedActionToken`, and runtime resolution to `DndEvent`
 - [x] Available actions module returns only the supported executable action subset, including Second Wind when `canSecondWind` passes
-- [ ] MCP server runs as an independent process with its own XState actor
-- [ ] `get_state` returns current DndContext as JSON
-- [ ] `get_available_actions` returns action tokens grouped by resource cost
+- [x] MCP server runs as an independent process with its own XState actor
+- [x] `get_state` returns current DndContext as JSON
+- [x] `get_available_actions` returns action tokens grouped by resource cost
 - [x] `execute_action` accepts a resolved token, runtime-resolves engine-only inputs, applies the event, and returns new state + description
 - [x] Round-trip integration test: get actions → resolve token → execute → verify state changed
 - [x] Focused creature MBT confirmation passes after the contract redesign
+- [x] Manual MCP harness run confirms post-action state transitions via returned snapshots, not only success booleans
 
 ### Phase 1 TODOs
 
@@ -61,6 +62,10 @@ Items discovered during implementation that need resolution before Phase 1 is co
 **`knownMetamagicOptions` in `SorcererClassState`**: `USE_METAMAGIC` token currently offers all 10 metamagic options. Should filter to character's known options (2-6 depending on level). Requires adding the field to class state and Quint spec.
 
 **Context serialization**: Replace `JSON.stringify` replacer with Effect Schema transforms (`Option` -> `null`, `Set` -> `array`). Define a `DndContextEncoded` schema in core using `Schema.OptionFromNullOr` and `Schema.ReadonlySet`.
+
+**Manual debugging ergonomics**: Keep a lightweight local MCP harness for end-to-end inspection of `get_state`, `get_available_actions`, and `execute_action`. If an action is hard to exercise manually, prefer adjusting demo initial conditions or adding a small temporary fixture over adding duplicated persistent state.
+
+**Project existing state before adding more**: If MCP needs to expose or drive more “inner state”, first project authoritative machine/spec state that already exists. Do not add adapter-owned copies of combat facts just to make demos or debugging easier.
 
 **Wire remaining `execute_action` handlers**:
 - Dice-roll actions: `USE_TIRELESS` (d8Roll), `WHOLENESS_OF_BODY` (healRoll), `UNCANNY_METABOLISM` (healRoll)

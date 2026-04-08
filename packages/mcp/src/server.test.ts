@@ -28,15 +28,6 @@ describe("MCP server adapter", () => {
 
   test("execute_action round-trip works for enter combat, start turn, and second wind", () => {
     const actor = createDemoActor()
-    actor.send({
-      type: "TAKE_DAMAGE",
-      amount: 10,
-      damageType: "slashing",
-      resistances: new Set(),
-      vulnerabilities: new Set(),
-      immunities: new Set(),
-      isCritical: false,
-    })
 
     const enterCombat = handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
     expect("isError" in enterCombat).toBe(false)
@@ -55,6 +46,7 @@ describe("MCP server adapter", () => {
     const secondWindPayload = readPayload(secondWind)
     expect(secondWindPayload.success).toBe(true)
     expect(secondWindPayload.state.hp).toBeGreaterThan(34)
+    expect(secondWindPayload.state.hp).toBeLessThanOrEqual(44)
   })
 
   test("execute_action rejects actions that are not available in the current state", () => {
