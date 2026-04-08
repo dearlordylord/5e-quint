@@ -2071,6 +2071,16 @@ module creature {
       pRemoveEffect(effects, ssOld.concentrationSpellId)
     else effects
 
+  /// Auto-break concentration when the concentrated spell's effect has expired.
+  /// SRD 5.2.1: "Concentration… ends early if… the duration expires."
+  pure def pAutoBreakExpiredConcentration(
+    ss: SpellSlotState, currentEffects: Set[ActiveEffect]
+  ): SpellSlotState =
+    if (not(isConcentrating(ss))) ss
+    else if (not(currentEffects.exists(e => e.spellId == ss.concentrationSpellId)))
+      pBreakConcentration(ss)
+    else ss
+
   type ConcBreakResult = { creature: CreatureState, slots: SpellSlotState }
 
   /// Combined: break concentration on state change + remove associated active effect.
@@ -2122,7 +2132,8 @@ module creature {
     val s1 = pProcessEndOfTurnSaves(s, saves)
     val r = pProcessEndOfTurnDamage(s1, ss, damages)
     val cleaned = pClearExpiredAtPhase(r.creature.activeEffects, AtEndOfTurn)
-    { creature: r.creature.with("activeEffects", cleaned), slots: r.slots }
+    val ss2 = pAutoBreakExpiredConcentration(r.slots, cleaned)
+    { creature: r.creature.with("activeEffects", cleaned), slots: ss2 }
   }
 
   // -- 15.5b START_TURN Processing (TA4) --
@@ -2181,6 +2192,7 @@ module creature {
     val eff1 = pDecrementDurations(s.activeEffects)
     // 2. Clear expired AtStartOfTurn
     val eff2 = pClearExpiredAtPhase(eff1, AtStartOfTurn)
+    val ss1 = pAutoBreakExpiredConcentration(ss, eff2)
     val s1 = s.with("activeEffects", eff2)
     // 3. Death save (if applicable) — Defy Death (Champion L18) applied via pFighterDeathSaveRoll
     val fighterLvl = config.classLevels.get(Fighter)
@@ -2189,7 +2201,7 @@ module creature {
       pDeathSave(s1, effectiveDsRoll)
     else s1
     // 4. Process start-of-turn effects
-    val r = pProcessStartOfTurn(s2, ss, startEffects)
+    val r = pProcessStartOfTurn(s2, ss1, startEffects)
     // 5. Turn state reset (uses post-processing creature state)
     val t = pStartTurn(config, r.creature, armorState, callerSpeedModifier, isGrappling, grappledTargetTwoSizesSmaller)
     { creature: r.creature, slots: r.slots, turn: t }

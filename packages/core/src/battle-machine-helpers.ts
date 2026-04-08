@@ -395,6 +395,11 @@ export function processStartTurn(
   let effs = decrementDurations(c.activeEffects)
   effs = clearExpiredAtPhase(effs, "start")
   c = { ...c, activeEffects: effs }
+  // Auto-break concentration if the concentrated spell's effect expired
+  if (Option.isSome(c.concentrationSpellId)) {
+    const cid = c.concentrationSpellId.value
+    if (!c.activeEffects.some((a) => a.spellId === cid)) c = breakConcentration(c)
+  }
   // Death save: if at 0 HP, not stable, not dead, and roll provided
   if (c.hp === 0 && !c.stable && !c.dead && deathSaveRoll > 0) {
     c = deathSave(c, deathSaveRoll)
@@ -453,18 +458,24 @@ export function processEndTurn(
     }
     if (idsToRemove.size > 0) c = { ...c, activeEffects: c.activeEffects.filter((ae) => !idsToRemove.has(ae.spellId)) }
   }
-  let result: Map<CreatureId, BattleCreatureState>
+  let baseCreatures: Creatures
   if (hasEotEffects && eotDmg > 0) {
     const r = applyDamageWithConcBreak(cs, activeId, c, eotDmg, eotDt, eotConSave)
     c = r.creature
-    c = { ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") }
-    result = setCreature(r.creatures, activeId, c)
+    baseCreatures = r.creatures
   } else {
-    c = { ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") }
-    result = setCreature(cs, activeId, c)
-    const oldConcId = cs.get(activeId)!.concentrationSpellId
-    if (Option.isSome(oldConcId) && Option.isNone(result.get(activeId)!.concentrationSpellId))
-      result = breakConcentrationAndPropagate(result, activeId)
+    baseCreatures = cs
+  }
+  c = { ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") }
+  // Auto-break concentration if the concentrated spell's effect expired
+  if (Option.isSome(c.concentrationSpellId)) {
+    const cid = c.concentrationSpellId.value
+    if (!c.activeEffects.some((a) => a.spellId === cid)) c = breakConcentration(c)
+  }
+  let result = setCreature(baseCreatures, activeId, c)
+  const oldConcId = cs.get(activeId)!.concentrationSpellId
+  if (Option.isSome(oldConcId) && Option.isNone(result.get(activeId)!.concentrationSpellId)) {
+    result = breakConcentrationAndPropagate(result, activeId)
   }
   return result
 }

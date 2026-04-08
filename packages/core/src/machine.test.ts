@@ -1876,6 +1876,38 @@ describe("concentration", () => {
     expect(isDead(snap(a))).toBe(true)
     expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true)
   })
+
+  it("concentration auto-expires at start of turn when effect duration runs out", () => {
+    const a = create()
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 1,
+      expiresAt: "start",
+      casterId: CreatureId("")
+    })
+    expect(isConcentrating(snap(a))).toBe(true)
+    startTurn(a)
+    expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true)
+    expect(isSpellIdle(snap(a))).toBe(true)
+  })
+
+  it("concentration auto-expires at end of turn when effect duration runs out", () => {
+    const a = create()
+    a.send({
+      type: "START_CONCENTRATION",
+      spellId: mkSpellId("bless"),
+      durationTurns: 1,
+      expiresAt: "end",
+      casterId: CreatureId("")
+    })
+    expect(isConcentrating(snap(a))).toBe(true)
+    startTurn(a) // decrements turnsRemaining to 0
+    // Effect still active (expiresAt=end, cleared at end of turn)
+    endTurn(a)
+    expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true)
+    expect(isSpellIdle(snap(a))).toBe(true)
+  })
 })
 
 describe("concentrationDC helper", () => {

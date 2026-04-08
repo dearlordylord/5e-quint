@@ -58,6 +58,12 @@ export function computeStartTurn(
   // 1. Decrement durations + clear expired AtStartOfTurn
   let ae = clearExpiredStart(decrementDurations(ctx.activeEffects))
 
+  // 1b. Auto-break concentration if the concentrated spell's effect expired
+  if (Option.isSome(conc)) {
+    const cid = conc.value
+    if (!ae.some((a) => a.spellId === cid)) conc = Option.none()
+  }
+
   // 2. Death save (if applicable)
   if (h === 0 && !stable && !dead && deathSaveRoll != null) {
     const ds = resolveDeathSave(deathSaveRoll, dsSucc, dsFail)

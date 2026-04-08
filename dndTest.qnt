@@ -2455,6 +2455,60 @@ module dndTest {
     assert(not(isConcentrating(result)))
   }
 
+  // -- Concentration Auto-Expiry --
+
+  run test_conc_auto_break_expired_at_start = {
+    // Concentration spell with 1 turn remaining, expires at start of turn.
+    // After pStartTurnFull, duration hits 0 → effect removed → concentration auto-broken.
+    val eff: ActiveEffect = {
+      spellId: "bless", turnsRemaining: 1, expiresAt: AtStartOfTurn,
+      casterId: "",
+      grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
+    }
+    val s = FRESH20.with("activeEffects", Set(eff))
+    val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
+    val r = pStartTurnFull(TEST_WIZARD, s, ss, Unarmored, 0, false, false, 0, 0, List())
+    all {
+      assert(not(isConcentrating(r.slots))),
+      assert(r.slots.concentrationSpellId == ""),
+      assert(r.creature.activeEffects.size() == 0),
+    }
+  }
+
+  run test_conc_auto_break_expired_at_end = {
+    // Concentration spell with turnsRemaining already at 0, expires at end of turn.
+    // pEndTurn clears it → concentration auto-broken.
+    val eff: ActiveEffect = {
+      spellId: "bless", turnsRemaining: 0, expiresAt: AtEndOfTurn,
+      casterId: "",
+      grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
+    }
+    val s = FRESH20.with("activeEffects", Set(eff))
+    val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
+    val r = pEndTurn(s, ss, List(), List())
+    all {
+      assert(not(isConcentrating(r.slots))),
+      assert(r.slots.concentrationSpellId == ""),
+      assert(r.creature.activeEffects.size() == 0),
+    }
+  }
+
+  run test_conc_not_broken_when_effect_still_alive = {
+    // Concentration spell with 2 turns remaining. After one decrement it still has 1 → not broken.
+    val eff: ActiveEffect = {
+      spellId: "bless", turnsRemaining: 2, expiresAt: AtStartOfTurn,
+      casterId: "",
+      grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
+    }
+    val s = FRESH20.with("activeEffects", Set(eff))
+    val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
+    val r = pStartTurnFull(TEST_WIZARD, s, ss, Unarmored, 0, false, false, 0, 0, List())
+    all {
+      assert(isConcentrating(r.slots)),
+      assert(r.slots.concentrationSpellId == "bless"),
+    }
+  }
+
   // -- Component Validation --
 
   run test_components_all_satisfied = {

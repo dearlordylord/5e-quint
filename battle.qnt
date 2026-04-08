@@ -758,12 +758,15 @@ module battle {
       val eff1 = pDecrementDurations(c.creature.activeEffects)
       // 2. Clear expired AtStartOfTurn effects
       val eff2 = pClearExpiredAtPhase(eff1, AtStartOfTurn)
+      // 2a. Auto-break concentration if the concentrated spell's effect expired
+      val ss0 = pAutoBreakExpiredConcentration(c.slots, eff2)
       val s0 = c.creature.with("activeEffects", eff2)
       // 2b. Death save (if applicable): hp == 0, not stable, not dead, roll provided
       val s1 = if (s0.hp == 0 and not(s0.stable) and not(s0.dead) and deathSaveRoll > 0)
         pDeathSave(s0, deathSaveRoll)
       else s0
-      val cs0 = setCreature(bCreatures, activeId, s1)
+      val cs0pre = setCreature(bCreatures, activeId, s1).setSlots(activeId, ss0)
+      val cs0 = propagateIfConcBroken(cs0pre, activeId, c.slots, ss0)
       // 3. Process start-of-turn effects (simplified: one aggregate effect)
       val hasEffects = eff2.size() > 0 and (sotDmg > 0 or sotHeal > 0)
       val cs1 = if (hasEffects) {

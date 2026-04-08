@@ -107,6 +107,12 @@ export function computeEndTurn(
     (a) => !removeIds.has(a.spellId) && !(a.expiresAt === "end" && a.turnsRemaining <= 0)
   )
 
+  // Auto-break concentration if the concentrated spell's effect expired
+  if (Option.isSome(conc)) {
+    const cid = conc.value
+    if (!ae.some((a) => a.spellId === cid)) conc = Option.none()
+  }
+
   return {
     conditions,
     activeEffects: ae,
