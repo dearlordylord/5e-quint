@@ -3,7 +3,7 @@ import { createActor } from "xstate"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleEvent } from "#/battle-machine-types.ts"
-import { armorClass, CreatureId } from "#/types.ts"
+import { armorClass, CreatureId, spellId } from "#/types.ts"
 
 const DEFAULT_ATTACK_CONTEXT = {
   knockOut: false,
@@ -58,6 +58,29 @@ function initTwoPcBattle() {
 
 function startTurn(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT })
+}
+
+function resolveAttackWindows(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
+  if (ctx(actor).awaitCtx?.interrupt.tag === "PIAttackHit") {
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+  }
+  if (ctx(actor).awaitCtx?.interrupt.tag === "PIAttackDamage") {
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+  }
+  if (ctx(actor).awaitCtx?.interrupt.tag === "PIAfterDamage") {
+    send(actor, {
+      type: "BATTLE_AFTER_DAMAGE_PASS",
+      reactorId: null
+    })
+  }
 }
 
 describe("competitor-sourced battle regressions", () => {
@@ -143,5 +166,142 @@ describe("competitor-sourced battle regressions", () => {
     expect(ctx(actor).movementCtx).toBeNull()
     expect(creature(actor, "A").movementRemaining).toBe(20)
     expect(creature(actor, "B").reactionAvailable).toBe(false)
+  })
+
+  it("natural_20: Shocking Grasp blocks opportunity attacks until the start of the target's next turn", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "lightning",
+      crit: false,
+      tAc: armorClass(12),
+      onHitEffect: {
+        spellId: spellId("shocking_grasp"),
+        turnsRemaining: 1,
+        expiresAt: "start",
+        casterId: CreatureId("A"),
+        expiryOwnerId: CreatureId("B"),
+        blocksOpportunityAttacks: true
+      },
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
+    expect(creature(actor, "B").activeEffects).toEqual(
+      expect.arrayContaining([expect.objectContaining({ spellId: spellId("shocking_grasp") })])
+    )
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      threatened: new Set([CreatureId("B")])
+    })
+
+    expect(ctx(actor).movementCtx).toBeNull()
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "B").activeEffects).toEqual([])
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+    send(actor, {
+      type: "BATTLE_MOVE",
+      threatened: new Set([CreatureId("B")])
+    })
+
+    expect(ctx(actor).movementCtx).not.toBeNull()
+    expect(ctx(actor).movementCtx?.threatenedBy.has(CreatureId("B"))).toBe(true)
+  })
+
+  it("foundryvtt-dnd5e: Ray of Frost reduces speed until the start of the caster's next turn", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 16,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "cold",
+      crit: false,
+      tAc: armorClass(12),
+      onHitEffect: {
+        spellId: spellId("ray_of_frost"),
+        turnsRemaining: 1,
+        expiresAt: "start",
+        casterId: CreatureId("A"),
+        expiryOwnerId: CreatureId("A"),
+        speedDeltaFeet: -10
+      },
+      ...DEFAULT_ATTACK_CONTEXT,
+      isMelee: false,
+      attackerWithin5ft: false
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "B").activeEffects).toEqual(
+      expect.arrayContaining([expect.objectContaining({ spellId: spellId("ray_of_frost") })])
+    )
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "B").effectiveSpeed).toBe(20)
+    expect(creature(actor, "B").movementRemaining).toBe(20)
+    expect(creature(actor, "B").activeEffects).toEqual(
+      expect.arrayContaining([expect.objectContaining({ spellId: spellId("ray_of_frost") })])
+    )
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "B").activeEffects).toEqual([])
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "B").effectiveSpeed).toBe(30)
+    expect(creature(actor, "B").movementRemaining).toBe(30)
   })
 })

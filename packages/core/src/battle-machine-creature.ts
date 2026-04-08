@@ -234,14 +234,47 @@ export function startConcentration(c: BattleCreatureState, spellId: SpellId): Ba
   return { ...c, concentrationSpellId: Option.some(spellId) }
 }
 
+export function effectExpiryOwnerId(effect: ActiveEffect): CreatureId {
+  return effect.expiryOwnerId ?? effect.casterId
+}
+
+export function blocksOpportunityAttacks(c: BattleCreatureState): boolean {
+  return c.activeEffects.some((effect) => effect.blocksOpportunityAttacks === true)
+}
+
+export function speedDeltaFromEffects(c: BattleCreatureState): number {
+  return c.activeEffects.reduce((total, effect) => total + (effect.speedDeltaFeet ?? 0), 0)
+}
+
+export function advanceEffectsForOwner(
+  effects: ReadonlyArray<ActiveEffect>,
+  ownerId: CreatureId,
+  phase: ExpiryPhase
+): ReadonlyArray<ActiveEffect> {
+  let changed = false
+  const advanced: Array<ActiveEffect> = []
+  for (const effect of effects) {
+    if (effectExpiryOwnerId(effect) !== ownerId) {
+      advanced.push(effect)
+      continue
+    }
+    changed = true
+    const turnsRemaining = effect.turnsRemaining - 1
+    if (turnsRemaining <= 0 && effect.expiresAt === phase) continue
+    advanced.push({ ...effect, turnsRemaining })
+  }
+  return changed ? advanced : effects
+}
+
 export function addEffect(
   c: BattleCreatureState,
   spellId: SpellId,
   duration: number,
   expiresAt: ExpiryPhase,
-  casterId: CreatureId
+  casterId: CreatureId,
+  options: Partial<Omit<ActiveEffect, "spellId" | "turnsRemaining" | "expiresAt" | "casterId">> = {}
 ): BattleCreatureState {
-  const newEffect: ActiveEffect = { spellId, turnsRemaining: duration, expiresAt, casterId }
+  const newEffect: ActiveEffect = { spellId, turnsRemaining: duration, expiresAt, casterId, ...options }
   return { ...c, activeEffects: [...c.activeEffects, newEffect] }
 }
 
@@ -252,17 +285,6 @@ export function removeEffect(c: BattleCreatureState, spellId: SpellId): BattleCr
 export function removeEffectsByCaster(c: BattleCreatureState, casterId: CreatureId): BattleCreatureState {
   const filtered = c.activeEffects.filter((e) => e.casterId !== casterId)
   return filtered.length === c.activeEffects.length ? c : { ...c, activeEffects: filtered }
-}
-
-export function decrementDurations(effects: ReadonlyArray<ActiveEffect>): ReadonlyArray<ActiveEffect> {
-  return effects.map((e) => ({ ...e, turnsRemaining: e.turnsRemaining - 1 }))
-}
-
-export function clearExpiredAtPhase(
-  effects: ReadonlyArray<ActiveEffect>,
-  phase: ExpiryPhase
-): ReadonlyArray<ActiveEffect> {
-  return effects.filter((e) => !(e.turnsRemaining <= 0 && e.expiresAt === phase))
 }
 
 // --- Constants & factories (moved from battle-machine-types.ts) ---

@@ -5,16 +5,17 @@
 import { Match, Option } from "effect"
 
 import {
+  advanceEffectsForOwner,
   applyCondition,
+  blocksOpportunityAttacks,
   breakConcentration,
-  clearExpiredAtPhase,
   deathSave,
-  decrementDurations,
   FRESH_TURN_STATE,
   heal,
   isIncapacitated,
   removeEffect,
   removeEffectsByCaster,
+  speedDeltaFromEffects,
   takeDamage
 } from "#/battle-machine-creature.ts"
 import { calculateEffectiveSpeed } from "#/machine-helpers.ts"
@@ -40,7 +41,7 @@ import {
   phaseResolvingMovement
 } from "#/battle-machine-types.ts"
 import { evasionDamage } from "#/features/class-rogue.ts"
-import type { DamageType, SpellId } from "#/types.ts"
+import type { ActiveEffect, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
 export const byTag = Match.discriminator("tag")
@@ -164,6 +165,10 @@ export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<Creatur
   return t.reactionAvailable && !t.dead && !t.unconscious ? new Set([targetId]) : new Set()
 }
 
+export function canMakeOpportunityAttack(c: BattleCreatureState): boolean {
+  return c.reactionAvailable && !c.dead && !isIncapacitated(c) && !blocksOpportunityAttacks(c)
+}
+
 /** Eligible for Legendary Resistance: alive + conscious + has LR charges remaining. */
 export function eligibleForLR(cs: Creatures, targetId: CreatureId): Set<CreatureId> {
   const t = cs.get(targetId)!
@@ -244,14 +249,16 @@ export function dealDamageWithAfterReactions(
 
 export function advanceFromHitPhase(
   cs: Creatures,
-  atk: AttackHitCtx
+  atk: AttackHitCtx,
+  currentTurnCreatureId: CreatureId
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const stillHit = isHit(atk.attackRoll, atk.targetAc, atk.critRange)
   if (!stillHit) return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) }
-  const dmgElig = eligibleTarget(cs, atk.target)
+  const cs1 = applyOnHitEffect(cs, atk.target, atk.onHitEffect, currentTurnCreatureId)
+  const dmgElig = eligibleTarget(cs1, atk.target)
   if (dmgElig.size > 0) {
     return {
-      creatures: new Map(cs),
+      creatures: new Map(cs1),
       ...phaseAwaitReaction(
         mkAwait(
           {
@@ -273,7 +280,7 @@ export function advanceFromHitPhase(
     }
   }
   return dealDamageWithAfterReactions(
-    cs,
+    cs1,
     atk.target,
     atk.attacker,
     atk.damage,
@@ -387,6 +394,66 @@ function applyDamageWithConcBreak(
   return { creatures: result, creature: c }
 }
 
+function autoBreakAllExpiredConcentration(cs: Creatures): Map<CreatureId, BattleCreatureState> {
+  const result = new Map(cs)
+  for (const [id, creature] of result) {
+    const updated = autoBreakExpiredConcentration(creature)
+    if (updated !== creature) result.set(id, updated)
+  }
+  return result
+}
+
+function advanceEffectsAtPhase(
+  cs: Creatures,
+  ownerId: CreatureId,
+  phase: ExpiryPhase
+): Map<CreatureId, BattleCreatureState> {
+  let changed = false
+  const result = new Map<CreatureId, BattleCreatureState>()
+  for (const [id, creature] of cs) {
+    const activeEffects = advanceEffectsForOwner(creature.activeEffects, ownerId, phase)
+    if (activeEffects !== creature.activeEffects) changed = true
+    result.set(id, activeEffects === creature.activeEffects ? creature : { ...creature, activeEffects })
+  }
+  return changed ? autoBreakAllExpiredConcentration(result) : new Map(cs)
+}
+
+function battleEffectiveSpeed(c: BattleCreatureState): number {
+  return calculateEffectiveSpeed({
+    baseSpeed: Math.max(0, c.baseWalkSpeed + speedDeltaFromEffects(c)),
+    armorPenalty: 0,
+    grappled: c.grappled,
+    restrained: c.restrained,
+    exhaustion: c.exhaustion,
+    isGrappling: false,
+    grappledTargetTwoSizesSmaller: false
+  })
+}
+
+export function applyOnHitEffect(
+  cs: Creatures,
+  targetId: CreatureId,
+  effect: ActiveEffect | undefined,
+  currentTurnCreatureId: CreatureId
+): Map<CreatureId, BattleCreatureState> {
+  if (!effect) return new Map(cs)
+  const target = cs.get(targetId)!
+  const activeEffects = [...target.activeEffects.filter((existing) => existing.spellId !== effect.spellId), effect]
+  const updatedTarget = { ...target, activeEffects }
+  const speed = targetId === currentTurnCreatureId ? battleEffectiveSpeed(updatedTarget) : updatedTarget.effectiveSpeed
+  return setCreature(
+    cs,
+    targetId,
+    targetId === currentTurnCreatureId
+      ? {
+          ...updatedTarget,
+          effectiveSpeed: speed,
+          movementRemaining: Math.min(updatedTarget.movementRemaining, speed)
+        }
+      : updatedTarget
+  )
+}
+
 export function processStartTurn(
   cs: Creatures,
   activeId: CreatureId,
@@ -398,16 +465,14 @@ export function processStartTurn(
   rechargedAbilities: ReadonlyArray<string> | undefined,
   deathSaveRoll: number
 ): Map<CreatureId, BattleCreatureState> {
-  let c = cs.get(activeId)!
-  let effs = decrementDurations(c.activeEffects)
-  effs = clearExpiredAtPhase(effs, "start")
-  c = autoBreakExpiredConcentration({ ...c, activeEffects: effs })
+  let result = advanceEffectsAtPhase(cs, activeId, "start")
+  let c = result.get(activeId)!
   // Death save: if at 0 HP, not stable, not dead, and roll provided
   if (c.hp === 0 && !c.stable && !c.dead && deathSaveRoll > 0) {
     c = deathSave(c, deathSaveRoll)
   }
-  let result = setCreature(cs, activeId, c)
-  const hasEffects = effs.length > 0 && (sotDmg > 0 || sotHeal > 0)
+  result = setCreature(result, activeId, c)
+  const hasEffects = c.activeEffects.length > 0 && (sotDmg > 0 || sotHeal > 0)
   if (hasEffects) {
     if (sotHeal > 0) c = heal(c, sotHeal)
     if (sotDmg > 0) {
@@ -419,15 +484,7 @@ export function processStartTurn(
     }
   }
   c = result.get(activeId)!
-  const speed = calculateEffectiveSpeed({
-    baseSpeed: c.baseWalkSpeed,
-    armorPenalty: 0,
-    grappled: c.grappled,
-    restrained: c.restrained,
-    exhaustion: c.exhaustion,
-    isGrappling: false,
-    grappledTargetTwoSizesSmaller: false
-  })
+  const speed = battleEffectiveSpeed(c)
   c = { ...c, ...FRESH_TURN_STATE, effectiveSpeed: speed, movementRemaining: speed }
   if (c.creatureKind === "Monster" && rechargedAbilities) {
     const newRecharge = { ...c.rechargeAvailable }
@@ -467,8 +524,9 @@ export function processEndTurn(
   } else {
     baseCreatures = cs
   }
-  c = autoBreakExpiredConcentration({ ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") })
   let result = setCreature(baseCreatures, activeId, c)
+  result = advanceEffectsAtPhase(result, activeId, "end")
+  c = result.get(activeId)!
   const oldConcId = cs.get(activeId)!.concentrationSpellId
   if (Option.isSome(oldConcId) && Option.isNone(result.get(activeId)!.concentrationSpellId)) {
     result = breakConcentrationAndPropagate(result, activeId)

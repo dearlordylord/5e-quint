@@ -1,6 +1,13 @@
 import { buildBattleAttackContext, resolveAttack } from "#/battle-machine-actions-attack.ts"
 import { isIncapacitated } from "#/battle-machine-creature.ts"
-import { activeId, setCreature, setDifference, spendMovement, spendReaction } from "#/battle-machine-helpers.ts"
+import {
+  activeId,
+  canMakeOpportunityAttack,
+  setCreature,
+  setDifference,
+  spendMovement,
+  spendReaction
+} from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext } from "#/battle-machine-types.ts"
 import { PHASE_ACTIVE, phaseResolvingMovement } from "#/battle-machine-types.ts"
 import { aggregateAttackMods } from "#/machine-combat.ts"
@@ -15,7 +22,7 @@ export function battleMove({ context: c, event: e }: BattleActionArgs<"BATTLE_MO
   const oaEligible = new Set(
     [...e.threatened].filter((tid) => {
       const t = cs.get(tid)
-      return t && t.reactionAvailable && !t.dead
+      return t != null && canMakeOpportunityAttack(t)
     })
   )
   if (oaEligible.size === 0) return { creatures: cs }
@@ -75,6 +82,7 @@ export function battleMovementOAAttack({
     e.knockOut,
     true,
     mods,
+    undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
     e.saDmg

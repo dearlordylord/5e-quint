@@ -227,6 +227,7 @@ export function battleReadyRelease({
     e.knockOut,
     e.isMelee,
     readyMods,
+    undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
     e.saDmg
@@ -266,6 +267,7 @@ export function battleLegendaryAttack({
     e.knockOut,
     e.isMelee,
     laMods,
+    undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
     e.saDmg

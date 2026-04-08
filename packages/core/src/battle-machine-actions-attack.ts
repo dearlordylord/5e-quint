@@ -101,6 +101,7 @@ export function resolveAttack(
   knockOut: boolean,
   isMelee: boolean,
   mods: FullAttackMods,
+  onHitEffect: AttackHitCtx["onHitEffect"],
   isFinesse: boolean,
   hasAllyAdjacentToTarget: boolean,
   saDmg: number
@@ -133,7 +134,8 @@ export function resolveAttack(
     isCritical: effectiveCrit,
     critRange,
     atkReturnTo: returnTo,
-    knockOut: effectiveKnockOut
+    knockOut: effectiveKnockOut,
+    onHitEffect
   }
   const elig = eligibleExcluding(cs1, attackerId)
   if (elig.size > 0) {
@@ -190,6 +192,7 @@ export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_
     e.knockOut,
     e.isMelee,
     mods,
+    e.onHitEffect,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
     e.saDmg
@@ -206,7 +209,7 @@ export function battleResolveHitReaction({
   if (!pi) return {}
   const atk = pi.ctx
   if (setDifference(aw.eligible, aw.offered).size === 0 || e.reactorId === null) {
-    const result = advanceFromHitPhase(c.creatures, atk)
+    const result = advanceFromHitPhase(c.creatures, atk, activeId(c))
     return {
       creatures: result.creatures,
       awaitCtx: result.awaitCtx,

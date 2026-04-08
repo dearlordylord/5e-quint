@@ -13,6 +13,7 @@ import type {
   SpellCastCtx
 } from "#/battle-machine-types.ts"
 import type {
+  ActiveEffect,
   Ability,
   ArmorClass,
   Condition,
@@ -76,6 +77,7 @@ export type BattleEvent =
       readonly tAc: ArmorClass
       readonly knockOut: boolean
       readonly isMelee: boolean
+      readonly onHitEffect?: ActiveEffect
       readonly isFinesse: boolean
       readonly attackerWithin5ft: boolean
       readonly hostileWithin5ft: boolean

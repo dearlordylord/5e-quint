@@ -113,21 +113,37 @@ Reason for deferral:
 - forcing this into the batch would have required a broader relationship model,
 - that violates the small-step rule for the first pass.
 
-### Shocking Grasp
+### Batch 3: Spell-Rider Runtime Batch
 
-Reason for deferral:
+Files:
 
-- battle state does not currently model a first-class temporary "cannot make Opportunity Attacks" effect,
-- the correct representation is probably an `ActiveEffect`-driven rider, not an ad hoc flag,
-- the spell rider expires at the start of the caster's next turn, which is a battle effect-lifecycle issue.
+- [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts)
+- [packages/core/src/types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/types.ts)
+- [packages/core/src/battle-machine-creature.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-creature.ts)
+- [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-helpers.ts)
+- [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-attack.ts)
+- [packages/core/src/battle-machine-actions-movement.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-movement.ts)
+- [packages/core/src/battle-machine-actions-turn.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-turn.ts)
 
-### Ray of Frost
+Added runtime coverage and support for:
 
-Reason for deferral:
+- `Shocking Grasp` blocking Opportunity Attacks until the start of the target's next turn,
+- `Ray of Frost` reducing Speed by 10 until the start of the caster's next turn.
 
-- battle state does not currently model transient speed-reduction riders,
-- current battle effect duration handling decrements only on the affected creature's turn,
-- Ray of Frost expires at the start of the caster's next turn, so this exposes the same lifecycle gap as Shocking Grasp.
+What changed:
+
+- `ActiveEffect` now carries optional rider data for OA blocking and speed deltas.
+- `ActiveEffect` now also carries an optional `expiryOwnerId`.
+- battle turn processing now advances effect durations by expiry owner rather than assuming the affected creature always owns the duration boundary.
+- OA eligibility now derives from effect state instead of only `reactionAvailable`.
+- battle speed derivation now includes active-effect speed deltas.
+- generic battle attacks can carry an optional on-hit effect payload, which is enough for the current competitor regressions.
+
+Important RAW correction discovered during implementation:
+
+- `Shocking Grasp` says "until the start of its next turn" and is therefore target-relative.
+- `Ray of Frost` says "until the start of your next turn" and is therefore caster-relative.
+- The correct generalized model is not "caster-relative only"; it is "effect owner relative."
 
 ## Architectural Conclusion So Far
 
@@ -137,11 +153,17 @@ The current battle layer is strong enough for:
 - reaction spending and OA sequencing,
 - generic hit / damage / after-damage interrupt windows.
 
-The next missing capability is:
+The runtime layer now also supports:
 
-- caster-relative temporary combat riders stored as effects and recomputed into battle state.
+- effect-driven OA suppression,
+- effect-driven temporary speed reduction,
+- mixed expiry ownership for temporary attack riders.
 
-That is the real next frontier, not more one-off battle tests.
+The next missing capability is no longer the runtime model. It is:
+
+- spec-level and MBT-generated coverage for these attack-hit riders.
+
+That is the real next frontier now, not more runtime-only battle tests.
 
 ## Verification Already Completed
 
@@ -173,47 +195,55 @@ Earlier batch-1 verification in this worktree also passed:
 - creature MBT seed: `0xf8aa11bf`
 - creature MBT seed: `0xedf7edf6`
 
+Batch-3 verification completed in this worktree:
+
+- focused battle regressions:
+  - `pnpm exec vitest run src/competitor-battle-scenarios.test.ts`
+  - passed: 4 tests
+- focused combined competitor suite:
+  - `pnpm exec vitest run src/competitor-scenarios.test.ts src/competitor-battle-scenarios.test.ts`
+  - passed: 15 tests
+- typecheck:
+  - `pnpm --filter @dnd/core typecheck`
+  - passed
+- battle projection MBT Tier 1:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
+  - seed: `0x5db20e93`
+  - total: `37s`
+- battle machine MBT Tier 1:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts`
+  - seed: `0xafdde94b`
+  - total: `12s`
+
 ## Current Worktree State
 
-Uncommitted files:
+This worktree now contains both regression tests and runtime battle-state changes.
 
-- [packages/core/src/competitor-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-scenarios.test.ts)
-- [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts)
-
-No spec or runtime code changed in these two batches.
-
-That means the next step can be chosen cleanly:
-
-- continue test-only work on already-supported mechanics, or
-- begin the first real battle-state/effect architecture extension.
+That means the next step is no longer "start the spell-rider batch." The runtime spell-rider batch is already done.
 
 ## Next Step Options
 
-### Option A: Start The Spell-Rider Batch
+### Option A: Add Quint / MBT Coverage For Attack-Hit Riders
 
 Recommended next step.
 
 Goal:
 
-- add the minimal battle-layer effect model needed for `Shocking Grasp` and `Ray of Frost`.
+- make the spec and model-based bridge actually exercise the new `Shocking Grasp` / `Ray of Frost` rider path.
 
 Scope:
 
-- extend `ActiveEffect` with enough typed rider data to express:
-  - no opportunity attacks until a given expiry point,
-  - speed reduction by a fixed amount until a given expiry point
-- make battle start-turn processing handle caster-relative expiry correctly,
-- recompute battle turn capabilities from active effects rather than storing redundant ad hoc flags,
-- add focused battle regression tests for:
-  - Shocking Grasp blocks OAs until the start of the caster's next turn,
-  - Ray of Frost reduces speed by 10 until the start of the caster's next turn,
-  - expiry actually restores the baseline behavior.
+- extend [battle.qnt](/workspace/typescript/dnd-competitor-tests-batch-1/battle.qnt) and the MBT bridge so `bAttack` can nondeterministically attach attack-hit riders,
+- add the corresponding mapping in [packages/core/src/battle-machine.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine.mbt.test.ts),
+- update [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-projection.mbt.test.ts) if needed so the projected creature-machine replay understands expiry ownership and rider effects,
+- extend normalization in [packages/core/src/mbt-shared.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/mbt-shared.ts) if new state fields are added to Quint effects,
+- only after that, rely on MBT to validate these mechanics instead of just deterministic runtime tests.
 
 Why this is next:
 
-- it is the smallest real architecture gap exposed by competitor scenario mining,
-- it unlocks multiple deferred scenarios with one coherent model change,
-- it remains tightly aligned with SRD combat formalization.
+- the runtime behavior is implemented and tested,
+- the remaining gap is proof coverage, not local mechanics,
+- this is the shortest path back to the project's actual goal: Quint parity.
 
 ### Option B: Add More Test-Only Battle Regressions
 
@@ -227,8 +257,8 @@ Candidates:
 
 Why this is weaker:
 
-- the best clear wins in the current model are already covered,
-- returns diminish quickly without addressing the spell-rider gap.
+- the clearest runtime wins are already captured,
+- more tests without spec/MBT uplift increase the proof gap rather than shrinking it.
 
 ## If You Continue This Work Next Time
 
@@ -238,10 +268,12 @@ Start here:
 2. read [ARCHITECTURE.md](/workspace/typescript/dnd-competitor-tests-batch-1/ARCHITECTURE.md),
 3. read [battle/DOMAIN.md](/workspace/typescript/dnd-competitor-tests-batch-1/battle/DOMAIN.md),
 4. inspect [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts),
-5. choose `Option A` unless there is a reason to avoid model changes.
+5. choose `Option A` unless there is a reason to avoid spec/MBT work.
 
 If choosing `Option A`, inspect these implementation anchors before editing:
 
+- [battle.qnt](/workspace/typescript/dnd-competitor-tests-batch-1/battle.qnt)
+- [creature.qnt](/workspace/typescript/dnd-competitor-tests-batch-1/creature.qnt)
 - [packages/core/src/types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/types.ts)
 - [packages/core/src/battle-machine-creature.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-creature.ts)
 - [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-helpers.ts)
@@ -256,7 +288,7 @@ Then preserve the same workflow:
 - keep the change SRD-traceable,
 - run typecheck,
 - run focused tests,
-- run creature MBT if creature-layer touched,
 - run battle projection MBT Tier 1,
+- run battle machine MBT Tier 1,
 - run battle machine MBT Tier 1,
 - record commands and seeds back into this file.

@@ -116,9 +116,12 @@ export interface ActiveEffect {
   readonly turnsRemaining: number
   readonly expiresAt: ExpiryPhase
   readonly casterId: CreatureId
+  readonly expiryOwnerId?: CreatureId
   readonly grantedResistances?: ReadonlySet<DamageType>
   readonly grantedVulnerabilities?: ReadonlySet<DamageType>
   readonly grantedImmunities?: ReadonlySet<DamageType>
+  readonly blocksOpportunityAttacks?: boolean
+  readonly speedDeltaFeet?: number
 }
 
 export interface Armor {

@@ -133,6 +133,7 @@ export interface AttackHitCtx {
   readonly critRange: number
   readonly atkReturnTo: AfterDamageReturn
   readonly knockOut: boolean
+  readonly onHitEffect?: ActiveEffect
 }
 
 export interface AttackDamageCtx {
