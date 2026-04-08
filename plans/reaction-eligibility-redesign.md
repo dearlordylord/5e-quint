@@ -171,21 +171,25 @@ Normalize the shared reaction-window architecture so the battle layer has one co
 - Phase 5 should now consume the authoritative window-owned legality rather than inventing new query-side trigger state.
 - Because the action-surface refactor on `master` is moving the same files that Phase 5 depends on, Phase 5 should be reassessed after rebasing onto current `master` rather than planned against the pre-rebase tree.
 - The architecture dependency remains the same: semantic reaction tokens must project from battle-owned trigger windows, not from generic resource availability.
+- That remaining integration work is now captured in [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md).
 
 ---
 
-## Phase 5: Action-Surface Reaction Tokens
+## Phase 5: Unified Action-Surface Integration
 
-**User stories**: honest semantic reaction actions in the supported action-query surface; no over-suggested reaction actions
+> Source PRD: [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md)
+
+**User stories**: honest semantic reaction actions in the supported action-query surface; no over-suggested reaction actions; unified action-query and execution across creature and battle scopes
 
 ### What to build
 
-Expose semantic reaction-cost actions through the supported action-query and MCP surface, now that trigger-window ownership exists in the battle model. The first exposed reaction actions should be chosen from the candidates already identified as blocked by missing owned trigger state, and they should only appear when the exact trigger window and legality conditions are satisfied.
+Integrate the battle-owned reaction windows into the supported action product through a unified action-surface redesign. The first battle-scoped semantic actions should be reaction tokens such as `USE_UNCANNY_DODGE` and `USE_CUTTING_WORDS`, but they should land through a scope-aware query/execute contract rather than being forced into the existing creature-only `available-actions.ts` pipeline.
 
 ### Acceptance criteria
 
-- [ ] At least one semantic reaction action is exposed honestly through the supported action-query surface.
+- [ ] The supported action product has a unified contract that can represent both creature-scoped and battle-scoped actions.
+- [ ] At least one semantic reaction action is exposed honestly through the battle-aware supported action surface.
 - [ ] The exposed reaction token appears only when the corresponding legal trigger window exists.
 - [ ] The action-query surface does not suggest reaction actions based solely on resource availability.
-- [ ] End-to-end tests cover both action discovery and execution for the exposed semantic reaction action.
-- [ ] The implementation reuses the authoritative reaction-window legality rather than introducing parallel query-only state.
+- [ ] End-to-end tests cover both battle-scoped action discovery and execution for the first semantic reaction action.
+- [ ] The implementation reuses the authoritative reaction-window legality rather than introducing parallel query-only state or duplicating battle triggers into creature state.

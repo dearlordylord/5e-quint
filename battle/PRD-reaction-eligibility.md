@@ -53,8 +53,9 @@ This redesign is also the missing prerequisite for honest reaction actions in th
 Relevant downstream document:
 
 - [plans/available-actions.md](../plans/available-actions.md)
+- [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md)
 
-That plan already records that Phase 2 reaction coverage is blocked by missing owned trigger state. This PRD is the architecture work that resolves that blocker.
+That plan already records that Phase 2 reaction coverage is blocked by missing owned trigger state. This PRD is the architecture work that resolves the battle-domain ownership blocker.
 
 Concrete downstream consumers called out there:
 
@@ -72,6 +73,8 @@ So this PRD is not only about battle-model correctness. It is also the enabling 
 - `packages/mcp/src/server.ts`
 
 Without this redesign, exposing reaction-cost semantic actions there would over-suggest illegal actions.
+
+This PRD does not by itself redesign the supported action product/API. Once battle-owned legality exists, the remaining integration work moves to [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md).
 
 ## Goals
 

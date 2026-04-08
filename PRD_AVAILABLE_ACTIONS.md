@@ -13,6 +13,12 @@ This requires two capabilities that don't exist yet:
 
 The Quint spec (`creature.qnt`, `battle.qnt`) already formally models D&D 5e rules — what's legal, what each action does, how state changes. The XState machine implements this with MBT-verified parity. But neither layer currently exposes "here are your options" as a queryable projection.
 
+Status note:
+
+- The creature-scoped supported action surface described in this PRD is now substantially implemented.
+- The next foundational extension beyond creature scope is tracked separately in [PRD_UNIFIED_ACTION_SURFACE.md](PRD_UNIFIED_ACTION_SURFACE.md).
+- That follow-on PRD covers the battle-scoped action surface needed for honest reaction tokens and other interrupt-window actions.
+
 ## Solution
 
 Build the **Available Actions Module** as the first building block — a pure function that projects the current character state into a set of structured, serializable action tokens. Expose it via an **MCP server** for LLM and programmatic consumption. In parallel, prototype the **transcript-to-events pipeline** in the Hellenvald project (simpler OSR rules, cheaper to iterate) with documented awareness of how it feeds back into this project.
