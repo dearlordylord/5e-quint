@@ -750,6 +750,7 @@ Verification:
 
 What is next now:
 
+- `BATTLE_HEAL` battle coverage is now in inspiration form, so do not re-pick that batch
 - `BATTLE_CAST_AOE` battle coverage is now in inspiration form, so do not re-pick that batch
 - concentration lifecycle battle coverage is now in inspiration form, so do not re-pick that batch
 - `Rage` / `Reckless Attack` battle coverage is now in inspiration form, so do not re-pick that batch
@@ -757,6 +758,22 @@ What is next now:
 - the `Ray of Frost` + `Dash` follow-up is now covered in inspiration form, so do not re-pick it as the next batch
 - scout the next small deterministic inspiration batch outside grapple and outside the already-covered `Ray of Frost`/`Dash` interaction
 - if you resume in a fresh session, start from this file and [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts), then pick the next `natural_20`-style scenario that fits current battle state without reopening architecture
+
+Batch 19 result:
+
+1. Added explicit battle coverage for `BATTLE_HEAL`.
+   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves:
+     - healing restores HP and spends the caster's action,
+     - healing is capped at the target's max HP,
+     - healing a 0 HP target revives it and clears the unconscious/death-save state
+2. Confirmed the existing implementation already matched RAW and current battle semantics.
+   - no production TS or Quint changes were required
+   - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
 
 Batch 18 result:
 

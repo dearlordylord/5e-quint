@@ -84,6 +84,19 @@ function initThreeCasterBattle() {
   return actor
 }
 
+function initHealBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", caster: true, initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 }
+    ]
+  })
+  return actor
+}
+
 function initAoEBattle() {
   const actor = createActor(battleMachine)
   actor.start()
@@ -208,6 +221,21 @@ function initGrappleBattle() {
 
 function startTurn(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT })
+}
+
+function endTurn(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
+  send(actor, {
+    type: "BATTLE_END_TURN",
+    eotSaveSucceeded: false,
+    eotDmg: 0,
+    eotDt: "bludgeoning",
+    eotConSave: true
+  })
+}
+
+function advanceToNextTurn(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
+  endTurn(actor)
+  startTurn(actor)
 }
 
 function resolveAttackWindows(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
@@ -1405,6 +1433,105 @@ describe("inspiration-sourced battle regressions", () => {
 
     expect(creature(actor, "C").hp).toBe(20)
     expect(ctx(actor).aoeCtx).toBeNull()
+  })
+
+  it("natural_20: BATTLE_HEAL restores HP to a wounded ally and spends the caster's action", () => {
+    const actor = initHealBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 8,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "B").hp).toBe(12)
+
+    advanceToNextTurn(actor)
+    advanceToNextTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_HEAL",
+      targetId: CreatureId("B"),
+      amount: 5
+    })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+    expect(creature(actor, "B").hp).toBe(17)
+  })
+
+  it("natural_20: BATTLE_HEAL cannot heal above the target's max HP", () => {
+    const actor = initHealBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 3,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    resolveAttackWindows(actor)
+
+    advanceToNextTurn(actor)
+    advanceToNextTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_HEAL",
+      targetId: CreatureId("B"),
+      amount: 10
+    })
+
+    expect(creature(actor, "B").hp).toBe(20)
+  })
+
+  it("natural_20: BATTLE_HEAL revives a 0 HP creature and clears unconscious and death saves", () => {
+    const actor = initHealBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 20,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "B").hp).toBe(0)
+    expect(creature(actor, "B").unconscious).toBe(true)
+
+    advanceToNextTurn(actor)
+    advanceToNextTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_HEAL",
+      targetId: CreatureId("B"),
+      amount: 6
+    })
+
+    expect(creature(actor, "B").hp).toBe(6)
+    expect(creature(actor, "B").unconscious).toBe(false)
+    expect(creature(actor, "B").stable).toBe(false)
+    expect(creature(actor, "B").deathSaves).toEqual({ successes: 0, failures: 0 })
   })
 
   it("natural_20: a readied spell releases with a reaction and applies its effect", () => {
