@@ -214,7 +214,6 @@ export function EventPanel({
           onClick={() =>
             send({
               type: "START_TURN",
-              callerSpeedModifier: 0,
               isGrappling: false,
               grappledTargetTwoSizesSmaller: false,
               startOfTurnEffects: []

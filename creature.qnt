@@ -1302,11 +1302,11 @@ module creature {
 
   /// Compute effective walking speed from base speed minus penalties.
   /// Grappled/restrained: speed 0 (no bonuses apply).
-  /// Order: base - armorPenalty - exhaustion penalty - grapple halving + callerMod.
+  /// Order: base - armorPenalty - exhaustion penalty - grapple halving.
   pure def pComputeEffectiveSpeed(
     baseWalkSpeed: int, exhaustion: int,
     grappled: bool, restrained: bool,
-    armorPenalty: int, callerSpeedModifier: int,
+    armorPenalty: int,
     isGrappling: bool, grappledTargetTwoSizesSmaller: bool
   ): int = {
     if (grappled or restrained) 0
@@ -1316,7 +1316,7 @@ module creature {
       val afterGrappling =
         if (isGrappling and not(grappledTargetTwoSizesSmaller)) afterExhaustion / 2
         else afterExhaustion
-      intMax(0, afterGrappling + callerSpeedModifier)
+      intMax(0, afterGrappling)
     }
   }
 
@@ -1326,7 +1326,6 @@ module creature {
     config: CharConfig,
     creature: CreatureState,
     armorState: ArmorState,
-    callerSpeedModifier: int,
     isGrappling: bool,
     grappledTargetTwoSizesSmaller: bool
   ): TurnState = {
@@ -1334,7 +1333,7 @@ module creature {
       config.speeds.get(Walk), creature.exhaustion,
       creature.grappled, creature.restrained,
       armorSpeedPenalty(armorState, config.abilityScores.get(Str)),
-      callerSpeedModifier, isGrappling, grappledTargetTwoSizesSmaller
+      isGrappling, grappledTargetTwoSizesSmaller
     )
     {
       movementRemaining: speed,
@@ -2181,7 +2180,6 @@ module creature {
     s: CreatureState,
     ss: SpellSlotState,
     armorState: ArmorState,
-    callerSpeedModifier: int,
     isGrappling: bool,
     grappledTargetTwoSizesSmaller: bool,
     deathSaveRoll: int,
@@ -2203,7 +2201,7 @@ module creature {
     // 4. Process start-of-turn effects
     val r = pProcessStartOfTurn(s2, ss1, startEffects)
     // 5. Turn state reset (uses post-processing creature state)
-    val t = pStartTurn(config, r.creature, armorState, callerSpeedModifier, isGrappling, grappledTargetTwoSizesSmaller)
+    val t = pStartTurn(config, r.creature, armorState, isGrappling, grappledTargetTwoSizesSmaller)
     { creature: r.creature, slots: r.slots, turn: t }
   }
 
@@ -4094,7 +4092,6 @@ module creature {
   }
 
   action doStartTurn = {
-    nondet callerSpeedMod = (-10).to(10).oneOf()
     nondet isGrappling = Bool.oneOf()
     nondet grappledSmall = Bool.oneOf()
     nondet deathSaveRoll = D20_RANGE.oneOf()
@@ -4121,7 +4118,7 @@ module creature {
         }]
       if (creatureKind == Monster) {
         val r = pStartTurnFull(monsterConfigFromStatBlock(monsterStatBlock), state, spellSlots, Unarmored,
-          callerSpeedMod, isGrappling, grappledSmall, 0, 0, effects)  // 0 = skip death save
+          isGrappling, grappledSmall, 0, 0, effects)  // 0 = skip death save
         val monsterExtraAttacks = if (monsterStatBlock.multiattack.length() > 0)
           monsterStatBlock.multiattack.length() - 1 else 0
         // Phase L: refresh legendary actions + process recharge rolls
@@ -4152,7 +4149,7 @@ module creature {
         // PC start turn: derive config from classLevels (multiclass-aware)
         val pcConfig = configFromClassLevels(classLevels)
         val r = pStartTurnFull(pcConfig, state, spellSlots, Unarmored,
-          callerSpeedMod, isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)
+          isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)
         // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied
         val afterRally = pHeroicRally(r.creature, classLevels.get(Fighter), conMod)
         all {

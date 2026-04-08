@@ -272,7 +272,6 @@ export function calculateEffectiveSpeed(params: {
   readonly grappled: boolean
   readonly restrained: boolean
   readonly exhaustion: number
-  readonly callerSpeedModifier: number
   readonly isGrappling: boolean
   readonly grappledTargetTwoSizesSmaller: boolean
 }): number {
@@ -283,7 +282,7 @@ export function calculateEffectiveSpeed(params: {
     params.isGrappling && !params.grappledTargetTwoSizesSmaller
       ? Math.floor(afterExhaustion / HALVE_DIVISOR)
       : afterExhaustion
-  return Math.max(0, afterGrappling + params.callerSpeedModifier)
+  return Math.max(0, afterGrappling)
 }
 
 /** Movement cost multiplier. Matches Quint pMovementCost. */

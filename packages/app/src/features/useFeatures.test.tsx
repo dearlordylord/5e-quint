@@ -27,7 +27,6 @@ function makeActingSnapshot(): DndSnapshot {
   actor.send({ type: "ENTER_COMBAT" })
   actor.send({
     type: "START_TURN",
-    callerSpeedModifier: 0,
     isGrappling: false,
     grappledTargetTwoSizesSmaller: false,
     startOfTurnEffects: []
@@ -105,7 +104,6 @@ describe("useFeatures", () => {
       act(() =>
         result.current.notify({
           type: "START_TURN",
-          callerSpeedModifier: 0,
           isGrappling: false,
           grappledTargetTwoSizesSmaller: false,
           startOfTurnEffects: []
@@ -268,7 +266,6 @@ describe("useFeatures", () => {
       act(() =>
         result.current.notify({
           type: "START_TURN",
-          callerSpeedModifier: 0,
           isGrappling: false,
           grappledTargetTwoSizesSmaller: false,
           startOfTurnEffects: []
@@ -403,7 +400,6 @@ describe("useFeatures — barbarian", () => {
       act(() => {
         result.current.notify({
           type: "START_TURN",
-          callerSpeedModifier: 0,
           isGrappling: false,
           grappledTargetTwoSizesSmaller: false,
           startOfTurnEffects: []

@@ -591,6 +591,7 @@ function createBattleMachineDriver() {
               caster: true,
               saveMiscBonus: p(picks, "smb2", 0),
               barbarianLevel: 5,
+              baseWalkSpeed: 40, // 30 base + 10 Fast Movement (Barbarian L5)
               initiativeRoll: p(picks, "initRoll2", 10),
               initiativeRollB: p(picks, "initRoll2b", 10),
               surprised: pb(picks, "surprised2", false)

@@ -750,7 +750,7 @@ module dndTest {
 
   run test_speed_exhaustion1_reduced_by_5 = {
     val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 1, false), Unarmored,
-      0, false, false)
+      false, false)
     assert(t.movementRemaining == 25) // 30 - 5*1 = 25
   }
 
@@ -758,7 +758,7 @@ module dndTest {
     // exhaustion 6 is death, but test with 5 and speed 20
     val cfg = TEST_FIGHTER_5.with("speeds", Map(Walk -> 20, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0))
     val t = pStartTurn(cfg, pAddExhaustion(FRESH20, 5, false), Unarmored,
-      0, false, false)
+      false, false)
     assert(t.movementRemaining == 0) // 20 - 25 → clamped to 0
   }
 
@@ -1172,7 +1172,7 @@ module dndTest {
   }
 
   pure val BASIC_TURN: TurnState = pStartTurn(
-    TEST_FIGHTER_5, FRESH20, Unarmored, 0, false, false
+    TEST_FIGHTER_5, FRESH20, Unarmored, false, false
   )
 
   // -- Start turn basics --
@@ -1205,49 +1205,51 @@ module dndTest {
   run test_speed_heavy_armor_penalty = {
     val t = pStartTurn(TEST_FIGHTER_5.with("abilityScores",
       Map(Str -> 12, Dex -> 14, Con -> 14, Int_ -> 10, Wis -> 12, Cha -> 8)),
-      FRESH20, WearingArmor(CHAIN_MAIL), 0, false, false)
+      FRESH20, WearingArmor(CHAIN_MAIL), false, false)
     assert(t.movementRemaining == 20) // 30 - 10 (STR 12 < 13)
   }
 
   run test_speed_exhaustion2_reduced_by_10 = {
     val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 2, false), Unarmored,
-      0, false, false)
+      false, false)
     assert(t.movementRemaining == 20) // 30 - 5*2 = 20
   }
 
   run test_speed_exhaustion5_reduced_by_25 = {
     val t = pStartTurn(TEST_FIGHTER_5, pAddExhaustion(FRESH20, 5, false), Unarmored,
-      0, false, false)
+      false, false)
     assert(t.movementRemaining == 5) // 30 - 5*5 = 5
   }
 
   run test_speed_grappled_zero = {
     val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled, Set()), Unarmored,
-      0, false, false)
+      false, false)
     assert(t.movementRemaining == 0)
   }
 
   run test_speed_grappled_ignores_bonus = {
+    // Grappled → speed 0 regardless of base speed (SRD: "Speed becomes 0")
     val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled, Set()), Unarmored,
-      10, false, false) // +10 from spell, should be ignored
+      false, false)
     assert(t.movementRemaining == 0)
   }
 
   run test_speed_grappling_halved = {
     val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
-      0, true, false) // grappling, target not 2+ sizes smaller
+      true, false) // grappling, target not 2+ sizes smaller
     assert(t.movementRemaining == 15)
   }
 
   run test_speed_grappling_tiny_target = {
     val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
-      0, true, true) // grappling, target 2+ sizes smaller
+      true, true) // grappling, target 2+ sizes smaller
     assert(t.movementRemaining == 30) // no penalty
   }
 
-  run test_speed_caller_modifier = {
-    val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
-      10, false, false) // +10 from Longstrider
+  run test_speed_bonus_baked_into_base = {
+    // Speed bonus (e.g. Fast Movement +10) is baked into baseWalkSpeed at init
+    val cfg = TEST_FIGHTER_5.with("speeds", Map(Walk -> 40, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0))
+    val t = pStartTurn(cfg, FRESH20, Unarmored, false, false)
     assert(t.movementRemaining == 40)
   }
 
@@ -1838,7 +1840,7 @@ module dndTest {
 
   run test_mount_speed_zero = {
     val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled, Set()), Unarmored,
-      0, false, false)
+      false, false)
     val t2 = pMountOrDismount(t)
     assert(t2.movementRemaining == 0) // speed 0, can't mount
   }
@@ -1912,7 +1914,7 @@ module dndTest {
 
   run test_stand_from_prone_speed_zero = {
     val t = pStartTurn(TEST_FIGHTER_5, pApplyCondition(FRESH20, CGrappled, Set()), Unarmored,
-      0, false, false)
+      false, false)
     val t2 = pStandFromProne(t)
     assert(t2.movementRemaining == 0) // speed 0, can't stand
   }
@@ -2467,7 +2469,7 @@ module dndTest {
     }
     val s = FRESH20.with("activeEffects", Set(eff))
     val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
-    val r = pStartTurnFull(TEST_WIZARD, s, ss, Unarmored, 0, false, false, 0, 0, List())
+    val r = pStartTurnFull(TEST_WIZARD, s, ss, Unarmored, false, false, 0, 0, List())
     all {
       assert(not(isConcentrating(r.slots))),
       assert(r.slots.concentrationSpellId == ""),
@@ -2502,7 +2504,7 @@ module dndTest {
     }
     val s = FRESH20.with("activeEffects", Set(eff))
     val ss = pStartConcentration(WIZARD_5_SLOTS, "bless")
-    val r = pStartTurnFull(TEST_WIZARD, s, ss, Unarmored, 0, false, false, 0, 0, List())
+    val r = pStartTurnFull(TEST_WIZARD, s, ss, Unarmored, false, false, 0, 0, List())
     all {
       assert(isConcentrating(r.slots)),
       assert(r.slots.concentrationSpellId == "bless"),
@@ -4178,7 +4180,7 @@ module dndTest {
   run test_skeleton_full_turn = {
     val creature = freshCreature(SKELETON.maxHp)
     val r = pStartTurnFull(monsterConfigFromStatBlock(SKELETON), creature, FRESH_SPELL_SLOTS, Unarmored,
-      0, false, false, 0, 0, [])
+      false, false, 0, 0, [])
     val t1 = pUseAction(r.turn, r.creature, AAttack)
     val endResult = pEndTurn(r.creature, r.slots, [], [])
     all {
@@ -4195,7 +4197,7 @@ module dndTest {
   run test_ogre_full_turn = {
     val creature = freshCreature(OGRE.maxHp)
     val r = pStartTurnFull(monsterConfigFromStatBlock(OGRE), creature, FRESH_SPELL_SLOTS, Unarmored,
-      0, false, false, 0, 0, [])
+      false, false, 0, 0, [])
     val t1 = pUseAction(r.turn, r.creature, AAttack)
     val endResult = pEndTurn(r.creature, r.slots, [], [])
     all {
@@ -4212,7 +4214,7 @@ module dndTest {
   run test_skeleton_turn_with_movement = {
     val creature = freshCreature(SKELETON.maxHp)
     val r = pStartTurnFull(monsterConfigFromStatBlock(SKELETON), creature, FRESH_SPELL_SLOTS, Unarmored,
-      0, false, false, 0, 0, [])
+      false, false, 0, 0, [])
     val t0 = r.turn
     val t1 = pUseMovement(t0, 20, 1)
     val t2 = pUseAction(t1, r.creature, AAttack)
@@ -4228,7 +4230,7 @@ module dndTest {
   run test_monster_multiattack_full_turn = {
     val creature = freshCreature(30)
     val r = pStartTurnFull(monsterConfigFromStatBlock(SKELETON), creature, FRESH_SPELL_SLOTS, Unarmored,
-      0, false, false, 0, 0, [])
+      false, false, 0, 0, [])
     val t0 = r.turn.with("extraAttacksRemaining", 1)
     val t1 = pUseAction(t0, r.creature, AAttack)
     val t2 = pUseExtraAttack(t1)

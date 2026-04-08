@@ -45,7 +45,6 @@ function skeletonDamage(amount: number, damageType: DamageType, isCritical = fal
 function skeletonStartTurn(): DndEvent {
   return {
     type: "START_TURN",
-    callerSpeedModifier: 0,
     isGrappling: false,
     grappledTargetTwoSizesSmaller: false,
     startOfTurnEffects: []

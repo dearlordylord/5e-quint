@@ -177,7 +177,6 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
   const speed = calculateEffectiveSpeed({
     baseSpeed: c.baseWalkSpeed,
     armorPenalty: 0, // armor not modeled at creature level
-    callerSpeedModifier: ev.callerSpeedModifier,
     exhaustion: c.exhaustion,
     grappled: conds.grappled ?? c.grappled,
     grappledTargetTwoSizesSmaller: ev.grappledTargetTwoSizesSmaller,

@@ -230,7 +230,6 @@ export type DndEvent =
   | {
       readonly type: "START_TURN"
       readonly extraAttacks?: number // override for monsters (multiattack); PCs derive from class levels
-      readonly callerSpeedModifier: number
       readonly isGrappling: boolean
       readonly grappledTargetTwoSizesSmaller: boolean
       readonly deathSaveRoll?: D20Roll

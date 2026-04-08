@@ -33,7 +33,6 @@ export function damage(amount: number, damageType: DamageType, isCritical = fals
 export function startTurn(): DndEvent {
   return {
     type: "START_TURN",
-    callerSpeedModifier: 0,
     isGrappling: false,
     grappledTargetTwoSizesSmaller: false,
     startOfTurnEffects: []

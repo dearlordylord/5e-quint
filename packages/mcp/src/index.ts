@@ -186,7 +186,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       if (parsed.type === "START_TURN") {
         actor.send({
           type: parsed.type,
-          callerSpeedModifier: 0,
           isGrappling: false,
           grappledTargetTwoSizesSmaller: false,
           startOfTurnEffects: [],
@@ -212,8 +211,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
   }
 })
-
-// --- Start ---
 
 const program = Effect.gen(function* () {
   const transport = new StdioServerTransport()

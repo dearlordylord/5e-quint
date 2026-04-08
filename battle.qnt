@@ -720,7 +720,7 @@ module battle {
     all {
       bCreatures' = Map(
         "A" -> mkCaster(hp1, PC).with("rogueLevel", 5).with("hasEvasion", true).with("sneakAttackDice", 3),  // B11: rogue 5, Evasion, SA 3d6
-        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", smb2).with("barbarianLevel", 5),  // Paladin Aura + barbarian 5
+        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", smb2).with("barbarianLevel", 5).with("baseWalkSpeed", 40).with("turn", FRESH_TURN.with("movementRemaining", 40).with("effectiveSpeed", 40)),  // Paladin Aura + barbarian 5, Fast Movement baked into baseWalkSpeed
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
         "D" -> mkCaster(hp4, PC).with("critRange", 19).with("fighterLevel", 5).with("fighterState", freshFighterState(5)).with("saveMiscBonus", smb4)  // Champion fighter 5
       ),
@@ -787,7 +787,7 @@ module battle {
       val speed = pComputeEffectiveSpeed(
         ac1.baseWalkSpeed, ac1.creature.exhaustion,
         ac1.creature.grappled, ac1.creature.restrained,
-        0, 0, false, false  // armor/callerMod/grappling: not modeled at battle level
+        0, false, false  // armor/grappling: not modeled at battle level
       )
       val cs2 = setTurn(cs1, activeId, FRESH_TURN
         .with("movementRemaining", speed)

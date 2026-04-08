@@ -937,7 +937,6 @@ const DEFAULT_BASE_SPEED = 30
 function startTurn(
   actor: ReturnType<typeof create>,
   opts: {
-    callerSpeedModifier?: number
     isGrappling?: boolean
     grappledTargetTwoSizesSmaller?: boolean
   } = {}
@@ -947,7 +946,6 @@ function startTurn(
   else if (s.matches({ turnPhase: "acting" })) endTurn(actor)
   actor.send({
     type: "START_TURN",
-    callerSpeedModifier: opts.callerSpeedModifier ?? 0,
     isGrappling: opts.isGrappling ?? false,
     grappledTargetTwoSizesSmaller: opts.grappledTargetTwoSizesSmaller ?? false,
     startOfTurnEffects: []
@@ -985,7 +983,7 @@ describe("turn lifecycle - START_TURN", () => {
     const a = createActor(creatureMachine, { input: { maxHp: DEFAULT_MAX_HP, fighterLevel: classLevel(11) } })
     a.start()
     enterCombat(a)
-    a.send({ type: "START_TURN", callerSpeedModifier: 0, isGrappling: false, grappledTargetTwoSizesSmaller: false, startOfTurnEffects: [] })
+    a.send({ type: "START_TURN", isGrappling: false, grappledTargetTwoSizesSmaller: false, startOfTurnEffects: [] })
     expect(ctx(a).extraAttacksRemaining).toBe(2)
   })
 
@@ -1036,7 +1034,6 @@ describe("combat mode separation (TA3)", () => {
     const a = create()
     a.send({
       type: "START_TURN",
-      callerSpeedModifier: 0,
       isGrappling: false,
       grappledTargetTwoSizesSmaller: false,
       startOfTurnEffects: []
@@ -1257,7 +1254,6 @@ describe("calculateEffectiveSpeed helper", () => {
     grappled: false,
     restrained: false,
     exhaustion: 0,
-    callerSpeedModifier: 0,
     isGrappling: false,
     grappledTargetTwoSizesSmaller: false
   }
@@ -1283,12 +1279,12 @@ describe("calculateEffectiveSpeed helper", () => {
     expect(calculateEffectiveSpeed({ ...baseParams, isGrappling: true, grappledTargetTwoSizesSmaller: true })).toBe(30)
   })
 
-  it("caller modifier adds to speed", () => {
-    expect(calculateEffectiveSpeed({ ...baseParams, callerSpeedModifier: 10 })).toBe(40)
+  it("speed bonus baked into baseSpeed (Fast Movement = baseSpeed 40)", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, baseSpeed: 40 })).toBe(40)
   })
 
   it("speed never goes below 0", () => {
-    expect(calculateEffectiveSpeed({ ...baseParams, callerSpeedModifier: -50 })).toBe(0)
+    expect(calculateEffectiveSpeed({ ...baseParams, exhaustion: 10 })).toBe(0)
   })
 })
 

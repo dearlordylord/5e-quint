@@ -197,7 +197,6 @@ const driverSchema = {
   doAddExhaustion: { levels: ITFBigInt, exhaustionImmune: z.boolean() },
   doReduceExhaustion: { levels: ITFBigInt },
   doStartTurn: {
-    callerSpeedMod: ITFBigInt,
     isGrappling: z.boolean(),
     grappledSmall: z.boolean(),
     deathSaveRoll: ITFBigInt.optional(),
@@ -499,7 +498,6 @@ function createDndDriver() {
         send({ type: "REDUCE_EXHAUSTION", levels: Number(levels) })
       },
       doStartTurn: ({
-        callerSpeedMod,
         conMod,
         deathSaveRoll: dsRoll,
         deathSaveRoll2: dsRoll2,
@@ -541,7 +539,6 @@ function createDndDriver() {
           extraAttacks: isMonster && sb
             ? (sb.multiattackLength > 0 ? sb.multiattackLength - 1 : 0)
             : undefined,
-          callerSpeedModifier: Number(callerSpeedMod),
           isGrappling,
           grappledTargetTwoSizesSmaller: grappledSmall,
           // Monsters: skip death save (pass undefined), skip Heroic Rally (conMod undefined)

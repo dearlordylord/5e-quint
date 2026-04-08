@@ -462,12 +462,13 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("A"), actorA)
       creatureKinds.set("A", "PC")
 
-      // B: PC caster, no class levels
+      // B: PC caster, barbarian 5 — Fast Movement baked into baseWalkSpeed (30 + 10 = 40)
       const actorB = createActor(creatureMachine, {
         input: {
           maxHp: hp2,
-          effectiveSpeed: 30,
-          movementRemaining: 30,
+          baseWalkSpeed: 40,
+          effectiveSpeed: 40,
+          movementRemaining: 40,
           extraAttacksRemaining: 1,
           creatureKind: "PC",
           slotsMax: casterSlots,
@@ -563,7 +564,6 @@ function createBattleProjectionDriver() {
         actor.send({
           type: "START_TURN",
           extraAttacks: 1, // Quint FRESH_TURN.extraAttacksRemaining is 1
-          callerSpeedModifier: 0,
           isGrappling: false,
           grappledTargetTwoSizesSmaller: false,
           startOfTurnEffects: []
@@ -610,7 +610,6 @@ function createBattleProjectionDriver() {
       send(id, {
         type: "START_TURN",
         extraAttacks: 1, // Quint FRESH_TURN.extraAttacksRemaining is 1
-        callerSpeedModifier: 0,
         isGrappling: false,
         grappledTargetTwoSizesSmaller: false,
         startOfTurnEffects: effects,

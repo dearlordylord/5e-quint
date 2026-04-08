@@ -423,7 +423,6 @@ export function processStartTurn(
     grappled: c.grappled,
     restrained: c.restrained,
     exhaustion: c.exhaustion,
-    callerSpeedModifier: 0,
     isGrappling: false,
     grappledTargetTwoSizesSmaller: false
   })
