@@ -2,6 +2,7 @@ import { Effect, JSONSchema, Match, Random, Schema } from "effect"
 import { createActor, type ActorRefFrom, type SnapshotFrom } from "xstate"
 
 import { creatureMachine } from "@dnd/core/machine.ts"
+import { encodeDndContext, encodeDndSnapshot } from "@dnd/core/context-encoding.ts"
 import type { DndMachineInput } from "@dnd/core/machine-types.ts"
 import { classHitDie } from "@dnd/core/features/class-tables.ts"
 import {
@@ -42,19 +43,6 @@ export function createDemoActor(input: DndMachineInput = DEMO_ACTOR_INPUT): DndA
     isCritical: false,
   })
   return actor
-}
-
-export function serializeContext(context: unknown): unknown {
-  return JSON.parse(
-    JSON.stringify(context, (_key, value) => {
-      if (value != null && typeof value === "object" && "_tag" in value) {
-        if (value._tag === "None") return null
-        if (value._tag === "Some") return value.value
-      }
-      if (value instanceof Set) return [...value]
-      return value
-    }),
-  )
 }
 
 export function groupByCost(tokens: ReadonlyArray<ActionToken>): Record<string, ReadonlyArray<ActionToken>> {
@@ -106,11 +94,7 @@ function errorContent(message: string, details?: unknown) {
 }
 
 function snapshotFingerprint(snapshot: DndSnapshot): string {
-  return JSON.stringify({
-    value: snapshot.value,
-    tags: [...snapshot.tags].sort(),
-    context: serializeContext(snapshot.context),
-  })
+  return JSON.stringify(encodeDndSnapshot(snapshot))
 }
 
 function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["context"]): Effect.Effect<ResolutionRuntimeInputs> {
@@ -217,13 +201,13 @@ function executeResolvedAction(actor: DndActor, args: unknown) {
   return jsonContent({
     success: true,
     outcome: finalized.outcome,
-    state: serializeContext(after.context),
+    state: encodeDndContext(after.context),
   })
 }
 
 export function handleToolCall(actor: DndActor, name: string, args: unknown) {
   if (name === "get_state") {
-    return jsonContent(serializeContext(actor.getSnapshot().context))
+    return jsonContent(encodeDndContext(actor.getSnapshot().context))
   }
 
   if (name === "get_available_actions") {

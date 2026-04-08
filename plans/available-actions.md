@@ -247,7 +247,66 @@ Items discovered during implementation that need resolution before Phase 1 is co
   - Unit tests proving known options are accepted when other Metamagic constraints pass.
   - Creature MBT passed after the spec/bridge update.
 
-**Context serialization**: Replace `JSON.stringify` replacer with Effect Schema transforms (`Option` -> `null`, `Set` -> `array`). Define a `DndContextEncoded` schema in core using `Schema.OptionFromNullOr` and `Schema.ReadonlySet`.
+**Context serialization cleanup completed (2026-04-08)**
+
+- **What is now true**
+  - Core owns the encoded MCP/debug state contract in `packages/core/src/context-encoding.ts`.
+  - `DndContextEncodedSchema` mirrors the `DndContext` surface that MCP returns.
+  - `encodeDndContext(...)` is the single encoder used by MCP state responses.
+  - `encodeDndSnapshot(...)` is the canonical snapshot encoder used for fingerprinting.
+  - MCP no longer has an ad hoc `serializeContext(...)` JSON replacer in `packages/mcp/src/server.ts`.
+
+- **Relevant files**
+  - MCP adapter:
+    - `packages/mcp/src/server.ts`
+    - `packages/mcp/src/server.test.ts`
+    - `packages/mcp/src/harness.ts`
+    - `packages/mcp/src/dev-client.ts`
+  - Core state/types:
+    - `packages/core/src/machine-types.ts`
+    - `packages/core/src/machine-class-states.ts`
+    - `packages/core/src/types.ts`
+    - `packages/core/src/context-encoding.ts`
+  - Effect references already present locally:
+    - `.references/effect/packages/effect/dtslint/Schema/Schema.tst.ts`
+      - `OptionFromNullOr`
+      - `ReadonlySet`
+
+- **Encoding rules now owned in core**
+  - `Option.None -> null` and `Option.Some(x) -> x` via `Schema.OptionFromNullOr(...)`
+  - `ReadonlySet -> readonly array` via `Schema.ReadonlySet(...)`
+  - arrays derived from sets are canonically sorted in core before encoding for:
+    - `incapacitatedSources`
+    - `grantedResistances`
+    - `grantedVulnerabilities`
+    - `grantedImmunities`
+    - `knownMetamagicOptions`
+    - `metamagicUsedThisCast`
+    - `mysticArcanumUsed`
+  - fingerprint stability also canonicalizes string-keyed records:
+    - `rechargeAvailable`
+    - `dailyUsesRemaining`
+    - `dailyUsesMax`
+  - naturally ordered arrays keep their semantic order:
+    - `slotsCurrent`
+    - `slotsMax`
+    - `activeEffects`
+
+- **Verification completed**
+  - `pnpm --filter @dnd/core exec tsc --noEmit`
+  - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+  - `pnpm --filter @dnd/core exec vitest run src/context-encoding.test.ts src/machine.test.ts -t "context encoding|SHORT_REST"`
+  - `pnpm --filter @dnd/mcp test -- server.test.ts`
+  - `pnpm --filter @dnd/mcp harness`
+  - `pnpm --filter @dnd/mcp probe:short-rest`
+  - wrapper cleanup check:
+    - `ps aux | grep '[p]npm --filter @dnd/mcp exec tsx src/harness.ts'`
+    - `ps aux | grep '[p]npm --filter @dnd/mcp exec tsx src/probe-short-rest.ts'`
+    - `ps aux | grep '[p]npm --filter @dnd/mcp exec tsx -e'`
+    - all clear after the final run
+
+- **Important caveat learned**
+  - set canonicalization was not enough for stable fingerprinting; the monster recharge/daily-use records also needed sorted-key canonicalization or semantically equal snapshots could stringify differently.
 
 **Manual debugging ergonomics**: Keep a lightweight local MCP harness for end-to-end inspection of `get_state`, `get_available_actions`, and `execute_action`. Prefer the checked-in scripts:
 - `pnpm --filter @dnd/mcp harness`
@@ -261,6 +320,14 @@ They now use Effect-scoped client acquisition/release and explicitly terminate t
 and clean with the matching `pkill -f ...` command before trusting process-level observations.
 
 **Project existing state before adding more**: If MCP needs to expose or drive more “inner state”, first project authoritative machine/spec state that already exists. Do not add adapter-owned copies of combat facts just to make demos or debugging easier.
+
+**Next step after serialization cleanup**
+
+- Finish the remaining app-package cleanup from Phase 1.5:
+  - remove legacy `startOfTurnEffects`, `endOfTurnSaves`, and `endOfTurnDamage` payload construction still hidden behind `as DndEvent` casts in `packages/app/`
+- Then continue Phase 2 coverage:
+  - representative reaction/free-permanent grouping gaps
+  - grouping-shape snapshot tests
 
 **Wire remaining `execute_action` handlers**:
 - ~~Dice-roll actions: `USE_TIRELESS` (d8Roll), `WHOLENESS_OF_BODY` (healRoll), `UNCANNY_METABOLISM` (healRoll)~~ — completed

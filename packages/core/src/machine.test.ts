@@ -1188,7 +1188,7 @@ describe("combat mode separation (TA3)", () => {
   it("SHORT_REST ignored when acting", () => {
     const a = createActor(
       creatureMachine,
-      { input: { maxHp: 20, conMod: 2, hitDiceRemaining: singleClassHitDice("fighter", 3) } },
+      { input: { maxHp: 20, conMod: abilityModifier(2), hitDiceRemaining: singleClassHitDice("fighter", 3) } },
     )
     a.start()
     startTurn(a)
@@ -1201,7 +1201,7 @@ describe("combat mode separation (TA3)", () => {
   it("SHORT_REST ignored when waitingForTurn", () => {
     const a = createActor(
       creatureMachine,
-      { input: { maxHp: 20, conMod: 2, hitDiceRemaining: singleClassHitDice("fighter", 3) } },
+      { input: { maxHp: 20, conMod: abilityModifier(2), hitDiceRemaining: singleClassHitDice("fighter", 3) } },
     )
     a.start()
     startTurn(a)
@@ -1215,7 +1215,7 @@ describe("combat mode separation (TA3)", () => {
   it("SHORT_REST works when outOfCombat", () => {
     const a = createActor(
       creatureMachine,
-      { input: { maxHp: 20, conMod: 2, hitDiceRemaining: singleClassHitDice("fighter", 3) } },
+      { input: { maxHp: 20, conMod: abilityModifier(2), hitDiceRemaining: singleClassHitDice("fighter", 3) } },
     )
     a.start()
     takeDamage(a, 5)

@@ -63,6 +63,22 @@ describe("MCP server adapter", () => {
     })
   })
 
+  test("get_state returns the core-encoded context shape", () => {
+    const actor = createDemoActor({
+      maxHp: 30,
+      sorcererLevel: classLevel(5),
+      knownMetamagicOptions: ["subtle", "careful"],
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+
+    const payload = readPayload(handleToolCall(actor, "get_state", {}))
+
+    expect(payload.concentrationSpellId).toBeNull()
+    expect(payload.classStates.sorcerer.knownMetamagicOptions).toEqual(["careful", "subtle"])
+    expect(payload.incapacitatedSources).toEqual([])
+  })
+
   test("execute_action supports SHORT_REST with runtime-rolled hit dice", () => {
     const actor = createDemoActor({
       maxHp: 24,
