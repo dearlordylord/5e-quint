@@ -143,6 +143,49 @@ describe("MCP server adapter", () => {
     expect(payload.state.classStates.fighter.heroicInspiration).toBe(false)
   })
 
+  test("execute_action supports CAST_PREPARED_SPELL with spell and slot choice holes", () => {
+    const actor = createDemoActor({
+      maxHp: 32,
+      clericLevel: classLevel(5),
+      preparedSpells: new Set(["bless", "healing_word"]),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.action).toContainEqual({
+      type: "CAST_PREPARED_SPELL",
+      spellName: "bless",
+      slotLevel: { options: [1, 2, 3] },
+      cost: { action: true, charge: "spellSlot" },
+      outcome: { summary: "Cast Bless with a spell slot of the chosen level and begin concentrating on it" },
+    })
+    expect(available.bonusAction).toContainEqual({
+      type: "CAST_PREPARED_SPELL",
+      spellName: "healing_word",
+      slotLevel: { options: [1, 2, 3] },
+      cost: { bonusAction: true, charge: "spellSlot" },
+      outcome: { summary: "Cast Healing Word with a spell slot of the chosen level" },
+    })
+
+    const illegal = handleToolCall(actor, "execute_action", { type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: 4 })
+    expect("isError" in illegal && illegal.isError).toBe(true)
+    expect(readPayload(illegal)).toEqual({
+      error: "Bless with a level 4 slot is not currently available in this state.",
+      details: "ACTION_NOT_AVAILABLE",
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: 2 })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.slotsCurrent).toEqual([4, 2, 2, 0, 0, 0, 0, 0, 0])
+    expect(payload.state.slotExpendedThisTurn).toBe(true)
+    expect(payload.state.concentrationSpellId).toBe("bless")
+  })
+
   test("execute_action supports USE_TACTICAL_MIND once the pending trigger exists", () => {
     const actor = createDemoActor({
       maxHp: 24,
@@ -337,6 +380,7 @@ describe("MCP server adapter", () => {
       sorcererLevel: classLevel(5),
       knownMetamagicOptions: ["careful", "subtle"],
       wizardLevel: classLevel(4),
+      preparedSpells: new Set(),
       wisMod: abilityModifier(3),
       slotsMax: [4, 3, 0, 0, 0, 0, 0, 0, 0],
       slotsCurrent: [3, 2, 0, 0, 0, 0, 0, 0, 0],

@@ -646,18 +646,59 @@ The MCP response from `get_available_actions` is already grouped by resource cos
 Add spell casting — the first action type with non-trivial choice holes. A spell token doesn't enumerate every spell x slot combination; it groups them:
 
 - Token for a known spell includes a choice hole for slot level, listing available slots that can cast it (including upcasts).
-- Multiple spells at the same slot level may be grouped.
+- The supported implementation returns one token per prepared modeled spell, not one token per spell x slot pair.
 - The consumer picks spell + slot, fills the holes, sends the token back to `execute_action`.
 
 This exercises the full command-with-holes pattern under the new contract: `get_available_actions` returns `ActionToken` values with typed choice slots, the consumer fills them into `ResolvedActionToken` values, `execute_action` validates them, the runtime layer supplies engine-only inputs, and the machine applies the resulting event.
 
 ### Acceptance criteria
 
-- [ ] Spell tokens include `choose: { slot: [...available levels...] }` with valid upcast options
-- [ ] No combinatorial explosion — spells are not multiplied by slot levels into separate tokens
-- [ ] Filling a spell token with a valid slot level and calling `execute_action` succeeds via the resolved-token/runtime-input pipeline
-- [ ] Filling with an invalid slot level (e.g., no slots remaining at that level) is rejected
-- [ ] Spell tokens only appear when the character has the relevant spell slots and meets casting prerequisites (action/bonus action available, not incapacitated)
+- [x] Spell tokens include a slot-level choice hole with valid cast levels
+- [x] No combinatorial explosion — one token per prepared modeled spell, not per spell x slot pair
+- [x] Filling a spell token with a valid slot level and calling `execute_action` succeeds via the resolved-token/runtime-input pipeline
+- [x] Filling with an invalid slot level (e.g. no slots remaining at that level) is rejected
+- [x] Spell tokens only appear when the character has the relevant spell slots and meets casting prerequisites (action/bonus action available, not incapacitated, not raging, slot not already expended this turn)
+
+### Phase 3 completion note (2026-04-08)
+
+- `CAST_PREPARED_SPELL` is now exposed through `available-actions.ts`, core resolution, and MCP.
+- The supported spell action boundary is intentionally narrow:
+  - regular spell-slot casting only
+  - action or bonus-action casting times only
+  - caster-side bookkeeping only: slot expenditure, action economy, concentration start/replacement
+  - battle remains authoritative for downstream spell effects, targets, save flows, and multi-creature semantics
+- The modeled spell subset for this phase is:
+  - `bless`
+  - `burning_hands`
+  - `fireball`
+  - `guiding_bolt`
+  - `haste`
+  - `healing_word`
+  - `hold_person`
+  - `inflict_wounds`
+  - `spirit_guardians`
+- Tokens are one-per-spell, with a `slotLevel` hole listing legal cast levels. The query surface does not multiply each spell into separate spell-slot variants.
+- Explicit `preparedSpells` input is supported in the TS machine. When it is omitted, the machine and `creature.qnt` both derive the same deterministic modeled prepared-spell subset for parity convenience, filtered by available regular spell slots.
+- Current exclusions are deliberate, not missing plumbing:
+  - cantrips
+  - rituals
+  - reaction spells
+  - pact-slot casting
+  - slot-free class/subclass spell casts
+  - full prepared-spell management / spellbook state
+- Verification that passed for this batch:
+  - `pnpm --filter @dnd/core exec tsc --noEmit`
+  - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+  - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/machine.test.ts src/context-encoding.test.ts`
+  - `pnpm --filter @dnd/mcp test -- server.test.ts`
+  - `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts`
+    - seed: `0xf5f32ad4`
+    - total: `21s`
+
+### Next after Phase 3
+
+- Continue Phase 4 breadth only for actions whose legality and execution contract are already semantically owned by current state.
+- Do not jump straight to reaction spells or pact-slot spellcasting without first designing the owned trigger/runtime semantics the way earlier pending-resolution work did.
 
 ---
 
@@ -798,6 +839,126 @@ Build this as service boundaries in the Hellenvald project (`/workspace/typescri
 - real Whisper + fake LLM: validates transcription/buffering without LLM nondeterminism
 - real Whisper + real LLM: manual end-to-end smoke test, not the default automated path
 
+**Phase 7 current state (2026-04-08):** the recorded-audio foundation now exists in Hellenvald.
+
+- `WhisperTranscriber.liveLayer` exists and uses a local Whisper subprocess backend through `uv run` plus a checked-in Python runner.
+- `TranscriptBuffer` exists with pause handling, dice-result continuation handling, and explicit action-restart flushing.
+- Whisper post-processing is now an explicit subsystem (`WhisperTranscriptPostProcessor`) rather than hidden logic inside the transcriber.
+- A clean audio-fixture matrix exists in `fixtures/audio/` with regression expectations for:
+  - single attack
+  - attack plus roll continuation
+  - strong two-action utterance
+  - weak `then`-boundary two-action utterance
+  - ambiguous attack
+  - non-action chatter
+- Manual real-Whisper checks currently pass for the strong and weak two-action fixtures.
+
+This means the next meaningful Phase 7 work is no longer “make audio transcription happen.” It is “represent uncertainty near the live tail of the stream without collapsing it too early.”
+
+### Phase 7 next milestone: branching tail
+
+Treat this as a distinct milestone, not a casual continuation of buffering.
+
+**Why this is a separate step:**
+
+- Everything implemented so far is still fundamentally “completed windows in, projected observations out.”
+- Branching tail changes the product semantics: the system must preserve unresolved candidate interpretations near the end of the stream instead of eagerly collapsing everything to one selected event.
+- That affects state shape, demo behavior, and testing strategy, even if the amount of code is moderate.
+
+**Core design goal:**
+
+Keep older transcript history collapsed and stable, while exposing a short live tail of unresolved transcript windows as candidate branches.
+
+**Proposed service boundary changes:**
+
+- Keep `WhisperTranscriber` unchanged.
+- Keep `TranscriptBuffer.push/flush` unchanged as the phrase-to-window seam.
+- Add a new tail-oriented service in Hellenvald, tentatively `TranscriptBranchingTail` or `TranscriptStream`:
+  - input: incremental buffered windows
+  - output:
+    - `committed`: older observations already collapsed to the selected event
+    - `tail`: recent windows whose candidate interpretations remain materialized
+
+**Recommended state shape:**
+
+- `CommittedTranscriptObservation`
+  - one buffered window
+  - one selected candidate event
+  - projector-applied / history-stable
+- `TailTranscriptObservation`
+  - one buffered window
+  - all current candidate interpretations
+  - selected index may exist, but the window is still considered revisable
+- `TranscriptStreamState`
+  - `committed: ReadonlyArray<CommittedTranscriptObservation>`
+  - `tail: ReadonlyArray<TailTranscriptObservation>`
+
+This gives a simple rule: old history is collapsed; only the near tail stays branchy.
+
+**Commit policy for tail windows:**
+
+Use simple, explicit heuristics first. Do not start with speculative probabilistic logic.
+
+1. A newly emitted buffered window enters `tail`, not `committed`.
+2. A tail window moves to `committed` when one of these happens:
+   - another clearly distinct buffered window arrives after it
+   - a long enough pause / flush boundary occurs after it
+   - the user explicitly ends input / stream flush
+3. Dice-result continuation windows should not commit the prior window prematurely if they are still semantically part of the same action.
+4. Only a short suffix of the stream should remain revisable. Everything older collapses.
+
+**Minimal first implementation choice:**
+
+- tail size of 1 or 2 windows maximum
+- when a third distinct buffered window arrives, collapse the oldest tail window to committed history
+- explicit `flush()` commits the entire remaining tail
+
+This is intentionally conservative and easy to reason about in tests.
+
+**Relationship to existing Hellenvald pieces:**
+
+- `WhisperTranscriptPostProcessor` stays responsible for phrase/clause recovery from raw Whisper output
+- `TranscriptBuffer` stays responsible for grouping phrase-level segments into action windows
+- `TranscriptInterpreter` still interprets one window at a time
+- `TranscriptPipeline` or a stream wrapper around it becomes responsible for:
+  - keeping unresolved recent windows in `tail`
+  - collapsing older windows to selected observations
+
+In other words: do not overload `TranscriptBuffer` with branching history concerns. Buffering and stream-history semantics should stay separate.
+
+**Testing strategy for the branching-tail milestone:**
+
+- Add a dedicated stream-oriented test harness. This is the missing test seam right now.
+- Default automated path:
+  - fake Whisper + fake/demo LLM
+- Manual smoke path:
+  - real Whisper + fake/demo LLM
+- Optional manual end-to-end:
+  - real Whisper + real LLM
+
+**First regression scenarios:**
+
+1. Attack declaration followed by roll/result continuation:
+   - recent tail should still expose the unresolved/selected attack window until the stream advances enough to commit it
+2. Attack followed by a clearly separate move:
+   - attack collapses to committed
+   - move remains in tail
+3. Non-action chatter near stream end:
+   - either remains as a tail window with zero candidates or is omitted by explicit policy, but behavior must be consistent and tested
+4. Explicit flush:
+   - commits all remaining tail windows
+
+**Recommended implementation order for the branching-tail milestone:**
+
+1. Define the Hellenvald stream-state types (`committed`, `tail`) and a small service boundary to manage them.
+2. Add a stream-oriented test harness with fake Whisper + fake/demo LLM.
+3. Implement the minimal commit policy:
+   - tail size cap
+   - explicit flush commits all
+   - distinct newer windows collapse older tail windows
+4. Add one CLI/demo mode that prints committed history separately from the live tail.
+5. Only then decide whether microphone/live capture is worth doing inside or outside the devcontainer.
+
 **Concrete implementation order:**
 
 1. Done: `WhisperTranscriber.liveLayer` now exists for recorded files only in Hellenvald, using a local Whisper backend through `uv run` and a checked-in Python runner. Current devcontainer constraint: `.wav` input only, no microphone capture.
@@ -805,19 +966,20 @@ Build this as service boundaries in the Hellenvald project (`/workspace/typescri
    - raw Whisper segments
    - buffered windows
    - resulting candidate events
-3. Add audio-fixture integration tests:
-   - `audio fixture -> fake Whisper`
-   - `audio fixture -> real Whisper` when the local backend is stable enough for reproducible checks
-4. Defer microphone/live capture until after recorded-file behavior is good.
+3. Done: add audio-fixture integration and regression coverage:
+   - fake Whisper seam tests
+   - real-Whisper-oriented fixture matrix and post-processing regression expectations
+4. Next: branching-tail milestone, as designed above.
+5. Defer microphone/live capture until after branching-tail behavior is good.
 
 ### Acceptance criteria
 
 - [x] Recorded audio file → Whisper → phrase-level segments with timestamps
-- [ ] Buffering layer groups related segments into complete action descriptions
-- [ ] Buffering correctly handles multi-segment actions ("I swing at him" + "that's a 17 plus 5")
-- [ ] Audio segments are cacheable — integration tests replay recorded segments
+- [x] Buffering layer groups related segments into complete action descriptions
+- [x] Buffering correctly handles multi-segment actions ("I swing at him" + "that's a 17 plus 5")
+- [x] Audio segments are cacheable — integration tests replay recorded segments
 - [ ] Branching tail: uncommitted candidates visible near stream end, collapsed farther back
-- [ ] End-to-end: recorded audio → segments → buffered groups → LLM → candidate events
+- [x] End-to-end: recorded audio → segments → buffered groups → LLM → candidate events
 
 ---
 

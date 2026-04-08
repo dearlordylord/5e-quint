@@ -23,6 +23,7 @@ describe("context encoding", () => {
     const encoded = encodeDndContext({
       ...base,
       concentrationSpellId: Option.some(mkSpellId("hold_person")),
+      preparedSpells: new Set(["hold_person", "bless"]),
       incapacitatedSources: new Set(["direct", "paralyzed"]),
       activeEffects: [
         {
@@ -57,6 +58,7 @@ describe("context encoding", () => {
     })
 
     expect(encoded.concentrationSpellId).toBe("hold_person")
+    expect(encoded.preparedSpells).toEqual(["bless", "hold_person"])
     expect(encoded.incapacitatedSources).toEqual(["paralyzed", "direct"])
     expect(encoded.activeEffects[0]?.grantedConditions).toEqual(["blinded", "restrained"])
     expect(encoded.activeEffects[0]?.grantedResistances).toEqual(["acid", "fire"])

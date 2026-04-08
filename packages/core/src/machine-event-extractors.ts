@@ -28,6 +28,7 @@ type UseBonusMovementEvent = Extract<DndEvent, { readonly type: "USE_BONUS_MOVEM
 type EndTurnEvent = Extract<DndEvent, { readonly type: "END_TURN" }>
 type AddEffectEvent = Extract<DndEvent, { readonly type: "ADD_EFFECT" }>
 type RemoveEffectEvent = Extract<DndEvent, { readonly type: "REMOVE_EFFECT" }>
+type CastPreparedSpellEvent = Extract<DndEvent, { readonly type: "CAST_PREPARED_SPELL" }>
 
 export function asTakeDamage(event: DndEvent): TakeDamageEvent {
   return event as TakeDamageEvent
@@ -106,4 +107,7 @@ export function asAddEffect(event: DndEvent): AddEffectEvent {
 }
 export function asRemoveEffect(event: DndEvent): RemoveEffectEvent {
   return event as RemoveEffectEvent
+}
+export function asCastPreparedSpell(event: DndEvent): CastPreparedSpellEvent {
+  return event as CastPreparedSpellEvent
 }

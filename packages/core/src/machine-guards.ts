@@ -2,6 +2,7 @@ import { Option } from "effect"
 
 import {
   canEnterRage as tsCanEnterRage,
+  canCastWhileRaging,
   canUseBrutalStrike,
   canUseIntimidatingPresence as tsCanUseIP,
   canUseRelentlessRage
@@ -18,6 +19,7 @@ import {
 } from "#/features/class-sorcerer.ts"
 import { canEldritchSmite, canUseMagicalCunning, mysticArcanumLevels } from "#/features/class-warlock.ts"
 import { arcaneRecoveryMaxLevels, canArcaneRecoverSlot, hasOverchannel } from "#/features/class-wizard.ts"
+import { getModeledPreparedSpellInfo } from "#/features/spell-available-actions.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
 import {
   addDeathFailures,
@@ -29,7 +31,7 @@ import {
 import { isIncapacitated } from "#/machine-queries.ts"
 import { asSpendHitDie, asTakeDamage, type DndContext, type DndEvent } from "#/machine-types.ts"
 import type { MetamagicOption } from "#/features/class-sorcerer.ts"
-import type { SpellSlotLevel } from "#/types.ts"
+import type { SpellName, SpellSlotLevel } from "#/types.ts"
 import { spellSlotLevel } from "#/types.ts"
 
 type GuardArg = { context: DndContext; event: DndEvent }
@@ -129,6 +131,22 @@ export function legalMysticArcanumLevels(context: DndContext): ReadonlyArray<Spe
     .map((level) => spellSlotLevel(level))
 }
 
+export function legalPreparedSpellSlotLevels(context: DndContext, spellName: SpellName): ReadonlyArray<SpellSlotLevel> {
+  const spell = getModeledPreparedSpellInfo(spellName)
+  if (spell == null) return []
+  if (!context.preparedSpells.has(spellName)) return []
+  if (context.hp <= 0 || isIncapacitated(context) || context.slotExpendedThisTurn) return []
+  if (!canCastWhileRaging(context.classStates.barbarian?.raging ?? false)) return []
+
+  if (spell.castingTime === "action") {
+    if (context.actionsRemaining <= 0 || context.actionSurgeActionPending || context.bonusActionSpellCast) return []
+  } else {
+    if (context.bonusActionUsed || context.nonCantripActionSpellCast) return []
+  }
+
+  return legalPreparedSlotLevels(context.slotsCurrent, (slotLevel) => slotLevel >= spell.baseLevel)
+}
+
 export function legalFontSlotRestoreLevels(context: DndContext): ReadonlyArray<SpellSlotLevel> {
   const bs = context.classStates.bard
   if (!bs || isIncapacitated(context) || bs.level < 5 || bs.bardicInspirationCharges >= bs.bardicInspirationMax) return []
@@ -194,6 +212,10 @@ export const guards = {
   isOutOfCombat: ({ context: c }: GuardArg) => !c.inCombat,
   regainedConsciousness: ({ context: c }: GuardArg) => c.hp > 0 && !c.dead,
   canConcentrate: ({ context: c }: GuardArg) => !c.dead && !isIncapacitated(c),
+  canCastPreparedSpell: ({ context: c, event: e }: GuardArg) => {
+    const ev = e as Extract<DndEvent, { readonly type: "CAST_PREPARED_SPELL" }>
+    return legalPreparedSpellSlotLevels(c, ev.spellName).includes(ev.slotLevel)
+  },
   // Monster death at 0 HP: SRD "Monsters and Death" — monsters die instead of entering death save track
   monsterDropsToZeroHp: ({ context: c, event: e }: GuardArg) =>
     c.creatureKind === "Monster" && isDropToZero(dmgR(c, e)),

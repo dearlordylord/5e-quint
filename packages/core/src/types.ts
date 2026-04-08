@@ -398,6 +398,7 @@ export type SRDSpellName =
   | "burning_hands"
   | "guiding_bolt"
   | "inflict_wounds"
+  | "healing_word"
   | "counterspell"
   | "shield"
   | "hellish_rebuke"

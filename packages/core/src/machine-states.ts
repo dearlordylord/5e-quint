@@ -286,6 +286,7 @@ export const rootEventHandlers = {
   SHOVE: { actions: ["applyShove"] },
   EXPEND_SLOT: { guard: "canExpendSlot" as const, actions: ["expendSlot"] },
   EXPEND_PACT_SLOT: { guard: "canExpendSlot" as const, actions: ["expendPactSlot"] },
+  CAST_PREPARED_SPELL: { guard: "canCastPreparedSpell" as const, actions: ["castPreparedSpell"] },
   SHORT_REST: {
     guard: "canShortRestStart" as const,
     actions: ["shortRest", "classShortRest"]

@@ -10,6 +10,7 @@ import { createActor } from "xstate"
 import { z } from "zod"
 
 import { defaultKnownMetamagicOptions } from "#/features/class-sorcerer.ts"
+import { defaultPreparedSpellsForClassLevels } from "#/features/spell-available-actions.ts"
 import { singleClassHitDice } from "#/features/class-tables.ts"
 import { creatureMachine, type DndEvent } from "#/machine.ts"
 import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
@@ -37,7 +38,8 @@ import {
   QuintTurnState,
   snapshotToNormalized
 } from "#/mbt-shared.ts"
-import type { ActionType, Condition, CreatureKind } from "#/types.ts"
+import { initSpellSlotsFromLevels } from "#/machine-spells.ts"
+import type { ActionType, Condition, CreatureKind, SpellName } from "#/types.ts"
 import {
   abilityModifier,
   classLevel,
@@ -76,6 +78,7 @@ type EventActionMap = {
   END_TURN: "doEndTurn"
   MARK_BONUS_ACTION_SPELL: "doMarkBonusActionSpell"
   MARK_NON_CANTRIP_ACTION_SPELL: "doMarkNonCantripActionSpell"
+  CAST_PREPARED_SPELL: "doCastPreparedSpell"
   GRAPPLE: "doGrapple"
   SET_GRAPPLING_STATE: "doSetGrapplingState"
   RELEASE_GRAPPLE: "doReleaseGrapple"
@@ -243,6 +246,7 @@ const driverSchema = {
   },
   doMarkBonusActionSpell: {},
   doMarkNonCantripActionSpell: {},
+  doCastPreparedSpell: { spellName: z.string().optional(), slotLevel: ITFBigInt.optional() },
   doExpendSlot: { level: ITFBigInt },
   doExpendPactSlot: {},
   doStartConcentration: { spellId: z.string(), duration: ITFBigInt, expiresAt: ITFVariant },
@@ -434,6 +438,23 @@ function createDndDriver() {
               wisMod: abilityModifier(Number(wisMod)),
               bardLevel: bdLevel,
               chaMod: abilityModifier(Number(chaMod)),
+              preparedSpells: defaultPreparedSpellsForClassLevels(
+                {
+                  barbarian: 0,
+                  bard: cls === "Bard" ? level : 0,
+                  cleric: cls === "Cleric" ? level : 0,
+                  druid: cls === "Druid" ? level : 0,
+                  fighter: cls === "Fighter" ? level : 0,
+                  monk: cls === "Monk" ? level : 0,
+                  paladin: cls === "Paladin" ? level : 0,
+                  ranger: cls === "Ranger" ? level : 0,
+                  rogue: cls === "Rogue" ? level : 0,
+                  sorcerer: cls === "Sorcerer" ? level : 0,
+                  warlock: cls === "Warlock" ? level : 0,
+                  wizard: cls === "Wizard" ? level : 0,
+                },
+                actorSlotsForClassLevel(cls as QuintClassName, level)
+              ),
               creatureKind: "PC"
             }
           })
@@ -629,6 +650,13 @@ function createDndDriver() {
       },
       doMarkNonCantripActionSpell: () => {
         send({ type: "MARK_NON_CANTRIP_ACTION_SPELL" })
+      },
+      doCastPreparedSpell: ({ spellName, slotLevel }) => {
+        send({
+          type: "CAST_PREPARED_SPELL",
+          spellName: (spellName ?? "bless") as SpellName,
+          slotLevel: spellSlotLevel(Number(slotLevel ?? 1))
+        })
       },
       doExpendSlot: ({ level }) => {
         send({ type: "EXPEND_SLOT", level: spellSlotLevel(Number(level)) })
@@ -927,6 +955,19 @@ function createDndDriver() {
       config: () => ({ statePath: [] })
     }
   })
+}
+
+function actorSlotsForClassLevel(cls: QuintClassName, level: number): ReadonlyArray<number> {
+  return initSpellSlotsFromLevels({
+    bardLevel: cls === "Bard" ? level : 0,
+    clericLevel: cls === "Cleric" ? level : 0,
+    druidLevel: cls === "Druid" ? level : 0,
+    sorcererLevel: cls === "Sorcerer" ? level : 0,
+    wizardLevel: cls === "Wizard" ? level : 0,
+    paladinLevel: cls === "Paladin" ? level : 0,
+    rangerLevel: cls === "Ranger" ? level : 0,
+    warlockLevel: cls === "Warlock" ? level : 0,
+  }).slotsMax
 }
 
 // ============================================================

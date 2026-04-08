@@ -1480,6 +1480,78 @@ module creature {
   pure def canCastNonCantripAction(t: TurnState): bool =
     not(t.bonusActionSpellCast)
 
+  pure val BARD_MODELED_PREPARED_SPELLS: Set[str] = Set("healing_word")
+  pure val CLERIC_MODELED_PREPARED_SPELLS: Set[str] =
+    Set("bless", "guiding_bolt", "healing_word", "hold_person", "inflict_wounds", "spirit_guardians")
+  pure val PALADIN_MODELED_PREPARED_SPELLS: Set[str] = Set("bless")
+  pure val SORCERER_MODELED_PREPARED_SPELLS: Set[str] = Set("burning_hands", "fireball", "haste")
+  pure val WIZARD_MODELED_PREPARED_SPELLS: Set[str] = Set("burning_hands", "fireball", "haste", "hold_person")
+
+  pure def pPreparedSpellBaseLevel(spellId: str): int =
+    if (spellId == "fireball" or spellId == "haste" or spellId == "spirit_guardians") 3
+    else if (spellId == "hold_person") 2
+    else 1
+
+  pure def pPreparedSpellCastingTime(spellId: str): CastingTime =
+    if (spellId == "healing_word") CTBonusAction else CTAction
+
+  pure def pPreparedSpellConcentrationTurns(spellId: str): int =
+    if (Set("bless", "haste", "hold_person", "spirit_guardians").contains(spellId)) 10 else 0
+
+  pure def pHighestSpellSlotLevel(ss: SpellSlotState): int =
+    if (ss.slotsMax.get(9) > 0) 9
+    else if (ss.slotsMax.get(8) > 0) 8
+    else if (ss.slotsMax.get(7) > 0) 7
+    else if (ss.slotsMax.get(6) > 0) 6
+    else if (ss.slotsMax.get(5) > 0) 5
+    else if (ss.slotsMax.get(4) > 0) 4
+    else if (ss.slotsMax.get(3) > 0) 3
+    else if (ss.slotsMax.get(2) > 0) 2
+    else if (ss.slotsMax.get(1) > 0) 1
+    else 0
+
+  pure def pModeledPreparedSpellPool(cl: ClassName -> int): Set[str] = {
+    val bardSpells = if (cl.get(Bard) > 0) BARD_MODELED_PREPARED_SPELLS else Set()
+    val clericSpells = if (cl.get(Cleric) > 0) CLERIC_MODELED_PREPARED_SPELLS else Set()
+    val paladinSpells = if (cl.get(Paladin) > 0) PALADIN_MODELED_PREPARED_SPELLS else Set()
+    val sorcererSpells = if (cl.get(Sorcerer) > 0) SORCERER_MODELED_PREPARED_SPELLS else Set()
+    val wizardSpells = if (cl.get(Wizard) > 0) WIZARD_MODELED_PREPARED_SPELLS else Set()
+    bardSpells.union(clericSpells).union(paladinSpells).union(sorcererSpells).union(wizardSpells)
+  }
+
+  /// Creature-level spellcasting abstraction for available-actions parity:
+  /// deterministic modeled prepared spell subset only. Battle owns richer spell
+  /// identity and target/effect resolution; this helper spec owns caster-side
+  /// bookkeeping only (slot use, action economy, concentration start).
+  pure def pDefaultPreparedSpells(cl: ClassName -> int, ss: SpellSlotState): Set[str] = {
+    val highestSlotLevel = pHighestSpellSlotLevel(ss)
+    pModeledPreparedSpellPool(cl).filter(spellId => pPreparedSpellBaseLevel(spellId) <= highestSlotLevel)
+  }
+
+  pure def canCastPreparedSpell(
+    s: CreatureState,
+    ts: TurnState,
+    ss: SpellSlotState,
+    cl: ClassName -> int,
+    bs: BarbarianState,
+    spellId: str,
+    slotLevel: int
+  ): bool = {
+    val preparedSpells = pDefaultPreparedSpells(cl, ss)
+    preparedSpells.contains(spellId)
+      and isConscious(s)
+      and pCanAct(s)
+      and not(ts.slotExpendedThisTurn)
+      and not(bs.raging)
+      and pCanCastAtLevel(ss, pPreparedSpellBaseLevel(spellId), slotLevel)
+      and (
+        if (pPreparedSpellCastingTime(spellId) == CTBonusAction)
+          not(ts.bonusActionUsed) and canCastBonusActionSpell(ts)
+        else
+          ts.actionsRemaining > 0 and not(ts.actionSurgeActionPending) and canCastNonCantripAction(ts)
+      )
+  }
+
   // ============================================================
   // 12. ATTACK MODIFIER AGGREGATION (combat/attack)
   // ============================================================
@@ -4287,6 +4359,49 @@ module creature {
     else all { state' = state, turnState' = pMarkNonCantripActionSpell(turnState), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
+  action doCastPreparedSpell = {
+    val preparedSpells = pDefaultPreparedSpells(classLevels, spellSlots)
+    if (turnPhase != "acting" or preparedSpells.size() == 0) unchanged
+    else {
+      nondet spellId = preparedSpells.oneOf()
+      nondet slotLevel = SLOT_LEVEL_RANGE.oneOf()
+      if (not(canCastPreparedSpell(state, turnState, spellSlots, classLevels, barbarianState, spellId, slotLevel))) unchanged
+      else {
+        val ss1 = pExpendSlot(spellSlots, slotLevel)
+        val ts1 = turnState.with("slotExpendedThisTurn", true)
+        val ts2 =
+          if (pPreparedSpellCastingTime(spellId) == CTBonusAction)
+            pMarkBonusActionSpell(pUseBonusAction(ts1, state))
+          else
+            pMarkNonCantripActionSpell(pUseAction(ts1, state, AMagic))
+        if (pPreparedSpellConcentrationTurns(spellId) > 0) {
+          val effects1 = pRemoveEffect(state.activeEffects, spellSlots.concentrationSpellId)
+          val effects2 = pAddEffectSimple(effects1, spellId, pPreparedSpellConcentrationTurns(spellId), AtEndOfTurn, "")
+          val ss2 = pStartConcentration(ss1, spellId)
+          all {
+            state' = state.with("activeEffects", effects2),
+            turnState' = ts2,
+            spellSlots' = ss2,
+            turnPhase' = turnPhase,
+            fighterState' = fighterState, classLevels' = classLevels,
+            creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+            barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState
+          }
+        } else {
+          all {
+            state' = state,
+            turnState' = ts2,
+            spellSlots' = ss1,
+            turnPhase' = turnPhase,
+            fighterState' = fighterState, classLevels' = classLevels,
+            creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+            barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState
+          }
+        }
+      }
+    }
+  }
+
   // Spell slot actions (A1: requires ability to act — see ASSUMPTIONS.md)
   action doExpendSlot = {
     nondet level = SLOT_LEVEL_RANGE.oneOf()
@@ -5797,6 +5912,7 @@ module creature {
     doUseFreeHuntersMark,
     doUseTireless,
     doUseNaturesVeil,
+    doCastPreparedSpell,
     doUseBardicInspiration,
     doUseCuttingWords,
     doUseFontSlotRestore,

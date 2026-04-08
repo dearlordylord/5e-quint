@@ -74,6 +74,7 @@ const PHASE_2_MULTIGROUP_INPUT: DndMachineInput = {
   sorcererLevel: classLevel(5),
   knownMetamagicOptions: ["careful", "subtle"],
   wizardLevel: classLevel(4),
+  preparedSpells: new Set(),
   wisMod: abilityModifier(3),
   slotsMax: [4, 3, 0, 0, 0, 0, 0, 0, 0],
   slotsCurrent: [3, 2, 0, 0, 0, 0, 0, 0, 0],
@@ -116,6 +117,14 @@ const WIZARD_4_INPUT: DndMachineInput = {
   wizardLevel: classLevel(4),
   slotsMax: [4, 3, 0, 0, 0, 0, 0, 0, 0],
   slotsCurrent: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const CLERIC_5_SPELL_INPUT: DndMachineInput = {
+  maxHp: 32,
+  clericLevel: classLevel(5),
+  preparedSpells: new Set(["bless", "guiding_bolt", "healing_word"]),
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 }
@@ -257,6 +266,71 @@ describe("available actions contract", () => {
     actor.send(secondWindFinalized.event)
 
     expect(actor.getSnapshot().context.hp).toBe(44)
+  })
+
+  test("exposes one prepared-spell token per prepared spell with slot-level choice holes", () => {
+    const actor = makeActorWithInput(CLERIC_5_SPELL_INPUT)
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+
+    const spellTokens = getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).filter(
+      (token) => token.type === "CAST_PREPARED_SPELL",
+    )
+
+    expect(spellTokens).toEqual([
+      {
+        type: "CAST_PREPARED_SPELL",
+        spellName: "bless",
+        slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
+        cost: { action: true, charge: "spellSlot" },
+        outcome: { summary: "Cast Bless with a spell slot of the chosen level and begin concentrating on it" },
+      },
+      {
+        type: "CAST_PREPARED_SPELL",
+        spellName: "guiding_bolt",
+        slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
+        cost: { action: true, charge: "spellSlot" },
+        outcome: { summary: "Cast Guiding Bolt with a spell slot of the chosen level" },
+      },
+      {
+        type: "CAST_PREPARED_SPELL",
+        spellName: "healing_word",
+        slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
+        cost: { bonusAction: true, charge: "spellSlot" },
+        outcome: { summary: "Cast Healing Word with a spell slot of the chosen level" },
+      },
+    ])
+  })
+
+  test("resolves prepared spell casts and rejects invalid slot levels", () => {
+    const actor = makeActorWithInput(CLERIC_5_SPELL_INPUT)
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+
+    expect(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, {
+        type: "CAST_PREPARED_SPELL",
+        spellName: "guiding_bolt",
+        slotLevel: spellSlotLevel(4),
+      }),
+    ).toEqual({
+      code: "ACTION_NOT_AVAILABLE",
+      message: "Guiding Bolt with a level 4 slot is not currently available in this state.",
+    })
+
+    const request = expectRequest(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, {
+        type: "CAST_PREPARED_SPELL",
+        spellName: "bless",
+        slotLevel: spellSlotLevel(2),
+      }),
+    )
+    const finalized = finalizeResolution(request, { runtime: "none" }, actor.getSnapshot().context)
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: spellSlotLevel(2) },
+      outcome: "Cast Bless with a level 2 spell slot and begin concentrating on it",
+    })
   })
 
   test("short rest exposes hit-die pools and finalizes runtime rolls", () => {

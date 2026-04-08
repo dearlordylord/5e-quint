@@ -25,6 +25,7 @@ import type {
   ShoveChoice,
   Size,
   SpellId,
+  SpellName,
   SpellSlotLevel,
   SpellSlots,
   TempHP
@@ -105,6 +106,7 @@ export interface DndMachineInput {
   readonly chaMod?: AbilityModifier
   readonly slotsMax?: ReadonlyArray<number>
   readonly slotsCurrent?: ReadonlyArray<number>
+  readonly preparedSpells?: ReadonlySet<SpellName>
 }
 
 // Per-class state interfaces: extracted to machine-class-states.ts for max-lines
@@ -171,6 +173,7 @@ export interface DndContext {
   readonly bonusMovementRemaining: number
   readonly bonusMovementOAFree: boolean
   readonly actionSurgeActionPending: boolean
+  readonly slotExpendedThisTurn: boolean
   readonly slotsMax: SpellSlots
   readonly slotsCurrent: SpellSlots
   readonly pactSlotsMax: number
@@ -178,6 +181,7 @@ export interface DndContext {
   readonly pactSlotLevel: number
   readonly concentrationSpellId: Option.Option<SpellId>
   readonly hitDiceRemaining: HitDiceRemaining
+  readonly preparedSpells: ReadonlySet<SpellName>
   readonly activeEffects: ReadonlyArray<ActiveEffect>
   readonly pendingResolution: PendingResolution
   readonly creatureKind: CreatureKind
@@ -246,6 +250,7 @@ export type DndEvent =
   | { readonly type: "DROP_PRONE" }
   | { readonly type: "MARK_BONUS_ACTION_SPELL" }
   | { readonly type: "MARK_NON_CANTRIP_ACTION_SPELL" }
+  | { readonly type: "CAST_PREPARED_SPELL"; readonly spellName: SpellName; readonly slotLevel: SpellSlotLevel }
   | {
       readonly type: "GRAPPLE"
       readonly attackerSize: Size
@@ -396,6 +401,7 @@ export {
   asApplyCondition,
   asApplyFall,
   asConcentrationCheck,
+  asCastPreparedSpell,
   asCondition,
   asDeathSave,
   asEndTurn,
@@ -453,5 +459,6 @@ export const INITIAL_TURN_STATE = {
   reactionAvailable: true,
   bonusMovementRemaining: 0,
   bonusMovementOAFree: false,
-  actionSurgeActionPending: false
+  actionSurgeActionPending: false,
+  slotExpendedThisTurn: false
 } as const

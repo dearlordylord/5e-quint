@@ -317,3 +317,24 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Rationale:** The spec tracks movement as a budget (`movementRemaining`) decremented by 1 per foot, not as a cost-per-foot system. Modeling Movable as a cost multiplier would require changing the movement system to track per-foot costs for grappling, difficult terrain, squeezing, etc. Halving speed is the simplest representation that preserves correctness.
 
 **Changes:** `pStartTurn` in `creature.qnt` applies `afterExhaustion / 2` when `isGrappling and not(grappledTargetTwoSizesSmaller)`.
+
+## A38: Creature-level prepared spell casting models deterministic prepared-spell defaults and caster-side bookkeeping only
+
+**Assumption:** The creature-level `CAST_PREPARED_SPELL` action does not model full player-chosen prepared spell lists or downstream spell effects. It models only caster-side bookkeeping:
+- spend a regular spell slot
+- consume Action or Bonus Action based on casting time
+- mark one-slot-per-turn flags
+- start/replace concentration for modeled concentration spells
+
+When explicit prepared-spell input is absent, the TypeScript machine and `creature.qnt` both derive the same deterministic modeled subset from class levels and available regular spell slots. This subset is intentionally narrow and exists to support available-actions/MCP coverage and MBT parity.
+
+**Rules basis:** The SRD defines prepared spells as character-build choices ("choose spells ... The chosen spells must be of a level for which you have spell slots"), but the helper creature spec does not model spellbook contents or player preparation choices as separate authored state. The battle spec remains the authoritative combat-spec layer for concrete spell identity/effect resolution.
+
+**Modeled subset in Phase 3:** `bless`, `burning_hands`, `fireball`, `guiding_bolt`, `haste`, `healing_word`, `hold_person`, `inflict_wounds`, `spirit_guardians`.
+
+**Out of scope for this phase:** Cantrips, ritual casting, reaction spells, pact-slot casting, slot-free class/subclass spell casts, target/effect resolution, and full class spell-list/preparation management.
+
+**Changes:**
+- `creature.qnt`: adds `doCastPreparedSpell`, deterministic `pDefaultPreparedSpells`, and spell-casting bookkeeping helpers.
+- TypeScript machine: adds `CAST_PREPARED_SPELL`, `preparedSpells` input/context, and default prepared-spell derivation when explicit input is omitted.
+- MBT bridge: adds `CAST_PREPARED_SPELL` driver mapping and compares `slotExpendedThisTurn` from the real creature machine state.

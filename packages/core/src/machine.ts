@@ -3,6 +3,7 @@ import type { SnapshotFrom } from "xstate"
 import { assign, setup } from "xstate"
 
 import { remarkableAthleteCritMovement } from "#/features/class-fighter.ts"
+import { defaultPreparedSpellsForClassLevels, getModeledPreparedSpellInfo } from "#/features/spell-available-actions.ts"
 import { ZERO_HIT_DICE } from "#/features/class-tables.ts"
 import * as barb from "#/machine-barbarian.ts"
 import * as bard from "#/machine-bard.ts"
@@ -47,6 +48,7 @@ import {
   asAddEffect,
   asAddExhaustion,
   asApplyCondition,
+  asCastPreparedSpell,
   asConcentrationCheck,
   asCondition,
   asEndTurn,
@@ -86,6 +88,7 @@ import {
   type IncapSource,
   movementFeet,
   resourceCount,
+  spellId,
   tempHp
 } from "#/types.ts"
 
@@ -256,6 +259,41 @@ export const creatureMachine = setup({
     }),
     markBonusActionSpell: assign({ bonusActionSpellCast: true }),
     markNonCantripActionSpell: assign({ nonCantripActionSpellCast: true }),
+    castPreparedSpell: assign(({ context: c, event: e }) => {
+      const ev = asCastPreparedSpell(e)
+      const spell = getModeledPreparedSpellInfo(ev.spellName)
+      if (spell == null) return {}
+      const slotsCurrent = expendSlot(c.slotsCurrent, ev.slotLevel)
+      const turnUpdates = spell.castingTime === "bonusAction"
+        ? {
+            bonusActionUsed: true,
+            bonusActionSpellCast: true,
+          }
+        : {
+            actionsRemaining: c.actionsRemaining - 1,
+            nonCantripActionSpellCast: true,
+          }
+      if (!spell.concentration || spell.durationTurns == null) {
+        return {
+          slotsCurrent,
+          slotExpendedThisTurn: true,
+          pendingResolution: null,
+          ...turnUpdates,
+        }
+      }
+      const nextSpellId = spellId(ev.spellName)
+      const baseEffects = Option.isSome(c.concentrationSpellId)
+        ? removeAe(c.activeEffects, c.concentrationSpellId.value)
+        : c.activeEffects
+      return {
+        slotsCurrent,
+        slotExpendedThisTurn: true,
+        pendingResolution: null,
+        concentrationSpellId: Option.some(nextSpellId),
+        activeEffects: addAe(baseEffects, nextSpellId, spell.durationTurns, "end", c.selfId ?? mkCreatureId("")),
+        ...turnUpdates,
+      }
+    }),
     applyGrapple: assign(({ context: c, event: e }) => {
       const ev = asGrapple(e)
       const ok = resolveGrapple(
@@ -586,6 +624,24 @@ export const creatureMachine = setup({
       rangerLevel: i.rangerLevel ?? 0,
       warlockLevel: i.warlockLevel ?? 0
     })
+    const slotsMax = i.slotsMax ?? derivedSlots.slotsMax
+    const preparedSpells = i.preparedSpells ?? defaultPreparedSpellsForClassLevels(
+      {
+        barbarian: i.barbarianLevel ?? 0,
+        bard: i.bardLevel ?? 0,
+        cleric: i.clericLevel ?? 0,
+        druid: i.druidLevel ?? 0,
+        fighter: i.fighterLevel ?? 0,
+        monk: i.monkLevel ?? 0,
+        paladin: i.paladinLevel ?? 0,
+        ranger: i.rangerLevel ?? 0,
+        rogue: i.rogueLevel ?? 0,
+        sorcerer: i.sorcererLevel ?? 0,
+        warlock: i.warlockLevel ?? 0,
+        wizard: i.wizardLevel ?? 0,
+      },
+      slotsMax
+    )
     return {
       ...INITIAL_CONDITIONS,
       ...INITIAL_TURN_STATE,
@@ -611,8 +667,9 @@ export const creatureMachine = setup({
       pactSlotLevel: derivedSlots.pactSlotLevel,
       pactSlotsCurrent: derivedSlots.pactSlotsCurrent,
       pactSlotsMax: derivedSlots.pactSlotsMax,
+      preparedSpells,
       slotsCurrent: i.slotsCurrent ?? derivedSlots.slotsCurrent,
-      slotsMax: i.slotsMax ?? derivedSlots.slotsMax,
+      slotsMax,
       tempHp: tempHp(0),
       legendaryActionsMax: i.legendaryActionsMax ?? i.legendaryActionsRemaining ?? resourceCount(0),
       legendaryResistancesMax: i.legendaryResistancesMax ?? i.legendaryResistancesRemaining ?? resourceCount(0),

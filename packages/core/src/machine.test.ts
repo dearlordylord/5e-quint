@@ -2104,6 +2104,72 @@ describe("spell slot expenditure", () => {
   })
 })
 
+describe("cast prepared spell", () => {
+  it("spends a slot, consumes action economy, and starts concentration for concentration spells", () => {
+    const a = createWithInput({
+      maxHp: 30,
+      clericLevel: classLevel(5),
+      preparedSpells: new Set(["bless", "guiding_bolt"]),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    a.send({ type: "ENTER_COMBAT" })
+    a.send({ type: "START_TURN" })
+    a.send({ type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: spellSlotLevel(2) })
+
+    expect(ctx(a).slotsCurrent).toEqual([4, 2, 2, 0, 0, 0, 0, 0, 0])
+    expect(ctx(a).actionsRemaining).toBe(0)
+    expect(ctx(a).nonCantripActionSpellCast).toBe(true)
+    expect(ctx(a).slotExpendedThisTurn).toBe(true)
+    expect(Option.getOrElse(ctx(a).concentrationSpellId, () => "")).toBe("bless")
+    expect(ctx(a).activeEffects).toEqual(
+      expect.arrayContaining([expect.objectContaining({ spellId: "bless", turnsRemaining: 10, expiresAt: "end" })]),
+    )
+  })
+
+  it("replaces existing concentration when casting a new concentration spell", () => {
+    const a = createWithInput({
+      maxHp: 30,
+      clericLevel: classLevel(5),
+      preparedSpells: new Set(["bless", "hold_person"]),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    a.send({ type: "ENTER_COMBAT" })
+    a.send({ type: "START_TURN" })
+    a.send({ type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: spellSlotLevel(1) })
+    a.send({ type: "END_TURN", effectResolutions: [] })
+    a.send({ type: "START_TURN" })
+    a.send({ type: "CAST_PREPARED_SPELL", spellName: "hold_person", slotLevel: spellSlotLevel(2) })
+
+    expect(Option.getOrElse(ctx(a).concentrationSpellId, () => "")).toBe("hold_person")
+    expect(ctx(a).activeEffects.find((effect) => effect.spellId === "bless")).toBeUndefined()
+    expect(ctx(a).activeEffects).toEqual(
+      expect.arrayContaining([expect.objectContaining({ spellId: "hold_person", turnsRemaining: 10, expiresAt: "end" })]),
+    )
+  })
+
+  it("cannot cast prepared spells while raging", () => {
+    const a = createWithInput({
+      maxHp: 36,
+      barbarianLevel: classLevel(5),
+      clericLevel: classLevel(5),
+      preparedSpells: new Set(["bless"]),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    a.send({ type: "ENTER_COMBAT" })
+    a.send({ type: "START_TURN" })
+    a.send({ type: "ENTER_RAGE" })
+    const before = ctx(a)
+    a.send({ type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: spellSlotLevel(1) })
+
+    expect(ctx(a).slotsCurrent).toEqual(before.slotsCurrent)
+    expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true)
+    expect(ctx(a).actionsRemaining).toBe(before.actionsRemaining)
+  })
+})
+
 describe("short rest", () => {
   it("spend hit dice: roll + owned CON mod, minimum 1", () => {
     const a = create()

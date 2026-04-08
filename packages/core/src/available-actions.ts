@@ -3,6 +3,12 @@ import { Match, Schema } from "effect"
 import {
   MetamagicOptionSchema,
 } from "#/features/class-sorcerer.ts"
+import {
+  getModeledPreparedSpellInfo,
+  MODELED_PREPARED_SPELLS,
+  ModeledPreparedSpellSchema,
+  type ModeledPreparedSpell,
+} from "#/features/spell-available-actions.ts"
 import { CLASS_NAMES, classHitDie, type ClassName } from "#/features/class-tables.ts"
 import { relentlessRageDC } from "#/features/class-barbarian.ts"
 import { pMartialArtsDie } from "#/features/class-monk.ts"
@@ -19,11 +25,12 @@ import {
   legalLayOnHandsAmounts,
   legalMetamagicOptions,
   legalMysticArcanumLevels,
+  legalPreparedSpellSlotLevels,
   legalWildResurgenceChargeLevels,
 } from "#/machine-guards.ts"
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
-import { SpellSlotLevel, type D20Roll, type SpellSlotLevel as SpellSlotLevelValue } from "#/types.ts"
+import { SpellSlotLevel, type D20Roll, type SpellName, type SpellSlotLevel as SpellSlotLevelValue } from "#/types.ts"
 
 export type ResourceCost = {
   readonly action?: true
@@ -49,9 +56,17 @@ const guardArgs = (context: DndContext): { context: DndContext; event: DndEvent 
   event: DUMMY_EVENT,
 })
 
+function displaySpellName(spellName: SpellName): string {
+  return spellName
+    .split("_")
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+    .join(" ")
+}
+
 export const SUPPORTED_ACTION_TYPES = [
   "ENTER_COMBAT",
   "USE_HEROIC_INSPIRATION",
+  "CAST_PREPARED_SPELL",
   "START_TURN",
   "USE_TACTICAL_MIND",
   "CONVERT_SLOT_TO_POINTS",
@@ -83,6 +98,10 @@ type SimpleToken<T extends SupportedActionType> = {
 type TokenByType = {
   readonly ENTER_COMBAT: SimpleToken<"ENTER_COMBAT">
   readonly USE_HEROIC_INSPIRATION: SimpleToken<"USE_HEROIC_INSPIRATION">
+  readonly CAST_PREPARED_SPELL: SimpleToken<"CAST_PREPARED_SPELL"> & {
+    readonly spellName: ModeledPreparedSpell
+    readonly slotLevel: Hole<SpellSlotLevelValue>
+  }
   readonly START_TURN: SimpleToken<"START_TURN">
   readonly USE_TACTICAL_MIND: SimpleToken<"USE_TACTICAL_MIND">
   readonly CONVERT_SLOT_TO_POINTS: SimpleToken<"CONVERT_SLOT_TO_POINTS"> & {
@@ -132,6 +151,7 @@ export type ActionToken = TokenByType[SupportedActionType]
 type ResolvedTokenByType = {
   readonly ENTER_COMBAT: { readonly type: "ENTER_COMBAT" }
   readonly USE_HEROIC_INSPIRATION: { readonly type: "USE_HEROIC_INSPIRATION" }
+  readonly CAST_PREPARED_SPELL: { readonly type: "CAST_PREPARED_SPELL"; readonly spellName: ModeledPreparedSpell; readonly slotLevel: SpellSlotLevelValue }
   readonly START_TURN: { readonly type: "START_TURN" }
   readonly USE_TACTICAL_MIND: { readonly type: "USE_TACTICAL_MIND" }
   readonly CONVERT_SLOT_TO_POINTS: { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: SpellSlotLevelValue }
@@ -159,6 +179,11 @@ const EnterCombatResolvedActionSchema = Schema.Struct({
 })
 const UseHeroicInspirationResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_HEROIC_INSPIRATION"),
+})
+const CastPreparedSpellResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("CAST_PREPARED_SPELL"),
+  spellName: ModeledPreparedSpellSchema,
+  slotLevel: SpellSlotLevel,
 })
 const StartTurnResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("START_TURN"),
@@ -231,6 +256,7 @@ const ExitCombatResolvedActionSchema = Schema.Struct({
 const PrimaryResolvedActionTokenSchema = Schema.Union(
   EnterCombatResolvedActionSchema,
   UseHeroicInspirationResolvedActionSchema,
+  CastPreparedSpellResolvedActionSchema,
   StartTurnResolvedActionSchema,
   UseTacticalMindResolvedActionSchema,
   ConvertSlotToPointsResolvedActionSchema,
@@ -258,6 +284,7 @@ const SecondaryResolvedActionTokenSchema = Schema.Union(
 export const RESOLVED_ACTION_SCHEMAS = [
   EnterCombatResolvedActionSchema,
   UseHeroicInspirationResolvedActionSchema,
+  CastPreparedSpellResolvedActionSchema,
   StartTurnResolvedActionSchema,
   UseTacticalMindResolvedActionSchema,
   ConvertSlotToPointsResolvedActionSchema,
@@ -331,6 +358,12 @@ export type ResolutionRequest =
       readonly outcome: string
       readonly runtime: "none"
       readonly event: Extract<DndEvent, { readonly type: "USE_HEROIC_INSPIRATION" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "CAST_PREPARED_SPELL" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "CAST_PREPARED_SPELL" }>
     }
   | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "START_TURN" }>
@@ -466,7 +499,7 @@ export type ActionResolutionError = {
 }
 
 type ActionSpec<T extends SupportedActionType> = {
-  readonly buildToken: (context: DndContext) => TokenByType[T] | null
+  readonly buildToken: (context: DndContext) => TokenByType[T] | ReadonlyArray<TokenByType[T]> | null
 }
 
 const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
@@ -489,6 +522,28 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
             outcome: { summary: "Spend Heroic Inspiration to reroll a die and use the new roll" },
           }
         : null,
+  },
+  CAST_PREPARED_SPELL: {
+    buildToken: (context) =>
+      MODELED_PREPARED_SPELLS.flatMap((spellName) => {
+        if (!context.preparedSpells.has(spellName)) return []
+        const spell = getModeledPreparedSpellInfo(spellName)
+        if (spell == null) return []
+        const slotLevels = legalPreparedSpellSlotLevels(context, spellName)
+        if (slotLevels.length === 0) return []
+        return [{
+          type: "CAST_PREPARED_SPELL" as const,
+          spellName,
+          slotLevel: { options: slotLevels },
+          cost: spell.castingTime === "bonusAction" ? { bonusAction: true, charge: "spellSlot" } : { action: true, charge: "spellSlot" },
+          outcome: {
+            summary:
+              spell.concentration
+                ? `Cast ${displaySpellName(spellName)} with a spell slot of the chosen level and begin concentrating on it`
+                : `Cast ${displaySpellName(spellName)} with a spell slot of the chosen level`,
+          },
+        }]
+      }),
   },
   START_TURN: {
     buildToken: (context) =>
@@ -753,7 +808,7 @@ export function getAvailableActions(context: DndContext, tags: ReadonlySet<strin
   return SUPPORTED_ACTION_TYPES.flatMap((type) => {
     if (!isAcceptedByMachine(type, tags)) return []
     const token = ACTION_SPECS[type].buildToken(context)
-    return token === null ? [] : [token]
+    return token == null ? [] : Array.isArray(token) ? token : [token]
   })
 }
 
@@ -838,6 +893,36 @@ export function resolveAction(
   tags: ReadonlySet<string>,
   token: ResolvedActionToken,
 ): ResolutionRequest | ActionResolutionError {
+  if (token.type === "CAST_PREPARED_SPELL") {
+    if (!isAcceptedByMachine(token.type, tags)) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} is not currently available in this state.`,
+      }
+    }
+    const spell = getModeledPreparedSpellInfo(token.spellName)
+    if (spell == null) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.spellName} is not currently available in this state.`,
+      }
+    }
+    if (!legalPreparedSpellSlotLevels(context, token.spellName).includes(token.slotLevel)) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${displaySpellName(token.spellName)} with a level ${token.slotLevel} slot is not currently available in this state.`,
+      }
+    }
+    return {
+      token,
+      outcome: spell.concentration
+        ? `Cast ${displaySpellName(token.spellName)} with a level ${token.slotLevel} spell slot and begin concentrating on it`
+        : `Cast ${displaySpellName(token.spellName)} with a level ${token.slotLevel} spell slot`,
+      runtime: "none",
+      event: { type: "CAST_PREPARED_SPELL", spellName: token.spellName, slotLevel: token.slotLevel },
+    }
+  }
+
   const available = availableTokenForType(context, tags, token.type)
   if (available == null) {
     return {

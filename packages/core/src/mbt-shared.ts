@@ -787,7 +787,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     bonusMovementRemaining: c.bonusMovementRemaining,
     bonusMovementOAFree: c.bonusMovementOAFree,
     actionSurgeActionPending: c.actionSurgeActionPending,
-    slotExpendedThisTurn: false, // battle-level only, not tracked by creature machine
+    slotExpendedThisTurn: c.slotExpendedThisTurn,
     pendingResolution: c.pendingResolution,
     turnPhase: snap.hasTag("canAct") ? "acting" : snap.hasTag("inCombat") ? "waitingForTurn" : "outOfCombat",
     slotsMax: [...c.slotsMax],
