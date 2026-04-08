@@ -10,7 +10,7 @@ import {
   expendSlot,
   firstAvailableSpellSlotLevel,
   isHit,
-  legalDamageReactions,
+  legalDamageReactionsByCreature,
   legalHitReactions,
   mkAwait,
   piAfterDamage,
@@ -301,7 +301,8 @@ export function battleResolveDmgReaction({
   newOffered.add(e.reactorId)
   const reactor = c.creatures.get(e.reactorId)!
   if (e.reactorId !== atk.target || !aw.eligible.has(e.reactorId)) return {}
-  if (e.decision.tag !== "RPass" && !atk.legalReactions.has(e.decision.tag)) return {}
+  const legalReactions = atk.legalReactionsByCreature.get(e.reactorId)
+  if (e.decision.tag !== "RPass" && !legalReactions?.has(e.decision.tag)) return {}
   const newDmg = Match.value(e.decision).pipe(
     byTag("RUncannyDodge", () => uncannyDodgeDamage(atk.damage)),
     byTag("RDeflectAttacks", (d) => deflectAttacksResult(atk.damage, d.amount).damageTaken),
@@ -316,7 +317,13 @@ export function battleResolveDmgReaction({
     return {
       creatures: cs,
       ...phaseAwaitReaction({
-        interrupt: { tag: "PIAttackDamage", ctx: { ...reducedCtx, legalReactions: legalDamageReactions(cs, reducedCtx) } },
+        interrupt: {
+          tag: "PIAttackDamage",
+          ctx: {
+            ...reducedCtx,
+            legalReactionsByCreature: legalDamageReactionsByCreature(cs, reducedCtx)
+          }
+        },
         trigger: "TAttackDamages",
         eligible: newElig,
         offered: newOffered

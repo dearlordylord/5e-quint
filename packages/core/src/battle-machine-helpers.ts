@@ -355,7 +355,7 @@ export function legalHitReactions(cs: Creatures, atk: AttackHitCtx, candidates: 
   return legalByCreature
 }
 
-export function legalDamageReactions(cs: Creatures, atk: AttackDamageCtx): Set<"RUncannyDodge" | "RDeflectAttacks"> {
+export function legalDamageReactionsByCreature(cs: Creatures, atk: AttackDamageCtx) {
   const target = cs.get(atk.target)!
   const legal = new Set<"RUncannyDodge" | "RDeflectAttacks">()
   if (
@@ -382,7 +382,9 @@ export function legalDamageReactions(cs: Creatures, atk: AttackDamageCtx): Set<"
   ) {
     legal.add("RDeflectAttacks")
   }
-  return legal
+  const legalByCreature = new Map<CreatureId, Set<"RUncannyDodge" | "RDeflectAttacks">>()
+  if (legal.size > 0) legalByCreature.set(atk.target, legal)
+  return legalByCreature
 }
 
 export function canMakeOpportunityAttack(c: BattleCreatureState): boolean {
@@ -475,7 +477,7 @@ export function advanceFromHitPhase(
   const stillHit = isHit(atk.attackRoll, atk.targetAc, atk.critRange)
   if (!stillHit) return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) }
   const cs1 = applyOnHitEffect(cs, atk.target, atk.onHitEffect, currentTurnCreatureId)
-  const dmgBase: Omit<AttackDamageCtx, "legalReactions"> = {
+  const dmgBase: Omit<AttackDamageCtx, "legalReactionsByCreature"> = {
     attacker: atk.attacker,
     target: atk.target,
     damage: atk.damage,
@@ -486,11 +488,15 @@ export function advanceFromHitPhase(
     targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
     isWeaponAttack: atk.isWeaponAttack
   }
-  const dmgCtx: AttackDamageCtx = { ...dmgBase, legalReactions: legalDamageReactions(cs1, { ...dmgBase, legalReactions: new Set() }) }
-  if (dmgCtx.legalReactions.size > 0) {
+  const dmgCtx: AttackDamageCtx = {
+    ...dmgBase,
+    legalReactionsByCreature: legalDamageReactionsByCreature(cs1, { ...dmgBase, legalReactionsByCreature: new Map() })
+  }
+  const elig = new Set(dmgCtx.legalReactionsByCreature.keys())
+  if (elig.size > 0) {
     return {
       creatures: new Map(cs1),
-      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackDamage", ctx: dmgCtx }, "TAttackDamages", new Set([atk.target])))
+      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackDamage", ctx: dmgCtx }, "TAttackDamages", elig))
     }
   }
   return dealDamageWithAfterReactions(

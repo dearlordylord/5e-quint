@@ -141,7 +141,7 @@ module battle {
     knockOut: bool,                  // propagated from AttackHitCtx
     targetCanSeeAttackerAtHit: bool,
     isWeaponAttack: bool,
-    legalReactions: Set[str],
+    legalReactionsByCreature: CreatureId -> Set[str],
   }
 
   type AttackHitRider =
@@ -843,7 +843,7 @@ module battle {
       and not(cs.get(id).turn.slotExpendedThisTurn)
     )
 
-  pure def legalDamageReactions(cs: CreatureId -> Combatant, atk: AttackDamageCtx): Set[str] = {
+  pure def legalDamageReactionsByCreature(cs: CreatureId -> Combatant, atk: AttackDamageCtx): CreatureId -> Set[str] = {
     val target = cs.get(atk.target)
     val canUncannyDodge =
       hasReaction(cs, atk.target)
@@ -868,7 +868,8 @@ module battle {
       )
     val uncanny = if (canUncannyDodge) Set(DMG_REACTION_UNCANNY_DODGE) else Set()
     val reduction = if (canDamageReduction) Set(DMG_REACTION_DEFLECT_ATTACKS) else Set()
-    uncanny.union(reduction)
+    val legal = uncanny.union(reduction)
+    if (legal.size() > 0) Map(atk.target -> legal) else Map()
   }
 
   pure def legalHitReactions(
@@ -1331,11 +1332,12 @@ module battle {
         knockOut: atk.knockOut,
         targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
         isWeaponAttack: atk.isWeaponAttack,
-        legalReactions: Set(),
+        legalReactionsByCreature: Map(),
       }
-      val dmgCtx = dmgBase.with("legalReactions", legalDamageReactions(cs1, dmgBase))
-      if (dmgCtx.legalReactions.size() > 0) {
-        { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, Set(atk.target))) }
+      val dmgCtx = dmgBase.with("legalReactionsByCreature", legalDamageReactionsByCreature(cs1, dmgBase))
+      val elig = dmgCtx.legalReactionsByCreature.keys()
+      if (elig.size() > 0) {
+        { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, elig)) }
       } else {
         // No damage-phase reactions — deal damage and check for after-damage reactions (R10.4)
         dealDamageWithAfterReactions(cs1, atk.target, atk.attacker,
@@ -1420,16 +1422,17 @@ module battle {
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
               nondet reactorId = remaining.oneOf()
+              val legal = atk.legalReactionsByCreature.get(reactorId)
               nondet reductionAmt = 1.to(20).oneOf()
               nondet decision = Set(RPass, RUncannyDodge, RDeflectAttacks(reductionAmt)).oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
               val newElig = ctx.eligible.exclude(Set(reactorId))
               val legalDecision =
                 decision == RPass
-                or (decision == RUncannyDodge and atk.legalReactions.contains(DMG_REACTION_UNCANNY_DODGE))
+                or (decision == RUncannyDodge and legal.contains(DMG_REACTION_UNCANNY_DODGE))
                 or (
                   match decision {
-                    | RDeflectAttacks(_) => atk.legalReactions.contains(DMG_REACTION_DEFLECT_ATTACKS)
+                    | RDeflectAttacks(_) => legal.contains(DMG_REACTION_DEFLECT_ATTACKS)
                     | _ => false
                   }
                 )
@@ -1445,7 +1448,7 @@ module battle {
               if (newDmg != atk.damage) {
                 val cs1 = spendReaction(bCreatures, reactorId)
                 val updatedAtk = atk.with("damage", newDmg)
-                val updatedAtkWithLegal = updatedAtk.with("legalReactions", legalDamageReactions(cs1, updatedAtk))
+                val updatedAtkWithLegal = updatedAtk.with("legalReactionsByCreature", legalDamageReactionsByCreature(cs1, updatedAtk))
                 all {
                   bCreatures' = cs1,
                   bPhase' = BPAwaitingReaction({

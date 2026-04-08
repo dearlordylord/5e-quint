@@ -146,11 +146,31 @@ Normalize the shared reaction-window architecture so the battle layer has one co
 
 ### Acceptance criteria
 
-- [ ] Battle interrupt windows use a consistent legality model across at least hit and damage reaction facilities.
-- [ ] Decision validation happens against authoritative window state rather than ad hoc runtime assumptions.
-- [ ] The architecture for adding future named reactions is documented and consistent with the implemented window model.
-- [ ] Existing deterministic scenario coverage for reactions still passes on the normalized facility.
-- [ ] Tier 1 battle parity checks pass after normalization.
+- [x] Battle interrupt windows use a consistent legality model across at least hit and damage reaction facilities.
+- [x] Decision validation happens against authoritative window state rather than ad hoc runtime assumptions.
+- [x] The architecture for adding future named reactions is documented and consistent with the implemented window model.
+- [x] Existing deterministic scenario coverage for reactions still passes on the normalized facility.
+- [x] Tier 1 battle parity checks pass after normalization.
+
+### Phase 4 notes
+
+- `PIAttackDamage` now matches `PIAttackHit` and carries `legalReactionsByCreature` in both Quint and TS, even though the current damage window still only ever exposes the target as a responder.
+- Damage-window `eligible` is now a direct projection of the owned legal map rather than a hard-coded `Set(atk.target)`.
+- Damage-reaction validation no longer depends on target-local assumptions; it validates against the per-creature legal reaction map exactly like the hit window.
+- This phase intentionally changed architecture shape only. Existing deterministic reaction coverage stayed green without adding new SRD mechanics.
+- Verification passed:
+  - `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
+  - `pnpm --filter @dnd/core typecheck`
+  - `pnpm exec quint typecheck battle.qnt`
+  - `node scripts/compile-battle-spec.cjs`
+  - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts` with seed `0x39355cd5`
+  - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts` with seed `0xfa5b477c`
+
+### Next implementation notes
+
+- Phase 5 should now consume the authoritative window-owned legality rather than inventing new query-side trigger state.
+- Because the action-surface refactor on `master` is moving the same files that Phase 5 depends on, Phase 5 should be reassessed after rebasing onto current `master` rather than planned against the pre-rebase tree.
+- The architecture dependency remains the same: semantic reaction tokens must project from battle-owned trigger windows, not from generic resource availability.
 
 ---
 

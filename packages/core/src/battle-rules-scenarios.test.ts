@@ -570,7 +570,7 @@ describe("battle rules scenario regressions", () => {
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
     const awaitCtx = ctx(actor).awaitCtx
     const dmgCtx = awaitCtx?.interrupt.tag === "PIAttackDamage" ? awaitCtx.interrupt.ctx : null
-    expect(dmgCtx?.legalReactions).toEqual(new Set(["RUncannyDodge"]))
+    expect(dmgCtx?.legalReactionsByCreature.get(CreatureId("B"))).toEqual(new Set(["RUncannyDodge"]))
 
     send(actor, {
       type: "BATTLE_RESOLVE_DMG_REACTION",
@@ -635,7 +635,7 @@ describe("battle rules scenario regressions", () => {
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
     const deflectAwaitCtx = ctx(actor).awaitCtx
     const deflectCtx = deflectAwaitCtx?.interrupt.tag === "PIAttackDamage" ? deflectAwaitCtx.interrupt.ctx : null
-    expect(deflectCtx?.legalReactions).toEqual(new Set(["RDeflectAttacks"]))
+    expect(deflectCtx?.legalReactionsByCreature.get(CreatureId("B"))).toEqual(new Set(["RDeflectAttacks"]))
 
     send(actor, {
       type: "BATTLE_RESOLVE_DMG_REACTION",

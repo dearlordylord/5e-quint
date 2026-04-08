@@ -157,7 +157,7 @@ export interface AttackDamageCtx {
   readonly knockOut: boolean
   readonly targetCanSeeAttackerAtHit: boolean
   readonly isWeaponAttack: boolean
-  readonly legalReactions: ReadonlySet<DmgReactionKind>
+  readonly legalReactionsByCreature: ReadonlyMap<CreatureId, ReadonlySet<DmgReactionKind>>
 }
 
 export interface AfterDamageCtx {
