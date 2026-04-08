@@ -127,6 +127,13 @@ export function dealDamage(
   return setCreature(cs, targetId, nc)
 }
 
+/** Auto-break concentration if the concentrated spell's effect no longer exists. Matches Quint pAutoBreakExpiredConcentration. */
+function autoBreakExpiredConcentration(c: BattleCreatureState): BattleCreatureState {
+  if (Option.isNone(c.concentrationSpellId)) return c
+  const cid = c.concentrationSpellId.value
+  return c.activeEffects.some((a) => a.spellId === cid) ? c : breakConcentration(c)
+}
+
 export function breakConcentrationAndPropagate(
   cs: Creatures,
   casterId: CreatureId
@@ -394,12 +401,7 @@ export function processStartTurn(
   let c = cs.get(activeId)!
   let effs = decrementDurations(c.activeEffects)
   effs = clearExpiredAtPhase(effs, "start")
-  c = { ...c, activeEffects: effs }
-  // Auto-break concentration if the concentrated spell's effect expired
-  if (Option.isSome(c.concentrationSpellId)) {
-    const cid = c.concentrationSpellId.value
-    if (!c.activeEffects.some((a) => a.spellId === cid)) c = breakConcentration(c)
-  }
+  c = autoBreakExpiredConcentration({ ...c, activeEffects: effs })
   // Death save: if at 0 HP, not stable, not dead, and roll provided
   if (c.hp === 0 && !c.stable && !c.dead && deathSaveRoll > 0) {
     c = deathSave(c, deathSaveRoll)
@@ -465,12 +467,7 @@ export function processEndTurn(
   } else {
     baseCreatures = cs
   }
-  c = { ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") }
-  // Auto-break concentration if the concentrated spell's effect expired
-  if (Option.isSome(c.concentrationSpellId)) {
-    const cid = c.concentrationSpellId.value
-    if (!c.activeEffects.some((a) => a.spellId === cid)) c = breakConcentration(c)
-  }
+  c = autoBreakExpiredConcentration({ ...c, activeEffects: clearExpiredAtPhase(c.activeEffects, "end") })
   let result = setCreature(baseCreatures, activeId, c)
   const oldConcId = cs.get(activeId)!.concentrationSpellId
   if (Option.isSome(oldConcId) && Option.isNone(result.get(activeId)!.concentrationSpellId)) {
