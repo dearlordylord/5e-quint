@@ -122,6 +122,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     concentrationSpellId: Option.none(),
     hitDiceRemaining: singleClassHitDice("fighter", 5),
     activeEffects: [],
+    pendingResolution: null,
     creatureKind: "PC",
     legendaryActionsMax: resourceCount(0),
     legendaryResistancesMax: resourceCount(0),

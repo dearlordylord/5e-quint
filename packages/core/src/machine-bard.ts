@@ -59,7 +59,10 @@ export function useFontSlotRestoreUpdate(c: DndContext, slotLevel: SpellSlotLeve
 export function usePeerlessSkillUpdate(c: DndContext, success: boolean): Partial<DndContext> {
   const bs = bd(c)
   assert(
-    !isIncapacitated(c) && hasPeerlessSkill(bs.level) && bs.bardicInspirationCharges > 0,
+    c.pendingResolution?.kind === "peerlessSkill" &&
+      !isIncapacitated(c) &&
+      hasPeerlessSkill(bs.level) &&
+      bs.bardicInspirationCharges > 0,
     "guard: canPeerlessSkill should have prevented this"
   )
   // Only spend charge on success

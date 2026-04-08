@@ -30,6 +30,15 @@ import type {
   TempHP
 } from "#/types.ts"
 
+export const PEERLESS_SKILL_PENDING_MODES = ["abilityCheck", "attackRoll"] as const satisfies ReadonlyArray<string>
+export type PeerlessSkillPendingMode = (typeof PEERLESS_SKILL_PENDING_MODES)[number]
+
+export type PendingResolution =
+  | null
+  | { readonly kind: "tacticalMind" }
+  | { readonly kind: "peerlessSkill"; readonly mode: PeerlessSkillPendingMode }
+  | { readonly kind: "relentlessRage" }
+
 // --- Shared turn-processing types (used by both START_TURN and END_TURN) ---
 
 export interface TurnPhaseCtx {
@@ -168,6 +177,7 @@ export interface DndContext {
   readonly concentrationSpellId: Option.Option<SpellId>
   readonly hitDiceRemaining: HitDiceRemaining
   readonly activeEffects: ReadonlyArray<ActiveEffect>
+  readonly pendingResolution: PendingResolution
   readonly creatureKind: CreatureKind
   // MonsterResourceState (Quint parity: monsterResourceState)
   readonly legendaryActionsMax: ResourceCount // effective max (includes lair bonus) — not compared in MBT
@@ -303,6 +313,7 @@ export type DndEvent =
   | { readonly type: "USE_ACTION_SURGE" }
   | { readonly type: "USE_INDOMITABLE" }
   | { readonly type: "USE_TACTICAL_MIND"; readonly boostedCheckSucceeds: boolean }
+  | { readonly type: "TRIGGER_TACTICAL_MIND" }
   | { readonly type: "USE_HEROIC_INSPIRATION" }
   | { readonly type: "SCORE_CRITICAL_HIT" }
   // Phase L: Monster resource events
@@ -364,11 +375,14 @@ export type DndEvent =
   | { readonly type: "USE_CUTTING_WORDS" }
   | { readonly type: "USE_FONT_SLOT_RESTORE"; readonly slotLevel: SpellSlotLevel }
   | { readonly type: "USE_PEERLESS_SKILL"; readonly success: boolean }
+  | { readonly type: "TRIGGER_PEERLESS_SKILL_ABILITY_CHECK" }
+  | { readonly type: "TRIGGER_PEERLESS_SKILL_ATTACK_ROLL" }
   // Phase DR: Druid events
   | { readonly type: "ENTER_WILD_SHAPE" }
   | { readonly type: "EXIT_WILD_SHAPE" }
   | { readonly type: "USE_WILD_RESURGENCE_CHARGE"; readonly slotLevel: SpellSlotLevel }
   | { readonly type: "USE_WILD_RESURGENCE_SLOT" }
+  | { readonly type: "CLEAR_PENDING_RESOLUTION" }
 
 // Event extractors: extracted to machine-event-extractors.ts for max-lines
 export {

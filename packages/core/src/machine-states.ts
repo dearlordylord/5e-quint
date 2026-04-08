@@ -52,7 +52,7 @@ export const damageTrackConfig = {
           {
             guard: "dropsToZeroHp" as const,
             target: "#dnd.damageTrack.dying",
-            actions: ["applyDamage", "setUnconscious"]
+            actions: ["applyDamage", "setUnconscious", "setRelentlessRagePending"]
           },
           { actions: ["applyDamage"] }
         ],
@@ -73,7 +73,7 @@ export const damageTrackConfig = {
           {
             guard: "fallDropsToZero" as const,
             target: "#dnd.damageTrack.dying",
-            actions: ["applyFall", "setUnconscious"]
+            actions: ["applyFall", "setUnconscious", "setRelentlessRagePending"]
           },
           { actions: ["applyFall"] }
         ],
@@ -86,7 +86,7 @@ export const damageTrackConfig = {
           {
             guard: "canSuffocate" as const,
             target: "#dnd.damageTrack.dying",
-            actions: ["suffocate"]
+            actions: ["suffocate", "setRelentlessRagePending"]
           }
         ]
       }
@@ -194,8 +194,6 @@ export const turnPhaseConfig = {
         USE_SECOND_WIND: { guard: "canSecondWind" as const, actions: ["useSecondWind"] },
         USE_ACTION_SURGE: { guard: "canActionSurge" as const, actions: ["useActionSurge"] },
         USE_INDOMITABLE: { guard: "canIndomitable" as const, actions: ["useIndomitable"] },
-        USE_TACTICAL_MIND: { guard: "canTacticalMind" as const, actions: ["useTacticalMind"] },
-
         SCORE_CRITICAL_HIT: { guard: "canScoreCriticalHit" as const, actions: ["scoreCriticalHit"] },
         MARK_BONUS_ACTION_SPELL: { actions: ["markBonusActionSpell"] },
         MARK_NON_CANTRIP_ACTION_SPELL: { actions: ["markNonCantripActionSpell"] },
@@ -244,8 +242,7 @@ export const turnPhaseConfig = {
         USE_NATURES_VEIL: { guard: "canNaturesVeil" as const, actions: ["useNaturesVeil"] },
         USE_BARDIC_INSPIRATION: { guard: "canBardicInspiration" as const, actions: ["useBardicInspiration"] },
         USE_CUTTING_WORDS: { guard: "canCuttingWords" as const, actions: ["useCuttingWords"] },
-        USE_FONT_SLOT_RESTORE: { guard: "canFontSlotRestore" as const, actions: ["useFontSlotRestore"] },
-        USE_PEERLESS_SKILL: { guard: "canPeerlessSkill" as const, actions: ["usePeerlessSkill"] }
+        USE_FONT_SLOT_RESTORE: { guard: "canFontSlotRestore" as const, actions: ["useFontSlotRestore"] }
       }
     },
     waitingForTurn: {
@@ -310,7 +307,13 @@ export const rootEventHandlers = {
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },
   APPLY_STARVATION: { actions: ["applyStarvation"] },
   APPLY_DEHYDRATION: { actions: ["applyDehydration"] },
+  CLEAR_PENDING_RESOLUTION: { actions: ["clearPendingResolution"] },
+  TRIGGER_TACTICAL_MIND: { actions: ["triggerTacticalMind"] },
+  TRIGGER_PEERLESS_SKILL_ABILITY_CHECK: { actions: ["triggerPeerlessSkillAbilityCheck"] },
+  TRIGGER_PEERLESS_SKILL_ATTACK_ROLL: { actions: ["triggerPeerlessSkillAttackRoll"] },
+  USE_TACTICAL_MIND: { guard: "canTacticalMind" as const, actions: ["useTacticalMind"] },
   USE_HEROIC_INSPIRATION: { actions: ["useHeroicInspiration"] },
+  USE_PEERLESS_SKILL: { guard: "canPeerlessSkill" as const, actions: ["usePeerlessSkill"] },
   END_RAGE: { guard: "isRaging" as const, actions: ["endRage"] },
   MARK_ATTACK_OR_FORCED_SAVE: { guard: "isRaging" as const, actions: ["markAttackOrForcedSave"] },
   RESTORE_INTIMIDATING_PRESENCE: { actions: ["restoreIntimidatingPresence"] },

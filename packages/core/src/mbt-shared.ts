@@ -194,6 +194,25 @@ export function mapAbility(s: string): Ability {
   return QUINT_ABILITY_MAP[s] ?? "str"
 }
 
+function parsePendingResolution(raw: unknown):
+  | null
+  | { readonly kind: "tacticalMind" }
+  | { readonly kind: "peerlessSkill"; readonly mode: "abilityCheck" | "attackRoll" }
+  | { readonly kind: "relentlessRage" } {
+  switch (variantToString(raw)) {
+    case "PRTacticalMind":
+      return { kind: "tacticalMind" }
+    case "PRPeerlessSkillAbilityCheck":
+      return { kind: "peerlessSkill", mode: "abilityCheck" }
+    case "PRPeerlessSkillAttackRoll":
+      return { kind: "peerlessSkill", mode: "attackRoll" }
+    case "PRRelentlessRage":
+      return { kind: "relentlessRage" }
+    default:
+      return null
+  }
+}
+
 // ============================================================
 // ITF schema helpers
 // ============================================================
@@ -287,7 +306,8 @@ export const QuintTurnState = z.object({
   bonusMovementRemaining: z.bigint(),
   bonusMovementOAFree: z.boolean(),
   actionSurgeActionPending: z.boolean(),
-  slotExpendedThisTurn: z.boolean()
+  slotExpendedThisTurn: z.boolean(),
+  pendingResolution: z.any().transform(parsePendingResolution)
 })
 
 export const QuintSlotMap = z.any().transform((raw: unknown) => {
@@ -512,6 +532,11 @@ export interface NormalizedState {
   readonly bonusMovementOAFree: boolean
   readonly actionSurgeActionPending: boolean
   readonly slotExpendedThisTurn: boolean
+  readonly pendingResolution:
+    | null
+    | { readonly kind: "tacticalMind" }
+    | { readonly kind: "peerlessSkill"; readonly mode: "abilityCheck" | "attackRoll" }
+    | { readonly kind: "relentlessRage" }
   // turnPhase
   readonly turnPhase: string
   // SpellSlotState
@@ -760,6 +785,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     bonusMovementOAFree: c.bonusMovementOAFree,
     actionSurgeActionPending: c.actionSurgeActionPending,
     slotExpendedThisTurn: false, // battle-level only, not tracked by creature machine
+    pendingResolution: c.pendingResolution,
     turnPhase: snap.hasTag("canAct") ? "acting" : snap.hasTag("inCombat") ? "waitingForTurn" : "outOfCombat",
     slotsMax: [...c.slotsMax],
     slotsCurrent: [...c.slotsCurrent],
@@ -824,6 +850,7 @@ export function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): No
     bonusMovementOAFree: t.bonusMovementOAFree,
     actionSurgeActionPending: t.actionSurgeActionPending,
     slotExpendedThisTurn: t.slotExpendedThisTurn,
+    pendingResolution: t.pendingResolution,
     turnPhase: raw.turnPhase,
     slotsMax: ss.slotsMax,
     slotsCurrent: ss.slotsCurrent,
@@ -960,7 +987,7 @@ export function compareNormalizedStates(spec: any, impl: any): boolean {
       if (!setsEqual(sv, iv)) return false
     } else if (Array.isArray(sv) && Array.isArray(iv)) {
       if (!arraysEqual(sv, iv)) return false
-    } else if (typeof sv === "object" && typeof iv === "object") {
+    } else if (sv !== null && iv !== null && typeof sv === "object" && typeof iv === "object") {
       const so = sv as Record<string, unknown>
       const io = iv as Record<string, unknown>
       const soKeys = Object.keys(so)

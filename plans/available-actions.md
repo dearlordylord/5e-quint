@@ -179,121 +179,40 @@ Items discovered during implementation that need resolution before Phase 1 is co
     - `conSaveSucceeded`
     - `boostedCheckSucceeds`
     - `success`
-    - Status: not yet exposed.
-    - Blocker:
-      - the single-creature machine does not currently own enough trigger state to know that a failed check / failed attack roll / Relentless Rage 0-HP trigger is actually pending
-      - exposing these actions now would over-suggest them because the existing guards are too broad
-    - Required follow-up before rollout:
-      - add authoritative pending-result state (for example failed-check pending / Relentless Rage trigger pending), then expose these actions through the same resolved-token/runtime-input contract
-    - Pre-research for the next session:
-      - `USE_TACTICAL_MIND`
-        - current machine guard is effectively `fighter level >= 2 && secondWindCharges > 0`, because it hardcodes `checkFailed = true`
-        - the real rule needs a pending failed ability check context before the action should be suggested
-        - current machine event only wants `{ boostedCheckSucceeds: boolean }`, which should remain runtime-owned once the trigger state exists
-      - `USE_PEERLESS_SKILL`
-        - current machine guard is effectively `bard level >= 14 && bardicInspirationCharges > 0`
-        - the real rule needs a pending failed ability check or attack roll context before the action should be suggested
-        - current machine event only wants `{ success: boolean }`, which should remain runtime-owned once the trigger state exists
-      - `USE_RELENTLESS_RAGE`
-        - current machine guard is effectively `barbarian level >= 11 && raging`
-        - the real rule needs a pending “dropped to 0 HP while raging and not dead outright” trigger before the action should be suggested
-        - current machine event only wants `{ conSaveSucceeded: boolean }`, which should remain runtime-owned once the trigger state exists
-    - Recommended ownership direction:
-      - do not solve this by making MCP remember that a failed check or Relentless Rage trigger happened
-      - add authoritative pending-trigger state to the machine/spec first, then project the zero-hole action token from that state
-      - after that, keep the boolean payload in runtime inputs, not in the public resolved token
-    - Likely shape of the missing state:
-      - a small pending-resolution object in context, not duplicated booleans spread across the adapter
-      - examples:
-        - pending failed ability-check context for Tactical Mind
-        - pending failed ability-check/attack-roll context for Peerless Skill
-        - pending Relentless Rage trigger context including current DC
-      - once that state exists, the token summary can be specific without MCP fabrication
-    - Important non-goal:
-      - do not expose these actions just because the coarse guard passes
-      - a false-positive suggestion here is worse than an omitted action, because it teaches the wrong ownership model
-    - Verification target for that future batch:
-      - focused core tests proving tokens appear only when the pending trigger exists
-      - MCP tests proving callers send zero-hole resolved tokens and runtime injects only the final boolean
-      - if the new pending-trigger state changes Quint-visible semantics, run the appropriate MBT tier after implementation
-    - Implementation design for the next session:
-      - **Goal**
-        - make these three actions queryable only when the machine actually owns the relevant trigger context
-        - keep the public resolved token zero-hole
-        - keep the final boolean runtime-owned
-      - **State to add**
-        - add a single authoritative pending-resolution object in core state rather than three unrelated booleans
-        - recommended shape:
-          - `pendingResolution:`
-            - `null`
-            - `{ kind: "tacticalMind" }`
-            - `{ kind: "peerlessSkill", mode: "abilityCheck" | "attackRoll" }`
-            - `{ kind: "relentlessRage", dc: number }`
-        - rationale:
-          - only one of these trigger windows should be active at once in the single-creature model
-          - the action query layer only needs to know “what trigger is pending now?”
-          - `Relentless Rage` needs current DC in summary/output, while the other two only need kind/mode
-      - **Where the state should live**
-        - add it to `DndContext` in `packages/core/src/machine-types.ts`
-        - initialize it in machine context construction
-        - mirror it into `creature.qnt` only if the single-creature spec is still used for the affected semantics
-        - if the trigger is battle-owned semantically, prefer keeping the authoritative concept battle-aligned and project the local pending state into the single-creature machine
-      - **What should create the pending state**
-        - do not invent pending state inside MCP
-        - add explicit machine events or transition points that establish it from owned state
-        - recommended first-pass explicit trigger events:
-          - `TRIGGER_TACTICAL_MIND`
-          - `TRIGGER_PEERLESS_SKILL`
-          - `TRIGGER_RELENTLESS_RAGE`
-        - these are not final public available-actions tokens; they are internal/battle/session-level trigger events that tell the machine “a valid trigger window now exists”
-        - `TRIGGER_RELENTLESS_RAGE` should carry the already-owned trigger facts needed to prove eligibility if they are not yet in context
-      - **What should clear the pending state**
-        - clear it immediately after:
-          - successful or failed resolution of the corresponding action
-          - turn boundaries if the trigger window expires there
-          - any competing state transition that makes the trigger stale
-        - there should never be a long-lived stale pending trigger in context
-      - **Available-actions contract once the state exists**
-        - `USE_TACTICAL_MIND` appears only when `pendingResolution.kind === "tacticalMind"` and the existing charge/level guard also passes
-        - `USE_PEERLESS_SKILL` appears only when `pendingResolution.kind === "peerlessSkill"` and the existing charge/level guard also passes
-        - `USE_RELENTLESS_RAGE` appears only when `pendingResolution.kind === "relentlessRage"` and the existing rage/level guard also passes
-        - all 3 remain zero-hole `ResolvedActionToken`s
-        - MCP/runtime supplies only:
-          - `boostedCheckSucceeds`
-          - `success`
-          - `conSaveSucceeded`
-      - **What not to do**
-        - do not expose these actions from the existing coarse guards alone
-        - do not make MCP remember “there was a failed check” or “the barbarian just dropped to 0”
-        - do not encode the runtime boolean into the public resolved token
-        - do not add duplicated pending-trigger fields in both adapter state and machine state
-      - **Recommended implementation order**
-        1. add `pendingResolution` state and initialization
-        2. add internal trigger events plus machine transitions/actions that set and clear it
-        3. add focused unit tests for trigger lifecycle
-        4. wire `USE_TACTICAL_MIND`, `USE_PEERLESS_SKILL`, `USE_RELENTLESS_RAGE` into `available-actions.ts`
-        5. add MCP runtime-input branches for the final booleans
-        6. verify with focused tests, then run MBT only if Quint-visible semantics changed
-      - **File map for the next session**
-        - likely core files:
-          - `packages/core/src/machine-types.ts`
-          - `packages/core/src/machine.ts`
-          - `packages/core/src/machine-states.ts`
-          - `packages/core/src/machine-guards.ts`
-          - `packages/core/src/available-actions.ts`
-          - `packages/core/src/available-actions.test.ts`
-        - likely MCP file:
-          - `packages/mcp/src/server.ts`
-          - `packages/mcp/src/server.test.ts`
-        - likely spec/bridge files if semantics become Quint-visible:
-          - `creature.qnt`
-          - `packages/core/src/creature.mbt.test.ts`
-          - `packages/core/src/mbt-shared.ts`
-      - **Specific caveats discovered already**
-        - `USE_TACTICAL_MIND` currently hardcodes `checkFailed = true` in the guard path, so current legality is too broad
-        - `USE_PEERLESS_SKILL` currently has no owned failed-roll trigger at all
-        - `USE_RELENTLESS_RAGE` currently models only `level >= 11 && raging`; it does not own the “dropped to 0 HP while raging and not dead outright” trigger window
-        - because of that, exposing these now would be architecturally wrong even if MCP could make them “work”
+    - Status: completed in the available-actions/MCP surface.
+    - What is now true:
+      - core owns an authoritative `pendingResolution` state:
+        - `null`
+        - `{ kind: "tacticalMind" }`
+        - `{ kind: "peerlessSkill", mode: "abilityCheck" | "attackRoll" }`
+        - `{ kind: "relentlessRage" }`
+      - `USE_TACTICAL_MIND` appears only when a failed ability-check trigger is pending.
+      - `USE_PEERLESS_SKILL` appears only when a failed ability-check or failed attack-roll trigger is pending.
+      - `USE_RELENTLESS_RAGE` appears only after a real drop-to-zero transition while raging and not dead outright.
+      - all 3 are exposed as zero-hole resolved tokens.
+      - MCP/runtime injects only the final boolean:
+        - `boostedCheckSucceeds`
+        - `success`
+        - `conSaveSucceeded`
+    - Trigger ownership:
+      - Tactical Mind and Peerless Skill use explicit internal trigger events:
+        - `TRIGGER_TACTICAL_MIND`
+        - `TRIGGER_PEERLESS_SKILL_ABILITY_CHECK`
+        - `TRIGGER_PEERLESS_SKILL_ATTACK_ROLL`
+      - Relentless Rage is not triggered by MCP or a fake helper event; the machine establishes it directly on qualifying drop-to-zero transitions.
+      - pending state clears on successful/failed resolution and on the major state resets that would otherwise leave a stale trigger window.
+    - Important caveat:
+      - the current machine/event contract still reduces these rules to a final boolean result, not full roll math or DC accounting
+      - MCP therefore only supplies opaque success/failure booleans, and the current demo runtime samples them randomly
+      - this is acceptable for the current available-actions foundation, but richer battle/session-owned roll semantics should eventually replace the random MCP sampling
+    - Quint/MBT parity notes:
+      - `pendingResolution` now lives in `creature.qnt` `TurnState` as the creature-level projection used by current MBT parity
+      - a small local helper (`withRelentlessRagePending`) was added to keep the new Quint wrapper logic from repeating the same Relentless Rage trigger snippet across multiple damage paths
+      - battle-level semantic ownership is still the long-term authority, but this batch was implemented and validated at the creature parity layer
+    - Verification completed:
+      - focused core tests prove tokens appear only when the pending trigger exists
+      - MCP tests prove callers send zero-hole resolved tokens and runtime injects only the final boolean
+      - creature MBT Tier 1b passed after the bridge/spec update
   - `SHORT_REST` is intentionally separate and should stay out of the first orchestrated parallel batch because it has a compound payload (`conMod`, `hdRolls`) and is a larger design surface than the other remaining items.
 - **Recommended implementation order for the orchestrator**:
   1. integrate the dice-roll family first
@@ -336,7 +255,7 @@ Items discovered during implementation that need resolution before Phase 1 is co
 
 **Wire remaining `execute_action` handlers**:
 - ~~Dice-roll actions: `USE_TIRELESS` (d8Roll), `WHOLENESS_OF_BODY` (healRoll), `UNCANNY_METABOLISM` (healRoll)~~ — completed
-- Battle-context actions: `USE_RELENTLESS_RAGE` (conSaveSucceeded), `USE_TACTICAL_MIND` (boostedCheckSucceeds), `USE_PEERLESS_SKILL` (success) — blocked on pending-result trigger state
+- ~~Battle-context actions: `USE_RELENTLESS_RAGE` (conSaveSucceeded), `USE_TACTICAL_MIND` (boostedCheckSucceeds), `USE_PEERLESS_SKILL` (success)~~ — completed with owned `pendingResolution` state
 - ~~Hole-field pass-throughs: `CONVERT_SLOT_TO_POINTS`, `CONVERT_POINTS_TO_SLOT`, `USE_ARCANE_RECOVERY`, `USE_MYSTIC_ARCANUM`, `USE_FONT_SLOT_RESTORE`, `USE_WILD_RESURGENCE_CHARGE`, `USE_DIVINE_SMITE`, `USE_LAY_ON_HANDS`, `USE_METAMAGIC`~~ — completed
 - Complex payload: `SHORT_REST` (conMod, hdRolls) — deferred, compound payload
 

@@ -78,7 +78,9 @@ export function indomitableUpdate(c: DndContext): Partial<DndContext> {
 export function tacticalMindUpdate(c: DndContext, boostedCheckSucceeds: boolean): Partial<DndContext> {
   const fs = f(c)
   assert(
-    canUseTacticalMind(fs.secondWindCharges, fs.level, true) && !isIncapacitated(c),
+    c.pendingResolution?.kind === "tacticalMind" &&
+      canUseTacticalMind(fs.secondWindCharges, fs.level, true) &&
+      !isIncapacitated(c),
     "guard: canTacticalMind should have prevented this"
   )
   if (!boostedCheckSucceeds) return {}

@@ -121,6 +121,18 @@ function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["co
         values: {},
       }),
     ),
+    // These actions already have an owned pending trigger window in core state.
+    // The current machine/event contract still reduces the underlying reroll/save
+    // math to a final success boolean, so MCP can only supply that boolean here.
+    // For now the demo runtime samples it randomly; richer battle/session-level
+    // roll ownership should replace this once the machine owns more than the
+    // final success/failure outcome.
+    Match.when({ runtime: "tacticalMind" }, () =>
+      Effect.map(Random.nextBoolean, (boostedCheckSucceeds) => ({
+        runtime: "tacticalMind" as const,
+        values: { boostedCheckSucceeds },
+      })),
+    ),
     Match.when({ runtime: "wholenessOfBody" }, () => {
       const monk = context.classStates.monk
       const dieSize = pMartialArtsDie(monk?.level ?? 0)
@@ -148,6 +160,18 @@ function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["co
       Effect.map(Random.nextIntBetween(1, 9), (d8Roll) => ({
         runtime: "tireless" as const,
         values: { d8Roll },
+      })),
+    ),
+    Match.when({ runtime: "peerlessSkill" }, () =>
+      Effect.map(Random.nextBoolean, (success) => ({
+        runtime: "peerlessSkill" as const,
+        values: { success },
+      })),
+    ),
+    Match.when({ runtime: "relentlessRage" }, () =>
+      Effect.map(Random.nextBoolean, (conSaveSucceeded) => ({
+        runtime: "relentlessRage" as const,
+        values: { conSaveSucceeded },
       })),
     ),
     Match.exhaustive,

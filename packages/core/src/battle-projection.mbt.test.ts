@@ -105,6 +105,7 @@ const QuintBattleState = z.object({
 /** Battle comparison excludes class states and turnPhase (not tracked by battle Combatant). */
 const BATTLE_EXCLUDED_KEYS_ARRAY = [
   "turnPhase",
+  "pendingResolution",
   "hitDiceRemaining",
   "secondWindCharges",
   "secondWindMax",

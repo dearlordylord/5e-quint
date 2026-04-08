@@ -117,7 +117,7 @@ export function brutalStrikeUpdate(c: DndContext): Partial<DndContext> {
 export function relentlessRageUpdate(c: DndContext, conSaveSucceeded: boolean): Partial<DndContext> {
   const bs = b(c)
   assert(
-    !isIncapacitated(c) && canUseRelentlessRage(bs.level, bs.raging),
+    c.pendingResolution?.kind === "relentlessRage" && canUseRelentlessRage(bs.level, bs.raging),
     "guard: canRelentlessRage should have prevented this"
   )
   const result = relentlessRageResult(conSaveSucceeded, bs.level)

@@ -254,7 +254,11 @@ export const guards = {
   canTacticalMind: ({ context: c }: GuardArg) => {
     const fs = c.classStates.fighter
     if (!fs) return false
-    return !isIncapacitated(c) && canUseTacticalMind(fs.secondWindCharges, fs.level, true)
+    return (
+      c.pendingResolution?.kind === "tacticalMind" &&
+      !isIncapacitated(c) &&
+      canUseTacticalMind(fs.secondWindCharges, fs.level, true)
+    )
   },
   canScoreCriticalHit: ({ context: c }: GuardArg) => {
     const fLevel = c.classStates.fighter?.level ?? 0
@@ -294,7 +298,7 @@ export const guards = {
   canRelentlessRage: ({ context: c }: GuardArg) => {
     const bs = c.classStates.barbarian
     if (!bs) return false
-    return !isIncapacitated(c) && canUseRelentlessRage(bs.level, bs.raging)
+    return c.pendingResolution?.kind === "relentlessRage" && canUseRelentlessRage(bs.level, bs.raging)
   },
 
   // ── R2.3: Monk guards ──
@@ -428,7 +432,12 @@ export const guards = {
   canPeerlessSkill: ({ context: c }: GuardArg) => {
     const bs = c.classStates.bard
     if (!bs) return false
-    return !isIncapacitated(c) && hasPeerlessSkill(bs.level) && bs.bardicInspirationCharges > 0
+    return (
+      c.pendingResolution?.kind === "peerlessSkill" &&
+      !isIncapacitated(c) &&
+      hasPeerlessSkill(bs.level) &&
+      bs.bardicInspirationCharges > 0
+    )
   },
 
   // Warlock

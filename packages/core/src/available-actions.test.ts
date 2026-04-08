@@ -49,6 +49,13 @@ const FIGHTER_10_INPUT: DndMachineInput = {
   effectiveSpeed: 30,
 }
 
+const FIGHTER_2_INPUT: DndMachineInput = {
+  maxHp: 24,
+  fighterLevel: classLevel(2),
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
 const SORCERER_5_INPUT: DndMachineInput = {
   maxHp: 30,
   sorcererLevel: classLevel(5),
@@ -108,11 +115,26 @@ const BARD_5_INPUT: DndMachineInput = {
   effectiveSpeed: 30,
 }
 
+const BARD_14_INPUT: DndMachineInput = {
+  maxHp: 38,
+  bardLevel: classLevel(14),
+  chaMod: abilityModifier(5),
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
 const DRUID_5_INPUT: DndMachineInput = {
   maxHp: 28,
   druidLevel: classLevel(5),
   slotsMax: [4, 3, 2, 0, 0, 0, 0, 0, 0],
   slotsCurrent: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const BARBARIAN_11_INPUT: DndMachineInput = {
+  maxHp: 40,
+  barbarianLevel: classLevel(11),
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 }
@@ -226,6 +248,43 @@ describe("available actions contract", () => {
     expect(actor.getSnapshot().context.classStates.fighter?.heroicInspiration).toBe(false)
   })
 
+  test("exposes USE_TACTICAL_MIND only while a failed ability check trigger is pending", () => {
+    const actor = makeActorWithInput(FIGHTER_2_INPUT)
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).not.toContain(
+      "USE_TACTICAL_MIND",
+    )
+
+    actor.send({ type: "TRIGGER_TACTICAL_MIND" })
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "USE_TACTICAL_MIND",
+      cost: { charge: "secondWind" },
+      outcome: {
+        summary: "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
+      },
+    })
+
+    const request = expectRequest(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_TACTICAL_MIND" }),
+    )
+    const finalized = finalizeResolution(
+      request,
+      { runtime: "tacticalMind", values: { boostedCheckSucceeds: true } },
+      actor.getSnapshot().context,
+    )
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "USE_TACTICAL_MIND", boostedCheckSucceeds: true },
+      outcome: "Tactical Mind turned the failed ability check into a success",
+    })
+    if (!finalized.ok) throw new Error("expected USE_TACTICAL_MIND finalization to succeed")
+    actor.send(finalized.event)
+
+    expect(actor.getSnapshot().context.classStates.fighter?.secondWindCharges).toBe(1)
+    expect(actor.getSnapshot().context.pendingResolution).toBeNull()
+  })
+
   test("exposes USE_METAMAGIC with only currently legal known options and executes the resolved token", () => {
     const actor = makeActorWithInput(SORCERER_5_INPUT)
     actor.send({ type: "ENTER_COMBAT" })
@@ -262,6 +321,81 @@ describe("available actions contract", () => {
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).not.toContain(
       "USE_METAMAGIC",
     )
+  })
+
+  test("exposes USE_PEERLESS_SKILL only while a failed roll trigger is pending", () => {
+    const actor = makeActorWithInput(BARD_14_INPUT)
+    actor.send({ type: "TRIGGER_PEERLESS_SKILL_ATTACK_ROLL" })
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "USE_PEERLESS_SKILL",
+      cost: { charge: "bardicInspiration" },
+      outcome: {
+        summary: "Add your Bardic Inspiration die to the failed attack roll; expend it only if the roll now succeeds",
+      },
+    })
+
+    const request = expectRequest(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_PEERLESS_SKILL" }),
+    )
+    const finalized = finalizeResolution(
+      request,
+      { runtime: "peerlessSkill", values: { success: false } },
+      actor.getSnapshot().context,
+    )
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "USE_PEERLESS_SKILL", success: false },
+      outcome: "Peerless Skill failed to turn the attack roll into a success, so Bardic Inspiration was not expended",
+    })
+    if (!finalized.ok) throw new Error("expected USE_PEERLESS_SKILL finalization to succeed")
+    actor.send(finalized.event)
+
+    expect(actor.getSnapshot().context.classStates.bard?.bardicInspirationCharges).toBe(5)
+    expect(actor.getSnapshot().context.pendingResolution).toBeNull()
+  })
+
+  test("exposes USE_RELENTLESS_RAGE only after the machine owns the drop-to-zero trigger", () => {
+    const actor = makeActorWithInput(BARBARIAN_11_INPUT)
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+    actor.send({ type: "ENTER_RAGE" })
+    actor.send({
+      type: "TAKE_DAMAGE",
+      amount: 40,
+      damageType: "slashing",
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false,
+    })
+
+    expect(actor.getSnapshot().context.pendingResolution).toEqual({ kind: "relentlessRage" })
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "USE_RELENTLESS_RAGE",
+      cost: {},
+      outcome: { summary: "Make a DC 10 Constitution save to stay at 22 HP instead of dropping to 0" },
+    })
+
+    const request = expectRequest(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_RELENTLESS_RAGE" }),
+    )
+    const finalized = finalizeResolution(
+      request,
+      { runtime: "relentlessRage", values: { conSaveSucceeded: true } },
+      actor.getSnapshot().context,
+    )
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "USE_RELENTLESS_RAGE", conSaveSucceeded: true },
+      outcome: "Relentless Rage succeeded; HP becomes 22",
+    })
+    if (!finalized.ok) throw new Error("expected USE_RELENTLESS_RAGE finalization to succeed")
+    actor.send(finalized.event)
+
+    expect(actor.getSnapshot().context.hp).toBe(22)
+    expect(actor.getSnapshot().context.classStates.barbarian?.relentlessRageTimesUsed).toBe(1)
+    expect(actor.getSnapshot().context.pendingResolution).toBeNull()
   })
 
   test("exposes and executes the dice-roll family through runtime inputs", () => {

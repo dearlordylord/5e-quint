@@ -3,6 +3,7 @@ import { Match, Schema } from "effect"
 import {
   MetamagicOptionSchema,
 } from "#/features/class-sorcerer.ts"
+import { relentlessRageDC } from "#/features/class-barbarian.ts"
 import { pMartialArtsDie } from "#/features/class-monk.ts"
 import { tirelessTempHp } from "#/features/class-ranger.ts"
 import { slotCreationCost, type MetamagicOption } from "#/features/class-sorcerer.ts"
@@ -40,7 +41,6 @@ export type MaybeHole<T> = T | Hole<T>
 export type FillHoles<T> = {
   readonly [K in keyof T]: T[K] extends Hole<infer V> ? V : T[K]
 }
-type HoleKeys<T> = { [K in keyof T]: T[K] extends Hole<unknown> ? K : never }[keyof T]
 
 const DUMMY_EVENT: DndEvent = { type: "STABILIZE" }
 const guardArgs = (context: DndContext): { context: DndContext; event: DndEvent } => ({
@@ -52,6 +52,7 @@ export const SUPPORTED_ACTION_TYPES = [
   "ENTER_COMBAT",
   "USE_HEROIC_INSPIRATION",
   "START_TURN",
+  "USE_TACTICAL_MIND",
   "CONVERT_SLOT_TO_POINTS",
   "CONVERT_POINTS_TO_SLOT",
   "USE_LAY_ON_HANDS",
@@ -65,6 +66,8 @@ export const SUPPORTED_ACTION_TYPES = [
   "USE_TIRELESS",
   "USE_FONT_SLOT_RESTORE",
   "USE_WILD_RESURGENCE_CHARGE",
+  "USE_PEERLESS_SKILL",
+  "USE_RELENTLESS_RAGE",
   "EXIT_COMBAT",
 ] as const
 export type SupportedActionType = (typeof SUPPORTED_ACTION_TYPES)[number]
@@ -79,6 +82,7 @@ type TokenByType = {
   readonly ENTER_COMBAT: SimpleToken<"ENTER_COMBAT">
   readonly USE_HEROIC_INSPIRATION: SimpleToken<"USE_HEROIC_INSPIRATION">
   readonly START_TURN: SimpleToken<"START_TURN">
+  readonly USE_TACTICAL_MIND: SimpleToken<"USE_TACTICAL_MIND">
   readonly CONVERT_SLOT_TO_POINTS: SimpleToken<"CONVERT_SLOT_TO_POINTS"> & {
     readonly slotLevel: Hole<SpellSlotLevelValue>
   }
@@ -110,12 +114,33 @@ type TokenByType = {
   readonly USE_WILD_RESURGENCE_CHARGE: SimpleToken<"USE_WILD_RESURGENCE_CHARGE"> & {
     readonly slotLevel: Hole<SpellSlotLevelValue>
   }
+  readonly USE_PEERLESS_SKILL: SimpleToken<"USE_PEERLESS_SKILL">
+  readonly USE_RELENTLESS_RAGE: SimpleToken<"USE_RELENTLESS_RAGE">
   readonly EXIT_COMBAT: SimpleToken<"EXIT_COMBAT">
 }
 
 export type ActionToken = TokenByType[SupportedActionType]
 type ResolvedTokenByType = {
-  readonly [K in SupportedActionType]: Pick<FillHoles<TokenByType[K]>, "type" | HoleKeys<TokenByType[K]>>
+  readonly ENTER_COMBAT: { readonly type: "ENTER_COMBAT" }
+  readonly USE_HEROIC_INSPIRATION: { readonly type: "USE_HEROIC_INSPIRATION" }
+  readonly START_TURN: { readonly type: "START_TURN" }
+  readonly USE_TACTICAL_MIND: { readonly type: "USE_TACTICAL_MIND" }
+  readonly CONVERT_SLOT_TO_POINTS: { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: SpellSlotLevelValue }
+  readonly CONVERT_POINTS_TO_SLOT: { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: SpellSlotLevelValue }
+  readonly USE_LAY_ON_HANDS: { readonly type: "USE_LAY_ON_HANDS"; readonly amount: number }
+  readonly USE_DIVINE_SMITE: { readonly type: "USE_DIVINE_SMITE"; readonly slotLevel: SpellSlotLevelValue }
+  readonly WHOLENESS_OF_BODY: { readonly type: "WHOLENESS_OF_BODY" }
+  readonly UNCANNY_METABOLISM: { readonly type: "UNCANNY_METABOLISM" }
+  readonly USE_ARCANE_RECOVERY: { readonly type: "USE_ARCANE_RECOVERY"; readonly slotLevel: SpellSlotLevelValue }
+  readonly USE_METAMAGIC: { readonly type: "USE_METAMAGIC"; readonly option: MetamagicOption }
+  readonly USE_MYSTIC_ARCANUM: { readonly type: "USE_MYSTIC_ARCANUM"; readonly spellLevel: SpellSlotLevelValue }
+  readonly USE_SECOND_WIND: { readonly type: "USE_SECOND_WIND" }
+  readonly USE_TIRELESS: { readonly type: "USE_TIRELESS" }
+  readonly USE_FONT_SLOT_RESTORE: { readonly type: "USE_FONT_SLOT_RESTORE"; readonly slotLevel: SpellSlotLevelValue }
+  readonly USE_WILD_RESURGENCE_CHARGE: { readonly type: "USE_WILD_RESURGENCE_CHARGE"; readonly slotLevel: SpellSlotLevelValue }
+  readonly USE_PEERLESS_SKILL: { readonly type: "USE_PEERLESS_SKILL" }
+  readonly USE_RELENTLESS_RAGE: { readonly type: "USE_RELENTLESS_RAGE" }
+  readonly EXIT_COMBAT: { readonly type: "EXIT_COMBAT" }
 }
 export type ResolvedActionToken = ResolvedTokenByType[SupportedActionType]
 
@@ -127,6 +152,9 @@ const UseHeroicInspirationResolvedActionSchema = Schema.Struct({
 })
 const StartTurnResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("START_TURN"),
+})
+const UseTacticalMindResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_TACTICAL_MIND"),
 })
 const ConvertSlotToPointsResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("CONVERT_SLOT_TO_POINTS"),
@@ -176,14 +204,47 @@ const UseWildResurgenceChargeResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_WILD_RESURGENCE_CHARGE"),
   slotLevel: SpellSlotLevel,
 })
+const UsePeerlessSkillResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_PEERLESS_SKILL"),
+})
+const UseRelentlessRageResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_RELENTLESS_RAGE"),
+})
 const ExitCombatResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("EXIT_COMBAT"),
 })
+
+const PrimaryResolvedActionTokenSchema = Schema.Union(
+  EnterCombatResolvedActionSchema,
+  UseHeroicInspirationResolvedActionSchema,
+  StartTurnResolvedActionSchema,
+  UseTacticalMindResolvedActionSchema,
+  ConvertSlotToPointsResolvedActionSchema,
+  ConvertPointsToSlotResolvedActionSchema,
+  UseLayOnHandsResolvedActionSchema,
+  UseDivineSmiteResolvedActionSchema,
+  WholenessOfBodyResolvedActionSchema,
+  UncannyMetabolismResolvedActionSchema,
+)
+
+const SecondaryResolvedActionTokenSchema = Schema.Union(
+  UseArcaneRecoveryResolvedActionSchema,
+  UseMetamagicResolvedActionSchema,
+  UseMysticArcanumResolvedActionSchema,
+  UseSecondWindResolvedActionSchema,
+  UseTirelessResolvedActionSchema,
+  UseFontSlotRestoreResolvedActionSchema,
+  UseWildResurgenceChargeResolvedActionSchema,
+  UsePeerlessSkillResolvedActionSchema,
+  UseRelentlessRageResolvedActionSchema,
+  ExitCombatResolvedActionSchema,
+)
 
 export const RESOLVED_ACTION_SCHEMAS = [
   EnterCombatResolvedActionSchema,
   UseHeroicInspirationResolvedActionSchema,
   StartTurnResolvedActionSchema,
+  UseTacticalMindResolvedActionSchema,
   ConvertSlotToPointsResolvedActionSchema,
   ConvertPointsToSlotResolvedActionSchema,
   UseLayOnHandsResolvedActionSchema,
@@ -197,9 +258,11 @@ export const RESOLVED_ACTION_SCHEMAS = [
   UseTirelessResolvedActionSchema,
   UseFontSlotRestoreResolvedActionSchema,
   UseWildResurgenceChargeResolvedActionSchema,
+  UsePeerlessSkillResolvedActionSchema,
+  UseRelentlessRageResolvedActionSchema,
   ExitCombatResolvedActionSchema,
 ] as const
-export const ResolvedActionTokenSchema = Schema.Union(...RESOLVED_ACTION_SCHEMAS)
+export const ResolvedActionTokenSchema = Schema.Union(PrimaryResolvedActionTokenSchema, SecondaryResolvedActionTokenSchema)
 
 export type StartTurnRuntimeInputs = {
   readonly extraAttacks?: number
@@ -213,6 +276,10 @@ export type UseSecondWindRuntimeInputs = {
   readonly d10Roll: number
 }
 
+export type UseTacticalMindRuntimeInputs = {
+  readonly boostedCheckSucceeds: boolean
+}
+
 export type WholenessOfBodyRuntimeInputs = {
   readonly healRoll: number
 }
@@ -223,6 +290,14 @@ export type UncannyMetabolismRuntimeInputs = {
 
 export type UseTirelessRuntimeInputs = {
   readonly d8Roll: number
+}
+
+export type UsePeerlessSkillRuntimeInputs = {
+  readonly success: boolean
+}
+
+export type UseRelentlessRageRuntimeInputs = {
+  readonly conSaveSucceeded: boolean
 }
 
 export type ResolutionRequest =
@@ -242,6 +317,11 @@ export type ResolutionRequest =
       readonly token: Extract<ResolvedActionToken, { readonly type: "START_TURN" }>
       readonly outcome: string
       readonly runtime: "startTurn"
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_TACTICAL_MIND" }>
+      readonly outcome: string
+      readonly runtime: "tacticalMind"
     }
   | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "CONVERT_SLOT_TO_POINTS" }>
@@ -318,6 +398,16 @@ export type ResolutionRequest =
       readonly event: Extract<DndEvent, { readonly type: "USE_WILD_RESURGENCE_CHARGE" }>
     }
   | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_PEERLESS_SKILL" }>
+      readonly outcome: string
+      readonly runtime: "peerlessSkill"
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_RELENTLESS_RAGE" }>
+      readonly outcome: string
+      readonly runtime: "relentlessRage"
+    }
+  | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "EXIT_COMBAT" }>
       readonly outcome: string
       readonly runtime: "none"
@@ -327,10 +417,13 @@ export type ResolutionRequest =
 export type ResolutionRuntimeInputs =
   | { readonly runtime: "none" }
   | { readonly runtime: "startTurn"; readonly values: StartTurnRuntimeInputs }
+  | { readonly runtime: "tacticalMind"; readonly values: UseTacticalMindRuntimeInputs }
   | { readonly runtime: "wholenessOfBody"; readonly values: WholenessOfBodyRuntimeInputs }
   | { readonly runtime: "uncannyMetabolism"; readonly values: UncannyMetabolismRuntimeInputs }
   | { readonly runtime: "secondWind"; readonly values: UseSecondWindRuntimeInputs }
   | { readonly runtime: "tireless"; readonly values: UseTirelessRuntimeInputs }
+  | { readonly runtime: "peerlessSkill"; readonly values: UsePeerlessSkillRuntimeInputs }
+  | { readonly runtime: "relentlessRage"; readonly values: UseRelentlessRageRuntimeInputs }
 
 export type FinalizedAction =
   | { readonly ok: true; readonly event: DndEvent; readonly outcome: string }
@@ -379,6 +472,18 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
             type: "START_TURN",
             cost: {},
             outcome: { summary: "Start your turn (reset action economy, process start-of-turn effects)" },
+          }
+        : null,
+  },
+  USE_TACTICAL_MIND: {
+    buildToken: (context) =>
+      guards.canTacticalMind(guardArgs(context))
+        ? {
+            type: "USE_TACTICAL_MIND",
+            cost: { charge: "secondWind" },
+            outcome: {
+              summary: "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
+            },
           }
         : null,
   },
@@ -544,6 +649,37 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       }
     },
   },
+  USE_PEERLESS_SKILL: {
+    buildToken: (context) => {
+      if (!guards.canPeerlessSkill(guardArgs(context))) return null
+      const mode = context.pendingResolution?.kind === "peerlessSkill" ? context.pendingResolution.mode : "abilityCheck"
+      return {
+        type: "USE_PEERLESS_SKILL",
+        cost: { charge: "bardicInspiration" },
+        outcome: {
+          summary:
+            mode === "attackRoll"
+              ? "Add your Bardic Inspiration die to the failed attack roll; expend it only if the roll now succeeds"
+              : "Add your Bardic Inspiration die to the failed ability check; expend it only if the check now succeeds",
+        },
+      }
+    },
+  },
+  USE_RELENTLESS_RAGE: {
+    buildToken: (context) => {
+      if (!guards.canRelentlessRage(guardArgs(context))) return null
+      const barbarian = context.classStates.barbarian
+      if (!barbarian) return null
+      const dc = relentlessRageDC(barbarian.relentlessRageTimesUsed)
+      return {
+        type: "USE_RELENTLESS_RAGE",
+        cost: {},
+        outcome: {
+          summary: `Make a DC ${dc} Constitution save to stay at ${2 * barbarian.level} HP instead of dropping to 0`,
+        },
+      }
+    },
+  },
   EXIT_COMBAT: {
     buildToken: (context) =>
       context.inCombat
@@ -610,179 +746,149 @@ export function resolveAction(
     }
   }
 
-  return Match.value(token).pipe(
-    Match.when({ type: "ENTER_COMBAT" }, (resolved) => ({
-      token: resolved,
-      outcome: available.outcome.summary,
-      runtime: "none" as const,
-      event: { type: "ENTER_COMBAT" as const },
-    })),
-    Match.when({ type: "USE_HEROIC_INSPIRATION" }, (resolved) => ({
-      token: resolved,
-      outcome: available.outcome.summary,
-      runtime: "none" as const,
-      event: { type: "USE_HEROIC_INSPIRATION" as const },
-    })),
-    Match.when({ type: "START_TURN" }, (resolved) => ({
-      token: resolved,
-      outcome: available.outcome.summary,
-      runtime: "startTurn" as const,
-    })),
-    Match.when({ type: "CONVERT_SLOT_TO_POINTS" }, (resolved) => {
-      if (!legalConvertSlotToPointsLevels(context).includes(resolved.slotLevel)) {
+  switch (token.type) {
+    case "ENTER_COMBAT":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "ENTER_COMBAT" } }
+    case "USE_HEROIC_INSPIRATION":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_HEROIC_INSPIRATION" } }
+    case "START_TURN":
+      return { token, outcome: available.outcome.summary, runtime: "startTurn" }
+    case "USE_TACTICAL_MIND":
+      return { token, outcome: available.outcome.summary, runtime: "tacticalMind" }
+    case "CONVERT_SLOT_TO_POINTS":
+      if (!legalConvertSlotToPointsLevels(context).includes(token.slotLevel)) {
         return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `Level ${resolved.slotLevel} slot conversion is not currently available in this state.`,
+          code: "ACTION_NOT_AVAILABLE",
+          message: `Level ${token.slotLevel} slot conversion is not currently available in this state.`,
         }
       }
       return {
-        token: resolved,
-        outcome: `Expend a level ${resolved.slotLevel} spell slot to gain ${resolved.slotLevel} sorcery points`,
-        runtime: "none" as const,
-        event: { type: "CONVERT_SLOT_TO_POINTS" as const, slotLevel: resolved.slotLevel },
+        token,
+        outcome: `Expend a level ${token.slotLevel} spell slot to gain ${token.slotLevel} sorcery points`,
+        runtime: "none",
+        event: { type: "CONVERT_SLOT_TO_POINTS", slotLevel: token.slotLevel },
       }
-    }),
-    Match.when({ type: "CONVERT_POINTS_TO_SLOT" }, (resolved) => {
-      if (!legalConvertPointsToSlotLevels(context).includes(resolved.slotLevel)) {
+    case "CONVERT_POINTS_TO_SLOT":
+      if (!legalConvertPointsToSlotLevels(context).includes(token.slotLevel)) {
         return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `Creating a level ${resolved.slotLevel} slot is not currently available in this state.`,
+          code: "ACTION_NOT_AVAILABLE",
+          message: `Creating a level ${token.slotLevel} slot is not currently available in this state.`,
         }
       }
       return {
-        token: resolved,
-        outcome: `Spend ${slotCreationCost(resolved.slotLevel)} sorcery points to create a level ${resolved.slotLevel} spell slot`,
-        runtime: "none" as const,
-        event: { type: "CONVERT_POINTS_TO_SLOT" as const, slotLevel: resolved.slotLevel },
+        token,
+        outcome: `Spend ${slotCreationCost(token.slotLevel)} sorcery points to create a level ${token.slotLevel} spell slot`,
+        runtime: "none",
+        event: { type: "CONVERT_POINTS_TO_SLOT", slotLevel: token.slotLevel },
       }
-    }),
-    Match.when({ type: "USE_LAY_ON_HANDS" }, (resolved) => {
-      if (!legalLayOnHandsAmounts(context).includes(resolved.amount)) {
+    case "USE_LAY_ON_HANDS":
+      if (!legalLayOnHandsAmounts(context).includes(token.amount)) {
         return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `Spending ${resolved.amount} Lay on Hands points is not currently available in this state.`,
+          code: "ACTION_NOT_AVAILABLE",
+          message: `Spending ${token.amount} Lay on Hands points is not currently available in this state.`,
         }
       }
       return {
-        token: resolved,
-        outcome: `Spend ${resolved.amount} Lay on Hands point${resolved.amount === 1 ? "" : "s"} to restore up to ${resolved.amount} HP`,
-        runtime: "none" as const,
-        event: { type: "USE_LAY_ON_HANDS" as const, amount: resolved.amount },
+        token,
+        outcome: `Spend ${token.amount} Lay on Hands point${token.amount === 1 ? "" : "s"} to restore up to ${token.amount} HP`,
+        runtime: "none",
+        event: { type: "USE_LAY_ON_HANDS", amount: token.amount },
       }
-    }),
-    Match.when({ type: "USE_DIVINE_SMITE" }, (resolved) => {
-      if (!legalDivineSmiteLevels(context).includes(resolved.slotLevel)) {
+    case "USE_DIVINE_SMITE":
+      if (!legalDivineSmiteLevels(context).includes(token.slotLevel)) {
         return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `Divine Smite with a level ${resolved.slotLevel} slot is not currently available in this state.`,
+          code: "ACTION_NOT_AVAILABLE",
+          message: `Divine Smite with a level ${token.slotLevel} slot is not currently available in this state.`,
         }
       }
       return {
-        token: resolved,
-        outcome: `Expend a level ${resolved.slotLevel} spell slot to use Divine Smite`,
-        runtime: "none" as const,
-        event: { type: "USE_DIVINE_SMITE" as const, slotLevel: resolved.slotLevel },
+        token,
+        outcome: `Expend a level ${token.slotLevel} spell slot to use Divine Smite`,
+        runtime: "none",
+        event: { type: "USE_DIVINE_SMITE", slotLevel: token.slotLevel },
       }
-    }),
-    Match.when({ type: "WHOLENESS_OF_BODY" }, (resolved) => ({
-      token: resolved,
-      outcome: available.outcome.summary,
-      runtime: "wholenessOfBody" as const,
-    })),
-    Match.when({ type: "UNCANNY_METABOLISM" }, (resolved) => ({
-      token: resolved,
-      outcome: available.outcome.summary,
-      runtime: "uncannyMetabolism" as const,
-    })),
-    Match.when({ type: "USE_ARCANE_RECOVERY" }, (resolved) => {
-      if (!legalArcaneRecoveryLevels(context).includes(resolved.slotLevel)) {
+    case "WHOLENESS_OF_BODY":
+      return { token, outcome: available.outcome.summary, runtime: "wholenessOfBody" }
+    case "UNCANNY_METABOLISM":
+      return { token, outcome: available.outcome.summary, runtime: "uncannyMetabolism" }
+    case "USE_ARCANE_RECOVERY":
+      if (!legalArcaneRecoveryLevels(context).includes(token.slotLevel)) {
         return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `Arcane Recovery for a level ${resolved.slotLevel} slot is not currently available in this state.`,
+          code: "ACTION_NOT_AVAILABLE",
+          message: `Arcane Recovery for a level ${token.slotLevel} slot is not currently available in this state.`,
         }
       }
       return {
-        token: resolved,
-        outcome: `Recover one expended level ${resolved.slotLevel} spell slot`,
-        runtime: "none" as const,
-        event: { type: "USE_ARCANE_RECOVERY" as const, slotLevel: resolved.slotLevel },
+        token,
+        outcome: `Recover one expended level ${token.slotLevel} spell slot`,
+        runtime: "none",
+        event: { type: "USE_ARCANE_RECOVERY", slotLevel: token.slotLevel },
       }
-    }),
-    Match.when({ type: "USE_METAMAGIC" }, (resolved) => {
+    case "USE_METAMAGIC": {
       const legalOptions = legalMetamagicOptions(context)
-      if (!legalOptions.includes(resolved.option)) {
+      if (!legalOptions.includes(token.option)) {
         return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `${resolved.option} Metamagic is not currently available in this state.`,
+          code: "ACTION_NOT_AVAILABLE",
+          message: `${token.option} Metamagic is not currently available in this state.`,
         }
       }
       return {
-        token: resolved,
-        outcome: `Apply ${resolved.option} Metamagic`,
-        runtime: "none" as const,
-        event: { type: "USE_METAMAGIC" as const, option: resolved.option },
+        token,
+        outcome: `Apply ${token.option} Metamagic`,
+        runtime: "none",
+        event: { type: "USE_METAMAGIC", option: token.option },
       }
-    }),
-    Match.when({ type: "USE_MYSTIC_ARCANUM" }, (resolved) => {
-      if (!legalMysticArcanumLevels(context).includes(resolved.spellLevel)) {
+    }
+    case "USE_MYSTIC_ARCANUM":
+      if (!legalMysticArcanumLevels(context).includes(token.spellLevel)) {
         return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `Mystic Arcanum level ${resolved.spellLevel} is not currently available in this state.`,
+          code: "ACTION_NOT_AVAILABLE",
+          message: `Mystic Arcanum level ${token.spellLevel} is not currently available in this state.`,
         }
       }
       return {
-        token: resolved,
-        outcome: `Cast your Mystic Arcanum spell of level ${resolved.spellLevel}`,
-        runtime: "none" as const,
-        event: { type: "USE_MYSTIC_ARCANUM" as const, spellLevel: resolved.spellLevel },
+        token,
+        outcome: `Cast your Mystic Arcanum spell of level ${token.spellLevel}`,
+        runtime: "none",
+        event: { type: "USE_MYSTIC_ARCANUM", spellLevel: token.spellLevel },
       }
-    }),
-    Match.when({ type: "USE_SECOND_WIND" }, (resolved) => ({
-      token: resolved,
-      outcome: available.outcome.summary,
-      runtime: "secondWind" as const,
-    })),
-    Match.when({ type: "USE_TIRELESS" }, (resolved) => ({
-      token: resolved,
-      outcome: available.outcome.summary,
-      runtime: "tireless" as const,
-    })),
-    Match.when({ type: "USE_FONT_SLOT_RESTORE" }, (resolved) => {
-      if (!legalFontSlotRestoreLevels(context).includes(resolved.slotLevel)) {
+    case "USE_SECOND_WIND":
+      return { token, outcome: available.outcome.summary, runtime: "secondWind" }
+    case "USE_TIRELESS":
+      return { token, outcome: available.outcome.summary, runtime: "tireless" }
+    case "USE_FONT_SLOT_RESTORE":
+      if (!legalFontSlotRestoreLevels(context).includes(token.slotLevel)) {
         return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `Font of Inspiration restore with a level ${resolved.slotLevel} slot is not currently available in this state.`,
+          code: "ACTION_NOT_AVAILABLE",
+          message: `Font of Inspiration restore with a level ${token.slotLevel} slot is not currently available in this state.`,
         }
       }
       return {
-        token: resolved,
-        outcome: `Expend a level ${resolved.slotLevel} spell slot to regain one Bardic Inspiration use`,
-        runtime: "none" as const,
-        event: { type: "USE_FONT_SLOT_RESTORE" as const, slotLevel: resolved.slotLevel },
+        token,
+        outcome: `Expend a level ${token.slotLevel} spell slot to regain one Bardic Inspiration use`,
+        runtime: "none",
+        event: { type: "USE_FONT_SLOT_RESTORE", slotLevel: token.slotLevel },
       }
-    }),
-    Match.when({ type: "USE_WILD_RESURGENCE_CHARGE" }, (resolved) => {
-      if (!legalWildResurgenceChargeLevels(context).includes(resolved.slotLevel)) {
+    case "USE_WILD_RESURGENCE_CHARGE":
+      if (!legalWildResurgenceChargeLevels(context).includes(token.slotLevel)) {
         return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `Wild Resurgence with a level ${resolved.slotLevel} slot is not currently available in this state.`,
+          code: "ACTION_NOT_AVAILABLE",
+          message: `Wild Resurgence with a level ${token.slotLevel} slot is not currently available in this state.`,
         }
       }
       return {
-        token: resolved,
-        outcome: `Expend a level ${resolved.slotLevel} spell slot to regain one Wild Shape use`,
-        runtime: "none" as const,
-        event: { type: "USE_WILD_RESURGENCE_CHARGE" as const, slotLevel: resolved.slotLevel },
+        token,
+        outcome: `Expend a level ${token.slotLevel} spell slot to regain one Wild Shape use`,
+        runtime: "none",
+        event: { type: "USE_WILD_RESURGENCE_CHARGE", slotLevel: token.slotLevel },
       }
-    }),
-    Match.when({ type: "EXIT_COMBAT" }, (resolved) => ({
-      token: resolved,
-      outcome: available.outcome.summary,
-      runtime: "none" as const,
-      event: { type: "EXIT_COMBAT" as const },
-    })),
-    Match.exhaustive,
-  )
+    case "USE_PEERLESS_SKILL":
+      return { token, outcome: available.outcome.summary, runtime: "peerlessSkill" }
+    case "USE_RELENTLESS_RAGE":
+      return { token, outcome: available.outcome.summary, runtime: "relentlessRage" }
+    case "EXIT_COMBAT":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "EXIT_COMBAT" } }
+  }
 }
 
 export function finalizeResolution(
@@ -805,6 +911,19 @@ export function finalizeResolution(
           type: "START_TURN" as const,
         },
         outcome: resolved.outcome,
+      }
+    }),
+    Match.when({ runtime: "tacticalMind" }, (): FinalizedAction => {
+      if (runtimeInputs.runtime !== "tacticalMind") return runtimeMismatch("tacticalMind", runtimeInputs.runtime)
+      return {
+        ok: true as const,
+        event: {
+          type: "USE_TACTICAL_MIND" as const,
+          boostedCheckSucceeds: runtimeInputs.values.boostedCheckSucceeds,
+        },
+        outcome: runtimeInputs.values.boostedCheckSucceeds
+          ? "Tactical Mind turned the failed ability check into a success"
+          : "Tactical Mind failed to turn the ability check into a success, so Second Wind was not expended",
       }
     }),
     Match.when({ runtime: "wholenessOfBody" }, (): FinalizedAction => {
@@ -899,6 +1018,34 @@ export function finalizeResolution(
           d8Roll: runtimeInputs.values.d8Roll,
         },
         outcome: `Gained 1d8(${runtimeInputs.values.d8Roll}) + ${Math.max(1, wisComponent)} = ${tempHp} temporary HP`,
+      }
+    }),
+    Match.when({ runtime: "peerlessSkill" }, (): FinalizedAction => {
+      if (runtimeInputs.runtime !== "peerlessSkill") return runtimeMismatch("peerlessSkill", runtimeInputs.runtime)
+      const mode = context.pendingResolution?.kind === "peerlessSkill" ? context.pendingResolution.mode : "abilityCheck"
+      return {
+        ok: true as const,
+        event: {
+          type: "USE_PEERLESS_SKILL" as const,
+          success: runtimeInputs.values.success,
+        },
+        outcome: runtimeInputs.values.success
+          ? `Peerless Skill turned the failed ${mode === "attackRoll" ? "attack roll" : "ability check"} into a success`
+          : `Peerless Skill failed to turn the ${mode === "attackRoll" ? "attack roll" : "ability check"} into a success, so Bardic Inspiration was not expended`,
+      }
+    }),
+    Match.when({ runtime: "relentlessRage" }, (): FinalizedAction => {
+      if (runtimeInputs.runtime !== "relentlessRage") return runtimeMismatch("relentlessRage", runtimeInputs.runtime)
+      const barbarianLevel = context.classStates.barbarian?.level ?? 0
+      return {
+        ok: true as const,
+        event: {
+          type: "USE_RELENTLESS_RAGE" as const,
+          conSaveSucceeded: runtimeInputs.values.conSaveSucceeded,
+        },
+        outcome: runtimeInputs.values.conSaveSucceeded
+          ? `Relentless Rage succeeded; HP becomes ${2 * barbarianLevel}`
+          : "Relentless Rage failed; HP remains 0",
       }
     }),
     Match.exhaustive,

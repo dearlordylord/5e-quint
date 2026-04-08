@@ -118,11 +118,16 @@ export const creatureMachine = setup({
         ? { unconscious: false, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "unconscious") }
         : {}
     ),
-    enterCombat: assign({ inCombat: true }),
-    exitCombat: assign({ inCombat: false }),
+    enterCombat: assign({ inCombat: true, pendingResolution: null }),
+    exitCombat: assign({ inCombat: false, pendingResolution: null }),
+    clearPendingResolution: assign({ pendingResolution: null }),
+    triggerTacticalMind: assign({ pendingResolution: { kind: "tacticalMind" } }),
+    triggerPeerlessSkillAbilityCheck: assign({ pendingResolution: { kind: "peerlessSkill", mode: "abilityCheck" } }),
+    triggerPeerlessSkillAttackRoll: assign({ pendingResolution: { kind: "peerlessSkill", mode: "attackRoll" } }),
     applyDamage: assign(({ context: c, event: e }) => ({
       hp: hp(dmgR(c, e).newHp),
-      tempHp: tempHp(dmgR(c, e).newTempHp)
+      tempHp: tempHp(dmgR(c, e).newTempHp),
+      pendingResolution: null
     })),
     absorbTempHpOnly: assign(({ context: c, event: e }) => ({ tempHp: tempHp(dmgR(c, e).newTempHp) })),
     applyDamageAtZeroHp: assign(({ context: c, event: e }) => {
@@ -130,7 +135,8 @@ export const creatureMachine = setup({
       return {
         deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(newFailures) },
         tempHp: tempHp(dmgR(c, e).newTempHp),
-        stable: false
+        stable: false,
+        pendingResolution: null
       }
     }),
     applyDeathSave: assign(({ context: c, event: e }) => {
@@ -140,11 +146,13 @@ export const creatureMachine = setup({
       return { deathSaves: { successes: deathSaveCount(r.newSuccesses), failures: deathSaveCount(r.newFailures) } }
     }),
     applyHeal: assign(({ context: c, event: e }) => ({
-      hp: hp(Math.min(c.hp + asHeal(e).amount, effectiveMaxHp(c.maxHp)))
+      hp: hp(Math.min(c.hp + asHeal(e).amount, effectiveMaxHp(c.maxHp))),
+      pendingResolution: null
     })),
     applyHealFromZero: assign(({ context: c, event: e }) => ({
       deathSaves: DEATH_SAVES_RESET,
-      hp: hp(Math.min(asHeal(e).amount, effectiveMaxHp(c.maxHp)))
+      hp: hp(Math.min(asHeal(e).amount, effectiveMaxHp(c.maxHp))),
+      pendingResolution: null
     })),
     applyTempHp: assign(({ event: e }) => (asGrantTempHp(e).keepOld ? {} : { tempHp: asGrantTempHp(e).amount })),
     applyKnockOut: assign(({ context: c }) => ({
@@ -190,7 +198,7 @@ export const creatureMachine = setup({
     reduceExhaustion: assign(({ context: c, event: e }) => ({
       exhaustion: exhaustionLevel(Math.max(0, c.exhaustion - asExhaustion(e).levels))
     })),
-    initTurn: assign(({ context: c, event: e }) => computeInitTurn(c, e)),
+    initTurn: assign(({ context: c, event: e }) => ({ ...computeInitTurn(c, e), pendingResolution: null })),
     useAction: assign(({ context: c, event: e }) => {
       const ev = asUseAction(e)
       // SRD 5.2.1: Action Surge "except the Magic action." XState can't prevent events
@@ -241,6 +249,7 @@ export const creatureMachine = setup({
       return {
         ...conds,
         ...rest,
+        pendingResolution: null,
         ...(lr.lrUsed ? { legendaryResistancesRemaining: resourceCount(c.legendaryResistancesRemaining - 1) } : {})
       }
     }),
@@ -324,19 +333,32 @@ export const creatureMachine = setup({
         hitDiceRemaining: r.newHitDice,
         hp: hp(r.newHp),
         pactSlotsCurrent: r.newPactSlots,
+        pendingResolution: null,
         ...(c.creatureKind === "Monster" ? { rechargeAvailable: refreshBoolRecord(c.rechargeAvailable) } : {})
       }
     }),
     longRest: assign(({ context: c }) => {
       const base = longRestUpdate(c)
-      return c.creatureKind !== "Monster" ? base : { ...base, ...monsterLongRestUpdate(c) }
+      return c.creatureKind !== "Monster"
+        ? { ...base, pendingResolution: null }
+        : {
+            ...base,
+            ...monsterLongRestUpdate(c),
+            legendaryResistancesRemaining: resourceCount(c.legendaryResistancesMax),
+            pendingResolution: null
+          }
     }),
     applyFall: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
       const took = r.newHp !== c.hp || r.newTempHp !== c.tempHp
       // Dying instant death: HP stays 0 but dmgThrough >= maxHp kills — Quint sees state change
       const dyingInstantDeath = c.hp === 0 && r.dmgThrough >= r.effMax
-      return { hp: hp(r.newHp), tempHp: tempHp(r.newTempHp), ...(took || dyingInstantDeath ? { prone: true } : {}) }
+      return {
+        hp: hp(r.newHp),
+        tempHp: tempHp(r.newTempHp),
+        ...(took || dyingInstantDeath ? { prone: true } : {}),
+        pendingResolution: null
+      }
     }),
     applyFallAtZeroHp: assign(({ context: c, event: e }) => {
       const r = fallR(c, e)
@@ -347,7 +369,8 @@ export const creatureMachine = setup({
         tempHp: tempHp(r.newTempHp),
         prone: true,
         stable: false,
-        deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(df.newFailures) }
+        deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(df.newFailures) },
+        pendingResolution: null
       }
     }),
     suffocate: assign(({ context: c }) => ({
@@ -359,15 +382,26 @@ export const creatureMachine = setup({
             prone: true,
             incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious")
           }),
+      pendingResolution: null,
       ...concBreak(c)
     })),
+    setRelentlessRagePending: assign(({ context: c }) => {
+      const barbarian = c.classStates.barbarian
+      if (!barbarian) return { pendingResolution: null }
+      return barbarian.level >= 11 && barbarian.raging && c.creatureKind === "PC"
+        ? { pendingResolution: { kind: "relentlessRage" as const } }
+        : { pendingResolution: null }
+    }),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     useSecondWind: assign(({ context: c, event: e }) => fighter.secondWindUpdate(c, asUseSecondWind(e).d10Roll)),
     useActionSurge: assign(({ context: c }) => fighter.actionSurgeUpdate(c)),
     useIndomitable: assign(({ context: c }) => fighter.indomitableUpdate(c)),
     useTacticalMind: assign(({ context: c, event: e }) =>
-      fighter.tacticalMindUpdate(c, asUseTacticalMind(e).boostedCheckSucceeds)
+      ({
+        ...fighter.tacticalMindUpdate(c, asUseTacticalMind(e).boostedCheckSucceeds),
+        pendingResolution: null
+      })
     ),
     classStartTurn: assign(({ context: c }) =>
       mergeClassUpdates(c, [
@@ -445,7 +479,7 @@ export const creatureMachine = setup({
         : useDailyAbilityUpdate(c.dailyUsesRemaining, (e as Extract<DndEvent, { type: "USE_DAILY_ABILITY" }>).name)
     ),
     enterRage: assign(({ context: c }) => barb.enterRageUpdate(c)),
-    endRage: assign(({ context: c }) => barb.endRageUpdate(c)),
+    endRage: assign(({ context: c }) => ({ ...barb.endRageUpdate(c), pendingResolution: null })),
     extendRageBA: assign(({ context: c }) => barb.extendRageBAUpdate(c)),
     markAttackOrForcedSave: assign(({ context: c }) => barb.markAttackOrForcedSaveUpdate(c)),
     declareReckless: assign(({ context: c }) => barb.declareRecklessUpdate(c)),
@@ -453,7 +487,10 @@ export const creatureMachine = setup({
     restoreIntimidatingPresence: assign(({ context: c }) => barb.restoreIntimidatingPresenceUpdate(c)),
     useBrutalStrike: assign(({ context: c }) => barb.brutalStrikeUpdate(c)),
     useRelentlessRage: assign(({ context: c, event: e }) =>
-      barb.relentlessRageUpdate(c, (e as Extract<DndEvent, { type: "USE_RELENTLESS_RAGE" }>).conSaveSucceeded)
+      ({
+        ...barb.relentlessRageUpdate(c, (e as Extract<DndEvent, { type: "USE_RELENTLESS_RAGE" }>).conSaveSucceeded),
+        pendingResolution: null
+      })
     ),
     flurryOfBlows: assign(({ context: c }) => monk.flurryOfBlowsUpdate(c)),
     patientDefenseFree: assign(({ context: c }) => monk.patientDefenseFreeUpdate(c)),
@@ -519,7 +556,10 @@ export const creatureMachine = setup({
       bard.useFontSlotRestoreUpdate(c, (e as Extract<DndEvent, { type: "USE_FONT_SLOT_RESTORE" }>).slotLevel)
     ),
     usePeerlessSkill: assign(({ context: c, event: e }) =>
-      bard.usePeerlessSkillUpdate(c, (e as Extract<DndEvent, { type: "USE_PEERLESS_SKILL" }>).success)
+      ({
+        ...bard.usePeerlessSkillUpdate(c, (e as Extract<DndEvent, { type: "USE_PEERLESS_SKILL" }>).success),
+        pendingResolution: null
+      })
     )
   }
 }).createMachine({
@@ -544,6 +584,7 @@ export const creatureMachine = setup({
       creatureKind: i.creatureKind ?? "PC",
       selfId: i.selfId ?? mkCreatureId(""),
       activeEffects: [] as ReadonlyArray<ActiveEffect>,
+      pendingResolution: null,
       concentrationSpellId: Option.none(),
       dead: false,
       inCombat: false,

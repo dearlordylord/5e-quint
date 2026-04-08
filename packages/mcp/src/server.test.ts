@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { classLevel } from "@dnd/core/types.ts"
+import { abilityModifier, classLevel } from "@dnd/core/types.ts"
 
 import { createDemoActor, handleToolCall } from "./server.ts"
 
@@ -87,6 +87,31 @@ describe("MCP server adapter", () => {
     expect(payload.state.classStates.fighter.heroicInspiration).toBe(false)
   })
 
+  test("execute_action supports USE_TACTICAL_MIND once the pending trigger exists", () => {
+    const actor = createDemoActor({
+      maxHp: 24,
+      fighterLevel: classLevel(2),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    actor.send({ type: "TRIGGER_TACTICAL_MIND" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_TACTICAL_MIND",
+      cost: { charge: "secondWind" },
+      outcome: {
+        summary: "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
+      },
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_TACTICAL_MIND" })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.pendingResolution).toBeNull()
+  })
+
   test("execute_action supports USE_METAMAGIC with filtered legal options", () => {
     const actor = createDemoActor({
       maxHp: 30,
@@ -128,7 +153,7 @@ describe("MCP server adapter", () => {
     const actor = createDemoActor({
       maxHp: 32,
       rangerLevel: classLevel(10),
-      wisMod: 3,
+      wisMod: abilityModifier(3),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
@@ -184,5 +209,66 @@ describe("MCP server adapter", () => {
     expect(payload.success).toBe(true)
     expect(payload.state.slotsCurrent).toEqual([4, 3, 0, 0, 0, 0, 0, 0, 0])
     expect(payload.state.classStates.wizard.arcaneRecoveryUsed).toBe(true)
+  })
+
+  test("execute_action supports USE_PEERLESS_SKILL once the pending trigger exists", () => {
+    const actor = createDemoActor({
+      maxHp: 38,
+      bardLevel: classLevel(14),
+      chaMod: abilityModifier(5),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    actor.send({ type: "TRIGGER_PEERLESS_SKILL_ATTACK_ROLL" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_PEERLESS_SKILL",
+      cost: { charge: "bardicInspiration" },
+      outcome: {
+        summary: "Add your Bardic Inspiration die to the failed attack roll; expend it only if the roll now succeeds",
+      },
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_PEERLESS_SKILL" })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.pendingResolution).toBeNull()
+  })
+
+  test("execute_action supports USE_RELENTLESS_RAGE after a real drop-to-zero trigger", () => {
+    const actor = createDemoActor({
+      maxHp: 40,
+      barbarianLevel: classLevel(11),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+    actor.send({ type: "ENTER_RAGE" })
+    actor.send({
+      type: "TAKE_DAMAGE",
+      amount: 40,
+      damageType: "slashing",
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false,
+    })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_RELENTLESS_RAGE",
+      cost: {},
+      outcome: { summary: "Make a DC 10 Constitution save to stay at 22 HP instead of dropping to 0" },
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_RELENTLESS_RAGE" })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.classStates.barbarian.relentlessRageTimesUsed).toBe(1)
+    expect(payload.state.pendingResolution).toBeNull()
   })
 })

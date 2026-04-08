@@ -4,7 +4,7 @@ import { createActor } from "xstate"
 
 import { singleClassHitDice, ZERO_HIT_DICE } from "#/features/class-tables.ts"
 import { defaultKnownMetamagicOptions } from "#/features/class-sorcerer.ts"
-import type { DndContext, DndSnapshot } from "#/machine.ts"
+import type { DndContext, DndMachineInput, DndSnapshot } from "#/machine.ts"
 import { creatureMachine } from "#/machine.ts"
 import {
   aggregateAttackMods,
@@ -36,6 +36,7 @@ import {
 import { calculateMulticlassSlots, concentrationDC, expendSlot, slotsPerLevel } from "#/machine-spells.ts"
 import type { ActionType, ArmorState, AttackContext, Condition, DamageType } from "#/types.ts"
 import {
+  abilityModifier,
   abilityScore,
   armorClass,
   classLevel,
@@ -57,6 +58,12 @@ const INSTANT_DEATH_HP = 10
 
 function create(maxHp = DEFAULT_MAX_HP) {
   const actor = createActor(creatureMachine, { input: { maxHp } })
+  actor.start()
+  return actor
+}
+
+function createWithInput(input: DndMachineInput) {
+  const actor = createActor(creatureMachine, { input })
   actor.start()
   return actor
 }
@@ -2508,5 +2515,44 @@ describe("GRANT_EXTRA_ACTION", () => {
     a.send({ type: "GRANT_EXTRA_ACTION" })
     a.send({ type: "GRANT_EXTRA_ACTION" })
     expect(ctx(a).actionsRemaining).toBe(3)
+  })
+})
+
+describe("pending resolution windows", () => {
+  it("sets and clears Tactical Mind pending state around resolution", () => {
+    const a = createWithInput({ maxHp: 24, fighterLevel: classLevel(2), baseWalkSpeed: 30, effectiveSpeed: 30 })
+    a.send({ type: "TRIGGER_TACTICAL_MIND" })
+    expect(ctx(a).pendingResolution).toEqual({ kind: "tacticalMind" })
+
+    a.send({ type: "USE_TACTICAL_MIND", boostedCheckSucceeds: false })
+    expect(ctx(a).pendingResolution).toBeNull()
+    expect(ctx(a).classStates.fighter?.secondWindCharges).toBe(2)
+  })
+
+  it("tracks Peerless Skill mode and clears it after resolution", () => {
+    const a = createWithInput({ maxHp: 38, bardLevel: classLevel(14), chaMod: abilityModifier(5), baseWalkSpeed: 30, effectiveSpeed: 30 })
+    a.send({ type: "TRIGGER_PEERLESS_SKILL_ATTACK_ROLL" })
+    expect(ctx(a).pendingResolution).toEqual({ kind: "peerlessSkill", mode: "attackRoll" })
+
+    a.send({ type: "USE_PEERLESS_SKILL", success: false })
+    expect(ctx(a).pendingResolution).toBeNull()
+    expect(ctx(a).classStates.bard?.bardicInspirationCharges).toBe(5)
+  })
+
+  it("establishes Relentless Rage pending on a real drop to zero while raging", () => {
+    const a = createWithInput({ maxHp: 40, barbarianLevel: classLevel(11), baseWalkSpeed: 30, effectiveSpeed: 30 })
+    enterCombat(a)
+    startTurn(a)
+    a.send({ type: "ENTER_RAGE" })
+    takeDamage(a, 40)
+
+    expect(ctx(a).hp).toBe(0)
+    expect(ctx(a).unconscious).toBe(true)
+    expect(ctx(a).pendingResolution).toEqual({ kind: "relentlessRage" })
+
+    a.send({ type: "USE_RELENTLESS_RAGE", conSaveSucceeded: true })
+    expect(ctx(a).hp).toBe(22)
+    expect(ctx(a).pendingResolution).toBeNull()
+    expect(ctx(a).classStates.barbarian?.relentlessRageTimesUsed).toBe(1)
   })
 })

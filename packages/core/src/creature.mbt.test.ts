@@ -101,6 +101,7 @@ type EventActionMap = {
   USE_ACTION_SURGE: "doUseActionSurge"
   USE_INDOMITABLE: "doUseIndomitable"
   USE_TACTICAL_MIND: "doUseTacticalMind"
+  TRIGGER_TACTICAL_MIND: "doTriggerTacticalMind"
   USE_HEROIC_INSPIRATION: "doUseHeroicInspiration"
   SCORE_CRITICAL_HIT: "doScoreCriticalHit"
   USE_BONUS_MOVEMENT: "doUseBonusMovement"
@@ -156,6 +157,9 @@ type EventActionMap = {
   USE_CUTTING_WORDS: "doUseCuttingWords"
   USE_FONT_SLOT_RESTORE: "doUseFontSlotRestore"
   USE_PEERLESS_SKILL: "doUsePeerlessSkill"
+  TRIGGER_PEERLESS_SKILL_ABILITY_CHECK: "doTriggerPeerlessSkillAbilityCheck"
+  TRIGGER_PEERLESS_SKILL_ATTACK_ROLL: "doTriggerPeerlessSkillAttackRoll"
+  CLEAR_PENDING_RESOLUTION: "doClearPendingResolution"
 }
 
 // Compile error if a DndEvent type is missing from EventActionMap
@@ -274,6 +278,7 @@ const driverSchema = {
   doUseActionSurge: {},
   doUseIndomitable: {},
   doUseTacticalMind: { boostedCheckSucceeds: z.boolean() },
+  doTriggerTacticalMind: {},
   doUseHeroicInspiration: {},
   doScoreCriticalHit: {},
   doUseBonusMovement: { feet: ITFBigInt },
@@ -326,6 +331,9 @@ const driverSchema = {
   doUseCuttingWords: {},
   doUseFontSlotRestore: { slotLevel: ITFBigInt.optional() },
   doUsePeerlessSkill: { success: z.boolean().optional() },
+  doTriggerPeerlessSkillAbilityCheck: {},
+  doTriggerPeerlessSkillAttackRoll: {},
+  doClearPendingResolution: {},
   step: {}, // dead character no-op
   stepPC: {}, // composite — framework expands to leaf actions
   stepMonster: {}, // composite — framework expands to leaf actions
@@ -734,6 +742,9 @@ function createDndDriver() {
       doUseTacticalMind: ({ boostedCheckSucceeds }) => {
         send({ type: "USE_TACTICAL_MIND", boostedCheckSucceeds })
       },
+      doTriggerTacticalMind: () => {
+        send({ type: "TRIGGER_TACTICAL_MIND" })
+      },
       doUseHeroicInspiration: () => {
         send({ type: "USE_HEROIC_INSPIRATION" })
       },
@@ -890,6 +901,15 @@ function createDndDriver() {
       },
       doUsePeerlessSkill: ({ success }) => {
         if (success != null) send({ type: "USE_PEERLESS_SKILL", success })
+      },
+      doTriggerPeerlessSkillAbilityCheck: () => {
+        send({ type: "TRIGGER_PEERLESS_SKILL_ABILITY_CHECK" })
+      },
+      doTriggerPeerlessSkillAttackRoll: () => {
+        send({ type: "TRIGGER_PEERLESS_SKILL_ATTACK_ROLL" })
+      },
+      doClearPendingResolution: () => {
+        send({ type: "CLEAR_PENDING_RESOLUTION" })
       },
       // Args are undefined when Quint guard → unchanged (nondet not generated)
       doUseLegendaryAction: ({ actionName }) => {

@@ -1256,6 +1256,13 @@ module creature {
   // ============================================================
 
   /// Per-turn mutable state, reset each turn.
+  type PendingResolution =
+    | NoPending
+    | PRTacticalMind
+    | PRPeerlessSkillAbilityCheck
+    | PRPeerlessSkillAttackRoll
+    | PRRelentlessRage
+
   type TurnState = {
     movementRemaining: int,
     effectiveSpeed: int,
@@ -1285,6 +1292,7 @@ module creature {
     // expend only one spell slot to cast a spell. Reset for ALL creatures at
     // start of each turn (not just the active creature). Gates eligibleForCounterspell.
     slotExpendedThisTurn: bool,
+    pendingResolution: PendingResolution,
   }
 
   /// Action types for pUseAction
@@ -1354,6 +1362,7 @@ module creature {
       bonusMovementOAFree: false,
       actionSurgeActionPending: false,
       slotExpendedThisTurn: false,
+      pendingResolution: NoPending,
     }
   }
 
@@ -2601,6 +2610,24 @@ module creature {
   /// SRD: "If you drop to 0 Hit Points while your Rage is active and don't die outright"
   pure def canRelentlessRage(bs: BarbarianState, barbarianLevel: int): bool = {
     bs.raging and barbarianLevel >= 11
+  }
+
+  pure def withRelentlessRagePending(
+    turnState: TurnState,
+    before: CreatureState,
+    after: CreatureState,
+    creatureKind: CreatureKind,
+    barbarianState: BarbarianState,
+    barbarianLevel: int
+  ): TurnState = {
+    if (
+      creatureKind == PC
+      and before.hp > 0
+      and after.hp == 0
+      and not(after.dead)
+      and canRelentlessRage(barbarianState, barbarianLevel)
+    ) turnState.with("pendingResolution", PRRelentlessRage)
+    else turnState.with("pendingResolution", NoPending)
   }
 
   /// Relentless Rage DC: 10 + (timesUsed * 5).
@@ -3899,6 +3926,7 @@ module creature {
     bonusMovementOAFree: false,
     actionSurgeActionPending: false,
     slotExpendedThisTurn: false,
+    pendingResolution: NoPending,
   }
 
   pure val FRESH_SPELL_SLOTS: SpellSlotState = {
@@ -4005,7 +4033,15 @@ module creature {
     nondet dt = DAMAGE_TYPES.oneOf()
     nondet isCrit = Bool.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(), Set(), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
+    val turn1 = withRelentlessRagePending(
+      turnState,
+      state,
+      r.creature,
+      creatureKind,
+      barbarianState,
+      classLevels.get(Barbarian)
+    )
+    all { state' = r.creature, turnState' = turn1, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doTakeDamageWithMods = {
@@ -4015,7 +4051,15 @@ module creature {
     nondet resType = DAMAGE_TYPES.oneOf()
     nondet vulnType = DAMAGE_TYPES.oneOf()
     val r = pWithConcBreak(spellSlots, state, pTakeDamage(state, amount, dt, Set(resType), Set(vulnType), Set(), isCrit))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
+    val turn1 = withRelentlessRagePending(
+      turnState,
+      state,
+      r.creature,
+      creatureKind,
+      barbarianState,
+      classLevels.get(Barbarian)
+    )
+    all { state' = r.creature, turnState' = turn1, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   /// Monster take damage: R/V/I sourced from stat block, monster death at 0 HP.
@@ -4032,7 +4076,7 @@ module creature {
 
   action doHeal = {
     nondet amount = HEAL_RANGE.oneOf()
-    all { state' = pHeal(state, amount), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
+    all { state' = pHeal(state, amount), turnState' = turnState.with("pendingResolution", NoPending), spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doGrantTempHp = {
@@ -4095,7 +4139,7 @@ module creature {
 
   action doExitCombat = {
     if (turnPhase == "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "outOfCombat", fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
+    else all { state' = state, turnState' = turnState.with("pendingResolution", NoPending), spellSlots' = spellSlots, turnPhase' = "outOfCombat", fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doStartTurn = {
@@ -4314,7 +4358,7 @@ module creature {
       val mrs1 = pRefreshRechargeAbilities(monsterResourceState)
       all {
         state' = pShortRest(state, conMod, rolls),
-        turnState' = turnState,
+        turnState' = turnState.with("pendingResolution", NoPending),
         spellSlots' = pRestorePactSlots(spellSlots),
         turnPhase' = turnPhase,
         fighterState' = pFighterShortRest(fighterState),
@@ -4352,7 +4396,7 @@ module creature {
       val freshSlots = pInitSpellSlots(classLevels)
       all {
         state' = pLongRest(state, classLevels),
-        turnState' = turnState,
+        turnState' = turnState.with("pendingResolution", NoPending),
         // Long rest restores all slots to multiclass-computed max; preserve concentration
         spellSlots' = freshSlots.with("concentrationSpellId", spellSlots.concentrationSpellId),
         turnPhase' = turnPhase,
@@ -4382,12 +4426,29 @@ module creature {
   action doApplyFall = {
     nondet damageRoll = DAMAGE_RANGE.oneOf()
     val r = pWithConcBreak(spellSlots, state, pApplyFall(state, damageRoll, Set(), Set(), Set()))
-    all { state' = pMonsterDeathCheck(r.creature, creatureKind), turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
+    val s1 = pMonsterDeathCheck(r.creature, creatureKind)
+    val turn1 = withRelentlessRagePending(
+      turnState,
+      state,
+      s1,
+      creatureKind,
+      barbarianState,
+      classLevels.get(Barbarian)
+    )
+    all { state' = s1, turnState' = turn1, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doSuffocate = {
     val r = pWithConcBreak(spellSlots, state, pSuffocate(state, creatureKind))
-    all { state' = r.creature, turnState' = turnState, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
+    val turn1 = withRelentlessRagePending(
+      turnState,
+      state,
+      r.creature,
+      creatureKind,
+      barbarianState,
+      classLevels.get(Barbarian)
+    )
+    all { state' = r.creature, turnState' = turn1, spellSlots' = r.slots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doApplyStarvation = {
@@ -4537,13 +4598,30 @@ module creature {
 
   action doUseTacticalMind = {
     nondet boostedCheckSucceeds = Bool.oneOf()
-    if (turnPhase != "acting" or not(canUseTacticalMind(classLevels.get(Fighter), fighterState)) or isIncapacitated(state)) unchanged
+    if (turnState.pendingResolution != PRTacticalMind
+        or not(canUseTacticalMind(classLevels.get(Fighter), fighterState))
+        or isIncapacitated(state)) unchanged
     else all {
       state' = state,
-      turnState' = turnState,
+      turnState' = turnState.with("pendingResolution", NoPending),
       spellSlots' = spellSlots,
       turnPhase' = turnPhase,
       fighterState' = pUseTacticalMind(fighterState, boostedCheckSucceeds),
+      classLevels' = classLevels,
+      creatureKind' = creatureKind,
+      monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
+    }
+  }
+
+  action doTriggerTacticalMind = {
+    all {
+      state' = state,
+      turnState' = turnState.with("pendingResolution", PRTacticalMind),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState,
       classLevels' = classLevels,
       creatureKind' = creatureKind,
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
@@ -4739,7 +4817,7 @@ module creature {
   /// die outright, you can make a DC 10 Constitution saving throw."
   /// NOT gated on turnPhase — fires during damage resolution.
   action doUseRelentlessRage = {
-    if (isIncapacitated(state)
+    if (turnState.pendingResolution != PRRelentlessRage
         or not(canRelentlessRage(barbarianState, classLevels.get(Barbarian)))) unchanged
     else {
       nondet conSaveSucceeded = Set(true, false).oneOf()
@@ -4747,7 +4825,7 @@ module creature {
       val newState = if (conSaveSucceeded) state.with("hp", 2 * classLevels.get(Barbarian)) else state
       all {
         state' = newState,
-        turnState' = turnState,
+        turnState' = turnState.with("pendingResolution", NoPending),
         spellSlots' = spellSlots,
         turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
@@ -5612,12 +5690,13 @@ module creature {
 
   /// Peerless Skill L14: on failed check, add BI die. Only spends on success.
   action doUsePeerlessSkill = {
-    if (turnPhase != "acting" or isIncapacitated(state)
+    if ((turnState.pendingResolution != PRPeerlessSkillAbilityCheck
+         and turnState.pendingResolution != PRPeerlessSkillAttackRoll) or isIncapacitated(state)
         or classLevels.get(Bard) < 14 or bardState.bardicInspirationCharges <= 0) unchanged
     else {
       nondet success = Bool.oneOf()
       all {
-        state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase,
+        state' = state, turnState' = turnState.with("pendingResolution", NoPending), spellSlots' = spellSlots, turnPhase' = turnPhase,
         fighterState' = fighterState, classLevels' = classLevels,
         creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
         barbarianState' = barbarianState,
@@ -5625,6 +5704,34 @@ module creature {
         rangerState' = rangerState,
         bardState' = pUsePeerlessSkill(bardState, success),
       }
+    }
+  }
+
+  action doTriggerPeerlessSkillAbilityCheck = {
+    all {
+      state' = state,
+      turnState' = turnState.with("pendingResolution", PRPeerlessSkillAbilityCheck),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState, classLevels' = classLevels,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+      rangerState' = rangerState, bardState' = bardState,
+    }
+  }
+
+  action doTriggerPeerlessSkillAttackRoll = {
+    all {
+      state' = state,
+      turnState' = turnState.with("pendingResolution", PRPeerlessSkillAttackRoll),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState, classLevels' = classLevels,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+      rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5640,6 +5747,7 @@ module creature {
     doUseSecondWind,
     doUseActionSurge,
     doUseIndomitable,
+    doTriggerTacticalMind,
     doUseTacticalMind,
     doUseHeroicInspiration,
     doScoreCriticalHit,
@@ -5691,6 +5799,8 @@ module creature {
     doUseBardicInspiration,
     doUseCuttingWords,
     doUseFontSlotRestore,
+    doTriggerPeerlessSkillAbilityCheck,
+    doTriggerPeerlessSkillAttackRoll,
     doUsePeerlessSkill,
   }
 
