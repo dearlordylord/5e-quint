@@ -561,9 +561,9 @@ function advanceEffectsAtPhase(
   let changed = false
   const result = new Map<CreatureId, BattleCreatureState>()
   for (const [id, creature] of cs) {
-    const activeEffects = advanceEffectsForOwner(creature.activeEffects, ownerId, phase)
-    if (activeEffects !== creature.activeEffects) changed = true
-    result.set(id, activeEffects === creature.activeEffects ? creature : { ...creature, activeEffects })
+    const updated = advanceEffectsForOwner(creature, ownerId, phase)
+    if (updated !== creature) changed = true
+    result.set(id, updated)
   }
   return changed ? autoBreakAllExpiredConcentration(result) : new Map(cs)
 }
@@ -643,7 +643,9 @@ export function processEndTurn(
     for (const ae of c.activeEffects) {
       if (ae.expiresAt === "end") idsToRemove.add(ae.spellId)
     }
-    if (idsToRemove.size > 0) c = { ...c, activeEffects: c.activeEffects.filter((ae) => !idsToRemove.has(ae.spellId)) }
+    if (idsToRemove.size > 0) {
+      for (const spellId of idsToRemove) c = removeEffect(c, spellId)
+    }
   }
   let baseCreatures: Creatures
   if (hasEotEffects && eotDmg > 0) {

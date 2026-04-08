@@ -504,8 +504,30 @@ module battle {
 
   /// Remove all active effects with the given casterId from a creature.
   /// Used for concentration break propagation (R33).
-  pure def removeEffectsByCaster(creature: CreatureState, cId: CreatureId): CreatureState =
-    creature.with("activeEffects", creature.activeEffects.filter(e => e.casterId != cId))
+  pure def removeConditionsForEffects(
+    creature: CreatureState, effects: Set[ActiveEffect]
+  ): CreatureState =
+    effects.fold(creature, (acc, effect) =>
+      effect.grantedConditions.fold(acc, (acc2, condition) => pRemoveCondition(acc2, condition))
+    )
+
+  pure def removeEffectFromCreature(creature: CreatureState, spellId: str): CreatureState = {
+    val removed = creature.activeEffects.filter(e => e.spellId == spellId)
+    if (removed.size() == 0) creature
+    else removeConditionsForEffects(
+      creature.with("activeEffects", creature.activeEffects.filter(e => e.spellId != spellId)),
+      removed
+    )
+  }
+
+  pure def removeEffectsByCaster(creature: CreatureState, cId: CreatureId): CreatureState = {
+    val removed = creature.activeEffects.filter(e => e.casterId == cId)
+    if (removed.size() == 0) creature
+    else removeConditionsForEffects(
+      creature.with("activeEffects", creature.activeEffects.filter(e => e.casterId != cId)),
+      removed
+    )
+  }
 
   /// Break concentration for a caster and propagate: remove all effects
   /// cast by this caster from ALL creatures in the battle.
@@ -519,7 +541,7 @@ module battle {
     if (spellId == "") cs  // not concentrating
     else {
       val newSlots = pBreakConcentration(caster.slots)
-      val newCreature = caster.creature.with("activeEffects", pRemoveEffect(caster.creature.activeEffects, spellId))
+      val newCreature = removeEffectFromCreature(caster.creature, spellId)
       val cs1 = setSlots(setCreature(cs, casterId, newCreature), casterId, newSlots)
       // Clear readied spell params (concentration break = spell fizzles)
       val caster1 = cs1.get(casterId)
@@ -707,9 +729,10 @@ module battle {
           e.with("turnsRemaining", e.turnsRemaining - 1)
         else e
       )
-      val cleared = pClearExpiredAtPhase(advanced, AtStartOfTurn)
+      val expired = pExpiredAtPhase(advanced, AtStartOfTurn)
+      val cleared = advanced.exclude(expired)
       val slots1 = pAutoBreakExpiredConcentration(cb.slots, cleared)
-      val creature1 = cb.creature.with("activeEffects", cleared)
+      val creature1 = removeConditionsForEffects(cb.creature.with("activeEffects", cleared), expired)
       val acc1 = setSlots(setCreature(acc, holderId, creature1), holderId, slots1)
       propagateIfConcBroken(acc1, holderId, cb.slots, slots1)
     )
@@ -1563,7 +1586,11 @@ module battle {
     val cs3 = setCreature(cs2, conc.caster, casterC.creature.with("activeEffects", casterEffects))
     // Add effect to target with casterId pointing back to caster
     val targetC = cs3.get(conc.target)
-    val newEffects = pAddEffectSimple(targetC.creature.activeEffects, conc.spellId, conc.duration, AtEndOfTurn, conc.caster)
+    val newEffects = pAddEffect(
+      targetC.creature.activeEffects, conc.spellId, conc.duration, AtEndOfTurn, conc.caster,
+      if (conc.applyCondition) Set(conc.conditionOnFail) else Set(),
+      Set(), Set(), Set()
+    )
     val cs4 = setCreature(cs3, conc.target, targetC.creature.with("activeEffects", newEffects))
     // Apply condition to target if applicable
     if (conc.applyCondition) {

@@ -66,7 +66,7 @@ export function applyCondition(c: BattleCreatureState, cond: Condition): BattleC
   )
 }
 
-function removeCondition(c: BattleCreatureState, cond: Condition): BattleCreatureState {
+export function removeCondition(c: BattleCreatureState, cond: Condition): BattleCreatureState {
   return Match.value(cond).pipe(
     Match.when("blinded", () => ({ ...c, blinded: false })),
     Match.when("charmed", () => ({ ...c, charmed: false })),
@@ -246,24 +246,42 @@ export function speedDeltaFromEffects(c: BattleCreatureState): number {
   return c.activeEffects.reduce((total, effect) => total + (effect.speedDeltaFeet ?? 0), 0)
 }
 
+function removeGrantedConditions(
+  c: BattleCreatureState,
+  effects: ReadonlyArray<ActiveEffect>
+): BattleCreatureState {
+  let next = c
+  for (const effect of effects) {
+    for (const condition of effect.grantedConditions ?? []) {
+      next = removeCondition(next, condition)
+    }
+  }
+  return next
+}
+
 export function advanceEffectsForOwner(
-  effects: ReadonlyArray<ActiveEffect>,
+  creature: BattleCreatureState,
   ownerId: CreatureId,
   phase: ExpiryPhase
-): ReadonlyArray<ActiveEffect> {
+): BattleCreatureState {
   let changed = false
   const advanced: Array<ActiveEffect> = []
-  for (const effect of effects) {
+  const removed: Array<ActiveEffect> = []
+  for (const effect of creature.activeEffects) {
     if (effectExpiryOwnerId(effect) !== ownerId) {
       advanced.push(effect)
       continue
     }
     changed = true
     const turnsRemaining = effect.turnsRemaining - 1
-    if (turnsRemaining <= 0 && effect.expiresAt === phase) continue
+    if (turnsRemaining <= 0 && effect.expiresAt === phase) {
+      removed.push(effect)
+      continue
+    }
     advanced.push({ ...effect, turnsRemaining })
   }
-  return changed ? advanced : effects
+  if (!changed) return creature
+  return removeGrantedConditions({ ...creature, activeEffects: advanced }, removed)
 }
 
 export function addEffect(
@@ -279,12 +297,21 @@ export function addEffect(
 }
 
 export function removeEffect(c: BattleCreatureState, spellId: SpellId): BattleCreatureState {
-  return { ...c, activeEffects: c.activeEffects.filter((e) => e.spellId !== spellId) }
+  const removed = c.activeEffects.filter((e) => e.spellId === spellId)
+  if (removed.length === 0) return c
+  return removeGrantedConditions(
+    { ...c, activeEffects: c.activeEffects.filter((e) => e.spellId !== spellId) },
+    removed
+  )
 }
 
 export function removeEffectsByCaster(c: BattleCreatureState, casterId: CreatureId): BattleCreatureState {
-  const filtered = c.activeEffects.filter((e) => e.casterId !== casterId)
-  return filtered.length === c.activeEffects.length ? c : { ...c, activeEffects: filtered }
+  const removed = c.activeEffects.filter((e) => e.casterId === casterId)
+  if (removed.length === 0) return c
+  return removeGrantedConditions(
+    { ...c, activeEffects: c.activeEffects.filter((e) => e.casterId !== casterId) },
+    removed
+  )
 }
 
 // --- Constants & factories (moved from battle-machine-types.ts) ---

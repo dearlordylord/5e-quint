@@ -565,7 +565,8 @@ function pb(picks: Record<string, unknown>, key: string, fallback: boolean): boo
 }
 function psz(picks: Record<string, unknown>, key: string, fallback: Size): Size {
   const v = picks[key]
-  return (typeof v === "string" ? v.toLowerCase() : fallback) as Size
+  const parsed = variantToString(v).toLowerCase()
+  return parsed === "[object object]" ? fallback : (parsed as Size)
 }
 /** Common spatial/visibility/SA fields for attack event dispatch. */
 function attackContextPicks(picks: Record<string, unknown>) {

@@ -35,7 +35,9 @@ export function resolveConcentration(cs: Creatures, conc: ConcentrationCtx): Map
   let c = startConcentration(cs1.get(conc.caster)!, conc.spellId)
   c = addEffect(c, conc.spellId, conc.duration, "end", conc.caster)
   cs1 = setCreature(cs1, conc.caster, c)
-  let t = addEffect(cs1.get(conc.target)!, conc.spellId, conc.duration, "end", conc.caster)
+  let t = addEffect(cs1.get(conc.target)!, conc.spellId, conc.duration, "end", conc.caster, {
+    grantedConditions: conc.applyCondition ? [conc.conditionOnFail] : []
+  })
   if (conc.applyCondition) t = applyCondition(t, conc.conditionOnFail)
   return setCreature(cs1, conc.target, t)
 }

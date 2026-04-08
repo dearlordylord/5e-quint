@@ -840,6 +840,7 @@ module creature {
   /// Core spec owns lifecycle only; spell-specific behavior lives in caller.
   type ActiveEffect = {
     spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase, casterId: str,
+    grantedConditions: Set[Condition],
     grantedResistances: Set[DamageType], grantedVulnerabilities: Set[DamageType], grantedImmunities: Set[DamageType],
   }
 
@@ -922,10 +923,11 @@ module creature {
   /// Add an effect, replacing any existing with the same spellId (no stacking).
   pure def pAddEffect(
     effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
-    grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
+    grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
   ): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId).union(Set({
       spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      grantedConditions: grantedC,
       grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
     }))
 
@@ -933,7 +935,7 @@ module creature {
   pure def pAddEffectSimple(
     effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str
   ): Set[ActiveEffect] =
-    pAddEffect(effects, spellId, durationTurns, expiresAt, casterId, Set(), Set(), Set())
+    pAddEffect(effects, spellId, durationTurns, expiresAt, casterId, Set(), Set(), Set(), Set())
 
   /// Remove an effect by spellId (dispel, concentration break, etc.).
   pure def pRemoveEffect(effects: Set[ActiveEffect], spellId: str): Set[ActiveEffect] =

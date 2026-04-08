@@ -70,6 +70,20 @@ function initTwoCasterBattle() {
   return actor
 }
 
+function initThreeCasterBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]) },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]) },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]) }
+    ]
+  })
+  return actor
+}
+
 function initFighterBattle(fighterLevel: number) {
   const actor = createActor(battleMachine)
   actor.start()
@@ -1185,6 +1199,101 @@ describe("inspiration-sourced battle regressions", () => {
     expect(creature(actor, "B").actionsRemaining).toBe(0)
     expect(creature(actor, "B").effectiveSpeed).toBe(20)
     expect(creature(actor, "B").movementRemaining).toBe(40)
+  })
+
+  it("natural_20: failing a concentration check ends the spell's effect on the target", () => {
+    const actor = initTwoCasterBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_CONCENTRATION_SPELL",
+      targetId: CreatureId("B"),
+      slotLvl: spellSlotLevel(2),
+      duration: 10,
+      spellId: spellId("hold_person"),
+      cond: "paralyzed",
+      applyCond: true,
+      ritual: false
+    })
+
+    expect(Option.isSome(creature(actor, "A").concentrationSpellId)).toBe(true)
+    expect(creature(actor, "B").paralyzed).toBe(true)
+    expect(creature(actor, "B").activeEffects).toEqual(
+      expect.arrayContaining([expect.objectContaining({ spellId: spellId("hold_person"), casterId: CreatureId("A") })])
+    )
+
+    send(actor, {
+      type: "BATTLE_CONCENTRATION_CHECK",
+      targetId: CreatureId("A"),
+      conSaveSucceeded: false
+    })
+
+    expect(Option.isNone(creature(actor, "A").concentrationSpellId)).toBe(true)
+    expect(creature(actor, "B").paralyzed).toBe(false)
+    expect(creature(actor, "B").activeEffects).toEqual([])
+  })
+
+  it("natural_20: starting a new concentration spell ends the previous one", () => {
+    const actor = initThreeCasterBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_CONCENTRATION_SPELL",
+      targetId: CreatureId("B"),
+      slotLvl: spellSlotLevel(2),
+      duration: 10,
+      spellId: spellId("hold_person"),
+      cond: "paralyzed",
+      applyCond: true,
+      ritual: false
+    })
+
+    expect(creature(actor, "B").paralyzed).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_CONCENTRATION_SPELL",
+      targetId: CreatureId("C"),
+      slotLvl: spellSlotLevel(2),
+      duration: 10,
+      spellId: spellId("hold_person"),
+      cond: "paralyzed",
+      applyCond: true,
+      ritual: false
+    })
+
+    expect(Option.isSome(creature(actor, "A").concentrationSpellId)).toBe(true)
+    expect(creature(actor, "A").concentrationSpellId).toEqual(Option.some(spellId("hold_person")))
+    expect(creature(actor, "B").paralyzed).toBe(false)
+    expect(creature(actor, "B").activeEffects).toEqual([])
+    expect(creature(actor, "C").paralyzed).toBe(true)
+    expect(creature(actor, "C").activeEffects).toEqual(
+      expect.arrayContaining([expect.objectContaining({ spellId: spellId("hold_person"), casterId: CreatureId("A") })])
+    )
   })
 
   it("natural_20: a readied spell releases with a reaction and applies its effect", () => {

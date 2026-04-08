@@ -127,6 +127,7 @@ export interface ActiveEffect {
   readonly expiresAt: ExpiryPhase
   readonly casterId: CreatureId
   readonly expiryOwnerId?: CreatureId
+  readonly grantedConditions?: ReadonlyArray<Condition>
   readonly startOfTurnHook?: EffectTurnHook
   readonly endOfTurnHook?: EffectTurnHook
   readonly grantedResistances?: ReadonlySet<DamageType>

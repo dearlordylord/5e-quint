@@ -750,11 +750,27 @@ Verification:
 
 What is next now:
 
+- concentration lifecycle battle coverage is now in inspiration form, so do not re-pick that batch
 - `Rage` / `Reckless Attack` battle coverage is now in inspiration form, so do not re-pick that batch
 - `Action Surge` battle coverage is now in inspiration form, so do not re-pick it as the next batch
 - the `Ray of Frost` + `Dash` follow-up is now covered in inspiration form, so do not re-pick it as the next batch
 - scout the next small deterministic inspiration batch outside grapple and outside the already-covered `Ray of Frost`/`Dash` interaction
 - if you resume in a fresh session, start from this file and [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts), then pick the next `natural_20`-style scenario that fits current battle state without reopening architecture
+
+Batch 17 result:
+
+1. Added explicit battle coverage for concentration lifecycle.
+   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves:
+     - failing a concentration check ends the spell's effect on the target,
+     - starting a new concentration spell ends the previous one
+2. Confirmed the existing implementation already matched RAW.
+   - no production TS or Quint changes were required
+   - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
 
 Batch 14 result:
 
