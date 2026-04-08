@@ -84,6 +84,20 @@ function initThreeCasterBattle() {
   return actor
 }
 
+function initAoEBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["burning_hands"]), initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", hasEvasion: true, initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", hasEvasion: true, initiativeRoll: 5 }
+    ]
+  })
+  return actor
+}
+
 function initFighterBattle(fighterLevel: number) {
   const actor = createActor(battleMachine)
   actor.start()
@@ -211,6 +225,15 @@ function resolveAttackWindows(actor: ReturnType<typeof createActor<typeof battle
       decision: { tag: "RPass" }
     })
   }
+  if (ctx(actor).awaitCtx?.interrupt.tag === "PIAfterDamage") {
+    send(actor, {
+      type: "BATTLE_AFTER_DAMAGE_PASS",
+      reactorId: null
+    })
+  }
+}
+
+function resolveAoEWindows(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   if (ctx(actor).awaitCtx?.interrupt.tag === "PIAfterDamage") {
     send(actor, {
       type: "BATTLE_AFTER_DAMAGE_PASS",
@@ -1294,6 +1317,94 @@ describe("inspiration-sourced battle regressions", () => {
     expect(creature(actor, "C").activeEffects).toEqual(
       expect.arrayContaining([expect.objectContaining({ spellId: spellId("hold_person"), casterId: CreatureId("A") })])
     )
+  })
+
+  it("natural_20: an AoE spell deals full damage on a failed save and half damage on a successful save", () => {
+    const actor = initAoEBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_AOE",
+      saveDC: difficultyClass(13),
+      dmgOnFail: 9,
+      halfOnSave: true,
+      dt: "thunder",
+      cond: "blinded",
+      applyCond: false,
+      saveAbility: "con",
+      slotLvl: spellSlotLevel(1),
+      spellName: "thunderwave",
+      ritual: false
+    })
+
+    expect(ctx(actor).aoeCtx?.remaining).toEqual(new Set([CreatureId("B"), CreatureId("C")]))
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_AOE_TARGET",
+      targetId: CreatureId("B"),
+      saveRoll: 5
+    })
+    resolveAoEWindows(actor)
+
+    expect(creature(actor, "B").hp).toBe(11)
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_AOE_TARGET",
+      targetId: CreatureId("C"),
+      saveRoll: 15
+    })
+    resolveAoEWindows(actor)
+    send(actor, {
+      type: "BATTLE_RESOLVE_AOE_TARGET",
+      targetId: null,
+      saveRoll: 0
+    })
+
+    expect(creature(actor, "C").hp).toBe(16)
+    expect(ctx(actor).aoeCtx).toBeNull()
+  })
+
+  it("natural_20: Evasion turns a failed Dexterity AoE save into half damage and a successful save into no damage", () => {
+    const actor = initAoEBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_AOE",
+      saveDC: difficultyClass(13),
+      dmgOnFail: 8,
+      halfOnSave: true,
+      dt: "fire",
+      cond: "blinded",
+      applyCond: false,
+      saveAbility: "dex",
+      slotLvl: spellSlotLevel(1),
+      spellName: "burning_hands",
+      ritual: false
+    })
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_AOE_TARGET",
+      targetId: CreatureId("B"),
+      saveRoll: 5
+    })
+    resolveAoEWindows(actor)
+
+    expect(creature(actor, "B").hp).toBe(16)
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_AOE_TARGET",
+      targetId: CreatureId("C"),
+      saveRoll: 15
+    })
+    resolveAoEWindows(actor)
+    send(actor, {
+      type: "BATTLE_RESOLVE_AOE_TARGET",
+      targetId: null,
+      saveRoll: 0
+    })
+
+    expect(creature(actor, "C").hp).toBe(20)
+    expect(ctx(actor).aoeCtx).toBeNull()
   })
 
   it("natural_20: a readied spell releases with a reaction and applies its effect", () => {
