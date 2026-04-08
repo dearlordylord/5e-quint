@@ -702,27 +702,164 @@ This exercises the full command-with-holes pattern under the new contract: `get_
 
 ---
 
-## Phase 4: Full event catalog
+## Phase 4: Semantic breadth pass
 
 **User stories**: 9, 10
 
 ### What to build
 
-Extend the event type catalog and available actions module to cover every event type in the `DndEvent` union. This is the breadth pass after phases 1-3 proved the depth.
+Broaden the supported action surface from the current representative subset toward the full *semantic* catalog. This is not a literal “expose every `DndEvent`” pass anymore. After Phases 1-3, the important distinction is:
 
-- Complete the `EVENT_TYPES` const array — every event type in the union is listed.
-- The available actions module queries guards for all event types and builds tokens for each legal one, but only exposes actions whose full execute contract is implemented.
-- Optional multi-creature fields (target, trigger context) are present in the token schema but not populated — forward compatibility for battle-level phases.
-- Property-based testing validates the contract: every returned token is executable, every omitted event type is actually illegal in the current state.
+- **semantic user-facing actions** that can be suggested honestly from current owned state
+- **low-level machine events** that are bookkeeping, internal triggers, or battle/runtime plumbing and should not be suggested directly
+
+The next session should therefore treat Phase 4 as a curated breadth rollout of missing semantic actions, not as a compile-time quest to mirror the entire `DndEvent["type"]` union.
+
+### Current state at Phase 4 start
+
+Already exposed through `available-actions.ts` / MCP:
+
+- `ENTER_COMBAT`
+- `USE_HEROIC_INSPIRATION`
+- `CAST_PREPARED_SPELL`
+- `START_TURN`
+- `USE_TACTICAL_MIND`
+- `CONVERT_SLOT_TO_POINTS`
+- `CONVERT_POINTS_TO_SLOT`
+- `USE_LAY_ON_HANDS`
+- `USE_DIVINE_SMITE`
+- `WHOLENESS_OF_BODY`
+- `UNCANNY_METABOLISM`
+- `USE_ARCANE_RECOVERY`
+- `USE_METAMAGIC`
+- `USE_MYSTIC_ARCANUM`
+- `USE_SECOND_WIND`
+- `USE_TIRELESS`
+- `USE_FONT_SLOT_RESTORE`
+- `USE_WILD_RESURGENCE_CHARGE`
+- `USE_PEERLESS_SKILL`
+- `USE_RELENTLESS_RAGE`
+- `SHORT_REST`
+- `EXIT_COMBAT`
+
+Deliberately still *not* exposed because they are low-level plumbing or still blocked by missing owned semantics:
+
+- low-level economy / bookkeeping:
+  - `USE_ACTION`
+  - `USE_BONUS_ACTION`
+  - `USE_REACTION`
+  - `USE_MOVEMENT`
+  - `USE_EXTRA_ATTACK`
+  - `MARK_BONUS_ACTION_SPELL`
+  - `MARK_NON_CANTRIP_ACTION_SPELL`
+  - `EXPEND_SLOT`
+  - `EXPEND_PACT_SLOT`
+  - `START_CONCENTRATION`
+  - `BREAK_CONCENTRATION`
+  - `CONCENTRATION_CHECK`
+  - `SPEND_HIT_DIE`
+- internal trigger-window / machine-control events:
+  - `TRIGGER_TACTICAL_MIND`
+  - `TRIGGER_PEERLESS_SKILL_ABILITY_CHECK`
+  - `TRIGGER_PEERLESS_SKILL_ATTACK_ROLL`
+  - `CLEAR_PENDING_RESOLUTION`
+  - `SET_GRAPPLING_STATE`
+- still blocked by missing owned trigger context:
+  - reaction family like `USE_UNCANNY_DODGE`, `USE_CUTTING_WORDS`
+  - any future reaction spell surface
+
+### Recommended Phase 4 split
+
+Do this in two subphases rather than one undifferentiated “catalog” pass.
+
+#### Phase 4A: Missing semantic no-hole / simple-hole actions already owned by current state
+
+Good candidates to audit and expose first:
+
+- Fighter / Barbarian / Monk / Rogue / Cleric / Bard / Ranger actions whose legality is already directly owned by machine state:
+  - `USE_ACTION_SURGE`
+  - `USE_INDOMITABLE`
+  - `ENTER_RAGE`
+  - `END_RAGE`
+  - `EXTEND_RAGE_BA`
+  - `DECLARE_RECKLESS`
+  - `FLURRY_OF_BLOWS`
+  - `PATIENT_DEFENSE_FREE`
+  - `PATIENT_DEFENSE_FOCUS`
+  - `STEP_OF_THE_WIND_FREE`
+  - `STEP_OF_THE_WIND_FOCUS`
+  - `USE_OVERCHANNEL`
+  - `USE_SNEAK_ATTACK`
+  - `USE_STEADY_AIM`
+  - `CUNNING_ACTION_DASH`
+  - `CUNNING_ACTION_DISENGAGE`
+  - `CUNNING_ACTION_HIDE`
+  - `USE_CLERIC_CHANNEL_DIVINITY`
+  - `USE_PALADIN_CHANNEL_DIVINITY`
+  - `USE_BARDIC_INSPIRATION`
+  - `USE_NATURES_VEIL`
+
+Rules for this subphase:
+
+- only expose actions whose legality can be determined honestly from existing owned state and current turn tags
+- do not add new state just to make these actions fit if they are already semantically owned
+- preserve the current resolved-token/runtime-input contract:
+  - zero-hole actions stay zero-hole
+  - simple scalar choices use typed holes
+  - no adapter-only legality inference in MCP
+
+#### Phase 4B: Blocked semantic actions that need a new ownership pass first
+
+Keep explicitly out of the first breadth batch:
+
+- reaction actions (`USE_UNCANNY_DODGE`, `USE_CUTTING_WORDS`)
+- reaction spellcasting
+- pact-slot casting or slot-free casting variants
+- anything whose legality depends on battle-owned target/trigger state not yet reflected in creature machine state
+
+### What not to do
+
+- Do **not** expose internal machine events just because they are in `DndEvent`.
+- Do **not** add a fake generic token like bare `USE_REACTION`.
+- Do **not** use MCP/runtime booleans to paper over missing trigger ownership for reaction-style actions.
+- Do **not** reintroduce parallel registries separate from `available-actions.ts` + machine guards.
 
 ### Acceptance criteria
 
-- [ ] `EVENT_TYPES` array includes every member of the `DndEvent["type"]` union — compile error if any are missing
-- [ ] Available actions module returns tokens for all legal actions in a given state, not just the representative subset from phases 1-3
-- [ ] Property-based test: for any generated DndContext, every returned token (filled with any valid choice) resolves through the supported execution contract and is accepted by the machine
-- [ ] Property-based test: for any generated DndContext, no event type absent from the result is accepted by the machine in that state
-- [ ] Multi-creature fields (target, trigger) exist as optional in token schema, are not populated
-- [ ] Snapshot tests for multiple character archetypes (Fighter, Wizard, multiclass) confirm expected token sets
+- [ ] Phase 4A adds at least one new representative semantic action from each still-uncovered family that is already fully owned by current state
+- [ ] No low-level bookkeeping/internal-trigger event is exposed as a user-facing token
+- [ ] Every newly exposed action has end-to-end coverage:
+  - token appears only when legal
+  - resolved token executes successfully through MCP
+  - resource/action-economy state changes are asserted
+- [ ] Snapshot tests for multiple archetypes confirm the grouped action surface after the breadth expansion
+- [ ] Reaction remains intentionally absent unless a separate ownership pass has made a reaction candidate honest to suggest
+
+### Files to read first next session
+
+- [plans/available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
+- [packages/core/src/available-actions.ts](/workspace/typescript/dnd/packages/core/src/available-actions.ts)
+- [packages/core/src/machine-states.ts](/workspace/typescript/dnd/packages/core/src/machine-states.ts)
+- [packages/core/src/machine-guards.ts](/workspace/typescript/dnd/packages/core/src/machine-guards.ts)
+- [packages/core/src/machine-types.ts](/workspace/typescript/dnd/packages/core/src/machine-types.ts)
+- [packages/core/src/available-actions.test.ts](/workspace/typescript/dnd/packages/core/src/available-actions.test.ts)
+- [packages/mcp/src/server.test.ts](/workspace/typescript/dnd/packages/mcp/src/server.test.ts)
+
+### Recommended implementation order
+
+1. Audit `machine-states.ts` handlers against `SUPPORTED_ACTION_TYPES` and identify Phase 4A candidates that already have honest owned legality.
+2. Add those actions to `SUPPORTED_ACTION_TYPES`, token types, resolved token schemas, and `ACTION_SPECS`.
+3. Prefer reusing or extracting legality helpers in `machine-guards.ts` when a coarse top-level guard is not enough for query-time hole filtering.
+4. Add focused core tests first, then MCP tests, then only if creature semantics changed materially, run Tier 1b creature MBT.
+
+### Verification
+
+- `pnpm --filter @dnd/core exec tsc --noEmit`
+- `pnpm --filter @dnd/mcp exec tsc --noEmit`
+- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/machine.test.ts`
+- `pnpm --filter @dnd/mcp test -- server.test.ts`
+- If creature-level semantics change, run Tier 1b:
+  - `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts`
 
 ---
 
