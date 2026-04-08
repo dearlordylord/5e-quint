@@ -57,6 +57,25 @@ function initTwoPcBattle() {
   return actor
 }
 
+function initDamageReactionBattle({
+  rogueLevel = 0,
+  monkLevel = 0,
+}: {
+  readonly rogueLevel?: number
+  readonly monkLevel?: number
+}) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", rogueLevel, monkLevel, initiativeRoll: 10 }
+    ]
+  })
+  return actor
+}
+
 function initTwoCasterBattle() {
   const actor = createActor(battleMachine)
   actor.start()
@@ -357,6 +376,104 @@ describe("battle rules scenario regressions", () => {
     expect(ctx(actor).awaitCtx).toBeNull()
     expect(creature(actor, "B").hp).toBe(20)
     expect(creature(actor, "B").reactionAvailable).toBe(false)
+  })
+
+  it("phase_1: the damage window is skipped when the target has no legal damage reaction", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit")
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
+    expect(creature(actor, "B").hp).toBe(13)
+  })
+
+  it("phase_1: Uncanny Dodge does not open when the attacker is unseen at the hit", () => {
+    const actor = initDamageReactionBattle({ rogueLevel: 5 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 8,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      targetCanSeeAttacker: false
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit")
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
+    expect(creature(actor, "B").hp).toBe(12)
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
+  })
+
+  it("phase_1: illegal damage reaction decisions are rejected against the owned window state", () => {
+    const actor = initDamageReactionBattle({ rogueLevel: 5 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 9,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
+    const awaitCtx = ctx(actor).awaitCtx
+    const dmgCtx = awaitCtx?.interrupt.tag === "PIAttackDamage" ? awaitCtx.interrupt.ctx : null
+    expect(dmgCtx?.legalReactions).toEqual(new Set(["RUncannyDodge"]))
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RDamageReduction", amount: 5 }
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
+    expect(creature(actor, "B").hp).toBe(20)
   })
 
   it("natural_20: Counterspell fizzles the spell, wastes the action, and preserves the original slot", () => {

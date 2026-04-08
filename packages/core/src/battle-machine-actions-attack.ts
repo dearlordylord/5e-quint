@@ -9,6 +9,7 @@ import {
   dealDamageWithAfterReactions,
   eligibleExcluding,
   isHit,
+  legalDamageReactions,
   mkAwait,
   piAfterDamage,
   piAttackDamage,
@@ -101,6 +102,7 @@ export function resolveAttack(
   returnTo: AfterDamageReturn,
   knockOut: boolean,
   isMelee: boolean,
+  targetCanSeeAttackerAtHit: boolean,
   mods: FullAttackMods,
   onHitEffect: AttackHitCtx["onHitEffect"],
   isFinesse: boolean,
@@ -136,7 +138,9 @@ export function resolveAttack(
     critRange,
     atkReturnTo: returnTo,
     knockOut: effectiveKnockOut,
-    onHitEffect
+    onHitEffect,
+    targetCanSeeAttackerAtHit,
+    isWeaponAttack: onHitEffect == null
   }
   const elig = eligibleExcluding(cs1, attackerId)
   if (elig.size > 0) {
@@ -192,6 +196,7 @@ export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_
     ADR_ACTIVE_TURN,
     e.knockOut,
     e.isMelee,
+    e.targetCanSeeAttacker,
     mods,
     e.onHitEffect,
     e.isFinesse,
@@ -276,6 +281,8 @@ export function battleResolveDmgReaction({
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
   const reactor = c.creatures.get(e.reactorId)!
+  if (e.reactorId !== atk.target || !aw.eligible.has(e.reactorId)) return {}
+  if (e.decision.tag !== "RPass" && !atk.legalReactions.has(e.decision.tag)) return {}
   const newDmg = Match.value(e.decision).pipe(
     byTag("RUncannyDodge", () => uncannyDodgeDamage(atk.damage)),
     byTag("RDamageReduction", (d) => deflectAttacksResult(atk.damage, d.amount).damageTaken),
@@ -286,10 +293,11 @@ export function battleResolveDmgReaction({
     const cs = setCreature(c.creatures, e.reactorId, spendReaction(reactor))
     const newElig = new Set(aw.eligible)
     newElig.delete(e.reactorId)
+    const reducedCtx = { ...atk, damage: newDmg }
     return {
       creatures: cs,
       ...phaseAwaitReaction({
-        interrupt: { tag: "PIAttackDamage", ctx: { ...atk, damage: newDmg } },
+        interrupt: { tag: "PIAttackDamage", ctx: { ...reducedCtx, legalReactions: legalDamageReactions(cs, reducedCtx) } },
         trigger: "TAttackDamages",
         eligible: newElig,
         offered: newOffered

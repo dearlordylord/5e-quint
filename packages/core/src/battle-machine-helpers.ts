@@ -21,6 +21,7 @@ import {
 import { calculateEffectiveSpeed } from "#/machine-helpers.ts"
 import type {
   AfterDamageReturn,
+  AttackDamageCtx,
   AttackHitCtx,
   AwaitCtx,
   BattleContext,
@@ -40,7 +41,8 @@ import {
   phaseResolvingAoE,
   phaseResolvingMovement
 } from "#/battle-machine-types.ts"
-import { evasionDamage } from "#/features/class-rogue.ts"
+import { canDeflectAttacks, hasDeflectEnergy } from "#/features/class-monk-features.ts"
+import { canUncannyDodge, evasionDamage } from "#/features/class-rogue.ts"
 import type { ActiveEffect, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
@@ -313,6 +315,36 @@ export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<Creatur
   return t.reactionAvailable && !t.dead && !t.unconscious ? new Set([targetId]) : new Set()
 }
 
+export function legalDamageReactions(cs: Creatures, atk: AttackDamageCtx): Set<"RUncannyDodge" | "RDamageReduction"> {
+  const target = cs.get(atk.target)!
+  const legal = new Set<"RUncannyDodge" | "RDamageReduction">()
+  if (
+    canUncannyDodge({
+      rogueLevel: target.rogueLevel,
+      reactionAvailable: target.reactionAvailable,
+      attackerVisible: atk.targetCanSeeAttackerAtHit,
+      isIncapacitated: isIncapacitated(target)
+    })
+  ) {
+    legal.add("RUncannyDodge")
+  }
+  if (
+    canDeflectAttacks(
+      target.monkLevel,
+      target.reactionAvailable,
+      atk.isWeaponAttack,
+      hasDeflectEnergy(target.monkLevel)
+    ) &&
+    (atk.damageType === "bludgeoning" ||
+      atk.damageType === "piercing" ||
+      atk.damageType === "slashing" ||
+      hasDeflectEnergy(target.monkLevel))
+  ) {
+    legal.add("RDamageReduction")
+  }
+  return legal
+}
+
 export function canMakeOpportunityAttack(c: BattleCreatureState): boolean {
   return c.reactionAvailable && !c.dead && !isIncapacitated(c) && !blocksOpportunityAttacks(c)
 }
@@ -403,28 +435,22 @@ export function advanceFromHitPhase(
   const stillHit = isHit(atk.attackRoll, atk.targetAc, atk.critRange)
   if (!stillHit) return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) }
   const cs1 = applyOnHitEffect(cs, atk.target, atk.onHitEffect, currentTurnCreatureId)
-  const dmgElig = eligibleTarget(cs1, atk.target)
-  if (dmgElig.size > 0) {
+  const dmgBase: Omit<AttackDamageCtx, "legalReactions"> = {
+    attacker: atk.attacker,
+    target: atk.target,
+    damage: atk.damage,
+    damageType: atk.damageType,
+    isCritical: atk.isCritical,
+    atkReturnTo: atk.atkReturnTo,
+    knockOut: atk.knockOut,
+    targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
+    isWeaponAttack: atk.isWeaponAttack
+  }
+  const dmgCtx: AttackDamageCtx = { ...dmgBase, legalReactions: legalDamageReactions(cs1, { ...dmgBase, legalReactions: new Set() }) }
+  if (dmgCtx.legalReactions.size > 0) {
     return {
       creatures: new Map(cs1),
-      ...phaseAwaitReaction(
-        mkAwait(
-          {
-            tag: "PIAttackDamage",
-            ctx: {
-              attacker: atk.attacker,
-              target: atk.target,
-              damage: atk.damage,
-              damageType: atk.damageType,
-              isCritical: atk.isCritical,
-              atkReturnTo: atk.atkReturnTo,
-              knockOut: atk.knockOut
-            }
-          },
-          "TAttackDamages",
-          dmgElig
-        )
-      )
+      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackDamage", ctx: dmgCtx }, "TAttackDamages", new Set([atk.target])))
     }
   }
   return dealDamageWithAfterReactions(

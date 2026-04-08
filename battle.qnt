@@ -96,6 +96,9 @@ module battle {
     | RLegendaryResistance   // auto-succeed the save
     | RDamageReduction(int)  // flat damage reduction (Deflect Attacks, Storm Giant Deflect, R10.3)
 
+  pure val DMG_REACTION_UNCANNY_DODGE = "RUncannyDodge"
+  pure val DMG_REACTION_DAMAGE_REDUCTION = "RDamageReduction"
+
   // Movement context: mover and who they're leaving the reach of.
   // threatenedBy is caller-provided (spatial concern per O2).
   type MovementCtx = {
@@ -116,6 +119,8 @@ module battle {
     atkReturnTo: AfterDamageReturn,  // where to go after entire attack chain resolves
     knockOut: bool,                  // SRD 5.2.1 "Knocking Out a Creature" — attacker's choice
     hitRider: AttackHitRider,
+    targetCanSeeAttackerAtHit: bool,
+    isWeaponAttack: bool,
   }
 
   type AttackDamageCtx = {
@@ -126,6 +131,9 @@ module battle {
     isCritical: bool,
     atkReturnTo: AfterDamageReturn,
     knockOut: bool,                  // propagated from AttackHitCtx
+    targetCanSeeAttackerAtHit: bool,
+    isWeaponAttack: bool,
+    legalReactions: Set[str],
   }
 
   type AttackHitRider =
@@ -576,7 +584,7 @@ module battle {
     )
 
   /// Eligible single-target reactor: target alone if it has reaction + alive + conscious.
-  /// Used for damage-reactions (Uncanny Dodge).
+  /// Used for after-damage reactions.
   pure def eligibleTarget(
     cs: CreatureId -> Combatant, targetId: CreatureId
   ): Set[CreatureId] =
@@ -791,13 +799,33 @@ module battle {
       and not(cs.get(id).turn.slotExpendedThisTurn)
     )
 
-  /// Eligible for Uncanny Dodge: rogue level >= 5.
-  pure def eligibleForUncannyDodge(cs: CreatureId -> Combatant, id: CreatureId): bool =
-    cs.get(id).rogueLevel >= 5
-
-  /// Eligible for Deflect Attacks: monk level >= 3.
-  pure def eligibleForDeflect(cs: CreatureId -> Combatant, id: CreatureId): bool =
-    cs.get(id).monkLevel >= 3
+  pure def legalDamageReactions(cs: CreatureId -> Combatant, atk: AttackDamageCtx): Set[str] = {
+    val target = cs.get(atk.target)
+    val canUncannyDodge =
+      hasReaction(cs, atk.target)
+      and not(target.creature.dead)
+      and not(target.creature.unconscious)
+      and not(isIncapacitated(target.creature))
+      and target.rogueLevel >= 5
+      and atk.targetCanSeeAttackerAtHit
+    val canDamageReduction =
+      hasReaction(cs, atk.target)
+      and not(target.creature.dead)
+      and not(target.creature.unconscious)
+      and not(isIncapacitated(target.creature))
+      and target.monkLevel >= 3
+      and (
+        (atk.damageType == Bludgeoning or atk.damageType == Piercing or atk.damageType == Slashing)
+        or target.monkLevel >= 13
+      )
+      and (
+        atk.isWeaponAttack
+        or target.monkLevel >= 13
+      )
+    val uncanny = if (canUncannyDodge) Set(DMG_REACTION_UNCANNY_DODGE) else Set()
+    val reduction = if (canDamageReduction) Set(DMG_REACTION_DAMAGE_REDUCTION) else Set()
+    uncanny.union(reduction)
+  }
 
   /// Pop the top entry from a spell stack.
   pure def popStack(s: List[SpellStackEntry]): { top: SpellStackEntry, rest: List[SpellStackEntry] } =
@@ -1105,6 +1133,7 @@ module battle {
     returnTo: AfterDamageReturn,
     knockOut: bool,
     isMelee: bool,
+    targetCanSeeAttackerAtHit: bool,
     mods: FullAttackMods,
     isFinesse: bool,
     hasAllyAdjacentToTarget: bool,
@@ -1138,6 +1167,8 @@ module battle {
         atkReturnTo: returnTo,
         knockOut: effectiveKnockOut,
         hitRider: hitRider,
+        targetCanSeeAttackerAtHit: targetCanSeeAttackerAtHit,
+        isWeaponAttack: hitRider == NoAttackHitRider,
       }
       val elig = eligibleExcluding(cs1, attackerId)
       if (elig.size() > 0) {
@@ -1192,7 +1223,7 @@ module battle {
       val cs1 = setTurn(bCreatures, activeId, newTurn)
       val atkCtx = buildAttackContext(cs1, activeId, targetId, isMelee, attackerWithin5ft, hostileWithin5ft, targetCanSeeAttacker, attackerCanSeeTarget, frightSourceInLOS)
       val atkMods = pAggregateAttackMods(atkCtx)
-      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, atkMods, isFinesse, hasAllyAdjacentToTarget, saDmg, hitRider)
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, targetCanSeeAttacker, atkMods, isFinesse, hasAllyAdjacentToTarget, saDmg, hitRider)
       all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
     }
   }
@@ -1205,15 +1236,18 @@ module battle {
       { creatures: cs, phase: returnToPhase(atk.atkReturnTo) }
     } else {
       val cs1 = applyAttackHitRider(cs, atk.attacker, atk.target, atk.hitRider)
-      val dmgElig = eligibleTarget(cs1, atk.target)
-      if (dmgElig.size() > 0) {
-        val dmgCtx: AttackDamageCtx = {
-          attacker: atk.attacker, target: atk.target,
-          damage: atk.damage, damageType: atk.damageType,
-          isCritical: atk.isCritical, atkReturnTo: atk.atkReturnTo,
-          knockOut: atk.knockOut,
-        }
-        { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, dmgElig)) }
+      val dmgBase: AttackDamageCtx = {
+        attacker: atk.attacker, target: atk.target,
+        damage: atk.damage, damageType: atk.damageType,
+        isCritical: atk.isCritical, atkReturnTo: atk.atkReturnTo,
+        knockOut: atk.knockOut,
+        targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
+        isWeaponAttack: atk.isWeaponAttack,
+        legalReactions: Set(),
+      }
+      val dmgCtx = dmgBase.with("legalReactions", legalDamageReactions(cs1, dmgBase))
+      if (dmgCtx.legalReactions.size() > 0) {
+        { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, Set(atk.target))) }
       } else {
         // No damage-phase reactions — deal damage and check for after-damage reactions (R10.4)
         dealDamageWithAfterReactions(cs1, atk.target, atk.attacker,
@@ -1288,24 +1322,32 @@ module battle {
               nondet decision = Set(RPass, RUncannyDodge, RDamageReduction(reductionAmt)).oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
               val newElig = ctx.eligible.exclude(Set(reactorId))
+              val legalDecision =
+                decision == RPass
+                or (decision == RUncannyDodge and atk.legalReactions.contains(DMG_REACTION_UNCANNY_DODGE))
+                or (
+                  match decision {
+                    | RDamageReduction(_) => atk.legalReactions.contains(DMG_REACTION_DAMAGE_REDUCTION)
+                    | _ => false
+                  }
+                )
               // Damage-reduction reactions: compute new damage, stay in damage phase.
               // RPass leaves damage unchanged; reduction reactions lower it.
-              // Gated on class level: Uncanny Dodge requires rogue 5+, Deflect Attacks requires monk 3+.
-              val newDmg = match decision {
+              val newDmg = if (not(legalDecision) or reactorId != atk.target) atk.damage else match decision {
                 | RUncannyDodge =>
-                  if (eligibleForUncannyDodge(bCreatures, reactorId)) atk.damage / 2 else atk.damage
+                  atk.damage / 2
                 | RDamageReduction(amount) =>
-                  if (eligibleForDeflect(bCreatures, reactorId)) {
-                    if (atk.damage - amount > 0) atk.damage - amount else 0
-                  } else atk.damage
+                  if (atk.damage - amount > 0) atk.damage - amount else 0
                 | _ => atk.damage
               }
               if (newDmg != atk.damage) {
                 val cs1 = spendReaction(bCreatures, reactorId)
+                val updatedAtk = atk.with("damage", newDmg)
+                val updatedAtkWithLegal = updatedAtk.with("legalReactions", legalDamageReactions(cs1, updatedAtk))
                 all {
                   bCreatures' = cs1,
                   bPhase' = BPAwaitingReaction({
-                    interrupt: PIAttackDamage(atk.with("damage", newDmg)), trigger: TAttackDamages,
+                    interrupt: PIAttackDamage(updatedAtkWithLegal), trigger: TAttackDamages,
                     eligible: newElig, offered: newOffered,
                   }),
                   keepBattle,
@@ -2217,7 +2259,7 @@ module battle {
         // OA: always melee, always within 5ft
         val oaCtx = buildAttackContext(cs1, reactorId, mv.mover, true, true, oaHostileWithin5ft, oaTargetCanSeeAttacker, oaAttackerCanSeeTarget, oaFrightSourceInLOS)
         val oaMods = pAggregateAttackMods(oaCtx)
-        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaMods, oaIsFinesse, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider)
+        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaTargetCanSeeAttacker, oaMods, oaIsFinesse, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -2364,7 +2406,7 @@ module battle {
           val readyReturn = ADRAwaitingReadiedAction(readyCtx)
           val readyAtkCtx = buildAttackContext(cs1, releaserId, targetId, readyIsMelee, readyAtkWithin5ft, readyHostileWithin5ft, readyTgtCanSee, readyAtkCanSee, readyFrightLOS)
           val readyMods = pAggregateAttackMods(readyAtkCtx)
-          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg, NoAttackHitRider)
+          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyTgtCanSee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg, NoAttackHitRider)
           all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -2455,7 +2497,7 @@ module battle {
         val laReturn = ADRAwaitingLegendaryAction(laCtx)
         val laAtkCtx = buildAttackContext(cs1, monsterId, laTarget, laIsMelee, laAtkWithin5ft, laHostileWithin5ft, laTgtCanSee, laAtkCanSee, laFrightLOS)
         val laMods = pAggregateAttackMods(laAtkCtx)
-        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laMods, laIsFinesse, laHasAllyAdjacent, laSaDmg, NoAttackHitRider)
+        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laTgtCanSee, laMods, laIsFinesse, laHasAllyAdjacent, laSaDmg, NoAttackHitRider)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }

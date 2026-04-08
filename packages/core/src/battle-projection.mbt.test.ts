@@ -12,7 +12,10 @@ import { createActor } from "xstate"
 import { z } from "zod"
 
 import { effectiveInitRoll } from "#/battle-machine-actions-turn.ts"
+import { canDeflectAttacks, hasDeflectEnergy } from "#/features/class-monk-features.ts"
+import { canUncannyDodge } from "#/features/class-rogue.ts"
 import { creatureMachine, type DndEvent, type DndSnapshot } from "#/machine.ts"
+import { isIncapacitated } from "#/machine-queries.ts"
 import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
 import { resolveGrapple, targetTwoSizesSmaller } from "#/machine-combat.ts"
 import {
@@ -572,7 +575,7 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("C"), actorC)
       creatureKinds.set("C", "Monster")
 
-      // D: PC caster, no class levels (enables CS chain depth >= 2)
+      // D: PC caster, Champion fighter 5 (Action Surge, crit range handled only in battle layer)
       const actorD = createActor(creatureMachine, {
         input: {
           maxHp: hp4,
@@ -580,6 +583,7 @@ function createBattleProjectionDriver() {
           effectiveSpeed: 30,
           movementRemaining: 30,
           extraAttacksRemaining: 1,
+          fighterLevel: classLevel(5),
           creatureKind: "PC",
           slotsMax: casterSlots,
           slotsCurrent: casterSlots
@@ -693,6 +697,7 @@ function createBattleProjectionDriver() {
       const hitRider = pickVariant(picks, "hitRider") ?? "NoAttackHitRider"
       const crit = pickBool(picks, "crit") ?? false
       const tAc = pickBigInt(picks, "tAc") ?? 15
+      const targetCanSeeAttacker = pickBool(picks, "targetCanSeeAttacker") ?? true
 
       const ctx = getSnap(id).context
       if (ctx.attackActionUsed && ctx.extraAttacksRemaining > 0) {
@@ -701,7 +706,7 @@ function createBattleProjectionDriver() {
         send(id, { type: "USE_ACTION", actionType: "attack" })
       }
 
-      resolveAttackHit(id, targetId, attackRoll, tAc, dmg, dt, hitRider, crit)
+      resolveAttackHit(id, targetId, attackRoll, tAc, dmg, dt, hitRider, crit, targetCanSeeAttacker)
     }
 
     /** Pending attack state for deferred damage */
@@ -714,6 +719,8 @@ function createBattleProjectionDriver() {
       attackRoll: number
       targetAc: number
       hitRider: string
+      targetCanSeeAttackerAtHit: boolean
+      isWeaponAttack: boolean
     } | null = null
 
     function handleBResolveHitReaction(picks: ReadonlyMap<string, unknown>) {
@@ -733,9 +740,26 @@ function createBattleProjectionDriver() {
           applyProjectedHitRider(pendingAttack.attacker, pendingAttack.target, pendingAttack.hitRider)
           // Check if target has damage-phase reaction available
           const targetSnap = getSnap(pendingAttack.target)
-          const targetHasReaction = targetSnap.context.reactionAvailable && !targetSnap.matches({ damageTrack: "dead" })
+          const targetCtx = targetSnap.context
+          const legalUncannyDodge = canUncannyDodge({
+            rogueLevel: targetCtx.classStates.rogue?.level ?? 0,
+            reactionAvailable: targetCtx.reactionAvailable,
+            attackerVisible: pendingAttack.targetCanSeeAttackerAtHit,
+            isIncapacitated: targetSnap.matches({ damageTrack: "dead" }) || isIncapacitated(targetCtx)
+          })
+          const legalDamageReduction =
+            canDeflectAttacks(
+              targetCtx.classStates.monk?.level ?? 0,
+              targetCtx.reactionAvailable,
+              pendingAttack.isWeaponAttack,
+              hasDeflectEnergy(targetCtx.classStates.monk?.level ?? 0)
+            ) &&
+            (pendingAttack.damageType === "bludgeoning" ||
+              pendingAttack.damageType === "piercing" ||
+              pendingAttack.damageType === "slashing" ||
+              hasDeflectEnergy(targetCtx.classStates.monk?.level ?? 0))
 
-          if (!targetHasReaction) {
+          if (!legalUncannyDodge && !legalDamageReduction) {
             // No damage reactions — apply damage immediately
             const atk = pendingAttack
             send(pendingAttack.target, {
@@ -1380,7 +1404,7 @@ function createBattleProjectionDriver() {
       const reactorSnap = getSnap(reactorId)
       if (reactorSnap.context.activeEffects.some((effect) => effect.blocksOpportunityAttacks === true)) return
       send(reactorId, { type: "USE_REACTION" })
-      resolveAttackHit(reactorId, activeId(), oaAtkRoll, oaTgtAc, oaDmg, oaDt, "NoAttackHitRider", oaCrit)
+      resolveAttackHit(reactorId, activeId(), oaAtkRoll, oaTgtAc, oaDmg, oaDt, "NoAttackHitRider", oaCrit, true)
     }
 
     function handleBGrapple(picks: ReadonlyMap<string, unknown>) {
@@ -1526,7 +1550,8 @@ function createBattleProjectionDriver() {
       dmg: number,
       dt: string,
       hitRider: string,
-      crit: boolean
+      crit: boolean,
+      targetCanSeeAttackerAtHit: boolean
     ) {
       const hit = atkRoll >= tgtAc || atkRoll === 20
       if (!hit) return
@@ -1554,7 +1579,9 @@ function createBattleProjectionDriver() {
           isCritical: crit,
           attackRoll: atkRoll,
           targetAc: tgtAc,
-          hitRider
+          hitRider,
+          targetCanSeeAttackerAtHit,
+          isWeaponAttack: hitRider === "NoAttackHitRider"
         }
       }
     }
@@ -1609,7 +1636,7 @@ function createBattleProjectionDriver() {
       const crit = pickBool(picks, "crit") ?? false
       const tgtAc = pickBigInt(picks, "tgtAc") ?? 15
       send(releaserId, { type: "USE_REACTION" })
-      resolveAttackHit(releaserId, targetId, atkRoll, tgtAc, dmg, dt, "NoAttackHitRider", crit)
+      resolveAttackHit(releaserId, targetId, atkRoll, tgtAc, dmg, dt, "NoAttackHitRider", crit, true)
     }
 
     /** Stored readied spell params, set at bReadySpell, consumed at bReadySpellRelease. */

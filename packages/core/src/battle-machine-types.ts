@@ -5,7 +5,7 @@
 import type { Option } from "effect"
 
 // Events, decisions, and interrupts extracted to battle-machine-events.ts for max-lines compliance.
-import type { PendingInterrupt, TriggerType } from "#/battle-machine-events.ts"
+import type { DmgReactionKind, PendingInterrupt, TriggerType } from "#/battle-machine-events.ts"
 import type {
   Ability,
   ActiveEffect,
@@ -138,6 +138,8 @@ export interface AttackHitCtx {
   readonly atkReturnTo: AfterDamageReturn
   readonly knockOut: boolean
   readonly onHitEffect?: ActiveEffect
+  readonly targetCanSeeAttackerAtHit: boolean
+  readonly isWeaponAttack: boolean
 }
 
 export interface AttackDamageCtx {
@@ -148,6 +150,9 @@ export interface AttackDamageCtx {
   readonly isCritical: boolean
   readonly atkReturnTo: AfterDamageReturn
   readonly knockOut: boolean
+  readonly targetCanSeeAttackerAtHit: boolean
+  readonly isWeaponAttack: boolean
+  readonly legalReactions: ReadonlySet<DmgReactionKind>
 }
 
 export interface AfterDamageCtx {

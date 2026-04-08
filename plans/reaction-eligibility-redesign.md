@@ -26,11 +26,21 @@ Redesign the damage-reaction interrupt as a complete vertical slice before migra
 
 ### Acceptance criteria
 
-- [ ] The authoritative battle model preserves the trigger facts needed to validate damage reactions at the interrupt point.
-- [ ] If no legal damage reaction exists, the battle proceeds without opening a meaningless damage-reaction window.
-- [ ] Illegal damage-reaction decisions are rejected by the battle engine rather than being silently accepted.
-- [ ] The redesign is verified end-to-end through deterministic battle scenarios, even if only a minimal representative damage reaction is enabled at this stage.
-- [ ] Tier 1 battle parity checks pass after the redesign.
+- [x] The authoritative battle model preserves the trigger facts needed to validate damage reactions at the interrupt point.
+- [x] If no legal damage reaction exists, the battle proceeds without opening a meaningless damage-reaction window.
+- [x] Illegal damage-reaction decisions are rejected by the battle engine rather than being silently accepted.
+- [x] The redesign is verified end-to-end through deterministic battle scenarios, even if only a minimal representative damage reaction is enabled at this stage.
+- [x] Tier 1 battle parity checks pass after the redesign.
+
+### Phase 1 notes
+
+- Implemented with owned `legalReactions` on `PIAttackDamage`, plus the trigger facts that later named-reaction phases need: `targetCanSeeAttackerAtHit` and `isWeaponAttack`.
+- The damage window now opens only when the target has at least one legal response at the interrupt point.
+- Deterministic coverage proves:
+  - no damage window when the target has no legal damage reaction
+  - no `Uncanny Dodge` window when the attacker is unseen
+  - illegal damage-reaction decisions are rejected as no-ops against the owned window state
+- Phase 1 verification also surfaced and fixed a pre-existing projection-driver drift: the projection MBT fixture still initialized combatant `D` as a non-fighter even though `battle.qnt` has `D` as fighter 5.
 
 ---
 
@@ -41,6 +51,15 @@ Redesign the damage-reaction interrupt as a complete vertical slice before migra
 ### What to build
 
 Move the first named damage reactions onto the owned damage-window model from Phase 1. This phase should make the modeled damage reactions use domain naming, enforce their exact legality rules, and demonstrate that the redesigned window can support named flow features without generic loopholes.
+
+### Next implementation notes
+
+- Rename the generic damage-reduction branch to `RDeflectAttacks` in both Quint and TS.
+- Keep `Uncanny Dodge` and `Deflect Attacks` as the only legal named damage reactions on this window.
+- Add deterministic scenario coverage for:
+  - positive `Uncanny Dodge`
+  - positive `Deflect Attacks`
+  - negative `Deflect Attacks` on a non-weapon or wrong-damage attack unless Deflect Energy applies
 
 ### Acceptance criteria
 
