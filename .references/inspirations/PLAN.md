@@ -196,6 +196,28 @@ Why this batch:
 - it exercises a real reaction/concentration/turn-boundary interaction,
 - and it avoids colliding with the still-unlanded grappler-link work on `master`.
 
+Batch 7 added the next smallest deterministic battle regression batch after Ready timing:
+
+- `inspiration-battle-scenarios.test.ts` now covers `Disengage` suppressing Opportunity Attacks for the rest of the current turn,
+- and confirms that the suppression ends when the mover's next turn starts.
+
+Why this batch:
+
+- the battle machine already carried `disengaged` state and an OA eligibility gate,
+- the SRD outcome is a simple deterministic yes/no timing check,
+- and it extends inspiration coverage without adding new battle state or colliding with grapple work.
+
+Batch 8 adds the explicit positive reaction-refresh boundary:
+
+- `inspiration-battle-scenarios.test.ts` now proves that a spent Reaction refreshes at the start of that creature's next turn,
+- and that the refreshed Reaction can immediately participate in a later Opportunity Attack window.
+
+Why this batch:
+
+- the battle machine already enforced the reset through fresh-turn state,
+- the existing inspiration suite only proved the negative side ("no second reaction before next turn"),
+- and this closes the deterministic SRD timing contract without requiring new battle state.
+
 ## Verification Already Completed
 
 Focused tests:
@@ -304,6 +326,24 @@ Batch-6 verification completed in this worktree:
   - seed: `0x81ee392c`
   - total: `13s`
 
+Batch-7 verification completed in this worktree:
+
+- focused battle regressions:
+  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - passed: 8 tests
+- package typecheck:
+  - command: `pnpm --filter @dnd/core typecheck`
+  - passed
+
+Batch-8 verification completed in this worktree:
+
+- focused battle regressions:
+  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - passed: 9 tests
+- package typecheck:
+  - command: `pnpm --filter @dnd/core typecheck`
+  - blocked by unrelated local `packages/core/src/available-actions.ts` errors on `master`
+
 ## Current Worktree State
 
 This worktree now contains:
@@ -311,6 +351,8 @@ This worktree now contains:
 - inspiration-driven creature regressions,
 - inspiration-driven battle regressions,
 - ready-spell timing regressions for release-vs-fizzle behavior,
+- disengage/OA timing regressions,
+- explicit reaction-refresh timing regressions,
 - runtime rider support,
 - spec-level rider generation,
 - MBT coverage for the rider path,
@@ -337,13 +379,14 @@ Scope:
 - coordinate with active parallel branches before picking grapple/forced-movement work,
 - favor one of these:
   - grappler incapacitation auto-releases target, but only after battle-layer grappler identity/link state lands on `master`,
-  - another owner-relative effect case if an external engine exposes one not yet covered,
-  - another deterministic scenario-mining batch from `natural_20` that does not require new battle state.
+  - Dodge attack-disadvantage timing through the existing `dodging` state, if an inspiration-level battle regression still adds value beyond the existing lower-level coverage,
+  - or another deterministic scenario-mining batch from `natural_20` that does not require new battle state.
 
 Why this is next:
 
 - the rider-path cleanup and the small Ready timing batch are now complete,
 - the current blocker for the preferred grapple scenario is still missing relationship state rather than missing tests,
+- the previously suggested Disengage and reaction-refresh batches are already covered in this worktree,
 - the remaining value is back in discovering the next missing mechanic interaction that the current battle surface can already express.
 
 Parallel pre-research plan for a later sub-agent pass:
@@ -378,28 +421,11 @@ Why this is weaker:
 
 If this work is resumed with subagents, they can scout these in parallel before implementation. All of them fit the current battle/runtime surface and avoid new battle state.
 
-### Candidate 1: Disengage Suppresses Opportunity Attacks For The Rest Of The Turn
+### Candidate 1: Dodge Applies Attack Disadvantage Until The Start Of The Dodger's Next Turn
 
-Why it is small:
+Status:
 
-- the battle machine already tracks `disengaged`,
-- movement OA offering already goes through a single eligibility gate,
-- and the expected behavior is a deterministic yes/no regression.
-
-Likely files:
-
-- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
-- [battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
-- [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
-
-RAW anchors:
-
-- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Disengage [Action]`
-- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Reaction`
-- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Opportunity Attacks`
-- [battle/REQUIREMENTS.md](../../battle/REQUIREMENTS.md) `R2`, `R5`
-
-### Candidate 2: Dodge Applies Attack Disadvantage Until The Start Of The Dodger's Next Turn
+- still available, but lower-level battle/machine tests already cover the core `targetDodging` aggregation and turn-start reset behavior.
 
 Why it is small:
 
@@ -419,9 +445,13 @@ RAW anchors:
 - [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Reaction`
 - [battle/REQUIREMENTS.md](../../battle/REQUIREMENTS.md) `R1`, `R2`
 
-### Candidate 3: A Spent Reaction Refreshes At The Start Of The Creature's Next Turn
+### Candidate 2: A Spent Reaction Refreshes At The Start Of The Creature's Next Turn
 
-Why it is small:
+Status:
+
+- completed in this worktree as Batch 8.
+
+Why it was small:
 
 - the battle layer already spends reactions for Shield, Opportunity Attacks, and readied actions,
 - existing inspiration tests cover "no second reaction before next turn" but not the explicit refresh boundary,
@@ -440,6 +470,31 @@ RAW anchors:
 - [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Ready [Action]`
 - [battle/REQUIREMENTS.md](../../battle/REQUIREMENTS.md) `R2`, `R5`
 
+### Candidate 3: Disengage Suppresses Opportunity Attacks For The Rest Of The Turn
+
+Status:
+
+- completed in this worktree as Batch 7.
+
+Why it was small:
+
+- the battle machine already tracked `disengaged`,
+- movement OA offering already went through a single eligibility gate,
+- and the expected behavior was a deterministic yes/no regression.
+
+Likely files:
+
+- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
+- [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
+
+RAW anchors:
+
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Disengage [Action]`
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Reaction`
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Opportunity Attacks`
+- [battle/REQUIREMENTS.md](../../battle/REQUIREMENTS.md) `R2`, `R5`
+
 ### Parallel Audit: Grapple Readiness Check
 
 This is a separate subagent task, not an implementation target.
@@ -448,6 +503,10 @@ Goal:
 
 - determine whether `master` has gained battle-layer grappler identity/link state beyond a bare `grappled: boolean`,
 - and answer whether "grappler incapacitation auto-releases target" is now a small deterministic batch or still an architectural batch.
+
+Current local finding:
+
+- still blocked. `BattleCreatureState` only carries [`grappled`](../../packages/core/src/battle-machine-types.ts), and both the battle runtime and Quint attack-context projection still hardcode [`attackerGrappled: false` and `targetIsGrappler: false`](../../packages/core/src/battle-machine-actions-attack.ts), with matching placeholders in [`battle.qnt`](../../battle.qnt).
 
 Files to inspect:
 

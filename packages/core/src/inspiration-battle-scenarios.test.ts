@@ -182,6 +182,133 @@ describe("inspiration-sourced battle regressions", () => {
     expect(creature(actor, "B").reactionAvailable).toBe(false)
   })
 
+  it("natural_20: a spent reaction refreshes at the start of the creature's next turn", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      threatened: new Set([CreatureId("B")])
+    })
+
+    expect(ctx(actor).movementCtx?.threatenedBy.has(CreatureId("B"))).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_MOVEMENT_OA_ATTACK",
+      reactorId: CreatureId("B"),
+      oaAtkRoll: 5,
+      oaDmg: 4,
+      oaDt: "slashing",
+      oaCrit: false,
+      oaTgtAc: armorClass(20),
+      knockOut: false,
+      isMelee: true,
+      isFinesse: false,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 0
+    })
+    send(actor, {
+      type: "BATTLE_MOVEMENT_OA_PASS",
+      reactorId: null
+    })
+
+    expect(creature(actor, "B").reactionAvailable).toBe(false)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      threatened: new Set([CreatureId("B")])
+    })
+
+    expect(ctx(actor).movementCtx).not.toBeNull()
+    expect(ctx(actor).movementCtx?.threatenedBy.has(CreatureId("B"))).toBe(true)
+  })
+
+  it("natural_20: Disengage prevents opportunity attacks for the rest of the turn", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_DISENGAGE" })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+    expect(creature(actor, "A").disengaged).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      threatened: new Set([CreatureId("B")])
+    })
+
+    expect(ctx(actor).movementCtx).toBeNull()
+    expect(creature(actor, "A").movementRemaining).toBe(25)
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
+  })
+
+  it("natural_20: Disengage ends when the creature's next turn starts", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_DISENGAGE" })
+    send(actor, {
+      type: "BATTLE_MOVE",
+      threatened: new Set([CreatureId("B")])
+    })
+
+    expect(ctx(actor).movementCtx).toBeNull()
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "A").disengaged).toBe(false)
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      threatened: new Set([CreatureId("B")])
+    })
+
+    expect(ctx(actor).movementCtx).not.toBeNull()
+    expect(ctx(actor).movementCtx?.threatenedBy.has(CreatureId("B"))).toBe(true)
+  })
+
   it("natural_20: Shocking Grasp blocks opportunity attacks until the start of the target's next turn", () => {
     const actor = initTwoPcBattle()
     startTurn(actor)
