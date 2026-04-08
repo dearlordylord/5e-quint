@@ -468,12 +468,128 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_RESOLVE_DMG_REACTION",
       reactorId: CreatureId("B"),
-      decision: { tag: "RDamageReduction", amount: 5 }
+      decision: { tag: "RDeflectAttacks", amount: 5 }
     })
 
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
     expect(creature(actor, "B").reactionAvailable).toBe(true)
     expect(creature(actor, "B").hp).toBe(20)
+  })
+
+  it("phase_2: Uncanny Dodge halves the damage against a visible attack and spends the reaction", () => {
+    const actor = initDamageReactionBattle({ rogueLevel: 5 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 9,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RUncannyDodge" }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(creature(actor, "B").hp).toBe(16)
+    expect(creature(actor, "B").reactionAvailable).toBe(false)
+  })
+
+  it("phase_2: Deflect Attacks reduces weapon-attack damage and spends the reaction", () => {
+    const actor = initDamageReactionBattle({ monkLevel: 3 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 9,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
+    const deflectAwaitCtx = ctx(actor).awaitCtx
+    const deflectCtx = deflectAwaitCtx?.interrupt.tag === "PIAttackDamage" ? deflectAwaitCtx.interrupt.ctx : null
+    expect(deflectCtx?.legalReactions).toEqual(new Set(["RDeflectAttacks"]))
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RDeflectAttacks", amount: 6 }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(creature(actor, "B").hp).toBe(17)
+    expect(creature(actor, "B").reactionAvailable).toBe(false)
+  })
+
+  it("phase_2: Deflect Attacks does not open on a non-weapon attack before Deflect Energy", () => {
+    const actor = initDamageReactionBattle({ monkLevel: 3 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "cold",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      onHitEffect: {
+        spellId: spellId("ray_of_frost"),
+        turnsRemaining: 1,
+        expiresAt: "start",
+        casterId: CreatureId("A"),
+        expiryOwnerId: CreatureId("A"),
+        speedDeltaFeet: -10
+      }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
+    expect(creature(actor, "B").hp).toBe(13)
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
   })
 
   it("natural_20: Counterspell fizzles the spell, wastes the action, and preserves the original slot", () => {

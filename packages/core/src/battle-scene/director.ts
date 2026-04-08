@@ -181,7 +181,11 @@ export function directorStep(
   }
   if (event.type === "BATTLE_RESOLVE_DMG_REACTION" && event.reactorId) {
     const text =
-      event.decision.tag === "RUncannyDodge" ? "Uncanny Dodge!" : event.decision.tag === "RPass" ? "Skip" : "Reduce"
+      event.decision.tag === "RUncannyDodge"
+        ? "Uncanny Dodge!"
+        : event.decision.tag === "RDeflectAttacks"
+          ? "Deflect Attacks!"
+          : "Skip"
     applyCue(creatureCues, event.reactorId, label(text, "positive"))
   }
 

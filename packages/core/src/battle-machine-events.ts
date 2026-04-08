@@ -34,12 +34,12 @@ export type HitReactionDecision =
   | { readonly tag: "RParry"; readonly bonus: number }
   | { readonly tag: "RCuttingWords"; readonly reduction: number }
 
-export type DmgReactionKind = "RUncannyDodge" | "RDamageReduction"
+export type DmgReactionKind = "RUncannyDodge" | "RDeflectAttacks"
 
 export type DmgReactionDecision =
   | { readonly tag: "RPass" }
   | { readonly tag: "RUncannyDodge" }
-  | { readonly tag: "RDamageReduction"; readonly amount: number }
+  | { readonly tag: "RDeflectAttacks"; readonly amount: number }
 
 export type CSDecision =
   | { readonly tag: "RPass" }

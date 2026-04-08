@@ -285,7 +285,7 @@ export function battleResolveDmgReaction({
   if (e.decision.tag !== "RPass" && !atk.legalReactions.has(e.decision.tag)) return {}
   const newDmg = Match.value(e.decision).pipe(
     byTag("RUncannyDodge", () => uncannyDodgeDamage(atk.damage)),
-    byTag("RDamageReduction", (d) => deflectAttacksResult(atk.damage, d.amount).damageTaken),
+    byTag("RDeflectAttacks", (d) => deflectAttacksResult(atk.damage, d.amount).damageTaken),
     byTag("RPass", () => atk.damage),
     Match.exhaustive
   )

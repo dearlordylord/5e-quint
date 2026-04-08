@@ -63,11 +63,20 @@ Move the first named damage reactions onto the owned damage-window model from Ph
 
 ### Acceptance criteria
 
-- [ ] Damage-reaction decisions use domain naming for the reactions they represent.
-- [ ] `Uncanny Dodge` is modeled as a named legal damage reaction with the required trigger conditions.
-- [ ] `Deflect Attacks` is modeled as a named legal damage reaction with the required trigger conditions.
-- [ ] Deterministic scenario tests cover positive and negative legality cases for the first named damage reactions.
-- [ ] Tier 1 battle parity checks pass after the redesign.
+- [x] Damage-reaction decisions use domain naming for the reactions they represent.
+- [x] `Uncanny Dodge` is modeled as a named legal damage reaction with the required trigger conditions.
+- [x] `Deflect Attacks` is modeled as a named legal damage reaction with the required trigger conditions.
+- [x] Deterministic scenario tests cover positive and negative legality cases for the first named damage reactions.
+- [x] Tier 1 battle parity checks pass after the redesign.
+
+### Phase 2 notes
+
+- Renamed the generic damage-reduction decision to `RDeflectAttacks` across Quint, runtime, MBT bridges, and scenario coverage.
+- Deterministic coverage now proves:
+  - positive `Uncanny Dodge`
+  - positive `Deflect Attacks`
+  - negative `Deflect Attacks` on a non-weapon spell attack before Deflect Energy
+- This phase did not change the Phase 1 ownership shape; it only moved the damage window onto explicit domain naming.
 
 ---
 
@@ -78,6 +87,14 @@ Move the first named damage reactions onto the owned damage-window model from Ph
 ### What to build
 
 Apply the same ownership pattern to hit-reaction windows. The hit interrupt should carry explicit legal reaction options for each responder rather than relying on a generic responder set plus caller-chosen decision variant. This phase should cover the named hit reactions already modeled by the battle system and align their legality with the battle-domain window model established in Phase 1.
+
+### Next implementation notes
+
+- Unlike the damage window, `PIAttackHit` is genuinely multi-responder. This phase should use a per-creature legal-reaction map rather than another target-local set.
+- `Shield` is already close to fully ownable from current battle state: prepared spell identity, slot availability, reaction availability, and one-slot-per-turn are already tracked.
+- `Cutting Words` is not yet fully ownable because battle combatants do not currently carry bardic-inspiration charge state.
+- `Parry` is not yet fully ownable because battle combatants do not currently carry a named parry capability or parry-bonus source.
+- So Phase 3 should explicitly include the owned-state additions that make those hit reactions honest, rather than narrowing the hit window back to `Shield` alone.
 
 ### Acceptance criteria
 

@@ -315,9 +315,9 @@ export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<Creatur
   return t.reactionAvailable && !t.dead && !t.unconscious ? new Set([targetId]) : new Set()
 }
 
-export function legalDamageReactions(cs: Creatures, atk: AttackDamageCtx): Set<"RUncannyDodge" | "RDamageReduction"> {
+export function legalDamageReactions(cs: Creatures, atk: AttackDamageCtx): Set<"RUncannyDodge" | "RDeflectAttacks"> {
   const target = cs.get(atk.target)!
-  const legal = new Set<"RUncannyDodge" | "RDamageReduction">()
+  const legal = new Set<"RUncannyDodge" | "RDeflectAttacks">()
   if (
     canUncannyDodge({
       rogueLevel: target.rogueLevel,
@@ -340,7 +340,7 @@ export function legalDamageReactions(cs: Creatures, atk: AttackDamageCtx): Set<"
       atk.damageType === "slashing" ||
       hasDeflectEnergy(target.monkLevel))
   ) {
-    legal.add("RDamageReduction")
+    legal.add("RDeflectAttacks")
   }
   return legal
 }

@@ -744,8 +744,8 @@ function createBattleMachineDriver() {
         const decision =
           tag === "RUncannyDodge"
             ? ({ tag: "RUncannyDodge" } as const)
-            : tag === "RDamageReduction"
-              ? ({ tag: "RDamageReduction", amount: p(picks, "reductionAmt", 5) } as const)
+            : tag === "RDeflectAttacks"
+              ? ({ tag: "RDeflectAttacks", amount: p(picks, "reductionAmt", 5) } as const)
               : ({ tag: "RPass" } as const)
         send({
           type: "BATTLE_RESOLVE_DMG_REACTION",

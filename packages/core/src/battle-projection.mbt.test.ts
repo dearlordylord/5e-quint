@@ -824,7 +824,7 @@ function createBattleProjectionDriver() {
       if (decision === "RUncannyDodge") {
         send(reactorId, { type: "USE_REACTION" })
         pendingAttack.damage = Math.floor(pendingAttack.damage / 2)
-      } else if (decision.startsWith("RDamageReduction")) {
+      } else if (decision.startsWith("RDeflectAttacks")) {
         send(reactorId, { type: "USE_REACTION" })
         pendingAttack.damage = Math.max(0, pendingAttack.damage - reductionAmt)
       }

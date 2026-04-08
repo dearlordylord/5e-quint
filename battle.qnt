@@ -94,10 +94,10 @@ module battle {
     | RCuttingWords(int)     // subtract from attack roll (Bardic Inspiration die, R10.1)
     | RCounterspell(bool)    // bool = target CON save succeeded (5.2.1 Counterspell)
     | RLegendaryResistance   // auto-succeed the save
-    | RDamageReduction(int)  // flat damage reduction (Deflect Attacks, Storm Giant Deflect, R10.3)
+    | RDeflectAttacks(int)  // flat damage reduction (Deflect Attacks, Storm Giant Deflect, R10.3)
 
   pure val DMG_REACTION_UNCANNY_DODGE = "RUncannyDodge"
-  pure val DMG_REACTION_DAMAGE_REDUCTION = "RDamageReduction"
+  pure val DMG_REACTION_DEFLECT_ATTACKS = "RDeflectAttacks"
 
   // Movement context: mover and who they're leaving the reach of.
   // threatenedBy is caller-provided (spatial concern per O2).
@@ -823,7 +823,7 @@ module battle {
         or target.monkLevel >= 13
       )
     val uncanny = if (canUncannyDodge) Set(DMG_REACTION_UNCANNY_DODGE) else Set()
-    val reduction = if (canDamageReduction) Set(DMG_REACTION_DAMAGE_REDUCTION) else Set()
+    val reduction = if (canDamageReduction) Set(DMG_REACTION_DEFLECT_ATTACKS) else Set()
     uncanny.union(reduction)
   }
 
@@ -1319,7 +1319,7 @@ module battle {
             } else {
               nondet reactorId = remaining.oneOf()
               nondet reductionAmt = 1.to(20).oneOf()
-              nondet decision = Set(RPass, RUncannyDodge, RDamageReduction(reductionAmt)).oneOf()
+              nondet decision = Set(RPass, RUncannyDodge, RDeflectAttacks(reductionAmt)).oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
               val newElig = ctx.eligible.exclude(Set(reactorId))
               val legalDecision =
@@ -1327,7 +1327,7 @@ module battle {
                 or (decision == RUncannyDodge and atk.legalReactions.contains(DMG_REACTION_UNCANNY_DODGE))
                 or (
                   match decision {
-                    | RDamageReduction(_) => atk.legalReactions.contains(DMG_REACTION_DAMAGE_REDUCTION)
+                    | RDeflectAttacks(_) => atk.legalReactions.contains(DMG_REACTION_DEFLECT_ATTACKS)
                     | _ => false
                   }
                 )
@@ -1336,7 +1336,7 @@ module battle {
               val newDmg = if (not(legalDecision) or reactorId != atk.target) atk.damage else match decision {
                 | RUncannyDodge =>
                   atk.damage / 2
-                | RDamageReduction(amount) =>
+                | RDeflectAttacks(amount) =>
                   if (atk.damage - amount > 0) atk.damage - amount else 0
                 | _ => atk.damage
               }
