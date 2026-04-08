@@ -92,6 +92,13 @@ export function withinOneSize(attackerSize: Size, targetSize: Size): boolean {
   return tIdx - aIdx <= 1
 }
 
+/** Check if target is at least two size categories smaller than attacker. */
+export function targetTwoSizesSmaller(attackerSize: Size, targetSize: Size): boolean {
+  const aIdx = SIZE_ORDER.indexOf(attackerSize)
+  const tIdx = SIZE_ORDER.indexOf(targetSize)
+  return tIdx <= aIdx - 2
+}
+
 /** Aggregate all attack modifiers. Matches Quint pAggregateAttackMods. */
 export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
   const anyAdvantage =

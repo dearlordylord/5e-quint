@@ -36,7 +36,7 @@ import {
   QuintTurnState,
   snapshotToNormalized
 } from "#/mbt-shared.ts"
-import type { ActionType, Condition, CreatureKind, DamageType } from "#/types.ts"
+import type { ActionType, Condition, CreatureKind } from "#/types.ts"
 import {
   abilityModifier,
   classLevel,
@@ -517,20 +517,21 @@ function createDndDriver() {
       }) => {
         const isMonster = currentCreatureKind === "Monster"
         const sb = currentStatBlock
-        const effects = !numEffects
+        void effDmgAmount
+        void effDmgType
+        void effHeal
+        void effResType
+        void effTempHp
+        void effVulnType
+        void grappledSmall
+        void isGrappling
+        const effectResolutions = !numEffects
           ? []
           : [
               {
                 spellId: spellId(effSpellId ?? ""),
-                healAmount: Number(effHeal ?? 0),
-                tempHpAmount: Number(effTempHp ?? 0),
-                saveResult: effSaveResult ?? false,
-                damageAmount: Number(effDmgAmount ?? 0),
-                damageType: mapDamageType(effDmgType ?? "Bludgeoning"),
+                saveSucceeded: effSaveResult ?? false,
                 conSaveSucceeded: effConSave ?? false,
-                resistances: new Set(effResType ? [mapDamageType(effResType)] : []),
-                vulnerabilities: new Set(effVulnType ? [mapDamageType(effVulnType)] : []),
-                immunities: new Set<DamageType>()
               }
             ]
         send({
@@ -539,13 +540,11 @@ function createDndDriver() {
           extraAttacks: isMonster && sb
             ? (sb.multiattackLength > 0 ? sb.multiattackLength - 1 : 0)
             : undefined,
-          isGrappling,
-          grappledTargetTwoSizesSmaller: grappledSmall,
           // Monsters: skip death save (pass undefined), skip Heroic Rally (conMod undefined)
           deathSaveRoll: isMonster ? undefined : dsRoll != null ? d20Roll(Number(dsRoll)) : undefined,
           deathSaveRoll2: isMonster ? undefined : dsRoll2 != null ? d20Roll(Number(dsRoll2)) : undefined,
           conMod: isMonster ? undefined : conMod != null ? Number(conMod) : undefined,
-          startOfTurnEffects: effects,
+          effectResolutions,
           // Phase L: compute which abilities recharged (mirrors Quint's pProcessRechargeRolls)
           rechargedAbilities:
             isMonster && sb && rechargeRollVal != null
@@ -596,32 +595,25 @@ function createDndDriver() {
         useLR
       }) => {
         // When turnPhase != "acting", Quint skips nondet generation — all params are undefined (no-op path)
-        const saves = !numSaves
+        const effectResolutions = !numSaves && !numDmg
           ? []
           : [
               {
-                spellId: spellId(saveSpellId ?? ""),
-                saveSucceeded: saveSucceeded ?? false,
-                conditionsToRemove: [QUINT_CONDITION_MAP[saveCondition ?? ""] ?? "blinded"]
+                spellId: spellId((numSaves ? saveSpellId : dmgSpellId) ?? ""),
+                saveSucceeded: numSaves ? (saveSucceeded ?? false) : false,
+                conSaveSucceeded: numDmg ? (conSave ?? false) : undefined,
               }
             ]
         const isMonster = currentCreatureKind === "Monster"
         const sb = currentStatBlock
-        const damages = !numDmg
-          ? []
-          : [
-              {
-                spellId: spellId(dmgSpellId ?? ""),
-                damage: Number(dmgAmount ?? 0),
-                damageType: mapDamageType(dmgType ?? "Bludgeoning"),
-                conSaveSucceeded: conSave ?? false,
-                resistances: isMonster && sb ? sb.resistances : new Set(dmgResType ? [mapDamageType(dmgResType)] : []),
-                vulnerabilities:
-                  isMonster && sb ? sb.vulnerabilities : new Set(dmgVulnType ? [mapDamageType(dmgVulnType)] : []),
-                immunities: isMonster && sb ? sb.immunities : new Set<DamageType>()
-              }
-            ]
-        send({ type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages, useLegendaryResistance: useLR })
+        void isMonster
+        void sb
+        void dmgAmount
+        void dmgType
+        void dmgResType
+        void dmgVulnType
+        void saveCondition
+        send({ type: "END_TURN", effectResolutions, useLegendaryResistance: useLR })
       },
       doMarkBonusActionSpell: () => {
         send({ type: "MARK_BONUS_ACTION_SPELL" })

@@ -86,6 +86,8 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     deafened: false,
     frightened: false,
     grappled: false,
+    grappling: false,
+    grappledTargetTwoSizesSmaller: false,
     invisible: false,
     paralyzed: false,
     petrified: false,

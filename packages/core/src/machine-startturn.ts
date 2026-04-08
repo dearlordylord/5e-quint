@@ -21,11 +21,11 @@ import {
   type DndContext,
   type DndEvent,
   INITIAL_TURN_STATE,
-  type StartTurnEffect,
+  type TurnHookResolution,
   type TurnPhaseCtx,
   type TurnPhaseResult
 } from "#/machine-types.ts"
-import type { ActiveEffect, SpellId } from "#/types.ts"
+import type { ActiveEffect, DamageType, SpellId } from "#/types.ts"
 import { deathSaveCount, hp, movementFeet, tempHp } from "#/types.ts"
 
 function decrementDurations(aes: ReadonlyArray<ActiveEffect>): ReadonlyArray<ActiveEffect> {
@@ -40,10 +40,66 @@ function hasEffect(aes: ReadonlyArray<ActiveEffect>, spellId: SpellId): boolean 
   return aes.some((a) => a.spellId === spellId && a.turnsRemaining > 0)
 }
 
+function aggregateDamageModifiers(
+  aes: ReadonlyArray<ActiveEffect>,
+  petrified: boolean,
+): {
+  readonly resistances: ReadonlySet<DamageType>
+  readonly vulnerabilities: ReadonlySet<DamageType>
+  readonly immunities: ReadonlySet<DamageType>
+} {
+  const resistances = new Set<DamageType>(petrified ? ALL_DAMAGE_TYPES : [])
+  const vulnerabilities = new Set<DamageType>()
+  const immunities = new Set<DamageType>()
+  for (const effect of aes) {
+    if (effect.grantedResistances) for (const damageType of effect.grantedResistances) resistances.add(damageType)
+    if (effect.grantedVulnerabilities) for (const damageType of effect.grantedVulnerabilities) vulnerabilities.add(damageType)
+    if (effect.grantedImmunities) for (const damageType of effect.grantedImmunities) immunities.add(damageType)
+  }
+  return { resistances, vulnerabilities, immunities }
+}
+
+function deriveStartTurnEffects(
+  aes: ReadonlyArray<ActiveEffect>,
+  runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined,
+  petrified: boolean,
+): ReadonlyArray<{
+  readonly spellId: SpellId
+  readonly healAmount: number
+  readonly tempHpAmount: number
+  readonly saveSucceeded: boolean
+  readonly damageAmount: number
+  readonly damageType: DamageType
+  readonly conSaveSucceeded: boolean
+  readonly resistances: ReadonlySet<DamageType>
+  readonly vulnerabilities: ReadonlySet<DamageType>
+  readonly immunities: ReadonlySet<DamageType>
+}> {
+  const overrides = new Map((runtimeResolutions ?? []).map((effect) => [effect.spellId, effect]))
+  const damageMods = aggregateDamageModifiers(aes, petrified)
+  return aes.flatMap((effect) => {
+    const hook = effect.startOfTurnHook
+    if (hook == null) return []
+    const override = overrides.get(effect.spellId)
+    return [{
+      spellId: effect.spellId,
+      healAmount: hook.healAmount ?? 0,
+      tempHpAmount: hook.tempHpAmount ?? 0,
+      saveSucceeded: hook.removeOnSaveSuccess ? (override?.saveSucceeded ?? false) : false,
+      damageAmount: hook.damageAmount ?? 0,
+      damageType: hook.damageType ?? "bludgeoning",
+      conSaveSucceeded: hook.requiresConcentrationCheck ? (override?.conSaveSucceeded ?? true) : true,
+      resistances: damageMods.resistances,
+      vulnerabilities: damageMods.vulnerabilities,
+      immunities: damageMods.immunities,
+    }]
+  })
+}
+
 export function computeStartTurn(
   ctx: TurnPhaseCtx,
   deathSaveRoll: number | undefined,
-  effects: ReadonlyArray<StartTurnEffect>
+  runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined
 ): TurnPhaseResult {
   const conditions: Partial<Record<ConditionFlag, boolean>> = {}
   let incap = ctx.incapacitatedSources
@@ -63,6 +119,8 @@ export function computeStartTurn(
     const cid = conc.value
     if (!ae.some((a) => a.spellId === cid)) conc = Option.none()
   }
+
+  const effects = deriveStartTurnEffects(ae, runtimeResolutions, ctx.petrified)
 
   // 2. Death save (if applicable)
   if (h === 0 && !stable && !dead && deathSaveRoll != null) {
@@ -98,7 +156,7 @@ export function computeStartTurn(
   for (const eff of effects) {
     if (!hasEffect(ae, eff.spellId)) continue
 
-    if (eff.saveResult) {
+    if (eff.saveSucceeded) {
       ae = removeAe(ae, eff.spellId)
     }
 
@@ -173,14 +231,14 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
   const fighterLevel = c.classStates.fighter?.level ?? 0
   const effectiveDsRoll =
     ev.deathSaveRoll != null ? applyDefyDeath(fighterLevel, ev.deathSaveRoll, ev.deathSaveRoll2) : undefined
-  const { conditions: conds, ...cr } = computeStartTurn(c, effectiveDsRoll, ev.startOfTurnEffects)
+  const { conditions: conds, ...cr } = computeStartTurn(c, effectiveDsRoll, ev.effectResolutions)
   const speed = calculateEffectiveSpeed({
     baseSpeed: c.baseWalkSpeed,
     armorPenalty: 0, // armor not modeled at creature level
     exhaustion: c.exhaustion,
-    grappled: conds.grappled ?? c.grappled,
-    grappledTargetTwoSizesSmaller: ev.grappledTargetTwoSizesSmaller,
-    isGrappling: ev.isGrappling,
+    grappled: c.grappling ? false : (conds.grappled ?? c.grappled),
+    grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
+    isGrappling: c.grappling,
     restrained: conds.restrained ?? c.restrained
   })
   // Derive extra attacks: event override (monsters/multiattack) or from class levels (PCs)

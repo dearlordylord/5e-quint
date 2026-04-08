@@ -117,11 +117,7 @@ function buildRuntimeInputs(request: ResolutionRequest): Effect.Effect<Resolutio
     Match.when({ runtime: "startTurn" }, () =>
       Effect.succeed({
         runtime: "startTurn" as const,
-        values: {
-          isGrappling: false,
-          grappledTargetTwoSizesSmaller: false,
-          startOfTurnEffects: [],
-        },
+        values: {},
       }),
     ),
     Match.when({ runtime: "secondWind" }, () =>

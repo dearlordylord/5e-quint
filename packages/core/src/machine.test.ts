@@ -934,22 +934,11 @@ describe("frightened - LOS parameterization", () => {
 const DEFAULT_BASE_SPEED = 30
 // ============================================================
 
-function startTurn(
-  actor: ReturnType<typeof create>,
-  opts: {
-    isGrappling?: boolean
-    grappledTargetTwoSizesSmaller?: boolean
-  } = {}
-) {
+function startTurn(actor: ReturnType<typeof create>) {
   const s = actor.getSnapshot()
   if (s.matches({ turnPhase: "outOfCombat" })) enterCombat(actor)
   else if (s.matches({ turnPhase: "acting" })) endTurn(actor)
-  actor.send({
-    type: "START_TURN",
-    isGrappling: opts.isGrappling ?? false,
-    grappledTargetTwoSizesSmaller: opts.grappledTargetTwoSizesSmaller ?? false,
-    startOfTurnEffects: []
-  })
+  actor.send({ type: "START_TURN" })
 }
 
 function enterCombat(actor: ReturnType<typeof create>) {
@@ -957,7 +946,7 @@ function enterCombat(actor: ReturnType<typeof create>) {
 }
 
 function endTurn(actor: ReturnType<typeof create>) {
-  actor.send({ type: "END_TURN", endOfTurnSaves: [], endOfTurnDamage: [] })
+  actor.send({ type: "END_TURN" })
 }
 
 function useAction(actor: ReturnType<typeof create>, actionType: ActionType) {
@@ -983,7 +972,7 @@ describe("turn lifecycle - START_TURN", () => {
     const a = createActor(creatureMachine, { input: { maxHp: DEFAULT_MAX_HP, fighterLevel: classLevel(11) } })
     a.start()
     enterCombat(a)
-    a.send({ type: "START_TURN", isGrappling: false, grappledTargetTwoSizesSmaller: false, startOfTurnEffects: [] })
+    a.send({ type: "START_TURN" })
     expect(ctx(a).extraAttacksRemaining).toBe(2)
   })
 
@@ -1003,6 +992,48 @@ describe("turn lifecycle - START_TURN", () => {
     expect(ctx(a).disengaged).toBe(true)
     startTurn(a)
     expect(ctx(a).disengaged).toBe(false)
+  })
+
+  it("derives start-of-turn healing from owned active effects without payload help", () => {
+    const a = create()
+    takeDamage(a, 5)
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("regeneration"),
+      durationTurns: 2,
+      expiresAt: "end",
+      casterId: CreatureId("self"),
+      startOfTurnHook: {
+        healAmount: 3,
+      }
+    })
+    startTurn(a)
+    expect(ctx(a).hp).toBe(DEFAULT_MAX_HP - 2)
+  })
+
+  it("derives end-of-turn removal from owned active effects with runtime save result only", () => {
+    const a = create()
+    startTurn(a)
+    applyCondition(a, "blinded")
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("blindness"),
+      durationTurns: 2,
+      expiresAt: "end",
+      casterId: CreatureId("self"),
+      endOfTurnHook: {
+        removeOnSaveSuccess: true,
+        conditionsToRemove: ["blinded"],
+      }
+    })
+
+    a.send({
+      type: "END_TURN",
+      effectResolutions: [{ spellId: mkSpellId("blindness"), saveSucceeded: true }]
+    })
+
+    expect(ctx(a).blinded).toBe(false)
+    expect(ctx(a).activeEffects.some((effect) => effect.spellId === mkSpellId("blindness"))).toBe(false)
   })
 })
 
@@ -1032,12 +1063,7 @@ describe("combat mode separation (TA3)", () => {
 
   it("START_TURN ignored from outOfCombat", () => {
     const a = create()
-    a.send({
-      type: "START_TURN",
-      isGrappling: false,
-      grappledTargetTwoSizesSmaller: false,
-      startOfTurnEffects: []
-    })
+    a.send({ type: "START_TURN" })
     expect(snap(a).matches({ turnPhase: "outOfCombat" })).toBe(true)
   })
 
@@ -1465,7 +1491,7 @@ describe("calculateAC", () => {
 })
 
 describe("grapple", () => {
-  it("grapple succeeds: target save failed", () => {
+  it("grapple succeeds: local creature starts grappling", () => {
     const a = create()
     a.send({
       type: "GRAPPLE",
@@ -1475,6 +1501,8 @@ describe("grapple", () => {
       attackerHasFreeHand: true
     })
     expect(ctx(a).grappled).toBe(true)
+    expect(ctx(a).grappling).toBe(true)
+    expect(ctx(a).grappledTargetTwoSizesSmaller).toBe(false)
   })
 
   it("grapple fails: target save succeeded", () => {
@@ -1486,7 +1514,7 @@ describe("grapple", () => {
       targetSaveFailed: false,
       attackerHasFreeHand: true
     })
-    expect(ctx(a).grappled).toBe(false)
+    expect(ctx(a).grappling).toBe(false)
   })
 
   it("grapple fails: target > 1 size larger", () => {
@@ -1498,7 +1526,7 @@ describe("grapple", () => {
       targetSaveFailed: true,
       attackerHasFreeHand: true
     })
-    expect(ctx(a).grappled).toBe(false)
+    expect(ctx(a).grappling).toBe(false)
   })
 
   it("grapple fails: no free hand", () => {
@@ -1510,7 +1538,7 @@ describe("grapple", () => {
       targetSaveFailed: true,
       attackerHasFreeHand: false
     })
-    expect(ctx(a).grappled).toBe(false)
+    expect(ctx(a).grappling).toBe(false)
   })
 
   it("grapple auto-success if incapacitated", () => {
@@ -1524,6 +1552,7 @@ describe("grapple", () => {
       attackerHasFreeHand: true
     })
     expect(ctx(a).grappled).toBe(true)
+    expect(ctx(a).grappling).toBe(true)
   })
 
   it("release grapple", () => {
@@ -1537,22 +1566,39 @@ describe("grapple", () => {
     })
     a.send({ type: "RELEASE_GRAPPLE" })
     expect(ctx(a).grappled).toBe(false)
+    expect(ctx(a).grappling).toBe(false)
+    expect(ctx(a).grappledTargetTwoSizesSmaller).toBe(false)
   })
 
-  it("escape grapple: target succeeds", () => {
+  it("escape grapple: local creature escapes being grappled", () => {
     const a = create()
-    a.send({
-      type: "GRAPPLE",
-      attackerSize: "medium",
-      targetSize: "medium",
-      targetSaveFailed: true,
-      attackerHasFreeHand: true
-    })
+    applyCondition(a, "grappled")
     a.send({ type: "ESCAPE_GRAPPLE", escapeSucceeded: true })
     expect(ctx(a).grappled).toBe(false)
   })
 
-  it("escape grapple: target fails keeps grapple", () => {
+  it("escape grapple: failed escape keeps grappled condition", () => {
+    const a = create()
+    applyCondition(a, "grappled")
+    a.send({ type: "ESCAPE_GRAPPLE", escapeSucceeded: false })
+    expect(ctx(a).grappled).toBe(true)
+  })
+
+  it("persists grapple drag facts for later turn-speed calculation", () => {
+    const a = create()
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "large",
+      targetSize: "tiny",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+    expect(ctx(a).grappled).toBe(true)
+    expect(ctx(a).grappling).toBe(true)
+    expect(ctx(a).grappledTargetTwoSizesSmaller).toBe(true)
+  })
+
+  it("START_TURN derives grappling speed penalty from owned state", () => {
     const a = create()
     a.send({
       type: "GRAPPLE",
@@ -1561,8 +1607,21 @@ describe("grapple", () => {
       targetSaveFailed: true,
       attackerHasFreeHand: true
     })
-    a.send({ type: "ESCAPE_GRAPPLE", escapeSucceeded: false })
-    expect(ctx(a).grappled).toBe(true)
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(15)
+  })
+
+  it("START_TURN skips grapple speed penalty for targets two sizes smaller", () => {
+    const a = create()
+    a.send({
+      type: "GRAPPLE",
+      attackerSize: "large",
+      targetSize: "tiny",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(30)
   })
 })
 

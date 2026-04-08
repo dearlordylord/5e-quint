@@ -26,9 +26,10 @@ This boundary is practical, not architectural. The SRD is freely available under
                  │                     │                     │
     ┌────────────▼──────────┐ ┌───────▼────────┐ ┌─────────▼──────────┐
     │   Quint Spec          │ │ UBIQUITOUS_    │ │   ASSUMPTIONS.md   │
-    │   creature.qnt (6K)   │ │ LANGUAGE.md    │ │   (34 modeling     │
-    │   battle.qnt (2K)     │ │ (canonical     │ │    decisions)      │
-    │                       │ │  terminology)  │ │                    │
+    │   battle.qnt          │ │ LANGUAGE.md    │ │   (34 modeling     │
+    │   (authoritative)     │ │ (canonical     │ │    decisions)      │
+    │   creature.qnt        │ │  terminology)  │ │                    │
+    │   (helper library)    │ │                │ │                    │
     │   Scope: abstract     │ └────────────────┘ └────────────────────┘
     │   mechanics, safety   │
     │   invariants          │
@@ -66,9 +67,9 @@ This boundary is practical, not architectural. The SRD is freely available under
 
 ## 1. Quint Spec
 
-**Files:** `creature.qnt` (6079 lines), `battle.qnt` (2065 lines), `dndTest.qnt` (7132 lines)
+**Files:** `battle.qnt` (authoritative combat spec), `creature.qnt` (helper library composed by `battle.qnt`), `dndTest.qnt`
 
-**Scope:** Abstract game mechanics. Proves safety properties hold under *any* input combination via property-based fuzzing and model checking.
+**Scope:** Abstract game mechanics. `battle.qnt` is the main semantic model for combat. `creature.qnt` provides pure helpers and decompositions reused by battle logic and tests. Safety properties are proved against the battle-level model.
 
 **Owns:**
 - Damage pipeline (temp HP absorption, R/V/I, death/unconscious/death saves, massive damage)
@@ -84,7 +85,7 @@ This boundary is practical, not architectural. The SRD is freely available under
 - Spatial relationships (no positions, distances, line of sight)
 - UI state or rendering
 
-**Correctness mechanism:** Nondeterministic fuzzing with abstract ranges (e.g., `DAMAGE_RANGE = 0.to(60)`) stress-tests the rules engine with inputs no single weapon produces, deliberately hitting edge cases that realistic inputs rarely reach. Safety invariants (HP bounded, dead implies 0 HP, exhaustion 6 implies dead, etc.) must hold for every reachable state. Additionally, `dndTest.qnt` contains 1,047 deterministic unit tests for pure functions.
+**Correctness mechanism:** Nondeterministic fuzzing with abstract ranges (e.g., `DAMAGE_RANGE = 0.to(60)`) stress-tests the rules engine with inputs no single weapon produces, deliberately hitting edge cases that realistic inputs rarely reach. Safety invariants (HP bounded, dead implies 0 HP, exhaustion 6 implies dead, etc.) must hold for every reachable battle state. Additionally, `dndTest.qnt` contains deterministic unit tests for pure helper functions, many of them in `creature.qnt`.
 
 **Key constraint:** Dice rolls are pre-resolved -- callers pass results as arguments. The spec never generates random numbers; it receives them as nondeterministic inputs.
 
@@ -124,9 +125,9 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 - Content data (delegated to TS features)
 - Rendering (delegated to React)
 
-**Correctness mechanism:** Model-Based Testing (MBT) via `@firfi/quint-connect`. The Quint spec generates ITF (Intermediate Trace Format) traces -- sequences of (action, state) pairs. The MBT bridge (`creature.mbt.test.ts`, `battle-machine.mbt.test.ts`) replays each trace against the XState machine, comparing state field-by-field after every step. 50 traces x 30 steps for creature; 50 traces x 10 steps for battle.
+**Correctness mechanism:** Model-Based Testing (MBT) via `@firfi/quint-connect`. `battle-machine.mbt.test.ts` is the primary combat parity proof against `battle.qnt`. `creature.mbt.test.ts` remains useful for helper/local-projection coverage, but it is not the semantic source of truth for combat ownership decisions.
 
-**Key constraint:** The creature machine and battle machine use completely different architectures. The creature machine has parallel states (damageTrack, turnPhase, spellcasting). The battle machine is flat with context-driven phase routing (nullable context fields trigger `always` transitions). Creatures in battle are a `Map<CreatureId, BattleCreatureState>` in context, NOT spawned child actors -- D&D combat requires atomic cross-creature updates.
+**Key constraint:** The creature machine and battle machine use completely different architectures. The battle machine is the authoritative engine because it mirrors `battle.qnt`. The creature machine is a local projection and debugging surface; when ownership questions arise, design from battle semantics outward and project local facts down. Creatures in battle are a `Map<CreatureId, BattleCreatureState>` in context, NOT spawned child actors -- D&D combat requires atomic cross-creature updates.
 
 ---
 

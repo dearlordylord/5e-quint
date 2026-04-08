@@ -415,7 +415,7 @@ function createBattleProjectionDriver() {
     function ensureWaitingForTurn(id: string) {
       const snap = getSnap(id)
       if (snap.matches({ turnPhase: "acting" })) {
-        send(id, { type: "END_TURN", endOfTurnSaves: [], endOfTurnDamage: [] })
+        send(id, { type: "END_TURN" })
       }
     }
 
@@ -564,9 +564,6 @@ function createBattleProjectionDriver() {
         actor.send({
           type: "START_TURN",
           extraAttacks: 1, // Quint FRESH_TURN.extraAttacksRemaining is 1
-          isGrappling: false,
-          grappledTargetTwoSizesSmaller: false,
-          startOfTurnEffects: []
         })
         turnStarted.add(id)
       }
@@ -582,7 +579,6 @@ function createBattleProjectionDriver() {
 
       const rechargeD6 = pickBigInt(picks, "rechargeD6") ?? 3
       const sotDmg = pickBigInt(picks, "sotDmg") ?? 0
-      const sotDt = pickVariant(picks, "sotDt") ?? "Bludgeoning"
       const sotHeal = pickBigInt(picks, "sotHeal") ?? 0
       const sotSaveResult = pickBool(picks, "sotSaveResult") ?? false
       const sotConSave = pickBool(picks, "sotConSave") ?? false
@@ -590,19 +586,12 @@ function createBattleProjectionDriver() {
       // Check if creature has active effects (for start-of-turn processing)
       const hasEffects = ctx.activeEffects.length > 0 && (sotDmg > 0 || sotHeal > 0)
 
-      const effects = hasEffects
+      const effectResolutions = hasEffects
         ? [
             {
               spellId: mkSpellId(""),
-              healAmount: sotHeal,
-              tempHpAmount: 0,
-              saveResult: sotSaveResult,
-              damageAmount: sotDmg,
-              damageType: mapDamageType(sotDt),
               conSaveSucceeded: sotConSave,
-              resistances: new Set<DamageType>(),
-              vulnerabilities: new Set<DamageType>(),
-              immunities: new Set<DamageType>()
+              saveSucceeded: sotSaveResult,
             }
           ]
         : []
@@ -610,9 +599,7 @@ function createBattleProjectionDriver() {
       send(id, {
         type: "START_TURN",
         extraAttacks: 1, // Quint FRESH_TURN.extraAttacksRemaining is 1
-        isGrappling: false,
-        grappledTargetTwoSizesSmaller: false,
-        startOfTurnEffects: effects,
+        effectResolutions,
         rechargedAbilities:
           isMonster && sb
             ? computeRechargedAbilities(rechargeD6, sb.rechargeMinRolls, ctx.rechargeAvailable)
@@ -1329,31 +1316,19 @@ function createBattleProjectionDriver() {
       // Build end-of-turn effects
       const hasEotEffects = ctx.activeEffects.length > 0
 
-      const saves =
-        hasEotEffects && eotSaveSucceeded
+      const effectResolutions =
+        hasEotEffects && (eotSaveSucceeded || eotDmg > 0)
           ? ctx.activeEffects
               .filter((e) => e.expiresAt === "end")
               .map((e) => ({
                 spellId: e.spellId,
-                saveSucceeded: true,
-                conditionsToRemove: ["blinded" as Condition]
+                saveSucceeded: eotSaveSucceeded,
+                conSaveSucceeded: eotConSave,
               }))
           : []
 
-      const damages =
-        hasEotEffects && eotDmg > 0
-          ? [
-              {
-                spellId: mkSpellId(""),
-                damage: eotDmg,
-                damageType: mapDamageType(eotDt),
-                conSaveSucceeded: eotConSave,
-                ...EMPTY_DAMAGE_MODS
-              }
-            ]
-          : []
-
-      send(id, { type: "END_TURN", endOfTurnSaves: saves, endOfTurnDamage: damages })
+      void eotDt
+      send(id, { type: "END_TURN", effectResolutions })
       turnStarted.delete(id)
 
       // Defer turn advancement — bLegendaryPass/bLegendaryAttack or before() will advance.

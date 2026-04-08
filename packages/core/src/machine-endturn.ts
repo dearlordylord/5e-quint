@@ -8,8 +8,8 @@ import {
   damageAtZeroTransition,
   removeConditionUpdate
 } from "#/machine-helpers.ts"
-import type { EndTurnDamage, EndTurnSave, TurnPhaseCtx, TurnPhaseResult } from "#/machine-types.ts"
-import type { ActiveEffect, CreatureId, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
+import type { TurnHookResolution, TurnPhaseCtx, TurnPhaseResult } from "#/machine-types.ts"
+import type { ActiveEffect, Condition, CreatureId, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
 import { deathSaveCount, hp, tempHp } from "#/types.ts"
 
 // --- Active effect helpers ---
@@ -20,13 +20,11 @@ export function addAe(
   turnsRemaining: number,
   expiresAt: ExpiryPhase,
   casterId: CreatureId,
-  grantedResistances?: ReadonlySet<DamageType>,
-  grantedVulnerabilities?: ReadonlySet<DamageType>,
-  grantedImmunities?: ReadonlySet<DamageType>
+  options: Partial<Omit<ActiveEffect, "spellId" | "turnsRemaining" | "expiresAt" | "casterId">> = {}
 ): ReadonlyArray<ActiveEffect> {
   return [
     ...aes.filter((ae) => ae.spellId !== spellId),
-    { spellId, turnsRemaining, expiresAt, casterId, grantedResistances, grantedVulnerabilities, grantedImmunities }
+    { spellId, turnsRemaining, expiresAt, casterId, ...options }
   ]
 }
 
@@ -34,12 +32,65 @@ export function removeAe(aes: ReadonlyArray<ActiveEffect>, spellId: SpellId): Re
   return aes.filter((ae) => ae.spellId !== spellId)
 }
 
+function aggregateDamageModifiers(
+  aes: ReadonlyArray<ActiveEffect>,
+  petrified: boolean,
+): {
+  readonly resistances: ReadonlySet<DamageType>
+  readonly vulnerabilities: ReadonlySet<DamageType>
+  readonly immunities: ReadonlySet<DamageType>
+} {
+  const resistances = new Set<DamageType>(petrified ? ALL_DAMAGE_TYPES : [])
+  const vulnerabilities = new Set<DamageType>()
+  const immunities = new Set<DamageType>()
+  for (const effect of aes) {
+    if (effect.grantedResistances) for (const damageType of effect.grantedResistances) resistances.add(damageType)
+    if (effect.grantedVulnerabilities) for (const damageType of effect.grantedVulnerabilities) vulnerabilities.add(damageType)
+    if (effect.grantedImmunities) for (const damageType of effect.grantedImmunities) immunities.add(damageType)
+  }
+  return { resistances, vulnerabilities, immunities }
+}
+
+function deriveEndTurnEffects(
+  aes: ReadonlyArray<ActiveEffect>,
+  runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined,
+  petrified: boolean,
+): ReadonlyArray<{
+  readonly spellId: SpellId
+  readonly saveSucceeded: boolean
+  readonly conditionsToRemove: ReadonlyArray<Condition>
+  readonly damageAmount: number
+  readonly damageType: DamageType
+  readonly conSaveSucceeded: boolean
+  readonly resistances: ReadonlySet<DamageType>
+  readonly vulnerabilities: ReadonlySet<DamageType>
+  readonly immunities: ReadonlySet<DamageType>
+}> {
+  const overrides = new Map((runtimeResolutions ?? []).map((effect) => [effect.spellId, effect]))
+  const damageMods = aggregateDamageModifiers(aes, petrified)
+  return aes.flatMap((effect) => {
+    const hook = effect.endOfTurnHook
+    if (hook == null) return []
+    const override = overrides.get(effect.spellId)
+    return [{
+      spellId: effect.spellId,
+      saveSucceeded: hook.removeOnSaveSuccess ? (override?.saveSucceeded ?? false) : false,
+      conditionsToRemove: hook.conditionsToRemove ?? [],
+      damageAmount: hook.damageAmount ?? 0,
+      damageType: hook.damageType ?? "bludgeoning",
+      conSaveSucceeded: hook.requiresConcentrationCheck ? (override?.conSaveSucceeded ?? true) : true,
+      resistances: damageMods.resistances,
+      vulnerabilities: damageMods.vulnerabilities,
+      immunities: damageMods.immunities,
+    }]
+  })
+}
+
 // --- END_TURN processing ---
 
 export function computeEndTurn(
   ctx: TurnPhaseCtx,
-  saves: ReadonlyArray<EndTurnSave>,
-  damages: ReadonlyArray<EndTurnDamage>
+  runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined
 ): TurnPhaseResult {
   const conditions: Partial<Record<ConditionFlag, boolean>> = {}
   let incap = ctx.incapacitatedSources
@@ -51,14 +102,14 @@ export function computeEndTurn(
   let deathFailures = ctx.deathSaves.failures as number
   const deathSuccesses = ctx.deathSaves.successes
 
-  // Collect effect IDs to remove (saves + concentration break)
   const removeIds = new Set<SpellId>()
+  const effects = deriveEndTurnEffects(ctx.activeEffects, runtimeResolutions, ctx.petrified)
 
   let unconscious = ctx.unconscious
-  for (const save of saves) {
-    if (save.saveSucceeded) {
-      removeIds.add(save.spellId)
-      for (const cond of save.conditionsToRemove) {
+  for (const effect of effects) {
+    if (effect.saveSucceeded) {
+      removeIds.add(effect.spellId)
+      for (const cond of effect.conditionsToRemove) {
         const u = removeConditionUpdate(cond, incap, unconscious)
         Object.assign(conditions, u.conditionFlags)
         incap = u.incapSources
@@ -68,19 +119,20 @@ export function computeEndTurn(
   }
 
   // See ASSUMPTIONS.md A16: damage is no-op on dead creatures
-  for (const dmg of damages) {
+  for (const effect of effects) {
+    if (effect.damageAmount <= 0 || removeIds.has(effect.spellId)) continue
     if (dead) continue
     const prevHp = h
-    const effResist = ctx.petrified ? ALL_DAMAGE_TYPES : dmg.resistances
+    const effResist = ctx.petrified ? ALL_DAMAGE_TYPES : effect.resistances
     const r = computeTakeDamage(
       h,
       ctx.maxHp,
       th,
-      dmg.damage,
-      dmg.damageType,
-      dmg.immunities,
+      effect.damageAmount,
+      effect.damageType,
+      effect.immunities,
       effResist,
-      dmg.vulnerabilities
+      effect.vulnerabilities
     )
     h = r.newHp
     th = r.newTempHp
@@ -96,7 +148,7 @@ export function computeEndTurn(
     if (dz.addIncap) incap = addIncapSource(incap, "unconscious")
 
     // Concentration handling
-    if (Option.isSome(conc) && (dead || (h === 0 && prevHp > 0) || !dmg.conSaveSucceeded)) {
+    if (Option.isSome(conc) && (dead || (h === 0 && prevHp > 0) || !effect.conSaveSucceeded)) {
       removeIds.add(conc.value)
       conc = Option.none()
     }

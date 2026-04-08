@@ -10,6 +10,8 @@ Durable decisions that apply across all phases:
 - **`execute_action` MCP input schema is derived from `ResolvedActionToken`**: Effect Schema `Schema.Union`, discriminated on `type`, generated from the supported resolved-token variants rather than hand-writing a union over all machine event types. `JSONSchema.make()` generates the MCP tool schema. Validation via `Schema.decodeUnknownEither`.
 - **MCP tool surface**: Three tools — `get_state`, `get_available_actions`, `execute_action`. Independent process from React app, instantiates its own XState actor. Low-level MCP SDK (`Server` + `setRequestHandler`), not the high-level `McpServer` class (which is zod-only).
 - **Supported action spec is the source of truth for the executable surface**: The available-actions module owns the supported action registry. For each supported action, the registry defines the query token, resolved execute shape, runtime-input requirements, and final `DndEvent` mapping. State topology (which events the machine accepts in which state) is still derived from `rootEventHandlers` + `turnPhaseConfig`.
+- **Battle semantics own combat-state meaning**: `battle.qnt` is the authoritative combat spec. If the MCP layer has to remember a combat fact such as grapple state in order to drive `execute_action`, that is treated as a domain-ownership bug and should be pushed down into battle/spec/machine state, then projected outward.
+- **MCP inconsistencies are a diagnostic surface**: if the MCP adapter must remember, fabricate, or re-derive a combat fact in order to execute an action, the ownership boundary is wrong. Fix the domain/spec/machine state first; do not solve ownership leaks in the adapter.
 - **Grouping axis**: Actions grouped by resource cost (action, bonus action, reaction, free/movement). No ordering within groups. Permanent — we do not rank by tactical value or optimality.
 - **No confidence scoring**: Permanent design decision. Player goals are opaque; we present options, never rank them.
 - **Cacheability**: Every layer boundary is an Effect service with test/mock/cached layers. Audio segments, transcript text, LLM calls, candidate events — all cacheable and replayable.
@@ -53,7 +55,7 @@ Pick one action type — Second Wind is a good candidate (bonus action, has a gu
 
 Items discovered during implementation that need resolution before Phase 1 is complete:
 
-**Turn-start runtime facts ownership**: `START_TURN` is now zero-payload at the consumer boundary, but the runtime layer still supplies placeholder values for `isGrappling`, `grappledTargetTwoSizesSmaller`, and `startOfTurnEffects`. Fix: derive these from authoritative domain state or a session/battle manager. The MCP caller should not provide or remember them.
+**Turn-start runtime facts ownership**: `START_TURN` is now zero-payload at the consumer boundary in the MCP/runtime path. Grapple-derived movement facts are machine-owned, and start-of-turn effect application is derived from owned `ActiveEffect` hooks rather than fabricated in MCP. Remaining work is to remove the last compatibility fields from the event surface and stop accepting old payload paths entirely.
 
 **Broaden the supported executable surface gradually**: the current implementation intentionally exposes only a narrow supported subset (`ENTER_COMBAT`, `START_TURN`, `USE_SECOND_WIND`, `EXIT_COMBAT`). Each new action must add all of: query token, resolved token schema, runtime-input requirements, final `DndEvent` mapping, and focused tests.
 
@@ -63,7 +65,7 @@ Items discovered during implementation that need resolution before Phase 1 is co
 
 **Context serialization**: Replace `JSON.stringify` replacer with Effect Schema transforms (`Option` -> `null`, `Set` -> `array`). Define a `DndContextEncoded` schema in core using `Schema.OptionFromNullOr` and `Schema.ReadonlySet`.
 
-**Manual debugging ergonomics**: Keep a lightweight local MCP harness for end-to-end inspection of `get_state`, `get_available_actions`, and `execute_action`. If an action is hard to exercise manually, prefer adjusting demo initial conditions or adding a small temporary fixture over adding duplicated persistent state.
+**Manual debugging ergonomics**: Keep a lightweight local MCP harness for end-to-end inspection of `get_state`, `get_available_actions`, and `execute_action`. Harness runs can leave stale wrapper processes behind even after the MCP transport closes; before and after manual inspection, check `ps aux | grep '[p]npm --filter @dnd/mcp exec tsx src/harness.ts'` and clean stale wrappers with `pkill -f 'pnpm --filter @dnd/mcp exec tsx src/harness.ts'` before trusting process-level observations. If an action is hard to exercise manually, prefer adjusting demo initial conditions or adding a small temporary fixture over adding duplicated persistent state.
 
 **Project existing state before adding more**: If MCP needs to expose or drive more “inner state”, first project authoritative machine/spec state that already exists. Do not add adapter-owned copies of combat facts just to make demos or debugging easier.
 
@@ -81,20 +83,43 @@ Items discovered during implementation that need resolution before Phase 1 is co
 
 ### What to build
 
-Make `START_TURN` runtime facts come from authoritative domain state rather than MCP placeholders, with grapple as the first concrete case.
+Make `START_TURN` runtime facts come from authoritative domain state rather than MCP placeholders, with grapple as the first concrete case and owned effect hooks as the second.
 
 - Keep `START_TURN` zero-payload at the consumer boundary.
 - Move `isGrappling` and `grappledTargetTwoSizesSmaller` out of MCP-owned placeholder logic and into spec/machine/session-owned state.
+- Model grapple from battle semantics first: battle owns the grapple link; single-creature tooling may persist only the local projection needed for speed and legality, but must not invent adapter-owned memory.
 - Model grapple as persistent combat state, not caller memory. User-supplied grapple events should establish or remove grapple state; subsequent turn-start logic should derive from that owned state.
+- The current single-creature implementation uses a temporary mixed local projection (`grappled` plus `grappling`) to preserve creature MBT parity while enabling owned grappler-side movement logic. This is an intentional intermediate state, not the target end state.
 - Move `startOfTurnEffects` to the same ownership pattern: derive from authoritative effect/session state rather than fabricating `[]` in the adapter.
+- Use a generic owned-effect hook model on `ActiveEffect` for the first pass, with explicit owner-relative timing fields shared with battle semantics.
+- Preserve battle-first ownership: `battle.qnt` is the authoritative combat model, and MCP inconsistencies are treated as a diagnostic surface for ownership leaks rather than the place to solve them.
 
 ### Acceptance criteria
 
-- [ ] `START_TURN` consumer input remains `{ type: "START_TURN" }`
-- [ ] Runtime derives grapple-related turn-start inputs from authoritative domain state
-- [ ] MCP no longer hardcodes grapple booleans
-- [ ] Focused tests confirm that grapple-establishing events affect later `START_TURN` behavior without caller bookkeeping
-- [ ] Creature/battle parity still holds after the grapple-state ownership change
+- [x] `START_TURN` consumer input remains `{ type: "START_TURN" }`
+- [x] Runtime derives grapple-related turn-start inputs from authoritative domain state
+- [x] MCP no longer hardcodes grapple booleans
+- [x] Focused tests confirm that grapple-establishing events affect later `START_TURN` behavior without caller bookkeeping
+- [x] Creature/battle parity still holds after the grapple-state ownership change
+- [x] `START_TURN` derives owned effect applications from `ActiveEffect` state in the runtime/MCP path
+
+### Remaining cleanup from Phase 1.5
+
+The ownership direction is now correct, but the type surface is still mixed. The next steps should be done as a breaking cleanup, not extended with more compatibility:
+
+1. **Break old `START_TURN` payload compatibility**
+   - Remove deprecated `startOfTurnEffects` from the `START_TURN` event surface.
+   - Remove any remaining tests/MBT paths that construct turn-start effect payloads directly.
+   - `START_TURN` should become a fully owned-state transition except for truly engine-only prerolls.
+
+2. **Redesign `END_TURN` ownership the same way**
+   - Move end-of-turn saves/damage application toward owned `ActiveEffect.endOfTurnHook` derivation rather than caller-supplied `endOfTurnSaves` / `endOfTurnDamage`.
+   - Keep the same battle-first contract: effect timing/ownership lives in spec/machine state, not MCP or caller memory.
+
+3. **Remove the remaining old event-payload model instead of carrying it forward**
+   - Do not keep deprecated compatibility fields.
+   - Collapse the temporary mixed grapple projection once the old event model is gone; the local projection should no longer need to preserve legacy `GRAPPLE` semantics just for compatibility.
+   - Once `START_TURN` and `END_TURN` are fully owned-state driven, delete the old hook-payload paths from core types, tests, and adapters.
 
 ---
 

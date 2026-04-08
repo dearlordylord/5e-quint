@@ -111,12 +111,24 @@ export const CASTER_CLASSES = [
 ] as const satisfies ReadonlyArray<ClassName>
 export type CasterClass = (typeof CASTER_CLASSES)[number]
 
+export interface EffectTurnHook {
+  readonly healAmount?: number
+  readonly tempHpAmount?: number
+  readonly damageAmount?: number
+  readonly damageType?: DamageType
+  readonly removeOnSaveSuccess?: boolean
+  readonly conditionsToRemove?: ReadonlyArray<Condition>
+  readonly requiresConcentrationCheck?: boolean
+}
+
 export interface ActiveEffect {
   readonly spellId: SpellId
   readonly turnsRemaining: number
   readonly expiresAt: ExpiryPhase
   readonly casterId: CreatureId
   readonly expiryOwnerId?: CreatureId
+  readonly startOfTurnHook?: EffectTurnHook
+  readonly endOfTurnHook?: EffectTurnHook
   readonly grantedResistances?: ReadonlySet<DamageType>
   readonly grantedVulnerabilities?: ReadonlySet<DamageType>
   readonly grantedImmunities?: ReadonlySet<DamageType>

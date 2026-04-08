@@ -90,14 +90,7 @@ describe("available actions contract", () => {
     )
     const startTurnFinalized = finalizeResolution(
       startTurnRequest,
-      {
-        runtime: "startTurn",
-        values: {
-          isGrappling: false,
-          grappledTargetTwoSizesSmaller: false,
-          startOfTurnEffects: [],
-        },
-      },
+      { runtime: "startTurn", values: {} },
       actor.getSnapshot().context,
     )
     expect(startTurnFinalized.ok).toBe(true)

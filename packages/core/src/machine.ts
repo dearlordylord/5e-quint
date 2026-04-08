@@ -7,7 +7,7 @@ import { ZERO_HIT_DICE } from "#/features/class-tables.ts"
 import * as barb from "#/machine-barbarian.ts"
 import * as bard from "#/machine-bard.ts"
 import * as cleric from "#/machine-cleric.ts"
-import { resolveGrapple, resolveShove } from "#/machine-combat.ts"
+import { resolveGrapple, resolveShove, targetTwoSizesSmaller } from "#/machine-combat.ts"
 import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
 import { dmgR, dsR, fallR } from "#/machine-damage.ts"
 import * as druid from "#/machine-druid.ts"
@@ -234,9 +234,9 @@ export const creatureMachine = setup({
       const ev = asEndTurn(e)
       const isMonster = c.creatureKind === "Monster"
       const lr = isMonster
-        ? applyLegendaryResistance(ev.endOfTurnSaves, ev.useLegendaryResistance, c.legendaryResistancesRemaining)
-        : { effectiveSaves: ev.endOfTurnSaves, lrUsed: false }
-      const { conditions: conds, ...rest } = computeEndTurn(c, lr.effectiveSaves, ev.endOfTurnDamage)
+        ? applyLegendaryResistance(ev.effectResolutions ?? [], ev.useLegendaryResistance, c.legendaryResistancesRemaining)
+        : { effectiveSaves: ev.effectResolutions ?? [], lrUsed: false }
+      const { conditions: conds, ...rest } = computeEndTurn(c, lr.effectiveSaves)
       return {
         ...conds,
         ...rest,
@@ -254,9 +254,15 @@ export const creatureMachine = setup({
         ev.attackerHasFreeHand,
         isIncapacitated(c)
       )
-      return ok ? { grappled: true } : {}
+      return ok
+        ? {
+            grappled: true,
+            grappling: true,
+            grappledTargetTwoSizesSmaller: targetTwoSizesSmaller(ev.attackerSize, ev.targetSize),
+          }
+        : {}
     }),
-    releaseGrapple: assign({ grappled: false }),
+    releaseGrapple: assign({ grappled: false, grappling: false, grappledTargetTwoSizesSmaller: false }),
     escapeGrapple: assign(({ event: e }) => (asEscapeGrapple(e).escapeSucceeded ? { grappled: false } : {})),
     applyShove: assign(({ context: c, event: e }) => {
       const ev = asShove(e)
@@ -293,9 +299,16 @@ export const creatureMachine = setup({
           ev.durationTurns,
           ev.expiresAt,
           ev.casterId,
-          ev.grantedResistances,
-          ev.grantedVulnerabilities,
-          ev.grantedImmunities
+          {
+            expiryOwnerId: ev.expiryOwnerId,
+            startOfTurnHook: ev.startOfTurnHook,
+            endOfTurnHook: ev.endOfTurnHook,
+            grantedResistances: ev.grantedResistances,
+            grantedVulnerabilities: ev.grantedVulnerabilities,
+            grantedImmunities: ev.grantedImmunities,
+            blocksOpportunityAttacks: ev.blocksOpportunityAttacks,
+            speedDeltaFeet: ev.speedDeltaFeet,
+          }
         )
       }
     }),

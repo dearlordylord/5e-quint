@@ -3,13 +3,13 @@
 **Edition: SRD 5.2.1 (2024).**
 
 Source: SRD 5.2.1 (CC-BY-4.0). Reference: `.references/srd-5.2.1/`
-Single-creature state machine. All dice pre-resolved. Multi-creature interactions caller-provided.
+Historical creature-helper plan. `battle.qnt` is now the main combat spec; `creature.qnt` remains the helper library this plan evolved from. All dice pre-resolved.
 
 ## Plan Index
 
 | Plan | Status | Scope |
 |------|--------|-------|
-| **PLAN.md** (this file) | Done | Core Quint spec: generic rules in `creature.qnt` (HP, damage, conditions, turns, rests, slots, grapple/shove, attack resolution, environment). The foundation everything else composes on. |
+| **PLAN.md** (this file) | Done | Historical creature-helper plan for generic rules extracted into `creature.qnt`. Useful context, but no longer the authoritative combat-spec roadmap. |
 | **PLAN_SCRAPERS.md** | Active | QA pipeline: new data sources for the community Q&A corpus (SE tags, Sage Advice, sageadvice.eu, errata). Independent of other plans. |
 
 ## Known Spec Gaps (Battle Machine) — all resolved

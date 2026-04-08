@@ -6,6 +6,7 @@ import type {
   AbilityModifier,
   ActionType,
   ActiveEffect,
+  EffectTurnHook,
   ClassLevel,
   Condition,
   CreatureId,
@@ -125,6 +126,8 @@ export interface DndContext {
   readonly deafened: boolean
   readonly frightened: boolean
   readonly grappled: boolean
+  readonly grappling: boolean
+  readonly grappledTargetTwoSizesSmaller: boolean
   readonly invisible: boolean
   readonly paralyzed: boolean
   readonly petrified: boolean
@@ -175,33 +178,10 @@ export interface DndContext {
 
 // --- Events ---
 
-export interface EndTurnSave {
+export interface TurnHookResolution {
   readonly spellId: SpellId
   readonly saveSucceeded: boolean
-  readonly conditionsToRemove: ReadonlyArray<Condition>
-}
-
-export interface EndTurnDamage {
-  readonly spellId: SpellId
-  readonly damage: number
-  readonly damageType: DamageType
-  readonly conSaveSucceeded: boolean
-  readonly resistances: ReadonlySet<DamageType>
-  readonly vulnerabilities: ReadonlySet<DamageType>
-  readonly immunities: ReadonlySet<DamageType>
-}
-
-export interface StartTurnEffect {
-  readonly spellId: SpellId
-  readonly healAmount: number
-  readonly tempHpAmount: number
-  readonly saveResult: boolean
-  readonly damageAmount: number
-  readonly damageType: DamageType
-  readonly conSaveSucceeded: boolean
-  readonly resistances: ReadonlySet<DamageType>
-  readonly vulnerabilities: ReadonlySet<DamageType>
-  readonly immunities: ReadonlySet<DamageType>
+  readonly conSaveSucceeded?: boolean
 }
 
 export type DndEvent =
@@ -230,18 +210,15 @@ export type DndEvent =
   | {
       readonly type: "START_TURN"
       readonly extraAttacks?: number // override for monsters (multiattack); PCs derive from class levels
-      readonly isGrappling: boolean
-      readonly grappledTargetTwoSizesSmaller: boolean
       readonly deathSaveRoll?: D20Roll
       readonly deathSaveRoll2?: D20Roll
       readonly conMod?: number
-      readonly startOfTurnEffects: ReadonlyArray<StartTurnEffect>
+      readonly effectResolutions?: ReadonlyArray<TurnHookResolution>
       readonly rechargedAbilities?: ReadonlyArray<string> // abilities that successfully recharged this turn
     }
   | {
       readonly type: "END_TURN"
-      readonly endOfTurnSaves: ReadonlyArray<EndTurnSave>
-      readonly endOfTurnDamage: ReadonlyArray<EndTurnDamage>
+      readonly effectResolutions?: ReadonlyArray<TurnHookResolution>
       readonly useLegendaryResistance?: boolean
     }
   | { readonly type: "USE_ACTION"; readonly actionType: ActionType }
@@ -285,9 +262,14 @@ export type DndEvent =
       readonly durationTurns: number
       readonly expiresAt: ExpiryPhase
       readonly casterId: CreatureId
+      readonly expiryOwnerId?: CreatureId
+      readonly startOfTurnHook?: EffectTurnHook
+      readonly endOfTurnHook?: EffectTurnHook
       readonly grantedResistances?: ReadonlySet<DamageType>
       readonly grantedVulnerabilities?: ReadonlySet<DamageType>
       readonly grantedImmunities?: ReadonlySet<DamageType>
+      readonly blocksOpportunityAttacks?: boolean
+      readonly speedDeltaFeet?: number
     }
   | { readonly type: "REMOVE_EFFECT"; readonly spellId: SpellId }
   | { readonly type: "BREAK_CONCENTRATION" }
@@ -421,6 +403,8 @@ export const INITIAL_CONDITIONS = {
   deafened: false,
   frightened: false,
   grappled: false,
+  grappling: false,
+  grappledTargetTwoSizesSmaller: false,
   invisible: false,
   paralyzed: false,
   petrified: false,

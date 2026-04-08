@@ -2,7 +2,7 @@ import { Match, Schema } from "effect"
 
 import { guards } from "#/machine-guards.ts"
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts"
-import type { DndContext, DndEvent, StartTurnEffect } from "#/machine-types.ts"
+import type { DndContext, DndEvent } from "#/machine-types.ts"
 import type { D20Roll } from "#/types.ts"
 
 export type ResourceCost = {
@@ -80,12 +80,9 @@ export const ResolvedActionTokenSchema = Schema.Union(...RESOLVED_ACTION_SCHEMAS
 
 export type StartTurnRuntimeInputs = {
   readonly extraAttacks?: number
-  readonly isGrappling: boolean
-  readonly grappledTargetTwoSizesSmaller: boolean
   readonly deathSaveRoll?: D20Roll
   readonly deathSaveRoll2?: D20Roll
   readonly conMod?: number
-  readonly startOfTurnEffects: ReadonlyArray<StartTurnEffect>
   readonly rechargedAbilities?: ReadonlyArray<string>
 }
 

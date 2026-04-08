@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process"
+
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js"
@@ -9,7 +11,34 @@ function extractTextResult(result: Awaited<ReturnType<Client["callTool"]>>) {
   return typeof text === "string" ? JSON.parse(text) : result
 }
 
+function findOtherHarnessWrappers(): ReadonlyArray<number> {
+  const output = execFileSync("ps", ["-eo", "pid=,args="], { encoding: "utf8" })
+  return output
+    .trim()
+    .split("\n")
+    .flatMap((line) => {
+      const match = line.match(/^\s*(\d+)\s+(.*)$/)
+      if (match == null) return []
+      const pid = Number(match[1])
+      const args = match[2] ?? ""
+      if (!args.includes("pnpm --filter @dnd/mcp exec tsx src/harness.ts")) return []
+      if (pid === process.ppid) return []
+      return [pid]
+    })
+}
+
+function logHarnessWrapperStatus(phase: "before" | "after") {
+  const otherWrappers = findOtherHarnessWrappers()
+  if (otherWrappers.length === 0) return
+  console.warn(
+    `[harness] ${phase} run: found stale wrapper process(es): ${otherWrappers.join(", ")}. ` +
+      "Check with `ps aux | grep '[p]npm --filter @dnd/mcp exec tsx src/harness.ts'` and clean with " +
+      "`pkill -f 'pnpm --filter @dnd/mcp exec tsx src/harness.ts'` before trusting manual MCP inspection."
+  )
+}
+
 async function main() {
+  logHarnessWrapperStatus("before")
   const transport = new StdioClientTransport({
     command: "pnpm",
     args: ["dev"],
@@ -76,6 +105,7 @@ async function main() {
   } finally {
     await transport.close()
     console.log("transport closed")
+    logHarnessWrapperStatus("after")
   }
 }
 

@@ -74,7 +74,7 @@ Things that cause non-obvious errors, not discoverable by reading code.
 
 ## SRD feature parity (CRITICAL)
 
-The spec (`creature.qnt`) is a **direct formalization of the SRD** — nothing more, nothing less. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
+The Quint spec is a **direct formalization of the SRD** — nothing more, nothing less. `battle.qnt` is the authoritative combat spec; `creature.qnt` is a helper library used by `battle.qnt` and related tests. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
 
 - **Model what the SRD says.** If the SRD doesn't define it, don't model it.
 - **No homebrew, no "reasonable extensions."** If a rule is ambiguous or the formalization requires a choice the SRD doesn't prescribe, document it in `ASSUMPTIONS.md` — don't silently pick an interpretation.
@@ -83,12 +83,12 @@ The spec (`creature.qnt`) is a **direct formalization of the SRD** — nothing m
 
 ## Quint parity (CRITICAL)
 
-The XState machine (`machine.ts`, `machine-helpers.ts`) MUST maintain full parity with the Quint spec (`creature.qnt`). The MBT bridge (`creature.mbt.test.ts`) via `@firfi/quint-connect` is the correctness proof — 50 traces × 30 steps comparing Quint and XState state field-by-field.
+`battle-machine.ts` MUST maintain parity with `battle.qnt`; that is the main correctness target for combat behavior. `machine.ts` and `creature.mbt.test.ts` remain valuable for helper/local-projection coverage, but when ownership or semantic-frontier questions arise, `battle.qnt` wins.
 
-- **Never** add logic to the XState machine that diverges from the Quint spec without updating the spec first.
-- **Never** "fix" XState behavior that the Quint spec models differently — update the spec or accept it as spec-level intentional.
-- **Never** remove or rename context fields that the MBT bridge maps — check `creature.mbt.test.ts` before removing anything from `DndContext`.
-- If a simplify/refactor changes behavior, the MBT tests MUST still pass. If they don't, the refactor is wrong.
+- **Never** add logic to an XState machine that diverges from the relevant Quint model without updating the spec first.
+- **Never** "fix" XState behavior that the authoritative Quint model handles differently — update the spec or accept it as spec-level intentional.
+- **Never** remove or rename context fields that an MBT bridge maps without checking the relevant parity test first.
+- If a simplify/refactor changes behavior, the relevant MBT tests MUST still pass. If they don't, the refactor is wrong.
 
 ## TypeScript conventions
 
