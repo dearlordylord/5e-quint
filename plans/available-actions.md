@@ -216,6 +216,84 @@ Items discovered during implementation that need resolution before Phase 1 is co
       - focused core tests proving tokens appear only when the pending trigger exists
       - MCP tests proving callers send zero-hole resolved tokens and runtime injects only the final boolean
       - if the new pending-trigger state changes Quint-visible semantics, run the appropriate MBT tier after implementation
+    - Implementation design for the next session:
+      - **Goal**
+        - make these three actions queryable only when the machine actually owns the relevant trigger context
+        - keep the public resolved token zero-hole
+        - keep the final boolean runtime-owned
+      - **State to add**
+        - add a single authoritative pending-resolution object in core state rather than three unrelated booleans
+        - recommended shape:
+          - `pendingResolution:`
+            - `null`
+            - `{ kind: "tacticalMind" }`
+            - `{ kind: "peerlessSkill", mode: "abilityCheck" | "attackRoll" }`
+            - `{ kind: "relentlessRage", dc: number }`
+        - rationale:
+          - only one of these trigger windows should be active at once in the single-creature model
+          - the action query layer only needs to know “what trigger is pending now?”
+          - `Relentless Rage` needs current DC in summary/output, while the other two only need kind/mode
+      - **Where the state should live**
+        - add it to `DndContext` in `packages/core/src/machine-types.ts`
+        - initialize it in machine context construction
+        - mirror it into `creature.qnt` only if the single-creature spec is still used for the affected semantics
+        - if the trigger is battle-owned semantically, prefer keeping the authoritative concept battle-aligned and project the local pending state into the single-creature machine
+      - **What should create the pending state**
+        - do not invent pending state inside MCP
+        - add explicit machine events or transition points that establish it from owned state
+        - recommended first-pass explicit trigger events:
+          - `TRIGGER_TACTICAL_MIND`
+          - `TRIGGER_PEERLESS_SKILL`
+          - `TRIGGER_RELENTLESS_RAGE`
+        - these are not final public available-actions tokens; they are internal/battle/session-level trigger events that tell the machine “a valid trigger window now exists”
+        - `TRIGGER_RELENTLESS_RAGE` should carry the already-owned trigger facts needed to prove eligibility if they are not yet in context
+      - **What should clear the pending state**
+        - clear it immediately after:
+          - successful or failed resolution of the corresponding action
+          - turn boundaries if the trigger window expires there
+          - any competing state transition that makes the trigger stale
+        - there should never be a long-lived stale pending trigger in context
+      - **Available-actions contract once the state exists**
+        - `USE_TACTICAL_MIND` appears only when `pendingResolution.kind === "tacticalMind"` and the existing charge/level guard also passes
+        - `USE_PEERLESS_SKILL` appears only when `pendingResolution.kind === "peerlessSkill"` and the existing charge/level guard also passes
+        - `USE_RELENTLESS_RAGE` appears only when `pendingResolution.kind === "relentlessRage"` and the existing rage/level guard also passes
+        - all 3 remain zero-hole `ResolvedActionToken`s
+        - MCP/runtime supplies only:
+          - `boostedCheckSucceeds`
+          - `success`
+          - `conSaveSucceeded`
+      - **What not to do**
+        - do not expose these actions from the existing coarse guards alone
+        - do not make MCP remember “there was a failed check” or “the barbarian just dropped to 0”
+        - do not encode the runtime boolean into the public resolved token
+        - do not add duplicated pending-trigger fields in both adapter state and machine state
+      - **Recommended implementation order**
+        1. add `pendingResolution` state and initialization
+        2. add internal trigger events plus machine transitions/actions that set and clear it
+        3. add focused unit tests for trigger lifecycle
+        4. wire `USE_TACTICAL_MIND`, `USE_PEERLESS_SKILL`, `USE_RELENTLESS_RAGE` into `available-actions.ts`
+        5. add MCP runtime-input branches for the final booleans
+        6. verify with focused tests, then run MBT only if Quint-visible semantics changed
+      - **File map for the next session**
+        - likely core files:
+          - `packages/core/src/machine-types.ts`
+          - `packages/core/src/machine.ts`
+          - `packages/core/src/machine-states.ts`
+          - `packages/core/src/machine-guards.ts`
+          - `packages/core/src/available-actions.ts`
+          - `packages/core/src/available-actions.test.ts`
+        - likely MCP file:
+          - `packages/mcp/src/server.ts`
+          - `packages/mcp/src/server.test.ts`
+        - likely spec/bridge files if semantics become Quint-visible:
+          - `creature.qnt`
+          - `packages/core/src/creature.mbt.test.ts`
+          - `packages/core/src/mbt-shared.ts`
+      - **Specific caveats discovered already**
+        - `USE_TACTICAL_MIND` currently hardcodes `checkFailed = true` in the guard path, so current legality is too broad
+        - `USE_PEERLESS_SKILL` currently has no owned failed-roll trigger at all
+        - `USE_RELENTLESS_RAGE` currently models only `level >= 11 && raging`; it does not own the “dropped to 0 HP while raging and not dead outright” trigger window
+        - because of that, exposing these now would be architecturally wrong even if MCP could make them “work”
   - `SHORT_REST` is intentionally separate and should stay out of the first orchestrated parallel batch because it has a compound payload (`conMod`, `hdRolls`) and is a larger design surface than the other remaining items.
 - **Recommended implementation order for the orchestrator**:
   1. integrate the dice-roll family first
@@ -257,10 +335,10 @@ Items discovered during implementation that need resolution before Phase 1 is co
 **Project existing state before adding more**: If MCP needs to expose or drive more “inner state”, first project authoritative machine/spec state that already exists. Do not add adapter-owned copies of combat facts just to make demos or debugging easier.
 
 **Wire remaining `execute_action` handlers**:
-- Dice-roll actions: `USE_TIRELESS` (d8Roll), `WHOLENESS_OF_BODY` (healRoll), `UNCANNY_METABOLISM` (healRoll)
-- Battle-context actions: `USE_RELENTLESS_RAGE` (conSaveSucceeded), `USE_TACTICAL_MIND` (boostedCheckSucceeds), `USE_PEERLESS_SKILL` (success)
-- Hole-field pass-throughs: `CONVERT_SLOT_TO_POINTS`, `CONVERT_POINTS_TO_SLOT`, `USE_ARCANE_RECOVERY`, `USE_MYSTIC_ARCANUM`, `USE_FONT_SLOT_RESTORE`, `USE_WILD_RESURGENCE_CHARGE`, `USE_DIVINE_SMITE`, `USE_LAY_ON_HANDS`, `USE_METAMAGIC` (all slotLevel/amount/option)
-- Complex payload: `SHORT_REST` (conMod, hdRolls)
+- ~~Dice-roll actions: `USE_TIRELESS` (d8Roll), `WHOLENESS_OF_BODY` (healRoll), `UNCANNY_METABOLISM` (healRoll)~~ — completed
+- Battle-context actions: `USE_RELENTLESS_RAGE` (conSaveSucceeded), `USE_TACTICAL_MIND` (boostedCheckSucceeds), `USE_PEERLESS_SKILL` (success) — blocked on pending-result trigger state
+- ~~Hole-field pass-throughs: `CONVERT_SLOT_TO_POINTS`, `CONVERT_POINTS_TO_SLOT`, `USE_ARCANE_RECOVERY`, `USE_MYSTIC_ARCANUM`, `USE_FONT_SLOT_RESTORE`, `USE_WILD_RESURGENCE_CHARGE`, `USE_DIVINE_SMITE`, `USE_LAY_ON_HANDS`, `USE_METAMAGIC`~~ — completed
+- Complex payload: `SHORT_REST` (conMod, hdRolls) — deferred, compound payload
 
 ---
 
@@ -292,21 +370,17 @@ Make `START_TURN` runtime facts come from authoritative domain state rather than
 
 ### Remaining cleanup from Phase 1.5
 
-The ownership direction is now correct, but the type surface is still mixed. The next steps should be done as a breaking cleanup, not extended with more compatibility:
+Core types are clean — `startOfTurnEffects`, `endOfTurnSaves`, `endOfTurnDamage` are removed from `machine-types.ts`. The owned `ActiveEffect` hook model (`startOfTurnHook`, `endOfTurnHook` on `EffectTurnHook`) is implemented in `types.ts` and used by `machine-startturn.ts` / `machine-endturn.ts`. Owned-state fields (`expiryOwnerId`, `blocksOpportunityAttacks`, `speedDeltaFeet`) are wired.
 
-1. **Break old `START_TURN` payload compatibility**
-   - Remove deprecated `startOfTurnEffects` from the `START_TURN` event surface.
-   - Remove any remaining tests/MBT paths that construct turn-start effect payloads directly.
-   - `START_TURN` should become a fully owned-state transition except for truly engine-only prerolls.
+**Remaining: app-package legacy only.** These files still construct old payload shapes behind `as DndEvent` casts:
 
-2. **Redesign `END_TURN` ownership the same way**
-   - Move end-of-turn saves/damage application toward owned `ActiveEffect.endOfTurnHook` derivation rather than caller-supplied `endOfTurnSaves` / `endOfTurnDamage`.
-   - Keep the same battle-first contract: effect timing/ownership lives in spec/machine state, not MCP or caller memory.
+- `packages/app/src/components/trace-visualizer/actual-play-types.ts` — `startTurn()` has `startOfTurnEffects: []`, `endTurn()` has `endOfTurnSaves: [], endOfTurnDamage: []`
+- `packages/app/src/components/trace-visualizer/sample-trace.ts` — same legacy fields
+- `packages/app/src/components/trace-visualizer/actual-play-skeleton.ts` — `startOfTurnEffects: []`
+- `packages/app/src/components/EventPanel.tsx` — constructs `startOfTurnEffects: []`
+- `packages/app/src/features/useFeatures.test.tsx` — 4 locations with `startOfTurnEffects: []`, 2 with `endOfTurnSaves: [], endOfTurnDamage: []`
 
-3. **Remove the remaining old event-payload model instead of carrying it forward**
-   - Do not keep deprecated compatibility fields.
-   - Collapse the temporary mixed grapple projection once the old event model is gone; the local projection should no longer need to preserve legacy `GRAPPLE` semantics just for compatibility.
-   - Once `START_TURN` and `END_TURN` are fully owned-state driven, delete the old hook-payload paths from core types, tests, and adapters.
+Cleanup is mechanical: delete the old fields from these app helpers/tests. The `as DndEvent` casts mask the fact that core types no longer include them.
 
 ---
 
@@ -328,8 +402,8 @@ The MCP response from `get_available_actions` now returns tokens organized into 
 ### Acceptance criteria
 
 - [ ] At least one action from each resource group (action, bonus action, reaction, free/movement) is returned when its guard passes
-- [ ] `get_available_actions` response is grouped by resource cost
-- [ ] Each action's outcome description accurately reflects what the action does (cost + what changes)
+- [x] `get_available_actions` response is grouped by resource cost
+- [x] Each action's outcome description accurately reflects what the action does (cost + what changes)
 - [ ] Guards correctly exclude actions when resources are spent (e.g., no Action-cost tokens when `actionsRemaining === 0`)
 - [ ] Snapshot test for a representative character state confirms expected grouping shape
 
