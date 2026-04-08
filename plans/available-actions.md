@@ -401,18 +401,15 @@ and clean with the matching `pkill -f ...` command before trusting process-level
      - seed: `0x6a71f4a5`
      - total: `20s`
 
-**Next batch after `SHORT_REST`**
+**Follow-up after `SHORT_REST`**
 
-- `SHORT_REST` is no longer pending.
-- The next technical follow-up is **context serialization cleanup**:
-  - replace the MCP `JSON.stringify` replacer in `packages/mcp/src/server.ts`
-  - define a core `DndContextEncoded` schema with Effect Schema transforms for `Option` and `Set`
-  - keep this separate from action-surface work
-    - `execute_action` with a valid plan updates HP, hit-dice pools, pact slots, and short-rest class resources
-  - manual harness:
-    - add a dedicated fixture rather than reusing the default Fighter 5 / Second Wind demo
-  - parity:
-    - run creature MBT Tier 1b after the spec/bridge update
+- `SHORT_REST` is complete.
+- The follow-up serialization cleanup is also complete:
+  - MCP no longer owns ad hoc context encoding
+  - core now owns `DndContextEncodedSchema` and canonical snapshot encoding
+- The remaining work now moves to:
+  - Phase 2 grouping coverage cleanup
+  - then Phase 3 choice-hole spellcasting
 
 ---
 
@@ -446,15 +443,17 @@ Make `START_TURN` runtime facts come from authoritative domain state rather than
 
 Core types are clean — `startOfTurnEffects`, `endOfTurnSaves`, `endOfTurnDamage` are removed from `machine-types.ts`. The owned `ActiveEffect` hook model (`startOfTurnHook`, `endOfTurnHook` on `EffectTurnHook`) is implemented in `types.ts` and used by `machine-startturn.ts` / `machine-endturn.ts`. Owned-state fields (`expiryOwnerId`, `blocksOpportunityAttacks`, `speedDeltaFeet`) are wired.
 
-**Remaining: app-package legacy only.** These files still construct old payload shapes behind `as DndEvent` casts:
+**App-package legacy cleanup is also complete.**
 
-- `packages/app/src/components/trace-visualizer/actual-play-types.ts` — `startTurn()` has `startOfTurnEffects: []`, `endTurn()` has `endOfTurnSaves: [], endOfTurnDamage: []`
-- `packages/app/src/components/trace-visualizer/sample-trace.ts` — same legacy fields
-- `packages/app/src/components/trace-visualizer/actual-play-skeleton.ts` — `startOfTurnEffects: []`
-- `packages/app/src/components/EventPanel.tsx` — constructs `startOfTurnEffects: []`
-- `packages/app/src/features/useFeatures.test.tsx` — 4 locations with `startOfTurnEffects: []`, 2 with `endOfTurnSaves: [], endOfTurnDamage: []`
-
-Cleanup is mechanical: delete the old fields from these app helpers/tests. The `as DndEvent` casts mask the fact that core types no longer include them.
+- Removed stale app-side construction of:
+  - `START_TURN.startOfTurnEffects`
+  - `END_TURN.endOfTurnSaves`
+  - `END_TURN.endOfTurnDamage`
+  - `SHORT_REST.conMod`
+- Verified with:
+  - `pnpm --filter @dnd/app exec tsc --noEmit`
+  - `pnpm --filter @dnd/app test -- src/features/useFeatures.test.tsx`
+  - `rg -n "startOfTurnEffects|endOfTurnSaves|endOfTurnDamage|conMod: [0-9]+, hdRolls" packages/app` → no hits
 
 ---
 
@@ -464,22 +463,38 @@ Cleanup is mechanical: delete the old fields from these app helpers/tests. The `
 
 ### What to build
 
-Extend the available actions module to cover one representative action per resource-cost group, so the grouping structure is exercised end-to-end:
+This phase is no longer about inventing the action pipeline. Most representative action families are already exposed. The remaining work is to tighten the grouping proof:
 
-- **Action**: A straightforward action-cost event (e.g., Dash — deterministic, grants extra movement).
-- **Bonus Action**: Second Wind (already done in phase 1).
-- **Reaction**: An event that costs the reaction (e.g., a reaction-costed class feature or spell if one is currently modeled).
-- **Free / movement**: Stand from prone (costs movement), object interaction, or similar zero-action-economy event.
+- confirm whether there is any real remaining **reaction** grouping gap in the currently modeled executable surface
+- confirm whether there is any real remaining **movement/free-permanent** grouping gap worth exposing as a representative token
+- add grouping-shape snapshot tests over representative states so regressions in cost bucketing are caught
+- add explicit spent-resource exclusion checks where the current tests are still only indirect
 
-The MCP response from `get_available_actions` now returns tokens organized into resource-cost groups. A consumer sees the turn budget structure.
+Current status:
+- **Bonus Action**: already well covered by `USE_SECOND_WIND`
+- **Action**: already covered by executable actions such as `USE_TIRELESS`
+- **Free**: already covered by multiple actions (`ENTER_COMBAT`, `EXIT_COMBAT`, `SHORT_REST`, several feature toggles)
+- **Reaction**: may still be the only true representative gap, depending on what modeled reaction-cost actions are currently exposed through `available-actions.ts`
+
+So the first step in this phase is a code-reading pass, not blind new implementation:
+- inspect `packages/core/src/available-actions.ts`
+- inspect the current `cost` assignments and exposed action registry
+- confirm whether a genuine reaction token is missing
+- if no modeled reaction action is currently executable, record that explicitly instead of forcing a fake representative
+
+The MCP response from `get_available_actions` is already grouped by resource cost. Phase 2 now exists to prove that grouping is complete and stable for the current modeled catalog.
 
 ### Acceptance criteria
 
-- [ ] At least one action from each resource group (action, bonus action, reaction, free/movement) is returned when its guard passes
+- [ ] Either:
+  - at least one currently modeled reaction-cost action is exposed and tested, or
+  - the plan explicitly records that no reaction-cost action is yet executable in the modeled catalog
+- [x] At least one action from `action`, `bonusAction`, and `free` groups is already exposed and tested
 - [x] `get_available_actions` response is grouped by resource cost
 - [x] Each action's outcome description accurately reflects what the action does (cost + what changes)
-- [ ] Guards correctly exclude actions when resources are spent (e.g., no Action-cost tokens when `actionsRemaining === 0`)
-- [ ] Snapshot test for a representative character state confirms expected grouping shape
+- [ ] Representative tests prove guards exclude tokens when the relevant resource is spent (e.g. no action-cost token when `actionsRemaining === 0`, no bonus-action token when `bonusActionUsed === true`)
+- [ ] Grouping-shape snapshot tests cover at least one representative state with multiple simultaneous groups populated
+- [ ] If a movement-cost token is treated as part of `free`, that bucketing is covered explicitly by test rather than only by convention
 
 ---
 
@@ -646,8 +661,8 @@ Build this as service boundaries in the Hellenvald project (`/workspace/typescri
 
 **Concrete implementation order:**
 
-1. Add `WhisperTranscriber.liveLayer` for recorded files only.
-2. Add one recorded-audio demo/runner in Hellenvald that prints:
+1. Done: `WhisperTranscriber.liveLayer` now exists for recorded files only in Hellenvald, using a local Whisper backend through `uv run` and a checked-in Python runner. Current devcontainer constraint: `.wav` input only, no microphone capture.
+2. Done: recorded-audio demo/runner in Hellenvald now prints:
    - raw Whisper segments
    - buffered windows
    - resulting candidate events
@@ -658,7 +673,7 @@ Build this as service boundaries in the Hellenvald project (`/workspace/typescri
 
 ### Acceptance criteria
 
-- [ ] Recorded audio file → Whisper → phrase-level segments with timestamps
+- [x] Recorded audio file → Whisper → phrase-level segments with timestamps
 - [ ] Buffering layer groups related segments into complete action descriptions
 - [ ] Buffering correctly handles multi-segment actions ("I swing at him" + "that's a 17 plus 5")
 - [ ] Audio segments are cacheable — integration tests replay recorded segments
