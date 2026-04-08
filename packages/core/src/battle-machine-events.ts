@@ -34,6 +34,7 @@ export type HitReactionDecision =
   | { readonly tag: "RParry"; readonly bonus: number }
   | { readonly tag: "RCuttingWords"; readonly reduction: number }
 
+export type HitReactionKind = Exclude<HitReactionDecision["tag"], "RPass">
 export type DmgReactionKind = "RUncannyDodge" | "RDeflectAttacks"
 
 export type DmgReactionDecision =
@@ -89,6 +90,7 @@ export type BattleEvent =
       readonly frightSourceInLOS: boolean
       readonly hasAllyAdjacentToTarget: boolean
       readonly saDmg: number
+      readonly hitReactionCandidates: ReadonlySet<CreatureId>
     }
   | {
       readonly type: "BATTLE_RESOLVE_HIT_REACTION"
@@ -188,6 +190,7 @@ export type BattleEvent =
       readonly frightSourceInLOS: boolean
       readonly hasAllyAdjacentToTarget: boolean
       readonly saDmg: number
+      readonly hitReactionCandidates: ReadonlySet<CreatureId>
     }
   | {
       readonly type: "BATTLE_END_TURN"
@@ -216,6 +219,7 @@ export type BattleEvent =
       readonly frightSourceInLOS: boolean
       readonly hasAllyAdjacentToTarget: boolean
       readonly saDmg: number
+      readonly hitReactionCandidates: ReadonlySet<CreatureId>
     }
   | { readonly type: "BATTLE_HEAL"; readonly targetId: CreatureId; readonly amount: number }
   | { readonly type: "BATTLE_DASH" }
@@ -268,6 +272,7 @@ export type BattleEvent =
       readonly frightSourceInLOS: boolean
       readonly hasAllyAdjacentToTarget: boolean
       readonly saDmg: number
+      readonly hitReactionCandidates: ReadonlySet<CreatureId>
     }
   | {
       readonly type: "BATTLE_READY_SPELL_RELEASE"

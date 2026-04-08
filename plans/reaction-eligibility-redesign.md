@@ -98,11 +98,28 @@ Apply the same ownership pattern to hit-reaction windows. The hit interrupt shou
 
 ### Acceptance criteria
 
-- [ ] Hit-reaction windows explicitly model legal named reactions for responders in that interrupt.
-- [ ] Generic responder-only hit windows are removed or narrowed so they no longer allow impossible reaction choices.
-- [ ] Deterministic scenario tests cover at least one positive and one negative legality case for the named hit reactions already modeled.
-- [ ] The battle runtime and authoritative model remain in parity for hit-reaction sequencing.
-- [ ] Tier 1 battle parity checks pass after the redesign.
+- [x] Hit-reaction windows explicitly model legal named reactions for responders in that interrupt.
+- [x] Generic responder-only hit windows are removed or narrowed so they no longer allow impossible reaction choices.
+- [x] Deterministic scenario tests cover at least one positive and one negative legality case for the named hit reactions already modeled.
+- [x] The battle runtime and authoritative model remain in parity for hit-reaction sequencing.
+- [x] Tier 1 battle parity checks pass after the redesign.
+
+### Phase 3 notes
+
+- `PIAttackHit` now carries an owned `legalReactionsByCreature` map in both Quint and TS, so hit windows open only for responders with at least one legal named option.
+- Battle attack events now accept caller-provided `hitReactionCandidates` for the external-responder boundary. This keeps spatial facts outside battle while making third-party hit reactions honest once the caller supplies them.
+- Battle combatants now track the owned state needed for the currently modeled hit reactions:
+  - `bardLevel`
+  - `bardicInspirationCharges`
+  - `parryAcBonus`
+- Deterministic coverage now proves:
+  - positive `Shield` with real slot + reaction cost
+  - positive `Cutting Words` with owned bardic-inspiration spending
+  - positive `Parry` with the owned fixed AC bonus
+  - negative no-legal-hit-reaction path
+- Closing this phase also exposed two unrelated but real parity drifts from current `master`, both fixed here because they blocked Phase 3 verification:
+  - bonus-action spell casting needed spend-then-refund parity with Quint before the Counterspell window
+  - the battle MBT schema needed to accept `Size` picks in ITF variant form for `bGrapple`
 
 ---
 
@@ -113,6 +130,19 @@ Apply the same ownership pattern to hit-reaction windows. The hit interrupt shou
 ### What to build
 
 Normalize the shared reaction-window architecture so the battle layer has one coherent way to represent reaction legality across interrupt types. This phase should align the battle-domain representation of interrupt windows, legal reaction options, and decision validation so future flow reactions can plug into the same architecture without reintroducing generic loopholes.
+
+### Next implementation notes
+
+- After Phase 3, the two main facilities still use different ownership shapes:
+  - `PIAttackHit` uses `legalReactionsByCreature`
+  - `PIAttackDamage` uses target-local `legalReactions`
+- Phase 4 should migrate damage reactions onto the same per-creature legal map pattern, even if the current damage window still only ever has one responder.
+- The normalization target should live at the battle interrupt/window layer, not in query-only helpers. A reasonable end state is:
+  - interrupt context preserves trigger facts
+  - interrupt context carries `legalReactionsByCreature`
+  - `AwaitCtx.eligible` becomes a direct projection of that owned legal map
+- The next phase does not need new SRD reaction coverage first. It should refactor the facility underneath the existing deterministic hit/damage scenarios and keep all of them green.
+- Once hit and damage windows share the same legality model, the next named-flow additions should not need special-case window plumbing.
 
 ### Acceptance criteria
 

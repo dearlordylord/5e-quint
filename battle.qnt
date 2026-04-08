@@ -49,6 +49,9 @@ module battle {
     grapplingTarget: CreatureId,             // "" = not currently grappling a target
     grappledTargetTwoSizesSmaller: bool,     // drag-speed exemption for the current grapple target
     baseWalkSpeed: int,                      // Walk speed (PC: 30, Monster: statBlock.speeds.get(Walk))
+    bardLevel: int,                          // 0 = not a bard
+    bardicInspirationCharges: int,           // current Lore-bard charges for Cutting Words
+    parryAcBonus: int,                       // 0 = no Parry reaction; otherwise fixed AC bonus
   }
 
   /// Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready action).
@@ -98,6 +101,9 @@ module battle {
 
   pure val DMG_REACTION_UNCANNY_DODGE = "RUncannyDodge"
   pure val DMG_REACTION_DEFLECT_ATTACKS = "RDeflectAttacks"
+  pure val HIT_REACTION_SHIELD = "RShield"
+  pure val HIT_REACTION_PARRY = "RParry"
+  pure val HIT_REACTION_CUTTING_WORDS = "RCuttingWords"
 
   // Movement context: mover and who they're leaving the reach of.
   // threatenedBy is caller-provided (spatial concern per O2).
@@ -120,7 +126,9 @@ module battle {
     knockOut: bool,                  // SRD 5.2.1 "Knocking Out a Creature" — attacker's choice
     hitRider: AttackHitRider,
     targetCanSeeAttackerAtHit: bool,
+    isMeleeAttack: bool,
     isWeaponAttack: bool,
+    legalReactionsByCreature: CreatureId -> Set[str],
   }
 
   type AttackDamageCtx = {
@@ -362,6 +370,11 @@ module battle {
   ): (CreatureId -> Combatant) =
     setTurn(cs, id, pUseReaction(cs.get(id).turn))
 
+  pure def spendBardicInspirationCharge(
+    cs: CreatureId -> Combatant, id: CreatureId
+  ): (CreatureId -> Combatant) =
+    cs.set(id, cs.get(id).with("bardicInspirationCharges", cs.get(id).bardicInspirationCharges - 1))
+
   val EMPTY_MONSTER_RESOURCES: MonsterResourceState = {
     legendaryActionsRemaining: 0,
     legendaryResistancesRemaining: 0,
@@ -378,7 +391,7 @@ module battle {
     "hold_person", "bless", "haste", "spirit_guardians",  // concentration spells
     "fireball", "burning_hands",                           // AoE / save spells
     "guiding_bolt", "inflict_wounds",                      // single-target save spells
-    "counterspell"                                         // reaction spell (CS chain)
+    "counterspell", "shield"                               // reaction spells
   )
 
   pure def mkCombatant(maxHp: int, k: CreatureKind): Combatant = {
@@ -407,6 +420,9 @@ module battle {
     grapplingTarget: "",
     grappledTargetTwoSizesSmaller: false,
     baseWalkSpeed: 30,
+    bardLevel: 0,
+    bardicInspirationCharges: 0,
+    parryAcBonus: 0,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -441,6 +457,9 @@ module battle {
     grapplingTarget: "",
     grappledTargetTwoSizesSmaller: false,
     baseWalkSpeed: 30,
+    bardLevel: 0,
+    bardicInspirationCharges: 0,
+    parryAcBonus: 0,
   }
 
   // Monster with legendary actions and resistances
@@ -476,6 +495,9 @@ module battle {
       grapplingTarget: "",
       grappledTargetTwoSizesSmaller: false,
       baseWalkSpeed: walkSpeed,
+      bardLevel: 0,
+      bardicInspirationCharges: 0,
+      parryAcBonus: 0,
     }
   }
 
@@ -787,6 +809,28 @@ module battle {
     val slots = cs.get(id).slots.slotsCurrent
     3.to(9).exists(lvl => slots.get(lvl) > 0)
 
+  pure def hasAnySpellSlot(c: Combatant): bool =
+    1.to(9).exists(lvl => c.slots.slotsCurrent.get(lvl) > 0)
+
+  pure def firstSpellSlotLevel(c: Combatant): int =
+    if (c.slots.slotsCurrent.get(1) > 0) 1
+    else if (c.slots.slotsCurrent.get(2) > 0) 2
+    else if (c.slots.slotsCurrent.get(3) > 0) 3
+    else if (c.slots.slotsCurrent.get(4) > 0) 4
+    else if (c.slots.slotsCurrent.get(5) > 0) 5
+    else if (c.slots.slotsCurrent.get(6) > 0) 6
+    else if (c.slots.slotsCurrent.get(7) > 0) 7
+    else if (c.slots.slotsCurrent.get(8) > 0) 8
+    else if (c.slots.slotsCurrent.get(9) > 0) 9
+    else 0
+
+  pure def battleBardicInspirationDie(bardLevel: int): int =
+    if (bardLevel <= 0) 0
+    else if (bardLevel < 5) 6
+    else if (bardLevel < 10) 8
+    else if (bardLevel < 15) 10
+    else 12
+
   /// Eligible Counterspell reactors: base eligible + has level 3+ slot + counterspell prepared
   /// + hasn't already expended a spell slot this turn (SRD 5.2.1 "One Spell with a Spell Slot per Turn").
   /// All spell-casting actions also guard on slotExpendedThisTurn at the action level.
@@ -826,6 +870,41 @@ module battle {
     val reduction = if (canDamageReduction) Set(DMG_REACTION_DEFLECT_ATTACKS) else Set()
     uncanny.union(reduction)
   }
+
+  pure def legalHitReactions(
+    cs: CreatureId -> Combatant, atk: AttackHitCtx, candidates: Set[CreatureId]
+  ): CreatureId -> Set[str] =
+    cs.keys().fold(Map(), (acc, id) => {
+      val c = cs.get(id)
+      val canReact =
+        id != atk.attacker
+        and c.turn.reactionAvailable
+        and not(c.creature.dead)
+        and not(c.creature.unconscious)
+        and not(isIncapacitated(c.creature))
+      val canShield =
+        canReact
+        and id == atk.target
+        and c.preparedSpells.contains("shield")
+        and hasAnySpellSlot(c)
+        and not(c.turn.slotExpendedThisTurn)
+      val canParry =
+        canReact
+        and id == atk.target
+        and atk.isMeleeAttack
+        and atk.isWeaponAttack
+        and c.parryAcBonus > 0
+      val canCuttingWords =
+        canReact
+        and candidates.contains(id)
+        and c.bardLevel >= 3
+        and c.bardicInspirationCharges > 0
+      val legal = Set()
+        .union(if (canShield) Set(HIT_REACTION_SHIELD) else Set())
+        .union(if (canParry) Set(HIT_REACTION_PARRY) else Set())
+        .union(if (canCuttingWords) Set(HIT_REACTION_CUTTING_WORDS) else Set())
+      acc.set(id, legal)
+    })
 
   /// Pop the top entry from a spell stack.
   pure def popStack(s: List[SpellStackEntry]): { top: SpellStackEntry, rest: List[SpellStackEntry] } =
@@ -1139,6 +1218,7 @@ module battle {
     hasAllyAdjacentToTarget: bool,
     saDmg: int,
     hitRider: AttackHitRider,
+    hitReactionCandidates: Set[CreatureId],
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     // autoMiss forces miss; otherwise normal hit check
     val hit = not(mods.autoMiss) and (attackRoll >= targetAc or attackRoll >= critRange)
@@ -1168,13 +1248,20 @@ module battle {
         knockOut: effectiveKnockOut,
         hitRider: hitRider,
         targetCanSeeAttackerAtHit: targetCanSeeAttackerAtHit,
+        isMeleeAttack: isMelee,
         isWeaponAttack: hitRider == NoAttackHitRider,
+        legalReactionsByCreature: Map(),
       }
-      val elig = eligibleExcluding(cs1, attackerId)
+      val legalByCreature = legalHitReactions(cs1, atkCtx, hitReactionCandidates)
+      val elig = legalByCreature.keys().filter(id => legalByCreature.get(id).size() > 0)
+      val hitCtx = atkCtx.with("legalReactionsByCreature", legalByCreature)
       if (elig.size() > 0) {
-        { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAttackHit(atkCtx), TAttackHits, elig)) }
+        {
+          creatures: cs1,
+          phase: BPAwaitingReaction(mkAwait(PIAttackHit(hitCtx), TAttackHits, elig))
+        }
       } else {
-        dealDamageWithAfterReactions(cs1, targetId, attackerId, totalDmg, damageType, effectiveCrit, returnTo, knockOut)
+        advanceFromHitPhase(cs1, hitCtx)
       }
     }
   }
@@ -1206,6 +1293,7 @@ module battle {
     nondet hitRider = Set(NoAttackHitRider, AHRShockingGrasp, AHRRayOfFrost).oneOf()
     // SA damage: nondeterministic within Nd6 range (0 if not eligible — resolved in resolveAttack)
     nondet saDmg = ac.sneakAttackDice.to(ac.sneakAttackDice * 6).oneOf()
+    nondet hitReactionCandidates = allIds.exclude(Set(activeId)).powerset().oneOf()
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -1223,7 +1311,7 @@ module battle {
       val cs1 = setTurn(bCreatures, activeId, newTurn)
       val atkCtx = buildAttackContext(cs1, activeId, targetId, isMelee, attackerWithin5ft, hostileWithin5ft, targetCanSeeAttacker, attackerCanSeeTarget, frightSourceInLOS)
       val atkMods = pAggregateAttackMods(atkCtx)
-      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, targetCanSeeAttacker, atkMods, isFinesse, hasAllyAdjacentToTarget, saDmg, hitRider)
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, targetCanSeeAttacker, atkMods, isFinesse, hasAllyAdjacentToTarget, saDmg, hitRider, hitReactionCandidates)
       all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
     }
   }
@@ -1267,9 +1355,16 @@ module battle {
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
               nondet reactorId = remaining.oneOf()
-              nondet parryBonus = 2.to(5).oneOf()
-              nondet cwReduction = 1.to(12).oneOf()
-              nondet decision = Set(RPass, RShield, RParry(parryBonus), RCuttingWords(cwReduction)).oneOf()
+              val reactor = bCreatures.get(reactorId)
+              val legal = atk.legalReactionsByCreature.get(reactorId)
+              val parryBonus = reactor.parryAcBonus
+              val maxCwReduction = intMax(1, battleBardicInspirationDie(reactor.bardLevel))
+              nondet cwReduction = 1.to(maxCwReduction).oneOf()
+              nondet decision = Set(RPass)
+                .union(if (legal.contains(HIT_REACTION_SHIELD)) Set(RShield) else Set())
+                .union(if (legal.contains(HIT_REACTION_PARRY)) Set(RParry(parryBonus)) else Set())
+                .union(if (legal.contains(HIT_REACTION_CUTTING_WORDS)) Set(RCuttingWords(cwReduction)) else Set())
+                .oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
               val newElig = ctx.eligible.exclude(Set(reactorId))
               // Retroactive reactions: spend reaction, modify atk, stay in hit phase.
@@ -1281,7 +1376,14 @@ module battle {
                 | _ => atk
               }
               if (retroAtk != atk) {
-                val cs1 = spendReaction(bCreatures, reactorId)
+                val cs1 = match decision {
+                  | RShield =>
+                    val slotLvl = firstSpellSlotLevel(reactor)
+                    expendSlot(spendReaction(bCreatures, reactorId), reactorId, slotLvl)
+                  | RParry(_) => spendReaction(bCreatures, reactorId)
+                  | RCuttingWords(_) => spendBardicInspirationCharge(spendReaction(bCreatures, reactorId), reactorId)
+                  | _ => bCreatures
+                }
                 all {
                   bCreatures' = cs1,
                   bPhase' = BPAwaitingReaction({
@@ -2245,6 +2347,7 @@ module battle {
     nondet oaAttackerCanSeeTarget = Bool.oneOf()
     nondet oaFrightSourceInLOS = Bool.oneOf()
     nondet oaHasAllyAdjacent = Bool.oneOf()
+    nondet oaHitReactionCandidates = bCreatures.keys().powerset().oneOf()
     match bPhase {
       | BPResolvingMovement(mv) =>
         val remaining = mv.threatenedBy.exclude(mv.processed)
@@ -2259,7 +2362,7 @@ module battle {
         // OA: always melee, always within 5ft
         val oaCtx = buildAttackContext(cs1, reactorId, mv.mover, true, true, oaHostileWithin5ft, oaTargetCanSeeAttacker, oaAttackerCanSeeTarget, oaFrightSourceInLOS)
         val oaMods = pAggregateAttackMods(oaCtx)
-        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaTargetCanSeeAttacker, oaMods, oaIsFinesse, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider)
+        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaTargetCanSeeAttacker, oaMods, oaIsFinesse, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider, oaHitReactionCandidates.exclude(Set(reactorId)))
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -2397,6 +2500,7 @@ module battle {
         nondet readyAtkCanSee = Bool.oneOf()
         nondet readyFrightLOS = Bool.oneOf()
         nondet readyHasAllyAdjacent = Bool.oneOf()
+        nondet readyHitReactionCandidates = allIds.exclude(Set(releaserId)).powerset().oneOf()
         val releaser = bCreatures.get(releaserId)
         nondet readySaDmg = releaser.sneakAttackDice.to(releaser.sneakAttackDice * 6).oneOf()
         all {
@@ -2406,7 +2510,7 @@ module battle {
           val readyReturn = ADRAwaitingReadiedAction(readyCtx)
           val readyAtkCtx = buildAttackContext(cs1, releaserId, targetId, readyIsMelee, readyAtkWithin5ft, readyHostileWithin5ft, readyTgtCanSee, readyAtkCanSee, readyFrightLOS)
           val readyMods = pAggregateAttackMods(readyAtkCtx)
-          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyTgtCanSee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg, NoAttackHitRider)
+          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyTgtCanSee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg, NoAttackHitRider, readyHitReactionCandidates)
           all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -2489,6 +2593,7 @@ module battle {
         nondet laAtkCanSee = Bool.oneOf()
         nondet laFrightLOS = Bool.oneOf()
         nondet laHasAllyAdjacent = Bool.oneOf()
+        nondet laHitReactionCandidates = allIds.exclude(Set(monsterId)).powerset().oneOf()
         val m = bCreatures.get(monsterId)
         nondet laSaDmg = m.sneakAttackDice.to(m.sneakAttackDice * 6).oneOf()
         val newMR = m.monsterResources.with("legendaryActionsRemaining",
@@ -2497,7 +2602,7 @@ module battle {
         val laReturn = ADRAwaitingLegendaryAction(laCtx)
         val laAtkCtx = buildAttackContext(cs1, monsterId, laTarget, laIsMelee, laAtkWithin5ft, laHostileWithin5ft, laTgtCanSee, laAtkCanSee, laFrightLOS)
         val laMods = pAggregateAttackMods(laAtkCtx)
-        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laTgtCanSee, laMods, laIsFinesse, laHasAllyAdjacent, laSaDmg, NoAttackHitRider)
+        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laTgtCanSee, laMods, laIsFinesse, laHasAllyAdjacent, laSaDmg, NoAttackHitRider, laHitReactionCandidates)
         all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }

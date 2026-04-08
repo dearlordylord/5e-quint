@@ -409,7 +409,8 @@ const battleDriverSchema = {
     attackerCanSeeTarget: OB,
     frightSourceInLOS: OB,
     hasAllyAdjacentToTarget: OB,
-    saDmg: OI
+    saDmg: OI,
+    hitReactionCandidates: z.any().optional()
   },
   bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
@@ -458,7 +459,8 @@ const battleDriverSchema = {
     attackerCanSeeTarget: OB,
     frightSourceInLOS: OB,
     hasAllyAdjacentToTarget: OB,
-    saDmg: OI
+    saDmg: OI,
+    hitReactionCandidates: z.any().optional()
   },
   bEndTurn: { eotSaveSucceeded: OB, eotDmg: OI, eotDt: OV, eotConSave: OB },
   bLegendaryPass: {},
@@ -479,13 +481,14 @@ const battleDriverSchema = {
     attackerCanSeeTarget: OB,
     frightSourceInLOS: OB,
     hasAllyAdjacentToTarget: OB,
-    saDmg: OI
+    saDmg: OI,
+    hitReactionCandidates: z.any().optional()
   },
   bHeal: { targetId: OS, amount: OI },
   bDash: {},
   bDisengage: {},
   bDodge: {},
-  bGrapple: { targetId: OS, attackerSize: OS, targetSize: OS, targetSaveFailed: OB, attackerHasFreeHand: OB },
+  bGrapple: { targetId: OS, attackerSize: z.any(), targetSize: z.any(), targetSaveFailed: OB, attackerHasFreeHand: OB },
   bReleaseGrapple: {},
   bEscapeGrapple: { escapeSucceeded: OB },
   bActionSurge: {},
@@ -522,7 +525,8 @@ const battleDriverSchema = {
     attackerCanSeeTarget: OB,
     frightSourceInLOS: OB,
     hasAllyAdjacentToTarget: OB,
-    saDmg: OI
+    saDmg: OI,
+    hitReactionCandidates: z.any().optional()
   },
   bReadySpellRelease: {
     releaserId: OS,
@@ -568,6 +572,13 @@ function psz(picks: Record<string, unknown>, key: string, fallback: Size): Size 
   const parsed = variantToString(v).toLowerCase()
   return parsed === "[object object]" ? fallback : (parsed as Size)
 }
+function pcs(picks: Record<string, unknown>, key: string): ReadonlySet<CreatureId> {
+  const raw = picks[key]
+  if (!(raw instanceof Set)) return new Set()
+  const result = new Set<CreatureId>()
+  for (const item of raw) result.add(mkCreatureId(String(item)))
+  return result
+}
 /** Common spatial/visibility/SA fields for attack event dispatch. */
 function attackContextPicks(picks: Record<string, unknown>) {
   return {
@@ -578,7 +589,8 @@ function attackContextPicks(picks: Record<string, unknown>) {
     attackerCanSeeTarget: pb(picks, "attackerCanSeeTarget", true),
     frightSourceInLOS: pb(picks, "frightSourceInLOS", false),
     hasAllyAdjacentToTarget: pb(picks, "hasAllyAdjacentToTarget", false),
-    saDmg: p(picks, "saDmg", 0)
+    saDmg: p(picks, "saDmg", 0),
+    hitReactionCandidates: pcs(picks, "hitReactionCandidates")
   }
 }
 

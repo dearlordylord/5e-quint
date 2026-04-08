@@ -19,7 +19,7 @@ import {
   spendLR,
   spendReaction
 } from "#/battle-machine-helpers.ts"
-import { resolveConcentration, resolveSpellEntry, returnToCSWindow } from "#/battle-machine-spells.ts"
+import { refundSpellEntry, resolveConcentration, resolveSpellEntry, returnToCSWindow } from "#/battle-machine-spells.ts"
 import type {
   AoESpellCtx,
   BattleActionArgs,
@@ -51,6 +51,7 @@ export function battleCastSaveSpell({
   let cs = e.bonusAction
     ? setCreature(c.creatures, id, { ...ac, bonusActionUsed: true, bonusActionSpellCast: true })
     : setCreature(c.creatures, id, spendAction(ac, "magic"))
+  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
   const saveCtx = {
     caster: id,
     target: e.targetId,
@@ -77,7 +78,6 @@ export function battleCastSaveSpell({
       ...phaseAwaitReaction(mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig))
     }
   }
-  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
   const result = resolveSave(cs, saveCtx, ADR_ACTIVE_TURN)
   return { ...result }
 }
@@ -97,13 +97,14 @@ export function battleResolveCounterspell({
       if (c.spellStack.length === 0) return { ...PHASE_ACTIVE }
       const popped = { top: c.spellStack[c.spellStack.length - 1], rest: c.spellStack.slice(0, -1) }
       if (!csEffect.conSaveSucceeded) {
+        const refunded = refundSpellEntry(c.creatures, popped.top)
         if (popped.top.spellPostCast.tag === "PCECounterspell") {
-          if (popped.rest.length === 0) return { ...PHASE_ACTIVE, spellStack: popped.rest }
+          if (popped.rest.length === 0) return { creatures: refunded, ...PHASE_ACTIVE, spellStack: popped.rest }
           const gp = { top: popped.rest[popped.rest.length - 1], rest: popped.rest.slice(0, -1) }
-          const result = returnToCSWindow(c.creatures, gp.top, gp.rest)
+          const result = returnToCSWindow(refunded, gp.top, gp.rest)
           return { ...result, spellStack: result.stack }
         }
-        return { ...PHASE_ACTIVE, spellStack: popped.rest }
+        return { creatures: refunded, ...PHASE_ACTIVE, spellStack: popped.rest }
       }
       const result = returnToCSWindow(c.creatures, popped.top, popped.rest)
       return { ...result, spellStack: result.stack }
@@ -201,6 +202,7 @@ export function battleCastConcentrationSpell({
   if (ac.actionSurgeActionPending || ac.ragingBlocksSpells) return {}
   if (ac.slotExpendedThisTurn && !e.ritual) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
+  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
   const concCtx = {
     caster: id,
     target: e.targetId,
@@ -223,7 +225,6 @@ export function battleCastConcentrationSpell({
       ...phaseAwaitReaction(mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig))
     }
   }
-  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
   return { creatures: resolveConcentration(cs, concCtx), ...PHASE_ACTIVE }
 }
 
@@ -244,6 +245,7 @@ export function battleCastAoE({ context: c, event: e }: BattleActionArgs<"BATTLE
   if (ac.actionSurgeActionPending || ac.ragingBlocksSpells) return {}
   if (ac.slotExpendedThisTurn && !e.ritual) return {}
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"))
+  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
   const liveTargets = new Set<CreatureId>()
   for (const [cid, cr] of cs) {
     if (cid !== id && !cr.dead) liveTargets.add(cid)
@@ -273,7 +275,6 @@ export function battleCastAoE({ context: c, event: e }: BattleActionArgs<"BATTLE
       ...phaseAwaitReaction(mkAwait({ tag: "PISpellCast", ctx: spellCtx }, "TSpellBeingCast", csElig))
     }
   }
-  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl))
   return { creatures: cs, ...phaseResolvingAoE(aoeCtx) }
 }
 

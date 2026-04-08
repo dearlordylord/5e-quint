@@ -7,9 +7,11 @@ import {
   awaitingReaction,
   byTag,
   dealDamageWithAfterReactions,
-  eligibleExcluding,
+  expendSlot,
+  firstAvailableSpellSlotLevel,
   isHit,
   legalDamageReactions,
+  legalHitReactions,
   mkAwait,
   piAfterDamage,
   piAttackDamage,
@@ -30,6 +32,7 @@ import type {
   PhaseFields
 } from "#/battle-machine-types.ts"
 import { ADR_ACTIVE_TURN, phaseAwaitReaction } from "#/battle-machine-types.ts"
+import { bardicInspirationDie } from "#/features/class-bard.ts"
 import { deflectAttacksResult } from "#/features/class-monk-features.ts"
 import { uncannyDodgeDamage } from "#/features/class-rogue.ts"
 import { aggregateAttackMods } from "#/machine-combat.ts"
@@ -107,7 +110,8 @@ export function resolveAttack(
   onHitEffect: AttackHitCtx["onHitEffect"],
   isFinesse: boolean,
   hasAllyAdjacentToTarget: boolean,
-  saDmg: number
+  saDmg: number,
+  hitReactionCandidates: ReadonlySet<CreatureId>
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const hit = !mods.autoMiss && isHit(attackRoll, targetAc, critRange)
   if (!hit) {
@@ -140,25 +144,20 @@ export function resolveAttack(
     knockOut: effectiveKnockOut,
     onHitEffect,
     targetCanSeeAttackerAtHit,
-    isWeaponAttack: onHitEffect == null
+    isMeleeAttack: isMelee,
+    isWeaponAttack: onHitEffect == null,
+    legalReactionsByCreature: new Map()
   }
-  const elig = eligibleExcluding(cs1, attackerId)
+  const legalReactionsByCreature = legalHitReactions(cs1, atkCtx, hitReactionCandidates)
+  const elig = new Set(legalReactionsByCreature.keys())
+  const hitCtx = { ...atkCtx, legalReactionsByCreature }
   if (elig.size > 0) {
     return {
       creatures: new Map(cs1),
-      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: atkCtx }, "TAttackHits", elig))
+      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackHit", ctx: hitCtx }, "TAttackHits", elig))
     }
   }
-  return dealDamageWithAfterReactions(
-    cs1,
-    targetId,
-    attackerId,
-    totalDmg,
-    damageType,
-    effectiveCrit,
-    effectiveKnockOut,
-    returnTo
-  )
+  return advanceFromHitPhase(cs1, hitCtx, attackerId)
 }
 
 export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_ATTACK">): Partial<BattleContext> {
@@ -201,7 +200,8 @@ export function battleAttack({ context: c, event: e }: BattleActionArgs<"BATTLE_
     e.onHitEffect,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
-    e.saDmg
+    e.saDmg,
+    e.hitReactionCandidates
   )
 }
 
@@ -226,6 +226,9 @@ export function battleResolveHitReaction({
   }
   const newOffered = new Set(aw.offered)
   newOffered.add(e.reactorId)
+  if (!aw.eligible.has(e.reactorId)) return {}
+  const legalReactions = atk.legalReactionsByCreature.get(e.reactorId)
+  if (e.decision.tag !== "RPass" && !legalReactions?.has(e.decision.tag)) return {}
   const retroAtk = Match.value(e.decision).pipe(
     byTag("RShield", () => ({ ...atk, targetAc: armorClass(atk.targetAc + 5) })),
     byTag("RParry", (d) => ({ ...atk, targetAc: armorClass(atk.targetAc + d.bonus) })),
@@ -234,7 +237,23 @@ export function battleResolveHitReaction({
     Match.exhaustive
   )
   if (retroAtk !== atk) {
-    const cs = setCreature(c.creatures, e.reactorId, spendReaction(c.creatures.get(e.reactorId)!))
+    const reactor = c.creatures.get(e.reactorId)!
+    const updatedReactor = Match.value(e.decision).pipe(
+      byTag("RShield", () => {
+        const slotLevel = firstAvailableSpellSlotLevel(reactor)
+        return slotLevel == null ? reactor : expendSlot(spendReaction(reactor), slotLevel)
+      }),
+      byTag("RParry", (d) => (d.bonus === reactor.parryAcBonus ? spendReaction(reactor) : reactor)),
+      byTag("RCuttingWords", (d) => {
+        const maxReduction = bardicInspirationDie(reactor.bardLevel)
+        if (d.reduction < 1 || d.reduction > maxReduction || reactor.bardicInspirationCharges <= 0) return reactor
+        return { ...spendReaction(reactor), bardicInspirationCharges: reactor.bardicInspirationCharges - 1 }
+      }),
+      byTag("RPass", () => reactor),
+      Match.exhaustive
+    )
+    if (updatedReactor === reactor) return {}
+    const cs = setCreature(c.creatures, e.reactorId, updatedReactor)
     const newElig = new Set(aw.eligible)
     newElig.delete(e.reactorId)
     return {

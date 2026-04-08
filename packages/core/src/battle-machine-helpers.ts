@@ -42,7 +42,9 @@ import {
   phaseResolvingMovement
 } from "#/battle-machine-types.ts"
 import { canDeflectAttacks, hasDeflectEnergy } from "#/features/class-monk-features.ts"
+import { hasCuttingWords } from "#/features/class-bard.ts"
 import { canUncannyDodge, evasionDamage } from "#/features/class-rogue.ts"
+import { canCastShield } from "#/features/spell-abjuration.ts"
 import type { ActiveEffect, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
@@ -310,9 +312,47 @@ export function eligibleExcluding(cs: Creatures, excludeId: CreatureId): Set<Cre
   return result
 }
 
+function hasAnySpellSlot(c: BattleCreatureState, minimumLevel = 1): boolean {
+  for (let i = Math.max(0, minimumLevel - 1); i < c.slotsCurrent.length; i++) {
+    if (c.slotsCurrent[i]! > 0) return true
+  }
+  return false
+}
+
+export function firstAvailableSpellSlotLevel(c: BattleCreatureState, minimumLevel = 1): number | null {
+  for (let i = Math.max(0, minimumLevel - 1); i < c.slotsCurrent.length; i++) {
+    if (c.slotsCurrent[i]! > 0) return i + 1
+  }
+  return null
+}
+
 export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<CreatureId> {
   const t = cs.get(targetId)!
   return t.reactionAvailable && !t.dead && !t.unconscious ? new Set([targetId]) : new Set()
+}
+
+export function legalHitReactions(cs: Creatures, atk: AttackHitCtx, candidates: ReadonlySet<CreatureId>) {
+  const legalByCreature = new Map<CreatureId, Set<"RShield" | "RParry" | "RCuttingWords">>()
+  for (const [id, c] of cs) {
+    if (!c.reactionAvailable || c.dead || c.unconscious || isIncapacitated(c) || id === atk.attacker) continue
+    const legal = new Set<"RShield" | "RParry" | "RCuttingWords">()
+    if (
+      id === atk.target &&
+      canCastShield(c.reactionAvailable, hasAnySpellSlot(c)) &&
+      c.preparedSpells.has("shield") &&
+      !c.slotExpendedThisTurn
+    ) {
+      legal.add("RShield")
+    }
+    if (id === atk.target && atk.isMeleeAttack && atk.isWeaponAttack && c.parryAcBonus > 0) {
+      legal.add("RParry")
+    }
+    if (candidates.has(id) && hasCuttingWords(c.bardLevel) && c.bardicInspirationCharges > 0) {
+      legal.add("RCuttingWords")
+    }
+    if (legal.size > 0) legalByCreature.set(id, legal)
+  }
+  return legalByCreature
 }
 
 export function legalDamageReactions(cs: Creatures, atk: AttackDamageCtx): Set<"RUncannyDodge" | "RDeflectAttacks"> {

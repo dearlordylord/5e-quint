@@ -96,6 +96,9 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
       ...(cfg.barbarianLevel != null ? { barbarianLevel: cfg.barbarianLevel } : {}),
       ...(cfg.meleeDamageBonus != null ? { meleeDamageBonus: cfg.meleeDamageBonus } : {}),
       ...(cfg.sneakAttackDice != null ? { sneakAttackDice: cfg.sneakAttackDice } : {}),
+      ...(cfg.bardLevel != null ? { bardLevel: cfg.bardLevel } : {}),
+      ...(cfg.bardicInspirationCharges != null ? { bardicInspirationCharges: cfg.bardicInspirationCharges } : {}),
+      ...(cfg.parryAcBonus != null ? { parryAcBonus: cfg.parryAcBonus } : {}),
       ...(cfg.baseWalkSpeed != null
         ? { baseWalkSpeed: cfg.baseWalkSpeed, movementRemaining: cfg.baseWalkSpeed, effectiveSpeed: cfg.baseWalkSpeed }
         : {})
@@ -278,7 +281,8 @@ export function battleReadyRelease({
     undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
-    e.saDmg
+    e.saDmg,
+    e.hitReactionCandidates
   )
 }
 
@@ -319,7 +323,8 @@ export function battleLegendaryAttack({
     undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
-    e.saDmg
+    e.saDmg,
+    e.hitReactionCandidates
   )
 }
 

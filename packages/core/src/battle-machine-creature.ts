@@ -349,7 +349,8 @@ const CASTER_PREPARED_SPELLS: ReadonlySet<string> = new Set([
   "burning_hands",
   "guiding_bolt",
   "inflict_wounds",
-  "counterspell"
+  "counterspell",
+  "shield"
 ])
 
 export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreatureState {
@@ -410,7 +411,10 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
     readiedSpellParams: null,
-    baseWalkSpeed: 30
+    baseWalkSpeed: 30,
+    bardLevel: 0,
+    bardicInspirationCharges: 0,
+    parryAcBonus: 0
   }
 }
 

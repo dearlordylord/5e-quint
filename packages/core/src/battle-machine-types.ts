@@ -5,7 +5,7 @@
 import type { Option } from "effect"
 
 // Events, decisions, and interrupts extracted to battle-machine-events.ts for max-lines compliance.
-import type { DmgReactionKind, PendingInterrupt, TriggerType } from "#/battle-machine-events.ts"
+import type { DmgReactionKind, HitReactionKind, PendingInterrupt, TriggerType } from "#/battle-machine-events.ts"
 import type {
   Ability,
   ActiveEffect,
@@ -109,6 +109,9 @@ export interface BattleCreatureState {
   readonly readiedSpellParams: ReadiedSpellParams | null
   // Walk speed (PC: 30, Monster: from stat block)
   readonly baseWalkSpeed: number
+  readonly bardLevel: number
+  readonly bardicInspirationCharges: number
+  readonly parryAcBonus: number
 }
 
 /** Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready). */
@@ -139,7 +142,9 @@ export interface AttackHitCtx {
   readonly knockOut: boolean
   readonly onHitEffect?: ActiveEffect
   readonly targetCanSeeAttackerAtHit: boolean
+  readonly isMeleeAttack: boolean
   readonly isWeaponAttack: boolean
+  readonly legalReactionsByCreature: ReadonlyMap<CreatureId, ReadonlySet<HitReactionKind>>
 }
 
 export interface AttackDamageCtx {
@@ -340,6 +345,9 @@ export interface InitCreatureConfig {
   readonly barbarianLevel?: number
   readonly meleeDamageBonus?: number
   readonly sneakAttackDice?: number
+  readonly bardLevel?: number
+  readonly bardicInspirationCharges?: number
+  readonly parryAcBonus?: number
   /** Walk speed (PC: 30, Monster: from stat block). Defaults to 30. */
   readonly baseWalkSpeed?: number
   /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */

@@ -86,6 +86,7 @@ export function battleMovementOAAttack({
     undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
-    e.saDmg
+    e.saDmg,
+    e.hitReactionCandidates
   )
 }

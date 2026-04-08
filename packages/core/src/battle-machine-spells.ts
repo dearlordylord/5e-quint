@@ -10,7 +10,6 @@ import {
   breakConcentrationAndPropagate,
   byTag,
   eligibleForCounterspell,
-  expendSlot,
   resolveSave,
   setCreature,
   setDifference
@@ -28,6 +27,25 @@ import { ADR_ACTIVE_TURN, PHASE_ACTIVE, phaseAwaitReaction, phaseResolvingAoE } 
 
 type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>
 
+function refundSlot(c: BattleCreatureState, level: number): BattleCreatureState {
+  const idx = level - 1
+  if (idx < 0 || idx >= c.slotsCurrent.length) return c
+  const current = c.slotsCurrent[idx]
+  const maximum = c.slotsMax[idx]
+  if (current == null || maximum == null || current >= maximum) return c
+  const newSlots = [...c.slotsCurrent]
+  newSlots[idx] = current + 1
+  return { ...c, slotsCurrent: newSlots }
+}
+
+export function refundSpellEntry(
+  cs: Creatures,
+  entry: SpellStackEntry
+): Map<CreatureId, BattleCreatureState> {
+  if (entry.ritual || entry.slotLvl <= 0) return new Map(cs)
+  return setCreature(cs, entry.spellCasterId, refundSlot(cs.get(entry.spellCasterId)!, entry.slotLvl))
+}
+
 export function resolveConcentration(cs: Creatures, conc: ConcentrationCtx): Map<CreatureId, BattleCreatureState> {
   let cs1: Map<CreatureId, BattleCreatureState> = Option.isSome(cs.get(conc.caster)!.concentrationSpellId)
     ? breakConcentrationAndPropagate(cs, conc.caster)
@@ -44,14 +62,13 @@ export function resolveConcentration(cs: Creatures, conc: ConcentrationCtx): Map
 
 export function resolveSpellEntry(
   cs: Creatures,
-  casterId: CreatureId,
-  slotLvl: number,
-  isRitual: boolean,
+  _casterId: CreatureId,
+  _slotLvl: number,
+  _isRitual: boolean,
   postCast: PostCastEffect,
   stack: ReadonlyArray<SpellStackEntry>
 ): { creatures: Map<CreatureId, BattleCreatureState>; stack: ReadonlyArray<SpellStackEntry> } & PhaseFields {
-  let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs)
-  if (!isRitual && slotLvl > 0) cs1 = setCreature(cs1, casterId, expendSlot(cs1.get(casterId)!, slotLvl))
+  const cs1: Map<CreatureId, BattleCreatureState> = new Map(cs)
   const result = Match.value(postCast).pipe(
     byTag("PCESave", (pc) => {
       const r = resolveSave(cs1, pc.save, ADR_ACTIVE_TURN)

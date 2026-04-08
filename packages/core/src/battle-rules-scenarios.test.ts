@@ -4,6 +4,7 @@ import { createActor } from "xstate"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleEvent } from "#/battle-machine-types.ts"
+import type { CreatureId as CreatureIdT } from "#/types.ts"
 import { armorClass, CreatureId, difficultyClass, spellId, spellSlotLevel } from "#/types.ts"
 
 const DEFAULT_ATTACK_CONTEXT = {
@@ -16,7 +17,8 @@ const DEFAULT_ATTACK_CONTEXT = {
   attackerCanSeeTarget: true,
   frightSourceInLOS: false,
   hasAllyAdjacentToTarget: false,
-  saDmg: 0
+  saDmg: 0,
+  hitReactionCandidates: new Set<CreatureIdT>()
 } as const
 
 const ZERO_SOT: Pick<
@@ -52,6 +54,35 @@ function initTwoPcBattle() {
     creatures: [
       { id: CreatureId("A"), maxHp: 20, kind: "PC" },
       { id: CreatureId("B"), maxHp: 20, kind: "PC" }
+    ]
+  })
+  return actor
+}
+
+function initHitReactionBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["shield"]),
+        initiativeRoll: 15
+      },
+      {
+        id: CreatureId("C"),
+        maxHp: 20,
+        kind: "PC",
+        bardLevel: 3,
+        bardicInspirationCharges: 3,
+        initiativeRoll: 10
+      },
+      { id: CreatureId("D"), maxHp: 20, kind: "Monster", parryAcBonus: 2, initiativeRoll: 5 }
     ]
   })
   return actor
@@ -343,7 +374,7 @@ function passSpellCastWindow(actor: ReturnType<typeof createActor<typeof battleM
 
 describe("battle rules scenario regressions", () => {
   it("natural_20: Shield negates the triggering hit and spends the reaction", () => {
-    const actor = initTwoPcBattle()
+    const actor = initHitReactionBattle()
     startTurn(actor)
 
     send(actor, {
@@ -376,6 +407,104 @@ describe("battle rules scenario regressions", () => {
     expect(ctx(actor).awaitCtx).toBeNull()
     expect(creature(actor, "B").hp).toBe(20)
     expect(creature(actor, "B").reactionAvailable).toBe(false)
+    expect(creature(actor, "B").slotsCurrent[0]).toBe(3)
+    expect(creature(actor, "B").slotExpendedThisTurn).toBe(true)
+  })
+
+  it("phase_3: Cutting Words is offered only to an owned candidate and spends bardic inspiration", () => {
+    const actor = initHitReactionBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(15),
+      ...DEFAULT_ATTACK_CONTEXT,
+      hitReactionCandidates: new Set([CreatureId("C")])
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit")
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("C"))).toBe(true)
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("D"))).toBe(false)
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: CreatureId("C"),
+      decision: { tag: "RCuttingWords", reduction: 4 }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "B").hp).toBe(20)
+    expect(creature(actor, "C").reactionAvailable).toBe(false)
+    expect(creature(actor, "C").bardicInspirationCharges).toBe(2)
+  })
+
+  it("phase_3: Parry is legal only on melee weapon hits and uses the owned AC bonus", () => {
+    const actor = initHitReactionBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("D"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(15),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit")
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("D"))).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: CreatureId("D"),
+      decision: { tag: "RParry", bonus: 2 }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "D").hp).toBe(20)
+    expect(creature(actor, "D").reactionAvailable).toBe(false)
+  })
+
+  it("phase_3: impossible hit reactions are rejected by owned window legality", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(15),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
+    expect(creature(actor, "B").hp).toBe(13)
   })
 
   it("phase_1: the damage window is skipped when the target has no legal damage reaction", () => {
@@ -393,14 +522,6 @@ describe("battle rules scenario regressions", () => {
       crit: false,
       tAc: armorClass(10),
       ...DEFAULT_ATTACK_CONTEXT
-    })
-
-    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit")
-
-    send(actor, {
-      type: "BATTLE_RESOLVE_HIT_REACTION",
-      reactorId: null,
-      decision: { tag: "RPass" }
     })
 
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
@@ -425,14 +546,6 @@ describe("battle rules scenario regressions", () => {
       targetCanSeeAttacker: false
     })
 
-    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit")
-
-    send(actor, {
-      type: "BATTLE_RESOLVE_HIT_REACTION",
-      reactorId: null,
-      decision: { tag: "RPass" }
-    })
-
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
     expect(creature(actor, "B").hp).toBe(12)
     expect(creature(actor, "B").reactionAvailable).toBe(true)
@@ -454,12 +567,6 @@ describe("battle rules scenario regressions", () => {
       tAc: armorClass(10),
       ...DEFAULT_ATTACK_CONTEXT
     })
-    send(actor, {
-      type: "BATTLE_RESOLVE_HIT_REACTION",
-      reactorId: null,
-      decision: { tag: "RPass" }
-    })
-
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
     const awaitCtx = ctx(actor).awaitCtx
     const dmgCtx = awaitCtx?.interrupt.tag === "PIAttackDamage" ? awaitCtx.interrupt.ctx : null
@@ -492,12 +599,6 @@ describe("battle rules scenario regressions", () => {
       tAc: armorClass(10),
       ...DEFAULT_ATTACK_CONTEXT
     })
-    send(actor, {
-      type: "BATTLE_RESOLVE_HIT_REACTION",
-      reactorId: null,
-      decision: { tag: "RPass" }
-    })
-
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
 
     send(actor, {
@@ -531,12 +632,6 @@ describe("battle rules scenario regressions", () => {
       tAc: armorClass(10),
       ...DEFAULT_ATTACK_CONTEXT
     })
-    send(actor, {
-      type: "BATTLE_RESOLVE_HIT_REACTION",
-      reactorId: null,
-      decision: { tag: "RPass" }
-    })
-
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
     const deflectAwaitCtx = ctx(actor).awaitCtx
     const deflectCtx = deflectAwaitCtx?.interrupt.tag === "PIAttackDamage" ? deflectAwaitCtx.interrupt.ctx : null
@@ -733,7 +828,8 @@ describe("battle rules scenario regressions", () => {
       attackerCanSeeTarget: true,
       frightSourceInLOS: false,
       hasAllyAdjacentToTarget: false,
-      saDmg: 0
+      saDmg: 0,
+      hitReactionCandidates: new Set<CreatureIdT>()
     })
     resolveAttackWindows(actor)
 
@@ -866,7 +962,8 @@ describe("battle rules scenario regressions", () => {
       attackerCanSeeTarget: true,
       frightSourceInLOS: false,
       hasAllyAdjacentToTarget: false,
-      saDmg: 0
+      saDmg: 0,
+      hitReactionCandidates: new Set<CreatureIdT>()
     })
     send(actor, {
       type: "BATTLE_MOVEMENT_OA_PASS",
@@ -913,7 +1010,8 @@ describe("battle rules scenario regressions", () => {
       attackerCanSeeTarget: true,
       frightSourceInLOS: false,
       hasAllyAdjacentToTarget: false,
-      saDmg: 0
+      saDmg: 0,
+      hitReactionCandidates: new Set<CreatureIdT>()
     })
     send(actor, {
       type: "BATTLE_MOVEMENT_OA_PASS",
