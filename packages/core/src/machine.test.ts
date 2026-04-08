@@ -1186,31 +1186,40 @@ describe("combat mode separation (TA3)", () => {
   })
 
   it("SHORT_REST ignored when acting", () => {
-    const a = createActor(creatureMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
+    const a = createActor(
+      creatureMachine,
+      { input: { maxHp: 20, conMod: 2, hitDiceRemaining: singleClassHitDice("fighter", 3) } },
+    )
     a.start()
     startTurn(a)
     takeDamage(a, 5)
     const hpBefore = ctx(a).hp
-    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [{ className: "fighter", roll: 4 }] })
+    a.send({ type: "SHORT_REST", hdRolls: [{ className: "fighter", roll: 4 }] })
     expect(ctx(a).hp).toBe(hpBefore)
   })
 
   it("SHORT_REST ignored when waitingForTurn", () => {
-    const a = createActor(creatureMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
+    const a = createActor(
+      creatureMachine,
+      { input: { maxHp: 20, conMod: 2, hitDiceRemaining: singleClassHitDice("fighter", 3) } },
+    )
     a.start()
     startTurn(a)
     takeDamage(a, 5)
     endTurn(a)
     const hpBefore = ctx(a).hp
-    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [{ className: "fighter", roll: 4 }] })
+    a.send({ type: "SHORT_REST", hdRolls: [{ className: "fighter", roll: 4 }] })
     expect(ctx(a).hp).toBe(hpBefore)
   })
 
   it("SHORT_REST works when outOfCombat", () => {
-    const a = createActor(creatureMachine, { input: { maxHp: 20, hitDiceRemaining: singleClassHitDice("fighter", 3) } })
+    const a = createActor(
+      creatureMachine,
+      { input: { maxHp: 20, conMod: 2, hitDiceRemaining: singleClassHitDice("fighter", 3) } },
+    )
     a.start()
     takeDamage(a, 5)
-    a.send({ type: "SHORT_REST", conMod: 2, hdRolls: [{ className: "fighter", roll: 4 }] })
+    a.send({ type: "SHORT_REST", hdRolls: [{ className: "fighter", roll: 4 }] })
     expect(ctx(a).hp).toBe(20)
   })
 })
@@ -2096,13 +2105,12 @@ describe("spell slot expenditure", () => {
 })
 
 describe("short rest", () => {
-  it("spend hit dice: roll + CON mod, min 0", () => {
+  it("spend hit dice: roll + owned CON mod, minimum 1", () => {
     const a = create()
     takeDamage(a, 15)
     // Can't spend HD when hitDiceRemaining is 0
     a.send({
       type: "SHORT_REST",
-      conMod: 2,
       hdRolls: [
         { className: "fighter", roll: 5 },
         { className: "fighter", roll: 3 }
@@ -2113,7 +2121,7 @@ describe("short rest", () => {
 
   it("short rest restores pact slots", () => {
     const a = create()
-    a.send({ type: "SHORT_REST", conMod: 0, hdRolls: [] })
+    a.send({ type: "SHORT_REST", hdRolls: [] })
     // pactSlotsMax is 0, so pactSlotsCurrent restored to 0
     expect(ctx(a).pactSlotsCurrent).toBe(0)
   })
@@ -2517,7 +2525,7 @@ describe("machine action edge cases", () => {
   it("spend hit die with 0 remaining is no-op", () => {
     const a = createActor(creatureMachine, { input: { maxHp: DEFAULT_MAX_HP, hitDiceRemaining: ZERO_HIT_DICE } })
     a.start()
-    a.send({ type: "SPEND_HIT_DIE", className: "fighter", conMod: 2, dieRoll: 4 })
+    a.send({ type: "SPEND_HIT_DIE", className: "fighter", dieRoll: 4 })
     expect(ctx(a).hp).toBe(DEFAULT_MAX_HP) // unchanged
   })
 

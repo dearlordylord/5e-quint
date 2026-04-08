@@ -27,8 +27,7 @@ import {
   type TakeDamageResult
 } from "#/machine-helpers.ts"
 import { isIncapacitated } from "#/machine-queries.ts"
-import { computeShortRest } from "#/machine-spells.ts"
-import { asShortRest, asSpendHitDie, asTakeDamage, type DndContext, type DndEvent } from "#/machine-types.ts"
+import { asSpendHitDie, asTakeDamage, type DndContext, type DndEvent } from "#/machine-types.ts"
 import type { MetamagicOption } from "#/features/class-sorcerer.ts"
 import type { SpellSlotLevel } from "#/types.ts"
 import { spellSlotLevel } from "#/types.ts"
@@ -178,18 +177,13 @@ export const guards = {
   },
   monsterSuffocates: ({ context: c }: GuardArg) => c.hp > 0 && c.creatureKind === "Monster",
   canSuffocate: ({ context: c }: GuardArg) => c.hp > 0,
-  shortRestHeals: ({ context: c, event: e }: GuardArg) => {
-    if (c.inCombat) return false
-    const ev = asShortRest(e)
-    const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
-    return c.hp === 0 && r.newHp > 0
-  },
   longRestHeals: ({ context: c }: GuardArg) => !c.inCombat && c.hp >= 1,
   hitDieHeals: ({ context: c, event: e }: GuardArg) => {
     const ev = asSpendHitDie(e)
     if (c.hitDiceRemaining[ev.className] <= 0) return false
-    return c.hp === 0 && Math.max(0, ev.dieRoll + ev.conMod) > 0
+    return c.hp === 0 && Math.max(1, ev.dieRoll + c.conMod) > 0
   },
+  canShortRestStart: ({ context: c }: GuardArg) => !c.inCombat && c.hp >= 1,
   exhaustionDeath: ({ context: c }: GuardArg) => c.exhaustion >= MAX_EXHAUSTION,
   canStandFromProne: ({ context: c }: GuardArg) =>
     !isIncapacitated(c) && c.effectiveSpeed > 0 && spendHalfSpeed(c.movementRemaining, c.effectiveSpeed).success,

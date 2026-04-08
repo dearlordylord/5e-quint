@@ -73,6 +73,7 @@ export interface TurnPhaseResult {
 export interface DndMachineInput {
   readonly selfId?: CreatureId
   readonly maxHp: number
+  readonly conMod?: AbilityModifier
   readonly hitDiceRemaining?: HitDiceRemaining
   readonly baseWalkSpeed?: number
   readonly effectiveSpeed?: number
@@ -129,6 +130,7 @@ export interface DndContext {
   readonly selfId?: CreatureId
   readonly hp: HP
   readonly maxHp: HP
+  readonly conMod: AbilityModifier
   readonly tempHp: TempHP
   readonly deathSaves: DeathSaves
   readonly stable: boolean
@@ -227,7 +229,6 @@ export type DndEvent =
       readonly extraAttacks?: number // override for monsters (multiattack); PCs derive from class levels
       readonly deathSaveRoll?: D20Roll
       readonly deathSaveRoll2?: D20Roll
-      readonly conMod?: number
       readonly effectResolutions?: ReadonlyArray<TurnHookResolution>
       readonly rechargedAbilities?: ReadonlyArray<string> // abilities that successfully recharged this turn
     }
@@ -296,11 +297,10 @@ export type DndEvent =
   | { readonly type: "CONCENTRATION_CHECK"; readonly conSaveSucceeded: boolean }
   | {
       readonly type: "SHORT_REST"
-      readonly conMod: number
       readonly hdRolls: ReadonlyArray<{ readonly className: ClassName; readonly roll: number }>
     }
   | { readonly type: "LONG_REST" }
-  | { readonly type: "SPEND_HIT_DIE"; readonly className: ClassName; readonly conMod: number; readonly dieRoll: number }
+  | { readonly type: "SPEND_HIT_DIE"; readonly className: ClassName; readonly dieRoll: number }
   | {
       readonly type: "APPLY_FALL"
       readonly damageRoll: number

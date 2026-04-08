@@ -181,6 +181,7 @@ const driverSchema = {
     maxHp: ITFBigInt,
     selectedBlock: z.any(),
     pcClass: z.string().optional(),
+    conMod: ITFBigInt,
     wisMod: ITFBigInt,
     chaMod: ITFBigInt
   },
@@ -207,7 +208,6 @@ const driverSchema = {
     grappledSmall: z.boolean(),
     deathSaveRoll: ITFBigInt.optional(),
     deathSaveRoll2: ITFBigInt.optional(),
-    conMod: ITFBigInt.optional(),
     numEffects: ITFBigInt.optional(),
     effSpellId: z.string().optional(),
     effHeal: ITFBigInt.optional(),
@@ -250,9 +250,8 @@ const driverSchema = {
   doAddEffect: { spellId: z.string(), duration: ITFBigInt, expiresAt: ITFVariant },
   doRemoveEffect: { spellId: z.string() },
   doConcentrationCheck: { saveSucceeded: z.boolean() },
-  doSpendHitDie: { className: ITFVariant, conMod: ITFBigInt, dieRoll: ITFBigInt },
+  doSpendHitDie: { className: ITFVariant, dieRoll: ITFBigInt },
   doShortRest: {
-    conMod: ITFBigInt,
     numDice: ITFBigInt,
     c1: ITFVariant,
     c2: ITFVariant,
@@ -357,7 +356,7 @@ function createDndDriver() {
     }
 
     return {
-      init: ({ chaMod, kind, l, maxHp: mhp, pcClass, selectedBlock, wisMod }) => {
+      init: ({ chaMod, conMod, kind, l, maxHp: mhp, pcClass, selectedBlock, wisMod }) => {
         if (actor) actor.stop()
         const creatureKind = mapCreatureKind(kind)
         currentCreatureKind = creatureKind
@@ -431,6 +430,7 @@ function createDndDriver() {
               warlockLevel: wkLevel,
               wizardLevel: wLevel,
               rangerLevel: rnLevel,
+              conMod: abilityModifier(Number(conMod)),
               wisMod: abilityModifier(Number(wisMod)),
               bardLevel: bdLevel,
               chaMod: abilityModifier(Number(chaMod)),
@@ -509,7 +509,6 @@ function createDndDriver() {
         send({ type: "REDUCE_EXHAUSTION", levels: Number(levels) })
       },
       doStartTurn: ({
-        conMod,
         deathSaveRoll: dsRoll,
         deathSaveRoll2: dsRoll2,
         effConSave,
@@ -551,10 +550,9 @@ function createDndDriver() {
           extraAttacks: isMonster && sb
             ? (sb.multiattackLength > 0 ? sb.multiattackLength - 1 : 0)
             : undefined,
-          // Monsters: skip death save (pass undefined), skip Heroic Rally (conMod undefined)
+          // Monsters: skip death save and use monster-owned start-turn data only.
           deathSaveRoll: isMonster ? undefined : dsRoll != null ? d20Roll(Number(dsRoll)) : undefined,
           deathSaveRoll2: isMonster ? undefined : dsRoll2 != null ? d20Roll(Number(dsRoll2)) : undefined,
-          conMod: isMonster ? undefined : conMod != null ? Number(conMod) : undefined,
           effectResolutions,
           // Phase L: compute which abilities recharged (mirrors Quint's pProcessRechargeRolls)
           rechargedAbilities:
@@ -665,20 +663,19 @@ function createDndDriver() {
       doConcentrationCheck: ({ saveSucceeded }) => {
         send({ type: "CONCENTRATION_CHECK", conSaveSucceeded: saveSucceeded })
       },
-      doSpendHitDie: ({ className, conMod, dieRoll }) => {
+      doSpendHitDie: ({ className, dieRoll }) => {
         send({
           type: "SPEND_HIT_DIE",
           className: quintClassToTs(className as QuintClassName),
-          conMod: Number(conMod),
           dieRoll: Number(dieRoll)
         })
       },
-      doShortRest: ({ c1, c2, c3, conMod, numDice, r1, r2, r3 }) => {
+      doShortRest: ({ c1, c2, c3, numDice, r1, r2, r3 }) => {
         const n = Number(numDice)
         const classes = [c1, c2, c3].slice(0, n)
         const rolls = [Number(r1), Number(r2), Number(r3)].slice(0, n)
         const hdRolls = classes.map((c, i) => ({ className: quintClassToTs(c as QuintClassName), roll: rolls[i] }))
-        send({ type: "SHORT_REST", conMod: Number(conMod), hdRolls })
+        send({ type: "SHORT_REST", hdRolls })
       },
       doLongRest: () => {
         send({ type: "LONG_REST" })

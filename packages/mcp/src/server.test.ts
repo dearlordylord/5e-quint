@@ -63,6 +63,46 @@ describe("MCP server adapter", () => {
     })
   })
 
+  test("execute_action supports SHORT_REST with runtime-rolled hit dice", () => {
+    const actor = createDemoActor({
+      maxHp: 24,
+      conMod: abilityModifier(2),
+      fighterLevel: classLevel(5),
+      hitDiceRemaining: {
+        barbarian: 0,
+        bard: 0,
+        cleric: 0,
+        druid: 0,
+        fighter: 2,
+        monk: 0,
+        paladin: 0,
+        ranger: 0,
+        rogue: 0,
+        sorcerer: 0,
+        warlock: 0,
+        wizard: 0,
+      },
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "SHORT_REST",
+      availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
+      cost: {},
+      outcome: { summary: "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features" },
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "SHORT_REST", spendHitDice: ["fighter", "fighter"] })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.hitDiceRemaining.fighter).toBe(0)
+    expect(payload.state.hp).toBeGreaterThan(14)
+    expect(payload.state.hp).toBeLessThanOrEqual(24)
+  })
+
   test("execute_action supports USE_HEROIC_INSPIRATION when the fighter has it", () => {
     const actor = createDemoActor({
       maxHp: 44,

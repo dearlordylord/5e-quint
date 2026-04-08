@@ -2,7 +2,7 @@ import { Option } from "effect"
 import { describe, expect, it } from "vitest"
 
 import { singleClassHitDice } from "#/features/class-tables.ts"
-import { spellId } from "#/types.ts"
+import { abilityModifier, spellId } from "#/types.ts"
 import {
   canExecuteActionSurge,
   canExecuteDeclareReckless,
@@ -75,6 +75,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
   return {
     hp: hp(10),
     maxHp: hp(20),
+    conMod: abilityModifier(0),
     tempHp: tempHp(0),
     deathSaves: DEATH_SAVES_RESET,
     stable: false,

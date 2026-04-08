@@ -106,17 +106,6 @@ export const damageTrackConfig = {
         GRANT_TEMP_HP: { actions: ["applyTempHp"] },
         KNOCK_OUT: { target: "#dnd.damageTrack.alive", actions: ["applyKnockOut", "setUnconscious"] },
         APPLY_FALL: [...DYING_FALL_PREFIX, { actions: ["applyFallAtZeroHp"] }],
-        SHORT_REST: [
-          {
-            guard: "shortRestHeals" as const,
-            target: "#dnd.damageTrack.alive",
-            actions: ["shortRest", "classShortRest", "clearUnconscious"]
-          },
-          {
-            guard: "isOutOfCombat" as const,
-            actions: ["shortRest", "classShortRest"]
-          }
-        ],
         LONG_REST: [
           {
             guard: "longRestHeals" as const,
@@ -298,7 +287,7 @@ export const rootEventHandlers = {
   EXPEND_SLOT: { guard: "canExpendSlot" as const, actions: ["expendSlot"] },
   EXPEND_PACT_SLOT: { guard: "canExpendSlot" as const, actions: ["expendPactSlot"] },
   SHORT_REST: {
-    guard: "isOutOfCombat" as const,
+    guard: "canShortRestStart" as const,
     actions: ["shortRest", "classShortRest"]
   },
   LONG_REST: {

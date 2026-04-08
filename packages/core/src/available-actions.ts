@@ -3,6 +3,7 @@ import { Match, Schema } from "effect"
 import {
   MetamagicOptionSchema,
 } from "#/features/class-sorcerer.ts"
+import { CLASS_NAMES, classHitDie, type ClassName } from "#/features/class-tables.ts"
 import { relentlessRageDC } from "#/features/class-barbarian.ts"
 import { pMartialArtsDie } from "#/features/class-monk.ts"
 import { tirelessTempHp } from "#/features/class-ranger.ts"
@@ -68,6 +69,7 @@ export const SUPPORTED_ACTION_TYPES = [
   "USE_WILD_RESURGENCE_CHARGE",
   "USE_PEERLESS_SKILL",
   "USE_RELENTLESS_RAGE",
+  "SHORT_REST",
   "EXIT_COMBAT",
 ] as const
 export type SupportedActionType = (typeof SUPPORTED_ACTION_TYPES)[number]
@@ -116,6 +118,13 @@ type TokenByType = {
   }
   readonly USE_PEERLESS_SKILL: SimpleToken<"USE_PEERLESS_SKILL">
   readonly USE_RELENTLESS_RAGE: SimpleToken<"USE_RELENTLESS_RAGE">
+  readonly SHORT_REST: SimpleToken<"SHORT_REST"> & {
+    readonly availableHitDice: ReadonlyArray<{
+      readonly className: ClassName
+      readonly remaining: number
+      readonly dieSize: number
+    }>
+  }
   readonly EXIT_COMBAT: SimpleToken<"EXIT_COMBAT">
 }
 
@@ -140,6 +149,7 @@ type ResolvedTokenByType = {
   readonly USE_WILD_RESURGENCE_CHARGE: { readonly type: "USE_WILD_RESURGENCE_CHARGE"; readonly slotLevel: SpellSlotLevelValue }
   readonly USE_PEERLESS_SKILL: { readonly type: "USE_PEERLESS_SKILL" }
   readonly USE_RELENTLESS_RAGE: { readonly type: "USE_RELENTLESS_RAGE" }
+  readonly SHORT_REST: { readonly type: "SHORT_REST"; readonly spendHitDice: ReadonlyArray<ClassName> }
   readonly EXIT_COMBAT: { readonly type: "EXIT_COMBAT" }
 }
 export type ResolvedActionToken = ResolvedTokenByType[SupportedActionType]
@@ -210,6 +220,10 @@ const UsePeerlessSkillResolvedActionSchema = Schema.Struct({
 const UseRelentlessRageResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_RELENTLESS_RAGE"),
 })
+const ShortRestResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("SHORT_REST"),
+  spendHitDice: Schema.Array(Schema.Literal(...CLASS_NAMES)),
+})
 const ExitCombatResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("EXIT_COMBAT"),
 })
@@ -237,6 +251,7 @@ const SecondaryResolvedActionTokenSchema = Schema.Union(
   UseWildResurgenceChargeResolvedActionSchema,
   UsePeerlessSkillResolvedActionSchema,
   UseRelentlessRageResolvedActionSchema,
+  ShortRestResolvedActionSchema,
   ExitCombatResolvedActionSchema,
 )
 
@@ -260,6 +275,7 @@ export const RESOLVED_ACTION_SCHEMAS = [
   UseWildResurgenceChargeResolvedActionSchema,
   UsePeerlessSkillResolvedActionSchema,
   UseRelentlessRageResolvedActionSchema,
+  ShortRestResolvedActionSchema,
   ExitCombatResolvedActionSchema,
 ] as const
 export const ResolvedActionTokenSchema = Schema.Union(PrimaryResolvedActionTokenSchema, SecondaryResolvedActionTokenSchema)
@@ -268,7 +284,6 @@ export type StartTurnRuntimeInputs = {
   readonly extraAttacks?: number
   readonly deathSaveRoll?: D20Roll
   readonly deathSaveRoll2?: D20Roll
-  readonly conMod?: number
   readonly rechargedAbilities?: ReadonlyArray<string>
 }
 
@@ -298,6 +313,10 @@ export type UsePeerlessSkillRuntimeInputs = {
 
 export type UseRelentlessRageRuntimeInputs = {
   readonly conSaveSucceeded: boolean
+}
+
+export type ShortRestRuntimeInputs = {
+  readonly hdRolls: ReadonlyArray<{ readonly className: ClassName; readonly roll: number }>
 }
 
 export type ResolutionRequest =
@@ -408,6 +427,11 @@ export type ResolutionRequest =
       readonly runtime: "relentlessRage"
     }
   | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "SHORT_REST" }>
+      readonly outcome: string
+      readonly runtime: "shortRest"
+    }
+  | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "EXIT_COMBAT" }>
       readonly outcome: string
       readonly runtime: "none"
@@ -424,6 +448,7 @@ export type ResolutionRuntimeInputs =
   | { readonly runtime: "tireless"; readonly values: UseTirelessRuntimeInputs }
   | { readonly runtime: "peerlessSkill"; readonly values: UsePeerlessSkillRuntimeInputs }
   | { readonly runtime: "relentlessRage"; readonly values: UseRelentlessRageRuntimeInputs }
+  | { readonly runtime: "shortRest"; readonly values: ShortRestRuntimeInputs }
 
 export type FinalizedAction =
   | { readonly ok: true; readonly event: DndEvent; readonly outcome: string }
@@ -680,6 +705,23 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       }
     },
   },
+  SHORT_REST: {
+    buildToken: (context) => {
+      if (!canBenefitFromShortRest(context)) return null
+      const availableHitDice = shortRestAvailableHitDice(context)
+      return {
+        type: "SHORT_REST",
+        availableHitDice,
+        cost: {},
+        outcome: {
+          summary:
+            availableHitDice.length === 0
+              ? "Finish a short rest and recharge short-rest features"
+              : "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features",
+        },
+      }
+    },
+  },
   EXIT_COMBAT: {
     buildToken: (context) =>
       context.inCombat
@@ -731,6 +773,64 @@ function availableTokenForType(
   type: SupportedActionType,
 ): ActionToken | undefined {
   return getAvailableActions(context, tags).find((token) => token.type === type)
+}
+
+function shortRestAvailableHitDice(context: DndContext): ReadonlyArray<{
+  readonly className: ClassName
+  readonly remaining: number
+  readonly dieSize: number
+}> {
+  return CLASS_NAMES.flatMap((className) => {
+    const remaining = context.hitDiceRemaining[className]
+    return remaining > 0 ? [{ className, remaining, dieSize: classHitDie(className) }] : []
+  })
+}
+
+function canBenefitFromShortRest(context: DndContext): boolean {
+  if (context.inCombat || context.hp < 1) return false
+  if (shortRestAvailableHitDice(context).length > 0) return true
+  if (context.pactSlotsCurrent < context.pactSlotsMax) return true
+  if (Object.values(context.rechargeAvailable).some((available) => !available)) return true
+
+  const fighter = context.classStates.fighter
+  if (fighter && (fighter.secondWindCharges < fighter.secondWindMax || fighter.actionSurgeCharges < fighter.actionSurgeMax)) {
+    return true
+  }
+
+  const barbarian = context.classStates.barbarian
+  if (barbarian && (barbarian.rageCharges < barbarian.rageMaxCharges || barbarian.relentlessRageTimesUsed > 0)) {
+    return true
+  }
+
+  const monk = context.classStates.monk
+  if (monk && monk.focusPoints < monk.focusMax) return true
+
+  const paladin = context.classStates.paladin
+  if (paladin && paladin.paladinChannelDivinityCharges < paladin.paladinChannelDivinityMax) return true
+
+  const cleric = context.classStates.cleric
+  if (cleric && cleric.clericChannelDivinityCharges < cleric.clericChannelDivinityMax) return true
+
+  const druid = context.classStates.druid
+  if (druid && druid.wildShapeCharges < druid.wildShapeMax) return true
+
+  const bard = context.classStates.bard
+  if (bard && bard.bardicInspirationCharges < bard.bardicInspirationMax) return true
+
+  const sorcerer = context.classStates.sorcerer
+  if (sorcerer && !sorcerer.sorcerousRestorationUsed) return true
+
+  return false
+}
+
+function isLegalShortRestSpendPlan(context: DndContext, spendHitDice: ReadonlyArray<ClassName>): boolean {
+  if (context.inCombat || context.hp < 1) return false
+  const remaining = { ...context.hitDiceRemaining }
+  for (const className of spendHitDice) {
+    if (remaining[className] <= 0) return false
+    remaining[className]--
+  }
+  return true
 }
 
 export function resolveAction(
@@ -886,6 +986,21 @@ export function resolveAction(
       return { token, outcome: available.outcome.summary, runtime: "peerlessSkill" }
     case "USE_RELENTLESS_RAGE":
       return { token, outcome: available.outcome.summary, runtime: "relentlessRage" }
+    case "SHORT_REST":
+      if (!isLegalShortRestSpendPlan(context, token.spendHitDice)) {
+        return {
+          code: "ACTION_NOT_AVAILABLE",
+          message: "The chosen short-rest hit-die spending plan is not currently available in this state.",
+        }
+      }
+      return {
+        token,
+        outcome:
+          token.spendHitDice.length === 0
+            ? "Finish a short rest and recharge short-rest features"
+            : `Finish a short rest and spend hit dice in this order: ${token.spendHitDice.join(", ")}`,
+        runtime: "shortRest",
+      }
     case "EXIT_COMBAT":
       return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "EXIT_COMBAT" } }
   }
@@ -1046,6 +1161,52 @@ export function finalizeResolution(
         outcome: runtimeInputs.values.conSaveSucceeded
           ? `Relentless Rage succeeded; HP becomes ${2 * barbarianLevel}`
           : "Relentless Rage failed; HP remains 0",
+      }
+    }),
+    Match.when({ runtime: "shortRest" }, (resolved): FinalizedAction => {
+      if (runtimeInputs.runtime !== "shortRest") return runtimeMismatch("shortRest", runtimeInputs.runtime)
+      if (runtimeInputs.values.hdRolls.length !== resolved.token.spendHitDice.length) {
+        return {
+          ok: false as const,
+          error: {
+            code: "INVALID_RUNTIME_INPUT" as const,
+            message: `Short Rest expected ${resolved.token.spendHitDice.length} hit-die roll(s), received ${runtimeInputs.values.hdRolls.length}.`,
+          },
+        }
+      }
+      for (const [index, expectedClassName] of resolved.token.spendHitDice.entries()) {
+        const actual = runtimeInputs.values.hdRolls[index]
+        const dieSize = classHitDie(expectedClassName)
+        if (actual == null || actual.className !== expectedClassName) {
+          return {
+            ok: false as const,
+            error: {
+              code: "INVALID_RUNTIME_INPUT" as const,
+              message: `Short Rest roll ${index + 1} must be for ${expectedClassName}, received ${actual?.className ?? "missing"}.`,
+            },
+          }
+        }
+        if (actual.roll < 1 || actual.roll > dieSize) {
+          return {
+            ok: false as const,
+            error: {
+              code: "INVALID_RUNTIME_INPUT" as const,
+              message: `Short Rest roll ${index + 1} for ${expectedClassName} must be between 1 and ${dieSize}, received ${actual.roll}.`,
+            },
+          }
+        }
+      }
+      return {
+        ok: true as const,
+        event: {
+          type: "SHORT_REST" as const,
+          hdRolls: runtimeInputs.values.hdRolls,
+        },
+        outcome: resolved.token.spendHitDice.length === 0
+          ? resolved.outcome
+          : `Spent hit dice in order: ${runtimeInputs.values.hdRolls
+              .map(({ className, roll }) => `${className} d${classHitDie(className)}(${roll})`)
+              .join(", ")}`,
       }
     }),
     Match.exhaustive,

@@ -394,13 +394,13 @@ export function standardExtraAttacks(classLevel: number): number {
 }
 
 export function spendHitDieUpdate(
-  c: { hitDiceRemaining: HitDiceRemaining; hp: number; maxHp: number },
-  roll: { className: ClassName; conMod: number; dieRoll: number }
+  c: { hitDiceRemaining: HitDiceRemaining; hp: number; maxHp: number; conMod: number },
+  roll: { className: ClassName; dieRoll: number }
 ): Record<string, unknown> {
   if (c.hitDiceRemaining[roll.className] <= 0) return {}
   return {
     hitDiceRemaining: { ...c.hitDiceRemaining, [roll.className]: c.hitDiceRemaining[roll.className] - 1 },
-    hp: hp(Math.min(c.hp + Math.max(0, roll.dieRoll + roll.conMod), effectiveMaxHp(c.maxHp)))
+    hp: hp(Math.min(c.hp + Math.max(1, roll.dieRoll + c.conMod), effectiveMaxHp(c.maxHp)))
   }
 }
 

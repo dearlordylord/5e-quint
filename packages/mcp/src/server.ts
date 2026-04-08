@@ -3,6 +3,7 @@ import { createActor, type ActorRefFrom, type SnapshotFrom } from "xstate"
 
 import { creatureMachine } from "@dnd/core/machine.ts"
 import type { DndMachineInput } from "@dnd/core/machine-types.ts"
+import { classHitDie } from "@dnd/core/features/class-tables.ts"
 import {
   EXPOSED_ACTION_TYPES,
   finalizeResolution,
@@ -173,6 +174,16 @@ function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["co
         runtime: "relentlessRage" as const,
         values: { conSaveSucceeded },
       })),
+    ),
+    Match.when({ runtime: "shortRest" }, (resolved) =>
+      Effect.forEach(resolved.token.spendHitDice, (className) =>
+        Effect.map(Random.nextIntBetween(1, classHitDie(className) + 1), (roll) => ({ className, roll })),
+      ).pipe(
+        Effect.map((hdRolls) => ({
+          runtime: "shortRest" as const,
+          values: { hdRolls },
+        })),
+      ),
     ),
     Match.exhaustive,
   )

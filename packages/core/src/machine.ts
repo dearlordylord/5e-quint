@@ -76,6 +76,7 @@ import {
 import * as warlock from "#/machine-warlock.ts"
 import * as wizard from "#/machine-wizard.ts"
 import {
+  abilityModifier,
   CreatureId as mkCreatureId,
   type ActiveEffect,
   DEATH_SAVES_RESET,
@@ -335,7 +336,7 @@ export const creatureMachine = setup({
     spendHitDie: assign(({ context: c, event: e }) => spendHitDieUpdate(c, asSpendHitDie(e))),
     shortRest: assign(({ context: c, event: e }) => {
       const ev = asShortRest(e)
-      const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, ev.conMod, ev.hdRolls)
+      const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, c.conMod, ev.hdRolls)
       return {
         hitDiceRemaining: r.newHitDice,
         hp: hp(r.newHp),
@@ -603,6 +604,7 @@ export const creatureMachine = setup({
       extraAttacksRemaining: i.extraAttacksRemaining ?? 0,
       hitDiceRemaining: i.hitDiceRemaining ?? ZERO_HIT_DICE,
       hp: hp(i.maxHp),
+      conMod: abilityModifier(i.conMod ?? 0),
       incapacitatedSources: new Set<IncapSource>(),
       maxHp: hp(i.maxHp),
       movementRemaining: movementFeet(i.movementRemaining ?? 0),

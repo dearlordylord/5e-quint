@@ -13,7 +13,9 @@ import { abilityModifier, classLevel, resourceCount, spellSlotLevel } from "#/ty
 
 const FIGHTER_5_INPUT: DndMachineInput = {
   maxHp: 44,
+  conMod: abilityModifier(2),
   fighterLevel: classLevel(5),
+  hitDiceRemaining: { barbarian: 0, bard: 0, cleric: 0, druid: 0, fighter: 2, monk: 0, paladin: 0, ranger: 0, rogue: 0, sorcerer: 0, warlock: 0, wizard: 0 },
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 }
@@ -154,6 +156,12 @@ describe("available actions contract", () => {
         cost: {},
         outcome: { summary: "Enter combat (begin tracking turns and action economy)" },
       },
+      {
+        type: "SHORT_REST",
+        availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
+        cost: {},
+        outcome: { summary: "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features" },
+      },
     ])
   })
 
@@ -220,6 +228,60 @@ describe("available actions contract", () => {
     actor.send(secondWindFinalized.event)
 
     expect(actor.getSnapshot().context.hp).toBe(44)
+  })
+
+  test("short rest exposes hit-die pools and finalizes runtime rolls", () => {
+    const actor = makeActor()
+    actor.send({
+      type: "TAKE_DAMAGE",
+      amount: 12,
+      damageType: "slashing",
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false,
+    })
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "SHORT_REST",
+      availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
+      cost: {},
+      outcome: { summary: "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features" },
+    })
+
+    const request = expectRequest(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "SHORT_REST", spendHitDice: ["fighter", "fighter"] }),
+    )
+    const finalized = finalizeResolution(
+      request,
+      {
+        runtime: "shortRest",
+        values: { hdRolls: [{ className: "fighter", roll: 4 }, { className: "fighter", roll: 3 }] },
+      },
+      actor.getSnapshot().context,
+    )
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "SHORT_REST", hdRolls: [{ className: "fighter", roll: 4 }, { className: "fighter", roll: 3 }] },
+      outcome: "Spent hit dice in order: fighter d10(4), fighter d10(3)",
+    })
+  })
+
+  test("short rest is not available at 0 HP", () => {
+    const actor = makeActor()
+    actor.send({
+      type: "TAKE_DAMAGE",
+      amount: 44,
+      damageType: "slashing",
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false,
+    })
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).not.toContain(
+      "SHORT_REST",
+    )
   })
 
   test("exposes and executes USE_HEROIC_INSPIRATION as a root action when the flag is present", () => {

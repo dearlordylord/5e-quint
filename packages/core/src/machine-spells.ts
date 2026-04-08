@@ -105,7 +105,7 @@ export function computeShortRest(
   for (const { className, roll } of hdRolls) {
     if (hd[className] <= 0) continue
     hd[className]--
-    curHp = Math.min(curHp + Math.max(0, roll + conMod), effMax)
+    curHp = Math.min(curHp + Math.max(1, roll + conMod), effMax)
   }
   return { newHitDice: hd, newHp: curHp, newPactSlots: pactSlotsMax }
 }

@@ -257,7 +257,7 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
     standardExtraAttacks(c.classStates.paladin?.level ?? 0),
     standardExtraAttacks(c.classStates.ranger?.level ?? 0)
   )
-  const rallyHeal = survivorHeroicRally(fighterLevel, cr.hp as number, c.maxHp, ev.conMod ?? 0)
+  const rallyHeal = survivorHeroicRally(fighterLevel, cr.hp as number, c.maxHp, c.conMod)
   const resultHp = rallyHeal > 0 ? Math.min((cr.hp as number) + rallyHeal, effectiveMaxHp(c.maxHp)) : cr.hp
   const mrsUpdates =
     c.creatureKind === "Monster"

@@ -241,6 +241,7 @@ export const QuintIncapSourceSet = z.any().transform((raw: unknown) => {
 export const QuintCreatureState = z.object({
   hp: z.bigint(),
   maxHp: z.bigint(),
+  conMod: z.bigint(),
   tempHp: z.bigint(),
   deathSaves: QuintDeathSaves,
   stable: z.boolean(),
@@ -484,6 +485,7 @@ export interface NormalizedState {
   // CreatureState
   readonly hp: number
   readonly maxHp: number
+  readonly conMod: number
   readonly tempHp: number
   readonly deathSavesSuccesses: number
   readonly deathSavesFailures: number
@@ -736,6 +738,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
   return {
     hp: c.hp,
     maxHp: c.maxHp,
+    conMod: c.conMod,
     tempHp: c.tempHp,
     deathSavesSuccesses: c.deathSaves.successes,
     deathSavesFailures: c.deathSaves.failures,
@@ -811,6 +814,7 @@ export function quintParsedToNormalized(raw: z.infer<typeof QuintFullState>): No
   return {
     hp: Number(s.hp),
     maxHp: Number(s.maxHp),
+    conMod: Number(s.conMod),
     tempHp: Number(s.tempHp),
     deathSavesSuccesses: Number(s.deathSaves.successes),
     deathSavesFailures: Number(s.deathSaves.failures),

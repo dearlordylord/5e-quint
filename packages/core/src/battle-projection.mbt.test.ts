@@ -203,6 +203,7 @@ function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
   return {
     hp: Number(s.hp),
     maxHp: Number(s.maxHp),
+    conMod: Number(s.conMod),
     tempHp: Number(s.tempHp),
     deathSavesSuccesses: Number(s.deathSaves.successes),
     deathSavesFailures: Number(s.deathSaves.failures),

@@ -866,6 +866,7 @@ module creature {
   type CreatureState = {
     hp: int,
     maxHp: int,
+    conMod: int,
     tempHp: int,
     deathSaves: DeathSaves,
     stable: bool,
@@ -894,7 +895,7 @@ module creature {
         Piercing, Poison, Psychic, Radiant, Slashing, Thunder)
 
   pure def freshCreature(maxHp: int): CreatureState = {
-    hp: maxHp, maxHp: maxHp, tempHp: 0,
+    hp: maxHp, maxHp: maxHp, conMod: 0, tempHp: 0,
     deathSaves: DEATH_SAVES_RESET,
     stable: false, dead: false,
     blinded: false, charmed: false, deafened: false,
@@ -2239,20 +2240,20 @@ module creature {
 
   // -- 16.1 Short Rest: Hit Die Spending --
 
-  /// Spend one hit die from a specific class pool. Heals dieRoll + conMod (min 0).
+  /// Spend one hit die from a specific class pool. Heals dieRoll + conMod (min 1).
   /// No-op if no HD remaining for that class or creature is dead.
-  pure def pSpendHitDie(s: CreatureState, className: ClassName, conMod: int, dieRoll: int): CreatureState =
+  pure def pSpendHitDie(s: CreatureState, className: ClassName, dieRoll: int): CreatureState =
     if (s.hitDiceRemaining.get(className) <= 0 or s.dead) s
     else {
-      val raw = dieRoll + conMod
-      val healing = intMax(0, raw)
+      val raw = dieRoll + s.conMod
+      val healing = intMax(1, raw)
       pHeal(s, healing).with("hitDiceRemaining", s.hitDiceRemaining.setBy(className, (n) => n - 1))
     }
 
   /// Short rest: spend hit dice from a list of pre-resolved (class, roll) pairs, then return state.
   /// Caller also calls pRestorePactSlots on SpellSlotState if applicable.
-  pure def pShortRest(s: CreatureState, conMod: int, hdRolls: List[(ClassName, int)]): CreatureState = {
-    hdRolls.foldl(s, (acc, pair) => pSpendHitDie(acc, pair._1, conMod, pair._2))
+  pure def pShortRest(s: CreatureState, hdRolls: List[(ClassName, int)]): CreatureState = {
+    hdRolls.foldl(s, (acc, pair) => pSpendHitDie(acc, pair._1, pair._2))
   }
 
   // -- 16.2 Long Rest --
@@ -3951,6 +3952,7 @@ module creature {
     nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric", "Paladin", "Warlock", "Sorcerer", "Druid", "Ranger", "Bard").oneOf()
     // D5: Wholeness of Body uses WIS mod; Ranger uses WIS mod; spec uses nondet range 1-5
     nondet wisMod = 1.to(5).oneOf()
+    nondet conMod = (-2).to(5).oneOf()
     // Bard uses CHA mod for Bardic Inspiration charges
     nondet chaMod = 1.to(5).oneOf()
     if (kind == Monster) {
@@ -4005,7 +4007,7 @@ module creature {
         monsterStatBlock' = NULL_STAT_BLOCK,
         monsterResourceState' = FRESH_MONSTER_RESOURCES,
         classLevels' = pcClassLevels,
-        state' = freshCreature(maxHp).with("hitDiceRemaining", pcClassLevels),
+        state' = freshCreature(maxHp).with("conMod", conMod).with("hitDiceRemaining", pcClassLevels),
         fighterState' = freshFighterState(fLevel),
         barbarianState' = freshBarbarianState(bLevel),
         monkState' = freshMonkState(mLevel, wisMod),
@@ -4147,7 +4149,6 @@ module creature {
     nondet grappledSmall = Bool.oneOf()
     nondet deathSaveRoll = D20_RANGE.oneOf()
     nondet deathSaveRoll2 = D20_RANGE.oneOf()
-    nondet conMod = (-2).to(5).oneOf()
     nondet numEffects = 0.to(1).oneOf()
     nondet effSpellId = SPELL_IDS.oneOf()
     nondet effHeal = 0.to(5).oneOf()
@@ -4201,8 +4202,8 @@ module creature {
         val pcConfig = configFromClassLevels(classLevels)
         val r = pStartTurnFull(pcConfig, state, spellSlots, Unarmored,
           isGrappling, grappledSmall, deathSaveRoll, deathSaveRoll2, effects)
-        // Heroic Rally (Champion L18): heal 5 + conMod if Bloodied
-        val afterRally = pHeroicRally(r.creature, classLevels.get(Fighter), conMod)
+        // Heroic Rally (Champion L18): heal 5 + owned Constitution modifier if Bloodied
+        val afterRally = pHeroicRally(r.creature, classLevels.get(Fighter), r.creature.conMod)
         all {
           state' = afterRally,
           turnState' = r.turn,
@@ -4337,13 +4338,11 @@ module creature {
   // Rest actions
   action doSpendHitDie = {
     nondet className = Set(Barbarian, Bard, Cleric, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard).oneOf()
-    nondet conMod = (-2).to(5).oneOf()
     nondet dieRoll = HD_ROLL_RANGE.oneOf()
-    all { state' = pSpendHitDie(state, className, conMod, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
+    all { state' = pSpendHitDie(state, className, dieRoll), turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doShortRest = {
-    nondet conMod = (-2).to(5).oneOf()
     nondet numDice = 0.to(3).oneOf()
     nondet c1 = Set(Barbarian, Bard, Cleric, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard).oneOf()
     nondet c2 = Set(Barbarian, Bard, Cleric, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard).oneOf()
@@ -4351,13 +4350,13 @@ module creature {
     nondet r1 = HD_ROLL_RANGE.oneOf()
     nondet r2 = HD_ROLL_RANGE.oneOf()
     nondet r3 = HD_ROLL_RANGE.oneOf()
-    if (turnPhase != "outOfCombat") unchanged
+    if (turnPhase != "outOfCombat" or state.hp < 1) unchanged
     else {
       val rolls = [(c1, r1), (c2, r2), (c3, r3)].slice(0, numDice)
       // Phase L: recharge abilities refresh on short rest
       val mrs1 = pRefreshRechargeAbilities(monsterResourceState)
       all {
-        state' = pShortRest(state, conMod, rolls),
+        state' = pShortRest(state, rolls),
         turnState' = turnState.with("pendingResolution", NoPending),
         spellSlots' = pRestorePactSlots(spellSlots),
         turnPhase' = turnPhase,

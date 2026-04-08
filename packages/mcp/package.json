@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/index.ts",
+    "harness": "tsx src/harness.ts",
+    "probe:short-rest": "tsx src/probe-short-rest.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

@@ -213,7 +213,7 @@ Items discovered during implementation that need resolution before Phase 1 is co
       - focused core tests prove tokens appear only when the pending trigger exists
       - MCP tests prove callers send zero-hole resolved tokens and runtime injects only the final boolean
       - creature MBT Tier 1b passed after the bridge/spec update
-  - `SHORT_REST` is intentionally separate and should stay out of the first orchestrated parallel batch because it has a compound payload (`conMod`, `hdRolls`) and is a larger design surface than the other remaining items.
+  - `SHORT_REST` was intentionally left out of the first orchestrated parallel batch because it originally leaked `conMod` and required a contract redesign rather than a simple action exposure pass. That dedicated batch is now complete.
 - **Recommended implementation order for the orchestrator**:
   1. integrate the dice-roll family first
   2. integrate the hole pass-through family second
@@ -249,7 +249,16 @@ Items discovered during implementation that need resolution before Phase 1 is co
 
 **Context serialization**: Replace `JSON.stringify` replacer with Effect Schema transforms (`Option` -> `null`, `Set` -> `array`). Define a `DndContextEncoded` schema in core using `Schema.OptionFromNullOr` and `Schema.ReadonlySet`.
 
-**Manual debugging ergonomics**: Keep a lightweight local MCP harness for end-to-end inspection of `get_state`, `get_available_actions`, and `execute_action`. Harness runs can leave stale wrapper processes behind even after the MCP transport closes; before and after manual inspection, check `ps aux | grep '[p]npm --filter @dnd/mcp exec tsx src/harness.ts'` and clean stale wrappers with `pkill -f 'pnpm --filter @dnd/mcp exec tsx src/harness.ts'` before trusting process-level observations. If an action is hard to exercise manually, prefer adjusting demo initial conditions or adding a small temporary fixture over adding duplicated persistent state.
+**Manual debugging ergonomics**: Keep a lightweight local MCP harness for end-to-end inspection of `get_state`, `get_available_actions`, and `execute_action`. Prefer the checked-in scripts:
+- `pnpm --filter @dnd/mcp harness`
+- `pnpm --filter @dnd/mcp probe:short-rest`
+
+They now use Effect-scoped client acquisition/release and explicitly terminate the wrapper process after the script finishes, which avoids the stale launcher behavior seen with ad hoc `pnpm --filter @dnd/mcp exec tsx -e ...` probes. If an action is hard to exercise manually, prefer adding another checked-in probe script over using `tsx -e`. If you suspect an old wrapper is still around from earlier runs, check:
+- `ps aux | grep '[p]npm --filter @dnd/mcp exec tsx src/harness.ts'`
+- `ps aux | grep '[p]npm --filter @dnd/mcp exec tsx src/probe-short-rest.ts'`
+- `ps aux | grep '[p]npm --filter @dnd/mcp exec tsx -e'`
+
+and clean with the matching `pkill -f ...` command before trusting process-level observations.
 
 **Project existing state before adding more**: If MCP needs to expose or drive more “inner state”, first project authoritative machine/spec state that already exists. Do not add adapter-owned copies of combat facts just to make demos or debugging easier.
 
@@ -257,7 +266,69 @@ Items discovered during implementation that need resolution before Phase 1 is co
 - ~~Dice-roll actions: `USE_TIRELESS` (d8Roll), `WHOLENESS_OF_BODY` (healRoll), `UNCANNY_METABOLISM` (healRoll)~~ — completed
 - ~~Battle-context actions: `USE_RELENTLESS_RAGE` (conSaveSucceeded), `USE_TACTICAL_MIND` (boostedCheckSucceeds), `USE_PEERLESS_SKILL` (success)~~ — completed with owned `pendingResolution` state
 - ~~Hole-field pass-throughs: `CONVERT_SLOT_TO_POINTS`, `CONVERT_POINTS_TO_SLOT`, `USE_ARCANE_RECOVERY`, `USE_MYSTIC_ARCANUM`, `USE_FONT_SLOT_RESTORE`, `USE_WILD_RESURGENCE_CHARGE`, `USE_DIVINE_SMITE`, `USE_LAY_ON_HANDS`, `USE_METAMAGIC`~~ — completed
-- Complex payload: `SHORT_REST` (conMod, hdRolls) — deferred, compound payload
+- ~~Complex payload: `SHORT_REST` (conMod, hdRolls)~~ — completed via spend-plan + runtime-roll contract
+
+**`SHORT_REST` batch completed (2026-04-08)**
+
+ - **RAW used**
+   - `.references/srd-5.2.1/Rules-Glossary.md`
+     - `## Short Rest`
+     - `## Hit Point Dice`
+ - **Implemented**
+   - `conMod` is now owned state:
+     - `DndMachineInput` accepts `conMod`
+     - `DndContext` owns `conMod`
+     - `creature.qnt` `CreatureState` owns `conMod`
+   - `SHORT_REST` no longer accepts caller-supplied `conMod`
+   - `SPEND_HIT_DIE` no longer accepts caller-supplied `conMod`
+   - `START_TURN` no longer carries the old `conMod` override; Heroic Rally uses owned state
+   - short-rest healing is now `max(1, roll + conMod)` in both TS and Quint
+   - starting a Short Rest now requires `!inCombat && hp >= 1`
+   - the public contract is now:
+     - `ActionToken`:
+       - `type: "SHORT_REST"`
+       - `availableHitDice: ReadonlyArray<{ className, remaining, dieSize }>`
+       - token omitted entirely if a short rest would not change anything
+     - `ResolvedActionToken`:
+       - `type: "SHORT_REST"`
+       - `spendHitDice: ReadonlyArray<ClassName>`
+     - runtime input:
+       - `hdRolls: ReadonlyArray<{ className, roll }>`
+     - final machine event:
+       - `SHORT_REST { hdRolls }`
+   - runtime validation now enforces:
+     - same length as `spendHitDice`
+     - same class order as `spendHitDice`
+     - each roll within that class’s hit-die size
+ - **Important caveats learned**
+   - the old default MCP demo actor surfaced a real projection bug:
+     - if a short rest cannot change anything at all, exposing the token leads to `execute_action` failing with “Action was not accepted by the machine”
+     - the fix is to omit the token unless the rest can actually change state
+   - Quint MBT still limits `doShortRest` to at most 3 sampled hit dice for tractability
+     - this is only an MBT sampling limit
+     - it must not leak into the public action contract
+ - **Verification completed**
+   - `pnpm --filter @dnd/core exec tsc --noEmit`
+   - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+   - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/machine.test.ts`
+   - `pnpm --filter @dnd/mcp test -- server.test.ts`
+   - manual stdio MCP probe confirmed the default demo actor no longer advertises `SHORT_REST` when no short-rest benefit exists
+   - creature MBT Tier 1b passed after the spec/bridge update
+     - seed: `0x6a71f4a5`
+     - total: `20s`
+
+**Next batch after `SHORT_REST`**
+
+- `SHORT_REST` is no longer pending.
+- The next technical follow-up is **context serialization cleanup**:
+  - replace the MCP `JSON.stringify` replacer in `packages/mcp/src/server.ts`
+  - define a core `DndContextEncoded` schema with Effect Schema transforms for `Option` and `Set`
+  - keep this separate from action-surface work
+    - `execute_action` with a valid plan updates HP, hit-dice pools, pact slots, and short-rest class resources
+  - manual harness:
+    - add a dedicated fixture rather than reusing the default Fighter 5 / Second Wind demo
+  - parity:
+    - run creature MBT Tier 1b after the spec/bridge update
 
 ---
 
@@ -391,7 +462,7 @@ In the Hellenvald project (`/workspace/typescript/osr-hellenvald`), build the tr
 
 ### Acceptance criteria
 
-- [ ] CLI accepts typed natural language input and produces structured candidate events
+- [x] CLI accepts typed natural language input and produces structured candidate events
 - [x] LLM interpretation layer is an Effect service with test/mock/cached layers
 - [x] Cached replay test: recorded input → expected candidates, no live LLM needed
 - [x] Multiple candidates produced for ambiguous input (e.g., "I attack" when multiple targets exist)
@@ -409,10 +480,16 @@ In the Hellenvald project (`/workspace/typescript/osr-hellenvald`), build the tr
 - 10 tests: 6 unit (interpreter patterns), 4 end-to-end (pipeline through Projector with state verification).
 - Electric field annotations on all key design points (guard validation, entity context derivation).
 
+**Completed after initial writeup (2026-04-08):**
+
+- CLI demo exists in `/workspace/typescript/osr-hellenvald/examples/transcript-demo.ts` and accepts line-buffered text input.
+- `TranscriptInterpreter.liveLayer` is wired to a real OpenRouter-backed `TranscriptLlm` Effect service with in-memory request caching.
+- Live mode was exercised end-to-end against the real LLM for attack, ambiguous attack, movement, and non-actionable transcript inputs.
+
 **Remaining for Phase 5:**
-- CLI interface (stdin, line-buffered) — simple readline or Ink wrapper that feeds typed input to the pipeline.
-- LLM live layer — replace mock pattern matching with actual LLM calls via an Effect service layer with caching.
-- Demo mode — mocked LLM responses with optional fake latency for presentations.
+- Demo mode — run the CLI through the LLM service boundary using mocked/recorded responses with optional fake latency for presentations.
+
+**Moved to Phase 7:**
 - Segment buffering — grouping multiple phrase-level segments into complete game actions before interpretation.
 
 ---
