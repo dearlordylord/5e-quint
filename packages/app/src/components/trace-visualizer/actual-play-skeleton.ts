@@ -43,12 +43,7 @@ function skeletonDamage(amount: number, damageType: DamageType, isCritical = fal
 }
 
 function skeletonStartTurn(): DndEvent {
-  return {
-    type: "START_TURN",
-    isGrappling: false,
-    grappledTargetTwoSizesSmaller: false,
-    startOfTurnEffects: []
-  }
+  return { type: "START_TURN" }
 }
 
 /** Skeleton default state: 13 HP, no fighter features, monster kind. */

@@ -209,17 +209,7 @@ export function EventPanel({
       </Section>
 
       <Section title={t.turnResources}>
-        <Btn
-          label={t.startTurn}
-          onClick={() =>
-            send({
-              type: "START_TURN",
-              isGrappling: false,
-              grappledTargetTwoSizesSmaller: false,
-              startOfTurnEffects: []
-            })
-          }
-        />
+        <Btn label={t.startTurn} onClick={() => send({ type: "START_TURN" })} />
       </Section>
 
       <Section title={t.spellSlots}>
@@ -258,7 +248,7 @@ export function EventPanel({
         <div className="flex gap-2">
           <Btn
             label={t.shortRest}
-            onClick={() => send({ type: "SHORT_REST", conMod: 2, hdRolls: [{ className: "fighter", roll: 4 }] })}
+            onClick={() => send({ type: "SHORT_REST", hdRolls: [{ className: "fighter", roll: 4 }] })}
           />
           <Btn label={t.longRest} onClick={() => send({ type: "LONG_REST" })} />
         </div>

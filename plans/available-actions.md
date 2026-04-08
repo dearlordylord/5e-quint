@@ -321,11 +321,28 @@ and clean with the matching `pkill -f ...` command before trusting process-level
 
 **Project existing state before adding more**: If MCP needs to expose or drive more “inner state”, first project authoritative machine/spec state that already exists. Do not add adapter-owned copies of combat facts just to make demos or debugging easier.
 
-**Next step after serialization cleanup**
+**App-package legacy cleanup completed (2026-04-08)**
 
-- Finish the remaining app-package cleanup from Phase 1.5:
-  - remove legacy `startOfTurnEffects`, `endOfTurnSaves`, and `endOfTurnDamage` payload construction still hidden behind `as DndEvent` casts in `packages/app/`
-- Then continue Phase 2 coverage:
+- Removed the remaining stale app-side construction of deleted turn payload fields:
+  - `startOfTurnEffects`
+  - `endOfTurnSaves`
+  - `endOfTurnDamage`
+  - `SHORT_REST.conMod`
+- Files cleaned:
+  - `packages/app/src/components/trace-visualizer/actual-play-types.ts`
+  - `packages/app/src/components/trace-visualizer/sample-trace.ts`
+  - `packages/app/src/components/trace-visualizer/actual-play-skeleton.ts`
+  - `packages/app/src/components/trace-visualizer/actual-play-cr-c4e04.ts`
+  - `packages/app/src/components/EventPanel.tsx`
+  - `packages/app/src/features/useFeatures.test.tsx`
+- Verification completed:
+  - `pnpm --filter @dnd/app exec tsc --noEmit`
+  - `pnpm --filter @dnd/app test -- src/features/useFeatures.test.tsx`
+  - `rg -n "startOfTurnEffects|endOfTurnSaves|endOfTurnDamage|conMod: [0-9]+, hdRolls" packages/app` returns no hits
+
+**Next step after app cleanup**
+
+- Continue Phase 2 coverage:
   - representative reaction/free-permanent grouping gaps
   - grouping-shape snapshot tests
 
@@ -597,6 +614,47 @@ Add audio input to the Hellenvald transcript pipeline. Whisper processes recorde
 - Buffering heuristics: pauses, dice-result patterns, DM response patterns.
 - Cached audio segments for replay testing.
 - Branching tail: near the end of the stream, uncommitted candidates are materialized. Farther back, collapsed to selected events.
+
+### Phase 7 design
+
+Build this as service boundaries in the Hellenvald project (`/workspace/typescript/osr-hellenvald`), not as ad hoc scripts:
+
+- `WhisperTranscriber` Effect service:
+  - `liveLayer`: local Whisper backend for recorded audio files.
+  - `fixtureLayer`: prerecorded phrase-level `TranscriptSegment[]` for deterministic tests.
+- `TranscriptBuffer` Effect service:
+  - incremental `push(segment)` / `flush()` API
+  - groups phrase-level segments into turn-level windows using minimal heuristics
+- `TranscriptPipeline` stays unchanged at the seam:
+  - input = grouped `TranscriptSegment[]`
+  - output = candidate events / projected state
+
+**Local Whisper design choice:** default to a local Whisper backend, not a hosted API. This fits the existing Effect service/layer architecture, preserves privacy, and keeps timestamped phrase segmentation under our control.
+
+**Recorded-audio first (important for current environment):** we are currently working inside a Docker devcontainer. That means microphone capture and host audio device access are the wrong first target. Phase 7 should start with recorded audio files mounted in the workspace:
+
+- first milestone: `audio file -> WhisperTranscriber.liveLayer -> TranscriptSegment[]`
+- then: `segments -> TranscriptBuffer -> TranscriptPipeline`
+- only after that: optional host-machine microphone/live streaming work outside the container
+
+**Testing matrix:** use layer composition instead of runtime feature flags.
+
+- fake Whisper + fake LLM: default automated integration tests
+- fake Whisper + real LLM: manual interpretation-quality checks
+- real Whisper + fake LLM: validates transcription/buffering without LLM nondeterminism
+- real Whisper + real LLM: manual end-to-end smoke test, not the default automated path
+
+**Concrete implementation order:**
+
+1. Add `WhisperTranscriber.liveLayer` for recorded files only.
+2. Add one recorded-audio demo/runner in Hellenvald that prints:
+   - raw Whisper segments
+   - buffered windows
+   - resulting candidate events
+3. Add audio-fixture integration tests:
+   - `audio fixture -> fake Whisper`
+   - `audio fixture -> real Whisper` when the local backend is stable enough for reproducible checks
+4. Defer microphone/live capture until after recorded-file behavior is good.
 
 ### Acceptance criteria
 

@@ -831,7 +831,6 @@ const TRACE_STEPS: ReadonlyArray<ActualPlayStep> = [
     events: [
       {
         type: "SHORT_REST",
-        conMod: 3,
         hdRolls: [
           { className: "fighter" as const, roll: 7 },
           { className: "fighter" as const, roll: 5 },

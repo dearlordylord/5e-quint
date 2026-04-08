@@ -25,12 +25,7 @@ function makeActingSnapshot(): DndSnapshot {
   const actor = createActor(creatureMachine, { input: { maxHp: 20 } })
   actor.start()
   actor.send({ type: "ENTER_COMBAT" })
-  actor.send({
-    type: "START_TURN",
-    isGrappling: false,
-    grappledTargetTwoSizesSmaller: false,
-    startOfTurnEffects: []
-  })
+  actor.send({ type: "START_TURN" })
   const snap = actor.getSnapshot()
   actor.stop()
   return snap
@@ -69,7 +64,7 @@ describe("useFeatures", () => {
       expect(result.current.featureState.fighter!.secondWindCharges).toBe(2)
 
       // Short rest restores 1
-      act(() => result.current.notify({ type: "SHORT_REST", conMod: 2, hdRolls: [] } as DndEvent))
+      act(() => result.current.notify({ type: "SHORT_REST", hdRolls: [] } as DndEvent))
       expect(result.current.featureState.fighter!.secondWindCharges).toBe(3)
     })
 
@@ -101,14 +96,7 @@ describe("useFeatures", () => {
       const snap = makeActingSnapshot()
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
 
-      act(() =>
-        result.current.notify({
-          type: "START_TURN",
-          isGrappling: false,
-          grappledTargetTwoSizesSmaller: false,
-          startOfTurnEffects: []
-        } as DndEvent)
-      )
+      act(() => result.current.notify({ type: "START_TURN" } as DndEvent))
       // START_TURN is a no-op for fighter Second Wind — charges unchanged
       expect(result.current.featureState.fighter!.secondWindCharges).toBe(3)
     })
@@ -196,7 +184,7 @@ describe("useFeatures", () => {
       })
       expect(result.current.canSecondWind).toBe(false)
 
-      act(() => result.current.notify({ type: "SHORT_REST", conMod: 2, hdRolls: [] } as DndEvent))
+      act(() => result.current.notify({ type: "SHORT_REST", hdRolls: [] } as DndEvent))
       expect(result.current.canSecondWind).toBe(true)
     })
   })
@@ -263,14 +251,7 @@ describe("useFeatures", () => {
       expect(result.current.featureState.fighter!.actionSurgeUsedThisTurn).toBe(true)
 
       // Notify START_TURN resets usedThisTurn
-      act(() =>
-        result.current.notify({
-          type: "START_TURN",
-          isGrappling: false,
-          grappledTargetTwoSizesSmaller: false,
-          startOfTurnEffects: []
-        } as DndEvent)
-      )
+      act(() => result.current.notify({ type: "START_TURN" } as DndEvent))
       expect(result.current.featureState.fighter!.actionSurgeUsedThisTurn).toBe(false)
     })
 
@@ -281,7 +262,7 @@ describe("useFeatures", () => {
       act(() => result.current.dispatch({ type: "FIGHTER_USE_ACTION_SURGE" }))
       expect(result.current.featureState.fighter!.actionSurgeCharges).toBe(0)
 
-      act(() => result.current.notify({ type: "SHORT_REST", conMod: 2, hdRolls: [] } as DndEvent))
+      act(() => result.current.notify({ type: "SHORT_REST", hdRolls: [] } as DndEvent))
       expect(result.current.featureState.fighter!.actionSurgeCharges).toBe(1)
     })
   })
@@ -326,11 +307,7 @@ describe("useFeatures — barbarian", () => {
 
       // End turn without marking attack
       act(() => {
-        result.current.notify({
-          type: "END_TURN",
-          endOfTurnSaves: [],
-          endOfTurnDamage: []
-        } as DndEvent)
+        result.current.notify({ type: "END_TURN" } as DndEvent)
       })
       expect(result.current.isRaging).toBe(false)
     })
@@ -346,11 +323,7 @@ describe("useFeatures — barbarian", () => {
         result.current.markAttackOrSave()
       })
       act(() => {
-        result.current.notify({
-          type: "END_TURN",
-          endOfTurnSaves: [],
-          endOfTurnDamage: []
-        } as DndEvent)
+        result.current.notify({ type: "END_TURN" } as DndEvent)
       })
       expect(result.current.isRaging).toBe(true)
     })
@@ -398,12 +371,7 @@ describe("useFeatures — barbarian", () => {
       expect(result.current.featureState.barbarian!.recklessThisTurn).toBe(true)
 
       act(() => {
-        result.current.notify({
-          type: "START_TURN",
-          isGrappling: false,
-          grappledTargetTwoSizesSmaller: false,
-          startOfTurnEffects: []
-        } as DndEvent)
+        result.current.notify({ type: "START_TURN" } as DndEvent)
       })
       expect(result.current.featureState.barbarian!.recklessThisTurn).toBe(false)
     })

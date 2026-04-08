@@ -31,16 +31,11 @@ export function damage(amount: number, damageType: DamageType, isCritical = fals
 }
 
 export function startTurn(): DndEvent {
-  return {
-    type: "START_TURN",
-    isGrappling: false,
-    grappledTargetTwoSizesSmaller: false,
-    startOfTurnEffects: []
-  }
+  return { type: "START_TURN" }
 }
 
 export function endTurn(): DndEvent {
-  return { type: "END_TURN", endOfTurnSaves: [], endOfTurnDamage: [] }
+  return { type: "END_TURN" }
 }
 
 /** L5 Champion Fighter default state. Shared across all actual-play traces. */

@@ -187,16 +187,11 @@ function critDamage(amount: number): DndEvent {
 }
 
 function startTurn(): DndEvent {
-  return {
-    type: "START_TURN",
-    isGrappling: false,
-    grappledTargetTwoSizesSmaller: false,
-    startOfTurnEffects: []
-  }
+  return { type: "START_TURN" }
 }
 
 function endTurn(): DndEvent {
-  return { type: "END_TURN", endOfTurnSaves: [], endOfTurnDamage: [] }
+  return { type: "END_TURN" }
 }
 
 // --- The sample trace: event definitions + expected Quint states ---
@@ -675,7 +670,6 @@ const TRACE_EVENTS: ReadonlyArray<TraceEventDef> = [
     events: [
       {
         type: "SHORT_REST",
-        conMod: 2,
         hdRolls: [
           { className: "fighter" as const, roll: 6 },
           { className: "fighter" as const, roll: 8 },
