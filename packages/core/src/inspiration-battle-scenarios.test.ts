@@ -83,7 +83,7 @@ function resolveAttackWindows(actor: ReturnType<typeof createActor<typeof battle
   }
 }
 
-describe("competitor-sourced battle regressions", () => {
+describe("inspiration-sourced battle regressions", () => {
   it("natural_20: Shield negates the triggering hit and spends the reaction", () => {
     const actor = initTwoPcBattle()
     startTurn(actor)

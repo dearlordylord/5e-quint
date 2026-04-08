@@ -1,25 +1,25 @@
-# Competitor-Driven Testing Plan
+# Inspiration-Driven Testing Plan
 
 ## Goal
 
-Use the clearest, most engine-like competitor behaviors as prompts for high-value SRD 5.2.1 regression tests, without treating competitor code as an authority.
+Use the clearest, most engine-like external implementations as prompts for high-value SRD 5.2.1 regression tests, without treating any external codebase as an authority.
 
 The point of this workstream is:
 
 - find mechanic interactions that are easy to miss in our spec/runtime,
 - turn them into deterministic tests first,
 - then validate parity with MBT,
-- and only expand architecture when a competitor case exposes a real modeling gap.
+- and only expand architecture when an inspiration case exposes a real modeling gap.
 
-This is downstream of the project purpose in [ARCHITECTURE.md](/workspace/typescript/dnd-competitor-tests-batch-1/ARCHITECTURE.md): the real target is still Quint proof + XState parity for SRD 5.2.1 combat.
+This is downstream of the project purpose in [ARCHITECTURE.md](../../ARCHITECTURE.md): the real target is still Quint proof + XState parity for SRD 5.2.1 combat.
 
 ## Why This Work Exists
 
-Earlier competitor research showed:
+Earlier repository analysis showed:
 
-- competitors are useful as sources of scenario ideas, state/action vocabulary, and tricky interaction patterns,
-- competitors are not useful as correctness oracles,
-- the fastest value comes from converting their strong examples into our own RAW-traceable tests.
+- external engines are useful as sources of scenario ideas, state/action vocabulary, and tricky interaction patterns,
+- they are not useful as correctness oracles,
+- the fastest value comes from converting their strongest examples into our own RAW-traceable tests.
 
 That led to a small-step worktree strategy:
 
@@ -31,18 +31,18 @@ That led to a small-step worktree strategy:
 
 Read these before changing anything:
 
-1. [ARCHITECTURE.md](/workspace/typescript/dnd-competitor-tests-batch-1/ARCHITECTURE.md)
-2. [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd-competitor-tests-batch-1/UBIQUITOUS_LANGUAGE.md)
-3. [ASSUMPTIONS.md](/workspace/typescript/dnd-competitor-tests-batch-1/ASSUMPTIONS.md)
-4. [battle/DOMAIN.md](/workspace/typescript/dnd-competitor-tests-batch-1/battle/DOMAIN.md)
-5. [battle/REQUIREMENTS.md](/workspace/typescript/dnd-competitor-tests-batch-1/battle/REQUIREMENTS.md)
+1. [ARCHITECTURE.md](../../ARCHITECTURE.md)
+2. [UBIQUITOUS_LANGUAGE.md](../../UBIQUITOUS_LANGUAGE.md)
+3. [ASSUMPTIONS.md](../../ASSUMPTIONS.md)
+4. [battle/DOMAIN.md](../../battle/DOMAIN.md)
+5. [battle/REQUIREMENTS.md](../../battle/REQUIREMENTS.md)
 
 For the rules involved in this workstream, use:
 
-- [.references/srd-5.2.1/Playing-the-Game.md](/workspace/typescript/dnd-competitor-tests-batch-1/.references/srd-5.2.1/Playing-the-Game.md)
-- [.references/srd-5.2.1/Rules-Glossary.md](/workspace/typescript/dnd-competitor-tests-batch-1/.references/srd-5.2.1/Rules-Glossary.md)
-- [.references/srd-5.2.1/Spells/Descriptions-Q-R.md](/workspace/typescript/dnd-competitor-tests-batch-1/.references/srd-5.2.1/Spells/Descriptions-Q-R.md)
-- [.references/srd-5.2.1/Spells/Descriptions-S-Z.md](/workspace/typescript/dnd-competitor-tests-batch-1/.references/srd-5.2.1/Spells/Descriptions-S-Z.md)
+- [.references/srd-5.2.1/Playing-the-Game.md](../srd-5.2.1/Playing-the-Game.md)
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md)
+- [.references/srd-5.2.1/Spells/Descriptions-Q-R.md](../srd-5.2.1/Spells/Descriptions-Q-R.md)
+- [.references/srd-5.2.1/Spells/Descriptions-S-Z.md](../srd-5.2.1/Spells/Descriptions-S-Z.md)
 
 Relevant RAW passages:
 
@@ -61,9 +61,9 @@ Relevant RAW passages:
 
 File:
 
-- [packages/core/src/competitor-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-scenarios.test.ts)
+- [inspiration-scenarios.test.ts](../../packages/core/src/inspiration-scenarios.test.ts)
 
-Added competitor-sourced creature regressions for:
+Added inspiration-sourced creature regressions for:
 
 - death save failure progression to death,
 - stabilization and reset of the death-save track,
@@ -80,14 +80,14 @@ Added competitor-sourced creature regressions for:
 Why these first:
 
 - they already mapped cleanly onto existing creature state and events,
-- they were directly motivated by competitor scenario mining,
+- they were directly motivated by scenario mining,
 - they gave immediate regression value without changing architecture.
 
 ### Batch 2: Battle-Level Clear Wins
 
 File:
 
-- [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts)
+- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
 
 Added battle regressions for:
 
@@ -117,13 +117,13 @@ Reason for deferral:
 
 Files:
 
-- [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts)
-- [packages/core/src/types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/types.ts)
-- [packages/core/src/battle-machine-creature.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-creature.ts)
-- [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-helpers.ts)
-- [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-attack.ts)
-- [packages/core/src/battle-machine-actions-movement.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-movement.ts)
-- [packages/core/src/battle-machine-actions-turn.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-turn.ts)
+- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [types.ts](../../packages/core/src/types.ts)
+- [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
+- [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts)
+- [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
+- [battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
+- [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts)
 
 Added runtime coverage and support for:
 
@@ -137,7 +137,7 @@ What changed:
 - battle turn processing now advances effect durations by expiry owner rather than assuming the affected creature always owns the duration boundary.
 - OA eligibility now derives from effect state instead of only `reactionAvailable`.
 - battle speed derivation now includes active-effect speed deltas.
-- generic battle attacks can carry an optional on-hit effect payload, which is enough for the current competitor regressions.
+- generic battle attacks can carry an optional on-hit effect payload, which is enough for the current inspiration regressions.
 
 Important RAW correction discovered during implementation:
 
@@ -182,15 +182,15 @@ Batch 5 completed the remaining projection convergence work:
 Current conclusion:
 
 - battle projection now replays `Shocking Grasp` and `Ray of Frost` through shared `ActiveEffect` state rather than a projection-local side map,
-- the remaining effect-ownership work is no longer this competitor branch's cleanup task; it is broader shared-effect evolution on `master`.
+- the remaining effect-ownership work is no longer this branch's cleanup task; it is broader shared-effect evolution on `master`.
 
 ## Verification Already Completed
 
 Focused tests:
 
-- `pnpm exec vitest run src/competitor-scenarios.test.ts`
-- `pnpm exec vitest run src/competitor-battle-scenarios.test.ts`
-- `pnpm exec vitest run src/competitor-scenarios.test.ts src/competitor-battle-scenarios.test.ts`
+- `pnpm exec vitest run src/inspiration-scenarios.test.ts`
+- `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm exec vitest run src/inspiration-scenarios.test.ts src/inspiration-battle-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 - `pnpm exec quint test --match "test_grapple|test_death_save_|test_take_damage_resist_vuln_sequential" dndTest.qnt`
 
@@ -217,10 +217,10 @@ Earlier batch-1 verification in this worktree also passed:
 Batch-3 verification completed in this worktree:
 
 - focused battle regressions:
-  - `pnpm exec vitest run src/competitor-battle-scenarios.test.ts`
+  - `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
   - passed: 4 tests
-- focused combined competitor suite:
-  - `pnpm exec vitest run src/competitor-scenarios.test.ts src/competitor-battle-scenarios.test.ts`
+- focused combined inspiration suite:
+  - `pnpm exec vitest run src/inspiration-scenarios.test.ts src/inspiration-battle-scenarios.test.ts`
   - passed: 15 tests
 - typecheck:
   - `pnpm --filter @dnd/core typecheck`
@@ -240,7 +240,7 @@ Batch-4 verification completed in this worktree:
   - command: `pnpm exec quint typecheck battle.qnt`
   - passed
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/competitor-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
   - passed: 4 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -261,7 +261,7 @@ Batch-4 verification completed in this worktree:
 Batch-5 verification completed in this worktree:
 
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/competitor-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
   - passed: 4 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -279,8 +279,8 @@ Batch-5 verification completed in this worktree:
 
 This worktree now contains:
 
-- competitor-driven creature regressions,
-- competitor-driven battle regressions,
+- inspiration-driven creature regressions,
+- inspiration-driven battle regressions,
 - runtime rider support,
 - spec-level rider generation,
 - MBT coverage for the rider path,
@@ -291,23 +291,23 @@ The next step is not "add rider proof coverage" or "remove the projection owners
 
 ## Next Step Options
 
-### Option A: Pick The Next Competitor Scenario Batch
+### Option A: Pick The Next Inspiration Scenario Batch
 
 Recommended next step.
 
 Goal:
 
-- return to the deferred competitor scenarios that still represent real mechanic gaps or useful proof targets,
+- return to the deferred inspiration scenarios that still represent real mechanic gaps or useful proof targets,
 - choose the smallest one that does not collide with active parallel work on `master`,
 - keep following the same pattern: deterministic regression first, then parity/MBT only if the scenario touches authoritative combat semantics.
 
 Scope:
 
-- prefer scenarios already identified in [SCENARIOS.md](/workspace/typescript/dnd/.references/competitors/SCENARIOS.md),
+- prefer scenarios already identified in the inspiration scenario inventory,
 - coordinate with active parallel branches before picking grapple/forced-movement work,
 - favor one of these:
   - grappler incapacitation auto-releases target, if the main grappling work has landed or can be cleanly rebased,
-  - another owner-relative effect case if a competitor exposes one not yet covered,
+  - another owner-relative effect case if an external engine exposes one not yet covered,
   - a deterministic scenario-mining batch from `natural_20` that does not require new battle state.
 
 Why this is next:
@@ -333,7 +333,7 @@ Suggested coverage:
 
 Why this is weaker:
 
-- it strengthens the shared machine contract but does not expand competitor-derived mechanic coverage,
+- it strengthens the shared machine contract but does not expand inspiration-derived mechanic coverage,
 - the main battle proof path is already green,
 - it is best treated as local hardening, not as the primary next milestone.
 
@@ -342,23 +342,23 @@ Why this is weaker:
 Start here:
 
 1. read this file,
-2. read [ARCHITECTURE.md](/workspace/typescript/dnd-competitor-tests-batch-1/ARCHITECTURE.md),
-3. read [battle/DOMAIN.md](/workspace/typescript/dnd-competitor-tests-batch-1/battle/DOMAIN.md),
-4. inspect [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts),
-5. choose `Option A` unless there is a reason to avoid another competitor scenario batch.
+2. read [ARCHITECTURE.md](../../ARCHITECTURE.md),
+3. read [battle/DOMAIN.md](../../battle/DOMAIN.md),
+4. inspect [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts),
+5. choose `Option A` unless there is a reason to avoid another inspiration scenario batch.
 
 If choosing `Option A`, inspect these implementation anchors before editing:
 
-- [battle.qnt](/workspace/typescript/dnd-competitor-tests-batch-1/battle.qnt)
-- [creature.qnt](/workspace/typescript/dnd-competitor-tests-batch-1/creature.qnt)
-- [packages/core/src/types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/types.ts)
-- [packages/core/src/battle-machine-creature.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-creature.ts)
-- [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-helpers.ts)
-- [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-attack.ts)
-- [packages/core/src/battle-machine-actions-movement.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-movement.ts)
-- [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts)
-- [packages/core/src/battle-machine.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine.mbt.test.ts)
-- [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-projection.mbt.test.ts)
+- [battle.qnt](../../battle.qnt)
+- [creature.qnt](../../creature.qnt)
+- [types.ts](../../packages/core/src/types.ts)
+- [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
+- [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts)
+- [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
+- [battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
+- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-machine.mbt.test.ts](../../packages/core/src/battle-machine.mbt.test.ts)
+- [battle-projection.mbt.test.ts](../../packages/core/src/battle-projection.mbt.test.ts)
 
 Then preserve the same workflow:
 
@@ -367,6 +367,5 @@ Then preserve the same workflow:
 - run typecheck,
 - run focused tests,
 - run battle projection MBT Tier 1,
-- run battle machine MBT Tier 1,
 - run battle machine MBT Tier 1,
 - record commands and seeds back into this file.

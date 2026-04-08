@@ -59,7 +59,7 @@ function createDying() {
   return actor
 }
 
-describe("competitor-sourced creature regressions", () => {
+describe("inspiration-sourced creature regressions", () => {
   describe("death saving throw track", () => {
     it("natural_20: three failures kill the creature", () => {
       const actor = createDying()
