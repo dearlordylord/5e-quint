@@ -1,9 +1,10 @@
+import { Option } from "effect"
 import { describe, expect, it } from "vitest"
 import { createActor } from "xstate"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleEvent } from "#/battle-machine-types.ts"
-import { armorClass, CreatureId, spellId } from "#/types.ts"
+import { armorClass, CreatureId, difficultyClass, spellId, spellSlotLevel } from "#/types.ts"
 
 const DEFAULT_ATTACK_CONTEXT = {
   knockOut: false,
@@ -51,6 +52,19 @@ function initTwoPcBattle() {
     creatures: [
       { id: CreatureId("A"), maxHp: 20, kind: "PC" },
       { id: CreatureId("B"), maxHp: 20, kind: "PC" }
+    ]
+  })
+  return actor
+}
+
+function initTwoCasterBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]) },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]) }
     ]
   })
   return actor
@@ -303,5 +317,95 @@ describe("inspiration-sourced battle regressions", () => {
 
     expect(creature(actor, "B").effectiveSpeed).toBe(30)
     expect(creature(actor, "B").movementRemaining).toBe(30)
+  })
+
+  it("natural_20: a readied spell releases with a reaction and applies its effect", () => {
+    const actor = initTwoCasterBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_READY_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person"
+    })
+
+    expect(creature(actor, "A").readiedAction).toBe(true)
+    expect(creature(actor, "A").readiedSpellParams).not.toBeNull()
+    expect(Option.isSome(creature(actor, "A").concentrationSpellId)).toBe(true)
+    expect(creature(actor, "A").slotsCurrent[0]).toBe(3)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+
+    expect(ctx(actor).readyCtx?.eligibleCreatures.has(CreatureId("A"))).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_READY_SPELL_RELEASE",
+      releaserId: CreatureId("A"),
+      saveRoll: 1
+    })
+
+    expect(creature(actor, "A").reactionAvailable).toBe(false)
+    expect(creature(actor, "A").readiedAction).toBe(false)
+    expect(creature(actor, "A").readiedSpellParams).toBeNull()
+    expect(Option.isNone(creature(actor, "A").concentrationSpellId)).toBe(true)
+    expect(creature(actor, "B").paralyzed).toBe(true)
+  })
+
+  it("natural_20: an unreleased readied spell dissipates at the start of the caster's next turn", () => {
+    const actor = initTwoCasterBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_READY_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person"
+    })
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    send(actor, { type: "BATTLE_READY_PASS" })
+
+    startTurn(actor)
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    send(actor, { type: "BATTLE_READY_PASS" })
+    startTurn(actor)
+
+    expect(creature(actor, "A").readiedSpellParams).toBeNull()
+    expect(creature(actor, "A").readiedAction).toBe(false)
+    expect(Option.isNone(creature(actor, "A").concentrationSpellId)).toBe(true)
+    expect(creature(actor, "A").slotsCurrent[0]).toBe(3)
+    expect(creature(actor, "B").paralyzed).toBe(false)
   })
 })

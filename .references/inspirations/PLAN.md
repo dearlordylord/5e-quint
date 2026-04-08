@@ -184,6 +184,18 @@ Current conclusion:
 - battle projection now replays `Shocking Grasp` and `Ray of Frost` through shared `ActiveEffect` state rather than a projection-local side map,
 - the remaining effect-ownership work is no longer this branch's cleanup task; it is broader shared-effect evolution on `master`.
 
+Batch 6 added the next small deterministic inspiration batch without widening battle state:
+
+- `inspiration-battle-scenarios.test.ts` now covers readied-spell timing through the existing battle ready/reaction pipeline,
+- a readied spell can be released with a Reaction and apply its effect,
+- an unreleased readied spell dissipates at the start of the caster's next turn while still consuming the slot spent at ready time.
+
+Why this batch:
+
+- RAW support was already present in the battle machine,
+- it exercises a real reaction/concentration/turn-boundary interaction,
+- and it avoids colliding with the still-unlanded grappler-link work on `master`.
+
 ## Verification Already Completed
 
 Focused tests:
@@ -275,12 +287,30 @@ Batch-5 verification completed in this worktree:
   - seed: `0xfe48b3f7`
   - total: `45s`
 
+Batch-6 verification completed in this worktree:
+
+- focused battle regressions:
+  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - passed: 6 tests
+- package typecheck:
+  - command: `pnpm --filter @dnd/core typecheck`
+  - passed
+- battle projection MBT Tier 1:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
+  - seed: `0xc1a962c6`
+  - total: `13s`
+- battle machine MBT Tier 1:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts`
+  - seed: `0x81ee392c`
+  - total: `13s`
+
 ## Current Worktree State
 
 This worktree now contains:
 
 - inspiration-driven creature regressions,
 - inspiration-driven battle regressions,
+- ready-spell timing regressions for release-vs-fizzle behavior,
 - runtime rider support,
 - spec-level rider generation,
 - MBT coverage for the rider path,
@@ -306,15 +336,22 @@ Scope:
 - prefer scenarios already identified in the inspiration scenario inventory,
 - coordinate with active parallel branches before picking grapple/forced-movement work,
 - favor one of these:
-  - grappler incapacitation auto-releases target, if the main grappling work has landed or can be cleanly rebased,
+  - grappler incapacitation auto-releases target, but only after battle-layer grappler identity/link state lands on `master`,
   - another owner-relative effect case if an external engine exposes one not yet covered,
-  - a deterministic scenario-mining batch from `natural_20` that does not require new battle state.
+  - another deterministic scenario-mining batch from `natural_20` that does not require new battle state.
 
 Why this is next:
 
-- the prior recommended cleanup is now complete,
-- the current proof gap is no longer in `Ray of Frost` projection ownership,
-- the remaining value is back in discovering the next missing mechanic interaction, not in polishing the already-green rider path.
+- the rider-path cleanup and the small Ready timing batch are now complete,
+- the current blocker for the preferred grapple scenario is still missing relationship state rather than missing tests,
+- the remaining value is back in discovering the next missing mechanic interaction that the current battle surface can already express.
+
+Parallel pre-research plan for a later sub-agent pass:
+
+- one sub-agent should scout 2-3 deterministic inspiration candidates that fit the current battle/runtime surface without adding new battle state,
+- one sub-agent should re-check whether battle-layer grappler identity/link state has landed on `master`, since that is the gating factor for the preferred grappler auto-release batch,
+- one sub-agent may take the weaker Option B hardening track and prepare direct creature-level ownership tests for `expiryOwnerId` and `speedDeltaFeet`,
+- the main thread should only start implementation after the scout results and grapple-readiness check agree on the smallest safe batch.
 
 ### Option B: Add Direct Creature-Level Ownership Tests
 
@@ -336,6 +373,29 @@ Why this is weaker:
 - it strengthens the shared machine contract but does not expand inspiration-derived mechanic coverage,
 - the main battle proof path is already green,
 - it is best treated as local hardening, not as the primary next milestone.
+
+## Parallel Pre-Research Plan
+
+When returning to this workstream later, pre-research can be split cleanly before implementation.
+
+Suggested parallel split:
+
+- candidate scout:
+  - read this file, inspect `inspiration-battle-scenarios.test.ts`, and propose 2-3 small deterministic inspiration scenarios that fit the current battle/runtime surface without adding new battle state,
+  - include exact RAW anchors and likely files to touch.
+- grapple readiness check:
+  - inspect current `master` for battle-layer grappler identity or link state,
+  - answer whether grappler incapacitation auto-release is now a small batch or is still architectural,
+  - include exact blocking files/fields if still blocked.
+- creature-level ownership hardening:
+  - inspect `machine-startturn.ts`, `machine-endturn.ts`, `machine.ts`, `types.ts`, and existing tests,
+  - prepare the smallest useful Option B test list for `expiryOwnerId` and `speedDeltaFeet`.
+
+How to use the results:
+
+- if the grapple readiness check comes back positive, prefer the grapple batch,
+- otherwise choose the best candidate from the candidate scout,
+- keep the creature-level ownership tests as an optional parallel sidecar because they do not need new battle state.
 
 ## If You Continue This Work Next Time
 
