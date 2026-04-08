@@ -589,11 +589,14 @@ The MCP response from `get_available_actions` is already grouped by resource cos
 - **Conclusion from the audit**
     - there is currently **no honest reaction-cost semantic action** ready to expose through the supported action contract without another ownership pass
     - the missing ingredient is trigger-window ownership, similar in spirit to the earlier `pendingResolution` work
+    - that ownership pass is now captured as dedicated architecture work in:
+      - [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md)
     - if Phase 2 is kept narrow, the next session should:
       - explicitly record that reaction coverage is still blocked by missing owned trigger state
       - proceed with grouping-shape snapshot tests and stronger spent-resource exclusion tests
     - if Phase 2 is expanded, the next real implementation would be:
-      - add owned pending trigger state for a reaction candidate
+      - implement the reaction-eligibility redesign from [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md)
+      - add owned pending trigger state for a reaction candidate on top of that redesign
       - probably `uncannyDodge` or `cuttingWords`
       - then expose that semantic reaction token honestly
 
@@ -629,6 +632,7 @@ The MCP response from `get_available_actions` is already grouped by resource cos
   - `bonusAction`: `CONVERT_POINTS_TO_SLOT`, `USE_SECOND_WIND`
   - `free`: `USE_ARCANE_RECOVERY`, `USE_METAMAGIC`, `EXIT_COMBAT`
 - Reaction remains intentionally absent from the supported surface because no semantic reaction action has fully owned trigger-window state yet.
+- That missing ownership work is now explicitly tracked in [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md).
 - Movement also remains absent from the supported surface as an explicit cost bucket; nothing currently exposed uses `cost.movement`.
 
 ---
