@@ -9,7 +9,7 @@ import {
 } from "#/available-actions.ts"
 import { creatureMachine } from "#/machine.ts"
 import type { DndMachineInput } from "#/machine-types.ts"
-import { classLevel, spellSlotLevel } from "#/types.ts"
+import { abilityModifier, classLevel, resourceCount, spellSlotLevel } from "#/types.ts"
 
 const FIGHTER_5_INPUT: DndMachineInput = {
   maxHp: 44,
@@ -60,7 +60,7 @@ const SORCERER_5_INPUT: DndMachineInput = {
 const MONK_6_INPUT: DndMachineInput = {
   maxHp: 30,
   monkLevel: classLevel(6),
-  wholenessMax: 3,
+  wholenessMax: resourceCount(3),
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 }
@@ -68,7 +68,7 @@ const MONK_6_INPUT: DndMachineInput = {
 const RANGER_10_INPUT: DndMachineInput = {
   maxHp: 32,
   rangerLevel: classLevel(10),
-  wisMod: 3,
+  wisMod: abilityModifier(3),
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 }
@@ -101,7 +101,7 @@ const PALADIN_2_INPUT: DndMachineInput = {
 const BARD_5_INPUT: DndMachineInput = {
   maxHp: 26,
   bardLevel: classLevel(5),
-  chaMod: 3,
+  chaMod: abilityModifier(3),
   slotsMax: [4, 3, 2, 0, 0, 0, 0, 0, 0],
   slotsCurrent: [4, 3, 2, 0, 0, 0, 0, 0, 0],
   baseWalkSpeed: 30,
