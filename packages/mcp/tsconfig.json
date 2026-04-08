@@ -5,7 +5,8 @@
     "module": "ESNext",
     "baseUrl": ".",
     "paths": {
-      "@dnd/core/*": ["../core/src/*"]
+      "@dnd/core/*": ["../core/src/*"],
+      "#/*": ["../core/src/*"]
     },
     "lib": ["ES2022"],
     "moduleResolution": "bundler",

@@ -7,9 +7,9 @@
 Durable decisions that apply across all phases:
 
 - **Action token schema**: Command-with-holes pattern. Serializable JSON. Same structure for query (`get_available_actions` returns tokens with choice holes) and execution (`execute_action` accepts tokens with holes filled). Cost is always populated; choice holes are typed with valid options enumerated.
-- **`execute_action` MCP input schema is static**: A flat, dumb envelope — `{ type: string, slotLevel?: number, choice?: string, ... }`. Does NOT dynamically reflect available tokens or valid enum values. Claude reads `get_available_actions` output to know what's valid; the schema just declares the shape. Validation happens server-side. Rationale: a dynamic `oneOf` with 50+ discriminated token variants is noise Claude must parse and wastes context.
-- **MCP tool surface**: Three tools — `get_state`, `get_available_actions`, `execute_action`. Independent process from React app, instantiates its own XState actor.
-- **Event type catalog**: `const EVENT_TYPES = [...] as const satisfies ReadonlyArray<DndEvent["type"]>` — runtime-iterable, compile-time validated against the event union.
+- **`execute_action` MCP input schema is a discriminated union**: Effect Schema `Schema.Union` with one variant per exposed action type, discriminated on `type`. Each variant declares exactly the fields it requires (no optional soup). `JSONSchema.make()` generates standard JSON Schema for the MCP tool definition. Validation via `Schema.decodeUnknownEither`.
+- **MCP tool surface**: Three tools — `get_state`, `get_available_actions`, `execute_action`. Independent process from React app, instantiates its own XState actor. Low-level MCP SDK (`Server` + `setRequestHandler`), not the high-level `McpServer` class (which is zod-only).
+- **No hand-curated event type catalog**: `TOKEN_BUILDERS` keys are the single source of truth for exposed actions. State topology (which events the machine accepts in which state) is derived from `rootEventHandlers` + `turnPhaseConfig` — no separate hand-written list. Adding a new action = add a token builder + the machine config already handles it.
 - **Grouping axis**: Actions grouped by resource cost (action, bonus action, reaction, free/movement). No ordering within groups. Permanent — we do not rank by tactical value or optimality.
 - **No confidence scoring**: Permanent design decision. Player goals are opaque; we present options, never rank them.
 - **Cacheability**: Every layer boundary is an Effect service with test/mock/cached layers. Audio segments, transcript text, LLM calls, candidate events — all cacheable and replayable.
@@ -44,6 +44,24 @@ Pick one action type — Second Wind is a good candidate (bonus action, has a gu
 - [ ] `get_available_actions` returns action tokens grouped by resource cost
 - [ ] `execute_action` accepts a filled token, applies the event, returns new state + description
 - [ ] Round-trip integration test: get actions → fill token → execute → verify state changed
+
+### Phase 1 TODOs
+
+Items discovered during implementation that need resolution before Phase 1 is complete:
+
+**START_TURN payload redesign**: `START_TURN` requires `baseSpeed`, `armorPenalty`, `extraAttacks`, `callerSpeedModifier`, `isGrappling`, `grappledTargetTwoSizesSmaller`, `startOfTurnEffects` — these are battle-context fields that the MCP consumer shouldn't provide. Currently hardcoded for Phase 1 Fighter 5 demo. Fix: derive from creature state or a session/battle manager. MCP `START_TURN` should be zero-payload from the consumer's perspective.
+
+**`USE_HEROIC_INSPIRATION` guard**: Token builder is missing because the guard isn't wired in `machine-guards.ts`. Need to add the guard, then add the token builder.
+
+**`knownMetamagicOptions` in `SorcererClassState`**: `USE_METAMAGIC` token currently offers all 10 metamagic options. Should filter to character's known options (2-6 depending on level). Requires adding the field to class state and Quint spec.
+
+**Context serialization**: Replace `JSON.stringify` replacer with Effect Schema transforms (`Option` -> `null`, `Set` -> `array`). Define a `DndContextEncoded` schema in core using `Schema.OptionFromNullOr` and `Schema.ReadonlySet`.
+
+**Wire remaining `execute_action` handlers**:
+- Dice-roll actions: `USE_TIRELESS` (d8Roll), `WHOLENESS_OF_BODY` (healRoll), `UNCANNY_METABOLISM` (healRoll)
+- Battle-context actions: `USE_RELENTLESS_RAGE` (conSaveSucceeded), `USE_TACTICAL_MIND` (boostedCheckSucceeds), `USE_PEERLESS_SKILL` (success)
+- Hole-field pass-throughs: `CONVERT_SLOT_TO_POINTS`, `CONVERT_POINTS_TO_SLOT`, `USE_ARCANE_RECOVERY`, `USE_MYSTIC_ARCANUM`, `USE_FONT_SLOT_RESTORE`, `USE_WILD_RESURGENCE_CHARGE`, `USE_DIVINE_SMITE`, `USE_LAY_ON_HANDS`, `USE_METAMAGIC` (all slotLevel/amount/option)
+- Complex payload: `SHORT_REST` (conMod, hdRolls)
 
 ---
 

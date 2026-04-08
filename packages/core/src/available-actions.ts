@@ -1,5 +1,8 @@
 import { bardicInspirationDie } from "#/features/class-bard.ts"
+import { METAMAGIC_OPTIONS, type MetamagicOption } from "#/features/class-sorcerer.ts"
+import { mysticArcanumLevels as warlockArcanumLevels } from "#/features/class-warlock.ts"
 import { guards } from "#/machine-guards.ts"
+import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts"
 import { type DndContext, type DndEvent } from "#/machine-types.ts"
 import { spellSlotLevel, type SpellSlotLevel } from "#/types.ts"
 import type { ShoveChoice } from "#/types.ts"
@@ -27,101 +30,11 @@ export type FillHoles<T> = {
   readonly [K in keyof T]: T[K] extends Hole<infer V> ? V : T[K]
 }
 
-// --- Player action catalog ---
-// Source of truth for which DndEvent types are player-initiated.
-// satisfies ReadonlyArray<DndEvent["type"]>: compile error on typo or deleted event type.
-// PlayerActionType (and therefore ActionToken, TOKEN_BUILDERS) is derived — never hand-written.
-
-export const PLAYER_ACTION_TYPES = [
-  // Movement
-  "STAND_FROM_PRONE",
-  "DROP_PRONE",
-  "USE_BONUS_MOVEMENT",
-  // Grappling / shoving (battle context required — builders return null until Phase 4)
-  "GRAPPLE",
-  "RELEASE_GRAPPLE",
-  "ESCAPE_GRAPPLE",
-  "SHOVE",
-  // Rest / recovery
-  "SHORT_REST",
-  "LONG_REST",
-  "SPEND_HIT_DIE",
-  // General
-  "USE_HEROIC_INSPIRATION",
-  // Monster resources
-  "USE_LEGENDARY_ACTION",
-  "USE_RECHARGE_ABILITY",
-  "USE_DAILY_ABILITY",
-  // Fighter
-  "USE_SECOND_WIND",
-  "USE_ACTION_SURGE",
-  "USE_INDOMITABLE",
-  "USE_TACTICAL_MIND",
-  // Barbarian
-  "ENTER_RAGE",
-  "END_RAGE",
-  "EXTEND_RAGE_BA",
-  "DECLARE_RECKLESS",
-  "USE_INTIMIDATING_PRESENCE",
-  "USE_BRUTAL_STRIKE",
-  "USE_RELENTLESS_RAGE",
-  // Paladin
-  "USE_LAY_ON_HANDS",
-  "USE_PALADIN_CHANNEL_DIVINITY",
-  "USE_DIVINE_SMITE",
-  "USE_DIVINE_SMITE_FREE",
-  // Monk
-  "FLURRY_OF_BLOWS",
-  "PATIENT_DEFENSE_FREE",
-  "PATIENT_DEFENSE_FOCUS",
-  "STEP_OF_THE_WIND_FREE",
-  "STEP_OF_THE_WIND_FOCUS",
-  "STUNNING_STRIKE",
-  "WHOLENESS_OF_BODY",
-  "UNCANNY_METABOLISM",
-  // Wizard
-  "USE_ARCANE_RECOVERY",
-  "USE_OVERCHANNEL",
-  // Rogue
-  "USE_SNEAK_ATTACK",
-  "USE_STEADY_AIM",
-  "CUNNING_ACTION_DASH",
-  "CUNNING_ACTION_DISENGAGE",
-  "CUNNING_ACTION_HIDE",
-  "USE_UNCANNY_DODGE",
-  "USE_CUNNING_STRIKE",
-  // Cleric
-  "USE_CLERIC_CHANNEL_DIVINITY",
-  // Warlock
-  "USE_MAGICAL_CUNNING",
-  "USE_MYSTIC_ARCANUM",
-  "USE_ELDRITCH_SMITE",
-  // Sorcerer
-  "CONVERT_SLOT_TO_POINTS",
-  "CONVERT_POINTS_TO_SLOT",
-  "USE_INNATE_SORCERY",
-  "USE_METAMAGIC",
-  // Ranger
-  "USE_FREE_HUNTERS_MARK",
-  "USE_TIRELESS",
-  "USE_NATURES_VEIL",
-  // Bard
-  "USE_BARDIC_INSPIRATION",
-  "USE_CUTTING_WORDS",
-  "USE_FONT_SLOT_RESTORE",
-  "USE_PEERLESS_SKILL",
-  // Druid
-  "ENTER_WILD_SHAPE",
-  "EXIT_WILD_SHAPE",
-  "USE_WILD_RESURGENCE_CHARGE",
-  "USE_WILD_RESURGENCE_SLOT",
-] as const satisfies ReadonlyArray<DndEvent["type"]>
-
-export type PlayerActionType = (typeof PLAYER_ACTION_TYPES)[number]
+type EventType = DndEvent["type"]
 
 // --- Token shapes ---
 
-type SimpleToken<T extends PlayerActionType> = {
+type SimpleToken<T extends EventType> = {
   readonly type: T
   readonly cost: ResourceCost
   readonly outcome: OutcomeDescription
@@ -149,18 +62,42 @@ type TokenOverrides = {
   readonly USE_WILD_RESURGENCE_CHARGE: SimpleToken<"USE_WILD_RESURGENCE_CHARGE"> & {
     readonly slotLevel: Hole<SpellSlotLevel>
   }
+  readonly USE_DIVINE_SMITE: SimpleToken<"USE_DIVINE_SMITE"> & {
+    readonly slotLevel: Hole<SpellSlotLevel>
+  }
+  readonly USE_LAY_ON_HANDS: SimpleToken<"USE_LAY_ON_HANDS"> & {
+    readonly amount: Hole<number>
+  }
+  // TODO: stub — uses full METAMAGIC_OPTIONS. Needs knownMetamagicOptions in SorcererClassState
+  // to filter to character's actual known options. See plan.
+  readonly USE_METAMAGIC: SimpleToken<"USE_METAMAGIC"> & {
+    readonly option: Hole<MetamagicOption>
+  }
 }
-// Compile-time assertion: every key in TokenOverrides must be a PlayerActionType.
-declare const _checkOverrideKeys: keyof TokenOverrides extends PlayerActionType ? true : never
+// Compile-time assertion: every key in TokenOverrides must be a valid DndEvent type.
+declare const _checkOverrideKeys: keyof TokenOverrides extends EventType ? true : never
 
-// Complete mapping: use override shape if defined, else SimpleToken.
-// Being a mapped type over PlayerActionType makes it inherently exhaustive.
-export type TokenFor = {
-  [K in PlayerActionType]: K extends keyof TokenOverrides ? TokenOverrides[K] : SimpleToken<K>
-}
+// Runtime catalog of action types with player-choice holes.
+// Derived from TokenOverrides — MCP and other consumers import this instead of maintaining their own list.
+export const HOLE_ACTION_TYPES = [
+  "SHOVE", "CONVERT_SLOT_TO_POINTS", "CONVERT_POINTS_TO_SLOT",
+  "USE_ARCANE_RECOVERY", "USE_MYSTIC_ARCANUM", "USE_FONT_SLOT_RESTORE",
+  "USE_WILD_RESURGENCE_CHARGE", "USE_DIVINE_SMITE", "USE_LAY_ON_HANDS", "USE_METAMAGIC",
+] as const satisfies ReadonlyArray<keyof TokenOverrides>
+// Completeness: every TokenOverrides key must be in HOLE_ACTION_TYPES
+declare const _checkHoleComplete: keyof TokenOverrides extends (typeof HOLE_ACTION_TYPES)[number] ? true : never
 
-// Derived union — never hand-written separately.
-export type ActionToken = TokenFor[PlayerActionType]
+export type HoleActionType = (typeof HOLE_ACTION_TYPES)[number]
+
+// Token type for a given event type: override shape if defined, else SimpleToken.
+export type TokenFor<K extends EventType> = K extends keyof TokenOverrides ? TokenOverrides[K] : SimpleToken<K>
+
+// Execute input: type + filled holes only (no cost/outcome). Used by MCP schema validation.
+type HoleKeys<T> = { [K in keyof T]: T[K] extends Hole<unknown> ? K : never }[keyof T]
+export type ExecuteInput<K extends EventType> = Pick<FillHoles<TokenFor<K>>, "type" | HoleKeys<TokenFor<K>>>
+
+// ActionToken is the union of all tokens that TOKEN_BUILDERS can produce.
+// Derived after TOKEN_BUILDERS definition (see bottom of file).
 
 // --- Helpers ---
 
@@ -183,15 +120,33 @@ function expiredSlotLevels(ctx: DndContext): ReadonlyArray<SpellSlotLevel> {
 function mysticArcanumLevels(ctx: DndContext): ReadonlyArray<SpellSlotLevel> {
   const ws = ctx.classStates.warlock
   if (!ws) return []
-  return ([6, 7, 8, 9] as const)
-    .filter((lvl) => lvl <= ws.level - 5 + 6 && !ws.mysticArcanumUsed.has(lvl))
+  return warlockArcanumLevels(ws.level)
+    .filter((lvl) => !ws.mysticArcanumUsed.has(lvl))
     .map((lvl) => spellSlotLevel(lvl))
 }
 
 // --- Token builders ---
-// Each builder: (ctx) → token | null (null = action not available in this state).
 
-const TOKEN_BUILDERS: { [K in PlayerActionType]: (ctx: DndContext) => TokenFor[K] | null } = {
+// Only events with builders are exposed as available actions.
+const TOKEN_BUILDERS = {
+  ENTER_COMBAT: (ctx) =>
+    !ctx.inCombat && !ctx.dead
+      ? {
+          type: "ENTER_COMBAT",
+          cost: {},
+          outcome: { summary: "Enter combat (begin tracking turns and action economy)" },
+        }
+      : null,
+
+  EXIT_COMBAT: (ctx) =>
+    ctx.inCombat
+      ? {
+          type: "EXIT_COMBAT",
+          cost: {},
+          outcome: { summary: "Leave combat (stop tracking turns)" },
+        }
+      : null,
+
   STAND_FROM_PRONE: (ctx) =>
     guards.canStandFromProne(g(ctx))
       ? {
@@ -219,9 +174,16 @@ const TOKEN_BUILDERS: { [K in PlayerActionType]: (ctx: DndContext) => TokenFor[K
         }
       : null,
 
-  GRAPPLE: () => null, // requires battle context (target) — Phase 4
+  START_TURN: (ctx) =>
+    ctx.inCombat
+      ? {
+          type: "START_TURN",
+          cost: {},
+          outcome: { summary: "Start your turn (reset action economy, process start-of-turn effects)" },
+        }
+      : null,
 
-  RELEASE_GRAPPLE: () => null, // requires battle context (grappling state) — Phase 4
+  // GRAPPLE, RELEASE_GRAPPLE, SHOVE: require battle context (target) — Phase 4
 
   ESCAPE_GRAPPLE: (ctx) =>
     ctx.grappled
@@ -231,8 +193,6 @@ const TOKEN_BUILDERS: { [K in PlayerActionType]: (ctx: DndContext) => TokenFor[K
           outcome: { summary: "Attempt to escape a grapple (Athletics or Acrobatics vs grappler's Athletics)" },
         }
       : null,
-
-  SHOVE: () => null, // requires battle context (target) — Phase 4
 
   SHORT_REST: (ctx) =>
     !ctx.inCombat && ctx.hp > 0
@@ -252,13 +212,9 @@ const TOKEN_BUILDERS: { [K in PlayerActionType]: (ctx: DndContext) => TokenFor[K
         }
       : null,
 
-  SPEND_HIT_DIE: () => null, // sub-action during SHORT_REST; parameterized by className + roll
-
-  USE_HEROIC_INSPIRATION: () => null, // guard not yet wired — TODO
-
-  USE_LEGENDARY_ACTION: () => null, // monster only
-  USE_RECHARGE_ABILITY: () => null, // monster only
-  USE_DAILY_ABILITY: () => null, // monster only
+  // SPEND_HIT_DIE: sub-action during SHORT_REST, parameterized by className + roll
+  // USE_HEROIC_INSPIRATION: guard not yet wired — TODO (add to plan)
+  // USE_LEGENDARY_ACTION, USE_RECHARGE_ABILITY, USE_DAILY_ABILITY: monster only
 
   USE_SECOND_WIND: (ctx) =>
     guards.canSecondWind(g(ctx))
@@ -366,16 +322,19 @@ const TOKEN_BUILDERS: { [K in PlayerActionType]: (ctx: DndContext) => TokenFor[K
         }
       : null,
 
-  USE_LAY_ON_HANDS: (ctx) =>
-    guards.canLayOnHands(g(ctx))
+  USE_LAY_ON_HANDS: (ctx) => {
+    const pool = ctx.classStates.paladin?.layOnHandsPool ?? 0
+    return guards.canLayOnHands(g(ctx))
       ? {
           type: "USE_LAY_ON_HANDS",
           cost: { bonusAction: true, charge: "layOnHands" },
+          amount: { options: Array.from({ length: pool }, (_, i) => i + 1) },
           outcome: {
-            summary: `Restore up to ${ctx.classStates.paladin?.layOnHandsPool ?? 0} HP from the Lay on Hands pool`,
+            summary: `Restore up to ${pool} HP from the Lay on Hands pool`,
           },
         }
-      : null,
+      : null
+  },
 
   USE_PALADIN_CHANNEL_DIVINITY: (ctx) =>
     guards.canPaladinCD(g(ctx))
@@ -391,6 +350,7 @@ const TOKEN_BUILDERS: { [K in PlayerActionType]: (ctx: DndContext) => TokenFor[K
       ? {
           type: "USE_DIVINE_SMITE",
           cost: { bonusAction: true },
+          slotLevel: { options: occupiedSlotLevels(ctx) },
           outcome: { summary: "After a melee hit: expend a spell slot to deal 2d8 radiant + 1d8 per slot level above 1st" },
         }
       : null,
@@ -640,11 +600,14 @@ const TOKEN_BUILDERS: { [K in PlayerActionType]: (ctx: DndContext) => TokenFor[K
         }
       : null,
 
+  // TODO: stub — offers full METAMAGIC_OPTIONS. Needs knownMetamagicOptions in SorcererClassState
+  // to filter to the character's actual known options.
   USE_METAMAGIC: (ctx) =>
     guards.canMetamagic(g(ctx))
       ? {
           type: "USE_METAMAGIC",
           cost: { charge: "sorceryPoints" },
+          option: { options: [...METAMAGIC_OPTIONS] },
           outcome: { summary: "Apply a Metamagic option to a spell" },
         }
       : null,
@@ -753,13 +716,38 @@ const TOKEN_BUILDERS: { [K in PlayerActionType]: (ctx: DndContext) => TokenFor[K
           outcome: { summary: "Expend a Wild Shape charge to regain a 1st-level spell slot" },
         }
       : null,
+} satisfies { [K in EventType]?: (ctx: DndContext) => TokenFor<K> | null }
+
+// --- State topology filter ---
+// Prevents returning tokens the machine would silently drop in the current state.
+
+const ROOT_ACTIONS = new Set(Object.keys(rootEventHandlers))
+const ACTING_ACTIONS = new Set(Object.keys(turnPhaseConfig.states.acting.on))
+const OUT_OF_COMBAT_ACTIONS = new Set(Object.keys(turnPhaseConfig.states.outOfCombat.on))
+const WAITING_ACTIONS = new Set(Object.keys(turnPhaseConfig.states.waitingForTurn.on))
+
+function isAcceptedByMachine(type: string, tags: ReadonlySet<string>): boolean {
+  if (ROOT_ACTIONS.has(type)) return true
+  if (ACTING_ACTIONS.has(type) && tags.has("canAct")) return true
+  if (OUT_OF_COMBAT_ACTIONS.has(type) && tags.has("outOfCombat")) return true
+  if (WAITING_ACTIONS.has(type) && tags.has("inCombat") && !tags.has("canAct")) return true
+  return false
 }
+
+// --- Derived types ---
+
+export type BuilderKey = keyof typeof TOKEN_BUILDERS
+export type ActionToken = { [K in BuilderKey]: NonNullable<ReturnType<(typeof TOKEN_BUILDERS)[K]>> }[BuilderKey]
+
+// Exported for MCP schema generation — the keys of TOKEN_BUILDERS are the exposed action types.
+export const EXPOSED_ACTION_TYPES = Object.keys(TOKEN_BUILDERS) as ReadonlyArray<BuilderKey>
 
 // --- Public API ---
 
-export function getAvailableActions(ctx: DndContext): ActionToken[] {
-  return PLAYER_ACTION_TYPES.flatMap((type) => {
-    const token = (TOKEN_BUILDERS[type] as (ctx: DndContext) => ActionToken | null)(ctx)
+export function getAvailableActions(ctx: DndContext, tags: ReadonlySet<string>): ActionToken[] {
+  return EXPOSED_ACTION_TYPES.flatMap((type) => {
+    if (!isAcceptedByMachine(type, tags)) return []
+    const token = TOKEN_BUILDERS[type](ctx)
     return token !== null ? [token] : []
   })
 }

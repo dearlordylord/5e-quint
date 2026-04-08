@@ -1,6 +1,7 @@
 // Sorcerer class features: Innate Sorcery, Font of Magic (Sorcery Points), Flexible Casting, Metamagic
 // SRD 5.2.1 Sorcerer
 
+import { Schema } from "effect"
 import type { SpellSlots } from "#/types.ts"
 
 // --- Constants ---
@@ -247,6 +248,8 @@ export const METAMAGIC_OPTIONS = [
 ] as const
 
 export type MetamagicOption = (typeof METAMAGIC_OPTIONS)[number]
+
+export const MetamagicOptionSchema = Schema.Literal(...METAMAGIC_OPTIONS)
 
 export const TRANSMUTABLE_DAMAGE_TYPES = ["acid", "cold", "fire", "lightning", "poison", "thunder"] as const
 

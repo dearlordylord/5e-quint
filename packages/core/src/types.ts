@@ -335,19 +335,17 @@ export function abilityModifier(n: number): AbilityModifier {
 }
 export type { AbilityModifier }
 
-const SpellSlotLevel = Schema.Number.pipe(
+export const SpellSlotLevel = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
   Schema.lessThanOrEqualTo(9),
   Schema.brand("SpellSlotLevel")
 )
-type SpellSlotLevel = typeof SpellSlotLevel.Type
+export type SpellSlotLevel = typeof SpellSlotLevel.Type
 export function spellSlotLevel(n: number): SpellSlotLevel {
   const MAX = 9
   return SpellSlotLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))))
 }
-export type { SpellSlotLevel }
-
 const ResourceCount = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0), Schema.brand("ResourceCount"))
 type ResourceCount = typeof ResourceCount.Type
 export function resourceCount(n: number): ResourceCount {
