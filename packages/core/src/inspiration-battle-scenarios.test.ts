@@ -635,4 +635,71 @@ describe("inspiration-sourced battle regressions", () => {
     expect(creature(actor, "A").slotsCurrent[0]).toBe(3)
     expect(creature(actor, "B").paralyzed).toBe(false)
   })
+
+  it("natural_20: a readied attack releases with a reaction and deals damage", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_READY" })
+
+    expect(creature(actor, "A").readiedAction).toBe(true)
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+
+    expect(ctx(actor).readyCtx?.eligibleCreatures.has(CreatureId("A"))).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_READY_RELEASE",
+      releaserId: CreatureId("A"),
+      targetId: CreatureId("B"),
+      atkRoll: 15,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tgtAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").reactionAvailable).toBe(false)
+    expect(creature(actor, "A").readiedAction).toBe(false)
+    expect(creature(actor, "B").hp).toBe(15)
+  })
+
+  it("natural_20: an unreleased readied attack expires at the start of the creature's next turn", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_READY" })
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    send(actor, { type: "BATTLE_READY_PASS" })
+
+    startTurn(actor)
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    send(actor, { type: "BATTLE_READY_PASS" })
+    startTurn(actor)
+
+    expect(creature(actor, "A").readiedAction).toBe(false)
+    expect(creature(actor, "A").reactionAvailable).toBe(true)
+    expect(creature(actor, "B").hp).toBe(20)
+  })
 })

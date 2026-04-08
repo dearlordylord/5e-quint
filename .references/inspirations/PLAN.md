@@ -229,6 +229,17 @@ Why this batch:
 - but `dodging` still has an observable battle-level effect because it disables ally-adjacent Sneak Attack by imposing Disadvantage,
 - and that gives an inspiration-derived turn-boundary proof without adding new battle state.
 
+Batch 10 adds the missing non-spell Ready timing proof:
+
+- `inspiration-battle-scenarios.test.ts` now covers an ordinary readied attack releasing with a Reaction and dealing damage,
+- and confirms that an unreleased readied attack expires at the start of the creature's next turn.
+
+Why this batch:
+
+- the inspiration suite already covered readied spells but not the separate non-spell `BATTLE_READY` / `BATTLE_READY_RELEASE` path,
+- the battle machine already had the ready window and release pipeline,
+- and this closes another deterministic SRD reaction/turn-boundary contract without widening battle state.
+
 ## Verification Already Completed
 
 Focused tests:
@@ -364,6 +375,15 @@ Batch-9 verification completed in this worktree:
   - command: `pnpm --filter @dnd/core typecheck`
   - passed
 
+Batch-10 verification completed in this worktree:
+
+- focused battle regressions:
+  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - passed: 12 tests
+- package typecheck:
+  - command: `pnpm --filter @dnd/core typecheck`
+  - blocked by unrelated `packages/core/src/available-actions.test.ts` brand-type errors already present on local `master`
+
 ## Current Worktree State
 
 This worktree now contains:
@@ -374,6 +394,7 @@ This worktree now contains:
 - disengage/OA timing regressions,
 - explicit reaction-refresh timing regressions,
 - dodge/sneak-attack timing regressions,
+- non-spell ready timing regressions,
 - runtime rider support,
 - spec-level rider generation,
 - MBT coverage for the rider path,
@@ -407,7 +428,7 @@ Why this is next:
 
 - the rider-path cleanup and the small Ready timing batch are now complete,
 - the current blocker for the preferred grapple scenario is still missing relationship state rather than missing tests,
-- the previously suggested Disengage, reaction-refresh, and Dodge timing batches are already covered in this worktree,
+- the previously suggested Disengage, reaction-refresh, Dodge timing, and non-spell Ready timing batches are already covered in this worktree,
 - the remaining value is back in discovering the next missing mechanic interaction that the current battle surface can already express.
 
 Parallel pre-research plan for a later sub-agent pass:
