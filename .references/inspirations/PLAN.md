@@ -218,6 +218,17 @@ Why this batch:
 - the existing inspiration suite only proved the negative side ("no second reaction before next turn"),
 - and this closes the deterministic SRD timing contract without requiring new battle state.
 
+Batch 9 adds the next small Dodge-timing inspiration proof:
+
+- `inspiration-battle-scenarios.test.ts` now covers `Dodge` suppressing ally-adjacent Sneak Attack while the dodging target can still see the attacker,
+- and confirms that the suppression ends at the start of the dodger's next turn.
+
+Why this batch:
+
+- the battle event surface does not expose raw advantage/disadvantage dice directly,
+- but `dodging` still has an observable battle-level effect because it disables ally-adjacent Sneak Attack by imposing Disadvantage,
+- and that gives an inspiration-derived turn-boundary proof without adding new battle state.
+
 ## Verification Already Completed
 
 Focused tests:
@@ -344,6 +355,15 @@ Batch-8 verification completed in this worktree:
   - command: `pnpm --filter @dnd/core typecheck`
   - blocked by unrelated local `packages/core/src/available-actions.ts` errors on `master`
 
+Batch-9 verification completed in this worktree:
+
+- focused battle regressions:
+  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - passed: 10 tests
+- package typecheck:
+  - command: `pnpm --filter @dnd/core typecheck`
+  - passed
+
 ## Current Worktree State
 
 This worktree now contains:
@@ -353,6 +373,7 @@ This worktree now contains:
 - ready-spell timing regressions for release-vs-fizzle behavior,
 - disengage/OA timing regressions,
 - explicit reaction-refresh timing regressions,
+- dodge/sneak-attack timing regressions,
 - runtime rider support,
 - spec-level rider generation,
 - MBT coverage for the rider path,
@@ -379,14 +400,14 @@ Scope:
 - coordinate with active parallel branches before picking grapple/forced-movement work,
 - favor one of these:
   - grappler incapacitation auto-releases target, but only after battle-layer grappler identity/link state lands on `master`,
-  - Dodge attack-disadvantage timing through the existing `dodging` state, if an inspiration-level battle regression still adds value beyond the existing lower-level coverage,
-  - or another deterministic scenario-mining batch from `natural_20` that does not require new battle state.
+  - another deterministic scenario-mining batch from `natural_20` that does not require new battle state,
+  - or Option B direct creature-level ownership tests if another inspiration scenario does not add enough value yet.
 
 Why this is next:
 
 - the rider-path cleanup and the small Ready timing batch are now complete,
 - the current blocker for the preferred grapple scenario is still missing relationship state rather than missing tests,
-- the previously suggested Disengage and reaction-refresh batches are already covered in this worktree,
+- the previously suggested Disengage, reaction-refresh, and Dodge timing batches are already covered in this worktree,
 - the remaining value is back in discovering the next missing mechanic interaction that the current battle surface can already express.
 
 Parallel pre-research plan for a later sub-agent pass:
@@ -425,7 +446,7 @@ If this work is resumed with subagents, they can scout these in parallel before 
 
 Status:
 
-- still available, but lower-level battle/machine tests already cover the core `targetDodging` aggregation and turn-start reset behavior.
+- completed in this worktree as Batch 9 via a battle-level Sneak Attack suppression proof.
 
 Why it is small:
 

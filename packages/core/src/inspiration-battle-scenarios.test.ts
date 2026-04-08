@@ -70,6 +70,20 @@ function initTwoCasterBattle() {
   return actor
 }
 
+function initSneakAttackBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", rogueLevel: 5, sneakAttackDice: 3, initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 }
+    ]
+  })
+  return actor
+}
+
 function startTurn(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT })
 }
@@ -307,6 +321,92 @@ describe("inspiration-sourced battle regressions", () => {
 
     expect(ctx(actor).movementCtx).not.toBeNull()
     expect(ctx(actor).movementCtx?.threatenedBy.has(CreatureId("B"))).toBe(true)
+  })
+
+  it("natural_20: Dodge suppresses ally-adjacent Sneak Attack until the start of the dodger's next turn", () => {
+    const actor = initSneakAttackBattle()
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_DODGE" })
+
+    expect(creature(actor, "B").dodging).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isFinesse: true,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 6
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "B").hp).toBe(16)
+    expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(false)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "B").dodging).toBe(false)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isFinesse: true,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 6
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "B").hp).toBe(6)
+    expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(true)
   })
 
   it("natural_20: Shocking Grasp blocks opportunity attacks until the start of the target's next turn", () => {
