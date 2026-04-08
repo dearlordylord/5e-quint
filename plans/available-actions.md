@@ -78,6 +78,98 @@ Items discovered during implementation that need resolution before Phase 1 is co
 - **Manual-debugging caveat**:
   - The default MCP demo actor is still the damaged Fighter 5 used for Second Wind inspection. It does not naturally expose Heroic Inspiration or Metamagic. If manual stdio inspection is needed for those actions, use a dedicated test fixture or extend the harness/demo actor intentionally rather than inferring missing state from the default demo run.
 
+**Next orchestrator batch: broaden `execute_action` coverage in parallel, but keep one owner for the shared contract seam**.
+
+- **Why this batch is parallelizable at all**:
+  - The remaining work splits into three structural families:
+    - dice-roll runtime-input actions
+    - hole pass-through actions
+    - battle-context boolean/result actions
+  - Each family has repeated shape and repeated test needs.
+- **Why it is not fully parallel**:
+  - `packages/core/src/available-actions.ts` is still the single supported-action registry and resolved-token schema source.
+  - `packages/core/src/machine-guards.ts` is still the shared query-time legality seam.
+  - `packages/mcp/src/server.ts` is still the shared runtime-input builder / tool execution seam.
+  - Those files need one orchestrator owner, or multiple workers will trip over each other.
+- **Recommended ownership split for a multi-agent orchestrator**:
+  - **Orchestrator/main owner**:
+    - owns `packages/core/src/available-actions.ts`
+    - owns `packages/core/src/machine-guards.ts`
+    - owns `packages/mcp/src/server.ts`
+    - owns final integration, final tests, and plan updates
+  - **Worker A: dice-roll runtime-input family**
+    - target actions:
+      - `USE_TIRELESS`
+      - `WHOLENESS_OF_BODY`
+      - `UNCANNY_METABOLISM`
+    - primary files:
+      - `packages/core/src/available-actions.test.ts`
+      - `packages/mcp/src/server.test.ts`
+      - action-specific source/context reading in `machine.ts`, `machine-states.ts`, and class feature modules
+    - contract to implement:
+      - zero-hole resolved token
+      - runtime input supplied by MCP (`d8Roll` or `healRoll`)
+      - direct final `DndEvent`
+  - **Worker B: hole pass-through family**
+    - target actions:
+      - `CONVERT_SLOT_TO_POINTS`
+      - `CONVERT_POINTS_TO_SLOT`
+      - `USE_ARCANE_RECOVERY`
+      - `USE_MYSTIC_ARCANUM`
+      - `USE_FONT_SLOT_RESTORE`
+      - `USE_WILD_RESURGENCE_CHARGE`
+      - `USE_DIVINE_SMITE`
+      - `USE_LAY_ON_HANDS`
+    - primary files:
+      - focused tests first
+      - source/context reading in `machine.ts`, `machine-states.ts`, and feature modules
+    - contract to implement:
+      - hole-bearing token filtered to currently legal numeric/domain choices
+      - resolved token passes the chosen value directly through
+      - runtime inputs remain `none`
+  - **Worker C: battle-context result family**
+    - target actions:
+      - `USE_RELENTLESS_RAGE`
+      - `USE_TACTICAL_MIND`
+      - `USE_PEERLESS_SKILL`
+    - primary files:
+      - focused tests first
+      - source/context reading in `machine.ts`, `machine-states.ts`, feature modules, and MBT bridge paths if semantics need checking
+    - contract to implement:
+      - user-facing resolved token is likely zero-hole or simple-hole
+      - MCP/runtime supplies the battle-result boolean if that boolean is treated as engine-only in the current model
+      - if the boolean is actually a user-facing choice in current semantics, document that explicitly before wiring it
+- **Important coordination rule for the orchestrator**:
+  - workers should not all edit `available-actions.ts` or `server.ts` directly
+  - workers should return:
+    - exact token shape needed
+    - runtime-input shape needed
+    - legality/filtering requirements
+    - focused tests or test cases
+  - then the orchestrator integrates those results into the shared registry/MCP seam
+- **Current action-family context**:
+  - **Dice-roll family** already has direct machine events with numeric payloads:
+    - `USE_TIRELESS` uses `d8Roll`
+    - `WHOLENESS_OF_BODY` uses `healRoll`
+    - `UNCANNY_METABOLISM` uses `healRoll`
+  - **Hole pass-through family** already has direct machine events with scalar payloads:
+    - `slotLevel`, `spellLevel`, or `amount`
+  - **Battle-context family** already has direct machine events with boolean payloads:
+    - `conSaveSucceeded`
+    - `boostedCheckSucceeds`
+    - `success`
+  - `SHORT_REST` is intentionally separate and should stay out of the first orchestrated parallel batch because it has a compound payload (`conMod`, `hdRolls`) and is a larger design surface than the other remaining items.
+- **Recommended implementation order for the orchestrator**:
+  1. integrate the dice-roll family first
+  2. integrate the hole pass-through family second
+  3. integrate the battle-context family third
+  4. leave `SHORT_REST` for its own dedicated batch afterward
+- **Verification expectations for the orchestrator batch**:
+  - focused core tests for each action family
+  - MCP tests for at least one representative action per family
+  - manual stdio harness inspection for one representative action per family if practical
+  - MBT only if the batch changes Quint-visible semantics rather than just exposing already-owned machine behavior
+
 **`knownMetamagicOptions` in `SorcererClassState`**: the authoritative-state and legality parts are now implemented. Remaining work is only the available-actions hole filtering when `USE_METAMAGIC` is added to the supported executable surface.
 
 - **SRD basis**: Sorcerers choose 2 Metamagic options at level 2, gain 2 more at level 10, and 2 more at level 17. Whenever they gain a Sorcerer level, they can replace one Metamagic option with one they do not know. That means the actual known subset is character-specific and cannot be derived from level alone; level only determines the allowed count (`2`, `4`, `6`).
