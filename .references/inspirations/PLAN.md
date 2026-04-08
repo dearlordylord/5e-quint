@@ -453,8 +453,8 @@ Scope:
 - prefer scenarios already identified in the inspiration scenario inventory,
 - coordinate with active parallel branches before picking grapple/forced-movement work,
 - favor one of these:
-  - another deterministic scenario-mining batch from `natural_20` that does not require new battle state,
   - explicit battle coverage for manual grapple release / escape if you want the remaining grapple lifecycle edges proved in inspiration form,
+  - another deterministic scenario-mining batch from `natural_20` that does not require new battle state,
   - or another deterministic scenario-mining batch from `natural_20` if grapple now feels sufficiently covered.
 
 Why this is next:
@@ -462,14 +462,15 @@ Why this is next:
 - the rider-path cleanup and the small Ready timing batch are now complete,
 - the former grapple architecture blocker is now cleared in this worktree,
 - the previously suggested Disengage, reaction-refresh, Dodge timing, and non-spell Ready timing batches are already covered in this worktree,
+- manual grapple release / escape is now a genuinely small deterministic follow-up because the battle/runtime/spec surface already exists,
 - the remaining value is back in discovering the next missing mechanic interaction that the current battle surface can already express.
 
 Parallel pre-research plan for a later sub-agent pass:
 
 - one sub-agent should scout 2-3 deterministic inspiration candidates that fit the current battle/runtime surface without adding new battle state,
-- one sub-agent should re-check whether battle-layer grappler identity/link state has landed on `master`, since that is the gating factor for the preferred grappler auto-release batch,
+- one sub-agent can prepare the explicit grapple release / escape proofs since the underlying architecture is now in place,
 - one sub-agent may take the weaker Option B hardening track and prepare direct creature-level ownership tests for `expiryOwnerId` and `speedDeltaFeet`,
-- the main thread should only start implementation after the scout results and grapple-readiness check agree on the smallest safe batch.
+- the main thread should only start implementation after the scout results agree on the smallest safe batch.
 
 ### Option B: Add Direct Creature-Level Ownership Tests
 
@@ -645,6 +646,85 @@ What remains if grapple work resumes:
 
 - add an explicit inspiration proof for manual release / escape if that lifecycle edge still matters,
 - or expand to movement-out-of-reach release once battle spatial ownership is modeled beyond caller-supplied threatened sets.
+
+### Design Handoff: Manual Grapple Release / Escape Inspiration Batch
+
+Status:
+
+- not implemented yet
+- recommended next small deterministic batch if you want to finish the grapple slice cleanly
+
+Goal:
+
+- add explicit inspiration battle regressions for the remaining grapple lifecycle edges already supported by the runtime/spec:
+  - voluntary release by the grappler
+  - successful escape by the grappled creature
+  - failed escape leaving the grapple intact
+
+Why this is small now:
+
+- [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts) already has `battleReleaseGrapple` and `battleEscapeGrapple`
+- [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts) already clears both sides of the link and refreshes speed
+- [battle.qnt](../../battle.qnt) already has matching `bReleaseGrapple` and `bEscapeGrapple`
+- this should be test-first in [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts), with little or no production code change unless the tests expose a real semantic gap
+
+RAW anchors:
+
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Grappled [Condition]`
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Grappling`
+- key text:
+  - "The grappler can release the target at any time (no action required)."
+  - "As an action, the grappled creature can make a Dexterity or Strength saving throw ... ending the condition on itself on a success."
+
+Suggested regression set:
+
+1. Voluntary release clears both sides immediately.
+   - active grappler uses `BATTLE_RELEASE_GRAPPLE`
+   - expect grappler `grapplingTarget == null`
+   - expect target `grappled == false` and `grappledBy == null`
+   - expect no action/reaction cost was spent by the release itself
+2. Successful escape spends the target's action and clears the grapple.
+   - grappler establishes the link first
+   - on the target's turn, send `BATTLE_ESCAPE_GRAPPLE { escapeSucceeded: true }`
+   - expect target action spent
+   - expect both sides of the relationship cleared
+3. Failed escape spends the target's action but leaves the grapple intact.
+   - same setup as above
+   - send `BATTLE_ESCAPE_GRAPPLE { escapeSucceeded: false }`
+   - expect target action spent
+   - expect target still grappled and grappler link still present
+
+Nice-to-have assertion:
+
+- after successful release or escape, the formerly grappled creature's next `effectiveSpeed` / `movementRemaining` reflects the cleared grapple state if it is the active creature
+
+Likely files:
+
+- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts)
+- [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts)
+- [battle.qnt](../../battle.qnt) only if tests expose a parity gap
+
+Recommended implementation order:
+
+1. add the three deterministic regressions in [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+2. run the focused battle test file
+3. only touch TS/Quint code if one of the new regressions fails
+4. if code changes are needed, keep spec/runtime in lockstep and re-run Tier 1 battle MBT
+
+Expected verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
+- if code changed beyond tests:
+  - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
+  - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts`
+
+Cold-start recommendation:
+
+- start with the existing grapple helper fixture in [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- do not reopen the architecture problem unless the regressions prove a mismatch
+- treat this as a small closure batch on top of Batch 12, not a new design task
 
 ## If You Continue This Work Next Time
 
