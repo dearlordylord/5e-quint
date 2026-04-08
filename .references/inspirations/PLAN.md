@@ -87,7 +87,7 @@ Why these first:
 
 File:
 
-- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 
 Added battle regressions for:
 
@@ -117,7 +117,7 @@ Reason for deferral:
 
 Files:
 
-- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 - [types.ts](../../packages/core/src/types.ts)
 - [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
 - [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts)
@@ -186,7 +186,7 @@ Current conclusion:
 
 Batch 6 added the next small deterministic inspiration batch without widening battle state:
 
-- `inspiration-battle-scenarios.test.ts` now covers readied-spell timing through the existing battle ready/reaction pipeline,
+- `battle-rules-scenarios.test.ts` now covers readied-spell timing through the existing battle ready/reaction pipeline,
 - a readied spell can be released with a Reaction and apply its effect,
 - an unreleased readied spell dissipates at the start of the caster's next turn while still consuming the slot spent at ready time.
 
@@ -198,7 +198,7 @@ Why this batch:
 
 Batch 7 added the next smallest deterministic battle regression batch after Ready timing:
 
-- `inspiration-battle-scenarios.test.ts` now covers `Disengage` suppressing Opportunity Attacks for the rest of the current turn,
+- `battle-rules-scenarios.test.ts` now covers `Disengage` suppressing Opportunity Attacks for the rest of the current turn,
 - and confirms that the suppression ends when the mover's next turn starts.
 
 Why this batch:
@@ -209,7 +209,7 @@ Why this batch:
 
 Batch 8 adds the explicit positive reaction-refresh boundary:
 
-- `inspiration-battle-scenarios.test.ts` now proves that a spent Reaction refreshes at the start of that creature's next turn,
+- `battle-rules-scenarios.test.ts` now proves that a spent Reaction refreshes at the start of that creature's next turn,
 - and that the refreshed Reaction can immediately participate in a later Opportunity Attack window.
 
 Why this batch:
@@ -220,7 +220,7 @@ Why this batch:
 
 Batch 9 adds the next small Dodge-timing inspiration proof:
 
-- `inspiration-battle-scenarios.test.ts` now covers `Dodge` suppressing ally-adjacent Sneak Attack while the dodging target can still see the attacker,
+- `battle-rules-scenarios.test.ts` now covers `Dodge` suppressing ally-adjacent Sneak Attack while the dodging target can still see the attacker,
 - and confirms that the suppression ends at the start of the dodger's next turn.
 
 Why this batch:
@@ -231,7 +231,7 @@ Why this batch:
 
 Batch 10 adds the missing non-spell Ready timing proof:
 
-- `inspiration-battle-scenarios.test.ts` now covers an ordinary readied attack releasing with a Reaction and dealing damage,
+- `battle-rules-scenarios.test.ts` now covers an ordinary readied attack releasing with a Reaction and dealing damage,
 - and confirms that an unreleased readied attack expires at the start of the creature's next turn.
 
 Why this batch:
@@ -245,8 +245,8 @@ Why this batch:
 Focused tests:
 
 - `pnpm exec vitest run src/inspiration-scenarios.test.ts`
-- `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
-- `pnpm exec vitest run src/inspiration-scenarios.test.ts src/inspiration-battle-scenarios.test.ts`
+- `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
+- `pnpm exec vitest run src/inspiration-scenarios.test.ts src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 - `pnpm exec quint test --match "test_grapple|test_death_save_|test_take_damage_resist_vuln_sequential" dndTest.qnt`
 
@@ -273,10 +273,10 @@ Earlier batch-1 verification in this worktree also passed:
 Batch-3 verification completed in this worktree:
 
 - focused battle regressions:
-  - `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
   - passed: 4 tests
 - focused combined inspiration suite:
-  - `pnpm exec vitest run src/inspiration-scenarios.test.ts src/inspiration-battle-scenarios.test.ts`
+  - `pnpm exec vitest run src/inspiration-scenarios.test.ts src/battle-rules-scenarios.test.ts`
   - passed: 15 tests
 - typecheck:
   - `pnpm --filter @dnd/core typecheck`
@@ -296,7 +296,7 @@ Batch-4 verification completed in this worktree:
   - command: `pnpm exec quint typecheck battle.qnt`
   - passed
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
   - passed: 4 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -317,7 +317,7 @@ Batch-4 verification completed in this worktree:
 Batch-5 verification completed in this worktree:
 
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
   - passed: 4 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -334,7 +334,7 @@ Batch-5 verification completed in this worktree:
 Batch-6 verification completed in this worktree:
 
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
   - passed: 6 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -351,7 +351,7 @@ Batch-6 verification completed in this worktree:
 Batch-7 verification completed in this worktree:
 
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
   - passed: 8 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -360,7 +360,7 @@ Batch-7 verification completed in this worktree:
 Batch-8 verification completed in this worktree:
 
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
   - passed: 9 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -369,7 +369,7 @@ Batch-8 verification completed in this worktree:
 Batch-9 verification completed in this worktree:
 
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
   - passed: 10 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -378,7 +378,7 @@ Batch-9 verification completed in this worktree:
 Batch-10 verification completed in this worktree:
 
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
   - passed: 12 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -399,7 +399,7 @@ Batch-11 verification completed in this worktree:
 Batch-12 verification completed in this worktree:
 
 - focused battle regressions:
-  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - command: `pnpm exec vitest run src/battle-rules-scenarios.test.ts`
   - passed: 15 tests
 - package typecheck:
   - command: `pnpm --filter @dnd/core typecheck`
@@ -522,7 +522,7 @@ Why it is small:
 
 Likely files:
 
-- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 - [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts)
 - [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
 
@@ -546,7 +546,7 @@ Why it was small:
 
 Likely files:
 
-- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 - [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts)
 - [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
 
@@ -571,7 +571,7 @@ Why it was small:
 
 Likely files:
 
-- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 - [battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
 - [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
 
@@ -626,7 +626,7 @@ What Batch 12 changed:
    - [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts) now projects `attackerGrappled` and `targetIsGrappler`
    - [battle.qnt](../../battle.qnt) now uses relationship-aware attack-context projection and drag-speed calculation
 4. Added deterministic battle regressions and parity verification.
-   - [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves auto-release on incapacitation, the grappler attack-disadvantage exception, and the drag-speed penalty
+   - [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves auto-release on incapacitation, the grappler attack-disadvantage exception, and the drag-speed penalty
    - both Tier 1 battle MBT checks passed against the updated spec/runtime pair
 
 Files likely involved:
@@ -638,7 +638,7 @@ Files likely involved:
 - [packages/core/src/battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts)
 - [packages/core/src/battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
 - [packages/core/src/battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
-- [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 - [packages/core/src/battle-machine.mbt.test.ts](../../packages/core/src/battle-machine.mbt.test.ts)
 - [packages/core/src/battle-projection.mbt.test.ts](../../packages/core/src/battle-projection.mbt.test.ts)
 
@@ -666,7 +666,7 @@ Why this is small now:
 - [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts) already has `battleReleaseGrapple` and `battleEscapeGrapple`
 - [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts) already clears both sides of the link and refreshes speed
 - [battle.qnt](../../battle.qnt) already has matching `bReleaseGrapple` and `bEscapeGrapple`
-- this should be test-first in [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts), with little or no production code change unless the tests expose a real semantic gap
+- this should be test-first in [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts), with little or no production code change unless the tests expose a real semantic gap
 
 RAW anchors:
 
@@ -700,21 +700,21 @@ Nice-to-have assertion:
 
 Likely files:
 
-- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 - [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts)
 - [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts)
 - [battle.qnt](../../battle.qnt) only if tests expose a parity gap
 
 Recommended implementation order:
 
-1. add the three deterministic regressions in [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+1. add the three deterministic regressions in [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 2. run the focused battle test file
 3. only touch TS/Quint code if one of the new regressions fails
 4. if code changes are needed, keep spec/runtime in lockstep and re-run Tier 1 battle MBT
 
 Expected verification:
 
-- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 - if code changed beyond tests:
   - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
@@ -722,7 +722,7 @@ Expected verification:
 
 Cold-start recommendation:
 
-- start with the existing grapple helper fixture in [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- start with the existing grapple helper fixture in [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 - do not reopen the architecture problem unless the regressions prove a mismatch
 - treat this as a small closure batch on top of Batch 12, not a new design task
 
@@ -741,28 +741,66 @@ Batch 13 result:
 
 Files touched:
 
-- [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 
 Verification:
 
-- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 
 What is next now:
 
+- legendary-action battle coverage is now in inspiration form, so do not re-pick that batch
+- `Counterspell` battle coverage is now in inspiration form, so do not re-pick that batch
 - `BATTLE_HEAL` battle coverage is now in inspiration form, so do not re-pick that batch
 - `BATTLE_CAST_AOE` battle coverage is now in inspiration form, so do not re-pick that batch
 - concentration lifecycle battle coverage is now in inspiration form, so do not re-pick that batch
 - `Rage` / `Reckless Attack` battle coverage is now in inspiration form, so do not re-pick that batch
 - `Action Surge` battle coverage is now in inspiration form, so do not re-pick it as the next batch
 - the `Ray of Frost` + `Dash` follow-up is now covered in inspiration form, so do not re-pick it as the next batch
-- scout the next small deterministic inspiration batch outside grapple and outside the already-covered `Ray of Frost`/`Dash` interaction
-- if you resume in a fresh session, start from this file and [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts), then pick the next `natural_20`-style scenario that fits current battle state without reopening architecture
+- scout the next small deterministic batch outside grapple and outside the already-covered `Ray of Frost`/`Dash` interaction
+- if you resume in a fresh session, start from this file and [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts), then pick the next `natural_20`-style scenario that fits current battle state without reopening architecture
+
+Batch 21 result:
+
+1. Renamed the battle regression suite to domain language.
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) replaces the old `inspiration-battle-scenarios.test.ts` name
+   - [PLAN.md](./PLAN.md) now points its file references and verification commands at the renamed suite
+2. Added explicit battle coverage for legendary-action timing.
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves:
+     - ending a turn enters the legendary-action window when an eligible monster has legendary actions remaining,
+     - `BATTLE_LEGENDARY_PASS` advances to the next turn,
+     - `BATTLE_LEGENDARY_ATTACK` spends one legendary action, deals damage, and returns to the legendary-action window
+3. Confirmed the existing implementation already matched current battle semantics.
+   - no production TS or Quint changes were required
+   - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
+
+Batch 20 result:
+
+1. Added explicit battle coverage for `Counterspell` on `BATTLE_CAST_SAVE_SPELL`.
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves:
+     - a successful `Counterspell` fizzles the original spell,
+     - the original caster still spends the action but preserves the original spell slot,
+     - a failed `Counterspell` still spends the reactor's slot/reaction and allows the spell to resolve,
+     - no eligible reactor means the spell resolves immediately
+2. Confirmed the existing implementation already matched RAW and current battle semantics.
+   - no production TS or Quint changes were required
+   - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
 
 Batch 19 result:
 
 1. Added explicit battle coverage for `BATTLE_HEAL`.
-   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves:
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves:
      - healing restores HP and spends the caster's action,
      - healing is capped at the target's max HP,
      - healing a 0 HP target revives it and clears the unconscious/death-save state
@@ -772,13 +810,13 @@ Batch 19 result:
 
 Verification:
 
-- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 
 Batch 18 result:
 
 1. Added explicit battle coverage for `BATTLE_CAST_AOE`.
-   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves:
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves:
      - one target can fail while another succeeds for the same AoE,
      - half-on-save damage is applied correctly,
      - Dexterity-save AoE interacts correctly with Evasion
@@ -788,13 +826,13 @@ Batch 18 result:
 
 Verification:
 
-- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 
 Batch 17 result:
 
 1. Added explicit battle coverage for concentration lifecycle.
-   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves:
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves:
      - failing a concentration check ends the spell's effect on the target,
      - starting a new concentration spell ends the previous one
 2. Confirmed the existing implementation already matched RAW.
@@ -803,26 +841,26 @@ Batch 17 result:
 
 Verification:
 
-- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 
 Batch 14 result:
 
 1. Added explicit battle coverage that `Dash` uses modified Speed, not base Speed.
-   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves a `Ray of Frost`-slowed creature gains only 20 extra feet from `BATTLE_DASH`, reaching 40 movement rather than 60
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves a `Ray of Frost`-slowed creature gains only 20 extra feet from `BATTLE_DASH`, reaching 40 movement rather than 60
 2. Confirmed the existing implementation already matched RAW.
    - no production TS or Quint changes were required
    - the batch stayed test-only
 
 Verification:
 
-- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 
 Batch 16 result:
 
 1. Added explicit battle coverage for Barbarian `Rage`.
-   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves:
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves:
      - entering Rage grants physical damage resistance and the expected melee damage bonus,
      - Rage blocks spellcasting while active
 2. Added explicit battle coverage for Barbarian `Reckless Attack`.
@@ -834,13 +872,13 @@ Batch 16 result:
 
 Verification:
 
-- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 
 Batch 15 result:
 
 1. Added explicit battle coverage for Fighter `Action Surge`.
-   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves:
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves:
      - a Fighter can take one additional non-Magic action on the same turn,
      - a level-17 Fighter still cannot use `Action Surge` twice on the same turn,
      - the surge-granted action cannot be the Magic action
@@ -850,7 +888,7 @@ Batch 15 result:
 
 Verification:
 
-- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 
 ## If You Continue This Work Next Time
@@ -860,7 +898,7 @@ Start here:
 1. read this file,
 2. read [ARCHITECTURE.md](../../ARCHITECTURE.md),
 3. read [battle/DOMAIN.md](../../battle/DOMAIN.md),
-4. inspect [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts),
+4. inspect [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts),
 5. choose `Option A` unless there is a reason to avoid another inspiration scenario batch.
 
 If choosing `Option A`, inspect these implementation anchors before editing:
@@ -872,7 +910,7 @@ If choosing `Option A`, inspect these implementation anchors before editing:
 - [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts)
 - [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
 - [battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
-- [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts)
 - [battle-machine.mbt.test.ts](../../packages/core/src/battle-machine.mbt.test.ts)
 - [battle-projection.mbt.test.ts](../../packages/core/src/battle-projection.mbt.test.ts)
 

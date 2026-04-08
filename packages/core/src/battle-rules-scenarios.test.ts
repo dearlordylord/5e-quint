@@ -84,6 +84,34 @@ function initThreeCasterBattle() {
   return actor
 }
 
+function initCounterspellBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]), initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["counterspell"]), initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 }
+    ]
+  })
+  return actor
+}
+
+function initLegendaryBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("C"), maxHp: 30, kind: "Monster", legendaryActions: 3, initiativeRoll: 10 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 5 }
+    ]
+  })
+  return actor
+}
+
 function initHealBattle() {
   const actor = createActor(battleMachine)
   actor.start()
@@ -270,7 +298,18 @@ function resolveAoEWindows(actor: ReturnType<typeof createActor<typeof battleMac
   }
 }
 
-describe("inspiration-sourced battle regressions", () => {
+function passSpellCastWindow(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
+  if (ctx(actor).awaitCtx?.interrupt.tag === "PISpellCast") {
+    send(actor, {
+      type: "BATTLE_RESOLVE_COUNTERSPELL",
+      reactorId: null,
+      decision: { tag: "RPass" },
+      csSlotLvl: spellSlotLevel(3)
+    })
+  }
+}
+
+describe("battle rules scenario regressions", () => {
   it("natural_20: Shield negates the triggering hit and spends the reaction", () => {
     const actor = initTwoPcBattle()
     startTurn(actor)
@@ -305,6 +344,161 @@ describe("inspiration-sourced battle regressions", () => {
     expect(ctx(actor).awaitCtx).toBeNull()
     expect(creature(actor, "B").hp).toBe(20)
     expect(creature(actor, "B").reactionAvailable).toBe(false)
+  })
+
+  it("natural_20: Counterspell fizzles the spell, wastes the action, and preserves the original slot", () => {
+    const actor = initCounterspellBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("C"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person",
+      ritual: false
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PISpellCast")
+    expect(ctx(actor).awaitCtx?.eligible).toEqual(new Set([CreatureId("B")]))
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_COUNTERSPELL",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RCounterspell", saveSucceeded: false },
+      csSlotLvl: spellSlotLevel(3)
+    })
+    passSpellCastWindow(actor)
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+    expect(creature(actor, "A").slotsCurrent[0]).toBe(4)
+    expect(creature(actor, "B").reactionAvailable).toBe(false)
+    expect(creature(actor, "B").slotsCurrent[2]).toBe(1)
+    expect(creature(actor, "C").paralyzed).toBe(false)
+  })
+
+  it("natural_20: a passed Counterspell Constitution save lets the original spell resolve", () => {
+    const actor = initCounterspellBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("C"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person",
+      ritual: false
+    })
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_COUNTERSPELL",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RCounterspell", saveSucceeded: true },
+      csSlotLvl: spellSlotLevel(3)
+    })
+    passSpellCastWindow(actor)
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+    expect(creature(actor, "A").slotsCurrent[0]).toBe(3)
+    expect(creature(actor, "B").reactionAvailable).toBe(false)
+    expect(creature(actor, "B").slotsCurrent[2]).toBe(1)
+    expect(creature(actor, "C").paralyzed).toBe(true)
+  })
+
+  it("natural_20: a save spell resolves immediately when no Counterspell reactor is eligible", () => {
+    const actor = initTwoCasterBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person",
+      ritual: false
+    })
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+    expect(creature(actor, "A").slotsCurrent[0]).toBe(3)
+    expect(creature(actor, "B").paralyzed).toBe(true)
+  })
+
+  it("natural_20: ending a turn enters the legendary window and pass advances to the next turn", () => {
+    const actor = initLegendaryBattle()
+    startTurn(actor)
+
+    endTurn(actor)
+
+    expect(ctx(actor).laCtx?.eligibleMonsters).toEqual(new Set([CreatureId("C")]))
+    expect(ctx(actor).laCtx?.endingTurnIndex).toBe(0)
+
+    send(actor, { type: "BATTLE_LEGENDARY_PASS" })
+
+    expect(ctx(actor).laCtx).toBeNull()
+    expect(ctx(actor).turnStarted).toBe(false)
+    expect(ctx(actor).turnIndex).toBe(1)
+  })
+
+  it("natural_20: a legendary attack spends one legendary action and then returns to the legendary window", () => {
+    const actor = initLegendaryBattle()
+    startTurn(actor)
+
+    endTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_LEGENDARY_ATTACK",
+      monsterId: CreatureId("C"),
+      laTarget: CreatureId("A"),
+      laAtkRoll: 15,
+      laDmg: 7,
+      laDt: "slashing",
+      laCrit: false,
+      laTgtAc: armorClass(10),
+      knockOut: false,
+      isMelee: true,
+      isFinesse: false,
+      attackerWithin5ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 0
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").hp).toBe(13)
+    expect(creature(actor, "C").legendaryActionsRemaining).toBe(2)
+    expect(ctx(actor).laCtx?.eligibleMonsters).toEqual(new Set([CreatureId("C")]))
+
+    send(actor, { type: "BATTLE_LEGENDARY_PASS" })
+
+    expect(ctx(actor).laCtx).toBeNull()
+    expect(ctx(actor).turnIndex).toBe(1)
   })
 
   it("opencombatengine: an opportunity attack spends the reaction and prevents a second OA before next turn", () => {
