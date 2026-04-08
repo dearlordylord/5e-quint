@@ -34,6 +34,7 @@ import {
   saveMods
 } from "#/machine-queries.ts"
 import { calculateMulticlassSlots, concentrationDC, expendSlot, slotsPerLevel } from "#/machine-spells.ts"
+import type { DndMachineInput } from "#/machine-types.ts"
 import type { ActionType, ArmorState, AttackContext, Condition, DamageType } from "#/types.ts"
 import {
   abilityModifier,
@@ -1042,6 +1043,103 @@ describe("turn lifecycle - START_TURN", () => {
 
     expect(ctx(a).blinded).toBe(false)
     expect(ctx(a).activeEffects.some((effect) => effect.spellId === mkSpellId("blindness"))).toBe(false)
+  })
+
+  it("START_TURN only advances start-owned effects whose expiryOwnerId matches selfId", () => {
+    const a = createWithInput({ maxHp: DEFAULT_MAX_HP, selfId: CreatureId("self") })
+    takeDamage(a, 5)
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("owned_regeneration"),
+      durationTurns: 2,
+      expiresAt: "start",
+      casterId: CreatureId("ally"),
+      expiryOwnerId: CreatureId("self"),
+      startOfTurnHook: {
+        healAmount: 3,
+      }
+    })
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("foreign_regeneration"),
+      durationTurns: 2,
+      expiresAt: "start",
+      casterId: CreatureId("ally"),
+      expiryOwnerId: CreatureId("other"),
+      startOfTurnHook: {
+        healAmount: 7,
+      }
+    })
+
+    startTurn(a)
+
+    expect(ctx(a).hp).toBe(DEFAULT_MAX_HP - 2)
+    expect(ctx(a).activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          spellId: mkSpellId("owned_regeneration"),
+          turnsRemaining: 1,
+          expiryOwnerId: CreatureId("self")
+        }),
+        expect.objectContaining({
+          spellId: mkSpellId("foreign_regeneration"),
+          turnsRemaining: 2,
+          expiryOwnerId: CreatureId("other")
+        })
+      ])
+    )
+  })
+
+  it("START_TURN applies speedDeltaFeet to effectiveSpeed", () => {
+    const a = createWithInput({ maxHp: DEFAULT_MAX_HP, selfId: CreatureId("self"), baseWalkSpeed: 30 })
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("slow_ray"),
+      durationTurns: 2,
+      expiresAt: "start",
+      casterId: CreatureId("ally"),
+      expiryOwnerId: CreatureId("ally"),
+      speedDeltaFeet: -10
+    })
+
+    startTurn(a)
+
+    expect(ctx(a).effectiveSpeed).toBe(20)
+    expect(ctx(a).movementRemaining).toBe(20)
+  })
+
+  it("END_TURN hooks ignore foreign-owned effects", () => {
+    const a = createWithInput({ maxHp: DEFAULT_MAX_HP, selfId: CreatureId("self") })
+    startTurn(a)
+    applyCondition(a, "blinded")
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("foreign_blindness"),
+      durationTurns: 1,
+      expiresAt: "end",
+      casterId: CreatureId("ally"),
+      expiryOwnerId: CreatureId("other"),
+      endOfTurnHook: {
+        removeOnSaveSuccess: true,
+        conditionsToRemove: ["blinded"],
+      }
+    })
+
+    a.send({
+      type: "END_TURN",
+      effectResolutions: [{ spellId: mkSpellId("foreign_blindness"), saveSucceeded: true }]
+    })
+
+    expect(ctx(a).blinded).toBe(true)
+    expect(ctx(a).activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          spellId: mkSpellId("foreign_blindness"),
+          turnsRemaining: 1,
+          expiryOwnerId: CreatureId("other")
+        })
+      ])
+    )
   })
 })
 

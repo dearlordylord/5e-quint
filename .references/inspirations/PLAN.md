@@ -384,6 +384,18 @@ Batch-10 verification completed in this worktree:
   - command: `pnpm --filter @dnd/core typecheck`
   - blocked by unrelated `packages/core/src/available-actions.test.ts` brand-type errors already present on local `master`
 
+Batch-11 verification completed in this worktree:
+
+- focused creature-machine ownership hardening:
+  - command: `pnpm exec vitest run src/machine.test.ts`
+  - passed: 280 tests
+- focused available-actions fixture check:
+  - command: `pnpm exec vitest run src/available-actions.test.ts`
+  - passed: 8 tests
+- package typecheck:
+  - command: `pnpm --filter @dnd/core typecheck`
+  - passed
+
 ## Current Worktree State
 
 This worktree now contains:
@@ -395,6 +407,7 @@ This worktree now contains:
 - explicit reaction-refresh timing regressions,
 - dodge/sneak-attack timing regressions,
 - non-spell ready timing regressions,
+- direct creature-level ownership/speedDelta hardening tests,
 - runtime rider support,
 - spec-level rider generation,
 - MBT coverage for the rider path,
@@ -442,6 +455,10 @@ Parallel pre-research plan for a later sub-agent pass:
 
 Do this before a larger mechanic batch if you want a tighter local contract around the recent convergence work.
 
+Status:
+
+- completed in this worktree as Batch 11.
+
 Goal:
 
 - add focused unit tests for owner-relative effect timing and speed derivation in the single-creature machine.
@@ -458,6 +475,13 @@ Why this is weaker:
 - it strengthens the shared machine contract but does not expand inspiration-derived mechanic coverage,
 - the main battle proof path is already green,
 - it is best treated as local hardening, not as the primary next milestone.
+
+What Batch 11 added:
+
+- `START_TURN` now has direct tests showing owned start-of-turn effects decrement for `selfId` while foreign-owned effects do not advance,
+- `START_TURN` has a direct test for `speedDeltaFeet` changing `effectiveSpeed` and `movementRemaining`,
+- `END_TURN` has a direct test showing foreign-owned end hooks are ignored,
+- and this branch also carries the branded test-input cleanup needed for local package typecheck.
 
 ## Parallel Pre-Research
 
@@ -556,6 +580,105 @@ Files to inspect:
 - [battle-machine-types.ts](../../packages/core/src/battle-machine-types.ts)
 - [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
 - [battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
+
+### Design Handoff: Grapple Auto-Release
+
+This is the next medium architecture task once the small deterministic batches are exhausted.
+
+RAW anchor:
+
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Grappled [Condition]`
+- [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Grappling`
+- key rule: "The condition also ends if the grappler has the Incapacitated condition ..."
+
+Why the current battle layer cannot do it:
+
+- [battle-machine-types.ts](../../packages/core/src/battle-machine-types.ts) only stores a bare `grappled: boolean` on each creature.
+- [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts) still projects `attackerGrappled: false` and `targetIsGrappler: false`.
+- [battle.qnt](../../battle.qnt) has the same placeholder attack-context projection (`attackerGrappled: false`, `targetIsGrappler: false`).
+- [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts) currently computes battle speed with `isGrappling: false` and `grappledTargetTwoSizesSmaller: false`, so the battle layer also lacks drag/carry relationship facts.
+
+What "blocked by missing battle-layer grappler relationship state" means:
+
+- battle can tell that target `B` is grappled,
+- but it cannot tell that `A` is the grappler for `B`,
+- so when `A` becomes incapacitated, there is no authoritative way to identify which target's `grappled` condition should end,
+- and there is no relationship data to project the grappler-side attack disadvantage exception or the grappler drag-speed penalty.
+
+Recommended design direction:
+
+- add explicit grappler-target relationship fields to battle state instead of trying to infer them from a single boolean.
+- prefer one source of truth that can answer all three grapple questions:
+  - who is grappled by whom,
+  - whether the current attacker is grappled and attacking a non-grappler,
+  - whether the current mover is dragging a grappled target small enough to avoid the speed penalty.
+
+Minimal viable state shape:
+
+- on the target side:
+  - `grappledBy: CreatureId | null`
+- on the grappler side:
+  - `grapplingTarget: CreatureId | null`
+  - `grappledTargetTwoSizesSmaller: boolean`
+
+Why both sides are worth storing here:
+
+- target-side ownership is needed for auto-release and attack-context projection,
+- grappler-side ownership is needed for drag-speed calculation without scanning the whole creature map every time,
+- and this repo explicitly prefers changing shared state over maintaining ad hoc side registries.
+
+Suggested implementation order:
+
+1. Extend Quint and battle TS state together.
+   - update [battle.qnt](../../battle.qnt)
+   - update [battle-machine-types.ts](../../packages/core/src/battle-machine-types.ts)
+   - update fresh creature factories in [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
+2. Add relationship-aware helpers.
+   - compute whether a creature is grappling someone
+   - compute whether a grappled attacker is attacking its grappler or a different target
+   - compute battle grappler drag-speed penalty from relationship state
+3. Wire attack-context projection.
+   - replace the placeholders in [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
+   - mirror the same semantics in [battle.qnt](../../battle.qnt)
+4. Add grapple lifecycle events/actions at battle level.
+   - battle already has creature-layer grapple semantics; this task needs battle-layer relationship updates, not a second workaround model
+   - when a grapple is applied, populate both sides of the link
+   - when escape/manual release happens, clear both sides
+5. Add auto-release on incapacitation.
+   - whenever a grappler gains an incapacitating state, clear the linked target's grapple state and clear the grappler link
+   - make the same change in Quint first or in lockstep so parity stays authoritative
+6. Add deterministic regressions before MBT.
+   - grappler incapacitation auto-releases target
+   - grappled attacker has Disadvantage against non-grappler but not against grappler
+   - grappler drag-speed penalty applies unless target is Tiny or two sizes smaller
+7. Run battle parity verification after code/spec are aligned.
+
+Files likely involved:
+
+- [battle.qnt](../../battle.qnt)
+- [creature.qnt](../../creature.qnt)
+- [packages/core/src/battle-machine-types.ts](../../packages/core/src/battle-machine-types.ts)
+- [packages/core/src/battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
+- [packages/core/src/battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts)
+- [packages/core/src/battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
+- [packages/core/src/battle-machine-actions-movement.ts](../../packages/core/src/battle-machine-actions-movement.ts)
+- [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+- [packages/core/src/battle-machine.mbt.test.ts](../../packages/core/src/battle-machine.mbt.test.ts)
+- [packages/core/src/battle-projection.mbt.test.ts](../../packages/core/src/battle-projection.mbt.test.ts)
+
+Verification target for that future task:
+
+- focused deterministic battle regressions for grapple apply / release / incapacitation,
+- `pnpm --filter @dnd/core typecheck`,
+- battle projection MBT Tier 1,
+- battle machine MBT Tier 1.
+
+Recommendation for a cold start later:
+
+- do not start by "just writing the inspiration test";
+- start by reading this section plus the RAW grapple passage,
+- then inspect the current placeholders in [battle.qnt](../../battle.qnt) and [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts),
+- and treat it as one coordinated spec/runtime state-model change rather than a test-only batch.
 
 ## If You Continue This Work Next Time
 
