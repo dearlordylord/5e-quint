@@ -557,6 +557,46 @@ The MCP response from `get_available_actions` is already grouped by resource cos
   - explicit spent-resource exclusion tests for the grouped surface are still weaker than they should be
   - the next session should add those regardless of whether a reaction representative is found
 
+- **Audit result as of 2026-04-08**
+  - The current best-looking reaction candidates are:
+    - `USE_UNCANNY_DODGE`
+    - `USE_CUTTING_WORDS`
+  - Why they looked promising:
+    - both already exist as real machine events in `machine-types.ts`
+    - both are wired in `machine-states.ts`
+    - both have machine actions in:
+      - `packages/core/src/machine-rogue.ts`
+      - `packages/core/src/machine-bard.ts`
+  - Why they are **not** query-surface-ready yet:
+    - `canUncannyDodge` in `machine-guards.ts` only checks:
+      - rogue level
+      - reaction available
+      - not incapacitated
+    - but the actual SRD/helper semantics in `features/class-rogue.ts` also require an attacker-visible trigger context
+    - so exposing it through `available-actions.ts` right now would over-suggest whenever the rogue merely has a reaction
+    - `canCuttingWords` in `machine-guards.ts` only checks:
+      - bard level
+      - bardic inspiration charge
+      - reaction available
+      - not incapacitated
+    - but the actual SRD text in `features/class-bard.ts` requires a creature you can see within 60 feet making a qualifying roll
+    - so exposing it right now would also over-suggest whenever the bard merely has a reaction and a charge
+  - Other reaction helpers found in bridge code are even less Phase-2-ready:
+    - monk `Deflect Attacks`
+    - monk `Slow Fall`
+    - barbarian `Retaliation`
+    - these currently live as feature-bridge helpers around generic `USE_REACTION`, not as supported semantic action tokens in `available-actions.ts`
+  - **Conclusion from the audit**
+    - there is currently **no honest reaction-cost semantic action** ready to expose through the supported action contract without another ownership pass
+    - the missing ingredient is trigger-window ownership, similar in spirit to the earlier `pendingResolution` work
+    - if Phase 2 is kept narrow, the next session should:
+      - explicitly record that reaction coverage is still blocked by missing owned trigger state
+      - proceed with grouping-shape snapshot tests and stronger spent-resource exclusion tests
+    - if Phase 2 is expanded, the next real implementation would be:
+      - add owned pending trigger state for a reaction candidate
+      - probably `uncannyDodge` or `cuttingWords`
+      - then expose that semantic reaction token honestly
+
 ### Recommended next-session order
 
 1. Audit the current modeled reaction candidates and choose one only if it is already semantically owned enough for the supported action contract.
