@@ -534,6 +534,7 @@ export const creatureMachine = setup({
       inCombat: false,
       deathSaves: DEATH_SAVES_RESET,
       stable: false,
+      baseWalkSpeed: i.baseWalkSpeed ?? 30,
       effectiveSpeed: movementFeet(i.effectiveSpeed ?? 0),
       exhaustion: exhaustionLevel(0),
       extraAttacksRemaining: i.extraAttacksRemaining ?? 0,

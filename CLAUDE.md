@@ -28,7 +28,7 @@ Worktree creation sometimes branches from a stale ref instead of master's HEAD. 
 
 ## MBT tests are nondeterministic
 
-MBT traces are generated with random seeds. Failures may not reproduce on the next run. When an MBT test fails, the error includes the seed (e.g., `seed: 0xfa2124eb`). **Always reproduce before fixing:** `QUINT_SEED=0xfa2124eb npx vitest run -t "replays Quint"`. Do not dismiss MBT failures as flaky — reproduce with the seed, diagnose, and fix unless the user explicitly says otherwise.
+MBT traces are generated with random seeds. Failures may not reproduce on the next run. When an MBT test fails, the error includes the seed (e.g., `seed: 0xfa2124eb`). **Always reproduce before fixing:** `cd packages/core && QUINT_SEED=0xfa2124eb npx vitest run -t "replays Quint"`. Do not dismiss MBT failures as flaky — reproduce with the seed, diagnose, and fix unless the user explicitly says otherwise.
 
 ## MBT runs are expensive
 
@@ -44,9 +44,9 @@ Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.** See `QUI
   2. Read the ITF trace JSON offline to inspect Quint state at each step.
   3. Trace through the Quint spec logic manually by reading the code.
 - **MBT run tiers (choose the right one!):** Wall-clock times include vitest startup (~8–10s overhead). See `BENCHMARK_METHODOLOGY.md` for full measurement data (Night 1, 2026-04-05).
-  - **Tier 1 — Battle dev (~15s wall-clock):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle-projection.mbt.test.ts` — **Use this for iterative development.** Requires compiled cache (`node scripts/compile-battle-spec.cjs`). Vitest overhead dominates; 3-step and 5-step are the same wall-clock (~14s median). Evaluator-only time is ~5–8s.
-  - **Tier 1b — Creature MBT (~17s wall-clock):** `MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts` — creature-level parity only (no battle.qnt). Use when changes are purely creature-level.
-  - **Tier 2 — Pre-commit (~12–18s/seed on host, ~25s on Docker):** `MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts` — 1 trace × 5 steps, 10 seeds via `MBT_DEV`. Background it. **Needs ~2GB+ free RAM** — OOMs when available memory is low. On memory-constrained environments, use Tier 1 or run on the host machine.
+  - **Tier 1 — Battle dev (~15s wall-clock):** `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle-projection.mbt.test.ts` — **Use this for iterative development.** Requires compiled cache (`node scripts/compile-battle-spec.cjs`). Vitest overhead dominates; 3-step and 5-step are the same wall-clock (~14s median). Evaluator-only time is ~5–8s.
+  - **Tier 1b — Creature MBT (~17s wall-clock):** `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts` — creature-level parity only (no battle.qnt). Use when changes are purely creature-level.
+  - **Tier 2 — Pre-commit (~12–18s/seed on host, ~25s on Docker):** `cd packages/core && MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts` — 1 trace × 5 steps, 10 seeds via `MBT_DEV`. Background it. **Needs ~2GB+ free RAM** — OOMs when available memory is low. On memory-constrained environments, use Tier 1 or run on the host machine.
   - **Tier 3 — CI validation (~15 min):** `MBT_STEPS=10 ./scripts/mbt-fuzz.sh 50` — 50 seeds × 1 trace × 10 steps. Use the fuzz script, NOT a single vitest invocation: a single call will hit a slow seed and hang. The fuzz script isolates each seed with a per-seed timeout.
   - **Tier 4 — Overnight (~92–105s/seed, unlimited):** `MBT_STEPS=640 MBT_TIMEOUT=150 ./scripts/mbt-fuzz.sh` — 640 steps/seed, runs indefinitely. Add `MBT_SAVE_TRACES=1` to save full ITF traces to `fat-traces/<seed>/` for offline analysis. Validated 2026-04-07: 314 seeds × 640 steps, 0 failures, 0 timeouts.
   - **Coverage lever is `MBT_TRACES`, not `MBT_MAX_SAMPLES`.** `MBT_TRACES=N` generates N distinct random walks per vitest call. `MBT_MAX_SAMPLES` is a search budget for invariant checking — irrelevant for MBT trace generation (first walk always succeeds). Do not escalate `MBT_MAX_SAMPLES` expecting more coverage.

@@ -17,6 +17,7 @@ import {
   removeEffectsByCaster,
   takeDamage
 } from "#/battle-machine-creature.ts"
+import { calculateEffectiveSpeed } from "#/machine-helpers.ts"
 import type {
   AfterDamageReturn,
   AttackHitCtx,
@@ -411,7 +412,17 @@ export function processStartTurn(
     }
   }
   c = result.get(activeId)!
-  c = { ...c, ...FRESH_TURN_STATE }
+  const speed = calculateEffectiveSpeed({
+    baseSpeed: c.baseWalkSpeed,
+    armorPenalty: 0,
+    grappled: c.grappled,
+    restrained: c.restrained,
+    exhaustion: c.exhaustion,
+    callerSpeedModifier: 0,
+    isGrappling: false,
+    grappledTargetTwoSizesSmaller: false
+  })
+  c = { ...c, ...FRESH_TURN_STATE, effectiveSpeed: speed, movementRemaining: speed }
   if (c.creatureKind === "Monster" && rechargedAbilities) {
     const newRecharge = { ...c.rechargeAvailable }
     for (const name of rechargedAbilities) newRecharge[name] = true

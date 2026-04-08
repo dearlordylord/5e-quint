@@ -1,6 +1,6 @@
 import { Option } from "effect"
 
-import { survivorHeroicRally } from "#/features/class-fighter.ts"
+import { fighterExtraAttacks, survivorHeroicRally } from "#/features/class-fighter.ts"
 import { removeAe } from "#/machine-endturn.ts"
 import {
   addIncapSource,
@@ -12,7 +12,8 @@ import {
   damageAtZeroTransition,
   effectiveMaxHp,
   removeIncapSource,
-  resolveDeathSave
+  resolveDeathSave,
+  standardExtraAttacks,
 } from "#/machine-helpers.ts"
 import { monsterStartTurnUpdate } from "#/machine-monster.ts"
 import {
@@ -168,8 +169,8 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
     ev.deathSaveRoll != null ? applyDefyDeath(fighterLevel, ev.deathSaveRoll, ev.deathSaveRoll2) : undefined
   const { conditions: conds, ...cr } = computeStartTurn(c, effectiveDsRoll, ev.startOfTurnEffects)
   const speed = calculateEffectiveSpeed({
-    armorPenalty: ev.armorPenalty,
-    baseSpeed: ev.baseSpeed,
+    baseSpeed: c.baseWalkSpeed,
+    armorPenalty: 0, // armor not modeled at creature level
     callerSpeedModifier: ev.callerSpeedModifier,
     exhaustion: c.exhaustion,
     grappled: conds.grappled ?? c.grappled,
@@ -177,6 +178,14 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
     isGrappling: ev.isGrappling,
     restrained: conds.restrained ?? c.restrained
   })
+  // Derive extra attacks: event override (monsters/multiattack) or from class levels (PCs)
+  const extraAttacks = ev.extraAttacks ?? Math.max(
+    fighterExtraAttacks(fighterLevel),
+    standardExtraAttacks(c.classStates.barbarian?.level ?? 0),
+    standardExtraAttacks(c.classStates.monk?.level ?? 0),
+    standardExtraAttacks(c.classStates.paladin?.level ?? 0),
+    standardExtraAttacks(c.classStates.ranger?.level ?? 0)
+  )
   const rallyHeal = survivorHeroicRally(fighterLevel, cr.hp as number, c.maxHp, ev.conMod ?? 0)
   const resultHp = rallyHeal > 0 ? Math.min((cr.hp as number) + rallyHeal, effectiveMaxHp(c.maxHp)) : cr.hp
   const mrsUpdates =
@@ -189,7 +198,7 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
     ...INITIAL_TURN_STATE,
     hp: hp(resultHp),
     effectiveSpeed: movementFeet(speed),
-    extraAttacksRemaining: ev.extraAttacks,
+    extraAttacksRemaining: extraAttacks,
     movementRemaining: movementFeet(speed),
     ...mrsUpdates
   }

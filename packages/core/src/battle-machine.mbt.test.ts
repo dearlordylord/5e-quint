@@ -69,7 +69,8 @@ const QuintCombatant = z.object({
   ragingBlocksSpells: z.boolean(),
   combatantResistances: z.any(),
   sneakAttackDice: z.bigint(),
-  sneakAttackUsedThisTurn: z.boolean()
+  sneakAttackUsedThisTurn: z.boolean(),
+  baseWalkSpeed: z.bigint()
 })
 
 type ParsedCombatant = z.infer<typeof QuintCombatant>
@@ -176,6 +177,7 @@ interface NormalizedBattleCreature {
   combatantResistances: ReadonlySet<string>
   sneakAttackDice: number
   sneakAttackUsedThisTurn: boolean
+  baseWalkSpeed: number
 }
 
 function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreature {
@@ -246,7 +248,8 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     ragingBlocksSpells: c.ragingBlocksSpells,
     combatantResistances: parseDamageTypeSet(c.combatantResistances),
     sneakAttackDice: Number(c.sneakAttackDice),
-    sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn
+    sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
+    baseWalkSpeed: Number(c.baseWalkSpeed)
   }
 }
 
@@ -327,7 +330,8 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     ragingBlocksSpells: c.ragingBlocksSpells,
     combatantResistances: c.combatantResistances,
     sneakAttackDice: c.sneakAttackDice,
-    sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn
+    sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
+    baseWalkSpeed: c.baseWalkSpeed
   }
 }
 
@@ -597,6 +601,7 @@ function createBattleMachineDriver() {
               kind: "Monster",
               legendaryActions: 3,
               legendaryResistances: 3,
+              baseWalkSpeed: 30,
               initiativeRoll: p(picks, "initRoll3", 10),
               initiativeRollB: p(picks, "initRoll3b", 10),
               surprised: pb(picks, "surprised3", false)
@@ -979,7 +984,7 @@ describe("Battle Machine MBT", () => {
   const MBT_TRACE_COUNT = 1
   const MBT_STEP_COUNT = isDev ? 5 : 10
   const MBT_MAX_SAMPLES = isDev ? 10 : 50
-  const specPath = path.resolve(import.meta.dirname, "../../battle.qnt")
+  const specPath = path.resolve(import.meta.dirname, "../../../battle.qnt")
 
   it("replays battle traces against battleMachine", async () => {
     const dir = process.env["MBT_REPLAY_DIR"]
@@ -994,7 +999,7 @@ describe("Battle Machine MBT", () => {
     } else {
       // Use pre-compiled spec cache if available (skip 15s+ parse/typecheck).
       // Generate with: node scripts/compile-battle-spec.cjs
-      const compiledInputPath = path.resolve(import.meta.dirname, "../../.quint-cache/battle-compiled.json")
+      const compiledInputPath = path.resolve(import.meta.dirname, "../../../.quint-cache/battle-compiled.json")
       const result = await run({
         spec: specPath,
         init: "bInit",

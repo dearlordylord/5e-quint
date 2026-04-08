@@ -265,7 +265,7 @@ export function computeAddExhaustion(
 /** SRD 5.2.1 exhaustion speed penalty: -5 × exhaustion level ft. */
 const EXHAUSTION_SPEED_PENALTY_PER_LEVEL = 5
 
-/** Calculate effective speed from base speed, conditions, and external factors. Matches Quint pStartTurn speed logic. */
+/** Calculate effective speed from base speed, conditions, and external factors. Matches Quint pComputeEffectiveSpeed. */
 export function calculateEffectiveSpeed(params: {
   readonly baseSpeed: number
   readonly armorPenalty: number

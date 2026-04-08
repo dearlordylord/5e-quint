@@ -45,9 +45,6 @@ function skeletonDamage(amount: number, damageType: DamageType, isCritical = fal
 function skeletonStartTurn(): DndEvent {
   return {
     type: "START_TURN",
-    baseSpeed: 30,
-    armorPenalty: 0,
-    extraAttacks: 0, // Skeleton has no Multiattack
     callerSpeedModifier: 0,
     isGrappling: false,
     grappledTargetTwoSizesSmaller: false,

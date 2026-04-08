@@ -103,6 +103,8 @@ export interface BattleCreatureState {
   readonly sneakAttackUsedThisTurn: boolean
   // Readied spell (SRD 5.2.1 Ready action)
   readonly readiedSpellParams: ReadiedSpellParams | null
+  // Walk speed (PC: 30, Monster: from stat block)
+  readonly baseWalkSpeed: number
 }
 
 /** Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready). */
@@ -328,6 +330,8 @@ export interface InitCreatureConfig {
   readonly barbarianLevel?: number
   readonly meleeDamageBonus?: number
   readonly sneakAttackDice?: number
+  /** Walk speed (PC: 30, Monster: from stat block). Defaults to 30. */
+  readonly baseWalkSpeed?: number
   /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */
   readonly initiativeRoll?: number
   /** Second d20 for Disadvantage. Required when surprised=true; defaults to initiativeRoll (no effect). */

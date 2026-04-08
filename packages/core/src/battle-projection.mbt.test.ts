@@ -562,9 +562,7 @@ function createBattleProjectionDriver() {
       for (const [id, actor] of actors) {
         actor.send({
           type: "START_TURN",
-          baseSpeed: 30,
-          armorPenalty: 0,
-          extraAttacks: 1,
+          extraAttacks: 1, // Quint FRESH_TURN.extraAttacksRemaining is 1
           callerSpeedModifier: 0,
           isGrappling: false,
           grappledTargetTwoSizesSmaller: false,
@@ -611,9 +609,7 @@ function createBattleProjectionDriver() {
 
       send(id, {
         type: "START_TURN",
-        baseSpeed: 30,
-        armorPenalty: 0,
-        extraAttacks: 1, // FRESH_TURN.extraAttacksRemaining is always 1 in the Quint spec
+        extraAttacks: 1, // Quint FRESH_TURN.extraAttacksRemaining is 1
         callerSpeedModifier: 0,
         isGrappling: false,
         grappledTargetTwoSizesSmaller: false,
@@ -1828,7 +1824,7 @@ describe("Battle Projection MBT", () => {
   const MBT_TRACE_COUNT = 1
   const MBT_STEP_COUNT = isDev ? 5 : 10
   const MBT_MAX_SAMPLES = isDev ? 10 : 50
-  const specPath = path.resolve(import.meta.dirname, "../../battle.qnt")
+  const specPath = path.resolve(import.meta.dirname, "../../../battle.qnt")
 
   it("replays battle traces per-creature against creatureMachine actors", async () => {
     const dir = process.env["MBT_REPLAY_DIR"]
@@ -1847,7 +1843,7 @@ describe("Battle Projection MBT", () => {
       // WARNING: Cache becomes stale when battle.qnt or creature.qnt change.
       // The compile script writes a .hash file for staleness detection.
       // See QUINT_CONNECT_TROUBLESHOOT.md for full context.
-      const compiledInputPath = path.resolve(import.meta.dirname, "../../.quint-cache/battle-compiled.json")
+      const compiledInputPath = path.resolve(import.meta.dirname, "../../../.quint-cache/battle-compiled.json")
       const hashPath = compiledInputPath.replace(/\.json$/, ".hash")
       if (compiledInputPath) {
         const { existsSync, readFileSync } = await import("node:fs")
@@ -1855,7 +1851,7 @@ describe("Battle Projection MBT", () => {
         if (existsSync(hashPath)) {
           const cachedHash = readFileSync(hashPath, "utf-8").trim()
           const hash = crypto.createHash("sha256")
-          const specDir = path.resolve(import.meta.dirname, "../..")
+          const specDir = path.resolve(import.meta.dirname, "../../..")
           for (const f of ["battle.qnt", "creature.qnt"]) {
             const fp = path.join(specDir, f)
             if (existsSync(fp)) hash.update(readFileSync(fp))

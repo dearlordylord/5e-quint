@@ -33,9 +33,6 @@ export function damage(amount: number, damageType: DamageType, isCritical = fals
 export function startTurn(): DndEvent {
   return {
     type: "START_TURN",
-    baseSpeed: 30,
-    armorPenalty: 0,
-    extraAttacks: 1,
     callerSpeedModifier: 0,
     isGrappling: false,
     grappledTargetTwoSizesSmaller: false,

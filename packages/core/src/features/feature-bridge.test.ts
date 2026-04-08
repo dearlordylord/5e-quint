@@ -95,6 +95,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     stunned: false,
     unconscious: false,
     incapacitatedSources: new Set(),
+    baseWalkSpeed: 30,
     movementRemaining: movementFeet(30),
     effectiveSpeed: movementFeet(30),
     actionsRemaining: 1,

@@ -931,16 +931,12 @@ describe("frightened - LOS parameterization", () => {
 
 // ============================================================
 // Phase 3: Turn Structure + Action Economy
-// ============================================================
-
 const DEFAULT_BASE_SPEED = 30
+// ============================================================
 
 function startTurn(
   actor: ReturnType<typeof create>,
   opts: {
-    baseSpeed?: number
-    armorPenalty?: number
-    extraAttacks?: number
     callerSpeedModifier?: number
     isGrappling?: boolean
     grappledTargetTwoSizesSmaller?: boolean
@@ -951,9 +947,6 @@ function startTurn(
   else if (s.matches({ turnPhase: "acting" })) endTurn(actor)
   actor.send({
     type: "START_TURN",
-    baseSpeed: opts.baseSpeed ?? DEFAULT_BASE_SPEED,
-    armorPenalty: opts.armorPenalty ?? 0,
-    extraAttacks: opts.extraAttacks ?? 0,
     callerSpeedModifier: opts.callerSpeedModifier ?? 0,
     isGrappling: opts.isGrappling ?? false,
     grappledTargetTwoSizesSmaller: opts.grappledTargetTwoSizesSmaller ?? false,
@@ -988,9 +981,11 @@ describe("turn lifecycle - START_TURN", () => {
     expect(ctx(a).reactionAvailable).toBe(true)
   })
 
-  it("sets extra attacks from config", () => {
-    const a = create()
-    startTurn(a, { extraAttacks: 2 })
+  it("derives extra attacks from class levels", () => {
+    const a = createActor(creatureMachine, { input: { maxHp: DEFAULT_MAX_HP, fighterLevel: classLevel(11) } })
+    a.start()
+    enterCombat(a)
+    a.send({ type: "START_TURN", callerSpeedModifier: 0, isGrappling: false, grappledTargetTwoSizesSmaller: false, startOfTurnEffects: [] })
     expect(ctx(a).extraAttacksRemaining).toBe(2)
   })
 
@@ -1041,9 +1036,6 @@ describe("combat mode separation (TA3)", () => {
     const a = create()
     a.send({
       type: "START_TURN",
-      baseSpeed: 30,
-      armorPenalty: 0,
-      extraAttacks: 0,
       callerSpeedModifier: 0,
       isGrappling: false,
       grappledTargetTwoSizesSmaller: false,
@@ -1256,11 +1248,6 @@ describe("speed modifiers from conditions", () => {
     expect(ctx(a).effectiveSpeed).toBe(5)
   })
 
-  it("armor penalty reduces base speed", () => {
-    const a = create()
-    startTurn(a, { armorPenalty: 10 })
-    expect(ctx(a).effectiveSpeed).toBe(20)
-  })
 })
 
 describe("calculateEffectiveSpeed helper", () => {
@@ -1339,9 +1326,11 @@ describe("movementCostMultiplier helper", () => {
 })
 
 describe("turn - extra attacks", () => {
-  it("can use extra attacks", () => {
-    const a = create()
-    startTurn(a, { extraAttacks: 2 })
+  it("can use extra attacks (fighter 11)", () => {
+    const a = createActor(creatureMachine, { input: { maxHp: DEFAULT_MAX_HP, fighterLevel: classLevel(11) } })
+    a.start()
+    startTurn(a)
+    expect(ctx(a).extraAttacksRemaining).toBe(2)
     a.send({ type: "USE_EXTRA_ATTACK" })
     expect(ctx(a).extraAttacksRemaining).toBe(1)
     a.send({ type: "USE_EXTRA_ATTACK" })
@@ -1350,7 +1339,8 @@ describe("turn - extra attacks", () => {
 
   it("cannot use extra attack when 0 remaining", () => {
     const a = create()
-    startTurn(a, { extraAttacks: 0 })
+    startTurn(a)
+    expect(ctx(a).extraAttacksRemaining).toBe(0)
     a.send({ type: "USE_EXTRA_ATTACK" })
     expect(ctx(a).extraAttacksRemaining).toBe(0)
   })

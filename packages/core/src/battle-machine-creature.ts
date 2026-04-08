@@ -268,8 +268,8 @@ export function clearExpiredAtPhase(
 // --- Constants & factories (moved from battle-machine-types.ts) ---
 
 export const FRESH_TURN_STATE = {
-  movementRemaining: 30,
-  effectiveSpeed: 30,
+  movementRemaining: 0,
+  effectiveSpeed: 0,
   actionsRemaining: 1,
   attackActionUsed: false,
   bonusActionUsed: false,
@@ -328,6 +328,8 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     incapacitatedSources: new Set(),
     activeEffects: [],
     ...FRESH_TURN_STATE,
+    movementRemaining: 30,
+    effectiveSpeed: 30,
     slotsMax: EMPTY_SLOTS,
     slotsCurrent: EMPTY_SLOTS,
     pactSlotsMax: 0,
@@ -355,7 +357,8 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     combatantResistances: new Set(),
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
-    readiedSpellParams: null
+    readiedSpellParams: null,
+    baseWalkSpeed: 30
   }
 }
 

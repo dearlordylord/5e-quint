@@ -22,6 +22,7 @@ import { MetamagicOptionSchema } from "@dnd/core/features/class-sorcerer.ts"
 const FIGHTER_5_INPUT: DndMachineInput = {
   maxHp: 44,
   fighterLevel: classLevel(5),
+  baseWalkSpeed: 30,
   effectiveSpeed: 30,
 }
 
@@ -182,16 +183,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return ok(`Healed 1d10(${d10Roll}) + ${fighterLevel} = ${d10Roll + fighterLevel} HP`)
       }
 
-      // TODO: START_TURN payload is wrong — baseSpeed, armorPenalty, extraAttacks etc. are
-      // battle-context fields that the MCP consumer shouldn't provide. These should come from
-      // creature state or a battle manager. Hardcoded for Phase 1 Fighter 5 demo. See plan.
       if (parsed.type === "START_TURN") {
         actor.send({
           type: parsed.type,
-          baseSpeed: 30,
-          armorPenalty: 0,
-          extraAttacks: 1,
-          callerSpeedModifier: 1,
+          callerSpeedModifier: 0,
           isGrappling: false,
           grappledTargetTwoSizesSmaller: false,
           startOfTurnEffects: [],

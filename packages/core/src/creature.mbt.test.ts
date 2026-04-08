@@ -9,13 +9,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { createActor } from "xstate"
 import { z } from "zod"
 
-import { fighterExtraAttacks } from "#/features/class-fighter.ts"
 import { singleClassHitDice } from "#/features/class-tables.ts"
 import { creatureMachine, type DndEvent } from "#/machine.ts"
-import { barbarianExtraAttacks } from "#/machine-barbarian.ts"
-import { monkExtraAttacks } from "#/machine-monk.ts"
-import { paladinExtraAttacks } from "#/machine-paladin.ts"
-import { rangerExtraAttacks } from "#/machine-ranger.ts"
 import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
 import {
   compareNormalizedStates,
@@ -364,6 +359,7 @@ function createDndDriver() {
             input: {
               maxHp: sb.maxHp,
               hitDiceRemaining: undefined,
+              baseWalkSpeed: sb.walkSpeed,
               effectiveSpeed: sb.walkSpeed,
               movementRemaining: sb.walkSpeed,
               extraAttacksRemaining: multiattackExtraAttacks(sb.multiattackLength),
@@ -409,6 +405,7 @@ function createDndDriver() {
             input: {
               maxHp: Number(mhp),
               hitDiceRemaining: singleClassHitDice(quintClassToTs(cls as QuintClassName), level),
+              baseWalkSpeed: INIT_SPEED,
               effectiveSpeed: INIT_SPEED,
               movementRemaining: INIT_SPEED,
               extraAttacksRemaining: 1,
@@ -522,21 +519,6 @@ function createDndDriver() {
       }) => {
         const isMonster = currentCreatureKind === "Monster"
         const sb = currentStatBlock
-        // Monster: speed from stat block, no armor penalty; PC: Walk=30, no armor penalty
-        const BASE_SPEED = isMonster && sb ? sb.walkSpeed : 30
-        const ctx = ensureActor().getSnapshot().context
-        const extraAttacks =
-          isMonster && sb
-            ? sb.multiattackLength > 0
-              ? sb.multiattackLength - 1
-              : 0
-            : Math.max(
-                fighterExtraAttacks(ctx.classStates.fighter?.level ?? 0),
-                barbarianExtraAttacks(ctx.classStates.barbarian?.level ?? 0),
-                monkExtraAttacks(ctx.classStates.monk?.level ?? 0),
-                paladinExtraAttacks(ctx.classStates.paladin?.level ?? 0),
-                rangerExtraAttacks(ctx.classStates.ranger?.level ?? 0)
-              )
         const effects = !numEffects
           ? []
           : [
@@ -555,9 +537,10 @@ function createDndDriver() {
             ]
         send({
           type: "START_TURN",
-          baseSpeed: BASE_SPEED,
-          armorPenalty: 0,
-          extraAttacks,
+          // Monsters: override extraAttacks from multiattack; PCs derive from class levels
+          extraAttacks: isMonster && sb
+            ? (sb.multiattackLength > 0 ? sb.multiattackLength - 1 : 0)
+            : undefined,
           callerSpeedModifier: Number(callerSpeedMod),
           isGrappling,
           grappledTargetTwoSizesSmaller: grappledSmall,
@@ -970,7 +953,7 @@ const QuintTypedef = Schema.Struct({
 function parseQuintTypeFields(typeName: string): Array<string> {
   const tmpFile = path.join(os.tmpdir(), `quint_ast_${process.pid}.json`)
   try {
-    execSync(`quint parse ${path.resolve(import.meta.dirname, "../../creature.qnt")} --out ${tmpFile}`)
+    execSync(`quint parse ${path.resolve(import.meta.dirname, "../../../creature.qnt")} --out ${tmpFile}`)
     const raw = JSON.parse(fs.readFileSync(tmpFile, "utf8")) as {
       modules: Array<{ declarations: Array<Record<string, unknown>> }>
     }
@@ -1044,7 +1027,7 @@ describe("DnD MBT", () => {
 
   const MBT_TRACE_COUNT = 50
   const MBT_STEP_COUNT = 30
-  const specPath = path.resolve(import.meta.dirname, "../../creature.qnt")
+  const specPath = path.resolve(import.meta.dirname, "../../../creature.qnt")
 
   it("replays Quint traces against XState machine (L3 + L5 + L9 + L10 + L18)", async () => {
     const result = await run({

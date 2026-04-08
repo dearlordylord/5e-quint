@@ -12,7 +12,6 @@ import {
 } from "@dnd/core/types.ts"
 import { type FormEvent, useState } from "react"
 
-import { DEFAULT_SPEED } from "#/components/App.tsx"
 import { useT } from "#/i18n.ts"
 
 const DAMAGE_TYPES: ReadonlyArray<DamageType> = Array.from(ALL_DAMAGE_TYPES)
@@ -215,9 +214,6 @@ export function EventPanel({
           onClick={() =>
             send({
               type: "START_TURN",
-              baseSpeed: DEFAULT_SPEED,
-              armorPenalty: 0,
-              extraAttacks: 1,
               callerSpeedModifier: 0,
               isGrappling: false,
               grappledTargetTwoSizesSmaller: false,

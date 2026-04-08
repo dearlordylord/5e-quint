@@ -61,6 +61,7 @@ export interface TurnPhaseResult {
 export interface DndMachineInput {
   readonly maxHp: number
   readonly hitDiceRemaining?: HitDiceRemaining
+  readonly baseWalkSpeed?: number
   readonly effectiveSpeed?: number
   readonly movementRemaining?: number
   readonly extraAttacksRemaining?: number
@@ -133,6 +134,7 @@ export interface DndContext {
   readonly stunned: boolean
   readonly unconscious: boolean
   readonly incapacitatedSources: ReadonlySet<IncapSource>
+  readonly baseWalkSpeed: number
   readonly movementRemaining: MovementFeet
   readonly effectiveSpeed: MovementFeet
   /** Actions remaining this turn (default 1; counter enables Action Surge / Haste granting additional actions). */
@@ -227,9 +229,7 @@ export type DndEvent =
   | { readonly type: "REDUCE_EXHAUSTION"; readonly levels: number }
   | {
       readonly type: "START_TURN"
-      readonly baseSpeed: number
-      readonly armorPenalty: number
-      readonly extraAttacks: number
+      readonly extraAttacks?: number // override for monsters (multiattack); PCs derive from class levels
       readonly callerSpeedModifier: number
       readonly isGrappling: boolean
       readonly grappledTargetTwoSizesSmaller: boolean

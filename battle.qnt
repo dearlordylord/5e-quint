@@ -45,6 +45,7 @@ module battle {
     sneakAttackDice: int,                    // Sneak Attack d6 count (0 = not a rogue; ceil(rogueLevel/2))
     sneakAttackUsedThisTurn: bool,           // SA once per turn (SRD 5.2.1 Rogue "Sneak Attack")
     readiedSpellParams: ReadiedSpellParams,  // readied spell params (SRD 5.2.1 Ready action); slotLvl==0 = no spell
+    baseWalkSpeed: int,                      // Walk speed (PC: 30, Monster: statBlock.speeds.get(Walk))
   }
 
   /// Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready action).
@@ -380,6 +381,7 @@ module battle {
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
     readiedSpellParams: NO_READIED_SPELL,
+    baseWalkSpeed: 30,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -410,33 +412,40 @@ module battle {
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
     readiedSpellParams: NO_READIED_SPELL,
+    baseWalkSpeed: 30,
   }
 
   // Monster with legendary actions and resistances
   pure def mkMonster(maxHp: int, sb: StatBlock): Combatant = {
-    creature: freshCreature(maxHp),
-    turn: FRESH_TURN,
-    slots: FRESH_SPELL_SLOTS,
-    kind: Monster,
-    monsterResources: EMPTY_MONSTER_RESOURCES
-      .with("legendaryActionsRemaining", sb.legendaryActionUses)
-      .with("legendaryResistancesRemaining", sb.legendaryResistanceUses),
-    statBlock: sb,
-    rogueLevel: 0, monkLevel: 0,
-    preparedSpells: Set(),
-    hasEvasion: false,
-    saveMiscBonus: 0,
-    critRange: 20,
-    fighterLevel: 0,
-    fighterState: freshFighterState(0),
-    barbarianLevel: 0,
-    meleeDamageBonus: 0,
-    recklessThisTurn: false,
-    ragingBlocksSpells: false,
-    combatantResistances: Set(),
-    sneakAttackDice: 0,
-    sneakAttackUsedThisTurn: false,
-    readiedSpellParams: NO_READIED_SPELL,
+    val walkSpeed = sb.speeds.get(Walk)
+    {
+      creature: freshCreature(maxHp),
+      turn: FRESH_TURN
+        .with("movementRemaining", walkSpeed)
+        .with("effectiveSpeed", walkSpeed),
+      slots: FRESH_SPELL_SLOTS,
+      kind: Monster,
+      monsterResources: EMPTY_MONSTER_RESOURCES
+        .with("legendaryActionsRemaining", sb.legendaryActionUses)
+        .with("legendaryResistancesRemaining", sb.legendaryResistanceUses),
+      statBlock: sb,
+      rogueLevel: 0, monkLevel: 0,
+      preparedSpells: Set(),
+      hasEvasion: false,
+      saveMiscBonus: 0,
+      critRange: 20,
+      fighterLevel: 0,
+      fighterState: freshFighterState(0),
+      barbarianLevel: 0,
+      meleeDamageBonus: 0,
+      recklessThisTurn: false,
+      ragingBlocksSpells: false,
+      combatantResistances: Set(),
+      sneakAttackDice: 0,
+      sneakAttackUsedThisTurn: false,
+      readiedSpellParams: NO_READIED_SPELL,
+      baseWalkSpeed: walkSpeed,
+    }
   }
 
   /// Deal damage to a target. When knockOut=true and the hit would reduce a PC to 0 HP,
@@ -679,6 +688,7 @@ module battle {
   // Stat block for test monster "C": 3 LA, 3 LR, one recharge ability.
   val TEST_MONSTER_STAT_BLOCK: StatBlock = NULL_STAT_BLOCK
     .with("name", "TestMonster")
+    .with("speeds", Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0))
     .with("legendaryActionUses", 3)
     .with("legendaryResistanceUses", 3)
     .with("legendaryActions", Map("tail_attack" -> { name: "Tail Attack", cost: 1 }))
@@ -770,7 +780,15 @@ module battle {
         propagateIfConcBroken(cs1a, activeId, ac0.slots, r.slots)
       } else cs0
       // 4. Fresh turn state
-      val cs2 = setTurn(cs1, activeId, FRESH_TURN)
+      val ac1 = cs1.get(activeId)
+      val speed = pComputeEffectiveSpeed(
+        ac1.baseWalkSpeed, ac1.creature.exhaustion,
+        ac1.creature.grappled, ac1.creature.restrained,
+        0, 0, false, false  // armor/callerMod/grappling: not modeled at battle level
+      )
+      val cs2 = setTurn(cs1, activeId, FRESH_TURN
+        .with("movementRemaining", speed)
+        .with("effectiveSpeed", speed))
       // 4b. Fighter start-of-turn: reset actionSurgeUsedThisTurn
       val ac4 = cs2.get(activeId)
       // 4c. Clear readied spell; if one was held, break its concentration (SRD 5.2.1:

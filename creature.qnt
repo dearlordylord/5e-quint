@@ -1300,6 +1300,26 @@ module creature {
     else 0
   }
 
+  /// Compute effective walking speed from base speed minus penalties.
+  /// Grappled/restrained: speed 0 (no bonuses apply).
+  /// Order: base - armorPenalty - exhaustion penalty - grapple halving + callerMod.
+  pure def pComputeEffectiveSpeed(
+    baseWalkSpeed: int, exhaustion: int,
+    grappled: bool, restrained: bool,
+    armorPenalty: int, callerSpeedModifier: int,
+    isGrappling: bool, grappledTargetTwoSizesSmaller: bool
+  ): int = {
+    if (grappled or restrained) 0
+    else {
+      val afterArmor = intMax(0, baseWalkSpeed - armorPenalty)
+      val afterExhaustion = intMax(0, afterArmor - 5 * exhaustion)
+      val afterGrappling =
+        if (isGrappling and not(grappledTargetTwoSizesSmaller)) afterExhaustion / 2
+        else afterExhaustion
+      intMax(0, afterGrappling + callerSpeedModifier)
+    }
+  }
+
   /// Start a new turn. Resets action economy. Movement = effective speed.
   /// Reaction resets at start of own turn.
   pure def pStartTurn(
@@ -1310,19 +1330,12 @@ module creature {
     isGrappling: bool,
     grappledTargetTwoSizesSmaller: bool
   ): TurnState = {
-    // Grappled/restrained: speed 0, no bonuses apply — short-circuit
-    val speed = if (creature.grappled or creature.restrained) 0
-    else {
-      val baseSpeed = config.speeds.get(Walk)
-      val armorPenalty = armorSpeedPenalty(armorState, config.abilityScores.get(Str))
-      val afterArmor = intMax(0, baseSpeed - armorPenalty)
-      val afterExhaustion = intMax(0, afterArmor - 5 * creature.exhaustion)
-      val afterGrappling =
-        if (isGrappling and not(grappledTargetTwoSizesSmaller)) afterExhaustion / 2
-        else afterExhaustion
-      val withMod = afterGrappling + callerSpeedModifier
-      intMax(0, withMod)
-    }
+    val speed = pComputeEffectiveSpeed(
+      config.speeds.get(Walk), creature.exhaustion,
+      creature.grappled, creature.restrained,
+      armorSpeedPenalty(armorState, config.abilityScores.get(Str)),
+      callerSpeedModifier, isGrappling, grappledTargetTwoSizesSmaller
+    )
     {
       movementRemaining: speed,
       effectiveSpeed: speed,

@@ -91,7 +91,10 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
         : {}),
       ...(cfg.barbarianLevel != null ? { barbarianLevel: cfg.barbarianLevel } : {}),
       ...(cfg.meleeDamageBonus != null ? { meleeDamageBonus: cfg.meleeDamageBonus } : {}),
-      ...(cfg.sneakAttackDice != null ? { sneakAttackDice: cfg.sneakAttackDice } : {})
+      ...(cfg.sneakAttackDice != null ? { sneakAttackDice: cfg.sneakAttackDice } : {}),
+      ...(cfg.baseWalkSpeed != null
+        ? { baseWalkSpeed: cfg.baseWalkSpeed, movementRemaining: cfg.baseWalkSpeed, effectiveSpeed: cfg.baseWalkSpeed }
+        : {})
     })
     initiative.push(cfg.id)
   }
