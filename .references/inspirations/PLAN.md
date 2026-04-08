@@ -651,8 +651,8 @@ What remains if grapple work resumes:
 
 Status:
 
-- not implemented yet
-- recommended next small deterministic batch if you want to finish the grapple slice cleanly
+- completed in Batch 13
+- this is no longer the next step; use it as a verification/history note
 
 Goal:
 
@@ -725,6 +725,33 @@ Cold-start recommendation:
 - start with the existing grapple helper fixture in [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
 - do not reopen the architecture problem unless the regressions prove a mismatch
 - treat this as a small closure batch on top of Batch 12, not a new design task
+
+Batch 13 result:
+
+1. Added deterministic battle regressions for the remaining grapple lifecycle edges.
+   - voluntary release now has explicit coverage via `BATTLE_RELEASE_GRAPPLE`
+   - successful and failed escape now have explicit coverage via `BATTLE_ESCAPE_GRAPPLE`
+2. Confirmed the existing runtime/spec behavior was already correct.
+   - no TS or Quint production changes were required
+   - the batch stayed test-only, which is the expected result for a closure pass after Batch 12
+3. Verified speed refresh semantics on the active creature after release/escape.
+   - successful release restores the grappler's current-turn `effectiveSpeed` / `movementRemaining`
+   - successful escape restores the target's current-turn `effectiveSpeed` / `movementRemaining`
+   - failed escape leaves the target grappled with Speed 0
+
+Files touched:
+
+- [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts)
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
+
+What is next now:
+
+- scout the next small deterministic inspiration batch outside grapple, since the main grapple lifecycle slice is now explicitly covered
+- if you resume in a fresh session, start from this file and [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts), then pick the next `natural_20`-style scenario that fits current battle state without reopening architecture
 
 ## If You Continue This Work Next Time
 

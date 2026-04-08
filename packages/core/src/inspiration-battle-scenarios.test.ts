@@ -599,6 +599,105 @@ describe("inspiration-sourced battle regressions", () => {
     expect(creature(exemptActor, "A").movementRemaining).toBe(30)
   })
 
+  it("natural_20: a grappler can release the target at any time without spending an action", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+    expect(creature(actor, "A").effectiveSpeed).toBe(15)
+    expect(creature(actor, "A").movementRemaining).toBe(15)
+
+    send(actor, { type: "BATTLE_RELEASE_GRAPPLE" })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0)
+    expect(creature(actor, "A").grapplingTarget).toBeNull()
+    expect(creature(actor, "A").effectiveSpeed).toBe(30)
+    expect(creature(actor, "A").movementRemaining).toBe(30)
+    expect(creature(actor, "B").grappled).toBe(false)
+    expect(creature(actor, "B").grappledBy).toBeNull()
+  })
+
+  it("natural_20: a successful escape spends the action and ends the grapple", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    expect(creature(actor, "B").grappled).toBe(true)
+    expect(creature(actor, "B").effectiveSpeed).toBe(0)
+    expect(creature(actor, "B").movementRemaining).toBe(0)
+
+    send(actor, {
+      type: "BATTLE_ESCAPE_GRAPPLE",
+      escapeSucceeded: true
+    })
+
+    expect(creature(actor, "B").actionsRemaining).toBe(0)
+    expect(creature(actor, "B").grappled).toBe(false)
+    expect(creature(actor, "B").grappledBy).toBeNull()
+    expect(creature(actor, "B").effectiveSpeed).toBe(30)
+    expect(creature(actor, "B").movementRemaining).toBe(30)
+    expect(creature(actor, "A").grapplingTarget).toBeNull()
+  })
+
+  it("natural_20: a failed escape spends the action but leaves the grapple intact", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ESCAPE_GRAPPLE",
+      escapeSucceeded: false
+    })
+
+    expect(creature(actor, "B").actionsRemaining).toBe(0)
+    expect(creature(actor, "B").grappled).toBe(true)
+    expect(creature(actor, "B").grappledBy).toBe(CreatureId("A"))
+    expect(creature(actor, "B").effectiveSpeed).toBe(0)
+    expect(creature(actor, "B").movementRemaining).toBe(0)
+    expect(creature(actor, "A").grapplingTarget).toBe(CreatureId("B"))
+  })
+
   it("natural_20: Shocking Grasp blocks opportunity attacks until the start of the target's next turn", () => {
     const actor = initTwoPcBattle()
     startTurn(actor)

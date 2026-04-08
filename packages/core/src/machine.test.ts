@@ -34,7 +34,6 @@ import {
   saveMods
 } from "#/machine-queries.ts"
 import { calculateMulticlassSlots, concentrationDC, expendSlot, slotsPerLevel } from "#/machine-spells.ts"
-import type { DndMachineInput } from "#/machine-types.ts"
 import type { ActionType, ArmorState, AttackContext, Condition, DamageType } from "#/types.ts"
 import {
   abilityModifier,
