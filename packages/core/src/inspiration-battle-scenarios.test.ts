@@ -84,6 +84,20 @@ function initSneakAttackBattle() {
   return actor
 }
 
+function initGrappleBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", rogueLevel: 5, sneakAttackDice: 3, initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 }
+    ]
+  })
+  return actor
+}
+
 function startTurn(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT })
 }
@@ -407,6 +421,182 @@ describe("inspiration-sourced battle regressions", () => {
 
     expect(creature(actor, "B").hp).toBe(6)
     expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(true)
+  })
+
+  it("natural_20: incapacitating the grappler auto-releases the target", () => {
+    const actor = initGrappleBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+
+    expect(creature(actor, "A").grapplingTarget).toBe(CreatureId("B"))
+    expect(creature(actor, "B").grappled).toBe(true)
+    expect(creature(actor, "B").grappledBy).toBe(CreatureId("A"))
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("A"),
+      saveDC: difficultyClass(14),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").paralyzed).toBe(true)
+    expect(creature(actor, "A").grapplingTarget).toBeNull()
+    expect(creature(actor, "B").grappled).toBe(false)
+    expect(creature(actor, "B").grappledBy).toBeNull()
+  })
+
+  it("natural_20: a grappled attacker loses ally-adjacent Sneak Attack against non-grapplers but not against the grappler", () => {
+    const actor = initGrappleBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("C"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isFinesse: true,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 6
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "C").hp).toBe(16)
+    expect(creature(actor, "B").sneakAttackUsedThisTurn).toBe(false)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("A"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isFinesse: true,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 6
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").hp).toBe(10)
+    expect(creature(actor, "B").sneakAttackUsedThisTurn).toBe(true)
+  })
+
+  it("natural_20: dragging a grappled target halves the grappler's speed unless the target is two sizes smaller", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+
+    expect(creature(actor, "A").effectiveSpeed).toBe(15)
+    expect(creature(actor, "A").movementRemaining).toBe(15)
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      threatened: new Set()
+    })
+
+    expect(creature(actor, "A").movementRemaining).toBe(10)
+
+    const exemptActor = initTwoPcBattle()
+    startTurn(exemptActor)
+
+    send(exemptActor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "huge",
+      targetSize: "medium",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+
+    expect(creature(exemptActor, "A").effectiveSpeed).toBe(30)
+    expect(creature(exemptActor, "A").movementRemaining).toBe(30)
   })
 
   it("natural_20: Shocking Grasp blocks opportunity attacks until the start of the target's next turn", () => {

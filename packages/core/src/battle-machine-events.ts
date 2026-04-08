@@ -20,6 +20,7 @@ import type {
   CreatureId,
   DamageType,
   DifficultyClass,
+  Size,
   SpellId,
   SpellSlotLevel
 } from "#/types.ts"
@@ -218,6 +219,16 @@ export type BattleEvent =
   | { readonly type: "BATTLE_DASH" }
   | { readonly type: "BATTLE_DISENGAGE" }
   | { readonly type: "BATTLE_DODGE" }
+  | {
+      readonly type: "BATTLE_GRAPPLE"
+      readonly targetId: CreatureId
+      readonly attackerSize: Size
+      readonly targetSize: Size
+      readonly targetSaveFailed: boolean
+      readonly attackerHasFreeHand: boolean
+    }
+  | { readonly type: "BATTLE_RELEASE_GRAPPLE" }
+  | { readonly type: "BATTLE_ESCAPE_GRAPPLE"; readonly escapeSucceeded: boolean }
   | { readonly type: "BATTLE_ACTION_SURGE" }
   | { readonly type: "BATTLE_ENTER_RAGE" }
   | { readonly type: "BATTLE_DECLARE_RECKLESS" }

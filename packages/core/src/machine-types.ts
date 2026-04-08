@@ -252,6 +252,11 @@ export type DndEvent =
       readonly targetSaveFailed: boolean
       readonly attackerHasFreeHand: boolean
     }
+  | {
+      readonly type: "SET_GRAPPLING_STATE"
+      readonly grappling: boolean
+      readonly grappledTargetTwoSizesSmaller: boolean
+    }
   | { readonly type: "RELEASE_GRAPPLE" }
   | { readonly type: "ESCAPE_GRAPPLE"; readonly escapeSucceeded: boolean }
   | {

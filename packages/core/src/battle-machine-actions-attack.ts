@@ -51,6 +51,7 @@ export function buildBattleAttackContext(
 ): AttackContext {
   const atk = cs.get(attackerId)!
   const tgt = cs.get(targetId)!
+  const attackerGrappled = atk.grappledBy != null || atk.grappled
   return {
     attackerBlinded: atk.blinded,
     attackerProne: atk.prone,
@@ -75,8 +76,8 @@ export function buildBattleAttackContext(
     isHeavyWeapon: false,
     wielderStrScore: 16, // not modeled in battle; safe default
     wielderDexScore: 14,
-    attackerGrappled: false, // grapple not in battle yet (F9)
-    targetIsGrappler: false,
+    attackerGrappled,
+    targetIsGrappler: atk.grappledBy === targetId,
     underwater: false,
     attackerHasSwimSpeed: false,
     isUnderwaterMeleeException: false,

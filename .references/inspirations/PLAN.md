@@ -396,6 +396,24 @@ Batch-11 verification completed in this worktree:
   - command: `pnpm --filter @dnd/core typecheck`
   - passed
 
+Batch-12 verification completed in this worktree:
+
+- focused battle regressions:
+  - command: `pnpm exec vitest run src/inspiration-battle-scenarios.test.ts`
+  - passed: 15 tests
+- package typecheck:
+  - command: `pnpm --filter @dnd/core typecheck`
+  - passed
+- compiled battle spec refresh:
+  - command: `node scripts/compile-battle-spec.cjs`
+  - result: rebuilt `.quint-cache/battle-compiled.json`
+- battle projection MBT Tier 1:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
+  - passed with seed `0x92440b11`, total `2s`
+- battle machine MBT Tier 1:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts`
+  - passed with seed `0x08383261`, total `2s`
+
 ## Current Worktree State
 
 This worktree now contains:
@@ -408,6 +426,8 @@ This worktree now contains:
 - dodge/sneak-attack timing regressions,
 - non-spell ready timing regressions,
 - direct creature-level ownership/speedDelta hardening tests,
+- battle-layer grapple relationship state and lifecycle actions,
+- deterministic grapple regressions for auto-release, attack disadvantage exception, and drag-speed penalty,
 - runtime rider support,
 - spec-level rider generation,
 - MBT coverage for the rider path,
@@ -433,14 +453,14 @@ Scope:
 - prefer scenarios already identified in the inspiration scenario inventory,
 - coordinate with active parallel branches before picking grapple/forced-movement work,
 - favor one of these:
-  - grappler incapacitation auto-releases target, but only after battle-layer grappler identity/link state lands on `master`,
   - another deterministic scenario-mining batch from `natural_20` that does not require new battle state,
-  - or Option B direct creature-level ownership tests if another inspiration scenario does not add enough value yet.
+  - explicit battle coverage for manual grapple release / escape if you want the remaining grapple lifecycle edges proved in inspiration form,
+  - or another deterministic scenario-mining batch from `natural_20` if grapple now feels sufficiently covered.
 
 Why this is next:
 
 - the rider-path cleanup and the small Ready timing batch are now complete,
-- the current blocker for the preferred grapple scenario is still missing relationship state rather than missing tests,
+- the former grapple architecture blocker is now cleared in this worktree,
 - the previously suggested Disengage, reaction-refresh, Dodge timing, and non-spell Ready timing batches are already covered in this worktree,
 - the remaining value is back in discovering the next missing mechanic interaction that the current battle surface can already express.
 
@@ -572,7 +592,7 @@ Goal:
 
 Current local finding:
 
-- still blocked. `BattleCreatureState` only carries [`grappled`](../../packages/core/src/battle-machine-types.ts), and both the battle runtime and Quint attack-context projection still hardcode [`attackerGrappled: false` and `targetIsGrappler: false`](../../packages/core/src/battle-machine-actions-attack.ts), with matching placeholders in [`battle.qnt`](../../battle.qnt).
+- completed in this worktree. Battle state now carries explicit grapple ownership links, attack-context projection consumes them, drag-speed uses them, and incapacitating the grappler auto-releases the target in both TS and Quint.
 
 Files to inspect:
 
@@ -583,7 +603,9 @@ Files to inspect:
 
 ### Design Handoff: Grapple Auto-Release
 
-This is the next medium architecture task once the small deterministic batches are exhausted.
+Status:
+
+- completed in this worktree as Batch 12.
 
 RAW anchor:
 
@@ -591,67 +613,20 @@ RAW anchor:
 - [.references/srd-5.2.1/Rules-Glossary.md](../srd-5.2.1/Rules-Glossary.md) `Grappling`
 - key rule: "The condition also ends if the grappler has the Incapacitated condition ..."
 
-Why the current battle layer cannot do it:
+What Batch 12 changed:
 
-- [battle-machine-types.ts](../../packages/core/src/battle-machine-types.ts) only stores a bare `grappled: boolean` on each creature.
-- [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts) still projects `attackerGrappled: false` and `targetIsGrappler: false`.
-- [battle.qnt](../../battle.qnt) has the same placeholder attack-context projection (`attackerGrappled: false`, `targetIsGrappler: false`).
-- [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts) currently computes battle speed with `isGrappling: false` and `grappledTargetTwoSizesSmaller: false`, so the battle layer also lacks drag/carry relationship facts.
-
-What "blocked by missing battle-layer grappler relationship state" means:
-
-- battle can tell that target `B` is grappled,
-- but it cannot tell that `A` is the grappler for `B`,
-- so when `A` becomes incapacitated, there is no authoritative way to identify which target's `grappled` condition should end,
-- and there is no relationship data to project the grappler-side attack disadvantage exception or the grappler drag-speed penalty.
-
-Recommended design direction:
-
-- add explicit grappler-target relationship fields to battle state instead of trying to infer them from a single boolean.
-- prefer one source of truth that can answer all three grapple questions:
-  - who is grappled by whom,
-  - whether the current attacker is grappled and attacking a non-grappler,
-  - whether the current mover is dragging a grappled target small enough to avoid the speed penalty.
-
-Minimal viable state shape:
-
-- on the target side:
-  - `grappledBy: CreatureId | null`
-- on the grappler side:
-  - `grapplingTarget: CreatureId | null`
-  - `grappledTargetTwoSizesSmaller: boolean`
-
-Why both sides are worth storing here:
-
-- target-side ownership is needed for auto-release and attack-context projection,
-- grappler-side ownership is needed for drag-speed calculation without scanning the whole creature map every time,
-- and this repo explicitly prefers changing shared state over maintaining ad hoc side registries.
-
-Suggested implementation order:
-
-1. Extend Quint and battle TS state together.
-   - update [battle.qnt](../../battle.qnt)
-   - update [battle-machine-types.ts](../../packages/core/src/battle-machine-types.ts)
-   - update fresh creature factories in [battle-machine-creature.ts](../../packages/core/src/battle-machine-creature.ts)
-2. Add relationship-aware helpers.
-   - compute whether a creature is grappling someone
-   - compute whether a grappled attacker is attacking its grappler or a different target
-   - compute battle grappler drag-speed penalty from relationship state
-3. Wire attack-context projection.
-   - replace the placeholders in [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts)
-   - mirror the same semantics in [battle.qnt](../../battle.qnt)
-4. Add grapple lifecycle events/actions at battle level.
-   - battle already has creature-layer grapple semantics; this task needs battle-layer relationship updates, not a second workaround model
-   - when a grapple is applied, populate both sides of the link
-   - when escape/manual release happens, clear both sides
-5. Add auto-release on incapacitation.
-   - whenever a grappler gains an incapacitating state, clear the linked target's grapple state and clear the grappler link
-   - make the same change in Quint first or in lockstep so parity stays authoritative
-6. Add deterministic regressions before MBT.
-   - grappler incapacitation auto-releases target
-   - grappled attacker has Disadvantage against non-grappler but not against grappler
-   - grappler drag-speed penalty applies unless target is Tiny or two sizes smaller
-7. Run battle parity verification after code/spec are aligned.
+1. Added explicit battle-layer relationship state.
+   - [battle.qnt](../../battle.qnt) combatants now track `grappledBy`, `grapplingTarget`, and `grappledTargetTwoSizesSmaller`
+   - [battle-machine-types.ts](../../packages/core/src/battle-machine-types.ts) mirrors the same fields
+2. Added relationship-aware helpers and lifecycle actions.
+   - [battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts) now links, clears, normalizes, and speed-refreshes grapple relationships
+   - [battle-machine-actions-turn.ts](../../packages/core/src/battle-machine-actions-turn.ts) now supports battle-level grapple, release, and escape actions
+3. Replaced the attack/speed placeholders with authoritative relationship facts.
+   - [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts) now projects `attackerGrappled` and `targetIsGrappler`
+   - [battle.qnt](../../battle.qnt) now uses relationship-aware attack-context projection and drag-speed calculation
+4. Added deterministic battle regressions and parity verification.
+   - [inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves auto-release on incapacitation, the grappler attack-disadvantage exception, and the drag-speed penalty
+   - both Tier 1 battle MBT checks passed against the updated spec/runtime pair
 
 Files likely involved:
 
@@ -666,19 +641,10 @@ Files likely involved:
 - [packages/core/src/battle-machine.mbt.test.ts](../../packages/core/src/battle-machine.mbt.test.ts)
 - [packages/core/src/battle-projection.mbt.test.ts](../../packages/core/src/battle-projection.mbt.test.ts)
 
-Verification target for that future task:
+What remains if grapple work resumes:
 
-- focused deterministic battle regressions for grapple apply / release / incapacitation,
-- `pnpm --filter @dnd/core typecheck`,
-- battle projection MBT Tier 1,
-- battle machine MBT Tier 1.
-
-Recommendation for a cold start later:
-
-- do not start by "just writing the inspiration test";
-- start by reading this section plus the RAW grapple passage,
-- then inspect the current placeholders in [battle.qnt](../../battle.qnt) and [battle-machine-actions-attack.ts](../../packages/core/src/battle-machine-actions-attack.ts),
-- and treat it as one coordinated spec/runtime state-model change rather than a test-only batch.
+- add an explicit inspiration proof for manual release / escape if that lifecycle edge still matters,
+- or expand to movement-out-of-reach release once battle spatial ownership is modeled beyond caller-supplied threatened sets.
 
 ## If You Continue This Work Next Time
 

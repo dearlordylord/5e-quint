@@ -291,6 +291,7 @@ export const rootEventHandlers = {
   ADD_EXHAUSTION: { actions: ["addExhaustion"] },
   REDUCE_EXHAUSTION: { actions: ["reduceExhaustion"] },
   GRAPPLE: { actions: ["applyGrapple"] },
+  SET_GRAPPLING_STATE: { actions: ["setGrapplingState"] },
   RELEASE_GRAPPLE: { actions: ["releaseGrapple"] },
   ESCAPE_GRAPPLE: { actions: ["escapeGrapple"] },
   SHOVE: { actions: ["applyShove"] },

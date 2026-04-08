@@ -31,7 +31,7 @@ import {
   QuintTurnState,
   variantToString
 } from "#/mbt-shared.ts"
-import type { CreatureId } from "#/types.ts"
+import type { CreatureId, Size } from "#/types.ts"
 import {
   armorClass,
   CreatureId as mkCreatureId,
@@ -70,7 +70,10 @@ const QuintCombatant = z.object({
   combatantResistances: z.any(),
   sneakAttackDice: z.bigint(),
   sneakAttackUsedThisTurn: z.boolean(),
-  baseWalkSpeed: z.bigint()
+  baseWalkSpeed: z.bigint(),
+  grappledBy: z.string(),
+  grapplingTarget: z.string(),
+  grappledTargetTwoSizesSmaller: z.boolean()
 })
 
 type ParsedCombatant = z.infer<typeof QuintCombatant>
@@ -118,6 +121,9 @@ interface NormalizedBattleCreature {
   exhaustion: number
   frightened: boolean
   grappled: boolean
+  grappledBy: string
+  grapplingTarget: string
+  grappledTargetTwoSizesSmaller: boolean
   invisible: boolean
   paralyzed: boolean
   petrified: boolean
@@ -198,6 +204,9 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     exhaustion: Number(s.exhaustion),
     frightened: s.frightened,
     grappled: s.grappled,
+    grappledBy: c.grappledBy,
+    grapplingTarget: c.grapplingTarget,
+    grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
     invisible: s.invisible,
     paralyzed: s.paralyzed,
     petrified: s.petrified,
@@ -270,6 +279,9 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     exhaustion: c.exhaustion,
     frightened: c.frightened,
     grappled: c.grappled,
+    grappledBy: c.grappledBy ?? "",
+    grapplingTarget: c.grapplingTarget ?? "",
+    grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
     invisible: c.invisible,
     paralyzed: c.paralyzed,
     petrified: c.petrified,
@@ -473,6 +485,9 @@ const battleDriverSchema = {
   bDash: {},
   bDisengage: {},
   bDodge: {},
+  bGrapple: { targetId: OS, attackerSize: OS, targetSize: OS, targetSaveFailed: OB, attackerHasFreeHand: OB },
+  bReleaseGrapple: {},
+  bEscapeGrapple: { escapeSucceeded: OB },
   bActionSurge: {},
   bEnterRage: {},
   bDeclareReckless: {},
@@ -547,6 +562,10 @@ function pcn(picks: Record<string, unknown>, key: string): CreatureId | null {
 function pb(picks: Record<string, unknown>, key: string, fallback: boolean): boolean {
   const v = picks[key]
   return typeof v === "boolean" ? v : fallback
+}
+function psz(picks: Record<string, unknown>, key: string, fallback: Size): Size {
+  const v = picks[key]
+  return (typeof v === "string" ? v.toLowerCase() : fallback) as Size
 }
 /** Common spatial/visibility/SA fields for attack event dispatch. */
 function attackContextPicks(picks: Record<string, unknown>) {
@@ -904,6 +923,25 @@ function createBattleMachineDriver() {
       },
       bDodge: () => {
         send({ type: "BATTLE_DODGE" })
+      },
+      bGrapple: (picks: Record<string, unknown>) => {
+        send({
+          type: "BATTLE_GRAPPLE",
+          targetId: pc(picks, "targetId", ""),
+          attackerSize: psz(picks, "attackerSize", "medium"),
+          targetSize: psz(picks, "targetSize", "medium"),
+          targetSaveFailed: pb(picks, "targetSaveFailed", false),
+          attackerHasFreeHand: pb(picks, "attackerHasFreeHand", true)
+        })
+      },
+      bReleaseGrapple: () => {
+        send({ type: "BATTLE_RELEASE_GRAPPLE" })
+      },
+      bEscapeGrapple: (picks: Record<string, unknown>) => {
+        send({
+          type: "BATTLE_ESCAPE_GRAPPLE",
+          escapeSucceeded: pb(picks, "escapeSucceeded", false)
+        })
       },
       bActionSurge: () => {
         send({ type: "BATTLE_ACTION_SURGE" })

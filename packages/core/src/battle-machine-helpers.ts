@@ -110,6 +110,154 @@ export function setCreature(
   return m
 }
 
+function isGrappling(c: BattleCreatureState): boolean {
+  return c.grapplingTarget != null
+}
+
+function battleEffectiveSpeed(c: BattleCreatureState): number {
+  return calculateEffectiveSpeed({
+    baseSpeed: Math.max(0, c.baseWalkSpeed + speedDeltaFromEffects(c)),
+    armorPenalty: 0,
+    grappled: c.grappled,
+    restrained: c.restrained,
+    exhaustion: c.exhaustion,
+    isGrappling: isGrappling(c),
+    grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller
+  })
+}
+
+function refreshCurrentTurnSpeed(previous: BattleCreatureState, updated: BattleCreatureState): BattleCreatureState {
+  const newSpeed = battleEffectiveSpeed(updated)
+  const spentMovement = Math.max(0, previous.effectiveSpeed - previous.movementRemaining)
+  return {
+    ...updated,
+    effectiveSpeed: newSpeed,
+    movementRemaining: Math.max(0, newSpeed - spentMovement)
+  }
+}
+
+function releaseGrapplePair(
+  cs: Creatures,
+  grapplerId: CreatureId,
+  targetId: CreatureId
+): Map<CreatureId, BattleCreatureState> {
+  let result = new Map(cs)
+  const grappler = result.get(grapplerId)
+  if (grappler) {
+    result.set(grapplerId, {
+      ...grappler,
+      grapplingTarget: null,
+      grappledTargetTwoSizesSmaller: false
+    })
+  }
+  const target = result.get(targetId)
+  if (target) {
+    result.set(targetId, {
+      ...target,
+      grappled: false,
+      grappledBy: null
+    })
+  }
+  return result
+}
+
+function refreshCurrentTurnCreatureSpeed(
+  cs: Creatures,
+  currentTurnCreatureId: CreatureId
+): Map<CreatureId, BattleCreatureState> {
+  const current = cs.get(currentTurnCreatureId)
+  if (!current) return new Map(cs)
+  return setCreature(cs, currentTurnCreatureId, refreshCurrentTurnSpeed(current, current))
+}
+
+export function linkBattleGrapple(
+  cs: Creatures,
+  grapplerId: CreatureId,
+  targetId: CreatureId,
+  targetTwoSizesSmaller: boolean,
+  currentTurnCreatureId: CreatureId
+): Map<CreatureId, BattleCreatureState> {
+  const grappler = cs.get(grapplerId)!
+  const target = cs.get(targetId)!
+  let result = new Map(cs)
+  result.set(grapplerId, {
+    ...grappler,
+    grapplingTarget: targetId,
+    grappledTargetTwoSizesSmaller: targetTwoSizesSmaller
+  })
+  result.set(targetId, {
+    ...target,
+    grappled: true,
+    grappledBy: grapplerId
+  })
+  if (grapplerId === currentTurnCreatureId) {
+    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
+  }
+  if (targetId === currentTurnCreatureId) {
+    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
+  }
+  return result
+}
+
+export function releaseBattleGrappleByGrappler(
+  cs: Creatures,
+  grapplerId: CreatureId,
+  currentTurnCreatureId: CreatureId
+): Map<CreatureId, BattleCreatureState> {
+  const grappler = cs.get(grapplerId)
+  if (!grappler?.grapplingTarget) return new Map(cs)
+  let result = releaseGrapplePair(cs, grapplerId, grappler.grapplingTarget)
+  if (grapplerId === currentTurnCreatureId || grappler.grapplingTarget === currentTurnCreatureId) {
+    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
+  }
+  return result
+}
+
+export function escapeBattleGrapple(
+  cs: Creatures,
+  targetId: CreatureId,
+  currentTurnCreatureId: CreatureId
+): Map<CreatureId, BattleCreatureState> {
+  const target = cs.get(targetId)
+  if (!target?.grappledBy) return new Map(cs)
+  let result = releaseGrapplePair(cs, target.grappledBy, targetId)
+  if (targetId === currentTurnCreatureId || target.grappledBy === currentTurnCreatureId) {
+    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
+  }
+  return result
+}
+
+export function normalizeBattleGrapples(cs: Creatures): Map<CreatureId, BattleCreatureState> {
+  let result = new Map(cs)
+  for (const [grapplerId, grappler] of result) {
+    if (!grappler.grapplingTarget) continue
+    const target = result.get(grappler.grapplingTarget)
+    const linkBroken =
+      target == null ||
+      target.dead ||
+      !target.grappled ||
+      target.grappledBy !== grapplerId ||
+      grappler.dead ||
+      isIncapacitated(grappler)
+    if (linkBroken) {
+      result = releaseGrapplePair(result, grapplerId, grappler.grapplingTarget)
+    }
+  }
+  for (const [targetId, target] of result) {
+    if (!target.grappledBy) continue
+    const grappler = result.get(target.grappledBy)
+    const linkBroken = grappler == null || grappler.grapplingTarget !== targetId || !target.grappled
+    if (linkBroken) {
+      result.set(targetId, {
+        ...target,
+        grappled: false,
+        grappledBy: null
+      })
+    }
+  }
+  return result
+}
+
 export function dealDamage(
   cs: Creatures,
   targetId: CreatureId,
@@ -123,9 +271,9 @@ export function dealDamage(
   // SRD 5.2.1 "Knocking Out a Creature": melee attacker's choice when damage
   // would reduce a PC to 0 HP (not instant death). Sets HP to 1 + Unconscious.
   if (knockOut && old.creatureKind === "PC" && old.hp > 0 && nc.hp === 0 && !nc.dead) {
-    return setCreature(cs, targetId, applyCondition({ ...old, hp: 1 }, "unconscious"))
+    return normalizeBattleGrapples(setCreature(cs, targetId, applyCondition({ ...old, hp: 1 }, "unconscious")))
   }
-  return setCreature(cs, targetId, nc)
+  return normalizeBattleGrapples(setCreature(cs, targetId, nc))
 }
 
 /** Auto-break concentration if the concentrated spell's effect no longer exists. Matches Quint pAutoBreakExpiredConcentration. */
@@ -353,7 +501,9 @@ export function applyFailEffects(
     return { creatures: new Map(cs), ...returnToState(returnTo) }
   }
   let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs)
-  if (ctx.applyCondition) cs1 = setCreature(cs1, ctx.target, applyCondition(cs1.get(ctx.target)!, ctx.conditionOnFail))
+  if (ctx.applyCondition) {
+    cs1 = normalizeBattleGrapples(setCreature(cs1, ctx.target, applyCondition(cs1.get(ctx.target)!, ctx.conditionOnFail)))
+  }
   if (ctx.damageOnFail > 0)
     return dealDamageWithAfterReactions(
       cs1,
@@ -418,18 +568,6 @@ function advanceEffectsAtPhase(
   return changed ? autoBreakAllExpiredConcentration(result) : new Map(cs)
 }
 
-function battleEffectiveSpeed(c: BattleCreatureState): number {
-  return calculateEffectiveSpeed({
-    baseSpeed: Math.max(0, c.baseWalkSpeed + speedDeltaFromEffects(c)),
-    armorPenalty: 0,
-    grappled: c.grappled,
-    restrained: c.restrained,
-    exhaustion: c.exhaustion,
-    isGrappling: false,
-    grappledTargetTwoSizesSmaller: false
-  })
-}
-
 export function applyOnHitEffect(
   cs: Creatures,
   targetId: CreatureId,
@@ -440,18 +578,8 @@ export function applyOnHitEffect(
   const target = cs.get(targetId)!
   const activeEffects = [...target.activeEffects.filter((existing) => existing.spellId !== effect.spellId), effect]
   const updatedTarget = { ...target, activeEffects }
-  const speed = targetId === currentTurnCreatureId ? battleEffectiveSpeed(updatedTarget) : updatedTarget.effectiveSpeed
-  return setCreature(
-    cs,
-    targetId,
-    targetId === currentTurnCreatureId
-      ? {
-          ...updatedTarget,
-          effectiveSpeed: speed,
-          movementRemaining: Math.min(updatedTarget.movementRemaining, speed)
-        }
-      : updatedTarget
-  )
+  const nextTarget = targetId === currentTurnCreatureId ? refreshCurrentTurnSpeed(target, updatedTarget) : updatedTarget
+  return setCreature(cs, targetId, nextTarget)
 }
 
 export function processStartTurn(
@@ -483,6 +611,7 @@ export function processStartTurn(
       result = setCreature(result, activeId, c)
     }
   }
+  result = normalizeBattleGrapples(result)
   c = result.get(activeId)!
   const speed = battleEffectiveSpeed(c)
   c = { ...c, ...FRESH_TURN_STATE, effectiveSpeed: speed, movementRemaining: speed }
@@ -496,7 +625,7 @@ export function processStartTurn(
   for (const [cid, cr] of result) {
     if (cid !== activeId && cr.slotExpendedThisTurn) result.set(cid, { ...cr, slotExpendedThisTurn: false })
   }
-  return result
+  return normalizeBattleGrapples(result)
 }
 
 export function processEndTurn(
@@ -531,5 +660,5 @@ export function processEndTurn(
   if (Option.isSome(oldConcId) && Option.isNone(result.get(activeId)!.concentrationSpellId)) {
     result = breakConcentrationAndPropagate(result, activeId)
   }
-  return result
+  return normalizeBattleGrapples(result)
 }

@@ -10,20 +10,24 @@ import {
   activeId,
   breakConcentrationAndPropagate,
   eligibleForCounterspell,
+  escapeBattleGrapple,
   heal,
+  linkBattleGrapple,
   mkAwait,
   nextTurn,
   processEndTurn,
   processStartTurn,
+  releaseBattleGrappleByGrappler,
   resolveSave,
   setCreature,
-  spendAction
+  spendAction,
+  spendExtraAttack
 } from "#/battle-machine-helpers.ts"
 import type { BattleActionArgs, BattleContext, BattleCreatureState, CreatureId } from "#/battle-machine-types.ts"
 import { PHASE_ACTIVE, phaseAwaitingLegendary, phaseAwaitingReady, phaseAwaitReaction } from "#/battle-machine-types.ts"
 import { rageDamageBonus, rageResistances } from "#/features/class-barbarian.ts"
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts"
-import { aggregateAttackMods } from "#/machine-combat.ts"
+import { aggregateAttackMods, resolveGrapple, targetTwoSizesSmaller } from "#/machine-combat.ts"
 import { spellId as mkSpellId } from "#/types.ts"
 
 // TODO style: combinators
@@ -179,6 +183,49 @@ export function battleEndTurn({ context: c, event: e }: BattleActionArgs<"BATTLE
     }
   }
   return { creatures: cs, ...readyWindowOrAdvance(cs, c.turnIndex, c.initiative.length, c.round) }
+}
+
+export function battleGrapple({ context: c, event: e }: BattleActionArgs<"BATTLE_GRAPPLE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
+  const id = activeId(c)
+  const ac = c.creatures.get(id)!
+  const tc = c.creatures.get(e.targetId)!
+  if (ac.dead || isIncapacitated(ac) || tc.dead) return {}
+  if (ac.actionsRemaining <= 0 && ac.extraAttacksRemaining <= 0) return {}
+  if (ac.grapplingTarget != null || tc.grappledBy != null) return {}
+  const updatedAc =
+    ac.attackActionUsed && ac.extraAttacksRemaining > 0 ? spendExtraAttack(ac) : spendAction(ac, "attack")
+  let cs = setCreature(c.creatures, id, updatedAc)
+  const success = resolveGrapple(
+    e.attackerSize,
+    e.targetSize,
+    e.targetSaveFailed,
+    e.attackerHasFreeHand,
+    isIncapacitated(tc)
+  )
+  if (success) {
+    cs = linkBattleGrapple(cs, id, e.targetId, targetTwoSizesSmaller(e.attackerSize, e.targetSize), id)
+  }
+  return { creatures: cs }
+}
+
+export function battleReleaseGrapple({ context: c }: BattleActionArgs<"BATTLE_RELEASE_GRAPPLE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
+  const id = activeId(c)
+  return { creatures: releaseBattleGrappleByGrappler(c.creatures, id, id) }
+}
+
+export function battleEscapeGrapple({
+  context: c,
+  event: e
+}: BattleActionArgs<"BATTLE_ESCAPE_GRAPPLE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {}
+  const id = activeId(c)
+  const ac = c.creatures.get(id)!
+  if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0 || ac.grappledBy == null) return {}
+  const cs = setCreature(c.creatures, id, spendAction(ac, "utilize"))
+  if (!e.escapeSucceeded) return { creatures: cs }
+  return { creatures: escapeBattleGrapple(cs, id, id) }
 }
 
 export function battleLegendaryPass({ context: c }: BattleActionArgs<"BATTLE_LEGENDARY_PASS">): Partial<BattleContext> {

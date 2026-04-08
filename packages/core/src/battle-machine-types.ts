@@ -16,6 +16,7 @@ import type {
   DamageType,
   DifficultyClass,
   IncapSource,
+  Size,
   SpellId,
   SpellSlotLevel
 } from "#/types.ts"
@@ -35,6 +36,9 @@ export interface BattleCreatureState {
   readonly exhaustion: number
   readonly frightened: boolean
   readonly grappled: boolean
+  readonly grappledBy: CreatureId | null
+  readonly grapplingTarget: CreatureId | null
+  readonly grappledTargetTwoSizesSmaller: boolean
   readonly invisible: boolean
   readonly paralyzed: boolean
   readonly petrified: boolean
@@ -339,4 +343,11 @@ export interface InitCreatureConfig {
   readonly initiativeRollB?: number
   /** SRD 5.2.1: surprised combatant has Disadvantage on Initiative roll. Defaults to false. */
   readonly surprised?: boolean
+}
+
+export interface GrappleParams {
+  readonly attackerSize: Size
+  readonly targetSize: Size
+  readonly targetSaveFailed: boolean
+  readonly attackerHasFreeHand: boolean
 }

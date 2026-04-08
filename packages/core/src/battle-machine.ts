@@ -37,7 +37,9 @@ import {
   battleDisengage,
   battleDodge,
   battleEndTurn,
+  battleEscapeGrapple,
   battleEnterRage,
+  battleGrapple,
   battleHeal,
   battleInit,
   battleLegendaryAttack,
@@ -47,6 +49,7 @@ import {
   battleReadyRelease,
   battleReadySpell,
   battleReadySpellRelease,
+  battleReleaseGrapple,
   battleStartTurn
 } from "#/battle-machine-actions-turn.ts"
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
@@ -123,6 +126,9 @@ export const battleMachine = setup({
     battleDash: narrow(battleDash),
     battleDisengage: narrow(battleDisengage),
     battleDodge: narrow(battleDodge),
+    battleGrapple: narrow(battleGrapple),
+    battleReleaseGrapple: narrow(battleReleaseGrapple),
+    battleEscapeGrapple: narrow(battleEscapeGrapple),
     battleActionSurge: narrow(battleActionSurge),
     battleEnterRage: narrow(battleEnterRage),
     battleDeclareReckless: narrow(battleDeclareReckless),
@@ -167,6 +173,9 @@ export const battleMachine = setup({
             BATTLE_DASH: { actions: "battleDash" },
             BATTLE_DISENGAGE: { actions: "battleDisengage" },
             BATTLE_DODGE: { actions: "battleDodge" },
+            BATTLE_GRAPPLE: { actions: "battleGrapple" },
+            BATTLE_RELEASE_GRAPPLE: { actions: "battleReleaseGrapple" },
+            BATTLE_ESCAPE_GRAPPLE: { actions: "battleEscapeGrapple" },
             BATTLE_ACTION_SURGE: { actions: "battleActionSurge" },
             BATTLE_ENTER_RAGE: { actions: "battleEnterRage" },
             BATTLE_DECLARE_RECKLESS: { actions: "battleDeclareReckless" },

@@ -272,6 +272,13 @@ export const creatureMachine = setup({
           }
         : {}
     }),
+    setGrapplingState: assign(({ event: e }) => {
+      const ev = e as Extract<DndEvent, { type: "SET_GRAPPLING_STATE" }>
+      return {
+        grappling: ev.grappling,
+        grappledTargetTwoSizesSmaller: ev.grappledTargetTwoSizesSmaller
+      }
+    }),
     releaseGrapple: assign({ grappled: false, grappling: false, grappledTargetTwoSizesSmaller: false }),
     escapeGrapple: assign(({ event: e }) => (asEscapeGrapple(e).escapeSucceeded ? { grappled: false } : {})),
     applyShove: assign(({ context: c, event: e }) => {

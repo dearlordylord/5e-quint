@@ -45,6 +45,9 @@ module battle {
     sneakAttackDice: int,                    // Sneak Attack d6 count (0 = not a rogue; ceil(rogueLevel/2))
     sneakAttackUsedThisTurn: bool,           // SA once per turn (SRD 5.2.1 Rogue "Sneak Attack")
     readiedSpellParams: ReadiedSpellParams,  // readied spell params (SRD 5.2.1 Ready action); slotLvl==0 = no spell
+    grappledBy: CreatureId,                  // "" = not grappled by another combatant
+    grapplingTarget: CreatureId,             // "" = not currently grappling a target
+    grappledTargetTwoSizesSmaller: bool,     // drag-speed exemption for the current grapple target
     baseWalkSpeed: int,                      // Walk speed (PC: 30, Monster: statBlock.speeds.get(Walk))
   }
 
@@ -73,6 +76,8 @@ module battle {
 
   /// Check if a combatant has a readied spell.
   pure def hasReadiedSpell(c: Combatant): bool = c.readiedSpellParams.slotLvl > 0
+
+  pure def isBattleGrappling(c: Combatant): bool = c.grapplingTarget != ""
 
   type TriggerType =
     | TAttackHits       // "when hit by attack roll" — Shield, Parry
@@ -390,6 +395,9 @@ module battle {
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
     readiedSpellParams: NO_READIED_SPELL,
+    grappledBy: "",
+    grapplingTarget: "",
+    grappledTargetTwoSizesSmaller: false,
     baseWalkSpeed: 30,
   }
 
@@ -421,6 +429,9 @@ module battle {
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
     readiedSpellParams: NO_READIED_SPELL,
+    grappledBy: "",
+    grapplingTarget: "",
+    grappledTargetTwoSizesSmaller: false,
     baseWalkSpeed: 30,
   }
 
@@ -453,6 +464,9 @@ module battle {
       sneakAttackDice: 0,
       sneakAttackUsedThisTurn: false,
       readiedSpellParams: NO_READIED_SPELL,
+      grappledBy: "",
+      grapplingTarget: "",
+      grappledTargetTwoSizesSmaller: false,
       baseWalkSpeed: walkSpeed,
     }
   }
@@ -559,6 +573,129 @@ module battle {
   pure def speedDeltaFromEffects(effects: Set[ActiveEffect]): int =
     if (effects.exists(e => e.spellId == RAY_OF_FROST_SPELL_ID and e.turnsRemaining > 0)) -10
     else 0
+
+  pure def battleEffectiveSpeed(c: Combatant): int = {
+    val adjustedBaseSpeed = intMax(0, c.baseWalkSpeed + speedDeltaFromEffects(c.creature.activeEffects))
+    pComputeEffectiveSpeed(
+      adjustedBaseSpeed, c.creature.exhaustion,
+      c.creature.grappled, c.creature.restrained,
+      0, isBattleGrappling(c), c.grappledTargetTwoSizesSmaller
+    )
+  }
+
+  pure def refreshCurrentTurnSpeed(
+    cs: CreatureId -> Combatant, currentTurnCreatureId: CreatureId
+  ): CreatureId -> Combatant = {
+    val current = cs.get(currentTurnCreatureId)
+    val newSpeed = battleEffectiveSpeed(current)
+    val spentMovement = intMax(0, current.turn.effectiveSpeed - current.turn.movementRemaining)
+    cs.set(
+      currentTurnCreatureId,
+      current.with("turn",
+        current.turn.with("effectiveSpeed", newSpeed).with("movementRemaining", intMax(0, newSpeed - spentMovement))
+      )
+    )
+  }
+
+  pure def releaseGrapplePair(
+    cs: CreatureId -> Combatant,
+    grapplerId: CreatureId,
+    targetId: CreatureId
+  ): CreatureId -> Combatant = {
+    val grappler = cs.get(grapplerId)
+    val target = cs.get(targetId)
+    cs.set(
+      grapplerId,
+      grappler.with("grapplingTarget", "").with("grappledTargetTwoSizesSmaller", false)
+    ).set(
+      targetId,
+      target.with("creature", pRemoveCondition(target.creature, CGrappled)).with("grappledBy", "")
+    )
+  }
+
+  pure def linkBattleGrapple(
+    cs: CreatureId -> Combatant,
+    grapplerId: CreatureId,
+    targetId: CreatureId,
+    targetTwoSizesSmaller: bool,
+    currentTurnCreatureId: CreatureId
+  ): CreatureId -> Combatant = {
+    val grappler = cs.get(grapplerId)
+    val target = cs.get(targetId)
+    val cs1 = cs.set(
+      grapplerId,
+      grappler.with("grapplingTarget", targetId).with("grappledTargetTwoSizesSmaller", targetTwoSizesSmaller)
+    ).set(
+      targetId,
+      target.with("creature", pApplyCondition(target.creature, CGrappled, Set())).with("grappledBy", grapplerId)
+    )
+    val cs2 = if (grapplerId == currentTurnCreatureId) refreshCurrentTurnSpeed(cs1, currentTurnCreatureId) else cs1
+    if (targetId == currentTurnCreatureId) refreshCurrentTurnSpeed(cs2, currentTurnCreatureId) else cs2
+  }
+
+  pure def releaseBattleGrappleByGrappler(
+    cs: CreatureId -> Combatant,
+    grapplerId: CreatureId,
+    currentTurnCreatureId: CreatureId
+  ): CreatureId -> Combatant = {
+    val grappler = cs.get(grapplerId)
+    if (grappler.grapplingTarget == "") cs
+    else {
+      val targetId = grappler.grapplingTarget
+      val cs1 = releaseGrapplePair(cs, grapplerId, targetId)
+      if (grapplerId == currentTurnCreatureId or targetId == currentTurnCreatureId)
+        refreshCurrentTurnSpeed(cs1, currentTurnCreatureId)
+      else cs1
+    }
+  }
+
+  pure def escapeBattleGrapple(
+    cs: CreatureId -> Combatant,
+    targetId: CreatureId,
+    currentTurnCreatureId: CreatureId
+  ): CreatureId -> Combatant = {
+    val target = cs.get(targetId)
+    if (target.grappledBy == "") cs
+    else {
+      val grapplerId = target.grappledBy
+      val cs1 = releaseGrapplePair(cs, grapplerId, targetId)
+      if (grapplerId == currentTurnCreatureId or targetId == currentTurnCreatureId)
+        refreshCurrentTurnSpeed(cs1, currentTurnCreatureId)
+      else cs1
+    }
+  }
+
+  pure def normalizeBattleGrapples(cs: CreatureId -> Combatant): CreatureId -> Combatant = {
+    val afterGrapplers = cs.keys().fold(cs, (acc, grapplerId) =>
+      val grappler = acc.get(grapplerId)
+      if (grappler.grapplingTarget == "") acc
+      else {
+        val targetId = grappler.grapplingTarget
+        val linkBroken =
+          not(acc.keys().contains(targetId)) or
+          acc.get(targetId).creature.dead or
+          not(acc.get(targetId).creature.grappled) or
+          acc.get(targetId).grappledBy != grapplerId or
+          grappler.creature.dead or
+          isIncapacitated(grappler.creature)
+        if (linkBroken) releaseGrapplePair(acc, grapplerId, targetId) else acc
+      }
+    )
+    afterGrapplers.keys().fold(afterGrapplers, (acc, targetId) =>
+      val target = acc.get(targetId)
+      if (target.grappledBy == "") acc
+      else {
+        val grapplerId = target.grappledBy
+        val linkBroken =
+          not(acc.keys().contains(grapplerId)) or
+          acc.get(grapplerId).grapplingTarget != targetId or
+          not(target.creature.grappled)
+        if (linkBroken)
+          acc.set(targetId, target.with("creature", pRemoveCondition(target.creature, CGrappled)).with("grappledBy", ""))
+        else acc
+      }
+    )
+  }
 
   pure def advanceStartEffectsForOwner(
     cs: CreatureId -> Combatant, ownerId: CreatureId
@@ -670,7 +807,7 @@ module battle {
     knockOut: bool
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     val oldT = cs.get(targetId)
-    val cs1 = dealDamage(cs, targetId, dmg, dt, crit, knockOut)
+    val cs1 = normalizeBattleGrapples(dealDamage(cs, targetId, dmg, dt, crit, knockOut))
     val newT = cs1.get(targetId)
     // Actual damage after resistance/vulnerability/immunity and temp HP absorption
     val actualDmg = (oldT.creature.hp + oldT.creature.tempHp) - (newT.creature.hp + newT.creature.tempHp)
@@ -831,15 +968,11 @@ module battle {
         val cs1a = setCreature(cs0, activeId, r.creature).setSlots(activeId, r.slots)
         propagateIfConcBroken(cs1a, activeId, ac0.slots, r.slots)
       } else cs0
+      val cs1b = normalizeBattleGrapples(cs1)
       // 4. Fresh turn state
-      val ac1 = cs1.get(activeId)
-      val adjustedBaseSpeed = intMax(0, ac1.baseWalkSpeed + speedDeltaFromEffects(ac1.creature.activeEffects))
-      val speed = pComputeEffectiveSpeed(
-        adjustedBaseSpeed, ac1.creature.exhaustion,
-        ac1.creature.grappled, ac1.creature.restrained,
-        0, false, false  // armor/grappling: not modeled at battle level
-      )
-      val cs2 = setTurn(cs1, activeId, FRESH_TURN
+      val ac1 = cs1b.get(activeId)
+      val speed = battleEffectiveSpeed(ac1)
+      val cs2 = setTurn(cs1b, activeId, FRESH_TURN
         .with("movementRemaining", speed)
         .with("effectiveSpeed", speed))
       // 4b. Fighter start-of-turn: reset actionSurgeUsedThisTurn
@@ -878,7 +1011,7 @@ module battle {
         acc.set(cid, cb.with("turn", cb.turn.with("slotExpendedThisTurn", false)))
       )
       all {
-        bCreatures' = cs4,
+        bCreatures' = normalizeBattleGrapples(cs4),
         bPhase' = BPActiveTurn,
         bInitiative' = bInitiative,
         bTurnIndex' = bTurnIndex,
@@ -927,8 +1060,8 @@ module battle {
       isHeavyWeapon: false,           // weapon properties not modeled in battle yet
       wielderStrScore: 16,            // safe default; not modeled in battle
       wielderDexScore: 14,            // safe default; not modeled in battle
-      attackerGrappled: false,        // grapple not in battle yet (F9)
-      targetIsGrappler: false,
+      attackerGrappled: atk.grappledBy != "" or atk.creature.grappled,
+      targetIsGrappler: atk.grappledBy == targetId,
       underwater: false,              // environmental, deferred
       attackerHasSwimSpeed: false,
       isUnderwaterMeleeException: false,
@@ -1400,7 +1533,7 @@ module battle {
       // after-damage reactions see the updated state).
       val cs1 = if (ctx.applyCondition) {
         val t = cs.get(ctx.target)
-        setCreature(cs, ctx.target, pApplyCondition(t.creature, ctx.conditionOnFail, Set()))
+        normalizeBattleGrapples(setCreature(cs, ctx.target, pApplyCondition(t.creature, ctx.conditionOnFail, Set())))
       } else cs
       if (ctx.damageOnFail > 0) {
         dealDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
@@ -2093,7 +2226,7 @@ module battle {
       val r = pEndTurn(c.creature, c.slots, eotSaves, eotDamages)
       val cs1 = setCreature(bCreatures, activeId, r.creature).setSlots(activeId, r.slots)
       // 3. Propagate concentration break across all creatures
-      val cs2 = propagateIfConcBroken(cs1, activeId, c.slots, r.slots)
+      val cs2 = normalizeBattleGrapples(propagateIfConcBroken(cs1, activeId, c.slots, r.slots))
       // 4. Check for LA window (R7: "at the end of another creature's turn")
       val laEligible = allIds.exclude(Set(activeId)).filter(id =>
         val mc = cs2.get(id)
@@ -2349,6 +2482,78 @@ module battle {
       val newTurn = pUseAction(ac.turn, ac.creature, ADodge)
       all {
         bCreatures' = setTurn(bCreatures, activeId, newTurn),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  action bGrapple = {
+    val activeId = bInitiative[bTurnIndex]
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
+    nondet targetId = allIds.exclude(Set(activeId)).oneOf()
+    nondet attackerSize = Set(Tiny, Small, Medium, Large, Huge, Gargantuan).oneOf()
+    nondet targetSize = Set(Tiny, Small, Medium, Large, Huge, Gargantuan).oneOf()
+    nondet targetSaveFailed = Bool.oneOf()
+    nondet attackerHasFreeHand = Bool.oneOf()
+    val tc = bCreatures.get(targetId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      ac.turn.actionsRemaining > 0 or ac.turn.extraAttacksRemaining > 0,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      not(tc.creature.dead),
+      ac.grapplingTarget == "",
+      tc.grappledBy == "",
+      val newTurn = if (ac.turn.attackActionUsed and ac.turn.extraAttacksRemaining > 0)
+        ac.turn.with("extraAttacksRemaining", ac.turn.extraAttacksRemaining - 1)
+      else
+        pUseAction(ac.turn, ac.creature, AAttack)
+      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val success = pGrapple(attackerSize, targetSize, tc.creature, targetSaveFailed, attackerHasFreeHand).success
+      val cs2 = if (success)
+        linkBattleGrapple(cs1, activeId, targetId, pTwoSizesSmaller(attackerSize, targetSize), activeId)
+      else cs1
+      all {
+        bCreatures' = cs2,
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  action bReleaseGrapple = {
+    val activeId = bInitiative[bTurnIndex]
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      bCreatures.get(activeId).grapplingTarget != "",
+      all {
+        bCreatures' = releaseBattleGrappleByGrappler(bCreatures, activeId, activeId),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  action bEscapeGrapple = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    nondet escapeSucceeded = Bool.oneOf()
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      ac.grappledBy != "",
+      val newTurn = pUseAction(ac.turn, ac.creature, AUtilize)
+      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val cs2 = if (escapeSucceeded) escapeBattleGrapple(cs1, activeId, activeId) else cs1
+      all {
+        bCreatures' = cs2,
         bPhase' = BPActiveTurn,
         keepBattle,
       }
@@ -2624,11 +2829,11 @@ module battle {
         if (canCastSpells) any {
           bAttack, bCastSaveSpell, bCastAoE,
           bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
-          bMove, bHeal, bDash, bDisengage, bDodge, bActionSurge,
+          bMove, bHeal, bDash, bDisengage, bDodge, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge,
           bEnterRage, bDeclareReckless, bReady, bReadySpell, bEndTurn,
         } else any {
           bAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage,
-          bDodge, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
+          bDodge, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
         }
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {
@@ -2685,6 +2890,22 @@ module battle {
   val readiedSpellImpliesConcentrating = bCreatures.keys().forall(id =>
     val c = bCreatures.get(id)
     hasReadiedSpell(c) implies c.slots.concentrationSpellId != ""
+  )
+
+  val grappleLinksConsistent = bCreatures.keys().forall(id =>
+    val c = bCreatures.get(id)
+    if (c.grapplingTarget == "") true
+    else
+      bCreatures.keys().contains(c.grapplingTarget) and
+      bCreatures.get(c.grapplingTarget).grappledBy == id and
+      bCreatures.get(c.grapplingTarget).creature.grappled
+  ) and bCreatures.keys().forall(id =>
+    val c = bCreatures.get(id)
+    if (c.grappledBy == "") true
+    else
+      bCreatures.keys().contains(c.grappledBy) and
+      bCreatures.get(c.grappledBy).grapplingTarget == id and
+      c.creature.grappled
   )
 
   /// If awaiting reaction, un-offered eligible reactors have their reaction available.
@@ -2785,6 +3006,7 @@ module battle {
     initiativeMatchesCreatures,
     initiativeNoDuplicates,
     allDeadNotConcentrating,
+    grappleLinksConsistent,
     reactorHasReaction,
     legendaryActionNotOnOwnTurn,
     allActiveEffectsUnique,

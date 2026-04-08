@@ -14,6 +14,7 @@ import { z } from "zod"
 import { effectiveInitRoll } from "#/battle-machine-actions-turn.ts"
 import { creatureMachine, type DndEvent, type DndSnapshot } from "#/machine.ts"
 import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
+import { resolveGrapple, targetTwoSizesSmaller } from "#/machine-combat.ts"
 import {
   compareNormalizedStates,
   computeRechargedAbilities,
@@ -32,7 +33,7 @@ import {
   snapshotToNormalized,
   variantToString
 } from "#/mbt-shared.ts"
-import type { Condition, CreatureId, CreatureKind, DamageType } from "#/types.ts"
+import type { Condition, CreatureId, CreatureKind, DamageType, Size } from "#/types.ts"
 import {
   classLevel,
   CreatureId as mkCreatureId,
@@ -331,6 +332,9 @@ const battleDriverSchema = {
   bDash: {},
   bDisengage: {},
   bDodge: {},
+  bGrapple: { targetId: OS, attackerSize: OS, targetSize: OS, targetSaveFailed: OB, attackerHasFreeHand: OB },
+  bReleaseGrapple: {},
+  bEscapeGrapple: { escapeSucceeded: OB },
   bActionSurge: {},
   bEnterRage: {},
   bDeclareReckless: {},
@@ -391,6 +395,8 @@ function createBattleProjectionDriver() {
 
     // Track who has been initialized with START_TURN
     const turnStarted = new Set<string>()
+    const grapplingTargets = new Map<string, string>()
+    const grappledBy = new Map<string, string>()
 
     // Pick helpers: values are already parsed by schema (number, string, boolean)
     function pickBigInt(picks: ReadonlyMap<string, unknown>, key: string): number | undefined {
@@ -431,6 +437,38 @@ function createBattleProjectionDriver() {
 
     function activeId(): string {
       return initiative[turnIndex]
+    }
+
+    function setProjectedGrapplingState(id: string, grappling: boolean, grappledSmall: boolean) {
+      send(id, {
+        type: "SET_GRAPPLING_STATE",
+        grappling,
+        grappledTargetTwoSizesSmaller: grappledSmall
+      })
+    }
+
+    function clearProjectedGrapple(grapplerId: string, targetId: string) {
+      if (getSnap(targetId).context.grappled) {
+        send(targetId, { type: "REMOVE_CONDITION", condition: "grappled" })
+      }
+      setProjectedGrapplingState(grapplerId, false, false)
+      grapplingTargets.delete(grapplerId)
+      grappledBy.delete(targetId)
+    }
+
+    function syncProjectedGrapples() {
+      for (const [grapplerId, targetId] of grapplingTargets) {
+        const grappler = getSnap(grapplerId)
+        const target = getSnap(targetId)
+        if (
+          grappler.matches({ damageTrack: "dead" }) ||
+          grappler.hasTag("incapacitated") ||
+          target.matches({ damageTrack: "dead" }) ||
+          !target.context.grappled
+        ) {
+          clearProjectedGrapple(grapplerId, targetId)
+        }
+      }
     }
 
     function applyProjectedHitRider(attackerId: string, targetId: string, hitRider: string) {
@@ -590,6 +628,8 @@ function createBattleProjectionDriver() {
       initiative = initEntries.map((e) => e.id)
       turnIndex = 0
       turnStarted.clear()
+      grapplingTargets.clear()
+      grappledBy.clear()
 
       // Battle creatures start with FRESH_TURN (actionsRemaining=1) and can act
       // immediately. Send START_TURN to put all actors in "acting" state so
@@ -640,6 +680,7 @@ function createBattleProjectionDriver() {
             : undefined
       })
       turnStarted.add(id)
+      syncProjectedGrapples()
     }
 
     function handleBAttack(picks: ReadonlyMap<string, unknown>) {
@@ -750,6 +791,7 @@ function createBattleProjectionDriver() {
         })
         pendingAfterDamage = { damageSource: atk.attacker, damagedCreature: atk.target }
         pendingAttack = null
+        syncProjectedGrapples()
         return
       }
 
@@ -797,6 +839,7 @@ function createBattleProjectionDriver() {
           isCritical: false
         })
         pendingAfterDamage = { damageSource: reactorId, damagedCreature: target }
+        syncProjectedGrapples()
       }
     }
 
@@ -826,6 +869,7 @@ function createBattleProjectionDriver() {
           isCritical: retCrit
         })
         pendingAfterDamage = { damageSource: reactorId, damagedCreature: target }
+        syncProjectedGrapples()
       }
     }
 
@@ -980,6 +1024,7 @@ function createBattleProjectionDriver() {
         })
         pendingAfterDamage = { damageSource: caster, damagedCreature: target }
       }
+      syncProjectedGrapples()
     }
 
     /** Check if there are eligible CS reactors excluding a caster and offered set. */
@@ -1337,6 +1382,53 @@ function createBattleProjectionDriver() {
       resolveAttackHit(reactorId, activeId(), oaAtkRoll, oaTgtAc, oaDmg, oaDt, "NoAttackHitRider", oaCrit)
     }
 
+    function handleBGrapple(picks: ReadonlyMap<string, unknown>) {
+      const attackerId = activeId()
+      const targetId = pickString(picks, "targetId") ?? ""
+      const attackerSize = ((pickString(picks, "attackerSize") ?? "medium").toLowerCase()) as Size
+      const targetSize = ((pickString(picks, "targetSize") ?? "medium").toLowerCase()) as Size
+      const targetSaveFailed = pickBool(picks, "targetSaveFailed") ?? false
+      const attackerHasFreeHand = pickBool(picks, "attackerHasFreeHand") ?? true
+      const attackerCtx = getSnap(attackerId).context
+      const targetSnap = getSnap(targetId)
+
+      if (attackerCtx.attackActionUsed && attackerCtx.extraAttacksRemaining > 0) {
+        send(attackerId, { type: "USE_EXTRA_ATTACK" })
+      } else {
+        send(attackerId, { type: "USE_ACTION", actionType: "attack" })
+      }
+
+      if (
+        grapplingTargets.has(attackerId) ||
+        grappledBy.has(targetId) ||
+        !resolveGrapple(attackerSize, targetSize, targetSaveFailed, attackerHasFreeHand, targetSnap.hasTag("incapacitated"))
+      ) {
+        return
+      }
+
+      send(targetId, { type: "APPLY_CONDITION", condition: "grappled" })
+      setProjectedGrapplingState(attackerId, true, targetTwoSizesSmaller(attackerSize, targetSize))
+      grapplingTargets.set(attackerId, targetId)
+      grappledBy.set(targetId, attackerId)
+      syncProjectedGrapples()
+    }
+
+    function handleBReleaseGrapple() {
+      const attackerId = activeId()
+      const targetId = grapplingTargets.get(attackerId)
+      if (!targetId) return
+      clearProjectedGrapple(attackerId, targetId)
+    }
+
+    function handleBEscapeGrapple(picks: ReadonlyMap<string, unknown>) {
+      const targetId = activeId()
+      send(targetId, { type: "USE_ACTION", actionType: "utilize" })
+      if (!(pickBool(picks, "escapeSucceeded") ?? false)) return
+      const grapplerId = grappledBy.get(targetId)
+      if (!grapplerId) return
+      clearProjectedGrapple(grapplerId, targetId)
+    }
+
     function handleBEndTurn(picks: ReadonlyMap<string, unknown>) {
       const id = activeId()
       const ctx = getSnap(id).context
@@ -1366,6 +1458,7 @@ function createBattleProjectionDriver() {
 
       // Defer turn advancement — bLegendaryPass/bLegendaryAttack or before() will advance.
       pendingEndTurn = true
+      syncProjectedGrapples()
     }
 
     let pendingEndTurn = false
@@ -1420,6 +1513,7 @@ function createBattleProjectionDriver() {
 
       send(id, { type: "USE_ACTION", actionType: "magic" })
       send(targetId, { type: "HEAL", amount: healAmount(amount) })
+      syncProjectedGrapples()
     }
 
     /** Shared hit resolution: checks reactors, applies or defers damage. */
@@ -1740,6 +1834,18 @@ function createBattleProjectionDriver() {
       bDodge: () => {
         before("bDodge")
         send(activeId(), { type: "USE_ACTION", actionType: "dodge" })
+      },
+      bGrapple: (p: Record<string, unknown>) => {
+        before("bGrapple")
+        handleBGrapple(toMap(p))
+      },
+      bReleaseGrapple: () => {
+        before("bReleaseGrapple")
+        handleBReleaseGrapple()
+      },
+      bEscapeGrapple: (p: Record<string, unknown>) => {
+        before("bEscapeGrapple")
+        handleBEscapeGrapple(toMap(p))
       },
       bActionSurge: () => {
         before("bActionSurge")

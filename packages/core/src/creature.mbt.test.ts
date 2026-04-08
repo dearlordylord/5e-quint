@@ -77,6 +77,7 @@ type EventActionMap = {
   MARK_BONUS_ACTION_SPELL: "doMarkBonusActionSpell"
   MARK_NON_CANTRIP_ACTION_SPELL: "doMarkNonCantripActionSpell"
   GRAPPLE: "doGrapple"
+  SET_GRAPPLING_STATE: "doSetGrapplingState"
   RELEASE_GRAPPLE: "doReleaseGrapple"
   ESCAPE_GRAPPLE: "doEscapeGrapple"
   SHOVE: "doShove"
