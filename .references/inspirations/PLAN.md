@@ -750,6 +750,7 @@ Verification:
 
 What is next now:
 
+- `Rage` / `Reckless Attack` battle coverage is now in inspiration form, so do not re-pick that batch
 - `Action Surge` battle coverage is now in inspiration form, so do not re-pick it as the next batch
 - the `Ray of Frost` + `Dash` follow-up is now covered in inspiration form, so do not re-pick it as the next batch
 - scout the next small deterministic inspiration batch outside grapple and outside the already-covered `Ray of Frost`/`Dash` interaction
@@ -762,6 +763,24 @@ Batch 14 result:
 2. Confirmed the existing implementation already matched RAW.
    - no production TS or Quint changes were required
    - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/inspiration-battle-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
+
+Batch 16 result:
+
+1. Added explicit battle coverage for Barbarian `Rage`.
+   - [packages/core/src/inspiration-battle-scenarios.test.ts](../../packages/core/src/inspiration-battle-scenarios.test.ts) now proves:
+     - entering Rage grants physical damage resistance and the expected melee damage bonus,
+     - Rage blocks spellcasting while active
+2. Added explicit battle coverage for Barbarian `Reckless Attack`.
+   - the suite now proves:
+     - attacks against a reckless barbarian gain advantage,
+     - non-barbarians cannot declare `Reckless Attack`
+3. Tightened a real battle-layer semantic gap exposed by the new regressions.
+   - `BATTLE_DECLARE_RECKLESS` now needs a qualifying Barbarian level instead of acting as a generic flag setter
 
 Verification:
 

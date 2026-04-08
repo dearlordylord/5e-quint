@@ -103,6 +103,53 @@ function initFighterCasterBattle(fighterLevel: number) {
   return actor
 }
 
+function initBarbarianBattle(barbarianLevel: number) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", barbarianLevel, initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 }
+    ]
+  })
+  return actor
+}
+
+function initBarbarianCasterBattle(barbarianLevel: number) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        barbarianLevel,
+        preparedSpells: new Set(["hold_person"]),
+        initiativeRoll: 15
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]), initiativeRoll: 10 }
+    ]
+  })
+  return actor
+}
+
+function initRecklessBattle(barbarianLevel: number) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", barbarianLevel, initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", rogueLevel: 5, sneakAttackDice: 3, initiativeRoll: 10 }
+    ]
+  })
+  return actor
+}
+
 function initSneakAttackBattle() {
   const actor = createActor(battleMachine)
   actor.start()
@@ -391,6 +438,146 @@ describe("inspiration-sourced battle regressions", () => {
     expect(creature(actor, "A").slotExpendedThisTurn).toBe(false)
     expect(creature(actor, "A").slotsCurrent[0]).toBe(4)
     expect(creature(actor, "B").paralyzed).toBe(false)
+  })
+
+  it("natural_20: Rage grants physical damage resistance until the barbarian's next turn ends", () => {
+    const actor = initBarbarianBattle(1)
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_ENTER_RAGE" })
+
+    expect(creature(actor, "A").bonusActionUsed).toBe(true)
+    expect(creature(actor, "A").meleeDamageBonus).toBe(2)
+    expect(creature(actor, "A").combatantResistances).toEqual(new Set(["bludgeoning", "piercing", "slashing"]))
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("A"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "bludgeoning",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").hp).toBe(17)
+  })
+
+  it("natural_20: Rage blocks spellcasting while active", () => {
+    const actor = initBarbarianCasterBattle(1)
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_ENTER_RAGE" })
+
+    expect(creature(actor, "A").ragingBlocksSpells).toBe(true)
+    expect(creature(actor, "A").actionsRemaining).toBe(1)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person",
+      ritual: false
+    })
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1)
+    expect(creature(actor, "A").slotsCurrent[0]).toBe(4)
+    expect(creature(actor, "B").paralyzed).toBe(false)
+  })
+
+  it("natural_20: Reckless Attack makes attack rolls against the barbarian have advantage until the start of the next turn", () => {
+    const actor = initRecklessBattle(2)
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_DECLARE_RECKLESS" })
+
+    expect(creature(actor, "A").recklessThisTurn).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("A"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isFinesse: true,
+      saDmg: 6
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").hp).toBe(10)
+    expect(creature(actor, "B").sneakAttackUsedThisTurn).toBe(true)
+  })
+
+  it("natural_20: non-barbarians cannot declare Reckless Attack", () => {
+    const actor = initRecklessBattle(0)
+    startTurn(actor)
+
+    send(actor, { type: "BATTLE_DECLARE_RECKLESS" })
+
+    expect(creature(actor, "A").recklessThisTurn).toBe(false)
+
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true
+    })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("A"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isFinesse: true,
+      saDmg: 6
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").hp).toBe(16)
+    expect(creature(actor, "B").sneakAttackUsedThisTurn).toBe(false)
   })
 
   it("natural_20: Disengage prevents opportunity attacks for the rest of the turn", () => {

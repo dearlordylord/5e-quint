@@ -479,7 +479,7 @@ export function battleDeclareReckless({
   if (!c.turnStarted) return {}
   const id = activeId(c)
   const ac = c.creatures.get(id)!
-  if (ac.dead || isIncapacitated(ac) || ac.recklessThisTurn) return {}
+  if (ac.dead || isIncapacitated(ac) || ac.recklessThisTurn || ac.barbarianLevel < 2) return {}
   return {
     creatures: setCreature(c.creatures, id, { ...ac, recklessThisTurn: true })
   }
