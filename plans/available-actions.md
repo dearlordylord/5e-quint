@@ -887,6 +887,331 @@ All 3 need machine-owned trigger windows before the available-actions surface ca
 - If creature-level semantics change, run Tier 1b:
   - `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts`
 
+### Next batch design: owned trigger windows for `USE_SNEAK_ATTACK`, `USE_INDOMITABLE`, `USE_OVERCHANNEL`
+
+This is the next real implementation batch. It should be treated as an ownership/state-design pass first, and only secondarily as an available-actions/MCP exposure pass.
+
+#### Why this batch exists
+
+All 3 deferred actions currently have the same architectural bug:
+
+- the machine owns the resource and per-turn bookkeeping
+- but it does **not** own the trigger window that makes the action semantically legal *right now*
+- therefore the current top-level guard is too coarse for the query surface
+
+The fix is the same kind of fix used earlier for:
+
+- `USE_TACTICAL_MIND`
+- `USE_PEERLESS_SKILL`
+- `USE_RELENTLESS_RAGE`
+
+Do **not** solve this in MCP. Extend the existing owned trigger state instead.
+
+#### Core design choice
+
+Reuse `pendingResolution` as the single creature-level trigger-window seam.
+
+Do **not** add a second parallel “pendingAction”, “pendingAttackModifier”, or adapter-local trigger registry.
+
+Current `pendingResolution`:
+
+- `null`
+- `{ kind: "tacticalMind" }`
+- `{ kind: "peerlessSkill", mode: "abilityCheck" | "attackRoll" }`
+- `{ kind: "relentlessRage" }`
+
+Recommended extension for the next batch:
+
+- `{ kind: "indomitable" }`
+- `{ kind: "overchannel", spellName: SpellName, slotLevel: SpellSlotLevel }`
+- `{ kind: "sneakAttack", mode: "finesse" | "ranged", source: "advantage" | "adjacentAlly" }`
+
+Notes:
+
+- `indomitable` only needs a save-failed trigger window in the current creature model; it does not need the original d20 total because the current machine event only decrements the charge.
+- `overchannel` should remember the qualifying spell identity and slot level because the feature is only legal for a Wizard spell cast with a level 1-5 slot that deals damage. Keeping the spell name and slot level in owned state prevents the query surface from drifting away from the spellcasting pipeline.
+- `sneakAttack` should remember only the semantic trigger facts needed for honest suggestion:
+  - whether the qualifying attack is finesse or ranged
+  - whether the trigger came from Advantage or from the adjacent-ally-without-Disadvantage path
+  - do **not** encode raw attack math or target IDs in the creature model unless the machine already owns them elsewhere
+
+#### Priority order
+
+1. `USE_SNEAK_ATTACK`
+2. `USE_INDOMITABLE`
+3. `USE_OVERCHANNEL`
+
+Why this order:
+
+- Sneak Attack is the most important user-facing gap and the clearest “query surface lies today” case.
+- It also sets the general trigger-window pattern for future attack/rider/reaction work.
+- Indomitable is simpler once the trigger-window pattern is in place.
+- Overchannel depends on the spellcasting pipeline and should be designed after reviewing the shaped spell-cast ownership already added in Phase 3.
+
+#### `USE_SNEAK_ATTACK` design
+
+##### Problem
+
+Current `canSneakAttack` in `machine-guards.ts` is only:
+
+- rogue level >= 1
+- not incapacitated
+- not used this turn
+
+That is not enough for suggestion. Sneak Attack also needs:
+
+- a qualifying hit already exists
+- the attack used a Finesse or Ranged weapon
+- either:
+  - the attack had Advantage
+  - or an enemy of the target was within 5 feet of it and you did not have Disadvantage
+
+The current creature machine does not own those trigger facts, so `USE_SNEAK_ATTACK` would be shown too often.
+
+##### Recommended state addition
+
+Add a new `pendingResolution` variant:
+
+- `{ kind: "sneakAttack", mode: "finesse" | "ranged", source: "advantage" | "adjacentAlly" }`
+
+This is enough for the current single-creature machine because:
+
+- the machine event `USE_SNEAK_ATTACK` is still just “mark it used this turn”
+- the actual damage dice remain battle/session-side or caller-side, just like today
+- available-actions only needs to know whether the semantic trigger exists, not the target AC or the damage roll
+
+##### Trigger creation
+
+Add an explicit internal event:
+
+- `TRIGGER_SNEAK_ATTACK`
+
+Recommended event payload:
+
+- `mode: "finesse" | "ranged"`
+- `source: "advantage" | "adjacentAlly"`
+
+Why an explicit trigger event is acceptable here:
+
+- the current creature machine does not own full attack-resolution semantics
+- attack hit / ally adjacency are battle-owned facts
+- using an internal trigger event keeps the boundary honest while the creature model remains a projection
+
+Do **not** add a coarse MCP boolean such as `qualifies: true`. The trigger should be established by domain/battle/session logic, not by the query adapter.
+
+##### Trigger clearing
+
+Clear the pending Sneak Attack trigger when:
+
+- `USE_SNEAK_ATTACK` resolves
+- `START_TURN` runs
+- `END_TURN` runs
+- leaving combat / long reset paths already clearing `pendingResolution`
+
+If another pending trigger model already clears on `START_TURN`, keep Sneak Attack aligned with that pattern.
+
+##### Available-actions contract
+
+Once trigger ownership exists:
+
+- expose `USE_SNEAK_ATTACK` as a zero-hole token
+- no MCP runtime inputs
+- outcome text should describe applying Sneak Attack damage to the qualifying hit, not rolling damage in MCP
+
+Recommended summary:
+
+- `Apply Sneak Attack damage to the qualifying hit`
+
+##### Quint / MBT impact
+
+Mirror the same trigger model in `creature.qnt`:
+
+- extend `PendingResolution`
+- add `PRSneakAttack(...)`
+- add `doTriggerSneakAttack`
+- gate `doUseSneakAttack` on that pending trigger instead of only the coarse rogue state
+
+Update:
+
+- `packages/core/src/creature.mbt.test.ts`
+- `packages/core/src/mbt-shared.ts`
+
+The MBT bridge already carries `pendingResolution`, so this is an extension of the existing parity seam, not a new one.
+
+#### `USE_INDOMITABLE` design
+
+##### Problem
+
+Current `canIndomitable` is only:
+
+- fighter level high enough
+- charges remaining
+
+But the feature is only meaningful after a failed saving throw.
+
+##### Recommended state addition
+
+Add:
+
+- `{ kind: "indomitable" }`
+
+No additional fields are required in the current machine because:
+
+- the current `USE_INDOMITABLE` event only consumes the charge
+- the machine does not yet model reroll total / success result
+
+##### Trigger creation
+
+Add explicit internal event:
+
+- `TRIGGER_INDOMITABLE`
+
+This should be raised by battle/session/save-resolution logic when the creature fails a saving throw and is eligible to reroll it.
+
+##### Trigger clearing
+
+Clear on:
+
+- `USE_INDOMITABLE`
+- turn boundaries / state resets, same as other pending trigger windows
+
+##### Available-actions contract
+
+Once trigger ownership exists:
+
+- expose `USE_INDOMITABLE` as zero-hole
+- no MCP runtime inputs under the current simplified machine contract
+
+Important caveat to preserve:
+
+- this still models only the “spend the feature in a valid failed-save window” part, not the reroll arithmetic
+- if richer save ownership is added later, the trigger and runtime/result contract can be deepened without changing the query-time token shape
+
+#### `USE_OVERCHANNEL` design
+
+##### Problem
+
+Current `canOverchannel` is only:
+
+- wizard level high enough
+- not incapacitated
+
+But Overchannel is only legal:
+
+- when you cast a **Wizard spell**
+- with a **level 1-5 spell slot**
+- that **deals damage**
+- on the turn you cast it
+
+The current machine does not own that qualifying cast window.
+
+##### Recommended state addition
+
+Add:
+
+- `{ kind: "overchannel", spellName: SpellName, slotLevel: SpellSlotLevel }`
+
+This should be established during or immediately after a qualifying spell cast, before downstream damage resolution consumes the opportunity.
+
+Why store spell name and slot level:
+
+- slot level matters directly to legality
+- spell identity is useful for future cross-checks and for avoiding a trigger window that outlives the qualifying cast context
+- this keeps the trigger aligned with the Phase 3 `CAST_PREPARED_SPELL` ownership work rather than inventing a vague boolean
+
+##### Trigger creation
+
+Preferred design:
+
+- establish the trigger from the spellcasting path, not from MCP
+- likely in the same core layer that already knows:
+  - spell name
+  - cast level
+  - whether the spell is one of the modeled damaging Wizard spells
+
+This probably means:
+
+- reviewing `packages/core/src/features/spell-available-actions.ts`
+- deciding which modeled prepared Wizard spells qualify as “deals damage” in current scope
+- setting the pending trigger only for those
+
+In current modeled prepared spells, obvious candidates are:
+
+- `burning_hands`
+- `fireball`
+
+Non-damaging examples like `haste` / `hold_person` must not establish the trigger.
+
+##### Trigger clearing
+
+Clear on:
+
+- `USE_OVERCHANNEL`
+- turn boundary / state reset
+- any path where the cast window is no longer relevant
+
+##### Available-actions contract
+
+Once trigger ownership exists:
+
+- expose `USE_OVERCHANNEL` as zero-hole
+- no MCP runtime inputs in the current simplified machine
+- outcome text should be about maximizing the qualifying spell’s damage, not about dealing damage directly in MCP
+
+Important caveat:
+
+- the current machine update only increments `overchannelUsesThisLR`
+- it does not yet propagate “this spell deals max damage now”
+- so exposing the action after trigger ownership is still primarily a semantic/legality improvement unless downstream spell-resolution state also starts reading it
+
+That caveat should be explicit in code/tests if this action is surfaced before full spell-damage resolution is modeled.
+
+#### Files to read first for this batch
+
+- [plans/available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
+- [packages/core/src/machine-types.ts](/workspace/typescript/dnd/packages/core/src/machine-types.ts)
+- [packages/core/src/machine.ts](/workspace/typescript/dnd/packages/core/src/machine.ts)
+- [packages/core/src/machine-states.ts](/workspace/typescript/dnd/packages/core/src/machine-states.ts)
+- [packages/core/src/machine-guards.ts](/workspace/typescript/dnd/packages/core/src/machine-guards.ts)
+- [packages/core/src/machine-rogue.ts](/workspace/typescript/dnd/packages/core/src/machine-rogue.ts)
+- [packages/core/src/machine-fighter.ts](/workspace/typescript/dnd/packages/core/src/machine-fighter.ts)
+- [packages/core/src/machine-wizard.ts](/workspace/typescript/dnd/packages/core/src/machine-wizard.ts)
+- [packages/core/src/available-actions.ts](/workspace/typescript/dnd/packages/core/src/available-actions.ts)
+- [packages/core/src/creature.mbt.test.ts](/workspace/typescript/dnd/packages/core/src/creature.mbt.test.ts)
+- [packages/core/src/mbt-shared.ts](/workspace/typescript/dnd/packages/core/src/mbt-shared.ts)
+- [creature.qnt](/workspace/typescript/dnd/creature.qnt)
+- [.references/srd-5.2.1/Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md)
+- [.references/srd-5.2.1/Classes/Rogue.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Rogue.md)
+- [.references/srd-5.2.1/Classes/Fighter.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Fighter.md)
+- [.references/srd-5.2.1/Classes/Wizard.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md)
+
+#### Recommended implementation order for the next session
+
+1. Extend `pendingResolution` in TS + Quint for the 3 new trigger-window variants.
+2. Implement `TRIGGER_SNEAK_ATTACK` first in TS + Quint + MBT bridge.
+3. Expose `USE_SNEAK_ATTACK` through `available-actions.ts` and MCP once the trigger is owned.
+4. Implement `TRIGGER_INDOMITABLE` next, then expose `USE_INDOMITABLE`.
+5. Finally implement qualifying-cast-owned `overchannel` pending state and expose `USE_OVERCHANNEL`.
+6. Keep MCP passive: it should consume owned trigger state, not create it.
+
+#### Acceptance criteria for the next batch
+
+- `USE_SNEAK_ATTACK` appears only when a qualifying Sneak Attack trigger is owned by machine/spec state
+- `USE_INDOMITABLE` appears only when a failed-save trigger is owned by machine/spec state
+- `USE_OVERCHANNEL` appears only in a qualifying damaging Wizard-spell cast window owned by machine/spec state
+- No new MCP-only legality inference is introduced
+- Creature parity is preserved for the new trigger state
+- The plan remains the source of context for the next follow-up (likely reaction trigger ownership)
+
+#### Verification for the next batch
+
+- `pnpm --filter @dnd/core exec tsc --noEmit`
+- `pnpm --filter @dnd/mcp exec tsc --noEmit`
+- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/machine.test.ts`
+- `pnpm --filter @dnd/mcp test -- server.test.ts`
+- If Quint-visible trigger state changes land:
+  - `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts`
+
 ---
 
 ## Phase 5: Hellenvald transcript prototype
@@ -1260,9 +1585,9 @@ This is the pragmatic first step because microphone device access is the real un
 
 **Acceptance criteria for the microphone/TUI milestone:**
 
-- [ ] `MicrophoneAudioSource` service boundary exists in Hellenvald
-- [ ] microphone path fails cleanly when no input device is available
-- [ ] host/manual chunked capture can feed the existing Whisper → buffer → stream pipeline
+- [x] `MicrophoneAudioSource` service boundary exists in Hellenvald
+- [x] microphone path fails cleanly when no input device is available or no host capture backend is configured
+- [x] host/manual chunked capture can feed the existing Whisper → buffer → stream pipeline
 - [ ] `ink` TUI shows committed history and live tail separately
 - [ ] TUI can flush tail and save replay snapshots
 - [ ] manual host smoke test proves at least one live spoken action reaches the transcript stream
