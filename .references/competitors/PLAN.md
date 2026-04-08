@@ -172,10 +172,17 @@ Important implementation note:
 - The TS bridge in this worktree did need to align to the shared effect contract so MBT could replay the same semantics without projection-only effect payloads.
 - That alignment added generic turn-hook support in the worktree TS effect model.
 
-Current remaining caveat:
+Batch 5 completed the remaining projection convergence work:
 
-- the projection harness still carries a small local shim for `Ray of Frost` expiry ownership, because the single-creature actor still has no creature identity and cannot decide "whose turn owns this expiry" from local state alone.
-- This is a bridge limitation, not a battle-spec limitation.
+- the single-creature machine now accepts an optional `selfId`,
+- start-turn and end-turn hook processing now respects `expiryOwnerId` when actor identity is available,
+- creature-level speed derivation now includes `ActiveEffect.speedDeltaFeet`,
+- battle projection no longer carries a parallel `Ray of Frost` ownership/speed shim.
+
+Current conclusion:
+
+- battle projection now replays `Shocking Grasp` and `Ray of Frost` through shared `ActiveEffect` state rather than a projection-local side map,
+- the remaining effect-ownership work is no longer this competitor branch's cleanup task; it is broader shared-effect evolution on `master`.
 
 ## Verification Already Completed
 
@@ -251,6 +258,23 @@ Batch-4 verification completed in this worktree:
   - seed: `0xf151cb03`
   - total: `14s`
 
+Batch-5 verification completed in this worktree:
+
+- focused battle regressions:
+  - command: `pnpm exec vitest run src/competitor-battle-scenarios.test.ts`
+  - passed: 4 tests
+- package typecheck:
+  - command: `pnpm --filter @dnd/core typecheck`
+  - passed
+- battle projection MBT Tier 1:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
+  - seed: `0x00d2f982`
+  - total: `12s`
+- battle machine MBT Tier 1:
+  - command: `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts`
+  - seed: `0xfe48b3f7`
+  - total: `45s`
+
 ## Current Worktree State
 
 This worktree now contains:
@@ -260,49 +284,58 @@ This worktree now contains:
 - runtime rider support,
 - spec-level rider generation,
 - MBT coverage for the rider path,
-- and a small TS effect-contract alignment to support owned-effect replay.
+- TS effect-contract alignment to support owned-effect replay,
+- and projection replay that now uses shared effect state for `Ray of Frost` as well as `Shocking Grasp`.
 
-The next step is not "add rider proof coverage." That work is now done in this worktree.
+The next step is not "add rider proof coverage" or "remove the projection ownership shim." Both are now done in this worktree.
 
 ## Next Step Options
 
-### Option A: Reconcile This Branch With Main-Branch Effect Ownership Work
+### Option A: Pick The Next Competitor Scenario Batch
 
 Recommended next step.
 
 Goal:
 
-- merge or rebase this worktree onto the main-branch authoritative `ActiveEffect` ownership changes,
-- remove any duplicated compatibility logic introduced here while preserving the now-green battle/spec MBT path,
-- decide whether the projection `Ray of Frost` ownership shim can disappear once creature actors carry enough identity to own expiry decisions locally.
+- return to the deferred competitor scenarios that still represent real mechanic gaps or useful proof targets,
+- choose the smallest one that does not collide with active parallel work on `master`,
+- keep following the same pattern: deterministic regression first, then parity/MBT only if the scenario touches authoritative combat semantics.
 
 Scope:
 
-- re-read the parallel effect-ownership branch before changing the shared effect files,
-- compare [packages/core/src/types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/types.ts), [packages/core/src/machine-types.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine-types.ts), [packages/core/src/machine.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine.ts), [packages/core/src/machine-startturn.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine-startturn.ts), and [packages/core/src/machine-endturn.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/machine-endturn.ts) against `master`,
-- keep [battle.qnt](/workspace/typescript/dnd-competitor-tests-batch-1/battle.qnt), [packages/core/src/battle-machine.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine.mbt.test.ts), and [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-projection.mbt.test.ts) as the behavioral reference,
-- rerun the same Tier 1 MBT checks after reconciliation.
+- prefer scenarios already identified in [SCENARIOS.md](/workspace/typescript/dnd/.references/competitors/SCENARIOS.md),
+- coordinate with active parallel branches before picking grapple/forced-movement work,
+- favor one of these:
+  - grappler incapacitation auto-releases target, if the main grappling work has landed or can be cleanly rebased,
+  - another owner-relative effect case if a competitor exposes one not yet covered,
+  - a deterministic scenario-mining batch from `natural_20` that does not require new battle state.
 
 Why this is next:
 
-- the battle/spec proof work is done here,
-- the main branch is now evolving the shared effect contract in the same direction,
-- the highest-value remaining task is to converge the two branches instead of letting them drift.
+- the prior recommended cleanup is now complete,
+- the current proof gap is no longer in `Ray of Frost` projection ownership,
+- the remaining value is back in discovering the next missing mechanic interaction, not in polishing the already-green rider path.
 
-### Option B: Replace The Projection Ownership Shim
+### Option B: Add Direct Creature-Level Ownership Tests
 
-Only do this if main-branch effect ownership work is blocked.
+Do this before a larger mechanic batch if you want a tighter local contract around the recent convergence work.
 
 Goal:
 
-- remove the battle-projection local `Ray of Frost` ownership helper by giving the replay layer enough identity/context to derive expiry ownership from actor state alone.
+- add focused unit tests for owner-relative effect timing and speed derivation in the single-creature machine.
+
+Suggested coverage:
+
+- `START_TURN` only advances start-owned effects whose `expiryOwnerId` matches `selfId`,
+- foreign-owned start effects stay active through this actor's turn,
+- `speedDeltaFeet` changes `effectiveSpeed` on `START_TURN`,
+- end-turn hooks ignore foreign-owned effects.
 
 Why this is weaker:
 
-- it is a bridge clean-up, not a new proof win,
-- it may be superseded by the main-branch effect work,
-- it should not be done in isolation if the shared effect contract is changing under it.
-- more tests without spec/MBT uplift increase the proof gap rather than shrinking it.
+- it strengthens the shared machine contract but does not expand competitor-derived mechanic coverage,
+- the main battle proof path is already green,
+- it is best treated as local hardening, not as the primary next milestone.
 
 ## If You Continue This Work Next Time
 
@@ -312,7 +345,7 @@ Start here:
 2. read [ARCHITECTURE.md](/workspace/typescript/dnd-competitor-tests-batch-1/ARCHITECTURE.md),
 3. read [battle/DOMAIN.md](/workspace/typescript/dnd-competitor-tests-batch-1/battle/DOMAIN.md),
 4. inspect [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts),
-5. choose `Option A` unless there is a reason to avoid spec/MBT work.
+5. choose `Option A` unless there is a reason to avoid another competitor scenario batch.
 
 If choosing `Option A`, inspect these implementation anchors before editing:
 
@@ -323,6 +356,7 @@ If choosing `Option A`, inspect these implementation anchors before editing:
 - [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-helpers.ts)
 - [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-attack.ts)
 - [packages/core/src/battle-machine-actions-movement.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine-actions-movement.ts)
+- [packages/core/src/competitor-battle-scenarios.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/competitor-battle-scenarios.test.ts)
 - [packages/core/src/battle-machine.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-machine.mbt.test.ts)
 - [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd-competitor-tests-batch-1/packages/core/src/battle-projection.mbt.test.ts)
 

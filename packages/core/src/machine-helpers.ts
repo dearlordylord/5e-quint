@@ -274,6 +274,7 @@ export function calculateEffectiveSpeed(params: {
   readonly exhaustion: number
   readonly isGrappling: boolean
   readonly grappledTargetTwoSizesSmaller: boolean
+  readonly effectSpeedDelta?: number
 }): number {
   if (params.grappled || params.restrained) return 0
   const afterArmor = Math.max(0, params.baseSpeed - params.armorPenalty)
@@ -282,7 +283,7 @@ export function calculateEffectiveSpeed(params: {
     params.isGrappling && !params.grappledTargetTwoSizesSmaller
       ? Math.floor(afterExhaustion / HALVE_DIVISOR)
       : afterExhaustion
-  return Math.max(0, afterGrappling)
+  return Math.max(0, afterGrappling + (params.effectSpeedDelta ?? 0))
 }
 
 /** Movement cost multiplier. Matches Quint pMovementCost. */

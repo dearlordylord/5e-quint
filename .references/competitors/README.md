@@ -35,4 +35,4 @@ Important context:
 
 - This branch started from `master`, so the broader research notes from the earlier competitor-analysis branch are not present here.
 - This directory is the local replacement for that missing context.
-- The next session should start from [PLAN.md](/workspace/typescript/dnd-competitor-tests-batch-1/.references/competitors/PLAN.md), then take the current recommended next step there: reconcile this worktree with the main-branch authoritative effect-ownership work.
+- The next session should start from [PLAN.md](/workspace/typescript/dnd-competitor-tests-batch-1/.references/competitors/PLAN.md), then take the current recommended next step there: pick the next small competitor scenario batch now that the rider-path convergence cleanup is done.

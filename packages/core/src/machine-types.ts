@@ -33,6 +33,7 @@ import type {
 // --- Shared turn-processing types (used by both START_TURN and END_TURN) ---
 
 export interface TurnPhaseCtx {
+  readonly selfId?: CreatureId
   readonly hp: number
   readonly maxHp: number
   readonly tempHp: number
@@ -61,6 +62,7 @@ export interface TurnPhaseResult {
 // --- Machine input ---
 
 export interface DndMachineInput {
+  readonly selfId?: CreatureId
   readonly maxHp: number
   readonly hitDiceRemaining?: HitDiceRemaining
   readonly baseWalkSpeed?: number
@@ -115,6 +117,7 @@ export type {
 // --- Context ---
 
 export interface DndContext {
+  readonly selfId?: CreatureId
   readonly hp: HP
   readonly maxHp: HP
   readonly tempHp: TempHP

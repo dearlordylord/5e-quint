@@ -261,15 +261,6 @@ const EMPTY_CONDITION_IMMUNITIES = new Set<Condition>()
 const SHOCKING_GRASP_ID = "shocking_grasp"
 const RAY_OF_FROST_ID = "ray_of_frost"
 
-interface ProjectedEffect {
-  readonly spellId: string
-  readonly turnsRemaining: number
-  readonly expiresAt: "start" | "end"
-  readonly casterId: string
-  readonly expiryOwnerId: string
-  readonly speedDeltaFeet?: number
-}
-
 // Battle driver schema: all fields optional because battleStep = any { ... }
 // generates nondets for ALL actions — unused actions have None picks.
 const OI = ITFBigInt.optional()
@@ -394,8 +385,6 @@ function createBattleProjectionDriver() {
       }
     >()
     const creatureKinds = new Map<string, CreatureKind>()
-    const projectedEffects = new Map<string, ReadonlyArray<ProjectedEffect>>()
-    const speedOverrides = new Map<string, number>()
     let initiative: Array<string> = []
     let turnIndex = 0
 
@@ -443,31 +432,6 @@ function createBattleProjectionDriver() {
       return initiative[turnIndex]
     }
 
-    function getProjectedEffects(id: string): ReadonlyArray<ProjectedEffect> {
-      return projectedEffects.get(id) ?? []
-    }
-
-    function setProjectedEffects(id: string, effects: ReadonlyArray<ProjectedEffect>) {
-      if (effects.length === 0) projectedEffects.delete(id)
-      else projectedEffects.set(id, effects)
-    }
-
-    function projectedSpeedDelta(id: string): number {
-      return getProjectedEffects(id).reduce((total, effect) => total + (effect.speedDeltaFeet ?? 0), 0)
-    }
-
-    function advanceProjectedStartEffects(ownerId: string) {
-      for (const [holderId, effects] of projectedEffects) {
-        const next = effects.flatMap((effect) => {
-          if (effect.expiryOwnerId !== ownerId) return [effect]
-          const turnsRemaining = effect.turnsRemaining - 1
-          if (turnsRemaining <= 0 && effect.expiresAt === "start") return []
-          return [{ ...effect, turnsRemaining }]
-        })
-        setProjectedEffects(holderId, next)
-      }
-    }
-
     function applyProjectedHitRider(attackerId: string, targetId: string, hitRider: string) {
       if (hitRider === "AHRShockingGrasp") {
         send(targetId, {
@@ -482,18 +446,15 @@ function createBattleProjectionDriver() {
         return
       }
       if (hitRider === "AHRRayOfFrost") {
-        const filtered = getProjectedEffects(targetId).filter((effect) => effect.spellId !== RAY_OF_FROST_ID)
-        setProjectedEffects(targetId, [
-          ...filtered,
-          {
-            spellId: RAY_OF_FROST_ID,
-            turnsRemaining: 1,
-            expiresAt: "start",
-            casterId: attackerId,
-            expiryOwnerId: attackerId,
-            speedDeltaFeet: -10
-          }
-        ])
+        send(targetId, {
+          type: "ADD_EFFECT",
+          spellId: mkSpellId(RAY_OF_FROST_ID),
+          durationTurns: 1,
+          expiresAt: "start",
+          casterId: mkCreatureId(attackerId),
+          expiryOwnerId: mkCreatureId(attackerId),
+          speedDeltaFeet: -10
+        })
       }
     }
 
@@ -502,8 +463,6 @@ function createBattleProjectionDriver() {
     // ============================================================
 
     function handleBInit(picks: ReadonlyMap<string, unknown>) {
-      projectedEffects.clear()
-      speedOverrides.clear()
       // bInit creates 4 creatures with nondeterministic HP.
       // A=PC caster rogue5, B=PC caster, C=Monster, D=PC caster (CS chain depth)
       const hp1 = pickBigInt(picks, "hp1") ?? 20
@@ -518,6 +477,7 @@ function createBattleProjectionDriver() {
       const actorA = createActor(creatureMachine, {
         input: {
           maxHp: hp1,
+          selfId: mkCreatureId("A"),
           effectiveSpeed: 30,
           movementRemaining: 30,
           extraAttacksRemaining: 1,
@@ -536,6 +496,7 @@ function createBattleProjectionDriver() {
       const actorB = createActor(creatureMachine, {
         input: {
           maxHp: hp2,
+          selfId: mkCreatureId("B"),
           baseWalkSpeed: 40,
           effectiveSpeed: 40,
           movementRemaining: 40,
@@ -555,6 +516,7 @@ function createBattleProjectionDriver() {
       const actorC = createActor(creatureMachine, {
         input: {
           maxHp: hp3,
+          selfId: mkCreatureId("C"),
           effectiveSpeed: 30,
           movementRemaining: 30,
           extraAttacksRemaining: 1,
@@ -574,6 +536,7 @@ function createBattleProjectionDriver() {
       const actorD = createActor(creatureMachine, {
         input: {
           maxHp: hp4,
+          selfId: mkCreatureId("D"),
           effectiveSpeed: 30,
           movementRemaining: 30,
           extraAttacksRemaining: 1,
@@ -645,7 +608,6 @@ function createBattleProjectionDriver() {
       const sb = statBlocks.get(id)
 
       ensureWaitingForTurn(id)
-      advanceProjectedStartEffects(id)
       const ctx = getSnap(id).context
 
       const rechargeD6 = pickBigInt(picks, "rechargeD6") ?? 3
@@ -655,7 +617,7 @@ function createBattleProjectionDriver() {
       const sotConSave = pickBool(picks, "sotConSave") ?? false
 
       // Check if creature has active effects (for start-of-turn processing)
-      const hasEffects = (ctx.activeEffects.length > 0 || getProjectedEffects(id).length > 0) && (sotDmg > 0 || sotHeal > 0)
+      const hasEffects = ctx.activeEffects.length > 0 && (sotDmg > 0 || sotHeal > 0)
 
       const effectResolutions = hasEffects
         ? [
@@ -676,14 +638,6 @@ function createBattleProjectionDriver() {
             ? computeRechargedAbilities(rechargeD6, sb.rechargeMinRolls, ctx.rechargeAvailable)
             : undefined
       })
-      const speedDelta = projectedSpeedDelta(id)
-      if (speedDelta < 0) {
-        send(id, { type: "USE_MOVEMENT", feet: -speedDelta, movementCost: 1 })
-      }
-      const started = getSnap(id).context
-      const projectedSpeed = Math.max(0, started.effectiveSpeed + speedDelta)
-      if (projectedSpeed === started.effectiveSpeed) speedOverrides.delete(id)
-      else speedOverrides.set(id, projectedSpeed)
       turnStarted.add(id)
     }
 
@@ -1776,12 +1730,7 @@ function createBattleProjectionDriver() {
       },
       bDash: () => {
         before("bDash")
-        const id = activeId()
-        send(id, { type: "USE_ACTION", actionType: "dash" })
-        const speedDelta = projectedSpeedDelta(id)
-        if (speedDelta < 0) {
-          send(id, { type: "USE_MOVEMENT", feet: -speedDelta, movementCost: 1 })
-        }
+        send(activeId(), { type: "USE_ACTION", actionType: "dash" })
       },
       bDisengage: () => {
         before("bDisengage")
@@ -1832,20 +1781,7 @@ function createBattleProjectionDriver() {
         const result = new Map<string, BattleCreatureState>()
         for (const [id, actor] of actors) {
           const base = projectToBattle(snapshotToNormalized(actor.getSnapshot()))
-          const projected = getProjectedEffects(id).map((effect) => ({
-            spellId: effect.spellId,
-            turnsRemaining: effect.turnsRemaining,
-            expiresAt: effect.expiresAt,
-            casterId: effect.casterId,
-            grantedResistances: new Set<string>(),
-            grantedVulnerabilities: new Set<string>(),
-            grantedImmunities: new Set<string>()
-          }))
-          result.set(id, {
-            ...base,
-            activeEffects: [...base.activeEffects, ...projected].sort((a, b) => a.spellId.localeCompare(b.spellId)),
-            effectiveSpeed: speedOverrides.get(id) ?? base.effectiveSpeed
-          })
+          result.set(id, base)
         }
         return result
       },

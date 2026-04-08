@@ -76,6 +76,7 @@ import {
 import * as warlock from "#/machine-warlock.ts"
 import * as wizard from "#/machine-wizard.ts"
 import {
+  CreatureId as mkCreatureId,
   type ActiveEffect,
   DEATH_SAVES_RESET,
   deathSaveCount,
@@ -541,6 +542,7 @@ export const creatureMachine = setup({
       ...INITIAL_CONDITIONS,
       ...INITIAL_TURN_STATE,
       creatureKind: i.creatureKind ?? "PC",
+      selfId: i.selfId ?? mkCreatureId(""),
       activeEffects: [] as ReadonlyArray<ActiveEffect>,
       concentrationSpellId: Option.none(),
       dead: false,

@@ -52,6 +52,7 @@ function aggregateDamageModifiers(
 }
 
 function deriveEndTurnEffects(
+  selfId: CreatureId,
   aes: ReadonlyArray<ActiveEffect>,
   runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined,
   petrified: boolean,
@@ -69,6 +70,7 @@ function deriveEndTurnEffects(
   const overrides = new Map((runtimeResolutions ?? []).map((effect) => [effect.spellId, effect]))
   const damageMods = aggregateDamageModifiers(aes, petrified)
   return aes.flatMap((effect) => {
+    if (effect.expiryOwnerId != null && effect.expiryOwnerId !== selfId) return []
     const hook = effect.endOfTurnHook
     if (hook == null) return []
     const override = overrides.get(effect.spellId)
@@ -92,6 +94,7 @@ export function computeEndTurn(
   ctx: TurnPhaseCtx,
   runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined
 ): TurnPhaseResult {
+  const selfId = ctx.selfId ?? ("" as CreatureId)
   const conditions: Partial<Record<ConditionFlag, boolean>> = {}
   let incap = ctx.incapacitatedSources
   let conc = ctx.concentrationSpellId
@@ -103,7 +106,7 @@ export function computeEndTurn(
   const deathSuccesses = ctx.deathSaves.successes
 
   const removeIds = new Set<SpellId>()
-  const effects = deriveEndTurnEffects(ctx.activeEffects, runtimeResolutions, ctx.petrified)
+  const effects = deriveEndTurnEffects(selfId, ctx.activeEffects, runtimeResolutions, ctx.petrified)
 
   let unconscious = ctx.unconscious
   for (const effect of effects) {
@@ -156,7 +159,9 @@ export function computeEndTurn(
 
   // Single pass: remove by ID + clear expired AtEndOfTurn
   const ae = ctx.activeEffects.filter(
-    (a) => !removeIds.has(a.spellId) && !(a.expiresAt === "end" && a.turnsRemaining <= 0)
+    (a) =>
+      !removeIds.has(a.spellId) &&
+      !((a.expiryOwnerId == null || a.expiryOwnerId === selfId) && a.expiresAt === "end" && a.turnsRemaining <= 0)
   )
 
   // Auto-break concentration if the concentrated spell's effect expired

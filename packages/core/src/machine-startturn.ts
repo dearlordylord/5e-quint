@@ -28,12 +28,16 @@ import {
 import type { ActiveEffect, DamageType, SpellId } from "#/types.ts"
 import { deathSaveCount, hp, movementFeet, tempHp } from "#/types.ts"
 
-function decrementDurations(aes: ReadonlyArray<ActiveEffect>): ReadonlyArray<ActiveEffect> {
-  return aes.map((ae) => ({ ...ae, turnsRemaining: ae.turnsRemaining - 1 }))
+function effectOwnedBySelf(effect: ActiveEffect, selfId: string | undefined): boolean {
+  return selfId == null || effect.expiryOwnerId == null || effect.expiryOwnerId === selfId
 }
 
-function clearExpiredStart(aes: ReadonlyArray<ActiveEffect>): ReadonlyArray<ActiveEffect> {
-  return aes.filter((a) => !(a.expiresAt === "start" && a.turnsRemaining <= 0))
+function decrementDurationsForOwner(aes: ReadonlyArray<ActiveEffect>, selfId: string): ReadonlyArray<ActiveEffect> {
+  return aes.map((ae) => (effectOwnedBySelf(ae, selfId) ? { ...ae, turnsRemaining: ae.turnsRemaining - 1 } : ae))
+}
+
+function clearExpiredStartForOwner(aes: ReadonlyArray<ActiveEffect>, selfId: string): ReadonlyArray<ActiveEffect> {
+  return aes.filter((a) => !(effectOwnedBySelf(a, selfId) && a.expiresAt === "start" && a.turnsRemaining <= 0))
 }
 
 function hasEffect(aes: ReadonlyArray<ActiveEffect>, spellId: SpellId): boolean {
@@ -60,6 +64,7 @@ function aggregateDamageModifiers(
 }
 
 function deriveStartTurnEffects(
+  selfId: string,
   aes: ReadonlyArray<ActiveEffect>,
   runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined,
   petrified: boolean,
@@ -78,6 +83,7 @@ function deriveStartTurnEffects(
   const overrides = new Map((runtimeResolutions ?? []).map((effect) => [effect.spellId, effect]))
   const damageMods = aggregateDamageModifiers(aes, petrified)
   return aes.flatMap((effect) => {
+    if (!effectOwnedBySelf(effect, selfId)) return []
     const hook = effect.startOfTurnHook
     if (hook == null) return []
     const override = overrides.get(effect.spellId)
@@ -101,6 +107,7 @@ export function computeStartTurn(
   deathSaveRoll: number | undefined,
   runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined
 ): TurnPhaseResult {
+  const selfId = ctx.selfId ?? ""
   const conditions: Partial<Record<ConditionFlag, boolean>> = {}
   let incap = ctx.incapacitatedSources
   let conc = ctx.concentrationSpellId
@@ -112,7 +119,7 @@ export function computeStartTurn(
   let dsFail = ctx.deathSaves.failures as number
 
   // 1. Decrement durations + clear expired AtStartOfTurn
-  let ae = clearExpiredStart(decrementDurations(ctx.activeEffects))
+  let ae = clearExpiredStartForOwner(decrementDurationsForOwner(ctx.activeEffects, selfId), selfId)
 
   // 1b. Auto-break concentration if the concentrated spell's effect expired
   if (Option.isSome(conc)) {
@@ -120,7 +127,7 @@ export function computeStartTurn(
     if (!ae.some((a) => a.spellId === cid)) conc = Option.none()
   }
 
-  const effects = deriveStartTurnEffects(ae, runtimeResolutions, ctx.petrified)
+  const effects = deriveStartTurnEffects(selfId, ae, runtimeResolutions, ctx.petrified)
 
   // 2. Death save (if applicable)
   if (h === 0 && !stable && !dead && deathSaveRoll != null) {
@@ -239,7 +246,8 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
     grappled: c.grappling ? false : (conds.grappled ?? c.grappled),
     grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
     isGrappling: c.grappling,
-    restrained: conds.restrained ?? c.restrained
+    restrained: conds.restrained ?? c.restrained,
+    effectSpeedDelta: cr.activeEffects.reduce((total, effect) => total + (effect.speedDeltaFeet ?? 0), 0)
   })
   // Derive extra attacks: event override (monsters/multiattack) or from class levels (PCs)
   const extraAttacks = ev.extraAttacks ?? Math.max(
