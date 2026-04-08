@@ -11,7 +11,7 @@ import {
 } from "#/features/spell-available-actions.ts"
 import { CLASS_NAMES, classHitDie, type ClassName } from "#/features/class-tables.ts"
 import { relentlessRageDC } from "#/features/class-barbarian.ts"
-import { pMartialArtsDie } from "#/features/class-monk.ts"
+import { flurryOfBlowsStrikes, pMartialArtsDie } from "#/features/class-monk.ts"
 import { tirelessTempHp } from "#/features/class-ranger.ts"
 import { slotCreationCost, type MetamagicOption } from "#/features/class-sorcerer.ts"
 import {
@@ -68,11 +68,21 @@ export const SUPPORTED_ACTION_TYPES = [
   "USE_HEROIC_INSPIRATION",
   "CAST_PREPARED_SPELL",
   "START_TURN",
+  "USE_ACTION_SURGE",
   "USE_TACTICAL_MIND",
   "CONVERT_SLOT_TO_POINTS",
   "CONVERT_POINTS_TO_SLOT",
+  "ENTER_RAGE",
+  "END_RAGE",
+  "EXTEND_RAGE_BA",
+  "DECLARE_RECKLESS",
   "USE_LAY_ON_HANDS",
   "USE_DIVINE_SMITE",
+  "FLURRY_OF_BLOWS",
+  "PATIENT_DEFENSE_FREE",
+  "PATIENT_DEFENSE_FOCUS",
+  "STEP_OF_THE_WIND_FREE",
+  "STEP_OF_THE_WIND_FOCUS",
   "WHOLENESS_OF_BODY",
   "UNCANNY_METABOLISM",
   "USE_ARCANE_RECOVERY",
@@ -80,8 +90,16 @@ export const SUPPORTED_ACTION_TYPES = [
   "USE_MYSTIC_ARCANUM",
   "USE_SECOND_WIND",
   "USE_TIRELESS",
+  "USE_STEADY_AIM",
+  "CUNNING_ACTION_DASH",
+  "CUNNING_ACTION_DISENGAGE",
+  "CUNNING_ACTION_HIDE",
+  "USE_CLERIC_CHANNEL_DIVINITY",
   "USE_FONT_SLOT_RESTORE",
+  "USE_PALADIN_CHANNEL_DIVINITY",
   "USE_WILD_RESURGENCE_CHARGE",
+  "USE_NATURES_VEIL",
+  "USE_BARDIC_INSPIRATION",
   "USE_PEERLESS_SKILL",
   "USE_RELENTLESS_RAGE",
   "SHORT_REST",
@@ -103,6 +121,7 @@ type TokenByType = {
     readonly slotLevel: Hole<SpellSlotLevelValue>
   }
   readonly START_TURN: SimpleToken<"START_TURN">
+  readonly USE_ACTION_SURGE: SimpleToken<"USE_ACTION_SURGE">
   readonly USE_TACTICAL_MIND: SimpleToken<"USE_TACTICAL_MIND">
   readonly CONVERT_SLOT_TO_POINTS: SimpleToken<"CONVERT_SLOT_TO_POINTS"> & {
     readonly slotLevel: Hole<SpellSlotLevelValue>
@@ -110,12 +129,21 @@ type TokenByType = {
   readonly CONVERT_POINTS_TO_SLOT: SimpleToken<"CONVERT_POINTS_TO_SLOT"> & {
     readonly slotLevel: Hole<SpellSlotLevelValue>
   }
+  readonly ENTER_RAGE: SimpleToken<"ENTER_RAGE">
+  readonly END_RAGE: SimpleToken<"END_RAGE">
+  readonly EXTEND_RAGE_BA: SimpleToken<"EXTEND_RAGE_BA">
+  readonly DECLARE_RECKLESS: SimpleToken<"DECLARE_RECKLESS">
   readonly USE_LAY_ON_HANDS: SimpleToken<"USE_LAY_ON_HANDS"> & {
     readonly amount: Hole<number>
   }
   readonly USE_DIVINE_SMITE: SimpleToken<"USE_DIVINE_SMITE"> & {
     readonly slotLevel: Hole<SpellSlotLevelValue>
   }
+  readonly FLURRY_OF_BLOWS: SimpleToken<"FLURRY_OF_BLOWS">
+  readonly PATIENT_DEFENSE_FREE: SimpleToken<"PATIENT_DEFENSE_FREE">
+  readonly PATIENT_DEFENSE_FOCUS: SimpleToken<"PATIENT_DEFENSE_FOCUS">
+  readonly STEP_OF_THE_WIND_FREE: SimpleToken<"STEP_OF_THE_WIND_FREE">
+  readonly STEP_OF_THE_WIND_FOCUS: SimpleToken<"STEP_OF_THE_WIND_FOCUS">
   readonly WHOLENESS_OF_BODY: SimpleToken<"WHOLENESS_OF_BODY">
   readonly UNCANNY_METABOLISM: SimpleToken<"UNCANNY_METABOLISM">
   readonly USE_ARCANE_RECOVERY: SimpleToken<"USE_ARCANE_RECOVERY"> & {
@@ -129,12 +157,20 @@ type TokenByType = {
   }
   readonly USE_SECOND_WIND: SimpleToken<"USE_SECOND_WIND">
   readonly USE_TIRELESS: SimpleToken<"USE_TIRELESS">
+  readonly USE_STEADY_AIM: SimpleToken<"USE_STEADY_AIM">
+  readonly CUNNING_ACTION_DASH: SimpleToken<"CUNNING_ACTION_DASH">
+  readonly CUNNING_ACTION_DISENGAGE: SimpleToken<"CUNNING_ACTION_DISENGAGE">
+  readonly CUNNING_ACTION_HIDE: SimpleToken<"CUNNING_ACTION_HIDE">
+  readonly USE_CLERIC_CHANNEL_DIVINITY: SimpleToken<"USE_CLERIC_CHANNEL_DIVINITY">
   readonly USE_FONT_SLOT_RESTORE: SimpleToken<"USE_FONT_SLOT_RESTORE"> & {
     readonly slotLevel: Hole<SpellSlotLevelValue>
   }
+  readonly USE_PALADIN_CHANNEL_DIVINITY: SimpleToken<"USE_PALADIN_CHANNEL_DIVINITY">
   readonly USE_WILD_RESURGENCE_CHARGE: SimpleToken<"USE_WILD_RESURGENCE_CHARGE"> & {
     readonly slotLevel: Hole<SpellSlotLevelValue>
   }
+  readonly USE_NATURES_VEIL: SimpleToken<"USE_NATURES_VEIL">
+  readonly USE_BARDIC_INSPIRATION: SimpleToken<"USE_BARDIC_INSPIRATION">
   readonly USE_PEERLESS_SKILL: SimpleToken<"USE_PEERLESS_SKILL">
   readonly USE_RELENTLESS_RAGE: SimpleToken<"USE_RELENTLESS_RAGE">
   readonly SHORT_REST: SimpleToken<"SHORT_REST"> & {
@@ -153,11 +189,21 @@ type ResolvedTokenByType = {
   readonly USE_HEROIC_INSPIRATION: { readonly type: "USE_HEROIC_INSPIRATION" }
   readonly CAST_PREPARED_SPELL: { readonly type: "CAST_PREPARED_SPELL"; readonly spellName: ModeledPreparedSpell; readonly slotLevel: SpellSlotLevelValue }
   readonly START_TURN: { readonly type: "START_TURN" }
+  readonly USE_ACTION_SURGE: { readonly type: "USE_ACTION_SURGE" }
   readonly USE_TACTICAL_MIND: { readonly type: "USE_TACTICAL_MIND" }
   readonly CONVERT_SLOT_TO_POINTS: { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: SpellSlotLevelValue }
   readonly CONVERT_POINTS_TO_SLOT: { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: SpellSlotLevelValue }
+  readonly ENTER_RAGE: { readonly type: "ENTER_RAGE" }
+  readonly END_RAGE: { readonly type: "END_RAGE" }
+  readonly EXTEND_RAGE_BA: { readonly type: "EXTEND_RAGE_BA" }
+  readonly DECLARE_RECKLESS: { readonly type: "DECLARE_RECKLESS" }
   readonly USE_LAY_ON_HANDS: { readonly type: "USE_LAY_ON_HANDS"; readonly amount: number }
   readonly USE_DIVINE_SMITE: { readonly type: "USE_DIVINE_SMITE"; readonly slotLevel: SpellSlotLevelValue }
+  readonly FLURRY_OF_BLOWS: { readonly type: "FLURRY_OF_BLOWS" }
+  readonly PATIENT_DEFENSE_FREE: { readonly type: "PATIENT_DEFENSE_FREE" }
+  readonly PATIENT_DEFENSE_FOCUS: { readonly type: "PATIENT_DEFENSE_FOCUS" }
+  readonly STEP_OF_THE_WIND_FREE: { readonly type: "STEP_OF_THE_WIND_FREE" }
+  readonly STEP_OF_THE_WIND_FOCUS: { readonly type: "STEP_OF_THE_WIND_FOCUS" }
   readonly WHOLENESS_OF_BODY: { readonly type: "WHOLENESS_OF_BODY" }
   readonly UNCANNY_METABOLISM: { readonly type: "UNCANNY_METABOLISM" }
   readonly USE_ARCANE_RECOVERY: { readonly type: "USE_ARCANE_RECOVERY"; readonly slotLevel: SpellSlotLevelValue }
@@ -165,8 +211,16 @@ type ResolvedTokenByType = {
   readonly USE_MYSTIC_ARCANUM: { readonly type: "USE_MYSTIC_ARCANUM"; readonly spellLevel: SpellSlotLevelValue }
   readonly USE_SECOND_WIND: { readonly type: "USE_SECOND_WIND" }
   readonly USE_TIRELESS: { readonly type: "USE_TIRELESS" }
+  readonly USE_STEADY_AIM: { readonly type: "USE_STEADY_AIM" }
+  readonly CUNNING_ACTION_DASH: { readonly type: "CUNNING_ACTION_DASH" }
+  readonly CUNNING_ACTION_DISENGAGE: { readonly type: "CUNNING_ACTION_DISENGAGE" }
+  readonly CUNNING_ACTION_HIDE: { readonly type: "CUNNING_ACTION_HIDE" }
+  readonly USE_CLERIC_CHANNEL_DIVINITY: { readonly type: "USE_CLERIC_CHANNEL_DIVINITY" }
   readonly USE_FONT_SLOT_RESTORE: { readonly type: "USE_FONT_SLOT_RESTORE"; readonly slotLevel: SpellSlotLevelValue }
+  readonly USE_PALADIN_CHANNEL_DIVINITY: { readonly type: "USE_PALADIN_CHANNEL_DIVINITY" }
   readonly USE_WILD_RESURGENCE_CHARGE: { readonly type: "USE_WILD_RESURGENCE_CHARGE"; readonly slotLevel: SpellSlotLevelValue }
+  readonly USE_NATURES_VEIL: { readonly type: "USE_NATURES_VEIL" }
+  readonly USE_BARDIC_INSPIRATION: { readonly type: "USE_BARDIC_INSPIRATION" }
   readonly USE_PEERLESS_SKILL: { readonly type: "USE_PEERLESS_SKILL" }
   readonly USE_RELENTLESS_RAGE: { readonly type: "USE_RELENTLESS_RAGE" }
   readonly SHORT_REST: { readonly type: "SHORT_REST"; readonly spendHitDice: ReadonlyArray<ClassName> }
@@ -188,6 +242,9 @@ const CastPreparedSpellResolvedActionSchema = Schema.Struct({
 const StartTurnResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("START_TURN"),
 })
+const UseActionSurgeResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_ACTION_SURGE"),
+})
 const UseTacticalMindResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_TACTICAL_MIND"),
 })
@@ -199,6 +256,18 @@ const ConvertPointsToSlotResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("CONVERT_POINTS_TO_SLOT"),
   slotLevel: SpellSlotLevel,
 })
+const EnterRageResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("ENTER_RAGE"),
+})
+const EndRageResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("END_RAGE"),
+})
+const ExtendRageBAResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("EXTEND_RAGE_BA"),
+})
+const DeclareRecklessResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("DECLARE_RECKLESS"),
+})
 const UseLayOnHandsResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_LAY_ON_HANDS"),
   amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
@@ -206,6 +275,21 @@ const UseLayOnHandsResolvedActionSchema = Schema.Struct({
 const UseDivineSmiteResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_DIVINE_SMITE"),
   slotLevel: SpellSlotLevel,
+})
+const FlurryOfBlowsResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("FLURRY_OF_BLOWS"),
+})
+const PatientDefenseFreeResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("PATIENT_DEFENSE_FREE"),
+})
+const PatientDefenseFocusResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("PATIENT_DEFENSE_FOCUS"),
+})
+const StepOfTheWindFreeResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("STEP_OF_THE_WIND_FREE"),
+})
+const StepOfTheWindFocusResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("STEP_OF_THE_WIND_FOCUS"),
 })
 const WholenessOfBodyResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("WHOLENESS_OF_BODY"),
@@ -231,13 +315,37 @@ const UseSecondWindResolvedActionSchema = Schema.Struct({
 const UseTirelessResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_TIRELESS"),
 })
+const UseSteadyAimResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_STEADY_AIM"),
+})
+const CunningActionDashResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("CUNNING_ACTION_DASH"),
+})
+const CunningActionDisengageResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("CUNNING_ACTION_DISENGAGE"),
+})
+const CunningActionHideResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("CUNNING_ACTION_HIDE"),
+})
+const UseClericChannelDivinityResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_CLERIC_CHANNEL_DIVINITY"),
+})
 const UseFontSlotRestoreResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_FONT_SLOT_RESTORE"),
   slotLevel: SpellSlotLevel,
 })
+const UsePaladinChannelDivinityResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_PALADIN_CHANNEL_DIVINITY"),
+})
 const UseWildResurgenceChargeResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_WILD_RESURGENCE_CHARGE"),
   slotLevel: SpellSlotLevel,
+})
+const UseNaturesVeilResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_NATURES_VEIL"),
+})
+const UseBardicInspirationResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_BARDIC_INSPIRATION"),
 })
 const UsePeerlessSkillResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_PEERLESS_SKILL"),
@@ -258,11 +366,21 @@ const PrimaryResolvedActionTokenSchema = Schema.Union(
   UseHeroicInspirationResolvedActionSchema,
   CastPreparedSpellResolvedActionSchema,
   StartTurnResolvedActionSchema,
+  UseActionSurgeResolvedActionSchema,
   UseTacticalMindResolvedActionSchema,
   ConvertSlotToPointsResolvedActionSchema,
   ConvertPointsToSlotResolvedActionSchema,
+  EnterRageResolvedActionSchema,
+  EndRageResolvedActionSchema,
+  ExtendRageBAResolvedActionSchema,
+  DeclareRecklessResolvedActionSchema,
   UseLayOnHandsResolvedActionSchema,
   UseDivineSmiteResolvedActionSchema,
+  FlurryOfBlowsResolvedActionSchema,
+  PatientDefenseFreeResolvedActionSchema,
+  PatientDefenseFocusResolvedActionSchema,
+  StepOfTheWindFreeResolvedActionSchema,
+  StepOfTheWindFocusResolvedActionSchema,
   WholenessOfBodyResolvedActionSchema,
   UncannyMetabolismResolvedActionSchema,
 )
@@ -273,8 +391,16 @@ const SecondaryResolvedActionTokenSchema = Schema.Union(
   UseMysticArcanumResolvedActionSchema,
   UseSecondWindResolvedActionSchema,
   UseTirelessResolvedActionSchema,
+  UseSteadyAimResolvedActionSchema,
+  CunningActionDashResolvedActionSchema,
+  CunningActionDisengageResolvedActionSchema,
+  CunningActionHideResolvedActionSchema,
+  UseClericChannelDivinityResolvedActionSchema,
   UseFontSlotRestoreResolvedActionSchema,
+  UsePaladinChannelDivinityResolvedActionSchema,
   UseWildResurgenceChargeResolvedActionSchema,
+  UseNaturesVeilResolvedActionSchema,
+  UseBardicInspirationResolvedActionSchema,
   UsePeerlessSkillResolvedActionSchema,
   UseRelentlessRageResolvedActionSchema,
   ShortRestResolvedActionSchema,
@@ -286,11 +412,21 @@ export const RESOLVED_ACTION_SCHEMAS = [
   UseHeroicInspirationResolvedActionSchema,
   CastPreparedSpellResolvedActionSchema,
   StartTurnResolvedActionSchema,
+  UseActionSurgeResolvedActionSchema,
   UseTacticalMindResolvedActionSchema,
   ConvertSlotToPointsResolvedActionSchema,
   ConvertPointsToSlotResolvedActionSchema,
+  EnterRageResolvedActionSchema,
+  EndRageResolvedActionSchema,
+  ExtendRageBAResolvedActionSchema,
+  DeclareRecklessResolvedActionSchema,
   UseLayOnHandsResolvedActionSchema,
   UseDivineSmiteResolvedActionSchema,
+  FlurryOfBlowsResolvedActionSchema,
+  PatientDefenseFreeResolvedActionSchema,
+  PatientDefenseFocusResolvedActionSchema,
+  StepOfTheWindFreeResolvedActionSchema,
+  StepOfTheWindFocusResolvedActionSchema,
   WholenessOfBodyResolvedActionSchema,
   UncannyMetabolismResolvedActionSchema,
   UseArcaneRecoveryResolvedActionSchema,
@@ -298,8 +434,16 @@ export const RESOLVED_ACTION_SCHEMAS = [
   UseMysticArcanumResolvedActionSchema,
   UseSecondWindResolvedActionSchema,
   UseTirelessResolvedActionSchema,
+  UseSteadyAimResolvedActionSchema,
+  CunningActionDashResolvedActionSchema,
+  CunningActionDisengageResolvedActionSchema,
+  CunningActionHideResolvedActionSchema,
+  UseClericChannelDivinityResolvedActionSchema,
   UseFontSlotRestoreResolvedActionSchema,
+  UsePaladinChannelDivinityResolvedActionSchema,
   UseWildResurgenceChargeResolvedActionSchema,
+  UseNaturesVeilResolvedActionSchema,
+  UseBardicInspirationResolvedActionSchema,
   UsePeerlessSkillResolvedActionSchema,
   UseRelentlessRageResolvedActionSchema,
   ShortRestResolvedActionSchema,
@@ -371,6 +515,12 @@ export type ResolutionRequest =
       readonly runtime: "startTurn"
     }
   | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_ACTION_SURGE" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_ACTION_SURGE" }>
+    }
+  | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_TACTICAL_MIND" }>
       readonly outcome: string
       readonly runtime: "tacticalMind"
@@ -388,6 +538,30 @@ export type ResolutionRequest =
       readonly event: Extract<DndEvent, { readonly type: "CONVERT_POINTS_TO_SLOT" }>
     }
   | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "ENTER_RAGE" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "ENTER_RAGE" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "END_RAGE" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "END_RAGE" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "EXTEND_RAGE_BA" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "EXTEND_RAGE_BA" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "DECLARE_RECKLESS" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "DECLARE_RECKLESS" }>
+    }
+  | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_LAY_ON_HANDS" }>
       readonly outcome: string
       readonly runtime: "none"
@@ -398,6 +572,36 @@ export type ResolutionRequest =
       readonly outcome: string
       readonly runtime: "none"
       readonly event: Extract<DndEvent, { readonly type: "USE_DIVINE_SMITE" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "FLURRY_OF_BLOWS" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "FLURRY_OF_BLOWS" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "PATIENT_DEFENSE_FREE" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "PATIENT_DEFENSE_FREE" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "PATIENT_DEFENSE_FOCUS" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "PATIENT_DEFENSE_FOCUS" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "STEP_OF_THE_WIND_FREE" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "STEP_OF_THE_WIND_FREE" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "STEP_OF_THE_WIND_FOCUS" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "STEP_OF_THE_WIND_FOCUS" }>
     }
   | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "WHOLENESS_OF_BODY" }>
@@ -438,16 +642,64 @@ export type ResolutionRequest =
       readonly runtime: "tireless"
     }
   | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_STEADY_AIM" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_STEADY_AIM" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "CUNNING_ACTION_DASH" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "CUNNING_ACTION_DASH" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "CUNNING_ACTION_DISENGAGE" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "CUNNING_ACTION_DISENGAGE" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "CUNNING_ACTION_HIDE" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "CUNNING_ACTION_HIDE" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_CLERIC_CHANNEL_DIVINITY" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_CLERIC_CHANNEL_DIVINITY" }>
+    }
+  | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_FONT_SLOT_RESTORE" }>
       readonly outcome: string
       readonly runtime: "none"
       readonly event: Extract<DndEvent, { readonly type: "USE_FONT_SLOT_RESTORE" }>
     }
   | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_PALADIN_CHANNEL_DIVINITY" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_PALADIN_CHANNEL_DIVINITY" }>
+    }
+  | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_WILD_RESURGENCE_CHARGE" }>
       readonly outcome: string
       readonly runtime: "none"
       readonly event: Extract<DndEvent, { readonly type: "USE_WILD_RESURGENCE_CHARGE" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_NATURES_VEIL" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_NATURES_VEIL" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_BARDIC_INSPIRATION" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_BARDIC_INSPIRATION" }>
     }
   | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_PEERLESS_SKILL" }>
@@ -555,6 +807,16 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
           }
         : null,
   },
+  USE_ACTION_SURGE: {
+    buildToken: (context) =>
+      guards.canActionSurge(guardArgs(context))
+        ? {
+            type: "USE_ACTION_SURGE",
+            cost: { charge: "actionSurge" },
+            outcome: { summary: "Expend one Action Surge use to gain one additional action this turn" },
+          }
+        : null,
+  },
   USE_TACTICAL_MIND: {
     buildToken: (context) =>
       guards.canTacticalMind(guardArgs(context))
@@ -591,6 +853,46 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       }
     },
   },
+  ENTER_RAGE: {
+    buildToken: (context) =>
+      guards.canEnterRage(guardArgs(context))
+        ? {
+            type: "ENTER_RAGE",
+            cost: { bonusAction: true, charge: "rage" },
+            outcome: { summary: "Enter a Rage, expend one Rage use, and consume your bonus action" },
+          }
+        : null,
+  },
+  END_RAGE: {
+    buildToken: (context) =>
+      guards.isRaging(guardArgs(context))
+        ? {
+            type: "END_RAGE",
+            cost: {},
+            outcome: { summary: "End your Rage" },
+          }
+        : null,
+  },
+  EXTEND_RAGE_BA: {
+    buildToken: (context) =>
+      guards.canExtendRageBA(guardArgs(context))
+        ? {
+            type: "EXTEND_RAGE_BA",
+            cost: { bonusAction: true },
+            outcome: { summary: "Use your bonus action to keep your Rage going this turn" },
+          }
+        : null,
+  },
+  DECLARE_RECKLESS: {
+    buildToken: (context) =>
+      guards.canDeclareReckless(guardArgs(context))
+        ? {
+            type: "DECLARE_RECKLESS",
+            cost: {},
+            outcome: { summary: "Declare Reckless Attack for this turn" },
+          }
+        : null,
+  },
   USE_LAY_ON_HANDS: {
     buildToken: (context) => {
       const amounts = legalLayOnHandsAmounts(context)
@@ -614,6 +916,59 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
         outcome: { summary: "Expend a spell slot of the chosen level to use Divine Smite" },
       }
     },
+  },
+  FLURRY_OF_BLOWS: {
+    buildToken: (context) => {
+      const monk = context.classStates.monk
+      if (!monk || !guards.canMonkFocusBA(guardArgs(context))) return null
+      return {
+        type: "FLURRY_OF_BLOWS",
+        cost: { bonusAction: true, charge: "focusPoint" },
+        outcome: {
+          summary: `Spend 1 Focus Point to make ${flurryOfBlowsStrikes(monk.level)} unarmed strike${flurryOfBlowsStrikes(monk.level) === 1 ? "" : "s"} as a bonus action`,
+        },
+      }
+    },
+  },
+  PATIENT_DEFENSE_FREE: {
+    buildToken: (context) =>
+      guards.canMonkFreeBA(guardArgs(context))
+        ? {
+            type: "PATIENT_DEFENSE_FREE",
+            cost: { bonusAction: true },
+            outcome: { summary: "Take the Disengage action as a bonus action" },
+          }
+        : null,
+  },
+  PATIENT_DEFENSE_FOCUS: {
+    buildToken: (context) =>
+      guards.canMonkFocusBA(guardArgs(context))
+        ? {
+            type: "PATIENT_DEFENSE_FOCUS",
+            cost: { bonusAction: true, charge: "focusPoint" },
+            outcome: { summary: "Spend 1 Focus Point to Disengage and Dodge as a bonus action" },
+          }
+        : null,
+  },
+  STEP_OF_THE_WIND_FREE: {
+    buildToken: (context) =>
+      guards.canMonkFreeBA(guardArgs(context))
+        ? {
+            type: "STEP_OF_THE_WIND_FREE",
+            cost: { bonusAction: true },
+            outcome: { summary: "Take the Dash action as a bonus action" },
+          }
+        : null,
+  },
+  STEP_OF_THE_WIND_FOCUS: {
+    buildToken: (context) =>
+      guards.canMonkFocusBA(guardArgs(context))
+        ? {
+            type: "STEP_OF_THE_WIND_FOCUS",
+            cost: { bonusAction: true, charge: "focusPoint" },
+            outcome: { summary: "Spend 1 Focus Point to Dash and Disengage as a bonus action" },
+          }
+        : null,
   },
   WHOLENESS_OF_BODY: {
     buildToken: (context) => {
@@ -705,6 +1060,56 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       }
     },
   },
+  USE_STEADY_AIM: {
+    buildToken: (context) =>
+      guards.canSteadyAim(guardArgs(context))
+        ? {
+            type: "USE_STEADY_AIM",
+            cost: { bonusAction: true },
+            outcome: { summary: "Use Steady Aim to gain Advantage on your next attack roll; your speed becomes 0 until end of turn" },
+          }
+        : null,
+  },
+  CUNNING_ACTION_DASH: {
+    buildToken: (context) =>
+      guards.canCunningAction(guardArgs(context))
+        ? {
+            type: "CUNNING_ACTION_DASH",
+            cost: { bonusAction: true },
+            outcome: { summary: "Take the Dash action as a bonus action" },
+          }
+        : null,
+  },
+  CUNNING_ACTION_DISENGAGE: {
+    buildToken: (context) =>
+      guards.canCunningAction(guardArgs(context))
+        ? {
+            type: "CUNNING_ACTION_DISENGAGE",
+            cost: { bonusAction: true },
+            outcome: { summary: "Take the Disengage action as a bonus action" },
+          }
+        : null,
+  },
+  CUNNING_ACTION_HIDE: {
+    buildToken: (context) =>
+      guards.canCunningAction(guardArgs(context))
+        ? {
+            type: "CUNNING_ACTION_HIDE",
+            cost: { bonusAction: true },
+            outcome: { summary: "Take the Hide action as a bonus action" },
+          }
+        : null,
+  },
+  USE_CLERIC_CHANNEL_DIVINITY: {
+    buildToken: (context) =>
+      guards.canClericCD(guardArgs(context))
+        ? {
+            type: "USE_CLERIC_CHANNEL_DIVINITY",
+            cost: { charge: "channelDivinity" },
+            outcome: { summary: "Expend one Cleric Channel Divinity use" },
+          }
+        : null,
+  },
   USE_FONT_SLOT_RESTORE: {
     buildToken: (context) => {
       const slotLevels = legalFontSlotRestoreLevels(context)
@@ -717,6 +1122,16 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       }
     },
   },
+  USE_PALADIN_CHANNEL_DIVINITY: {
+    buildToken: (context) =>
+      guards.canPaladinCD(guardArgs(context))
+        ? {
+            type: "USE_PALADIN_CHANNEL_DIVINITY",
+            cost: { charge: "channelDivinity" },
+            outcome: { summary: "Expend one Paladin Channel Divinity use" },
+          }
+        : null,
+  },
   USE_WILD_RESURGENCE_CHARGE: {
     buildToken: (context) => {
       const slotLevels = legalWildResurgenceChargeLevels(context)
@@ -728,6 +1143,26 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
         outcome: { summary: "Expend a spell slot to regain one Wild Shape use" },
       }
     },
+  },
+  USE_NATURES_VEIL: {
+    buildToken: (context) =>
+      guards.canNaturesVeil(guardArgs(context))
+        ? {
+            type: "USE_NATURES_VEIL",
+            cost: { bonusAction: true, charge: "naturesVeil" },
+            outcome: { summary: "Expend one Nature's Veil use to become Invisible" },
+          }
+        : null,
+  },
+  USE_BARDIC_INSPIRATION: {
+    buildToken: (context) =>
+      guards.canBardicInspiration(guardArgs(context))
+        ? {
+            type: "USE_BARDIC_INSPIRATION",
+            cost: { bonusAction: true, charge: "bardicInspiration" },
+            outcome: { summary: "Expend one Bardic Inspiration use to inspire another creature" },
+          }
+        : null,
   },
   USE_PEERLESS_SKILL: {
     buildToken: (context) => {
@@ -938,6 +1373,8 @@ export function resolveAction(
       return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_HEROIC_INSPIRATION" } }
     case "START_TURN":
       return { token, outcome: available.outcome.summary, runtime: "startTurn" }
+    case "USE_ACTION_SURGE":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_ACTION_SURGE" } }
     case "USE_TACTICAL_MIND":
       return { token, outcome: available.outcome.summary, runtime: "tacticalMind" }
     case "CONVERT_SLOT_TO_POINTS":
@@ -966,6 +1403,14 @@ export function resolveAction(
         runtime: "none",
         event: { type: "CONVERT_POINTS_TO_SLOT", slotLevel: token.slotLevel },
       }
+    case "ENTER_RAGE":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "ENTER_RAGE" } }
+    case "END_RAGE":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "END_RAGE" } }
+    case "EXTEND_RAGE_BA":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "EXTEND_RAGE_BA" } }
+    case "DECLARE_RECKLESS":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "DECLARE_RECKLESS" } }
     case "USE_LAY_ON_HANDS":
       if (!legalLayOnHandsAmounts(context).includes(token.amount)) {
         return {
@@ -992,6 +1437,16 @@ export function resolveAction(
         runtime: "none",
         event: { type: "USE_DIVINE_SMITE", slotLevel: token.slotLevel },
       }
+    case "FLURRY_OF_BLOWS":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "FLURRY_OF_BLOWS" } }
+    case "PATIENT_DEFENSE_FREE":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "PATIENT_DEFENSE_FREE" } }
+    case "PATIENT_DEFENSE_FOCUS":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "PATIENT_DEFENSE_FOCUS" } }
+    case "STEP_OF_THE_WIND_FREE":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "STEP_OF_THE_WIND_FREE" } }
+    case "STEP_OF_THE_WIND_FOCUS":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "STEP_OF_THE_WIND_FOCUS" } }
     case "WHOLENESS_OF_BODY":
       return { token, outcome: available.outcome.summary, runtime: "wholenessOfBody" }
     case "UNCANNY_METABOLISM":
@@ -1041,6 +1496,16 @@ export function resolveAction(
       return { token, outcome: available.outcome.summary, runtime: "secondWind" }
     case "USE_TIRELESS":
       return { token, outcome: available.outcome.summary, runtime: "tireless" }
+    case "USE_STEADY_AIM":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_STEADY_AIM" } }
+    case "CUNNING_ACTION_DASH":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "CUNNING_ACTION_DASH" } }
+    case "CUNNING_ACTION_DISENGAGE":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "CUNNING_ACTION_DISENGAGE" } }
+    case "CUNNING_ACTION_HIDE":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "CUNNING_ACTION_HIDE" } }
+    case "USE_CLERIC_CHANNEL_DIVINITY":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_CLERIC_CHANNEL_DIVINITY" } }
     case "USE_FONT_SLOT_RESTORE":
       if (!legalFontSlotRestoreLevels(context).includes(token.slotLevel)) {
         return {
@@ -1054,6 +1519,8 @@ export function resolveAction(
         runtime: "none",
         event: { type: "USE_FONT_SLOT_RESTORE", slotLevel: token.slotLevel },
       }
+    case "USE_PALADIN_CHANNEL_DIVINITY":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_PALADIN_CHANNEL_DIVINITY" } }
     case "USE_WILD_RESURGENCE_CHARGE":
       if (!legalWildResurgenceChargeLevels(context).includes(token.slotLevel)) {
         return {
@@ -1067,6 +1534,10 @@ export function resolveAction(
         runtime: "none",
         event: { type: "USE_WILD_RESURGENCE_CHARGE", slotLevel: token.slotLevel },
       }
+    case "USE_NATURES_VEIL":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_NATURES_VEIL" } }
+    case "USE_BARDIC_INSPIRATION":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_BARDIC_INSPIRATION" } }
     case "USE_PEERLESS_SKILL":
       return { token, outcome: available.outcome.summary, runtime: "peerlessSkill" }
     case "USE_RELENTLESS_RAGE":

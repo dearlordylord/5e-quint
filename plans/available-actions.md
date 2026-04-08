@@ -774,11 +774,10 @@ Do this in two subphases rather than one undifferentiated “catalog” pass.
 
 #### Phase 4A: Missing semantic no-hole / simple-hole actions already owned by current state
 
-Good candidates to audit and expose first:
+Completed breadth batch:
 
 - Fighter / Barbarian / Monk / Rogue / Cleric / Bard / Ranger actions whose legality is already directly owned by machine state:
   - `USE_ACTION_SURGE`
-  - `USE_INDOMITABLE`
   - `ENTER_RAGE`
   - `END_RAGE`
   - `EXTEND_RAGE_BA`
@@ -788,8 +787,6 @@ Good candidates to audit and expose first:
   - `PATIENT_DEFENSE_FOCUS`
   - `STEP_OF_THE_WIND_FREE`
   - `STEP_OF_THE_WIND_FOCUS`
-  - `USE_OVERCHANNEL`
-  - `USE_SNEAK_ATTACK`
   - `USE_STEADY_AIM`
   - `CUNNING_ACTION_DASH`
   - `CUNNING_ACTION_DISENGAGE`
@@ -798,6 +795,20 @@ Good candidates to audit and expose first:
   - `USE_PALADIN_CHANNEL_DIVINITY`
   - `USE_BARDIC_INSPIRATION`
   - `USE_NATURES_VEIL`
+
+Deferred after audit:
+
+- `USE_INDOMITABLE`
+- `USE_OVERCHANNEL`
+- `USE_SNEAK_ATTACK`
+
+Reason these 3 stayed out:
+
+- `USE_INDOMITABLE` currently has only a coarse resource/level guard. The machine does not yet own a failed-save trigger window, so exposing it now would over-suggest it whenever charges remain.
+- `USE_OVERCHANNEL` currently has only a coarse subclass/level guard. The machine does not yet own the qualifying “you are casting a Wizard spell with a level 1-5 slot that deals damage” trigger window.
+- `USE_SNEAK_ATTACK` currently has only a coarse per-turn availability guard. The machine does not yet own the hit/weapon/advantage-or-ally trigger context needed to suggest it honestly.
+
+This is the same ownership class of problem as the earlier reaction/pending-trigger work: do not solve it in MCP, and do not expose the token until the machine/spec owns the trigger state.
 
 Rules for this subphase:
 
@@ -826,14 +837,15 @@ Keep explicitly out of the first breadth batch:
 
 ### Acceptance criteria
 
-- [ ] Phase 4A adds at least one new representative semantic action from each still-uncovered family that is already fully owned by current state
-- [ ] No low-level bookkeeping/internal-trigger event is exposed as a user-facing token
-- [ ] Every newly exposed action has end-to-end coverage:
+- [x] Phase 4A adds representative semantic breadth from the already-owned Fighter / Barbarian / Monk / Rogue / Cleric / Bard / Ranger families
+- [x] No low-level bookkeeping/internal-trigger event is exposed as a user-facing token
+- [x] Every newly exposed action has end-to-end coverage:
   - token appears only when legal
   - resolved token executes successfully through MCP
   - resource/action-economy state changes are asserted
-- [ ] Snapshot tests for multiple archetypes confirm the grouped action surface after the breadth expansion
-- [ ] Reaction remains intentionally absent unless a separate ownership pass has made a reaction candidate honest to suggest
+- [x] Snapshot tests for representative archetypes confirm the grouped action surface after the breadth expansion
+- [x] Reaction remains intentionally absent unless a separate ownership pass has made a reaction candidate honest to suggest
+- [x] The 3 coarse-guard false positives (`USE_INDOMITABLE`, `USE_OVERCHANNEL`, `USE_SNEAK_ATTACK`) are explicitly documented as blocked by missing owned trigger state rather than silently omitted
 
 ### Files to read first next session
 
@@ -842,22 +854,36 @@ Keep explicitly out of the first breadth batch:
 - [packages/core/src/machine-states.ts](/workspace/typescript/dnd/packages/core/src/machine-states.ts)
 - [packages/core/src/machine-guards.ts](/workspace/typescript/dnd/packages/core/src/machine-guards.ts)
 - [packages/core/src/machine-types.ts](/workspace/typescript/dnd/packages/core/src/machine-types.ts)
+- [packages/core/src/machine-fighter.ts](/workspace/typescript/dnd/packages/core/src/machine-fighter.ts)
+- [packages/core/src/machine-rogue.ts](/workspace/typescript/dnd/packages/core/src/machine-rogue.ts)
+- [packages/core/src/machine-wizard.ts](/workspace/typescript/dnd/packages/core/src/machine-wizard.ts)
 - [packages/core/src/available-actions.test.ts](/workspace/typescript/dnd/packages/core/src/available-actions.test.ts)
 - [packages/mcp/src/server.test.ts](/workspace/typescript/dnd/packages/mcp/src/server.test.ts)
 
 ### Recommended implementation order
 
-1. Audit `machine-states.ts` handlers against `SUPPORTED_ACTION_TYPES` and identify Phase 4A candidates that already have honest owned legality.
-2. Add those actions to `SUPPORTED_ACTION_TYPES`, token types, resolved token schemas, and `ACTION_SPECS`.
-3. Prefer reusing or extracting legality helpers in `machine-guards.ts` when a coarse top-level guard is not enough for query-time hole filtering.
-4. Add focused core tests first, then MCP tests, then only if creature semantics changed materially, run Tier 1b creature MBT.
+1. If resuming breadth work, start from the 3 deferred coarse-guard actions and decide whether to do another pending-trigger/ownership pass.
+2. For `USE_INDOMITABLE`, add owned failed-save trigger state before exposing the token.
+3. For `USE_OVERCHANNEL`, add owned qualifying-cast trigger state before exposing the token.
+4. For `USE_SNEAK_ATTACK`, add owned hit/weapon/qualifying-advantage-or-adjacent-ally trigger state before exposing the token.
+5. Only after the machine owns those trigger windows, add them to `SUPPORTED_ACTION_TYPES`, token types, resolved token schemas, and `ACTION_SPECS`.
 
 ### Verification
 
 - `pnpm --filter @dnd/core exec tsc --noEmit`
 - `pnpm --filter @dnd/mcp exec tsc --noEmit`
-- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/machine.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`
 - `pnpm --filter @dnd/mcp test -- server.test.ts`
+
+### Current next step after Phase 4A
+
+The next honest semantic-breadth work is **not** “add more zero-hole tokens.” It is another ownership pass for the 3 deferred coarse-guard actions:
+
+- `USE_INDOMITABLE`
+- `USE_OVERCHANNEL`
+- `USE_SNEAK_ATTACK`
+
+All 3 need machine-owned trigger windows before the available-actions surface can suggest them honestly.
 - If creature-level semantics change, run Tier 1b:
   - `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts`
 
@@ -1117,6 +1143,129 @@ In other words: do not overload `TranscriptBuffer` with branching history concer
 - [x] Audio segments are cacheable — integration tests replay recorded segments
 - [ ] Branching tail: uncommitted candidates visible near stream end, collapsed farther back
 - [x] End-to-end: recorded audio → segments → buffered groups → LLM → candidate events
+
+### Phase 7 next architecture step: microphone capture + TUI
+
+This should be treated as the next distinct milestone after recorded-audio replay/snapshots.
+
+**Current context from Hellenvald (already implemented):**
+
+- real/fake Whisper switching exists
+- real/fake LLM switching exists
+- transcript buffering exists
+- Whisper post-processing exists
+- branching-tail stream state exists (`committed` vs `tail`)
+- text demo, recorded-audio demo, and replay snapshot tooling exist
+
+That means the remaining unknown is not transcript semantics. It is live device capture and operator UX.
+
+**Critical environment constraint:**
+
+We are currently working inside a Docker devcontainer. Recorded WAV workflows are container-friendly. Microphone capture is not the right default assumption in this environment because it depends on host audio-device passthrough, container permissions, and OS-specific plumbing.
+
+So:
+
+- architecture/design can be implemented now in repo code
+- graceful “no microphone device available” behavior must exist
+- actual end-to-end microphone validation should be assumed to happen on the host machine, not inside the devcontainer
+
+**Recommended architecture:**
+
+Keep the existing transcript pipeline intact. Add microphone capture as a new input boundary, not as a new pipeline implementation.
+
+- `MicrophoneAudioSource` Effect service:
+  - responsibility: capture short audio chunks from a microphone
+  - output: chunk metadata and/or short temporary WAV recordings
+  - no knowledge of Whisper, buffering, or game logic
+- `WhisperTranscriber`:
+  - unchanged boundary
+  - microphone mode feeds it rolling short WAV chunks instead of whole-session files
+- `WhisperTranscriptPostProcessor`:
+  - unchanged responsibility
+  - still turns raw Whisper segments into phrase/clause-level transcript segments
+- `TranscriptBuffer`:
+  - unchanged phrase-to-window grouping
+- `TranscriptStream`:
+  - unchanged committed/tail semantics
+- TUI:
+  - thin control/inspection shell over those services
+  - does not own transcript semantics
+
+In short:
+
+- services own capture/transcription/buffering/stream state
+- the TUI only displays state and controls the services
+
+**TUI library choice:**
+
+Use `ink`, not a new TUI stack.
+
+Reason:
+
+- `ink` is already in `osr-hellenvald/package.json`
+- it is enough for panes, status bars, and key handling
+- introducing OpenTUI or another TUI framework now would add tool churn without solving a current problem
+
+**Recommended first microphone milestone:**
+
+Do not start with true continuous streaming transcription.
+
+Start with host-oriented chunked capture:
+
+1. press start recording
+2. collect a short audio chunk or rolling temp WAV
+3. pass that chunk through the existing `WhisperTranscriber`
+4. feed resulting segments into `TranscriptBuffer`
+5. update `TranscriptStream`
+6. redraw the TUI
+
+This is the pragmatic first step because microphone device access is the real unknown, not the transcript pipeline.
+
+**Minimal TUI layout:**
+
+- top bar:
+  - recording on/off
+  - Whisper mode
+  - LLM mode
+  - current chunk age / status
+- left pane:
+  - latest transcript segments
+  - current pending buffer
+- right pane:
+  - live tail windows with candidate events
+- bottom pane:
+  - committed history
+- controls:
+  - `r` start/stop recording
+  - `f` flush stream tail
+  - `s` save replay snapshot
+  - `q` quit
+
+**Implementation order:**
+
+1. Add `MicrophoneAudioSource` service boundary with explicit “device unavailable” failure mode.
+2. Add a non-TUI/manual microphone runner first:
+   - start capture
+   - write short WAV chunks
+   - feed chunks through the current pipeline
+3. Validate that path on the host machine.
+4. Only then wrap it with an `ink` TUI.
+5. Add one replay/snapshot export path from the TUI so live sessions can still be debugged deterministically after the fact.
+
+**Testing strategy:**
+
+- automated tests should stay mostly below the real microphone boundary
+- use fake or prerecorded chunk sources for deterministic tests
+- treat real microphone validation as manual smoke testing on host
+
+**Acceptance criteria for the microphone/TUI milestone:**
+
+- [ ] `MicrophoneAudioSource` service boundary exists in Hellenvald
+- [ ] microphone path fails cleanly when no input device is available
+- [ ] host/manual chunked capture can feed the existing Whisper → buffer → stream pipeline
+- [ ] `ink` TUI shows committed history and live tail separately
+- [ ] TUI can flush tail and save replay snapshots
+- [ ] manual host smoke test proves at least one live spoken action reaches the transcript stream
 
 ---
 

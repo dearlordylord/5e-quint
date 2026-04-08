@@ -41,7 +41,7 @@ describe("MCP server adapter", () => {
 
     const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
     expect(available.bonusAction.map((token: { readonly type: string }) => token.type)).toEqual(["USE_SECOND_WIND"])
-    expect(available.free.map((token: { readonly type: string }) => token.type)).toEqual(["EXIT_COMBAT"])
+    expect(available.free.map((token: { readonly type: string }) => token.type)).toEqual(["USE_ACTION_SURGE", "EXIT_COMBAT"])
 
     const secondWind = handleToolCall(actor, "execute_action", { type: "USE_SECOND_WIND" })
     expect("isError" in secondWind).toBe(false)
@@ -371,6 +371,60 @@ describe("MCP server adapter", () => {
     expect(payload.state.pendingResolution).toBeNull()
   })
 
+  test("execute_action supports representative phase 4A semantic actions", () => {
+    const actor = createDemoActor({
+      maxHp: 52,
+      fighterLevel: classLevel(2),
+      barbarianLevel: classLevel(2),
+      monkLevel: classLevel(2),
+      rogueLevel: classLevel(3),
+      clericLevel: classLevel(2),
+      paladinLevel: classLevel(3),
+      bardLevel: classLevel(1),
+      rangerLevel: classLevel(14),
+      chaMod: abilityModifier(3),
+      wisMod: abilityModifier(3),
+      preparedSpells: new Set(),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_ACTION_SURGE",
+      cost: { charge: "actionSurge" },
+      outcome: { summary: "Expend one Action Surge use to gain one additional action this turn" },
+    })
+    expect(available.bonusAction).toContainEqual({
+      type: "FLURRY_OF_BLOWS",
+      cost: { bonusAction: true, charge: "focusPoint" },
+      outcome: { summary: "Spend 1 Focus Point to make 2 unarmed strikes as a bonus action" },
+    })
+    expect(available.bonusAction).toContainEqual({
+      type: "USE_BARDIC_INSPIRATION",
+      cost: { bonusAction: true, charge: "bardicInspiration" },
+      outcome: { summary: "Expend one Bardic Inspiration use to inspire another creature" },
+    })
+    expect(available.free.map((token: { readonly type: string }) => token.type)).not.toContain("USE_INDOMITABLE")
+    expect(available.free.map((token: { readonly type: string }) => token.type)).not.toContain("USE_OVERCHANNEL")
+
+    const actionSurge = handleToolCall(actor, "execute_action", { type: "USE_ACTION_SURGE" })
+    expect("isError" in actionSurge).toBe(false)
+    const actionSurgePayload = readPayload(actionSurge)
+    expect(actionSurgePayload.success).toBe(true)
+    expect(actionSurgePayload.state.actionsRemaining).toBe(2)
+    expect(actionSurgePayload.state.classStates.fighter.actionSurgeCharges).toBe(0)
+
+    const bardic = handleToolCall(actor, "execute_action", { type: "USE_BARDIC_INSPIRATION" })
+    expect("isError" in bardic).toBe(false)
+    const bardicPayload = readPayload(bardic)
+    expect(bardicPayload.success).toBe(true)
+    expect(bardicPayload.state.classStates.bard.bardicInspirationCharges).toBe(2)
+    expect(bardicPayload.state.bonusActionUsed).toBe(true)
+  })
+
   test("get_available_actions groups a representative multigroup state stably", () => {
     const actor = createDemoActor({
       maxHp: 44,
@@ -447,6 +501,15 @@ describe("MCP server adapter", () => {
           },
         ],
         "free": [
+          {
+            "cost": {
+              "charge": "actionSurge",
+            },
+            "outcome": {
+              "summary": "Expend one Action Surge use to gain one additional action this turn",
+            },
+            "type": "USE_ACTION_SURGE",
+          },
           {
             "cost": {
               "charge": "arcaneRecovery",

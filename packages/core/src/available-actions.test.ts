@@ -179,6 +179,23 @@ const BARBARIAN_11_INPUT: DndMachineInput = {
   effectiveSpeed: 30,
 }
 
+const PHASE_4A_SAFE_BATCH_INPUT: DndMachineInput = {
+  maxHp: 52,
+  fighterLevel: classLevel(2),
+  barbarianLevel: classLevel(2),
+  monkLevel: classLevel(2),
+  rogueLevel: classLevel(3),
+  clericLevel: classLevel(2),
+  paladinLevel: classLevel(3),
+  bardLevel: classLevel(1),
+  rangerLevel: classLevel(14),
+  chaMod: abilityModifier(3),
+  wisMod: abilityModifier(3),
+  preparedSpells: new Set(),
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
 function expectRequest(request: ResolutionRequest | { readonly code: string }) {
   if ("code" in request) throw new Error(`expected successful resolution request, got ${request.code}`)
   return request
@@ -245,6 +262,7 @@ describe("available actions contract", () => {
     actor.send(startTurnFinalized.event)
 
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).toEqual([
+      "USE_ACTION_SURGE",
       "USE_SECOND_WIND",
       "EXIT_COMBAT",
     ])
@@ -563,6 +581,107 @@ describe("available actions contract", () => {
     expect(actor.getSnapshot().context.pendingResolution).toBeNull()
   })
 
+  test("exposes the safe phase 4A semantic batch from current owned state", () => {
+    const actor = makeActorWithInput(PHASE_4A_SAFE_BATCH_INPUT)
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+
+    const tokenTypes = getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)
+    expect(tokenTypes).toEqual(expect.arrayContaining([
+      "USE_ACTION_SURGE",
+      "ENTER_RAGE",
+      "DECLARE_RECKLESS",
+      "FLURRY_OF_BLOWS",
+      "PATIENT_DEFENSE_FREE",
+      "PATIENT_DEFENSE_FOCUS",
+      "STEP_OF_THE_WIND_FREE",
+      "STEP_OF_THE_WIND_FOCUS",
+      "USE_STEADY_AIM",
+      "CUNNING_ACTION_DASH",
+      "CUNNING_ACTION_DISENGAGE",
+      "CUNNING_ACTION_HIDE",
+      "USE_CLERIC_CHANNEL_DIVINITY",
+      "USE_PALADIN_CHANNEL_DIVINITY",
+      "USE_BARDIC_INSPIRATION",
+      "USE_NATURES_VEIL",
+      "EXIT_COMBAT",
+    ]))
+    expect(tokenTypes).not.toContain("USE_INDOMITABLE")
+    expect(tokenTypes).not.toContain("USE_OVERCHANNEL")
+    expect(tokenTypes).not.toContain("USE_SNEAK_ATTACK")
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "USE_ACTION_SURGE",
+      cost: { charge: "actionSurge" },
+      outcome: { summary: "Expend one Action Surge use to gain one additional action this turn" },
+    })
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "FLURRY_OF_BLOWS",
+      cost: { bonusAction: true, charge: "focusPoint" },
+      outcome: { summary: "Spend 1 Focus Point to make 2 unarmed strikes as a bonus action" },
+    })
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "USE_BARDIC_INSPIRATION",
+      cost: { bonusAction: true, charge: "bardicInspiration" },
+      outcome: { summary: "Expend one Bardic Inspiration use to inspire another creature" },
+    })
+  })
+
+  test("resolves and executes representative zero-runtime phase 4A actions", () => {
+    const actor = makeActorWithInput(PHASE_4A_SAFE_BATCH_INPUT)
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+
+    const actionSurgeRequest = expectRequest(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_ACTION_SURGE" }),
+    )
+    const actionSurgeFinalized = finalizeResolution(actionSurgeRequest, { runtime: "none" }, actor.getSnapshot().context)
+    expect(actionSurgeFinalized).toEqual({
+      ok: true,
+      event: { type: "USE_ACTION_SURGE" },
+      outcome: "Expend one Action Surge use to gain one additional action this turn",
+    })
+    if (!actionSurgeFinalized.ok) throw new Error("expected USE_ACTION_SURGE finalization to succeed")
+    actor.send(actionSurgeFinalized.event)
+    expect(actor.getSnapshot().context.actionsRemaining).toBe(2)
+
+    const bard = makeActorWithInput(PHASE_4A_SAFE_BATCH_INPUT)
+    bard.send({ type: "ENTER_COMBAT" })
+    bard.send({ type: "START_TURN" })
+    const inspirationRequest = expectRequest(
+      resolveAction(bard.getSnapshot().context, bard.getSnapshot().tags, { type: "USE_BARDIC_INSPIRATION" }),
+    )
+    const inspirationFinalized = finalizeResolution(inspirationRequest, { runtime: "none" }, bard.getSnapshot().context)
+    expect(inspirationFinalized).toEqual({
+      ok: true,
+      event: { type: "USE_BARDIC_INSPIRATION" },
+      outcome: "Expend one Bardic Inspiration use to inspire another creature",
+    })
+    if (!inspirationFinalized.ok) throw new Error("expected USE_BARDIC_INSPIRATION finalization to succeed")
+    bard.send(inspirationFinalized.event)
+    expect(bard.getSnapshot().context.classStates.bard?.bardicInspirationCharges).toBe(2)
+    expect(bard.getSnapshot().context.bonusActionUsed).toBe(true)
+
+    const barbarian = makeActorWithInput(PHASE_4A_SAFE_BATCH_INPUT)
+    barbarian.send({ type: "ENTER_COMBAT" })
+    barbarian.send({ type: "START_TURN" })
+    const rageRequest = expectRequest(
+      resolveAction(barbarian.getSnapshot().context, barbarian.getSnapshot().tags, { type: "ENTER_RAGE" }),
+    )
+    const rageFinalized = finalizeResolution(rageRequest, { runtime: "none" }, barbarian.getSnapshot().context)
+    expect(rageFinalized).toEqual({
+      ok: true,
+      event: { type: "ENTER_RAGE" },
+      outcome: "Enter a Rage, expend one Rage use, and consume your bonus action",
+    })
+    if (!rageFinalized.ok) throw new Error("expected ENTER_RAGE finalization to succeed")
+    barbarian.send(rageFinalized.event)
+
+    barbarian.send({ type: "START_TURN" })
+    const nextTurnTypes = getAvailableActions(barbarian.getSnapshot().context, barbarian.getSnapshot().tags).map((token) => token.type)
+    expect(nextTurnTypes).toContain("END_RAGE")
+  })
+
   test("exposes and executes the dice-roll family through runtime inputs", () => {
     const monk = makeActorWithInput(MONK_6_INPUT)
     monk.send({ type: "TAKE_DAMAGE", amount: 10, damageType: "slashing", resistances: new Set(), vulnerabilities: new Set(), immunities: new Set(), isCritical: false })
@@ -771,6 +890,7 @@ describe("available actions contract", () => {
     actor.send({ type: "START_TURN" })
 
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).toEqual([
+      "USE_ACTION_SURGE",
       "CONVERT_POINTS_TO_SLOT",
       "USE_ARCANE_RECOVERY",
       "USE_METAMAGIC",
@@ -781,6 +901,7 @@ describe("available actions contract", () => {
 
     actor.send({ type: "USE_TIRELESS", d8Roll: 4 })
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).toEqual([
+      "USE_ACTION_SURGE",
       "CONVERT_POINTS_TO_SLOT",
       "USE_ARCANE_RECOVERY",
       "USE_METAMAGIC",
@@ -790,6 +911,7 @@ describe("available actions contract", () => {
 
     actor.send({ type: "USE_SECOND_WIND", d10Roll: 3 })
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).toEqual([
+      "USE_ACTION_SURGE",
       "USE_ARCANE_RECOVERY",
       "USE_METAMAGIC",
       "EXIT_COMBAT",
@@ -797,6 +919,7 @@ describe("available actions contract", () => {
 
     actor.send({ type: "USE_ARCANE_RECOVERY", slotLevel: spellSlotLevel(2) })
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags).map((token) => token.type)).toEqual([
+      "USE_ACTION_SURGE",
       "USE_METAMAGIC",
       "EXIT_COMBAT",
     ])

@@ -72,7 +72,7 @@ export const toolDefinitions = [
   },
   {
     name: "get_available_actions",
-    description: `Returns available action tokens grouped by action economy cost. Phase 1 exposes: ${EXPOSED_ACTION_TYPES.join(", ")}.`,
+    description: `Returns available action tokens grouped by action economy cost. Currently exposes: ${EXPOSED_ACTION_TYPES.join(", ")}.`,
     inputSchema: { type: "object" as const, properties: {} },
   },
   {
