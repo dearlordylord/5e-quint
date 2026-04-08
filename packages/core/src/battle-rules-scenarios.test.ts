@@ -112,6 +112,19 @@ function initLegendaryBattle() {
   return actor
 }
 
+function initLegendaryResistanceBattle(legendaryResistances: number) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]), initiativeRoll: 15 },
+      { id: CreatureId("C"), maxHp: 30, kind: "Monster", legendaryResistances, initiativeRoll: 10 }
+    ]
+  })
+  return actor
+}
+
 function initHealBattle() {
   const actor = createActor(battleMachine)
   actor.start()
@@ -499,6 +512,97 @@ describe("battle rules scenario regressions", () => {
 
     expect(ctx(actor).laCtx).toBeNull()
     expect(ctx(actor).turnIndex).toBe(1)
+  })
+
+  it("natural_20: Legendary Resistance turns a failed save into a success and spends one use", () => {
+    const actor = initLegendaryResistanceBattle(3)
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("C"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person",
+      ritual: false
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PISaveFailed")
+    expect(ctx(actor).awaitCtx?.eligible).toEqual(new Set([CreatureId("C")]))
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
+      reactorId: CreatureId("C"),
+      decision: { tag: "RLegendaryResistance" }
+    })
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "A").slotsCurrent[0]).toBe(3)
+    expect(creature(actor, "C").legendaryResistancesRemaining).toBe(2)
+    expect(creature(actor, "C").paralyzed).toBe(false)
+  })
+
+  it("natural_20: passing the failed-save reaction applies the spell effect and preserves Legendary Resistance", () => {
+    const actor = initLegendaryResistanceBattle(3)
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("C"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person",
+      ritual: false
+    })
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "C").legendaryResistancesRemaining).toBe(3)
+    expect(creature(actor, "C").paralyzed).toBe(true)
+  })
+
+  it("natural_20: no Legendary Resistance uses means a failed save resolves immediately", () => {
+    const actor = initLegendaryResistanceBattle(0)
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("C"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(1),
+      spellName: "hold_person",
+      ritual: false
+    })
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "C").legendaryResistancesRemaining).toBe(0)
+    expect(creature(actor, "C").paralyzed).toBe(true)
   })
 
   it("opencombatengine: an opportunity attack spends the reaction and prevents a second OA before next turn", () => {

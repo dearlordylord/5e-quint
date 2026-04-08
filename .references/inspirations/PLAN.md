@@ -750,6 +750,7 @@ Verification:
 
 What is next now:
 
+- legendary-resistance battle coverage is now in inspiration form, so do not re-pick that batch
 - legendary-action battle coverage is now in inspiration form, so do not re-pick that batch
 - `Counterspell` battle coverage is now in inspiration form, so do not re-pick that batch
 - `BATTLE_HEAL` battle coverage is now in inspiration form, so do not re-pick that batch
@@ -760,6 +761,22 @@ What is next now:
 - the `Ray of Frost` + `Dash` follow-up is now covered in inspiration form, so do not re-pick it as the next batch
 - scout the next small deterministic batch outside grapple and outside the already-covered `Ray of Frost`/`Dash` interaction
 - if you resume in a fresh session, start from this file and [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts), then pick the next `natural_20`-style scenario that fits current battle state without reopening architecture
+
+Batch 22 result:
+
+1. Added explicit battle coverage for `BATTLE_RESOLVE_SAVE_FAILED_REACTION` via Legendary Resistance.
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves:
+     - a monster can expend Legendary Resistance to turn a failed save into a success,
+     - passing the failed-save reaction applies the spell effect and preserves Legendary Resistance,
+     - no Legendary Resistance uses means the failed save resolves immediately without opening the reaction window
+2. Confirmed the existing implementation already matched current battle semantics.
+   - no production TS or Quint changes were required
+   - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
 
 Batch 21 result:
 
