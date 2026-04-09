@@ -336,6 +336,37 @@ This runbook counts as complete when:
 5. at least two simplify-style review rounds have been completed
 6. overnight validation remains optional and is not required for this runbook
 
+## Outcomes
+
+This runbook batch is now landed.
+
+Landed:
+
+1. `oa-path-vocabulary`
+2. `duration-boundary-audit`
+3. `qualified-damage-typing`
+4. `battle-helped-target-state`
+5. `help-advantage-state`
+6. `weapon-property-aware-battle-resolution`
+7. `off-hand-attack-surface`
+8. `two-weapon-fighting-bonus-attack`
+9. `one-shot-rider-consumption-metadata`
+
+What landed for each lane:
+
+- Lane A: vocabulary landed in [battle/DOMAIN.md](../battle/DOMAIN.md), [battle.qnt](../battle.qnt), and [packages/core/src/battle-machine-actions-movement.ts](../packages/core/src/battle-machine-actions-movement.ts)
+- Lane B: audit checklist landed in [DURATION_BOUNDARY_AUDIT.md](./DURATION_BOUNDARY_AUDIT.md) with deterministic timing regressions; no broader production refactor was required
+- Lane C: minimal damage qualification landed as battle-owned `magical` / `silvered` / `adamantine` metadata in Quint and TS
+- Lane D: helped-target state and Help-as-advantage both landed with owner-scoped expiry and consumption semantics
+- Lane E: battle attack resolution now consumes weapon properties, and the light-weapon off-hand bonus-action slice landed
+- Lane F: consume-on-next-qualifying-hit metadata landed without widening into the full next-hit rider consumer batch
+
+Residual boundaries kept intentionally out of scope:
+
+- battle geometry is still caller-owned; only OA vocabulary was clarified
+- no broader battle `available-actions` action-surface expansion beyond already-modeled slices
+- no qualified-damage bypass consumer rollout yet
+
 ## Notes To Future Orchestrators
 
 - Treat [plans/available-actions.md](./available-actions.md) as historical context, not as the current critical path. Several items it described as “next” are already implemented.

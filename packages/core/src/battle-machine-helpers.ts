@@ -9,6 +9,7 @@ import {
   applyCondition,
   blocksOpportunityAttacks,
   breakConcentration,
+  consumeOneShotHitEffects,
   deathSave,
   FRESH_TURN_STATE,
   heal,
@@ -27,6 +28,7 @@ import type {
   BattleContext,
   BattleCreatureState,
   CreatureId,
+  HelpTarget,
   PendingInterrupt,
   PhaseFields,
   SaveFailedCtx,
@@ -50,6 +52,7 @@ import { canUncannyDodge, evasionDamage } from "#/features/class-rogue.ts";
 import { canCastShield } from "#/features/spell-abjuration.ts";
 import type {
   ActiveEffect,
+  DamageQualifier,
   DamageType,
   ExpiryPhase,
   SpellId,
@@ -574,6 +577,7 @@ export function applyDamageWithAfterReactions(
   sourceId: CreatureId,
   dmg: number,
   dt: DamageType,
+  damageQualifiers: ReadonlySet<DamageQualifier>,
   crit: boolean,
   knockOut: boolean,
   returnTo: AfterDamageReturn,
@@ -595,6 +599,7 @@ export function applyDamageWithAfterReactions(
               damagedCreature: targetId,
               damageDealt: actualDmg,
               damageType: dt,
+              damageQualifiers,
               returnTo,
             },
           },
@@ -615,17 +620,26 @@ export function advanceFromHitPhase(
   const stillHit = isHit(atk.attackRoll, atk.targetAc, atk.critRange);
   if (!stillHit)
     return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) };
-  const cs1 = applyOnHitEffect(
+  let cs1 = applyOnHitEffect(
     cs,
     atk.target,
     atk.onHitEffect,
     currentTurnCreatureId,
   );
+  const attacker = cs1.get(atk.attacker);
+  if (attacker != null) {
+    cs1 = setCreature(
+      cs1,
+      atk.attacker,
+      consumeOneShotHitEffects(attacker, atk.isWeaponAttack, atk.isMeleeAttack),
+    );
+  }
   const dmgBase: Omit<AttackDamageCtx, "legalReactionsByCreature"> = {
     attacker: atk.attacker,
     target: atk.target,
     damage: atk.damage,
     damageType: atk.damageType,
+    damageQualifiers: atk.damageQualifiers,
     isCritical: atk.isCritical,
     atkReturnTo: atk.atkReturnTo,
     knockOut: atk.knockOut,
@@ -654,6 +668,7 @@ export function advanceFromHitPhase(
     atk.attacker,
     atk.damage,
     atk.damageType,
+    atk.damageQualifiers,
     atk.isCritical,
     atk.knockOut,
     atk.atkReturnTo,
@@ -684,6 +699,7 @@ export function resolveSave(
         save.caster,
         evDmg,
         save.damageType,
+        new Set<DamageQualifier>(),
         false,
         false,
         returnTo,
@@ -729,6 +745,7 @@ export function applyFailEffects(
         ctx.caster,
         Math.trunc(ctx.damageOnFail / 2),
         ctx.damageType,
+        new Set<DamageQualifier>(),
         false,
         false,
         returnTo,
@@ -753,6 +770,7 @@ export function applyFailEffects(
       ctx.caster,
       ctx.damageOnFail,
       ctx.damageType,
+      new Set<DamageQualifier>(),
       false,
       false,
       returnTo,
@@ -946,4 +964,23 @@ export function processEndTurn(
     result = breakConcentrationAndPropagate(result, activeId);
   }
   return normalizeBattleGrapples(result);
+}
+
+/** Return the index of the matching Help entry to consume, or -1 if none applies. */
+export function findHelpAdvantage(
+  helpTargets: ReadonlyArray<HelpTarget>,
+  attackerId: CreatureId,
+  targetId: CreatureId,
+): number {
+  return helpTargets.findIndex(
+    (h) => h.allyId === attackerId && h.targetEnemyId === targetId,
+  );
+}
+
+/** Remove the consumed Help entry by index. */
+export function consumeHelp(
+  helpTargets: ReadonlyArray<HelpTarget>,
+  idx: number,
+): ReadonlyArray<HelpTarget> {
+  return [...helpTargets.slice(0, idx), ...helpTargets.slice(idx + 1)];
 }

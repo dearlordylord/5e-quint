@@ -349,6 +349,37 @@ export function speedDeltaFromEffects(c: BattleCreatureState): number {
   );
 }
 
+function qualifiesOneShotHit(
+  effect: ActiveEffect,
+  isWeaponAttack: boolean,
+  isMeleeAttack: boolean,
+): boolean {
+  const trigger = effect.consumeOnQualifiedHit?.trigger;
+  if (trigger == null) return false;
+  if (trigger === "nextWeaponHit") return isWeaponAttack;
+  return isWeaponAttack && isMeleeAttack;
+}
+
+export function consumeOneShotHitEffects(
+  c: BattleCreatureState,
+  isWeaponAttack: boolean,
+  isMeleeAttack: boolean,
+): BattleCreatureState {
+  const removed = c.activeEffects.filter((effect) =>
+    qualifiesOneShotHit(effect, isWeaponAttack, isMeleeAttack),
+  );
+  if (removed.length === 0) return c;
+  return removeGrantedConditions(
+    {
+      ...c,
+      activeEffects: c.activeEffects.filter(
+        (effect) => !qualifiesOneShotHit(effect, isWeaponAttack, isMeleeAttack),
+      ),
+    },
+    removed,
+  );
+}
+
 function removeGrantedConditions(
   c: BattleCreatureState,
   effects: ReadonlyArray<ActiveEffect>,
@@ -459,6 +490,7 @@ export const FRESH_TURN_STATE = {
   readiedAction: false,
   bonusActionSpellCast: false,
   nonCantripActionSpellCast: false,
+  lightAttackUsedThisTurn: false,
   bonusMovementRemaining: 0,
   bonusMovementOAFree: false,
   actionSurgeActionPending: false,
@@ -548,6 +580,8 @@ export function freshCreature(
     bardLevel: 0,
     bardicInspirationCharges: 0,
     parryAcBonus: 0,
+    mainHandWeapon: null,
+    offHandWeapon: null,
   };
 }
 

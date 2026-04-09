@@ -12,8 +12,10 @@ import {
 import {
   activeId,
   breakConcentrationAndPropagate,
+  consumeHelp,
   eligibleForCounterspell,
   escapeBattleGrapple,
+  findHelpAdvantage,
   heal,
   linkBattleGrapple,
   mkAwait,
@@ -33,6 +35,7 @@ import type {
   CreatureId,
 } from "#/battle-machine-types.ts";
 import {
+  ADR_ACTIVE_TURN,
   PHASE_ACTIVE,
   phaseAwaitingLegendary,
   phaseAwaitingReady,
@@ -176,6 +179,10 @@ export function battleInit({
             effectiveSpeed: cfg.baseWalkSpeed,
           }
         : {}),
+      ...(cfg.mainHandWeapon != null
+        ? { mainHandWeapon: cfg.mainHandWeapon }
+        : {}),
+      ...(cfg.offHandWeapon != null ? { offHandWeapon: cfg.offHandWeapon } : {}),
     });
     initiative.push(cfg.id);
   }
@@ -187,6 +194,7 @@ export function battleInit({
     ...PHASE_ACTIVE,
     spellStack: [],
     turnStarted: false,
+    helpTargets: [],
   };
 }
 
@@ -242,7 +250,8 @@ export function battleStartTurn({
     sneakAttackUsedThisTurn: false,
     readiedSpellParams: null,
   });
-  return { creatures: resetResult, turnStarted: true };
+  const helpTargets = c.helpTargets.filter((h) => h.helperId !== id);
+  return { creatures: resetResult, turnStarted: true, helpTargets };
 }
 
 export function battleEndTurn({
@@ -383,20 +392,23 @@ export function battleReadyRelease({
     tag: "ADRAwaitingReadiedAction" as const,
     ready: c.readyCtx!,
   };
+  const helpIdx = findHelpAdvantage(c.helpTargets, e.releaserId, e.targetId);
   const readyCtx = buildBattleAttackContext(
     cs,
     e.releaserId,
     e.targetId,
     e.isMelee,
+    e.weaponProperties ?? new Set(e.isFinesse === true ? ["finesse"] : []),
     e.attackerWithin5ft,
     e.hostileWithin5ft,
     e.targetCanSeeAttacker,
     e.attackerCanSeeTarget,
     e.frightSourceInLOS,
+    helpIdx >= 0,
   );
   const readyMods = aggregateAttackMods(readyCtx);
   const readyHasAnyDisadvantageSource = hasAttackDisadvantageSource(readyCtx);
-  return resolveAttack(
+  const result = resolveAttack(
     cs,
     e.releaserId,
     e.targetId,
@@ -404,6 +416,7 @@ export function battleReadyRelease({
     e.tgtAc,
     e.dmg,
     e.dt,
+    e.damageQualifiers ?? new Set(),
     e.crit,
     releaser.critRange,
     readyReturn,
@@ -412,12 +425,15 @@ export function battleReadyRelease({
     e.targetCanSeeAttacker,
     readyMods,
     undefined,
-    e.isFinesse,
+    e.weaponProperties ?? new Set(e.isFinesse === true ? ["finesse"] : []),
     e.hasAllyAdjacentToTarget,
     readyHasAnyDisadvantageSource,
     e.saDmg,
     e.hitReactionCandidates,
   );
+  return helpIdx >= 0
+    ? { ...result, helpTargets: consumeHelp(c.helpTargets, helpIdx) }
+    : result;
 }
 
 export function battleLegendaryAttack({
@@ -430,20 +446,23 @@ export function battleLegendaryAttack({
     legendaryActionsRemaining: m.legendaryActionsRemaining - 1,
   });
   const laReturn = { tag: "ADRAwaitingLegendaryAction" as const, la: c.laCtx! };
+  const helpIdx = findHelpAdvantage(c.helpTargets, e.monsterId, e.laTarget);
   const laCtx = buildBattleAttackContext(
     cs,
     e.monsterId,
     e.laTarget,
     e.isMelee,
+    e.weaponProperties ?? new Set(e.isFinesse === true ? ["finesse"] : []),
     e.attackerWithin5ft,
     e.hostileWithin5ft,
     e.targetCanSeeAttacker,
     e.attackerCanSeeTarget,
     e.frightSourceInLOS,
+    helpIdx >= 0,
   );
   const laMods = aggregateAttackMods(laCtx);
   const laHasAnyDisadvantageSource = hasAttackDisadvantageSource(laCtx);
-  return resolveAttack(
+  const result = resolveAttack(
     cs,
     e.monsterId,
     e.laTarget,
@@ -451,6 +470,7 @@ export function battleLegendaryAttack({
     e.laTgtAc,
     e.laDmg,
     e.laDt,
+    e.damageQualifiers ?? new Set(),
     e.laCrit,
     m.critRange,
     laReturn,
@@ -459,12 +479,15 @@ export function battleLegendaryAttack({
     e.targetCanSeeAttacker,
     laMods,
     undefined,
-    e.isFinesse,
+    e.weaponProperties ?? new Set(e.isFinesse === true ? ["finesse"] : []),
     e.hasAllyAdjacentToTarget,
     laHasAnyDisadvantageSource,
     e.saDmg,
     e.hitReactionCandidates,
   );
+  return helpIdx >= 0
+    ? { ...result, helpTargets: consumeHelp(c.helpTargets, helpIdx) }
+    : result;
 }
 
 export function battleHeal({
@@ -479,6 +502,113 @@ export function battleHeal({
   let cs = setCreature(c.creatures, id, spendAction(ac, "magic"));
   cs = setCreature(cs, e.targetId, heal(cs.get(e.targetId)!, e.amount));
   return { creatures: cs };
+}
+
+export function battleHelpAttack({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_HELP_ATTACK">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  const id = activeId(c);
+  const helper = c.creatures.get(id)!;
+  const ally = c.creatures.get(e.allyId);
+  const target = c.creatures.get(e.targetId);
+  if (
+    helper.dead ||
+    isIncapacitated(helper) ||
+    helper.actionsRemaining <= 0 ||
+    ally == null ||
+    target == null ||
+    ally.dead ||
+    target.dead ||
+    !e.helperCanSeeAlly ||
+    !e.helperCanSeeTarget ||
+    !e.helperWithin5ftOfTarget ||
+    e.allyId === id ||
+    e.targetId === id ||
+    e.allyId === e.targetId
+  ) {
+    return {};
+  }
+  const spent = spendAction(helper, "help");
+  return {
+    creatures: setCreature(c.creatures, id, spent),
+    helpTargets: [
+      ...c.helpTargets,
+      { helperId: id, allyId: e.allyId, targetEnemyId: e.targetId },
+    ],
+  };
+}
+
+export function battleOffHandAttack({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_OFF_HAND_ATTACK">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  const id = activeId(c);
+  const attacker = c.creatures.get(id)!;
+  const target = c.creatures.get(e.targetId)!;
+  const mainHand = attacker.mainHandWeapon;
+  const offHand = attacker.offHandWeapon;
+  if (
+    attacker.dead ||
+    target.dead ||
+    isIncapacitated(attacker) ||
+    attacker.bonusActionUsed ||
+    !attacker.attackActionUsed ||
+    !attacker.lightAttackUsedThisTurn ||
+    mainHand == null ||
+    offHand == null
+  ) {
+    return {};
+  }
+  if (
+    !mainHand.isMelee ||
+    !offHand.isMelee ||
+    !mainHand.properties.has("light") ||
+    !offHand.properties.has("light")
+  ) {
+    return {};
+  }
+  const cs = setCreature(c.creatures, id, { ...attacker, bonusActionUsed: true });
+  const damage = Math.max(0, e.dmg + Math.min(0, e.abilityMod));
+  const ctx = buildBattleAttackContext(
+    cs,
+    id,
+    e.targetId,
+    offHand.isMelee,
+    offHand.properties,
+    e.attackerWithin5ft,
+    e.hostileWithin5ft,
+    e.targetCanSeeAttacker,
+    e.attackerCanSeeTarget,
+    e.frightSourceInLOS,
+  );
+  const mods = aggregateAttackMods(ctx);
+  const hasAnyDisadvantageSource = hasAttackDisadvantageSource(ctx);
+  return resolveAttack(
+    cs,
+    id,
+    e.targetId,
+    e.attackRoll,
+    e.tAc,
+    damage,
+    offHand.damageType,
+    offHand.damageQualifiers ?? new Set(),
+    e.crit,
+    attacker.critRange,
+    ADR_ACTIVE_TURN,
+    e.knockOut,
+    offHand.isMelee,
+    e.targetCanSeeAttacker,
+    mods,
+    undefined,
+    offHand.properties,
+    e.hasAllyAdjacentToTarget,
+    hasAnyDisadvantageSource,
+    e.saDmg,
+    e.hitReactionCandidates,
+  );
 }
 
 type SimpleActionType = "dash" | "disengage" | "dodge" | "ready";

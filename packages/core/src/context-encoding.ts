@@ -207,6 +207,11 @@ const ActiveEffectSchema = Schema.Struct({
   grantedImmunities: Schema.optional(Schema.ReadonlySet(DamageTypeSchema)),
   blocksOpportunityAttacks: Schema.optional(Schema.Boolean),
   speedDeltaFeet: Schema.optional(Schema.Number),
+  consumeOnQualifiedHit: Schema.optional(
+    Schema.Struct({
+      trigger: Schema.Literal("nextWeaponHit", "nextMeleeWeaponHit"),
+    }),
+  ),
 });
 
 const FighterClassStateSchema = Schema.Struct({

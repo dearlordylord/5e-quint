@@ -16,6 +16,7 @@ import type {
   ActiveEffect,
   Ability,
   ArmorClass,
+  DamageQualifier,
   Condition,
   CreatureId,
   DamageType,
@@ -23,6 +24,7 @@ import type {
   Size,
   SpellId,
   SpellSlotLevel,
+  WeaponProperty,
 } from "#/types.ts";
 
 export type TriggerType =
@@ -91,12 +93,14 @@ export type BattleEvent =
       readonly dieSize: number;
       readonly dmg: number;
       readonly dt: DamageType;
+      readonly damageQualifiers?: ReadonlySet<DamageQualifier>;
       readonly crit: boolean;
       readonly tAc: ArmorClass;
       readonly knockOut: boolean;
       readonly isMelee: boolean;
+      readonly weaponProperties?: ReadonlySet<WeaponProperty>;
+      readonly isFinesse?: boolean;
       readonly onHitEffect?: ActiveEffect;
-      readonly isFinesse: boolean;
       readonly attackerWithin5ft: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;
@@ -105,6 +109,14 @@ export type BattleEvent =
       readonly hasAllyAdjacentToTarget: boolean;
       readonly saDmg: number;
       readonly hitReactionCandidates: ReadonlySet<CreatureId>;
+    }
+  | {
+      readonly type: "BATTLE_HELP_ATTACK";
+      readonly allyId: CreatureId;
+      readonly targetId: CreatureId;
+      readonly helperCanSeeAlly: boolean;
+      readonly helperCanSeeTarget: boolean;
+      readonly helperWithin5ftOfTarget: boolean;
     }
   | {
       readonly type: "BATTLE_RESOLVE_HIT_REACTION";
@@ -210,11 +222,13 @@ export type BattleEvent =
       readonly oaAtkRoll: number;
       readonly oaDmg: number;
       readonly oaDt: DamageType;
+      readonly oaDamageQualifiers?: ReadonlySet<DamageQualifier>;
       readonly oaCrit: boolean;
       readonly oaTgtAc: ArmorClass;
       readonly knockOut: boolean;
       readonly isMelee: true; // OA attacks are always melee per RAW
-      readonly isFinesse: boolean;
+      readonly weaponProperties?: ReadonlySet<WeaponProperty>;
+      readonly isFinesse?: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;
       readonly attackerCanSeeTarget: boolean;
@@ -238,11 +252,13 @@ export type BattleEvent =
       readonly laAtkRoll: number;
       readonly laDmg: number;
       readonly laDt: DamageType;
+      readonly damageQualifiers?: ReadonlySet<DamageQualifier>;
       readonly laCrit: boolean;
       readonly laTgtAc: ArmorClass;
       readonly knockOut: boolean;
       readonly isMelee: boolean;
-      readonly isFinesse: boolean;
+      readonly weaponProperties?: ReadonlySet<WeaponProperty>;
+      readonly isFinesse?: boolean;
       readonly attackerWithin5ft: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;
@@ -261,6 +277,24 @@ export type BattleEvent =
   | { readonly type: "BATTLE_DISENGAGE" }
   | { readonly type: "BATTLE_DODGE" }
   | { readonly type: "BATTLE_STAND_FROM_PRONE" }
+  | {
+      readonly type: "BATTLE_OFF_HAND_ATTACK";
+      readonly targetId: CreatureId;
+      readonly attackRoll: number;
+      readonly dmg: number;
+      readonly abilityMod: number;
+      readonly crit: boolean;
+      readonly tAc: ArmorClass;
+      readonly knockOut: boolean;
+      readonly attackerWithin5ft: boolean;
+      readonly hostileWithin5ft: boolean;
+      readonly targetCanSeeAttacker: boolean;
+      readonly attackerCanSeeTarget: boolean;
+      readonly frightSourceInLOS: boolean;
+      readonly hasAllyAdjacentToTarget: boolean;
+      readonly saDmg: number;
+      readonly hitReactionCandidates: ReadonlySet<CreatureId>;
+    }
   | {
       readonly type: "BATTLE_GRAPPLE";
       readonly targetId: CreatureId;
@@ -299,11 +333,13 @@ export type BattleEvent =
       readonly atkRoll: number;
       readonly dmg: number;
       readonly dt: DamageType;
+      readonly damageQualifiers?: ReadonlySet<DamageQualifier>;
       readonly crit: boolean;
       readonly tgtAc: ArmorClass;
       readonly knockOut: boolean;
       readonly isMelee: boolean;
-      readonly isFinesse: boolean;
+      readonly weaponProperties?: ReadonlySet<WeaponProperty>;
+      readonly isFinesse?: boolean;
       readonly attackerWithin5ft: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;

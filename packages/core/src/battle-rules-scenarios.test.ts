@@ -4,7 +4,10 @@ import { createActor } from "xstate";
 
 import { battleMachine } from "#/battle-machine.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
-import type { CreatureId as CreatureIdT } from "#/types.ts";
+import type {
+  BattleWeaponProfile,
+  CreatureId as CreatureIdT,
+} from "#/types.ts";
 import {
   armorClass,
   CreatureId,
@@ -44,6 +47,20 @@ const ZERO_SOT: Pick<
   sotSaveResult: false,
   sotConSave: true,
   deathSaveRoll: 0,
+};
+
+const SHORTSWORD: BattleWeaponProfile = {
+  name: "Shortsword",
+  damageType: "piercing",
+  isMelee: true,
+  properties: new Set(["finesse", "light"]),
+};
+
+const MACE: BattleWeaponProfile = {
+  name: "Mace",
+  damageType: "bludgeoning",
+  isMelee: true,
+  properties: new Set(),
 };
 
 function send(
@@ -2854,4 +2871,282 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").reactionAvailable).toBe(true);
     expect(creature(actor, "B").hp).toBe(20);
   });
+
+  it("Help grants advantage on the next attack against the chosen target and is consumed", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+        { id: CreatureId("C"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_HELP_ATTACK",
+      allyId: CreatureId("B"),
+      targetId: CreatureId("C"),
+      helperCanSeeAlly: true,
+      helperCanSeeTarget: true,
+      helperWithin5ftOfTarget: true,
+    });
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    startTurn(actor);
+
+    expect(ctx(actor).helpTargets).toEqual([
+      {
+        helperId: CreatureId("A"),
+        allyId: CreatureId("B"),
+        targetEnemyId: CreatureId("C"),
+      },
+    ]);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("C"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(ctx(actor).helpTargets).toEqual([]);
+    expect(creature(actor, "C").hp).toBe(15);
+  });
+
+  it("Help expires when the helper's next turn starts if unused", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+        { id: CreatureId("C"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_HELP_ATTACK",
+      allyId: CreatureId("B"),
+      targetId: CreatureId("C"),
+      helperCanSeeAlly: true,
+      helperCanSeeTarget: true,
+      helperWithin5ftOfTarget: true,
+    });
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    startTurn(actor);
+
+    expect(ctx(actor).helpTargets).toEqual([]);
+  });
+
+  it("off-hand attack requires a light main-hand Attack action and spends the bonus action", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTSWORD,
+          offHandWeapon: SHORTSWORD,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+    send(actor, {
+      type: "BATTLE_OFF_HAND_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      dmg: 3,
+      abilityMod: 3,
+      crit: false,
+      tAc: armorClass(10),
+      knockOut: false,
+      attackerWithin5ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 0,
+      hitReactionCandidates: new Set(),
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").bonusActionUsed).toBe(true);
+    expect(creature(actor, "A").lightAttackUsedThisTurn).toBe(true);
+    expect(creature(actor, "B").hp).toBe(12);
+  });
+
+  it("off-hand attack is rejected without two light melee weapons", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTSWORD,
+          offHandWeapon: MACE,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+    send(actor, {
+      type: "BATTLE_OFF_HAND_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      dmg: 3,
+      abilityMod: 3,
+      crit: false,
+      tAc: armorClass(10),
+      knockOut: false,
+      attackerWithin5ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 0,
+      hitReactionCandidates: new Set(),
+    });
+
+    expect(creature(actor, "A").bonusActionUsed).toBe(false);
+    expect(creature(actor, "B").hp).toBe(15);
+  });
+
+  it("off-hand attack keeps a negative ability modifier and drops a positive one", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTSWORD,
+          offHandWeapon: SHORTSWORD,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    send(actor, {
+      type: "BATTLE_OFF_HAND_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      dmg: 3,
+      abilityMod: -2,
+      crit: false,
+      tAc: armorClass(10),
+      knockOut: false,
+      attackerWithin5ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 0,
+      hitReactionCandidates: new Set(),
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(14);
+  });
+
 });

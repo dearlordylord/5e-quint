@@ -21,6 +21,28 @@ module battle {
 
   type CreatureId = str
 
+  pure val NO_WEAPON: Weapon = {
+    name: "",
+    damageDie: 0,
+    versatileDie: 0,
+    damageType: Bludgeoning,
+    properties: Set(),
+    isMelee: true,
+    normalRange: 0,
+    longRange: 0,
+  }
+
+  pure val LIGHT_MELEE_WEAPON: Weapon = {
+    name: "Shortsword",
+    damageDie: 6,
+    versatileDie: 0,
+    damageType: Piercing,
+    properties: Set(Finesse, Light_),
+    isMelee: true,
+    normalRange: 0,
+    longRange: 0,
+  }
+
   // Per-creature bundle.
   type Combatant = {
     creature: CreatureState,
@@ -49,10 +71,13 @@ module battle {
     grappledBy: CreatureId,                  // "" = not grappled by another combatant
     grapplingTarget: CreatureId,             // "" = not currently grappling a target
     grappledTargetTwoSizesSmaller: bool,     // drag-speed exemption for the current grapple target
+    lightAttackUsedThisTurn: bool,           // whether the Attack action used a Light melee weapon this turn
     baseWalkSpeed: int,                      // Walk speed (PC: 30, Monster: statBlock.speeds.get(Walk))
     bardLevel: int,                          // 0 = not a bard
     bardicInspirationCharges: int,           // current Lore-bard charges for Cutting Words
     parryAcBonus: int,                       // 0 = no Parry reaction; otherwise fixed AC bonus
+    mainHandWeapon: Weapon,
+    offHandWeapon: Weapon,
   }
 
   /// Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready action).
@@ -121,6 +146,7 @@ module battle {
     targetAc: int,
     damage: int,
     damageType: DamageType,
+    damageQualifiers: Set[DamageQualifier],
     isCritical: bool,
     critRange: int,                  // natural roll >= critRange is a critical hit
     atkReturnTo: AfterDamageReturn,  // where to go after entire attack chain resolves
@@ -137,6 +163,7 @@ module battle {
     target: CreatureId,
     damage: int,
     damageType: DamageType,
+    damageQualifiers: Set[DamageQualifier],
     isCritical: bool,
     atkReturnTo: AfterDamageReturn,
     knockOut: bool,                  // propagated from AttackHitCtx
@@ -259,6 +286,7 @@ module battle {
     damagedCreature: CreatureId,  // who took the damage
     damageDealt: int,
     damageType: DamageType,
+    damageQualifiers: Set[DamageQualifier],
     returnTo: AfterDamageReturn,  // phase to return to after resolving
   }
 
@@ -315,6 +343,7 @@ module battle {
   var bPhase: BattlePhase
   var bSpellStack: List[SpellStackEntry]  // Counterspell chain stack (B5)
   var bTurnStarted: bool                  // guard against double-firing bStartTurn
+  var bHelpTargets: Set[{ helperId: CreatureId, allyId: CreatureId, targetEnemyId: CreatureId }]
 
   // ============================================================
   // 3. HELPERS
@@ -420,10 +449,13 @@ module battle {
     grappledBy: "",
     grapplingTarget: "",
     grappledTargetTwoSizesSmaller: false,
+    lightAttackUsedThisTurn: false,
     baseWalkSpeed: 30,
     bardLevel: 0,
     bardicInspirationCharges: 0,
     parryAcBonus: 0,
+    mainHandWeapon: LIGHT_MELEE_WEAPON,
+    offHandWeapon: NO_WEAPON,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -457,10 +489,13 @@ module battle {
     grappledBy: "",
     grapplingTarget: "",
     grappledTargetTwoSizesSmaller: false,
+    lightAttackUsedThisTurn: false,
     baseWalkSpeed: 30,
     bardLevel: 0,
     bardicInspirationCharges: 0,
     parryAcBonus: 0,
+    mainHandWeapon: LIGHT_MELEE_WEAPON,
+    offHandWeapon: NO_WEAPON,
   }
 
   // Monster with legendary actions and resistances
@@ -495,10 +530,13 @@ module battle {
       grappledBy: "",
       grapplingTarget: "",
       grappledTargetTwoSizesSmaller: false,
+      lightAttackUsedThisTurn: false,
       baseWalkSpeed: walkSpeed,
       bardLevel: 0,
       bardicInspirationCharges: 0,
       parryAcBonus: 0,
+      mainHandWeapon: LIGHT_MELEE_WEAPON,
+      offHandWeapon: NO_WEAPON,
     }
   }
 
@@ -954,7 +992,7 @@ module battle {
   pure def applyDamageWithAfterReactions(
     cs: CreatureId -> Combatant,
     targetId: CreatureId, sourceId: CreatureId,
-    dmg: int, dt: DamageType, crit: bool,
+    dmg: int, dt: DamageType, damageQualifiers: Set[DamageQualifier], crit: bool,
     returnTo: AfterDamageReturn,
     knockOut: bool
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
@@ -968,7 +1006,7 @@ module battle {
     if (actualDmg > 0 and elig.size() > 0) {
       val adCtx: AfterDamageCtx = {
         damageSource: sourceId, damagedCreature: targetId,
-        damageDealt: actualDmg, damageType: dt, returnTo: returnTo,
+        damageDealt: actualDmg, damageType: dt, damageQualifiers: damageQualifiers, returnTo: returnTo,
       }
       { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAfterDamage(adCtx), TDamageTaken, elig)) }
     } else {
@@ -994,6 +1032,7 @@ module battle {
     bRound' = bRound,
     bSpellStack' = bSpellStack,
     bTurnStarted' = bTurnStarted,
+    bHelpTargets' = bHelpTargets,
   }
 
   /// Compute next turn index and round number.
@@ -1081,6 +1120,7 @@ module battle {
       bPhase' = BPActiveTurn,
       bSpellStack' = List(),
       bTurnStarted' = false,
+      bHelpTargets' = Set(),
     }
   }
 
@@ -1162,14 +1202,17 @@ module battle {
         val cb = acc.get(cid)
         acc.set(cid, cb.with("turn", cb.turn.with("slotExpendedThisTurn", false)))
       )
+      val cs5 = cs4.set(activeId, cs4.get(activeId).with("lightAttackUsedThisTurn", false))
+      val newHelpTargets = bHelpTargets.filter(h => h.helperId != activeId)
       all {
-        bCreatures' = normalizeBattleGrapples(cs4),
+        bCreatures' = normalizeBattleGrapples(cs5),
         bPhase' = BPActiveTurn,
         bInitiative' = bInitiative,
         bTurnIndex' = bTurnIndex,
         bRound' = bRound,
         bSpellStack' = bSpellStack,
         bTurnStarted' = true,
+        bHelpTargets' = newHelpTargets,
       }
     }
   }
@@ -1182,9 +1225,11 @@ module battle {
     cs: CreatureId -> Combatant,
     attackerId: CreatureId, targetId: CreatureId,
     isMelee: bool,
+    weapon: Weapon,
     attackerWithin5ft: bool, hostileWithin5ft: bool,
     targetCanSeeAttacker: bool, attackerCanSeeTarget: bool,
     frightSourceInLOS: bool,
+    helpAdvantage: bool,
   ): AttackContext = {
     val atk = cs.get(attackerId)
     val tgt = cs.get(targetId)
@@ -1208,10 +1253,11 @@ module battle {
       targetSpeedZero: tgt.turn.effectiveSpeed == 0,
       targetCanSeeAttacker: targetCanSeeAttacker,
       attackerCanSeeTarget: attackerCanSeeTarget,
+      attackerHelpedAgainstTarget: helpAdvantage,
       isRangedAttack: not(isMelee),
       beyondNormalRange: false,       // range modeling deferred
       hostileWithin5ft: hostileWithin5ft,
-      isHeavyWeapon: false,           // weapon properties not modeled in battle yet
+      isHeavyWeapon: weapon.properties.contains(Heavy),
       wielderStrScore: 16,            // safe default; not modeled in battle
       wielderDexScore: 14,            // safe default; not modeled in battle
       attackerGrappled: atk.grappledBy != "" or atk.creature.grappled,
@@ -1231,28 +1277,29 @@ module battle {
     cs: CreatureId -> Combatant,
     attackerId: CreatureId, targetId: CreatureId,
     attackRoll: int, targetAc: int,
-    damage: int, damageType: DamageType, isCritical: bool,
+    damage: int, damageType: DamageType, damageQualifiers: Set[DamageQualifier], isCritical: bool,
     critRange: int,
     returnTo: AfterDamageReturn,
     knockOut: bool,
     isMelee: bool,
     targetCanSeeAttackerAtHit: bool,
     mods: FullAttackMods,
-    isFinesse: bool,
+    weapon: Weapon,
     hasAllyAdjacentToTarget: bool,
     saDmg: int,
     hitRider: AttackHitRider,
     hitReactionCandidates: Set[CreatureId],
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     // autoMiss forces miss; otherwise normal hit check
+    val cs0 = cs
     val hit = not(mods.autoMiss) and (attackRoll >= targetAc or attackRoll >= critRange)
     if (not(hit)) {
-      { creatures: cs, phase: returnToPhase(returnTo) }
+      { creatures: cs0, phase: returnToPhase(returnTo) }
     } else {
-      val atk = cs.get(attackerId)
+      val atk = cs0.get(attackerId)
       val meleeDmgBonus = if (isMelee) atk.meleeDamageBonus else 0  // rage bonus: melee only (D1 fix)
       // Sneak Attack eligibility (SRD 5.2.1 Rogue "Sneak Attack")
-      val eligibleWeapon = isFinesse or not(isMelee)  // finesse or ranged weapon
+      val eligibleWeapon = weapon.properties.contains(Finesse) or not(isMelee)  // finesse or ranged weapon
       val saEligible = atk.sneakAttackDice > 0
         and not(atk.sneakAttackUsedThisTurn)
         and eligibleWeapon
@@ -1262,11 +1309,11 @@ module battle {
       val effectiveKnockOut = knockOut and isMelee  // SRD: knock out is melee only
       val effectiveCrit = isCritical or mods.autoCrit  // Paralyzed/Unconscious within 5ft = auto-crit
       // Mark SA used on attacker if SA fired
-      val cs1 = if (saEligible) cs.set(attackerId, atk.with("sneakAttackUsedThisTurn", true)) else cs
+      val cs1 = if (saEligible) cs0.set(attackerId, atk.with("sneakAttackUsedThisTurn", true)) else cs0
       val atkCtx: AttackHitCtx = {
         attacker: attackerId, target: targetId,
         attackRoll: attackRoll, targetAc: targetAc,
-        damage: totalDmg, damageType: damageType, isCritical: effectiveCrit,
+        damage: totalDmg, damageType: damageType, damageQualifiers: damageQualifiers, isCritical: effectiveCrit,
         critRange: critRange,
         atkReturnTo: returnTo,
         knockOut: effectiveKnockOut,
@@ -1306,7 +1353,7 @@ module battle {
     nondet tAc = 10.to(20).oneOf()
     nondet knockOut = Bool.oneOf()
     nondet isMelee = Bool.oneOf()
-    nondet isFinesse = Bool.oneOf()  // SRD: only melee weapons have Finesse, except Dart (Simple Ranged)
+    val weapon = ac.mainHandWeapon
     // Spatial/visibility nondets (caller-provided facts)
     nondet attackerWithin5ft = Bool.oneOf()
     nondet hostileWithin5ft = Bool.oneOf()
@@ -1332,11 +1379,27 @@ module battle {
         ac.turn.with("extraAttacksRemaining", ac.turn.extraAttacksRemaining - 1)
       else
         pUseAction(ac.turn, ac.creature, AAttack)
-      val cs1 = setTurn(bCreatures, activeId, newTurn)
-      val atkCtx = buildAttackContext(cs1, activeId, targetId, isMelee, attackerWithin5ft, hostileWithin5ft, targetCanSeeAttacker, attackerCanSeeTarget, frightSourceInLOS)
+      val newCombatant = if (isMelee and weapon.properties.contains(Light_))
+        ac.with("turn", newTurn).with("lightAttackUsedThisTurn", true)
+      else
+        ac.with("turn", newTurn)
+      val cs1 = bCreatures.set(activeId, newCombatant)
+      val helpMatches = bHelpTargets.filter(h => h.allyId == activeId and h.targetEnemyId == targetId)
+      val helpAdv = helpMatches.size() > 0
+      val newHelpTargets = if (helpAdv) bHelpTargets.exclude(helpMatches) else bHelpTargets
+      val atkCtx = buildAttackContext(cs1, activeId, targetId, isMelee, weapon, attackerWithin5ft, hostileWithin5ft, targetCanSeeAttacker, attackerCanSeeTarget, frightSourceInLOS, helpAdv)
       val atkMods = pAggregateAttackMods(atkCtx)
-      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, targetCanSeeAttacker, atkMods, isFinesse, hasAllyAdjacentToTarget, saDmg, hitRider, hitReactionCandidates)
-      all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, Set(), crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, targetCanSeeAttacker, atkMods, weapon, hasAllyAdjacentToTarget, saDmg, hitRider, hitReactionCandidates)
+      all {
+        bCreatures' = result.creatures,
+        bPhase' = result.phase,
+        bInitiative' = bInitiative,
+        bTurnIndex' = bTurnIndex,
+        bRound' = bRound,
+        bSpellStack' = bSpellStack,
+        bTurnStarted' = bTurnStarted,
+        bHelpTargets' = newHelpTargets,
+      }
     }
   }
 
@@ -1351,20 +1414,25 @@ module battle {
       val dmgBase: AttackDamageCtx = {
         attacker: atk.attacker, target: atk.target,
         damage: atk.damage, damageType: atk.damageType,
+        damageQualifiers: atk.damageQualifiers,
         isCritical: atk.isCritical, atkReturnTo: atk.atkReturnTo,
         knockOut: atk.knockOut,
         targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
         isWeaponAttack: atk.isWeaponAttack,
         legalReactionsByCreature: Map(),
       }
-      val dmgCtx = dmgBase.with("legalReactionsByCreature", legalDamageReactionsByCreature(cs1, dmgBase))
+      val attacker = cs1.get(atk.attacker)
+      val cs2 = cs1.set(atk.attacker, attacker.with("creature",
+        attacker.creature.with("activeEffects",
+          pConsumeOneShotHitEffects(attacker.creature.activeEffects, atk.isWeaponAttack, atk.isMeleeAttack))))
+      val dmgCtx = dmgBase.with("legalReactionsByCreature", legalDamageReactionsByCreature(cs2, dmgBase))
       val elig = dmgCtx.legalReactionsByCreature.keys()
       if (elig.size() > 0) {
-        { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, elig)) }
+        { creatures: cs2, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, elig)) }
       } else {
         // No damage-phase reactions — deal damage and check for after-damage reactions (R10.4)
-        applyDamageWithAfterReactions(cs1, atk.target, atk.attacker,
-          atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo, atk.knockOut)
+        applyDamageWithAfterReactions(cs2, atk.target, atk.attacker,
+          atk.damage, atk.damageType, atk.damageQualifiers, atk.isCritical, atk.atkReturnTo, atk.knockOut)
       }
     }
   }
@@ -1441,7 +1509,7 @@ module battle {
             if (remaining.size() == 0) {
               // All damage reactions resolved — deal damage and check after-damage (R10.4)
               val result = applyDamageWithAfterReactions(bCreatures,
-                atk.target, atk.attacker, atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo, atk.knockOut)
+                atk.target, atk.attacker, atk.damage, atk.damageType, atk.damageQualifiers, atk.isCritical, atk.atkReturnTo, atk.knockOut)
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
               nondet reactorId = remaining.oneOf()
@@ -1545,7 +1613,7 @@ module battle {
               val actualDmg = if (reactionSaved) reactionDmg / 2 else reactionDmg
               val result = applyDamageWithAfterReactions(
                 cs1, ad.damageSource, reactorId,
-                actualDmg, reactionDt, false, ad.returnTo, false
+                actualDmg, reactionDt, Set(), false, ad.returnTo, false
               )
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             }
@@ -1582,7 +1650,7 @@ module battle {
               } else {
                 val result = applyDamageWithAfterReactions(
                   cs1, ad.damageSource, reactorId,
-                  retDmg, retDt, retCrit, ad.returnTo, false
+                  retDmg, retDt, Set(), retCrit, ad.returnTo, false
                 )
                 all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
               }
@@ -1685,7 +1753,7 @@ module battle {
           { creatures: cs, phase: returnToPhase(returnTo) }
         } else {
           applyDamageWithAfterReactions(cs, save.target, save.caster,
-            evDmg, save.damageType, false, returnTo, false)
+            evDmg, save.damageType, Set(), false, returnTo, false)
         }
       } else {
         { creatures: cs, phase: returnToPhase(returnTo) }
@@ -1718,7 +1786,7 @@ module battle {
       // LR flipped the save — apply half damage if applicable
       if (ctx.halfOnSuccess and ctx.damageOnFail > 0) {
         applyDamageWithAfterReactions(cs, ctx.target, ctx.caster,
-          ctx.damageOnFail / 2, ctx.damageType, false, returnTo, false)
+          ctx.damageOnFail / 2, ctx.damageType, Set(), false, returnTo, false)
       } else {
         { creatures: cs, phase: returnToPhase(returnTo) }
       }
@@ -1731,7 +1799,7 @@ module battle {
       } else cs
       if (ctx.damageOnFail > 0) {
         applyDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
-          ctx.damageOnFail, ctx.damageType, false, returnTo, false)
+          ctx.damageOnFail, ctx.damageType, Set(), false, returnTo, false)
       } else {
         { creatures: cs1, phase: returnToPhase(returnTo) }
       }
@@ -1907,21 +1975,21 @@ module battle {
                           // Fizzled spell was a CS → refund CS slot, its target spell continues
                           val csRef2 = maybeRefundEntry(bCreatures, popped.top)
                           if (popped.rest.length() == 0) {
-                            all { bCreatures' = csRef2, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted }
+                            all { bCreatures' = csRef2, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
                           } else {
                             val gp = popStack(popped.rest)
                             val result = returnToCSWindow(csRef2, gp.top, gp.rest)
-                            all { bCreatures' = result.creatures, bPhase' = result.phase, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = result.stack, bTurnStarted' = bTurnStarted }
+                            all { bCreatures' = result.creatures, bPhase' = result.phase, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = result.stack, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
                           }
                         | _ =>
                           // Original spell fizzled → refund slot
                           val csRef3 = maybeRefundEntry(bCreatures, popped.top)
-                          all { bCreatures' = csRef3, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted }
+                          all { bCreatures' = csRef3, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
                       }
                     } else {
                       // CS fails → countered spell continues
                       val result = returnToCSWindow(bCreatures, popped.top, popped.rest)
-                      all { bCreatures' = result.creatures, bPhase' = result.phase, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = result.stack, bTurnStarted' = bTurnStarted }
+                      all { bCreatures' = result.creatures, bPhase' = result.phase, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = result.stack, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
                     }
                   }
                 | _ =>
@@ -1977,6 +2045,7 @@ module battle {
                       bCreatures' = cs2,
                       bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(csSpell), TSpellBeingCast, csElig)),
                       bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = newStack, bTurnStarted' = bTurnStarted,
+                      bHelpTargets' = bHelpTargets,
                     }
                   }
                 | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -2262,7 +2331,7 @@ module battle {
                 all { bCreatures' = bCreatures, bPhase' = BPResolvingAoE(updatedAoe), keepBattle }
               } else {
                 val result = applyDamageWithAfterReactions(bCreatures,
-                  targetId, aoe.caster, evDmg, aoe.damageType, false, aoeReturn, false)
+                  targetId, aoe.caster, evDmg, aoe.damageType, Set(), false, aoeReturn, false)
                 all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
               }
             } else {
@@ -2300,10 +2369,10 @@ module battle {
   }
 
   // --- Movement / Opportunity Attacks (B9, R5, R22) ---
-  // Active creature moves, leaving the reach of one or more enemies.
-  // Each enemy with an unused reaction can take an OA (one melee attack).
-  // OA fires "right before" leaving reach (BEFORE timing).
-  // Disengage prevents OA entirely.
+  // Active creature spends one 5ft movement step.
+  // Caller supplies the threat set for the corresponding reach-exit checkpoint.
+  // Each eligible threat source can take one OA before the movement step completes.
+  // Disengage suppresses the checkpoint entirely.
 
   action bMove = {
     val activeId = bInitiative[bTurnIndex]
@@ -2367,7 +2436,6 @@ module battle {
     nondet oaCrit = Bool.oneOf()
     nondet oaTgtAc = 10.to(20).oneOf()
     nondet oaKnockOut = Bool.oneOf()
-    nondet oaIsFinesse = Bool.oneOf()
     // OA spatial: always within 5ft, visibility nondeterministic
     nondet oaHostileWithin5ft = Bool.oneOf()
     nondet oaTargetCanSeeAttacker = Bool.oneOf()
@@ -2384,13 +2452,26 @@ module battle {
         nondet reactorId = remaining.oneOf()
         val updatedMv = mv.with("processed", mv.processed.union(Set(reactorId)))
         val reactor = bCreatures.get(reactorId)
+        val weapon = reactor.mainHandWeapon
         nondet oaSaDmg = reactor.sneakAttackDice.to(reactor.sneakAttackDice * 6).oneOf()
         val cs1 = spendReaction(bCreatures, reactorId)
+        val helpMatches = bHelpTargets.filter(h => h.allyId == reactorId and h.targetEnemyId == mv.mover)
+        val helpAdv = helpMatches.size() > 0
+        val newHelpTargets = if (helpAdv) bHelpTargets.exclude(helpMatches) else bHelpTargets
         // OA: always melee, always within 5ft
-        val oaCtx = buildAttackContext(cs1, reactorId, mv.mover, true, true, oaHostileWithin5ft, oaTargetCanSeeAttacker, oaAttackerCanSeeTarget, oaFrightSourceInLOS)
+        val oaCtx = buildAttackContext(cs1, reactorId, mv.mover, true, weapon, true, oaHostileWithin5ft, oaTargetCanSeeAttacker, oaAttackerCanSeeTarget, oaFrightSourceInLOS, helpAdv)
         val oaMods = pAggregateAttackMods(oaCtx)
-        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaTargetCanSeeAttacker, oaMods, oaIsFinesse, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider, oaHitReactionCandidates.exclude(Set(reactorId)))
-        all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, Set(), oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaTargetCanSeeAttacker, oaMods, weapon, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider, oaHitReactionCandidates.exclude(Set(reactorId)))
+        all {
+          bCreatures' = result.creatures,
+          bPhase' = result.phase,
+          bInitiative' = bInitiative,
+          bTurnIndex' = bTurnIndex,
+          bRound' = bRound,
+          bSpellStack' = bSpellStack,
+          bTurnStarted' = bTurnStarted,
+          bHelpTargets' = newHelpTargets,
+        }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
@@ -2458,6 +2539,7 @@ module battle {
             bTurnIndex' = nt.idx, bRound' = nt.round,
             bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
             bTurnStarted' = false,
+            bHelpTargets' = bHelpTargets,
           }
         }
       }
@@ -2484,6 +2566,7 @@ module battle {
             bTurnIndex' = nt.idx, bRound' = nt.round,
             bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
             bTurnStarted' = false,
+            bHelpTargets' = bHelpTargets,
           }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
@@ -2500,6 +2583,7 @@ module battle {
           bTurnIndex' = nt.idx, bRound' = nt.round,
           bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
           bTurnStarted' = false,
+          bHelpTargets' = bHelpTargets,
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
@@ -2520,7 +2604,6 @@ module battle {
         nondet tgtAc = 10.to(20).oneOf()
         nondet readyKnockOut = Bool.oneOf()
         nondet readyIsMelee = Bool.oneOf()
-        nondet readyIsFinesse = Bool.oneOf()
         nondet readyAtkWithin5ft = Bool.oneOf()
         nondet readyHostileWithin5ft = Bool.oneOf()
         nondet readyTgtCanSee = Bool.oneOf()
@@ -2529,16 +2612,29 @@ module battle {
         nondet readyHasAllyAdjacent = Bool.oneOf()
         nondet readyHitReactionCandidates = allIds.exclude(Set(releaserId)).powerset().oneOf()
         val releaser = bCreatures.get(releaserId)
+        val weapon = releaser.mainHandWeapon
         nondet readySaDmg = releaser.sneakAttackDice.to(releaser.sneakAttackDice * 6).oneOf()
         all {
           not(hasReadiedSpell(releaser)),  // attack release only for non-spell readied actions
           val updatedTurn = releaser.turn.with("reactionAvailable", false).with("readiedAction", false)
           val cs1 = bCreatures.set(releaserId, releaser.with("turn", updatedTurn))
+          val helpMatches = bHelpTargets.filter(h => h.allyId == releaserId and h.targetEnemyId == targetId)
+          val helpAdv = helpMatches.size() > 0
+          val newHelpTargets = if (helpAdv) bHelpTargets.exclude(helpMatches) else bHelpTargets
           val readyReturn = ADRAwaitingReadiedAction(readyCtx)
-          val readyAtkCtx = buildAttackContext(cs1, releaserId, targetId, readyIsMelee, readyAtkWithin5ft, readyHostileWithin5ft, readyTgtCanSee, readyAtkCanSee, readyFrightLOS)
+          val readyAtkCtx = buildAttackContext(cs1, releaserId, targetId, readyIsMelee, weapon, readyAtkWithin5ft, readyHostileWithin5ft, readyTgtCanSee, readyAtkCanSee, readyFrightLOS, helpAdv)
           val readyMods = pAggregateAttackMods(readyAtkCtx)
-          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyTgtCanSee, readyMods, readyIsFinesse, readyHasAllyAdjacent, readySaDmg, NoAttackHitRider, readyHitReactionCandidates)
-          all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, Set(), crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyTgtCanSee, readyMods, weapon, readyHasAllyAdjacent, readySaDmg, NoAttackHitRider, readyHitReactionCandidates)
+          all {
+            bCreatures' = result.creatures,
+            bPhase' = result.phase,
+            bInitiative' = bInitiative,
+            bTurnIndex' = bTurnIndex,
+            bRound' = bRound,
+            bSpellStack' = bSpellStack,
+            bTurnStarted' = bTurnStarted,
+            bHelpTargets' = newHelpTargets,
+          }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
@@ -2613,7 +2709,6 @@ module battle {
         nondet laTgtAc = 10.to(20).oneOf()
         nondet laKnockOut = Bool.oneOf()
         nondet laIsMelee = Bool.oneOf()
-        nondet laIsFinesse = Bool.oneOf()
         nondet laAtkWithin5ft = Bool.oneOf()
         nondet laHostileWithin5ft = Bool.oneOf()
         nondet laTgtCanSee = Bool.oneOf()
@@ -2622,16 +2717,125 @@ module battle {
         nondet laHasAllyAdjacent = Bool.oneOf()
         nondet laHitReactionCandidates = allIds.exclude(Set(monsterId)).powerset().oneOf()
         val m = bCreatures.get(monsterId)
+        val weapon = m.mainHandWeapon
         nondet laSaDmg = m.sneakAttackDice.to(m.sneakAttackDice * 6).oneOf()
         val newMR = m.monsterResources.with("legendaryActionsRemaining",
           m.monsterResources.legendaryActionsRemaining - 1)
         val cs1 = bCreatures.set(monsterId, m.with("monsterResources", newMR))
+        val helpMatches = bHelpTargets.filter(h => h.allyId == monsterId and h.targetEnemyId == laTarget)
+        val helpAdv = helpMatches.size() > 0
+        val newHelpTargets = if (helpAdv) bHelpTargets.exclude(helpMatches) else bHelpTargets
         val laReturn = ADRAwaitingLegendaryAction(laCtx)
-        val laAtkCtx = buildAttackContext(cs1, monsterId, laTarget, laIsMelee, laAtkWithin5ft, laHostileWithin5ft, laTgtCanSee, laAtkCanSee, laFrightLOS)
+        val laAtkCtx = buildAttackContext(cs1, monsterId, laTarget, laIsMelee, weapon, laAtkWithin5ft, laHostileWithin5ft, laTgtCanSee, laAtkCanSee, laFrightLOS, helpAdv)
         val laMods = pAggregateAttackMods(laAtkCtx)
-        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laTgtCanSee, laMods, laIsFinesse, laHasAllyAdjacent, laSaDmg, NoAttackHitRider, laHitReactionCandidates)
-        all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
+        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, Set(), laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laTgtCanSee, laMods, weapon, laHasAllyAdjacent, laSaDmg, NoAttackHitRider, laHitReactionCandidates)
+        all {
+          bCreatures' = result.creatures,
+          bPhase' = result.phase,
+          bInitiative' = bInitiative,
+          bTurnIndex' = bTurnIndex,
+          bRound' = bRound,
+          bSpellStack' = bSpellStack,
+          bTurnStarted' = bTurnStarted,
+          bHelpTargets' = newHelpTargets,
+        }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  action bHelpAttack = {
+    val activeId = bInitiative[bTurnIndex]
+    val allIds = bCreatures.keys()
+    val helper = bCreatures.get(activeId)
+    nondet allyId = allIds.exclude(Set(activeId)).oneOf()
+    nondet targetId = allIds.exclude(Set(activeId, allyId)).oneOf()
+    nondet helperCanSeeAlly = Bool.oneOf()
+    nondet helperCanSeeTarget = Bool.oneOf()
+    nondet helperWithin5ftOfTarget = Bool.oneOf()
+    val ally = bCreatures.get(allyId)
+    val target = bCreatures.get(targetId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      helper.turn.actionsRemaining > 0,
+      not(helper.creature.dead),
+      not(isIncapacitated(helper.creature)),
+      not(ally.creature.dead),
+      not(target.creature.dead),
+      helperCanSeeAlly,
+      helperCanSeeTarget,
+      helperWithin5ftOfTarget,
+      val newTurn = pUseAction(helper.turn, helper.creature, AHelp)
+      all {
+        bCreatures' = setTurn(bCreatures, activeId, newTurn),
+        bPhase' = BPActiveTurn,
+        bInitiative' = bInitiative,
+        bTurnIndex' = bTurnIndex,
+        bRound' = bRound,
+        bSpellStack' = bSpellStack,
+        bTurnStarted' = bTurnStarted,
+        bHelpTargets' = bHelpTargets.union(Set({ helperId: activeId, allyId: allyId, targetEnemyId: targetId })),
+      }
+    }
+  }
+
+  action bOffHandAttack = {
+    val activeId = bInitiative[bTurnIndex]
+    val allIds = bCreatures.keys()
+    val attacker = bCreatures.get(activeId)
+    nondet targetId = allIds.exclude(Set(activeId)).oneOf()
+    nondet attackRoll = 1.to(20).oneOf()
+    nondet dmg = 1.to(12).oneOf()
+    nondet crit = Bool.oneOf()
+    nondet tAc = 10.to(20).oneOf()
+    nondet knockOut = Bool.oneOf()
+    nondet attackerWithin5ft = Bool.oneOf()
+    nondet hostileWithin5ft = Bool.oneOf()
+    nondet targetCanSeeAttacker = Bool.oneOf()
+    nondet attackerCanSeeTarget = Bool.oneOf()
+    nondet frightSourceInLOS = Bool.oneOf()
+    nondet hasAllyAdjacentToTarget = Bool.oneOf()
+    nondet abilityMod = (-5).to(10).oneOf()
+    nondet saDmg = attacker.sneakAttackDice.to(attacker.sneakAttackDice * 6).oneOf()
+    nondet hitReactionCandidates = allIds.exclude(Set(activeId)).powerset().oneOf()
+    val target = bCreatures.get(targetId)
+    val mainHand = attacker.mainHandWeapon
+    val offHand = attacker.offHandWeapon
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      not(attacker.creature.dead),
+      not(target.creature.dead),
+      not(isIncapacitated(attacker.creature)),
+      attacker.turn.attackActionUsed,
+      attacker.lightAttackUsedThisTurn,
+      not(attacker.turn.bonusActionUsed),
+      mainHand.isMelee,
+      offHand.isMelee,
+      mainHand.properties.contains(Light_),
+      offHand.properties.contains(Light_),
+      val newTurn = pUseBonusAction(attacker.turn, attacker.creature)
+      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val adjustedDmg = if (abilityMod < 0)
+        if (dmg + abilityMod < 0) 0 else dmg + abilityMod
+      else
+        dmg
+      val helpMatches = bHelpTargets.filter(h => h.allyId == activeId and h.targetEnemyId == targetId)
+      val helpAdv = helpMatches.size() > 0
+      val newHelpTargets = if (helpAdv) bHelpTargets.exclude(helpMatches) else bHelpTargets
+      val atkCtx = buildAttackContext(cs1, activeId, targetId, offHand.isMelee, offHand, attackerWithin5ft, hostileWithin5ft, targetCanSeeAttacker, attackerCanSeeTarget, frightSourceInLOS, helpAdv)
+      val atkMods = pAggregateAttackMods(atkCtx)
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, adjustedDmg, offHand.damageType, Set(), crit, attacker.critRange, ADRActiveTurn, knockOut, offHand.isMelee, targetCanSeeAttacker, atkMods, offHand, hasAllyAdjacentToTarget, saDmg, NoAttackHitRider, hitReactionCandidates)
+      all {
+        bCreatures' = result.creatures,
+        bPhase' = result.phase,
+        bInitiative' = bInitiative,
+        bTurnIndex' = bTurnIndex,
+        bRound' = bRound,
+        bSpellStack' = bSpellStack,
+        bTurnStarted' = bTurnStarted,
+        bHelpTargets' = newHelpTargets,
+      }
     }
   }
 
@@ -3029,12 +3233,12 @@ module battle {
         val turnAc = bCreatures.get(bInitiative[bTurnIndex])
         val canCastSpells = turnAc.preparedSpells.size() > 0 and not(turnAc.ragingBlocksSpells)
         if (canCastSpells) any {
-          bAttack, bCastSaveSpell, bCastAoE,
+          bAttack, bOffHandAttack, bHelpAttack, bCastSaveSpell, bCastAoE,
           bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
           bMove, bHeal, bDash, bDisengage, bDodge, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge,
           bEnterRage, bDeclareReckless, bReady, bReadySpell, bEndTurn,
         } else any {
-          bAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage,
+          bAttack, bOffHandAttack, bHelpAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage,
           bDodge, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
         }
       }

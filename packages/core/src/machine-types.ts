@@ -355,6 +355,9 @@ export type DndEvent =
       readonly grantedImmunities?: ReadonlySet<DamageType>;
       readonly blocksOpportunityAttacks?: boolean;
       readonly speedDeltaFeet?: number;
+      readonly consumeOnQualifiedHit?: {
+        readonly trigger: "nextWeaponHit" | "nextMeleeWeaponHit";
+      };
     }
   | { readonly type: "REMOVE_EFFECT"; readonly spellId: SpellId }
   | { readonly type: "BREAK_CONCENTRATION" }

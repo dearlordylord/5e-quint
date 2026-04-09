@@ -26,6 +26,26 @@ export const DAMAGE_TYPES = [
 ] as const;
 export type DamageType = (typeof DAMAGE_TYPES)[number];
 
+export const DAMAGE_QUALIFIERS = [
+  "adamantine",
+  "magical",
+  "silvered",
+] as const;
+export type DamageQualifier = (typeof DAMAGE_QUALIFIERS)[number];
+
+export const WEAPON_PROPERTIES = [
+  "ammunition",
+  "finesse",
+  "heavy",
+  "light",
+  "loading",
+  "reach",
+  "thrown",
+  "twoHanded",
+  "versatile",
+] as const;
+export type WeaponProperty = (typeof WEAPON_PROPERTIES)[number];
+
 export const CONDITIONS = [
   "blinded",
   "charmed",
@@ -228,6 +248,16 @@ export interface EffectTurnHook {
   readonly requiresConcentrationCheck?: boolean;
 }
 
+export const ONE_SHOT_RIDER_TRIGGERS = [
+  "nextMeleeWeaponHit",
+  "nextWeaponHit",
+] as const;
+export type OneShotRiderTrigger = (typeof ONE_SHOT_RIDER_TRIGGERS)[number];
+
+export interface OneShotRiderConsumption {
+  readonly trigger: OneShotRiderTrigger;
+}
+
 export interface ActiveEffect {
   readonly spellId: SpellId;
   readonly turnsRemaining: number;
@@ -242,6 +272,7 @@ export interface ActiveEffect {
   readonly grantedImmunities?: ReadonlySet<DamageType>;
   readonly blocksOpportunityAttacks?: boolean;
   readonly speedDeltaFeet?: number;
+  readonly consumeOnQualifiedHit?: OneShotRiderConsumption;
 }
 
 export interface Armor {
@@ -306,6 +337,7 @@ export interface AttackContext {
   readonly targetSpeedZero: boolean;
   readonly targetCanSeeAttacker: boolean;
   readonly attackerCanSeeTarget: boolean;
+  readonly attackerHelpedAgainstTarget: boolean;
   readonly isRangedAttack: boolean;
   readonly beyondNormalRange: boolean;
   readonly hostileWithin5ft: boolean;
@@ -320,6 +352,14 @@ export interface AttackContext {
   readonly isUnderwaterRangedException: boolean;
   readonly attackerReckless: boolean;
   readonly targetReckless: boolean;
+}
+
+export interface BattleWeaponProfile {
+  readonly name: string;
+  readonly damageType: DamageType;
+  readonly isMelee: boolean;
+  readonly properties: ReadonlySet<WeaponProperty>;
+  readonly damageQualifiers?: ReadonlySet<DamageQualifier>;
 }
 
 // --- Branded numeric types ---

@@ -15,9 +15,11 @@ import type {
   Ability,
   ActiveEffect,
   ArmorClass,
+  BattleWeaponProfile,
   Condition,
   CreatureId,
   CreatureKind,
+  DamageQualifier,
   DamageType,
   DifficultyClass,
   IncapSource,
@@ -71,6 +73,7 @@ export interface BattleCreatureState {
   readonly readiedAction: boolean;
   readonly bonusActionSpellCast: boolean;
   readonly nonCantripActionSpellCast: boolean;
+  readonly lightAttackUsedThisTurn: boolean;
   readonly bonusMovementRemaining: number;
   readonly bonusMovementOAFree: boolean;
   readonly actionSurgeActionPending: boolean;
@@ -122,6 +125,8 @@ export interface BattleCreatureState {
   readonly bardLevel: number;
   readonly bardicInspirationCharges: number;
   readonly parryAcBonus: number;
+  readonly mainHandWeapon: BattleWeaponProfile | null;
+  readonly offHandWeapon: BattleWeaponProfile | null;
 }
 
 /** Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready). */
@@ -146,6 +151,7 @@ export interface AttackHitCtx {
   readonly targetAc: ArmorClass;
   readonly damage: number;
   readonly damageType: DamageType;
+  readonly damageQualifiers: ReadonlySet<DamageQualifier>;
   readonly isCritical: boolean;
   readonly critRange: number;
   readonly atkReturnTo: AfterDamageReturn;
@@ -165,6 +171,7 @@ export interface AttackDamageCtx {
   readonly target: CreatureId;
   readonly damage: number;
   readonly damageType: DamageType;
+  readonly damageQualifiers: ReadonlySet<DamageQualifier>;
   readonly isCritical: boolean;
   readonly atkReturnTo: AfterDamageReturn;
   readonly knockOut: boolean;
@@ -181,6 +188,7 @@ export interface AfterDamageCtx {
   readonly damagedCreature: CreatureId;
   readonly damageDealt: number;
   readonly damageType: DamageType;
+  readonly damageQualifiers: ReadonlySet<DamageQualifier>;
   readonly returnTo: AfterDamageReturn;
 }
 
@@ -272,6 +280,15 @@ export interface SpellStackEntry {
   readonly ritual: boolean;
 }
 
+/** SRD 5.2.1 Help "Assist an Attack Roll": a chosen ally's next attack against the
+ *  chosen enemy gains Advantage. Consumed by the first qualifying attack; expires
+ *  at the start of the helper's next turn. */
+export interface HelpTarget {
+  readonly helperId: CreatureId;
+  readonly allyId: CreatureId;
+  readonly targetEnemyId: CreatureId;
+}
+
 export interface MovementCtx {
   readonly mover: CreatureId;
   readonly threatenedBy: ReadonlySet<CreatureId>;
@@ -317,6 +334,7 @@ export interface BattleContext {
   readonly laCtx: LAWindowCtx | null;
   readonly readyCtx: ReadyWindowCtx | null;
   readonly spellStack: ReadonlyArray<SpellStackEntry>;
+  readonly helpTargets: ReadonlyArray<HelpTarget>;
 }
 
 /** All phase fields nulled — machine is in activeTurn. */
@@ -410,6 +428,8 @@ export interface InitCreatureConfig {
   readonly initiativeRollB?: number;
   /** SRD 5.2.1: surprised combatant has Disadvantage on Initiative roll. Defaults to false. */
   readonly surprised?: boolean;
+  readonly mainHandWeapon?: BattleWeaponProfile;
+  readonly offHandWeapon?: BattleWeaponProfile;
 }
 
 export interface GrappleParams {

@@ -26,6 +26,8 @@ module creature {
     | Lightning | Necrotic | Piercing | Poison
     | Psychic | Radiant | Slashing | Thunder
 
+  type DamageQualifier = Adamantine | Magical | Silvered
+
   type CoverType = NoCover | HalfCover | ThreeQuartersCover | TotalCover
 
   type ArmorCategory = LightArmor | MediumArmor | HeavyArmor
@@ -842,7 +844,10 @@ module creature {
     spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase, casterId: str,
     grantedConditions: Set[Condition],
     grantedResistances: Set[DamageType], grantedVulnerabilities: Set[DamageType], grantedImmunities: Set[DamageType],
+    consumeOnQualifiedHit: OneShotRiderTrigger,
   }
+
+  type OneShotRiderTrigger = NoOneShotRider | ORNextMeleeWeaponHit | ORNextWeaponHit
 
   /// End-of-turn save: caller provides spell, result, and conditions to remove on success.
   type EndOfTurnSave = { spellId: str, saveSucceeded: bool, conditionsToRemove: Set[Condition] }
@@ -929,6 +934,7 @@ module creature {
       spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
       grantedConditions: grantedC,
       grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
+      consumeOnQualifiedHit: NoOneShotRider,
     }))
 
   /// Convenience wrapper: add effect with no granted R/V/I.
@@ -960,6 +966,17 @@ module creature {
   /// Atomic decrement-by-n + clear all expired. Out-of-combat time advance primitive.
   pure def pTickEffects(effects: Set[ActiveEffect], n: int): Set[ActiveEffect] =
     effects.map(e => e.with("turnsRemaining", e.turnsRemaining - n)).filter(e => e.turnsRemaining > 0)
+
+  pure def pConsumeOneShotHitEffects(
+    effects: Set[ActiveEffect], isWeaponAttack: bool, isMeleeAttack: bool
+  ): Set[ActiveEffect] =
+    effects.filter(e =>
+      not(
+        (e.consumeOnQualifiedHit == ORNextWeaponHit and isWeaponAttack)
+        or
+        (e.consumeOnQualifiedHit == ORNextMeleeWeaponHit and isWeaponAttack and isMeleeAttack)
+      )
+    )
 
   // ============================================================
   // 9. CONDITIONS (character/conditions)
@@ -1593,6 +1610,7 @@ module creature {
     targetCanSeeAttacker: bool,
     // Unseen attacker/target
     attackerCanSeeTarget: bool,
+    attackerHelpedAgainstTarget: bool,
     // Ranged
     isRangedAttack: bool,
     beyondNormalRange: bool,
@@ -1635,10 +1653,11 @@ module creature {
     val adv_attackerReckless = ctx.attackerReckless and not(ctx.isRangedAttack)
     // RAW: "attack rolls against you have Advantage" when reckless
     val adv_targetReckless = ctx.targetReckless
+    val adv_helpedAttack = ctx.attackerHelpedAgainstTarget
 
     val anyAdvantage = adv_targetBlinded or adv_targetIncap
       or adv_targetProne5ft or adv_targetRestrained or adv_unseenAttacker
-      or adv_attackerReckless or adv_targetReckless
+      or adv_attackerReckless or adv_targetReckless or adv_helpedAttack
 
     // --- Disadvantage sources ---
     val disadv_attackerBlinded = ctx.attackerBlinded

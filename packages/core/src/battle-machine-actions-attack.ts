@@ -1,6 +1,8 @@
 import { Match } from "effect";
 
-import { isIncapacitated } from "#/battle-machine-creature.ts";
+import {
+  isIncapacitated,
+} from "#/battle-machine-creature.ts";
 import {
   activeId,
   advanceFromHitPhase,
@@ -13,6 +15,8 @@ import {
   legalDamageReactionsByCreature,
   legalHitReactions,
   mkAwait,
+  consumeHelp,
+  findHelpAdvantage,
   piAfterDamage,
   piAttackDamage,
   piAttackHit,
@@ -42,8 +46,10 @@ import {
 import type {
   AttackContext,
   CreatureId,
+  DamageQualifier,
   DamageType,
   FullAttackMods,
+  WeaponProperty,
 } from "#/types.ts";
 import { armorClass } from "#/types.ts";
 
@@ -55,11 +61,13 @@ export function buildBattleAttackContext(
   attackerId: CreatureId,
   targetId: CreatureId,
   isMelee: boolean,
+  weaponProperties: ReadonlySet<WeaponProperty>,
   attackerWithin5ft: boolean,
   hostileWithin5ft: boolean,
   targetCanSeeAttacker: boolean,
   attackerCanSeeTarget: boolean,
   frightSourceInLOS: boolean,
+  helpAdvantage = false,
 ): AttackContext {
   const atk = cs.get(attackerId)!;
   const tgt = cs.get(targetId)!;
@@ -84,10 +92,11 @@ export function buildBattleAttackContext(
     targetSpeedZero: tgt.effectiveSpeed === 0,
     targetCanSeeAttacker,
     attackerCanSeeTarget,
+    attackerHelpedAgainstTarget: helpAdvantage,
     isRangedAttack: !isMelee,
     beyondNormalRange: false,
     hostileWithin5ft,
-    isHeavyWeapon: false,
+    isHeavyWeapon: weaponProperties.has("heavy"),
     wielderStrScore: 16, // not modeled in battle; safe default
     wielderDexScore: 14,
     attackerGrappled,
@@ -110,6 +119,7 @@ export function resolveAttack(
   targetAc: number,
   damage: number,
   damageType: DamageType,
+  damageQualifiers: ReadonlySet<DamageQualifier>,
   isCritical: boolean,
   critRange: number,
   returnTo: AfterDamageReturn,
@@ -118,20 +128,21 @@ export function resolveAttack(
   targetCanSeeAttackerAtHit: boolean,
   mods: FullAttackMods,
   onHitEffect: AttackHitCtx["onHitEffect"],
-  isFinesse: boolean,
+  weaponProperties: ReadonlySet<WeaponProperty>,
   hasAllyAdjacentToTarget: boolean,
   hasAnyDisadvantageSource: boolean,
   saDmg: number,
   hitReactionCandidates: ReadonlySet<CreatureId>,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const hit = !mods.autoMiss && isHit(attackRoll, targetAc, critRange);
+  const cs0 = new Map(cs);
   if (!hit) {
-    return { creatures: new Map(cs), ...returnToState(returnTo) };
+    return { creatures: cs0, ...returnToState(returnTo) };
   }
-  const atk = cs.get(attackerId)!;
+  const atk = cs0.get(attackerId)!;
   const meleeDmgBonus = isMelee ? atk.meleeDamageBonus : 0; // rage bonus: melee only (D1 fix)
   // Sneak Attack eligibility (SRD 5.2.1 Rogue "Sneak Attack")
-  const eligibleWeapon = isFinesse || !isMelee;
+  const eligibleWeapon = weaponProperties.has("finesse") || !isMelee;
   const saEligible =
     atk.sneakAttackDice > 0 &&
     !atk.sneakAttackUsedThisTurn &&
@@ -143,8 +154,8 @@ export function resolveAttack(
   const effectiveCrit = isCritical || mods.autoCrit;
   const effectiveKnockOut = knockOut && isMelee; // SRD: knock out is melee only
   const cs1 = saEligible
-    ? setCreature(cs, attackerId, { ...atk, sneakAttackUsedThisTurn: true })
-    : cs;
+    ? setCreature(cs0, attackerId, { ...atk, sneakAttackUsedThisTurn: true })
+    : cs0;
   const atkCtx: AttackHitCtx = {
     attacker: attackerId,
     target: targetId,
@@ -152,6 +163,7 @@ export function resolveAttack(
     targetAc: armorClass(targetAc),
     damage: totalDmg,
     damageType,
+    damageQualifiers,
     isCritical: effectiveCrit,
     critRange,
     atkReturnTo: returnTo,
@@ -190,25 +202,35 @@ export function battleAttack({
   const tc = c.creatures.get(e.targetId)!;
   if (ac.dead || isIncapacitated(ac) || tc.dead) return {};
   if (ac.actionsRemaining <= 0 && ac.extraAttacksRemaining <= 0) return {};
-  const updatedAc =
+  const weaponProperties =
+    e.weaponProperties ??
+    ac.mainHandWeapon?.properties ??
+    new Set(e.isFinesse === true ? ["finesse"] : []);
+  let updatedAc =
     ac.attackActionUsed && ac.extraAttacksRemaining > 0
       ? spendExtraAttack(ac)
       : spendAction(ac, "attack");
+  if (e.isMelee && weaponProperties.has("light")) {
+    updatedAc = { ...updatedAc, lightAttackUsedThisTurn: true };
+  }
   const cs = setCreature(c.creatures, id, updatedAc);
+  const helpIdx = findHelpAdvantage(c.helpTargets, id, e.targetId);
   const ctx = buildBattleAttackContext(
     cs,
     id,
     e.targetId,
     e.isMelee,
+    weaponProperties,
     e.attackerWithin5ft,
     e.hostileWithin5ft,
     e.targetCanSeeAttacker,
     e.attackerCanSeeTarget,
     e.frightSourceInLOS,
+    helpIdx >= 0,
   );
   const mods = aggregateAttackMods(ctx);
   const hasAnyDisadvantageSource = hasAttackDisadvantageSource(ctx);
-  return resolveAttack(
+  const result = resolveAttack(
     cs,
     id,
     e.targetId,
@@ -216,6 +238,7 @@ export function battleAttack({
     e.tAc,
     e.dmg,
     e.dt,
+    e.damageQualifiers ?? ac.mainHandWeapon?.damageQualifiers ?? new Set(),
     e.crit,
     ac.critRange,
     ADR_ACTIVE_TURN,
@@ -224,12 +247,15 @@ export function battleAttack({
     e.targetCanSeeAttacker,
     mods,
     e.onHitEffect,
-    e.isFinesse,
+    weaponProperties,
     e.hasAllyAdjacentToTarget,
     hasAnyDisadvantageSource,
     e.saDmg,
     e.hitReactionCandidates,
   );
+  return helpIdx >= 0
+    ? { ...result, helpTargets: consumeHelp(c.helpTargets, helpIdx) }
+    : result;
 }
 
 export function battleResolveHitReaction({
@@ -340,6 +366,7 @@ export function battleResolveDmgReaction({
       atk.attacker,
       atk.damage,
       atk.damageType,
+      atk.damageQualifiers,
       atk.isCritical,
       atk.knockOut,
       atk.atkReturnTo,
@@ -435,6 +462,7 @@ export function battleAfterDamageSpellReaction({
     e.reactorId,
     actualDmg,
     e.reactionDt,
+    new Set(),
     false,
     false,
     ad.returnTo,
@@ -470,6 +498,7 @@ export function battleAfterDamageRetaliation({
     e.reactorId,
     e.retDmg,
     e.retDt,
+    new Set(),
     e.retCrit,
     false,
     ad.returnTo,

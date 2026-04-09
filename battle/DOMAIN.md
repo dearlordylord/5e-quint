@@ -93,6 +93,12 @@ Reactions have four distinct timing relationships to their triggers (derived fro
 
 **Range** — The distances at which a ranged attack or spell can target: normal range (no penalty) and long range (disadvantage, see `AttackContext.beyondNormalRange`).
 
+**Movement Step** — One engine-level movement segment. The current battle layer spends movement in 5-foot chunks and receives the caller-computed threatened set for that chunk.
+
+**Reach-Exit Checkpoint** — The exact movement boundary where a mover is still in a threat source's reach before the step and would be outside that reach after the step. Opportunity attacks are offered at this checkpoint, before the move completes.
+
+**Threat Set** — The caller-provided set of creatures whose reach-exit checkpoints are crossed by the current movement step. The battle engine filters this set by reaction availability and incapacitation, but it does not compute geometry itself.
+
 **Threatened** — A creature is threatened by an enemy if within that enemy's reach and the enemy can see them. Leaving a threatened area triggers an opportunity attack.
 
 ## State Dependencies

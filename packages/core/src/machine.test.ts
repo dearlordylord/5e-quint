@@ -7,6 +7,10 @@ import { defaultKnownMetamagicOptions } from "#/features/class-sorcerer.ts";
 import type { DndContext, DndMachineInput, DndSnapshot } from "#/machine.ts";
 import { creatureMachine } from "#/machine.ts";
 import {
+  consumeOneShotHitEffects,
+  freshCreature,
+} from "#/battle-machine-creature.ts";
+import {
   aggregateAttackMods,
   calculateAC,
   coverBonus,
@@ -1240,6 +1244,25 @@ describe("turn lifecycle - START_TURN", () => {
     expect(ctx(a).movementRemaining).toBe(20);
   });
 
+  it("one-shot rider metadata is consumed on the next qualifying hit", () => {
+    const creature = {
+      ...freshCreature(20, "PC"),
+      activeEffects: [
+        {
+          spellId: mkSpellId("test_rider"),
+          turnsRemaining: 10,
+          expiresAt: "end" as const,
+          casterId: CreatureId("self"),
+          consumeOnQualifiedHit: { trigger: "nextWeaponHit" as const },
+        },
+      ],
+    };
+
+    const next = consumeOneShotHitEffects(creature, true, true);
+
+    expect(next.activeEffects).toEqual([]);
+  });
+
   it("END_TURN hooks ignore foreign-owned effects", () => {
     const a = createWithInput({
       maxHp: DEFAULT_MAX_HP,
@@ -1277,6 +1300,64 @@ describe("turn lifecycle - START_TURN", () => {
         }),
       ]),
     );
+  });
+
+  it("AtEndOfTurn effect with turnsRemaining=1 fires end-of-turn hook then clears", () => {
+    const a = createWithInput({
+      maxHp: DEFAULT_MAX_HP,
+      selfId: CreatureId("self"),
+    });
+    startTurn(a);
+    applyCondition(a, "blinded");
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("faerie_fire"),
+      durationTurns: 1,
+      expiresAt: "end",
+      casterId: CreatureId("self"),
+      endOfTurnHook: {
+        removeOnSaveSuccess: true,
+        conditionsToRemove: ["blinded"],
+      },
+    });
+
+    startTurn(a);
+    expect(
+      ctx(a).activeEffects.some((e) => e.spellId === mkSpellId("faerie_fire")),
+    ).toBe(true);
+
+    a.send({
+      type: "END_TURN",
+      effectResolutions: [
+        { spellId: mkSpellId("faerie_fire"), saveSucceeded: true },
+      ],
+    });
+    expect(ctx(a).blinded).toBe(false);
+    expect(
+      ctx(a).activeEffects.some((e) => e.spellId === mkSpellId("faerie_fire")),
+    ).toBe(false);
+  });
+
+  it("AtStartOfTurn effect with turnsRemaining=1 is cleared at start of its final turn", () => {
+    const a = createWithInput({
+      maxHp: DEFAULT_MAX_HP,
+      selfId: CreatureId("self"),
+    });
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("shield"),
+      durationTurns: 1,
+      expiresAt: "start",
+      casterId: CreatureId("self"),
+    });
+    expect(
+      ctx(a).activeEffects.some((e) => e.spellId === mkSpellId("shield")),
+    ).toBe(true);
+
+    startTurn(a);
+    expect(
+      ctx(a).activeEffects.some((e) => e.spellId === mkSpellId("shield")),
+    ).toBe(false);
   });
 });
 
@@ -2054,6 +2135,7 @@ describe("aggregateAttackMods", () => {
     targetUnconscious: false,
     targetIncapacitated: false,
     targetSpeedZero: false,
+    attackerHelpedAgainstTarget: false,
     underwater: false,
     wielderStrScore: 16,
     wielderDexScore: 14,
@@ -2909,6 +2991,7 @@ describe("aggregateAttackMods additional branches", () => {
     targetUnconscious: false,
     targetIncapacitated: false,
     targetSpeedZero: false,
+    attackerHelpedAgainstTarget: false,
     underwater: false,
     wielderStrScore: 16,
     wielderDexScore: 14,

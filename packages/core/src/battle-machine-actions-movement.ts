@@ -9,6 +9,8 @@ import {
 import {
   activeId,
   canMakeOpportunityAttack,
+  consumeHelp,
+  findHelpAdvantage,
   setCreature,
   setDifference,
   spendMovement,
@@ -37,6 +39,7 @@ export function battleMove({
   const ac = c.creatures.get(id)!;
   if (ac.dead || isIncapacitated(ac) || ac.movementRemaining <= 0) return {};
   const cs = setCreature(c.creatures, id, spendMovement(ac, 5, 1));
+  // The caller owns geometry and provides the threat set for this 5ft reach-exit checkpoint.
   if (ac.disengaged) return { creatures: cs };
   const oaEligible = new Set(
     [...e.threatened].filter((tid) => {
@@ -83,20 +86,27 @@ export function battleMovementOAAttack({
   const updatedMv = { ...mv, processed: newProc };
   const reactor = c.creatures.get(e.reactorId)!;
   const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(reactor));
+  const helpIdx = findHelpAdvantage(c.helpTargets, e.reactorId, mv.mover);
+  const weaponProperties =
+    e.weaponProperties ??
+    reactor.mainHandWeapon?.properties ??
+    new Set(e.isFinesse === true ? ["finesse"] : []);
   const ctx = buildBattleAttackContext(
     cs1,
     e.reactorId,
     mv.mover,
     true,
+    weaponProperties,
     true,
     e.hostileWithin5ft,
     e.targetCanSeeAttacker,
     e.attackerCanSeeTarget,
     e.frightSourceInLOS,
+    helpIdx >= 0,
   );
   const mods = aggregateAttackMods(ctx);
   const hasAnyDisadvantageSource = hasAttackDisadvantageSource(ctx);
-  return resolveAttack(
+  const result = resolveAttack(
     cs1,
     e.reactorId,
     mv.mover,
@@ -104,6 +114,7 @@ export function battleMovementOAAttack({
     e.oaTgtAc,
     e.oaDmg,
     e.oaDt,
+    e.oaDamageQualifiers ?? reactor.mainHandWeapon?.damageQualifiers ?? new Set(),
     e.oaCrit,
     reactor.critRange,
     { tag: "ADRResolvingMovement", mv: updatedMv },
@@ -112,12 +123,15 @@ export function battleMovementOAAttack({
     e.targetCanSeeAttacker,
     mods,
     undefined,
-    e.isFinesse,
+    weaponProperties,
     e.hasAllyAdjacentToTarget,
     hasAnyDisadvantageSource,
     e.saDmg,
     e.hitReactionCandidates,
   );
+  return helpIdx >= 0
+    ? { ...result, helpTargets: consumeHelp(c.helpTargets, helpIdx) }
+    : result;
 }
 
 /** SRD 5.2.1: standing from prone costs half your speed. */

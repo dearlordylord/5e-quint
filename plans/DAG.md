@@ -125,7 +125,7 @@ authoritative-d20-modifier-query-surface
 | `canonical-condition-effects` | facility | ready | none | `duration-boundary-audit` | Canonical consequence map for condition-driven mechanics from applied inspiration `05`; optional for small fixes, but useful before broader condition-heavy parity cleanup |
 | `first-class-consumption-model` | facility | ready | none | `battle-spellcast-action-breadth`, `preview-execution`, `dm-override` | Typed spend/refund/quota vocabulary from applied inspiration `10`; important before broader spell/action-surface work |
 | `closed-modifier-algebra` | facility | blocked | none | `generic-per-attack-type-bonus-surface` | Refines the old shared modifier surface using applied inspiration `11`; use a closed typed algebra, not an open-ended registry |
-| `oa-path-vocabulary` | facility | ready | none | `movement-action-surface`, `battle-spatial-expansion` | Domain-language node from applied inspiration `12`; clarify OA checkpoints and movement interruption semantics without adding full geometry |
+| `oa-path-vocabulary` | facility | complete | none | `movement-action-surface`, `battle-spatial-expansion` | Landed in [battle/DOMAIN.md](/workspace/typescript/dnd/battle/DOMAIN.md), [battle.qnt](/workspace/typescript/dnd/battle.qnt), and [battle-machine-actions-movement.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-movement.ts); geometry remains caller-owned by design |
 | `authoritative-d20-modifier-query-surface` | facility | blocked | none | `armor-training-disadvantage` | Need one authoritative runtime/query fact for d20 disadvantage sources before wiring armor-training disadvantage cleanly |
 | `available-actions-main` | plan | active | none | `movement-action-surface`, `preview-execution`, `battle-spellcast-action-breadth`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
 | `battle-spellcast-action-breadth` | plan | later | `available-actions-main`, `first-class-consumption-model` | later spell-cast reactions | `CAST_COUNTERSPELL` is already complete; this is the remaining breadth umbrella |
@@ -140,18 +140,18 @@ authoritative-d20-modifier-query-surface
 | `sneak-attack-any-disadvantage` | candidate | ready | none | correctness win in rogue attack policy | Inspiration item `24` |
 | `sneak-attack-once-per-turn-boundary` | candidate | ready | none | battle turn-boundary regression coverage | Inspiration item `4` |
 | `stand-from-prone-in-battle` | candidate | ready | none | battle action exposure for standing | Inspiration item `14` |
-| `duration-boundary-audit` | candidate | ready | `canonical-condition-effects` | timing-sensitive effect regression coverage | Inspiration item `5`; optional architecture pass first, but worth making explicit in scheduling |
-| `qualified-damage-typing` | facility | blocked | none | `qualified-physical-damage-bypass` | Need `magical` / `silvered` / `adamantine` distinctions |
+| `duration-boundary-audit` | candidate | complete | `canonical-condition-effects` | timing-sensitive effect regression coverage | Audit checklist landed in [DURATION_BOUNDARY_AUDIT.md](/workspace/typescript/dnd/plans/DURATION_BOUNDARY_AUDIT.md) with deterministic timing regressions; no broader production refactor was needed |
+| `qualified-damage-typing` | facility | complete | none | `qualified-physical-damage-bypass` | Landed minimal `magical` / `silvered` / `adamantine` qualifiers in Quint and TS attack/damage flow |
 | `qualified-physical-damage-bypass` | candidate | blocked | `qualified-damage-typing` | monster/effect fidelity | Inspiration item `7` |
-| `battle-helped-target-state` | facility | blocked | none | `help-advantage-state` | Need helped-target/help-consumption battle state |
-| `help-advantage-state` | candidate | blocked | `battle-helped-target-state` | core action-economy mechanic | Inspiration item `10` |
+| `battle-helped-target-state` | facility | complete | none | `help-advantage-state` | Battle-owned helped-target state landed with owner-scoped expiry semantics in Quint and TS |
+| `help-advantage-state` | candidate | complete | `battle-helped-target-state` | core action-economy mechanic | Help now contributes a real attack-advantage source with consumption on the next qualifying attack |
 | `effect-dependency-graph` | facility | blocked | none | `parent-child-effect-teardown` | Need parent/child effect ownership graph |
 | `parent-child-effect-teardown` | candidate | blocked | `effect-dependency-graph` | concentration-linked cleanup correctness | Inspiration item `31` |
-| `one-shot-rider-consumption-metadata` | facility | blocked | none | `next-hit-rider-consumption` | Need consume-on-next-qualifying-hit metadata |
+| `one-shot-rider-consumption-metadata` | facility | complete | none | `next-hit-rider-consumption` | Landed consume-on-next-qualifying-hit metadata and consumption hooks without widening to the full downstream rider batch |
 | `next-hit-rider-consumption` | candidate | blocked | `one-shot-rider-consumption-metadata` | recurring spell/feature semantics | Inspiration item `33` |
-| `off-hand-attack-surface` | facility | blocked | none | `two-weapon-fighting-bonus-attack` | Need battle off-hand attack event/action token |
-| `two-weapon-fighting-bonus-attack` | candidate | blocked | `off-hand-attack-surface` | battle bonus-action attack support | Inspiration item `3` |
-| `weapon-property-aware-battle-resolution` | facility | blocked | none | `fighting-styles-in-battle`, `versatile-weapon-die-switching` | Battle is still weapon-property blind in relevant places |
+| `off-hand-attack-surface` | facility | complete | none | `two-weapon-fighting-bonus-attack` | Battle off-hand attack event/action surface landed in Quint and TS battle machines |
+| `two-weapon-fighting-bonus-attack` | candidate | complete | `off-hand-attack-surface` | battle bonus-action attack support | Landed the light-weapon bonus-action off-hand attack slice; fighting-style modifiers remain separate follow-up work |
+| `weapon-property-aware-battle-resolution` | facility | complete | none | `fighting-styles-in-battle`, `versatile-weapon-die-switching` | Battle attack resolution now consumes weapon-property ownership for immediate combat semantics |
 | `fighting-styles-in-battle` | candidate | blocked | `weapon-property-aware-battle-resolution` | broader weapon semantics | Inspiration item `8` |
 | `versatile-weapon-die-switching` | candidate | blocked | `weapon-property-aware-battle-resolution` | hand-usage / wield-state semantics | Inspiration item `13` |
 | `battle-spatial-expansion` | facility | blocked | `oa-path-vocabulary` | `hide-stealth-chain`, `forced-movement-vs-oa`, `reach-extends-oa-range` | Current battle spatial model is intentionally narrow |
@@ -174,8 +174,7 @@ If scheduling strictly by current value and low dependency risk:
 6. `resolve-commit-doctrine`
 7. `canonical-condition-effects`
 8. `first-class-consumption-model`
-9. `duration-boundary-audit`
-10. `preview-execution`
+9. `preview-execution`
 
 ## Researched Nodes
 
@@ -334,7 +333,7 @@ If scheduling strictly by current value and low dependency risk:
 
 ### `duration-boundary-audit`
 
-- classification: `fuller handoff still needed`
+- classification: `completed in this batch`
 - owner_layer: shared effect timing semantics across creature and battle
 - read_first:
   - [.references/inspirations/PLAN.md](/workspace/typescript/dnd/.references/inspirations/PLAN.md)
@@ -345,12 +344,14 @@ If scheduling strictly by current value and low dependency risk:
   - [battle-rules-scenarios.test.ts](/workspace/typescript/dnd/packages/core/src/battle-rules-scenarios.test.ts)
   - [machine.test.ts](/workspace/typescript/dnd/packages/core/src/machine.test.ts)
 - actual_blockers:
-  - not blocked by missing facilities
-  - but it is audit-shaped rather than a single sharp regression, so it needs a curated scenario list before implementation
+  - no semantic blocker found
+  - the audit was satisfied by landing a checklist plus deterministic boundary regressions
 - suggested_first_edit_set:
-  - write the concrete audit checklist first
-  - add deterministic regressions before touching production code
+  - [plans/DURATION_BOUNDARY_AUDIT.md](/workspace/typescript/dnd/plans/DURATION_BOUNDARY_AUDIT.md)
+  - [machine.test.ts](/workspace/typescript/dnd/packages/core/src/machine.test.ts)
+  - [battle-rules-scenarios.test.ts](/workspace/typescript/dnd/packages/core/src/battle-rules-scenarios.test.ts)
 - verification:
+  - `pnpm exec quint test --match "test_conc_auto_break|inv_activeEffect_expiryPhaseSpecific" dndTest.qnt`
   - `pnpm --filter @dnd/core exec vitest run src/machine.test.ts src/battle-rules-scenarios.test.ts`
   - `pnpm --filter @dnd/core exec tsc --noEmit`
   - Tier 1 MBT only if timing semantics change

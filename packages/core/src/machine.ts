@@ -516,6 +516,7 @@ export const creatureMachine = setup({
             grantedImmunities: ev.grantedImmunities,
             blocksOpportunityAttacks: ev.blocksOpportunityAttacks,
             speedDeltaFeet: ev.speedDeltaFeet,
+            consumeOnQualifiedHit: ev.consumeOnQualifiedHit,
           },
         ),
       };

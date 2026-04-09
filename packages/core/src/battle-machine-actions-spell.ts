@@ -382,6 +382,7 @@ export function battleResolveAoETarget({
         aoe.caster,
         evDmg,
         aoe.damageType,
+        new Set(),
         false,
         false,
         aoeReturn,

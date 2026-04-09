@@ -125,7 +125,8 @@ export function hasAttackAdvantageSource(ctx: AttackContext): boolean {
     ctx.targetRestrained ||
     !ctx.targetCanSeeAttacker ||
     (ctx.attackerReckless && !ctx.isRangedAttack) ||
-    ctx.targetReckless
+    ctx.targetReckless ||
+    ctx.attackerHelpedAgainstTarget
   );
 }
 
