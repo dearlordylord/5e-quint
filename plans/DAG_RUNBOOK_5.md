@@ -208,6 +208,23 @@ Stop and return a design note instead of pushing through if any of these become 
 4. introducing non-SRD style consumers or style names not present in the local 5.2.1 corpus
 5. widening the batch into the umbrella `fighting-styles-in-battle`
 
+## Questions To Resolve For Later Runbooks
+
+Record short answers in the PR description or follow-up DAG notes if the implementation makes them clear.
+
+### Questions For The Rest Of Fighting Styles
+
+1. After the narrow modifier facility lands, is `fighting-styles-in-battle` still best expressed as one umbrella node, or should it be decomposed permanently into concrete remaining consumers?
+2. Does `Defense` now look like a clean next consumer, or does it still need explicit battle-owned armor-worn state?
+3. Does `Great Weapon Fighting` now look like a clean next consumer, or does it still need battle-owned die-face reroll ownership in attack resolution?
+4. Does `two-weapon-fighting-style-in-battle` fit the same closed additive seam cleanly, or did it reveal a second seam specific to bonus-attack damage handling?
+
+### Questions For Runbook 6
+
+1. Is `generic-per-attack-type-bonus-surface` still a real next node after this concrete modifier batch, or should the DAG keep preferring named consumers over reusable modifier abstractions?
+2. Did the implementation reveal any missing battle-owned modifier facts beyond simple additive fields, such as binary suppressions or reroll semantics?
+3. Is there enough evidence after this batch to promote more of `fighting-styles-in-battle`, or should the next research effort stay focused on `effect-dependency-graph` or `battle-hidden-state` instead?
+
 ## Verification
 
 Minimum verification for the batch:

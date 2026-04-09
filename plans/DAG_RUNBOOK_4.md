@@ -258,6 +258,25 @@ Reason:
 ## Stop Conditions
 
 - if `battle-basic-action-surface` requires redesigning the resolved-token contract rather than consuming it
+- if `battle-ready-spell-surface` or `after-damage-reaction-surface` appears to need a generic reaction registry instead of consuming already-owned interrupt points
+- if `forced-movement-vs-oa` or `reach-extends-oa-range` appears to need battle-owned geometry rather than caller-owned threat sets
+- if `versatile-weapon-die-switching` appears to require a new explicit reposture action instead of using the current hand-occupancy ownership seam
+
+## Questions To Resolve For Later Runbooks
+
+Record short answers in the PR description or follow-up DAG notes if the implementation makes them clear.
+
+### Questions For Runbook 5
+
+1. Is the current hand/weapon ownership seam sufficient for later modifier consumers, or did `versatile-weapon-die-switching` expose a missing battle-owned fact?
+2. Does the available-actions work reveal a stable battle action-token taxonomy that later `dm-override` / transcript work can consume directly?
+3. Does `battle-ready-spell-surface` prove that battle spell/reaction exposure can keep using concrete owned windows, or did it reveal pressure toward a generic registry that should be rejected explicitly?
+
+### Questions For Runbook 6
+
+1. Is `movement-provocation-kind` enough of a spatial contract for future OA/stealth work, or is another minimal caller-owned movement fact still missing?
+2. Do `forced-movement-vs-oa` and `reach-extends-oa-range` validate that caller-owned threat sets remain the right boundary, or do they expose a need to redesign `battle-hidden-state` / future spatial nodes?
+3. Do the action-surface lanes leave any unresolved token-shape or interrupt-shape inconsistencies that should be settled before later product nodes like `dm-override` and `transcript-port-to-dnd`?
 - if `battle-ready-spell-surface` reveals a deeper concentration ownership mismatch beyond the already-modeled battle semantics
 - if `movement-provocation-kind` tries to grow into a hidden geometry engine
 - if `reach-extends-oa-range` needs battle-owned positions rather than caller-owned threat-set semantics
