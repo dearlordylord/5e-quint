@@ -2586,6 +2586,9 @@ describe("aggregateAttackMods additional branches", () => {
   it("ranged + hostile within 5ft: disadv", () => {
     expect(aggregateAttackMods({ ...baseCtx, isRangedAttack: true, hostileWithin5ft: true }).hasDisadvantage).toBe(true)
   })
+  it("can't see target: disadv", () => {
+    expect(aggregateAttackMods({ ...baseCtx, attackerCanSeeTarget: false }).hasDisadvantage).toBe(true)
+  })
   it("underwater ranged within normal range: disadv", () => {
     expect(aggregateAttackMods({ ...baseCtx, underwater: true, isRangedAttack: true }).hasDisadvantage).toBe(true)
   })

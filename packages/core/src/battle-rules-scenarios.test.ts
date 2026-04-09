@@ -1585,6 +1585,38 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(false)
   })
 
+  it("natural_20: attacking a target you cannot see suppresses ally-adjacent Sneak Attack by imposing disadvantage", () => {
+    const actor = initRangedSneakAttackBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 14,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(12),
+      knockOut: false,
+      isMelee: false,
+      isFinesse: false,
+      attackerWithin5ft: false,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: false,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 10,
+      hitReactionCandidates: new Set<CreatureIdT>()
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "B").hp).toBe(15)
+    expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(false)
+  })
+
   it("natural_20: incapacitating the grappler auto-releases the target", () => {
     const actor = initGrappleBattle()
     startTurn(actor)

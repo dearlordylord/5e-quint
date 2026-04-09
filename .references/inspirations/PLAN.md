@@ -954,6 +954,20 @@ Verification:
 - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts` with seed `0x1a8f8103`
   - reproduced the same `bDeclareReckless` mismatch on local `master`
 
+Batch 27 result:
+
+1. Added explicit coverage for the unseen-target disadvantage rule.
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves attacking a target you cannot see suppresses ally-adjacent ranged Sneak Attack by imposing disadvantage
+   - [packages/core/src/machine.test.ts](../../packages/core/src/machine.test.ts) now proves the same disadvantage source directly at attack-modifier level
+2. Confirmed the existing implementation already matched RAW.
+   - no production TS or Quint changes were required
+   - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts src/machine.test.ts`
+- `pnpm --filter @dnd/core typecheck`
+
 Batch 24 result:
 
 1. Added explicit battle coverage for ranged attacks in close combat suppressing ranged Sneak Attack.
