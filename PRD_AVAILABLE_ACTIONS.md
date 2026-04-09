@@ -16,12 +16,16 @@ The Quint spec (`creature.qnt`, `battle.qnt`) already formally models D&D 5e rul
 Status note:
 
 - The creature-scoped supported action surface described in this PRD is now substantially implemented.
-- The next foundational extension beyond creature scope is tracked separately in [PRD_UNIFIED_ACTION_SURFACE.md](PRD_UNIFIED_ACTION_SURFACE.md).
-- That follow-on PRD covers the battle-scoped action surface needed for honest reaction tokens and other interrupt-window actions.
+- The battle-scoped follow-on redesign is now also implemented on `master`.
+- The current priority is still SRD feature completion and better domain-language architecture in this repo.
+- Transcript/Hellenvald work is explicitly lower priority until those domain goals are farther along.
+- TypeScript architecture remains supporting structure for the formal spec and domain language; it is not the primary driver.
 
 ## Solution
 
-Build the **Available Actions Module** as the first building block — a pure function that projects the current character state into a set of structured, serializable action tokens. Expose it via an **MCP server** for LLM and programmatic consumption. In parallel, prototype the **transcript-to-events pipeline** in the Hellenvald project (simpler OSR rules, cheaper to iterate) with documented awareness of how it feeds back into this project.
+Build the **Available Actions Module** as the first building block — a pure function that projects the current character state into a set of structured, serializable action tokens. Expose it via an **MCP server** for LLM and programmatic consumption.
+
+Transcript/Hellenvald work remains a downstream supporting track, not the current scheduling driver.
 
 ## Design Context
 

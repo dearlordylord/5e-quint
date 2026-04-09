@@ -2,6 +2,21 @@
 
 > Source PRD: `PRD_AVAILABLE_ACTIONS.md`
 
+## Current status
+
+- The foundational action-surface redesign is complete on `master`.
+- The battle reaction-ownership redesign is complete on `master`.
+- The supported action surface is now unified across creature and battle scopes.
+- Battle-scoped hit/damage reaction discovery and execution are complete for:
+  - `CAST_SHIELD`
+  - `USE_PARRY`
+  - `USE_CUTTING_WORDS`
+  - `USE_UNCANNY_DODGE`
+  - `USE_DEFLECT_ATTACKS`
+- The next batch is semantic breadth on the established contract, not another ownership redesign.
+- The next recommended implementation slice is `CAST_COUNTERSPELL`.
+- Hellenvald/transcript work is intentionally deferred until the repo has the full SRD feature set we want and stronger domain-language architecture. Priority order is: formal spec / `.sbt`, then domain language/ownership, then TS architecture as support.
+
 ## Architectural decisions
 
 Durable decisions that apply across all phases:
@@ -559,8 +574,8 @@ The MCP response from `get_available_actions` is already grouped by resource cos
   - the next session should add those regardless of whether a reaction representative is found
 
 - **Audit result after the battle-scope merge (2026-04-08)**
-  - The battle ownership pass from [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md) has materially landed on `master`.
-  - The unified scoped action surface from [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md) has also started landing.
+  - The battle ownership pass is complete on `master`.
+  - The unified scoped action surface is complete on `master`.
   - Honest reaction discovery is now present through battle-scoped tokens.
   - Current query-time battle reaction tokens on `master`:
     - `CAST_SHIELD`
@@ -614,8 +629,6 @@ If starting from an empty session, read these first:
     - `Counterspell`
 - terminology:
   - `UBIQUITOUS_LANGUAGE.md`
-- `battle/PRD-reaction-eligibility.md`
-- `plans/unified-action-surface.md`
 - `packages/core/src/available-actions.ts`
 - `packages/core/src/battle-machine-events.ts`
 - `packages/core/src/battle-machine-actions-spell.ts`
@@ -760,8 +773,8 @@ The success condition for the next batch is:
   - `bonusAction`: `CONVERT_POINTS_TO_SLOT`, `USE_SECOND_WIND`
   - `free`: `USE_ARCANE_RECOVERY`, `USE_METAMAGIC`, `EXIT_COMBAT`
 - `reaction`: now present through battle-scoped tokens derived from authoritative battle interrupt state
-- The battle ownership work is tracked in [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md) and has partially landed.
-- The scoped action-surface redesign is tracked in [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md) and has partially landed.
+- The battle ownership redesign is complete.
+- The scoped action-surface redesign is complete.
 - The old Deflect Attacks execution blocker is complete on `master`.
 - Remaining reaction work is now breadth, not repair: choose the next battle-owned semantic family to add on the same surface.
 - Movement also remains absent from the supported surface as an explicit cost bucket; nothing currently exposed uses `cost.movement`.
@@ -896,8 +909,7 @@ Deliberately still *not* exposed because they are low-level plumbing or still bl
   - `CLEAR_PENDING_RESOLUTION`
   - `SET_GRAPPLING_STATE`
 - still blocked by missing owned trigger context:
-  - reaction family like `USE_UNCANNY_DODGE`, `USE_CUTTING_WORDS`
-  - any future reaction spell surface
+  - future reaction spell surface such as `CAST_COUNTERSPELL`
 
 ### Recommended Phase 4 split
 
@@ -1387,7 +1399,7 @@ That caveat should be explicit in code/tests if this action is surfaced before f
 
 #### Next after the trigger-window batch
 
-- The next big semantic gap is no longer reaction ownership from scratch; that battle-first work has partially landed on `master`.
+- The next big semantic gap is no longer reaction ownership from scratch; that battle-first work is complete on `master`.
 - The next concrete gap is battle reaction execution breadth:
   - `CAST_SHIELD`
   - `USE_CUTTING_WORDS`
@@ -1409,7 +1421,6 @@ That caveat should be explicit in code/tests if this action is surfaced before f
   - `.references/srd-5.2.1/Classes/Bard.md`
     - `Cutting Words`: creature you can see within 60 feet makes a damage roll or succeeds on an ability check or attack roll; spend Bardic Inspiration and Reaction
 - Existing architecture/design:
-  - `battle/PRD-reaction-eligibility.md`
   - `battle/REQUIREMENTS.md`
   - `battle/DOMAIN.md`
 - Current implementation files:
@@ -1433,10 +1444,10 @@ That caveat should be explicit in code/tests if this action is surfaced before f
   - which responder is within range / can see the actor
 - Because those facts arise at interrupt creation time and can be lost later, reaction ownership should start in battle, not by adding another creature-only trigger layer.
 
-**Recommended direction that was subsequently validated**
+**Recommended direction that was subsequently validated and completed**
 
 - Do **not** add `USE_UNCANNY_DODGE` / `USE_CUTTING_WORDS` to creature `pendingResolution` first.
-- Instead, follow the battle-first direction from `battle/PRD-reaction-eligibility.md`:
+- Instead, follow the battle-first direction that is now implemented on `master`:
   - preserve legality facts at interrupt creation time
   - derive named legal reactions at interrupt creation time
   - only then project semantic reaction actions into query surfaces
@@ -1461,7 +1472,6 @@ That caveat should be explicit in code/tests if this action is surfaced before f
 
 - This is the first upcoming batch that is likely to clash materially with work in another worktree.
 - High-risk overlap files:
-  - `battle/PRD-reaction-eligibility.md`
   - `battle.qnt`
   - `packages/core/src/battle-machine-events.ts`
   - `packages/core/src/battle-machine-actions-attack.ts`
@@ -1492,14 +1502,31 @@ That caveat should be explicit in code/tests if this action is surfaced before f
 
 **User stories**: 7, 8
 
-### What to build
+### Current state
 
-In the Hellenvald project (`/workspace/typescript/osr-hellenvald`), build the transcript-to-events pipeline. Text in, candidate game events out. No audio — text input simulating phrase-level Whisper segments.
+This phase is complete in Hellenvald.
 
-- CLI interface (stdin, line-buffered) where you type natural D&D speech.
-- LLM interpretation layer: given a text window + current game state (via Hellenvald's ReadModelStore), produce candidate events. Multiple candidates when ambiguous, single candidate when clear.
-- Effect-based caching/mocking for LLM calls. Recorded responses for deterministic replay and demos (fake timeouts to simulate LLM latency without live dependency).
-- "Electric field" documentation: each design choice annotated with what changes when this moves to the D&D project (hard guards instead of soft warnings, Quint spec validation, MBT parity).
+What exists there now:
+
+- transcript CLI/demo wiring
+- mock/demo/live interpreter modes
+- cached/mockable LLM service boundary
+- recorded-audio transcription path
+- buffering
+- branching-tail stream state
+
+### Priority note
+
+Do not schedule additional Hellenvald work from this plan until:
+
+- the SRD feature set we want in this repo is substantially complete
+- the repo's domain-language architecture is stronger
+
+Priority order remains:
+
+1. formal spec / `.sbt`
+2. domain language and ownership
+3. TypeScript architecture as support
 
 ### Acceptance criteria
 
@@ -1509,29 +1536,11 @@ In the Hellenvald project (`/workspace/typescript/osr-hellenvald`), build the tr
 - [x] Multiple candidates produced for ambiguous input (e.g., "I attack" when multiple targets exist)
 - [x] Single candidate produced for unambiguous input
 - [x] "Electric field" annotations present in code/docs for key design choices
-- [ ] Demo mode works with mocked LLM responses and optional fake latency
+- [x] Demo mode works with mocked LLM responses and optional fake latency
 
-### Phase 5 progress
+### Scheduling note
 
-**Completed (2026-04-08):** Transcript-to-events pipeline core in `/workspace/typescript/osr-hellenvald/src/transcript/`:
-
-- `TranscriptInterpreter` Effect service (`Context.Tag`) with `mockLayer` — pattern-matches known phrases to candidate `DomainEvent`s with confidence scores. Entity resolution for named targets ("the goblin" → EntityId).
-- `TranscriptPipeline` orchestration service: segments → interpreter → `ObservationEntry` → `Projector.projectLatest()`. Bridges transcript layer to existing event-sourcing infrastructure.
-- `TranscriptSegment` Schema class for phrase-level input (text + timestamp + speaker hint).
-- 10 tests: 6 unit (interpreter patterns), 4 end-to-end (pipeline through Projector with state verification).
-- Electric field annotations on all key design points (guard validation, entity context derivation).
-
-**Completed after initial writeup (2026-04-08):**
-
-- CLI demo exists in `/workspace/typescript/osr-hellenvald/examples/transcript-demo.ts` and accepts line-buffered text input.
-- `TranscriptInterpreter.liveLayer` is wired to a real OpenRouter-backed `TranscriptLlm` Effect service with in-memory request caching.
-- Live mode was exercised end-to-end against the real LLM for attack, ambiguous attack, movement, and non-actionable transcript inputs.
-
-**Remaining for Phase 5:**
-- Demo mode — run the CLI through the LLM service boundary using mocked/recorded responses with optional fake latency for presentations.
-
-**Moved to Phase 7:**
-- Segment buffering — grouping multiple phrase-level segments into complete game actions before interpretation.
+This phase should not drive current implementation ordering in this repo.
 
 ---
 
@@ -1562,177 +1571,18 @@ Add the ability to accept mechanically incorrect rulings from the table and warn
 
 **User story**: 8
 
-### What to build
+### Current state
 
-Add audio input to the Hellenvald transcript pipeline. Whisper processes recorded audio into phrase-level segments. A buffering layer groups segments into complete game actions before passing to the LLM interpretation layer.
+This phase is functionally complete enough in Hellenvald for current repo purposes:
 
-- Whisper integration: recorded audio file → timestamped segments.
-- Two-level buffering: phrase level (Whisper segments) → turn level (complete game action spanning multiple phrases).
-- Buffering heuristics: pauses, dice-result patterns, DM response patterns.
-- Cached audio segments for replay testing.
-- Branching tail: near the end of the stream, uncommitted candidates are materialized. Farther back, collapsed to selected events.
+- recorded-audio transcription exists
+- buffering exists
+- branching-tail stream state exists
+- transcript demo, replay flow, and supporting tests exist
 
-### Phase 7 design
+### Priority note
 
-Build this as service boundaries in the Hellenvald project (`/workspace/typescript/osr-hellenvald`), not as ad hoc scripts:
-
-- `WhisperTranscriber` Effect service:
-  - `liveLayer`: local Whisper backend for recorded audio files.
-  - `fixtureLayer`: prerecorded phrase-level `TranscriptSegment[]` for deterministic tests.
-- `TranscriptBuffer` Effect service:
-  - incremental `push(segment)` / `flush()` API
-  - groups phrase-level segments into turn-level windows using minimal heuristics
-- `TranscriptPipeline` stays unchanged at the seam:
-  - input = grouped `TranscriptSegment[]`
-  - output = candidate events / projected state
-
-**Local Whisper design choice:** default to a local Whisper backend, not a hosted API. This fits the existing Effect service/layer architecture, preserves privacy, and keeps timestamped phrase segmentation under our control.
-
-**Recorded-audio first (important for current environment):** we are currently working inside a Docker devcontainer. That means microphone capture and host audio device access are the wrong first target. Phase 7 should start with recorded audio files mounted in the workspace:
-
-- first milestone: `audio file -> WhisperTranscriber.liveLayer -> TranscriptSegment[]`
-- then: `segments -> TranscriptBuffer -> TranscriptPipeline`
-- only after that: optional host-machine microphone/live streaming work outside the container
-
-**Testing matrix:** use layer composition instead of runtime feature flags.
-
-- fake Whisper + fake LLM: default automated integration tests
-- fake Whisper + real LLM: manual interpretation-quality checks
-- real Whisper + fake LLM: validates transcription/buffering without LLM nondeterminism
-- real Whisper + real LLM: manual end-to-end smoke test, not the default automated path
-
-**Phase 7 current state (2026-04-08):** the recorded-audio foundation now exists in Hellenvald.
-
-- `WhisperTranscriber.liveLayer` exists and uses a local Whisper subprocess backend through `uv run` plus a checked-in Python runner.
-- `TranscriptBuffer` exists with pause handling, dice-result continuation handling, and explicit action-restart flushing.
-- Whisper post-processing is now an explicit subsystem (`WhisperTranscriptPostProcessor`) rather than hidden logic inside the transcriber.
-- A clean audio-fixture matrix exists in `fixtures/audio/` with regression expectations for:
-  - single attack
-  - attack plus roll continuation
-  - strong two-action utterance
-  - weak `then`-boundary two-action utterance
-  - ambiguous attack
-  - non-action chatter
-- Manual real-Whisper checks currently pass for the strong and weak two-action fixtures.
-
-This means the next meaningful Phase 7 work is no longer “make audio transcription happen.” It is “represent uncertainty near the live tail of the stream without collapsing it too early.”
-
-### Phase 7 next milestone: branching tail
-
-Treat this as a distinct milestone, not a casual continuation of buffering.
-
-**Why this is a separate step:**
-
-- Everything implemented so far is still fundamentally “completed windows in, projected observations out.”
-- Branching tail changes the product semantics: the system must preserve unresolved candidate interpretations near the end of the stream instead of eagerly collapsing everything to one selected event.
-- That affects state shape, demo behavior, and testing strategy, even if the amount of code is moderate.
-
-**Core design goal:**
-
-Keep older transcript history collapsed and stable, while exposing a short live tail of unresolved transcript windows as candidate branches.
-
-**Proposed service boundary changes:**
-
-- Keep `WhisperTranscriber` unchanged.
-- Keep `TranscriptBuffer.push/flush` unchanged as the phrase-to-window seam.
-- Add a new tail-oriented service in Hellenvald, tentatively `TranscriptBranchingTail` or `TranscriptStream`:
-  - input: incremental buffered windows
-  - output:
-    - `committed`: older observations already collapsed to the selected event
-    - `tail`: recent windows whose candidate interpretations remain materialized
-
-**Recommended state shape:**
-
-- `CommittedTranscriptObservation`
-  - one buffered window
-  - one selected candidate event
-  - projector-applied / history-stable
-- `TailTranscriptObservation`
-  - one buffered window
-  - all current candidate interpretations
-  - selected index may exist, but the window is still considered revisable
-- `TranscriptStreamState`
-  - `committed: ReadonlyArray<CommittedTranscriptObservation>`
-  - `tail: ReadonlyArray<TailTranscriptObservation>`
-
-This gives a simple rule: old history is collapsed; only the near tail stays branchy.
-
-**Commit policy for tail windows:**
-
-Use simple, explicit heuristics first. Do not start with speculative probabilistic logic.
-
-1. A newly emitted buffered window enters `tail`, not `committed`.
-2. A tail window moves to `committed` when one of these happens:
-   - another clearly distinct buffered window arrives after it
-   - a long enough pause / flush boundary occurs after it
-   - the user explicitly ends input / stream flush
-3. Dice-result continuation windows should not commit the prior window prematurely if they are still semantically part of the same action.
-4. Only a short suffix of the stream should remain revisable. Everything older collapses.
-
-**Minimal first implementation choice:**
-
-- tail size of 1 or 2 windows maximum
-- when a third distinct buffered window arrives, collapse the oldest tail window to committed history
-- explicit `flush()` commits the entire remaining tail
-
-This is intentionally conservative and easy to reason about in tests.
-
-**Relationship to existing Hellenvald pieces:**
-
-- `WhisperTranscriptPostProcessor` stays responsible for phrase/clause recovery from raw Whisper output
-- `TranscriptBuffer` stays responsible for grouping phrase-level segments into action windows
-- `TranscriptInterpreter` still interprets one window at a time
-- `TranscriptPipeline` or a stream wrapper around it becomes responsible for:
-  - keeping unresolved recent windows in `tail`
-  - collapsing older windows to selected observations
-
-In other words: do not overload `TranscriptBuffer` with branching history concerns. Buffering and stream-history semantics should stay separate.
-
-**Testing strategy for the branching-tail milestone:**
-
-- Add a dedicated stream-oriented test harness. This is the missing test seam right now.
-- Default automated path:
-  - fake Whisper + fake/demo LLM
-- Manual smoke path:
-  - real Whisper + fake/demo LLM
-- Optional manual end-to-end:
-  - real Whisper + real LLM
-
-**First regression scenarios:**
-
-1. Attack declaration followed by roll/result continuation:
-   - recent tail should still expose the unresolved/selected attack window until the stream advances enough to commit it
-2. Attack followed by a clearly separate move:
-   - attack collapses to committed
-   - move remains in tail
-3. Non-action chatter near stream end:
-   - either remains as a tail window with zero candidates or is omitted by explicit policy, but behavior must be consistent and tested
-4. Explicit flush:
-   - commits all remaining tail windows
-
-**Recommended implementation order for the branching-tail milestone:**
-
-1. Define the Hellenvald stream-state types (`committed`, `tail`) and a small service boundary to manage them.
-2. Add a stream-oriented test harness with fake Whisper + fake/demo LLM.
-3. Implement the minimal commit policy:
-   - tail size cap
-   - explicit flush commits all
-   - distinct newer windows collapse older tail windows
-4. Add one CLI/demo mode that prints committed history separately from the live tail.
-5. Only then decide whether microphone/live capture is worth doing inside or outside the devcontainer.
-
-**Concrete implementation order:**
-
-1. Done: `WhisperTranscriber.liveLayer` now exists for recorded files only in Hellenvald, using a local Whisper backend through `uv run` and a checked-in Python runner. Current devcontainer constraint: `.wav` input only, no microphone capture.
-2. Done: recorded-audio demo/runner in Hellenvald now prints:
-   - raw Whisper segments
-   - buffered windows
-   - resulting candidate events
-3. Done: add audio-fixture integration and regression coverage:
-   - fake Whisper seam tests
-   - real-Whisper-oriented fixture matrix and post-processing regression expectations
-4. Next: branching-tail milestone, as designed above.
-5. Defer microphone/live capture until after branching-tail behavior is good.
+Do not schedule more Hellenvald transcript work from this plan until SRD coverage and domain-language architecture work in this repo are farther along.
 
 ### Acceptance criteria
 
@@ -1740,131 +1590,8 @@ In other words: do not overload `TranscriptBuffer` with branching history concer
 - [x] Buffering layer groups related segments into complete action descriptions
 - [x] Buffering correctly handles multi-segment actions ("I swing at him" + "that's a 17 plus 5")
 - [x] Audio segments are cacheable — integration tests replay recorded segments
-- [ ] Branching tail: uncommitted candidates visible near stream end, collapsed farther back
+- [x] Branching tail: uncommitted candidates visible near stream end, collapsed farther back
 - [x] End-to-end: recorded audio → segments → buffered groups → LLM → candidate events
-
-### Phase 7 next architecture step: microphone capture + TUI
-
-This should be treated as the next distinct milestone after recorded-audio replay/snapshots.
-
-**Current context from Hellenvald (already implemented):**
-
-- real/fake Whisper switching exists
-- real/fake LLM switching exists
-- transcript buffering exists
-- Whisper post-processing exists
-- branching-tail stream state exists (`committed` vs `tail`)
-- text demo, recorded-audio demo, and replay snapshot tooling exist
-
-That means the remaining unknown is not transcript semantics. It is live device capture and operator UX.
-
-**Critical environment constraint:**
-
-We are currently working inside a Docker devcontainer. Recorded WAV workflows are container-friendly. Microphone capture is not the right default assumption in this environment because it depends on host audio-device passthrough, container permissions, and OS-specific plumbing.
-
-So:
-
-- architecture/design can be implemented now in repo code
-- graceful “no microphone device available” behavior must exist
-- actual end-to-end microphone validation should be assumed to happen on the host machine, not inside the devcontainer
-
-**Recommended architecture:**
-
-Keep the existing transcript pipeline intact. Add microphone capture as a new input boundary, not as a new pipeline implementation.
-
-- `MicrophoneAudioSource` Effect service:
-  - responsibility: capture short audio chunks from a microphone
-  - output: chunk metadata and/or short temporary WAV recordings
-  - no knowledge of Whisper, buffering, or game logic
-- `WhisperTranscriber`:
-  - unchanged boundary
-  - microphone mode feeds it rolling short WAV chunks instead of whole-session files
-- `WhisperTranscriptPostProcessor`:
-  - unchanged responsibility
-  - still turns raw Whisper segments into phrase/clause-level transcript segments
-- `TranscriptBuffer`:
-  - unchanged phrase-to-window grouping
-- `TranscriptStream`:
-  - unchanged committed/tail semantics
-- TUI:
-  - thin control/inspection shell over those services
-  - does not own transcript semantics
-
-In short:
-
-- services own capture/transcription/buffering/stream state
-- the TUI only displays state and controls the services
-
-**TUI library choice:**
-
-Use `ink`, not a new TUI stack.
-
-Reason:
-
-- `ink` is already in `osr-hellenvald/package.json`
-- it is enough for panes, status bars, and key handling
-- introducing OpenTUI or another TUI framework now would add tool churn without solving a current problem
-
-**Recommended first microphone milestone:**
-
-Do not start with true continuous streaming transcription.
-
-Start with host-oriented chunked capture:
-
-1. press start recording
-2. collect a short audio chunk or rolling temp WAV
-3. pass that chunk through the existing `WhisperTranscriber`
-4. feed resulting segments into `TranscriptBuffer`
-5. update `TranscriptStream`
-6. redraw the TUI
-
-This is the pragmatic first step because microphone device access is the real unknown, not the transcript pipeline.
-
-**Minimal TUI layout:**
-
-- top bar:
-  - recording on/off
-  - Whisper mode
-  - LLM mode
-  - current chunk age / status
-- left pane:
-  - latest transcript segments
-  - current pending buffer
-- right pane:
-  - live tail windows with candidate events
-- bottom pane:
-  - committed history
-- controls:
-  - `r` start/stop recording
-  - `f` flush stream tail
-  - `s` save replay snapshot
-  - `q` quit
-
-**Implementation order:**
-
-1. Add `MicrophoneAudioSource` service boundary with explicit “device unavailable” failure mode.
-2. Add a non-TUI/manual microphone runner first:
-   - start capture
-   - write short WAV chunks
-   - feed chunks through the current pipeline
-3. Validate that path on the host machine.
-4. Only then wrap it with an `ink` TUI.
-5. Add one replay/snapshot export path from the TUI so live sessions can still be debugged deterministically after the fact.
-
-**Testing strategy:**
-
-- automated tests should stay mostly below the real microphone boundary
-- use fake or prerecorded chunk sources for deterministic tests
-- treat real microphone validation as manual smoke testing on host
-
-**Acceptance criteria for the microphone/TUI milestone:**
-
-- [x] `MicrophoneAudioSource` service boundary exists in Hellenvald
-- [x] microphone path fails cleanly when no input device is available or no host capture backend is configured
-- [x] host/manual chunked capture can feed the existing Whisper → buffer → stream pipeline
-- [x] `ink` TUI shows committed history and live tail separately
-- [x] TUI can flush tail and save replay snapshots
-- [x] manual host smoke test proves at least one live spoken action reaches the transcript stream
 
 ---
 
