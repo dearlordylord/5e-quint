@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest"
 import { createActor } from "xstate"
 
 import {
+  finalizeBattleResolution,
   finalizeResolution,
   getAvailableActions,
   getAvailableBattleActions,
@@ -230,6 +231,11 @@ function expectRequest(request: ResolutionRequest | { readonly code: string }) {
   return request
 }
 
+function expectBattleRequest(request: ReturnType<typeof resolveBattleAction>) {
+  if ("code" in request) throw new Error(`expected successful battle resolution request, got ${request.code}`)
+  return request
+}
+
 function creatureToken<T extends object>(token: T) {
   return { scope: "creature" as const, ...token }
 }
@@ -279,6 +285,16 @@ function initBattleForHitDiscovery() {
       { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
       { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["shield"]), initiativeRoll: 15 },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", bardLevel: 3, bardicInspirationCharges: 3, initiativeRoll: 10 },
+    ],
+  })
+}
+
+function initBattleForParryDiscovery() {
+  return makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+      { id: CreatureId("D"), maxHp: 20, kind: "Monster", parryAcBonus: 2, initiativeRoll: 15 },
     ],
   })
 }
@@ -1177,11 +1193,8 @@ describe("available actions contract", () => {
     const actor = initBattleForDamageDiscovery()
 
     expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" })).toEqual({
-      ok: false,
-      error: {
-        code: "ACTION_NOT_AVAILABLE",
-        message: "USE_UNCANNY_DODGE is not currently available for B in this battle state.",
-      },
+      code: "ACTION_NOT_AVAILABLE",
+      message: "USE_UNCANNY_DODGE is not currently available for B in this battle state.",
     })
 
     actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
@@ -1199,7 +1212,20 @@ describe("available actions contract", () => {
     })
     actor.send({ type: "BATTLE_RESOLVE_HIT_REACTION", reactorId: null, decision: { tag: "RPass" } })
 
-    expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" })).toEqual({
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" }),
+    )
+    expect(request).toEqual({
+      token: { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" },
+      outcome: "Use your reaction to halve the triggering attack's damage against you",
+      runtime: "none",
+      event: {
+        type: "BATTLE_RESOLVE_DMG_REACTION",
+        reactorId: "B",
+        decision: { tag: "RUncannyDodge" },
+      },
+    })
+    expect(finalizeBattleResolution(request, { runtime: "none" }, actor.getSnapshot().context)).toEqual({
       ok: true,
       event: {
         type: "BATTLE_RESOLVE_DMG_REACTION",
@@ -1207,6 +1233,136 @@ describe("available actions contract", () => {
         decision: { tag: "RUncannyDodge" },
       },
       outcome: "Use your reaction to halve the triggering attack's damage against you",
+    })
+  })
+
+  test("battle resolution executes CAST_SHIELD only when that hit-reaction token is currently available", () => {
+    const actor = initBattleForHitDiscovery()
+
+    expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "CAST_SHIELD" })).toEqual({
+      code: "ACTION_NOT_AVAILABLE",
+      message: "CAST_SHIELD is not currently available for B in this battle state.",
+    })
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+      hitReactionCandidates: new Set([CreatureId("C")]),
+    })
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "CAST_SHIELD" }),
+    )
+    expect(request).toEqual({
+      token: { scope: "battle", actorId: "B", type: "CAST_SHIELD" },
+      outcome: "Use your reaction to cast Shield against the triggering attack",
+      runtime: "none",
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: "B",
+        decision: { tag: "RShield" },
+      },
+    })
+    expect(finalizeBattleResolution(request, { runtime: "none" }, actor.getSnapshot().context)).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: "B",
+        decision: { tag: "RShield" },
+      },
+      outcome: "Use your reaction to cast Shield against the triggering attack",
+    })
+  })
+
+  test("battle resolution executes USE_PARRY only when that hit-reaction token is currently available", () => {
+    const actor = initBattleForParryDiscovery()
+
+    expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "D", type: "USE_PARRY" })).toEqual({
+      code: "ACTION_NOT_AVAILABLE",
+      message: "USE_PARRY is not currently available for D in this battle state.",
+    })
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("D"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+    })
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "D", type: "USE_PARRY" }),
+    )
+    expect(request).toEqual({
+      token: { scope: "battle", actorId: "D", type: "USE_PARRY" },
+      outcome: "Use your reaction to add your Parry bonus against the triggering melee weapon attack",
+      runtime: "none",
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: "D",
+        decision: { tag: "RParry", bonus: 2 },
+      },
+    })
+    expect(finalizeBattleResolution(request, { runtime: "none" }, actor.getSnapshot().context)).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: "D",
+        decision: { tag: "RParry", bonus: 2 },
+      },
+      outcome: "Use your reaction to add your Parry bonus against the triggering melee weapon attack",
+    })
+  })
+
+  test("battle resolution executes USE_CUTTING_WORDS with runtime-owned reduction", () => {
+    const actor = initBattleForHitDiscovery()
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+      hitReactionCandidates: new Set([CreatureId("C")]),
+    })
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "C", type: "USE_CUTTING_WORDS" }),
+    )
+    expect(request).toEqual({
+      token: { scope: "battle", actorId: "C", type: "USE_CUTTING_WORDS" },
+      outcome: "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll",
+      runtime: "cuttingWords",
+    })
+    expect(finalizeBattleResolution(request, { runtime: "cuttingWords", values: { reduction: 4 } }, actor.getSnapshot().context)).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: "C",
+        decision: { tag: "RCuttingWords", reduction: 4 },
+      },
+      outcome: "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll (4)",
     })
   })
 })

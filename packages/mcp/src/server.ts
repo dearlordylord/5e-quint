@@ -6,17 +6,21 @@ import { creatureMachine } from "@dnd/core/machine.ts"
 import { encodeDndContext, encodeDndSnapshot } from "@dnd/core/context-encoding.ts"
 import type { BattleContext, CreatureId } from "@dnd/core/battle-machine-types.ts"
 import type { DndMachineInput } from "@dnd/core/machine-types.ts"
+import { bardicInspirationDie } from "@dnd/core/features/class-bard.ts"
 import { classHitDie } from "@dnd/core/features/class-tables.ts"
 import {
   EXPOSED_ACTION_TYPES,
-  type BattleResolvedActionToken,
+  finalizeBattleResolution,
   finalizeResolution,
   getAvailableActions,
   getAvailableBattleActions,
+  type BattleResolutionRequest,
+  type BattleResolutionRuntimeInputs,
   resolveBattleAction,
   resolveAction,
   ResolvedActionTokenSchema,
   type ActionToken,
+  type BattleResolvedActionToken,
   type ResolvedActionToken,
   type ResolutionRequest,
   type ResourceCost,
@@ -230,6 +234,24 @@ function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["co
   )
 }
 
+function buildBattleRuntimeInputs(
+  request: BattleResolutionRequest,
+  context: BattleContext,
+): Effect.Effect<BattleResolutionRuntimeInputs> {
+  return Match.value(request).pipe(
+    Match.when({ runtime: "none" }, () => Effect.succeed({ runtime: "none" as const })),
+    Match.when({ runtime: "cuttingWords" }, () => {
+      const bardLevel = context.creatures.get(request.token.actorId as CreatureId)?.bardLevel ?? 0
+      const dieSize = bardicInspirationDie(bardLevel)
+      return Effect.map(Random.nextIntBetween(1, dieSize + 1), (reduction) => ({
+        runtime: "cuttingWords" as const,
+        values: { reduction },
+      }))
+    }),
+    Match.exhaustive,
+  )
+}
+
 function executeCreatureResolvedAction(actor: DndActor, token: Extract<ResolvedActionToken, { readonly scope: "creature" }>) {
   const before = actor.getSnapshot()
   const resolution = resolveAction(before.context, before.tags, token)
@@ -264,14 +286,32 @@ function scopeMismatchContent(tokenScope: "creature" | "battle", hostScope: "cre
   )
 }
 
+function isSupportedBattleResolvedActionToken(
+  token: { readonly scope: "battle"; readonly actorId: string; readonly type: string },
+): token is BattleResolvedActionToken {
+  return (
+    token.type === "CAST_SHIELD" ||
+    token.type === "USE_PARRY" ||
+    token.type === "USE_CUTTING_WORDS" ||
+    token.type === "USE_UNCANNY_DODGE" ||
+    token.type === "USE_DEFLECT_ATTACKS"
+  )
+}
+
 function executeBattleResolvedAction(actor: BattleActor, token: BattleResolvedActionToken) {
   const before = actor.getSnapshot()
   const resolution = resolveBattleAction(before.context, token)
-  if (!resolution.ok) {
-    return errorContent(resolution.error.message, resolution.error.code)
+  if ("code" in resolution) {
+    return errorContent(resolution.message, resolution.code)
   }
 
-  actor.send(resolution.event)
+  const runtimeInputs = Effect.runSync(buildBattleRuntimeInputs(resolution, before.context))
+  const finalized = finalizeBattleResolution(resolution, runtimeInputs, before.context)
+  if (!finalized.ok) {
+    return errorContent(finalized.error.message, finalized.error.code)
+  }
+
+  actor.send(finalized.event)
 
   const after = actor.getSnapshot()
   if (battleSnapshotUnchanged(before, after)) {
@@ -280,7 +320,7 @@ function executeBattleResolvedAction(actor: BattleActor, token: BattleResolvedAc
 
   return jsonContent({
     success: true,
-    outcome: resolution.outcome,
+    outcome: finalized.outcome,
     state: encodeBattleRuntimeState(after),
   })
 }
@@ -301,6 +341,9 @@ function executeResolvedAction(host: SupportedActionHost, args: unknown) {
     Match.when({ scope: "battle" }, ({ actor }) => {
       if (decoded.right.scope !== "battle") {
         return scopeMismatchContent(decoded.right.scope, "battle")
+      }
+      if (!isSupportedBattleResolvedActionToken(decoded.right)) {
+        return errorContent(`${decoded.right.type} is not implemented yet through the battle action surface.`, "ACTION_NOT_SUPPORTED")
       }
       return executeBattleResolvedAction(actor, decoded.right)
     }),

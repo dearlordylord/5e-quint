@@ -15,6 +15,7 @@ import { flurryOfBlowsStrikes, pMartialArtsDie } from "#/features/class-monk.ts"
 import { tirelessTempHp } from "#/features/class-ranger.ts"
 import { slotCreationCost, type MetamagicOption } from "#/features/class-sorcerer.ts"
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
+import { bardicInspirationDie } from "#/features/class-bard.ts"
 import {
   canUseHeroicInspirationNow,
   guards,
@@ -277,11 +278,14 @@ type ResolvedTokenByType = {
   readonly EXIT_COMBAT: { readonly type: "EXIT_COMBAT" }
 }
 type CreatureResolvedActionToken = ResolvedTokenByType[SupportedActionType] & { readonly scope: "creature" }
-export type BattleResolvedActionToken = {
-  readonly scope: "battle"
-  readonly actorId: string
-  readonly type: string
-}
+type SpecificBattleResolvedActionToken =
+  | { readonly scope: "battle"; readonly actorId: string; readonly type: "CAST_SHIELD" }
+  | { readonly scope: "battle"; readonly actorId: string; readonly type: "USE_PARRY" }
+  | { readonly scope: "battle"; readonly actorId: string; readonly type: "USE_CUTTING_WORDS" }
+  | { readonly scope: "battle"; readonly actorId: string; readonly type: "USE_UNCANNY_DODGE" }
+  | { readonly scope: "battle"; readonly actorId: string; readonly type: "USE_DEFLECT_ATTACKS" }
+
+export type BattleResolvedActionToken = SpecificBattleResolvedActionToken
 export type ResolvedActionToken = CreatureResolvedActionToken | BattleResolvedActionToken
 
 const EnterCombatResolvedActionSchema = Schema.Struct({
@@ -801,6 +805,35 @@ export type FinalizedAction =
 export type FinalizedBattleAction =
   | { readonly ok: true; readonly event: BattleEvent; readonly outcome: string }
   | { readonly ok: false; readonly error: ActionResolutionError }
+
+export type BattleResolutionRequest =
+  | {
+      readonly token: Extract<BattleResolvedActionToken, { readonly type: "USE_UNCANNY_DODGE" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_RESOLVE_DMG_REACTION" }>
+    }
+  | {
+      readonly token: Extract<BattleResolvedActionToken, { readonly type: "CAST_SHIELD" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_RESOLVE_HIT_REACTION" }>
+    }
+  | {
+      readonly token: Extract<BattleResolvedActionToken, { readonly type: "USE_PARRY" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_RESOLVE_HIT_REACTION" }>
+    }
+  | {
+      readonly token: Extract<BattleResolvedActionToken, { readonly type: "USE_CUTTING_WORDS" }>
+      readonly outcome: string
+      readonly runtime: "cuttingWords"
+    }
+
+export type BattleResolutionRuntimeInputs =
+  | { readonly runtime: "none" }
+  | { readonly runtime: "cuttingWords"; readonly values: { readonly reduction: number } }
 
 export type ActionResolutionErrorCode =
   | "ACTION_NOT_AVAILABLE"
@@ -1444,36 +1477,104 @@ function availableBattleTokenForType(
   return getAvailableBattleActions(context).find((token) => token.type === type && token.actorId === actorId)
 }
 
-export function resolveBattleAction(context: BattleContext, token: BattleResolvedActionToken): FinalizedBattleAction {
-  if (token.type !== "USE_UNCANNY_DODGE") {
+export function resolveBattleAction(
+  context: BattleContext,
+  token: BattleResolvedActionToken,
+): BattleResolutionRequest | ActionResolutionError {
+  if (
+    token.type !== "USE_UNCANNY_DODGE" &&
+    token.type !== "CAST_SHIELD" &&
+    token.type !== "USE_PARRY" &&
+    token.type !== "USE_CUTTING_WORDS"
+  ) {
     return {
-      ok: false,
-      error: {
-        code: "ACTION_NOT_SUPPORTED",
-        message: `${token.type} is not implemented yet through the battle action surface.`,
-      },
+      code: "ACTION_NOT_SUPPORTED",
+      message: `${token.type} is not implemented yet through the battle action surface.`,
     }
   }
 
   const availableToken = availableBattleTokenForType(context, token.type, token.actorId)
   if (availableToken == null) {
     return {
-      ok: false,
-      error: {
-        code: "ACTION_NOT_AVAILABLE",
-        message: `${token.type} is not currently available for ${token.actorId} in this battle state.`,
-      },
+      code: "ACTION_NOT_AVAILABLE",
+      message: `${token.type} is not currently available for ${token.actorId} in this battle state.`,
     }
   }
 
+  return Match.value(token).pipe(
+    Match.when({ type: "USE_UNCANNY_DODGE" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: {
+        type: "BATTLE_RESOLVE_DMG_REACTION" as const,
+        reactorId: CreatureId(specificToken.actorId),
+        decision: { tag: "RUncannyDodge" as const },
+      },
+    })),
+    Match.when({ type: "CAST_SHIELD" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION" as const,
+        reactorId: CreatureId(specificToken.actorId),
+        decision: { tag: "RShield" as const },
+      },
+    })),
+    Match.when({ type: "USE_PARRY" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION" as const,
+        reactorId: CreatureId(specificToken.actorId),
+        decision: {
+          tag: "RParry" as const,
+          bonus: context.creatures.get(CreatureId(specificToken.actorId))?.parryAcBonus ?? 0,
+        },
+      },
+    })),
+    Match.when({ type: "USE_CUTTING_WORDS" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "cuttingWords" as const,
+    })),
+    Match.exhaustive,
+  )
+}
+
+export function finalizeBattleResolution(
+  request: BattleResolutionRequest,
+  runtimeInputs: BattleResolutionRuntimeInputs,
+  context: BattleContext,
+): FinalizedBattleAction {
+  if (request.runtime === "none") {
+    if (runtimeInputs.runtime !== "none") return battleRuntimeMismatch("none", runtimeInputs.runtime)
+    return { ok: true, event: request.event, outcome: request.outcome }
+  }
+
+  if (runtimeInputs.runtime !== "cuttingWords") return battleRuntimeMismatch("cuttingWords", runtimeInputs.runtime)
+  const bardLevel = context.creatures.get(CreatureId(request.token.actorId))?.bardLevel ?? 0
+  const maxReduction = bardicInspirationDie(bardLevel)
+  const reduction = runtimeInputs.values.reduction
+  if (reduction < 1 || reduction > maxReduction) {
+    return {
+      ok: false,
+      error: {
+        code: "INVALID_RUNTIME_INPUT",
+        message: `Cutting Words reduction must be between 1 and ${maxReduction}.`,
+      },
+    }
+  }
   return {
     ok: true,
     event: {
-      type: "BATTLE_RESOLVE_DMG_REACTION",
-      reactorId: CreatureId(token.actorId),
-      decision: { tag: "RUncannyDodge" },
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: CreatureId(request.token.actorId),
+      decision: { tag: "RCuttingWords", reduction },
     },
-    outcome: availableToken.outcome.summary,
+    outcome: `${request.outcome} (${reduction})`,
   }
 }
 
@@ -1482,6 +1583,19 @@ function runtimeMismatch(expected: ResolutionRuntimeInputs["runtime"], actual: R
     ok: false as const,
     error: {
       code: "RUNTIME_INPUT_MISMATCH" as const,
+      message: `Expected ${expected} runtime inputs, received ${actual}.`,
+    },
+  }
+}
+
+function battleRuntimeMismatch(
+  expected: BattleResolutionRuntimeInputs["runtime"],
+  actual: BattleResolutionRuntimeInputs["runtime"],
+): FinalizedBattleAction {
+  return {
+    ok: false,
+    error: {
+      code: "RUNTIME_INPUT_MISMATCH",
       message: `Expected ${expected} runtime inputs, received ${actual}.`,
     },
   }
