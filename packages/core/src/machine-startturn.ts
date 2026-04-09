@@ -246,7 +246,10 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
     grappled: c.grappling ? false : (conds.grappled ?? c.grappled),
     grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
     isGrappling: c.grappling,
+    paralyzed: conds.paralyzed ?? c.paralyzed,
+    petrified: conds.petrified ?? c.petrified,
     restrained: conds.restrained ?? c.restrained,
+    unconscious: conds.unconscious ?? c.unconscious,
     effectSpeedDelta: cr.activeEffects.reduce((total, effect) => total + (effect.speedDeltaFeet ?? 0), 0)
   })
   // Derive extra attacks: event override (monsters/multiattack) or from class levels (PCs)

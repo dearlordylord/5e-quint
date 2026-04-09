@@ -929,6 +929,31 @@ Verification:
 - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts` with seed `0x03202e35`, total `2s`
 - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts` with seed `0xea9ae108`, total `1s`
 
+Batch 26 result:
+
+1. Tightened effective-Speed computation to match SRD 5.2.1 speed-zero conditions.
+   - [packages/core/src/machine-helpers.ts](../../packages/core/src/machine-helpers.ts) and [creature.qnt](../../creature.qnt) now treat `paralyzed`, `petrified`, and `unconscious` the same way they already treated `grappled` and `restrained` for Speed computation
+   - [packages/core/src/battle-machine-helpers.ts](../../packages/core/src/battle-machine-helpers.ts) and [battle.qnt](../../battle.qnt) project the same speed semantics at battle level
+2. Added focused regression coverage and locked in the current-SRD distinction for `Stunned`.
+   - [packages/core/src/machine.test.ts](../../packages/core/src/machine.test.ts) now proves:
+     - `paralyzed`, `petrified`, and `unconscious` reduce Speed to 0,
+     - `stunned` does not reduce Speed to 0 in SRD 5.2.1
+3. Confirmed two MBT failures encountered during verification are inherited from local `master`, not introduced by this batch.
+   - projection seed `0xc47ce5c1` fails on local `master` with a preexisting Quint `legalHitReactions` map-set error
+   - battle-machine seed `0x1a8f8103` fails on local `master` with a preexisting `bDeclareReckless` state mismatch
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/machine.test.ts`
+- `pnpm --filter @dnd/core typecheck`
+- `pnpm exec quint typecheck battle.qnt`
+- `node scripts/compile-battle-spec.cjs`
+- `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts` with seed `0xb2a8eef8`, total `2s`
+- `QUINT_SEED=0xc47ce5c1 MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
+  - reproduced the same Quint `legalHitReactions` failure on local `master`
+- `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts` with seed `0x1a8f8103`
+  - reproduced the same `bDeclareReckless` mismatch on local `master`
+
 Batch 24 result:
 
 1. Added explicit battle coverage for ranged attacks in close combat suppressing ranged Sneak Attack.

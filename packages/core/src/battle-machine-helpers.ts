@@ -123,7 +123,10 @@ function battleEffectiveSpeed(c: BattleCreatureState): number {
     baseSpeed: Math.max(0, c.baseWalkSpeed + speedDeltaFromEffects(c)),
     armorPenalty: 0,
     grappled: c.grappled,
+    paralyzed: c.paralyzed,
+    petrified: c.petrified,
     restrained: c.restrained,
+    unconscious: c.unconscious,
     exhaustion: c.exhaustion,
     isGrappling: isGrappling(c),
     grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller

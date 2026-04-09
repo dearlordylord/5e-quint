@@ -271,12 +271,15 @@ export function calculateEffectiveSpeed(params: {
   readonly armorPenalty: number
   readonly grappled: boolean
   readonly restrained: boolean
+  readonly paralyzed: boolean
+  readonly petrified: boolean
+  readonly unconscious: boolean
   readonly exhaustion: number
   readonly isGrappling: boolean
   readonly grappledTargetTwoSizesSmaller: boolean
   readonly effectSpeedDelta?: number
 }): number {
-  if (params.grappled || params.restrained) return 0
+  if (params.grappled || params.restrained || params.paralyzed || params.petrified || params.unconscious) return 0
   const afterArmor = Math.max(0, params.baseSpeed - params.armorPenalty)
   const afterExhaustion = Math.max(0, afterArmor - EXHAUSTION_SPEED_PENALTY_PER_LEVEL * params.exhaustion)
   const afterGrappling =

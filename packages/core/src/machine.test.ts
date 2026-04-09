@@ -1371,6 +1371,34 @@ describe("speed modifiers from conditions", () => {
     expect(ctx(a).effectiveSpeed).toBe(0)
   })
 
+  it("paralyzed: speed 0", () => {
+    const a = create()
+    applyCondition(a, "paralyzed")
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(0)
+  })
+
+  it("petrified: speed 0", () => {
+    const a = create()
+    applyCondition(a, "petrified")
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(0)
+  })
+
+  it("unconscious: speed 0", () => {
+    const a = create()
+    applyCondition(a, "unconscious")
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(0)
+  })
+
+  it("stunned does not set speed 0 in SRD 5.2.1", () => {
+    const a = create()
+    applyCondition(a, "stunned")
+    startTurn(a)
+    expect(ctx(a).effectiveSpeed).toBe(30)
+  })
+
   it("exhaustion 2: speed reduced by 10 (5.2.1: -5 per level)", () => {
     const a = create()
     addExhaustion(a, 2)
@@ -1392,7 +1420,10 @@ describe("calculateEffectiveSpeed helper", () => {
     baseSpeed: 30,
     armorPenalty: 0,
     grappled: false,
+    paralyzed: false,
+    petrified: false,
     restrained: false,
+    unconscious: false,
     exhaustion: 0,
     isGrappling: false,
     grappledTargetTwoSizesSmaller: false
@@ -1404,6 +1435,18 @@ describe("calculateEffectiveSpeed helper", () => {
 
   it("grappled returns 0", () => {
     expect(calculateEffectiveSpeed({ ...baseParams, grappled: true })).toBe(0)
+  })
+
+  it("paralyzed returns 0", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, paralyzed: true })).toBe(0)
+  })
+
+  it("petrified returns 0", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, petrified: true })).toBe(0)
+  })
+
+  it("unconscious returns 0", () => {
+    expect(calculateEffectiveSpeed({ ...baseParams, unconscious: true })).toBe(0)
   })
 
   it("exhaustion 2: -10ft (5.2.1)", () => {

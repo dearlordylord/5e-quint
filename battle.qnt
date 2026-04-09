@@ -632,6 +632,7 @@ module battle {
     pComputeEffectiveSpeed(
       adjustedBaseSpeed, c.creature.exhaustion,
       c.creature.grappled, c.creature.restrained,
+      c.creature.paralyzed, c.creature.petrified, c.creature.unconscious,
       0, isBattleGrappling(c), c.grappledTargetTwoSizesSmaller
     )
   }
@@ -639,15 +640,18 @@ module battle {
   pure def refreshProjectedSpeed(
     cs: CreatureId -> Combatant, creatureId: CreatureId
   ): CreatureId -> Combatant = {
-    val current = cs.get(creatureId)
-    val newSpeed = battleEffectiveSpeed(current)
-    val spentMovement = intMax(0, current.turn.effectiveSpeed - current.turn.movementRemaining)
-    cs.set(
-      creatureId,
-      current.with("turn",
-        current.turn.with("effectiveSpeed", newSpeed).with("movementRemaining", intMax(0, newSpeed - spentMovement))
+    if (not(cs.keys().contains(creatureId))) cs
+    else {
+      val current = cs.get(creatureId)
+      val newSpeed = battleEffectiveSpeed(current)
+      val spentMovement = intMax(0, current.turn.effectiveSpeed - current.turn.movementRemaining)
+      cs.set(
+        creatureId,
+        current.with("turn",
+          current.turn.with("effectiveSpeed", newSpeed).with("movementRemaining", intMax(0, newSpeed - spentMovement))
+        )
       )
-    )
+    }
   }
 
   pure def refreshCurrentTurnSpeed(
@@ -660,15 +664,21 @@ module battle {
     grapplerId: CreatureId,
     targetId: CreatureId
   ): CreatureId -> Combatant = {
-    val grappler = cs.get(grapplerId)
-    val target = cs.get(targetId)
-    cs.set(
-      grapplerId,
-      grappler.with("grapplingTarget", "").with("grappledTargetTwoSizesSmaller", false)
-    ).set(
-      targetId,
-      target.with("creature", pRemoveCondition(target.creature, CGrappled)).with("grappledBy", "")
-    )
+    val afterGrappler =
+      if (cs.keys().contains(grapplerId))
+        cs.set(
+          grapplerId,
+          cs.get(grapplerId).with("grapplingTarget", "").with("grappledTargetTwoSizesSmaller", false)
+        )
+      else
+        cs
+    if (afterGrappler.keys().contains(targetId))
+      afterGrappler.set(
+        targetId,
+        afterGrappler.get(targetId).with("creature", pRemoveCondition(afterGrappler.get(targetId).creature, CGrappled)).with("grappledBy", "")
+      )
+    else
+      afterGrappler
   }
 
   pure def linkBattleGrapple(

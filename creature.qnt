@@ -1326,10 +1326,11 @@ module creature {
   pure def pComputeEffectiveSpeed(
     baseWalkSpeed: int, exhaustion: int,
     grappled: bool, restrained: bool,
+    paralyzed: bool, petrified: bool, unconscious: bool,
     armorPenalty: int,
     isGrappling: bool, grappledTargetTwoSizesSmaller: bool
   ): int = {
-    if (grappled or restrained) 0
+    if (grappled or restrained or paralyzed or petrified or unconscious) 0
     else {
       val afterArmor = intMax(0, baseWalkSpeed - armorPenalty)
       val afterExhaustion = intMax(0, afterArmor - 5 * exhaustion)
@@ -1352,6 +1353,7 @@ module creature {
     val speed = pComputeEffectiveSpeed(
       config.speeds.get(Walk), creature.exhaustion,
       creature.grappled, creature.restrained,
+      creature.paralyzed, creature.petrified, creature.unconscious,
       armorSpeedPenalty(armorState, config.abilityScores.get(Str)),
       isGrappling, grappledTargetTwoSizesSmaller
     )
