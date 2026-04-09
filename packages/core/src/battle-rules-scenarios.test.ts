@@ -324,6 +324,27 @@ function initGrappleBattle() {
   return actor
 }
 
+function initDodgeLossBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["hold_person"]),
+        initiativeRoll: 10
+      },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", rogueLevel: 5, sneakAttackDice: 3, initiativeRoll: 5 }
+    ]
+  })
+  return actor
+}
+
 function startTurn(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT })
 }
@@ -1434,6 +1455,102 @@ describe("battle rules scenario regressions", () => {
 
     expect(creature(actor, "B").hp).toBe(6)
     expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(true)
+  })
+
+  it("natural_20: Dodge benefits end immediately when the dodger becomes incapacitated", () => {
+    const actor = initDodgeLossBattle()
+    startTurn(actor)
+    send(actor, { type: "BATTLE_DODGE" })
+
+    endTurn(actor)
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("A"),
+      saveDC: difficultyClass(14),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").dodging).toBe(true)
+    expect(creature(actor, "A").paralyzed).toBe(true)
+
+    endTurn(actor)
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("A"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isFinesse: true,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 6
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").hp).toBe(10)
+    expect(creature(actor, "C").sneakAttackUsedThisTurn).toBe(true)
+  })
+
+  it("natural_20: Dodge benefits end immediately when the dodger's Speed becomes 0", () => {
+    const actor = initDodgeLossBattle()
+    startTurn(actor)
+    send(actor, { type: "BATTLE_DODGE" })
+
+    endTurn(actor)
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("A"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+      attackerHasFreeHand: true
+    })
+
+    expect(creature(actor, "A").dodging).toBe(true)
+    expect(creature(actor, "A").effectiveSpeed).toBe(0)
+
+    endTurn(actor)
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("A"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isFinesse: true,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 6
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "A").hp).toBe(10)
+    expect(creature(actor, "C").sneakAttackUsedThisTurn).toBe(true)
   })
 
   it("natural_20: a hostile creature within 5 feet suppresses ranged Sneak Attack by imposing disadvantage", () => {

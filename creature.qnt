@@ -1586,6 +1586,8 @@ module creature {
     attackerWithin5ft: bool,
     // Turn state
     targetDodging: bool,
+    targetIncapacitated: bool,
+    targetSpeedZero: bool,
     targetCanSeeAttacker: bool,
     // Unseen attacker/target
     attackerCanSeeTarget: bool,
@@ -1656,6 +1658,7 @@ module creature {
     val disadv_underwaterRanged = ctx.underwater and ctx.isRangedAttack
       and not(ctx.beyondNormalRange) and not(ctx.isUnderwaterRangedException)
     val disadv_dodging = ctx.targetDodging and ctx.targetCanSeeAttacker
+      and not(ctx.targetIncapacitated) and not(ctx.targetSpeedZero)
 
     val anyDisadvantage = disadv_attackerBlinded
       or disadv_attackerProne or disadv_attackerRestrained or disadv_attackerPoisoned

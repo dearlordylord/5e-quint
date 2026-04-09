@@ -72,6 +72,8 @@ export function buildBattleAttackContext(
     targetProne: tgt.prone,
     attackerWithin5ft,
     targetDodging: tgt.dodging,
+    targetIncapacitated: isIncapacitated(tgt),
+    targetSpeedZero: tgt.effectiveSpeed === 0,
     targetCanSeeAttacker,
     attackerCanSeeTarget,
     isRangedAttack: !isMelee,

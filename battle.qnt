@@ -636,19 +636,24 @@ module battle {
     )
   }
 
-  pure def refreshCurrentTurnSpeed(
-    cs: CreatureId -> Combatant, currentTurnCreatureId: CreatureId
+  pure def refreshProjectedSpeed(
+    cs: CreatureId -> Combatant, creatureId: CreatureId
   ): CreatureId -> Combatant = {
-    val current = cs.get(currentTurnCreatureId)
+    val current = cs.get(creatureId)
     val newSpeed = battleEffectiveSpeed(current)
     val spentMovement = intMax(0, current.turn.effectiveSpeed - current.turn.movementRemaining)
     cs.set(
-      currentTurnCreatureId,
+      creatureId,
       current.with("turn",
         current.turn.with("effectiveSpeed", newSpeed).with("movementRemaining", intMax(0, newSpeed - spentMovement))
       )
     )
   }
+
+  pure def refreshCurrentTurnSpeed(
+    cs: CreatureId -> Combatant, currentTurnCreatureId: CreatureId
+  ): CreatureId -> Combatant =
+    refreshProjectedSpeed(cs, currentTurnCreatureId)
 
   pure def releaseGrapplePair(
     cs: CreatureId -> Combatant,
@@ -682,8 +687,11 @@ module battle {
       targetId,
       target.with("creature", pApplyCondition(target.creature, CGrappled, Set())).with("grappledBy", grapplerId)
     )
-    val cs2 = if (grapplerId == currentTurnCreatureId) refreshCurrentTurnSpeed(cs1, currentTurnCreatureId) else cs1
-    if (targetId == currentTurnCreatureId) refreshCurrentTurnSpeed(cs2, currentTurnCreatureId) else cs2
+    val cs2 = refreshProjectedSpeed(refreshProjectedSpeed(cs1, grapplerId), targetId)
+    if (grapplerId == currentTurnCreatureId or targetId == currentTurnCreatureId)
+      refreshCurrentTurnSpeed(cs2, currentTurnCreatureId)
+    else
+      cs2
   }
 
   pure def releaseBattleGrappleByGrappler(
@@ -696,9 +704,10 @@ module battle {
     else {
       val targetId = grappler.grapplingTarget
       val cs1 = releaseGrapplePair(cs, grapplerId, targetId)
+      val cs2 = refreshProjectedSpeed(refreshProjectedSpeed(cs1, grapplerId), targetId)
       if (grapplerId == currentTurnCreatureId or targetId == currentTurnCreatureId)
-        refreshCurrentTurnSpeed(cs1, currentTurnCreatureId)
-      else cs1
+        refreshCurrentTurnSpeed(cs2, currentTurnCreatureId)
+      else cs2
     }
   }
 
@@ -712,9 +721,10 @@ module battle {
     else {
       val grapplerId = target.grappledBy
       val cs1 = releaseGrapplePair(cs, grapplerId, targetId)
+      val cs2 = refreshProjectedSpeed(refreshProjectedSpeed(cs1, grapplerId), targetId)
       if (grapplerId == currentTurnCreatureId or targetId == currentTurnCreatureId)
-        refreshCurrentTurnSpeed(cs1, currentTurnCreatureId)
-      else cs1
+        refreshCurrentTurnSpeed(cs2, currentTurnCreatureId)
+      else cs2
     }
   }
 
@@ -1184,6 +1194,8 @@ module battle {
       targetProne: tgt.creature.prone,
       attackerWithin5ft: attackerWithin5ft,
       targetDodging: tgt.turn.dodging,
+      targetIncapacitated: isIncapacitated(tgt.creature),
+      targetSpeedZero: tgt.turn.effectiveSpeed == 0,
       targetCanSeeAttacker: targetCanSeeAttacker,
       attackerCanSeeTarget: attackerCanSeeTarget,
       isRangedAttack: not(isMelee),

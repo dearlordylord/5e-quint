@@ -193,6 +193,8 @@ export interface AttackContext {
   readonly targetProne: boolean
   readonly attackerWithin5ft: boolean
   readonly targetDodging: boolean
+  readonly targetIncapacitated: boolean
+  readonly targetSpeedZero: boolean
   readonly targetCanSeeAttacker: boolean
   readonly attackerCanSeeTarget: boolean
   readonly isRangedAttack: boolean

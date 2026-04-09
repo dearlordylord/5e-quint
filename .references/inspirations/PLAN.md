@@ -908,6 +908,27 @@ Verification:
 - `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 
+Batch 25 result:
+
+1. Added explicit battle coverage that Dodge benefits end immediately when the dodger becomes incapacitated or their Speed becomes 0.
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves:
+     - a paralyzed dodger no longer suppresses ally-adjacent Sneak Attack,
+     - a grappled dodger with Speed 0 no longer suppresses ally-adjacent Sneak Attack
+2. Tightened a real attack-context semantic gap exposed by the new regressions.
+   - attack aggregation now carries explicit `targetIncapacitated` and `targetSpeedZero` facts in both TS and Quint
+   - Dodge disadvantage now applies only while the target is still able to benefit from Dodge
+3. Tightened a related battle projection gap exposed by the Speed-0 proof.
+   - grapple link/release projection now refreshes `effectiveSpeed` for both affected creatures immediately instead of waiting for the current-turn owner
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts src/machine.test.ts`
+- `pnpm --filter @dnd/core typecheck`
+- `pnpm exec quint typecheck battle.qnt`
+- `node scripts/compile-battle-spec.cjs`
+- `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts` with seed `0x03202e35`, total `2s`
+- `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts` with seed `0xea9ae108`, total `1s`
+
 Batch 24 result:
 
 1. Added explicit battle coverage for ranged attacks in close combat suppressing ranged Sneak Attack.

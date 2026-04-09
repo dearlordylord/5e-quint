@@ -130,7 +130,7 @@ function battleEffectiveSpeed(c: BattleCreatureState): number {
   })
 }
 
-function refreshCurrentTurnSpeed(previous: BattleCreatureState, updated: BattleCreatureState): BattleCreatureState {
+function refreshProjectedSpeed(previous: BattleCreatureState, updated: BattleCreatureState): BattleCreatureState {
   const newSpeed = battleEffectiveSpeed(updated)
   const spentMovement = Math.max(0, previous.effectiveSpeed - previous.movementRemaining)
   return {
@@ -171,7 +171,16 @@ function refreshCurrentTurnCreatureSpeed(
 ): Map<CreatureId, BattleCreatureState> {
   const current = cs.get(currentTurnCreatureId)
   if (!current) return new Map(cs)
-  return setCreature(cs, currentTurnCreatureId, refreshCurrentTurnSpeed(current, current))
+  return setCreature(cs, currentTurnCreatureId, refreshProjectedSpeed(current, current))
+}
+
+function refreshCreatureSpeedProjection(
+  cs: Creatures,
+  creatureId: CreatureId
+): Map<CreatureId, BattleCreatureState> {
+  const current = cs.get(creatureId)
+  if (!current) return new Map(cs)
+  return setCreature(cs, creatureId, refreshProjectedSpeed(current, current))
 }
 
 export function linkBattleGrapple(
@@ -194,10 +203,9 @@ export function linkBattleGrapple(
     grappled: true,
     grappledBy: grapplerId
   })
-  if (grapplerId === currentTurnCreatureId) {
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
-  }
-  if (targetId === currentTurnCreatureId) {
+  result = refreshCreatureSpeedProjection(result, grapplerId)
+  result = refreshCreatureSpeedProjection(result, targetId)
+  if (grapplerId === currentTurnCreatureId || targetId === currentTurnCreatureId) {
     result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
   }
   return result
@@ -211,9 +219,10 @@ export function releaseBattleGrappleByGrappler(
   const grappler = cs.get(grapplerId)
   if (!grappler?.grapplingTarget) return new Map(cs)
   let result = releaseGrapplePair(cs, grapplerId, grappler.grapplingTarget)
-  if (grapplerId === currentTurnCreatureId || grappler.grapplingTarget === currentTurnCreatureId) {
+  result = refreshCreatureSpeedProjection(result, grapplerId)
+  result = refreshCreatureSpeedProjection(result, grappler.grapplingTarget)
+  if (grapplerId === currentTurnCreatureId || grappler.grapplingTarget === currentTurnCreatureId)
     result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
-  }
   return result
 }
 
@@ -225,9 +234,10 @@ export function escapeBattleGrapple(
   const target = cs.get(targetId)
   if (!target?.grappledBy) return new Map(cs)
   let result = releaseGrapplePair(cs, target.grappledBy, targetId)
-  if (targetId === currentTurnCreatureId || target.grappledBy === currentTurnCreatureId) {
+  result = refreshCreatureSpeedProjection(result, target.grappledBy)
+  result = refreshCreatureSpeedProjection(result, targetId)
+  if (targetId === currentTurnCreatureId || target.grappledBy === currentTurnCreatureId)
     result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
-  }
   return result
 }
 
@@ -650,7 +660,7 @@ export function applyOnHitEffect(
   const target = cs.get(targetId)!
   const activeEffects = [...target.activeEffects.filter((existing) => existing.spellId !== effect.spellId), effect]
   const updatedTarget = { ...target, activeEffects }
-  const nextTarget = targetId === currentTurnCreatureId ? refreshCurrentTurnSpeed(target, updatedTarget) : updatedTarget
+  const nextTarget = targetId === currentTurnCreatureId ? refreshProjectedSpeed(target, updatedTarget) : updatedTarget
   return setCreature(cs, targetId, nextTarget)
 }
 

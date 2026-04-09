@@ -1803,6 +1803,8 @@ describe("aggregateAttackMods", () => {
     targetRestrained: false,
     targetStunned: false,
     targetUnconscious: false,
+    targetIncapacitated: false,
+    targetSpeedZero: false,
     underwater: false,
     wielderStrScore: 16,
     wielderDexScore: 14,
@@ -1836,6 +1838,16 @@ describe("aggregateAttackMods", () => {
 
   it("target dodging and can see attacker: disadv", () => {
     expect(aggregateAttackMods({ ...baseCtx, targetDodging: true }).hasDisadvantage).toBe(true)
+  })
+
+  it("target dodging loses the benefit while incapacitated", () => {
+    expect(aggregateAttackMods({ ...baseCtx, targetDodging: true, targetIncapacitated: true }).hasDisadvantage).toBe(
+      false
+    )
+  })
+
+  it("target dodging loses the benefit while speed is 0", () => {
+    expect(aggregateAttackMods({ ...baseCtx, targetDodging: true, targetSpeedZero: true }).hasDisadvantage).toBe(false)
   })
 
   it("auto-crit: paralyzed + within 5ft", () => {
@@ -2509,6 +2521,8 @@ describe("aggregateAttackMods additional branches", () => {
     targetRestrained: false,
     targetStunned: false,
     targetUnconscious: false,
+    targetIncapacitated: false,
+    targetSpeedZero: false,
     underwater: false,
     wielderStrScore: 16,
     wielderDexScore: 14,

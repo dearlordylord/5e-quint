@@ -127,7 +127,7 @@ export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
     (ctx.attackerGrappled && !ctx.targetIsGrappler) ||
     (ctx.underwater && !ctx.isRangedAttack && !ctx.attackerHasSwimSpeed && !ctx.isUnderwaterMeleeException) ||
     (ctx.underwater && ctx.isRangedAttack && !ctx.beyondNormalRange && !ctx.isUnderwaterRangedException) ||
-    (ctx.targetDodging && ctx.targetCanSeeAttacker)
+    (ctx.targetDodging && ctx.targetCanSeeAttacker && !ctx.targetIncapacitated && !ctx.targetSpeedZero)
 
   const resolved = resolveAdvantage({ hasAdvantage: anyAdvantage, hasDisadvantage: anyDisadvantage })
   return {
