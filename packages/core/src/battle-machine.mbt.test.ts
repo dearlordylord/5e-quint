@@ -13,6 +13,11 @@ import { createActor } from "xstate";
 import { z } from "zod";
 
 import { battleMachine } from "#/battle-machine.ts";
+import {
+  getBattleMbtRunShape,
+  getMbtBackend,
+  withDefaultLocalBattleSeed,
+} from "#/mbt-config.ts";
 import type {
   BattleContext,
   BattleCreatureState,
@@ -1233,10 +1238,8 @@ describe("Battle Machine MBT", () => {
   });
 
   const isDev = process.env["MBT_DEV"] === "1";
-  const mbtBackend = process.env["MBT_BACKEND"] ?? "typescript";
-  const MBT_TRACE_COUNT = 1;
-  const MBT_STEP_COUNT = isDev ? 5 : 10;
-  const MBT_MAX_SAMPLES = isDev ? 10 : 50;
+  const mbtBackend = getMbtBackend();
+  const battleRunShape = getBattleMbtRunShape(isDev);
   const specPath = path.resolve(import.meta.dirname, "../../../battle.qnt");
 
   it("replays battle traces against battleMachine", async () => {
@@ -1252,29 +1255,36 @@ describe("Battle Machine MBT", () => {
         `[battle machine MBT] replayed ${result.tracesReplayed} traces from ${dir}`,
       );
     } else {
-      // The compiled-input fast path is opt-in here. In this environment,
-      // quint-connect's direct-evaluator write path can fail with EPIPE before
-      // the run begins. The plain `quint run` path is slower but stable.
-      const useCompiledInput = process.env["MBT_USE_COMPILED_CACHE"] === "1";
-      const compiledInputPath = useCompiledInput
-        ? path.resolve(
-            import.meta.dirname,
-            "../../../.quint-cache/battle-compiled.json",
-          )
-        : undefined;
-      const result = await run({
-        spec: specPath,
-        init: "bInit",
-        step: "battleStep",
-        driver: createBattleMachineDriver(),
-        backend: mbtBackend,
-        nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
-        maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
-        maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
-        stateCheck: battleMachineStateCheck,
-        ...(compiledInputPath ? { compiledInput: compiledInputPath } : {}),
+      await withDefaultLocalBattleSeed(async () => {
+        // The compiled-input fast path is opt-in here. In this environment,
+        // quint-connect's direct-evaluator write path can fail with EPIPE before
+        // the run begins. The plain `quint run` path is slower but stable.
+        const useCompiledInput = process.env["MBT_USE_COMPILED_CACHE"] === "1";
+        const compiledInputPath = useCompiledInput
+          ? path.resolve(
+              import.meta.dirname,
+              "../../../.quint-cache/battle-compiled.json",
+            )
+          : undefined;
+        const result = await run({
+          spec: specPath,
+          init: "bInit",
+          step: "battleStep",
+          driver: createBattleMachineDriver(),
+          backend: mbtBackend,
+          nTraces: Number(process.env["MBT_TRACES"] ?? battleRunShape.traceCount),
+          maxSteps: Number(process.env["MBT_STEPS"] ?? battleRunShape.stepCount),
+          maxSamples: Number(
+            process.env["MBT_MAX_SAMPLES"] ?? battleRunShape.maxSamples,
+          ),
+          stateCheck: battleMachineStateCheck,
+          ...(compiledInputPath ? { compiledInput: compiledInputPath } : {}),
+          ...(process.env["MBT_TRACE_DIR"]
+            ? { traceDir: process.env["MBT_TRACE_DIR"] }
+            : {}),
+        });
+        logMbtSeed("battle machine MBT", result);
       });
-      logMbtSeed("battle machine MBT", result);
     }
   }, 600_000);
 });

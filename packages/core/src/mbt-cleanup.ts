@@ -19,11 +19,17 @@ import { execSync } from "node:child_process";
 // installed evaluator with different runtime behavior.
 process.env["QUINT_EVALUATOR_VERSION"] ??= "v0.5.0";
 
-/** Kill all quint_evaluator processes. Safe to call when none exist. */
+/** Kill all MBT subprocesses. Safe to call when none exist. */
 export function killZombieEvaluators(): void {
   try {
     // pkill returns exit code 1 when no processes match — that's fine
     execSync("pkill -9 -f quint_evaluator", { stdio: "ignore" });
+  } catch {
+    // No matching processes — expected and fine
+  }
+  try {
+    // TypeScript-backend MBT runs spawn `quint run ... --mbt` children.
+    execSync("pkill -9 -f 'quint run .* --mbt'", { stdio: "ignore" });
   } catch {
     // No matching processes — expected and fine
   }

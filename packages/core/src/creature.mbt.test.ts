@@ -1290,9 +1290,11 @@ describe("DnD MBT", () => {
     killZombieEvaluators();
   });
 
+  const isCi = process.env["CI"] === "true";
   const mbtBackend = process.env["MBT_BACKEND"] ?? "typescript";
-  const MBT_TRACE_COUNT = 50;
-  const MBT_STEP_COUNT = 30;
+  // Keep local runs cheap; broader random coverage belongs in CI/fuzz runs.
+  const MBT_TRACE_COUNT = isCi ? 50 : 1;
+  const MBT_STEP_COUNT = isCi ? 30 : 10;
   const specPath = path.resolve(import.meta.dirname, "../../../creature.qnt");
 
   it("replays Quint traces against XState machine (L3 + L5 + L9 + L10 + L18)", async () => {
