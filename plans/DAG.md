@@ -67,9 +67,6 @@ available-actions-main
   -> dm-override
   -> transcript-port-to-dnd
 
-battle-spellcast-action-breadth
-  -> legendary-resistance-fallback
-
 available-actions-main
   -> preview-execution
 
@@ -95,7 +92,10 @@ off-hand-attack-surface
   -> two-weapon-fighting-bonus-attack
 
 weapon-property-aware-battle-resolution
+  -> battle-hand-occupancy-state
   -> fighting-styles-in-battle
+
+battle-hand-occupancy-state
   -> versatile-weapon-die-switching
 
 oa-path-vocabulary
@@ -129,7 +129,7 @@ authoritative-d20-modifier-query-surface
 | `authoritative-d20-modifier-query-surface` | facility | complete | none | `armor-training-disadvantage` | Landed authoritative d20 modifier/disadvantage query ownership in machine query/types surfaces; keep here because downstream planning still references the seam |
 | `available-actions-main` | plan | active | none | `movement-action-surface`, `preview-execution`, `battle-spellcast-action-breadth`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
 | `battle-spellcast-action-breadth` | plan | later | `available-actions-main`, `first-class-consumption-model` | later spell-cast reactions | `CAST_COUNTERSPELL` is already complete; this is the remaining breadth umbrella |
-| `legendary-resistance-fallback` | batch | blocked | `battle-spellcast-action-breadth` | additional battle interrupt breadth | Do not schedule directly unless the next concrete spell-cast breadth slice reveals a real narrow gap |
+| `legendary-resistance-fallback` | batch | complete | `battle-spellcast-action-breadth` | additional battle interrupt breadth | Closed as a narrow AoE failed-save regression slice; no separate breadth batch remains to schedule here |
 | `movement-action-surface` | plan | later | `available-actions-main`, `oa-path-vocabulary` | explicit `cost.movement` bucket | Too broad as a handoff; prefer concrete slices like `stand-from-prone-in-battle` |
 | `preview-execution` | batch | complete | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | no-spend scripted action preview | Landed end to end in core and MCP; retain only because later descriptive-mode/transcript work still depends on the doctrine/model it consumed |
 | `dm-override` | plan | later | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
@@ -142,34 +142,32 @@ authoritative-d20-modifier-query-surface
 | `stand-from-prone-in-battle` | candidate | complete | none | battle action exposure for standing | Landed as a first-class battle action and surfaced available action |
 | `duration-boundary-audit` | candidate | complete | `canonical-condition-effects` | timing-sensitive effect regression coverage | Audit checklist landed in [DURATION_BOUNDARY_AUDIT.md](/workspace/typescript/dnd/plans/DURATION_BOUNDARY_AUDIT.md) with deterministic timing regressions; no broader production refactor was needed |
 | `qualified-damage-typing` | facility | complete | none | `qualified-physical-damage-bypass` | Landed minimal `magical` / `silvered` / `adamantine` qualifiers in Quint and TS attack/damage flow |
-| `qualified-physical-damage-bypass` | candidate | ready | `qualified-damage-typing` | monster/effect fidelity | Now unblocked by the completed qualification surface; first reliable runbook-3 consumer node |
+| `qualified-physical-damage-bypass` | candidate | complete | `qualified-damage-typing` | monster/effect fidelity | Landed qualified physical resistance, vulnerability, and immunity bypass semantics in Quint and TS battle damage flow with deterministic scenario coverage |
 | `battle-helped-target-state` | facility | complete | none | `help-advantage-state` | Battle-owned helped-target state landed with owner-scoped expiry semantics in Quint and TS |
 | `help-advantage-state` | candidate | complete | `battle-helped-target-state` | core action-economy mechanic | Help now contributes a real attack-advantage source with consumption on the next qualifying attack |
 | `effect-dependency-graph` | facility | blocked | none | `parent-child-effect-teardown` | Need parent/child effect ownership graph |
 | `parent-child-effect-teardown` | candidate | blocked | `effect-dependency-graph` | concentration-linked cleanup correctness | Inspiration item `31` |
 | `one-shot-rider-consumption-metadata` | facility | complete | none | `next-hit-rider-consumption` | Landed consume-on-next-qualifying-hit metadata and consumption hooks without widening to the full downstream rider batch |
-| `next-hit-rider-consumption` | candidate | ready | `one-shot-rider-consumption-metadata` | recurring spell/feature semantics | Now unblocked by the completed consume-on-next-hit metadata surface |
+| `next-hit-rider-consumption` | candidate | complete | `one-shot-rider-consumption-metadata` | recurring spell/feature semantics | Landed battle consumption of qualifying next-hit rider effects with deterministic regression coverage |
 | `off-hand-attack-surface` | facility | complete | none | `two-weapon-fighting-bonus-attack` | Battle off-hand attack event/action surface landed in Quint and TS battle machines |
 | `two-weapon-fighting-bonus-attack` | candidate | complete | `off-hand-attack-surface` | battle bonus-action attack support | Landed the light-weapon bonus-action off-hand attack slice; fighting-style modifiers remain separate follow-up work |
-| `weapon-property-aware-battle-resolution` | facility | complete | none | `fighting-styles-in-battle`, `versatile-weapon-die-switching` | Battle attack resolution now consumes weapon-property ownership for immediate combat semantics |
+| `weapon-property-aware-battle-resolution` | facility | complete | none | `battle-hand-occupancy-state`, `fighting-styles-in-battle` | Battle attack resolution now consumes weapon-property ownership for immediate combat semantics |
+| `battle-hand-occupancy-state` | facility | ready | `weapon-property-aware-battle-resolution` | `versatile-weapon-die-switching` | Next owned-state seam for hand-busy / shield / free-hand facts; needed before versatile die switching and future hand-usage consumers such as double-grapple semantics |
 | `fighting-styles-in-battle` | candidate | blocked | `weapon-property-aware-battle-resolution` | broader weapon semantics | Inspiration item `8` |
-| `versatile-weapon-die-switching` | candidate | ready | `weapon-property-aware-battle-resolution` | hand-usage / wield-state semantics | Now unblocked structurally, but only execution-grade if it can be expressed without adding new wield-state ownership |
+| `versatile-weapon-die-switching` | candidate | blocked | `battle-hand-occupancy-state` | hand-usage / wield-state semantics | Do not schedule on top of the weak “empty off hand means two-handed” simplification; land explicit hand-occupancy ownership first |
 | `battle-spatial-expansion` | facility | blocked | `oa-path-vocabulary` | `hide-stealth-chain`, `forced-movement-vs-oa`, `reach-extends-oa-range` | Current battle spatial model is intentionally narrow |
 | `hide-stealth-chain` | candidate | blocked | `battle-spatial-expansion` | visibility/stealth correctness | Inspiration item `11` |
 | `forced-movement-vs-oa` | candidate | blocked | `battle-spatial-expansion` | OA legality fidelity | Inspiration item `17` |
 | `reach-extends-oa-range` | candidate | blocked | `battle-spatial-expansion` | threat radius fidelity | Inspiration item `22` |
-| `max-hp-reduction-state` | facility | ready | none | `max-hp-reduction` | Reliable next state-owning facility: add explicit max-HP reduction state instead of overloading plain `maxHp` |
-| `max-hp-reduction` | candidate | blocked | `max-hp-reduction-state` | HP-reduction mechanics | Inspiration item `27` |
+| `max-hp-reduction-state` | facility | complete | none | `max-hp-reduction` | Landed explicit max-HP reduction state in Quint and TS rather than overloading plain `maxHp` |
+| `max-hp-reduction` | candidate | complete | `max-hp-reduction-state` | HP-reduction mechanics | Landed first consumer semantics, including effective-max clamping, reduction/restore actions, battle consistency, and targeted tests |
 | `generic-per-attack-type-bonus-surface` | candidate | blocked | `closed-modifier-algebra` | reusable modifier semantics | Inspiration item `28` |
 
 ## Ready Queue
 
 If scheduling strictly by current value and low dependency risk, outside already-complete runbooks:
 
-1. `qualified-physical-damage-bypass`
-2. `next-hit-rider-consumption`
-3. `max-hp-reduction-state`
-4. `versatile-weapon-die-switching`
+1. `battle-hand-occupancy-state`
 
 ## Research Queue
 

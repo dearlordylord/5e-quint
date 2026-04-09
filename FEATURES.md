@@ -39,8 +39,11 @@ Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** 
 | Extra Attack (1 / 2 / 3) | Spec + Battle | Done | Fighter progression + Warlock Thirsting/Devouring Blade |
 | Finesse weapons | Spec + Battle | Done | Higher of STR/DEX |
 | Heavy weapon penalty | Spec | Done | 5.2.1: STR 13 threshold (not size check) |
+| Qualified physical damage bypass | Spec + Battle | Done | Nonmagical / nonsilvered / nonadamantine physical resistance, vulnerability, and immunity can now be modeled via qualifiers |
+| Consume-on-next-hit rider effects | Spec + Battle | Done | Qualifying one-shot rider effects are consumed on the correct battle hit |
 | Weapon Mastery (8 properties) | Content | Done | Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex |
 | 33 weapons with mastery mappings | Content | Done | Simple + martial, melee + ranged |
+| Versatile weapon die switching | — | Not done | Blocked on explicit battle-owned hand occupancy / shield / free-hand state |
 
 ## Conditions (14/14 + Exhaustion)
 
@@ -68,6 +71,7 @@ Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** 
 |---------|-------|--------|-------|
 | HP tracking | Spec | Done | Current / max / effective max |
 | Temporary HP | Spec | Done | Non-stacking, separate pool |
+| Max HP reduction / restoration | Spec + Battle | Done | Explicit reduction state, restore semantics, death at effective max 0, healing capped at effective max |
 | Death saves (PC) | Spec + Battle | Done | 3 success/fail, nat 1 = 2 failures, nat 20 = revive at 1 HP |
 | Stabilization | Spec | Done | Stable state + recovery |
 | Monster instant death at 0 HP | Spec | Done | CreatureKind discriminator (PC vs Monster) |

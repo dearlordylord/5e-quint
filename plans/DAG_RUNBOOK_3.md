@@ -12,6 +12,31 @@ Use:
 
 This runbook is intentionally narrower than “all remaining DAG work.” It only includes the portion of the remaining DAG that is concrete enough to schedule without a separate design pass.
 
+## Closure Status
+
+Runbook 3 is closed.
+
+Landed in this batch:
+
+- `qualified-physical-damage-bypass`
+- `next-hit-rider-consumption`
+- `max-hp-reduction-state`
+- `max-hp-reduction`
+- `legendary-resistance-fallback` as the narrow AoE failed-save regression slice
+
+Deferred from this runbook:
+
+- `versatile-weapon-die-switching`
+
+Follow-up required:
+
+- `battle-hand-occupancy-state`
+
+Reason:
+
+- versatile switching should not be implemented via the weaker simplification “no off-hand weapon means two-handed”
+- the next correct ownership seam is explicit battle-owned hand occupancy / shield / free-hand state, which also supports later hand-usage consumers beyond versatile switching
+
 ## Current Mission
 
 Repository-shaping priority remains:
@@ -50,7 +75,7 @@ Do not reschedule these in this runbook unless regression evidence appears:
 
 ## Default In-Scope Nodes
 
-Execution-grade remainder:
+Execution-grade remainder for the original run:
 
 1. `qualified-physical-damage-bypass`
 2. `next-hit-rider-consumption`
@@ -58,11 +83,11 @@ Execution-grade remainder:
 4. `max-hp-reduction`
 5. `legendary-resistance-fallback`
 
-Conditional in-scope node:
+Conditional in-scope node from the original run:
 
 1. `versatile-weapon-die-switching`
 
-Only schedule `versatile-weapon-die-switching` if the current weapon-property ownership from runbook 2 is already sufficient without introducing new wield-state architecture.
+This condition did not hold. `versatile-weapon-die-switching` remains deferred pending explicit `battle-hand-occupancy-state`.
 
 ## Default Out Of Scope
 
@@ -244,6 +269,11 @@ Goal:
 
 - consume the now-owned weapon-property surface for the specific versatile-die switch case, if that case can be expressed without new wield-state architecture
 
+Outcome:
+
+- not landed in runbook 3
+- promoted to a follow-up dependency on `battle-hand-occupancy-state`
+
 Execution rule:
 
 - begin with a short read-only viability pass
@@ -270,9 +300,13 @@ Verification:
 - `pnpm --filter @dnd/core exec tsc --noEmit`
 - Tier 1 MBT if battle attack semantics change
 
+Follow-up note:
+
+- future work should introduce battle-owned hand occupancy / shield / free-hand state first, then re-schedule versatile switching on top of that ownership seam
+
 ## Merge Order
 
-Recommended merge sequence:
+Historical merge sequence:
 
 1. Lane A
 2. Lane B
@@ -290,7 +324,7 @@ Reason:
 
 ## Batch Exit Criteria
 
-This runbook counts as complete when:
+This runbook counted as complete when:
 
 1. every in-scope node is either landed or explicitly stopped with a design note tied to a real blocker
 2. no out-of-scope design-heavy cluster was silently pulled in
@@ -302,6 +336,6 @@ This runbook counts as complete when:
 ## Notes To Future Orchestrators
 
 - This runbook is intentionally not “all remaining DAG work.”
-- If this runbook lands cleanly, the remainder of the DAG is mostly design-first work and should likely be split into:
+- After this runbook, the remaining adjacent work is mostly design-first and should likely be split into:
 - a design memo for architecture-heavy clusters
 - then a later runbook after those boundaries are frozen
