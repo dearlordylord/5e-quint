@@ -14,7 +14,7 @@ import { relentlessRageDC } from "#/features/class-barbarian.ts"
 import { flurryOfBlowsStrikes, pMartialArtsDie } from "#/features/class-monk.ts"
 import { tirelessTempHp } from "#/features/class-ranger.ts"
 import { slotCreationCost, type MetamagicOption } from "#/features/class-sorcerer.ts"
-import type { BattleContext } from "#/battle-machine-types.ts"
+import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
 import {
   canUseHeroicInspirationNow,
   guards,
@@ -31,7 +31,7 @@ import {
 } from "#/machine-guards.ts"
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
-import { SpellSlotLevel, type D20Roll, type SpellName, type SpellSlotLevel as SpellSlotLevelValue } from "#/types.ts"
+import { CreatureId, SpellSlotLevel, type D20Roll, type SpellName, type SpellSlotLevel as SpellSlotLevelValue } from "#/types.ts"
 
 export type ResourceCost = {
   readonly action?: true
@@ -759,6 +759,10 @@ export type FinalizedAction =
   | { readonly ok: true; readonly event: DndEvent; readonly outcome: string }
   | { readonly ok: false; readonly error: ActionResolutionError }
 
+export type FinalizedBattleAction =
+  | { readonly ok: true; readonly event: BattleEvent; readonly outcome: string }
+  | { readonly ok: false; readonly error: ActionResolutionError }
+
 export type ActionResolutionErrorCode =
   | "ACTION_NOT_AVAILABLE"
   | "ACTION_NOT_SUPPORTED"
@@ -1358,6 +1362,47 @@ export function getAvailableBattleActions(context: BattleContext): ReadonlyArray
   }
 
   return []
+}
+
+function availableBattleTokenForType(
+  context: BattleContext,
+  type: BattleActionToken["type"],
+  actorId: string,
+): BattleActionToken | undefined {
+  return getAvailableBattleActions(context).find((token) => token.type === type && token.actorId === actorId)
+}
+
+export function resolveBattleAction(context: BattleContext, token: BattleResolvedActionToken): FinalizedBattleAction {
+  if (token.type !== "USE_UNCANNY_DODGE") {
+    return {
+      ok: false,
+      error: {
+        code: "ACTION_NOT_SUPPORTED",
+        message: `${token.type} is not implemented yet through the battle action surface.`,
+      },
+    }
+  }
+
+  const availableToken = availableBattleTokenForType(context, token.type, token.actorId)
+  if (availableToken == null) {
+    return {
+      ok: false,
+      error: {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} is not currently available for ${token.actorId} in this battle state.`,
+      },
+    }
+  }
+
+  return {
+    ok: true,
+    event: {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: CreatureId(token.actorId),
+      decision: { tag: "RUncannyDodge" },
+    },
+    outcome: availableToken.outcome.summary,
+  }
 }
 
 function runtimeMismatch(expected: ResolutionRuntimeInputs["runtime"], actual: ResolutionRuntimeInputs["runtime"]): FinalizedAction {

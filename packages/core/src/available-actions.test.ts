@@ -5,6 +5,7 @@ import {
   finalizeResolution,
   getAvailableActions,
   getAvailableBattleActions,
+  resolveBattleAction,
   resolveAction,
   type ResolutionRequest,
 } from "#/available-actions.ts"
@@ -1062,5 +1063,42 @@ describe("available actions contract", () => {
         outcome: { summary: "Use your reaction to halve the triggering attack's damage against you" },
       },
     ])
+  })
+
+  test("battle resolution executes USE_UNCANNY_DODGE only when that reaction token is currently available", () => {
+    const actor = initBattleForDamageDiscovery()
+
+    expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" })).toEqual({
+      ok: false,
+      error: {
+        code: "ACTION_NOT_AVAILABLE",
+        message: "USE_UNCANNY_DODGE is not currently available for B in this battle state.",
+      },
+    })
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+    })
+    actor.send({ type: "BATTLE_RESOLVE_HIT_REACTION", reactorId: null, decision: { tag: "RPass" } })
+
+    expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" })).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_RESOLVE_DMG_REACTION",
+        reactorId: "B",
+        decision: { tag: "RUncannyDodge" },
+      },
+      outcome: "Use your reaction to halve the triggering attack's damage against you",
+    })
   })
 })

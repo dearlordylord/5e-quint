@@ -13,6 +13,7 @@ import {
   finalizeResolution,
   getAvailableActions,
   getAvailableBattleActions,
+  resolveBattleAction,
   resolveAction,
   ResolvedActionTokenSchema,
   type ActionToken,
@@ -115,6 +116,10 @@ function errorContent(message: string, details?: unknown) {
 
 function snapshotFingerprint(snapshot: DndSnapshot): string {
   return JSON.stringify(encodeDndSnapshot(snapshot))
+}
+
+function battleSnapshotUnchanged(before: BattleSnapshot, after: BattleSnapshot): boolean {
+  return before.context === after.context && JSON.stringify(before.value) === JSON.stringify(after.value)
 }
 
 function battlePhase(context: BattleContext) {
@@ -260,11 +265,24 @@ function scopeMismatchContent(tokenScope: "creature" | "battle", hostScope: "cre
 }
 
 function executeBattleResolvedAction(actor: BattleActor, token: BattleResolvedActionToken) {
-  void actor
-  return errorContent(
-    `${token.type} is battle-scoped, and battle execute_action routing is not implemented yet.`,
-    "ACTION_NOT_SUPPORTED",
-  )
+  const before = actor.getSnapshot()
+  const resolution = resolveBattleAction(before.context, token)
+  if (!resolution.ok) {
+    return errorContent(resolution.error.message, resolution.error.code)
+  }
+
+  actor.send(resolution.event)
+
+  const after = actor.getSnapshot()
+  if (battleSnapshotUnchanged(before, after)) {
+    return errorContent("Action was not accepted by the battle machine", token.type)
+  }
+
+  return jsonContent({
+    success: true,
+    outcome: resolution.outcome,
+    state: encodeBattleRuntimeState(after),
+  })
 }
 
 function executeResolvedAction(host: SupportedActionHost, args: unknown) {

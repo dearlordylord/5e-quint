@@ -70,6 +70,43 @@ function initBattleHostWithHitWindow() {
   return createBattleHost(actor)
 }
 
+function initBattleHostWithDamageWindow() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", rogueLevel: 5, initiativeRoll: 10 },
+    ],
+  })
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+  actor.send({
+    type: "BATTLE_ATTACK",
+    targetId: CreatureId("B"),
+    attackRoll: 15,
+    diceCount: 1,
+    dieSize: 8,
+    dmg: 5,
+    dt: "slashing",
+    crit: false,
+    tAc: armorClass(10),
+    knockOut: false,
+    isMelee: true,
+    isFinesse: false,
+    attackerWithin5ft: true,
+    hostileWithin5ft: false,
+    targetCanSeeAttacker: true,
+    attackerCanSeeTarget: true,
+    frightSourceInLOS: false,
+    hasAllyAdjacentToTarget: false,
+    saDmg: 0,
+    hitReactionCandidates: new Set(),
+  })
+  actor.send({ type: "BATTLE_RESOLVE_HIT_REACTION", reactorId: null, decision: { tag: "RPass" } })
+  return createBattleHost(actor)
+}
+
 describe("MCP server adapter", () => {
   test("get_available_actions only returns the supported executable action set", () => {
     const host = createDemoHost()
@@ -677,15 +714,31 @@ describe("MCP server adapter", () => {
     })
   })
 
-  test("execute_action routes battle-scoped tokens to the battle lane", () => {
-    const host = createBattleHost()
+  test("execute_action routes USE_UNCANNY_DODGE through the battle lane end to end", () => {
+    const host = initBattleHostWithDamageWindow()
 
     const response = handleToolCall(host, "execute_action", { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" })
 
-    expect("isError" in response && response.isError).toBe(true)
+    expect("isError" in response).toBe(false)
     expect(readPayload(response)).toEqual({
-      error: "USE_UNCANNY_DODGE is battle-scoped, and battle execute_action routing is not implemented yet.",
-      details: "ACTION_NOT_SUPPORTED",
+      success: true,
+      outcome: "Use your reaction to halve the triggering attack's damage against you",
+      state: {
+        scope: "battle",
+        machineState: { running: "awaitingReaction" },
+        tags: ["reactionWindow"],
+        round: 1,
+        turnIndex: 0,
+        activeCreatureId: "A",
+        initiative: ["A", "B"],
+        creatureIds: ["A", "B"],
+        phase: "awaitingReaction",
+        awaitingReaction: true,
+        resolvingAoE: false,
+        resolvingMovement: false,
+        awaitingLegendaryAction: false,
+        awaitingReadiedAction: false,
+      },
     })
   })
 

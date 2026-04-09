@@ -170,11 +170,42 @@ Land the first semantic battle-scoped reaction actions through the unified actio
 
 ### Acceptance criteria
 
-- [ ] At least one semantic reaction token is exposed through the unified action surface.
-- [ ] The reaction token appears only when the corresponding legal battle trigger window exists.
-- [ ] Executing the resolved reaction token updates authoritative battle state correctly.
-- [ ] Negative tests prove the token does not appear when only coarse reaction resources are available.
-- [ ] End-to-end tests cover battle-scoped discovery, resolution, and execution for the first reaction token.
+- [x] At least one semantic reaction token is exposed through the unified action surface.
+- [x] The reaction token appears only when the corresponding legal battle trigger window exists.
+- [x] Executing the resolved reaction token updates authoritative battle state correctly.
+- [x] Negative tests prove the token does not appear when only coarse reaction resources are available.
+- [x] End-to-end tests cover battle-scoped discovery, resolution, and execution for the first reaction token.
+
+### Phase 4 notes
+
+- `USE_UNCANNY_DODGE` is now the first fully wired battle-scoped semantic reaction token.
+- The end-to-end path now exists through the unified action surface:
+  - battle discovery exposes the token only in a real `PIAttackDamage` window
+  - core battle resolution validates the token against current authoritative battle discovery
+  - MCP routes the resolved token to the battle engine and returns updated battle state
+- `actorId` is now the authoritative responder selector for battle execution, not just battle discovery.
+- This phase kept the runtime scope intentionally narrow:
+  - `USE_UNCANNY_DODGE` executes end to end
+  - other discovered battle reaction tokens still return an explicit not-implemented error instead of silently doing nothing
+- Verification passed:
+  - `pnpm --filter @dnd/core typecheck`
+  - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`
+  - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+  - `pnpm --filter @dnd/mcp test -- server.test.ts`
+
+### Next implementation notes
+
+- Phase 5 should broaden battle execution by adding the next zero-hole reaction token on the same path.
+- The best next target is `CAST_SHIELD`:
+  - already discovered
+  - already battle-owned and honest
+  - no user-facing holes
+  - a good second tracer bullet for battle hit-reaction execution
+- After `CAST_SHIELD`, the next candidates are:
+  - `USE_CUTTING_WORDS`
+  - `USE_PARRY`
+  - `USE_DEFLECT_ATTACKS`
+- Those later reactions will need engine-owned numeric runtime inputs or owned fixed capability values, so `CAST_SHIELD` is the cleanest immediate continuation.
 
 ---
 
