@@ -22,7 +22,7 @@ import type { DamageType } from "@dnd/core/types.ts"
 
 import type { ActualPlayStep, EncounterDef } from "./actual-play-types.ts"
 import { endTurn, replayActualPlayTrace } from "./actual-play-types.ts"
-import type { NormalizedState, TraceStep } from "./sample-trace.ts"
+import type { NormalizedState, TraceStep } from "./trace-types.ts"
 
 // --- Monster damage helper (with stat-block R/V/I) ---
 

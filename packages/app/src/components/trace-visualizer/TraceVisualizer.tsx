@@ -12,7 +12,8 @@ import { ROLL20_ENCOUNTER, ROLL20_SUMMARY, ROLL20_TRACE } from "./actual-play-ro
 import { SKELETON_ENCOUNTER, SKELETON_SUMMARY, SKELETON_TRACE } from "./actual-play-skeleton.ts"
 import type { EncounterDef, EncounterSummary } from "./actual-play-types.ts"
 import { SubMachineViz } from "./MachineViz.tsx"
-import { FIELD_GROUPS, type NormalizedState, SAMPLE_TRACE, type TraceStep } from "./sample-trace.ts"
+import { FIELD_GROUPS, SAMPLE_TRACE } from "./sample-trace.ts"
+import type { NormalizedState, TraceStep } from "./trace-types.ts"
 
 /** Map Quint action names to their spec snippets */
 const ACTION_SNIPPETS: Partial<Record<string, QuintSnippet>> = {

@@ -21,7 +21,7 @@ import { classLevel } from "@dnd/core/types.ts"
 
 import type { ActualPlayStep, EncounterDef } from "./actual-play-types.ts"
 import { damage, defaultState, endTurn, replayActualPlayTrace, startTurn } from "./actual-play-types.ts"
-import type { TraceStep } from "./sample-trace.ts"
+import type { TraceStep } from "./trace-types.ts"
 
 // --- Encounter definition ---
 

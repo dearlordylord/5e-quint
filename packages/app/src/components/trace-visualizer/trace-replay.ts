@@ -8,11 +8,11 @@
  */
 
 import { creatureMachine, type DndSnapshot } from "@dnd/core/machine.ts"
-import type { DndEvent, DndMachineInput } from "@dnd/core/machine-types.ts"
+import type { DndMachineInput } from "@dnd/core/machine-types.ts"
 import { Option } from "effect"
 import { createActor } from "xstate"
 
-import type { NormalizedState, TraceStep } from "./sample-trace.ts"
+import type { NormalizedState, TraceEventDef, TraceStep } from "./trace-types.ts"
 
 // Mirrors machine.mbt.test.ts snapshotToNormalized but uses Array (not Set)
 // for incapacitatedSources, matching the visualizer's NormalizedState type.
@@ -83,14 +83,6 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     heroicInspiration: c.classStates.fighter?.heroicInspiration ?? false,
     fighterLevel: c.classStates.fighter?.level ?? 0
   }
-}
-
-export interface TraceEventDef {
-  readonly quintAction: string
-  readonly xstateEvent: string
-  readonly description: string
-  readonly events: ReadonlyArray<DndEvent>
-  readonly expectedQuintState: NormalizedState
 }
 
 export function replayTrace(input: DndMachineInput, defs: ReadonlyArray<TraceEventDef>): ReadonlyArray<TraceStep> {

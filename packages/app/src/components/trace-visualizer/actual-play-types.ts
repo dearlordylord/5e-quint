@@ -10,8 +10,8 @@
 import type { DndEvent, DndMachineInput } from "@dnd/core/machine-types.ts"
 import type { DamageType } from "@dnd/core/types.ts"
 
-import type { NormalizedState, TraceStep } from "./sample-trace.ts"
-import { replayTrace, type TraceEventDef } from "./trace-replay.ts"
+import { replayTrace } from "./trace-replay.ts"
+import type { NormalizedState, TraceEventDef, TraceStep } from "./trace-types.ts"
 
 // --- Shared event helpers ---
 // Extracted here to avoid duplication across trace files.

@@ -32,25 +32,25 @@ narrative. These tell the story for the demo and are not programmatically valida
 
 ### `actual-play-roll20.ts` — PHB 2024 Combat Example (19 steps)
 
-| Field | Detail |
-|---|---|
-| **Source** | Roll20 Compendium / 2024 PHB |
-| **Perspective** | Shreeve (Barbarian → Champion Fighter L5) |
-| **Rounds** | 2 (R1 original, R2 fabricated) |
-| **Kills** | 3 (by Shreeve; 7 others off-screen) |
-| **Damage taken** | 14 piercing (R1: 9, R2: 5) |
-| **Exports** | `ROLL20_TRACE`, `ROLL20_SUMMARY`, `ROLL20_ENCOUNTER` |
+| Field            | Detail                                               |
+| ---------------- | ---------------------------------------------------- |
+| **Source**       | Roll20 Compendium / 2024 PHB                         |
+| **Perspective**  | Shreeve (Barbarian → Champion Fighter L5)            |
+| **Rounds**       | 2 (R1 original, R2 fabricated)                       |
+| **Kills**        | 3 (by Shreeve; 7 others off-screen)                  |
+| **Damage taken** | 14 piercing (R1: 9, R2: 5)                           |
+| **Exports**      | `ROLL20_TRACE`, `ROLL20_SUMMARY`, `ROLL20_ENCOUNTER` |
 
 ### `actual-play-cr-c4e04.ts` — CR C4E04 "Stone-Faced" (40 steps)
 
-| Field | Detail |
-|---|---|
-| **Source** | Omen Archive (107 dealt, 46 taken, 6 kills) |
-| **Perspective** | Sir Julien Davinos (Rogue/Fighter → Champion Fighter L5) |
-| **Rounds** | 5 |
-| **Kills** | 6 (matches Omen Archive `refKills`) |
+| Field            | Detail                                                                  |
+| ---------------- | ----------------------------------------------------------------------- |
+| **Source**       | Omen Archive (107 dealt, 46 taken, 6 kills)                             |
+| **Perspective**  | Sir Julien Davinos (Rogue/Fighter → Champion Fighter L5)                |
+| **Rounds**       | 5                                                                       |
+| **Kills**        | 6 (matches Omen Archive `refKills`)                                     |
 | **Damage taken** | 55 (R1: 8, R2: 12, R3: 12, R4: 23) — piercing 16, necrotic 27, force 12 |
-| **Exports** | `CR_C4E04_TRACE`, `CR_C4E04_SUMMARY`, `CR_C4E04_ENCOUNTER` |
+| **Exports**      | `CR_C4E04_TRACE`, `CR_C4E04_SUMMARY`, `CR_C4E04_ENCOUNTER`              |
 
 ## Validation
 

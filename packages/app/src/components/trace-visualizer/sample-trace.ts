@@ -13,87 +13,8 @@ import { singleClassHitDice } from "@dnd/core/features/class-tables.ts"
 import type { DndEvent } from "@dnd/core/machine-types.ts"
 import { classLevel, d20Roll } from "@dnd/core/types.ts"
 
-import { replayTrace, type TraceEventDef } from "./trace-replay.ts"
-
-export interface NormalizedState {
-  // CreatureState
-  readonly hp: number
-  readonly maxHp: number
-  readonly tempHp: number
-  readonly deathSavesSuccesses: number
-  readonly deathSavesFailures: number
-  readonly stable: boolean
-  readonly dead: boolean
-  readonly blinded: boolean
-  readonly charmed: boolean
-  readonly deafened: boolean
-  readonly exhaustion: number
-  readonly frightened: boolean
-  readonly grappled: boolean
-  readonly invisible: boolean
-  readonly paralyzed: boolean
-  readonly petrified: boolean
-  readonly poisoned: boolean
-  readonly prone: boolean
-  readonly restrained: boolean
-  readonly stunned: boolean
-  readonly unconscious: boolean
-  readonly incapacitatedSources: ReadonlyArray<string>
-  readonly hitPointDiceRemaining: number | Record<string, number>
-  readonly activeEffects: ReadonlyArray<{
-    spellId: string
-    turnsRemaining: number
-    expiresAt: string
-  }>
-  // TurnState
-  readonly movementRemaining: number
-  readonly effectiveSpeed: number
-  readonly actionsRemaining: number
-  readonly attackActionUsed: boolean
-  readonly bonusActionUsed: boolean
-  readonly reactionAvailable: boolean
-  readonly freeInteractionUsed: boolean
-  readonly extraAttacksRemaining: number
-  readonly disengaged: boolean
-  readonly dodging: boolean
-  readonly readiedAction: boolean
-  readonly bonusActionSpellCast: boolean
-  readonly nonCantripActionSpellCast: boolean
-  readonly bonusMovementRemaining: number
-  readonly bonusMovementOAFree: boolean
-  // turnPhase
-  readonly turnPhase: string
-  // SpellSlotState
-  readonly slotsMax: ReadonlyArray<number>
-  readonly slotsCurrent: ReadonlyArray<number>
-  readonly pactSlotsMax: number
-  readonly pactSlotsCurrent: number
-  readonly pactSlotLevel: number
-  readonly concentrationSpellId: string
-  // FighterState
-  readonly secondWindCharges: number
-  readonly secondWindMax: number
-  readonly actionSurgeCharges: number
-  readonly actionSurgeMax: number
-  readonly actionSurgeUsedThisTurn: boolean
-  readonly indomitableCharges: number
-  readonly indomitableMax: number
-  readonly heroicInspiration: boolean
-  readonly fighterLevel: number
-}
-
-export interface TraceStep {
-  /** The Quint action name (e.g., "doTakeDamage") */
-  readonly quintAction: string
-  /** The corresponding XState event type (e.g., "TAKE_DAMAGE") */
-  readonly xstateEvent: string
-  /** Human-readable description of what happened */
-  readonly description: string
-  /** Quint state after this step (hand-written expected values) */
-  readonly quintState: NormalizedState
-  /** XState state after this step (from real machine replay) */
-  readonly xstateState: NormalizedState
-}
+import { replayTrace } from "./trace-replay.ts"
+import type { NormalizedState, TraceEventDef, TraceStep } from "./trace-types.ts"
 
 // --- Default state factory ---
 
