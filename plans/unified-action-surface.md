@@ -253,15 +253,17 @@ Expand the proven unified action surface beyond the first battle reaction token 
 ### Next implementation notes
 
 - The next honest extensions on this same surface are the remaining discovered battle reactions:
-  - `USE_CUTTING_WORDS`
   - `USE_DEFLECT_ATTACKS`
 - Recommended implementation order:
-  1. `USE_CUTTING_WORDS`
-     - runtime-owned Bardic Inspiration die roll
-  2. `USE_DEFLECT_ATTACKS`
-     - runtime-owned reduction amount
+  1. `USE_DEFLECT_ATTACKS`
+     - blocked on missing owned reduction inputs in battle state
 - Completed breadth after the foundational redesign:
   - `USE_UNCANNY_DODGE`
   - `CAST_SHIELD`
   - `USE_PARRY`
+  - `USE_CUTTING_WORDS`
+- `USE_DEFLECT_ATTACKS` is not blocked on the unified action surface anymore; it is blocked on battle ownership:
+  - current battle state does not carry the full reduction basis needed to produce an honest runtime `amount`
+  - specifically, battle can tell that Deflect Attacks is legal, but it does not own the Dexterity-modifier-derived reduction inputs needed to finalize the event from MCP/runtime alone
+  - the next correct step is a battle/model ownership slice, not another action-surface patch
 - The foundational unified-action-surface redesign itself is now proven. Follow-on work is breadth on top of the established contract, not another architecture phase.
