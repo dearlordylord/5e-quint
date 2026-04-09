@@ -168,3 +168,29 @@
 1. Each phase: Quint typecheck → invariant tests → TS typecheck → TS unit tests → MBT (dev mode for phases 1-2, full for phase 3)
 2. `/simplify` convergence: minimum 2 rounds after Phase 3
 3. RAW check: Sneak Attack text in `Classes/Rogue.md`, Prone/Paralyzed/Unconscious in `Rules-Glossary.md`, attack type rules in `Playing-the-Game.md`
+
+---
+
+## Dated Pre-Research Backlog: Height Advantage / High Ground
+
+**Date:** 2026-04-08
+
+**Status:** Pre-research only. Do not implement from this note alone.
+
+- The existing plan set already covers Two-Weapon Fighting elsewhere in the repo; this plan does not need a new TWF work item.
+- Height advantage/high ground was missing from the plan/PRD set. If it becomes a tracked item, this is the correct plan family because it would extend battle attack-mod aggregation.
+- Pre-research against `.references/srd-5.2.1/` found no general RAW rule that higher elevation grants Advantage on attack rolls.
+- Therefore this is currently a research backlog item, not an accepted feature.
+
+### What later expansion must answer
+
+- Is there actual SRD text in the repo corpus that requires a formal high-ground mechanic?
+- If not, should the idea be rejected outright under the repo's SRD-parity rule, or elevated to an explicit `ASSUMPTIONS.md` deviation by owner decision?
+- If approved after research, should it enter as:
+  - a general GM-circumstance hook outside the formal combat model, or
+  - a formal `AttackContext` boolean with explicit provenance and parity coverage?
+
+### If later promoted from pre-research
+
+- Expand the PRD first with exact RAW citations or an explicit assumptions entry.
+- Only then add concrete implementation phases and acceptance criteria here.

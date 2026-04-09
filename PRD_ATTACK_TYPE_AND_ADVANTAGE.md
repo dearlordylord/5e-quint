@@ -229,6 +229,30 @@ Existing 50-trace x 10-step runs will exercise the new fields. The field-by-fiel
 - **Spatial modeling**: `attackerWithin5ft`, `hostileWithin5ft`, `hasAllyAdjacentToTarget` are abstract booleans. No positions, distances, or grids.
 - **Visibility modeling**: `targetCanSeeAttacker`, `attackerCanSeeTarget` are nondeterministic booleans. No line-of-sight computation.
 
+## Dated Pre-Research: Height Advantage / High Ground
+
+**Date:** 2026-04-08
+
+**Status:** Pre-research only. Not approved for implementation. This note exists so the idea is tracked in the correct planning thread and can be expanded later if research changes the conclusion.
+
+### Pre-research findings
+
+- The current plan/PRD set did not contain a dedicated "height advantage" or "high ground" feature.
+- This topic belongs here, if anywhere, because it would be an attack-roll advantage source and therefore part of the same `AttackContext` / `pAggregateAttackMods` pipeline.
+- The repo's local RAW corpus does **not** currently support a general SRD rule that higher elevation grants Advantage on attack rolls.
+- In `.references/srd-5.2.1/Playing-the-Game.md`, Advantage/Disadvantage can come from special abilities, actions, or GM-decided circumstances, but no standing combat rule for high ground appears in the corpus.
+- The local corpus does include adjacent spatial/environmental rules that are real combat modifiers and already fit this PRD's scope: Cover, unseen attacker/target, ranged attacks in melee, underwater attacks, and range bands.
+- `Gameplay-Toolbox.md` mentions elevation as terrain that rewards clever positioning, but that is encounter-design guidance, not a general rule granting Advantage.
+
+### Pre-expansion notes
+
+- If the project owner wants "height advantage" tracked for future work, it should be treated as a **research-first candidate extension**, not as an accepted SRD feature.
+- The first research question is not "how do we model it?" but "is there any SRD-backed rule text in the repo corpus that should formalize it, or is this only a GM-circumstance example?"
+- If later research still finds no explicit RAW rule, the only compliant ways to proceed would be:
+  - reject it as non-SRD and leave it out of the formal combat spec, or
+  - document a sanctioned deviation in `ASSUMPTIONS.md` before any modeling work.
+- If it is ever approved, the likely mechanical home is a new caller-provided `hasHeightAdvantage: bool`-style input to `AttackContext`, but only after the rules basis is explicitly settled.
+
 ## Further Notes
 
 - This PRD closes the loop on the biggest documented simplification in the battle spec. The advantage infrastructure in creature.qnt was designed for this — the work is wiring, not inventing.
