@@ -11,7 +11,15 @@
 #   mbt-timing.jsonl        — per-seed timing data for tier analysis
 
 set -euo pipefail
-cd "$(dirname "$0")/../packages/core"
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+OUTPUT_ROOT="${FUZZ_OUTPUT_ROOT:-$PROJECT_ROOT}"
+case "$OUTPUT_ROOT" in
+  "$PROJECT_ROOT/packages"|"$PROJECT_ROOT/packages/"*)
+    echo "Refusing to write fuzz artifacts under $OUTPUT_ROOT" >&2
+    exit 1
+    ;;
+esac
+cd "$PROJECT_ROOT/packages/core"
 
 MAX_SEEDS="${1:-0}"
 CREATURE_TRACES="${MBT_TRACES:-50}"
@@ -19,9 +27,9 @@ CREATURE_STEPS="${MBT_STEPS:-30}"
 BATTLE_TRACES="${BATTLE_MBT_TRACES:-1}"
 BATTLE_STEPS="${BATTLE_MBT_STEPS:-5}"
 BATTLE_SAMPLES="${BATTLE_MBT_SAMPLES:-3}"
-LOG="../../mbt-fuzz.log"
-FAILURES="../../mbt-failures.jsonl"
-TIMING="../../mbt-timing.jsonl"
+LOG="$OUTPUT_ROOT/mbt-fuzz.log"
+FAILURES="$OUTPUT_ROOT/mbt-failures.jsonl"
+TIMING="$OUTPUT_ROOT/mbt-timing.jsonl"
 TMP="/tmp/mbt-fuzz-$$.out"
 COUNT=0
 FAIL_COUNT=0
@@ -78,7 +86,7 @@ run_seed() {
     DIFF_FIELD=$(grep -oP 'field "\K[^"]+' "$TMP" | head -1 || echo "unknown")
 
     # Save full output for later analysis
-    cp "$TMP" "../../mbt-failure-${KIND}-${SEED}.log"
+    cp "$TMP" "$OUTPUT_ROOT/mbt-failure-${KIND}-${SEED}.log"
 
     cat >> "$FAILURES" <<JSONEOF
 {"timestamp":"$TIMESTAMP","seed":"$SEED","kind":"$KIND","elapsed_s":$ELAPSED,"field":"$DIFF_FIELD","error":"$(echo "$ERROR_MSG" | tr '\n' ' ' | sed 's/"/\\"/g' | head -c 500)"}

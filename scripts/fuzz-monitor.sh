@@ -5,7 +5,9 @@
 # Output: prints a status summary to stdout (cron prompt picks this up).
 
 set -euo pipefail
-cd "$(dirname "$0")/.."
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+OUTPUT_ROOT="${FUZZ_OUTPUT_ROOT:-$PROJECT_ROOT}"
+cd "$PROJECT_ROOT"
 
 echo "=== Fuzz Monitor $(date -Iseconds) ==="
 
@@ -31,8 +33,8 @@ fi
 # 3. Count failures since last check
 MBT_FAILS=0
 INV_FAILS=0
-[ -f mbt-failures.jsonl ] && MBT_FAILS=$(wc -l < mbt-failures.jsonl)
-[ -f invariant-failures.jsonl ] && INV_FAILS=$(wc -l < invariant-failures.jsonl)
+[ -f "$OUTPUT_ROOT/mbt-failures.jsonl" ] && MBT_FAILS=$(wc -l < "$OUTPUT_ROOT/mbt-failures.jsonl")
+[ -f "$OUTPUT_ROOT/invariant-failures.jsonl" ] && INV_FAILS=$(wc -l < "$OUTPUT_ROOT/invariant-failures.jsonl")
 
 echo "MBT failures: $MBT_FAILS"
 echo "Invariant failures: $INV_FAILS"
@@ -44,25 +46,25 @@ if [ "$MBT_FAILS" -gt 0 ]; then
 
   # Group by kind
   echo "By kind:"
-  jq -r '.kind' mbt-failures.jsonl 2>/dev/null | sort | uniq -c | sort -rn || echo "  (could not parse)"
+  jq -r '.kind' "$OUTPUT_ROOT/mbt-failures.jsonl" 2>/dev/null | sort | uniq -c | sort -rn || echo "  (could not parse)"
 
   # Group by field
   echo "By divergent field:"
-  jq -r '.field' mbt-failures.jsonl 2>/dev/null | sort | uniq -c | sort -rn || echo "  (could not parse)"
+  jq -r '.field' "$OUTPUT_ROOT/mbt-failures.jsonl" 2>/dev/null | sort | uniq -c | sort -rn || echo "  (could not parse)"
 
   # Show last 3 failures
   echo "Latest failures:"
-  tail -3 mbt-failures.jsonl
+  tail -3 "$OUTPUT_ROOT/mbt-failures.jsonl"
 fi
 
 # 5. Analyze invariant failure patterns
 if [ "$INV_FAILS" -gt 0 ]; then
   echo ""
   echo "--- Invariant Failure Analysis ---"
-  tail -3 invariant-failures.jsonl
+  tail -3 "$OUTPUT_ROOT/invariant-failures.jsonl"
 
   # Check if same invariant keeps failing
-  for LOG_FILE in invariant-failure-*.log; do
+  for LOG_FILE in "$OUTPUT_ROOT"/invariant-failure-*.log; do
     [ -f "$LOG_FILE" ] || continue
     INV_NAME=$(grep -oP 'invariant \K\w+' "$LOG_FILE" | head -1 || echo "unknown")
     echo "  $LOG_FILE: invariant=$INV_NAME"
@@ -70,17 +72,17 @@ if [ "$INV_FAILS" -gt 0 ]; then
 fi
 
 # 6. Timing stats (if timing data exists)
-if [ -f mbt-timing.jsonl ]; then
+if [ -f "$OUTPUT_ROOT/mbt-timing.jsonl" ]; then
   echo ""
   echo "--- Timing Stats ---"
-  TOTAL_SEEDS=$(wc -l < mbt-timing.jsonl)
+  TOTAL_SEEDS=$(wc -l < "$OUTPUT_ROOT/mbt-timing.jsonl")
   echo "Total seeds timed: $TOTAL_SEEDS"
 
   echo "Creature MBT (last 20):"
-  grep '"creature"' mbt-timing.jsonl | tail -20 | jq -r '.elapsed_s' 2>/dev/null | awk '{sum+=$1; n++; if($1>max)max=$1; if(n==1||$1<min)min=$1} END{if(n>0) printf "  n=%d min=%ds avg=%ds max=%ds\n",n,min,sum/n,max}' || echo "  (no data)"
+  grep '"creature"' "$OUTPUT_ROOT/mbt-timing.jsonl" | tail -20 | jq -r '.elapsed_s' 2>/dev/null | awk '{sum+=$1; n++; if($1>max)max=$1; if(n==1||$1<min)min=$1} END{if(n>0) printf "  n=%d min=%ds avg=%ds max=%ds\n",n,min,sum/n,max}' || echo "  (no data)"
 
   echo "Battle MBT (last 20):"
-  grep '"battle"' mbt-timing.jsonl | tail -20 | jq -r '.elapsed_s' 2>/dev/null | awk '{sum+=$1; n++; if($1>max)max=$1; if(n==1||$1<min)min=$1} END{if(n>0) printf "  n=%d min=%ds avg=%ds max=%ds\n",n,min,sum/n,max}' || echo "  (no data)"
+  grep '"battle"' "$OUTPUT_ROOT/mbt-timing.jsonl" | tail -20 | jq -r '.elapsed_s' 2>/dev/null | awk '{sum+=$1; n++; if($1>max)max=$1; if(n==1||$1<min)min=$1} END{if(n>0) printf "  n=%d min=%ds avg=%ds max=%ds\n",n,min,sum/n,max}' || echo "  (no data)"
 fi
 
 # 7. Auto-fix analysis
@@ -90,14 +92,14 @@ if [ "$MBT_FAILS" -eq 0 ] && [ "$INV_FAILS" -eq 0 ]; then
   echo "No failures — nothing to fix."
 elif [ "$MBT_FAILS" -gt 0 ]; then
   # Check if ALL failures are on the same field — likely a single bug
-  UNIQUE_FIELDS=$(jq -r '.field' mbt-failures.jsonl 2>/dev/null | sort -u | wc -l || echo 0)
-  UNIQUE_ACTIONS=$(jq -r '.error' mbt-failures.jsonl 2>/dev/null | grep -oP 'action: \K\w+' | sort -u | wc -l || echo 0)
+  UNIQUE_FIELDS=$(jq -r '.field' "$OUTPUT_ROOT/mbt-failures.jsonl" 2>/dev/null | sort -u | wc -l || echo 0)
+  UNIQUE_ACTIONS=$(jq -r '.error' "$OUTPUT_ROOT/mbt-failures.jsonl" 2>/dev/null | grep -oP 'action: \K\w+' | sort -u | wc -l || echo 0)
 
   if [ "$UNIQUE_FIELDS" -eq 1 ]; then
-    THE_FIELD=$(jq -r '.field' mbt-failures.jsonl 2>/dev/null | head -1)
+    THE_FIELD=$(jq -r '.field' "$OUTPUT_ROOT/mbt-failures.jsonl" 2>/dev/null | head -1)
     echo "ALL $MBT_FAILS MBT failures on field '$THE_FIELD' — likely a single bug."
     echo "RECOMMENDATION: Debug one seed manually, fix should resolve all."
-    echo "  Repro: QUINT_SEED=$(jq -r '.seed' mbt-failures.jsonl | head -1) MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=5 npx vitest run -t 'replays Quint'"
+    echo "  Repro: QUINT_SEED=$(jq -r '.seed' "$OUTPUT_ROOT/mbt-failures.jsonl" | head -1) MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=5 npx vitest run -t 'replays Quint'"
   else
     echo "MBT failures across $UNIQUE_FIELDS fields — multiple bugs or cascading issue."
     echo "RECOMMENDATION: Defer to manual triage. Seeds saved in mbt-failure-*.log files."

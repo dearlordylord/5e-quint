@@ -10,14 +10,16 @@
 # Output: escalate-fuzz.log (append-only), plus mbt-fuzz.log / mbt-timing.jsonl from mbt-fuzz.sh
 
 set -euo pipefail
-cd "$(dirname "$0")/.."
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+OUTPUT_ROOT="${FUZZ_OUTPUT_ROOT:-$PROJECT_ROOT}"
+cd "$PROJECT_ROOT"
 
 STEPS="${STEPS_START:-10}"
 MAX_STEPS="${MAX_STEPS:-10000}"
 CLEAN_THRESHOLD="${CLEAN_THRESHOLD:-20}"
 SAMPLES="${MBT_MAX_SAMPLES:-10}"
 TIMEOUT="${MBT_TIMEOUT:-180}"
-LOG="escalate-fuzz.log"
+LOG="$OUTPUT_ROOT/escalate-fuzz.log"
 
 cleanup() {
   pkill -f "mbt-fuzz.sh" 2>/dev/null || true
@@ -38,7 +40,7 @@ while [ "$STEPS" -le "$MAX_STEPS" ]; do
   TIMEOUTS=0
   INTENTIONAL_KILL=0
 
-  MBT_MAX_SAMPLES="$SAMPLES" MBT_STEPS="$STEPS" MBT_TIMEOUT="$TIMEOUT" \
+  MBT_MAX_SAMPLES="$SAMPLES" MBT_STEPS="$STEPS" MBT_TIMEOUT="$TIMEOUT" FUZZ_OUTPUT_ROOT="$OUTPUT_ROOT" \
     ./scripts/mbt-fuzz.sh 2>&1 | tee "$TMP_LOG" &
   FUZZ_PID=$!
 

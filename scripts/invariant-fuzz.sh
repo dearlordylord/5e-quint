@@ -16,13 +16,21 @@
 #     --init=bInit --step=battleStep --main=battle battle.qnt
 
 set -euo pipefail
-cd "$(dirname "$0")/.."
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+OUTPUT_ROOT="${FUZZ_OUTPUT_ROOT:-$PROJECT_ROOT}"
+case "$OUTPUT_ROOT" in
+  "$PROJECT_ROOT/packages"|"$PROJECT_ROOT/packages/"*)
+    echo "Refusing to write fuzz artifacts under $OUTPUT_ROOT" >&2
+    exit 1
+    ;;
+esac
+cd "$PROJECT_ROOT"
 
 MAX_SEEDS="${1:-0}"  # 0 = infinite
 SAMPLES="${FUZZ_SAMPLES:-10}"
 STEPS="${FUZZ_STEPS:-10}"
-LOG="invariant-fuzz.log"
-FAILURES="invariant-failures.jsonl"
+LOG="$OUTPUT_ROOT/invariant-fuzz.log"
+FAILURES="$OUTPUT_ROOT/invariant-failures.jsonl"
 TMP="/tmp/inv-fuzz-$$.out"
 COUNT=0
 FAIL_COUNT=0
@@ -79,7 +87,7 @@ while true; do
 JSONEOF
 
     # Save full output for debugging
-    cp "$TMP" "invariant-failure-${REPRO_SEED}.log"
+    cp "$TMP" "$OUTPUT_ROOT/invariant-failure-${REPRO_SEED}.log"
   fi
 
   if [ "$MAX_SEEDS" -gt 0 ] && [ "$COUNT" -ge "$MAX_SEEDS" ]; then

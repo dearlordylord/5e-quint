@@ -20,7 +20,15 @@
 #     npx vitest run -t "replays Quint" -- src/battle-projection.mbt.test.ts
 
 set -euo pipefail
-cd "$(dirname "$0")/../packages/core"
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+OUTPUT_ROOT="${FUZZ_OUTPUT_ROOT:-$PROJECT_ROOT}"
+case "$OUTPUT_ROOT" in
+  "$PROJECT_ROOT/packages"|"$PROJECT_ROOT/packages/"*)
+    echo "Refusing to write fuzz artifacts under $OUTPUT_ROOT" >&2
+    exit 1
+    ;;
+esac
+cd "$PROJECT_ROOT/packages/core"
 
 MAX_SEEDS="${1:-0}"  # 0 = infinite
 TRACES="${MBT_TRACES:-1}"
@@ -29,10 +37,10 @@ STEPS="${MBT_STEPS:-5}"
 TIMEOUT="${MBT_TIMEOUT:-180}"
 TEST_KIND="${MBT_TEST:-battle}"  # "battle" or "creature"
 SAVE_TRACES="${MBT_SAVE_TRACES:-0}"  # 1 = save ITF traces to ../fat-traces/<seed>/
-LOG="../../mbt-fuzz.log"
-FAILURES="../../mbt-failures.jsonl"
-TIMING="../../mbt-timing.jsonl"
-BLACKLIST="../../mbt-seed-blacklist.txt"
+LOG="$OUTPUT_ROOT/mbt-fuzz.log"
+FAILURES="$OUTPUT_ROOT/mbt-failures.jsonl"
+TIMING="$OUTPUT_ROOT/mbt-timing.jsonl"
+BLACKLIST="$OUTPUT_ROOT/mbt-seed-blacklist.txt"
 TMP="/tmp/mbt-fuzz-$$.out"
 COUNT=0
 FAIL_COUNT=0
@@ -86,7 +94,7 @@ while true; do
 
   TRACE_DIR_ARG=""
   if [ "$SAVE_TRACES" = "1" ]; then
-    TRACE_DIR="../../fat-traces/${SEED}"
+    TRACE_DIR="$OUTPUT_ROOT/fat-traces/${SEED}"
     mkdir -p "$TRACE_DIR"
     TRACE_DIR_ARG="MBT_TRACE_DIR=$TRACE_DIR"
   fi
@@ -125,7 +133,7 @@ while true; do
     echo "$TIMESTAMP seed=$SEED kind=$TEST_KIND elapsed=${ELAPSED}s FAIL action=${ACTION:-?} field=${DIFF_FIELD:-?}" >> "$LOG"
 
     # Save full output for debugging
-    cp "$TMP" "../../mbt-failure-${TEST_KIND}-${SEED}.log"
+    cp "$TMP" "$OUTPUT_ROOT/mbt-failure-${TEST_KIND}-${SEED}.log"
     echo "  saved: mbt-failure-${TEST_KIND}-${SEED}.log"
 
     # Write structured failure record — use jq-safe escaping
