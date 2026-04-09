@@ -44,6 +44,8 @@ export function narrate(event: BattleEvent, meta: ScenarioMeta): string {
       if (!event.reactorId) return "No damage reactions."
       if (event.decision.tag === "RUncannyDodge")
         return `${name(event.reactorId, meta)} uses Uncanny Dodge — halves damage!`
+      if (event.decision.tag === "RDeflectAttacks")
+        return `${name(event.reactorId, meta)} uses Deflect Attacks!`
       if (event.decision.tag === "RPass") return `${name(event.reactorId, meta)} skips.`
       return `${name(event.reactorId, meta)} reduces damage.`
     case "BATTLE_END_TURN":

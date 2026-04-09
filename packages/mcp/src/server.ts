@@ -1,17 +1,23 @@
 import { Effect, JSONSchema, Match, Random, Schema } from "effect"
 import { createActor, type ActorRefFrom, type SnapshotFrom } from "xstate"
 
+import { battleMachine } from "@dnd/core/battle-machine.ts"
 import { creatureMachine } from "@dnd/core/machine.ts"
 import { encodeDndContext, encodeDndSnapshot } from "@dnd/core/context-encoding.ts"
+import type { BattleContext, CreatureId } from "@dnd/core/battle-machine-types.ts"
 import type { DndMachineInput } from "@dnd/core/machine-types.ts"
 import { classHitDie } from "@dnd/core/features/class-tables.ts"
 import {
   EXPOSED_ACTION_TYPES,
+  type BattleResolvedActionToken,
   finalizeResolution,
   getAvailableActions,
+  getAvailableBattleActions,
+  resolveBattleAction,
   resolveAction,
   ResolvedActionTokenSchema,
   type ActionToken,
+  type ResolvedActionToken,
   type ResolutionRequest,
   type ResourceCost,
   type ResolutionRuntimeInputs,
@@ -29,6 +35,11 @@ const DEMO_STARTING_DAMAGE = 10
 
 export type DndActor = ActorRefFrom<typeof creatureMachine>
 type DndSnapshot = SnapshotFrom<typeof creatureMachine>
+export type BattleActor = ActorRefFrom<typeof battleMachine>
+type BattleSnapshot = SnapshotFrom<typeof battleMachine>
+export type CreatureActionHost = { readonly scope: "creature"; readonly actor: DndActor }
+export type BattleActionHost = { readonly scope: "battle"; readonly actor: BattleActor }
+export type SupportedActionHost = CreatureActionHost | BattleActionHost
 
 export function createDemoActor(input: DndMachineInput = DEMO_ACTOR_INPUT): DndActor {
   const actor = createActor(creatureMachine, { input })
@@ -43,6 +54,16 @@ export function createDemoActor(input: DndMachineInput = DEMO_ACTOR_INPUT): DndA
     isCritical: false,
   })
   return actor
+}
+
+export function createDemoHost(input: DndMachineInput = DEMO_ACTOR_INPUT): CreatureActionHost {
+  return { scope: "creature", actor: createDemoActor(input) }
+}
+
+export function createBattleHost(actor?: BattleActor): BattleActionHost {
+  const battleActor = actor ?? createActor(battleMachine)
+  battleActor.start()
+  return { scope: "battle", actor: battleActor }
 }
 
 export function groupByCost(tokens: ReadonlyArray<ActionToken>): Record<string, ReadonlyArray<ActionToken>> {
@@ -67,17 +88,17 @@ export const executeActionJsonSchema = JSONSchema.make(ResolvedActionTokenSchema
 export const toolDefinitions = [
   {
     name: "get_state",
-    description: "Returns the current creature state (HP, conditions, resources, class features, turn economy) as JSON.",
+    description: "Returns the current creature or battle host state as JSON.",
     inputSchema: { type: "object" as const, properties: {} },
   },
   {
     name: "get_available_actions",
-    description: `Returns available action tokens grouped by action economy cost. Currently exposes: ${EXPOSED_ACTION_TYPES.join(", ")}.`,
+    description: `Returns available scoped action tokens grouped by action economy cost. Currently exposes creature actions: ${EXPOSED_ACTION_TYPES.join(", ")}.`,
     inputSchema: { type: "object" as const, properties: {} },
   },
   {
     name: "execute_action",
-    description: "Execute a resolved action token. User-facing choices must already be filled; MCP supplies engine-only values like prerolls.",
+    description: "Execute a resolved scoped action token. User-facing choices must already be filled; MCP supplies engine-only values like prerolls.",
     inputSchema: executeActionJsonSchema,
   },
 ] as const
@@ -95,6 +116,42 @@ function errorContent(message: string, details?: unknown) {
 
 function snapshotFingerprint(snapshot: DndSnapshot): string {
   return JSON.stringify(encodeDndSnapshot(snapshot))
+}
+
+function battleSnapshotUnchanged(before: BattleSnapshot, after: BattleSnapshot): boolean {
+  return before.context === after.context && JSON.stringify(before.value) === JSON.stringify(after.value)
+}
+
+function battlePhase(context: BattleContext) {
+  if (context.awaitCtx !== null) return "awaitingReaction" as const
+  if (context.aoeCtx !== null) return "resolvingAoE" as const
+  if (context.movementCtx !== null) return "resolvingMovement" as const
+  if (context.laCtx !== null) return "awaitingLegendaryAction" as const
+  if (context.readyCtx !== null) return "awaitingReadiedAction" as const
+  return "activeTurn" as const
+}
+
+function currentTurnCreatureId(context: BattleContext): CreatureId | null {
+  return context.initiative[context.turnIndex] ?? null
+}
+
+function encodeBattleRuntimeState(snapshot: BattleSnapshot) {
+  return {
+    scope: "battle" as const,
+    machineState: snapshot.value,
+    tags: [...snapshot.tags].sort(),
+    round: snapshot.context.round,
+    turnIndex: snapshot.context.turnIndex,
+    activeCreatureId: currentTurnCreatureId(snapshot.context),
+    initiative: snapshot.context.initiative,
+    creatureIds: [...snapshot.context.creatures.keys()].sort(),
+    phase: battlePhase(snapshot.context),
+    awaitingReaction: snapshot.context.awaitCtx !== null,
+    resolvingAoE: snapshot.context.aoeCtx !== null,
+    resolvingMovement: snapshot.context.movementCtx !== null,
+    awaitingLegendaryAction: snapshot.context.laCtx !== null,
+    awaitingReadiedAction: snapshot.context.readyCtx !== null,
+  }
 }
 
 function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["context"]): Effect.Effect<ResolutionRuntimeInputs> {
@@ -173,14 +230,9 @@ function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["co
   )
 }
 
-function executeResolvedAction(actor: DndActor, args: unknown) {
-  const decoded = Schema.decodeUnknownEither(ResolvedActionTokenSchema)(args)
-  if (decoded._tag === "Left") {
-    return errorContent("Invalid execute_action input", String(decoded.left))
-  }
-
+function executeCreatureResolvedAction(actor: DndActor, token: Extract<ResolvedActionToken, { readonly scope: "creature" }>) {
   const before = actor.getSnapshot()
-  const resolution = resolveAction(before.context, before.tags, decoded.right)
+  const resolution = resolveAction(before.context, before.tags, token)
   if ("code" in resolution) {
     return errorContent(resolution.message, resolution.code)
   }
@@ -195,7 +247,7 @@ function executeResolvedAction(actor: DndActor, args: unknown) {
 
   const after = actor.getSnapshot()
   if (snapshotFingerprint(before) === snapshotFingerprint(after)) {
-    return errorContent("Action was not accepted by the machine", decoded.right.type)
+    return errorContent("Action was not accepted by the machine", token.type)
   }
 
   return jsonContent({
@@ -205,18 +257,79 @@ function executeResolvedAction(actor: DndActor, args: unknown) {
   })
 }
 
-export function handleToolCall(actor: DndActor, name: string, args: unknown) {
+function scopeMismatchContent(tokenScope: "creature" | "battle", hostScope: "creature" | "battle") {
+  return errorContent(
+    `Action scope ${tokenScope} does not match the current ${hostScope} host.`,
+    "ACTION_SCOPE_MISMATCH",
+  )
+}
+
+function executeBattleResolvedAction(actor: BattleActor, token: BattleResolvedActionToken) {
+  const before = actor.getSnapshot()
+  const resolution = resolveBattleAction(before.context, token)
+  if (!resolution.ok) {
+    return errorContent(resolution.error.message, resolution.error.code)
+  }
+
+  actor.send(resolution.event)
+
+  const after = actor.getSnapshot()
+  if (battleSnapshotUnchanged(before, after)) {
+    return errorContent("Action was not accepted by the battle machine", token.type)
+  }
+
+  return jsonContent({
+    success: true,
+    outcome: resolution.outcome,
+    state: encodeBattleRuntimeState(after),
+  })
+}
+
+function executeResolvedAction(host: SupportedActionHost, args: unknown) {
+  const decoded = Schema.decodeUnknownEither(ResolvedActionTokenSchema)(args)
+  if (decoded._tag === "Left") {
+    return errorContent("Invalid execute_action input", String(decoded.left))
+  }
+
+  return Match.value(host).pipe(
+    Match.when({ scope: "creature" }, ({ actor }) => {
+      if (decoded.right.scope !== "creature") {
+        return scopeMismatchContent(decoded.right.scope, "creature")
+      }
+      return executeCreatureResolvedAction(actor, decoded.right)
+    }),
+    Match.when({ scope: "battle" }, ({ actor }) => {
+      if (decoded.right.scope !== "battle") {
+        return scopeMismatchContent(decoded.right.scope, "battle")
+      }
+      return executeBattleResolvedAction(actor, decoded.right)
+    }),
+    Match.exhaustive,
+  )
+}
+
+export function handleToolCall(host: SupportedActionHost, name: string, args: unknown) {
   if (name === "get_state") {
-    return jsonContent(encodeDndContext(actor.getSnapshot().context))
+    return Match.value(host).pipe(
+      Match.when({ scope: "creature" }, ({ actor }) => jsonContent(encodeDndContext(actor.getSnapshot().context))),
+      Match.when({ scope: "battle" }, ({ actor }) => jsonContent(encodeBattleRuntimeState(actor.getSnapshot()))),
+      Match.exhaustive,
+    )
   }
 
   if (name === "get_available_actions") {
-    const snapshot = actor.getSnapshot()
-    return jsonContent(groupByCost(getAvailableActions(snapshot.context, snapshot.tags)))
+    return Match.value(host).pipe(
+      Match.when({ scope: "creature" }, ({ actor }) => {
+        const snapshot = actor.getSnapshot()
+        return jsonContent(groupByCost(getAvailableActions(snapshot.context, snapshot.tags)))
+      }),
+      Match.when({ scope: "battle" }, ({ actor }) => jsonContent(groupByCost(getAvailableBattleActions(actor.getSnapshot().context)))),
+      Match.exhaustive,
+    )
   }
 
   if (name === "execute_action") {
-    return executeResolvedAction(actor, args)
+    return executeResolvedAction(host, args)
   }
 
   return errorContent(`Unknown tool: ${name}`)

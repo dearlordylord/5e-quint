@@ -26,11 +26,21 @@ Redesign the damage-reaction interrupt as a complete vertical slice before migra
 
 ### Acceptance criteria
 
-- [ ] The authoritative battle model preserves the trigger facts needed to validate damage reactions at the interrupt point.
-- [ ] If no legal damage reaction exists, the battle proceeds without opening a meaningless damage-reaction window.
-- [ ] Illegal damage-reaction decisions are rejected by the battle engine rather than being silently accepted.
-- [ ] The redesign is verified end-to-end through deterministic battle scenarios, even if only a minimal representative damage reaction is enabled at this stage.
-- [ ] Tier 1 battle parity checks pass after the redesign.
+- [x] The authoritative battle model preserves the trigger facts needed to validate damage reactions at the interrupt point.
+- [x] If no legal damage reaction exists, the battle proceeds without opening a meaningless damage-reaction window.
+- [x] Illegal damage-reaction decisions are rejected by the battle engine rather than being silently accepted.
+- [x] The redesign is verified end-to-end through deterministic battle scenarios, even if only a minimal representative damage reaction is enabled at this stage.
+- [x] Tier 1 battle parity checks pass after the redesign.
+
+### Phase 1 notes
+
+- Implemented with owned `legalReactions` on `PIAttackDamage`, plus the trigger facts that later named-reaction phases need: `targetCanSeeAttackerAtHit` and `isWeaponAttack`.
+- The damage window now opens only when the target has at least one legal response at the interrupt point.
+- Deterministic coverage proves:
+  - no damage window when the target has no legal damage reaction
+  - no `Uncanny Dodge` window when the attacker is unseen
+  - illegal damage-reaction decisions are rejected as no-ops against the owned window state
+- Phase 1 verification also surfaced and fixed a pre-existing projection-driver drift: the projection MBT fixture still initialized combatant `D` as a non-fighter even though `battle.qnt` has `D` as fighter 5.
 
 ---
 
@@ -42,13 +52,31 @@ Redesign the damage-reaction interrupt as a complete vertical slice before migra
 
 Move the first named damage reactions onto the owned damage-window model from Phase 1. This phase should make the modeled damage reactions use domain naming, enforce their exact legality rules, and demonstrate that the redesigned window can support named flow features without generic loopholes.
 
+### Next implementation notes
+
+- Rename the generic damage-reduction branch to `RDeflectAttacks` in both Quint and TS.
+- Keep `Uncanny Dodge` and `Deflect Attacks` as the only legal named damage reactions on this window.
+- Add deterministic scenario coverage for:
+  - positive `Uncanny Dodge`
+  - positive `Deflect Attacks`
+  - negative `Deflect Attacks` on a non-weapon or wrong-damage attack unless Deflect Energy applies
+
 ### Acceptance criteria
 
-- [ ] Damage-reaction decisions use domain naming for the reactions they represent.
-- [ ] `Uncanny Dodge` is modeled as a named legal damage reaction with the required trigger conditions.
-- [ ] `Deflect Attacks` is modeled as a named legal damage reaction with the required trigger conditions.
-- [ ] Deterministic scenario tests cover positive and negative legality cases for the first named damage reactions.
-- [ ] Tier 1 battle parity checks pass after the redesign.
+- [x] Damage-reaction decisions use domain naming for the reactions they represent.
+- [x] `Uncanny Dodge` is modeled as a named legal damage reaction with the required trigger conditions.
+- [x] `Deflect Attacks` is modeled as a named legal damage reaction with the required trigger conditions.
+- [x] Deterministic scenario tests cover positive and negative legality cases for the first named damage reactions.
+- [x] Tier 1 battle parity checks pass after the redesign.
+
+### Phase 2 notes
+
+- Renamed the generic damage-reduction decision to `RDeflectAttacks` across Quint, runtime, MBT bridges, and scenario coverage.
+- Deterministic coverage now proves:
+  - positive `Uncanny Dodge`
+  - positive `Deflect Attacks`
+  - negative `Deflect Attacks` on a non-weapon spell attack before Deflect Energy
+- This phase did not change the Phase 1 ownership shape; it only moved the damage window onto explicit domain naming.
 
 ---
 
@@ -60,13 +88,38 @@ Move the first named damage reactions onto the owned damage-window model from Ph
 
 Apply the same ownership pattern to hit-reaction windows. The hit interrupt should carry explicit legal reaction options for each responder rather than relying on a generic responder set plus caller-chosen decision variant. This phase should cover the named hit reactions already modeled by the battle system and align their legality with the battle-domain window model established in Phase 1.
 
+### Next implementation notes
+
+- Unlike the damage window, `PIAttackHit` is genuinely multi-responder. This phase should use a per-creature legal-reaction map rather than another target-local set.
+- `Shield` is already close to fully ownable from current battle state: prepared spell identity, slot availability, reaction availability, and one-slot-per-turn are already tracked.
+- `Cutting Words` is not yet fully ownable because battle combatants do not currently carry bardic-inspiration charge state.
+- `Parry` is not yet fully ownable because battle combatants do not currently carry a named parry capability or parry-bonus source.
+- So Phase 3 should explicitly include the owned-state additions that make those hit reactions honest, rather than narrowing the hit window back to `Shield` alone.
+
 ### Acceptance criteria
 
-- [ ] Hit-reaction windows explicitly model legal named reactions for responders in that interrupt.
-- [ ] Generic responder-only hit windows are removed or narrowed so they no longer allow impossible reaction choices.
-- [ ] Deterministic scenario tests cover at least one positive and one negative legality case for the named hit reactions already modeled.
-- [ ] The battle runtime and authoritative model remain in parity for hit-reaction sequencing.
-- [ ] Tier 1 battle parity checks pass after the redesign.
+- [x] Hit-reaction windows explicitly model legal named reactions for responders in that interrupt.
+- [x] Generic responder-only hit windows are removed or narrowed so they no longer allow impossible reaction choices.
+- [x] Deterministic scenario tests cover at least one positive and one negative legality case for the named hit reactions already modeled.
+- [x] The battle runtime and authoritative model remain in parity for hit-reaction sequencing.
+- [x] Tier 1 battle parity checks pass after the redesign.
+
+### Phase 3 notes
+
+- `PIAttackHit` now carries an owned `legalReactionsByCreature` map in both Quint and TS, so hit windows open only for responders with at least one legal named option.
+- Battle attack events now accept caller-provided `hitReactionCandidates` for the external-responder boundary. This keeps spatial facts outside battle while making third-party hit reactions honest once the caller supplies them.
+- Battle combatants now track the owned state needed for the currently modeled hit reactions:
+  - `bardLevel`
+  - `bardicInspirationCharges`
+  - `parryAcBonus`
+- Deterministic coverage now proves:
+  - positive `Shield` with real slot + reaction cost
+  - positive `Cutting Words` with owned bardic-inspiration spending
+  - positive `Parry` with the owned fixed AC bonus
+  - negative no-legal-hit-reaction path
+- Closing this phase also exposed two unrelated but real parity drifts from current `master`, both fixed here because they blocked Phase 3 verification:
+  - bonus-action spell casting needed spend-then-refund parity with Quint before the Counterspell window
+  - the battle MBT schema needed to accept `Size` picks in ITF variant form for `bGrapple`
 
 ---
 
@@ -78,28 +131,65 @@ Apply the same ownership pattern to hit-reaction windows. The hit interrupt shou
 
 Normalize the shared reaction-window architecture so the battle layer has one coherent way to represent reaction legality across interrupt types. This phase should align the battle-domain representation of interrupt windows, legal reaction options, and decision validation so future flow reactions can plug into the same architecture without reintroducing generic loopholes.
 
+### Next implementation notes
+
+- After Phase 3, the two main facilities still use different ownership shapes:
+  - `PIAttackHit` uses `legalReactionsByCreature`
+  - `PIAttackDamage` uses target-local `legalReactions`
+- Phase 4 should migrate damage reactions onto the same per-creature legal map pattern, even if the current damage window still only ever has one responder.
+- The normalization target should live at the battle interrupt/window layer, not in query-only helpers. A reasonable end state is:
+  - interrupt context preserves trigger facts
+  - interrupt context carries `legalReactionsByCreature`
+  - `AwaitCtx.eligible` becomes a direct projection of that owned legal map
+- The next phase does not need new SRD reaction coverage first. It should refactor the facility underneath the existing deterministic hit/damage scenarios and keep all of them green.
+- Once hit and damage windows share the same legality model, the next named-flow additions should not need special-case window plumbing.
+
 ### Acceptance criteria
 
-- [ ] Battle interrupt windows use a consistent legality model across at least hit and damage reaction facilities.
-- [ ] Decision validation happens against authoritative window state rather than ad hoc runtime assumptions.
-- [ ] The architecture for adding future named reactions is documented and consistent with the implemented window model.
-- [ ] Existing deterministic scenario coverage for reactions still passes on the normalized facility.
-- [ ] Tier 1 battle parity checks pass after normalization.
+- [x] Battle interrupt windows use a consistent legality model across at least hit and damage reaction facilities.
+- [x] Decision validation happens against authoritative window state rather than ad hoc runtime assumptions.
+- [x] The architecture for adding future named reactions is documented and consistent with the implemented window model.
+- [x] Existing deterministic scenario coverage for reactions still passes on the normalized facility.
+- [x] Tier 1 battle parity checks pass after normalization.
+
+### Phase 4 notes
+
+- `PIAttackDamage` now matches `PIAttackHit` and carries `legalReactionsByCreature` in both Quint and TS, even though the current damage window still only ever exposes the target as a responder.
+- Damage-window `eligible` is now a direct projection of the owned legal map rather than a hard-coded `Set(atk.target)`.
+- Damage-reaction validation no longer depends on target-local assumptions; it validates against the per-creature legal reaction map exactly like the hit window.
+- This phase intentionally changed architecture shape only. Existing deterministic reaction coverage stayed green without adding new SRD mechanics.
+- Verification passed:
+  - `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
+  - `pnpm --filter @dnd/core typecheck`
+  - `pnpm exec quint typecheck battle.qnt`
+  - `node scripts/compile-battle-spec.cjs`
+  - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts` with seed `0x39355cd5`
+  - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts` with seed `0xfa5b477c`
+
+### Next implementation notes
+
+- Phase 5 should now consume the authoritative window-owned legality rather than inventing new query-side trigger state.
+- Because the action-surface refactor on `master` is moving the same files that Phase 5 depends on, Phase 5 should be reassessed after rebasing onto current `master` rather than planned against the pre-rebase tree.
+- The architecture dependency remains the same: semantic reaction tokens must project from battle-owned trigger windows, not from generic resource availability.
+- That remaining integration work is now captured in [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md).
 
 ---
 
-## Phase 5: Action-Surface Reaction Tokens
+## Phase 5: Unified Action-Surface Integration
 
-**User stories**: honest semantic reaction actions in the supported action-query surface; no over-suggested reaction actions
+> Source PRD: [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md)
+
+**User stories**: honest semantic reaction actions in the supported action-query surface; no over-suggested reaction actions; unified action-query and execution across creature and battle scopes
 
 ### What to build
 
-Expose semantic reaction-cost actions through the supported action-query and MCP surface, now that trigger-window ownership exists in the battle model. The first exposed reaction actions should be chosen from the candidates already identified as blocked by missing owned trigger state, and they should only appear when the exact trigger window and legality conditions are satisfied.
+Integrate the battle-owned reaction windows into the supported action product through a unified action-surface redesign. The first battle-scoped semantic actions should be reaction tokens such as `USE_UNCANNY_DODGE` and `USE_CUTTING_WORDS`, but they should land through a scope-aware query/execute contract rather than being forced into the existing creature-only `available-actions.ts` pipeline.
 
 ### Acceptance criteria
 
-- [ ] At least one semantic reaction action is exposed honestly through the supported action-query surface.
+- [ ] The supported action product has a unified contract that can represent both creature-scoped and battle-scoped actions.
+- [ ] At least one semantic reaction action is exposed honestly through the battle-aware supported action surface.
 - [ ] The exposed reaction token appears only when the corresponding legal trigger window exists.
 - [ ] The action-query surface does not suggest reaction actions based solely on resource availability.
-- [ ] End-to-end tests cover both action discovery and execution for the exposed semantic reaction action.
-- [ ] The implementation reuses the authoritative reaction-window legality rather than introducing parallel query-only state.
+- [ ] End-to-end tests cover both battle-scoped action discovery and execution for the first semantic reaction action.
+- [ ] The implementation reuses the authoritative reaction-window legality rather than introducing parallel query-only state or duplicating battle triggers into creature state.

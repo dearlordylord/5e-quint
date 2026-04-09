@@ -81,10 +81,12 @@ export function battleMovementOAAttack({
     { tag: "ADRResolvingMovement", mv: updatedMv },
     e.knockOut,
     true,
+    e.targetCanSeeAttacker,
     mods,
     undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
-    e.saDmg
+    e.saDmg,
+    e.hitReactionCandidates
   )
 }

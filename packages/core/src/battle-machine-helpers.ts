@@ -21,6 +21,7 @@ import {
 import { calculateEffectiveSpeed } from "#/machine-helpers.ts"
 import type {
   AfterDamageReturn,
+  AttackDamageCtx,
   AttackHitCtx,
   AwaitCtx,
   BattleContext,
@@ -40,7 +41,10 @@ import {
   phaseResolvingAoE,
   phaseResolvingMovement
 } from "#/battle-machine-types.ts"
-import { evasionDamage } from "#/features/class-rogue.ts"
+import { canDeflectAttacks, hasDeflectEnergy } from "#/features/class-monk-features.ts"
+import { hasCuttingWords } from "#/features/class-bard.ts"
+import { canUncannyDodge, evasionDamage } from "#/features/class-rogue.ts"
+import { canCastShield } from "#/features/spell-abjuration.ts"
 import type { ActiveEffect, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
@@ -308,9 +312,79 @@ export function eligibleExcluding(cs: Creatures, excludeId: CreatureId): Set<Cre
   return result
 }
 
+function hasAnySpellSlot(c: BattleCreatureState, minimumLevel = 1): boolean {
+  for (let i = Math.max(0, minimumLevel - 1); i < c.slotsCurrent.length; i++) {
+    if (c.slotsCurrent[i]! > 0) return true
+  }
+  return false
+}
+
+export function firstAvailableSpellSlotLevel(c: BattleCreatureState, minimumLevel = 1): number | null {
+  for (let i = Math.max(0, minimumLevel - 1); i < c.slotsCurrent.length; i++) {
+    if (c.slotsCurrent[i]! > 0) return i + 1
+  }
+  return null
+}
+
 export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<CreatureId> {
   const t = cs.get(targetId)!
   return t.reactionAvailable && !t.dead && !t.unconscious ? new Set([targetId]) : new Set()
+}
+
+export function legalHitReactions(cs: Creatures, atk: AttackHitCtx, candidates: ReadonlySet<CreatureId>) {
+  const legalByCreature = new Map<CreatureId, Set<"RShield" | "RParry" | "RCuttingWords">>()
+  for (const [id, c] of cs) {
+    if (!c.reactionAvailable || c.dead || c.unconscious || isIncapacitated(c) || id === atk.attacker) continue
+    const legal = new Set<"RShield" | "RParry" | "RCuttingWords">()
+    if (
+      id === atk.target &&
+      canCastShield(c.reactionAvailable, hasAnySpellSlot(c)) &&
+      c.preparedSpells.has("shield") &&
+      !c.slotExpendedThisTurn
+    ) {
+      legal.add("RShield")
+    }
+    if (id === atk.target && atk.isMeleeAttack && atk.isWeaponAttack && c.parryAcBonus > 0) {
+      legal.add("RParry")
+    }
+    if (candidates.has(id) && hasCuttingWords(c.bardLevel) && c.bardicInspirationCharges > 0) {
+      legal.add("RCuttingWords")
+    }
+    if (legal.size > 0) legalByCreature.set(id, legal)
+  }
+  return legalByCreature
+}
+
+export function legalDamageReactionsByCreature(cs: Creatures, atk: AttackDamageCtx) {
+  const target = cs.get(atk.target)!
+  const legal = new Set<"RUncannyDodge" | "RDeflectAttacks">()
+  if (
+    canUncannyDodge({
+      rogueLevel: target.rogueLevel,
+      reactionAvailable: target.reactionAvailable,
+      attackerVisible: atk.targetCanSeeAttackerAtHit,
+      isIncapacitated: isIncapacitated(target)
+    })
+  ) {
+    legal.add("RUncannyDodge")
+  }
+  if (
+    canDeflectAttacks(
+      target.monkLevel,
+      target.reactionAvailable,
+      atk.isWeaponAttack,
+      hasDeflectEnergy(target.monkLevel)
+    ) &&
+    (atk.damageType === "bludgeoning" ||
+      atk.damageType === "piercing" ||
+      atk.damageType === "slashing" ||
+      hasDeflectEnergy(target.monkLevel))
+  ) {
+    legal.add("RDeflectAttacks")
+  }
+  const legalByCreature = new Map<CreatureId, Set<"RUncannyDodge" | "RDeflectAttacks">>()
+  if (legal.size > 0) legalByCreature.set(atk.target, legal)
+  return legalByCreature
 }
 
 export function canMakeOpportunityAttack(c: BattleCreatureState): boolean {
@@ -403,28 +477,26 @@ export function advanceFromHitPhase(
   const stillHit = isHit(atk.attackRoll, atk.targetAc, atk.critRange)
   if (!stillHit) return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) }
   const cs1 = applyOnHitEffect(cs, atk.target, atk.onHitEffect, currentTurnCreatureId)
-  const dmgElig = eligibleTarget(cs1, atk.target)
-  if (dmgElig.size > 0) {
+  const dmgBase: Omit<AttackDamageCtx, "legalReactionsByCreature"> = {
+    attacker: atk.attacker,
+    target: atk.target,
+    damage: atk.damage,
+    damageType: atk.damageType,
+    isCritical: atk.isCritical,
+    atkReturnTo: atk.atkReturnTo,
+    knockOut: atk.knockOut,
+    targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
+    isWeaponAttack: atk.isWeaponAttack
+  }
+  const dmgCtx: AttackDamageCtx = {
+    ...dmgBase,
+    legalReactionsByCreature: legalDamageReactionsByCreature(cs1, { ...dmgBase, legalReactionsByCreature: new Map() })
+  }
+  const elig = new Set(dmgCtx.legalReactionsByCreature.keys())
+  if (elig.size > 0) {
     return {
       creatures: new Map(cs1),
-      ...phaseAwaitReaction(
-        mkAwait(
-          {
-            tag: "PIAttackDamage",
-            ctx: {
-              attacker: atk.attacker,
-              target: atk.target,
-              damage: atk.damage,
-              damageType: atk.damageType,
-              isCritical: atk.isCritical,
-              atkReturnTo: atk.atkReturnTo,
-              knockOut: atk.knockOut
-            }
-          },
-          "TAttackDamages",
-          dmgElig
-        )
-      )
+      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackDamage", ctx: dmgCtx }, "TAttackDamages", elig))
     }
   }
   return dealDamageWithAfterReactions(

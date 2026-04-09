@@ -14,6 +14,7 @@ import { relentlessRageDC } from "#/features/class-barbarian.ts"
 import { flurryOfBlowsStrikes, pMartialArtsDie } from "#/features/class-monk.ts"
 import { tirelessTempHp } from "#/features/class-ranger.ts"
 import { slotCreationCost, type MetamagicOption } from "#/features/class-sorcerer.ts"
+import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
 import {
   canUseHeroicInspirationNow,
   guards,
@@ -30,7 +31,7 @@ import {
 } from "#/machine-guards.ts"
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
-import { SpellSlotLevel, type D20Roll, type SpellName, type SpellSlotLevel as SpellSlotLevelValue } from "#/types.ts"
+import { CreatureId, SpellSlotLevel, type D20Roll, type SpellName, type SpellSlotLevel as SpellSlotLevelValue } from "#/types.ts"
 
 export type ResourceCost = {
   readonly action?: true
@@ -43,6 +44,9 @@ export type ResourceCost = {
 export type OutcomeDescription = {
   readonly summary: string
 }
+
+export const ACTION_SCOPES = ["creature", "battle"] as const
+export type ActionScope = (typeof ACTION_SCOPES)[number]
 
 export type Hole<T> = { readonly options: ReadonlyArray<T> }
 export type MaybeHole<T> = T | Hole<T>
@@ -189,7 +193,44 @@ type TokenByType = {
   readonly EXIT_COMBAT: SimpleToken<"EXIT_COMBAT">
 }
 
-export type ActionToken = TokenByType[SupportedActionType]
+type CreatureActionToken = TokenByType[SupportedActionType] & { readonly scope: "creature" }
+export type BattleActionToken =
+  | {
+      readonly scope: "battle"
+      readonly actorId: string
+      readonly type: "CAST_SHIELD"
+      readonly cost: { readonly reaction: true; readonly charge: "spellSlot" }
+      readonly outcome: OutcomeDescription
+    }
+  | {
+      readonly scope: "battle"
+      readonly actorId: string
+      readonly type: "USE_PARRY"
+      readonly cost: { readonly reaction: true }
+      readonly outcome: OutcomeDescription
+    }
+  | {
+      readonly scope: "battle"
+      readonly actorId: string
+      readonly type: "USE_CUTTING_WORDS"
+      readonly cost: { readonly reaction: true; readonly charge: "bardicInspiration" }
+      readonly outcome: OutcomeDescription
+    }
+  | {
+      readonly scope: "battle"
+      readonly actorId: string
+      readonly type: "USE_UNCANNY_DODGE"
+      readonly cost: { readonly reaction: true }
+      readonly outcome: OutcomeDescription
+    }
+  | {
+      readonly scope: "battle"
+      readonly actorId: string
+      readonly type: "USE_DEFLECT_ATTACKS"
+      readonly cost: { readonly reaction: true }
+      readonly outcome: OutcomeDescription
+    }
+export type ActionToken = CreatureActionToken | BattleActionToken
 type ResolvedTokenByType = {
   readonly ENTER_COMBAT: { readonly type: "ENTER_COMBAT" }
   readonly USE_HEROIC_INSPIRATION: { readonly type: "USE_HEROIC_INSPIRATION" }
@@ -235,7 +276,13 @@ type ResolvedTokenByType = {
   readonly SHORT_REST: { readonly type: "SHORT_REST"; readonly spendHitDice: ReadonlyArray<ClassName> }
   readonly EXIT_COMBAT: { readonly type: "EXIT_COMBAT" }
 }
-export type ResolvedActionToken = ResolvedTokenByType[SupportedActionType]
+type CreatureResolvedActionToken = ResolvedTokenByType[SupportedActionType] & { readonly scope: "creature" }
+export type BattleResolvedActionToken = {
+  readonly scope: "battle"
+  readonly actorId: string
+  readonly type: string
+}
+export type ResolvedActionToken = CreatureResolvedActionToken | BattleResolvedActionToken
 
 const EnterCombatResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("ENTER_COMBAT"),
@@ -379,7 +426,7 @@ const ExitCombatResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("EXIT_COMBAT"),
 })
 
-const PrimaryResolvedActionTokenSchema = Schema.Union(
+const PrimaryCreatureResolvedActionTokenSchema = Schema.Union(
   EnterCombatResolvedActionSchema,
   UseHeroicInspirationResolvedActionSchema,
   CastPreparedSpellResolvedActionSchema,
@@ -402,9 +449,9 @@ const PrimaryResolvedActionTokenSchema = Schema.Union(
   StepOfTheWindFocusResolvedActionSchema,
   WholenessOfBodyResolvedActionSchema,
   UncannyMetabolismResolvedActionSchema,
-)
+).pipe(Schema.attachPropertySignature("scope", "creature"))
 
-const SecondaryResolvedActionTokenSchema = Schema.Union(
+const SecondaryCreatureResolvedActionTokenSchema = Schema.Union(
   UseArcaneRecoveryResolvedActionSchema,
   UseOverchannelResolvedActionSchema,
   UseMetamagicResolvedActionSchema,
@@ -426,54 +473,24 @@ const SecondaryResolvedActionTokenSchema = Schema.Union(
   UseRelentlessRageResolvedActionSchema,
   ShortRestResolvedActionSchema,
   ExitCombatResolvedActionSchema,
-)
+).pipe(Schema.attachPropertySignature("scope", "creature"))
+
+const BattleResolvedActionTokenSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  actorId: Schema.String,
+  type: Schema.String,
+})
 
 export const RESOLVED_ACTION_SCHEMAS = [
-  EnterCombatResolvedActionSchema,
-  UseHeroicInspirationResolvedActionSchema,
-  CastPreparedSpellResolvedActionSchema,
-  StartTurnResolvedActionSchema,
-  UseActionSurgeResolvedActionSchema,
-  UseIndomitableResolvedActionSchema,
-  UseTacticalMindResolvedActionSchema,
-  ConvertSlotToPointsResolvedActionSchema,
-  ConvertPointsToSlotResolvedActionSchema,
-  EnterRageResolvedActionSchema,
-  EndRageResolvedActionSchema,
-  ExtendRageBAResolvedActionSchema,
-  DeclareRecklessResolvedActionSchema,
-  UseLayOnHandsResolvedActionSchema,
-  UseDivineSmiteResolvedActionSchema,
-  FlurryOfBlowsResolvedActionSchema,
-  PatientDefenseFreeResolvedActionSchema,
-  PatientDefenseFocusResolvedActionSchema,
-  StepOfTheWindFreeResolvedActionSchema,
-  StepOfTheWindFocusResolvedActionSchema,
-  WholenessOfBodyResolvedActionSchema,
-  UncannyMetabolismResolvedActionSchema,
-  UseArcaneRecoveryResolvedActionSchema,
-  UseOverchannelResolvedActionSchema,
-  UseMetamagicResolvedActionSchema,
-  UseMysticArcanumResolvedActionSchema,
-  UseSecondWindResolvedActionSchema,
-  UseTirelessResolvedActionSchema,
-  UseSneakAttackResolvedActionSchema,
-  UseSteadyAimResolvedActionSchema,
-  CunningActionDashResolvedActionSchema,
-  CunningActionDisengageResolvedActionSchema,
-  CunningActionHideResolvedActionSchema,
-  UseClericChannelDivinityResolvedActionSchema,
-  UseFontSlotRestoreResolvedActionSchema,
-  UsePaladinChannelDivinityResolvedActionSchema,
-  UseWildResurgenceChargeResolvedActionSchema,
-  UseNaturesVeilResolvedActionSchema,
-  UseBardicInspirationResolvedActionSchema,
-  UsePeerlessSkillResolvedActionSchema,
-  UseRelentlessRageResolvedActionSchema,
-  ShortRestResolvedActionSchema,
-  ExitCombatResolvedActionSchema,
+  PrimaryCreatureResolvedActionTokenSchema,
+  SecondaryCreatureResolvedActionTokenSchema,
+  BattleResolvedActionTokenSchema,
 ] as const
-export const ResolvedActionTokenSchema = Schema.Union(PrimaryResolvedActionTokenSchema, SecondaryResolvedActionTokenSchema)
+export const ResolvedActionTokenSchema = Schema.Union(
+  PrimaryCreatureResolvedActionTokenSchema,
+  SecondaryCreatureResolvedActionTokenSchema,
+  BattleResolvedActionTokenSchema,
+)
 
 export type StartTurnRuntimeInputs = {
   readonly extraAttacks?: number
@@ -781,6 +798,10 @@ export type FinalizedAction =
   | { readonly ok: true; readonly event: DndEvent; readonly outcome: string }
   | { readonly ok: false; readonly error: ActionResolutionError }
 
+export type FinalizedBattleAction =
+  | { readonly ok: true; readonly event: BattleEvent; readonly outcome: string }
+  | { readonly ok: false; readonly error: ActionResolutionError }
+
 export type ActionResolutionErrorCode =
   | "ACTION_NOT_AVAILABLE"
   | "ACTION_NOT_SUPPORTED"
@@ -794,6 +815,10 @@ export type ActionResolutionError = {
 
 type ActionSpec<T extends SupportedActionType> = {
   readonly buildToken: (context: DndContext) => TokenByType[T] | ReadonlyArray<TokenByType[T]> | null
+}
+
+function creatureActionToken<T extends TokenByType[SupportedActionType]>(token: T): T & { readonly scope: "creature" } {
+  return { scope: "creature", ...token }
 }
 
 const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
@@ -1317,9 +1342,139 @@ export const EXPOSED_ACTION_TYPES = SUPPORTED_ACTION_TYPES
 export function getAvailableActions(context: DndContext, tags: ReadonlySet<string>): ReadonlyArray<ActionToken> {
   return SUPPORTED_ACTION_TYPES.flatMap((type) => {
     if (!isAcceptedByMachine(type, tags)) return []
-    const token = ACTION_SPECS[type].buildToken(context)
-    return token == null ? [] : Array.isArray(token) ? token : [token]
+    const builtToken = ACTION_SPECS[type].buildToken(context)
+    if (builtToken == null) return []
+    if (Array.isArray(builtToken)) return builtToken.map((entry) => creatureActionToken(entry))
+    const singleToken = builtToken as TokenByType[SupportedActionType]
+    return [creatureActionToken(singleToken)]
   })
+}
+
+function battleToken<T extends BattleActionToken>(token: Omit<T, "scope">): T {
+  return { scope: "battle", ...token } as T
+}
+
+function hitReactionToken(actorId: string, reaction: "RShield" | "RParry" | "RCuttingWords"): BattleActionToken {
+  return Match.value(reaction).pipe(
+    Match.when("RShield", () =>
+      battleToken({
+        actorId,
+        type: "CAST_SHIELD",
+        cost: { reaction: true, charge: "spellSlot" },
+        outcome: { summary: "Use your reaction to cast Shield against the triggering attack" },
+      }),
+    ),
+    Match.when("RParry", () =>
+      battleToken({
+        actorId,
+        type: "USE_PARRY",
+        cost: { reaction: true },
+        outcome: { summary: "Use your reaction to add your Parry bonus against the triggering melee weapon attack" },
+      }),
+    ),
+    Match.when("RCuttingWords", () =>
+      battleToken({
+        actorId,
+        type: "USE_CUTTING_WORDS",
+        cost: { reaction: true, charge: "bardicInspiration" },
+        outcome: { summary: "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll" },
+      }),
+    ),
+    Match.exhaustive,
+  )
+}
+
+function damageReactionToken(actorId: string, reaction: "RUncannyDodge" | "RDeflectAttacks"): BattleActionToken {
+  return Match.value(reaction).pipe(
+    Match.when("RUncannyDodge", () =>
+      battleToken({
+        actorId,
+        type: "USE_UNCANNY_DODGE",
+        cost: { reaction: true },
+        outcome: { summary: "Use your reaction to halve the triggering attack's damage against you" },
+      }),
+    ),
+    Match.when("RDeflectAttacks", () =>
+      battleToken({
+        actorId,
+        type: "USE_DEFLECT_ATTACKS",
+        cost: { reaction: true },
+        outcome: { summary: "Use your reaction to reduce the triggering attack's damage with Deflect Attacks" },
+      }),
+    ),
+    Match.exhaustive,
+  )
+}
+
+export function getAvailableBattleActions(context: BattleContext): ReadonlyArray<BattleActionToken> {
+  const awaitCtx = context.awaitCtx
+  if (awaitCtx == null) return []
+
+  const interrupt = awaitCtx.interrupt
+  if (interrupt.tag === "PIAttackHit") {
+    const tokens: Array<BattleActionToken> = []
+    for (const [actorId, legalReactions] of interrupt.ctx.legalReactionsByCreature) {
+      if (!awaitCtx.eligible.has(actorId)) continue
+      for (const reaction of legalReactions) {
+        tokens.push(hitReactionToken(actorId, reaction))
+      }
+    }
+    return tokens
+  }
+
+  if (interrupt.tag === "PIAttackDamage") {
+    const tokens: Array<BattleActionToken> = []
+    for (const [actorId, legalReactions] of interrupt.ctx.legalReactionsByCreature) {
+      if (!awaitCtx.eligible.has(actorId)) continue
+      for (const reaction of legalReactions) {
+        tokens.push(damageReactionToken(actorId, reaction))
+      }
+    }
+    return tokens
+  }
+
+  return []
+}
+
+function availableBattleTokenForType(
+  context: BattleContext,
+  type: BattleActionToken["type"],
+  actorId: string,
+): BattleActionToken | undefined {
+  return getAvailableBattleActions(context).find((token) => token.type === type && token.actorId === actorId)
+}
+
+export function resolveBattleAction(context: BattleContext, token: BattleResolvedActionToken): FinalizedBattleAction {
+  if (token.type !== "USE_UNCANNY_DODGE") {
+    return {
+      ok: false,
+      error: {
+        code: "ACTION_NOT_SUPPORTED",
+        message: `${token.type} is not implemented yet through the battle action surface.`,
+      },
+    }
+  }
+
+  const availableToken = availableBattleTokenForType(context, token.type, token.actorId)
+  if (availableToken == null) {
+    return {
+      ok: false,
+      error: {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} is not currently available for ${token.actorId} in this battle state.`,
+      },
+    }
+  }
+
+  return {
+    ok: true,
+    event: {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: CreatureId(token.actorId),
+      decision: { tag: "RUncannyDodge" },
+    },
+    outcome: availableToken.outcome.summary,
+  }
 }
 
 function runtimeMismatch(expected: ResolutionRuntimeInputs["runtime"], actual: ResolutionRuntimeInputs["runtime"]): FinalizedAction {
@@ -1336,8 +1491,8 @@ function availableTokenForType(
   context: DndContext,
   tags: ReadonlySet<string>,
   type: SupportedActionType,
-): ActionToken | undefined {
-  return getAvailableActions(context, tags).find((token) => token.type === type)
+): CreatureActionToken | undefined {
+  return getAvailableActions(context, tags).find((token): token is CreatureActionToken => token.scope === "creature" && token.type === type)
 }
 
 function shortRestAvailableHitDice(context: DndContext): ReadonlyArray<{
@@ -1403,6 +1558,12 @@ export function resolveAction(
   tags: ReadonlySet<string>,
   token: ResolvedActionToken,
 ): ResolutionRequest | ActionResolutionError {
+  if (token.scope === "battle") {
+    return {
+      code: "ACTION_NOT_SUPPORTED",
+      message: `${token.type} is battle-scoped and cannot execute through the creature action pipeline.`,
+    }
+  }
   if (token.type === "CAST_PREPARED_SPELL") {
     if (!isAcceptedByMachine(token.type, tags)) {
       return {

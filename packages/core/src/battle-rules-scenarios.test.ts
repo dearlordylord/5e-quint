@@ -4,6 +4,7 @@ import { createActor } from "xstate"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleEvent } from "#/battle-machine-types.ts"
+import type { CreatureId as CreatureIdT } from "#/types.ts"
 import { armorClass, CreatureId, difficultyClass, spellId, spellSlotLevel } from "#/types.ts"
 
 const DEFAULT_ATTACK_CONTEXT = {
@@ -16,7 +17,8 @@ const DEFAULT_ATTACK_CONTEXT = {
   attackerCanSeeTarget: true,
   frightSourceInLOS: false,
   hasAllyAdjacentToTarget: false,
-  saDmg: 0
+  saDmg: 0,
+  hitReactionCandidates: new Set<CreatureIdT>()
 } as const
 
 const ZERO_SOT: Pick<
@@ -52,6 +54,54 @@ function initTwoPcBattle() {
     creatures: [
       { id: CreatureId("A"), maxHp: 20, kind: "PC" },
       { id: CreatureId("B"), maxHp: 20, kind: "PC" }
+    ]
+  })
+  return actor
+}
+
+function initHitReactionBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["shield"]),
+        initiativeRoll: 15
+      },
+      {
+        id: CreatureId("C"),
+        maxHp: 20,
+        kind: "PC",
+        bardLevel: 3,
+        bardicInspirationCharges: 3,
+        initiativeRoll: 10
+      },
+      { id: CreatureId("D"), maxHp: 20, kind: "Monster", parryAcBonus: 2, initiativeRoll: 5 }
+    ]
+  })
+  return actor
+}
+
+function initDamageReactionBattle({
+  rogueLevel = 0,
+  monkLevel = 0,
+}: {
+  readonly rogueLevel?: number
+  readonly monkLevel?: number
+}) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", rogueLevel, monkLevel, initiativeRoll: 10 }
     ]
   })
   return actor
@@ -324,7 +374,7 @@ function passSpellCastWindow(actor: ReturnType<typeof createActor<typeof battleM
 
 describe("battle rules scenario regressions", () => {
   it("natural_20: Shield negates the triggering hit and spends the reaction", () => {
-    const actor = initTwoPcBattle()
+    const actor = initHitReactionBattle()
     startTurn(actor)
 
     send(actor, {
@@ -357,6 +407,284 @@ describe("battle rules scenario regressions", () => {
     expect(ctx(actor).awaitCtx).toBeNull()
     expect(creature(actor, "B").hp).toBe(20)
     expect(creature(actor, "B").reactionAvailable).toBe(false)
+    expect(creature(actor, "B").slotsCurrent[0]).toBe(3)
+    expect(creature(actor, "B").slotExpendedThisTurn).toBe(true)
+  })
+
+  it("phase_3: Cutting Words is offered only to an owned candidate and spends bardic inspiration", () => {
+    const actor = initHitReactionBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(15),
+      ...DEFAULT_ATTACK_CONTEXT,
+      hitReactionCandidates: new Set([CreatureId("C")])
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit")
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("C"))).toBe(true)
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("D"))).toBe(false)
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: CreatureId("C"),
+      decision: { tag: "RCuttingWords", reduction: 4 }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "B").hp).toBe(20)
+    expect(creature(actor, "C").reactionAvailable).toBe(false)
+    expect(creature(actor, "C").bardicInspirationCharges).toBe(2)
+  })
+
+  it("phase_3: Parry is legal only on melee weapon hits and uses the owned AC bonus", () => {
+    const actor = initHitReactionBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("D"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(15),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit")
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("D"))).toBe(true)
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: CreatureId("D"),
+      decision: { tag: "RParry", bonus: 2 }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx).toBeNull()
+    expect(creature(actor, "D").hp).toBe(20)
+    expect(creature(actor, "D").reactionAvailable).toBe(false)
+  })
+
+  it("phase_3: impossible hit reactions are rejected by owned window legality", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(15),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
+    expect(creature(actor, "B").hp).toBe(13)
+  })
+
+  it("phase_1: the damage window is skipped when the target has no legal damage reaction", () => {
+    const actor = initTwoPcBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
+    expect(creature(actor, "B").hp).toBe(13)
+  })
+
+  it("phase_1: Uncanny Dodge does not open when the attacker is unseen at the hit", () => {
+    const actor = initDamageReactionBattle({ rogueLevel: 5 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 8,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      targetCanSeeAttacker: false
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
+    expect(creature(actor, "B").hp).toBe(12)
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
+  })
+
+  it("phase_1: illegal damage reaction decisions are rejected against the owned window state", () => {
+    const actor = initDamageReactionBattle({ rogueLevel: 5 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 9,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
+    const awaitCtx = ctx(actor).awaitCtx
+    const dmgCtx = awaitCtx?.interrupt.tag === "PIAttackDamage" ? awaitCtx.interrupt.ctx : null
+    expect(dmgCtx?.legalReactionsByCreature.get(CreatureId("B"))).toEqual(new Set(["RUncannyDodge"]))
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RDeflectAttacks", amount: 5 }
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
+    expect(creature(actor, "B").hp).toBe(20)
+  })
+
+  it("phase_2: Uncanny Dodge halves the damage against a visible attack and spends the reaction", () => {
+    const actor = initDamageReactionBattle({ rogueLevel: 5 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 9,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RUncannyDodge" }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(creature(actor, "B").hp).toBe(16)
+    expect(creature(actor, "B").reactionAvailable).toBe(false)
+  })
+
+  it("phase_2: Deflect Attacks reduces weapon-attack damage and spends the reaction", () => {
+    const actor = initDamageReactionBattle({ monkLevel: 3 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 9,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT
+    })
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage")
+    const deflectAwaitCtx = ctx(actor).awaitCtx
+    const deflectCtx = deflectAwaitCtx?.interrupt.tag === "PIAttackDamage" ? deflectAwaitCtx.interrupt.ctx : null
+    expect(deflectCtx?.legalReactionsByCreature.get(CreatureId("B"))).toEqual(new Set(["RDeflectAttacks"]))
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RDeflectAttacks", amount: 6 }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(creature(actor, "B").hp).toBe(17)
+    expect(creature(actor, "B").reactionAvailable).toBe(false)
+  })
+
+  it("phase_2: Deflect Attacks does not open on a non-weapon attack before Deflect Energy", () => {
+    const actor = initDamageReactionBattle({ monkLevel: 3 })
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "cold",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+      onHitEffect: {
+        spellId: spellId("ray_of_frost"),
+        turnsRemaining: 1,
+        expiresAt: "start",
+        casterId: CreatureId("A"),
+        expiryOwnerId: CreatureId("A"),
+        speedDeltaFeet: -10
+      }
+    })
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" }
+    })
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage")
+    expect(creature(actor, "B").hp).toBe(13)
+    expect(creature(actor, "B").reactionAvailable).toBe(true)
   })
 
   it("natural_20: Counterspell fizzles the spell, wastes the action, and preserves the original slot", () => {
@@ -500,7 +828,8 @@ describe("battle rules scenario regressions", () => {
       attackerCanSeeTarget: true,
       frightSourceInLOS: false,
       hasAllyAdjacentToTarget: false,
-      saDmg: 0
+      saDmg: 0,
+      hitReactionCandidates: new Set<CreatureIdT>()
     })
     resolveAttackWindows(actor)
 
@@ -633,7 +962,8 @@ describe("battle rules scenario regressions", () => {
       attackerCanSeeTarget: true,
       frightSourceInLOS: false,
       hasAllyAdjacentToTarget: false,
-      saDmg: 0
+      saDmg: 0,
+      hitReactionCandidates: new Set<CreatureIdT>()
     })
     send(actor, {
       type: "BATTLE_MOVEMENT_OA_PASS",
@@ -680,7 +1010,8 @@ describe("battle rules scenario regressions", () => {
       attackerCanSeeTarget: true,
       frightSourceInLOS: false,
       hasAllyAdjacentToTarget: false,
-      saDmg: 0
+      saDmg: 0,
+      hitReactionCandidates: new Set<CreatureIdT>()
     })
     send(actor, {
       type: "BATTLE_MOVEMENT_OA_PASS",

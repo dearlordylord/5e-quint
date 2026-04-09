@@ -9,6 +9,7 @@ import { createActor } from "xstate"
 
 import { battleMachine } from "#/battle-machine.ts"
 import type { BattleEvent } from "#/battle-machine-types.ts"
+import type { CreatureId as CreatureIdT } from "#/types.ts"
 import { armorClass, CreatureId } from "#/types.ts"
 
 function send(actor: ReturnType<typeof createActor<typeof battleMachine>>, ...events: Array<BattleEvent>) {
@@ -25,7 +26,8 @@ const DEFAULT_ATTACK_CONTEXT = {
   attackerCanSeeTarget: true,
   frightSourceInLOS: false,
   hasAllyAdjacentToTarget: false,
-  saDmg: 0
+  saDmg: 0,
+  hitReactionCandidates: new Set<CreatureIdT>()
 } as const
 
 function ctx(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
