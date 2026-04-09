@@ -1373,7 +1373,7 @@ function availableBattleTokenForType(
 }
 
 export function resolveBattleAction(context: BattleContext, token: BattleResolvedActionToken): FinalizedBattleAction {
-  if (token.type !== "USE_UNCANNY_DODGE") {
+  if (token.type !== "USE_UNCANNY_DODGE" && token.type !== "CAST_SHIELD") {
     return {
       ok: false,
       error: {
@@ -1396,11 +1396,19 @@ export function resolveBattleAction(context: BattleContext, token: BattleResolve
 
   return {
     ok: true,
-    event: {
-      type: "BATTLE_RESOLVE_DMG_REACTION",
-      reactorId: CreatureId(token.actorId),
-      decision: { tag: "RUncannyDodge" },
-    },
+    event: Match.value(token.type).pipe(
+      Match.when("USE_UNCANNY_DODGE", () => ({
+        type: "BATTLE_RESOLVE_DMG_REACTION" as const,
+        reactorId: CreatureId(token.actorId),
+        decision: { tag: "RUncannyDodge" as const },
+      })),
+      Match.when("CAST_SHIELD", () => ({
+        type: "BATTLE_RESOLVE_HIT_REACTION" as const,
+        reactorId: CreatureId(token.actorId),
+        decision: { tag: "RShield" as const },
+      })),
+      Match.exhaustive,
+    ),
     outcome: availableToken.outcome.summary,
   }
 }

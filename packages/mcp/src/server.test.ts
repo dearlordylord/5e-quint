@@ -742,6 +742,49 @@ describe("MCP server adapter", () => {
     })
   })
 
+  test("execute_action routes CAST_SHIELD through the battle lane end to end", () => {
+    const host = initBattleHostWithHitWindow()
+
+    const response = handleToolCall(host, "execute_action", { scope: "battle", actorId: "B", type: "CAST_SHIELD" })
+
+    expect("isError" in response).toBe(false)
+    expect(readPayload(response)).toEqual({
+      success: true,
+      outcome: "Use your reaction to cast Shield against the triggering attack",
+      state: {
+        scope: "battle",
+        machineState: { running: "awaitingReaction" },
+        tags: ["reactionWindow"],
+        round: 1,
+        turnIndex: 0,
+        activeCreatureId: "A",
+        initiative: ["A", "B", "C"],
+        creatureIds: ["A", "B", "C"],
+        phase: "awaitingReaction",
+        awaitingReaction: true,
+        resolvingAoE: false,
+        resolvingMovement: false,
+        awaitingLegendaryAction: false,
+        awaitingReadiedAction: false,
+      },
+    })
+
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual({
+      action: [],
+      bonusAction: [],
+      reaction: [
+        {
+          scope: "battle",
+          actorId: "C",
+          type: "USE_CUTTING_WORDS",
+          cost: { reaction: true, charge: "bardicInspiration" },
+          outcome: { summary: "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll" },
+        },
+      ],
+      free: [],
+    })
+  })
+
   test("execute_action rejects scope mismatches between token and host", () => {
     const creatureHost = createDemoHost()
     const battleHost = createBattleHost()

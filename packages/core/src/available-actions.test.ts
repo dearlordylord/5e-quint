@@ -1101,4 +1101,41 @@ describe("available actions contract", () => {
       outcome: "Use your reaction to halve the triggering attack's damage against you",
     })
   })
+
+  test("battle resolution executes CAST_SHIELD only when that hit-reaction token is currently available", () => {
+    const actor = initBattleForHitDiscovery()
+
+    expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "CAST_SHIELD" })).toEqual({
+      ok: false,
+      error: {
+        code: "ACTION_NOT_AVAILABLE",
+        message: "CAST_SHIELD is not currently available for B in this battle state.",
+      },
+    })
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+      hitReactionCandidates: new Set([CreatureId("C")]),
+    })
+
+    expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "CAST_SHIELD" })).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: "B",
+        decision: { tag: "RShield" },
+      },
+      outcome: "Use your reaction to cast Shield against the triggering attack",
+    })
+  })
 })

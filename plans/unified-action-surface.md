@@ -219,8 +219,49 @@ Expand the proven unified action surface beyond the first battle reaction token 
 
 ### Acceptance criteria
 
-- [ ] The unified action surface can support more than one class of battle-scoped semantic action.
-- [ ] Additional battle-scoped semantic actions reuse the same scope-aware contract and routing path.
-- [ ] The action surface remains coherent from the consumer perspective across creature and battle scopes.
-- [ ] The design leaves no need for a separate permanent battle-only action product.
-- [ ] Regression tests prove creature-scoped and battle-scoped actions coexist safely in the unified surface.
+- [x] The unified action surface can support more than one class of battle-scoped semantic action.
+- [x] Additional battle-scoped semantic actions reuse the same scope-aware contract and routing path.
+- [x] The action surface remains coherent from the consumer perspective across creature and battle scopes.
+- [x] The design leaves no need for a separate permanent battle-only action product.
+- [x] Regression tests prove creature-scoped and battle-scoped actions coexist safely in the unified surface.
+
+### Phase 5 notes
+
+- The unified action surface now supports battle-scoped actions across more than one interrupt family:
+  - damage reaction execution with `USE_UNCANNY_DODGE`
+  - hit reaction execution with `CAST_SHIELD`
+- Both battle tokens reuse the same architectural path:
+  - battle discovery from authoritative `awaitCtx`
+  - actor-scoped battle resolved token
+  - core battle resolution
+  - MCP routing to the battle machine
+- This confirms the redesign does not need a separate permanent battle-only action product. The same tool family now handles:
+  - creature discovery/execution
+  - battle discovery
+  - battle execution for the first two semantic reaction tokens
+- The contract remains coherent from the consumer side:
+  - one `get_available_actions`
+  - one `execute_action`
+  - explicit `scope`
+  - explicit `actorId` only when multi-responder battle state makes it necessary
+- Verification passed:
+  - `pnpm --filter @dnd/core typecheck`
+  - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`
+  - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+  - `pnpm --filter @dnd/mcp test -- server.test.ts`
+
+### Next implementation notes
+
+- The next honest extensions on this same surface are the remaining discovered battle reactions:
+  - `USE_PARRY`
+  - `USE_CUTTING_WORDS`
+  - `USE_DEFLECT_ATTACKS`
+- Recommended implementation order:
+  1. `USE_PARRY`
+     - no user-facing holes
+     - fixed bonus already owned in battle state
+  2. `USE_CUTTING_WORDS`
+     - runtime-owned Bardic Inspiration die roll
+  3. `USE_DEFLECT_ATTACKS`
+     - runtime-owned reduction amount
+- The foundational unified-action-surface redesign itself is now proven. Follow-on work is breadth on top of the established contract, not another architecture phase.
