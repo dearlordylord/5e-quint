@@ -36,3 +36,9 @@ traces/
 .quint-cache/
 mbt-timing.jsonl
 tier-timing.jsonl
+
+mbt-failure-battle-*.log
+escalate-fuzz.log
+.codex/
+fat-traces/
+

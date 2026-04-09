@@ -524,21 +524,18 @@ The MCP response from `get_available_actions` is already grouped by resource cos
     - battle-scoped actions
 - **What is still incomplete**
   - query/discovery coverage exists for the battle-scoped reaction surface
-  - end-to-end execute coverage is now mostly complete
-  - as of merge commit `52b4f02`, `resolveBattleAction(...)` executes:
+  - end-to-end execute coverage for the currently discovered hit/damage reaction set is complete
+  - as of commit `5bd5a7c`, `resolveBattleAction(...)` executes:
     - `USE_UNCANNY_DODGE`
     - `CAST_SHIELD`
     - `USE_PARRY`
     - `USE_CUTTING_WORDS`
-  - the remaining discovered battle reaction token that is still blocked is:
     - `USE_DEFLECT_ATTACKS`
-  - that blocker is battle/model ownership, not action-surface plumbing:
-    - battle can tell that `USE_DEFLECT_ATTACKS` is legal
-    - but battle does not yet own the full reduction basis needed to finalize an honest `RDeflectAttacks` amount without MCP/runtime fabrication
 - **Important distinction for the next session**
   - Do not expose bare `USE_REACTION`.
   - Do not regress back to creature-only reaction suggestions.
-  - The next work is not “invent the first reaction token”; it is “finish the one remaining battle-owned execution blocker for `USE_DEFLECT_ATTACKS`.”
+  - The next work is no longer Deflect Attacks ownership.
+  - The next work is to identify the next battle-owned semantic action family that can ride the established unified action surface without inventing adapter-owned trigger state.
 - **Likely first file map for a fresh session**
   - `packages/core/src/available-actions.ts`
   - `packages/core/src/available-actions.test.ts`
@@ -577,46 +574,169 @@ The MCP response from `get_available_actions` is already grouped by resource cos
       - `USE_PARRY`
       - `USE_CUTTING_WORDS`
       - `USE_UNCANNY_DODGE`
-    - still blocked by battle/model ownership:
       - `USE_DEFLECT_ATTACKS`
-  - So the remaining gap is no longer reaction ownership itself; it is the missing battle-owned reduction basis for `USE_DEFLECT_ATTACKS`.
+  - `USE_DEFLECT_ATTACKS` now resolves honestly from battle-owned static state plus runtime-owned roll input:
+    - battle owns `dexMod` and `monkLevel`
+    - runtime owns the `d10Roll`
+    - finalization computes the reduction before sending `RDeflectAttacks(amount)`
+  - Verification completed for this ownership slice:
+    - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/battle-rules-scenarios.test.ts`
+    - `pnpm --filter @dnd/mcp test -- server.test.ts`
+    - `pnpm --filter @dnd/core exec tsc --noEmit`
+    - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+    - battle MBT Tier 1 seed:
+      - `QUINT_SEED=0x7920437b MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-machine.mbt.test.ts`
 
 ### Recommended next-session order
 
-1. Design the battle ownership slice for `USE_DEFLECT_ATTACKS`.
-   - identify the exact reduction inputs battle must own
-   - thread those inputs into the damage interrupt / decision path
-   - avoid MCP/runtime fabrication of Dex-mod-derived reduction amounts
-2. Implement `USE_DEFLECT_ATTACKS` end to end through `resolveBattleAction(...)`.
-3. Re-run the focused battle action tests and MCP tests for the full discovered reaction set.
-4. Only after that decide whether additional reaction families (reaction spells, other interrupt reactions) are ready.
+1. Update the battle/action-surface plans to treat Deflect Attacks as complete and remove the stale blocker text.
+2. Take `CAST_COUNTERSPELL` as the next breadth batch on the battle action surface.
+3. Prefer this batch because it:
+   - projects from already-owned battle interrupt state
+   - does not require adapter-owned trigger booleans
+   - does not require a broader speculative stat-model migration
+   - broadens the surface to battle spell-cast reactions rather than more hit/damage variants
+4. Defer `Legendary Resistance` until after Counterspell unless Counterspell exposes unexpected spell-stack complexity.
 
 ### Clean-slate handoff for the next batch
 
+Current repo/base state for the next session:
+
+- this handoff was written directly on `master`
+- expected base commit at handoff time:
+  - `5bd5a7c` `Own Deflect Attacks reduction in battle state`
+- do not assume there is a separate feature worktree unless the session explicitly creates one
+
 If starting from an empty session, read these first:
 
+- RAW:
+  - `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+    - `Counterspell`
+- terminology:
+  - `UBIQUITOUS_LANGUAGE.md`
 - `battle/PRD-reaction-eligibility.md`
 - `plans/unified-action-surface.md`
 - `packages/core/src/available-actions.ts`
 - `packages/core/src/battle-machine-events.ts`
+- `packages/core/src/battle-machine-actions-spell.ts`
+- `packages/core/src/battle-machine-spells.ts`
 - `packages/core/src/battle-machine-actions-attack.ts`
+- `packages/core/src/battle-machine-helpers.ts`
 - `packages/mcp/src/server.ts`
 - `packages/mcp/src/server.test.ts`
 
 The real next question is:
 
-- what exact reduction basis must battle own so `USE_DEFLECT_ATTACKS` can be finalized honestly through `RDeflectAttacks`?
+- how should `CAST_COUNTERSPELL` fit the existing resolved-token/runtime-input contract without inventing another battle-only API?
 
 It is **not**:
 
-- how to add another action token
-- how to patch MCP/runtime to provide Dex-derived reduction inputs
+- how to reopen the Deflect Attacks ownership question
+- how to invent adapter-owned trigger state for convenience
 
-The action surface is already there. The remaining work is a battle/model ownership slice.
+The action surface is already there, including the full currently discovered hit/damage reaction set. The remaining work is breadth on top of that proven contract.
 
 The success condition for the next batch is:
 
-- `resolveBattleAction(...)` supports the full currently discovered battle reaction set without MCP/runtime fabricating `USE_DEFLECT_ATTACKS` reduction inputs
+- `CAST_COUNTERSPELL` is discoverable and executable through the same unified action surface without reopening product/API seams or pushing trigger ownership into MCP
+
+### Next breadth design: `CAST_COUNTERSPELL`
+
+- **Why this is the next batch**
+  - `Counterspell` is a battle-owned reaction spell, so it broadens the surface beyond hit/damage reactions into spell-cast interrupt windows.
+  - The battle machine already owns the decisive trigger window through `PISpellCast`.
+  - Eligibility is already battle-owned in `eligibleForCounterspell(...)`.
+  - Recent merged `master` work did not touch this projection/execution seam, so this is lower overlap than starting another redesign.
+
+- **RAW basis**
+  - [Descriptions-A-D.md](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md:1185)
+    - Reaction when you see a creature within 60 feet casting a spell with components.
+    - Target makes a Constitution saving throw.
+    - On a failed save, the spell dissipates with no effect and the action/bonus action/reaction is wasted.
+    - If cast with a spell slot, the slot is not expended.
+    - Using a higher-level spell slot auto-ends a spell whose level is less than or equal to the slot level used.
+
+- **Current ownership state**
+  - battle already enters `PISpellCast`
+  - battle already tracks eligible responders
+  - battle already resolves nested Counterspell chains in `battleResolveCounterspell(...)`
+  - battle already owns the original spell stack / refund behavior
+  - the action surface currently ignores `PISpellCast`
+
+- **Recommended token shape**
+  - query token:
+    - `scope: "battle"`
+    - `actorId`
+    - `type: "CAST_COUNTERSPELL"`
+    - `slotLevel: Hole<SpellSlotLevel>`
+    - `cost: { reaction: true, charge: "spellSlot" }`
+  - resolved token:
+    - `scope: "battle"`
+    - `actorId`
+    - `type: "CAST_COUNTERSPELL"`
+    - `slotLevel: SpellSlotLevel`
+
+- **Recommended ownership split**
+  - user-facing choice:
+    - `slotLevel`
+  - battle-owned static facts:
+    - target spell level from `PISpellCast`
+    - reactor spell-slot inventory / legality
+  - runtime-owned input:
+    - only the final `saveSucceeded` boolean when the chosen slot level is too low for auto-success
+  - no MCP/user input should provide:
+    - target spell level
+    - whether the reactor is eligible
+    - whether the original spell should be refunded
+
+- **Recommended finalize behavior**
+  - if `slotLevel >= targetSpellLevel`:
+    - runtime kind should be `none`
+    - finalize directly to `BATTLE_RESOLVE_COUNTERSPELL` with `decision: { tag: "RCounterspell", saveSucceeded: false }`
+      because the target does not get the save in the auto-success case
+  - if `slotLevel < targetSpellLevel`:
+    - runtime kind should be `counterspell`
+    - runtime supplies `saveSucceeded`
+    - finalize produces `BATTLE_RESOLVE_COUNTERSPELL` with the chosen `csSlotLvl`
+
+- **Important legality/filtering rules**
+  - only project from a live `PISpellCast` window
+  - only project for currently eligible responders in `awaitCtx.eligible`
+  - `slotLevel` hole must be filtered to legal regular spell-slot levels the reactor can actually spend for Counterspell
+  - do not surface Counterspell from coarse “has spell slots + knows spell” checks outside the live window
+  - do not invent a generic reaction-spell token family in this batch; land `CAST_COUNTERSPELL` only
+
+- **Why this should not interfere with current `master`**
+  - recent merged work, in order, was:
+    - battle action routing by scope
+    - battle reaction discovery
+    - `USE_UNCANNY_DODGE`
+    - `CAST_SHIELD`
+    - `USE_PARRY`
+    - `USE_CUTTING_WORDS`
+    - `USE_DEFLECT_ATTACKS`
+  - none of those changed battle action-surface projection/execution for `PISpellCast`
+  - the highest-risk overlap files are therefore isolated and known up front:
+    - `packages/core/src/available-actions.ts`
+    - `packages/core/src/battle-machine-actions-spell.ts`
+    - `packages/core/src/battle-machine-helpers.ts`
+    - `packages/mcp/src/server.ts`
+    - tests in `packages/core/src/available-actions.test.ts` and `packages/mcp/src/server.test.ts`
+
+- **Suggested verification**
+  - focused tests:
+    - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/battle-rules-scenarios.test.ts`
+    - `pnpm --filter @dnd/mcp test -- server.test.ts`
+  - typecheck:
+    - `pnpm --filter @dnd/core exec tsc --noEmit`
+    - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+  - battle MBT Tier 1 only if the spell-window semantic ownership changes, not just projection/routing
+
+- **Fallback if Counterspell reveals hidden complexity**
+  - take `Legendary Resistance` next instead
+  - same battle-owned interrupt-window principle (`PISaveFailed`)
+  - simpler zero-hole execution shape
+  - lower product value, so it is the fallback rather than the preferred next slice
 
 ### Acceptance criteria
 
@@ -642,7 +762,8 @@ The success condition for the next batch is:
 - `reaction`: now present through battle-scoped tokens derived from authoritative battle interrupt state
 - The battle ownership work is tracked in [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md) and has partially landed.
 - The scoped action-surface redesign is tracked in [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md) and has partially landed.
-- Remaining reaction work is no longer "make reactions honest to suggest"; it is "finish the one remaining battle-owned execution blocker for `USE_DEFLECT_ATTACKS`."
+- The old Deflect Attacks execution blocker is complete on `master`.
+- Remaining reaction work is now breadth, not repair: choose the next battle-owned semantic family to add on the same surface.
 - Movement also remains absent from the supported surface as an explicit cost bucket; nothing currently exposed uses `cost.movement`.
 
 ---

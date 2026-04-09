@@ -252,18 +252,28 @@ Expand the proven unified action surface beyond the first battle reaction token 
 
 ### Next implementation notes
 
-- The next honest extensions on this same surface are the remaining discovered battle reactions:
-  - `USE_DEFLECT_ATTACKS`
+- The next honest extension on this same surface should be the battle spell-cast reaction window:
+  - `CAST_COUNTERSPELL`
 - Recommended implementation order:
-  1. `USE_DEFLECT_ATTACKS`
-     - blocked on missing owned reduction inputs in battle state
+  1. `CAST_COUNTERSPELL`
+     - projects from `PISpellCast`
+     - uses the same actor-scoped battle token path as the hit/damage reactions
+     - is already battle-owned at the trigger/eligibility layer
 - Completed breadth after the foundational redesign:
   - `USE_UNCANNY_DODGE`
   - `CAST_SHIELD`
   - `USE_PARRY`
   - `USE_CUTTING_WORDS`
-- `USE_DEFLECT_ATTACKS` is not blocked on the unified action surface anymore; it is blocked on battle ownership:
-  - current battle state does not carry the full reduction basis needed to produce an honest runtime `amount`
-  - specifically, battle can tell that Deflect Attacks is legal, but it does not own the Dexterity-modifier-derived reduction inputs needed to finalize the event from MCP/runtime alone
-  - the next correct step is a battle/model ownership slice, not another action-surface patch
+  - `USE_DEFLECT_ATTACKS`
+- Why `CAST_COUNTERSPELL` is the next batch:
+  - battle already owns the live interrupt window in `PISpellCast`
+  - battle already owns reactor eligibility through `eligibleForCounterspell(...)`
+  - the semantic action is player-facing and SRD-traceable
+  - it broadens the unified surface beyond hit/damage reactions without reopening the architecture
+- Why not `Legendary Resistance` first:
+  - it is battle-owned and already modeled, but it is monster-only and lower product value than a player-facing reaction spell
+  - it remains a good fallback batch if Counterspell exposes hidden spell-stack complexity
+- Low-overlap note:
+  - recent merged `master` work covered battle action routing, reaction discovery, hit/damage reaction execution, and Deflect Attacks ownership
+  - no recent merged work touched battle action-surface projection/execution for `PISpellCast` or `CAST_COUNTERSPELL`
 - The foundational unified-action-surface redesign itself is now proven. Follow-on work is breadth on top of the established contract, not another architecture phase.
