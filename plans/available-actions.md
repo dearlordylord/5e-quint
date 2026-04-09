@@ -524,14 +524,21 @@ The MCP response from `get_available_actions` is already grouped by resource cos
     - battle-scoped actions
 - **What is still incomplete**
   - query/discovery coverage exists for the battle-scoped reaction surface
-  - end-to-end execute coverage is still partial
-  - as merged on `master`, `resolveBattleAction(...)` only executes:
+  - end-to-end execute coverage is now mostly complete
+  - as of merge commit `52b4f02`, `resolveBattleAction(...)` executes:
     - `USE_UNCANNY_DODGE`
-  - the other discovered battle reaction tokens are present but still return "not implemented yet through the battle action surface"
+    - `CAST_SHIELD`
+    - `USE_PARRY`
+    - `USE_CUTTING_WORDS`
+  - the remaining discovered battle reaction token that is still blocked is:
+    - `USE_DEFLECT_ATTACKS`
+  - that blocker is battle/model ownership, not action-surface plumbing:
+    - battle can tell that `USE_DEFLECT_ATTACKS` is legal
+    - but battle does not yet own the full reduction basis needed to finalize an honest `RDeflectAttacks` amount without MCP/runtime fabrication
 - **Important distinction for the next session**
   - Do not expose bare `USE_REACTION`.
   - Do not regress back to creature-only reaction suggestions.
-  - The next work is not “invent the first reaction token”; it is “finish battle-scoped reaction execution breadth and reconcile tests/docs with the new scoped surface.”
+  - The next work is not “invent the first reaction token”; it is “finish the one remaining battle-owned execution blocker for `USE_DEFLECT_ATTACKS`.”
 - **Likely first file map for a fresh session**
   - `packages/core/src/available-actions.ts`
   - `packages/core/src/available-actions.test.ts`
@@ -560,26 +567,28 @@ The MCP response from `get_available_actions` is already grouped by resource cos
   - Honest reaction discovery is now present through battle-scoped tokens.
   - Current query-time battle reaction tokens on `master`:
     - `CAST_SHIELD`
+    - `USE_PARRY`
     - `USE_CUTTING_WORDS`
     - `USE_UNCANNY_DODGE`
     - `USE_DEFLECT_ATTACKS`
   - Current execute-time battle reaction support on `master`:
     - implemented end-to-end:
-      - `USE_UNCANNY_DODGE`
-    - still not implemented through `resolveBattleAction(...)`:
       - `CAST_SHIELD`
+      - `USE_PARRY`
       - `USE_CUTTING_WORDS`
+      - `USE_UNCANNY_DODGE`
+    - still blocked by battle/model ownership:
       - `USE_DEFLECT_ATTACKS`
-  - So the remaining gap is no longer reaction ownership itself; it is battle action execution breadth and plan/doc reconciliation.
+  - So the remaining gap is no longer reaction ownership itself; it is the missing battle-owned reduction basis for `USE_DEFLECT_ATTACKS`.
 
 ### Recommended next-session order
 
-1. Reconcile the plan/docs with the merged battle-scoped reaction surface.
-2. Audit `resolveBattleAction(...)` and MCP tests to identify which discovered battle reaction tokens still lack execute support.
-3. Implement the next honest battle reaction executions:
-   - `CAST_SHIELD`
-   - `USE_CUTTING_WORDS`
-   - `USE_DEFLECT_ATTACKS`
+1. Design the battle ownership slice for `USE_DEFLECT_ATTACKS`.
+   - identify the exact reduction inputs battle must own
+   - thread those inputs into the damage interrupt / decision path
+   - avoid MCP/runtime fabrication of Dex-mod-derived reduction amounts
+2. Implement `USE_DEFLECT_ATTACKS` end to end through `resolveBattleAction(...)`.
+3. Re-run the focused battle action tests and MCP tests for the full discovered reaction set.
 4. Only after that decide whether additional reaction families (reaction spells, other interrupt reactions) are ready.
 
 ### Acceptance criteria
@@ -606,7 +615,7 @@ The MCP response from `get_available_actions` is already grouped by resource cos
 - `reaction`: now present through battle-scoped tokens derived from authoritative battle interrupt state
 - The battle ownership work is tracked in [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md) and has partially landed.
 - The scoped action-surface redesign is tracked in [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md) and has partially landed.
-- Remaining reaction work is no longer "make reactions honest to suggest"; it is "finish executing the discovered battle-scoped reactions."
+- Remaining reaction work is no longer "make reactions honest to suggest"; it is "finish the one remaining battle-owned execution blocker for `USE_DEFLECT_ATTACKS`."
 - Movement also remains absent from the supported surface as an explicit cost bucket; nothing currently exposed uses `cost.movement`.
 
 ---
@@ -1325,6 +1334,7 @@ That caveat should be explicit in code/tests if this action is surfaced before f
 - legal reaction options are derived at interrupt creation time, not recomputed later from weakened state
 - discovered battle-scoped reaction tokens are only suggestible on real owned interrupt windows
 - `resolveBattleAction(...)` supports the discovered named reactions that the action surface exposes
+- `USE_DEFLECT_ATTACKS` no longer depends on MCP/runtime fabricating the reduction basis
 - no fake creature-only reaction suggestions appear outside an owned interrupt window
 - battle/spec parity and query-surface tests both pass
 
