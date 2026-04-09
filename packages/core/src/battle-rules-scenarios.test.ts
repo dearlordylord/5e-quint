@@ -296,6 +296,20 @@ function initSneakAttackBattle() {
   return actor
 }
 
+function initRangedSneakAttackBattle() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", rogueLevel: 5, sneakAttackDice: 3, initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 }
+    ]
+  })
+  return actor
+}
+
 function initGrappleBattle() {
   const actor = createActor(battleMachine)
   actor.start()
@@ -1420,6 +1434,38 @@ describe("battle rules scenario regressions", () => {
 
     expect(creature(actor, "B").hp).toBe(6)
     expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(true)
+  })
+
+  it("natural_20: a hostile creature within 5 feet suppresses ranged Sneak Attack by imposing disadvantage", () => {
+    const actor = initRangedSneakAttackBattle()
+    startTurn(actor)
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 14,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(12),
+      knockOut: false,
+      isMelee: false,
+      isFinesse: false,
+      attackerWithin5ft: false,
+      hostileWithin5ft: true,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 10,
+      hitReactionCandidates: new Set<CreatureIdT>()
+    })
+    resolveAttackWindows(actor)
+
+    expect(creature(actor, "B").hp).toBe(15)
+    expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(false)
   })
 
   it("natural_20: incapacitating the grappler auto-releases the target", () => {

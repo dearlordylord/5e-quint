@@ -908,6 +908,19 @@ Verification:
 - `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
 - `pnpm --filter @dnd/core typecheck`
 
+Batch 24 result:
+
+1. Added explicit battle coverage for ranged attacks in close combat suppressing ranged Sneak Attack.
+   - [packages/core/src/battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts) now proves a hostile creature within 5 feet imposes disadvantage on a ranged attack, so ally-adjacent Sneak Attack does not apply
+2. Confirmed the existing implementation already matched RAW.
+   - no production TS or Quint changes were required
+   - the batch stayed test-only
+
+Verification:
+
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts`
+- `pnpm --filter @dnd/core typecheck`
+
 ## If You Continue This Work Next Time
 
 Start here:
