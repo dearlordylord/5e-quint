@@ -37,9 +37,12 @@ traces/
 .quint-cache/
 mbt-timing.jsonl
 tier-timing.jsonl
+.turbo/
+packages/*/.turbo/
+fuzz-archive/
+mbt-seed-blacklist.txt
 
 mbt-failure-battle-*.log
 escalate-fuzz.log
 .codex/
 fat-traces/
-

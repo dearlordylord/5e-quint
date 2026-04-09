@@ -4,13 +4,25 @@
   "scripts": {
     "prepare": "husky",
     "dev": "turbo dev --filter=@dnd/app",
+    "lint": "pnpm --filter @dnd/core lint && pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
+    "circular": "pnpm --filter @dnd/core circular && pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
+    "quality": "pnpm lint && pnpm circular && pnpm typecheck",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },
   "devDependencies": {
+    "@typescript-eslint/parser": "^8.57.2",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
     "husky": "^9.1.7",
+    "jscpd": "^4.0.8",
+    "madge": "^8.0.0",
+    "prettier": "^3.8.1",
     "turbo": "latest",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

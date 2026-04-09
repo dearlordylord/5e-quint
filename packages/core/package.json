@@ -6,6 +6,8 @@
     "#/*": "./src/*"
   },
   "scripts": {
+    "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src && jscpd src --threshold 2 --ignore \"**/*.test.ts,**/*.mbt.test.ts,**/spell-registry.ts,**/mbt-shared.ts\"",
+    "circular": "madge --extensions ts --circular src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
