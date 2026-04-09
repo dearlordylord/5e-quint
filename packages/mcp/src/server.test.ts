@@ -5,7 +5,7 @@ import { battleMachine } from "@dnd/core/battle-machine.ts"
 import type { BattleEvent } from "@dnd/core/battle-machine-types.ts"
 import { abilityModifier, armorClass, classLevel, CreatureId, spellSlotLevel } from "@dnd/core/types.ts"
 
-import { createBattleHost, createDemoActor, createDemoHost, handleToolCall } from "./server.ts"
+import { createBattleHost, createDemoHost, handleToolCall } from "./server.ts"
 
 function readPayload(response: ReturnType<typeof handleToolCall>) {
   return JSON.parse(response.content[0]?.text ?? "null")
@@ -87,6 +87,43 @@ function initBattleHostWithDamageWindow() {
     diceCount: 1,
     dieSize: 8,
     dmg: 5,
+    dt: "slashing",
+    crit: false,
+    tAc: armorClass(10),
+    knockOut: false,
+    isMelee: true,
+    isFinesse: false,
+    attackerWithin5ft: true,
+    hostileWithin5ft: false,
+    targetCanSeeAttacker: true,
+    attackerCanSeeTarget: true,
+    frightSourceInLOS: false,
+    hasAllyAdjacentToTarget: false,
+    saDmg: 0,
+    hitReactionCandidates: new Set(),
+  })
+  actor.send({ type: "BATTLE_RESOLVE_HIT_REACTION", reactorId: null, decision: { tag: "RPass" } })
+  return createBattleHost(actor)
+}
+
+function initBattleHostWithDeflectWindow() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", monkLevel: 3, dexMod: 4, initiativeRoll: 10 },
+    ],
+  })
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+  actor.send({
+    type: "BATTLE_ATTACK",
+    targetId: CreatureId("B"),
+    attackRoll: 15,
+    diceCount: 1,
+    dieSize: 8,
+    dmg: 9,
     dt: "slashing",
     crit: false,
     tAc: armorClass(10),
@@ -347,18 +384,19 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports USE_INDOMITABLE once the pending trigger exists", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 24,
       fighterLevel: classLevel(9),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
-    handleToolCall(actor, "execute_action", { type: "START_TURN" })
-    actor.send({ type: "TRIGGER_INDOMITABLE" })
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
+    host.actor.send({ type: "TRIGGER_INDOMITABLE" })
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual({
+      scope: "creature",
       type: "USE_INDOMITABLE",
       cost: { charge: "indomitable" },
       outcome: {
@@ -366,7 +404,7 @@ describe("MCP server adapter", () => {
       },
     })
 
-    const response = handleToolCall(actor, "execute_action", { type: "USE_INDOMITABLE" })
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_INDOMITABLE" }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -474,25 +512,26 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports USE_OVERCHANNEL once the qualifying cast trigger exists", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 36,
       wizardLevel: classLevel(14),
       preparedSpells: new Set(["burning_hands", "fireball", "hold_person"]),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
-    handleToolCall(actor, "execute_action", { type: "START_TURN" })
-    actor.send({ type: "TRIGGER_OVERCHANNEL", spellName: "fireball", slotLevel: spellSlotLevel(3) })
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
+    host.actor.send({ type: "TRIGGER_OVERCHANNEL", spellName: "fireball", slotLevel: spellSlotLevel(3) })
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual({
+      scope: "creature",
       type: "USE_OVERCHANNEL",
       cost: {},
       outcome: { summary: "Overchannel the qualifying Fireball cast at slot level 3 for maximum damage" },
     })
 
-    const response = handleToolCall(actor, "execute_action", { type: "USE_OVERCHANNEL" })
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_OVERCHANNEL" }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -562,24 +601,25 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports USE_SNEAK_ATTACK once the qualifying hit trigger exists", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 32,
       rogueLevel: classLevel(5),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
-    handleToolCall(actor, "execute_action", { type: "START_TURN" })
-    actor.send({ type: "TRIGGER_SNEAK_ATTACK", mode: "finesse", source: "adjacentAlly" })
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
+    host.actor.send({ type: "TRIGGER_SNEAK_ATTACK", mode: "finesse", source: "adjacentAlly" })
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual({
+      scope: "creature",
       type: "USE_SNEAK_ATTACK",
       cost: {},
       outcome: { summary: "Apply Sneak Attack damage to the qualifying hit" },
     })
 
-    const response = handleToolCall(actor, "execute_action", { type: "USE_SNEAK_ATTACK" })
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_SNEAK_ATTACK" }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -974,6 +1014,40 @@ describe("MCP server adapter", () => {
           outcome: { summary: "Use your reaction to cast Shield against the triggering attack" },
         },
       ],
+      free: [],
+    })
+  })
+
+  test("execute_action routes USE_DEFLECT_ATTACKS through the battle lane end to end", () => {
+    const host = initBattleHostWithDeflectWindow()
+
+    const response = handleToolCall(host, "execute_action", { scope: "battle", actorId: "B", type: "USE_DEFLECT_ATTACKS" })
+
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.outcome).toMatch(/^Use your reaction to reduce the triggering attack's damage with Deflect Attacks \((?:[8-9]|1\d|17)\)$/)
+    expect(payload.state).toEqual({
+      scope: "battle",
+      machineState: { running: "awaitingReaction" },
+      tags: ["reactionWindow"],
+      round: 1,
+      turnIndex: 0,
+      activeCreatureId: "A",
+      initiative: ["A", "B"],
+      creatureIds: ["A", "B"],
+      phase: "awaitingReaction",
+      awaitingReaction: true,
+      resolvingAoE: false,
+      resolvingMovement: false,
+      awaitingLegendaryAction: false,
+      awaitingReadiedAction: false,
+    })
+
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual({
+      action: [],
+      bonusAction: [],
+      reaction: [],
       free: [],
     })
   })

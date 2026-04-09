@@ -396,6 +396,7 @@ export function freshCreature(maxHp: number, kind: CreatureKind): BattleCreature
     creatureKind: kind,
     rogueLevel: 0,
     monkLevel: 0,
+    dexMod: 0,
     preparedSpells: new Set(),
     hasEvasion: false,
     saveMiscBonus: 0,

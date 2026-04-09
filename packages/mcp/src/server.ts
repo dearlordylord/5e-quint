@@ -248,6 +248,12 @@ function buildBattleRuntimeInputs(
         values: { reduction },
       }))
     }),
+    Match.when({ runtime: "deflectAttacks" }, () =>
+      Effect.map(Random.nextIntBetween(1, 11), (d10Roll) => ({
+        runtime: "deflectAttacks" as const,
+        values: { d10Roll },
+      }))
+    ),
     Match.exhaustive,
   )
 }

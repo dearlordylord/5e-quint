@@ -1,8 +1,34 @@
 # Inspiration Workstream
 
-This directory is the handoff packet for inspiration-driven test work.
+This directory contains two workstreams: inspiration-driven testing and competitor architecture research.
 
-Read these in order:
+## Competitor Architecture Research
+
+Start here for the competitive landscape:
+
+1. [COMPARISON.md](./COMPARISON.md) — Full cross-engine comparison with tables, pattern analysis, and comparison with our project
+2. [METHODOLOGY.md](./METHODOLOGY.md) — Analysis rubric and discovery methodology
+
+Per-engine deep dives (in tier order):
+
+- [ARCHITECTURE-dnd_engine.md](./ARCHITECTURE-dnd_engine.md) — Entity-Component-Event, 4-channel modifier algebra (Tier A)
+- [ARCHITECTURE-foundryvtt-dnd5e.md](./ARCHITECTURE-foundryvtt-dnd5e.md) — Document-DataModel-Activity on Foundry (Tier A)
+- [ARCHITECTURE-natural_20.md](./ARCHITECTURE-natural_20.md) — Resolve-then-Commit with YAML content (Tier A)
+- [ARCHITECTURE-opencombatengine.md](./ARCHITECTURE-opencombatengine.md) — Interface-segregated composition (Tier A)
+- [ARCHITECTURE-avrae.md](./ARCHITECTURE-avrae.md) — Discord bot, automation tree (Tier A, newly discovered)
+- [ARCHITECTURE-rpg-toolkit.md](./ARCHITECTURE-rpg-toolkit.md) — Go, typed event system (Tier B+, newly discovered)
+- [ARCHITECTURE-ShiningSword.md](./ARCHITECTURE-ShiningSword.md) — F#, functional combat (Tier B, newly discovered)
+- [ARCHITECTURE-libsrd5.md](./ARCHITECTURE-libsrd5.md) — Mutable OOP with enum effects (Tier B)
+- [ARCHITECTURE-dnd-5e-core.md](./ARCHITECTURE-dnd-5e-core.md) — Mutable-dataclass CRUD (Tier B)
+- [ARCHITECTURE-Py5e.md](./ARCHITECTURE-Py5e.md) — Minimal baseline (Tier C)
+
+### Scenario Mining
+
+- [SCENARIO-MINING.md](./SCENARIO-MINING.md) — Consolidated findings: 30 medium/high priority mechanical interactions mined from competitor test suites
+
+## Inspiration-Driven Testing
+
+Read these for the testing workstream:
 
 1. [PLAN.md](./PLAN.md)
 2. [ARCHITECTURE.md](../../ARCHITECTURE.md)
@@ -30,9 +56,3 @@ Current implementation artifacts from this worktree:
 - [machine.ts](../../packages/core/src/machine.ts)
 - [machine-startturn.ts](../../packages/core/src/machine-startturn.ts)
 - [machine-endturn.ts](../../packages/core/src/machine-endturn.ts)
-
-Important context:
-
-- This branch started from `master`, so the broader earlier analysis notes are not present here.
-- This directory is the local replacement for that missing context.
-- The next session should start from [PLAN.md](./PLAN.md), then take the current recommended next step there: pick the next small inspiration scenario batch now that the rider-path convergence cleanup is done.

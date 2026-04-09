@@ -309,6 +309,16 @@ function initBattleForDamageDiscovery() {
   })
 }
 
+function initBattleForDeflectDiscovery() {
+  return makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", monkLevel: 3, dexMod: 4, initiativeRoll: 10 },
+    ],
+  })
+}
+
 describe("available actions contract", () => {
   test("initial state only exposes ENTER_COMBAT", () => {
     const actor = makeActor()
@@ -698,13 +708,14 @@ describe("available actions contract", () => {
     actor.send({ type: "TRIGGER_INDOMITABLE" })
 
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      scope: "creature",
       type: "USE_INDOMITABLE",
       cost: { charge: "indomitable" },
       outcome: { summary: "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level" },
     })
 
     const request = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_INDOMITABLE" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { scope: "creature", type: "USE_INDOMITABLE" }),
     )
     const finalized = finalizeResolution(request, { runtime: "none" }, actor.getSnapshot().context)
     expect(finalized).toEqual({
@@ -726,13 +737,14 @@ describe("available actions contract", () => {
     actor.send({ type: "TRIGGER_OVERCHANNEL", spellName: "fireball", slotLevel: spellSlotLevel(3) })
 
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      scope: "creature",
       type: "USE_OVERCHANNEL",
       cost: {},
       outcome: { summary: "Overchannel the qualifying Fireball cast at slot level 3 for maximum damage" },
     })
 
     const request = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_OVERCHANNEL" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { scope: "creature", type: "USE_OVERCHANNEL" }),
     )
     const finalized = finalizeResolution(request, { runtime: "none" }, actor.getSnapshot().context)
     expect(finalized).toEqual({
@@ -754,13 +766,14 @@ describe("available actions contract", () => {
     actor.send({ type: "TRIGGER_SNEAK_ATTACK", mode: "finesse", source: "adjacentAlly" })
 
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      scope: "creature",
       type: "USE_SNEAK_ATTACK",
       cost: {},
       outcome: { summary: "Apply Sneak Attack damage to the qualifying hit" },
     })
 
     const request = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_SNEAK_ATTACK" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { scope: "creature", type: "USE_SNEAK_ATTACK" }),
     )
     const finalized = finalizeResolution(request, { runtime: "none" }, actor.getSnapshot().context)
     expect(finalized).toEqual({
@@ -1233,6 +1246,56 @@ describe("available actions contract", () => {
         decision: { tag: "RUncannyDodge" },
       },
       outcome: "Use your reaction to halve the triggering attack's damage against you",
+    })
+  })
+
+  test("battle discovery and resolution surface USE_DEFLECT_ATTACKS through battle-owned dexMod plus runtime d10", () => {
+    const actor = initBattleForDeflectDiscovery()
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([])
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 9,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+    })
+    actor.send({ type: "BATTLE_RESOLVE_HIT_REACTION", reactorId: null, decision: { tag: "RPass" } })
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "B",
+        type: "USE_DEFLECT_ATTACKS",
+        cost: { reaction: true },
+        outcome: { summary: "Use your reaction to reduce the triggering attack's damage with Deflect Attacks" },
+      },
+    ])
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "USE_DEFLECT_ATTACKS" }),
+    )
+    expect(request).toEqual({
+      token: { scope: "battle", actorId: "B", type: "USE_DEFLECT_ATTACKS" },
+      outcome: "Use your reaction to reduce the triggering attack's damage with Deflect Attacks",
+      runtime: "deflectAttacks",
+    })
+
+    expect(finalizeBattleResolution(request, { runtime: "deflectAttacks", values: { d10Roll: 7 } }, actor.getSnapshot().context)).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_RESOLVE_DMG_REACTION",
+        reactorId: CreatureId("B"),
+        decision: { tag: "RDeflectAttacks", amount: 14 },
+      },
+      outcome: "Use your reaction to reduce the triggering attack's damage with Deflect Attacks (14)",
     })
   })
 

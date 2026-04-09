@@ -16,6 +16,7 @@ import { tirelessTempHp } from "#/features/class-ranger.ts"
 import { slotCreationCost, type MetamagicOption } from "#/features/class-sorcerer.ts"
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
 import { bardicInspirationDie } from "#/features/class-bard.ts"
+import { deflectAttacksReduction } from "#/features/class-monk-features.ts"
 import {
   canUseHeroicInspirationNow,
   guards,
@@ -830,10 +831,16 @@ export type BattleResolutionRequest =
       readonly outcome: string
       readonly runtime: "cuttingWords"
     }
+  | {
+      readonly token: Extract<BattleResolvedActionToken, { readonly type: "USE_DEFLECT_ATTACKS" }>
+      readonly outcome: string
+      readonly runtime: "deflectAttacks"
+    }
 
 export type BattleResolutionRuntimeInputs =
   | { readonly runtime: "none" }
   | { readonly runtime: "cuttingWords"; readonly values: { readonly reduction: number } }
+  | { readonly runtime: "deflectAttacks"; readonly values: { readonly d10Roll: number } }
 
 export type ActionResolutionErrorCode =
   | "ACTION_NOT_AVAILABLE"
@@ -1481,18 +1488,6 @@ export function resolveBattleAction(
   context: BattleContext,
   token: BattleResolvedActionToken,
 ): BattleResolutionRequest | ActionResolutionError {
-  if (
-    token.type !== "USE_UNCANNY_DODGE" &&
-    token.type !== "CAST_SHIELD" &&
-    token.type !== "USE_PARRY" &&
-    token.type !== "USE_CUTTING_WORDS"
-  ) {
-    return {
-      code: "ACTION_NOT_SUPPORTED",
-      message: `${token.type} is not implemented yet through the battle action surface.`,
-    }
-  }
-
   const availableToken = availableBattleTokenForType(context, token.type, token.actorId)
   if (availableToken == null) {
     return {
@@ -1540,6 +1535,11 @@ export function resolveBattleAction(
       outcome: availableToken.outcome.summary,
       runtime: "cuttingWords" as const,
     })),
+    Match.when({ type: "USE_DEFLECT_ATTACKS" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "deflectAttacks" as const,
+    })),
     Match.exhaustive,
   )
 }
@@ -1554,28 +1554,59 @@ export function finalizeBattleResolution(
     return { ok: true, event: request.event, outcome: request.outcome }
   }
 
-  if (runtimeInputs.runtime !== "cuttingWords") return battleRuntimeMismatch("cuttingWords", runtimeInputs.runtime)
-  const bardLevel = context.creatures.get(CreatureId(request.token.actorId))?.bardLevel ?? 0
-  const maxReduction = bardicInspirationDie(bardLevel)
-  const reduction = runtimeInputs.values.reduction
-  if (reduction < 1 || reduction > maxReduction) {
-    return {
-      ok: false,
-      error: {
-        code: "INVALID_RUNTIME_INPUT",
-        message: `Cutting Words reduction must be between 1 and ${maxReduction}.`,
-      },
-    }
-  }
-  return {
-    ok: true,
-    event: {
-      type: "BATTLE_RESOLVE_HIT_REACTION",
-      reactorId: CreatureId(request.token.actorId),
-      decision: { tag: "RCuttingWords", reduction },
-    },
-    outcome: `${request.outcome} (${reduction})`,
-  }
+  return Match.value(request).pipe(
+    Match.when({ runtime: "cuttingWords" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "cuttingWords") return battleRuntimeMismatch("cuttingWords", runtimeInputs.runtime)
+      const bardLevel = context.creatures.get(CreatureId(request.token.actorId))?.bardLevel ?? 0
+      const maxReduction = bardicInspirationDie(bardLevel)
+      const reduction = runtimeInputs.values.reduction
+      if (reduction < 1 || reduction > maxReduction) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: `Cutting Words reduction must be between 1 and ${maxReduction}.`,
+          },
+        }
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_RESOLVE_HIT_REACTION",
+          reactorId: CreatureId(request.token.actorId),
+          decision: { tag: "RCuttingWords", reduction },
+        },
+        outcome: `${request.outcome} (${reduction})`,
+      }
+    }),
+    Match.when({ runtime: "deflectAttacks" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "deflectAttacks") {
+        return battleRuntimeMismatch("deflectAttacks", runtimeInputs.runtime)
+      }
+      const reactor = context.creatures.get(CreatureId(request.token.actorId))
+      const d10Roll = runtimeInputs.values.d10Roll
+      if (d10Roll < 1 || d10Roll > 10) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Deflect Attacks d10 roll must be between 1 and 10.",
+          },
+        }
+      }
+      const amount = deflectAttacksReduction(d10Roll, reactor?.dexMod ?? 0, reactor?.monkLevel ?? 0)
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_RESOLVE_DMG_REACTION",
+          reactorId: CreatureId(request.token.actorId),
+          decision: { tag: "RDeflectAttacks", amount },
+        },
+        outcome: `${request.outcome} (${amount})`,
+      }
+    }),
+    Match.exhaustive,
+  )
 }
 
 function runtimeMismatch(expected: ResolutionRuntimeInputs["runtime"], actual: ResolutionRuntimeInputs["runtime"]): FinalizedAction {

@@ -84,6 +84,8 @@ export interface BattleCreatureState {
   // Class levels tracked by battle Combatant
   readonly rogueLevel: number
   readonly monkLevel: number
+  // Static combatant modifier owned by battle when battle-resolved rules need it.
+  readonly dexMod: number
   // Prepared spells (for CS eligibility)
   readonly preparedSpells: ReadonlySet<string>
   // Evasion (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
@@ -335,6 +337,7 @@ export interface InitCreatureConfig {
   readonly caster?: boolean
   readonly rogueLevel?: number
   readonly monkLevel?: number
+  readonly dexMod?: number
   readonly legendaryActions?: number
   readonly legendaryResistances?: number
   readonly preparedSpells?: ReadonlySet<string>

@@ -78,6 +78,7 @@ export function battleInit({ event: e }: BattleActionArgs<"BATTLE_INIT">): Parti
       ...base,
       ...(cfg.rogueLevel != null ? { rogueLevel: cfg.rogueLevel } : {}),
       ...(cfg.monkLevel != null ? { monkLevel: cfg.monkLevel } : {}),
+      ...(cfg.dexMod != null ? { dexMod: cfg.dexMod } : {}),
       ...(cfg.legendaryActions != null ? { legendaryActionsRemaining: cfg.legendaryActions } : {}),
       ...(cfg.legendaryResistances != null ? { legendaryResistancesRemaining: cfg.legendaryResistances } : {}),
       ...(cfg.preparedSpells != null ? { preparedSpells: cfg.preparedSpells } : {}),

@@ -31,6 +31,7 @@ module battle {
     statBlock: StatBlock,                    // stat block for reading LA uses, recharge, etc. (B12)
     rogueLevel: int,                         // 0 = not a rogue (B11)
     monkLevel: int,                          // 0 = not a monk (B11)
+    dexMod: int,                             // static Dex modifier for battle-owned Monk reaction math
     preparedSpells: Set[str],                // spells this creature has prepared (SRD 5.2.1 Gaining Spells)
     hasEvasion: bool,                        // Evasion feature (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
     saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
@@ -401,7 +402,7 @@ module battle {
     kind: k,
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
-    rogueLevel: 0, monkLevel: 0,
+    rogueLevel: 0, monkLevel: 0, dexMod: 0,
     preparedSpells: Set(),
     hasEvasion: false,
     saveMiscBonus: 0,
@@ -438,7 +439,7 @@ module battle {
     kind: k,
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
-    rogueLevel: 0, monkLevel: 0,
+    rogueLevel: 0, monkLevel: 0, dexMod: 0,
     preparedSpells: CASTER_PREPARED_SPELLS,
     hasEvasion: false,
     saveMiscBonus: 0,
@@ -476,7 +477,7 @@ module battle {
         .with("legendaryActionsRemaining", sb.legendaryActionUses)
         .with("legendaryResistancesRemaining", sb.legendaryResistanceUses),
       statBlock: sb,
-      rogueLevel: 0, monkLevel: 0,
+      rogueLevel: 0, monkLevel: 0, dexMod: abilityModifier(sb.abilityScores.get(Dex)),
       preparedSpells: Set(),
       hasEvasion: false,
       saveMiscBonus: 0,
@@ -1423,8 +1424,9 @@ module battle {
             } else {
               nondet reactorId = remaining.oneOf()
               val legal = atk.legalReactionsByCreature.get(reactorId)
-              nondet reductionAmt = 1.to(20).oneOf()
-              nondet decision = Set(RPass, RUncannyDodge, RDeflectAttacks(reductionAmt)).oneOf()
+              nondet deflectRoll = 1.to(10).oneOf()
+              val deflectAmount = deflectRoll + bCreatures.get(reactorId).dexMod + bCreatures.get(reactorId).monkLevel
+              nondet decision = Set(RPass, RUncannyDodge, RDeflectAttacks(deflectAmount)).oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
               val newElig = ctx.eligible.exclude(Set(reactorId))
               val legalDecision =

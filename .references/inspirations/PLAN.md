@@ -913,10 +913,11 @@ Verification:
 Start here:
 
 1. read this file,
-2. read [ARCHITECTURE.md](../../ARCHITECTURE.md),
-3. read [battle/DOMAIN.md](../../battle/DOMAIN.md),
-4. inspect [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts),
-5. choose `Option A` unless there is a reason to avoid another inspiration scenario batch.
+2. read [SCENARIO-MINING.md](./SCENARIO-MINING.md) — **the prioritized queue for batches 23+**, mined from 4 competitor test suites (7 high, 23 medium priority items),
+3. read [ARCHITECTURE.md](../../ARCHITECTURE.md),
+4. read [battle/DOMAIN.md](../../battle/DOMAIN.md),
+5. inspect [battle-rules-scenarios.test.ts](../../packages/core/src/battle-rules-scenarios.test.ts),
+6. choose `Option A` unless there is a reason to avoid another inspiration scenario batch.
 
 If choosing `Option A`, inspect these implementation anchors before editing:
 
