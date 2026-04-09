@@ -49,6 +49,19 @@ Status values:
 ## Active DAG
 
 ```text
+resolve-commit-doctrine
+  -> preview-execution
+  -> dm-override
+  -> transcript-port-to-dnd
+
+canonical-condition-effects
+  -> duration-boundary-audit
+
+first-class-consumption-model
+  -> battle-spellcast-action-breadth
+  -> preview-execution
+  -> dm-override
+
 available-actions-main
   -> movement-action-surface
   -> dm-override
@@ -85,6 +98,10 @@ weapon-property-aware-battle-resolution
   -> fighting-styles-in-battle
   -> versatile-weapon-die-switching
 
+oa-path-vocabulary
+  -> movement-action-surface
+  -> battle-spatial-expansion
+
 battle-spatial-expansion
   -> hide-stealth-chain
   -> forced-movement-vs-oa
@@ -93,28 +110,37 @@ battle-spatial-expansion
 max-hp-reduction-state
   -> max-hp-reduction
 
-shared-attack-damage-modifier-surface
+closed-modifier-algebra
   -> generic-per-attack-type-bonus-surface
+
+authoritative-d20-modifier-query-surface
+  -> armor-training-disadvantage
 ```
 
 ## Node Table
 
 | Node | Kind | Status | Depends on | Unblocks | Notes |
 | --- | --- | --- | --- | --- | --- |
+| `resolve-commit-doctrine` | facility | ready | none | `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Domain-language/doctrine node from applied inspiration `03`; clarifies resolve vs commit ownership before descriptive-mode and transcript work |
+| `canonical-condition-effects` | facility | ready | none | `duration-boundary-audit` | Canonical consequence map for condition-driven mechanics from applied inspiration `05`; optional for small fixes, but useful before broader condition-heavy parity cleanup |
+| `first-class-consumption-model` | facility | ready | none | `battle-spellcast-action-breadth`, `preview-execution`, `dm-override` | Typed spend/refund/quota vocabulary from applied inspiration `10`; important before broader spell/action-surface work |
+| `closed-modifier-algebra` | facility | blocked | none | `generic-per-attack-type-bonus-surface` | Refines the old shared modifier surface using applied inspiration `11`; use a closed typed algebra, not an open-ended registry |
+| `oa-path-vocabulary` | facility | ready | none | `movement-action-surface`, `battle-spatial-expansion` | Domain-language node from applied inspiration `12`; clarify OA checkpoints and movement interruption semantics without adding full geometry |
+| `authoritative-d20-modifier-query-surface` | facility | blocked | none | `armor-training-disadvantage` | Need one authoritative runtime/query fact for d20 disadvantage sources before wiring armor-training disadvantage cleanly |
 | `available-actions-main` | plan | active | none | `movement-action-surface`, `preview-execution`, `battle-spellcast-action-breadth`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
-| `battle-spellcast-action-breadth` | plan | later | `available-actions-main` | later spell-cast reactions | `CAST_COUNTERSPELL` is already complete; this is the remaining breadth umbrella |
+| `battle-spellcast-action-breadth` | plan | later | `available-actions-main`, `first-class-consumption-model` | later spell-cast reactions | `CAST_COUNTERSPELL` is already complete; this is the remaining breadth umbrella |
 | `legendary-resistance-fallback` | batch | ready | `battle-spellcast-action-breadth` | additional battle interrupt breadth | Fallback only if the next spell-cast reaction batch exposes hidden complexity |
-| `movement-action-surface` | plan | later | `available-actions-main` | explicit `cost.movement` bucket | Too broad as a handoff; prefer concrete slices like `stand-from-prone-in-battle` |
-| `preview-execution` | batch | ready | `available-actions-main` | no-spend scripted action preview | Inspiration item `34` |
-| `dm-override` | plan | later | `available-actions-main` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
-| `transcript-port-to-dnd` | plan | later | `available-actions-main` | end-to-end audio/transcript/action loop | Hellenvald demo + tail facilities already exist; port is still later |
+| `movement-action-surface` | plan | later | `available-actions-main`, `oa-path-vocabulary` | explicit `cost.movement` bucket | Too broad as a handoff; prefer concrete slices like `stand-from-prone-in-battle` |
+| `preview-execution` | batch | ready | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | no-spend scripted action preview | Inspiration item `34` |
+| `dm-override` | plan | later | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
+| `transcript-port-to-dnd` | plan | later | `available-actions-main`, `resolve-commit-doctrine` | end-to-end audio/transcript/action loop | Hellenvald demo + tail facilities already exist; port is still later |
 | `same-name-magical-effect-non-stacking` | candidate | ready | none | runtime policy alignment | Inspiration item `6` |
 | `exhaustion-d20-penalty` | candidate | ready | none | TS/runtime parity with Quint | Inspiration item `23` |
-| `armor-training-disadvantage` | candidate | ready | none | STR/DEX d20 disadvantage wiring | Inspiration item `25` |
+| `armor-training-disadvantage` | candidate | blocked | `authoritative-d20-modifier-query-surface` | STR/DEX d20 disadvantage wiring | Inspiration item `25`; needs a small repo-internal query/modifier ownership pass first |
 | `sneak-attack-any-disadvantage` | candidate | ready | none | correctness win in rogue attack policy | Inspiration item `24` |
 | `sneak-attack-once-per-turn-boundary` | candidate | ready | none | battle turn-boundary regression coverage | Inspiration item `4` |
 | `stand-from-prone-in-battle` | candidate | ready | none | battle action exposure for standing | Inspiration item `14` |
-| `duration-boundary-audit` | candidate | ready | none | timing-sensitive effect regression coverage | Inspiration item `5` |
+| `duration-boundary-audit` | candidate | ready | `canonical-condition-effects` | timing-sensitive effect regression coverage | Inspiration item `5`; optional architecture pass first, but worth making explicit in scheduling |
 | `qualified-damage-typing` | facility | blocked | none | `qualified-physical-damage-bypass` | Need `magical` / `silvered` / `adamantine` distinctions |
 | `qualified-physical-damage-bypass` | candidate | blocked | `qualified-damage-typing` | monster/effect fidelity | Inspiration item `7` |
 | `battle-helped-target-state` | facility | blocked | none | `help-advantage-state` | Need helped-target/help-consumption battle state |
@@ -128,14 +154,13 @@ shared-attack-damage-modifier-surface
 | `weapon-property-aware-battle-resolution` | facility | blocked | none | `fighting-styles-in-battle`, `versatile-weapon-die-switching` | Battle is still weapon-property blind in relevant places |
 | `fighting-styles-in-battle` | candidate | blocked | `weapon-property-aware-battle-resolution` | broader weapon semantics | Inspiration item `8` |
 | `versatile-weapon-die-switching` | candidate | blocked | `weapon-property-aware-battle-resolution` | hand-usage / wield-state semantics | Inspiration item `13` |
-| `battle-spatial-expansion` | facility | blocked | none | `hide-stealth-chain`, `forced-movement-vs-oa`, `reach-extends-oa-range` | Current battle spatial model is intentionally narrow |
+| `battle-spatial-expansion` | facility | blocked | `oa-path-vocabulary` | `hide-stealth-chain`, `forced-movement-vs-oa`, `reach-extends-oa-range` | Current battle spatial model is intentionally narrow |
 | `hide-stealth-chain` | candidate | blocked | `battle-spatial-expansion` | visibility/stealth correctness | Inspiration item `11` |
 | `forced-movement-vs-oa` | candidate | blocked | `battle-spatial-expansion` | OA legality fidelity | Inspiration item `17` |
 | `reach-extends-oa-range` | candidate | blocked | `battle-spatial-expansion` | threat radius fidelity | Inspiration item `22` |
 | `max-hp-reduction-state` | facility | blocked | none | `max-hp-reduction` | Need max-HP modifier/reduction state, not only `maxHp` |
 | `max-hp-reduction` | candidate | blocked | `max-hp-reduction-state` | HP-reduction mechanics | Inspiration item `27` |
-| `shared-attack-damage-modifier-surface` | facility | blocked | none | `generic-per-attack-type-bonus-surface` | Current bonuses are too ad hoc |
-| `generic-per-attack-type-bonus-surface` | candidate | blocked | `shared-attack-damage-modifier-surface` | reusable modifier semantics | Inspiration item `28` |
+| `generic-per-attack-type-bonus-surface` | candidate | blocked | `closed-modifier-algebra` | reusable modifier semantics | Inspiration item `28` |
 
 ## Ready Queue
 
@@ -146,11 +171,11 @@ If scheduling strictly by current value and low dependency risk:
 3. `exhaustion-d20-penalty`
 4. `sneak-attack-once-per-turn-boundary`
 5. `stand-from-prone-in-battle`
-6. `duration-boundary-audit`
-7. `preview-execution`
-8. `armor-training-disadvantage`
-9. `legendary-resistance-fallback`
-10. `movement-action-surface`
+6. `resolve-commit-doctrine`
+7. `canonical-condition-effects`
+8. `first-class-consumption-model`
+9. `duration-boundary-audit`
+10. `preview-execution`
 
 ## Researched Nodes
 
