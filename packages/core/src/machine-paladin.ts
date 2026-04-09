@@ -5,7 +5,7 @@ import {
   paladinChannelDivinityMax,
   restoreChannelDivinityShort,
 } from "#/features/class-paladin.ts";
-import { updateClass } from "#/machine-helpers.ts";
+import { effectiveMaxHp, updateClass } from "#/machine-helpers.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import { expendSlot } from "#/machine-spells.ts";
 import type { DndContext, PaladinClassState } from "#/machine-types.ts";
@@ -32,7 +32,10 @@ export function layOnHandsUpdate(
     "guard: canLayOnHands should have prevented this",
   );
   if (ps.layOnHandsPool < amount || amount <= 0) return {};
-  const healedAmount = Math.min(amount, c.maxHp - c.hp);
+  const healedAmount = Math.min(
+    amount,
+    effectiveMaxHp(c.maxHp, c.maxHpReduction) - c.hp,
+  );
   return {
     bonusActionUsed: true,
     hp: hp(c.hp + healedAmount),

@@ -33,6 +33,7 @@ export const exhaustionWithConcBreak = (
     levels,
     c.hp,
     c.maxHp,
+    c.maxHpReduction,
     exhaustionImmune,
   );
   const died =

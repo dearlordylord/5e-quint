@@ -23,6 +23,7 @@ export const fallR = (c: DndContext, e: DndEvent) => {
     ev.damageRoll,
     c.hp,
     c.maxHp,
+    c.maxHpReduction,
     c.tempHp,
     ev.immunities,
     pR(c, ev.resistances),
@@ -35,6 +36,7 @@ export const dmgR = (c: DndContext, e: DndEvent) => {
   return computeTakeDamage(
     c.hp,
     c.maxHp,
+    c.maxHpReduction,
     c.tempHp,
     ev.amount,
     ev.damageType,

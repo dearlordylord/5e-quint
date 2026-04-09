@@ -365,7 +365,7 @@ export const guards = {
       !isIncapacitated(c) &&
       canUseSecondWind({
         hp: c.hp,
-        maxHp: effectiveMaxHp(c.maxHp),
+        maxHp: effectiveMaxHp(c.maxHp, c.maxHpReduction),
         secondWindCharges: fs.secondWindCharges,
         bonusActionUsed: c.bonusActionUsed,
       })

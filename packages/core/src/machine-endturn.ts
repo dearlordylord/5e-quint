@@ -211,6 +211,7 @@ export function computeEndTurn(
     const r = computeTakeDamage(
       h,
       ctx.maxHp,
+      ctx.maxHpReduction,
       th,
       effect.damageAmount,
       effect.damageType,

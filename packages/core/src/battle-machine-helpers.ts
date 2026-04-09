@@ -315,11 +315,12 @@ export function applyDamage(
   targetId: CreatureId,
   dmg: number,
   dt: DamageType,
+  damageQualifiers: ReadonlySet<DamageQualifier>,
   crit: boolean,
   knockOut: boolean,
 ): Map<CreatureId, BattleCreatureState> {
   const old = cs.get(targetId)!;
-  const nc = takeDamage(old, dmg, dt, crit);
+  const nc = takeDamage(old, dmg, dt, damageQualifiers, crit);
   // SRD 5.2.1 "Knocking Out a Creature": melee attacker's choice when damage
   // would reduce a PC to 0 HP (not instant death). Sets HP to 1 + Unconscious.
   if (
@@ -583,7 +584,15 @@ export function applyDamageWithAfterReactions(
   returnTo: AfterDamageReturn,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const oldT = cs.get(targetId)!;
-  const cs1 = applyDamage(cs, targetId, dmg, dt, crit, knockOut);
+  const cs1 = applyDamage(
+    cs,
+    targetId,
+    dmg,
+    dt,
+    damageQualifiers,
+    crit,
+    knockOut,
+  );
   const newT = cs1.get(targetId)!;
   const actualDmg = oldT.hp + oldT.tempHp - (newT.hp + newT.tempHp);
   const elig = eligibleTarget(cs1, targetId);
@@ -800,7 +809,7 @@ function applyDamageWithConcBreak(
   creature: BattleCreatureState;
 } {
   const hadConc = Option.isSome(creature.concentrationSpellId);
-  let c = takeDamage(creature, dmg, dt, false);
+  let c = takeDamage(creature, dmg, dt, new Set(), false);
   if (hadConc && (c.dead || isIncapacitated(c))) c = breakConcentration(c);
   if (Option.isSome(c.concentrationSpellId) && !conSaveSucceeded)
     c = breakConcentration(c);

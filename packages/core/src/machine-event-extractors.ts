@@ -4,6 +4,11 @@ import type { DndEvent } from "#/machine-types.ts";
 
 type TakeDamageEvent = Extract<DndEvent, { readonly type: "TAKE_DAMAGE" }>;
 type HealEvent = Extract<DndEvent, { readonly type: "HEAL" }>;
+type ReduceMaxHpEvent = Extract<DndEvent, { readonly type: "REDUCE_MAX_HP" }>;
+type RestoreMaxHpEvent = Extract<
+  DndEvent,
+  { readonly type: "RESTORE_MAX_HP" }
+>;
 type GrantTempHpEvent = Extract<DndEvent, { readonly type: "GRANT_TEMP_HP" }>;
 type DeathSaveEvent = Extract<DndEvent, { readonly type: "DEATH_SAVE" }>;
 type ApplyConditionEvent = Extract<
@@ -68,6 +73,12 @@ export function asTakeDamage(event: DndEvent): TakeDamageEvent {
 }
 export function asHeal(event: DndEvent): HealEvent {
   return event as HealEvent;
+}
+export function asReduceMaxHp(event: DndEvent): ReduceMaxHpEvent {
+  return event as ReduceMaxHpEvent;
+}
+export function asRestoreMaxHp(event: DndEvent): RestoreMaxHpEvent {
+  return event as RestoreMaxHpEvent;
 }
 export function asGrantTempHp(event: DndEvent): GrantTempHpEvent {
   return event as GrantTempHpEvent;

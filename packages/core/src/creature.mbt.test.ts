@@ -174,6 +174,8 @@ type EventActionMap = {
   USE_PEERLESS_SKILL: "doUsePeerlessSkill";
   TRIGGER_PEERLESS_SKILL_ABILITY_CHECK: "doTriggerPeerlessSkillAbilityCheck";
   TRIGGER_PEERLESS_SKILL_ATTACK_ROLL: "doTriggerPeerlessSkillAttackRoll";
+  REDUCE_MAX_HP: "doReduceMaxHp";
+  RESTORE_MAX_HP: "doRestoreMaxHp";
   CLEAR_PENDING_RESOLUTION: "doClearPendingResolution";
 };
 

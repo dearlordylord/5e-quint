@@ -43,9 +43,12 @@ export function applyDamageModifiers(
     : afterResist;
 }
 
-/** Effective max HP. SRD 5.2.1: exhaustion no longer halves max HP. Kept as abstraction point for future max-HP modifiers. */
-export function effectiveMaxHp(maxHp: number): number {
-  return maxHp;
+/** Effective max HP after explicit max-HP reduction. SRD allows this to reach 0. */
+export function effectiveMaxHp(
+  maxHp: number,
+  maxHpReduction = 0,
+): number {
+  return Math.max(0, maxHp - Math.max(0, maxHpReduction));
 }
 
 /** Defy Death (Champion L18): advantage on death saves, rolls 18-20 count as 20. */
@@ -84,6 +87,7 @@ export interface TakeDamageResult {
 export function computeTakeDamage(
   ctxHp: number,
   ctxMaxHp: number,
+  ctxMaxHpReduction: number,
   ctxTempHp: number,
   amount: number,
   damageType: DamageType,
@@ -103,7 +107,7 @@ export function computeTakeDamage(
   const newTempHp = ctxTempHp - tempAbsorb;
   const newHp = Math.max(0, ctxHp - dmgThrough);
   const overflow = dmgThrough > ctxHp ? dmgThrough - ctxHp : 0;
-  const effMax = effectiveMaxHp(ctxMaxHp);
+  const effMax = effectiveMaxHp(ctxMaxHp, ctxMaxHpReduction);
   return { dmgThrough, effAmount, effMax, newHp, newTempHp, overflow };
 }
 
@@ -297,6 +301,7 @@ export function computeAddExhaustion(
   levels: number,
   currentHp: number,
   maxHp: number,
+  maxHpReduction: number = 0,
   exhaustionImmune: boolean = false,
 ): { readonly newExhaustion: number; readonly newHp: number } {
   if (exhaustionImmune)
@@ -305,7 +310,7 @@ export function computeAddExhaustion(
   if (newExhaustion >= MAX_EXHAUSTION) {
     return { newExhaustion, newHp: 0 };
   }
-  const effMax = effectiveMaxHp(maxHp);
+  const effMax = effectiveMaxHp(maxHp, maxHpReduction);
   return { newExhaustion, newHp: Math.min(currentHp, effMax) };
 }
 
@@ -421,6 +426,7 @@ export function computeFallResult(
   damageRoll: number,
   ctxHp: number,
   ctxMaxHp: number,
+  ctxMaxHpReduction: number,
   ctxTempHp: number,
   immunities: ReadonlySet<DamageType>,
   resistances: ReadonlySet<DamageType>,
@@ -429,6 +435,7 @@ export function computeFallResult(
   return computeTakeDamage(
     ctxHp,
     ctxMaxHp,
+    ctxMaxHpReduction,
     ctxTempHp,
     damageRoll,
     "bludgeoning",
@@ -473,6 +480,7 @@ export function spendHitDieUpdate(
     hitDiceRemaining: HitDiceRemaining;
     hp: number;
     maxHp: number;
+    maxHpReduction?: number;
     conMod: number;
   },
   roll: { className: ClassName; dieRoll: number },
@@ -486,7 +494,7 @@ export function spendHitDieUpdate(
     hp: hp(
       Math.min(
         c.hp + Math.max(1, roll.dieRoll + c.conMod),
-        effectiveMaxHp(c.maxHp),
+        effectiveMaxHp(c.maxHp, c.maxHpReduction ?? 0),
       ),
     ),
   };
@@ -495,6 +503,7 @@ export function spendHitDieUpdate(
 export function longRestUpdate(c: {
   hp: number;
   maxHp: number;
+  maxHpReduction?: number;
   exhaustion: number;
   slotsMax: SpellSlots;
   pactSlotsMax: number;
@@ -505,6 +514,7 @@ export function longRestUpdate(c: {
   const r = computeLongRest(
     c.hp,
     c.maxHp,
+    c.maxHpReduction ?? 0,
     c.exhaustion,
     c.slotsMax,
     c.pactSlotsMax,

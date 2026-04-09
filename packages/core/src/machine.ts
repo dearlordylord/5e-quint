@@ -77,7 +77,9 @@ import {
   asGrantTempHp,
   asGrapple,
   asHeal,
+  asReduceMaxHp,
   asRemoveEffect,
+  asRestoreMaxHp,
   asShortRest,
   asShove,
   asSpendHitDie,
@@ -228,13 +230,47 @@ export const creatureMachine = setup({
       };
     }),
     applyHeal: assign(({ context: c, event: e }) => ({
-      hp: hp(Math.min(c.hp + asHeal(e).amount, effectiveMaxHp(c.maxHp))),
+      hp: hp(
+        Math.min(
+          c.hp + asHeal(e).amount,
+          effectiveMaxHp(c.maxHp, c.maxHpReduction),
+        ),
+      ),
       pendingResolution: null,
     })),
     applyHealFromZero: assign(({ context: c, event: e }) => ({
       deathSaves: DEATH_SAVES_RESET,
-      hp: hp(Math.min(asHeal(e).amount, effectiveMaxHp(c.maxHp))),
+      hp: hp(
+        Math.min(
+          asHeal(e).amount,
+          effectiveMaxHp(c.maxHp, c.maxHpReduction),
+        ),
+      ),
       pendingResolution: null,
+    })),
+    reduceMaxHp: assign(({ context: c, event: e }) => {
+      const nextReduction = Math.min(
+        c.maxHp,
+        c.maxHpReduction + Math.max(0, asReduceMaxHp(e).amount),
+      );
+      const nextEffectiveMaxHp = effectiveMaxHp(c.maxHp, nextReduction);
+      return {
+        maxHpReduction: nextReduction,
+        hp: hp(Math.min(c.hp, nextEffectiveMaxHp)),
+        ...(nextEffectiveMaxHp === 0
+          ? {
+              dead: true,
+              stable: false,
+              ...concBreak(c),
+            }
+          : {}),
+      };
+    }),
+    restoreMaxHp: assign(({ context: c, event: e }) => ({
+      maxHpReduction: Math.max(
+        0,
+        c.maxHpReduction - Math.max(0, asRestoreMaxHp(e).amount),
+      ),
     })),
     applyTempHp: assign(({ event: e }) =>
       asGrantTempHp(e).keepOld ? {} : { tempHp: asGrantTempHp(e).amount },
@@ -514,6 +550,12 @@ export const creatureMachine = setup({
             grantedResistances: ev.grantedResistances,
             grantedVulnerabilities: ev.grantedVulnerabilities,
             grantedImmunities: ev.grantedImmunities,
+            grantedQualifiedPhysicalResistances:
+              ev.grantedQualifiedPhysicalResistances,
+            grantedQualifiedPhysicalVulnerabilities:
+              ev.grantedQualifiedPhysicalVulnerabilities,
+            grantedQualifiedPhysicalImmunities:
+              ev.grantedQualifiedPhysicalImmunities,
             blocksOpportunityAttacks: ev.blocksOpportunityAttacks,
             speedDeltaFeet: ev.speedDeltaFeet,
             consumeOnQualifiedHit: ev.consumeOnQualifiedHit,
@@ -532,6 +574,7 @@ export const creatureMachine = setup({
       const r = computeShortRest(
         c.hp,
         c.maxHp,
+        c.maxHpReduction,
         c.hitDiceRemaining,
         c.pactSlotsMax,
         c.conMod,
@@ -951,6 +994,7 @@ export const creatureMachine = setup({
       conMod: abilityModifier(i.conMod ?? 0),
       incapacitatedSources: new Set<IncapSource>(),
       maxHp: hp(i.maxHp),
+      maxHpReduction: Math.max(0, i.maxHpReduction ?? 0),
       movementRemaining: movementFeet(i.movementRemaining ?? 0),
       pactSlotLevel: derivedSlots.pactSlotLevel,
       pactSlotsCurrent: derivedSlots.pactSlotsCurrent,

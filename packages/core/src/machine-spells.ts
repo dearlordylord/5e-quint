@@ -133,6 +133,7 @@ export function initSpellSlotsFromLevels(levels: {
 export function computeShortRest(
   currentHp: number,
   maxHp: number,
+  maxHpReduction: number,
   hitDiceRemaining: HitDiceRemaining,
   pactSlotsMax: number,
   conMod: number,
@@ -145,7 +146,7 @@ export function computeShortRest(
   readonly newHitDice: HitDiceRemaining;
   readonly newPactSlots: number;
 } {
-  const effMax = effectiveMaxHp(maxHp);
+  const effMax = effectiveMaxHp(maxHp, maxHpReduction);
   let curHp = currentHp;
   const hd = { ...hitDiceRemaining };
   for (const { className, roll } of hdRolls) {
@@ -160,6 +161,7 @@ export function computeShortRest(
 export function computeLongRest(
   currentHp: number,
   maxHp: number,
+  maxHpReduction: number,
   exhaustion: number,
   slotsMax: SpellSlots,
   pactSlotsMax: number,
@@ -171,7 +173,7 @@ export function computeLongRest(
 } | null {
   if (currentHp < 1) return null;
   const newExhaustion = Math.max(0, exhaustion - 1);
-  const effMax = effectiveMaxHp(maxHp);
+  const effMax = effectiveMaxHp(maxHp, maxHpReduction);
   return {
     newExhaustion,
     newHp: effMax,

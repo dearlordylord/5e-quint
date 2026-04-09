@@ -20,8 +20,11 @@ import type {
   ActiveEffect,
   Condition,
   CreatureKind,
+  DamageQualifier,
   DamageType,
   ExpiryPhase,
+  PhysicalDamageType,
+  QualifiedPhysicalBypass,
   SpellId,
 } from "#/types.ts";
 
@@ -39,6 +42,41 @@ function applyDamageModifiers(
     ? Math.trunc(afterFlat / 2)
     : afterFlat;
   return vulnerabilities.has(damageType) ? afterResist * 2 : afterResist;
+}
+
+function isPhysicalDamageType(
+  damageType: DamageType,
+): damageType is PhysicalDamageType {
+  return (
+    damageType === "bludgeoning" ||
+    damageType === "piercing" ||
+    damageType === "slashing"
+  );
+}
+
+function isBypassed(
+  rule: QualifiedPhysicalBypass,
+  damageQualifiers: ReadonlySet<DamageQualifier>,
+): boolean {
+  for (const qualifier of rule.bypassedBy) {
+    if (damageQualifiers.has(qualifier)) return true;
+  }
+  return false;
+}
+
+function qualifyingPhysicalRules(
+  rules: ReadonlyArray<QualifiedPhysicalBypass>,
+  damageType: DamageType,
+  damageQualifiers: ReadonlySet<DamageQualifier>,
+): ReadonlyArray<QualifiedPhysicalBypass> {
+  if (!isPhysicalDamageType(damageType)) return [];
+  return rules.filter(
+    (rule) => rule.damageType === damageType && !isBypassed(rule, damageQualifiers),
+  );
+}
+
+export function effectiveMaxHp(c: BattleCreatureState): number {
+  return Math.max(0, c.maxHp - Math.max(0, c.maxHpReduction));
 }
 
 export function isIncapacitated(c: BattleCreatureState): boolean {
@@ -188,6 +226,7 @@ export function takeDamage(
   c: BattleCreatureState,
   amount: number,
   damageType: DamageType,
+  damageQualifiers: ReadonlySet<DamageQualifier>,
   isCritical: boolean,
 ): BattleCreatureState {
   if (c.dead) return c;
@@ -197,13 +236,34 @@ export function takeDamage(
   for (const r of c.combatantResistances) totalR.add(r);
   const totalV = new Set<DamageType>();
   const totalI = new Set<DamageType>();
+  const qualifiedR: Array<QualifiedPhysicalBypass> = [
+    ...c.qualifiedPhysicalResistances,
+  ];
+  const qualifiedV: Array<QualifiedPhysicalBypass> = [
+    ...c.qualifiedPhysicalVulnerabilities,
+  ];
+  const qualifiedI: Array<QualifiedPhysicalBypass> = [
+    ...c.qualifiedPhysicalImmunities,
+  ];
   for (const e of c.activeEffects) {
     if (e.grantedResistances)
       for (const r of e.grantedResistances) totalR.add(r);
     if (e.grantedVulnerabilities)
       for (const v of e.grantedVulnerabilities) totalV.add(v);
     if (e.grantedImmunities) for (const i of e.grantedImmunities) totalI.add(i);
+    if (e.grantedQualifiedPhysicalResistances)
+      qualifiedR.push(...e.grantedQualifiedPhysicalResistances);
+    if (e.grantedQualifiedPhysicalVulnerabilities)
+      qualifiedV.push(...e.grantedQualifiedPhysicalVulnerabilities);
+    if (e.grantedQualifiedPhysicalImmunities)
+      qualifiedI.push(...e.grantedQualifiedPhysicalImmunities);
   }
+  for (const rule of qualifyingPhysicalRules(qualifiedR, damageType, damageQualifiers))
+    totalR.add(rule.damageType);
+  for (const rule of qualifyingPhysicalRules(qualifiedV, damageType, damageQualifiers))
+    totalV.add(rule.damageType);
+  for (const rule of qualifyingPhysicalRules(qualifiedI, damageType, damageQualifiers))
+    totalI.add(rule.damageType);
   const effAmount = applyDamageModifiers(
     amount,
     damageType,
@@ -217,9 +277,10 @@ export function takeDamage(
   const dmgThrough = effAmount - tempAbsorb;
   const c1 = { ...c, tempHp: c.tempHp - tempAbsorb };
   if (dmgThrough === 0) return c1;
+  const effMax = effectiveMaxHp(c);
   if (c1.hp === 0) {
     if (c.creatureKind === "Monster") return { ...c1, dead: true };
-    if (dmgThrough >= c.maxHp) return { ...c1, dead: true };
+    if (dmgThrough >= effMax) return { ...c1, dead: true };
     return addDeathFailures({ ...c1, stable: false }, isCritical ? 2 : 1);
   }
   const newHp = c1.hp - dmgThrough;
@@ -227,7 +288,7 @@ export function takeDamage(
     const overflow = -newHp;
     const c2 = { ...c1, hp: 0 };
     if (c.creatureKind === "Monster") return { ...c2, dead: true };
-    if (overflow >= c.maxHp) return { ...c2, dead: true };
+    if (overflow >= effMax) return { ...c2, dead: true };
     return applyCondition(c2, "unconscious");
   }
   return { ...c1, hp: newHp };
@@ -238,7 +299,7 @@ export function heal(
   amount: number,
 ): BattleCreatureState {
   if (c.dead || amount <= 0) return c;
-  const newHp = Math.min(c.hp + amount, c.maxHp);
+  const newHp = Math.min(c.hp + amount, effectiveMaxHp(c));
   const c1 = { ...c, hp: newHp };
   if (c.hp === 0 && newHp > 0) {
     return {
@@ -521,6 +582,7 @@ export function freshCreature(
   return {
     hp: maxHp,
     maxHp,
+    maxHpReduction: 0,
     tempHp: 0,
     deathSaves: { successes: 0, failures: 0 },
     stable: false,
@@ -573,6 +635,9 @@ export function freshCreature(
     recklessThisTurn: false,
     ragingBlocksSpells: false,
     combatantResistances: new Set(),
+    qualifiedPhysicalResistances: [],
+    qualifiedPhysicalVulnerabilities: [],
+    qualifiedPhysicalImmunities: [],
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
     readiedSpellParams: null,

@@ -251,7 +251,10 @@ export function computeStartTurn(
     // Quint pHeal: if (s.dead) s — no-op
     if (!dead && eff.healAmount > 0) {
       const prevHp = h;
-      h = Math.min(h + eff.healAmount, effectiveMaxHp(ctx.maxHp));
+      h = Math.min(
+        h + eff.healAmount,
+        effectiveMaxHp(ctx.maxHp, ctx.maxHpReduction),
+      );
       if (prevHp === 0 && h > 0) {
         conditions.unconscious = false;
         incap = removeIncapSource(incap, "unconscious");
@@ -273,6 +276,7 @@ export function computeStartTurn(
       const r = computeTakeDamage(
         h,
         ctx.maxHp,
+        ctx.maxHpReduction,
         th,
         eff.damageAmount,
         eff.damageType,
@@ -380,7 +384,10 @@ export function computeInitTurn(
   );
   const resultHp =
     rallyHeal > 0
-      ? Math.min((cr.hp as number) + rallyHeal, effectiveMaxHp(c.maxHp))
+      ? Math.min(
+          (cr.hp as number) + rallyHeal,
+          effectiveMaxHp(c.maxHp, c.maxHpReduction),
+        )
       : cr.hp;
   const mrsUpdates =
     c.creatureKind === "Monster"

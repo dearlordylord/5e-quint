@@ -1202,6 +1202,68 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "C").paralyzed).toBe(true);
   });
 
+  it("Legendary Resistance also resolves the narrow AoE failed-save window", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          caster: true,
+          preparedSpells: new Set(["thunderwave"]),
+          initiativeRoll: 20,
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "Monster",
+          initiativeRoll: 10,
+          legendaryResistances: 3,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_CAST_AOE",
+      saveDC: difficultyClass(13),
+      dmgOnFail: 9,
+      halfOnSave: true,
+      dt: "thunder",
+      cond: "blinded",
+      applyCond: false,
+      saveAbility: "con",
+      slotLvl: spellSlotLevel(1),
+      spellName: "thunderwave",
+      ritual: false,
+    });
+    send(actor, {
+      type: "BATTLE_RESOLVE_AOE_TARGET",
+      targetId: CreatureId("B"),
+      saveRoll: 1,
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PISaveFailedAoE");
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RLegendaryResistance" },
+    });
+    send(actor, {
+      type: "BATTLE_RESOLVE_AOE_TARGET",
+      targetId: null,
+      saveRoll: 0,
+    });
+
+    expect(creature(actor, "B").legendaryResistancesRemaining).toBe(2);
+    expect(creature(actor, "B").hp).toBe(16);
+    expect(ctx(actor).aoeCtx).toBeNull();
+  });
+
   it("opencombatengine: an opportunity attack spends the reaction and prevents a second OA before next turn", () => {
     const actor = initTwoPcBattle();
     startTurn(actor);
@@ -2976,6 +3038,140 @@ describe("battle rules scenario regressions", () => {
     startTurn(actor);
 
     expect(ctx(actor).helpTargets).toEqual([]);
+  });
+
+  it("qualified physical immunity is bypassed by magical or silvered weapon hits", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTSWORD,
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "Monster",
+          initiativeRoll: 10,
+          qualifiedPhysicalImmunities: [
+            {
+              damageType: "piercing",
+              bypassedBy: new Set(["magical", "silvered"]),
+            },
+          ],
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      tAc: armorClass(10),
+      crit: false,
+      damageQualifiers: new Set(),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(20);
+
+    advanceToNextTurn(actor);
+    advanceToNextTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      tAc: armorClass(10),
+      crit: false,
+      damageQualifiers: new Set(["silvered"]),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(15);
+  });
+
+  it("next-hit rider metadata survives non-weapon hits and is consumed by the next qualifying weapon hit", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          activeEffects: [
+            {
+              spellId: spellId("test_rider"),
+              turnsRemaining: 10,
+              expiresAt: "end",
+              casterId: CreatureId("A"),
+              consumeOnQualifiedHit: { trigger: "nextWeaponHit" },
+            },
+          ],
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "lightning",
+      tAc: armorClass(10),
+      crit: false,
+      onHitEffect: {
+        spellId: spellId("spell_attack_marker"),
+        turnsRemaining: 1,
+        expiresAt: "end",
+        casterId: CreatureId("A"),
+      },
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").activeEffects).toEqual([
+      expect.objectContaining({ spellId: spellId("test_rider") }),
+    ]);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      tAc: armorClass(10),
+      crit: false,
+      weaponProperties: SHORTSWORD.properties,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").activeEffects).toEqual([]);
   });
 
   it("off-hand attack requires a light main-hand Attack action and spends the bonus action", () => {

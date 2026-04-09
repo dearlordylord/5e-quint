@@ -8,7 +8,7 @@ import {
   pUncannyMetabolism as tsUncannyMetabolism,
 } from "#/features/class-monk.ts";
 import { wholenessOfBodyMaxCharges } from "#/features/class-monk-features.ts";
-import { updateClass } from "#/machine-helpers.ts";
+import { effectiveMaxHp, updateClass } from "#/machine-helpers.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import type { DndContext, MonkClassState } from "#/machine-types.ts";
 import type { ClassLevel, ResourceCount } from "#/types.ts";
@@ -122,7 +122,7 @@ export function wholenessOfBodyUpdate(
   const healAmount = Math.max(1, healRoll);
   return {
     bonusActionUsed: true,
-    hp: hp(Math.min(c.hp + healAmount, c.maxHp)),
+    hp: hp(Math.min(c.hp + healAmount, effectiveMaxHp(c.maxHp, c.maxHpReduction))),
     ...updateClass(c, "monk", {
       wholenessCharges: resourceCount(ms.wholenessCharges - 1),
     }),
@@ -141,7 +141,7 @@ export function uncannyMetabolismUpdate(
   const r = tsUncannyMetabolism(toFocusPool(c), ms.level, healRoll);
   if (!r.triggered) return {};
   return {
-    hp: hp(Math.min(c.hp + r.hpHealed, c.maxHp)),
+    hp: hp(Math.min(c.hp + r.hpHealed, effectiveMaxHp(c.maxHp, c.maxHpReduction))),
     ...updateClass(c, "monk", {
       focusPoints: resourceCount(r.focusPoints),
       uncannyMetabolismUsed: true,

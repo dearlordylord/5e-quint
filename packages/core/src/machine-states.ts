@@ -505,6 +505,8 @@ export const rootEventHandlers = {
   REMOVE_EFFECT: { actions: ["removeEffect"] },
   ADD_EXHAUSTION: { actions: ["addExhaustion"] },
   REDUCE_EXHAUSTION: { actions: ["reduceExhaustion"] },
+  REDUCE_MAX_HP: { actions: ["reduceMaxHp"] },
+  RESTORE_MAX_HP: { actions: ["restoreMaxHp"] },
   GRAPPLE: { actions: ["applyGrapple"] },
   SET_GRAPPLING_STATE: { actions: ["setGrapplingState"] },
   RELEASE_GRAPPLE: { actions: ["releaseGrapple"] },

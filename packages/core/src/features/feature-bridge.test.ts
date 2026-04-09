@@ -88,6 +88,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
   return {
     hp: hp(10),
     maxHp: hp(20),
+    maxHpReduction: 0,
     conMod: abilityModifier(0),
     tempHp: tempHp(0),
     deathSaves: DEATH_SAVES_RESET,

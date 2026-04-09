@@ -26,12 +26,24 @@ export const DAMAGE_TYPES = [
 ] as const;
 export type DamageType = (typeof DAMAGE_TYPES)[number];
 
+export const PHYSICAL_DAMAGE_TYPES = [
+  "bludgeoning",
+  "piercing",
+  "slashing",
+] as const satisfies ReadonlyArray<DamageType>;
+export type PhysicalDamageType = (typeof PHYSICAL_DAMAGE_TYPES)[number];
+
 export const DAMAGE_QUALIFIERS = [
   "adamantine",
   "magical",
   "silvered",
 ] as const;
 export type DamageQualifier = (typeof DAMAGE_QUALIFIERS)[number];
+
+export interface QualifiedPhysicalBypass {
+  readonly damageType: PhysicalDamageType;
+  readonly bypassedBy: ReadonlySet<DamageQualifier>;
+}
 
 export const WEAPON_PROPERTIES = [
   "ammunition",
@@ -270,6 +282,9 @@ export interface ActiveEffect {
   readonly grantedResistances?: ReadonlySet<DamageType>;
   readonly grantedVulnerabilities?: ReadonlySet<DamageType>;
   readonly grantedImmunities?: ReadonlySet<DamageType>;
+  readonly grantedQualifiedPhysicalResistances?: ReadonlyArray<QualifiedPhysicalBypass>;
+  readonly grantedQualifiedPhysicalVulnerabilities?: ReadonlyArray<QualifiedPhysicalBypass>;
+  readonly grantedQualifiedPhysicalImmunities?: ReadonlyArray<QualifiedPhysicalBypass>;
   readonly blocksOpportunityAttacks?: boolean;
   readonly speedDeltaFeet?: number;
   readonly consumeOnQualifiedHit?: OneShotRiderConsumption;

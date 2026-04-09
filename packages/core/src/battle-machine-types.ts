@@ -23,6 +23,7 @@ import type {
   DamageType,
   DifficultyClass,
   IncapSource,
+  QualifiedPhysicalBypass,
   Size,
   SpellId,
   SpellSlotLevel,
@@ -33,6 +34,7 @@ export type { CreatureId } from "#/types.ts";
 export interface BattleCreatureState {
   readonly hp: number;
   readonly maxHp: number;
+  readonly maxHpReduction: number;
   readonly tempHp: number;
   readonly deathSaves: {
     readonly successes: number;
@@ -115,6 +117,9 @@ export interface BattleCreatureState {
   readonly recklessThisTurn: boolean;
   readonly ragingBlocksSpells: boolean;
   readonly combatantResistances: ReadonlySet<DamageType>;
+  readonly qualifiedPhysicalResistances: ReadonlyArray<QualifiedPhysicalBypass>;
+  readonly qualifiedPhysicalVulnerabilities: ReadonlyArray<QualifiedPhysicalBypass>;
+  readonly qualifiedPhysicalImmunities: ReadonlyArray<QualifiedPhysicalBypass>;
   // Rogue state
   readonly sneakAttackDice: number;
   readonly sneakAttackUsedThisTurn: boolean;
@@ -401,6 +406,7 @@ export function phaseAwaitingReady(ready: ReadyWindowCtx): PhaseFields {
 export interface InitCreatureConfig {
   readonly id: CreatureId;
   readonly maxHp: number;
+  readonly maxHpReduction?: number;
   readonly kind: CreatureKind;
   readonly caster?: boolean;
   readonly rogueLevel?: number;
@@ -420,6 +426,7 @@ export interface InitCreatureConfig {
   readonly bardicInspirationCharges?: number;
   readonly parryAcBonus?: number;
   readonly prone?: boolean;
+  readonly activeEffects?: ReadonlyArray<ActiveEffect>;
   /** Walk speed (PC: 30, Monster: from stat block). Defaults to 30. */
   readonly baseWalkSpeed?: number;
   /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */
@@ -430,6 +437,9 @@ export interface InitCreatureConfig {
   readonly surprised?: boolean;
   readonly mainHandWeapon?: BattleWeaponProfile;
   readonly offHandWeapon?: BattleWeaponProfile;
+  readonly qualifiedPhysicalResistances?: ReadonlyArray<QualifiedPhysicalBypass>;
+  readonly qualifiedPhysicalVulnerabilities?: ReadonlyArray<QualifiedPhysicalBypass>;
+  readonly qualifiedPhysicalImmunities?: ReadonlyArray<QualifiedPhysicalBypass>;
 }
 
 export interface GrappleParams {

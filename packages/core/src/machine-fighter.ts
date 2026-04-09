@@ -36,7 +36,7 @@ export function secondWindUpdate(
   const fs = f(c);
   const swState = {
     hp: c.hp,
-    maxHp: effectiveMaxHp(c.maxHp),
+    maxHp: effectiveMaxHp(c.maxHp, c.maxHpReduction),
     secondWindCharges: fs.secondWindCharges,
     bonusActionUsed: c.bonusActionUsed,
   };

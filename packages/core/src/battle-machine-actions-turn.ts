@@ -126,6 +126,9 @@ export function battleInit({
       : freshCreature(cfg.maxHp, cfg.kind);
     creatures.set(cfg.id, {
       ...base,
+      ...(cfg.maxHpReduction != null
+        ? { maxHpReduction: cfg.maxHpReduction }
+        : {}),
       ...(cfg.rogueLevel != null ? { rogueLevel: cfg.rogueLevel } : {}),
       ...(cfg.monkLevel != null ? { monkLevel: cfg.monkLevel } : {}),
       ...(cfg.dexMod != null ? { dexMod: cfg.dexMod } : {}),
@@ -172,6 +175,7 @@ export function battleInit({
         : {}),
       ...(cfg.parryAcBonus != null ? { parryAcBonus: cfg.parryAcBonus } : {}),
       ...(cfg.prone === true ? { prone: true } : {}),
+      ...(cfg.activeEffects != null ? { activeEffects: cfg.activeEffects } : {}),
       ...(cfg.baseWalkSpeed != null
         ? {
             baseWalkSpeed: cfg.baseWalkSpeed,
@@ -183,6 +187,18 @@ export function battleInit({
         ? { mainHandWeapon: cfg.mainHandWeapon }
         : {}),
       ...(cfg.offHandWeapon != null ? { offHandWeapon: cfg.offHandWeapon } : {}),
+      ...(cfg.qualifiedPhysicalResistances != null
+        ? { qualifiedPhysicalResistances: cfg.qualifiedPhysicalResistances }
+        : {}),
+      ...(cfg.qualifiedPhysicalVulnerabilities != null
+        ? {
+            qualifiedPhysicalVulnerabilities:
+              cfg.qualifiedPhysicalVulnerabilities,
+          }
+        : {}),
+      ...(cfg.qualifiedPhysicalImmunities != null
+        ? { qualifiedPhysicalImmunities: cfg.qualifiedPhysicalImmunities }
+        : {}),
     });
     initiative.push(cfg.id);
   }

@@ -256,6 +256,11 @@ describe("effectiveMaxHp", () => {
     expect(effectiveMaxHp(1)).toBe(1);
     expect(effectiveMaxHp(100)).toBe(100);
   });
+
+  it("applies explicit max-HP reduction and allows 0", () => {
+    expect(effectiveMaxHp(20, 7)).toBe(13);
+    expect(effectiveMaxHp(20, 25)).toBe(0);
+  });
 });
 
 describe("damage track - basic damage", () => {
@@ -472,6 +477,32 @@ describe("damage track - healing", () => {
     takeDamage(a, 5);
     heal(a, 100);
     expect(snap(a).context.hp).toBe(DEFAULT_MAX_HP);
+  });
+
+  it("REDUCE_MAX_HP clamps current HP to the reduced maximum", () => {
+    const a = createWithInput({ maxHp: 20 });
+    a.send({ type: "REDUCE_MAX_HP", amount: 7 });
+
+    expect(ctx(a).maxHpReduction).toBe(7);
+    expect(ctx(a).hp).toBe(13);
+  });
+
+  it("REDUCE_MAX_HP to 0 maximum kills the creature", () => {
+    const a = createWithInput({ maxHp: 20 });
+    a.send({ type: "REDUCE_MAX_HP", amount: 20 });
+
+    expect(ctx(a).maxHpReduction).toBe(20);
+    expect(ctx(a).hp).toBe(0);
+    expect(ctx(a).dead).toBe(true);
+  });
+
+  it("RESTORE_MAX_HP removes explicit reduction without changing current HP", () => {
+    const a = createWithInput({ maxHp: 20 });
+    a.send({ type: "REDUCE_MAX_HP", amount: 7 });
+    a.send({ type: "RESTORE_MAX_HP", amount: 4 });
+
+    expect(ctx(a).maxHpReduction).toBe(3);
+    expect(ctx(a).hp).toBe(13);
   });
 
   it("heal at 0 HP restores consciousness", () => {

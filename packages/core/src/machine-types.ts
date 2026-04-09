@@ -21,6 +21,7 @@ import type {
   HP,
   IncapSource,
   MovementFeet,
+  QualifiedPhysicalBypass,
   ResourceCount,
   ShoveChoice,
   Size,
@@ -75,6 +76,7 @@ export interface TurnPhaseCtx {
   readonly selfId?: CreatureId;
   readonly hp: number;
   readonly maxHp: number;
+  readonly maxHpReduction: number;
   readonly tempHp: number;
   readonly concentrationSpellId: Option.Option<SpellId>;
   readonly activeEffects: ReadonlyArray<ActiveEffect>;
@@ -103,6 +105,7 @@ export interface TurnPhaseResult {
 export interface DndMachineInput {
   readonly selfId?: CreatureId;
   readonly maxHp: number;
+  readonly maxHpReduction?: number;
   readonly conMod?: AbilityModifier;
   readonly hitDiceRemaining?: HitDiceRemaining;
   readonly baseWalkSpeed?: number;
@@ -162,6 +165,7 @@ export interface DndContext {
   readonly selfId?: CreatureId;
   readonly hp: HP;
   readonly maxHp: HP;
+  readonly maxHpReduction: number;
   readonly conMod: AbilityModifier;
   readonly tempHp: TempHP;
   readonly deathSaves: DeathSaves;
@@ -253,6 +257,8 @@ export type DndEvent =
       readonly isCritical: boolean;
     }
   | { readonly type: "HEAL"; readonly amount: HealAmount }
+  | { readonly type: "REDUCE_MAX_HP"; readonly amount: number }
+  | { readonly type: "RESTORE_MAX_HP"; readonly amount: number }
   | {
       readonly type: "GRANT_TEMP_HP";
       readonly amount: TempHP;
@@ -353,6 +359,9 @@ export type DndEvent =
       readonly grantedResistances?: ReadonlySet<DamageType>;
       readonly grantedVulnerabilities?: ReadonlySet<DamageType>;
       readonly grantedImmunities?: ReadonlySet<DamageType>;
+      readonly grantedQualifiedPhysicalResistances?: ReadonlyArray<QualifiedPhysicalBypass>;
+      readonly grantedQualifiedPhysicalVulnerabilities?: ReadonlyArray<QualifiedPhysicalBypass>;
+      readonly grantedQualifiedPhysicalImmunities?: ReadonlyArray<QualifiedPhysicalBypass>;
       readonly blocksOpportunityAttacks?: boolean;
       readonly speedDeltaFeet?: number;
       readonly consumeOnQualifiedHit?: {
@@ -506,6 +515,8 @@ export {
   asGrantTempHp,
   asGrapple,
   asHeal,
+  asReduceMaxHp,
+  asRestoreMaxHp,
   asRemoveEffect,
   asShortRest,
   asShove,

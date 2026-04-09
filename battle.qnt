@@ -21,6 +21,11 @@ module battle {
 
   type CreatureId = str
 
+  type QualifiedPhysicalBypass = {
+    damageType: DamageType,
+    bypassedBy: Set[DamageQualifier],
+  }
+
   pure val NO_WEAPON: Weapon = {
     name: "",
     damageDie: 0,
@@ -65,6 +70,9 @@ module battle {
     recklessThisTurn: bool,                  // Reckless Attack declared this turn
     ragingBlocksSpells: bool,                // rage blocks spell casting
     combatantResistances: Set[DamageType],   // runtime resistances (rage B/P/S, Bear Totem all, etc.)
+    qualifiedPhysicalResistances: Set[QualifiedPhysicalBypass],
+    qualifiedPhysicalVulnerabilities: Set[QualifiedPhysicalBypass],
+    qualifiedPhysicalImmunities: Set[QualifiedPhysicalBypass],
     sneakAttackDice: int,                    // Sneak Attack d6 count (0 = not a rogue; ceil(rogueLevel/2))
     sneakAttackUsedThisTurn: bool,           // SA once per turn (SRD 5.2.1 Rogue "Sneak Attack")
     readiedSpellParams: ReadiedSpellParams,  // readied spell params (SRD 5.2.1 Ready action); slotLvl==0 = no spell
@@ -443,6 +451,9 @@ module battle {
     recklessThisTurn: false,
     ragingBlocksSpells: false,
     combatantResistances: Set(),
+    qualifiedPhysicalResistances: Set(),
+    qualifiedPhysicalVulnerabilities: Set(),
+    qualifiedPhysicalImmunities: Set(),
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
     readiedSpellParams: NO_READIED_SPELL,
@@ -524,6 +535,9 @@ module battle {
       recklessThisTurn: false,
       ragingBlocksSpells: false,
       combatantResistances: Set(),
+      qualifiedPhysicalResistances: Set(),
+      qualifiedPhysicalVulnerabilities: Set(),
+      qualifiedPhysicalImmunities: Set(),
       sneakAttackDice: 0,
       sneakAttackUsedThisTurn: false,
       readiedSpellParams: NO_READIED_SPELL,
@@ -547,7 +561,7 @@ module battle {
   /// separate bConcentrationCheck action, not inline — consistent with all battle damage paths.
   pure def applyDamage(
     cs: CreatureId -> Combatant, targetId: CreatureId,
-    dmg: int, dt: DamageType, crit: bool, knockOut: bool
+    dmg: int, dt: DamageType, damageQualifiers: Set[DamageQualifier], crit: bool, knockOut: bool
   ): (CreatureId -> Combatant) = {
     val t = cs.get(targetId)
     // Merge stat block R/V/I with active effect granted R/V/I (single pass)
@@ -555,9 +569,24 @@ module battle {
       { r: Set(), v: Set(), i: Set() },
       (acc, e) => { r: acc.r.union(e.grantedResistances), v: acc.v.union(e.grantedVulnerabilities), i: acc.i.union(e.grantedImmunities) }
     )
-    val totalR = t.statBlock.resistances.union(merged.r).union(t.combatantResistances)
-    val totalV = t.statBlock.vulnerabilities.union(merged.v)
-    val totalI = t.statBlock.damageImmunities.union(merged.i)
+    val totalR = addQualifiedPhysicalModifiers(
+      t.statBlock.resistances.union(merged.r).union(t.combatantResistances),
+      t.qualifiedPhysicalResistances,
+      dt,
+      damageQualifiers,
+    )
+    val totalV = addQualifiedPhysicalModifiers(
+      t.statBlock.vulnerabilities.union(merged.v),
+      t.qualifiedPhysicalVulnerabilities,
+      dt,
+      damageQualifiers,
+    )
+    val totalI = addQualifiedPhysicalModifiers(
+      t.statBlock.damageImmunities.union(merged.i),
+      t.qualifiedPhysicalImmunities,
+      dt,
+      damageQualifiers,
+    )
     val nc = pTakeDamageAsCreature(t.creature, dmg, dt, totalR, totalV, totalI, crit, t.kind)
     // SRD: knock-out only if damage would reduce to exactly 0 HP (not instant death).
     // pKnockOut operates on original state — sets HP to 1 + Unconscious, bypassing
@@ -986,6 +1015,31 @@ module battle {
     saveSucceeded: false,
   }
 
+  pure def isPhysicalDamageType(dt: DamageType): bool =
+    dt == Bludgeoning or dt == Piercing or dt == Slashing
+
+  pure def bypassedByQualifiers(
+    rule: QualifiedPhysicalBypass,
+    damageQualifiers: Set[DamageQualifier],
+  ): bool =
+    rule.bypassedBy.exists(q => damageQualifiers.contains(q))
+
+  pure def addQualifiedPhysicalModifiers(
+    base: Set[DamageType],
+    rules: Set[QualifiedPhysicalBypass],
+    damageType: DamageType,
+    damageQualifiers: Set[DamageQualifier],
+  ): Set[DamageType] =
+    if (not(isPhysicalDamageType(damageType))) base
+    else
+      rules.fold(
+        base,
+        (acc, rule) =>
+          if (rule.damageType == damageType and not(bypassedByQualifiers(rule, damageQualifiers)))
+            acc.union(Set(rule.damageType))
+          else acc,
+      )
+
   /// Apply damage and check for after-damage reactions (R10.4).
   /// Returns new creatures + phase. If an eligible reactor exists, enters
   /// BPAwaitingReaction(PIAfterDamage); otherwise returns the given returnPhase.
@@ -997,7 +1051,7 @@ module battle {
     knockOut: bool
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     val oldT = cs.get(targetId)
-    val cs1 = normalizeBattleGrapples(applyDamage(cs, targetId, dmg, dt, crit, knockOut))
+    val cs1 = normalizeBattleGrapples(applyDamage(cs, targetId, dmg, dt, damageQualifiers, crit, knockOut))
     val newT = cs1.get(targetId)
     // Actual damage after resistance/vulnerability/immunity and temp HP absorption
     val actualDmg = (oldT.creature.hp + oldT.creature.tempHp) - (newT.creature.hp + newT.creature.tempHp)

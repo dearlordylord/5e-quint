@@ -872,6 +872,7 @@ module creature {
   type CreatureState = {
     hp: int,
     maxHp: int,
+    maxHpReduction: int,
     conMod: int,
     tempHp: int,
     deathSaves: DeathSaves,
@@ -901,7 +902,7 @@ module creature {
         Piercing, Poison, Psychic, Radiant, Slashing, Thunder)
 
   pure def freshCreature(maxHp: int): CreatureState = {
-    hp: maxHp, maxHp: maxHp, conMod: 0, tempHp: 0,
+    hp: maxHp, maxHp: maxHp, maxHpReduction: 0, conMod: 0, tempHp: 0,
     deathSaves: DEATH_SAVES_RESET,
     stable: false, dead: false,
     blinded: false, charmed: false, deafened: false,
@@ -920,7 +921,18 @@ module creature {
   pure def isConscious(s: CreatureState): bool = s.hp > 0 and not(s.dead)
 
   /// Effective max HP (extension point for effects that modify HP maximum).
-  pure def effectiveMaxHp(s: CreatureState): int = s.maxHp
+  /// SRD 5.2.1 "Hit Point Maximum of 0": this may reach 0.
+  pure def effectiveMaxHp(s: CreatureState): int = intMax(0, s.maxHp - s.maxHpReduction)
+
+  pure def pReduceMaxHp(s: CreatureState, amount: int): CreatureState = {
+    val nextReduction = intMin(s.maxHp, s.maxHpReduction + intMax(0, amount))
+    val effMax = intMax(0, s.maxHp - nextReduction)
+    val s1 = s.with("maxHpReduction", nextReduction).with("hp", intMin(s.hp, effMax))
+    if (effMax == 0) s1.with("dead", true).with("stable", false) else s1
+  }
+
+  pure def pRestoreMaxHp(s: CreatureState, amount: int): CreatureState =
+    s.with("maxHpReduction", intMax(0, s.maxHpReduction - intMax(0, amount)))
 
   // -- 8.1 Active Effect Lifecycle --
   // Core owns add/remove/decrement/expire. Spell-specific behavior is caller's job.

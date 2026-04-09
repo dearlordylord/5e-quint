@@ -471,6 +471,25 @@ module dndTest::Impl {
     assert(effectiveMaxHp(s) == 20)
   }
 
+  run test_effectiveMaxHp_reduction = {
+    val s = FRESH20.with("maxHpReduction", 7)
+    assert(effectiveMaxHp(s) == 13)
+  }
+
+  run test_effectiveMaxHp_zero = {
+    val s = FRESH20.with("maxHpReduction", 25)
+    assert(effectiveMaxHp(s) == 0)
+  }
+
+  run test_reduceMaxHp_to_zero_dies = {
+    val s = pReduceMaxHp(FRESH20, 20)
+    all {
+      assert(s.maxHpReduction == 20),
+      assert(s.hp == 0),
+      assert(s.dead),
+    }
+  }
+
   // -- isIncapacitated --
   run test_incapacitated_none = assert(not(isIncapacitated(FRESH20)))
   run test_incapacitated_from_paralyzed = assert(isIncapacitated(pApplyCondition(FRESH20, CParalyzed, Set())))
