@@ -191,6 +191,12 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
   - [PRD_ATTACK_PIPELINE.md](/workspace/typescript/dnd/PRD_ATTACK_PIPELINE.md)
   - [PRD_ATTACK_TYPE_AND_ADVANTAGE.md](/workspace/typescript/dnd/PRD_ATTACK_TYPE_AND_ADVANTAGE.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
+- `battle-hand-occupancy-state`, `versatile-weapon-die-switching`, future hand-sensitive OA/grapple/spellcasting consumers:
+  - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
+  - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
+  - [.references/srd-5.2.1/Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md)
+  - [.references/srd-5.2.1/Equipment.md](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md)
+  - [.references/srd-5.2.1/Spells/Gaining-and-Casting.md](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Gaining-and-Casting.md)
 - `closed-modifier-algebra`, `generic-per-attack-type-bonus-surface`, `max-hp-reduction-state`, `max-hp-reduction`, `next-hit-rider-consumption`, `effect-dependency-graph`:
   - [PLAN_AUDIT.md](/workspace/typescript/dnd/PLAN_AUDIT.md)
   - [PRD_PASSIVE_MODIFIERS.md](/workspace/typescript/dnd/PRD_PASSIVE_MODIFIERS.md)
@@ -204,6 +210,33 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
 ## Research Starting Points
 
 Keep these compact and live. Completed historical handoffs belong in runbooks, not here.
+
+### `battle-hand-occupancy-state`
+
+- classification: `execution-grade facility with explicit follow-up scenario`
+- owner_layer: battle-owned hand / shield / free-hand facts for hand-sensitive combat semantics
+- read_first:
+  - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
+  - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
+  - [.references/srd-5.2.1/Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md)
+  - [.references/srd-5.2.1/Equipment.md](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md)
+  - [.references/srd-5.2.1/Spells/Gaining-and-Casting.md](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Gaining-and-Casting.md)
+- raw_constraints:
+  - grapple uses a free hand and is one grapple per hand
+  - a hand used to maintain a grapple is busy until the grapple ends
+  - a Two-Handed weapon requires two hands when you attack, not continuously
+  - a Versatile weapon can be used one- or two-handed, and uses the parenthetical damage only when used with two hands to make a melee attack
+  - Somatic components require at least one hand
+  - Material components require a free hand, except that the same hand can satisfy Somatic and Material together, or a held focus can substitute where allowed
+  - an Opportunity Attack is one melee attack with a weapon or an Unarmed Strike
+- promotion_goal:
+  - land one authoritative battle state seam that can answer `hasFreeHand`, `shieldOccupiesHand`, `grappleHandsBusy`, and `mainHandAttackUsesTwoHands` without inferring them from `offHandWeapon == null`
+- scenario_todo:
+  - explicit regression scenario: a caster begins the turn wielding a two-handed or versatile melee weapon, casts a spell with Somatic or Material requirements by freeing a hand, and therefore no longer has the two-handed attack posture for later reaction attacks unless they can re-establish it under explicit modeled rules
+  - same scenario must distinguish a true Two-Handed weapon from a Versatile weapon: freeing a hand from a Versatile weapon should imply one-handed follow-up semantics rather than the two-handed damage profile
+  - include grapple pressure: a creature with one occupied grapple hand and one weapon hand should not be treated as having two free hands, and double-grapple should remain possible only with two available hands
+- explicit_test_target:
+  - add deterministic battle tests proving that hand occupancy, spell components, grapple occupancy, and later Opportunity Attack / versatile-damage legality are derived from the same owned state rather than from weapon-slot heuristics
 
 ### `closed-modifier-algebra`
 
