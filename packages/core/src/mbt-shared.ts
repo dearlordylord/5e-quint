@@ -19,6 +19,7 @@ import type {
   ShoveChoice,
   Size,
 } from "#/types.ts";
+import { SIZES } from "#/types.ts";
 
 // ============================================================
 // Quint → TS enum mappings
@@ -207,6 +208,25 @@ const QUINT_ABILITY_MAP: Record<string, Ability> = {
 export function mapAbility(s: string): Ability {
   return QUINT_ABILITY_MAP[s] ?? "str";
 }
+
+const SIZE_SET: ReadonlySet<string> = new Set(SIZES);
+
+export function parseItfSize(raw: unknown, fallback: Size): Size {
+  const parsed = variantToString(raw).toLowerCase();
+  return SIZE_SET.has(parsed) ? (parsed as Size) : fallback;
+}
+
+export const ITFSize = z.unknown().transform((raw, ctx): Size => {
+  const parsed = variantToString(raw).toLowerCase();
+  if (!SIZE_SET.has(parsed)) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Invalid ITF size: ${String(raw)}`,
+    });
+    return z.NEVER;
+  }
+  return parsed as Size;
+});
 
 function parsePendingResolution(raw: unknown):
   | null

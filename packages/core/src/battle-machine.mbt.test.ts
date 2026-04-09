@@ -30,12 +30,14 @@ import {
 import {
   compareNormalizedStates,
   ITFBigInt,
+  ITFSize,
   ITFVariant,
   ITFVariantWithValue,
   logMbtSeed,
   mapAbility,
   mapDamageType,
   parseDamageTypeSet,
+  parseItfSize,
   QUINT_CONDITION_MAP,
   QuintCreatureState,
   QuintMonsterResourceState,
@@ -548,8 +550,8 @@ const battleDriverSchema = {
   bDodge: {},
   bGrapple: {
     targetId: OS,
-    attackerSize: z.any(),
-    targetSize: z.any(),
+    attackerSize: ITFSize,
+    targetSize: ITFSize,
     targetSaveFailed: OB,
     attackerHasFreeHand: OB,
   },
@@ -652,9 +654,7 @@ function psz(
   key: string,
   fallback: Size,
 ): Size {
-  const v = picks[key];
-  const parsed = variantToString(v).toLowerCase();
-  return parsed === "[object object]" ? fallback : (parsed as Size);
+  return parseItfSize(picks[key], fallback);
 }
 function pcs(
   picks: Record<string, unknown>,

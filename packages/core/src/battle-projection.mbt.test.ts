@@ -30,10 +30,12 @@ import {
   computeRechargedAbilities,
   EMPTY_DAMAGE_MODS,
   ITFBigInt,
+  ITFSize,
   ITFVariant,
   ITFVariantWithValue,
   logMbtSeed,
   mapDamageType,
+  parseItfSize,
   type NormalizedState,
   QUINT_CONDITION_MAP,
   QuintCreatureState,
@@ -415,8 +417,8 @@ const battleDriverSchema = {
   bDodge: {},
   bGrapple: {
     targetId: OS,
-    attackerSize: z.any(),
-    targetSize: z.any(),
+    attackerSize: ITFSize,
+    targetSize: ITFSize,
     targetSaveFailed: OB,
     attackerHasFreeHand: OB,
   },
@@ -1623,12 +1625,8 @@ function createBattleProjectionDriver() {
     function handleBGrapple(picks: ReadonlyMap<string, unknown>) {
       const attackerId = activeId();
       const targetId = pickString(picks, "targetId") ?? "";
-      const parseSize = (key: string, fallback: Size): Size => {
-        const parsed = variantToString(picks.get(key)).toLowerCase();
-        return parsed === "[object object]" ? fallback : (parsed as Size);
-      };
-      const attackerSize = parseSize("attackerSize", "medium");
-      const targetSize = parseSize("targetSize", "medium");
+      const attackerSize = parseItfSize(picks.get("attackerSize"), "medium");
+      const targetSize = parseItfSize(picks.get("targetSize"), "medium");
       const targetSaveFailed = pickBool(picks, "targetSaveFailed") ?? false;
       const attackerHasFreeHand =
         pickBool(picks, "attackerHasFreeHand") ?? true;
