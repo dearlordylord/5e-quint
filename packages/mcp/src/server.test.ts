@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest"
+import { createActor } from "xstate"
 
+import { battleMachine } from "@dnd/core/battle-machine.ts"
 import { abilityModifier, classLevel } from "@dnd/core/types.ts"
+import type { BattleEvent } from "@dnd/core/battle-machine-types.ts"
+import { armorClass, CreatureId } from "@dnd/core/types.ts"
 
 import { createBattleHost, createDemoHost, handleToolCall } from "./server.ts"
 
@@ -14,6 +18,56 @@ function creatureToken<T extends object>(token: T) {
 
 function creatureResolved<T extends object>(token: T) {
   return { scope: "creature" as const, ...token }
+}
+
+const ZERO_BATTLE_SOT: Pick<
+  BattleEvent & { type: "BATTLE_START_TURN" },
+  "sotDmg" | "sotDt" | "sotHeal" | "sotSaveResult" | "sotConSave" | "rechargeD6" | "deathSaveRoll"
+> = {
+  rechargeD6: 1,
+  sotDmg: 0,
+  sotDt: "bludgeoning",
+  sotHeal: 0,
+  sotSaveResult: false,
+  sotConSave: true,
+  deathSaveRoll: 0,
+}
+
+function initBattleHostWithHitWindow() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["shield"]), initiativeRoll: 15 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", bardLevel: 3, bardicInspirationCharges: 3, initiativeRoll: 10 },
+    ],
+  })
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+  actor.send({
+    type: "BATTLE_ATTACK",
+    targetId: CreatureId("B"),
+    attackRoll: 15,
+    diceCount: 1,
+    dieSize: 8,
+    dmg: 5,
+    dt: "slashing",
+    crit: false,
+    tAc: armorClass(10),
+    knockOut: false,
+    isMelee: true,
+    isFinesse: false,
+    attackerWithin5ft: true,
+    hostileWithin5ft: false,
+    targetCanSeeAttacker: true,
+    attackerCanSeeTarget: true,
+    frightSourceInLOS: false,
+    hasAllyAdjacentToTarget: false,
+    saDmg: 0,
+    hitReactionCandidates: new Set([CreatureId("C")]),
+  })
+  return createBattleHost(actor)
 }
 
 describe("MCP server adapter", () => {
@@ -597,10 +651,36 @@ describe("MCP server adapter", () => {
     })
   })
 
+  test("battle hosts surface live reaction tokens from the authoritative battle window", () => {
+    const host = initBattleHostWithHitWindow()
+
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual({
+      action: [],
+      bonusAction: [],
+      reaction: [
+        {
+          scope: "battle",
+          actorId: "B",
+          type: "CAST_SHIELD",
+          cost: { reaction: true, charge: "spellSlot" },
+          outcome: { summary: "Use your reaction to cast Shield against the triggering attack" },
+        },
+        {
+          scope: "battle",
+          actorId: "C",
+          type: "USE_CUTTING_WORDS",
+          cost: { reaction: true, charge: "bardicInspiration" },
+          outcome: { summary: "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll" },
+        },
+      ],
+      free: [],
+    })
+  })
+
   test("execute_action routes battle-scoped tokens to the battle lane", () => {
     const host = createBattleHost()
 
-    const response = handleToolCall(host, "execute_action", { scope: "battle", type: "USE_UNCANNY_DODGE" })
+    const response = handleToolCall(host, "execute_action", { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" })
 
     expect("isError" in response && response.isError).toBe(true)
     expect(readPayload(response)).toEqual({
@@ -613,7 +693,7 @@ describe("MCP server adapter", () => {
     const creatureHost = createDemoHost()
     const battleHost = createBattleHost()
 
-    const battleOnCreature = handleToolCall(creatureHost, "execute_action", { scope: "battle", type: "USE_UNCANNY_DODGE" })
+    const battleOnCreature = handleToolCall(creatureHost, "execute_action", { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" })
     expect("isError" in battleOnCreature && battleOnCreature.isError).toBe(true)
     expect(readPayload(battleOnCreature)).toEqual({
       error: "Action scope battle does not match the current creature host.",

@@ -4,12 +4,16 @@ import { createActor } from "xstate"
 import {
   finalizeResolution,
   getAvailableActions,
+  getAvailableBattleActions,
   resolveAction,
   type ResolutionRequest,
 } from "#/available-actions.ts"
+import { battleMachine } from "#/battle-machine.ts"
+import type { BattleEvent } from "#/battle-machine-types.ts"
 import { creatureMachine } from "#/machine.ts"
 import type { DndMachineInput } from "#/machine-types.ts"
-import { abilityModifier, classLevel, resourceCount, spellSlotLevel } from "#/types.ts"
+import type { CreatureId as CreatureIdT } from "#/types.ts"
+import { abilityModifier, armorClass, classLevel, CreatureId, resourceCount, spellSlotLevel } from "#/types.ts"
 
 const FIGHTER_5_INPUT: DndMachineInput = {
   maxHp: 44,
@@ -207,6 +211,61 @@ function creatureToken<T extends object>(token: T) {
 
 function creatureResolved<T extends object>(token: T) {
   return { scope: "creature" as const, ...token }
+}
+
+const DEFAULT_BATTLE_ATTACK_CONTEXT = {
+  knockOut: false,
+  isMelee: true,
+  isFinesse: false,
+  attackerWithin5ft: true,
+  hostileWithin5ft: false,
+  targetCanSeeAttacker: true,
+  attackerCanSeeTarget: true,
+  frightSourceInLOS: false,
+  hasAllyAdjacentToTarget: false,
+  saDmg: 0,
+  hitReactionCandidates: new Set<CreatureIdT>(),
+} as const
+
+const ZERO_BATTLE_SOT: Pick<
+  BattleEvent & { type: "BATTLE_START_TURN" },
+  "sotDmg" | "sotDt" | "sotHeal" | "sotSaveResult" | "sotConSave" | "rechargeD6" | "deathSaveRoll"
+> = {
+  rechargeD6: 1,
+  sotDmg: 0,
+  sotDt: "bludgeoning",
+  sotHeal: 0,
+  sotSaveResult: false,
+  sotConSave: true,
+  deathSaveRoll: 0,
+}
+
+function makeBattleActor(...events: ReadonlyArray<BattleEvent>) {
+  const actor = createActor(battleMachine)
+  actor.start()
+  for (const event of events) actor.send(event)
+  return actor
+}
+
+function initBattleForHitDiscovery() {
+  return makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["shield"]), initiativeRoll: 15 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", bardLevel: 3, bardicInspirationCharges: 3, initiativeRoll: 10 },
+    ],
+  })
+}
+
+function initBattleForDamageDiscovery() {
+  return makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", rogueLevel: 5, initiativeRoll: 10 },
+    ],
+  })
 }
 
 describe("available actions contract", () => {
@@ -933,6 +992,75 @@ describe("available actions contract", () => {
       "USE_ACTION_SURGE",
       "USE_METAMAGIC",
       "EXIT_COMBAT",
+    ])
+  })
+
+  test("battle discovery exposes only the legal hit reactions in the current interrupt window", () => {
+    const actor = initBattleForHitDiscovery()
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([])
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+      hitReactionCandidates: new Set([CreatureId("C")]),
+    })
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "B",
+        type: "CAST_SHIELD",
+        cost: { reaction: true, charge: "spellSlot" },
+        outcome: { summary: "Use your reaction to cast Shield against the triggering attack" },
+      },
+      {
+        scope: "battle",
+        actorId: "C",
+        type: "USE_CUTTING_WORDS",
+        cost: { reaction: true, charge: "bardicInspiration" },
+        outcome: { summary: "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll" },
+      },
+    ])
+  })
+
+  test("battle discovery does not surface damage reactions until the damage window actually exists", () => {
+    const actor = initBattleForDamageDiscovery()
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([])
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+    })
+    actor.send({ type: "BATTLE_RESOLVE_HIT_REACTION", reactorId: null, decision: { tag: "RPass" } })
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "B",
+        type: "USE_UNCANNY_DODGE",
+        cost: { reaction: true },
+        outcome: { summary: "Use your reaction to halve the triggering attack's damage against you" },
+      },
     ])
   })
 })

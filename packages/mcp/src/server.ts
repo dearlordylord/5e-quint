@@ -12,6 +12,7 @@ import {
   type BattleResolvedActionToken,
   finalizeResolution,
   getAvailableActions,
+  getAvailableBattleActions,
   resolveAction,
   ResolvedActionTokenSchema,
   type ActionToken,
@@ -114,15 +115,6 @@ function errorContent(message: string, details?: unknown) {
 
 function snapshotFingerprint(snapshot: DndSnapshot): string {
   return JSON.stringify(encodeDndSnapshot(snapshot))
-}
-
-function emptyActionGroups(): Record<string, ReadonlyArray<ActionToken>> {
-  return {
-    action: [],
-    bonusAction: [],
-    reaction: [],
-    free: [],
-  }
 }
 
 function battlePhase(context: BattleContext) {
@@ -313,7 +305,7 @@ export function handleToolCall(host: SupportedActionHost, name: string, args: un
         const snapshot = actor.getSnapshot()
         return jsonContent(groupByCost(getAvailableActions(snapshot.context, snapshot.tags)))
       }),
-      Match.when({ scope: "battle" }, () => jsonContent(emptyActionGroups())),
+      Match.when({ scope: "battle" }, ({ actor }) => jsonContent(groupByCost(getAvailableBattleActions(actor.getSnapshot().context)))),
       Match.exhaustive,
     )
   }

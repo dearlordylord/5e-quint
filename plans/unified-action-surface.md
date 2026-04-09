@@ -116,11 +116,47 @@ Add battle-scoped action discovery on top of the unified contract. This phase sh
 
 ### Acceptance criteria
 
-- [ ] Battle-scoped actions can be discovered through the unified action surface.
-- [ ] Battle-scoped discovery projects from authoritative battle state rather than parallel query-only state.
-- [ ] Live interrupt windows can produce semantic battle-scoped action tokens.
-- [ ] No battle-scoped action is suggested solely from coarse resource availability.
-- [ ] Deterministic tests prove battle-scoped discovery reflects the actual battle window state.
+- [x] Battle-scoped actions can be discovered through the unified action surface.
+- [x] Battle-scoped discovery projects from authoritative battle state rather than parallel query-only state.
+- [x] Live interrupt windows can produce semantic battle-scoped action tokens.
+- [x] No battle-scoped action is suggested solely from coarse resource availability.
+- [x] Deterministic tests prove battle-scoped discovery reflects the actual battle window state.
+
+### Phase 3 notes
+
+- Battle discovery is now live for authoritative hit and damage reaction windows owned in `BattleContext.awaitCtx`.
+- The unified action contract had to become actor-scoped for battle tokens:
+  - battle discovery now returns semantic tokens with `scope: "battle"` and `actorId`
+  - this is required because a single battle host can surface legal reactions for multiple responders at once
+- Battle discovery currently projects only from owned named reaction legality on:
+  - `PIAttackHit`
+  - `PIAttackDamage`
+- The first discovered semantic battle tokens are:
+  - `CAST_SHIELD`
+  - `USE_PARRY`
+  - `USE_CUTTING_WORDS`
+  - `USE_UNCANNY_DODGE`
+  - `USE_DEFLECT_ATTACKS`
+- Discovery intentionally remains narrow:
+  - no battle action is surfaced outside a live interrupt window
+  - no discovery yet for spell-cast, save-failed, movement, legendary, or ready windows
+- MCP battle hosts now surface those discovered reaction tokens through the same `get_available_actions` tool family.
+- Verification passed:
+  - `pnpm --filter @dnd/core typecheck`
+  - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`
+  - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+  - `pnpm --filter @dnd/mcp test -- server.test.ts`
+
+### Next implementation notes
+
+- Phase 4 should execute the first discovered battle token end to end rather than broadening discovery further.
+- The cleanest first execution slice is `USE_UNCANNY_DODGE`:
+  - already discovered
+  - zero user-facing holes
+  - no engine-owned numeric parameter beyond the existing battle semantics
+  - maps directly to `BATTLE_RESOLVE_DMG_REACTION`
+- Phase 4 should treat `actorId` as the authoritative responder selector for battle execution tokens.
+- After the first zero-hole battle token works end to end, the next likely follow-up token is `CAST_SHIELD`, because it also has no user-facing holes and already uses owned battle legality.
 
 ---
 
