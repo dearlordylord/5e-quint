@@ -511,30 +511,27 @@ The MCP response from `get_available_actions` is already grouped by resource cos
     - `CONVERT_SLOT_TO_POINTS`
     - `USE_FONT_SLOT_RESTORE`
     - `USE_WILD_RESURGENCE_CHARGE`
-- **Current explicit gap**
-  - No exposed token in `packages/core/src/available-actions.ts` currently uses `cost: { reaction: true }`.
-  - So the old Phase 2 placeholder “add one reaction example” is now a concrete missing seam, not a hypothetical one.
-- **Why this gap exists**
-  - The machine has a generic `USE_REACTION` event and `reactionAvailable` state, but the current available-actions surface does not yet project a semantic reaction action.
-  - Several reaction-capable features exist elsewhere in the repo, but mostly in feature bridges or helper modules rather than the current available-actions registry.
-  - Examples found during code reading:
-    - Rogue reaction logic:
-      - `packages/core/src/machine-rogue.ts`
-      - `packages/core/src/features/class-rogue.ts`
-    - Monk bridge reactions:
-      - `packages/core/src/features/feature-bridge-monk.ts`
-      - `Deflect Attacks`
-      - `Slow Fall`
-    - Barbarian Retaliation helper:
-      - `packages/core/src/features/class-barbarian.ts`
-      - `packages/core/src/features/feature-bridge.ts`
-    - Ranger reaction helper:
-      - `packages/core/src/features/class-ranger.ts`
-  - Those are signals that reaction semantics exist in parts of the system, but they have not yet been turned into a supported `ActionToken` / `ResolvedActionToken` / runtime-input path in `packages/core/src/available-actions.ts`.
+- **Reaction update after the battle-scope merge (2026-04-08)**
+  - The old explicit reaction gap is no longer true.
+  - `packages/core/src/available-actions.ts` now exposes real battle-scoped reaction tokens with `cost: { reaction: true }`:
+    - `CAST_SHIELD`
+    - `USE_CUTTING_WORDS`
+    - `USE_UNCANNY_DODGE`
+    - `USE_DEFLECT_ATTACKS`
+  - These are derived from authoritative battle interrupt state, not from coarse creature guards.
+  - The surface is now scope-aware:
+    - creature-scoped actions
+    - battle-scoped actions
+- **What is still incomplete**
+  - query/discovery coverage exists for the battle-scoped reaction surface
+  - end-to-end execute coverage is still partial
+  - as merged on `master`, `resolveBattleAction(...)` only executes:
+    - `USE_UNCANNY_DODGE`
+  - the other discovered battle reaction tokens are present but still return "not implemented yet through the battle action surface"
 - **Important distinction for the next session**
-  - Do not expose bare `USE_REACTION` as the Phase 2 fix.
-  - Phase 2 needs a semantic action token with real user meaning and outcome text, not a generic “spend your reaction” token.
-  - If no semantic reaction action is sufficiently modeled end-to-end yet, the correct outcome is to document that explicitly and defer the reaction representative rather than exposing a meaningless placeholder.
+  - Do not expose bare `USE_REACTION`.
+  - Do not regress back to creature-only reaction suggestions.
+  - The next work is not “invent the first reaction token”; it is “finish battle-scoped reaction execution breadth and reconcile tests/docs with the new scoped surface.”
 - **Likely first file map for a fresh session**
   - `packages/core/src/available-actions.ts`
   - `packages/core/src/available-actions.test.ts`
@@ -557,75 +554,48 @@ The MCP response from `get_available_actions` is already grouped by resource cos
   - explicit spent-resource exclusion tests for the grouped surface are still weaker than they should be
   - the next session should add those regardless of whether a reaction representative is found
 
-- **Audit result as of 2026-04-08**
-  - The current best-looking reaction candidates are:
-    - `USE_UNCANNY_DODGE`
+- **Audit result after the battle-scope merge (2026-04-08)**
+  - The battle ownership pass from [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md) has materially landed on `master`.
+  - The unified scoped action surface from [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md) has also started landing.
+  - Honest reaction discovery is now present through battle-scoped tokens.
+  - Current query-time battle reaction tokens on `master`:
+    - `CAST_SHIELD`
     - `USE_CUTTING_WORDS`
-  - Why they looked promising:
-    - both already exist as real machine events in `machine-types.ts`
-    - both are wired in `machine-states.ts`
-    - both have machine actions in:
-      - `packages/core/src/machine-rogue.ts`
-      - `packages/core/src/machine-bard.ts`
-  - Why they are **not** query-surface-ready yet:
-    - `canUncannyDodge` in `machine-guards.ts` only checks:
-      - rogue level
-      - reaction available
-      - not incapacitated
-    - but the actual SRD/helper semantics in `features/class-rogue.ts` also require an attacker-visible trigger context
-    - so exposing it through `available-actions.ts` right now would over-suggest whenever the rogue merely has a reaction
-    - `canCuttingWords` in `machine-guards.ts` only checks:
-      - bard level
-      - bardic inspiration charge
-      - reaction available
-      - not incapacitated
-    - but the actual SRD text in `features/class-bard.ts` requires a creature you can see within 60 feet making a qualifying roll
-    - so exposing it right now would also over-suggest whenever the bard merely has a reaction and a charge
-  - Other reaction helpers found in bridge code are even less Phase-2-ready:
-    - monk `Deflect Attacks`
-    - monk `Slow Fall`
-    - barbarian `Retaliation`
-    - these currently live as feature-bridge helpers around generic `USE_REACTION`, not as supported semantic action tokens in `available-actions.ts`
-- **Conclusion from the audit**
-    - there is currently **no honest reaction-cost semantic action** ready to expose through the supported action contract without another ownership pass
-    - the missing ingredient is trigger-window ownership, similar in spirit to the earlier `pendingResolution` work
-    - that ownership pass is now captured as dedicated architecture work in:
-      - [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md)
-    - after that ownership work lands, the remaining blocker is the supported action product/API seam for battle-owned trigger windows
-    - that follow-on redesign is now captured in:
-      - [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md)
-    - if Phase 2 is kept narrow, the next session should:
-      - explicitly record that reaction coverage is still blocked by missing owned trigger state
-      - proceed with grouping-shape snapshot tests and stronger spent-resource exclusion tests
-    - if Phase 2 is expanded, the next real implementation would be:
-      - implement the reaction-eligibility redesign from [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md)
-      - then implement the unified action-surface redesign from [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md)
-      - then expose the first battle-scoped semantic reaction token honestly
+    - `USE_UNCANNY_DODGE`
+    - `USE_DEFLECT_ATTACKS`
+  - Current execute-time battle reaction support on `master`:
+    - implemented end-to-end:
+      - `USE_UNCANNY_DODGE`
+    - still not implemented through `resolveBattleAction(...)`:
+      - `CAST_SHIELD`
+      - `USE_CUTTING_WORDS`
+      - `USE_DEFLECT_ATTACKS`
+  - So the remaining gap is no longer reaction ownership itself; it is battle action execution breadth and plan/doc reconciliation.
 
 ### Recommended next-session order
 
-1. Audit the current modeled reaction candidates and choose one only if it is already semantically owned enough for the supported action contract.
-2. If a viable reaction candidate exists, expose it through `available-actions.ts`, MCP, and focused tests.
-3. If not, record that Phase 2 has no reaction-ready semantic action yet and proceed with:
-   - grouping-shape snapshot tests
-   - explicit spent-resource exclusion tests for `action`, `bonusAction`, and `free`
-4. Only then reopen whether a movement-cost token should be represented explicitly in the grouped MCP surface.
+1. Reconcile the plan/docs with the merged battle-scoped reaction surface.
+2. Audit `resolveBattleAction(...)` and MCP tests to identify which discovered battle reaction tokens still lack execute support.
+3. Implement the next honest battle reaction executions:
+   - `CAST_SHIELD`
+   - `USE_CUTTING_WORDS`
+   - `USE_DEFLECT_ATTACKS`
+4. Only after that decide whether additional reaction families (reaction spells, other interrupt reactions) are ready.
 
 ### Acceptance criteria
 
-- [x] Either:
-  - at least one currently modeled reaction-cost action is exposed and tested, or
-  - the plan explicitly records that no reaction-cost action is yet executable in the modeled catalog
+- [x] At least one currently modeled reaction-cost action is exposed and tested
 - [x] At least one action from `action`, `bonusAction`, and `free` groups is already exposed and tested
 - [x] `get_available_actions` response is grouped by resource cost
 - [x] Each action's outcome description accurately reflects what the action does (cost + what changes)
 - [x] Representative tests prove guards exclude tokens when the relevant resource is spent (e.g. no action-cost token when `actionsRemaining === 0`, no bonus-action token when `bonusActionUsed === true`)
 - [x] Grouping-shape snapshot tests cover at least one representative state with multiple simultaneous groups populated
+- [x] Battle-scoped reaction tokens are now present in the grouped MCP surface
 - [x] No movement-cost token is currently exposed through `available-actions.ts`, so there is no Phase 2 movement/free bucketing case to assert yet
 
 ### Phase 2 completion note (2026-04-08)
 
-- Phase 2 was completed narrowly, without forcing a fake reaction token.
+- Phase 2 was completed with a real reaction surface after the battle-scope merge.
 - The grouped MCP surface now has:
   - a representative multigroup snapshot test in `packages/mcp/src/server.test.ts`
   - explicit spent-resource exclusion coverage in `packages/core/src/available-actions.test.ts`
@@ -633,9 +603,10 @@ The MCP response from `get_available_actions` is already grouped by resource cos
   - `action`: `USE_TIRELESS`
   - `bonusAction`: `CONVERT_POINTS_TO_SLOT`, `USE_SECOND_WIND`
   - `free`: `USE_ARCANE_RECOVERY`, `USE_METAMAGIC`, `EXIT_COMBAT`
-- Reaction remains intentionally absent from the supported surface because no semantic reaction action has fully owned trigger-window state and a battle-aware supported action contract.
-- The battle ownership work is tracked in [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md).
-- The remaining product/API redesign is tracked in [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md).
+- `reaction`: now present through battle-scoped tokens derived from authoritative battle interrupt state
+- The battle ownership work is tracked in [battle/PRD-reaction-eligibility.md](../battle/PRD-reaction-eligibility.md) and has partially landed.
+- The scoped action-surface redesign is tracked in [PRD_UNIFIED_ACTION_SURFACE.md](../PRD_UNIFIED_ACTION_SURFACE.md) and has partially landed.
+- Remaining reaction work is no longer "make reactions honest to suggest"; it is "finish executing the discovered battle-scoped reactions."
 - Movement also remains absent from the supported surface as an explicit cost bucket; nothing currently exposed uses `cost.movement`.
 
 ---
@@ -1259,14 +1230,103 @@ That caveat should be explicit in code/tests if this action is surfaced before f
 
 #### Next after the trigger-window batch
 
-- The next big semantic gap is still reaction-family ownership:
-  - `USE_UNCANNY_DODGE`
+- The next big semantic gap is no longer reaction ownership from scratch; that battle-first work has partially landed on `master`.
+- The next concrete gap is battle reaction execution breadth:
+  - `CAST_SHIELD`
   - `USE_CUTTING_WORDS`
-  - reaction spellcasting and similar trigger-window reaction work
-- If continuing the creature-level available-actions roadmap, the next clean design batch should decide whether reaction-family trigger windows:
-  - also belong on `pendingResolution`, or
-  - need a battle-owned interrupt state projected into creature suggestions
-- Do not expose a fake semantic reaction token before that ownership exists.
+  - `USE_DEFLECT_ATTACKS`
+  - plus later reaction spellcasting and other interrupt reactions
+- The design decision is now settled:
+  - reaction legality belongs to battle interrupt state
+  - battle-scoped actions project from that authoritative interrupt state
+  - creature `pendingResolution` is not the right seam for these reactions
+- Do not regress back to fake creature-only reaction tokens or MCP-owned trigger booleans.
+
+#### Reaction-family design research
+
+**Read first**
+
+- RAW:
+  - `.references/srd-5.2.1/Classes/Rogue.md`
+    - `Uncanny Dodge`: "When an attacker that you can see hits you with an attack roll, you can take a Reaction to halve the attack's damage against you (round down)."
+  - `.references/srd-5.2.1/Classes/Bard.md`
+    - `Cutting Words`: creature you can see within 60 feet makes a damage roll or succeeds on an ability check or attack roll; spend Bardic Inspiration and Reaction
+- Existing architecture/design:
+  - `battle/PRD-reaction-eligibility.md`
+  - `battle/REQUIREMENTS.md`
+  - `battle/DOMAIN.md`
+- Current implementation files:
+  - `packages/core/src/battle-machine-events.ts`
+  - `packages/core/src/battle-machine-actions-attack.ts`
+  - `packages/core/src/machine-rogue.ts`
+  - `packages/core/src/machine-bard.ts`
+  - `packages/core/src/available-actions.ts`
+
+**What the audit found before the battle-scope merge**
+
+- Creature-level guards are still too coarse for honest reaction suggestions.
+  - `canUncannyDodge` currently means "rogue has the feature and a reaction"
+  - `canCuttingWords` currently means "bard has the feature, a charge, and a reaction"
+  - neither owns the actual interrupt facts required by RAW
+- The decisive legality facts already belong to the battle interrupt boundary:
+  - hit window vs damage window
+  - who the attacker/target are
+  - whether the target can see the attacker
+  - whether the roll is an attack roll, damage roll, or ability check
+  - which responder is within range / can see the actor
+- Because those facts arise at interrupt creation time and can be lost later, reaction ownership should start in battle, not by adding another creature-only trigger layer.
+
+**Recommended direction that was subsequently validated**
+
+- Do **not** add `USE_UNCANNY_DODGE` / `USE_CUTTING_WORDS` to creature `pendingResolution` first.
+- Instead, follow the battle-first direction from `battle/PRD-reaction-eligibility.md`:
+  - preserve legality facts at interrupt creation time
+  - derive named legal reactions at interrupt creation time
+  - only then project semantic reaction actions into query surfaces
+- Recommended staged model:
+  - for attack-damage windows: start with capability booleans or equivalent explicit legality facts in `PIAttackDamage`
+  - for broader hit/damage windows: evolve toward a per-window legal-reaction map keyed by responder
+
+**Practical implementation split that remains useful**
+
+1. Battle ownership pass first
+   - redesign `PIAttackHit` / `PIAttackDamage` interrupt context so it preserves the facts needed for reaction legality
+   - compute legal reaction options when entering the interrupt
+   - validate battle reaction decisions against those persisted legal options
+2. Query projection second
+   - decide how the currently active battle interrupt projects to suggestion surfaces
+   - expose only the named battle-scoped reactions that the active interrupt says are legal
+3. MCP/action-surface integration last
+   - reuse the existing resolved-token contract
+   - do not invent MCP-only trigger booleans
+
+**Likely overlap with worktree work**
+
+- This is the first upcoming batch that is likely to clash materially with work in another worktree.
+- High-risk overlap files:
+  - `battle/PRD-reaction-eligibility.md`
+  - `battle.qnt`
+  - `packages/core/src/battle-machine-events.ts`
+  - `packages/core/src/battle-machine-actions-attack.ts`
+  - `packages/core/src/battle-machine-types.ts`
+- This overlap has already materialized once: the reaction-eligibility worktree was merged into `master` as `f644fa5`.
+- Before future reaction work, compare against current `master` first; do not assume the pre-merge plan text is still current.
+
+**What not to do**
+
+- Do not expose bare `USE_REACTION`.
+- Do not patch `USE_UNCANNY_DODGE` or `USE_CUTTING_WORDS` with MCP/runtime booleans.
+- Do not duplicate battle interrupt facts into permanent creature state if they already exist in the interrupt context.
+- Do not patch only `Uncanny Dodge`; the same ownership seam affects `Cutting Words` and future reaction work.
+
+**Acceptance criteria for the remaining reaction batch**
+
+- battle interrupt state preserves the legality facts required by RAW
+- legal reaction options are derived at interrupt creation time, not recomputed later from weakened state
+- discovered battle-scoped reaction tokens are only suggestible on real owned interrupt windows
+- `resolveBattleAction(...)` supports the discovered named reactions that the action surface exposes
+- no fake creature-only reaction suggestions appear outside an owned interrupt window
+- battle/spec parity and query-surface tests both pass
 
 ---
 
@@ -1644,9 +1704,9 @@ This is the pragmatic first step because microphone device access is the real un
 - [x] `MicrophoneAudioSource` service boundary exists in Hellenvald
 - [x] microphone path fails cleanly when no input device is available or no host capture backend is configured
 - [x] host/manual chunked capture can feed the existing Whisper → buffer → stream pipeline
-- [ ] `ink` TUI shows committed history and live tail separately
-- [ ] TUI can flush tail and save replay snapshots
-- [ ] manual host smoke test proves at least one live spoken action reaches the transcript stream
+- [x] `ink` TUI shows committed history and live tail separately
+- [x] TUI can flush tail and save replay snapshots
+- [x] manual host smoke test proves at least one live spoken action reaches the transcript stream
 
 ---
 
