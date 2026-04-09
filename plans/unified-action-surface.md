@@ -253,15 +253,15 @@ Expand the proven unified action surface beyond the first battle reaction token 
 ### Next implementation notes
 
 - The next honest extensions on this same surface are the remaining discovered battle reactions:
-  - `USE_PARRY`
   - `USE_CUTTING_WORDS`
   - `USE_DEFLECT_ATTACKS`
 - Recommended implementation order:
-  1. `USE_PARRY`
-     - no user-facing holes
-     - fixed bonus already owned in battle state
-  2. `USE_CUTTING_WORDS`
+  1. `USE_CUTTING_WORDS`
      - runtime-owned Bardic Inspiration die roll
-  3. `USE_DEFLECT_ATTACKS`
+  2. `USE_DEFLECT_ATTACKS`
      - runtime-owned reduction amount
+- Completed breadth after the foundational redesign:
+  - `USE_UNCANNY_DODGE`
+  - `CAST_SHIELD`
+  - `USE_PARRY`
 - The foundational unified-action-surface redesign itself is now proven. Follow-on work is breadth on top of the established contract, not another architecture phase.

@@ -259,6 +259,16 @@ function initBattleForHitDiscovery() {
   })
 }
 
+function initBattleForParryDiscovery() {
+  return makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+      { id: CreatureId("D"), maxHp: 20, kind: "Monster", parryAcBonus: 2, initiativeRoll: 15 },
+    ],
+  })
+}
+
 function initBattleForDamageDiscovery() {
   return makeBattleActor({
     type: "BATTLE_INIT",
@@ -1136,6 +1146,42 @@ describe("available actions contract", () => {
         decision: { tag: "RShield" },
       },
       outcome: "Use your reaction to cast Shield against the triggering attack",
+    })
+  })
+
+  test("battle resolution executes USE_PARRY only when that hit-reaction token is currently available", () => {
+    const actor = initBattleForParryDiscovery()
+
+    expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "D", type: "USE_PARRY" })).toEqual({
+      ok: false,
+      error: {
+        code: "ACTION_NOT_AVAILABLE",
+        message: "USE_PARRY is not currently available for D in this battle state.",
+      },
+    })
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("D"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+    })
+
+    expect(resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "D", type: "USE_PARRY" })).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: "D",
+        decision: { tag: "RParry", bonus: 2 },
+      },
+      outcome: "Use your reaction to add your Parry bonus against the triggering melee weapon attack",
     })
   })
 })

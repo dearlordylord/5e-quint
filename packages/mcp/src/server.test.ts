@@ -107,6 +107,42 @@ function initBattleHostWithDamageWindow() {
   return createBattleHost(actor)
 }
 
+function initBattleHostWithParryWindow() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+      { id: CreatureId("D"), maxHp: 20, kind: "Monster", parryAcBonus: 2, initiativeRoll: 15 },
+    ],
+  })
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+  actor.send({
+    type: "BATTLE_ATTACK",
+    targetId: CreatureId("D"),
+    attackRoll: 15,
+    diceCount: 1,
+    dieSize: 8,
+    dmg: 5,
+    dt: "slashing",
+    crit: false,
+    tAc: armorClass(10),
+    knockOut: false,
+    isMelee: true,
+    isFinesse: false,
+    attackerWithin5ft: true,
+    hostileWithin5ft: false,
+    targetCanSeeAttacker: true,
+    attackerCanSeeTarget: true,
+    frightSourceInLOS: false,
+    hasAllyAdjacentToTarget: false,
+    saDmg: 0,
+    hitReactionCandidates: new Set(),
+  })
+  return createBattleHost(actor)
+}
+
 describe("MCP server adapter", () => {
   test("get_available_actions only returns the supported executable action set", () => {
     const host = createDemoHost()
@@ -781,6 +817,41 @@ describe("MCP server adapter", () => {
           outcome: { summary: "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll" },
         },
       ],
+      free: [],
+    })
+  })
+
+  test("execute_action routes USE_PARRY through the battle lane end to end", () => {
+    const host = initBattleHostWithParryWindow()
+
+    const response = handleToolCall(host, "execute_action", { scope: "battle", actorId: "D", type: "USE_PARRY" })
+
+    expect("isError" in response).toBe(false)
+    expect(readPayload(response)).toEqual({
+      success: true,
+      outcome: "Use your reaction to add your Parry bonus against the triggering melee weapon attack",
+      state: {
+        scope: "battle",
+        machineState: { running: "awaitingReaction" },
+        tags: ["reactionWindow"],
+        round: 1,
+        turnIndex: 0,
+        activeCreatureId: "A",
+        initiative: ["A", "D"],
+        creatureIds: ["A", "D"],
+        phase: "awaitingReaction",
+        awaitingReaction: true,
+        resolvingAoE: false,
+        resolvingMovement: false,
+        awaitingLegendaryAction: false,
+        awaitingReadiedAction: false,
+      },
+    })
+
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual({
+      action: [],
+      bonusAction: [],
+      reaction: [],
       free: [],
     })
   })

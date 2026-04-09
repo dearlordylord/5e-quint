@@ -1373,7 +1373,7 @@ function availableBattleTokenForType(
 }
 
 export function resolveBattleAction(context: BattleContext, token: BattleResolvedActionToken): FinalizedBattleAction {
-  if (token.type !== "USE_UNCANNY_DODGE" && token.type !== "CAST_SHIELD") {
+  if (token.type !== "USE_UNCANNY_DODGE" && token.type !== "CAST_SHIELD" && token.type !== "USE_PARRY") {
     return {
       ok: false,
       error: {
@@ -1406,6 +1406,14 @@ export function resolveBattleAction(context: BattleContext, token: BattleResolve
         type: "BATTLE_RESOLVE_HIT_REACTION" as const,
         reactorId: CreatureId(token.actorId),
         decision: { tag: "RShield" as const },
+      })),
+      Match.when("USE_PARRY", () => ({
+        type: "BATTLE_RESOLVE_HIT_REACTION" as const,
+        reactorId: CreatureId(token.actorId),
+        decision: {
+          tag: "RParry" as const,
+          bonus: context.creatures.get(CreatureId(token.actorId))?.parryAcBonus ?? 0,
+        },
       })),
       Match.exhaustive,
     ),
