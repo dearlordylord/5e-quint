@@ -2,20 +2,20 @@
 // Generated from .references/srd-5.2.1/Spells/Descriptions-*.md
 // Pure metadata for spell browser UI. Combat logic lives in spell-{school}.ts files.
 
-import type { CasterClass, SpellSchool } from "#/types.ts"
+import type { CasterClass, SpellSchool } from "#/types.ts";
 
 /** Metadata for any SRD spell (combat or non-combat). */
 export interface SpellInfo {
-  readonly name: string
-  readonly level: number // 0 = cantrip
-  readonly school: SpellSchool
-  readonly castingTime: string
-  readonly range: string
-  readonly components: string
-  readonly duration: string
-  readonly concentration: boolean
-  readonly ritual: boolean
-  readonly classes: ReadonlyArray<CasterClass>
+  readonly name: string;
+  readonly level: number; // 0 = cantrip
+  readonly school: SpellSchool;
+  readonly castingTime: string;
+  readonly range: string;
+  readonly components: string;
+  readonly duration: string;
+  readonly concentration: boolean;
+  readonly ritual: boolean;
+  readonly classes: ReadonlyArray<CasterClass>;
 }
 
 export const SRD_SPELLS = [
@@ -29,7 +29,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Acid Splash",
@@ -41,7 +41,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Aid",
@@ -53,7 +53,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "paladin", "ranger"]
+    classes: ["bard", "cleric", "druid", "paladin", "ranger"],
   },
   {
     name: "Alarm",
@@ -65,7 +65,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: true,
-    classes: ["ranger", "wizard"]
+    classes: ["ranger", "wizard"],
   },
   {
     name: "Alter Self",
@@ -77,7 +77,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Animal Friendship",
@@ -89,7 +89,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "ranger"]
+    classes: ["bard", "druid", "ranger"],
   },
   {
     name: "Animal Messenger",
@@ -101,7 +101,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: true,
-    classes: ["bard", "druid", "ranger"]
+    classes: ["bard", "druid", "ranger"],
   },
   {
     name: "Animal Shapes",
@@ -113,7 +113,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Animate Dead",
@@ -121,11 +121,12 @@ export const SRD_SPELLS = [
     school: "necromancy",
     castingTime: "1 minute",
     range: "10 feet",
-    components: "V, S, M (a drop of blood, a piece of flesh, and a pinch of bone dust)",
+    components:
+      "V, S, M (a drop of blood, a piece of flesh, and a pinch of bone dust)",
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "wizard"]
+    classes: ["cleric", "wizard"],
   },
   {
     name: "Animate Objects",
@@ -137,7 +138,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Antilife Shell",
@@ -149,7 +150,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Antimagic Field",
@@ -161,7 +162,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "wizard"]
+    classes: ["cleric", "wizard"],
   },
   {
     name: "Antipathy/Sympathy",
@@ -173,7 +174,7 @@ export const SRD_SPELLS = [
     duration: "10 days",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "wizard"]
+    classes: ["bard", "druid", "wizard"],
   },
   {
     name: "Arcane Eye",
@@ -185,7 +186,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Arcane Hand",
@@ -197,7 +198,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Arcane Lock",
@@ -209,7 +210,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Arcane Sword",
@@ -221,7 +222,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Arcanist's Magic Aura",
@@ -233,7 +234,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Astral Projection",
@@ -246,7 +247,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "warlock", "wizard"]
+    classes: ["cleric", "warlock", "wizard"],
   },
   {
     name: "Augury",
@@ -254,11 +255,12 @@ export const SRD_SPELLS = [
     school: "divination",
     castingTime: "1 minute or Ritual",
     range: "Self",
-    components: "V, S, M (specially marked sticks, bones, cards, or other divinatory tokens worth 25+ GP)",
+    components:
+      "V, S, M (specially marked sticks, bones, cards, or other divinatory tokens worth 25+ GP)",
     duration: "Instantaneous",
     concentration: false,
     ritual: true,
-    classes: ["cleric", "druid", "wizard"]
+    classes: ["cleric", "druid", "wizard"],
   },
   {
     name: "Aura of Life",
@@ -270,7 +272,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "paladin"]
+    classes: ["cleric", "paladin"],
   },
   {
     name: "Awaken",
@@ -282,7 +284,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid"]
+    classes: ["bard", "druid"],
   },
   {
     name: "Bane",
@@ -294,7 +296,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric", "warlock"]
+    classes: ["bard", "cleric", "warlock"],
   },
   {
     name: "Banishment",
@@ -306,7 +308,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "paladin", "sorcerer", "warlock", "wizard"]
+    classes: ["cleric", "paladin", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Barkskin",
@@ -318,7 +320,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "Beacon of Hope",
@@ -330,7 +332,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Befuddlement",
@@ -342,7 +344,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "warlock", "wizard"]
+    classes: ["bard", "druid", "warlock", "wizard"],
   },
   {
     name: "Bestow Curse",
@@ -354,7 +356,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric", "wizard"]
+    classes: ["bard", "cleric", "wizard"],
   },
   {
     name: "Black Tentacles",
@@ -366,7 +368,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Blade Barrier",
@@ -378,7 +380,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Bless",
@@ -390,7 +392,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "paladin"]
+    classes: ["cleric", "paladin"],
   },
   {
     name: "Blight",
@@ -402,7 +404,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["druid", "sorcerer", "warlock", "wizard"]
+    classes: ["druid", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Blindness/Deafness",
@@ -414,7 +416,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "sorcerer", "wizard"]
+    classes: ["bard", "cleric", "sorcerer", "wizard"],
   },
   {
     name: "Blink",
@@ -426,7 +428,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Blur",
@@ -438,7 +440,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Burning Hands",
@@ -450,7 +452,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Call Lightning",
@@ -462,7 +464,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Calm Emotions",
@@ -474,7 +476,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric"]
+    classes: ["bard", "cleric"],
   },
   {
     name: "Chain Lightning",
@@ -486,7 +488,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Charm Monster",
@@ -498,7 +500,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "druid", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Charm Person",
@@ -510,7 +512,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "druid", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Chill Touch",
@@ -522,7 +524,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Chromatic Orb",
@@ -534,7 +536,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Circle of Death",
@@ -546,7 +548,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Clairvoyance",
@@ -554,11 +556,12 @@ export const SRD_SPELLS = [
     school: "divination",
     castingTime: "10 minutes",
     range: "1 mile",
-    components: "V, S, M (a focus worth 100+ GP, either a jeweled horn for hearing or a glass eye for seeing)",
+    components:
+      "V, S, M (a focus worth 100+ GP, either a jeweled horn for hearing or a glass eye for seeing)",
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric", "sorcerer", "wizard"]
+    classes: ["bard", "cleric", "sorcerer", "wizard"],
   },
   {
     name: "Clone",
@@ -571,7 +574,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Cloudkill",
@@ -583,7 +586,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Color Spray",
@@ -595,7 +598,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Command",
@@ -607,7 +610,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "paladin"]
+    classes: ["bard", "cleric", "paladin"],
   },
   {
     name: "Commune",
@@ -619,7 +622,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: true,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Commune with Nature",
@@ -631,7 +634,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: true,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "Comprehend Languages",
@@ -643,7 +646,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: true,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Compulsion",
@@ -655,7 +658,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard"]
+    classes: ["bard"],
   },
   {
     name: "Cone of Cold",
@@ -667,7 +670,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Confusion",
@@ -679,7 +682,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "druid", "sorcerer", "wizard"]
+    classes: ["bard", "druid", "sorcerer", "wizard"],
   },
   {
     name: "Conjure Animals",
@@ -691,7 +694,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "Conjure Celestial",
@@ -703,7 +706,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Conjure Elemental",
@@ -715,7 +718,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid", "wizard"]
+    classes: ["druid", "wizard"],
   },
   {
     name: "Conjure Fey",
@@ -727,7 +730,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Conjure Minor Elementals",
@@ -739,7 +742,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid", "wizard"]
+    classes: ["druid", "wizard"],
   },
   {
     name: "Conjure Woodland Beings",
@@ -751,7 +754,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "Contact Other Plane",
@@ -763,7 +766,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: true,
-    classes: ["warlock", "wizard"]
+    classes: ["warlock", "wizard"],
   },
   {
     name: "Contagion",
@@ -775,7 +778,7 @@ export const SRD_SPELLS = [
     duration: "7 days",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid"]
+    classes: ["cleric", "druid"],
   },
   {
     name: "Contingency",
@@ -783,11 +786,12 @@ export const SRD_SPELLS = [
     school: "abjuration",
     castingTime: "10 minutes",
     range: "Self",
-    components: "V, S, M (a gem-encrusted statuette of yourself worth 1,500+ GP)",
+    components:
+      "V, S, M (a gem-encrusted statuette of yourself worth 1,500+ GP)",
     duration: "10 days",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Continual Flame",
@@ -799,7 +803,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid", "wizard"]
+    classes: ["cleric", "druid", "wizard"],
   },
   {
     name: "Control Water",
@@ -811,7 +815,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "druid", "wizard"]
+    classes: ["cleric", "druid", "wizard"],
   },
   {
     name: "Control Weather",
@@ -823,7 +827,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 8 hours",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "druid", "wizard"]
+    classes: ["cleric", "druid", "wizard"],
   },
   {
     name: "Counterspell",
@@ -836,7 +840,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Create Food and Water",
@@ -848,7 +852,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "paladin"]
+    classes: ["cleric", "paladin"],
   },
   {
     name: "Create or Destroy Water",
@@ -860,7 +864,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid"]
+    classes: ["cleric", "druid"],
   },
   {
     name: "Create Undead",
@@ -872,7 +876,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "warlock", "wizard"]
+    classes: ["cleric", "warlock", "wizard"],
   },
   {
     name: "Creation",
@@ -884,7 +888,7 @@ export const SRD_SPELLS = [
     duration: "Special",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Cure Wounds",
@@ -896,7 +900,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "paladin", "ranger"]
+    classes: ["bard", "cleric", "druid", "paladin", "ranger"],
   },
   {
     name: "Dancing Lights",
@@ -908,7 +912,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Darkness",
@@ -920,7 +924,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Darkvision",
@@ -932,7 +936,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["druid", "ranger", "sorcerer", "wizard"]
+    classes: ["druid", "ranger", "sorcerer", "wizard"],
   },
   {
     name: "Daylight",
@@ -944,7 +948,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid", "paladin", "ranger", "sorcerer"]
+    classes: ["cleric", "druid", "paladin", "ranger", "sorcerer"],
   },
   {
     name: "Death Ward",
@@ -956,7 +960,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "paladin"]
+    classes: ["cleric", "paladin"],
   },
   {
     name: "Delayed Blast Fireball",
@@ -968,7 +972,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Demiplane",
@@ -980,7 +984,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Detect Evil and Good",
@@ -992,7 +996,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "paladin"]
+    classes: ["cleric", "paladin"],
   },
   {
     name: "Detect Magic",
@@ -1004,7 +1008,16 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: true,
-    classes: ["bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"]
+    classes: [
+      "bard",
+      "cleric",
+      "druid",
+      "paladin",
+      "ranger",
+      "sorcerer",
+      "warlock",
+      "wizard",
+    ],
   },
   {
     name: "Detect Poison and Disease",
@@ -1016,7 +1029,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: true,
-    classes: ["cleric", "druid", "paladin", "ranger"]
+    classes: ["cleric", "druid", "paladin", "ranger"],
   },
   {
     name: "Detect Thoughts",
@@ -1028,7 +1041,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Dimension Door",
@@ -1040,7 +1053,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Disguise Self",
@@ -1052,7 +1065,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Disintegrate",
@@ -1064,7 +1077,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Dispel Evil and Good",
@@ -1076,7 +1089,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "paladin"]
+    classes: ["cleric", "paladin"],
   },
   {
     name: "Dispel Magic",
@@ -1088,7 +1101,16 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"]
+    classes: [
+      "bard",
+      "cleric",
+      "druid",
+      "paladin",
+      "ranger",
+      "sorcerer",
+      "warlock",
+      "wizard",
+    ],
   },
   {
     name: "Dissonant Whispers",
@@ -1100,7 +1122,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard"]
+    classes: ["bard"],
   },
   {
     name: "Divination",
@@ -1112,7 +1134,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: true,
-    classes: ["cleric", "druid", "wizard"]
+    classes: ["cleric", "druid", "wizard"],
   },
   {
     name: "Divine Favor",
@@ -1124,7 +1146,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["paladin"]
+    classes: ["paladin"],
   },
   {
     name: "Divine Smite",
@@ -1137,7 +1159,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["paladin"]
+    classes: ["paladin"],
   },
   {
     name: "Divine Word",
@@ -1149,7 +1171,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Dominate Beast",
@@ -1161,7 +1183,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger", "sorcerer"]
+    classes: ["druid", "ranger", "sorcerer"],
   },
   {
     name: "Dominate Monster",
@@ -1173,7 +1195,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Dominate Person",
@@ -1185,7 +1207,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Dragon's Breath",
@@ -1197,7 +1219,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Dream",
@@ -1209,7 +1231,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "warlock", "wizard"]
+    classes: ["bard", "warlock", "wizard"],
   },
   {
     name: "Druidcraft",
@@ -1221,7 +1243,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Earthquake",
@@ -1233,7 +1255,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "druid", "sorcerer"]
+    classes: ["cleric", "druid", "sorcerer"],
   },
   {
     name: "Eldritch Blast",
@@ -1245,7 +1267,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["warlock"]
+    classes: ["warlock"],
   },
   {
     name: "Elementalism",
@@ -1257,7 +1279,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Enhance Ability",
@@ -1269,7 +1291,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "ranger", "sorcerer", "wizard"]
+    classes: ["bard", "cleric", "druid", "ranger", "sorcerer", "wizard"],
   },
   {
     name: "Enlarge/Reduce",
@@ -1281,19 +1303,20 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "druid", "sorcerer", "wizard"]
+    classes: ["bard", "druid", "sorcerer", "wizard"],
   },
   {
     name: "Ensnaring Strike",
     level: 1,
     school: "conjuration",
-    castingTime: "Bonus Action, which you take immediately after hitting a creature with a weapon",
+    castingTime:
+      "Bonus Action, which you take immediately after hitting a creature with a weapon",
     range: "Self",
     components: "V",
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["ranger"]
+    classes: ["ranger"],
   },
   {
     name: "Entangle",
@@ -1305,7 +1328,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "Enthrall",
@@ -1317,7 +1340,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "warlock"]
+    classes: ["bard", "warlock"],
   },
   {
     name: "Etherealness",
@@ -1329,7 +1352,7 @@ export const SRD_SPELLS = [
     duration: "Up to 8 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "cleric", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Expeditious Retreat",
@@ -1341,7 +1364,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Eyebite",
@@ -1353,7 +1376,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Fabricate",
@@ -1365,7 +1388,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Faerie Fire",
@@ -1377,7 +1400,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "druid"]
+    classes: ["bard", "druid"],
   },
   {
     name: "Faithful Hound",
@@ -1389,7 +1412,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "False Life",
@@ -1401,7 +1424,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Fear",
@@ -1413,19 +1436,20 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Feather Fall",
     level: 1,
     school: "transmutation",
-    castingTime: "Reaction, which you take when you or a creature you can see within 60 feet of you falls",
+    castingTime:
+      "Reaction, which you take when you or a creature you can see within 60 feet of you falls",
     range: "60 feet",
     components: "V, M (a small feather or piece of down)",
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Find Familiar",
@@ -1433,11 +1457,12 @@ export const SRD_SPELLS = [
     school: "conjuration",
     castingTime: "1 hour or Ritual",
     range: "10 feet",
-    components: "V, S, M (burning incense worth 10+ GP, which the spell consumes)",
+    components:
+      "V, S, M (burning incense worth 10+ GP, which the spell consumes)",
     duration: "Instantaneous",
     concentration: false,
     ritual: true,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Find Steed",
@@ -1449,7 +1474,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["paladin"]
+    classes: ["paladin"],
   },
   {
     name: "Find the Path",
@@ -1457,11 +1482,12 @@ export const SRD_SPELLS = [
     school: "divination",
     castingTime: "1 minute",
     range: "Self",
-    components: "V, S, M (a set of divination tools—such as cards or runes—worth 100+ GP)",
+    components:
+      "V, S, M (a set of divination tools—such as cards or runes—worth 100+ GP)",
     duration: "Concentration, up to 1 day",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric", "druid"]
+    classes: ["bard", "cleric", "druid"],
   },
   {
     name: "Find Traps",
@@ -1473,7 +1499,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid", "ranger"]
+    classes: ["cleric", "druid", "ranger"],
   },
   {
     name: "Finger of Death",
@@ -1485,7 +1511,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Fire Bolt",
@@ -1497,7 +1523,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Fire Shield",
@@ -1509,7 +1535,7 @@ export const SRD_SPELLS = [
     duration: "10 minutes",
     concentration: false,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Fire Storm",
@@ -1521,7 +1547,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid", "sorcerer"]
+    classes: ["cleric", "druid", "sorcerer"],
   },
   {
     name: "Fireball",
@@ -1533,7 +1559,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Flame Blade",
@@ -1545,7 +1571,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid", "sorcerer"]
+    classes: ["druid", "sorcerer"],
   },
   {
     name: "Flame Strike",
@@ -1557,7 +1583,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Flaming Sphere",
@@ -1569,7 +1595,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Flesh to Stone",
@@ -1581,7 +1607,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Floating Disk",
@@ -1593,7 +1619,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: true,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Fly",
@@ -1605,7 +1631,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Fog Cloud",
@@ -1617,7 +1643,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger", "sorcerer", "wizard"]
+    classes: ["druid", "ranger", "sorcerer", "wizard"],
   },
   {
     name: "Forbiddance",
@@ -1629,7 +1655,7 @@ export const SRD_SPELLS = [
     duration: "1 day",
     concentration: false,
     ritual: true,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Forcecage",
@@ -1641,7 +1667,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["bard", "warlock", "wizard"]
+    classes: ["bard", "warlock", "wizard"],
   },
   {
     name: "Foresight",
@@ -1653,7 +1679,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "warlock", "wizard"]
+    classes: ["bard", "druid", "warlock", "wizard"],
   },
   {
     name: "Freedom of Movement",
@@ -1665,7 +1691,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "ranger"]
+    classes: ["bard", "cleric", "druid", "ranger"],
   },
   {
     name: "Freezing Sphere",
@@ -1677,7 +1703,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Gaseous Form",
@@ -1689,7 +1715,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Gate",
@@ -1701,7 +1727,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "sorcerer", "warlock", "wizard"]
+    classes: ["cleric", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Geas",
@@ -1713,7 +1739,7 @@ export const SRD_SPELLS = [
     duration: "30 days",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "paladin", "wizard"]
+    classes: ["bard", "cleric", "druid", "paladin", "wizard"],
   },
   {
     name: "Gentle Repose",
@@ -1725,7 +1751,7 @@ export const SRD_SPELLS = [
     duration: "10 days",
     concentration: false,
     ritual: true,
-    classes: ["cleric", "paladin", "wizard"]
+    classes: ["cleric", "paladin", "wizard"],
   },
   {
     name: "Giant Insect",
@@ -1737,7 +1763,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Glibness",
@@ -1749,7 +1775,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "warlock"]
+    classes: ["bard", "warlock"],
   },
   {
     name: "Globe of Invulnerability",
@@ -1761,7 +1787,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Glyph of Warding",
@@ -1769,11 +1795,12 @@ export const SRD_SPELLS = [
     school: "abjuration",
     castingTime: "1 hour",
     range: "Touch",
-    components: "V, S, M (powdered diamond worth 200+ GP, which the spell consumes)",
+    components:
+      "V, S, M (powdered diamond worth 200+ GP, which the spell consumes)",
     duration: "Until dispelled or triggered",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "wizard"]
+    classes: ["bard", "cleric", "wizard"],
   },
   {
     name: "Goodberry",
@@ -1785,7 +1812,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "Grease",
@@ -1797,7 +1824,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Greater Invisibility",
@@ -1809,7 +1836,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Greater Restoration",
@@ -1817,11 +1844,12 @@ export const SRD_SPELLS = [
     school: "abjuration",
     castingTime: "Action",
     range: "Touch",
-    components: "V, S, M (diamond dust worth 100+ GP, which the spell consumes)",
+    components:
+      "V, S, M (diamond dust worth 100+ GP, which the spell consumes)",
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "paladin", "ranger"]
+    classes: ["bard", "cleric", "druid", "paladin", "ranger"],
   },
   {
     name: "Guardian of Faith",
@@ -1833,7 +1861,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Guards and Wards",
@@ -1845,7 +1873,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Guidance",
@@ -1857,7 +1885,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "druid"]
+    classes: ["cleric", "druid"],
   },
   {
     name: "Guiding Bolt",
@@ -1869,7 +1897,7 @@ export const SRD_SPELLS = [
     duration: "1 round",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Gust of Wind",
@@ -1881,7 +1909,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger", "sorcerer", "wizard"]
+    classes: ["druid", "ranger", "sorcerer", "wizard"],
   },
   {
     name: "Hallow",
@@ -1893,7 +1921,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Hallucinatory Terrain",
@@ -1905,7 +1933,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "warlock", "wizard"]
+    classes: ["bard", "druid", "warlock", "wizard"],
   },
   {
     name: "Harm",
@@ -1917,7 +1945,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Haste",
@@ -1929,7 +1957,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Heal",
@@ -1941,7 +1969,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid"]
+    classes: ["cleric", "druid"],
   },
   {
     name: "Healing Word",
@@ -1953,7 +1981,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid"]
+    classes: ["bard", "cleric", "druid"],
   },
   {
     name: "Heat Metal",
@@ -1965,7 +1993,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "druid"]
+    classes: ["bard", "druid"],
   },
   {
     name: "Hellish Rebuke",
@@ -1978,7 +2006,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["warlock"]
+    classes: ["warlock"],
   },
   {
     name: "Heroes' Feast",
@@ -1986,11 +2014,12 @@ export const SRD_SPELLS = [
     school: "conjuration",
     castingTime: "10 minutes",
     range: "Self",
-    components: "V, S, M (a gem-encrusted bowl worth 1,000+ GP, which the spell consumes)",
+    components:
+      "V, S, M (a gem-encrusted bowl worth 1,000+ GP, which the spell consumes)",
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid"]
+    classes: ["bard", "cleric", "druid"],
   },
   {
     name: "Heroism",
@@ -2002,7 +2031,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "paladin"]
+    classes: ["bard", "paladin"],
   },
   {
     name: "Hex",
@@ -2014,7 +2043,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["warlock"]
+    classes: ["warlock"],
   },
   {
     name: "Hideous Laughter",
@@ -2026,7 +2055,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "warlock", "wizard"]
+    classes: ["bard", "warlock", "wizard"],
   },
   {
     name: "Hold Monster",
@@ -2038,7 +2067,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Hold Person",
@@ -2050,7 +2079,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "cleric", "druid", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Holy Aura",
@@ -2062,7 +2091,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Hunter's Mark",
@@ -2074,7 +2103,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["ranger"]
+    classes: ["ranger"],
   },
   {
     name: "Hypnotic Pattern",
@@ -2086,7 +2115,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Ice Knife",
@@ -2098,7 +2127,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Ice Storm",
@@ -2110,7 +2139,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Identify",
@@ -2122,7 +2151,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: true,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Illusory Script",
@@ -2134,7 +2163,7 @@ export const SRD_SPELLS = [
     duration: "10 days",
     concentration: false,
     ritual: true,
-    classes: ["bard", "warlock", "wizard"]
+    classes: ["bard", "warlock", "wizard"],
   },
   {
     name: "Imprisonment",
@@ -2146,7 +2175,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["warlock", "wizard"]
+    classes: ["warlock", "wizard"],
   },
   {
     name: "Incendiary Cloud",
@@ -2158,7 +2187,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Inflict Wounds",
@@ -2170,7 +2199,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Insect Plague",
@@ -2182,7 +2211,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "druid", "sorcerer"]
+    classes: ["cleric", "druid", "sorcerer"],
   },
   {
     name: "Instant Summons",
@@ -2194,7 +2223,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: true,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Invisibility",
@@ -2206,7 +2235,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Irresistible Dance",
@@ -2218,7 +2247,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Jump",
@@ -2230,7 +2259,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["druid", "ranger", "sorcerer", "wizard"]
+    classes: ["druid", "ranger", "sorcerer", "wizard"],
   },
   {
     name: "Knock",
@@ -2242,7 +2271,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Legend Lore",
@@ -2250,11 +2279,12 @@ export const SRD_SPELLS = [
     school: "divination",
     castingTime: "10 minutes",
     range: "Self",
-    components: "V, S, M (incense worth 250+ GP, which the spell consumes, and four ivory strips worth 50+ GP each)",
+    components:
+      "V, S, M (incense worth 250+ GP, which the spell consumes, and four ivory strips worth 50+ GP each)",
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "wizard"]
+    classes: ["bard", "cleric", "wizard"],
   },
   {
     name: "Lesser Restoration",
@@ -2266,7 +2296,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "paladin", "ranger"]
+    classes: ["bard", "cleric", "druid", "paladin", "ranger"],
   },
   {
     name: "Levitate",
@@ -2278,7 +2308,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Light",
@@ -2290,7 +2320,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "sorcerer", "wizard"]
+    classes: ["bard", "cleric", "sorcerer", "wizard"],
   },
   {
     name: "Lightning Bolt",
@@ -2302,7 +2332,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Locate Animals or Plants",
@@ -2314,7 +2344,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: true,
-    classes: ["bard", "druid", "ranger"]
+    classes: ["bard", "druid", "ranger"],
   },
   {
     name: "Locate Creature",
@@ -2326,7 +2356,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "paladin", "ranger", "wizard"]
+    classes: ["bard", "cleric", "druid", "paladin", "ranger", "wizard"],
   },
   {
     name: "Locate Object",
@@ -2338,7 +2368,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "paladin", "ranger", "wizard"]
+    classes: ["bard", "cleric", "druid", "paladin", "ranger", "wizard"],
   },
   {
     name: "Longstrider",
@@ -2350,7 +2380,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "ranger", "wizard"]
+    classes: ["bard", "druid", "ranger", "wizard"],
   },
   {
     name: "Mage Armor",
@@ -2362,7 +2392,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Mage Hand",
@@ -2374,7 +2404,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Magic Circle",
@@ -2382,11 +2412,12 @@ export const SRD_SPELLS = [
     school: "abjuration",
     castingTime: "1 minute",
     range: "10 feet",
-    components: "V, S, M (salt and powdered silver worth 100+ GP, which the spell consumes)",
+    components:
+      "V, S, M (salt and powdered silver worth 100+ GP, which the spell consumes)",
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "paladin", "warlock", "wizard"]
+    classes: ["cleric", "paladin", "warlock", "wizard"],
   },
   {
     name: "Magic Jar",
@@ -2398,7 +2429,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Magic Missile",
@@ -2410,7 +2441,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Magic Mouth",
@@ -2422,7 +2453,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: true,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Magic Weapon",
@@ -2434,7 +2465,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["paladin", "ranger", "sorcerer", "wizard"]
+    classes: ["paladin", "ranger", "sorcerer", "wizard"],
   },
   {
     name: "Magnificent Mansion",
@@ -2446,7 +2477,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Major Image",
@@ -2458,7 +2489,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Mass Cure Wounds",
@@ -2470,7 +2501,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid"]
+    classes: ["bard", "cleric", "druid"],
   },
   {
     name: "Mass Heal",
@@ -2482,7 +2513,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Mass Healing Word",
@@ -2494,7 +2525,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric"]
+    classes: ["bard", "cleric"],
   },
   {
     name: "Mass Suggestion",
@@ -2506,7 +2537,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Maze",
@@ -2518,7 +2549,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Meld into Stone",
@@ -2530,7 +2561,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: true,
-    classes: ["cleric", "druid", "ranger"]
+    classes: ["cleric", "druid", "ranger"],
   },
   {
     name: "Mending",
@@ -2542,7 +2573,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "sorcerer", "wizard"]
+    classes: ["bard", "cleric", "druid", "sorcerer", "wizard"],
   },
   {
     name: "Message",
@@ -2554,7 +2585,7 @@ export const SRD_SPELLS = [
     duration: "1 round",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "sorcerer", "wizard"]
+    classes: ["bard", "druid", "sorcerer", "wizard"],
   },
   {
     name: "Meteor Swarm",
@@ -2566,7 +2597,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Mind Blank",
@@ -2578,7 +2609,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Mind Spike",
@@ -2590,7 +2621,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Minor Illusion",
@@ -2602,7 +2633,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Mirage Arcane",
@@ -2614,7 +2645,7 @@ export const SRD_SPELLS = [
     duration: "10 days",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "wizard"]
+    classes: ["bard", "druid", "wizard"],
   },
   {
     name: "Mirror Image",
@@ -2626,7 +2657,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Mislead",
@@ -2638,7 +2669,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["bard", "warlock", "wizard"]
+    classes: ["bard", "warlock", "wizard"],
   },
   {
     name: "Misty Step",
@@ -2650,7 +2681,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Modify Memory",
@@ -2662,7 +2693,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Moonbeam",
@@ -2674,7 +2705,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Move Earth",
@@ -2686,7 +2717,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 2 hours",
     concentration: true,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Nondetection",
@@ -2694,11 +2725,12 @@ export const SRD_SPELLS = [
     school: "abjuration",
     castingTime: "Action",
     range: "Touch",
-    components: "V, S, M (a pinch of diamond dust worth 25+ GP, which the spell consumes)",
+    components:
+      "V, S, M (a pinch of diamond dust worth 25+ GP, which the spell consumes)",
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "ranger", "wizard"]
+    classes: ["bard", "ranger", "wizard"],
   },
   {
     name: "Pass without Trace",
@@ -2710,7 +2742,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "Passwall",
@@ -2722,7 +2754,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Phantasmal Force",
@@ -2734,7 +2766,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Phantasmal Killer",
@@ -2746,7 +2778,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Phantom Steed",
@@ -2758,7 +2790,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: true,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Planar Ally",
@@ -2770,7 +2802,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Planar Binding",
@@ -2782,7 +2814,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "warlock", "wizard"]
+    classes: ["bard", "cleric", "druid", "warlock", "wizard"],
   },
   {
     name: "Plane Shift",
@@ -2790,11 +2822,12 @@ export const SRD_SPELLS = [
     school: "conjuration",
     castingTime: "Action",
     range: "Touch",
-    components: "V, S, M (a forked, metal rod worth 250+ GP and attuned to a plane of existence)",
+    components:
+      "V, S, M (a forked, metal rod worth 250+ GP and attuned to a plane of existence)",
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid", "sorcerer", "warlock", "wizard"]
+    classes: ["cleric", "druid", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Plant Growth",
@@ -2806,7 +2839,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "ranger"]
+    classes: ["bard", "druid", "ranger"],
   },
   {
     name: "Poison Spray",
@@ -2818,7 +2851,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["druid", "sorcerer", "warlock", "wizard"]
+    classes: ["druid", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Polymorph",
@@ -2830,7 +2863,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["bard", "druid", "sorcerer", "wizard"]
+    classes: ["bard", "druid", "sorcerer", "wizard"],
   },
   {
     name: "Power Word Heal",
@@ -2842,7 +2875,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric"]
+    classes: ["bard", "cleric"],
   },
   {
     name: "Power Word Kill",
@@ -2854,7 +2887,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Power Word Stun",
@@ -2866,7 +2899,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Prayer of Healing",
@@ -2878,7 +2911,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "paladin"]
+    classes: ["cleric", "paladin"],
   },
   {
     name: "Prestidigitation",
@@ -2890,7 +2923,7 @@ export const SRD_SPELLS = [
     duration: "Up to 1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Prismatic Spray",
@@ -2902,7 +2935,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Prismatic Wall",
@@ -2914,7 +2947,7 @@ export const SRD_SPELLS = [
     duration: "10 minutes",
     concentration: false,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Private Sanctum",
@@ -2926,7 +2959,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Produce Flame",
@@ -2938,7 +2971,7 @@ export const SRD_SPELLS = [
     duration: "10 minutes",
     concentration: false,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Programmed Illusion",
@@ -2950,7 +2983,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Project Image",
@@ -2962,7 +2995,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 day",
     concentration: true,
     ritual: false,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Protection from Energy",
@@ -2974,7 +3007,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "druid", "ranger", "sorcerer", "wizard"]
+    classes: ["cleric", "druid", "ranger", "sorcerer", "wizard"],
   },
   {
     name: "Protection from Evil and Good",
@@ -2982,11 +3015,12 @@ export const SRD_SPELLS = [
     school: "abjuration",
     castingTime: "Action",
     range: "Touch",
-    components: "V, S, M (a flask of Holy Water worth 25+ GP, which the spell consumes)",
+    components:
+      "V, S, M (a flask of Holy Water worth 25+ GP, which the spell consumes)",
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "druid", "paladin", "warlock", "wizard"]
+    classes: ["cleric", "druid", "paladin", "warlock", "wizard"],
   },
   {
     name: "Protection from Poison",
@@ -2998,7 +3032,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid", "paladin", "ranger"]
+    classes: ["cleric", "druid", "paladin", "ranger"],
   },
   {
     name: "Purify Food and Drink",
@@ -3010,7 +3044,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: true,
-    classes: ["cleric", "druid", "paladin"]
+    classes: ["cleric", "druid", "paladin"],
   },
   {
     name: "Raise Dead",
@@ -3022,7 +3056,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "paladin"]
+    classes: ["bard", "cleric", "paladin"],
   },
   {
     name: "Ray of Enfeeblement",
@@ -3034,7 +3068,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["warlock", "wizard"]
+    classes: ["warlock", "wizard"],
   },
   {
     name: "Ray of Frost",
@@ -3046,7 +3080,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Ray of Sickness",
@@ -3058,7 +3092,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Regenerate",
@@ -3070,7 +3104,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid"]
+    classes: ["bard", "cleric", "druid"],
   },
   {
     name: "Reincarnate",
@@ -3082,7 +3116,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Remove Curse",
@@ -3094,7 +3128,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "paladin", "warlock", "wizard"]
+    classes: ["cleric", "paladin", "warlock", "wizard"],
   },
   {
     name: "Resilient Sphere",
@@ -3106,7 +3140,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Resistance",
@@ -3118,7 +3152,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "druid"]
+    classes: ["cleric", "druid"],
   },
   {
     name: "Resurrection",
@@ -3130,7 +3164,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric"]
+    classes: ["bard", "cleric"],
   },
   {
     name: "Reverse Gravity",
@@ -3142,7 +3176,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Revivify",
@@ -3154,7 +3188,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid", "paladin", "ranger"]
+    classes: ["cleric", "druid", "paladin", "ranger"],
   },
   {
     name: "Rope Trick",
@@ -3166,7 +3200,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Sacred Flame",
@@ -3178,7 +3212,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Sanctuary",
@@ -3190,7 +3224,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Scorching Ray",
@@ -3202,7 +3236,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Scrying",
@@ -3210,11 +3244,12 @@ export const SRD_SPELLS = [
     school: "divination",
     castingTime: "10 minutes",
     range: "Self",
-    components: "V, S, M (a focus worth 1,000+ GP, such as a crystal ball, mirror, or water-filled font)",
+    components:
+      "V, S, M (a focus worth 1,000+ GP, such as a crystal ball, mirror, or water-filled font)",
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "warlock", "wizard"]
+    classes: ["bard", "cleric", "druid", "warlock", "wizard"],
   },
   {
     name: "Searing Smite",
@@ -3227,7 +3262,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["paladin"]
+    classes: ["paladin"],
   },
   {
     name: "Secret Chest",
@@ -3240,7 +3275,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "See Invisibility",
@@ -3252,7 +3287,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Seeming",
@@ -3264,7 +3299,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Sending",
@@ -3276,7 +3311,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "wizard"]
+    classes: ["bard", "cleric", "wizard"],
   },
   {
     name: "Sequester",
@@ -3288,7 +3323,7 @@ export const SRD_SPELLS = [
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Shapechange",
@@ -3300,7 +3335,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["druid", "wizard"]
+    classes: ["druid", "wizard"],
   },
   {
     name: "Shatter",
@@ -3312,19 +3347,20 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Shield",
     level: 1,
     school: "abjuration",
-    castingTime: "Reaction, which you take when you are hit by an attack roll or targeted by the *Magic Missile* spell",
+    castingTime:
+      "Reaction, which you take when you are hit by an attack roll or targeted by the *Magic Missile* spell",
     range: "Self",
     components: "V, S",
     duration: "1 round",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Shield of Faith",
@@ -3336,7 +3372,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "paladin"]
+    classes: ["cleric", "paladin"],
   },
   {
     name: "Shillelagh",
@@ -3348,7 +3384,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Shining Smite",
@@ -3361,7 +3397,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["paladin"]
+    classes: ["paladin"],
   },
   {
     name: "Shocking Grasp",
@@ -3373,7 +3409,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Silence",
@@ -3385,7 +3421,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: true,
-    classes: ["bard", "cleric", "ranger"]
+    classes: ["bard", "cleric", "ranger"],
   },
   {
     name: "Silent Image",
@@ -3397,7 +3433,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Simulacrum",
@@ -3405,11 +3441,12 @@ export const SRD_SPELLS = [
     school: "illusion",
     castingTime: "12 hours",
     range: "Touch",
-    components: "V, S, M (powdered ruby worth 1,500+ GP, which the spell consumes)",
+    components:
+      "V, S, M (powdered ruby worth 1,500+ GP, which the spell consumes)",
     duration: "Until dispelled",
     concentration: false,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Sleep",
@@ -3421,7 +3458,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Sleet Storm",
@@ -3433,7 +3470,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Slow",
@@ -3445,7 +3482,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Sorcerous Burst",
@@ -3457,7 +3494,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer"]
+    classes: ["sorcerer"],
   },
   {
     name: "Spare the Dying",
@@ -3469,7 +3506,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid"]
+    classes: ["cleric", "druid"],
   },
   {
     name: "Speak with Animals",
@@ -3481,7 +3518,7 @@ export const SRD_SPELLS = [
     duration: "10 minutes",
     concentration: false,
     ritual: true,
-    classes: ["bard", "druid", "ranger", "warlock"]
+    classes: ["bard", "druid", "ranger", "warlock"],
   },
   {
     name: "Speak with Dead",
@@ -3493,7 +3530,7 @@ export const SRD_SPELLS = [
     duration: "10 minutes",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "wizard"]
+    classes: ["bard", "cleric", "wizard"],
   },
   {
     name: "Speak with Plants",
@@ -3505,7 +3542,7 @@ export const SRD_SPELLS = [
     duration: "10 minutes",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "ranger"]
+    classes: ["bard", "druid", "ranger"],
   },
   {
     name: "Spider Climb",
@@ -3517,7 +3554,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Spike Growth",
@@ -3529,7 +3566,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "Spirit Guardians",
@@ -3541,7 +3578,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Spiritual Weapon",
@@ -3553,7 +3590,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Starry Wisp",
@@ -3565,7 +3602,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid"]
+    classes: ["bard", "druid"],
   },
   {
     name: "Stinking Cloud",
@@ -3577,7 +3614,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Stone Shape",
@@ -3589,7 +3626,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid", "wizard"]
+    classes: ["cleric", "druid", "wizard"],
   },
   {
     name: "Stoneskin",
@@ -3597,11 +3634,12 @@ export const SRD_SPELLS = [
     school: "transmutation",
     castingTime: "Action",
     range: "Touch",
-    components: "V, S, M (diamond dust worth 100+ GP, which the spell consumes)",
+    components:
+      "V, S, M (diamond dust worth 100+ GP, which the spell consumes)",
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger", "sorcerer", "wizard"]
+    classes: ["druid", "ranger", "sorcerer", "wizard"],
   },
   {
     name: "Storm of Vengeance",
@@ -3613,7 +3651,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Suggestion",
@@ -3625,7 +3663,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 8 hours",
     concentration: true,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Summon Dragon",
@@ -3633,11 +3671,12 @@ export const SRD_SPELLS = [
     school: "conjuration",
     castingTime: "Action",
     range: "60 feet",
-    components: "V, S, M (an object with the image of a dragon engraved on it worth 500+ GP)",
+    components:
+      "V, S, M (an object with the image of a dragon engraved on it worth 500+ GP)",
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Sunbeam",
@@ -3649,7 +3688,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["cleric", "druid", "sorcerer", "wizard"]
+    classes: ["cleric", "druid", "sorcerer", "wizard"],
   },
   {
     name: "Sunburst",
@@ -3661,7 +3700,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid", "sorcerer", "wizard"]
+    classes: ["cleric", "druid", "sorcerer", "wizard"],
   },
   {
     name: "Symbol",
@@ -3669,11 +3708,12 @@ export const SRD_SPELLS = [
     school: "abjuration",
     castingTime: "1 minute",
     range: "Touch",
-    components: "V, S, M (powdered diamond worth 1,000+ GP, which the spell consumes)",
+    components:
+      "V, S, M (powdered diamond worth 1,000+ GP, which the spell consumes)",
     duration: "Until dispelled or triggered",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "druid", "wizard"]
+    classes: ["bard", "cleric", "druid", "wizard"],
   },
   {
     name: "Telekinesis",
@@ -3685,7 +3725,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Telepathic Bond",
@@ -3697,7 +3737,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: true,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Teleport",
@@ -3709,7 +3749,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "wizard"]
+    classes: ["bard", "sorcerer", "wizard"],
   },
   {
     name: "Teleportation Circle",
@@ -3721,7 +3761,7 @@ export const SRD_SPELLS = [
     duration: "1 round",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Thaumaturgy",
@@ -3733,7 +3773,7 @@ export const SRD_SPELLS = [
     duration: "Up to 1 minute",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Thunderwave",
@@ -3745,7 +3785,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "druid", "sorcerer", "wizard"]
+    classes: ["bard", "druid", "sorcerer", "wizard"],
   },
   {
     name: "Time Stop",
@@ -3757,7 +3797,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Tiny Hut",
@@ -3769,7 +3809,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: true,
-    classes: ["bard", "wizard"]
+    classes: ["bard", "wizard"],
   },
   {
     name: "Tongues",
@@ -3781,7 +3821,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "cleric", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Transport via Plants",
@@ -3793,7 +3833,7 @@ export const SRD_SPELLS = [
     duration: "1 minute",
     concentration: false,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Tree Stride",
@@ -3805,7 +3845,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "True Polymorph",
@@ -3813,11 +3853,12 @@ export const SRD_SPELLS = [
     school: "transmutation",
     castingTime: "Action",
     range: "30 feet",
-    components: "V, S, M (a drop of mercury, a dollop of gum arabic, and a wisp of smoke)",
+    components:
+      "V, S, M (a drop of mercury, a dollop of gum arabic, and a wisp of smoke)",
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["bard", "warlock", "wizard"]
+    classes: ["bard", "warlock", "wizard"],
   },
   {
     name: "True Resurrection",
@@ -3829,7 +3870,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "druid"]
+    classes: ["cleric", "druid"],
   },
   {
     name: "True Seeing",
@@ -3837,11 +3878,12 @@ export const SRD_SPELLS = [
     school: "divination",
     castingTime: "Action",
     range: "Touch",
-    components: "V, S, M (mushroom powder worth 25+ GP, which the spell consumes)",
+    components:
+      "V, S, M (mushroom powder worth 25+ GP, which the spell consumes)",
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "cleric", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "True Strike",
@@ -3849,11 +3891,12 @@ export const SRD_SPELLS = [
     school: "divination",
     castingTime: "Action",
     range: "Self",
-    components: "S, M (a weapon with which you have proficiency and that is worth 1+ CP)",
+    components:
+      "S, M (a weapon with which you have proficiency and that is worth 1+ CP)",
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard", "sorcerer", "warlock", "wizard"]
+    classes: ["bard", "sorcerer", "warlock", "wizard"],
   },
   {
     name: "Tsunami",
@@ -3865,7 +3908,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 6 rounds",
     concentration: true,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Unseen Servant",
@@ -3877,7 +3920,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: true,
-    classes: ["bard", "warlock", "wizard"]
+    classes: ["bard", "warlock", "wizard"],
   },
   {
     name: "Vampiric Touch",
@@ -3889,7 +3932,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "warlock", "wizard"]
+    classes: ["sorcerer", "warlock", "wizard"],
   },
   {
     name: "Vicious Mockery",
@@ -3901,7 +3944,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["bard"]
+    classes: ["bard"],
   },
   {
     name: "Vitriolic Sphere",
@@ -3913,7 +3956,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Wall of Fire",
@@ -3925,7 +3968,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Wall of Force",
@@ -3937,7 +3980,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Wall of Ice",
@@ -3949,7 +3992,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["wizard"]
+    classes: ["wizard"],
   },
   {
     name: "Wall of Stone",
@@ -3961,7 +4004,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid", "sorcerer", "wizard"]
+    classes: ["druid", "sorcerer", "wizard"],
   },
   {
     name: "Wall of Thorns",
@@ -3973,7 +4016,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 10 minutes",
     concentration: true,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Warding Bond",
@@ -3986,7 +4029,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: false,
-    classes: ["cleric", "paladin"]
+    classes: ["cleric", "paladin"],
   },
   {
     name: "Water Breathing",
@@ -3998,7 +4041,7 @@ export const SRD_SPELLS = [
     duration: "24 hours",
     concentration: false,
     ritual: true,
-    classes: ["druid", "ranger", "sorcerer", "wizard"]
+    classes: ["druid", "ranger", "sorcerer", "wizard"],
   },
   {
     name: "Water Walk",
@@ -4010,7 +4053,7 @@ export const SRD_SPELLS = [
     duration: "1 hour",
     concentration: false,
     ritual: true,
-    classes: ["cleric", "druid", "ranger", "sorcerer"]
+    classes: ["cleric", "druid", "ranger", "sorcerer"],
   },
   {
     name: "Web",
@@ -4022,7 +4065,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 hour",
     concentration: true,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Weird",
@@ -4034,7 +4077,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["warlock", "wizard"]
+    classes: ["warlock", "wizard"],
   },
   {
     name: "Wind Walk",
@@ -4046,7 +4089,7 @@ export const SRD_SPELLS = [
     duration: "8 hours",
     concentration: false,
     ritual: false,
-    classes: ["druid"]
+    classes: ["druid"],
   },
   {
     name: "Wind Wall",
@@ -4058,7 +4101,7 @@ export const SRD_SPELLS = [
     duration: "Concentration, up to 1 minute",
     concentration: true,
     ritual: false,
-    classes: ["druid", "ranger"]
+    classes: ["druid", "ranger"],
   },
   {
     name: "Wish",
@@ -4070,7 +4113,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["sorcerer", "wizard"]
+    classes: ["sorcerer", "wizard"],
   },
   {
     name: "Word of Recall",
@@ -4082,7 +4125,7 @@ export const SRD_SPELLS = [
     duration: "Instantaneous",
     concentration: false,
     ritual: false,
-    classes: ["cleric"]
+    classes: ["cleric"],
   },
   {
     name: "Zone of Truth",
@@ -4094,9 +4137,9 @@ export const SRD_SPELLS = [
     duration: "10 minutes",
     concentration: false,
     ritual: false,
-    classes: ["bard", "cleric", "paladin"]
-  }
-] as const satisfies ReadonlyArray<SpellInfo>
+    classes: ["bard", "cleric", "paladin"],
+  },
+] as const satisfies ReadonlyArray<SpellInfo>;
 
 /** Union of all 339 SRD spell display names (Title Case). */
-export type SRDSpellDisplayName = (typeof SRD_SPELLS)[number]["name"]
+export type SRDSpellDisplayName = (typeof SRD_SPELLS)[number]["name"];

@@ -14,5 +14,5 @@ export {
   overchannelNecroticDice,
   potentCantripDamage,
   sculptSpellsMaxCreatures,
-  validateArcaneRecovery
-} from "#/features/class-wizard.ts"
+  validateArcaneRecovery,
+} from "#/features/class-wizard.ts";

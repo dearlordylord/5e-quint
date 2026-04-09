@@ -1,5 +1,5 @@
-import { featureSaveDC } from "#/srd-constants.ts"
-import type { AbilityModifier, DifficultyClass } from "#/types.ts"
+import { featureSaveDC } from "#/srd-constants.ts";
+import type { AbilityModifier, DifficultyClass } from "#/types.ts";
 
 // TS-only: mastery effects are caller-side composition on existing Quint primitives
 // (pTakeDamage, pApplyCondition, action economy). Effects like Topple (→ Prone) and
@@ -9,18 +9,29 @@ import type { AbilityModifier, DifficultyClass } from "#/types.ts"
 
 // --- Types ---
 
-export const WEAPON_MASTERY_PROPERTIES = ["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"] as const
+export const WEAPON_MASTERY_PROPERTIES = [
+  "cleave",
+  "graze",
+  "nick",
+  "push",
+  "sap",
+  "slow",
+  "topple",
+  "vex",
+] as const;
 
 /** Weapon mastery properties per SRD 5.2.1 Equipment chapter. */
-export type WeaponMasteryProperty = (typeof WEAPON_MASTERY_PROPERTIES)[number]
+export type WeaponMasteryProperty = (typeof WEAPON_MASTERY_PROPERTIES)[number];
 
 // --- Constants ---
 
-const PUSH_DISTANCE_FEET = 10
-const SLOW_SPEED_REDUCTION_FEET = 10
+const PUSH_DISTANCE_FEET = 10;
+const SLOW_SPEED_REDUCTION_FEET = 10;
 
 /** Maps standard SRD 5.2.1 weapons to their mastery property. */
-export const WEAPON_MASTERY_MAP: Readonly<Record<string, WeaponMasteryProperty>> = {
+export const WEAPON_MASTERY_MAP: Readonly<
+  Record<string, WeaponMasteryProperty>
+> = {
   // Simple Melee
   club: "slow",
   dagger: "nick",
@@ -62,8 +73,8 @@ export const WEAPON_MASTERY_MAP: Readonly<Record<string, WeaponMasteryProperty>>
   heavyCrossbow: "push",
   longbow: "slow",
   musket: "slow",
-  pistol: "vex"
-}
+  pistol: "vex",
+};
 
 // --- Shared precondition ---
 
@@ -71,9 +82,9 @@ export const WEAPON_MASTERY_MAP: Readonly<Record<string, WeaponMasteryProperty>>
 export function masteryActive(
   hasWeaponMastery: boolean,
   weaponMastery: WeaponMasteryProperty,
-  required: WeaponMasteryProperty
+  required: WeaponMasteryProperty,
 ): boolean {
-  return hasWeaponMastery && weaponMastery === required
+  return hasWeaponMastery && weaponMastery === required;
 }
 
 // --- Cleave ---
@@ -87,9 +98,11 @@ export function masteryActive(
 export function canCleave(
   hasWeaponMastery: boolean,
   masteryProperty: WeaponMasteryProperty,
-  hitTarget: boolean
+  hitTarget: boolean,
 ): boolean {
-  return masteryActive(hasWeaponMastery, masteryProperty, "cleave") && hitTarget
+  return (
+    masteryActive(hasWeaponMastery, masteryProperty, "cleave") && hitTarget
+  );
 }
 
 /**
@@ -99,7 +112,7 @@ export function canCleave(
  * Caller rolls the die and applies negative modifier if applicable.
  */
 export function cleaveExtraDamage(weaponDieSize: number): number {
-  return weaponDieSize
+  return weaponDieSize;
 }
 
 // --- Graze ---
@@ -113,9 +126,11 @@ export function cleaveExtraDamage(weaponDieSize: number): number {
 export function canGraze(
   hasWeaponMastery: boolean,
   masteryProperty: WeaponMasteryProperty,
-  missedTarget: boolean
+  missedTarget: boolean,
 ): boolean {
-  return masteryActive(hasWeaponMastery, masteryProperty, "graze") && missedTarget
+  return (
+    masteryActive(hasWeaponMastery, masteryProperty, "graze") && missedTarget
+  );
 }
 
 /**
@@ -125,7 +140,7 @@ export function canGraze(
  * We apply min 1 so the mastery always deals at least some damage.
  */
 export function grazeDamage(abilityMod: number): number {
-  return Math.max(1, abilityMod)
+  return Math.max(1, abilityMod);
 }
 
 // --- Nick ---
@@ -138,9 +153,11 @@ export function grazeDamage(abilityMod: number): number {
 export function canNick(
   hasWeaponMastery: boolean,
   masteryProperty: WeaponMasteryProperty,
-  hasExtraAttack: boolean
+  hasExtraAttack: boolean,
 ): boolean {
-  return masteryActive(hasWeaponMastery, masteryProperty, "nick") && hasExtraAttack
+  return (
+    masteryActive(hasWeaponMastery, masteryProperty, "nick") && hasExtraAttack
+  );
 }
 
 // --- Push ---
@@ -153,14 +170,14 @@ export function canNick(
 export function canPush(
   hasWeaponMastery: boolean,
   masteryProperty: WeaponMasteryProperty,
-  hitTarget: boolean
+  hitTarget: boolean,
 ): boolean {
-  return masteryActive(hasWeaponMastery, masteryProperty, "push") && hitTarget
+  return masteryActive(hasWeaponMastery, masteryProperty, "push") && hitTarget;
 }
 
 /** Returns the Push distance in feet (always 10). */
 export function pushDistance(): 10 {
-  return PUSH_DISTANCE_FEET as 10
+  return PUSH_DISTANCE_FEET as 10;
 }
 
 // --- Sap ---
@@ -170,13 +187,17 @@ export function pushDistance(): 10 {
  * SRD: "If you hit a creature with this weapon, that creature has Disadvantage
  * on its next attack roll before the start of your next turn."
  */
-export function canSap(hasWeaponMastery: boolean, masteryProperty: WeaponMasteryProperty, hitTarget: boolean): boolean {
-  return masteryActive(hasWeaponMastery, masteryProperty, "sap") && hitTarget
+export function canSap(
+  hasWeaponMastery: boolean,
+  masteryProperty: WeaponMasteryProperty,
+  hitTarget: boolean,
+): boolean {
+  return masteryActive(hasWeaponMastery, masteryProperty, "sap") && hitTarget;
 }
 
 /** Returns the Sap effect: target has Disadvantage on next attack roll. */
 export function sapResult(): { readonly targetDisadvantageOnNextAttack: true } {
-  return { targetDisadvantageOnNextAttack: true }
+  return { targetDisadvantageOnNextAttack: true };
 }
 
 // --- Slow ---
@@ -189,14 +210,14 @@ export function sapResult(): { readonly targetDisadvantageOnNextAttack: true } {
 export function canSlow(
   hasWeaponMastery: boolean,
   masteryProperty: WeaponMasteryProperty,
-  hitTarget: boolean
+  hitTarget: boolean,
 ): boolean {
-  return masteryActive(hasWeaponMastery, masteryProperty, "slow") && hitTarget
+  return masteryActive(hasWeaponMastery, masteryProperty, "slow") && hitTarget;
 }
 
 /** Returns the Slow speed reduction in feet (always 10). */
 export function slowSpeedReduction(): 10 {
-  return SLOW_SPEED_REDUCTION_FEET as 10
+  return SLOW_SPEED_REDUCTION_FEET as 10;
 }
 
 // --- Topple ---
@@ -210,17 +231,24 @@ export function slowSpeedReduction(): 10 {
 export function canTopple(
   hasWeaponMastery: boolean,
   masteryProperty: WeaponMasteryProperty,
-  hitTarget: boolean
+  hitTarget: boolean,
 ): boolean {
-  return masteryActive(hasWeaponMastery, masteryProperty, "topple") && hitTarget
+  return (
+    masteryActive(hasWeaponMastery, masteryProperty, "topple") && hitTarget
+  );
 }
 
 /** Returns the Topple saving throw DC: 8 + ability modifier + proficiency bonus. */
-export const toppleDC: (abilityMod: AbilityModifier, profBonus: number) => DifficultyClass = featureSaveDC
+export const toppleDC: (
+  abilityMod: AbilityModifier,
+  profBonus: number,
+) => DifficultyClass = featureSaveDC;
 
 /** Returns the Topple result: target falls Prone on failed save. */
-export function toppleResult(savePassed: boolean): { readonly targetProne: boolean } {
-  return { targetProne: !savePassed }
+export function toppleResult(savePassed: boolean): {
+  readonly targetProne: boolean;
+} {
+  return { targetProne: !savePassed };
 }
 
 // --- Vex ---
@@ -231,11 +259,15 @@ export function toppleResult(savePassed: boolean): { readonly targetProne: boole
  * you have Advantage on your next attack roll against that creature before the
  * end of your next turn."
  */
-export function canVex(hasWeaponMastery: boolean, masteryProperty: WeaponMasteryProperty, hitTarget: boolean): boolean {
-  return masteryActive(hasWeaponMastery, masteryProperty, "vex") && hitTarget
+export function canVex(
+  hasWeaponMastery: boolean,
+  masteryProperty: WeaponMasteryProperty,
+  hitTarget: boolean,
+): boolean {
+  return masteryActive(hasWeaponMastery, masteryProperty, "vex") && hitTarget;
 }
 
 /** Returns the Vex effect: Advantage on next attack roll vs that target. */
 export function vexResult(): { readonly advantageOnNextAttackVsTarget: true } {
-  return { advantageOnNextAttackVsTarget: true }
+  return { advantageOnNextAttackVsTarget: true };
 }

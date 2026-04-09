@@ -27,5 +27,5 @@ export {
   mysticArcanumLevels,
   pactSlotCount,
   pactSlotLevel,
-  repellingBlastDistance
-} from "#/features/class-warlock.ts"
+  repellingBlastDistance,
+} from "#/features/class-warlock.ts";

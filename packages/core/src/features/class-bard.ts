@@ -4,16 +4,16 @@
 
 // --- Constants ---
 
-const JACK_OF_ALL_TRADES_LEVEL = 2
-const FONT_OF_INSPIRATION_LEVEL = 5
-const COUNTERCHARM_LEVEL = 7
-const SUPERIOR_INSPIRATION_LEVEL = 18
-const SUPERIOR_INSPIRATION_THRESHOLD = 2
-const WORDS_OF_CREATION_LEVEL = 20
-const LORE_SUBCLASS_LEVEL = 3
-const CUTTING_WORDS_LEVEL = 3
-const MAGICAL_DISCOVERIES_LEVEL = 6
-const PEERLESS_SKILL_LEVEL = 14
+const JACK_OF_ALL_TRADES_LEVEL = 2;
+const FONT_OF_INSPIRATION_LEVEL = 5;
+const COUNTERCHARM_LEVEL = 7;
+const SUPERIOR_INSPIRATION_LEVEL = 18;
+const SUPERIOR_INSPIRATION_THRESHOLD = 2;
+const WORDS_OF_CREATION_LEVEL = 20;
+const LORE_SUBCLASS_LEVEL = 3;
+const CUTTING_WORDS_LEVEL = 3;
+const MAGICAL_DISCOVERIES_LEVEL = 6;
+const PEERLESS_SKILL_LEVEL = 14;
 
 // =============================================================================
 // Bardic Inspiration (Level 1)
@@ -27,16 +27,16 @@ const PEERLESS_SKILL_LEVEL = 14
 
 /** Bardic Inspiration die size at given Bard level. */
 export function bardicInspirationDie(bardLevel: number): number {
-  if (bardLevel <= 0) return 0
-  if (bardLevel < 5) return 6
-  if (bardLevel < 10) return 8
-  if (bardLevel < 15) return 10
-  return 12
+  if (bardLevel <= 0) return 0;
+  if (bardLevel < 5) return 6;
+  if (bardLevel < 10) return 8;
+  if (bardLevel < 15) return 10;
+  return 12;
 }
 
 /** Max Bardic Inspiration uses = CHA mod (min 1). */
 export function bardicInspirationMaxCharges(chaMod: number): number {
-  return Math.max(1, chaMod)
+  return Math.max(1, chaMod);
 }
 
 // =============================================================================
@@ -46,9 +46,13 @@ export function bardicInspirationMaxCharges(chaMod: number): number {
 // check you make that uses a skill proficiency you lack."
 // =============================================================================
 
-export function jackOfAllTradesBonus(bardLevel: number, profBonus: number, hasProficiency: boolean): number {
-  if (bardLevel < JACK_OF_ALL_TRADES_LEVEL || hasProficiency) return 0
-  return Math.floor(profBonus / 2)
+export function jackOfAllTradesBonus(
+  bardLevel: number,
+  profBonus: number,
+  hasProficiency: boolean,
+): number {
+  if (bardLevel < JACK_OF_ALL_TRADES_LEVEL || hasProficiency) return 0;
+  return Math.floor(profBonus / 2);
 }
 
 // =============================================================================
@@ -58,7 +62,8 @@ export function jackOfAllTradesBonus(bardLevel: number, profBonus: number, hasPr
 // =============================================================================
 
 /** Song of Rest die = same progression as Bardic Inspiration die. */
-export const songOfRestDie: (bardLevel: number) => number = bardicInspirationDie
+export const songOfRestDie: (bardLevel: number) => number =
+  bardicInspirationDie;
 
 // =============================================================================
 // Font of Inspiration (Level 5)
@@ -69,7 +74,7 @@ export const songOfRestDie: (bardLevel: number) => number = bardicInspirationDie
 // =============================================================================
 
 export function hasFontOfInspiration(bardLevel: number): boolean {
-  return bardLevel >= FONT_OF_INSPIRATION_LEVEL
+  return bardLevel >= FONT_OF_INSPIRATION_LEVEL;
 }
 
 // =============================================================================
@@ -81,7 +86,7 @@ export function hasFontOfInspiration(bardLevel: number): boolean {
 // =============================================================================
 
 export function hasCountercharm(bardLevel: number): boolean {
-  return bardLevel >= COUNTERCHARM_LEVEL
+  return bardLevel >= COUNTERCHARM_LEVEL;
 }
 
 // =============================================================================
@@ -91,9 +96,12 @@ export function hasCountercharm(bardLevel: number): boolean {
 // Inspiration until you have two if you have fewer than that."
 // =============================================================================
 
-export function superiorInspirationRestore(bardLevel: number, currentCharges: number): number {
-  if (bardLevel < SUPERIOR_INSPIRATION_LEVEL) return currentCharges
-  return Math.max(currentCharges, SUPERIOR_INSPIRATION_THRESHOLD)
+export function superiorInspirationRestore(
+  bardLevel: number,
+  currentCharges: number,
+): number {
+  if (bardLevel < SUPERIOR_INSPIRATION_LEVEL) return currentCharges;
+  return Math.max(currentCharges, SUPERIOR_INSPIRATION_THRESHOLD);
 }
 
 // =============================================================================
@@ -104,7 +112,7 @@ export function superiorInspirationRestore(bardLevel: number, currentCharges: nu
 // =============================================================================
 
 export function hasWordsOfCreation(bardLevel: number): boolean {
-  return bardLevel >= WORDS_OF_CREATION_LEVEL
+  return bardLevel >= WORDS_OF_CREATION_LEVEL;
 }
 
 // =============================================================================
@@ -116,7 +124,7 @@ export function hasWordsOfCreation(bardLevel: number): boolean {
 // --- Bonus Proficiencies (L3) ---
 
 export function hasLoreBonusProficiencies(bardLevel: number): boolean {
-  return bardLevel >= LORE_SUBCLASS_LEVEL
+  return bardLevel >= LORE_SUBCLASS_LEVEL;
 }
 
 // --- Cutting Words (L3) ---
@@ -128,26 +136,26 @@ export function hasLoreBonusProficiencies(bardLevel: number): boolean {
  * subtract the number rolled from the creature's roll."
  */
 export function hasCuttingWords(bardLevel: number): boolean {
-  return bardLevel >= CUTTING_WORDS_LEVEL
+  return bardLevel >= CUTTING_WORDS_LEVEL;
 }
 
 // --- Magical Discoveries (L6) ---
 
 /** SRD: Learn 2 spells from Cleric/Druid/Wizard list. Config-only. */
 export function hasMagicalDiscoveries(bardLevel: number): boolean {
-  return bardLevel >= MAGICAL_DISCOVERIES_LEVEL
+  return bardLevel >= MAGICAL_DISCOVERIES_LEVEL;
 }
 
 // --- Peerless Skill (L14) ---
 
 export function hasPeerlessSkill(bardLevel: number): boolean {
-  return bardLevel >= PEERLESS_SKILL_LEVEL
+  return bardLevel >= PEERLESS_SKILL_LEVEL;
 }
 
 export interface PeerlessSkillResult {
-  readonly newTotal: number
-  readonly success: boolean
-  readonly biExpended: boolean
+  readonly newTotal: number;
+  readonly success: boolean;
+  readonly biExpended: boolean;
 }
 
 /**
@@ -156,10 +164,14 @@ export interface PeerlessSkillResult {
  * number rolled to the d20, potentially turning a failure into a success. On a
  * failure, the Bardic Inspiration isn't expended."
  */
-export function peerlessSkillResult(originalTotal: number, dc: number, biDieRoll: number): PeerlessSkillResult {
-  const newTotal = originalTotal + biDieRoll
-  const success = newTotal >= dc
-  return { newTotal, success, biExpended: success }
+export function peerlessSkillResult(
+  originalTotal: number,
+  dc: number,
+  biDieRoll: number,
+): PeerlessSkillResult {
+  const newTotal = originalTotal + biDieRoll;
+  const success = newTotal >= dc;
+  return { newTotal, success, biExpended: success };
 }
 
 /* eslint-enable no-magic-numbers */

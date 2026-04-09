@@ -25,5 +25,5 @@ export {
   rovingSpeedBonus,
   rovingSwimSpeed,
   tirelessMaxCharges,
-  tirelessTempHp
-} from "#/features/class-ranger.ts"
+  tirelessTempHp,
+} from "#/features/class-ranger.ts";

@@ -1,13 +1,13 @@
-import { Schema } from "effect"
+import { Schema } from "effect";
 
-import { CLASS_NAMES, type HitDiceRemaining } from "#/features/class-tables.ts"
-import { METAMAGIC_OPTIONS } from "#/features/class-sorcerer.ts"
-import type { DndContext } from "#/machine-types.ts"
+import { CLASS_NAMES, type HitDiceRemaining } from "#/features/class-tables.ts";
+import { METAMAGIC_OPTIONS } from "#/features/class-sorcerer.ts";
+import type { DndContext } from "#/machine-types.ts";
 import {
   PEERLESS_SKILL_PENDING_MODES,
   SNEAK_ATTACK_PENDING_MODES,
   SNEAK_ATTACK_PENDING_SOURCES,
-} from "#/machine-types.ts"
+} from "#/machine-types.ts";
 import {
   CONDITIONS,
   DAMAGE_TYPES,
@@ -15,75 +15,123 @@ import {
   INCAP_SOURCES,
   type ActiveEffect,
   type EffectTurnHook,
-} from "#/types.ts"
+} from "#/types.ts";
 
-const ConditionSchema = Schema.Literal(...CONDITIONS)
-const DamageTypeSchema = Schema.Literal(...DAMAGE_TYPES)
-const IncapSourceSchema = Schema.Literal(...INCAP_SOURCES)
-const ExpiryPhaseSchema = Schema.Literal(...EXPIRY_PHASES)
-const MetamagicOptionSchema = Schema.Literal(...METAMAGIC_OPTIONS)
-const PeerlessSkillPendingModeSchema = Schema.Literal(...PEERLESS_SKILL_PENDING_MODES)
-const SneakAttackPendingModeSchema = Schema.Literal(...SNEAK_ATTACK_PENDING_MODES)
-const SneakAttackPendingSourceSchema = Schema.Literal(...SNEAK_ATTACK_PENDING_SOURCES)
+const ConditionSchema = Schema.Literal(...CONDITIONS);
+const DamageTypeSchema = Schema.Literal(...DAMAGE_TYPES);
+const IncapSourceSchema = Schema.Literal(...INCAP_SOURCES);
+const ExpiryPhaseSchema = Schema.Literal(...EXPIRY_PHASES);
+const MetamagicOptionSchema = Schema.Literal(...METAMAGIC_OPTIONS);
+const PeerlessSkillPendingModeSchema = Schema.Literal(
+  ...PEERLESS_SKILL_PENDING_MODES,
+);
+const SneakAttackPendingModeSchema = Schema.Literal(
+  ...SNEAK_ATTACK_PENDING_MODES,
+);
+const SneakAttackPendingSourceSchema = Schema.Literal(
+  ...SNEAK_ATTACK_PENDING_SOURCES,
+);
 
 function compareByOrder<T extends string>(order: ReadonlyArray<T>) {
-  const ranks = new Map(order.map((value, index) => [value, index]))
-  return (left: T, right: T) => (ranks.get(left) ?? Number.POSITIVE_INFINITY) - (ranks.get(right) ?? Number.POSITIVE_INFINITY)
+  const ranks = new Map(order.map((value, index) => [value, index]));
+  return (left: T, right: T) =>
+    (ranks.get(left) ?? Number.POSITIVE_INFINITY) -
+    (ranks.get(right) ?? Number.POSITIVE_INFINITY);
 }
 
-const compareCondition = compareByOrder(CONDITIONS)
-const compareDamageType = compareByOrder(DAMAGE_TYPES)
-const compareIncapSource = compareByOrder(INCAP_SOURCES)
-const compareMetamagicOption = compareByOrder(METAMAGIC_OPTIONS)
+const compareCondition = compareByOrder(CONDITIONS);
+const compareDamageType = compareByOrder(DAMAGE_TYPES);
+const compareIncapSource = compareByOrder(INCAP_SOURCES);
+const compareMetamagicOption = compareByOrder(METAMAGIC_OPTIONS);
 
-function sortReadonlyArray<T>(values: ReadonlyArray<T>, compare: (left: T, right: T) => number): ReadonlyArray<T> {
-  return [...values].sort(compare)
+function sortReadonlyArray<T>(
+  values: ReadonlyArray<T>,
+  compare: (left: T, right: T) => number,
+): ReadonlyArray<T> {
+  return [...values].sort(compare);
 }
 
-function sortReadonlySet<T>(values: ReadonlySet<T>, compare: (left: T, right: T) => number): ReadonlyArray<T> {
-  return [...values].sort(compare)
+function sortReadonlySet<T>(
+  values: ReadonlySet<T>,
+  compare: (left: T, right: T) => number,
+): ReadonlyArray<T> {
+  return [...values].sort(compare);
 }
 
-function canonicalizeHook(hook: EffectTurnHook | undefined): EffectTurnHook | undefined {
-  if (hook == null) return undefined
+function canonicalizeHook(
+  hook: EffectTurnHook | undefined,
+): EffectTurnHook | undefined {
+  if (hook == null) return undefined;
   return {
     ...hook,
     conditionsToRemove:
-      hook.conditionsToRemove == null ? undefined : sortReadonlyArray(hook.conditionsToRemove, compareCondition),
-  }
+      hook.conditionsToRemove == null
+        ? undefined
+        : sortReadonlyArray(hook.conditionsToRemove, compareCondition),
+  };
 }
 
 function canonicalizeEffect(effect: ActiveEffect): ActiveEffect {
   return {
     ...effect,
     grantedConditions:
-      effect.grantedConditions == null ? undefined : sortReadonlyArray(effect.grantedConditions, compareCondition),
+      effect.grantedConditions == null
+        ? undefined
+        : sortReadonlyArray(effect.grantedConditions, compareCondition),
     grantedResistances:
-      effect.grantedResistances == null ? undefined : new Set(sortReadonlySet(effect.grantedResistances, compareDamageType)),
+      effect.grantedResistances == null
+        ? undefined
+        : new Set(
+            sortReadonlySet(effect.grantedResistances, compareDamageType),
+          ),
     grantedVulnerabilities:
-      effect.grantedVulnerabilities == null ? undefined : new Set(sortReadonlySet(effect.grantedVulnerabilities, compareDamageType)),
+      effect.grantedVulnerabilities == null
+        ? undefined
+        : new Set(
+            sortReadonlySet(effect.grantedVulnerabilities, compareDamageType),
+          ),
     grantedImmunities:
-      effect.grantedImmunities == null ? undefined : new Set(sortReadonlySet(effect.grantedImmunities, compareDamageType)),
+      effect.grantedImmunities == null
+        ? undefined
+        : new Set(sortReadonlySet(effect.grantedImmunities, compareDamageType)),
     startOfTurnHook: canonicalizeHook(effect.startOfTurnHook),
     endOfTurnHook: canonicalizeHook(effect.endOfTurnHook),
-  }
+  };
 }
 
-function canonicalizeHitDiceRemaining(hitDiceRemaining: HitDiceRemaining): HitDiceRemaining {
-  return Object.fromEntries(CLASS_NAMES.map((className) => [className, hitDiceRemaining[className]])) as HitDiceRemaining
+function canonicalizeHitDiceRemaining(
+  hitDiceRemaining: HitDiceRemaining,
+): HitDiceRemaining {
+  return Object.fromEntries(
+    CLASS_NAMES.map((className) => [className, hitDiceRemaining[className]]),
+  ) as HitDiceRemaining;
 }
 
-function canonicalizeNumberRecord(values: Readonly<Record<string, number>>): Readonly<Record<string, number>> {
-  return Object.fromEntries(Object.keys(values).sort().map((key) => [key, values[key]]))
+function canonicalizeNumberRecord(
+  values: Readonly<Record<string, number>>,
+): Readonly<Record<string, number>> {
+  return Object.fromEntries(
+    Object.keys(values)
+      .sort()
+      .map((key) => [key, values[key]]),
+  );
 }
 
-function canonicalizeBooleanRecord(values: Readonly<Record<string, boolean>>): Readonly<Record<string, boolean>> {
-  return Object.fromEntries(Object.keys(values).sort().map((key) => [key, values[key]]))
+function canonicalizeBooleanRecord(
+  values: Readonly<Record<string, boolean>>,
+): Readonly<Record<string, boolean>> {
+  return Object.fromEntries(
+    Object.keys(values)
+      .sort()
+      .map((key) => [key, values[key]]),
+  );
 }
 
-function canonicalizeClassStates(classStates: DndContext["classStates"]): DndContext["classStates"] {
-  const sorcerer = classStates.sorcerer
-  const warlock = classStates.warlock
+function canonicalizeClassStates(
+  classStates: DndContext["classStates"],
+): DndContext["classStates"] {
+  const sorcerer = classStates.sorcerer;
+  const warlock = classStates.warlock;
   return {
     ...classStates,
     sorcerer:
@@ -91,17 +139,31 @@ function canonicalizeClassStates(classStates: DndContext["classStates"]): DndCon
         ? undefined
         : {
             ...sorcerer,
-            knownMetamagicOptions: new Set(sortReadonlySet(sorcerer.knownMetamagicOptions, compareMetamagicOption)),
-            metamagicUsedThisCast: new Set(sortReadonlySet(sorcerer.metamagicUsedThisCast, compareMetamagicOption)),
+            knownMetamagicOptions: new Set(
+              sortReadonlySet(
+                sorcerer.knownMetamagicOptions,
+                compareMetamagicOption,
+              ),
+            ),
+            metamagicUsedThisCast: new Set(
+              sortReadonlySet(
+                sorcerer.metamagicUsedThisCast,
+                compareMetamagicOption,
+              ),
+            ),
           },
     warlock:
       warlock == null
         ? undefined
         : {
             ...warlock,
-            mysticArcanumUsed: new Set([...warlock.mysticArcanumUsed].sort((left, right) => left - right)),
+            mysticArcanumUsed: new Set(
+              [...warlock.mysticArcanumUsed].sort(
+                (left, right) => left - right,
+              ),
+            ),
           },
-  }
+  };
 }
 
 function canonicalizeContext(context: DndContext): DndContext {
@@ -111,12 +173,14 @@ function canonicalizeContext(context: DndContext): DndContext {
     hitDiceRemaining: canonicalizeHitDiceRemaining(context.hitDiceRemaining),
     preparedSpells: new Set([...context.preparedSpells].sort()),
     activeEffects: context.activeEffects.map(canonicalizeEffect),
-    incapacitatedSources: new Set(sortReadonlySet(context.incapacitatedSources, compareIncapSource)),
+    incapacitatedSources: new Set(
+      sortReadonlySet(context.incapacitatedSources, compareIncapSource),
+    ),
     rechargeAvailable: canonicalizeBooleanRecord(context.rechargeAvailable),
     dailyUsesRemaining: canonicalizeNumberRecord(context.dailyUsesRemaining),
     dailyUsesMax: canonicalizeNumberRecord(context.dailyUsesMax),
     classStates: canonicalizeClassStates(context.classStates),
-  }
+  };
 }
 
 const EffectTurnHookSchema = Schema.Struct({
@@ -127,7 +191,7 @@ const EffectTurnHookSchema = Schema.Struct({
   removeOnSaveSuccess: Schema.optional(Schema.Boolean),
   conditionsToRemove: Schema.optional(Schema.Array(ConditionSchema)),
   requiresConcentrationCheck: Schema.optional(Schema.Boolean),
-})
+});
 
 const ActiveEffectSchema = Schema.Struct({
   spellId: Schema.String,
@@ -143,7 +207,7 @@ const ActiveEffectSchema = Schema.Struct({
   grantedImmunities: Schema.optional(Schema.ReadonlySet(DamageTypeSchema)),
   blocksOpportunityAttacks: Schema.optional(Schema.Boolean),
   speedDeltaFeet: Schema.optional(Schema.Number),
-})
+});
 
 const FighterClassStateSchema = Schema.Struct({
   level: Schema.Number,
@@ -155,7 +219,7 @@ const FighterClassStateSchema = Schema.Struct({
   indomitableCharges: Schema.Number,
   indomitableMax: Schema.Number,
   heroicInspiration: Schema.Boolean,
-})
+});
 
 const BarbarianClassStateSchema = Schema.Struct({
   level: Schema.Number,
@@ -170,7 +234,7 @@ const BarbarianClassStateSchema = Schema.Struct({
   intimidatingPresenceUsed: Schema.Boolean,
   relentlessRageTimesUsed: Schema.Number,
   brutalStrikeUsedThisTurn: Schema.Boolean,
-})
+});
 
 const MonkClassStateSchema = Schema.Struct({
   level: Schema.Number,
@@ -180,7 +244,7 @@ const MonkClassStateSchema = Schema.Struct({
   stunningStrikeUsedThisTurn: Schema.Boolean,
   wholenessCharges: Schema.Number,
   wholenessMax: Schema.Number,
-})
+});
 
 const PaladinClassStateSchema = Schema.Struct({
   level: Schema.Number,
@@ -189,20 +253,20 @@ const PaladinClassStateSchema = Schema.Struct({
   paladinChannelDivinityCharges: Schema.Number,
   paladinChannelDivinityMax: Schema.Number,
   smiteFreeUsed: Schema.Boolean,
-})
+});
 
 const RogueClassStateSchema = Schema.Struct({
   level: Schema.Number,
   sneakAttackUsedThisTurn: Schema.Boolean,
   steadyAimUsedThisTurn: Schema.Boolean,
   cunningStrikeUsesThisTurn: Schema.Number,
-})
+});
 
 const ClericClassStateSchema = Schema.Struct({
   level: Schema.Number,
   clericChannelDivinityCharges: Schema.Number,
   clericChannelDivinityMax: Schema.Number,
-})
+});
 
 const DruidClassStateSchema = Schema.Struct({
   level: Schema.Number,
@@ -210,7 +274,7 @@ const DruidClassStateSchema = Schema.Struct({
   wildShapeMax: Schema.Number,
   inWildShape: Schema.Boolean,
   wildResurgenceSlotUsedThisLR: Schema.Boolean,
-})
+});
 
 const SorcererClassStateSchema = Schema.Struct({
   level: Schema.Number,
@@ -223,20 +287,20 @@ const SorcererClassStateSchema = Schema.Struct({
   knownMetamagicOptions: Schema.ReadonlySet(MetamagicOptionSchema),
   metamagicUsedThisCast: Schema.ReadonlySet(MetamagicOptionSchema),
   apotheosisUsedThisTurn: Schema.Boolean,
-})
+});
 
 const WarlockClassStateSchema = Schema.Struct({
   level: Schema.Number,
   mysticArcanumUsed: Schema.ReadonlySet(Schema.Number),
   magicalCunningUsed: Schema.Boolean,
   eldritchSmiteUsedThisTurn: Schema.Boolean,
-})
+});
 
 const WizardClassStateSchema = Schema.Struct({
   level: Schema.Number,
   arcaneRecoveryUsed: Schema.Boolean,
   overchannelUsesThisLR: Schema.Number,
-})
+});
 
 const RangerClassStateSchema = Schema.Struct({
   level: Schema.Number,
@@ -245,13 +309,13 @@ const RangerClassStateSchema = Schema.Struct({
   tirelessMax: Schema.Number,
   naturesVeilCharges: Schema.Number,
   naturesVeilMax: Schema.Number,
-})
+});
 
 const BardClassStateSchema = Schema.Struct({
   level: Schema.Number,
   bardicInspirationCharges: Schema.Number,
   bardicInspirationMax: Schema.Number,
-})
+});
 
 const ClassStatesSchema = Schema.Struct({
   fighter: Schema.optional(FighterClassStateSchema),
@@ -266,7 +330,7 @@ const ClassStatesSchema = Schema.Struct({
   wizard: Schema.optional(WizardClassStateSchema),
   ranger: Schema.optional(RangerClassStateSchema),
   bard: Schema.optional(BardClassStateSchema),
-})
+});
 
 const HitDiceRemainingSchema = Schema.Struct({
   barbarian: Schema.Number,
@@ -281,12 +345,12 @@ const HitDiceRemainingSchema = Schema.Struct({
   sorcerer: Schema.Number,
   warlock: Schema.Number,
   wizard: Schema.Number,
-})
+});
 
 const DeathSavesSchema = Schema.Struct({
   successes: Schema.Number,
   failures: Schema.Number,
-})
+});
 
 const PendingResolutionSchema = Schema.NullOr(
   Schema.Union(
@@ -302,10 +366,13 @@ const PendingResolutionSchema = Schema.NullOr(
       mode: SneakAttackPendingModeSchema,
       source: SneakAttackPendingSourceSchema,
     }),
-    Schema.Struct({ kind: Schema.Literal("peerlessSkill"), mode: PeerlessSkillPendingModeSchema }),
+    Schema.Struct({
+      kind: Schema.Literal("peerlessSkill"),
+      mode: PeerlessSkillPendingModeSchema,
+    }),
     Schema.Struct({ kind: Schema.Literal("relentlessRage") }),
   ),
-)
+);
 
 export const DndContextEncodedSchema = Schema.Struct({
   selfId: Schema.optional(Schema.String),
@@ -367,32 +434,42 @@ export const DndContextEncodedSchema = Schema.Struct({
   legendaryResistancesMax: Schema.Number,
   legendaryActionsRemaining: Schema.Number,
   legendaryResistancesRemaining: Schema.Number,
-  rechargeAvailable: Schema.Record({ key: Schema.String, value: Schema.Boolean }),
-  dailyUsesRemaining: Schema.Record({ key: Schema.String, value: Schema.Number }),
+  rechargeAvailable: Schema.Record({
+    key: Schema.String,
+    value: Schema.Boolean,
+  }),
+  dailyUsesRemaining: Schema.Record({
+    key: Schema.String,
+    value: Schema.Number,
+  }),
   dailyUsesMax: Schema.Record({ key: Schema.String, value: Schema.Number }),
   classStates: ClassStatesSchema,
-})
+});
 
-export type DndContextEncoded = Schema.Schema.Encoded<typeof DndContextEncodedSchema>
+export type DndContextEncoded = Schema.Schema.Encoded<
+  typeof DndContextEncodedSchema
+>;
 
 export function encodeDndContext(context: DndContext): DndContextEncoded {
-  return Schema.encodeSync(DndContextEncodedSchema)(canonicalizeContext(context))
+  return Schema.encodeSync(DndContextEncodedSchema)(
+    canonicalizeContext(context),
+  );
 }
 
 export interface DndSnapshotEncoded {
-  readonly value: unknown
-  readonly tags: ReadonlyArray<string>
-  readonly context: DndContextEncoded
+  readonly value: unknown;
+  readonly tags: ReadonlyArray<string>;
+  readonly context: DndContextEncoded;
 }
 
 export function encodeDndSnapshot(snapshot: {
-  readonly value: unknown
-  readonly tags: ReadonlySet<string>
-  readonly context: DndContext
+  readonly value: unknown;
+  readonly tags: ReadonlySet<string>;
+  readonly context: DndContext;
 }): DndSnapshotEncoded {
   return {
     value: snapshot.value,
     tags: [...snapshot.tags].sort(),
     context: encodeDndContext(snapshot.context),
-  }
+  };
 }

@@ -8,5 +8,5 @@ export {
   type LandType,
   naturalRecoveryMaxLevels,
   naturesWardResistance,
-  validateNaturalRecovery
-} from "#/features/class-druid.ts"
+  validateNaturalRecovery,
+} from "#/features/class-druid.ts";

@@ -1,13 +1,13 @@
-import { Brand, Schema } from "effect"
+import { Brand, Schema } from "effect";
 
-import type { ClassName } from "#/features/class-tables.ts"
+import type { ClassName } from "#/features/class-tables.ts";
 
 // --- Domain constants + derived types ---
 // Convention: define const array first, derive union type with typeof X[number].
 // See CLAUDE.md "Typed constant arrays" and "Derive union types from constant arrays".
 
-export const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const
-export type Ability = (typeof ABILITIES)[number]
+export const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const;
+export type Ability = (typeof ABILITIES)[number];
 
 export const DAMAGE_TYPES = [
   "acid",
@@ -22,9 +22,9 @@ export const DAMAGE_TYPES = [
   "psychic",
   "radiant",
   "slashing",
-  "thunder"
-] as const
-export type DamageType = (typeof DAMAGE_TYPES)[number]
+  "thunder",
+] as const;
+export type DamageType = (typeof DAMAGE_TYPES)[number];
 
 export const CONDITIONS = [
   "blinded",
@@ -40,12 +40,18 @@ export const CONDITIONS = [
   "prone",
   "restrained",
   "stunned",
-  "unconscious"
-] as const
-export type Condition = (typeof CONDITIONS)[number]
+  "unconscious",
+] as const;
+export type Condition = (typeof CONDITIONS)[number];
 
-export const INCAP_SOURCES = ["paralyzed", "petrified", "stunned", "unconscious", "direct"] as const
-export type IncapSource = (typeof INCAP_SOURCES)[number]
+export const INCAP_SOURCES = [
+  "paralyzed",
+  "petrified",
+  "stunned",
+  "unconscious",
+  "direct",
+] as const;
+export type IncapSource = (typeof INCAP_SOURCES)[number];
 
 export const ACTION_TYPES = [
   "attack",
@@ -59,33 +65,40 @@ export const ACTION_TYPES = [
   "ready",
   "search",
   "study",
-  "utilize"
-] as const
-export type ActionType = (typeof ACTION_TYPES)[number]
+  "utilize",
+] as const;
+export type ActionType = (typeof ACTION_TYPES)[number];
 
-export const COVER_TYPES = ["none", "half", "threeQuarters", "total"] as const
-export type CoverType = (typeof COVER_TYPES)[number]
+export const COVER_TYPES = ["none", "half", "threeQuarters", "total"] as const;
+export type CoverType = (typeof COVER_TYPES)[number];
 
-export const ARMOR_CATEGORIES = ["light", "medium", "heavy"] as const
-export type ArmorCategory = (typeof ARMOR_CATEGORIES)[number]
+export const ARMOR_CATEGORIES = ["light", "medium", "heavy"] as const;
+export type ArmorCategory = (typeof ARMOR_CATEGORIES)[number];
 
-export const ARMOR_WEIGHTS = ["none", "light", "medium", "heavy"] as const
-export type ArmorWeight = (typeof ARMOR_WEIGHTS)[number]
+export const ARMOR_WEIGHTS = ["none", "light", "medium", "heavy"] as const;
+export type ArmorWeight = (typeof ARMOR_WEIGHTS)[number];
 
-export const SIZES = ["tiny", "small", "medium", "large", "huge", "gargantuan"] as const
-export type Size = (typeof SIZES)[number]
+export const SIZES = [
+  "tiny",
+  "small",
+  "medium",
+  "large",
+  "huge",
+  "gargantuan",
+] as const;
+export type Size = (typeof SIZES)[number];
 
-export const SHOVE_CHOICES = ["prone", "push"] as const
-export type ShoveChoice = (typeof SHOVE_CHOICES)[number]
+export const SHOVE_CHOICES = ["prone", "push"] as const;
+export type ShoveChoice = (typeof SHOVE_CHOICES)[number];
 
-export const CREATURE_KINDS = ["PC", "Monster"] as const
-export type CreatureKind = (typeof CREATURE_KINDS)[number]
+export const CREATURE_KINDS = ["PC", "Monster"] as const;
+export type CreatureKind = (typeof CREATURE_KINDS)[number];
 
-export const UNARMORED_DEFENSES = ["none", "barbarian", "monk"] as const
-export type UnarmoredDefense = (typeof UNARMORED_DEFENSES)[number]
+export const UNARMORED_DEFENSES = ["none", "barbarian", "monk"] as const;
+export type UnarmoredDefense = (typeof UNARMORED_DEFENSES)[number];
 
-export const EXPIRY_PHASES = ["start", "end"] as const
-export type ExpiryPhase = (typeof EXPIRY_PHASES)[number]
+export const EXPIRY_PHASES = ["start", "end"] as const;
+export type ExpiryPhase = (typeof EXPIRY_PHASES)[number];
 
 export const SPELL_SCHOOLS = [
   "abjuration",
@@ -95,9 +108,9 @@ export const SPELL_SCHOOLS = [
   "evocation",
   "illusion",
   "necromancy",
-  "transmutation"
-] as const
-export type SpellSchool = (typeof SPELL_SCHOOLS)[number]
+  "transmutation",
+] as const;
+export type SpellSchool = (typeof SPELL_SCHOOLS)[number];
 
 export const CASTER_CLASSES = [
   "bard",
@@ -107,290 +120,335 @@ export const CASTER_CLASSES = [
   "ranger",
   "sorcerer",
   "warlock",
-  "wizard"
-] as const satisfies ReadonlyArray<ClassName>
-export type CasterClass = (typeof CASTER_CLASSES)[number]
+  "wizard",
+] as const satisfies ReadonlyArray<ClassName>;
+export type CasterClass = (typeof CASTER_CLASSES)[number];
 
 export interface EffectTurnHook {
-  readonly healAmount?: number
-  readonly tempHpAmount?: number
-  readonly damageAmount?: number
-  readonly damageType?: DamageType
-  readonly removeOnSaveSuccess?: boolean
-  readonly conditionsToRemove?: ReadonlyArray<Condition>
-  readonly requiresConcentrationCheck?: boolean
+  readonly healAmount?: number;
+  readonly tempHpAmount?: number;
+  readonly damageAmount?: number;
+  readonly damageType?: DamageType;
+  readonly removeOnSaveSuccess?: boolean;
+  readonly conditionsToRemove?: ReadonlyArray<Condition>;
+  readonly requiresConcentrationCheck?: boolean;
 }
 
 export interface ActiveEffect {
-  readonly spellId: SpellId
-  readonly turnsRemaining: number
-  readonly expiresAt: ExpiryPhase
-  readonly casterId: CreatureId
-  readonly expiryOwnerId?: CreatureId
-  readonly grantedConditions?: ReadonlyArray<Condition>
-  readonly startOfTurnHook?: EffectTurnHook
-  readonly endOfTurnHook?: EffectTurnHook
-  readonly grantedResistances?: ReadonlySet<DamageType>
-  readonly grantedVulnerabilities?: ReadonlySet<DamageType>
-  readonly grantedImmunities?: ReadonlySet<DamageType>
-  readonly blocksOpportunityAttacks?: boolean
-  readonly speedDeltaFeet?: number
+  readonly spellId: SpellId;
+  readonly turnsRemaining: number;
+  readonly expiresAt: ExpiryPhase;
+  readonly casterId: CreatureId;
+  readonly expiryOwnerId?: CreatureId;
+  readonly grantedConditions?: ReadonlyArray<Condition>;
+  readonly startOfTurnHook?: EffectTurnHook;
+  readonly endOfTurnHook?: EffectTurnHook;
+  readonly grantedResistances?: ReadonlySet<DamageType>;
+  readonly grantedVulnerabilities?: ReadonlySet<DamageType>;
+  readonly grantedImmunities?: ReadonlySet<DamageType>;
+  readonly blocksOpportunityAttacks?: boolean;
+  readonly speedDeltaFeet?: number;
 }
 
 export interface Armor {
-  readonly category: ArmorCategory
-  readonly baseAC: ArmorClass
-  readonly strRequirement: AbilityScore
-  readonly stealthDisadvantage: boolean
+  readonly category: ArmorCategory;
+  readonly baseAC: ArmorClass;
+  readonly strRequirement: AbilityScore;
+  readonly stealthDisadvantage: boolean;
 }
 
-export type ArmorState = { readonly type: "unarmored" } | { readonly type: "wearingArmor"; readonly armor: Armor }
+export type ArmorState =
+  | { readonly type: "unarmored" }
+  | { readonly type: "wearingArmor"; readonly armor: Armor };
 
 // --- Modifier result types ---
 
 export interface AdvState {
-  readonly hasAdvantage: boolean
-  readonly hasDisadvantage: boolean
+  readonly hasAdvantage: boolean;
+  readonly hasDisadvantage: boolean;
 }
 
 export interface DefenseMods {
-  readonly attackerAdvantage: boolean
-  readonly attackerDisadvantage: boolean
-  readonly autoCrit: boolean
+  readonly attackerAdvantage: boolean;
+  readonly attackerDisadvantage: boolean;
+  readonly autoCrit: boolean;
 }
 
 export interface D20Mods {
-  readonly hasAdvantage: boolean
-  readonly hasDisadvantage: boolean
-  readonly autoFail: boolean
+  readonly hasAdvantage: boolean;
+  readonly hasDisadvantage: boolean;
+  readonly autoFail: boolean;
 }
 
 export interface AttackResult {
-  readonly hits: boolean
-  readonly isCritical: boolean
+  readonly hits: boolean;
+  readonly isCritical: boolean;
 }
 
 export interface FullAttackMods {
-  readonly hasAdvantage: boolean
-  readonly hasDisadvantage: boolean
-  readonly autoCrit: boolean
-  readonly autoMiss: boolean
+  readonly hasAdvantage: boolean;
+  readonly hasDisadvantage: boolean;
+  readonly autoCrit: boolean;
+  readonly autoMiss: boolean;
 }
 
 export interface AttackContext {
-  readonly attackerBlinded: boolean
-  readonly attackerProne: boolean
-  readonly attackerRestrained: boolean
-  readonly attackerPoisoned: boolean
-  readonly attackerFrightened: boolean
-  readonly attackerFrightSourceInLOS: boolean
-  readonly targetBlinded: boolean
-  readonly targetParalyzed: boolean
-  readonly targetPetrified: boolean
-  readonly targetStunned: boolean
-  readonly targetUnconscious: boolean
-  readonly targetRestrained: boolean
-  readonly targetProne: boolean
-  readonly attackerWithin5ft: boolean
-  readonly targetDodging: boolean
-  readonly targetIncapacitated: boolean
-  readonly targetSpeedZero: boolean
-  readonly targetCanSeeAttacker: boolean
-  readonly attackerCanSeeTarget: boolean
-  readonly isRangedAttack: boolean
-  readonly beyondNormalRange: boolean
-  readonly hostileWithin5ft: boolean
-  readonly isHeavyWeapon: boolean
-  readonly wielderStrScore: number
-  readonly wielderDexScore: number
-  readonly attackerGrappled: boolean
-  readonly targetIsGrappler: boolean
-  readonly underwater: boolean
-  readonly attackerHasSwimSpeed: boolean
-  readonly isUnderwaterMeleeException: boolean
-  readonly isUnderwaterRangedException: boolean
-  readonly attackerReckless: boolean
-  readonly targetReckless: boolean
+  readonly attackerBlinded: boolean;
+  readonly attackerProne: boolean;
+  readonly attackerRestrained: boolean;
+  readonly attackerPoisoned: boolean;
+  readonly attackerFrightened: boolean;
+  readonly attackerFrightSourceInLOS: boolean;
+  readonly targetBlinded: boolean;
+  readonly targetParalyzed: boolean;
+  readonly targetPetrified: boolean;
+  readonly targetStunned: boolean;
+  readonly targetUnconscious: boolean;
+  readonly targetRestrained: boolean;
+  readonly targetProne: boolean;
+  readonly attackerWithin5ft: boolean;
+  readonly targetDodging: boolean;
+  readonly targetIncapacitated: boolean;
+  readonly targetSpeedZero: boolean;
+  readonly targetCanSeeAttacker: boolean;
+  readonly attackerCanSeeTarget: boolean;
+  readonly isRangedAttack: boolean;
+  readonly beyondNormalRange: boolean;
+  readonly hostileWithin5ft: boolean;
+  readonly isHeavyWeapon: boolean;
+  readonly wielderStrScore: number;
+  readonly wielderDexScore: number;
+  readonly attackerGrappled: boolean;
+  readonly targetIsGrappler: boolean;
+  readonly underwater: boolean;
+  readonly attackerHasSwimSpeed: boolean;
+  readonly isUnderwaterMeleeException: boolean;
+  readonly isUnderwaterRangedException: boolean;
+  readonly attackerReckless: boolean;
+  readonly targetReckless: boolean;
 }
 
 // --- Branded numeric types ---
 /* eslint-disable no-magic-numbers -- Schema constraints and literal types use domain-specific constants */
 
-const HP = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0), Schema.brand("HP"))
-type HP = typeof HP.Type
+const HP = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.brand("HP"),
+);
+type HP = typeof HP.Type;
 export function hp(n: number): HP {
-  return HP.make(Math.max(0, Math.floor(n)))
+  return HP.make(Math.max(0, Math.floor(n)));
 }
-export type { HP }
+export type { HP };
 
-const TempHP = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0), Schema.brand("TempHP"))
-type TempHP = typeof TempHP.Type
+const TempHP = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.brand("TempHP"),
+);
+type TempHP = typeof TempHP.Type;
 export function tempHp(n: number): TempHP {
-  return TempHP.make(Math.max(0, Math.floor(n)))
+  return TempHP.make(Math.max(0, Math.floor(n)));
 }
-export type { TempHP }
+export type { TempHP };
 
-const DamageAmount = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0), Schema.brand("DamageAmount"))
-type DamageAmount = typeof DamageAmount.Type
+const DamageAmount = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.brand("DamageAmount"),
+);
+type DamageAmount = typeof DamageAmount.Type;
 export function damageAmount(n: number): DamageAmount {
-  return DamageAmount.make(Math.max(0, Math.floor(n)))
+  return DamageAmount.make(Math.max(0, Math.floor(n)));
 }
-export type { DamageAmount }
+export type { DamageAmount };
 
-const HealAmount = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1), Schema.brand("HealAmount"))
-type HealAmount = typeof HealAmount.Type
+const HealAmount = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.brand("HealAmount"),
+);
+type HealAmount = typeof HealAmount.Type;
 export function healAmount(n: number): HealAmount {
-  return HealAmount.make(Math.max(1, Math.floor(n)))
+  return HealAmount.make(Math.max(1, Math.floor(n)));
 }
-export type { HealAmount }
+export type { HealAmount };
 
-const DeathSaveCount = Schema.Literal(0, 1, 2, 3).pipe(Schema.brand("DeathSaveCount"))
-type DeathSaveCount = typeof DeathSaveCount.Type
+const DeathSaveCount = Schema.Literal(0, 1, 2, 3).pipe(
+  Schema.brand("DeathSaveCount"),
+);
+type DeathSaveCount = typeof DeathSaveCount.Type;
 export function deathSaveCount(n: number): DeathSaveCount {
-  return DeathSaveCount.make(Math.max(0, Math.min(3, Math.floor(n))) as 0 | 1 | 2 | 3)
+  return DeathSaveCount.make(
+    Math.max(0, Math.min(3, Math.floor(n))) as 0 | 1 | 2 | 3,
+  );
 }
-export type { DeathSaveCount }
+export type { DeathSaveCount };
 
 const D20Roll = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
   Schema.lessThanOrEqualTo(20),
-  Schema.brand("D20Roll")
-)
-type D20Roll = typeof D20Roll.Type
+  Schema.brand("D20Roll"),
+);
+type D20Roll = typeof D20Roll.Type;
 export function d20Roll(n: number): D20Roll {
-  const MIN = 1
-  const MAX = 20
-  return D20Roll.make(Math.max(MIN, Math.min(MAX, Math.floor(n))))
+  const MIN = 1;
+  const MAX = 20;
+  return D20Roll.make(Math.max(MIN, Math.min(MAX, Math.floor(n))));
 }
-export type { D20Roll }
+export type { D20Roll };
 
-const ExhaustionLevel = Schema.Literal(0, 1, 2, 3, 4, 5, 6).pipe(Schema.brand("ExhaustionLevel"))
-type ExhaustionLevel = typeof ExhaustionLevel.Type
+const ExhaustionLevel = Schema.Literal(0, 1, 2, 3, 4, 5, 6).pipe(
+  Schema.brand("ExhaustionLevel"),
+);
+type ExhaustionLevel = typeof ExhaustionLevel.Type;
 export function exhaustionLevel(n: number): ExhaustionLevel {
-  const MAX = 6
-  return ExhaustionLevel.make(Math.max(0, Math.min(MAX, Math.floor(n))) as 0 | 1 | 2 | 3 | 4 | 5 | 6)
+  const MAX = 6;
+  return ExhaustionLevel.make(
+    Math.max(0, Math.min(MAX, Math.floor(n))) as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+  );
 }
-export type { ExhaustionLevel }
+export type { ExhaustionLevel };
 
 const AbilityScore = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
   Schema.lessThanOrEqualTo(30),
-  Schema.brand("AbilityScore")
-)
-type AbilityScore = typeof AbilityScore.Type
+  Schema.brand("AbilityScore"),
+);
+type AbilityScore = typeof AbilityScore.Type;
 export function abilityScore(n: number): AbilityScore {
-  const MAX = 30
-  return AbilityScore.make(Math.max(1, Math.min(MAX, Math.floor(n))))
+  const MAX = 30;
+  return AbilityScore.make(Math.max(1, Math.min(MAX, Math.floor(n))));
 }
-export type { AbilityScore }
+export type { AbilityScore };
 
-const ProficiencyBonus = Schema.Literal(2, 3, 4, 5, 6).pipe(Schema.brand("ProficiencyBonus"))
-type ProficiencyBonus = typeof ProficiencyBonus.Type
+const ProficiencyBonus = Schema.Literal(2, 3, 4, 5, 6).pipe(
+  Schema.brand("ProficiencyBonus"),
+);
+type ProficiencyBonus = typeof ProficiencyBonus.Type;
 export function proficiencyBonus(n: number): ProficiencyBonus {
-  const MIN = 2
-  const MAX = 6
-  return ProficiencyBonus.make(Math.max(MIN, Math.min(MAX, Math.floor(n))) as 2 | 3 | 4 | 5 | 6)
+  const MIN = 2;
+  const MAX = 6;
+  return ProficiencyBonus.make(
+    Math.max(MIN, Math.min(MAX, Math.floor(n))) as 2 | 3 | 4 | 5 | 6,
+  );
 }
-export type { ProficiencyBonus }
+export type { ProficiencyBonus };
 
-const MovementFeet = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0), Schema.brand("MovementFeet"))
-type MovementFeet = typeof MovementFeet.Type
+const MovementFeet = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.brand("MovementFeet"),
+);
+type MovementFeet = typeof MovementFeet.Type;
 export function movementFeet(n: number): MovementFeet {
-  return MovementFeet.make(Math.max(0, Math.floor(n)))
+  return MovementFeet.make(Math.max(0, Math.floor(n)));
 }
-export type { MovementFeet }
+export type { MovementFeet };
 
 const ClassLevel = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
   Schema.lessThanOrEqualTo(20),
-  Schema.brand("ClassLevel")
-)
-type ClassLevel = typeof ClassLevel.Type
+  Schema.brand("ClassLevel"),
+);
+type ClassLevel = typeof ClassLevel.Type;
 export function classLevel(n: number): ClassLevel {
-  const MAX = 20
-  return ClassLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))))
+  const MAX = 20;
+  return ClassLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))));
 }
-export type { ClassLevel }
+export type { ClassLevel };
 
 const CharacterLevel = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
   Schema.lessThanOrEqualTo(20),
-  Schema.brand("CharacterLevel")
-)
-type CharacterLevel = typeof CharacterLevel.Type
+  Schema.brand("CharacterLevel"),
+);
+type CharacterLevel = typeof CharacterLevel.Type;
 export function characterLevel(n: number): CharacterLevel {
-  const MAX = 20
-  return CharacterLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))))
+  const MAX = 20;
+  return CharacterLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))));
 }
-export type { CharacterLevel }
+export type { CharacterLevel };
 
-const ArmorClass = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1), Schema.brand("ArmorClass"))
-type ArmorClass = typeof ArmorClass.Type
+const ArmorClass = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.brand("ArmorClass"),
+);
+type ArmorClass = typeof ArmorClass.Type;
 export function armorClass(n: number): ArmorClass {
-  return ArmorClass.make(Math.max(1, Math.floor(n)))
+  return ArmorClass.make(Math.max(1, Math.floor(n)));
 }
-export type { ArmorClass }
+export type { ArmorClass };
 
 const DifficultyClass = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
-  Schema.brand("DifficultyClass")
-)
-type DifficultyClass = typeof DifficultyClass.Type
+  Schema.brand("DifficultyClass"),
+);
+type DifficultyClass = typeof DifficultyClass.Type;
 export function difficultyClass(n: number): DifficultyClass {
-  return DifficultyClass.make(Math.max(1, Math.floor(n)))
+  return DifficultyClass.make(Math.max(1, Math.floor(n)));
 }
-export type { DifficultyClass }
+export type { DifficultyClass };
 
-const AbilityModifier = Schema.Number.pipe(Schema.int(), Schema.brand("AbilityModifier"))
-type AbilityModifier = typeof AbilityModifier.Type
+const AbilityModifier = Schema.Number.pipe(
+  Schema.int(),
+  Schema.brand("AbilityModifier"),
+);
+type AbilityModifier = typeof AbilityModifier.Type;
 export function abilityModifier(n: number): AbilityModifier {
-  return AbilityModifier.make(Math.floor(n))
+  return AbilityModifier.make(Math.floor(n));
 }
-export type { AbilityModifier }
+export type { AbilityModifier };
 
 export const SpellSlotLevel = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
   Schema.lessThanOrEqualTo(9),
-  Schema.brand("SpellSlotLevel")
-)
-export type SpellSlotLevel = typeof SpellSlotLevel.Type
+  Schema.brand("SpellSlotLevel"),
+);
+export type SpellSlotLevel = typeof SpellSlotLevel.Type;
 export function spellSlotLevel(n: number): SpellSlotLevel {
-  const MAX = 9
-  return SpellSlotLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))))
+  const MAX = 9;
+  return SpellSlotLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))));
 }
-const ResourceCount = Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0), Schema.brand("ResourceCount"))
-type ResourceCount = typeof ResourceCount.Type
+const ResourceCount = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.brand("ResourceCount"),
+);
+type ResourceCount = typeof ResourceCount.Type;
 export function resourceCount(n: number): ResourceCount {
-  return ResourceCount.make(Math.max(0, Math.floor(n)))
+  return ResourceCount.make(Math.max(0, Math.floor(n)));
 }
-export type { ResourceCount }
+export type { ResourceCount };
 
 /* eslint-enable no-magic-numbers */
 
 // --- Branded string types (nominal — IDs) ---
 
-type CreatureId = string & Brand.Brand<"CreatureId">
-const CreatureId = Brand.nominal<CreatureId>()
-export { CreatureId }
+type CreatureId = string & Brand.Brand<"CreatureId">;
+const CreatureId = Brand.nominal<CreatureId>();
+export { CreatureId };
 
-type SpellId = string & Brand.Brand<"SpellId">
-const SpellId = Brand.nominal<SpellId>()
-export const spellId: (s: string) => SpellId = SpellId
-export type { SpellId }
+type SpellId = string & Brand.Brand<"SpellId">;
+const SpellId = Brand.nominal<SpellId>();
+export const spellId: (s: string) => SpellId = SpellId;
+export type { SpellId };
 
 // --- Branded string types (extendable — SRD defaults + open extension) ---
 // Pattern: SRDFoo | (string & Brand.Brand<"Foo"> & {})
 // SRD literal type provides autocomplete; branded string allows extension.
 
-type NonEmptyString = string & Brand.Brand<"NonEmptyString">
+type NonEmptyString = string & Brand.Brand<"NonEmptyString">;
 
-export type SpellName = SRDSpellName | (NonEmptyString & {})
+export type SpellName = SRDSpellName | (NonEmptyString & {});
 export type SRDSpellName =
   | "hold_person"
   | "bless"
@@ -413,33 +471,36 @@ export type SRDSpellName =
   | "dominate_monster"
   | "dominate_beast"
   | "confusion"
-  | "protection_from_evil_and_good"
+  | "protection_from_evil_and_good";
 
-export type CreatureName = SRDCreatureName | (NonEmptyString & {})
-export type SRDCreatureName = string & Brand.Brand<"SRDCreatureName">
+export type CreatureName = SRDCreatureName | (NonEmptyString & {});
+export type SRDCreatureName = string & Brand.Brand<"SRDCreatureName">;
 
-export type AttackName = SRDAttackName | (NonEmptyString & {})
-export type SRDAttackName = string & Brand.Brand<"SRDAttackName">
+export type AttackName = SRDAttackName | (NonEmptyString & {});
+export type SRDAttackName = string & Brand.Brand<"SRDAttackName">;
 
-export type MonsterAbilityName = SRDMonsterAbilityName | (NonEmptyString & {})
-export type SRDMonsterAbilityName = string & Brand.Brand<"SRDMonsterAbilityName">
+export type MonsterAbilityName = SRDMonsterAbilityName | (NonEmptyString & {});
+export type SRDMonsterAbilityName = string &
+  Brand.Brand<"SRDMonsterAbilityName">;
 
-export const CASTER_TYPES = ["full", "half", "third"] as const
-export type CasterType = (typeof CASTER_TYPES)[number]
+export const CASTER_TYPES = ["full", "half", "third"] as const;
+export type CasterType = (typeof CASTER_TYPES)[number];
 
-export type SpellSlots = ReadonlyArray<number>
+export type SpellSlots = ReadonlyArray<number>;
 
-export const SPELL_SLOT_LEVELS = 9
-export const EMPTY_SLOTS: SpellSlots = new Array(SPELL_SLOT_LEVELS).fill(0) as SpellSlots
+export const SPELL_SLOT_LEVELS = 9;
+export const EMPTY_SLOTS: SpellSlots = new Array(SPELL_SLOT_LEVELS).fill(
+  0,
+) as SpellSlots;
 
 // --- Record types ---
 
 export interface DeathSaves {
-  readonly successes: DeathSaveCount
-  readonly failures: DeathSaveCount
+  readonly successes: DeathSaveCount;
+  readonly failures: DeathSaveCount;
 }
 
 export const DEATH_SAVES_RESET: DeathSaves = {
   successes: deathSaveCount(0),
-  failures: deathSaveCount(0)
-}
+  failures: deathSaveCount(0),
+};

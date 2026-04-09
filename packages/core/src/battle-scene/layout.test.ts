@@ -1,67 +1,73 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest";
 
-import { FIREBALL_BATTLE } from "#/demo/fireball-battle.ts"
+import { FIREBALL_BATTLE } from "#/demo/fireball-battle.ts";
 
-import { EMPTY_CUES } from "./director.ts"
-import { computeLayout, DEFAULT_LAYOUT_CONFIG } from "./layout.ts"
-import { snapshotAt } from "./test-helpers.ts"
+import { EMPTY_CUES } from "./director.ts";
+import { computeLayout, DEFAULT_LAYOUT_CONFIG } from "./layout.ts";
+import { snapshotAt } from "./test-helpers.ts";
 
-const CFG = DEFAULT_LAYOUT_CONFIG
+const CFG = DEFAULT_LAYOUT_CONFIG;
 
 describe("computeLayout", () => {
   it("produces correct viewBox dimensions", () => {
-    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG)
-    expect(layout.viewBox.width).toBe(CFG.gridCols * CFG.cellSize)
-    expect(layout.viewBox.height).toBe(CFG.gridRows * CFG.cellSize)
-  })
+    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG);
+    expect(layout.viewBox.width).toBe(CFG.gridCols * CFG.cellSize);
+    expect(layout.viewBox.height).toBe(CFG.gridRows * CFG.cellSize);
+  });
 
   it("generates grid lines for rows and columns", () => {
-    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG)
-    expect(layout.gridLines).toHaveLength(CFG.gridRows + 1 + (CFG.gridCols + 1))
-  })
+    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG);
+    expect(layout.gridLines).toHaveLength(
+      CFG.gridRows + 1 + (CFG.gridCols + 1),
+    );
+  });
 
   it("places creatures at correct pixel positions", () => {
-    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG)
-    const a = layout.creatures.find((c) => c.id === "A")!
+    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG);
+    const a = layout.creatures.find((c) => c.id === "A")!;
     // A is at grid (3,2) → pixel center (2*60+30, 3*60+30) = (150, 210)
-    expect(a.cx).toBe(150)
-    expect(a.cy).toBe(210)
-    expect(a.teamColor).toBe("#3b82f6")
-  })
+    expect(a.cx).toBe(150);
+    expect(a.cy).toBe(210);
+    expect(a.teamColor).toBe("#3b82f6");
+  });
 
   it("unconscious creatures have reduced opacity", () => {
-    const layout = computeLayout(snapshotAt(FIREBALL_BATTLE.length), EMPTY_CUES, CFG)
-    expect(layout.creatures.find((c) => c.id === "A")!.opacity).toBe(1)
-    expect(layout.creatures.find((c) => c.id === "C")!.opacity).toBe(1)
-    expect(layout.creatures.find((c) => c.id === "B")!.opacity).toBe(0.3)
-    expect(layout.creatures.find((c) => c.id === "D")!.opacity).toBe(0.3)
-    expect(layout.creatures.find((c) => c.id === "E")!.opacity).toBe(0.3)
-    expect(layout.creatures.find((c) => c.id === "F")!.opacity).toBe(0.3)
-  })
+    const layout = computeLayout(
+      snapshotAt(FIREBALL_BATTLE.length),
+      EMPTY_CUES,
+      CFG,
+    );
+    expect(layout.creatures.find((c) => c.id === "A")!.opacity).toBe(1);
+    expect(layout.creatures.find((c) => c.id === "C")!.opacity).toBe(1);
+    expect(layout.creatures.find((c) => c.id === "B")!.opacity).toBe(0.3);
+    expect(layout.creatures.find((c) => c.id === "D")!.opacity).toBe(0.3);
+    expect(layout.creatures.find((c) => c.id === "E")!.opacity).toBe(0.3);
+    expect(layout.creatures.find((c) => c.id === "F")!.opacity).toBe(0.3);
+  });
 
   it("HP bar fill scales with hpRatio", () => {
-    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG)
-    const a = layout.creatures.find((c) => c.id === "A")!
-    expect(a.hpBar.fillWidth).toBe(a.hpBar.totalWidth)
-  })
+    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG);
+    const a = layout.creatures.find((c) => c.id === "A")!;
+    expect(a.hpBar.fillWidth).toBe(a.hpBar.totalWidth);
+  });
 
   it("computes AoE zone layout from feet to pixels", () => {
-    const layout = computeLayout(snapshotAt(8, "2"), EMPTY_CUES, CFG)
-    expect(layout.aoeZones).toHaveLength(1)
-    const zone = layout.aoeZones[0]
+    const layout = computeLayout(snapshotAt(8, "2"), EMPTY_CUES, CFG);
+    expect(layout.aoeZones).toHaveLength(1);
+    const zone = layout.aoeZones[0];
     // AoE center at grid (5,8) → pixel (8*60+30, 5*60+30) = (510, 330)
-    expect(zone.cx).toBe(510)
-    expect(zone.cy).toBe(330)
-    expect(zone.r).toBe(240)
-  })
+    expect(zone.cx).toBe(510);
+    expect(zone.cy).toBe(330);
+    expect(zone.r).toBe(240);
+  });
 
   it("slot rows reflect per-level slots", () => {
-    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG)
-    const a = layout.creatures.find((c) => c.id === "A")!
+    const layout = computeLayout(snapshotAt(2), EMPTY_CUES, CFG);
+    const a = layout.creatures.find((c) => c.id === "A")!;
     // Caster slots: [4,3,2] = 3 levels
-    expect(a.slotRows).toHaveLength(3)
-    expect(a.slotRows[0]).toMatchObject({ level: 1, filled: 4, total: 4 })
-    expect(a.slotRows[1]).toMatchObject({ level: 2, filled: 3, total: 3 })
-    expect(a.slotRows[2]).toMatchObject({ level: 3, filled: 2, total: 2 })
-  })
-})
+    expect(a.slotRows).toHaveLength(3);
+    expect(a.slotRows[0]).toMatchObject({ level: 1, filled: 4, total: 4 });
+    expect(a.slotRows[1]).toMatchObject({ level: 2, filled: 3, total: 3 });
+    expect(a.slotRows[2]).toMatchObject({ level: 3, filled: 2, total: 2 });
+  });
+});

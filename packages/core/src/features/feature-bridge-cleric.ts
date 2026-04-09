@@ -18,5 +18,5 @@ export {
   preserveLifePool,
   searUndeadDice,
   supremeHealing,
-  thaumaturgeBonus
-} from "#/features/class-cleric.ts"
+  thaumaturgeBonus,
+} from "#/features/class-cleric.ts";

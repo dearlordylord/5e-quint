@@ -11,14 +11,17 @@
  * Turn D: Fireball at blue team. No counterspellers (all spent reactions).
  *   A saves (50→36), B fails (50→22), C fails (50→22).
  */
-import type { BattleEvent, InitCreatureConfig } from "#/battle-machine-types.ts"
-import type { ScenarioMeta } from "#/battle-scene/scene-snapshot.ts"
-import type { DamageType } from "#/types.ts"
-import { CreatureId as cid, difficultyClass, spellSlotLevel } from "#/types.ts"
+import type {
+  BattleEvent,
+  InitCreatureConfig,
+} from "#/battle-machine-types.ts";
+import type { ScenarioMeta } from "#/battle-scene/scene-snapshot.ts";
+import type { DamageType } from "#/types.ts";
+import { CreatureId as cid, difficultyClass, spellSlotLevel } from "#/types.ts";
 
-const WIZARD_HP = 50
-const FIREBALL_DMG = 28
-const FIREBALL_DC = 15
+const WIZARD_HP = 50;
+const FIREBALL_DMG = 28;
+const FIREBALL_DC = 15;
 
 const WITH_CS: ReadonlySet<string> = new Set([
   "hold_person",
@@ -26,32 +29,79 @@ const WITH_CS: ReadonlySet<string> = new Set([
   "fireball",
   "counterspell",
   "guiding_bolt",
-  "shield"
-])
+  "shield",
+]);
 
-const NO_CS: ReadonlySet<string> = new Set(["hold_person", "bless", "fireball", "guiding_bolt", "shield"])
+const NO_CS: ReadonlySet<string> = new Set([
+  "hold_person",
+  "bless",
+  "fireball",
+  "guiding_bolt",
+  "shield",
+]);
 
 const CREATURES: ReadonlyArray<InitCreatureConfig> = [
-  { id: cid("A"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: NO_CS },
-  { id: cid("D"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: NO_CS },
-  { id: cid("B"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
-  { id: cid("E"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
-  { id: cid("C"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS },
-  { id: cid("F"), maxHp: WIZARD_HP, kind: "PC", caster: true, preparedSpells: WITH_CS }
-]
+  {
+    id: cid("A"),
+    maxHp: WIZARD_HP,
+    kind: "PC",
+    caster: true,
+    preparedSpells: NO_CS,
+  },
+  {
+    id: cid("D"),
+    maxHp: WIZARD_HP,
+    kind: "PC",
+    caster: true,
+    preparedSpells: NO_CS,
+  },
+  {
+    id: cid("B"),
+    maxHp: WIZARD_HP,
+    kind: "PC",
+    caster: true,
+    preparedSpells: WITH_CS,
+  },
+  {
+    id: cid("E"),
+    maxHp: WIZARD_HP,
+    kind: "PC",
+    caster: true,
+    preparedSpells: WITH_CS,
+  },
+  {
+    id: cid("C"),
+    maxHp: WIZARD_HP,
+    kind: "PC",
+    caster: true,
+    preparedSpells: WITH_CS,
+  },
+  {
+    id: cid("F"),
+    maxHp: WIZARD_HP,
+    kind: "PC",
+    caster: true,
+    preparedSpells: WITH_CS,
+  },
+];
 
-const cs = (reactorId: string | null, saveSucceeded: boolean, slotLvl = spellSlotLevel(3)): BattleEvent => ({
+const cs = (
+  reactorId: string | null,
+  saveSucceeded: boolean,
+  slotLvl = spellSlotLevel(3),
+): BattleEvent => ({
   type: "BATTLE_RESOLVE_COUNTERSPELL",
   reactorId: reactorId != null ? cid(reactorId) : null,
-  decision: reactorId != null ? { tag: "RCounterspell" as const, saveSucceeded } : null,
-  csSlotLvl: slotLvl
-})
+  decision:
+    reactorId != null ? { tag: "RCounterspell" as const, saveSucceeded } : null,
+  csSlotLvl: slotLvl,
+});
 
 const aoeTarget = (targetId: string | null, saveRoll: number): BattleEvent => ({
   type: "BATTLE_RESOLVE_AOE_TARGET",
   targetId: targetId != null ? cid(targetId) : null,
-  saveRoll
-})
+  saveRoll,
+});
 
 const startTurn: BattleEvent = {
   type: "BATTLE_START_TURN",
@@ -61,19 +111,19 @@ const startTurn: BattleEvent = {
   sotHeal: 0,
   sotSaveResult: true,
   sotConSave: true,
-  deathSaveRoll: 0
-}
+  deathSaveRoll: 0,
+};
 
 const endTurn: BattleEvent = {
   type: "BATTLE_END_TURN",
   eotSaveSucceeded: true,
   eotDmg: 0,
   eotDt: "fire" as DamageType,
-  eotConSave: true
-}
+  eotConSave: true,
+};
 
-const SHATTER_DMG = 14
-const SHATTER_DC = 15
+const SHATTER_DMG = 14;
+const SHATTER_DC = 15;
 
 const castShatter: BattleEvent = {
   type: "BATTLE_CAST_AOE",
@@ -86,8 +136,8 @@ const castShatter: BattleEvent = {
   saveAbility: "con",
   slotLvl: spellSlotLevel(2),
   spellName: "shatter",
-  ritual: false
-}
+  ritual: false,
+};
 
 const castFireball: BattleEvent = {
   type: "BATTLE_CAST_AOE",
@@ -100,19 +150,19 @@ const castFireball: BattleEvent = {
   saveAbility: "dex",
   slotLvl: spellSlotLevel(3),
   spellName: "fireball",
-  ritual: false
-}
+  ritual: false,
+};
 
 const sfPass = (reactorId: string | null): BattleEvent => ({
   type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
   reactorId: reactorId != null ? cid(reactorId) : null,
-  decision: { tag: "RPass" as const }
-})
+  decision: { tag: "RPass" as const },
+});
 
 const adPass = (reactorId: string | null): BattleEvent => ({
   type: "BATTLE_AFTER_DAMAGE_PASS",
-  reactorId: reactorId != null ? cid(reactorId) : null
-})
+  reactorId: reactorId != null ? cid(reactorId) : null,
+});
 
 export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
   // === Init ===
@@ -221,7 +271,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 5
+    deathSaveRoll: 5,
   },
   endTurn,
 
@@ -234,7 +284,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 5
+    deathSaveRoll: 5,
   },
   endTurn,
 
@@ -286,7 +336,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 5
+    deathSaveRoll: 5,
   },
   endTurn,
 
@@ -306,7 +356,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 4
+    deathSaveRoll: 4,
   },
   endTurn,
 
@@ -319,7 +369,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 12
+    deathSaveRoll: 12,
   },
   endTurn,
 
@@ -332,7 +382,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 8
+    deathSaveRoll: 8,
   },
   endTurn,
 
@@ -349,7 +399,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 14
+    deathSaveRoll: 14,
   },
   endTurn,
 
@@ -373,7 +423,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 1
+    deathSaveRoll: 1,
   },
   endTurn,
 
@@ -386,7 +436,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 15
+    deathSaveRoll: 15,
   },
   endTurn,
 
@@ -403,7 +453,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 11
+    deathSaveRoll: 11,
   },
   endTurn,
 
@@ -427,7 +477,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 3
+    deathSaveRoll: 3,
   },
   endTurn,
 
@@ -440,7 +490,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 14
+    deathSaveRoll: 14,
   },
   endTurn,
 
@@ -457,7 +507,7 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 15
+    deathSaveRoll: 15,
   },
   endTurn,
 
@@ -485,11 +535,11 @@ export const FIREBALL_BATTLE: ReadonlyArray<BattleEvent> = [
     sotHeal: 0,
     sotSaveResult: false,
     sotConSave: true,
-    deathSaveRoll: 12
+    deathSaveRoll: 12,
   },
-  endTurn
+  endTurn,
   // Final state: D=DEAD, B=DEAD, E=STABLE, F=STABLE. A(8HP) and C(22HP) alive.
-]
+];
 
 /** Metadata for game engine rendering — not consumed by the battle machine. */
 export const FIREBALL_BATTLE_META = {
@@ -500,7 +550,7 @@ export const FIREBALL_BATTLE_META = {
     C: "Bufo",
     D: "Mud Scamp",
     E: "Gray Elf",
-    F: "Ritual Wizard"
+    F: "Ritual Wizard",
   },
   gridPositions: {
     A: { row: 3, col: 2 },
@@ -508,7 +558,7 @@ export const FIREBALL_BATTLE_META = {
     C: { row: 7, col: 2 },
     D: { row: 3, col: 8 },
     E: { row: 5, col: 8 },
-    F: { row: 7, col: 8 }
+    F: { row: 7, col: 8 },
   },
   aoeTargetPoints: {
     "2": { row: 5, col: 8 },
@@ -516,7 +566,7 @@ export const FIREBALL_BATTLE_META = {
     "30": { row: 4, col: 2 },
     "49": { row: 5, col: 8 },
     "69": { row: 4, col: 2 },
-    "84": { row: 5, col: 8 }
+    "84": { row: 5, col: 8 },
   },
   spellAnnotations: {
     "2": "Fireball",
@@ -524,16 +574,32 @@ export const FIREBALL_BATTLE_META = {
     "30": "Shatter",
     "49": "Fireball",
     "69": "Shatter",
-    "84": "Fireball"
+    "84": "Fireball",
   },
   sprites: (() => {
-    const imgW = 384
-    const imgH = 448
-    const w = 64
-    const h = 64
-    const scale = 1.8
+    const imgW = 384;
+    const imgH = 448;
+    const w = 64;
+    const h = 64;
+    const scale = 1.8;
     // Idle frame: row 0, col 0 of each wizard_pack sheet
-    const sprite = (file: number) => ({ url: `/sprites/${file}.png`, x: 0, y: 0, w, h, imgW, imgH, scale })
-    return { A: sprite(5), B: sprite(1), C: sprite(3), D: sprite(4), E: sprite(2), F: sprite(6) }
-  })()
-} satisfies ScenarioMeta
+    const sprite = (file: number) => ({
+      url: `/sprites/${file}.png`,
+      x: 0,
+      y: 0,
+      w,
+      h,
+      imgW,
+      imgH,
+      scale,
+    });
+    return {
+      A: sprite(5),
+      B: sprite(1),
+      C: sprite(3),
+      D: sprite(4),
+      E: sprite(2),
+      F: sprite(6),
+    };
+  })(),
+} satisfies ScenarioMeta;

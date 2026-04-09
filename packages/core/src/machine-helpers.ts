@@ -1,20 +1,28 @@
-import { CHAMPION_SURVIVOR_LEVEL, SURVIVOR_DEFY_DEATH_THRESHOLD } from "#/features/class-fighter.ts"
-import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts"
-import { hitDiceFromClassLevels } from "#/features/class-tables.ts"
-import { computeLongRest } from "#/machine-spells.ts"
-import type { ClassStateMap, DndContext } from "#/machine-types.ts"
-import type { Condition, DamageType, IncapSource, SpellSlots } from "#/types.ts"
-import { exhaustionLevel, hp, tempHp } from "#/types.ts"
+import {
+  CHAMPION_SURVIVOR_LEVEL,
+  SURVIVOR_DEFY_DEATH_THRESHOLD,
+} from "#/features/class-fighter.ts";
+import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts";
+import { hitDiceFromClassLevels } from "#/features/class-tables.ts";
+import { computeLongRest } from "#/machine-spells.ts";
+import type { ClassStateMap, DndContext } from "#/machine-types.ts";
+import type {
+  Condition,
+  DamageType,
+  IncapSource,
+  SpellSlots,
+} from "#/types.ts";
+import { exhaustionLevel, hp, tempHp } from "#/types.ts";
 
 // --- Constants ---
 
-export const DEATH_SAVE_THRESHOLD = 3
-export const NAT_20 = 20
-export const NAT_1 = 1
-const DEATH_SAVE_SUCCESS_MIN = 10
-const DOUBLE_FAILURE_COUNT = 2
-const HALVE_DIVISOR = 2
-const VULNERABILITY_MULTIPLIER = 2
+export const DEATH_SAVE_THRESHOLD = 3;
+export const NAT_20 = 20;
+export const NAT_1 = 1;
+const DEATH_SAVE_SUCCESS_MIN = 10;
+const DOUBLE_FAILURE_COUNT = 2;
+const HALVE_DIVISOR = 2;
+const VULNERABILITY_MULTIPLIER = 2;
 
 // --- Pure functions ---
 
@@ -24,41 +32,52 @@ export function applyDamageModifiers(
   damageType: DamageType,
   immunities: ReadonlySet<DamageType>,
   resistances: ReadonlySet<DamageType>,
-  vulnerabilities: ReadonlySet<DamageType>
+  vulnerabilities: ReadonlySet<DamageType>,
 ): number {
-  if (immunities.has(damageType)) return 0
-  const afterResist = resistances.has(damageType) ? Math.floor(amount / HALVE_DIVISOR) : amount
-  return vulnerabilities.has(damageType) ? afterResist * VULNERABILITY_MULTIPLIER : afterResist
+  if (immunities.has(damageType)) return 0;
+  const afterResist = resistances.has(damageType)
+    ? Math.floor(amount / HALVE_DIVISOR)
+    : amount;
+  return vulnerabilities.has(damageType)
+    ? afterResist * VULNERABILITY_MULTIPLIER
+    : afterResist;
 }
 
 /** Effective max HP. SRD 5.2.1: exhaustion no longer halves max HP. Kept as abstraction point for future max-HP modifiers. */
 export function effectiveMaxHp(maxHp: number): number {
-  return maxHp
+  return maxHp;
 }
 
 /** Defy Death (Champion L18): advantage on death saves, rolls 18-20 count as 20. */
-export function applyDefyDeath(fighterLevel: number, roll1: number, roll2: number | undefined): number {
-  let roll = roll1
+export function applyDefyDeath(
+  fighterLevel: number,
+  roll1: number,
+  roll2: number | undefined,
+): number {
+  let roll = roll1;
   if (fighterLevel >= CHAMPION_SURVIVOR_LEVEL && roll2 != null) {
-    roll = Math.max(roll, roll2)
+    roll = Math.max(roll, roll2);
   }
-  if (fighterLevel >= CHAMPION_SURVIVOR_LEVEL && roll >= SURVIVOR_DEFY_DEATH_THRESHOLD) {
-    roll = 20
+  if (
+    fighterLevel >= CHAMPION_SURVIVOR_LEVEL &&
+    roll >= SURVIVOR_DEFY_DEATH_THRESHOLD
+  ) {
+    roll = 20;
   }
-  return roll
+  return roll;
 }
 
-export const EMPTY_CONDITION_SET: ReadonlySet<Condition> = new Set()
+export const EMPTY_CONDITION_SET: ReadonlySet<Condition> = new Set();
 
 // --- Damage computation result ---
 
 export interface TakeDamageResult {
-  readonly effAmount: number
-  readonly dmgThrough: number
-  readonly newTempHp: number
-  readonly newHp: number
-  readonly overflow: number
-  readonly effMax: number
+  readonly effAmount: number;
+  readonly dmgThrough: number;
+  readonly newTempHp: number;
+  readonly newHp: number;
+  readonly overflow: number;
+  readonly effMax: number;
 }
 
 /** Compute all damage values from context + event params. Used by guards and actions. */
@@ -70,81 +89,97 @@ export function computeTakeDamage(
   damageType: DamageType,
   immunities: ReadonlySet<DamageType>,
   resistances: ReadonlySet<DamageType>,
-  vulnerabilities: ReadonlySet<DamageType>
+  vulnerabilities: ReadonlySet<DamageType>,
 ): TakeDamageResult {
-  const effAmount = applyDamageModifiers(amount, damageType, immunities, resistances, vulnerabilities)
-  const tempAbsorb = Math.min(ctxTempHp, effAmount)
-  const dmgThrough = effAmount - tempAbsorb
-  const newTempHp = ctxTempHp - tempAbsorb
-  const newHp = Math.max(0, ctxHp - dmgThrough)
-  const overflow = dmgThrough > ctxHp ? dmgThrough - ctxHp : 0
-  const effMax = effectiveMaxHp(ctxMaxHp)
-  return { dmgThrough, effAmount, effMax, newHp, newTempHp, overflow }
+  const effAmount = applyDamageModifiers(
+    amount,
+    damageType,
+    immunities,
+    resistances,
+    vulnerabilities,
+  );
+  const tempAbsorb = Math.min(ctxTempHp, effAmount);
+  const dmgThrough = effAmount - tempAbsorb;
+  const newTempHp = ctxTempHp - tempAbsorb;
+  const newHp = Math.max(0, ctxHp - dmgThrough);
+  const overflow = dmgThrough > ctxHp ? dmgThrough - ctxHp : 0;
+  const effMax = effectiveMaxHp(ctxMaxHp);
+  return { dmgThrough, effAmount, effMax, newHp, newTempHp, overflow };
 }
 
 // --- Death save logic ---
 
 interface DeathSaveResult {
-  readonly newSuccesses: number
-  readonly newFailures: number
-  readonly isDead: boolean
-  readonly isStabilized: boolean
-  readonly regainsConsciousness: boolean
+  readonly newSuccesses: number;
+  readonly newFailures: number;
+  readonly isDead: boolean;
+  readonly isStabilized: boolean;
+  readonly regainsConsciousness: boolean;
 }
 
-export function resolveDeathSave(d20Roll: number, successes: number, failures: number): DeathSaveResult {
+export function resolveDeathSave(
+  d20Roll: number,
+  successes: number,
+  failures: number,
+): DeathSaveResult {
   if (d20Roll === NAT_20) {
-    return { isDead: false, isStabilized: false, newFailures: 0, newSuccesses: 0, regainsConsciousness: true }
+    return {
+      isDead: false,
+      isStabilized: false,
+      newFailures: 0,
+      newSuccesses: 0,
+      regainsConsciousness: true,
+    };
   }
   if (d20Roll === NAT_1) {
-    const newFail = failures + DOUBLE_FAILURE_COUNT
+    const newFail = failures + DOUBLE_FAILURE_COUNT;
     return {
       isDead: newFail >= DEATH_SAVE_THRESHOLD,
       isStabilized: false,
       newFailures: newFail,
       newSuccesses: successes,
-      regainsConsciousness: false
-    }
+      regainsConsciousness: false,
+    };
   }
   if (d20Roll >= DEATH_SAVE_SUCCESS_MIN) {
-    const newSucc = successes + 1
+    const newSucc = successes + 1;
     return {
       isDead: false,
       isStabilized: newSucc >= DEATH_SAVE_THRESHOLD,
       newFailures: failures,
       newSuccesses: newSucc,
-      regainsConsciousness: false
-    }
+      regainsConsciousness: false,
+    };
   }
-  const newFail = failures + 1
+  const newFail = failures + 1;
   return {
     isDead: newFail >= DEATH_SAVE_THRESHOLD,
     isStabilized: false,
     newFailures: newFail,
     newSuccesses: successes,
-    regainsConsciousness: false
-  }
+    regainsConsciousness: false,
+  };
 }
 
 /** Add death save failures from damage at 0 HP. Returns new failure count and whether dead. */
 export function addDeathFailures(
   currentFailures: number,
-  isCritical: boolean
+  isCritical: boolean,
 ): { readonly newFailures: number; readonly isDead: boolean } {
-  const count = isCritical ? DOUBLE_FAILURE_COUNT : 1
-  const newFailures = currentFailures + count
-  return { isDead: newFailures >= DEATH_SAVE_THRESHOLD, newFailures }
+  const count = isCritical ? DOUBLE_FAILURE_COUNT : 1;
+  const newFailures = currentFailures + count;
+  return { isDead: newFailures >= DEATH_SAVE_THRESHOLD, newFailures };
 }
 
 // --- Damage-at-zero-HP state transitions ---
 
 export interface DamageAtZeroUpdate {
-  readonly dead: boolean
-  readonly stable: boolean
-  readonly newDeathFailures: number
-  readonly unconscious?: true
-  readonly prone?: true
-  readonly addIncap?: true
+  readonly dead: boolean;
+  readonly stable: boolean;
+  readonly newDeathFailures: number;
+  readonly unconscious?: true;
+  readonly prone?: true;
+  readonly addIncap?: true;
 }
 
 /** Shared logic for damage-at-zero transitions: drop-to-zero, instant death, death failures. */
@@ -156,19 +191,28 @@ export function damageAtZeroTransition(
   effMax: number,
   deathFailures: number,
   stable: boolean,
-  dead: boolean
+  dead: boolean,
 ): DamageAtZeroUpdate {
-  if (dmgThrough <= 0) return { dead, stable, newDeathFailures: deathFailures }
+  if (dmgThrough <= 0) return { dead, stable, newDeathFailures: deathFailures };
   if (prevHp > 0 && newHp === 0) {
-    if (overflow >= effMax) return { dead: true, stable, newDeathFailures: deathFailures }
-    return { dead, stable, newDeathFailures: deathFailures, unconscious: true, prone: true, addIncap: true }
+    if (overflow >= effMax)
+      return { dead: true, stable, newDeathFailures: deathFailures };
+    return {
+      dead,
+      stable,
+      newDeathFailures: deathFailures,
+      unconscious: true,
+      prone: true,
+      addIncap: true,
+    };
   }
   if (prevHp === 0) {
-    if (dmgThrough >= effMax) return { dead: true, stable, newDeathFailures: deathFailures }
-    const df = addDeathFailures(deathFailures, false)
-    return { dead: df.isDead, stable: false, newDeathFailures: df.newFailures }
+    if (dmgThrough >= effMax)
+      return { dead: true, stable, newDeathFailures: deathFailures };
+    const df = addDeathFailures(deathFailures, false);
+    return { dead: df.isDead, stable: false, newDeathFailures: df.newFailures };
   }
-  return { dead, stable, newDeathFailures: deathFailures }
+  return { dead, stable, newDeathFailures: deathFailures };
 }
 
 // --- Condition implication logic ---
@@ -179,16 +223,16 @@ const INCAP_SOURCE_MAP: Readonly<Partial<Record<Condition, IncapSource>>> = {
   paralyzed: "paralyzed",
   petrified: "petrified",
   stunned: "stunned",
-  unconscious: "unconscious"
-}
+  unconscious: "unconscious",
+};
 
 /** Condition boolean field names in context (excludes "incapacitated" which is derived). */
-export type ConditionFlag = Exclude<Condition, "incapacitated">
+export type ConditionFlag = Exclude<Condition, "incapacitated">;
 
 /** Result of applying or removing a condition. */
 interface ConditionUpdate {
-  readonly conditionFlags: Readonly<Partial<Record<ConditionFlag, boolean>>>
-  readonly incapSources: ReadonlySet<IncapSource>
+  readonly conditionFlags: Readonly<Partial<Record<ConditionFlag, boolean>>>;
+  readonly incapSources: ReadonlySet<IncapSource>;
 }
 
 /** Compute context updates for applying a condition. Matches Quint pApplyCondition. */
@@ -196,26 +240,28 @@ export function applyConditionUpdate(
   condition: Condition,
   currentIncapSources: ReadonlySet<IncapSource>,
   isPetrified: boolean,
-  immunities: ReadonlySet<Condition> = EMPTY_CONDITION_SET
+  immunities: ReadonlySet<Condition> = EMPTY_CONDITION_SET,
 ): ConditionUpdate {
   if (immunities.has(condition)) {
-    return { conditionFlags: {}, incapSources: currentIncapSources }
+    return { conditionFlags: {}, incapSources: currentIncapSources };
   }
-  const incapSource = INCAP_SOURCE_MAP[condition]
-  const incapSources = incapSource ? addIncapSource(currentIncapSources, incapSource) : currentIncapSources
+  const incapSource = INCAP_SOURCE_MAP[condition];
+  const incapSources = incapSource
+    ? addIncapSource(currentIncapSources, incapSource)
+    : currentIncapSources;
 
   if (condition === "incapacitated") {
-    return { conditionFlags: {}, incapSources }
+    return { conditionFlags: {}, incapSources };
   }
   if (condition === "poisoned" && isPetrified) {
-    return { conditionFlags: {}, incapSources: currentIncapSources }
+    return { conditionFlags: {}, incapSources: currentIncapSources };
   }
   if (condition === "unconscious") {
-    return { conditionFlags: { prone: true, unconscious: true }, incapSources }
+    return { conditionFlags: { prone: true, unconscious: true }, incapSources };
   }
 
-  const flag = condition as ConditionFlag
-  return { conditionFlags: { [flag]: true }, incapSources }
+  const flag = condition as ConditionFlag;
+  return { conditionFlags: { [flag]: true }, incapSources };
 }
 
 /** Compute context updates for removing a condition. Matches Quint pRemoveCondition.
@@ -223,25 +269,27 @@ export function applyConditionUpdate(
 export function removeConditionUpdate(
   condition: Condition,
   currentIncapSources: ReadonlySet<IncapSource>,
-  isUnconscious: boolean = false
+  isUnconscious: boolean = false,
 ): ConditionUpdate {
   if (condition === "prone" && isUnconscious) {
-    return { conditionFlags: {}, incapSources: currentIncapSources }
+    return { conditionFlags: {}, incapSources: currentIncapSources };
   }
-  const incapSource = INCAP_SOURCE_MAP[condition]
-  const incapSources = incapSource ? removeIncapSource(currentIncapSources, incapSource) : currentIncapSources
+  const incapSource = INCAP_SOURCE_MAP[condition];
+  const incapSources = incapSource
+    ? removeIncapSource(currentIncapSources, incapSource)
+    : currentIncapSources;
 
   if (condition === "incapacitated") {
-    return { conditionFlags: {}, incapSources }
+    return { conditionFlags: {}, incapSources };
   }
 
-  const flag = condition as ConditionFlag
-  return { conditionFlags: { [flag]: false }, incapSources }
+  const flag = condition as ConditionFlag;
+  return { conditionFlags: { [flag]: false }, incapSources };
 }
 
 // --- Exhaustion helpers ---
 
-export const MAX_EXHAUSTION = 6
+export const MAX_EXHAUSTION = 6;
 
 /** Compute new exhaustion level and HP after adding exhaustion. Matches Quint pAddExhaustion. */
 export function computeAddExhaustion(
@@ -249,87 +297,106 @@ export function computeAddExhaustion(
   levels: number,
   currentHp: number,
   maxHp: number,
-  exhaustionImmune: boolean = false
+  exhaustionImmune: boolean = false,
 ): { readonly newExhaustion: number; readonly newHp: number } {
-  if (exhaustionImmune) return { newExhaustion: currentExhaustion, newHp: currentHp }
-  const newExhaustion = Math.min(currentExhaustion + levels, MAX_EXHAUSTION)
+  if (exhaustionImmune)
+    return { newExhaustion: currentExhaustion, newHp: currentHp };
+  const newExhaustion = Math.min(currentExhaustion + levels, MAX_EXHAUSTION);
   if (newExhaustion >= MAX_EXHAUSTION) {
-    return { newExhaustion, newHp: 0 }
+    return { newExhaustion, newHp: 0 };
   }
-  const effMax = effectiveMaxHp(maxHp)
-  return { newExhaustion, newHp: Math.min(currentHp, effMax) }
+  const effMax = effectiveMaxHp(maxHp);
+  return { newExhaustion, newHp: Math.min(currentHp, effMax) };
 }
 
 // --- Speed calculation ---
 
 /** SRD 5.2.1 exhaustion speed penalty: -5 × exhaustion level ft. */
-const EXHAUSTION_SPEED_PENALTY_PER_LEVEL = 5
+const EXHAUSTION_SPEED_PENALTY_PER_LEVEL = 5;
 
 /** Calculate effective speed from base speed, conditions, and external factors. Matches Quint pComputeEffectiveSpeed. */
 export function calculateEffectiveSpeed(params: {
-  readonly baseSpeed: number
-  readonly armorPenalty: number
-  readonly grappled: boolean
-  readonly restrained: boolean
-  readonly paralyzed: boolean
-  readonly petrified: boolean
-  readonly unconscious: boolean
-  readonly exhaustion: number
-  readonly isGrappling: boolean
-  readonly grappledTargetTwoSizesSmaller: boolean
-  readonly effectSpeedDelta?: number
+  readonly baseSpeed: number;
+  readonly armorPenalty: number;
+  readonly grappled: boolean;
+  readonly restrained: boolean;
+  readonly paralyzed: boolean;
+  readonly petrified: boolean;
+  readonly unconscious: boolean;
+  readonly exhaustion: number;
+  readonly isGrappling: boolean;
+  readonly grappledTargetTwoSizesSmaller: boolean;
+  readonly effectSpeedDelta?: number;
 }): number {
-  if (params.grappled || params.restrained || params.paralyzed || params.petrified || params.unconscious) return 0
-  const afterArmor = Math.max(0, params.baseSpeed - params.armorPenalty)
-  const afterExhaustion = Math.max(0, afterArmor - EXHAUSTION_SPEED_PENALTY_PER_LEVEL * params.exhaustion)
+  if (
+    params.grappled ||
+    params.restrained ||
+    params.paralyzed ||
+    params.petrified ||
+    params.unconscious
+  )
+    return 0;
+  const afterArmor = Math.max(0, params.baseSpeed - params.armorPenalty);
+  const afterExhaustion = Math.max(
+    0,
+    afterArmor - EXHAUSTION_SPEED_PENALTY_PER_LEVEL * params.exhaustion,
+  );
   const afterGrappling =
     params.isGrappling && !params.grappledTargetTwoSizesSmaller
       ? Math.floor(afterExhaustion / HALVE_DIVISOR)
-      : afterExhaustion
-  return Math.max(0, afterGrappling + (params.effectSpeedDelta ?? 0))
+      : afterExhaustion;
+  return Math.max(0, afterGrappling + (params.effectSpeedDelta ?? 0));
 }
 
 /** Movement cost multiplier. Matches Quint pMovementCost. */
 export function movementCostMultiplier(params: {
-  readonly isDifficultTerrain: boolean
-  readonly isCrawling: boolean
-  readonly isClimbingOrSwimming: boolean
-  readonly hasRelevantSpeed: boolean
+  readonly isDifficultTerrain: boolean;
+  readonly isCrawling: boolean;
+  readonly isClimbingOrSwimming: boolean;
+  readonly hasRelevantSpeed: boolean;
 }): number {
-  const terrainExtra = params.isDifficultTerrain ? 1 : 0
-  const crawlExtra = params.isCrawling ? 1 : 0
-  const climbSwimExtra = params.isClimbingOrSwimming && !params.hasRelevantSpeed ? 1 : 0
-  return 1 + terrainExtra + crawlExtra + climbSwimExtra
+  const terrainExtra = params.isDifficultTerrain ? 1 : 0;
+  const crawlExtra = params.isCrawling ? 1 : 0;
+  const climbSwimExtra =
+    params.isClimbingOrSwimming && !params.hasRelevantSpeed ? 1 : 0;
+  return 1 + terrainExtra + crawlExtra + climbSwimExtra;
 }
 
 /** Spend half effective speed (for standing from prone). Matches Quint pSpendHalfSpeed. */
 /** Spend half speed (e.g., standing from prone). See ASSUMPTIONS.md A17: cost must be > 0. */
 export function spendHalfSpeed(
   movementRemaining: number,
-  effectiveSpeed: number
+  effectiveSpeed: number,
 ): { readonly success: boolean; readonly newMovementRemaining: number } {
-  const cost = Math.floor(effectiveSpeed / HALVE_DIVISOR)
+  const cost = Math.floor(effectiveSpeed / HALVE_DIVISOR);
   if (cost <= 0 || cost > movementRemaining) {
-    return { newMovementRemaining: movementRemaining, success: false }
+    return { newMovementRemaining: movementRemaining, success: false };
   }
-  return { newMovementRemaining: movementRemaining - cost, success: true }
+  return { newMovementRemaining: movementRemaining - cost, success: true };
 }
 
 // --- Environmental helpers ---
 
-const FALL_DAMAGE_DIVISOR = 10
-const FALL_DAMAGE_MAX_DICE = 20
-const ARMOR_SPEED_PENALTY = 10
+const FALL_DAMAGE_DIVISOR = 10;
+const FALL_DAMAGE_MAX_DICE = 20;
+const ARMOR_SPEED_PENALTY = 10;
 
 /** Fall damage d6 count. Matches Quint: min(floor(height/10), 20). */
 export function fallDamageDice(heightFeet: number): number {
-  return Math.min(Math.floor(heightFeet / FALL_DAMAGE_DIVISOR), FALL_DAMAGE_MAX_DICE)
+  return Math.min(
+    Math.floor(heightFeet / FALL_DAMAGE_DIVISOR),
+    FALL_DAMAGE_MAX_DICE,
+  );
 }
 
 /** Armor speed penalty: 10ft if heavy armor STR requirement not met. Matches Quint armorSpeedPenalty. */
-export function armorSpeedPenalty(armorStrRequirement: number, strScore: number): number {
-  if (armorStrRequirement > 0 && strScore < armorStrRequirement) return ARMOR_SPEED_PENALTY
-  return 0
+export function armorSpeedPenalty(
+  armorStrRequirement: number,
+  strScore: number,
+): number {
+  if (armorStrRequirement > 0 && strScore < armorStrRequirement)
+    return ARMOR_SPEED_PENALTY;
+  return 0;
 }
 
 /** All D&D 5e damage types. Used for petrified resistance. */
@@ -346,8 +413,8 @@ export const ALL_DAMAGE_TYPES = new Set([
   "psychic",
   "radiant",
   "slashing",
-  "thunder"
-] as const satisfies ReadonlyArray<DamageType>)
+  "thunder",
+] as const satisfies ReadonlyArray<DamageType>);
 
 /** Compute fall damage as TakeDamageResult. Used by guards and actions. */
 export function computeFallResult(
@@ -357,7 +424,7 @@ export function computeFallResult(
   ctxTempHp: number,
   immunities: ReadonlySet<DamageType>,
   resistances: ReadonlySet<DamageType>,
-  vulnerabilities: ReadonlySet<DamageType>
+  vulnerabilities: ReadonlySet<DamageType>,
 ): TakeDamageResult {
   return computeTakeDamage(
     ctxHp,
@@ -367,66 +434,90 @@ export function computeFallResult(
     "bludgeoning",
     immunities,
     resistances,
-    vulnerabilities
-  )
+    vulnerabilities,
+  );
 }
 
 // --- Shared context update helpers ---
 
 export const exhUpdate = (r: { newExhaustion: number; newHp: number }) => ({
   exhaustion: exhaustionLevel(r.newExhaustion),
-  hp: hp(r.newHp)
-})
+  hp: hp(r.newHp),
+});
 
 // --- IncapSource set helpers ---
 
-export const addIncapSource = (s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> =>
-  s.has(v) ? s : new Set(s).add(v)
-export function removeIncapSource(s: ReadonlySet<IncapSource>, v: IncapSource): ReadonlySet<IncapSource> {
-  if (!s.has(v)) return s
-  const n = new Set(s)
-  n.delete(v)
-  return n
+export const addIncapSource = (
+  s: ReadonlySet<IncapSource>,
+  v: IncapSource,
+): ReadonlySet<IncapSource> => (s.has(v) ? s : new Set(s).add(v));
+export function removeIncapSource(
+  s: ReadonlySet<IncapSource>,
+  v: IncapSource,
+): ReadonlySet<IncapSource> {
+  if (!s.has(v)) return s;
+  const n = new Set(s);
+  n.delete(v);
+  return n;
 }
 
 // --- Shared class helpers ---
 
 /** Standard Extra Attack: 1 extra attack at class level 5+. Used by Barbarian, Monk, Ranger, Paladin. */
 export function standardExtraAttacks(classLevel: number): number {
-  return classLevel >= 5 ? 1 : 0
+  return classLevel >= 5 ? 1 : 0;
 }
 
 export function spendHitDieUpdate(
-  c: { hitDiceRemaining: HitDiceRemaining; hp: number; maxHp: number; conMod: number },
-  roll: { className: ClassName; dieRoll: number }
+  c: {
+    hitDiceRemaining: HitDiceRemaining;
+    hp: number;
+    maxHp: number;
+    conMod: number;
+  },
+  roll: { className: ClassName; dieRoll: number },
 ): Record<string, unknown> {
-  if (c.hitDiceRemaining[roll.className] <= 0) return {}
+  if (c.hitDiceRemaining[roll.className] <= 0) return {};
   return {
-    hitDiceRemaining: { ...c.hitDiceRemaining, [roll.className]: c.hitDiceRemaining[roll.className] - 1 },
-    hp: hp(Math.min(c.hp + Math.max(1, roll.dieRoll + c.conMod), effectiveMaxHp(c.maxHp)))
-  }
+    hitDiceRemaining: {
+      ...c.hitDiceRemaining,
+      [roll.className]: c.hitDiceRemaining[roll.className] - 1,
+    },
+    hp: hp(
+      Math.min(
+        c.hp + Math.max(1, roll.dieRoll + c.conMod),
+        effectiveMaxHp(c.maxHp),
+      ),
+    ),
+  };
 }
 
 export function longRestUpdate(c: {
-  hp: number
-  maxHp: number
-  exhaustion: number
-  slotsMax: SpellSlots
-  pactSlotsMax: number
-  classStates: Partial<ClassStateMap>
+  hp: number;
+  maxHp: number;
+  exhaustion: number;
+  slotsMax: SpellSlots;
+  pactSlotsMax: number;
+  classStates: Partial<ClassStateMap>;
 }): Record<string, unknown> {
   // SRD 5.2.1: "To start a Long Rest, you must have at least 1 Hit Point."
   // computeLongRest returns null when hp < 1 → no-op.
-  const r = computeLongRest(c.hp, c.maxHp, c.exhaustion, c.slotsMax, c.pactSlotsMax)
-  if (!r) return {}
+  const r = computeLongRest(
+    c.hp,
+    c.maxHp,
+    c.exhaustion,
+    c.slotsMax,
+    c.pactSlotsMax,
+  );
+  if (!r) return {};
   return {
     exhaustion: exhaustionLevel(r.newExhaustion),
     hitDiceRemaining: hitDiceFromClassLevels(c.classStates),
     hp: hp(r.newHp),
     pactSlotsCurrent: r.newPactSlots,
     slotsCurrent: r.newSlots,
-    tempHp: tempHp(0)
-  }
+    tempHp: tempHp(0),
+  };
 }
 
 // --- Class state helper ---
@@ -435,7 +526,12 @@ export function longRestUpdate(c: {
 export function updateClass<K extends keyof ClassStateMap>(
   c: DndContext,
   cls: K,
-  patch: Partial<ClassStateMap[K]>
+  patch: Partial<ClassStateMap[K]>,
 ): Pick<DndContext, "classStates"> {
-  return { classStates: { ...c.classStates, [cls]: { ...c.classStates[cls]!, ...patch } } }
+  return {
+    classStates: {
+      ...c.classStates,
+      [cls]: { ...c.classStates[cls]!, ...patch },
+    },
+  };
 }

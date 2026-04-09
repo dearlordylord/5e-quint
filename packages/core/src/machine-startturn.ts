@@ -1,7 +1,10 @@
-import { Option } from "effect"
+import { Option } from "effect";
 
-import { fighterExtraAttacks, survivorHeroicRally } from "#/features/class-fighter.ts"
-import { removeAe } from "#/machine-endturn.ts"
+import {
+  fighterExtraAttacks,
+  survivorHeroicRally,
+} from "#/features/class-fighter.ts";
+import { removeAe } from "#/machine-endturn.ts";
 import {
   addIncapSource,
   ALL_DAMAGE_TYPES,
@@ -14,8 +17,8 @@ import {
   removeIncapSource,
   resolveDeathSave,
   standardExtraAttacks,
-} from "#/machine-helpers.ts"
-import { monsterStartTurnUpdate } from "#/machine-monster.ts"
+} from "#/machine-helpers.ts";
+import { monsterStartTurnUpdate } from "#/machine-monster.ts";
 import {
   asStartTurn,
   type DndContext,
@@ -23,44 +26,77 @@ import {
   INITIAL_TURN_STATE,
   type TurnHookResolution,
   type TurnPhaseCtx,
-  type TurnPhaseResult
-} from "#/machine-types.ts"
-import type { ActiveEffect, DamageType, SpellId } from "#/types.ts"
-import { deathSaveCount, hp, movementFeet, tempHp } from "#/types.ts"
+  type TurnPhaseResult,
+} from "#/machine-types.ts";
+import type { ActiveEffect, DamageType, SpellId } from "#/types.ts";
+import { deathSaveCount, hp, movementFeet, tempHp } from "#/types.ts";
 
-function effectOwnedBySelf(effect: ActiveEffect, selfId: string | undefined): boolean {
-  return selfId == null || effect.expiryOwnerId == null || effect.expiryOwnerId === selfId
+function effectOwnedBySelf(
+  effect: ActiveEffect,
+  selfId: string | undefined,
+): boolean {
+  return (
+    selfId == null ||
+    effect.expiryOwnerId == null ||
+    effect.expiryOwnerId === selfId
+  );
 }
 
-function decrementDurationsForOwner(aes: ReadonlyArray<ActiveEffect>, selfId: string): ReadonlyArray<ActiveEffect> {
-  return aes.map((ae) => (effectOwnedBySelf(ae, selfId) ? { ...ae, turnsRemaining: ae.turnsRemaining - 1 } : ae))
+function decrementDurationsForOwner(
+  aes: ReadonlyArray<ActiveEffect>,
+  selfId: string,
+): ReadonlyArray<ActiveEffect> {
+  return aes.map((ae) =>
+    effectOwnedBySelf(ae, selfId)
+      ? { ...ae, turnsRemaining: ae.turnsRemaining - 1 }
+      : ae,
+  );
 }
 
-function clearExpiredStartForOwner(aes: ReadonlyArray<ActiveEffect>, selfId: string): ReadonlyArray<ActiveEffect> {
-  return aes.filter((a) => !(effectOwnedBySelf(a, selfId) && a.expiresAt === "start" && a.turnsRemaining <= 0))
+function clearExpiredStartForOwner(
+  aes: ReadonlyArray<ActiveEffect>,
+  selfId: string,
+): ReadonlyArray<ActiveEffect> {
+  return aes.filter(
+    (a) =>
+      !(
+        effectOwnedBySelf(a, selfId) &&
+        a.expiresAt === "start" &&
+        a.turnsRemaining <= 0
+      ),
+  );
 }
 
-function hasEffect(aes: ReadonlyArray<ActiveEffect>, spellId: SpellId): boolean {
-  return aes.some((a) => a.spellId === spellId && a.turnsRemaining > 0)
+function hasEffect(
+  aes: ReadonlyArray<ActiveEffect>,
+  spellId: SpellId,
+): boolean {
+  return aes.some((a) => a.spellId === spellId && a.turnsRemaining > 0);
 }
 
 function aggregateDamageModifiers(
   aes: ReadonlyArray<ActiveEffect>,
   petrified: boolean,
 ): {
-  readonly resistances: ReadonlySet<DamageType>
-  readonly vulnerabilities: ReadonlySet<DamageType>
-  readonly immunities: ReadonlySet<DamageType>
+  readonly resistances: ReadonlySet<DamageType>;
+  readonly vulnerabilities: ReadonlySet<DamageType>;
+  readonly immunities: ReadonlySet<DamageType>;
 } {
-  const resistances = new Set<DamageType>(petrified ? ALL_DAMAGE_TYPES : [])
-  const vulnerabilities = new Set<DamageType>()
-  const immunities = new Set<DamageType>()
+  const resistances = new Set<DamageType>(petrified ? ALL_DAMAGE_TYPES : []);
+  const vulnerabilities = new Set<DamageType>();
+  const immunities = new Set<DamageType>();
   for (const effect of aes) {
-    if (effect.grantedResistances) for (const damageType of effect.grantedResistances) resistances.add(damageType)
-    if (effect.grantedVulnerabilities) for (const damageType of effect.grantedVulnerabilities) vulnerabilities.add(damageType)
-    if (effect.grantedImmunities) for (const damageType of effect.grantedImmunities) immunities.add(damageType)
+    if (effect.grantedResistances)
+      for (const damageType of effect.grantedResistances)
+        resistances.add(damageType);
+    if (effect.grantedVulnerabilities)
+      for (const damageType of effect.grantedVulnerabilities)
+        vulnerabilities.add(damageType);
+    if (effect.grantedImmunities)
+      for (const damageType of effect.grantedImmunities)
+        immunities.add(damageType);
   }
-  return { resistances, vulnerabilities, immunities }
+  return { resistances, vulnerabilities, immunities };
 }
 
 function deriveStartTurnEffects(
@@ -69,91 +105,136 @@ function deriveStartTurnEffects(
   runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined,
   petrified: boolean,
 ): ReadonlyArray<{
-  readonly spellId: SpellId
-  readonly healAmount: number
-  readonly tempHpAmount: number
-  readonly saveSucceeded: boolean
-  readonly damageAmount: number
-  readonly damageType: DamageType
-  readonly conSaveSucceeded: boolean
-  readonly resistances: ReadonlySet<DamageType>
-  readonly vulnerabilities: ReadonlySet<DamageType>
-  readonly immunities: ReadonlySet<DamageType>
+  readonly spellId: SpellId;
+  readonly healAmount: number;
+  readonly tempHpAmount: number;
+  readonly saveSucceeded: boolean;
+  readonly damageAmount: number;
+  readonly damageType: DamageType;
+  readonly conSaveSucceeded: boolean;
+  readonly resistances: ReadonlySet<DamageType>;
+  readonly vulnerabilities: ReadonlySet<DamageType>;
+  readonly immunities: ReadonlySet<DamageType>;
 }> {
-  const overrides = new Map((runtimeResolutions ?? []).map((effect) => [effect.spellId, effect]))
-  const damageMods = aggregateDamageModifiers(aes, petrified)
+  const overrides = new Map(
+    (runtimeResolutions ?? []).map((effect) => [effect.spellId, effect]),
+  );
+  const damageMods = aggregateDamageModifiers(aes, petrified);
   return aes.flatMap((effect) => {
-    if (!effectOwnedBySelf(effect, selfId)) return []
-    const hook = effect.startOfTurnHook
-    if (hook == null) return []
-    const override = overrides.get(effect.spellId)
-    return [{
-      spellId: effect.spellId,
-      healAmount: hook.healAmount ?? 0,
-      tempHpAmount: hook.tempHpAmount ?? 0,
-      saveSucceeded: hook.removeOnSaveSuccess ? (override?.saveSucceeded ?? false) : false,
-      damageAmount: hook.damageAmount ?? 0,
-      damageType: hook.damageType ?? "bludgeoning",
-      conSaveSucceeded: hook.requiresConcentrationCheck ? (override?.conSaveSucceeded ?? true) : true,
-      resistances: damageMods.resistances,
-      vulnerabilities: damageMods.vulnerabilities,
-      immunities: damageMods.immunities,
-    }]
-  })
+    if (!effectOwnedBySelf(effect, selfId)) return [];
+    const hook = effect.startOfTurnHook;
+    const override = overrides.get(effect.spellId);
+    // Effects with explicit hooks use hook data; effects without hooks
+    // fall back to inline resolution data (creature-level MBT bridge).
+    if (hook == null && override == null) return [];
+    if (hook == null) {
+      // Creature-level MBT: resolution carries damage/heal data directly
+      const r = override!;
+      const hasDamage = (r.damageAmount ?? 0) > 0;
+      const hasHeal = (r.healAmount ?? 0) > 0;
+      const hasTempHp = (r.tempHpAmount ?? 0) > 0;
+      if (!hasDamage && !hasHeal && !hasTempHp && !r.removeOnSaveSuccess)
+        return [];
+      return [
+        {
+          spellId: effect.spellId,
+          healAmount: r.healAmount ?? 0,
+          tempHpAmount: r.tempHpAmount ?? 0,
+          saveSucceeded: r.removeOnSaveSuccess
+            ? (r.saveSucceeded ?? false)
+            : false,
+          damageAmount: r.damageAmount ?? 0,
+          damageType: r.damageType ?? ("bludgeoning" as DamageType),
+          conSaveSucceeded: hasDamage
+            ? (r.conSaveSucceeded ?? true)
+            : true,
+          resistances: damageMods.resistances,
+          vulnerabilities: damageMods.vulnerabilities,
+          immunities: damageMods.immunities,
+        },
+      ];
+    }
+    return [
+      {
+        spellId: effect.spellId,
+        healAmount: hook.healAmount ?? 0,
+        tempHpAmount: hook.tempHpAmount ?? 0,
+        saveSucceeded: hook.removeOnSaveSuccess
+          ? (override?.saveSucceeded ?? false)
+          : false,
+        damageAmount: hook.damageAmount ?? 0,
+        damageType: hook.damageType ?? "bludgeoning",
+        conSaveSucceeded: hook.requiresConcentrationCheck
+          ? (override?.conSaveSucceeded ?? true)
+          : true,
+        resistances: damageMods.resistances,
+        vulnerabilities: damageMods.vulnerabilities,
+        immunities: damageMods.immunities,
+      },
+    ];
+  });
 }
 
 export function computeStartTurn(
   ctx: TurnPhaseCtx,
   deathSaveRoll: number | undefined,
-  runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined
+  runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined,
 ): TurnPhaseResult {
-  const selfId = ctx.selfId ?? ""
-  const conditions: Partial<Record<ConditionFlag, boolean>> = {}
-  let incap = ctx.incapacitatedSources
-  let conc = ctx.concentrationSpellId
-  let h = ctx.hp
-  let th = ctx.tempHp
-  let dead = ctx.dead
-  let stable = ctx.stable
-  let dsSucc = ctx.deathSaves.successes as number
-  let dsFail = ctx.deathSaves.failures as number
+  const selfId = ctx.selfId ?? "";
+  const conditions: Partial<Record<ConditionFlag, boolean>> = {};
+  let incap = ctx.incapacitatedSources;
+  let conc = ctx.concentrationSpellId;
+  let h = ctx.hp;
+  let th = ctx.tempHp;
+  let dead = ctx.dead;
+  let stable = ctx.stable;
+  let dsSucc = ctx.deathSaves.successes as number;
+  let dsFail = ctx.deathSaves.failures as number;
 
   // 1. Decrement durations + clear expired AtStartOfTurn
-  let ae = clearExpiredStartForOwner(decrementDurationsForOwner(ctx.activeEffects, selfId), selfId)
+  let ae = clearExpiredStartForOwner(
+    decrementDurationsForOwner(ctx.activeEffects, selfId),
+    selfId,
+  );
 
   // 1b. Auto-break concentration if the concentrated spell's effect expired
   if (Option.isSome(conc)) {
-    const cid = conc.value
-    if (!ae.some((a) => a.spellId === cid)) conc = Option.none()
+    const cid = conc.value;
+    if (!ae.some((a) => a.spellId === cid)) conc = Option.none();
   }
 
-  const effects = deriveStartTurnEffects(selfId, ae, runtimeResolutions, ctx.petrified)
+  const effects = deriveStartTurnEffects(
+    selfId,
+    ae,
+    runtimeResolutions,
+    ctx.petrified,
+  );
 
   // 2. Death save (if applicable)
   if (h === 0 && !stable && !dead && deathSaveRoll != null) {
-    const ds = resolveDeathSave(deathSaveRoll, dsSucc, dsFail)
+    const ds = resolveDeathSave(deathSaveRoll, dsSucc, dsFail);
     if (ds.regainsConsciousness) {
-      h = 1
-      conditions.unconscious = false
-      incap = removeIncapSource(incap, "unconscious")
-      dsSucc = 0
-      dsFail = 0
-      stable = false
+      h = 1;
+      conditions.unconscious = false;
+      incap = removeIncapSource(incap, "unconscious");
+      dsSucc = 0;
+      dsFail = 0;
+      stable = false;
     } else if (ds.isDead) {
-      dead = true
-      dsFail = ds.newFailures
-      dsSucc = ds.newSuccesses
+      dead = true;
+      dsFail = ds.newFailures;
+      dsSucc = ds.newSuccesses;
     } else if (ds.isStabilized) {
-      stable = true
-      dsSucc = 0
-      dsFail = 0
+      stable = true;
+      dsSucc = 0;
+      dsFail = 0;
     } else {
-      dsSucc = ds.newSuccesses
-      dsFail = ds.newFailures
+      dsSucc = ds.newSuccesses;
+      dsFail = ds.newFailures;
     }
     if (dead && Option.isSome(conc)) {
-      ae = removeAe(ae, conc.value)
-      conc = Option.none()
+      ae = removeAe(ae, conc.value);
+      conc = Option.none();
     }
   }
 
@@ -161,34 +242,34 @@ export function computeStartTurn(
   // See ASSUMPTIONS.md A16: no early exit on death. Saves still remove effects,
   // tempHp grants still apply, but heal/damage are no-ops on dead creatures.
   for (const eff of effects) {
-    if (!hasEffect(ae, eff.spellId)) continue
+    if (!hasEffect(ae, eff.spellId)) continue;
 
     if (eff.saveSucceeded) {
-      ae = removeAe(ae, eff.spellId)
+      ae = removeAe(ae, eff.spellId);
     }
 
     // Quint pHeal: if (s.dead) s — no-op
     if (!dead && eff.healAmount > 0) {
-      const prevHp = h
-      h = Math.min(h + eff.healAmount, effectiveMaxHp(ctx.maxHp))
+      const prevHp = h;
+      h = Math.min(h + eff.healAmount, effectiveMaxHp(ctx.maxHp));
       if (prevHp === 0 && h > 0) {
-        conditions.unconscious = false
-        incap = removeIncapSource(incap, "unconscious")
-        dsSucc = 0
-        dsFail = 0
-        stable = false
+        conditions.unconscious = false;
+        incap = removeIncapSource(incap, "unconscious");
+        dsSucc = 0;
+        dsFail = 0;
+        stable = false;
       }
     }
 
     // Quint pGrantTempHp: no dead check — tempHp set unconditionally (if !keepOld)
     if (eff.tempHpAmount > 0) {
-      th = eff.tempHpAmount
+      th = eff.tempHpAmount;
     }
 
     // Quint pTakeDamage: if (s.dead) s — no-op
     if (!dead && eff.damageAmount > 0) {
-      const prevHp = h
-      const effResist = ctx.petrified ? ALL_DAMAGE_TYPES : eff.resistances
+      const prevHp = h;
+      const effResist = ctx.petrified ? ALL_DAMAGE_TYPES : eff.resistances;
       const r = computeTakeDamage(
         h,
         ctx.maxHp,
@@ -197,24 +278,36 @@ export function computeStartTurn(
         eff.damageType,
         eff.immunities,
         effResist,
-        eff.vulnerabilities
-      )
-      h = r.newHp
-      th = r.newTempHp
+        eff.vulnerabilities,
+      );
+      h = r.newHp;
+      th = r.newTempHp;
 
-      const dz = damageAtZeroTransition(prevHp, h, r.dmgThrough, r.overflow, r.effMax, dsFail, stable, dead)
-      dead = dz.dead
-      stable = dz.stable
-      dsFail = dz.newDeathFailures
+      const dz = damageAtZeroTransition(
+        prevHp,
+        h,
+        r.dmgThrough,
+        r.overflow,
+        r.effMax,
+        dsFail,
+        stable,
+        dead,
+      );
+      dead = dz.dead;
+      stable = dz.stable;
+      dsFail = dz.newDeathFailures;
       if (dz.unconscious) {
-        conditions.unconscious = true
-        conditions.prone = true
+        conditions.unconscious = true;
+        conditions.prone = true;
       }
-      if (dz.addIncap) incap = addIncapSource(incap, "unconscious")
+      if (dz.addIncap) incap = addIncapSource(incap, "unconscious");
 
-      if (Option.isSome(conc) && (dead || (h === 0 && prevHp > 0) || !eff.conSaveSucceeded)) {
-        ae = removeAe(ae, conc.value)
-        conc = Option.none()
+      if (
+        Option.isSome(conc) &&
+        (dead || (h === 0 && prevHp > 0) || !eff.conSaveSucceeded)
+      ) {
+        ae = removeAe(ae, conc.value);
+        conc = Option.none();
       }
     }
   }
@@ -228,44 +321,75 @@ export function computeStartTurn(
     tempHp: tempHp(th),
     dead,
     stable,
-    deathSaves: { successes: deathSaveCount(dsSucc), failures: deathSaveCount(dsFail) }
-  }
+    deathSaves: {
+      successes: deathSaveCount(dsSucc),
+      failures: deathSaveCount(dsFail),
+    },
+  };
 }
 
 /** Full initTurn computation: death save, start-of-turn effects, speed, rally, monster resources. */
-export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unknown> {
-  const ev = asStartTurn(e)
-  const fighterLevel = c.classStates.fighter?.level ?? 0
+export function computeInitTurn(
+  c: DndContext,
+  e: DndEvent,
+): Record<string, unknown> {
+  const ev = asStartTurn(e);
+  const fighterLevel = c.classStates.fighter?.level ?? 0;
   const effectiveDsRoll =
-    ev.deathSaveRoll != null ? applyDefyDeath(fighterLevel, ev.deathSaveRoll, ev.deathSaveRoll2) : undefined
-  const { conditions: conds, ...cr } = computeStartTurn(c, effectiveDsRoll, ev.effectResolutions)
+    ev.deathSaveRoll != null
+      ? applyDefyDeath(fighterLevel, ev.deathSaveRoll, ev.deathSaveRoll2)
+      : undefined;
+  const { conditions: conds, ...cr } = computeStartTurn(
+    c,
+    effectiveDsRoll,
+    ev.effectResolutions,
+  );
+  const isGrappling = ev.isGrappling ?? c.grappling;
   const speed = calculateEffectiveSpeed({
     baseSpeed: c.baseWalkSpeed,
     armorPenalty: 0, // armor not modeled at creature level
     exhaustion: c.exhaustion,
-    grappled: c.grappling ? false : (conds.grappled ?? c.grappled),
-    grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
-    isGrappling: c.grappling,
+    grappled: conds.grappled ?? c.grappled,
+    grappledTargetTwoSizesSmaller:
+      ev.grappledTargetTwoSizesSmaller ?? c.grappledTargetTwoSizesSmaller,
+    isGrappling,
     paralyzed: conds.paralyzed ?? c.paralyzed,
     petrified: conds.petrified ?? c.petrified,
     restrained: conds.restrained ?? c.restrained,
     unconscious: conds.unconscious ?? c.unconscious,
-    effectSpeedDelta: cr.activeEffects.reduce((total, effect) => total + (effect.speedDeltaFeet ?? 0), 0)
-  })
+    effectSpeedDelta: cr.activeEffects.reduce(
+      (total, effect) => total + (effect.speedDeltaFeet ?? 0),
+      0,
+    ),
+  });
   // Derive extra attacks: event override (monsters/multiattack) or from class levels (PCs)
-  const extraAttacks = ev.extraAttacks ?? Math.max(
-    fighterExtraAttacks(fighterLevel),
-    standardExtraAttacks(c.classStates.barbarian?.level ?? 0),
-    standardExtraAttacks(c.classStates.monk?.level ?? 0),
-    standardExtraAttacks(c.classStates.paladin?.level ?? 0),
-    standardExtraAttacks(c.classStates.ranger?.level ?? 0)
-  )
-  const rallyHeal = survivorHeroicRally(fighterLevel, cr.hp as number, c.maxHp, c.conMod)
-  const resultHp = rallyHeal > 0 ? Math.min((cr.hp as number) + rallyHeal, effectiveMaxHp(c.maxHp)) : cr.hp
+  const extraAttacks =
+    ev.extraAttacks ??
+    Math.max(
+      fighterExtraAttacks(fighterLevel),
+      standardExtraAttacks(c.classStates.barbarian?.level ?? 0),
+      standardExtraAttacks(c.classStates.monk?.level ?? 0),
+      standardExtraAttacks(c.classStates.paladin?.level ?? 0),
+      standardExtraAttacks(c.classStates.ranger?.level ?? 0),
+    );
+  const rallyHeal = survivorHeroicRally(
+    fighterLevel,
+    cr.hp as number,
+    c.maxHp,
+    c.conMod,
+  );
+  const resultHp =
+    rallyHeal > 0
+      ? Math.min((cr.hp as number) + rallyHeal, effectiveMaxHp(c.maxHp))
+      : cr.hp;
   const mrsUpdates =
     c.creatureKind === "Monster"
-      ? monsterStartTurnUpdate(c.legendaryActionsMax, c.rechargeAvailable, ev.rechargedAbilities)
-      : {}
+      ? monsterStartTurnUpdate(
+          c.legendaryActionsMax,
+          c.rechargeAvailable,
+          ev.rechargedAbilities,
+        )
+      : {};
   return {
     ...conds,
     ...cr,
@@ -274,6 +398,6 @@ export function computeInitTurn(c: DndContext, e: DndEvent): Record<string, unkn
     effectiveSpeed: movementFeet(speed),
     extraAttacksRemaining: extraAttacks,
     movementRemaining: movementFeet(speed),
-    ...mrsUpdates
-  }
+    ...mrsUpdates,
+  };
 }

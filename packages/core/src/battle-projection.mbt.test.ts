@@ -3,21 +3,27 @@
  * per-creature state against existing creatureMachine XState actors.
  *
  */
-import * as path from "node:path"
+import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect"
-import { Option } from "effect"
-import { afterAll, beforeAll, describe, it } from "vitest"
-import { createActor } from "xstate"
-import { z } from "zod"
+import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import { Option } from "effect";
+import { afterAll, beforeAll, describe, it } from "vitest";
+import { createActor } from "xstate";
+import { z } from "zod";
 
-import { effectiveInitRoll } from "#/battle-machine-actions-turn.ts"
-import { canDeflectAttacks, hasDeflectEnergy } from "#/features/class-monk-features.ts"
-import { canUncannyDodge } from "#/features/class-rogue.ts"
-import { creatureMachine, type DndEvent, type DndSnapshot } from "#/machine.ts"
-import { isIncapacitated } from "#/machine-queries.ts"
-import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
-import { resolveGrapple, targetTwoSizesSmaller } from "#/machine-combat.ts"
+import { effectiveInitRoll } from "#/battle-machine-actions-turn.ts";
+import {
+  canDeflectAttacks,
+  hasDeflectEnergy,
+} from "#/features/class-monk-features.ts";
+import { canUncannyDodge } from "#/features/class-rogue.ts";
+import { creatureMachine, type DndEvent, type DndSnapshot } from "#/machine.ts";
+import { isIncapacitated } from "#/machine-queries.ts";
+import {
+  killZombieEvaluators,
+  registerEvaluatorCleanup,
+} from "#/mbt-cleanup.ts";
+import { resolveGrapple, targetTwoSizesSmaller } from "#/machine-combat.ts";
 import {
   compareNormalizedStates,
   computeRechargedAbilities,
@@ -34,25 +40,31 @@ import {
   QuintSpellSlotState,
   QuintTurnState,
   snapshotToNormalized,
-  variantToString
-} from "#/mbt-shared.ts"
-import type { Condition, CreatureId, CreatureKind, DamageType, Size } from "#/types.ts"
+  variantToString,
+} from "#/mbt-shared.ts";
+import type {
+  Condition,
+  CreatureId,
+  CreatureKind,
+  DamageType,
+  Size,
+} from "#/types.ts";
 import {
   classLevel,
   CreatureId as mkCreatureId,
   healAmount,
   resourceCount,
   spellId as mkSpellId,
-  spellSlotLevel
-} from "#/types.ts"
+  spellSlotLevel,
+} from "#/types.ts";
 
 // ============================================================
 // Battle-level Zod schemas (B14.2)
 // ============================================================
 
 const QuintReadiedSpellParams = z.object({
-  slotLvl: z.bigint()
-})
+  slotLvl: z.bigint(),
+});
 
 const QuintCombatant = z.object({
   creature: QuintCreatureState,
@@ -63,39 +75,39 @@ const QuintCombatant = z.object({
   statBlock: z.any(),
   rogueLevel: z.bigint(),
   monkLevel: z.bigint(),
-  readiedSpellParams: QuintReadiedSpellParams
-})
+  readiedSpellParams: QuintReadiedSpellParams,
+});
 
-type ParsedCombatant = z.infer<typeof QuintCombatant>
+type ParsedCombatant = z.infer<typeof QuintCombatant>;
 
 // Parse bCreatures map: CreatureId -> Combatant
 const QuintBCreaturesMap = z.any().transform((raw: unknown) => {
-  const result = new Map<string, ParsedCombatant>()
+  const result = new Map<string, ParsedCombatant>();
   if (raw instanceof Map) {
     for (const [k, v] of raw) {
-      result.set(String(k), QuintCombatant.parse(v))
+      result.set(String(k), QuintCombatant.parse(v));
     }
   } else if (typeof raw === "object" && raw !== null) {
     for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
-      result.set(k, QuintCombatant.parse(v))
+      result.set(k, QuintCombatant.parse(v));
     }
   }
-  return result
-})
+  return result;
+});
 
 // Parse bInitiative: List[CreatureId]
 const QuintInitiativeList = z.any().transform((raw: unknown) => {
-  if (Array.isArray(raw)) return raw.map(String)
-  return [] as Array<string>
-})
+  if (Array.isArray(raw)) return raw.map(String);
+  return [] as Array<string>;
+});
 
 const QuintBattleState = z.object({
   bCreatures: QuintBCreaturesMap,
   bInitiative: QuintInitiativeList,
   bTurnIndex: z.bigint(),
   bRound: z.bigint(),
-  bPhase: z.any() // parsed but only used for phase detection
-})
+  bPhase: z.any(), // parsed but only used for phase detection
+});
 
 // ============================================================
 // Per-creature normalized state (battle subset)
@@ -183,26 +195,26 @@ const BATTLE_EXCLUDED_KEYS_ARRAY = [
   "bardLevel",
   "bardicInspirationCharges",
   "bardicInspirationMax",
-  "slotExpendedThisTurn"
-] as const satisfies ReadonlyArray<keyof NormalizedState>
+  "slotExpendedThisTurn",
+] as const satisfies ReadonlyArray<keyof NormalizedState>;
 
-type BattleExcludedKeys = (typeof BATTLE_EXCLUDED_KEYS_ARRAY)[number]
-type BattleCreatureState = Omit<NormalizedState, BattleExcludedKeys>
-const BATTLE_EXCLUDED_KEYS = new Set<string>(BATTLE_EXCLUDED_KEYS_ARRAY)
+type BattleExcludedKeys = (typeof BATTLE_EXCLUDED_KEYS_ARRAY)[number];
+type BattleCreatureState = Omit<NormalizedState, BattleExcludedKeys>;
+const BATTLE_EXCLUDED_KEYS = new Set<string>(BATTLE_EXCLUDED_KEYS_ARRAY);
 
 /** Project NormalizedState to BattleCreatureState by dropping class/turnPhase fields. */
 function projectToBattle(full: NormalizedState): BattleCreatureState {
-  const result: Record<string, unknown> = {}
+  const result: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(full)) {
-    if (!BATTLE_EXCLUDED_KEYS.has(k)) result[k] = v
+    if (!BATTLE_EXCLUDED_KEYS.has(k)) result[k] = v;
   }
-  return result as BattleCreatureState
+  return result as BattleCreatureState;
 }
 
 function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
-  const s = c.creature
-  const t = c.turn
-  const ss = c.slots
+  const s = c.creature;
+  const t = c.turn;
+  const ss = c.slots;
   return {
     hp: Number(s.hp),
     maxHp: Number(s.maxHp),
@@ -250,29 +262,33 @@ function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
     pactSlotsCurrent: Number(ss.pactSlotsCurrent),
     pactSlotLevel: Number(ss.pactSlotLevel),
     concentrationSpellId: ss.concentrationSpellId,
-    legendaryActionsRemaining: Number(c.monsterResources.legendaryActionsRemaining),
-    legendaryResistancesRemaining: Number(c.monsterResources.legendaryResistancesRemaining),
+    legendaryActionsRemaining: Number(
+      c.monsterResources.legendaryActionsRemaining,
+    ),
+    legendaryResistancesRemaining: Number(
+      c.monsterResources.legendaryResistancesRemaining,
+    ),
     rechargeAvailable: c.monsterResources.rechargeAvailable,
     dailyUsesRemaining: c.monsterResources.dailyUsesRemaining,
-    creatureKind: c.kind
-  }
+    creatureKind: c.kind,
+  };
 }
 
 // ============================================================
 // Battle projection driver
 // ============================================================
 
-type Actor = ReturnType<typeof createActor<typeof creatureMachine>>
-const EMPTY_CONDITION_IMMUNITIES = new Set<Condition>()
-const SHOCKING_GRASP_ID = "shocking_grasp"
-const RAY_OF_FROST_ID = "ray_of_frost"
+type Actor = ReturnType<typeof createActor<typeof creatureMachine>>;
+const EMPTY_CONDITION_IMMUNITIES = new Set<Condition>();
+const SHOCKING_GRASP_ID = "shocking_grasp";
+const RAY_OF_FROST_ID = "ray_of_frost";
 
 // Battle driver schema: all fields optional because battleStep = any { ... }
 // generates nondets for ALL actions — unused actions have None picks.
-const OI = ITFBigInt.optional()
-const OV = ITFVariant.optional()
-const OB = z.boolean().optional()
-const OS = z.string().optional()
+const OI = ITFBigInt.optional();
+const OV = ITFVariant.optional();
+const OB = z.boolean().optional();
+const OS = z.string().optional();
 
 const battleDriverSchema = {
   bInit: {
@@ -291,15 +307,47 @@ const battleDriverSchema = {
     surprised1: OB,
     surprised2: OB,
     surprised3: OB,
-    surprised4: OB
+    surprised4: OB,
   },
-  bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
-  bAttack: { targetId: OS, attackRoll: OI, dmg: OI, dt: OV, hitRider: OV, crit: OB, tAc: OI },
-  bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
+  bStartTurn: {
+    rechargeD6: OI,
+    sotDmg: OI,
+    sotDt: OV,
+    sotHeal: OI,
+    sotSaveResult: OB,
+    sotConSave: OB,
+  },
+  bAttack: {
+    targetId: OS,
+    attackRoll: OI,
+    dmg: OI,
+    dt: OV,
+    hitRider: OV,
+    crit: OB,
+    tAc: OI,
+  },
+  bResolveHitReaction: {
+    reactorId: OS,
+    parryBonus: OI,
+    cwReduction: OI,
+    decision: OV,
+  },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
   bAfterDamagePass: { reactorId: OS },
-  bAfterDamageSpellReaction: { reactionDmg: OI, reactionSaved: OB, reactionDt: OV, reactorId: OS },
-  bAfterDamageRetaliation: { retAtkRoll: OI, retDmg: OI, retDt: OV, retCrit: OB, retTgtAc: OI, reactorId: OS },
+  bAfterDamageSpellReaction: {
+    reactionDmg: OI,
+    reactionSaved: OB,
+    reactionDt: OV,
+    reactorId: OS,
+  },
+  bAfterDamageRetaliation: {
+    retAtkRoll: OI,
+    retDmg: OI,
+    retDt: OV,
+    retCrit: OB,
+    retTgtAc: OI,
+    reactorId: OS,
+  },
   bCastSaveSpell: {
     targetId: OS,
     saveDC: OI,
@@ -310,9 +358,13 @@ const battleDriverSchema = {
     cond: OV,
     applyCond: OB,
     slotLvl: OI,
-    ritual: OB
+    ritual: OB,
   },
-  bResolveCounterspell: { reactorId: OS, decision: ITFVariantWithValue.optional(), csSlotLvl: OI },
+  bResolveCounterspell: {
+    reactorId: OS,
+    decision: ITFVariantWithValue.optional(),
+    csSlotLvl: OI,
+  },
   bResolveSaveFailedReaction: { reactorId: OS, decision: OV },
   bCastConcentrationSpell: {
     targetId: OS,
@@ -321,22 +373,52 @@ const battleDriverSchema = {
     spellId: OS,
     cond: OV,
     applyCond: OB,
-    ritual: OB
+    ritual: OB,
   },
   bConcentrationCheck: { targetId: OS, conSaveSucceeded: OB },
-  bCastAoE: { saveDC: OI, dmgOnFail: OI, halfOnSave: OB, dt: OV, cond: OV, applyCond: OB, slotLvl: OI, ritual: OB },
+  bCastAoE: {
+    saveDC: OI,
+    dmgOnFail: OI,
+    halfOnSave: OB,
+    dt: OV,
+    cond: OV,
+    applyCond: OB,
+    slotLvl: OI,
+    ritual: OB,
+  },
   bResolveAoETarget: { targetId: OS, saveRoll: OI },
   bMove: { threatened: z.any().optional() },
   bMovementOAPass: { reactorId: OS },
-  bMovementOAAttack: { oaAtkRoll: OI, oaDmg: OI, oaDt: OV, oaCrit: OB, oaTgtAc: OI, reactorId: OS },
+  bMovementOAAttack: {
+    oaAtkRoll: OI,
+    oaDmg: OI,
+    oaDt: OV,
+    oaCrit: OB,
+    oaTgtAc: OI,
+    reactorId: OS,
+  },
   bEndTurn: { eotSaveSucceeded: OB, eotDmg: OI, eotDt: OV, eotConSave: OB },
   bLegendaryPass: {},
-  bLegendaryAttack: { monsterId: OS, laTarget: OS, laAtkRoll: OI, laDmg: OI, laDt: OV, laCrit: OB, laTgtAc: OI },
+  bLegendaryAttack: {
+    monsterId: OS,
+    laTarget: OS,
+    laAtkRoll: OI,
+    laDmg: OI,
+    laDt: OV,
+    laCrit: OB,
+    laTgtAc: OI,
+  },
   bHeal: { targetId: OS, amount: OI },
   bDash: {},
   bDisengage: {},
   bDodge: {},
-  bGrapple: { targetId: OS, attackerSize: OS, targetSize: OS, targetSaveFailed: OB, attackerHasFreeHand: OB },
+  bGrapple: {
+    targetId: OS,
+    attackerSize: OS,
+    targetSize: OS,
+    targetSaveFailed: OB,
+    attackerHasFreeHand: OB,
+  },
   bReleaseGrapple: {},
   bEscapeGrapple: { escapeSucceeded: OB },
   bActionSurge: {},
@@ -353,7 +435,7 @@ const battleDriverSchema = {
     applyCond: OB,
     saveAb: OV,
     slotLvl: OI,
-    spellName: OS
+    spellName: OS,
   },
   bReadyPass: {},
   bReadyRelease: {
@@ -363,11 +445,11 @@ const battleDriverSchema = {
     dmg: OI,
     dt: OV,
     crit: OB,
-    tgtAc: OI
+    tgtAc: OI,
   },
   bReadySpellRelease: {
     releaserId: OS,
-    saveRoll: OI
+    saveRoll: OI,
   },
   bCastBonusActionSpell: {
     targetId: OS,
@@ -378,104 +460,124 @@ const battleDriverSchema = {
     dt: OV,
     cond: OV,
     applyCond: OB,
-    slotLvl: OI
+    slotLvl: OI,
   },
-  battleStep: {} // composite — framework expands to leaf actions
-} as const
+  battleStep: {}, // composite — framework expands to leaf actions
+} as const;
 
 function createBattleProjectionDriver() {
   return defineDriver(battleDriverSchema, () => {
-    const actors = new Map<CreatureId, Actor>()
+    const actors = new Map<CreatureId, Actor>();
     const statBlocks = new Map<
       string,
       {
-        multiattackLength: number
-        rechargeMinRolls: Record<string, number>
+        multiattackLength: number;
+        rechargeMinRolls: Record<string, number>;
       }
-    >()
-    const creatureKinds = new Map<string, CreatureKind>()
-    let initiative: Array<string> = []
-    let turnIndex = 0
+    >();
+    const creatureKinds = new Map<string, CreatureKind>();
+    let initiative: Array<string> = [];
+    let turnIndex = 0;
 
     // Track who has been initialized with START_TURN
-    const turnStarted = new Set<string>()
-    const grapplingTargets = new Map<string, string>()
-    const grappledBy = new Map<string, string>()
+    const turnStarted = new Set<string>();
+    const grapplingTargets = new Map<string, string>();
+    const grappledBy = new Map<string, string>();
 
     // Pick helpers: values are already parsed by schema (number, string, boolean)
-    function pickBigInt(picks: ReadonlyMap<string, unknown>, key: string): number | undefined {
-      const v = picks.get(key)
-      return v != null ? Number(v) : undefined
+    function pickBigInt(
+      picks: ReadonlyMap<string, unknown>,
+      key: string,
+    ): number | undefined {
+      const v = picks.get(key);
+      return v != null ? Number(v) : undefined;
     }
-    function pickString(picks: ReadonlyMap<string, unknown>, key: string): string | undefined {
-      const v = picks.get(key)
-      return v != null ? String(v) : undefined
+    function pickString(
+      picks: ReadonlyMap<string, unknown>,
+      key: string,
+    ): string | undefined {
+      const v = picks.get(key);
+      return v != null ? String(v) : undefined;
     }
-    function pickBool(picks: ReadonlyMap<string, unknown>, key: string): boolean | undefined {
-      const v = picks.get(key)
-      return typeof v === "boolean" ? v : undefined
+    function pickBool(
+      picks: ReadonlyMap<string, unknown>,
+      key: string,
+    ): boolean | undefined {
+      const v = picks.get(key);
+      return typeof v === "boolean" ? v : undefined;
     }
-    function pickVariant(picks: ReadonlyMap<string, unknown>, key: string): string | undefined {
-      const v = picks.get(key)
-      return v != null ? String(v) : undefined
+    function pickVariant(
+      picks: ReadonlyMap<string, unknown>,
+      key: string,
+    ): string | undefined {
+      const v = picks.get(key);
+      return v != null ? String(v) : undefined;
     }
     function send(id: string, event: DndEvent) {
-      const actor = actors.get(mkCreatureId(id))
-      if (!actor) throw new Error(`No actor for ${id}`)
-      actor.send(event)
+      const actor = actors.get(mkCreatureId(id));
+      if (!actor) throw new Error(`No actor for ${id}`);
+      actor.send(event);
     }
 
     /** Transition creature to waitingForTurn if still acting (XState lifecycle). */
     function ensureWaitingForTurn(id: string) {
-      const snap = getSnap(id)
+      const snap = getSnap(id);
       if (snap.matches({ turnPhase: "acting" })) {
-        send(id, { type: "END_TURN" })
+        send(id, { type: "END_TURN" });
       }
     }
 
     function getSnap(id: string): DndSnapshot {
-      const actor = actors.get(mkCreatureId(id))
-      if (!actor) throw new Error(`No actor for ${id}`)
-      return actor.getSnapshot()
+      const actor = actors.get(mkCreatureId(id));
+      if (!actor) throw new Error(`No actor for ${id}`);
+      return actor.getSnapshot();
     }
 
     function activeId(): string {
-      return initiative[turnIndex]
+      return initiative[turnIndex];
     }
 
-    function setProjectedGrapplingState(id: string, grappling: boolean, grappledSmall: boolean) {
+    function setProjectedGrapplingState(
+      id: string,
+      grappling: boolean,
+      grappledSmall: boolean,
+    ) {
       send(id, {
         type: "SET_GRAPPLING_STATE",
         grappling,
-        grappledTargetTwoSizesSmaller: grappledSmall
-      })
+        grappledTargetTwoSizesSmaller: grappledSmall,
+      });
     }
 
     function clearProjectedGrapple(grapplerId: string, targetId: string) {
       if (getSnap(targetId).context.grappled) {
-        send(targetId, { type: "REMOVE_CONDITION", condition: "grappled" })
+        send(targetId, { type: "REMOVE_CONDITION", condition: "grappled" });
       }
-      setProjectedGrapplingState(grapplerId, false, false)
-      grapplingTargets.delete(grapplerId)
-      grappledBy.delete(targetId)
+      setProjectedGrapplingState(grapplerId, false, false);
+      grapplingTargets.delete(grapplerId);
+      grappledBy.delete(targetId);
     }
 
     function syncProjectedGrapples() {
       for (const [grapplerId, targetId] of grapplingTargets) {
-        const grappler = getSnap(grapplerId)
-        const target = getSnap(targetId)
+        const grappler = getSnap(grapplerId);
+        const target = getSnap(targetId);
         if (
           grappler.matches({ damageTrack: "dead" }) ||
           grappler.hasTag("incapacitated") ||
           target.matches({ damageTrack: "dead" }) ||
           !target.context.grappled
         ) {
-          clearProjectedGrapple(grapplerId, targetId)
+          clearProjectedGrapple(grapplerId, targetId);
         }
       }
     }
 
-    function applyProjectedHitRider(attackerId: string, targetId: string, hitRider: string) {
+    function applyProjectedHitRider(
+      attackerId: string,
+      targetId: string,
+      hitRider: string,
+    ) {
       if (hitRider === "AHRShockingGrasp") {
         send(targetId, {
           type: "ADD_EFFECT",
@@ -484,9 +586,9 @@ function createBattleProjectionDriver() {
           expiresAt: "start",
           casterId: mkCreatureId(attackerId),
           expiryOwnerId: mkCreatureId(targetId),
-          blocksOpportunityAttacks: true
-        })
-        return
+          blocksOpportunityAttacks: true,
+        });
+        return;
       }
       if (hitRider === "AHRRayOfFrost") {
         send(targetId, {
@@ -496,8 +598,8 @@ function createBattleProjectionDriver() {
           expiresAt: "start",
           casterId: mkCreatureId(attackerId),
           expiryOwnerId: mkCreatureId(attackerId),
-          speedDeltaFeet: -10
-        })
+          speedDeltaFeet: -10,
+        });
       }
     }
 
@@ -508,13 +610,13 @@ function createBattleProjectionDriver() {
     function handleBInit(picks: ReadonlyMap<string, unknown>) {
       // bInit creates 4 creatures with nondeterministic HP.
       // A=PC caster rogue5, B=PC caster, C=Monster, D=PC caster (CS chain depth)
-      const hp1 = pickBigInt(picks, "hp1") ?? 20
-      const hp2 = pickBigInt(picks, "hp2") ?? 20
-      const hp3 = pickBigInt(picks, "hp3") ?? 35
-      const hp4 = pickBigInt(picks, "hp4") ?? 20
+      const hp1 = pickBigInt(picks, "hp1") ?? 20;
+      const hp2 = pickBigInt(picks, "hp2") ?? 20;
+      const hp3 = pickBigInt(picks, "hp3") ?? 35;
+      const hp4 = pickBigInt(picks, "hp4") ?? 20;
 
       // Spell slot config for mkCaster: slots 1:4, 2:3, 3:2
-      const casterSlots = [4, 3, 2, 0, 0, 0, 0, 0, 0]
+      const casterSlots = [4, 3, 2, 0, 0, 0, 0, 0, 0];
 
       // A: PC caster with rogueLevel=5
       const actorA = createActor(creatureMachine, {
@@ -527,13 +629,13 @@ function createBattleProjectionDriver() {
           rogueLevel: classLevel(5),
           creatureKind: "PC",
           slotsMax: casterSlots,
-          slotsCurrent: casterSlots
-        }
-      })
-      actorA.start()
-      actorA.send({ type: "ENTER_COMBAT" })
-      actors.set(mkCreatureId("A"), actorA)
-      creatureKinds.set("A", "PC")
+          slotsCurrent: casterSlots,
+        },
+      });
+      actorA.start();
+      actorA.send({ type: "ENTER_COMBAT" });
+      actors.set(mkCreatureId("A"), actorA);
+      creatureKinds.set("A", "PC");
 
       // B: PC caster, barbarian 5 — Fast Movement baked into baseWalkSpeed (30 + 10 = 40)
       const actorB = createActor(creatureMachine, {
@@ -546,16 +648,19 @@ function createBattleProjectionDriver() {
           extraAttacksRemaining: 1,
           creatureKind: "PC",
           slotsMax: casterSlots,
-          slotsCurrent: casterSlots
-        }
-      })
-      actorB.start()
-      actorB.send({ type: "ENTER_COMBAT" })
-      actors.set(mkCreatureId("B"), actorB)
-      creatureKinds.set("B", "PC")
+          slotsCurrent: casterSlots,
+        },
+      });
+      actorB.start();
+      actorB.send({ type: "ENTER_COMBAT" });
+      actors.set(mkCreatureId("B"), actorB);
+      creatureKinds.set("B", "PC");
 
       // C: Monster with TEST_MONSTER_STAT_BLOCK (3 LA, 3 LR, breath_weapon recharge 5)
-      statBlocks.set("C", { multiattackLength: 0, rechargeMinRolls: { breath_weapon: 5 } })
+      statBlocks.set("C", {
+        multiattackLength: 0,
+        rechargeMinRolls: { breath_weapon: 5 },
+      });
       const actorC = createActor(creatureMachine, {
         input: {
           maxHp: hp3,
@@ -567,13 +672,13 @@ function createBattleProjectionDriver() {
           legendaryActionsRemaining: resourceCount(3),
           legendaryResistancesRemaining: resourceCount(3),
           rechargeAvailable: {},
-          dailyUsesRemaining: {}
-        }
-      })
-      actorC.start()
-      actorC.send({ type: "ENTER_COMBAT" })
-      actors.set(mkCreatureId("C"), actorC)
-      creatureKinds.set("C", "Monster")
+          dailyUsesRemaining: {},
+        },
+      });
+      actorC.start();
+      actorC.send({ type: "ENTER_COMBAT" });
+      actors.set(mkCreatureId("C"), actorC);
+      creatureKinds.set("C", "Monster");
 
       // D: PC caster, Champion fighter 5 (Action Surge, crit range handled only in battle layer)
       const actorD = createActor(creatureMachine, {
@@ -586,13 +691,13 @@ function createBattleProjectionDriver() {
           fighterLevel: classLevel(5),
           creatureKind: "PC",
           slotsMax: casterSlots,
-          slotsCurrent: casterSlots
-        }
-      })
-      actorD.start()
-      actorD.send({ type: "ENTER_COMBAT" })
-      actors.set(mkCreatureId("D"), actorD)
-      creatureKinds.set("D", "PC")
+          slotsCurrent: casterSlots,
+        },
+      });
+      actorD.start();
+      actorD.send({ type: "ENTER_COMBAT" });
+      actors.set(mkCreatureId("D"), actorD);
+      creatureKinds.set("D", "PC");
 
       const initEntries = [
         {
@@ -600,41 +705,41 @@ function createBattleProjectionDriver() {
           score: effectiveInitRoll(
             pickBigInt(picks, "initRoll1") ?? 10,
             pickBigInt(picks, "initRoll1b") ?? 10,
-            pickBool(picks, "surprised1") ?? false
-          )
+            pickBool(picks, "surprised1") ?? false,
+          ),
         },
         {
           id: "B",
           score: effectiveInitRoll(
             pickBigInt(picks, "initRoll2") ?? 10,
             pickBigInt(picks, "initRoll2b") ?? 10,
-            pickBool(picks, "surprised2") ?? false
-          )
+            pickBool(picks, "surprised2") ?? false,
+          ),
         },
         {
           id: "C",
           score: effectiveInitRoll(
             pickBigInt(picks, "initRoll3") ?? 10,
             pickBigInt(picks, "initRoll3b") ?? 10,
-            pickBool(picks, "surprised3") ?? false
-          )
+            pickBool(picks, "surprised3") ?? false,
+          ),
         },
         {
           id: "D",
           score: effectiveInitRoll(
             pickBigInt(picks, "initRoll4") ?? 10,
             pickBigInt(picks, "initRoll4b") ?? 10,
-            pickBool(picks, "surprised4") ?? false
-          )
-        }
-      ]
+            pickBool(picks, "surprised4") ?? false,
+          ),
+        },
+      ];
       // Stable sort descending (matches Quint's selection sort: ties preserve input order)
-      initEntries.sort((a, b) => b.score - a.score)
-      initiative = initEntries.map((e) => e.id)
-      turnIndex = 0
-      turnStarted.clear()
-      grapplingTargets.clear()
-      grappledBy.clear()
+      initEntries.sort((a, b) => b.score - a.score);
+      initiative = initEntries.map((e) => e.id);
+      turnIndex = 0;
+      turnStarted.clear();
+      grapplingTargets.clear();
+      grappledBy.clear();
 
       // Battle creatures start with FRESH_TURN (actionsRemaining=1) and can act
       // immediately. Send START_TURN to put all actors in "acting" state so
@@ -643,27 +748,28 @@ function createBattleProjectionDriver() {
         actor.send({
           type: "START_TURN",
           extraAttacks: 1, // Quint FRESH_TURN.extraAttacksRemaining is 1
-        })
-        turnStarted.add(id)
+        });
+        turnStarted.add(id);
       }
     }
 
     function handleBStartTurn(picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
-      const isMonster = creatureKinds.get(id) === "Monster"
-      const sb = statBlocks.get(id)
+      const id = activeId();
+      const isMonster = creatureKinds.get(id) === "Monster";
+      const sb = statBlocks.get(id);
 
-      ensureWaitingForTurn(id)
-      const ctx = getSnap(id).context
+      ensureWaitingForTurn(id);
+      const ctx = getSnap(id).context;
 
-      const rechargeD6 = pickBigInt(picks, "rechargeD6") ?? 3
-      const sotDmg = pickBigInt(picks, "sotDmg") ?? 0
-      const sotHeal = pickBigInt(picks, "sotHeal") ?? 0
-      const sotSaveResult = pickBool(picks, "sotSaveResult") ?? false
-      const sotConSave = pickBool(picks, "sotConSave") ?? false
+      const rechargeD6 = pickBigInt(picks, "rechargeD6") ?? 3;
+      const sotDmg = pickBigInt(picks, "sotDmg") ?? 0;
+      const sotHeal = pickBigInt(picks, "sotHeal") ?? 0;
+      const sotSaveResult = pickBool(picks, "sotSaveResult") ?? false;
+      const sotConSave = pickBool(picks, "sotConSave") ?? false;
 
       // Check if creature has active effects (for start-of-turn processing)
-      const hasEffects = ctx.activeEffects.length > 0 && (sotDmg > 0 || sotHeal > 0)
+      const hasEffects =
+        ctx.activeEffects.length > 0 && (sotDmg > 0 || sotHeal > 0);
 
       const effectResolutions = hasEffects
         ? [
@@ -671,9 +777,9 @@ function createBattleProjectionDriver() {
               spellId: mkSpellId(""),
               conSaveSucceeded: sotConSave,
               saveSucceeded: sotSaveResult,
-            }
+            },
           ]
-        : []
+        : [];
 
       send(id, {
         type: "START_TURN",
@@ -681,87 +787,110 @@ function createBattleProjectionDriver() {
         effectResolutions,
         rechargedAbilities:
           isMonster && sb
-            ? computeRechargedAbilities(rechargeD6, sb.rechargeMinRolls, ctx.rechargeAvailable)
-            : undefined
-      })
-      turnStarted.add(id)
-      syncProjectedGrapples()
+            ? computeRechargedAbilities(
+                rechargeD6,
+                sb.rechargeMinRolls,
+                ctx.rechargeAvailable,
+              )
+            : undefined,
+      });
+      turnStarted.add(id);
+      syncProjectedGrapples();
     }
 
     function handleBAttack(picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
-      const targetId = pickString(picks, "targetId") ?? ""
-      const attackRoll = pickBigInt(picks, "attackRoll") ?? 10
-      const dmg = pickBigInt(picks, "dmg") ?? 5
-      const dt = pickVariant(picks, "dt") ?? "Slashing"
-      const hitRider = pickVariant(picks, "hitRider") ?? "NoAttackHitRider"
-      const crit = pickBool(picks, "crit") ?? false
-      const tAc = pickBigInt(picks, "tAc") ?? 15
-      const targetCanSeeAttacker = pickBool(picks, "targetCanSeeAttacker") ?? true
+      const id = activeId();
+      const targetId = pickString(picks, "targetId") ?? "";
+      const attackRoll = pickBigInt(picks, "attackRoll") ?? 10;
+      const dmg = pickBigInt(picks, "dmg") ?? 5;
+      const dt = pickVariant(picks, "dt") ?? "Slashing";
+      const hitRider = pickVariant(picks, "hitRider") ?? "NoAttackHitRider";
+      const crit = pickBool(picks, "crit") ?? false;
+      const tAc = pickBigInt(picks, "tAc") ?? 15;
+      const targetCanSeeAttacker =
+        pickBool(picks, "targetCanSeeAttacker") ?? true;
 
-      const ctx = getSnap(id).context
+      const ctx = getSnap(id).context;
       if (ctx.attackActionUsed && ctx.extraAttacksRemaining > 0) {
-        send(id, { type: "USE_EXTRA_ATTACK" })
+        send(id, { type: "USE_EXTRA_ATTACK" });
       } else {
-        send(id, { type: "USE_ACTION", actionType: "attack" })
+        send(id, { type: "USE_ACTION", actionType: "attack" });
       }
 
-      resolveAttackHit(id, targetId, attackRoll, tAc, dmg, dt, hitRider, crit, targetCanSeeAttacker)
+      resolveAttackHit(
+        id,
+        targetId,
+        attackRoll,
+        tAc,
+        dmg,
+        dt,
+        hitRider,
+        crit,
+        targetCanSeeAttacker,
+      );
     }
 
     /** Pending attack state for deferred damage */
     let pendingAttack: {
-      attacker: string
-      target: string
-      damage: number
-      damageType: DamageType
-      isCritical: boolean
-      attackRoll: number
-      targetAc: number
-      hitRider: string
-      targetCanSeeAttackerAtHit: boolean
-      isWeaponAttack: boolean
-    } | null = null
+      attacker: string;
+      target: string;
+      damage: number;
+      damageType: DamageType;
+      isCritical: boolean;
+      attackRoll: number;
+      targetAc: number;
+      hitRider: string;
+      targetCanSeeAttackerAtHit: boolean;
+      isWeaponAttack: boolean;
+    } | null = null;
 
     function handleBResolveHitReaction(picks: ReadonlyMap<string, unknown>) {
-      if (!pendingAttack) return // no-op when not in attack reaction phase
+      if (!pendingAttack) return; // no-op when not in attack reaction phase
 
-      const reactorId = pickString(picks, "reactorId")
-      const parryBonus = pickBigInt(picks, "parryBonus") ?? 3
-      const cwReduction = pickBigInt(picks, "cwReduction") ?? 6
-      const decisionRaw = picks.get("decision")
-      const decision = variantToString(decisionRaw)
+      const reactorId = pickString(picks, "reactorId");
+      const parryBonus = pickBigInt(picks, "parryBonus") ?? 3;
+      const cwReduction = pickBigInt(picks, "cwReduction") ?? 6;
+      const decisionRaw = picks.get("decision");
+      const decision = variantToString(decisionRaw);
 
       if (!reactorId) {
         // remaining == 0: all reactors offered, advance from hit phase
         // Check if the attack still hits after AC modifications
-        const stillHit = pendingAttack.attackRoll >= pendingAttack.targetAc || pendingAttack.attackRoll === 20
+        const stillHit =
+          pendingAttack.attackRoll >= pendingAttack.targetAc ||
+          pendingAttack.attackRoll === 20;
         if (stillHit) {
-          applyProjectedHitRider(pendingAttack.attacker, pendingAttack.target, pendingAttack.hitRider)
+          applyProjectedHitRider(
+            pendingAttack.attacker,
+            pendingAttack.target,
+            pendingAttack.hitRider,
+          );
           // Check if target has damage-phase reaction available
-          const targetSnap = getSnap(pendingAttack.target)
-          const targetCtx = targetSnap.context
+          const targetSnap = getSnap(pendingAttack.target);
+          const targetCtx = targetSnap.context;
           const legalUncannyDodge = canUncannyDodge({
             rogueLevel: targetCtx.classStates.rogue?.level ?? 0,
             reactionAvailable: targetCtx.reactionAvailable,
             attackerVisible: pendingAttack.targetCanSeeAttackerAtHit,
-            isIncapacitated: targetSnap.matches({ damageTrack: "dead" }) || isIncapacitated(targetCtx)
-          })
+            isIncapacitated:
+              targetSnap.matches({ damageTrack: "dead" }) ||
+              isIncapacitated(targetCtx),
+          });
           const legalDamageReduction =
             canDeflectAttacks(
               targetCtx.classStates.monk?.level ?? 0,
               targetCtx.reactionAvailable,
               pendingAttack.isWeaponAttack,
-              hasDeflectEnergy(targetCtx.classStates.monk?.level ?? 0)
+              hasDeflectEnergy(targetCtx.classStates.monk?.level ?? 0),
             ) &&
             (pendingAttack.damageType === "bludgeoning" ||
               pendingAttack.damageType === "piercing" ||
               pendingAttack.damageType === "slashing" ||
-              hasDeflectEnergy(targetCtx.classStates.monk?.level ?? 0))
+              hasDeflectEnergy(targetCtx.classStates.monk?.level ?? 0));
 
           if (!legalUncannyDodge && !legalDamageReduction) {
             // No damage reactions — apply damage immediately
-            const atk = pendingAttack
+            const atk = pendingAttack;
             send(pendingAttack.target, {
               type: "TAKE_DAMAGE",
               amount: pendingAttack.damage,
@@ -769,219 +898,242 @@ function createBattleProjectionDriver() {
               resistances: new Set<DamageType>(),
               vulnerabilities: new Set<DamageType>(),
               immunities: new Set<DamageType>(),
-              isCritical: pendingAttack.isCritical
-            })
-            pendingAfterDamage = { damageSource: atk.attacker, damagedCreature: atk.target }
-            pendingAttack = null
+              isCritical: pendingAttack.isCritical,
+            });
+            pendingAfterDamage = {
+              damageSource: atk.attacker,
+              damagedCreature: atk.target,
+            };
+            pendingAttack = null;
           }
           // If target has reaction, leave pendingAttack for bResolveDmgReaction
         } else {
           // Miss — no damage
-          pendingAttack = null
+          pendingAttack = null;
         }
-        return
+        return;
       }
 
       // A reactor is deciding
       if (decision === "RShield") {
-        send(reactorId, { type: "USE_REACTION" })
-        pendingAttack.targetAc += 5
+        send(reactorId, { type: "USE_REACTION" });
+        pendingAttack.targetAc += 5;
       } else if (decision.startsWith("RParry")) {
-        send(reactorId, { type: "USE_REACTION" })
-        pendingAttack.targetAc += parryBonus
+        send(reactorId, { type: "USE_REACTION" });
+        pendingAttack.targetAc += parryBonus;
       } else if (decision.startsWith("RCuttingWords")) {
-        send(reactorId, { type: "USE_REACTION" })
-        pendingAttack.attackRoll -= cwReduction
+        send(reactorId, { type: "USE_REACTION" });
+        pendingAttack.attackRoll -= cwReduction;
       }
       // RPass: no reaction spent, no changes
     }
 
     function handleBResolveDmgReaction(picks: ReadonlyMap<string, unknown>) {
-      if (!pendingAttack) return
+      if (!pendingAttack) return;
 
-      const reactorId = pickString(picks, "reactorId")
-      const reductionAmt = pickBigInt(picks, "reductionAmt") ?? 5
-      const decisionRaw = picks.get("decision")
-      const decision = variantToString(decisionRaw)
+      const reactorId = pickString(picks, "reactorId");
+      const reductionAmt = pickBigInt(picks, "reductionAmt") ?? 5;
+      const decisionRaw = picks.get("decision");
+      const decision = variantToString(decisionRaw);
 
       if (!reactorId) {
         // remaining == 0: all reactors offered, deal damage
-        const atk = pendingAttack
+        const atk = pendingAttack;
         send(pendingAttack.target, {
           type: "TAKE_DAMAGE",
           amount: pendingAttack.damage,
           damageType: pendingAttack.damageType,
           ...EMPTY_DAMAGE_MODS,
-          isCritical: pendingAttack.isCritical
-        })
-        pendingAfterDamage = { damageSource: atk.attacker, damagedCreature: atk.target }
-        pendingAttack = null
-        syncProjectedGrapples()
-        return
+          isCritical: pendingAttack.isCritical,
+        });
+        pendingAfterDamage = {
+          damageSource: atk.attacker,
+          damagedCreature: atk.target,
+        };
+        pendingAttack = null;
+        syncProjectedGrapples();
+        return;
       }
 
       // Damage reduction reactions
       if (decision === "RUncannyDodge") {
-        send(reactorId, { type: "USE_REACTION" })
-        pendingAttack.damage = Math.floor(pendingAttack.damage / 2)
+        send(reactorId, { type: "USE_REACTION" });
+        pendingAttack.damage = Math.floor(pendingAttack.damage / 2);
       } else if (decision.startsWith("RDeflectAttacks")) {
-        send(reactorId, { type: "USE_REACTION" })
-        pendingAttack.damage = Math.max(0, pendingAttack.damage - reductionAmt)
+        send(reactorId, { type: "USE_REACTION" });
+        pendingAttack.damage = Math.max(0, pendingAttack.damage - reductionAmt);
       }
       // RPass: no change
     }
 
     function handleBAfterDamagePass(picks: ReadonlyMap<string, unknown>) {
-      const reactorId = pickString(picks, "reactorId")
+      const reactorId = pickString(picks, "reactorId");
       if (!reactorId) {
         // remaining == 0: after-damage window closed
-        pendingAfterDamage = null
+        pendingAfterDamage = null;
       }
     }
 
-    function handleBAfterDamageSpellReaction(picks: ReadonlyMap<string, unknown>) {
-      const reactorId = pickString(picks, "reactorId")
+    function handleBAfterDamageSpellReaction(
+      picks: ReadonlyMap<string, unknown>,
+    ) {
+      const reactorId = pickString(picks, "reactorId");
       if (!reactorId) {
         // remaining == 0: after-damage window closed
-        pendingAfterDamage = null
-        return
+        pendingAfterDamage = null;
+        return;
       }
 
-      const reactionDmg = pickBigInt(picks, "reactionDmg") ?? 10
-      const reactionSaved = pickBool(picks, "reactionSaved") ?? false
-      const reactionDt = pickVariant(picks, "reactionDt") ?? "Fire"
+      const reactionDmg = pickBigInt(picks, "reactionDmg") ?? 10;
+      const reactionSaved = pickBool(picks, "reactionSaved") ?? false;
+      const reactionDt = pickVariant(picks, "reactionDt") ?? "Fire";
 
-      send(reactorId, { type: "USE_REACTION" })
+      send(reactorId, { type: "USE_REACTION" });
       // Damage source tracked in pendingAfterDamage (set when damage is applied).
       if (pendingAfterDamage) {
-        const actualDmg = reactionSaved ? Math.floor(reactionDmg / 2) : reactionDmg
-        const target = pendingAfterDamage.damageSource
+        const actualDmg = reactionSaved
+          ? Math.floor(reactionDmg / 2)
+          : reactionDmg;
+        const target = pendingAfterDamage.damageSource;
         send(target, {
           type: "TAKE_DAMAGE",
           amount: actualDmg,
           damageType: mapDamageType(reactionDt),
           ...EMPTY_DAMAGE_MODS,
-          isCritical: false
-        })
-        pendingAfterDamage = { damageSource: reactorId, damagedCreature: target }
-        syncProjectedGrapples()
+          isCritical: false,
+        });
+        pendingAfterDamage = {
+          damageSource: reactorId,
+          damagedCreature: target,
+        };
+        syncProjectedGrapples();
       }
     }
 
-    function handleBAfterDamageRetaliation(picks: ReadonlyMap<string, unknown>) {
-      const reactorId = pickString(picks, "reactorId")
+    function handleBAfterDamageRetaliation(
+      picks: ReadonlyMap<string, unknown>,
+    ) {
+      const reactorId = pickString(picks, "reactorId");
       if (!reactorId) {
         // remaining == 0: after-damage window closed
-        pendingAfterDamage = null
-        return
+        pendingAfterDamage = null;
+        return;
       }
 
-      const retAtkRoll = pickBigInt(picks, "retAtkRoll") ?? 10
-      const retDmg = pickBigInt(picks, "retDmg") ?? 5
-      const retDt = pickVariant(picks, "retDt") ?? "Slashing"
-      const retCrit = pickBool(picks, "retCrit") ?? false
-      const retTgtAc = pickBigInt(picks, "retTgtAc") ?? 15
+      const retAtkRoll = pickBigInt(picks, "retAtkRoll") ?? 10;
+      const retDmg = pickBigInt(picks, "retDmg") ?? 5;
+      const retDt = pickVariant(picks, "retDt") ?? "Slashing";
+      const retCrit = pickBool(picks, "retCrit") ?? false;
+      const retTgtAc = pickBigInt(picks, "retTgtAc") ?? 15;
 
-      send(reactorId, { type: "USE_REACTION" })
-      const hit = retAtkRoll >= retTgtAc || retAtkRoll === 20
+      send(reactorId, { type: "USE_REACTION" });
+      const hit = retAtkRoll >= retTgtAc || retAtkRoll === 20;
       if (hit && pendingAfterDamage) {
-        const target = pendingAfterDamage.damageSource
+        const target = pendingAfterDamage.damageSource;
         send(target, {
           type: "TAKE_DAMAGE",
           amount: retDmg,
           damageType: mapDamageType(retDt),
           ...EMPTY_DAMAGE_MODS,
-          isCritical: retCrit
-        })
-        pendingAfterDamage = { damageSource: reactorId, damagedCreature: target }
-        syncProjectedGrapples()
+          isCritical: retCrit,
+        });
+        pendingAfterDamage = {
+          damageSource: reactorId,
+          damagedCreature: target,
+        };
+        syncProjectedGrapples();
       }
     }
 
     /** Track after-damage context for Hellish Rebuke / Retaliation */
-    let pendingAfterDamage: { damageSource: string; damagedCreature: string } | null = null
+    let pendingAfterDamage: {
+      damageSource: string;
+      damagedCreature: string;
+    } | null = null;
 
     /** Track deferred save-failed context for LR interrupt (PISaveFailed / PISaveFailedAoE).
      *  When a save fails and the target has reaction available (LR eligible),
      *  effects are NOT applied immediately — they're deferred until bResolveSaveFailedReaction. */
     let pendingSaveFailed: {
-      target: string
-      caster: string
-      damageOnFail: number
-      halfOnSuccess: boolean
-      damageType: DamageType
-      conditionOnFail: Condition
-      applyCondition: boolean
-      saveSucceeded: boolean // flipped to true by LR
-    } | null = null
+      target: string;
+      caster: string;
+      damageOnFail: number;
+      halfOnSuccess: boolean;
+      damageType: DamageType;
+      conditionOnFail: Condition;
+      applyCondition: boolean;
+      saveSucceeded: boolean; // flipped to true by LR
+    } | null = null;
 
     /** Check if target creature has reaction available (eligible for LR). */
     function hasLRReactor(targetId: string): boolean {
-      const actor = actors.get(mkCreatureId(targetId))
-      if (!actor) return false
-      const snap = actor.getSnapshot()
-      return snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })
+      const actor = actors.get(mkCreatureId(targetId));
+      if (!actor) return false;
+      const snap = actor.getSnapshot();
+      return (
+        snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })
+      );
     }
 
     function handleBCastSaveSpell(picks: ReadonlyMap<string, unknown>) {
-      send(activeId(), { type: "USE_ACTION", actionType: "magic" })
-      castSaveSpell(picks, pickBool(picks, "ritual") ?? false)
+      send(activeId(), { type: "USE_ACTION", actionType: "magic" });
+      castSaveSpell(picks, pickBool(picks, "ritual") ?? false);
     }
 
     /** Pending spell context (slot deferred until CS resolves) */
     let pendingSpell: {
-      caster: string
-      target: string
-      saveDC: number
-      saveRoll: number
-      damageOnFail: number
-      halfOnSuccess: boolean
-      damageType: DamageType
-      conditionOnFail: Condition
-      applyCondition: boolean
-      slotLvl: number
-      ritual: boolean
-    } | null = null
+      caster: string;
+      target: string;
+      saveDC: number;
+      saveRoll: number;
+      damageOnFail: number;
+      halfOnSuccess: boolean;
+      damageType: DamageType;
+      conditionOnFail: Condition;
+      applyCondition: boolean;
+      slotLvl: number;
+      ritual: boolean;
+    } | null = null;
 
     /** Pending AoE context (slot deferred until CS resolves) */
     let pendingAoE: {
-      caster: string
-      saveDC: number
-      damageOnFail: number
-      halfOnSuccess: boolean
-      damageType: DamageType
-      conditionOnFail: Condition
-      applyCondition: boolean
-      ritual: boolean
-      slotLvl: number
-    } | null = null
+      caster: string;
+      saveDC: number;
+      damageOnFail: number;
+      halfOnSuccess: boolean;
+      damageType: DamageType;
+      conditionOnFail: Condition;
+      applyCondition: boolean;
+      ritual: boolean;
+      slotLvl: number;
+    } | null = null;
 
     /** Pending concentration context (slot + effects deferred until CS resolves) */
     let pendingConcentration: {
-      caster: string
-      target: string
-      spellId: string
-      duration: number
-      conditionOnFail: Condition
-      applyCondition: boolean
-      slotLvl: number
-      ritual: boolean
-    } | null = null
+      caster: string;
+      target: string;
+      spellId: string;
+      duration: number;
+      conditionOnFail: Condition;
+      applyCondition: boolean;
+      slotLvl: number;
+      ritual: boolean;
+    } | null = null;
 
     /** CS chain: tracks nested Counterspell-on-Counterspell outcomes.
      *  Each entry records whether the CS succeeded and the interrupted spell's caster
      *  (needed to check remaining reactors when returning to that window during unwinding). */
-    const csChain: Array<{ succeeded: boolean; csCaster: string }> = []
+    const csChain: Array<{ succeeded: boolean; csCaster: string }> = [];
 
     /** Reactors already offered in the original spell's CS window.
      *  Used to determine if remaining reactors exist when CS chain unwinds. */
-    const csWindowOffered = new Set<string>()
+    const csWindowOffered = new Set<string>();
 
     function resolveSpellSave(spell: NonNullable<typeof pendingSpell>) {
-      const saved = spell.saveRoll >= spell.saveDC
+      const saved = spell.saveRoll >= spell.saveDC;
       if (saved) {
         if (spell.halfOnSuccess && spell.damageOnFail > 0) {
-          const halfDmg = Math.floor(spell.damageOnFail / 2)
+          const halfDmg = Math.floor(spell.damageOnFail / 2);
           send(spell.target, {
             type: "TAKE_DAMAGE",
             amount: halfDmg,
@@ -989,9 +1141,12 @@ function createBattleProjectionDriver() {
             resistances: new Set<DamageType>(),
             vulnerabilities: new Set<DamageType>(),
             immunities: new Set<DamageType>(),
-            isCritical: false
-          })
-          pendingAfterDamage = { damageSource: spell.caster, damagedCreature: spell.target }
+            isCritical: false,
+          });
+          pendingAfterDamage = {
+            damageSource: spell.caster,
+            damagedCreature: spell.target,
+          };
         }
       } else {
         // Save failed — check for LR-eligible reactor before applying effects
@@ -1005,8 +1160,8 @@ function createBattleProjectionDriver() {
             damageType: spell.damageType,
             conditionOnFail: spell.conditionOnFail,
             applyCondition: spell.applyCondition,
-            saveSucceeded: false
-          }
+            saveSucceeded: false,
+          };
         } else {
           // No LR — apply fail effects immediately
           applyFailEffects(
@@ -1015,8 +1170,8 @@ function createBattleProjectionDriver() {
             spell.damageOnFail,
             spell.damageType,
             spell.conditionOnFail,
-            spell.applyCondition
-          )
+            spell.applyCondition,
+          );
         }
       }
     }
@@ -1028,14 +1183,14 @@ function createBattleProjectionDriver() {
       damageOnFail: number,
       damageType: DamageType,
       conditionOnFail: Condition,
-      applyCondition: boolean
+      applyCondition: boolean,
     ) {
       if (applyCondition) {
         send(target, {
           type: "APPLY_CONDITION",
           condition: conditionOnFail,
-          conditionImmunities: EMPTY_CONDITION_IMMUNITIES
-        })
+          conditionImmunities: EMPTY_CONDITION_IMMUNITIES,
+        });
       }
       if (damageOnFail > 0) {
         send(target, {
@@ -1045,103 +1200,126 @@ function createBattleProjectionDriver() {
           resistances: new Set<DamageType>(),
           vulnerabilities: new Set<DamageType>(),
           immunities: new Set<DamageType>(),
-          isCritical: false
-        })
-        pendingAfterDamage = { damageSource: caster, damagedCreature: target }
+          isCritical: false,
+        });
+        pendingAfterDamage = { damageSource: caster, damagedCreature: target };
       }
-      syncProjectedGrapples()
+      syncProjectedGrapples();
     }
 
     /** Check if there are eligible CS reactors excluding a caster and offered set. */
-    function hasEligibleCSReactors(casterId: string, offered: ReadonlySet<string>): boolean {
+    function hasEligibleCSReactors(
+      casterId: string,
+      offered: ReadonlySet<string>,
+    ): boolean {
       return [...actors.entries()].some(([c, actor]) => {
-        if (c === casterId || offered.has(c as string)) return false
-        const snap = actor.getSnapshot()
-        if (!snap.context.reactionAvailable || snap.matches({ damageTrack: "dead" })) return false
-        return snap.context.slotsCurrent.slice(2).some((s) => s > 0)
-      })
+        if (c === casterId || offered.has(c as string)) return false;
+        const snap = actor.getSnapshot();
+        if (
+          !snap.context.reactionAvailable ||
+          snap.matches({ damageTrack: "dead" })
+        )
+          return false;
+        return snap.context.slotsCurrent.slice(2).some((s) => s > 0);
+      });
     }
 
     function originalCasterId(): string {
-      return pendingSpell?.caster ?? pendingAoE?.caster ?? pendingConcentration?.caster ?? ""
+      return (
+        pendingSpell?.caster ??
+        pendingAoE?.caster ??
+        pendingConcentration?.caster ??
+        ""
+      );
     }
 
     function handleBResolveCounterspell(picks: ReadonlyMap<string, unknown>) {
-      const reactorId = pickString(picks, "reactorId")
-      const decision = picks.get("decision") as { tag: string; value: unknown } | undefined
-      const csSlotLvl = pickBigInt(picks, "csSlotLvl") ?? 3
+      const reactorId = pickString(picks, "reactorId");
+      const decision = picks.get("decision") as
+        | { tag: string; value: unknown }
+        | undefined;
+      const csSlotLvl = pickBigInt(picks, "csSlotLvl") ?? 3;
       if (!reactorId) {
         if (csChain.length > 0) {
           // CS chain unwinding. Walk level by level, checking remaining at each.
-          let fizzleBelow = false
+          let fizzleBelow = false;
           while (csChain.length > 0) {
-            const entry = csChain.pop()!
+            const entry = csChain.pop()!;
             if (fizzleBelow) {
               // This level was fizzled → its target is unaffected.
-              fizzleBelow = false
+              fizzleBelow = false;
             } else if (entry.succeeded) {
-              fizzleBelow = true
-              continue // Don't check remaining yet — need to see what's below
+              fizzleBelow = true;
+              continue; // Don't check remaining yet — need to see what's below
             }
             // CS failed or was fizzled. Check remaining at the returned-to window.
             // The returned-to window's caster is the CS caster of the entry we just popped
             // (we're returning to THEIR CS window). At depth 0, it's the original caster.
-            const parentCaster = csChain.length > 0 ? csChain[csChain.length - 1].csCaster : originalCasterId()
-            const offered = csChain.length === 0 ? csWindowOffered : new Set<string>()
+            const parentCaster =
+              csChain.length > 0
+                ? csChain[csChain.length - 1].csCaster
+                : originalCasterId();
+            const offered =
+              csChain.length === 0 ? csWindowOffered : new Set<string>();
             if (hasEligibleCSReactors(parentCaster, offered)) {
-              return // Quint re-enters this window — more bResolveCounterspell steps coming
+              return; // Quint re-enters this window — more bResolveCounterspell steps coming
             }
           }
           if (fizzleBelow) {
-            pendingSpell = null
-            pendingAoE = null
-            pendingConcentration = null
-            csWindowOffered.clear()
+            pendingSpell = null;
+            pendingAoE = null;
+            pendingConcentration = null;
+            csWindowOffered.clear();
 
-            return
+            return;
           }
-          csWindowOffered.clear()
+          csWindowOffered.clear();
         }
         // Depth 0: resolve original spell.
         if (pendingSpell) {
-          resolveSpellSave(pendingSpell)
-          pendingSpell = null
+          resolveSpellSave(pendingSpell);
+          pendingSpell = null;
         } else if (pendingAoE) {
         } else if (pendingConcentration) {
-          resolveConcentrationSpell(pendingConcentration)
-          pendingConcentration = null
+          resolveConcentrationSpell(pendingConcentration);
+          pendingConcentration = null;
         }
-        csWindowOffered.clear()
-        return
+        csWindowOffered.clear();
+        return;
       }
 
       // Track offered reactors at original window depth.
       if (csChain.length === 0) {
-        csWindowOffered.add(reactorId)
+        csWindowOffered.add(reactorId);
       }
 
       if (decision?.tag.startsWith("RCounterspell")) {
-        send(reactorId, { type: "USE_REACTION" })
-        send(reactorId, { type: "EXPEND_SLOT", level: spellSlotLevel(csSlotLvl) })
-        const conSaveSucceeded = Boolean(decision.value)
-        csChain.push({ succeeded: !conSaveSucceeded, csCaster: reactorId })
+        send(reactorId, { type: "USE_REACTION" });
+        send(reactorId, {
+          type: "EXPEND_SLOT",
+          level: spellSlotLevel(csSlotLvl),
+        });
+        const conSaveSucceeded = Boolean(decision.value);
+        csChain.push({ succeeded: !conSaveSucceeded, csCaster: reactorId });
       }
     }
 
-    function handleBResolveSaveFailedReaction(picks: ReadonlyMap<string, unknown>) {
-      const reactorId = pickString(picks, "reactorId")
-      const decisionRaw = picks.get("decision")
-      const decision = variantToString(decisionRaw)
+    function handleBResolveSaveFailedReaction(
+      picks: ReadonlyMap<string, unknown>,
+    ) {
+      const reactorId = pickString(picks, "reactorId");
+      const decisionRaw = picks.get("decision");
+      const decision = variantToString(decisionRaw);
 
       if (!reactorId) {
         // No remaining reactors — apply deferred effects based on saveSucceeded flag
         if (pendingSaveFailed) {
-          const sf = pendingSaveFailed
-          pendingSaveFailed = null
+          const sf = pendingSaveFailed;
+          pendingSaveFailed = null;
           if (sf.saveSucceeded) {
             // LR flipped save to succeeded — half damage if applicable, no condition
             if (sf.halfOnSuccess && sf.damageOnFail > 0) {
-              const halfDmg = Math.floor(sf.damageOnFail / 2)
+              const halfDmg = Math.floor(sf.damageOnFail / 2);
               send(sf.target, {
                 type: "TAKE_DAMAGE",
                 amount: halfDmg,
@@ -1149,9 +1327,12 @@ function createBattleProjectionDriver() {
                 resistances: new Set<DamageType>(),
                 vulnerabilities: new Set<DamageType>(),
                 immunities: new Set<DamageType>(),
-                isCritical: false
-              })
-              pendingAfterDamage = { damageSource: sf.caster, damagedCreature: sf.target }
+                isCritical: false,
+              });
+              pendingAfterDamage = {
+                damageSource: sf.caster,
+                damagedCreature: sf.target,
+              };
             }
           } else {
             // No LR used — full fail effects
@@ -1161,24 +1342,24 @@ function createBattleProjectionDriver() {
               sf.damageOnFail,
               sf.damageType,
               sf.conditionOnFail,
-              sf.applyCondition
-            )
+              sf.applyCondition,
+            );
           }
         }
-        return
+        return;
       }
 
       if (decision === "RLegendaryResistance") {
         // LR: spend reaction, flip save to succeeded
-        send(reactorId, { type: "USE_REACTION" })
+        send(reactorId, { type: "USE_REACTION" });
         if (pendingSaveFailed) {
-          pendingSaveFailed.saveSucceeded = true
+          pendingSaveFailed.saveSucceeded = true;
           // Effects applied when remaining==0 (reactorId is null)
           // But in Quint, LR immediately resolves — apply now
-          const sf = pendingSaveFailed
-          pendingSaveFailed = null
+          const sf = pendingSaveFailed;
+          pendingSaveFailed = null;
           if (sf.halfOnSuccess && sf.damageOnFail > 0) {
-            const halfDmg = Math.floor(sf.damageOnFail / 2)
+            const halfDmg = Math.floor(sf.damageOnFail / 2);
             send(sf.target, {
               type: "TAKE_DAMAGE",
               amount: halfDmg,
@@ -1186,28 +1367,34 @@ function createBattleProjectionDriver() {
               resistances: new Set<DamageType>(),
               vulnerabilities: new Set<DamageType>(),
               immunities: new Set<DamageType>(),
-              isCritical: false
-            })
-            pendingAfterDamage = { damageSource: sf.caster, damagedCreature: sf.target }
+              isCritical: false,
+            });
+            pendingAfterDamage = {
+              damageSource: sf.caster,
+              damagedCreature: sf.target,
+            };
           }
         }
       }
       // RPass: do nothing, keep pending for next reactor
     }
 
-    function handleBCastConcentrationSpell(picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
-      const targetId = pickString(picks, "targetId") ?? ""
-      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
-      const duration = pickBigInt(picks, "duration") ?? 5
-      const spellId = pickString(picks, "spellId") ?? "hold_person"
-      const cond = pickVariant(picks, "cond") ?? "CParalyzed"
-      const applyCond = pickBool(picks, "applyCond") ?? false
-      const ritual = pickBool(picks, "ritual") ?? false
+    function handleBCastConcentrationSpell(
+      picks: ReadonlyMap<string, unknown>,
+    ) {
+      const id = activeId();
+      const targetId = pickString(picks, "targetId") ?? "";
+      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1;
+      const duration = pickBigInt(picks, "duration") ?? 5;
+      const spellId = pickString(picks, "spellId") ?? "hold_person";
+      const cond = pickVariant(picks, "cond") ?? "CParalyzed";
+      const applyCond = pickBool(picks, "applyCond") ?? false;
+      const ritual = pickBool(picks, "ritual") ?? false;
 
       // Spend action, then expend slot immediately (spend-then-refund parity with battle.qnt).
-      send(id, { type: "USE_ACTION", actionType: "magic" })
-      if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
+      send(id, { type: "USE_ACTION", actionType: "magic" });
+      if (!ritual)
+        send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) });
 
       pendingConcentration = {
         caster: id,
@@ -1217,22 +1404,24 @@ function createBattleProjectionDriver() {
         conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "paralyzed",
         applyCondition: applyCond,
         slotLvl,
-        ritual
-      }
+        ritual,
+      };
 
-      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
+      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered);
       if (!hasCSReactors) {
-        resolveConcentrationSpell(pendingConcentration)
-        pendingConcentration = null
+        resolveConcentrationSpell(pendingConcentration);
+        pendingConcentration = null;
       }
     }
 
     /** Resolve a concentration spell: start concentration, add effects. Slot already spent. */
-    function resolveConcentrationSpell(conc: NonNullable<typeof pendingConcentration>) {
+    function resolveConcentrationSpell(
+      conc: NonNullable<typeof pendingConcentration>,
+    ) {
       // If already concentrating, break old concentration
-      const ctx = getSnap(conc.caster).context
+      const ctx = getSnap(conc.caster).context;
       if (Option.isSome(ctx.concentrationSpellId)) {
-        breakConcentrationAndPropagate(conc.caster)
+        breakConcentrationAndPropagate(conc.caster);
       }
 
       // Start concentration
@@ -1241,8 +1430,8 @@ function createBattleProjectionDriver() {
         spellId: mkSpellId(conc.spellId),
         durationTurns: conc.duration,
         expiresAt: "end",
-        casterId: mkCreatureId(conc.caster)
-      })
+        casterId: mkCreatureId(conc.caster),
+      });
 
       // Add effect to target
       send(conc.target, {
@@ -1250,64 +1439,65 @@ function createBattleProjectionDriver() {
         spellId: mkSpellId(conc.spellId),
         durationTurns: conc.duration,
         expiresAt: "end",
-        casterId: mkCreatureId(conc.caster)
-      })
+        casterId: mkCreatureId(conc.caster),
+      });
 
       // Apply condition to target
       if (conc.applyCondition) {
         send(conc.target, {
           type: "APPLY_CONDITION",
           condition: conc.conditionOnFail,
-          conditionImmunities: EMPTY_CONDITION_IMMUNITIES
-        })
+          conditionImmunities: EMPTY_CONDITION_IMMUNITIES,
+        });
       }
     }
 
     function handleBConcentrationCheck(picks: ReadonlyMap<string, unknown>) {
-      const targetId = pickString(picks, "targetId") ?? ""
-      const conSaveSucceeded = pickBool(picks, "conSaveSucceeded") ?? false
+      const targetId = pickString(picks, "targetId") ?? "";
+      const conSaveSucceeded = pickBool(picks, "conSaveSucceeded") ?? false;
 
       if (!conSaveSucceeded) {
-        breakConcentrationAndPropagate(targetId)
+        breakConcentrationAndPropagate(targetId);
       }
     }
 
     /** Break concentration for a caster and remove effects from all creatures. */
     function breakConcentrationAndPropagate(casterId: string) {
-      const casterSnap = getSnap(casterId)
-      const concOpt = casterSnap.context.concentrationSpellId
-      if (Option.isNone(concOpt)) return
-      const sid = concOpt.value
+      const casterSnap = getSnap(casterId);
+      const concOpt = casterSnap.context.concentrationSpellId;
+      if (Option.isNone(concOpt)) return;
+      const sid = concOpt.value;
 
-      send(casterId, { type: "BREAK_CONCENTRATION" })
-      send(casterId, { type: "REMOVE_EFFECT", spellId: sid })
+      send(casterId, { type: "BREAK_CONCENTRATION" });
+      send(casterId, { type: "REMOVE_EFFECT", spellId: sid });
 
       // Remove effects from other creatures cast by this caster (match by casterId)
       for (const [cid, actor] of actors) {
-        if (cid === casterId) continue
-        const snap = actor.getSnapshot()
+        if (cid === casterId) continue;
+        const snap = actor.getSnapshot();
         for (const eff of snap.context.activeEffects) {
           if (eff.casterId === casterId) {
-            send(cid, { type: "REMOVE_EFFECT", spellId: eff.spellId })
+            send(cid, { type: "REMOVE_EFFECT", spellId: eff.spellId });
           }
         }
       }
     }
 
     function handleBCastAoE(picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
-      const saveDC = pickBigInt(picks, "saveDC") ?? 15
-      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10
-      const halfOnSave = pickBool(picks, "halfOnSave") ?? false
-      const dt = pickVariant(picks, "dt") ?? "Fire"
-      const cond = pickVariant(picks, "cond") ?? "CBlinded"
-      const applyCond = pickBool(picks, "applyCond") ?? false
-      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
-      const ritual = pickBool(picks, "ritual") ?? false
+      const id = activeId();
+      const saveDC = pickBigInt(picks, "saveDC") ?? 15;
+      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10;
+      const halfOnSave = pickBool(picks, "halfOnSave") ?? false;
+      const dt = pickVariant(picks, "dt") ?? "Fire";
+      const cond = pickVariant(picks, "cond") ?? "CBlinded";
+      const applyCond = pickBool(picks, "applyCond") ?? false;
+      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1;
+      const ritual = pickBool(picks, "ritual") ?? false;
 
       // Spend action, then expend slot immediately (spend-then-refund parity with battle.qnt).
-      send(id, { type: "USE_ACTION", actionType: "magic" })
-      if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
+      send(id, { type: "USE_ACTION", actionType: "magic" });
+      if (!ritual)
+        send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) });
 
       pendingAoE = {
         caster: id,
@@ -1318,30 +1508,31 @@ function createBattleProjectionDriver() {
         damageType: mapDamageType(dt),
         conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
         applyCondition: applyCond,
-        ritual
+        ritual,
+      };
+
+      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered);
+
+      if (!hasCSReactors) {
       }
-
-      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
-
-      if (!hasCSReactors) {}
     }
 
     function handleBResolveAoETarget(picks: ReadonlyMap<string, unknown>) {
-      if (!pendingAoE) return
+      if (!pendingAoE) return;
 
-      const targetId = pickString(picks, "targetId")
-      const saveRoll = pickBigInt(picks, "saveRoll") ?? 10
+      const targetId = pickString(picks, "targetId");
+      const saveRoll = pickBigInt(picks, "saveRoll") ?? 10;
 
       if (!targetId) {
         // remaining == 0: all targets processed, back to active turn
-        pendingAoE = null
-        return
+        pendingAoE = null;
+        return;
       }
 
-      const saved = saveRoll >= pendingAoE.saveDC
+      const saved = saveRoll >= pendingAoE.saveDC;
       if (saved) {
         if (pendingAoE.halfOnSuccess && pendingAoE.damageOnFail > 0) {
-          const halfDmg = Math.floor(pendingAoE.damageOnFail / 2)
+          const halfDmg = Math.floor(pendingAoE.damageOnFail / 2);
           send(targetId, {
             type: "TAKE_DAMAGE",
             amount: halfDmg,
@@ -1349,9 +1540,12 @@ function createBattleProjectionDriver() {
             resistances: new Set<DamageType>(),
             vulnerabilities: new Set<DamageType>(),
             immunities: new Set<DamageType>(),
-            isCritical: false
-          })
-          pendingAfterDamage = { damageSource: pendingAoE.caster, damagedCreature: targetId }
+            isCritical: false,
+          });
+          pendingAfterDamage = {
+            damageSource: pendingAoE.caster,
+            damagedCreature: targetId,
+          };
         }
       } else {
         // Failed save — check for LR-eligible reactor before applying effects
@@ -1365,8 +1559,8 @@ function createBattleProjectionDriver() {
             damageType: pendingAoE.damageType,
             conditionOnFail: pendingAoE.conditionOnFail,
             applyCondition: pendingAoE.applyCondition,
-            saveSucceeded: false
-          }
+            saveSucceeded: false,
+          };
         } else {
           // No LR — apply fail effects immediately
           applyFailEffects(
@@ -1375,16 +1569,16 @@ function createBattleProjectionDriver() {
             pendingAoE.damageOnFail,
             pendingAoE.damageType,
             pendingAoE.conditionOnFail,
-            pendingAoE.applyCondition
-          )
+            pendingAoE.applyCondition,
+          );
         }
       }
     }
 
     function handleBMove(_picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
+      const id = activeId();
       // bMove spends 5ft of movement
-      send(id, { type: "USE_MOVEMENT", feet: 5, movementCost: 1 })
+      send(id, { type: "USE_MOVEMENT", feet: 5, movementCost: 1 });
     }
 
     function handleBMovementOAPass(_picks: ReadonlyMap<string, unknown>) {
@@ -1392,83 +1586,112 @@ function createBattleProjectionDriver() {
     }
 
     function handleBMovementOAAttack(picks: ReadonlyMap<string, unknown>) {
-      const reactorId = pickString(picks, "reactorId")
-      if (!reactorId) return
+      const reactorId = pickString(picks, "reactorId");
+      if (!reactorId) return;
 
-      const oaAtkRoll = pickBigInt(picks, "oaAtkRoll") ?? 10
-      const oaDmg = pickBigInt(picks, "oaDmg") ?? 5
-      const oaDt = pickVariant(picks, "oaDt") ?? "Slashing"
-      const oaCrit = pickBool(picks, "oaCrit") ?? false
-      const oaTgtAc = pickBigInt(picks, "oaTgtAc") ?? 15
+      const oaAtkRoll = pickBigInt(picks, "oaAtkRoll") ?? 10;
+      const oaDmg = pickBigInt(picks, "oaDmg") ?? 5;
+      const oaDt = pickVariant(picks, "oaDt") ?? "Slashing";
+      const oaCrit = pickBool(picks, "oaCrit") ?? false;
+      const oaTgtAc = pickBigInt(picks, "oaTgtAc") ?? 15;
 
-      const reactorSnap = getSnap(reactorId)
-      if (reactorSnap.context.activeEffects.some((effect) => effect.blocksOpportunityAttacks === true)) return
-      send(reactorId, { type: "USE_REACTION" })
-      resolveAttackHit(reactorId, activeId(), oaAtkRoll, oaTgtAc, oaDmg, oaDt, "NoAttackHitRider", oaCrit, true)
+      const reactorSnap = getSnap(reactorId);
+      if (
+        reactorSnap.context.activeEffects.some(
+          (effect) => effect.blocksOpportunityAttacks === true,
+        )
+      )
+        return;
+      send(reactorId, { type: "USE_REACTION" });
+      resolveAttackHit(
+        reactorId,
+        activeId(),
+        oaAtkRoll,
+        oaTgtAc,
+        oaDmg,
+        oaDt,
+        "NoAttackHitRider",
+        oaCrit,
+        true,
+      );
     }
 
     function handleBGrapple(picks: ReadonlyMap<string, unknown>) {
-      const attackerId = activeId()
-      const targetId = pickString(picks, "targetId") ?? ""
+      const attackerId = activeId();
+      const targetId = pickString(picks, "targetId") ?? "";
       const parseSize = (key: string, fallback: Size): Size => {
-        const parsed = variantToString(picks.get(key)).toLowerCase()
-        return parsed === "[object object]" ? fallback : (parsed as Size)
-      }
-      const attackerSize = parseSize("attackerSize", "medium")
-      const targetSize = parseSize("targetSize", "medium")
-      const targetSaveFailed = pickBool(picks, "targetSaveFailed") ?? false
-      const attackerHasFreeHand = pickBool(picks, "attackerHasFreeHand") ?? true
-      const attackerCtx = getSnap(attackerId).context
-      const targetSnap = getSnap(targetId)
+        const parsed = variantToString(picks.get(key)).toLowerCase();
+        return parsed === "[object object]" ? fallback : (parsed as Size);
+      };
+      const attackerSize = parseSize("attackerSize", "medium");
+      const targetSize = parseSize("targetSize", "medium");
+      const targetSaveFailed = pickBool(picks, "targetSaveFailed") ?? false;
+      const attackerHasFreeHand =
+        pickBool(picks, "attackerHasFreeHand") ?? true;
+      const attackerCtx = getSnap(attackerId).context;
+      const targetSnap = getSnap(targetId);
 
-      if (attackerCtx.attackActionUsed && attackerCtx.extraAttacksRemaining > 0) {
-        send(attackerId, { type: "USE_EXTRA_ATTACK" })
+      if (
+        attackerCtx.attackActionUsed &&
+        attackerCtx.extraAttacksRemaining > 0
+      ) {
+        send(attackerId, { type: "USE_EXTRA_ATTACK" });
       } else {
-        send(attackerId, { type: "USE_ACTION", actionType: "attack" })
+        send(attackerId, { type: "USE_ACTION", actionType: "attack" });
       }
 
       if (
         grapplingTargets.has(attackerId) ||
         grappledBy.has(targetId) ||
-        !resolveGrapple(attackerSize, targetSize, targetSaveFailed, attackerHasFreeHand, targetSnap.hasTag("incapacitated"))
+        !resolveGrapple(
+          attackerSize,
+          targetSize,
+          targetSaveFailed,
+          attackerHasFreeHand,
+          targetSnap.hasTag("incapacitated"),
+        )
       ) {
-        return
+        return;
       }
 
-      send(targetId, { type: "APPLY_CONDITION", condition: "grappled" })
-      setProjectedGrapplingState(attackerId, true, targetTwoSizesSmaller(attackerSize, targetSize))
-      grapplingTargets.set(attackerId, targetId)
-      grappledBy.set(targetId, attackerId)
-      syncProjectedGrapples()
+      send(targetId, { type: "APPLY_CONDITION", condition: "grappled" });
+      setProjectedGrapplingState(
+        attackerId,
+        true,
+        targetTwoSizesSmaller(attackerSize, targetSize),
+      );
+      grapplingTargets.set(attackerId, targetId);
+      grappledBy.set(targetId, attackerId);
+      syncProjectedGrapples();
     }
 
     function handleBReleaseGrapple() {
-      const attackerId = activeId()
-      const targetId = grapplingTargets.get(attackerId)
-      if (!targetId) return
-      clearProjectedGrapple(attackerId, targetId)
+      const attackerId = activeId();
+      const targetId = grapplingTargets.get(attackerId);
+      if (!targetId) return;
+      clearProjectedGrapple(attackerId, targetId);
     }
 
     function handleBEscapeGrapple(picks: ReadonlyMap<string, unknown>) {
-      const targetId = activeId()
-      send(targetId, { type: "USE_ACTION", actionType: "utilize" })
-      if (!(pickBool(picks, "escapeSucceeded") ?? false)) return
-      const grapplerId = grappledBy.get(targetId)
-      if (!grapplerId) return
-      clearProjectedGrapple(grapplerId, targetId)
+      const targetId = activeId();
+      send(targetId, { type: "USE_ACTION", actionType: "utilize" });
+      if (!(pickBool(picks, "escapeSucceeded") ?? false)) return;
+      const grapplerId = grappledBy.get(targetId);
+      if (!grapplerId) return;
+      clearProjectedGrapple(grapplerId, targetId);
     }
 
     function handleBEndTurn(picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
-      const ctx = getSnap(id).context
+      const id = activeId();
+      const ctx = getSnap(id).context;
 
-      const eotSaveSucceeded = pickBool(picks, "eotSaveSucceeded") ?? false
-      const eotDmg = pickBigInt(picks, "eotDmg") ?? 0
-      const eotDt = pickVariant(picks, "eotDt") ?? "Bludgeoning"
-      const eotConSave = pickBool(picks, "eotConSave") ?? false
+      const eotSaveSucceeded = pickBool(picks, "eotSaveSucceeded") ?? false;
+      const eotDmg = pickBigInt(picks, "eotDmg") ?? 0;
+      const eotDt = pickVariant(picks, "eotDt") ?? "Bludgeoning";
+      const eotConSave = pickBool(picks, "eotConSave") ?? false;
 
       // Build end-of-turn effects
-      const hasEotEffects = ctx.activeEffects.length > 0
+      const hasEotEffects = ctx.activeEffects.length > 0;
 
       const effectResolutions =
         hasEotEffects && (eotSaveSucceeded || eotDmg > 0)
@@ -1479,70 +1702,76 @@ function createBattleProjectionDriver() {
                 saveSucceeded: eotSaveSucceeded,
                 conSaveSucceeded: eotConSave,
               }))
-          : []
+          : [];
 
-      void eotDt
-      send(id, { type: "END_TURN", effectResolutions })
-      turnStarted.delete(id)
+      void eotDt;
+      send(id, { type: "END_TURN", effectResolutions });
+      turnStarted.delete(id);
 
       // Defer turn advancement — bLegendaryPass/bLegendaryAttack or before() will advance.
-      pendingEndTurn = true
-      syncProjectedGrapples()
+      pendingEndTurn = true;
+      syncProjectedGrapples();
     }
 
-    let pendingEndTurn = false
+    let pendingEndTurn = false;
 
     function advanceTurn() {
-      const initLen = initiative.length
-      turnIndex = (turnIndex + 1) % initLen
-      pendingEndTurn = false
+      const initLen = initiative.length;
+      turnIndex = (turnIndex + 1) % initLen;
+      pendingEndTurn = false;
     }
 
     function handleBLegendaryPass(_picks: ReadonlyMap<string, unknown>) {
       // Only advance turn if we're actually in the LA window (after bEndTurn)
-      if (pendingEndTurn) advanceTurn()
+      if (pendingEndTurn) advanceTurn();
     }
 
     function handleBLegendaryAttack(picks: ReadonlyMap<string, unknown>) {
       // Only act if we're in the LA window (after bEndTurn)
-      if (!pendingEndTurn) return
+      if (!pendingEndTurn) return;
 
-      const monsterId = pickString(picks, "monsterId") ?? ""
-      const laTarget = pickString(picks, "laTarget") ?? ""
-      const laAtkRoll = pickBigInt(picks, "laAtkRoll") ?? 10
-      const laDmg = pickBigInt(picks, "laDmg") ?? 10
-      const laDt = pickVariant(picks, "laDt") ?? "Slashing"
-      const laCrit = pickBool(picks, "laCrit") ?? false
-      const laTgtAc = pickBigInt(picks, "laTgtAc") ?? 15
+      const monsterId = pickString(picks, "monsterId") ?? "";
+      const laTarget = pickString(picks, "laTarget") ?? "";
+      const laAtkRoll = pickBigInt(picks, "laAtkRoll") ?? 10;
+      const laDmg = pickBigInt(picks, "laDmg") ?? 10;
+      const laDt = pickVariant(picks, "laDt") ?? "Slashing";
+      const laCrit = pickBool(picks, "laCrit") ?? false;
+      const laTgtAc = pickBigInt(picks, "laTgtAc") ?? 15;
 
-      ensureWaitingForTurn(monsterId)
+      ensureWaitingForTurn(monsterId);
 
       // Spend LA
-      send(monsterId, { type: "USE_LEGENDARY_ACTION", actionName: "tail_attack" })
+      send(monsterId, {
+        type: "USE_LEGENDARY_ACTION",
+        actionName: "tail_attack",
+      });
 
-      const hit = laAtkRoll >= laTgtAc || laAtkRoll === 20
+      const hit = laAtkRoll >= laTgtAc || laAtkRoll === 20;
       if (hit) {
         send(laTarget, {
           type: "TAKE_DAMAGE",
           amount: laDmg,
           damageType: mapDamageType(laDt),
           ...EMPTY_DAMAGE_MODS,
-          isCritical: laCrit
-        })
-        pendingAfterDamage = { damageSource: monsterId, damagedCreature: laTarget }
+          isCritical: laCrit,
+        });
+        pendingAfterDamage = {
+          damageSource: monsterId,
+          damagedCreature: laTarget,
+        };
       }
 
-      advanceTurn()
+      advanceTurn();
     }
 
     function handleBHeal(picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
-      const targetId = pickString(picks, "targetId") ?? ""
-      const amount = pickBigInt(picks, "amount") ?? 5
+      const id = activeId();
+      const targetId = pickString(picks, "targetId") ?? "";
+      const amount = pickBigInt(picks, "amount") ?? 5;
 
-      send(id, { type: "USE_ACTION", actionType: "magic" })
-      send(targetId, { type: "HEAL", amount: healAmount(amount) })
-      syncProjectedGrapples()
+      send(id, { type: "USE_ACTION", actionType: "magic" });
+      send(targetId, { type: "HEAL", amount: healAmount(amount) });
+      syncProjectedGrapples();
     }
 
     /** Shared hit resolution: checks reactors, applies or defers damage. */
@@ -1555,25 +1784,31 @@ function createBattleProjectionDriver() {
       dt: string,
       hitRider: string,
       crit: boolean,
-      targetCanSeeAttackerAtHit: boolean
+      targetCanSeeAttackerAtHit: boolean,
     ) {
-      const hit = atkRoll >= tgtAc || atkRoll === 20
-      if (!hit) return
+      const hit = atkRoll >= tgtAc || atkRoll === 20;
+      if (!hit) return;
       const hasHitReactors = [...actors.entries()].some(([cid, actor]) => {
-        if (cid === attackerId) return false
-        const snap = actor.getSnapshot()
-        return snap.context.reactionAvailable && !snap.matches({ damageTrack: "dead" })
-      })
+        if (cid === attackerId) return false;
+        const snap = actor.getSnapshot();
+        return (
+          snap.context.reactionAvailable &&
+          !snap.matches({ damageTrack: "dead" })
+        );
+      });
       if (!hasHitReactors) {
-        applyProjectedHitRider(attackerId, targetId, hitRider)
+        applyProjectedHitRider(attackerId, targetId, hitRider);
         send(targetId, {
           type: "TAKE_DAMAGE",
           amount: dmg,
           damageType: mapDamageType(dt),
           ...EMPTY_DAMAGE_MODS,
-          isCritical: crit
-        })
-        pendingAfterDamage = { damageSource: attackerId, damagedCreature: targetId }
+          isCritical: crit,
+        });
+        pendingAfterDamage = {
+          damageSource: attackerId,
+          damagedCreature: targetId,
+        };
       } else {
         pendingAttack = {
           attacker: attackerId,
@@ -1585,23 +1820,26 @@ function createBattleProjectionDriver() {
           targetAc: tgtAc,
           hitRider,
           targetCanSeeAttackerAtHit,
-          isWeaponAttack: hitRider === "NoAttackHitRider"
-        }
+          isWeaponAttack: hitRider === "NoAttackHitRider",
+        };
       }
     }
 
     /** Shared save-spell resolution: parses picks, sets pendingSpell, resolves or defers to CS. */
-    function castSaveSpell(picks: ReadonlyMap<string, unknown>, ritual: boolean) {
-      const id = activeId()
-      const targetId = pickString(picks, "targetId") ?? ""
-      const saveDC = pickBigInt(picks, "saveDC") ?? 15
-      const saveRoll = pickBigInt(picks, "saveRoll") ?? 10
-      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10
-      const halfOnSave = pickBool(picks, "halfOnSave") ?? false
-      const dt = pickVariant(picks, "dt") ?? "Fire"
-      const cond = pickVariant(picks, "cond") ?? "CBlinded"
-      const applyCond = pickBool(picks, "applyCond") ?? false
-      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
+    function castSaveSpell(
+      picks: ReadonlyMap<string, unknown>,
+      ritual: boolean,
+    ) {
+      const id = activeId();
+      const targetId = pickString(picks, "targetId") ?? "";
+      const saveDC = pickBigInt(picks, "saveDC") ?? 15;
+      const saveRoll = pickBigInt(picks, "saveRoll") ?? 10;
+      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10;
+      const halfOnSave = pickBool(picks, "halfOnSave") ?? false;
+      const dt = pickVariant(picks, "dt") ?? "Fire";
+      const cond = pickVariant(picks, "cond") ?? "CBlinded";
+      const applyCond = pickBool(picks, "applyCond") ?? false;
+      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1;
 
       pendingSpell = {
         caster: id,
@@ -1614,67 +1852,78 @@ function createBattleProjectionDriver() {
         conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
         applyCondition: applyCond,
         slotLvl,
-        ritual
-      }
+        ritual,
+      };
 
-      if (!ritual) send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
-      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered)
+      if (!ritual)
+        send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) });
+      const hasCSReactors = hasEligibleCSReactors(id, csWindowOffered);
 
       if (!hasCSReactors) {
-        resolveSpellSave(pendingSpell)
-        pendingSpell = null
+        resolveSpellSave(pendingSpell);
+        pendingSpell = null;
       }
     }
 
     function handleBReadyPass() {
-      if (pendingEndTurn) advanceTurn()
+      if (pendingEndTurn) advanceTurn();
     }
 
     function handleBReadyRelease(picks: ReadonlyMap<string, unknown>) {
-      if (!pendingEndTurn) return
-      const releaserId = pickString(picks, "releaserId") ?? ""
-      const targetId = pickString(picks, "targetId") ?? ""
-      const atkRoll = pickBigInt(picks, "atkRoll") ?? 10
-      const dmg = pickBigInt(picks, "dmg") ?? 5
-      const dt = pickVariant(picks, "dt") ?? "Slashing"
-      const crit = pickBool(picks, "crit") ?? false
-      const tgtAc = pickBigInt(picks, "tgtAc") ?? 15
-      send(releaserId, { type: "USE_REACTION" })
-      resolveAttackHit(releaserId, targetId, atkRoll, tgtAc, dmg, dt, "NoAttackHitRider", crit, true)
+      if (!pendingEndTurn) return;
+      const releaserId = pickString(picks, "releaserId") ?? "";
+      const targetId = pickString(picks, "targetId") ?? "";
+      const atkRoll = pickBigInt(picks, "atkRoll") ?? 10;
+      const dmg = pickBigInt(picks, "dmg") ?? 5;
+      const dt = pickVariant(picks, "dt") ?? "Slashing";
+      const crit = pickBool(picks, "crit") ?? false;
+      const tgtAc = pickBigInt(picks, "tgtAc") ?? 15;
+      send(releaserId, { type: "USE_REACTION" });
+      resolveAttackHit(
+        releaserId,
+        targetId,
+        atkRoll,
+        tgtAc,
+        dmg,
+        dt,
+        "NoAttackHitRider",
+        crit,
+        true,
+      );
     }
 
     /** Stored readied spell params, set at bReadySpell, consumed at bReadySpellRelease. */
     let storedReadiedSpellParams: {
-      caster: string
-      target: string
-      saveDC: number
-      damageOnFail: number
-      halfOnSuccess: boolean
-      damageType: DamageType
-      conditionOnFail: Condition
-      applyCondition: boolean
-    } | null = null
+      caster: string;
+      target: string;
+      saveDC: number;
+      damageOnFail: number;
+      halfOnSuccess: boolean;
+      damageType: DamageType;
+      conditionOnFail: Condition;
+      applyCondition: boolean;
+    } | null = null;
 
     function handleBReadySpell(picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
-      const targetId = pickString(picks, "targetId") ?? ""
-      const saveDC = pickBigInt(picks, "saveDC") ?? 13
-      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10
-      const halfOnSave = pickBool(picks, "halfOnSave") ?? false
-      const dt = pickVariant(picks, "dt") ?? "Fire"
-      const cond = pickVariant(picks, "cond") ?? "CBlinded"
-      const applyCond = pickBool(picks, "applyCond") ?? false
-      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1
-      const spellName = pickString(picks, "spellName") ?? "hold_person"
+      const id = activeId();
+      const targetId = pickString(picks, "targetId") ?? "";
+      const saveDC = pickBigInt(picks, "saveDC") ?? 13;
+      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10;
+      const halfOnSave = pickBool(picks, "halfOnSave") ?? false;
+      const dt = pickVariant(picks, "dt") ?? "Fire";
+      const cond = pickVariant(picks, "cond") ?? "CBlinded";
+      const applyCond = pickBool(picks, "applyCond") ?? false;
+      const slotLvl = pickBigInt(picks, "slotLvl") ?? 1;
+      const spellName = pickString(picks, "spellName") ?? "hold_person";
 
       // Spend action as Ready
-      send(id, { type: "USE_ACTION", actionType: "ready" })
+      send(id, { type: "USE_ACTION", actionType: "ready" });
       // Spend slot
-      send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) })
+      send(id, { type: "EXPEND_SLOT", level: spellSlotLevel(slotLvl) });
       // Break existing concentration if any
-      const ctx = getSnap(id).context
+      const ctx = getSnap(id).context;
       if (Option.isSome(ctx.concentrationSpellId)) {
-        breakConcentrationAndPropagate(id)
+        breakConcentrationAndPropagate(id);
       }
       // Start concentration for the readied spell. The creature machine's START_CONCENTRATION
       // also adds an activeEffect, but Quint's bReadySpell only sets concentrationSpellId
@@ -1684,9 +1933,9 @@ function createBattleProjectionDriver() {
         spellId: mkSpellId(spellName),
         durationTurns: 1,
         expiresAt: "end",
-        casterId: mkCreatureId(id)
-      })
-      send(id, { type: "REMOVE_EFFECT", spellId: mkSpellId(spellName) })
+        casterId: mkCreatureId(id),
+      });
+      send(id, { type: "REMOVE_EFFECT", spellId: mkSpellId(spellName) });
       // Store params for release
       storedReadiedSpellParams = {
         caster: id,
@@ -1696,23 +1945,23 @@ function createBattleProjectionDriver() {
         halfOnSuccess: halfOnSave,
         damageType: mapDamageType(dt),
         conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
-        applyCondition: applyCond
-      }
+        applyCondition: applyCond,
+      };
     }
 
     function handleBReadySpellRelease(picks: ReadonlyMap<string, unknown>) {
-      if (!pendingEndTurn) return
-      const releaserId = pickString(picks, "releaserId") ?? ""
-      const saveRoll = pickBigInt(picks, "saveRoll") ?? 10
+      if (!pendingEndTurn) return;
+      const releaserId = pickString(picks, "releaserId") ?? "";
+      const saveRoll = pickBigInt(picks, "saveRoll") ?? 10;
 
       // Spend reaction
-      send(releaserId, { type: "USE_REACTION" })
+      send(releaserId, { type: "USE_REACTION" });
       // Break concentration (spell energy discharged)
-      breakConcentrationAndPropagate(releaserId)
+      breakConcentrationAndPropagate(releaserId);
 
-      if (!storedReadiedSpellParams) return
-      const rsp = storedReadiedSpellParams
-      storedReadiedSpellParams = null
+      if (!storedReadiedSpellParams) return;
+      const rsp = storedReadiedSpellParams;
+      storedReadiedSpellParams = null;
 
       // Create pendingSpell for CS window / immediate resolution
       pendingSpell = {
@@ -1726,21 +1975,21 @@ function createBattleProjectionDriver() {
         conditionOnFail: rsp.conditionOnFail,
         applyCondition: rsp.applyCondition,
         slotLvl: 0, // slot already spent at ready time — 0 skips expenditure in resolveSpellEntry
-        ritual: false
-      }
+        ritual: false,
+      };
 
-      const hasCSReactors = hasEligibleCSReactors(releaserId, csWindowOffered)
+      const hasCSReactors = hasEligibleCSReactors(releaserId, csWindowOffered);
       if (!hasCSReactors) {
-        resolveSpellSave(pendingSpell)
-        pendingSpell = null
+        resolveSpellSave(pendingSpell);
+        pendingSpell = null;
       }
     }
 
     function handleBCastBonusActionSpell(picks: ReadonlyMap<string, unknown>) {
-      const id = activeId()
-      send(id, { type: "USE_BONUS_ACTION" })
-      send(id, { type: "MARK_BONUS_ACTION_SPELL" })
-      castSaveSpell(picks, false)
+      const id = activeId();
+      send(id, { type: "USE_BONUS_ACTION" });
+      send(id, { type: "MARK_BONUS_ACTION_SPELL" });
+      castSaveSpell(picks, false);
     }
 
     // ============================================================
@@ -1749,7 +1998,7 @@ function createBattleProjectionDriver() {
 
     // Convert typed picks to Map for existing handlers
     function toMap(p: Record<string, unknown>): ReadonlyMap<string, unknown> {
-      return new Map(Object.entries(p))
+      return new Map(Object.entries(p));
     }
 
     const BETWEEN_TURN_ACTIONS = new Set([
@@ -1757,202 +2006,204 @@ function createBattleProjectionDriver() {
       "bLegendaryAttack",
       "bReadyPass",
       "bReadyRelease",
-      "bReadySpellRelease"
-    ])
+      "bReadySpellRelease",
+    ]);
 
     function before(action: string) {
       if (pendingEndTurn && !BETWEEN_TURN_ACTIONS.has(action)) {
-        advanceTurn()
+        advanceTurn();
       }
     }
 
     return {
       bInit: (p: Record<string, unknown>) => {
-        before("bInit")
-        handleBInit(toMap(p))
+        before("bInit");
+        handleBInit(toMap(p));
       },
       bStartTurn: (p: Record<string, unknown>) => {
-        before("bStartTurn")
-        handleBStartTurn(toMap(p))
+        before("bStartTurn");
+        handleBStartTurn(toMap(p));
       },
       bAttack: (p: Record<string, unknown>) => {
-        before("bAttack")
-        handleBAttack(toMap(p))
+        before("bAttack");
+        handleBAttack(toMap(p));
       },
       bResolveHitReaction: (p: Record<string, unknown>) => {
-        before("bResolveHitReaction")
-        handleBResolveHitReaction(toMap(p))
+        before("bResolveHitReaction");
+        handleBResolveHitReaction(toMap(p));
       },
       bResolveDmgReaction: (p: Record<string, unknown>) => {
-        before("bResolveDmgReaction")
-        handleBResolveDmgReaction(toMap(p))
+        before("bResolveDmgReaction");
+        handleBResolveDmgReaction(toMap(p));
       },
       bAfterDamagePass: (p: Record<string, unknown>) => {
-        before("bAfterDamagePass")
-        handleBAfterDamagePass(toMap(p))
+        before("bAfterDamagePass");
+        handleBAfterDamagePass(toMap(p));
       },
       bAfterDamageSpellReaction: (p: Record<string, unknown>) => {
-        before("bAfterDamageSpellReaction")
-        handleBAfterDamageSpellReaction(toMap(p))
+        before("bAfterDamageSpellReaction");
+        handleBAfterDamageSpellReaction(toMap(p));
       },
       bAfterDamageRetaliation: (p: Record<string, unknown>) => {
-        before("bAfterDamageRetaliation")
-        handleBAfterDamageRetaliation(toMap(p))
+        before("bAfterDamageRetaliation");
+        handleBAfterDamageRetaliation(toMap(p));
       },
       bCastSaveSpell: (p: Record<string, unknown>) => {
-        before("bCastSaveSpell")
-        handleBCastSaveSpell(toMap(p))
+        before("bCastSaveSpell");
+        handleBCastSaveSpell(toMap(p));
       },
       bResolveCounterspell: (p: Record<string, unknown>) => {
-        before("bResolveCounterspell")
-        handleBResolveCounterspell(toMap(p))
+        before("bResolveCounterspell");
+        handleBResolveCounterspell(toMap(p));
       },
       bResolveSaveFailedReaction: (p: Record<string, unknown>) => {
-        before("bResolveSaveFailedReaction")
-        handleBResolveSaveFailedReaction(toMap(p))
+        before("bResolveSaveFailedReaction");
+        handleBResolveSaveFailedReaction(toMap(p));
       },
       bCastConcentrationSpell: (p: Record<string, unknown>) => {
-        before("bCastConcentrationSpell")
-        handleBCastConcentrationSpell(toMap(p))
+        before("bCastConcentrationSpell");
+        handleBCastConcentrationSpell(toMap(p));
       },
       bConcentrationCheck: (p: Record<string, unknown>) => {
-        before("bConcentrationCheck")
-        handleBConcentrationCheck(toMap(p))
+        before("bConcentrationCheck");
+        handleBConcentrationCheck(toMap(p));
       },
       bCastAoE: (p: Record<string, unknown>) => {
-        before("bCastAoE")
-        handleBCastAoE(toMap(p))
+        before("bCastAoE");
+        handleBCastAoE(toMap(p));
       },
       bResolveAoETarget: (p: Record<string, unknown>) => {
-        before("bResolveAoETarget")
-        handleBResolveAoETarget(toMap(p))
+        before("bResolveAoETarget");
+        handleBResolveAoETarget(toMap(p));
       },
       bMove: () => {
-        before("bMove")
-        handleBMove(new Map())
+        before("bMove");
+        handleBMove(new Map());
       },
       bMovementOAPass: () => {
-        before("bMovementOAPass")
-        handleBMovementOAPass(new Map())
+        before("bMovementOAPass");
+        handleBMovementOAPass(new Map());
       },
       bMovementOAAttack: (p: Record<string, unknown>) => {
-        before("bMovementOAAttack")
-        handleBMovementOAAttack(toMap(p))
+        before("bMovementOAAttack");
+        handleBMovementOAAttack(toMap(p));
       },
       bEndTurn: (p: Record<string, unknown>) => {
-        before("bEndTurn")
-        handleBEndTurn(toMap(p))
+        before("bEndTurn");
+        handleBEndTurn(toMap(p));
       },
       bLegendaryPass: () => {
-        before("bLegendaryPass")
-        handleBLegendaryPass(new Map())
+        before("bLegendaryPass");
+        handleBLegendaryPass(new Map());
       },
       bLegendaryAttack: (p: Record<string, unknown>) => {
-        before("bLegendaryAttack")
-        handleBLegendaryAttack(toMap(p))
+        before("bLegendaryAttack");
+        handleBLegendaryAttack(toMap(p));
       },
       bHeal: (p: Record<string, unknown>) => {
-        before("bHeal")
-        handleBHeal(toMap(p))
+        before("bHeal");
+        handleBHeal(toMap(p));
       },
       bDash: () => {
-        before("bDash")
-        send(activeId(), { type: "USE_ACTION", actionType: "dash" })
+        before("bDash");
+        send(activeId(), { type: "USE_ACTION", actionType: "dash" });
       },
       bDisengage: () => {
-        before("bDisengage")
-        send(activeId(), { type: "USE_ACTION", actionType: "disengage" })
+        before("bDisengage");
+        send(activeId(), { type: "USE_ACTION", actionType: "disengage" });
       },
       bDodge: () => {
-        before("bDodge")
-        send(activeId(), { type: "USE_ACTION", actionType: "dodge" })
+        before("bDodge");
+        send(activeId(), { type: "USE_ACTION", actionType: "dodge" });
       },
       bGrapple: (p: Record<string, unknown>) => {
-        before("bGrapple")
-        handleBGrapple(toMap(p))
+        before("bGrapple");
+        handleBGrapple(toMap(p));
       },
       bReleaseGrapple: () => {
-        before("bReleaseGrapple")
-        handleBReleaseGrapple()
+        before("bReleaseGrapple");
+        handleBReleaseGrapple();
       },
       bEscapeGrapple: (p: Record<string, unknown>) => {
-        before("bEscapeGrapple")
-        handleBEscapeGrapple(toMap(p))
+        before("bEscapeGrapple");
+        handleBEscapeGrapple(toMap(p));
       },
       bActionSurge: () => {
-        before("bActionSurge")
-        send(activeId(), { type: "USE_ACTION_SURGE" })
+        before("bActionSurge");
+        send(activeId(), { type: "USE_ACTION_SURGE" });
       },
       bEnterRage: () => {
-        before("bEnterRage")
-        send(activeId(), { type: "ENTER_RAGE" })
+        before("bEnterRage");
+        send(activeId(), { type: "ENTER_RAGE" });
       },
       bDeclareReckless: () => {
-        before("bDeclareReckless")
-        send(activeId(), { type: "DECLARE_RECKLESS" })
+        before("bDeclareReckless");
+        send(activeId(), { type: "DECLARE_RECKLESS" });
       },
       bReady: () => {
-        before("bReady")
-        send(activeId(), { type: "USE_ACTION", actionType: "ready" })
+        before("bReady");
+        send(activeId(), { type: "USE_ACTION", actionType: "ready" });
       },
       bReadySpell: (p: Record<string, unknown>) => {
-        before("bReadySpell")
-        handleBReadySpell(toMap(p))
+        before("bReadySpell");
+        handleBReadySpell(toMap(p));
       },
       bReadyPass: () => {
-        before("bReadyPass")
-        handleBReadyPass()
+        before("bReadyPass");
+        handleBReadyPass();
       },
       bReadyRelease: (p: Record<string, unknown>) => {
-        before("bReadyRelease")
-        handleBReadyRelease(toMap(p))
+        before("bReadyRelease");
+        handleBReadyRelease(toMap(p));
       },
       bReadySpellRelease: (p: Record<string, unknown>) => {
-        before("bReadySpellRelease")
-        handleBReadySpellRelease(toMap(p))
+        before("bReadySpellRelease");
+        handleBReadySpellRelease(toMap(p));
       },
       bCastBonusActionSpell: (p: Record<string, unknown>) => {
-        before("bCastBonusActionSpell")
-        handleBCastBonusActionSpell(toMap(p))
+        before("bCastBonusActionSpell");
+        handleBCastBonusActionSpell(toMap(p));
       },
       battleStep: () => {}, // composite — framework expands to leaf actions
       getState: () => {
-        const result = new Map<string, BattleCreatureState>()
+        const result = new Map<string, BattleCreatureState>();
         for (const [id, actor] of actors) {
-          const base = projectToBattle(snapshotToNormalized(actor.getSnapshot()))
-          result.set(id, base)
+          const base = projectToBattle(
+            snapshotToNormalized(actor.getSnapshot()),
+          );
+          result.set(id, base);
         }
-        return result
+        return result;
       },
-      config: () => ({ statePath: [] as Array<string> })
-    }
-  })
+      config: () => ({ statePath: [] as Array<string> }),
+    };
+  });
 }
 
 // ============================================================
 // State comparison (B14.5)
 // ============================================================
 
-type BattleDriverState = Map<string, BattleCreatureState>
+type BattleDriverState = Map<string, BattleCreatureState>;
 
 const battleStateCheck = stateCheck(
   (raw: unknown) => {
-    const parsed = QuintBattleState.parse(raw)
-    const result = new Map<string, BattleCreatureState>()
+    const parsed = QuintBattleState.parse(raw);
+    const result = new Map<string, BattleCreatureState>();
     for (const [id, combatant] of parsed.bCreatures) {
-      result.set(id, quintCombatantToNormalized(combatant))
+      result.set(id, quintCombatantToNormalized(combatant));
     }
-    return result
+    return result;
   },
   (spec: BattleDriverState, impl: BattleDriverState) => {
     for (const [id, specState] of spec) {
-      const implState = impl.get(id)
-      if (!implState) return false
-      if (!compareNormalizedStates(specState, implState)) return false
+      const implState = impl.get(id);
+      if (!implState) return false;
+      if (!compareNormalizedStates(specState, implState)) return false;
     }
-    return true
-  }
-)
+    return true;
+  },
+);
 
 // ============================================================
 // Test harness (B14.5)
@@ -1962,55 +2213,60 @@ describe("Battle Projection MBT", () => {
   // Kill zombie evaluators before starting and after finishing.
   // Zombies from prior runs at 100% CPU cause 40x slowdowns (Finding 12).
   beforeAll(() => {
-    killZombieEvaluators()
-    registerEvaluatorCleanup()
-  })
+    killZombieEvaluators();
+    registerEvaluatorCleanup();
+  });
   afterAll(() => {
-    killZombieEvaluators()
-  })
+    killZombieEvaluators();
+  });
 
   // MBT_DEV=1: fast dev feedback (fewer samples, shorter traces).
   // Default: comprehensive run for CI / perpetual background validation.
-  const isDev = process.env["MBT_DEV"] === "1"
-  const MBT_TRACE_COUNT = 1
-  const MBT_STEP_COUNT = isDev ? 5 : 10
-  const MBT_MAX_SAMPLES = isDev ? 10 : 50
-  const specPath = path.resolve(import.meta.dirname, "../../../battle.qnt")
+  const isDev = process.env["MBT_DEV"] === "1";
+  const MBT_TRACE_COUNT = 1;
+  const MBT_STEP_COUNT = isDev ? 5 : 10;
+  const MBT_MAX_SAMPLES = isDev ? 10 : 50;
+  const specPath = path.resolve(import.meta.dirname, "../../../battle.qnt");
 
   it("replays battle traces per-creature against creatureMachine actors", async () => {
-    const dir = process.env["MBT_REPLAY_DIR"]
+    const dir = process.env["MBT_REPLAY_DIR"];
     if (dir) {
       // Replay from pre-generated ITF files (skips Quint evaluator).
-      const { replayFromDir } = await import("./mbt-replay.js")
+      const { replayFromDir } = await import("./mbt-replay.js");
       const result = await replayFromDir({
         dir,
         driver: createBattleProjectionDriver(),
-        stateCheck: battleStateCheck
-      })
-      console.log(`[battle MBT] replayed ${result.tracesReplayed} traces from ${dir}`)
+        stateCheck: battleStateCheck,
+      });
+      console.log(
+        `[battle MBT] replayed ${result.tracesReplayed} traces from ${dir}`,
+      );
     } else {
       // Use pre-compiled spec cache if available (skip 15s+ parse/typecheck).
       // Generate with: node scripts/compile-battle-spec.cjs
       // WARNING: Cache becomes stale when battle.qnt or creature.qnt change.
       // The compile script writes a .hash file for staleness detection.
       // See QUINT_CONNECT_TROUBLESHOOT.md for full context.
-      const compiledInputPath = path.resolve(import.meta.dirname, "../../../.quint-cache/battle-compiled.json")
-      const hashPath = compiledInputPath.replace(/\.json$/, ".hash")
+      const compiledInputPath = path.resolve(
+        import.meta.dirname,
+        "../../../.quint-cache/battle-compiled.json",
+      );
+      const hashPath = compiledInputPath.replace(/\.json$/, ".hash");
       if (compiledInputPath) {
-        const { existsSync, readFileSync } = await import("node:fs")
-        const crypto = await import("node:crypto")
+        const { existsSync, readFileSync } = await import("node:fs");
+        const crypto = await import("node:crypto");
         if (existsSync(hashPath)) {
-          const cachedHash = readFileSync(hashPath, "utf-8").trim()
-          const hash = crypto.createHash("sha256")
-          const specDir = path.resolve(import.meta.dirname, "../../..")
+          const cachedHash = readFileSync(hashPath, "utf-8").trim();
+          const hash = crypto.createHash("sha256");
+          const specDir = path.resolve(import.meta.dirname, "../../..");
           for (const f of ["battle.qnt", "creature.qnt"]) {
-            const fp = path.join(specDir, f)
-            if (existsSync(fp)) hash.update(readFileSync(fp))
+            const fp = path.join(specDir, f);
+            if (existsSync(fp)) hash.update(readFileSync(fp));
           }
           if (hash.digest("hex") !== cachedHash) {
             console.warn(
-              "[battle MBT] WARNING: compiled spec cache is STALE. Run: node scripts/compile-battle-spec.cjs"
-            )
+              "[battle MBT] WARNING: compiled spec cache is STALE. Run: node scripts/compile-battle-spec.cjs",
+            );
           }
         }
       }
@@ -2025,9 +2281,11 @@ describe("Battle Projection MBT", () => {
         maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
         stateCheck: battleStateCheck,
         compiledInput: compiledInputPath,
-        ...(process.env["MBT_TRACE_DIR"] ? { traceDir: process.env["MBT_TRACE_DIR"] } : {})
-      })
-      logMbtSeed("battle MBT", result)
+        ...(process.env["MBT_TRACE_DIR"]
+          ? { traceDir: process.env["MBT_TRACE_DIR"] }
+          : {}),
+      });
+      logMbtSeed("battle MBT", result);
     }
-  }, 600_000) // 10 min — sufficient for Tier 1/2; Tier 3 uses mbt-fuzz.sh (per-seed isolation)
-})
+  }, 600_000); // 10 min — sufficient for Tier 1/2; Tier 3 uses mbt-fuzz.sh (per-seed isolation)
+});

@@ -4,17 +4,24 @@
  *
  * Complements battle-projection.mbt.test.ts (per-creature projection against creatureMachine).
  */
-import * as path from "node:path"
+import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect"
-import { Option } from "effect"
-import { afterAll, beforeAll, describe, it } from "vitest"
-import { createActor } from "xstate"
-import { z } from "zod"
+import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import { Option } from "effect";
+import { afterAll, beforeAll, describe, it } from "vitest";
+import { createActor } from "xstate";
+import { z } from "zod";
 
-import { battleMachine } from "#/battle-machine.ts"
-import type { BattleContext, BattleCreatureState, BattleEvent } from "#/battle-machine-types.ts"
-import { killZombieEvaluators, registerEvaluatorCleanup } from "#/mbt-cleanup.ts"
+import { battleMachine } from "#/battle-machine.ts";
+import type {
+  BattleContext,
+  BattleCreatureState,
+  BattleEvent,
+} from "#/battle-machine-types.ts";
+import {
+  killZombieEvaluators,
+  registerEvaluatorCleanup,
+} from "#/mbt-cleanup.ts";
 import {
   compareNormalizedStates,
   ITFBigInt,
@@ -29,16 +36,16 @@ import {
   QuintMonsterResourceState,
   QuintSpellSlotState,
   QuintTurnState,
-  variantToString
-} from "#/mbt-shared.ts"
-import type { CreatureId, Size } from "#/types.ts"
+  variantToString,
+} from "#/mbt-shared.ts";
+import type { CreatureId, Size } from "#/types.ts";
 import {
   armorClass,
   CreatureId as mkCreatureId,
   difficultyClass,
   spellId as mkSpellId,
-  spellSlotLevel
-} from "#/types.ts"
+  spellSlotLevel,
+} from "#/types.ts";
 
 // ============================================================
 // Quint state parsing (reuse battle-level schemas from B14)
@@ -59,7 +66,7 @@ const QuintCombatant = z.object({
   fighterState: z
     .object({
       actionSurgeCharges: z.bigint(),
-      actionSurgeUsedThisTurn: z.boolean()
+      actionSurgeUsedThisTurn: z.boolean(),
     })
     .passthrough(),
   fighterLevel: z.bigint(),
@@ -73,25 +80,26 @@ const QuintCombatant = z.object({
   baseWalkSpeed: z.bigint(),
   grappledBy: z.string(),
   grapplingTarget: z.string(),
-  grappledTargetTwoSizesSmaller: z.boolean()
-})
+  grappledTargetTwoSizesSmaller: z.boolean(),
+});
 
-type ParsedCombatant = z.infer<typeof QuintCombatant>
+type ParsedCombatant = z.infer<typeof QuintCombatant>;
 
 const QuintBCreaturesMap = z.any().transform((raw: unknown) => {
-  const result = new Map<string, ParsedCombatant>()
+  const result = new Map<string, ParsedCombatant>();
   if (raw instanceof Map) {
-    for (const [k, v] of raw) result.set(String(k), QuintCombatant.parse(v))
+    for (const [k, v] of raw) result.set(String(k), QuintCombatant.parse(v));
   } else if (typeof raw === "object" && raw !== null) {
-    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) result.set(k, QuintCombatant.parse(v))
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>))
+      result.set(k, QuintCombatant.parse(v));
   }
-  return result
-})
+  return result;
+});
 
 const QuintInitiativeList = z.any().transform((raw: unknown) => {
-  if (Array.isArray(raw)) return raw.map(String)
-  return [] as Array<string>
-})
+  if (Array.isArray(raw)) return raw.map(String);
+  return [] as Array<string>;
+});
 
 const QuintBattleState = z.object({
   bCreatures: QuintBCreaturesMap,
@@ -100,96 +108,98 @@ const QuintBattleState = z.object({
   bRound: z.bigint(),
   bTurnStarted: z.boolean(),
   bPhase: z.any(),
-  bSpellStack: z.any()
-})
+  bSpellStack: z.any(),
+});
 
 // ============================================================
 // Normalized battle creature state (for comparison)
 // ============================================================
 
 interface NormalizedBattleCreature {
-  hp: number
-  maxHp: number
-  tempHp: number
-  deathSavesSuccesses: number
-  deathSavesFailures: number
-  stable: boolean
-  dead: boolean
-  blinded: boolean
-  charmed: boolean
-  deafened: boolean
-  exhaustion: number
-  frightened: boolean
-  grappled: boolean
-  grappledBy: string
-  grapplingTarget: string
-  grappledTargetTwoSizesSmaller: boolean
-  invisible: boolean
-  paralyzed: boolean
-  petrified: boolean
-  poisoned: boolean
-  prone: boolean
-  restrained: boolean
-  stunned: boolean
-  unconscious: boolean
-  incapacitatedSources: ReadonlySet<string>
+  hp: number;
+  maxHp: number;
+  tempHp: number;
+  deathSavesSuccesses: number;
+  deathSavesFailures: number;
+  stable: boolean;
+  dead: boolean;
+  blinded: boolean;
+  charmed: boolean;
+  deafened: boolean;
+  exhaustion: number;
+  frightened: boolean;
+  grappled: boolean;
+  grappledBy: string;
+  grapplingTarget: string;
+  grappledTargetTwoSizesSmaller: boolean;
+  invisible: boolean;
+  paralyzed: boolean;
+  petrified: boolean;
+  poisoned: boolean;
+  prone: boolean;
+  restrained: boolean;
+  stunned: boolean;
+  unconscious: boolean;
+  incapacitatedSources: ReadonlySet<string>;
   activeEffects: ReadonlyArray<{
-    spellId: string
-    turnsRemaining: number
-    expiresAt: string
-    casterId: string
-    grantedResistances: ReadonlySet<string>
-    grantedVulnerabilities: ReadonlySet<string>
-    grantedImmunities: ReadonlySet<string>
-  }>
-  movementRemaining: number
-  effectiveSpeed: number
-  actionsRemaining: number
-  attackActionUsed: boolean
-  bonusActionUsed: boolean
-  reactionAvailable: boolean
-  freeInteractionUsed: boolean
-  extraAttacksRemaining: number
-  disengaged: boolean
-  dodging: boolean
-  readiedAction: boolean
-  bonusActionSpellCast: boolean
-  nonCantripActionSpellCast: boolean
-  bonusMovementRemaining: number
-  bonusMovementOAFree: boolean
-  actionSurgeActionPending: boolean
-  slotExpendedThisTurn: boolean
-  slotsMax: ReadonlyArray<number>
-  slotsCurrent: ReadonlyArray<number>
-  pactSlotsMax: number
-  pactSlotsCurrent: number
-  pactSlotLevel: number
-  concentrationSpellId: string
-  legendaryActionsRemaining: number
-  legendaryResistancesRemaining: number
-  rechargeAvailable: Readonly<Record<string, boolean>>
-  dailyUsesRemaining: Readonly<Record<string, number>>
-  creatureKind: string
-  hasEvasion: boolean
-  saveMiscBonus: number
-  critRange: number
-  actionSurgeCharges: number
-  actionSurgeUsedThisTurn: boolean
-  fighterLevel: number
-  barbarianLevel: number
-  meleeDamageBonus: number
-  recklessThisTurn: boolean
-  ragingBlocksSpells: boolean
-  combatantResistances: ReadonlySet<string>
-  sneakAttackDice: number
-  sneakAttackUsedThisTurn: boolean
-  baseWalkSpeed: number
+    spellId: string;
+    turnsRemaining: number;
+    expiresAt: string;
+    casterId: string;
+    grantedResistances: ReadonlySet<string>;
+    grantedVulnerabilities: ReadonlySet<string>;
+    grantedImmunities: ReadonlySet<string>;
+  }>;
+  movementRemaining: number;
+  effectiveSpeed: number;
+  actionsRemaining: number;
+  attackActionUsed: boolean;
+  bonusActionUsed: boolean;
+  reactionAvailable: boolean;
+  freeInteractionUsed: boolean;
+  extraAttacksRemaining: number;
+  disengaged: boolean;
+  dodging: boolean;
+  readiedAction: boolean;
+  bonusActionSpellCast: boolean;
+  nonCantripActionSpellCast: boolean;
+  bonusMovementRemaining: number;
+  bonusMovementOAFree: boolean;
+  actionSurgeActionPending: boolean;
+  slotExpendedThisTurn: boolean;
+  slotsMax: ReadonlyArray<number>;
+  slotsCurrent: ReadonlyArray<number>;
+  pactSlotsMax: number;
+  pactSlotsCurrent: number;
+  pactSlotLevel: number;
+  concentrationSpellId: string;
+  legendaryActionsRemaining: number;
+  legendaryResistancesRemaining: number;
+  rechargeAvailable: Readonly<Record<string, boolean>>;
+  dailyUsesRemaining: Readonly<Record<string, number>>;
+  creatureKind: string;
+  hasEvasion: boolean;
+  saveMiscBonus: number;
+  critRange: number;
+  actionSurgeCharges: number;
+  actionSurgeUsedThisTurn: boolean;
+  fighterLevel: number;
+  barbarianLevel: number;
+  meleeDamageBonus: number;
+  recklessThisTurn: boolean;
+  ragingBlocksSpells: boolean;
+  combatantResistances: ReadonlySet<string>;
+  sneakAttackDice: number;
+  sneakAttackUsedThisTurn: boolean;
+  baseWalkSpeed: number;
 }
 
-function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreature {
-  const s = c.creature
-  const t = c.turn
-  const ss = c.slots
+function quintCombatantToNormalized(
+  c: ParsedCombatant,
+): NormalizedBattleCreature {
+  const s = c.creature;
+  const t = c.turn;
+  const ss = c.slots;
   return {
     hp: Number(s.hp),
     maxHp: Number(s.maxHp),
@@ -240,8 +250,12 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     pactSlotsCurrent: Number(ss.pactSlotsCurrent),
     pactSlotLevel: Number(ss.pactSlotLevel),
     concentrationSpellId: ss.concentrationSpellId,
-    legendaryActionsRemaining: Number(c.monsterResources.legendaryActionsRemaining),
-    legendaryResistancesRemaining: Number(c.monsterResources.legendaryResistancesRemaining),
+    legendaryActionsRemaining: Number(
+      c.monsterResources.legendaryActionsRemaining,
+    ),
+    legendaryResistancesRemaining: Number(
+      c.monsterResources.legendaryResistancesRemaining,
+    ),
     rechargeAvailable: c.monsterResources.rechargeAvailable,
     dailyUsesRemaining: c.monsterResources.dailyUsesRemaining,
     creatureKind: c.kind,
@@ -258,13 +272,15 @@ function quintCombatantToNormalized(c: ParsedCombatant): NormalizedBattleCreatur
     combatantResistances: parseDamageTypeSet(c.combatantResistances),
     sneakAttackDice: Number(c.sneakAttackDice),
     sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
-    baseWalkSpeed: Number(c.baseWalkSpeed)
-  }
+    baseWalkSpeed: Number(c.baseWalkSpeed),
+  };
 }
 
-const EMPTY_STRING_SET: ReadonlySet<string> = new Set<string>()
+const EMPTY_STRING_SET: ReadonlySet<string> = new Set<string>();
 
-function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCreature {
+function xstateCreatureToNormalized(
+  c: BattleCreatureState,
+): NormalizedBattleCreature {
   return {
     hp: c.hp,
     maxHp: c.maxHp,
@@ -299,7 +315,7 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
         casterId: ae.casterId,
         grantedResistances: ae.grantedResistances ?? EMPTY_STRING_SET,
         grantedVulnerabilities: ae.grantedVulnerabilities ?? EMPTY_STRING_SET,
-        grantedImmunities: ae.grantedImmunities ?? EMPTY_STRING_SET
+        grantedImmunities: ae.grantedImmunities ?? EMPTY_STRING_SET,
       }))
       .sort((a, b) => a.spellId.localeCompare(b.spellId)),
     movementRemaining: c.movementRemaining,
@@ -343,8 +359,8 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
     combatantResistances: c.combatantResistances,
     sneakAttackDice: c.sneakAttackDice,
     sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
-    baseWalkSpeed: c.baseWalkSpeed
-  }
+    baseWalkSpeed: c.baseWalkSpeed,
+  };
 }
 
 // ============================================================
@@ -352,21 +368,21 @@ function xstateCreatureToNormalized(c: BattleCreatureState): NormalizedBattleCre
 // ============================================================
 
 interface BattleCompareState {
-  creatures: Map<string, NormalizedBattleCreature>
-  turnIndex: number
-  round: number
-  turnStarted: boolean
-  phase: string
+  creatures: Map<string, NormalizedBattleCreature>;
+  turnIndex: number;
+  round: number;
+  turnStarted: boolean;
+  phase: string;
 }
 
 // ============================================================
 // Driver
 // ============================================================
 
-const OI = ITFBigInt.optional()
-const OV = ITFVariant.optional()
-const OB = z.boolean().optional()
-const OS = z.string().optional()
+const OI = ITFBigInt.optional();
+const OV = ITFVariant.optional();
+const OB = z.boolean().optional();
+const OS = z.string().optional();
 
 const battleDriverSchema = {
   bInit: {
@@ -387,9 +403,16 @@ const battleDriverSchema = {
     surprised3: OB,
     surprised4: OB,
     smb2: OI,
-    smb4: OI
+    smb4: OI,
   },
-  bStartTurn: { rechargeD6: OI, sotDmg: OI, sotDt: OV, sotHeal: OI, sotSaveResult: OB, sotConSave: OB },
+  bStartTurn: {
+    rechargeD6: OI,
+    sotDmg: OI,
+    sotDt: OV,
+    sotHeal: OI,
+    sotSaveResult: OB,
+    sotConSave: OB,
+  },
   bAttack: {
     targetId: OS,
     attackRoll: OI,
@@ -410,13 +433,30 @@ const battleDriverSchema = {
     frightSourceInLOS: OB,
     hasAllyAdjacentToTarget: OB,
     saDmg: OI,
-    hitReactionCandidates: z.any().optional()
+    hitReactionCandidates: z.any().optional(),
   },
-  bResolveHitReaction: { reactorId: OS, parryBonus: OI, cwReduction: OI, decision: OV },
+  bResolveHitReaction: {
+    reactorId: OS,
+    parryBonus: OI,
+    cwReduction: OI,
+    decision: OV,
+  },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
   bAfterDamagePass: { reactorId: OS },
-  bAfterDamageSpellReaction: { reactionDmg: OI, reactionSaved: OB, reactionDt: OV, reactorId: OS },
-  bAfterDamageRetaliation: { retAtkRoll: OI, retDmg: OI, retDt: OV, retCrit: OB, retTgtAc: OI, reactorId: OS },
+  bAfterDamageSpellReaction: {
+    reactionDmg: OI,
+    reactionSaved: OB,
+    reactionDt: OV,
+    reactorId: OS,
+  },
+  bAfterDamageRetaliation: {
+    retAtkRoll: OI,
+    retDmg: OI,
+    retDt: OV,
+    retCrit: OB,
+    retTgtAc: OI,
+    reactorId: OS,
+  },
   bCastSaveSpell: {
     targetId: OS,
     saveDC: OI,
@@ -427,9 +467,13 @@ const battleDriverSchema = {
     cond: OV,
     applyCond: OB,
     slotLvl: OI,
-    ritual: OB
+    ritual: OB,
   },
-  bResolveCounterspell: { reactorId: OS, decision: ITFVariantWithValue.optional(), csSlotLvl: OI },
+  bResolveCounterspell: {
+    reactorId: OS,
+    decision: ITFVariantWithValue.optional(),
+    csSlotLvl: OI,
+  },
   bResolveSaveFailedReaction: { reactorId: OS, decision: OV },
   bCastConcentrationSpell: {
     targetId: OS,
@@ -438,10 +482,19 @@ const battleDriverSchema = {
     spellId: OS,
     cond: OV,
     applyCond: OB,
-    ritual: OB
+    ritual: OB,
   },
   bConcentrationCheck: { targetId: OS, conSaveSucceeded: OB },
-  bCastAoE: { saveDC: OI, dmgOnFail: OI, halfOnSave: OB, dt: OV, cond: OV, applyCond: OB, slotLvl: OI, ritual: OB },
+  bCastAoE: {
+    saveDC: OI,
+    dmgOnFail: OI,
+    halfOnSave: OB,
+    dt: OV,
+    cond: OV,
+    applyCond: OB,
+    slotLvl: OI,
+    ritual: OB,
+  },
   bResolveAoETarget: { targetId: OS, saveRoll: OI },
   bMove: { threatened: z.any().optional() },
   bMovementOAPass: { reactorId: OS },
@@ -460,7 +513,7 @@ const battleDriverSchema = {
     frightSourceInLOS: OB,
     hasAllyAdjacentToTarget: OB,
     saDmg: OI,
-    hitReactionCandidates: z.any().optional()
+    hitReactionCandidates: z.any().optional(),
   },
   bEndTurn: { eotSaveSucceeded: OB, eotDmg: OI, eotDt: OV, eotConSave: OB },
   bLegendaryPass: {},
@@ -482,13 +535,19 @@ const battleDriverSchema = {
     frightSourceInLOS: OB,
     hasAllyAdjacentToTarget: OB,
     saDmg: OI,
-    hitReactionCandidates: z.any().optional()
+    hitReactionCandidates: z.any().optional(),
   },
   bHeal: { targetId: OS, amount: OI },
   bDash: {},
   bDisengage: {},
   bDodge: {},
-  bGrapple: { targetId: OS, attackerSize: z.any(), targetSize: z.any(), targetSaveFailed: OB, attackerHasFreeHand: OB },
+  bGrapple: {
+    targetId: OS,
+    attackerSize: z.any(),
+    targetSize: z.any(),
+    targetSaveFailed: OB,
+    attackerHasFreeHand: OB,
+  },
   bReleaseGrapple: {},
   bEscapeGrapple: { escapeSucceeded: OB },
   bActionSurge: {},
@@ -505,7 +564,7 @@ const battleDriverSchema = {
     applyCond: OB,
     saveAb: OV,
     slotLvl: OI,
-    spellName: OS
+    spellName: OS,
   },
   bReadyPass: {},
   bReadyRelease: {
@@ -526,11 +585,11 @@ const battleDriverSchema = {
     frightSourceInLOS: OB,
     hasAllyAdjacentToTarget: OB,
     saDmg: OI,
-    hitReactionCandidates: z.any().optional()
+    hitReactionCandidates: z.any().optional(),
   },
   bReadySpellRelease: {
     releaserId: OS,
-    saveRoll: OI
+    saveRoll: OI,
   },
   bCastBonusActionSpell: {
     targetId: OS,
@@ -542,42 +601,65 @@ const battleDriverSchema = {
     cond: OV,
     applyCond: OB,
     slotLvl: OI,
-    spellName: OS
+    spellName: OS,
   },
-  battleStep: {}
-} as const
+  battleStep: {},
+} as const;
 
-function p(picks: Record<string, unknown>, key: string, fallback: number): number {
-  const v = picks[key]
-  return v != null ? Number(v) : fallback
+function p(
+  picks: Record<string, unknown>,
+  key: string,
+  fallback: number,
+): number {
+  const v = picks[key];
+  return v != null ? Number(v) : fallback;
 }
-function ps(picks: Record<string, unknown>, key: string, fallback: string): string {
-  const v = picks[key]
-  return v != null ? String(v) : fallback
+function ps(
+  picks: Record<string, unknown>,
+  key: string,
+  fallback: string,
+): string {
+  const v = picks[key];
+  return v != null ? String(v) : fallback;
 }
 /** Pick a string and brand as CreatureId (MBT boundary). */
-function pc(picks: Record<string, unknown>, key: string, fallback: string): CreatureId {
-  return mkCreatureId(ps(picks, key, fallback))
+function pc(
+  picks: Record<string, unknown>,
+  key: string,
+  fallback: string,
+): CreatureId {
+  return mkCreatureId(ps(picks, key, fallback));
 }
 /** Pick a nullable string and brand as CreatureId | null (MBT boundary). */
 function pcn(picks: Record<string, unknown>, key: string): CreatureId | null {
-  return picks[key] != null ? mkCreatureId(String(picks[key])) : null
+  return picks[key] != null ? mkCreatureId(String(picks[key])) : null;
 }
-function pb(picks: Record<string, unknown>, key: string, fallback: boolean): boolean {
-  const v = picks[key]
-  return typeof v === "boolean" ? v : fallback
+function pb(
+  picks: Record<string, unknown>,
+  key: string,
+  fallback: boolean,
+): boolean {
+  const v = picks[key];
+  return typeof v === "boolean" ? v : fallback;
 }
-function psz(picks: Record<string, unknown>, key: string, fallback: Size): Size {
-  const v = picks[key]
-  const parsed = variantToString(v).toLowerCase()
-  return parsed === "[object object]" ? fallback : (parsed as Size)
+function psz(
+  picks: Record<string, unknown>,
+  key: string,
+  fallback: Size,
+): Size {
+  const v = picks[key];
+  const parsed = variantToString(v).toLowerCase();
+  return parsed === "[object object]" ? fallback : (parsed as Size);
 }
-function pcs(picks: Record<string, unknown>, key: string): ReadonlySet<CreatureId> {
-  const raw = picks[key]
-  if (!(raw instanceof Set)) return new Set()
-  const result = new Set<CreatureId>()
-  for (const item of raw) result.add(mkCreatureId(String(item)))
-  return result
+function pcs(
+  picks: Record<string, unknown>,
+  key: string,
+): ReadonlySet<CreatureId> {
+  const raw = picks[key];
+  if (!(raw instanceof Set)) return new Set();
+  const result = new Set<CreatureId>();
+  for (const item of raw) result.add(mkCreatureId(String(item)));
+  return result;
 }
 /** Common spatial/visibility/SA fields for attack event dispatch. */
 function attackContextPicks(picks: Record<string, unknown>) {
@@ -590,20 +672,20 @@ function attackContextPicks(picks: Record<string, unknown>) {
     frightSourceInLOS: pb(picks, "frightSourceInLOS", false),
     hasAllyAdjacentToTarget: pb(picks, "hasAllyAdjacentToTarget", false),
     saDmg: p(picks, "saDmg", 0),
-    hitReactionCandidates: pcs(picks, "hitReactionCandidates")
-  }
+    hitReactionCandidates: pcs(picks, "hitReactionCandidates"),
+  };
 }
 
 function currentTurnCreatureId(context: BattleContext): CreatureId {
-  return context.initiative[context.turnIndex]!
+  return context.initiative[context.turnIndex]!;
 }
 
 function onHitEffectFromPicks(
   picks: Record<string, unknown>,
   attackerId: CreatureId,
-  targetId: CreatureId
+  targetId: CreatureId,
 ) {
-  const hitRider = ps(picks, "hitRider", "NoAttackHitRider")
+  const hitRider = ps(picks, "hitRider", "NoAttackHitRider");
   if (hitRider === "AHRShockingGrasp") {
     return {
       spellId: mkSpellId("shocking_grasp"),
@@ -611,8 +693,8 @@ function onHitEffectFromPicks(
       expiresAt: "start" as const,
       casterId: attackerId,
       expiryOwnerId: targetId,
-      blocksOpportunityAttacks: true
-    }
+      blocksOpportunityAttacks: true,
+    };
   }
   if (hitRider === "AHRRayOfFrost") {
     return {
@@ -621,36 +703,39 @@ function onHitEffectFromPicks(
       expiresAt: "start" as const,
       casterId: attackerId,
       expiryOwnerId: attackerId,
-      speedDeltaFeet: -10
-    }
+      speedDeltaFeet: -10,
+    };
   }
-  return undefined
+  return undefined;
 }
 
 function createBattleMachineDriver() {
   return defineDriver(battleDriverSchema, () => {
-    let actor: ReturnType<typeof createActor<typeof battleMachine>> | null = null
+    let actor: ReturnType<typeof createActor<typeof battleMachine>> | null =
+      null;
 
     function send(event: BattleEvent) {
-      if (!actor) throw new Error("Actor not initialized")
-      actor.send(event)
+      if (!actor) throw new Error("Actor not initialized");
+      actor.send(event);
     }
 
     function ctx(): BattleContext {
-      if (!actor) throw new Error("Actor not initialized")
-      return actor.getSnapshot().context
+      if (!actor) throw new Error("Actor not initialized");
+      return actor.getSnapshot().context;
     }
 
     function parseThreatenedSet(raw: unknown): Set<CreatureId> {
-      if (raw instanceof Set) return new Set([...raw].map((x) => mkCreatureId(String(x))))
-      if (Array.isArray(raw)) return new Set(raw.map((x) => mkCreatureId(String(x))))
-      return new Set()
+      if (raw instanceof Set)
+        return new Set([...raw].map((x) => mkCreatureId(String(x))));
+      if (Array.isArray(raw))
+        return new Set(raw.map((x) => mkCreatureId(String(x))));
+      return new Set();
     }
 
     return {
       bInit: (picks: Record<string, unknown>) => {
-        actor = createActor(battleMachine)
-        actor.start()
+        actor = createActor(battleMachine);
+        actor.start();
         send({
           type: "BATTLE_INIT",
           creatures: [
@@ -664,7 +749,7 @@ function createBattleMachineDriver() {
               sneakAttackDice: 3,
               initiativeRoll: p(picks, "initRoll1", 10),
               initiativeRollB: p(picks, "initRoll1b", 10),
-              surprised: pb(picks, "surprised1", false)
+              surprised: pb(picks, "surprised1", false),
             },
             {
               id: mkCreatureId("B"),
@@ -676,7 +761,7 @@ function createBattleMachineDriver() {
               baseWalkSpeed: 40, // 30 base + 10 Fast Movement (Barbarian L5)
               initiativeRoll: p(picks, "initRoll2", 10),
               initiativeRollB: p(picks, "initRoll2b", 10),
-              surprised: pb(picks, "surprised2", false)
+              surprised: pb(picks, "surprised2", false),
             },
             {
               id: mkCreatureId("C"),
@@ -687,7 +772,7 @@ function createBattleMachineDriver() {
               baseWalkSpeed: 30,
               initiativeRoll: p(picks, "initRoll3", 10),
               initiativeRollB: p(picks, "initRoll3b", 10),
-              surprised: pb(picks, "surprised3", false)
+              surprised: pb(picks, "surprised3", false),
             },
             {
               id: mkCreatureId("D"),
@@ -699,10 +784,10 @@ function createBattleMachineDriver() {
               saveMiscBonus: p(picks, "smb4", 0),
               initiativeRoll: p(picks, "initRoll4", 10),
               initiativeRollB: p(picks, "initRoll4b", 10),
-              surprised: pb(picks, "surprised4", false)
-            }
-          ]
-        })
+              surprised: pb(picks, "surprised4", false),
+            },
+          ],
+        });
       },
       bStartTurn: (picks: Record<string, unknown>) => {
         send({
@@ -713,12 +798,12 @@ function createBattleMachineDriver() {
           sotHeal: p(picks, "sotHeal", 0),
           sotSaveResult: pb(picks, "sotSaveResult", false),
           sotConSave: pb(picks, "sotConSave", false),
-          deathSaveRoll: p(picks, "deathSaveRoll", 0)
-        })
+          deathSaveRoll: p(picks, "deathSaveRoll", 0),
+        });
       },
       bAttack: (picks: Record<string, unknown>) => {
-        const battleCtx = ctx()
-        const targetId = pc(picks, "targetId", "")
+        const battleCtx = ctx();
+        const targetId = pc(picks, "targetId", "");
         send({
           type: "BATTLE_ATTACK",
           targetId,
@@ -731,45 +816,55 @@ function createBattleMachineDriver() {
           tAc: armorClass(p(picks, "tAc", 15)),
           knockOut: pb(picks, "knockOut", false),
           isMelee: pb(picks, "isMelee", true),
-          onHitEffect: onHitEffectFromPicks(picks, currentTurnCreatureId(battleCtx), targetId),
-          ...attackContextPicks(picks)
-        })
+          onHitEffect: onHitEffectFromPicks(
+            picks,
+            currentTurnCreatureId(battleCtx),
+            targetId,
+          ),
+          ...attackContextPicks(picks),
+        });
       },
       bResolveHitReaction: (picks: Record<string, unknown>) => {
-        const tag = ps(picks, "decision", "RPass")
+        const tag = ps(picks, "decision", "RPass");
         const decision =
           tag === "RShield"
             ? ({ tag: "RShield" } as const)
             : tag === "RParry"
               ? ({ tag: "RParry", bonus: p(picks, "parryBonus", 3) } as const)
               : tag === "RCuttingWords"
-                ? ({ tag: "RCuttingWords", reduction: p(picks, "cwReduction", 6) } as const)
-                : ({ tag: "RPass" } as const)
+                ? ({
+                    tag: "RCuttingWords",
+                    reduction: p(picks, "cwReduction", 6),
+                  } as const)
+                : ({ tag: "RPass" } as const);
         send({
           type: "BATTLE_RESOLVE_HIT_REACTION",
           reactorId: pcn(picks, "reactorId"),
-          decision
-        })
+          decision,
+        });
       },
       bResolveDmgReaction: (picks: Record<string, unknown>) => {
-        const tag = ps(picks, "decision", "RPass")
+        const tag = ps(picks, "decision", "RPass");
         const decision =
           tag === "RUncannyDodge"
             ? ({ tag: "RUncannyDodge" } as const)
             : tag === "RDeflectAttacks"
-              ? ({ tag: "RDeflectAttacks", amount: p(picks, "reductionAmt", 5) } as const)
-              : ({ tag: "RPass" } as const)
+              ? ({
+                  tag: "RDeflectAttacks",
+                  amount: p(picks, "reductionAmt", 5),
+                } as const)
+              : ({ tag: "RPass" } as const);
         send({
           type: "BATTLE_RESOLVE_DMG_REACTION",
           reactorId: pcn(picks, "reactorId"),
-          decision
-        })
+          decision,
+        });
       },
       bAfterDamagePass: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_AFTER_DAMAGE_PASS",
-          reactorId: pcn(picks, "reactorId")
-        })
+          reactorId: pcn(picks, "reactorId"),
+        });
       },
       bAfterDamageSpellReaction: (picks: Record<string, unknown>) => {
         send({
@@ -777,8 +872,8 @@ function createBattleMachineDriver() {
           reactorId: pcn(picks, "reactorId"),
           reactionDmg: p(picks, "reactionDmg", 10),
           reactionSaved: pb(picks, "reactionSaved", false),
-          reactionDt: mapDamageType(ps(picks, "reactionDt", "Fire"))
-        })
+          reactionDt: mapDamageType(ps(picks, "reactionDt", "Fire")),
+        });
       },
       bAfterDamageRetaliation: (picks: Record<string, unknown>) => {
         send({
@@ -788,8 +883,8 @@ function createBattleMachineDriver() {
           retDmg: p(picks, "retDmg", 5),
           retDt: mapDamageType(ps(picks, "retDt", "Slashing")),
           retCrit: pb(picks, "retCrit", false),
-          retTgtAc: armorClass(p(picks, "retTgtAc", 15))
-        })
+          retTgtAc: armorClass(p(picks, "retTgtAc", 15)),
+        });
       },
       bCastSaveSpell: (picks: Record<string, unknown>) => {
         send({
@@ -805,34 +900,41 @@ function createBattleMachineDriver() {
           saveAbility: mapAbility(ps(picks, "saveAb", "Con")),
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           spellName: ps(picks, "spellName", "guiding_bolt"),
-          ritual: pb(picks, "ritual", false)
-        })
+          ritual: pb(picks, "ritual", false),
+        });
       },
       bResolveCounterspell: (picks: Record<string, unknown>) => {
-        const raw = picks["decision"] as { tag: string; value: unknown } | undefined
-        const tag = raw ? variantToString(raw) : undefined
+        const raw = picks["decision"] as
+          | { tag: string; value: unknown }
+          | undefined;
+        const tag = raw ? variantToString(raw) : undefined;
         const decision =
           tag === "RCounterspell"
-            ? ({ tag: "RCounterspell", saveSucceeded: Boolean(raw!.value) } as const)
+            ? ({
+                tag: "RCounterspell",
+                saveSucceeded: Boolean(raw!.value),
+              } as const)
             : tag === "RPass"
               ? ({ tag: "RPass" } as const)
-              : null
+              : null;
         send({
           type: "BATTLE_RESOLVE_COUNTERSPELL",
           reactorId: pcn(picks, "reactorId"),
           decision,
-          csSlotLvl: spellSlotLevel(p(picks, "csSlotLvl", 3))
-        })
+          csSlotLvl: spellSlotLevel(p(picks, "csSlotLvl", 3)),
+        });
       },
       bResolveSaveFailedReaction: (picks: Record<string, unknown>) => {
-        const tag = ps(picks, "decision", "RPass")
+        const tag = ps(picks, "decision", "RPass");
         const decision =
-          tag === "RLegendaryResistance" ? ({ tag: "RLegendaryResistance" } as const) : ({ tag: "RPass" } as const)
+          tag === "RLegendaryResistance"
+            ? ({ tag: "RLegendaryResistance" } as const)
+            : ({ tag: "RPass" } as const);
         send({
           type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
           reactorId: pcn(picks, "reactorId"),
-          decision
-        })
+          decision,
+        });
       },
       bCastConcentrationSpell: (picks: Record<string, unknown>) => {
         send({
@@ -841,17 +943,18 @@ function createBattleMachineDriver() {
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           duration: p(picks, "duration", 5),
           spellId: mkSpellId(ps(picks, "spellId", "hold_person")),
-          cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CParalyzed")] ?? "paralyzed",
+          cond:
+            QUINT_CONDITION_MAP[ps(picks, "cond", "CParalyzed")] ?? "paralyzed",
           applyCond: pb(picks, "applyCond", false),
-          ritual: pb(picks, "ritual", false)
-        })
+          ritual: pb(picks, "ritual", false),
+        });
       },
       bConcentrationCheck: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_CONCENTRATION_CHECK",
           targetId: pc(picks, "targetId", ""),
-          conSaveSucceeded: pb(picks, "conSaveSucceeded", false)
-        })
+          conSaveSucceeded: pb(picks, "conSaveSucceeded", false),
+        });
       },
       bCastAoE: (picks: Record<string, unknown>) => {
         send({
@@ -865,24 +968,27 @@ function createBattleMachineDriver() {
           saveAbility: mapAbility(ps(picks, "saveAb", "Dex")),
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           spellName: ps(picks, "spellName", "fireball"),
-          ritual: pb(picks, "ritual", false)
-        })
+          ritual: pb(picks, "ritual", false),
+        });
       },
       bResolveAoETarget: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_RESOLVE_AOE_TARGET",
           targetId: pcn(picks, "targetId"),
-          saveRoll: p(picks, "saveRoll", 10)
-        })
+          saveRoll: p(picks, "saveRoll", 10),
+        });
       },
       bMove: (picks: Record<string, unknown>) => {
-        send({ type: "BATTLE_MOVE", threatened: parseThreatenedSet(picks["threatened"]) })
+        send({
+          type: "BATTLE_MOVE",
+          threatened: parseThreatenedSet(picks["threatened"]),
+        });
       },
       bMovementOAPass: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_MOVEMENT_OA_PASS",
-          reactorId: pcn(picks, "reactorId")
-        })
+          reactorId: pcn(picks, "reactorId"),
+        });
       },
       bMovementOAAttack: (picks: Record<string, unknown>) => {
         send({
@@ -895,8 +1001,8 @@ function createBattleMachineDriver() {
           oaTgtAc: armorClass(p(picks, "oaTgtAc", 15)),
           knockOut: pb(picks, "knockOut", false),
           isMelee: true as const,
-          ...attackContextPicks(picks)
-        })
+          ...attackContextPicks(picks),
+        });
       },
       bEndTurn: (picks: Record<string, unknown>) => {
         send({
@@ -904,11 +1010,11 @@ function createBattleMachineDriver() {
           eotSaveSucceeded: pb(picks, "eotSaveSucceeded", false),
           eotDmg: p(picks, "eotDmg", 0),
           eotDt: mapDamageType(ps(picks, "eotDt", "Bludgeoning")),
-          eotConSave: pb(picks, "eotConSave", false)
-        })
+          eotConSave: pb(picks, "eotConSave", false),
+        });
       },
       bLegendaryPass: () => {
-        send({ type: "BATTLE_LEGENDARY_PASS" })
+        send({ type: "BATTLE_LEGENDARY_PASS" });
       },
       bLegendaryAttack: (picks: Record<string, unknown>) => {
         send({
@@ -922,20 +1028,24 @@ function createBattleMachineDriver() {
           laTgtAc: armorClass(p(picks, "laTgtAc", 15)),
           knockOut: pb(picks, "knockOut", false),
           isMelee: pb(picks, "isMelee", true),
-          ...attackContextPicks(picks)
-        })
+          ...attackContextPicks(picks),
+        });
       },
       bHeal: (picks: Record<string, unknown>) => {
-        send({ type: "BATTLE_HEAL", targetId: pc(picks, "targetId", ""), amount: p(picks, "amount", 5) })
+        send({
+          type: "BATTLE_HEAL",
+          targetId: pc(picks, "targetId", ""),
+          amount: p(picks, "amount", 5),
+        });
       },
       bDash: () => {
-        send({ type: "BATTLE_DASH" })
+        send({ type: "BATTLE_DASH" });
       },
       bDisengage: () => {
-        send({ type: "BATTLE_DISENGAGE" })
+        send({ type: "BATTLE_DISENGAGE" });
       },
       bDodge: () => {
-        send({ type: "BATTLE_DODGE" })
+        send({ type: "BATTLE_DODGE" });
       },
       bGrapple: (picks: Record<string, unknown>) => {
         send({
@@ -944,29 +1054,29 @@ function createBattleMachineDriver() {
           attackerSize: psz(picks, "attackerSize", "medium"),
           targetSize: psz(picks, "targetSize", "medium"),
           targetSaveFailed: pb(picks, "targetSaveFailed", false),
-          attackerHasFreeHand: pb(picks, "attackerHasFreeHand", true)
-        })
+          attackerHasFreeHand: pb(picks, "attackerHasFreeHand", true),
+        });
       },
       bReleaseGrapple: () => {
-        send({ type: "BATTLE_RELEASE_GRAPPLE" })
+        send({ type: "BATTLE_RELEASE_GRAPPLE" });
       },
       bEscapeGrapple: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_ESCAPE_GRAPPLE",
-          escapeSucceeded: pb(picks, "escapeSucceeded", false)
-        })
+          escapeSucceeded: pb(picks, "escapeSucceeded", false),
+        });
       },
       bActionSurge: () => {
-        send({ type: "BATTLE_ACTION_SURGE" })
+        send({ type: "BATTLE_ACTION_SURGE" });
       },
       bEnterRage: () => {
-        send({ type: "BATTLE_ENTER_RAGE" })
+        send({ type: "BATTLE_ENTER_RAGE" });
       },
       bDeclareReckless: () => {
-        send({ type: "BATTLE_DECLARE_RECKLESS" })
+        send({ type: "BATTLE_DECLARE_RECKLESS" });
       },
       bReady: () => {
-        send({ type: "BATTLE_READY" })
+        send({ type: "BATTLE_READY" });
       },
       bReadySpell: (picks: Record<string, unknown>) => {
         send({
@@ -980,11 +1090,11 @@ function createBattleMachineDriver() {
           applyCond: pb(picks, "applyCond", false),
           saveAbility: mapAbility(ps(picks, "saveAb", "Con")),
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
-          spellName: ps(picks, "spellName", "guiding_bolt")
-        })
+          spellName: ps(picks, "spellName", "guiding_bolt"),
+        });
       },
       bReadyPass: () => {
-        send({ type: "BATTLE_READY_PASS" })
+        send({ type: "BATTLE_READY_PASS" });
       },
       bReadyRelease: (picks: Record<string, unknown>) => {
         send({
@@ -998,8 +1108,8 @@ function createBattleMachineDriver() {
           tgtAc: armorClass(p(picks, "tgtAc", 15)),
           knockOut: pb(picks, "knockOut", false),
           isMelee: pb(picks, "isMelee", true),
-          ...attackContextPicks(picks)
-        })
+          ...attackContextPicks(picks),
+        });
       },
       bCastBonusActionSpell: (picks: Record<string, unknown>) => {
         send({
@@ -1016,30 +1126,40 @@ function createBattleMachineDriver() {
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
           spellName: ps(picks, "spellName", "guiding_bolt"),
           ritual: false,
-          bonusAction: true
-        })
+          bonusAction: true,
+        });
       },
       bReadySpellRelease: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_READY_SPELL_RELEASE",
           releaserId: pc(picks, "releaserId", ""),
-          saveRoll: p(picks, "saveRoll", 10)
-        })
+          saveRoll: p(picks, "saveRoll", 10),
+        });
       },
       battleStep: () => {},
       getState: (): BattleCompareState => {
-        const c = ctx()
-        const creatures = new Map<string, NormalizedBattleCreature>()
-        for (const [id, cr] of c.creatures) creatures.set(id, xstateCreatureToNormalized(cr))
+        const c = ctx();
+        const creatures = new Map<string, NormalizedBattleCreature>();
+        for (const [id, cr] of c.creatures)
+          creatures.set(id, xstateCreatureToNormalized(cr));
         // Extract XState phase from hierarchical state value
-        const snap = actor!.getSnapshot()
-        const stateVal = snap.value as Record<string, string> | string
-        const phase = typeof stateVal === "object" && "running" in stateVal ? stateVal.running : "idle"
-        return { creatures, turnIndex: c.turnIndex, round: c.round, turnStarted: c.turnStarted, phase }
+        const snap = actor!.getSnapshot();
+        const stateVal = snap.value as Record<string, string> | string;
+        const phase =
+          typeof stateVal === "object" && "running" in stateVal
+            ? stateVal.running
+            : "idle";
+        return {
+          creatures,
+          turnIndex: c.turnIndex,
+          round: c.round,
+          turnStarted: c.turnStarted,
+          phase,
+        };
       },
-      config: () => ({ statePath: [] as Array<string> })
-    }
-  })
+      config: () => ({ statePath: [] as Array<string> }),
+    };
+  });
 }
 
 // ============================================================
@@ -1048,51 +1168,56 @@ function createBattleMachineDriver() {
 
 /** Map Quint bPhase variant tag to XState child state name. */
 function normalizeQuintPhase(raw: unknown): string {
-  const tag = variantToString(raw)
+  const tag = variantToString(raw);
   switch (tag) {
     case "BPActiveTurn":
-      return "activeTurn"
+      return "activeTurn";
     case "BPAwaitingReaction":
-      return "awaitingReaction"
+      return "awaitingReaction";
     case "BPResolvingAoE":
-      return "resolvingAoE"
+      return "resolvingAoE";
     case "BPResolvingMovement":
-      return "resolvingMovement"
+      return "resolvingMovement";
     case "BPAwaitingLegendaryAction":
-      return "awaitingLegendaryAction"
+      return "awaitingLegendaryAction";
     default:
-      return `unknown(${tag})`
+      return `unknown(${tag})`;
   }
 }
 
 const battleMachineStateCheck = stateCheck(
   (raw: unknown) => {
-    const parsed = QuintBattleState.parse(raw)
-    const creatures = new Map<string, NormalizedBattleCreature>()
-    for (const [id, combatant] of parsed.bCreatures) creatures.set(id, quintCombatantToNormalized(combatant))
+    const parsed = QuintBattleState.parse(raw);
+    const creatures = new Map<string, NormalizedBattleCreature>();
+    for (const [id, combatant] of parsed.bCreatures)
+      creatures.set(id, quintCombatantToNormalized(combatant));
     return {
       creatures,
       turnIndex: Number(parsed.bTurnIndex),
       round: Number(parsed.bRound),
       turnStarted: parsed.bTurnStarted,
-      phase: normalizeQuintPhase(parsed.bPhase)
-    } satisfies BattleCompareState
+      phase: normalizeQuintPhase(parsed.bPhase),
+    } satisfies BattleCompareState;
   },
   (spec: BattleCompareState, impl: BattleCompareState) => {
     // Compare battle-level fields
-    if (spec.turnIndex !== impl.turnIndex || spec.round !== impl.round || spec.turnStarted !== impl.turnStarted)
-      return false
+    if (
+      spec.turnIndex !== impl.turnIndex ||
+      spec.round !== impl.round ||
+      spec.turnStarted !== impl.turnStarted
+    )
+      return false;
     // Compare phase
-    if (spec.phase !== impl.phase) return false
+    if (spec.phase !== impl.phase) return false;
     // Compare per-creature fields
     for (const [id, specState] of spec.creatures) {
-      const implState = impl.creatures.get(id)
-      if (!implState) return false
-      if (!compareNormalizedStates(specState, implState)) return false
+      const implState = impl.creatures.get(id);
+      if (!implState) return false;
+      if (!compareNormalizedStates(specState, implState)) return false;
     }
-    return true
-  }
-)
+    return true;
+  },
+);
 
 // ============================================================
 // Test harness
@@ -1100,33 +1225,38 @@ const battleMachineStateCheck = stateCheck(
 
 describe("Battle Machine MBT", () => {
   beforeAll(() => {
-    killZombieEvaluators()
-    registerEvaluatorCleanup()
-  })
+    killZombieEvaluators();
+    registerEvaluatorCleanup();
+  });
   afterAll(() => {
-    killZombieEvaluators()
-  })
+    killZombieEvaluators();
+  });
 
-  const isDev = process.env["MBT_DEV"] === "1"
-  const MBT_TRACE_COUNT = 1
-  const MBT_STEP_COUNT = isDev ? 5 : 10
-  const MBT_MAX_SAMPLES = isDev ? 10 : 50
-  const specPath = path.resolve(import.meta.dirname, "../../../battle.qnt")
+  const isDev = process.env["MBT_DEV"] === "1";
+  const MBT_TRACE_COUNT = 1;
+  const MBT_STEP_COUNT = isDev ? 5 : 10;
+  const MBT_MAX_SAMPLES = isDev ? 10 : 50;
+  const specPath = path.resolve(import.meta.dirname, "../../../battle.qnt");
 
   it("replays battle traces against battleMachine", async () => {
-    const dir = process.env["MBT_REPLAY_DIR"]
+    const dir = process.env["MBT_REPLAY_DIR"];
     if (dir) {
-      const { replayFromDir } = await import("./mbt-replay.js")
+      const { replayFromDir } = await import("./mbt-replay.js");
       const result = await replayFromDir({
         dir,
         driver: createBattleMachineDriver(),
-        stateCheck: battleMachineStateCheck
-      })
-      console.log(`[battle machine MBT] replayed ${result.tracesReplayed} traces from ${dir}`)
+        stateCheck: battleMachineStateCheck,
+      });
+      console.log(
+        `[battle machine MBT] replayed ${result.tracesReplayed} traces from ${dir}`,
+      );
     } else {
       // Use pre-compiled spec cache if available (skip 15s+ parse/typecheck).
       // Generate with: node scripts/compile-battle-spec.cjs
-      const compiledInputPath = path.resolve(import.meta.dirname, "../../../.quint-cache/battle-compiled.json")
+      const compiledInputPath = path.resolve(
+        import.meta.dirname,
+        "../../../.quint-cache/battle-compiled.json",
+      );
       const result = await run({
         spec: specPath,
         init: "bInit",
@@ -1137,9 +1267,9 @@ describe("Battle Machine MBT", () => {
         maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
         maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
         stateCheck: battleMachineStateCheck,
-        compiledInput: compiledInputPath
-      })
-      logMbtSeed("battle machine MBT", result)
+        compiledInput: compiledInputPath,
+      });
+      logMbtSeed("battle machine MBT", result);
     }
-  }, 600_000)
-})
+  }, 600_000);
+});

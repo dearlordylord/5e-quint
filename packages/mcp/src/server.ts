@@ -1,13 +1,19 @@
-import { Effect, JSONSchema, Match, Random, Schema } from "effect"
-import { createActor, type ActorRefFrom, type SnapshotFrom } from "xstate"
+import { Effect, JSONSchema, Match, Random, Schema } from "effect";
+import { createActor, type ActorRefFrom, type SnapshotFrom } from "xstate";
 
-import { battleMachine } from "@dnd/core/battle-machine.ts"
-import { creatureMachine } from "@dnd/core/machine.ts"
-import { encodeDndContext, encodeDndSnapshot } from "@dnd/core/context-encoding.ts"
-import type { BattleContext, CreatureId } from "@dnd/core/battle-machine-types.ts"
-import type { DndMachineInput } from "@dnd/core/machine-types.ts"
-import { bardicInspirationDie } from "@dnd/core/features/class-bard.ts"
-import { classHitDie } from "@dnd/core/features/class-tables.ts"
+import { battleMachine } from "@dnd/core/battle-machine.ts";
+import { creatureMachine } from "@dnd/core/machine.ts";
+import {
+  encodeDndContext,
+  encodeDndSnapshot,
+} from "@dnd/core/context-encoding.ts";
+import type {
+  BattleContext,
+  CreatureId,
+} from "@dnd/core/battle-machine-types.ts";
+import type { DndMachineInput } from "@dnd/core/machine-types.ts";
+import { bardicInspirationDie } from "@dnd/core/features/class-bard.ts";
+import { classHitDie } from "@dnd/core/features/class-tables.ts";
 import {
   EXPOSED_ACTION_TYPES,
   finalizeBattleResolution,
@@ -25,29 +31,37 @@ import {
   type ResolutionRequest,
   type ResourceCost,
   type ResolutionRuntimeInputs,
-} from "@dnd/core/available-actions.ts"
-import { pMartialArtsDie } from "@dnd/core/features/class-monk.ts"
-import { classLevel } from "@dnd/core/types.ts"
+} from "@dnd/core/available-actions.ts";
+import { pMartialArtsDie } from "@dnd/core/features/class-monk.ts";
+import { classLevel } from "@dnd/core/types.ts";
 
 export const DEMO_ACTOR_INPUT: DndMachineInput = {
   maxHp: 44,
   fighterLevel: classLevel(5),
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
-}
-const DEMO_STARTING_DAMAGE = 10
+};
+const DEMO_STARTING_DAMAGE = 10;
 
-export type DndActor = ActorRefFrom<typeof creatureMachine>
-type DndSnapshot = SnapshotFrom<typeof creatureMachine>
-export type BattleActor = ActorRefFrom<typeof battleMachine>
-type BattleSnapshot = SnapshotFrom<typeof battleMachine>
-export type CreatureActionHost = { readonly scope: "creature"; readonly actor: DndActor }
-export type BattleActionHost = { readonly scope: "battle"; readonly actor: BattleActor }
-export type SupportedActionHost = CreatureActionHost | BattleActionHost
+export type DndActor = ActorRefFrom<typeof creatureMachine>;
+type DndSnapshot = SnapshotFrom<typeof creatureMachine>;
+export type BattleActor = ActorRefFrom<typeof battleMachine>;
+type BattleSnapshot = SnapshotFrom<typeof battleMachine>;
+export type CreatureActionHost = {
+  readonly scope: "creature";
+  readonly actor: DndActor;
+};
+export type BattleActionHost = {
+  readonly scope: "battle";
+  readonly actor: BattleActor;
+};
+export type SupportedActionHost = CreatureActionHost | BattleActionHost;
 
-export function createDemoActor(input: DndMachineInput = DEMO_ACTOR_INPUT): DndActor {
-  const actor = createActor(creatureMachine, { input })
-  actor.start()
+export function createDemoActor(
+  input: DndMachineInput = DEMO_ACTOR_INPUT,
+): DndActor {
+  const actor = createActor(creatureMachine, { input });
+  actor.start();
   actor.send({
     type: "TAKE_DAMAGE",
     amount: DEMO_STARTING_DAMAGE,
@@ -56,38 +70,44 @@ export function createDemoActor(input: DndMachineInput = DEMO_ACTOR_INPUT): DndA
     vulnerabilities: new Set(),
     immunities: new Set(),
     isCritical: false,
-  })
-  return actor
+  });
+  return actor;
 }
 
-export function createDemoHost(input: DndMachineInput = DEMO_ACTOR_INPUT): CreatureActionHost {
-  return { scope: "creature", actor: createDemoActor(input) }
+export function createDemoHost(
+  input: DndMachineInput = DEMO_ACTOR_INPUT,
+): CreatureActionHost {
+  return { scope: "creature", actor: createDemoActor(input) };
 }
 
 export function createBattleHost(actor?: BattleActor): BattleActionHost {
-  const battleActor = actor ?? createActor(battleMachine)
-  battleActor.start()
-  return { scope: "battle", actor: battleActor }
+  const battleActor = actor ?? createActor(battleMachine);
+  battleActor.start();
+  return { scope: "battle", actor: battleActor };
 }
 
-export function groupByCost(tokens: ReadonlyArray<ActionToken>): Record<string, ReadonlyArray<ActionToken>> {
+export function groupByCost(
+  tokens: ReadonlyArray<ActionToken>,
+): Record<string, ReadonlyArray<ActionToken>> {
   const groups: Record<string, ActionToken[]> = {
     action: [],
     bonusAction: [],
     reaction: [],
     free: [],
-  }
+  };
   for (const token of tokens) {
-    const cost: ResourceCost = token.cost
-    if (cost.action) groups.action.push(token)
-    else if (cost.bonusAction) groups.bonusAction.push(token)
-    else if (cost.reaction) groups.reaction.push(token)
-    else groups.free.push(token)
+    const cost: ResourceCost = token.cost;
+    if (cost.action) groups.action.push(token);
+    else if (cost.bonusAction) groups.bonusAction.push(token);
+    else if (cost.reaction) groups.reaction.push(token);
+    else groups.free.push(token);
   }
-  return groups
+  return groups;
 }
 
-export const executeActionJsonSchema = JSONSchema.make(ResolvedActionTokenSchema)
+export const executeActionJsonSchema = JSONSchema.make(
+  ResolvedActionTokenSchema,
+);
 
 export const toolDefinitions = [
   {
@@ -102,41 +122,54 @@ export const toolDefinitions = [
   },
   {
     name: "execute_action",
-    description: "Execute a resolved scoped action token. User-facing choices must already be filled; MCP supplies engine-only values like prerolls.",
+    description:
+      "Execute a resolved scoped action token. User-facing choices must already be filled; MCP supplies engine-only values like prerolls.",
     inputSchema: executeActionJsonSchema,
   },
-] as const
+] as const;
 
 function jsonContent(payload: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }] }
+  return {
+    content: [
+      { type: "text" as const, text: JSON.stringify(payload, null, 2) },
+    ],
+  };
 }
 
 function errorContent(message: string, details?: unknown) {
   return {
-    ...jsonContent(details == null ? { error: message } : { error: message, details }),
+    ...jsonContent(
+      details == null ? { error: message } : { error: message, details },
+    ),
     isError: true as const,
-  }
+  };
 }
 
 function snapshotFingerprint(snapshot: DndSnapshot): string {
-  return JSON.stringify(encodeDndSnapshot(snapshot))
+  return JSON.stringify(encodeDndSnapshot(snapshot));
 }
 
-function battleSnapshotUnchanged(before: BattleSnapshot, after: BattleSnapshot): boolean {
-  return before.context === after.context && JSON.stringify(before.value) === JSON.stringify(after.value)
+function battleSnapshotUnchanged(
+  before: BattleSnapshot,
+  after: BattleSnapshot,
+): boolean {
+  return (
+    before.context === after.context &&
+    JSON.stringify(before.value) === JSON.stringify(after.value)
+  );
 }
 
 function battlePhase(context: BattleContext) {
-  if (context.awaitCtx !== null) return "awaitingReaction" as const
-  if (context.aoeCtx !== null) return "resolvingAoE" as const
-  if (context.movementCtx !== null) return "resolvingMovement" as const
-  if (context.laCtx !== null) return "awaitingLegendaryAction" as const
-  if (context.readyCtx !== null) return "awaitingReadiedAction" as const
-  return "activeTurn" as const
+  if (context.awaitCtx !== null) return "awaitingReaction" as const;
+  if (context.aoeCtx !== null) return "resolvingAoE" as const;
+  if (context.movementCtx !== null) return "resolvingMovement" as const;
+  if (context.laCtx !== null) return "awaitingLegendaryAction" as const;
+  if (context.readyCtx !== null) return "awaitingReadiedAction" as const;
+  return "activeTurn" as const;
 }
 
 function currentTurnCreatureId(context: BattleContext): CreatureId | null {
-  return context.initiative[context.turnIndex] ?? null
+  return context.initiative[context.turnIndex] ?? null;
 }
 
 function encodeBattleRuntimeState(snapshot: BattleSnapshot) {
@@ -155,12 +188,17 @@ function encodeBattleRuntimeState(snapshot: BattleSnapshot) {
     resolvingMovement: snapshot.context.movementCtx !== null,
     awaitingLegendaryAction: snapshot.context.laCtx !== null,
     awaitingReadiedAction: snapshot.context.readyCtx !== null,
-  }
+  };
 }
 
-function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["context"]): Effect.Effect<ResolutionRuntimeInputs> {
+function buildRuntimeInputs(
+  request: ResolutionRequest,
+  context: DndSnapshot["context"],
+): Effect.Effect<ResolutionRuntimeInputs> {
   return Match.value(request).pipe(
-    Match.when({ runtime: "none" }, () => Effect.succeed({ runtime: "none" as const })),
+    Match.when({ runtime: "none" }, () =>
+      Effect.succeed({ runtime: "none" as const }),
+    ),
     Match.when({ runtime: "startTurn" }, () =>
       Effect.succeed({
         runtime: "startTurn" as const,
@@ -180,21 +218,21 @@ function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["co
       })),
     ),
     Match.when({ runtime: "wholenessOfBody" }, () => {
-      const monk = context.classStates.monk
-      const dieSize = pMartialArtsDie(monk?.level ?? 0)
-      const wisMod = monk?.wholenessMax ?? 0
+      const monk = context.classStates.monk;
+      const dieSize = pMartialArtsDie(monk?.level ?? 0);
+      const wisMod = monk?.wholenessMax ?? 0;
       return Effect.map(Random.nextIntBetween(1, dieSize + 1), (dieRoll) => ({
         runtime: "wholenessOfBody" as const,
         values: { healRoll: Math.max(1, dieRoll + wisMod) },
-      }))
+      }));
     }),
     Match.when({ runtime: "uncannyMetabolism" }, () => {
-      const monk = context.classStates.monk
-      const dieSize = pMartialArtsDie(monk?.level ?? 0)
+      const monk = context.classStates.monk;
+      const dieSize = pMartialArtsDie(monk?.level ?? 0);
       return Effect.map(Random.nextIntBetween(1, dieSize + 1), (healRoll) => ({
         runtime: "uncannyMetabolism" as const,
         values: { healRoll },
-      }))
+      }));
     }),
     Match.when({ runtime: "secondWind" }, () =>
       Effect.map(Random.nextIntBetween(1, 11), (d10Roll) => ({
@@ -222,7 +260,10 @@ function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["co
     ),
     Match.when({ runtime: "shortRest" }, (resolved) =>
       Effect.forEach(resolved.token.spendHitDice, (className) =>
-        Effect.map(Random.nextIntBetween(1, classHitDie(className) + 1), (roll) => ({ className, roll })),
+        Effect.map(
+          Random.nextIntBetween(1, classHitDie(className) + 1),
+          (roll) => ({ className, roll }),
+        ),
       ).pipe(
         Effect.map((hdRolls) => ({
           runtime: "shortRest" as const,
@@ -231,7 +272,7 @@ function buildRuntimeInputs(request: ResolutionRequest, context: DndSnapshot["co
       ),
     ),
     Match.exhaustive,
-  )
+  );
 }
 
 function buildBattleRuntimeInputs(
@@ -239,138 +280,180 @@ function buildBattleRuntimeInputs(
   context: BattleContext,
 ): Effect.Effect<BattleResolutionRuntimeInputs> {
   return Match.value(request).pipe(
-    Match.when({ runtime: "none" }, () => Effect.succeed({ runtime: "none" as const })),
+    Match.when({ runtime: "none" }, () =>
+      Effect.succeed({ runtime: "none" as const }),
+    ),
     Match.when({ runtime: "counterspell" }, () =>
       Effect.map(Random.nextBoolean, (saveSucceeded) => ({
         runtime: "counterspell" as const,
         values: { saveSucceeded },
-      }))
+      })),
     ),
     Match.when({ runtime: "cuttingWords" }, () => {
-      const bardLevel = context.creatures.get(request.token.actorId as CreatureId)?.bardLevel ?? 0
-      const dieSize = bardicInspirationDie(bardLevel)
+      const bardLevel =
+        context.creatures.get(request.token.actorId as CreatureId)?.bardLevel ??
+        0;
+      const dieSize = bardicInspirationDie(bardLevel);
       return Effect.map(Random.nextIntBetween(1, dieSize + 1), (reduction) => ({
         runtime: "cuttingWords" as const,
         values: { reduction },
-      }))
+      }));
     }),
     Match.when({ runtime: "deflectAttacks" }, () =>
       Effect.map(Random.nextIntBetween(1, 11), (d10Roll) => ({
         runtime: "deflectAttacks" as const,
         values: { d10Roll },
-      }))
+      })),
     ),
     Match.exhaustive,
-  )
+  );
 }
 
-function executeCreatureResolvedAction(actor: DndActor, token: Extract<ResolvedActionToken, { readonly scope: "creature" }>) {
-  const before = actor.getSnapshot()
-  const resolution = resolveAction(before.context, before.tags, token)
+function executeCreatureResolvedAction(
+  actor: DndActor,
+  token: Extract<ResolvedActionToken, { readonly scope: "creature" }>,
+) {
+  const before = actor.getSnapshot();
+  const resolution = resolveAction(before.context, before.tags, token);
   if ("code" in resolution) {
-    return errorContent(resolution.message, resolution.code)
+    return errorContent(resolution.message, resolution.code);
   }
 
-  const runtimeInputs = Effect.runSync(buildRuntimeInputs(resolution, before.context))
-  const finalized = finalizeResolution(resolution, runtimeInputs, before.context)
+  const runtimeInputs = Effect.runSync(
+    buildRuntimeInputs(resolution, before.context),
+  );
+  const finalized = finalizeResolution(
+    resolution,
+    runtimeInputs,
+    before.context,
+  );
   if (!finalized.ok) {
-    return errorContent(finalized.error.message, finalized.error.code)
+    return errorContent(finalized.error.message, finalized.error.code);
   }
 
-  actor.send(finalized.event)
+  actor.send(finalized.event);
 
-  const after = actor.getSnapshot()
+  const after = actor.getSnapshot();
   if (snapshotFingerprint(before) === snapshotFingerprint(after)) {
-    return errorContent("Action was not accepted by the machine", token.type)
+    return errorContent("Action was not accepted by the machine", token.type);
   }
 
   return jsonContent({
     success: true,
     outcome: finalized.outcome,
     state: encodeDndContext(after.context),
-  })
+  });
 }
 
-function scopeMismatchContent(tokenScope: "creature" | "battle", hostScope: "creature" | "battle") {
+function scopeMismatchContent(
+  tokenScope: "creature" | "battle",
+  hostScope: "creature" | "battle",
+) {
   return errorContent(
     `Action scope ${tokenScope} does not match the current ${hostScope} host.`,
     "ACTION_SCOPE_MISMATCH",
-  )
+  );
 }
 
-function executeBattleResolvedAction(actor: BattleActor, token: BattleResolvedActionToken) {
-  const before = actor.getSnapshot()
-  const resolution = resolveBattleAction(before.context, token)
+function executeBattleResolvedAction(
+  actor: BattleActor,
+  token: BattleResolvedActionToken,
+) {
+  const before = actor.getSnapshot();
+  const resolution = resolveBattleAction(before.context, token);
   if ("code" in resolution) {
-    return errorContent(resolution.message, resolution.code)
+    return errorContent(resolution.message, resolution.code);
   }
 
-  const runtimeInputs = Effect.runSync(buildBattleRuntimeInputs(resolution, before.context))
-  const finalized = finalizeBattleResolution(resolution, runtimeInputs, before.context)
+  const runtimeInputs = Effect.runSync(
+    buildBattleRuntimeInputs(resolution, before.context),
+  );
+  const finalized = finalizeBattleResolution(
+    resolution,
+    runtimeInputs,
+    before.context,
+  );
   if (!finalized.ok) {
-    return errorContent(finalized.error.message, finalized.error.code)
+    return errorContent(finalized.error.message, finalized.error.code);
   }
 
-  actor.send(finalized.event)
+  actor.send(finalized.event);
 
-  const after = actor.getSnapshot()
+  const after = actor.getSnapshot();
   if (battleSnapshotUnchanged(before, after)) {
-    return errorContent("Action was not accepted by the battle machine", token.type)
+    return errorContent(
+      "Action was not accepted by the battle machine",
+      token.type,
+    );
   }
 
   return jsonContent({
     success: true,
     outcome: finalized.outcome,
     state: encodeBattleRuntimeState(after),
-  })
+  });
 }
 
 function executeResolvedAction(host: SupportedActionHost, args: unknown) {
-  const decoded = Schema.decodeUnknownEither(ResolvedActionTokenSchema)(args)
+  const decoded = Schema.decodeUnknownEither(ResolvedActionTokenSchema)(args);
   if (decoded._tag === "Left") {
-    return errorContent("Invalid execute_action input", String(decoded.left))
+    return errorContent("Invalid execute_action input", String(decoded.left));
   }
 
   return Match.value(host).pipe(
     Match.when({ scope: "creature" }, ({ actor }) => {
       if (decoded.right.scope !== "creature") {
-        return scopeMismatchContent(decoded.right.scope, "creature")
+        return scopeMismatchContent(decoded.right.scope, "creature");
       }
-      return executeCreatureResolvedAction(actor, decoded.right)
+      return executeCreatureResolvedAction(actor, decoded.right);
     }),
     Match.when({ scope: "battle" }, ({ actor }) => {
       if (decoded.right.scope !== "battle") {
-        return scopeMismatchContent(decoded.right.scope, "battle")
+        return scopeMismatchContent(decoded.right.scope, "battle");
       }
-      return executeBattleResolvedAction(actor, decoded.right)
+      return executeBattleResolvedAction(actor, decoded.right);
     }),
     Match.exhaustive,
-  )
+  );
 }
 
-export function handleToolCall(host: SupportedActionHost, name: string, args: unknown) {
+export function handleToolCall(
+  host: SupportedActionHost,
+  name: string,
+  args: unknown,
+) {
   if (name === "get_state") {
     return Match.value(host).pipe(
-      Match.when({ scope: "creature" }, ({ actor }) => jsonContent(encodeDndContext(actor.getSnapshot().context))),
-      Match.when({ scope: "battle" }, ({ actor }) => jsonContent(encodeBattleRuntimeState(actor.getSnapshot()))),
+      Match.when({ scope: "creature" }, ({ actor }) =>
+        jsonContent(encodeDndContext(actor.getSnapshot().context)),
+      ),
+      Match.when({ scope: "battle" }, ({ actor }) =>
+        jsonContent(encodeBattleRuntimeState(actor.getSnapshot())),
+      ),
       Match.exhaustive,
-    )
+    );
   }
 
   if (name === "get_available_actions") {
     return Match.value(host).pipe(
       Match.when({ scope: "creature" }, ({ actor }) => {
-        const snapshot = actor.getSnapshot()
-        return jsonContent(groupByCost(getAvailableActions(snapshot.context, snapshot.tags)))
+        const snapshot = actor.getSnapshot();
+        return jsonContent(
+          groupByCost(getAvailableActions(snapshot.context, snapshot.tags)),
+        );
       }),
-      Match.when({ scope: "battle" }, ({ actor }) => jsonContent(groupByCost(getAvailableBattleActions(actor.getSnapshot().context)))),
+      Match.when({ scope: "battle" }, ({ actor }) =>
+        jsonContent(
+          groupByCost(getAvailableBattleActions(actor.getSnapshot().context)),
+        ),
+      ),
       Match.exhaustive,
-    )
+    );
   }
 
   if (name === "execute_action") {
-    return executeResolvedAction(host, args)
+    return executeResolvedAction(host, args);
   }
 
-  return errorContent(`Unknown tool: ${name}`)
+  return errorContent(`Unknown tool: ${name}`);
 }

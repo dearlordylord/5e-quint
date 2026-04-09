@@ -1,4 +1,4 @@
-import { Option } from "effect"
+import { Option } from "effect";
 import {
   canApplyFrenzy,
   canEnterRage,
@@ -9,8 +9,8 @@ import {
   mindlessRageImmunities,
   mindlessRageOnEnterRage,
   rageDamageBonus,
-  rageResistances
-} from "#/features/class-barbarian.ts"
+  rageResistances,
+} from "#/features/class-barbarian.ts";
 import {
   canUseActionSurge,
   canUseIndomitable,
@@ -26,71 +26,87 @@ import {
   survivorDefyDeathAdvantage,
   survivorHeroicRally,
   tacticalMasterSubstitute,
-  useSecondWind as applySecondWind
-} from "#/features/class-fighter.ts"
-import type { FeatureAction, FeatureState } from "#/features/feature-store.ts"
-import type { DndContext, DndEvent } from "#/machine-types.ts"
-import type { AbilityModifier, Condition, DamageType, DifficultyClass } from "#/types.ts"
-import { healAmount } from "#/types.ts"
+  useSecondWind as applySecondWind,
+} from "#/features/class-fighter.ts";
+import type { FeatureAction, FeatureState } from "#/features/feature-store.ts";
+import type { DndContext, DndEvent } from "#/machine-types.ts";
+import type {
+  AbilityModifier,
+  Condition,
+  DamageType,
+  DifficultyClass,
+} from "#/types.ts";
+import { healAmount } from "#/types.ts";
 
 export interface BridgeResult {
-  readonly featureAction: FeatureAction
-  readonly machineEvents: ReadonlyArray<DndEvent>
+  readonly featureAction: FeatureAction;
+  readonly machineEvents: ReadonlyArray<DndEvent>;
 }
 
 // --- Fighter: Second Wind ---
 
-export function canExecuteSecondWind(featureState: FeatureState, ctx: DndContext): boolean {
-  if (!featureState.fighter) return false
+export function canExecuteSecondWind(
+  featureState: FeatureState,
+  ctx: DndContext,
+): boolean {
+  if (!featureState.fighter) return false;
   return canUseSecondWind({
     hp: ctx.hp,
     maxHp: ctx.maxHp,
     secondWindCharges: featureState.fighter.secondWindCharges,
-    bonusActionUsed: ctx.bonusActionUsed
-  })
+    bonusActionUsed: ctx.bonusActionUsed,
+  });
 }
 
 export function executeSecondWind(
   featureState: FeatureState,
   ctx: DndContext,
   d10Roll: number,
-  fighterLevel: number
+  fighterLevel: number,
 ): BridgeResult {
-  if (!featureState.fighter) throw new Error("executeSecondWind called without fighter state")
+  if (!featureState.fighter)
+    throw new Error("executeSecondWind called without fighter state");
   const result = applySecondWind(
     {
       hp: ctx.hp,
       maxHp: ctx.maxHp,
       secondWindCharges: featureState.fighter.secondWindCharges,
-      bonusActionUsed: ctx.bonusActionUsed
+      bonusActionUsed: ctx.bonusActionUsed,
     },
     { d10Roll, fighterLevel },
-    ctx.effectiveSpeed
-  )
+    ctx.effectiveSpeed,
+  );
 
   return {
     featureAction: { type: "FIGHTER_USE_SECOND_WIND" },
-    machineEvents: [{ type: "USE_BONUS_ACTION" }, { type: "HEAL", amount: healAmount(result.healAmount) }]
-  }
+    machineEvents: [
+      { type: "USE_BONUS_ACTION" },
+      { type: "HEAL", amount: healAmount(result.healAmount) },
+    ],
+  };
 }
 
 // --- Fighter: Action Surge ---
 
-export function canExecuteActionSurge(featureState: FeatureState, ctx: DndContext): boolean {
-  if (!featureState.fighter) return false
+export function canExecuteActionSurge(
+  featureState: FeatureState,
+  ctx: DndContext,
+): boolean {
+  if (!featureState.fighter) return false;
   return canUseActionSurge({
     actionSurgeCharges: featureState.fighter.actionSurgeCharges,
     actionSurgeUsedThisTurn: featureState.fighter.actionSurgeUsedThisTurn,
-    actionsRemaining: ctx.actionsRemaining
-  })
+    actionsRemaining: ctx.actionsRemaining,
+  });
 }
 
 export function executeActionSurge(featureState: FeatureState): BridgeResult {
-  if (!featureState.fighter) throw new Error("executeActionSurge called without fighter state")
+  if (!featureState.fighter)
+    throw new Error("executeActionSurge called without fighter state");
   return {
     featureAction: { type: "FIGHTER_USE_ACTION_SURGE" },
-    machineEvents: [{ type: "GRANT_EXTRA_ACTION" }]
-  }
+    machineEvents: [{ type: "GRANT_EXTRA_ACTION" }],
+  };
 }
 
 // --- Fighter: Tactical Mind ---
@@ -98,33 +114,47 @@ export function executeActionSurge(featureState: FeatureState): BridgeResult {
 export function canExecuteTacticalMind(
   featureState: FeatureState,
   fighterLevel: number,
-  checkFailed: boolean
+  checkFailed: boolean,
 ): boolean {
-  if (!featureState.fighter) return false
-  return canUseTacticalMind(featureState.fighter.secondWindCharges, fighterLevel, checkFailed)
+  if (!featureState.fighter) return false;
+  return canUseTacticalMind(
+    featureState.fighter.secondWindCharges,
+    fighterLevel,
+    checkFailed,
+  );
 }
 
 // SRD: "If the check still fails, this use of Second Wind isn't expended."
 // Only dispatch the charge-decrement action if the boosted check succeeded.
-export function executeTacticalMind(boostedCheckSucceeded: boolean): BridgeResult {
+export function executeTacticalMind(
+  boostedCheckSucceeded: boolean,
+): BridgeResult {
   return {
-    featureAction: boostedCheckSucceeded ? { type: "FIGHTER_USE_TACTICAL_MIND" } : { type: "NOOP" },
-    machineEvents: []
-  }
+    featureAction: boostedCheckSucceeded
+      ? { type: "FIGHTER_USE_TACTICAL_MIND" }
+      : { type: "NOOP" },
+    machineEvents: [],
+  };
 }
 
 // --- Fighter: Indomitable ---
 
-export function canExecuteIndomitable(featureState: FeatureState, fighterLevel: number): boolean {
-  if (!featureState.fighter) return false
-  return canUseIndomitable(fighterLevel, featureState.fighter.indomitableCharges)
+export function canExecuteIndomitable(
+  featureState: FeatureState,
+  fighterLevel: number,
+): boolean {
+  if (!featureState.fighter) return false;
+  return canUseIndomitable(
+    fighterLevel,
+    featureState.fighter.indomitableCharges,
+  );
 }
 
 export function executeIndomitable(): BridgeResult {
   return {
     featureAction: { type: "FIGHTER_USE_INDOMITABLE" },
-    machineEvents: []
-  }
+    machineEvents: [],
+  };
 }
 
 // --- Fighter base features (L9+) + Champion subclass queries (passive — no state) ---
@@ -141,82 +171,99 @@ export {
   studiedAttacksAdvantage,
   survivorDefyDeathAdvantage,
   survivorHeroicRally,
-  tacticalMasterSubstitute
-}
+  tacticalMasterSubstitute,
+};
 
 // --- Barbarian: Rage ---
 
-export function canExecuteEnterRage(featureState: FeatureState, ctx: DndContext): boolean {
-  if (!featureState.barbarian) return false
-  const b = featureState.barbarian
+export function canExecuteEnterRage(
+  featureState: FeatureState,
+  ctx: DndContext,
+): boolean {
+  if (!featureState.barbarian) return false;
+  const b = featureState.barbarian;
   // TODO: armor weight should come from context/config, not hardcoded.
   // Currently no heavy armor tracking in DndContext — caller must prevent raging in heavy armor.
-  return !b.raging && !ctx.bonusActionUsed && canEnterRage(b.rageCharges, "light")
+  return (
+    !b.raging && !ctx.bonusActionUsed && canEnterRage(b.rageCharges, "light")
+  );
 }
 
-export function executeEnterRage(_featureState: FeatureState, ctx: DndContext): BridgeResult {
+export function executeEnterRage(
+  _featureState: FeatureState,
+  ctx: DndContext,
+): BridgeResult {
   // Entering rage costs a Bonus Action and breaks concentration if active
-  const machineEvents: ReadonlyArray<DndEvent> =
-    Option.isSome(ctx.concentrationSpellId)
-      ? [{ type: "USE_BONUS_ACTION" }, { type: "BREAK_CONCENTRATION" }]
-      : [{ type: "USE_BONUS_ACTION" }]
+  const machineEvents: ReadonlyArray<DndEvent> = Option.isSome(
+    ctx.concentrationSpellId,
+  )
+    ? [{ type: "USE_BONUS_ACTION" }, { type: "BREAK_CONCENTRATION" }]
+    : [{ type: "USE_BONUS_ACTION" }];
   return {
     featureAction: { type: "BARBARIAN_ENTER_RAGE" },
-    machineEvents
-  }
+    machineEvents,
+  };
 }
 
 export function canExecuteEndRage(featureState: FeatureState): boolean {
-  return featureState.barbarian?.raging === true
+  return featureState.barbarian?.raging === true;
 }
 
 export function executeEndRage(): BridgeResult {
   return {
     featureAction: { type: "BARBARIAN_END_RAGE" },
-    machineEvents: []
-  }
+    machineEvents: [],
+  };
 }
 
-export function canExecuteExtendRageBA(featureState: FeatureState, ctx: DndContext): boolean {
-  if (!featureState.barbarian) return false
-  return featureState.barbarian.raging && !ctx.bonusActionUsed
+export function canExecuteExtendRageBA(
+  featureState: FeatureState,
+  ctx: DndContext,
+): boolean {
+  if (!featureState.barbarian) return false;
+  return featureState.barbarian.raging && !ctx.bonusActionUsed;
 }
 
 export function executeExtendRageBA(): BridgeResult {
   return {
     featureAction: { type: "BARBARIAN_EXTEND_RAGE_BA" },
-    machineEvents: [{ type: "USE_BONUS_ACTION" }]
-  }
+    machineEvents: [{ type: "USE_BONUS_ACTION" }],
+  };
 }
 
 export function canExecuteDeclareReckless(featureState: FeatureState): boolean {
-  if (!featureState.barbarian) return false
-  return !featureState.barbarian.recklessThisTurn
+  if (!featureState.barbarian) return false;
+  return !featureState.barbarian.recklessThisTurn;
 }
 
 export function executeDeclareReckless(): BridgeResult {
   return {
     featureAction: { type: "BARBARIAN_DECLARE_RECKLESS" },
-    machineEvents: []
-  }
+    machineEvents: [],
+  };
 }
 
 // --- Barbarian: Query functions (no BridgeResult -- pure data for UI) ---
 
-const EMPTY_SET: ReadonlySet<never> = new Set()
+const EMPTY_SET: ReadonlySet<never> = new Set();
 
-export function getRageResistances(featureState: FeatureState): ReadonlySet<DamageType> {
-  if (!featureState.barbarian) return EMPTY_SET
-  return rageResistances(featureState.barbarian.raging)
+export function getRageResistances(
+  featureState: FeatureState,
+): ReadonlySet<DamageType> {
+  if (!featureState.barbarian) return EMPTY_SET;
+  return rageResistances(featureState.barbarian.raging);
 }
 
 export function getIsRaging(featureState: FeatureState): boolean {
-  return featureState.barbarian?.raging === true
+  return featureState.barbarian?.raging === true;
 }
 
-export function getRageDamageBonus(featureState: FeatureState, barbarianLevel: number): number {
-  if (!featureState.barbarian?.raging) return 0
-  return rageDamageBonus(barbarianLevel)
+export function getRageDamageBonus(
+  featureState: FeatureState,
+  barbarianLevel: number,
+): number {
+  if (!featureState.barbarian?.raging) return 0;
+  return rageDamageBonus(barbarianLevel);
 }
 
 // --- Berserker: Frenzy (L3) ---
@@ -224,54 +271,68 @@ export function getRageDamageBonus(featureState: FeatureState, barbarianLevel: n
 export function canExecuteFrenzy(
   featureState: FeatureState,
   berserkerLevel: number,
-  isStrengthBased: boolean
+  isStrengthBased: boolean,
 ): boolean {
-  if (!featureState.barbarian || berserkerLevel < 3) return false
-  const b = featureState.barbarian
-  return canApplyFrenzy(b.raging, b.recklessThisTurn, isStrengthBased, b.frenzyUsedThisTurn)
+  if (!featureState.barbarian || berserkerLevel < 3) return false;
+  const b = featureState.barbarian;
+  return canApplyFrenzy(
+    b.raging,
+    b.recklessThisTurn,
+    isStrengthBased,
+    b.frenzyUsedThisTurn,
+  );
 }
 
 export function executeFrenzy(): BridgeResult {
   return {
     featureAction: { type: "BERSERKER_APPLY_FRENZY" },
-    machineEvents: []
-  }
+    machineEvents: [],
+  };
 }
 
-export function getFrenzyDamageDice(featureState: FeatureState, barbarianLevel: number): number {
-  if (!featureState.barbarian?.raging) return 0
-  return frenzyDamageDice(rageDamageBonus(barbarianLevel))
+export function getFrenzyDamageDice(
+  featureState: FeatureState,
+  barbarianLevel: number,
+): number {
+  if (!featureState.barbarian?.raging) return 0;
+  return frenzyDamageDice(rageDamageBonus(barbarianLevel));
 }
 
 // --- Berserker: Mindless Rage (L6) ---
 
-export function getMindlessRageImmunities(featureState: FeatureState, berserkerLevel: number): ReadonlySet<Condition> {
-  if (!featureState.barbarian) return EMPTY_SET
-  return mindlessRageImmunities(featureState.barbarian.raging, berserkerLevel)
+export function getMindlessRageImmunities(
+  featureState: FeatureState,
+  berserkerLevel: number,
+): ReadonlySet<Condition> {
+  if (!featureState.barbarian) return EMPTY_SET;
+  return mindlessRageImmunities(featureState.barbarian.raging, berserkerLevel);
 }
 
 export const getEnterRageConditionsToRemove: (
   currentConditions: ReadonlyArray<Condition>,
-  berserkerLevel: number
-) => ReadonlyArray<Condition> = mindlessRageOnEnterRage
+  berserkerLevel: number,
+) => ReadonlyArray<Condition> = mindlessRageOnEnterRage;
 
 export function executeEnterRageWithMindlessRage(
   featureState: FeatureState,
   ctx: DndContext,
   berserkerLevel: number,
-  currentConditions: ReadonlyArray<Condition>
+  currentConditions: ReadonlyArray<Condition>,
 ): BridgeResult {
-  const base = executeEnterRage(featureState, ctx)
-  const conditionsToRemove = mindlessRageOnEnterRage(currentConditions, berserkerLevel)
-  if (conditionsToRemove.length === 0) return base
+  const base = executeEnterRage(featureState, ctx);
+  const conditionsToRemove = mindlessRageOnEnterRage(
+    currentConditions,
+    berserkerLevel,
+  );
+  if (conditionsToRemove.length === 0) return base;
   const removeEvents: ReadonlyArray<DndEvent> = conditionsToRemove.map((c) => ({
     type: "REMOVE_CONDITION" as const,
-    condition: c
-  }))
+    condition: c,
+  }));
   return {
     featureAction: base.featureAction,
-    machineEvents: [...base.machineEvents, ...removeEvents]
-  }
+    machineEvents: [...base.machineEvents, ...removeEvents],
+  };
 }
 
 // --- Berserker: Retaliation (L10) ---
@@ -280,17 +341,21 @@ export function canExecuteRetaliation(
   featureState: FeatureState,
   ctx: DndContext,
   berserkerLevel: number,
-  damagedByCreatureWithin5ft: boolean
+  damagedByCreatureWithin5ft: boolean,
 ): boolean {
-  if (!featureState.barbarian) return false
-  return canRetaliate(berserkerLevel, ctx.reactionAvailable, damagedByCreatureWithin5ft)
+  if (!featureState.barbarian) return false;
+  return canRetaliate(
+    berserkerLevel,
+    ctx.reactionAvailable,
+    damagedByCreatureWithin5ft,
+  );
 }
 
 export function executeRetaliation(): BridgeResult {
   return {
     featureAction: { type: "BERSERKER_USE_RETALIATION" },
-    machineEvents: [{ type: "USE_REACTION" }]
-  }
+    machineEvents: [{ type: "USE_REACTION" }],
+  };
 }
 
 // --- Berserker: Intimidating Presence (L14) ---
@@ -298,24 +363,27 @@ export function executeRetaliation(): BridgeResult {
 export function canExecuteIntimidatingPresence(
   featureState: FeatureState,
   ctx: DndContext,
-  berserkerLevel: number
+  berserkerLevel: number,
 ): boolean {
-  if (!featureState.barbarian) return false
+  if (!featureState.barbarian) return false;
   return canUseIntimidatingPresence(
     berserkerLevel,
     ctx.bonusActionUsed,
-    featureState.barbarian.intimidatingPresenceUsed
-  )
+    featureState.barbarian.intimidatingPresenceUsed,
+  );
 }
 
 export function executeIntimidatingPresence(): BridgeResult {
   return {
     featureAction: { type: "BERSERKER_USE_INTIMIDATING_PRESENCE" },
-    machineEvents: [{ type: "USE_BONUS_ACTION" }]
-  }
+    machineEvents: [{ type: "USE_BONUS_ACTION" }],
+  };
 }
 
-export const getIntimidatingPresenceDC: (strMod: AbilityModifier, profBonus: number) => DifficultyClass = intimidatingPresenceDC
+export const getIntimidatingPresenceDC: (
+  strMod: AbilityModifier,
+  profBonus: number,
+) => DifficultyClass = intimidatingPresenceDC;
 
 // --- Barbarian passives: extracted to feature-bridge-barbarian.ts to stay under max-lines ---
 export {
@@ -327,8 +395,8 @@ export {
   hasFeralInstinct,
   indomitableMight,
   instinctivePounceDistance,
-  primalChampionBonus
-} from "#/features/feature-bridge-barbarian.ts"
+  primalChampionBonus,
+} from "#/features/feature-bridge-barbarian.ts";
 
 // --- Paladin bridge: extracted to feature-bridge-paladin.ts to stay under max-lines ---
 export {
@@ -351,8 +419,8 @@ export {
   getCanUseAuraOfCourage,
   getCanUseAuraOfProtection,
   getDivineSmiteDamage,
-  getRadiantStrikesDice
-} from "#/features/feature-bridge-paladin.ts"
+  getRadiantStrikesDice,
+} from "#/features/feature-bridge-paladin.ts";
 
 // --- Monk bridge: extracted to feature-bridge-monk.ts to stay under max-lines ---
 export {
@@ -391,8 +459,8 @@ export {
   hasFleetStep,
   hasFocusEmpoweredStrikes,
   selfRestorationConditions,
-  unarmoredMovementBonus
-} from "#/features/feature-bridge-monk.ts"
+  unarmoredMovementBonus,
+} from "#/features/feature-bridge-monk.ts";
 
 // --- Rogue bridge: extracted to feature-bridge-rogue.ts to stay under max-lines ---
 export {
@@ -408,8 +476,8 @@ export {
   getElusiveCancelsAdvantage,
   getHasSlipperyMind,
   getReliableTalent,
-  getSneakAttackDice
-} from "#/features/feature-bridge-rogue.ts"
+  getSneakAttackDice,
+} from "#/features/feature-bridge-rogue.ts";
 
 // --- Weapon Mastery (query-only — no BridgeResult, no state mutations) ---
 export {
@@ -431,8 +499,8 @@ export {
   toppleResult,
   vexResult,
   WEAPON_MASTERY_MAP,
-  type WeaponMasteryProperty
-} from "#/features/weapon-mastery.ts"
+  type WeaponMasteryProperty,
+} from "#/features/weapon-mastery.ts";
 
 // --- Ranger ---
 export {
@@ -460,8 +528,8 @@ export {
   rovingSpeedBonus,
   rovingSwimSpeed,
   tirelessMaxCharges,
-  tirelessTempHp
-} from "#/features/feature-bridge-ranger.ts"
+  tirelessTempHp,
+} from "#/features/feature-bridge-ranger.ts";
 
 // --- Bard ---
 export {
@@ -478,12 +546,12 @@ export {
   type PeerlessSkillResult,
   peerlessSkillResult,
   songOfRestDie,
-  superiorInspirationRestore
-} from "#/features/feature-bridge-bard.ts"
+  superiorInspirationRestore,
+} from "#/features/feature-bridge-bard.ts";
 
 // --- Cleric / Wizard / Warlock / Druid / Species (re-exported via sub-bridges) ---
-export * from "#/features/feature-bridge-cleric.ts"
-export * from "#/features/feature-bridge-druid.ts"
-export * from "#/features/feature-bridge-species.ts"
-export * from "#/features/feature-bridge-warlock.ts"
-export * from "#/features/feature-bridge-wizard.ts"
+export * from "#/features/feature-bridge-cleric.ts";
+export * from "#/features/feature-bridge-druid.ts";
+export * from "#/features/feature-bridge-species.ts";
+export * from "#/features/feature-bridge-warlock.ts";
+export * from "#/features/feature-bridge-wizard.ts";

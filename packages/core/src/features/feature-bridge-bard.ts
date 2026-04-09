@@ -14,5 +14,5 @@ export {
   type PeerlessSkillResult,
   peerlessSkillResult,
   songOfRestDie,
-  superiorInspirationRestore
-} from "#/features/class-bard.ts"
+  superiorInspirationRestore,
+} from "#/features/class-bard.ts";

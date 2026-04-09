@@ -1,20 +1,30 @@
-import { Option } from "effect"
-import type { SnapshotFrom } from "xstate"
-import { assign, setup } from "xstate"
+import { Option } from "effect";
+import type { SnapshotFrom } from "xstate";
+import { assign, setup } from "xstate";
 
-import { remarkableAthleteCritMovement } from "#/features/class-fighter.ts"
-import { defaultPreparedSpellsForClassLevels, getModeledPreparedSpellInfo } from "#/features/spell-available-actions.ts"
-import { ZERO_HIT_DICE } from "#/features/class-tables.ts"
-import * as barb from "#/machine-barbarian.ts"
-import * as bard from "#/machine-bard.ts"
-import * as cleric from "#/machine-cleric.ts"
-import { resolveGrapple, resolveShove, targetTwoSizesSmaller } from "#/machine-combat.ts"
-import { concBreak, concBreakFields, exhaustionWithConcBreak } from "#/machine-conc.ts"
-import { dmgR, dsR, fallR } from "#/machine-damage.ts"
-import * as druid from "#/machine-druid.ts"
-import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts"
-import * as fighter from "#/machine-fighter.ts"
-import { guards } from "#/machine-guards.ts"
+import { remarkableAthleteCritMovement } from "#/features/class-fighter.ts";
+import {
+  defaultPreparedSpellsForClassLevels,
+  getModeledPreparedSpellInfo,
+} from "#/features/spell-available-actions.ts";
+import { ZERO_HIT_DICE } from "#/features/class-tables.ts";
+import * as barb from "#/machine-barbarian.ts";
+import * as bard from "#/machine-bard.ts";
+import * as cleric from "#/machine-cleric.ts";
+import {
+  resolveGrapple,
+  resolveShove,
+} from "#/machine-combat.ts";
+import {
+  concBreak,
+  concBreakFields,
+  exhaustionWithConcBreak,
+} from "#/machine-conc.ts";
+import { dmgR, dsR, fallR } from "#/machine-damage.ts";
+import * as druid from "#/machine-druid.ts";
+import { addAe, computeEndTurn, removeAe } from "#/machine-endturn.ts";
+import * as fighter from "#/machine-fighter.ts";
+import { guards } from "#/machine-guards.ts";
 import {
   addDeathFailures,
   addIncapSource,
@@ -26,24 +36,33 @@ import {
   removeIncapSource,
   spendHalfSpeed,
   spendHitDieUpdate,
-  updateClass
-} from "#/machine-helpers.ts"
-import * as monk from "#/machine-monk.ts"
+  updateClass,
+} from "#/machine-helpers.ts";
+import * as monk from "#/machine-monk.ts";
 import {
   applyLegendaryResistance,
   monsterLongRestUpdate,
   refreshBoolRecord,
   useDailyAbilityUpdate,
-  useRechargeAbilityUpdate
-} from "#/machine-monster.ts"
-import * as paladin from "#/machine-paladin.ts"
-import { isIncapacitated } from "#/machine-queries.ts"
-import * as ranger from "#/machine-ranger.ts"
-import * as rogue from "#/machine-rogue.ts"
-import * as sorcerer from "#/machine-sorcerer.ts"
-import { computeShortRest, expendSlot, initSpellSlotsFromLevels } from "#/machine-spells.ts"
-import { computeInitTurn } from "#/machine-startturn.ts"
-import { damageTrackConfig, rootEventHandlers, spellcastingConfig, turnPhaseConfig } from "#/machine-states.ts"
+  useRechargeAbilityUpdate,
+} from "#/machine-monster.ts";
+import * as paladin from "#/machine-paladin.ts";
+import { isIncapacitated } from "#/machine-queries.ts";
+import * as ranger from "#/machine-ranger.ts";
+import * as rogue from "#/machine-rogue.ts";
+import * as sorcerer from "#/machine-sorcerer.ts";
+import {
+  computeShortRest,
+  expendSlot,
+  initSpellSlotsFromLevels,
+} from "#/machine-spells.ts";
+import { computeInitTurn } from "#/machine-startturn.ts";
+import {
+  damageTrackConfig,
+  rootEventHandlers,
+  spellcastingConfig,
+  turnPhaseConfig,
+} from "#/machine-states.ts";
 import {
   asAddEffect,
   asAddExhaustion,
@@ -73,10 +92,10 @@ import {
   type DndEvent,
   type DndMachineInput,
   INITIAL_CONDITIONS,
-  INITIAL_TURN_STATE
-} from "#/machine-types.ts"
-import * as warlock from "#/machine-warlock.ts"
-import * as wizard from "#/machine-wizard.ts"
+  INITIAL_TURN_STATE,
+} from "#/machine-types.ts";
+import * as warlock from "#/machine-warlock.ts";
+import * as wizard from "#/machine-wizard.ts";
 import {
   abilityModifier,
   CreatureId as mkCreatureId,
@@ -89,26 +108,33 @@ import {
   movementFeet,
   resourceCount,
   spellId,
-  tempHp
-} from "#/types.ts"
+  tempHp,
+} from "#/types.ts";
 
-export type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts"
+export type { DndContext, DndEvent, DndMachineInput } from "#/machine-types.ts";
 
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
-const MT = { context: {} as DndContext, events: {} as DndEvent, input: {} as DndMachineInput }
+const MT = {
+  context: {} as DndContext,
+  events: {} as DndEvent,
+  input: {} as DndMachineInput,
+};
 /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
 /** Merge multiple class update results, combining classStates from each.
  * Each class lifecycle function returns either {} (inactive) or { classStates: { ...merged } }. */
-function mergeClassUpdates(c: DndContext, updates: ReadonlyArray<Partial<DndContext>>): Partial<DndContext> {
-  let cs = c.classStates
-  let result: Partial<DndContext> = {}
+function mergeClassUpdates(
+  c: DndContext,
+  updates: ReadonlyArray<Partial<DndContext>>,
+): Partial<DndContext> {
+  let cs = c.classStates;
+  let result: Partial<DndContext> = {};
   for (const u of updates) {
-    if (u.classStates) cs = { ...cs, ...u.classStates }
-    const { classStates: _, ...rest } = u
-    if (Object.keys(rest).length > 0) result = { ...result, ...rest }
+    if (u.classStates) cs = { ...cs, ...u.classStates };
+    const { classStates: _, ...rest } = u;
+    if (Object.keys(rest).length > 0) result = { ...result, ...rest };
   }
-  return cs === c.classStates ? result : { ...result, classStates: cs }
+  return cs === c.classStates ? result : { ...result, classStates: cs };
 }
 
 export const creatureMachine = setup({
@@ -119,8 +145,14 @@ export const creatureMachine = setup({
     // Quint pMonsterDeathCheck: clear spurious unconscious when monster dies at 0 HP
     monsterDeathCleanup: assign(({ context: c }) =>
       c.creatureKind === "Monster"
-        ? { unconscious: false, incapacitatedSources: removeIncapSource(c.incapacitatedSources, "unconscious") }
-        : {}
+        ? {
+            unconscious: false,
+            incapacitatedSources: removeIncapSource(
+              c.incapacitatedSources,
+              "unconscious",
+            ),
+          }
+        : {},
     ),
     enterCombat: assign({ inCombat: true, pendingResolution: null }),
     exitCombat: assign({ inCombat: false, pendingResolution: null }),
@@ -130,236 +162,344 @@ export const creatureMachine = setup({
     // ownership for a cast, so Overchannel is opened by an explicit internal trigger
     // rather than guessed from CAST_PREPARED_SPELL alone.
     triggerOverchannel: assign(({ event: e }) => {
-      const ev = e as Extract<DndEvent, { type: "TRIGGER_OVERCHANNEL" }>
-      return { pendingResolution: { kind: "overchannel" as const, spellName: ev.spellName, slotLevel: ev.slotLevel } }
+      const ev = e as Extract<DndEvent, { type: "TRIGGER_OVERCHANNEL" }>;
+      return {
+        pendingResolution: {
+          kind: "overchannel" as const,
+          spellName: ev.spellName,
+          slotLevel: ev.slotLevel,
+        },
+      };
     }),
     triggerSneakAttack: assign(({ event: e }) => {
-      const ev = e as Extract<DndEvent, { type: "TRIGGER_SNEAK_ATTACK" }>
-      return { pendingResolution: { kind: "sneakAttack" as const, mode: ev.mode, source: ev.source } }
+      const ev = e as Extract<DndEvent, { type: "TRIGGER_SNEAK_ATTACK" }>;
+      return {
+        pendingResolution: {
+          kind: "sneakAttack" as const,
+          mode: ev.mode,
+          source: ev.source,
+        },
+      };
     }),
-    triggerTacticalMind: assign({ pendingResolution: { kind: "tacticalMind" } }),
-    triggerPeerlessSkillAbilityCheck: assign({ pendingResolution: { kind: "peerlessSkill", mode: "abilityCheck" } }),
-    triggerPeerlessSkillAttackRoll: assign({ pendingResolution: { kind: "peerlessSkill", mode: "attackRoll" } }),
+    triggerTacticalMind: assign({
+      pendingResolution: { kind: "tacticalMind" },
+    }),
+    triggerPeerlessSkillAbilityCheck: assign({
+      pendingResolution: { kind: "peerlessSkill", mode: "abilityCheck" },
+    }),
+    triggerPeerlessSkillAttackRoll: assign({
+      pendingResolution: { kind: "peerlessSkill", mode: "attackRoll" },
+    }),
     applyDamage: assign(({ context: c, event: e }) => ({
       hp: hp(dmgR(c, e).newHp),
       tempHp: tempHp(dmgR(c, e).newTempHp),
-      pendingResolution: null
+      pendingResolution: null,
     })),
-    absorbTempHpOnly: assign(({ context: c, event: e }) => ({ tempHp: tempHp(dmgR(c, e).newTempHp) })),
+    absorbTempHpOnly: assign(({ context: c, event: e }) => ({
+      tempHp: tempHp(dmgR(c, e).newTempHp),
+      pendingResolution: null,
+    })),
     applyDamageAtZeroHp: assign(({ context: c, event: e }) => {
-      const { newFailures } = addDeathFailures(c.deathSaves.failures, asTakeDamage(e).isCritical)
+      const { newFailures } = addDeathFailures(
+        c.deathSaves.failures,
+        asTakeDamage(e).isCritical,
+      );
       return {
-        deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(newFailures) },
+        deathSaves: {
+          successes: c.deathSaves.successes,
+          failures: deathSaveCount(newFailures),
+        },
         tempHp: tempHp(dmgR(c, e).newTempHp),
         stable: false,
-        pendingResolution: null
-      }
+        pendingResolution: null,
+      };
     }),
     applyDeathSave: assign(({ context: c, event: e }) => {
-      const r = dsR(c, e)
-      if (r.regainsConsciousness) return { deathSaves: DEATH_SAVES_RESET, hp: hp(1) }
-      if (r.isStabilized) return { deathSaves: DEATH_SAVES_RESET, stable: true }
-      return { deathSaves: { successes: deathSaveCount(r.newSuccesses), failures: deathSaveCount(r.newFailures) } }
+      const r = dsR(c, e);
+      if (r.regainsConsciousness)
+        return { deathSaves: DEATH_SAVES_RESET, hp: hp(1) };
+      if (r.isStabilized)
+        return { deathSaves: DEATH_SAVES_RESET, stable: true };
+      return {
+        deathSaves: {
+          successes: deathSaveCount(r.newSuccesses),
+          failures: deathSaveCount(r.newFailures),
+        },
+      };
     }),
     applyHeal: assign(({ context: c, event: e }) => ({
       hp: hp(Math.min(c.hp + asHeal(e).amount, effectiveMaxHp(c.maxHp))),
-      pendingResolution: null
+      pendingResolution: null,
     })),
     applyHealFromZero: assign(({ context: c, event: e }) => ({
       deathSaves: DEATH_SAVES_RESET,
       hp: hp(Math.min(asHeal(e).amount, effectiveMaxHp(c.maxHp))),
-      pendingResolution: null
+      pendingResolution: null,
     })),
-    applyTempHp: assign(({ event: e }) => (asGrantTempHp(e).keepOld ? {} : { tempHp: asGrantTempHp(e).amount })),
+    applyTempHp: assign(({ event: e }) =>
+      asGrantTempHp(e).keepOld ? {} : { tempHp: asGrantTempHp(e).amount },
+    ),
     applyKnockOut: assign(({ context: c }) => ({
       hp: hp(1),
-      ...concBreak(c)
+      ...concBreak(c),
     })),
     applyStabilize: assign({ deathSaves: DEATH_SAVES_RESET, stable: true }),
     setUnconscious: assign(({ context: c }) => ({
       unconscious: true,
       prone: true,
-      incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious"),
-      ...concBreak(c)
+      incapacitatedSources: addIncapSource(
+        c.incapacitatedSources,
+        "unconscious",
+      ),
+      ...concBreak(c),
     })),
     clearUnconscious: assign(({ context: c }) => ({
       unconscious: false,
-      incapacitatedSources: removeIncapSource(c.incapacitatedSources, "unconscious"),
+      incapacitatedSources: removeIncapSource(
+        c.incapacitatedSources,
+        "unconscious",
+      ),
       stable: false,
-      deathSaves: DEATH_SAVES_RESET
+      deathSaves: DEATH_SAVES_RESET,
     })),
     applyCondition: assign(({ context: c, event: e }) => {
-      const ev = asApplyCondition(e)
+      const ev = asApplyCondition(e);
       const u = applyConditionUpdate(
         ev.condition,
         c.incapacitatedSources,
         c.petrified,
-        ev.conditionImmunities ?? EMPTY_CONDITION_SET
-      )
+        ev.conditionImmunities ?? EMPTY_CONDITION_SET,
+      );
       return {
         ...u.conditionFlags,
         incapacitatedSources: u.incapSources,
-        ...(!isIncapacitated(c) && u.incapSources.size > 0 ? concBreakFields(c) : {})
-      }
+        ...(!isIncapacitated(c) && u.incapSources.size > 0
+          ? concBreakFields(c)
+          : {}),
+      };
     }),
     removeCondition: assign(({ context: c, event: e }) => {
-      const cond = asCondition(e).condition
-      const u = removeConditionUpdate(cond, c.incapacitatedSources, c.unconscious)
-      return { ...u.conditionFlags, incapacitatedSources: u.incapSources }
+      const cond = asCondition(e).condition;
+      const u = removeConditionUpdate(
+        cond,
+        c.incapacitatedSources,
+        c.unconscious,
+      );
+      return { ...u.conditionFlags, incapacitatedSources: u.incapSources };
     }),
     addExhaustion: assign(({ context: c, event: e }) => {
-      const ev = asAddExhaustion(e)
-      return exhaustionWithConcBreak(c, ev.levels, ev.exhaustionImmune)
+      const ev = asAddExhaustion(e);
+      return exhaustionWithConcBreak(c, ev.levels, ev.exhaustionImmune);
     }),
     reduceExhaustion: assign(({ context: c, event: e }) => ({
-      exhaustion: exhaustionLevel(Math.max(0, c.exhaustion - asExhaustion(e).levels))
+      exhaustion: exhaustionLevel(
+        Math.max(0, c.exhaustion - asExhaustion(e).levels),
+      ),
     })),
-    initTurn: assign(({ context: c, event: e }) => ({ ...computeInitTurn(c, e), pendingResolution: null })),
+    initTurn: assign(({ context: c, event: e }) => ({
+      ...computeInitTurn(c, e),
+      pendingResolution: null,
+    })),
     useAction: assign(({ context: c, event: e }) => {
-      const ev = asUseAction(e)
+      const ev = asUseAction(e);
       // SRD 5.2.1: Action Surge "except the Magic action." XState can't prevent events
       // from arriving, so reject here. See actionSurgeActionPending in creature.qnt for full design.
-      if (c.actionSurgeActionPending && ev.actionType === "magic") return {}
-      const pending = c.actionSurgeActionPending ? { actionSurgeActionPending: false } : {}
-      const base = { actionsRemaining: c.actionsRemaining - 1, ...pending }
+      if (c.actionSurgeActionPending && ev.actionType === "magic") return {};
+      const pending = c.actionSurgeActionPending
+        ? { actionSurgeActionPending: false }
+        : {};
+      const base = { actionsRemaining: c.actionsRemaining - 1, ...pending };
       switch (ev.actionType) {
         case "attack":
-          return { ...base, attackActionUsed: true }
+          return { ...base, attackActionUsed: true };
         case "disengage":
-          return { ...base, disengaged: true }
+          return { ...base, disengaged: true };
         case "dodge":
-          return { ...base, dodging: true }
+          return { ...base, dodging: true };
         case "dash":
-          return { ...base, movementRemaining: movementFeet(c.movementRemaining + c.effectiveSpeed) }
+          return {
+            ...base,
+            movementRemaining: movementFeet(
+              c.movementRemaining + c.effectiveSpeed,
+            ),
+          };
         case "ready":
-          return { ...base, readiedAction: true }
+          return { ...base, readiedAction: true };
         default:
-          return base
+          return base;
       }
     }),
     useBonusAction: assign(() => ({ bonusActionUsed: true })),
     useReaction: assign(() => ({ reactionAvailable: false })),
     useMovement: assign(({ context: c, event: e }) => {
-      const cost = asUseMovement(e).feet * asUseMovement(e).movementCost
+      const cost = asUseMovement(e).feet * asUseMovement(e).movementCost;
       return cost > c.movementRemaining || cost < 0
         ? {}
-        : { movementRemaining: movementFeet(c.movementRemaining - cost) }
+        : { movementRemaining: movementFeet(c.movementRemaining - cost) };
     }),
-    useExtraAttack: assign(({ context: c }) => ({ extraAttacksRemaining: c.extraAttacksRemaining - 1 })),
+    useExtraAttack: assign(({ context: c }) => ({
+      extraAttacksRemaining: c.extraAttacksRemaining - 1,
+    })),
     grantExtraAction: assign(({ context: c }) => ({
-      actionsRemaining: c.actionsRemaining + 1
+      actionsRemaining: c.actionsRemaining + 1,
     })),
     standFromProne: assign(({ context: c }) => {
-      const r = spendHalfSpeed(c.movementRemaining, c.effectiveSpeed)
-      if (!r.success) return {}
-      return { movementRemaining: movementFeet(r.newMovementRemaining), ...(c.prone ? { prone: false } : {}) }
+      const r = spendHalfSpeed(c.movementRemaining, c.effectiveSpeed);
+      if (!r.success) return {};
+      return {
+        movementRemaining: movementFeet(r.newMovementRemaining),
+        ...(c.prone ? { prone: false } : {}),
+      };
     }),
-    dropProne: assign(({ context: c }) => (c.effectiveSpeed === 0 ? {} : { prone: true })),
+    dropProne: assign(({ context: c }) =>
+      c.effectiveSpeed === 0 ? {} : { prone: true },
+    ),
     endTurn: assign(({ context: c, event: e }) => {
-      const ev = asEndTurn(e)
-      const isMonster = c.creatureKind === "Monster"
+      const ev = asEndTurn(e);
+      const isMonster = c.creatureKind === "Monster";
       const lr = isMonster
-        ? applyLegendaryResistance(ev.effectResolutions ?? [], ev.useLegendaryResistance, c.legendaryResistancesRemaining)
-        : { effectiveSaves: ev.effectResolutions ?? [], lrUsed: false }
-      const { conditions: conds, ...rest } = computeEndTurn(c, lr.effectiveSaves)
+        ? applyLegendaryResistance(
+            ev.effectResolutions ?? [],
+            ev.useLegendaryResistance,
+            c.legendaryResistancesRemaining,
+          )
+        : { effectiveSaves: ev.effectResolutions ?? [], lrUsed: false };
+      const { conditions: conds, ...rest } = computeEndTurn(
+        c,
+        lr.effectiveSaves,
+      );
       return {
         ...conds,
         ...rest,
         pendingResolution: null,
-        ...(lr.lrUsed ? { legendaryResistancesRemaining: resourceCount(c.legendaryResistancesRemaining - 1) } : {})
-      }
+        ...(lr.lrUsed
+          ? {
+              legendaryResistancesRemaining: resourceCount(
+                c.legendaryResistancesRemaining - 1,
+              ),
+            }
+          : {}),
+      };
     }),
     markBonusActionSpell: assign({ bonusActionSpellCast: true }),
     markNonCantripActionSpell: assign({ nonCantripActionSpellCast: true }),
     castPreparedSpell: assign(({ context: c, event: e }) => {
-      const ev = asCastPreparedSpell(e)
-      const spell = getModeledPreparedSpellInfo(ev.spellName)
-      if (spell == null) return {}
-      const slotsCurrent = expendSlot(c.slotsCurrent, ev.slotLevel)
-      const turnUpdates = spell.castingTime === "bonusAction"
-        ? {
-            bonusActionUsed: true,
-            bonusActionSpellCast: true,
-          }
-        : {
-            actionsRemaining: c.actionsRemaining - 1,
-            nonCantripActionSpellCast: true,
-          }
+      const ev = asCastPreparedSpell(e);
+      const spell = getModeledPreparedSpellInfo(ev.spellName);
+      if (spell == null) return {};
+      const slotsCurrent = expendSlot(c.slotsCurrent, ev.slotLevel);
+      const turnUpdates =
+        spell.castingTime === "bonusAction"
+          ? {
+              bonusActionUsed: true,
+              bonusActionSpellCast: true,
+            }
+          : {
+              actionsRemaining: c.actionsRemaining - 1,
+              nonCantripActionSpellCast: true,
+            };
       if (!spell.concentration || spell.durationTurns == null) {
         return {
           slotsCurrent,
           slotExpendedThisTurn: true,
           pendingResolution: null,
           ...turnUpdates,
-        }
+        };
       }
-      const nextSpellId = spellId(ev.spellName)
+      const nextSpellId = spellId(ev.spellName);
       const baseEffects = Option.isSome(c.concentrationSpellId)
         ? removeAe(c.activeEffects, c.concentrationSpellId.value)
-        : c.activeEffects
+        : c.activeEffects;
       return {
         slotsCurrent,
         slotExpendedThisTurn: true,
         pendingResolution: null,
         concentrationSpellId: Option.some(nextSpellId),
-        activeEffects: addAe(baseEffects, nextSpellId, spell.durationTurns, "end", c.selfId ?? mkCreatureId("")),
+        activeEffects: addAe(
+          baseEffects,
+          nextSpellId,
+          spell.durationTurns,
+          "end",
+          c.selfId ?? mkCreatureId(""),
+        ),
         ...turnUpdates,
-      }
+      };
     }),
     applyGrapple: assign(({ context: c, event: e }) => {
-      const ev = asGrapple(e)
+      const ev = asGrapple(e);
       const ok = resolveGrapple(
         ev.attackerSize,
         ev.targetSize,
         ev.targetSaveFailed,
         ev.attackerHasFreeHand,
-        isIncapacitated(c)
-      )
-      return ok
-        ? {
-            grappled: true,
-            grappling: true,
-            grappledTargetTwoSizesSmaller: targetTwoSizesSmaller(ev.attackerSize, ev.targetSize),
-          }
-        : {}
+        isIncapacitated(c),
+      );
+      // Creature-level: creature is grapple TARGET → gets grappled condition.
+      // Grappler state (isGrappling) is passed externally via START_TURN event.
+      return ok ? { grappled: true } : {};
     }),
     setGrapplingState: assign(({ event: e }) => {
-      const ev = e as Extract<DndEvent, { type: "SET_GRAPPLING_STATE" }>
+      const ev = e as Extract<DndEvent, { type: "SET_GRAPPLING_STATE" }>;
       return {
         grappling: ev.grappling,
-        grappledTargetTwoSizesSmaller: ev.grappledTargetTwoSizesSmaller
-      }
+        grappledTargetTwoSizesSmaller: ev.grappledTargetTwoSizesSmaller,
+      };
     }),
-    releaseGrapple: assign({ grappled: false, grappling: false, grappledTargetTwoSizesSmaller: false }),
-    escapeGrapple: assign(({ event: e }) => (asEscapeGrapple(e).escapeSucceeded ? { grappled: false } : {})),
+    releaseGrapple: assign({
+      grappled: false,
+      grappling: false,
+      grappledTargetTwoSizesSmaller: false,
+    }),
+    escapeGrapple: assign(({ event: e }) =>
+      asEscapeGrapple(e).escapeSucceeded ? { grappled: false } : {},
+    ),
     applyShove: assign(({ context: c, event: e }) => {
-      const ev = asShove(e)
-      if (!resolveShove(ev.attackerSize, ev.targetSize, ev.targetSaveFailed, isIncapacitated(c))) return {}
-      if (ev.choice === "prone") return { prone: true }
-      return {}
+      const ev = asShove(e);
+      if (
+        !resolveShove(
+          ev.attackerSize,
+          ev.targetSize,
+          ev.targetSaveFailed,
+          isIncapacitated(c),
+        )
+      )
+        return {};
+      if (ev.choice === "prone") return { prone: true };
+      return {};
     }),
     expendSlot: assign(({ context: c, event: e }) => ({
-      slotsCurrent: expendSlot(c.slotsCurrent, asExpendSlot(e).level)
+      slotsCurrent: expendSlot(c.slotsCurrent, asExpendSlot(e).level),
     })),
     expendPactSlot: assign(({ context: c }) =>
-      c.pactSlotsCurrent <= 0 ? {} : { pactSlotsCurrent: c.pactSlotsCurrent - 1 }
+      c.pactSlotsCurrent <= 0
+        ? {}
+        : { pactSlotsCurrent: c.pactSlotsCurrent - 1 },
     ),
     startConcentration: assign(({ context: c, event: e }) => {
-      const ev = asStartConcentration(e)
+      const ev = asStartConcentration(e);
       const base = Option.isSome(c.concentrationSpellId)
         ? removeAe(c.activeEffects, c.concentrationSpellId.value)
-        : c.activeEffects
+        : c.activeEffects;
       return {
         concentrationSpellId: Option.some(ev.spellId),
-        activeEffects: addAe(base, ev.spellId, ev.durationTurns, ev.expiresAt, ev.casterId)
-      }
+        activeEffects: addAe(
+          base,
+          ev.spellId,
+          ev.durationTurns,
+          ev.expiresAt,
+          ev.casterId,
+        ),
+      };
     }),
     breakConcentration: assign(({ context: c }) => concBreakFields(c)),
     concentrationCheck: assign(({ context: c, event: e }) =>
-      Option.isNone(c.concentrationSpellId) || asConcentrationCheck(e).conSaveSucceeded ? {} : concBreakFields(c)
+      Option.isNone(c.concentrationSpellId) ||
+      asConcentrationCheck(e).conSaveSucceeded
+        ? {}
+        : concBreakFields(c),
     ),
     addEffect: assign(({ context: c, event: e }) => {
-      const ev = asAddEffect(e)
+      const ev = asAddEffect(e);
       return {
         activeEffects: addAe(
           c.activeEffects,
@@ -376,60 +516,80 @@ export const creatureMachine = setup({
             grantedImmunities: ev.grantedImmunities,
             blocksOpportunityAttacks: ev.blocksOpportunityAttacks,
             speedDeltaFeet: ev.speedDeltaFeet,
-          }
-        )
-      }
+          },
+        ),
+      };
     }),
     removeEffect: assign(({ context: c, event: e }) => ({
-      activeEffects: removeAe(c.activeEffects, asRemoveEffect(e).spellId)
+      activeEffects: removeAe(c.activeEffects, asRemoveEffect(e).spellId),
     })),
-    spendHitDie: assign(({ context: c, event: e }) => spendHitDieUpdate(c, asSpendHitDie(e))),
+    spendHitDie: assign(({ context: c, event: e }) =>
+      spendHitDieUpdate(c, asSpendHitDie(e)),
+    ),
     shortRest: assign(({ context: c, event: e }) => {
-      const ev = asShortRest(e)
-      const r = computeShortRest(c.hp, c.maxHp, c.hitDiceRemaining, c.pactSlotsMax, c.conMod, ev.hdRolls)
+      const ev = asShortRest(e);
+      const r = computeShortRest(
+        c.hp,
+        c.maxHp,
+        c.hitDiceRemaining,
+        c.pactSlotsMax,
+        c.conMod,
+        ev.hdRolls,
+      );
       return {
         hitDiceRemaining: r.newHitDice,
         hp: hp(r.newHp),
         pactSlotsCurrent: r.newPactSlots,
         pendingResolution: null,
-        ...(c.creatureKind === "Monster" ? { rechargeAvailable: refreshBoolRecord(c.rechargeAvailable) } : {})
-      }
+        ...(c.creatureKind === "Monster"
+          ? { rechargeAvailable: refreshBoolRecord(c.rechargeAvailable) }
+          : {}),
+      };
     }),
     longRest: assign(({ context: c }) => {
-      const base = longRestUpdate(c)
+      const base = longRestUpdate(c);
       return c.creatureKind !== "Monster"
         ? { ...base, pendingResolution: null }
         : {
             ...base,
             ...monsterLongRestUpdate(c),
-            legendaryResistancesRemaining: resourceCount(c.legendaryResistancesMax),
-            pendingResolution: null
-          }
+            legendaryResistancesRemaining: resourceCount(
+              c.legendaryResistancesMax,
+            ),
+            pendingResolution: null,
+          };
     }),
     applyFall: assign(({ context: c, event: e }) => {
-      const r = fallR(c, e)
-      const took = r.newHp !== c.hp || r.newTempHp !== c.tempHp
+      const r = fallR(c, e);
+      const took = r.newHp !== c.hp || r.newTempHp !== c.tempHp;
       // Dying instant death: HP stays 0 but dmgThrough >= maxHp kills — Quint sees state change
-      const dyingInstantDeath = c.hp === 0 && r.dmgThrough >= r.effMax
+      const dyingInstantDeath = c.hp === 0 && r.dmgThrough >= r.effMax;
       return {
         hp: hp(r.newHp),
         tempHp: tempHp(r.newTempHp),
         ...(took || dyingInstantDeath ? { prone: true } : {}),
-        pendingResolution: null
-      }
+        pendingResolution: null,
+      };
     }),
     applyFallAtZeroHp: assign(({ context: c, event: e }) => {
-      const r = fallR(c, e)
+      const r = fallR(c, e);
       if (r.dmgThrough === 0)
-        return { tempHp: tempHp(r.newTempHp), ...(r.newTempHp !== c.tempHp ? { prone: true } : {}) }
-      const df = addDeathFailures(c.deathSaves.failures, false)
+        return {
+          tempHp: tempHp(r.newTempHp),
+          ...(r.newTempHp !== c.tempHp ? { prone: true } : {}),
+          pendingResolution: null,
+        };
+      const df = addDeathFailures(c.deathSaves.failures, false);
       return {
         tempHp: tempHp(r.newTempHp),
         prone: true,
         stable: false,
-        deathSaves: { successes: c.deathSaves.successes, failures: deathSaveCount(df.newFailures) },
-        pendingResolution: null
-      }
+        deathSaves: {
+          successes: c.deathSaves.successes,
+          failures: deathSaveCount(df.newFailures),
+        },
+        pendingResolution: null,
+      };
     }),
     suffocate: assign(({ context: c }) => ({
       hp: hp(0),
@@ -438,29 +598,40 @@ export const creatureMachine = setup({
         : {
             unconscious: true,
             prone: true,
-            incapacitatedSources: addIncapSource(c.incapacitatedSources, "unconscious")
+            incapacitatedSources: addIncapSource(
+              c.incapacitatedSources,
+              "unconscious",
+            ),
           }),
       pendingResolution: null,
-      ...concBreak(c)
+      ...concBreak(c),
     })),
     setRelentlessRagePending: assign(({ context: c }) => {
-      const barbarian = c.classStates.barbarian
-      if (!barbarian) return { pendingResolution: null }
-      return barbarian.level >= 11 && barbarian.raging && c.creatureKind === "PC"
+      const barbarian = c.classStates.barbarian;
+      if (!barbarian) return { pendingResolution: null };
+      return barbarian.level >= 11 &&
+        barbarian.raging &&
+        c.creatureKind === "PC"
         ? { pendingResolution: { kind: "relentlessRage" as const } }
-        : { pendingResolution: null }
+        : { pendingResolution: null };
     }),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
-    useSecondWind: assign(({ context: c, event: e }) => fighter.secondWindUpdate(c, asUseSecondWind(e).d10Roll)),
-    useActionSurge: assign(({ context: c }) => fighter.actionSurgeUpdate(c)),
-    useIndomitable: assign(({ context: c }) => ({ ...fighter.indomitableUpdate(c), pendingResolution: null })),
-    useTacticalMind: assign(({ context: c, event: e }) =>
-      ({
-        ...fighter.tacticalMindUpdate(c, asUseTacticalMind(e).boostedCheckSucceeds),
-        pendingResolution: null
-      })
+    useSecondWind: assign(({ context: c, event: e }) =>
+      fighter.secondWindUpdate(c, asUseSecondWind(e).d10Roll),
     ),
+    useActionSurge: assign(({ context: c }) => fighter.actionSurgeUpdate(c)),
+    useIndomitable: assign(({ context: c }) => ({
+      ...fighter.indomitableUpdate(c),
+      pendingResolution: null,
+    })),
+    useTacticalMind: assign(({ context: c, event: e }) => ({
+      ...fighter.tacticalMindUpdate(
+        c,
+        asUseTacticalMind(e).boostedCheckSucceeds,
+      ),
+      pendingResolution: null,
+    })),
     classStartTurn: assign(({ context: c }) =>
       mergeClassUpdates(c, [
         fighter.fighterStartTurnUpdate(c),
@@ -474,8 +645,8 @@ export const creatureMachine = setup({
         warlock.warlockStartTurnUpdate(c),
         wizard.wizardStartTurnUpdate(c),
         ranger.rangerStartTurnUpdate(c),
-        bard.bardStartTurnUpdate(c)
-      ])
+        bard.bardStartTurnUpdate(c),
+      ]),
     ),
     classShortRest: assign(({ context: c }) =>
       mergeClassUpdates(c, [
@@ -490,8 +661,8 @@ export const creatureMachine = setup({
         warlock.warlockShortRestUpdate(c),
         wizard.wizardShortRestUpdate(c),
         ranger.rangerShortRestUpdate(c),
-        bard.bardShortRestUpdate(c)
-      ])
+        bard.bardShortRestUpdate(c),
+      ]),
     ),
     classLongRest: assign(({ context: c }) =>
       mergeClassUpdates(c, [
@@ -506,120 +677,222 @@ export const creatureMachine = setup({
         warlock.warlockLongRestUpdate(c),
         wizard.wizardLongRestUpdate(c),
         ranger.rangerLongRestUpdate(c),
-        bard.bardLongRestUpdate(c)
-      ])
+        bard.bardLongRestUpdate(c),
+      ]),
     ),
     useHeroicInspiration: assign(({ context: c }) => {
-      if (!c.classStates.fighter?.heroicInspiration) return {}
-      return updateClass(c, "fighter", { heroicInspiration: false })
+      if (!c.classStates.fighter?.heroicInspiration) return {};
+      return updateClass(c, "fighter", { heroicInspiration: false });
     }),
     scoreCriticalHit: assign(({ context: c }) => {
-      const fLevel = c.classStates.fighter?.level ?? 0
-      const d = remarkableAthleteCritMovement(fLevel, c.effectiveSpeed)
-      return d <= 0 ? { bonusMovementOAFree: true } : { bonusMovementRemaining: d, bonusMovementOAFree: true }
+      const fLevel = c.classStates.fighter?.level ?? 0;
+      const d = remarkableAthleteCritMovement(fLevel, c.effectiveSpeed);
+      return d <= 0
+        ? { bonusMovementOAFree: true }
+        : { bonusMovementRemaining: d, bonusMovementOAFree: true };
     }),
     useBonusMovement: assign(({ context: c, event: e }) => ({
-      bonusMovementRemaining: Math.max(c.bonusMovementRemaining - asUseBonusMovement(e).feet, 0)
+      bonusMovementRemaining: Math.max(
+        c.bonusMovementRemaining - asUseBonusMovement(e).feet,
+        0,
+      ),
     })),
     useLegendaryAction: assign(({ context: c }) =>
       c.creatureKind !== "Monster" || c.legendaryActionsRemaining <= 0
         ? {}
-        : { legendaryActionsRemaining: resourceCount(c.legendaryActionsRemaining - 1) }
+        : {
+            legendaryActionsRemaining: resourceCount(
+              c.legendaryActionsRemaining - 1,
+            ),
+          },
     ),
     useRechargeAbility: assign(({ context: c, event: e }) =>
       c.creatureKind !== "Monster"
         ? {}
-        : useRechargeAbilityUpdate(c.rechargeAvailable, (e as Extract<DndEvent, { type: "USE_RECHARGE_ABILITY" }>).name)
+        : useRechargeAbilityUpdate(
+            c.rechargeAvailable,
+            (e as Extract<DndEvent, { type: "USE_RECHARGE_ABILITY" }>).name,
+          ),
     ),
     useDailyAbility: assign(({ context: c, event: e }) =>
       c.creatureKind !== "Monster"
         ? {}
-        : useDailyAbilityUpdate(c.dailyUsesRemaining, (e as Extract<DndEvent, { type: "USE_DAILY_ABILITY" }>).name)
+        : useDailyAbilityUpdate(
+            c.dailyUsesRemaining,
+            (e as Extract<DndEvent, { type: "USE_DAILY_ABILITY" }>).name,
+          ),
     ),
     enterRage: assign(({ context: c }) => barb.enterRageUpdate(c)),
-    endRage: assign(({ context: c }) => ({ ...barb.endRageUpdate(c), pendingResolution: null })),
+    endRage: assign(({ context: c }) => ({
+      ...barb.endRageUpdate(c),
+      pendingResolution: null,
+    })),
     extendRageBA: assign(({ context: c }) => barb.extendRageBAUpdate(c)),
-    markAttackOrForcedSave: assign(({ context: c }) => barb.markAttackOrForcedSaveUpdate(c)),
-    declareReckless: assign(({ context: c }) => barb.declareRecklessUpdate(c)),
-    useIntimidatingPresence: assign(({ context: c }) => barb.useIntimidatingPresenceUpdate(c)),
-    restoreIntimidatingPresence: assign(({ context: c }) => barb.restoreIntimidatingPresenceUpdate(c)),
-    useBrutalStrike: assign(({ context: c }) => barb.brutalStrikeUpdate(c)),
-    useRelentlessRage: assign(({ context: c, event: e }) =>
-      ({
-        ...barb.relentlessRageUpdate(c, (e as Extract<DndEvent, { type: "USE_RELENTLESS_RAGE" }>).conSaveSucceeded),
-        pendingResolution: null
-      })
+    markAttackOrForcedSave: assign(({ context: c }) =>
+      barb.markAttackOrForcedSaveUpdate(c),
     ),
+    declareReckless: assign(({ context: c }) => barb.declareRecklessUpdate(c)),
+    useIntimidatingPresence: assign(({ context: c }) =>
+      barb.useIntimidatingPresenceUpdate(c),
+    ),
+    restoreIntimidatingPresence: assign(({ context: c }) =>
+      barb.restoreIntimidatingPresenceUpdate(c),
+    ),
+    useBrutalStrike: assign(({ context: c }) => barb.brutalStrikeUpdate(c)),
+    useRelentlessRage: assign(({ context: c, event: e }) => ({
+      ...barb.relentlessRageUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_RELENTLESS_RAGE" }>)
+          .conSaveSucceeded,
+      ),
+      pendingResolution: null,
+    })),
     flurryOfBlows: assign(({ context: c }) => monk.flurryOfBlowsUpdate(c)),
-    patientDefenseFree: assign(({ context: c }) => monk.patientDefenseFreeUpdate(c)),
-    patientDefenseFocus: assign(({ context: c }) => monk.patientDefenseFocusUpdate(c)),
-    stepOfTheWindFree: assign(({ context: c }) => monk.stepOfTheWindFreeUpdate(c)),
-    stepOfTheWindFocus: assign(({ context: c }) => monk.stepOfTheWindFocusUpdate(c)),
+    patientDefenseFree: assign(({ context: c }) =>
+      monk.patientDefenseFreeUpdate(c),
+    ),
+    patientDefenseFocus: assign(({ context: c }) =>
+      monk.patientDefenseFocusUpdate(c),
+    ),
+    stepOfTheWindFree: assign(({ context: c }) =>
+      monk.stepOfTheWindFreeUpdate(c),
+    ),
+    stepOfTheWindFocus: assign(({ context: c }) =>
+      monk.stepOfTheWindFocusUpdate(c),
+    ),
     stunningStrike: assign(({ context: c }) => monk.stunningStrikeUpdate(c)),
     wholenessOfBody: assign(({ context: c, event: e }) =>
-      monk.wholenessOfBodyUpdate(c, (e as Extract<DndEvent, { type: "WHOLENESS_OF_BODY" }>).healRoll)
+      monk.wholenessOfBodyUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "WHOLENESS_OF_BODY" }>).healRoll,
+      ),
     ),
     uncannyMetabolism: assign(({ context: c, event: e }) =>
-      monk.uncannyMetabolismUpdate(c, (e as Extract<DndEvent, { type: "UNCANNY_METABOLISM" }>).healRoll)
+      monk.uncannyMetabolismUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "UNCANNY_METABOLISM" }>).healRoll,
+      ),
     ),
     useLayOnHands: assign(({ context: c, event: e }) =>
-      paladin.layOnHandsUpdate(c, (e as Extract<DndEvent, { type: "USE_LAY_ON_HANDS" }>).amount)
+      paladin.layOnHandsUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_LAY_ON_HANDS" }>).amount,
+      ),
     ),
-    usePaladinChannelDivinity: assign(({ context: c }) => paladin.paladinChannelDivinityUpdate(c)),
+    usePaladinChannelDivinity: assign(({ context: c }) =>
+      paladin.paladinChannelDivinityUpdate(c),
+    ),
     useDivineSmite: assign(({ context: c, event: e }) =>
-      paladin.divineSmiteUpdate(c, (e as Extract<DndEvent, { type: "USE_DIVINE_SMITE" }>).slotLevel)
+      paladin.divineSmiteUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_DIVINE_SMITE" }>).slotLevel,
+      ),
     ),
-    useDivineSmiteFree: assign(({ context: c }) => paladin.divineSmiteFreeUpdate(c)),
-    useSneakAttack: assign(({ context: c }) => ({ ...rogue.sneakAttackUpdate(c), pendingResolution: null })),
+    useDivineSmiteFree: assign(({ context: c }) =>
+      paladin.divineSmiteFreeUpdate(c),
+    ),
+    useSneakAttack: assign(({ context: c }) => ({
+      ...rogue.sneakAttackUpdate(c),
+      pendingResolution: null,
+    })),
     useSteadyAim: assign(({ context: c }) => rogue.steadyAimUpdate(c)),
-    cunningActionDash: assign(({ context: c }) => rogue.cunningActionDashUpdate(c)),
-    cunningActionDisengage: assign(({ context: c }) => rogue.cunningActionDisengageUpdate(c)),
-    cunningActionHide: assign(({ context: c }) => rogue.cunningActionHideUpdate(c)),
+    cunningActionDash: assign(({ context: c }) =>
+      rogue.cunningActionDashUpdate(c),
+    ),
+    cunningActionDisengage: assign(({ context: c }) =>
+      rogue.cunningActionDisengageUpdate(c),
+    ),
+    cunningActionHide: assign(({ context: c }) =>
+      rogue.cunningActionHideUpdate(c),
+    ),
     useUncannyDodge: assign(({ context: c }) => rogue.uncannyDodgeUpdate(c)),
     useCunningStrike: assign(({ context: c }) => rogue.cunningStrikeUpdate(c)),
-    useClericChannelDivinity: assign(({ context: c }) => cleric.clericChannelDivinityUpdate(c)),
+    useClericChannelDivinity: assign(({ context: c }) =>
+      cleric.clericChannelDivinityUpdate(c),
+    ),
     enterWildShape: assign(({ context: c }) => druid.enterWildShapeUpdate(c)),
     exitWildShape: assign(({ context: c }) => druid.exitWildShapeUpdate(c)),
     wildResurgenceCharge: assign(({ context: c, event: e }) =>
-      druid.wildResurgenceChargeUpdate(c, (e as Extract<DndEvent, { type: "USE_WILD_RESURGENCE_CHARGE" }>).slotLevel)
+      druid.wildResurgenceChargeUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_WILD_RESURGENCE_CHARGE" }>)
+          .slotLevel,
+      ),
     ),
-    wildResurgenceSlot: assign(({ context: c }) => druid.wildResurgenceSlotUpdate(c)),
+    wildResurgenceSlot: assign(({ context: c }) =>
+      druid.wildResurgenceSlotUpdate(c),
+    ),
     convertSlotToPoints: assign(({ context: c, event: e }) =>
-      sorcerer.convertSlotToPointsUpdate(c, (e as Extract<DndEvent, { type: "CONVERT_SLOT_TO_POINTS" }>).slotLevel)
+      sorcerer.convertSlotToPointsUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "CONVERT_SLOT_TO_POINTS" }>).slotLevel,
+      ),
     ),
     convertPointsToSlot: assign(({ context: c, event: e }) =>
-      sorcerer.convertPointsToSlotUpdate(c, (e as Extract<DndEvent, { type: "CONVERT_POINTS_TO_SLOT" }>).slotLevel)
+      sorcerer.convertPointsToSlotUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "CONVERT_POINTS_TO_SLOT" }>).slotLevel,
+      ),
     ),
-    useInnateSorcery: assign(({ context: c }) => sorcerer.innateSorceryUpdate(c)),
+    useInnateSorcery: assign(({ context: c }) =>
+      sorcerer.innateSorceryUpdate(c),
+    ),
     useMetamagic: assign(({ context: c, event: e }) =>
-      sorcerer.useMetamagicUpdate(c, (e as Extract<DndEvent, { type: "USE_METAMAGIC" }>).option)
+      sorcerer.useMetamagicUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_METAMAGIC" }>).option,
+      ),
     ),
-    useMagicalCunning: assign(({ context: c }) => warlock.magicalCunningUpdate(c)),
+    useMagicalCunning: assign(({ context: c }) =>
+      warlock.magicalCunningUpdate(c),
+    ),
     useMysticArcanum: assign(({ context: c, event: e }) =>
-      warlock.mysticArcanumUpdate(c, (e as Extract<DndEvent, { type: "USE_MYSTIC_ARCANUM" }>).spellLevel)
+      warlock.mysticArcanumUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_MYSTIC_ARCANUM" }>).spellLevel,
+      ),
     ),
-    useEldritchSmite: assign(({ context: c }) => warlock.eldritchSmiteUpdate(c)),
+    useEldritchSmite: assign(({ context: c }) =>
+      warlock.eldritchSmiteUpdate(c),
+    ),
     useArcaneRecovery: assign(({ context: c, event: e }) =>
-      wizard.arcaneRecoveryUpdate(c, (e as Extract<DndEvent, { type: "USE_ARCANE_RECOVERY" }>).slotLevel)
+      wizard.arcaneRecoveryUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_ARCANE_RECOVERY" }>).slotLevel,
+      ),
     ),
-    useOverchannel: assign(({ context: c }) => ({ ...wizard.overchannelUpdate(c), pendingResolution: null })),
-    useFreeHuntersMark: assign(({ context: c }) => ranger.useFreeHuntersMarkUpdate(c)),
+    useOverchannel: assign(({ context: c }) => ({
+      ...wizard.overchannelUpdate(c),
+      pendingResolution: null,
+    })),
+    useFreeHuntersMark: assign(({ context: c }) =>
+      ranger.useFreeHuntersMarkUpdate(c),
+    ),
     useTireless: assign(({ context: c, event: e }) =>
-      ranger.useTirelessUpdate(c, (e as Extract<DndEvent, { type: "USE_TIRELESS" }>).d8Roll)
+      ranger.useTirelessUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_TIRELESS" }>).d8Roll,
+      ),
     ),
     useNaturesVeil: assign(({ context: c }) => ranger.useNaturesVeilUpdate(c)),
-    useBardicInspiration: assign(({ context: c }) => bard.useBardicInspirationUpdate(c)),
+    useBardicInspiration: assign(({ context: c }) =>
+      bard.useBardicInspirationUpdate(c),
+    ),
     useCuttingWords: assign(({ context: c }) => bard.useCuttingWordsUpdate(c)),
     useFontSlotRestore: assign(({ context: c, event: e }) =>
-      bard.useFontSlotRestoreUpdate(c, (e as Extract<DndEvent, { type: "USE_FONT_SLOT_RESTORE" }>).slotLevel)
+      bard.useFontSlotRestoreUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_FONT_SLOT_RESTORE" }>).slotLevel,
+      ),
     ),
-    usePeerlessSkill: assign(({ context: c, event: e }) =>
-      ({
-        ...bard.usePeerlessSkillUpdate(c, (e as Extract<DndEvent, { type: "USE_PEERLESS_SKILL" }>).success),
-        pendingResolution: null
-      })
-    )
-  }
+    usePeerlessSkill: assign(({ context: c, event: e }) => ({
+      ...bard.usePeerlessSkillUpdate(
+        c,
+        (e as Extract<DndEvent, { type: "USE_PEERLESS_SKILL" }>).success,
+      ),
+      pendingResolution: null,
+    })),
+  },
 }).createMachine({
   id: "dnd",
   type: "parallel",
@@ -634,26 +907,28 @@ export const creatureMachine = setup({
       wizardLevel: i.wizardLevel ?? 0,
       paladinLevel: i.paladinLevel ?? 0,
       rangerLevel: i.rangerLevel ?? 0,
-      warlockLevel: i.warlockLevel ?? 0
-    })
-    const slotsMax = i.slotsMax ?? derivedSlots.slotsMax
-    const preparedSpells = i.preparedSpells ?? defaultPreparedSpellsForClassLevels(
-      {
-        barbarian: i.barbarianLevel ?? 0,
-        bard: i.bardLevel ?? 0,
-        cleric: i.clericLevel ?? 0,
-        druid: i.druidLevel ?? 0,
-        fighter: i.fighterLevel ?? 0,
-        monk: i.monkLevel ?? 0,
-        paladin: i.paladinLevel ?? 0,
-        ranger: i.rangerLevel ?? 0,
-        rogue: i.rogueLevel ?? 0,
-        sorcerer: i.sorcererLevel ?? 0,
-        warlock: i.warlockLevel ?? 0,
-        wizard: i.wizardLevel ?? 0,
-      },
-      slotsMax
-    )
+      warlockLevel: i.warlockLevel ?? 0,
+    });
+    const slotsMax = i.slotsMax ?? derivedSlots.slotsMax;
+    const preparedSpells =
+      i.preparedSpells ??
+      defaultPreparedSpellsForClassLevels(
+        {
+          barbarian: i.barbarianLevel ?? 0,
+          bard: i.bardLevel ?? 0,
+          cleric: i.clericLevel ?? 0,
+          druid: i.druidLevel ?? 0,
+          fighter: i.fighterLevel ?? 0,
+          monk: i.monkLevel ?? 0,
+          paladin: i.paladinLevel ?? 0,
+          ranger: i.rangerLevel ?? 0,
+          rogue: i.rogueLevel ?? 0,
+          sorcerer: i.sorcererLevel ?? 0,
+          warlock: i.warlockLevel ?? 0,
+          wizard: i.wizardLevel ?? 0,
+        },
+        slotsMax,
+      );
     return {
       ...INITIAL_CONDITIONS,
       ...INITIAL_TURN_STATE,
@@ -683,36 +958,71 @@ export const creatureMachine = setup({
       slotsCurrent: i.slotsCurrent ?? derivedSlots.slotsCurrent,
       slotsMax,
       tempHp: tempHp(0),
-      legendaryActionsMax: i.legendaryActionsMax ?? i.legendaryActionsRemaining ?? resourceCount(0),
-      legendaryResistancesMax: i.legendaryResistancesMax ?? i.legendaryResistancesRemaining ?? resourceCount(0),
-      legendaryActionsRemaining: i.legendaryActionsRemaining ?? resourceCount(0),
-      legendaryResistancesRemaining: i.legendaryResistancesRemaining ?? resourceCount(0),
+      legendaryActionsMax:
+        i.legendaryActionsMax ??
+        i.legendaryActionsRemaining ??
+        resourceCount(0),
+      legendaryResistancesMax:
+        i.legendaryResistancesMax ??
+        i.legendaryResistancesRemaining ??
+        resourceCount(0),
+      legendaryActionsRemaining:
+        i.legendaryActionsRemaining ?? resourceCount(0),
+      legendaryResistancesRemaining:
+        i.legendaryResistancesRemaining ?? resourceCount(0),
       rechargeAvailable: i.rechargeAvailable ?? {},
       dailyUsesRemaining: i.dailyUsesRemaining ?? {},
       dailyUsesMax: i.dailyUsesMax ?? i.dailyUsesRemaining ?? {},
       classStates: {
-        ...(i.fighterLevel ? { fighter: fighter.initialFighterState(i.fighterLevel) } : {}),
-        ...(i.barbarianLevel ? { barbarian: barb.initialBarbarianState(i.barbarianLevel) } : {}),
-        ...(i.monkLevel ? { monk: monk.initialMonkState(i.monkLevel, i.wholenessMax) } : {}),
-        ...(i.paladinLevel ? { paladin: paladin.initialPaladinState(i.paladinLevel) } : {}),
-        ...(i.rogueLevel ? { rogue: rogue.initialRogueState(i.rogueLevel) } : {}),
-        ...(i.clericLevel ? { cleric: cleric.initialClericState(i.clericLevel) } : {}),
-        ...(i.druidLevel ? { druid: druid.initialDruidState(i.druidLevel) } : {}),
-        ...(i.sorcererLevel
-          ? { sorcerer: sorcerer.initialSorcererState(i.sorcererLevel, i.knownMetamagicOptions) }
+        ...(i.fighterLevel
+          ? { fighter: fighter.initialFighterState(i.fighterLevel) }
           : {}),
-        ...(i.warlockLevel ? { warlock: warlock.initialWarlockState(i.warlockLevel) } : {}),
-        ...(i.wizardLevel ? { wizard: wizard.initialWizardState(i.wizardLevel) } : {}),
-        ...(i.rangerLevel ? { ranger: ranger.initialRangerState(i.rangerLevel, i.wisMod) } : {}),
-        ...(i.bardLevel ? { bard: bard.initialBardState(i.bardLevel, i.chaMod) } : {})
-      }
-    }
+        ...(i.barbarianLevel
+          ? { barbarian: barb.initialBarbarianState(i.barbarianLevel) }
+          : {}),
+        ...(i.monkLevel
+          ? { monk: monk.initialMonkState(i.monkLevel, i.wholenessMax) }
+          : {}),
+        ...(i.paladinLevel
+          ? { paladin: paladin.initialPaladinState(i.paladinLevel) }
+          : {}),
+        ...(i.rogueLevel
+          ? { rogue: rogue.initialRogueState(i.rogueLevel) }
+          : {}),
+        ...(i.clericLevel
+          ? { cleric: cleric.initialClericState(i.clericLevel) }
+          : {}),
+        ...(i.druidLevel
+          ? { druid: druid.initialDruidState(i.druidLevel) }
+          : {}),
+        ...(i.sorcererLevel
+          ? {
+              sorcerer: sorcerer.initialSorcererState(
+                i.sorcererLevel,
+                i.knownMetamagicOptions,
+              ),
+            }
+          : {}),
+        ...(i.warlockLevel
+          ? { warlock: warlock.initialWarlockState(i.warlockLevel) }
+          : {}),
+        ...(i.wizardLevel
+          ? { wizard: wizard.initialWizardState(i.wizardLevel) }
+          : {}),
+        ...(i.rangerLevel
+          ? { ranger: ranger.initialRangerState(i.rangerLevel, i.wisMod) }
+          : {}),
+        ...(i.bardLevel
+          ? { bard: bard.initialBardState(i.bardLevel, i.chaMod) }
+          : {}),
+      },
+    };
   },
   on: rootEventHandlers,
   states: {
     damageTrack: damageTrackConfig,
     turnPhase: turnPhaseConfig,
-    spellcasting: spellcastingConfig
-  }
-})
-export type DndSnapshot = SnapshotFrom<typeof creatureMachine>
+    spellcasting: spellcastingConfig,
+  },
+});
+export type DndSnapshot = SnapshotFrom<typeof creatureMachine>;

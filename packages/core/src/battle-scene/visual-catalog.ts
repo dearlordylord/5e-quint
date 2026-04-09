@@ -2,38 +2,69 @@
  * Visual catalog — pure data mappings for spell, damage type, and condition visuals.
  * No logic, no imports beyond domain types.
  */
-import type { Condition, DamageType } from "#/types.ts"
+import type { Condition, DamageType } from "#/types.ts";
 
 export interface SpellVisual {
-  color: string
-  aoeShape?: "circle" | "cone" | "cube" | "line"
-  castDurationMs: number
-  label: string
+  color: string;
+  aoeShape?: "circle" | "cone" | "cube" | "line";
+  castDurationMs: number;
+  label: string;
 }
 
 export interface DamageTypeVisual {
-  flashColor: string
-  aoeColor: string
+  flashColor: string;
+  aoeColor: string;
 }
 
 export interface ConditionVisual {
-  tintColor?: string
-  label: string
+  tintColor?: string;
+  label: string;
 }
 
 export const spellVisuals: Record<string, SpellVisual> = {
-  fireball: { color: "#f97316", aoeShape: "circle", castDurationMs: 500, label: "Fireball" },
-  counterspell: { color: "#8b5cf6", castDurationMs: 300, label: "Counterspell" },
-  shatter: { color: "#93c5fd", aoeShape: "circle", castDurationMs: 400, label: "Shatter" },
+  fireball: {
+    color: "#f97316",
+    aoeShape: "circle",
+    castDurationMs: 500,
+    label: "Fireball",
+  },
+  counterspell: {
+    color: "#8b5cf6",
+    castDurationMs: 300,
+    label: "Counterspell",
+  },
+  shatter: {
+    color: "#93c5fd",
+    aoeShape: "circle",
+    castDurationMs: 400,
+    label: "Shatter",
+  },
   hold_person: { color: "#eab308", castDurationMs: 400, label: "Hold Person" },
   bless: { color: "#fbbf24", castDurationMs: 400, label: "Bless" },
-  guiding_bolt: { color: "#facc15", castDurationMs: 350, label: "Guiding Bolt" },
+  guiding_bolt: {
+    color: "#facc15",
+    castDurationMs: 350,
+    label: "Guiding Bolt",
+  },
   shield: { color: "#60a5fa", castDurationMs: 200, label: "Shield" },
   haste: { color: "#34d399", castDurationMs: 400, label: "Haste" },
-  spirit_guardians: { color: "#f9fafb", castDurationMs: 500, label: "Spirit Guardians" },
-  burning_hands: { color: "#ef4444", aoeShape: "cone", castDurationMs: 350, label: "Burning Hands" },
-  inflict_wounds: { color: "#6b21a8", castDurationMs: 400, label: "Inflict Wounds" }
-}
+  spirit_guardians: {
+    color: "#f9fafb",
+    castDurationMs: 500,
+    label: "Spirit Guardians",
+  },
+  burning_hands: {
+    color: "#ef4444",
+    aoeShape: "cone",
+    castDurationMs: 350,
+    label: "Burning Hands",
+  },
+  inflict_wounds: {
+    color: "#6b21a8",
+    castDurationMs: 400,
+    label: "Inflict Wounds",
+  },
+};
 
 export const damageTypeVisuals: Record<DamageType, DamageTypeVisual> = {
   acid: { flashColor: "#84cc16", aoeColor: "#65a30d" },
@@ -48,8 +79,8 @@ export const damageTypeVisuals: Record<DamageType, DamageTypeVisual> = {
   psychic: { flashColor: "#e879f9", aoeColor: "#c026d3" },
   radiant: { flashColor: "#fef08a", aoeColor: "#fde047" },
   slashing: { flashColor: "#e5e5e5", aoeColor: "#d4d4d4" },
-  thunder: { flashColor: "#93c5fd", aoeColor: "#dc2626" }
-}
+  thunder: { flashColor: "#93c5fd", aoeColor: "#dc2626" },
+};
 
 export const conditionVisuals: Record<Condition, ConditionVisual> = {
   blinded: { tintColor: "#1f2937", label: "Blinded" },
@@ -65,8 +96,8 @@ export const conditionVisuals: Record<Condition, ConditionVisual> = {
   prone: { tintColor: "#92400e", label: "Prone" },
   restrained: { tintColor: "#b45309", label: "Restrained" },
   stunned: { tintColor: "#fcd34d", label: "Stunned" },
-  unconscious: { tintColor: "#374151", label: "Unconscious" }
-}
+  unconscious: { tintColor: "#374151", label: "Unconscious" },
+};
 
 /** Look up a spell visual, falling back to a generic default. */
 export function getSpellVisual(spellName: string): SpellVisual {
@@ -74,7 +105,7 @@ export function getSpellVisual(spellName: string): SpellVisual {
     spellVisuals[spellName] ?? {
       color: "#9ca3af",
       castDurationMs: 400,
-      label: spellName
+      label: spellName,
     }
-  )
+  );
 }

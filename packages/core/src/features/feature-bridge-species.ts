@@ -25,5 +25,5 @@ export {
   orcAdrenalineRushTempHp,
   stonesEnduranceReduction,
   stormsThunderDieSize,
-  type TieflingLegacy
-} from "#/features/species-traits.ts"
+  type TieflingLegacy,
+} from "#/features/species-traits.ts";

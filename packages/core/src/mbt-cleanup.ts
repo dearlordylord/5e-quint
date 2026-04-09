@@ -12,44 +12,44 @@
  * - Process signals (SIGINT, SIGTERM)
  * - Uncaught exceptions
  */
-import { execSync } from "node:child_process"
+import { execSync } from "node:child_process";
 
 /** Kill all quint_evaluator processes. Safe to call when none exist. */
 export function killZombieEvaluators(): void {
   try {
     // pkill returns exit code 1 when no processes match — that's fine
-    execSync("pkill -9 -f quint_evaluator", { stdio: "ignore" })
+    execSync("pkill -9 -f quint_evaluator", { stdio: "ignore" });
   } catch {
     // No matching processes — expected and fine
   }
 }
 
-let signalHandlersRegistered = false
+let signalHandlersRegistered = false;
 
 /**
  * Register process-level signal handlers that kill evaluators on exit.
  * Idempotent — safe to call multiple times.
  */
 export function registerEvaluatorCleanup(): void {
-  if (signalHandlersRegistered) return
-  signalHandlersRegistered = true
+  if (signalHandlersRegistered) return;
+  signalHandlersRegistered = true;
 
   const cleanup = () => {
-    killZombieEvaluators()
-  }
+    killZombieEvaluators();
+  };
 
-  process.on("exit", cleanup)
+  process.on("exit", cleanup);
   process.on("SIGINT", () => {
-    cleanup()
-    process.exit(130)
-  })
+    cleanup();
+    process.exit(130);
+  });
   process.on("SIGTERM", () => {
-    cleanup()
-    process.exit(143)
-  })
+    cleanup();
+    process.exit(143);
+  });
   process.on("uncaughtException", (err) => {
-    cleanup()
-    console.error("Uncaught exception (evaluator cleanup ran):", err)
-    process.exit(1)
-  })
+    cleanup();
+    console.error("Uncaught exception (evaluator cleanup ran):", err);
+    process.exit(1);
+  });
 }

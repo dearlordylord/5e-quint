@@ -1,4 +1,4 @@
-import { assert } from "#/assert.ts"
+import { assert } from "#/assert.ts";
 import {
   canUseInnateSorcery,
   canUseMetamagic,
@@ -10,18 +10,18 @@ import {
   sorcererLongRest as tsSorcererLongRest,
   sorceryPointsMax,
   useInnateSorcery as tsUseInnateSorcery,
-  useMetamagic as tsUseMetamagic
-} from "#/features/class-sorcerer.ts"
-import { updateClass } from "#/machine-helpers.ts"
-import { isIncapacitated } from "#/machine-queries.ts"
-import type { DndContext, SorcererClassState } from "#/machine-types.ts"
-import type { ClassLevel, SpellSlotLevel } from "#/types.ts"
-import { resourceCount } from "#/types.ts"
+  useMetamagic as tsUseMetamagic,
+} from "#/features/class-sorcerer.ts";
+import { updateClass } from "#/machine-helpers.ts";
+import { isIncapacitated } from "#/machine-queries.ts";
+import type { DndContext, SorcererClassState } from "#/machine-types.ts";
+import type { ClassLevel, SpellSlotLevel } from "#/types.ts";
+import { resourceCount } from "#/types.ts";
 
-const SORCEROUS_RESTORATION_LEVEL = 5
+const SORCEROUS_RESTORATION_LEVEL = 5;
 
 function s(c: DndContext) {
-  return c.classStates.sorcerer!
+  return c.classStates.sorcerer!;
 }
 
 // -- Action Updates --
@@ -31,19 +31,25 @@ function s(c: DndContext) {
  * SRD: "You can expend a spell slot to gain a number of Sorcery Points
  * equal to the slot's level (no action required)."
  */
-export function convertSlotToPointsUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
-  const ss = s(c)
-  assert(!isIncapacitated(c) && ss.level >= 2, "guard: canConvertSlotToPoints should have prevented this")
-  if (slotLevel < 1 || slotLevel > 9) return {}
-  const currentSlots = [...c.slotsCurrent]
-  const idx = slotLevel - 1
-  if (idx >= currentSlots.length || currentSlots[idx] <= 0) return {}
-  currentSlots[idx] = currentSlots[idx] - 1
-  const newPts = Math.min(ss.sorceryPoints + slotLevel, ss.sorceryPointsMax)
+export function convertSlotToPointsUpdate(
+  c: DndContext,
+  slotLevel: SpellSlotLevel,
+): Partial<DndContext> {
+  const ss = s(c);
+  assert(
+    !isIncapacitated(c) && ss.level >= 2,
+    "guard: canConvertSlotToPoints should have prevented this",
+  );
+  if (slotLevel < 1 || slotLevel > 9) return {};
+  const currentSlots = [...c.slotsCurrent];
+  const idx = slotLevel - 1;
+  if (idx >= currentSlots.length || currentSlots[idx] <= 0) return {};
+  currentSlots[idx] = currentSlots[idx] - 1;
+  const newPts = Math.min(ss.sorceryPoints + slotLevel, ss.sorceryPointsMax);
   return {
     slotsCurrent: currentSlots,
-    ...updateClass(c, "sorcerer", { sorceryPoints: resourceCount(newPts) })
-  }
+    ...updateClass(c, "sorcerer", { sorceryPoints: resourceCount(newPts) }),
+  };
 }
 
 /**
@@ -51,68 +57,79 @@ export function convertSlotToPointsUpdate(c: DndContext, slotLevel: SpellSlotLev
  * SRD: "As a Bonus Action, you can transform unexpended Sorcery Points
  * into one spell slot." Max slot level 5.
  */
-export function convertPointsToSlotUpdate(c: DndContext, slotLevel: SpellSlotLevel): Partial<DndContext> {
-  const ss = s(c)
+export function convertPointsToSlotUpdate(
+  c: DndContext,
+  slotLevel: SpellSlotLevel,
+): Partial<DndContext> {
+  const ss = s(c);
   assert(
     !isIncapacitated(c) && ss.level >= 2 && !c.bonusActionUsed,
-    "guard: canConvertPointsToSlot should have prevented this"
-  )
-  if (slotLevel < 1 || slotLevel > 5) return {}
-  const cost = slotCreationCost(slotLevel)
-  if (cost === 0 || ss.sorceryPoints < cost) return {}
-  const currentSlots = [...c.slotsCurrent]
-  const idx = slotLevel - 1
-  if (idx >= currentSlots.length || currentSlots[idx] >= c.slotsMax[idx]) return {}
-  currentSlots[idx] = currentSlots[idx] + 1
+    "guard: canConvertPointsToSlot should have prevented this",
+  );
+  if (slotLevel < 1 || slotLevel > 5) return {};
+  const cost = slotCreationCost(slotLevel);
+  if (cost === 0 || ss.sorceryPoints < cost) return {};
+  const currentSlots = [...c.slotsCurrent];
+  const idx = slotLevel - 1;
+  if (idx >= currentSlots.length || currentSlots[idx] >= c.slotsMax[idx])
+    return {};
+  currentSlots[idx] = currentSlots[idx] + 1;
   return {
     bonusActionUsed: true,
     slotsCurrent: currentSlots,
-    ...updateClass(c, "sorcerer", { sorceryPoints: resourceCount(ss.sorceryPoints - cost) })
-  }
+    ...updateClass(c, "sorcerer", {
+      sorceryPoints: resourceCount(ss.sorceryPoints - cost),
+    }),
+  };
 }
 
 // -- Lifecycle --
 
-const INNATE_SORCERY_DURATION = 10
+const INNATE_SORCERY_DURATION = 10;
 
 export function sorcererStartTurnUpdate(c: DndContext): Partial<DndContext> {
-  const ss = c.classStates.sorcerer
-  if (!ss || ss.level === 0) return {}
+  const ss = c.classStates.sorcerer;
+  if (!ss || ss.level === 0) return {};
   const metamagicReset: Partial<SorcererClassState> = {
     metamagicUsedThisCast: new Set<MetamagicOption>(),
-    apotheosisUsedThisTurn: false
-  }
+    apotheosisUsedThisTurn: false,
+  };
   if (ss.innateSorceryActive && ss.innateSorceryTurnsRemaining > 0) {
-    const remaining = ss.innateSorceryTurnsRemaining - 1
+    const remaining = ss.innateSorceryTurnsRemaining - 1;
     if (remaining === 0)
       return updateClass(c, "sorcerer", {
         ...metamagicReset,
         innateSorceryTurnsRemaining: 0,
-        innateSorceryActive: false
-      })
-    return updateClass(c, "sorcerer", { ...metamagicReset, innateSorceryTurnsRemaining: remaining })
+        innateSorceryActive: false,
+      });
+    return updateClass(c, "sorcerer", {
+      ...metamagicReset,
+      innateSorceryTurnsRemaining: remaining,
+    });
   }
-  return updateClass(c, "sorcerer", metamagicReset)
+  return updateClass(c, "sorcerer", metamagicReset);
 }
 
 export function sorcererShortRestUpdate(c: DndContext): Partial<DndContext> {
-  const ss = c.classStates.sorcerer
-  if (!ss || ss.level === 0) return {}
+  const ss = c.classStates.sorcerer;
+  if (!ss || ss.level === 0) return {};
   if (ss.level >= SORCEROUS_RESTORATION_LEVEL && !ss.sorcerousRestorationUsed) {
-    const HALVE = 2
-    const regain = Math.floor(ss.level / HALVE)
+    const HALVE = 2;
+    const regain = Math.floor(ss.level / HALVE);
     return updateClass(c, "sorcerer", {
-      sorceryPoints: resourceCount(Math.min(ss.sorceryPoints + regain, ss.sorceryPointsMax)),
-      sorcerousRestorationUsed: true
-    })
+      sorceryPoints: resourceCount(
+        Math.min(ss.sorceryPoints + regain, ss.sorceryPointsMax),
+      ),
+      sorcerousRestorationUsed: true,
+    });
   }
-  return {}
+  return {};
 }
 
 export function sorcererLongRestUpdate(c: DndContext): Partial<DndContext> {
-  const ss = c.classStates.sorcerer
-  if (!ss || ss.level === 0) return {}
-  const result = tsSorcererLongRest({ sorcererLevel: ss.level })
+  const ss = c.classStates.sorcerer;
+  if (!ss || ss.level === 0) return {};
+  const result = tsSorcererLongRest({ sorcererLevel: ss.level });
   return updateClass(c, "sorcerer", {
     sorceryPoints: resourceCount(result.sorceryPoints),
     sorceryPointsMax: resourceCount(result.sorceryPointsMax),
@@ -121,40 +138,49 @@ export function sorcererLongRestUpdate(c: DndContext): Partial<DndContext> {
     innateSorceryTurnsRemaining: 0,
     sorcerousRestorationUsed: false,
     metamagicUsedThisCast: new Set<MetamagicOption>(),
-    apotheosisUsedThisTurn: false
-  })
+    apotheosisUsedThisTurn: false,
+  });
 }
 
 // -- Innate Sorcery --
 
 export function innateSorceryUpdate(c: DndContext): Partial<DndContext> {
-  const ss = s(c)
+  const ss = s(c);
   const state = {
     innateSorceryActive: ss.innateSorceryActive,
     innateSorceryCharges: ss.innateSorceryCharges,
     sorceryPoints: ss.sorceryPoints,
     sorcererLevel: ss.level,
-    bonusActionUsed: c.bonusActionUsed
-  }
-  assert(!isIncapacitated(c) && canUseInnateSorcery(state), "guard: canInnateSorcery should have prevented this")
-  const result = tsUseInnateSorcery(state)
+    bonusActionUsed: c.bonusActionUsed,
+  };
+  assert(
+    !isIncapacitated(c) && canUseInnateSorcery(state),
+    "guard: canInnateSorcery should have prevented this",
+  );
+  const result = tsUseInnateSorcery(state);
   return {
     bonusActionUsed: true,
     ...updateClass(c, "sorcerer", {
       innateSorceryActive: result.innateSorceryActive,
       innateSorceryCharges: resourceCount(result.innateSorceryCharges),
       innateSorceryTurnsRemaining: INNATE_SORCERY_DURATION,
-      sorceryPoints: resourceCount(result.sorceryPoints)
-    })
-  }
+      sorceryPoints: resourceCount(result.sorceryPoints),
+    }),
+  };
 }
 
 // -- Metamagic --
 
-export function useMetamagicUpdate(c: DndContext, option: string): Partial<DndContext> {
-  assert(!isIncapacitated(c) && s(c).level >= 2, "guard: canMetamagic should have prevented this")
-  if (!METAMAGIC_OPTIONS.includes(option as MetamagicOption)) return {}
-  const ss = s(c)
+export function useMetamagicUpdate(
+  c: DndContext,
+  option: string,
+): Partial<DndContext> {
+  assert(
+    !isIncapacitated(c) && s(c).level >= 2,
+    "guard: canMetamagic should have prevented this",
+  );
+  if (!METAMAGIC_OPTIONS.includes(option as MetamagicOption)) return {};
+  const ss = s(c);
   const state = {
     sorcererLevel: ss.level,
     sorceryPoints: ss.sorceryPoints,
@@ -163,27 +189,29 @@ export function useMetamagicUpdate(c: DndContext, option: string): Partial<DndCo
     knownMetamagicOptions: ss.knownMetamagicOptions,
     metamagicUsedThisCast: ss.metamagicUsedThisCast,
     apotheosisUsedThisTurn: ss.apotheosisUsedThisTurn,
-    innateSorceryActive: ss.innateSorceryActive
-  }
-  if (!canUseMetamagic(state, option as MetamagicOption)) return {}
-  const result = tsUseMetamagic(state, option as MetamagicOption)
+    innateSorceryActive: ss.innateSorceryActive,
+  };
+  if (!canUseMetamagic(state, option as MetamagicOption)) return {};
+  const result = tsUseMetamagic(state, option as MetamagicOption);
   return {
     bonusActionUsed: result.bonusActionUsed,
     ...updateClass(c, "sorcerer", {
       sorceryPoints: resourceCount(result.sorceryPoints),
       metamagicUsedThisCast: result.metamagicUsedThisCast,
-      apotheosisUsedThisTurn: result.apotheosisUsedThisTurn
-    })
-  }
+      apotheosisUsedThisTurn: result.apotheosisUsedThisTurn,
+    }),
+  };
 }
 
 // -- Init --
 
 export function initialSorcererState(
   sorcererLevel: ClassLevel,
-  knownMetamagicOptions: ReadonlyArray<MetamagicOption> = defaultKnownMetamagicOptions(sorcererLevel),
+  knownMetamagicOptions: ReadonlyArray<MetamagicOption> = defaultKnownMetamagicOptions(
+    sorcererLevel,
+  ),
 ): SorcererClassState {
-  const spMax = resourceCount(sorceryPointsMax(sorcererLevel))
+  const spMax = resourceCount(sorceryPointsMax(sorcererLevel));
   return {
     level: sorcererLevel,
     sorceryPoints: spMax,
@@ -192,8 +220,11 @@ export function initialSorcererState(
     innateSorceryActive: false,
     innateSorceryCharges: resourceCount(2),
     innateSorceryTurnsRemaining: 0,
-    knownMetamagicOptions: normalizeKnownMetamagicOptions(sorcererLevel, knownMetamagicOptions),
+    knownMetamagicOptions: normalizeKnownMetamagicOptions(
+      sorcererLevel,
+      knownMetamagicOptions,
+    ),
     metamagicUsedThisCast: new Set<MetamagicOption>(),
-    apotheosisUsedThisTurn: false
-  }
+    apotheosisUsedThisTurn: false,
+  };
 }

@@ -1,7 +1,7 @@
 // Cross-class reference tables extracted from creature.qnt (non-core)
 // SRD 5.2.1 class hit dice and multiclass prerequisites
 
-import type { Ability } from "#/types.ts"
+import type { Ability } from "#/types.ts";
 
 // --- Types ---
 
@@ -17,10 +17,10 @@ export const CLASS_NAMES = [
   "rogue",
   "sorcerer",
   "warlock",
-  "wizard"
-] as const
+  "wizard",
+] as const;
 
-export type ClassName = (typeof CLASS_NAMES)[number]
+export type ClassName = (typeof CLASS_NAMES)[number];
 
 // --- Hit Dice (PHB class tables) ---
 
@@ -36,104 +36,160 @@ const HIT_DIE: Record<ClassName, number> = {
   rogue: 8,
   warlock: 8,
   sorcerer: 6,
-  wizard: 6
-}
+  wizard: 6,
+};
 
 export function classHitDie(className: ClassName): number {
-  return HIT_DIE[className]
+  return HIT_DIE[className];
 }
 
 // --- Hit Dice Remaining (per-class tracking, SRD 5.2.1 multiclass) ---
 
-export type HitDiceRemaining = Readonly<Record<ClassName, number>>
+export type HitDiceRemaining = Readonly<Record<ClassName, number>>;
 
-export const ZERO_HIT_DICE: HitDiceRemaining = Object.fromEntries(CLASS_NAMES.map((c) => [c, 0])) as HitDiceRemaining
+export const ZERO_HIT_DICE: HitDiceRemaining = Object.fromEntries(
+  CLASS_NAMES.map((c) => [c, 0]),
+) as HitDiceRemaining;
 
-export function singleClassHitDice(className: ClassName, count: number): HitDiceRemaining {
-  return { ...ZERO_HIT_DICE, [className]: count }
+export function singleClassHitDice(
+  className: ClassName,
+  count: number,
+): HitDiceRemaining {
+  return { ...ZERO_HIT_DICE, [className]: count };
 }
 
-export function hitDiceFromClassLevels(classStates: Partial<Record<ClassName, { level: number }>>): HitDiceRemaining {
-  const result = { ...ZERO_HIT_DICE }
+export function hitDiceFromClassLevels(
+  classStates: Partial<Record<ClassName, { level: number }>>,
+): HitDiceRemaining {
+  const result = { ...ZERO_HIT_DICE };
   for (const c of CLASS_NAMES) {
-    result[c] = classStates[c]?.level ?? 0
+    result[c] = classStates[c]?.level ?? 0;
   }
-  return result
+  return result;
 }
 
 // --- Multiclass Prerequisites (PHB Ch6) ---
 
-const MULTICLASS_THRESHOLD = 13
+const MULTICLASS_THRESHOLD = 13;
 
-export function meetsMulticlassPrereq(scores: Record<Ability, number>, className: ClassName): boolean {
-  const t = MULTICLASS_THRESHOLD
+export function meetsMulticlassPrereq(
+  scores: Record<Ability, number>,
+  className: ClassName,
+): boolean {
+  const t = MULTICLASS_THRESHOLD;
   switch (className) {
     case "barbarian":
-      return scores.str >= t
+      return scores.str >= t;
     case "bard":
-      return scores.cha >= t
+      return scores.cha >= t;
     case "cleric":
-      return scores.wis >= t
+      return scores.wis >= t;
     case "druid":
-      return scores.wis >= t
+      return scores.wis >= t;
     case "fighter":
-      return scores.str >= t || scores.dex >= t
+      return scores.str >= t || scores.dex >= t;
     case "monk":
-      return scores.dex >= t && scores.wis >= t
+      return scores.dex >= t && scores.wis >= t;
     case "paladin":
-      return scores.str >= t && scores.cha >= t
+      return scores.str >= t && scores.cha >= t;
     case "ranger":
-      return scores.dex >= t && scores.wis >= t
+      return scores.dex >= t && scores.wis >= t;
     case "rogue":
-      return scores.dex >= t
+      return scores.dex >= t;
     case "sorcerer":
-      return scores.cha >= t
+      return scores.cha >= t;
     case "warlock":
-      return scores.cha >= t
+      return scores.cha >= t;
     case "wizard":
-      return scores.int >= t
+      return scores.int >= t;
   }
 }
 
 /** Must meet prereqs for BOTH current and new class (PHB Ch6). */
-export function canMulticlass(scores: Record<Ability, number>, currentClass: ClassName, newClass: ClassName): boolean {
-  return meetsMulticlassPrereq(scores, currentClass) && meetsMulticlassPrereq(scores, newClass)
+export function canMulticlass(
+  scores: Record<Ability, number>,
+  currentClass: ClassName,
+  newClass: ClassName,
+): boolean {
+  return (
+    meetsMulticlassPrereq(scores, currentClass) &&
+    meetsMulticlassPrereq(scores, newClass)
+  );
 }
 // --- Multiclass Proficiency Gains (SRD 5.2.1) ---
 // When multiclassing INTO a class (not starting class), you gain only
 // partial proficiencies. Attacking without proficiency: no prof bonus (NOT disadvantage).
 
-export const ARMOR_TRAININGS = ["light", "medium"] as const
-export type ArmorTraining = (typeof ARMOR_TRAININGS)[number]
+export const ARMOR_TRAININGS = ["light", "medium"] as const;
+export type ArmorTraining = (typeof ARMOR_TRAININGS)[number];
 
-export const WEAPON_TRAININGS = ["simple", "martial"] as const
-export type WeaponTraining = (typeof WEAPON_TRAININGS)[number]
+export const WEAPON_TRAININGS = ["simple", "martial"] as const;
+export type WeaponTraining = (typeof WEAPON_TRAININGS)[number];
 
 export interface MulticlassProficiencyGains {
-  readonly armor: ReadonlyArray<ArmorTraining>
-  readonly weapons: ReadonlyArray<WeaponTraining>
-  readonly shields: boolean
-  readonly skillChoices: number
+  readonly armor: ReadonlyArray<ArmorTraining>;
+  readonly weapons: ReadonlyArray<WeaponTraining>;
+  readonly shields: boolean;
+  readonly skillChoices: number;
 }
 
-const MULTICLASS_PROFICIENCY_GAINS: Readonly<Record<ClassName, MulticlassProficiencyGains>> = {
-  barbarian: { armor: [], weapons: ["simple", "martial"], shields: true, skillChoices: 0 },
+const MULTICLASS_PROFICIENCY_GAINS: Readonly<
+  Record<ClassName, MulticlassProficiencyGains>
+> = {
+  barbarian: {
+    armor: [],
+    weapons: ["simple", "martial"],
+    shields: true,
+    skillChoices: 0,
+  },
   bard: { armor: ["light"], weapons: [], shields: false, skillChoices: 1 },
-  cleric: { armor: ["light", "medium"], weapons: ["simple"], shields: true, skillChoices: 0 },
-  druid: { armor: ["light", "medium"], weapons: [], shields: true, skillChoices: 0 },
-  fighter: { armor: ["light", "medium"], weapons: ["simple", "martial"], shields: true, skillChoices: 0 },
+  cleric: {
+    armor: ["light", "medium"],
+    weapons: ["simple"],
+    shields: true,
+    skillChoices: 0,
+  },
+  druid: {
+    armor: ["light", "medium"],
+    weapons: [],
+    shields: true,
+    skillChoices: 0,
+  },
+  fighter: {
+    armor: ["light", "medium"],
+    weapons: ["simple", "martial"],
+    shields: true,
+    skillChoices: 0,
+  },
   monk: { armor: [], weapons: ["simple"], shields: false, skillChoices: 0 },
-  paladin: { armor: ["light", "medium"], weapons: ["simple", "martial"], shields: true, skillChoices: 0 },
-  ranger: { armor: ["light", "medium"], weapons: ["simple", "martial"], shields: true, skillChoices: 0 },
+  paladin: {
+    armor: ["light", "medium"],
+    weapons: ["simple", "martial"],
+    shields: true,
+    skillChoices: 0,
+  },
+  ranger: {
+    armor: ["light", "medium"],
+    weapons: ["simple", "martial"],
+    shields: true,
+    skillChoices: 0,
+  },
   rogue: { armor: ["light"], weapons: [], shields: false, skillChoices: 1 },
   sorcerer: { armor: [], weapons: [], shields: false, skillChoices: 0 },
-  warlock: { armor: ["light"], weapons: ["simple"], shields: false, skillChoices: 0 },
-  wizard: { armor: [], weapons: [], shields: false, skillChoices: 0 }
-}
+  warlock: {
+    armor: ["light"],
+    weapons: ["simple"],
+    shields: false,
+    skillChoices: 0,
+  },
+  wizard: { armor: [], weapons: [], shields: false, skillChoices: 0 },
+};
 
 /** Proficiencies gained when multiclassing INTO the given class. */
-export function multiclassProficiencies(className: ClassName): MulticlassProficiencyGains {
-  return MULTICLASS_PROFICIENCY_GAINS[className]
+export function multiclassProficiencies(
+  className: ClassName,
+): MulticlassProficiencyGains {
+  return MULTICLASS_PROFICIENCY_GAINS[className];
 }
 
 /**
@@ -142,5 +198,5 @@ export function multiclassProficiencies(className: ClassName): MulticlassProfici
  * Proficiency Bonus to the attack roll." (NOT disadvantage.)
  */
 export function nonProficientAttackBonus(): 0 {
-  return 0
+  return 0;
 }

@@ -4,22 +4,22 @@
 
 // --- Constants ---
 
-const DEFT_EXPLORER_LEVEL = 2
-const ROVING_LEVEL = 6
-const ROVING_SPEED_BONUS = 10
-const RANGER_EXPERTISE_LEVEL = 9
-const TIRELESS_LEVEL = 10
-const RELENTLESS_HUNTER_LEVEL = 13
-const NATURES_VEIL_LEVEL = 14
-const PRECISE_HUNTER_LEVEL = 17
-const FERAL_SENSES_LEVEL = 18
-const FOE_SLAYER_LEVEL = 20
-const HUNTERS_MARK_BASE_DIE = 6
-const HUNTERS_MARK_FOE_SLAYER_DIE = 10
-const HUNTER_SUBCLASS_LEVEL = 3
-const SUPERIOR_HUNTERS_PREY_LEVEL = 11
-const SUPERIOR_HUNTERS_DEFENSE_LEVEL = 15
-const COLOSSUS_SLAYER_DIE = 8
+const DEFT_EXPLORER_LEVEL = 2;
+const ROVING_LEVEL = 6;
+const ROVING_SPEED_BONUS = 10;
+const RANGER_EXPERTISE_LEVEL = 9;
+const TIRELESS_LEVEL = 10;
+const RELENTLESS_HUNTER_LEVEL = 13;
+const NATURES_VEIL_LEVEL = 14;
+const PRECISE_HUNTER_LEVEL = 17;
+const FERAL_SENSES_LEVEL = 18;
+const FOE_SLAYER_LEVEL = 20;
+const HUNTERS_MARK_BASE_DIE = 6;
+const HUNTERS_MARK_FOE_SLAYER_DIE = 10;
+const HUNTER_SUBCLASS_LEVEL = 3;
+const SUPERIOR_HUNTERS_PREY_LEVEL = 11;
+const SUPERIOR_HUNTERS_DEFENSE_LEVEL = 15;
+const COLOSSUS_SLAYER_DIE = 8;
 
 // =============================================================================
 // Favored Enemy (Level 1)
@@ -30,12 +30,12 @@ const COLOSSUS_SLAYER_DIE = 8
 
 /** Free Hunter's Mark casts per long rest (from Favored Enemy column). */
 export function favoredEnemyFreeUses(rangerLevel: number): number {
-  if (rangerLevel <= 0) return 0
-  if (rangerLevel < 5) return 2
-  if (rangerLevel < 9) return 3
-  if (rangerLevel < 13) return 4
-  if (rangerLevel < 17) return 5
-  return 6
+  if (rangerLevel <= 0) return 0;
+  if (rangerLevel < 5) return 2;
+  if (rangerLevel < 9) return 3;
+  if (rangerLevel < 13) return 4;
+  if (rangerLevel < 17) return 5;
+  return 6;
 }
 
 // =============================================================================
@@ -43,7 +43,7 @@ export function favoredEnemyFreeUses(rangerLevel: number): number {
 // =============================================================================
 
 export function hasDeftExplorer(rangerLevel: number): boolean {
-  return rangerLevel >= DEFT_EXPLORER_LEVEL
+  return rangerLevel >= DEFT_EXPLORER_LEVEL;
 }
 
 // =============================================================================
@@ -53,24 +53,33 @@ export function hasDeftExplorer(rangerLevel: number): boolean {
 // You also have a Climb Speed and a Swim Speed equal to your Speed."
 // =============================================================================
 
-export function rovingSpeedBonus(rangerLevel: number, isHeavyArmor: boolean): number {
-  if (rangerLevel < ROVING_LEVEL || isHeavyArmor) return 0
-  return ROVING_SPEED_BONUS
+export function rovingSpeedBonus(
+  rangerLevel: number,
+  isHeavyArmor: boolean,
+): number {
+  if (rangerLevel < ROVING_LEVEL || isHeavyArmor) return 0;
+  return ROVING_SPEED_BONUS;
 }
 
 function rovingExtraSpeed(rangerLevel: number, walkSpeed: number): number {
-  return rangerLevel >= ROVING_LEVEL ? walkSpeed : 0
+  return rangerLevel >= ROVING_LEVEL ? walkSpeed : 0;
 }
 
-export const rovingClimbSpeed: (rangerLevel: number, walkSpeed: number) => number = rovingExtraSpeed
-export const rovingSwimSpeed: (rangerLevel: number, walkSpeed: number) => number = rovingExtraSpeed
+export const rovingClimbSpeed: (
+  rangerLevel: number,
+  walkSpeed: number,
+) => number = rovingExtraSpeed;
+export const rovingSwimSpeed: (
+  rangerLevel: number,
+  walkSpeed: number,
+) => number = rovingExtraSpeed;
 
 // =============================================================================
 // Expertise (Level 9) — 2 more skills
 // =============================================================================
 
 export function hasRangerExpertise(rangerLevel: number): boolean {
-  return rangerLevel >= RANGER_EXPERTISE_LEVEL
+  return rangerLevel >= RANGER_EXPERTISE_LEVEL;
 }
 
 // =============================================================================
@@ -81,17 +90,20 @@ export function hasRangerExpertise(rangerLevel: number): boolean {
 // Uses = WIS mod (min 1)/LR. Short rest reduces exhaustion by 1.
 // =============================================================================
 
-export function canUseTireless(rangerLevel: number, tirelessCharges: number): boolean {
-  return rangerLevel >= TIRELESS_LEVEL && tirelessCharges > 0
+export function canUseTireless(
+  rangerLevel: number,
+  tirelessCharges: number,
+): boolean {
+  return rangerLevel >= TIRELESS_LEVEL && tirelessCharges > 0;
 }
 
 /** @param wisComponent - WIS modifier or tirelessMax (both work; clamped to min 1 per SRD). */
 export function tirelessTempHp(d8Roll: number, wisComponent: number): number {
-  return d8Roll + Math.max(1, wisComponent)
+  return d8Roll + Math.max(1, wisComponent);
 }
 
 export function tirelessMaxCharges(wisMod: number): number {
-  return Math.max(1, wisMod)
+  return Math.max(1, wisMod);
 }
 
 // =============================================================================
@@ -101,7 +113,7 @@ export function tirelessMaxCharges(wisMod: number): number {
 // =============================================================================
 
 export function hasRelentlessHunter(rangerLevel: number): boolean {
-  return rangerLevel >= RELENTLESS_HUNTER_LEVEL
+  return rangerLevel >= RELENTLESS_HUNTER_LEVEL;
 }
 
 // =============================================================================
@@ -115,13 +127,17 @@ export function hasRelentlessHunter(rangerLevel: number): boolean {
 export function canUseNaturesVeil(
   rangerLevel: number,
   naturesVeilCharges: number,
-  bonusActionAvailable: boolean
+  bonusActionAvailable: boolean,
 ): boolean {
-  return rangerLevel >= NATURES_VEIL_LEVEL && naturesVeilCharges > 0 && bonusActionAvailable
+  return (
+    rangerLevel >= NATURES_VEIL_LEVEL &&
+    naturesVeilCharges > 0 &&
+    bonusActionAvailable
+  );
 }
 
 export function naturesVeilMaxCharges(wisMod: number): number {
-  return Math.max(1, wisMod)
+  return Math.max(1, wisMod);
 }
 
 // =============================================================================
@@ -132,7 +148,7 @@ export function naturesVeilMaxCharges(wisMod: number): number {
 // =============================================================================
 
 export function hasPreciseHunter(rangerLevel: number): boolean {
-  return rangerLevel >= PRECISE_HUNTER_LEVEL
+  return rangerLevel >= PRECISE_HUNTER_LEVEL;
 }
 
 // =============================================================================
@@ -140,7 +156,7 @@ export function hasPreciseHunter(rangerLevel: number): boolean {
 // =============================================================================
 
 export function hasFeralSenses(rangerLevel: number): boolean {
-  return rangerLevel >= FERAL_SENSES_LEVEL
+  return rangerLevel >= FERAL_SENSES_LEVEL;
 }
 
 // =============================================================================
@@ -150,7 +166,9 @@ export function hasFeralSenses(rangerLevel: number): boolean {
 // =============================================================================
 
 export function foeSlayerHuntersMarkDie(rangerLevel: number): number {
-  return rangerLevel >= FOE_SLAYER_LEVEL ? HUNTERS_MARK_FOE_SLAYER_DIE : HUNTERS_MARK_BASE_DIE
+  return rangerLevel >= FOE_SLAYER_LEVEL
+    ? HUNTERS_MARK_FOE_SLAYER_DIE
+    : HUNTERS_MARK_BASE_DIE;
 }
 
 // =============================================================================
@@ -160,17 +178,20 @@ export function foeSlayerHuntersMarkDie(rangerLevel: number): number {
 // flags. No state transitions trackable in single-creature Quint model.
 // =============================================================================
 
-export const HUNTER_PREY_CHOICES = ["colossusSlayer", "hordeBreaker"] as const
-export type HunterPreyChoice = (typeof HUNTER_PREY_CHOICES)[number]
+export const HUNTER_PREY_CHOICES = ["colossusSlayer", "hordeBreaker"] as const;
+export type HunterPreyChoice = (typeof HUNTER_PREY_CHOICES)[number];
 
-export const DEFENSIVE_TACTIC_CHOICES = ["escapeTheHorde", "multiattackDefense"] as const
-export type DefensiveTacticChoice = (typeof DEFENSIVE_TACTIC_CHOICES)[number]
+export const DEFENSIVE_TACTIC_CHOICES = [
+  "escapeTheHorde",
+  "multiattackDefense",
+] as const;
+export type DefensiveTacticChoice = (typeof DEFENSIVE_TACTIC_CHOICES)[number];
 
 // --- Hunter's Lore (L3, passive) ---
 
 /** SRD: While marked by Hunter's Mark, you know the target's R/V/I. */
 export function hasHuntersLore(rangerLevel: number): boolean {
-  return rangerLevel >= HUNTER_SUBCLASS_LEVEL
+  return rangerLevel >= HUNTER_SUBCLASS_LEVEL;
 }
 
 // --- Hunter's Prey (L3, choose one, swappable on rest) ---
@@ -179,27 +200,33 @@ export function hasHuntersLore(rangerLevel: number): boolean {
  * SRD: "When you hit a creature with a weapon, the weapon deals an extra 1d8
  * damage to the target if it's missing any of its Hit Points."
  */
-export function canColossusSlayer(choice: HunterPreyChoice, targetBelowMaxHp: boolean): boolean {
-  return choice === "colossusSlayer" && targetBelowMaxHp
+export function canColossusSlayer(
+  choice: HunterPreyChoice,
+  targetBelowMaxHp: boolean,
+): boolean {
+  return choice === "colossusSlayer" && targetBelowMaxHp;
 }
 
 export function colossusSlayerDieSize(): number {
-  return COLOSSUS_SLAYER_DIE
+  return COLOSSUS_SLAYER_DIE;
 }
 
 /**
  * SRD: "you can make another attack with the same weapon against a different
  * creature that is within 5 feet of the original target"
  */
-export function canHordeBreaker(choice: HunterPreyChoice, differentTargetWithin5ft: boolean): boolean {
-  return choice === "hordeBreaker" && differentTargetWithin5ft
+export function canHordeBreaker(
+  choice: HunterPreyChoice,
+  differentTargetWithin5ft: boolean,
+): boolean {
+  return choice === "hordeBreaker" && differentTargetWithin5ft;
 }
 
 // --- Defensive Tactics (L7, choose one, swappable on rest) ---
 
 /** SRD: "Opportunity Attacks have Disadvantage against you." */
 export function hasEscapeTheHorde(choice: DefensiveTacticChoice): boolean {
-  return choice === "escapeTheHorde"
+  return choice === "escapeTheHorde";
 }
 
 /**
@@ -207,14 +234,14 @@ export function hasEscapeTheHorde(choice: DefensiveTacticChoice): boolean {
  * Disadvantage on all other attack rolls against you this turn."
  */
 export function hasMultiattackDefense(choice: DefensiveTacticChoice): boolean {
-  return choice === "multiattackDefense"
+  return choice === "multiattackDefense";
 }
 
 // --- Superior Hunter's Prey (L11, base feature) ---
 
 /** SRD: 1/turn, spread Hunter's Mark damage to different creature within 30ft. */
 export function hasSuperiorHuntersPrey(rangerLevel: number): boolean {
-  return rangerLevel >= SUPERIOR_HUNTERS_PREY_LEVEL
+  return rangerLevel >= SUPERIOR_HUNTERS_PREY_LEVEL;
 }
 
 // --- Superior Hunter's Defense (L15, base feature) ---
@@ -224,6 +251,9 @@ export function hasSuperiorHuntersPrey(rangerLevel: number): boolean {
  * Resistance to that damage and any other damage of the same type until
  * the end of the current turn."
  */
-export function canUseSuperiorHuntersDefense(rangerLevel: number, reactionAvailable: boolean): boolean {
-  return rangerLevel >= SUPERIOR_HUNTERS_DEFENSE_LEVEL && reactionAvailable
+export function canUseSuperiorHuntersDefense(
+  rangerLevel: number,
+  reactionAvailable: boolean,
+): boolean {
+  return rangerLevel >= SUPERIOR_HUNTERS_DEFENSE_LEVEL && reactionAvailable;
 }

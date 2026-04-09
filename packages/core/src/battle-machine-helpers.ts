@@ -2,7 +2,7 @@
  * Battle-level helpers (ported from battle.qnt section 3).
  * Creature-level pure functions are in battle-machine-creature.ts.
  */
-import { Match, Option } from "effect"
+import { Match, Option } from "effect";
 
 import {
   advanceEffectsForOwner,
@@ -16,9 +16,9 @@ import {
   removeEffect,
   removeEffectsByCaster,
   speedDeltaFromEffects,
-  takeDamage
-} from "#/battle-machine-creature.ts"
-import { calculateEffectiveSpeed } from "#/machine-helpers.ts"
+  takeDamage,
+} from "#/battle-machine-creature.ts";
+import { calculateEffectiveSpeed } from "#/machine-helpers.ts";
 import type {
   AfterDamageReturn,
   AttackDamageCtx,
@@ -31,24 +31,32 @@ import type {
   PhaseFields,
   SaveFailedCtx,
   SaveSpellCtx,
-  TriggerType
-} from "#/battle-machine-types.ts"
+  TriggerType,
+} from "#/battle-machine-types.ts";
 import {
   PHASE_ACTIVE,
   phaseAwaitingLegendary,
   phaseAwaitingReady,
   phaseAwaitReaction,
   phaseResolvingAoE,
-  phaseResolvingMovement
-} from "#/battle-machine-types.ts"
-import { canDeflectAttacks, hasDeflectEnergy } from "#/features/class-monk-features.ts"
-import { hasCuttingWords } from "#/features/class-bard.ts"
-import { canUncannyDodge, evasionDamage } from "#/features/class-rogue.ts"
-import { canCastShield } from "#/features/spell-abjuration.ts"
-import type { ActiveEffect, DamageType, ExpiryPhase, SpellId } from "#/types.ts"
+  phaseResolvingMovement,
+} from "#/battle-machine-types.ts";
+import {
+  canDeflectAttacks,
+  hasDeflectEnergy,
+} from "#/features/class-monk-features.ts";
+import { hasCuttingWords } from "#/features/class-bard.ts";
+import { canUncannyDodge, evasionDamage } from "#/features/class-rogue.ts";
+import { canCastShield } from "#/features/spell-abjuration.ts";
+import type {
+  ActiveEffect,
+  DamageType,
+  ExpiryPhase,
+  SpellId,
+} from "#/types.ts";
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
-export const byTag = Match.discriminator("tag")
+export const byTag = Match.discriminator("tag");
 
 // Re-export creature-level functions used by actions.
 // battleExpendSlot re-exported as expendSlot — battle callers always mark "slot expended this turn".
@@ -60,62 +68,62 @@ export {
   spendExtraAttack,
   spendMovement,
   spendReaction,
-  takeDamage
-} from "#/battle-machine-creature.ts"
+  takeDamage,
+} from "#/battle-machine-creature.ts";
 
-type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>
+type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>;
 
 export function setDifference<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> {
-  const result = new Set<T>()
+  const result = new Set<T>();
   for (const item of a) {
-    if (!b.has(item)) result.add(item)
+    if (!b.has(item)) result.add(item);
   }
-  return result
+  return result;
 }
 
 export function isHit(roll: number, ac: number, critRange = 20): boolean {
-  return roll >= ac || roll >= critRange
+  return roll >= ac || roll >= critRange;
 }
 
 export function activeId(c: BattleContext): CreatureId {
-  return c.initiative[c.turnIndex]
+  return c.initiative[c.turnIndex];
 }
 
 export function awaitingReaction(c: BattleContext): AwaitCtx | null {
-  return c.awaitCtx
+  return c.awaitCtx;
 }
 
 export function piAttackHit(pi: PendingInterrupt) {
-  return pi.tag === "PIAttackHit" ? pi : null
+  return pi.tag === "PIAttackHit" ? pi : null;
 }
 export function piAttackDamage(pi: PendingInterrupt) {
-  return pi.tag === "PIAttackDamage" ? pi : null
+  return pi.tag === "PIAttackDamage" ? pi : null;
 }
 export function piAfterDamage(pi: PendingInterrupt) {
-  return pi.tag === "PIAfterDamage" ? pi : null
+  return pi.tag === "PIAfterDamage" ? pi : null;
 }
 export function piSpellCast(pi: PendingInterrupt) {
-  return pi.tag === "PISpellCast" ? pi : null
+  return pi.tag === "PISpellCast" ? pi : null;
 }
 export function piSaveFailed(pi: PendingInterrupt) {
-  return pi.tag === "PISaveFailed" ? pi : null
+  return pi.tag === "PISaveFailed" ? pi : null;
 }
 export function piSaveFailedAoE(pi: PendingInterrupt) {
-  return pi.tag === "PISaveFailedAoE" ? pi : null
+  return pi.tag === "PISaveFailedAoE" ? pi : null;
 }
 
 export function setCreature(
   cs: Creatures,
   id: CreatureId,
-  c: BattleCreatureState
+  c: BattleCreatureState,
 ): Map<CreatureId, BattleCreatureState> {
-  const m = new Map(cs)
-  m.set(id, c)
-  return m
+  const m = new Map(cs);
+  m.set(id, c);
+  return m;
 }
 
 function isGrappling(c: BattleCreatureState): boolean {
-  return c.grapplingTarget != null
+  return c.grapplingTarget != null;
 }
 
 function battleEffectiveSpeed(c: BattleCreatureState): number {
@@ -129,61 +137,71 @@ function battleEffectiveSpeed(c: BattleCreatureState): number {
     unconscious: c.unconscious,
     exhaustion: c.exhaustion,
     isGrappling: isGrappling(c),
-    grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller
-  })
+    grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
+  });
 }
 
-function refreshProjectedSpeed(previous: BattleCreatureState, updated: BattleCreatureState): BattleCreatureState {
-  const newSpeed = battleEffectiveSpeed(updated)
-  const spentMovement = Math.max(0, previous.effectiveSpeed - previous.movementRemaining)
+function refreshProjectedSpeed(
+  previous: BattleCreatureState,
+  updated: BattleCreatureState,
+): BattleCreatureState {
+  const newSpeed = battleEffectiveSpeed(updated);
+  const spentMovement = Math.max(
+    0,
+    previous.effectiveSpeed - previous.movementRemaining,
+  );
   return {
     ...updated,
     effectiveSpeed: newSpeed,
-    movementRemaining: Math.max(0, newSpeed - spentMovement)
-  }
+    movementRemaining: Math.max(0, newSpeed - spentMovement),
+  };
 }
 
 function releaseGrapplePair(
   cs: Creatures,
   grapplerId: CreatureId,
-  targetId: CreatureId
+  targetId: CreatureId,
 ): Map<CreatureId, BattleCreatureState> {
-  let result = new Map(cs)
-  const grappler = result.get(grapplerId)
+  let result = new Map(cs);
+  const grappler = result.get(grapplerId);
   if (grappler) {
     result.set(grapplerId, {
       ...grappler,
       grapplingTarget: null,
-      grappledTargetTwoSizesSmaller: false
-    })
+      grappledTargetTwoSizesSmaller: false,
+    });
   }
-  const target = result.get(targetId)
+  const target = result.get(targetId);
   if (target) {
     result.set(targetId, {
       ...target,
       grappled: false,
-      grappledBy: null
-    })
+      grappledBy: null,
+    });
   }
-  return result
+  return result;
 }
 
 function refreshCurrentTurnCreatureSpeed(
   cs: Creatures,
-  currentTurnCreatureId: CreatureId
+  currentTurnCreatureId: CreatureId,
 ): Map<CreatureId, BattleCreatureState> {
-  const current = cs.get(currentTurnCreatureId)
-  if (!current) return new Map(cs)
-  return setCreature(cs, currentTurnCreatureId, refreshProjectedSpeed(current, current))
+  const current = cs.get(currentTurnCreatureId);
+  if (!current) return new Map(cs);
+  return setCreature(
+    cs,
+    currentTurnCreatureId,
+    refreshProjectedSpeed(current, current),
+  );
 }
 
 function refreshCreatureSpeedProjection(
   cs: Creatures,
-  creatureId: CreatureId
+  creatureId: CreatureId,
 ): Map<CreatureId, BattleCreatureState> {
-  const current = cs.get(creatureId)
-  if (!current) return new Map(cs)
-  return setCreature(cs, creatureId, refreshProjectedSpeed(current, current))
+  const current = cs.get(creatureId);
+  if (!current) return new Map(cs);
+  return setCreature(cs, creatureId, refreshProjectedSpeed(current, current));
 }
 
 export function linkBattleGrapple(
@@ -191,88 +209,102 @@ export function linkBattleGrapple(
   grapplerId: CreatureId,
   targetId: CreatureId,
   targetTwoSizesSmaller: boolean,
-  currentTurnCreatureId: CreatureId
+  currentTurnCreatureId: CreatureId,
 ): Map<CreatureId, BattleCreatureState> {
-  const grappler = cs.get(grapplerId)!
-  const target = cs.get(targetId)!
-  let result = new Map(cs)
+  const grappler = cs.get(grapplerId)!;
+  const target = cs.get(targetId)!;
+  let result = new Map(cs);
   result.set(grapplerId, {
     ...grappler,
     grapplingTarget: targetId,
-    grappledTargetTwoSizesSmaller: targetTwoSizesSmaller
-  })
+    grappledTargetTwoSizesSmaller: targetTwoSizesSmaller,
+  });
   result.set(targetId, {
     ...target,
     grappled: true,
-    grappledBy: grapplerId
-  })
-  result = refreshCreatureSpeedProjection(result, grapplerId)
-  result = refreshCreatureSpeedProjection(result, targetId)
-  if (grapplerId === currentTurnCreatureId || targetId === currentTurnCreatureId) {
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
+    grappledBy: grapplerId,
+  });
+  result = refreshCreatureSpeedProjection(result, grapplerId);
+  result = refreshCreatureSpeedProjection(result, targetId);
+  if (
+    grapplerId === currentTurnCreatureId ||
+    targetId === currentTurnCreatureId
+  ) {
+    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId);
   }
-  return result
+  return result;
 }
 
 export function releaseBattleGrappleByGrappler(
   cs: Creatures,
   grapplerId: CreatureId,
-  currentTurnCreatureId: CreatureId
+  currentTurnCreatureId: CreatureId,
 ): Map<CreatureId, BattleCreatureState> {
-  const grappler = cs.get(grapplerId)
-  if (!grappler?.grapplingTarget) return new Map(cs)
-  let result = releaseGrapplePair(cs, grapplerId, grappler.grapplingTarget)
-  result = refreshCreatureSpeedProjection(result, grapplerId)
-  result = refreshCreatureSpeedProjection(result, grappler.grapplingTarget)
-  if (grapplerId === currentTurnCreatureId || grappler.grapplingTarget === currentTurnCreatureId)
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
-  return result
+  const grappler = cs.get(grapplerId);
+  if (!grappler?.grapplingTarget) return new Map(cs);
+  let result = releaseGrapplePair(cs, grapplerId, grappler.grapplingTarget);
+  result = refreshCreatureSpeedProjection(result, grapplerId);
+  result = refreshCreatureSpeedProjection(result, grappler.grapplingTarget);
+  if (
+    grapplerId === currentTurnCreatureId ||
+    grappler.grapplingTarget === currentTurnCreatureId
+  )
+    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId);
+  return result;
 }
 
 export function escapeBattleGrapple(
   cs: Creatures,
   targetId: CreatureId,
-  currentTurnCreatureId: CreatureId
+  currentTurnCreatureId: CreatureId,
 ): Map<CreatureId, BattleCreatureState> {
-  const target = cs.get(targetId)
-  if (!target?.grappledBy) return new Map(cs)
-  let result = releaseGrapplePair(cs, target.grappledBy, targetId)
-  result = refreshCreatureSpeedProjection(result, target.grappledBy)
-  result = refreshCreatureSpeedProjection(result, targetId)
-  if (targetId === currentTurnCreatureId || target.grappledBy === currentTurnCreatureId)
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId)
-  return result
+  const target = cs.get(targetId);
+  if (!target?.grappledBy) return new Map(cs);
+  let result = releaseGrapplePair(cs, target.grappledBy, targetId);
+  result = refreshCreatureSpeedProjection(result, target.grappledBy);
+  result = refreshCreatureSpeedProjection(result, targetId);
+  if (
+    targetId === currentTurnCreatureId ||
+    target.grappledBy === currentTurnCreatureId
+  )
+    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId);
+  return result;
 }
 
-export function normalizeBattleGrapples(cs: Creatures): Map<CreatureId, BattleCreatureState> {
-  let result = new Map(cs)
+export function normalizeBattleGrapples(
+  cs: Creatures,
+): Map<CreatureId, BattleCreatureState> {
+  let result = new Map(cs);
   for (const [grapplerId, grappler] of result) {
-    if (!grappler.grapplingTarget) continue
-    const target = result.get(grappler.grapplingTarget)
+    if (!grappler.grapplingTarget) continue;
+    const target = result.get(grappler.grapplingTarget);
     const linkBroken =
       target == null ||
       target.dead ||
       !target.grappled ||
       target.grappledBy !== grapplerId ||
       grappler.dead ||
-      isIncapacitated(grappler)
+      isIncapacitated(grappler);
     if (linkBroken) {
-      result = releaseGrapplePair(result, grapplerId, grappler.grapplingTarget)
+      result = releaseGrapplePair(result, grapplerId, grappler.grapplingTarget);
     }
   }
   for (const [targetId, target] of result) {
-    if (!target.grappledBy) continue
-    const grappler = result.get(target.grappledBy)
-    const linkBroken = grappler == null || grappler.grapplingTarget !== targetId || !target.grappled
+    if (!target.grappledBy) continue;
+    const grappler = result.get(target.grappledBy);
+    const linkBroken =
+      grappler == null ||
+      grappler.grapplingTarget !== targetId ||
+      !target.grappled;
     if (linkBroken) {
       result.set(targetId, {
         ...target,
         grappled: false,
-        grappledBy: null
-      })
+        grappledBy: null,
+      });
     }
   }
-  return result
+  return result;
 }
 
 export function dealDamage(
@@ -281,161 +313,248 @@ export function dealDamage(
   dmg: number,
   dt: DamageType,
   crit: boolean,
-  knockOut: boolean
+  knockOut: boolean,
 ): Map<CreatureId, BattleCreatureState> {
-  const old = cs.get(targetId)!
-  const nc = takeDamage(old, dmg, dt, crit)
+  const old = cs.get(targetId)!;
+  const nc = takeDamage(old, dmg, dt, crit);
   // SRD 5.2.1 "Knocking Out a Creature": melee attacker's choice when damage
   // would reduce a PC to 0 HP (not instant death). Sets HP to 1 + Unconscious.
-  if (knockOut && old.creatureKind === "PC" && old.hp > 0 && nc.hp === 0 && !nc.dead) {
-    return normalizeBattleGrapples(setCreature(cs, targetId, applyCondition({ ...old, hp: 1 }, "unconscious")))
+  if (
+    knockOut &&
+    old.creatureKind === "PC" &&
+    old.hp > 0 &&
+    nc.hp === 0 &&
+    !nc.dead
+  ) {
+    return normalizeBattleGrapples(
+      setCreature(
+        cs,
+        targetId,
+        applyCondition({ ...old, hp: 1 }, "unconscious"),
+      ),
+    );
   }
-  return normalizeBattleGrapples(setCreature(cs, targetId, nc))
+  return normalizeBattleGrapples(setCreature(cs, targetId, nc));
 }
 
 /** Auto-break concentration if the concentrated spell's effect no longer exists. Matches Quint pAutoBreakExpiredConcentration. */
-function autoBreakExpiredConcentration(c: BattleCreatureState): BattleCreatureState {
-  if (Option.isNone(c.concentrationSpellId)) return c
-  const cid = c.concentrationSpellId.value
-  return c.activeEffects.some((a) => a.spellId === cid) ? c : breakConcentration(c)
+function autoBreakExpiredConcentration(
+  c: BattleCreatureState,
+): BattleCreatureState {
+  if (Option.isNone(c.concentrationSpellId)) return c;
+  const cid = c.concentrationSpellId.value;
+  return c.activeEffects.some((a) => a.spellId === cid)
+    ? c
+    : breakConcentration(c);
 }
 
 export function breakConcentrationAndPropagate(
   cs: Creatures,
-  casterId: CreatureId
+  casterId: CreatureId,
 ): Map<CreatureId, BattleCreatureState> {
-  const caster = cs.get(casterId)!
-  const concOpt = caster.concentrationSpellId
-  if (Option.isNone(concOpt)) return new Map(cs)
-  const spellId = concOpt.value
-  const result = setCreature(cs, casterId, breakConcentration(removeEffect(caster, spellId)))
+  const caster = cs.get(casterId)!;
+  const concOpt = caster.concentrationSpellId;
+  if (Option.isNone(concOpt)) return new Map(cs);
+  const spellId = concOpt.value;
+  const result = setCreature(
+    cs,
+    casterId,
+    breakConcentration(removeEffect(caster, spellId)),
+  );
   for (const [cid, c] of result) {
-    if (cid === casterId) continue
-    const cleaned = removeEffectsByCaster(c, casterId)
-    if (cleaned !== c) result.set(cid, cleaned)
+    if (cid === casterId) continue;
+    const cleaned = removeEffectsByCaster(c, casterId);
+    if (cleaned !== c) result.set(cid, cleaned);
   }
-  return result
+  return result;
 }
 
-export function eligibleExcluding(cs: Creatures, excludeId: CreatureId): Set<CreatureId> {
-  const result = new Set<CreatureId>()
+export function eligibleExcluding(
+  cs: Creatures,
+  excludeId: CreatureId,
+): Set<CreatureId> {
+  const result = new Set<CreatureId>();
   for (const [id, c] of cs) {
-    if (id !== excludeId && c.reactionAvailable && !c.dead && !c.unconscious) result.add(id)
+    if (id !== excludeId && c.reactionAvailable && !c.dead && !c.unconscious)
+      result.add(id);
   }
-  return result
+  return result;
 }
 
 function hasAnySpellSlot(c: BattleCreatureState, minimumLevel = 1): boolean {
   for (let i = Math.max(0, minimumLevel - 1); i < c.slotsCurrent.length; i++) {
-    if (c.slotsCurrent[i]! > 0) return true
+    if (c.slotsCurrent[i]! > 0) return true;
   }
-  return false
+  return false;
 }
 
-export function firstAvailableSpellSlotLevel(c: BattleCreatureState, minimumLevel = 1): number | null {
+export function firstAvailableSpellSlotLevel(
+  c: BattleCreatureState,
+  minimumLevel = 1,
+): number | null {
   for (let i = Math.max(0, minimumLevel - 1); i < c.slotsCurrent.length; i++) {
-    if (c.slotsCurrent[i]! > 0) return i + 1
+    if (c.slotsCurrent[i]! > 0) return i + 1;
   }
-  return null
+  return null;
 }
 
-export function eligibleTarget(cs: Creatures, targetId: CreatureId): Set<CreatureId> {
-  const t = cs.get(targetId)!
-  return t.reactionAvailable && !t.dead && !t.unconscious ? new Set([targetId]) : new Set()
+export function eligibleTarget(
+  cs: Creatures,
+  targetId: CreatureId,
+): Set<CreatureId> {
+  const t = cs.get(targetId)!;
+  return t.reactionAvailable && !t.dead && !t.unconscious
+    ? new Set([targetId])
+    : new Set();
 }
 
-export function legalHitReactions(cs: Creatures, atk: AttackHitCtx, candidates: ReadonlySet<CreatureId>) {
-  const legalByCreature = new Map<CreatureId, Set<"RShield" | "RParry" | "RCuttingWords">>()
+export function legalHitReactions(
+  cs: Creatures,
+  atk: AttackHitCtx,
+  candidates: ReadonlySet<CreatureId>,
+) {
+  const legalByCreature = new Map<
+    CreatureId,
+    Set<"RShield" | "RParry" | "RCuttingWords">
+  >();
   for (const [id, c] of cs) {
-    if (!c.reactionAvailable || c.dead || c.unconscious || isIncapacitated(c) || id === atk.attacker) continue
-    const legal = new Set<"RShield" | "RParry" | "RCuttingWords">()
+    if (
+      !c.reactionAvailable ||
+      c.dead ||
+      c.unconscious ||
+      isIncapacitated(c) ||
+      id === atk.attacker
+    )
+      continue;
+    const legal = new Set<"RShield" | "RParry" | "RCuttingWords">();
     if (
       id === atk.target &&
       canCastShield(c.reactionAvailable, hasAnySpellSlot(c)) &&
       c.preparedSpells.has("shield") &&
       !c.slotExpendedThisTurn
     ) {
-      legal.add("RShield")
+      legal.add("RShield");
     }
-    if (id === atk.target && atk.isMeleeAttack && atk.isWeaponAttack && c.parryAcBonus > 0) {
-      legal.add("RParry")
+    if (
+      id === atk.target &&
+      atk.isMeleeAttack &&
+      atk.isWeaponAttack &&
+      c.parryAcBonus > 0
+    ) {
+      legal.add("RParry");
     }
-    if (candidates.has(id) && hasCuttingWords(c.bardLevel) && c.bardicInspirationCharges > 0) {
-      legal.add("RCuttingWords")
+    if (
+      candidates.has(id) &&
+      hasCuttingWords(c.bardLevel) &&
+      c.bardicInspirationCharges > 0
+    ) {
+      legal.add("RCuttingWords");
     }
-    if (legal.size > 0) legalByCreature.set(id, legal)
+    if (legal.size > 0) legalByCreature.set(id, legal);
   }
-  return legalByCreature
+  return legalByCreature;
 }
 
-export function legalDamageReactionsByCreature(cs: Creatures, atk: AttackDamageCtx) {
-  const target = cs.get(atk.target)!
-  const legal = new Set<"RUncannyDodge" | "RDeflectAttacks">()
+export function legalDamageReactionsByCreature(
+  cs: Creatures,
+  atk: AttackDamageCtx,
+) {
+  const target = cs.get(atk.target)!;
+  const legal = new Set<"RUncannyDodge" | "RDeflectAttacks">();
   if (
     canUncannyDodge({
       rogueLevel: target.rogueLevel,
       reactionAvailable: target.reactionAvailable,
       attackerVisible: atk.targetCanSeeAttackerAtHit,
-      isIncapacitated: isIncapacitated(target)
+      isIncapacitated: isIncapacitated(target),
     })
   ) {
-    legal.add("RUncannyDodge")
+    legal.add("RUncannyDodge");
   }
   if (
     canDeflectAttacks(
       target.monkLevel,
       target.reactionAvailable,
       atk.isWeaponAttack,
-      hasDeflectEnergy(target.monkLevel)
+      hasDeflectEnergy(target.monkLevel),
     ) &&
     (atk.damageType === "bludgeoning" ||
       atk.damageType === "piercing" ||
       atk.damageType === "slashing" ||
       hasDeflectEnergy(target.monkLevel))
   ) {
-    legal.add("RDeflectAttacks")
+    legal.add("RDeflectAttacks");
   }
-  const legalByCreature = new Map<CreatureId, Set<"RUncannyDodge" | "RDeflectAttacks">>()
-  if (legal.size > 0) legalByCreature.set(atk.target, legal)
-  return legalByCreature
+  const legalByCreature = new Map<
+    CreatureId,
+    Set<"RUncannyDodge" | "RDeflectAttacks">
+  >();
+  if (legal.size > 0) legalByCreature.set(atk.target, legal);
+  return legalByCreature;
 }
 
 export function canMakeOpportunityAttack(c: BattleCreatureState): boolean {
-  return c.reactionAvailable && !c.dead && !isIncapacitated(c) && !blocksOpportunityAttacks(c)
+  return (
+    c.reactionAvailable &&
+    !c.dead &&
+    !isIncapacitated(c) &&
+    !blocksOpportunityAttacks(c)
+  );
 }
 
 /** Eligible for Legendary Resistance: alive + conscious + has LR charges remaining. */
-export function eligibleForLR(cs: Creatures, targetId: CreatureId): Set<CreatureId> {
-  const t = cs.get(targetId)!
-  return !t.dead && !t.unconscious && t.legendaryResistancesRemaining > 0 ? new Set([targetId]) : new Set()
+export function eligibleForLR(
+  cs: Creatures,
+  targetId: CreatureId,
+): Set<CreatureId> {
+  const t = cs.get(targetId)!;
+  return !t.dead && !t.unconscious && t.legendaryResistancesRemaining > 0
+    ? new Set([targetId])
+    : new Set();
 }
 
 /** Spend one Legendary Resistance charge. */
 export function spendLR(cs: Creatures, id: CreatureId): Creatures {
-  const c = cs.get(id)!
-  return setCreature(cs, id, { ...c, legendaryResistancesRemaining: c.legendaryResistancesRemaining - 1 })
+  const c = cs.get(id)!;
+  return setCreature(cs, id, {
+    ...c,
+    legendaryResistancesRemaining: c.legendaryResistancesRemaining - 1,
+  });
 }
 
 // slotExpendedThisTurn is guarded both here (for reactions) and at all spell-casting
 // actions (for action/BA spells). SRD 5.2.1 "One Spell with a Spell Slot per Turn".
-export function eligibleForCounterspell(cs: Creatures, excludeId: CreatureId): Set<CreatureId> {
-  const result = new Set<CreatureId>()
+export function eligibleForCounterspell(
+  cs: Creatures,
+  excludeId: CreatureId,
+): Set<CreatureId> {
+  const result = new Set<CreatureId>();
   for (const [id, c] of cs) {
-    if (id === excludeId || !c.reactionAvailable || c.dead || c.unconscious) continue
-    let hasSlot = false
+    if (id === excludeId || !c.reactionAvailable || c.dead || c.unconscious)
+      continue;
+    let hasSlot = false;
     for (let i = 2; i < c.slotsCurrent.length; i++) {
       if (c.slotsCurrent[i] > 0) {
-        hasSlot = true
-        break
+        hasSlot = true;
+        break;
       }
     }
-    if (hasSlot && c.preparedSpells.has("counterspell") && !c.slotExpendedThisTurn) result.add(id)
+    if (
+      hasSlot &&
+      c.preparedSpells.has("counterspell") &&
+      !c.slotExpendedThisTurn
+    )
+      result.add(id);
   }
-  return result
+  return result;
 }
 
-export function mkAwait(pi: PendingInterrupt, tt: TriggerType, elig: Set<CreatureId>): AwaitCtx {
-  return { interrupt: pi, trigger: tt, eligible: elig, offered: new Set() }
+export function mkAwait(
+  pi: PendingInterrupt,
+  tt: TriggerType,
+  elig: Set<CreatureId>,
+): AwaitCtx {
+  return { interrupt: pi, trigger: tt, eligible: elig, offered: new Set() };
 }
 
 export function returnToState(r: AfterDamageReturn): PhaseFields {
@@ -445,8 +564,8 @@ export function returnToState(r: AfterDamageReturn): PhaseFields {
     byTag("ADRResolvingMovement", (v) => phaseResolvingMovement(v.mv)),
     byTag("ADRAwaitingLegendaryAction", (v) => phaseAwaitingLegendary(v.la)),
     byTag("ADRAwaitingReadiedAction", (v) => phaseAwaitingReady(v.ready)),
-    Match.exhaustive
-  )
+    Match.exhaustive,
+  );
 }
 
 export function dealDamageWithAfterReactions(
@@ -457,13 +576,13 @@ export function dealDamageWithAfterReactions(
   dt: DamageType,
   crit: boolean,
   knockOut: boolean,
-  returnTo: AfterDamageReturn
+  returnTo: AfterDamageReturn,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
-  const oldT = cs.get(targetId)!
-  const cs1 = dealDamage(cs, targetId, dmg, dt, crit, knockOut)
-  const newT = cs1.get(targetId)!
-  const actualDmg = oldT.hp + oldT.tempHp - (newT.hp + newT.tempHp)
-  const elig = eligibleTarget(cs1, targetId)
+  const oldT = cs.get(targetId)!;
+  const cs1 = dealDamage(cs, targetId, dmg, dt, crit, knockOut);
+  const newT = cs1.get(targetId)!;
+  const actualDmg = oldT.hp + oldT.tempHp - (newT.hp + newT.tempHp);
+  const elig = eligibleTarget(cs1, targetId);
   if (actualDmg > 0 && elig.size > 0) {
     return {
       creatures: cs1,
@@ -471,25 +590,37 @@ export function dealDamageWithAfterReactions(
         mkAwait(
           {
             tag: "PIAfterDamage",
-            ctx: { damageSource: sourceId, damagedCreature: targetId, damageDealt: actualDmg, damageType: dt, returnTo }
+            ctx: {
+              damageSource: sourceId,
+              damagedCreature: targetId,
+              damageDealt: actualDmg,
+              damageType: dt,
+              returnTo,
+            },
           },
           "TDamageTaken",
-          elig
-        )
-      )
-    }
+          elig,
+        ),
+      ),
+    };
   }
-  return { creatures: cs1, ...returnToState(returnTo) }
+  return { creatures: cs1, ...returnToState(returnTo) };
 }
 
 export function advanceFromHitPhase(
   cs: Creatures,
   atk: AttackHitCtx,
-  currentTurnCreatureId: CreatureId
+  currentTurnCreatureId: CreatureId,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
-  const stillHit = isHit(atk.attackRoll, atk.targetAc, atk.critRange)
-  if (!stillHit) return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) }
-  const cs1 = applyOnHitEffect(cs, atk.target, atk.onHitEffect, currentTurnCreatureId)
+  const stillHit = isHit(atk.attackRoll, atk.targetAc, atk.critRange);
+  if (!stillHit)
+    return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) };
+  const cs1 = applyOnHitEffect(
+    cs,
+    atk.target,
+    atk.onHitEffect,
+    currentTurnCreatureId,
+  );
   const dmgBase: Omit<AttackDamageCtx, "legalReactionsByCreature"> = {
     attacker: atk.attacker,
     target: atk.target,
@@ -499,18 +630,23 @@ export function advanceFromHitPhase(
     atkReturnTo: atk.atkReturnTo,
     knockOut: atk.knockOut,
     targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
-    isWeaponAttack: atk.isWeaponAttack
-  }
+    isWeaponAttack: atk.isWeaponAttack,
+  };
   const dmgCtx: AttackDamageCtx = {
     ...dmgBase,
-    legalReactionsByCreature: legalDamageReactionsByCreature(cs1, { ...dmgBase, legalReactionsByCreature: new Map() })
-  }
-  const elig = new Set(dmgCtx.legalReactionsByCreature.keys())
+    legalReactionsByCreature: legalDamageReactionsByCreature(cs1, {
+      ...dmgBase,
+      legalReactionsByCreature: new Map(),
+    }),
+  };
+  const elig = new Set(dmgCtx.legalReactionsByCreature.keys());
   if (elig.size > 0) {
     return {
       creatures: new Map(cs1),
-      ...phaseAwaitReaction(mkAwait({ tag: "PIAttackDamage", ctx: dmgCtx }, "TAttackDamages", elig))
-    }
+      ...phaseAwaitReaction(
+        mkAwait({ tag: "PIAttackDamage", ctx: dmgCtx }, "TAttackDamages", elig),
+      ),
+    };
   }
   return dealDamageWithAfterReactions(
     cs1,
@@ -520,32 +656,45 @@ export function advanceFromHitPhase(
     atk.damageType,
     atk.isCritical,
     atk.knockOut,
-    atk.atkReturnTo
-  )
+    atk.atkReturnTo,
+  );
 }
 
 export function resolveSave(
   cs: Creatures,
   save: SaveSpellCtx,
-  returnTo: AfterDamageReturn
+  returnTo: AfterDamageReturn,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
-  const tgt = cs.get(save.target)!
-  const saved = save.saveRoll + tgt.saveMiscBonus >= save.saveDC
-  const isDex = save.saveAbility === "dex"
-  const tgtIncap = isIncapacitated(tgt)
+  const tgt = cs.get(save.target)!;
+  const saved = save.saveRoll + tgt.saveMiscBonus >= save.saveDC;
+  const isDex = save.saveAbility === "dex";
+  const tgtIncap = isIncapacitated(tgt);
   if (saved) {
     if (save.halfOnSuccess && save.damageOnFail > 0) {
-      const halfDmg = Math.trunc(save.damageOnFail / 2)
-      const evDmg = isDex ? evasionDamage(tgt.hasEvasion, tgtIncap, true, halfDmg) : halfDmg
+      const halfDmg = Math.trunc(save.damageOnFail / 2);
+      const evDmg = isDex
+        ? evasionDamage(tgt.hasEvasion, tgtIncap, true, halfDmg)
+        : halfDmg;
       if (evDmg === 0) {
-        return { creatures: new Map(cs), ...returnToState(returnTo) }
+        return { creatures: new Map(cs), ...returnToState(returnTo) };
       }
-      return dealDamageWithAfterReactions(cs, save.target, save.caster, evDmg, save.damageType, false, false, returnTo)
+      return dealDamageWithAfterReactions(
+        cs,
+        save.target,
+        save.caster,
+        evDmg,
+        save.damageType,
+        false,
+        false,
+        returnTo,
+      );
     }
-    return { creatures: new Map(cs), ...returnToState(returnTo) }
+    return { creatures: new Map(cs), ...returnToState(returnTo) };
   }
-  const evDmgOnFail = isDex ? evasionDamage(tgt.hasEvasion, tgtIncap, false, save.damageOnFail) : save.damageOnFail
-  const elig = eligibleForLR(cs, save.target)
+  const evDmgOnFail = isDex
+    ? evasionDamage(tgt.hasEvasion, tgtIncap, false, save.damageOnFail)
+    : save.damageOnFail;
+  const elig = eligibleForLR(cs, save.target);
   const failCtx: SaveFailedCtx = {
     caster: save.caster,
     target: save.target,
@@ -554,21 +703,23 @@ export function resolveSave(
     damageType: save.damageType,
     conditionOnFail: save.conditionOnFail,
     applyCondition: save.applyCondition,
-    saveSucceeded: false
-  }
+    saveSucceeded: false,
+  };
   if (elig.size > 0) {
     return {
       creatures: new Map(cs),
-      ...phaseAwaitReaction(mkAwait({ tag: "PISaveFailed", ctx: failCtx }, "TSaveFailed", elig))
-    }
+      ...phaseAwaitReaction(
+        mkAwait({ tag: "PISaveFailed", ctx: failCtx }, "TSaveFailed", elig),
+      ),
+    };
   }
-  return applyFailEffects(cs, failCtx, returnTo)
+  return applyFailEffects(cs, failCtx, returnTo);
 }
 
 export function applyFailEffects(
   cs: Creatures,
   ctx: SaveFailedCtx,
-  returnTo: AfterDamageReturn
+  returnTo: AfterDamageReturn,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   if (ctx.saveSucceeded) {
     if (ctx.halfOnSuccess && ctx.damageOnFail > 0) {
@@ -580,14 +731,20 @@ export function applyFailEffects(
         ctx.damageType,
         false,
         false,
-        returnTo
-      )
+        returnTo,
+      );
     }
-    return { creatures: new Map(cs), ...returnToState(returnTo) }
+    return { creatures: new Map(cs), ...returnToState(returnTo) };
   }
-  let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs)
+  let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs);
   if (ctx.applyCondition) {
-    cs1 = normalizeBattleGrapples(setCreature(cs1, ctx.target, applyCondition(cs1.get(ctx.target)!, ctx.conditionOnFail)))
+    cs1 = normalizeBattleGrapples(
+      setCreature(
+        cs1,
+        ctx.target,
+        applyCondition(cs1.get(ctx.target)!, ctx.conditionOnFail),
+      ),
+    );
   }
   if (ctx.damageOnFail > 0)
     return dealDamageWithAfterReactions(
@@ -598,14 +755,18 @@ export function applyFailEffects(
       ctx.damageType,
       false,
       false,
-      returnTo
-    )
-  return { creatures: cs1, ...returnToState(returnTo) }
+      returnTo,
+    );
+  return { creatures: cs1, ...returnToState(returnTo) };
 }
 
-export function nextTurn(turnIndex: number, initLen: number, round: number): { idx: number; round: number } {
-  const nextIdx = turnIndex + 1 < initLen ? turnIndex + 1 : 0
-  return { idx: nextIdx, round: nextIdx === 0 ? round + 1 : round }
+export function nextTurn(
+  turnIndex: number,
+  initLen: number,
+  round: number,
+): { idx: number; round: number } {
+  const nextIdx = turnIndex + 1 < initLen ? turnIndex + 1 : 0;
+  return { idx: nextIdx, round: nextIdx === 0 ? round + 1 : round };
 }
 
 /** Apply damage to a creature and handle concentration break + propagation in one step. */
@@ -615,56 +776,70 @@ function applyDamageWithConcBreak(
   creature: BattleCreatureState,
   dmg: number,
   dt: DamageType,
-  conSaveSucceeded: boolean
-): { creatures: Map<CreatureId, BattleCreatureState>; creature: BattleCreatureState } {
-  const hadConc = Option.isSome(creature.concentrationSpellId)
-  let c = takeDamage(creature, dmg, dt, false)
-  if (hadConc && (c.dead || isIncapacitated(c))) c = breakConcentration(c)
-  if (Option.isSome(c.concentrationSpellId) && !conSaveSucceeded) c = breakConcentration(c)
-  let result = setCreature(cs, id, c)
+  conSaveSucceeded: boolean,
+): {
+  creatures: Map<CreatureId, BattleCreatureState>;
+  creature: BattleCreatureState;
+} {
+  const hadConc = Option.isSome(creature.concentrationSpellId);
+  let c = takeDamage(creature, dmg, dt, false);
+  if (hadConc && (c.dead || isIncapacitated(c))) c = breakConcentration(c);
+  if (Option.isSome(c.concentrationSpellId) && !conSaveSucceeded)
+    c = breakConcentration(c);
+  let result = setCreature(cs, id, c);
   if (hadConc && Option.isNone(c.concentrationSpellId)) {
-    result = breakConcentrationAndPropagate(result, id)
-    c = result.get(id)!
+    result = breakConcentrationAndPropagate(result, id);
+    c = result.get(id)!;
   }
-  return { creatures: result, creature: c }
+  return { creatures: result, creature: c };
 }
 
-function autoBreakAllExpiredConcentration(cs: Creatures): Map<CreatureId, BattleCreatureState> {
-  const result = new Map(cs)
+function autoBreakAllExpiredConcentration(
+  cs: Creatures,
+): Map<CreatureId, BattleCreatureState> {
+  const result = new Map(cs);
   for (const [id, creature] of result) {
-    const updated = autoBreakExpiredConcentration(creature)
-    if (updated !== creature) result.set(id, updated)
+    const updated = autoBreakExpiredConcentration(creature);
+    if (updated !== creature) result.set(id, updated);
   }
-  return result
+  return result;
 }
 
 function advanceEffectsAtPhase(
   cs: Creatures,
   ownerId: CreatureId,
-  phase: ExpiryPhase
+  phase: ExpiryPhase,
 ): Map<CreatureId, BattleCreatureState> {
-  let changed = false
-  const result = new Map<CreatureId, BattleCreatureState>()
+  let changed = false;
+  const result = new Map<CreatureId, BattleCreatureState>();
   for (const [id, creature] of cs) {
-    const updated = advanceEffectsForOwner(creature, ownerId, phase)
-    if (updated !== creature) changed = true
-    result.set(id, updated)
+    const updated = advanceEffectsForOwner(creature, ownerId, phase);
+    if (updated !== creature) changed = true;
+    result.set(id, updated);
   }
-  return changed ? autoBreakAllExpiredConcentration(result) : new Map(cs)
+  return changed ? autoBreakAllExpiredConcentration(result) : new Map(cs);
 }
 
 export function applyOnHitEffect(
   cs: Creatures,
   targetId: CreatureId,
   effect: ActiveEffect | undefined,
-  currentTurnCreatureId: CreatureId
+  currentTurnCreatureId: CreatureId,
 ): Map<CreatureId, BattleCreatureState> {
-  if (!effect) return new Map(cs)
-  const target = cs.get(targetId)!
-  const activeEffects = [...target.activeEffects.filter((existing) => existing.spellId !== effect.spellId), effect]
-  const updatedTarget = { ...target, activeEffects }
-  const nextTarget = targetId === currentTurnCreatureId ? refreshProjectedSpeed(target, updatedTarget) : updatedTarget
-  return setCreature(cs, targetId, nextTarget)
+  if (!effect) return new Map(cs);
+  const target = cs.get(targetId)!;
+  const activeEffects = [
+    ...target.activeEffects.filter(
+      (existing) => existing.spellId !== effect.spellId,
+    ),
+    effect,
+  ];
+  const updatedTarget = { ...target, activeEffects };
+  const nextTarget =
+    targetId === currentTurnCreatureId
+      ? refreshProjectedSpeed(target, updatedTarget)
+      : updatedTarget;
+  return setCreature(cs, targetId, nextTarget);
 }
 
 export function processStartTurn(
@@ -676,41 +851,54 @@ export function processStartTurn(
   _sotSaveResult: boolean,
   sotConSave: boolean,
   rechargedAbilities: ReadonlyArray<string> | undefined,
-  deathSaveRoll: number
+  deathSaveRoll: number,
 ): Map<CreatureId, BattleCreatureState> {
-  let result = advanceEffectsAtPhase(cs, activeId, "start")
-  let c = result.get(activeId)!
+  let result = advanceEffectsAtPhase(cs, activeId, "start");
+  let c = result.get(activeId)!;
   // Death save: if at 0 HP, not stable, not dead, and roll provided
   if (c.hp === 0 && !c.stable && !c.dead && deathSaveRoll > 0) {
-    c = deathSave(c, deathSaveRoll)
+    c = deathSave(c, deathSaveRoll);
   }
-  result = setCreature(result, activeId, c)
-  const hasEffects = c.activeEffects.length > 0 && (sotDmg > 0 || sotHeal > 0)
+  result = setCreature(result, activeId, c);
+  const hasEffects = c.activeEffects.length > 0 && (sotDmg > 0 || sotHeal > 0);
   if (hasEffects) {
-    if (sotHeal > 0) c = heal(c, sotHeal)
+    if (sotHeal > 0) c = heal(c, sotHeal);
     if (sotDmg > 0) {
-      const r = applyDamageWithConcBreak(result, activeId, c, sotDmg, sotDt, sotConSave)
-      result = r.creatures
-      c = r.creature
+      const r = applyDamageWithConcBreak(
+        result,
+        activeId,
+        c,
+        sotDmg,
+        sotDt,
+        sotConSave,
+      );
+      result = r.creatures;
+      c = r.creature;
     } else {
-      result = setCreature(result, activeId, c)
+      result = setCreature(result, activeId, c);
     }
   }
-  result = normalizeBattleGrapples(result)
-  c = result.get(activeId)!
-  const speed = battleEffectiveSpeed(c)
-  c = { ...c, ...FRESH_TURN_STATE, effectiveSpeed: speed, movementRemaining: speed }
+  result = normalizeBattleGrapples(result);
+  c = result.get(activeId)!;
+  const speed = battleEffectiveSpeed(c);
+  c = {
+    ...c,
+    ...FRESH_TURN_STATE,
+    effectiveSpeed: speed,
+    movementRemaining: speed,
+  };
   if (c.creatureKind === "Monster" && rechargedAbilities) {
-    const newRecharge = { ...c.rechargeAvailable }
-    for (const name of rechargedAbilities) newRecharge[name] = true
-    c = { ...c, rechargeAvailable: newRecharge }
+    const newRecharge = { ...c.rechargeAvailable };
+    for (const name of rechargedAbilities) newRecharge[name] = true;
+    c = { ...c, rechargeAvailable: newRecharge };
   }
-  result = setCreature(result, activeId, c)
+  result = setCreature(result, activeId, c);
   // Reset slotExpendedThisTurn for non-active creatures (active already reset by FRESH_TURN_STATE)
   for (const [cid, cr] of result) {
-    if (cid !== activeId && cr.slotExpendedThisTurn) result.set(cid, { ...cr, slotExpendedThisTurn: false })
+    if (cid !== activeId && cr.slotExpendedThisTurn)
+      result.set(cid, { ...cr, slotExpendedThisTurn: false });
   }
-  return normalizeBattleGrapples(result)
+  return normalizeBattleGrapples(result);
 }
 
 export function processEndTurn(
@@ -719,33 +907,43 @@ export function processEndTurn(
   eotSaveSucceeded: boolean,
   eotDmg: number,
   eotDt: DamageType,
-  eotConSave: boolean
+  eotConSave: boolean,
 ): Map<CreatureId, BattleCreatureState> {
-  let c = cs.get(activeId)!
-  const hasEotEffects = c.activeEffects.length > 0
+  let c = cs.get(activeId)!;
+  const hasEotEffects = c.activeEffects.length > 0;
   if (hasEotEffects && eotSaveSucceeded) {
-    const idsToRemove = new Set<SpellId>()
+    const idsToRemove = new Set<SpellId>();
     for (const ae of c.activeEffects) {
-      if (ae.expiresAt === "end") idsToRemove.add(ae.spellId)
+      if (ae.expiresAt === "end") idsToRemove.add(ae.spellId);
     }
     if (idsToRemove.size > 0) {
-      for (const spellId of idsToRemove) c = removeEffect(c, spellId)
+      for (const spellId of idsToRemove) c = removeEffect(c, spellId);
     }
   }
-  let baseCreatures: Creatures
+  let baseCreatures: Creatures;
   if (hasEotEffects && eotDmg > 0) {
-    const r = applyDamageWithConcBreak(cs, activeId, c, eotDmg, eotDt, eotConSave)
-    c = r.creature
-    baseCreatures = r.creatures
+    const r = applyDamageWithConcBreak(
+      cs,
+      activeId,
+      c,
+      eotDmg,
+      eotDt,
+      eotConSave,
+    );
+    c = r.creature;
+    baseCreatures = r.creatures;
   } else {
-    baseCreatures = cs
+    baseCreatures = cs;
   }
-  let result = setCreature(baseCreatures, activeId, c)
-  result = advanceEffectsAtPhase(result, activeId, "end")
-  c = result.get(activeId)!
-  const oldConcId = cs.get(activeId)!.concentrationSpellId
-  if (Option.isSome(oldConcId) && Option.isNone(result.get(activeId)!.concentrationSpellId)) {
-    result = breakConcentrationAndPropagate(result, activeId)
+  let result = setCreature(baseCreatures, activeId, c);
+  result = advanceEffectsAtPhase(result, activeId, "end");
+  c = result.get(activeId)!;
+  const oldConcId = cs.get(activeId)!.concentrationSpellId;
+  if (
+    Option.isSome(oldConcId) &&
+    Option.isNone(result.get(activeId)!.concentrationSpellId)
+  ) {
+    result = breakConcentrationAndPropagate(result, activeId);
   }
-  return normalizeBattleGrapples(result)
+  return normalizeBattleGrapples(result);
 }

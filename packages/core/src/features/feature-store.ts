@@ -1,4 +1,4 @@
-import { Option } from "effect"
+import { Option } from "effect";
 
 import {
   pCheckRageMaintenance,
@@ -7,88 +7,91 @@ import {
   pExtendRageWithBA,
   pMarkAttackOrForcedSave,
   rageMaxCharges,
-  type RageState
-} from "#/features/class-barbarian.ts"
+  type RageState,
+} from "#/features/class-barbarian.ts";
 import {
   actionSurgeMaxCharges,
   fighterLongRest,
   fighterShortRest,
   indomitableMaxCharges,
-  secondWindMaxCharges
-} from "#/features/class-fighter.ts"
-import { pInitFocusPool } from "#/features/class-monk.ts"
-import { wholenessOfBodyMaxCharges } from "#/features/class-monk-features.ts"
-import { layOnHandsPoolMax } from "#/features/class-paladin.ts"
-import { reduceMonk } from "#/features/feature-store-monk.ts"
-import { channelDivinityMaxCharges, reducePaladin } from "#/features/feature-store-paladin.ts"
-import { reduceRogue } from "#/features/feature-store-rogue.ts"
+  secondWindMaxCharges,
+} from "#/features/class-fighter.ts";
+import { pInitFocusPool } from "#/features/class-monk.ts";
+import { wholenessOfBodyMaxCharges } from "#/features/class-monk-features.ts";
+import { layOnHandsPoolMax } from "#/features/class-paladin.ts";
+import { reduceMonk } from "#/features/feature-store-monk.ts";
+import {
+  channelDivinityMaxCharges,
+  reducePaladin,
+} from "#/features/feature-store-paladin.ts";
+import { reduceRogue } from "#/features/feature-store-rogue.ts";
 
 export interface FeatureConfig {
-  readonly className: string
-  readonly level: number
+  readonly className: string;
+  readonly level: number;
   // Subclass levels are hardcoded per-subclass because the SRD 5.2.1 provides
   // exactly one subclass per class. No generic subclass dispatch needed.
-  readonly berserkerLevel?: number
-  readonly championLevel?: number
+  readonly berserkerLevel?: number;
+  readonly championLevel?: number;
   // Ability modifiers needed for feature DCs (e.g., Intimidating Presence = 8 + STR + prof)
-  readonly strMod?: number
-  readonly profBonus?: number
+  readonly strMod?: number;
+  readonly profBonus?: number;
 }
 
 export interface FighterFeatureState {
-  readonly secondWindCharges: number
-  readonly secondWindMax: number
-  readonly actionSurgeCharges: number
-  readonly actionSurgeMax: number
-  readonly actionSurgeUsedThisTurn: boolean
-  readonly indomitableCharges: number
-  readonly indomitableMax: number
+  readonly secondWindCharges: number;
+  readonly secondWindMax: number;
+  readonly actionSurgeCharges: number;
+  readonly actionSurgeMax: number;
+  readonly actionSurgeUsedThisTurn: boolean;
+  readonly indomitableCharges: number;
+  readonly indomitableMax: number;
 }
 
 export interface BarbarianFeatureState {
-  readonly raging: boolean
-  readonly rageCharges: number
-  readonly rageMaxCharges: number
-  readonly rageTurnsRemaining: number
-  readonly attackedOrForcedSaveThisTurn: boolean
-  readonly rageExtendedWithBA: boolean
-  readonly recklessThisTurn: boolean
-  readonly frenzyUsedThisTurn: boolean
-  readonly intimidatingPresenceUsed: boolean
-  readonly relentlessRageTimesUsed: number
+  readonly raging: boolean;
+  readonly rageCharges: number;
+  readonly rageMaxCharges: number;
+  readonly rageTurnsRemaining: number;
+  readonly attackedOrForcedSaveThisTurn: boolean;
+  readonly rageExtendedWithBA: boolean;
+  readonly recklessThisTurn: boolean;
+  readonly frenzyUsedThisTurn: boolean;
+  readonly intimidatingPresenceUsed: boolean;
+  readonly relentlessRageTimesUsed: number;
 }
 
 export interface MonkFeatureState {
-  readonly focusPoints: number
-  readonly focusMax: number
-  readonly uncannyMetabolismUsed: boolean
-  readonly wholenessOfBodyCharges: number
-  readonly wholenessOfBodyMax: number
-  readonly quiveringPalmActive: boolean
-  readonly deflectAttacksUsedThisRound: boolean
+  readonly focusPoints: number;
+  readonly focusMax: number;
+  readonly uncannyMetabolismUsed: boolean;
+  readonly wholenessOfBodyCharges: number;
+  readonly wholenessOfBodyMax: number;
+  readonly quiveringPalmActive: boolean;
+  readonly deflectAttacksUsedThisRound: boolean;
 }
 
 export interface PaladinFeatureState {
-  readonly layOnHandsPool: number
-  readonly layOnHandsMax: number
-  readonly smiteFreeUsed: boolean
-  readonly faithfulSteedUsed: boolean
-  readonly channelDivinityCharges: number
-  readonly channelDivinityMax: number
+  readonly layOnHandsPool: number;
+  readonly layOnHandsMax: number;
+  readonly smiteFreeUsed: boolean;
+  readonly faithfulSteedUsed: boolean;
+  readonly channelDivinityCharges: number;
+  readonly channelDivinityMax: number;
 }
 
 export interface RogueFeatureState {
-  readonly sneakAttackUsedThisTurn: boolean
-  readonly steadyAimUsed: boolean
-  readonly strokeOfLuckUsed: boolean
+  readonly sneakAttackUsedThisTurn: boolean;
+  readonly steadyAimUsed: boolean;
+  readonly strokeOfLuckUsed: boolean;
 }
 
 export interface FeatureState {
-  readonly fighter?: FighterFeatureState
-  readonly barbarian?: BarbarianFeatureState
-  readonly monk?: MonkFeatureState
-  readonly paladin?: PaladinFeatureState
-  readonly rogue?: RogueFeatureState
+  readonly fighter?: FighterFeatureState;
+  readonly barbarian?: BarbarianFeatureState;
+  readonly monk?: MonkFeatureState;
+  readonly paladin?: PaladinFeatureState;
+  readonly rogue?: RogueFeatureState;
 }
 
 export type FeatureAction =
@@ -107,11 +110,14 @@ export type FeatureAction =
   | { readonly type: "BARBARIAN_USE_RELENTLESS_RAGE" }
   | { readonly type: "MONK_EXPEND_FOCUS"; readonly cost: number }
   | {
-      readonly type: "MONK_USE_UNCANNY_METABOLISM"
-      readonly focusPoints: number
-      readonly uncannyMetabolismUsed: boolean
+      readonly type: "MONK_USE_UNCANNY_METABOLISM";
+      readonly focusPoints: number;
+      readonly uncannyMetabolismUsed: boolean;
     }
-  | { readonly type: "MONK_USE_WHOLENESS_OF_BODY"; readonly chargesAfter: number }
+  | {
+      readonly type: "MONK_USE_WHOLENESS_OF_BODY";
+      readonly chargesAfter: number;
+    }
   | { readonly type: "MONK_USE_QUIVERING_PALM" }
   | { readonly type: "MONK_TRIGGER_QUIVERING_PALM" }
   | { readonly type: "MONK_USE_SUPERIOR_DEFENSE" }
@@ -133,7 +139,7 @@ export type FeatureAction =
   | { readonly type: "NOTIFY_START_TURN" }
   | { readonly type: "NOTIFY_END_TURN" }
   | { readonly type: "NOOP" }
-  | { readonly type: "RESET" }
+  | { readonly type: "RESET" };
 
 function barbarianToRageState(b: BarbarianFeatureState): RageState {
   return {
@@ -143,11 +149,14 @@ function barbarianToRageState(b: BarbarianFeatureState): RageState {
     rageTurnsRemaining: b.rageTurnsRemaining,
     attackedOrForcedSaveThisTurn: b.attackedOrForcedSaveThisTurn,
     rageExtendedWithBA: b.rageExtendedWithBA,
-    concentrationSpellId: Option.none()
-  }
+    concentrationSpellId: Option.none(),
+  };
 }
 
-function rageStateToBarbarianPatch(r: RageState, prev: BarbarianFeatureState): BarbarianFeatureState {
+function rageStateToBarbarianPatch(
+  r: RageState,
+  prev: BarbarianFeatureState,
+): BarbarianFeatureState {
   return {
     raging: r.raging,
     rageCharges: r.rageCharges,
@@ -158,15 +167,15 @@ function rageStateToBarbarianPatch(r: RageState, prev: BarbarianFeatureState): B
     recklessThisTurn: prev.recklessThisTurn,
     frenzyUsedThisTurn: prev.frenzyUsedThisTurn,
     intimidatingPresenceUsed: prev.intimidatingPresenceUsed,
-    relentlessRageTimesUsed: prev.relentlessRageTimesUsed
-  }
+    relentlessRageTimesUsed: prev.relentlessRageTimesUsed,
+  };
 }
 
 export function createInitialFeatureState(config: FeatureConfig): FeatureState {
   if (config.className === "fighter") {
-    const swMax = secondWindMaxCharges(config.level)
-    const asMax = actionSurgeMaxCharges(config.level)
-    const indMax = indomitableMaxCharges(config.level)
+    const swMax = secondWindMaxCharges(config.level);
+    const asMax = actionSurgeMaxCharges(config.level);
+    const indMax = indomitableMaxCharges(config.level);
     return {
       fighter: {
         secondWindCharges: swMax,
@@ -175,21 +184,21 @@ export function createInitialFeatureState(config: FeatureConfig): FeatureState {
         actionSurgeMax: asMax,
         actionSurgeUsedThisTurn: false,
         indomitableCharges: indMax,
-        indomitableMax: indMax
-      }
-    }
+        indomitableMax: indMax,
+      },
+    };
   }
   if (config.className === "rogue") {
     return {
       rogue: {
         sneakAttackUsedThisTurn: false,
         steadyAimUsed: false,
-        strokeOfLuckUsed: false
-      }
-    }
+        strokeOfLuckUsed: false,
+      },
+    };
   }
   if (config.className === "barbarian") {
-    const max = rageMaxCharges(config.level)
+    const max = rageMaxCharges(config.level);
     return {
       barbarian: {
         raging: false,
@@ -201,14 +210,14 @@ export function createInitialFeatureState(config: FeatureConfig): FeatureState {
         recklessThisTurn: false,
         frenzyUsedThisTurn: false,
         intimidatingPresenceUsed: false,
-        relentlessRageTimesUsed: 0
-      }
-    }
+        relentlessRageTimesUsed: 0,
+      },
+    };
   }
   if (config.className === "monk") {
-    const pool = pInitFocusPool(config.level)
+    const pool = pInitFocusPool(config.level);
     // TODO: wisMod should come from config; default to 1 for now (minimum 1 charge)
-    const wobMax = wholenessOfBodyMaxCharges(0)
+    const wobMax = wholenessOfBodyMaxCharges(0);
     return {
       monk: {
         focusPoints: pool.focusPoints,
@@ -217,13 +226,13 @@ export function createInitialFeatureState(config: FeatureConfig): FeatureState {
         wholenessOfBodyCharges: wobMax,
         wholenessOfBodyMax: wobMax,
         quiveringPalmActive: false,
-        deflectAttacksUsedThisRound: false
-      }
-    }
+        deflectAttacksUsedThisRound: false,
+      },
+    };
   }
   if (config.className === "paladin") {
-    const max = layOnHandsPoolMax(config.level)
-    const cdMax = channelDivinityMaxCharges(config.level)
+    const max = layOnHandsPoolMax(config.level);
+    const cdMax = channelDivinityMaxCharges(config.level);
     return {
       paladin: {
         layOnHandsPool: max,
@@ -231,46 +240,60 @@ export function createInitialFeatureState(config: FeatureConfig): FeatureState {
         smiteFreeUsed: false,
         faithfulSteedUsed: false,
         channelDivinityCharges: cdMax,
-        channelDivinityMax: cdMax
-      }
-    }
+        channelDivinityMax: cdMax,
+      },
+    };
   }
-  return {}
+  return {};
 }
 
-function reduceFighter(state: FeatureState, action: FeatureAction, _config: FeatureConfig): FeatureState {
-  if (!state.fighter) return state
-  const f = state.fighter
+function reduceFighter(
+  state: FeatureState,
+  action: FeatureAction,
+  _config: FeatureConfig,
+): FeatureState {
+  if (!state.fighter) return state;
+  const f = state.fighter;
 
   switch (action.type) {
     case "FIGHTER_USE_SECOND_WIND":
     case "FIGHTER_USE_TACTICAL_MIND":
-      return { ...state, fighter: { ...f, secondWindCharges: f.secondWindCharges - 1 } }
+      return {
+        ...state,
+        fighter: { ...f, secondWindCharges: f.secondWindCharges - 1 },
+      };
 
     case "FIGHTER_USE_ACTION_SURGE":
       return {
         ...state,
-        fighter: { ...f, actionSurgeCharges: f.actionSurgeCharges - 1, actionSurgeUsedThisTurn: true }
-      }
+        fighter: {
+          ...f,
+          actionSurgeCharges: f.actionSurgeCharges - 1,
+          actionSurgeUsedThisTurn: true,
+        },
+      };
 
     case "FIGHTER_USE_INDOMITABLE":
-      return { ...state, fighter: { ...f, indomitableCharges: f.indomitableCharges - 1 } }
+      return {
+        ...state,
+        fighter: { ...f, indomitableCharges: f.indomitableCharges - 1 },
+      };
 
     case "NOTIFY_SHORT_REST": {
       const rest = fighterShortRest({
         secondWindCharges: f.secondWindCharges,
         secondWindMax: f.secondWindMax,
         actionSurgeCharges: f.actionSurgeCharges,
-        actionSurgeMax: f.actionSurgeMax
-      })
+        actionSurgeMax: f.actionSurgeMax,
+      });
       return {
         ...state,
         fighter: {
           ...f,
           secondWindCharges: rest.secondWindCharges,
-          actionSurgeCharges: rest.actionSurgeCharges
-        }
-      }
+          actionSurgeCharges: rest.actionSurgeCharges,
+        },
+      };
     }
 
     case "NOTIFY_LONG_REST": {
@@ -279,67 +302,77 @@ function reduceFighter(state: FeatureState, action: FeatureAction, _config: Feat
         secondWindMax: f.secondWindMax,
         actionSurgeCharges: f.actionSurgeCharges,
         actionSurgeMax: f.actionSurgeMax,
-        indomitableMax: f.indomitableMax
-      })
+        indomitableMax: f.indomitableMax,
+      });
       return {
         ...state,
         fighter: {
           ...f,
           secondWindCharges: rest.secondWindCharges,
           actionSurgeCharges: rest.actionSurgeCharges,
-          indomitableCharges: rest.indomitableCharges
-        }
-      }
+          indomitableCharges: rest.indomitableCharges,
+        },
+      };
     }
 
     case "NOTIFY_START_TURN":
-      return { ...state, fighter: { ...f, actionSurgeUsedThisTurn: false } }
+      return { ...state, fighter: { ...f, actionSurgeUsedThisTurn: false } };
 
     default:
-      return state
+      return state;
   }
 }
 
-function reduceBarbarian(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
-  if (!state.barbarian) return state
-  const b = state.barbarian
-  const rageState = barbarianToRageState(b)
+function reduceBarbarian(
+  state: FeatureState,
+  action: FeatureAction,
+  config: FeatureConfig,
+): FeatureState {
+  if (!state.barbarian) return state;
+  const b = state.barbarian;
+  const rageState = barbarianToRageState(b);
 
   switch (action.type) {
     case "BARBARIAN_ENTER_RAGE": {
-      const next = pEnterRage(rageState)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
+      const next = pEnterRage(rageState);
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) };
     }
 
     case "BARBARIAN_END_RAGE": {
-      const next = pEndRage(rageState)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
+      const next = pEndRage(rageState);
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) };
     }
 
     case "BARBARIAN_EXTEND_RAGE_BA": {
-      const next = pExtendRageWithBA(rageState)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
+      const next = pExtendRageWithBA(rageState);
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) };
     }
 
     case "BARBARIAN_MARK_ATTACK_OR_SAVE": {
-      const next = pMarkAttackOrForcedSave(rageState)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
+      const next = pMarkAttackOrForcedSave(rageState);
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) };
     }
 
     case "BARBARIAN_DECLARE_RECKLESS":
-      return { ...state, barbarian: { ...b, recklessThisTurn: true } }
+      return { ...state, barbarian: { ...b, recklessThisTurn: true } };
 
     case "BERSERKER_APPLY_FRENZY":
-      return { ...state, barbarian: { ...b, frenzyUsedThisTurn: true } }
+      return { ...state, barbarian: { ...b, frenzyUsedThisTurn: true } };
 
     case "BERSERKER_USE_RETALIATION":
-      return state // no store-side state change; machine event (USE_REACTION) handled by bridge
+      return state; // no store-side state change; machine event (USE_REACTION) handled by bridge
 
     case "BERSERKER_USE_INTIMIDATING_PRESENCE":
-      return { ...state, barbarian: { ...b, intimidatingPresenceUsed: true } }
+      return { ...state, barbarian: { ...b, intimidatingPresenceUsed: true } };
 
     case "BARBARIAN_USE_RELENTLESS_RAGE":
-      return { ...state, barbarian: { ...b, relentlessRageTimesUsed: b.relentlessRageTimesUsed + 1 } }
+      return {
+        ...state,
+        barbarian: {
+          ...b,
+          relentlessRageTimesUsed: b.relentlessRageTimesUsed + 1,
+        },
+      };
 
     case "NOTIFY_START_TURN":
       return {
@@ -349,26 +382,30 @@ function reduceBarbarian(state: FeatureState, action: FeatureAction, config: Fea
           recklessThisTurn: false,
           attackedOrForcedSaveThisTurn: false,
           rageExtendedWithBA: false,
-          frenzyUsedThisTurn: false
-        }
-      }
+          frenzyUsedThisTurn: false,
+        },
+      };
 
     case "NOTIFY_END_TURN": {
-      const next = pCheckRageMaintenance(rageState, config.level)
-      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) }
+      const next = pCheckRageMaintenance(rageState, config.level);
+      return { ...state, barbarian: rageStateToBarbarianPatch(next, b) };
     }
 
     case "NOTIFY_SHORT_REST": {
       // SRD: "You regain one expended use when you finish a Short Rest"
-      const max = rageMaxCharges(config.level)
+      const max = rageMaxCharges(config.level);
       return {
         ...state,
-        barbarian: { ...b, rageCharges: Math.min(b.rageCharges + 1, max), relentlessRageTimesUsed: 0 }
-      }
+        barbarian: {
+          ...b,
+          rageCharges: Math.min(b.rageCharges + 1, max),
+          relentlessRageTimesUsed: 0,
+        },
+      };
     }
 
     case "NOTIFY_LONG_REST": {
-      const max = rageMaxCharges(config.level)
+      const max = rageMaxCharges(config.level);
       return {
         ...state,
         barbarian: {
@@ -381,29 +418,33 @@ function reduceBarbarian(state: FeatureState, action: FeatureAction, config: Fea
           recklessThisTurn: false,
           frenzyUsedThisTurn: false,
           intimidatingPresenceUsed: false,
-          relentlessRageTimesUsed: 0
-        }
-      }
+          relentlessRageTimesUsed: 0,
+        },
+      };
     }
 
     default:
-      return state
+      return state;
   }
 }
 
 // reduceMonk extracted to feature-store-monk.ts
 // reducePaladin extracted to feature-store-paladin.ts
 
-export function featureReducer(state: FeatureState, action: FeatureAction, config: FeatureConfig): FeatureState {
+export function featureReducer(
+  state: FeatureState,
+  action: FeatureAction,
+  config: FeatureConfig,
+): FeatureState {
   if (action.type === "RESET") {
-    return createInitialFeatureState(config)
+    return createInitialFeatureState(config);
   }
 
-  let result = state
-  result = reduceFighter(result, action, config)
-  result = reduceBarbarian(result, action, config)
-  result = reduceMonk(result, action, config)
-  result = reducePaladin(result, action, config)
-  result = reduceRogue(result, action, config)
-  return result
+  let result = state;
+  result = reduceFighter(result, action, config);
+  result = reduceBarbarian(result, action, config);
+  result = reduceMonk(result, action, config);
+  result = reducePaladin(result, action, config);
+  result = reduceRogue(result, action, config);
+  return result;
 }

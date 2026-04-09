@@ -1,69 +1,86 @@
 // Fighter class features: Fighting Styles, Second Wind, Tactical Mind, Tactical Shift, Action Surge
 // SRD 5.2.1 Fighter
 
-import { assert } from "#/assert.ts"
+import { assert } from "#/assert.ts";
 
 // --- Fighting Style Feat Effects (SRD 5.2.1) ---
 
-export const FIGHTING_STYLES = ["archery", "defense", "greatWeaponFighting", "twoWeaponFighting"] as const
+export const FIGHTING_STYLES = [
+  "archery",
+  "defense",
+  "greatWeaponFighting",
+  "twoWeaponFighting",
+] as const;
 
-export type FightingStyle = (typeof FIGHTING_STYLES)[number]
+export type FightingStyle = (typeof FIGHTING_STYLES)[number];
 
 /** Archery: +2 to attack rolls with Ranged weapons. */
-export function archeryAttackBonus(styles: ReadonlySet<FightingStyle>, isRanged: boolean): number {
-  return isRanged && styles.has("archery") ? 2 : 0
+export function archeryAttackBonus(
+  styles: ReadonlySet<FightingStyle>,
+  isRanged: boolean,
+): number {
+  return isRanged && styles.has("archery") ? 2 : 0;
 }
 
 /** Defense: +1 AC while wearing Light, Medium, or Heavy armor. */
-export function defenseACBonus(styles: ReadonlySet<FightingStyle>, isWearingArmor: boolean): number {
-  return isWearingArmor && styles.has("defense") ? 1 : 0
+export function defenseACBonus(
+  styles: ReadonlySet<FightingStyle>,
+  isWearingArmor: boolean,
+): number {
+  return isWearingArmor && styles.has("defense") ? 1 : 0;
 }
 
 /** Great Weapon Fighting: treat 1 or 2 on a damage die as 3. */
-export function gwfDamageDie(styles: ReadonlySet<FightingStyle>, dieResult: number): number {
-  return styles.has("greatWeaponFighting") && dieResult <= 2 ? 3 : dieResult
+export function gwfDamageDie(
+  styles: ReadonlySet<FightingStyle>,
+  dieResult: number,
+): number {
+  return styles.has("greatWeaponFighting") && dieResult <= 2 ? 3 : dieResult;
 }
 
 /** TWF with Fighting Style: always add ability modifier to off-hand damage. */
-export function twfOffHandDamageStyled(diceResult: number, abilityMod: number): number {
-  return Math.max(0, diceResult + abilityMod)
+export function twfOffHandDamageStyled(
+  diceResult: number,
+  abilityMod: number,
+): number {
+  return Math.max(0, diceResult + abilityMod);
 }
 
 // --- Second Wind charges by level ---
 
 /** Second Wind max uses from the Fighter Features table (SRD 5.2.1). */
 export function secondWindMaxCharges(fighterLevel: number): number {
-  if (fighterLevel <= 0) return 0
-  if (fighterLevel <= 3) return 2
-  if (fighterLevel <= 9) return 3
-  return 4
+  if (fighterLevel <= 0) return 0;
+  if (fighterLevel <= 3) return 2;
+  if (fighterLevel <= 9) return 3;
+  return 4;
 }
 
 // --- Second Wind (Level 1) ---
 
 export interface SecondWindState {
-  readonly hp: number
-  readonly maxHp: number
-  readonly secondWindCharges: number
-  readonly bonusActionUsed: boolean
+  readonly hp: number;
+  readonly maxHp: number;
+  readonly secondWindCharges: number;
+  readonly bonusActionUsed: boolean;
 }
 
 export interface SecondWindConfig {
-  readonly fighterLevel: number
-  readonly d10Roll: number // 1-10
+  readonly fighterLevel: number;
+  readonly d10Roll: number; // 1-10
 }
 
 export interface SecondWindResult {
-  readonly hp: number
-  readonly secondWindCharges: number
-  readonly bonusActionUsed: true
-  readonly healAmount: number
-  readonly tacticalShiftDistance: number // 0 if level < 5
+  readonly hp: number;
+  readonly secondWindCharges: number;
+  readonly bonusActionUsed: true;
+  readonly healAmount: number;
+  readonly tacticalShiftDistance: number; // 0 if level < 5
 }
 
 /** Precondition: can use Second Wind. */
 export function canUseSecondWind(state: SecondWindState): boolean {
-  return state.secondWindCharges > 0 && !state.bonusActionUsed
+  return state.secondWindCharges > 0 && !state.bonusActionUsed;
 }
 
 /**
@@ -74,40 +91,45 @@ export function canUseSecondWind(state: SecondWindState): boolean {
 export function useSecondWind(
   state: SecondWindState,
   config: SecondWindConfig,
-  effectiveSpeed: number
+  effectiveSpeed: number,
 ): SecondWindResult {
-  assert(canUseSecondWind(state), "useSecondWind: precondition failed")
-  const healAmount = config.d10Roll + config.fighterLevel
-  const newHp = Math.min(state.hp + healAmount, state.maxHp)
-  const tacticalShiftDistance = config.fighterLevel >= 5 ? Math.floor(effectiveSpeed / 2) : 0
+  assert(canUseSecondWind(state), "useSecondWind: precondition failed");
+  const healAmount = config.d10Roll + config.fighterLevel;
+  const newHp = Math.min(state.hp + healAmount, state.maxHp);
+  const tacticalShiftDistance =
+    config.fighterLevel >= 5 ? Math.floor(effectiveSpeed / 2) : 0;
 
   return {
     hp: newHp,
     secondWindCharges: state.secondWindCharges - 1,
     bonusActionUsed: true,
     healAmount,
-    tacticalShiftDistance
-  }
+    tacticalShiftDistance,
+  };
 }
 
 // --- Tactical Mind (Level 2) ---
 
 export interface TacticalMindInput {
-  readonly secondWindCharges: number
-  readonly originalCheckTotal: number // the failed check result
-  readonly dc: number // the DC that was failed against
-  readonly d10Roll: number // 1-10, the Tactical Mind bonus roll
+  readonly secondWindCharges: number;
+  readonly originalCheckTotal: number; // the failed check result
+  readonly dc: number; // the DC that was failed against
+  readonly d10Roll: number; // 1-10, the Tactical Mind bonus roll
 }
 
 export interface TacticalMindResult {
-  readonly newCheckTotal: number
-  readonly success: boolean
-  readonly secondWindCharges: number // only decremented if the boosted check succeeds
+  readonly newCheckTotal: number;
+  readonly success: boolean;
+  readonly secondWindCharges: number; // only decremented if the boosted check succeeds
 }
 
 /** Precondition: can use Tactical Mind. Fighter level >= 2, charges > 0, check must have failed. */
-export function canUseTacticalMind(secondWindCharges: number, fighterLevel: number, checkFailed: boolean): boolean {
-  return fighterLevel >= 2 && secondWindCharges > 0 && checkFailed
+export function canUseTacticalMind(
+  secondWindCharges: number,
+  fighterLevel: number,
+  checkFailed: boolean,
+): boolean {
+  return fighterLevel >= 2 && secondWindCharges > 0 && checkFailed;
 }
 
 /**
@@ -115,50 +137,52 @@ export function canUseTacticalMind(secondWindCharges: number, fighterLevel: numb
  * If the check still fails, the Second Wind use is NOT expended.
  */
 export function useTacticalMind(input: TacticalMindInput): TacticalMindResult {
-  assert(input.secondWindCharges > 0, "useTacticalMind: precondition failed")
-  const newCheckTotal = input.originalCheckTotal + input.d10Roll
-  const success = newCheckTotal >= input.dc
+  assert(input.secondWindCharges > 0, "useTacticalMind: precondition failed");
+  const newCheckTotal = input.originalCheckTotal + input.d10Roll;
+  const success = newCheckTotal >= input.dc;
 
   return {
     newCheckTotal,
     success,
     // Only expend the charge if the boosted total succeeds
-    secondWindCharges: success ? input.secondWindCharges - 1 : input.secondWindCharges
-  }
+    secondWindCharges: success
+      ? input.secondWindCharges - 1
+      : input.secondWindCharges,
+  };
 }
 
 // --- Action Surge (Level 2) ---
 
 export interface ActionSurgeState {
-  readonly actionSurgeCharges: number
-  readonly actionSurgeUsedThisTurn: boolean
-  readonly actionsRemaining: number
+  readonly actionSurgeCharges: number;
+  readonly actionSurgeUsedThisTurn: boolean;
+  readonly actionsRemaining: number;
 }
 
 /** Extra Attack count from the Fighter Features table (SRD 5.2.1). L5: 1, L11: 2, L20: 3. */
 export function fighterExtraAttacks(fighterLevel: number): number {
-  if (fighterLevel >= 20) return 3
-  if (fighterLevel >= 11) return 2
-  if (fighterLevel >= 5) return 1
-  return 0
+  if (fighterLevel >= 20) return 3;
+  if (fighterLevel >= 11) return 2;
+  if (fighterLevel >= 5) return 1;
+  return 0;
 }
 
 /** Action Surge max charges from the Fighter Features table (SRD 5.2.1). */
 export function actionSurgeMaxCharges(fighterLevel: number): number {
-  if (fighterLevel < 2) return 0
-  if (fighterLevel < 17) return 1
-  return 2
+  if (fighterLevel < 2) return 0;
+  if (fighterLevel < 17) return 1;
+  return 2;
 }
 
 /** Precondition: can use Action Surge. */
 export function canUseActionSurge(state: ActionSurgeState): boolean {
-  return state.actionSurgeCharges > 0 && !state.actionSurgeUsedThisTurn
+  return state.actionSurgeCharges > 0 && !state.actionSurgeUsedThisTurn;
 }
 
 export interface ActionSurgeResult {
-  readonly actionsRemaining: number
-  readonly actionSurgeCharges: number
-  readonly actionSurgeUsedThisTurn: true
+  readonly actionsRemaining: number;
+  readonly actionSurgeCharges: number;
+  readonly actionSurgeUsedThisTurn: true;
 }
 
 /**
@@ -166,49 +190,52 @@ export interface ActionSurgeResult {
  * Can only use once per turn even with 2 charges.
  */
 export function useActionSurge(state: ActionSurgeState): ActionSurgeResult {
-  assert(canUseActionSurge(state), "useActionSurge: precondition failed")
+  assert(canUseActionSurge(state), "useActionSurge: precondition failed");
   return {
     actionsRemaining: state.actionsRemaining + 1, // grant additional action
     actionSurgeCharges: state.actionSurgeCharges - 1,
-    actionSurgeUsedThisTurn: true
-  }
+    actionSurgeUsedThisTurn: true,
+  };
 }
 
 // --- Rest recovery ---
 
 export interface FighterRestState {
-  readonly secondWindCharges: number
-  readonly secondWindMax: number
-  readonly actionSurgeCharges: number
-  readonly actionSurgeMax: number
+  readonly secondWindCharges: number;
+  readonly secondWindMax: number;
+  readonly actionSurgeCharges: number;
+  readonly actionSurgeMax: number;
 }
 
 /** Short rest: regain one expended Second Wind use; regain all Action Surge uses. */
 export function fighterShortRest(state: FighterRestState): {
-  readonly secondWindCharges: number
-  readonly actionSurgeCharges: number
+  readonly secondWindCharges: number;
+  readonly actionSurgeCharges: number;
 } {
   return {
-    secondWindCharges: Math.min(state.secondWindCharges + 1, state.secondWindMax),
-    actionSurgeCharges: state.actionSurgeMax
-  }
+    secondWindCharges: Math.min(
+      state.secondWindCharges + 1,
+      state.secondWindMax,
+    ),
+    actionSurgeCharges: state.actionSurgeMax,
+  };
 }
 
 export interface FighterLongRestState extends FighterRestState {
-  readonly indomitableMax: number
+  readonly indomitableMax: number;
 }
 
 /** Long rest: regain all Second Wind uses, Action Surge uses, and Indomitable uses. */
 export function fighterLongRest(state: FighterLongRestState): {
-  readonly secondWindCharges: number
-  readonly actionSurgeCharges: number
-  readonly indomitableCharges: number
+  readonly secondWindCharges: number;
+  readonly actionSurgeCharges: number;
+  readonly indomitableCharges: number;
 } {
   return {
     secondWindCharges: state.secondWindMax,
     actionSurgeCharges: state.actionSurgeMax,
-    indomitableCharges: state.indomitableMax
-  }
+    indomitableCharges: state.indomitableMax,
+  };
 }
 
 // =============================================================================
@@ -222,13 +249,13 @@ export function fighterLongRest(state: FighterLongRestState): {
 
 // --- Constants ---
 
-export const CHAMPION_IMPROVED_CRITICAL_LEVEL = 3
-export const CHAMPION_ADDITIONAL_FIGHTING_STYLE_LEVEL = 7
-export const CHAMPION_HEROIC_WARRIOR_LEVEL = 10
-export const CHAMPION_SUPERIOR_CRITICAL_LEVEL = 15
-export const CHAMPION_SURVIVOR_LEVEL = 18
-export const SURVIVOR_HEAL_BASE = 5
-export const SURVIVOR_DEFY_DEATH_THRESHOLD = 18
+export const CHAMPION_IMPROVED_CRITICAL_LEVEL = 3;
+export const CHAMPION_ADDITIONAL_FIGHTING_STYLE_LEVEL = 7;
+export const CHAMPION_HEROIC_WARRIOR_LEVEL = 10;
+export const CHAMPION_SUPERIOR_CRITICAL_LEVEL = 15;
+export const CHAMPION_SURVIVOR_LEVEL = 18;
+export const SURVIVOR_HEAL_BASE = 5;
+export const SURVIVOR_DEFY_DEATH_THRESHOLD = 18;
 
 // --- Improved Critical (L3) / Superior Critical (L15) ---
 
@@ -237,25 +264,28 @@ export const SURVIVOR_DEFY_DEATH_THRESHOLD = 18
  * Default: 20; L3+: 19; L15+: 18.
  */
 export function championCritRange(fighterLevel: number): number {
-  if (fighterLevel >= CHAMPION_SUPERIOR_CRITICAL_LEVEL) return 18
-  if (fighterLevel >= CHAMPION_IMPROVED_CRITICAL_LEVEL) return 19
-  return 20
+  if (fighterLevel >= CHAMPION_SUPERIOR_CRITICAL_LEVEL) return 18;
+  if (fighterLevel >= CHAMPION_IMPROVED_CRITICAL_LEVEL) return 19;
+  return 20;
 }
 
 // --- Remarkable Athlete (L3 Champion) ---
 
 /** Whether Remarkable Athlete is active (Champion level 3+). Grants Advantage on Initiative and Athletics. */
 export function hasRemarkableAthlete(championLevel: number): boolean {
-  return championLevel >= CHAMPION_IMPROVED_CRITICAL_LEVEL
+  return championLevel >= CHAMPION_IMPROVED_CRITICAL_LEVEL;
 }
 
 /**
  * After scoring a Critical Hit, move up to half your Speed without provoking Opportunity Attacks.
  * Returns the distance (floored) if Champion level 3+, else 0.
  */
-export function remarkableAthleteCritMovement(championLevel: number, effectiveSpeed: number): number {
-  if (championLevel < CHAMPION_IMPROVED_CRITICAL_LEVEL) return 0
-  return Math.floor(effectiveSpeed / 2)
+export function remarkableAthleteCritMovement(
+  championLevel: number,
+  effectiveSpeed: number,
+): number {
+  if (championLevel < CHAMPION_IMPROVED_CRITICAL_LEVEL) return 0;
+  return Math.floor(effectiveSpeed / 2);
 }
 
 // --- Heroic Warrior (L10 Champion) ---
@@ -264,15 +294,20 @@ export function remarkableAthleteCritMovement(championLevel: number, effectiveSp
  * At the start of your turn, gain Heroic Inspiration if you don't already have it.
  * Returns true if inspiration should be granted (L10+ and doesn't already have it).
  */
-export function heroicWarriorInspiration(championLevel: number, hasHeroicInspiration: boolean): boolean {
-  return championLevel >= CHAMPION_HEROIC_WARRIOR_LEVEL && !hasHeroicInspiration
+export function heroicWarriorInspiration(
+  championLevel: number,
+  hasHeroicInspiration: boolean,
+): boolean {
+  return (
+    championLevel >= CHAMPION_HEROIC_WARRIOR_LEVEL && !hasHeroicInspiration
+  );
 }
 
 // --- Survivor (L18 Champion) ---
 
 /** Defy Death: Advantage on Death Saving Throws at Champion level 18+. */
 export function survivorDefyDeathAdvantage(championLevel: number): boolean {
-  return championLevel >= CHAMPION_SURVIVOR_LEVEL
+  return championLevel >= CHAMPION_SURVIVOR_LEVEL;
 }
 
 /**
@@ -281,14 +316,16 @@ export function survivorDefyDeathAdvantage(championLevel: number): boolean {
  * else 21 (never triggers since max d20 roll is 20).
  */
 export function survivorDefyDeathThreshold(championLevel: number): number {
-  return championLevel >= CHAMPION_SURVIVOR_LEVEL ? SURVIVOR_DEFY_DEATH_THRESHOLD : 21
+  return championLevel >= CHAMPION_SURVIVOR_LEVEL
+    ? SURVIVOR_DEFY_DEATH_THRESHOLD
+    : 21;
 }
 
 /**
  * Bloodied: at or below half max HP AND has at least 1 HP.
  */
 export function isBloodied(currentHp: number, maxHp: number): boolean {
-  return currentHp > 0 && currentHp <= Math.floor(maxHp / 2)
+  return currentHp > 0 && currentHp <= Math.floor(maxHp / 2);
 }
 
 /**
@@ -296,10 +333,15 @@ export function isBloodied(currentHp: number, maxHp: number): boolean {
  * if Bloodied (0 < hp <= floor(maxHp/2)) and Champion level 18+.
  * Returns the amount of HP to heal, or 0 if conditions not met.
  */
-export function survivorHeroicRally(championLevel: number, currentHp: number, maxHp: number, conMod: number): number {
-  if (championLevel < CHAMPION_SURVIVOR_LEVEL) return 0
-  if (!isBloodied(currentHp, maxHp)) return 0
-  return SURVIVOR_HEAL_BASE + conMod
+export function survivorHeroicRally(
+  championLevel: number,
+  currentHp: number,
+  maxHp: number,
+  conMod: number,
+): number {
+  if (championLevel < CHAMPION_SURVIVOR_LEVEL) return 0;
+  if (!isBloodied(currentHp, maxHp)) return 0;
+  return SURVIVOR_HEAL_BASE + conMod;
 }
 
 // =============================================================================
@@ -308,9 +350,9 @@ export function survivorHeroicRally(championLevel: number, currentHp: number, ma
 
 // --- Constants ---
 
-export const INDOMITABLE_LEVEL = 9
-export const INDOMITABLE_TWO_CHARGES_LEVEL = 13
-export const INDOMITABLE_THREE_CHARGES_LEVEL = 17
+export const INDOMITABLE_LEVEL = 9;
+export const INDOMITABLE_TWO_CHARGES_LEVEL = 13;
+export const INDOMITABLE_THREE_CHARGES_LEVEL = 17;
 
 // --- Indomitable max charges by level ---
 
@@ -319,10 +361,10 @@ export const INDOMITABLE_THREE_CHARGES_LEVEL = 17
  * 0 below L9, 1 at L9, 2 at L13, 3 at L17.
  */
 export function indomitableMaxCharges(fighterLevel: number): number {
-  if (fighterLevel < INDOMITABLE_LEVEL) return 0
-  if (fighterLevel < INDOMITABLE_TWO_CHARGES_LEVEL) return 1
-  if (fighterLevel < INDOMITABLE_THREE_CHARGES_LEVEL) return 2
-  return 3
+  if (fighterLevel < INDOMITABLE_LEVEL) return 0;
+  if (fighterLevel < INDOMITABLE_TWO_CHARGES_LEVEL) return 1;
+  if (fighterLevel < INDOMITABLE_THREE_CHARGES_LEVEL) return 2;
+  return 3;
 }
 
 // --- Indomitable usage ---
@@ -330,8 +372,11 @@ export function indomitableMaxCharges(fighterLevel: number): number {
 /**
  * Precondition: can use Indomitable. Fighter level >= 9 and charges > 0.
  */
-export function canUseIndomitable(fighterLevel: number, indomitableCharges: number): boolean {
-  return fighterLevel >= INDOMITABLE_LEVEL && indomitableCharges > 0
+export function canUseIndomitable(
+  fighterLevel: number,
+  indomitableCharges: number,
+): boolean {
+  return fighterLevel >= INDOMITABLE_LEVEL && indomitableCharges > 0;
 }
 
 /**
@@ -341,16 +386,16 @@ export function canUseIndomitable(fighterLevel: number, indomitableCharges: numb
  */
 export function useIndomitable(
   indomitableCharges: number,
-  newRoll: number
+  newRoll: number,
 ): {
-  readonly indomitableCharges: number
-  readonly newSaveResult: number
+  readonly indomitableCharges: number;
+  readonly newSaveResult: number;
 } {
-  assert(indomitableCharges > 0, "useIndomitable: precondition failed")
+  assert(indomitableCharges > 0, "useIndomitable: precondition failed");
   return {
     indomitableCharges: indomitableCharges - 1,
-    newSaveResult: newRoll
-  }
+    newSaveResult: newRoll,
+  };
 }
 
 // =============================================================================
@@ -363,26 +408,32 @@ export function useIndomitable(
 // TS-only (see weapon-mastery.ts), so this stays in TS for uniformity.
 // =============================================================================
 
-export const TACTICAL_MASTER_LEVEL = 9
-const TACTICAL_MASTER_SUBSTITUTIONS = ["push", "sap", "slow"] as const
-export type TacticalMasterSubstitution = (typeof TACTICAL_MASTER_SUBSTITUTIONS)[number]
-const TACTICAL_MASTER_SUBSTITUTIONS_S = new Set(TACTICAL_MASTER_SUBSTITUTIONS)
+export const TACTICAL_MASTER_LEVEL = 9;
+const TACTICAL_MASTER_SUBSTITUTIONS = ["push", "sap", "slow"] as const;
+export type TacticalMasterSubstitution =
+  (typeof TACTICAL_MASTER_SUBSTITUTIONS)[number];
+const TACTICAL_MASTER_SUBSTITUTIONS_S = new Set(TACTICAL_MASTER_SUBSTITUTIONS);
 
 /** Precondition: can use Tactical Master to substitute a mastery property. */
-export function canUseTacticalMaster(fighterLevel: number, hasWeaponMastery: boolean): boolean {
-  return fighterLevel >= TACTICAL_MASTER_LEVEL && hasWeaponMastery
+export function canUseTacticalMaster(
+  fighterLevel: number,
+  hasWeaponMastery: boolean,
+): boolean {
+  return fighterLevel >= TACTICAL_MASTER_LEVEL && hasWeaponMastery;
 }
 
 /**
  * Validates and returns the substituted mastery property.
  * The substitution must be Push, Sap, or Slow.
  */
-export function tacticalMasterSubstitute(substitute: TacticalMasterSubstitution): TacticalMasterSubstitution {
+export function tacticalMasterSubstitute(
+  substitute: TacticalMasterSubstitution,
+): TacticalMasterSubstitution {
   assert(
     TACTICAL_MASTER_SUBSTITUTIONS_S.has(substitute),
-    `tacticalMasterSubstitute: invalid substitute "${substitute}"`
-  )
-  return substitute
+    `tacticalMasterSubstitute: invalid substitute "${substitute}"`,
+  );
+  return substitute;
 }
 
 // =============================================================================
@@ -396,11 +447,11 @@ export function tacticalMasterSubstitute(substitute: TacticalMasterSubstitution)
 // single-creature Quint model. Same pattern as Vex mastery property.
 // =============================================================================
 
-export const STUDIED_ATTACKS_LEVEL = 13
+export const STUDIED_ATTACKS_LEVEL = 13;
 
 /** Whether Studied Attacks is active (Fighter level 13+). */
 export function hasStudiedAttacks(fighterLevel: number): boolean {
-  return fighterLevel >= STUDIED_ATTACKS_LEVEL
+  return fighterLevel >= STUDIED_ATTACKS_LEVEL;
 }
 
 /**
@@ -409,9 +460,10 @@ export function hasStudiedAttacks(fighterLevel: number): boolean {
  */
 export function studiedAttacksAdvantage(
   fighterLevel: number,
-  missedTarget: boolean
+  missedTarget: boolean,
 ): { readonly advantageOnNextAttackVsTarget: boolean } {
   return {
-    advantageOnNextAttackVsTarget: fighterLevel >= STUDIED_ATTACKS_LEVEL && missedTarget
-  }
+    advantageOnNextAttackVsTarget:
+      fighterLevel >= STUDIED_ATTACKS_LEVEL && missedTarget,
+  };
 }

@@ -1,11 +1,11 @@
-import { Option } from "effect"
-import { describe, expect, it } from "vitest"
-import { createActor } from "xstate"
+import { Option } from "effect";
+import { describe, expect, it } from "vitest";
+import { createActor } from "xstate";
 
-import { creatureMachine } from "#/machine.ts"
-import { classLevel, CreatureId, spellId as mkSpellId } from "#/types.ts"
+import { creatureMachine } from "#/machine.ts";
+import { classLevel, CreatureId, spellId as mkSpellId } from "#/types.ts";
 
-import { encodeDndContext, encodeDndSnapshot } from "./context-encoding.ts"
+import { encodeDndContext, encodeDndSnapshot } from "./context-encoding.ts";
 
 describe("context encoding", () => {
   it("encodes Option fields and canonicalizes set-derived arrays", () => {
@@ -16,9 +16,9 @@ describe("context encoding", () => {
         knownMetamagicOptions: ["subtle", "careful"],
         warlockLevel: classLevel(11),
       },
-    })
-    actor.start()
-    const base = actor.getSnapshot().context
+    });
+    actor.start();
+    const base = actor.getSnapshot().context;
 
     const encoded = encodeDndContext({
       ...base,
@@ -41,52 +41,71 @@ describe("context encoding", () => {
       ],
       classStates: {
         ...base.classStates,
-        sorcerer: base.classStates.sorcerer == null
-          ? undefined
-          : {
-              ...base.classStates.sorcerer,
-              knownMetamagicOptions: new Set(["subtle", "careful"]),
-              metamagicUsedThisCast: new Set(["subtle", "careful"]),
-            },
-        warlock: base.classStates.warlock == null
-          ? undefined
-          : {
-              ...base.classStates.warlock,
-              mysticArcanumUsed: new Set([7, 6]),
-            },
+        sorcerer:
+          base.classStates.sorcerer == null
+            ? undefined
+            : {
+                ...base.classStates.sorcerer,
+                knownMetamagicOptions: new Set(["subtle", "careful"]),
+                metamagicUsedThisCast: new Set(["subtle", "careful"]),
+              },
+        warlock:
+          base.classStates.warlock == null
+            ? undefined
+            : {
+                ...base.classStates.warlock,
+                mysticArcanumUsed: new Set([7, 6]),
+              },
       },
-    })
+    });
 
-    expect(encoded.concentrationSpellId).toBe("hold_person")
-    expect(encoded.preparedSpells).toEqual(["bless", "hold_person"])
-    expect(encoded.incapacitatedSources).toEqual(["paralyzed", "direct"])
-    expect(encoded.activeEffects[0]?.grantedConditions).toEqual(["blinded", "restrained"])
-    expect(encoded.activeEffects[0]?.grantedResistances).toEqual(["acid", "fire"])
-    expect(encoded.activeEffects[0]?.grantedImmunities).toEqual(["cold", "thunder"])
-    expect(encoded.activeEffects[0]?.startOfTurnHook?.conditionsToRemove).toEqual(["blinded", "poisoned"])
-    expect(encoded.classStates.sorcerer?.knownMetamagicOptions).toEqual(["careful", "subtle"])
-    expect(encoded.classStates.sorcerer?.metamagicUsedThisCast).toEqual(["careful", "subtle"])
-    expect(encoded.classStates.warlock?.mysticArcanumUsed).toEqual([6, 7])
-  })
+    expect(encoded.concentrationSpellId).toBe("hold_person");
+    expect(encoded.preparedSpells).toEqual(["bless", "hold_person"]);
+    expect(encoded.incapacitatedSources).toEqual(["paralyzed", "direct"]);
+    expect(encoded.activeEffects[0]?.grantedConditions).toEqual([
+      "blinded",
+      "restrained",
+    ]);
+    expect(encoded.activeEffects[0]?.grantedResistances).toEqual([
+      "acid",
+      "fire",
+    ]);
+    expect(encoded.activeEffects[0]?.grantedImmunities).toEqual([
+      "cold",
+      "thunder",
+    ]);
+    expect(
+      encoded.activeEffects[0]?.startOfTurnHook?.conditionsToRemove,
+    ).toEqual(["blinded", "poisoned"]);
+    expect(encoded.classStates.sorcerer?.knownMetamagicOptions).toEqual([
+      "careful",
+      "subtle",
+    ]);
+    expect(encoded.classStates.sorcerer?.metamagicUsedThisCast).toEqual([
+      "careful",
+      "subtle",
+    ]);
+    expect(encoded.classStates.warlock?.mysticArcanumUsed).toEqual([6, 7]);
+  });
 
   it("sorts snapshot tags and encodes None as null", () => {
-    const actor = createActor(creatureMachine, { input: { maxHp: 20 } })
-    actor.start()
+    const actor = createActor(creatureMachine, { input: { maxHp: 20 } });
+    actor.start();
 
     const encoded = encodeDndSnapshot({
       value: actor.getSnapshot().value,
       tags: new Set(["zeta", "alpha"]),
       context: actor.getSnapshot().context,
-    })
+    });
 
-    expect(encoded.tags).toEqual(["alpha", "zeta"])
-    expect(encoded.context.concentrationSpellId).toBeNull()
-  })
+    expect(encoded.tags).toEqual(["alpha", "zeta"]);
+    expect(encoded.context.concentrationSpellId).toBeNull();
+  });
 
   it("produces the same encoded snapshot for equal set and record contents regardless of insertion order", () => {
-    const actor = createActor(creatureMachine, { input: { maxHp: 20 } })
-    actor.start()
-    const base = actor.getSnapshot().context
+    const actor = createActor(creatureMachine, { input: { maxHp: 20 } });
+    actor.start();
+    const base = actor.getSnapshot().context;
 
     const left = encodeDndSnapshot({
       value: actor.getSnapshot().value,
@@ -98,7 +117,7 @@ describe("context encoding", () => {
         dailyUsesRemaining: { zeta: 1, alpha: 2 },
         dailyUsesMax: { zeta: 3, alpha: 4 },
       },
-    })
+    });
     const right = encodeDndSnapshot({
       value: actor.getSnapshot().value,
       tags: new Set(["alpha", "beta"]),
@@ -109,8 +128,8 @@ describe("context encoding", () => {
         dailyUsesRemaining: { alpha: 2, zeta: 1 },
         dailyUsesMax: { alpha: 4, zeta: 3 },
       },
-    })
+    });
 
-    expect(JSON.stringify(left)).toBe(JSON.stringify(right))
-  })
-})
+    expect(JSON.stringify(left)).toBe(JSON.stringify(right));
+  });
+});

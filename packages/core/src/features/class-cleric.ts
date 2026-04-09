@@ -1,7 +1,7 @@
 // Cleric class features extracted from creature.qnt (non-core)
 // SRD 5.2.1 Cleric
 
-import { paladinChannelDivinityMax } from "#/features/class-paladin.ts"
+import { paladinChannelDivinityMax } from "#/features/class-paladin.ts";
 
 // --- Channel Divinity (Level 2) ---
 
@@ -9,18 +9,21 @@ import { paladinChannelDivinityMax } from "#/features/class-paladin.ts"
 
 /** Max Channel Divinity uses for a Cleric at given class level. */
 export function clericChannelDivinityMax(clericLevel: number): number {
-  if (clericLevel < 2) return 0
-  if (clericLevel < 6) return 2
-  if (clericLevel < 18) return 3
-  return 4
+  if (clericLevel < 2) return 0;
+  if (clericLevel < 6) return 2;
+  if (clericLevel < 18) return 3;
+  return 4;
 }
 
 /** Combined Channel Divinity max from Cleric + Paladin levels (additive, per ASSUMPTIONS.md A9). */
 export function channelDivinityMax(classLevels: {
-  readonly clericLevel: number
-  readonly paladinLevel: number
+  readonly clericLevel: number;
+  readonly paladinLevel: number;
 }): number {
-  return clericChannelDivinityMax(classLevels.clericLevel) + paladinChannelDivinityMax(classLevels.paladinLevel)
+  return (
+    clericChannelDivinityMax(classLevels.clericLevel) +
+    paladinChannelDivinityMax(classLevels.paladinLevel)
+  );
 }
 
 // =============================================================================
@@ -29,13 +32,13 @@ export function channelDivinityMax(classLevels: {
 // SRD: Choose Protector or Thaumaturge.
 // =============================================================================
 
-export const DIVINE_ORDER_CHOICES = ["protector", "thaumaturge"] as const
+export const DIVINE_ORDER_CHOICES = ["protector", "thaumaturge"] as const;
 
-export type DivineOrderChoice = (typeof DIVINE_ORDER_CHOICES)[number]
+export type DivineOrderChoice = (typeof DIVINE_ORDER_CHOICES)[number];
 
 /** Thaumaturge: bonus to Arcana/Religion checks = WIS mod (min +1). */
 export function thaumaturgeBonus(wisMod: number): number {
-  return Math.max(1, wisMod)
+  return Math.max(1, wisMod);
 }
 
 // =============================================================================
@@ -47,15 +50,15 @@ export function thaumaturgeBonus(wisMod: number): number {
 // =============================================================================
 
 export function divineSparkDice(clericLevel: number): number {
-  if (clericLevel < 2) return 0
-  if (clericLevel < 7) return 1
-  if (clericLevel < 13) return 2
-  if (clericLevel < 18) return 3
-  return 4
+  if (clericLevel < 2) return 0;
+  if (clericLevel < 7) return 1;
+  if (clericLevel < 13) return 2;
+  if (clericLevel < 18) return 3;
+  return 4;
 }
 
 export function divineSparkAmount(diceTotal: number, wisMod: number): number {
-  return diceTotal + wisMod
+  return diceTotal + wisMod;
 }
 
 // =============================================================================
@@ -63,7 +66,7 @@ export function divineSparkAmount(diceTotal: number, wisMod: number): number {
 // =============================================================================
 
 export function hasTurnUndead(clericLevel: number): boolean {
-  return clericLevel >= 2
+  return clericLevel >= 2;
 }
 
 // =============================================================================
@@ -73,36 +76,42 @@ export function hasTurnUndead(clericLevel: number): boolean {
 // =============================================================================
 
 export function searUndeadDice(wisMod: number): number {
-  return Math.max(1, wisMod)
+  return Math.max(1, wisMod);
 }
 
 // =============================================================================
 // Blessed Strikes (Level 7, choose one)
 // =============================================================================
 
-export const BLESSED_STRIKES_CHOICES = ["divineStrike", "potentSpellcasting"] as const
+export const BLESSED_STRIKES_CHOICES = [
+  "divineStrike",
+  "potentSpellcasting",
+] as const;
 
-export type BlessedStrikesChoice = (typeof BLESSED_STRIKES_CHOICES)[number]
+export type BlessedStrikesChoice = (typeof BLESSED_STRIKES_CHOICES)[number];
 
 /** Divine Strike: +1d8 at L7, +2d8 at L14 (Improved Blessed Strikes). */
 export function divineStrikeDice(clericLevel: number): number {
-  if (clericLevel < 7) return 0
-  if (clericLevel < 14) return 1
-  return 2
+  if (clericLevel < 7) return 0;
+  if (clericLevel < 14) return 1;
+  return 2;
 }
 
 /** Potent Spellcasting: +WIS mod to cantrip damage. */
 export function potentSpellcastingBonus(wisMod: number): number {
-  return wisMod
+  return wisMod;
 }
 
 /**
  * Improved Potent Spellcasting (L14): when cantrip deals damage,
  * grant temp HP = 2 × WIS mod to creature within 60ft.
  */
-export function improvedPotentSpellcastingTempHp(clericLevel: number, wisMod: number): number {
-  if (clericLevel < 14) return 0
-  return 2 * wisMod
+export function improvedPotentSpellcastingTempHp(
+  clericLevel: number,
+  wisMod: number,
+): number {
+  if (clericLevel < 14) return 0;
+  return 2 * wisMod;
 }
 
 // =============================================================================
@@ -112,8 +121,11 @@ export function improvedPotentSpellcastingTempHp(clericLevel: number, wisMod: nu
 // slot or needing Material components. 1/LR."
 // =============================================================================
 
-export function canUseDivineIntervention(clericLevel: number, divineInterventionUsed: boolean): boolean {
-  return clericLevel >= 10 && !divineInterventionUsed
+export function canUseDivineIntervention(
+  clericLevel: number,
+  divineInterventionUsed: boolean,
+): boolean {
+  return clericLevel >= 10 && !divineInterventionUsed;
 }
 
 // =============================================================================
@@ -124,7 +136,7 @@ export function canUseDivineIntervention(clericLevel: number, divineIntervention
 // =============================================================================
 
 export function hasGreaterDivineIntervention(clericLevel: number): boolean {
-  return clericLevel >= 20
+  return clericLevel >= 20;
 }
 
 // =============================================================================
@@ -135,22 +147,22 @@ export function hasGreaterDivineIntervention(clericLevel: number): boolean {
 
 /** Disciple of Life (L3): bonus healing = 2 + spell slot level. */
 export function discipleOfLifeBonus(slotLevel: number): number {
-  return 2 + slotLevel
+  return 2 + slotLevel;
 }
 
 /** Preserve Life (L3 CD): healing pool = 5 × cleric level. */
 export function preserveLifePool(clericLevel: number): number {
-  return 5 * clericLevel
+  return 5 * clericLevel;
 }
 
 /** Blessed Healer (L6): self-heal = 2 + spell slot level (when healing others). */
 export function blessedHealerSelfHeal(slotLevel: number): number {
-  return 2 + slotLevel
+  return 2 + slotLevel;
 }
 
 /** Supreme Healing (L17): max all healing dice. */
 export function supremeHealing(diceCount: number, dieSize: number): number {
-  return diceCount * dieSize
+  return diceCount * dieSize;
 }
 
 /* eslint-enable no-magic-numbers */
