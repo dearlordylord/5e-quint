@@ -591,6 +591,33 @@ The MCP response from `get_available_actions` is already grouped by resource cos
 3. Re-run the focused battle action tests and MCP tests for the full discovered reaction set.
 4. Only after that decide whether additional reaction families (reaction spells, other interrupt reactions) are ready.
 
+### Clean-slate handoff for the next batch
+
+If starting from an empty session, read these first:
+
+- `battle/PRD-reaction-eligibility.md`
+- `plans/unified-action-surface.md`
+- `packages/core/src/available-actions.ts`
+- `packages/core/src/battle-machine-events.ts`
+- `packages/core/src/battle-machine-actions-attack.ts`
+- `packages/mcp/src/server.ts`
+- `packages/mcp/src/server.test.ts`
+
+The real next question is:
+
+- what exact reduction basis must battle own so `USE_DEFLECT_ATTACKS` can be finalized honestly through `RDeflectAttacks`?
+
+It is **not**:
+
+- how to add another action token
+- how to patch MCP/runtime to provide Dex-derived reduction inputs
+
+The action surface is already there. The remaining work is a battle/model ownership slice.
+
+The success condition for the next batch is:
+
+- `resolveBattleAction(...)` supports the full currently discovered battle reaction set without MCP/runtime fabricating `USE_DEFLECT_ATTACKS` reduction inputs
+
 ### Acceptance criteria
 
 - [x] At least one currently modeled reaction-cost action is exposed and tested
