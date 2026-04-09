@@ -1410,8 +1410,12 @@ function createBattleProjectionDriver() {
     function handleBGrapple(picks: ReadonlyMap<string, unknown>) {
       const attackerId = activeId()
       const targetId = pickString(picks, "targetId") ?? ""
-      const attackerSize = ((pickString(picks, "attackerSize") ?? "medium").toLowerCase()) as Size
-      const targetSize = ((pickString(picks, "targetSize") ?? "medium").toLowerCase()) as Size
+      const parseSize = (key: string, fallback: Size): Size => {
+        const parsed = variantToString(picks.get(key)).toLowerCase()
+        return parsed === "[object object]" ? fallback : (parsed as Size)
+      }
+      const attackerSize = parseSize("attackerSize", "medium")
+      const targetSize = parseSize("targetSize", "medium")
       const targetSaveFailed = pickBool(picks, "targetSaveFailed") ?? false
       const attackerHasFreeHand = pickBool(picks, "attackerHasFreeHand") ?? true
       const attackerCtx = getSnap(attackerId).context

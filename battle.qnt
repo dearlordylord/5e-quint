@@ -925,7 +925,7 @@ module battle {
         .union(if (canShield) Set(HIT_REACTION_SHIELD) else Set())
         .union(if (canParry) Set(HIT_REACTION_PARRY) else Set())
         .union(if (canCuttingWords) Set(HIT_REACTION_CUTTING_WORDS) else Set())
-      acc.set(id, legal)
+      if (legal.size() > 0) acc.put(id, legal) else acc
     })
 
   /// Pop the top entry from a spell stack.
@@ -2903,6 +2903,7 @@ module battle {
       bTurnStarted,
       not(ac.creature.dead),
       not(isIncapacitated(ac.creature)),
+      ac.barbarianLevel >= 2,
       not(ac.recklessThisTurn),  // can only declare once per turn
       val updatedC = ac.with("recklessThisTurn", true)
       all {
