@@ -427,6 +427,7 @@ export const DndContextEncodedSchema = Schema.Struct({
   concentrationSpellId: Schema.OptionFromNullOr(Schema.String),
   hitDiceRemaining: HitDiceRemainingSchema,
   preparedSpells: Schema.ReadonlySet(Schema.String),
+  wearingArmorWithoutTraining: Schema.Boolean,
   activeEffects: Schema.Array(ActiveEffectSchema),
   pendingResolution: PendingResolutionSchema,
   creatureKind: Schema.Literal("PC", "Monster"),

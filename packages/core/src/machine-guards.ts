@@ -47,7 +47,7 @@ import {
   spendHalfSpeed,
   type TakeDamageResult,
 } from "#/machine-helpers.ts";
-import { isIncapacitated } from "#/machine-queries.ts";
+import { canCastSpells, isIncapacitated } from "#/machine-queries.ts";
 import {
   asSpendHitDie,
   asTakeDamage,
@@ -190,7 +190,8 @@ export function legalPreparedSpellSlotLevels(
   if (
     context.hp <= 0 ||
     isIncapacitated(context) ||
-    context.slotExpendedThisTurn
+    context.slotExpendedThisTurn ||
+    !canCastSpells(context)
   )
     return [];
   if (!canCastWhileRaging(context.classStates.barbarian?.raging ?? false))

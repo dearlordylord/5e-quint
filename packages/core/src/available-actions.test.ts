@@ -6,6 +6,8 @@ import {
   finalizeResolution,
   getAvailableActions,
   getAvailableBattleActions,
+  previewAction,
+  previewBattleAction,
   resolveBattleAction,
   resolveAction,
   type ResolutionRequest,
@@ -366,6 +368,24 @@ function initBattleForDamageDiscovery() {
       },
     ],
   });
+}
+
+function initBattleForProneDiscovery() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        prone: true,
+        initiativeRoll: 15,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return actor;
 }
 
 function initBattleForDeflectDiscovery() {
@@ -1814,6 +1834,66 @@ describe("available actions contract", () => {
     ]);
   });
 
+  test("battle discovery and resolution expose standing from prone during the active turn", () => {
+    const actor = initBattleForProneDiscovery();
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "A",
+        type: "STAND_FROM_PRONE",
+        cost: { movement: 15, shape: "spend" },
+        outcome: {
+          summary: "Spend half your Speed in movement to stand up from Prone",
+        },
+      },
+    ]);
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "STAND_FROM_PRONE",
+      }),
+    );
+    expect(request).toEqual({
+      token: { scope: "battle", actorId: "A", type: "STAND_FROM_PRONE" },
+      outcome: "Spend half your Speed in movement to stand up from Prone",
+      runtime: "none",
+      event: { type: "BATTLE_STAND_FROM_PRONE" },
+    });
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        { runtime: "none" },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: { type: "BATTLE_STAND_FROM_PRONE" },
+      outcome: "Spend half your Speed in movement to stand up from Prone",
+    });
+  });
+
+  test("previewBattleAction summarizes standing from prone without runtime inputs", () => {
+    const actor = initBattleForProneDiscovery();
+
+    expect(
+      previewBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "STAND_FROM_PRONE",
+      }),
+    ).toEqual({
+      ok: true,
+      summary: "Spend half your Speed in movement to stand up from Prone",
+      cost: { movement: 15, shape: "spend" },
+      runtime: "none",
+      eventType: "BATTLE_STAND_FROM_PRONE",
+    });
+  });
+
   test("battle discovery does not surface damage reactions until the damage window actually exists", () => {
     const actor = initBattleForDamageDiscovery();
 
@@ -2272,6 +2352,29 @@ describe("available actions contract", () => {
       },
       outcome:
         "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll (4)",
+    });
+  });
+
+  test("previewAction summarizes a creature action without spending resources", () => {
+    const actor = damageActor(5);
+    actor.send({ type: "ENTER_COMBAT" });
+    actor.send({ type: "START_TURN" });
+    const snapshot = actor.getSnapshot();
+
+    expect(
+      previewAction(snapshot.context, snapshot.tags, {
+        scope: "creature",
+        type: "USE_SECOND_WIND",
+      }),
+    ).toEqual({
+      ok: true,
+      summary: "Heal 1d10 + 5 HP",
+      cost: {
+        bonusAction: true,
+        charge: "secondWind",
+      },
+      runtime: "secondWind",
+      eventType: undefined,
     });
   });
 });

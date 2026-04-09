@@ -401,6 +401,7 @@ export interface InitCreatureConfig {
   readonly bardLevel?: number;
   readonly bardicInspirationCharges?: number;
   readonly parryAcBonus?: number;
+  readonly prone?: boolean;
   /** Walk speed (PC: 30, Monster: from stat block). Defaults to 30. */
   readonly baseWalkSpeed?: number;
   /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */

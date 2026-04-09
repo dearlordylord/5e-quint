@@ -24,6 +24,7 @@ import {
   type MetamagicOption,
 } from "#/features/class-sorcerer.ts";
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts";
+import { isIncapacitated } from "#/battle-machine-creature.ts";
 import { bardicInspirationDie } from "#/features/class-bard.ts";
 import { deflectAttacksReduction } from "#/features/class-monk-features.ts";
 import { counterspellAutoSuccess } from "#/features/spell-abjuration.ts";
@@ -57,8 +58,38 @@ export type ResourceCost = {
   readonly bonusAction?: true;
   readonly reaction?: true;
   readonly movement?: number;
-  readonly charge?: string;
+  readonly charge?: ResourceCostCharge;
+  readonly shape?: ResourceConsumptionShape;
 };
+
+export const RESOURCE_COST_CHARGES = [
+  "actionSurge",
+  "arcaneRecovery",
+  "bardicInspiration",
+  "channelDivinity",
+  "focusPoint",
+  "indomitable",
+  "layOnHandsPool",
+  "mysticArcanum",
+  "naturesVeil",
+  "rage",
+  "secondWind",
+  "sorceryPoints",
+  "spellSlot",
+  "tireless",
+  "uncannyMetabolism",
+  "wholenessOfBody",
+] as const;
+export type ResourceCostCharge = (typeof RESOURCE_COST_CHARGES)[number];
+
+export const RESOURCE_CONSUMPTION_SHAPES = [
+  "spend",
+  "grant",
+  "reserve",
+  "refund",
+] as const;
+export type ResourceConsumptionShape =
+  (typeof RESOURCE_CONSUMPTION_SHAPES)[number];
 
 export type OutcomeDescription = {
   readonly summary: string;
@@ -221,6 +252,13 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "STAND_FROM_PRONE";
+      readonly cost: { readonly movement: number; readonly shape: "spend" };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "CAST_COUNTERSPELL";
       readonly slotLevel: Hole<SpellSlotLevelValue>;
       readonly cost: { readonly reaction: true; readonly charge: "spellSlot" };
@@ -354,6 +392,11 @@ type CreatureResolvedActionToken = ResolvedTokenByType[SupportedActionType] & {
   readonly scope: "creature";
 };
 type SpecificBattleResolvedActionToken =
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "STAND_FROM_PRONE";
+    }
   | {
       readonly scope: "battle";
       readonly actorId: string;
@@ -588,6 +631,11 @@ const CastCounterspellBattleResolvedActionSchema = Schema.Struct({
   slotLevel: SpellSlotLevel,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const StandFromProneBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("STAND_FROM_PRONE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const CastShieldBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("CAST_SHIELD"),
@@ -614,6 +662,7 @@ const UseDeflectAttacksBattleResolvedActionSchema = Schema.Struct({
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const BattleResolvedActionTokenSchema = Schema.Union(
+  StandFromProneBattleResolvedActionSchema,
   CastCounterspellBattleResolvedActionSchema,
   CastShieldBattleResolvedActionSchema,
   UseParryBattleResolvedActionSchema,
@@ -1151,6 +1200,18 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "STAND_FROM_PRONE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_STAND_FROM_PRONE" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "CAST_COUNTERSPELL" }
       >;
       readonly outcome: string;
@@ -1246,6 +1307,26 @@ export type ActionResolutionError = {
   readonly code: ActionResolutionErrorCode;
   readonly message: string;
 };
+
+export type PreviewedAction =
+  | {
+      readonly ok: true;
+      readonly summary: string;
+      readonly cost: ResourceCost;
+      readonly runtime: ResolutionRequest["runtime"];
+      readonly eventType?: DndEvent["type"];
+    }
+  | { readonly ok: false; readonly error: ActionResolutionError };
+
+export type PreviewedBattleAction =
+  | {
+      readonly ok: true;
+      readonly summary: string;
+      readonly cost: ResourceCost;
+      readonly runtime: BattleResolutionRequest["runtime"];
+      readonly eventType?: BattleEvent["type"];
+    }
+  | { readonly ok: false; readonly error: ActionResolutionError };
 
 type ActionSpec<T extends SupportedActionType> = {
   readonly buildToken: (
@@ -1984,7 +2065,38 @@ export function getAvailableBattleActions(
   context: BattleContext,
 ): ReadonlyArray<BattleActionToken> {
   const awaitCtx = context.awaitCtx;
-  if (awaitCtx == null) return [];
+  if (awaitCtx == null) {
+    const activeCreatureId = context.initiative[context.turnIndex];
+    if (activeCreatureId == null) return [];
+    const activeCreature = context.creatures.get(activeCreatureId);
+    if (
+      !context.turnStarted ||
+      activeCreature == null ||
+      !activeCreature.prone ||
+      activeCreature.dead ||
+      isIncapacitated(activeCreature)
+    ) {
+      return [];
+    }
+    const standCost = Math.floor(activeCreature.effectiveSpeed / 2);
+    if (
+      standCost <= 0 ||
+      standCost > activeCreature.movementRemaining
+    ) {
+      return [];
+    }
+    return [
+      battleToken({
+        actorId: activeCreatureId,
+        type: "STAND_FROM_PRONE",
+        cost: { movement: standCost, shape: "spend" },
+        outcome: {
+          summary:
+            "Spend half your Speed in movement to stand up from Prone",
+        },
+      }),
+    ];
+  }
 
   const interrupt = awaitCtx.interrupt;
   if (interrupt.tag === "PIAttackHit") {
@@ -2064,6 +2176,14 @@ export function resolveBattleAction(
   }
 
   return Match.value(token).pipe(
+    Match.when({ type: "STAND_FROM_PRONE" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: {
+        type: "BATTLE_STAND_FROM_PRONE" as const,
+      },
+    })),
     Match.when({ type: "CAST_COUNTERSPELL" }, (specificToken) => {
       if (
         !("slotLevel" in availableToken) ||
@@ -2256,6 +2376,26 @@ export function finalizeBattleResolution(
     }),
     Match.exhaustive,
   );
+}
+
+export function previewBattleAction(
+  context: BattleContext,
+  token: BattleResolvedActionToken,
+): PreviewedBattleAction {
+  const request = resolveBattleAction(context, token);
+  if ("code" in request) return { ok: false, error: request };
+  const availableToken = availableBattleTokenForType(
+    context,
+    token.type,
+    token.actorId,
+  );
+  return {
+    ok: true,
+    summary: availableToken?.outcome.summary ?? token.type,
+    cost: availableToken?.cost ?? {},
+    runtime: request.runtime,
+    eventType: request.runtime === "none" ? request.event.type : undefined,
+  };
 }
 
 function runtimeMismatch(
@@ -3029,4 +3169,23 @@ export function finalizeResolution(
     }),
     Match.exhaustive,
   );
+}
+
+export function previewAction(
+  context: DndContext,
+  tags: ReadonlySet<string>,
+  token: ResolvedActionToken,
+): PreviewedAction {
+  const request = resolveAction(context, tags, token);
+  if ("code" in request) return { ok: false, error: request };
+  const availableToken = getAvailableActions(context, tags).find(
+    (candidate) => candidate.type === token.type,
+  );
+  return {
+    ok: true,
+    summary: availableToken?.outcome.summary ?? token.type,
+    cost: availableToken?.cost ?? {},
+    runtime: request.runtime,
+    eventType: request.runtime === "none" ? request.event.type : undefined,
+  };
 }

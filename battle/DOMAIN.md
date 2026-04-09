@@ -55,7 +55,23 @@ Transaction shapes:
 - Has a valid reaction for this trigger type
 - Meets the reaction's specific conditions (range, visibility, etc.)
 
-**Pass** — A creature in a reaction window decides not to react. Explicitly declining does not consume the reaction.
+**Pass** — Historical term for a creature declining to react. Prefer **Decline** for per-creature windows.
+
+## Resolve / Commit Doctrine
+
+The repo separates pure outcome resolution from runtime state commitment across two independent implementations:
+
+- **Resolve layer**: `battle.qnt` computes rule consequences over immutable battle records.
+- **Commit layer**: `battle-machine.ts` commits those same outcomes as runtime state transitions for actors, UI, and tooling.
+- **Parity proof**: MBT replays Quint traces against XState and checks that the commit layer reproduces the resolve layer.
+
+Within the interrupt-resolution pipeline, use this vocabulary:
+
+- **resolve**: compute the outcome
+- **offer**: open a reaction window
+- **decline**: an eligible reactor chooses not to react
+- **apply**: build the new state
+- **advance**: move to the next phase boundary
 
 ## Timing Categories
 

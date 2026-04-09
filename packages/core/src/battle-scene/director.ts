@@ -59,7 +59,7 @@ export const DEFAULT_TIMING: PlaybackTiming = {
     BATTLE_RESOLVE_COUNTERSPELL: 600,
     BATTLE_RESOLVE_AOE_TARGET: 400,
     BATTLE_RESOLVE_SAVE_FAILED_REACTION: 300,
-    BATTLE_AFTER_DAMAGE_PASS: 200,
+    BATTLE_AFTER_DAMAGE_DECLINE: 200,
     BATTLE_END_TURN: 400,
   },
 };
@@ -203,7 +203,7 @@ export function directorStep(
       label(isLR ? "Legendary Resistance!" : "Skip", "positive"),
     );
   }
-  if (event.type === "BATTLE_AFTER_DAMAGE_PASS" && event.reactorId) {
+  if (event.type === "BATTLE_AFTER_DAMAGE_DECLINE" && event.reactorId) {
     applyCue(creatureCues, event.reactorId, label("Skip", "positive"));
   }
   if (event.type === "BATTLE_RESOLVE_HIT_REACTION" && event.reactorId) {

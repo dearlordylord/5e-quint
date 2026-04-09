@@ -26,11 +26,14 @@ import {
 } from "#/machine-helpers.ts";
 import {
   canAct,
+  canCastSpells,
   canSpeak,
   checkMods,
   defenseMods,
+  exhaustionPenalty,
   isIncapacitated,
   ownAttackMods,
+  queryD20Modifiers,
   saveMods,
 } from "#/machine-queries.ts";
 import {
@@ -909,6 +912,47 @@ describe("modifier aggregation - check mods", () => {
     expect(checkMods(ctx(a), false, true, false).autoFail).toBe(true);
     expect(checkMods(ctx(a), false, false, false).autoFail).toBe(false);
   });
+
+  it("reports exhaustion as a flat d20 penalty instead of condition disadvantage", () => {
+    const a = create();
+    addExhaustion(a, 2);
+    expect(exhaustionPenalty(ctx(a))).toBe(-4);
+    expect(
+      queryD20Modifiers(ctx(a), { kind: "abilityCheck", ability: "wis" }),
+    ).toEqual({
+      flatModifier: -4,
+      disadvantageSources: ["exhaustion"],
+      spellcastingBlocked: false,
+    });
+  });
+
+  it("reports armor-training disadvantage for Strength and Dexterity d20 tests", () => {
+    const a = createWithInput({
+      maxHp: DEFAULT_MAX_HP,
+      wearingArmorWithoutTraining: true,
+    });
+    expect(
+      queryD20Modifiers(ctx(a), { kind: "abilityCheck", ability: "str" }),
+    ).toEqual({
+      flatModifier: 0,
+      disadvantageSources: ["armorTraining"],
+      spellcastingBlocked: true,
+    });
+    expect(
+      queryD20Modifiers(ctx(a), { kind: "savingThrow", ability: "dex" }),
+    ).toEqual({
+      flatModifier: 0,
+      disadvantageSources: ["armorTraining"],
+      spellcastingBlocked: true,
+    });
+    expect(
+      queryD20Modifiers(ctx(a), { kind: "abilityCheck", ability: "wis" }),
+    ).toEqual({
+      flatModifier: 0,
+      disadvantageSources: [],
+      spellcastingBlocked: true,
+    });
+  });
 });
 
 describe("modifier aggregation - save mods", () => {
@@ -1147,6 +1191,31 @@ describe("turn lifecycle - START_TURN", () => {
         }),
       ]),
     );
+  });
+
+  it("ADD_EFFECT replaces an existing same-spell effect instead of stacking it", () => {
+    const a = create();
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("bless"),
+      durationTurns: 2,
+      expiresAt: "end",
+      casterId: CreatureId("self"),
+    });
+    a.send({
+      type: "ADD_EFFECT",
+      spellId: mkSpellId("bless"),
+      durationTurns: 5,
+      expiresAt: "end",
+      casterId: CreatureId("self"),
+    });
+
+    expect(ctx(a).activeEffects).toEqual([
+      expect.objectContaining({
+        spellId: mkSpellId("bless"),
+        turnsRemaining: 5,
+      }),
+    ]);
   });
 
   it("START_TURN applies speedDeltaFeet to effectiveSpeed", () => {
@@ -2464,6 +2533,32 @@ describe("cast prepared spell", () => {
     expect(ctx(a).slotsCurrent).toEqual(before.slotsCurrent);
     expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true);
     expect(ctx(a).actionsRemaining).toBe(before.actionsRemaining);
+  });
+
+  it("cannot cast prepared spells while wearing armor without training", () => {
+    const a = createWithInput({
+      maxHp: 30,
+      clericLevel: classLevel(5),
+      preparedSpells: new Set(["bless"]),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+      wearingArmorWithoutTraining: true,
+    });
+    a.send({ type: "ENTER_COMBAT" });
+    a.send({ type: "START_TURN" });
+
+    expect(canCastSpells(ctx(a))).toBe(false);
+
+    a.send({
+      type: "CAST_PREPARED_SPELL",
+      spellName: "bless",
+      slotLevel: spellSlotLevel(1),
+    });
+
+    expect(ctx(a).slotsCurrent).toEqual([4, 3, 2, 0, 0, 0, 0, 0, 0]);
+    expect(ctx(a).actionsRemaining).toBe(1);
+    expect(ctx(a).slotExpendedThisTurn).toBe(false);
+    expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true);
   });
 });
 

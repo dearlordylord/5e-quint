@@ -2,7 +2,10 @@ import {
   buildBattleAttackContext,
   resolveAttack,
 } from "#/battle-machine-actions-attack.ts";
-import { isIncapacitated } from "#/battle-machine-creature.ts";
+import {
+  isIncapacitated,
+  removeCondition,
+} from "#/battle-machine-creature.ts";
 import {
   activeId,
   canMakeOpportunityAttack,
@@ -19,7 +22,11 @@ import {
   PHASE_ACTIVE,
   phaseResolvingMovement,
 } from "#/battle-machine-types.ts";
-import { aggregateAttackMods } from "#/machine-combat.ts";
+import { spendHalfSpeed } from "#/machine-helpers.ts";
+import {
+  aggregateAttackMods,
+  hasAttackDisadvantageSource,
+} from "#/machine-combat.ts";
 
 export function battleMove({
   context: c,
@@ -48,10 +55,10 @@ export function battleMove({
   };
 }
 
-export function battleMovementOAPass({
+export function battleMovementOADecline({
   context: c,
   event: e,
-}: BattleActionArgs<"BATTLE_MOVEMENT_OA_PASS">): Partial<BattleContext> {
+}: BattleActionArgs<"BATTLE_MOVEMENT_OA_DECLINE">): Partial<BattleContext> {
   const mv = c.movementCtx;
   if (!mv) return {};
   if (
@@ -88,6 +95,7 @@ export function battleMovementOAAttack({
     e.frightSourceInLOS,
   );
   const mods = aggregateAttackMods(ctx);
+  const hasAnyDisadvantageSource = hasAttackDisadvantageSource(ctx);
   return resolveAttack(
     cs1,
     e.reactorId,
@@ -106,7 +114,30 @@ export function battleMovementOAAttack({
     undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
+    hasAnyDisadvantageSource,
     e.saDmg,
     e.hitReactionCandidates,
   );
+}
+
+/** SRD 5.2.1: standing from prone costs half your speed. */
+export function battleStandFromProne({
+  context: c,
+}: BattleActionArgs<"BATTLE_STAND_FROM_PRONE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  const id = activeId(c);
+  const ac = c.creatures.get(id)!;
+  if (!ac.prone || ac.dead || isIncapacitated(ac)) return {};
+  const result = spendHalfSpeed(ac.movementRemaining, ac.effectiveSpeed);
+  if (!result.success) return {};
+  return {
+    creatures: setCreature(
+      c.creatures,
+      id,
+      removeCondition(
+        { ...ac, movementRemaining: result.newMovementRemaining },
+        "prone",
+      ),
+    ),
+  };
 }

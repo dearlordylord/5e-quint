@@ -32,7 +32,7 @@ export function narrate(event: BattleEvent, meta: ScenarioMeta): string {
       if (event.decision.tag === "RPass")
         return `${name(event.reactorId, meta)} skips reaction.`;
       return `${name(event.reactorId, meta)} uses Legendary Resistance!`;
-    case "BATTLE_AFTER_DAMAGE_PASS":
+    case "BATTLE_AFTER_DAMAGE_DECLINE":
       if (!event.reactorId) return "No more after-damage reactions.";
       return `${name(event.reactorId, meta)} skips after-damage reaction.`;
     case "BATTLE_ATTACK":
@@ -57,7 +57,7 @@ export function narrate(event: BattleEvent, meta: ScenarioMeta): string {
       return "Turn ends.";
     case "BATTLE_MOVE":
       return "Movement.";
-    case "BATTLE_MOVEMENT_OA_PASS":
+    case "BATTLE_MOVEMENT_OA_DECLINE":
       if (!event.reactorId) return "No opportunity attacks.";
       return `${name(event.reactorId, meta)} forgoes opportunity attack.`;
     case "BATTLE_MOVEMENT_OA_ATTACK":

@@ -114,8 +114,8 @@ export function targetTwoSizesSmaller(
 }
 
 /** Aggregate all attack modifiers. Matches Quint pAggregateAttackMods. */
-export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
-  const anyAdvantage =
+export function hasAttackAdvantageSource(ctx: AttackContext): boolean {
+  return (
     ctx.targetBlinded ||
     ctx.targetParalyzed ||
     ctx.targetPetrified ||
@@ -124,10 +124,13 @@ export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
     (ctx.targetProne && ctx.attackerWithin5ft) ||
     ctx.targetRestrained ||
     !ctx.targetCanSeeAttacker ||
-    (ctx.attackerReckless && !ctx.isRangedAttack) || // Reckless Attack: advantage on melee
-    ctx.targetReckless; // RAW: attacks against reckless creature have Advantage
+    (ctx.attackerReckless && !ctx.isRangedAttack) ||
+    ctx.targetReckless
+  );
+}
 
-  const anyDisadvantage =
+export function hasAttackDisadvantageSource(ctx: AttackContext): boolean {
+  return (
     ctx.attackerBlinded ||
     ctx.attackerProne ||
     ctx.attackerRestrained ||
@@ -153,7 +156,13 @@ export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
     (ctx.targetDodging &&
       ctx.targetCanSeeAttacker &&
       !ctx.targetIncapacitated &&
-      !ctx.targetSpeedZero);
+      !ctx.targetSpeedZero)
+  );
+}
+
+export function aggregateAttackMods(ctx: AttackContext): FullAttackMods {
+  const anyAdvantage = hasAttackAdvantageSource(ctx);
+  const anyDisadvantage = hasAttackDisadvantageSource(ctx);
 
   const resolved = resolveAdvantage({
     hasAdvantage: anyAdvantage,

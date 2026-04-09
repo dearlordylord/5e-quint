@@ -20,6 +20,16 @@
 | **Advantage** | A modifier on a d20 roll: roll two d20s, use the higher; binary (not stackable); translates to +5 in the passive check formula | Bonus (different mechanic) |
 | **Disadvantage** | A modifier on a d20 roll: roll two d20s, use the lower; binary (not stackable); translates to -5 in the passive check formula | Penalty (different mechanic) |
 
+## Action Lifecycle
+
+| Term | Definition | Aliases to avoid |
+|------|-----------|-----------------|
+| **Resolve** | Compute an outcome from inputs without changing state. In Quint, this is pure rules evaluation over immutable records. In TypeScript, this is outcome computation such as hit/miss, save pass/fail, and reaction legality. | Execute, apply |
+| **Apply** | Take a resolved outcome and produce updated state. In Quint, this is a pure record transformation. In TypeScript, this is the state-building part of the commit layer. | Resolve, mutate |
+| **Advance** | Move through a phase boundary, potentially opening the next interrupt point or timing window. | Continue, proceed |
+| **Offer** | Suspend resolution to present a reaction window to eligible creatures. | Prompt, ask |
+| **Decline** | A creature in a reaction window explicitly chooses not to react. Declining does not consume the reaction resource. | Pass |
+
 ## Proficiency
 
 | Term | Definition | Aliases to avoid |
@@ -80,6 +90,23 @@
 | **Stunned** | Incapacitated; can't move; can speak only falteringly; auto-fails Str/Dex saves; attacks against have advantage | Dazed |
 | **Unconscious** | Incapacitated; can't move/speak; unaware; drops held items and falls prone; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical | Knocked out (KO is a specific mechanic — melee attacker's choice to render unconscious + stable) |
 | **Exhaustion** | A special condition measured in six cumulative levels: 1 = disadvantage on checks; 2 = speed halved; 3 = disadvantage on attacks/saves; 4 = HP max halved; 5 = speed 0; 6 = death | Fatigue |
+
+### Canonical Condition Consequences
+
+Use one consequence-indexed question per rules surface rather than scattering condition checks inline:
+
+- **Own attack disadvantage**: Blinded, Poisoned, Prone, Restrained, plus Frightened while the source is in line of sight
+- **Defense advantage granted to attackers**: Blinded, Paralyzed, Petrified, Restrained, Stunned, Unconscious, plus Prone against attackers within 5 feet
+- **Defense disadvantage imposed on attackers**: Invisible, plus Prone against attackers beyond 5 feet
+- **Automatic Strength/Dexterity save failure**: Paralyzed, Petrified, Stunned, Unconscious
+- **Dexterity save disadvantage**: Restrained
+- **Ability check disadvantage**: Poisoned, plus Frightened while the source is in line of sight
+- **Automatic sight/hearing check failure**: Blinded for sight-based checks, Deafened for hearing-based checks
+- **Speed becomes 0**: Grappled, Paralyzed, Petrified, Restrained, Unconscious
+- **Blocks actions / bonus actions / reactions**: Incapacitated and any condition that implies it
+- **Blocks speech**: Paralyzed, Petrified, Unconscious
+
+This table is a support-layer projection of the SRD condition text. Quint remains the semantic authority.
 
 ## Turn Structure
 

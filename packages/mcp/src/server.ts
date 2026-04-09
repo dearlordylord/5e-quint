@@ -20,6 +20,8 @@ import {
   finalizeResolution,
   getAvailableActions,
   getAvailableBattleActions,
+  previewAction,
+  previewBattleAction,
   type BattleResolutionRequest,
   type BattleResolutionRuntimeInputs,
   resolveBattleAction,
@@ -124,6 +126,12 @@ export const toolDefinitions = [
     name: "execute_action",
     description:
       "Execute a resolved scoped action token. User-facing choices must already be filled; MCP supplies engine-only values like prerolls.",
+    inputSchema: executeActionJsonSchema,
+  },
+  {
+    name: "preview_action",
+    description:
+      "Preview a resolved scoped action token without spending resources or mutating state.",
     inputSchema: executeActionJsonSchema,
   },
 ] as const;
@@ -417,6 +425,34 @@ function executeResolvedAction(host: SupportedActionHost, args: unknown) {
   );
 }
 
+function previewResolvedAction(host: SupportedActionHost, args: unknown) {
+  const decoded = Schema.decodeUnknownEither(ResolvedActionTokenSchema)(args);
+  if (decoded._tag === "Left") {
+    return errorContent("Invalid preview_action input", String(decoded.left));
+  }
+
+  return Match.value(host).pipe(
+    Match.when({ scope: "creature" }, ({ actor }) => {
+      if (decoded.right.scope !== "creature") {
+        return scopeMismatchContent(decoded.right.scope, "creature");
+      }
+      const snapshot = actor.getSnapshot();
+      return jsonContent(
+        previewAction(snapshot.context, snapshot.tags, decoded.right),
+      );
+    }),
+    Match.when({ scope: "battle" }, ({ actor }) => {
+      if (decoded.right.scope !== "battle") {
+        return scopeMismatchContent(decoded.right.scope, "battle");
+      }
+      return jsonContent(
+        previewBattleAction(actor.getSnapshot().context, decoded.right),
+      );
+    }),
+    Match.exhaustive,
+  );
+}
+
 export function handleToolCall(
   host: SupportedActionHost,
   name: string,
@@ -453,6 +489,10 @@ export function handleToolCall(
 
   if (name === "execute_action") {
     return executeResolvedAction(host, args);
+  }
+
+  if (name === "preview_action") {
+    return previewResolvedAction(host, args);
   }
 
   return errorContent(`Unknown tool: ${name}`);

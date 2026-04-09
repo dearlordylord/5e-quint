@@ -449,7 +449,7 @@ const battleDriverSchema = {
     decision: OV,
   },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
-  bAfterDamagePass: { reactorId: OS },
+  bAfterDamageDecline: { reactorId: OS },
   bAfterDamageSpellReaction: {
     reactionDmg: OI,
     reactionSaved: OB,
@@ -504,7 +504,7 @@ const battleDriverSchema = {
   },
   bResolveAoETarget: { targetId: OS, saveRoll: OI },
   bMove: { threatened: z.any().optional() },
-  bMovementOAPass: { reactorId: OS },
+  bMovementOADecline: { reactorId: OS },
   bMovementOAAttack: {
     oaAtkRoll: OI,
     oaDmg: OI,
@@ -865,9 +865,9 @@ function createBattleMachineDriver() {
           decision,
         });
       },
-      bAfterDamagePass: (picks: Record<string, unknown>) => {
+      bAfterDamageDecline: (picks: Record<string, unknown>) => {
         send({
-          type: "BATTLE_AFTER_DAMAGE_PASS",
+          type: "BATTLE_AFTER_DAMAGE_DECLINE",
           reactorId: pcn(picks, "reactorId"),
         });
       },
@@ -989,9 +989,9 @@ function createBattleMachineDriver() {
           threatened: parseThreatenedSet(picks["threatened"]),
         });
       },
-      bMovementOAPass: (picks: Record<string, unknown>) => {
+      bMovementOADecline: (picks: Record<string, unknown>) => {
         send({
-          type: "BATTLE_MOVEMENT_OA_PASS",
+          type: "BATTLE_MOVEMENT_OA_DECLINE",
           reactorId: pcn(picks, "reactorId"),
         });
       },

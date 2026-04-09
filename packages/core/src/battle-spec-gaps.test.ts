@@ -119,7 +119,7 @@ function passReactions(
         decision: { tag: "RPass" },
       });
     } else if (pi.tag === "PIAfterDamage") {
-      send(actor, { type: "BATTLE_AFTER_DAMAGE_PASS", reactorId: null });
+      send(actor, { type: "BATTLE_AFTER_DAMAGE_DECLINE", reactorId: null });
     } else if (pi.tag === "PISaveFailed") {
       send(actor, {
         type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",

@@ -160,7 +160,7 @@ const sfPass = (reactorId: string | null): BattleEvent => ({
 });
 
 const adPass = (reactorId: string | null): BattleEvent => ({
-  type: "BATTLE_AFTER_DAMAGE_PASS",
+  type: "BATTLE_AFTER_DAMAGE_DECLINE",
   reactorId: reactorId != null ? cid(reactorId) : null,
 });
 

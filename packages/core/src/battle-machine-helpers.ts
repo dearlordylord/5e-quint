@@ -307,7 +307,7 @@ export function normalizeBattleGrapples(
   return result;
 }
 
-export function dealDamage(
+export function applyDamage(
   cs: Creatures,
   targetId: CreatureId,
   dmg: number,
@@ -568,7 +568,7 @@ export function returnToState(r: AfterDamageReturn): PhaseFields {
   );
 }
 
-export function dealDamageWithAfterReactions(
+export function applyDamageWithAfterReactions(
   cs: Creatures,
   targetId: CreatureId,
   sourceId: CreatureId,
@@ -579,7 +579,7 @@ export function dealDamageWithAfterReactions(
   returnTo: AfterDamageReturn,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const oldT = cs.get(targetId)!;
-  const cs1 = dealDamage(cs, targetId, dmg, dt, crit, knockOut);
+  const cs1 = applyDamage(cs, targetId, dmg, dt, crit, knockOut);
   const newT = cs1.get(targetId)!;
   const actualDmg = oldT.hp + oldT.tempHp - (newT.hp + newT.tempHp);
   const elig = eligibleTarget(cs1, targetId);
@@ -648,7 +648,7 @@ export function advanceFromHitPhase(
       ),
     };
   }
-  return dealDamageWithAfterReactions(
+  return applyDamageWithAfterReactions(
     cs1,
     atk.target,
     atk.attacker,
@@ -678,7 +678,7 @@ export function resolveSave(
       if (evDmg === 0) {
         return { creatures: new Map(cs), ...returnToState(returnTo) };
       }
-      return dealDamageWithAfterReactions(
+      return applyDamageWithAfterReactions(
         cs,
         save.target,
         save.caster,
@@ -723,7 +723,7 @@ export function applyFailEffects(
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   if (ctx.saveSucceeded) {
     if (ctx.halfOnSuccess && ctx.damageOnFail > 0) {
-      return dealDamageWithAfterReactions(
+      return applyDamageWithAfterReactions(
         cs,
         ctx.target,
         ctx.caster,
@@ -747,7 +747,7 @@ export function applyFailEffects(
     );
   }
   if (ctx.damageOnFail > 0)
-    return dealDamageWithAfterReactions(
+    return applyDamageWithAfterReactions(
       cs1,
       ctx.target,
       ctx.caster,

@@ -8,6 +8,7 @@ import type {
   BattleCreatureState,
   CreatureId,
 } from "#/battle-machine-types.ts";
+import { addAe } from "#/machine-endturn.ts";
 import {
   addIncapSource,
   ALL_DAMAGE_TYPES,
@@ -399,14 +400,17 @@ export function addEffect(
     Omit<ActiveEffect, "spellId" | "turnsRemaining" | "expiresAt" | "casterId">
   > = {},
 ): BattleCreatureState {
-  const newEffect: ActiveEffect = {
-    spellId,
-    turnsRemaining: duration,
-    expiresAt,
-    casterId,
-    ...options,
+  return {
+    ...c,
+    activeEffects: addAe(
+      c.activeEffects,
+      spellId,
+      duration,
+      expiresAt,
+      casterId,
+      options,
+    ),
   };
-  return { ...c, activeEffects: [...c.activeEffects, newEffect] };
 }
 
 export function removeEffect(

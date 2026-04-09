@@ -13,7 +13,7 @@
 import { assign, setup, type SnapshotFrom } from "xstate";
 
 import {
-  battleAfterDamagePass,
+  battleAfterDamageDecline,
   battleAfterDamageRetaliation,
   battleAfterDamageSpellReaction,
   battleAttack,
@@ -22,8 +22,9 @@ import {
 } from "#/battle-machine-actions-attack.ts";
 import {
   battleMove,
+  battleMovementOADecline,
   battleMovementOAAttack,
-  battleMovementOAPass,
+  battleStandFromProne,
 } from "#/battle-machine-actions-movement.ts";
 import {
   battleCastAoE,
@@ -124,7 +125,7 @@ export const battleMachine = setup({
     battleAttack: narrow(battleAttack),
     battleResolveHitReaction: narrow(battleResolveHitReaction),
     battleResolveDmgReaction: narrow(battleResolveDmgReaction),
-    battleAfterDamagePass: narrow(battleAfterDamagePass),
+    battleAfterDamageDecline: narrow(battleAfterDamageDecline),
     battleAfterDamageSpellReaction: narrow(battleAfterDamageSpellReaction),
     battleAfterDamageRetaliation: narrow(battleAfterDamageRetaliation),
     battleCastSaveSpell: narrow(battleCastSaveSpell),
@@ -135,7 +136,7 @@ export const battleMachine = setup({
     battleCastAoE: narrow(battleCastAoE),
     battleResolveAoETarget: narrow(battleResolveAoETarget),
     battleMove: narrow(battleMove),
-    battleMovementOAPass: narrow(battleMovementOAPass),
+    battleMovementOADecline: narrow(battleMovementOADecline),
     battleMovementOAAttack: narrow(battleMovementOAAttack),
     battleEndTurn: narrow(battleEndTurn),
     battleLegendaryPass: narrow(battleLegendaryPass),
@@ -144,6 +145,7 @@ export const battleMachine = setup({
     battleDash: narrow(battleDash),
     battleDisengage: narrow(battleDisengage),
     battleDodge: narrow(battleDodge),
+    battleStandFromProne: narrow(battleStandFromProne),
     battleGrapple: narrow(battleGrapple),
     battleReleaseGrapple: narrow(battleReleaseGrapple),
     battleEscapeGrapple: narrow(battleEscapeGrapple),
@@ -193,6 +195,7 @@ export const battleMachine = setup({
             BATTLE_DASH: { actions: "battleDash" },
             BATTLE_DISENGAGE: { actions: "battleDisengage" },
             BATTLE_DODGE: { actions: "battleDodge" },
+            BATTLE_STAND_FROM_PRONE: { actions: "battleStandFromProne" },
             BATTLE_GRAPPLE: { actions: "battleGrapple" },
             BATTLE_RELEASE_GRAPPLE: { actions: "battleReleaseGrapple" },
             BATTLE_ESCAPE_GRAPPLE: { actions: "battleEscapeGrapple" },
@@ -213,7 +216,9 @@ export const battleMachine = setup({
             BATTLE_RESOLVE_DMG_REACTION: {
               actions: "battleResolveDmgReaction",
             },
-            BATTLE_AFTER_DAMAGE_PASS: { actions: "battleAfterDamagePass" },
+            BATTLE_AFTER_DAMAGE_DECLINE: {
+              actions: "battleAfterDamageDecline",
+            },
             BATTLE_AFTER_DAMAGE_SPELL_REACTION: {
               actions: "battleAfterDamageSpellReaction",
             },
@@ -239,7 +244,9 @@ export const battleMachine = setup({
           tags: ["resolving"],
           always: [{ guard: "noMovementCtx", target: "activeTurn" }],
           on: {
-            BATTLE_MOVEMENT_OA_PASS: { actions: "battleMovementOAPass" },
+            BATTLE_MOVEMENT_OA_DECLINE: {
+              actions: "battleMovementOADecline",
+            },
             BATTLE_MOVEMENT_OA_ATTACK: { actions: "battleMovementOAAttack" },
           },
         },

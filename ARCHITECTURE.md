@@ -127,6 +127,8 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 
 **Correctness mechanism:** Model-Based Testing (MBT) via `@firfi/quint-connect`. `battle-machine.mbt.test.ts` is the primary combat parity proof against `battle.qnt`. `creature.mbt.test.ts` remains useful for helper/local-projection coverage, but it is not the semantic source of truth for combat ownership decisions.
 
+**Architectural role:** The commit layer. Quint resolves what the rules prescribe; XState commits those outcomes as runtime state.
+
 **Key constraint:** The creature machine and battle machine use completely different architectures. The battle machine is the authoritative engine because it mirrors `battle.qnt`. The creature machine is a local projection and debugging surface; when ownership questions arise, design from battle semantics outward and project local facts down. Creatures in battle are a `Map<CreatureId, BattleCreatureState>` in context, NOT spawned child actors -- D&D combat requires atomic cross-creature updates.
 
 ---

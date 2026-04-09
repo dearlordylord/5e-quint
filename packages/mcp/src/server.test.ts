@@ -143,6 +143,26 @@ function initBattleHostWithDamageWindow() {
   return createBattleHost(actor);
 }
 
+function initBattleHostWithProneActor() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        prone: true,
+        initiativeRoll: 15,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
 function initBattleHostWithDeflectWindow() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -359,6 +379,33 @@ describe("MCP server adapter", () => {
       error: "START_TURN is not currently available in this state.",
       details: "ACTION_NOT_AVAILABLE",
     });
+  });
+
+  test("preview_action summarizes a creature action without mutating state", () => {
+    const host = createDemoHost();
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }));
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }));
+
+    const before = readPayload(handleToolCall(host, "get_state", {}));
+    const preview = readPayload(
+      handleToolCall(
+        host,
+        "preview_action",
+        creatureResolved({ type: "USE_SECOND_WIND" }),
+      ),
+    );
+    const after = readPayload(handleToolCall(host, "get_state", {}));
+
+    expect(preview).toEqual({
+      ok: true,
+      summary: "Heal 1d10 + 5 HP",
+      cost: {
+        bonusAction: true,
+        charge: "secondWind",
+      },
+      runtime: "secondWind",
+    });
+    expect(after).toEqual(before);
   });
 
   test("get_state returns the core-encoded context shape", () => {
@@ -1344,6 +1391,29 @@ describe("MCP server adapter", () => {
         awaitingReadiedAction: false,
       },
     });
+  });
+
+  test("preview_action summarizes a battle action without mutating state", () => {
+    const host = initBattleHostWithProneActor();
+
+    const before = readPayload(handleToolCall(host, "get_state", {}));
+    const preview = readPayload(
+      handleToolCall(host, "preview_action", {
+        scope: "battle",
+        actorId: "A",
+        type: "STAND_FROM_PRONE",
+      }),
+    );
+    const after = readPayload(handleToolCall(host, "get_state", {}));
+
+    expect(preview).toEqual({
+      ok: true,
+      summary: "Spend half your Speed in movement to stand up from Prone",
+      cost: { movement: 15, shape: "spend" },
+      runtime: "none",
+      eventType: "BATTLE_STAND_FROM_PRONE",
+    });
+    expect(after).toEqual(before);
   });
 
   test("execute_action routes CAST_SHIELD through the battle lane end to end", () => {

@@ -136,6 +136,7 @@ export interface DndMachineInput {
   readonly slotsMax?: ReadonlyArray<number>;
   readonly slotsCurrent?: ReadonlyArray<number>;
   readonly preparedSpells?: ReadonlySet<SpellName>;
+  readonly wearingArmorWithoutTraining?: boolean;
 }
 
 // Per-class state interfaces: extracted to machine-class-states.ts for max-lines
@@ -211,6 +212,7 @@ export interface DndContext {
   readonly concentrationSpellId: Option.Option<SpellId>;
   readonly hitDiceRemaining: HitDiceRemaining;
   readonly preparedSpells: ReadonlySet<SpellName>;
+  readonly wearingArmorWithoutTraining: boolean;
   readonly activeEffects: ReadonlyArray<ActiveEffect>;
   readonly pendingResolution: PendingResolution;
   readonly creatureKind: CreatureKind;

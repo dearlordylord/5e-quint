@@ -45,6 +45,7 @@ import {
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts";
 import {
   aggregateAttackMods,
+  hasAttackDisadvantageSource,
   resolveGrapple,
   targetTwoSizesSmaller,
 } from "#/machine-combat.ts";
@@ -167,6 +168,7 @@ export function battleInit({
         ? { bardicInspirationCharges: cfg.bardicInspirationCharges }
         : {}),
       ...(cfg.parryAcBonus != null ? { parryAcBonus: cfg.parryAcBonus } : {}),
+      ...(cfg.prone === true ? { prone: true } : {}),
       ...(cfg.baseWalkSpeed != null
         ? {
             baseWalkSpeed: cfg.baseWalkSpeed,
@@ -393,6 +395,7 @@ export function battleReadyRelease({
     e.frightSourceInLOS,
   );
   const readyMods = aggregateAttackMods(readyCtx);
+  const readyHasAnyDisadvantageSource = hasAttackDisadvantageSource(readyCtx);
   return resolveAttack(
     cs,
     e.releaserId,
@@ -411,6 +414,7 @@ export function battleReadyRelease({
     undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
+    readyHasAnyDisadvantageSource,
     e.saDmg,
     e.hitReactionCandidates,
   );
@@ -438,6 +442,7 @@ export function battleLegendaryAttack({
     e.frightSourceInLOS,
   );
   const laMods = aggregateAttackMods(laCtx);
+  const laHasAnyDisadvantageSource = hasAttackDisadvantageSource(laCtx);
   return resolveAttack(
     cs,
     e.monsterId,
@@ -456,6 +461,7 @@ export function battleLegendaryAttack({
     undefined,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
+    laHasAnyDisadvantageSource,
     e.saDmg,
     e.hitReactionCandidates,
   );

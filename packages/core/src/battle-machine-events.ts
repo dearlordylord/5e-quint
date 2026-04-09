@@ -117,7 +117,7 @@ export type BattleEvent =
       readonly decision: DmgReactionDecision;
     }
   | {
-      readonly type: "BATTLE_AFTER_DAMAGE_PASS";
+      readonly type: "BATTLE_AFTER_DAMAGE_DECLINE";
       readonly reactorId: CreatureId | null;
     }
   | {
@@ -201,7 +201,7 @@ export type BattleEvent =
       readonly threatened: ReadonlySet<CreatureId>;
     }
   | {
-      readonly type: "BATTLE_MOVEMENT_OA_PASS";
+      readonly type: "BATTLE_MOVEMENT_OA_DECLINE";
       readonly reactorId: CreatureId | null;
     }
   | {
@@ -260,6 +260,7 @@ export type BattleEvent =
   | { readonly type: "BATTLE_DASH" }
   | { readonly type: "BATTLE_DISENGAGE" }
   | { readonly type: "BATTLE_DODGE" }
+  | { readonly type: "BATTLE_STAND_FROM_PRONE" }
   | {
       readonly type: "BATTLE_GRAPPLE";
       readonly targetId: CreatureId;

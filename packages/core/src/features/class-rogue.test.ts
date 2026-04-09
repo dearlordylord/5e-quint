@@ -116,8 +116,7 @@ describe("canSneakAttack", () => {
     ).toBe(false);
   });
 
-  it("allows with advantage even if has disadvantage", () => {
-    // SRD: advantage is sufficient on its own
+  it("denies when advantage and disadvantage both apply", () => {
     expect(
       canSneakAttack({
         ...base,
@@ -125,7 +124,7 @@ describe("canSneakAttack", () => {
         hasDisadvantage: true,
         isFinesse: true,
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("once per turn", () => {

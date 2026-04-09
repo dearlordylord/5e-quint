@@ -507,7 +507,7 @@ module battle {
   /// NOTE: knockOut currently ignores melee-only guard — no melee/ranged distinction yet (see D1).
   /// NOTE: concentration break from knockOut-induced Unconscious is handled by the
   /// separate bConcentrationCheck action, not inline — consistent with all battle damage paths.
-  pure def dealDamage(
+  pure def applyDamage(
     cs: CreatureId -> Combatant, targetId: CreatureId,
     dmg: int, dt: DamageType, crit: bool, knockOut: bool
   ): (CreatureId -> Combatant) = {
@@ -951,7 +951,7 @@ module battle {
   /// Apply damage and check for after-damage reactions (R10.4).
   /// Returns new creatures + phase. If an eligible reactor exists, enters
   /// BPAwaitingReaction(PIAfterDamage); otherwise returns the given returnPhase.
-  pure def dealDamageWithAfterReactions(
+  pure def applyDamageWithAfterReactions(
     cs: CreatureId -> Combatant,
     targetId: CreatureId, sourceId: CreatureId,
     dmg: int, dt: DamageType, crit: bool,
@@ -959,7 +959,7 @@ module battle {
     knockOut: bool
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     val oldT = cs.get(targetId)
-    val cs1 = normalizeBattleGrapples(dealDamage(cs, targetId, dmg, dt, crit, knockOut))
+    val cs1 = normalizeBattleGrapples(applyDamage(cs, targetId, dmg, dt, crit, knockOut))
     val newT = cs1.get(targetId)
     // Actual damage after resistance/vulnerability/immunity and temp HP absorption
     val actualDmg = (oldT.creature.hp + oldT.creature.tempHp) - (newT.creature.hp + newT.creature.tempHp)
@@ -1363,7 +1363,7 @@ module battle {
         { creatures: cs1, phase: BPAwaitingReaction(mkAwait(PIAttackDamage(dmgCtx), TAttackDamages, elig)) }
       } else {
         // No damage-phase reactions — deal damage and check for after-damage reactions (R10.4)
-        dealDamageWithAfterReactions(cs1, atk.target, atk.attacker,
+        applyDamageWithAfterReactions(cs1, atk.target, atk.attacker,
           atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo, atk.knockOut)
       }
     }
@@ -1440,7 +1440,7 @@ module battle {
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
               // All damage reactions resolved — deal damage and check after-damage (R10.4)
-              val result = dealDamageWithAfterReactions(bCreatures,
+              val result = applyDamageWithAfterReactions(bCreatures,
                 atk.target, atk.attacker, atk.damage, atk.damageType, atk.isCritical, atk.atkReturnTo, atk.knockOut)
               all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
             } else {
@@ -1500,7 +1500,7 @@ module battle {
   // Fires after damage is applied. Split into separate actions per reaction type
   // to avoid exploring unused nondets (e.g., Hellish Rebuke nondets on Pass path).
 
-  action bAfterDamagePass = {
+  action bAfterDamageDecline = {
     match bPhase {
       | BPAwaitingReaction(ctx) =>
         match ctx.interrupt {
@@ -1543,7 +1543,7 @@ module battle {
               nondet reactorId = remaining.oneOf()
               val cs1 = spendReaction(bCreatures, reactorId)
               val actualDmg = if (reactionSaved) reactionDmg / 2 else reactionDmg
-              val result = dealDamageWithAfterReactions(
+              val result = applyDamageWithAfterReactions(
                 cs1, ad.damageSource, reactorId,
                 actualDmg, reactionDt, false, ad.returnTo, false
               )
@@ -1580,7 +1580,7 @@ module battle {
                   keepBattle,
                 }
               } else {
-                val result = dealDamageWithAfterReactions(
+                val result = applyDamageWithAfterReactions(
                   cs1, ad.damageSource, reactorId,
                   retDmg, retDt, retCrit, ad.returnTo, false
                 )
@@ -1684,7 +1684,7 @@ module battle {
         if (evDmg == 0) {
           { creatures: cs, phase: returnToPhase(returnTo) }
         } else {
-          dealDamageWithAfterReactions(cs, save.target, save.caster,
+          applyDamageWithAfterReactions(cs, save.target, save.caster,
             evDmg, save.damageType, false, returnTo, false)
         }
       } else {
@@ -1717,7 +1717,7 @@ module battle {
     if (ctx.saveSucceeded) {
       // LR flipped the save — apply half damage if applicable
       if (ctx.halfOnSuccess and ctx.damageOnFail > 0) {
-        dealDamageWithAfterReactions(cs, ctx.target, ctx.caster,
+        applyDamageWithAfterReactions(cs, ctx.target, ctx.caster,
           ctx.damageOnFail / 2, ctx.damageType, false, returnTo, false)
       } else {
         { creatures: cs, phase: returnToPhase(returnTo) }
@@ -1730,7 +1730,7 @@ module battle {
         normalizeBattleGrapples(setCreature(cs, ctx.target, pApplyCondition(t.creature, ctx.conditionOnFail, Set())))
       } else cs
       if (ctx.damageOnFail > 0) {
-        dealDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
+        applyDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
           ctx.damageOnFail, ctx.damageType, false, returnTo, false)
       } else {
         { creatures: cs1, phase: returnToPhase(returnTo) }
@@ -2261,7 +2261,7 @@ module battle {
               if (evDmg == 0) {
                 all { bCreatures' = bCreatures, bPhase' = BPResolvingAoE(updatedAoe), keepBattle }
               } else {
-                val result = dealDamageWithAfterReactions(bCreatures,
+                val result = applyDamageWithAfterReactions(bCreatures,
                   targetId, aoe.caster, evDmg, aoe.damageType, false, aoeReturn, false)
                 all { bCreatures' = result.creatures, bPhase' = result.phase, keepBattle }
               }
@@ -2343,7 +2343,7 @@ module battle {
   }
 
   /// Movement OA: threatened creature passes or all processed → movement completes.
-  action bMovementOAPass = {
+  action bMovementOADecline = {
     match bPhase {
       | BPResolvingMovement(mv) =>
         val remaining = mv.threatenedBy.exclude(mv.processed)
@@ -3042,13 +3042,13 @@ module battle {
         | PIAttackHit(_) => any { bResolveHitReaction, }
         | PIAttackDamage(_) => any { bResolveDmgReaction, }
         | PIAfterDamage(_) => any {
-            bAfterDamagePass, bAfterDamageSpellReaction, bAfterDamageRetaliation,
+            bAfterDamageDecline, bAfterDamageSpellReaction, bAfterDamageRetaliation,
           }
         | PISpellCast(_) => any { bResolveCounterspell, }
         | _ => any { bResolveSaveFailedReaction, }
       }
     | BPResolvingAoE(_) => any { bResolveAoETarget, }
-    | BPResolvingMovement(_) => any { bMovementOAPass, bMovementOAAttack }
+    | BPResolvingMovement(_) => any { bMovementOADecline, bMovementOAAttack }
     | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bLegendaryAttack }
     | BPAwaitingReadiedAction(_) => any { bReadyPass, bReadyRelease, bReadySpellRelease, }
   }

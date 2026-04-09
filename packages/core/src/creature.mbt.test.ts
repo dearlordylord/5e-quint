@@ -1291,7 +1291,9 @@ describe("DnD MBT", () => {
   });
 
   const isCi = process.env["CI"] === "true";
-  const mbtBackend = process.env["MBT_BACKEND"] ?? "typescript";
+  const mbtBackend = (
+    process.env["MBT_BACKEND"] ?? "typescript"
+  ) as "typescript" | "rust";
   // Keep local runs cheap; broader random coverage belongs in CI/fuzz runs.
   const MBT_TRACE_COUNT = isCi ? 50 : 1;
   const MBT_STEP_COUNT = isCi ? 30 : 10;

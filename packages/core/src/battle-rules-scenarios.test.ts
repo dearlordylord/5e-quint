@@ -77,6 +77,19 @@ function initTwoPcBattle() {
   return actor;
 }
 
+function initProneBattle() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", prone: true },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC" },
+    ],
+  });
+  return actor;
+}
+
 function initHitReactionBattle() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -566,7 +579,7 @@ function resolveAttackWindows(
   }
   if (ctx(actor).awaitCtx?.interrupt.tag === "PIAfterDamage") {
     send(actor, {
-      type: "BATTLE_AFTER_DAMAGE_PASS",
+      type: "BATTLE_AFTER_DAMAGE_DECLINE",
       reactorId: null,
     });
   }
@@ -577,7 +590,7 @@ function resolveAoEWindows(
 ) {
   if (ctx(actor).awaitCtx?.interrupt.tag === "PIAfterDamage") {
     send(actor, {
-      type: "BATTLE_AFTER_DAMAGE_PASS",
+      type: "BATTLE_AFTER_DAMAGE_DECLINE",
       reactorId: null,
     });
   }
@@ -1206,7 +1219,7 @@ describe("battle rules scenario regressions", () => {
       hitReactionCandidates: new Set<CreatureIdT>(),
     });
     send(actor, {
-      type: "BATTLE_MOVEMENT_OA_PASS",
+      type: "BATTLE_MOVEMENT_OA_DECLINE",
       reactorId: null,
     });
 
@@ -1256,7 +1269,7 @@ describe("battle rules scenario regressions", () => {
       hitReactionCandidates: new Set<CreatureIdT>(),
     });
     send(actor, {
-      type: "BATTLE_MOVEMENT_OA_PASS",
+      type: "BATTLE_MOVEMENT_OA_DECLINE",
       reactorId: null,
     });
 
@@ -1828,6 +1841,91 @@ describe("battle rules scenario regressions", () => {
 
     expect(creature(actor, "B").hp).toBe(15);
     expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(false);
+  });
+
+  it("natural_20: simultaneous advantage and disadvantage still suppress Sneak Attack", () => {
+    const actor = initRangedSneakAttackBattle();
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 14,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(12),
+      knockOut: false,
+      isMelee: false,
+      isFinesse: false,
+      attackerWithin5ft: false,
+      hostileWithin5ft: true,
+      targetCanSeeAttacker: false,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 10,
+      hitReactionCandidates: new Set<CreatureIdT>(),
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(15);
+    expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(false);
+  });
+
+  it("natural_20: Sneak Attack resets at the next turn boundary", () => {
+    const actor = initRangedSneakAttackBattle();
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 14,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(12),
+      knockOut: false,
+      isMelee: false,
+      isFinesse: false,
+      attackerWithin5ft: false,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: false,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 10,
+      hitReactionCandidates: new Set<CreatureIdT>(),
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(true);
+
+    endTurn(actor);
+    startTurn(actor);
+    endTurn(actor);
+    startTurn(actor);
+    endTurn(actor);
+    startTurn(actor);
+
+    expect(creature(actor, "A").sneakAttackUsedThisTurn).toBe(false);
+  });
+
+  it("natural_20: standing from prone in battle costs half speed", () => {
+    const actor = initProneBattle();
+    startTurn(actor);
+
+    expect(creature(actor, "A").prone).toBe(true);
+    expect(creature(actor, "A").movementRemaining).toBe(30);
+
+    send(actor, { type: "BATTLE_STAND_FROM_PRONE" });
+
+    expect(creature(actor, "A").prone).toBe(false);
+    expect(creature(actor, "A").movementRemaining).toBe(15);
   });
 
   it("natural_20: incapacitating the grappler auto-releases the target", () => {

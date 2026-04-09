@@ -6,7 +6,7 @@ import {
   advanceFromHitPhase,
   awaitingReaction,
   byTag,
-  dealDamageWithAfterReactions,
+  applyDamageWithAfterReactions,
   expendSlot,
   firstAvailableSpellSlotLevel,
   isHit,
@@ -35,7 +35,10 @@ import { ADR_ACTIVE_TURN, phaseAwaitReaction } from "#/battle-machine-types.ts";
 import { bardicInspirationDie } from "#/features/class-bard.ts";
 import { deflectAttacksResult } from "#/features/class-monk-features.ts";
 import { uncannyDodgeDamage } from "#/features/class-rogue.ts";
-import { aggregateAttackMods } from "#/machine-combat.ts";
+import {
+  aggregateAttackMods,
+  hasAttackDisadvantageSource,
+} from "#/machine-combat.ts";
 import type {
   AttackContext,
   CreatureId,
@@ -117,6 +120,7 @@ export function resolveAttack(
   onHitEffect: AttackHitCtx["onHitEffect"],
   isFinesse: boolean,
   hasAllyAdjacentToTarget: boolean,
+  hasAnyDisadvantageSource: boolean,
   saDmg: number,
   hitReactionCandidates: ReadonlySet<CreatureId>,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
@@ -132,7 +136,8 @@ export function resolveAttack(
     atk.sneakAttackDice > 0 &&
     !atk.sneakAttackUsedThisTurn &&
     eligibleWeapon &&
-    (mods.hasAdvantage || (hasAllyAdjacentToTarget && !mods.hasDisadvantage));
+    !hasAnyDisadvantageSource &&
+    (mods.hasAdvantage || hasAllyAdjacentToTarget);
   const effectiveSaDmg = saEligible ? saDmg : 0;
   const totalDmg = damage + meleeDmgBonus + effectiveSaDmg;
   const effectiveCrit = isCritical || mods.autoCrit;
@@ -202,6 +207,7 @@ export function battleAttack({
     e.frightSourceInLOS,
   );
   const mods = aggregateAttackMods(ctx);
+  const hasAnyDisadvantageSource = hasAttackDisadvantageSource(ctx);
   return resolveAttack(
     cs,
     id,
@@ -220,6 +226,7 @@ export function battleAttack({
     e.onHitEffect,
     e.isFinesse,
     e.hasAllyAdjacentToTarget,
+    hasAnyDisadvantageSource,
     e.saDmg,
     e.hitReactionCandidates,
   );
@@ -327,7 +334,7 @@ export function battleResolveDmgReaction({
     setDifference(aw.eligible, aw.offered).size === 0 ||
     e.reactorId === null
   ) {
-    const result = dealDamageWithAfterReactions(
+    const result = applyDamageWithAfterReactions(
       c.creatures,
       atk.target,
       atk.attacker,
@@ -388,10 +395,10 @@ export function battleResolveDmgReaction({
   return { ...phaseAwaitReaction({ ...aw, offered: newOffered }) };
 }
 
-export function battleAfterDamagePass({
+export function battleAfterDamageDecline({
   context: c,
   event: e,
-}: BattleActionArgs<"BATTLE_AFTER_DAMAGE_PASS">): Partial<BattleContext> {
+}: BattleActionArgs<"BATTLE_AFTER_DAMAGE_DECLINE">): Partial<BattleContext> {
   const aw = awaitingReaction(c);
   if (!aw) return {};
   const pi = piAfterDamage(aw.interrupt);
@@ -422,7 +429,7 @@ export function battleAfterDamageSpellReaction({
   const actualDmg = e.reactionSaved
     ? Math.trunc(e.reactionDmg / 2)
     : e.reactionDmg;
-  const result = dealDamageWithAfterReactions(
+  const result = applyDamageWithAfterReactions(
     cs1,
     ad.damageSource,
     e.reactorId,
@@ -457,7 +464,7 @@ export function battleAfterDamageRetaliation({
       creatures: cs1,
       ...phaseAwaitReaction({ ...aw, offered: newOffered }),
     };
-  const result = dealDamageWithAfterReactions(
+  const result = applyDamageWithAfterReactions(
     cs1,
     ad.damageSource,
     e.reactorId,

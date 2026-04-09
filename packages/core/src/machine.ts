@@ -955,6 +955,7 @@ export const creatureMachine = setup({
       pactSlotsCurrent: derivedSlots.pactSlotsCurrent,
       pactSlotsMax: derivedSlots.pactSlotsMax,
       preparedSpells,
+      wearingArmorWithoutTraining: i.wearingArmorWithoutTraining ?? false,
       slotsCurrent: i.slotsCurrent ?? derivedSlots.slotsCurrent,
       slotsMax,
       tempHp: tempHp(0),

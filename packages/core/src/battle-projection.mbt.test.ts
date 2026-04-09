@@ -50,7 +50,6 @@ import type {
   CreatureId,
   CreatureKind,
   DamageType,
-  Size,
 } from "#/types.ts";
 import {
   classLevel,
@@ -336,7 +335,7 @@ const battleDriverSchema = {
     decision: OV,
   },
   bResolveDmgReaction: { reactorId: OS, reductionAmt: OI, decision: OV },
-  bAfterDamagePass: { reactorId: OS },
+  bAfterDamageDecline: { reactorId: OS },
   bAfterDamageSpellReaction: {
     reactionDmg: OI,
     reactionSaved: OB,
@@ -391,7 +390,7 @@ const battleDriverSchema = {
   },
   bResolveAoETarget: { targetId: OS, saveRoll: OI },
   bMove: { threatened: z.any().optional() },
-  bMovementOAPass: { reactorId: OS },
+  bMovementOADecline: { reactorId: OS },
   bMovementOAAttack: {
     oaAtkRoll: OI,
     oaDmg: OI,
@@ -969,7 +968,7 @@ function createBattleProjectionDriver() {
       // RPass: no change
     }
 
-    function handleBAfterDamagePass(picks: ReadonlyMap<string, unknown>) {
+    function handleBAfterDamageDecline(picks: ReadonlyMap<string, unknown>) {
       const reactorId = pickString(picks, "reactorId");
       if (!reactorId) {
         // remaining == 0: after-damage window closed
@@ -1584,7 +1583,7 @@ function createBattleProjectionDriver() {
       send(id, { type: "USE_MOVEMENT", feet: 5, movementCost: 1 });
     }
 
-    function handleBMovementOAPass(_picks: ReadonlyMap<string, unknown>) {
+    function handleBMovementOADecline(_picks: ReadonlyMap<string, unknown>) {
       // Pass — no events
     }
 
@@ -2038,9 +2037,9 @@ function createBattleProjectionDriver() {
         before("bResolveDmgReaction");
         handleBResolveDmgReaction(toMap(p));
       },
-      bAfterDamagePass: (p: Record<string, unknown>) => {
-        before("bAfterDamagePass");
-        handleBAfterDamagePass(toMap(p));
+      bAfterDamageDecline: (p: Record<string, unknown>) => {
+        before("bAfterDamageDecline");
+        handleBAfterDamageDecline(toMap(p));
       },
       bAfterDamageSpellReaction: (p: Record<string, unknown>) => {
         before("bAfterDamageSpellReaction");
@@ -2082,9 +2081,9 @@ function createBattleProjectionDriver() {
         before("bMove");
         handleBMove(new Map());
       },
-      bMovementOAPass: () => {
-        before("bMovementOAPass");
-        handleBMovementOAPass(new Map());
+      bMovementOADecline: () => {
+        before("bMovementOADecline");
+        handleBMovementOADecline(new Map());
       },
       bMovementOAAttack: (p: Record<string, unknown>) => {
         before("bMovementOAAttack");
@@ -2226,7 +2225,9 @@ describe("Battle Projection MBT", () => {
   // Default: comprehensive run for CI / perpetual background validation.
   const isCi = process.env["CI"] === "true";
   const isDev = process.env["MBT_DEV"] === "1";
-  const mbtBackend = process.env["MBT_BACKEND"] ?? "typescript";
+  const mbtBackend = (
+    process.env["MBT_BACKEND"] ?? "typescript"
+  ) as "typescript" | "rust";
   // Local projection MBT defaults to replaying a checked-in battle trace.
   // This keeps `pnpm test` stable; live randomized battle generation belongs in
   // CI/fuzz runs or explicit MBT_REPLAY_DIR / QUINT_SEED overrides.

@@ -44,6 +44,100 @@ export const CONDITIONS = [
 ] as const;
 export type Condition = (typeof CONDITIONS)[number];
 
+export interface ConditionConsequences {
+  readonly ownAttackDisadvantage: boolean;
+  readonly defenseAdvantage: boolean;
+  readonly defenseAutoCritWithin5ft: boolean;
+  readonly checkDisadvantage: boolean;
+  readonly saveDexDisadvantage: boolean;
+  readonly saveStrDexAutoFail: boolean;
+  readonly speedZero: boolean;
+  readonly blocksActions: boolean;
+  readonly blocksSpeech: boolean;
+}
+
+const NO_CONDITION_CONSEQUENCES: ConditionConsequences = {
+  ownAttackDisadvantage: false,
+  defenseAdvantage: false,
+  defenseAutoCritWithin5ft: false,
+  checkDisadvantage: false,
+  saveDexDisadvantage: false,
+  saveStrDexAutoFail: false,
+  speedZero: false,
+  blocksActions: false,
+  blocksSpeech: false,
+};
+
+export const CANONICAL_CONDITION_CONSEQUENCES: Readonly<
+  Record<Condition, ConditionConsequences>
+> = {
+  blinded: {
+    ...NO_CONDITION_CONSEQUENCES,
+    ownAttackDisadvantage: true,
+    defenseAdvantage: true,
+  },
+  charmed: NO_CONDITION_CONSEQUENCES,
+  deafened: NO_CONDITION_CONSEQUENCES,
+  frightened: NO_CONDITION_CONSEQUENCES,
+  grappled: {
+    ...NO_CONDITION_CONSEQUENCES,
+    speedZero: true,
+  },
+  incapacitated: {
+    ...NO_CONDITION_CONSEQUENCES,
+    blocksActions: true,
+  },
+  invisible: NO_CONDITION_CONSEQUENCES,
+  paralyzed: {
+    ...NO_CONDITION_CONSEQUENCES,
+    defenseAdvantage: true,
+    defenseAutoCritWithin5ft: true,
+    saveStrDexAutoFail: true,
+    speedZero: true,
+    blocksActions: true,
+    blocksSpeech: true,
+  },
+  petrified: {
+    ...NO_CONDITION_CONSEQUENCES,
+    defenseAdvantage: true,
+    saveStrDexAutoFail: true,
+    speedZero: true,
+    blocksActions: true,
+    blocksSpeech: true,
+  },
+  poisoned: {
+    ...NO_CONDITION_CONSEQUENCES,
+    ownAttackDisadvantage: true,
+    checkDisadvantage: true,
+  },
+  prone: {
+    ...NO_CONDITION_CONSEQUENCES,
+    ownAttackDisadvantage: true,
+  },
+  restrained: {
+    ...NO_CONDITION_CONSEQUENCES,
+    ownAttackDisadvantage: true,
+    defenseAdvantage: true,
+    saveDexDisadvantage: true,
+    speedZero: true,
+  },
+  stunned: {
+    ...NO_CONDITION_CONSEQUENCES,
+    defenseAdvantage: true,
+    saveStrDexAutoFail: true,
+    blocksActions: true,
+  },
+  unconscious: {
+    ...NO_CONDITION_CONSEQUENCES,
+    defenseAdvantage: true,
+    defenseAutoCritWithin5ft: true,
+    saveStrDexAutoFail: true,
+    speedZero: true,
+    blocksActions: true,
+    blocksSpeech: true,
+  },
+};
+
 export const INCAP_SOURCES = [
   "paralyzed",
   "petrified",

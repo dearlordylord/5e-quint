@@ -99,9 +99,9 @@ export function canSneakAttack(params: {
 }): boolean {
   if (params.sneakAttackUsedThisTurn) return false;
   if (!params.isFinesse && !params.isRanged) return false;
+  if (params.hasDisadvantage) return false;
   if (params.hasAdvantage) return true;
-  if (params.allyAdjacentAndNotIncapacitated && !params.hasDisadvantage)
-    return true;
+  if (params.allyAdjacentAndNotIncapacitated) return true;
   return false;
 }
 

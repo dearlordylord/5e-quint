@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-module dndTest {
+module dndTest::Impl {
   import creature.* from "./creature"
 
   // ============================================================
@@ -256,7 +256,7 @@ module dndTest {
   // AC Calculation
   // ============================================================
 
-  run test_ac_no_armor = {
+  run test_NoUnarmoredDefense_Unarmored_ac_no_armor = {
     val ac = calculateAC(Unarmored, 2, false, NoUnarmoredDefense, 0, 0)
     assert(ac == 12) // 10 + 2 DEX
   }
@@ -286,17 +286,17 @@ module dndTest {
     assert(ac == 20) // 18 + 2
   }
 
-  run test_ac_barbarian_unarmored = {
+  run test_Unarmored_ac_barbarian = {
     val ac = calculateAC(Unarmored, 3, false, BarbarianUD, 2, 0)
     assert(ac == 15) // 10 + 3 DEX + 2 CON
   }
 
-  run test_ac_monk_unarmored = {
+  run test_Unarmored_ac_monk = {
     val ac = calculateAC(Unarmored, 3, false, MonkUD, 0, 2)
     assert(ac == 15) // 10 + 3 DEX + 2 WIS
   }
 
-  run test_ac_barbarian_unarmored_shield = {
+  run test_Unarmored_ac_barbarian_shield = {
     val ac = calculateAC(Unarmored, 2, true, BarbarianUD, 3, 0)
     assert(ac == 17) // 10 + 2 DEX + 3 CON + 2 shield
   }
@@ -305,19 +305,19 @@ module dndTest {
   // Armor Speed Penalty
   // ============================================================
 
-  run test_armor_speed_no_penalty = {
+  run test_armorSpeedPenalty_no_penalty = {
     assert(armorSpeedPenalty(WearingArmor(CHAIN_MAIL), 13) == 0) // meets STR 13
   }
 
-  run test_armor_speed_penalty = {
+  run test_armorSpeedPenalty_penalty = {
     assert(armorSpeedPenalty(WearingArmor(CHAIN_MAIL), 12) == 10) // STR 12 < 13
   }
 
-  run test_armor_speed_no_req = {
+  run test_armorSpeedPenalty_no_req = {
     assert(armorSpeedPenalty(WearingArmor(RING_MAIL), 8) == 0) // no STR req
   }
 
-  run test_armor_speed_unarmored = {
+  run test_armorSpeedPenalty_unarmored = {
     assert(armorSpeedPenalty(Unarmored, 5) == 0)
   }
 
@@ -464,9 +464,9 @@ module dndTest {
   }
 
   // -- effectiveMaxHp --
-  run test_effective_max_hp_normal = assert(effectiveMaxHp(FRESH20) == 20)
+  run test_effectiveMaxHp_normal = assert(effectiveMaxHp(FRESH20) == 20)
 
-  run test_effective_max_hp_exhaustion4 = {
+  run test_effectiveMaxHp_exhaustion4 = {
     val s = FRESH20.with("exhaustion", 4)
     assert(effectiveMaxHp(s) == 20)
   }
@@ -767,9 +767,9 @@ module dndTest {
   // ============================================================
 
   pure val EMPTY_EFFECTS: Set[ActiveEffect] = Set()
-  pure val EFF_A: ActiveEffect = { spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
-  pure val EFF_B: ActiveEffect = { spellId: "bless", turnsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
-  pure val EFF_START: ActiveEffect = { spellId: "dodge", turnsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
+  pure val EFF_A: ActiveEffect = { spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
+  pure val EFF_B: ActiveEffect = { spellId: "bless", turnsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
+  pure val EFF_START: ActiveEffect = { spellId: "dodge", turnsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
   pure val TWO_EFFECTS: Set[ActiveEffect] = Set(EFF_A, EFF_B)
 
   // -- pAddEffect --
@@ -821,7 +821,7 @@ module dndTest {
   }
 
   run test_decrement_to_zero = {
-    val effects = Set({ spellId: "shield", turnsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() })
+    val effects = Set({ spellId: "shield", turnsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() })
     val result = pDecrementDurations(effects)
     assert(result.exists(e => e.spellId == "shield" and e.turnsRemaining == 0))
   }
@@ -832,9 +832,9 @@ module dndTest {
 
   run test_expired_at_phase_end = {
     val effects = Set(
-      { spellId: "a", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
-      { spellId: "b", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
-      { spellId: "c", turnsRemaining: -1, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
+      { spellId: "a", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
+      { spellId: "b", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
+      { spellId: "c", turnsRemaining: -1, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
     )
     val expired = pExpiredAtPhase(effects, AtEndOfTurn)
     all { assert(expired.exists(e => e.spellId == "a")), assert(expired.exists(e => e.spellId == "c")), assert(expired.size() == 2) }
@@ -842,8 +842,8 @@ module dndTest {
 
   run test_expired_at_phase_start_only = {
     val effects = Set(
-      { spellId: "a", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
-      { spellId: "b", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
+      { spellId: "a", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
+      { spellId: "b", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
     )
     val expiredStart = pExpiredAtPhase(effects, AtStartOfTurn)
     val expiredEnd = pExpiredAtPhase(effects, AtEndOfTurn)
@@ -859,9 +859,9 @@ module dndTest {
 
   run test_clear_expired_at_phase = {
     val effects = Set(
-      { spellId: "a", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
-      { spellId: "b", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
-      { spellId: "c", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
+      { spellId: "a", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
+      { spellId: "b", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
+      { spellId: "c", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
     )
     val result = pClearExpiredAtPhase(effects, AtEndOfTurn)
     all {
@@ -880,7 +880,7 @@ module dndTest {
   run test_has_effect_empty = assert(not(pHasEffect(EMPTY_EFFECTS, "anything")))
 
   run test_has_effect_expired_false = {
-    val effects = Set({ spellId: "shield", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() })
+    val effects = Set({ spellId: "shield", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() })
     assert(not(pHasEffect(effects, "shield")))
   }
 
@@ -888,8 +888,8 @@ module dndTest {
 
   run test_tick_effects = {
     val effects = Set(
-      { spellId: "a", turnsRemaining: 5, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
-      { spellId: "b", turnsRemaining: 2, expiresAt: AtStartOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
+      { spellId: "a", turnsRemaining: 5, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() },
+      { spellId: "b", turnsRemaining: 2, expiresAt: AtStartOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }
     )
     val result = pTickEffects(effects, 3)
     all {
@@ -944,7 +944,7 @@ module dndTest {
 
   run test_end_turn_save_removes_effect = {
     val s = freshCreature(20).with("activeEffects",
-      Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
+      Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
     val saves = [{ spellId: "hold_person", saveSucceeded: true, conditionsToRemove: Set() }]
     val r = pEndTurn(s, FRESH_SPELL_SLOTS, saves, [])
     assert(not(pHasEffect(r.creature.activeEffects, "hold_person")))
@@ -952,7 +952,7 @@ module dndTest {
 
   run test_end_turn_save_removes_condition = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
+      .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
     val s2 = pApplyCondition(s, CParalyzed, Set())
     val saves = [{ spellId: "hold_person", saveSucceeded: true, conditionsToRemove: Set(CParalyzed) }]
     val r = pEndTurn(s2, FRESH_SPELL_SLOTS, saves, [])
@@ -964,7 +964,7 @@ module dndTest {
 
   run test_end_turn_save_fail_keeps = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
+      .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
     val s2 = pApplyCondition(s, CParalyzed, Set())
     val saves = [{ spellId: "hold_person", saveSucceeded: false, conditionsToRemove: Set(CParalyzed) }]
     val r = pEndTurn(s2, FRESH_SPELL_SLOTS, saves, [])
@@ -983,7 +983,7 @@ module dndTest {
 
   run test_end_turn_damage_breaks_conc = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "bless", turnsRemaining: 5, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
+      .with("activeEffects", Set({ spellId: "bless", turnsRemaining: 5, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
     val ss = FRESH_SPELL_SLOTS.with("concentrationSpellId", "bless")
     val damages = [{ spellId: "wall_of_fire", damage: 5, damageType: Fire, conSaveSucceeded: false, resistances: Set(), vulnerabilities: Set(), immunities: Set() }]
     val r = pEndTurn(s, ss, [], damages)
@@ -996,14 +996,14 @@ module dndTest {
 
   run test_end_turn_clears_expired_at_end = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "rage", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
+      .with("activeEffects", Set({ spellId: "rage", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
     val r = pEndTurn(s, FRESH_SPELL_SLOTS, [], [])
     assert(r.creature.activeEffects.size() == 0)
   }
 
   run test_end_turn_preserves_start_expired = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "dodge", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
+      .with("activeEffects", Set({ spellId: "dodge", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", grantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set() }))
     val r = pEndTurn(s, FRESH_SPELL_SLOTS, [], [])
     // AtStartOfTurn expired effects are NOT cleared by END_TURN — that's START_TURN's job
     assert(r.creature.activeEffects.size() == 1)
@@ -1443,7 +1443,8 @@ module dndTest {
     targetBlinded: false, targetParalyzed: false,
     targetPetrified: false, targetStunned: false, targetUnconscious: false,
     targetRestrained: false, targetProne: false,
-    attackerWithin5ft: true, targetDodging: false, targetCanSeeAttacker: true,
+    attackerWithin5ft: true, targetDodging: false, targetIncapacitated: false,
+    targetSpeedZero: false, targetCanSeeAttacker: true,
     attackerCanSeeTarget: true,
     isRangedAttack: false, beyondNormalRange: false, hostileWithin5ft: false,
     isHeavyWeapon: false, wielderStrScore: 16, wielderDexScore: 14,
@@ -2465,6 +2466,7 @@ module dndTest {
     val eff: ActiveEffect = {
       spellId: "bless", turnsRemaining: 1, expiresAt: AtStartOfTurn,
       casterId: "",
+      grantedConditions: Set(),
       grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
     }
     val s = FRESH20.with("activeEffects", Set(eff))
@@ -2483,6 +2485,7 @@ module dndTest {
     val eff: ActiveEffect = {
       spellId: "bless", turnsRemaining: 0, expiresAt: AtEndOfTurn,
       casterId: "",
+      grantedConditions: Set(),
       grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
     }
     val s = FRESH20.with("activeEffects", Set(eff))
@@ -2500,6 +2503,7 @@ module dndTest {
     val eff: ActiveEffect = {
       spellId: "bless", turnsRemaining: 2, expiresAt: AtStartOfTurn,
       casterId: "",
+      grantedConditions: Set(),
       grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
     }
     val s = FRESH20.with("activeEffects", Set(eff))
@@ -2585,7 +2589,7 @@ module dndTest {
 
   run test_spend_hd_basic = {
     // Roll 6 + CON mod 2 = 8 healing. HP 15 → 23. HD 3 → 2.
-    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, FIGHTER_CON_MOD, 6)
+    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, 6)
     all {
       assert(s.hp == 23),
       assert(s.hitDiceRemaining.get(Fighter) == 2),
@@ -2594,7 +2598,7 @@ module dndTest {
 
   run test_spend_hd_caps_at_max = {
     // Roll 10 + 2 = 12 healing. HP 15 + 12 = 27, capped at maxHp 30. HD 3 → 2.
-    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, FIGHTER_CON_MOD, 10)
+    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, 10)
     all {
       assert(s.hp == 27),
       assert(s.hitDiceRemaining.get(Fighter) == 2),
@@ -2604,7 +2608,7 @@ module dndTest {
   run test_spend_hd_no_dice_remaining = {
     // 0 HD remaining → no-op
     val s = WOUNDED_FIGHTER.with("hitDiceRemaining", ZERO_CLASS_LEVELS)
-    val result = pSpendHitDie(s, Fighter, FIGHTER_CON_MOD, 8)
+    val result = pSpendHitDie(s, Fighter, 8)
     all {
       assert(result.hp == 15),
       assert(result.hitDiceRemaining.get(Fighter) == 0),
@@ -2613,13 +2617,13 @@ module dndTest {
 
   run test_spend_hd_dead_noop = {
     val s = WOUNDED_FIGHTER.with("dead", true)
-    val result = pSpendHitDie(s, Fighter, FIGHTER_CON_MOD, 6)
+    val result = pSpendHitDie(s, Fighter, 6)
     assert(result.hp == 15)
   }
 
   run test_spend_hd_negative_con_mod = {
     // CON mod -1, roll 2 → 2 + (-1) = 1 healing. HP 15 → 16.
-    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, -1, 2)
+    val s = pSpendHitDie(WOUNDED_FIGHTER.with("conMod", -1), Fighter, 2)
     all {
       assert(s.hp == 16),
       assert(s.hitDiceRemaining.get(Fighter) == 2),
@@ -2628,7 +2632,7 @@ module dndTest {
 
   run test_spend_hd_negative_total_floors_to_zero = {
     // CON mod -3, roll 1 → 1 + (-3) = -2 → min 0 → no healing
-    val s = pSpendHitDie(WOUNDED_FIGHTER, Fighter, -3, 1)
+    val s = pSpendHitDie(WOUNDED_FIGHTER.with("conMod", -3), Fighter, 1)
     all {
       assert(s.hp == 15),
       assert(s.hitDiceRemaining.get(Fighter) == 2),
@@ -2642,7 +2646,7 @@ module dndTest {
       CUnconscious,
       Set()
     )
-    val result = pSpendHitDie(s, Fighter, FIGHTER_CON_MOD, 4)
+    val result = pSpendHitDie(s, Fighter, 4)
     all {
       assert(result.hp == 6),
       assert(not(result.unconscious)),
@@ -2654,7 +2658,7 @@ module dndTest {
 
   run test_short_rest_multiple_rolls = {
     // 3 HD remaining. Spend 2: roll 5 (+2=7), roll 3 (+2=5). HP 15 → 27. HD 3 → 1.
-    val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [(Fighter, 5), (Fighter, 3)])
+    val s = pShortRest(WOUNDED_FIGHTER, [(Fighter, 5), (Fighter, 3)])
     all {
       assert(s.hp == 27),
       assert(s.hitDiceRemaining.get(Fighter) == 1),
@@ -2663,7 +2667,7 @@ module dndTest {
 
   run test_short_rest_empty_rolls = {
     // No HD spent → unchanged
-    val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [])
+    val s = pShortRest(WOUNDED_FIGHTER, [])
     all {
       assert(s.hp == 15),
       assert(s.hitDiceRemaining.get(Fighter) == 3),
@@ -2672,7 +2676,7 @@ module dndTest {
 
   run test_short_rest_exceeds_hd = {
     // 3 HD remaining, try to spend 5 → only first 3 take effect
-    val s = pShortRest(WOUNDED_FIGHTER, FIGHTER_CON_MOD, [(Fighter, 4), (Fighter, 4), (Fighter, 4), (Fighter, 4), (Fighter, 4)])
+    val s = pShortRest(WOUNDED_FIGHTER, [(Fighter, 4), (Fighter, 4), (Fighter, 4), (Fighter, 4), (Fighter, 4)])
     // 3 rolls of 4+2=6 each → 18 healing. HP 15 → 30 (capped). HD 3 → 0.
     all {
       assert(s.hp == 30),
@@ -2683,7 +2687,7 @@ module dndTest {
   run test_short_rest_caps_hp = {
     // Nearly full HP, one roll: 28 HP, roll 8 + 2 = 10 → cap at 30
     val s = WOUNDED_FIGHTER.with("hp", 28)
-    val result = pShortRest(s, FIGHTER_CON_MOD, [(Fighter, 8)])
+    val result = pShortRest(s, [(Fighter, 8)])
     assert(result.hp == 30)
   }
 
@@ -3184,9 +3188,9 @@ module dndTest {
   run test_extra_attack_stacks_first = assert(pExtraAttackStacks(false))
   run test_extra_attack_no_stack = assert(not(pExtraAttackStacks(true)))
 
-  run test_can_gain_ud_first = assert(pCanGainUnarmoredDefense(NoUnarmoredDefense))
-  run test_cant_gain_ud_barbarian = assert(not(pCanGainUnarmoredDefense(BarbarianUD)))
-  run test_cant_gain_ud_monk = assert(not(pCanGainUnarmoredDefense(MonkUD)))
+  run test_pCanGainUnarmoredDefense_first = assert(pCanGainUnarmoredDefense(NoUnarmoredDefense))
+  run test_pCanGainUnarmoredDefense_barbarian = assert(not(pCanGainUnarmoredDefense(BarbarianUD)))
+  run test_pCanGainUnarmoredDefense_monk = assert(not(pCanGainUnarmoredDefense(MonkUD)))
 
   // ============================================================
   // Invariant Verification (MBT trace tests)
@@ -4064,6 +4068,7 @@ module dndTest {
     bonusMovementOAFree: false,
     actionSurgeActionPending: false,
     slotExpendedThisTurn: false,
+    pendingResolution: NoPending,
   }
 
   // 2-attack Multiattack: Attack action -> extra attack -> depleted
@@ -6781,6 +6786,7 @@ module dndTest {
 
   pure val INV_CONC_EFFECT: ActiveEffect = {
     spellId: "spell1", turnsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster1",
+    grantedConditions: Set(),
     grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
   }
 
@@ -7087,10 +7093,12 @@ module dndTest {
   run inv_activeEffect_expiryPhaseSpecific = {
     val eEnd: ActiveEffect = {
       spellId: "endSpell", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "c1",
+      grantedConditions: Set(),
       grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
     }
     val eStart: ActiveEffect = {
       spellId: "startSpell", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "c1",
+      grantedConditions: Set(),
       grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(),
     }
     val effects = Set(eEnd, eStart)
@@ -7208,4 +7216,9 @@ module dndTest {
     assert(s1.hp == 50)
   }
 
+}
+
+module dndTest {
+  import dndTest::Impl.*
+  export dndTest::Impl.*
 }

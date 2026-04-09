@@ -23,11 +23,11 @@ export function isCiEnv(): boolean {
   return process.env["CI"] === "true";
 }
 
-export function getMbtBackend(): string {
+export function getMbtBackend(): "typescript" | "rust" {
   // Rust remains opt-in via MBT_BACKEND=rust. The default stays on the
   // TypeScript backend because the Rust evaluator path is not reliable in this
   // environment.
-  return process.env["MBT_BACKEND"] ?? "typescript";
+  return (process.env["MBT_BACKEND"] ?? "typescript") as "typescript" | "rust";
 }
 
 export function getBattleMbtRunShape(isDev: boolean): MbtBattleRunShape {

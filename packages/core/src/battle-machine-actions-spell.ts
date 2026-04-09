@@ -4,7 +4,7 @@ import {
   applyFailEffects,
   awaitingReaction,
   breakConcentrationAndPropagate,
-  dealDamageWithAfterReactions,
+  applyDamageWithAfterReactions,
   eligibleForCounterspell,
   eligibleForLR,
   expendSlot,
@@ -376,7 +376,7 @@ export function battleResolveAoETarget({
       if (evDmg === 0) {
         return { ...phaseResolvingAoE(updatedAoe) };
       }
-      const result = dealDamageWithAfterReactions(
+      const result = applyDamageWithAfterReactions(
         c.creatures,
         e.targetId,
         aoe.caster,
