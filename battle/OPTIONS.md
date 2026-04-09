@@ -1,6 +1,6 @@
 # Battle State — Architecture Options
 
-Design options under consideration. Everything here is a proposal — not decided.
+> **Note (2026-04-09 audit):** O1 (layered architecture), O2 (caller-provided distances), O3.A (reactions as state machine states), and O4 (whole rulebook in Quint) are all **implemented**. This file is now primarily historical reference for the design rationale behind these choices.
 
 ---
 

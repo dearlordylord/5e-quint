@@ -197,9 +197,8 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
   - [PRD_AVAILABLE_ACTIONS.md](/workspace/typescript/dnd/PRD_AVAILABLE_ACTIONS.md)
   - [PRD_READY_ACTION.md](/workspace/typescript/dnd/PRD_READY_ACTION.md)
 - `qualified-damage-typing`, `qualified-physical-damage-bypass`, `weapon-property-aware-battle-resolution`, `versatile-weapon-die-switching`, `off-hand-attack-surface`, `two-weapon-fighting-bonus-attack`, `fighting-styles-in-battle`:
-  - [PRD_ATTACK_PIPELINE.md](/workspace/typescript/dnd/PRD_ATTACK_PIPELINE.md)
-  - [PRD_ATTACK_TYPE_AND_ADVANTAGE.md](/workspace/typescript/dnd/PRD_ATTACK_TYPE_AND_ADVANTAGE.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
+  - [PLAN_AUDIT.md](/workspace/typescript/dnd/PLAN_AUDIT.md)
 - `battle-hand-occupancy-state`, `versatile-weapon-die-switching`, future hand-sensitive OA/grapple/spellcasting consumers:
   - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
@@ -208,7 +207,6 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
   - [.references/srd-5.2.1/Spells/Gaining-and-Casting.md](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Gaining-and-Casting.md)
 - `closed-modifier-algebra`, `generic-per-attack-type-bonus-surface`, `max-hp-reduction-state`, `max-hp-reduction`, `next-hit-rider-consumption`, `effect-dependency-graph`:
   - [PLAN_AUDIT.md](/workspace/typescript/dnd/PLAN_AUDIT.md)
-  - [PRD_PASSIVE_MODIFIERS.md](/workspace/typescript/dnd/PRD_PASSIVE_MODIFIERS.md)
   - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
 - `oa-path-vocabulary`, `movement-provocation-kind`, `battle-hidden-state`, `hide-stealth-chain`, `forced-movement-vs-oa`, `reach-extends-oa-range`:
   - [battle/DOMAIN.md](/workspace/typescript/dnd/battle/DOMAIN.md)
@@ -226,8 +224,6 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 - owner_layer: shared runtime/query modifier vocabulary
 - read_first:
   - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
-  - [PRD_PASSIVE_MODIFIERS.md](/workspace/typescript/dnd/PRD_PASSIVE_MODIFIERS.md)
-  - [PRD_ATTACK_TYPE_AND_ADVANTAGE.md](/workspace/typescript/dnd/PRD_ATTACK_TYPE_AND_ADVANTAGE.md)
   - [.references/inspirations/11-modifier-algebra.md](/workspace/typescript/dnd/.references/inspirations/11-modifier-algebra.md)
 - promotion_goal:
   - define the smallest closed modifier algebra that can unblock `generic-per-attack-type-bonus-surface` without introducing an open registry
@@ -250,7 +246,6 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 - owner_layer: battle attack/damage/AC pipelines plus fighter style content
 - read_first:
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
-  - [PRD_ATTACK_PIPELINE.md](/workspace/typescript/dnd/PRD_ATTACK_PIPELINE.md)
   - [packages/core/src/features/class-fighter.ts](/workspace/typescript/dnd/packages/core/src/features/class-fighter.ts)
   - [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-attack.ts)
   - [packages/core/src/battle-machine-creature.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-creature.ts)

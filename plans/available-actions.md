@@ -4,18 +4,13 @@
 
 ## Current status
 
-- The foundational action-surface redesign is complete on `master`.
-- The battle reaction-ownership redesign is complete on `master`.
-- The supported action surface is now unified across creature and battle scopes.
-- Battle-scoped hit/damage reaction discovery and execution are complete for:
-  - `CAST_SHIELD`
-  - `USE_PARRY`
-  - `USE_CUTTING_WORDS`
-  - `USE_UNCANNY_DODGE`
-  - `USE_DEFLECT_ATTACKS`
-- The next batch is semantic breadth on the established contract, not another ownership redesign.
-- The next recommended implementation slice is `CAST_COUNTERSPELL`.
-- Hellenvald/transcript work is intentionally deferred until the repo has the full SRD feature set we want and stronger domain-language architecture. Priority order is: formal spec / `.sbt`, then domain language/ownership, then TS architecture as support.
+> Updated 2026-04-09 (documentation audit).
+
+- Phases 1-4A are complete. The foundational contract, battle reaction ownership, action grouping, choice holes, and semantic breadth are all landed.
+- `CAST_COUNTERSPELL` is complete (landed in the battle action surface).
+- Trigger-window actions (`USE_SNEAK_ATTACK`, `USE_INDOMITABLE`, `USE_OVERCHANNEL`) are implemented and exposed, despite earlier deferral notes in Phase 4 — the owned trigger-window state was added during subsequent development.
+- Architectural decisions in this file are durable and are now also summarized in `ARCHITECTURE.md` section 5.
+- Hellenvald/transcript work (phases 5-8) is intentionally deferred until the repo has the full SRD feature set and stronger domain-language architecture.
 
 ## Architectural decisions
 

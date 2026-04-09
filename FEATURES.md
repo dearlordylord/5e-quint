@@ -43,7 +43,7 @@ Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** 
 | Consume-on-next-hit rider effects | Spec + Battle | Done | Qualifying one-shot rider effects are consumed on the correct battle hit |
 | Weapon Mastery (8 properties) | Content | Done | Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex |
 | 33 weapons with mastery mappings | Content | Done | Simple + martial, melee + ranged |
-| Versatile weapon die switching | — | Not done | Blocked on explicit battle-owned hand occupancy / shield / free-hand state |
+| Versatile weapon die switching | — | Not done | Hand occupancy state landed; implementation ready to schedule |
 
 ## Conditions (14/14 + Exhaustion)
 
@@ -341,7 +341,8 @@ Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** 
 | Feature | Status | Reference | Notes |
 |---------|--------|-----------|-------|
 | Remaining ~18 reaction types | Planned | F1 in PLAN_AUDIT | Absorb Elements, Sentinel, War Caster, Silvery Barbs, etc. |
-| Grapple/Shove/TWF in battle flow | Planned | F9 | Modeled in creature spec; not wired into battle actions |
+| Grapple/Shove in battle flow | Done | F9 | `bGrapple`, `bReleaseGrapple`, `bEscapeGrapple` in battle.qnt |
+| TWF in battle flow | Done | F9 | `bOffHandAttack` in battle.qnt |
 | Spell identity & prepared lists | Planned | TODO_FEATURES | Slots modeled; individual spell tracking deferred |
 | Danger Sense (battle wiring) | Deferred | F13 | Data in content; not wired to save advantage in battle |
 | Elusive (battle wiring) | Deferred | F14 | Data in content; not wired to attack advantage in battle |
@@ -368,11 +369,11 @@ Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** 
 | Weapons with mastery | 38 |
 | Weapon mastery properties | 8 |
 | Metamagic options | 10 |
-| Battle actions | 36 |
-| Creature actions | 108 |
-| Spec pure functions | 238+ |
+| Battle actions | 41 |
+| Creature actions | 115 |
+| Spec pure functions | 413+ |
 | Reaction types modeled in battle | 7 (3 more have facility, variant not wired) |
-| Safety invariants | 49 (creature) + 13 (battle) |
+| Safety invariants | 49 (creature) + 14 (battle) |
 | Species traits | 7+ (Dragonborn, Orc, Goliath, Tiefling) |
 | Fighting Styles | 4 |
 | QA corpus entries | ~12,700 |

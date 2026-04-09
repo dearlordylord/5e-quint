@@ -28,9 +28,11 @@ Use the local SRD corpus in [.references/srd-5.2.1/](../srd-5.2.1/) as the autho
 
 ## Current Actionable Subset
 
-These mined scenarios are viable now without introducing new core facilities.
+> **Note (2026-04-09 audit):** Items 4, 5, 6, 14, 23, 24, 25 and the "Best Next Batch" ordering below are all **complete** — landed in DAG Runbooks 1-3. Items 7, 10, 33, 3, 27 from "Worth Taking Later" are also complete. See `plans/DAG.md` node table for authoritative status.
 
-### 4. Sneak Attack once-per-turn boundary
+These mined scenarios were viable without introducing new core facilities. All are now complete.
+
+### 4. Sneak Attack once-per-turn boundary (COMPLETE)
 
 Why it is actionable:
 
@@ -148,17 +150,17 @@ Evidence:
 - [PRD_AVAILABLE_ACTIONS.md](../../PRD_AVAILABLE_ACTIONS.md)
 - [packages/core/src/available-actions.ts](../../packages/core/src/available-actions.ts)
 
-## Best Next Batch
+## Best Next Batch (ALL COMPLETE)
 
-Pick from this order unless a user asks for a specific rule:
+All items in this batch were landed in DAG Runbooks 1-3:
 
-1. `24` Sneak Attack blocked by any disadvantage
-2. `6` same-name magical effect non-stacking
-3. `23` exhaustion d20 penalty in TS/runtime
-4. `25` Armor Training disadvantage
-5. `4` Sneak Attack once-per-turn boundary
-6. `14` stand from prone in battle
-7. `5` duration-boundary audit
+1. `24` Sneak Attack blocked by any disadvantage — DONE
+2. `6` same-name magical effect non-stacking — DONE
+3. `23` exhaustion d20 penalty in TS/runtime — DONE
+4. `25` Armor Training disadvantage — DONE
+5. `4` Sneak Attack once-per-turn boundary — DONE
+6. `14` stand from prone in battle — DONE
+7. `5` duration-boundary audit — DONE
 
 Reasoning:
 
@@ -169,26 +171,22 @@ Reasoning:
 
 ## Worth Taking Later Once Facilities Exist
 
-These items are still good candidates for the product, but they should be promoted only after the missing state/model support is built intentionally.
+> **Note (2026-04-09 audit):** Items 7, 10, 33, 3, 27 are now **complete** — landed in DAG Runbooks 2-3.
 
 ### Highest-value later promotions
 
-- `7` qualified physical damage bypass
-  - worth taking because monster and effect modeling need `magical` / `silvered` / `adamantine` distinctions to stay faithful to common SRD stat blocks
-- `10` Help advantage state
-  - worth taking because it is a core action-economy mechanic with a clean semantic payoff once battle can own helped-target state
-- `31` parent/child effect teardown
-  - worth taking because dependent cleanup is a real correctness problem for concentration-linked or parent-owned rider effects
-- `33` one-shot next-hit rider consumption
-  - worth taking because "next qualifying hit/attack" semantics recur across multiple spells and features
+- `7` qualified physical damage bypass — **COMPLETE**
+- `10` Help advantage state — **COMPLETE**
+- `31` parent/child effect teardown — still blocked on `effect-dependency-graph`
+- `33` one-shot next-hit rider consumption — **COMPLETE**
 
 ### Good later promotions once battle state grows
 
-- `3` Two-Weapon Fighting bonus-action attack
-- `8` fighting styles in battle
-- `13` versatile weapon die switching
-- `27` max HP reduction
-- `28` generic per-attack-type bonus surface
+- `3` Two-Weapon Fighting bonus-action attack — **COMPLETE**
+- `8` fighting styles in battle — still blocked on `closed-modifier-algebra`
+- `13` versatile weapon die switching — ready (hand occupancy landed)
+- `27` max HP reduction — **COMPLETE**
+- `28` generic per-attack-type bonus surface — still blocked on `closed-modifier-algebra`
 
 ### Lower-priority later promotions tied to a larger spatial/visibility expansion
 

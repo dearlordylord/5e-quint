@@ -110,8 +110,8 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 ## 2. XState Machines
 
 **Files:**
-- `app/src/machine.ts` + `machine-*.ts` (single-creature state machine, ~20 files)
-- `app/src/battle-machine.ts` + `battle-machine-*.ts` (multi-creature battle, ~8 files)
+- `packages/core/src/machine.ts` + `machine-*.ts` (single-creature state machine, ~28 files)
+- `packages/core/src/battle-machine.ts` + `battle-machine-*.ts` (multi-creature battle, ~8 files)
 
 **Scope:** The actual game engine. Implements the same state transitions as the Quint spec.
 
@@ -135,7 +135,7 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 
 ## 3. TS Features
 
-**Files:** `app/src/features/class-*.ts`, `features/spell-*.ts`, `features/weapon-mastery.ts`, `features/feats.ts`
+**Files:** `packages/core/src/features/class-*.ts`, `features/spell-*.ts`, `features/weapon-mastery.ts`, `features/feats.ts`
 
 **Scope:** Pure functions for specific SRD content -- class features, spells, weapons, feats. The content database.
 
@@ -157,7 +157,7 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 
 ## 4. React UI
 
-**Files:** `app/src/components/`, `app/src/features/use*.ts` (hooks)
+**Files:** `packages/app/src/components/`, `packages/app/src/features/use*.ts` (hooks)
 
 **Scope:** Presentation layer. Reads XState state via `useSelector`, dispatches events, renders panels.
 
@@ -167,7 +167,29 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 
 ---
 
-## 5. QA Pipeline
+## 5. MCP Server & Available-Actions Module
+
+**Files:** `packages/mcp/` (MCP server process), `packages/core/src/available-actions.ts` (pure function)
+
+**Scope:** Exposes the game engine to LLM and programmatic consumers via the Model Context Protocol. The available-actions module is a pure projection: `(DndContext, machineState) → ActionToken[]`.
+
+**Owns:**
+- Supported action registry (query tokens, resolved tokens, runtime-input requirements, event mappings)
+- Three MCP tools: `get_state`, `get_available_actions`, `execute_action`
+- Three-step execution contract: `ActionToken` (query-time) → `ResolvedActionToken` (user choices filled) → `ResolutionRequest` → `DndEvent` (runtime inputs added)
+
+**Does NOT own:**
+- Game logic or state transitions (delegated to XState machines)
+- Legality computation (queries the same XState guards that MBT validates against Quint)
+- Dice rolls or runtime facts (supplied by the runtime layer after token resolution)
+
+**Key constraint:** If the MCP adapter must remember, fabricate, or re-derive a combat fact to execute an action, that is an ownership bug. Fix the domain/spec/machine state first; do not solve ownership leaks in the adapter.
+
+**Detailed design:** See `plans/available-actions.md` for phase-by-phase implementation history and architectural decisions.
+
+---
+
+## 6. QA Pipeline
 
 **Files:** `scripts/qa/`, `qa_generated.qnt` (generated)
 
@@ -186,7 +208,7 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 
 ---
 
-## 6. Reference Documents
+## 7. Reference Documents
 
 | Document | Scope | Authority |
 |----------|-------|-----------|
@@ -263,18 +285,22 @@ A feature starts in TS (specific, unit-tested). If it has subtle interaction bug
 
 | Flow features (Quint, named) | Modifier features (Quint generic + TS specific) | Content (TS only) | Not modeled |
 |------------------------------|--------------------------------------------------|-------------------|-------------|
-| Attack/reaction chains (10 reaction types) | *Planned: hasEvasion, saveMiscBonus* | Specific weapon stats | Positions / distances |
-| Counterspell stack (depth 5) | *Planned: conditionImmunities (external)* | Specific spell effects | Cover geometry |
-| Legendary actions/resistance | | Specific feat behavior | Line of sight |
-| AoE resolution | | AC from specific armor | Difficult terrain |
-| Movement / opportunity attacks | | Weapon mastery effects | Social / exploration |
-| Damage pipeline (R/V/I, temp HP, death) | | Sneak Attack dice count | Mounted combat |
-| 14 conditions + exhaustion | | Divine Smite damage | Ready action triggers |
+| Attack/reaction chains (10 reaction types) | hasEvasion (Rogue/Monk 7+) | Specific weapon stats | Positions / distances |
+| Counterspell stack (depth 5) | saveMiscBonus (Aura of Protection) | Specific spell effects | Cover geometry |
+| Legendary actions/resistance | critRange (Champion 19/18) | Specific feat behavior | Line of sight |
+| AoE resolution | meleeDamageBonus (Rage) | AC from specific armor | Difficult terrain |
+| Movement / opportunity attacks | recklessThisTurn (Barbarian) | Weapon mastery effects | Social / exploration |
+| Damage pipeline (R/V/I, temp HP, death) | sneakAttackDice (Rogue) | Sneak Attack dice count | Mounted combat |
+| 14 conditions + exhaustion | *Planned: conditionImmunities (external)* | Divine Smite damage | Ready action triggers |
 | Spell slot economy (multiclass) | | Rage damage bonus | Lair actions |
-| Turn structure (action economy) | | Evasion damage halving | Multi-target conc. |
-| Class resource pools (creature.qnt, all 12) | | Aura of Protection bonus | Grapple/shove in battle |
-| Death saves / stabilization | | Bardic Inspiration | TWF in battle |
-| Concentration (start/break/check) | | Level-up HP calculation | Environmental hazards |
+| Turn structure (action economy) | | Evasion damage halving | Environmental hazards |
+| Class resource pools (creature.qnt, all 12) | | Aura of Protection bonus | |
+| Death saves / stabilization | | Bardic Inspiration | |
+| Concentration (start/break/check) | | Level-up HP calculation | |
+| Grapple / shove / escape in battle | | | |
+| TWF off-hand attack in battle | | | |
+| Hand occupancy (weapon/shield/grapple/free) | | | |
+| Qualified physical damage bypass | | | |
 
 Items in *italics* are planned (see PLAN_AUDIT.md, PRD 3).
 
@@ -284,9 +310,9 @@ Items in *italics* are planned (see PLAN_AUDIT.md, PRD 3).
 
 The following items are scoped but deferred. See `PLAN_AUDIT.md` for full context.
 
-- **Aura of Courage** (Paladin L10): Frightened immunity within Aura of Protection. Would use a `conditionImmunities: Set[Condition]` modifier field on Combatant, following the same generic-field pattern as `saveMiscBonus`. Deferred until the modifier pattern is validated by PRD 3.
-- **Additional passive modifiers** (Danger Sense, Elusive, etc.): Each is a new field or modifier on Combatant. Deferred until the modifier pattern is validated. Danger Sense = advantage on DEX saves (needs `dexSaveAdvantage: bool`). Elusive = no advantage on attacks against you (needs `attacksCannotHaveAdvantage: bool`).
-- **Class state in battle Combatant**: Currently `Combatant` has no `FighterState`, `BarbarianState`, etc. Adding class state to battle is required for Action Surge, Rage damage, Sneak Attack, etc. Scoped in PRD 1 (attack pipeline + class features).
+- **Aura of Courage** (Paladin L10): Frightened immunity within Aura of Protection. Would use a `conditionImmunities: Set[Condition]` modifier field on Combatant, following the same generic-field pattern as `saveMiscBonus`. Data layer done in `class-paladin.ts`; battle wiring deferred.
+- **Additional passive modifiers** (Danger Sense, Elusive, etc.): Each is a new field or modifier on Combatant. Data layers done in `class-barbarian.ts` and `class-rogue.ts`; battle wiring deferred. Danger Sense = advantage on DEX saves (needs `dexSaveAdvantage: bool`). Elusive = no advantage on attacks against you (needs `attacksCannotHaveAdvantage: bool`).
+- **Versatile weapon die switching**: Hand occupancy state is now landed. Implementation is ready to schedule — see DAG node `versatile-weapon-die-switching`.
 
 ---
 
