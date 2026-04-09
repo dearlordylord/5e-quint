@@ -9,6 +9,7 @@ import {
   ModeledPreparedSpellSchema,
   type ModeledPreparedSpell,
 } from "#/features/spell-available-actions.ts"
+import { SRD_SPELLS } from "#/features/spell-registry.ts"
 import { CLASS_NAMES, classHitDie, type ClassName } from "#/features/class-tables.ts"
 import { relentlessRageDC } from "#/features/class-barbarian.ts"
 import { flurryOfBlowsStrikes, pMartialArtsDie } from "#/features/class-monk.ts"
@@ -17,6 +18,7 @@ import { slotCreationCost, type MetamagicOption } from "#/features/class-sorcere
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts"
 import { bardicInspirationDie } from "#/features/class-bard.ts"
 import { deflectAttacksReduction } from "#/features/class-monk-features.ts"
+import { counterspellAutoSuccess } from "#/features/spell-abjuration.ts"
 import {
   canUseHeroicInspirationNow,
   guards,
@@ -33,7 +35,7 @@ import {
 } from "#/machine-guards.ts"
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts"
 import type { DndContext, DndEvent } from "#/machine-types.ts"
-import { CreatureId, SpellSlotLevel, type D20Roll, type SpellName, type SpellSlotLevel as SpellSlotLevelValue } from "#/types.ts"
+import { CreatureId, SpellSlotLevel, spellSlotLevel, type D20Roll, type SpellName, type SpellSlotLevel as SpellSlotLevelValue } from "#/types.ts"
 
 export type ResourceCost = {
   readonly action?: true
@@ -200,6 +202,14 @@ export type BattleActionToken =
   | {
       readonly scope: "battle"
       readonly actorId: string
+      readonly type: "CAST_COUNTERSPELL"
+      readonly slotLevel: Hole<SpellSlotLevelValue>
+      readonly cost: { readonly reaction: true; readonly charge: "spellSlot" }
+      readonly outcome: OutcomeDescription
+    }
+  | {
+      readonly scope: "battle"
+      readonly actorId: string
       readonly type: "CAST_SHIELD"
       readonly cost: { readonly reaction: true; readonly charge: "spellSlot" }
       readonly outcome: OutcomeDescription
@@ -280,6 +290,7 @@ type ResolvedTokenByType = {
 }
 type CreatureResolvedActionToken = ResolvedTokenByType[SupportedActionType] & { readonly scope: "creature" }
 type SpecificBattleResolvedActionToken =
+  | { readonly scope: "battle"; readonly actorId: string; readonly type: "CAST_COUNTERSPELL"; readonly slotLevel: SpellSlotLevelValue }
   | { readonly scope: "battle"; readonly actorId: string; readonly type: "CAST_SHIELD" }
   | { readonly scope: "battle"; readonly actorId: string; readonly type: "USE_PARRY" }
   | { readonly scope: "battle"; readonly actorId: string; readonly type: "USE_CUTTING_WORDS" }
@@ -480,11 +491,45 @@ const SecondaryCreatureResolvedActionTokenSchema = Schema.Union(
   ExitCombatResolvedActionSchema,
 ).pipe(Schema.attachPropertySignature("scope", "creature"))
 
-const BattleResolvedActionTokenSchema = Schema.Struct({
-  scope: Schema.Literal("battle"),
+const CastCounterspellBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
-  type: Schema.String,
-})
+  type: Schema.Literal("CAST_COUNTERSPELL"),
+  slotLevel: SpellSlotLevel,
+}).pipe(Schema.attachPropertySignature("scope", "battle"))
+
+const CastShieldBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("CAST_SHIELD"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"))
+
+const UseParryBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("USE_PARRY"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"))
+
+const UseCuttingWordsBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("USE_CUTTING_WORDS"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"))
+
+const UseUncannyDodgeBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("USE_UNCANNY_DODGE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"))
+
+const UseDeflectAttacksBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("USE_DEFLECT_ATTACKS"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"))
+
+const BattleResolvedActionTokenSchema = Schema.Union(
+  CastCounterspellBattleResolvedActionSchema,
+  CastShieldBattleResolvedActionSchema,
+  UseParryBattleResolvedActionSchema,
+  UseCuttingWordsBattleResolvedActionSchema,
+  UseUncannyDodgeBattleResolvedActionSchema,
+  UseDeflectAttacksBattleResolvedActionSchema,
+)
 
 export const RESOLVED_ACTION_SCHEMAS = [
   PrimaryCreatureResolvedActionTokenSchema,
@@ -809,6 +854,17 @@ export type FinalizedBattleAction =
 
 export type BattleResolutionRequest =
   | {
+      readonly token: Extract<BattleResolvedActionToken, { readonly type: "CAST_COUNTERSPELL" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_RESOLVE_COUNTERSPELL" }>
+    }
+  | {
+      readonly token: Extract<BattleResolvedActionToken, { readonly type: "CAST_COUNTERSPELL" }>
+      readonly outcome: string
+      readonly runtime: "counterspell"
+    }
+  | {
       readonly token: Extract<BattleResolvedActionToken, { readonly type: "USE_UNCANNY_DODGE" }>
       readonly outcome: string
       readonly runtime: "none"
@@ -839,6 +895,7 @@ export type BattleResolutionRequest =
 
 export type BattleResolutionRuntimeInputs =
   | { readonly runtime: "none" }
+  | { readonly runtime: "counterspell"; readonly values: { readonly saveSucceeded: boolean } }
   | { readonly runtime: "cuttingWords"; readonly values: { readonly reduction: number } }
   | { readonly runtime: "deflectAttacks"; readonly values: { readonly d10Roll: number } }
 
@@ -1446,6 +1503,27 @@ function damageReactionToken(actorId: string, reaction: "RUncannyDodge" | "RDefl
   )
 }
 
+function battleCounterspellSlotLevels(actorId: string, context: BattleContext): ReadonlyArray<SpellSlotLevelValue> {
+  const reactor = context.creatures.get(CreatureId(actorId))
+  if (reactor == null) return []
+  return reactor.slotsCurrent.flatMap((remaining, index) => (index >= 2 && remaining > 0 ? [spellSlotLevel(index + 1)] : []))
+}
+
+function normalizeSpellLookupName(spellName: string): string {
+  return spellName
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+}
+
+function battleSpellBaseLevel(spellName: string): number | null {
+  const modeled = getModeledPreparedSpellInfo(spellName as SpellName)
+  if (modeled != null) return modeled.baseLevel
+  const normalized = normalizeSpellLookupName(spellName)
+  return SRD_SPELLS.find((info) => normalizeSpellLookupName(info.name) === normalized)?.level ?? null
+}
+
 export function getAvailableBattleActions(context: BattleContext): ReadonlyArray<BattleActionToken> {
   const awaitCtx = context.awaitCtx
   if (awaitCtx == null) return []
@@ -1469,6 +1547,22 @@ export function getAvailableBattleActions(context: BattleContext): ReadonlyArray
       for (const reaction of legalReactions) {
         tokens.push(damageReactionToken(actorId, reaction))
       }
+    }
+    return tokens
+  }
+
+  if (interrupt.tag === "PISpellCast") {
+    const tokens: Array<BattleActionToken> = []
+    for (const actorId of awaitCtx.eligible) {
+      const slotLevels = battleCounterspellSlotLevels(actorId, context)
+      if (slotLevels.length === 0) continue
+      tokens.push(battleToken<Extract<BattleActionToken, { readonly type: "CAST_COUNTERSPELL" }>>({
+        actorId,
+        type: "CAST_COUNTERSPELL",
+        slotLevel: { options: slotLevels },
+        cost: { reaction: true, charge: "spellSlot" },
+        outcome: { summary: "Use your reaction to cast Counterspell against the triggering spell" },
+      }))
     }
     return tokens
   }
@@ -1497,6 +1591,46 @@ export function resolveBattleAction(
   }
 
   return Match.value(token).pipe(
+    Match.when({ type: "CAST_COUNTERSPELL" }, (specificToken) => {
+      if (!("slotLevel" in availableToken) || !availableToken.slotLevel.options.includes(specificToken.slotLevel)) {
+        return {
+          code: "ACTION_NOT_AVAILABLE" as const,
+          message: `CAST_COUNTERSPELL at slot level ${specificToken.slotLevel} is not currently available for ${specificToken.actorId} in this battle state.`,
+        }
+      }
+      const interrupt = context.awaitCtx?.interrupt
+      if (interrupt == null || interrupt.tag !== "PISpellCast") {
+        return {
+          code: "ACTION_NOT_AVAILABLE" as const,
+          message: `${specificToken.type} is not currently available for ${specificToken.actorId} in this battle state.`,
+        }
+      }
+      const targetSpellLevel = battleSpellBaseLevel(interrupt.ctx.spellName)
+      if (targetSpellLevel == null) {
+        return {
+          code: "ACTION_NOT_SUPPORTED" as const,
+          message: `Counterspell cannot resolve ${interrupt.ctx.spellName} because its spell level is not modeled yet.`,
+        }
+      }
+      if (counterspellAutoSuccess(targetSpellLevel, specificToken.slotLevel)) {
+        return {
+          token: specificToken,
+          outcome: availableToken.outcome.summary,
+          runtime: "none" as const,
+          event: {
+            type: "BATTLE_RESOLVE_COUNTERSPELL" as const,
+            reactorId: CreatureId(specificToken.actorId),
+            decision: { tag: "RCounterspell" as const, saveSucceeded: false },
+            csSlotLvl: specificToken.slotLevel,
+          },
+        }
+      }
+      return {
+        token: specificToken,
+        outcome: availableToken.outcome.summary,
+        runtime: "counterspell" as const,
+      }
+    }),
     Match.when({ type: "USE_UNCANNY_DODGE" }, (specificToken) => ({
       token: specificToken,
       outcome: availableToken.outcome.summary,
@@ -1555,6 +1689,28 @@ export function finalizeBattleResolution(
   }
 
   return Match.value(request).pipe(
+    Match.when({ runtime: "counterspell" }, (counterspellRequest): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "counterspell") return battleRuntimeMismatch("counterspell", runtimeInputs.runtime)
+      if (counterspellRequest.token.type !== "CAST_COUNTERSPELL") {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Counterspell runtime cannot finalize ${counterspellRequest.token.type}.`,
+          },
+        }
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_RESOLVE_COUNTERSPELL",
+          reactorId: CreatureId(counterspellRequest.token.actorId),
+          decision: { tag: "RCounterspell", saveSucceeded: runtimeInputs.values.saveSucceeded },
+          csSlotLvl: counterspellRequest.token.slotLevel,
+        },
+        outcome: counterspellRequest.outcome,
+      }
+    }),
     Match.when({ runtime: "cuttingWords" }, (): FinalizedBattleAction => {
       if (runtimeInputs.runtime !== "cuttingWords") return battleRuntimeMismatch("cuttingWords", runtimeInputs.runtime)
       const bardLevel = context.creatures.get(CreatureId(request.token.actorId))?.bardLevel ?? 0

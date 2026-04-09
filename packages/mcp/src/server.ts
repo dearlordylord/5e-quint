@@ -240,6 +240,12 @@ function buildBattleRuntimeInputs(
 ): Effect.Effect<BattleResolutionRuntimeInputs> {
   return Match.value(request).pipe(
     Match.when({ runtime: "none" }, () => Effect.succeed({ runtime: "none" as const })),
+    Match.when({ runtime: "counterspell" }, () =>
+      Effect.map(Random.nextBoolean, (saveSucceeded) => ({
+        runtime: "counterspell" as const,
+        values: { saveSucceeded },
+      }))
+    ),
     Match.when({ runtime: "cuttingWords" }, () => {
       const bardLevel = context.creatures.get(request.token.actorId as CreatureId)?.bardLevel ?? 0
       const dieSize = bardicInspirationDie(bardLevel)
@@ -292,18 +298,6 @@ function scopeMismatchContent(tokenScope: "creature" | "battle", hostScope: "cre
   )
 }
 
-function isSupportedBattleResolvedActionToken(
-  token: { readonly scope: "battle"; readonly actorId: string; readonly type: string },
-): token is BattleResolvedActionToken {
-  return (
-    token.type === "CAST_SHIELD" ||
-    token.type === "USE_PARRY" ||
-    token.type === "USE_CUTTING_WORDS" ||
-    token.type === "USE_UNCANNY_DODGE" ||
-    token.type === "USE_DEFLECT_ATTACKS"
-  )
-}
-
 function executeBattleResolvedAction(actor: BattleActor, token: BattleResolvedActionToken) {
   const before = actor.getSnapshot()
   const resolution = resolveBattleAction(before.context, token)
@@ -347,9 +341,6 @@ function executeResolvedAction(host: SupportedActionHost, args: unknown) {
     Match.when({ scope: "battle" }, ({ actor }) => {
       if (decoded.right.scope !== "battle") {
         return scopeMismatchContent(decoded.right.scope, "battle")
-      }
-      if (!isSupportedBattleResolvedActionToken(decoded.right)) {
-        return errorContent(`${decoded.right.type} is not implemented yet through the battle action surface.`, "ACTION_NOT_SUPPORTED")
       }
       return executeBattleResolvedAction(actor, decoded.right)
     }),

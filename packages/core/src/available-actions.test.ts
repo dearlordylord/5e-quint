@@ -15,7 +15,7 @@ import type { BattleEvent } from "#/battle-machine-types.ts"
 import { creatureMachine } from "#/machine.ts"
 import type { DndMachineInput } from "#/machine-types.ts"
 import type { CreatureId as CreatureIdT } from "#/types.ts"
-import { abilityModifier, armorClass, classLevel, CreatureId, resourceCount, spellSlotLevel } from "#/types.ts"
+import { abilityModifier, armorClass, classLevel, CreatureId, difficultyClass, resourceCount, spellSlotLevel } from "#/types.ts"
 
 const FIGHTER_5_INPUT: DndMachineInput = {
   maxHp: 44,
@@ -317,6 +317,62 @@ function initBattleForDeflectDiscovery() {
       { id: CreatureId("B"), maxHp: 20, kind: "PC", monkLevel: 3, dexMod: 4, initiativeRoll: 10 },
     ],
   })
+}
+
+function initBattleForCounterspellDiscovery() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]), initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["counterspell"]), initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
+    ],
+  })
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+  actor.send({
+    type: "BATTLE_CAST_SAVE_SPELL",
+    targetId: CreatureId("C"),
+    saveDC: difficultyClass(13),
+    saveRoll: 1,
+    dmgOnFail: 0,
+    halfOnSave: false,
+    dt: "psychic",
+    cond: "paralyzed",
+    applyCond: true,
+    saveAbility: "wis",
+    slotLvl: spellSlotLevel(1),
+    spellName: "hold_person",
+    ritual: false,
+  })
+  return actor
+}
+
+function initBattleForCounterspellRuntimeDiscovery() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["banishment"]), initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["counterspell"]), initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
+    ],
+  })
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+  actor.send({
+    type: "BATTLE_CAST_SAVE_SPELL",
+    targetId: CreatureId("C"),
+    saveDC: difficultyClass(15),
+    saveRoll: 1,
+    dmgOnFail: 0,
+    halfOnSave: false,
+    dt: "force",
+    cond: "paralyzed",
+    applyCond: false,
+    saveAbility: "cha",
+    slotLvl: spellSlotLevel(4),
+    spellName: "banishment",
+    ritual: false,
+  })
+  return actor
 }
 
 describe("available actions contract", () => {
@@ -1296,6 +1352,73 @@ describe("available actions contract", () => {
         decision: { tag: "RDeflectAttacks", amount: 14 },
       },
       outcome: "Use your reaction to reduce the triggering attack's damage with Deflect Attacks (14)",
+    })
+  })
+
+  test("battle discovery surfaces CAST_COUNTERSPELL with legal slot choices during the spell-cast window", () => {
+    const actor = initBattleForCounterspellDiscovery()
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "B",
+        type: "CAST_COUNTERSPELL",
+        slotLevel: { options: [spellSlotLevel(3)] },
+        cost: { reaction: true, charge: "spellSlot" },
+        outcome: { summary: "Use your reaction to cast Counterspell against the triggering spell" },
+      },
+    ])
+  })
+
+  test("battle resolution auto-finalizes CAST_COUNTERSPELL when the chosen slot auto-succeeds", () => {
+    const actor = initBattleForCounterspellDiscovery()
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "CAST_COUNTERSPELL", slotLevel: spellSlotLevel(3) }),
+    )
+    expect(request).toEqual({
+      token: { scope: "battle", actorId: "B", type: "CAST_COUNTERSPELL", slotLevel: spellSlotLevel(3) },
+      outcome: "Use your reaction to cast Counterspell against the triggering spell",
+      runtime: "none",
+      event: {
+        type: "BATTLE_RESOLVE_COUNTERSPELL",
+        reactorId: "B",
+        decision: { tag: "RCounterspell", saveSucceeded: false },
+        csSlotLvl: spellSlotLevel(3),
+      },
+    })
+    expect(finalizeBattleResolution(request, { runtime: "none" }, actor.getSnapshot().context)).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_RESOLVE_COUNTERSPELL",
+        reactorId: "B",
+        decision: { tag: "RCounterspell", saveSucceeded: false },
+        csSlotLvl: spellSlotLevel(3),
+      },
+      outcome: "Use your reaction to cast Counterspell against the triggering spell",
+    })
+  })
+
+  test("battle resolution requires runtime-owned save results when CAST_COUNTERSPELL does not auto-succeed", () => {
+    const actor = initBattleForCounterspellRuntimeDiscovery()
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, { scope: "battle", actorId: "B", type: "CAST_COUNTERSPELL", slotLevel: spellSlotLevel(3) }),
+    )
+    expect(request).toEqual({
+      token: { scope: "battle", actorId: "B", type: "CAST_COUNTERSPELL", slotLevel: spellSlotLevel(3) },
+      outcome: "Use your reaction to cast Counterspell against the triggering spell",
+      runtime: "counterspell",
+    })
+    expect(finalizeBattleResolution(request, { runtime: "counterspell", values: { saveSucceeded: true } }, actor.getSnapshot().context)).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_RESOLVE_COUNTERSPELL",
+        reactorId: "B",
+        decision: { tag: "RCounterspell", saveSucceeded: true },
+        csSlotLvl: spellSlotLevel(3),
+      },
+      outcome: "Use your reaction to cast Counterspell against the triggering spell",
     })
   })
 

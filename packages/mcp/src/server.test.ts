@@ -3,7 +3,7 @@ import { createActor } from "xstate"
 
 import { battleMachine } from "@dnd/core/battle-machine.ts"
 import type { BattleEvent } from "@dnd/core/battle-machine-types.ts"
-import { abilityModifier, armorClass, classLevel, CreatureId, spellSlotLevel } from "@dnd/core/types.ts"
+import { abilityModifier, armorClass, classLevel, CreatureId, difficultyClass, spellSlotLevel } from "@dnd/core/types.ts"
 
 import { createBattleHost, createDemoHost, handleToolCall } from "./server.ts"
 
@@ -140,6 +140,36 @@ function initBattleHostWithDeflectWindow() {
     hitReactionCandidates: new Set(),
   })
   actor.send({ type: "BATTLE_RESOLVE_HIT_REACTION", reactorId: null, decision: { tag: "RPass" } })
+  return createBattleHost(actor)
+}
+
+function initBattleHostWithCounterspellWindow() {
+  const actor = createActor(battleMachine)
+  actor.start()
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["hold_person"]), initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", caster: true, preparedSpells: new Set(["counterspell"]), initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
+    ],
+  })
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT })
+  actor.send({
+    type: "BATTLE_CAST_SAVE_SPELL",
+    targetId: CreatureId("C"),
+    saveDC: difficultyClass(13),
+    saveRoll: 1,
+    dmgOnFail: 0,
+    halfOnSave: false,
+    dt: "psychic",
+    cond: "paralyzed",
+    applyCond: true,
+    saveAbility: "wis",
+    slotLvl: spellSlotLevel(1),
+    spellName: "hold_person",
+    ritual: false,
+  })
   return createBattleHost(actor)
 }
 
@@ -870,6 +900,26 @@ describe("MCP server adapter", () => {
     })
   })
 
+  test("battle hosts surface CAST_COUNTERSPELL from the authoritative spell-cast window", () => {
+    const host = initBattleHostWithCounterspellWindow()
+
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual({
+      action: [],
+      bonusAction: [],
+      reaction: [
+        {
+          scope: "battle",
+          actorId: "B",
+          type: "CAST_COUNTERSPELL",
+          slotLevel: { options: [3] },
+          cost: { reaction: true, charge: "spellSlot" },
+          outcome: { summary: "Use your reaction to cast Counterspell against the triggering spell" },
+        },
+      ],
+      free: [],
+    })
+  })
+
   test("execute_action routes USE_UNCANNY_DODGE through the battle lane end to end", () => {
     const host = initBattleHostWithDamageWindow()
 
@@ -1049,6 +1099,34 @@ describe("MCP server adapter", () => {
       bonusAction: [],
       reaction: [],
       free: [],
+    })
+  })
+
+  test("execute_action routes CAST_COUNTERSPELL through the battle lane end to end", () => {
+    const host = initBattleHostWithCounterspellWindow()
+
+    const response = handleToolCall(host, "execute_action", { scope: "battle", actorId: "B", type: "CAST_COUNTERSPELL", slotLevel: 3 })
+
+    expect("isError" in response).toBe(false)
+    expect(readPayload(response)).toEqual({
+      success: true,
+      outcome: "Use your reaction to cast Counterspell against the triggering spell",
+      state: {
+        scope: "battle",
+        machineState: { running: "awaitingReaction" },
+        tags: ["reactionWindow"],
+        round: 1,
+        turnIndex: 0,
+        activeCreatureId: "A",
+        initiative: ["A", "B", "C"],
+        creatureIds: ["A", "B", "C"],
+        phase: "awaitingReaction",
+        awaitingReaction: true,
+        resolvingAoE: false,
+        resolvingMovement: false,
+        awaitingLegendaryAction: false,
+        awaitingReadiedAction: false,
+      },
     })
   })
 
