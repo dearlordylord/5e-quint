@@ -71,11 +71,38 @@ Extend the runtime and MCP/tooling boundary so the unified action contract can r
 
 ### Acceptance criteria
 
-- [ ] The runtime can route resolved supported actions to the correct authoritative engine based on token scope.
-- [ ] The MCP/tool surface remains coherent while supporting both creature and battle-backed actions.
-- [ ] Existing creature-scoped action discovery and execution continue to work through the updated tooling boundary.
-- [ ] The design does not require battle trigger state to be re-derived or stored in the adapter layer.
-- [ ] Integration tests prove the updated tool/runtime contract still works for creature-scoped actions.
+- [x] The runtime can route resolved supported actions to the correct authoritative engine based on token scope.
+- [x] The MCP/tool surface remains coherent while supporting both creature and battle-backed actions.
+- [x] Existing creature-scoped action discovery and execution continue to work through the updated tooling boundary.
+- [x] The design does not require battle trigger state to be re-derived or stored in the adapter layer.
+- [x] Integration tests prove the updated tool/runtime contract still works for creature-scoped actions.
+
+### Phase 2 notes
+
+- The MCP/runtime seam is now host-scoped rather than implicitly creature-scoped:
+  - `handleToolCall` accepts a supported action host
+  - the host carries the authoritative execution scope (`creature` or `battle`)
+- The current creature path remains intact, but it now runs through the generalized routing layer rather than direct creature-only assumptions.
+- The MCP server entrypoint now boots a creature host instead of handing a raw creature actor to the tool adapter.
+- Battle hosts are now first-class at the tooling boundary:
+  - `get_state` returns a battle runtime summary
+  - `get_available_actions` returns an empty grouped result until battle discovery lands
+  - `execute_action` routes battle-scoped tokens to a dedicated battle execution lane
+- Scope mismatches are now explicit product errors rather than accidental routing through the wrong engine.
+- This phase deliberately did not add battle action discovery or battle execution semantics yet. It only made the tool/runtime seam scope-aware and battle-capable.
+- Verification passed:
+  - `pnpm --filter @dnd/core typecheck`
+  - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+  - `pnpm --filter @dnd/mcp test -- server.test.ts`
+
+### Next implementation notes
+
+- Phase 3 should keep using the new battle host and tool family rather than introducing a parallel battle-only MCP surface.
+- The next slice is battle-scoped discovery, not battle execution:
+  - project semantic battle actions from authoritative `BattleContext`
+  - keep `execute_action` minimal until at least one discovered battle token exists
+- The first discovered battle tokens should come from already-owned battle windows, not from coarse battle resources or inferred trigger state.
+- Prefer one narrow discovery family first, likely live reaction windows, so discovery and execution can meet on a real end-to-end token in Phase 4.
 
 ---
 

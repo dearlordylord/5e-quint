@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 
 import { abilityModifier, classLevel } from "@dnd/core/types.ts"
 
-import { createDemoActor, handleToolCall } from "./server.ts"
+import { createBattleHost, createDemoHost, handleToolCall } from "./server.ts"
 
 function readPayload(response: ReturnType<typeof handleToolCall>) {
   return JSON.parse(response.content[0]?.text ?? "null")
@@ -18,9 +18,9 @@ function creatureResolved<T extends object>(token: T) {
 
 describe("MCP server adapter", () => {
   test("get_available_actions only returns the supported executable action set", () => {
-    const actor = createDemoActor()
+    const host = createDemoHost()
 
-    const payload = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const payload = readPayload(handleToolCall(host, "get_available_actions", {}))
 
     expect(payload).toEqual({
       action: [],
@@ -38,21 +38,21 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action round-trip works for enter combat, start turn, and second wind", () => {
-    const actor = createDemoActor()
+    const host = createDemoHost()
 
-    const enterCombat = handleToolCall(actor, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    const enterCombat = handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
     expect("isError" in enterCombat).toBe(false)
     expect(readPayload(enterCombat).success).toBe(true)
 
-    const startTurn = handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
+    const startTurn = handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
     expect("isError" in startTurn).toBe(false)
     expect(readPayload(startTurn).success).toBe(true)
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.bonusAction.map((token: { readonly type: string }) => token.type)).toEqual(["USE_SECOND_WIND"])
     expect(available.free.map((token: { readonly type: string }) => token.type)).toEqual(["USE_ACTION_SURGE", "EXIT_COMBAT"])
 
-    const secondWind = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_SECOND_WIND" }))
+    const secondWind = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_SECOND_WIND" }))
     expect("isError" in secondWind).toBe(false)
     const secondWindPayload = readPayload(secondWind)
     expect(secondWindPayload.success).toBe(true)
@@ -61,9 +61,9 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action rejects actions that are not available in the current state", () => {
-    const actor = createDemoActor()
+    const host = createDemoHost()
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
 
     expect("isError" in response && response.isError).toBe(true)
     expect(readPayload(response)).toEqual({
@@ -73,7 +73,7 @@ describe("MCP server adapter", () => {
   })
 
   test("get_state returns the core-encoded context shape", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 30,
       sorcererLevel: classLevel(5),
       knownMetamagicOptions: ["subtle", "careful"],
@@ -81,7 +81,7 @@ describe("MCP server adapter", () => {
       effectiveSpeed: 30,
     })
 
-    const payload = readPayload(handleToolCall(actor, "get_state", {}))
+    const payload = readPayload(handleToolCall(host, "get_state", {}))
 
     expect(payload.concentrationSpellId).toBeNull()
     expect(payload.classStates.sorcerer.knownMetamagicOptions).toEqual(["careful", "subtle"])
@@ -89,7 +89,7 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports SHORT_REST with runtime-rolled hit dice", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 24,
       conMod: abilityModifier(2),
       fighterLevel: classLevel(5),
@@ -111,7 +111,7 @@ describe("MCP server adapter", () => {
       effectiveSpeed: 30,
     })
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual(creatureToken({
       type: "SHORT_REST",
       availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
@@ -119,7 +119,7 @@ describe("MCP server adapter", () => {
       outcome: { summary: "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features" },
     }))
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "SHORT_REST", spendHitDice: ["fighter", "fighter"] }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "SHORT_REST", spendHitDice: ["fighter", "fighter"] }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -129,23 +129,23 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports USE_HEROIC_INSPIRATION when the fighter has it", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 44,
       fighterLevel: classLevel(10),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual(creatureToken({
       type: "USE_HEROIC_INSPIRATION",
       cost: {},
       outcome: { summary: "Spend Heroic Inspiration to reroll a die and use the new roll" },
     }))
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_HEROIC_INSPIRATION" }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_HEROIC_INSPIRATION" }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -153,17 +153,17 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports CAST_PREPARED_SPELL with spell and slot choice holes", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 32,
       clericLevel: classLevel(5),
       preparedSpells: new Set(["bless", "healing_word"]),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.action).toContainEqual(creatureToken({
       type: "CAST_PREPARED_SPELL",
       spellName: "bless",
@@ -179,14 +179,14 @@ describe("MCP server adapter", () => {
       outcome: { summary: "Cast Healing Word with a spell slot of the chosen level" },
     }))
 
-    const illegal = handleToolCall(actor, "execute_action", creatureResolved({ type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: 4 }))
+    const illegal = handleToolCall(host, "execute_action", creatureResolved({ type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: 4 }))
     expect("isError" in illegal && illegal.isError).toBe(true)
     expect(readPayload(illegal)).toEqual({
       error: "Bless with a level 4 slot is not currently available in this state.",
       details: "ACTION_NOT_AVAILABLE",
     })
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: 2 }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "CAST_PREPARED_SPELL", spellName: "bless", slotLevel: 2 }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -196,15 +196,15 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports USE_TACTICAL_MIND once the pending trigger exists", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 24,
       fighterLevel: classLevel(2),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    actor.send({ type: "TRIGGER_TACTICAL_MIND" })
+    host.actor.send({ type: "TRIGGER_TACTICAL_MIND" })
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual(creatureToken({
       type: "USE_TACTICAL_MIND",
       cost: { charge: "secondWind" },
@@ -213,7 +213,7 @@ describe("MCP server adapter", () => {
       },
     }))
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_TACTICAL_MIND" }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_TACTICAL_MIND" }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -221,17 +221,17 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports USE_METAMAGIC with filtered legal options", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 30,
       sorcererLevel: classLevel(5),
       knownMetamagicOptions: ["careful", "subtle"],
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual(creatureToken({
       type: "USE_METAMAGIC",
       option: { options: ["careful", "subtle"] },
@@ -239,43 +239,43 @@ describe("MCP server adapter", () => {
       outcome: { summary: "Apply a currently legal known Metamagic option to the spell you are casting" },
     }))
 
-    const illegalBeforeUse = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_METAMAGIC", option: "quickened" }))
+    const illegalBeforeUse = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_METAMAGIC", option: "quickened" }))
     expect("isError" in illegalBeforeUse && illegalBeforeUse.isError).toBe(true)
     expect(readPayload(illegalBeforeUse)).toEqual({
       error: "quickened Metamagic is not currently available in this state.",
       details: "ACTION_NOT_AVAILABLE",
     })
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_METAMAGIC", option: "careful" }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_METAMAGIC", option: "careful" }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
     expect(payload.state.classStates.sorcerer.sorceryPoints).toBe(4)
     expect(payload.state.classStates.sorcerer.metamagicUsedThisCast).toEqual(["careful"])
     expect(
-      readPayload(handleToolCall(actor, "get_available_actions", {})).free.map((token: { readonly type: string }) => token.type),
+      readPayload(handleToolCall(host, "get_available_actions", {})).free.map((token: { readonly type: string }) => token.type),
     ).not.toContain("USE_METAMAGIC")
   })
 
   test("execute_action supports a dice-roll runtime action with USE_TIRELESS", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 32,
       rangerLevel: classLevel(10),
       wisMod: abilityModifier(3),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.action).toContainEqual(creatureToken({
       type: "USE_TIRELESS",
       cost: { action: true, charge: "tireless" },
       outcome: { summary: "Gain 1d8 + 3 temporary HP (minimum 1)" },
     }))
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_TIRELESS" }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_TIRELESS" }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -285,7 +285,7 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports a hole pass-through action with USE_ARCANE_RECOVERY", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 24,
       wizardLevel: classLevel(4),
       slotsMax: [4, 3, 0, 0, 0, 0, 0, 0, 0],
@@ -293,10 +293,10 @@ describe("MCP server adapter", () => {
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual(creatureToken({
       type: "USE_ARCANE_RECOVERY",
       slotLevel: { options: [2] },
@@ -304,14 +304,14 @@ describe("MCP server adapter", () => {
       outcome: { summary: "Recover one expended spell slot of the chosen level and use Arcane Recovery" },
     }))
 
-    const illegal = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_ARCANE_RECOVERY", slotLevel: 1 }))
+    const illegal = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_ARCANE_RECOVERY", slotLevel: 1 }))
     expect("isError" in illegal && illegal.isError).toBe(true)
     expect(readPayload(illegal)).toEqual({
       error: "Arcane Recovery for a level 1 slot is not currently available in this state.",
       details: "ACTION_NOT_AVAILABLE",
     })
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_ARCANE_RECOVERY", slotLevel: 2 }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_ARCANE_RECOVERY", slotLevel: 2 }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -320,16 +320,16 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports USE_PEERLESS_SKILL once the pending trigger exists", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 38,
       bardLevel: classLevel(14),
       chaMod: abilityModifier(5),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    actor.send({ type: "TRIGGER_PEERLESS_SKILL_ATTACK_ROLL" })
+    host.actor.send({ type: "TRIGGER_PEERLESS_SKILL_ATTACK_ROLL" })
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual(creatureToken({
       type: "USE_PEERLESS_SKILL",
       cost: { charge: "bardicInspiration" },
@@ -338,7 +338,7 @@ describe("MCP server adapter", () => {
       },
     }))
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_PEERLESS_SKILL" }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_PEERLESS_SKILL" }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -346,16 +346,16 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports USE_RELENTLESS_RAGE after a real drop-to-zero trigger", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 40,
       barbarianLevel: classLevel(11),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
-    actor.send({ type: "ENTER_RAGE" })
-    actor.send({
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
+    host.actor.send({ type: "ENTER_RAGE" })
+    host.actor.send({
       type: "TAKE_DAMAGE",
       amount: 40,
       damageType: "slashing",
@@ -365,14 +365,14 @@ describe("MCP server adapter", () => {
       isCritical: false,
     })
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual(creatureToken({
       type: "USE_RELENTLESS_RAGE",
       cost: {},
       outcome: { summary: "Make a DC 10 Constitution save to stay at 22 HP instead of dropping to 0" },
     }))
 
-    const response = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_RELENTLESS_RAGE" }))
+    const response = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_RELENTLESS_RAGE" }))
     expect("isError" in response).toBe(false)
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
@@ -381,7 +381,7 @@ describe("MCP server adapter", () => {
   })
 
   test("execute_action supports representative phase 4A semantic actions", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 52,
       fighterLevel: classLevel(2),
       barbarianLevel: classLevel(2),
@@ -397,10 +397,10 @@ describe("MCP server adapter", () => {
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
 
-    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    const available = readPayload(handleToolCall(host, "get_available_actions", {}))
     expect(available.free).toContainEqual(creatureToken({
       type: "USE_ACTION_SURGE",
       cost: { charge: "actionSurge" },
@@ -419,14 +419,14 @@ describe("MCP server adapter", () => {
     expect(available.free.map((token: { readonly type: string }) => token.type)).not.toContain("USE_INDOMITABLE")
     expect(available.free.map((token: { readonly type: string }) => token.type)).not.toContain("USE_OVERCHANNEL")
 
-    const actionSurge = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_ACTION_SURGE" }))
+    const actionSurge = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_ACTION_SURGE" }))
     expect("isError" in actionSurge).toBe(false)
     const actionSurgePayload = readPayload(actionSurge)
     expect(actionSurgePayload.success).toBe(true)
     expect(actionSurgePayload.state.actionsRemaining).toBe(2)
     expect(actionSurgePayload.state.classStates.fighter.actionSurgeCharges).toBe(0)
 
-    const bardic = handleToolCall(actor, "execute_action", creatureResolved({ type: "USE_BARDIC_INSPIRATION" }))
+    const bardic = handleToolCall(host, "execute_action", creatureResolved({ type: "USE_BARDIC_INSPIRATION" }))
     expect("isError" in bardic).toBe(false)
     const bardicPayload = readPayload(bardic)
     expect(bardicPayload.success).toBe(true)
@@ -435,7 +435,7 @@ describe("MCP server adapter", () => {
   })
 
   test("get_available_actions groups a representative multigroup state stably", () => {
-    const actor = createDemoActor({
+    const host = createDemoHost({
       maxHp: 44,
       conMod: abilityModifier(2),
       fighterLevel: classLevel(10),
@@ -464,10 +464,10 @@ describe("MCP server adapter", () => {
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     })
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
-    handleToolCall(actor, "execute_action", creatureResolved({ type: "START_TURN" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }))
 
-    expect(readPayload(handleToolCall(actor, "get_available_actions", {}))).toMatchInlineSnapshot(`
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toMatchInlineSnapshot(`
       {
         "action": [
           {
@@ -567,5 +567,64 @@ describe("MCP server adapter", () => {
         "reaction": [],
       }
     `)
+  })
+
+  test("battle hosts return a routed battle state summary and no discovered actions yet", () => {
+    const host = createBattleHost()
+
+    expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual({
+      scope: "battle",
+      machineState: "idle",
+      tags: [],
+      round: 0,
+      turnIndex: 0,
+      activeCreatureId: null,
+      initiative: [],
+      creatureIds: [],
+      phase: "activeTurn",
+      awaitingReaction: false,
+      resolvingAoE: false,
+      resolvingMovement: false,
+      awaitingLegendaryAction: false,
+      awaitingReadiedAction: false,
+    })
+
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual({
+      action: [],
+      bonusAction: [],
+      reaction: [],
+      free: [],
+    })
+  })
+
+  test("execute_action routes battle-scoped tokens to the battle lane", () => {
+    const host = createBattleHost()
+
+    const response = handleToolCall(host, "execute_action", { scope: "battle", type: "USE_UNCANNY_DODGE" })
+
+    expect("isError" in response && response.isError).toBe(true)
+    expect(readPayload(response)).toEqual({
+      error: "USE_UNCANNY_DODGE is battle-scoped, and battle execute_action routing is not implemented yet.",
+      details: "ACTION_NOT_SUPPORTED",
+    })
+  })
+
+  test("execute_action rejects scope mismatches between token and host", () => {
+    const creatureHost = createDemoHost()
+    const battleHost = createBattleHost()
+
+    const battleOnCreature = handleToolCall(creatureHost, "execute_action", { scope: "battle", type: "USE_UNCANNY_DODGE" })
+    expect("isError" in battleOnCreature && battleOnCreature.isError).toBe(true)
+    expect(readPayload(battleOnCreature)).toEqual({
+      error: "Action scope battle does not match the current creature host.",
+      details: "ACTION_SCOPE_MISMATCH",
+    })
+
+    const creatureOnBattle = handleToolCall(battleHost, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }))
+    expect("isError" in creatureOnBattle && creatureOnBattle.isError).toBe(true)
+    expect(readPayload(creatureOnBattle)).toEqual({
+      error: "Action scope creature does not match the current battle host.",
+      details: "ACTION_SCOPE_MISMATCH",
+    })
   })
 })

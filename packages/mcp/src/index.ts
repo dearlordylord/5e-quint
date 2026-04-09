@@ -4,9 +4,9 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 
-import { createDemoActor, handleToolCall, toolDefinitions } from "./server.ts"
+import { createDemoHost, handleToolCall, toolDefinitions } from "./server.ts"
 
-const actor = createDemoActor()
+const host = createDemoHost()
 
 const server = new Server(
   { name: "dnd-available-actions", version: "0.1.0" },
@@ -18,7 +18,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 }))
 
 server.setRequestHandler(CallToolRequestSchema, async (request) =>
-  handleToolCall(actor, request.params.name, request.params.arguments),
+  handleToolCall(host, request.params.name, request.params.arguments),
 )
 
 const program = Effect.gen(function* () {
