@@ -44,17 +44,17 @@ Do not reschedule these in this runbook unless regression evidence appears:
 1. `versatile-weapon-die-switching`
 2. `battle-basic-action-surface`
 3. `battle-ready-action-surface`
-4. `battle-ready-spell-surface`
-5. `after-damage-reaction-surface`
-6. `movement-provocation-kind`
-7. `forced-movement-vs-oa`
-8. `reach-extends-oa-range`
+4. `movement-provocation-kind`
+5. `forced-movement-vs-oa`
+6. `reach-extends-oa-range`
 
 ## Default Out Of Scope
 
 Do not schedule these in the same run unless explicitly requested:
 
 - `closed-modifier-algebra`
+- `battle-ready-spell-payload-state`
+- `after-damage-trigger-state`
 - `generic-per-attack-type-bonus-surface`
 - `effect-dependency-graph`
 - `parent-child-effect-teardown`
@@ -68,6 +68,7 @@ Do not schedule these in the same run unless explicitly requested:
 Reason:
 
 - these are still design-first, still need decomposition, or sit beyond the current product-surface priority boundary
+- `battle-ready-spell-surface` and `after-damage-reaction-surface` are no longer treated as ready after implementation proved battle lacks the owned payload/trigger metadata to expose them honestly
 
 ## Handoff To Orchestrator
 
@@ -197,48 +198,23 @@ Verification:
 - focused MCP tests for round-trip execution
 - `pnpm --filter @dnd/core exec tsc --noEmit`
 
-### Lane D: Battle Spell/Reaction Surface Breadth
+### Deferred Boundary Discovered During Execution
 
-Nodes:
+These two nodes were initially included in the batch but should now be treated as blocked follow-ups rather than Runbook 4 scope:
 
 - `battle-ready-spell-surface`
 - `after-damage-reaction-surface`
 
-Goal:
+Reason:
 
-- expose the already-owned battle spell/reaction semantics through the unified action surface for:
-- `BATTLE_READY_SPELL`
-- `BATTLE_READY_SPELL_RELEASE`
-- after-damage reactions already present in battle semantics, such as Hellish Rebuke, Fire Shield, and Retaliation
+- `battle-ready-spell-surface` needs battle-owned spell save/effect payload metadata before `READY_SPELL` / `READY_SPELL_RELEASE` can be exposed honestly
+- `after-damage-reaction-surface` needs battle-owned trigger qualifiers and stored reactive effect-choice facts before reactions such as Hellish Rebuke / Fire Shield / Retaliation can be surfaced honestly
 
-Execution rule:
+Do not recover these by:
 
-- do not widen this into generic “all battle spells”
-- keep `battle-ready-spell-surface` and `after-damage-reaction-surface` logically separate even if they share `available-actions.ts` edits
-- keep the surface limited to already-owned semantics with clear events and deterministic tests
-
-Likely files:
-
-- [packages/core/src/available-actions.ts](../packages/core/src/available-actions.ts)
-- [packages/mcp/src/server.ts](../packages/mcp/src/server.ts)
-- [packages/core/src/battle-machine-actions-spell.ts](../packages/core/src/battle-machine-actions-spell.ts)
-- [packages/core/src/battle-machine-helpers.ts](../packages/core/src/battle-machine-helpers.ts)
-- [packages/core/src/available-actions.test.ts](../packages/core/src/available-actions.test.ts)
-- [packages/mcp/src/server.test.ts](../packages/mcp/src/server.test.ts)
-- [packages/core/src/battle-rules-scenarios.test.ts](../packages/core/src/battle-rules-scenarios.test.ts)
-
-Non-goals:
-
-- no `dm-override`
-- no transcript pipeline work
-- no generic reaction registry
-
-Verification:
-
-- focused available-actions tests for query/execution of the new battle spell/reaction tokens
-- focused MCP tests for round-trip execution
-- targeted battle scenario tests for representative after-damage reactions and ready-spell release
-- `pnpm --filter @dnd/core exec tsc --noEmit`
+- fabricating payloads in `available-actions.ts`
+- storing ad hoc spell names or reaction choices only in MCP/action-token plumbing
+- widening into a generic reaction registry
 
 ## Merge Order
 
@@ -246,18 +222,18 @@ Verification:
 2. Lane A: `versatile-weapon-die-switching`
 3. Lane C basic surface: `battle-basic-action-surface`
 4. Lane C ready surface: `battle-ready-action-surface`
-5. Lane D spell/reaction surface: `battle-ready-spell-surface`, `after-damage-reaction-surface`
-6. Lane B consumers: `forced-movement-vs-oa`, `reach-extends-oa-range`
+5. Lane B consumers: `forced-movement-vs-oa`, `reach-extends-oa-range`
 
 Reason:
 
 - the movement facility should settle before its correctness consumers
 - the basic and ready surfaces can land independently if one stalls
-- action-surface breadth can proceed in parallel once it stays off the movement event contract
+- the spell/reaction surface follow-ups are now intentionally excluded until their missing owned-state facilities are designed
 
 ## Stop Conditions
 
 - if `battle-basic-action-surface` requires redesigning the resolved-token contract rather than consuming it
+- if `battle-ready-spell-surface` or `after-damage-reaction-surface` appears to need battle-owned payload/trigger metadata that does not already exist, stop and move that discovery into `DAG.md` as a new facility rather than forcing the surface through
 - if `battle-ready-spell-surface` or `after-damage-reaction-surface` appears to need a generic reaction registry instead of consuming already-owned interrupt points
 - if `forced-movement-vs-oa` or `reach-extends-oa-range` appears to need battle-owned geometry rather than caller-owned threat sets
 - if `versatile-weapon-die-switching` appears to require a new explicit reposture action instead of using the current hand-occupancy ownership seam
@@ -277,11 +253,8 @@ Record short answers in the PR description or follow-up DAG notes if the impleme
 1. Is `movement-provocation-kind` enough of a spatial contract for future OA/stealth work, or is another minimal caller-owned movement fact still missing?
 2. Do `forced-movement-vs-oa` and `reach-extends-oa-range` validate that caller-owned threat sets remain the right boundary, or do they expose a need to redesign `battle-hidden-state` / future spatial nodes?
 3. Do the action-surface lanes leave any unresolved token-shape or interrupt-shape inconsistencies that should be settled before later product nodes like `dm-override` and `transcript-port-to-dnd`?
-- if `battle-ready-spell-surface` reveals a deeper concentration ownership mismatch beyond the already-modeled battle semantics
-- if `movement-provocation-kind` tries to grow into a hidden geometry engine
-- if `reach-extends-oa-range` needs battle-owned positions rather than caller-owned threat-set semantics
 
-If any of these happen:
+If any of these happen during execution:
 
 1. stop the affected lane
 2. write a short design note

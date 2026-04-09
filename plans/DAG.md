@@ -63,8 +63,8 @@ first-class-consumption-model
 available-actions-main
   -> battle-basic-action-surface
   -> battle-ready-action-surface
-  -> battle-ready-spell-surface
-  -> after-damage-reaction-surface
+  -> battle-ready-spell-payload-state
+  -> after-damage-trigger-state
   -> dm-override
   -> transcript-port-to-dnd
 
@@ -88,6 +88,12 @@ one-shot-rider-consumption-metadata
 
 off-hand-attack-surface
   -> two-weapon-fighting-bonus-attack
+
+battle-ready-spell-payload-state
+  -> battle-ready-spell-surface
+
+after-damage-trigger-state
+  -> after-damage-reaction-surface
 
 weapon-property-aware-battle-resolution
   -> battle-hand-occupancy-state
@@ -138,8 +144,10 @@ authoritative-d20-modifier-query-surface
 | `legendary-resistance-fallback` | batch | complete | none | additional battle interrupt breadth | Closed as a narrow AoE failed-save regression slice; no separate breadth batch remains to schedule here |
 | `battle-basic-action-surface` | candidate | ready | `available-actions-main` | unified projection/execution of `dash`, `disengage`, and `dodge` in battle scope | Battle semantics and events already exist; the remaining work is available-actions / MCP projection and deterministic coverage |
 | `battle-ready-action-surface` | candidate | ready | `available-actions-main` | battle-scoped `READY`, `READY_PASS`, and `READY_RELEASE` action-surface support | Ready semantics are already implemented in battle Quint/TS; the gap is honest projection/execution through the unified action surface |
-| `battle-ready-spell-surface` | candidate | ready | `available-actions-main` | battle-scoped `READY_SPELL` and `READY_SPELL_RELEASE` action-surface support | Readied spells, slot expenditure, concentration holding, and Counterspell-on-release already exist in battle semantics; the gap is action-surface exposure |
-| `after-damage-reaction-surface` | candidate | ready | `available-actions-main` | battle-scoped `PIAfterDamage` reaction discovery/execution such as Hellish Rebuke / Fire Shield / Retaliation | `PIAfterDamage` and corresponding battle events already exist; the action surface currently ignores them |
+| `battle-ready-spell-payload-state` | facility | blocked | `available-actions-main` | `battle-ready-spell-surface` | Newly discovered missing owned state: battle does not yet carry enough spell save/effect payload metadata to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through the action surface |
+| `battle-ready-spell-surface` | candidate | blocked | `available-actions-main`, `battle-ready-spell-payload-state` | battle-scoped `READY_SPELL` and `READY_SPELL_RELEASE` action-surface support | Readied-spell timing exists, but honest action-surface exposure is blocked on battle-owned spell payload/state rather than token plumbing alone |
+| `after-damage-trigger-state` | facility | blocked | `available-actions-main` | `after-damage-reaction-surface` | Newly discovered missing owned state: battle does not yet carry enough after-damage trigger qualifiers and stored effect/reaction choice metadata to project these reactions honestly |
+| `after-damage-reaction-surface` | candidate | blocked | `available-actions-main`, `after-damage-trigger-state` | battle-scoped `PIAfterDamage` reaction discovery/execution such as Hellish Rebuke / Fire Shield / Retaliation | `PIAfterDamage` exists, but honest surfacing is blocked on battle-owned trigger facts such as visibility, range/proximity, and stored reactive effect choice |
 | `preview-execution` | batch | complete | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | no-spend scripted action preview | Landed end to end in core and MCP; retain only because later descriptive-mode/transcript work still depends on the doctrine/model it consumed |
 | `dm-override` | plan | later | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
 | `transcript-port-to-dnd` | plan | later | `available-actions-main`, `resolve-commit-doctrine` | end-to-end audio/transcript/action loop | Hellenvald demo + tail facilities already exist; port is still later |
@@ -182,27 +190,27 @@ If scheduling strictly by current value and low dependency risk, outside already
 1. `versatile-weapon-die-switching`
 2. `battle-basic-action-surface`
 3. `battle-ready-action-surface`
-4. `battle-ready-spell-surface`
-5. `after-damage-reaction-surface`
-6. `movement-provocation-kind`
-7. `forced-movement-vs-oa`
-8. `reach-extends-oa-range`
-9. `closed-modifier-algebra`
+4. `movement-provocation-kind`
+5. `forced-movement-vs-oa`
+6. `reach-extends-oa-range`
+7. `closed-modifier-algebra`
 
 ## Research Queue
 
 Promote these through design/research before trying to package another large execution-grade runbook:
 
 1. `effect-dependency-graph`
-2. `fighting-styles-in-battle`
-3. `battle-hidden-state`
-4. `dm-override` / `transcript-port-to-dnd` only after the product-surface slices above are landed
+2. `battle-ready-spell-payload-state`
+3. `after-damage-trigger-state`
+4. `fighting-styles-in-battle`
+5. `battle-hidden-state`
+6. `dm-override` / `transcript-port-to-dnd` only after the product-surface slices above are landed
 
 ## Upstream Planning Sources
 
 Use this index before researching or promoting remaining nodes. `DAG.md` is the scheduler; these are the deeper source documents.
 
-- `available-actions-main`, `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-surface`, `after-damage-reaction-surface`, `dm-override`, `preview-execution`, `transcript-port-to-dnd`:
+- `available-actions-main`, `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-payload-state`, `battle-ready-spell-surface`, `after-damage-trigger-state`, `after-damage-reaction-surface`, `dm-override`, `preview-execution`, `transcript-port-to-dnd`:
   - [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
   - [PRD_AVAILABLE_ACTIONS.md](/workspace/typescript/dnd/PRD_AVAILABLE_ACTIONS.md)
   - [PRD_READY_ACTION.md](/workspace/typescript/dnd/PRD_READY_ACTION.md)
@@ -249,6 +257,30 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [.references/inspirations/PLAN.md](/workspace/typescript/dnd/.references/inspirations/PLAN.md)
 - promotion_goal:
   - define parent/child effect ownership and teardown semantics tightly enough to make `parent-child-effect-teardown` execution-grade
+
+### `battle-ready-spell-payload-state`
+
+- classification: `research / promotion`
+- owner_layer: battle-owned readied-spell payload metadata
+- read_first:
+  - [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
+  - [PRD_READY_ACTION.md](/workspace/typescript/dnd/PRD_READY_ACTION.md)
+  - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
+  - [packages/core/src/available-actions.ts](/workspace/typescript/dnd/packages/core/src/available-actions.ts)
+- promotion_goal:
+  - define the smallest battle-owned spell save/effect payload facts needed to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through available-actions / MCP
+
+### `after-damage-trigger-state`
+
+- classification: `research / promotion`
+- owner_layer: battle-owned after-damage reaction trigger facts
+- read_first:
+  - [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
+  - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
+  - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
+  - [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-helpers.ts)
+- promotion_goal:
+  - define the smallest owned trigger qualifiers and stored reactive effect choice facts needed to surface `PIAfterDamage` reactions honestly without inventing a generic registry
 
 ### `fighting-styles-in-battle`
 
