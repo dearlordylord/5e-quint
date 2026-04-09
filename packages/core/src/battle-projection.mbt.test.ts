@@ -419,7 +419,6 @@ const battleDriverSchema = {
     attackerSize: ITFSize,
     targetSize: ITFSize,
     targetSaveFailed: OB,
-    attackerHasFreeHand: OB,
   },
   bReleaseGrapple: {},
   bEscapeGrapple: { escapeSucceeded: OB },
@@ -1627,8 +1626,6 @@ function createBattleProjectionDriver() {
       const attackerSize = parseItfSize(picks.get("attackerSize"), "medium");
       const targetSize = parseItfSize(picks.get("targetSize"), "medium");
       const targetSaveFailed = pickBool(picks, "targetSaveFailed") ?? false;
-      const attackerHasFreeHand =
-        pickBool(picks, "attackerHasFreeHand") ?? true;
       const attackerCtx = getSnap(attackerId).context;
       const targetSnap = getSnap(targetId);
 
@@ -1648,7 +1645,7 @@ function createBattleProjectionDriver() {
           attackerSize,
           targetSize,
           targetSaveFailed,
-          attackerHasFreeHand,
+          true,
           targetSnap.hasTag("incapacitated"),
         )
       ) {

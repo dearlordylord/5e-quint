@@ -301,7 +301,6 @@ export type BattleEvent =
       readonly attackerSize: Size;
       readonly targetSize: Size;
       readonly targetSaveFailed: boolean;
-      readonly attackerHasFreeHand: boolean;
     }
   | { readonly type: "BATTLE_RELEASE_GRAPPLE" }
   | {

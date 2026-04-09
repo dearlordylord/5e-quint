@@ -1,6 +1,7 @@
 import { Match } from "effect";
 
 import {
+  prepareHandsForSpellComponents,
   isIncapacitated,
 } from "#/battle-machine-creature.ts";
 import {
@@ -309,7 +310,10 @@ export function battleResolveHitReaction({
         const slotLevel = firstAvailableSpellSlotLevel(reactor);
         return slotLevel == null
           ? reactor
-          : expendSlot(spendReaction(reactor), slotLevel);
+          : expendSlot(
+              spendReaction(prepareHandsForSpellComponents(reactor)),
+              slotLevel,
+            );
       }),
       byTag("RParry", (d) =>
         d.bonus === reactor.parryAcBonus ? spendReaction(reactor) : reactor,

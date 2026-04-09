@@ -7,6 +7,7 @@ import { Match, Option } from "effect";
 import {
   advanceEffectsForOwner,
   applyCondition,
+  battleHasFreeHand,
   blocksOpportunityAttacks,
   breakConcentration,
   consumeOneShotHitEffects,
@@ -14,10 +15,13 @@ import {
   FRESH_TURN_STATE,
   heal,
   isIncapacitated,
+  prepareHandsForSpellComponents,
   removeEffect,
   removeEffectsByCaster,
+  releaseOneGrappleHand,
   speedDeltaFromEffects,
   takeDamage,
+  occupyFreeHandWithGrapple,
 } from "#/battle-machine-creature.ts";
 import { calculateEffectiveSpeed } from "#/machine-helpers.ts";
 import type {
@@ -50,6 +54,7 @@ import {
 import { hasCuttingWords } from "#/features/class-bard.ts";
 import { canUncannyDodge, evasionDamage } from "#/features/class-rogue.ts";
 import { canCastShield } from "#/features/spell-abjuration.ts";
+import { getSpellComponentRequirements } from "#/features/spell-available-actions.ts";
 import type {
   ActiveEffect,
   DamageQualifier,
@@ -169,7 +174,7 @@ function releaseGrapplePair(
   const grappler = result.get(grapplerId);
   if (grappler) {
     result.set(grapplerId, {
-      ...grappler,
+      ...releaseOneGrappleHand(grappler),
       grapplingTarget: null,
       grappledTargetTwoSizesSmaller: false,
     });
@@ -218,7 +223,7 @@ export function linkBattleGrapple(
   const target = cs.get(targetId)!;
   let result = new Map(cs);
   result.set(grapplerId, {
-    ...grappler,
+    ...occupyFreeHandWithGrapple(grappler),
     grapplingTarget: targetId,
     grappledTargetTwoSizesSmaller: targetTwoSizesSmaller,
   });
@@ -392,6 +397,30 @@ function hasAnySpellSlot(c: BattleCreatureState, minimumLevel = 1): boolean {
   return false;
 }
 
+function canBattleSpeak(c: BattleCreatureState): boolean {
+  return !c.paralyzed && !c.petrified && !c.unconscious;
+}
+
+export function canProvideBattleSpellComponents(
+  c: BattleCreatureState,
+  spellName: string,
+): boolean {
+  const requirements = getSpellComponentRequirements(spellName);
+  if (requirements == null) return true;
+  if (requirements.requiresVerbal && !canBattleSpeak(c)) return false;
+  if (!requirements.requiresHandComponent) return true;
+  return battleHasFreeHand(prepareHandsForSpellComponents(c));
+}
+
+export function prepareBattleCasterForSpell(
+  c: BattleCreatureState,
+  spellName: string,
+): BattleCreatureState {
+  const requirements = getSpellComponentRequirements(spellName);
+  if (requirements == null || !requirements.requiresHandComponent) return c;
+  return prepareHandsForSpellComponents(c);
+}
+
 export function firstAvailableSpellSlotLevel(
   c: BattleCreatureState,
   minimumLevel = 1,
@@ -435,7 +464,8 @@ export function legalHitReactions(
       id === atk.target &&
       canCastShield(c.reactionAvailable, hasAnySpellSlot(c)) &&
       c.preparedSpells.has("shield") &&
-      !c.slotExpendedThisTurn
+      !c.slotExpendedThisTurn &&
+      canProvideBattleSpellComponents(c, "shield")
     ) {
       legal.add("RShield");
     }
@@ -546,7 +576,8 @@ export function eligibleForCounterspell(
     if (
       hasSlot &&
       c.preparedSpells.has("counterspell") &&
-      !c.slotExpendedThisTurn
+      !c.slotExpendedThisTurn &&
+      canProvideBattleSpellComponents(c, "counterspell")
     )
       result.add(id);
   }

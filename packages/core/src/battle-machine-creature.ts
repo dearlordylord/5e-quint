@@ -18,11 +18,13 @@ import {
 import type {
   ActionType,
   ActiveEffect,
+  BattleWeaponProfile,
   Condition,
   CreatureKind,
   DamageQualifier,
   DamageType,
   ExpiryPhase,
+  HandUse,
   PhysicalDamageType,
   QualifiedPhysicalBypass,
   SpellId,
@@ -79,6 +81,106 @@ export function effectiveMaxHp(c: BattleCreatureState): number {
   return Math.max(0, c.maxHp - Math.max(0, c.maxHpReduction));
 }
 
+function countHandUse(c: BattleCreatureState, use: HandUse): number {
+  let count = 0;
+  if (c.leftHandUse === use) count += 1;
+  if (c.rightHandUse === use) count += 1;
+  return count;
+}
+
+export function battleFreeHandCount(c: BattleCreatureState): number {
+  return countHandUse(c, "free");
+}
+
+export function battleHasFreeHand(c: BattleCreatureState): boolean {
+  return battleFreeHandCount(c) > 0;
+}
+
+export function battleShieldOccupiesHand(c: BattleCreatureState): boolean {
+  return countHandUse(c, "shield") > 0;
+}
+
+export function battleMainHandUsesTwoHands(c: BattleCreatureState): boolean {
+  return countHandUse(c, "mainWeapon") >= 2;
+}
+
+export function dropHeldItems(c: BattleCreatureState): BattleCreatureState {
+  return {
+    ...c,
+    leftHandUse: "free",
+    rightHandUse: "free",
+  };
+}
+
+function markDead(c: BattleCreatureState): BattleCreatureState {
+  return { ...dropHeldItems(c), dead: true };
+}
+
+function withFirstMatchingHand(
+  c: BattleCreatureState,
+  from: HandUse,
+  to: HandUse,
+): BattleCreatureState {
+  if (c.leftHandUse === from) return { ...c, leftHandUse: to };
+  if (c.rightHandUse === from) return { ...c, rightHandUse: to };
+  return c;
+}
+
+export function releaseOneHandFromTwoHandGrip(
+  c: BattleCreatureState,
+): BattleCreatureState {
+  if (!battleMainHandUsesTwoHands(c)) return c;
+  return withFirstMatchingHand(c, "mainWeapon", "free");
+}
+
+export function prepareHandsForSpellComponents(
+  c: BattleCreatureState,
+): BattleCreatureState {
+  return battleHasFreeHand(c) ? c : releaseOneHandFromTwoHandGrip(c);
+}
+
+export function occupyFreeHandWithGrapple(
+  c: BattleCreatureState,
+): BattleCreatureState {
+  return withFirstMatchingHand(c, "free", "grapple");
+}
+
+export function releaseOneGrappleHand(
+  c: BattleCreatureState,
+): BattleCreatureState {
+  return withFirstMatchingHand(c, "grapple", "free");
+}
+
+export function deriveBattleHandUses(params: {
+  readonly mainHandWeapon: BattleWeaponProfile | null;
+  readonly offHandWeapon: BattleWeaponProfile | null;
+  readonly hasShieldEquipped: boolean;
+  readonly mainHandUsesTwoHands: boolean;
+}): Pick<BattleCreatureState, "leftHandUse" | "rightHandUse"> {
+  if (params.mainHandWeapon == null) {
+    if (params.offHandWeapon != null && params.hasShieldEquipped) {
+      return { leftHandUse: "offWeapon", rightHandUse: "shield" };
+    }
+    if (params.offHandWeapon != null) {
+      return { leftHandUse: "offWeapon", rightHandUse: "free" };
+    }
+    if (params.hasShieldEquipped) {
+      return { leftHandUse: "shield", rightHandUse: "free" };
+    }
+    return { leftHandUse: "free", rightHandUse: "free" };
+  }
+  if (params.mainHandUsesTwoHands) {
+    return { leftHandUse: "mainWeapon", rightHandUse: "mainWeapon" };
+  }
+  if (params.offHandWeapon != null) {
+    return { leftHandUse: "mainWeapon", rightHandUse: "offWeapon" };
+  }
+  if (params.hasShieldEquipped) {
+    return { leftHandUse: "mainWeapon", rightHandUse: "shield" };
+  }
+  return { leftHandUse: "mainWeapon", rightHandUse: "free" };
+}
+
 export function isIncapacitated(c: BattleCreatureState): boolean {
   return c.incapacitatedSources.size > 0;
 }
@@ -117,7 +219,7 @@ export function applyCondition(
       incapacitatedSources: addIncapSource(c.incapacitatedSources, "stunned"),
     })),
     Match.when("unconscious", () => ({
-      ...c,
+      ...dropHeldItems(c),
       unconscious: true,
       prone: true,
       incapacitatedSources: addIncapSource(
@@ -192,7 +294,7 @@ function addDeathFailures(
     ...c,
     deathSaves: { successes: c.deathSaves.successes, failures: newFails },
   };
-  return newFails >= 3 ? { ...c1, dead: true } : c1;
+  return newFails >= 3 ? markDead(c1) : c1;
 }
 
 /** Death saving throw at start of turn. Delegates to resolveDeathSave for d20 logic. */
@@ -216,7 +318,7 @@ export function deathSave(
     ...c,
     deathSaves: { successes: r.newSuccesses, failures: r.newFailures },
   };
-  if (r.isDead) return { ...c1, dead: true };
+  if (r.isDead) return markDead(c1);
   if (r.isStabilized)
     return { ...c1, stable: true, deathSaves: { successes: 0, failures: 0 } };
   return c1;
@@ -279,16 +381,16 @@ export function takeDamage(
   if (dmgThrough === 0) return c1;
   const effMax = effectiveMaxHp(c);
   if (c1.hp === 0) {
-    if (c.creatureKind === "Monster") return { ...c1, dead: true };
-    if (dmgThrough >= effMax) return { ...c1, dead: true };
+    if (c.creatureKind === "Monster") return markDead(c1);
+    if (dmgThrough >= effMax) return markDead(c1);
     return addDeathFailures({ ...c1, stable: false }, isCritical ? 2 : 1);
   }
   const newHp = c1.hp - dmgThrough;
   if (newHp <= 0) {
     const overflow = -newHp;
     const c2 = { ...c1, hp: 0 };
-    if (c.creatureKind === "Monster") return { ...c2, dead: true };
-    if (overflow >= effMax) return { ...c2, dead: true };
+    if (c.creatureKind === "Monster") return markDead(c2);
+    if (overflow >= effMax) return markDead(c2);
     return applyCondition(c2, "unconscious");
   }
   return { ...c1, hp: newHp };
@@ -647,6 +749,8 @@ export function freshCreature(
     parryAcBonus: 0,
     mainHandWeapon: null,
     offHandWeapon: null,
+    leftHandUse: "free",
+    rightHandUse: "free",
   };
 }
 

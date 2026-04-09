@@ -132,6 +132,7 @@ This table is a support-layer projection of the SRD condition text. Quint remain
 | **Unarmed Strike** | A melee weapon attack (punch, kick, etc.) dealing 1 + Strength modifier bludgeoning damage; every creature is proficient | — |
 | **Two-Weapon Fighting** | When attacking with a Light melee weapon, a creature can use a bonus action to attack with a different Light melee weapon in the other hand; ability modifier is not added to the bonus attack's damage (unless negative) | Dual wielding (acceptable colloquial, not the PHB term) |
 | **Knock Out** | When a melee attack reduces a creature to 0 HP, the attacker can choose to render it Unconscious and Stable instead of dying | KO |
+| **Free Hand** | A hand not currently occupied by holding a weapon, wielding a Shield, or maintaining a grapple; required by rules that explicitly say "free hand" | Off hand, spare hand |
 
 ## Movement
 
@@ -151,6 +152,8 @@ This table is a support-layer projection of the SRD condition text. Quint remain
 | Term | Definition | Aliases to avoid |
 |------|-----------|-----------------|
 | **Weapon Property** | One of 10 traits on a weapon defining special mechanics: Ammunition, Finesse, Heavy, Light, Loading, Reach, Special, Thrown, Two-Handed, Versatile | Weapon tag, weapon trait |
+| **Two-Handed** | A weapon property meaning the weapon requires two hands when you attack with it | Two-hand mode, main-hand only |
+| **Versatile** | A weapon property meaning the weapon can be used with one or two hands; the parenthetical damage applies only when used with two hands to make a melee attack | Flexible weapon mode |
 | **Mastery Property** | A weapon-specific combat technique (one of 8: Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex) usable only by a character with a feature that unlocks it; each weapon has exactly one mastery property. Distinct from Weapon Properties — mastery is an additional layer, not one of the 10 weapon traits | Weapon mastery (ambiguous — could mean the class feature or the property) |
 | **Weapon Mastery** | A class feature (Fighter L1, Barbarian L1, Paladin L1, Ranger L1, Rogue L1) that lets a character use mastery properties on a limited number of weapons they are proficient with. Number of mastered weapons varies by class and level; changeable on Long Rest. Barbarian restricted to melee weapons only | — |
 | **Cleave** | Mastery property: on melee hit, make a melee attack against a second creature within 5 feet of the first and within your reach; second creature takes weapon damage without ability modifier (unless negative). Once per turn | — |
@@ -162,6 +165,7 @@ This table is a support-layer projection of the SRD condition text. Quint remain
 | **Topple** | Mastery property: on hit, force a Constitution saving throw (DC 8 + ability modifier + proficiency bonus); on failure, target has the Prone condition | — |
 | **Vex** | Mastery property: on hit (with damage), gain Advantage on your next attack roll against that creature before the end of your next turn | — |
 | **Donning/Doffing** | Putting on or removing armor; time varies: Light (1 min / 1 min), Medium (5 min / 1 min), Heavy (10 min / 5 min); doffing Heavy is halved with help | — |
+| **Holding / Wielding** | The SRD-facing concept for what a creature has in hand. Use this language in rules and docs; avoid inventing handedness terms that the SRD does not define | Main hand, off hand, left hand, right hand |
 
 ## Spellcasting
 
@@ -174,6 +178,23 @@ This table is a support-layer projection of the SRD condition text. Quint remain
 | **Cantrip** | A level 0 spell cast at will without expending a spell slot | At-will spell, 0-level spell |
 | **Ritual** | A spell cast with 10 extra minutes of casting time, without expending a spell slot; requires a feature that allows ritual casting | — |
 | **Spell Component** | A physical requirement to cast a spell: Verbal (V) = spoken words; Somatic (S) = gestures, requires a free hand; Material (M) = specific objects, replaceable by a focus unless the component has a cost | Ingredient (only partially overlaps with Material) |
+
+### Hand Occupancy Terminology
+
+Use SRD terms in rules-facing prose:
+
+- `free hand`
+- `holding`
+- `wielding a Shield`
+- `Two-Handed`
+- `Versatile`
+
+Avoid these as domain-language terms because the SRD does not define them:
+
+- `main hand`
+- `off hand`
+- `left hand`
+- `right hand`
 | **Spell Level** | A measure of a spell's power, ranging from 0 (cantrip) to 9; distinct from character level — a 5th-level character can cast 3rd-level spells | Character level (different concept; spell level 5 ≠ character level 5) |
 | **Base Spell Level** | The minimum spell slot level required to cast a spell; e.g., Fireball's base spell level is 3 | Spell level (ambiguous — could mean the level it's being cast at) |
 | **Cast Level** | The spell slot level actually used to cast a spell; equals the base spell level or higher when using a higher-level spell slot | Upcast level |

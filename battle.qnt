@@ -26,6 +26,8 @@ module battle {
     bypassedBy: Set[DamageQualifier],
   }
 
+  type HandUse = | HFree | HMainWeapon | HOffWeapon | HShield | HGrapple
+
   pure val NO_WEAPON: Weapon = {
     name: "",
     damageDie: 0,
@@ -86,6 +88,8 @@ module battle {
     parryAcBonus: int,                       // 0 = no Parry reaction; otherwise fixed AC bonus
     mainHandWeapon: Weapon,
     offHandWeapon: Weapon,
+    leftHandUse: HandUse,
+    rightHandUse: HandUse,
   }
 
   /// Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready action).
@@ -115,6 +119,58 @@ module battle {
   pure def hasReadiedSpell(c: Combatant): bool = c.readiedSpellParams.slotLvl > 0
 
   pure def isBattleGrappling(c: Combatant): bool = c.grapplingTarget != ""
+
+  pure def battleFreeHandCount(c: Combatant): int =
+    (if (c.leftHandUse == HFree) 1 else 0) + (if (c.rightHandUse == HFree) 1 else 0)
+
+  pure def battleHasFreeHand(c: Combatant): bool = battleFreeHandCount(c) > 0
+
+  pure def battleMainHandUsesTwoHands(c: Combatant): bool =
+    c.leftHandUse == HMainWeapon and c.rightHandUse == HMainWeapon
+
+  pure def releaseOneHandFromTwoHandGrip(c: Combatant): Combatant =
+    if (not(battleMainHandUsesTwoHands(c))) c
+    else if (c.leftHandUse == HMainWeapon) c.with("leftHandUse", HFree)
+    else c.with("rightHandUse", HFree)
+
+  pure def prepareHandsForSpellComponents(c: Combatant): Combatant =
+    if (battleHasFreeHand(c)) c else releaseOneHandFromTwoHandGrip(c)
+
+  pure def occupyFreeHandWithGrapple(c: Combatant): Combatant =
+    if (c.leftHandUse == HFree) c.with("leftHandUse", HGrapple)
+    else if (c.rightHandUse == HFree) c.with("rightHandUse", HGrapple)
+    else c
+
+  pure def releaseOneGrappleHand(c: Combatant): Combatant =
+    if (c.leftHandUse == HGrapple) c.with("leftHandUse", HFree)
+    else if (c.rightHandUse == HGrapple) c.with("rightHandUse", HFree)
+    else c
+
+  pure def dropHeldItems(c: Combatant): Combatant =
+    c.with("leftHandUse", HFree).with("rightHandUse", HFree)
+
+  /// Component requirements for the currently battle-modeled spell surface.
+  /// This is intentionally separate from hand occupancy itself.
+  pure def battleSpellComponentRequirements(spellName: str): { requiresVerbal: bool, requiresSomatic: bool } =
+    if (spellName == "counterspell") { requiresVerbal: false, requiresSomatic: true }
+    else if (
+      spellName == "shield" or
+      spellName == "hold_person" or
+      spellName == "bless" or
+      spellName == "haste" or
+      spellName == "spirit_guardians" or
+      spellName == "fireball" or
+      spellName == "burning_hands" or
+      spellName == "guiding_bolt" or
+      spellName == "inflict_wounds"
+    ) { requiresVerbal: true, requiresSomatic: true }
+    else { requiresVerbal: false, requiresSomatic: false }
+
+  pure def canProvideBattleSpellComponents(c: Combatant, spellName: str): bool = {
+    val req = battleSpellComponentRequirements(spellName)
+    val prepared = if (req.requiresSomatic) prepareHandsForSpellComponents(c) else c
+    pCanProvideComponents(prepared.creature, req.requiresVerbal, req.requiresSomatic, battleHasFreeHand(prepared))
+  }
 
   type TriggerType =
     | TAttackHits       // "when hit by attack roll" — Shield, Parry
@@ -465,8 +521,10 @@ module battle {
     bardLevel: 0,
     bardicInspirationCharges: 0,
     parryAcBonus: 0,
-    mainHandWeapon: LIGHT_MELEE_WEAPON,
+    mainHandWeapon: NO_WEAPON,
     offHandWeapon: NO_WEAPON,
+    leftHandUse: HFree,
+    rightHandUse: HFree,
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -494,6 +552,9 @@ module battle {
     recklessThisTurn: false,
     ragingBlocksSpells: false,
     combatantResistances: Set(),
+    qualifiedPhysicalResistances: Set(),
+    qualifiedPhysicalVulnerabilities: Set(),
+    qualifiedPhysicalImmunities: Set(),
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
     readiedSpellParams: NO_READIED_SPELL,
@@ -505,8 +566,10 @@ module battle {
     bardLevel: 0,
     bardicInspirationCharges: 0,
     parryAcBonus: 0,
-    mainHandWeapon: LIGHT_MELEE_WEAPON,
+    mainHandWeapon: NO_WEAPON,
     offHandWeapon: NO_WEAPON,
+    leftHandUse: HFree,
+    rightHandUse: HFree,
   }
 
   // Monster with legendary actions and resistances
@@ -549,8 +612,10 @@ module battle {
       bardLevel: 0,
       bardicInspirationCharges: 0,
       parryAcBonus: 0,
-      mainHandWeapon: LIGHT_MELEE_WEAPON,
+      mainHandWeapon: NO_WEAPON,
       offHandWeapon: NO_WEAPON,
+      leftHandUse: HFree,
+      rightHandUse: HFree,
     }
   }
 
@@ -593,9 +658,12 @@ module battle {
     // the computed damage result. This is correct: the attacker's choice replaces
     // the "reduce to 0" outcome entirely.
     if (knockOut and t.kind == PC and t.creature.hp > 0 and nc.hp == 0 and not(nc.dead)) {
-      setCreature(cs, targetId, pKnockOut(t.creature))
+      cs.set(targetId, dropHeldItems(cs.get(targetId)).with("creature", pKnockOut(t.creature)))
     } else {
-      setCreature(cs, targetId, nc)
+      if (nc.dead or nc.unconscious)
+        cs.set(targetId, dropHeldItems(cs.get(targetId)).with("creature", nc))
+      else
+        setCreature(cs, targetId, nc)
     }
   }
 
@@ -735,7 +803,11 @@ module battle {
       if (cs.keys().contains(grapplerId))
         cs.set(
           grapplerId,
-          cs.get(grapplerId).with("grapplingTarget", "").with("grappledTargetTwoSizesSmaller", false)
+          releaseOneGrappleHand(
+            cs.get(grapplerId)
+              .with("grapplingTarget", "")
+              .with("grappledTargetTwoSizesSmaller", false)
+          )
         )
       else
         cs
@@ -759,7 +831,9 @@ module battle {
     val target = cs.get(targetId)
     val cs1 = cs.set(
       grapplerId,
-      grappler.with("grapplingTarget", targetId).with("grappledTargetTwoSizesSmaller", targetTwoSizesSmaller)
+      occupyFreeHandWithGrapple(
+        grappler.with("grapplingTarget", targetId).with("grappledTargetTwoSizesSmaller", targetTwoSizesSmaller)
+      )
     ).set(
       targetId,
       target.with("creature", pApplyCondition(target.creature, CGrappled, Set())).with("grappledBy", grapplerId)
@@ -929,6 +1003,7 @@ module battle {
       hasCounterspellSlot(cs, id)
       and cs.get(id).preparedSpells.contains("counterspell")
       and not(cs.get(id).turn.slotExpendedThisTurn)
+      and canProvideBattleSpellComponents(cs.get(id), "counterspell")
     )
 
   pure def legalDamageReactionsByCreature(cs: CreatureId -> Combatant, atk: AttackDamageCtx): CreatureId -> Set[str] = {
@@ -977,6 +1052,7 @@ module battle {
         and c.preparedSpells.contains("shield")
         and hasAnySpellSlot(c)
         and not(c.turn.slotExpendedThisTurn)
+        and canProvideBattleSpellComponents(c, "shield")
       val canParry =
         canReact
         and id == atk.target
@@ -1031,14 +1107,11 @@ module battle {
     damageQualifiers: Set[DamageQualifier],
   ): Set[DamageType] =
     if (not(isPhysicalDamageType(damageType))) base
-    else
-      rules.fold(
-        base,
-        (acc, rule) =>
-          if (rule.damageType == damageType and not(bypassedByQualifiers(rule, damageQualifiers)))
-            acc.union(Set(rule.damageType))
-          else acc,
-      )
+    else rules.fold(base, (acc, rule) =>
+      if (rule.damageType == damageType and not(bypassedByQualifiers(rule, damageQualifiers)))
+        acc.union(Set(rule.damageType))
+      else acc
+    )
 
   /// Apply damage and check for after-damage reactions (R10.4).
   /// Returns new creatures + phase. If an eligible reactor exists, enters
@@ -1526,7 +1599,9 @@ module battle {
                 val cs1 = match decision {
                   | RShield =>
                     val slotLvl = firstSpellSlotLevel(reactor)
-                    expendSlot(spendReaction(bCreatures, reactorId), reactorId, slotLvl)
+                    val preparedReactor = prepareHandsForSpellComponents(reactor)
+                    val cs0 = bCreatures.set(reactorId, preparedReactor)
+                    expendSlot(spendReaction(cs0, reactorId), reactorId, slotLvl)
                   | RParry(_) => spendReaction(bCreatures, reactorId)
                   | RCuttingWords(_) => spendBardicInspirationCharge(spendReaction(bCreatures, reactorId), reactorId)
                   | _ => bCreatures
@@ -1737,6 +1812,7 @@ module battle {
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
+    val preparedCaster = prepareHandsForSpellComponents(ac)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -1749,10 +1825,12 @@ module battle {
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       ac.preparedSpells.size() > 0,           // must have at least one prepared spell
+      canProvideBattleSpellComponents(ac, spellName),
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
-      val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
-      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val newTurn = pUseAction(preparedCaster.turn, preparedCaster.creature, AMagic)
+      val cs0 = bCreatures.set(activeId, preparedCaster)
+      val cs1 = setTurn(cs0, activeId, newTurn)
       // Spend-then-refund: expend slot immediately (sets slotExpendedThisTurn = true).
       // SRD 5.2.1 Counterspell: "the slot isn't expended" → refunded in bResolveCounterspell.
       // SRD 5.2.1 "One Spell with a Spell Slot per Turn" → flag stays true even after refund.
@@ -2068,8 +2146,12 @@ module battle {
                     bSpellStack.length() < 2,
                     // Guard: reactor must have a slot of level csSlotLvl
                     bCreatures.get(reactorId).slots.slotsCurrent.get(csSlotLvl) > 0,
+                    canProvideBattleSpellComponents(bCreatures.get(reactorId), "counterspell"),
                     // Spend reaction + slot
-                    val cs1 = spendReaction(bCreatures, reactorId)
+                    val cs1 = spendReaction(
+                      bCreatures.set(reactorId, prepareHandsForSpellComponents(bCreatures.get(reactorId))),
+                      reactorId
+                    )
                     val cs2 = expendSlot(cs1, reactorId, csSlotLvl)
                     // Push current spell context onto stack
                     val stackEntry: SpellStackEntry = {
@@ -2206,6 +2288,7 @@ module battle {
     nondet cond = Set(CParalyzed, CCharmed, CRestrained).oneOf()
     nondet applyCond = Bool.oneOf()
     nondet ritual = Bool.oneOf()
+    val preparedCaster = prepareHandsForSpellComponents(ac)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -2218,10 +2301,12 @@ module battle {
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       ac.preparedSpells.contains(spellId),    // SRD 5.2.1: must have spell prepared
+      canProvideBattleSpellComponents(ac, spellId),
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
-      val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
-      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val newTurn = pUseAction(preparedCaster.turn, preparedCaster.creature, AMagic)
+      val cs0 = bCreatures.set(activeId, preparedCaster)
+      val cs1 = setTurn(cs0, activeId, newTurn)
       // Spend-then-refund (see bCastSaveSpell comment for rationale)
       val cs2 = if (ritual) cs1 else expendSlot(cs1, activeId, slotLvl)
       val concCtx: ConcentrationCtx = {
@@ -2306,6 +2391,7 @@ module battle {
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
+    val preparedCaster = prepareHandsForSpellComponents(ac)
     all {
       bPhase == BPActiveTurn,
       bTurnStarted,
@@ -2317,10 +2403,12 @@ module battle {
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       ac.preparedSpells.size() > 0,           // must have at least one prepared spell
+      canProvideBattleSpellComponents(ac, spellName),
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
-      val newTurn = pUseAction(ac.turn, ac.creature, AMagic)
-      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val newTurn = pUseAction(preparedCaster.turn, preparedCaster.creature, AMagic)
+      val cs0 = bCreatures.set(activeId, preparedCaster)
+      val cs1 = setTurn(cs0, activeId, newTurn)
       // Spend-then-refund (see bCastSaveSpell comment for rationale)
       val cs2 = if (ritual) cs1 else expendSlot(cs1, activeId, slotLvl)
       val aoeCtx: AoESpellCtx = {
@@ -2706,25 +2794,25 @@ module battle {
         val releaser = bCreatures.get(releaserId)
         all {
           hasReadiedSpell(releaser),  // spell release only
-          val rsp = releaser.readiedSpellParams
+          canProvideBattleSpellComponents(releaser, releaser.readiedSpellParams.spellName),
           // Spend reaction, clear readiedAction and readiedSpellParams
-          val updatedTurn = releaser.turn.with("reactionAvailable", false).with("readiedAction", false)
+          val updatedTurn = prepareHandsForSpellComponents(releaser).turn.with("reactionAvailable", false).with("readiedAction", false)
           val cs1 = bCreatures.set(releaserId,
-            releaser.with("turn", updatedTurn).with("readiedSpellParams", NO_READIED_SPELL))
+            prepareHandsForSpellComponents(releaser).with("turn", updatedTurn).with("readiedSpellParams", NO_READIED_SPELL))
           // Break concentration (spell energy is being released)
           val cs2 = breakConcentrationAndPropagate(cs1, releaserId)
           val readyReturn = ADRAwaitingReadiedAction(readyCtx)
           val saveCtx: SaveSpellCtx = {
-            caster: rsp.caster, target: rsp.target,
-            saveDC: rsp.saveDC, saveRoll: saveRoll,
-            damageOnFail: rsp.damageOnFail, halfOnSuccess: rsp.halfOnSuccess,
-            damageType: rsp.damageType,
-            conditionOnFail: rsp.conditionOnFail, applyCondition: rsp.applyCondition,
-            saveAbility: rsp.saveAbility,
+            caster: releaser.readiedSpellParams.caster, target: releaser.readiedSpellParams.target,
+            saveDC: releaser.readiedSpellParams.saveDC, saveRoll: saveRoll,
+            damageOnFail: releaser.readiedSpellParams.damageOnFail, halfOnSuccess: releaser.readiedSpellParams.halfOnSuccess,
+            damageType: releaser.readiedSpellParams.damageType,
+            conditionOnFail: releaser.readiedSpellParams.conditionOnFail, applyCondition: releaser.readiedSpellParams.applyCondition,
+            saveAbility: releaser.readiedSpellParams.saveAbility,
           }
           val spellCtx: SpellCastCtx = {
-            caster: rsp.caster,
-            spellName: rsp.spellName,
+            caster: releaser.readiedSpellParams.caster,
+            spellName: releaser.readiedSpellParams.spellName,
             postCast: PCESave(saveCtx),
             slotLvl: 0,   // slot already spent at ready time — no refund on counterspell
             ritual: false, // readied spells cannot be rituals
@@ -2955,7 +3043,6 @@ module battle {
     nondet attackerSize = Set(Tiny, Small, Medium, Large, Huge, Gargantuan).oneOf()
     nondet targetSize = Set(Tiny, Small, Medium, Large, Huge, Gargantuan).oneOf()
     nondet targetSaveFailed = Bool.oneOf()
-    nondet attackerHasFreeHand = Bool.oneOf()
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -2966,12 +3053,13 @@ module battle {
       not(tc.creature.dead),
       ac.grapplingTarget == "",
       tc.grappledBy == "",
+      battleHasFreeHand(ac),
       val newTurn = if (ac.turn.attackActionUsed and ac.turn.extraAttacksRemaining > 0)
         ac.turn.with("extraAttacksRemaining", ac.turn.extraAttacksRemaining - 1)
       else
         pUseAction(ac.turn, ac.creature, AAttack)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
-      val success = pGrapple(attackerSize, targetSize, tc.creature, targetSaveFailed, attackerHasFreeHand).success
+      val success = pGrapple(attackerSize, targetSize, tc.creature, targetSaveFailed, true).success
       val cs2 = if (success)
         linkBattleGrapple(cs1, activeId, targetId, pTwoSizesSmaller(attackerSize, targetSize), activeId)
       else cs1
@@ -3063,6 +3151,7 @@ module battle {
     nondet saveAb = Set(Dex, Con).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
+    val preparedCaster = prepareHandsForSpellComponents(ac)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -3075,10 +3164,12 @@ module battle {
       not(ac.ragingBlocksSpells),
       not(ac.turn.slotExpendedThisTurn),  // readied spells cost a slot
       ac.preparedSpells.size() > 0,
+      canProvideBattleSpellComponents(ac, spellName),
       ac.slots.slotsCurrent.get(slotLvl) > 0,
-      val newTurn = pUseAction(ac.turn, ac.creature, AReady)
+      val newTurn = pUseAction(preparedCaster.turn, preparedCaster.creature, AReady)
       // Spend slot immediately (SRD 5.2.1: "expending any resources")
-      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val cs0 = bCreatures.set(activeId, preparedCaster)
+      val cs1 = setTurn(cs0, activeId, newTurn)
       val cs2 = expendSlot(cs1, activeId, slotLvl)
       // Break existing concentration if any, then start new concentration for the readied spell
       val cs3 = if (ac.slots.concentrationSpellId != "")
@@ -3218,6 +3309,7 @@ module battle {
     nondet saveAb = Set(Dex, Con).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
+    val preparedCaster = prepareHandsForSpellComponents(ac)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -3229,10 +3321,12 @@ module battle {
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn),        // SRD 5.2.1 one slot per turn
       ac.preparedSpells.size() > 0,
+      canProvideBattleSpellComponents(ac, spellName),
       ac.slots.slotsCurrent.get(slotLvl) > 0,   // BA spells cannot be rituals
-      val newTurn = pUseBonusAction(ac.turn, ac.creature)
+      val newTurn = pUseBonusAction(preparedCaster.turn, preparedCaster.creature)
                       .with("bonusActionSpellCast", true)
-      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val cs0 = bCreatures.set(activeId, preparedCaster)
+      val cs1 = setTurn(cs0, activeId, newTurn)
       // Spend-then-refund (see bCastSaveSpell comment for rationale). No ritual for BA spells.
       val cs2 = expendSlot(cs1, activeId, slotLvl)
       val saveCtx: SaveSpellCtx = {

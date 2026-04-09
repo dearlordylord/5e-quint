@@ -4,6 +4,8 @@ import {
 } from "#/battle-machine-actions-attack.ts";
 import {
   battleExpendSlot,
+  battleHasFreeHand,
+  deriveBattleHandUses,
   freshCaster,
   freshCreature,
   isIncapacitated,
@@ -12,6 +14,8 @@ import {
 import {
   activeId,
   breakConcentrationAndPropagate,
+  canProvideBattleSpellComponents,
+  prepareBattleCasterForSpell,
   consumeHelp,
   eligibleForCounterspell,
   escapeBattleGrapple,
@@ -124,6 +128,14 @@ export function battleInit({
     const base = cfg.caster
       ? freshCaster(cfg.maxHp, cfg.kind)
       : freshCreature(cfg.maxHp, cfg.kind);
+    const mainHandWeapon = cfg.mainHandWeapon ?? base.mainHandWeapon;
+    const offHandWeapon = cfg.offHandWeapon ?? base.offHandWeapon;
+    const handUses = deriveBattleHandUses({
+      mainHandWeapon,
+      offHandWeapon,
+      hasShieldEquipped: cfg.hasShieldEquipped ?? false,
+      mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
+    });
     creatures.set(cfg.id, {
       ...base,
       ...(cfg.maxHpReduction != null
@@ -187,6 +199,7 @@ export function battleInit({
         ? { mainHandWeapon: cfg.mainHandWeapon }
         : {}),
       ...(cfg.offHandWeapon != null ? { offHandWeapon: cfg.offHandWeapon } : {}),
+      ...handUses,
       ...(cfg.qualifiedPhysicalResistances != null
         ? { qualifiedPhysicalResistances: cfg.qualifiedPhysicalResistances }
         : {}),
@@ -320,6 +333,7 @@ export function battleGrapple({
   if (ac.dead || isIncapacitated(ac) || tc.dead) return {};
   if (ac.actionsRemaining <= 0 && ac.extraAttacksRemaining <= 0) return {};
   if (ac.grapplingTarget != null || tc.grappledBy != null) return {};
+  if (!battleHasFreeHand(ac)) return {};
   const updatedAc =
     ac.attackActionUsed && ac.extraAttacksRemaining > 0
       ? spendExtraAttack(ac)
@@ -329,7 +343,7 @@ export function battleGrapple({
     e.attackerSize,
     e.targetSize,
     e.targetSaveFailed,
-    e.attackerHasFreeHand,
+    true,
     isIncapacitated(tc),
   );
   if (success) {
@@ -730,7 +744,9 @@ export function battleReadySpell({
   )
     return {};
   if (ac.preparedSpells.size === 0) return {};
-  const afterAction = spendAction(ac, "ready");
+  if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
+  const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
+  const afterAction = spendAction(preparedCaster, "ready");
   let cs = setCreature(
     c.creatures,
     id,
@@ -766,9 +782,11 @@ export function battleReadySpellRelease({
   const releaser = c.creatures.get(e.releaserId)!;
   const rsp = releaser.readiedSpellParams;
   if (!rsp) return {}; // no readied spell
+  if (!canProvideBattleSpellComponents(releaser, rsp.spellName)) return {};
+  const preparedReleaser = prepareBattleCasterForSpell(releaser, rsp.spellName);
   // Spend reaction, clear readiedAction and readiedSpellParams
   let cs = setCreature(c.creatures, e.releaserId, {
-    ...releaser,
+    ...preparedReleaser,
     reactionAvailable: false,
     readiedAction: false,
     readiedSpellParams: null,

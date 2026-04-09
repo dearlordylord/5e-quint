@@ -27,7 +27,17 @@ export type ModeledPreparedSpellInfo = {
   readonly baseLevel: number;
   readonly castingTime: "action" | "bonusAction";
   readonly concentration: boolean;
+  readonly requiresVerbal: boolean;
+  readonly requiresSomatic: boolean;
+  readonly requiresMaterial: boolean;
   readonly durationTurns?: number;
+};
+
+export type SpellComponentRequirements = {
+  readonly requiresVerbal: boolean;
+  readonly requiresSomatic: boolean;
+  readonly requiresMaterial: boolean;
+  readonly requiresHandComponent: boolean;
 };
 
 const MODELED_PREPARED_SPELLS_BY_CLASS = {
@@ -82,6 +92,21 @@ function parseConcentrationDurationTurns(duration: string): number | undefined {
   return undefined;
 }
 
+function parseSpellComponentRequirements(
+  components: string,
+): SpellComponentRequirements {
+  const requirements = {
+    requiresVerbal: components.includes("V"),
+    requiresSomatic: components.includes("S"),
+    requiresMaterial: components.includes("M"),
+  };
+  return {
+    ...requirements,
+    requiresHandComponent:
+      requirements.requiresSomatic || requirements.requiresMaterial,
+  };
+}
+
 function requireSpellInfo(
   spellName: ModeledPreparedSpell,
 ): ModeledPreparedSpellInfo {
@@ -105,11 +130,13 @@ function requireSpellInfo(
       `Unsupported concentration duration for modeled prepared spell ${spellName}: ${entry.duration}`,
     );
   }
+  const components = parseSpellComponentRequirements(entry.components);
   return {
     name: spellName,
     baseLevel: entry.level,
     castingTime,
     concentration: entry.concentration,
+    ...components,
     ...(durationTurns == null ? {} : { durationTurns }),
   };
 }
@@ -129,6 +156,15 @@ export function getModeledPreparedSpellInfo(
   return spellName in MODELED_PREPARED_SPELL_INFO
     ? MODELED_PREPARED_SPELL_INFO[spellName as ModeledPreparedSpell]
     : null;
+}
+
+export function getSpellComponentRequirements(
+  spellName: string,
+): SpellComponentRequirements | null {
+  const entry = SRD_SPELLS.find(
+    (info) => snakeCaseSpellName(info.name) === spellName,
+  );
+  return entry == null ? null : parseSpellComponentRequirements(entry.components);
 }
 
 export function defaultPreparedSpellsForClassLevels(

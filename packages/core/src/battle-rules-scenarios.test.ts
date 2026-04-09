@@ -63,6 +63,13 @@ const MACE: BattleWeaponProfile = {
   properties: new Set(),
 };
 
+const GREATSWORD: BattleWeaponProfile = {
+  name: "Greatsword",
+  damageType: "slashing",
+  isMelee: true,
+  properties: new Set(["twoHanded"]),
+};
+
 function send(
   actor: ReturnType<typeof createActor<typeof battleMachine>>,
   ...events: Array<BattleEvent>
@@ -248,6 +255,60 @@ function initCounterspellBattle() {
         initiativeRoll: 10,
       },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
+    ],
+  });
+  return actor;
+}
+
+function initHandOccupancyBattle() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["hold_person", "shield"]),
+        mainHandWeapon: GREATSWORD,
+        mainHandUsesTwoHands: true,
+        initiativeRoll: 20,
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 10,
+      },
+    ],
+  });
+  return actor;
+}
+
+function initShieldHandOccupancyBattle() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["hold_person"]),
+        mainHandWeapon: MACE,
+        hasShieldEquipped: true,
+        initiativeRoll: 20,
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 10,
+      },
     ],
   });
   return actor;
@@ -1828,7 +1889,6 @@ describe("battle rules scenario regressions", () => {
       attackerSize: "medium",
       targetSize: "medium",
       targetSaveFailed: true,
-      attackerHasFreeHand: true,
     });
 
     expect(creature(actor, "A").dodging).toBe(true);
@@ -2017,7 +2077,6 @@ describe("battle rules scenario regressions", () => {
       attackerSize: "medium",
       targetSize: "medium",
       targetSaveFailed: true,
-      attackerHasFreeHand: true,
     });
 
     expect(creature(actor, "A").grapplingTarget).toBe(CreatureId("B"));
@@ -2066,7 +2125,6 @@ describe("battle rules scenario regressions", () => {
       attackerSize: "medium",
       targetSize: "medium",
       targetSaveFailed: true,
-      attackerHasFreeHand: true,
     });
     send(actor, {
       type: "BATTLE_END_TURN",
@@ -2154,7 +2212,6 @@ describe("battle rules scenario regressions", () => {
       attackerSize: "medium",
       targetSize: "medium",
       targetSaveFailed: true,
-      attackerHasFreeHand: true,
     });
 
     expect(creature(actor, "A").effectiveSpeed).toBe(15);
@@ -2176,7 +2233,6 @@ describe("battle rules scenario regressions", () => {
       attackerSize: "huge",
       targetSize: "medium",
       targetSaveFailed: true,
-      attackerHasFreeHand: true,
     });
 
     expect(creature(exemptActor, "A").effectiveSpeed).toBe(30);
@@ -2193,7 +2249,6 @@ describe("battle rules scenario regressions", () => {
       attackerSize: "medium",
       targetSize: "medium",
       targetSaveFailed: true,
-      attackerHasFreeHand: true,
     });
 
     expect(creature(actor, "A").actionsRemaining).toBe(0);
@@ -2220,7 +2275,6 @@ describe("battle rules scenario regressions", () => {
       attackerSize: "medium",
       targetSize: "medium",
       targetSaveFailed: true,
-      attackerHasFreeHand: true,
     });
     send(actor, {
       type: "BATTLE_END_TURN",
@@ -2258,7 +2312,6 @@ describe("battle rules scenario regressions", () => {
       attackerSize: "medium",
       targetSize: "medium",
       targetSaveFailed: true,
-      attackerHasFreeHand: true,
     });
     send(actor, {
       type: "BATTLE_END_TURN",
@@ -2280,6 +2333,129 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "B").effectiveSpeed).toBe(0);
     expect(creature(actor, "B").movementRemaining).toBe(0);
     expect(creature(actor, "A").grapplingTarget).toBe(CreatureId("B"));
+  });
+
+  it("natural_20: a grapple occupies a hand and releasing it frees that hand", () => {
+    const actor = initTwoPcBattle();
+    startTurn(actor);
+
+    expect(creature(actor, "A").leftHandUse).toBe("free");
+    expect(creature(actor, "A").rightHandUse).toBe("free");
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+    });
+
+    expect(
+      [creature(actor, "A").leftHandUse, creature(actor, "A").rightHandUse],
+    ).toContain("grapple");
+
+    send(actor, { type: "BATTLE_RELEASE_GRAPPLE" });
+
+    expect(
+      [creature(actor, "A").leftHandUse, creature(actor, "A").rightHandUse],
+    ).not.toContain("grapple");
+  });
+
+  it("natural_20: a weapon-and-shield loadout leaves no free hand for grappling", () => {
+    const actor = initShieldHandOccupancyBattle();
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+    });
+
+    expect(creature(actor, "A").grapplingTarget).toBeNull();
+    expect(creature(actor, "B").grappled).toBe(false);
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+  });
+
+  it("natural_20: a two-handed grip can be relaxed to cast a hand-component spell", () => {
+    const actor = initHandOccupancyBattle();
+    startTurn(actor);
+
+    expect(creature(actor, "A").leftHandUse).toBe("mainWeapon");
+    expect(creature(actor, "A").rightHandUse).toBe("mainWeapon");
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(
+      [creature(actor, "A").leftHandUse, creature(actor, "A").rightHandUse],
+    ).toContain("free");
+    expect(creature(actor, "A").actionsRemaining).toBe(0);
+    expect(creature(actor, "B").paralyzed).toBe(true);
+  });
+
+  it("natural_20: a weapon-and-shield loadout cannot cast a hand-component action spell", () => {
+    const actor = initShieldHandOccupancyBattle();
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false,
+    });
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+    expect(creature(actor, "B").paralyzed).toBe(false);
+  });
+
+  it("natural_20: becoming unconscious drops held items", () => {
+    const actor = initHandOccupancyBattle();
+    startTurn(actor);
+    endTurn(actor);
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("A"),
+      attackRoll: 18,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 25,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").unconscious).toBe(true);
+    expect(creature(actor, "A").leftHandUse).toBe("free");
+    expect(creature(actor, "A").rightHandUse).toBe("free");
   });
 
   it("natural_20: Shocking Grasp blocks opportunity attacks until the start of the target's next turn", () => {

@@ -22,6 +22,7 @@ import type {
   DamageQualifier,
   DamageType,
   DifficultyClass,
+  HandUse,
   IncapSource,
   QualifiedPhysicalBypass,
   Size,
@@ -132,6 +133,8 @@ export interface BattleCreatureState {
   readonly parryAcBonus: number;
   readonly mainHandWeapon: BattleWeaponProfile | null;
   readonly offHandWeapon: BattleWeaponProfile | null;
+  readonly leftHandUse: HandUse;
+  readonly rightHandUse: HandUse;
 }
 
 /** Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready). */
@@ -437,6 +440,8 @@ export interface InitCreatureConfig {
   readonly surprised?: boolean;
   readonly mainHandWeapon?: BattleWeaponProfile;
   readonly offHandWeapon?: BattleWeaponProfile;
+  readonly hasShieldEquipped?: boolean;
+  readonly mainHandUsesTwoHands?: boolean;
   readonly qualifiedPhysicalResistances?: ReadonlyArray<QualifiedPhysicalBypass>;
   readonly qualifiedPhysicalVulnerabilities?: ReadonlyArray<QualifiedPhysicalBypass>;
   readonly qualifiedPhysicalImmunities?: ReadonlyArray<QualifiedPhysicalBypass>;

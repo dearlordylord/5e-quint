@@ -58,6 +58,23 @@ import {
 // Quint state parsing (reuse battle-level schemas from B14)
 // ============================================================
 
+function mapHandUse(value: string): string {
+  switch (value) {
+    case "HFree":
+      return "free";
+    case "HMainWeapon":
+      return "mainWeapon";
+    case "HOffWeapon":
+      return "offWeapon";
+    case "HShield":
+      return "shield";
+    case "HGrapple":
+      return "grapple";
+    default:
+      return value;
+  }
+}
+
 const QuintCombatant = z.object({
   creature: QuintCreatureState,
   turn: QuintTurnState,
@@ -88,6 +105,8 @@ const QuintCombatant = z.object({
   grappledBy: z.string(),
   grapplingTarget: z.string(),
   grappledTargetTwoSizesSmaller: z.boolean(),
+  leftHandUse: z.any().transform((v) => mapHandUse(variantToString(v))),
+  rightHandUse: z.any().transform((v) => mapHandUse(variantToString(v))),
 });
 
 type ParsedCombatant = z.infer<typeof QuintCombatant>;
@@ -139,6 +158,8 @@ interface NormalizedBattleCreature {
   grappledBy: string;
   grapplingTarget: string;
   grappledTargetTwoSizesSmaller: boolean;
+  leftHandUse: string;
+  rightHandUse: string;
   invisible: boolean;
   paralyzed: boolean;
   petrified: boolean;
@@ -224,6 +245,8 @@ function quintCombatantToNormalized(
     grappledBy: c.grappledBy,
     grapplingTarget: c.grapplingTarget,
     grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
+    leftHandUse: c.leftHandUse,
+    rightHandUse: c.rightHandUse,
     invisible: s.invisible,
     paralyzed: s.paralyzed,
     petrified: s.petrified,
@@ -305,6 +328,8 @@ function xstateCreatureToNormalized(
     grappledBy: c.grappledBy ?? "",
     grapplingTarget: c.grapplingTarget ?? "",
     grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
+    leftHandUse: c.leftHandUse,
+    rightHandUse: c.rightHandUse,
     invisible: c.invisible,
     paralyzed: c.paralyzed,
     petrified: c.petrified,
@@ -553,7 +578,6 @@ const battleDriverSchema = {
     attackerSize: ITFSize,
     targetSize: ITFSize,
     targetSaveFailed: OB,
-    attackerHasFreeHand: OB,
   },
   bReleaseGrapple: {},
   bEscapeGrapple: { escapeSucceeded: OB },
@@ -1059,7 +1083,6 @@ function createBattleMachineDriver() {
           attackerSize: psz(picks, "attackerSize", "medium"),
           targetSize: psz(picks, "targetSize", "medium"),
           targetSaveFailed: pb(picks, "targetSaveFailed", false),
-          attackerHasFreeHand: pb(picks, "attackerHasFreeHand", true),
         });
       },
       bReleaseGrapple: () => {

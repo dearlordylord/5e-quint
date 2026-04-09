@@ -7,7 +7,6 @@ This file is the execution companion for the next reliably execution-grade batch
 Use:
 
 - [DAG.md](./DAG.md) for dependency truth
-- [DAG_TASK_CARDS.md](./DAG_TASK_CARDS.md) for compact node handoff cards where they exist
 - `DAG_RUNBOOK_3.md` for orchestrated coding-agent execution
 
 This runbook is intentionally narrower than “all remaining DAG work.” It only includes the portion of the remaining DAG that is concrete enough to schedule without a separate design pass.

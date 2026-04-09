@@ -7,11 +7,13 @@ import {
   applyDamageWithAfterReactions,
   eligibleForCounterspell,
   eligibleForLR,
+  canProvideBattleSpellComponents,
   expendSlot,
   mkAwait,
   piSaveFailed,
   piSaveFailedAoE,
   piSpellCast,
+  prepareBattleCasterForSpell,
   resolveSave,
   setCreature,
   setDifference,
@@ -51,6 +53,8 @@ export function battleCastSaveSpell({
   const ac = c.creatures.get(id)!;
   if (ac.dead || isIncapacitated(ac)) return {};
   if (ac.ragingBlocksSpells) return {};
+  if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
+  const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
   if (e.bonusAction) {
     if (ac.bonusActionUsed || ac.slotExpendedThisTurn) return {};
   } else {
@@ -60,11 +64,11 @@ export function battleCastSaveSpell({
   }
   let cs = e.bonusAction
     ? setCreature(c.creatures, id, {
-        ...ac,
+        ...preparedCaster,
         bonusActionUsed: true,
         bonusActionSpellCast: true,
       })
-    : setCreature(c.creatures, id, spendAction(ac, "magic"));
+    : setCreature(c.creatures, id, spendAction(preparedCaster, "magic"));
   if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl));
   const saveCtx = {
     caster: id,
@@ -165,7 +169,9 @@ export function battleResolveCounterspell({
   }
   // Only remaining variant after null/RPass check above
   const reactor = c.creatures.get(e.reactorId)!;
-  let cs = setCreature(c.creatures, e.reactorId, spendReaction(reactor));
+  if (!canProvideBattleSpellComponents(reactor, "counterspell")) return {};
+  const preparedReactor = prepareBattleCasterForSpell(reactor, "counterspell");
+  let cs = setCreature(c.creatures, e.reactorId, spendReaction(preparedReactor));
   cs = setCreature(
     cs,
     e.reactorId,
@@ -258,7 +264,9 @@ export function battleCastConcentrationSpell({
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {};
   if (ac.actionSurgeActionPending || ac.ragingBlocksSpells) return {};
   if (ac.slotExpendedThisTurn && !e.ritual) return {};
-  let cs = setCreature(c.creatures, id, spendAction(ac, "magic"));
+  if (!canProvideBattleSpellComponents(ac, e.spellId)) return {};
+  const preparedCaster = prepareBattleCasterForSpell(ac, e.spellId);
+  let cs = setCreature(c.creatures, id, spendAction(preparedCaster, "magic"));
   if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl));
   const concCtx = {
     caster: id,
@@ -310,7 +318,9 @@ export function battleCastAoE({
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {};
   if (ac.actionSurgeActionPending || ac.ragingBlocksSpells) return {};
   if (ac.slotExpendedThisTurn && !e.ritual) return {};
-  let cs = setCreature(c.creatures, id, spendAction(ac, "magic"));
+  if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
+  const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
+  let cs = setCreature(c.creatures, id, spendAction(preparedCaster, "magic"));
   if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl));
   const liveTargets = new Set<CreatureId>();
   for (const [cid, cr] of cs) {

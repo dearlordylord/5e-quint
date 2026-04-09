@@ -7,7 +7,6 @@ This file is the execution companion for the next repository-shaping batch after
 Use:
 
 - [DAG.md](./DAG.md) for dependency truth
-- [DAG_TASK_CARDS.md](./DAG_TASK_CARDS.md) for compact node handoff cards
 - `DAG_RUNBOOK_2.md` for all-day orchestrated execution
 
 This file is intentionally execution-first. It assumes the prior runbook batch is already landed.

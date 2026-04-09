@@ -58,6 +58,15 @@ export const WEAPON_PROPERTIES = [
 ] as const;
 export type WeaponProperty = (typeof WEAPON_PROPERTIES)[number];
 
+export const HAND_USES = [
+  "free",
+  "mainWeapon",
+  "offWeapon",
+  "shield",
+  "grapple",
+] as const;
+export type HandUse = (typeof HAND_USES)[number];
+
 export const CONDITIONS = [
   "blinded",
   "charmed",
