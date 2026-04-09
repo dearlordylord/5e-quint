@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This file is the execution companion for the next large execution-grade batch after [DAG_RUNBOOK_3.md](./DAG_RUNBOOK_3.md).
+This file is the execution companion for the next large execution-grade batch after the first three DAG batches.
 
 Use:
 
@@ -30,9 +30,7 @@ This batch should:
 
 Do not reschedule these in this runbook unless regression evidence appears:
 
-- everything closed by [DAG_RUNBOOK.md](./DAG_RUNBOOK.md)
-- everything closed by [DAG_RUNBOOK_2.md](./DAG_RUNBOOK_2.md)
-- everything closed by [DAG_RUNBOOK_3.md](./DAG_RUNBOOK_3.md)
+- everything closed by DAG Runbooks 1-3 (deleted after completion; see `DAG.md` node table for authoritative status)
 - `battle-hand-occupancy-state`
 - `preview-execution`
 - `battle-helped-target-state`
@@ -165,10 +163,15 @@ Nodes:
 
 Goal:
 
-- expose already-owned battle action semantics through the unified available-actions and MCP surface for:
+- expose already-owned non-spell battle action semantics through the unified available-actions and MCP surface
+
+Scope split:
+
+- `battle-basic-action-surface` covers:
 - `BATTLE_DASH`
 - `BATTLE_DISENGAGE`
 - `BATTLE_DODGE`
+- `battle-ready-action-surface` covers:
 - `BATTLE_READY`
 - `BATTLE_READY_PASS`
 - `BATTLE_READY_RELEASE`
@@ -185,6 +188,7 @@ Non-goals:
 
 - no battle movement token in this lane
 - no battle spell breadth in this lane
+- no after-damage reaction surfacing in this lane
 - no DM override warnings
 
 Verification:
@@ -210,6 +214,7 @@ Goal:
 Execution rule:
 
 - do not widen this into generic “all battle spells”
+- keep `battle-ready-spell-surface` and `after-damage-reaction-surface` logically separate even if they share `available-actions.ts` edits
 - keep the surface limited to already-owned semantics with clear events and deterministic tests
 
 Likely files:
@@ -239,13 +244,15 @@ Verification:
 
 1. Lane B facility: `movement-provocation-kind`
 2. Lane A: `versatile-weapon-die-switching`
-3. Lane C: `battle-basic-action-surface`, `battle-ready-action-surface`
-4. Lane D: `battle-ready-spell-surface`, `after-damage-reaction-surface`
-5. Lane B consumers: `forced-movement-vs-oa`, `reach-extends-oa-range`
+3. Lane C basic surface: `battle-basic-action-surface`
+4. Lane C ready surface: `battle-ready-action-surface`
+5. Lane D spell/reaction surface: `battle-ready-spell-surface`, `after-damage-reaction-surface`
+6. Lane B consumers: `forced-movement-vs-oa`, `reach-extends-oa-range`
 
 Reason:
 
 - the movement facility should settle before its correctness consumers
+- the basic and ready surfaces can land independently if one stalls
 - action-surface breadth can proceed in parallel once it stays off the movement event contract
 
 ## Stop Conditions
