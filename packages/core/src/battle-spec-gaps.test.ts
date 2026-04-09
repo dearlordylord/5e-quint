@@ -207,9 +207,21 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
     send(actor, {
       type: "BATTLE_INIT",
       creatures: [
-        { id: CreatureId("A"), maxHp: 40, kind: "PC" },
-        { id: CreatureId("B"), maxHp: 20, kind: "PC" },
-        { id: CreatureId("C"), maxHp: 20, kind: "PC" },
+        { id: CreatureId("A"), maxHp: 40, kind: "PC", fighterLevel: 5 },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          bardLevel: 3,
+          bardicInspirationCharges: 3,
+        },
+        {
+          id: CreatureId("C"),
+          maxHp: 20,
+          kind: "PC",
+          caster: true,
+          preparedSpells: new Set(["shield"]),
+        },
       ],
     });
     return actor;
@@ -218,7 +230,7 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
   it("conscious creature IS eligible for reaction", () => {
     const actor = initThreePC();
     startTurn(actor);
-    // A attacks C. B is alive and conscious => B should be eligible to react to the hit.
+    // A attacks C. B is alive and conscious and is a valid Cutting Words reactor.
     send(actor, {
       type: "BATTLE_ATTACK",
       targetId: CreatureId("C"),
@@ -230,6 +242,7 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
       crit: false,
       tAc: armorClass(10),
       ...DEFAULT_ATTACK_CONTEXT,
+      hitReactionCandidates: new Set([CreatureId("B")]),
     });
     const aw = ctx(actor).awaitCtx;
     expect(aw).not.toBeNull();
@@ -245,7 +258,8 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
     attackB(actor, 25);
     expect(creature(actor, "B").unconscious).toBe(true);
 
-    // A attacks C with extra attack. B is unconscious => should NOT be eligible.
+    // A attacks C with extra attack. C can still react with Shield, but B cannot
+    // because unconscious creatures are excluded from the eligibility set.
     send(actor, {
       type: "BATTLE_ATTACK",
       targetId: CreatureId("C"),
@@ -257,13 +271,14 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
       crit: false,
       tAc: armorClass(10),
       ...DEFAULT_ATTACK_CONTEXT,
+      hitReactionCandidates: new Set([CreatureId("B")]),
     });
     const aw = ctx(actor).awaitCtx;
-    // Attack hit => reaction window opens. B must NOT be in the eligible set.
+    // Attack hit => reaction window opens via C's Shield. B must NOT be eligible.
     expect(aw).not.toBeNull();
     if (aw) {
       expect(aw.eligible.has(CreatureId("B"))).toBe(false);
-      // C (the target) should still be eligible via eligibleExcluding
+      // C (the target) is still eligible because Shield is legal here.
       expect(aw.eligible.has(CreatureId("C"))).toBe(true);
     }
   });

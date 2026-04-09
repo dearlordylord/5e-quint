@@ -35,9 +35,9 @@ describe("diffSnapshots", () => {
   });
 
   it("detects damage after AoE save-failed reaction resolves", () => {
-    // D's damage (50→22) applies when save-failed reaction window closes (event 10)
-    const before = snapshotAt(9);
-    const after = snapshotAt(11);
+    // D's damage (50→22) lands on the first AoE target resolution (event 8→9).
+    const before = snapshotAt(8);
+    const after = snapshotAt(9);
     const delta = diffSnapshots(before, after);
     expect(delta.damageTaken["D"]).toBe(28);
     expect(delta.becameUnconscious).toHaveLength(0);

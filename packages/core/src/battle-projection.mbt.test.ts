@@ -2223,6 +2223,7 @@ describe("Battle Projection MBT", () => {
   // MBT_DEV=1: fast dev feedback (fewer samples, shorter traces).
   // Default: comprehensive run for CI / perpetual background validation.
   const isDev = process.env["MBT_DEV"] === "1";
+  const mbtBackend = process.env["MBT_BACKEND"] ?? "typescript";
   const MBT_TRACE_COUNT = 1;
   const MBT_STEP_COUNT = isDev ? 5 : 10;
   const MBT_MAX_SAMPLES = isDev ? 10 : 50;
@@ -2242,17 +2243,18 @@ describe("Battle Projection MBT", () => {
         `[battle MBT] replayed ${result.tracesReplayed} traces from ${dir}`,
       );
     } else {
-      // Use pre-compiled spec cache if available (skip 15s+ parse/typecheck).
-      // Generate with: node scripts/compile-battle-spec.cjs
-      // WARNING: Cache becomes stale when battle.qnt or creature.qnt change.
-      // The compile script writes a .hash file for staleness detection.
-      // See QUINT_CONNECT_TROUBLESHOOT.md for full context.
-      const compiledInputPath = path.resolve(
-        import.meta.dirname,
-        "../../../.quint-cache/battle-compiled.json",
-      );
-      const hashPath = compiledInputPath.replace(/\.json$/, ".hash");
-      if (compiledInputPath) {
+      // The compiled-input fast path is opt-in here. In this environment,
+      // quint-connect's direct-evaluator write path can fail with EPIPE before
+      // the run begins. The plain `quint run` path is slower but stable.
+      const useCompiledInput = process.env["MBT_USE_COMPILED_CACHE"] === "1";
+      const compiledInputPath = useCompiledInput
+        ? path.resolve(
+            import.meta.dirname,
+            "../../../.quint-cache/battle-compiled.json",
+          )
+        : undefined;
+      const hashPath = compiledInputPath?.replace(/\.json$/, ".hash");
+      if (compiledInputPath && hashPath) {
         const { existsSync, readFileSync } = await import("node:fs");
         const crypto = await import("node:crypto");
         if (existsSync(hashPath)) {
@@ -2275,12 +2277,12 @@ describe("Battle Projection MBT", () => {
         init: "bInit",
         step: "battleStep",
         driver: createBattleProjectionDriver(),
-        backend: "rust",
+        backend: mbtBackend,
         nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
         maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
         maxSamples: Number(process.env["MBT_MAX_SAMPLES"] ?? MBT_MAX_SAMPLES),
         stateCheck: battleStateCheck,
-        compiledInput: compiledInputPath,
+        ...(compiledInputPath ? { compiledInput: compiledInputPath } : {}),
         ...(process.env["MBT_TRACE_DIR"]
           ? { traceDir: process.env["MBT_TRACE_DIR"] }
           : {}),

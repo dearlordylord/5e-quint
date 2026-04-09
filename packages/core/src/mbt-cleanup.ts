@@ -14,6 +14,11 @@
  */
 import { execSync } from "node:child_process";
 
+// The repo's local evaluator compatibility script builds and validates v0.5.0.
+// Pin MBT runs to the same version so quint-connect doesn't auto-pick a newer
+// installed evaluator with different runtime behavior.
+process.env["QUINT_EVALUATOR_VERSION"] ??= "v0.5.0";
+
 /** Kill all quint_evaluator processes. Safe to call when none exist. */
 export function killZombieEvaluators(): void {
   try {
@@ -25,6 +30,14 @@ export function killZombieEvaluators(): void {
 }
 
 let signalHandlersRegistered = false;
+
+function runningUnderVitest(): boolean {
+  return (
+    "VITEST" in process.env ||
+    "VITEST_POOL_ID" in process.env ||
+    "VITEST_WORKER_ID" in process.env
+  );
+}
 
 /**
  * Register process-level signal handlers that kill evaluators on exit.
@@ -41,15 +54,27 @@ export function registerEvaluatorCleanup(): void {
   process.on("exit", cleanup);
   process.on("SIGINT", () => {
     cleanup();
+    if (runningUnderVitest()) {
+      process.exitCode = 130;
+      return;
+    }
     process.exit(130);
   });
   process.on("SIGTERM", () => {
     cleanup();
+    if (runningUnderVitest()) {
+      process.exitCode = 143;
+      return;
+    }
     process.exit(143);
   });
   process.on("uncaughtException", (err) => {
     cleanup();
     console.error("Uncaught exception (evaluator cleanup ran):", err);
+    if (runningUnderVitest()) {
+      process.exitCode = 1;
+      return;
+    }
     process.exit(1);
   });
 }

@@ -1290,6 +1290,7 @@ describe("DnD MBT", () => {
     killZombieEvaluators();
   });
 
+  const mbtBackend = process.env["MBT_BACKEND"] ?? "typescript";
   const MBT_TRACE_COUNT = 50;
   const MBT_STEP_COUNT = 30;
   const specPath = path.resolve(import.meta.dirname, "../../../creature.qnt");
@@ -1298,7 +1299,7 @@ describe("DnD MBT", () => {
     const result = await run({
       spec: specPath,
       driver: createDndDriver(),
-      backend: "rust",
+      backend: mbtBackend,
       nTraces: Number(process.env["MBT_TRACES"] ?? MBT_TRACE_COUNT),
       maxSteps: Number(process.env["MBT_STEPS"] ?? MBT_STEP_COUNT),
       stateCheck: mbtStateCheck,

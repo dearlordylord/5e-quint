@@ -44,8 +44,8 @@ describe("directorStep", () => {
   });
 
   it("produces damage flash when creature takes damage", () => {
-    // D's damage applies when save-failed window closes (event 10→11 transition)
-    const { curr, event, prev } = pairAt(10);
+    // D's fireball damage lands on the first AoE target resolution (event 8→9).
+    const { curr, event, prev } = pairAt(8);
     const delta = diffSnapshots(prev, curr);
     const cues = directorStep(event, curr, prev, delta);
     expect(cues.creatureCues["D"].damageFlash).toBe(true);

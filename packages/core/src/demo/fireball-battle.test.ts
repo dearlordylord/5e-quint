@@ -12,20 +12,20 @@ describe("Fireball Battle scenario", () => {
     for (const event of FIREBALL_BATTLE) actor.send(event);
     const ctx = actor.getSnapshot().context;
 
-    // Blue team: A barely alive, B KO'd by Shatter, C healthy
+    // Blue team: A barely alive, B dead after follow-up damage, C healthy
     expect(ctx.creatures.get(CreatureId("A"))!.hp).toBe(8);
     expect(ctx.creatures.get(CreatureId("B"))!.unconscious).toBe(true);
+    expect(ctx.creatures.get(CreatureId("B"))!.dead).toBe(true);
     expect(ctx.creatures.get(CreatureId("C"))!.hp).toBe(22);
 
-    // Red team: all unconscious. D and F took AoE at 0 HP (death save failures).
+    // Red team: all down. D dies from follow-up damage at 0 HP; E and F remain
+    // unconscious, with F not accumulating death-save failures in this script.
     expect(ctx.creatures.get(CreatureId("D"))!.unconscious).toBe(true);
-    expect(
-      ctx.creatures.get(CreatureId("D"))!.deathSaves.failures,
-    ).toBeGreaterThan(0);
+    expect(ctx.creatures.get(CreatureId("D"))!.dead).toBe(true);
+    expect(ctx.creatures.get(CreatureId("D"))!.deathSaves.failures).toBe(3);
     expect(ctx.creatures.get(CreatureId("E"))!.unconscious).toBe(true);
     expect(ctx.creatures.get(CreatureId("F"))!.unconscious).toBe(true);
-    expect(
-      ctx.creatures.get(CreatureId("F"))!.deathSaves.failures,
-    ).toBeGreaterThan(0);
+    expect(ctx.creatures.get(CreatureId("F"))!.dead).toBe(false);
+    expect(ctx.creatures.get(CreatureId("F"))!.deathSaves.failures).toBe(0);
   });
 });

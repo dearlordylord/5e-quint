@@ -39,10 +39,10 @@ describe("computeLayout", () => {
     );
     expect(layout.creatures.find((c) => c.id === "A")!.opacity).toBe(1);
     expect(layout.creatures.find((c) => c.id === "C")!.opacity).toBe(1);
-    expect(layout.creatures.find((c) => c.id === "B")!.opacity).toBe(0.3);
-    expect(layout.creatures.find((c) => c.id === "D")!.opacity).toBe(0.3);
-    expect(layout.creatures.find((c) => c.id === "E")!.opacity).toBe(0.3);
-    expect(layout.creatures.find((c) => c.id === "F")!.opacity).toBe(0.3);
+    expect(layout.creatures.find((c) => c.id === "B")!.opacity).toBe(0);
+    expect(layout.creatures.find((c) => c.id === "D")!.opacity).toBe(0);
+    expect(layout.creatures.find((c) => c.id === "E")!.opacity).toBe(0.7);
+    expect(layout.creatures.find((c) => c.id === "F")!.opacity).toBe(0.7);
   });
 
   it("HP bar fill scales with hpRatio", () => {
