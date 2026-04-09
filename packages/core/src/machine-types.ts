@@ -34,9 +34,26 @@ import type {
 export const PEERLESS_SKILL_PENDING_MODES = ["abilityCheck", "attackRoll"] as const satisfies ReadonlyArray<string>
 export type PeerlessSkillPendingMode = (typeof PEERLESS_SKILL_PENDING_MODES)[number]
 
+export const SNEAK_ATTACK_PENDING_MODES = ["finesse", "ranged"] as const satisfies ReadonlyArray<string>
+export type SneakAttackPendingMode = (typeof SNEAK_ATTACK_PENDING_MODES)[number]
+
+export const SNEAK_ATTACK_PENDING_SOURCES = ["advantage", "adjacentAlly"] as const satisfies ReadonlyArray<string>
+export type SneakAttackPendingSource = (typeof SNEAK_ATTACK_PENDING_SOURCES)[number]
+
 export type PendingResolution =
   | null
   | { readonly kind: "tacticalMind" }
+  | { readonly kind: "indomitable" }
+  | {
+      readonly kind: "overchannel"
+      readonly spellName: SpellName
+      readonly slotLevel: SpellSlotLevel
+    }
+  | {
+      readonly kind: "sneakAttack"
+      readonly mode: SneakAttackPendingMode
+      readonly source: SneakAttackPendingSource
+    }
   | { readonly kind: "peerlessSkill"; readonly mode: PeerlessSkillPendingMode }
   | { readonly kind: "relentlessRage" }
 
@@ -322,6 +339,7 @@ export type DndEvent =
   | { readonly type: "USE_SECOND_WIND"; readonly d10Roll: number }
   | { readonly type: "USE_ACTION_SURGE" }
   | { readonly type: "USE_INDOMITABLE" }
+  | { readonly type: "TRIGGER_INDOMITABLE" }
   | { readonly type: "USE_TACTICAL_MIND"; readonly boostedCheckSucceeds: boolean }
   | { readonly type: "TRIGGER_TACTICAL_MIND" }
   | { readonly type: "USE_HEROIC_INSPIRATION" }
@@ -357,8 +375,14 @@ export type DndEvent =
   // Phase W: Wizard events
   | { readonly type: "USE_ARCANE_RECOVERY"; readonly slotLevel: SpellSlotLevel }
   | { readonly type: "USE_OVERCHANNEL" }
+  | { readonly type: "TRIGGER_OVERCHANNEL"; readonly spellName: SpellName; readonly slotLevel: SpellSlotLevel }
   // Phase R: Rogue events
   | { readonly type: "USE_SNEAK_ATTACK" }
+  | {
+      readonly type: "TRIGGER_SNEAK_ATTACK"
+      readonly mode: SneakAttackPendingMode
+      readonly source: SneakAttackPendingSource
+    }
   | { readonly type: "USE_STEADY_AIM" }
   | { readonly type: "CUNNING_ACTION_DASH" }
   | { readonly type: "CUNNING_ACTION_DISENGAGE" }

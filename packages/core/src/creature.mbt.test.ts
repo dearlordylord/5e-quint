@@ -104,6 +104,7 @@ type EventActionMap = {
   USE_SECOND_WIND: "doUseSecondWind"
   USE_ACTION_SURGE: "doUseActionSurge"
   USE_INDOMITABLE: "doUseIndomitable"
+  TRIGGER_INDOMITABLE: "doTriggerIndomitable"
   USE_TACTICAL_MIND: "doUseTacticalMind"
   TRIGGER_TACTICAL_MIND: "doTriggerTacticalMind"
   USE_HEROIC_INSPIRATION: "doUseHeroicInspiration"
@@ -131,7 +132,9 @@ type EventActionMap = {
   UNCANNY_METABOLISM: "doUncannyMetabolism"
   USE_ARCANE_RECOVERY: "doUseArcaneRecovery"
   USE_OVERCHANNEL: "doOverchannel"
+  TRIGGER_OVERCHANNEL: "doTriggerOverchannel"
   USE_SNEAK_ATTACK: "doUseSneakAttack"
+  TRIGGER_SNEAK_ATTACK: "doTriggerSneakAttack"
   USE_STEADY_AIM: "doUseSteadyAim"
   CUNNING_ACTION_DASH: "doCunningActionDash"
   CUNNING_ACTION_DISENGAGE: "doCunningActionDisengage"
@@ -281,6 +284,7 @@ const driverSchema = {
   doUseSecondWind: { d10Roll: ITFBigInt },
   doUseActionSurge: {},
   doUseIndomitable: {},
+  doTriggerIndomitable: {},
   doUseTacticalMind: { boostedCheckSucceeds: z.boolean() },
   doTriggerTacticalMind: {},
   doUseHeroicInspiration: {},
@@ -305,7 +309,9 @@ const driverSchema = {
   doUncannyMetabolism: { healRoll: ITFBigInt.optional() },
   doUseArcaneRecovery: { slotLevel: ITFBigInt.optional() },
   doOverchannel: {},
+  doTriggerOverchannel: { spellName: z.string().optional(), slotLevel: ITFBigInt.optional() },
   doUseSneakAttack: {},
+  doTriggerSneakAttack: { mode: ITFVariant.optional(), source: ITFVariant.optional() },
   doUseSteadyAim: {},
   doCunningActionDash: {},
   doCunningActionDisengage: {},
@@ -765,6 +771,9 @@ function createDndDriver() {
       doUseIndomitable: () => {
         send({ type: "USE_INDOMITABLE" })
       },
+      doTriggerIndomitable: () => {
+        send({ type: "TRIGGER_INDOMITABLE" })
+      },
       doUseTacticalMind: ({ boostedCheckSucceeds }) => {
         send({ type: "USE_TACTICAL_MIND", boostedCheckSucceeds })
       },
@@ -837,8 +846,22 @@ function createDndDriver() {
       doOverchannel: () => {
         send({ type: "USE_OVERCHANNEL" })
       },
+      doTriggerOverchannel: ({ spellName, slotLevel }) => {
+        if (spellName != null && slotLevel != null) {
+          send({ type: "TRIGGER_OVERCHANNEL", spellName: spellName as SpellName, slotLevel: spellSlotLevel(Number(slotLevel)) })
+        }
+      },
       doUseSneakAttack: () => {
         send({ type: "USE_SNEAK_ATTACK" })
+      },
+      doTriggerSneakAttack: ({ mode, source }) => {
+        if (mode != null && source != null) {
+          send({
+            type: "TRIGGER_SNEAK_ATTACK",
+            mode: mode === "SARanged" ? "ranged" : "finesse",
+            source: source === "SAAdjacentAlly" ? "adjacentAlly" : "advantage",
+          })
+        }
       },
       doUseSteadyAim: () => {
         send({ type: "USE_STEADY_AIM" })

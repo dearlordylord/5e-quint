@@ -4,6 +4,11 @@ import { CLASS_NAMES, type HitDiceRemaining } from "#/features/class-tables.ts"
 import { METAMAGIC_OPTIONS } from "#/features/class-sorcerer.ts"
 import type { DndContext } from "#/machine-types.ts"
 import {
+  PEERLESS_SKILL_PENDING_MODES,
+  SNEAK_ATTACK_PENDING_MODES,
+  SNEAK_ATTACK_PENDING_SOURCES,
+} from "#/machine-types.ts"
+import {
   CONDITIONS,
   DAMAGE_TYPES,
   EXPIRY_PHASES,
@@ -17,7 +22,9 @@ const DamageTypeSchema = Schema.Literal(...DAMAGE_TYPES)
 const IncapSourceSchema = Schema.Literal(...INCAP_SOURCES)
 const ExpiryPhaseSchema = Schema.Literal(...EXPIRY_PHASES)
 const MetamagicOptionSchema = Schema.Literal(...METAMAGIC_OPTIONS)
-const PeerlessSkillPendingModeSchema = Schema.Literal("abilityCheck", "attackRoll")
+const PeerlessSkillPendingModeSchema = Schema.Literal(...PEERLESS_SKILL_PENDING_MODES)
+const SneakAttackPendingModeSchema = Schema.Literal(...SNEAK_ATTACK_PENDING_MODES)
+const SneakAttackPendingSourceSchema = Schema.Literal(...SNEAK_ATTACK_PENDING_SOURCES)
 
 function compareByOrder<T extends string>(order: ReadonlyArray<T>) {
   const ranks = new Map(order.map((value, index) => [value, index]))
@@ -284,6 +291,17 @@ const DeathSavesSchema = Schema.Struct({
 const PendingResolutionSchema = Schema.NullOr(
   Schema.Union(
     Schema.Struct({ kind: Schema.Literal("tacticalMind") }),
+    Schema.Struct({ kind: Schema.Literal("indomitable") }),
+    Schema.Struct({
+      kind: Schema.Literal("overchannel"),
+      spellName: Schema.String,
+      slotLevel: Schema.Number,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("sneakAttack"),
+      mode: SneakAttackPendingModeSchema,
+      source: SneakAttackPendingSourceSchema,
+    }),
     Schema.Struct({ kind: Schema.Literal("peerlessSkill"), mode: PeerlessSkillPendingModeSchema }),
     Schema.Struct({ kind: Schema.Literal("relentlessRage") }),
   ),

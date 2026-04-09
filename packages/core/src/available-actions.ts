@@ -69,6 +69,7 @@ export const SUPPORTED_ACTION_TYPES = [
   "CAST_PREPARED_SPELL",
   "START_TURN",
   "USE_ACTION_SURGE",
+  "USE_INDOMITABLE",
   "USE_TACTICAL_MIND",
   "CONVERT_SLOT_TO_POINTS",
   "CONVERT_POINTS_TO_SLOT",
@@ -86,10 +87,12 @@ export const SUPPORTED_ACTION_TYPES = [
   "WHOLENESS_OF_BODY",
   "UNCANNY_METABOLISM",
   "USE_ARCANE_RECOVERY",
+  "USE_OVERCHANNEL",
   "USE_METAMAGIC",
   "USE_MYSTIC_ARCANUM",
   "USE_SECOND_WIND",
   "USE_TIRELESS",
+  "USE_SNEAK_ATTACK",
   "USE_STEADY_AIM",
   "CUNNING_ACTION_DASH",
   "CUNNING_ACTION_DISENGAGE",
@@ -122,6 +125,7 @@ type TokenByType = {
   }
   readonly START_TURN: SimpleToken<"START_TURN">
   readonly USE_ACTION_SURGE: SimpleToken<"USE_ACTION_SURGE">
+  readonly USE_INDOMITABLE: SimpleToken<"USE_INDOMITABLE">
   readonly USE_TACTICAL_MIND: SimpleToken<"USE_TACTICAL_MIND">
   readonly CONVERT_SLOT_TO_POINTS: SimpleToken<"CONVERT_SLOT_TO_POINTS"> & {
     readonly slotLevel: Hole<SpellSlotLevelValue>
@@ -149,6 +153,7 @@ type TokenByType = {
   readonly USE_ARCANE_RECOVERY: SimpleToken<"USE_ARCANE_RECOVERY"> & {
     readonly slotLevel: Hole<SpellSlotLevelValue>
   }
+  readonly USE_OVERCHANNEL: SimpleToken<"USE_OVERCHANNEL">
   readonly USE_METAMAGIC: SimpleToken<"USE_METAMAGIC"> & {
     readonly option: Hole<MetamagicOption>
   }
@@ -157,6 +162,7 @@ type TokenByType = {
   }
   readonly USE_SECOND_WIND: SimpleToken<"USE_SECOND_WIND">
   readonly USE_TIRELESS: SimpleToken<"USE_TIRELESS">
+  readonly USE_SNEAK_ATTACK: SimpleToken<"USE_SNEAK_ATTACK">
   readonly USE_STEADY_AIM: SimpleToken<"USE_STEADY_AIM">
   readonly CUNNING_ACTION_DASH: SimpleToken<"CUNNING_ACTION_DASH">
   readonly CUNNING_ACTION_DISENGAGE: SimpleToken<"CUNNING_ACTION_DISENGAGE">
@@ -190,6 +196,7 @@ type ResolvedTokenByType = {
   readonly CAST_PREPARED_SPELL: { readonly type: "CAST_PREPARED_SPELL"; readonly spellName: ModeledPreparedSpell; readonly slotLevel: SpellSlotLevelValue }
   readonly START_TURN: { readonly type: "START_TURN" }
   readonly USE_ACTION_SURGE: { readonly type: "USE_ACTION_SURGE" }
+  readonly USE_INDOMITABLE: { readonly type: "USE_INDOMITABLE" }
   readonly USE_TACTICAL_MIND: { readonly type: "USE_TACTICAL_MIND" }
   readonly CONVERT_SLOT_TO_POINTS: { readonly type: "CONVERT_SLOT_TO_POINTS"; readonly slotLevel: SpellSlotLevelValue }
   readonly CONVERT_POINTS_TO_SLOT: { readonly type: "CONVERT_POINTS_TO_SLOT"; readonly slotLevel: SpellSlotLevelValue }
@@ -207,10 +214,12 @@ type ResolvedTokenByType = {
   readonly WHOLENESS_OF_BODY: { readonly type: "WHOLENESS_OF_BODY" }
   readonly UNCANNY_METABOLISM: { readonly type: "UNCANNY_METABOLISM" }
   readonly USE_ARCANE_RECOVERY: { readonly type: "USE_ARCANE_RECOVERY"; readonly slotLevel: SpellSlotLevelValue }
+  readonly USE_OVERCHANNEL: { readonly type: "USE_OVERCHANNEL" }
   readonly USE_METAMAGIC: { readonly type: "USE_METAMAGIC"; readonly option: MetamagicOption }
   readonly USE_MYSTIC_ARCANUM: { readonly type: "USE_MYSTIC_ARCANUM"; readonly spellLevel: SpellSlotLevelValue }
   readonly USE_SECOND_WIND: { readonly type: "USE_SECOND_WIND" }
   readonly USE_TIRELESS: { readonly type: "USE_TIRELESS" }
+  readonly USE_SNEAK_ATTACK: { readonly type: "USE_SNEAK_ATTACK" }
   readonly USE_STEADY_AIM: { readonly type: "USE_STEADY_AIM" }
   readonly CUNNING_ACTION_DASH: { readonly type: "CUNNING_ACTION_DASH" }
   readonly CUNNING_ACTION_DISENGAGE: { readonly type: "CUNNING_ACTION_DISENGAGE" }
@@ -244,6 +253,9 @@ const StartTurnResolvedActionSchema = Schema.Struct({
 })
 const UseActionSurgeResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_ACTION_SURGE"),
+})
+const UseIndomitableResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_INDOMITABLE"),
 })
 const UseTacticalMindResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_TACTICAL_MIND"),
@@ -301,6 +313,9 @@ const UseArcaneRecoveryResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_ARCANE_RECOVERY"),
   slotLevel: SpellSlotLevel,
 })
+const UseOverchannelResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_OVERCHANNEL"),
+})
 const UseMetamagicResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_METAMAGIC"),
   option: MetamagicOptionSchema,
@@ -314,6 +329,9 @@ const UseSecondWindResolvedActionSchema = Schema.Struct({
 })
 const UseTirelessResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_TIRELESS"),
+})
+const UseSneakAttackResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_SNEAK_ATTACK"),
 })
 const UseSteadyAimResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_STEADY_AIM"),
@@ -367,6 +385,7 @@ const PrimaryResolvedActionTokenSchema = Schema.Union(
   CastPreparedSpellResolvedActionSchema,
   StartTurnResolvedActionSchema,
   UseActionSurgeResolvedActionSchema,
+  UseIndomitableResolvedActionSchema,
   UseTacticalMindResolvedActionSchema,
   ConvertSlotToPointsResolvedActionSchema,
   ConvertPointsToSlotResolvedActionSchema,
@@ -387,10 +406,12 @@ const PrimaryResolvedActionTokenSchema = Schema.Union(
 
 const SecondaryResolvedActionTokenSchema = Schema.Union(
   UseArcaneRecoveryResolvedActionSchema,
+  UseOverchannelResolvedActionSchema,
   UseMetamagicResolvedActionSchema,
   UseMysticArcanumResolvedActionSchema,
   UseSecondWindResolvedActionSchema,
   UseTirelessResolvedActionSchema,
+  UseSneakAttackResolvedActionSchema,
   UseSteadyAimResolvedActionSchema,
   CunningActionDashResolvedActionSchema,
   CunningActionDisengageResolvedActionSchema,
@@ -413,6 +434,7 @@ export const RESOLVED_ACTION_SCHEMAS = [
   CastPreparedSpellResolvedActionSchema,
   StartTurnResolvedActionSchema,
   UseActionSurgeResolvedActionSchema,
+  UseIndomitableResolvedActionSchema,
   UseTacticalMindResolvedActionSchema,
   ConvertSlotToPointsResolvedActionSchema,
   ConvertPointsToSlotResolvedActionSchema,
@@ -430,10 +452,12 @@ export const RESOLVED_ACTION_SCHEMAS = [
   WholenessOfBodyResolvedActionSchema,
   UncannyMetabolismResolvedActionSchema,
   UseArcaneRecoveryResolvedActionSchema,
+  UseOverchannelResolvedActionSchema,
   UseMetamagicResolvedActionSchema,
   UseMysticArcanumResolvedActionSchema,
   UseSecondWindResolvedActionSchema,
   UseTirelessResolvedActionSchema,
+  UseSneakAttackResolvedActionSchema,
   UseSteadyAimResolvedActionSchema,
   CunningActionDashResolvedActionSchema,
   CunningActionDisengageResolvedActionSchema,
@@ -519,6 +543,12 @@ export type ResolutionRequest =
       readonly outcome: string
       readonly runtime: "none"
       readonly event: Extract<DndEvent, { readonly type: "USE_ACTION_SURGE" }>
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_INDOMITABLE" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_INDOMITABLE" }>
     }
   | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_TACTICAL_MIND" }>
@@ -620,6 +650,12 @@ export type ResolutionRequest =
       readonly event: Extract<DndEvent, { readonly type: "USE_ARCANE_RECOVERY" }>
     }
   | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_OVERCHANNEL" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_OVERCHANNEL" }>
+    }
+  | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_METAMAGIC" }>
       readonly outcome: string
       readonly runtime: "none"
@@ -640,6 +676,12 @@ export type ResolutionRequest =
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_TIRELESS" }>
       readonly outcome: string
       readonly runtime: "tireless"
+    }
+  | {
+      readonly token: Extract<ResolvedActionToken, { readonly type: "USE_SNEAK_ATTACK" }>
+      readonly outcome: string
+      readonly runtime: "none"
+      readonly event: Extract<DndEvent, { readonly type: "USE_SNEAK_ATTACK" }>
     }
   | {
       readonly token: Extract<ResolvedActionToken, { readonly type: "USE_STEADY_AIM" }>
@@ -814,6 +856,16 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
             type: "USE_ACTION_SURGE",
             cost: { charge: "actionSurge" },
             outcome: { summary: "Expend one Action Surge use to gain one additional action this turn" },
+          }
+        : null,
+  },
+  USE_INDOMITABLE: {
+    buildToken: (context) =>
+      guards.canIndomitable(guardArgs(context))
+        ? {
+            type: "USE_INDOMITABLE",
+            cost: { charge: "indomitable" },
+            outcome: { summary: "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level" },
           }
         : null,
   },
@@ -1011,6 +1063,19 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       }
     },
   },
+  USE_OVERCHANNEL: {
+    buildToken: (context) => {
+      if (!guards.canOverchannel(guardArgs(context))) return null
+      if (context.pendingResolution?.kind !== "overchannel") return null
+      return {
+        type: "USE_OVERCHANNEL",
+        cost: {},
+        outcome: {
+          summary: `Overchannel the qualifying ${displaySpellName(context.pendingResolution.spellName)} cast at slot level ${context.pendingResolution.slotLevel} for maximum damage`,
+        },
+      }
+    },
+  },
   USE_METAMAGIC: {
     buildToken: (context) => {
       const legalOptions = legalMetamagicOptions(context)
@@ -1059,6 +1124,16 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
         outcome: { summary: `Gain 1d8 + ${ranger.tirelessMax} temporary HP (minimum 1)` },
       }
     },
+  },
+  USE_SNEAK_ATTACK: {
+    buildToken: (context) =>
+      guards.canSneakAttack(guardArgs(context))
+        ? {
+            type: "USE_SNEAK_ATTACK",
+            cost: {},
+            outcome: { summary: "Apply Sneak Attack damage to the qualifying hit" },
+          }
+        : null,
   },
   USE_STEADY_AIM: {
     buildToken: (context) =>
@@ -1375,6 +1450,8 @@ export function resolveAction(
       return { token, outcome: available.outcome.summary, runtime: "startTurn" }
     case "USE_ACTION_SURGE":
       return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_ACTION_SURGE" } }
+    case "USE_INDOMITABLE":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_INDOMITABLE" } }
     case "USE_TACTICAL_MIND":
       return { token, outcome: available.outcome.summary, runtime: "tacticalMind" }
     case "CONVERT_SLOT_TO_POINTS":
@@ -1464,6 +1541,8 @@ export function resolveAction(
         runtime: "none",
         event: { type: "USE_ARCANE_RECOVERY", slotLevel: token.slotLevel },
       }
+    case "USE_OVERCHANNEL":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_OVERCHANNEL" } }
     case "USE_METAMAGIC": {
       const legalOptions = legalMetamagicOptions(context)
       if (!legalOptions.includes(token.option)) {
@@ -1496,6 +1575,8 @@ export function resolveAction(
       return { token, outcome: available.outcome.summary, runtime: "secondWind" }
     case "USE_TIRELESS":
       return { token, outcome: available.outcome.summary, runtime: "tireless" }
+    case "USE_SNEAK_ATTACK":
+      return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_SNEAK_ATTACK" } }
     case "USE_STEADY_AIM":
       return { token, outcome: available.outcome.summary, runtime: "none", event: { type: "USE_STEADY_AIM" } }
     case "CUNNING_ACTION_DASH":

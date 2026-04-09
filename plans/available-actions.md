@@ -1212,6 +1212,59 @@ That caveat should be explicit in code/tests if this action is surfaced before f
 - If Quint-visible trigger state changes land:
   - `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts`
 
+#### Trigger-window batch completion note (2026-04-08)
+
+- This batch is now complete.
+- Implemented owned trigger windows for:
+  - `USE_SNEAK_ATTACK`
+  - `USE_INDOMITABLE`
+  - `USE_OVERCHANNEL`
+- `pendingResolution` now includes:
+  - `{ kind: "indomitable" }`
+  - `{ kind: "overchannel", spellName, slotLevel }`
+  - `{ kind: "sneakAttack", mode, source }`
+- New internal trigger events now exist across TS + Quint + MBT:
+  - `TRIGGER_INDOMITABLE`
+  - `TRIGGER_OVERCHANNEL`
+  - `TRIGGER_SNEAK_ATTACK`
+- `USE_SNEAK_ATTACK`, `USE_INDOMITABLE`, and `USE_OVERCHANNEL` are now exposed through `available-actions.ts` and MCP only when those owned trigger windows exist.
+- `USE_SNEAK_ATTACK` and `USE_INDOMITABLE` are now zero-hole, zero-runtime semantic actions once triggered.
+- `USE_OVERCHANNEL` is also zero-hole and zero-runtime once triggered, but there is one important caveat:
+  - the current creature model does not own authoritative class-source identity for a `CAST_PREPARED_SPELL`
+  - because of that, `TRIGGER_OVERCHANNEL` is currently an explicit internal trigger event rather than something inferred directly from `CAST_PREPARED_SPELL`
+  - this is intentional: inferring from the current creature-level prepared-spell set would over-claim “Wizard spell” ownership in some multiclass cases
+- Current Overchannel semantic caveat:
+  - the trigger window and suggestion are now honest
+  - but the creature machine still only records `overchannelUsesThisLR`
+  - downstream “this spell deals maximum damage now” semantics remain future battle/session work
+- MBT/parity note:
+  - extending the trigger-window seam exposed one stale spec/machine mismatch on MBT seed `0xced548ef`
+  - Quint preserved `pendingResolution` across `ENTER_COMBAT`
+  - XState already cleared it
+  - fix applied: `creature.qnt` `doEnterCombat` now clears `pendingResolution`, matching XState
+- Verification completed:
+  - `pnpm --filter @dnd/core exec tsc --noEmit`
+  - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+  - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/machine.test.ts`
+  - `pnpm --filter @dnd/mcp test -- server.test.ts`
+  - reproduced/fixed MBT seed:
+    - `QUINT_SEED=0xced548ef MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run -t "replays Quint" src/creature.mbt.test.ts`
+  - final Tier 1b creature MBT:
+    - `MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts`
+    - seed: `0x1e1f8930`
+    - total: `24s`
+
+#### Next after the trigger-window batch
+
+- The next big semantic gap is still reaction-family ownership:
+  - `USE_UNCANNY_DODGE`
+  - `USE_CUTTING_WORDS`
+  - reaction spellcasting and similar trigger-window reaction work
+- If continuing the creature-level available-actions roadmap, the next clean design batch should decide whether reaction-family trigger windows:
+  - also belong on `pendingResolution`, or
+  - need a battle-owned interrupt state projected into creature suggestions
+- Do not expose a fake semantic reaction token before that ownership exists.
+
 ---
 
 ## Phase 5: Hellenvald transcript prototype

@@ -51,6 +51,13 @@ const FIGHTER_10_INPUT: DndMachineInput = {
   effectiveSpeed: 30,
 }
 
+const FIGHTER_9_INPUT: DndMachineInput = {
+  maxHp: 44,
+  fighterLevel: classLevel(9),
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
 const FIGHTER_2_INPUT: DndMachineInput = {
   maxHp: 24,
   fighterLevel: classLevel(2),
@@ -121,6 +128,16 @@ const WIZARD_4_INPUT: DndMachineInput = {
   effectiveSpeed: 30,
 }
 
+const WIZARD_14_INPUT: DndMachineInput = {
+  maxHp: 36,
+  wizardLevel: classLevel(14),
+  slotsMax: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+  slotsCurrent: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+  preparedSpells: new Set(["burning_hands", "fireball", "hold_person"]),
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
 const CLERIC_5_SPELL_INPUT: DndMachineInput = {
   maxHp: 32,
   clericLevel: classLevel(5),
@@ -175,6 +192,13 @@ const DRUID_5_INPUT: DndMachineInput = {
 const BARBARIAN_11_INPUT: DndMachineInput = {
   maxHp: 40,
   barbarianLevel: classLevel(11),
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+}
+
+const ROGUE_5_INPUT: DndMachineInput = {
+  maxHp: 32,
+  rogueLevel: classLevel(5),
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 }
@@ -578,6 +602,90 @@ describe("available actions contract", () => {
 
     expect(actor.getSnapshot().context.hp).toBe(22)
     expect(actor.getSnapshot().context.classStates.barbarian?.relentlessRageTimesUsed).toBe(1)
+    expect(actor.getSnapshot().context.pendingResolution).toBeNull()
+  })
+
+  test("exposes USE_INDOMITABLE only after the machine owns the failed-save trigger", () => {
+    const actor = makeActorWithInput(FIGHTER_9_INPUT)
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+    actor.send({ type: "TRIGGER_INDOMITABLE" })
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "USE_INDOMITABLE",
+      cost: { charge: "indomitable" },
+      outcome: { summary: "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level" },
+    })
+
+    const request = expectRequest(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_INDOMITABLE" }),
+    )
+    const finalized = finalizeResolution(request, { runtime: "none" }, actor.getSnapshot().context)
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "USE_INDOMITABLE" },
+      outcome: "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level",
+    })
+    if (!finalized.ok) throw new Error("expected USE_INDOMITABLE finalization to succeed")
+    actor.send(finalized.event)
+
+    expect(actor.getSnapshot().context.classStates.fighter?.indomitableCharges).toBe(0)
+    expect(actor.getSnapshot().context.pendingResolution).toBeNull()
+  })
+
+  test("exposes USE_OVERCHANNEL only after the machine owns a qualifying cast trigger", () => {
+    const actor = makeActorWithInput(WIZARD_14_INPUT)
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+    actor.send({ type: "TRIGGER_OVERCHANNEL", spellName: "fireball", slotLevel: spellSlotLevel(3) })
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "USE_OVERCHANNEL",
+      cost: {},
+      outcome: { summary: "Overchannel the qualifying Fireball cast at slot level 3 for maximum damage" },
+    })
+
+    const request = expectRequest(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_OVERCHANNEL" }),
+    )
+    const finalized = finalizeResolution(request, { runtime: "none" }, actor.getSnapshot().context)
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "USE_OVERCHANNEL" },
+      outcome: "Overchannel the qualifying Fireball cast at slot level 3 for maximum damage",
+    })
+    if (!finalized.ok) throw new Error("expected USE_OVERCHANNEL finalization to succeed")
+    actor.send(finalized.event)
+
+    expect(actor.getSnapshot().context.classStates.wizard?.overchannelUsesThisLR).toBe(1)
+    expect(actor.getSnapshot().context.pendingResolution).toBeNull()
+  })
+
+  test("exposes USE_SNEAK_ATTACK only after the machine owns a qualifying hit trigger", () => {
+    const actor = makeActorWithInput(ROGUE_5_INPUT)
+    actor.send({ type: "ENTER_COMBAT" })
+    actor.send({ type: "START_TURN" })
+    actor.send({ type: "TRIGGER_SNEAK_ATTACK", mode: "finesse", source: "adjacentAlly" })
+
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+      type: "USE_SNEAK_ATTACK",
+      cost: {},
+      outcome: { summary: "Apply Sneak Attack damage to the qualifying hit" },
+    })
+
+    const request = expectRequest(
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_SNEAK_ATTACK" }),
+    )
+    const finalized = finalizeResolution(request, { runtime: "none" }, actor.getSnapshot().context)
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "USE_SNEAK_ATTACK" },
+      outcome: "Apply Sneak Attack damage to the qualifying hit",
+    })
+    if (!finalized.ok) throw new Error("expected USE_SNEAK_ATTACK finalization to succeed")
+    actor.send(finalized.event)
+
+    expect(actor.getSnapshot().context.classStates.rogue?.sneakAttackUsedThisTurn).toBe(true)
     expect(actor.getSnapshot().context.pendingResolution).toBeNull()
   })
 

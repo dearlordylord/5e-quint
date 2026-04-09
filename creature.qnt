@@ -1259,9 +1259,17 @@ module creature {
   // ============================================================
 
   /// Per-turn mutable state, reset each turn.
+  type SneakAttackPendingMode = SAFinesse | SARanged
+  type SneakAttackPendingSource = SAAdvantage | SAAdjacentAlly
+  type OverchannelPending = { spellName: str, slotLevel: int }
+  type SneakAttackPending = { mode: SneakAttackPendingMode, source: SneakAttackPendingSource }
+
   type PendingResolution =
     | NoPending
     | PRTacticalMind
+    | PRIndomitable
+    | PROverchannel(OverchannelPending)
+    | PRSneakAttack(SneakAttackPending)
     | PRPeerlessSkillAbilityCheck
     | PRPeerlessSkillAttackRoll
     | PRRelentlessRage
@@ -4210,7 +4218,7 @@ module creature {
   // Combat mode transitions
   action doEnterCombat = {
     if (turnPhase != "outOfCombat") unchanged
-    else all { state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = "waitingForTurn", fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
+    else all { state' = state, turnState' = turnState.with("pendingResolution", NoPending), spellSlots' = spellSlots, turnPhase' = "waitingForTurn", fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState }
   }
 
   action doExitCombat = {
@@ -4697,10 +4705,11 @@ module creature {
   }
 
   action doUseIndomitable = {
-    if (turnPhase != "acting" or not(canUseIndomitable(classLevels.get(Fighter), fighterState))) unchanged
+    if (turnPhase != "acting" or turnState.pendingResolution != PRIndomitable
+        or not(canUseIndomitable(classLevels.get(Fighter), fighterState))) unchanged
     else all {
       state' = state,
-      turnState' = turnState,
+      turnState' = turnState.with("pendingResolution", NoPending),
       spellSlots' = spellSlots,
       turnPhase' = turnPhase,
       fighterState' = pUseIndomitable(fighterState),
@@ -4709,6 +4718,20 @@ module creature {
       monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
       barbarianState' = barbarianState,
       monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
+    }
+  }
+
+  action doTriggerIndomitable = {
+    all {
+      state' = state,
+      turnState' = turnState.with("pendingResolution", PRIndomitable),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState, classLevels' = classLevels,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+      rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5141,10 +5164,11 @@ module creature {
   /// Self-damage and slot level are caller-managed.
   action doOverchannel = {
     if (turnPhase != "acting" or isIncapacitated(state)
+        or match turnState.pendingResolution { | PROverchannel(_) => false | _ => true }
         or not(canOverchannel(classLevels.get(Wizard)))) unchanged
     else all {
       state' = state,
-      turnState' = turnState,
+      turnState' = turnState.with("pendingResolution", NoPending),
       spellSlots' = spellSlots,
       turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
@@ -5152,6 +5176,22 @@ module creature {
       barbarianState' = barbarianState,
       monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState,
       wizardState' = pOverchannel(wizardState),
+      rangerState' = rangerState, bardState' = bardState,
+    }
+  }
+
+  action doTriggerOverchannel = {
+    nondet spellName = Set("burning_hands", "fireball").oneOf()
+    nondet slotLevel = 1.to(5).oneOf()
+    all {
+      state' = state,
+      turnState' = turnState.with("pendingResolution", PROverchannel({ spellName: spellName, slotLevel: slotLevel })),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState, classLevels' = classLevels,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
       rangerState' = rangerState, bardState' = bardState,
     }
   }
@@ -5262,10 +5302,11 @@ module creature {
   /// or a Ranged weapon."
   action doUseSneakAttack = {
     if (turnPhase != "acting" or isIncapacitated(state)
+        or match turnState.pendingResolution { | PRSneakAttack(_) => false | _ => true }
         or not(canSneakAttack(rogueState, classLevels.get(Rogue)))) unchanged
     else all {
       state' = state,
-      turnState' = turnState,
+      turnState' = turnState.with("pendingResolution", NoPending),
       spellSlots' = spellSlots,
       turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
@@ -5274,6 +5315,22 @@ module creature {
       monkState' = monkState, paladinState' = paladinState,
       rogueState' = pUseSneakAttack(rogueState),
       clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState,
+    }
+  }
+
+  action doTriggerSneakAttack = {
+    nondet mode = Set(SAFinesse, SARanged).oneOf()
+    nondet source = Set(SAAdvantage, SAAdjacentAlly).oneOf()
+    all {
+      state' = state,
+      turnState' = turnState.with("pendingResolution", PRSneakAttack({ mode: mode, source: source })),
+      spellSlots' = spellSlots,
+      turnPhase' = turnPhase,
+      fighterState' = fighterState, classLevels' = classLevels,
+      creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState,
+      barbarianState' = barbarianState,
+      monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState,
+      rangerState' = rangerState, bardState' = bardState,
     }
   }
 
@@ -5863,6 +5920,7 @@ module creature {
     doUseSecondWind,
     doUseActionSurge,
     doUseIndomitable,
+    doTriggerIndomitable,
     doTriggerTacticalMind,
     doUseTacticalMind,
     doUseHeroicInspiration,
@@ -5886,7 +5944,9 @@ module creature {
     doUncannyMetabolism,
     doUseArcaneRecovery,
     doOverchannel,
+    doTriggerOverchannel,
     doUseSneakAttack,
+    doTriggerSneakAttack,
     doUseSteadyAim,
     doCunningActionDash,
     doCunningActionDisengage,

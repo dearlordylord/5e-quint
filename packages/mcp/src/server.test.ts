@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { abilityModifier, classLevel } from "@dnd/core/types.ts"
+import { abilityModifier, classLevel, spellSlotLevel } from "@dnd/core/types.ts"
 
 import { createDemoActor, handleToolCall } from "./server.ts"
 
@@ -211,6 +211,34 @@ describe("MCP server adapter", () => {
     expect(payload.state.pendingResolution).toBeNull()
   })
 
+  test("execute_action supports USE_INDOMITABLE once the pending trigger exists", () => {
+    const actor = createDemoActor({
+      maxHp: 24,
+      fighterLevel: classLevel(9),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+    actor.send({ type: "TRIGGER_INDOMITABLE" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_INDOMITABLE",
+      cost: { charge: "indomitable" },
+      outcome: {
+        summary: "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level",
+      },
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_INDOMITABLE" })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.classStates.fighter.indomitableCharges).toBe(0)
+    expect(payload.state.pendingResolution).toBeNull()
+  })
+
   test("execute_action supports USE_METAMAGIC with filtered legal options", () => {
     const actor = createDemoActor({
       maxHp: 30,
@@ -310,6 +338,33 @@ describe("MCP server adapter", () => {
     expect(payload.state.classStates.wizard.arcaneRecoveryUsed).toBe(true)
   })
 
+  test("execute_action supports USE_OVERCHANNEL once the qualifying cast trigger exists", () => {
+    const actor = createDemoActor({
+      maxHp: 36,
+      wizardLevel: classLevel(14),
+      preparedSpells: new Set(["burning_hands", "fireball", "hold_person"]),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+    actor.send({ type: "TRIGGER_OVERCHANNEL", spellName: "fireball", slotLevel: spellSlotLevel(3) })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_OVERCHANNEL",
+      cost: {},
+      outcome: { summary: "Overchannel the qualifying Fireball cast at slot level 3 for maximum damage" },
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_OVERCHANNEL" })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.classStates.wizard.overchannelUsesThisLR).toBe(1)
+    expect(payload.state.pendingResolution).toBeNull()
+  })
+
   test("execute_action supports USE_PEERLESS_SKILL once the pending trigger exists", () => {
     const actor = createDemoActor({
       maxHp: 38,
@@ -368,6 +423,32 @@ describe("MCP server adapter", () => {
     const payload = readPayload(response)
     expect(payload.success).toBe(true)
     expect(payload.state.classStates.barbarian.relentlessRageTimesUsed).toBe(1)
+    expect(payload.state.pendingResolution).toBeNull()
+  })
+
+  test("execute_action supports USE_SNEAK_ATTACK once the qualifying hit trigger exists", () => {
+    const actor = createDemoActor({
+      maxHp: 32,
+      rogueLevel: classLevel(5),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    })
+    handleToolCall(actor, "execute_action", { type: "ENTER_COMBAT" })
+    handleToolCall(actor, "execute_action", { type: "START_TURN" })
+    actor.send({ type: "TRIGGER_SNEAK_ATTACK", mode: "finesse", source: "adjacentAlly" })
+
+    const available = readPayload(handleToolCall(actor, "get_available_actions", {}))
+    expect(available.free).toContainEqual({
+      type: "USE_SNEAK_ATTACK",
+      cost: {},
+      outcome: { summary: "Apply Sneak Attack damage to the qualifying hit" },
+    })
+
+    const response = handleToolCall(actor, "execute_action", { type: "USE_SNEAK_ATTACK" })
+    expect("isError" in response).toBe(false)
+    const payload = readPayload(response)
+    expect(payload.success).toBe(true)
+    expect(payload.state.classStates.rogue.sneakAttackUsedThisTurn).toBe(true)
     expect(payload.state.pendingResolution).toBeNull()
   })
 

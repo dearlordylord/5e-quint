@@ -125,6 +125,18 @@ export const creatureMachine = setup({
     enterCombat: assign({ inCombat: true, pendingResolution: null }),
     exitCombat: assign({ inCombat: false, pendingResolution: null }),
     clearPendingResolution: assign({ pendingResolution: null }),
+    triggerIndomitable: assign({ pendingResolution: { kind: "indomitable" } }),
+    // The creature model knows prepared spell names but not authoritative class-source
+    // ownership for a cast, so Overchannel is opened by an explicit internal trigger
+    // rather than guessed from CAST_PREPARED_SPELL alone.
+    triggerOverchannel: assign(({ event: e }) => {
+      const ev = e as Extract<DndEvent, { type: "TRIGGER_OVERCHANNEL" }>
+      return { pendingResolution: { kind: "overchannel" as const, spellName: ev.spellName, slotLevel: ev.slotLevel } }
+    }),
+    triggerSneakAttack: assign(({ event: e }) => {
+      const ev = e as Extract<DndEvent, { type: "TRIGGER_SNEAK_ATTACK" }>
+      return { pendingResolution: { kind: "sneakAttack" as const, mode: ev.mode, source: ev.source } }
+    }),
     triggerTacticalMind: assign({ pendingResolution: { kind: "tacticalMind" } }),
     triggerPeerlessSkillAbilityCheck: assign({ pendingResolution: { kind: "peerlessSkill", mode: "abilityCheck" } }),
     triggerPeerlessSkillAttackRoll: assign({ pendingResolution: { kind: "peerlessSkill", mode: "attackRoll" } }),
@@ -442,7 +454,7 @@ export const creatureMachine = setup({
     applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     useSecondWind: assign(({ context: c, event: e }) => fighter.secondWindUpdate(c, asUseSecondWind(e).d10Roll)),
     useActionSurge: assign(({ context: c }) => fighter.actionSurgeUpdate(c)),
-    useIndomitable: assign(({ context: c }) => fighter.indomitableUpdate(c)),
+    useIndomitable: assign(({ context: c }) => ({ ...fighter.indomitableUpdate(c), pendingResolution: null })),
     useTacticalMind: assign(({ context: c, event: e }) =>
       ({
         ...fighter.tacticalMindUpdate(c, asUseTacticalMind(e).boostedCheckSucceeds),
@@ -558,7 +570,7 @@ export const creatureMachine = setup({
       paladin.divineSmiteUpdate(c, (e as Extract<DndEvent, { type: "USE_DIVINE_SMITE" }>).slotLevel)
     ),
     useDivineSmiteFree: assign(({ context: c }) => paladin.divineSmiteFreeUpdate(c)),
-    useSneakAttack: assign(({ context: c }) => rogue.sneakAttackUpdate(c)),
+    useSneakAttack: assign(({ context: c }) => ({ ...rogue.sneakAttackUpdate(c), pendingResolution: null })),
     useSteadyAim: assign(({ context: c }) => rogue.steadyAimUpdate(c)),
     cunningActionDash: assign(({ context: c }) => rogue.cunningActionDashUpdate(c)),
     cunningActionDisengage: assign(({ context: c }) => rogue.cunningActionDisengageUpdate(c)),
@@ -590,7 +602,7 @@ export const creatureMachine = setup({
     useArcaneRecovery: assign(({ context: c, event: e }) =>
       wizard.arcaneRecoveryUpdate(c, (e as Extract<DndEvent, { type: "USE_ARCANE_RECOVERY" }>).slotLevel)
     ),
-    useOverchannel: assign(({ context: c }) => wizard.overchannelUpdate(c)),
+    useOverchannel: assign(({ context: c }) => ({ ...wizard.overchannelUpdate(c), pendingResolution: null })),
     useFreeHuntersMark: assign(({ context: c }) => ranger.useFreeHuntersMarkUpdate(c)),
     useTireless: assign(({ context: c, event: e }) =>
       ranger.useTirelessUpdate(c, (e as Extract<DndEvent, { type: "USE_TIRELESS" }>).d8Roll)

@@ -31,7 +31,10 @@ export function arcaneRecoveryUpdate(c: DndContext, slotLevel: SpellSlotLevel): 
 
 export function overchannelUpdate(c: DndContext): Partial<DndContext> {
   const ws = w(c)
-  assert(!isIncapacitated(c) && hasOverchannel(ws.level), "guard: canOverchannel should have prevented this")
+  assert(
+    c.pendingResolution?.kind === "overchannel" && !isIncapacitated(c) && hasOverchannel(ws.level),
+    "guard: canOverchannel should have prevented this"
+  )
   return updateClass(c, "wizard", { overchannelUsesThisLR: ws.overchannelUsesThisLR + 1 })
 }
 

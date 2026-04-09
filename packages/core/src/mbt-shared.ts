@@ -197,11 +197,45 @@ export function mapAbility(s: string): Ability {
 function parsePendingResolution(raw: unknown):
   | null
   | { readonly kind: "tacticalMind" }
+  | { readonly kind: "indomitable" }
+  | { readonly kind: "overchannel"; readonly spellName: string; readonly slotLevel: number }
+  | {
+      readonly kind: "sneakAttack"
+      readonly mode: "finesse" | "ranged"
+      readonly source: "advantage" | "adjacentAlly"
+    }
   | { readonly kind: "peerlessSkill"; readonly mode: "abilityCheck" | "attackRoll" }
   | { readonly kind: "relentlessRage" } {
-  switch (variantToString(raw)) {
+  const tag = variantToString(raw)
+  switch (tag) {
     case "PRTacticalMind":
       return { kind: "tacticalMind" }
+    case "PRIndomitable":
+      return { kind: "indomitable" }
+    case "PROverchannel": {
+      const value =
+        typeof raw === "object" && raw !== null && "value" in raw ? (raw as { readonly value: unknown }).value : null
+      if (value == null || typeof value !== "object") return null
+      const record = value as Record<string, unknown>
+      return {
+        kind: "overchannel",
+        spellName: typeof record.spellName === "string" ? record.spellName : "",
+        slotLevel: Number(record.slotLevel ?? 0),
+      }
+    }
+    case "PRSneakAttack": {
+      const value =
+        typeof raw === "object" && raw !== null && "value" in raw ? (raw as { readonly value: unknown }).value : null
+      if (value == null || typeof value !== "object") return null
+      const record = value as Record<string, unknown>
+      const mode = variantToString(record.mode)
+      const source = variantToString(record.source)
+      return {
+        kind: "sneakAttack",
+        mode: mode === "SARanged" ? "ranged" : "finesse",
+        source: source === "SAAdjacentAlly" ? "adjacentAlly" : "advantage",
+      }
+    }
     case "PRPeerlessSkillAbilityCheck":
       return { kind: "peerlessSkill", mode: "abilityCheck" }
     case "PRPeerlessSkillAttackRoll":
@@ -537,6 +571,13 @@ export interface NormalizedState {
   readonly pendingResolution:
     | null
     | { readonly kind: "tacticalMind" }
+    | { readonly kind: "indomitable" }
+    | { readonly kind: "overchannel"; readonly spellName: string; readonly slotLevel: number }
+    | {
+        readonly kind: "sneakAttack"
+        readonly mode: "finesse" | "ranged"
+        readonly source: "advantage" | "adjacentAlly"
+      }
     | { readonly kind: "peerlessSkill"; readonly mode: "abilityCheck" | "attackRoll" }
     | { readonly kind: "relentlessRage" }
   // turnPhase

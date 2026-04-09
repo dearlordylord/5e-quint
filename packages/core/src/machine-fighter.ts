@@ -69,7 +69,10 @@ export function actionSurgeUpdate(c: DndContext): Partial<DndContext> {
 
 export function indomitableUpdate(c: DndContext): Partial<DndContext> {
   const fs = f(c)
-  assert(canUseIndomitable(fs.level, fs.indomitableCharges), "guard: canIndomitable should have prevented this")
+  assert(
+    c.pendingResolution?.kind === "indomitable" && canUseIndomitable(fs.level, fs.indomitableCharges),
+    "guard: canIndomitable should have prevented this"
+  )
   return updateClass(c, "fighter", {
     indomitableCharges: resourceCount(tsUseIndomitable(fs.indomitableCharges, 0).indomitableCharges)
   })

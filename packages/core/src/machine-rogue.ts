@@ -15,7 +15,10 @@ function r(c: DndContext) {
 export function sneakAttackUpdate(c: DndContext): Partial<DndContext> {
   const rs = r(c)
   assert(
-    !isIncapacitated(c) && rs.level >= 1 && !rs.sneakAttackUsedThisTurn,
+    c.pendingResolution?.kind === "sneakAttack" &&
+      !isIncapacitated(c) &&
+      rs.level >= 1 &&
+      !rs.sneakAttackUsedThisTurn,
     "guard: canSneakAttack should have prevented this"
   )
   return updateClass(c, "rogue", { sneakAttackUsedThisTurn: true })

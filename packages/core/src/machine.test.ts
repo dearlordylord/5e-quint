@@ -2690,6 +2690,18 @@ describe("GRANT_EXTRA_ACTION", () => {
 })
 
 describe("pending resolution windows", () => {
+  it("sets and clears Indomitable pending state around resolution", () => {
+    const a = createWithInput({ maxHp: 24, fighterLevel: classLevel(9), baseWalkSpeed: 30, effectiveSpeed: 30 })
+    enterCombat(a)
+    startTurn(a)
+    a.send({ type: "TRIGGER_INDOMITABLE" })
+    expect(ctx(a).pendingResolution).toEqual({ kind: "indomitable" })
+
+    a.send({ type: "USE_INDOMITABLE" })
+    expect(ctx(a).pendingResolution).toBeNull()
+    expect(ctx(a).classStates.fighter?.indomitableCharges).toBe(0)
+  })
+
   it("sets and clears Tactical Mind pending state around resolution", () => {
     const a = createWithInput({ maxHp: 24, fighterLevel: classLevel(2), baseWalkSpeed: 30, effectiveSpeed: 30 })
     a.send({ type: "TRIGGER_TACTICAL_MIND" })
@@ -2708,6 +2720,30 @@ describe("pending resolution windows", () => {
     a.send({ type: "USE_PEERLESS_SKILL", success: false })
     expect(ctx(a).pendingResolution).toBeNull()
     expect(ctx(a).classStates.bard?.bardicInspirationCharges).toBe(5)
+  })
+
+  it("tracks Sneak Attack trigger details and clears them after resolution", () => {
+    const a = createWithInput({ maxHp: 24, rogueLevel: classLevel(5), baseWalkSpeed: 30, effectiveSpeed: 30 })
+    enterCombat(a)
+    startTurn(a)
+    a.send({ type: "TRIGGER_SNEAK_ATTACK", mode: "ranged", source: "advantage" })
+    expect(ctx(a).pendingResolution).toEqual({ kind: "sneakAttack", mode: "ranged", source: "advantage" })
+
+    a.send({ type: "USE_SNEAK_ATTACK" })
+    expect(ctx(a).pendingResolution).toBeNull()
+    expect(ctx(a).classStates.rogue?.sneakAttackUsedThisTurn).toBe(true)
+  })
+
+  it("tracks Overchannel qualifying cast details and clears them after use", () => {
+    const a = createWithInput({ maxHp: 24, wizardLevel: classLevel(14), baseWalkSpeed: 30, effectiveSpeed: 30 })
+    enterCombat(a)
+    startTurn(a)
+    a.send({ type: "TRIGGER_OVERCHANNEL", spellName: "fireball", slotLevel: spellSlotLevel(3) })
+    expect(ctx(a).pendingResolution).toEqual({ kind: "overchannel", spellName: "fireball", slotLevel: 3 })
+
+    a.send({ type: "USE_OVERCHANNEL" })
+    expect(ctx(a).pendingResolution).toBeNull()
+    expect(ctx(a).classStates.wizard?.overchannelUsesThisLR).toBe(1)
   })
 
   it("establishes Relentless Rage pending on a real drop to zero while raging", () => {

@@ -265,7 +265,7 @@ export const guards = {
   canIndomitable: ({ context: c }: GuardArg) => {
     const fs = c.classStates.fighter
     if (!fs) return false
-    return canUseIndomitable(fs.level, fs.indomitableCharges)
+    return c.pendingResolution?.kind === "indomitable" && canUseIndomitable(fs.level, fs.indomitableCharges)
   },
   canTacticalMind: ({ context: c }: GuardArg) => {
     const fs = c.classStates.fighter
@@ -350,7 +350,7 @@ export const guards = {
   canSneakAttack: ({ context: c }: GuardArg) => {
     const rs = c.classStates.rogue
     if (!rs) return false
-    return !isIncapacitated(c) && rs.level >= 1 && !rs.sneakAttackUsedThisTurn
+    return c.pendingResolution?.kind === "sneakAttack" && !isIncapacitated(c) && rs.level >= 1 && !rs.sneakAttackUsedThisTurn
   },
   canSteadyAim: ({ context: c }: GuardArg) => {
     const rs = c.classStates.rogue
@@ -395,7 +395,13 @@ export const guards = {
   canOverchannel: ({ context: c }: GuardArg) => {
     const ws = c.classStates.wizard
     if (!ws) return false
-    return !isIncapacitated(c) && hasOverchannel(ws.level)
+    return (
+      c.pendingResolution?.kind === "overchannel" &&
+      !isIncapacitated(c) &&
+      hasOverchannel(ws.level) &&
+      c.pendingResolution.slotLevel >= 1 &&
+      c.pendingResolution.slotLevel <= 5
+    )
   },
 
   // Cleric
