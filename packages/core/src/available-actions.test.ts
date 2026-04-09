@@ -201,29 +201,37 @@ function expectRequest(request: ResolutionRequest | { readonly code: string }) {
   return request
 }
 
+function creatureToken<T extends object>(token: T) {
+  return { scope: "creature" as const, ...token }
+}
+
+function creatureResolved<T extends object>(token: T) {
+  return { scope: "creature" as const, ...token }
+}
+
 describe("available actions contract", () => {
   test("initial state only exposes ENTER_COMBAT", () => {
     const actor = makeActor()
 
     expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toEqual([
-      {
+      creatureToken({
         type: "ENTER_COMBAT",
         cost: {},
         outcome: { summary: "Enter combat (begin tracking turns and action economy)" },
-      },
-      {
+      }),
+      creatureToken({
         type: "SHORT_REST",
         availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
         cost: {},
         outcome: { summary: "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features" },
-      },
+      }),
     ])
   })
 
   test("START_TURN is unavailable before entering combat", () => {
     const actor = makeActor()
 
-    expect(resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "START_TURN" })).toEqual({
+    expect(resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "START_TURN" }))).toEqual({
       code: "ACTION_NOT_AVAILABLE",
       message: "START_TURN is not currently available in this state.",
     })
@@ -233,7 +241,7 @@ describe("available actions contract", () => {
     const actor = damageActor(10)
 
     const enterRequest = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "ENTER_COMBAT" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "ENTER_COMBAT" })),
     )
     const enterFinalized = finalizeResolution(enterRequest, { runtime: "none" }, actor.getSnapshot().context)
     expect(enterFinalized).toEqual({
@@ -250,7 +258,7 @@ describe("available actions contract", () => {
     ])
 
     const startTurnRequest = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "START_TURN" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "START_TURN" })),
     )
     const startTurnFinalized = finalizeResolution(
       startTurnRequest,
@@ -268,7 +276,7 @@ describe("available actions contract", () => {
     ])
 
     const secondWindRequest = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_SECOND_WIND" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "USE_SECOND_WIND" })),
     )
     const secondWindFinalized = finalizeResolution(
       secondWindRequest,
@@ -296,27 +304,27 @@ describe("available actions contract", () => {
     )
 
     expect(spellTokens).toEqual([
-      {
+      creatureToken({
         type: "CAST_PREPARED_SPELL",
         spellName: "bless",
         slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
         cost: { action: true, charge: "spellSlot" },
         outcome: { summary: "Cast Bless with a spell slot of the chosen level and begin concentrating on it" },
-      },
-      {
+      }),
+      creatureToken({
         type: "CAST_PREPARED_SPELL",
         spellName: "guiding_bolt",
         slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
         cost: { action: true, charge: "spellSlot" },
         outcome: { summary: "Cast Guiding Bolt with a spell slot of the chosen level" },
-      },
-      {
+      }),
+      creatureToken({
         type: "CAST_PREPARED_SPELL",
         spellName: "healing_word",
         slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
         cost: { bonusAction: true, charge: "spellSlot" },
         outcome: { summary: "Cast Healing Word with a spell slot of the chosen level" },
-      },
+      }),
     ])
   })
 
@@ -327,6 +335,7 @@ describe("available actions contract", () => {
 
     expect(
       resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, {
+        scope: "creature",
         type: "CAST_PREPARED_SPELL",
         spellName: "guiding_bolt",
         slotLevel: spellSlotLevel(4),
@@ -338,6 +347,7 @@ describe("available actions contract", () => {
 
     const request = expectRequest(
       resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, {
+        scope: "creature",
         type: "CAST_PREPARED_SPELL",
         spellName: "bless",
         slotLevel: spellSlotLevel(2),
@@ -363,15 +373,15 @@ describe("available actions contract", () => {
       isCritical: false,
     })
 
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "SHORT_REST",
       availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
       cost: {},
       outcome: { summary: "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features" },
-    })
+    }))
 
     const request = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "SHORT_REST", spendHitDice: ["fighter", "fighter"] }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "SHORT_REST", spendHitDice: ["fighter", "fighter"] })),
     )
     const finalized = finalizeResolution(
       request,
@@ -410,14 +420,14 @@ describe("available actions contract", () => {
     actor.send({ type: "ENTER_COMBAT" })
     actor.send({ type: "START_TURN" })
 
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_HEROIC_INSPIRATION",
       cost: {},
       outcome: { summary: "Spend Heroic Inspiration to reroll a die and use the new roll" },
-    })
+    }))
 
     const request = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_HEROIC_INSPIRATION" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "USE_HEROIC_INSPIRATION" })),
     )
     const finalized = finalizeResolution(request, { runtime: "none" }, actor.getSnapshot().context)
     expect(finalized).toEqual({
@@ -440,16 +450,16 @@ describe("available actions contract", () => {
 
     actor.send({ type: "TRIGGER_TACTICAL_MIND" })
 
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_TACTICAL_MIND",
       cost: { charge: "secondWind" },
       outcome: {
         summary: "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
       },
-    })
+    }))
 
     const request = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_TACTICAL_MIND" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "USE_TACTICAL_MIND" })),
     )
     const finalized = finalizeResolution(
       request,
@@ -473,22 +483,22 @@ describe("available actions contract", () => {
     actor.send({ type: "ENTER_COMBAT" })
     actor.send({ type: "START_TURN" })
 
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_METAMAGIC",
       option: { options: ["careful", "subtle"] },
       cost: { charge: "sorceryPoints" },
       outcome: { summary: "Apply a currently legal known Metamagic option to the spell you are casting" },
-    })
+    }))
 
     expect(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_METAMAGIC", option: "quickened" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "USE_METAMAGIC", option: "quickened" })),
     ).toEqual({
       code: "ACTION_NOT_AVAILABLE",
       message: "quickened Metamagic is not currently available in this state.",
     })
 
     const request = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_METAMAGIC", option: "careful" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "USE_METAMAGIC", option: "careful" })),
     )
     const finalized = finalizeResolution(request, { runtime: "none" }, actor.getSnapshot().context)
     expect(finalized).toEqual({
@@ -510,16 +520,16 @@ describe("available actions contract", () => {
     const actor = makeActorWithInput(BARD_14_INPUT)
     actor.send({ type: "TRIGGER_PEERLESS_SKILL_ATTACK_ROLL" })
 
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_PEERLESS_SKILL",
       cost: { charge: "bardicInspiration" },
       outcome: {
         summary: "Add your Bardic Inspiration die to the failed attack roll; expend it only if the roll now succeeds",
       },
-    })
+    }))
 
     const request = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_PEERLESS_SKILL" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "USE_PEERLESS_SKILL" })),
     )
     const finalized = finalizeResolution(
       request,
@@ -554,14 +564,14 @@ describe("available actions contract", () => {
     })
 
     expect(actor.getSnapshot().context.pendingResolution).toEqual({ kind: "relentlessRage" })
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_RELENTLESS_RAGE",
       cost: {},
       outcome: { summary: "Make a DC 10 Constitution save to stay at 22 HP instead of dropping to 0" },
-    })
+    }))
 
     const request = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_RELENTLESS_RAGE" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "USE_RELENTLESS_RAGE" })),
     )
     const finalized = finalizeResolution(
       request,
@@ -610,21 +620,21 @@ describe("available actions contract", () => {
     expect(tokenTypes).not.toContain("USE_OVERCHANNEL")
     expect(tokenTypes).not.toContain("USE_SNEAK_ATTACK")
 
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_ACTION_SURGE",
       cost: { charge: "actionSurge" },
       outcome: { summary: "Expend one Action Surge use to gain one additional action this turn" },
-    })
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    }))
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "FLURRY_OF_BLOWS",
       cost: { bonusAction: true, charge: "focusPoint" },
       outcome: { summary: "Spend 1 Focus Point to make 2 unarmed strikes as a bonus action" },
-    })
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    }))
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_BARDIC_INSPIRATION",
       cost: { bonusAction: true, charge: "bardicInspiration" },
       outcome: { summary: "Expend one Bardic Inspiration use to inspire another creature" },
-    })
+    }))
   })
 
   test("resolves and executes representative zero-runtime phase 4A actions", () => {
@@ -633,7 +643,7 @@ describe("available actions contract", () => {
     actor.send({ type: "START_TURN" })
 
     const actionSurgeRequest = expectRequest(
-      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, { type: "USE_ACTION_SURGE" }),
+      resolveAction(actor.getSnapshot().context, actor.getSnapshot().tags, creatureResolved({ type: "USE_ACTION_SURGE" })),
     )
     const actionSurgeFinalized = finalizeResolution(actionSurgeRequest, { runtime: "none" }, actor.getSnapshot().context)
     expect(actionSurgeFinalized).toEqual({
@@ -649,7 +659,7 @@ describe("available actions contract", () => {
     bard.send({ type: "ENTER_COMBAT" })
     bard.send({ type: "START_TURN" })
     const inspirationRequest = expectRequest(
-      resolveAction(bard.getSnapshot().context, bard.getSnapshot().tags, { type: "USE_BARDIC_INSPIRATION" }),
+      resolveAction(bard.getSnapshot().context, bard.getSnapshot().tags, creatureResolved({ type: "USE_BARDIC_INSPIRATION" })),
     )
     const inspirationFinalized = finalizeResolution(inspirationRequest, { runtime: "none" }, bard.getSnapshot().context)
     expect(inspirationFinalized).toEqual({
@@ -666,7 +676,7 @@ describe("available actions contract", () => {
     barbarian.send({ type: "ENTER_COMBAT" })
     barbarian.send({ type: "START_TURN" })
     const rageRequest = expectRequest(
-      resolveAction(barbarian.getSnapshot().context, barbarian.getSnapshot().tags, { type: "ENTER_RAGE" }),
+      resolveAction(barbarian.getSnapshot().context, barbarian.getSnapshot().tags, creatureResolved({ type: "ENTER_RAGE" })),
     )
     const rageFinalized = finalizeResolution(rageRequest, { runtime: "none" }, barbarian.getSnapshot().context)
     expect(rageFinalized).toEqual({
@@ -688,19 +698,19 @@ describe("available actions contract", () => {
     monk.send({ type: "ENTER_COMBAT" })
     monk.send({ type: "START_TURN" })
 
-    expect(getAvailableActions(monk.getSnapshot().context, monk.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(monk.getSnapshot().context, monk.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "WHOLENESS_OF_BODY",
       cost: { bonusAction: true, charge: "wholenessOfBody" },
       outcome: { summary: "Heal 1d8 + 3 HP (minimum 1)" },
-    })
-    expect(getAvailableActions(monk.getSnapshot().context, monk.getSnapshot().tags)).toContainEqual({
+    }))
+    expect(getAvailableActions(monk.getSnapshot().context, monk.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "UNCANNY_METABOLISM",
       cost: { charge: "uncannyMetabolism" },
       outcome: { summary: "Regain all expended Focus Points and heal 1d8 + 6 HP" },
-    })
+    }))
 
     const wholenessRequest = expectRequest(
-      resolveAction(monk.getSnapshot().context, monk.getSnapshot().tags, { type: "WHOLENESS_OF_BODY" }),
+      resolveAction(monk.getSnapshot().context, monk.getSnapshot().tags, creatureResolved({ type: "WHOLENESS_OF_BODY" })),
     )
     const wholenessFinalized = finalizeResolution(
       wholenessRequest,
@@ -721,7 +731,7 @@ describe("available actions contract", () => {
     monk2.send({ type: "ENTER_COMBAT" })
     monk2.send({ type: "START_TURN" })
     const uncannyRequest = expectRequest(
-      resolveAction(monk2.getSnapshot().context, monk2.getSnapshot().tags, { type: "UNCANNY_METABOLISM" }),
+      resolveAction(monk2.getSnapshot().context, monk2.getSnapshot().tags, creatureResolved({ type: "UNCANNY_METABOLISM" })),
     )
     const uncannyFinalized = finalizeResolution(
       uncannyRequest,
@@ -741,13 +751,13 @@ describe("available actions contract", () => {
     const ranger = makeActorWithInput(RANGER_10_INPUT)
     ranger.send({ type: "ENTER_COMBAT" })
     ranger.send({ type: "START_TURN" })
-    expect(getAvailableActions(ranger.getSnapshot().context, ranger.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(ranger.getSnapshot().context, ranger.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_TIRELESS",
       cost: { action: true, charge: "tireless" },
       outcome: { summary: "Gain 1d8 + 3 temporary HP (minimum 1)" },
-    })
+    }))
     const tirelessRequest = expectRequest(
-      resolveAction(ranger.getSnapshot().context, ranger.getSnapshot().tags, { type: "USE_TIRELESS" }),
+      resolveAction(ranger.getSnapshot().context, ranger.getSnapshot().tags, creatureResolved({ type: "USE_TIRELESS" })),
     )
     const tirelessFinalized = finalizeResolution(
       tirelessRequest,
@@ -769,14 +779,15 @@ describe("available actions contract", () => {
     const wizard = makeActorWithInput(WIZARD_4_INPUT)
     wizard.send({ type: "ENTER_COMBAT" })
     wizard.send({ type: "START_TURN" })
-    expect(getAvailableActions(wizard.getSnapshot().context, wizard.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(wizard.getSnapshot().context, wizard.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_ARCANE_RECOVERY",
       slotLevel: { options: [spellSlotLevel(2)] },
       cost: { charge: "arcaneRecovery" },
       outcome: { summary: "Recover one expended spell slot of the chosen level and use Arcane Recovery" },
-    })
+    }))
     expect(
       resolveAction(wizard.getSnapshot().context, wizard.getSnapshot().tags, {
+        scope: "creature",
         type: "USE_ARCANE_RECOVERY",
         slotLevel: spellSlotLevel(1),
       }),
@@ -788,30 +799,30 @@ describe("available actions contract", () => {
     const warlock = makeActorWithInput(WARLOCK_13_INPUT)
     warlock.send({ type: "ENTER_COMBAT" })
     warlock.send({ type: "START_TURN" })
-    expect(getAvailableActions(warlock.getSnapshot().context, warlock.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(warlock.getSnapshot().context, warlock.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_MYSTIC_ARCANUM",
       spellLevel: { options: [spellSlotLevel(6), spellSlotLevel(7)] },
       cost: { charge: "mysticArcanum" },
       outcome: { summary: "Cast an unused Mystic Arcanum spell of the chosen level without expending a slot" },
-    })
+    }))
 
     const paladin = makeActorWithInput(PALADIN_2_INPUT)
     paladin.send({ type: "ENTER_COMBAT" })
     paladin.send({ type: "START_TURN" })
-    expect(getAvailableActions(paladin.getSnapshot().context, paladin.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(paladin.getSnapshot().context, paladin.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_LAY_ON_HANDS",
       amount: { options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
       cost: { bonusAction: true, charge: "layOnHandsPool" },
       outcome: { summary: "Spend Lay on Hands points to restore up to that many HP" },
-    })
-    expect(getAvailableActions(paladin.getSnapshot().context, paladin.getSnapshot().tags)).toContainEqual({
+    }))
+    expect(getAvailableActions(paladin.getSnapshot().context, paladin.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_DIVINE_SMITE",
       slotLevel: { options: [spellSlotLevel(1)] },
       cost: { bonusAction: true, charge: "spellSlot" },
       outcome: { summary: "Expend a spell slot of the chosen level to use Divine Smite" },
-    })
+    }))
     const layOnHandsRequest = expectRequest(
-      resolveAction(paladin.getSnapshot().context, paladin.getSnapshot().tags, { type: "USE_LAY_ON_HANDS", amount: 3 }),
+      resolveAction(paladin.getSnapshot().context, paladin.getSnapshot().tags, creatureResolved({ type: "USE_LAY_ON_HANDS", amount: 3 })),
     )
     const layOnHandsFinalized = finalizeResolution(layOnHandsRequest, { runtime: "none" }, paladin.getSnapshot().context)
     expect(layOnHandsFinalized).toEqual({
@@ -824,12 +835,12 @@ describe("available actions contract", () => {
     bard.send({ type: "ENTER_COMBAT" })
     bard.send({ type: "START_TURN" })
     bard.send({ type: "USE_BARDIC_INSPIRATION" })
-    expect(getAvailableActions(bard.getSnapshot().context, bard.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(bard.getSnapshot().context, bard.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_FONT_SLOT_RESTORE",
       slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
       cost: { charge: "spellSlot" },
       outcome: { summary: "Expend a spell slot to regain one Bardic Inspiration use" },
-    })
+    }))
 
     const sorcerer = makeActorWithInput({
       ...SORCERER_5_INPUT,
@@ -839,18 +850,18 @@ describe("available actions contract", () => {
     sorcerer.send({ type: "ENTER_COMBAT" })
     sorcerer.send({ type: "START_TURN" })
     sorcerer.send({ type: "USE_METAMAGIC", option: "careful" })
-    expect(getAvailableActions(sorcerer.getSnapshot().context, sorcerer.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(sorcerer.getSnapshot().context, sorcerer.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "CONVERT_SLOT_TO_POINTS",
       slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
       cost: { charge: "spellSlot" },
       outcome: { summary: "Expend a spell slot to gain sorcery points equal to its level" },
-    })
-    expect(getAvailableActions(sorcerer.getSnapshot().context, sorcerer.getSnapshot().tags)).toContainEqual({
+    }))
+    expect(getAvailableActions(sorcerer.getSnapshot().context, sorcerer.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "CONVERT_POINTS_TO_SLOT",
       slotLevel: { options: [spellSlotLevel(1)] },
       cost: { bonusAction: true, charge: "sorceryPoints" },
       outcome: { summary: "Spend sorcery points to create a spell slot of the chosen level" },
-    })
+    }))
   })
 
   test("surfaces Wild Resurgence charge recovery only after Wild Shape charges are depleted", () => {
@@ -867,12 +878,12 @@ describe("available actions contract", () => {
     actor.send({ type: "END_TURN" })
     actor.send({ type: "START_TURN" })
 
-    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual({
+    expect(getAvailableActions(actor.getSnapshot().context, actor.getSnapshot().tags)).toContainEqual(creatureToken({
       type: "USE_WILD_RESURGENCE_CHARGE",
       slotLevel: { options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)] },
       cost: { charge: "spellSlot" },
       outcome: { summary: "Expend a spell slot to regain one Wild Shape use" },
-    })
+    }))
   })
 
   test("spent resources remove action, bonus-action, and charge-gated free tokens from the grouped surface", () => {

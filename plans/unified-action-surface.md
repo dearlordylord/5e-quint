@@ -30,11 +30,34 @@ Define the unified supported action contract so the product can represent both c
 
 ### Acceptance criteria
 
-- [ ] The supported action contract can represent both creature-scoped and battle-scoped actions.
-- [ ] Token scope is explicit in the contract rather than inferred from adapter logic.
-- [ ] The current creature-scoped action surface still behaves correctly through the generalized contract.
-- [ ] Discovery, resolution, and execution remain one coherent product flow from the consumer perspective.
-- [ ] Regression tests prove the creature action surface still works after the contract generalization.
+- [x] The supported action contract can represent both creature-scoped and battle-scoped actions.
+- [x] Token scope is explicit in the contract rather than inferred from adapter logic.
+- [x] The current creature-scoped action surface still behaves correctly through the generalized contract.
+- [x] Discovery, resolution, and execution remain one coherent product flow from the consumer perspective.
+- [x] Regression tests prove the creature action surface still works after the contract generalization.
+
+### Phase 1 notes
+
+- The public supported action contract is now explicitly scope-aware:
+  - query tokens now include `scope`
+  - resolved execute tokens now include `scope`
+- The current creature pipeline is preserved as `scope: "creature"` throughout the existing supported action surface.
+- The resolved-token schema can now represent both:
+  - creature-scoped semantic actions
+  - battle-scoped placeholders for future routing work
+- Battle-scoped execution is intentionally not implemented yet in the creature pipeline; creature resolution now rejects battle-scoped tokens explicitly instead of relying on implicit assumptions.
+- This phase kept the action registry authoring model stable. Existing creature action specs still build unscoped internal tokens, and the public contract adds creature scope at the boundary.
+- Verification passed:
+  - `pnpm --filter @dnd/core typecheck`
+  - `pnpm --filter @dnd/mcp exec tsc --noEmit`
+  - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`
+  - `pnpm --filter @dnd/mcp test -- server.test.ts`
+
+### Next implementation notes
+
+- Phase 2 should keep the explicit scope model but move the runtime/tool boundary onto it, rather than hardcoding creature-machine execution assumptions in MCP.
+- The next slice should preserve the current tool family while introducing scope-aware routing inputs and result handling.
+- Do not add battle discovery yet in Phase 2. First make the tooling/runtime seam capable of carrying a battle-scoped token to the correct engine.
 
 ---
 
