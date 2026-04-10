@@ -482,7 +482,7 @@ Commit after this task:
 
 ### Task 18 - Battle Suggested Action Ownership Audit
 
-- [ ] For each currently blocked battle `suggested_action`, decide whether the missing facts are already in battle state, should be a user choice hole, should be runtime-owned, or require a domain/spec change:
+- [x] For each currently blocked battle `suggested_action`, decide whether the missing facts are already in battle state, should be a user choice hole, should be runtime-owned, or require a domain/spec change:
   - `BATTLE_ATTACK`
   - `BATTLE_HELP_ATTACK`
   - `BATTLE_MOVE`
@@ -493,8 +493,16 @@ Commit after this task:
   - `BATTLE_RELEASE_GRAPPLE`
   - `BATTLE_ESCAPE_GRAPPLE`
   - `BATTLE_LEGENDARY_ATTACK`
-- [ ] Classify each missing fact as one of: already battle-owned, user choice hole, runtime-owned input, table/session fact, or missing domain/spec ownership.
-- [ ] Update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) with precise blockers and first safe implementation candidates.
+- [x] Classify each missing fact as one of: already battle-owned, user choice hole, runtime-owned input, table/session fact, or missing domain/spec ownership.
+- [x] Update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) with precise blockers and first safe implementation candidates.
+
+Audit result, 2026-04-10:
+
+- Best Task 19 first slice: `BATTLE_RELEASE_GRAPPLE`. Battle already owns the active creature's `grapplingTarget`; the event has no runtime payload and can be exposed only when the active creature is grappling a target.
+- Next safe candidates: `BATTLE_ESCAPE_GRAPPLE` with explicit runtime `escapeSucceeded`, then `BATTLE_SEARCH` with user `targetId` and runtime `perceptionTotal`. `BATTLE_HIDE` is possible only if MCP explicitly accepts `stealthTotal`, `hasCoverOrObscurement`, and `outOfEnemyLineOfSight` as runtime/session inputs.
+- Defer `BATTLE_ATTACK`, `BATTLE_OFF_HAND_ATTACK`, and `BATTLE_LEGENDARY_ATTACK` to Task 20 because they need target AC, attack/damage rolls, geometry/visibility, reaction-candidate ownership, and in the legendary case monster stat-block action payload ownership.
+- Defer `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` until geometry/session ownership exists for visibility, reach, threat, and provocation facts.
+- Defer `BATTLE_GRAPPLE` until battle owns creature Size instead of receiving `attackerSize`/`targetSize` from the raw event payload; the save failure itself can remain a runtime input.
 
 Dependencies: Task 1.
 
