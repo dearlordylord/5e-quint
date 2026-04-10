@@ -611,15 +611,21 @@ Commit after this task:
 
 ### Task 21 - Battle Rider And Off-Hand Slice
 
-- [ ] Reassess `BATTLE_OFF_HAND_ATTACK` after `BATTLE_ATTACK` ownership is resolved.
-- [ ] Reassess creature attack riders that likely need battle ownership:
+- [x] Reassess `BATTLE_OFF_HAND_ATTACK` after `BATTLE_ATTACK` ownership is resolved. (Task 20 kept `BATTLE_ATTACK` blocked on the public attack runtime contract, so off-hand remains blocked on the same target AC, geometry/visibility, adjacency, and hit-reaction-candidate inputs plus Light-property ability-modifier handling.)
+- [x] Reassess creature attack riders that likely need battle ownership:
   - `USE_BRUTAL_STRIKE`
   - `STUNNING_STRIKE`
   - `USE_CUNNING_STRIKE`
   - `USE_ELDRITCH_SMITE`
   - `USE_DIVINE_SMITE_FREE`, if Task 14 did not include it
-- [ ] Implement only one rider/off-hand slice if all ownership facts are clear.
-- [ ] Otherwise update blockers.
+- [x] Implement only one rider/off-hand slice if all ownership facts are clear. (No implementation slice is safe yet because Task 20 did not establish the attack runtime boundary.)
+- [x] Otherwise update blockers. (Updated [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) with per-rider and off-hand blockers.)
+
+Task 21 result, 2026-04-10:
+
+- Kept `BATTLE_OFF_HAND_ATTACK`, `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` blocked behind battle attack/rider ownership.
+- RAW check completed against SRD 5.2.1 Barbarian Brutal Strike, Monk Stunning Strike, Rogue Cunning Strike, Warlock Eldritch Smite, Paladin's Smite / *Divine Smite*, and Equipment Light/Nick. Ubiquitous-language check completed for Two-Weapon Fighting, Nick, Attack Roll, Saving Throw, Prone, Stunned, and Poisoned.
+- No code change: exposing any one of these now would duplicate or invent attack-resolution facts that the public MCP action-token runtime path cannot yet accept explicitly.
 
 Dependencies: Task 20. Also depends on Task 14 if `USE_DIVINE_SMITE_FREE` is evaluated there.
 
@@ -630,9 +636,7 @@ RAW check:
 
 Verification:
 
-- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
-- `pnpm --filter @dnd/mcp test -- src/server.test.ts`
-- Tier 1 battle MBT for any battle/spec/bridge semantic change.
+- Docs-only audit update. Run task-specific doc checks (`git diff --check` plus relevant `rg`/source inspection). No MBT required because no battle behavior, spec, or bridge semantics changed.
 
 Commit after this task:
 
