@@ -90,7 +90,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "number": 11,
       "id": "MCP1-B",
       "status": "ready-for-research",
-      "title": "Core Goblin Minion Stat-Block Slice"
+      "title": "Core Statblock Facility + Initial Goblin Minion Entry"
     },
     {
       "number": 12,
@@ -191,7 +191,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 8 | C - ResourceCost Typed Refactor | ready-for-implementation-after-light-research | none | Cleaner MCP/UI cost display and future resource docs | Confirm cost consumer blast radius and immediate-cost scope, then implement typed costs if still small | Good support-layer cleanup |
 | 9 | D - Battle Attack Runtime/Session Boundary | ready-for-research | none | F, G, MCP1-C, MCP2-A, possibly I; public `BATTLE_ATTACK`; off-hand/legendary/riders | Design token/runtime/session contract and stop conditions | Research only; do not implement attack yet |
 | 10 | MCP1-A - Session Host Architecture | ready-for-research | MCP0 tasks done or intentionally deferred | MCP1-C, MCP2-A | Design MCP session/router host without combat state duplication | Research before implementation |
-| 11 | MCP1-B - Core Goblin Minion Stat-Block Slice | ready-for-research | MCP0 tasks done or intentionally deferred | MCP1-C, MCP2-B | Design core-owned goblin minion content and stat-block compiler slice | Research before implementation |
+| 11 | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry | ready-for-research | MCP0 tasks done or intentionally deferred | MCP1-C, MCP2-B | Design a reusable core statblock facility, document approved provenance for future entries, and add Goblin Minion as the first entry | Research before implementation |
 | 12 | E - Movement And Help Geometry/Session Ownership | ready-for-research | none | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK` | Decide visibility/reach/threat/path/provocation ownership | Research only |
 | 13 | J - Generic Table Events, Environmental Hazards, And Monster Commands | ready-for-research | none | Future raw table event exposure and monster command work | Pick one narrow source/provenance family or keep deferred | Research only |
 | 14 | F - Legendary Attack Payload Ownership | blocked | D plus monster stat-block payload ownership | Public `BATTLE_LEGENDARY_ATTACK` | Wait for D, then define stat-block Legendary Action payload ownership | Not handoff-ready |
@@ -228,8 +228,8 @@ Merged MCP Fighter vs. Goblin baseline:
   - `SHORT_REST` documentation clarity;
   - `EXIT_COMBAT` after death UX decision.
 - The fighter-vs-goblin flow is blocked on Task D because MCP does not yet expose public `BATTLE_ATTACK`.
-- The safest first goblin content slice is Goblin Minion, not Goblin Warrior. Goblin Warrior has advantage-based extra damage not represented by the current `MonsterAttack` shape, and full goblin support also needs Nimble Escape as a monster bonus-action option.
-- Goblin content must live in core stat-block/content modules. MCP should select or reference that content; it must not duplicate RAW stat-block numbers in its own registry.
+- The first monster-content slice should be a reusable core statblock facility with Goblin Minion as the initial SRD-backed entry, not a goblin-only architecture. Goblin Warrior still remains deferred because its advantage-based extra damage is not represented by the current `MonsterAttack` shape, and full goblin support also needs Nimble Escape as a monster bonus-action option.
+- Monster content must live in core stat-block/content modules. MCP should select or reference that content; it must not duplicate RAW stat-block numbers in its own registry.
 
 ## Task Selection Guidance
 
@@ -869,7 +869,7 @@ Extra research needed:
 
 - Yes. Confirm the current stdio/test-host wiring before coding, then pick the smallest routing model that supports a creature host and an active battle host.
 
-### Task 11 - MCP1-B - Core Goblin Minion Stat-Block Slice
+### Task 11 - MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry
 
 Status: ready-for-research.
 
@@ -879,7 +879,7 @@ Blocks: Task MCP1-C, Task MCP2-B.
 
 Purpose:
 
-- Add the smallest core-owned goblin content slice needed to create a goblin opponent without duplicating RAW stat-block fields in MCP.
+- Add a reusable core-owned statblock/content facility, then express Goblin Minion through that facility without duplicating RAW stat-block fields in MCP.
 
 Inputs:
 
@@ -890,10 +890,13 @@ Inputs:
 - `creature.qnt` stat-block definitions if Quint parity must be extended.
 - `packages/core/src/battle-machine-types.ts`.
 - `packages/core/src/battle-machine-actions-turn.ts`.
+- Any provenance/maintenance docs that describe where additional local statblocks should be sourced from.
 
 Implementation output:
 
-- Add a core-owned Goblin Minion stat-block/content entry.
+- Add a reusable core-owned statblock/content facility for battle-init-compatible monster definitions.
+- Add a short description of approved provenance for future statblocks: local `.references/srd-5.2.1/` first; other corpora only by explicit owner decision. 5etools may be used as a research aid but is not the default imported source of truth.
+- Add a core-owned Goblin Minion stat-block/content entry using that shared facility.
 - Add a compiler/projection from stat-block content to `InitCreatureConfig` or directly to battle init state, depending on the ownership chosen in Task MCP1-A.
 - Represent only facts currently supported by core types:
   - name: Goblin Minion;
@@ -909,25 +912,28 @@ Implementation output:
   - CR 1/8, PB +2;
   - dagger attack +4, reach 5 or range 20/60, average 4 Piercing.
 - Defer Goblin Warrior and Nimble Escape unless the needed stat-block attack rider/bonus-action support is already present.
+- Do not build a bulk corpus importer in this task.
 
 Acceptance criteria:
 
-- Goblin data is defined once in core.
+- A reusable statblock/content facility exists in core.
+- Goblin Minion is defined once in core using that facility.
 - MCP selects or references the core content; it does not repeat RAW numbers.
-- The slice is named clearly if it omits Nimble Escape, for example "Goblin Minion stat-block/init slice" rather than "full goblin".
+- Future statblock provenance is documented clearly enough that a later task can add more entries without reopening the ownership question.
 - Goblin Warrior is explicitly deferred until advantage damage rider support exists.
+- No bulk importer or non-SRD corpus ingestion is introduced by this task.
 
 Verification:
 
 - RAW check: Goblin Minion and Monsters Overview in `.references/srd-5.2.1/`; terminology in `UBIQUITOUS_LANGUAGE.md`.
 - `/simplify` convergence: minimum two rounds after implementation.
-- Focused unit tests for catalog values and compiler projection.
+- Focused unit tests for the shared statblock facility, Goblin Minion catalog values, and compiler projection.
 - Creature MBT only if `creature.qnt` or the creature bridge changes.
 - Tier 1 battle MBT only if battle semantics or Quint bridge changes.
 
 Extra research needed:
 
-- Yes. Confirm existing monster catalog/projection ownership before adding fields, and search for any existing goblin/stat-block data to avoid duplication.
+- Yes. Confirm existing monster catalog/projection ownership before adding fields, and identify where the provenance note should live so future statblocks are added consistently.
 
 ### Task 12 - E - Movement And Help Geometry/Session Ownership
 
