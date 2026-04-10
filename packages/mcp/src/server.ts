@@ -1,5 +1,5 @@
 import { Effect, JSONSchema, Match, Schema } from "effect";
-import { createActor, type ActorRefFrom } from "xstate";
+import { createActor } from "xstate";
 
 import { battleMachine } from "@dnd/core/battle-machine.ts";
 import { creatureMachine } from "@dnd/core/machine.ts";
@@ -22,7 +22,6 @@ import {
   type ResolvedActionToken,
   type ResourceCost,
   TableEventCommandSchema,
-  type TableEventCommand,
 } from "@dnd/core/available-actions.ts";
 import { classLevel } from "@dnd/core/types.ts";
 
@@ -32,12 +31,16 @@ import {
   buildRuntimeInputs,
 } from "./server-runtime.ts";
 import {
+  type BattleActor,
+  type DndActor,
+  type SupportedActionHost,
   battleSnapshotUnchanged,
   encodeBattleRuntimeState,
   errorContent,
   jsonContent,
   snapshotFingerprint,
 } from "./server-shared.ts";
+import { recordTableEvent } from "./server-table-events.ts";
 
 export const DEMO_ACTOR_INPUT: DndMachineInput = {
   maxHp: 44,
@@ -47,8 +50,7 @@ export const DEMO_ACTOR_INPUT: DndMachineInput = {
 };
 const DEMO_STARTING_DAMAGE = 10;
 
-export type DndActor = ActorRefFrom<typeof creatureMachine>;
-export type BattleActor = ActorRefFrom<typeof battleMachine>;
+export type { BattleActor, DndActor, SupportedActionHost };
 export type CreatureActionHost = {
   readonly scope: "creature";
   readonly actor: DndActor;
@@ -57,7 +59,6 @@ export type BattleActionHost = {
   readonly scope: "battle";
   readonly actor: BattleActor;
 };
-export type SupportedActionHost = CreatureActionHost | BattleActionHost;
 
 export function createDemoActor(
   input: DndMachineInput = DEMO_ACTOR_INPUT,
@@ -115,7 +116,6 @@ export const executeControlCommandJsonSchema =
 export const recordTableEventJsonSchema = JSONSchema.make(
   TableEventCommandSchema,
 );
-const strictCommandParseOptions = { onExcessProperty: "error" } as const;
 
 export const toolDefinitions = [
   {
@@ -198,13 +198,6 @@ function scopeMismatchContent(
     `Action scope ${tokenScope} does not match the current ${hostScope} host.`,
     "ACTION_SCOPE_MISMATCH",
   );
-}
-
-function unsupportedTableEventContent(command: TableEventCommand) {
-  return errorContent("Table event is not implemented yet", {
-    code: "TABLE_EVENT_NOT_IMPLEMENTED",
-    command,
-  });
 }
 
 function executeBattleResolvedAction(
@@ -295,28 +288,6 @@ function previewResolvedAction(host: SupportedActionHost, args: unknown) {
     }),
     Match.exhaustive,
   );
-}
-
-function recordTableEvent(host: SupportedActionHost, args: unknown) {
-  const decoded = Schema.decodeUnknownEither(
-    TableEventCommandSchema,
-    strictCommandParseOptions,
-  )(args);
-  if (decoded._tag === "Left") {
-    return errorContent(
-      "Invalid record_table_event input",
-      String(decoded.left),
-    );
-  }
-
-  if (decoded.right.scope !== host.scope) {
-    return errorContent(
-      `Table event scope ${decoded.right.scope} does not match the current ${host.scope} host.`,
-      "TABLE_EVENT_SCOPE_MISMATCH",
-    );
-  }
-
-  return unsupportedTableEventContent(decoded.right);
 }
 
 export function handleToolCall(

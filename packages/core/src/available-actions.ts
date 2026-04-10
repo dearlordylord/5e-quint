@@ -656,6 +656,18 @@ export const BATTLE_TABLE_EVENT_TYPES = [
 ] as const satisfies ReadonlyArray<BattleEvent["type"]>;
 export type BattleTableEventType = (typeof BATTLE_TABLE_EVENT_TYPES)[number];
 
+export const TABLE_EVENT_WARNING_CODES = [
+  "bypasses_semantic_action",
+  "external_table_fact",
+  "unsupported_domain_gap",
+] as const satisfies ReadonlyArray<string>;
+export type TableEventWarningCode = (typeof TABLE_EVENT_WARNING_CODES)[number];
+
+export type TableEventWarning = {
+  readonly code: TableEventWarningCode;
+  readonly message: string;
+};
+
 const EnterCombatResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("ENTER_COMBAT"),
 });
@@ -1135,6 +1147,29 @@ export const TableEventCommandSchema = Schema.Union(
 export type TableEventCommand = Schema.Schema.Type<
   typeof TableEventCommandSchema
 >;
+
+export type RecordTableEventAppliedResult<State> = {
+  readonly success: true;
+  readonly appliedEvent: TableEventCommand;
+  readonly warnings: ReadonlyArray<TableEventWarning>;
+  readonly state: State;
+};
+
+export type RecordTableEventUnsupportedResult<State> = {
+  readonly success: false;
+  readonly appliedEvent: null;
+  readonly warnings: ReadonlyArray<TableEventWarning>;
+  readonly state: State;
+  readonly error: {
+    readonly code: "TABLE_EVENT_NOT_IMPLEMENTED";
+    readonly message: string;
+    readonly event: TableEventCommand;
+  };
+};
+
+export type RecordTableEventResult<State> =
+  | RecordTableEventAppliedResult<State>
+  | RecordTableEventUnsupportedResult<State>;
 
 export type StartTurnRuntimeInputs = {
   readonly extraAttacks?: number;

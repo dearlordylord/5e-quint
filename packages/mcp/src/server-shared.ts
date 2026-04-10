@@ -1,4 +1,4 @@
-import { type SnapshotFrom } from "xstate";
+import { type ActorRefFrom, type SnapshotFrom } from "xstate";
 
 import { battleMachine } from "@dnd/core/battle-machine.ts";
 import type {
@@ -7,6 +7,12 @@ import type {
 } from "@dnd/core/battle-machine-types.ts";
 import { encodeDndSnapshot } from "@dnd/core/context-encoding.ts";
 import { creatureMachine } from "@dnd/core/machine.ts";
+
+export type DndActor = ActorRefFrom<typeof creatureMachine>;
+export type BattleActor = ActorRefFrom<typeof battleMachine>;
+export type SupportedActionHost =
+  | { readonly scope: "creature"; readonly actor: DndActor }
+  | { readonly scope: "battle"; readonly actor: BattleActor };
 
 type DndSnapshot = SnapshotFrom<typeof creatureMachine>;
 type BattleSnapshot = SnapshotFrom<typeof battleMachine>;

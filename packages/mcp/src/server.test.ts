@@ -3,6 +3,7 @@ import { createActor } from "xstate";
 
 import { battleMachine } from "@dnd/core/battle-machine.ts";
 import type { BattleEvent } from "@dnd/core/battle-machine-types.ts";
+import { TABLE_EVENT_WARNING_CODES } from "@dnd/core/available-actions.ts";
 import {
   abilityModifier,
   armorClass,
@@ -18,6 +19,7 @@ import {
   handleToolCall,
   toolDefinitions,
 } from "./server.ts";
+import { tableEventSuccess } from "./server-table-events.ts";
 
 function readPayload(response: ReturnType<typeof handleToolCall>) {
   return JSON.parse(response.content[0]?.text ?? "null");
@@ -442,6 +444,7 @@ describe("MCP server adapter", () => {
 
   test("record_table_event validates a narrow table-event shape", () => {
     const host = createDemoHost();
+    const before = readPayload(handleToolCall(host, "get_state", {}));
 
     const invalidRawAction = handleToolCall(host, "record_table_event", {
       scope: "creature",
@@ -455,6 +458,7 @@ describe("MCP server adapter", () => {
     expect(readPayload(invalidRawAction).error).toBe(
       "Invalid record_table_event input",
     );
+    expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
 
     const undecidedGenericSpell = handleToolCall(host, "record_table_event", {
       scope: "battle",
@@ -467,6 +471,74 @@ describe("MCP server adapter", () => {
     expect(readPayload(undecidedGenericSpell).error).toBe(
       "Invalid record_table_event input",
     );
+  });
+
+  test("record_table_event exports the minimum warning vocabulary", () => {
+    expect(TABLE_EVENT_WARNING_CODES).toEqual([
+      "bypasses_semantic_action",
+      "external_table_fact",
+      "unsupported_domain_gap",
+    ]);
+  });
+
+  test("tableEventSuccess builds the applied event result shape", () => {
+    const result = tableEventSuccess(
+      { scope: "creature", type: "STABILIZE" },
+      [
+        {
+          code: "external_table_fact",
+          message: "The table declared the creature stable.",
+        },
+      ],
+      { hp: 0, stable: true },
+    );
+
+    expect(readPayload(result)).toEqual({
+      success: true,
+      appliedEvent: { scope: "creature", type: "STABILIZE" },
+      warnings: [
+        {
+          code: "external_table_fact",
+          message: "The table declared the creature stable.",
+        },
+      ],
+      state: { hp: 0, stable: true },
+    });
+  });
+
+  test("record_table_event rejects scope mismatches", () => {
+    const creatureHost = createDemoHost();
+    const battleHost = createBattleHost();
+
+    const battleOnCreature = handleToolCall(
+      creatureHost,
+      "record_table_event",
+      {
+        scope: "battle",
+        type: "BATTLE_HEAL",
+      },
+    );
+    expect("isError" in battleOnCreature && battleOnCreature.isError).toBe(
+      true,
+    );
+    expect(readPayload(battleOnCreature)).toEqual({
+      error:
+        "Table event scope battle does not match the current creature host.",
+      details: "TABLE_EVENT_SCOPE_MISMATCH",
+    });
+
+    const creatureOnBattle = handleToolCall(battleHost, "record_table_event", {
+      scope: "creature",
+      type: "HEAL",
+    });
+    expect("isError" in creatureOnBattle && creatureOnBattle.isError).toBe(
+      true,
+    );
+    expect(readPayload(creatureOnBattle)).toEqual({
+      error:
+        "Table event scope creature does not match the current battle host.",
+      details: "TABLE_EVENT_SCOPE_MISMATCH",
+    });
   });
 
   test("execute_control_command rejects excess turn runtime facts", () => {
@@ -495,10 +567,20 @@ describe("MCP server adapter", () => {
 
     expect("isError" in response && response.isError).toBe(true);
     expect(readPayload(response)).toEqual({
-      error: "Table event is not implemented yet",
-      details: {
+      success: false,
+      appliedEvent: null,
+      warnings: [
+        {
+          code: "unsupported_domain_gap",
+          message:
+            "HEAL is reserved for the warning-aware table-event surface but is not wired to domain semantics yet.",
+        },
+      ],
+      state: before,
+      error: {
         code: "TABLE_EVENT_NOT_IMPLEMENTED",
-        command: { scope: "creature", type: "HEAL" },
+        message: "Table event is not implemented yet",
+        event: { scope: "creature", type: "HEAL" },
       },
     });
     expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
@@ -515,10 +597,20 @@ describe("MCP server adapter", () => {
 
     expect("isError" in response && response.isError).toBe(true);
     expect(readPayload(response)).toEqual({
-      error: "Table event is not implemented yet",
-      details: {
+      success: false,
+      appliedEvent: null,
+      warnings: [
+        {
+          code: "unsupported_domain_gap",
+          message:
+            "BATTLE_HEAL is reserved for the warning-aware table-event surface but is not wired to domain semantics yet.",
+        },
+      ],
+      state: before,
+      error: {
         code: "TABLE_EVENT_NOT_IMPLEMENTED",
-        command: { scope: "battle", type: "BATTLE_HEAL" },
+        message: "Table event is not implemented yet",
+        event: { scope: "battle", type: "BATTLE_HEAL" },
       },
     });
     expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);

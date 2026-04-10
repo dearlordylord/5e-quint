@@ -1,7 +1,5 @@
 import { Match, Schema } from "effect";
-import { type ActorRefFrom } from "xstate";
 
-import { battleMachine } from "@dnd/core/battle-machine.ts";
 import type { BattleEvent } from "@dnd/core/battle-machine-types.ts";
 import {
   ControlCommandSchema,
@@ -9,9 +7,11 @@ import {
   type ControlCommand,
 } from "@dnd/core/available-actions.ts";
 import { encodeDndContext } from "@dnd/core/context-encoding.ts";
-import { creatureMachine } from "@dnd/core/machine.ts";
 
 import {
+  type BattleActor,
+  type DndActor,
+  type SupportedActionHost,
   battleSnapshotUnchanged,
   encodeBattleRuntimeState,
   errorContent,
@@ -19,11 +19,6 @@ import {
   snapshotFingerprint,
 } from "./server-shared.ts";
 
-type DndActor = ActorRefFrom<typeof creatureMachine>;
-type BattleActor = ActorRefFrom<typeof battleMachine>;
-type SupportedActionHost =
-  | { readonly scope: "creature"; readonly actor: DndActor }
-  | { readonly scope: "battle"; readonly actor: BattleActor };
 type DndMachineEvent = Parameters<DndActor["send"]>[0];
 
 const strictCommandParseOptions = { onExcessProperty: "error" } as const;
