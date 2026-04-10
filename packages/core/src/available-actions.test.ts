@@ -2117,6 +2117,198 @@ describe("available actions contract", () => {
     );
   });
 
+  test("surfaces ENTER_WILD_SHAPE for a level 2+ druid with charges and bonus action available", () => {
+    const actor = makeActorWithInput(DRUID_5_INPUT);
+    actor.send({ type: "ENTER_COMBAT" });
+    actor.send({ type: "START_TURN" });
+
+    expect(
+      getAvailableActions(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+      ),
+    ).toContainEqual(
+      creatureToken({
+        type: "ENTER_WILD_SHAPE",
+        cost: { bonusAction: true, charge: "wildShape" },
+        outcome: {
+          summary: "Shape-shift into a beast form, gaining 5 temporary HP",
+        },
+      }),
+    );
+
+    const request = expectRequest(
+      resolveAction(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+        creatureResolved({ type: "ENTER_WILD_SHAPE" }),
+      ),
+    );
+    const finalized = finalizeResolution(
+      request,
+      { runtime: "none" },
+      actor.getSnapshot().context,
+    );
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "ENTER_WILD_SHAPE" },
+      outcome: "Shape-shift into a beast form, gaining 5 temporary HP",
+    });
+    if (!finalized.ok)
+      throw new Error("expected ENTER_WILD_SHAPE finalization to succeed");
+    actor.send(finalized.event);
+    expect(actor.getSnapshot().context.classStates.druid?.inWildShape).toBe(
+      true,
+    );
+    expect(
+      actor.getSnapshot().context.classStates.druid?.wildShapeCharges,
+    ).toBe(1);
+    expect(actor.getSnapshot().context.bonusActionUsed).toBe(true);
+    expect(actor.getSnapshot().context.tempHp).toBe(5);
+  });
+
+  test("surfaces EXIT_WILD_SHAPE only when in wild shape with bonus action available", () => {
+    const actor = makeActorWithInput(DRUID_5_INPUT);
+    actor.send({ type: "ENTER_COMBAT" });
+    actor.send({ type: "START_TURN" });
+
+    expect(
+      getAvailableActions(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+      ).map((token) => token.type),
+    ).not.toContain("EXIT_WILD_SHAPE");
+
+    actor.send({ type: "ENTER_WILD_SHAPE" });
+    actor.send({ type: "END_TURN" });
+    actor.send({ type: "START_TURN" });
+
+    expect(
+      getAvailableActions(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+      ),
+    ).toContainEqual(
+      creatureToken({
+        type: "EXIT_WILD_SHAPE",
+        cost: { bonusAction: true },
+        outcome: {
+          summary: "Revert from beast form to your normal form",
+        },
+      }),
+    );
+
+    const request = expectRequest(
+      resolveAction(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+        creatureResolved({ type: "EXIT_WILD_SHAPE" }),
+      ),
+    );
+    const finalized = finalizeResolution(
+      request,
+      { runtime: "none" },
+      actor.getSnapshot().context,
+    );
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "EXIT_WILD_SHAPE" },
+      outcome: "Revert from beast form to your normal form",
+    });
+    if (!finalized.ok)
+      throw new Error("expected EXIT_WILD_SHAPE finalization to succeed");
+    actor.send(finalized.event);
+    expect(actor.getSnapshot().context.classStates.druid?.inWildShape).toBe(
+      false,
+    );
+    expect(actor.getSnapshot().context.bonusActionUsed).toBe(true);
+  });
+
+  test("surfaces USE_WILD_RESURGENCE_SLOT only when the level 1 slot can be restored", () => {
+    const fullSlotActor = makeActorWithInput(DRUID_5_INPUT);
+    fullSlotActor.send({ type: "ENTER_COMBAT" });
+    fullSlotActor.send({ type: "START_TURN" });
+
+    expect(
+      getAvailableActions(
+        fullSlotActor.getSnapshot().context,
+        fullSlotActor.getSnapshot().tags,
+      ).map((token) => token.type),
+    ).not.toContain("USE_WILD_RESURGENCE_SLOT");
+    expect(
+      resolveAction(
+        fullSlotActor.getSnapshot().context,
+        fullSlotActor.getSnapshot().tags,
+        creatureResolved({ type: "USE_WILD_RESURGENCE_SLOT" }),
+      ),
+    ).toEqual({
+      code: "ACTION_NOT_AVAILABLE",
+      message:
+        "USE_WILD_RESURGENCE_SLOT is not currently available in this state.",
+    });
+
+    const actor = makeActorWithInput({
+      ...DRUID_5_INPUT,
+      slotsCurrent: [3, 3, 2, 0, 0, 0, 0, 0, 0],
+    });
+    actor.send({ type: "ENTER_COMBAT" });
+    actor.send({ type: "START_TURN" });
+
+    expect(
+      getAvailableActions(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+      ),
+    ).toContainEqual(
+      creatureToken({
+        type: "USE_WILD_RESURGENCE_SLOT",
+        cost: { charge: "wildShape" },
+        outcome: {
+          summary:
+            "Expend one Wild Shape use to regain a level 1 spell slot; once per Long Rest",
+        },
+      }),
+    );
+
+    const request = expectRequest(
+      resolveAction(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+        creatureResolved({ type: "USE_WILD_RESURGENCE_SLOT" }),
+      ),
+    );
+    const finalized = finalizeResolution(
+      request,
+      { runtime: "none" },
+      actor.getSnapshot().context,
+    );
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "USE_WILD_RESURGENCE_SLOT" },
+      outcome:
+        "Expend one Wild Shape use to regain a level 1 spell slot; once per Long Rest",
+    });
+    if (!finalized.ok)
+      throw new Error(
+        "expected USE_WILD_RESURGENCE_SLOT finalization to succeed",
+      );
+    actor.send(finalized.event);
+    expect(actor.getSnapshot().context.slotsCurrent[0]).toBe(4);
+    expect(
+      actor.getSnapshot().context.classStates.druid?.wildShapeCharges,
+    ).toBe(1);
+    expect(
+      actor.getSnapshot().context.classStates.druid
+        ?.wildResurgenceSlotUsedThisLR,
+    ).toBe(true);
+    expect(
+      getAvailableActions(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+      ).map((token) => token.type),
+    ).not.toContain("USE_WILD_RESURGENCE_SLOT");
+  });
+
   test("spent resources remove action, bonus-action, and charge-gated free tokens from the grouped surface", () => {
     const actor = makeActorWithInput(PHASE_2_MULTIGROUP_INPUT);
     actor.send({

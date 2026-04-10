@@ -92,6 +92,7 @@ export const RESOURCE_COST_CHARGES = [
   "tireless",
   "uncannyMetabolism",
   "wholenessOfBody",
+  "wildShape",
 ] as const;
 export type ResourceCostCharge = (typeof RESOURCE_COST_CHARGES)[number];
 
@@ -160,6 +161,9 @@ export const SUPPORTED_ACTION_TYPES = [
   "USE_METAMAGIC",
   "USE_INNATE_SORCERY",
   "USE_MAGICAL_CUNNING",
+  "ENTER_WILD_SHAPE",
+  "EXIT_WILD_SHAPE",
+  "USE_WILD_RESURGENCE_SLOT",
   "USE_MYSTIC_ARCANUM",
   "USE_SECOND_WIND",
   "USE_TIRELESS",
@@ -230,6 +234,9 @@ type TokenByType = {
   };
   readonly USE_INNATE_SORCERY: SimpleToken<"USE_INNATE_SORCERY">;
   readonly USE_MAGICAL_CUNNING: SimpleToken<"USE_MAGICAL_CUNNING">;
+  readonly ENTER_WILD_SHAPE: SimpleToken<"ENTER_WILD_SHAPE">;
+  readonly EXIT_WILD_SHAPE: SimpleToken<"EXIT_WILD_SHAPE">;
+  readonly USE_WILD_RESURGENCE_SLOT: SimpleToken<"USE_WILD_RESURGENCE_SLOT">;
   readonly USE_MYSTIC_ARCANUM: SimpleToken<"USE_MYSTIC_ARCANUM"> & {
     readonly spellLevel: Hole<SpellSlotLevelValue>;
   };
@@ -472,6 +479,11 @@ type ResolvedTokenByType = {
   };
   readonly USE_INNATE_SORCERY: { readonly type: "USE_INNATE_SORCERY" };
   readonly USE_MAGICAL_CUNNING: { readonly type: "USE_MAGICAL_CUNNING" };
+  readonly ENTER_WILD_SHAPE: { readonly type: "ENTER_WILD_SHAPE" };
+  readonly EXIT_WILD_SHAPE: { readonly type: "EXIT_WILD_SHAPE" };
+  readonly USE_WILD_RESURGENCE_SLOT: {
+    readonly type: "USE_WILD_RESURGENCE_SLOT";
+  };
   readonly USE_MYSTIC_ARCANUM: {
     readonly type: "USE_MYSTIC_ARCANUM";
     readonly spellLevel: SpellSlotLevelValue;
@@ -794,6 +806,15 @@ const UseInnateSorceryResolvedActionSchema = Schema.Struct({
 const UseMagicalCunningResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_MAGICAL_CUNNING"),
 });
+const EnterWildShapeResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("ENTER_WILD_SHAPE"),
+});
+const ExitWildShapeResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("EXIT_WILD_SHAPE"),
+});
+const UseWildResurgenceSlotResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_WILD_RESURGENCE_SLOT"),
+});
 const UseMysticArcanumResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_MYSTIC_ARCANUM"),
   spellLevel: SpellSlotLevel,
@@ -884,6 +905,9 @@ const SecondaryCreatureResolvedActionTokenSchema = Schema.Union(
   UseMetamagicResolvedActionSchema,
   UseInnateSorceryResolvedActionSchema,
   UseMagicalCunningResolvedActionSchema,
+  EnterWildShapeResolvedActionSchema,
+  ExitWildShapeResolvedActionSchema,
+  UseWildResurgenceSlotResolvedActionSchema,
   UseMysticArcanumResolvedActionSchema,
   UseSecondWindResolvedActionSchema,
   UseTirelessResolvedActionSchema,
@@ -1652,6 +1676,36 @@ export type ResolutionRequest =
       readonly event: Extract<
         DndEvent,
         { readonly type: "USE_MAGICAL_CUNNING" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        ResolvedActionToken,
+        { readonly type: "ENTER_WILD_SHAPE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<DndEvent, { readonly type: "ENTER_WILD_SHAPE" }>;
+    }
+  | {
+      readonly token: Extract<
+        ResolvedActionToken,
+        { readonly type: "EXIT_WILD_SHAPE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<DndEvent, { readonly type: "EXIT_WILD_SHAPE" }>;
+    }
+  | {
+      readonly token: Extract<
+        ResolvedActionToken,
+        { readonly type: "USE_WILD_RESURGENCE_SLOT" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        DndEvent,
+        { readonly type: "USE_WILD_RESURGENCE_SLOT" }
       >;
     }
   | {
@@ -2567,6 +2621,44 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
             outcome: {
               summary:
                 "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
+            },
+          }
+        : null,
+  },
+  ENTER_WILD_SHAPE: {
+    buildToken: (context) =>
+      guards.canEnterWildShape(guardArgs(context))
+        ? {
+            type: "ENTER_WILD_SHAPE",
+            cost: { bonusAction: true, charge: "wildShape" },
+            outcome: {
+              summary: `Shape-shift into a beast form, gaining ${context.classStates.druid?.level ?? 0} temporary HP`,
+            },
+          }
+        : null,
+  },
+  EXIT_WILD_SHAPE: {
+    buildToken: (context) =>
+      guards.canExitWildShape(guardArgs(context))
+        ? {
+            type: "EXIT_WILD_SHAPE",
+            cost: { bonusAction: true },
+            outcome: {
+              summary: "Revert from beast form to your normal form",
+            },
+          }
+        : null,
+  },
+  USE_WILD_RESURGENCE_SLOT: {
+    buildToken: (context) =>
+      guards.canWildResurgenceSlot(guardArgs(context)) &&
+      context.slotsCurrent[0] < context.slotsMax[0]
+        ? {
+            type: "USE_WILD_RESURGENCE_SLOT",
+            cost: { charge: "wildShape" },
+            outcome: {
+              summary:
+                "Expend one Wild Shape use to regain a level 1 spell slot; once per Long Rest",
             },
           }
         : null,
@@ -4334,6 +4426,27 @@ export function resolveAction(
         outcome: available.outcome.summary,
         runtime: "none",
         event: { type: "USE_MAGICAL_CUNNING" },
+      };
+    case "ENTER_WILD_SHAPE":
+      return {
+        token,
+        outcome: available.outcome.summary,
+        runtime: "none",
+        event: { type: "ENTER_WILD_SHAPE" },
+      };
+    case "EXIT_WILD_SHAPE":
+      return {
+        token,
+        outcome: available.outcome.summary,
+        runtime: "none",
+        event: { type: "EXIT_WILD_SHAPE" },
+      };
+    case "USE_WILD_RESURGENCE_SLOT":
+      return {
+        token,
+        outcome: available.outcome.summary,
+        runtime: "none",
+        event: { type: "USE_WILD_RESURGENCE_SLOT" },
       };
     case "USE_MYSTIC_ARCANUM":
       if (!legalMysticArcanumLevels(context).includes(token.spellLevel)) {

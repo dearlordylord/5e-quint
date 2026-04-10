@@ -1790,6 +1790,143 @@ describe("MCP server adapter", () => {
     expect(innateSorceryPayload.state.bonusActionUsed).toBe(true);
   });
 
+  test("execute_action supports druid Wild Shape enter/exit and Wild Resurgence slot recovery", () => {
+    const fullSlotHost = createDemoHost({
+      maxHp: 28,
+      druidLevel: classLevel(5),
+      slotsMax: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+      slotsCurrent: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    handleToolCall(
+      fullSlotHost,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      fullSlotHost,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
+    const fullSlotAvailable = readPayload(
+      handleToolCall(fullSlotHost, "get_available_actions", {}),
+    );
+    expect(
+      fullSlotAvailable.free.map(
+        (action: { readonly type: string }) => action.type,
+      ),
+    ).not.toContain("USE_WILD_RESURGENCE_SLOT");
+    const fullSlotResurgence = handleToolCall(
+      fullSlotHost,
+      "execute_action",
+      creatureResolved({ type: "USE_WILD_RESURGENCE_SLOT" }),
+    );
+    expect("isError" in fullSlotResurgence && fullSlotResurgence.isError).toBe(
+      true,
+    );
+    expect(readPayload(fullSlotResurgence)).toEqual({
+      error:
+        "USE_WILD_RESURGENCE_SLOT is not currently available in this state.",
+      details: "ACTION_NOT_AVAILABLE",
+    });
+
+    const host = createDemoHost({
+      maxHp: 28,
+      druidLevel: classLevel(5),
+      slotsMax: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+      slotsCurrent: [3, 3, 2, 0, 0, 0, 0, 0, 0],
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
+
+    const available = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    );
+    expect(available.bonusAction).toContainEqual(
+      creatureToken({
+        type: "ENTER_WILD_SHAPE",
+        cost: { bonusAction: true, charge: "wildShape" },
+        outcome: {
+          summary: "Shape-shift into a beast form, gaining 5 temporary HP",
+        },
+      }),
+    );
+    expect(available.free).toContainEqual(
+      creatureToken({
+        type: "USE_WILD_RESURGENCE_SLOT",
+        cost: { charge: "wildShape" },
+        outcome: {
+          summary:
+            "Expend one Wild Shape use to regain a level 1 spell slot; once per Long Rest",
+        },
+      }),
+    );
+
+    const resurgence = handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "USE_WILD_RESURGENCE_SLOT" }),
+    );
+    expect("isError" in resurgence).toBe(false);
+    const resurgencePayload = readPayload(resurgence);
+    expect(resurgencePayload.success).toBe(true);
+    expect(resurgencePayload.state.slotsCurrent[0]).toBe(4);
+    expect(resurgencePayload.state.classStates.druid.wildShapeCharges).toBe(1);
+    expect(
+      resurgencePayload.state.classStates.druid.wildResurgenceSlotUsedThisLR,
+    ).toBe(true);
+
+    const enterWS = handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_WILD_SHAPE" }),
+    );
+    expect("isError" in enterWS).toBe(false);
+    const enterWSPayload = readPayload(enterWS);
+    expect(enterWSPayload.success).toBe(true);
+    expect(enterWSPayload.state.classStates.druid.inWildShape).toBe(true);
+    expect(enterWSPayload.state.bonusActionUsed).toBe(true);
+    expect(enterWSPayload.state.tempHp).toBe(5);
+
+    host.actor.send({ type: "END_TURN" });
+    host.actor.send({ type: "START_TURN" });
+
+    const afterEnter = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    );
+    expect(afterEnter.bonusAction).toContainEqual(
+      creatureToken({
+        type: "EXIT_WILD_SHAPE",
+        cost: { bonusAction: true },
+        outcome: {
+          summary: "Revert from beast form to your normal form",
+        },
+      }),
+    );
+
+    const exitWS = handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "EXIT_WILD_SHAPE" }),
+    );
+    expect("isError" in exitWS).toBe(false);
+    const exitWSPayload = readPayload(exitWS);
+    expect(exitWSPayload.success).toBe(true);
+    expect(exitWSPayload.state.classStates.druid.inWildShape).toBe(false);
+    expect(exitWSPayload.state.bonusActionUsed).toBe(true);
+  });
+
   test("execute_action supports a dice-roll runtime action with USE_TIRELESS", () => {
     const host = createDemoHost({
       maxHp: 32,
