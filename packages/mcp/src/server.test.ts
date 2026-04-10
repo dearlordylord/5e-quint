@@ -1675,6 +1675,98 @@ describe("MCP server adapter", () => {
     });
   });
 
+  test("execute_action returns compact error for unknown action type", () => {
+    const response = handleToolCall(createDemoHost(), "execute_action", {
+      type: "TOTALLY_FAKE_ACTION",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Unknown execute_action type: TOTALLY_FAKE_ACTION",
+      details: {
+        code: "UNKNOWN_ACTION_TYPE",
+        type: "TOTALLY_FAKE_ACTION",
+      },
+    });
+  });
+
+  test("execute_action returns compact error for missing action type", () => {
+    const response = handleToolCall(createDemoHost(), "execute_action", {});
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Unknown execute_action type: (missing)",
+      details: {
+        code: "UNKNOWN_ACTION_TYPE",
+        type: null,
+      },
+    });
+  });
+
+  test("execute_action keeps schema validation for malformed known action payloads", () => {
+    const response = handleToolCall(createDemoHost(), "execute_action", {
+      type: "SHORT_REST",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    const payload = readPayload(response);
+    expect(payload.error).toBe("Invalid execute_action input");
+    expect(String(payload.details)).toContain("spendHitDice");
+  });
+
+  test("execute_action keeps scope mismatch behavior for known battle action types", () => {
+    const response = handleToolCall(createDemoHost(), "execute_action", {
+      scope: "battle",
+      type: "BATTLE_DASH",
+      actorId: "fighter",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Action scope battle does not match the current creature host.",
+      details: "ACTION_SCOPE_MISMATCH",
+    });
+  });
+
+  test("preview_action returns compact error for unknown action type", () => {
+    const response = handleToolCall(createDemoHost(), "preview_action", {
+      type: "TOTALLY_FAKE_ACTION",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Unknown preview_action type: TOTALLY_FAKE_ACTION",
+      details: {
+        code: "UNKNOWN_ACTION_TYPE",
+        type: "TOTALLY_FAKE_ACTION",
+      },
+    });
+  });
+
+  test("preview_action returns compact error for missing action type", () => {
+    const response = handleToolCall(createDemoHost(), "preview_action", {});
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Unknown preview_action type: (missing)",
+      details: {
+        code: "UNKNOWN_ACTION_TYPE",
+        type: null,
+      },
+    });
+  });
+
+  test("preview_action keeps schema validation for malformed known action payloads", () => {
+    const response = handleToolCall(createDemoHost(), "preview_action", {
+      type: "SHORT_REST",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    const payload = readPayload(response);
+    expect(payload.error).toBe("Invalid preview_action input");
+    expect(String(payload.details)).toContain("spendHitDice");
+  });
+
   test("preview_action summarizes a creature action without mutating state", () => {
     const host = createDemoHost();
     handleToolCall(

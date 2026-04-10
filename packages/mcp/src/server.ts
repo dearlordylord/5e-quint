@@ -272,51 +272,137 @@ function executeBattleResolvedAction(
   });
 }
 
-function executeResolvedAction(host: SupportedActionHost, args: unknown) {
+type SchemaAstNode = {
+  readonly _tag: string;
+  readonly types?: ReadonlyArray<SchemaAstNode>;
+  readonly from?: SchemaAstNode;
+  readonly propertySignatures?: ReadonlyArray<{
+    readonly name: PropertyKey;
+    readonly type: SchemaAstNode;
+  }>;
+  readonly literal?: unknown;
+};
+
+function addResolvedActionTypesFromAst(
+  ast: SchemaAstNode,
+  actionTypes: Set<string>,
+): void {
+  if (ast._tag === "Union" && ast.types) {
+    for (const type of ast.types) {
+      addResolvedActionTypesFromAst(type, actionTypes);
+    }
+    return;
+  }
+
+  if (ast._tag === "Transformation" && ast.from) {
+    addResolvedActionTypesFromAst(ast.from, actionTypes);
+    return;
+  }
+
+  if (ast._tag !== "TypeLiteral" || !ast.propertySignatures) {
+    return;
+  }
+
+  for (const property of ast.propertySignatures) {
+    if (property.name !== "type") continue;
+    if (property.type._tag !== "Literal") continue;
+    if (typeof property.type.literal !== "string") continue;
+    actionTypes.add(property.type.literal);
+  }
+}
+
+function resolvedActionTypesFromSchema(): ReadonlySet<string> {
+  const actionTypes = new Set<string>();
+  addResolvedActionTypesFromAst(
+    ResolvedActionTokenSchema.ast as SchemaAstNode,
+    actionTypes,
+  );
+  return actionTypes;
+}
+
+const RESOLVED_ACTION_TYPES = resolvedActionTypesFromSchema();
+
+function unknownActionTypeContent(
+  toolName: "execute_action" | "preview_action",
+  type: unknown,
+) {
+  const messageType =
+    typeof type === "string" ? type : type == null ? "(missing)" : String(type);
+  return errorContent(`Unknown ${toolName} type: ${messageType}`, {
+    code: "UNKNOWN_ACTION_TYPE",
+    type: typeof type === "string" ? type : null,
+  });
+}
+
+function decodeResolvedActionInput(
+  toolName: "execute_action" | "preview_action",
+  args: unknown,
+) {
+  if (typeof args !== "object" || args === null || Array.isArray(args)) {
+    return unknownActionTypeContent(toolName, null);
+  }
+
+  const type = Reflect.get(args, "type");
+  if (typeof type !== "string") {
+    return unknownActionTypeContent(toolName, type);
+  }
+  if (!RESOLVED_ACTION_TYPES.has(type)) {
+    return unknownActionTypeContent(toolName, type);
+  }
+
   const decoded = Schema.decodeUnknownEither(ResolvedActionTokenSchema)(args);
   if (decoded._tag === "Left") {
-    return errorContent("Invalid execute_action input", String(decoded.left));
+    return errorContent(`Invalid ${toolName} input`, String(decoded.left));
+  }
+
+  return decoded.right;
+}
+
+function executeResolvedAction(host: SupportedActionHost, args: unknown) {
+  const decoded = decodeResolvedActionInput("execute_action", args);
+  if ("isError" in decoded) {
+    return decoded;
   }
 
   return Match.value(host).pipe(
     Match.when({ scope: "creature" }, ({ actor }) => {
-      if (decoded.right.scope !== "creature") {
-        return scopeMismatchContent(decoded.right.scope, "creature");
+      if (decoded.scope !== "creature") {
+        return scopeMismatchContent(decoded.scope, "creature");
       }
-      return executeCreatureResolvedAction(actor, decoded.right);
+      return executeCreatureResolvedAction(actor, decoded);
     }),
     Match.when({ scope: "battle" }, ({ actor }) => {
-      if (decoded.right.scope !== "battle") {
-        return scopeMismatchContent(decoded.right.scope, "battle");
+      if (decoded.scope !== "battle") {
+        return scopeMismatchContent(decoded.scope, "battle");
       }
-      return executeBattleResolvedAction(actor, decoded.right);
+      return executeBattleResolvedAction(actor, decoded);
     }),
     Match.exhaustive,
   );
 }
 
 function previewResolvedAction(host: SupportedActionHost, args: unknown) {
-  const decoded = Schema.decodeUnknownEither(ResolvedActionTokenSchema)(args);
-  if (decoded._tag === "Left") {
-    return errorContent("Invalid preview_action input", String(decoded.left));
+  const decoded = decodeResolvedActionInput("preview_action", args);
+  if ("isError" in decoded) {
+    return decoded;
   }
 
   return Match.value(host).pipe(
     Match.when({ scope: "creature" }, ({ actor }) => {
-      if (decoded.right.scope !== "creature") {
-        return scopeMismatchContent(decoded.right.scope, "creature");
+      if (decoded.scope !== "creature") {
+        return scopeMismatchContent(decoded.scope, "creature");
       }
       const snapshot = actor.getSnapshot();
       return jsonContent(
-        previewAction(snapshot.context, snapshot.tags, decoded.right),
+        previewAction(snapshot.context, snapshot.tags, decoded),
       );
     }),
     Match.when({ scope: "battle" }, ({ actor }) => {
-      if (decoded.right.scope !== "battle") {
-        return scopeMismatchContent(decoded.right.scope, "battle");
+      if (decoded.scope !== "battle") {
+        return scopeMismatchContent(decoded.scope, "battle");
       }
       return jsonContent(
-        previewBattleAction(actor.getSnapshot().context, decoded.right),
+        previewBattleAction(actor.getSnapshot().context, decoded),
       );
     }),
     Match.exhaustive,

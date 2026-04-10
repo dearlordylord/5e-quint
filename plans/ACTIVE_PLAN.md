@@ -41,7 +41,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 3,
       "id": "MCP0-C",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Short Unknown Action Error"
     },
     {
@@ -183,7 +183,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | ----- | --------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
 | 1     | MCP0-A - Dead-Creature Condition Mutation Bug                         | done                                          | none                                                     | MCP0-B, safer MCP table events                                                      | Closed 2026-04-10: dead-creature condition apply/remove now reject at MCP/XState and no-op in Quint                                                                      | Completed; policy documented in A16        |
 | 2     | MCP0-B - Dead-Creature Exhaustion Mutation Decision                   | done                                          | MCP0-A RAW/dead policy research                          | safer MCP table events                                                              | Closed 2026-04-10: dead-creature exhaustion add/reduce now reject at MCP/XState and no-op in Quint; generic starvation/dehydration exhaustion is also blocked while dead | Completed; policy documented in A16        |
-| 3     | MCP0-C - Short Unknown Action Error                                   | ready-for-implementation-after-light-research | none                                                     | MCP UX and downstream agents                                                        | Add short pre-decode unknown-action error                                                                                                                                | Small MCP adapter fix                      |
+| 3     | MCP0-C - Short Unknown Action Error                                   | done                                          | none                                                     | MCP UX and downstream agents                                                        | Closed 2026-04-10: `execute_action` / `preview_action` now return compact `UNKNOWN_ACTION_TYPE` errors before full decode, while known-action schema validation remains intact | Completed; no downstream plan changes      |
 | 4     | MCP0-D - SHORT_REST Documentation Clarity                             | ready-for-implementation-after-light-research | none                                                     | MCP docs accuracy                                                                   | Clarify action-token ownership; do not add a duplicate command                                                                                                           | Small docs/tool-description fix            |
 | 5     | MCP0-E - EXIT_COMBAT After Death UX Decision                          | ready-for-research                            | MCP0-A policy context                                    | optional UX cleanup                                                                 | Decide whether to keep, hide, or warn                                                                                                                                    | Lower-priority UX decision                 |
 | 6     | B - Battle Size Ownership For Grapple                                 | ready-for-implementation-after-light-research | none                                                     | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns               | Read RAW Grapple/Size and existing owned-size sources, then implement if no duplicate state exists                                                                       | Good implementation slice after MCP0       |
@@ -236,7 +236,7 @@ Merged MCP Fighter vs. Goblin baseline:
 Recommended first coding-loop tasks:
 
 1. **Task MCP0-A: Dead-Creature Condition Mutation Bug** if the goal is the highest-priority MCP correctness fix.
-2. **Task MCP0-C: Short Unknown Action Error** if the goal is a small adapter UX fix.
+2. **Task MCP0-D: SHORT_REST Documentation Clarity** if the goal is a small MCP docs/tool-description fix.
 3. **Task B: Battle Size Ownership For Grapple** if the goal is a concrete implementation slice that unblocks a public battle action after the MCP0 bugs.
 4. **Task A: Condition Consequence Table Completion Research** if the goal is competitor-research follow-through and spec auditability.
 5. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
@@ -406,13 +406,13 @@ Extra research needed:
 
 ### Task 3 - MCP0-C - Short Unknown Action Error
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: MCP UX and downstream agents.
 
-Next action: add a compact pre-decode unknown-action error without changing known-action validation.
+Next action: Closed 2026-04-10. Use the compact unknown-action error path as the MCP baseline for future action-surface work; no downstream plan updates were required.
 
 Problem:
 
@@ -447,9 +447,25 @@ Verification:
 - Focused MCP tests for unknown action type, missing type, malformed known type, and scope mismatch.
 - `pnpm --filter @dnd/mcp test`.
 
-Extra research needed:
+Verification completed:
 
-- Light. Confirm the best core-owned action type source before editing.
+- Confirmed the core-owned discriminator source is `ResolvedActionTokenSchema`; MCP now derives the pre-decode type set from the schema AST instead of maintaining a parallel registry.
+- `/simplify` round 1: removed the need for any new exported action-type list by deriving the discriminator check from the existing core schema. No duplicate MCP/core registry remains.
+- `/simplify` round 2: re-checked the pre-decode path for behavior drift. Unknown and missing types stay compact, while known malformed payloads still fall through to full schema validation and scope mismatch remains unchanged.
+- `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts -t "compact error|missing action type|malformed known action payloads|scope mismatch behavior"`: passed.
+- `pnpm --filter @dnd/mcp lint`: passed.
+- `pnpm --filter @dnd/mcp typecheck`: passed.
+- `pnpm --filter @dnd/mcp test`: passed.
+- `pnpm quality`: failed before reaching typecheck because `packages/core` has pre-existing `prettier --check` drift in `src/battle-machine-actions-attack.ts`, `src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/features/spell-available-actions.ts`, `src/machine-event-extractors.ts`, `src/machine-helpers.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`, and `src/types.ts`. No new `pnpm quality` failure was introduced by MCP0-C.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCP0-C`: revise to `done`.
+  - `MCP0-D`: no-change.
+  - `B`: no-change.
+- Plan edits: marked `MCP0-C` done in the Ralph task index, DAG row, task section, and refreshed the recommended task list to remove the completed item.
 
 ### Task 4 - MCP0-D - SHORT_REST Documentation Clarity
 
