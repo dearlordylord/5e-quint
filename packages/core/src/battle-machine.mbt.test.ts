@@ -528,7 +528,10 @@ const battleDriverSchema = {
     ritual: OB,
   },
   bResolveAoETarget: { targetId: OS, saveRoll: OI },
-  bMove: { threatened: z.any().optional() },
+  bMove: {
+    threatened: z.any().optional(),
+    provocationKind: z.string().optional(),
+  },
   bMovementOADecline: { reactorId: OS },
   bMovementOAAttack: {
     oaAtkRoll: OI,
@@ -539,6 +542,7 @@ const battleDriverSchema = {
     reactorId: OS,
     knockOut: OB,
     isFinesse: OB,
+    attackerWithin5ft: OB,
     hostileWithin5ft: OB,
     targetCanSeeAttacker: OB,
     attackerCanSeeTarget: OB,
@@ -1010,6 +1014,10 @@ function createBattleMachineDriver() {
       bMove: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_MOVE",
+          provocationKind:
+            picks["provocationKind"] === "MPDoesNotProvokeOpportunityAttacks"
+              ? "doesNotProvokeOpportunityAttacks"
+              : "provokesOpportunityAttacks",
           threatened: parseThreatenedSet(picks["threatened"]),
         });
       },

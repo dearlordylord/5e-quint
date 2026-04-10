@@ -1,5 +1,11 @@
 # DAG Runbook 4
 
+## Status
+
+Completed on 2026-04-09.
+
+The repo kept the Quint-first `dnd/` implementation rather than the parallel TS-only `dnd-slopus/` variant. Post-comparison cleanup merged the additional versatile-grip regression coverage, tightened MBT movement-OA schema coverage, and fixed the trigger-taxonomy markdown/doc fallout discovered during review.
+
 ## Purpose
 
 This file is the execution companion for the next large execution-grade batch after the first three DAG batches.
@@ -245,14 +251,20 @@ Record short answers in the PR description or follow-up DAG notes if the impleme
 ### Questions For Runbook 5
 
 1. Is the current hand/weapon ownership seam sufficient for later modifier consumers, or did `versatile-weapon-die-switching` expose a missing battle-owned fact?
+Answer: sufficient for the versatile consumer; no new reposture facility was needed. Spellcasting still relaxes two-handed occupancy through the existing hand-occupancy seam, and the merged regression coverage now locks that in.
 2. Does the available-actions work reveal a stable battle action-token taxonomy that later `dm-override` / transcript work can consume directly?
+Answer: mostly yes. The basic/ready action families now fit the existing action-token surface, though the registry remains repetitive enough that a later cleanup pass should collapse boilerplate rather than copy the pattern outward.
 3. Does `battle-ready-spell-surface` prove that battle spell/reaction exposure can keep using concrete owned windows, or did it reveal pressure toward a generic registry that should be rejected explicitly?
+Answer: still blocked exactly as expected. Nothing in Runbook 4 reduced the need for battle-owned spell payload/trigger facts, so the generic-registry escape hatch should remain rejected.
 
 ### Questions For Runbook 6
 
 1. Is `movement-provocation-kind` enough of a spatial contract for future OA/stealth work, or is another minimal caller-owned movement fact still missing?
+Answer: enough for the current OA slice. The merged coverage shows caller-owned provocation kind plus caller-owned threat sets are sufficient for forced movement and reach-sensitive OA handling without widening into geometry ownership.
 2. Do `forced-movement-vs-oa` and `reach-extends-oa-range` validate that caller-owned threat sets remain the right boundary, or do they expose a need to redesign `battle-hidden-state` / future spatial nodes?
+Answer: they validate the current boundary. Reach-sensitive OA handling needed attack-context plumbing, not battle-owned geometry.
 3. Do the action-surface lanes leave any unresolved token-shape or interrupt-shape inconsistencies that should be settled before later product nodes like `dm-override` and `transcript-port-to-dnd`?
+Answer: no new interrupt-shape redesign surfaced in this batch. The remaining cleanup pressure is registry boilerplate reduction, not a semantic frontier mismatch.
 
 If any of these happen during execution:
 

@@ -34,6 +34,13 @@ export type TriggerType =
   | "TSaveFailed"
   | "TDamageTaken";
 
+export const MOVEMENT_PROVOCATION_KINDS = [
+  "provokesOpportunityAttacks",
+  "doesNotProvokeOpportunityAttacks",
+] as const;
+export type MovementProvocationKind =
+  (typeof MOVEMENT_PROVOCATION_KINDS)[number];
+
 // Reaction decision unions — one per interrupt point, mirroring Quint's ReactionDecision
 export type HitReactionDecision =
   | { readonly tag: "RPass" }
@@ -210,6 +217,7 @@ export type BattleEvent =
     }
   | {
       readonly type: "BATTLE_MOVE";
+      readonly provocationKind: MovementProvocationKind;
       readonly threatened: ReadonlySet<CreatureId>;
     }
   | {
@@ -229,6 +237,7 @@ export type BattleEvent =
       readonly isMelee: true; // OA attacks are always melee per RAW
       readonly weaponProperties?: ReadonlySet<WeaponProperty>;
       readonly isFinesse?: boolean;
+      readonly attackerWithin5ft: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;
       readonly attackerCanSeeTarget: boolean;

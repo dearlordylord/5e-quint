@@ -40,7 +40,12 @@ export function battleMove({
   if (ac.dead || isIncapacitated(ac) || ac.movementRemaining <= 0) return {};
   const cs = setCreature(c.creatures, id, spendMovement(ac, 5, 1));
   // The caller owns geometry and provides the threat set for this 5ft reach-exit checkpoint.
-  if (ac.disengaged) return { creatures: cs };
+  if (
+    ac.disengaged ||
+    e.provocationKind === "doesNotProvokeOpportunityAttacks"
+  ) {
+    return { creatures: cs };
+  }
   const oaEligible = new Set(
     [...e.threatened].filter((tid) => {
       const t = cs.get(tid);
@@ -97,7 +102,7 @@ export function battleMovementOAAttack({
     mv.mover,
     true,
     weaponProperties,
-    true,
+    e.attackerWithin5ft,
     e.hostileWithin5ft,
     e.targetCanSeeAttacker,
     e.attackerCanSeeTarget,

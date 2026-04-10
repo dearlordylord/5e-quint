@@ -388,6 +388,26 @@ function initBattleForProneDiscovery() {
   return actor;
 }
 
+function initBattleForReadyWindow() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  actor.send({ type: "BATTLE_READY" });
+  actor.send({
+    type: "BATTLE_END_TURN",
+    eotSaveSucceeded: false,
+    eotDmg: 0,
+    eotDt: "bludgeoning",
+    eotConSave: true,
+  });
+  return actor;
+}
+
 function initBattleForDeflectDiscovery() {
   return makeBattleActor({
     type: "BATTLE_INIT",
@@ -1837,17 +1857,56 @@ describe("available actions contract", () => {
   test("battle discovery and resolution expose standing from prone during the active turn", () => {
     const actor = initBattleForProneDiscovery();
 
-    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
-      {
-        scope: "battle",
-        actorId: "A",
-        type: "STAND_FROM_PRONE",
-        cost: { movement: 15, shape: "spend" },
-        outcome: {
-          summary: "Spend half your Speed in movement to stand up from Prone",
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_DASH",
+          cost: { action: true },
+          outcome: { summary: "Spend your action to gain extra movement" },
         },
-      },
-    ]);
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_DISENGAGE",
+          cost: { action: true },
+          outcome: {
+            summary:
+              "Spend your action so your movement does not provoke opportunity attacks this turn",
+          },
+        },
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_DODGE",
+          cost: { action: true },
+          outcome: {
+            summary:
+              "Spend your action to impose disadvantage on attacks against you until your next turn starts",
+          },
+        },
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_READY",
+          cost: { action: true },
+          outcome: {
+            summary:
+              "Spend your action to ready an attack for release with your reaction",
+          },
+        },
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "STAND_FROM_PRONE",
+          cost: { movement: 15, shape: "spend" },
+          outcome: {
+            summary: "Spend half your Speed in movement to stand up from Prone",
+          },
+        },
+      ]),
+    );
 
     const request = expectBattleRequest(
       resolveBattleAction(actor.getSnapshot().context, {
@@ -1891,6 +1950,101 @@ describe("available actions contract", () => {
       cost: { movement: 15, shape: "spend" },
       runtime: "none",
       eventType: "BATTLE_STAND_FROM_PRONE",
+    });
+  });
+
+  test("battle discovery exposes basic action tokens during the active turn", () => {
+    const actor = initBattleForProneDiscovery();
+    const tokens = getAvailableBattleActions(actor.getSnapshot().context);
+
+    expect(tokens.map((token) => token.type)).toEqual(
+      expect.arrayContaining([
+        "BATTLE_DASH",
+        "BATTLE_DISENGAGE",
+        "BATTLE_DODGE",
+        "BATTLE_READY",
+        "STAND_FROM_PRONE",
+      ]),
+    );
+  });
+
+  test("battle discovery and resolution expose ready-window pass and release tokens", () => {
+    const actor = initBattleForReadyWindow();
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_READY_PASS",
+          cost: {},
+          outcome: { summary: "Decline to release your readied action" },
+        },
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_READY_RELEASE",
+          targetId: { options: ["B"] },
+          cost: { reaction: true },
+          outcome: {
+            summary:
+              "Spend your reaction to release the readied attack against the chosen target",
+          },
+        },
+      ]),
+    );
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_READY_RELEASE",
+        targetId: "B",
+      }),
+    );
+    expect(request.runtime).toBe("readyAttack");
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "readyAttack",
+          values: {
+            atkRoll: 15,
+            dmg: 5,
+            tgtAc: 10,
+            crit: false,
+            knockOut: false,
+          },
+        },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_READY_RELEASE",
+        releaserId: CreatureId("A"),
+        targetId: CreatureId("B"),
+        atkRoll: 15,
+        dmg: 5,
+        dt: "slashing",
+        damageQualifiers: new Set(),
+        crit: false,
+        tgtAc: armorClass(10),
+        knockOut: false,
+        isMelee: true,
+        weaponProperties: new Set(),
+        attackerWithin5ft: true,
+        hostileWithin5ft: false,
+        targetCanSeeAttacker: true,
+        attackerCanSeeTarget: true,
+        frightSourceInLOS: false,
+        hasAllyAdjacentToTarget: false,
+        saDmg: 0,
+        hitReactionCandidates: new Set(),
+      },
+      outcome:
+        "Spend your reaction to release the readied attack against the chosen target",
     });
   });
 

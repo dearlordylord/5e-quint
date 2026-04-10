@@ -142,8 +142,8 @@ authoritative-d20-modifier-query-surface
 | `authoritative-d20-modifier-query-surface` | facility | complete | none | `armor-training-disadvantage` | Landed authoritative d20 modifier/disadvantage query ownership in machine query/types surfaces; keep here because downstream planning still references the seam |
 | `available-actions-main` | plan | active | none | `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-surface`, `after-damage-reaction-surface`, `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Do not schedule the umbrella directly; schedule the concrete slices below. |
 | `legendary-resistance-fallback` | batch | complete | none | additional battle interrupt breadth | Closed as a narrow AoE failed-save regression slice; no separate breadth batch remains to schedule here |
-| `battle-basic-action-surface` | candidate | ready | `available-actions-main` | unified projection/execution of `dash`, `disengage`, and `dodge` in battle scope | Battle semantics and events already exist; the remaining work is available-actions / MCP projection and deterministic coverage |
-| `battle-ready-action-surface` | candidate | ready | `available-actions-main` | battle-scoped `READY`, `READY_PASS`, and `READY_RELEASE` action-surface support | Ready semantics are already implemented in battle Quint/TS; the gap is honest projection/execution through the unified action surface |
+| `battle-basic-action-surface` | candidate | complete | `available-actions-main` | unified projection/execution of `dash`, `disengage`, and `dodge` in battle scope | Landed in core available-actions and MCP with deterministic action-surface coverage |
+| `battle-ready-action-surface` | candidate | complete | `available-actions-main` | battle-scoped `READY`, `READY_PASS`, and `READY_RELEASE` action-surface support | Landed in core available-actions and MCP over the existing battle ready window; follow-up simplification can reduce registry boilerplate, but the runbook slice is closed |
 | `battle-ready-spell-payload-state` | facility | blocked | `available-actions-main` | `battle-ready-spell-surface` | Newly discovered missing owned state: battle does not yet carry enough spell save/effect payload metadata to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through the action surface |
 | `battle-ready-spell-surface` | candidate | blocked | `available-actions-main`, `battle-ready-spell-payload-state` | battle-scoped `READY_SPELL` and `READY_SPELL_RELEASE` action-surface support | Readied-spell timing exists, but honest action-surface exposure is blocked on battle-owned spell payload/state rather than token plumbing alone |
 | `after-damage-trigger-state` | facility | blocked | `available-actions-main` | `after-damage-reaction-surface` | Newly discovered missing owned state: battle does not yet carry enough after-damage trigger qualifiers and stored effect/reaction choice metadata to project these reactions honestly |
@@ -173,12 +173,12 @@ authoritative-d20-modifier-query-surface
 | `archery-in-battle` | candidate | blocked | `closed-modifier-algebra` | `fighting-styles-in-battle` | Best first fighting-style consumer: pure +2 bonus to attack rolls with Ranged weapons already exists in content and maps cleanly onto battle attack resolution without new armor or die-face state |
 | `two-weapon-fighting-style-in-battle` | candidate | blocked | `closed-modifier-algebra`, `off-hand-attack-surface` | `fighting-styles-in-battle` | Best second consumer: SRD-backed, already has a content helper, and plugs directly into the battle-owned off-hand damage branch without needing armor state or die-face reroll ownership |
 | `fighting-styles-in-battle` | candidate | blocked | `weapon-property-aware-battle-resolution` | broader weapon semantics | Inspiration item `8` |
-| `versatile-weapon-die-switching` | candidate | ready | `battle-hand-occupancy-state` | hand-usage / wield-state semantics | Now schedulable: use explicit hand occupancy rather than the old “empty off hand means two-handed” shortcut |
-| `movement-provocation-kind` | facility | ready | `oa-path-vocabulary` | `forced-movement-vs-oa` | Minimal spatial growth: encode whether a movement step provokes OAs instead of letting voluntary and forced movement share the same event semantics |
+| `versatile-weapon-die-switching` | candidate | complete | `battle-hand-occupancy-state` | hand-usage / wield-state semantics | Landed in Quint and TS attack resolution with deterministic one-hand/two-hand regression coverage plus spellcasting grip-relaxation coverage |
+| `movement-provocation-kind` | facility | complete | `oa-path-vocabulary` | `forced-movement-vs-oa` | Landed explicit movement provocation kind in battle Quint/TS plus battle domain docs; voluntary and non-provoking movement no longer share the same event meaning |
 | `battle-hidden-state` | facility | blocked | none | `hide-stealth-chain` | Hide/stealth needs explicit hidden/seen battle state; it should not be bundled into OA/reach work now that OA path vocabulary is already caller-owned |
 | `hide-stealth-chain` | candidate | blocked | `battle-hidden-state` | visibility/stealth correctness | Inspiration item `11` |
-| `forced-movement-vs-oa` | candidate | ready | `movement-provocation-kind` | OA legality fidelity | Once movement-provocation kind exists, the remaining work is a narrow legality correction and deterministic OA regression coverage |
-| `reach-extends-oa-range` | candidate | ready | `oa-path-vocabulary` | threat radius fidelity | Caller-owned threat sets already encode reach-exit checkpoints; the remaining work is deterministic coverage proving reach is not hardcoded to 5 feet |
+| `forced-movement-vs-oa` | candidate | complete | `movement-provocation-kind` | OA legality fidelity | Landed deterministic non-provoking-movement coverage and Quint/TS movement-contract parity |
+| `reach-extends-oa-range` | candidate | complete | `oa-path-vocabulary` | threat radius fidelity | Landed deterministic coverage that reach-sensitive OAs are not hardcoded to 5 feet, including prone-sensitive attack-context handling |
 | `max-hp-reduction-state` | facility | complete | none | `max-hp-reduction` | Landed explicit max-HP reduction state in Quint and TS rather than overloading plain `maxHp` |
 | `max-hp-reduction` | candidate | complete | `max-hp-reduction-state` | HP-reduction mechanics | Landed first consumer semantics, including effective-max clamping, reduction/restore actions, battle consistency, and targeted tests |
 | `generic-per-attack-type-bonus-surface` | candidate | blocked | `closed-modifier-algebra` | reusable modifier semantics | Inspiration item `28` |
@@ -187,13 +187,7 @@ authoritative-d20-modifier-query-surface
 
 If scheduling strictly by current value and low dependency risk, outside already-complete runbooks:
 
-1. `versatile-weapon-die-switching`
-2. `battle-basic-action-surface`
-3. `battle-ready-action-surface`
-4. `movement-provocation-kind`
-5. `forced-movement-vs-oa`
-6. `reach-extends-oa-range`
-7. `closed-modifier-algebra`
+1. `closed-modifier-algebra`
 
 ## Research Queue
 

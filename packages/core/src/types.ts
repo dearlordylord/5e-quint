@@ -383,6 +383,8 @@ export interface BattleWeaponProfile {
   readonly damageType: DamageType;
   readonly isMelee: boolean;
   readonly properties: ReadonlySet<WeaponProperty>;
+  readonly damageDie?: number;
+  readonly versatileDie?: number;
   readonly damageQualifiers?: ReadonlySet<DamageQualifier>;
 }
 

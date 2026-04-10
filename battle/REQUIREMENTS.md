@@ -471,4 +471,6 @@ All SRD distances are in **feet** (5ft increments on grid, approximate in theatr
 | MOVE_ENDS | A creature finishes its movement | "creature ends move within 120ft" | Nalfeshnee Pursuit |
 | ALLY_TAKES_ATTACK_ACTION | An ally takes the Attack action | "you take Attack action, forgo one attack" | Warlock Familiar Attack |
 
+Caller-owned implication for the battle engine: a movement step must distinguish "leaves reach and can provoke" from "leaves reach but does not provoke" when the mover is displaced without using its movement, action, Bonus Action, or Reaction.
+
 **Note:** ATTACK_HITS, ATTACK_DAMAGES, and DAMAGE_TAKEN are three distinct interrupt points within the same attack resolution (R20). They are sequential, not alternative. A single attack may trigger reactions at all three points.

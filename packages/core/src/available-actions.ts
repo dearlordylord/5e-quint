@@ -45,6 +45,7 @@ import {
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts";
 import type { DndContext, DndEvent } from "#/machine-types.ts";
 import {
+  armorClass,
   CreatureId,
   SpellSlotLevel,
   spellSlotLevel,
@@ -252,6 +253,49 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_DASH";
+      readonly cost: { readonly action: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_DISENGAGE";
+      readonly cost: { readonly action: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_DODGE";
+      readonly cost: { readonly action: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_READY";
+      readonly cost: { readonly action: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_READY_PASS";
+      readonly cost: {};
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_READY_RELEASE";
+      readonly targetId: Hole<string>;
+      readonly cost: { readonly reaction: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "STAND_FROM_PRONE";
       readonly cost: { readonly movement: number; readonly shape: "spend" };
       readonly outcome: OutcomeDescription;
@@ -392,6 +436,37 @@ type CreatureResolvedActionToken = ResolvedTokenByType[SupportedActionType] & {
   readonly scope: "creature";
 };
 type SpecificBattleResolvedActionToken =
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_DASH";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_DISENGAGE";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_DODGE";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_READY";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_READY_PASS";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_READY_RELEASE";
+      readonly targetId: string;
+    }
   | {
       readonly scope: "battle";
       readonly actorId: string;
@@ -631,6 +706,37 @@ const CastCounterspellBattleResolvedActionSchema = Schema.Struct({
   slotLevel: SpellSlotLevel,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleDashResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_DASH"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleDisengageResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_DISENGAGE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleDodgeResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_DODGE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleReadyResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_READY"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleReadyPassResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_READY_PASS"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleReadyReleaseResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_READY_RELEASE"),
+  targetId: Schema.String,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const StandFromProneBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("STAND_FROM_PRONE"),
@@ -662,6 +768,12 @@ const UseDeflectAttacksBattleResolvedActionSchema = Schema.Struct({
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const BattleResolvedActionTokenSchema = Schema.Union(
+  BattleDashResolvedActionSchema,
+  BattleDisengageResolvedActionSchema,
+  BattleDodgeResolvedActionSchema,
+  BattleReadyResolvedActionSchema,
+  BattleReadyPassResolvedActionSchema,
+  BattleReadyReleaseResolvedActionSchema,
   StandFromProneBattleResolvedActionSchema,
   CastCounterspellBattleResolvedActionSchema,
   CastShieldBattleResolvedActionSchema,
@@ -1200,6 +1312,65 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "BATTLE_DASH" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_DASH" }>;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_DISENGAGE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_DISENGAGE" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_DODGE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_DODGE" }>;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_READY" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_READY" }>;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_READY_PASS" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_READY_PASS" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_READY_RELEASE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "readyAttack";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "STAND_FROM_PRONE" }
       >;
       readonly outcome: string;
@@ -1284,6 +1455,16 @@ export type BattleResolutionRequest =
 
 export type BattleResolutionRuntimeInputs =
   | { readonly runtime: "none" }
+  | {
+      readonly runtime: "readyAttack";
+      readonly values: {
+        readonly atkRoll: number;
+        readonly dmg: number;
+        readonly tgtAc: number;
+        readonly crit: boolean;
+        readonly knockOut: boolean;
+      };
+    }
   | {
       readonly runtime: "counterspell";
       readonly values: { readonly saveSucceeded: boolean };
@@ -2064,6 +2245,48 @@ function battleSpellBaseLevel(spellName: string): number | null {
 export function getAvailableBattleActions(
   context: BattleContext,
 ): ReadonlyArray<BattleActionToken> {
+  if (context.readyCtx != null) {
+    const activeReadyTokens: Array<BattleActionToken> = [];
+    for (const actorId of context.readyCtx.eligibleCreatures) {
+      const actor = context.creatures.get(actorId);
+      if (actor == null || !actor.readiedAction || !actor.reactionAvailable)
+        continue;
+      activeReadyTokens.push(
+        battleToken({
+          actorId,
+          type: "BATTLE_READY_PASS",
+          cost: {},
+          outcome: { summary: "Decline to release your readied action" },
+        }),
+      );
+      if (actor.readiedSpellParams == null) {
+        const targetOptions = [...context.creatures.keys()]
+          .filter((creatureId) => creatureId !== actorId)
+          .sort();
+        if (targetOptions.length > 0) {
+          activeReadyTokens.push(
+            battleToken<
+              Extract<
+                BattleActionToken,
+                { readonly type: "BATTLE_READY_RELEASE" }
+              >
+            >({
+              actorId,
+              type: "BATTLE_READY_RELEASE",
+              targetId: { options: targetOptions },
+              cost: { reaction: true },
+              outcome: {
+                summary:
+                  "Spend your reaction to release the readied attack against the chosen target",
+              },
+            }),
+          );
+        }
+      }
+    }
+    return activeReadyTokens;
+  }
+
   const awaitCtx = context.awaitCtx;
   if (awaitCtx == null) {
     const activeCreatureId = context.initiative[context.turnIndex];
@@ -2072,30 +2295,75 @@ export function getAvailableBattleActions(
     if (
       !context.turnStarted ||
       activeCreature == null ||
-      !activeCreature.prone ||
       activeCreature.dead ||
       isIncapacitated(activeCreature)
     ) {
       return [];
     }
-    const standCost = Math.floor(activeCreature.effectiveSpeed / 2);
-    if (
-      standCost <= 0 ||
-      standCost > activeCreature.movementRemaining
-    ) {
-      return [];
+    const tokens: Array<BattleActionToken> = [];
+    if (activeCreature.actionsRemaining > 0) {
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_DASH",
+          cost: { action: true },
+          outcome: { summary: "Spend your action to gain extra movement" },
+        }),
+      );
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_DISENGAGE",
+          cost: { action: true },
+          outcome: {
+            summary:
+              "Spend your action so your movement does not provoke opportunity attacks this turn",
+          },
+        }),
+      );
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_DODGE",
+          cost: { action: true },
+          outcome: {
+            summary:
+              "Spend your action to impose disadvantage on attacks against you until your next turn starts",
+          },
+        }),
+      );
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_READY",
+          cost: { action: true },
+          outcome: {
+            summary:
+              "Spend your action to ready an attack for release with your reaction",
+          },
+        }),
+      );
     }
-    return [
-      battleToken({
-        actorId: activeCreatureId,
-        type: "STAND_FROM_PRONE",
-        cost: { movement: standCost, shape: "spend" },
-        outcome: {
-          summary:
-            "Spend half your Speed in movement to stand up from Prone",
-        },
-      }),
-    ];
+    if (activeCreature.prone) {
+      const standCost = Math.floor(activeCreature.effectiveSpeed / 2);
+      if (
+        standCost > 0 &&
+        standCost <= activeCreature.movementRemaining
+      ) {
+        tokens.push(
+          battleToken({
+            actorId: activeCreatureId,
+            type: "STAND_FROM_PRONE",
+            cost: { movement: standCost, shape: "spend" },
+            outcome: {
+              summary:
+                "Spend half your Speed in movement to stand up from Prone",
+            },
+          }),
+        );
+      }
+    }
+    return tokens;
   }
 
   const interrupt = awaitCtx.interrupt;
@@ -2176,6 +2444,52 @@ export function resolveBattleAction(
   }
 
   return Match.value(token).pipe(
+    Match.when({ type: "BATTLE_DASH" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: { type: "BATTLE_DASH" as const },
+    })),
+    Match.when({ type: "BATTLE_DISENGAGE" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: { type: "BATTLE_DISENGAGE" as const },
+    })),
+    Match.when({ type: "BATTLE_DODGE" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: { type: "BATTLE_DODGE" as const },
+    })),
+    Match.when({ type: "BATTLE_READY" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: { type: "BATTLE_READY" as const },
+    })),
+    Match.when({ type: "BATTLE_READY_PASS" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: { type: "BATTLE_READY_PASS" as const },
+    })),
+    Match.when({ type: "BATTLE_READY_RELEASE" }, (specificToken) => {
+      if (
+        !("targetId" in availableToken) ||
+        !availableToken.targetId.options.includes(specificToken.targetId)
+      ) {
+        return {
+          code: "ACTION_NOT_AVAILABLE" as const,
+          message: `BATTLE_READY_RELEASE against ${specificToken.targetId} is not currently available for ${specificToken.actorId} in this battle state.`,
+        };
+      }
+      return {
+        token: specificToken,
+        outcome: availableToken.outcome.summary,
+        runtime: "readyAttack" as const,
+      };
+    }),
     Match.when({ type: "STAND_FROM_PRONE" }, (specificToken) => ({
       token: specificToken,
       outcome: availableToken.outcome.summary,
@@ -2288,6 +2602,68 @@ export function finalizeBattleResolution(
   }
 
   return Match.value(request).pipe(
+    Match.when({ runtime: "readyAttack" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "readyAttack") {
+        return battleRuntimeMismatch("readyAttack", runtimeInputs.runtime);
+      }
+      if (request.token.type !== "BATTLE_READY_RELEASE") {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Ready-attack runtime cannot finalize ${request.token.type}.`,
+          },
+        };
+      }
+      const actor = context.creatures.get(CreatureId(request.token.actorId));
+      const attackRoll = runtimeInputs.values.atkRoll;
+      const damage = runtimeInputs.values.dmg;
+      const targetAc = runtimeInputs.values.tgtAc;
+      if (attackRoll < 1 || attackRoll > 20) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Ready attack roll must be between 1 and 20.",
+          },
+        };
+      }
+      if (damage < 0) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Ready attack damage must be non-negative.",
+          },
+        };
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_READY_RELEASE",
+          releaserId: CreatureId(request.token.actorId),
+          targetId: CreatureId(request.token.targetId),
+          atkRoll: attackRoll,
+          dmg: damage,
+          dt: actor?.mainHandWeapon?.damageType ?? "slashing",
+          damageQualifiers: actor?.mainHandWeapon?.damageQualifiers ?? new Set(),
+          crit: runtimeInputs.values.crit,
+          tgtAc: armorClass(targetAc),
+          knockOut: runtimeInputs.values.knockOut,
+          isMelee: actor?.mainHandWeapon?.isMelee ?? true,
+          weaponProperties: actor?.mainHandWeapon?.properties ?? new Set(),
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          saDmg: 0,
+          hitReactionCandidates: new Set(),
+        },
+        outcome: request.outcome,
+      };
+    }),
     Match.when(
       { runtime: "counterspell" },
       (counterspellRequest): FinalizedBattleAction => {

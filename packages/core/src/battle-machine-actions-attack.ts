@@ -1,6 +1,7 @@
 import { Match } from "effect";
 
 import {
+  battleMainHandDamageDie,
   prepareHandsForSpellComponents,
   isIncapacitated,
 } from "#/battle-machine-creature.ts";
@@ -207,6 +208,15 @@ export function battleAttack({
     e.weaponProperties ??
     ac.mainHandWeapon?.properties ??
     new Set(e.isFinesse === true ? ["finesse"] : []);
+  const expectedDamageDie = battleMainHandDamageDie(ac, e.isMelee);
+  if (
+    expectedDamageDie != null &&
+    ac.mainHandWeapon != null &&
+    ac.mainHandWeapon.properties.has("versatile") &&
+    e.dieSize !== expectedDamageDie
+  ) {
+    return {};
+  }
   let updatedAc =
     ac.attackActionUsed && ac.extraAttacksRemaining > 0
       ? spendExtraAttack(ac)

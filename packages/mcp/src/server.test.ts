@@ -163,6 +163,28 @@ function initBattleHostWithProneActor() {
   return createBattleHost(actor);
 }
 
+function initBattleHostWithReadyWindow() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  actor.send({ type: "BATTLE_READY" });
+  actor.send({
+    type: "BATTLE_END_TURN",
+    eotSaveSucceeded: false,
+    eotDmg: 0,
+    eotDt: "bludgeoning",
+    eotConSave: true,
+  });
+  return createBattleHost(actor);
+}
+
 function initBattleHostWithDeflectWindow() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -1332,6 +1354,95 @@ describe("MCP server adapter", () => {
         },
       ],
       free: [],
+    });
+  });
+
+  test("battle hosts surface basic battle actions during an active turn", () => {
+    const host = initBattleHostWithProneActor();
+
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual({
+      action: expect.arrayContaining([
+        expect.objectContaining({ type: "BATTLE_DASH", actorId: "A" }),
+        expect.objectContaining({ type: "BATTLE_DISENGAGE", actorId: "A" }),
+        expect.objectContaining({ type: "BATTLE_DODGE", actorId: "A" }),
+        expect.objectContaining({ type: "BATTLE_READY", actorId: "A" }),
+      ]),
+      bonusAction: [],
+      reaction: [],
+      free: [
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "STAND_FROM_PRONE",
+          cost: { movement: 15, shape: "spend" },
+          outcome: {
+            summary: "Spend half your Speed in movement to stand up from Prone",
+          },
+        },
+      ],
+    });
+  });
+
+  test("battle hosts surface and execute ready-window actions through MCP", () => {
+    const host = initBattleHostWithReadyWindow();
+
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual({
+      action: [],
+      bonusAction: [],
+      reaction: [
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_READY_RELEASE",
+          targetId: { options: ["B"] },
+          cost: { reaction: true },
+          outcome: {
+            summary:
+              "Spend your reaction to release the readied attack against the chosen target",
+          },
+        },
+      ],
+      free: [
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_READY_PASS",
+          cost: {},
+          outcome: { summary: "Decline to release your readied action" },
+        },
+      ],
+    });
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_READY_PASS",
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual({
+      success: true,
+      outcome: "Decline to release your readied action",
+      state: {
+        scope: "battle",
+        machineState: { running: "activeTurn" },
+        tags: ["playerTurn"],
+        round: 1,
+        turnIndex: 1,
+        activeCreatureId: "B",
+        initiative: ["A", "B"],
+        creatureIds: ["A", "B"],
+        phase: "activeTurn",
+        awaitingReaction: false,
+        resolvingAoE: false,
+        resolvingMovement: false,
+        awaitingLegendaryAction: false,
+        awaitingReadiedAction: false,
+      },
     });
   });
 

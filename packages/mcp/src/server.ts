@@ -34,6 +34,7 @@ import {
   type ResourceCost,
   type ResolutionRuntimeInputs,
 } from "@dnd/core/available-actions.ts";
+import { battleMainHandDamageDie } from "@dnd/core/battle-machine-creature.ts";
 import { pMartialArtsDie } from "@dnd/core/features/class-monk.ts";
 import { classLevel } from "@dnd/core/types.ts";
 
@@ -119,7 +120,7 @@ export const toolDefinitions = [
   },
   {
     name: "get_available_actions",
-    description: `Returns available scoped action tokens grouped by action economy cost. Currently exposes creature actions: ${EXPOSED_ACTION_TYPES.join(", ")}.`,
+    description: `Returns available scoped action tokens grouped by action economy cost. Creature scope exposes: ${EXPOSED_ACTION_TYPES.join(", ")}. Battle scope exposes the currently owned battle actions and interrupt reactions for the live battle window.`,
     inputSchema: { type: "object" as const, properties: {} },
   },
   {
@@ -313,6 +314,22 @@ function buildBattleRuntimeInputs(
         values: { d10Roll },
       })),
     ),
+    Match.when({ runtime: "readyAttack" }, () => {
+      const actor = context.creatures.get(request.token.actorId as CreatureId);
+      const damageDie = actor == null ? 8 : (battleMainHandDamageDie(actor, true) ?? 8);
+      return Effect.all({
+        atkRoll: Random.nextIntBetween(1, 21),
+        dmg: Random.nextIntBetween(1, damageDie + 1),
+        tgtAc: Random.nextIntBetween(10, 19),
+        crit: Random.nextBoolean,
+        knockOut: Effect.succeed(false),
+      }).pipe(
+        Effect.map((values) => ({
+          runtime: "readyAttack" as const,
+          values,
+        })),
+      );
+    }),
     Match.exhaustive,
   );
 }

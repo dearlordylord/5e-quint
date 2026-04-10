@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 
 import { battleMachine } from "#/battle-machine.ts";
+import { battleMainHandDamageDie } from "#/battle-machine-creature.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import type {
   BattleWeaponProfile,
@@ -53,6 +54,8 @@ const SHORTSWORD: BattleWeaponProfile = {
   name: "Shortsword",
   damageType: "piercing",
   isMelee: true,
+  damageDie: 6,
+  versatileDie: 0,
   properties: new Set(["finesse", "light"]),
 };
 
@@ -60,14 +63,36 @@ const MACE: BattleWeaponProfile = {
   name: "Mace",
   damageType: "bludgeoning",
   isMelee: true,
+  damageDie: 6,
+  versatileDie: 0,
   properties: new Set(),
+};
+
+const LONGSWORD: BattleWeaponProfile = {
+  name: "Longsword",
+  damageType: "slashing",
+  isMelee: true,
+  damageDie: 8,
+  versatileDie: 10,
+  properties: new Set(["versatile"]),
 };
 
 const GREATSWORD: BattleWeaponProfile = {
   name: "Greatsword",
   damageType: "slashing",
   isMelee: true,
+  damageDie: 6,
+  versatileDie: 0,
   properties: new Set(["twoHanded"]),
+};
+
+const WHIP: BattleWeaponProfile = {
+  name: "Whip",
+  damageType: "slashing",
+  isMelee: true,
+  damageDie: 4,
+  versatileDie: 0,
+  properties: new Set(["finesse", "reach"]),
 };
 
 function send(
@@ -307,6 +332,32 @@ function initShieldHandOccupancyBattle() {
         id: CreatureId("B"),
         maxHp: 20,
         kind: "PC",
+        initiativeRoll: 10,
+      },
+    ],
+  });
+  return actor;
+}
+
+function initVersatileBattle(mainHandUsesTwoHands: boolean) {
+  const actor = createActor(battleMachine);
+  actor.start();
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        mainHandWeapon: LONGSWORD,
+        mainHandUsesTwoHands,
+        initiativeRoll: 20,
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        prone: true,
         initiativeRoll: 10,
       },
     ],
@@ -1331,6 +1382,7 @@ describe("battle rules scenario regressions", () => {
 
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set([CreatureId("B")]),
     });
 
@@ -1350,6 +1402,7 @@ describe("battle rules scenario regressions", () => {
       knockOut: false,
       isMelee: true,
       isFinesse: false,
+      attackerWithin5ft: true,
       hostileWithin5ft: false,
       targetCanSeeAttacker: true,
       attackerCanSeeTarget: true,
@@ -1368,6 +1421,7 @@ describe("battle rules scenario regressions", () => {
 
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set([CreatureId("B")]),
     });
 
@@ -1382,6 +1436,7 @@ describe("battle rules scenario regressions", () => {
 
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set([CreatureId("B")]),
     });
 
@@ -1400,6 +1455,7 @@ describe("battle rules scenario regressions", () => {
       knockOut: false,
       isMelee: true,
       isFinesse: false,
+      attackerWithin5ft: true,
       hostileWithin5ft: false,
       targetCanSeeAttacker: true,
       attackerCanSeeTarget: true,
@@ -1437,6 +1493,7 @@ describe("battle rules scenario regressions", () => {
 
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set([CreatureId("B")]),
     });
 
@@ -1444,6 +1501,81 @@ describe("battle rules scenario regressions", () => {
     expect(ctx(actor).movementCtx?.threatenedBy.has(CreatureId("B"))).toBe(
       true,
     );
+  });
+
+  it("natural_20: movement that does not provoke opportunity attacks skips the OA window even if the caller provides threatened creatures", () => {
+    const actor = initTwoPcBattle();
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      provocationKind: "doesNotProvokeOpportunityAttacks",
+      threatened: new Set([CreatureId("B")]),
+    });
+
+    expect(ctx(actor).movementCtx).toBeNull();
+    expect(creature(actor, "A").movementRemaining).toBe(25);
+    expect(creature(actor, "B").reactionAvailable).toBe(true);
+  });
+
+  it("natural_20: reach-based opportunity attacks are not treated as within 5 feet for prone-sensitive sneak attack logic", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          prone: true,
+          initiativeRoll: 20,
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          rogueLevel: 5,
+          mainHandWeapon: WHIP,
+          initiativeRoll: 10,
+        },
+        { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
+      threatened: new Set([CreatureId("B")]),
+    });
+    send(actor, {
+      type: "BATTLE_MOVEMENT_OA_ATTACK",
+      reactorId: CreatureId("B"),
+      oaAtkRoll: 15,
+      oaDmg: 3,
+      oaDt: "slashing",
+      oaCrit: false,
+      oaTgtAc: armorClass(10),
+      knockOut: false,
+      isMelee: true,
+      isFinesse: true,
+      attackerWithin5ft: false,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: true,
+      saDmg: 6,
+      hitReactionCandidates: new Set<CreatureIdT>(),
+    });
+    send(actor, {
+      type: "BATTLE_MOVEMENT_OA_DECLINE",
+      reactorId: null,
+    });
+
+    expect(creature(actor, "A").hp).toBe(17);
+    expect(creature(actor, "B").sneakAttackUsedThisTurn).toBe(false);
   });
 
   it("natural_20: Action Surge grants one additional non-Magic action on the same turn", () => {
@@ -1684,6 +1816,7 @@ describe("battle rules scenario regressions", () => {
 
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set([CreatureId("B")]),
     });
 
@@ -1699,6 +1832,7 @@ describe("battle rules scenario regressions", () => {
     send(actor, { type: "BATTLE_DISENGAGE" });
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set([CreatureId("B")]),
     });
 
@@ -1728,6 +1862,7 @@ describe("battle rules scenario regressions", () => {
 
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set([CreatureId("B")]),
     });
 
@@ -2219,6 +2354,7 @@ describe("battle rules scenario regressions", () => {
 
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set(),
     });
 
@@ -2458,6 +2594,92 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").rightHandUse).toBe("free");
   });
 
+  it("natural_20: versatile weapons reject the two-handed die while the wielder is only using one hand", () => {
+    const actor = initVersatileBattle(false);
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 10,
+      dmg: 9,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+    expect(creature(actor, "B").hp).toBe(20);
+  });
+
+  it("natural_20: versatile weapons accept the larger die when a melee attack is made with two hands", () => {
+    const actor = initVersatileBattle(true);
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 10,
+      dmg: 9,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0);
+    expect(creature(actor, "B").hp).toBe(11);
+  });
+
+  it("natural_20: spellcasting relaxes a two-handed versatile grip back to the one-handed die", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          caster: true,
+          preparedSpells: new Set(["hold_person"]),
+          mainHandWeapon: LONGSWORD,
+          mainHandUsesTwoHands: true,
+          initiativeRoll: 20,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      ],
+    });
+    startTurn(actor);
+
+    expect(battleMainHandDamageDie(creature(actor, "A"), true)).toBe(10);
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(battleMainHandDamageDie(creature(actor, "A"), true)).toBe(8);
+  });
+
   it("natural_20: Shocking Grasp blocks opportunity attacks until the start of the target's next turn", () => {
     const actor = initTwoPcBattle();
     startTurn(actor);
@@ -2493,6 +2715,7 @@ describe("battle rules scenario regressions", () => {
 
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set([CreatureId("B")]),
     });
 
@@ -2519,6 +2742,7 @@ describe("battle rules scenario regressions", () => {
     startTurn(actor);
     send(actor, {
       type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
       threatened: new Set([CreatureId("B")]),
     });
 

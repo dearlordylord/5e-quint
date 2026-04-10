@@ -104,6 +104,19 @@ export function battleMainHandUsesTwoHands(c: BattleCreatureState): boolean {
   return countHandUse(c, "mainWeapon") >= 2;
 }
 
+export function battleMainHandDamageDie(
+  c: BattleCreatureState,
+  isMeleeAttack: boolean,
+): number | null {
+  const weapon = c.mainHandWeapon;
+  if (weapon == null) return null;
+  const defaultDie = weapon.damageDie ?? null;
+  if (!isMeleeAttack || !weapon.properties.has("versatile")) return defaultDie;
+  const versatileDie = weapon.versatileDie ?? null;
+  if (versatileDie == null) return defaultDie;
+  return battleMainHandUsesTwoHands(c) ? versatileDie : defaultDie;
+}
+
 export function dropHeldItems(c: BattleCreatureState): BattleCreatureState {
   return {
     ...c,

@@ -93,7 +93,7 @@ Reactions have four distinct timing relationships to their triggers (derived fro
 
 **Range** — The distances at which a ranged attack or spell can target: normal range (no penalty) and long range (disadvantage, see `AttackContext.beyondNormalRange`).
 
-**Movement Step** — One engine-level movement segment. The current battle layer spends movement in 5-foot chunks and receives the caller-computed threatened set for that chunk.
+**Movement Step** — One engine-level movement segment. The current battle layer spends movement in 5-foot chunks and receives the caller-computed threatened set for that chunk, plus caller-owned provocation kind for whether that step can trigger opportunity attacks at all.
 
 **Reach-Exit Checkpoint** — The exact movement boundary where a mover is still in a threat source's reach before the step and would be outside that reach after the step. Opportunity attacks are offered at this checkpoint, before the move completes.
 

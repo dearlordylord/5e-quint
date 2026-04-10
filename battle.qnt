@@ -28,6 +28,10 @@ module battle {
 
   type HandUse = | HFree | HMainWeapon | HOffWeapon | HShield | HGrapple
 
+  type MovementProvocationKind =
+    | MPProvokesOpportunityAttacks
+    | MPDoesNotProvokeOpportunityAttacks
+
   pure val NO_WEAPON: Weapon = {
     name: "",
     damageDie: 0,
@@ -1481,6 +1485,11 @@ module battle {
     nondet knockOut = Bool.oneOf()
     nondet isMelee = Bool.oneOf()
     val weapon = ac.mainHandWeapon
+    val expectedDieSize =
+      if (isMelee and weapon.versatileDie > 0 and battleMainHandUsesTwoHands(ac))
+        weapon.versatileDie
+      else
+        weapon.damageDie
     // Spatial/visibility nondets (caller-provided facts)
     nondet attackerWithin5ft = Bool.oneOf()
     nondet hostileWithin5ft = Bool.oneOf()
@@ -1500,6 +1509,7 @@ module battle {
       not(ac.creature.dead),
       not(isIncapacitated(ac.creature)),
       not(tc.creature.dead),
+      (weapon.versatileDie == 0) or (dieSize == expectedDieSize),
       (hitRider != AHRShockingGrasp) or (isMelee and dt == Lightning),
       (hitRider != AHRRayOfFrost) or (not(isMelee) and dt == Cold),
       val newTurn = if (ac.turn.attackActionUsed and ac.turn.extraAttacksRemaining > 0)
@@ -2521,6 +2531,10 @@ module battle {
     val allIds = bCreatures.keys()
     val ac = bCreatures.get(activeId)
     // Caller provides which creatures' reach the mover is leaving (spatial concern per O2)
+    nondet provocationKind = Set(
+      MPProvokesOpportunityAttacks,
+      MPDoesNotProvokeOpportunityAttacks,
+    ).oneOf()
     nondet threatened = allIds.exclude(Set(activeId)).powerset().oneOf()
     all {
       bPhase == BPActiveTurn,
@@ -2533,7 +2547,7 @@ module battle {
       val newTurn = pUseMovement(ac.turn, 5, 1)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
       // If disengaged, no OA triggers
-      if (ac.turn.disengaged) {
+      if (ac.turn.disengaged or provocationKind == MPDoesNotProvokeOpportunityAttacks) {
         all { bCreatures' = cs1, bPhase' = BPActiveTurn, keepBattle }
       } else {
         // Filter threatened to those with reaction + alive (visibility is a spatial concern, not modeled)
@@ -2578,7 +2592,8 @@ module battle {
     nondet oaCrit = Bool.oneOf()
     nondet oaTgtAc = 10.to(20).oneOf()
     nondet oaKnockOut = Bool.oneOf()
-    // OA spatial: always within 5ft, visibility nondeterministic
+    // Caller owns the exact reach-exit checkpoint. Reach OAs are not hardcoded to 5ft.
+    nondet oaAttackerWithin5ft = Bool.oneOf()
     nondet oaHostileWithin5ft = Bool.oneOf()
     nondet oaTargetCanSeeAttacker = Bool.oneOf()
     nondet oaAttackerCanSeeTarget = Bool.oneOf()
@@ -2600,8 +2615,7 @@ module battle {
         val helpMatches = bHelpTargets.filter(h => h.allyId == reactorId and h.targetEnemyId == mv.mover)
         val helpAdv = helpMatches.size() > 0
         val newHelpTargets = if (helpAdv) bHelpTargets.exclude(helpMatches) else bHelpTargets
-        // OA: always melee, always within 5ft
-        val oaCtx = buildAttackContext(cs1, reactorId, mv.mover, true, weapon, true, oaHostileWithin5ft, oaTargetCanSeeAttacker, oaAttackerCanSeeTarget, oaFrightSourceInLOS, helpAdv)
+        val oaCtx = buildAttackContext(cs1, reactorId, mv.mover, true, weapon, oaAttackerWithin5ft, oaHostileWithin5ft, oaTargetCanSeeAttacker, oaAttackerCanSeeTarget, oaFrightSourceInLOS, helpAdv)
         val oaMods = pAggregateAttackMods(oaCtx)
         val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, Set(), oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaTargetCanSeeAttacker, oaMods, weapon, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider, oaHitReactionCandidates.exclude(Set(reactorId)))
         all {
