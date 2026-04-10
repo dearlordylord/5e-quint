@@ -463,6 +463,11 @@ Commit after this task:
 - [ ] If the spell-damage trigger belongs behind `CAST_PREPARED_SPELL` or battle spell resolution, update the audit blocker instead of adding a raw command.
 - [ ] Add tests proving any implemented command opens `USE_OVERCHANNEL` and resolution clears the pending state.
 
+Pre-research result, 2026-04-10:
+
+- Defer public creature command for now. RAW Wizard "Overchannel" requires a Wizard spell cast with a level 1-5 spell slot that deals damage. The existing trigger payload is `spellName` plus `slotLevel`, and creature scope knows prepared spell names but not authoritative class-source ownership for a cast.
+- This should stay behind spell-cast or battle spell-resolution ownership unless a deliberate out-of-band spell-result recording surface is designed. A semantic "record spell damage context" command would need to prove spell class source, slot level, and damage-dealing cast provenance without duplicating spell action state.
+
 Dependencies: Task 2.
 
 RAW check:
