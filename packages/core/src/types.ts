@@ -279,6 +279,11 @@ export interface OneShotRiderConsumption {
   readonly trigger: OneShotRiderTrigger;
 }
 
+export type ReactiveEffectPayload = {
+  readonly trigger: "meleeHitWithin5ft";
+  readonly damageType: "fire" | "cold";
+};
+
 export interface ActiveEffect {
   readonly spellId: SpellId;
   readonly turnsRemaining: number;
@@ -297,6 +302,7 @@ export interface ActiveEffect {
   readonly blocksOpportunityAttacks?: boolean;
   readonly speedDeltaFeet?: number;
   readonly consumeOnQualifiedHit?: OneShotRiderConsumption;
+  readonly reactivePayload?: ReactiveEffectPayload;
 }
 
 export interface Armor {

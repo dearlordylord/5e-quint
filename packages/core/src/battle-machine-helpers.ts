@@ -26,6 +26,7 @@ import {
 import { calculateEffectiveSpeed } from "#/machine-helpers.ts";
 import type {
   AfterDamageReturn,
+  AfterDamageTriggerQualifiers,
   AttackDamageCtx,
   AttackHitCtx,
   AwaitCtx,
@@ -612,6 +613,30 @@ export function returnToState(r: AfterDamageReturn): PhaseFields {
   );
 }
 
+export function triggerQualifiersFromAttack(atk: {
+  readonly targetCanSeeAttackerAtHit: boolean;
+  readonly attackerWithin5ftAtHit: boolean;
+  readonly isMeleeAttack: boolean;
+}): AfterDamageTriggerQualifiers {
+  return {
+    sourceVisibleToDamagedCreature: atk.targetCanSeeAttackerAtHit,
+    sourceWithin5ftOfDamagedCreature: atk.attackerWithin5ftAtHit,
+    // The current attack event owns a 5-foot qualifier but not a separate
+    // 60-foot qualifier. Non-melee attacks remain eligible for the narrow
+    // Hellish Rebuke surface until battle owns that caller-provided fact.
+    sourceWithin60ftOfDamagedCreature:
+      atk.attackerWithin5ftAtHit || !atk.isMeleeAttack,
+    sourceHitWithMeleeAttackRoll: atk.isMeleeAttack,
+  };
+}
+
+const DEFAULT_AFTER_DAMAGE_TRIGGER_QUALIFIERS: AfterDamageTriggerQualifiers = {
+  sourceVisibleToDamagedCreature: false,
+  sourceWithin5ftOfDamagedCreature: false,
+  sourceWithin60ftOfDamagedCreature: false,
+  sourceHitWithMeleeAttackRoll: false,
+};
+
 export function applyDamageWithAfterReactions(
   cs: Creatures,
   targetId: CreatureId,
@@ -622,6 +647,7 @@ export function applyDamageWithAfterReactions(
   crit: boolean,
   knockOut: boolean,
   returnTo: AfterDamageReturn,
+  triggerFacts: AfterDamageTriggerQualifiers = DEFAULT_AFTER_DAMAGE_TRIGGER_QUALIFIERS,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const oldT = cs.get(targetId)!;
   const cs1 = applyDamage(
@@ -649,6 +675,7 @@ export function applyDamageWithAfterReactions(
               damageDealt: actualDmg,
               damageType: dt,
               damageQualifiers,
+              ...triggerFacts,
               returnTo,
             },
           },
@@ -701,6 +728,8 @@ export function advanceFromHitPhase(
     atkReturnTo: atk.atkReturnTo,
     knockOut: atk.knockOut,
     targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
+    attackerWithin5ftAtHit: atk.attackerWithin5ftAtHit,
+    isMeleeAttack: atk.isMeleeAttack,
     isWeaponAttack: atk.isWeaponAttack,
   };
   const dmgCtx: AttackDamageCtx = {
@@ -729,6 +758,7 @@ export function advanceFromHitPhase(
     atk.isCritical,
     atk.knockOut,
     atk.atkReturnTo,
+    triggerQualifiersFromAttack(atk),
   );
 }
 

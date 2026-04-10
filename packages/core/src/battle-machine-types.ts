@@ -11,6 +11,7 @@ import type {
   PendingInterrupt,
   TriggerType,
 } from "#/battle-machine-events.ts";
+import type { BattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
 import type {
   Ability,
   ActiveEffect,
@@ -102,6 +103,8 @@ export interface BattleCreatureState {
   readonly dexMod: number;
   // Prepared spells (for CS eligibility)
   readonly preparedSpells: ReadonlySet<string>;
+  // Battle-owned payload facts for readyable action-casting-time spells.
+  readonly readyableSpellPayloads: ReadonlyMap<string, BattleReadyableSpellPayload>;
   // Evasion (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
   readonly hasEvasion: boolean;
   // Misc save bonus (Paladin Aura, Ring of Protection, etc.)
@@ -168,6 +171,7 @@ export interface AttackHitCtx {
   readonly knockOut: boolean;
   readonly onHitEffect?: ActiveEffect;
   readonly targetCanSeeAttackerAtHit: boolean;
+  readonly attackerWithin5ftAtHit: boolean;
   readonly isMeleeAttack: boolean;
   readonly isRangedWeaponAttack: boolean;
   readonly isWeaponAttack: boolean;
@@ -187,6 +191,8 @@ export interface AttackDamageCtx {
   readonly atkReturnTo: AfterDamageReturn;
   readonly knockOut: boolean;
   readonly targetCanSeeAttackerAtHit: boolean;
+  readonly attackerWithin5ftAtHit: boolean;
+  readonly isMeleeAttack: boolean;
   readonly isWeaponAttack: boolean;
   readonly legalReactionsByCreature: ReadonlyMap<
     CreatureId,
@@ -194,7 +200,15 @@ export interface AttackDamageCtx {
   >;
 }
 
-export interface AfterDamageCtx {
+/** Trigger qualifiers for after-damage reactions. Spatial and visibility facts are caller-owned. */
+export interface AfterDamageTriggerQualifiers {
+  readonly sourceVisibleToDamagedCreature: boolean;
+  readonly sourceWithin5ftOfDamagedCreature: boolean;
+  readonly sourceWithin60ftOfDamagedCreature: boolean;
+  readonly sourceHitWithMeleeAttackRoll: boolean;
+}
+
+export interface AfterDamageCtx extends AfterDamageTriggerQualifiers {
   readonly damageSource: CreatureId;
   readonly damagedCreature: CreatureId;
   readonly damageDealt: number;
@@ -421,6 +435,7 @@ export interface InitCreatureConfig {
   readonly legendaryActions?: number;
   readonly legendaryResistances?: number;
   readonly preparedSpells?: ReadonlySet<string>;
+  readonly readyableSpellPayloads?: ReadonlyMap<string, BattleReadyableSpellPayload>;
   readonly hasEvasion?: boolean;
   readonly saveMiscBonus?: number;
   readonly critRange?: number;

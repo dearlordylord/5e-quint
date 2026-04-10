@@ -24,6 +24,7 @@ import {
   CreatureId,
   difficultyClass,
   resourceCount,
+  spellId,
   spellSlotLevel,
 } from "#/types.ts";
 
@@ -273,7 +274,20 @@ function creatureResolved<T extends object>(token: T) {
   return { scope: "creature" as const, ...token };
 }
 
-const DEFAULT_BATTLE_ATTACK_CONTEXT = {
+const DEFAULT_BATTLE_ATTACK_CONTEXT: Pick<
+  Extract<BattleEvent, { type: "BATTLE_ATTACK" }>,
+  | "knockOut"
+  | "isMelee"
+  | "isFinesse"
+  | "attackerWithin5ft"
+  | "hostileWithin5ft"
+  | "targetCanSeeAttacker"
+  | "attackerCanSeeTarget"
+  | "frightSourceInLOS"
+  | "hasAllyAdjacentToTarget"
+  | "saDmg"
+  | "hitReactionCandidates"
+> = {
   knockOut: false,
   isMelee: true,
   isFinesse: false,
@@ -285,7 +299,7 @@ const DEFAULT_BATTLE_ATTACK_CONTEXT = {
   hasAllyAdjacentToTarget: false,
   saDmg: 0,
   hitReactionCandidates: new Set<CreatureIdT>(),
-} as const;
+};
 
 const ZERO_BATTLE_SOT: Pick<
   BattleEvent & { type: "BATTLE_START_TURN" },
@@ -370,6 +384,41 @@ function initBattleForDamageDiscovery() {
   });
 }
 
+function initBattleForAfterDamageDiscovery(
+  defenderConfig: Partial<
+    Extract<BattleEvent, { type: "BATTLE_INIT" }>["creatures"][number]
+  >,
+  attackContext = DEFAULT_BATTLE_ATTACK_CONTEXT,
+) {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 10,
+        ...defenderConfig,
+      },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  actor.send({
+    type: "BATTLE_ATTACK",
+    targetId: CreatureId("B"),
+    attackRoll: 15,
+    diceCount: 1,
+    dieSize: 8,
+    dmg: 5,
+    dt: "slashing",
+    crit: false,
+    tAc: armorClass(10),
+    ...attackContext,
+  });
+  return actor;
+}
+
 function initBattleForProneDiscovery() {
   const actor = makeBattleActor({
     type: "BATTLE_INIT",
@@ -405,6 +454,30 @@ function initBattleForReadyWindow() {
     eotDt: "bludgeoning",
     eotConSave: true,
   });
+  return actor;
+}
+
+function initBattleForReadySpellDiscovery(
+  actorConfig: Partial<
+    Extract<BattleEvent, { type: "BATTLE_INIT" }>["creatures"][number]
+  > = {},
+) {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["hold_person"]),
+        initiativeRoll: 15,
+        ...actorConfig,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
   return actor;
 }
 
@@ -1968,6 +2041,85 @@ describe("available actions contract", () => {
     );
   });
 
+  test("battle discovery resolves ready-spell setup from battle-owned payload facts", () => {
+    const actor = initBattleForReadySpellDiscovery();
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toContainEqual({
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_READY_SPELL",
+      spellName: "hold_person",
+      slotLevel: { options: [spellSlotLevel(2), spellSlotLevel(3)] },
+      targetId: { options: ["B"] },
+      cost: { action: true, charge: "spellSlot" },
+      outcome: {
+        summary:
+          "Spend your action and a spell slot to Ready Hold Person and hold it with Concentration",
+      },
+    });
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_READY_SPELL",
+        spellName: "hold_person",
+        slotLevel: spellSlotLevel(2),
+        targetId: "B",
+      }),
+    );
+
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_READY_SPELL",
+        spellName: "hold_person",
+        slotLevel: spellSlotLevel(2),
+        targetId: "B",
+      },
+      outcome:
+        "Spend your action and a spell slot to Ready Hold Person and hold it with Concentration",
+      runtime: "none",
+      event: {
+        type: "BATTLE_READY_SPELL",
+        targetId: CreatureId("B"),
+        saveDC: difficultyClass(13),
+        dmgOnFail: 0,
+        halfOnSave: false,
+        dt: "psychic",
+        cond: "paralyzed",
+        applyCond: true,
+        saveAbility: "wis",
+        slotLvl: spellSlotLevel(2),
+        spellName: "hold_person",
+      },
+    });
+  });
+
+  test("battle discovery does not surface ready-spell setup without a modeled payload", () => {
+    const actor = initBattleForReadySpellDiscovery({
+      preparedSpells: new Set(["hellish_rebuke"]),
+    });
+
+    expect(
+      getAvailableBattleActions(actor.getSnapshot().context).map(
+        (token) => token.type,
+      ),
+    ).not.toContain("BATTLE_READY_SPELL");
+  });
+
+  test("battle discovery does not surface ready-spell setup while rage blocks spellcasting", () => {
+    const actor = initBattleForReadySpellDiscovery({ barbarianLevel: 1 });
+    actor.send({ type: "BATTLE_ENTER_RAGE" });
+
+    expect(
+      getAvailableBattleActions(actor.getSnapshot().context).map(
+        (token) => token.type,
+      ),
+    ).not.toContain("BATTLE_READY_SPELL");
+  });
+
   test("battle discovery and resolution expose ready-window pass and release tokens", () => {
     const actor = initBattleForReadyWindow();
 
@@ -2045,6 +2197,75 @@ describe("available actions contract", () => {
       },
       outcome:
         "Spend your reaction to release the readied attack against the chosen target",
+    });
+  });
+
+  test("battle discovery exposes ready-spell release only for a readied spell", () => {
+    const actor = initBattleForReadySpellDiscovery();
+    actor.send({
+      type: "BATTLE_READY_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+    });
+    actor.send({
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_READY_PASS",
+        cost: {},
+        outcome: { summary: "Decline to release your readied action" },
+      },
+      {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_READY_SPELL_RELEASE",
+        cost: { reaction: true },
+        outcome: {
+          summary:
+            "Spend your reaction to release the readied spell against its chosen target",
+        },
+      },
+    ]);
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_READY_SPELL_RELEASE",
+      }),
+    );
+    expect(request.runtime).toBe("readySpellRelease");
+    expect(
+      finalizeBattleResolution(
+        request,
+        { runtime: "readySpellRelease", values: { saveRoll: 1 } },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_READY_SPELL_RELEASE",
+        releaserId: CreatureId("A"),
+        saveRoll: 1,
+      },
+      outcome:
+        "Spend your reaction to release the readied spell against its chosen target",
     });
   });
 
@@ -2153,6 +2374,149 @@ describe("available actions contract", () => {
       },
       outcome:
         "Use your reaction to halve the triggering attack's damage against you",
+    });
+  });
+
+  test("after-damage discovery exposes Hellish Rebuke only from owned visible and within-60 trigger facts", () => {
+    const actor = initBattleForAfterDamageDiscovery({
+      caster: true,
+      preparedSpells: new Set(["hellish_rebuke"]),
+    });
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "B",
+        type: "CAST_HELLISH_REBUKE",
+        cost: { reaction: true, charge: "spellSlot" },
+        outcome: {
+          summary:
+            "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
+        },
+      },
+    ]);
+
+    const hiddenActor = initBattleForAfterDamageDiscovery(
+      { caster: true, preparedSpells: new Set(["hellish_rebuke"]) },
+      { ...DEFAULT_BATTLE_ATTACK_CONTEXT, targetCanSeeAttacker: false },
+    );
+    expect(getAvailableBattleActions(hiddenActor.getSnapshot().context)).toEqual(
+      [],
+    );
+
+    const rangedActor = initBattleForAfterDamageDiscovery(
+      { caster: true, preparedSpells: new Set(["hellish_rebuke"]) },
+      {
+        ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+        isMelee: false,
+        attackerWithin5ft: false,
+      },
+    );
+    expect(getAvailableBattleActions(rangedActor.getSnapshot().context)).toEqual(
+      [
+        {
+          scope: "battle",
+          actorId: "B",
+          type: "CAST_HELLISH_REBUKE",
+          cost: { reaction: true, charge: "spellSlot" },
+          outcome: {
+            summary:
+              "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
+          },
+        },
+      ],
+    );
+
+    const rangedContext = rangedActor.getSnapshot().context;
+    const interrupt = rangedContext.awaitCtx!.interrupt;
+    expect(interrupt.tag).toBe("PIAfterDamage");
+    const tooFarContext =
+      interrupt.tag === "PIAfterDamage"
+        ? {
+            ...rangedContext,
+            awaitCtx: {
+              ...rangedContext.awaitCtx!,
+              interrupt: {
+                ...interrupt,
+                ctx: {
+                  ...interrupt.ctx,
+                  sourceWithin60ftOfDamagedCreature: false,
+                },
+              },
+            },
+          }
+        : rangedContext;
+    expect(getAvailableBattleActions(tooFarContext)).toEqual([]);
+  });
+
+  test("after-damage discovery exposes Retaliation only when the source is within 5 feet", () => {
+    const actor = initBattleForAfterDamageDiscovery({ barbarianLevel: 10 });
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "B",
+        type: "USE_RETALIATION",
+        cost: { reaction: true },
+        outcome: {
+          summary:
+            "Use your reaction to make a melee attack against the creature that damaged you",
+        },
+      },
+    ]);
+
+    const rangedActor = initBattleForAfterDamageDiscovery(
+      { barbarianLevel: 10 },
+      {
+        ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+        isMelee: false,
+        attackerWithin5ft: false,
+      },
+    );
+    expect(getAvailableBattleActions(rangedActor.getSnapshot().context)).toEqual(
+      [],
+    );
+  });
+
+  test("after-damage discovery exposes Fire Shield from the active effect payload", () => {
+    const actor = initBattleForAfterDamageDiscovery({
+      activeEffects: [
+        {
+          spellId: spellId("fire_shield"),
+          turnsRemaining: 100,
+          expiresAt: "end",
+          casterId: CreatureId("B"),
+          reactivePayload: {
+            trigger: "meleeHitWithin5ft",
+            damageType: "cold",
+          },
+        },
+      ],
+    });
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "B",
+        type: "TRIGGER_FIRE_SHIELD",
+      }),
+    );
+    expect(request.runtime).toBe("fireShield");
+    expect(
+      finalizeBattleResolution(
+        request,
+        { runtime: "fireShield", values: { damage: 16 } },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT",
+        reactorId: CreatureId("B"),
+        reactionDmg: 16,
+        reactionDt: "cold",
+      },
+      outcome: "Apply Fire Shield's cold damage to the attacker",
     });
   });
 

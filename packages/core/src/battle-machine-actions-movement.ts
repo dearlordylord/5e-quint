@@ -124,6 +124,7 @@ export function battleMovementOAAttack({
     { tag: "ADRResolvingMovement", mv: updatedMv },
     e.knockOut,
     true,
+    e.attackerWithin5ft,
     e.targetCanSeeAttacker,
     mods,
     false,

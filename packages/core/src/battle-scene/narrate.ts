@@ -76,6 +76,9 @@ export function narrate(event: BattleEvent, meta: ScenarioMeta): string {
     case "BATTLE_AFTER_DAMAGE_SPELL_REACTION":
       if (!event.reactorId) return "No spell reaction.";
       return `${name(event.reactorId, meta)} retaliates with a spell!`;
+    case "BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT":
+      if (!event.reactorId) return "No reactive effect.";
+      return `${name(event.reactorId, meta)}'s effect retaliates!`;
     case "BATTLE_AFTER_DAMAGE_RETALIATION":
       if (!event.reactorId) return "No retaliation.";
       return `${name(event.reactorId, meta)} retaliates!`;

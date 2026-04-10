@@ -2,9 +2,11 @@ import { Match, Schema } from "effect";
 
 import { MetamagicOptionSchema } from "#/features/class-sorcerer.ts";
 import {
+  getBattleReadyableSpellPayload,
   getModeledPreparedSpellInfo,
   MODELED_PREPARED_SPELLS,
   ModeledPreparedSpellSchema,
+  type BattleReadyableSpellPayload,
   type ModeledPreparedSpell,
 } from "#/features/spell-available-actions.ts";
 import { SRD_SPELLS } from "#/features/spell-registry.ts";
@@ -23,7 +25,11 @@ import {
   slotCreationCost,
   type MetamagicOption,
 } from "#/features/class-sorcerer.ts";
-import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts";
+import type {
+  BattleContext,
+  BattleCreatureState,
+  BattleEvent,
+} from "#/battle-machine-types.ts";
 import { isIncapacitated } from "#/battle-machine-creature.ts";
 import { bardicInspirationDie } from "#/features/class-bard.ts";
 import { deflectAttacksReduction } from "#/features/class-monk-features.ts";
@@ -296,6 +302,23 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_READY_SPELL";
+      readonly spellName: string;
+      readonly slotLevel: Hole<SpellSlotLevelValue>;
+      readonly targetId: Hole<string>;
+      readonly cost: { readonly action: true; readonly charge: "spellSlot" };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_READY_SPELL_RELEASE";
+      readonly cost: { readonly reaction: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "STAND_FROM_PRONE";
       readonly cost: { readonly movement: number; readonly shape: "spend" };
       readonly outcome: OutcomeDescription;
@@ -344,6 +367,27 @@ export type BattleActionToken =
       readonly actorId: string;
       readonly type: "USE_DEFLECT_ATTACKS";
       readonly cost: { readonly reaction: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "CAST_HELLISH_REBUKE";
+      readonly cost: { readonly reaction: true; readonly charge: "spellSlot" };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "USE_RETALIATION";
+      readonly cost: { readonly reaction: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "TRIGGER_FIRE_SHIELD";
+      readonly cost: {};
       readonly outcome: OutcomeDescription;
     };
 export type ActionToken = CreatureActionToken | BattleActionToken;
@@ -470,6 +514,19 @@ type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_READY_SPELL";
+      readonly spellName: string;
+      readonly slotLevel: SpellSlotLevelValue;
+      readonly targetId: string;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_READY_SPELL_RELEASE";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "STAND_FROM_PRONE";
     }
   | {
@@ -502,6 +559,21 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "USE_DEFLECT_ATTACKS";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "CAST_HELLISH_REBUKE";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "USE_RETALIATION";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "TRIGGER_FIRE_SHIELD";
     };
 
 export type BattleResolvedActionToken = SpecificBattleResolvedActionToken;
@@ -737,6 +809,19 @@ const BattleReadyReleaseResolvedActionSchema = Schema.Struct({
   targetId: Schema.String,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleReadySpellResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_READY_SPELL"),
+  spellName: Schema.String,
+  slotLevel: SpellSlotLevel,
+  targetId: Schema.String,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleReadySpellReleaseResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_READY_SPELL_RELEASE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const StandFromProneBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("STAND_FROM_PRONE"),
@@ -767,6 +852,21 @@ const UseDeflectAttacksBattleResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_DEFLECT_ATTACKS"),
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const CastHellishRebukeBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("CAST_HELLISH_REBUKE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const UseRetaliationBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("USE_RETALIATION"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const TriggerFireShieldBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("TRIGGER_FIRE_SHIELD"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleResolvedActionTokenSchema = Schema.Union(
   BattleDashResolvedActionSchema,
   BattleDisengageResolvedActionSchema,
@@ -774,6 +874,8 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   BattleReadyResolvedActionSchema,
   BattleReadyPassResolvedActionSchema,
   BattleReadyReleaseResolvedActionSchema,
+  BattleReadySpellResolvedActionSchema,
+  BattleReadySpellReleaseResolvedActionSchema,
   StandFromProneBattleResolvedActionSchema,
   CastCounterspellBattleResolvedActionSchema,
   CastShieldBattleResolvedActionSchema,
@@ -781,6 +883,9 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   UseCuttingWordsBattleResolvedActionSchema,
   UseUncannyDodgeBattleResolvedActionSchema,
   UseDeflectAttacksBattleResolvedActionSchema,
+  CastHellishRebukeBattleResolvedActionSchema,
+  UseRetaliationBattleResolvedActionSchema,
+  TriggerFireShieldBattleResolvedActionSchema,
 );
 
 export const RESOLVED_ACTION_SCHEMAS = [
@@ -1371,6 +1476,26 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "BATTLE_READY_SPELL" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_READY_SPELL" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_READY_SPELL_RELEASE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "readySpellRelease";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "STAND_FROM_PRONE" }
       >;
       readonly outcome: string;
@@ -1451,6 +1576,30 @@ export type BattleResolutionRequest =
       >;
       readonly outcome: string;
       readonly runtime: "deflectAttacks";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "CAST_HELLISH_REBUKE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "hellishRebuke";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "USE_RETALIATION" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "retaliation";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "TRIGGER_FIRE_SHIELD" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "fireShield";
     };
 
 export type BattleResolutionRuntimeInputs =
@@ -1476,6 +1625,30 @@ export type BattleResolutionRuntimeInputs =
   | {
       readonly runtime: "deflectAttacks";
       readonly values: { readonly d10Roll: number };
+    }
+  | {
+      readonly runtime: "readySpellRelease";
+      readonly values: { readonly saveRoll: number };
+    }
+  | {
+      readonly runtime: "hellishRebuke";
+      readonly values: {
+        readonly damage: number;
+        readonly saveSucceeded: boolean;
+      };
+    }
+  | {
+      readonly runtime: "retaliation";
+      readonly values: {
+        readonly attackRoll: number;
+        readonly damage: number;
+        readonly targetAc: number;
+        readonly critical: boolean;
+      };
+    }
+  | {
+      readonly runtime: "fireShield";
+      readonly values: { readonly damage: number };
     };
 
 export type ActionResolutionErrorCode =
@@ -2212,6 +2385,85 @@ function damageReactionToken(
   );
 }
 
+function afterDamageReactionTokens(
+  context: BattleContext,
+): ReadonlyArray<BattleActionToken> {
+  const awaitCtx = context.awaitCtx;
+  const interrupt = awaitCtx?.interrupt;
+  if (awaitCtx == null || interrupt?.tag !== "PIAfterDamage") return [];
+  const ad = interrupt.ctx;
+  const tokens: Array<BattleActionToken> = [];
+  for (const actorId of awaitCtx.eligible) {
+    if (awaitCtx.offered.has(actorId)) continue;
+    if (actorId !== ad.damagedCreature) continue;
+    const actor = context.creatures.get(actorId);
+    if (
+      actor == null ||
+      !actor.reactionAvailable ||
+      actor.dead ||
+      isIncapacitated(actor)
+    ) {
+      continue;
+    }
+    if (
+      ad.sourceVisibleToDamagedCreature &&
+      ad.sourceWithin60ftOfDamagedCreature &&
+      actor.preparedSpells.has("hellish_rebuke") &&
+      actor.slotsCurrent.some((remaining) => remaining > 0)
+    ) {
+      tokens.push(
+        battleToken<
+          Extract<BattleActionToken, { readonly type: "CAST_HELLISH_REBUKE" }>
+        >({
+          actorId,
+          type: "CAST_HELLISH_REBUKE",
+          cost: { reaction: true, charge: "spellSlot" },
+          outcome: {
+            summary:
+              "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
+          },
+        }),
+      );
+    }
+    if (ad.sourceWithin5ftOfDamagedCreature && actor.barbarianLevel >= 10) {
+      tokens.push(
+        battleToken<
+          Extract<BattleActionToken, { readonly type: "USE_RETALIATION" }>
+        >({
+          actorId,
+          type: "USE_RETALIATION",
+          cost: { reaction: true },
+          outcome: {
+            summary:
+              "Use your reaction to make a melee attack against the creature that damaged you",
+          },
+        }),
+      );
+    }
+    const fireShieldPayload = actor.activeEffects.find(
+      (effect) =>
+        effect.reactivePayload?.trigger === "meleeHitWithin5ft" &&
+        ad.sourceWithin5ftOfDamagedCreature &&
+        ad.sourceHitWithMeleeAttackRoll,
+    )?.reactivePayload;
+    if (fireShieldPayload != null) {
+      tokens.push(
+        battleToken<
+          Extract<BattleActionToken, { readonly type: "TRIGGER_FIRE_SHIELD" }>
+        >({
+          actorId,
+          type: "TRIGGER_FIRE_SHIELD",
+          cost: {},
+          outcome: {
+            summary: `Apply Fire Shield's ${fireShieldPayload.damageType} damage to the attacker`,
+          },
+        }),
+      );
+    }
+  }
+  return tokens;
+}
+
 function battleCounterspellSlotLevels(
   actorId: string,
   context: BattleContext,
@@ -2220,6 +2472,83 @@ function battleCounterspellSlotLevels(
   if (reactor == null) return [];
   return reactor.slotsCurrent.flatMap((remaining, index) =>
     index >= 2 && remaining > 0 ? [spellSlotLevel(index + 1)] : [],
+  );
+}
+
+function battleActiveReadyableSpellTokens(
+  actorId: string,
+  actor: BattleCreatureState,
+  context: BattleContext,
+): ReadonlyArray<BattleActionToken> {
+  if (
+    actor.actionSurgeActionPending ||
+    actor.ragingBlocksSpells ||
+    actor.slotExpendedThisTurn ||
+    actor.readyableSpellPayloads.size === 0
+  ) {
+    return [];
+  }
+  const targetOptions = [...context.creatures.keys()]
+    .filter((creatureId) => creatureId !== actorId)
+    .sort();
+  if (targetOptions.length === 0) return [];
+  const tokens: Array<
+    Extract<BattleActionToken, { readonly type: "BATTLE_READY_SPELL" }>
+  > = [];
+  for (const [spellName, payload] of actor.readyableSpellPayloads.entries()) {
+    if (!actor.preparedSpells.has(spellName)) continue;
+    const slotOptions = currentReadyableSpellPayloads(actor, spellName, payload)
+      .map((p) => p.slotLevel)
+      .sort((a, b) => a - b);
+    if (slotOptions.length === 0) continue;
+    tokens.push(
+      battleToken<
+        Extract<BattleActionToken, { readonly type: "BATTLE_READY_SPELL" }>
+      >({
+        actorId,
+        type: "BATTLE_READY_SPELL",
+        spellName,
+        slotLevel: { options: slotOptions },
+        targetId: { options: targetOptions },
+        cost: { action: true, charge: "spellSlot" },
+        outcome: {
+          summary: `Spend your action and a spell slot to Ready ${displaySpellName(
+            spellName as SpellName,
+          )} and hold it with Concentration`,
+        },
+      }),
+    );
+  }
+  return tokens.sort((a, b) => a.spellName.localeCompare(b.spellName));
+}
+
+function currentReadyableSpellPayloads(
+  actor: BattleCreatureState,
+  spellName: string,
+  storedPayload: BattleReadyableSpellPayload | undefined,
+): ReadonlyArray<BattleReadyableSpellPayload> {
+  if (storedPayload == null) return [];
+  return actor.slotsCurrent.flatMap((remaining, index) => {
+    const slotLevel = spellSlotLevel(index + 1);
+    if (slotLevel < storedPayload.baseLevel || remaining <= 0) return [];
+    const payload = getBattleReadyableSpellPayload(
+      spellName as SpellName,
+      slotLevel,
+    );
+    return payload == null ? [] : [payload];
+  });
+}
+
+function currentReadyableSpellPayload(
+  actor: BattleCreatureState,
+  spellName: string,
+  slotLevel: SpellSlotLevelValue,
+): BattleReadyableSpellPayload | null {
+  const storedPayload = actor.readyableSpellPayloads.get(spellName);
+  return (
+    currentReadyableSpellPayloads(actor, spellName, storedPayload).find(
+      (payload) => payload.slotLevel === slotLevel,
+    ) ?? null
   );
 }
 
@@ -2282,6 +2611,23 @@ export function getAvailableBattleActions(
             }),
           );
         }
+      } else {
+        activeReadyTokens.push(
+          battleToken<
+            Extract<
+              BattleActionToken,
+              { readonly type: "BATTLE_READY_SPELL_RELEASE" }
+            >
+          >({
+            actorId,
+            type: "BATTLE_READY_SPELL_RELEASE",
+            cost: { reaction: true },
+            outcome: {
+              summary:
+                "Spend your reaction to release the readied spell against its chosen target",
+            },
+          }),
+        );
       }
     }
     return activeReadyTokens;
@@ -2342,6 +2688,13 @@ export function getAvailableBattleActions(
               "Spend your action to ready an attack for release with your reaction",
           },
         }),
+      );
+      tokens.push(
+        ...battleActiveReadyableSpellTokens(
+          activeCreatureId,
+          activeCreature,
+          context,
+        ),
       );
     }
     if (activeCreature.prone) {
@@ -2414,28 +2767,35 @@ export function getAvailableBattleActions(
     return tokens;
   }
 
+  if (interrupt.tag === "PIAfterDamage") {
+    return afterDamageReactionTokens(context);
+  }
+
   return [];
 }
 
-function availableBattleTokenForType(
+function availableBattleTokenForResolved(
   context: BattleContext,
-  type: BattleActionToken["type"],
-  actorId: string,
+  token: BattleResolvedActionToken,
 ): BattleActionToken | undefined {
-  return getAvailableBattleActions(context).find(
-    (token) => token.type === type && token.actorId === actorId,
-  );
+  return getAvailableBattleActions(context).find((candidate) => {
+    if (candidate.type !== token.type || candidate.actorId !== token.actorId)
+      return false;
+    if (
+      candidate.type === "BATTLE_READY_SPELL" &&
+      token.type === "BATTLE_READY_SPELL"
+    ) {
+      return candidate.spellName === token.spellName;
+    }
+    return true;
+  });
 }
 
 export function resolveBattleAction(
   context: BattleContext,
   token: BattleResolvedActionToken,
 ): BattleResolutionRequest | ActionResolutionError {
-  const availableToken = availableBattleTokenForType(
-    context,
-    token.type,
-    token.actorId,
-  );
+  const availableToken = availableBattleTokenForResolved(context, token);
   if (availableToken == null) {
     return {
       code: "ACTION_NOT_AVAILABLE",
@@ -2490,6 +2850,59 @@ export function resolveBattleAction(
         runtime: "readyAttack" as const,
       };
     }),
+    Match.when({ type: "BATTLE_READY_SPELL" }, (specificToken) => {
+      if (
+        !("spellName" in availableToken) ||
+        availableToken.spellName !== specificToken.spellName ||
+        !("slotLevel" in availableToken) ||
+        !availableToken.slotLevel.options.includes(specificToken.slotLevel) ||
+        !("targetId" in availableToken) ||
+        !availableToken.targetId.options.includes(specificToken.targetId)
+      ) {
+        return {
+          code: "ACTION_NOT_AVAILABLE" as const,
+          message: `${specificToken.type} ${specificToken.spellName} against ${specificToken.targetId} is not currently available for ${specificToken.actorId} in this battle state.`,
+        };
+      }
+      const actor = context.creatures.get(CreatureId(specificToken.actorId));
+      const payload =
+        actor == null
+          ? null
+          : currentReadyableSpellPayload(
+              actor,
+              specificToken.spellName,
+              specificToken.slotLevel,
+            );
+      if (payload == null) {
+        return {
+          code: "ACTION_NOT_AVAILABLE" as const,
+          message: `${specificToken.spellName} has no battle-owned ready spell payload for ${specificToken.actorId}.`,
+        };
+      }
+      return {
+        token: specificToken,
+        outcome: availableToken.outcome.summary,
+        runtime: "none" as const,
+        event: {
+          type: "BATTLE_READY_SPELL" as const,
+          targetId: CreatureId(specificToken.targetId),
+          saveDC: payload.release.saveDC,
+          dmgOnFail: payload.release.damageOnFail,
+          halfOnSave: payload.release.halfOnSuccess,
+          dt: payload.release.damageType,
+          cond: payload.release.conditionOnFail,
+          applyCond: payload.release.applyCondition,
+          saveAbility: payload.release.saveAbility,
+          slotLvl: payload.slotLevel,
+          spellName: specificToken.spellName,
+        },
+      };
+    }),
+    Match.when({ type: "BATTLE_READY_SPELL_RELEASE" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "readySpellRelease" as const,
+    })),
     Match.when({ type: "STAND_FROM_PRONE" }, (specificToken) => ({
       token: specificToken,
       outcome: availableToken.outcome.summary,
@@ -2586,6 +2999,21 @@ export function resolveBattleAction(
       outcome: availableToken.outcome.summary,
       runtime: "deflectAttacks" as const,
     })),
+    Match.when({ type: "CAST_HELLISH_REBUKE" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "hellishRebuke" as const,
+    })),
+    Match.when({ type: "USE_RETALIATION" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "retaliation" as const,
+    })),
+    Match.when({ type: "TRIGGER_FIRE_SHIELD" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "fireShield" as const,
+    })),
     Match.exhaustive,
   );
 }
@@ -2660,6 +3088,39 @@ export function finalizeBattleResolution(
           hasAllyAdjacentToTarget: false,
           saDmg: 0,
           hitReactionCandidates: new Set(),
+        },
+        outcome: request.outcome,
+      };
+    }),
+    Match.when({ runtime: "readySpellRelease" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "readySpellRelease") {
+        return battleRuntimeMismatch("readySpellRelease", runtimeInputs.runtime);
+      }
+      if (request.token.type !== "BATTLE_READY_SPELL_RELEASE") {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Ready-spell runtime cannot finalize ${request.token.type}.`,
+          },
+        };
+      }
+      const saveRoll = runtimeInputs.values.saveRoll;
+      if (saveRoll < 1 || saveRoll > 20) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Ready spell save roll must be between 1 and 20.",
+          },
+        };
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_READY_SPELL_RELEASE",
+          releaserId: CreatureId(request.token.actorId),
+          saveRoll,
         },
         outcome: request.outcome,
       };
@@ -2750,6 +3211,108 @@ export function finalizeBattleResolution(
         outcome: `${request.outcome} (${amount})`,
       };
     }),
+    Match.when({ runtime: "hellishRebuke" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "hellishRebuke") {
+        return battleRuntimeMismatch("hellishRebuke", runtimeInputs.runtime);
+      }
+      const damage = runtimeInputs.values.damage;
+      if (damage < 0) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Hellish Rebuke damage must be non-negative.",
+          },
+        };
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_AFTER_DAMAGE_SPELL_REACTION",
+          reactorId: CreatureId(request.token.actorId),
+          reactionDmg: damage,
+          reactionSaved: runtimeInputs.values.saveSucceeded,
+          reactionDt: "fire",
+        },
+        outcome: request.outcome,
+      };
+    }),
+    Match.when({ runtime: "retaliation" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "retaliation") {
+        return battleRuntimeMismatch("retaliation", runtimeInputs.runtime);
+      }
+      const { attackRoll, damage, targetAc, critical } = runtimeInputs.values;
+      if (attackRoll < 1 || attackRoll > 20) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Retaliation attack roll must be between 1 and 20.",
+          },
+        };
+      }
+      if (damage < 0) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Retaliation damage must be non-negative.",
+          },
+        };
+      }
+      const actor = context.creatures.get(CreatureId(request.token.actorId));
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_AFTER_DAMAGE_RETALIATION",
+          reactorId: CreatureId(request.token.actorId),
+          retAtkRoll: attackRoll,
+          retDmg: damage,
+          retDt: actor?.mainHandWeapon?.damageType ?? "slashing",
+          retCrit: critical,
+          retTgtAc: armorClass(targetAc),
+        },
+        outcome: request.outcome,
+      };
+    }),
+    Match.when({ runtime: "fireShield" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "fireShield") {
+        return battleRuntimeMismatch("fireShield", runtimeInputs.runtime);
+      }
+      const actor = context.creatures.get(CreatureId(request.token.actorId));
+      const payload = actor?.activeEffects.find(
+        (effect) => effect.reactivePayload?.trigger === "meleeHitWithin5ft",
+      )?.reactivePayload;
+      if (payload == null) {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_AVAILABLE",
+            message: "Fire Shield has no active reactive payload.",
+          },
+        };
+      }
+      const damage = runtimeInputs.values.damage;
+      if (damage < 0) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Fire Shield damage must be non-negative.",
+          },
+        };
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT",
+          reactorId: CreatureId(request.token.actorId),
+          reactionDmg: damage,
+          reactionDt: payload.damageType,
+        },
+        outcome: request.outcome,
+      };
+    }),
     Match.exhaustive,
   );
 }
@@ -2760,11 +3323,7 @@ export function previewBattleAction(
 ): PreviewedBattleAction {
   const request = resolveBattleAction(context, token);
   if ("code" in request) return { ok: false, error: request };
-  const availableToken = availableBattleTokenForType(
-    context,
-    token.type,
-    token.actorId,
-  );
+  const availableToken = availableBattleTokenForResolved(context, token);
   return {
     ok: true,
     summary: availableToken?.outcome.summary ?? token.type,

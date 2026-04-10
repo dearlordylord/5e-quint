@@ -264,6 +264,12 @@ const ActiveEffectSchema = Schema.Struct({
       trigger: Schema.Literal("nextWeaponHit", "nextMeleeWeaponHit"),
     }),
   ),
+  reactivePayload: Schema.optional(
+    Schema.Struct({
+      trigger: Schema.Literal("meleeHitWithin5ft"),
+      damageType: Schema.Literal("fire", "cold"),
+    }),
+  ),
 });
 
 const FighterClassStateSchema = Schema.Struct({

@@ -330,6 +330,42 @@ function buildBattleRuntimeInputs(
         })),
       );
     }),
+    Match.when({ runtime: "readySpellRelease" }, () =>
+      Effect.map(Random.nextIntBetween(1, 21), (saveRoll) => ({
+        runtime: "readySpellRelease" as const,
+        values: { saveRoll },
+      })),
+    ),
+    Match.when({ runtime: "hellishRebuke" }, () =>
+      Effect.all({
+        damage: Random.nextIntBetween(1, 21),
+        saveSucceeded: Random.nextBoolean,
+      }).pipe(
+        Effect.map((values) => ({
+          runtime: "hellishRebuke" as const,
+          values,
+        })),
+      ),
+    ),
+    Match.when({ runtime: "retaliation" }, () =>
+      Effect.all({
+        attackRoll: Random.nextIntBetween(1, 21),
+        damage: Random.nextIntBetween(1, 9),
+        targetAc: Random.nextIntBetween(10, 19),
+        critical: Random.nextBoolean,
+      }).pipe(
+        Effect.map((values) => ({
+          runtime: "retaliation" as const,
+          values,
+        })),
+      ),
+    ),
+    Match.when({ runtime: "fireShield" }, () =>
+      Effect.map(Random.nextIntBetween(2, 17), (damage) => ({
+        runtime: "fireShield" as const,
+        values: { damage },
+      })),
+    ),
     Match.exhaustive,
   );
 }

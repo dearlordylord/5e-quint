@@ -139,10 +139,10 @@ authoritative-d20-modifier-query-surface
 | `legendary-resistance-fallback` | batch | complete | none | additional battle interrupt breadth | Closed as a narrow AoE failed-save regression slice; no separate breadth batch remains to schedule here |
 | `battle-basic-action-surface` | candidate | complete | `available-actions-main` | unified projection/execution of `dash`, `disengage`, and `dodge` in battle scope | Landed in core available-actions and MCP with deterministic action-surface coverage |
 | `battle-ready-action-surface` | candidate | complete | `available-actions-main` | battle-scoped `READY`, `READY_PASS`, and `READY_RELEASE` action-surface support | Landed in core available-actions and MCP over the existing battle ready window; follow-up simplification can reduce registry boilerplate, but the runbook slice is closed |
-| `battle-ready-spell-payload-state` | facility | ready | `available-actions-main` | `battle-ready-spell-surface` | Promoted by [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md). Add the smallest battle-owned spell save/effect payload metadata needed to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through the action surface. |
-| `battle-ready-spell-surface` | candidate | blocked | `available-actions-main`, `battle-ready-spell-payload-state` | battle-scoped `READY_SPELL` and `READY_SPELL_RELEASE` action-surface support | Readied-spell timing exists, but honest action-surface exposure is blocked on battle-owned spell payload/state rather than token plumbing alone |
-| `after-damage-trigger-state` | facility | ready | `available-actions-main` | `after-damage-reaction-surface` | Promoted by [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md). Add the smallest battle-owned after-damage trigger qualifiers and stored reactive effect metadata needed to project these reactions honestly. |
-| `after-damage-reaction-surface` | candidate | blocked | `available-actions-main`, `after-damage-trigger-state` | battle-scoped `PIAfterDamage` reaction discovery/execution such as Hellish Rebuke / Fire Shield / Retaliation | `PIAfterDamage` exists, but honest surfacing is blocked on battle-owned trigger facts such as visibility, range/proximity, and stored reactive effect choice |
+| `battle-ready-spell-payload-state` | facility | complete | `available-actions-main` | `battle-ready-spell-surface` | TS battle state now owns typed readyable-spell save/effect payloads for the modeled ready-spell slice. Follow-up remains to mirror the new payload shape in `battle.qnt` before treating this as full spec parity. |
+| `battle-ready-spell-surface` | candidate | complete | `available-actions-main`, `battle-ready-spell-payload-state` | battle-scoped `READY_SPELL` and `READY_SPELL_RELEASE` action-surface support | Landed in core available-actions and MCP with per-spell tokens, slot-level choice holes, target holes, and battle-owned event finalization. |
+| `after-damage-trigger-state` | facility | complete | `available-actions-main` | `after-damage-reaction-surface` | TS battle state now carries after-damage trigger qualifiers plus narrow reactive active-effect payloads. Follow-up remains to mirror the qualifier shape in `battle.qnt` before treating this as full spec parity. |
+| `after-damage-reaction-surface` | candidate | complete | `available-actions-main`, `after-damage-trigger-state` | battle-scoped `PIAfterDamage` reaction discovery/execution such as Hellish Rebuke / Fire Shield / Retaliation | Landed in core available-actions and MCP for Hellish Rebuke, Retaliation, and Fire Shield from owned trigger/effect facts without adding a generic reaction registry. |
 | `preview-execution` | batch | complete | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | no-spend scripted action preview | Landed end to end in core and MCP; retain only because later descriptive-mode/transcript work still depends on the doctrine/model it consumed |
 | `dm-override` | plan | later | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
 | `transcript-port-to-dnd` | plan | later | `available-actions-main`, `resolve-commit-doctrine` | end-to-end audio/transcript/action loop | Hellenvald demo + tail facilities already exist; port is still later |
@@ -186,11 +186,6 @@ authoritative-d20-modifier-query-surface
 
 If scheduling strictly by current value and low dependency risk, outside already-complete runbooks:
 
-- [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md):
-  - `battle-ready-spell-payload-state`
-  - `battle-ready-spell-surface` after `battle-ready-spell-payload-state`
-  - `after-damage-trigger-state`
-  - `after-damage-reaction-surface` after `after-damage-trigger-state`
 - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md):
   - `effect-dependency-graph`
   - `parent-child-effect-teardown` after `effect-dependency-graph`
@@ -261,7 +256,7 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 
 ### `battle-ready-spell-payload-state`
 
-- classification: `promoted / runbook 6`
+- classification: `complete / TS+MCP landed; Quint parity follow-up remains`
 - owner_layer: battle-owned readied-spell payload metadata
 - read_first:
   - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
@@ -270,11 +265,12 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
   - [packages/core/src/available-actions.ts](/workspace/typescript/dnd/packages/core/src/available-actions.ts)
 - execution_goal:
-  - implement the smallest battle-owned spell save/effect payload facts needed to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through available-actions / MCP
+  - landed the smallest battle-owned spell save/effect payload facts needed to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through available-actions / MCP
+  - follow-up: mirror the payload ownership in `battle.qnt` / MBT mapping if the authoritative spec surface needs to observe it
 
 ### `after-damage-trigger-state`
 
-- classification: `promoted / runbook 6`
+- classification: `complete / TS+MCP landed; Quint parity follow-up remains`
 - owner_layer: battle-owned after-damage reaction trigger facts
 - read_first:
   - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
@@ -283,7 +279,8 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
   - [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-helpers.ts)
 - execution_goal:
-  - implement the smallest owned trigger qualifiers and stored reactive effect choice facts needed to surface `PIAfterDamage` reactions honestly without inventing a generic registry
+  - landed the smallest owned trigger qualifiers and stored reactive effect choice facts needed to surface `PIAfterDamage` reactions honestly without inventing a generic registry
+  - follow-up: mirror the qualifier ownership in `battle.qnt` / MBT mapping if the authoritative spec surface needs to observe it
 
 ### `fighting-styles-in-battle`
 

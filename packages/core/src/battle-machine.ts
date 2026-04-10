@@ -14,6 +14,7 @@ import { assign, setup, type SnapshotFrom } from "xstate";
 
 import {
   battleAfterDamageDecline,
+  battleAfterDamageReactiveEffect,
   battleAfterDamageRetaliation,
   battleAfterDamageSpellReaction,
   battleAttack,
@@ -130,6 +131,7 @@ export const battleMachine = setup({
     battleResolveDmgReaction: narrow(battleResolveDmgReaction),
     battleAfterDamageDecline: narrow(battleAfterDamageDecline),
     battleAfterDamageSpellReaction: narrow(battleAfterDamageSpellReaction),
+    battleAfterDamageReactiveEffect: narrow(battleAfterDamageReactiveEffect),
     battleAfterDamageRetaliation: narrow(battleAfterDamageRetaliation),
     battleCastSaveSpell: narrow(battleCastSaveSpell),
     battleResolveCounterspell: narrow(battleResolveCounterspell),
@@ -228,6 +230,9 @@ export const battleMachine = setup({
             },
             BATTLE_AFTER_DAMAGE_SPELL_REACTION: {
               actions: "battleAfterDamageSpellReaction",
+            },
+            BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT: {
+              actions: "battleAfterDamageReactiveEffect",
             },
             BATTLE_AFTER_DAMAGE_RETALIATION: {
               actions: "battleAfterDamageRetaliation",

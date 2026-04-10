@@ -29,6 +29,7 @@ import type {
   QualifiedPhysicalBypass,
   SpellId,
 } from "#/types.ts";
+import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 
 function applyDamageModifiers(
   amount: number,
@@ -752,6 +753,7 @@ export function freshCreature(
     monkLevel: 0,
     dexMod: 0,
     preparedSpells: new Set(),
+    readyableSpellPayloads: new Map(),
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
@@ -791,5 +793,9 @@ export function freshCaster(
     slotsMax: CASTER_SLOTS,
     slotsCurrent: CASTER_SLOTS,
     preparedSpells: CASTER_PREPARED_SPELLS,
+    readyableSpellPayloads: battleReadyableSpellPayloadsFromPreparedSpells(
+      CASTER_PREPARED_SPELLS,
+      CASTER_SLOTS,
+    ),
   };
 }

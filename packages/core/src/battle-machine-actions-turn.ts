@@ -51,12 +51,16 @@ import {
 } from "#/features/class-barbarian.ts";
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts";
 import {
+  battleReadyableSpellPayloadsFromPreparedSpells,
+  getBattleReadyableSpellPayloadForSlots,
+} from "#/features/spell-available-actions.ts";
+import {
   aggregateAttackMods,
   hasAttackDisadvantageSource,
   resolveGrapple,
   targetTwoSizesSmaller,
 } from "#/machine-combat.ts";
-import { spellId as mkSpellId } from "#/types.ts";
+import { spellId as mkSpellId, type SpellName } from "#/types.ts";
 
 // TODO style: combinators
 function readyEligible(
@@ -136,6 +140,7 @@ export function battleInit({
       hasShieldEquipped: cfg.hasShieldEquipped ?? false,
       mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
     });
+    const preparedSpells = cfg.preparedSpells ?? base.preparedSpells;
     creatures.set(cfg.id, {
       ...base,
       ...(cfg.maxHpReduction != null
@@ -150,9 +155,13 @@ export function battleInit({
       ...(cfg.legendaryResistances != null
         ? { legendaryResistancesRemaining: cfg.legendaryResistances }
         : {}),
-      ...(cfg.preparedSpells != null
-        ? { preparedSpells: cfg.preparedSpells }
-        : {}),
+      preparedSpells,
+      readyableSpellPayloads:
+        cfg.readyableSpellPayloads ??
+        battleReadyableSpellPayloadsFromPreparedSpells(
+          preparedSpells,
+          base.slotsCurrent,
+        ),
       ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
       ...(cfg.saveMiscBonus != null
         ? { saveMiscBonus: cfg.saveMiscBonus }
@@ -465,6 +474,7 @@ export function battleReadyRelease({
     readyReturn,
     e.knockOut,
     e.isMelee,
+    e.attackerWithin5ft,
     e.targetCanSeeAttacker,
     readyMods,
     releaser.mainHandWeapon != null
@@ -522,6 +532,7 @@ export function battleLegendaryAttack({
     laReturn,
     e.knockOut,
     e.isMelee,
+    e.attackerWithin5ft,
     e.targetCanSeeAttacker,
     laMods,
     m.mainHandWeapon != null ? !m.mainHandWeapon.isMelee : !e.isMelee,
@@ -654,6 +665,7 @@ export function battleOffHandAttack({
     ADR_ACTIVE_TURN,
     e.knockOut,
     offHand.isMelee,
+    e.attackerWithin5ft,
     e.targetCanSeeAttacker,
     mods,
     false,
@@ -769,6 +781,25 @@ export function battleReadySpell({
   )
     return {};
   if (ac.preparedSpells.size === 0) return {};
+  const readyableDefinition = ac.readyableSpellPayloads.get(e.spellName);
+  const readyablePayload =
+    readyableDefinition == null
+      ? null
+      : getBattleReadyableSpellPayloadForSlots(
+          e.spellName as SpellName,
+          readyableDefinition.baseLevel,
+          ac.slotsCurrent,
+        );
+  if (readyablePayload == null) return {};
+  if (e.slotLvl !== readyablePayload.slotLevel) return {};
+  if ((ac.slotsCurrent[e.slotLvl - 1] ?? 0) <= 0) return {};
+  if (e.saveDC !== readyablePayload.release.saveDC) return {};
+  if (e.dmgOnFail !== readyablePayload.release.damageOnFail) return {};
+  if (e.halfOnSave !== readyablePayload.release.halfOnSuccess) return {};
+  if (e.dt !== readyablePayload.release.damageType) return {};
+  if (e.cond !== readyablePayload.release.conditionOnFail) return {};
+  if (e.applyCond !== readyablePayload.release.applyCondition) return {};
+  if (e.saveAbility !== readyablePayload.release.saveAbility) return {};
   if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
   const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
   const afterAction = spendAction(preparedCaster, "ready");

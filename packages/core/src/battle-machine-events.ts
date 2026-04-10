@@ -147,6 +147,12 @@ export type BattleEvent =
       readonly reactionDt: DamageType;
     }
   | {
+      readonly type: "BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT";
+      readonly reactorId: CreatureId | null;
+      readonly reactionDmg: number;
+      readonly reactionDt: DamageType;
+    }
+  | {
       readonly type: "BATTLE_AFTER_DAMAGE_RETALIATION";
       readonly reactorId: CreatureId | null;
       readonly retAtkRoll: number;

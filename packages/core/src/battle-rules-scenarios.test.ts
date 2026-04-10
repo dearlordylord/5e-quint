@@ -1088,7 +1088,7 @@ describe("battle rules scenario regressions", () => {
       cond: "paralyzed",
       applyCond: true,
       saveAbility: "wis",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "hold_person",
       ritual: false,
     });
@@ -1127,7 +1127,7 @@ describe("battle rules scenario regressions", () => {
       cond: "paralyzed",
       applyCond: true,
       saveAbility: "wis",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "hold_person",
       ritual: false,
     });
@@ -1142,7 +1142,7 @@ describe("battle rules scenario regressions", () => {
 
     expect(ctx(actor).awaitCtx).toBeNull();
     expect(creature(actor, "A").actionsRemaining).toBe(0);
-    expect(creature(actor, "A").slotsCurrent[0]).toBe(3);
+    expect(creature(actor, "A").slotsCurrent[1]).toBe(2);
     expect(creature(actor, "B").reactionAvailable).toBe(false);
     expect(creature(actor, "B").slotsCurrent[2]).toBe(1);
     expect(creature(actor, "C").paralyzed).toBe(true);
@@ -1163,14 +1163,14 @@ describe("battle rules scenario regressions", () => {
       cond: "paralyzed",
       applyCond: true,
       saveAbility: "wis",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "hold_person",
       ritual: false,
     });
 
     expect(ctx(actor).awaitCtx).toBeNull();
     expect(creature(actor, "A").actionsRemaining).toBe(0);
-    expect(creature(actor, "A").slotsCurrent[0]).toBe(3);
+    expect(creature(actor, "A").slotsCurrent[1]).toBe(2);
     expect(creature(actor, "B").paralyzed).toBe(true);
   });
 
@@ -1283,7 +1283,7 @@ describe("battle rules scenario regressions", () => {
       cond: "paralyzed",
       applyCond: true,
       saveAbility: "wis",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "hold_person",
       ritual: false,
     });
@@ -3200,14 +3200,14 @@ describe("battle rules scenario regressions", () => {
       cond: "paralyzed",
       applyCond: true,
       saveAbility: "wis",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "hold_person",
     });
 
     expect(creature(actor, "A").readiedAction).toBe(true);
     expect(creature(actor, "A").readiedSpellParams).not.toBeNull();
     expect(Option.isSome(creature(actor, "A").concentrationSpellId)).toBe(true);
-    expect(creature(actor, "A").slotsCurrent[0]).toBe(3);
+    expect(creature(actor, "A").slotsCurrent[1]).toBe(2);
 
     send(actor, {
       type: "BATTLE_END_TURN",
@@ -3248,7 +3248,7 @@ describe("battle rules scenario regressions", () => {
       cond: "paralyzed",
       applyCond: true,
       saveAbility: "wis",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "hold_person",
     });
     send(actor, {
@@ -3274,7 +3274,7 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").readiedSpellParams).toBeNull();
     expect(creature(actor, "A").readiedAction).toBe(false);
     expect(Option.isNone(creature(actor, "A").concentrationSpellId)).toBe(true);
-    expect(creature(actor, "A").slotsCurrent[0]).toBe(3);
+    expect(creature(actor, "A").slotsCurrent[1]).toBe(2);
     expect(creature(actor, "B").paralyzed).toBe(false);
   });
 

@@ -29,6 +29,7 @@ import {
   spendAction,
   spendExtraAttack,
   spendReaction,
+  triggerQualifiersFromAttack,
 } from "#/battle-machine-helpers.ts";
 import type {
   AfterDamageReturn,
@@ -128,6 +129,7 @@ export function resolveAttack(
   returnTo: AfterDamageReturn,
   knockOut: boolean,
   isMelee: boolean,
+  attackerWithin5ft: boolean,
   targetCanSeeAttackerAtHit: boolean,
   mods: FullAttackMods,
   weaponIsRanged: boolean,
@@ -179,6 +181,7 @@ export function resolveAttack(
     knockOut: effectiveKnockOut,
     onHitEffect,
     targetCanSeeAttackerAtHit,
+    attackerWithin5ftAtHit: attackerWithin5ft,
     isMeleeAttack: isMelee,
     isRangedWeaponAttack: weaponIsRanged,
     isWeaponAttack: onHitEffect == null,
@@ -263,6 +266,7 @@ export function battleAttack({
     ADR_ACTIVE_TURN,
     e.knockOut,
     e.isMelee,
+    e.attackerWithin5ft,
     e.targetCanSeeAttacker,
     mods,
     ac.mainHandWeapon != null ? !ac.mainHandWeapon.isMelee : !e.isMelee,
@@ -393,6 +397,7 @@ export function battleResolveDmgReaction({
       atk.isCritical,
       atk.knockOut,
       atk.atkReturnTo,
+      triggerQualifiersFromAttack(atk),
     );
     return {
       creatures: result.creatures,
@@ -471,10 +476,25 @@ export function battleAfterDamageSpellReaction({
   if (!pi) return {};
   const ad = pi.ctx;
   if (e.reactorId === null) return {};
+  const reactor = c.creatures.get(e.reactorId);
+  if (
+    reactor == null ||
+    !aw.eligible.has(e.reactorId) ||
+    !reactor.reactionAvailable ||
+    e.reactorId !== ad.damagedCreature ||
+    !ad.sourceVisibleToDamagedCreature ||
+    !ad.sourceWithin60ftOfDamagedCreature ||
+    !reactor.preparedSpells.has("hellish_rebuke") ||
+    !reactor.slotsCurrent.some((remaining) => remaining > 0)
+  ) {
+    return {};
+  }
+  const slotLevel = firstAvailableSpellSlotLevel(reactor);
+  if (slotLevel == null) return {};
   const cs1 = setCreature(
     c.creatures,
     e.reactorId,
-    spendReaction(c.creatures.get(e.reactorId)!),
+    expendSlot(spendReaction(reactor), slotLevel),
   );
   const actualDmg = e.reactionSaved
     ? Math.trunc(e.reactionDmg / 2)
@@ -503,10 +523,21 @@ export function battleAfterDamageRetaliation({
   if (!pi) return {};
   const ad = pi.ctx;
   if (e.reactorId === null) return {};
+  const reactor = c.creatures.get(e.reactorId);
+  if (
+    reactor == null ||
+    !aw.eligible.has(e.reactorId) ||
+    !reactor.reactionAvailable ||
+    e.reactorId !== ad.damagedCreature ||
+    !ad.sourceWithin5ftOfDamagedCreature ||
+    reactor.barbarianLevel < 10
+  ) {
+    return {};
+  }
   const cs1 = setCreature(
     c.creatures,
     e.reactorId,
-    spendReaction(c.creatures.get(e.reactorId)!),
+    spendReaction(reactor),
   );
   const newOffered = new Set(aw.offered);
   newOffered.add(e.reactorId);
@@ -523,6 +554,45 @@ export function battleAfterDamageRetaliation({
     e.retDt,
     new Set(),
     e.retCrit,
+    false,
+    ad.returnTo,
+  );
+  return { ...result };
+}
+
+export function battleAfterDamageReactiveEffect({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT">): Partial<BattleContext> {
+  const aw = awaitingReaction(c);
+  if (!aw) return {};
+  const pi = piAfterDamage(aw.interrupt);
+  if (!pi) return {};
+  const ad = pi.ctx;
+  if (e.reactorId === null) return {};
+  const reactor = c.creatures.get(e.reactorId);
+  const payload = reactor?.activeEffects.find(
+    (effect) => effect.reactivePayload?.trigger === "meleeHitWithin5ft",
+  )?.reactivePayload;
+  if (
+    reactor == null ||
+    payload == null ||
+    !aw.eligible.has(e.reactorId) ||
+    e.reactorId !== ad.damagedCreature ||
+    !ad.sourceWithin5ftOfDamagedCreature ||
+    !ad.sourceHitWithMeleeAttackRoll ||
+    e.reactionDt !== payload.damageType
+  ) {
+    return {};
+  }
+  const result = applyDamageWithAfterReactions(
+    c.creatures,
+    ad.damageSource,
+    e.reactorId,
+    e.reactionDmg,
+    e.reactionDt,
+    new Set(),
+    false,
     false,
     ad.returnTo,
   );

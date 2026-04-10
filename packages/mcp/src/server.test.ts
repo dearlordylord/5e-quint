@@ -185,6 +185,70 @@ function initBattleHostWithReadyWindow() {
   return createBattleHost(actor);
 }
 
+function initBattleHostWithReadySpellActor() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["hold_person"]),
+        initiativeRoll: 15,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
+function initBattleHostWithHellishRebukeWindow() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["hellish_rebuke"]),
+        initiativeRoll: 10,
+      },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  actor.send({
+    type: "BATTLE_ATTACK",
+    targetId: CreatureId("B"),
+    attackRoll: 15,
+    diceCount: 1,
+    dieSize: 8,
+    dmg: 5,
+    dt: "slashing",
+    crit: false,
+    tAc: armorClass(10),
+    knockOut: false,
+    isMelee: true,
+    isFinesse: false,
+    attackerWithin5ft: true,
+    hostileWithin5ft: false,
+    targetCanSeeAttacker: true,
+    attackerCanSeeTarget: true,
+    frightSourceInLOS: false,
+    hasAllyAdjacentToTarget: false,
+    saDmg: 0,
+    hitReactionCandidates: new Set(),
+  });
+  return createBattleHost(actor);
+}
+
 function initBattleHostWithDeflectWindow() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -1444,6 +1508,115 @@ describe("MCP server adapter", () => {
         awaitingReadiedAction: false,
       },
     });
+  });
+
+  test("battle hosts surface and execute ready spell setup through MCP", () => {
+    const host = initBattleHostWithReadySpellActor();
+
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual(
+      expect.objectContaining({
+        action: expect.arrayContaining([
+          expect.objectContaining({
+            scope: "battle",
+            actorId: "A",
+            type: "BATTLE_READY_SPELL",
+            spellName: "hold_person",
+            slotLevel: { options: [2, 3] },
+            targetId: { options: ["B"] },
+          }),
+        ]),
+      }),
+    );
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_READY_SPELL",
+      spellName: "hold_person",
+      slotLevel: 2,
+      targetId: "B",
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome:
+          "Spend your action and a spell slot to Ready Hold Person and hold it with Concentration",
+      }),
+    );
+
+    host.actor.send({
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual(
+      expect.objectContaining({
+        reaction: expect.arrayContaining([
+          expect.objectContaining({
+            scope: "battle",
+            actorId: "A",
+            type: "BATTLE_READY_SPELL_RELEASE",
+          }),
+        ]),
+      }),
+    );
+
+    const releaseResponse = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_READY_SPELL_RELEASE",
+    });
+
+    expect("isError" in releaseResponse).toBe(false);
+    expect(readPayload(releaseResponse)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome:
+          "Spend your reaction to release the readied spell against its chosen target",
+      }),
+    );
+  });
+
+  test("battle hosts surface and execute after-damage reactions through MCP", () => {
+    const host = initBattleHostWithHellishRebukeWindow();
+
+    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual({
+      action: [],
+      bonusAction: [],
+      reaction: [
+        {
+          scope: "battle",
+          actorId: "B",
+          type: "CAST_HELLISH_REBUKE",
+          cost: { reaction: true, charge: "spellSlot" },
+          outcome: {
+            summary:
+              "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
+          },
+        },
+      ],
+      free: [],
+    });
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "B",
+      type: "CAST_HELLISH_REBUKE",
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome:
+          "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
+      }),
+    );
   });
 
   test("battle hosts surface CAST_COUNTERSPELL from the authoritative spell-cast window", () => {
