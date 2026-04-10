@@ -173,9 +173,11 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 
 **Scope:** Exposes the game engine to LLM and programmatic consumers via the Model Context Protocol. The available-actions module is a pure projection: `(DndContext, machineState) → ActionToken[]`.
 
+**MCP API surface taxonomy:** The audit in `plans/MCP_EVENT_SURFACE_AUDIT.md` classifies every core event into one of six MCP/API-adapter categories: `suggested_action`, `control_command`, `table_event`, `action_resolution`, `domain_trigger`, `bookkeeping`. This taxonomy describes how events map to the MCP adapter layer — it is not a Quint or XState domain taxonomy.
+
 **Owns:**
 - Supported action registry (query tokens, resolved tokens, runtime-input requirements, event mappings)
-- Three MCP tools: `get_state`, `get_available_actions`, `execute_action`
+- Four MCP tools: `get_state`, `get_available_actions`, `execute_action`, `preview_action`; planned separate surfaces: `execute_control_command`, `record_table_event`
 - Three-step execution contract: `ActionToken` (query-time) → `ResolvedActionToken` (user choices filled) → `ResolutionRequest` → `DndEvent` (runtime inputs added)
 
 **Does NOT own:**
