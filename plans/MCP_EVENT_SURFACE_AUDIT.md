@@ -71,7 +71,7 @@ Classify every core event into exactly one primary category:
 | `domain_trigger` | A semantic trigger that opens an owned pending window for a later suggested action. | Usually internal; if public, expose a semantic command rather than the raw `TRIGGER_*` event. |
 | `bookkeeping` | Internal state accounting behind higher-level semantics. | No public MCP surface. |
 
-Some lifecycle `control_command` events are currently exposed through `get_available_actions` for legacy single-creature orchestration. Task 4 keeps `ENTER_COMBAT`, `START_TURN`, `SHORT_REST`, and `EXIT_COMBAT` in `get_available_actions` without mirroring them on `execute_control_command`; their existing action-token path handles player/runtime choices and avoids duplicate public routes. Their primary taxonomy still remains `control_command`.
+Some lifecycle `control_command` events are exposed through `get_available_actions` / `execute_action` rather than `execute_control_command` because they carry player choices or runtime rolls that the action-token three-step contract already handles. Specifically: `SHORT_REST` has user-selected hit-dice order and runtime-rolled hit dice; `START_TURN` has runtime-filled resolution; `ENTER_COMBAT` and `EXIT_COMBAT` are single-creature host bootstrap/teardown. These are not mirrored on `execute_control_command` to avoid duplicate public routes. Their primary taxonomy still remains `control_command`.
 
 ## Creature Event Classification
 

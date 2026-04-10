@@ -502,6 +502,23 @@ describe("MCP server adapter", () => {
     ]);
   });
 
+  test("tool descriptions keep SHORT_REST on the action-token lane", () => {
+    expect(
+      toolDefinitions.find((tool) => tool.name === "get_available_actions")
+        ?.description,
+    ).toContain("SHORT_REST");
+    expect(
+      toolDefinitions.find((tool) => tool.name === "execute_action")
+        ?.description,
+    ).toContain("SHORT_REST");
+    expect(
+      toolDefinitions.find((tool) => tool.name === "execute_control_command")
+        ?.description,
+    ).toContain(
+      "does not mirror lifecycle flows already kept on execute_action, including SHORT_REST",
+    );
+  });
+
   test("tool definition input schemas satisfy MCP object-schema shape", () => {
     expect(toolDefinitions.map((tool) => tool.inputSchema.type)).toEqual([
       "object",

@@ -158,13 +158,13 @@ export const toolDefinitions = [
   },
   {
     name: "get_available_actions",
-    description: `Returns available scoped action tokens grouped by action economy cost. Creature scope exposes: ${EXPOSED_ACTION_TYPES.join(", ")}. Battle scope exposes the currently owned battle actions and interrupt reactions for the live battle window.`,
+    description: `Returns available scoped action tokens grouped by action economy cost. Creature scope exposes: ${EXPOSED_ACTION_TYPES.join(", ")}. This lane also keeps lifecycle tokens such as SHORT_REST when the public step includes user choices or runtime resolution. Battle scope exposes the currently owned battle actions and interrupt reactions for the live battle window.`,
     inputSchema: { type: "object" as const, properties: {} },
   },
   {
     name: "execute_action",
     description:
-      "Execute a resolved scoped action token. User-facing choices must already be filled; MCP supplies engine-only values like prerolls.",
+      "Execute a resolved scoped action token. User-facing choices must already be filled; this includes lifecycle tokens such as SHORT_REST when their public contract carries user choice or runtime-owned rolls. MCP supplies engine-only values like prerolls.",
     inputSchema: resolvedActionMcpInputSchema,
   },
   {
@@ -176,7 +176,7 @@ export const toolDefinitions = [
   {
     name: "execute_control_command",
     description:
-      "Execute a narrow session, turn, rest, or monster-control command. Supported battle turn commands require explicit runtime facts; MCP does not invent hidden start/end-turn inputs.",
+      "Execute a narrow session, turn, rest, or monster-control command. Supported battle turn commands require explicit runtime facts; MCP does not invent hidden start/end-turn inputs. This surface does not mirror lifecycle flows already kept on execute_action, including SHORT_REST.",
     inputSchema: scopedCommandMcpInputSchema,
   },
   {

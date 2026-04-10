@@ -47,7 +47,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 4,
       "id": "MCP0-D",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "SHORT_REST Documentation Clarity"
     },
     {
@@ -184,7 +184,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 1     | MCP0-A - Dead-Creature Condition Mutation Bug                         | done                                          | none                                                     | MCP0-B, safer MCP table events                                                      | Closed 2026-04-10: dead-creature condition apply/remove now reject at MCP/XState and no-op in Quint                                                                      | Completed; policy documented in A16        |
 | 2     | MCP0-B - Dead-Creature Exhaustion Mutation Decision                   | done                                          | MCP0-A RAW/dead policy research                          | safer MCP table events                                                              | Closed 2026-04-10: dead-creature exhaustion add/reduce now reject at MCP/XState and no-op in Quint; generic starvation/dehydration exhaustion is also blocked while dead | Completed; policy documented in A16        |
 | 3     | MCP0-C - Short Unknown Action Error                                   | done                                          | none                                                     | MCP UX and downstream agents                                                        | Closed 2026-04-10: `execute_action` / `preview_action` now return compact `UNKNOWN_ACTION_TYPE` errors before full decode, while known-action schema validation remains intact | Completed; no downstream plan changes      |
-| 4     | MCP0-D - SHORT_REST Documentation Clarity                             | ready-for-implementation-after-light-research | none                                                     | MCP docs accuracy                                                                   | Clarify action-token ownership; do not add a duplicate command                                                                                                           | Small docs/tool-description fix            |
+| 4     | MCP0-D - SHORT_REST Documentation Clarity                             | done                                          | none                                                     | MCP docs accuracy                                                                   | Closed 2026-04-10: docs/tool descriptions now keep `SHORT_REST` on the action-token lane and explicitly out of `execute_control_command`                               | Completed; no duplicate route added        |
 | 5     | MCP0-E - EXIT_COMBAT After Death UX Decision                          | ready-for-research                            | MCP0-A policy context                                    | optional UX cleanup                                                                 | Decide whether to keep, hide, or warn                                                                                                                                    | Lower-priority UX decision                 |
 | 6     | B - Battle Size Ownership For Grapple                                 | ready-for-implementation-after-light-research | none                                                     | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns               | Read RAW Grapple/Size and existing owned-size sources, then implement if no duplicate state exists                                                                       | Good implementation slice after MCP0       |
 | 7     | A - Condition Consequence Table Completion Research                   | ready-for-research                            | none                                                     | Possible condition-table implementation                                             | Reread SRD condition entries, decide each proposed column, and write Condition Table Delta                                                                               | Good research slice                        |
@@ -236,7 +236,7 @@ Merged MCP Fighter vs. Goblin baseline:
 Recommended first coding-loop tasks:
 
 1. **Task MCP0-A: Dead-Creature Condition Mutation Bug** if the goal is the highest-priority MCP correctness fix.
-2. **Task MCP0-D: SHORT_REST Documentation Clarity** if the goal is a small MCP docs/tool-description fix.
+2. **Task MCP0-E: EXIT_COMBAT After Death UX Decision** if the goal is the remaining MCP0 UX/assumption decision.
 3. **Task B: Battle Size Ownership For Grapple** if the goal is a concrete implementation slice that unblocks a public battle action after the MCP0 bugs.
 4. **Task A: Condition Consequence Table Completion Research** if the goal is competitor-research follow-through and spec auditability.
 5. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
@@ -469,13 +469,13 @@ Plan Impact:
 
 ### Task 4 - MCP0-D - SHORT_REST Documentation Clarity
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: MCP documentation accuracy.
 
-Next action: clarify docs/tool descriptions; do not add `SHORT_REST` to `execute_control_command`.
+Next action: Closed 2026-04-10. Keep `SHORT_REST` on `get_available_actions` / `execute_action`; do not add a mirrored `execute_control_command` route.
 
 Problem:
 
@@ -508,6 +508,23 @@ Verification:
 - RAW check: Short Rest wording only if documentation cites SRD behavior.
 - `/simplify` convergence: minimum two rounds after implementation or docs/tool-description edits.
 - `pnpm --filter @dnd/mcp test` if tool description tests change.
+
+Verification completed:
+
+- Light research confirmed the misleading wording lived in `ARCHITECTURE.md`, `plans/available-actions.md`, `plans/MCP_EVENT_SURFACE_AUDIT.md`, and the MCP tool descriptions in `packages/mcp/src/server.ts`; the existing `SHORT_REST` action-token route and test coverage already lived in `packages/core/src/available-actions.ts` and `packages/mcp/src/server.test.ts`.
+- RAW check: not applicable beyond avoiding new SRD claims. The final wording is routing/ownership documentation only and does not add or reinterpret rule text.
+- `/simplify` round 1: kept the change set on the documentation/tool-description surface only. No schema, control-command, or action-routing code changed, so there was nothing to collapse into a new public route.
+- `/simplify` round 2: re-checked for duplicated guidance between the audit, architecture note, and tool descriptions. The remaining repetition is intentional because each file serves a different reader surface; no further simplification needed.
+- `pnpm --filter @dnd/mcp test -- --runInBand`: passed.
+- `git diff --check`: passed.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCP0-D`: revise to `done`.
+  - `MCP0-E`: no-change; this task only clarified routing docs and did not change the pending UX decision.
+- Plan edits: marked `MCP0-D` done in the Ralph task index, DAG row, task-selection guidance, and Task 4 closeout.
 
 Extra research needed:
 
