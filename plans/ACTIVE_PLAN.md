@@ -35,7 +35,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 2,
       "id": "MCP0-B",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Dead-Creature Exhaustion Mutation Decision"
     },
     {
@@ -179,29 +179,29 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 ## DAG / Queue Order
 
-| Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | MCP0-A - Dead-Creature Condition Mutation Bug | done | none | MCP0-B, safer MCP table events | Closed 2026-04-10: dead-creature condition apply/remove now reject at MCP/XState and no-op in Quint | Completed; policy documented in A16 |
-| 2 | MCP0-B - Dead-Creature Exhaustion Mutation Decision | ready-for-implementation-after-light-research | MCP0-A RAW/dead policy research | safer MCP table events | Read RAW Dead/Exhaustion, then decide and implement dead-exhaustion behavior | Should follow MCP0-A |
-| 3 | MCP0-C - Short Unknown Action Error | ready-for-implementation-after-light-research | none | MCP UX and downstream agents | Add short pre-decode unknown-action error | Small MCP adapter fix |
-| 4 | MCP0-D - SHORT_REST Documentation Clarity | ready-for-implementation-after-light-research | none | MCP docs accuracy | Clarify action-token ownership; do not add a duplicate command | Small docs/tool-description fix |
-| 5 | MCP0-E - EXIT_COMBAT After Death UX Decision | ready-for-research | MCP0-A policy context | optional UX cleanup | Decide whether to keep, hide, or warn | Lower-priority UX decision |
-| 6 | B - Battle Size Ownership For Grapple | ready-for-implementation-after-light-research | none | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns | Read RAW Grapple/Size and existing owned-size sources, then implement if no duplicate state exists | Good implementation slice after MCP0 |
-| 7 | A - Condition Consequence Table Completion Research | ready-for-research | none | Possible condition-table implementation | Reread SRD condition entries, decide each proposed column, and write Condition Table Delta | Good research slice |
-| 8 | C - ResourceCost Typed Refactor | ready-for-implementation-after-light-research | none | Cleaner MCP/UI cost display and future resource docs | Confirm cost consumer blast radius and immediate-cost scope, then implement typed costs if still small | Good support-layer cleanup |
-| 9 | D - Battle Attack Runtime/Session Boundary | ready-for-research | none | F, G, MCP1-C, MCP2-A, possibly I; public `BATTLE_ATTACK`; off-hand/legendary/riders | Design token/runtime/session contract and stop conditions | Research only; do not implement attack yet |
-| 10 | MCP1-A - Session Host Architecture | ready-for-research | MCP0 tasks done or intentionally deferred | MCP1-C, MCP2-A | Design MCP session/router host without combat state duplication | Research before implementation |
-| 11 | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry | ready-for-research | MCP0 tasks done or intentionally deferred | MCP1-C, MCP2-B | Design a reusable core statblock facility, document approved provenance for future entries, and add Goblin Minion as the first entry | Research before implementation |
-| 12 | E - Movement And Help Geometry/Session Ownership | ready-for-research | none | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK` | Decide visibility/reach/threat/path/provocation ownership | Research only |
-| 13 | J - Generic Table Events, Environmental Hazards, And Monster Commands | ready-for-research | none | Future raw table event exposure and monster command work | Pick one narrow source/provenance family or keep deferred | Research only |
-| 14 | F - Legendary Attack Payload Ownership | blocked | D plus monster stat-block payload ownership | Public `BATTLE_LEGENDARY_ATTACK` | Wait for D, then define stat-block Legendary Action payload ownership | Not handoff-ready |
-| 15 | G - Attack Rider Ownership | blocked | D | Attack rider tokens | Wait for D, then classify rider timing and owned/runtime facts | Not handoff-ready |
-| 16 | MCP1-C - Encounter Start Tool/Command | blocked | MCP1-A, MCP1-B | MCP2-A | Initialize fighter-vs-goblin battle via MCP | Not handoff-ready |
-| 17 | MCP2-A - Battle Attack Public Boundary | blocked | D, MCP1-C | MCP2-B | Implement first-slice main-hand `BATTLE_ATTACK` token after D decides the boundary | Not handoff-ready |
-| 18 | MCP2-B - Fighter Attacks Goblin End-to-End | blocked | MCP2-A | motivating MCP flow | Execute attack against goblin through MCP | Not handoff-ready |
-| 19 | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up | blocked | MCP1-B, MCP2-A; possible stat-block attack-rider support | fuller goblin behavior | Model richer goblin behavior after the minion slice | Not handoff-ready |
-| 20 | H - PassiveModifiers Sub-Record | deferred | none | Possible passive modifier cleanup | Only revisit if the batch selects passive modifier restructuring | Not current-batch work |
-| 21 | I - Build-Map / Hole Metadata | deferred | Concrete consumer, possibly D | Future token-hole metadata | Only revisit when attack boundary, transcript disambiguation, or UI needs it | Not current-batch work |
+| Order | Task                                                                  | Status                                        | Depends on                                               | Blocks                                                                              | Next action                                                                                                                                                              | Handoff readiness                          |
+| ----- | --------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| 1     | MCP0-A - Dead-Creature Condition Mutation Bug                         | done                                          | none                                                     | MCP0-B, safer MCP table events                                                      | Closed 2026-04-10: dead-creature condition apply/remove now reject at MCP/XState and no-op in Quint                                                                      | Completed; policy documented in A16        |
+| 2     | MCP0-B - Dead-Creature Exhaustion Mutation Decision                   | done                                          | MCP0-A RAW/dead policy research                          | safer MCP table events                                                              | Closed 2026-04-10: dead-creature exhaustion add/reduce now reject at MCP/XState and no-op in Quint; generic starvation/dehydration exhaustion is also blocked while dead | Completed; policy documented in A16        |
+| 3     | MCP0-C - Short Unknown Action Error                                   | ready-for-implementation-after-light-research | none                                                     | MCP UX and downstream agents                                                        | Add short pre-decode unknown-action error                                                                                                                                | Small MCP adapter fix                      |
+| 4     | MCP0-D - SHORT_REST Documentation Clarity                             | ready-for-implementation-after-light-research | none                                                     | MCP docs accuracy                                                                   | Clarify action-token ownership; do not add a duplicate command                                                                                                           | Small docs/tool-description fix            |
+| 5     | MCP0-E - EXIT_COMBAT After Death UX Decision                          | ready-for-research                            | MCP0-A policy context                                    | optional UX cleanup                                                                 | Decide whether to keep, hide, or warn                                                                                                                                    | Lower-priority UX decision                 |
+| 6     | B - Battle Size Ownership For Grapple                                 | ready-for-implementation-after-light-research | none                                                     | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns               | Read RAW Grapple/Size and existing owned-size sources, then implement if no duplicate state exists                                                                       | Good implementation slice after MCP0       |
+| 7     | A - Condition Consequence Table Completion Research                   | ready-for-research                            | none                                                     | Possible condition-table implementation                                             | Reread SRD condition entries, decide each proposed column, and write Condition Table Delta                                                                               | Good research slice                        |
+| 8     | C - ResourceCost Typed Refactor                                       | ready-for-implementation-after-light-research | none                                                     | Cleaner MCP/UI cost display and future resource docs                                | Confirm cost consumer blast radius and immediate-cost scope, then implement typed costs if still small                                                                   | Good support-layer cleanup                 |
+| 9     | D - Battle Attack Runtime/Session Boundary                            | ready-for-research                            | none                                                     | F, G, MCP1-C, MCP2-A, possibly I; public `BATTLE_ATTACK`; off-hand/legendary/riders | Design token/runtime/session contract and stop conditions                                                                                                                | Research only; do not implement attack yet |
+| 10    | MCP1-A - Session Host Architecture                                    | ready-for-research                            | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-A                                                                      | Design MCP session/router host without combat state duplication                                                                                                          | Research before implementation             |
+| 11    | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry        | ready-for-research                            | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-B                                                                      | Design a reusable core statblock facility, document approved provenance for future entries, and add Goblin Minion as the first entry                                     | Research before implementation             |
+| 12    | E - Movement And Help Geometry/Session Ownership                      | ready-for-research                            | none                                                     | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK`                                          | Decide visibility/reach/threat/path/provocation ownership                                                                                                                | Research only                              |
+| 13    | J - Generic Table Events, Environmental Hazards, And Monster Commands | ready-for-research                            | none                                                     | Future raw table event exposure and monster command work                            | Pick one narrow source/provenance family or keep deferred                                                                                                                | Research only                              |
+| 14    | F - Legendary Attack Payload Ownership                                | blocked                                       | D plus monster stat-block payload ownership              | Public `BATTLE_LEGENDARY_ATTACK`                                                    | Wait for D, then define stat-block Legendary Action payload ownership                                                                                                    | Not handoff-ready                          |
+| 15    | G - Attack Rider Ownership                                            | blocked                                       | D                                                        | Attack rider tokens                                                                 | Wait for D, then classify rider timing and owned/runtime facts                                                                                                           | Not handoff-ready                          |
+| 16    | MCP1-C - Encounter Start Tool/Command                                 | blocked                                       | MCP1-A, MCP1-B                                           | MCP2-A                                                                              | Initialize fighter-vs-goblin battle via MCP                                                                                                                              | Not handoff-ready                          |
+| 17    | MCP2-A - Battle Attack Public Boundary                                | blocked                                       | D, MCP1-C                                                | MCP2-B                                                                              | Implement first-slice main-hand `BATTLE_ATTACK` token after D decides the boundary                                                                                       | Not handoff-ready                          |
+| 18    | MCP2-B - Fighter Attacks Goblin End-to-End                            | blocked                                       | MCP2-A                                                   | motivating MCP flow                                                                 | Execute attack against goblin through MCP                                                                                                                                | Not handoff-ready                          |
+| 19    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | blocked                                       | MCP1-B, MCP2-A; possible stat-block attack-rider support | fuller goblin behavior                                                              | Model richer goblin behavior after the minion slice                                                                                                                      | Not handoff-ready                          |
+| 20    | H - PassiveModifiers Sub-Record                                       | deferred                                      | none                                                     | Possible passive modifier cleanup                                                   | Only revisit if the batch selects passive modifier restructuring                                                                                                         | Not current-batch work                     |
+| 21    | I - Build-Map / Hole Metadata                                         | deferred                                      | Concrete consumer, possibly D                            | Future token-hole metadata                                                          | Only revisit when attack boundary, transcript disambiguation, or UI needs it                                                                                             | Not current-batch work                     |
 
 ## Current Integrated Baseline
 
@@ -331,13 +331,13 @@ Extra research needed:
 
 ### Task 2 - MCP0-B - Dead-Creature Exhaustion Mutation Decision
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: Task MCP0-A RAW/dead policy research.
 
 Blocks: safer table-event behavior and later MCP session reliability.
 
-Next action: read RAW Dead/Exhaustion, decide the rule behavior in `creature.qnt` first, then update XState/MCP to match.
+Next action: Closed 2026-04-10. Use the A16 dead-creature exhaustion policy as context for MCP0-E and future table-event provenance work.
 
 Problem:
 
@@ -379,6 +379,26 @@ Verification:
 - Focused core and MCP tests.
 - `npx quint test --match "inv_" dndTest.qnt`.
 - Tier 1b creature MBT if `creature.qnt` or the bridge changes.
+
+Verification completed:
+
+- RAW check completed against `.references/srd-5.2.1/Rules-Glossary.md` ("Dead", "Exhaustion"), `ASSUMPTIONS.md` A14/A16/A33, and `UBIQUITOUS_LANGUAGE.md`.
+- `/simplify` round 1: kept both the Quint dead no-op and the XState root guards. Quint remains the semantic authority, while the root guards are still needed so MCP table events return structured `TABLE_EVENT_NOT_ACCEPTED` results instead of silently no-oping after dispatch.
+- `/simplify` round 2: checked for remaining dead-exhaustion mutation paths and found that `APPLY_STARVATION` / `APPLY_DEHYDRATION` bypass `pAddExhaustion` through `exhaustionWithConcBreak`, so the shared `canChangeExhaustion` guard stays on those root handlers to preserve Quint parity. No further simplification needed.
+- `pnpm --filter @dnd/core exec vitest run src/machine.test.ts -t "dead state rejects exhaustion|dead state rejects starvation exhaustion|dead state rejects dehydration exhaustion"`: passed.
+- `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts -t "record_table_event rejects ADD_EXHAUSTION on dead creatures|record_table_event rejects REDUCE_EXHAUSTION on dead creatures"`: passed.
+- `npx quint test --match "test_dead_exhaustion_(add|reduce)_noop|inv_" dndTest.qnt`: passed.
+- Tier 1b creature MBT: after confirming no live `vitest` processes and no stale `quint_evaluator` processes before launch, `START=$(date +%s); cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` completed with MBT replay passing for seed `0xa6875358`, but the run still failed on the pre-existing schema-sync assertion `New Quint CreatureState fields not in schema: maxHpReduction`.
+- `pnpm quality`: failed on pre-existing `prettier --check` drift in `packages/core/src` (`battle-machine-actions-attack.ts`, `context-encoding.ts`, `creature.mbt.test.ts`, `features/spell-available-actions.ts`, `machine-event-extractors.ts`, `machine-helpers.ts`, `machine-monk.ts`, `machine-queries.ts`, `machine-startturn.ts`, `machine.ts`, `types.ts`) before reaching circular-dependency and typecheck steps.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCP0-B`: revise to `done`.
+  - `MCP0-E`: no-change; the dead/exhaustion policy is now explicit for the later UX decision.
+  - `J`: no-change; generic raw table-event provenance work still remains a separate research task.
+- Plan edits: marked `MCP0-B` done in the Ralph task index and DAG row, and added the task closeout with verification and policy notes.
 
 Extra research needed:
 

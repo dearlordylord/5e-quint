@@ -846,6 +846,42 @@ describe("exhaustion", () => {
     reduceExhaustion(a, 3);
     expect(isDead(snap(a))).toBe(true);
   });
+
+  it("dead state rejects exhaustion addition and preserves existing exhaustion", () => {
+    const a = create();
+    addExhaustion(a, 2);
+    takeDamage(a, DEFAULT_MAX_HP);
+    deathSave(a, 1);
+    deathSave(a, 5);
+
+    expect(isDead(snap(a))).toBe(true);
+    expect(a.getSnapshot().can({ type: "ADD_EXHAUSTION", levels: 1 })).toBe(
+      false,
+    );
+
+    addExhaustion(a, 1);
+
+    expect(ctx(a).exhaustion).toBe(2);
+    expect(isDead(snap(a))).toBe(true);
+  });
+
+  it("dead state rejects exhaustion reduction and preserves existing exhaustion", () => {
+    const a = create();
+    addExhaustion(a, 3);
+    takeDamage(a, DEFAULT_MAX_HP);
+    deathSave(a, 1);
+    deathSave(a, 5);
+
+    expect(isDead(snap(a))).toBe(true);
+    expect(a.getSnapshot().can({ type: "REDUCE_EXHAUSTION", levels: 1 })).toBe(
+      false,
+    );
+
+    reduceExhaustion(a, 1);
+
+    expect(ctx(a).exhaustion).toBe(3);
+    expect(isDead(snap(a))).toBe(true);
+  });
 });
 
 describe("modifier aggregation - own attack mods", () => {
@@ -2941,6 +2977,20 @@ describe("starvation", () => {
     a.send({ type: "APPLY_STARVATION" });
     expect(ctx(a).exhaustion).toBe(2);
   });
+
+  it("dead state rejects starvation exhaustion", () => {
+    const a = create();
+    addExhaustion(a, 2);
+    takeDamage(a, DEFAULT_MAX_HP);
+    deathSave(a, 1);
+    deathSave(a, 5);
+
+    expect(isDead(snap(a))).toBe(true);
+    expect(a.getSnapshot().can({ type: "APPLY_STARVATION" })).toBe(false);
+
+    a.send({ type: "APPLY_STARVATION" });
+    expect(ctx(a).exhaustion).toBe(2);
+  });
 });
 
 describe("dehydration", () => {
@@ -2955,6 +3005,20 @@ describe("dehydration", () => {
     addExhaustion(a, 2);
     a.send({ type: "APPLY_DEHYDRATION" });
     expect(ctx(a).exhaustion).toBe(3);
+  });
+
+  it("dead state rejects dehydration exhaustion", () => {
+    const a = create();
+    addExhaustion(a, 2);
+    takeDamage(a, DEFAULT_MAX_HP);
+    deathSave(a, 1);
+    deathSave(a, 5);
+
+    expect(isDead(snap(a))).toBe(true);
+    expect(a.getSnapshot().can({ type: "APPLY_DEHYDRATION" })).toBe(false);
+
+    a.send({ type: "APPLY_DEHYDRATION" });
+    expect(ctx(a).exhaustion).toBe(2);
   });
 });
 

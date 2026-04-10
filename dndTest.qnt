@@ -758,6 +758,18 @@ module dndTest::Impl {
 
   run test_exhaustion_reduce = assert(pReduceExhaustion(pAddExhaustion(FRESH20, 3, false), 1).exhaustion == 2)
 
+  run test_dead_exhaustion_add_noop = {
+    val s = FRESH20.with("dead", true).with("hp", 0).with("exhaustion", 2)
+    val s1 = pAddExhaustion(s, 3, false)
+    all { assert(s1.dead), assert(s1.hp == 0), assert(s1.exhaustion == 2) }
+  }
+
+  run test_dead_exhaustion_reduce_noop = {
+    val s = FRESH20.with("dead", true).with("hp", 0).with("exhaustion", 3)
+    val s1 = pReduceExhaustion(s, 2)
+    all { assert(s1.dead), assert(s1.hp == 0), assert(s1.exhaustion == 3) }
+  }
+
   // -- Exhaustion Penalty --
 
   run test_exhaustion_penalty_0 = assert(exhaustionPenalty(FRESH20) == 0)

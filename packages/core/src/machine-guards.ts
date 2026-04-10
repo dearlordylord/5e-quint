@@ -326,6 +326,7 @@ export const guards = {
   canExpendSlot: ({ context: c }: GuardArg) => c.hp > 0 && !isIncapacitated(c),
   contextDead: ({ context: c }: GuardArg) => c.dead,
   canChangeCondition: ({ context: c }: GuardArg) => !c.dead,
+  canChangeExhaustion: ({ context: c }: GuardArg) => !c.dead,
   hpZeroUnconscious: ({ context: c }: GuardArg) => c.hp === 0 && c.unconscious,
   isOutOfCombat: ({ context: c }: GuardArg) => !c.inCombat,
   regainedConsciousness: ({ context: c }: GuardArg) => c.hp > 0 && !c.dead,

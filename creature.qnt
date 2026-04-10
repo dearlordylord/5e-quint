@@ -1091,9 +1091,9 @@ module creature {
          .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISUnconscious)))
   }
 
-  /// Increment exhaustion. Level 6 = death. If exhaustionImmune, no effect.
+  /// Increment exhaustion. Level 6 = death. If dead or exhaustionImmune, no effect.
   pure def pAddExhaustion(s: CreatureState, levels: int, exhaustionImmune: bool): CreatureState = {
-    if (exhaustionImmune) s
+    if (s.dead or exhaustionImmune) s
     else {
       val newLevel = intMin(s.exhaustion + levels, 6)
       val s1 = s.with("exhaustion", newLevel)
@@ -1102,10 +1102,13 @@ module creature {
     }
   }
 
-  /// Reduce exhaustion (min 0). HP does not auto-increase.
+  /// Reduce exhaustion (min 0). HP does not auto-increase. Dead creatures do not change.
   pure def pReduceExhaustion(s: CreatureState, levels: int): CreatureState = {
-    val newLevel = intMax(s.exhaustion - levels, 0)
-    s.with("exhaustion", newLevel)
+    if (s.dead) s
+    else {
+      val newLevel = intMax(s.exhaustion - levels, 0)
+      s.with("exhaustion", newLevel)
+    }
   }
 
   // -- Modifier aggregation --

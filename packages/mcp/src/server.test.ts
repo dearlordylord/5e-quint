@@ -1032,6 +1032,86 @@ describe("MCP server adapter", () => {
     expect(immuneExhaustion.state.exhaustion).toBe(0);
   });
 
+  test("record_table_event rejects ADD_EXHAUSTION on dead creatures", () => {
+    const host = createDemoHost({ maxHp: 20 });
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "ADD_EXHAUSTION",
+        levels: 2,
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 10,
+        damageType: "slashing",
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 20,
+        damageType: "slashing",
+      }),
+    );
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "ADD_EXHAUSTION",
+      levels: 1,
+    });
+    const payload = readPayload(response);
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe("TABLE_EVENT_NOT_ACCEPTED");
+    expect(payload.state.dead).toBe(true);
+    expect(payload.state.exhaustion).toBe(2);
+  });
+
+  test("record_table_event rejects REDUCE_EXHAUSTION on dead creatures", () => {
+    const host = createDemoHost({ maxHp: 20 });
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "ADD_EXHAUSTION",
+        levels: 3,
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 10,
+        damageType: "slashing",
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 20,
+        damageType: "slashing",
+      }),
+    );
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "REDUCE_EXHAUSTION",
+      levels: 1,
+    });
+    const payload = readPayload(response);
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe("TABLE_EVENT_NOT_ACCEPTED");
+    expect(payload.state.dead).toBe(true);
+    expect(payload.state.exhaustion).toBe(3);
+  });
+
   test("record_table_event validates condition and exhaustion schema shapes", () => {
     const host = createDemoHost();
 
