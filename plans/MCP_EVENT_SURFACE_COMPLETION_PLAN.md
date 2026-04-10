@@ -457,10 +457,10 @@ Commit after this task:
 
 ### Task 17 - Spell Damage Semantic Trigger Commands
 
-- [ ] Do not expose raw `TRIGGER_OVERCHANNEL`.
-- [ ] Add a semantic command shape for spell-damage context only if MCP/session users need to record it outside a modeled spell action.
-- [ ] If the spell-damage trigger belongs behind `CAST_PREPARED_SPELL` or battle spell resolution, update the audit blocker instead of adding a raw command.
-- [ ] Add tests proving any implemented command opens `USE_OVERCHANNEL` and resolution clears the pending state.
+- [x] Do not expose raw `TRIGGER_OVERCHANNEL`. (Confirmed with MCP validation coverage.)
+- [x] Add a semantic command shape for spell-damage context only if MCP/session users need to record it outside a modeled spell action. (Not added; no safe out-of-band command without duplicating spell-cast provenance.)
+- [x] If the spell-damage trigger belongs behind `CAST_PREPARED_SPELL` or battle spell resolution, update the audit blocker instead of adding a raw command. (Done: updated `MCP_EVENT_SURFACE_AUDIT.md` to keep it internal behind modeled spell/battle resolution ownership.)
+- [x] Add tests proving any implemented command opens `USE_OVERCHANNEL` and resolution clears the pending state. (N/A: no command implemented; existing internal trigger/use test still covers pending state clearing, and new MCP tests reject the raw trigger.)
 
 Pre-research result, 2026-04-10:
 
@@ -471,14 +471,14 @@ Dependencies: Task 2.
 
 RAW check:
 
-- Read Wizard Overchannel SRD 5.2.1 class passages and relevant spellcasting damage passages.
-- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+- [x] Read Wizard Overchannel SRD 5.2.1 class passages and relevant spellcasting damage passages. Overchannel requires casting a Wizard spell with a level 1-5 spell slot that deals damage.
+- [x] Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md). Relevant terms: Cast Level, Using a Higher-Level Spell Slot, Damage, Damage Roll.
 
 Verification:
 
 - `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
 - `pnpm --filter @dnd/mcp test -- src/server.test.ts`
-- Tier 1b creature MBT if pending-resolution state or MBT bridge semantics change.
+- Tier 1b creature MBT if pending-resolution state or MBT bridge semantics change. (Not required: no pending-resolution or MBT bridge semantics changed.)
 
 Commit after this task:
 

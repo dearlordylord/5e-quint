@@ -1164,6 +1164,28 @@ describe("MCP server adapter", () => {
     expect(response.state.pendingResolution).toBeNull();
   });
 
+  test("record_table_event keeps the raw Overchannel trigger internal", () => {
+    const host = createDemoHost({
+      maxHp: 36,
+      wizardLevel: classLevel(14),
+      preparedSpells: new Set(["fireball"]),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+
+    const rawTrigger = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "TRIGGER_OVERCHANNEL",
+      spellName: "fireball",
+      slotLevel: 3,
+    });
+    expect("isError" in rawTrigger && rawTrigger.isError).toBe(true);
+    expect(readPayload(rawTrigger).error).toBe(
+      "Invalid record_table_event input",
+    );
+    expect(host.actor.getSnapshot().context.pendingResolution).toBeNull();
+  });
+
   test("record_table_event keeps max-HP and generic effect payloads blocked", () => {
     const host = createDemoHost();
 
@@ -2283,6 +2305,38 @@ describe("MCP server adapter", () => {
     expect(payload.success).toBe(true);
     expect(payload.state.classStates.wizard.overchannelUsesThisLR).toBe(1);
     expect(payload.state.pendingResolution).toBeNull();
+  });
+
+  test("execute_action rejects raw TRIGGER_OVERCHANNEL as a public MCP command", () => {
+    const host = createDemoHost({
+      maxHp: 36,
+      wizardLevel: classLevel(14),
+      preparedSpells: new Set(["fireball"]),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
+
+    const response = handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({
+        type: "TRIGGER_OVERCHANNEL",
+        spellName: "fireball",
+        slotLevel: 3,
+      }),
+    );
+    expect("isError" in response && response.isError).toBe(true);
+    expect(host.actor.getSnapshot().context.pendingResolution).toBeNull();
   });
 
   test("execute_action supports USE_PEERLESS_SKILL once the pending trigger exists", () => {
