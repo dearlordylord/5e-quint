@@ -3081,6 +3081,7 @@ export function finalizeBattleResolution(
           isMelee: actor?.mainHandWeapon?.isMelee ?? true,
           weaponProperties: actor?.mainHandWeapon?.properties ?? new Set(),
           attackerWithin5ft: true,
+          attackerWithin60ft: true,
           hostileWithin5ft: false,
           targetCanSeeAttacker: true,
           attackerCanSeeTarget: true,

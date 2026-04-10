@@ -110,6 +110,7 @@ export type BattleEvent =
       readonly isFinesse?: boolean;
       readonly onHitEffect?: ActiveEffect;
       readonly attackerWithin5ft: boolean;
+      readonly attackerWithin60ft?: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;
       readonly attackerCanSeeTarget: boolean;
@@ -245,6 +246,7 @@ export type BattleEvent =
       readonly weaponProperties?: ReadonlySet<WeaponProperty>;
       readonly isFinesse?: boolean;
       readonly attackerWithin5ft: boolean;
+      readonly attackerWithin60ft?: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;
       readonly attackerCanSeeTarget: boolean;
@@ -276,6 +278,7 @@ export type BattleEvent =
       readonly weaponProperties?: ReadonlySet<WeaponProperty>;
       readonly isFinesse?: boolean;
       readonly attackerWithin5ft: boolean;
+      readonly attackerWithin60ft?: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;
       readonly attackerCanSeeTarget: boolean;
@@ -314,6 +317,7 @@ export type BattleEvent =
       readonly tAc: ArmorClass;
       readonly knockOut: boolean;
       readonly attackerWithin5ft: boolean;
+      readonly attackerWithin60ft?: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;
       readonly attackerCanSeeTarget: boolean;
@@ -367,6 +371,7 @@ export type BattleEvent =
       readonly weaponProperties?: ReadonlySet<WeaponProperty>;
       readonly isFinesse?: boolean;
       readonly attackerWithin5ft: boolean;
+      readonly attackerWithin60ft?: boolean;
       readonly hostileWithin5ft: boolean;
       readonly targetCanSeeAttacker: boolean;
       readonly attackerCanSeeTarget: boolean;

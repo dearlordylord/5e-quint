@@ -85,6 +85,7 @@ function initBattleHostWithHitWindow() {
     isMelee: true,
     isFinesse: false,
     attackerWithin5ft: true,
+    attackerWithin60ft: true,
     hostileWithin5ft: false,
     targetCanSeeAttacker: true,
     attackerCanSeeTarget: true,
@@ -127,6 +128,7 @@ function initBattleHostWithDamageWindow() {
     isMelee: true,
     isFinesse: false,
     attackerWithin5ft: true,
+    attackerWithin60ft: true,
     hostileWithin5ft: false,
     targetCanSeeAttacker: true,
     attackerCanSeeTarget: true,
@@ -238,6 +240,7 @@ function initBattleHostWithHellishRebukeWindow() {
     isMelee: true,
     isFinesse: false,
     attackerWithin5ft: true,
+    attackerWithin60ft: true,
     hostileWithin5ft: false,
     targetCanSeeAttacker: true,
     attackerCanSeeTarget: true,
@@ -469,8 +472,16 @@ describe("MCP server adapter", () => {
 
   test("preview_action summarizes a creature action without mutating state", () => {
     const host = createDemoHost();
-    handleToolCall(host, "execute_action", creatureResolved({ type: "ENTER_COMBAT" }));
-    handleToolCall(host, "execute_action", creatureResolved({ type: "START_TURN" }));
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
 
     const before = readPayload(handleToolCall(host, "get_state", {}));
     const preview = readPayload(
@@ -1513,7 +1524,9 @@ describe("MCP server adapter", () => {
   test("battle hosts surface and execute ready spell setup through MCP", () => {
     const host = initBattleHostWithReadySpellActor();
 
-    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual(
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual(
       expect.objectContaining({
         action: expect.arrayContaining([
           expect.objectContaining({
@@ -1554,7 +1567,9 @@ describe("MCP server adapter", () => {
       eotConSave: true,
     });
 
-    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual(
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual(
       expect.objectContaining({
         reaction: expect.arrayContaining([
           expect.objectContaining({
@@ -1585,7 +1600,9 @@ describe("MCP server adapter", () => {
   test("battle hosts surface and execute after-damage reactions through MCP", () => {
     const host = initBattleHostWithHellishRebukeWindow();
 
-    expect(readPayload(handleToolCall(host, "get_available_actions", {}))).toEqual({
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual({
       action: [],
       bonusAction: [],
       reaction: [

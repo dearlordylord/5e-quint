@@ -125,6 +125,7 @@ export function battleMovementOAAttack({
     e.knockOut,
     true,
     e.attackerWithin5ft,
+    e.attackerWithin60ft ?? false,
     e.targetCanSeeAttacker,
     mods,
     false,

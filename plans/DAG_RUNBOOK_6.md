@@ -2,11 +2,9 @@
 
 ## Status
 
-TS/MCP action-surface implementation landed.
+TS/MCP action-surface implementation landed; Quint parity work is now partially mirrored.
 
-The merge completed the TypeScript battle state, available-actions, MCP, and focused test portions of this runbook. `battle.qnt` was not changed in that commit.
-
-The remaining exception is tracked in [DAG.md](./DAG.md) as `runbook6-quint-parity`. Treat that follow-up as required spec-first work before using Runbook 6 as evidence for authoritative battle ownership in product consumers such as `dm-override` or `transcript-port-to-dnd`.
+The merge completed the TypeScript battle state, available-actions, MCP, and focused test portions of this runbook. The follow-up worktree updates `battle.qnt` so ready-spell setup derives modeled payload facts from spell identity and slot level, and so attack damage carries explicit after-damage trigger qualifiers for Hellish Rebuke and Retaliation. A narrower follow-up remains for Fire Shield's reactive active-effect payload if that automatic effect must become fully spec-visible.
 
 This runbook captures the execution-grade batch after Runbook 5. Its scope comes from the ownership gaps discovered during Runbook 4 and confirmed still open after Runbook 5.
 
@@ -457,4 +455,4 @@ This runbook is complete when:
 Implementation note:
 
 - The TS/MCP action surface satisfies the exit criteria above for the current runtime projection layer.
-- `battle.qnt` still has the pre-existing spell-name/parameter and after-damage context shape. `runbook6-quint-parity` in [DAG.md](./DAG.md) is the required follow-up before this runbook counts as authoritative spec-level ownership.
+- `battle.qnt` now mirrors the ready-spell payload derivation and after-damage trigger qualifier shape used by Hellish Rebuke and Retaliation. Fire Shield's reactive active-effect payload remains TS-owned until the Quint active-effect schema gains an equivalent payload.

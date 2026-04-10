@@ -1,7 +1,3 @@
-/**
- * Battle-level XState machine types — mirrors battle.qnt state variables and types.
- * Flat context with Map<CreatureId, BattleCreature>, phase as discriminated union.
- */
 import type { Option } from "effect";
 
 // Events, decisions, and interrupts extracted to battle-machine-events.ts for max-lines compliance.
@@ -26,22 +22,20 @@ import type {
   HandUse,
   IncapSource,
   QualifiedPhysicalBypass,
-  Size,
   SpellId,
   SpellSlotLevel,
 } from "#/types.ts";
 
 export type { CreatureId } from "#/types.ts";
 
+type DeathSaves = { readonly successes: number; readonly failures: number };
+
 export interface BattleCreatureState {
   readonly hp: number;
   readonly maxHp: number;
   readonly maxHpReduction: number;
   readonly tempHp: number;
-  readonly deathSaves: {
-    readonly successes: number;
-    readonly failures: number;
-  };
+  readonly deathSaves: DeathSaves;
   readonly stable: boolean;
   readonly dead: boolean;
   readonly blinded: boolean;
@@ -104,7 +98,10 @@ export interface BattleCreatureState {
   // Prepared spells (for CS eligibility)
   readonly preparedSpells: ReadonlySet<string>;
   // Battle-owned payload facts for readyable action-casting-time spells.
-  readonly readyableSpellPayloads: ReadonlyMap<string, BattleReadyableSpellPayload>;
+  readonly readyableSpellPayloads: ReadonlyMap<
+    string,
+    BattleReadyableSpellPayload
+  >;
   // Evasion (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
   readonly hasEvasion: boolean;
   // Misc save bonus (Paladin Aura, Ring of Protection, etc.)
@@ -176,6 +173,7 @@ export interface AttackHitCtx {
   readonly onHitEffect?: ActiveEffect;
   readonly targetCanSeeAttackerAtHit: boolean;
   readonly attackerWithin5ftAtHit: boolean;
+  readonly attackerWithin60ftAtHit: boolean;
   readonly isMeleeAttack: boolean;
   readonly isRangedWeaponAttack: boolean;
   readonly isWeaponAttack: boolean;
@@ -196,6 +194,7 @@ export interface AttackDamageCtx {
   readonly knockOut: boolean;
   readonly targetCanSeeAttackerAtHit: boolean;
   readonly attackerWithin5ftAtHit: boolean;
+  readonly attackerWithin60ftAtHit: boolean;
   readonly isMeleeAttack: boolean;
   readonly isWeaponAttack: boolean;
   readonly legalReactionsByCreature: ReadonlyMap<
@@ -439,7 +438,10 @@ export interface InitCreatureConfig {
   readonly legendaryActions?: number;
   readonly legendaryResistances?: number;
   readonly preparedSpells?: ReadonlySet<string>;
-  readonly readyableSpellPayloads?: ReadonlyMap<string, BattleReadyableSpellPayload>;
+  readonly readyableSpellPayloads?: ReadonlyMap<
+    string,
+    BattleReadyableSpellPayload
+  >;
   readonly hasEvasion?: boolean;
   readonly saveMiscBonus?: number;
   readonly critRange?: number;
@@ -473,11 +475,4 @@ export interface InitCreatureConfig {
   readonly qualifiedPhysicalResistances?: ReadonlyArray<QualifiedPhysicalBypass>;
   readonly qualifiedPhysicalVulnerabilities?: ReadonlyArray<QualifiedPhysicalBypass>;
   readonly qualifiedPhysicalImmunities?: ReadonlyArray<QualifiedPhysicalBypass>;
-}
-
-export interface GrappleParams {
-  readonly attackerSize: Size;
-  readonly targetSize: Size;
-  readonly targetSaveFailed: boolean;
-  readonly attackerHasFreeHand: boolean;
 }

@@ -149,9 +149,9 @@ authoritative-d20-modifier-query-surface
 | `battle-ready-action-surface` | candidate | complete | `available-actions-main` | battle-scoped `READY`, `READY_PASS`, and `READY_RELEASE` action-surface support | Landed in core available-actions and MCP over the existing battle ready window; follow-up simplification can reduce registry boilerplate, but the runbook slice is closed |
 | `battle-ready-spell-payload-state` | facility | complete | `available-actions-main` | `battle-ready-spell-surface`, `runbook6-quint-parity` | TS battle state now owns typed readyable-spell save/effect payloads for the modeled ready-spell slice. Authoritative Quint parity is tracked by `runbook6-quint-parity`; do not treat the TS-only shape as final spec ownership. |
 | `battle-ready-spell-surface` | candidate | complete | `available-actions-main`, `battle-ready-spell-payload-state` | battle-scoped `READY_SPELL` and `READY_SPELL_RELEASE` action-surface support | Landed in core available-actions and MCP with per-spell tokens, slot-level choice holes, target holes, and battle-owned event finalization. |
-| `after-damage-trigger-state` | facility | complete | `available-actions-main` | `after-damage-reaction-surface`, `runbook6-quint-parity` | TS battle state now carries after-damage trigger qualifiers plus narrow reactive active-effect payloads. Authoritative Quint parity is tracked by `runbook6-quint-parity`; do not treat the TS-only shape as final spec ownership. |
+| `after-damage-trigger-state` | facility | complete | `available-actions-main` | `after-damage-reaction-surface`, `runbook6-quint-parity` | TS battle state now carries after-damage trigger qualifiers plus narrow reactive active-effect payloads. `battle.qnt` mirrors the attack-derived qualifier shape for Hellish Rebuke and Retaliation; Fire Shield reactive payload parity remains tracked by `runbook6-quint-parity`. |
 | `after-damage-reaction-surface` | candidate | complete | `available-actions-main`, `after-damage-trigger-state` | battle-scoped `PIAfterDamage` reaction discovery/execution such as Hellish Rebuke / Fire Shield / Retaliation | Landed in core available-actions and MCP for Hellish Rebuke, Retaliation, and Fire Shield from owned trigger/effect facts without adding a generic reaction registry. |
-| `runbook6-quint-parity` | batch | ready | `battle-ready-spell-payload-state`, `after-damage-trigger-state` | `dm-override`, `transcript-port-to-dnd` | Spec-first follow-up for Runbook 6. Mirror TS-owned readyable spell payloads, after-damage trigger qualifiers, and reactive effect payload semantics into `battle.qnt` plus MBT bridge/tests before product consumers rely on Runbook 6 as authoritative battle ownership. |
+| `runbook6-quint-parity` | batch | active | `battle-ready-spell-payload-state`, `after-damage-trigger-state` | `dm-override`, `transcript-port-to-dnd` | Spec-first follow-up for Runbook 6. Ready-spell payload derivation and attack-derived Hellish Rebuke/Retaliation trigger qualifiers are mirrored in `battle.qnt`; Fire Shield reactive active-effect payload semantics remain before product consumers rely on Runbook 6 as fully authoritative battle ownership. |
 | `preview-execution` | batch | complete | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | no-spend scripted action preview | Landed end to end in core and MCP; retain only because later descriptive-mode/transcript work still depends on the doctrine/model it consumed |
 | `dm-override` | plan | later | `available-actions-main`, `runbook6-quint-parity`, `resolve-commit-doctrine`, `first-class-consumption-model` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Do not promote until Runbook 6's TS/MCP action-surface facts have Quint parity. |
 | `transcript-port-to-dnd` | plan | later | `available-actions-main`, `runbook6-quint-parity`, `resolve-commit-doctrine` | end-to-end audio/transcript/action loop | Hellenvald demo + tail facilities already exist; port is still later, and should not promote while Runbook 6 action-surface facts are TS-only. |
@@ -263,7 +263,7 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 
 ### `battle-ready-spell-payload-state`
 
-- classification: `complete / TS+MCP landed; Quint parity follow-up remains`
+- classification: `complete / TS+MCP landed; Quint ready-payload parity mirrored`
 - owner_layer: battle-owned readied-spell payload metadata
 - read_first:
   - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
@@ -273,11 +273,11 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [packages/core/src/available-actions.ts](/workspace/typescript/dnd/packages/core/src/available-actions.ts)
 - execution_goal:
   - landed the smallest battle-owned spell save/effect payload facts needed to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through available-actions / MCP
-  - follow-up: `runbook6-quint-parity` must mirror the payload ownership in `battle.qnt` / MBT mapping before downstream product consumers rely on it
+  - Quint parity: `battle.qnt` now derives modeled ready-spell payload facts from spell identity and slot level instead of caller-provided opaque save/effect values
 
 ### `after-damage-trigger-state`
 
-- classification: `complete / TS+MCP landed; Quint parity follow-up remains`
+- classification: `complete / TS+MCP landed; Quint trigger parity partly mirrored`
 - owner_layer: battle-owned after-damage reaction trigger facts
 - read_first:
   - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
@@ -287,11 +287,12 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-helpers.ts)
 - execution_goal:
   - landed the smallest owned trigger qualifiers and stored reactive effect choice facts needed to surface `PIAfterDamage` reactions honestly without inventing a generic registry
-  - follow-up: `runbook6-quint-parity` must mirror the qualifier ownership in `battle.qnt` / MBT mapping before downstream product consumers rely on it
+  - Quint parity: `battle.qnt` now carries explicit source-visible/source-within-5ft/source-within-60ft/melee-hit trigger facts for attack-derived after-damage windows used by Hellish Rebuke and Retaliation
+  - follow-up: mirror Fire Shield's active-effect reactive payload in `creature.qnt`/`battle.qnt` if the authoritative spec surface needs that automatic effect fully visible
 
 ### `runbook6-quint-parity`
 
-- classification: `ready / spec parity`
+- classification: `active / partial spec parity`
 - owner_layer: `battle.qnt` authoritative combat spec plus MBT bridge
 - read_first:
   - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
@@ -299,9 +300,9 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [packages/core/src/battle-machine-types.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-types.ts)
   - [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd/packages/core/src/battle-projection.mbt.test.ts)
 - execution_goal:
-  - mirror Runbook 6's TS/MCP readyable spell payload ownership into Quint so `BATTLE_READY_SPELL` no longer remains parameter-fabrication-only at the spec layer
-  - mirror Runbook 6's after-damage trigger qualifiers and reactive effect payload semantics into Quint so `PIAfterDamage` legality is spec-visible
-  - update MBT bridge/tests so TS and Quint agree on the new owned payload/trigger shape
+  - complete: Runbook 6's TS/MCP readyable spell payload ownership is mirrored into Quint so `BATTLE_READY_SPELL` uses modeled spell payload facts instead of caller-fabricated save/effect parameters at the spec layer
+  - complete: Runbook 6's attack-derived after-damage trigger qualifiers are mirrored into Quint and MBT bridge/tests for Hellish Rebuke and Retaliation
+  - remaining: mirror Fire Shield's reactive active-effect payload semantics into `creature.qnt`/`battle.qnt` if product consumers need that automatic effect fully spec-visible
 
 ### `fighting-styles-in-battle`
 

@@ -8,7 +8,7 @@
 
 - Phases 1-4A are complete. The foundational contract, battle reaction ownership, action grouping, choice holes, and semantic breadth are all landed.
 - `CAST_COUNTERSPELL` is complete (landed in the battle action surface).
-- Runbook 6 TS/MCP slices are complete: battle-scoped ready-spell setup/release now project from battle-owned readyable-spell payload facts, and after-damage Hellish Rebuke / Retaliation / Fire Shield tokens project from owned trigger qualifiers and reactive effect payloads. Quint parity for the new payload/trigger shape is tracked in `DAG.md` as `runbook6-quint-parity` and should land before product consumers rely on these facts as authoritative battle ownership.
+- Runbook 6 TS/MCP slices are complete: battle-scoped ready-spell setup/release now project from battle-owned readyable-spell payload facts, and after-damage Hellish Rebuke / Retaliation / Fire Shield tokens project from owned trigger qualifiers and reactive effect payloads. `battle.qnt` now mirrors ready-spell payload derivation plus the attack-derived after-damage trigger qualifiers for Hellish Rebuke and Retaliation; Fire Shield reactive active-effect payload parity remains a narrower follow-up.
 - Trigger-window actions (`USE_SNEAK_ATTACK`, `USE_INDOMITABLE`, `USE_OVERCHANNEL`) are implemented and exposed, despite earlier deferral notes in Phase 4 — the owned trigger-window state was added during subsequent development.
 - Architectural decisions in this file are durable and are now also summarized in `ARCHITECTURE.md` section 5.
 - Hellenvald/transcript work (phases 5-8) is intentionally deferred until the repo has the full SRD feature set and stronger domain-language architecture.

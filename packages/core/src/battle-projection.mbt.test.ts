@@ -18,6 +18,7 @@ import {
   hasDeflectEnergy,
 } from "#/features/class-monk-features.ts";
 import { canUncannyDodge } from "#/features/class-rogue.ts";
+import { getBattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
 import { creatureMachine, type DndEvent, type DndSnapshot } from "#/machine.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import {
@@ -50,6 +51,7 @@ import type {
   CreatureId,
   CreatureKind,
   DamageType,
+  SpellName,
 } from "#/types.ts";
 import {
   classLevel,
@@ -339,7 +341,7 @@ const battleDriverSchema = {
   bAfterDamageSpellReaction: {
     reactionDmg: OI,
     reactionSaved: OB,
-    reactionDt: OV,
+    reactionDt: OV.optional(),
     reactorId: OS,
   },
   bAfterDamageRetaliation: {
@@ -402,6 +404,7 @@ const battleDriverSchema = {
     oaTgtAc: OI,
     reactorId: OS,
     attackerWithin5ft: OB,
+    attackerWithin60ft: OB.optional(),
     hostileWithin5ft: OB,
     targetCanSeeAttacker: OB,
     attackerCanSeeTarget: OB,
@@ -439,13 +442,13 @@ const battleDriverSchema = {
   bReady: {},
   bReadySpell: {
     targetId: OS,
-    saveDC: OI,
-    dmgOnFail: OI,
-    halfOnSave: OB,
-    dt: OV,
-    cond: OV,
-    applyCond: OB,
-    saveAb: OV,
+    saveDC: OI.optional(),
+    dmgOnFail: OI.optional(),
+    halfOnSave: OB.optional(),
+    dt: OV.optional(),
+    cond: OV.optional(),
+    applyCond: OB.optional(),
+    saveAb: OV.optional(),
     slotLvl: OI,
     spellName: OS,
   },
@@ -1916,14 +1919,13 @@ function createBattleProjectionDriver() {
     function handleBReadySpell(picks: ReadonlyMap<string, unknown>) {
       const id = activeId();
       const targetId = pickString(picks, "targetId") ?? "";
-      const saveDC = pickBigInt(picks, "saveDC") ?? 13;
-      const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10;
-      const halfOnSave = pickBool(picks, "halfOnSave") ?? false;
-      const dt = pickVariant(picks, "dt") ?? "Fire";
-      const cond = pickVariant(picks, "cond") ?? "CBlinded";
-      const applyCond = pickBool(picks, "applyCond") ?? false;
       const slotLvl = pickBigInt(picks, "slotLvl") ?? 1;
       const spellName = pickString(picks, "spellName") ?? "hold_person";
+      const payload = getBattleReadyableSpellPayload(
+        spellName as SpellName,
+        spellSlotLevel(slotLvl),
+      );
+      const release = payload?.release;
 
       // Spend action as Ready
       send(id, { type: "USE_ACTION", actionType: "ready" });
@@ -1949,12 +1951,12 @@ function createBattleProjectionDriver() {
       storedReadiedSpellParams = {
         caster: id,
         target: targetId,
-        saveDC,
-        damageOnFail: dmgOnFail,
-        halfOnSuccess: halfOnSave,
-        damageType: mapDamageType(dt),
-        conditionOnFail: QUINT_CONDITION_MAP[cond] ?? "blinded",
-        applyCondition: applyCond,
+        saveDC: release?.saveDC ?? 13,
+        damageOnFail: release?.damageOnFail ?? 0,
+        halfOnSuccess: release?.halfOnSuccess ?? false,
+        damageType: release?.damageType ?? "slashing",
+        conditionOnFail: release?.conditionOnFail ?? "blinded",
+        applyCondition: release?.applyCondition ?? false,
       };
     }
 
@@ -2233,9 +2235,9 @@ describe("Battle Projection MBT", () => {
   // Default: comprehensive run for CI / perpetual background validation.
   const isCi = process.env["CI"] === "true";
   const isDev = process.env["MBT_DEV"] === "1";
-  const mbtBackend = (
-    process.env["MBT_BACKEND"] ?? "typescript"
-  ) as "typescript" | "rust";
+  const mbtBackend = (process.env["MBT_BACKEND"] ?? "typescript") as
+    | "typescript"
+    | "rust";
   // Local projection MBT defaults to replaying a checked-in battle trace.
   // This keeps `pnpm test` stable; live randomized battle generation belongs in
   // CI/fuzz runs or explicit MBT_REPLAY_DIR / QUINT_SEED overrides.

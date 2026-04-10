@@ -280,6 +280,7 @@ const DEFAULT_BATTLE_ATTACK_CONTEXT: Pick<
   | "isMelee"
   | "isFinesse"
   | "attackerWithin5ft"
+  | "attackerWithin60ft"
   | "hostileWithin5ft"
   | "targetCanSeeAttacker"
   | "attackerCanSeeTarget"
@@ -292,6 +293,7 @@ const DEFAULT_BATTLE_ATTACK_CONTEXT: Pick<
   isMelee: true,
   isFinesse: false,
   attackerWithin5ft: true,
+  attackerWithin60ft: true,
   hostileWithin5ft: false,
   targetCanSeeAttacker: true,
   attackerCanSeeTarget: true,
@@ -2044,7 +2046,9 @@ describe("available actions contract", () => {
   test("battle discovery resolves ready-spell setup from battle-owned payload facts", () => {
     const actor = initBattleForReadySpellDiscovery();
 
-    expect(getAvailableBattleActions(actor.getSnapshot().context)).toContainEqual({
+    expect(
+      getAvailableBattleActions(actor.getSnapshot().context),
+    ).toContainEqual({
       scope: "battle",
       actorId: "A",
       type: "BATTLE_READY_SPELL",
@@ -2187,6 +2191,7 @@ describe("available actions contract", () => {
         isMelee: true,
         weaponProperties: new Set(),
         attackerWithin5ft: true,
+        attackerWithin60ft: true,
         hostileWithin5ft: false,
         targetCanSeeAttacker: true,
         attackerCanSeeTarget: true,
@@ -2400,9 +2405,9 @@ describe("available actions contract", () => {
       { caster: true, preparedSpells: new Set(["hellish_rebuke"]) },
       { ...DEFAULT_BATTLE_ATTACK_CONTEXT, targetCanSeeAttacker: false },
     );
-    expect(getAvailableBattleActions(hiddenActor.getSnapshot().context)).toEqual(
-      [],
-    );
+    expect(
+      getAvailableBattleActions(hiddenActor.getSnapshot().context),
+    ).toEqual([]);
 
     const rangedActor = initBattleForAfterDamageDiscovery(
       { caster: true, preparedSpells: new Set(["hellish_rebuke"]) },
@@ -2410,22 +2415,23 @@ describe("available actions contract", () => {
         ...DEFAULT_BATTLE_ATTACK_CONTEXT,
         isMelee: false,
         attackerWithin5ft: false,
+        attackerWithin60ft: true,
       },
     );
-    expect(getAvailableBattleActions(rangedActor.getSnapshot().context)).toEqual(
-      [
-        {
-          scope: "battle",
-          actorId: "B",
-          type: "CAST_HELLISH_REBUKE",
-          cost: { reaction: true, charge: "spellSlot" },
-          outcome: {
-            summary:
-              "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
-          },
+    expect(
+      getAvailableBattleActions(rangedActor.getSnapshot().context),
+    ).toEqual([
+      {
+        scope: "battle",
+        actorId: "B",
+        type: "CAST_HELLISH_REBUKE",
+        cost: { reaction: true, charge: "spellSlot" },
+        outcome: {
+          summary:
+            "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
         },
-      ],
-    );
+      },
+    ]);
 
     const rangedContext = rangedActor.getSnapshot().context;
     const interrupt = rangedContext.awaitCtx!.interrupt;
@@ -2473,9 +2479,9 @@ describe("available actions contract", () => {
         attackerWithin5ft: false,
       },
     );
-    expect(getAvailableBattleActions(rangedActor.getSnapshot().context)).toEqual(
-      [],
-    );
+    expect(
+      getAvailableBattleActions(rangedActor.getSnapshot().context),
+    ).toEqual([]);
   });
 
   test("after-damage discovery exposes Fire Shield from the active effect payload", () => {

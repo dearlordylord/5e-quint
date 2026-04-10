@@ -13,6 +13,7 @@ import { createActor } from "xstate";
 import { z } from "zod";
 
 import { battleMachine } from "#/battle-machine.ts";
+import { getBattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
 import {
   getBattleMbtRunShape,
   getMbtBackend,
@@ -45,7 +46,7 @@ import {
   QuintTurnState,
   variantToString,
 } from "#/mbt-shared.ts";
-import type { CreatureId, Size } from "#/types.ts";
+import type { CreatureId, Size, SpellName } from "#/types.ts";
 import {
   armorClass,
   CreatureId as mkCreatureId,
@@ -487,6 +488,7 @@ const battleDriverSchema = {
     isMelee: OB,
     isFinesse: OB,
     attackerWithin5ft: OB,
+    attackerWithin60ft: OB.optional(),
     hostileWithin5ft: OB,
     targetCanSeeAttacker: OB,
     attackerCanSeeTarget: OB,
@@ -506,7 +508,7 @@ const battleDriverSchema = {
   bAfterDamageSpellReaction: {
     reactionDmg: OI,
     reactionSaved: OB,
-    reactionDt: OV,
+    reactionDt: OV.optional(),
     reactorId: OS,
   },
   bAfterDamageRetaliation: {
@@ -571,6 +573,7 @@ const battleDriverSchema = {
     knockOut: OB,
     isFinesse: OB,
     attackerWithin5ft: OB,
+    attackerWithin60ft: OB.optional(),
     hostileWithin5ft: OB,
     targetCanSeeAttacker: OB,
     attackerCanSeeTarget: OB,
@@ -593,6 +596,7 @@ const battleDriverSchema = {
     isMelee: OB,
     isFinesse: OB,
     attackerWithin5ft: OB,
+    attackerWithin60ft: OB.optional(),
     hostileWithin5ft: OB,
     targetCanSeeAttacker: OB,
     attackerCanSeeTarget: OB,
@@ -619,13 +623,13 @@ const battleDriverSchema = {
   bReady: {},
   bReadySpell: {
     targetId: OS,
-    saveDC: OI,
-    dmgOnFail: OI,
-    halfOnSave: OB,
-    dt: OV,
-    cond: OV,
-    applyCond: OB,
-    saveAb: OV,
+    saveDC: OI.optional(),
+    dmgOnFail: OI.optional(),
+    halfOnSave: OB.optional(),
+    dt: OV.optional(),
+    cond: OV.optional(),
+    applyCond: OB.optional(),
+    saveAb: OV.optional(),
     slotLvl: OI,
     spellName: OS,
   },
@@ -642,6 +646,7 @@ const battleDriverSchema = {
     isMelee: OB,
     isFinesse: OB,
     attackerWithin5ft: OB,
+    attackerWithin60ft: OB.optional(),
     hostileWithin5ft: OB,
     targetCanSeeAttacker: OB,
     attackerCanSeeTarget: OB,
@@ -727,6 +732,7 @@ function attackContextPicks(picks: Record<string, unknown>) {
   return {
     isFinesse: pb(picks, "isFinesse", false),
     attackerWithin5ft: pb(picks, "attackerWithin5ft", true),
+    attackerWithin60ft: pb(picks, "attackerWithin60ft", true),
     hostileWithin5ft: pb(picks, "hostileWithin5ft", false),
     targetCanSeeAttacker: pb(picks, "targetCanSeeAttacker", true),
     attackerCanSeeTarget: pb(picks, "attackerCanSeeTarget", true),
@@ -1151,18 +1157,25 @@ function createBattleMachineDriver() {
         send({ type: "BATTLE_READY" });
       },
       bReadySpell: (picks: Record<string, unknown>) => {
+        const slotLvl = p(picks, "slotLvl", 1);
+        const spellName = ps(picks, "spellName", "hold_person");
+        const payload = getBattleReadyableSpellPayload(
+          spellName as SpellName,
+          spellSlotLevel(slotLvl),
+        );
+        const release = payload?.release;
         send({
           type: "BATTLE_READY_SPELL",
           targetId: pc(picks, "targetId", ""),
-          saveDC: difficultyClass(p(picks, "saveDC", 15)),
-          dmgOnFail: p(picks, "dmgOnFail", 10),
-          halfOnSave: pb(picks, "halfOnSave", false),
-          dt: mapDamageType(ps(picks, "dt", "Fire")),
-          cond: QUINT_CONDITION_MAP[ps(picks, "cond", "CBlinded")] ?? "blinded",
-          applyCond: pb(picks, "applyCond", false),
-          saveAbility: mapAbility(ps(picks, "saveAb", "Con")),
-          slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
-          spellName: ps(picks, "spellName", "guiding_bolt"),
+          saveDC: release?.saveDC ?? difficultyClass(13),
+          dmgOnFail: release?.damageOnFail ?? 0,
+          halfOnSave: release?.halfOnSuccess ?? false,
+          dt: release?.damageType ?? "slashing",
+          cond: release?.conditionOnFail ?? "blinded",
+          applyCond: release?.applyCondition ?? false,
+          saveAbility: release?.saveAbility ?? "dex",
+          slotLvl: spellSlotLevel(slotLvl),
+          spellName,
         });
       },
       bReadyPass: () => {

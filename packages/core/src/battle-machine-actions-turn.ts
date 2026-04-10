@@ -489,6 +489,7 @@ export function battleReadyRelease({
     e.knockOut,
     e.isMelee,
     e.attackerWithin5ft,
+    e.attackerWithin60ft ?? false,
     e.targetCanSeeAttacker,
     readyMods,
     releaser.mainHandWeapon != null
@@ -547,6 +548,7 @@ export function battleLegendaryAttack({
     e.knockOut,
     e.isMelee,
     e.attackerWithin5ft,
+    e.attackerWithin60ft ?? false,
     e.targetCanSeeAttacker,
     laMods,
     m.mainHandWeapon != null ? !m.mainHandWeapon.isMelee : !e.isMelee,
@@ -732,6 +734,7 @@ export function battleOffHandAttack({
     e.knockOut,
     offHand.isMelee,
     e.attackerWithin5ft,
+    e.attackerWithin60ft ?? false,
     e.targetCanSeeAttacker,
     mods,
     false,

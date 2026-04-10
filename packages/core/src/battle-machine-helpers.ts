@@ -620,16 +620,13 @@ export function returnToState(r: AfterDamageReturn): PhaseFields {
 export function triggerQualifiersFromAttack(atk: {
   readonly targetCanSeeAttackerAtHit: boolean;
   readonly attackerWithin5ftAtHit: boolean;
+  readonly attackerWithin60ftAtHit: boolean;
   readonly isMeleeAttack: boolean;
 }): AfterDamageTriggerQualifiers {
   return {
     sourceVisibleToDamagedCreature: atk.targetCanSeeAttackerAtHit,
     sourceWithin5ftOfDamagedCreature: atk.attackerWithin5ftAtHit,
-    // The current attack event owns a 5-foot qualifier but not a separate
-    // 60-foot qualifier. Non-melee attacks remain eligible for the narrow
-    // Hellish Rebuke surface until battle owns that caller-provided fact.
-    sourceWithin60ftOfDamagedCreature:
-      atk.attackerWithin5ftAtHit || !atk.isMeleeAttack,
+    sourceWithin60ftOfDamagedCreature: atk.attackerWithin60ftAtHit,
     sourceHitWithMeleeAttackRoll: atk.isMeleeAttack,
   };
 }
@@ -733,6 +730,7 @@ export function advanceFromHitPhase(
     knockOut: atk.knockOut,
     targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
     attackerWithin5ftAtHit: atk.attackerWithin5ftAtHit,
+    attackerWithin60ftAtHit: atk.attackerWithin60ftAtHit,
     isMeleeAttack: atk.isMeleeAttack,
     isWeaponAttack: atk.isWeaponAttack,
   };

@@ -234,11 +234,11 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 ## A27: TS-only barbarian features
 
-**Assumption:** Brutal Strike effects (Forceful Blow, Hamstring Blow, Staggering Blow, Sundering Blow), Frenzy bonus damage, Danger Sense advantage, Retaliation reaction, and Relentless Rage save resolution remain TS-only features. These are caller-side composition (e.g., applying extra damage dice, granting advantage on DEX saves) rather than resource tracking, so they don't need Quint state variables.
+**Assumption:** Brutal Strike effects (Forceful Blow, Hamstring Blow, Staggering Blow, Sundering Blow), Frenzy bonus damage, Danger Sense advantage, and Relentless Rage save resolution remain TS-only features. These are caller-side composition (e.g., applying extra damage dice, granting advantage on DEX saves) rather than resource tracking, so they don't need Quint state variables.
 
 **Rules basis:** These features modify attack rolls, damage totals, or saving throws — all computed by the caller using the existing spec mechanics (damage, advantage, saves). The spec tracks only the resource charges and state flags that constrain when these features can be used.
 
-**Changes:** No Quint changes. TS implementation in `class-barbarian.ts` (526 lines, fully tested).
+**Changes:** Retaliation after-damage reaction eligibility is modeled in `battle.qnt` from battle-owned trigger qualifiers. The remaining TS-only features are implemented in `class-barbarian.ts`.
 
 ## A28: Persistent Rage modeling
 
