@@ -385,10 +385,10 @@ Commit after this task:
 
 ### Task 14 - Paladin Free Smite Decision
 
-- [ ] Re-check `USE_DIVINE_SMITE_FREE` against RAW and the current guard/update path.
-- [ ] If the existing event is enough without attack-hit ownership leakage, add creature `suggested_action` support.
-- [ ] If it needs hit/target/attack ownership, do not expose it as a creature token; move it to the battle-action blocker list in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md).
-- [ ] Add focused tests for the implemented path or audit-only blocker update.
+- [x] Re-check `USE_DIVINE_SMITE_FREE` against RAW and the current guard/update path.
+- [x] If the existing event is enough without attack-hit ownership leakage, add creature `suggested_action` support. (Not enough: RAW requires a hit-triggered Divine Smite cast.)
+- [x] If it needs hit/target/attack ownership, do not expose it as a creature token; move it to the battle-action blocker list in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md).
+- [x] Add focused tests for the implemented path or audit-only blocker update.
 
 Dependencies: Task 1.
 

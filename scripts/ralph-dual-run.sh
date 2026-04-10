@@ -7,7 +7,7 @@ Usage: scripts/ralph-dual-run.sh <plan.md> [options]
 
 Runs a Ralph-style dual implementation loop:
   1. Parse the plan into ### Task N sections.
-  2. Create an integration branch from the current main HEAD, unless --commit-to-master is set.
+  2. Create an integration branch from the current main HEAD, unless --commit-to-base is set.
   3. For each task, create two disposable worktrees from the current integration HEAD.
   4. Run Claude in one and Codex in the other, scoped to that task only.
   5. Ask Codex to review both task diffs.
@@ -18,8 +18,9 @@ Options:
   --base <ref>            Base ref to branch from. Default: master
   --output-branch <ref>   Integration branch to create.
                           Default: ralph/<run-id>/integration
-  --commit-to-master      Commit reconciled results directly to --base instead
+  --commit-to-base        Commit reconciled results directly to --base instead
                           of an integration branch.
+  --commit-to-master      Deprecated alias for --commit-to-base.
   --run-id <id>           Run identifier. Default: timestamp
   --test-command <cmd>    Verification command to tell agents to run.
                           Default: pnpm quality
@@ -60,7 +61,7 @@ plan_file=""
 base_ref="master"
 run_id="$(date -u +%Y%m%dT%H%M%SZ)"
 output_branch=""
-commit_to_master=false
+commit_to_base=false
 test_command="pnpm quality"
 keep_run=false
 keep_worktrees=false
@@ -81,8 +82,8 @@ while [[ $# -gt 0 ]]; do
       output_branch="$2"
       shift 2
       ;;
-    --commit-to-master)
-      commit_to_master=true
+    --commit-to-base|--commit-to-master)
+      commit_to_base=true
       shift
       ;;
     --run-id)
@@ -144,8 +145,8 @@ if [[ -z "$output_branch" ]]; then
   output_branch="ralph/$run_id/integration"
 fi
 
-if [[ "$commit_to_master" == true ]]; then
-  [[ "$output_branch" == "ralph/$run_id/integration" ]] || die "--output-branch cannot be combined with --commit-to-master"
+if [[ "$commit_to_base" == true ]]; then
+  [[ "$output_branch" == "ralph/$run_id/integration" ]] || die "--output-branch cannot be combined with --commit-to-base"
   output_branch="$base_ref"
 fi
 
@@ -158,14 +159,14 @@ current_branch="$(git branch --show-current)"
 git diff --quiet || die "main worktree has unstaged changes; commit or stash before running"
 git diff --cached --quiet || die "main worktree has staged changes; commit or stash before running"
 
-if [[ "$commit_to_master" == false ]]; then
+if [[ "$commit_to_base" == false ]]; then
   if git show-ref --verify --quiet "refs/heads/$output_branch"; then
     die "output branch already exists: $output_branch"
   fi
   log "creating/updating integration branch $output_branch from $base_ref ($base_sha)"
   git switch -C "$output_branch" "$base_sha"
 else
-  [[ "$current_branch" == "$base_ref" ]] || die "--commit-to-master requires the current branch to be $base_ref"
+  [[ "$current_branch" == "$base_ref" ]] || die "--commit-to-base requires the current branch to be $base_ref"
 fi
 
 run_root="$repo_root/.ralph/runs/$run_id"

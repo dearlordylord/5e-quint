@@ -142,7 +142,7 @@ Some lifecycle `control_command` events are currently exposed through `get_avail
 | `USE_LAY_ON_HANDS` | creature | yes | `USE_LAY_ON_HANDS` | `suggested_action` | It is a legal player feature option with a user-filled amount. | yes | - | Existing token is the correct owner. |
 | `USE_PALADIN_CHANNEL_DIVINITY` | creature | yes | `USE_PALADIN_CHANNEL_DIVINITY` | `suggested_action` | It is a legal player resource use in the current feature model. | yes | - | Existing token is the correct owner. |
 | `USE_DIVINE_SMITE` | creature | yes | `USE_DIVINE_SMITE` | `suggested_action` | It is a legal player smite option with a user-filled slot level. | yes | - | Existing token is the correct owner. |
-| `USE_DIVINE_SMITE_FREE` | creature | no | - | `suggested_action` | It is a modeled Paladin feature option not currently in the MCP registry. | yes | Creature or battle `get_available_actions`. | Add token only after verifying current guard semantics and RAW trigger ownership. |
+| `USE_DIVINE_SMITE_FREE` | creature | no | - | `suggested_action` | It is a modeled Paladin feature option, but RAW Divine Smite is cast immediately after hitting a target with a Melee weapon or Unarmed Strike. | yes | Battle `get_available_actions`. | **Task 14 blocker:** do not expose as a creature token. The current creature guard only owns Paladin level, Bonus Action availability, and the once-per-Long-Rest flag; it does not own the qualifying hit, target, attack mode, or target creature-type facts needed for honest projection. Prefer a battle attack-rider token once attack-hit ownership exists. |
 | `FLURRY_OF_BLOWS` | creature | yes | `FLURRY_OF_BLOWS` | `suggested_action` | It is a legal player Monk bonus-action option. | yes | - | Existing token is the correct owner. |
 | `PATIENT_DEFENSE_FREE` | creature | yes | `PATIENT_DEFENSE_FREE` | `suggested_action` | It is a legal player Monk option. | yes | - | Existing token is the correct owner. |
 | `PATIENT_DEFENSE_FOCUS` | creature | yes | `PATIENT_DEFENSE_FOCUS` | `suggested_action` | It is a legal player Monk option with Focus cost. | yes | - | Existing token is the correct owner. |
@@ -244,6 +244,6 @@ Why that completed batch was small and high-confidence:
 
 Still explicitly deferred:
 
-- `BATTLE_ATTACK`, `BATTLE_OFF_HAND_ATTACK`, `BATTLE_GRAPPLE`, `BATTLE_ESCAPE_GRAPPLE`, `BATTLE_MOVE`, `BATTLE_HIDE`, `BATTLE_SEARCH`, `BATTLE_HELP_ATTACK`, and `BATTLE_LEGENDARY_ATTACK` because they need missing target/spatial/roll/payload ownership facts.
+- `BATTLE_ATTACK`, `BATTLE_OFF_HAND_ATTACK`, Divine Smite's free-use attack rider (`USE_DIVINE_SMITE_FREE`), `BATTLE_GRAPPLE`, `BATTLE_ESCAPE_GRAPPLE`, `BATTLE_MOVE`, `BATTLE_HIDE`, `BATTLE_SEARCH`, `BATTLE_HELP_ATTACK`, and `BATTLE_LEGENDARY_ATTACK` because they need missing target/spatial/roll/payload ownership facts.
 - Generic battle damage, conditions, effects, environmental events, and raw spell events because they belong to a future `record_table_event` surface, not `get_available_actions`; battle healing is now wired through `record_table_event`.
 - Internal triggers and bookkeeping events because they should remain domain-owned and hidden behind semantic commands.
