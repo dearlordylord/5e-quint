@@ -568,6 +568,30 @@ Commit after this task:
 - [ ] If implementable, add only the smallest token path for one default weapon attack shape.
 - [ ] If not implementable, document the exact missing ownership facts and stop.
 
+Pre-design result, 2026-04-10:
+
+- Smallest plausible implementation slice: one `BATTLE_ATTACK` token for the active creature's current main-hand weapon attack against a chosen target. Do not include off-hand, legendary, grapple, spell attack, weapon swapping, custom weapon payloads, or attack riders in this slice.
+- Battle-owned and derivable:
+  - active attacker, action/extra-attack budget, `attackActionUsed`, `lightAttackUsedThisTurn`, help-target consumption, attacker crit range, main-hand weapon profile, main-hand weapon properties, main-hand damage type, damage qualifiers, melee/ranged from the weapon, Sneak Attack once-per-turn state, and class/condition attack modifier state already consumed by `buildBattleAttackContext`.
+  - `weaponProperties`, `isMelee`, `dt`, and default `damageQualifiers` should not be public user inputs for the first slice when `mainHandWeapon != null`; derive them from `BattleCreatureState.mainHandWeapon`.
+- User choice holes:
+  - `targetId` from current battle creatures other than the attacker.
+  - `knockOut`, only meaningful for melee hits that reduce a target to 0 HP; safe as an explicit choice with existing `resolveAttack` clamping to melee.
+- Runtime-owned dice/result inputs:
+  - `attackRoll`.
+  - damage result inputs. Prefer the existing `damageDieRolls` + `diceCount` + `dieSize` path when `battleMainHandDamageDie` can validate the die; allow `dmg` as the final pre-modifier damage total only if the runtime API deliberately owns damage aggregation.
+  - `crit` if the runtime is already classifying natural-20/feature criticals; otherwise derive from `attackRoll` and `critRange` in a later refactor rather than adding parallel critical logic in MCP.
+  - `saDmg` only if Sneak Attack eligibility is possible and battle will apply it; otherwise require `0` and leave rider damage to Task 16/21.
+- Table/session facts that must be explicit inputs until geometry/visibility ownership exists:
+  - `tAc` target Armor Class.
+  - `attackerWithin5ft`, optional `attackerWithin60ft`, `hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, and `hasAllyAdjacentToTarget`.
+  - `hitReactionCandidates`, unless an exact battle-owned candidate derivation is added first.
+- First-slice blockers:
+  - No token should be emitted when `mainHandWeapon == null`; unarmed strike and grapple use different payload rules and should wait.
+  - Do not expose `onHitEffect` in the basic attack token; it is an effect/rider payload and belongs to a later modeled attack/rider slice.
+  - Do not accept caller-supplied `weaponProperties`, `isFinesse`, `dt`, or `damageQualifiers` for the first slice; that would duplicate battle-owned weapon profile state.
+  - Do not include `BATTLE_OFF_HAND_ATTACK` or `BATTLE_LEGENDARY_ATTACK`; Task 21/23 should reuse the finalized attack runtime boundary after Task 20.
+
 Dependencies: Task 18. Prefer after Task 3 because `BATTLE_DECLARE_RECKLESS` changes attack-context meaning.
 
 RAW check:
