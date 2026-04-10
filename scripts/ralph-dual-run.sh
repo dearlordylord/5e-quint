@@ -6,7 +6,7 @@ usage() {
 Usage: scripts/ralph-dual-run.sh <plan.md> [options]
 
 Runs a Ralph-style dual implementation loop:
-  1. Parse the plan into ### Task N sections.
+  1. Parse the plan's ralph-task-index and matching ### Task N sections.
   2. Create an integration branch from the current main HEAD, unless --commit-to-base is set.
   3. For each task, create two disposable worktrees from the current integration HEAD.
   4. Run Claude in one and Codex in the other, scoped to that task only.
@@ -137,6 +137,7 @@ done
 require_cmd git
 require_cmd claude
 require_cmd codex
+require_cmd node
 require_cmd pnpm
 
 [[ -f "$plan_file" ]] || die "plan file not found: $plan_file"
@@ -175,43 +176,104 @@ worktree_root="$repo_root/.worktrees/ralph/$run_id"
 
 mkdir -p "$run_root" "$worktree_root"
 plan_snapshot="$run_root/plan.md"
-cp "$plan_file" "$plan_snapshot"
 task_index="$run_root/tasks.tsv"
 
-awk '
-  /^### Task [0-9]+ / {
-    if (task_no != "") {
-      print task_no "\t" task_start "\t" NR - 1 "\t" task_title
-    }
-    task_no = $3
-    gsub(/[^0-9]/, "", task_no)
-    task_start = NR
-    task_title = $0
-  }
-  END {
-    if (task_no != "") {
-      print task_no "\t" task_start "\t" NR "\t" task_title
-    }
-  }
-' "$plan_snapshot" >"$task_index"
+write_task_index() {
+  node - "$plan_snapshot" >"$task_index" <<'NODE'
+const fs = require("fs")
+const path = process.argv[2]
+const text = fs.readFileSync(path, "utf8")
+const indexMatch = text.match(/<!-- ralph-task-index\n([\s\S]*?)\n-->/)
 
-[[ -s "$task_index" ]] || die "no task headings found in plan snapshot: $plan_snapshot"
+if (!indexMatch) {
+  throw new Error(`missing ralph-task-index block in ${path}`)
+}
 
+const index = JSON.parse(indexMatch[1])
+
+if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
+  throw new Error(`invalid ralph-task-index schema in ${path}`)
+}
+
+const lineStarts = [0]
+for (let i = 0; i < text.length; i += 1) {
+  if (text[i] === "\n") {
+    lineStarts.push(i + 1)
+  }
+}
+
+const lineNumber = (offset) => {
+  let lo = 0
+  let hi = lineStarts.length - 1
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2)
+    if (lineStarts[mid] <= offset) {
+      lo = mid + 1
+    } else {
+      hi = mid - 1
+    }
+  }
+  return hi + 1
+}
+
+const headings = [...text.matchAll(/^### Task ([0-9]+)\b.*$/gm)].map((match) => ({
+  number: Number(match[1]),
+  offset: match.index,
+}))
+const headingByNumber = new Map(headings.map((heading, index) => [
+  heading.number,
+  {
+    startLine: lineNumber(heading.offset),
+    endLine: index + 1 < headings.length ? lineNumber(headings[index + 1].offset) - 1 : text.split("\n").length,
+  },
+]))
+
+for (const task of index.tasks) {
+  if (!Number.isInteger(task.number) || typeof task.id !== "string" || typeof task.status !== "string" || typeof task.title !== "string") {
+    throw new Error(`invalid task metadata: ${JSON.stringify(task)}`)
+  }
+  const heading = headingByNumber.get(task.number)
+  if (!heading) {
+    throw new Error(`missing markdown heading for task ${task.number} (${task.id})`)
+  }
+  console.log([task.number, task.id, task.status, heading.startLine, heading.endLine, task.title].join("\t"))
+}
+NODE
+
+  [[ -s "$task_index" ]] || die "no task headings found in plan snapshot: $plan_snapshot"
+}
+
+refresh_plan_snapshot() {
+  cp "$plan_file" "$plan_snapshot"
+  write_task_index
+}
+
+lookup_task_row() {
+  local task_no="$1"
+  awk -F $'\t' -v selected="$task_no" '
+    $1 == selected {
+      print
+      found = 1
+      exit
+    }
+    END {
+      exit found ? 0 : 1
+    }
+  ' "$task_index"
+}
+
+refresh_plan_snapshot
+
+task_numbers=()
 if [[ ${#selected_tasks[@]} -gt 0 ]]; then
-  ordered_task_index="$run_root/tasks.selected.tsv"
-  : >"$ordered_task_index"
   for selected in "${selected_tasks[@]}"; do
-    awk -F $'\t' -v selected="$selected" '
-      $1 == selected {
-        print
-        found = 1
-      }
-      END {
-        exit found ? 0 : 1
-      }
-    ' "$task_index" >>"$ordered_task_index" || die "selected task not found in plan: $selected"
+    lookup_task_row "$selected" >/dev/null || die "selected task not found in plan: $selected"
+    task_numbers+=("$selected")
   done
-  mv "$ordered_task_index" "$task_index"
+else
+  while IFS=$'\t' read -r task_no _task_id _status _task_start _task_end _task_title; do
+    task_numbers+=("$task_no")
+  done <"$task_index"
 fi
 
 task_selected() {
@@ -314,6 +376,11 @@ At the end, write a concise final status including:
 - Files changed
 - Verification commands run and their result
 - Any unresolved risks
+- Plan Impact:
+  - Status: none | update-required
+  - Affected tasks: task IDs and whether each should be unblocked, blocked, deferred, revised, added, or left unchanged
+  - Observations: task discoveries that should affect future planning
+  - Required plan edits: concrete edits the decider should make to the plan, or "none"
 EOF
 }
 
@@ -347,6 +414,7 @@ Your final answer is the review report. The harness saves it to the output path 
 - Findings
 - Missing verification
 - Merge notes
+- Plan Impact
 EOF
 }
 
@@ -381,6 +449,7 @@ Requirements:
 - Preserve repo constraints: pnpm only, no redundant state, Quint parity, SRD traceability for modeled rules, scarce MBT usage.
 - Before any MBT run, check for existing vitest and quint_evaluator processes per AGENTS.md. Kill stale quint_evaluator processes, and do not launch a second MBT while another vitest/MBT run is alive.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
+- Inspect both implementations and both reviews for Plan Impact. If any impact is update-required, update the plan file at $plan_file in the same commit. If no plan update is needed, say so explicitly in the final Plan Impact section.
 - Commit the reconciled Task $task_no result to $output_branch in the main worktree after verification. Use a concise task-scoped commit message. Do not leave tracked changes staged or unstaged; the next task worktrees are created from the updated integration HEAD.
 - For docs-only tasks, prefer the task-specific grep/search checks and git diff --check over broad formatters that churn unrelated Markdown. Do not run broad formatters unless the task explicitly requires formatting.
 - Leave temporary worktree cleanup to the harness.
@@ -391,6 +460,10 @@ At the end, report:
 - Files changed in the main worktree
 - Verification commands run and results
 - Any remaining risks
+- Plan Impact:
+  - Status: none | applied
+  - Affected tasks: task IDs and final planning action for each
+  - Plan edits: summary of updates made to $plan_file, or "none"
 EOF
 }
 
@@ -434,8 +507,15 @@ log "base $base_ref is $base_sha"
 log "output branch: $output_branch"
 log "run state: $run_root"
 
-while IFS=$'\t' read -r task_no task_start task_end task_title; do
+for task_no in "${task_numbers[@]}"; do
   task_selected "$task_no" || continue
+  refresh_plan_snapshot
+  task_row="$(lookup_task_row "$task_no")" || die "task $task_no no longer exists in refreshed plan snapshot"
+  IFS=$'\t' read -r task_no task_id status task_start task_end task_title <<<"$task_row"
+  if [[ ${#selected_tasks[@]} -eq 0 && "$status" != "ready-for-research" && "$status" != "ready-for-implementation-after-light-research" ]]; then
+    log "task $task_no: skipping because refreshed status is $status"
+    continue
+  fi
 
   task_root="$run_root/task-$task_no"
   task_file="$task_root/task.md"
@@ -508,8 +588,13 @@ while IFS=$'\t' read -r task_no task_start task_end task_title; do
   write_decider_prompt "$task_root/decider.prompt.md" "$task_no" "$task_file" "$task_base_sha" "$claude_worktree" "$codex_worktree" "$task_root"
   run_codex "$repo_root" "$task_root/decider.prompt.md" "$task_root/decider.log" "$task_root/decider.final.md"
 
+  if ! grep -Eqi "Plan Impact|Plan impact" "$task_root/decider.final.md"; then
+    die "task $task_no decider final report is missing a Plan Impact section"
+  fi
+
   git diff --quiet || die "task $task_no decider left unstaged tracked changes; commit or clean them before continuing"
   git diff --cached --quiet || die "task $task_no decider left staged changes; commit or clean them before continuing"
+  refresh_plan_snapshot
 
   if [[ "$keep_worktrees" == false ]]; then
     git worktree remove --force "$claude_worktree" >/dev/null 2>&1 || true
@@ -522,6 +607,6 @@ while IFS=$'\t' read -r task_no task_start task_end task_title; do
   fi
 
   log "task $task_no reconciled"
-done <"$task_index"
+done
 
 log "done. run state: $run_root"

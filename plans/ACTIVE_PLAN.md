@@ -18,9 +18,153 @@ The coding loop should treat this file as the active queue. Do not start a task 
 - `deferred`: Do not pick up unless the batch objective changes.
 - `done`: Work completed and verification recorded.
 
+## Ralph Task Index
+
+The Ralph harness reads this machine-readable index for task order and status. Keep it synchronized with the task sections whenever task status, order, ID, or title changes.
+
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    {
+      "number": 1,
+      "id": "MCP0-A",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Dead-Creature Condition Mutation Bug"
+    },
+    {
+      "number": 2,
+      "id": "MCP0-B",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Dead-Creature Exhaustion Mutation Decision"
+    },
+    {
+      "number": 3,
+      "id": "MCP0-C",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Short Unknown Action Error"
+    },
+    {
+      "number": 4,
+      "id": "MCP0-D",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "SHORT_REST Documentation Clarity"
+    },
+    {
+      "number": 5,
+      "id": "MCP0-E",
+      "status": "ready-for-research",
+      "title": "EXIT_COMBAT After Death UX Decision"
+    },
+    {
+      "number": 6,
+      "id": "B",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Battle Size Ownership For Grapple"
+    },
+    {
+      "number": 7,
+      "id": "A",
+      "status": "ready-for-research",
+      "title": "Condition Consequence Table Completion Research"
+    },
+    {
+      "number": 8,
+      "id": "C",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "ResourceCost Typed Refactor"
+    },
+    {
+      "number": 9,
+      "id": "D",
+      "status": "ready-for-research",
+      "title": "Battle Attack Runtime/Session Boundary"
+    },
+    {
+      "number": 10,
+      "id": "MCP1-A",
+      "status": "ready-for-research",
+      "title": "Session Host Architecture"
+    },
+    {
+      "number": 11,
+      "id": "MCP1-B",
+      "status": "ready-for-research",
+      "title": "Core Goblin Minion Stat-Block Slice"
+    },
+    {
+      "number": 12,
+      "id": "E",
+      "status": "ready-for-research",
+      "title": "Movement And Help Geometry/Session Ownership"
+    },
+    {
+      "number": 13,
+      "id": "J",
+      "status": "ready-for-research",
+      "title": "Generic Table Events, Environmental Hazards, And Monster Commands"
+    },
+    {
+      "number": 14,
+      "id": "F",
+      "status": "blocked",
+      "title": "Legendary Attack Payload Ownership"
+    },
+    {
+      "number": 15,
+      "id": "G",
+      "status": "blocked",
+      "title": "Attack Rider Ownership"
+    },
+    {
+      "number": 16,
+      "id": "MCP1-C",
+      "status": "blocked",
+      "title": "Encounter Start Tool/Command"
+    },
+    {
+      "number": 17,
+      "id": "MCP2-A",
+      "status": "blocked",
+      "title": "Battle Attack Public Boundary"
+    },
+    {
+      "number": 18,
+      "id": "MCP2-B",
+      "status": "blocked",
+      "title": "Fighter Attacks Goblin End-to-End"
+    },
+    {
+      "number": 19,
+      "id": "MCP3-A",
+      "status": "blocked",
+      "title": "Goblin Warrior/Nimble Escape Follow-Up"
+    },
+    {
+      "number": 20,
+      "id": "H",
+      "status": "deferred",
+      "title": "PassiveModifiers Sub-Record"
+    },
+    {
+      "number": 21,
+      "id": "I",
+      "status": "deferred",
+      "title": "Build-Map / Hole Metadata"
+    }
+  ]
+}
+-->
+
 ## Coding Loop Handoff Rules
 
 - Start with the highest-priority task in the DAG table whose status is `ready-for-implementation-after-light-research` or `ready-for-research`.
+- Treat the task loop as bidirectional: the plan scopes the task, and task discoveries may update the plan.
+- Keep `Ralph Task Index` synchronized with task sections when changing task order, ID, title, or status. The Ralph harness treats that JSON block as the machine-readable control surface.
+- Every task closeout must include `Plan Impact`:
+  - `Status: none` when no future planning changes are needed;
+  - `Status: update-required` or `Status: applied` when the task changes downstream assumptions, status, dependencies, ordering, blockers, acceptance criteria, verification, or creates follow-up work.
+- When `Plan Impact` is not `none`, update this file in the same task closeout before continuing. Record affected task IDs and the concrete planning action for each: unblock, block, defer, revise, add, or no-change.
 - Update the task status before ending the loop:
   - `done` if implementation/research and verification are complete;
   - `ready-for-implementation-after-light-research` if research made it implementable;
@@ -101,7 +245,7 @@ Do not start with `BATTLE_ATTACK` implementation. Its public runtime/session con
 
 Do not start the full fighter-vs-goblin implementation before Task D has produced the public attack boundary. The session and goblin-content tasks can be researched first, but the motivating "Fighter attacks Goblin through MCP" loop remains blocked until public `BATTLE_ATTACK` exists.
 
-## Task MCP0-A - Dead-Creature Condition Mutation Bug
+### Task 1 - MCP0-A - Dead-Creature Condition Mutation Bug
 
 Status: ready-for-implementation-after-light-research.
 
@@ -164,7 +308,7 @@ Extra research needed:
 
 - Light. RAW Dead/Stable/Unconscious reread required before edits.
 
-## Task MCP0-B - Dead-Creature Exhaustion Mutation Decision
+### Task 2 - MCP0-B - Dead-Creature Exhaustion Mutation Decision
 
 Status: ready-for-implementation-after-light-research.
 
@@ -219,7 +363,7 @@ Extra research needed:
 
 - Light. Depends on the dead-creature policy in Task MCP0-A.
 
-## Task MCP0-C - Short Unknown Action Error
+### Task 3 - MCP0-C - Short Unknown Action Error
 
 Status: ready-for-implementation-after-light-research.
 
@@ -266,7 +410,7 @@ Extra research needed:
 
 - Light. Confirm the best core-owned action type source before editing.
 
-## Task MCP0-D - SHORT_REST Documentation Clarity
+### Task 4 - MCP0-D - SHORT_REST Documentation Clarity
 
 Status: ready-for-implementation-after-light-research.
 
@@ -312,7 +456,7 @@ Extra research needed:
 
 - Light. Confirm where the misleading docs/tool text is before editing.
 
-## Task MCP0-E - EXIT_COMBAT After Death UX Decision
+### Task 5 - MCP0-E - EXIT_COMBAT After Death UX Decision
 
 Status: ready-for-research.
 
@@ -354,7 +498,69 @@ Extra research needed:
 
 - Yes. This is an assumption/UX decision, not an obvious RAW bug.
 
-## Task A - Condition Consequence Table Completion Research
+### Task 6 - B - Battle Size Ownership For Grapple
+
+Status: ready-for-implementation-after-light-research.
+
+Depends on: none.
+
+Blocks: public `BATTLE_GRAPPLE` exposure and any grapple legality surface that requires owned combatant Size.
+
+Next action: reread RAW Grapple/Size, search for existing owned size fields to avoid redundant state, then implement if no blocker appears.
+
+Purpose:
+
+- Move creature Size into battle-owned combatant state so `BATTLE_GRAPPLE` can stop accepting `attackerSize` and `targetSize` as public/raw event payload facts.
+
+Context:
+
+- Folded-in ownership note: battle Size ownership must be fixed before public
+  `BATTLE_GRAPPLE` exposure.
+- Audit row: `plans/MCP_EVENT_SURFACE_AUDIT.md`.
+- Current problem: `BATTLE_GRAPPLE` needs size, but `BattleCreatureState` and `battle.qnt` `Combatant` do not store size.
+- Current raw payload locations to inspect: `packages/core/src/battle-machine-events.ts` `BATTLE_GRAPPLE` and `packages/core/src/battle-machine-actions-turn.ts` grapple handling.
+
+Inputs:
+
+- `.references/srd-5.2.1/Rules-Glossary.md` Grapple and Size text.
+- `UBIQUITOUS_LANGUAGE.md`.
+- `battle.qnt`.
+- `packages/core/src/battle-machine-types.ts`.
+- `packages/core/src/battle-machine-events.ts` if event payload shape changes.
+- `packages/core/src/battle-machine-actions-turn.ts`.
+- `packages/core/src/available-actions.ts`.
+- Battle MBT projection files.
+
+Implementation output:
+
+- Add `creatureSize` to Quint `Combatant`.
+- Add `creatureSize` to `BattleCreatureState`.
+- Add optional `creatureSize` to `InitCreatureConfig`; default PCs to `"medium"` unless a better owned source is available.
+- Add `creatureSize` to MCP `BATTLE_INIT` creature schema if battle init remains the public combatant config source.
+- Update `BATTLE_GRAPPLE` handling to derive attacker and target size from battle state.
+- Reassess whether public `BATTLE_GRAPPLE` token can be exposed after size is owned. If save/free-hand/target facts are still clean, expose; otherwise update blocker precisely.
+
+Acceptance criteria:
+
+- Public API no longer accepts caller-supplied `attackerSize`/`targetSize` for grapple.
+- Battle machine and `battle.qnt` derive grapple size legality from combatant state.
+- MBT bridge maps the new size field.
+- No MCP-only size state is introduced.
+- Existing release/escape grapple behavior remains unchanged.
+
+Verification:
+
+- RAW check: Grapple and Size entries in `.references/srd-5.2.1/Rules-Glossary.md` and terminology in `UBIQUITOUS_LANGUAGE.md` before implementation.
+- `/simplify` convergence: minimum two rounds after implementation.
+- Focused battle scenario tests for size-blocked and size-allowed grapples.
+- `pnpm --filter @dnd/core typecheck`.
+- Tier 1 battle MBT after Quint and bridge changes.
+
+Extra research needed:
+
+- Light. RAW Grapple/Size reread required, but the ownership design is already documented.
+
+### Task 7 - A - Condition Consequence Table Completion Research
 
 Status: ready-for-research.
 
@@ -445,69 +651,7 @@ Extra research needed:
 
 - Yes. RAW condition reread required before code changes.
 
-## Task B - Battle Size Ownership For Grapple
-
-Status: ready-for-implementation-after-light-research.
-
-Depends on: none.
-
-Blocks: public `BATTLE_GRAPPLE` exposure and any grapple legality surface that requires owned combatant Size.
-
-Next action: reread RAW Grapple/Size, search for existing owned size fields to avoid redundant state, then implement if no blocker appears.
-
-Purpose:
-
-- Move creature Size into battle-owned combatant state so `BATTLE_GRAPPLE` can stop accepting `attackerSize` and `targetSize` as public/raw event payload facts.
-
-Context:
-
-- Folded-in ownership note: battle Size ownership must be fixed before public
-  `BATTLE_GRAPPLE` exposure.
-- Audit row: `plans/MCP_EVENT_SURFACE_AUDIT.md`.
-- Current problem: `BATTLE_GRAPPLE` needs size, but `BattleCreatureState` and `battle.qnt` `Combatant` do not store size.
-- Current raw payload locations to inspect: `packages/core/src/battle-machine-events.ts` `BATTLE_GRAPPLE` and `packages/core/src/battle-machine-actions-turn.ts` grapple handling.
-
-Inputs:
-
-- `.references/srd-5.2.1/Rules-Glossary.md` Grapple and Size text.
-- `UBIQUITOUS_LANGUAGE.md`.
-- `battle.qnt`.
-- `packages/core/src/battle-machine-types.ts`.
-- `packages/core/src/battle-machine-events.ts` if event payload shape changes.
-- `packages/core/src/battle-machine-actions-turn.ts`.
-- `packages/core/src/available-actions.ts`.
-- Battle MBT projection files.
-
-Implementation output:
-
-- Add `creatureSize` to Quint `Combatant`.
-- Add `creatureSize` to `BattleCreatureState`.
-- Add optional `creatureSize` to `InitCreatureConfig`; default PCs to `"medium"` unless a better owned source is available.
-- Add `creatureSize` to MCP `BATTLE_INIT` creature schema if battle init remains the public combatant config source.
-- Update `BATTLE_GRAPPLE` handling to derive attacker and target size from battle state.
-- Reassess whether public `BATTLE_GRAPPLE` token can be exposed after size is owned. If save/free-hand/target facts are still clean, expose; otherwise update blocker precisely.
-
-Acceptance criteria:
-
-- Public API no longer accepts caller-supplied `attackerSize`/`targetSize` for grapple.
-- Battle machine and `battle.qnt` derive grapple size legality from combatant state.
-- MBT bridge maps the new size field.
-- No MCP-only size state is introduced.
-- Existing release/escape grapple behavior remains unchanged.
-
-Verification:
-
-- RAW check: Grapple and Size entries in `.references/srd-5.2.1/Rules-Glossary.md` and terminology in `UBIQUITOUS_LANGUAGE.md` before implementation.
-- `/simplify` convergence: minimum two rounds after implementation.
-- Focused battle scenario tests for size-blocked and size-allowed grapples.
-- `pnpm --filter @dnd/core typecheck`.
-- Tier 1 battle MBT after Quint and bridge changes.
-
-Extra research needed:
-
-- Light. RAW Grapple/Size reread required, but the ownership design is already documented.
-
-## Task C - ResourceCost Typed Refactor
+### Task 8 - C - ResourceCost Typed Refactor
 
 Status: ready-for-implementation-after-light-research.
 
@@ -571,7 +715,7 @@ Extra research needed:
 
 - Light. Confirm consumer blast radius before code changes.
 
-## Task D - Battle Attack Runtime/Session Boundary
+### Task 9 - D - Battle Attack Runtime/Session Boundary
 
 Status: ready-for-research.
 
@@ -676,304 +820,7 @@ Extra research needed:
 
 - Yes. API contract design and RAW attack reread required.
 
-## Task E - Movement And Help Geometry/Session Ownership
-
-Status: ready-for-research.
-
-Depends on: none.
-
-Blocks: public `BATTLE_MOVE` and `BATTLE_HELP_ATTACK`.
-
-Next action: decide the owner of visibility, reach, threat, path, and provocation facts; do not implement movement/help until ownership is explicit.
-
-Purpose:
-
-- Decide whether to introduce a session geometry owner or keep `BATTLE_MOVE` and `BATTLE_HELP_ATTACK` deferred.
-
-Context:
-
-- `BATTLE_MOVE` is blocked on position, path/destination, difficult terrain beyond a fixed step, reach exit, threatened creature set, and OA provocation.
-- `BATTLE_HELP_ATTACK` is blocked on helper/ally/target visibility and range/reach facts.
-- `ARCHITECTURE.md` and `battle/DOMAIN.md` intentionally keep formal geometry out of the core.
-- `.references/inspirations/12-opportunity-attack-path-analysis.md` recommends adopting vocabulary but not adding grid/pathfinding.
-
-Inputs:
-
-- `ARCHITECTURE.md`.
-- `battle/DOMAIN.md`.
-- `.references/inspirations/12-opportunity-attack-path-analysis.md`.
-- `plans/MCP_EVENT_SURFACE_AUDIT.md`.
-
-Research output:
-
-- Decision note:
-  - continue deferring;
-  - accept explicit caller/session facts for a narrow action;
-  - or define a future session geometry owner.
-
-Acceptance criteria:
-
-- The note must not add a grid/geometry engine by accident.
-- The note must identify the owner of visibility, reach, threat, path, and provocation facts.
-
-Verification:
-
-- Docs-only unless implementation is explicitly scheduled later.
-- RAW check and `/simplify` convergence are required if the research later leads to implementation.
-
-Extra research needed:
-
-- Yes. This is product/session boundary design, not ready implementation.
-
-## Task F - Legendary Attack Payload Ownership
-
-Status: blocked.
-
-Depends on: Task D and monster stat-block action payload ownership.
-
-Blocks: public `BATTLE_LEGENDARY_ATTACK`.
-
-Next action: wait for Task D; then define stat-block Legendary Action payload ownership and whether the action is a suggested action, monster-control command, or both.
-
-Purpose:
-
-- Define what entity owns monster Legendary Action option payloads before exposing `BATTLE_LEGENDARY_ATTACK`.
-
-Context:
-
-- `BATTLE_LEGENDARY_PASS` is already wired as a control command.
-- `BATTLE_LEGENDARY_ATTACK` remains blocked because battle owns the legendary-action window and charges, but not the specific stat-block Legendary Action option payload/name/cost.
-- It also needs the same attack runtime/session contract as `BATTLE_ATTACK`.
-
-Inputs:
-
-- `plans/MCP_EVENT_SURFACE_AUDIT.md`.
-- Monster stat-block files/types.
-- `battle.qnt` legendary action handling.
-- Task D research output.
-
-Research output:
-
-- A monster stat-block action payload ownership proposal.
-- Decide whether legendary attack is a suggested action, monster-control command, or both.
-
-Acceptance criteria:
-
-- MCP does not accept arbitrary damage type, damage qualifier, weapon property, action cost, or melee/ranged facts.
-- The plan reuses the Task D attack boundary where possible.
-
-Verification:
-
-- Docs-only until implementation.
-- RAW check and `/simplify` convergence are required if the research later leads to implementation.
-
-Extra research needed:
-
-- Yes. Depends on attack boundary and monster payload ownership review.
-
-## Task G - Attack Rider Ownership
-
-Status: blocked.
-
-Depends on: Task D.
-
-Blocks: attack rider tokens.
-
-Next action: wait for Task D; then classify each rider by timing, owned feature state, and runtime/session facts.
-
-Purpose:
-
-- Keep attack riders out of creature-level MCP and prepare them as battle-owned rider windows after attack ownership exists.
-
-Context:
-
-- Blocked riders:
-  - `USE_BRUTAL_STRIKE`;
-  - `STUNNING_STRIKE`;
-  - `USE_CUNNING_STRIKE`;
-  - `USE_ELDRITCH_SMITE`;
-  - `USE_DIVINE_SMITE_FREE`.
-- Each requires specific attack timing and qualifying-hit facts.
-
-Inputs:
-
-- `plans/MCP_EVENT_SURFACE_AUDIT.md` rider rows.
-- `.references/srd-5.2.1/Classes/` relevant class passages.
-- Task D research output.
-
-Research output:
-
-- For each rider, classify:
-  - pre-roll choice;
-  - post-hit/pre-damage choice;
-  - post-damage effect;
-  - runtime save/target facts;
-  - battle-owned feature state.
-
-Acceptance criteria:
-
-- No creature-level token is added for a hit-qualified rider.
-- Rider timing is explicit and maps to battle attack resolution phases.
-
-Verification:
-
-- Docs-only until Task D is implemented.
-- RAW check and `/simplify` convergence are required if the research later leads to implementation.
-
-Extra research needed:
-
-- Yes. Depends on attack boundary and RAW class feature reread.
-
-## Task H - PassiveModifiers Sub-Record
-
-Status: deferred.
-
-Depends on: none.
-
-Blocks: possible passive modifier field cleanup.
-
-Next action: do not pick up unless the batch explicitly selects passive modifier restructuring.
-
-Purpose:
-
-- Reduce flat modifier field boilerplate by grouping explicit named fields into a closed `PassiveModifiers` record.
-
-Context:
-
-- Competitor inspiration: `.references/inspirations/11-modifier-algebra.md`.
-- The repo intentionally rejects open modifier registries in favor of explicit Quint fields.
-- Current flat fields include `hasEvasion`, `saveMiscBonus`, `critRange`, `rangedWeaponAttackRollBonus`, `defenseArmorClassBonus`, `greatWeaponFightingDamageFloor`, `meleeDamageBonus`, `recklessThisTurn`, and related fields.
-- `ARCHITECTURE.md` lists planned future passive fields: `conditionImmunities`, `dexSaveAdvantage`, `attacksCannotHaveAdvantage`.
-
-Inputs:
-
-- `.references/inspirations/11-modifier-algebra.md`.
-- `ARCHITECTURE.md`.
-- `battle.qnt`.
-- `packages/core/src/battle-machine-types.ts`.
-- Battle MBT bridge.
-
-Implementation output:
-
-- Add `PassiveModifiers`/`FRESH_MODS` in Quint and TS only if this batch is deliberately selected.
-- Mechanically nest existing passive modifier fields.
-- Do not add a generic modifier resolver unless there is a real multi-source stacking case.
-
-Acceptance criteria:
-
-- Behavior unchanged.
-- Field grouping reduces boilerplate without hiding semantics in an open registry.
-- MBT bridge remains explicit and parity-tested.
-
-Verification:
-
-- RAW/domain-language check before implementation if this grouping lands with new modifier semantics; pure mechanical grouping still needs `UBIQUITOUS_LANGUAGE.md` terminology review.
-- `/simplify` convergence: minimum two rounds after implementation.
-- Typecheck.
-- Focused battle tests if setup types change.
-- Tier 1 battle MBT because the bridge/spec shape changes.
-
-Extra research needed:
-
-- Moderate. Not urgent; best paired with adding new passive modifier fields.
-
-## Task I - Build-Map / Hole Metadata
-
-Status: deferred.
-
-Depends on: a concrete consumer; possibly Task D if the first consumer is attack-boundary parameterization.
-
-Blocks: future token-hole metadata.
-
-Next action: do not pick up until a concrete attack, transcript, or UI consumer exists.
-
-Purpose:
-
-- Enrich action-token holes with metadata such as domain name, legality source, and whether filling one hole narrows later holes.
-
-Context:
-
-- Competitor inspiration: `.references/inspirations/15-build-map-parameterization.md`.
-- Current implementation already has `ActionToken` -> `ResolvedActionToken` -> `ResolutionRequest` -> event.
-- Current `Hole<T>` is just `{ options: ReadonlyArray<T> }`.
-
-Inputs:
-
-- `.references/inspirations/15-build-map-parameterization.md`.
-- `packages/core/src/available-actions.ts`.
-- `plans/available-actions.md`.
-- Task D research output if this is used for battle attacks.
-
-Research output:
-
-- Decide whether the first user is attack boundary, transcript disambiguation, or a future UI.
-
-Acceptance criteria:
-
-- Metadata is not added speculatively without a consumer.
-- No UI-specific abstraction leaks into core action legality.
-
-Verification:
-
-- Docs-only unless a consumer is selected.
-- RAW check and `/simplify` convergence are required if the research later leads to implementation.
-
-Extra research needed:
-
-- Yes, but defer until a concrete consumer exists.
-
-## Task J - Generic Table Events, Environmental Hazards, And Monster Commands
-
-Status: ready-for-research.
-
-Depends on: none.
-
-Blocks: future raw table event exposure and monster command work.
-
-Next action: choose one narrow source/provenance family to research, or mark the family deferred.
-
-Purpose:
-
-- Decide whether to schedule a table-event provenance or monster-command ownership batch.
-
-Context:
-
-- Max-HP reduction/restoration needs source-specific provenance and caps.
-- Raw effect add/remove needs source, duration, dependency, and payload ownership.
-- Generic battle spell table events are blocked on multi-phase reaction resolution and spell payload ownership.
-- `SUFFOCATE` is blocked because the current raw event is a terminal drop-to-0 shortcut, not a public SRD suffocation-progress hazard event.
-- Raw monster `USE_LEGENDARY_ACTION` is blocked because named monster legendary actions need action-name legality and stat-block ownership; `BATTLE_LEGENDARY_PASS` is already the safe control command for passing a legendary-action window.
-
-Inputs:
-
-- `plans/MCP_EVENT_SURFACE_AUDIT.md`.
-- Relevant SRD spell/effect examples if a specific table event is selected.
-- Monster stat-block/action data if a monster command is selected.
-
-Research output:
-
-- Pick one narrow table-event or monster-command family, or keep all deferred.
-- For max-HP work, distinguish `REDUCE_MAX_HP` and `RESTORE_MAX_HP` provenance and caps.
-- For effect work, distinguish raw `ADD_EFFECT` payloads from modeled semantic spell/feature effects.
-- For environmental work, decide whether to model a source-specific hazard like suffocation rather than exposing the raw terminal event.
-- For monster commands, decide whether a command owns a named stat-block action or must wait for monster action payload ownership.
-
-Acceptance criteria:
-
-- No raw payload command is exposed without source/provenance constraints.
-- Prefer modeled semantic spell/action tokens when possible.
-- Public monster commands do not accept arbitrary action names, damage, damage types, or payload facts without stat-block validation.
-
-Verification:
-
-- Docs-only until implementation.
-- RAW check and `/simplify` convergence are required if the research later leads to implementation.
-
-Extra research needed:
-
-- Yes. Needs source-by-source provenance review.
-
-## Task MCP1-A - Session Host Architecture
+### Task 10 - MCP1-A - Session Host Architecture
 
 Status: ready-for-research.
 
@@ -1022,7 +869,7 @@ Extra research needed:
 
 - Yes. Confirm the current stdio/test-host wiring before coding, then pick the smallest routing model that supports a creature host and an active battle host.
 
-## Task MCP1-B - Core Goblin Minion Stat-Block Slice
+### Task 11 - MCP1-B - Core Goblin Minion Stat-Block Slice
 
 Status: ready-for-research.
 
@@ -1082,7 +929,206 @@ Extra research needed:
 
 - Yes. Confirm existing monster catalog/projection ownership before adding fields, and search for any existing goblin/stat-block data to avoid duplication.
 
-## Task MCP1-C - Encounter Start Tool/Command
+### Task 12 - E - Movement And Help Geometry/Session Ownership
+
+Status: ready-for-research.
+
+Depends on: none.
+
+Blocks: public `BATTLE_MOVE` and `BATTLE_HELP_ATTACK`.
+
+Next action: decide the owner of visibility, reach, threat, path, and provocation facts; do not implement movement/help until ownership is explicit.
+
+Purpose:
+
+- Decide whether to introduce a session geometry owner or keep `BATTLE_MOVE` and `BATTLE_HELP_ATTACK` deferred.
+
+Context:
+
+- `BATTLE_MOVE` is blocked on position, path/destination, difficult terrain beyond a fixed step, reach exit, threatened creature set, and OA provocation.
+- `BATTLE_HELP_ATTACK` is blocked on helper/ally/target visibility and range/reach facts.
+- `ARCHITECTURE.md` and `battle/DOMAIN.md` intentionally keep formal geometry out of the core.
+- `.references/inspirations/12-opportunity-attack-path-analysis.md` recommends adopting vocabulary but not adding grid/pathfinding.
+
+Inputs:
+
+- `ARCHITECTURE.md`.
+- `battle/DOMAIN.md`.
+- `.references/inspirations/12-opportunity-attack-path-analysis.md`.
+- `plans/MCP_EVENT_SURFACE_AUDIT.md`.
+
+Research output:
+
+- Decision note:
+  - continue deferring;
+  - accept explicit caller/session facts for a narrow action;
+  - or define a future session geometry owner.
+
+Acceptance criteria:
+
+- The note must not add a grid/geometry engine by accident.
+- The note must identify the owner of visibility, reach, threat, path, and provocation facts.
+
+Verification:
+
+- Docs-only unless implementation is explicitly scheduled later.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
+
+Extra research needed:
+
+- Yes. This is product/session boundary design, not ready implementation.
+
+### Task 13 - J - Generic Table Events, Environmental Hazards, And Monster Commands
+
+Status: ready-for-research.
+
+Depends on: none.
+
+Blocks: future raw table event exposure and monster command work.
+
+Next action: choose one narrow source/provenance family to research, or mark the family deferred.
+
+Purpose:
+
+- Decide whether to schedule a table-event provenance or monster-command ownership batch.
+
+Context:
+
+- Max-HP reduction/restoration needs source-specific provenance and caps.
+- Raw effect add/remove needs source, duration, dependency, and payload ownership.
+- Generic battle spell table events are blocked on multi-phase reaction resolution and spell payload ownership.
+- `SUFFOCATE` is blocked because the current raw event is a terminal drop-to-0 shortcut, not a public SRD suffocation-progress hazard event.
+- Raw monster `USE_LEGENDARY_ACTION` is blocked because named monster legendary actions need action-name legality and stat-block ownership; `BATTLE_LEGENDARY_PASS` is already the safe control command for passing a legendary-action window.
+
+Inputs:
+
+- `plans/MCP_EVENT_SURFACE_AUDIT.md`.
+- Relevant SRD spell/effect examples if a specific table event is selected.
+- Monster stat-block/action data if a monster command is selected.
+
+Research output:
+
+- Pick one narrow table-event or monster-command family, or keep all deferred.
+- For max-HP work, distinguish `REDUCE_MAX_HP` and `RESTORE_MAX_HP` provenance and caps.
+- For effect work, distinguish raw `ADD_EFFECT` payloads from modeled semantic spell/feature effects.
+- For environmental work, decide whether to model a source-specific hazard like suffocation rather than exposing the raw terminal event.
+- For monster commands, decide whether a command owns a named stat-block action or must wait for monster action payload ownership.
+
+Acceptance criteria:
+
+- No raw payload command is exposed without source/provenance constraints.
+- Prefer modeled semantic spell/action tokens when possible.
+- Public monster commands do not accept arbitrary action names, damage, damage types, or payload facts without stat-block validation.
+
+Verification:
+
+- Docs-only until implementation.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
+
+Extra research needed:
+
+- Yes. Needs source-by-source provenance review.
+
+### Task 14 - F - Legendary Attack Payload Ownership
+
+Status: blocked.
+
+Depends on: Task D and monster stat-block action payload ownership.
+
+Blocks: public `BATTLE_LEGENDARY_ATTACK`.
+
+Next action: wait for Task D; then define stat-block Legendary Action payload ownership and whether the action is a suggested action, monster-control command, or both.
+
+Purpose:
+
+- Define what entity owns monster Legendary Action option payloads before exposing `BATTLE_LEGENDARY_ATTACK`.
+
+Context:
+
+- `BATTLE_LEGENDARY_PASS` is already wired as a control command.
+- `BATTLE_LEGENDARY_ATTACK` remains blocked because battle owns the legendary-action window and charges, but not the specific stat-block Legendary Action option payload/name/cost.
+- It also needs the same attack runtime/session contract as `BATTLE_ATTACK`.
+
+Inputs:
+
+- `plans/MCP_EVENT_SURFACE_AUDIT.md`.
+- Monster stat-block files/types.
+- `battle.qnt` legendary action handling.
+- Task D research output.
+
+Research output:
+
+- A monster stat-block action payload ownership proposal.
+- Decide whether legendary attack is a suggested action, monster-control command, or both.
+
+Acceptance criteria:
+
+- MCP does not accept arbitrary damage type, damage qualifier, weapon property, action cost, or melee/ranged facts.
+- The plan reuses the Task D attack boundary where possible.
+
+Verification:
+
+- Docs-only until implementation.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
+
+Extra research needed:
+
+- Yes. Depends on attack boundary and monster payload ownership review.
+
+### Task 15 - G - Attack Rider Ownership
+
+Status: blocked.
+
+Depends on: Task D.
+
+Blocks: attack rider tokens.
+
+Next action: wait for Task D; then classify each rider by timing, owned feature state, and runtime/session facts.
+
+Purpose:
+
+- Keep attack riders out of creature-level MCP and prepare them as battle-owned rider windows after attack ownership exists.
+
+Context:
+
+- Blocked riders:
+  - `USE_BRUTAL_STRIKE`;
+  - `STUNNING_STRIKE`;
+  - `USE_CUNNING_STRIKE`;
+  - `USE_ELDRITCH_SMITE`;
+  - `USE_DIVINE_SMITE_FREE`.
+- Each requires specific attack timing and qualifying-hit facts.
+
+Inputs:
+
+- `plans/MCP_EVENT_SURFACE_AUDIT.md` rider rows.
+- `.references/srd-5.2.1/Classes/` relevant class passages.
+- Task D research output.
+
+Research output:
+
+- For each rider, classify:
+  - pre-roll choice;
+  - post-hit/pre-damage choice;
+  - post-damage effect;
+  - runtime save/target facts;
+  - battle-owned feature state.
+
+Acceptance criteria:
+
+- No creature-level token is added for a hit-qualified rider.
+- Rider timing is explicit and maps to battle attack resolution phases.
+
+Verification:
+
+- Docs-only until Task D is implemented.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
+
+Extra research needed:
+
+- Yes. Depends on attack boundary and RAW class feature reread.
+
+### Task 16 - MCP1-C - Encounter Start Tool/Command
 
 Status: blocked.
 
@@ -1131,7 +1177,7 @@ Extra research needed:
 
 - Yes. Confirm how current Fighter durable/config state is represented and which fields battle init already owns.
 
-## Task MCP2-A - Battle Attack Public Boundary
+### Task 17 - MCP2-A - Battle Attack Public Boundary
 
 Status: blocked.
 
@@ -1185,7 +1231,7 @@ Extra research needed:
 
 - Yes. Complete Task D first; this task should consume that contract rather than redesign attack ownership inside MCP.
 
-## Task MCP2-B - Fighter Attacks Goblin End-to-End
+### Task 18 - MCP2-B - Fighter Attacks Goblin End-to-End
 
 Status: blocked.
 
@@ -1225,7 +1271,7 @@ Extra research needed:
 
 - Light. Mostly integration wiring once the prior tasks are done.
 
-## Task MCP3-A - Goblin Warrior/Nimble Escape Follow-Up
+### Task 19 - MCP3-A - Goblin Warrior/Nimble Escape Follow-Up
 
 Status: blocked.
 
@@ -1259,6 +1305,104 @@ Verification:
 Extra research needed:
 
 - Yes. This is intentionally deferred until the minimal Fighter/Goblin Minion path and public attack boundary exist.
+
+### Task 20 - H - PassiveModifiers Sub-Record
+
+Status: deferred.
+
+Depends on: none.
+
+Blocks: possible passive modifier field cleanup.
+
+Next action: do not pick up unless the batch explicitly selects passive modifier restructuring.
+
+Purpose:
+
+- Reduce flat modifier field boilerplate by grouping explicit named fields into a closed `PassiveModifiers` record.
+
+Context:
+
+- Competitor inspiration: `.references/inspirations/11-modifier-algebra.md`.
+- The repo intentionally rejects open modifier registries in favor of explicit Quint fields.
+- Current flat fields include `hasEvasion`, `saveMiscBonus`, `critRange`, `rangedWeaponAttackRollBonus`, `defenseArmorClassBonus`, `greatWeaponFightingDamageFloor`, `meleeDamageBonus`, `recklessThisTurn`, and related fields.
+- `ARCHITECTURE.md` lists planned future passive fields: `conditionImmunities`, `dexSaveAdvantage`, `attacksCannotHaveAdvantage`.
+
+Inputs:
+
+- `.references/inspirations/11-modifier-algebra.md`.
+- `ARCHITECTURE.md`.
+- `battle.qnt`.
+- `packages/core/src/battle-machine-types.ts`.
+- Battle MBT bridge.
+
+Implementation output:
+
+- Add `PassiveModifiers`/`FRESH_MODS` in Quint and TS only if this batch is deliberately selected.
+- Mechanically nest existing passive modifier fields.
+- Do not add a generic modifier resolver unless there is a real multi-source stacking case.
+
+Acceptance criteria:
+
+- Behavior unchanged.
+- Field grouping reduces boilerplate without hiding semantics in an open registry.
+- MBT bridge remains explicit and parity-tested.
+
+Verification:
+
+- RAW/domain-language check before implementation if this grouping lands with new modifier semantics; pure mechanical grouping still needs `UBIQUITOUS_LANGUAGE.md` terminology review.
+- `/simplify` convergence: minimum two rounds after implementation.
+- Typecheck.
+- Focused battle tests if setup types change.
+- Tier 1 battle MBT because the bridge/spec shape changes.
+
+Extra research needed:
+
+- Moderate. Not urgent; best paired with adding new passive modifier fields.
+
+### Task 21 - I - Build-Map / Hole Metadata
+
+Status: deferred.
+
+Depends on: a concrete consumer; possibly Task D if the first consumer is attack-boundary parameterization.
+
+Blocks: future token-hole metadata.
+
+Next action: do not pick up until a concrete attack, transcript, or UI consumer exists.
+
+Purpose:
+
+- Enrich action-token holes with metadata such as domain name, legality source, and whether filling one hole narrows later holes.
+
+Context:
+
+- Competitor inspiration: `.references/inspirations/15-build-map-parameterization.md`.
+- Current implementation already has `ActionToken` -> `ResolvedActionToken` -> `ResolutionRequest` -> event.
+- Current `Hole<T>` is just `{ options: ReadonlyArray<T> }`.
+
+Inputs:
+
+- `.references/inspirations/15-build-map-parameterization.md`.
+- `packages/core/src/available-actions.ts`.
+- `plans/available-actions.md`.
+- Task D research output if this is used for battle attacks.
+
+Research output:
+
+- Decide whether the first user is attack boundary, transcript disambiguation, or a future UI.
+
+Acceptance criteria:
+
+- Metadata is not added speculatively without a consumer.
+- No UI-specific abstraction leaks into core action legality.
+
+Verification:
+
+- Docs-only unless a consumer is selected.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
+
+Extra research needed:
+
+- Yes, but defer until a concrete consumer exists.
 
 ## Extra Research Summary
 
