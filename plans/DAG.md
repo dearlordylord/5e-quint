@@ -133,9 +133,9 @@ authoritative-d20-modifier-query-surface
 | `legendary-resistance-fallback` | batch | complete | none | additional battle interrupt breadth | Closed as a narrow AoE failed-save regression slice; no separate breadth batch remains to schedule here |
 | `battle-basic-action-surface` | candidate | complete | `available-actions-main` | unified projection/execution of `dash`, `disengage`, and `dodge` in battle scope | Landed in core available-actions and MCP with deterministic action-surface coverage |
 | `battle-ready-action-surface` | candidate | complete | `available-actions-main` | battle-scoped `READY`, `READY_PASS`, and `READY_RELEASE` action-surface support | Landed in core available-actions and MCP over the existing battle ready window; follow-up simplification can reduce registry boilerplate, but the runbook slice is closed |
-| `battle-ready-spell-payload-state` | facility | blocked | `available-actions-main` | `battle-ready-spell-surface` | Newly discovered missing owned state: battle does not yet carry enough spell save/effect payload metadata to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through the action surface |
+| `battle-ready-spell-payload-state` | facility | ready | `available-actions-main` | `battle-ready-spell-surface` | Promoted by [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md). Add the smallest battle-owned spell save/effect payload metadata needed to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through the action surface. |
 | `battle-ready-spell-surface` | candidate | blocked | `available-actions-main`, `battle-ready-spell-payload-state` | battle-scoped `READY_SPELL` and `READY_SPELL_RELEASE` action-surface support | Readied-spell timing exists, but honest action-surface exposure is blocked on battle-owned spell payload/state rather than token plumbing alone |
-| `after-damage-trigger-state` | facility | blocked | `available-actions-main` | `after-damage-reaction-surface` | Newly discovered missing owned state: battle does not yet carry enough after-damage trigger qualifiers and stored effect/reaction choice metadata to project these reactions honestly |
+| `after-damage-trigger-state` | facility | ready | `available-actions-main` | `after-damage-reaction-surface` | Promoted by [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md). Add the smallest battle-owned after-damage trigger qualifiers and stored reactive effect metadata needed to project these reactions honestly. |
 | `after-damage-reaction-surface` | candidate | blocked | `available-actions-main`, `after-damage-trigger-state` | battle-scoped `PIAfterDamage` reaction discovery/execution such as Hellish Rebuke / Fire Shield / Retaliation | `PIAfterDamage` exists, but honest surfacing is blocked on battle-owned trigger facts such as visibility, range/proximity, and stored reactive effect choice |
 | `preview-execution` | batch | complete | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | no-spend scripted action preview | Landed end to end in core and MCP; retain only because later descriptive-mode/transcript work still depends on the doctrine/model it consumed |
 | `dm-override` | plan | later | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
@@ -176,18 +176,20 @@ authoritative-d20-modifier-query-surface
 
 If scheduling strictly by current value and low dependency risk, outside already-complete runbooks:
 
-None. Promote from the research queue before packaging another execution-grade batch.
+- [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md):
+  - `battle-ready-spell-payload-state`
+  - `battle-ready-spell-surface` after `battle-ready-spell-payload-state`
+  - `after-damage-trigger-state`
+  - `after-damage-reaction-surface` after `after-damage-trigger-state`
 
 ## Research Queue
 
 Promote these through design/research before trying to package another large execution-grade runbook:
 
 1. `effect-dependency-graph`
-2. `battle-ready-spell-payload-state`
-3. `after-damage-trigger-state`
-4. `fighting-styles-in-battle`
-5. `battle-hidden-state`
-6. `dm-override` / `transcript-port-to-dnd` only after the product-surface slices above are landed
+2. `fighting-styles-in-battle`
+3. `battle-hidden-state`
+4. `dm-override` / `transcript-port-to-dnd` only after the product-surface slices above are landed
 
 ## Upstream Planning Sources
 
@@ -233,27 +235,29 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 
 ### `battle-ready-spell-payload-state`
 
-- classification: `research / promotion`
+- classification: `promoted / runbook 6`
 - owner_layer: battle-owned readied-spell payload metadata
 - read_first:
+  - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
   - [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
   - [PRD_READY_ACTION.md](/workspace/typescript/dnd/PRD_READY_ACTION.md)
   - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
   - [packages/core/src/available-actions.ts](/workspace/typescript/dnd/packages/core/src/available-actions.ts)
-- promotion_goal:
-  - define the smallest battle-owned spell save/effect payload facts needed to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through available-actions / MCP
+- execution_goal:
+  - implement the smallest battle-owned spell save/effect payload facts needed to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through available-actions / MCP
 
 ### `after-damage-trigger-state`
 
-- classification: `research / promotion`
+- classification: `promoted / runbook 6`
 - owner_layer: battle-owned after-damage reaction trigger facts
 - read_first:
+  - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
   - [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
   - [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-helpers.ts)
-- promotion_goal:
-  - define the smallest owned trigger qualifiers and stored reactive effect choice facts needed to surface `PIAfterDamage` reactions honestly without inventing a generic registry
+- execution_goal:
+  - implement the smallest owned trigger qualifiers and stored reactive effect choice facts needed to surface `PIAfterDamage` reactions honestly without inventing a generic registry
 
 ### `fighting-styles-in-battle`
 
