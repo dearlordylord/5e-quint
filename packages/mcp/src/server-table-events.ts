@@ -197,6 +197,9 @@ function buildCreatureTableEvent(
       vulnerabilities: damageTypeSet(c.vulnerabilities),
       immunities: damageTypeSet(c.immunities),
     })),
+    Match.when({ type: "BREAK_CONCENTRATION" }, () => ({
+      type: "BREAK_CONCENTRATION" as const,
+    })),
     Match.exhaustive,
   );
 }

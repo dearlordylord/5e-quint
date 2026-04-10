@@ -662,10 +662,17 @@ export const CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES = [
 export type CreatureEnvironmentalTableEventType =
   (typeof CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES)[number];
 
+export const CREATURE_CONCENTRATION_TABLE_EVENT_TYPES = [
+  "BREAK_CONCENTRATION",
+] as const satisfies ReadonlyArray<DndEvent["type"]>;
+export type CreatureConcentrationTableEventType =
+  (typeof CREATURE_CONCENTRATION_TABLE_EVENT_TYPES)[number];
+
 export const CREATURE_TABLE_EVENT_TYPES = [
   ...CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES,
   ...CREATURE_CONDITION_EXHAUSTION_TABLE_EVENT_TYPES,
   ...CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES,
+  ...CREATURE_CONCENTRATION_TABLE_EVENT_TYPES,
 ] as const satisfies ReadonlyArray<DndEvent["type"]>;
 export type CreatureTableEventType =
   (typeof CREATURE_TABLE_EVENT_TYPES)[number];
@@ -1245,6 +1252,11 @@ const CreatureApplyFallTableEventSchema = Schema.Struct({
   ...TableEventDamageModifiersSchema,
   ...TableEventSemanticActionField,
 });
+const CreatureBreakConcentrationTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("BREAK_CONCENTRATION"),
+  ...TableEventSemanticActionField,
+});
 const BattleTableEventSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal(...BATTLE_TABLE_EVENT_TYPES),
@@ -1261,6 +1273,7 @@ export const TableEventCommandSchema = Schema.Union(
   CreatureAddExhaustionTableEventSchema,
   CreatureReduceExhaustionTableEventSchema,
   CreatureApplyFallTableEventSchema,
+  CreatureBreakConcentrationTableEventSchema,
   BattleTableEventSchema,
 );
 export type TableEventCommand = Schema.Schema.Type<

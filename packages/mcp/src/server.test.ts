@@ -10,6 +10,7 @@ import {
   classLevel,
   CreatureId,
   difficultyClass,
+  spellId,
   spellSlotLevel,
 } from "@dnd/core/types.ts";
 
@@ -907,6 +908,59 @@ describe("MCP server adapter", () => {
     expect(readPayload(zeroLevels)).toMatchObject({
       error: "Invalid record_table_event input",
     });
+  });
+
+  test("record_table_event applies voluntary concentration breaks with warnings", () => {
+    const host = createDemoHost();
+    host.actor.send({
+      type: "START_CONCENTRATION",
+      spellId: spellId("bless"),
+      durationTurns: 10,
+      expiresAt: "end",
+      casterId: CreatureId("self"),
+    });
+
+    const response = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "BREAK_CONCENTRATION",
+      }),
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.state.concentrationSpellId).toBeNull();
+    expect(response.state.activeEffects).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ spellId: "bless" })]),
+    );
+    expect(response.warnings).toContainEqual({
+      code: "external_table_fact",
+      message:
+        "BREAK_CONCENTRATION records a table fact rather than an ordinary suggested action.",
+    });
+  });
+
+  test("record_table_event keeps max-HP and generic effect payloads blocked", () => {
+    const host = createDemoHost();
+
+    for (const event of [
+      { scope: "creature", type: "REDUCE_MAX_HP", amount: 5 },
+      { scope: "creature", type: "RESTORE_MAX_HP", amount: 5 },
+      {
+        scope: "creature",
+        type: "ADD_EFFECT",
+        spellId: "bless",
+        durationTurns: 10,
+        expiresAt: "end",
+        casterId: "self",
+      },
+      { scope: "creature", type: "REMOVE_EFFECT", spellId: "bless" },
+    ]) {
+      expect(
+        readPayload(handleToolCall(host, "record_table_event", event)),
+      ).toMatchObject({
+        error: "Invalid record_table_event input",
+      });
+    }
   });
 
   test("unsupported battle table events return a structured error without mutating state", () => {
