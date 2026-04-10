@@ -693,17 +693,23 @@ Commit after this task:
 
 ### Task 23 - Monster Legendary Attack Slice
 
-- [ ] Reassess `BATTLE_LEGENDARY_ATTACK` after control-command support for `BATTLE_LEGENDARY_PASS` and monster control exists.
-- [ ] Decide whether legendary attack should be a `suggested_action` in `get_available_actions`, a `control_command`, or both depending on active monster host UX.
-- [ ] Identify missing monster stat-block payload ownership for target, attack roll, damage, damage type, AC, crit, knockout, weapon properties, and reaction candidates.
-- [ ] Implement only if the monster payload is already battle-owned; otherwise document blockers.
+- [x] Reassess `BATTLE_LEGENDARY_ATTACK` after control-command support for `BATTLE_LEGENDARY_PASS` and monster control exists.
+- [x] Decide whether legendary attack should be a `suggested_action` in `get_available_actions`, a `control_command`, or both depending on active monster host UX.
+- [x] Identify missing monster stat-block payload ownership for target, attack roll, damage, damage type, AC, crit, knockout, weapon properties, and reaction candidates.
+- [x] Implement only if the monster payload is already battle-owned; otherwise document blockers. (Blocked; documented in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md).)
 
 Pre-research result, 2026-04-10:
 
-- Keep `BATTLE_LEGENDARY_ATTACK` blocked for now. Battle owns the legendary-action window (`laCtx.eligibleMonsters`) and each monster's `legendaryActionsRemaining`, but it does not own the specific legendary action payload/name/cost.
+- Keep `BATTLE_LEGENDARY_ATTACK` blocked for now. Battle owns the legendary-action window (`laCtx.eligibleMonsters`) and each monster's `legendaryActionsRemaining`, but it does not own the specific legendary action payload/name.
 - The public surface should probably be a monster-host `suggested_action` only after stat-block action payloads exist. A `control_command` could still be useful for fully external monster automation, but it should use the same stat-block payload validation rather than accepting arbitrary attack payloads.
-- Reuse the Task 20 attack runtime boundary once it exists: user/runtime inputs still include target, attack roll, damage, crit, target AC, knockout choice, visibility/range/adjacency facts, and `hitReactionCandidates`; battle/stat-block ownership should provide damage type, damage qualifiers, weapon properties, melee/ranged shape, and action cost.
+- Reuse the Task 20 attack runtime boundary once it exists: user/runtime inputs still include target, attack roll, damage, crit, target AC, knockout choice, visibility/range/adjacency facts, and `hitReactionCandidates`; battle/stat-block ownership should provide damage type, damage qualifiers, weapon properties, and melee/ranged shape.
 - Do not expose caller-supplied `weaponProperties`, `isFinesse`, `laDt`, or `damageQualifiers` as arbitrary public payloads before monster stat-block action ownership exists.
+
+Task 23 decision, 2026-04-10:
+
+- Keep `BATTLE_LEGENDARY_ATTACK` blocked. `BATTLE_LEGENDARY_PASS` is now correctly modeled as a `control_command`, but a legendary attack is still a monster-host `suggested_action` only after battle/stat-block ownership can name a specific Legendary Action option and derive its melee/ranged shape, weapon properties, damage type, and damage qualifiers.
+- Do not add a public `control_command` variant for legendary attack yet. A future external monster automation command may be useful, but it must share the same stat-block action payload validation as the suggested-action path instead of accepting arbitrary raw attack fields.
+- Current user/runtime holes remain `monsterId`, `laTarget`, `knockOut`, `laAtkRoll`, `laDmg`, `laCrit`, `laTgtAc`, visibility/range/adjacency facts, and `hitReactionCandidates`; MCP still lacks a public resolved-token contract for supplying those open table/session facts without inventing state.
 
 Dependencies: Task 4 and Task 18. May also depend on Task 20 if it reuses the regular attack token/runtime design.
 
