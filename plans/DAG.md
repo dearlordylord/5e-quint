@@ -99,6 +99,12 @@ weapon-property-aware-battle-resolution
   -> battle-hand-occupancy-state
   -> fighting-styles-in-battle
 
+battle-armor-worn-state
+  -> defense-fighting-style-in-battle
+
+damage-die-face-resolution
+  -> great-weapon-fighting-in-battle
+
 battle-hand-occupancy-state
   -> versatile-weapon-die-switching
 
@@ -151,7 +157,7 @@ authoritative-d20-modifier-query-surface
 | `qualified-physical-damage-bypass` | candidate | complete | `qualified-damage-typing` | monster/effect fidelity | Landed qualified physical resistance, vulnerability, and immunity bypass semantics in Quint and TS battle damage flow with deterministic scenario coverage |
 | `battle-helped-target-state` | facility | complete | none | `help-advantage-state` | Battle-owned helped-target state landed with owner-scoped expiry semantics in Quint and TS |
 | `help-advantage-state` | candidate | complete | `battle-helped-target-state` | core action-economy mechanic | Help now contributes a real attack-advantage source with consumption on the next qualifying attack |
-| `effect-dependency-graph` | facility | blocked | none | `parent-child-effect-teardown` | Still design-first. Current effect identity is `spellId`/`casterId` plus owner-relative expiry; parent/child teardown needs explicit effect identity and parent linkage, not just more helper code. |
+| `effect-dependency-graph` | facility | ready | none | `parent-child-effect-teardown` | Promoted by [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md). Add explicit effect identity and parent/dependency linkage so teardown can remove dependent child effects without relying on broad `spellId` matching. |
 | `parent-child-effect-teardown` | candidate | blocked | `effect-dependency-graph` | concentration-linked cleanup correctness | Inspiration item `31` |
 | `one-shot-rider-consumption-metadata` | facility | complete | none | `next-hit-rider-consumption` | Landed consume-on-next-qualifying-hit metadata and consumption hooks without widening to the full downstream rider batch |
 | `next-hit-rider-consumption` | candidate | complete | `one-shot-rider-consumption-metadata` | recurring spell/feature semantics | Landed battle consumption of qualifying next-hit rider effects with deterministic regression coverage |
@@ -161,10 +167,14 @@ authoritative-d20-modifier-query-surface
 | `battle-hand-occupancy-state` | facility | complete | `weapon-property-aware-battle-resolution` | `versatile-weapon-die-switching` | Landed explicit battle-owned hand occupancy for weapons, shields, grapples, and spell-component legality |
 | `archery-in-battle` | candidate | complete | `closed-modifier-algebra` | partial `fighting-styles-in-battle` progress | Landed through the narrow battle-owned `rangedWeaponAttackRollBonus` field, with TS fighter content projecting the specific +2 and regressions proving the bonus does not affect natural critical-hit range |
 | `two-weapon-fighting-style-in-battle` | candidate | complete | `closed-modifier-algebra`, `off-hand-attack-surface` | partial `fighting-styles-in-battle` progress | Landed through the battle-owned Light-property extra-attack damage flag, preserving negative ability-modifier behavior and positive-modifier omission when the style is absent |
-| `fighting-styles-in-battle` | candidate | blocked | remaining style-specific ownership facts | broader weapon semantics | Keep decomposed. `Defense` still needs battle-owned armor-worn state, and `Great Weapon Fighting` still needs battle-owned die-face reroll ownership rather than the additive modifier seam. |
+| `battle-armor-worn-state` | facility | ready | none | `defense-fighting-style-in-battle` | Promoted by [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md). Add the smallest battle-owned fact for wearing Light, Medium, or Heavy armor; do not widen to full armor inventory. |
+| `defense-fighting-style-in-battle` | candidate | blocked | `battle-armor-worn-state` | partial `fighting-styles-in-battle` progress | Defense is a concrete AC consumer and should not be forced through the Runbook 5 attack-modifier seam. |
+| `damage-die-face-resolution` | facility | ready | `battle-hand-occupancy-state`, `weapon-property-aware-battle-resolution` | `great-weapon-fighting-in-battle` | Promoted by [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md). Add enough battle-owned weapon damage die-face data to apply Great Weapon Fighting without a generic reroll engine. |
+| `great-weapon-fighting-in-battle` | candidate | blocked | `damage-die-face-resolution` | partial `fighting-styles-in-battle` progress | Concrete Great Weapon Fighting consumer: Melee weapon held with two hands, Two-Handed or Versatile property, treat 1/2 weapon damage dice as 3. |
+| `fighting-styles-in-battle` | candidate | blocked | remaining style-specific ownership facts | broader weapon semantics | Keep decomposed. Runbook 7 promotes the remaining concrete consumers (`Defense`, `Great Weapon Fighting`) rather than scheduling this umbrella directly. |
 | `versatile-weapon-die-switching` | candidate | complete | `battle-hand-occupancy-state` | hand-usage / wield-state semantics | Landed in Quint and TS attack resolution with deterministic one-hand/two-hand regression coverage plus spellcasting grip-relaxation coverage |
 | `movement-provocation-kind` | facility | complete | `oa-path-vocabulary` | `forced-movement-vs-oa` | Landed explicit movement provocation kind in battle Quint/TS plus battle domain docs; voluntary and non-provoking movement no longer share the same event meaning |
-| `battle-hidden-state` | facility | blocked | none | `hide-stealth-chain` | Hide/stealth needs explicit hidden/seen battle state; it should not be bundled into OA/reach work now that OA path vocabulary is already caller-owned |
+| `battle-hidden-state` | facility | ready | none | `hide-stealth-chain` | Promoted by [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md). Add hidden state with Hide check total / discovery DC and keep cover/obscurement/line-of-sight preconditions caller-owned. |
 | `hide-stealth-chain` | candidate | blocked | `battle-hidden-state` | visibility/stealth correctness | Inspiration item `11` |
 | `forced-movement-vs-oa` | candidate | complete | `movement-provocation-kind` | OA legality fidelity | Landed deterministic non-provoking-movement coverage and Quint/TS movement-contract parity |
 | `reach-extends-oa-range` | candidate | complete | `oa-path-vocabulary` | threat radius fidelity | Landed deterministic coverage that reach-sensitive OAs are not hardcoded to 5 feet, including prone-sensitive attack-context handling |
@@ -181,15 +191,22 @@ If scheduling strictly by current value and low dependency risk, outside already
   - `battle-ready-spell-surface` after `battle-ready-spell-payload-state`
   - `after-damage-trigger-state`
   - `after-damage-reaction-surface` after `after-damage-trigger-state`
+- [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md):
+  - `effect-dependency-graph`
+  - `parent-child-effect-teardown` after `effect-dependency-graph`
+  - `battle-armor-worn-state`
+  - `defense-fighting-style-in-battle` after `battle-armor-worn-state`
+  - `damage-die-face-resolution`
+  - `great-weapon-fighting-in-battle` after `damage-die-face-resolution`
+  - `battle-hidden-state`
+  - `hide-stealth-chain` after `battle-hidden-state`
 
 ## Research Queue
 
 Promote these through design/research before trying to package another large execution-grade runbook:
 
-1. `effect-dependency-graph`
-2. `fighting-styles-in-battle`
-3. `battle-hidden-state`
-4. `dm-override` / `transcript-port-to-dnd` only after the product-surface slices above are landed
+1. `fighting-styles-in-battle` umbrella cleanup after Runbook 7's concrete consumers land
+2. `dm-override` / `transcript-port-to-dnd` only after the product-surface slices above are landed
 
 ## Upstream Planning Sources
 
@@ -202,6 +219,11 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
 - `qualified-damage-typing`, `qualified-physical-damage-bypass`, `weapon-property-aware-battle-resolution`, `versatile-weapon-die-switching`, `off-hand-attack-surface`, `two-weapon-fighting-bonus-attack`, `fighting-styles-in-battle`:
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [PLAN_AUDIT.md](/workspace/typescript/dnd/PLAN_AUDIT.md)
+- `battle-armor-worn-state`, `defense-fighting-style-in-battle`, `damage-die-face-resolution`, `great-weapon-fighting-in-battle`:
+  - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
+  - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
+  - [.references/srd-5.2.1/Feats.md](/workspace/typescript/dnd/.references/srd-5.2.1/Feats.md)
+  - [.references/srd-5.2.1/Equipment.md](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md)
 - `battle-hand-occupancy-state`, `versatile-weapon-die-switching`, future hand-sensitive OA/grapple/spellcasting consumers:
   - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
@@ -212,10 +234,13 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
   - [PLAN_AUDIT.md](/workspace/typescript/dnd/PLAN_AUDIT.md)
   - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
 - `oa-path-vocabulary`, `movement-provocation-kind`, `battle-hidden-state`, `hide-stealth-chain`, `forced-movement-vs-oa`, `reach-extends-oa-range`:
+  - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
   - [battle/DOMAIN.md](/workspace/typescript/dnd/battle/DOMAIN.md)
   - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
   - [battle/OPTIONS.md](/workspace/typescript/dnd/battle/OPTIONS.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
+  - [.references/srd-5.2.1/Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md)
+  - [.references/srd-5.2.1/Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md)
 
 ## Research Starting Points
 
@@ -223,15 +248,16 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 
 ### `effect-dependency-graph`
 
-- classification: `research / promotion`
+- classification: `promoted / runbook 7`
 - owner_layer: effect lifecycle ownership and teardown
 - read_first:
+  - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
   - [PLAN_AUDIT.md](/workspace/typescript/dnd/PLAN_AUDIT.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
   - [.references/inspirations/PLAN.md](/workspace/typescript/dnd/.references/inspirations/PLAN.md)
-- promotion_goal:
-  - define parent/child effect ownership and teardown semantics tightly enough to make `parent-child-effect-teardown` execution-grade
+- execution_goal:
+  - implement parent/child effect ownership and teardown semantics tightly enough to close `parent-child-effect-teardown`
 
 ### `battle-ready-spell-payload-state`
 
@@ -271,17 +297,42 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 - promotion_goal:
   - split the umbrella into concrete style consumers instead of inventing a general-purpose modifier algebra prematurely
 
+### `battle-armor-worn-state`
+
+- classification: `promoted / runbook 7`
+- owner_layer: battle-owned armor-worn facts
+- read_first:
+  - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
+  - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
+  - [.references/srd-5.2.1/Feats.md](/workspace/typescript/dnd/.references/srd-5.2.1/Feats.md)
+  - [.references/srd-5.2.1/Equipment.md](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md)
+- execution_goal:
+  - implement the smallest battle-owned Light/Medium/Heavy armor-worn fact needed to close `defense-fighting-style-in-battle`
+
+### `damage-die-face-resolution`
+
+- classification: `promoted / runbook 7`
+- owner_layer: battle-owned weapon damage die-face facts
+- read_first:
+  - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
+  - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
+  - [.references/srd-5.2.1/Feats.md](/workspace/typescript/dnd/.references/srd-5.2.1/Feats.md)
+  - [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-attack.ts)
+- execution_goal:
+  - implement the smallest battle-owned weapon damage die-face shape needed to close `great-weapon-fighting-in-battle`
+
 ### `battle-hidden-state`
 
-- classification: `research / promotion`
+- classification: `promoted / runbook 7`
 - owner_layer: battle-owned visibility / hidden-state semantics
 - read_first:
+  - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
   - [battle/DOMAIN.md](/workspace/typescript/dnd/battle/DOMAIN.md)
   - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [.references/inspirations/12-opportunity-attack-path-analysis.md](/workspace/typescript/dnd/.references/inspirations/12-opportunity-attack-path-analysis.md)
-- promotion_goal:
-  - define the smallest battle-owned hidden/seen state that can support `hide-stealth-chain` without widening into a full grid/geometry model
+- execution_goal:
+  - implement the smallest battle-owned hidden/seen state that can support `hide-stealth-chain` without widening into a full grid/geometry model
 
 ## Maintenance Rules
 
