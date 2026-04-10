@@ -289,7 +289,7 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 **Initiative for new arrivals:** The SRD does not specify how a creature joining mid-combat enters the initiative order. The spec treats this as caller-provided: the caller supplies the initiative count when inserting a new creature.
 
-**Dead/unconscious creatures in initiative:** The SRD does not explicitly remove dead or unconscious creatures from initiative order. Dead monsters are implicitly removed (they cease to exist). Unconscious PCs remain in initiative but are Incapacitated (can't act, speed 0). The spec keeps dead/unconscious creatures in the initiative list until explicitly removed by the caller.
+**Dead/unconscious creatures in initiative:** The SRD does not explicitly remove dead or unconscious creatures from initiative order. Dead monsters are implicitly removed (they cease to exist). Unconscious PCs remain in initiative but are Incapacitated (can't act, speed 0). The spec keeps dead/unconscious creatures in the initiative list until explicitly removed by the caller. `EXIT_COMBAT` remains available after death as the caller-owned teardown mechanism; blocking it would strand a dead creature in initiative under A33.
 
 **Summoned creature initiative:** Varies by spell. Find Familiar: rolls own initiative. Find Steed / Summon Dragon: shares caster's initiative count, acts on caster's turn or immediately after. Conjure spells (Animals, Elemental, etc.): no independent turn — act as effects under caster control.
 

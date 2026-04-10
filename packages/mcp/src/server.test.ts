@@ -1519,6 +1519,52 @@ describe("MCP server adapter", () => {
     expect(readPayload(longRest).state.hp).toBe(44);
   });
 
+  test("EXIT_COMBAT remains executable after death because roster teardown is caller-owned", () => {
+    const host = createDemoHost();
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    host.actor.send({
+      type: "TAKE_DAMAGE",
+      amount: 88,
+      damageType: "slashing",
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false,
+    });
+
+    const stateAfterDeath = readPayload(handleToolCall(host, "get_state", {}));
+    expect(stateAfterDeath.dead).toBe(true);
+
+    const available = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    );
+    expect(available.free).toContainEqual(
+      creatureToken({
+        type: "EXIT_COMBAT",
+        cost: {},
+        outcome: {
+          summary: "Stop tracking this creature in combat and initiative order",
+        },
+      }),
+    );
+
+    const exitCombat = handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "EXIT_COMBAT" }),
+    );
+    expect("isError" in exitCombat).toBe(false);
+    expect(readPayload(exitCombat)).toMatchObject({
+      success: true,
+      outcome: "Stop tracking this creature in combat and initiative order",
+      state: { dead: true },
+    });
+  });
+
   test("battle control commands execute with explicit runtime facts", () => {
     const host = createBattleHost();
 
@@ -2984,7 +3030,7 @@ describe("MCP server adapter", () => {
           {
             "cost": {},
             "outcome": {
-              "summary": "Leave combat (stop tracking turns)",
+              "summary": "Stop tracking this creature in combat and initiative order",
             },
             "scope": "creature",
             "type": "EXIT_COMBAT",

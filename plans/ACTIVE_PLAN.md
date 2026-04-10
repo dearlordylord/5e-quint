@@ -53,7 +53,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 5,
       "id": "MCP0-E",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "EXIT_COMBAT After Death UX Decision"
     },
     {
@@ -185,7 +185,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 2     | MCP0-B - Dead-Creature Exhaustion Mutation Decision                   | done                                          | MCP0-A RAW/dead policy research                          | safer MCP table events                                                              | Closed 2026-04-10: dead-creature exhaustion add/reduce now reject at MCP/XState and no-op in Quint; generic starvation/dehydration exhaustion is also blocked while dead | Completed; policy documented in A16        |
 | 3     | MCP0-C - Short Unknown Action Error                                   | done                                          | none                                                     | MCP UX and downstream agents                                                        | Closed 2026-04-10: `execute_action` / `preview_action` now return compact `UNKNOWN_ACTION_TYPE` errors before full decode, while known-action schema validation remains intact | Completed; no downstream plan changes      |
 | 4     | MCP0-D - SHORT_REST Documentation Clarity                             | done                                          | none                                                     | MCP docs accuracy                                                                   | Closed 2026-04-10: docs/tool descriptions now keep `SHORT_REST` on the action-token lane and explicitly out of `execute_control_command`                               | Completed; no duplicate route added        |
-| 5     | MCP0-E - EXIT_COMBAT After Death UX Decision                          | ready-for-research                            | MCP0-A policy context                                    | optional UX cleanup                                                                 | Decide whether to keep, hide, or warn                                                                                                                                    | Lower-priority UX decision                 |
+| 5     | MCP0-E - EXIT_COMBAT After Death UX Decision                          | done                                          | MCP0-A policy context                                    | optional UX cleanup                                                                 | Closed 2026-04-10: keep `EXIT_COMBAT` available after death, document A33 caller-owned roster teardown, and clarify the MCP/core outcome text                           | Completed; no dead-creature special route  |
 | 6     | B - Battle Size Ownership For Grapple                                 | ready-for-implementation-after-light-research | none                                                     | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns               | Read RAW Grapple/Size and existing owned-size sources, then implement if no duplicate state exists                                                                       | Good implementation slice after MCP0       |
 | 7     | A - Condition Consequence Table Completion Research                   | ready-for-research                            | none                                                     | Possible condition-table implementation                                             | Reread SRD condition entries, decide each proposed column, and write Condition Table Delta                                                                               | Good research slice                        |
 | 8     | C - ResourceCost Typed Refactor                                       | ready-for-implementation-after-light-research | none                                                     | Cleaner MCP/UI cost display and future resource docs                                | Confirm cost consumer blast radius and immediate-cost scope, then implement typed costs if still small                                                                   | Good support-layer cleanup                 |
@@ -235,11 +235,11 @@ Merged MCP Fighter vs. Goblin baseline:
 
 Recommended first coding-loop tasks:
 
-1. **Task MCP0-A: Dead-Creature Condition Mutation Bug** if the goal is the highest-priority MCP correctness fix.
-2. **Task MCP0-E: EXIT_COMBAT After Death UX Decision** if the goal is the remaining MCP0 UX/assumption decision.
-3. **Task B: Battle Size Ownership For Grapple** if the goal is a concrete implementation slice that unblocks a public battle action after the MCP0 bugs.
-4. **Task A: Condition Consequence Table Completion Research** if the goal is competitor-research follow-through and spec auditability.
-5. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
+1. **Task B: Battle Size Ownership For Grapple** if the goal is a concrete implementation slice that unblocks a public battle action after the MCP0 fixes.
+2. **Task A: Condition Consequence Table Completion Research** if the goal is competitor-research follow-through and spec auditability.
+3. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
+4. **Task D: Battle Attack Runtime/Session Boundary** if the goal is the next ownership/API research frontier after the MCP0 cleanup.
+5. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
 
 Do not start with `BATTLE_ATTACK` implementation. Its public runtime/session contract is the main unresolved API boundary and can easily absorb off-hand attacks, hit reactions, legendary actions, and riders.
 
@@ -532,13 +532,13 @@ Extra research needed:
 
 ### Task 5 - MCP0-E - EXIT_COMBAT After Death UX Decision
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: Task MCP0-A policy context.
 
 Blocks: optional UX cleanup.
 
-Next action: decide whether to keep current behavior, hide the token after death, or keep it available with clearer outcome text.
+Next action: Closed 2026-04-10. Keep `EXIT_COMBAT` available after death, document the A33 caller-owned teardown rationale, and use clearer outcome text in core/MCP surfaces.
 
 Problem:
 
@@ -554,7 +554,7 @@ Inputs:
 
 Research output:
 
-- Decide whether to keep current behavior, hide the token after death, or keep it available with clearer outcome text.
+- Decision: keep `EXIT_COMBAT` available after death and clarify the outcome text so it describes caller-owned removal from combat/initiative tracking.
 
 Acceptance criteria:
 
@@ -568,9 +568,28 @@ Verification:
 - `/simplify` convergence: minimum two rounds if implementation or docs/tool-description edits occur.
 - Focused available-actions/MCP tests if token availability or text changes.
 
+Verification completed:
+
+- RAW/assumption check: reread `ASSUMPTIONS.md` A33 and kept the caller-owned roster teardown policy intact. This task does not add new SRD semantics; it clarifies the MCP/core UX around the existing assumption.
+- `/simplify` round 1: rejected a dead-only MCP special case. The final change keeps ownership in the core action spec and uses one clearer `EXIT_COMBAT` summary for both living and dead creatures.
+- `/simplify` round 2: re-checked for redundant state or duplicated routing. No new flags, control routes, or MCP-only logic were added; the remaining docs updates are intentional mirrors of the same A33 decision.
+- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`: passed.
+- `pnpm --filter @dnd/mcp test -- --runInBand packages/mcp/src/server.test.ts`: passed.
+- `git diff --check`: passed.
+- `pnpm quality`: failed in a pre-existing repo state during `packages/core` lint because `prettier --check src` reported unrelated formatting drift in 11 existing files (`src/battle-machine-actions-attack.ts`, `src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/features/spell-available-actions.ts`, `src/machine-event-extractors.ts`, `src/machine-helpers.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`, `src/types.ts`). This task did not touch those files and did not run broad formatters.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCP0-E`: revise to `done`.
+  - `MCP1-A`: no-change; the decision preserves caller-owned teardown and does not add a second MCP control surface.
+  - `MCP1-C`: no-change; encounter teardown ownership remains aligned with the existing single-creature host route.
+- Plan edits: marked `MCP0-E` done in the Ralph task index, DAG row, task-selection guidance, and Task 5 closeout.
+
 Extra research needed:
 
-- Yes. This is an assumption/UX decision, not an obvious RAW bug.
+- No. The decision is closed for this batch; only optional future UX copy cleanup remains.
 
 ### Task 6 - B - Battle Size Ownership For Grapple
 
@@ -1490,7 +1509,6 @@ Needs extra research before coding:
 
 - Task MCP0-A: dead-creature condition policy and RAW citations for Unconscious/Dead/Stable.
 - Task MCP0-B: dead-creature exhaustion mutation policy.
-- Task MCP0-E: dead-creature combat-exit UX decision.
 - Task A: Condition table completion. RAW condition reread and column decision required.
 - Task D: Battle attack boundary. API contract and RAW attack reread required.
 - Task E: Movement/help geometry. Session/product ownership decision required.

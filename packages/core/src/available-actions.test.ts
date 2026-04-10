@@ -986,6 +986,53 @@ describe("available actions contract", () => {
     expect(actor.getSnapshot().context.hp).toBe(44);
   });
 
+  test("EXIT_COMBAT remains available after death while roster teardown is caller-owned", () => {
+    const actor = makeActor();
+    actor.send({ type: "ENTER_COMBAT" });
+    actor.send({
+      type: "TAKE_DAMAGE",
+      amount: 88,
+      damageType: "slashing",
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false,
+    });
+
+    expect(actor.getSnapshot().context.dead).toBe(true);
+    expect(
+      getAvailableActions(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+      ),
+    ).toContainEqual({
+      scope: "creature",
+      type: "EXIT_COMBAT",
+      cost: {},
+      outcome: {
+        summary: "Stop tracking this creature in combat and initiative order",
+      },
+    });
+
+    const exitRequest = expectRequest(
+      resolveAction(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+        creatureResolved({ type: "EXIT_COMBAT" }),
+      ),
+    );
+    const exitFinalized = finalizeResolution(
+      exitRequest,
+      { runtime: "none" },
+      actor.getSnapshot().context,
+    );
+    expect(exitFinalized).toEqual({
+      ok: true,
+      event: { type: "EXIT_COMBAT" },
+      outcome: "Stop tracking this creature in combat and initiative order",
+    });
+  });
+
   test("exposes one prepared-spell token per prepared spell with slot-level choice holes", () => {
     const actor = makeActorWithInput(CLERIC_5_SPELL_INPUT);
     actor.send({ type: "ENTER_COMBAT" });

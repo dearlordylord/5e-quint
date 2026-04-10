@@ -3047,7 +3047,12 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
         ? {
             type: "EXIT_COMBAT",
             cost: {},
-            outcome: { summary: "Leave combat (stop tracking turns)" },
+            // A33 leaves initiative-roster teardown to the caller, so this
+            // remains available even if the creature is dead or unconscious.
+            outcome: {
+              summary:
+                "Stop tracking this creature in combat and initiative order",
+            },
           }
         : null,
   },
