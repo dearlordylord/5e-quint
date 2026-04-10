@@ -87,6 +87,10 @@ const QuintCombatant = z.object({
   hasEvasion: z.boolean(),
   saveMiscBonus: z.bigint(),
   critRange: z.bigint(),
+  isWearingArmor: z.boolean(),
+  defenseArmorClassBonus: z.bigint(),
+  greatWeaponFightingDamageFloor: z.boolean(),
+  hiddenDiscoveryDc: z.bigint(),
   rangedWeaponAttackRollBonus: z.bigint(),
   fighterState: z
     .object({
@@ -211,6 +215,10 @@ interface NormalizedBattleCreature {
   hasEvasion: boolean;
   saveMiscBonus: number;
   critRange: number;
+  isWearingArmor: boolean;
+  defenseArmorClassBonus: number;
+  greatWeaponFightingDamageFloor: boolean;
+  hiddenDiscoveryDc: number;
   rangedWeaponAttackRollBonus: number;
   actionSurgeCharges: number;
   actionSurgeUsedThisTurn: boolean;
@@ -296,6 +304,10 @@ function quintCombatantToNormalized(
     hasEvasion: c.hasEvasion,
     saveMiscBonus: Number(c.saveMiscBonus),
     critRange: Number(c.critRange),
+    isWearingArmor: c.isWearingArmor,
+    defenseArmorClassBonus: Number(c.defenseArmorClassBonus),
+    greatWeaponFightingDamageFloor: c.greatWeaponFightingDamageFloor,
+    hiddenDiscoveryDc: Number(c.hiddenDiscoveryDc),
     rangedWeaponAttackRollBonus: Number(c.rangedWeaponAttackRollBonus),
     actionSurgeCharges: Number(c.fighterState.actionSurgeCharges),
     actionSurgeUsedThisTurn: c.fighterState.actionSurgeUsedThisTurn,
@@ -388,6 +400,10 @@ function xstateCreatureToNormalized(
     hasEvasion: c.hasEvasion,
     saveMiscBonus: c.saveMiscBonus,
     critRange: c.critRange,
+    isWearingArmor: c.isWearingArmor,
+    defenseArmorClassBonus: c.defenseArmorClassBonus,
+    greatWeaponFightingDamageFloor: c.greatWeaponFightingDamageFloor,
+    hiddenDiscoveryDc: c.hiddenDiscoveryDc,
     rangedWeaponAttackRollBonus: c.rangedWeaponAttackRollBonus,
     actionSurgeCharges: c.actionSurgeCharges,
     actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
@@ -460,6 +476,8 @@ const battleDriverSchema = {
     attackRoll: OI,
     diceCount: OI,
     dieSize: OI,
+    die1: OI,
+    die2: OI,
     dmg: OI,
     dt: OV,
     hitRider: OV,
@@ -847,12 +865,17 @@ function createBattleMachineDriver() {
       bAttack: (picks: Record<string, unknown>) => {
         const battleCtx = ctx();
         const targetId = pc(picks, "targetId", "");
+        const diceCount = p(picks, "diceCount", 1);
+        const dieSize = p(picks, "dieSize", 8);
+        const die1 = p(picks, "die1", 1);
+        const die2 = p(picks, "die2", 1);
         send({
           type: "BATTLE_ATTACK",
           targetId,
           attackRoll: p(picks, "attackRoll", 10),
-          diceCount: p(picks, "diceCount", 1),
-          dieSize: p(picks, "dieSize", 8),
+          diceCount,
+          dieSize,
+          damageDieRolls: diceCount === 1 ? [die1] : [die1, die2],
           dmg: p(picks, "dmg", 5),
           dt: mapDamageType(ps(picks, "dt", "Slashing")),
           crit: pb(picks, "crit", false),

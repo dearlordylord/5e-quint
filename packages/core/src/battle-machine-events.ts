@@ -98,6 +98,7 @@ export type BattleEvent =
       readonly attackRoll: number;
       readonly diceCount: number;
       readonly dieSize: number;
+      readonly damageDieRolls?: ReadonlyArray<number>;
       readonly dmg: number;
       readonly dt: DamageType;
       readonly damageQualifiers?: ReadonlySet<DamageQualifier>;
@@ -291,6 +292,17 @@ export type BattleEvent =
   | { readonly type: "BATTLE_DASH" }
   | { readonly type: "BATTLE_DISENGAGE" }
   | { readonly type: "BATTLE_DODGE" }
+  | {
+      readonly type: "BATTLE_HIDE";
+      readonly stealthTotal: number;
+      readonly hasCoverOrObscurement: boolean;
+      readonly outOfEnemyLineOfSight: boolean;
+    }
+  | {
+      readonly type: "BATTLE_SEARCH";
+      readonly targetId: CreatureId;
+      readonly perceptionTotal: number;
+    }
   | { readonly type: "BATTLE_STAND_FROM_PRONE" }
   | {
       readonly type: "BATTLE_OFF_HAND_ATTACK";

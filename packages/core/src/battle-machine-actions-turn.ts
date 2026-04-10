@@ -167,6 +167,20 @@ export function battleInit({
         ? { saveMiscBonus: cfg.saveMiscBonus }
         : {}),
       ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
+      ...(cfg.isWearingArmor != null
+        ? { isWearingArmor: cfg.isWearingArmor }
+        : {}),
+      ...(cfg.defenseArmorClassBonus != null
+        ? { defenseArmorClassBonus: cfg.defenseArmorClassBonus }
+        : {}),
+      ...(cfg.greatWeaponFightingDamageFloor != null
+        ? {
+            greatWeaponFightingDamageFloor: cfg.greatWeaponFightingDamageFloor,
+          }
+        : {}),
+      ...(cfg.hiddenDiscoveryDc != null
+        ? { hiddenDiscoveryDc: cfg.hiddenDiscoveryDc }
+        : {}),
       ...(cfg.rangedWeaponAttackRollBonus != null
         ? { rangedWeaponAttackRollBonus: cfg.rangedWeaponAttackRollBonus }
         : {}),
@@ -596,6 +610,58 @@ export function battleHelpAttack({
       { helperId: id, allyId: e.allyId, targetEnemyId: e.targetId },
     ],
   };
+}
+
+export function battleHide({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_HIDE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  const id = activeId(c);
+  const ac = c.creatures.get(id)!;
+  if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {};
+  const next = spendAction(ac, "hide");
+  const hidden =
+    e.stealthTotal >= 15 && e.hasCoverOrObscurement && e.outOfEnemyLineOfSight;
+  return {
+    creatures: setCreature(c.creatures, id, {
+      ...next,
+      hiddenDiscoveryDc: hidden ? e.stealthTotal : 0,
+      invisible: hidden ? true : next.invisible,
+    }),
+  };
+}
+
+export function battleSearch({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_SEARCH">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  const id = activeId(c);
+  const ac = c.creatures.get(id)!;
+  const target = c.creatures.get(e.targetId);
+  if (
+    target == null ||
+    ac.dead ||
+    isIncapacitated(ac) ||
+    ac.actionsRemaining <= 0
+  )
+    return {};
+  const nextSearch = spendAction(ac, "search");
+  let creatures = setCreature(c.creatures, id, nextSearch);
+  if (
+    target.hiddenDiscoveryDc > 0 &&
+    e.perceptionTotal >= target.hiddenDiscoveryDc
+  ) {
+    creatures = setCreature(creatures, e.targetId, {
+      ...target,
+      hiddenDiscoveryDc: 0,
+      invisible: target.activeEffects.some((effect) =>
+        effect.grantedConditions?.includes("invisible"),
+      ),
+    });
+  }
+  return { creatures };
 }
 
 export function battleOffHandAttack({

@@ -166,8 +166,8 @@ authoritative-d20-modifier-query-surface
 | `qualified-physical-damage-bypass` | candidate | complete | `qualified-damage-typing` | monster/effect fidelity | Landed qualified physical resistance, vulnerability, and immunity bypass semantics in Quint and TS battle damage flow with deterministic scenario coverage |
 | `battle-helped-target-state` | facility | complete | none | `help-advantage-state` | Battle-owned helped-target state landed with owner-scoped expiry semantics in Quint and TS |
 | `help-advantage-state` | candidate | complete | `battle-helped-target-state` | core action-economy mechanic | Help now contributes a real attack-advantage source with consumption on the next qualifying attack |
-| `effect-dependency-graph` | facility | ready | none | `parent-child-effect-teardown` | Promoted by [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md). Add explicit effect identity and parent/dependency linkage so teardown can remove dependent child effects without relying on broad `spellId` matching. |
-| `parent-child-effect-teardown` | candidate | blocked | `effect-dependency-graph` | concentration-linked cleanup correctness | Inspiration item `31` |
+| `effect-dependency-graph` | facility | complete | none | `parent-child-effect-teardown` | Landed parent spell/caster dependency metadata on active effects, with MBT normalization updated. |
+| `parent-child-effect-teardown` | candidate | complete | `effect-dependency-graph` | concentration-linked cleanup correctness | Concentration teardown now removes the parent effect plus dependents without deleting another caster's same-spell effect. |
 | `one-shot-rider-consumption-metadata` | facility | complete | none | `next-hit-rider-consumption` | Landed consume-on-next-qualifying-hit metadata and consumption hooks without widening to the full downstream rider batch |
 | `next-hit-rider-consumption` | candidate | complete | `one-shot-rider-consumption-metadata` | recurring spell/feature semantics | Landed battle consumption of qualifying next-hit rider effects with deterministic regression coverage |
 | `off-hand-attack-surface` | facility | complete | none | `two-weapon-fighting-bonus-attack` | Battle off-hand attack event/action surface landed in Quint and TS battle machines |
@@ -176,15 +176,15 @@ authoritative-d20-modifier-query-surface
 | `battle-hand-occupancy-state` | facility | complete | `weapon-property-aware-battle-resolution` | `versatile-weapon-die-switching` | Landed explicit battle-owned hand occupancy for weapons, shields, grapples, and spell-component legality |
 | `archery-in-battle` | candidate | complete | `closed-modifier-algebra` | partial `fighting-styles-in-battle` progress | Landed through the narrow battle-owned `rangedWeaponAttackRollBonus` field, with TS fighter content projecting the specific +2 and regressions proving the bonus does not affect natural critical-hit range |
 | `two-weapon-fighting-style-in-battle` | candidate | complete | `closed-modifier-algebra`, `off-hand-attack-surface` | partial `fighting-styles-in-battle` progress | Landed through the battle-owned Light-property extra-attack damage flag, preserving negative ability-modifier behavior and positive-modifier omission when the style is absent |
-| `battle-armor-worn-state` | facility | ready | none | `defense-fighting-style-in-battle` | Promoted by [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md). Add the smallest battle-owned fact for wearing Light, Medium, or Heavy armor; do not widen to full armor inventory. |
-| `defense-fighting-style-in-battle` | candidate | blocked | `battle-armor-worn-state` | partial `fighting-styles-in-battle` progress | Defense is a concrete AC consumer and should not be forced through the Runbook 5 attack-modifier seam. |
-| `damage-die-face-resolution` | facility | ready | `battle-hand-occupancy-state`, `weapon-property-aware-battle-resolution` | `great-weapon-fighting-in-battle` | Promoted by [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md). Add enough battle-owned weapon damage die-face data to apply Great Weapon Fighting without a generic reroll engine. |
-| `great-weapon-fighting-in-battle` | candidate | blocked | `damage-die-face-resolution` | partial `fighting-styles-in-battle` progress | Concrete Great Weapon Fighting consumer: Melee weapon held with two hands, Two-Handed or Versatile property, treat 1/2 weapon damage dice as 3. |
-| `fighting-styles-in-battle` | candidate | blocked | remaining style-specific ownership facts | broader weapon semantics | Keep decomposed. Runbook 7 promotes the remaining concrete consumers (`Defense`, `Great Weapon Fighting`) rather than scheduling this umbrella directly. |
+| `battle-armor-worn-state` | facility | complete | none | `defense-fighting-style-in-battle` | Landed the smallest battle-owned `isWearingArmor` fact needed by Defense; no armor inventory/don/doff system added. |
+| `defense-fighting-style-in-battle` | candidate | complete | `battle-armor-worn-state` | partial `fighting-styles-in-battle` progress | Defense now contributes through named `defenseArmorClassBonus`, guarded by battle-owned armor-worn state. |
+| `damage-die-face-resolution` | facility | complete | `battle-hand-occupancy-state`, `weapon-property-aware-battle-resolution` | `great-weapon-fighting-in-battle` | Landed explicit weapon damage die-face event data for battle attacks; eligible GWF attacks require per-die faces rather than aggregate-only damage. |
+| `great-weapon-fighting-in-battle` | candidate | complete | `damage-die-face-resolution` | partial `fighting-styles-in-battle` progress | Concrete Great Weapon Fighting consumer landed: Melee weapon held with two hands, Two-Handed or Versatile property, treat 1/2 weapon damage dice as 3. |
+| `fighting-styles-in-battle` | candidate | later | future style-specific ownership facts | broader weapon semantics | Keep decomposed. The Runbook 5 and 7 concrete consumers landed without needing a broad umbrella or generic modifier registry. |
 | `versatile-weapon-die-switching` | candidate | complete | `battle-hand-occupancy-state` | hand-usage / wield-state semantics | Landed in Quint and TS attack resolution with deterministic one-hand/two-hand regression coverage plus spellcasting grip-relaxation coverage |
 | `movement-provocation-kind` | facility | complete | `oa-path-vocabulary` | `forced-movement-vs-oa` | Landed explicit movement provocation kind in battle Quint/TS plus battle domain docs; voluntary and non-provoking movement no longer share the same event meaning |
-| `battle-hidden-state` | facility | ready | none | `hide-stealth-chain` | Promoted by [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md). Add hidden state with Hide check total / discovery DC and keep cover/obscurement/line-of-sight preconditions caller-owned. |
-| `hide-stealth-chain` | candidate | blocked | `battle-hidden-state` | visibility/stealth correctness | Inspiration item `11` |
+| `battle-hidden-state` | facility | complete | none | `hide-stealth-chain` | Landed combatant-owned `hiddenDiscoveryDc` state; cover/obscurement/line-of-sight remain caller-provided facts. |
+| `hide-stealth-chain` | candidate | complete | `battle-hidden-state` | visibility/stealth correctness | Hide/Search, hidden attacker reveal, unseen-attacker advantage, and verbal-spell reveal landed without a geometry engine. |
 | `forced-movement-vs-oa` | candidate | complete | `movement-provocation-kind` | OA legality fidelity | Landed deterministic non-provoking-movement coverage and Quint/TS movement-contract parity |
 | `reach-extends-oa-range` | candidate | complete | `oa-path-vocabulary` | threat radius fidelity | Landed deterministic coverage that reach-sensitive OAs are not hardcoded to 5 feet, including prone-sensitive attack-context handling |
 | `max-hp-reduction-state` | facility | complete | none | `max-hp-reduction` | Landed explicit max-HP reduction state in Quint and TS rather than overloading plain `maxHp` |
@@ -196,15 +196,7 @@ authoritative-d20-modifier-query-surface
 If scheduling strictly by current value and low dependency risk, outside already-complete runbooks:
 
 - `runbook6-quint-parity`
-- [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md):
-  - `effect-dependency-graph`
-  - `parent-child-effect-teardown` after `effect-dependency-graph`
-  - `battle-armor-worn-state`
-  - `defense-fighting-style-in-battle` after `battle-armor-worn-state`
-  - `damage-die-face-resolution`
-  - `great-weapon-fighting-in-battle` after `damage-die-face-resolution`
-  - `battle-hidden-state`
-  - `hide-stealth-chain` after `battle-hidden-state`
+- Runbook 7 is complete. No Runbook 7 nodes remain in the ready queue.
 
 ## Research Queue
 

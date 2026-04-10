@@ -353,6 +353,8 @@ export const QuintCreatureState = z.object({
       turnsRemaining: number;
       expiresAt: string;
       casterId: string;
+      parentSpellId: string;
+      parentCasterId: string;
       grantedResistances: ReadonlySet<string>;
       grantedVulnerabilities: ReadonlySet<string>;
       grantedImmunities: ReadonlySet<string>;
@@ -365,6 +367,8 @@ export const QuintCreatureState = z.object({
           turnsRemaining: Number(r.turnsRemaining ?? r.remainingTurns ?? 0),
           expiresAt: mapExpiryPhase(variantToString(r.expiresAt)),
           casterId: String(r.casterId ?? ""),
+          parentSpellId: String(r.parentSpellId ?? ""),
+          parentCasterId: String(r.parentCasterId ?? ""),
           grantedResistances: parseDamageTypeSet(r.grantedResistances),
           grantedVulnerabilities: parseDamageTypeSet(r.grantedVulnerabilities),
           grantedImmunities: parseDamageTypeSet(r.grantedImmunities),
@@ -605,6 +609,8 @@ export interface NormalizedState {
     turnsRemaining: number;
     expiresAt: string;
     casterId: string;
+    parentSpellId: string;
+    parentCasterId: string;
     grantedResistances: ReadonlySet<string>;
     grantedVulnerabilities: ReadonlySet<string>;
     grantedImmunities: ReadonlySet<string>;
@@ -875,6 +881,8 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
         turnsRemaining: ae.turnsRemaining,
         expiresAt: ae.expiresAt,
         casterId: ae.casterId,
+        parentSpellId: ae.parentSpellId ?? "",
+        parentCasterId: ae.parentCasterId ?? "",
         grantedResistances: ae.grantedResistances ?? EMPTY_STRING_SET,
         grantedVulnerabilities: ae.grantedVulnerabilities ?? EMPTY_STRING_SET,
         grantedImmunities: ae.grantedImmunities ?? EMPTY_STRING_SET,
@@ -1103,6 +1111,8 @@ export function activeEffectsEqual(
       a[i].turnsRemaining !== b[i].turnsRemaining ||
       a[i].expiresAt !== b[i].expiresAt ||
       a[i].casterId !== b[i].casterId ||
+      a[i].parentSpellId !== b[i].parentSpellId ||
+      a[i].parentCasterId !== b[i].parentCasterId ||
       !setsEqual(a[i].grantedResistances, b[i].grantedResistances) ||
       !setsEqual(a[i].grantedVulnerabilities, b[i].grantedVulnerabilities) ||
       !setsEqual(a[i].grantedImmunities, b[i].grantedImmunities)

@@ -2,7 +2,20 @@
 
 ## Status
 
-Ready for implementation.
+Completed on 2026-04-10.
+
+Final shape landed the Runbook 7 lanes as battle-owned facilities and concrete
+consumers:
+
+- concentration-linked active effects now carry parent spell/caster dependency
+  metadata and teardown removes dependents without broad same-spell deletion
+- Defense uses battle-owned `isWearingArmor` plus a named
+  `defenseArmorClassBonus`
+- Great Weapon Fighting uses explicit weapon damage die faces and rejects
+  eligible GWF attacks that omit per-die data
+- hidden state lives on the battle combatant as `hiddenDiscoveryDc`; Hide,
+  Search, unseen-attacker advantage, attack reveal, and verbal-spell reveal are
+  wired without adding a geometry engine
 
 This runbook is intentionally independent of [DAG_RUNBOOK_6.md](./DAG_RUNBOOK_6.md). Runbook 6 closes the remaining available-actions product-surface honesty gaps; Runbook 7 promotes separate SRD/domain facilities that can be worked in parallel without waiting for those action-surface results.
 

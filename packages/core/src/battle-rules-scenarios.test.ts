@@ -4,6 +4,7 @@ import { createActor } from "xstate";
 
 import { battleMachine } from "#/battle-machine.ts";
 import { battleMainHandDamageDie } from "#/battle-machine-creature.ts";
+import { breakConcentrationAndPropagate } from "#/battle-machine-helpers.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
 import type {
@@ -3540,7 +3541,12 @@ describe("battle rules scenario regressions", () => {
             },
           ],
         },
-        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "Monster",
+          initiativeRoll: 10,
+        },
       ],
     });
 
@@ -3601,7 +3607,12 @@ describe("battle rules scenario regressions", () => {
           mainHandWeapon: SHORTSWORD,
           offHandWeapon: SHORTSWORD,
         },
-        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "Monster",
+          initiativeRoll: 10,
+        },
       ],
     });
 
@@ -4051,5 +4062,521 @@ describe("battle rules scenario regressions", () => {
     resolveAttackWindows(actor);
 
     expect(creature(actor, "B").hp).toBe(14);
+  });
+
+  it("runbook_7: concentration teardown removes dependent child effects without deleting another caster's same spell", () => {
+    const actor = initTwoPcBattle();
+    const bless = spellId("bless");
+    const child = spellId("bless_child");
+    const creatures = new Map(ctx(actor).creatures);
+    creatures.set(CreatureId("A"), {
+      ...creature(actor, "A"),
+      concentrationSpellId: Option.some(bless),
+      activeEffects: [
+        {
+          spellId: bless,
+          turnsRemaining: 3,
+          expiresAt: "end",
+          casterId: CreatureId("A"),
+        },
+        {
+          spellId: bless,
+          turnsRemaining: 3,
+          expiresAt: "end",
+          casterId: CreatureId("B"),
+        },
+      ],
+    });
+    creatures.set(CreatureId("B"), {
+      ...creature(actor, "B"),
+      activeEffects: [
+        {
+          spellId: child,
+          turnsRemaining: 3,
+          expiresAt: "end",
+          casterId: CreatureId("A"),
+          parentSpellId: bless,
+          parentCasterId: CreatureId("A"),
+          grantedConditions: ["invisible"],
+        },
+      ],
+      invisible: true,
+    });
+
+    const result = breakConcentrationAndPropagate(creatures, CreatureId("A"));
+
+    expect(result.get(CreatureId("A"))?.activeEffects).toEqual([
+      {
+        spellId: bless,
+        turnsRemaining: 3,
+        expiresAt: "end",
+        casterId: CreatureId("B"),
+      },
+    ]);
+    expect(result.get(CreatureId("B"))?.activeEffects).toEqual([]);
+    expect(result.get(CreatureId("B"))?.invisible).toBe(false);
+  });
+
+  it("runbook_7: Defense adds AC only through the named armor-owned battle bonus", () => {
+    const defenseMods = fightingStyleBattleModifiers(
+      new Set(["defense"]),
+      true,
+    );
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          isWearingArmor: true,
+          ...defenseMods,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "slashing",
+      tAc: armorClass(15),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+
+    expect(creature(actor, "B").hp).toBe(20);
+  });
+
+  it("runbook_7: Defense adds no AC while unarmored or without the style", () => {
+    expect(
+      fightingStyleBattleModifiers(new Set(["defense"]), false),
+    ).toMatchObject({
+      defenseArmorClassBonus: 0,
+    });
+    expect(fightingStyleBattleModifiers(new Set(), true)).toMatchObject({
+      defenseArmorClassBonus: 0,
+    });
+  });
+
+  it("runbook_7: Great Weapon Fighting floors eligible weapon damage die faces to 3", () => {
+    const gwfMods = fightingStyleBattleModifiers(
+      new Set(["greatWeaponFighting"]),
+    );
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: GREATSWORD,
+          mainHandUsesTwoHands: true,
+          ...gwfMods,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 2,
+      dieSize: 6,
+      damageDieRolls: [1, 2],
+      dmg: 3,
+      dt: "slashing",
+      weaponProperties: GREATSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(14);
+  });
+
+  it("runbook_7: Great Weapon Fighting leaves die faces 3+ unchanged", () => {
+    const gwfMods = fightingStyleBattleModifiers(
+      new Set(["greatWeaponFighting"]),
+    );
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: GREATSWORD,
+          mainHandUsesTwoHands: true,
+          ...gwfMods,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 2,
+      dieSize: 6,
+      damageDieRolls: [3, 4],
+      dmg: 7,
+      dt: "slashing",
+      weaponProperties: GREATSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(13);
+  });
+
+  it("runbook_7: Great Weapon Fighting requires explicit weapon damage die faces", () => {
+    const gwfMods = fightingStyleBattleModifiers(
+      new Set(["greatWeaponFighting"]),
+    );
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: GREATSWORD,
+          mainHandUsesTwoHands: true,
+          ...gwfMods,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 2,
+      dieSize: 6,
+      dmg: 3,
+      dt: "slashing",
+      weaponProperties: GREATSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+    expect(creature(actor, "B").hp).toBe(20);
+  });
+
+  it("runbook_7: one-handed Versatile attacks do not get Great Weapon Fighting", () => {
+    const gwfMods = fightingStyleBattleModifiers(
+      new Set(["greatWeaponFighting"]),
+    );
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: LONGSWORD,
+          mainHandUsesTwoHands: false,
+          ...gwfMods,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 8,
+      damageDieRolls: [1],
+      dmg: 1,
+      dt: "slashing",
+      weaponProperties: LONGSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(19);
+  });
+
+  it("runbook_7: non-eligible and ranged weapons do not get Great Weapon Fighting", () => {
+    const gwfMods = fightingStyleBattleModifiers(
+      new Set(["greatWeaponFighting"]),
+    );
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: MACE,
+          mainHandUsesTwoHands: true,
+          ...gwfMods,
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "Monster",
+          initiativeRoll: 10,
+          mainHandWeapon: SHORTBOW,
+          mainHandUsesTwoHands: true,
+          ...gwfMods,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      damageDieRolls: [1],
+      dmg: 1,
+      dt: "bludgeoning",
+      weaponProperties: MACE.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+    expect(creature(actor, "B").hp).toBe(19);
+
+    advanceToNextTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("A"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      damageDieRolls: [1],
+      dmg: 1,
+      dt: "piercing",
+      weaponProperties: SHORTBOW.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+      isMelee: false,
+    });
+    resolveAttackWindows(actor);
+    expect(creature(actor, "A").hp).toBe(19);
+  });
+
+  it("runbook_7: Hide stores discovery DC and Search below that DC does not reveal", () => {
+    const actor = initTwoPcBattle();
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_HIDE",
+      stealthTotal: 18,
+      hasCoverOrObscurement: true,
+      outOfEnemyLineOfSight: true,
+    });
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(18);
+    expect(creature(actor, "A").invisible).toBe(true);
+
+    advanceToNextTurn(actor);
+    send(actor, {
+      type: "BATTLE_SEARCH",
+      targetId: CreatureId("A"),
+      perceptionTotal: 17,
+    });
+
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(18);
+    expect(creature(actor, "A").invisible).toBe(true);
+  });
+
+  it("runbook_7: failed Hide does not store hidden state", () => {
+    const actor = initTwoPcBattle();
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_HIDE",
+      stealthTotal: 14,
+      hasCoverOrObscurement: true,
+      outOfEnemyLineOfSight: true,
+    });
+
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
+    expect(creature(actor, "A").invisible).toBe(false);
+  });
+
+  it("runbook_7: Search at the discovery DC removes hidden state", () => {
+    const actor = initTwoPcBattle();
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_HIDE",
+      stealthTotal: 18,
+      hasCoverOrObscurement: true,
+      outOfEnemyLineOfSight: true,
+    });
+    advanceToNextTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_SEARCH",
+      targetId: CreatureId("A"),
+      perceptionTotal: 18,
+    });
+
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
+    expect(creature(actor, "A").invisible).toBe(false);
+  });
+
+  it("runbook_7: Search reveal preserves invisibility from an active effect", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          hiddenDiscoveryDc: 18,
+          activeEffects: [
+            {
+              spellId: spellId("invisibility"),
+              turnsRemaining: 3,
+              expiresAt: "end",
+              casterId: CreatureId("B"),
+              grantedConditions: ["invisible"],
+            },
+          ],
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_SEARCH",
+      targetId: CreatureId("B"),
+      perceptionTotal: 18,
+    });
+
+    expect(creature(actor, "B").hiddenDiscoveryDc).toBe(0);
+    expect(creature(actor, "B").invisible).toBe(true);
+  });
+
+  it("runbook_7: verbal spell casting ends hidden state", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          caster: true,
+          preparedSpells: new Set(["guiding_bolt"]),
+          initiativeRoll: 20,
+          hiddenDiscoveryDc: 18,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "radiant",
+      cond: "blinded",
+      applyCond: false,
+      saveAbility: "dex",
+      slotLvl: spellSlotLevel(1),
+      spellName: "guiding_bolt",
+      ritual: false,
+    });
+
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
+  });
+
+  it("runbook_7: hidden attacker gets unseen-attacker advantage and loses hidden after attacking", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          rogueLevel: 1,
+          sneakAttackDice: 1,
+          hiddenDiscoveryDc: 18,
+          mainHandWeapon: SHORTSWORD,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 1,
+      dt: "piercing",
+      weaponProperties: SHORTSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+      targetCanSeeAttacker: true,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 6,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(13);
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
   });
 });

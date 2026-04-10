@@ -842,6 +842,7 @@ module creature {
   /// Core spec owns lifecycle only; spell-specific behavior lives in caller.
   type ActiveEffect = {
     spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase, casterId: str,
+    parentSpellId: str, parentCasterId: str,
     grantedConditions: Set[Condition],
     grantedResistances: Set[DamageType], grantedVulnerabilities: Set[DamageType], grantedImmunities: Set[DamageType],
     consumeOnQualifiedHit: OneShotRiderTrigger,
@@ -944,6 +945,21 @@ module creature {
   ): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId).union(Set({
       spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      parentSpellId: "", parentCasterId: "",
+      grantedConditions: grantedC,
+      grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
+      consumeOnQualifiedHit: NoOneShotRider,
+    }))
+
+  /// Add an effect that depends on a battle-owned parent effect identity.
+  pure def pAddDependentEffect(
+    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    parentSpellId: str, parentCasterId: str,
+    grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
+  ): Set[ActiveEffect] =
+    effects.filter(e => e.spellId != spellId).union(Set({
+      spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      parentSpellId: parentSpellId, parentCasterId: parentCasterId,
       grantedConditions: grantedC,
       grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
       consumeOnQualifiedHit: NoOneShotRider,

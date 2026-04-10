@@ -12,12 +12,13 @@ import {
   breakConcentration,
   consumeOneShotHitEffects,
   deathSave,
+  endHidden,
   FRESH_TURN_STATE,
   heal,
   isIncapacitated,
   prepareHandsForSpellComponents,
   removeEffect,
-  removeEffectsByCaster,
+  removeEffectAndDependents,
   releaseOneGrappleHand,
   speedDeltaFromEffects,
   takeDamage,
@@ -375,14 +376,14 @@ export function breakConcentrationAndPropagate(
   const concOpt = caster.concentrationSpellId;
   if (Option.isNone(concOpt)) return new Map(cs);
   const spellId = concOpt.value;
-  const result = setCreature(
-    cs,
-    casterId,
-    breakConcentration(removeEffect(caster, spellId)),
-  );
+  const result = setCreature(cs, casterId, {
+    ...removeEffectAndDependents(caster, casterId, spellId),
+    concentrationSpellId: Option.none(),
+    readiedSpellParams: null,
+  });
   for (const [cid, c] of result) {
     if (cid === casterId) continue;
-    const cleaned = removeEffectsByCaster(c, casterId);
+    const cleaned = removeEffectAndDependents(c, casterId, spellId);
     if (cleaned !== c) result.set(cid, cleaned);
   }
   return result;
@@ -427,8 +428,11 @@ export function prepareBattleCasterForSpell(
   spellName: string,
 ): BattleCreatureState {
   const requirements = getSpellComponentRequirements(spellName);
-  if (requirements == null || !requirements.requiresHandComponent) return c;
-  return prepareHandsForSpellComponents(c);
+  const prepared =
+    requirements == null || !requirements.requiresHandComponent
+      ? c
+      : prepareHandsForSpellComponents(c);
+  return requirements?.requiresVerbal === true ? endHidden(prepared) : prepared;
 }
 
 export function firstAvailableSpellSlotLevel(
