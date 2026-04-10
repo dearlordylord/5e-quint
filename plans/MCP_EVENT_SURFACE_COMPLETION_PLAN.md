@@ -620,6 +620,7 @@ Commit after this task:
   - threatened creatures
   - opportunity attack provocation
 - [ ] Implement only actions whose spatial facts are already battle-owned or cleanly represented as explicit user/runtime holes.
+- [ ] Before exposing `BATTLE_GRAPPLE`, fold in the Size ownership cleanup from [BATTLE_SIZE_OWNERSHIP.md](./BATTLE_SIZE_OWNERSHIP.md): battle should own combatant Size and derive `attackerSize`/`targetSize` instead of accepting them as public command payload.
 - [ ] For the rest, update blockers instead of adding MCP-only state.
 
 Dependencies: Task 18. `BATTLE_MOVE` should wait until either a geometry/session owner exists or the plan explicitly accepts caller-supplied provocation/threat facts.
