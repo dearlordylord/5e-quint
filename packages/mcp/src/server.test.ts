@@ -22,6 +22,28 @@ import {
 } from "./server.ts";
 import { tableEventSuccess } from "./server-table-events.ts";
 
+function quota(resource: "action" | "bonusAction" | "reaction") {
+  return { kind: "quota" as const, resource };
+}
+
+function movement(amount: number) {
+  return { kind: "quota" as const, resource: "movement" as const, amount };
+}
+
+function pool(resource: string) {
+  return { kind: "pool" as const, resource };
+}
+
+function cost(
+  ...items: ReadonlyArray<
+    | ReturnType<typeof quota>
+    | ReturnType<typeof movement>
+    | ReturnType<typeof pool>
+  >
+) {
+  return items;
+}
+
 function readPayload(response: ReturnType<typeof handleToolCall>) {
   return JSON.parse(response.content[0]?.text ?? "null");
 }
@@ -1241,7 +1263,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_INDOMITABLE",
-        cost: { charge: "indomitable" },
+        cost: cost(pool("indomitable")),
         outcome: {
           summary:
             "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level",
@@ -1300,7 +1322,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_TACTICAL_MIND",
-        cost: { charge: "secondWind" },
+        cost: cost(pool("secondWind")),
         outcome: {
           summary:
             "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
@@ -1543,7 +1565,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "EXIT_COMBAT",
-        cost: {},
+        cost: cost(),
         outcome: {
           summary: "Stop tracking this creature in combat and initiative order",
         },
@@ -1668,7 +1690,7 @@ describe("MCP server adapter", () => {
         {
           scope: "creature",
           type: "ENTER_COMBAT",
-          cost: {},
+          cost: cost(),
           outcome: {
             summary: "Enter combat (begin tracking turns and action economy)",
           },
@@ -1854,10 +1876,7 @@ describe("MCP server adapter", () => {
     expect(preview).toEqual({
       ok: true,
       summary: "Heal 1d10 + 5 HP",
-      cost: {
-        bonusAction: true,
-        charge: "secondWind",
-      },
+      cost: cost(quota("bonusAction"), pool("secondWind")),
       runtime: "secondWind",
     });
     expect(after).toEqual(before);
@@ -1912,7 +1931,7 @@ describe("MCP server adapter", () => {
       creatureToken({
         type: "SHORT_REST",
         availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features",
@@ -1960,7 +1979,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_HEROIC_INSPIRATION",
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Spend Heroic Inspiration to reroll a die and use the new roll",
@@ -2006,7 +2025,7 @@ describe("MCP server adapter", () => {
         type: "CAST_PREPARED_SPELL",
         spellName: "bless",
         slotLevel: { options: [1, 2, 3] },
-        cost: { action: true, charge: "spellSlot" },
+        cost: cost(quota("action"), pool("spellSlot")),
         outcome: {
           summary:
             "Cast Bless with a spell slot of the chosen level and begin concentrating on it",
@@ -2018,7 +2037,7 @@ describe("MCP server adapter", () => {
         type: "CAST_PREPARED_SPELL",
         spellName: "healing_word",
         slotLevel: { options: [1, 2, 3] },
-        cost: { bonusAction: true, charge: "spellSlot" },
+        cost: cost(quota("bonusAction"), pool("spellSlot")),
         outcome: {
           summary: "Cast Healing Word with a spell slot of the chosen level",
         },
@@ -2073,7 +2092,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_TACTICAL_MIND",
-        cost: { charge: "secondWind" },
+        cost: cost(pool("secondWind")),
         outcome: {
           summary:
             "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
@@ -2117,7 +2136,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual({
       scope: "creature",
       type: "USE_INDOMITABLE",
-      cost: { charge: "indomitable" },
+      cost: cost(pool("indomitable")),
       outcome: {
         summary:
           "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level",
@@ -2162,7 +2181,7 @@ describe("MCP server adapter", () => {
       creatureToken({
         type: "USE_METAMAGIC",
         option: { options: ["careful", "subtle"] },
-        cost: { charge: "sorceryPoints" },
+        cost: cost(pool("sorceryPoints")),
         outcome: {
           summary:
             "Apply a currently legal known Metamagic option to the spell you are casting",
@@ -2228,7 +2247,7 @@ describe("MCP server adapter", () => {
     expect(warlockAvailable.free).toContainEqual(
       creatureToken({
         type: "USE_MAGICAL_CUNNING",
-        cost: { charge: "magicalCunning" },
+        cost: cost(pool("magicalCunning")),
         outcome: {
           summary:
             "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
@@ -2269,7 +2288,7 @@ describe("MCP server adapter", () => {
     expect(fullRecoveryAvailable.free).toContainEqual(
       creatureToken({
         type: "USE_MAGICAL_CUNNING",
-        cost: { charge: "magicalCunning" },
+        cost: cost(pool("magicalCunning")),
         outcome: {
           summary:
             "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
@@ -2311,7 +2330,7 @@ describe("MCP server adapter", () => {
     expect(sorcererAvailable.bonusAction).toContainEqual(
       creatureToken({
         type: "USE_INNATE_SORCERY",
-        cost: { bonusAction: true, charge: "innateSorcery" },
+        cost: cost(quota("bonusAction"), pool("innateSorcery")),
         outcome: {
           summary: "Use a bonus action to activate Innate Sorcery for 1 minute",
         },
@@ -2401,7 +2420,7 @@ describe("MCP server adapter", () => {
     expect(available.bonusAction).toContainEqual(
       creatureToken({
         type: "ENTER_WILD_SHAPE",
-        cost: { bonusAction: true, charge: "wildShape" },
+        cost: cost(quota("bonusAction"), pool("wildShape")),
         outcome: {
           summary: "Shape-shift into a beast form, gaining 5 temporary HP",
         },
@@ -2410,7 +2429,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_WILD_RESURGENCE_SLOT",
-        cost: { charge: "wildShape" },
+        cost: cost(pool("wildShape")),
         outcome: {
           summary:
             "Expend one Wild Shape use to regain a level 1 spell slot; once per Long Rest",
@@ -2453,7 +2472,7 @@ describe("MCP server adapter", () => {
     expect(afterEnter.bonusAction).toContainEqual(
       creatureToken({
         type: "EXIT_WILD_SHAPE",
-        cost: { bonusAction: true },
+        cost: cost(quota("bonusAction")),
         outcome: {
           summary: "Revert from beast form to your normal form",
         },
@@ -2497,7 +2516,7 @@ describe("MCP server adapter", () => {
     expect(available.action).toContainEqual(
       creatureToken({
         type: "USE_TIRELESS",
-        cost: { action: true, charge: "tireless" },
+        cost: cost(quota("action"), pool("tireless")),
         outcome: { summary: "Gain 1d8 + 3 temporary HP (minimum 1)" },
       }),
     );
@@ -2542,7 +2561,7 @@ describe("MCP server adapter", () => {
       creatureToken({
         type: "USE_ARCANE_RECOVERY",
         slotLevel: { options: [2] },
-        cost: { charge: "arcaneRecovery" },
+        cost: cost(pool("arcaneRecovery")),
         outcome: {
           summary:
             "Recover one expended spell slot of the chosen level and use Arcane Recovery",
@@ -2604,7 +2623,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual({
       scope: "creature",
       type: "USE_OVERCHANNEL",
-      cost: {},
+      cost: cost(),
       outcome: {
         summary:
           "Overchannel the qualifying Fireball cast at slot level 3 for maximum damage",
@@ -2671,7 +2690,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_PEERLESS_SKILL",
-        cost: { charge: "bardicInspiration" },
+        cost: cost(pool("bardicInspiration")),
         outcome: {
           summary:
             "Add your Bardic Inspiration die to the failed attack roll; expend it only if the roll now succeeds",
@@ -2724,7 +2743,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_RELENTLESS_RAGE",
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Make a DC 10 Constitution save to stay at 22 HP instead of dropping to 0",
@@ -2773,7 +2792,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual({
       scope: "creature",
       type: "USE_SNEAK_ATTACK",
-      cost: {},
+      cost: cost(),
       outcome: { summary: "Apply Sneak Attack damage to the qualifying hit" },
     });
 
@@ -2823,7 +2842,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_ACTION_SURGE",
-        cost: { charge: "actionSurge" },
+        cost: cost(pool("actionSurge")),
         outcome: {
           summary:
             "Expend one Action Surge use to gain one additional action this turn",
@@ -2833,7 +2852,7 @@ describe("MCP server adapter", () => {
     expect(available.bonusAction).toContainEqual(
       creatureToken({
         type: "FLURRY_OF_BLOWS",
-        cost: { bonusAction: true, charge: "focusPoint" },
+        cost: cost(quota("bonusAction"), pool("focusPoint")),
         outcome: {
           summary:
             "Spend 1 Focus Point to make 2 unarmed strikes as a bonus action",
@@ -2843,7 +2862,7 @@ describe("MCP server adapter", () => {
     expect(available.bonusAction).toContainEqual(
       creatureToken({
         type: "USE_BARDIC_INSPIRATION",
-        cost: { bonusAction: true, charge: "bardicInspiration" },
+        cost: cost(quota("bonusAction"), pool("bardicInspiration")),
         outcome: {
           summary:
             "Expend one Bardic Inspiration use to inspire another creature",
@@ -2930,10 +2949,16 @@ describe("MCP server adapter", () => {
       {
         "action": [
           {
-            "cost": {
-              "action": true,
-              "charge": "tireless",
-            },
+            "cost": [
+              {
+                "kind": "quota",
+                "resource": "action",
+              },
+              {
+                "kind": "pool",
+                "resource": "tireless",
+              },
+            ],
             "outcome": {
               "summary": "Gain 1d8 + 3 temporary HP (minimum 1)",
             },
@@ -2943,10 +2968,16 @@ describe("MCP server adapter", () => {
         ],
         "bonusAction": [
           {
-            "cost": {
-              "bonusAction": true,
-              "charge": "sorceryPoints",
-            },
+            "cost": [
+              {
+                "kind": "quota",
+                "resource": "bonusAction",
+              },
+              {
+                "kind": "pool",
+                "resource": "sorceryPoints",
+              },
+            ],
             "outcome": {
               "summary": "Spend sorcery points to create a spell slot of the chosen level",
             },
@@ -2960,10 +2991,16 @@ describe("MCP server adapter", () => {
             "type": "CONVERT_POINTS_TO_SLOT",
           },
           {
-            "cost": {
-              "bonusAction": true,
-              "charge": "innateSorcery",
-            },
+            "cost": [
+              {
+                "kind": "quota",
+                "resource": "bonusAction",
+              },
+              {
+                "kind": "pool",
+                "resource": "innateSorcery",
+              },
+            ],
             "outcome": {
               "summary": "Use a bonus action to activate Innate Sorcery for 1 minute",
             },
@@ -2971,10 +3008,16 @@ describe("MCP server adapter", () => {
             "type": "USE_INNATE_SORCERY",
           },
           {
-            "cost": {
-              "bonusAction": true,
-              "charge": "secondWind",
-            },
+            "cost": [
+              {
+                "kind": "quota",
+                "resource": "bonusAction",
+              },
+              {
+                "kind": "pool",
+                "resource": "secondWind",
+              },
+            ],
             "outcome": {
               "summary": "Heal 1d10 + 10 HP",
             },
@@ -2984,9 +3027,12 @@ describe("MCP server adapter", () => {
         ],
         "free": [
           {
-            "cost": {
-              "charge": "actionSurge",
-            },
+            "cost": [
+              {
+                "kind": "pool",
+                "resource": "actionSurge",
+              },
+            ],
             "outcome": {
               "summary": "Expend one Action Surge use to gain one additional action this turn",
             },
@@ -2994,9 +3040,12 @@ describe("MCP server adapter", () => {
             "type": "USE_ACTION_SURGE",
           },
           {
-            "cost": {
-              "charge": "arcaneRecovery",
-            },
+            "cost": [
+              {
+                "kind": "pool",
+                "resource": "arcaneRecovery",
+              },
+            ],
             "outcome": {
               "summary": "Recover one expended spell slot of the chosen level and use Arcane Recovery",
             },
@@ -3010,9 +3059,12 @@ describe("MCP server adapter", () => {
             "type": "USE_ARCANE_RECOVERY",
           },
           {
-            "cost": {
-              "charge": "sorceryPoints",
-            },
+            "cost": [
+              {
+                "kind": "pool",
+                "resource": "sorceryPoints",
+              },
+            ],
             "option": {
               "options": [
                 "careful",
@@ -3026,7 +3078,7 @@ describe("MCP server adapter", () => {
             "type": "USE_METAMAGIC",
           },
           {
-            "cost": {},
+            "cost": [],
             "outcome": {
               "summary": "Stop tracking this creature in combat and initiative order",
             },
@@ -3082,7 +3134,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_SHIELD",
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Shield against the triggering attack",
@@ -3092,7 +3144,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "C",
           type: "USE_CUTTING_WORDS",
-          cost: { reaction: true, charge: "bardicInspiration" },
+          cost: cost(quota("reaction"), pool("bardicInspiration")),
           outcome: {
             summary:
               "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll",
@@ -3122,7 +3174,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "STAND_FROM_PRONE",
-          cost: { movement: 15, shape: "spend" },
+          cost: cost(movement(15)),
           outcome: {
             summary: "Spend half your Speed in movement to stand up from Prone",
           },
@@ -3145,7 +3197,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_ENTER_RAGE",
-          cost: { bonusAction: true, charge: "rage" },
+          cost: cost(quota("bonusAction"), pool("rage")),
           outcome: {
             summary:
               "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
@@ -3158,7 +3210,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_ACTION_SURGE",
-          cost: { charge: "actionSurge" },
+          cost: cost(pool("actionSurge")),
           outcome: {
             summary:
               "Expend one Action Surge use to gain one additional non-Magic action this turn",
@@ -3168,7 +3220,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_DECLARE_RECKLESS",
-          cost: {},
+          cost: cost(),
           outcome: { summary: "Declare Reckless Attack for this turn" },
         },
       ]),
@@ -3249,7 +3301,7 @@ describe("MCP server adapter", () => {
       ok: true,
       summary:
         "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
-      cost: { bonusAction: true, charge: "rage" },
+      cost: cost(quota("bonusAction"), pool("rage")),
       runtime: "none",
       eventType: "BATTLE_ENTER_RAGE",
     });
@@ -3270,7 +3322,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_RELEASE_GRAPPLE",
-          cost: {},
+          cost: cost(),
           outcome: {
             summary:
               "Release the creature you are grappling; no action required",
@@ -3322,7 +3374,7 @@ describe("MCP server adapter", () => {
             actorId: "B",
             type: "BATTLE_ESCAPE_GRAPPLE",
             escapeSucceeded: { options: [true, false] },
-            cost: { action: true },
+            cost: cost(quota("action")),
           }),
         ]),
       }),
@@ -3394,7 +3446,7 @@ describe("MCP server adapter", () => {
             actorId: "B",
             type: "BATTLE_SEARCH",
             targetId: { options: ["A"] },
-            cost: { action: true },
+            cost: cost(quota("action")),
           }),
         ]),
       }),
@@ -3428,7 +3480,7 @@ describe("MCP server adapter", () => {
           actorId: "A",
           type: "BATTLE_READY_RELEASE",
           targetId: { options: ["B"] },
-          cost: { reaction: true },
+          cost: cost(quota("reaction")),
           outcome: {
             summary:
               "Spend your reaction to release the readied attack against the chosen target",
@@ -3440,7 +3492,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_READY_PASS",
-          cost: {},
+          cost: cost(),
           outcome: { summary: "Decline to release your readied action" },
         },
       ],
@@ -3564,7 +3616,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_HELLISH_REBUKE",
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
@@ -3604,7 +3656,7 @@ describe("MCP server adapter", () => {
           actorId: "B",
           type: "CAST_COUNTERSPELL",
           slotLevel: { options: [3] },
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Counterspell against the triggering spell",
@@ -3664,7 +3716,7 @@ describe("MCP server adapter", () => {
     expect(preview).toEqual({
       ok: true,
       summary: "Spend half your Speed in movement to stand up from Prone",
-      cost: { movement: 15, shape: "spend" },
+      cost: cost(movement(15)),
       runtime: "none",
       eventType: "BATTLE_STAND_FROM_PRONE",
     });
@@ -3712,7 +3764,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "C",
           type: "USE_CUTTING_WORDS",
-          cost: { reaction: true, charge: "bardicInspiration" },
+          cost: cost(quota("reaction"), pool("bardicInspiration")),
           outcome: {
             summary:
               "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll",
@@ -3807,7 +3859,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_SHIELD",
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Shield against the triggering attack",

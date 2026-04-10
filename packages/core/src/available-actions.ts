@@ -65,16 +65,7 @@ import {
   type SpellSlotLevel as SpellSlotLevelValue,
 } from "#/types.ts";
 
-export type ResourceCost = {
-  readonly action?: true;
-  readonly bonusAction?: true;
-  readonly reaction?: true;
-  readonly movement?: number;
-  readonly charge?: ResourceCostCharge;
-  readonly shape?: ResourceConsumptionShape;
-};
-
-export const RESOURCE_COST_CHARGES = [
+export const RESOURCE_COST_POOLS = [
   "actionSurge",
   "arcaneRecovery",
   "bardicInspiration",
@@ -95,16 +86,54 @@ export const RESOURCE_COST_CHARGES = [
   "wholenessOfBody",
   "wildShape",
 ] as const;
-export type ResourceCostCharge = (typeof RESOURCE_COST_CHARGES)[number];
+export type ResourceCostPool = (typeof RESOURCE_COST_POOLS)[number];
 
-export const RESOURCE_CONSUMPTION_SHAPES = [
-  "spend",
-  "grant",
-  "reserve",
-  "refund",
+export const RESOURCE_COST_QUOTAS = [
+  "action",
+  "bonusAction",
+  "reaction",
+  "movement",
 ] as const;
-export type ResourceConsumptionShape =
-  (typeof RESOURCE_CONSUMPTION_SHAPES)[number];
+export type ResourceCostQuota = (typeof RESOURCE_COST_QUOTAS)[number];
+
+export type QuotaCost =
+  | {
+      readonly kind: "quota";
+      readonly resource: Exclude<ResourceCostQuota, "movement">;
+    }
+  | {
+      readonly kind: "quota";
+      readonly resource: "movement";
+      readonly amount: number;
+    };
+
+export type PoolCost = {
+  readonly kind: "pool";
+  readonly resource: ResourceCostPool;
+};
+
+export type ResourceCostItem = QuotaCost | PoolCost;
+export type ResourceCost = ReadonlyArray<ResourceCostItem>;
+
+export const FREE_COST = [] as const satisfies ResourceCost;
+
+function quotaCost(
+  resource: Exclude<ResourceCostQuota, "movement">,
+): QuotaCost {
+  return { kind: "quota", resource };
+}
+
+function movementCost(amount: number): QuotaCost {
+  return { kind: "quota", resource: "movement", amount };
+}
+
+function poolCost(resource: ResourceCostPool): PoolCost {
+  return { kind: "pool", resource };
+}
+
+function costs(...items: ReadonlyArray<ResourceCostItem>): ResourceCost {
+  return items;
+}
 
 export type OutcomeDescription = {
   readonly summary: string;
@@ -287,28 +316,28 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_ACTION_SURGE";
-      readonly cost: { readonly charge: "actionSurge" };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_ENTER_RAGE";
-      readonly cost: { readonly bonusAction: true; readonly charge: "rage" };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DECLARE_RECKLESS";
-      readonly cost: {};
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_RELEASE_GRAPPLE";
-      readonly cost: {};
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
@@ -316,28 +345,28 @@ export type BattleActionToken =
       readonly actorId: string;
       readonly type: "BATTLE_ESCAPE_GRAPPLE";
       readonly escapeSucceeded: Hole<boolean>;
-      readonly cost: { readonly action: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DASH";
-      readonly cost: { readonly action: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DISENGAGE";
-      readonly cost: { readonly action: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DODGE";
-      readonly cost: { readonly action: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
@@ -347,7 +376,7 @@ export type BattleActionToken =
       readonly stealthTotal: Hole<number>;
       readonly hasCoverOrObscurement: Hole<boolean>;
       readonly outOfEnemyLineOfSight: Hole<boolean>;
-      readonly cost: { readonly action: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
@@ -356,21 +385,21 @@ export type BattleActionToken =
       readonly type: "BATTLE_SEARCH";
       readonly targetId: Hole<string>;
       readonly perceptionTotal: Hole<number>;
-      readonly cost: { readonly action: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_READY";
-      readonly cost: { readonly action: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_READY_PASS";
-      readonly cost: {};
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
@@ -378,7 +407,7 @@ export type BattleActionToken =
       readonly actorId: string;
       readonly type: "BATTLE_READY_RELEASE";
       readonly targetId: Hole<string>;
-      readonly cost: { readonly reaction: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
@@ -388,21 +417,21 @@ export type BattleActionToken =
       readonly spellName: string;
       readonly slotLevel: Hole<SpellSlotLevelValue>;
       readonly targetId: Hole<string>;
-      readonly cost: { readonly action: true; readonly charge: "spellSlot" };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_READY_SPELL_RELEASE";
-      readonly cost: { readonly reaction: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "STAND_FROM_PRONE";
-      readonly cost: { readonly movement: number; readonly shape: "spend" };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
@@ -410,66 +439,63 @@ export type BattleActionToken =
       readonly actorId: string;
       readonly type: "CAST_COUNTERSPELL";
       readonly slotLevel: Hole<SpellSlotLevelValue>;
-      readonly cost: { readonly reaction: true; readonly charge: "spellSlot" };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "CAST_SHIELD";
-      readonly cost: { readonly reaction: true; readonly charge: "spellSlot" };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "USE_PARRY";
-      readonly cost: { readonly reaction: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "USE_CUTTING_WORDS";
-      readonly cost: {
-        readonly reaction: true;
-        readonly charge: "bardicInspiration";
-      };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "USE_UNCANNY_DODGE";
-      readonly cost: { readonly reaction: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "USE_DEFLECT_ATTACKS";
-      readonly cost: { readonly reaction: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "CAST_HELLISH_REBUKE";
-      readonly cost: { readonly reaction: true; readonly charge: "spellSlot" };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "USE_RETALIATION";
-      readonly cost: { readonly reaction: true };
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "TRIGGER_FIRE_SHIELD";
-      readonly cost: {};
+      readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     };
 export type ActionToken = CreatureActionToken | BattleActionToken;
@@ -2415,7 +2441,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       !context.inCombat && !context.dead
         ? {
             type: "ENTER_COMBAT",
-            cost: {},
+            cost: FREE_COST,
             outcome: {
               summary: "Enter combat (begin tracking turns and action economy)",
             },
@@ -2427,7 +2453,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       canUseHeroicInspirationNow(context)
         ? {
             type: "USE_HEROIC_INSPIRATION",
-            cost: {},
+            cost: FREE_COST,
             outcome: {
               summary:
                 "Spend Heroic Inspiration to reroll a die and use the new roll",
@@ -2450,8 +2476,8 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
             slotLevel: { options: slotLevels },
             cost:
               spell.castingTime === "bonusAction"
-                ? { bonusAction: true, charge: "spellSlot" }
-                : { action: true, charge: "spellSlot" },
+                ? costs(quotaCost("bonusAction"), poolCost("spellSlot"))
+                : costs(quotaCost("action"), poolCost("spellSlot")),
             outcome: {
               summary: spell.concentration
                 ? `Cast ${displaySpellName(spellName)} with a spell slot of the chosen level and begin concentrating on it`
@@ -2466,7 +2492,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       context.inCombat
         ? {
             type: "START_TURN",
-            cost: {},
+            cost: FREE_COST,
             outcome: {
               summary:
                 "Start your turn (reset action economy, process start-of-turn effects)",
@@ -2479,7 +2505,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canActionSurge(guardArgs(context))
         ? {
             type: "USE_ACTION_SURGE",
-            cost: { charge: "actionSurge" },
+            cost: costs(poolCost("actionSurge")),
             outcome: {
               summary:
                 "Expend one Action Surge use to gain one additional action this turn",
@@ -2492,7 +2518,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canIndomitable(guardArgs(context))
         ? {
             type: "USE_INDOMITABLE",
-            cost: { charge: "indomitable" },
+            cost: costs(poolCost("indomitable")),
             outcome: {
               summary:
                 "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level",
@@ -2505,7 +2531,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canTacticalMind(guardArgs(context))
         ? {
             type: "USE_TACTICAL_MIND",
-            cost: { charge: "secondWind" },
+            cost: costs(poolCost("secondWind")),
             outcome: {
               summary:
                 "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
@@ -2520,7 +2546,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "CONVERT_SLOT_TO_POINTS",
         slotLevel: { options: slotLevels },
-        cost: { charge: "spellSlot" },
+        cost: costs(poolCost("spellSlot")),
         outcome: {
           summary:
             "Expend a spell slot to gain sorcery points equal to its level",
@@ -2535,7 +2561,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "CONVERT_POINTS_TO_SLOT",
         slotLevel: { options: slotLevels },
-        cost: { bonusAction: true, charge: "sorceryPoints" },
+        cost: costs(quotaCost("bonusAction"), poolCost("sorceryPoints")),
         outcome: {
           summary:
             "Spend sorcery points to create a spell slot of the chosen level",
@@ -2548,7 +2574,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canEnterRage(guardArgs(context))
         ? {
             type: "ENTER_RAGE",
-            cost: { bonusAction: true, charge: "rage" },
+            cost: costs(quotaCost("bonusAction"), poolCost("rage")),
             outcome: {
               summary:
                 "Enter a Rage, expend one Rage use, and consume your bonus action",
@@ -2561,7 +2587,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.isRaging(guardArgs(context))
         ? {
             type: "END_RAGE",
-            cost: {},
+            cost: FREE_COST,
             outcome: { summary: "End your Rage" },
           }
         : null,
@@ -2571,7 +2597,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canExtendRageBA(guardArgs(context))
         ? {
             type: "EXTEND_RAGE_BA",
-            cost: { bonusAction: true },
+            cost: costs(quotaCost("bonusAction")),
             outcome: {
               summary:
                 "Use your bonus action to keep your Rage going this turn",
@@ -2584,7 +2610,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canDeclareReckless(guardArgs(context))
         ? {
             type: "DECLARE_RECKLESS",
-            cost: {},
+            cost: FREE_COST,
             outcome: { summary: "Declare Reckless Attack for this turn" },
           }
         : null,
@@ -2596,7 +2622,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "USE_LAY_ON_HANDS",
         amount: { options: amounts },
-        cost: { bonusAction: true, charge: "layOnHandsPool" },
+        cost: costs(quotaCost("bonusAction"), poolCost("layOnHandsPool")),
         outcome: {
           summary: "Spend Lay on Hands points to restore up to that many HP",
         },
@@ -2610,7 +2636,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "USE_DIVINE_SMITE",
         slotLevel: { options: slotLevels },
-        cost: { bonusAction: true, charge: "spellSlot" },
+        cost: costs(quotaCost("bonusAction"), poolCost("spellSlot")),
         outcome: {
           summary:
             "Expend a spell slot of the chosen level to use Divine Smite",
@@ -2624,7 +2650,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       if (!monk || !guards.canMonkFocusBA(guardArgs(context))) return null;
       return {
         type: "FLURRY_OF_BLOWS",
-        cost: { bonusAction: true, charge: "focusPoint" },
+        cost: costs(quotaCost("bonusAction"), poolCost("focusPoint")),
         outcome: {
           summary: `Spend 1 Focus Point to make ${flurryOfBlowsStrikes(monk.level)} unarmed strike${flurryOfBlowsStrikes(monk.level) === 1 ? "" : "s"} as a bonus action`,
         },
@@ -2636,7 +2662,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canMonkFreeBA(guardArgs(context))
         ? {
             type: "PATIENT_DEFENSE_FREE",
-            cost: { bonusAction: true },
+            cost: costs(quotaCost("bonusAction")),
             outcome: { summary: "Take the Disengage action as a bonus action" },
           }
         : null,
@@ -2646,7 +2672,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canMonkFocusBA(guardArgs(context))
         ? {
             type: "PATIENT_DEFENSE_FOCUS",
-            cost: { bonusAction: true, charge: "focusPoint" },
+            cost: costs(quotaCost("bonusAction"), poolCost("focusPoint")),
             outcome: {
               summary:
                 "Spend 1 Focus Point to Disengage and Dodge as a bonus action",
@@ -2659,7 +2685,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canMonkFreeBA(guardArgs(context))
         ? {
             type: "STEP_OF_THE_WIND_FREE",
-            cost: { bonusAction: true },
+            cost: costs(quotaCost("bonusAction")),
             outcome: { summary: "Take the Dash action as a bonus action" },
           }
         : null,
@@ -2669,7 +2695,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canMonkFocusBA(guardArgs(context))
         ? {
             type: "STEP_OF_THE_WIND_FOCUS",
-            cost: { bonusAction: true, charge: "focusPoint" },
+            cost: costs(quotaCost("bonusAction"), poolCost("focusPoint")),
             outcome: {
               summary:
                 "Spend 1 Focus Point to Dash and Disengage as a bonus action",
@@ -2686,7 +2712,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       // when WIS >= 1; low-WIS monks would need explicit modifier state for exact text.
       return {
         type: "WHOLENESS_OF_BODY",
-        cost: { bonusAction: true, charge: "wholenessOfBody" },
+        cost: costs(quotaCost("bonusAction"), poolCost("wholenessOfBody")),
         outcome: {
           summary: `Heal 1d${pMartialArtsDie(monk.level)} + ${monk.wholenessMax} HP (minimum 1)`,
         },
@@ -2700,7 +2726,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
         return null;
       return {
         type: "UNCANNY_METABOLISM",
-        cost: { charge: "uncannyMetabolism" },
+        cost: costs(poolCost("uncannyMetabolism")),
         outcome: {
           summary: `Regain all expended Focus Points and heal 1d${pMartialArtsDie(monk.level)} + ${monk.level} HP`,
         },
@@ -2714,7 +2740,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "USE_ARCANE_RECOVERY",
         slotLevel: { options: slotLevels },
-        cost: { charge: "arcaneRecovery" },
+        cost: costs(poolCost("arcaneRecovery")),
         outcome: {
           summary:
             "Recover one expended spell slot of the chosen level and use Arcane Recovery",
@@ -2728,7 +2754,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       if (context.pendingResolution?.kind !== "overchannel") return null;
       return {
         type: "USE_OVERCHANNEL",
-        cost: {},
+        cost: FREE_COST,
         outcome: {
           summary: `Overchannel the qualifying ${displaySpellName(context.pendingResolution.spellName)} cast at slot level ${context.pendingResolution.slotLevel} for maximum damage`,
         },
@@ -2746,7 +2772,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "USE_METAMAGIC",
         option: { options: legalOptions },
-        cost: { charge: "sorceryPoints" },
+        cost: costs(poolCost("sorceryPoints")),
         outcome: {
           summary:
             "Apply a currently legal known Metamagic option to the spell you are casting",
@@ -2760,13 +2786,14 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       const sorcerer = context.classStates.sorcerer;
       return {
         type: "USE_INNATE_SORCERY",
-        cost: {
-          bonusAction: true,
-          charge:
+        cost: costs(
+          quotaCost("bonusAction"),
+          poolCost(
             sorcerer && sorcerer.innateSorceryCharges > 0
               ? "innateSorcery"
               : "sorceryPoints",
-        },
+          ),
+        ),
         outcome: {
           summary: "Use a bonus action to activate Innate Sorcery for 1 minute",
         },
@@ -2778,7 +2805,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canMagicalCunning(guardArgs(context))
         ? {
             type: "USE_MAGICAL_CUNNING",
-            cost: { charge: "magicalCunning" },
+            cost: costs(poolCost("magicalCunning")),
             outcome: {
               summary:
                 "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
@@ -2791,7 +2818,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canEnterWildShape(guardArgs(context))
         ? {
             type: "ENTER_WILD_SHAPE",
-            cost: { bonusAction: true, charge: "wildShape" },
+            cost: costs(quotaCost("bonusAction"), poolCost("wildShape")),
             outcome: {
               summary: `Shape-shift into a beast form, gaining ${context.classStates.druid?.level ?? 0} temporary HP`,
             },
@@ -2803,7 +2830,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canExitWildShape(guardArgs(context))
         ? {
             type: "EXIT_WILD_SHAPE",
-            cost: { bonusAction: true },
+            cost: costs(quotaCost("bonusAction")),
             outcome: {
               summary: "Revert from beast form to your normal form",
             },
@@ -2816,7 +2843,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       context.slotsCurrent[0] < context.slotsMax[0]
         ? {
             type: "USE_WILD_RESURGENCE_SLOT",
-            cost: { charge: "wildShape" },
+            cost: costs(poolCost("wildShape")),
             outcome: {
               summary:
                 "Expend one Wild Shape use to regain a level 1 spell slot; once per Long Rest",
@@ -2831,7 +2858,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "USE_MYSTIC_ARCANUM",
         spellLevel: { options: spellLevels },
-        cost: { charge: "mysticArcanum" },
+        cost: costs(poolCost("mysticArcanum")),
         outcome: {
           summary:
             "Cast an unused Mystic Arcanum spell of the chosen level without expending a slot",
@@ -2844,7 +2871,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canSecondWind(guardArgs(context))
         ? {
             type: "USE_SECOND_WIND",
-            cost: { bonusAction: true, charge: "secondWind" },
+            cost: costs(quotaCost("bonusAction"), poolCost("secondWind")),
             outcome: {
               summary: `Heal 1d10 + ${context.classStates.fighter?.level ?? 0} HP`,
             },
@@ -2857,7 +2884,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       if (!ranger || !guards.canTireless(guardArgs(context))) return null;
       return {
         type: "USE_TIRELESS",
-        cost: { action: true, charge: "tireless" },
+        cost: costs(quotaCost("action"), poolCost("tireless")),
         outcome: {
           summary: `Gain 1d8 + ${ranger.tirelessMax} temporary HP (minimum 1)`,
         },
@@ -2869,7 +2896,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canSneakAttack(guardArgs(context))
         ? {
             type: "USE_SNEAK_ATTACK",
-            cost: {},
+            cost: FREE_COST,
             outcome: {
               summary: "Apply Sneak Attack damage to the qualifying hit",
             },
@@ -2881,7 +2908,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canSteadyAim(guardArgs(context))
         ? {
             type: "USE_STEADY_AIM",
-            cost: { bonusAction: true },
+            cost: costs(quotaCost("bonusAction")),
             outcome: {
               summary:
                 "Use Steady Aim to gain Advantage on your next attack roll; your speed becomes 0 until end of turn",
@@ -2894,7 +2921,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canCunningAction(guardArgs(context))
         ? {
             type: "CUNNING_ACTION_DASH",
-            cost: { bonusAction: true },
+            cost: costs(quotaCost("bonusAction")),
             outcome: { summary: "Take the Dash action as a bonus action" },
           }
         : null,
@@ -2904,7 +2931,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canCunningAction(guardArgs(context))
         ? {
             type: "CUNNING_ACTION_DISENGAGE",
-            cost: { bonusAction: true },
+            cost: costs(quotaCost("bonusAction")),
             outcome: { summary: "Take the Disengage action as a bonus action" },
           }
         : null,
@@ -2914,7 +2941,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canCunningAction(guardArgs(context))
         ? {
             type: "CUNNING_ACTION_HIDE",
-            cost: { bonusAction: true },
+            cost: costs(quotaCost("bonusAction")),
             outcome: { summary: "Take the Hide action as a bonus action" },
           }
         : null,
@@ -2924,7 +2951,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canClericCD(guardArgs(context))
         ? {
             type: "USE_CLERIC_CHANNEL_DIVINITY",
-            cost: { charge: "channelDivinity" },
+            cost: costs(poolCost("channelDivinity")),
             outcome: { summary: "Expend one Cleric Channel Divinity use" },
           }
         : null,
@@ -2936,7 +2963,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "USE_FONT_SLOT_RESTORE",
         slotLevel: { options: slotLevels },
-        cost: { charge: "spellSlot" },
+        cost: costs(poolCost("spellSlot")),
         outcome: {
           summary: "Expend a spell slot to regain one Bardic Inspiration use",
         },
@@ -2948,7 +2975,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canPaladinCD(guardArgs(context))
         ? {
             type: "USE_PALADIN_CHANNEL_DIVINITY",
-            cost: { charge: "channelDivinity" },
+            cost: costs(poolCost("channelDivinity")),
             outcome: { summary: "Expend one Paladin Channel Divinity use" },
           }
         : null,
@@ -2960,7 +2987,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "USE_WILD_RESURGENCE_CHARGE",
         slotLevel: { options: slotLevels },
-        cost: { charge: "spellSlot" },
+        cost: costs(poolCost("spellSlot")),
         outcome: {
           summary: "Expend a spell slot to regain one Wild Shape use",
         },
@@ -2972,7 +2999,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canNaturesVeil(guardArgs(context))
         ? {
             type: "USE_NATURES_VEIL",
-            cost: { bonusAction: true, charge: "naturesVeil" },
+            cost: costs(quotaCost("bonusAction"), poolCost("naturesVeil")),
             outcome: {
               summary: "Expend one Nature's Veil use to become Invisible",
             },
@@ -2984,7 +3011,10 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       guards.canBardicInspiration(guardArgs(context))
         ? {
             type: "USE_BARDIC_INSPIRATION",
-            cost: { bonusAction: true, charge: "bardicInspiration" },
+            cost: costs(
+              quotaCost("bonusAction"),
+              poolCost("bardicInspiration"),
+            ),
             outcome: {
               summary:
                 "Expend one Bardic Inspiration use to inspire another creature",
@@ -3001,7 +3031,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
           : "abilityCheck";
       return {
         type: "USE_PEERLESS_SKILL",
-        cost: { charge: "bardicInspiration" },
+        cost: costs(poolCost("bardicInspiration")),
         outcome: {
           summary:
             mode === "attackRoll"
@@ -3019,7 +3049,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       const dc = relentlessRageDC(barbarian.relentlessRageTimesUsed);
       return {
         type: "USE_RELENTLESS_RAGE",
-        cost: {},
+        cost: FREE_COST,
         outcome: {
           summary: `Make a DC ${dc} Constitution save to stay at ${2 * barbarian.level} HP instead of dropping to 0`,
         },
@@ -3033,7 +3063,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       return {
         type: "SHORT_REST",
         availableHitDice,
-        cost: {},
+        cost: FREE_COST,
         outcome: {
           summary:
             availableHitDice.length === 0
@@ -3048,7 +3078,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
       context.inCombat
         ? {
             type: "EXIT_COMBAT",
-            cost: {},
+            cost: FREE_COST,
             // A33 leaves initiative-roster teardown to the caller, so this
             // remains available even if the creature is dead or unconscious.
             outcome: {
@@ -3111,7 +3141,7 @@ function hitReactionToken(
       battleToken({
         actorId,
         type: "CAST_SHIELD",
-        cost: { reaction: true, charge: "spellSlot" },
+        cost: costs(quotaCost("reaction"), poolCost("spellSlot")),
         outcome: {
           summary:
             "Use your reaction to cast Shield against the triggering attack",
@@ -3122,7 +3152,7 @@ function hitReactionToken(
       battleToken({
         actorId,
         type: "USE_PARRY",
-        cost: { reaction: true },
+        cost: costs(quotaCost("reaction")),
         outcome: {
           summary:
             "Use your reaction to add your Parry bonus against the triggering melee weapon attack",
@@ -3133,7 +3163,7 @@ function hitReactionToken(
       battleToken({
         actorId,
         type: "USE_CUTTING_WORDS",
-        cost: { reaction: true, charge: "bardicInspiration" },
+        cost: costs(quotaCost("reaction"), poolCost("bardicInspiration")),
         outcome: {
           summary:
             "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll",
@@ -3153,7 +3183,7 @@ function damageReactionToken(
       battleToken({
         actorId,
         type: "USE_UNCANNY_DODGE",
-        cost: { reaction: true },
+        cost: costs(quotaCost("reaction")),
         outcome: {
           summary:
             "Use your reaction to halve the triggering attack's damage against you",
@@ -3164,7 +3194,7 @@ function damageReactionToken(
       battleToken({
         actorId,
         type: "USE_DEFLECT_ATTACKS",
-        cost: { reaction: true },
+        cost: costs(quotaCost("reaction")),
         outcome: {
           summary:
             "Use your reaction to reduce the triggering attack's damage with Deflect Attacks",
@@ -3207,7 +3237,7 @@ function afterDamageReactionTokens(
         >({
           actorId,
           type: "CAST_HELLISH_REBUKE",
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: costs(quotaCost("reaction"), poolCost("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
@@ -3222,7 +3252,7 @@ function afterDamageReactionTokens(
         >({
           actorId,
           type: "USE_RETALIATION",
-          cost: { reaction: true },
+          cost: costs(quotaCost("reaction")),
           outcome: {
             summary:
               "Use your reaction to make a melee attack against the creature that damaged you",
@@ -3243,7 +3273,7 @@ function afterDamageReactionTokens(
         >({
           actorId,
           type: "TRIGGER_FIRE_SHIELD",
-          cost: {},
+          cost: FREE_COST,
           outcome: {
             summary: `Apply Fire Shield's ${fireShieldPayload.damageType} damage to the attacker`,
           },
@@ -3300,7 +3330,7 @@ function battleActiveReadyableSpellTokens(
         spellName,
         slotLevel: { options: slotOptions },
         targetId: { options: targetOptions },
-        cost: { action: true, charge: "spellSlot" },
+        cost: costs(quotaCost("action"), poolCost("spellSlot")),
         outcome: {
           summary: `Spend your action and a spell slot to Ready ${displaySpellName(
             spellName as SpellName,
@@ -3374,7 +3404,7 @@ export function getAvailableBattleActions(
         battleToken({
           actorId,
           type: "BATTLE_READY_PASS",
-          cost: {},
+          cost: FREE_COST,
           outcome: { summary: "Decline to release your readied action" },
         }),
       );
@@ -3393,7 +3423,7 @@ export function getAvailableBattleActions(
               actorId,
               type: "BATTLE_READY_RELEASE",
               targetId: { options: targetOptions },
-              cost: { reaction: true },
+              cost: costs(quotaCost("reaction")),
               outcome: {
                 summary:
                   "Spend your reaction to release the readied attack against the chosen target",
@@ -3411,7 +3441,7 @@ export function getAvailableBattleActions(
           >({
             actorId,
             type: "BATTLE_READY_SPELL_RELEASE",
-            cost: { reaction: true },
+            cost: costs(quotaCost("reaction")),
             outcome: {
               summary:
                 "Spend your reaction to release the readied spell against its chosen target",
@@ -3445,7 +3475,7 @@ export function getAvailableBattleActions(
         battleToken({
           actorId: activeCreatureId,
           type: "BATTLE_ACTION_SURGE",
-          cost: { charge: "actionSurge" },
+          cost: costs(poolCost("actionSurge")),
           outcome: {
             summary:
               "Expend one Action Surge use to gain one additional non-Magic action this turn",
@@ -3463,7 +3493,7 @@ export function getAvailableBattleActions(
         battleToken({
           actorId: activeCreatureId,
           type: "BATTLE_ENTER_RAGE",
-          cost: { bonusAction: true, charge: "rage" },
+          cost: costs(quotaCost("bonusAction"), poolCost("rage")),
           outcome: {
             summary:
               "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
@@ -3481,7 +3511,7 @@ export function getAvailableBattleActions(
         battleToken({
           actorId: activeCreatureId,
           type: "BATTLE_DECLARE_RECKLESS",
-          cost: {},
+          cost: FREE_COST,
           outcome: {
             summary: "Declare Reckless Attack for this turn",
           },
@@ -3493,7 +3523,7 @@ export function getAvailableBattleActions(
         battleToken({
           actorId: activeCreatureId,
           type: "BATTLE_RELEASE_GRAPPLE",
-          cost: {},
+          cost: FREE_COST,
           outcome: {
             summary:
               "Release the creature you are grappling; no action required",
@@ -3512,7 +3542,7 @@ export function getAvailableBattleActions(
           actorId: activeCreatureId,
           type: "BATTLE_ESCAPE_GRAPPLE",
           escapeSucceeded: { options: [true, false] },
-          cost: { action: true },
+          cost: costs(quotaCost("action")),
           outcome: {
             summary:
               "Spend your action to attempt to escape the grapple with a resolved Athletics or Acrobatics check",
@@ -3530,7 +3560,7 @@ export function getAvailableBattleActions(
           stealthTotal: { options: SUGGESTED_D20_CHECK_TOTAL_OPTIONS },
           hasCoverOrObscurement: { options: [true, false] },
           outOfEnemyLineOfSight: { options: [true, false] },
-          cost: { action: true },
+          cost: costs(quotaCost("action")),
           outcome: {
             summary:
               "Spend your action to hide using explicit Stealth, cover or obscurement, and line-of-sight facts",
@@ -3552,7 +3582,7 @@ export function getAvailableBattleActions(
             type: "BATTLE_SEARCH",
             targetId: { options: hiddenTargetIds },
             perceptionTotal: { options: SUGGESTED_D20_CHECK_TOTAL_OPTIONS },
-            cost: { action: true },
+            cost: costs(quotaCost("action")),
             outcome: {
               summary:
                 "Spend your action to Search for a hidden creature with an explicit Wisdom check total",
@@ -3564,7 +3594,7 @@ export function getAvailableBattleActions(
         battleToken({
           actorId: activeCreatureId,
           type: "BATTLE_DASH",
-          cost: { action: true },
+          cost: costs(quotaCost("action")),
           outcome: { summary: "Spend your action to gain extra movement" },
         }),
       );
@@ -3572,7 +3602,7 @@ export function getAvailableBattleActions(
         battleToken({
           actorId: activeCreatureId,
           type: "BATTLE_DISENGAGE",
-          cost: { action: true },
+          cost: costs(quotaCost("action")),
           outcome: {
             summary:
               "Spend your action so your movement does not provoke opportunity attacks this turn",
@@ -3583,7 +3613,7 @@ export function getAvailableBattleActions(
         battleToken({
           actorId: activeCreatureId,
           type: "BATTLE_DODGE",
-          cost: { action: true },
+          cost: costs(quotaCost("action")),
           outcome: {
             summary:
               "Spend your action to impose disadvantage on attacks against you until your next turn starts",
@@ -3594,7 +3624,7 @@ export function getAvailableBattleActions(
         battleToken({
           actorId: activeCreatureId,
           type: "BATTLE_READY",
-          cost: { action: true },
+          cost: costs(quotaCost("action")),
           outcome: {
             summary:
               "Spend your action to ready an attack for release with your reaction",
@@ -3616,7 +3646,7 @@ export function getAvailableBattleActions(
           battleToken({
             actorId: activeCreatureId,
             type: "STAND_FROM_PRONE",
-            cost: { movement: standCost, shape: "spend" },
+            cost: costs(movementCost(standCost)),
             outcome: {
               summary:
                 "Spend half your Speed in movement to stand up from Prone",
@@ -3665,7 +3695,7 @@ export function getAvailableBattleActions(
           actorId,
           type: "CAST_COUNTERSPELL",
           slotLevel: { options: slotLevels },
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: costs(quotaCost("reaction"), poolCost("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Counterspell against the triggering spell",
@@ -4331,7 +4361,7 @@ export function previewBattleAction(
   return {
     ok: true,
     summary: availableToken?.outcome.summary ?? token.type,
-    cost: availableToken?.cost ?? {},
+    cost: availableToken?.cost ?? FREE_COST,
     runtime: request.runtime,
     eventType: request.runtime === "none" ? request.event.type : undefined,
   };
@@ -5158,7 +5188,7 @@ export function previewAction(
   return {
     ok: true,
     summary: availableToken?.outcome.summary ?? token.type,
-    cost: availableToken?.cost ?? {},
+    cost: availableToken?.cost ?? FREE_COST,
     runtime: request.runtime,
     eventType: request.runtime === "none" ? request.event.type : undefined,
   };

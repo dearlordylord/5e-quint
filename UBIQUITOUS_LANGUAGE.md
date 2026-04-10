@@ -30,6 +30,19 @@
 | **Offer** | Suspend resolution to present a reaction window to eligible creatures. | Prompt, ask |
 | **Decline** | A creature in a reaction window explicitly chooses not to react. Declining does not consume the reaction resource. | Pass |
 
+## Resource Consumption
+
+| Term | Definition | Aliases to avoid |
+|------|-----------|-----------------|
+| **Pool** | A counted stock that depletes until a rest or feature-specific recharge restores it. | Charge bucket, resource blob |
+| **Quota** | A per-turn or per-window allowance that refills automatically at its reset boundary. | Charge, use counter |
+| **Lock** | An exclusive hold where only one effect can occupy the slot at a time; taking a new lock displaces the old holder. | Reservation slot, latch |
+| **Timer** | A countdown or duration that expires after turns, rounds, or another explicit clock. | Counter (too vague) |
+| **Spend** | Pay an immediate up-front cost to take an action now. | Consume (too broad), use up |
+| **Grant** | A spend that creates or restores a different usable resource. | Refund (opposite direction) |
+| **Reserve** | Pay now to hold a future release window; if the hold breaks, the reserved action is lost. | Delay-cast, queue |
+| **Refund** | Restore a previously spent pool resource without rewinding any separate quota that was already used. | Undo, rollback |
+
 ## Proficiency
 
 | Term | Definition | Aliases to avoid |

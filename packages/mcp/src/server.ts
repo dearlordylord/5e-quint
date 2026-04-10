@@ -100,9 +100,20 @@ export function groupByCost(
   };
   for (const token of tokens) {
     const cost: ResourceCost = token.cost;
-    if (cost.action) groups.action.push(token);
-    else if (cost.bonusAction) groups.bonusAction.push(token);
-    else if (cost.reaction) groups.reaction.push(token);
+    if (
+      cost.some((item) => item.kind === "quota" && item.resource === "action")
+    )
+      groups.action.push(token);
+    else if (
+      cost.some(
+        (item) => item.kind === "quota" && item.resource === "bonusAction",
+      )
+    )
+      groups.bonusAction.push(token);
+    else if (
+      cost.some((item) => item.kind === "quota" && item.resource === "reaction")
+    )
+      groups.reaction.push(token);
     else groups.free.push(token);
   }
   return groups;

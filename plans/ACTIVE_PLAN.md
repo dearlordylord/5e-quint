@@ -71,7 +71,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 8,
       "id": "C",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "ResourceCost Typed Refactor"
     },
     {
@@ -188,7 +188,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 5     | MCP0-E - EXIT_COMBAT After Death UX Decision                          | done                                          | MCP0-A policy context                                    | optional UX cleanup                                                                 | Closed 2026-04-10: keep `EXIT_COMBAT` available after death, document A33 caller-owned roster teardown, and clarify the MCP/core outcome text                           | Completed; no dead-creature special route  |
 | 6     | B - Battle Size Ownership For Grapple                                 | done                                          | none                                                     | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns               | Closed 2026-04-10: battle/spec/init now own combatant `creatureSize`; `BATTLE_GRAPPLE` no longer accepts caller-supplied sizes and remains unexposed only because `targetSaveFailed` still needs the final public runtime/session contract | Completed; audit blocker text updated      |
 | 7     | A - Condition Consequence Table Completion Research                   | done                                          | none                                                     | none                                                                                | Closed 2026-04-10: rejected redundant/single-condition table columns, deferred initiative modifiers, and landed the SRD 5.2.1 incapacitated speech fix                 | Completed; no table expansion needed       |
-| 8     | C - ResourceCost Typed Refactor                                       | ready-for-implementation-after-light-research | none                                                     | Cleaner MCP/UI cost display and future resource docs                                | Confirm cost consumer blast radius and immediate-cost scope, then implement typed costs if still small                                                                   | Good support-layer cleanup                 |
+| 8     | C - ResourceCost Typed Refactor                                       | done                                          | none                                                     | Cleaner MCP/UI cost display and future resource docs                                | Closed 2026-04-10: `ResourceCost` now models immediate selectable costs as typed pool/quota items, docs define the shared vocabulary, and MCP/core tests cover the new shape | Completed; no downstream reorder needed    |
 | 9     | D - Battle Attack Runtime/Session Boundary                            | ready-for-research                            | none                                                     | F, G, MCP1-C, MCP2-A, possibly I; public `BATTLE_ATTACK`; off-hand/legendary/riders | Design token/runtime/session contract and stop conditions                                                                                                                | Research only; do not implement attack yet |
 | 10    | MCP1-A - Session Host Architecture                                    | ready-for-research                            | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-A                                                                      | Design MCP session/router host without combat state duplication                                                                                                          | Research before implementation             |
 | 11    | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry        | ready-for-research                            | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-B                                                                      | Design a reusable core statblock facility, document approved provenance for future entries, and add Goblin Minion as the first entry                                     | Research before implementation             |
@@ -235,9 +235,9 @@ Merged MCP Fighter vs. Goblin baseline:
 
 Recommended first coding-loop tasks:
 
-1. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
-2. **Task D: Battle Attack Runtime/Session Boundary** if the goal is the next ownership/API research frontier after the MCP0 cleanup.
-3. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
+1. **Task D: Battle Attack Runtime/Session Boundary** if the goal is the next ownership/API research frontier after the MCP0 cleanup.
+2. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
+3. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is content/data-layer research without widening MCP ownership.
 4. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is monster-content research that feeds later public battle surfaces.
 5. **Task E: Movement And Help Geometry/Session Ownership** if the goal is another bounded ownership research slice.
 
@@ -792,13 +792,13 @@ Plan Impact:
 
 ### Task 8 - C - ResourceCost Typed Refactor
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: cleaner MCP/UI cost display and future resource consumption terminology.
 
-Next action: inspect all `ResourceCost` consumers and confirm this remains an immediate-cost display/selection shape before changing types.
+Next action: closed 2026-04-10 after confirming all `ResourceCost` consumers remain immediate-cost display/selection surfaces only.
 
 Purpose:
 
@@ -853,6 +853,27 @@ Verification:
 Extra research needed:
 
 - Light. Confirm consumer blast radius before code changes.
+
+Implementation closeout:
+
+- Confirmed blast radius stayed on support-layer display/preview consumers in `packages/core/src/available-actions.ts`, `packages/mcp/src/server.ts`, and the directly affected tests.
+- Replaced the shallow `ResourceCost` object with typed `ReadonlyArray<ResourceCostItem>` entries split into quota costs and pool costs, plus `FREE_COST` and small builders for token construction.
+- Updated battle and creature preview paths plus MCP `groupByCost` to consume the new typed representation without adding any generic Quint cost engine or changing token execution semantics.
+- Added shared resource-consumption vocabulary to `UBIQUITOUS_LANGUAGE.md` and `battle/DOMAIN.md`, including ready-spell reserve semantics and Counterspell refund framing as documentation examples only.
+
+Verification results:
+
+- RAW/domain-language check completed against `.references/srd-5.2.1/Rules-Glossary.md` (`Ready [Action]`) and `.references/srd-5.2.1/Spells/Gaining-and-Casting.md` (spell-slot expenditure), plus `UBIQUITOUS_LANGUAGE.md`.
+- `/simplify` round 1: kept the representation limited to pool/quota items and rejected adding lock/timer entries or a generic consumption engine, because those remain outcome semantics rather than selectable token costs.
+- `/simplify` round 2: rechecked for redundant state and helper duplication across core and MCP consumers. The remaining local test helpers only adapt expectations to the shared typed shape; no additional runtime registry or parallel state remains.
+- `pnpm quality`.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `C`: revised from `ready-for-implementation-after-light-research` to `done`; no downstream unblock/reorder was required.
+- Plan edits: synchronized Task 8 status in the index and DAG, recorded the final closeout, and updated task-selection guidance to point at the remaining open work.
 
 ### Task 9 - D - Battle Attack Runtime/Session Boundary
 

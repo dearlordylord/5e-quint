@@ -85,6 +85,20 @@ Reactions have four distinct timing relationships to their triggers (derived fro
 
 **After** — Trigger fully resolves, reaction is an independent response. Example: Hellish Rebuke deals damage back to the attacker.
 
+## Resource Consumption Terms
+
+The battle layer uses the shared support-language terms from `UBIQUITOUS_LANGUAGE.md` for action costs:
+
+- **Quota** covers immediate turn-economy spends such as action, bonus action, reaction, and movement.
+- **Pool** covers rest- or feature-recharged stocks such as spell slots, Rage uses, Bardic Inspiration uses, and Action Surge.
+- **Lock** covers exclusive holds such as concentration.
+- **Timer** covers ongoing countdowns such as Rage duration.
+
+For battle action tokens, `ResourceCost` is limited to the immediate up-front costs a player chooses to pay now. Lock displacement and timer consequences remain outcome semantics, not selectable token costs. Examples:
+
+- Readying a spell spends an action quota and a spell-slot pool now; the later reaction release is a separate quota spend.
+- A Counterspell refund restores the spent spell-slot pool if the spell is negated, but it does not restore the per-turn slot-expended quota gate.
+
 ## Spatial Concepts
 
 **Distance** — Always in feet (SRD). The battle layer does not define zones. Theatre of mind vs. grid is a caller concern — both produce feet.
