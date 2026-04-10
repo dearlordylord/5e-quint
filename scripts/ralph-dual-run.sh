@@ -344,8 +344,9 @@ write_prompt() {
   cat >"$output_file" <<EOF
 You are the $role agent in a Ralph-style fresh-context implementation run for this repository.
 
-Before starting, run 'git log --oneline -1 master' and verify your HEAD matches. If not, run 'git rebase master'.
-For later tasks on the integration branch, your HEAD may be ahead of master because earlier reconciled task commits are already present; in that case, verify master is the branch base and continue after the rebase check.
+Before starting, run 'git log --oneline -1 master' and 'git log --oneline -1 HEAD'. Treat this as a branch-base check, not an exact-match requirement.
+If HEAD is missing master's tip as an ancestor, run 'git rebase master'.
+If HEAD is ahead of master because earlier reconciled task commits are already present on the integration branch, continue after confirming master is still the branch base.
 
 Workspace: $workspace
 Base ref: $task_base_ref
@@ -396,8 +397,9 @@ write_review_prompt() {
   cat >"$output_file" <<EOF
 You are reviewing the $implementation implementation for Task $task_no in this Ralph run.
 
-Before starting, run 'git log --oneline -1 master' and verify your HEAD matches. If not, run 'git rebase master'.
-For later tasks on the integration branch, your HEAD may be ahead of master because earlier reconciled task commits are already present; in that case, verify master is the branch base and continue after the rebase check.
+Before starting, run 'git log --oneline -1 master' and 'git log --oneline -1 HEAD'. Treat this as a branch-base check, not an exact-match requirement.
+If HEAD is missing master's tip as an ancestor, run 'git rebase master'.
+If HEAD is ahead of master because earlier reconciled task commits are already present on the integration branch, continue after confirming master is still the branch base.
 
 Workspace: $workspace
 Base ref: $base_ref

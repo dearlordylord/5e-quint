@@ -75,11 +75,14 @@ To use the older behavior and commit reconciled results directly to `master`, pa
 scripts/ralph-dual-run.sh plans/some-plan.md --commit-to-master
 ```
 
-The script refuses to start unless the main worktree is clean and `HEAD` matches `master` (or the `--base` ref). Each implementer and reviewer prompt also includes the repo-specific stale-worktree check:
+The script refuses to start unless the main worktree is clean and `HEAD` matches `master` (or the `--base` ref) at run start. Each implementer and reviewer prompt also includes the repo-specific branch-base check:
 
 ```bash
 git log --oneline -1 master
+git log --oneline -1 HEAD
 ```
+
+Agents treat this as an ancestor check, not an exact-match requirement. Earlier tasks may already have advanced the integration branch beyond `master`, which is expected. Only when `master` is no longer in the current branch history should the worktree be considered stale.
 
 If a worktree is stale, the agent is instructed to run:
 
