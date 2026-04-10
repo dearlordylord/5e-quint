@@ -170,6 +170,27 @@ function initBattleHostWithProneActor() {
   return createBattleHost(actor);
 }
 
+function initBattleHostWithFeatureActor() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        fighterLevel: 2,
+        barbarianLevel: 2,
+        initiativeRoll: 15,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
 function initBattleHostWithReadyWindow() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -1579,6 +1600,131 @@ describe("MCP server adapter", () => {
         },
       ],
     });
+  });
+
+  test("battle hosts surface and execute active-turn feature actions through MCP", () => {
+    const host = initBattleHostWithFeatureActor();
+
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual({
+      action: expect.arrayContaining([
+        expect.objectContaining({ type: "BATTLE_DASH", actorId: "A" }),
+      ]),
+      bonusAction: [
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_ENTER_RAGE",
+          cost: { bonusAction: true, charge: "rage" },
+          outcome: {
+            summary:
+              "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
+          },
+        },
+      ],
+      reaction: [],
+      free: expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_ACTION_SURGE",
+          cost: { charge: "actionSurge" },
+          outcome: {
+            summary:
+              "Expend one Action Surge use to gain one additional non-Magic action this turn",
+          },
+        },
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_DECLARE_RECKLESS",
+          cost: {},
+          outcome: { summary: "Declare Reckless Attack for this turn" },
+        },
+      ]),
+    });
+
+    const actionSurge = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ACTION_SURGE",
+    });
+    expect("isError" in actionSurge).toBe(false);
+    expect(readPayload(actionSurge)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome:
+          "Expend one Action Surge use to gain one additional non-Magic action this turn",
+      }),
+    );
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
+        ?.actionsRemaining,
+    ).toBe(2);
+
+    const rage = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ENTER_RAGE",
+    });
+    expect("isError" in rage).toBe(false);
+    expect(readPayload(rage)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome:
+          "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
+      }),
+    );
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
+        ?.ragingBlocksSpells,
+    ).toBe(true);
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
+        ?.rageCharges,
+    ).toBe(1);
+
+    const reckless = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_DECLARE_RECKLESS",
+    });
+    expect("isError" in reckless).toBe(false);
+    expect(readPayload(reckless)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome: "Declare Reckless Attack for this turn",
+      }),
+    );
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
+        ?.recklessThisTurn,
+    ).toBe(true);
+  });
+
+  test("preview_action summarizes a battle feature action without mutating state", () => {
+    const host = initBattleHostWithFeatureActor();
+
+    const before = readPayload(handleToolCall(host, "get_state", {}));
+    const preview = readPayload(
+      handleToolCall(host, "preview_action", {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ENTER_RAGE",
+      }),
+    );
+    const after = readPayload(handleToolCall(host, "get_state", {}));
+
+    expect(preview).toEqual({
+      ok: true,
+      summary:
+        "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
+      cost: { bonusAction: true, charge: "rage" },
+      runtime: "none",
+      eventType: "BATTLE_ENTER_RAGE",
+    });
+    expect(after).toEqual(before);
   });
 
   test("battle hosts surface and execute ready-window actions through MCP", () => {

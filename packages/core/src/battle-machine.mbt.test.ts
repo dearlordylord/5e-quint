@@ -102,6 +102,7 @@ const QuintCombatant = z.object({
     .passthrough(),
   fighterLevel: z.bigint(),
   barbarianLevel: z.bigint(),
+  rageCharges: z.bigint(),
   meleeDamageBonus: z.bigint(),
   recklessThisTurn: z.boolean(),
   ragingBlocksSpells: z.boolean(),
@@ -229,6 +230,7 @@ interface NormalizedBattleCreature {
   actionSurgeUsedThisTurn: boolean;
   fighterLevel: number;
   barbarianLevel: number;
+  rageCharges: number;
   meleeDamageBonus: number;
   recklessThisTurn: boolean;
   ragingBlocksSpells: boolean;
@@ -318,6 +320,7 @@ function quintCombatantToNormalized(
     actionSurgeUsedThisTurn: c.fighterState.actionSurgeUsedThisTurn,
     fighterLevel: Number(c.fighterLevel),
     barbarianLevel: Number(c.barbarianLevel),
+    rageCharges: Number(c.rageCharges),
     meleeDamageBonus: Number(c.meleeDamageBonus),
     recklessThisTurn: c.recklessThisTurn,
     ragingBlocksSpells: c.ragingBlocksSpells,
@@ -417,6 +420,7 @@ function xstateCreatureToNormalized(
     actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
     fighterLevel: c.fighterLevel,
     barbarianLevel: c.barbarianLevel,
+    rageCharges: c.rageCharges,
     meleeDamageBonus: c.meleeDamageBonus,
     recklessThisTurn: c.recklessThisTurn,
     ragingBlocksSpells: c.ragingBlocksSpells,

@@ -259,6 +259,27 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_ACTION_SURGE";
+      readonly cost: { readonly charge: "actionSurge" };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_ENTER_RAGE";
+      readonly cost: { readonly bonusAction: true; readonly charge: "rage" };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_DECLARE_RECKLESS";
+      readonly cost: {};
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_DASH";
       readonly cost: { readonly action: true };
       readonly outcome: OutcomeDescription;
@@ -480,6 +501,21 @@ type CreatureResolvedActionToken = ResolvedTokenByType[SupportedActionType] & {
   readonly scope: "creature";
 };
 type SpecificBattleResolvedActionToken =
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_ACTION_SURGE";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_ENTER_RAGE";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_DECLARE_RECKLESS";
+    }
   | {
       readonly scope: "battle";
       readonly actorId: string;
@@ -814,6 +850,21 @@ const CastCounterspellBattleResolvedActionSchema = Schema.Struct({
   slotLevel: SpellSlotLevel,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleActionSurgeResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_ACTION_SURGE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleEnterRageResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_ENTER_RAGE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleDeclareRecklessResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_DECLARE_RECKLESS"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleDashResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_DASH"),
@@ -904,6 +955,9 @@ const TriggerFireShieldBattleResolvedActionSchema = Schema.Struct({
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const BattleResolvedActionTokenSchema = Schema.Union(
+  BattleActionSurgeResolvedActionSchema,
+  BattleEnterRageResolvedActionSchema,
+  BattleDeclareRecklessResolvedActionSchema,
   BattleDashResolvedActionSchema,
   BattleDisengageResolvedActionSchema,
   BattleDodgeResolvedActionSchema,
@@ -1475,6 +1529,42 @@ export type FinalizedBattleAction =
   | { readonly ok: false; readonly error: ActionResolutionError };
 
 export type BattleResolutionRequest =
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_ACTION_SURGE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_ACTION_SURGE" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_ENTER_RAGE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_ENTER_RAGE" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_DECLARE_RECKLESS" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_DECLARE_RECKLESS" }
+      >;
+    }
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
@@ -2708,6 +2798,57 @@ export function getAvailableBattleActions(
       return [];
     }
     const tokens: Array<BattleActionToken> = [];
+    if (
+      activeCreature.actionSurgeCharges > 0 &&
+      !activeCreature.actionSurgeUsedThisTurn
+    ) {
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_ACTION_SURGE",
+          cost: { charge: "actionSurge" },
+          outcome: {
+            summary:
+              "Expend one Action Surge use to gain one additional non-Magic action this turn",
+          },
+        }),
+      );
+    }
+    if (
+      !activeCreature.bonusActionUsed &&
+      !activeCreature.ragingBlocksSpells &&
+      activeCreature.barbarianLevel > 0 &&
+      activeCreature.rageCharges > 0
+    ) {
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_ENTER_RAGE",
+          cost: { bonusAction: true, charge: "rage" },
+          outcome: {
+            summary:
+              "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
+          },
+        }),
+      );
+    }
+    if (
+      activeCreature.barbarianLevel >= 2 &&
+      activeCreature.actionsRemaining > 0 &&
+      !activeCreature.attackActionUsed &&
+      !activeCreature.recklessThisTurn
+    ) {
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_DECLARE_RECKLESS",
+          cost: {},
+          outcome: {
+            summary: "Declare Reckless Attack for this turn",
+          },
+        }),
+      );
+    }
     if (activeCreature.actionsRemaining > 0) {
       tokens.push(
         battleToken({
@@ -2858,6 +2999,31 @@ export function resolveBattleAction(
     return {
       code: "ACTION_NOT_AVAILABLE",
       message: `${token.type} is not currently available for ${token.actorId} in this battle state.`,
+    };
+  }
+
+  if (token.type === "BATTLE_ACTION_SURGE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: { type: "BATTLE_ACTION_SURGE" },
+    };
+  }
+  if (token.type === "BATTLE_ENTER_RAGE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: { type: "BATTLE_ENTER_RAGE" },
+    };
+  }
+  if (token.type === "BATTLE_DECLARE_RECKLESS") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: { type: "BATTLE_DECLARE_RECKLESS" },
     };
   }
 

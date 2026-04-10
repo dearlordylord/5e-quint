@@ -397,7 +397,7 @@ const battleDriverSchema = {
   bResolveAoETarget: { targetId: OS, saveRoll: OI },
   bMove: {
     threatened: z.any().optional(),
-    provocationKind: z.string().optional(),
+    provocationKind: OV.optional(),
   },
   bMovementOADecline: { reactorId: OS },
   bMovementOAAttack: {
@@ -432,6 +432,12 @@ const battleDriverSchema = {
   bDash: {},
   bDisengage: {},
   bDodge: {},
+  bHide: {
+    stealthTotal: OI,
+    hasCoverOrObscurement: OB,
+    outOfEnemyLineOfSight: OB,
+  },
+  bSearch: { targetId: OS, perceptionTotal: OI },
   bGrapple: {
     targetId: OS,
     attackerSize: ITFSize,
@@ -502,6 +508,7 @@ function createBattleProjectionDriver() {
     const turnStarted = new Set<string>();
     const grapplingTargets = new Map<string, string>();
     const grappledBy = new Map<string, string>();
+    const hiddenDiscoveryDcs = new Map<string, number>();
 
     // Pick helpers: values are already parsed by schema (number, string, boolean)
     function pickBigInt(
@@ -575,6 +582,51 @@ function createBattleProjectionDriver() {
       setProjectedGrapplingState(grapplerId, false, false);
       grapplingTargets.delete(grapplerId);
       grappledBy.delete(targetId);
+    }
+
+    function handleBHide(picks: ReadonlyMap<string, unknown>) {
+      const actorId = activeId();
+      const stealthTotal = pickBigInt(picks, "stealthTotal") ?? 1;
+      const hasCoverOrObscurement =
+        pickBool(picks, "hasCoverOrObscurement") ?? false;
+      const outOfEnemyLineOfSight =
+        pickBool(picks, "outOfEnemyLineOfSight") ?? false;
+      send(actorId, { type: "USE_ACTION", actionType: "hide" });
+      if (
+        stealthTotal >= 15 &&
+        hasCoverOrObscurement &&
+        outOfEnemyLineOfSight
+      ) {
+        hiddenDiscoveryDcs.set(actorId, stealthTotal);
+        send(actorId, { type: "APPLY_CONDITION", condition: "invisible" });
+      } else {
+        hiddenDiscoveryDcs.delete(actorId);
+      }
+    }
+
+    function handleBSearch(picks: ReadonlyMap<string, unknown>) {
+      const actorId = activeId();
+      const targetId =
+        pickString(picks, "targetId") ??
+        initiative.find((candidate) => candidate !== actorId);
+      if (targetId == null) return;
+      const perceptionTotal = pickBigInt(picks, "perceptionTotal") ?? 1;
+      send(actorId, { type: "USE_ACTION", actionType: "search" });
+      const hiddenDc = hiddenDiscoveryDcs.get(targetId);
+      if (hiddenDc != null && perceptionTotal >= hiddenDc) {
+        hiddenDiscoveryDcs.delete(targetId);
+        const target = getSnap(targetId).context;
+        if (
+          !target.activeEffects.some((effect) =>
+            effect.grantedConditions?.includes("invisible"),
+          )
+        ) {
+          send(targetId, {
+            type: "REMOVE_CONDITION",
+            condition: "invisible",
+          });
+        }
+      }
     }
 
     function syncProjectedGrapples() {
@@ -2168,6 +2220,14 @@ function createBattleProjectionDriver() {
       bDodge: () => {
         before("bDodge");
         send(activeId(), { type: "USE_ACTION", actionType: "dodge" });
+      },
+      bHide: (p: Record<string, unknown>) => {
+        before("bHide");
+        handleBHide(toMap(p));
+      },
+      bSearch: (p: Record<string, unknown>) => {
+        before("bSearch");
+        handleBSearch(toMap(p));
       },
       bGrapple: (p: Record<string, unknown>) => {
         before("bGrapple");

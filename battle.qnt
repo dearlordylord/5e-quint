@@ -77,6 +77,7 @@ module battle {
     fighterLevel: int,                       // 0 = not a fighter
     fighterState: FighterState,              // fighter class state (non-fighters carry freshFighterState(0))
     barbarianLevel: int,                     // 0 = not a barbarian
+    rageCharges: int,                        // remaining Rage uses in battle scope
     meleeDamageBonus: int,                   // rage damage bonus (0 if not raging)
     recklessThisTurn: bool,                  // Reckless Attack declared this turn
     ragingBlocksSpells: bool,                // rage blocks spell casting
@@ -561,6 +562,7 @@ module battle {
     fighterLevel: 0,
     fighterState: freshFighterState(0),
     barbarianLevel: 0,
+    rageCharges: 0,
     meleeDamageBonus: 0,
     recklessThisTurn: false,
     ragingBlocksSpells: false,
@@ -612,6 +614,7 @@ module battle {
     fighterLevel: 0,
     fighterState: freshFighterState(0),
     barbarianLevel: 0,
+    rageCharges: 0,
     meleeDamageBonus: 0,
     recklessThisTurn: false,
     ragingBlocksSpells: false,
@@ -664,6 +667,7 @@ module battle {
       fighterLevel: 0,
       fighterState: freshFighterState(0),
       barbarianLevel: 0,
+      rageCharges: 0,
       meleeDamageBonus: 0,
       recklessThisTurn: false,
       ragingBlocksSpells: false,
@@ -1333,7 +1337,7 @@ module battle {
     all {
       bCreatures' = Map(
         "A" -> mkCaster(hp1, PC).with("rogueLevel", 5).with("hasEvasion", true).with("sneakAttackDice", 3),  // B11: rogue 5, Evasion, SA 3d6
-        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", smb2).with("barbarianLevel", 5).with("baseWalkSpeed", 40).with("turn", FRESH_TURN.with("movementRemaining", 40).with("effectiveSpeed", 40)),  // Paladin Aura + barbarian 5, Fast Movement baked into baseWalkSpeed
+        "B" -> mkCaster(hp2, PC).with("saveMiscBonus", smb2).with("barbarianLevel", 5).with("rageCharges", freshBarbarianState(5).rageCharges).with("baseWalkSpeed", 40).with("turn", FRESH_TURN.with("movementRemaining", 40).with("effectiveSpeed", 40)),  // Paladin Aura + barbarian 5, Fast Movement baked into baseWalkSpeed
         "C" -> mkMonster(hp3, TEST_MONSTER_STAT_BLOCK),
         "D" -> mkCaster(hp4, PC).with("critRange", 19).with("fighterLevel", 5).with("fighterState", freshFighterState(5)).with("saveMiscBonus", smb4)  // Champion fighter 5
       ),
@@ -3512,9 +3516,11 @@ module battle {
       not(ac.turn.bonusActionUsed),
       not(ac.ragingBlocksSpells),  // can't rage while already raging
       ac.barbarianLevel > 0,       // must be a barbarian
+      ac.rageCharges > 0,
       val rageBonus = rageDamageBonus(ac.barbarianLevel)
       val newTurn = pUseBonusAction(ac.turn, ac.creature)
       val updatedC = ac.with("turn", newTurn)
+                       .with("rageCharges", ac.rageCharges - 1)
                        .with("meleeDamageBonus", rageBonus)
                        .with("ragingBlocksSpells", true)
                        .with("combatantResistances", Set(Bludgeoning, Piercing, Slashing))
@@ -3538,6 +3544,8 @@ module battle {
       not(ac.creature.dead),
       not(isIncapacitated(ac.creature)),
       ac.barbarianLevel >= 2,
+      ac.turn.actionsRemaining > 0,
+      not(ac.turn.attackActionUsed),
       not(ac.recklessThisTurn),  // can only declare once per turn
       val updatedC = ac.with("recklessThisTurn", true)
       all {

@@ -802,6 +802,7 @@ export function freshCreature(
     actionSurgeCharges: 0,
     actionSurgeUsedThisTurn: false,
     barbarianLevel: 0,
+    rageCharges: 0,
     meleeDamageBonus: 0,
     recklessThisTurn: false,
     ragingBlocksSpells: false,

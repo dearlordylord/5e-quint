@@ -47,6 +47,7 @@ import {
 } from "#/battle-machine-types.ts";
 import {
   rageDamageBonus,
+  rageMaxCharges,
   rageResistances,
 } from "#/features/class-barbarian.ts";
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts";
@@ -199,7 +200,13 @@ export function battleInit({
           })()
         : {}),
       ...(cfg.barbarianLevel != null
-        ? { barbarianLevel: cfg.barbarianLevel }
+        ? (() => {
+            const maxCharges = rageMaxCharges(cfg.barbarianLevel);
+            return {
+              barbarianLevel: cfg.barbarianLevel,
+              rageCharges: maxCharges,
+            };
+          })()
         : {}),
       ...(cfg.meleeDamageBonus != null
         ? { meleeDamageBonus: cfg.meleeDamageBonus }
@@ -814,13 +821,15 @@ export function battleEnterRage({
     isIncapacitated(ac) ||
     ac.bonusActionUsed ||
     ac.ragingBlocksSpells ||
-    ac.barbarianLevel <= 0
+    ac.barbarianLevel <= 0 ||
+    ac.rageCharges <= 0
   )
     return {};
   return {
     creatures: setCreature(c.creatures, id, {
       ...ac,
       bonusActionUsed: true,
+      rageCharges: ac.rageCharges - 1,
       meleeDamageBonus: rageDamageBonus(ac.barbarianLevel),
       ragingBlocksSpells: true,
       combatantResistances: rageResistances(true),
@@ -967,6 +976,8 @@ export function battleDeclareReckless({
   if (
     ac.dead ||
     isIncapacitated(ac) ||
+    ac.actionsRemaining <= 0 ||
+    ac.attackActionUsed ||
     ac.recklessThisTurn ||
     ac.barbarianLevel < 2
   )

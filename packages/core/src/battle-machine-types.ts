@@ -113,12 +113,11 @@ export interface BattleCreatureState {
   readonly greatWeaponFightingDamageFloor: boolean;
   readonly hiddenDiscoveryDc: number;
   readonly rangedWeaponAttackRollBonus: number;
-  // Fighter state
   readonly fighterLevel: number;
   readonly actionSurgeCharges: number;
   readonly actionSurgeUsedThisTurn: boolean;
-  // Barbarian state
   readonly barbarianLevel: number;
+  readonly rageCharges: number;
   readonly meleeDamageBonus: number;
   readonly recklessThisTurn: boolean;
   readonly ragingBlocksSpells: boolean;
@@ -126,7 +125,6 @@ export interface BattleCreatureState {
   readonly qualifiedPhysicalResistances: ReadonlyArray<QualifiedPhysicalBypass>;
   readonly qualifiedPhysicalVulnerabilities: ReadonlyArray<QualifiedPhysicalBypass>;
   readonly qualifiedPhysicalImmunities: ReadonlyArray<QualifiedPhysicalBypass>;
-  // Rogue state
   readonly sneakAttackDice: number;
   readonly sneakAttackUsedThisTurn: boolean;
   // Readied spell (SRD 5.2.1 Ready action)

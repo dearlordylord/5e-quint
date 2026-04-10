@@ -439,6 +439,25 @@ function initBattleForProneDiscovery() {
   return actor;
 }
 
+function initBattleForFeatureDiscovery() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        fighterLevel: 2,
+        barbarianLevel: 2,
+        initiativeRoll: 15,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return actor;
+}
+
 function initBattleForReadyWindow() {
   const actor = makeBattleActor({
     type: "BATTLE_INIT",
@@ -2041,6 +2060,129 @@ describe("available actions contract", () => {
         "STAND_FROM_PRONE",
       ]),
     );
+  });
+
+  test("battle discovery and resolution expose active-turn feature tokens", () => {
+    const actor = initBattleForFeatureDiscovery();
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_ACTION_SURGE",
+          cost: { charge: "actionSurge" },
+          outcome: {
+            summary:
+              "Expend one Action Surge use to gain one additional non-Magic action this turn",
+          },
+        },
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_ENTER_RAGE",
+          cost: { bonusAction: true, charge: "rage" },
+          outcome: {
+            summary:
+              "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
+          },
+        },
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_DECLARE_RECKLESS",
+          cost: {},
+          outcome: { summary: "Declare Reckless Attack for this turn" },
+        },
+      ]),
+    );
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ACTION_SURGE",
+      }),
+    ).toEqual({
+      token: { scope: "battle", actorId: "A", type: "BATTLE_ACTION_SURGE" },
+      outcome:
+        "Expend one Action Surge use to gain one additional non-Magic action this turn",
+      runtime: "none",
+      event: { type: "BATTLE_ACTION_SURGE" },
+    });
+    expect(
+      previewBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ENTER_RAGE",
+      }),
+    ).toEqual({
+      ok: true,
+      summary:
+        "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
+      cost: { bonusAction: true, charge: "rage" },
+      runtime: "none",
+      eventType: "BATTLE_ENTER_RAGE",
+    });
+  });
+
+  test("battle discovery hides feature tokens when their battle-owned state is spent", () => {
+    const actor = initBattleForFeatureDiscovery();
+    actor.send({ type: "BATTLE_ACTION_SURGE" });
+    actor.send({ type: "BATTLE_ENTER_RAGE" });
+    actor.send({ type: "BATTLE_DECLARE_RECKLESS" });
+
+    expect(
+      getAvailableBattleActions(actor.getSnapshot().context).map(
+        (token) => token.type,
+      ),
+    ).not.toEqual(
+      expect.arrayContaining([
+        "BATTLE_ACTION_SURGE",
+        "BATTLE_ENTER_RAGE",
+        "BATTLE_DECLARE_RECKLESS",
+      ]),
+    );
+  });
+
+  test("battle discovery hides BATTLE_ENTER_RAGE when Rage uses are spent", () => {
+    const actor = initBattleForFeatureDiscovery();
+    const context = actor.getSnapshot().context;
+    const active = context.creatures.get(CreatureId("A"));
+    if (active == null) throw new Error("expected active creature");
+    const creatures = new Map(context.creatures).set(CreatureId("A"), {
+      ...active,
+      rageCharges: 0,
+    });
+
+    expect(
+      getAvailableBattleActions({ ...context, creatures }).map(
+        (token) => token.type,
+      ),
+    ).not.toContain("BATTLE_ENTER_RAGE");
+  });
+
+  test("battle discovery hides BATTLE_DECLARE_RECKLESS after the first attack", () => {
+    const actor = initBattleForFeatureDiscovery();
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+    });
+
+    expect(
+      getAvailableBattleActions(actor.getSnapshot().context).map(
+        (token) => token.type,
+      ),
+    ).not.toContain("BATTLE_DECLARE_RECKLESS");
   });
 
   test("battle discovery resolves ready-spell setup from battle-owned payload facts", () => {
