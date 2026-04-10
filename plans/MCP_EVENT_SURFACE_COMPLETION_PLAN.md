@@ -433,28 +433,27 @@ Commit after this task:
 
 ### Task 16 - Attack Rider Semantic Trigger Commands
 
-- [ ] Defer implementation until after Task 20 defines battle attack payload/runtime ownership.
-- [ ] Do not expose raw `TRIGGER_SNEAK_ATTACK` or `TRIGGER_PEERLESS_SKILL_ATTACK_ROLL`.
-- [ ] Add semantic command shapes only if MCP/session users need to record an attack hit or failed attack roll outside the battle action path.
-- [ ] If attack-hit facts are better owned by battle attack resolution, update the audit blocker instead of adding a creature command.
-- [ ] Add tests proving any implemented command opens the expected suggested action and resolution clears the pending state.
+- [x] Defer implementation until after Task 20 defines battle attack payload/runtime ownership. (Confirmed: Task 20 not yet implemented; both triggers belong to battle attack resolution.)
+- [x] Do not expose raw `TRIGGER_SNEAK_ATTACK` or `TRIGGER_PEERLESS_SKILL_ATTACK_ROLL`. (Confirmed: kept internal.)
+- [x] Add semantic command shapes only if MCP/session users need to record an attack hit or failed attack roll outside the battle action path. (Analyzed: not needed — both facts are battle-resolution-owned.)
+- [x] If attack-hit facts are better owned by battle attack resolution, update the audit blocker instead of adding a creature command. (Done: updated `MCP_EVENT_SURFACE_AUDIT.md` entries from "deferred" to "confirmed" with ownership rationale.)
+- [x] Add tests proving any implemented command opens the expected suggested action and resolution clears the pending state. (N/A: no creature command implemented; existing creature-level trigger/use tests remain valid.)
 
 Dependencies: Task 2 and Task 20.
 
 RAW check:
 
-- Read Rogue Sneak Attack and Bard Peerless Skill SRD 5.2.1 class passages.
-- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+- [x] Read Rogue Sneak Attack (SRD 5.2.1 Rogue.md lines 63-69) and Bard Peerless Skill (SRD 5.2.1 Bard.md lines 342-344). Sneak Attack requires qualifying hit with finesse/ranged weapon + advantage or adjacent ally — all battle-context facts. Peerless Skill triggers on a failed attack roll — a battle-resolution fact.
+- [x] Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md). No entries for "attack rider", "sneak attack", or "peerless skill" as standalone terms.
 
 Verification:
 
-- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
-- `pnpm --filter @dnd/mcp test -- src/server.test.ts`
-- Tier 1b creature MBT if pending-resolution state or MBT bridge semantics change.
+- No code changes — audit-only update. No test runs required.
+- Pending-resolution state and MBT bridge semantics are unchanged.
 
 Commit after this task:
 
-- `feat(mcp): add attack rider trigger commands`
+- `docs: confirm attack rider trigger battle ownership`
 
 ### Task 17 - Spell Damage Semantic Trigger Commands
 
