@@ -76,10 +76,10 @@ Rationale for replacing the audit taxonomy:
 
 ### Task 1 - Rename And Lock The Taxonomy
 
-- [ ] Update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) from the old category names to the API-surface taxonomy in this plan.
-- [ ] Update [ARCHITECTURE.md](../ARCHITECTURE.md) section 5 to state that this taxonomy is MCP/API-adapter-only.
-- [ ] Update [available-actions.md](./available-actions.md) if it still says the MCP surface is only three tools; it now has four existing tools and planned separate control/table surfaces.
-- [ ] Add a short note in or near `packages/core/src/available-actions.ts` only if code comments currently use the old taxonomy; otherwise keep this docs-only.
+- [x] Update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) from the old category names to the API-surface taxonomy in this plan.
+- [x] Update [ARCHITECTURE.md](../ARCHITECTURE.md) section 5 to state that this taxonomy is MCP/API-adapter-only.
+- [x] Update [available-actions.md](./available-actions.md) if it still says the MCP surface is only three tools; it now has four existing tools and planned separate control/table surfaces.
+- [x] Add a short note in or near `packages/core/src/available-actions.ts` only if code comments currently use the old taxonomy; otherwise keep this docs-only. (No old taxonomy found in code comments; docs-only.)
 
 Dependencies: none.
 

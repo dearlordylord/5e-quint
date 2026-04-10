@@ -46,7 +46,7 @@ Pick one action type — Second Wind is a good candidate (bonus action, has a gu
 - Define the query-time `ActionToken` schema and execute-time `ResolvedActionToken` schema.
 - Implement the available actions module returning only supported action tokens when guards and state topology allow them.
 - Implement core action resolution: resolved token → runtime-input request → final `DndEvent`.
-- Stand up the MCP server with the initial three tools. `get_state` returns DndContext. `get_available_actions` returns the supported token set grouped by cost. `execute_action` accepts a resolved token, runtime-resolves engine-only fields, sends the event, and returns the new state.
+- Stand up the MCP server with the initial action-token tools. The current server has four existing tools: `get_state`, `get_available_actions`, `execute_action`, and `preview_action`. `get_state` returns DndContext. `get_available_actions` returns the supported token set grouped by cost. `execute_action` accepts a resolved token, runtime-resolves engine-only fields, sends the event, and returns the new state. Planned separate MCP surfaces (`execute_control_command` and `record_table_event`) own control commands and table events rather than mixing those into ordinary suggested actions.
 - Verify: connect Claude Desktop to the MCP server. Ask "what can my character do?" — get the supported action set back. Execute one — see state change.
 
 ### Acceptance criteria
