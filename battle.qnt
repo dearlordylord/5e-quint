@@ -69,6 +69,7 @@ module battle {
     hasEvasion: bool,                        // Evasion feature (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
     saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
     critRange: int,                          // natural roll >= critRange is a critical hit (default 20, Champion 19/18)
+    rangedWeaponAttackRollBonus: int,        // additive bonus to attack rolls made with Ranged weapons
     fighterLevel: int,                       // 0 = not a fighter
     fighterState: FighterState,              // fighter class state (non-fighters carry freshFighterState(0))
     barbarianLevel: int,                     // 0 = not a barbarian
@@ -90,6 +91,7 @@ module battle {
     bardLevel: int,                          // 0 = not a bard
     bardicInspirationCharges: int,           // current Lore-bard charges for Cutting Words
     parryAcBonus: int,                       // 0 = no Parry reaction; otherwise fixed AC bonus
+    lightPropertyExtraAttackAddsAbilityModifier: bool,  // Two-Weapon Fighting style consumer for the Light-property extra attack
     mainHandWeapon: Weapon,
     offHandWeapon: Weapon,
     leftHandUse: HandUse,
@@ -222,6 +224,7 @@ module battle {
     hitRider: AttackHitRider,
     targetCanSeeAttackerAtHit: bool,
     isMeleeAttack: bool,
+    isRangedWeaponAttack: bool,
     isWeaponAttack: bool,
     legalReactionsByCreature: CreatureId -> Set[str],
   }
@@ -504,6 +507,7 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    rangedWeaponAttackRollBonus: 0,
     fighterLevel: 0,
     fighterState: freshFighterState(0),
     barbarianLevel: 0,
@@ -525,6 +529,7 @@ module battle {
     bardLevel: 0,
     bardicInspirationCharges: 0,
     parryAcBonus: 0,
+    lightPropertyExtraAttackAddsAbilityModifier: false,
     mainHandWeapon: NO_WEAPON,
     offHandWeapon: NO_WEAPON,
     leftHandUse: HFree,
@@ -549,6 +554,7 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    rangedWeaponAttackRollBonus: 0,
     fighterLevel: 0,
     fighterState: freshFighterState(0),
     barbarianLevel: 0,
@@ -570,6 +576,7 @@ module battle {
     bardLevel: 0,
     bardicInspirationCharges: 0,
     parryAcBonus: 0,
+    lightPropertyExtraAttackAddsAbilityModifier: false,
     mainHandWeapon: NO_WEAPON,
     offHandWeapon: NO_WEAPON,
     leftHandUse: HFree,
@@ -595,6 +602,7 @@ module battle {
       hasEvasion: false,
       saveMiscBonus: 0,
       critRange: 20,
+      rangedWeaponAttackRollBonus: 0,
       fighterLevel: 0,
       fighterState: freshFighterState(0),
       barbarianLevel: 0,
@@ -616,6 +624,7 @@ module battle {
       bardLevel: 0,
       bardicInspirationCharges: 0,
       parryAcBonus: 0,
+      lightPropertyExtraAttackAddsAbilityModifier: false,
       mainHandWeapon: NO_WEAPON,
       offHandWeapon: NO_WEAPON,
       leftHandUse: HFree,
@@ -1402,6 +1411,11 @@ module battle {
     }
   }
 
+  /// Hit check with a Ranged-weapon attack-roll bonus. The bonus applies to AC only; crit range uses the raw d20.
+  pure def isHitWithAttackRollBonus(roll: int, targetAc: int, critRange: int, attackRollBonus: int): bool = {
+    roll + attackRollBonus >= targetAc or roll >= critRange
+  }
+
   /// Shared attack resolution: determines hit, enters reaction chain or deals damage.
   /// Called by bAttack, bMovementOAAttack, bLegendaryAttack, bReadyRelease.
   pure def resolveAttack(
@@ -1423,7 +1437,8 @@ module battle {
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     // autoMiss forces miss; otherwise normal hit check
     val cs0 = cs
-    val hit = not(mods.autoMiss) and (attackRoll >= targetAc or attackRoll >= critRange)
+    val rangedWeaponBonus = if (not(weapon.isMelee)) cs0.get(attackerId).rangedWeaponAttackRollBonus else 0
+    val hit = not(mods.autoMiss) and isHitWithAttackRollBonus(attackRoll, targetAc, critRange, rangedWeaponBonus)
     if (not(hit)) {
       { creatures: cs0, phase: returnToPhase(returnTo) }
     } else {
@@ -1451,6 +1466,7 @@ module battle {
         hitRider: hitRider,
         targetCanSeeAttackerAtHit: targetCanSeeAttackerAtHit,
         isMeleeAttack: isMelee,
+        isRangedWeaponAttack: not(weapon.isMelee),
         isWeaponAttack: hitRider == NoAttackHitRider,
         legalReactionsByCreature: Map(),
       }
@@ -1543,7 +1559,8 @@ module battle {
   pure def advanceFromHitPhase(
     cs: CreatureId -> Combatant, atk: AttackHitCtx
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
-    val stillHit = atk.attackRoll >= atk.targetAc or atk.attackRoll >= atk.critRange
+    val rangedWeaponBonus = if (atk.isRangedWeaponAttack) cs.get(atk.attacker).rangedWeaponAttackRollBonus else 0
+    val stillHit = isHitWithAttackRollBonus(atk.attackRoll, atk.targetAc, atk.critRange, rangedWeaponBonus)
     if (not(stillHit)) {
       { creatures: cs, phase: returnToPhase(atk.atkReturnTo) }
     } else {
@@ -2972,10 +2989,9 @@ module battle {
       offHand.properties.contains(Light_),
       val newTurn = pUseBonusAction(attacker.turn, attacker.creature)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
-      val adjustedDmg = if (abilityMod < 0)
-        if (dmg + abilityMod < 0) 0 else dmg + abilityMod
-      else
-        dmg
+      // SRD 5.2.1 Two-Weapon Fighting: ability modifier is added only when the style grants it.
+      val effectiveAbilityMod = if (attacker.lightPropertyExtraAttackAddsAbilityModifier) abilityMod else intMin(0, abilityMod)
+      val adjustedDmg = intMax(0, dmg + effectiveAbilityMod)
       val helpMatches = bHelpTargets.filter(h => h.allyId == activeId and h.targetEnemyId == targetId)
       val helpAdv = helpMatches.size() > 0
       val newHelpTargets = if (helpAdv) bHelpTargets.exclude(helpMatches) else bHelpTargets

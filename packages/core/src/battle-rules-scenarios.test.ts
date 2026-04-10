@@ -5,6 +5,7 @@ import { createActor } from "xstate";
 import { battleMachine } from "#/battle-machine.ts";
 import { battleMainHandDamageDie } from "#/battle-machine-creature.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
+import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
 import type {
   BattleWeaponProfile,
   CreatureId as CreatureIdT,
@@ -66,6 +67,15 @@ const MACE: BattleWeaponProfile = {
   damageDie: 6,
   versatileDie: 0,
   properties: new Set(),
+};
+
+const SHORTBOW: BattleWeaponProfile = {
+  name: "Shortbow",
+  damageType: "piercing",
+  isMelee: false,
+  damageDie: 6,
+  versatileDie: 0,
+  properties: new Set(["ammunition", "twoHanded"]),
 };
 
 const LONGSWORD: BattleWeaponProfile = {
@@ -2486,15 +2496,17 @@ describe("battle rules scenario regressions", () => {
       targetSaveFailed: true,
     });
 
-    expect(
-      [creature(actor, "A").leftHandUse, creature(actor, "A").rightHandUse],
-    ).toContain("grapple");
+    expect([
+      creature(actor, "A").leftHandUse,
+      creature(actor, "A").rightHandUse,
+    ]).toContain("grapple");
 
     send(actor, { type: "BATTLE_RELEASE_GRAPPLE" });
 
-    expect(
-      [creature(actor, "A").leftHandUse, creature(actor, "A").rightHandUse],
-    ).not.toContain("grapple");
+    expect([
+      creature(actor, "A").leftHandUse,
+      creature(actor, "A").rightHandUse,
+    ]).not.toContain("grapple");
   });
 
   it("natural_20: a weapon-and-shield loadout leaves no free hand for grappling", () => {
@@ -2538,9 +2550,10 @@ describe("battle rules scenario regressions", () => {
     });
     resolveAttackWindows(actor);
 
-    expect(
-      [creature(actor, "A").leftHandUse, creature(actor, "A").rightHandUse],
-    ).toContain("free");
+    expect([
+      creature(actor, "A").leftHandUse,
+      creature(actor, "A").rightHandUse,
+    ]).toContain("free");
     expect(creature(actor, "A").actionsRemaining).toBe(0);
     expect(creature(actor, "B").paralyzed).toBe(true);
   });
@@ -3632,6 +3645,122 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "B").hp).toBe(12);
   });
 
+  it("adds the Archery bonus only to attack rolls made with Ranged weapons", () => {
+    const archeryMods = fightingStyleBattleModifiers(new Set(["archery"]));
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTBOW,
+          ...archeryMods,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 8,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTBOW.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+      isMelee: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(15);
+  });
+
+  it("does not add the Archery bonus to attack rolls with Melee weapons", () => {
+    const archeryMods = fightingStyleBattleModifiers(new Set(["archery"]));
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTSWORD,
+          ...archeryMods,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 8,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(20);
+  });
+
+  it("does not let the Archery bonus satisfy natural critical hit range", () => {
+    const archeryMods = fightingStyleBattleModifiers(new Set(["archery"]));
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTBOW,
+          ...archeryMods,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 18,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTBOW.properties,
+      tAc: armorClass(25),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+      isMelee: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(20);
+  });
+
   it("off-hand attack is rejected without two light melee weapons", () => {
     const actor = createActor(battleMachine);
     actor.start();
@@ -3745,4 +3874,182 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "B").hp).toBe(14);
   });
 
+  it("off-hand attack without Two-Weapon Fighting drops a positive ability modifier", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTSWORD,
+          offHandWeapon: SHORTSWORD,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    send(actor, {
+      type: "BATTLE_OFF_HAND_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      dmg: 3,
+      abilityMod: 3,
+      crit: false,
+      tAc: armorClass(10),
+      knockOut: false,
+      attackerWithin5ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 0,
+      hitReactionCandidates: new Set(),
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(12);
+  });
+
+  it("off-hand attack adds a positive ability modifier with Two-Weapon Fighting", () => {
+    const twfMods = fightingStyleBattleModifiers(
+      new Set(["twoWeaponFighting"]),
+    );
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTSWORD,
+          offHandWeapon: SHORTSWORD,
+          ...twfMods,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    send(actor, {
+      type: "BATTLE_OFF_HAND_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      dmg: 3,
+      abilityMod: 3,
+      crit: false,
+      tAc: armorClass(10),
+      knockOut: false,
+      attackerWithin5ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 0,
+      hitReactionCandidates: new Set(),
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(9);
+  });
+
+  it("off-hand attack still keeps a negative ability modifier with Two-Weapon Fighting", () => {
+    const twfMods = fightingStyleBattleModifiers(
+      new Set(["twoWeaponFighting"]),
+    );
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+          mainHandWeapon: SHORTSWORD,
+          offHandWeapon: SHORTSWORD,
+          ...twfMods,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      weaponProperties: SHORTSWORD.properties,
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    send(actor, {
+      type: "BATTLE_OFF_HAND_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      dmg: 3,
+      abilityMod: -2,
+      crit: false,
+      tAc: armorClass(10),
+      knockOut: false,
+      attackerWithin5ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 0,
+      hitReactionCandidates: new Set(),
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(14);
+  });
 });

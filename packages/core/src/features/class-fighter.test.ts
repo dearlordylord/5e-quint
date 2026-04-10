@@ -12,6 +12,7 @@ import {
   defenseACBonus,
   fighterLongRest,
   fighterShortRest,
+  fightingStyleBattleModifiers,
   type FightingStyle,
   gwfDamageDie,
   hasRemarkableAthlete,
@@ -46,6 +47,20 @@ describe("archeryAttackBonus", () => {
     expect(archeryAttackBonus(styles("archery"), false)).toBe(0));
   it("0 without feat", () =>
     expect(archeryAttackBonus(styles(), true)).toBe(0));
+});
+
+describe("fightingStyleBattleModifiers", () => {
+  it("projects Archery into battle-owned ranged attack state", () =>
+    expect(fightingStyleBattleModifiers(styles("archery"))).toEqual({
+      rangedWeaponAttackRollBonus: 2,
+      lightPropertyExtraAttackAddsAbilityModifier: false,
+    }));
+
+  it("projects Two-Weapon Fighting into battle-owned Light extra attack state", () =>
+    expect(fightingStyleBattleModifiers(styles("twoWeaponFighting"))).toEqual({
+      rangedWeaponAttackRollBonus: 0,
+      lightPropertyExtraAttackAddsAbilityModifier: true,
+    }));
 });
 
 describe("defenseACBonus", () => {

@@ -158,6 +158,9 @@ export function battleInit({
         ? { saveMiscBonus: cfg.saveMiscBonus }
         : {}),
       ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
+      ...(cfg.rangedWeaponAttackRollBonus != null
+        ? { rangedWeaponAttackRollBonus: cfg.rangedWeaponAttackRollBonus }
+        : {}),
       ...(cfg.fighterLevel != null
         ? (() => {
             const asCharges = actionSurgeMaxCharges(cfg.fighterLevel);
@@ -186,8 +189,16 @@ export function battleInit({
         ? { bardicInspirationCharges: cfg.bardicInspirationCharges }
         : {}),
       ...(cfg.parryAcBonus != null ? { parryAcBonus: cfg.parryAcBonus } : {}),
+      ...(cfg.lightPropertyExtraAttackAddsAbilityModifier != null
+        ? {
+            lightPropertyExtraAttackAddsAbilityModifier:
+              cfg.lightPropertyExtraAttackAddsAbilityModifier,
+          }
+        : {}),
       ...(cfg.prone === true ? { prone: true } : {}),
-      ...(cfg.activeEffects != null ? { activeEffects: cfg.activeEffects } : {}),
+      ...(cfg.activeEffects != null
+        ? { activeEffects: cfg.activeEffects }
+        : {}),
       ...(cfg.baseWalkSpeed != null
         ? {
             baseWalkSpeed: cfg.baseWalkSpeed,
@@ -198,7 +209,9 @@ export function battleInit({
       ...(cfg.mainHandWeapon != null
         ? { mainHandWeapon: cfg.mainHandWeapon }
         : {}),
-      ...(cfg.offHandWeapon != null ? { offHandWeapon: cfg.offHandWeapon } : {}),
+      ...(cfg.offHandWeapon != null
+        ? { offHandWeapon: cfg.offHandWeapon }
+        : {}),
       ...handUses,
       ...(cfg.qualifiedPhysicalResistances != null
         ? { qualifiedPhysicalResistances: cfg.qualifiedPhysicalResistances }
@@ -454,6 +467,9 @@ export function battleReadyRelease({
     e.isMelee,
     e.targetCanSeeAttacker,
     readyMods,
+    releaser.mainHandWeapon != null
+      ? !releaser.mainHandWeapon.isMelee
+      : !e.isMelee,
     undefined,
     e.weaponProperties ?? new Set(e.isFinesse === true ? ["finesse"] : []),
     e.hasAllyAdjacentToTarget,
@@ -508,6 +524,7 @@ export function battleLegendaryAttack({
     e.isMelee,
     e.targetCanSeeAttacker,
     laMods,
+    m.mainHandWeapon != null ? !m.mainHandWeapon.isMelee : !e.isMelee,
     undefined,
     e.weaponProperties ?? new Set(e.isFinesse === true ? ["finesse"] : []),
     e.hasAllyAdjacentToTarget,
@@ -600,8 +617,15 @@ export function battleOffHandAttack({
   ) {
     return {};
   }
-  const cs = setCreature(c.creatures, id, { ...attacker, bonusActionUsed: true });
-  const damage = Math.max(0, e.dmg + Math.min(0, e.abilityMod));
+  const cs = setCreature(c.creatures, id, {
+    ...attacker,
+    bonusActionUsed: true,
+  });
+  const effectiveAbilityMod =
+    attacker.lightPropertyExtraAttackAddsAbilityModifier
+      ? e.abilityMod
+      : Math.min(0, e.abilityMod);
+  const damage = Math.max(0, e.dmg + effectiveAbilityMod);
   const ctx = buildBattleAttackContext(
     cs,
     id,
@@ -632,6 +656,7 @@ export function battleOffHandAttack({
     offHand.isMelee,
     e.targetCanSeeAttacker,
     mods,
+    false,
     undefined,
     offHand.properties,
     e.hasAllyAdjacentToTarget,

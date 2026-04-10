@@ -14,6 +14,7 @@ import {
   expendSlot,
   firstAvailableSpellSlotLevel,
   isHit,
+  isHitWithAttackRollBonus,
   legalDamageReactionsByCreature,
   legalHitReactions,
   mkAwait,
@@ -129,6 +130,7 @@ export function resolveAttack(
   isMelee: boolean,
   targetCanSeeAttackerAtHit: boolean,
   mods: FullAttackMods,
+  weaponIsRanged: boolean,
   onHitEffect: AttackHitCtx["onHitEffect"],
   weaponProperties: ReadonlySet<WeaponProperty>,
   hasAllyAdjacentToTarget: boolean,
@@ -136,8 +138,13 @@ export function resolveAttack(
   saDmg: number,
   hitReactionCandidates: ReadonlySet<CreatureId>,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
-  const hit = !mods.autoMiss && isHit(attackRoll, targetAc, critRange);
   const cs0 = new Map(cs);
+  const attackRollBonus = weaponIsRanged
+    ? cs0.get(attackerId)!.rangedWeaponAttackRollBonus
+    : 0;
+  const hit =
+    !mods.autoMiss &&
+    isHitWithAttackRollBonus(attackRoll, targetAc, critRange, attackRollBonus);
   if (!hit) {
     return { creatures: cs0, ...returnToState(returnTo) };
   }
@@ -173,6 +180,7 @@ export function resolveAttack(
     onHitEffect,
     targetCanSeeAttackerAtHit,
     isMeleeAttack: isMelee,
+    isRangedWeaponAttack: weaponIsRanged,
     isWeaponAttack: onHitEffect == null,
     legalReactionsByCreature: new Map(),
   };
@@ -257,6 +265,7 @@ export function battleAttack({
     e.isMelee,
     e.targetCanSeeAttacker,
     mods,
+    ac.mainHandWeapon != null ? !ac.mainHandWeapon.isMelee : !e.isMelee,
     e.onHitEffect,
     weaponProperties,
     e.hasAllyAdjacentToTarget,

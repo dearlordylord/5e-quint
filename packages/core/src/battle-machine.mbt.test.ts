@@ -87,6 +87,7 @@ const QuintCombatant = z.object({
   hasEvasion: z.boolean(),
   saveMiscBonus: z.bigint(),
   critRange: z.bigint(),
+  rangedWeaponAttackRollBonus: z.bigint(),
   fighterState: z
     .object({
       actionSurgeCharges: z.bigint(),
@@ -102,6 +103,7 @@ const QuintCombatant = z.object({
   sneakAttackDice: z.bigint(),
   sneakAttackUsedThisTurn: z.boolean(),
   baseWalkSpeed: z.bigint(),
+  lightPropertyExtraAttackAddsAbilityModifier: z.boolean(),
   grappledBy: z.string(),
   grapplingTarget: z.string(),
   grappledTargetTwoSizesSmaller: z.boolean(),
@@ -209,6 +211,7 @@ interface NormalizedBattleCreature {
   hasEvasion: boolean;
   saveMiscBonus: number;
   critRange: number;
+  rangedWeaponAttackRollBonus: number;
   actionSurgeCharges: number;
   actionSurgeUsedThisTurn: boolean;
   fighterLevel: number;
@@ -220,6 +223,7 @@ interface NormalizedBattleCreature {
   sneakAttackDice: number;
   sneakAttackUsedThisTurn: boolean;
   baseWalkSpeed: number;
+  lightPropertyExtraAttackAddsAbilityModifier: boolean;
 }
 
 function quintCombatantToNormalized(
@@ -292,6 +296,7 @@ function quintCombatantToNormalized(
     hasEvasion: c.hasEvasion,
     saveMiscBonus: Number(c.saveMiscBonus),
     critRange: Number(c.critRange),
+    rangedWeaponAttackRollBonus: Number(c.rangedWeaponAttackRollBonus),
     actionSurgeCharges: Number(c.fighterState.actionSurgeCharges),
     actionSurgeUsedThisTurn: c.fighterState.actionSurgeUsedThisTurn,
     fighterLevel: Number(c.fighterLevel),
@@ -303,6 +308,8 @@ function quintCombatantToNormalized(
     sneakAttackDice: Number(c.sneakAttackDice),
     sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
     baseWalkSpeed: Number(c.baseWalkSpeed),
+    lightPropertyExtraAttackAddsAbilityModifier:
+      c.lightPropertyExtraAttackAddsAbilityModifier,
   };
 }
 
@@ -381,6 +388,7 @@ function xstateCreatureToNormalized(
     hasEvasion: c.hasEvasion,
     saveMiscBonus: c.saveMiscBonus,
     critRange: c.critRange,
+    rangedWeaponAttackRollBonus: c.rangedWeaponAttackRollBonus,
     actionSurgeCharges: c.actionSurgeCharges,
     actionSurgeUsedThisTurn: c.actionSurgeUsedThisTurn,
     fighterLevel: c.fighterLevel,
@@ -392,6 +400,8 @@ function xstateCreatureToNormalized(
     sneakAttackDice: c.sneakAttackDice,
     sneakAttackUsedThisTurn: c.sneakAttackUsedThisTurn,
     baseWalkSpeed: c.baseWalkSpeed,
+    lightPropertyExtraAttackAddsAbilityModifier:
+      c.lightPropertyExtraAttackAddsAbilityModifier,
   };
 }
 
@@ -530,7 +540,7 @@ const battleDriverSchema = {
   bResolveAoETarget: { targetId: OS, saveRoll: OI },
   bMove: {
     threatened: z.any().optional(),
-    provocationKind: z.string().optional(),
+    provocationKind: OV,
   },
   bMovementOADecline: { reactorId: OS },
   bMovementOAAttack: {
@@ -1012,10 +1022,13 @@ function createBattleMachineDriver() {
         });
       },
       bMove: (picks: Record<string, unknown>) => {
+        const provocationKind = variantToString(
+          picks["provocationKind"] ?? "MPProvokesOpportunityAttacks",
+        );
         send({
           type: "BATTLE_MOVE",
           provocationKind:
-            picks["provocationKind"] === "MPDoesNotProvokeOpportunityAttacks"
+            provocationKind === "MPDoesNotProvokeOpportunityAttacks"
               ? "doesNotProvokeOpportunityAttacks"
               : "provokesOpportunityAttacks",
           threatened: parseThreatenedSet(picks["threatened"]),
@@ -1303,8 +1316,12 @@ describe("Battle Machine MBT", () => {
           step: "battleStep",
           driver: createBattleMachineDriver(),
           backend: mbtBackend,
-          nTraces: Number(process.env["MBT_TRACES"] ?? battleRunShape.traceCount),
-          maxSteps: Number(process.env["MBT_STEPS"] ?? battleRunShape.stepCount),
+          nTraces: Number(
+            process.env["MBT_TRACES"] ?? battleRunShape.traceCount,
+          ),
+          maxSteps: Number(
+            process.env["MBT_STEPS"] ?? battleRunShape.stepCount,
+          ),
           maxSamples: Number(
             process.env["MBT_MAX_SAMPLES"] ?? battleRunShape.maxSamples,
           ),

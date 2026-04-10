@@ -2,10 +2,7 @@ import {
   buildBattleAttackContext,
   resolveAttack,
 } from "#/battle-machine-actions-attack.ts";
-import {
-  isIncapacitated,
-  removeCondition,
-} from "#/battle-machine-creature.ts";
+import { isIncapacitated, removeCondition } from "#/battle-machine-creature.ts";
 import {
   activeId,
   canMakeOpportunityAttack,
@@ -119,7 +116,9 @@ export function battleMovementOAAttack({
     e.oaTgtAc,
     e.oaDmg,
     e.oaDt,
-    e.oaDamageQualifiers ?? reactor.mainHandWeapon?.damageQualifiers ?? new Set(),
+    e.oaDamageQualifiers ??
+      reactor.mainHandWeapon?.damageQualifiers ??
+      new Set(),
     e.oaCrit,
     reactor.critRange,
     { tag: "ADRResolvingMovement", mv: updatedMv },
@@ -127,6 +126,7 @@ export function battleMovementOAAttack({
     true,
     e.targetCanSeeAttacker,
     mods,
+    false,
     undefined,
     weaponProperties,
     e.hasAllyAdjacentToTarget,

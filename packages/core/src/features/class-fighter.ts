@@ -14,12 +14,29 @@ export const FIGHTING_STYLES = [
 
 export type FightingStyle = (typeof FIGHTING_STYLES)[number];
 
+export interface FightingStyleBattleModifiers {
+  readonly rangedWeaponAttackRollBonus: number;
+  readonly lightPropertyExtraAttackAddsAbilityModifier: boolean;
+}
+
+export function fightingStyleBattleModifiers(
+  styles: ReadonlySet<FightingStyle>,
+): FightingStyleBattleModifiers {
+  return {
+    rangedWeaponAttackRollBonus: styles.has("archery") ? 2 : 0,
+    lightPropertyExtraAttackAddsAbilityModifier:
+      styles.has("twoWeaponFighting"),
+  };
+}
+
 /** Archery: +2 to attack rolls with Ranged weapons. */
 export function archeryAttackBonus(
   styles: ReadonlySet<FightingStyle>,
   isRanged: boolean,
 ): number {
-  return isRanged && styles.has("archery") ? 2 : 0;
+  return isRanged
+    ? fightingStyleBattleModifiers(styles).rangedWeaponAttackRollBonus
+    : 0;
 }
 
 /** Defense: +1 AC while wearing Light, Medium, or Heavy armor. */

@@ -73,7 +73,8 @@ function qualifyingPhysicalRules(
 ): ReadonlyArray<QualifiedPhysicalBypass> {
   if (!isPhysicalDamageType(damageType)) return [];
   return rules.filter(
-    (rule) => rule.damageType === damageType && !isBypassed(rule, damageQualifiers),
+    (rule) =>
+      rule.damageType === damageType && !isBypassed(rule, damageQualifiers),
   );
 }
 
@@ -373,11 +374,23 @@ export function takeDamage(
     if (e.grantedQualifiedPhysicalImmunities)
       qualifiedI.push(...e.grantedQualifiedPhysicalImmunities);
   }
-  for (const rule of qualifyingPhysicalRules(qualifiedR, damageType, damageQualifiers))
+  for (const rule of qualifyingPhysicalRules(
+    qualifiedR,
+    damageType,
+    damageQualifiers,
+  ))
     totalR.add(rule.damageType);
-  for (const rule of qualifyingPhysicalRules(qualifiedV, damageType, damageQualifiers))
+  for (const rule of qualifyingPhysicalRules(
+    qualifiedV,
+    damageType,
+    damageQualifiers,
+  ))
     totalV.add(rule.damageType);
-  for (const rule of qualifyingPhysicalRules(qualifiedI, damageType, damageQualifiers))
+  for (const rule of qualifyingPhysicalRules(
+    qualifiedI,
+    damageType,
+    damageQualifiers,
+  ))
     totalI.add(rule.damageType);
   const effAmount = applyDamageModifiers(
     amount,
@@ -742,6 +755,7 @@ export function freshCreature(
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    rangedWeaponAttackRollBonus: 0,
     fighterLevel: 0,
     actionSurgeCharges: 0,
     actionSurgeUsedThisTurn: false,
@@ -760,6 +774,7 @@ export function freshCreature(
     bardLevel: 0,
     bardicInspirationCharges: 0,
     parryAcBonus: 0,
+    lightPropertyExtraAttackAddsAbilityModifier: false,
     mainHandWeapon: null,
     offHandWeapon: null,
     leftHandUse: "free",

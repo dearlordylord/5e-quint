@@ -93,6 +93,15 @@ export function isHit(roll: number, ac: number, critRange = 20): boolean {
   return roll >= ac || roll >= critRange;
 }
 
+export function isHitWithAttackRollBonus(
+  roll: number,
+  ac: number,
+  critRange: number,
+  attackRollBonus: number,
+): boolean {
+  return roll + attackRollBonus >= ac || roll >= critRange;
+}
+
 export function activeId(c: BattleContext): CreatureId {
   return c.initiative[c.turnIndex];
 }
@@ -657,7 +666,15 @@ export function advanceFromHitPhase(
   atk: AttackHitCtx,
   currentTurnCreatureId: CreatureId,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
-  const stillHit = isHit(atk.attackRoll, atk.targetAc, atk.critRange);
+  const attackRollBonus = atk.isRangedWeaponAttack
+    ? cs.get(atk.attacker)!.rangedWeaponAttackRollBonus
+    : 0;
+  const stillHit = isHitWithAttackRollBonus(
+    atk.attackRoll,
+    atk.targetAc,
+    atk.critRange,
+    attackRollBonus,
+  );
   if (!stillHit)
     return { creatures: new Map(cs), ...returnToState(atk.atkReturnTo) };
   let cs1 = applyOnHitEffect(

@@ -115,17 +115,6 @@ battle-hidden-state
 max-hp-reduction-state
   -> max-hp-reduction
 
-closed-modifier-algebra
-  -> archery-in-battle
-  -> two-weapon-fighting-style-in-battle
-  -> generic-per-attack-type-bonus-surface
-
-archery-in-battle
-  -> fighting-styles-in-battle
-
-two-weapon-fighting-style-in-battle
-  -> fighting-styles-in-battle
-
 authoritative-d20-modifier-query-surface
   -> armor-training-disadvantage
 ```
@@ -137,7 +126,7 @@ authoritative-d20-modifier-query-surface
 | `resolve-commit-doctrine` | facility | complete | none | `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Landed in repo architecture/domain docs and battle vocabulary; retain only because later descriptive-mode and transcript work still depend on the doctrine |
 | `canonical-condition-effects` | facility | complete | none | `duration-boundary-audit` | Landed canonical condition-consequence ownership in runtime query/types surfaces; keep here only because it still explains why the audit node is now complete |
 | `first-class-consumption-model` | facility | complete | none | `preview-execution`, `dm-override` | Landed typed spend/refund/quota vocabulary in available-actions support surfaces; keep here because later action-surface work still builds on it |
-| `closed-modifier-algebra` | facility | ready | none | `archery-in-battle`, `two-weapon-fighting-style-in-battle`, `generic-per-attack-type-bonus-surface` | Ready as a narrow battle-owned additive modifier seam. Keep it concrete: introduce only the closed fields needed by the first real consumers, not a generic modifier registry or tag-driven system. |
+| `closed-modifier-algebra` | facility | complete | none | `archery-in-battle`, `two-weapon-fighting-style-in-battle` | Landed as narrow battle-owned concrete fields for Ranged-weapon attack-roll bonuses and Light-property extra-attack ability-modifier damage. Deliberately did not introduce a generic modifier registry or tag-driven system. |
 | `oa-path-vocabulary` | facility | complete | none | `movement-provocation-kind`, `reach-extends-oa-range` | Landed in [battle/DOMAIN.md](/workspace/typescript/dnd/battle/DOMAIN.md), [battle.qnt](/workspace/typescript/dnd/battle.qnt), and [battle-machine-actions-movement.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-movement.ts); geometry remains caller-owned by design |
 | `authoritative-d20-modifier-query-surface` | facility | complete | none | `armor-training-disadvantage` | Landed authoritative d20 modifier/disadvantage query ownership in machine query/types surfaces; keep here because downstream planning still references the seam |
 | `available-actions-main` | plan | active | none | `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-surface`, `after-damage-reaction-surface`, `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Do not schedule the umbrella directly; schedule the concrete slices below. |
@@ -170,9 +159,9 @@ authoritative-d20-modifier-query-surface
 | `two-weapon-fighting-bonus-attack` | candidate | complete | `off-hand-attack-surface` | battle bonus-action attack support | Landed the light-weapon bonus-action off-hand attack slice; fighting-style modifiers remain separate follow-up work |
 | `weapon-property-aware-battle-resolution` | facility | complete | none | `battle-hand-occupancy-state`, `fighting-styles-in-battle` | Battle attack resolution now consumes weapon-property ownership for immediate combat semantics |
 | `battle-hand-occupancy-state` | facility | complete | `weapon-property-aware-battle-resolution` | `versatile-weapon-die-switching` | Landed explicit battle-owned hand occupancy for weapons, shields, grapples, and spell-component legality |
-| `archery-in-battle` | candidate | blocked | `closed-modifier-algebra` | `fighting-styles-in-battle` | Best first fighting-style consumer: pure +2 bonus to attack rolls with Ranged weapons already exists in content and maps cleanly onto battle attack resolution without new armor or die-face state |
-| `two-weapon-fighting-style-in-battle` | candidate | blocked | `closed-modifier-algebra`, `off-hand-attack-surface` | `fighting-styles-in-battle` | Best second consumer: SRD-backed, already has a content helper, and plugs directly into the battle-owned off-hand damage branch without needing armor state or die-face reroll ownership |
-| `fighting-styles-in-battle` | candidate | blocked | `weapon-property-aware-battle-resolution` | broader weapon semantics | Inspiration item `8` |
+| `archery-in-battle` | candidate | complete | `closed-modifier-algebra` | partial `fighting-styles-in-battle` progress | Landed through the narrow battle-owned `rangedWeaponAttackRollBonus` field, with TS fighter content projecting the specific +2 and regressions proving the bonus does not affect natural critical-hit range |
+| `two-weapon-fighting-style-in-battle` | candidate | complete | `closed-modifier-algebra`, `off-hand-attack-surface` | partial `fighting-styles-in-battle` progress | Landed through the battle-owned Light-property extra-attack damage flag, preserving negative ability-modifier behavior and positive-modifier omission when the style is absent |
+| `fighting-styles-in-battle` | candidate | blocked | remaining style-specific ownership facts | broader weapon semantics | Keep decomposed. `Defense` still needs battle-owned armor-worn state, and `Great Weapon Fighting` still needs battle-owned die-face reroll ownership rather than the additive modifier seam. |
 | `versatile-weapon-die-switching` | candidate | complete | `battle-hand-occupancy-state` | hand-usage / wield-state semantics | Landed in Quint and TS attack resolution with deterministic one-hand/two-hand regression coverage plus spellcasting grip-relaxation coverage |
 | `movement-provocation-kind` | facility | complete | `oa-path-vocabulary` | `forced-movement-vs-oa` | Landed explicit movement provocation kind in battle Quint/TS plus battle domain docs; voluntary and non-provoking movement no longer share the same event meaning |
 | `battle-hidden-state` | facility | blocked | none | `hide-stealth-chain` | Hide/stealth needs explicit hidden/seen battle state; it should not be bundled into OA/reach work now that OA path vocabulary is already caller-owned |
@@ -181,13 +170,13 @@ authoritative-d20-modifier-query-surface
 | `reach-extends-oa-range` | candidate | complete | `oa-path-vocabulary` | threat radius fidelity | Landed deterministic coverage that reach-sensitive OAs are not hardcoded to 5 feet, including prone-sensitive attack-context handling |
 | `max-hp-reduction-state` | facility | complete | none | `max-hp-reduction` | Landed explicit max-HP reduction state in Quint and TS rather than overloading plain `maxHp` |
 | `max-hp-reduction` | candidate | complete | `max-hp-reduction-state` | HP-reduction mechanics | Landed first consumer semantics, including effective-max clamping, reduction/restore actions, battle consistency, and targeted tests |
-| `generic-per-attack-type-bonus-surface` | candidate | blocked | `closed-modifier-algebra` | reusable modifier semantics | Inspiration item `28` |
+| `generic-per-attack-type-bonus-surface` | candidate | later | real multi-source attack-bonus composition pressure | reusable modifier semantics | Do not promote from Runbook 5 alone. The concrete Archery/TWF consumers favored named battle-owned fields over a reusable modifier abstraction. |
 
 ## Ready Queue
 
 If scheduling strictly by current value and low dependency risk, outside already-complete runbooks:
 
-1. `closed-modifier-algebra`
+None. Promote from the research queue before packaging another execution-grade batch.
 
 ## Research Queue
 
@@ -208,7 +197,7 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
   - [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
   - [PRD_AVAILABLE_ACTIONS.md](/workspace/typescript/dnd/PRD_AVAILABLE_ACTIONS.md)
   - [PRD_READY_ACTION.md](/workspace/typescript/dnd/PRD_READY_ACTION.md)
-- `qualified-damage-typing`, `qualified-physical-damage-bypass`, `weapon-property-aware-battle-resolution`, `versatile-weapon-die-switching`, `off-hand-attack-surface`, `two-weapon-fighting-bonus-attack`, `archery-in-battle`, `two-weapon-fighting-style-in-battle`, `fighting-styles-in-battle`:
+- `qualified-damage-typing`, `qualified-physical-damage-bypass`, `weapon-property-aware-battle-resolution`, `versatile-weapon-die-switching`, `off-hand-attack-surface`, `two-weapon-fighting-bonus-attack`, `fighting-styles-in-battle`:
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [PLAN_AUDIT.md](/workspace/typescript/dnd/PLAN_AUDIT.md)
 - `battle-hand-occupancy-state`, `versatile-weapon-die-switching`, future hand-sensitive OA/grapple/spellcasting consumers:
@@ -217,7 +206,7 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
   - [.references/srd-5.2.1/Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md)
   - [.references/srd-5.2.1/Equipment.md](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md)
   - [.references/srd-5.2.1/Spells/Gaining-and-Casting.md](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Gaining-and-Casting.md)
-- `closed-modifier-algebra`, `generic-per-attack-type-bonus-surface`, `max-hp-reduction-state`, `max-hp-reduction`, `next-hit-rider-consumption`, `effect-dependency-graph`:
+- `generic-per-attack-type-bonus-surface`, `max-hp-reduction-state`, `max-hp-reduction`, `next-hit-rider-consumption`, `effect-dependency-graph`:
   - [PLAN_AUDIT.md](/workspace/typescript/dnd/PLAN_AUDIT.md)
   - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
 - `oa-path-vocabulary`, `movement-provocation-kind`, `battle-hidden-state`, `hide-stealth-chain`, `forced-movement-vs-oa`, `reach-extends-oa-range`:
@@ -229,16 +218,6 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
 ## Research Starting Points
 
 Keep these compact and live. Completed historical handoffs belong in runbooks, not here.
-
-### `closed-modifier-algebra`
-
-- classification: `ready execution facility`
-- owner_layer: battle-owned additive modifier vocabulary
-- read_first:
-  - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
-  - [.references/inspirations/11-modifier-algebra.md](/workspace/typescript/dnd/.references/inspirations/11-modifier-algebra.md)
-- promotion_goal:
-  - freeze the smallest closed additive field set that can unblock `archery-in-battle` and `two-weapon-fighting-style-in-battle` without introducing an open registry
 
 ### `effect-dependency-graph`
 
@@ -287,30 +266,6 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [packages/core/src/battle-machine-creature.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-creature.ts)
 - promotion_goal:
   - split the umbrella into concrete style consumers instead of inventing a general-purpose modifier algebra prematurely
-
-### `archery-in-battle`
-
-- classification: `likely first runbook-5 consumer`
-- owner_layer: battle attack-roll pipeline
-- read_first:
-  - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
-  - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
-  - [packages/core/src/features/class-fighter.ts](/workspace/typescript/dnd/packages/core/src/features/class-fighter.ts)
-  - [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-attack.ts)
-- promotion_goal:
-  - wire the existing +2 ranged attack bonus into battle attack resolution through a narrow battle-owned additive-modifier seam
-
-### `two-weapon-fighting-style-in-battle`
-
-- classification: `possible runbook-5 consumer`
-- owner_layer: battle off-hand damage pipeline
-- read_first:
-  - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
-  - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
-  - [packages/core/src/features/class-fighter.ts](/workspace/typescript/dnd/packages/core/src/features/class-fighter.ts)
-  - [packages/core/src/battle-machine-actions-turn.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-turn.ts)
-- promotion_goal:
-  - wire the existing style helper so the Light-property bonus attack can add the ability modifier to damage when the style is present
 
 ### `battle-hidden-state`
 

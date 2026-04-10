@@ -1,5 +1,13 @@
 # DAG Runbook 5
 
+## Status
+
+Completed on 2026-04-10.
+
+The repo kept the `dnd/` implementation as the base rather than the parallel `dnd-slopus/` variant. Post-comparison cleanup merged the important `dnd-slopus/` correctness pieces: Archery's attack-roll bonus is applied to Armor Class comparison but not to natural critical-hit range, post-hit reaction revalidation recomputes that bonus from raw roll state, and deterministic regressions now cover the crit-range boundary and the no-style positive ability-modifier case.
+
+The final shape keeps the `dnd/` content projection through `fightingStyleBattleModifiers`, the SRD-facing `rangedWeaponAttackRollBonus` / `lightPropertyExtraAttackAddsAbilityModifier` field names, and the unrelated Runbook 4 MBT provocation-kind bridge fix that was already present in `dnd/`.
+
 ## Purpose
 
 This file is the execution companion for the next high-confidence batch after [DAG_RUNBOOK_4.md](./DAG_RUNBOOK_4.md).
@@ -215,15 +223,22 @@ Record short answers in the PR description or follow-up DAG notes if the impleme
 ### Questions For The Rest Of Fighting Styles
 
 1. After the narrow modifier facility lands, is `fighting-styles-in-battle` still best expressed as one umbrella node, or should it be decomposed permanently into concrete remaining consumers?
+Answer: keep decomposing into concrete consumers. `Archery` and `Two-Weapon Fighting` share a narrow additive seam cleanly, but `Defense` and `Great Weapon Fighting` still need different battle-owned facts.
 2. Does `Defense` now look like a clean next consumer, or does it still need explicit battle-owned armor-worn state?
+Answer: still needs explicit battle-owned armor-worn state; do not force it through the additive modifier seam yet.
 3. Does `Great Weapon Fighting` now look like a clean next consumer, or does it still need battle-owned die-face reroll ownership in attack resolution?
+Answer: still needs battle-owned die-face/reroll ownership. It should remain separate from the additive modifier seam.
 4. Does `two-weapon-fighting-style-in-battle` fit the same closed additive seam cleanly, or did it reveal a second seam specific to bonus-attack damage handling?
+Answer: it fits as a concrete battle-owned flag for the Light-property extra attack. It did not justify a generic modifier registry.
 
 ### Questions For Runbook 6
 
 1. Is `generic-per-attack-type-bonus-surface` still a real next node after this concrete modifier batch, or should the DAG keep preferring named consumers over reusable modifier abstractions?
+Answer: prefer named consumers. The implementation did not reveal enough multi-source composition pressure to promote a generic per-attack-type bonus surface.
 2. Did the implementation reveal any missing battle-owned modifier facts beyond simple additive fields, such as binary suppressions or reroll semantics?
+Answer: no missing facts for this batch. It confirmed a revalidation fact is needed on attack-hit context: whether the attack was made with a Ranged weapon, so the Archery bonus can be re-applied after hit reactions without changing raw d20 crit semantics.
 3. Is there enough evidence after this batch to promote more of `fighting-styles-in-battle`, or should the next research effort stay focused on `effect-dependency-graph` or `battle-hidden-state` instead?
+Answer: do not promote the full umbrella yet. If fighting styles continue, promote `Defense` or `Great Weapon Fighting` only after their specific missing ownership facts are designed.
 
 ## Verification
 

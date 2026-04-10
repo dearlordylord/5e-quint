@@ -108,6 +108,7 @@ export interface BattleCreatureState {
   readonly saveMiscBonus: number;
   // Natural roll >= critRange is a critical hit (default 20, Champion 19/18)
   readonly critRange: number;
+  readonly rangedWeaponAttackRollBonus: number;
   // Fighter state
   readonly fighterLevel: number;
   readonly actionSurgeCharges: number;
@@ -131,6 +132,7 @@ export interface BattleCreatureState {
   readonly bardLevel: number;
   readonly bardicInspirationCharges: number;
   readonly parryAcBonus: number;
+  readonly lightPropertyExtraAttackAddsAbilityModifier: boolean;
   readonly mainHandWeapon: BattleWeaponProfile | null;
   readonly offHandWeapon: BattleWeaponProfile | null;
   readonly leftHandUse: HandUse;
@@ -167,6 +169,7 @@ export interface AttackHitCtx {
   readonly onHitEffect?: ActiveEffect;
   readonly targetCanSeeAttackerAtHit: boolean;
   readonly isMeleeAttack: boolean;
+  readonly isRangedWeaponAttack: boolean;
   readonly isWeaponAttack: boolean;
   readonly legalReactionsByCreature: ReadonlyMap<
     CreatureId,
@@ -421,6 +424,7 @@ export interface InitCreatureConfig {
   readonly hasEvasion?: boolean;
   readonly saveMiscBonus?: number;
   readonly critRange?: number;
+  readonly rangedWeaponAttackRollBonus?: number;
   readonly fighterLevel?: number;
   readonly barbarianLevel?: number;
   readonly meleeDamageBonus?: number;
@@ -428,6 +432,7 @@ export interface InitCreatureConfig {
   readonly bardLevel?: number;
   readonly bardicInspirationCharges?: number;
   readonly parryAcBonus?: number;
+  readonly lightPropertyExtraAttackAddsAbilityModifier?: boolean;
   readonly prone?: boolean;
   readonly activeEffects?: ReadonlyArray<ActiveEffect>;
   /** Walk speed (PC: 30, Monster: from stat block). Defaults to 30. */
