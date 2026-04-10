@@ -677,8 +677,11 @@ export const CREATURE_TABLE_EVENT_TYPES = [
 export type CreatureTableEventType =
   (typeof CREATURE_TABLE_EVENT_TYPES)[number];
 
-export const BATTLE_TABLE_EVENT_TYPES = [
+const BATTLE_HEAL_TABLE_EVENT_TYPES = [
   "BATTLE_HEAL",
+] as const satisfies ReadonlyArray<BattleEvent["type"]>;
+export const BATTLE_TABLE_EVENT_TYPES = [
+  ...BATTLE_HEAL_TABLE_EVENT_TYPES,
 ] as const satisfies ReadonlyArray<BattleEvent["type"]>;
 export type BattleTableEventType = (typeof BATTLE_TABLE_EVENT_TYPES)[number];
 
@@ -1257,10 +1260,14 @@ const CreatureBreakConcentrationTableEventSchema = Schema.Struct({
   type: Schema.Literal("BREAK_CONCENTRATION"),
   ...TableEventSemanticActionField,
 });
-const BattleTableEventSchema = Schema.Struct({
+const BattleHealTableEventSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
-  type: Schema.Literal(...BATTLE_TABLE_EVENT_TYPES),
+  type: Schema.Literal(...BATTLE_HEAL_TABLE_EVENT_TYPES),
+  targetId: Schema.String,
+  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  ...TableEventSemanticActionField,
 });
+const BattleTableEventSchema = BattleHealTableEventSchema;
 
 export const TableEventCommandSchema = Schema.Union(
   CreatureTakeDamageTableEventSchema,

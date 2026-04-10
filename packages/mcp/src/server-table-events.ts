@@ -6,9 +6,11 @@ import {
   type TableEventCommand,
   type TableEventWarning,
 } from "@dnd/core/available-actions.ts";
+import type { BattleEvent } from "@dnd/core/battle-machine-events.ts";
 import { encodeDndContext } from "@dnd/core/context-encoding.ts";
 import type { DndEvent } from "@dnd/core/machine-types.ts";
 import {
+  CreatureId,
   healAmount,
   tempHp,
   type Condition,
@@ -16,26 +18,16 @@ import {
 } from "@dnd/core/types.ts";
 
 import {
+  type BattleActor,
   type DndActor,
   type SupportedActionHost,
+  battleSnapshotUnchanged,
   encodeBattleRuntimeState,
   errorContent,
   jsonContent,
 } from "./server-shared.ts";
 
 const strictCommandParseOptions = { onExcessProperty: "error" } as const;
-
-function encodeHostState(host: SupportedActionHost) {
-  return Match.value(host).pipe(
-    Match.when({ scope: "creature" }, ({ actor }) =>
-      encodeDndContext(actor.getSnapshot().context),
-    ),
-    Match.when({ scope: "battle" }, ({ actor }) =>
-      encodeBattleRuntimeState(actor.getSnapshot()),
-    ),
-    Match.exhaustive,
-  );
-}
 
 export function tableEventWarning(
   code: TableEventWarning["code"],
@@ -56,33 +48,6 @@ export function tableEventSuccess<State>(
     state,
   };
   return jsonContent(result);
-}
-
-function unsupportedTableEventWarning(
-  command: TableEventCommand,
-): TableEventWarning {
-  return tableEventWarning(
-    "unsupported_domain_gap",
-    `${command.type} is reserved for the warning-aware table-event surface but is not wired to domain semantics yet.`,
-  );
-}
-
-export function tableEventUnsupported<State>(
-  command: TableEventCommand,
-  state: State,
-) {
-  const result: RecordTableEventResult<State> = {
-    success: false,
-    appliedEvent: null,
-    warnings: [unsupportedTableEventWarning(command)],
-    state,
-    error: {
-      code: "TABLE_EVENT_NOT_IMPLEMENTED",
-      message: "Table event is not implemented yet",
-      event: command,
-    },
-  };
-  return { ...jsonContent(result), isError: true as const };
 }
 
 function tableEventNotAccepted<State>(
@@ -227,6 +192,46 @@ function recordCreatureTableEvent(
   );
 }
 
+function buildBattleTableEvent(
+  command: Extract<TableEventCommand, { readonly scope: "battle" }>,
+): BattleEvent {
+  return Match.value(command).pipe(
+    Match.when({ type: "BATTLE_HEAL" }, (c) => ({
+      type: "BATTLE_HEAL" as const,
+      targetId: CreatureId(c.targetId),
+      amount: c.amount,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function recordBattleTableEvent(
+  actor: BattleActor,
+  command: Extract<TableEventCommand, { readonly scope: "battle" }>,
+) {
+  const targetId = CreatureId(command.targetId);
+  const before = actor.getSnapshot();
+  const warnings = tableEventWarnings(command);
+  if (!before.context.creatures.has(targetId)) {
+    return tableEventNotAccepted(
+      command,
+      warnings,
+      encodeBattleRuntimeState(before),
+    );
+  }
+
+  actor.send(buildBattleTableEvent(command));
+  const after = actor.getSnapshot();
+  if (battleSnapshotUnchanged(before, after)) {
+    return tableEventNotAccepted(
+      command,
+      warnings,
+      encodeBattleRuntimeState(after),
+    );
+  }
+  return tableEventSuccess(command, warnings, encodeBattleRuntimeState(after));
+}
+
 export function recordTableEvent(host: SupportedActionHost, args: unknown) {
   const decoded = Schema.decodeUnknownEither(
     TableEventCommandSchema,
@@ -256,8 +261,14 @@ export function recordTableEvent(host: SupportedActionHost, args: unknown) {
         >,
       ),
     ),
-    Match.when({ scope: "battle" }, () =>
-      tableEventUnsupported(decoded.right, encodeHostState(host)),
+    Match.when({ scope: "battle" }, ({ actor }) =>
+      recordBattleTableEvent(
+        actor,
+        decoded.right as Extract<
+          TableEventCommand,
+          { readonly scope: "battle" }
+        >,
+      ),
     ),
     Match.exhaustive,
   );

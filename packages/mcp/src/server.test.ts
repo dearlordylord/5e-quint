@@ -194,6 +194,60 @@ function initBattleHostWithFeatureActor() {
   return createBattleHost(actor);
 }
 
+function initBattleHostWithWoundedActiveHealer() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  actor.send({
+    type: "BATTLE_ATTACK",
+    targetId: CreatureId("B"),
+    attackRoll: 15,
+    diceCount: 1,
+    dieSize: 8,
+    dmg: 7,
+    dt: "slashing",
+    crit: false,
+    tAc: armorClass(10),
+    knockOut: false,
+    isMelee: true,
+    isFinesse: false,
+    attackerWithin5ft: true,
+    attackerWithin60ft: true,
+    hostileWithin5ft: false,
+    targetCanSeeAttacker: true,
+    attackerCanSeeTarget: true,
+    frightSourceInLOS: false,
+    hasAllyAdjacentToTarget: false,
+    saDmg: 0,
+    hitReactionCandidates: new Set(),
+  });
+  actor.send({
+    type: "BATTLE_RESOLVE_HIT_REACTION",
+    reactorId: null,
+    decision: { tag: "RPass" },
+  });
+  actor.send({
+    type: "BATTLE_AFTER_DAMAGE_DECLINE",
+    reactorId: null,
+  });
+  actor.send({
+    type: "BATTLE_END_TURN",
+    eotSaveSucceeded: false,
+    eotDmg: 0,
+    eotDt: "bludgeoning",
+    eotConSave: true,
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
 function initBattleHostWithReadyWindow() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -517,6 +571,8 @@ describe("MCP server adapter", () => {
       {
         scope: "battle",
         type: "BATTLE_HEAL",
+        targetId: "B",
+        amount: 5,
       },
     );
     expect("isError" in battleOnCreature && battleOnCreature.isError).toBe(
@@ -963,34 +1019,102 @@ describe("MCP server adapter", () => {
     }
   });
 
-  test("unsupported battle table events return a structured error without mutating state", () => {
-    const host = createBattleHost();
-    const before = readPayload(handleToolCall(host, "get_state", {}));
+  test("record_table_event applies battle healing with warnings", () => {
+    const host = initBattleHostWithWoundedActiveHealer();
 
-    const response = handleToolCall(host, "record_table_event", {
-      scope: "battle",
-      type: "BATTLE_HEAL",
-    });
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B"))?.hp,
+    ).toBe(13);
 
-    expect("isError" in response && response.isError).toBe(true);
-    expect(readPayload(response)).toEqual({
-      success: false,
-      appliedEvent: null,
+    const response = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "battle",
+        type: "BATTLE_HEAL",
+        targetId: "B",
+        amount: 5,
+        semanticAction: { kind: "spell", name: "Healing Word" },
+      }),
+    );
+
+    expect(response).toMatchObject({
+      success: true,
+      appliedEvent: {
+        scope: "battle",
+        type: "BATTLE_HEAL",
+        targetId: "B",
+        amount: 5,
+        semanticAction: { kind: "spell", name: "Healing Word" },
+      },
       warnings: [
         {
-          code: "unsupported_domain_gap",
+          code: "external_table_fact",
           message:
-            "BATTLE_HEAL is reserved for the warning-aware table-event surface but is not wired to domain semantics yet.",
+            "BATTLE_HEAL records a table fact rather than an ordinary suggested action.",
+        },
+        {
+          code: "bypasses_semantic_action",
+          message:
+            "BATTLE_HEAL bypasses the stricter spell action path for Healing Word. Prefer a modeled action token when one exists.",
         },
       ],
-      state: before,
-      error: {
-        code: "TABLE_EVENT_NOT_IMPLEMENTED",
-        message: "Table event is not implemented yet",
-        event: { scope: "battle", type: "BATTLE_HEAL" },
-      },
+      state: { scope: "battle", activeCreatureId: "B" },
     });
-    expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))?.hp,
+    ).toBe(20);
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B"))?.hp,
+    ).toBe(18);
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B"))
+        ?.actionsRemaining,
+    ).toBe(0);
+  });
+
+  test("record_table_event rejects invalid battle healing", () => {
+    const host = initBattleHostWithWoundedActiveHealer();
+
+    const missingTarget = handleToolCall(host, "record_table_event", {
+      scope: "battle",
+      type: "BATTLE_HEAL",
+      amount: 5,
+    });
+    expect("isError" in missingTarget && missingTarget.isError).toBe(true);
+    expect(readPayload(missingTarget).error).toBe(
+      "Invalid record_table_event input",
+    );
+
+    const missingAmount = handleToolCall(host, "record_table_event", {
+      scope: "battle",
+      type: "BATTLE_HEAL",
+      targetId: "B",
+    });
+    expect("isError" in missingAmount && missingAmount.isError).toBe(true);
+    expect(readPayload(missingAmount).error).toBe(
+      "Invalid record_table_event input",
+    );
+
+    const zeroAmount = handleToolCall(host, "record_table_event", {
+      scope: "battle",
+      type: "BATTLE_HEAL",
+      targetId: "B",
+      amount: 0,
+    });
+    expect("isError" in zeroAmount && zeroAmount.isError).toBe(true);
+    expect(readPayload(zeroAmount).error).toBe(
+      "Invalid record_table_event input",
+    );
+
+    const unknownTarget = handleToolCall(host, "record_table_event", {
+      scope: "battle",
+      type: "BATTLE_HEAL",
+      targetId: "missing",
+      amount: 1,
+    });
+    expect("isError" in unknownTarget && unknownTarget.isError).toBe(true);
+    const unknownPayload = readPayload(unknownTarget);
+    expect(unknownPayload.success).toBe(false);
+    expect(unknownPayload.error.code).toBe("TABLE_EVENT_NOT_ACCEPTED");
   });
 
   test("creature control commands execute turn end and long rest", () => {

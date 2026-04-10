@@ -729,6 +729,15 @@ describe("available actions contract", () => {
     ).toBe("Right");
     expect(
       Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "battle",
+        type: "BATTLE_HEAL",
+        targetId: "B",
+        amount: 5,
+        semanticAction: { kind: "spell", name: "Healing Word" },
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
         scope: "creature",
         type: "TAKE_DAMAGE",
         amount: 8,
@@ -762,6 +771,19 @@ describe("available actions contract", () => {
       Schema.decodeUnknownEither(TableEventCommandSchema)({
         scope: "creature",
         type: "APPLY_FALL",
+      })._tag,
+    ).toBe("Left");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "battle",
+        type: "BATTLE_HEAL",
+        amount: 5,
+      })._tag,
+    ).toBe("Left");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "battle",
+        type: "BATTLE_CAST_SAVE_SPELL",
       })._tag,
     ).toBe("Left");
   });
