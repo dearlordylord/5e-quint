@@ -10,7 +10,42 @@ plan files.
 
 Pick one or more bounded implementation slices that improve the D&D rules engine and MCP action surface without adding MCP-only state, duplicating owned facts, or widening into a geometry/grid engine.
 
-The coding loop should treat each task below as independently schedulable. Do not start a task marked "research first" until its research output is written back into this file or a task-specific plan.
+The coding loop should treat this file as the active queue. Do not start a task whose status is not `ready-for-implementation-after-light-research` or `ready-for-research` unless this file is updated first.
+
+## Status Vocabulary
+
+- `ready-for-research`: The next step is documentation/source research. Write results back into this file or a task-specific plan before implementing.
+- `ready-for-implementation-after-light-research`: The task shape is understood, but the coding agent must do the listed RAW or blast-radius check before editing code.
+- `blocked`: A dependency or ownership decision must land first.
+- `deferred`: Do not pick up unless the batch objective changes.
+- `done`: Work completed and verification recorded.
+
+## Coding Loop Handoff Rules
+
+- Start with the highest-priority task in the DAG table whose status is `ready-for-implementation-after-light-research` or `ready-for-research`.
+- Update the task status before ending the loop:
+  - `done` if implementation/research and verification are complete;
+  - `ready-for-implementation-after-light-research` if research made it implementable;
+  - `blocked` if a required ownership/API decision is still unresolved;
+  - `deferred` if research shows the task should not be in the current batch.
+- For any implementation task, read the relevant SRD text in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md` before editing code.
+- For any implementation task, include `/simplify` convergence in the task closeout: minimum two rounds unless the changeset is trivial, and continue until no important fixes remain.
+- Do not run MBT for research-only tasks. For implementation tasks, use the narrowest verification tier listed on the task.
+
+## DAG / Queue Order
+
+| Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | B - Battle Size Ownership For Grapple | ready-for-implementation-after-light-research | none | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns | Read RAW Grapple/Size and existing owned-size sources, then implement if no duplicate state exists | Best first implementation slice |
+| 2 | A - Condition Consequence Table Completion Research | ready-for-research | none | Possible condition-table implementation | Reread SRD condition entries, decide each proposed column, and write Condition Table Delta | Best first research slice |
+| 3 | C - ResourceCost Typed Refactor | ready-for-implementation-after-light-research | none | Cleaner MCP/UI cost display and future resource docs | Confirm cost consumer blast radius and immediate-cost scope, then implement typed costs if still small | Good support-layer cleanup |
+| 4 | D - Battle Attack Runtime/Session Boundary | ready-for-research | none | F, G, possibly I; public `BATTLE_ATTACK`; off-hand/legendary/riders | Design token/runtime/session contract and stop conditions | Research only; do not implement attack yet |
+| 5 | E - Movement And Help Geometry/Session Ownership | ready-for-research | none | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK` | Decide visibility/reach/threat/path/provocation ownership | Research only |
+| 6 | J - Generic Table Events, Environmental Hazards, And Monster Commands | ready-for-research | none | Future raw table event exposure and monster command work | Pick one narrow source/provenance family or keep deferred | Research only |
+| 7 | F - Legendary Attack Payload Ownership | blocked | D plus monster stat-block payload ownership | Public `BATTLE_LEGENDARY_ATTACK` | Wait for D, then define stat-block Legendary Action payload ownership | Not handoff-ready |
+| 8 | G - Attack Rider Ownership | blocked | D | Attack rider tokens | Wait for D, then classify rider timing and owned/runtime facts | Not handoff-ready |
+| 9 | H - PassiveModifiers Sub-Record | deferred | none | Possible passive modifier cleanup | Only revisit if the batch selects passive modifier restructuring | Not current-batch work |
+| 10 | I - Build-Map / Hole Metadata | deferred | Concrete consumer, possibly D | Future token-hole metadata | Only revisit when attack boundary, transcript disambiguation, or UI needs it | Not current-batch work |
 
 ## Current Integrated Baseline
 
@@ -21,7 +56,7 @@ Already wired on `master`:
 - Warlock `USE_MAGICAL_CUNNING`, Sorcerer `USE_INNATE_SORCERY`, and Druid `ENTER_WILD_SHAPE`, `EXIT_WILD_SHAPE`, `USE_WILD_RESURGENCE_SLOT`.
 - Creature damage/recovery, condition/exhaustion, falling, voluntary concentration break, failed-save/check semantic triggers, and battle `BATTLE_HEAL` through `record_table_event`.
 
-Still explicitly deferred in `MCP_EVENT_SURFACE_AUDIT.md`:
+Still explicitly deferred in the `MCP_EVENT_SURFACE_AUDIT.md` baseline. This plan schedules the grapple Size ownership prerequisite as Task B, but public `BATTLE_GRAPPLE` is not considered exposed until Task B is completed and the audit row is updated:
 
 - `BATTLE_ATTACK`, `BATTLE_OFF_HAND_ATTACK`, `BATTLE_LEGENDARY_ATTACK`.
 - Attack riders: `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, `USE_DIVINE_SMITE_FREE`.
@@ -30,16 +65,23 @@ Still explicitly deferred in `MCP_EVENT_SURFACE_AUDIT.md`:
 
 ## Task Selection Guidance
 
-Recommended first coding-loop task:
+Recommended first coding-loop tasks:
 
-1. **Task A: Condition Consequence Table Completion Research** if the goal is competitor-research follow-through and spec auditability.
-2. **Task B: Battle Size Ownership For Grapple** if the goal is a concrete implementation slice that unblocks a public battle action.
+1. **Task B: Battle Size Ownership For Grapple** if the goal is a concrete implementation slice that unblocks a public battle action.
+2. **Task A: Condition Consequence Table Completion Research** if the goal is competitor-research follow-through and spec auditability.
+3. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
 
 Do not start with `BATTLE_ATTACK` implementation. Its public runtime/session contract is the main unresolved API boundary and can easily absorb off-hand attacks, hit reactions, legendary actions, and riders.
 
 ## Task A - Condition Consequence Table Completion Research
 
-Status: research first.
+Status: ready-for-research.
+
+Depends on: none.
+
+Blocks: possible condition consequence table implementation.
+
+Next action: research SRD condition entries and write the Condition Table Delta before any code changes.
 
 Purpose:
 
@@ -112,6 +154,8 @@ Acceptance criteria for implementation:
 
 Verification:
 
+- RAW check: condition entries in `.references/srd-5.2.1/Rules-Glossary.md` and terminology in `UBIQUITOUS_LANGUAGE.md` before any implementation.
+- `/simplify` convergence: minimum two rounds after implementation if the research leads to code changes.
 - `npx quint test --match "inv_" dndTest.qnt`.
 - Tier 1b creature MBT if only creature-level parity changes.
 - Tier 1 battle MBT if battle-facing behavior changes.
@@ -122,7 +166,13 @@ Extra research needed:
 
 ## Task B - Battle Size Ownership For Grapple
 
-Status: implementation-ready after RAW check.
+Status: ready-for-implementation-after-light-research.
+
+Depends on: none.
+
+Blocks: public `BATTLE_GRAPPLE` exposure and any grapple legality surface that requires owned combatant Size.
+
+Next action: reread RAW Grapple/Size, search for existing owned size fields to avoid redundant state, then implement if no blocker appears.
 
 Purpose:
 
@@ -166,6 +216,8 @@ Acceptance criteria:
 
 Verification:
 
+- RAW check: Grapple and Size entries in `.references/srd-5.2.1/Rules-Glossary.md` and terminology in `UBIQUITOUS_LANGUAGE.md` before implementation.
+- `/simplify` convergence: minimum two rounds after implementation.
 - Focused battle scenario tests for size-blocked and size-allowed grapples.
 - `pnpm --filter @dnd/core typecheck`.
 - Tier 1 battle MBT after Quint and bridge changes.
@@ -176,7 +228,13 @@ Extra research needed:
 
 ## Task C - ResourceCost Typed Refactor
 
-Status: implementation-ready after scope confirmation.
+Status: ready-for-implementation-after-light-research.
+
+Depends on: none.
+
+Blocks: cleaner MCP/UI cost display and future resource consumption terminology.
+
+Next action: inspect all `ResourceCost` consumers and confirm this remains an immediate-cost display/selection shape before changing types.
 
 Purpose:
 
@@ -222,6 +280,8 @@ Acceptance criteria:
 
 Verification:
 
+- RAW/domain-language check: confirm the representation is support-layer terminology and does not change SRD semantics.
+- `/simplify` convergence: minimum two rounds after implementation.
 - `pnpm --filter @dnd/core typecheck`.
 - Focused available-actions tests if token snapshots/shape tests exist.
 - MCP tests if JSON schema or grouping output changes.
@@ -232,7 +292,13 @@ Extra research needed:
 
 ## Task D - Battle Attack Runtime/Session Boundary
 
-Status: research/design first.
+Status: ready-for-research.
+
+Depends on: none.
+
+Blocks: Task F, Task G, possibly Task I, public `BATTLE_ATTACK`, `BATTLE_OFF_HAND_ATTACK`, `BATTLE_LEGENDARY_ATTACK`, and attack riders.
+
+Next action: design and document the token/runtime/session contract; do not implement attack in this pass.
 
 Purpose:
 
@@ -319,6 +385,8 @@ Acceptance criteria for implementation:
 
 Verification:
 
+- RAW check: attack and relevant condition/visibility entries in `.references/srd-5.2.1/` and terminology in `UBIQUITOUS_LANGUAGE.md` before implementation.
+- `/simplify` convergence: minimum two rounds after implementation if the research leads to code changes.
 - Focused available-actions tests.
 - MCP tests if schema/runtime handling changes.
 - Tier 1 battle MBT if battle/spec/bridge semantics change.
@@ -329,7 +397,13 @@ Extra research needed:
 
 ## Task E - Movement And Help Geometry/Session Ownership
 
-Status: research/design only.
+Status: ready-for-research.
+
+Depends on: none.
+
+Blocks: public `BATTLE_MOVE` and `BATTLE_HELP_ATTACK`.
+
+Next action: decide the owner of visibility, reach, threat, path, and provocation facts; do not implement movement/help until ownership is explicit.
 
 Purpose:
 
@@ -364,6 +438,7 @@ Acceptance criteria:
 Verification:
 
 - Docs-only unless implementation is explicitly scheduled later.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
 
 Extra research needed:
 
@@ -371,7 +446,13 @@ Extra research needed:
 
 ## Task F - Legendary Attack Payload Ownership
 
-Status: research/design only; blocked by Task D.
+Status: blocked.
+
+Depends on: Task D and monster stat-block action payload ownership.
+
+Blocks: public `BATTLE_LEGENDARY_ATTACK`.
+
+Next action: wait for Task D; then define stat-block Legendary Action payload ownership and whether the action is a suggested action, monster-control command, or both.
 
 Purpose:
 
@@ -403,6 +484,7 @@ Acceptance criteria:
 Verification:
 
 - Docs-only until implementation.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
 
 Extra research needed:
 
@@ -410,7 +492,13 @@ Extra research needed:
 
 ## Task G - Attack Rider Ownership
 
-Status: research/design only; blocked by Task D.
+Status: blocked.
+
+Depends on: Task D.
+
+Blocks: attack rider tokens.
+
+Next action: wait for Task D; then classify each rider by timing, owned feature state, and runtime/session facts.
 
 Purpose:
 
@@ -449,6 +537,7 @@ Acceptance criteria:
 Verification:
 
 - Docs-only until Task D is implemented.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
 
 Extra research needed:
 
@@ -456,7 +545,13 @@ Extra research needed:
 
 ## Task H - PassiveModifiers Sub-Record
 
-Status: defer unless a passive-modifier implementation batch is selected.
+Status: deferred.
+
+Depends on: none.
+
+Blocks: possible passive modifier field cleanup.
+
+Next action: do not pick up unless the batch explicitly selects passive modifier restructuring.
 
 Purpose:
 
@@ -491,6 +586,8 @@ Acceptance criteria:
 
 Verification:
 
+- RAW/domain-language check before implementation if this grouping lands with new modifier semantics; pure mechanical grouping still needs `UBIQUITOUS_LANGUAGE.md` terminology review.
+- `/simplify` convergence: minimum two rounds after implementation.
 - Typecheck.
 - Focused battle tests if setup types change.
 - Tier 1 battle MBT because the bridge/spec shape changes.
@@ -501,7 +598,13 @@ Extra research needed:
 
 ## Task I - Build-Map / Hole Metadata
 
-Status: defer.
+Status: deferred.
+
+Depends on: a concrete consumer; possibly Task D if the first consumer is attack-boundary parameterization.
+
+Blocks: future token-hole metadata.
+
+Next action: do not pick up until a concrete attack, transcript, or UI consumer exists.
 
 Purpose:
 
@@ -532,6 +635,7 @@ Acceptance criteria:
 Verification:
 
 - Docs-only unless a consumer is selected.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
 
 Extra research needed:
 
@@ -539,7 +643,13 @@ Extra research needed:
 
 ## Task J - Generic Table Events, Environmental Hazards, And Monster Commands
 
-Status: research/design only.
+Status: ready-for-research.
+
+Depends on: none.
+
+Blocks: future raw table event exposure and monster command work.
+
+Next action: choose one narrow source/provenance family to research, or mark the family deferred.
 
 Purpose:
 
@@ -576,6 +686,7 @@ Acceptance criteria:
 Verification:
 
 - Docs-only until implementation.
+- RAW check and `/simplify` convergence are required if the research later leads to implementation.
 
 Extra research needed:
 
@@ -599,7 +710,7 @@ Light research only:
 - Task C: ResourceCost typed refactor. Confirm consumer blast radius and immediate-cost scope.
 - Task H: PassiveModifiers. Research only if selected; otherwise defer.
 
-## Recommended APR10 Coding Loop
+## Recommended Coding Loop
 
 If choosing one implementation batch:
 
