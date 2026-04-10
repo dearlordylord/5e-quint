@@ -117,10 +117,17 @@ export const recordTableEventJsonSchema = JSONSchema.make(
   TableEventCommandSchema,
 );
 
-function mcpObjectInputSchema(schema: object) {
-  return "type" in schema && schema.type === "object"
-    ? schema
-    : { ...schema, type: "object" as const };
+type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
+  readonly type: "object";
+};
+
+function mcpObjectInputSchema(
+  schema: object,
+): McpObjectInputSchema {
+  const schemaRecord = schema as Readonly<Record<string, unknown>>;
+  return schemaRecord.type === "object"
+    ? ({ ...schemaRecord, type: "object" } satisfies McpObjectInputSchema)
+    : { ...schema, type: "object" };
 }
 
 export const toolDefinitions = [
