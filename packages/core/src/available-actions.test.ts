@@ -186,6 +186,13 @@ const WARLOCK_13_INPUT: DndMachineInput = {
   effectiveSpeed: 30,
 };
 
+const WARLOCK_20_INPUT: DndMachineInput = {
+  maxHp: 28,
+  warlockLevel: classLevel(20),
+  baseWalkSpeed: 30,
+  effectiveSpeed: 30,
+};
+
 const PALADIN_2_INPUT: DndMachineInput = {
   maxHp: 28,
   paladinLevel: classLevel(2),
@@ -2115,6 +2122,38 @@ describe("available actions contract", () => {
         },
       }),
     );
+  });
+
+  test("restores all expended pact slots at Warlock 20 with Eldritch Master", () => {
+    const warlock = makeActorWithInput(WARLOCK_20_INPUT);
+    warlock.send({ type: "ENTER_COMBAT" });
+    warlock.send({ type: "START_TURN" });
+    warlock.send({ type: "EXPEND_PACT_SLOT" });
+    warlock.send({ type: "EXPEND_PACT_SLOT" });
+    expect(warlock.getSnapshot().context.pactSlotsCurrent).toBe(2);
+
+    const magicalCunningRequest = expectRequest(
+      resolveAction(
+        warlock.getSnapshot().context,
+        warlock.getSnapshot().tags,
+        creatureResolved({ type: "USE_MAGICAL_CUNNING" }),
+      ),
+    );
+    const magicalCunningFinalized = finalizeResolution(
+      magicalCunningRequest,
+      { runtime: "none" },
+      warlock.getSnapshot().context,
+    );
+    expect(magicalCunningFinalized).toEqual({
+      ok: true,
+      event: { type: "USE_MAGICAL_CUNNING" },
+      outcome:
+        "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
+    });
+    if (!magicalCunningFinalized.ok)
+      throw new Error("expected USE_MAGICAL_CUNNING finalization to succeed");
+    warlock.send(magicalCunningFinalized.event);
+    expect(warlock.getSnapshot().context.pactSlotsCurrent).toBe(4);
   });
 
   test("surfaces ENTER_WILD_SHAPE for a level 2+ druid with charges and bonus action available", () => {

@@ -806,7 +806,7 @@ describe("MCP server adapter", () => {
     });
   });
 
-  test("record_table_event rejects handled events that are unavailable in the current creature state", () => {
+  test("record_table_event rejects handled events that are unavailable in the current host state", () => {
     const host = createDemoHost();
 
     const response = handleToolCall(host, "record_table_event", {
@@ -828,7 +828,7 @@ describe("MCP server adapter", () => {
       state: readPayload(handleToolCall(host, "get_state", {})),
       error: {
         code: "TABLE_EVENT_NOT_ACCEPTED",
-        message: "Table event is not accepted in the current creature state",
+        message: "Table event is not accepted in the current host state",
         event: { scope: "creature", type: "STABILIZE" },
       },
     });
@@ -1741,6 +1741,44 @@ describe("MCP server adapter", () => {
       magicalCunningPayload.state.classStates.warlock.magicalCunningUsed,
     ).toBe(true);
     expect(magicalCunningPayload.state.pactSlotsCurrent).toBe(3);
+
+    const fullRecoveryHost = createDemoHost({
+      maxHp: 28,
+      warlockLevel: classLevel(20),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    fullRecoveryHost.actor.send({ type: "ENTER_COMBAT" });
+    fullRecoveryHost.actor.send({ type: "START_TURN" });
+    fullRecoveryHost.actor.send({ type: "EXPEND_PACT_SLOT" });
+    fullRecoveryHost.actor.send({ type: "EXPEND_PACT_SLOT" });
+    expect(fullRecoveryHost.actor.getSnapshot().context.pactSlotsCurrent).toBe(
+      2,
+    );
+
+    const fullRecoveryAvailable = readPayload(
+      handleToolCall(fullRecoveryHost, "get_available_actions", {}),
+    );
+    expect(fullRecoveryAvailable.free).toContainEqual(
+      creatureToken({
+        type: "USE_MAGICAL_CUNNING",
+        cost: { charge: "magicalCunning" },
+        outcome: {
+          summary:
+            "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
+        },
+      }),
+    );
+
+    const fullRecovery = handleToolCall(
+      fullRecoveryHost,
+      "execute_action",
+      creatureResolved({ type: "USE_MAGICAL_CUNNING" }),
+    );
+    expect("isError" in fullRecovery).toBe(false);
+    const fullRecoveryPayload = readPayload(fullRecovery);
+    expect(fullRecoveryPayload.success).toBe(true);
+    expect(fullRecoveryPayload.state.pactSlotsCurrent).toBe(4);
 
     const sorcererHost = createDemoHost({
       maxHp: 30,

@@ -3,6 +3,7 @@ import {
   canEldritchSmite,
   canUseMagicalCunning,
   canUseMysticArcanum,
+  hasEldritchMaster,
   magicalCunningRecovery,
 } from "#/features/class-warlock.ts";
 import { updateClass } from "#/machine-helpers.ts";
@@ -28,10 +29,12 @@ export function magicalCunningUpdate(c: DndContext): Partial<DndContext> {
     "guard: canMagicalCunning should have prevented this",
   );
   return {
-    pactSlotsCurrent: Math.min(
-      c.pactSlotsMax,
-      c.pactSlotsCurrent + magicalCunningRecovery(c.pactSlotsMax),
-    ),
+    pactSlotsCurrent: hasEldritchMaster(ws.level)
+      ? c.pactSlotsMax
+      : Math.min(
+          c.pactSlotsMax,
+          c.pactSlotsCurrent + magicalCunningRecovery(c.pactSlotsMax),
+        ),
     ...updateClass(c, "warlock", { magicalCunningUsed: true }),
   };
 }

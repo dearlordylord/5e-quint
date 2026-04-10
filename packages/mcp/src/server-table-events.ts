@@ -62,7 +62,7 @@ function tableEventNotAccepted<State>(
     state,
     error: {
       code: "TABLE_EVENT_NOT_ACCEPTED",
-      message: "Table event is not accepted in the current creature state",
+      message: "Table event is not accepted in the current host state",
       event: command,
     },
   };
