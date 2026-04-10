@@ -449,7 +449,7 @@ describe("MCP server adapter", () => {
     const invalidRawAction = handleToolCall(host, "record_table_event", {
       scope: "creature",
       type: "HEAL",
-      amount: 5,
+      amount: 0,
     });
 
     expect("isError" in invalidRawAction && invalidRawAction.isError).toBe(
@@ -529,7 +529,7 @@ describe("MCP server adapter", () => {
 
     const creatureOnBattle = handleToolCall(battleHost, "record_table_event", {
       scope: "creature",
-      type: "HEAL",
+      type: "STABILIZE",
     });
     expect("isError" in creatureOnBattle && creatureOnBattle.isError).toBe(
       true,
@@ -562,7 +562,7 @@ describe("MCP server adapter", () => {
 
     const response = handleToolCall(host, "record_table_event", {
       scope: "creature",
-      type: "HEAL",
+      type: "APPLY_CONDITION",
     });
 
     expect("isError" in response && response.isError).toBe(true);
@@ -573,17 +573,188 @@ describe("MCP server adapter", () => {
         {
           code: "unsupported_domain_gap",
           message:
-            "HEAL is reserved for the warning-aware table-event surface but is not wired to domain semantics yet.",
+            "APPLY_CONDITION is reserved for the warning-aware table-event surface but is not wired to domain semantics yet.",
         },
       ],
       state: before,
       error: {
         code: "TABLE_EVENT_NOT_IMPLEMENTED",
         message: "Table event is not implemented yet",
-        event: { scope: "creature", type: "HEAL" },
+        event: { scope: "creature", type: "APPLY_CONDITION" },
       },
     });
     expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
+  });
+
+  test("record_table_event applies creature damage and recovery events with warnings", () => {
+    const damageHost = createDemoHost();
+    const damage = readPayload(
+      handleToolCall(damageHost, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 8,
+        damageType: "fire",
+        resistances: ["fire"],
+        semanticAction: { kind: "spell", name: "fireball" },
+      }),
+    );
+    expect(damage).toMatchObject({
+      success: true,
+      appliedEvent: {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 8,
+        damageType: "fire",
+        resistances: ["fire"],
+        semanticAction: { kind: "spell", name: "fireball" },
+      },
+      warnings: [
+        {
+          code: "external_table_fact",
+          message:
+            "TAKE_DAMAGE records a table fact rather than an ordinary suggested action.",
+        },
+        {
+          code: "bypasses_semantic_action",
+          message:
+            "TAKE_DAMAGE bypasses the stricter spell action path for fireball. Prefer a modeled action token when one exists.",
+        },
+      ],
+    });
+    expect(damage.state.hp).toBe(30);
+
+    const heal = readPayload(
+      handleToolCall(damageHost, "record_table_event", {
+        scope: "creature",
+        type: "HEAL",
+        amount: 5,
+        semanticAction: { kind: "feature", name: "Second Wind" },
+      }),
+    );
+    expect(heal.success).toBe(true);
+    expect(heal.state.hp).toBe(35);
+    expect(heal.warnings).toContainEqual({
+      code: "bypasses_semantic_action",
+      message:
+        "HEAL bypasses the stricter feature action path for Second Wind. Prefer a modeled action token when one exists.",
+    });
+
+    const temp = readPayload(
+      handleToolCall(damageHost, "record_table_event", {
+        scope: "creature",
+        type: "GRANT_TEMP_HP",
+        amount: 7,
+        keepOld: false,
+      }),
+    );
+    expect(temp.success).toBe(true);
+    expect(temp.state.tempHp).toBe(7);
+
+    const stableHost = createDemoHost({
+      maxHp: 10,
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    const stabilize = readPayload(
+      handleToolCall(stableHost, "record_table_event", {
+        scope: "creature",
+        type: "STABILIZE",
+      }),
+    );
+    expect(stabilize.success).toBe(true);
+    expect(stabilize.state.stable).toBe(true);
+    expect(stabilize.state.deathSaves).toEqual({ successes: 0, failures: 0 });
+
+    const knockoutHost = createDemoHost();
+    const knockOut = readPayload(
+      handleToolCall(knockoutHost, "record_table_event", {
+        scope: "creature",
+        type: "KNOCK_OUT",
+      }),
+    );
+    expect(knockOut.success).toBe(true);
+    expect(knockOut.state.hp).toBe(1);
+    expect(knockOut.state.unconscious).toBe(true);
+  });
+
+  test("record_table_event reports handled no-op damage and recovery events as applied", () => {
+    const immuneHost = createDemoHost();
+    const immuneDamage = handleToolCall(immuneHost, "record_table_event", {
+      scope: "creature",
+      type: "TAKE_DAMAGE",
+      amount: 10,
+      damageType: "poison",
+      immunities: ["poison"],
+    });
+    expect("isError" in immuneDamage).toBe(false);
+    expect(readPayload(immuneDamage)).toMatchObject({
+      success: true,
+      state: { hp: 34 },
+    });
+
+    const healedHost = createDemoHost();
+    handleToolCall(healedHost, "record_table_event", {
+      scope: "creature",
+      type: "HEAL",
+      amount: 100,
+    });
+    const cappedHeal = handleToolCall(healedHost, "record_table_event", {
+      scope: "creature",
+      type: "HEAL",
+      amount: 1,
+    });
+    expect("isError" in cappedHeal).toBe(false);
+    expect(readPayload(cappedHeal)).toMatchObject({
+      success: true,
+      state: { hp: 44 },
+    });
+
+    const tempHpHost = createDemoHost();
+    handleToolCall(tempHpHost, "record_table_event", {
+      scope: "creature",
+      type: "GRANT_TEMP_HP",
+      amount: 8,
+      keepOld: false,
+    });
+    const keepOldTempHp = handleToolCall(tempHpHost, "record_table_event", {
+      scope: "creature",
+      type: "GRANT_TEMP_HP",
+      amount: 3,
+      keepOld: true,
+    });
+    expect("isError" in keepOldTempHp).toBe(false);
+    expect(readPayload(keepOldTempHp)).toMatchObject({
+      success: true,
+      state: { tempHp: 8 },
+    });
+  });
+
+  test("record_table_event rejects handled events that are unavailable in the current creature state", () => {
+    const host = createDemoHost();
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "STABILIZE",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      success: false,
+      appliedEvent: null,
+      warnings: [
+        {
+          code: "external_table_fact",
+          message:
+            "STABILIZE records a table fact rather than an ordinary suggested action.",
+        },
+      ],
+      state: readPayload(handleToolCall(host, "get_state", {})),
+      error: {
+        code: "TABLE_EVENT_NOT_ACCEPTED",
+        message: "Table event is not accepted in the current creature state",
+        event: { scope: "creature", type: "STABILIZE" },
+      },
+    });
   });
 
   test("unsupported battle table events return a structured error without mutating state", () => {

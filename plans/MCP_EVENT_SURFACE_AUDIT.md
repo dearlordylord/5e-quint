@@ -42,7 +42,7 @@ Current workspace counts from the audited files:
 
 Raw event exposure is therefore 61 / 154 = about 40%. That number is not a completion metric. Many of the remaining 93 core variants should never appear in `get_available_actions`.
 
-Current MCP tools are `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, and `record_table_event`. Control commands for battle setup, battle turn lifecycle, legendary-action pass, creature turn end, and creature long rest are wired. Table events are skeleton-only.
+Current MCP tools are `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, and `record_table_event`. Control commands for battle setup, battle turn lifecycle, legendary-action pass, creature turn end, and creature long rest are wired. Creature damage/recovery table events are wired; later table-event slices remain unsupported.
 
 ## MCP API Surface Taxonomy
 
@@ -65,14 +65,14 @@ Some lifecycle `control_command` events are currently exposed through `get_avail
 
 | Event | Scope | Currently exposed in MCP? | Current MCP token name | Classification | Reasoning | Should be in `get_available_actions`? | If not, owning MCP surface | Blocker or next implementation step |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `TAKE_DAMAGE` | creature | no | - | `table_event` | Damage is an external table fact, not a player option. | no | Future `record_table_event` surface. | Design warning-aware damage application surface. |
-| `HEAL` | creature | no | - | `table_event` | Generic healing records a table outcome rather than a specific chosen feature. | no | Future `record_table_event` surface. | Design generic healing application surface. |
+| `TAKE_DAMAGE` | creature | yes | `record_table_event` | `table_event` | Damage is an external table fact, not a player option. | no | `record_table_event` | **Task 6: wired.** Accepts amount, Damage Type, modifier sets, Critical Hit flag, and optional semantic-action provenance warning. |
+| `HEAL` | creature | yes | `record_table_event` | `table_event` | Generic healing records a table outcome rather than a specific chosen feature. | no | `record_table_event` | **Task 6: wired.** Accepts amount and optional semantic-action provenance warning. |
 | `REDUCE_MAX_HP` | creature | no | - | `table_event` | Max-HP reduction comes from an external effect or rule fact. | no | Future `record_table_event` surface. | Add only after effect ownership is explicit. |
 | `RESTORE_MAX_HP` | creature | no | - | `table_event` | Max-HP restoration is an external recovery fact. | no | Future `record_table_event` surface. | Add with max-HP reduction restoration semantics. |
-| `GRANT_TEMP_HP` | creature | no | - | `table_event` | Generic temporary HP grants are produced by spells/features or DM facts. | no | Future `record_table_event` surface. | Add via semantic feature tokens or `record_table_event`. |
+| `GRANT_TEMP_HP` | creature | yes | `record_table_event` | `table_event` | Generic temporary HP grants are produced by spells/features or DM facts. | no | `record_table_event` | **Task 6: wired.** Requires explicit keep-old/new Temporary Hit Points choice and accepts optional semantic-action provenance warning. |
 | `DEATH_SAVE` | creature | no | - | `action_resolution` | Death-save rolls are runtime dice consumed during turn processing. | no | Runtime/session roll owner. | Keep hidden behind turn processing or future roll owner. |
-| `STABILIZE` | creature | no | - | `table_event` | Stabilization can be a DM/table result rather than an ordinary self option. | no | Future `record_table_event` surface. | Design table-event surface if manual stabilization is needed. |
-| `KNOCK_OUT` | creature | no | - | `table_event` | Knockout is a damage-resolution choice or table outcome. | no | Future `record_table_event` surface. | Represent as part of damage/attack resolution, not an action token. |
+| `STABILIZE` | creature | yes | `record_table_event` | `table_event` | Stabilization can be a DM/table result rather than an ordinary self option. | no | `record_table_event` | **Task 6: wired.** Accepts optional semantic-action provenance warning. |
+| `KNOCK_OUT` | creature | yes | `record_table_event` | `table_event` | Knockout is a damage-resolution choice or table outcome. | no | `record_table_event` | **Task 6: wired.** Accepts optional semantic-action provenance warning. |
 | `APPLY_CONDITION` | creature | no | - | `table_event` | Condition application is an external rule/effect fact. | no | Future `record_table_event` surface. | Add warning-aware condition application if needed. |
 | `REMOVE_CONDITION` | creature | no | - | `table_event` | Generic condition removal is an external rule/effect fact. | no | Future `record_table_event` surface. | Add via semantic feature/spell or `record_table_event`. |
 | `ADD_EXHAUSTION` | creature | no | - | `table_event` | Exhaustion gain is an external environmental or rule fact. | no | Future `record_table_event` surface. | Add only with table-event provenance. |

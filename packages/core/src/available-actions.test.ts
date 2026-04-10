@@ -12,6 +12,7 @@ import {
   previewBattleAction,
   resolveBattleAction,
   resolveAction,
+  TableEventCommandSchema,
   type ResolutionRequest,
 } from "#/available-actions.ts";
 import { battleMachine } from "#/battle-machine.ts";
@@ -646,6 +647,64 @@ describe("available actions contract", () => {
         sotConSave: true,
         deathSaveRoll: 0,
         hiddenRuntimeFact: true,
+      })._tag,
+    ).toBe("Left");
+  });
+
+  test("table event schema exposes damage and recovery commands without raw passthrough", () => {
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 8,
+        damageType: "fire",
+        resistances: ["fire"],
+        semanticAction: { kind: "spell", name: "fireball" },
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "HEAL",
+        amount: 5,
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "GRANT_TEMP_HP",
+        amount: 6,
+        keepOld: false,
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "STABILIZE",
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "KNOCK_OUT",
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 8,
+      })._tag,
+    ).toBe("Left");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema, {
+        onExcessProperty: "error",
+      })({
+        scope: "creature",
+        type: "GRANT_TEMP_HP",
+        amount: 6,
+        keepOld: false,
+        condition: "poisoned",
       })._tag,
     ).toBe("Left");
   });

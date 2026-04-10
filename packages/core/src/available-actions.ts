@@ -636,17 +636,29 @@ export const BATTLE_CONTROL_COMMAND_TYPES = [
 export type BattleControlCommandType =
   (typeof BATTLE_CONTROL_COMMAND_TYPES)[number];
 
-export const CREATURE_TABLE_EVENT_TYPES = [
+export const CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES = [
   "TAKE_DAMAGE",
   "HEAL",
   "GRANT_TEMP_HP",
   "STABILIZE",
   "KNOCK_OUT",
+] as const satisfies ReadonlyArray<DndEvent["type"]>;
+export type CreatureDamageRecoveryTableEventType =
+  (typeof CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES)[number];
+
+export const CREATURE_REMAINING_TABLE_EVENT_TYPES = [
   "APPLY_CONDITION",
   "REMOVE_CONDITION",
   "ADD_EXHAUSTION",
   "REDUCE_EXHAUSTION",
   "APPLY_FALL",
+] as const satisfies ReadonlyArray<DndEvent["type"]>;
+export type CreatureRemainingTableEventType =
+  (typeof CREATURE_REMAINING_TABLE_EVENT_TYPES)[number];
+
+export const CREATURE_TABLE_EVENT_TYPES = [
+  ...CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES,
+  ...CREATURE_REMAINING_TABLE_EVENT_TYPES,
 ] as const satisfies ReadonlyArray<DndEvent["type"]>;
 export type CreatureTableEventType =
   (typeof CREATURE_TABLE_EVENT_TYPES)[number];
@@ -1134,15 +1146,70 @@ export function toBattleInitCreatureConfig(
   };
 }
 
+const TableEventSemanticActionSchema = Schema.Struct({
+  kind: Schema.Literal("spell", "feature"),
+  name: Schema.String,
+});
+const TableEventDamageTypeSetSchema = Schema.Array(
+  Schema.Literal(...DAMAGE_TYPES),
+);
+const TableEventDamageModifiersSchema = {
+  resistances: Schema.optional(TableEventDamageTypeSetSchema),
+  vulnerabilities: Schema.optional(TableEventDamageTypeSetSchema),
+  immunities: Schema.optional(TableEventDamageTypeSetSchema),
+} as const;
+const TableEventSemanticActionField = {
+  semanticAction: Schema.optional(TableEventSemanticActionSchema),
+} as const;
+const CreatureTakeDamageTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("TAKE_DAMAGE"),
+  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  damageType: Schema.Literal(...DAMAGE_TYPES),
+  isCritical: Schema.optional(Schema.Boolean),
+  ...TableEventDamageModifiersSchema,
+  ...TableEventSemanticActionField,
+});
+const CreatureHealTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("HEAL"),
+  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  ...TableEventSemanticActionField,
+});
+const CreatureGrantTempHpTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("GRANT_TEMP_HP"),
+  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  keepOld: Schema.Boolean,
+  ...TableEventSemanticActionField,
+});
+const CreatureStabilizeTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("STABILIZE"),
+  ...TableEventSemanticActionField,
+});
+const CreatureKnockOutTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("KNOCK_OUT"),
+  ...TableEventSemanticActionField,
+});
+const RemainingCreatureTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal(...CREATURE_REMAINING_TABLE_EVENT_TYPES),
+});
+const BattleTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  type: Schema.Literal(...BATTLE_TABLE_EVENT_TYPES),
+});
+
 export const TableEventCommandSchema = Schema.Union(
-  Schema.Struct({
-    scope: Schema.Literal("creature"),
-    type: Schema.Literal(...CREATURE_TABLE_EVENT_TYPES),
-  }),
-  Schema.Struct({
-    scope: Schema.Literal("battle"),
-    type: Schema.Literal(...BATTLE_TABLE_EVENT_TYPES),
-  }),
+  CreatureTakeDamageTableEventSchema,
+  CreatureHealTableEventSchema,
+  CreatureGrantTempHpTableEventSchema,
+  CreatureStabilizeTableEventSchema,
+  CreatureKnockOutTableEventSchema,
+  RemainingCreatureTableEventSchema,
+  BattleTableEventSchema,
 );
 export type TableEventCommand = Schema.Schema.Type<
   typeof TableEventCommandSchema
@@ -1167,9 +1234,22 @@ export type RecordTableEventUnsupportedResult<State> = {
   };
 };
 
+export type RecordTableEventNotAcceptedResult<State> = {
+  readonly success: false;
+  readonly appliedEvent: null;
+  readonly warnings: ReadonlyArray<TableEventWarning>;
+  readonly state: State;
+  readonly error: {
+    readonly code: "TABLE_EVENT_NOT_ACCEPTED";
+    readonly message: string;
+    readonly event: TableEventCommand;
+  };
+};
+
 export type RecordTableEventResult<State> =
   | RecordTableEventAppliedResult<State>
-  | RecordTableEventUnsupportedResult<State>;
+  | RecordTableEventUnsupportedResult<State>
+  | RecordTableEventNotAcceptedResult<State>;
 
 export type StartTurnRuntimeInputs = {
   readonly extraAttacks?: number;
