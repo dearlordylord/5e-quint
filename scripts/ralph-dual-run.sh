@@ -460,8 +460,21 @@ while IFS=$'\t' read -r task_no task_start task_end task_title; do
   write_review_prompt "Claude" "$claude_worktree" "$task_root/claude-review.md" "$task_root/claude-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
   write_review_prompt "Codex" "$codex_worktree" "$task_root/codex-review.md" "$task_root/codex-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
 
-  run_codex "$claude_worktree" "$task_root/claude-review.prompt.md" "$task_root/claude-review.log" "$task_root/claude-review.md"
-  run_codex "$codex_worktree" "$task_root/codex-review.prompt.md" "$task_root/codex-review.log" "$task_root/codex-review.md"
+  run_codex "$claude_worktree" "$task_root/claude-review.prompt.md" "$task_root/claude-review.log" "$task_root/claude-review.md" &
+  claude_review_pid=$!
+  child_pids+=("$claude_review_pid")
+  run_codex "$codex_worktree" "$task_root/codex-review.prompt.md" "$task_root/codex-review.log" "$task_root/codex-review.md" &
+  codex_review_pid=$!
+  child_pids+=("$codex_review_pid")
+
+  claude_review_status=0
+  codex_review_status=0
+  wait "$claude_review_pid" || claude_review_status=$?
+  wait "$codex_review_pid" || codex_review_status=$?
+  child_pids=()
+
+  printf '%s\n' "$claude_review_status" >"$task_root/claude-review.exit"
+  printf '%s\n' "$codex_review_status" >"$task_root/codex-review.exit"
 
   save_diff "$claude_worktree" "$task_root/claude.after-review.diff" "$task_base_sha"
   save_diff "$codex_worktree" "$task_root/codex.after-review.diff" "$task_base_sha"
