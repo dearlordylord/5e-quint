@@ -59,7 +59,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 6,
       "id": "B",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Battle Size Ownership For Grapple"
     },
     {
@@ -186,7 +186,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 3     | MCP0-C - Short Unknown Action Error                                   | done                                          | none                                                     | MCP UX and downstream agents                                                        | Closed 2026-04-10: `execute_action` / `preview_action` now return compact `UNKNOWN_ACTION_TYPE` errors before full decode, while known-action schema validation remains intact | Completed; no downstream plan changes      |
 | 4     | MCP0-D - SHORT_REST Documentation Clarity                             | done                                          | none                                                     | MCP docs accuracy                                                                   | Closed 2026-04-10: docs/tool descriptions now keep `SHORT_REST` on the action-token lane and explicitly out of `execute_control_command`                               | Completed; no duplicate route added        |
 | 5     | MCP0-E - EXIT_COMBAT After Death UX Decision                          | done                                          | MCP0-A policy context                                    | optional UX cleanup                                                                 | Closed 2026-04-10: keep `EXIT_COMBAT` available after death, document A33 caller-owned roster teardown, and clarify the MCP/core outcome text                           | Completed; no dead-creature special route  |
-| 6     | B - Battle Size Ownership For Grapple                                 | ready-for-implementation-after-light-research | none                                                     | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns               | Read RAW Grapple/Size and existing owned-size sources, then implement if no duplicate state exists                                                                       | Good implementation slice after MCP0       |
+| 6     | B - Battle Size Ownership For Grapple                                 | done                                          | none                                                     | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns               | Closed 2026-04-10: battle/spec/init now own combatant `creatureSize`; `BATTLE_GRAPPLE` no longer accepts caller-supplied sizes and remains unexposed only because `targetSaveFailed` still needs the final public runtime/session contract | Completed; audit blocker text updated      |
 | 7     | A - Condition Consequence Table Completion Research                   | ready-for-research                            | none                                                     | Possible condition-table implementation                                             | Reread SRD condition entries, decide each proposed column, and write Condition Table Delta                                                                               | Good research slice                        |
 | 8     | C - ResourceCost Typed Refactor                                       | ready-for-implementation-after-light-research | none                                                     | Cleaner MCP/UI cost display and future resource docs                                | Confirm cost consumer blast radius and immediate-cost scope, then implement typed costs if still small                                                                   | Good support-layer cleanup                 |
 | 9     | D - Battle Attack Runtime/Session Boundary                            | ready-for-research                            | none                                                     | F, G, MCP1-C, MCP2-A, possibly I; public `BATTLE_ATTACK`; off-hand/legendary/riders | Design token/runtime/session contract and stop conditions                                                                                                                | Research only; do not implement attack yet |
@@ -212,7 +212,7 @@ Already wired on `master`:
 - Warlock `USE_MAGICAL_CUNNING`, Sorcerer `USE_INNATE_SORCERY`, and Druid `ENTER_WILD_SHAPE`, `EXIT_WILD_SHAPE`, `USE_WILD_RESURGENCE_SLOT`.
 - Creature damage/recovery, condition/exhaustion, falling, voluntary concentration break, failed-save/check semantic triggers, and battle `BATTLE_HEAL` through `record_table_event`.
 
-Still explicitly deferred in the `MCP_EVENT_SURFACE_AUDIT.md` baseline. This plan schedules the grapple Size ownership prerequisite as Task B, but public `BATTLE_GRAPPLE` is not considered exposed until Task B is completed and the audit row is updated:
+Still explicitly deferred in the `MCP_EVENT_SURFACE_AUDIT.md` baseline. Task B is now complete, but public `BATTLE_GRAPPLE` remains deferred until its remaining runtime/session contract is finalized:
 
 - `BATTLE_ATTACK`, `BATTLE_OFF_HAND_ATTACK`, `BATTLE_LEGENDARY_ATTACK`.
 - Attack riders: `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, `USE_DIVINE_SMITE_FREE`.
@@ -235,11 +235,11 @@ Merged MCP Fighter vs. Goblin baseline:
 
 Recommended first coding-loop tasks:
 
-1. **Task B: Battle Size Ownership For Grapple** if the goal is a concrete implementation slice that unblocks a public battle action after the MCP0 fixes.
-2. **Task A: Condition Consequence Table Completion Research** if the goal is competitor-research follow-through and spec auditability.
-3. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
-4. **Task D: Battle Attack Runtime/Session Boundary** if the goal is the next ownership/API research frontier after the MCP0 cleanup.
-5. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
+1. **Task A: Condition Consequence Table Completion Research** if the goal is competitor-research follow-through and spec auditability.
+2. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
+3. **Task D: Battle Attack Runtime/Session Boundary** if the goal is the next ownership/API research frontier after the MCP0 cleanup.
+4. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
+5. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is monster-content research that feeds later public battle surfaces.
 
 Do not start with `BATTLE_ATTACK` implementation. Its public runtime/session contract is the main unresolved API boundary and can easily absorb off-hand attacks, hit reactions, legendary actions, and riders.
 
@@ -593,13 +593,13 @@ Extra research needed:
 
 ### Task 6 - B - Battle Size Ownership For Grapple
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: public `BATTLE_GRAPPLE` exposure and any grapple legality surface that requires owned combatant Size.
 
-Next action: reread RAW Grapple/Size, search for existing owned size fields to avoid redundant state, then implement if no blocker appears.
+Next action: Closed 2026-04-10. Use the updated `plans/MCP_EVENT_SURFACE_AUDIT.md` row for the remaining `BATTLE_GRAPPLE` public-surface blocker (`targetId` plus runtime-owned `targetSaveFailed` contract).
 
 Purpose:
 
@@ -648,6 +648,30 @@ Verification:
 - Focused battle scenario tests for size-blocked and size-allowed grapples.
 - `pnpm --filter @dnd/core typecheck`.
 - Tier 1 battle MBT after Quint and bridge changes.
+
+Verification completed:
+
+- RAW check: reread `.references/srd-5.2.1/Rules-Glossary.md` Grappled, Grappling, Unarmed Strike (grapple size limit), and Size; rechecked `UBIQUITOUS_LANGUAGE.md` entries for Grapple, Free Hand, and Size before editing. The final change only moves Size ownership into battle/spec state and keeps the existing SRD grapple legality.
+- `/simplify` round 1: removed the raw `attackerSize`/`targetSize` payload from battle events/tests and rejected the bridge-side hardcoded grapple-size inputs.
+- `/simplify` round 2: rechecked init/default ownership and public-surface wording; kept `BATTLE_GRAPPLE` unexposed because `targetSaveFailed` is still a runtime-owned fact, and updated the audit/plan text to describe that precise remaining blocker.
+- Focused battle scenario tests: added a size-blocked grapple case and kept the size-allowed drag-speed exemption coverage.
+- `pnpm --filter @dnd/core typecheck`: passed.
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts -t "grapple fails when the target is more than one size larger|dragging a grappled target halves the grappler's speed unless the target is two sizes smaller"`: passed.
+- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts -t 'release grapple|escape grapple'`: passed.
+- `pnpm --filter @dnd/mcp test -- --runInBand packages/mcp/src/server.test.ts -t 'release grapple|escape grapple'`: passed.
+- `node scripts/compile-battle-spec.cjs`: passed; rebuilt `.quint-cache/battle-compiled.json` for the updated battle spec.
+- Tier 1 battle MBT: `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle-projection.mbt.test.ts` passed after recompiling the battle spec cache.
+- `git diff --check`: passed.
+- `pnpm quality`: failed in a pre-existing repo state during `packages/core` lint because `prettier --check src` reported unrelated formatting drift in 11 existing files (`src/battle-machine-actions-attack.ts`, `src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/features/spell-available-actions.ts`, `src/machine-event-extractors.ts`, `src/machine-helpers.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`, `src/types.ts`). This task-formatted its touched test files and did not run broad repo-wide formatting.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `B`: revise to `done`.
+  - `D`: no-change; the remaining `BATTLE_GRAPPLE` blocker is now the same runtime/session-boundary problem family, but Task D scope itself is unchanged.
+  - `MCP2-A`: no-change; attack-boundary research remains a separate blocker for public attacks.
+- Plan edits: marked Task `B` done in the Ralph task index, DAG row, task-selection guidance, current baseline note, and Task 6 closeout; updated the next-step text to point at the audit's new post-size blocker wording.
 
 Extra research needed:
 

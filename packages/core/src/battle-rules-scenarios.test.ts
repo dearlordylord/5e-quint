@@ -124,14 +124,37 @@ function creature(
   return ctx(actor).creatures.get(CreatureId(id))!;
 }
 
-function initTwoPcBattle() {
+function initTwoPcBattle({
+  attackerSize = "medium",
+  targetSize = "medium",
+}: {
+  readonly attackerSize?:
+    | "tiny"
+    | "small"
+    | "medium"
+    | "large"
+    | "huge"
+    | "gargantuan";
+  readonly targetSize?:
+    | "tiny"
+    | "small"
+    | "medium"
+    | "large"
+    | "huge"
+    | "gargantuan";
+} = {}) {
   const actor = createActor(battleMachine);
   actor.start();
   send(actor, {
     type: "BATTLE_INIT",
     creatures: [
-      { id: CreatureId("A"), maxHp: 20, kind: "PC" },
-      { id: CreatureId("B"), maxHp: 20, kind: "PC" },
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        creatureSize: attackerSize,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", creatureSize: targetSize },
     ],
   });
   return actor;
@@ -2123,8 +2146,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("A"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
 
@@ -2311,8 +2332,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
 
@@ -2359,8 +2378,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
     send(actor, {
@@ -2439,6 +2456,24 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "B").sneakAttackUsedThisTurn).toBe(true);
   });
 
+  it("natural_20: grapple fails when the target is more than one size larger", () => {
+    const actor = initTwoPcBattle({
+      attackerSize: "medium",
+      targetSize: "huge",
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      targetSaveFailed: true,
+    });
+
+    expect(creature(actor, "A").grapplingTarget).toBeNull();
+    expect(creature(actor, "B").grappled).toBe(false);
+    expect(creature(actor, "A").actionsRemaining).toBe(0);
+  });
+
   it("natural_20: dragging a grappled target halves the grappler's speed unless the target is two sizes smaller", () => {
     const actor = initTwoPcBattle();
     startTurn(actor);
@@ -2446,8 +2481,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
 
@@ -2462,14 +2495,15 @@ describe("battle rules scenario regressions", () => {
 
     expect(creature(actor, "A").movementRemaining).toBe(10);
 
-    const exemptActor = initTwoPcBattle();
+    const exemptActor = initTwoPcBattle({
+      attackerSize: "huge",
+      targetSize: "medium",
+    });
     startTurn(exemptActor);
 
     send(exemptActor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "huge",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
 
@@ -2484,8 +2518,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
 
@@ -2510,8 +2542,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
     send(actor, {
@@ -2547,8 +2577,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
     send(actor, {
@@ -2583,8 +2611,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
 
@@ -2608,8 +2634,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, {
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
 

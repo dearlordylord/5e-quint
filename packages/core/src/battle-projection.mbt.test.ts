@@ -36,7 +36,6 @@ import {
   ITFVariantWithValue,
   logMbtSeed,
   mapDamageType,
-  parseItfSize,
   type NormalizedState,
   QUINT_CONDITION_MAP,
   QuintCreatureState,
@@ -51,6 +50,7 @@ import type {
   CreatureId,
   CreatureKind,
   DamageType,
+  Size,
   SpellName,
 } from "#/types.ts";
 import {
@@ -75,6 +75,13 @@ const QuintCombatant = z.object({
   turn: QuintTurnState,
   slots: QuintSpellSlotState,
   kind: z.any().transform(variantToString),
+  creatureSize: z
+    .unknown()
+    .optional()
+    .transform((raw): Size => {
+      if (raw === undefined) return "medium";
+      return ITFSize.parse(raw);
+    }),
   monsterResources: QuintMonsterResourceState,
   statBlock: z.any(),
   rogueLevel: z.bigint(),
@@ -203,7 +210,9 @@ const BATTLE_EXCLUDED_KEYS_ARRAY = [
 ] as const satisfies ReadonlyArray<keyof NormalizedState>;
 
 type BattleExcludedKeys = (typeof BATTLE_EXCLUDED_KEYS_ARRAY)[number];
-type BattleCreatureState = Omit<NormalizedState, BattleExcludedKeys>;
+type BattleCreatureState = Omit<NormalizedState, BattleExcludedKeys> & {
+  readonly creatureSize: Size;
+};
 const BATTLE_EXCLUDED_KEYS = new Set<string>(BATTLE_EXCLUDED_KEYS_ARRAY);
 
 /** Project NormalizedState to BattleCreatureState by dropping class/turnPhase fields. */
@@ -220,6 +229,7 @@ function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
   const t = c.turn;
   const ss = c.slots;
   return {
+    creatureSize: c.creatureSize,
     hp: Number(s.hp),
     maxHp: Number(s.maxHp),
     conMod: Number(s.conMod),
@@ -440,8 +450,6 @@ const battleDriverSchema = {
   bSearch: { targetId: OS, perceptionTotal: OI },
   bGrapple: {
     targetId: OS,
-    attackerSize: ITFSize,
-    targetSize: ITFSize,
     targetSaveFailed: OB,
   },
   bReleaseGrapple: {},
@@ -508,6 +516,7 @@ function createBattleProjectionDriver() {
     const turnStarted = new Set<string>();
     const grapplingTargets = new Map<string, string>();
     const grappledBy = new Map<string, string>();
+    const creatureSizes = new Map<string, Size>();
     const hiddenDiscoveryDcs = new Map<string, number>();
 
     // Pick helpers: values are already parsed by schema (number, string, boolean)
@@ -707,6 +716,7 @@ function createBattleProjectionDriver() {
       actorA.send({ type: "ENTER_COMBAT" });
       actors.set(mkCreatureId("A"), actorA);
       creatureKinds.set("A", "PC");
+      creatureSizes.set("A", "medium");
 
       // B: PC caster, barbarian 5 — Fast Movement baked into baseWalkSpeed (30 + 10 = 40)
       const actorB = createActor(creatureMachine, {
@@ -726,6 +736,7 @@ function createBattleProjectionDriver() {
       actorB.send({ type: "ENTER_COMBAT" });
       actors.set(mkCreatureId("B"), actorB);
       creatureKinds.set("B", "PC");
+      creatureSizes.set("B", "medium");
 
       // C: Monster with TEST_MONSTER_STAT_BLOCK (3 LA, 3 LR, breath_weapon recharge 5)
       statBlocks.set("C", {
@@ -750,6 +761,7 @@ function createBattleProjectionDriver() {
       actorC.send({ type: "ENTER_COMBAT" });
       actors.set(mkCreatureId("C"), actorC);
       creatureKinds.set("C", "Monster");
+      creatureSizes.set("C", "medium");
 
       // D: PC caster, Champion fighter 5 (Action Surge, crit range handled only in battle layer)
       const actorD = createActor(creatureMachine, {
@@ -769,6 +781,7 @@ function createBattleProjectionDriver() {
       actorD.send({ type: "ENTER_COMBAT" });
       actors.set(mkCreatureId("D"), actorD);
       creatureKinds.set("D", "PC");
+      creatureSizes.set("D", "medium");
 
       const initEntries = [
         {
@@ -1727,8 +1740,8 @@ function createBattleProjectionDriver() {
     function handleBGrapple(picks: ReadonlyMap<string, unknown>) {
       const attackerId = activeId();
       const targetId = pickString(picks, "targetId") ?? "";
-      const attackerSize = parseItfSize(picks.get("attackerSize"), "medium");
-      const targetSize = parseItfSize(picks.get("targetSize"), "medium");
+      const attackerSize = creatureSizes.get(attackerId) ?? "medium";
+      const targetSize = creatureSizes.get(targetId) ?? "medium";
       const targetSaveFailed = pickBool(picks, "targetSaveFailed") ?? false;
       const attackerCtx = getSnap(attackerId).context;
       const targetSnap = getSnap(targetId);
@@ -2284,7 +2297,10 @@ function createBattleProjectionDriver() {
           const base = projectToBattle(
             snapshotToNormalized(actor.getSnapshot()),
           );
-          result.set(id, base);
+          result.set(id, {
+            ...base,
+            creatureSize: creatureSizes.get(id) ?? "medium",
+          });
         }
         return result;
       },

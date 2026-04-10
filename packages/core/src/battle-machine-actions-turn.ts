@@ -144,6 +144,7 @@ export function battleInit({
     const preparedSpells = cfg.preparedSpells ?? base.preparedSpells;
     creatures.set(cfg.id, {
       ...base,
+      ...(cfg.creatureSize != null ? { creatureSize: cfg.creatureSize } : {}),
       ...(cfg.maxHpReduction != null
         ? { maxHpReduction: cfg.maxHpReduction }
         : {}),
@@ -377,14 +378,16 @@ export function battleGrapple({
   if (ac.actionsRemaining <= 0 && ac.extraAttacksRemaining <= 0) return {};
   if (ac.grapplingTarget != null || tc.grappledBy != null) return {};
   if (!battleHasFreeHand(ac)) return {};
+  const attackerSize = ac.creatureSize;
+  const targetSize = tc.creatureSize;
   const updatedAc =
     ac.attackActionUsed && ac.extraAttacksRemaining > 0
       ? spendExtraAttack(ac)
       : spendAction(ac, "attack");
   let cs = setCreature(c.creatures, id, updatedAc);
   const success = resolveGrapple(
-    e.attackerSize,
-    e.targetSize,
+    attackerSize,
+    targetSize,
     e.targetSaveFailed,
     true,
     isIncapacitated(tc),
@@ -394,7 +397,7 @@ export function battleGrapple({
       cs,
       id,
       e.targetId,
-      targetTwoSizesSmaller(e.attackerSize, e.targetSize),
+      targetTwoSizesSmaller(attackerSize, targetSize),
       id,
     );
   }

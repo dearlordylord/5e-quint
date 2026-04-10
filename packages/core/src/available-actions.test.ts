@@ -489,8 +489,6 @@ function initBattleForReleaseGrappleDiscovery(
     actor.send({
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
   }

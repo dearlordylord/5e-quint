@@ -21,7 +21,6 @@ import type {
   CreatureId,
   DamageType,
   DifficultyClass,
-  Size,
   SpellId,
   SpellSlotLevel,
   WeaponProperty,
@@ -329,8 +328,6 @@ export type BattleEvent =
   | {
       readonly type: "BATTLE_GRAPPLE";
       readonly targetId: CreatureId;
-      readonly attackerSize: Size;
-      readonly targetSize: Size;
       readonly targetSaveFailed: boolean;
     }
   | { readonly type: "BATTLE_RELEASE_GRAPPLE" }

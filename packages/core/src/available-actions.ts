@@ -57,6 +57,7 @@ import {
   CREATURE_KINDS,
   CreatureId,
   DAMAGE_TYPES,
+  SIZES,
   SpellSlotLevel,
   spellSlotLevel,
   type D20Roll,
@@ -1195,6 +1196,7 @@ const BattleInitCreatureConfigSchema = Schema.Struct({
     Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
   ),
   kind: Schema.Literal(...CREATURE_KINDS),
+  creatureSize: Schema.optional(Schema.Literal(...SIZES)),
   caster: Schema.optional(Schema.Boolean),
   rogueLevel: Schema.optional(
     Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
