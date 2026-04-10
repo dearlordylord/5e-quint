@@ -1172,8 +1172,8 @@ module creature {
 
   pure def pCanAct(s: CreatureState): bool = not(isIncapacitated(s))
 
-  pure def pCanSpeak(s: CreatureState): bool =
-    not(s.paralyzed) and not(s.petrified) and not(s.unconscious)
+  /// SRD 5.2.1: Incapacitated includes "Speechless. You can't speak."
+  pure def pCanSpeak(s: CreatureState): bool = not(isIncapacitated(s))
 
   // ============================================================
   // 10. HIT POINTS (character/hitpoints)

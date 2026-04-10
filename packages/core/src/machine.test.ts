@@ -1093,7 +1093,7 @@ describe("canAct and canSpeak", () => {
     expect(canAct(ctx(a))).toBe(false);
   });
 
-  it("canSpeak = not paralyzed/petrified/unconscious", () => {
+  it("canSpeak = not incapacitated", () => {
     const a = create();
     expect(canSpeak(ctx(a))).toBe(true);
 
@@ -1109,10 +1109,10 @@ describe("canAct and canSpeak", () => {
     expect(canSpeak(ctx(a))).toBe(false);
   });
 
-  it("stunned can still speak (falteringly)", () => {
+  it("stunned blocks speech", () => {
     const a = create();
     applyCondition(a, "stunned");
-    expect(canSpeak(ctx(a))).toBe(true);
+    expect(canSpeak(ctx(a))).toBe(false);
   });
 });
 

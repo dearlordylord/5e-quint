@@ -127,6 +127,7 @@ export const CANONICAL_CONDITION_CONSEQUENCES: Readonly<
   incapacitated: {
     ...NO_CONDITION_CONSEQUENCES,
     blocksActions: true,
+    blocksSpeech: true,
   },
   invisible: NO_CONDITION_CONSEQUENCES,
   paralyzed: {

@@ -65,7 +65,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 7,
       "id": "A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Condition Consequence Table Completion Research"
     },
     {
@@ -187,7 +187,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 4     | MCP0-D - SHORT_REST Documentation Clarity                             | done                                          | none                                                     | MCP docs accuracy                                                                   | Closed 2026-04-10: docs/tool descriptions now keep `SHORT_REST` on the action-token lane and explicitly out of `execute_control_command`                               | Completed; no duplicate route added        |
 | 5     | MCP0-E - EXIT_COMBAT After Death UX Decision                          | done                                          | MCP0-A policy context                                    | optional UX cleanup                                                                 | Closed 2026-04-10: keep `EXIT_COMBAT` available after death, document A33 caller-owned roster teardown, and clarify the MCP/core outcome text                           | Completed; no dead-creature special route  |
 | 6     | B - Battle Size Ownership For Grapple                                 | done                                          | none                                                     | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns               | Closed 2026-04-10: battle/spec/init now own combatant `creatureSize`; `BATTLE_GRAPPLE` no longer accepts caller-supplied sizes and remains unexposed only because `targetSaveFailed` still needs the final public runtime/session contract | Completed; audit blocker text updated      |
-| 7     | A - Condition Consequence Table Completion Research                   | ready-for-research                            | none                                                     | Possible condition-table implementation                                             | Reread SRD condition entries, decide each proposed column, and write Condition Table Delta                                                                               | Good research slice                        |
+| 7     | A - Condition Consequence Table Completion Research                   | done                                          | none                                                     | none                                                                                | Closed 2026-04-10: rejected redundant/single-condition table columns, deferred initiative modifiers, and landed the SRD 5.2.1 incapacitated speech fix                 | Completed; no table expansion needed       |
 | 8     | C - ResourceCost Typed Refactor                                       | ready-for-implementation-after-light-research | none                                                     | Cleaner MCP/UI cost display and future resource docs                                | Confirm cost consumer blast radius and immediate-cost scope, then implement typed costs if still small                                                                   | Good support-layer cleanup                 |
 | 9     | D - Battle Attack Runtime/Session Boundary                            | ready-for-research                            | none                                                     | F, G, MCP1-C, MCP2-A, possibly I; public `BATTLE_ATTACK`; off-hand/legendary/riders | Design token/runtime/session contract and stop conditions                                                                                                                | Research only; do not implement attack yet |
 | 10    | MCP1-A - Session Host Architecture                                    | ready-for-research                            | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-A                                                                      | Design MCP session/router host without combat state duplication                                                                                                          | Research before implementation             |
@@ -235,11 +235,11 @@ Merged MCP Fighter vs. Goblin baseline:
 
 Recommended first coding-loop tasks:
 
-1. **Task A: Condition Consequence Table Completion Research** if the goal is competitor-research follow-through and spec auditability.
-2. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
-3. **Task D: Battle Attack Runtime/Session Boundary** if the goal is the next ownership/API research frontier after the MCP0 cleanup.
-4. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
-5. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is monster-content research that feeds later public battle surfaces.
+1. **Task C: ResourceCost Typed Refactor** if the goal is support-layer cleanup with limited behavioral risk.
+2. **Task D: Battle Attack Runtime/Session Boundary** if the goal is the next ownership/API research frontier after the MCP0 cleanup.
+3. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
+4. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is monster-content research that feeds later public battle surfaces.
+5. **Task E: Movement And Help Geometry/Session Ownership** if the goal is another bounded ownership research slice.
 
 Do not start with `BATTLE_ATTACK` implementation. Its public runtime/session contract is the main unresolved API boundary and can easily absorb off-hand attacks, hit reactions, legendary actions, and riders.
 
@@ -679,13 +679,13 @@ Extra research needed:
 
 ### Task 7 - A - Condition Consequence Table Completion Research
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
-Blocks: possible condition consequence table implementation.
+Blocks: none.
 
-Next action: research SRD condition entries and write the Condition Table Delta before any code changes.
+Next action: Closed 2026-04-10. Task 7 research rejected the proposed redundant/single-condition columns, deferred initiative modifiers to future initiative work, and landed the narrow SRD 5.2.1 speech fix for Incapacitated/Stunned parity.
 
 Purpose:
 
@@ -766,7 +766,29 @@ Verification:
 
 Extra research needed:
 
-- Yes. RAW condition reread required before code changes.
+- No. RAW reread completed.
+
+Implementation closeout:
+
+- Research outcome: keep the existing 9-column support table, fix the `incapacitated.blocksSpeech` gap, and do not add redundant/single-condition columns.
+- Implemented scope: `pCanSpeak` now keys off incapacitation, TS `blocksSpeech` now includes Incapacitated, tests expect stunned creatures to be speechless, and `UBIQUITOUS_LANGUAGE.md` now reflects SRD 5.2.1 wording.
+
+Verification results:
+
+- RAW check completed against `.references/srd-5.2.1/Rules-Glossary.md` for Incapacitated, Stunned, Invisible, Petrified, and Concentration, plus `UBIQUITOUS_LANGUAGE.md`.
+- `/simplify` round 1: removed candidate carryover that was only formatting/comment churn and kept the task to the SRD-backed speech fix plus terminology/test updates.
+- `/simplify` round 2: no further important simplifications found; no redundant state or extra table columns remain.
+- `pnpm quality` failed in `prettier --check` because unrelated existing files already have formatting drift (`src/battle-machine-actions-attack.ts`, `src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/features/spell-available-actions.ts`, `src/machine-event-extractors.ts`, `src/machine-helpers.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`, `src/types.ts`).
+- `pnpm --dir packages/core exec vitest run src/machine.test.ts -t "canAct and canSpeak"` passed.
+- `pnpm exec quint test --match "test_can_speak_" dndTest.qnt` passed.
+- `git diff --check` passed.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `A`: revised from `ready-for-research` to `done`; no new follow-up task added.
+- Plan edits: synchronized Task 7 status/queue guidance and recorded the final closeout.
 
 ### Task 8 - C - ResourceCost Typed Refactor
 

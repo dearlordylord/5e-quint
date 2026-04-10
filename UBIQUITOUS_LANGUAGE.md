@@ -80,14 +80,14 @@
 | **Deafened** | Can't hear; auto-fails hearing-based checks | — |
 | **Frightened** | Disadvantage on ability checks and attack rolls while source of fear is in line of sight; can't willingly move closer to source | Scared, feared |
 | **Grappled** | Speed becomes 0; ends if grappler is incapacitated or creature is moved out of reach | Grabbed, held |
-| **Incapacitated** | Can't take actions or reactions | Disabled, stunned (Stunned is a separate, stronger condition) |
+| **Incapacitated** | Can't take actions, bonus actions, or reactions; concentration broken; can't speak; disadvantage on initiative rolls | Disabled, stunned (Stunned is a separate, stronger condition) |
 | **Invisible** | Can't be seen without magic; heavily obscured for hiding; attacks against have disadvantage; own attacks have advantage | Hidden (different — hidden requires both unseen and unheard) |
 | **Paralyzed** | Incapacitated; can't move or speak; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical | — |
 | **Petrified** | Turned to stone; incapacitated; can't move/speak; unaware; auto-fails Str/Dex saves; attacks against have advantage; resistance to all damage; immune to poison/disease | — |
 | **Poisoned** | Disadvantage on attack rolls and ability checks | — |
 | **Prone** | Can only crawl (or stand, costing half speed); disadvantage on own attack rolls; attacks within 5 ft have advantage, beyond 5 ft have disadvantage | Knocked down, lying down |
 | **Restrained** | Speed becomes 0; attacks against have advantage; own attacks have disadvantage; disadvantage on Dex saves | Immobilized (imprecise — Grappled also stops movement but differs mechanically) |
-| **Stunned** | Incapacitated; can't move; can speak only falteringly; auto-fails Str/Dex saves; attacks against have advantage | Dazed |
+| **Stunned** | Incapacitated; can't move; auto-fails Str/Dex saves; attacks against have advantage | Dazed |
 | **Unconscious** | Incapacitated; can't move/speak; unaware; drops held items and falls prone; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical | Knocked out (KO is a specific mechanic — melee attacker's choice to render unconscious + stable) |
 | **Exhaustion** | A special condition measured in six cumulative levels: 1 = disadvantage on checks; 2 = speed halved; 3 = disadvantage on attacks/saves; 4 = HP max halved; 5 = speed 0; 6 = death | Fatigue |
 
@@ -104,7 +104,7 @@ Use one consequence-indexed question per rules surface rather than scattering co
 - **Automatic sight/hearing check failure**: Blinded for sight-based checks, Deafened for hearing-based checks
 - **Speed becomes 0**: Grappled, Paralyzed, Petrified, Restrained, Unconscious
 - **Blocks actions / bonus actions / reactions**: Incapacitated and any condition that implies it
-- **Blocks speech**: Paralyzed, Petrified, Unconscious
+- **Blocks speech**: Incapacitated and any condition that implies it (Paralyzed, Petrified, Stunned, Unconscious)
 
 This table is a support-layer projection of the SRD condition text. Quint remains the semantic authority.
 

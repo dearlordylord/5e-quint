@@ -1217,7 +1217,7 @@ module dndTest::Impl {
   run test_can_act_incapacitated = assert(not(pCanAct(pApplyCondition(FRESH20, CParalyzed, Set()))))
   run test_can_speak_normal = assert(pCanSpeak(FRESH20))
   run test_can_speak_paralyzed = assert(not(pCanSpeak(pApplyCondition(FRESH20, CParalyzed, Set()))))
-  run test_can_speak_stunned_ok = assert(pCanSpeak(pApplyCondition(FRESH20, CStunned, Set())))
+  run test_can_speak_stunned_blocked = assert(not(pCanSpeak(pApplyCondition(FRESH20, CStunned, Set()))))
 
   // ============================================================
   // Combined scenarios
