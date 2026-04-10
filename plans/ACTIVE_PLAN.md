@@ -83,7 +83,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 10,
       "id": "MCP1-A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Session Host Architecture"
     },
     {
@@ -190,7 +190,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 7     | A - Condition Consequence Table Completion Research                   | done                                          | none                                                     | none                                                                                | Closed 2026-04-10: rejected redundant/single-condition table columns, deferred initiative modifiers, and landed the SRD 5.2.1 incapacitated speech fix                 | Completed; no table expansion needed       |
 | 8     | C - ResourceCost Typed Refactor                                       | done                                          | none                                                     | Cleaner MCP/UI cost display and future resource docs                                | Closed 2026-04-10: `ResourceCost` now models immediate selectable costs as typed pool/quota items, docs define the shared vocabulary, and MCP/core tests cover the new shape | Completed; no downstream reorder needed    |
 | 9     | D - Battle Attack Runtime/Session Boundary                            | done                                          | none                                                     | F, G, MCP2-A, public `BATTLE_ATTACK`; off-hand/legendary/riders                      | Closed 2026-04-10: documented the first-slice `BATTLE_ATTACK` boundary. Public token carries only `targetId` and `knockOut`; runtime `battleAttack` carries explicit table/session facts plus rolled `weaponDamage` and optional `sneakAttackDamage`; battle derives crit, weapon payload, and damage aggregation. | Completed; MCP2-A can consume directly     |
-| 10    | MCP1-A - Session Host Architecture                                    | ready-for-research                            | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-A                                                                      | Design MCP session/router host without combat state duplication                                                                                                          | Research before implementation             |
+| 10    | MCP1-A - Session Host Architecture                                    | done                                          | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-A                                                                      | Closed 2026-04-10: stdio now runs through an in-process session router that auto-promotes `BATTLE_INIT` onto a battle host while keeping encounter drafts / character-list refs as optional adapter-only metadata and leaving mutable combat state in the machines. | Completed; shared public route established |
 | 11    | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry        | ready-for-research                            | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-B                                                                      | Design a reusable core statblock facility, document approved provenance for future entries, and add Goblin Minion as the first entry                                     | Research before implementation             |
 | 12    | E - Movement And Help Geometry/Session Ownership                      | ready-for-research                            | none                                                     | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK`                                          | Decide visibility/reach/threat/path/provocation ownership                                                                                                                | Research only                              |
 | 13    | J - Generic Table Events, Environmental Hazards, And Monster Commands | ready-for-research                            | none                                                     | Future raw table event exposure and monster command work                            | Pick one narrow source/provenance family or keep deferred                                                                                                                | Research only                              |
@@ -235,11 +235,11 @@ Merged MCP Fighter vs. Goblin baseline:
 
 Recommended first coding-loop tasks:
 
-1. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
-2. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is content/data-layer research without widening MCP ownership.
-3. **Task F: Legendary Attack Payload Ownership** if the goal is the next attack-adjacent ownership research slice after Task D.
-4. **Task G: Attack Rider Ownership** if the goal is the next attack-timing research slice after Task D.
-5. **Task E: Movement And Help Geometry/Session Ownership** if the goal is another bounded ownership research slice.
+1. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is content/data-layer research without widening MCP ownership.
+2. **Task F: Legendary Attack Payload Ownership** if the goal is the next attack-adjacent ownership research slice after Task D.
+3. **Task G: Attack Rider Ownership** if the goal is the next attack-timing research slice after Task D.
+4. **Task E: Movement And Help Geometry/Session Ownership** if the goal is another bounded ownership research slice.
+5. **Task J: Generic Table Events, Environmental Hazards, And Monster Commands** only if the batch needs another bounded research slice after the MCP/battle routing work.
 
 Do not widen `BATTLE_ATTACK` implementation beyond the Task D contract. The remaining risk is scope creep into off-hand attacks, hit reactions, legendary actions, and riders.
 
@@ -1010,7 +1010,7 @@ Plan Impact:
 
 ### Task 10 - MCP1-A - Session Host Architecture
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: MCP0 tasks done or intentionally deferred.
 
@@ -1061,15 +1061,26 @@ Verification:
 - `pnpm --filter @dnd/mcp test`.
 - `pnpm --filter @dnd/mcp typecheck`.
 
-Extra research needed:
+Completed work:
 
-- Yes. Confirm the current stdio/test-host wiring before coding, then pick the smallest router that supports a creature host plus an active battle host without adding a second combat store.
+- Confirmed the current wiring before implementation: stdio started from `createDemoHost()` in `packages/mcp/src/index.ts`, tests injected `SupportedActionHost` directly, and `packages/mcp/src/server.ts` already dispatched on creature vs battle host scope.
+- Added a pure in-process `SessionRouter` in `packages/mcp/src/session-router.ts`. It owns only active host selection plus optional encounter-draft and durable character-list-reference metadata; it does not mirror HP, conditions, initiative, or any other mutable combat facts.
+- Moved the stdio entrypoint onto that router and made `execute_control_command { scope: "battle", type: "BATTLE_INIT" }` the shared public path that promotes from the default creature host onto a fresh battle host for both stdio and tests.
+- Kept all mutable combat state inside `creatureMachine` / `battleMachine`. The router only swaps which host receives tools; it does not copy or reproject live battle state.
+
+Verification:
+
+- RAW check: not applicable; adapter/session architecture only.
+- Read `ARCHITECTURE.md` and the current `packages/mcp` wiring before implementation to confirm the adapter boundary and shared-host assumptions.
+- `/simplify` convergence: round 1 removed the parallel `setHost()` path and ensured replaced hosts are stopped on successful promotion; round 2 found no further important simplifications.
+- `pnpm --filter @dnd/mcp test`.
+- `pnpm --filter @dnd/mcp typecheck`.
+- `pnpm quality`.
 
 Plan impact:
 
-- `MCP1-C`: consume the session/router boundary and any explicit encounter-draft input instead of introducing a separate demo-only bootstrap path.
-- `MCP2-A`: keep using the same public routing path established here rather than adding a parallel battle-host selector.
-- Statuses and DAG dependencies stay unchanged at research time.
+- `MCP1-C`: no-change on status; it still depends on `MCP1-B`, but it must now reuse the shared routed `execute_control_command` / `BATTLE_INIT` path instead of adding a separate selector or demo bootstrap lane.
+- `MCP2-A`: no-change on status; it should consume the active battle host created by the routed session boundary landed here rather than adding a parallel host-selection surface.
 
 ### Task 11 - MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry
 

@@ -20,6 +20,7 @@ import {
   handleToolCall,
   toolDefinitions,
 } from "./server.ts";
+import { createSessionRouter } from "./session-router.ts";
 import { tableEventSuccess } from "./server-table-events.ts";
 
 function quota(resource: "action" | "bonusAction" | "reaction") {
@@ -3974,6 +3975,120 @@ describe("MCP server adapter", () => {
     expect(readPayload(creatureOnBattle)).toEqual({
       error: "Action scope creature does not match the current battle host.",
       details: "ACTION_SCOPE_MISMATCH",
+    });
+  });
+});
+
+describe("SessionRouter", () => {
+  test("routes creature tools through the initial host", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
+      hp: 34,
+      maxHp: 44,
+    });
+    expect(router.getSnapshot()).toEqual({
+      activeScope: "creature",
+      encounterDraft: null,
+      characterListRefs: [],
+    });
+  });
+
+  test("auto-promotes BATTLE_INIT onto a battle host through the stdio routing path", () => {
+    const router = createSessionRouter(createDemoHost(), {
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+
+    const init = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: "fighter", maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: "goblin-1", maxHp: 15, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    expect("isError" in init).toBe(false);
+    expect(router.getSnapshot()).toEqual({
+      activeScope: "battle",
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+    expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
+      scope: "battle",
+      round: 1,
+      turnIndex: 0,
+      activeCreatureId: "fighter",
+      initiative: ["fighter", "goblin-1"],
+      creatureIds: ["fighter", "goblin-1"],
+      phase: "activeTurn",
+      awaitingReaction: false,
+      resolvingAoE: false,
+      resolvingMovement: false,
+      awaitingLegendaryAction: false,
+      awaitingReadiedAction: false,
+    });
+  });
+
+  test("battle tools keep using the same routed public path after promotion", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: "A", maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: "B", maxHp: 15, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    const startTurn = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+    });
+
+    expect("isError" in startTurn).toBe(false);
+    expect(readPayload(startTurn)).toMatchObject({
+      success: true,
+      state: {
+        scope: "battle",
+        phase: "activeTurn",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_available_actions", {})),
+    ).toMatchObject({
+      bonusAction: [],
+      reaction: [],
+      free: [],
+    });
+    expect(
+      readPayload(router.handleToolCall("get_available_actions", {})).action,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+        }),
+      ]),
+    );
+  });
+
+  test("failed BATTLE_INIT leaves the creature host active", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const init = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+    });
+
+    expect("isError" in init && init.isError).toBe(true);
+    expect(router.getSnapshot()).toEqual({
+      activeScope: "creature",
+      encounterDraft: null,
+      characterListRefs: [],
     });
   });
 });

@@ -1,10 +1,6 @@
 import { Effect, JSONSchema, Match, Schema } from "effect";
-import { createActor } from "xstate";
 
-import { battleMachine } from "@dnd/core/battle-machine.ts";
-import { creatureMachine } from "@dnd/core/machine.ts";
 import { encodeDndContext } from "@dnd/core/context-encoding.ts";
-import type { DndMachineInput } from "@dnd/core/machine-types.ts";
 import {
   EXPOSED_ACTION_TYPES,
   finalizeBattleResolution,
@@ -23,8 +19,13 @@ import {
   type ResourceCost,
   TableEventCommandSchema,
 } from "@dnd/core/available-actions.ts";
-import { classLevel } from "@dnd/core/types.ts";
 
+import {
+  createBattleHost,
+  createDemoHost,
+  type BattleActionHost,
+  type CreatureActionHost,
+} from "./host-factories.ts";
 import { executeControlCommand } from "./server-control.ts";
 import {
   buildBattleRuntimeInputs,
@@ -42,52 +43,13 @@ import {
 } from "./server-shared.ts";
 import { recordTableEvent } from "./server-table-events.ts";
 
-export const DEMO_ACTOR_INPUT: DndMachineInput = {
-  maxHp: 44,
-  fighterLevel: classLevel(5),
-  baseWalkSpeed: 30,
-  effectiveSpeed: 30,
-};
-const DEMO_STARTING_DAMAGE = 10;
-
 export type { BattleActor, DndActor, SupportedActionHost };
-export type CreatureActionHost = {
-  readonly scope: "creature";
-  readonly actor: DndActor;
+export {
+  createBattleHost,
+  createDemoHost,
+  type BattleActionHost,
+  type CreatureActionHost,
 };
-export type BattleActionHost = {
-  readonly scope: "battle";
-  readonly actor: BattleActor;
-};
-
-export function createDemoActor(
-  input: DndMachineInput = DEMO_ACTOR_INPUT,
-): DndActor {
-  const actor = createActor(creatureMachine, { input });
-  actor.start();
-  actor.send({
-    type: "TAKE_DAMAGE",
-    amount: DEMO_STARTING_DAMAGE,
-    damageType: "slashing",
-    resistances: new Set(),
-    vulnerabilities: new Set(),
-    immunities: new Set(),
-    isCritical: false,
-  });
-  return actor;
-}
-
-export function createDemoHost(
-  input: DndMachineInput = DEMO_ACTOR_INPUT,
-): CreatureActionHost {
-  return { scope: "creature", actor: createDemoActor(input) };
-}
-
-export function createBattleHost(actor?: BattleActor): BattleActionHost {
-  const battleActor = actor ?? createActor(battleMachine);
-  battleActor.start();
-  return { scope: "battle", actor: battleActor };
-}
 
 export function groupByCost(
   tokens: ReadonlyArray<ActionToken>,

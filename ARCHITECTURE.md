@@ -178,6 +178,7 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 **Owns:**
 - Supported action registry (query tokens, resolved tokens, runtime-input requirements, event mappings)
 - Six MCP tools: `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, `record_table_event`
+- In-process session routing: active host selection plus optional encounter-draft inputs and durable character-list references only
 - Three-step execution contract: `ActionToken` (query-time) → `ResolvedActionToken` (user choices filled) → `ResolutionRequest` → `DndEvent` (runtime inputs added)
 - Lifecycle/control events can still use the action-token lane when the public step includes user choice or runtime resolution. `SHORT_REST` stays on `get_available_actions` / `execute_action` because hit-die order is player-chosen and the rest still needs runtime healing rolls.
 
