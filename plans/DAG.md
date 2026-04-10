@@ -1,8 +1,19 @@
 # Plans Dependency DAG
 
+## Status
+
+Mechanical/rulewise DAG scheduling is closed as of commit `7f16d6b`.
+
+No mechanical implementation nodes remain ready or blocked. The only remaining DAG tail is product/MCP work:
+
+- `dm-override`
+- `transcript-port-to-dnd`
+
+Do not use this file to schedule another mechanical runbook unless new SRD/rules work is explicitly added. Use [MCP_EVENT_SURFACE_AUDIT.md](/workspace/typescript/dnd/plans/MCP_EVENT_SURFACE_AUDIT.md) as the active starting point for MCP event-surface planning.
+
 ## Purpose
 
-This file is a scheduling artifact.
+This file was the mechanical/rulewise scheduling artifact for DAG Runbooks 1-8. It is now a closed dependency index plus product-tail pointer.
 
 It exists to answer:
 
@@ -10,7 +21,7 @@ It exists to answer:
 - what is blocked on what
 - what is ready to schedule next
 
-It is intentionally smaller than the full plan corpus. Completed historical redesigns should be removed from the active DAG once they no longer inform any remaining ordering decisions.
+It is intentionally smaller than the full plan corpus. Completed historical redesigns should be removed from any future active scheduler once they no longer inform remaining ordering decisions.
 
 ## Priority Boundary
 
@@ -46,7 +57,9 @@ Status values:
 - `later`
 - `complete`
 
-## Active DAG
+## Closed Mechanical DAG Snapshot
+
+This is retained for dependency archaeology only. It is not an active scheduling queue.
 
 ```text
 resolve-commit-doctrine
@@ -147,7 +160,7 @@ authoritative-d20-modifier-query-surface
 | `closed-modifier-algebra` | facility | complete | none | `archery-in-battle`, `two-weapon-fighting-style-in-battle` | Landed as narrow battle-owned concrete fields for Ranged-weapon attack-roll bonuses and Light-property extra-attack ability-modifier damage. Deliberately did not introduce a generic modifier registry or tag-driven system. |
 | `oa-path-vocabulary` | facility | complete | none | `movement-provocation-kind`, `reach-extends-oa-range` | Landed in [battle/DOMAIN.md](/workspace/typescript/dnd/battle/DOMAIN.md), [battle.qnt](/workspace/typescript/dnd/battle.qnt), and [battle-machine-actions-movement.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-movement.ts); geometry remains caller-owned by design |
 | `authoritative-d20-modifier-query-surface` | facility | complete | none | `armor-training-disadvantage` | Landed authoritative d20 modifier/disadvantage query ownership in machine query/types surfaces; keep here because downstream planning still references the seam |
-| `available-actions-main` | plan | active | none | `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-surface`, `after-damage-reaction-surface`, `runbook6-quint-parity`, `fire-shield-reactive-effect-payload-parity`, `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Do not schedule the umbrella directly; schedule the concrete slices below. Mechanical/rulewise action-surface work is complete; product/MCP work remains separate. |
+| `available-actions-main` | plan | complete | none | `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-surface`, `after-damage-reaction-surface`, `runbook6-quint-parity`, `fire-shield-reactive-effect-payload-parity`, `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Mechanical/rulewise action-surface work is complete; product/MCP work remains separate. |
 | `legendary-resistance-fallback` | batch | complete | none | additional battle interrupt breadth | Closed as a narrow AoE failed-save regression slice; no separate breadth batch remains to schedule here |
 | `battle-basic-action-surface` | candidate | complete | `available-actions-main` | unified projection/execution of `dash`, `disengage`, and `dodge` in battle scope | Landed in core available-actions and MCP with deterministic action-surface coverage |
 | `battle-ready-action-surface` | candidate | complete | `available-actions-main` | battle-scoped `READY`, `READY_PASS`, and `READY_RELEASE` action-surface support | Landed in core available-actions and MCP over the existing battle ready window; follow-up simplification can reduce registry boilerplate, but the runbook slice is closed |
@@ -209,7 +222,7 @@ Promote these through design/research only after the mechanical/rulewise DAG is 
 
 ## Upstream Planning Sources
 
-Use this index before researching or promoting remaining nodes. `DAG.md` is the scheduler; these are the deeper source documents.
+Use this index only when researching historical mechanical decisions or the remaining product tail. `DAG.md` is no longer the active mechanical scheduler; these are the deeper source documents.
 
 - `available-actions-main`, `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-payload-state`, `battle-ready-spell-surface`, `after-damage-trigger-state`, `after-damage-reaction-surface`, `fire-shield-reactive-effect-payload-parity`, `dm-override`, `preview-execution`, `transcript-port-to-dnd`:
   - [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
@@ -256,11 +269,11 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
 
 ## Research Starting Points
 
-Keep these compact and live. Completed historical handoffs belong in runbooks, not here.
+Keep these compact. These are closure notes for formerly live mechanical nodes, retained only where they explain important ownership decisions.
 
 ### `effect-dependency-graph`
 
-- classification: `promoted / runbook 7`
+- classification: `complete / runbook 7`
 - owner_layer: effect lifecycle ownership and teardown
 - read_first:
   - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
@@ -268,8 +281,8 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
   - [.references/inspirations/PLAN.md](/workspace/typescript/dnd/.references/inspirations/PLAN.md)
-- execution_goal:
-  - implement parent/child effect ownership and teardown semantics tightly enough to close `parent-child-effect-teardown`
+- result:
+  - implemented parent/child effect ownership and teardown semantics tightly enough to close `parent-child-effect-teardown`
 
 ### `battle-ready-spell-payload-state`
 
@@ -347,31 +360,31 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 
 ### `battle-armor-worn-state`
 
-- classification: `promoted / runbook 7`
+- classification: `complete / runbook 7`
 - owner_layer: battle-owned armor-worn facts
 - read_first:
   - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [.references/srd-5.2.1/Feats.md](/workspace/typescript/dnd/.references/srd-5.2.1/Feats.md)
   - [.references/srd-5.2.1/Equipment.md](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md)
-- execution_goal:
-  - implement the smallest battle-owned Light/Medium/Heavy armor-worn fact needed to close `defense-fighting-style-in-battle`
+- result:
+  - implemented the smallest battle-owned armor-worn fact needed to close `defense-fighting-style-in-battle`
 
 ### `damage-die-face-resolution`
 
-- classification: `promoted / runbook 7`
+- classification: `complete / runbook 7`
 - owner_layer: battle-owned weapon damage die-face facts
 - read_first:
   - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [.references/srd-5.2.1/Feats.md](/workspace/typescript/dnd/.references/srd-5.2.1/Feats.md)
   - [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-attack.ts)
-- execution_goal:
-  - implement the smallest battle-owned weapon damage die-face shape needed to close `great-weapon-fighting-in-battle`
+- result:
+  - implemented the smallest battle-owned weapon damage die-face shape needed to close `great-weapon-fighting-in-battle`
 
 ### `battle-hidden-state`
 
-- classification: `promoted / runbook 7`
+- classification: `complete / runbook 7`
 - owner_layer: battle-owned visibility / hidden-state semantics
 - read_first:
   - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md)
@@ -379,13 +392,13 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [battle/REQUIREMENTS.md](/workspace/typescript/dnd/battle/REQUIREMENTS.md)
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [.references/inspirations/12-opportunity-attack-path-analysis.md](/workspace/typescript/dnd/.references/inspirations/12-opportunity-attack-path-analysis.md)
-- execution_goal:
-  - implement the smallest battle-owned hidden/seen state that can support `hide-stealth-chain` without widening into a full grid/geometry model
+- result:
+  - implemented the smallest battle-owned hidden/search/reveal state that supports `hide-stealth-chain` without widening into a full grid/geometry model
 
 ## Maintenance Rules
 
-- Keep only live scheduling nodes here.
-- When a node is completed and no longer informs ordering, remove it from the active DAG instead of preserving history.
+- Keep this file closed until new SRD/rulewise work is explicitly added.
+- For new work, create a fresh active scheduler section instead of reviving completed Runbook 1-8 nodes.
 - When a candidate is blocked, prefer adding the missing `facility` node rather than writing vague prose about “needs more support.”
 - If a plan says “X is blocked by missing owned state,” add a concrete facility node for that owned state here.
 - Keep `Upstream Planning Sources` synchronized with repo-level PRDs, audits, and feature docs so research starts from the right corpus instead of stale handoff notes.

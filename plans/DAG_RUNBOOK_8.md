@@ -24,11 +24,11 @@ Use:
 - [DAG.md](./DAG.md) for dependency truth
 - `DAG_RUNBOOK_8.md` for the execution plan
 
-This batch closes the remaining rules-owned caveat from Runbook 6:
+This batch was created to close the remaining rules-owned caveat from Runbook 6:
 
-- Fire Shield's automatic reactive active-effect payload is still TS-owned.
-- Ready-spell payload parity and attack-derived after-damage trigger qualifier parity already landed in `battle.qnt`.
-- Fire Shield now needs the same spec-first treatment so the final after-damage reactive effect is not hidden in TypeScript action-surface logic.
+- At runbook creation time, Fire Shield's automatic reactive active-effect payload was still TS-owned.
+- Ready-spell payload parity and attack-derived after-damage trigger qualifier parity had already landed in `battle.qnt`.
+- Runbook 8 gave Fire Shield the same spec-first treatment so the final after-damage reactive effect is not hidden in TypeScript action-surface logic.
 
 ## Current Mission
 
@@ -46,19 +46,18 @@ The work should:
 - update stale mechanical status docs after parity lands
 - close mechanical umbrella nodes that no longer have real work
 
-## DAG Completion Percentages
+## Final DAG State
 
-Current scheduler state after Runbook 7 and the partial Runbook 6 parity merge:
+Runbook 8 completed the remaining mechanical/rulewise DAG implementation work.
 
-- Node count: 50 complete / 54 total = **92.6% complete**, **7.4% left**.
-- Mechanical/rulewise DAG: only `fire-shield-reactive-effect-payload-parity` remains as implementation work. That is roughly **97-98% complete**, **2-3% left** effort-weighted.
-- Full DAG including product/MCP tail: after this runbook, `dm-override` and `transcript-port-to-dnd` remain intentionally later. Counting them, the full DAG is roughly **88-91% complete**, **9-12% left** effort-weighted because product nodes are heavier than typical mechanical candidates.
+Current interpretation:
 
-Interpretation:
+- Mechanical/rulewise DAG: complete.
+- Active mechanical ready queue: empty.
+- Product/MCP tail: `dm-override` and `transcript-port-to-dnd` remain intentionally later.
+- Next active planning artifact: [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md), not another mechanical DAG runbook.
 
-- This runbook should complete the mechanical/rulewise DAG.
-- It should not attempt to complete the MCP/product DAG.
-- After this runbook lands, the next planning conversation should switch to MCP/product work, starting from `dm-override` only if that is still desired before transcript work.
+Do not reuse the pre-Runbook-8 percentage estimates. They were scheduling estimates before Fire Shield reactive payload parity landed and are no longer the source of truth.
 
 ## Default In-Scope Nodes
 
