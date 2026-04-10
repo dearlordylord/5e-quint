@@ -94,11 +94,11 @@ Commit after this task:
 
 ### Task 2 - Add MCP Surface Skeletons
 
-- [ ] Add typed command schemas for `execute_control_command` and `record_table_event` in MCP/core-owned schema code.
-- [ ] Keep the initial schemas narrow; do not accept arbitrary raw `DndEvent` or `BattleEvent`.
-- [ ] Add MCP tool definitions and handlers that validate inputs and return structured unsupported/not-yet-implemented errors for commands that are not wired yet.
-- [ ] Preserve existing `get_state`, `get_available_actions`, `execute_action`, and `preview_action` behavior.
-- [ ] Add focused MCP tests proving the new tools exist, validate shape, and do not mutate state for unsupported commands.
+- [x] Add typed command schemas for `execute_control_command` and `record_table_event` in MCP/core-owned schema code.
+- [x] Keep the initial schemas narrow; do not accept arbitrary raw `DndEvent` or `BattleEvent`.
+- [x] Add MCP tool definitions and handlers that validate inputs and return structured unsupported/not-yet-implemented errors for commands that are not wired yet.
+- [x] Preserve existing `get_state`, `get_available_actions`, `execute_action`, and `preview_action` behavior.
+- [x] Add focused MCP tests proving the new tools exist, validate shape, and do not mutate state for unsupported commands.
 
 Dependencies: Task 1.
 
@@ -113,12 +113,12 @@ Commit after this task:
 
 ### Task 3 - Battle Feature Suggested Actions
 
-- [ ] Add battle `suggested_action` support for `BATTLE_ACTION_SURGE`.
-- [ ] Add battle `suggested_action` support for `BATTLE_ENTER_RAGE`.
-- [ ] Add battle `suggested_action` support for `BATTLE_DECLARE_RECKLESS`.
-- [ ] Use battle-owned state only: active creature, turn-started flag, action/bonus-action economy, class levels, feature charges, Rage state, and Reckless state.
-- [ ] Do not add target, roll, geometry, or reaction-candidate facts in this task.
-- [ ] Add focused core available-actions tests and MCP execute/preview tests.
+- [x] Add battle `suggested_action` support for `BATTLE_ACTION_SURGE`.
+- [x] Add battle `suggested_action` support for `BATTLE_ENTER_RAGE`.
+- [x] Add battle `suggested_action` support for `BATTLE_DECLARE_RECKLESS`.
+- [x] Use battle-owned state only: active creature, turn-started flag, action/bonus-action economy, class levels, feature charges, Rage state, and Reckless state.
+- [x] Do not add target, roll, geometry, or reaction-candidate facts in this task.
+- [x] Add focused core available-actions tests and MCP execute/preview tests.
 
 Dependencies: Task 1. Task 2 is not required because this task uses the existing `get_available_actions` / `execute_action` path.
 
@@ -140,17 +140,17 @@ Commit after this task:
 
 ### Task 4 - Control Commands
 
-- [ ] Implement `control_command` support for battle/session lifecycle events that are not ordinary suggestions:
+- [x] Implement `control_command` support for battle/session lifecycle events that are not ordinary suggestions:
   - `BATTLE_INIT`
   - `BATTLE_START_TURN`
   - `BATTLE_END_TURN`
   - `BATTLE_LEGENDARY_PASS`
   - creature `END_TURN`
   - creature `LONG_REST`
-- [ ] Decide whether creature `ENTER_COMBAT`, creature `START_TURN`, creature `SHORT_REST`, and creature `EXIT_COMBAT` remain in `get_available_actions`, become mirrored control commands, or move entirely to control commands; document the decision before code changes.
-- [ ] Keep turn-start/end runtime facts runtime-owned; do not make MCP invent hidden state.
-- [ ] Add preview or dry-run behavior only if the existing pattern makes it cheap; otherwise keep control commands execute-only.
-- [ ] Add focused core/MCP tests.
+- [x] Decide whether creature `ENTER_COMBAT`, creature `START_TURN`, creature `SHORT_REST`, and creature `EXIT_COMBAT` remain in `get_available_actions`, become mirrored control commands, or move entirely to control commands; document the decision before code changes.
+- [x] Keep turn-start/end runtime facts runtime-owned; do not make MCP invent hidden state.
+- [x] Add preview or dry-run behavior only if the existing pattern makes it cheap; otherwise keep control commands execute-only. (Kept execute-only.)
+- [x] Add focused core/MCP tests.
 
 Dependencies: Task 2.
 
@@ -171,10 +171,10 @@ Commit after this task:
 
 ### Task 5 - Table Event Shared Contract
 
-- [ ] Define the shared `record_table_event` result shape: applied event, warnings, resulting state, and unsupported/error cases.
-- [ ] Add the minimum warning vocabulary: bypasses semantic action, external table fact, unsupported domain gap.
-- [ ] Keep the schema narrow and avoid arbitrary raw `DndEvent` / `BattleEvent` passthrough.
-- [ ] Add tests for validation, warnings, unsupported events, and no mutation on invalid input.
+- [x] Define the shared `record_table_event` result shape: applied event, warnings, resulting state, and unsupported/error cases.
+- [x] Add the minimum warning vocabulary: bypasses semantic action, external table fact, unsupported domain gap.
+- [x] Keep the schema narrow and avoid arbitrary raw `DndEvent` / `BattleEvent` passthrough.
+- [x] Add tests for validation, warnings, unsupported events, and no mutation on invalid input.
 
 Dependencies: Task 2.
 
@@ -189,13 +189,13 @@ Commit after this task:
 
 ### Task 6 - Creature Damage And Recovery Table Events
 
-- [ ] Implement warning-aware `record_table_event` support for creature `TAKE_DAMAGE`.
-- [ ] Implement warning-aware `record_table_event` support for creature `HEAL`.
-- [ ] Implement warning-aware `record_table_event` support for creature `GRANT_TEMP_HP`.
-- [ ] Implement warning-aware `record_table_event` support for creature `STABILIZE`.
-- [ ] Implement warning-aware `record_table_event` support for creature `KNOCK_OUT`.
-- [ ] Return warnings when the table event bypasses a stricter semantic action path such as a spell/feature token.
-- [ ] Do not include conditions, exhaustion, max-HP changes, or environmental events in this task.
+- [x] Implement warning-aware `record_table_event` support for creature `TAKE_DAMAGE`.
+- [x] Implement warning-aware `record_table_event` support for creature `HEAL`.
+- [x] Implement warning-aware `record_table_event` support for creature `GRANT_TEMP_HP`.
+- [x] Implement warning-aware `record_table_event` support for creature `STABILIZE`.
+- [x] Implement warning-aware `record_table_event` support for creature `KNOCK_OUT`.
+- [x] Return warnings when the table event bypasses a stricter semantic action path such as a spell/feature token.
+- [x] Do not include conditions, exhaustion, max-HP changes, or environmental events in this task.
 
 Dependencies: Task 5.
 
@@ -216,12 +216,12 @@ Commit after this task:
 
 ### Task 7 - Creature Condition And Exhaustion Table Events
 
-- [ ] Implement warning-aware `record_table_event` support for creature `APPLY_CONDITION`.
-- [ ] Implement warning-aware `record_table_event` support for creature `REMOVE_CONDITION`.
-- [ ] Implement warning-aware `record_table_event` support for creature `ADD_EXHAUSTION`.
-- [ ] Implement warning-aware `record_table_event` support for creature `REDUCE_EXHAUSTION`.
-- [ ] Keep condition immunity and exhaustion immunity facts domain-owned or explicit table-event inputs; do not invent adapter state.
-- [ ] Do not include effect payload insertion/removal in this task.
+- [x] Implement warning-aware `record_table_event` support for creature `APPLY_CONDITION`.
+- [x] Implement warning-aware `record_table_event` support for creature `REMOVE_CONDITION`.
+- [x] Implement warning-aware `record_table_event` support for creature `ADD_EXHAUSTION`.
+- [x] Implement warning-aware `record_table_event` support for creature `REDUCE_EXHAUSTION`.
+- [x] Keep condition immunity and exhaustion immunity facts domain-owned or explicit table-event inputs; do not invent adapter state.
+- [x] Do not include effect payload insertion/removal in this task.
 
 Dependencies: Task 5.
 
@@ -242,11 +242,11 @@ Commit after this task:
 
 ### Task 8 - Creature Environmental Table Events
 
-- [ ] Implement warning-aware `record_table_event` support for creature `APPLY_FALL`.
-- [ ] Decide whether `SUFFOCATE`, `APPLY_STARVATION`, and `APPLY_DEHYDRATION` are ready for public table-event commands or should remain named blockers.
-- [ ] If implemented, keep environmental runtime facts explicit in the table-event input and avoid hidden MCP state.
-- [ ] If deferred, update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) with the exact ownership blocker.
-- [ ] Do not include generic damage or condition events already handled by Tasks 6-7.
+- [x] Implement warning-aware `record_table_event` support for creature `APPLY_FALL`.
+- [x] Decide whether `SUFFOCATE`, `APPLY_STARVATION`, and `APPLY_DEHYDRATION` are ready for public table-event commands or should remain named blockers.
+- [x] If implemented, keep environmental runtime facts explicit in the table-event input and avoid hidden MCP state.
+- [x] If deferred, update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) with the exact ownership blocker.
+- [x] Do not include generic damage or condition events already handled by Tasks 6-7.
 
 Dependencies: Task 5.
 
@@ -267,11 +267,11 @@ Commit after this task:
 
 ### Task 9 - Creature Max-HP Effect And Concentration Table Events
 
-- [ ] Decide whether `REDUCE_MAX_HP` and `RESTORE_MAX_HP` are ready for public `table_event` commands or should remain named blockers.
-- [ ] Decide whether `ADD_EFFECT` and `REMOVE_EFFECT` can be exposed without becoming arbitrary payload dumps.
-- [ ] Decide whether `BREAK_CONCENTRATION` needs a public table-event command or should stay generated by owned damage/condition semantics.
-- [ ] Keep `CONCENTRATION_CHECK` classified as `action_resolution` unless a parent table event needs to supply a runtime save result.
-- [ ] Implement only the items whose provenance, warning semantics, and owned facts are clear; update the audit with named blockers for the rest.
+- [x] Decide whether `REDUCE_MAX_HP` and `RESTORE_MAX_HP` are ready for public `table_event` commands or should remain named blockers.
+- [x] Decide whether `ADD_EFFECT` and `REMOVE_EFFECT` can be exposed without becoming arbitrary payload dumps.
+- [x] Decide whether `BREAK_CONCENTRATION` needs a public table-event command or should stay generated by owned damage/condition semantics.
+- [x] Keep `CONCENTRATION_CHECK` classified as `action_resolution` unless a parent table event needs to supply a runtime save result.
+- [x] Implement only the items whose provenance, warning semantics, and owned facts are clear; update the audit with named blockers for the rest. (Implemented `BREAK_CONCENTRATION`; kept max-HP and raw effect payloads blocked.)
 
 Dependencies: Task 5. Best after Tasks 6 and 7 because damage, condition, and exhaustion semantics inform concentration/effect handling.
 
@@ -292,11 +292,11 @@ Commit after this task:
 
 ### Task 10 - Battle Table Events And Generic Spell Blockers
 
-- [ ] Implement warning-aware `record_table_event` support for battle `BATTLE_HEAL`.
-- [ ] Re-check `BATTLE_CAST_SAVE_SPELL`, `BATTLE_CAST_CONCENTRATION_SPELL`, `BATTLE_CAST_AOE`, and `BATTLE_CONCENTRATION_CHECK`.
-- [ ] Implement only the battle table/spell items whose payload, target, save, and runtime facts are already owned by the domain or explicit table-event input.
-- [ ] Prefer modeled spell `suggested_action` tokens over generic raw spell events whenever the spell can be modeled semantically.
-- [ ] Update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) with named blockers for generic spell events that are still unsafe to expose.
+- [x] Implement warning-aware `record_table_event` support for battle `BATTLE_HEAL`.
+- [x] Re-check `BATTLE_CAST_SAVE_SPELL`, `BATTLE_CAST_CONCENTRATION_SPELL`, `BATTLE_CAST_AOE`, and `BATTLE_CONCENTRATION_CHECK`.
+- [x] Implement only the battle table/spell items whose payload, target, save, and runtime facts are already owned by the domain or explicit table-event input.
+- [x] Prefer modeled spell `suggested_action` tokens over generic raw spell events whenever the spell can be modeled semantically.
+- [x] Update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) with named blockers for generic spell events that are still unsafe to expose.
 
 Dependencies: Task 5.
 
@@ -317,10 +317,10 @@ Commit after this task:
 
 ### Task 11 - Table Event Audit Wrap
 
-- [ ] Update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) to reflect implemented vs blocked `table_event` items.
-- [ ] Confirm no `table_event` implementation accepts arbitrary raw events.
-- [ ] Confirm all manual table-event paths return warning metadata.
-- [ ] Confirm all unsupported public-worthy table events have named blockers.
+- [x] Update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) to reflect implemented vs blocked `table_event` items.
+- [x] Confirm no `table_event` implementation accepts arbitrary raw events.
+- [x] Confirm all manual table-event paths return warning metadata.
+- [x] Confirm all unsupported public-worthy table events have named blockers.
 
 Dependencies: Tasks 6-10, or explicitly skipped subtasks with documented blockers.
 
@@ -336,10 +336,10 @@ Commit after this task:
 
 ### Task 12 - Warlock And Sorcerer Creature Suggested Actions
 
-- [ ] Add creature `suggested_action` support for `USE_MAGICAL_CUNNING`.
-- [ ] Add creature `suggested_action` support for `USE_INNATE_SORCERY`.
-- [ ] Verify each token uses an existing guard/update path and does not duplicate state.
-- [ ] Add focused available-actions and MCP tests.
+- [x] Add creature `suggested_action` support for `USE_MAGICAL_CUNNING`.
+- [x] Add creature `suggested_action` support for `USE_INNATE_SORCERY`.
+- [x] Verify each token uses an existing guard/update path and does not duplicate state.
+- [x] Add focused available-actions and MCP tests.
 
 Dependencies: Task 1. Task 2 only if either item is reclassified as `control_command`.
 
@@ -360,11 +360,11 @@ Commit after this task:
 
 ### Task 13 - Druid Creature Suggested Actions
 
-- [ ] Add creature `suggested_action` support for `ENTER_WILD_SHAPE`.
-- [ ] Add creature `suggested_action` support for `EXIT_WILD_SHAPE`.
-- [ ] Add creature `suggested_action` support for `USE_WILD_RESURGENCE_SLOT`.
-- [ ] Verify token legality from existing guard/update paths and do not add duplicate state.
-- [ ] Add focused available-actions and MCP tests.
+- [x] Add creature `suggested_action` support for `ENTER_WILD_SHAPE`.
+- [x] Add creature `suggested_action` support for `EXIT_WILD_SHAPE`.
+- [x] Add creature `suggested_action` support for `USE_WILD_RESURGENCE_SLOT`.
+- [x] Verify token legality from existing guard/update paths and do not add duplicate state.
+- [x] Add focused available-actions and MCP tests.
 
 Dependencies: Task 1. Task 2 only if any item is reclassified as `control_command`.
 
@@ -525,13 +525,13 @@ Commit after this task:
 
 ### Task 19 - Battle Non-Attack First Slice
 
-- [ ] Implement the smallest non-attack suggested action from Task 18 that does not require speculative geometry or MCP-only state.
-- [ ] Candidate order, if Task 18 confirms ownership:
+- [x] Implement the smallest non-attack suggested action from Task 18 that does not require speculative geometry or MCP-only state.
+- [x] Candidate order, if Task 18 confirms ownership:
   - `BATTLE_RELEASE_GRAPPLE`, if battle state already owns the actor's grapple state strongly enough.
   - `BATTLE_ESCAPE_GRAPPLE`, if the only missing fact is an escape result that can be runtime-owned.
   - `BATTLE_SEARCH`, if target choice and perception total can follow existing user-hole/runtime conventions.
-- [ ] Do not include `BATTLE_MOVE` unless provocation/threat ownership is explicit.
-- [ ] Do not include `BATTLE_HIDE` unless cover/obscurement and line-of-sight facts are explicitly owned or user/runtime holes.
+- [x] Do not include `BATTLE_MOVE` unless provocation/threat ownership is explicit.
+- [x] Do not include `BATTLE_HIDE` unless cover/obscurement and line-of-sight facts are explicitly owned or user/runtime holes. (Included only after making cover/obscurement and line of sight explicit session inputs.)
 
 Dependencies: Task 18. Task 2 only if this slice uses new control/table plumbing.
 
@@ -552,8 +552,8 @@ Commit after this task:
 
 ### Task 20 - Battle Basic Attack Research Slice
 
-- [ ] Split `BATTLE_ATTACK` into its token choices and runtime-owned inputs.
-- [ ] Decide whether these are battle-owned, user holes, runtime inputs, or blockers:
+- [x] Split `BATTLE_ATTACK` into its token choices and runtime-owned inputs.
+- [x] Decide whether these are battle-owned, user holes, runtime inputs, or blockers:
   - `targetId`
   - weapon payload / damage type / damage qualifiers
   - attack roll
@@ -564,8 +564,8 @@ Commit after this task:
   - melee/ranged and weapon properties
   - visibility/fear/sneak-attack adjacency facts
   - `hitReactionCandidates`
-- [ ] If implementable, add only the smallest token path for one default weapon attack shape.
-- [ ] If not implementable, document the exact missing ownership facts and stop.
+- [x] If implementable, add only the smallest token path for one default weapon attack shape. (Not implementable yet without adding a public runtime/session fact contract.)
+- [x] If not implementable, document the exact missing ownership facts and stop.
 
 Pre-design result, 2026-04-10:
 
