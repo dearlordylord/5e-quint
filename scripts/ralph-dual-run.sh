@@ -24,7 +24,8 @@ Options:
   --run-id <id>           Run identifier. Default: timestamp
   --test-command <cmd>    Verification command to tell agents to run.
                           Default: pnpm quality
-  --task <n>              Run only Task n. May be repeated.
+  --task <n>              Run only Task n. May be repeated; tasks run in
+                          the order provided.
   --keep-run              Keep .ralph/runs/<run-id> after failure/interrupt.
   --keep-worktrees        Leave temporary worktrees in place.
   --skip-decider          Stop each task after implementation and review.
@@ -195,6 +196,23 @@ awk '
 ' "$plan_snapshot" >"$task_index"
 
 [[ -s "$task_index" ]] || die "no task headings found in plan snapshot: $plan_snapshot"
+
+if [[ ${#selected_tasks[@]} -gt 0 ]]; then
+  ordered_task_index="$run_root/tasks.selected.tsv"
+  : >"$ordered_task_index"
+  for selected in "${selected_tasks[@]}"; do
+    awk -F $'\t' -v selected="$selected" '
+      $1 == selected {
+        print
+        found = 1
+      }
+      END {
+        exit found ? 0 : 1
+      }
+    ' "$task_index" >>"$ordered_task_index" || die "selected task not found in plan: $selected"
+  done
+  mv "$ordered_task_index" "$task_index"
+fi
 
 task_selected() {
   local task_no="$1"
