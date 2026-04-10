@@ -45,4 +45,5 @@ mbt-seed-blacklist.txt
 mbt-failure-battle-*.log
 escalate-fuzz.log
 .codex/
+.mcp.dnd.local.json
 fat-traces/

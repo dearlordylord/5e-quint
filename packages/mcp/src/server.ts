@@ -117,6 +117,12 @@ export const recordTableEventJsonSchema = JSONSchema.make(
   TableEventCommandSchema,
 );
 
+function mcpObjectInputSchema(schema: object) {
+  return "type" in schema && schema.type === "object"
+    ? schema
+    : { ...schema, type: "object" as const };
+}
+
 export const toolDefinitions = [
   {
     name: "get_state",
@@ -132,25 +138,25 @@ export const toolDefinitions = [
     name: "execute_action",
     description:
       "Execute a resolved scoped action token. User-facing choices must already be filled; MCP supplies engine-only values like prerolls.",
-    inputSchema: executeActionJsonSchema,
+    inputSchema: mcpObjectInputSchema(executeActionJsonSchema),
   },
   {
     name: "preview_action",
     description:
       "Preview a resolved scoped action token without spending resources or mutating state.",
-    inputSchema: executeActionJsonSchema,
+    inputSchema: mcpObjectInputSchema(executeActionJsonSchema),
   },
   {
     name: "execute_control_command",
     description:
       "Execute a narrow session, turn, rest, or monster-control command. Supported battle turn commands require explicit runtime facts; MCP does not invent hidden start/end-turn inputs.",
-    inputSchema: executeControlCommandJsonSchema,
+    inputSchema: mcpObjectInputSchema(executeControlCommandJsonSchema),
   },
   {
     name: "record_table_event",
     description:
       "Record a narrow DM/table/world fact. Creature damage/recovery and condition/exhaustion events are applied with provenance warnings; unsupported table events return structured errors without mutating state.",
-    inputSchema: recordTableEventJsonSchema,
+    inputSchema: mcpObjectInputSchema(recordTableEventJsonSchema),
   },
 ] as const;
 

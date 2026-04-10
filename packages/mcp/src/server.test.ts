@@ -502,6 +502,17 @@ describe("MCP server adapter", () => {
     ]);
   });
 
+  test("tool definition input schemas satisfy MCP object-schema shape", () => {
+    expect(toolDefinitions.map((tool) => tool.inputSchema.type)).toEqual([
+      "object",
+      "object",
+      "object",
+      "object",
+      "object",
+      "object",
+    ]);
+  });
+
   test("execute_control_command validates a narrow command shape", () => {
     const host = createDemoHost();
 
