@@ -60,10 +60,13 @@ Rationale for replacing the audit taxonomy:
 1. Task 1 must happen first because it renames the taxonomy and updates the audit baseline.
 2. Task 2 must happen before new control/table surfaces so code and docs share the new API names.
 3. Task 3 is the first implementation batch because it is high-confidence and does not require missing target/geometry/roll ownership.
-4. Tasks 4 and 5 can happen after Task 2, but Task 5 benefits from Task 4's control-command schema pattern.
-5. Tasks 6 and 7 depend on either Task 4 or Task 5 if they reuse the new command plumbing; otherwise they can only add `get_available_actions` tokens.
-6. Task 8 should wait until target/roll/spatial ownership facts are in place or explicitly modeled as user/runtime holes.
-7. Task 9 is a final sweep and should be last.
+4. Task 4 can happen after Task 2 and establishes the control-command implementation pattern.
+5. Tasks 5-9 all depend on Task 2 because they use the `record_table_event` command surface.
+6. Tasks 5-9 are ordered from least domain-specific to most domain-specific; keep that order unless a blocker makes a later table-event slice safer to do first.
+7. Tasks 10-12 can happen after Task 1; they use `get_available_actions` and should stay independent of table-event work unless a feature is reclassified.
+8. Tasks 13-15 depend on Task 2 because they use semantic commands rather than raw `TRIGGER_*` events.
+9. Task 16 should wait until Tasks 1-15 update the audit, because its job is to re-check all blocked battle actions with current surface names.
+10. Task 17 is a final sweep and should be last.
 
 ## Task List
 
@@ -162,61 +165,146 @@ Commit after this task:
 
 - `feat(mcp): add session control commands`
 
-### Task 5 - Table Event Commands
+### Task 5 - Creature Damage And Recovery Table Events
 
-- [ ] Implement warning-aware `table_event` support for high-value creature events:
-  - `TAKE_DAMAGE`
-  - `HEAL`
-  - `GRANT_TEMP_HP`
-  - `APPLY_CONDITION`
-  - `REMOVE_CONDITION`
-  - `ADD_EXHAUSTION`
-  - `REDUCE_EXHAUSTION`
-  - `STABILIZE`
-  - `KNOCK_OUT`
-  - `APPLY_FALL`
-- [ ] Implement warning-aware `table_event` support for high-value battle events:
-  - `BATTLE_HEAL`
-  - generic damage/condition/effect application only if the battle machine already has a direct event for it; otherwise document the domain gap.
-- [ ] Keep `REDUCE_MAX_HP`, `RESTORE_MAX_HP`, `ADD_EFFECT`, `REMOVE_EFFECT`, `BREAK_CONCENTRATION`, `SUFFOCATE`, `APPLY_STARVATION`, and `APPLY_DEHYDRATION` either implemented or explicitly deferred in the audit with a named reason.
-- [ ] Return warnings when the command bypasses a stricter semantic action path.
-- [ ] Do not expose raw `ADD_EFFECT` as an arbitrary payload dump unless provenance and warning semantics are explicit.
+- [ ] Implement warning-aware `record_table_event` support for creature `TAKE_DAMAGE`.
+- [ ] Implement warning-aware `record_table_event` support for creature `HEAL`.
+- [ ] Implement warning-aware `record_table_event` support for creature `GRANT_TEMP_HP`.
+- [ ] Implement warning-aware `record_table_event` support for creature `STABILIZE`.
+- [ ] Implement warning-aware `record_table_event` support for creature `KNOCK_OUT`.
+- [ ] Return warnings when the table event bypasses a stricter semantic action path such as a spell/feature token.
+- [ ] Do not include conditions, exhaustion, max-HP changes, or environmental events in this task.
 
 Dependencies: Task 2.
 
 RAW check:
 
-- Read damage, healing, conditions, exhaustion, falling, suffocation, food/water, and concentration passages in `.references/srd-5.2.1/Playing-the-Game.md` and `.references/srd-5.2.1/Rules-Glossary.md`.
+- Read damage, healing, temporary HP, dying, stabilization, and knocking a creature out in `.references/srd-5.2.1/Playing-the-Game.md` and `.references/srd-5.2.1/Rules-Glossary.md`.
+- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md) for HP, death save, and damage terminology.
+
+Verification:
+
+- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
+- `pnpm --filter @dnd/mcp test -- src/server.test.ts`
+- `npx quint test --match "inv_" dndTest.qnt` if damage/death-state invariant behavior is affected.
+
+Commit after this task:
+
+- `feat(mcp): add creature damage table events`
+
+### Task 6 - Creature Condition And Exhaustion Table Events
+
+- [ ] Implement warning-aware `record_table_event` support for creature `APPLY_CONDITION`.
+- [ ] Implement warning-aware `record_table_event` support for creature `REMOVE_CONDITION`.
+- [ ] Implement warning-aware `record_table_event` support for creature `ADD_EXHAUSTION`.
+- [ ] Implement warning-aware `record_table_event` support for creature `REDUCE_EXHAUSTION`.
+- [ ] Keep condition immunity and exhaustion immunity facts domain-owned or explicit table-event inputs; do not invent adapter state.
+- [ ] Do not include effect payload insertion/removal in this task.
+
+Dependencies: Task 2.
+
+RAW check:
+
+- Read conditions and exhaustion in `.references/srd-5.2.1/Rules-Glossary.md` and any relevant condition passages in `.references/srd-5.2.1/Playing-the-Game.md`.
 - Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md) for condition/effect terminology.
 
 Verification:
 
 - `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
 - `pnpm --filter @dnd/mcp test -- src/server.test.ts`
-- `npx quint test --match "inv_" dndTest.qnt` if creature invariant edge cases are affected.
+- `npx quint test --match "inv_" dndTest.qnt` if condition or exhaustion invariants are affected.
 
 Commit after this task:
 
-- `feat(mcp): add table event commands`
+- `feat(mcp): add condition table events`
 
-### Task 6 - Remaining High-Confidence Creature Suggested Actions
+### Task 7 - Creature Environmental Table Events
 
-- [ ] Add creature `suggested_action` support for zero- or simple-payload feature events that do not need missing target/geometry/attack ownership:
-  - `USE_MAGICAL_CUNNING`
-  - `USE_INNATE_SORCERY`
-  - `ENTER_WILD_SHAPE`
-  - `EXIT_WILD_SHAPE`
-  - `USE_WILD_RESURGENCE_SLOT`
-  - `USE_DIVINE_SMITE_FREE`, only if RAW/guard review confirms the existing event is enough without attack-hit ownership leakage
-- [ ] For each token, verify that an existing guard/update path already owns legality.
-- [ ] Do not add MCP-only booleans or duplicate state fields.
-- [ ] Add focused available-actions and MCP tests.
+- [ ] Implement warning-aware `record_table_event` support for creature `APPLY_FALL`.
+- [ ] Decide whether `SUFFOCATE`, `APPLY_STARVATION`, and `APPLY_DEHYDRATION` are ready for public table-event commands or should remain named blockers.
+- [ ] If implemented, keep environmental runtime facts explicit in the table-event input and avoid hidden MCP state.
+- [ ] If deferred, update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) with the exact ownership blocker.
+- [ ] Do not include generic damage or condition events already handled by Tasks 5-6.
 
-Dependencies: Task 1. Task 2 only if any item is reclassified as `control_command`.
+Dependencies: Task 2.
 
 RAW check:
 
-- Read relevant Warlock, Sorcerer, Druid, and Paladin SRD 5.2.1 class passages.
+- Read falling, suffocation, food, and water rules in `.references/srd-5.2.1/Playing-the-Game.md` and `.references/srd-5.2.1/Rules-Glossary.md`.
+- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+
+Verification:
+
+- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
+- `pnpm --filter @dnd/mcp test -- src/server.test.ts`
+- `npx quint test --match "inv_" dndTest.qnt` if environmental edge-case invariants are affected.
+
+Commit after this task:
+
+- `feat(mcp): add environmental table events`
+
+### Task 8 - Creature Max-HP Effect And Concentration Table Events
+
+- [ ] Decide whether `REDUCE_MAX_HP` and `RESTORE_MAX_HP` are ready for public `table_event` commands or should remain named blockers.
+- [ ] Decide whether `ADD_EFFECT` and `REMOVE_EFFECT` can be exposed without becoming arbitrary payload dumps.
+- [ ] Decide whether `BREAK_CONCENTRATION` needs a public table-event command or should stay generated by owned damage/condition semantics.
+- [ ] Keep `CONCENTRATION_CHECK` classified as `action_resolution` unless a parent table event needs to supply a runtime save result.
+- [ ] Implement only the items whose provenance, warning semantics, and owned facts are clear; update the audit with named blockers for the rest.
+
+Dependencies: Task 2.
+
+RAW check:
+
+- Read concentration and max-HP/effect-relevant passages in `.references/srd-5.2.1/Playing-the-Game.md`, `.references/srd-5.2.1/Rules-Glossary.md`, and relevant local spell/class files when applicable.
+- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md) for effect and concentration terminology.
+
+Verification:
+
+- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
+- `pnpm --filter @dnd/mcp test -- src/server.test.ts`
+- `npx quint test --match "inv_" dndTest.qnt` if concentration or effect invariants are affected.
+
+Commit after this task:
+
+- `feat(mcp): handle effect table event blockers`
+
+### Task 9 - Battle Table Events And Generic Spell Blockers
+
+- [ ] Implement warning-aware `record_table_event` support for battle `BATTLE_HEAL`.
+- [ ] Re-check `BATTLE_CAST_SAVE_SPELL`, `BATTLE_CAST_CONCENTRATION_SPELL`, `BATTLE_CAST_AOE`, and `BATTLE_CONCENTRATION_CHECK`.
+- [ ] Implement only the battle table/spell items whose payload, target, save, and runtime facts are already owned by the domain or explicit table-event input.
+- [ ] Prefer modeled spell `suggested_action` tokens over generic raw spell events whenever the spell can be modeled semantically.
+- [ ] Update [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) with named blockers for generic spell events that are still unsafe to expose.
+
+Dependencies: Task 2.
+
+RAW check:
+
+- Read healing, spellcasting, saving throw, concentration, and AoE-related passages in `.references/srd-5.2.1/Playing-the-Game.md` and `.references/srd-5.2.1/Rules-Glossary.md`.
+- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+
+Verification:
+
+- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
+- `pnpm --filter @dnd/mcp test -- src/server.test.ts`
+- Tier 1 battle MBT only if battle behavior/spec/bridge semantics change.
+
+Commit after this task:
+
+- `feat(mcp): add battle table event coverage`
+
+### Task 10 - Warlock And Sorcerer Creature Suggested Actions
+
+- [ ] Add creature `suggested_action` support for `USE_MAGICAL_CUNNING`.
+- [ ] Add creature `suggested_action` support for `USE_INNATE_SORCERY`.
+- [ ] Verify each token uses an existing guard/update path and does not duplicate state.
+- [ ] Add focused available-actions and MCP tests.
+
+Dependencies: Task 1. Task 2 only if either item is reclassified as `control_command`.
+
+RAW check:
+
+- Read relevant Warlock and Sorcerer SRD 5.2.1 class passages.
 - Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
 
 Verification:
@@ -227,25 +315,69 @@ Verification:
 
 Commit after this task:
 
-- `feat(core): expose remaining creature feature actions`
+- `feat(core): expose warlock sorcerer MCP actions`
 
-### Task 7 - Semantic Domain Triggers
+### Task 11 - Druid Creature Suggested Actions
 
-- [ ] Do not expose raw `TRIGGER_*` events.
-- [ ] Add semantic command shapes only where MCP/session users need to record a triggering failure or hit:
-  - failed save for `TRIGGER_INDOMITABLE`
-  - failed ability check for `TRIGGER_TACTICAL_MIND`
-  - spell damage context for `TRIGGER_OVERCHANNEL`
-  - attack hit context for `TRIGGER_SNEAK_ATTACK`
-  - failed ability check or attack roll for `TRIGGER_PEERLESS_SKILL_*`
-- [ ] If the semantic trigger needs facts the domain does not own, stop and add a blocker to the audit instead of inventing MCP-only state.
-- [ ] Add tests proving the semantic command opens the expected suggested action and that resolution clears the pending state.
+- [ ] Add creature `suggested_action` support for `ENTER_WILD_SHAPE`.
+- [ ] Add creature `suggested_action` support for `EXIT_WILD_SHAPE`.
+- [ ] Add creature `suggested_action` support for `USE_WILD_RESURGENCE_SLOT`.
+- [ ] Verify token legality from existing guard/update paths and do not add duplicate state.
+- [ ] Add focused available-actions and MCP tests.
+
+Dependencies: Task 1. Task 2 only if any item is reclassified as `control_command`.
+
+RAW check:
+
+- Read relevant Druid SRD 5.2.1 class passages.
+- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+
+Verification:
+
+- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
+- `pnpm --filter @dnd/mcp test -- src/server.test.ts`
+- Tier 1b creature MBT if Quint-visible semantics or bridge fields change.
+
+Commit after this task:
+
+- `feat(core): expose druid MCP actions`
+
+### Task 12 - Paladin Free Smite Decision
+
+- [ ] Re-check `USE_DIVINE_SMITE_FREE` against RAW and the current guard/update path.
+- [ ] If the existing event is enough without attack-hit ownership leakage, add creature `suggested_action` support.
+- [ ] If it needs hit/target/attack ownership, do not expose it as a creature token; move it to the battle-action blocker list in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md).
+- [ ] Add focused tests for the implemented path or audit-only blocker update.
+
+Dependencies: Task 1.
+
+RAW check:
+
+- Read relevant Paladin Divine Smite SRD 5.2.1 class passages.
+- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+
+Verification:
+
+- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
+- `pnpm --filter @dnd/mcp test -- src/server.test.ts` if exposed through MCP.
+- Tier 1b creature MBT if Quint-visible semantics or bridge fields change.
+
+Commit after this task:
+
+- `feat(core): decide free divine smite MCP surface`
+
+### Task 13 - Save And Check Semantic Trigger Commands
+
+- [ ] Do not expose raw `TRIGGER_INDOMITABLE` or `TRIGGER_TACTICAL_MIND`.
+- [ ] Add semantic command shapes for recording a failed save that can open Indomitable and a failed ability check that can open Tactical Mind.
+- [ ] If either trigger needs facts the domain does not own, stop and add a blocker to the audit instead of inventing MCP-only state.
+- [ ] Add tests proving the semantic command opens the expected suggested action and resolution clears the pending state.
 
 Dependencies: Task 2.
 
 RAW check:
 
-- Read the SRD passages for the corresponding class features.
+- Read Fighter Indomitable and Fighter Tactical Mind SRD 5.2.1 class passages.
 - Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
 
 Verification:
@@ -256,9 +388,57 @@ Verification:
 
 Commit after this task:
 
-- `feat(mcp): add semantic trigger commands`
+- `feat(mcp): add save check trigger commands`
 
-### Task 8 - Blocked Battle Suggested Actions Research And First Slice
+### Task 14 - Attack Rider Semantic Trigger Commands
+
+- [ ] Do not expose raw `TRIGGER_SNEAK_ATTACK` or `TRIGGER_PEERLESS_SKILL_ATTACK_ROLL`.
+- [ ] Add semantic command shapes only if MCP/session users need to record an attack hit or failed attack roll outside the battle action path.
+- [ ] If attack-hit facts are better owned by battle attack resolution, update the audit blocker instead of adding a creature command.
+- [ ] Add tests proving any implemented command opens the expected suggested action and resolution clears the pending state.
+
+Dependencies: Task 2.
+
+RAW check:
+
+- Read Rogue Sneak Attack and Bard Peerless Skill SRD 5.2.1 class passages.
+- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+
+Verification:
+
+- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
+- `pnpm --filter @dnd/mcp test -- src/server.test.ts`
+- Tier 1b creature MBT if pending-resolution state or MBT bridge semantics change.
+
+Commit after this task:
+
+- `feat(mcp): add attack rider trigger commands`
+
+### Task 15 - Spell Damage Semantic Trigger Commands
+
+- [ ] Do not expose raw `TRIGGER_OVERCHANNEL`.
+- [ ] Add a semantic command shape for spell-damage context only if MCP/session users need to record it outside a modeled spell action.
+- [ ] If the spell-damage trigger belongs behind `CAST_PREPARED_SPELL` or battle spell resolution, update the audit blocker instead of adding a raw command.
+- [ ] Add tests proving any implemented command opens `USE_OVERCHANNEL` and resolution clears the pending state.
+
+Dependencies: Task 2.
+
+RAW check:
+
+- Read Wizard Overchannel SRD 5.2.1 class passages and relevant spellcasting damage passages.
+- Check [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+
+Verification:
+
+- `pnpm --filter @dnd/core test -- src/available-actions.test.ts`
+- `pnpm --filter @dnd/mcp test -- src/server.test.ts`
+- Tier 1b creature MBT if pending-resolution state or MBT bridge semantics change.
+
+Commit after this task:
+
+- `feat(mcp): add spell damage trigger command`
+
+### Task 16 - Blocked Battle Suggested Actions Research And First Slice
 
 - [ ] For each currently blocked battle `suggested_action`, decide whether the missing facts are already in battle state, should be a user choice hole, should be runtime-owned, or require a domain/spec change:
   - `BATTLE_ATTACK`
@@ -292,7 +472,7 @@ Commit after this task:
 
 - `feat(core): add first blocked battle action slice`
 
-### Task 9 - Final Surface Audit And Docs Wrap
+### Task 17 - Final Surface Audit And Docs Wrap
 
 - [ ] Regenerate/check the inventory: all 112 `DndEvent` and 42 `BattleEvent` variants must appear exactly once in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md).
 - [ ] Confirm every event is classified with the new API-surface taxonomy.
