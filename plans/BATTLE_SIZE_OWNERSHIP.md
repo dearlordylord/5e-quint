@@ -6,7 +6,7 @@ Date: 2026-04-10
 
 `BATTLE_GRAPPLE` currently carries `attackerSize` and `targetSize` directly in the event payload. That keeps the battle machine behavior testable, but it makes Size a caller-owned runtime fact even though Size is a stable creature/stat-block fact.
 
-Task 18 in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) therefore keeps `BATTLE_GRAPPLE` blocked for public `get_available_actions` exposure until battle owns creature Size.
+Task 18 in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) and Task 22 in [MCP_EVENT_SURFACE_COMPLETION_PLAN.md](./MCP_EVENT_SURFACE_COMPLETION_PLAN.md) should keep `BATTLE_GRAPPLE` blocked for public `get_available_actions` exposure until battle owns creature Size.
 
 ## Current Ownership
 
@@ -29,9 +29,13 @@ Make Size a battle-owned combatant fact:
 - Update `BATTLE_GRAPPLE` so it no longer accepts `attackerSize` or `targetSize`; derive both from `BattleCreatureState`.
 - Mirror the same ownership in `battle.qnt` by storing Size on combatants and deriving grapple legality from combatant state, not nondet event payloads.
 
-## Why This Is Parallel-Safe
+## Why This Fits The MCP Surface Plan
+
+This is not an MCP endpoint by itself, but it blocks a safe MCP surface for `BATTLE_GRAPPLE`. Without this cleanup, a public grapple action would need to accept `attackerSize` and `targetSize`, which would duplicate stable creature/stat-block state in the command payload.
 
 This is not required for `BATTLE_RELEASE_GRAPPLE` or `BATTLE_ESCAPE_GRAPPLE`, because those actions use existing grapple links and do not need Size. It can proceed independently as a domain cleanup before exposing `BATTLE_GRAPPLE`.
+
+## Why This Is Parallel-Safe
 
 It may conflict with work that edits:
 

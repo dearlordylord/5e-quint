@@ -660,6 +660,13 @@ Commit after this task:
 - [ ] Before exposing `BATTLE_GRAPPLE`, fold in the Size ownership cleanup from [BATTLE_SIZE_OWNERSHIP.md](./BATTLE_SIZE_OWNERSHIP.md): battle should own combatant Size and derive `attackerSize`/`targetSize` instead of accepting them as public command payload.
 - [ ] For the rest, update blockers instead of adding MCP-only state.
 
+Pre-research result, 2026-04-10:
+
+- `BATTLE_ESCAPE_GRAPPLE` is a clean candidate after `BATTLE_RELEASE_GRAPPLE`: battle owns the active creature's `grappledBy` state and action availability; the token needs one explicit runtime result, `escapeSucceeded`, for the Strength (Athletics) or Dexterity (Acrobatics) check against the escape DC.
+- `BATTLE_SEARCH` is a clean candidate if the token treats the check total as runtime-owned: battle owns action spend and the target's `hiddenDiscoveryDc`; user chooses `targetId`; runtime supplies `perceptionTotal` or the applicable Wisdom-check total. Do not invent perception/proficiency state in MCP.
+- `BATTLE_HIDE` is implementable only if MCP explicitly accepts session facts as inputs: `stealthTotal`, `hasCoverOrObscurement`, and `outOfEnemyLineOfSight`. Battle can own action spend and `hiddenDiscoveryDc` projection after those facts are supplied, but it does not own cover, obscurement, or enemy line of sight.
+- `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` remain blocked on geometry/session ownership: visibility, reach, path, threatened creatures, and opportunity-attack provocation are not battle-owned.
+
 Dependencies: Task 18. `BATTLE_MOVE` should wait until either a geometry/session owner exists or the plan explicitly accepts caller-supplied provocation/threat facts.
 
 RAW check:
@@ -684,6 +691,13 @@ Commit after this task:
 - [ ] Decide whether legendary attack should be a `suggested_action` in `get_available_actions`, a `control_command`, or both depending on active monster host UX.
 - [ ] Identify missing monster stat-block payload ownership for target, attack roll, damage, damage type, AC, crit, knockout, weapon properties, and reaction candidates.
 - [ ] Implement only if the monster payload is already battle-owned; otherwise document blockers.
+
+Pre-research result, 2026-04-10:
+
+- Keep `BATTLE_LEGENDARY_ATTACK` blocked for now. Battle owns the legendary-action window (`laCtx.eligibleMonsters`) and each monster's `legendaryActionsRemaining`, but it does not own the specific legendary action payload/name/cost.
+- The public surface should probably be a monster-host `suggested_action` only after stat-block action payloads exist. A `control_command` could still be useful for fully external monster automation, but it should use the same stat-block payload validation rather than accepting arbitrary attack payloads.
+- Reuse the Task 20 attack runtime boundary once it exists: user/runtime inputs still include target, attack roll, damage, crit, target AC, knockout choice, visibility/range/adjacency facts, and `hitReactionCandidates`; battle/stat-block ownership should provide damage type, damage qualifiers, weapon properties, melee/ranged shape, and action cost.
+- Do not expose caller-supplied `weaponProperties`, `isFinesse`, `laDt`, or `damageQualifiers` as arbitrary public payloads before monster stat-block action ownership exists.
 
 Dependencies: Task 4 and Task 18. May also depend on Task 20 if it reuses the regular attack token/runtime design.
 
