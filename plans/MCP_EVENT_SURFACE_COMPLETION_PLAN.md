@@ -65,7 +65,7 @@ Rationale for replacing the audit taxonomy:
 6. Tasks 6-11 all depend on Task 5 because they use the warning-aware table-event contract.
 7. Tasks 6-11 are ordered from least domain-specific to most domain-specific; keep that order unless a blocker makes a later table-event slice safer to do first.
 8. Tasks 12-14 can happen after Task 1; they use `get_available_actions` and should stay independent of table-event work unless a feature is reclassified.
-9. Tasks 15-17 depend on Task 2 because they use semantic commands rather than raw `TRIGGER_*` events.
+9. Tasks 15 and 17 depend on Task 2 because they use semantic commands rather than raw `TRIGGER_*` events. Task 16 additionally depends on Task 20 because its triggers need attack-result ownership facts from the battle attack boundary.
 10. Task 18 is the battle suggested-action ownership audit and must happen before Tasks 19-23.
 11. Task 20 should happen after Task 3 because `BATTLE_DECLARE_RECKLESS` changes attack-context meaning.
 12. Task 21 depends on Task 20 and cross-references Task 14 for `USE_DIVINE_SMITE_FREE` so it is not implemented twice at creature and battle scope.
@@ -409,10 +409,10 @@ Commit after this task:
 
 ### Task 15 - Save And Check Semantic Trigger Commands
 
-- [ ] Do not expose raw `TRIGGER_INDOMITABLE` or `TRIGGER_TACTICAL_MIND`.
-- [ ] Add semantic command shapes for recording a failed save that can open Indomitable and a failed ability check that can open Tactical Mind.
-- [ ] If either trigger needs facts the domain does not own, stop and add a blocker to the audit instead of inventing MCP-only state.
-- [ ] Add tests proving the semantic command opens the expected suggested action and resolution clears the pending state.
+- [x] Do not expose raw `TRIGGER_INDOMITABLE` or `TRIGGER_TACTICAL_MIND`.
+- [x] Add semantic command shapes for recording a failed save that can open Indomitable and a failed ability check that can open Tactical Mind.
+- [x] If either trigger needs facts the domain does not own, stop and add a blocker to the audit instead of inventing MCP-only state.
+- [x] Add tests proving the semantic command opens the expected suggested action and resolution clears the pending state.
 
 Dependencies: Task 2.
 
@@ -433,12 +433,13 @@ Commit after this task:
 
 ### Task 16 - Attack Rider Semantic Trigger Commands
 
+- [ ] Defer implementation until after Task 20 defines battle attack payload/runtime ownership.
 - [ ] Do not expose raw `TRIGGER_SNEAK_ATTACK` or `TRIGGER_PEERLESS_SKILL_ATTACK_ROLL`.
 - [ ] Add semantic command shapes only if MCP/session users need to record an attack hit or failed attack roll outside the battle action path.
 - [ ] If attack-hit facts are better owned by battle attack resolution, update the audit blocker instead of adding a creature command.
 - [ ] Add tests proving any implemented command opens the expected suggested action and resolution clears the pending state.
 
-Dependencies: Task 2.
+Dependencies: Task 2 and Task 20.
 
 RAW check:
 
