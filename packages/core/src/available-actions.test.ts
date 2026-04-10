@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
+import { Schema } from "effect";
 import { createActor } from "xstate";
 
 import {
+  ControlCommandSchema,
   finalizeBattleResolution,
   finalizeResolution,
   getAvailableActions,
@@ -604,6 +606,50 @@ function initBattleForCounterspellRuntimeDiscovery() {
 }
 
 describe("available actions contract", () => {
+  test("control command schema exposes lifecycle commands without raw passthrough", () => {
+    expect(
+      Schema.decodeUnknownEither(ControlCommandSchema)({
+        scope: "creature",
+        type: "LONG_REST",
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(ControlCommandSchema)({
+        scope: "battle",
+        type: "BATTLE_START_TURN",
+        rechargeD6: 6,
+        sotDmg: 0,
+        sotDt: "bludgeoning",
+        sotHeal: 0,
+        sotSaveResult: false,
+        sotConSave: true,
+        deathSaveRoll: 0,
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(ControlCommandSchema)({
+        scope: "battle",
+        type: "BATTLE_START_TURN",
+      })._tag,
+    ).toBe("Left");
+    expect(
+      Schema.decodeUnknownEither(ControlCommandSchema, {
+        onExcessProperty: "error",
+      })({
+        scope: "battle",
+        type: "BATTLE_START_TURN",
+        rechargeD6: 6,
+        sotDmg: 0,
+        sotDt: "bludgeoning",
+        sotHeal: 0,
+        sotSaveResult: false,
+        sotConSave: true,
+        deathSaveRoll: 0,
+        hiddenRuntimeFact: true,
+      })._tag,
+    ).toBe("Left");
+  });
+
   test("initial state only exposes ENTER_COMBAT", () => {
     const actor = makeActor();
 

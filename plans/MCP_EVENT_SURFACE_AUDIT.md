@@ -42,7 +42,7 @@ Current workspace counts from the audited files:
 
 Raw event exposure is therefore 61 / 154 = about 40%. That number is not a completion metric. Many of the remaining 93 core variants should never appear in `get_available_actions`.
 
-Current MCP tools are `get_state`, `get_available_actions`, `execute_action`, and `preview_action`. There is no separate control-command or table-event MCP surface yet.
+Current MCP tools are `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, and `record_table_event`. Control commands for battle setup, battle turn lifecycle, legendary-action pass, creature turn end, and creature long rest are wired. Table events are skeleton-only.
 
 ## MCP API Surface Taxonomy
 
@@ -59,7 +59,7 @@ Classify every core event into exactly one primary category:
 | `domain_trigger` | A semantic trigger that opens an owned pending window for a later suggested action. | Usually internal; if public, expose a semantic command rather than the raw `TRIGGER_*` event. |
 | `bookkeeping` | Internal state accounting behind higher-level semantics. | No public MCP surface. |
 
-Some lifecycle `control_command` events are currently exposed through `get_available_actions` for legacy single-creature orchestration. Task 4 owns the migration decision for those transitional tokens; their primary taxonomy still remains `control_command`.
+Some lifecycle `control_command` events are currently exposed through `get_available_actions` for legacy single-creature orchestration. Task 4 keeps `ENTER_COMBAT`, `START_TURN`, `SHORT_REST`, and `EXIT_COMBAT` in `get_available_actions` without mirroring them on `execute_control_command`; their existing action-token path handles player/runtime choices and avoids duplicate public routes. Their primary taxonomy still remains `control_command`.
 
 ## Creature Event Classification
 
@@ -77,8 +77,8 @@ Some lifecycle `control_command` events are currently exposed through `get_avail
 | `REMOVE_CONDITION` | creature | no | - | `table_event` | Generic condition removal is an external rule/effect fact. | no | Future `record_table_event` surface. | Add via semantic feature/spell or `record_table_event`. |
 | `ADD_EXHAUSTION` | creature | no | - | `table_event` | Exhaustion gain is an external environmental or rule fact. | no | Future `record_table_event` surface. | Add only with table-event provenance. |
 | `REDUCE_EXHAUSTION` | creature | no | - | `table_event` | Exhaustion reduction is an external recovery or rest fact. | no | Future `record_table_event` surface. | Prefer rest semantics when possible. |
-| `START_TURN` | creature | yes | `START_TURN` | `control_command` | This starts creature turn processing and currently exposes a runtime-filled token. | yes | - | Existing token is acceptable; longer term, session control may own it. |
-| `END_TURN` | creature | no | - | `control_command` | Ending a turn is lifecycle control rather than a character option. | no | Future `execute_control_command` surface. | Add when MCP can drive full turn flow explicitly. |
+| `START_TURN` | creature | yes | `START_TURN` | `control_command` | This starts creature turn processing and currently exposes a runtime-filled token. | yes | - | **Task 4 decision: stays in `get_available_actions`.** The existing action-token path handles resolution and preview. No mirrored control command. |
+| `END_TURN` | creature | yes | `execute_control_command` | `control_command` | Ending a turn is lifecycle control rather than a character option. | no | `execute_control_command` | **Task 4: wired.** No parameters; dispatches directly. |
 | `USE_ACTION` | creature | no | - | `bookkeeping` | This is raw action-economy bookkeeping behind semantic actions. | no | None. | Keep internal. |
 | `USE_BONUS_ACTION` | creature | no | - | `bookkeeping` | This is raw bonus-action bookkeeping behind semantic actions. | no | None. | Keep internal. |
 | `USE_REACTION` | creature | no | - | `bookkeeping` | This is raw reaction-economy bookkeeping behind semantic reactions. | no | None. | Keep internal. |
@@ -102,16 +102,16 @@ Some lifecycle `control_command` events are currently exposed through `get_avail
 | `REMOVE_EFFECT` | creature | no | - | `table_event` | Generic effect removal is a table/effect fact. | no | Future `record_table_event` surface. | Add only with provenance and warning semantics. |
 | `BREAK_CONCENTRATION` | creature | no | - | `table_event` | Concentration break is normally caused by damage, incapacitation, or table choice. | no | Future `record_table_event` surface. | Prefer generated break from owned damage/condition semantics. |
 | `CONCENTRATION_CHECK` | creature | no | - | `action_resolution` | This is a runtime save result after damage or another concentration trigger. | no | Runtime/session roll owner. | Keep behind damage/concentration resolution. |
-| `SHORT_REST` | creature | yes | `SHORT_REST` | `control_command` | Resting is lifecycle control with user-selected hit dice and runtime rolls. | yes | - | Existing token is acceptable; session-control split can revisit. |
-| `LONG_REST` | creature | no | - | `control_command` | Long rest is lifecycle/session control rather than an in-turn option. | no | Future `execute_control_command` surface. | Add explicit rest command if MCP should drive rest flow. |
+| `SHORT_REST` | creature | yes | `SHORT_REST` | `control_command` | Resting is lifecycle control with user-selected hit dice and runtime rolls. | yes | - | **Task 4 decision: stays in `get_available_actions`.** `spendHitDice` is a player choice with runtime-rolled hit dice; the existing action-token path handles it. No mirrored control command. |
+| `LONG_REST` | creature | yes | `execute_control_command` | `control_command` | Long rest is lifecycle/session control rather than an in-turn option. | no | `execute_control_command` | **Task 4: wired.** No parameters; dispatches directly. |
 | `SPEND_HIT_DIE` | creature | no | - | `bookkeeping` | Hit-die spending is a sub-step of `SHORT_REST`. | no | None. | Keep behind `SHORT_REST`. |
 | `APPLY_FALL` | creature | no | - | `table_event` | Falling is an environmental/table event with runtime damage. | no | Future `record_table_event` surface. | Add after environmental event shape is designed. |
 | `SUFFOCATE` | creature | no | - | `table_event` | Suffocation is an environmental/table event. | no | Future `record_table_event` surface. | Add after environmental event shape is designed. |
 | `APPLY_STARVATION` | creature | no | - | `table_event` | Starvation is an environmental/table event. | no | Future `record_table_event` surface. | Add after environmental event shape is designed. |
 | `APPLY_DEHYDRATION` | creature | no | - | `table_event` | Dehydration is an environmental/table event. | no | Future `record_table_event` surface. | Add after environmental event shape is designed. |
 | `USE_BONUS_MOVEMENT` | creature | no | - | `bookkeeping` | Bonus movement spending is economy bookkeeping. | no | None. | Keep behind movement-granting actions. |
-| `ENTER_COMBAT` | creature | yes | `ENTER_COMBAT` | `control_command` | Entering combat changes lifecycle mode rather than spending an action. | yes | - | Existing token is acceptable for single-creature host bootstrap. |
-| `EXIT_COMBAT` | creature | yes | `EXIT_COMBAT` | `control_command` | Exiting combat changes lifecycle mode rather than spending an action. | yes | - | Existing token is acceptable for single-creature host teardown. |
+| `ENTER_COMBAT` | creature | yes | `ENTER_COMBAT` | `control_command` | Entering combat changes lifecycle mode rather than spending an action. | yes | - | **Task 4 decision: stays in `get_available_actions`.** Single-creature host bootstrap; no separate control command path. |
+| `EXIT_COMBAT` | creature | yes | `EXIT_COMBAT` | `control_command` | Exiting combat changes lifecycle mode rather than spending an action. | yes | - | **Task 4 decision: stays in `get_available_actions`.** Single-creature host teardown; no separate control command path. |
 | `USE_SECOND_WIND` | creature | yes | `USE_SECOND_WIND` | `suggested_action` | It is a legal player feature option with MCP-owned runtime healing die. | yes | - | Existing token is the correct owner; future roll owner should replace random sampling. |
 | `USE_ACTION_SURGE` | creature | yes | `USE_ACTION_SURGE` | `suggested_action` | It is a legal player feature option that grants action economy. | yes | - | Existing token is the correct creature-scope owner. |
 | `USE_INDOMITABLE` | creature | yes | `USE_INDOMITABLE` | `suggested_action` | It is a legal player reaction to an owned pending saving-throw failure. | yes | - | Existing token is the correct owner. |
@@ -182,8 +182,8 @@ Some lifecycle `control_command` events are currently exposed through `get_avail
 
 | Event | Scope | Currently exposed in MCP? | Current MCP token name | Classification | Reasoning | Should be in `get_available_actions`? | If not, owning MCP surface | Blocker or next implementation step |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `BATTLE_INIT` | battle | no | - | `control_command` | Battle initialization is session lifecycle control. | no | Future `execute_control_command` surface. | Add explicit battle/session setup command if MCP should create battles. |
-| `BATTLE_START_TURN` | battle | no | - | `control_command` | Starting a battle turn is lifecycle control with runtime start-of-turn facts. | no | Future `execute_control_command` surface. | Add after turn-start runtime fact ownership is explicit. |
+| `BATTLE_INIT` | battle | yes | `execute_control_command` | `control_command` | Battle initialization is session lifecycle control. | no | `execute_control_command` | **Task 4: wired.** Accepts a narrow JSON creature-config subset and converts IDs before dispatch. |
+| `BATTLE_START_TURN` | battle | yes | `execute_control_command` | `control_command` | Starting a battle turn is lifecycle control with runtime start-of-turn facts. | no | `execute_control_command` | **Task 4: wired with explicit runtime facts.** Callers must provide recharge, death-save, and start-of-turn effect facts; MCP rejects omitted or extra hidden inputs. |
 | `BATTLE_ATTACK` | battle | no | - | `suggested_action` | Attack is a primary player option, but the event needs target, weapon, roll, damage, visibility, and reaction-candidate facts. | yes | Battle `get_available_actions`. | Blocked on battle/session ownership of target, weapon payload, roll/damage, visibility, and reaction-candidate facts. |
 | `BATTLE_HELP_ATTACK` | battle | no | - | `suggested_action` | Help attack is a player action needing ally, target, visibility, and range facts. | yes | Battle `get_available_actions`. | Blocked on ally/target and spatial visibility ownership. |
 | `BATTLE_RESOLVE_HIT_REACTION` | battle | yes | `CAST_SHIELD` / `USE_PARRY` / `USE_CUTTING_WORDS` | `action_resolution` | This is the low-level hit-reaction decision emitted after a reaction token is chosen. | no | Hidden behind `execute_action`. | Existing token wrappers are correct; do not expose raw event. |
@@ -202,8 +202,8 @@ Some lifecycle `control_command` events are currently exposed through `get_avail
 | `BATTLE_MOVE` | battle | no | - | `suggested_action` | Movement is a player option, but provocation and threatened-creature facts are session/spatial ownership. | yes | Battle `get_available_actions`. | Blocked on session/geometry ownership of path, threats, and opportunity-attack provocation. |
 | `BATTLE_MOVEMENT_OA_DECLINE` | battle | no | - | `action_resolution` | This is an opportunity-attack reaction-window decline branch. | no | Hidden behind movement reaction handling. | Add only if movement OA UX needs a public decline token. |
 | `BATTLE_MOVEMENT_OA_ATTACK` | battle | no | - | `action_resolution` | This is the low-level opportunity attack emitted after a movement reaction is chosen. | no | Hidden behind future OA reaction token. | Blocked on OA reaction token and attack runtime fact ownership. |
-| `BATTLE_END_TURN` | battle | no | - | `control_command` | Ending a battle turn is lifecycle control with runtime end-of-turn facts. | no | Future `execute_control_command` surface. | Add after end-turn runtime fact ownership is explicit. |
-| `BATTLE_LEGENDARY_PASS` | battle | no | - | `control_command` | Passing a legendary-action window is turn-control for monsters. | no | Future session/monster-control command. | Add with legendary-action window surface if MCP should operate monsters. |
+| `BATTLE_END_TURN` | battle | yes | `execute_control_command` | `control_command` | Ending a battle turn is lifecycle control with runtime end-of-turn facts. | no | `execute_control_command` | **Task 4: wired with explicit runtime facts.** Callers must provide end-of-turn save, damage, and concentration facts; MCP rejects omitted or extra hidden inputs. |
+| `BATTLE_LEGENDARY_PASS` | battle | yes | `execute_control_command` | `control_command` | Passing a legendary-action window is turn-control for monsters. | no | `execute_control_command` | **Task 4: wired.** No parameters; dispatches directly. |
 | `BATTLE_LEGENDARY_ATTACK` | battle | no | - | `suggested_action` | A legendary attack is a monster option but needs target, roll, damage, and reaction-candidate facts. | yes | Battle `get_available_actions` for monster hosts or monster-control command. | Blocked on monster action payload and runtime attack ownership. |
 | `BATTLE_HEAL` | battle | no | - | `table_event` | Generic battle healing records a table/spell outcome rather than a specific player token. | no | Future `record_table_event` or modeled spell token surface. | Prefer semantic spell/feature tokens before generic raw event exposure. |
 | `BATTLE_DASH` | battle | yes | `BATTLE_DASH` | `suggested_action` | It is a legal active-turn player action. | yes | - | Existing token is the correct owner. |

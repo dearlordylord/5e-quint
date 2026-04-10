@@ -1,19 +1,10 @@
-import { Effect, JSONSchema, Match, Random, Schema } from "effect";
-import { createActor, type ActorRefFrom, type SnapshotFrom } from "xstate";
+import { Effect, JSONSchema, Match, Schema } from "effect";
+import { createActor, type ActorRefFrom } from "xstate";
 
 import { battleMachine } from "@dnd/core/battle-machine.ts";
 import { creatureMachine } from "@dnd/core/machine.ts";
-import {
-  encodeDndContext,
-  encodeDndSnapshot,
-} from "@dnd/core/context-encoding.ts";
-import type {
-  BattleContext,
-  CreatureId,
-} from "@dnd/core/battle-machine-types.ts";
+import { encodeDndContext } from "@dnd/core/context-encoding.ts";
 import type { DndMachineInput } from "@dnd/core/machine-types.ts";
-import { bardicInspirationDie } from "@dnd/core/features/class-bard.ts";
-import { classHitDie } from "@dnd/core/features/class-tables.ts";
 import {
   EXPOSED_ACTION_TYPES,
   finalizeBattleResolution,
@@ -22,25 +13,31 @@ import {
   getAvailableBattleActions,
   previewAction,
   previewBattleAction,
-  type BattleResolutionRequest,
-  type BattleResolutionRuntimeInputs,
   ControlCommandSchema,
   resolveBattleAction,
   resolveAction,
   ResolvedActionTokenSchema,
   type ActionToken,
   type BattleResolvedActionToken,
-  type ControlCommand,
   type ResolvedActionToken,
-  type ResolutionRequest,
   type ResourceCost,
-  type ResolutionRuntimeInputs,
   TableEventCommandSchema,
   type TableEventCommand,
 } from "@dnd/core/available-actions.ts";
-import { battleMainHandDamageDie } from "@dnd/core/battle-machine-creature.ts";
-import { pMartialArtsDie } from "@dnd/core/features/class-monk.ts";
 import { classLevel } from "@dnd/core/types.ts";
+
+import { executeControlCommand } from "./server-control.ts";
+import {
+  buildBattleRuntimeInputs,
+  buildRuntimeInputs,
+} from "./server-runtime.ts";
+import {
+  battleSnapshotUnchanged,
+  encodeBattleRuntimeState,
+  errorContent,
+  jsonContent,
+  snapshotFingerprint,
+} from "./server-shared.ts";
 
 export const DEMO_ACTOR_INPUT: DndMachineInput = {
   maxHp: 44,
@@ -51,9 +48,7 @@ export const DEMO_ACTOR_INPUT: DndMachineInput = {
 const DEMO_STARTING_DAMAGE = 10;
 
 export type DndActor = ActorRefFrom<typeof creatureMachine>;
-type DndSnapshot = SnapshotFrom<typeof creatureMachine>;
 export type BattleActor = ActorRefFrom<typeof battleMachine>;
-type BattleSnapshot = SnapshotFrom<typeof battleMachine>;
 export type CreatureActionHost = {
   readonly scope: "creature";
   readonly actor: DndActor;
@@ -148,7 +143,7 @@ export const toolDefinitions = [
   {
     name: "execute_control_command",
     description:
-      "Execute a narrow session, turn, rest, or monster-control command. The initial surface validates command shape but reports unsupported commands until each command is wired.",
+      "Execute a narrow session, turn, rest, or monster-control command. Supported battle turn commands require explicit runtime facts; MCP does not invent hidden start/end-turn inputs.",
     inputSchema: executeControlCommandJsonSchema,
   },
   {
@@ -158,240 +153,6 @@ export const toolDefinitions = [
     inputSchema: recordTableEventJsonSchema,
   },
 ] as const;
-
-function jsonContent(payload: unknown) {
-  return {
-    content: [
-      { type: "text" as const, text: JSON.stringify(payload, null, 2) },
-    ],
-  };
-}
-
-function errorContent(message: string, details?: unknown) {
-  return {
-    ...jsonContent(
-      details == null ? { error: message } : { error: message, details },
-    ),
-    isError: true as const,
-  };
-}
-
-function snapshotFingerprint(snapshot: DndSnapshot): string {
-  return JSON.stringify(encodeDndSnapshot(snapshot));
-}
-
-function battleSnapshotUnchanged(
-  before: BattleSnapshot,
-  after: BattleSnapshot,
-): boolean {
-  return (
-    before.context === after.context &&
-    JSON.stringify(before.value) === JSON.stringify(after.value)
-  );
-}
-
-function battlePhase(context: BattleContext) {
-  if (context.awaitCtx !== null) return "awaitingReaction" as const;
-  if (context.aoeCtx !== null) return "resolvingAoE" as const;
-  if (context.movementCtx !== null) return "resolvingMovement" as const;
-  if (context.laCtx !== null) return "awaitingLegendaryAction" as const;
-  if (context.readyCtx !== null) return "awaitingReadiedAction" as const;
-  return "activeTurn" as const;
-}
-
-function currentTurnCreatureId(context: BattleContext): CreatureId | null {
-  return context.initiative[context.turnIndex] ?? null;
-}
-
-function encodeBattleRuntimeState(snapshot: BattleSnapshot) {
-  return {
-    scope: "battle" as const,
-    machineState: snapshot.value,
-    tags: [...snapshot.tags].sort(),
-    round: snapshot.context.round,
-    turnIndex: snapshot.context.turnIndex,
-    activeCreatureId: currentTurnCreatureId(snapshot.context),
-    initiative: snapshot.context.initiative,
-    creatureIds: [...snapshot.context.creatures.keys()].sort(),
-    phase: battlePhase(snapshot.context),
-    awaitingReaction: snapshot.context.awaitCtx !== null,
-    resolvingAoE: snapshot.context.aoeCtx !== null,
-    resolvingMovement: snapshot.context.movementCtx !== null,
-    awaitingLegendaryAction: snapshot.context.laCtx !== null,
-    awaitingReadiedAction: snapshot.context.readyCtx !== null,
-  };
-}
-
-function buildRuntimeInputs(
-  request: ResolutionRequest,
-  context: DndSnapshot["context"],
-): Effect.Effect<ResolutionRuntimeInputs> {
-  return Match.value(request).pipe(
-    Match.when({ runtime: "none" }, () =>
-      Effect.succeed({ runtime: "none" as const }),
-    ),
-    Match.when({ runtime: "startTurn" }, () =>
-      Effect.succeed({
-        runtime: "startTurn" as const,
-        values: {},
-      }),
-    ),
-    // These actions already have an owned pending trigger window in core state.
-    // The current machine/event contract still reduces the underlying reroll/save
-    // math to a final success boolean, so MCP can only supply that boolean here.
-    // For now the demo runtime samples it randomly; richer battle/session-level
-    // roll ownership should replace this once the machine owns more than the
-    // final success/failure outcome.
-    Match.when({ runtime: "tacticalMind" }, () =>
-      Effect.map(Random.nextBoolean, (boostedCheckSucceeds) => ({
-        runtime: "tacticalMind" as const,
-        values: { boostedCheckSucceeds },
-      })),
-    ),
-    Match.when({ runtime: "wholenessOfBody" }, () => {
-      const monk = context.classStates.monk;
-      const dieSize = pMartialArtsDie(monk?.level ?? 0);
-      const wisMod = monk?.wholenessMax ?? 0;
-      return Effect.map(Random.nextIntBetween(1, dieSize + 1), (dieRoll) => ({
-        runtime: "wholenessOfBody" as const,
-        values: { healRoll: Math.max(1, dieRoll + wisMod) },
-      }));
-    }),
-    Match.when({ runtime: "uncannyMetabolism" }, () => {
-      const monk = context.classStates.monk;
-      const dieSize = pMartialArtsDie(monk?.level ?? 0);
-      return Effect.map(Random.nextIntBetween(1, dieSize + 1), (healRoll) => ({
-        runtime: "uncannyMetabolism" as const,
-        values: { healRoll },
-      }));
-    }),
-    Match.when({ runtime: "secondWind" }, () =>
-      Effect.map(Random.nextIntBetween(1, 11), (d10Roll) => ({
-        runtime: "secondWind" as const,
-        values: { d10Roll },
-      })),
-    ),
-    Match.when({ runtime: "tireless" }, () =>
-      Effect.map(Random.nextIntBetween(1, 9), (d8Roll) => ({
-        runtime: "tireless" as const,
-        values: { d8Roll },
-      })),
-    ),
-    Match.when({ runtime: "peerlessSkill" }, () =>
-      Effect.map(Random.nextBoolean, (success) => ({
-        runtime: "peerlessSkill" as const,
-        values: { success },
-      })),
-    ),
-    Match.when({ runtime: "relentlessRage" }, () =>
-      Effect.map(Random.nextBoolean, (conSaveSucceeded) => ({
-        runtime: "relentlessRage" as const,
-        values: { conSaveSucceeded },
-      })),
-    ),
-    Match.when({ runtime: "shortRest" }, (resolved) =>
-      Effect.forEach(resolved.token.spendHitDice, (className) =>
-        Effect.map(
-          Random.nextIntBetween(1, classHitDie(className) + 1),
-          (roll) => ({ className, roll }),
-        ),
-      ).pipe(
-        Effect.map((hdRolls) => ({
-          runtime: "shortRest" as const,
-          values: { hdRolls },
-        })),
-      ),
-    ),
-    Match.exhaustive,
-  );
-}
-
-function buildBattleRuntimeInputs(
-  request: BattleResolutionRequest,
-  context: BattleContext,
-): Effect.Effect<BattleResolutionRuntimeInputs> {
-  return Match.value(request).pipe(
-    Match.when({ runtime: "none" }, () =>
-      Effect.succeed({ runtime: "none" as const }),
-    ),
-    Match.when({ runtime: "counterspell" }, () =>
-      Effect.map(Random.nextBoolean, (saveSucceeded) => ({
-        runtime: "counterspell" as const,
-        values: { saveSucceeded },
-      })),
-    ),
-    Match.when({ runtime: "cuttingWords" }, () => {
-      const bardLevel =
-        context.creatures.get(request.token.actorId as CreatureId)?.bardLevel ??
-        0;
-      const dieSize = bardicInspirationDie(bardLevel);
-      return Effect.map(Random.nextIntBetween(1, dieSize + 1), (reduction) => ({
-        runtime: "cuttingWords" as const,
-        values: { reduction },
-      }));
-    }),
-    Match.when({ runtime: "deflectAttacks" }, () =>
-      Effect.map(Random.nextIntBetween(1, 11), (d10Roll) => ({
-        runtime: "deflectAttacks" as const,
-        values: { d10Roll },
-      })),
-    ),
-    Match.when({ runtime: "readyAttack" }, () => {
-      const actor = context.creatures.get(request.token.actorId as CreatureId);
-      const damageDie =
-        actor == null ? 8 : (battleMainHandDamageDie(actor, true) ?? 8);
-      return Effect.all({
-        atkRoll: Random.nextIntBetween(1, 21),
-        dmg: Random.nextIntBetween(1, damageDie + 1),
-        tgtAc: Random.nextIntBetween(10, 19),
-        crit: Random.nextBoolean,
-        knockOut: Effect.succeed(false),
-      }).pipe(
-        Effect.map((values) => ({
-          runtime: "readyAttack" as const,
-          values,
-        })),
-      );
-    }),
-    Match.when({ runtime: "readySpellRelease" }, () =>
-      Effect.map(Random.nextIntBetween(1, 21), (saveRoll) => ({
-        runtime: "readySpellRelease" as const,
-        values: { saveRoll },
-      })),
-    ),
-    Match.when({ runtime: "hellishRebuke" }, () =>
-      Effect.all({
-        damage: Random.nextIntBetween(1, 21),
-        saveSucceeded: Random.nextBoolean,
-      }).pipe(
-        Effect.map((values) => ({
-          runtime: "hellishRebuke" as const,
-          values,
-        })),
-      ),
-    ),
-    Match.when({ runtime: "retaliation" }, () =>
-      Effect.all({
-        attackRoll: Random.nextIntBetween(1, 21),
-        damage: Random.nextIntBetween(1, 9),
-        targetAc: Random.nextIntBetween(10, 19),
-        critical: Random.nextBoolean,
-      }).pipe(
-        Effect.map((values) => ({
-          runtime: "retaliation" as const,
-          values,
-        })),
-      ),
-    ),
-    Match.when({ runtime: "fireShield" }, () =>
-      Effect.map(Random.nextIntBetween(2, 17), (damage) => ({
-        runtime: "fireShield" as const,
-        values: { damage },
-      })),
-    ),
-    Match.exhaustive,
-  );
-}
 
 function executeCreatureResolvedAction(
   actor: DndActor,
@@ -437,13 +198,6 @@ function scopeMismatchContent(
     `Action scope ${tokenScope} does not match the current ${hostScope} host.`,
     "ACTION_SCOPE_MISMATCH",
   );
-}
-
-function unsupportedControlCommandContent(command: ControlCommand) {
-  return errorContent("Control command is not implemented yet", {
-    code: "CONTROL_COMMAND_NOT_IMPLEMENTED",
-    command,
-  });
 }
 
 function unsupportedTableEventContent(command: TableEventCommand) {
@@ -541,28 +295,6 @@ function previewResolvedAction(host: SupportedActionHost, args: unknown) {
     }),
     Match.exhaustive,
   );
-}
-
-function executeControlCommand(host: SupportedActionHost, args: unknown) {
-  const decoded = Schema.decodeUnknownEither(
-    ControlCommandSchema,
-    strictCommandParseOptions,
-  )(args);
-  if (decoded._tag === "Left") {
-    return errorContent(
-      "Invalid execute_control_command input",
-      String(decoded.left),
-    );
-  }
-
-  if (decoded.right.scope !== host.scope) {
-    return errorContent(
-      `Control command scope ${decoded.right.scope} does not match the current ${host.scope} host.`,
-      "CONTROL_COMMAND_SCOPE_MISMATCH",
-    );
-  }
-
-  return unsupportedControlCommandContent(decoded.right);
 }
 
 function recordTableEvent(host: SupportedActionHost, args: unknown) {

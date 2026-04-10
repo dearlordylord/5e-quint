@@ -469,24 +469,19 @@ describe("MCP server adapter", () => {
     );
   });
 
-  test("unsupported control commands return a structured error without mutating state", () => {
+  test("execute_control_command rejects excess turn runtime facts", () => {
     const host = createDemoHost();
-    const before = readPayload(handleToolCall(host, "get_state", {}));
 
     const response = handleToolCall(host, "execute_control_command", {
       scope: "creature",
       type: "LONG_REST",
+      rechargeD6: 6,
     });
 
     expect("isError" in response && response.isError).toBe(true);
-    expect(readPayload(response)).toEqual({
-      error: "Control command is not implemented yet",
-      details: {
-        code: "CONTROL_COMMAND_NOT_IMPLEMENTED",
-        command: { scope: "creature", type: "LONG_REST" },
-      },
-    });
-    expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
+    expect(readPayload(response).error).toBe(
+      "Invalid execute_control_command input",
+    );
   });
 
   test("unsupported table events return a structured error without mutating state", () => {
@@ -527,6 +522,127 @@ describe("MCP server adapter", () => {
       },
     });
     expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
+  });
+
+  test("creature control commands execute turn end and long rest", () => {
+    const host = createDemoHost();
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
+
+    const endTurn = handleToolCall(host, "execute_control_command", {
+      scope: "creature",
+      type: "END_TURN",
+    });
+
+    expect("isError" in endTurn).toBe(false);
+    expect(readPayload(endTurn).success).toBe(true);
+
+    const restHost = createDemoHost();
+    const longRest = handleToolCall(restHost, "execute_control_command", {
+      scope: "creature",
+      type: "LONG_REST",
+    });
+
+    expect("isError" in longRest).toBe(false);
+    expect(readPayload(longRest).state.hp).toBe(44);
+  });
+
+  test("battle control commands execute with explicit runtime facts", () => {
+    const host = createBattleHost();
+
+    const init = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "A",
+          maxHp: 20,
+          kind: "PC",
+          fighterLevel: 5,
+          initiativeRoll: 20,
+        },
+        {
+          id: "B",
+          maxHp: 30,
+          kind: "Monster",
+          legendaryActions: 1,
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    expect("isError" in init).toBe(false);
+    expect(readPayload(init).state).toEqual(
+      expect.objectContaining({
+        activeCreatureId: "A",
+        creatureIds: ["A", "B"],
+      }),
+    );
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
+        ?.fighterLevel,
+    ).toBe(5);
+
+    const startTurn = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+    });
+
+    expect("isError" in startTurn).toBe(false);
+    expect(readPayload(startTurn).state.phase).toBe("activeTurn");
+
+    const endTurn = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+
+    expect("isError" in endTurn).toBe(false);
+    expect(readPayload(endTurn).state).toEqual(
+      expect.objectContaining({
+        phase: "awaitingLegendaryAction",
+        awaitingLegendaryAction: true,
+      }),
+    );
+
+    const pass = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_LEGENDARY_PASS",
+    });
+
+    expect("isError" in pass).toBe(false);
+    expect(readPayload(pass).state).toEqual(
+      expect.objectContaining({
+        activeCreatureId: "B",
+        awaitingLegendaryAction: false,
+      }),
+    );
+  });
+
+  test("battle turn control commands require explicit runtime facts", () => {
+    const host = createBattleHost();
+
+    const response = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response).error).toBe(
+      "Invalid execute_control_command input",
+    );
   });
 
   test("get_available_actions only returns the supported executable action set", () => {

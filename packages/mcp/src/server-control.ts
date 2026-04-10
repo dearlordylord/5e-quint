@@ -1,0 +1,152 @@
+import { Match, Schema } from "effect";
+import { type ActorRefFrom } from "xstate";
+
+import { battleMachine } from "@dnd/core/battle-machine.ts";
+import type { BattleEvent } from "@dnd/core/battle-machine-types.ts";
+import {
+  ControlCommandSchema,
+  toBattleInitCreatureConfig,
+  type ControlCommand,
+} from "@dnd/core/available-actions.ts";
+import { encodeDndContext } from "@dnd/core/context-encoding.ts";
+import { creatureMachine } from "@dnd/core/machine.ts";
+
+import {
+  battleSnapshotUnchanged,
+  encodeBattleRuntimeState,
+  errorContent,
+  jsonContent,
+  snapshotFingerprint,
+} from "./server-shared.ts";
+
+type DndActor = ActorRefFrom<typeof creatureMachine>;
+type BattleActor = ActorRefFrom<typeof battleMachine>;
+type SupportedActionHost =
+  | { readonly scope: "creature"; readonly actor: DndActor }
+  | { readonly scope: "battle"; readonly actor: BattleActor };
+type DndMachineEvent = Parameters<DndActor["send"]>[0];
+
+const strictCommandParseOptions = { onExcessProperty: "error" } as const;
+
+function controlCommandNotAcceptedContent(command: ControlCommand) {
+  return errorContent("Control command was not accepted by the machine", {
+    code: "CONTROL_COMMAND_NOT_ACCEPTED",
+    command,
+  });
+}
+
+function buildCreatureControlEvent(
+  command: Extract<ControlCommand, { readonly scope: "creature" }>,
+): DndMachineEvent {
+  return Match.value(command).pipe(
+    Match.when({ type: "END_TURN" }, () => ({ type: "END_TURN" }) as const),
+    Match.when({ type: "LONG_REST" }, () => ({ type: "LONG_REST" }) as const),
+    Match.exhaustive,
+  );
+}
+
+function buildBattleControlEvent(
+  command: Extract<ControlCommand, { readonly scope: "battle" }>,
+): BattleEvent {
+  return Match.value(command).pipe(
+    Match.when({ type: "BATTLE_INIT" }, ({ creatures }) => ({
+      type: "BATTLE_INIT" as const,
+      creatures: creatures.map(toBattleInitCreatureConfig),
+    })),
+    Match.when({ type: "BATTLE_START_TURN" }, (c) => ({
+      type: "BATTLE_START_TURN" as const,
+      rechargeD6: c.rechargeD6,
+      sotDmg: c.sotDmg,
+      sotDt: c.sotDt,
+      sotHeal: c.sotHeal,
+      sotSaveResult: c.sotSaveResult,
+      sotConSave: c.sotConSave,
+      deathSaveRoll: c.deathSaveRoll,
+    })),
+    Match.when({ type: "BATTLE_END_TURN" }, (c) => ({
+      type: "BATTLE_END_TURN" as const,
+      eotSaveSucceeded: c.eotSaveSucceeded,
+      eotDmg: c.eotDmg,
+      eotDt: c.eotDt,
+      eotConSave: c.eotConSave,
+    })),
+    Match.when({ type: "BATTLE_LEGENDARY_PASS" }, () => ({
+      type: "BATTLE_LEGENDARY_PASS" as const,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function executeCreatureControlCommand(
+  actor: DndActor,
+  command: Extract<ControlCommand, { readonly scope: "creature" }>,
+) {
+  const before = actor.getSnapshot();
+  actor.send(buildCreatureControlEvent(command));
+  const after = actor.getSnapshot();
+  if (snapshotFingerprint(before) === snapshotFingerprint(after)) {
+    return controlCommandNotAcceptedContent(command);
+  }
+  return jsonContent({
+    success: true,
+    state: encodeDndContext(after.context),
+  });
+}
+
+function executeBattleControlCommand(
+  actor: BattleActor,
+  command: Extract<ControlCommand, { readonly scope: "battle" }>,
+) {
+  const before = actor.getSnapshot();
+  actor.send(buildBattleControlEvent(command));
+  const after = actor.getSnapshot();
+  if (battleSnapshotUnchanged(before, after)) {
+    return controlCommandNotAcceptedContent(command);
+  }
+  return jsonContent({
+    success: true,
+    state: encodeBattleRuntimeState(after),
+  });
+}
+
+export function executeControlCommand(
+  host: SupportedActionHost,
+  args: unknown,
+) {
+  const decoded = Schema.decodeUnknownEither(
+    ControlCommandSchema,
+    strictCommandParseOptions,
+  )(args);
+  if (decoded._tag === "Left") {
+    return errorContent(
+      "Invalid execute_control_command input",
+      String(decoded.left),
+    );
+  }
+
+  if (decoded.right.scope !== host.scope) {
+    return errorContent(
+      `Control command scope ${decoded.right.scope} does not match the current ${host.scope} host.`,
+      "CONTROL_COMMAND_SCOPE_MISMATCH",
+    );
+  }
+
+  return Match.value(host).pipe(
+    Match.when({ scope: "creature" }, ({ actor }) =>
+      executeCreatureControlCommand(
+        actor,
+        decoded.right as Extract<
+          ControlCommand,
+          { readonly scope: "creature" }
+        >,
+      ),
+    ),
+    Match.when({ scope: "battle" }, ({ actor }) =>
+      executeBattleControlCommand(
+        actor,
+        decoded.right as Extract<ControlCommand, { readonly scope: "battle" }>,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}

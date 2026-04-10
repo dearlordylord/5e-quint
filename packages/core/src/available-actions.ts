@@ -29,6 +29,7 @@ import type {
   BattleContext,
   BattleCreatureState,
   BattleEvent,
+  InitCreatureConfig,
 } from "#/battle-machine-types.ts";
 import { isIncapacitated } from "#/battle-machine-creature.ts";
 import { bardicInspirationDie } from "#/features/class-bard.ts";
@@ -52,7 +53,9 @@ import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts";
 import type { DndContext, DndEvent } from "#/machine-types.ts";
 import {
   armorClass,
+  CREATURE_KINDS,
   CreatureId,
+  DAMAGE_TYPES,
   SpellSlotLevel,
   spellSlotLevel,
   type D20Roll,
@@ -988,17 +991,136 @@ export const ResolvedActionTokenSchema = Schema.Union(
   SecondaryCreatureResolvedActionTokenSchema,
   BattleResolvedActionTokenSchema,
 );
+
+const CreatureEndTurnControlSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("END_TURN"),
+});
+const CreatureLongRestControlSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("LONG_REST"),
+});
+const BattleInitCreatureConfigSchema = Schema.Struct({
+  id: Schema.String,
+  maxHp: Schema.Number.pipe(Schema.int(), Schema.positive()),
+  maxHpReduction: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  kind: Schema.Literal(...CREATURE_KINDS),
+  caster: Schema.optional(Schema.Boolean),
+  rogueLevel: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  monkLevel: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  dexMod: Schema.optional(Schema.Number.pipe(Schema.int())),
+  legendaryActions: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  legendaryResistances: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  hasEvasion: Schema.optional(Schema.Boolean),
+  saveMiscBonus: Schema.optional(Schema.Number.pipe(Schema.int())),
+  critRange: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.between(1, 20)),
+  ),
+  isWearingArmor: Schema.optional(Schema.Boolean),
+  defenseArmorClassBonus: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  greatWeaponFightingDamageFloor: Schema.optional(Schema.Boolean),
+  hiddenDiscoveryDc: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  rangedWeaponAttackRollBonus: Schema.optional(
+    Schema.Number.pipe(Schema.int()),
+  ),
+  fighterLevel: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  barbarianLevel: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  meleeDamageBonus: Schema.optional(Schema.Number.pipe(Schema.int())),
+  sneakAttackDice: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  bardLevel: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  bardicInspirationCharges: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  parryAcBonus: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  lightPropertyExtraAttackAddsAbilityModifier: Schema.optional(Schema.Boolean),
+  prone: Schema.optional(Schema.Boolean),
+  baseWalkSpeed: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  initiativeRoll: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.between(1, 20)),
+  ),
+  initiativeRollB: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.between(1, 20)),
+  ),
+  surprised: Schema.optional(Schema.Boolean),
+  hasShieldEquipped: Schema.optional(Schema.Boolean),
+  mainHandUsesTwoHands: Schema.optional(Schema.Boolean),
+});
+const BattleInitControlSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  type: Schema.Literal("BATTLE_INIT"),
+  creatures: Schema.NonEmptyArray(BattleInitCreatureConfigSchema),
+});
+const BattleStartTurnControlSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  type: Schema.Literal("BATTLE_START_TURN"),
+  rechargeD6: Schema.Number.pipe(Schema.int(), Schema.between(1, 6)),
+  sotDmg: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  sotDt: Schema.Literal(...DAMAGE_TYPES),
+  sotHeal: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  sotSaveResult: Schema.Boolean,
+  sotConSave: Schema.Boolean,
+  deathSaveRoll: Schema.Number.pipe(Schema.int(), Schema.between(0, 20)),
+});
+const BattleEndTurnControlSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  type: Schema.Literal("BATTLE_END_TURN"),
+  eotSaveSucceeded: Schema.Boolean,
+  eotDmg: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  eotDt: Schema.Literal(...DAMAGE_TYPES),
+  eotConSave: Schema.Boolean,
+});
+const BattleLegendaryPassControlSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  type: Schema.Literal("BATTLE_LEGENDARY_PASS"),
+});
+
 export const ControlCommandSchema = Schema.Union(
-  Schema.Struct({
-    scope: Schema.Literal("creature"),
-    type: Schema.Literal(...CREATURE_CONTROL_COMMAND_TYPES),
-  }),
-  Schema.Struct({
-    scope: Schema.Literal("battle"),
-    type: Schema.Literal(...BATTLE_CONTROL_COMMAND_TYPES),
-  }),
+  CreatureEndTurnControlSchema,
+  CreatureLongRestControlSchema,
+  BattleInitControlSchema,
+  BattleStartTurnControlSchema,
+  BattleEndTurnControlSchema,
+  BattleLegendaryPassControlSchema,
 );
 export type ControlCommand = Schema.Schema.Type<typeof ControlCommandSchema>;
+export type BattleInitControlCreatureConfig = Schema.Schema.Type<
+  typeof BattleInitCreatureConfigSchema
+>;
+
+export function toBattleInitCreatureConfig(
+  config: BattleInitControlCreatureConfig,
+): InitCreatureConfig {
+  return {
+    ...config,
+    id: CreatureId(config.id),
+  };
+}
 
 export const TableEventCommandSchema = Schema.Union(
   Schema.Struct({
