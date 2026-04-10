@@ -3,6 +3,7 @@
 ## Status
 
 Audit completed against the current worktree on 2026-04-09.
+Table-event wrap checked on 2026-04-10 after Tasks 6-10.
 
 This is a read-only audit of MCP event surfaces. It does not propose raw event-count coverage as a completion metric, and it intentionally excludes transcript-port-to-dnd implementation.
 
@@ -43,6 +44,12 @@ Current workspace counts from the audited files:
 Raw event exposure is therefore 61 / 154 = about 40%. That number is not a completion metric. Many of the remaining 93 core variants should never appear in `get_available_actions`.
 
 Current MCP tools are `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, and `record_table_event`. Control commands for battle setup, battle turn lifecycle, legendary-action pass, creature turn end, and creature long rest are wired. Creature damage/recovery, condition/exhaustion, falling, and voluntary concentration-break table events are wired. Battle `BATTLE_HEAL` table event is wired. Generic spell events (`BATTLE_CAST_SAVE_SPELL`, `BATTLE_CAST_CONCENTRATION_SPELL`, `BATTLE_CAST_AOE`) remain blocked on multi-phase reaction resolution and spell payload ownership; `BATTLE_CONCENTRATION_CHECK` remains classified as `action_resolution`.
+
+Task 11 table-event wrap:
+
+- `record_table_event` accepts only the typed `TableEventCommandSchema` union: creature `TAKE_DAMAGE`, `HEAL`, `GRANT_TEMP_HP`, `STABILIZE`, `KNOCK_OUT`, `APPLY_CONDITION`, `REMOVE_CONDITION`, `ADD_EXHAUSTION`, `REDUCE_EXHAUSTION`, `APPLY_FALL`, `BREAK_CONCENTRATION`, and battle `BATTLE_HEAL`. It does not accept arbitrary raw `DndEvent` or `BattleEvent` payloads, and strict command parsing rejects extra raw-event fields.
+- All accepted manual table-event paths return the shared warning metadata. Applied and not-accepted table events include `warnings`; invalid schema and scope-mismatch inputs fail before table-event acceptance and do not mutate state.
+- Unsupported public-worthy table events have named blockers in the rows below: max-HP reduction/restoration, raw generic effect add/remove, prone/session-position changes, suffocation, starvation, dehydration, Intimidating Presence restoration, generic battle save spells, generic battle concentration spells, and generic battle AoE spells.
 
 ## MCP API Surface Taxonomy
 
@@ -85,7 +92,7 @@ Some lifecycle `control_command` events are currently exposed through `get_avail
 | `USE_MOVEMENT` | creature | no | - | `bookkeeping` | Creature-level movement spending is low-level economy accounting. | no | None. | Use battle/session movement surfaces instead. |
 | `USE_EXTRA_ATTACK` | creature | no | - | `bookkeeping` | Extra-attack spending is bookkeeping inside attack resolution. | no | None. | Keep internal. |
 | `STAND_FROM_PRONE` | creature | no | - | `suggested_action` | Standing from prone is a real movement option, but the current public token is battle-scoped. | yes | Existing battle `get_available_actions`; creature direct action only if single-creature UX needs it. | Creature-scope token is blocked on deciding whether single-creature movement remains public. |
-| `DROP_PRONE` | creature | no | - | `table_event` | Dropping prone is table-position state and should be owned with movement/position semantics. | no | Future `record_table_event` or movement surface. | Needs session/position ownership before public exposure. |
+| `DROP_PRONE` | creature | no | - | `table_event` | Dropping prone is table-position state and should be owned with movement/position semantics. | no | Future `record_table_event` or movement surface. | Blocked on session/position ownership: dropping prone is a free interaction tied to movement cost (standing costs half speed), so the raw event without movement-budget context loses SRD cost semantics. Expose after battle movement/position ownership is wired. |
 | `MARK_BONUS_ACTION_SPELL` | creature | no | - | `bookkeeping` | This records spellcasting restrictions after a spell action. | no | None. | Keep behind spell execution. |
 | `MARK_NON_CANTRIP_ACTION_SPELL` | creature | no | - | `bookkeeping` | This records spellcasting restrictions after a spell action. | no | None. | Keep behind spell execution. |
 | `CAST_PREPARED_SPELL` | creature | yes | `CAST_PREPARED_SPELL` | `suggested_action` | It is a legal player spell option with user-filled spell and slot choices. | yes | - | Existing token is the correct owner. |
@@ -129,7 +136,7 @@ Some lifecycle `control_command` events are currently exposed through `get_avail
 | `MARK_ATTACK_OR_FORCED_SAVE` | creature | no | - | `bookkeeping` | This is Rage-duration bookkeeping after an attack or forced save. | no | None. | Keep behind attack/save-producing actions. |
 | `DECLARE_RECKLESS` | creature | yes | `DECLARE_RECKLESS` | `suggested_action` | It is a legal player declaration for Reckless Attack. | yes | - | Existing token is the correct creature-scope owner. |
 | `USE_INTIMIDATING_PRESENCE` | creature | no | - | `suggested_action` | It is a real Barbarian feature option, but target/save facts are not in the current token. | yes | Battle `get_available_actions` or creature token with explicit target hole. | Blocked on target and save-result ownership. |
-| `RESTORE_INTIMIDATING_PRESENCE` | creature | no | - | `table_event` | This restores a feature use and is not an in-turn player action. | no | Future `execute_control_command` or `record_table_event` surface. | Prefer rest/session ownership. |
+| `RESTORE_INTIMIDATING_PRESENCE` | creature | no | - | `table_event` | This restores a feature use and is not an in-turn player action. | no | Future `execute_control_command` or `record_table_event` surface. | Blocked on rest/session ownership: Intimidating Presence uses are restored on Long Rest; prefer Long Rest control command semantics over a raw charge-restore event that bypasses rest provenance. |
 | `USE_BRUTAL_STRIKE` | creature | no | - | `suggested_action` | It is a Barbarian attack rider that needs attack-context ownership. | yes | Battle `get_available_actions`. | Blocked on battle attack/rider choice ownership. |
 | `USE_RELENTLESS_RAGE` | creature | yes | `USE_RELENTLESS_RAGE` | `suggested_action` | It is a legal feature option over an owned pending drop-to-zero window. | yes | - | Existing token is the correct owner; future roll owner should replace random save sampling. |
 | `USE_LAY_ON_HANDS` | creature | yes | `USE_LAY_ON_HANDS` | `suggested_action` | It is a legal player feature option with a user-filled amount. | yes | - | Existing token is the correct owner. |
