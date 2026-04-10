@@ -194,6 +194,27 @@ function initBattleHostWithFeatureActor() {
   return createBattleHost(actor);
 }
 
+function initBattleHostWithGrapplingActor() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  actor.send({
+    type: "BATTLE_GRAPPLE",
+    targetId: CreatureId("B"),
+    attackerSize: "medium",
+    targetSize: "medium",
+    targetSaveFailed: true,
+  });
+  return createBattleHost(actor);
+}
+
 function initBattleHostWithWoundedActiveHealer() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -2863,6 +2884,51 @@ describe("MCP server adapter", () => {
       eventType: "BATTLE_ENTER_RAGE",
     });
     expect(after).toEqual(before);
+  });
+
+  test("battle hosts surface and execute release grapple through MCP", () => {
+    const host = initBattleHostWithGrapplingActor();
+
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual({
+      action: [],
+      bonusAction: [],
+      reaction: [],
+      free: expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_RELEASE_GRAPPLE",
+          cost: {},
+          outcome: {
+            summary:
+              "Release the creature you are grappling; no action required",
+          },
+        },
+      ]),
+    });
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_RELEASE_GRAPPLE",
+    });
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome: "Release the creature you are grappling; no action required",
+      }),
+    );
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
+        ?.grapplingTarget,
+    ).toBeNull();
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B"))
+        ?.grappledBy,
+    ).toBeNull();
   });
 
   test("battle hosts surface and execute ready-window actions through MCP", () => {

@@ -468,6 +468,31 @@ function initBattleForFeatureDiscovery() {
   return actor;
 }
 
+function initBattleForReleaseGrappleDiscovery(
+  { withGrapple }: { readonly withGrapple: boolean } = {
+    withGrapple: true,
+  },
+) {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  if (withGrapple) {
+    actor.send({
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      attackerSize: "medium",
+      targetSize: "medium",
+      targetSaveFailed: true,
+    });
+  }
+  return actor;
+}
+
 function initBattleForReadyWindow() {
   const actor = makeBattleActor({
     type: "BATTLE_INIT",
@@ -2719,6 +2744,95 @@ describe("available actions contract", () => {
         (token) => token.type,
       ),
     ).not.toContain("BATTLE_DECLARE_RECKLESS");
+  });
+
+  test("battle discovery and resolution expose release grapple without action cost", () => {
+    const actor = initBattleForReleaseGrappleDiscovery();
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_RELEASE_GRAPPLE",
+          cost: {},
+          outcome: {
+            summary:
+              "Release the creature you are grappling; no action required",
+          },
+        },
+      ]),
+    );
+
+    const request = expectBattleRequest(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_RELEASE_GRAPPLE",
+      }),
+    );
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_RELEASE_GRAPPLE",
+      },
+      outcome: "Release the creature you are grappling; no action required",
+      runtime: "none",
+      event: { type: "BATTLE_RELEASE_GRAPPLE" },
+    });
+
+    expect(
+      finalizeBattleResolution(request, { runtime: "none" }, context),
+    ).toEqual({
+      ok: true,
+      event: { type: "BATTLE_RELEASE_GRAPPLE" },
+      outcome: "Release the creature you are grappling; no action required",
+    });
+    expect(
+      previewBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_RELEASE_GRAPPLE",
+      }),
+    ).toEqual({
+      ok: true,
+      summary: "Release the creature you are grappling; no action required",
+      cost: {},
+      runtime: "none",
+      eventType: "BATTLE_RELEASE_GRAPPLE",
+    });
+  });
+
+  test("battle discovery hides release grapple when the active creature is not grappling", () => {
+    const actor = initBattleForReleaseGrappleDiscovery({
+      withGrapple: false,
+    });
+
+    expect(
+      getAvailableBattleActions(actor.getSnapshot().context).map(
+        (token) => token.type,
+      ),
+    ).not.toContain("BATTLE_RELEASE_GRAPPLE");
+  });
+
+  test("battle resolution rejects release grapple when the active creature is not grappling", () => {
+    const actor = initBattleForReleaseGrappleDiscovery({
+      withGrapple: false,
+    });
+
+    expect(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_RELEASE_GRAPPLE",
+      }),
+    ).toEqual({
+      code: "ACTION_NOT_AVAILABLE",
+      message:
+        "BATTLE_RELEASE_GRAPPLE is not currently available for A in this battle state.",
+    });
   });
 
   test("battle discovery resolves ready-spell setup from battle-owned payload facts", () => {

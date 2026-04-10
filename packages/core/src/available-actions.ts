@@ -297,6 +297,13 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_RELEASE_GRAPPLE";
+      readonly cost: {};
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_DASH";
       readonly cost: { readonly action: true };
       readonly outcome: OutcomeDescription;
@@ -539,6 +546,11 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DECLARE_RECKLESS";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_RELEASE_GRAPPLE";
     }
   | {
       readonly scope: "battle";
@@ -957,6 +969,11 @@ const BattleDeclareRecklessResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("BATTLE_DECLARE_RECKLESS"),
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleReleaseGrappleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_RELEASE_GRAPPLE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleDashResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_DASH"),
@@ -1050,6 +1067,7 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   BattleActionSurgeResolvedActionSchema,
   BattleEnterRageResolvedActionSchema,
   BattleDeclareRecklessResolvedActionSchema,
+  BattleReleaseGrappleResolvedActionSchema,
   BattleDashResolvedActionSchema,
   BattleDisengageResolvedActionSchema,
   BattleDodgeResolvedActionSchema,
@@ -1984,6 +2002,18 @@ export type BattleResolutionRequest =
       readonly event: Extract<
         BattleEvent,
         { readonly type: "BATTLE_DECLARE_RECKLESS" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_RELEASE_GRAPPLE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_RELEASE_GRAPPLE" }
       >;
     }
   | {
@@ -3340,6 +3370,19 @@ export function getAvailableBattleActions(
         }),
       );
     }
+    if (activeCreature.grapplingTarget != null) {
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_RELEASE_GRAPPLE",
+          cost: {},
+          outcome: {
+            summary:
+              "Release the creature you are grappling; no action required",
+          },
+        }),
+      );
+    }
     if (activeCreature.actionsRemaining > 0) {
       tokens.push(
         battleToken({
@@ -3515,6 +3558,14 @@ export function resolveBattleAction(
       outcome: availableToken.outcome.summary,
       runtime: "none",
       event: { type: "BATTLE_DECLARE_RECKLESS" },
+    };
+  }
+  if (token.type === "BATTLE_RELEASE_GRAPPLE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: { type: "BATTLE_RELEASE_GRAPPLE" },
     };
   }
 
