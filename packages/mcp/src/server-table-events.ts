@@ -5,10 +5,16 @@ import {
   TableEventCommandSchema,
   type TableEventCommand,
   type TableEventWarning,
+  type CreatureSemanticTriggerTableEventType,
 } from "@dnd/core/available-actions.ts";
 import type { BattleEvent } from "@dnd/core/battle-machine-events.ts";
 import { encodeDndContext } from "@dnd/core/context-encoding.ts";
+import {
+  canUseIndomitable,
+  canUseTacticalMind,
+} from "@dnd/core/features/class-fighter.ts";
 import type { DndEvent } from "@dnd/core/machine-types.ts";
+import { isIncapacitated } from "@dnd/core/machine-queries.ts";
 import {
   CreatureId,
   healAmount,
@@ -113,8 +119,21 @@ function conditionSet(
   return values == null ? undefined : new Set(values);
 }
 
+type CreatureDirectTableEventCommand = Exclude<
+  Extract<TableEventCommand, { readonly scope: "creature" }>,
+  { readonly type: CreatureSemanticTriggerTableEventType }
+>;
+
+type CreatureSemanticTriggerCommand = Extract<
+  TableEventCommand,
+  {
+    readonly scope: "creature";
+    readonly type: CreatureSemanticTriggerTableEventType;
+  }
+>;
+
 function buildCreatureTableEvent(
-  command: Extract<TableEventCommand, { readonly scope: "creature" }>,
+  command: CreatureDirectTableEventCommand,
 ): DndEvent {
   return Match.value(command).pipe(
     Match.when({ type: "TAKE_DAMAGE" }, (c) => ({
@@ -169,9 +188,50 @@ function buildCreatureTableEvent(
   );
 }
 
-function recordCreatureTableEvent(
+function semanticTriggerEvent(
   actor: DndActor,
-  command: Extract<TableEventCommand, { readonly scope: "creature" }>,
+  command: CreatureSemanticTriggerCommand,
+) {
+  const ctx = actor.getSnapshot().context;
+  const fs = ctx.classStates.fighter;
+  if (!fs || ctx.pendingResolution != null) return null;
+
+  if (
+    command.type === "RECORD_FAILED_SAVING_THROW" &&
+    canUseIndomitable(fs.level, fs.indomitableCharges)
+  ) {
+    return { type: "TRIGGER_INDOMITABLE" } as const;
+  }
+
+  if (
+    command.type === "RECORD_FAILED_ABILITY_CHECK" &&
+    !isIncapacitated(ctx) &&
+    canUseTacticalMind(fs.secondWindCharges, fs.level, true)
+  ) {
+    return { type: "TRIGGER_TACTICAL_MIND" } as const;
+  }
+
+  return null;
+}
+
+function recordCreatureSemanticTrigger(
+  actor: DndActor,
+  command: CreatureSemanticTriggerCommand,
+) {
+  const warnings = tableEventWarnings(command);
+  const trigger = semanticTriggerEvent(actor, command);
+  if (trigger) actor.send(trigger);
+
+  return tableEventSuccess(
+    command,
+    warnings,
+    encodeDndContext(actor.getSnapshot().context),
+  );
+}
+
+function recordCreatureDirectTableEvent(
+  actor: DndActor,
+  command: CreatureDirectTableEventCommand,
 ) {
   const event = buildCreatureTableEvent(command);
   const before = actor.getSnapshot();
@@ -190,6 +250,20 @@ function recordCreatureTableEvent(
     warnings,
     encodeDndContext(actor.getSnapshot().context),
   );
+}
+
+function recordCreatureTableEvent(
+  actor: DndActor,
+  command: Extract<TableEventCommand, { readonly scope: "creature" }>,
+) {
+  if (
+    command.type === "RECORD_FAILED_SAVING_THROW" ||
+    command.type === "RECORD_FAILED_ABILITY_CHECK"
+  ) {
+    return recordCreatureSemanticTrigger(actor, command);
+  }
+
+  return recordCreatureDirectTableEvent(actor, command);
 }
 
 function buildBattleTableEvent(

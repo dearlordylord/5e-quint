@@ -688,12 +688,20 @@ export const CREATURE_CONCENTRATION_TABLE_EVENT_TYPES = [
 export type CreatureConcentrationTableEventType =
   (typeof CREATURE_CONCENTRATION_TABLE_EVENT_TYPES)[number];
 
+export const CREATURE_SEMANTIC_TRIGGER_TABLE_EVENT_TYPES = [
+  "RECORD_FAILED_SAVING_THROW",
+  "RECORD_FAILED_ABILITY_CHECK",
+] as const;
+export type CreatureSemanticTriggerTableEventType =
+  (typeof CREATURE_SEMANTIC_TRIGGER_TABLE_EVENT_TYPES)[number];
+
 export const CREATURE_TABLE_EVENT_TYPES = [
   ...CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES,
   ...CREATURE_CONDITION_EXHAUSTION_TABLE_EVENT_TYPES,
   ...CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES,
   ...CREATURE_CONCENTRATION_TABLE_EVENT_TYPES,
-] as const satisfies ReadonlyArray<DndEvent["type"]>;
+  ...CREATURE_SEMANTIC_TRIGGER_TABLE_EVENT_TYPES,
+] as const;
 export type CreatureTableEventType =
   (typeof CREATURE_TABLE_EVENT_TYPES)[number];
 
@@ -1300,6 +1308,14 @@ const CreatureBreakConcentrationTableEventSchema = Schema.Struct({
   type: Schema.Literal("BREAK_CONCENTRATION"),
   ...TableEventSemanticActionField,
 });
+const CreatureRecordFailedSavingThrowTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("RECORD_FAILED_SAVING_THROW"),
+});
+const CreatureRecordFailedAbilityCheckTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("RECORD_FAILED_ABILITY_CHECK"),
+});
 const BattleHealTableEventSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal(...BATTLE_HEAL_TABLE_EVENT_TYPES),
@@ -1321,6 +1337,8 @@ export const TableEventCommandSchema = Schema.Union(
   CreatureReduceExhaustionTableEventSchema,
   CreatureApplyFallTableEventSchema,
   CreatureBreakConcentrationTableEventSchema,
+  CreatureRecordFailedSavingThrowTableEventSchema,
+  CreatureRecordFailedAbilityCheckTableEventSchema,
   BattleTableEventSchema,
 );
 export type TableEventCommand = Schema.Schema.Type<

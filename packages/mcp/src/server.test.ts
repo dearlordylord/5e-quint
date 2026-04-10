@@ -995,6 +995,154 @@ describe("MCP server adapter", () => {
     });
   });
 
+  test("record_table_event records a failed Saving Throw for Indomitable without exposing the raw trigger", () => {
+    const host = createDemoHost({
+      maxHp: 24,
+      fighterLevel: classLevel(9),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
+
+    const rawTrigger = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "TRIGGER_INDOMITABLE",
+    });
+    expect("isError" in rawTrigger && rawTrigger.isError).toBe(true);
+    expect(readPayload(rawTrigger).error).toBe(
+      "Invalid record_table_event input",
+    );
+
+    const response = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "RECORD_FAILED_SAVING_THROW",
+      }),
+    );
+    expect(response.success).toBe(true);
+    expect(response.state.pendingResolution).toEqual({ kind: "indomitable" });
+    expect(response.warnings).toContainEqual({
+      code: "external_table_fact",
+      message:
+        "RECORD_FAILED_SAVING_THROW records a table fact rather than an ordinary suggested action.",
+    });
+
+    const available = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    );
+    expect(available.free).toContainEqual(
+      creatureToken({
+        type: "USE_INDOMITABLE",
+        cost: { charge: "indomitable" },
+        outcome: {
+          summary:
+            "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level",
+        },
+      }),
+    );
+
+    const execResponse = handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "USE_INDOMITABLE" }),
+    );
+    expect("isError" in execResponse).toBe(false);
+    const execPayload = readPayload(execResponse);
+    expect(execPayload.success).toBe(true);
+    expect(execPayload.state.classStates.fighter.indomitableCharges).toBe(0);
+    expect(execPayload.state.pendingResolution).toBeNull();
+  });
+
+  test("record_table_event records a failed Ability Check for Tactical Mind without exposing the raw trigger", () => {
+    const host = createDemoHost({
+      maxHp: 24,
+      fighterLevel: classLevel(2),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+
+    const rawTrigger = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "TRIGGER_TACTICAL_MIND",
+    });
+    expect("isError" in rawTrigger && rawTrigger.isError).toBe(true);
+    expect(readPayload(rawTrigger).error).toBe(
+      "Invalid record_table_event input",
+    );
+
+    const response = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "RECORD_FAILED_ABILITY_CHECK",
+      }),
+    );
+    expect(response.success).toBe(true);
+    expect(response.state.pendingResolution).toEqual({
+      kind: "tacticalMind",
+    });
+    expect(response.warnings).toContainEqual({
+      code: "external_table_fact",
+      message:
+        "RECORD_FAILED_ABILITY_CHECK records a table fact rather than an ordinary suggested action.",
+    });
+
+    const available = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    );
+    expect(available.free).toContainEqual(
+      creatureToken({
+        type: "USE_TACTICAL_MIND",
+        cost: { charge: "secondWind" },
+        outcome: {
+          summary:
+            "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
+        },
+      }),
+    );
+
+    const execResponse = handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "USE_TACTICAL_MIND" }),
+    );
+    expect("isError" in execResponse).toBe(false);
+    const execPayload = readPayload(execResponse);
+    expect(execPayload.success).toBe(true);
+    expect(execPayload.state.pendingResolution).toBeNull();
+  });
+
+  test("record_table_event does not open Tactical Mind while the fighter is Incapacitated", () => {
+    const host = createDemoHost({
+      maxHp: 24,
+      fighterLevel: classLevel(2),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "APPLY_CONDITION",
+      condition: "incapacitated",
+    });
+
+    const response = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "RECORD_FAILED_ABILITY_CHECK",
+      }),
+    );
+    expect(response.success).toBe(true);
+    expect(response.state.pendingResolution).toBeNull();
+  });
+
   test("record_table_event keeps max-HP and generic effect payloads blocked", () => {
     const host = createDemoHost();
 

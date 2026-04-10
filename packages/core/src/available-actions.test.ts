@@ -736,6 +736,18 @@ describe("available actions contract", () => {
     ).toBe("Right");
     expect(
       Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "RECORD_FAILED_SAVING_THROW",
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "RECORD_FAILED_ABILITY_CHECK",
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
         scope: "battle",
         type: "BATTLE_HEAL",
         targetId: "B",
@@ -791,6 +803,18 @@ describe("available actions contract", () => {
       Schema.decodeUnknownEither(TableEventCommandSchema)({
         scope: "battle",
         type: "BATTLE_CAST_SAVE_SPELL",
+      })._tag,
+    ).toBe("Left");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "TRIGGER_INDOMITABLE",
+      })._tag,
+    ).toBe("Left");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "TRIGGER_TACTICAL_MIND",
       })._tag,
     ).toBe("Left");
   });
