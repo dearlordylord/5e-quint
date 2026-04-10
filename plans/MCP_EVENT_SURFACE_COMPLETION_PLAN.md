@@ -645,14 +645,14 @@ Commit after this task:
 
 ### Task 22 - Battle Spatial Actions Slice
 
-- [ ] Reassess movement/spatial actions together:
+- [x] Reassess movement/spatial actions together:
   - `BATTLE_MOVE`
   - `BATTLE_HELP_ATTACK`
   - `BATTLE_HIDE`
   - `BATTLE_SEARCH`, if not already handled
   - `BATTLE_GRAPPLE`
   - `BATTLE_ESCAPE_GRAPPLE`, if not already handled
-- [ ] Identify what needs a future session/geometry owner:
+- [x] Identify what needs a future session/geometry owner:
   - positions
   - distance
   - path
@@ -660,16 +660,18 @@ Commit after this task:
   - line of sight
   - threatened creatures
   - opportunity attack provocation
-- [ ] Implement only actions whose spatial facts are already battle-owned or cleanly represented as explicit user/runtime holes.
-- [ ] Before exposing `BATTLE_GRAPPLE`, fold in the Size ownership cleanup from [BATTLE_SIZE_OWNERSHIP.md](./BATTLE_SIZE_OWNERSHIP.md): battle should own combatant Size and derive `attackerSize`/`targetSize` instead of accepting them as public command payload.
-- [ ] For the rest, update blockers instead of adding MCP-only state.
+- [x] Implement only actions whose spatial facts are already battle-owned or cleanly represented as explicit user/runtime holes. (Implemented `BATTLE_ESCAPE_GRAPPLE`, `BATTLE_HIDE`, and `BATTLE_SEARCH` with explicit result/session inputs.)
+- [x] Before exposing `BATTLE_GRAPPLE`, fold in the Size ownership cleanup from [BATTLE_SIZE_OWNERSHIP.md](./BATTLE_SIZE_OWNERSHIP.md): battle should own combatant Size and derive `attackerSize`/`targetSize` instead of accepting them as public command payload. (Not exposed; blocker retained because Size ownership cleanup is still required.)
+- [x] For the rest, update blockers instead of adding MCP-only state. (`BATTLE_MOVE`, `BATTLE_HELP_ATTACK`, and `BATTLE_GRAPPLE` remain blocked with refined ownership notes.)
 
 Pre-research result, 2026-04-10:
 
-- `BATTLE_ESCAPE_GRAPPLE` is a clean candidate after `BATTLE_RELEASE_GRAPPLE`: battle owns the active creature's `grappledBy` state and action availability; the token needs one explicit runtime result, `escapeSucceeded`, for the Strength (Athletics) or Dexterity (Acrobatics) check against the escape DC.
-- `BATTLE_SEARCH` is a clean candidate if the token treats the check total as runtime-owned: battle owns action spend and the target's `hiddenDiscoveryDc`; user chooses `targetId`; runtime supplies `perceptionTotal` or the applicable Wisdom-check total. Do not invent perception/proficiency state in MCP.
-- `BATTLE_HIDE` is implementable only if MCP explicitly accepts session facts as inputs: `stealthTotal`, `hasCoverOrObscurement`, and `outOfEnemyLineOfSight`. Battle can own action spend and `hiddenDiscoveryDc` projection after those facts are supplied, but it does not own cover, obscurement, or enemy line of sight.
+- `BATTLE_ESCAPE_GRAPPLE` is wired after `BATTLE_RELEASE_GRAPPLE`: battle owns the active creature's `grappledBy` state and action availability; the token accepts the explicit `escapeSucceeded` result for the Strength (Athletics) or Dexterity (Acrobatics) check against the escape DC.
+- `BATTLE_SEARCH` is wired for currently hidden combatants: battle owns action spend and the target's `hiddenDiscoveryDc`; user chooses `targetId`; the token accepts `perceptionTotal` or the applicable Wisdom-check total. No perception/proficiency state was invented in MCP.
+- `BATTLE_HIDE` is wired with explicit session facts: `stealthTotal`, `hasCoverOrObscurement`, and `outOfEnemyLineOfSight`. Battle owns action spend and `hiddenDiscoveryDc` projection after those facts are supplied, but it does not own cover, obscurement, or enemy line of sight.
 - `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` remain blocked on geometry/session ownership: visibility, reach, path, threatened creatures, and opportunity-attack provocation are not battle-owned.
+- `BATTLE_GRAPPLE` remains blocked until battle owns combatant Size and derives `attackerSize`/`targetSize` instead of accepting them from the public command payload.
+- RAW check completed against SRD 5.2.1 movement, opportunity attack, Help, Hide, Search, and Grappling passages; ubiquitous-language check completed for Ability Check, Action, Opportunity Attack, Grapple, Speed, and Movement terms.
 
 Dependencies: Task 18. `BATTLE_MOVE` should wait until either a geometry/session owner exists or the plan explicitly accepts caller-supplied provocation/threat facts.
 

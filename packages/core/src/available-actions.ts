@@ -118,6 +118,15 @@ export type FillHoles<T> = {
   readonly [K in keyof T]: T[K] extends Hole<infer V> ? V : T[K];
 };
 
+const SUGGESTED_D20_CHECK_TOTAL_OPTIONS = Array.from(
+  { length: 30 },
+  (_, i) => i + 1,
+);
+
+function isResolvedD20CheckTotal(value: number): boolean {
+  return Number.isInteger(value) && Number.isFinite(value);
+}
+
 const DUMMY_EVENT: DndEvent = { type: "STABILIZE" };
 const guardArgs = (
   context: DndContext,
@@ -304,6 +313,14 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_ESCAPE_GRAPPLE";
+      readonly escapeSucceeded: Hole<boolean>;
+      readonly cost: { readonly action: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_DASH";
       readonly cost: { readonly action: true };
       readonly outcome: OutcomeDescription;
@@ -319,6 +336,25 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DODGE";
+      readonly cost: { readonly action: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_HIDE";
+      readonly stealthTotal: Hole<number>;
+      readonly hasCoverOrObscurement: Hole<boolean>;
+      readonly outOfEnemyLineOfSight: Hole<boolean>;
+      readonly cost: { readonly action: true };
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_SEARCH";
+      readonly targetId: Hole<string>;
+      readonly perceptionTotal: Hole<number>;
       readonly cost: { readonly action: true };
       readonly outcome: OutcomeDescription;
     }
@@ -555,6 +591,12 @@ type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_ESCAPE_GRAPPLE";
+      readonly escapeSucceeded: boolean;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_DASH";
     }
   | {
@@ -566,6 +608,21 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DODGE";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_HIDE";
+      readonly stealthTotal: number;
+      readonly hasCoverOrObscurement: boolean;
+      readonly outOfEnemyLineOfSight: boolean;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_SEARCH";
+      readonly targetId: string;
+      readonly perceptionTotal: number;
     }
   | {
       readonly scope: "battle";
@@ -974,6 +1031,12 @@ const BattleReleaseGrappleResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("BATTLE_RELEASE_GRAPPLE"),
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleEscapeGrappleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_ESCAPE_GRAPPLE"),
+  escapeSucceeded: Schema.Boolean,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleDashResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_DASH"),
@@ -987,6 +1050,21 @@ const BattleDisengageResolvedActionSchema = Schema.Struct({
 const BattleDodgeResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_DODGE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleHideResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_HIDE"),
+  stealthTotal: Schema.Number,
+  hasCoverOrObscurement: Schema.Boolean,
+  outOfEnemyLineOfSight: Schema.Boolean,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleSearchResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_SEARCH"),
+  targetId: Schema.String,
+  perceptionTotal: Schema.Number,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const BattleReadyResolvedActionSchema = Schema.Struct({
@@ -1068,9 +1146,12 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   BattleEnterRageResolvedActionSchema,
   BattleDeclareRecklessResolvedActionSchema,
   BattleReleaseGrappleResolvedActionSchema,
+  BattleEscapeGrappleResolvedActionSchema,
   BattleDashResolvedActionSchema,
   BattleDisengageResolvedActionSchema,
   BattleDodgeResolvedActionSchema,
+  BattleHideResolvedActionSchema,
+  BattleSearchResolvedActionSchema,
   BattleReadyResolvedActionSchema,
   BattleReadyPassResolvedActionSchema,
   BattleReadyReleaseResolvedActionSchema,
@@ -2019,6 +2100,18 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "BATTLE_ESCAPE_GRAPPLE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_ESCAPE_GRAPPLE" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "BATTLE_DASH" }
       >;
       readonly outcome: string;
@@ -2045,6 +2138,24 @@ export type BattleResolutionRequest =
       readonly outcome: string;
       readonly runtime: "none";
       readonly event: Extract<BattleEvent, { readonly type: "BATTLE_DODGE" }>;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_HIDE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_HIDE" }>;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_SEARCH" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_SEARCH" }>;
     }
   | {
       readonly token: Extract<
@@ -3383,7 +3494,65 @@ export function getAvailableBattleActions(
         }),
       );
     }
+    if (
+      activeCreature.grappledBy != null &&
+      activeCreature.actionsRemaining > 0
+    ) {
+      tokens.push(
+        battleToken<
+          Extract<BattleActionToken, { readonly type: "BATTLE_ESCAPE_GRAPPLE" }>
+        >({
+          actorId: activeCreatureId,
+          type: "BATTLE_ESCAPE_GRAPPLE",
+          escapeSucceeded: { options: [true, false] },
+          cost: { action: true },
+          outcome: {
+            summary:
+              "Spend your action to attempt to escape the grapple with a resolved Athletics or Acrobatics check",
+          },
+        }),
+      );
+    }
     if (activeCreature.actionsRemaining > 0) {
+      tokens.push(
+        battleToken<
+          Extract<BattleActionToken, { readonly type: "BATTLE_HIDE" }>
+        >({
+          actorId: activeCreatureId,
+          type: "BATTLE_HIDE",
+          stealthTotal: { options: SUGGESTED_D20_CHECK_TOTAL_OPTIONS },
+          hasCoverOrObscurement: { options: [true, false] },
+          outOfEnemyLineOfSight: { options: [true, false] },
+          cost: { action: true },
+          outcome: {
+            summary:
+              "Spend your action to hide using explicit Stealth, cover or obscurement, and line-of-sight facts",
+          },
+        }),
+      );
+      const hiddenTargetIds = [...context.creatures]
+        .filter(
+          ([targetId, target]) =>
+            targetId !== activeCreatureId && target.hiddenDiscoveryDc > 0,
+        )
+        .map(([targetId]) => targetId);
+      if (hiddenTargetIds.length > 0) {
+        tokens.push(
+          battleToken<
+            Extract<BattleActionToken, { readonly type: "BATTLE_SEARCH" }>
+          >({
+            actorId: activeCreatureId,
+            type: "BATTLE_SEARCH",
+            targetId: { options: hiddenTargetIds },
+            perceptionTotal: { options: SUGGESTED_D20_CHECK_TOTAL_OPTIONS },
+            cost: { action: true },
+            outcome: {
+              summary:
+                "Spend your action to Search for a hidden creature with an explicit Wisdom check total",
+            },
+          }),
+        );
+      }
       tokens.push(
         battleToken({
           actorId: activeCreatureId,
@@ -3520,6 +3689,9 @@ function availableBattleTokenForResolved(
     ) {
       return candidate.spellName === token.spellName;
     }
+    if (candidate.type === "BATTLE_SEARCH" && token.type === "BATTLE_SEARCH") {
+      return candidate.targetId.options.includes(token.targetId);
+    }
     return true;
   });
 }
@@ -3566,6 +3738,60 @@ export function resolveBattleAction(
       outcome: availableToken.outcome.summary,
       runtime: "none",
       event: { type: "BATTLE_RELEASE_GRAPPLE" },
+    };
+  }
+  if (token.type === "BATTLE_ESCAPE_GRAPPLE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: {
+        type: "BATTLE_ESCAPE_GRAPPLE",
+        escapeSucceeded: token.escapeSucceeded,
+      },
+    };
+  }
+  if (
+    token.type === "BATTLE_HIDE" &&
+    !isResolvedD20CheckTotal(token.stealthTotal)
+  ) {
+    return {
+      code: "INVALID_RUNTIME_INPUT",
+      message: "Hide Stealth total must be an integer.",
+    };
+  }
+  if (
+    token.type === "BATTLE_SEARCH" &&
+    !isResolvedD20CheckTotal(token.perceptionTotal)
+  ) {
+    return {
+      code: "INVALID_RUNTIME_INPUT",
+      message: "Search Wisdom check total must be an integer.",
+    };
+  }
+  if (token.type === "BATTLE_HIDE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: {
+        type: "BATTLE_HIDE",
+        stealthTotal: token.stealthTotal,
+        hasCoverOrObscurement: token.hasCoverOrObscurement,
+        outOfEnemyLineOfSight: token.outOfEnemyLineOfSight,
+      },
+    };
+  }
+  if (token.type === "BATTLE_SEARCH") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: {
+        type: "BATTLE_SEARCH",
+        targetId: CreatureId(token.targetId),
+        perceptionTotal: token.perceptionTotal,
+      },
     };
   }
 

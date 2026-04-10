@@ -2985,6 +2985,119 @@ describe("MCP server adapter", () => {
     ).toBeNull();
   });
 
+  test("battle hosts surface and execute escape grapple through MCP", () => {
+    const host = initBattleHostWithGrapplingActor();
+    host.actor.send({
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    host.actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual(
+      expect.objectContaining({
+        action: expect.arrayContaining([
+          expect.objectContaining({
+            scope: "battle",
+            actorId: "B",
+            type: "BATTLE_ESCAPE_GRAPPLE",
+            escapeSucceeded: { options: [true, false] },
+            cost: { action: true },
+          }),
+        ]),
+      }),
+    );
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "B",
+      type: "BATTLE_ESCAPE_GRAPPLE",
+      escapeSucceeded: true,
+    });
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome:
+          "Spend your action to attempt to escape the grapple with a resolved Athletics or Acrobatics check",
+      }),
+    );
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B"))
+        ?.grappledBy,
+    ).toBeNull();
+  });
+
+  test("battle hosts surface and execute hide and search through MCP", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    actor.send({
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const host = createBattleHost(actor);
+
+    const hideResponse = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_HIDE",
+      stealthTotal: 35,
+      hasCoverOrObscurement: true,
+      outOfEnemyLineOfSight: true,
+    });
+    expect("isError" in hideResponse).toBe(false);
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
+        ?.hiddenDiscoveryDc,
+    ).toBe(35);
+
+    host.actor.send({
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    host.actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual(
+      expect.objectContaining({
+        action: expect.arrayContaining([
+          expect.objectContaining({
+            scope: "battle",
+            actorId: "B",
+            type: "BATTLE_SEARCH",
+            targetId: { options: ["A"] },
+            cost: { action: true },
+          }),
+        ]),
+      }),
+    );
+
+    const searchResponse = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "B",
+      type: "BATTLE_SEARCH",
+      targetId: "A",
+      perceptionTotal: 35,
+    });
+    expect("isError" in searchResponse).toBe(false);
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
+        ?.hiddenDiscoveryDc,
+    ).toBe(0);
+  });
+
   test("battle hosts surface and execute ready-window actions through MCP", () => {
     const host = initBattleHostWithReadyWindow();
 

@@ -469,8 +469,12 @@ function initBattleForFeatureDiscovery() {
 }
 
 function initBattleForReleaseGrappleDiscovery(
-  { withGrapple }: { readonly withGrapple: boolean } = {
+  {
+    withGrapple,
+    hiddenTarget = false,
+  }: { readonly withGrapple: boolean; readonly hiddenTarget?: boolean } = {
     withGrapple: true,
+    hiddenTarget: false,
   },
 ) {
   const actor = makeBattleActor({
@@ -489,6 +493,22 @@ function initBattleForReleaseGrappleDiscovery(
       targetSize: "medium",
       targetSaveFailed: true,
     });
+  }
+  if (hiddenTarget) {
+    actor.send({
+      type: "BATTLE_HIDE",
+      stealthTotal: 18,
+      hasCoverOrObscurement: true,
+      outOfEnemyLineOfSight: true,
+    });
+    actor.send({
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
   }
   return actor;
 }
@@ -2832,6 +2852,184 @@ describe("available actions contract", () => {
       code: "ACTION_NOT_AVAILABLE",
       message:
         "BATTLE_RELEASE_GRAPPLE is not currently available for A in this battle state.",
+    });
+  });
+
+  test("battle discovery and resolution expose escape grapple with explicit check result", () => {
+    const actor = initBattleForReleaseGrappleDiscovery();
+    actor.send({
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "B",
+          type: "BATTLE_ESCAPE_GRAPPLE",
+          escapeSucceeded: { options: [true, false] },
+          cost: { action: true },
+          outcome: {
+            summary:
+              "Spend your action to attempt to escape the grapple with a resolved Athletics or Acrobatics check",
+          },
+        },
+      ]),
+    );
+
+    const request = expectBattleRequest(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "B",
+        type: "BATTLE_ESCAPE_GRAPPLE",
+        escapeSucceeded: true,
+      }),
+    );
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "B",
+        type: "BATTLE_ESCAPE_GRAPPLE",
+        escapeSucceeded: true,
+      },
+      outcome:
+        "Spend your action to attempt to escape the grapple with a resolved Athletics or Acrobatics check",
+      runtime: "none",
+      event: { type: "BATTLE_ESCAPE_GRAPPLE", escapeSucceeded: true },
+    });
+  });
+
+  test("battle discovery and resolution expose hide with explicit session facts", () => {
+    const actor = initBattleForReleaseGrappleDiscovery({
+      withGrapple: false,
+    });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_HIDE",
+          stealthTotal: {
+            options: Array.from({ length: 30 }, (_, i) => i + 1),
+          },
+          hasCoverOrObscurement: { options: [true, false] },
+          outOfEnemyLineOfSight: { options: [true, false] },
+          cost: { action: true },
+        }),
+      ]),
+    );
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_HIDE",
+        stealthTotal: 35,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      }),
+    ).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_HIDE",
+        stealthTotal: 35,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      },
+      outcome:
+        "Spend your action to hide using explicit Stealth, cover or obscurement, and line-of-sight facts",
+      runtime: "none",
+      event: {
+        type: "BATTLE_HIDE",
+        stealthTotal: 35,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      },
+    });
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_HIDE",
+        stealthTotal: 18.5,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      }),
+    ).toEqual({
+      code: "INVALID_RUNTIME_INPUT",
+      message: "Hide Stealth total must be an integer.",
+    });
+  });
+
+  test("battle discovery and resolution expose search against hidden combatants", () => {
+    const actor = initBattleForReleaseGrappleDiscovery({
+      withGrapple: false,
+      hiddenTarget: true,
+    });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "B",
+          type: "BATTLE_SEARCH",
+          targetId: { options: ["A"] },
+          perceptionTotal: {
+            options: Array.from({ length: 30 }, (_, i) => i + 1),
+          },
+          cost: { action: true },
+        }),
+      ]),
+    );
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "B",
+        type: "BATTLE_SEARCH",
+        targetId: "A",
+        perceptionTotal: -1,
+      }),
+    ).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "B",
+        type: "BATTLE_SEARCH",
+        targetId: "A",
+        perceptionTotal: -1,
+      },
+      outcome:
+        "Spend your action to Search for a hidden creature with an explicit Wisdom check total",
+      runtime: "none",
+      event: {
+        type: "BATTLE_SEARCH",
+        targetId: CreatureId("A"),
+        perceptionTotal: -1,
+      },
+    });
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "B",
+        type: "BATTLE_SEARCH",
+        targetId: "A",
+        perceptionTotal: 18.5,
+      }),
+    ).toEqual({
+      code: "INVALID_RUNTIME_INPUT",
+      message: "Search Wisdom check total must be an integer.",
     });
   });
 
