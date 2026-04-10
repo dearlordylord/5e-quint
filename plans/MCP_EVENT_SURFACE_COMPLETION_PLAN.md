@@ -731,14 +731,20 @@ Commit after this task:
 
 ### Task 24 - Final Surface Audit And Docs Wrap
 
-- [ ] Regenerate/check the inventory: all 112 `DndEvent` and 42 `BattleEvent` variants must appear exactly once in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md).
-- [ ] Confirm every event is classified with the new API-surface taxonomy.
-- [ ] Confirm every `suggested_action` is either implemented in `get_available_actions` or has a named blocker.
-- [ ] Confirm every `control_command` has a command path or a named blocker.
-- [ ] Confirm every `table_event` has a command path or a named blocker.
-- [ ] Confirm every `action_resolution`, `domain_trigger`, and `bookkeeping` item is intentionally hidden or covered by a parent semantic surface.
-- [ ] Update [ARCHITECTURE.md](../ARCHITECTURE.md) section 5 if the final MCP tool list changed.
-- [ ] Update [available-actions.md](./available-actions.md) if implementation history or durable decisions changed.
+- [x] Regenerate/check the inventory: all 112 `DndEvent` and 42 `BattleEvent` variants must appear exactly once in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md).
+- [x] Confirm every event is classified with the new API-surface taxonomy.
+- [x] Confirm every `suggested_action` is either implemented in `get_available_actions` or has a named blocker.
+- [x] Confirm every `control_command` has a command path or a named blocker.
+- [x] Confirm every `table_event` has a command path or a named blocker.
+- [x] Confirm every `action_resolution`, `domain_trigger`, and `bookkeeping` item is intentionally hidden or covered by a parent semantic surface.
+- [x] Update [ARCHITECTURE.md](../ARCHITECTURE.md) section 5 if the final MCP tool list changed.
+- [x] Update [available-actions.md](./available-actions.md) if implementation history or durable decisions changed.
+
+Task 24 final sweep, 2026-04-10:
+
+- Inventory script returned `creature { source: 112, rows: 112, missing: [], extra: [], dup: [] }` and `battle { source: 42, rows: 42, missing: [], extra: [], dup: [] }`.
+- The audit row taxonomy was reviewed against the six categories in this plan; no row uses the old taxonomy.
+- This task changed documentation only. No modeled D&D rule behavior, Quint-visible behavior, or bridge mapping changed, so no additional RAW corpus or MBT run was needed for Task 24 itself.
 
 Dependencies: all implemented tasks.
 

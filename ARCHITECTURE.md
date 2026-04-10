@@ -177,7 +177,7 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 
 **Owns:**
 - Supported action registry (query tokens, resolved tokens, runtime-input requirements, event mappings)
-- Four MCP tools: `get_state`, `get_available_actions`, `execute_action`, `preview_action`; planned separate surfaces: `execute_control_command`, `record_table_event`
+- Six MCP tools: `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, `record_table_event`
 - Three-step execution contract: `ActionToken` (query-time) → `ResolvedActionToken` (user choices filled) → `ResolutionRequest` → `DndEvent` (runtime inputs added)
 
 **Does NOT own:**

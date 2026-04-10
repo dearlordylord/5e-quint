@@ -4,7 +4,7 @@
 
 ## Current status
 
-> Updated 2026-04-09 (documentation audit).
+> Updated 2026-04-10 (final MCP event-surface audit).
 
 - Phases 1-4A are complete. The foundational contract, battle reaction ownership, action grouping, choice holes, and semantic breadth are all landed.
 - `CAST_COUNTERSPELL` is complete (landed in the battle action surface).
@@ -19,7 +19,7 @@ Durable decisions that apply across all phases:
 
 - **Three-step execution contract**: `get_available_actions` returns `ActionToken` values (query-time shape). `execute_action` accepts `ResolvedActionToken` values (user-facing holes filled, no engine-only fields). Core then resolves that token into a `ResolutionRequest`, and the runtime layer supplies engine-only inputs (dice rolls, turn-start runtime facts) to produce the final `DndEvent`.
 - **`execute_action` MCP input schema is derived from `ResolvedActionToken`**: Effect Schema `Schema.Union`, discriminated on `type`, generated from the supported resolved-token variants rather than hand-writing a union over all machine event types. `JSONSchema.make()` generates the MCP tool schema. Validation via `Schema.decodeUnknownEither`.
-- **MCP tool surface**: Four existing tools — `get_state`, `get_available_actions`, `execute_action`, `preview_action`. Planned separate surfaces: `execute_control_command` (session/turn/rest/monster control) and `record_table_event` (DM/table/world facts). Independent process from React app, instantiates its own XState actor. Low-level MCP SDK (`Server` + `setRequestHandler`), not the high-level `McpServer` class (which is zod-only).
+- **MCP tool surface**: Six tools — `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command` (session/turn/rest/monster control), and `record_table_event` (DM/table/world facts with warning metadata). Independent process from React app, instantiates its own XState actor. Low-level MCP SDK (`Server` + `setRequestHandler`), not the high-level `McpServer` class (which is zod-only).
 - **Supported action spec is the source of truth for the executable surface**: The available-actions module owns the supported action registry. For each supported action, the registry defines the query token, resolved execute shape, runtime-input requirements, and final `DndEvent` mapping. State topology (which events the machine accepts in which state) is still derived from `rootEventHandlers` + `turnPhaseConfig`.
 - **Battle semantics own combat-state meaning**: `battle.qnt` is the authoritative combat spec. If the MCP layer has to remember a combat fact such as grapple state in order to drive `execute_action`, that is treated as a domain-ownership bug and should be pushed down into battle/spec/machine state, then projected outward.
 - **MCP inconsistencies are a diagnostic surface**: if the MCP adapter must remember, fabricate, or re-derive a combat fact in order to execute an action, the ownership boundary is wrong. Fix the domain/spec/machine state first; do not solve ownership leaks in the adapter.
@@ -46,7 +46,7 @@ Pick one action type — Second Wind is a good candidate (bonus action, has a gu
 - Define the query-time `ActionToken` schema and execute-time `ResolvedActionToken` schema.
 - Implement the available actions module returning only supported action tokens when guards and state topology allow them.
 - Implement core action resolution: resolved token → runtime-input request → final `DndEvent`.
-- Stand up the MCP server with the initial action-token tools. The current server has four existing tools: `get_state`, `get_available_actions`, `execute_action`, and `preview_action`. `get_state` returns DndContext. `get_available_actions` returns the supported token set grouped by cost. `execute_action` accepts a resolved token, runtime-resolves engine-only fields, sends the event, and returns the new state. Planned separate MCP surfaces (`execute_control_command` and `record_table_event`) own control commands and table events rather than mixing those into ordinary suggested actions.
+- Stand up the MCP server with the initial action-token tools. The current server has six tools: `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, and `record_table_event`. `get_state` returns DndContext. `get_available_actions` returns the supported token set grouped by cost. `execute_action` accepts a resolved token, runtime-resolves engine-only fields, sends the event, and returns the new state. `execute_control_command` handles session/turn/rest lifecycle commands. `record_table_event` accepts DM/table/world facts with warning metadata.
 - Verify: connect Claude Desktop to the MCP server. Ask "what can my character do?" — get the supported action set back. Execute one — see state change.
 
 ### Acceptance criteria
