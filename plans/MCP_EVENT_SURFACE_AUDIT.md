@@ -42,7 +42,7 @@ Current workspace counts from the audited files:
 
 Raw event exposure is therefore 61 / 154 = about 40%. That number is not a completion metric. Many of the remaining 93 core variants should never appear in `get_available_actions`.
 
-Current MCP tools are `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, and `record_table_event`. Control commands for battle setup, battle turn lifecycle, legendary-action pass, creature turn end, and creature long rest are wired. Creature damage/recovery table events are wired; later table-event slices remain unsupported.
+Current MCP tools are `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, and `record_table_event`. Control commands for battle setup, battle turn lifecycle, legendary-action pass, creature turn end, and creature long rest are wired. Creature damage/recovery and condition/exhaustion table events are wired; later table-event slices remain unsupported.
 
 ## MCP API Surface Taxonomy
 
@@ -73,10 +73,10 @@ Some lifecycle `control_command` events are currently exposed through `get_avail
 | `DEATH_SAVE` | creature | no | - | `action_resolution` | Death-save rolls are runtime dice consumed during turn processing. | no | Runtime/session roll owner. | Keep hidden behind turn processing or future roll owner. |
 | `STABILIZE` | creature | yes | `record_table_event` | `table_event` | Stabilization can be a DM/table result rather than an ordinary self option. | no | `record_table_event` | **Task 6: wired.** Accepts optional semantic-action provenance warning. |
 | `KNOCK_OUT` | creature | yes | `record_table_event` | `table_event` | Knockout is a damage-resolution choice or table outcome. | no | `record_table_event` | **Task 6: wired.** Accepts optional semantic-action provenance warning. |
-| `APPLY_CONDITION` | creature | no | - | `table_event` | Condition application is an external rule/effect fact. | no | Future `record_table_event` surface. | Add warning-aware condition application if needed. |
-| `REMOVE_CONDITION` | creature | no | - | `table_event` | Generic condition removal is an external rule/effect fact. | no | Future `record_table_event` surface. | Add via semantic feature/spell or `record_table_event`. |
-| `ADD_EXHAUSTION` | creature | no | - | `table_event` | Exhaustion gain is an external environmental or rule fact. | no | Future `record_table_event` surface. | Add only with table-event provenance. |
-| `REDUCE_EXHAUSTION` | creature | no | - | `table_event` | Exhaustion reduction is an external recovery or rest fact. | no | Future `record_table_event` surface. | Prefer rest semantics when possible. |
+| `APPLY_CONDITION` | creature | yes | `record_table_event` | `table_event` | Condition application is an external rule/effect fact. | no | `record_table_event` | **Task 7: wired.** Requires a Condition and accepts explicit condition-immunity facts plus optional semantic-action provenance warning. |
+| `REMOVE_CONDITION` | creature | yes | `record_table_event` | `table_event` | Generic condition removal is an external rule/effect fact. | no | `record_table_event` | **Task 7: wired.** Requires a Condition and accepts optional semantic-action provenance warning. |
+| `ADD_EXHAUSTION` | creature | yes | `record_table_event` | `table_event` | Exhaustion gain is an external environmental or rule fact. | no | `record_table_event` | **Task 7: wired.** Requires explicit levels, accepts explicit exhaustion-immunity facts, and accepts optional semantic-action provenance warning. |
+| `REDUCE_EXHAUSTION` | creature | yes | `record_table_event` | `table_event` | Exhaustion reduction is an external recovery or rest fact. | no | `record_table_event` | **Task 7: wired.** Requires explicit levels and accepts optional semantic-action provenance warning; prefer rest semantics when possible. |
 | `START_TURN` | creature | yes | `START_TURN` | `control_command` | This starts creature turn processing and currently exposes a runtime-filled token. | yes | - | **Task 4 decision: stays in `get_available_actions`.** The existing action-token path handles resolution and preview. No mirrored control command. |
 | `END_TURN` | creature | yes | `execute_control_command` | `control_command` | Ending a turn is lifecycle control rather than a character option. | no | `execute_control_command` | **Task 4: wired.** No parameters; dispatches directly. |
 | `USE_ACTION` | creature | no | - | `bookkeeping` | This is raw action-economy bookkeeping behind semantic actions. | no | None. | Keep internal. |

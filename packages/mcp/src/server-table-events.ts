@@ -8,7 +8,12 @@ import {
 } from "@dnd/core/available-actions.ts";
 import { encodeDndContext } from "@dnd/core/context-encoding.ts";
 import type { DndEvent } from "@dnd/core/machine-types.ts";
-import { healAmount, tempHp, type DamageType } from "@dnd/core/types.ts";
+import {
+  healAmount,
+  tempHp,
+  type Condition,
+  type DamageType,
+} from "@dnd/core/types.ts";
 
 import {
   type DndActor,
@@ -137,6 +142,12 @@ function damageTypeSet(
   return new Set(values ?? []);
 }
 
+function conditionSet(
+  values: ReadonlyArray<Condition> | undefined,
+): ReadonlySet<Condition> | undefined {
+  return values == null ? undefined : new Set(values);
+}
+
 function buildCreatureTableEvent(
   command: Extract<TableEventCommand, { readonly scope: "creature" }>,
 ): DndEvent | null {
@@ -161,10 +172,24 @@ function buildCreatureTableEvent(
     })),
     Match.when({ type: "STABILIZE" }, () => ({ type: "STABILIZE" }) as const),
     Match.when({ type: "KNOCK_OUT" }, () => ({ type: "KNOCK_OUT" }) as const),
-    Match.when({ type: "APPLY_CONDITION" }, () => null),
-    Match.when({ type: "REMOVE_CONDITION" }, () => null),
-    Match.when({ type: "ADD_EXHAUSTION" }, () => null),
-    Match.when({ type: "REDUCE_EXHAUSTION" }, () => null),
+    Match.when({ type: "APPLY_CONDITION" }, (c) => ({
+      type: "APPLY_CONDITION" as const,
+      condition: c.condition,
+      conditionImmunities: conditionSet(c.conditionImmunities),
+    })),
+    Match.when({ type: "REMOVE_CONDITION" }, (c) => ({
+      type: "REMOVE_CONDITION" as const,
+      condition: c.condition,
+    })),
+    Match.when({ type: "ADD_EXHAUSTION" }, (c) => ({
+      type: "ADD_EXHAUSTION" as const,
+      levels: c.levels,
+      exhaustionImmune: c.exhaustionImmune ?? false,
+    })),
+    Match.when({ type: "REDUCE_EXHAUSTION" }, (c) => ({
+      type: "REDUCE_EXHAUSTION" as const,
+      levels: c.levels,
+    })),
     Match.when({ type: "APPLY_FALL" }, () => null),
     Match.exhaustive,
   );

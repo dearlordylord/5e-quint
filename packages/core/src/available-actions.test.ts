@@ -651,7 +651,7 @@ describe("available actions contract", () => {
     ).toBe("Left");
   });
 
-  test("table event schema exposes damage and recovery commands without raw passthrough", () => {
+  test("table event schema exposes wired creature commands without raw passthrough", () => {
     expect(
       Schema.decodeUnknownEither(TableEventCommandSchema)({
         scope: "creature",
@@ -692,6 +692,36 @@ describe("available actions contract", () => {
     expect(
       Schema.decodeUnknownEither(TableEventCommandSchema)({
         scope: "creature",
+        type: "APPLY_CONDITION",
+        condition: "poisoned",
+        conditionImmunities: ["petrified"],
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "REMOVE_CONDITION",
+        condition: "poisoned",
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "ADD_EXHAUSTION",
+        levels: 2,
+        exhaustionImmune: false,
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "REDUCE_EXHAUSTION",
+        levels: 1,
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
         type: "TAKE_DAMAGE",
         amount: 8,
       })._tag,
@@ -705,6 +735,19 @@ describe("available actions contract", () => {
         amount: 6,
         keepOld: false,
         condition: "poisoned",
+      })._tag,
+    ).toBe("Left");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "APPLY_CONDITION",
+      })._tag,
+    ).toBe("Left");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "ADD_EXHAUSTION",
+        levels: 7,
       })._tag,
     ).toBe("Left");
   });

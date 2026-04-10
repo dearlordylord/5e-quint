@@ -562,7 +562,7 @@ describe("MCP server adapter", () => {
 
     const response = handleToolCall(host, "record_table_event", {
       scope: "creature",
-      type: "APPLY_CONDITION",
+      type: "APPLY_FALL",
     });
 
     expect("isError" in response && response.isError).toBe(true);
@@ -573,14 +573,14 @@ describe("MCP server adapter", () => {
         {
           code: "unsupported_domain_gap",
           message:
-            "APPLY_CONDITION is reserved for the warning-aware table-event surface but is not wired to domain semantics yet.",
+            "APPLY_FALL is reserved for the warning-aware table-event surface but is not wired to domain semantics yet.",
         },
       ],
       state: before,
       error: {
         code: "TABLE_EVENT_NOT_IMPLEMENTED",
         message: "Table event is not implemented yet",
-        event: { scope: "creature", type: "APPLY_CONDITION" },
+        event: { scope: "creature", type: "APPLY_FALL" },
       },
     });
     expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
@@ -754,6 +754,138 @@ describe("MCP server adapter", () => {
         message: "Table event is not accepted in the current creature state",
         event: { scope: "creature", type: "STABILIZE" },
       },
+    });
+  });
+
+  test("record_table_event applies creature condition events with warnings", () => {
+    const host = createDemoHost();
+
+    const apply = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "APPLY_CONDITION",
+        condition: "poisoned",
+        semanticAction: { kind: "spell", name: "ray of sickness" },
+      }),
+    );
+    expect(apply.success).toBe(true);
+    expect(apply.state.poisoned).toBe(true);
+    expect(apply.warnings).toContainEqual({
+      code: "external_table_fact",
+      message:
+        "APPLY_CONDITION records a table fact rather than an ordinary suggested action.",
+    });
+    expect(apply.warnings).toContainEqual({
+      code: "bypasses_semantic_action",
+      message:
+        "APPLY_CONDITION bypasses the stricter spell action path for ray of sickness. Prefer a modeled action token when one exists.",
+    });
+
+    const remove = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "REMOVE_CONDITION",
+        condition: "poisoned",
+      }),
+    );
+    expect(remove.success).toBe(true);
+    expect(remove.state.poisoned).toBe(false);
+  });
+
+  test("record_table_event applies condition with immunity pass-through", () => {
+    const host = createDemoHost();
+
+    const immuneApply = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "APPLY_CONDITION",
+        condition: "charmed",
+        conditionImmunities: ["charmed"],
+      }),
+    );
+    expect(immuneApply.success).toBe(true);
+    expect(immuneApply.state.charmed).toBe(false);
+  });
+
+  test("record_table_event applies creature exhaustion events with warnings", () => {
+    const host = createDemoHost();
+
+    const addExhaustion = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "ADD_EXHAUSTION",
+        levels: 2,
+      }),
+    );
+    expect(addExhaustion.success).toBe(true);
+    expect(addExhaustion.state.exhaustion).toBe(2);
+    expect(addExhaustion.warnings).toContainEqual({
+      code: "external_table_fact",
+      message:
+        "ADD_EXHAUSTION records a table fact rather than an ordinary suggested action.",
+    });
+
+    const reduceExhaustion = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "REDUCE_EXHAUSTION",
+        levels: 1,
+      }),
+    );
+    expect(reduceExhaustion.success).toBe(true);
+    expect(reduceExhaustion.state.exhaustion).toBe(1);
+  });
+
+  test("record_table_event applies exhaustion with immunity pass-through", () => {
+    const host = createDemoHost();
+
+    const immuneExhaustion = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "ADD_EXHAUSTION",
+        levels: 1,
+        exhaustionImmune: true,
+      }),
+    );
+    expect(immuneExhaustion.success).toBe(true);
+    expect(immuneExhaustion.state.exhaustion).toBe(0);
+  });
+
+  test("record_table_event validates condition and exhaustion schema shapes", () => {
+    const host = createDemoHost();
+
+    const missingCondition = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "APPLY_CONDITION",
+    });
+    expect(readPayload(missingCondition)).toMatchObject({
+      error: "Invalid record_table_event input",
+    });
+
+    const invalidCondition = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "APPLY_CONDITION",
+      condition: "cursed",
+    });
+    expect(readPayload(invalidCondition)).toMatchObject({
+      error: "Invalid record_table_event input",
+    });
+
+    const missingLevels = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "ADD_EXHAUSTION",
+    });
+    expect(readPayload(missingLevels)).toMatchObject({
+      error: "Invalid record_table_event input",
+    });
+
+    const zeroLevels = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "ADD_EXHAUSTION",
+      levels: 0,
+    });
+    expect(readPayload(zeroLevels)).toMatchObject({
+      error: "Invalid record_table_event input",
     });
   });
 

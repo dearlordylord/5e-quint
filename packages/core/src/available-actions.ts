@@ -53,6 +53,7 @@ import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts";
 import type { DndContext, DndEvent } from "#/machine-types.ts";
 import {
   armorClass,
+  CONDITIONS,
   CREATURE_KINDS,
   CreatureId,
   DAMAGE_TYPES,
@@ -646,11 +647,16 @@ export const CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES = [
 export type CreatureDamageRecoveryTableEventType =
   (typeof CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES)[number];
 
-export const CREATURE_REMAINING_TABLE_EVENT_TYPES = [
+export const CREATURE_CONDITION_EXHAUSTION_TABLE_EVENT_TYPES = [
   "APPLY_CONDITION",
   "REMOVE_CONDITION",
   "ADD_EXHAUSTION",
   "REDUCE_EXHAUSTION",
+] as const satisfies ReadonlyArray<DndEvent["type"]>;
+export type CreatureConditionExhaustionTableEventType =
+  (typeof CREATURE_CONDITION_EXHAUSTION_TABLE_EVENT_TYPES)[number];
+
+export const CREATURE_REMAINING_TABLE_EVENT_TYPES = [
   "APPLY_FALL",
 ] as const satisfies ReadonlyArray<DndEvent["type"]>;
 export type CreatureRemainingTableEventType =
@@ -658,6 +664,7 @@ export type CreatureRemainingTableEventType =
 
 export const CREATURE_TABLE_EVENT_TYPES = [
   ...CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES,
+  ...CREATURE_CONDITION_EXHAUSTION_TABLE_EVENT_TYPES,
   ...CREATURE_REMAINING_TABLE_EVENT_TYPES,
 ] as const satisfies ReadonlyArray<DndEvent["type"]>;
 export type CreatureTableEventType =
@@ -1193,6 +1200,44 @@ const CreatureKnockOutTableEventSchema = Schema.Struct({
   type: Schema.Literal("KNOCK_OUT"),
   ...TableEventSemanticActionField,
 });
+const ConditionSchema = Schema.Literal(...CONDITIONS);
+const ConditionImmunitiesField = {
+  conditionImmunities: Schema.optional(Schema.Array(ConditionSchema)),
+} as const;
+const CreatureApplyConditionTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("APPLY_CONDITION"),
+  condition: ConditionSchema,
+  ...ConditionImmunitiesField,
+  ...TableEventSemanticActionField,
+});
+const CreatureRemoveConditionTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("REMOVE_CONDITION"),
+  condition: ConditionSchema,
+  ...TableEventSemanticActionField,
+});
+const CreatureAddExhaustionTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("ADD_EXHAUSTION"),
+  levels: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(6),
+  ),
+  exhaustionImmune: Schema.optional(Schema.Boolean),
+  ...TableEventSemanticActionField,
+});
+const CreatureReduceExhaustionTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("REDUCE_EXHAUSTION"),
+  levels: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(6),
+  ),
+  ...TableEventSemanticActionField,
+});
 const RemainingCreatureTableEventSchema = Schema.Struct({
   scope: Schema.Literal("creature"),
   type: Schema.Literal(...CREATURE_REMAINING_TABLE_EVENT_TYPES),
@@ -1208,6 +1253,10 @@ export const TableEventCommandSchema = Schema.Union(
   CreatureGrantTempHpTableEventSchema,
   CreatureStabilizeTableEventSchema,
   CreatureKnockOutTableEventSchema,
+  CreatureApplyConditionTableEventSchema,
+  CreatureRemoveConditionTableEventSchema,
+  CreatureAddExhaustionTableEventSchema,
+  CreatureReduceExhaustionTableEventSchema,
   RemainingCreatureTableEventSchema,
   BattleTableEventSchema,
 );

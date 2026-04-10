@@ -149,7 +149,7 @@ export const toolDefinitions = [
   {
     name: "record_table_event",
     description:
-      "Record a narrow DM/table/world fact. Creature damage and recovery events are applied with provenance warnings; unsupported table events return structured errors without mutating state.",
+      "Record a narrow DM/table/world fact. Creature damage/recovery and condition/exhaustion events are applied with provenance warnings; unsupported table events return structured errors without mutating state.",
     inputSchema: recordTableEventJsonSchema,
   },
 ] as const;
