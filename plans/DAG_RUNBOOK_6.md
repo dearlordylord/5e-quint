@@ -4,7 +4,9 @@
 
 TS/MCP action-surface implementation landed.
 
-The merge completed the TypeScript battle state, available-actions, MCP, and focused test portions of this runbook. `battle.qnt` was not changed in this commit; keep a Quint/MBT parity follow-up open if these newly owned payload/trigger facts need to become Quint-visible rather than TS battle-owned projection facts.
+The merge completed the TypeScript battle state, available-actions, MCP, and focused test portions of this runbook. `battle.qnt` was not changed in that commit.
+
+The remaining exception is tracked in [DAG.md](./DAG.md) as `runbook6-quint-parity`. Treat that follow-up as required spec-first work before using Runbook 6 as evidence for authoritative battle ownership in product consumers such as `dm-override` or `transcript-port-to-dnd`.
 
 This runbook captures the execution-grade batch after Runbook 5. Its scope comes from the ownership gaps discovered during Runbook 4 and confirmed still open after Runbook 5.
 
@@ -455,4 +457,4 @@ This runbook is complete when:
 Implementation note:
 
 - The TS/MCP action surface satisfies the exit criteria above for the current runtime projection layer.
-- `battle.qnt` still has the pre-existing spell-name/parameter and after-damage context shape. Treat Quint parity as the remaining follow-up before using this runbook as evidence for authoritative spec-level ownership.
+- `battle.qnt` still has the pre-existing spell-name/parameter and after-damage context shape. `runbook6-quint-parity` in [DAG.md](./DAG.md) is the required follow-up before this runbook counts as authoritative spec-level ownership.

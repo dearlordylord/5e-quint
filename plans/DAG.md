@@ -65,14 +65,12 @@ available-actions-main
   -> battle-ready-action-surface
   -> battle-ready-spell-payload-state
   -> after-damage-trigger-state
+  -> runbook6-quint-parity
   -> dm-override
   -> transcript-port-to-dnd
 
 available-actions-main
   -> preview-execution
-
-available-actions-main
-  -> transcript-port-to-dnd
 
 battle-helped-target-state
   -> help-advantage-state
@@ -94,6 +92,16 @@ battle-ready-spell-payload-state
 
 after-damage-trigger-state
   -> after-damage-reaction-surface
+
+battle-ready-spell-payload-state
+  -> runbook6-quint-parity
+
+after-damage-trigger-state
+  -> runbook6-quint-parity
+
+runbook6-quint-parity
+  -> dm-override
+  -> transcript-port-to-dnd
 
 weapon-property-aware-battle-resolution
   -> battle-hand-occupancy-state
@@ -135,17 +143,18 @@ authoritative-d20-modifier-query-surface
 | `closed-modifier-algebra` | facility | complete | none | `archery-in-battle`, `two-weapon-fighting-style-in-battle` | Landed as narrow battle-owned concrete fields for Ranged-weapon attack-roll bonuses and Light-property extra-attack ability-modifier damage. Deliberately did not introduce a generic modifier registry or tag-driven system. |
 | `oa-path-vocabulary` | facility | complete | none | `movement-provocation-kind`, `reach-extends-oa-range` | Landed in [battle/DOMAIN.md](/workspace/typescript/dnd/battle/DOMAIN.md), [battle.qnt](/workspace/typescript/dnd/battle.qnt), and [battle-machine-actions-movement.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-movement.ts); geometry remains caller-owned by design |
 | `authoritative-d20-modifier-query-surface` | facility | complete | none | `armor-training-disadvantage` | Landed authoritative d20 modifier/disadvantage query ownership in machine query/types surfaces; keep here because downstream planning still references the seam |
-| `available-actions-main` | plan | active | none | `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-surface`, `after-damage-reaction-surface`, `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Do not schedule the umbrella directly; schedule the concrete slices below. |
+| `available-actions-main` | plan | active | none | `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-surface`, `after-damage-reaction-surface`, `runbook6-quint-parity`, `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Do not schedule the umbrella directly; schedule the concrete slices below. |
 | `legendary-resistance-fallback` | batch | complete | none | additional battle interrupt breadth | Closed as a narrow AoE failed-save regression slice; no separate breadth batch remains to schedule here |
 | `battle-basic-action-surface` | candidate | complete | `available-actions-main` | unified projection/execution of `dash`, `disengage`, and `dodge` in battle scope | Landed in core available-actions and MCP with deterministic action-surface coverage |
 | `battle-ready-action-surface` | candidate | complete | `available-actions-main` | battle-scoped `READY`, `READY_PASS`, and `READY_RELEASE` action-surface support | Landed in core available-actions and MCP over the existing battle ready window; follow-up simplification can reduce registry boilerplate, but the runbook slice is closed |
-| `battle-ready-spell-payload-state` | facility | complete | `available-actions-main` | `battle-ready-spell-surface` | TS battle state now owns typed readyable-spell save/effect payloads for the modeled ready-spell slice. Follow-up remains to mirror the new payload shape in `battle.qnt` before treating this as full spec parity. |
+| `battle-ready-spell-payload-state` | facility | complete | `available-actions-main` | `battle-ready-spell-surface`, `runbook6-quint-parity` | TS battle state now owns typed readyable-spell save/effect payloads for the modeled ready-spell slice. Authoritative Quint parity is tracked by `runbook6-quint-parity`; do not treat the TS-only shape as final spec ownership. |
 | `battle-ready-spell-surface` | candidate | complete | `available-actions-main`, `battle-ready-spell-payload-state` | battle-scoped `READY_SPELL` and `READY_SPELL_RELEASE` action-surface support | Landed in core available-actions and MCP with per-spell tokens, slot-level choice holes, target holes, and battle-owned event finalization. |
-| `after-damage-trigger-state` | facility | complete | `available-actions-main` | `after-damage-reaction-surface` | TS battle state now carries after-damage trigger qualifiers plus narrow reactive active-effect payloads. Follow-up remains to mirror the qualifier shape in `battle.qnt` before treating this as full spec parity. |
+| `after-damage-trigger-state` | facility | complete | `available-actions-main` | `after-damage-reaction-surface`, `runbook6-quint-parity` | TS battle state now carries after-damage trigger qualifiers plus narrow reactive active-effect payloads. Authoritative Quint parity is tracked by `runbook6-quint-parity`; do not treat the TS-only shape as final spec ownership. |
 | `after-damage-reaction-surface` | candidate | complete | `available-actions-main`, `after-damage-trigger-state` | battle-scoped `PIAfterDamage` reaction discovery/execution such as Hellish Rebuke / Fire Shield / Retaliation | Landed in core available-actions and MCP for Hellish Rebuke, Retaliation, and Fire Shield from owned trigger/effect facts without adding a generic reaction registry. |
+| `runbook6-quint-parity` | batch | ready | `battle-ready-spell-payload-state`, `after-damage-trigger-state` | `dm-override`, `transcript-port-to-dnd` | Spec-first follow-up for Runbook 6. Mirror TS-owned readyable spell payloads, after-damage trigger qualifiers, and reactive effect payload semantics into `battle.qnt` plus MBT bridge/tests before product consumers rely on Runbook 6 as authoritative battle ownership. |
 | `preview-execution` | batch | complete | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | no-spend scripted action preview | Landed end to end in core and MCP; retain only because later descriptive-mode/transcript work still depends on the doctrine/model it consumed |
-| `dm-override` | plan | later | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md) |
-| `transcript-port-to-dnd` | plan | later | `available-actions-main`, `resolve-commit-doctrine` | end-to-end audio/transcript/action loop | Hellenvald demo + tail facilities already exist; port is still later |
+| `dm-override` | plan | later | `available-actions-main`, `runbook6-quint-parity`, `resolve-commit-doctrine`, `first-class-consumption-model` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Do not promote until Runbook 6's TS/MCP action-surface facts have Quint parity. |
+| `transcript-port-to-dnd` | plan | later | `available-actions-main`, `runbook6-quint-parity`, `resolve-commit-doctrine` | end-to-end audio/transcript/action loop | Hellenvald demo + tail facilities already exist; port is still later, and should not promote while Runbook 6 action-surface facts are TS-only. |
 | `same-name-magical-effect-non-stacking` | candidate | complete | none | runtime policy alignment | Landed runtime replacement semantics to match same-spell non-stacking policy |
 | `exhaustion-d20-penalty` | candidate | complete | none | TS/runtime parity with Quint | Landed runtime penalty aggregation parity with Quint exhaustion semantics |
 | `armor-training-disadvantage` | candidate | complete | `authoritative-d20-modifier-query-surface` | STR/DEX d20 disadvantage wiring | Landed via the new d20 query seam and armor/training guard wiring |
@@ -186,6 +195,7 @@ authoritative-d20-modifier-query-surface
 
 If scheduling strictly by current value and low dependency risk, outside already-complete runbooks:
 
+- `runbook6-quint-parity`
 - [DAG_RUNBOOK_7.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_7.md):
   - `effect-dependency-graph`
   - `parent-child-effect-teardown` after `effect-dependency-graph`
@@ -201,7 +211,7 @@ If scheduling strictly by current value and low dependency risk, outside already
 Promote these through design/research before trying to package another large execution-grade runbook:
 
 1. `fighting-styles-in-battle` umbrella cleanup after Runbook 7's concrete consumers land
-2. `dm-override` / `transcript-port-to-dnd` only after the product-surface slices above are landed
+2. `dm-override` / `transcript-port-to-dnd` only after `runbook6-quint-parity` lands
 
 ## Upstream Planning Sources
 
@@ -211,6 +221,11 @@ Use this index before researching or promoting remaining nodes. `DAG.md` is the 
   - [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md)
   - [PRD_AVAILABLE_ACTIONS.md](/workspace/typescript/dnd/PRD_AVAILABLE_ACTIONS.md)
   - [PRD_READY_ACTION.md](/workspace/typescript/dnd/PRD_READY_ACTION.md)
+- `runbook6-quint-parity`:
+  - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
+  - [battle.qnt](/workspace/typescript/dnd/battle.qnt)
+  - [packages/core/src/battle-machine-types.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-types.ts)
+  - [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd/packages/core/src/battle-projection.mbt.test.ts)
 - `qualified-damage-typing`, `qualified-physical-damage-bypass`, `weapon-property-aware-battle-resolution`, `versatile-weapon-die-switching`, `off-hand-attack-surface`, `two-weapon-fighting-bonus-attack`, `fighting-styles-in-battle`:
   - [FEATURES.md](/workspace/typescript/dnd/FEATURES.md)
   - [PLAN_AUDIT.md](/workspace/typescript/dnd/PLAN_AUDIT.md)
@@ -266,7 +281,7 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [packages/core/src/available-actions.ts](/workspace/typescript/dnd/packages/core/src/available-actions.ts)
 - execution_goal:
   - landed the smallest battle-owned spell save/effect payload facts needed to expose `READY_SPELL` and `READY_SPELL_RELEASE` honestly through available-actions / MCP
-  - follow-up: mirror the payload ownership in `battle.qnt` / MBT mapping if the authoritative spec surface needs to observe it
+  - follow-up: `runbook6-quint-parity` must mirror the payload ownership in `battle.qnt` / MBT mapping before downstream product consumers rely on it
 
 ### `after-damage-trigger-state`
 
@@ -280,7 +295,21 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [packages/core/src/battle-machine-helpers.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-helpers.ts)
 - execution_goal:
   - landed the smallest owned trigger qualifiers and stored reactive effect choice facts needed to surface `PIAfterDamage` reactions honestly without inventing a generic registry
-  - follow-up: mirror the qualifier ownership in `battle.qnt` / MBT mapping if the authoritative spec surface needs to observe it
+  - follow-up: `runbook6-quint-parity` must mirror the qualifier ownership in `battle.qnt` / MBT mapping before downstream product consumers rely on it
+
+### `runbook6-quint-parity`
+
+- classification: `ready / spec parity`
+- owner_layer: `battle.qnt` authoritative combat spec plus MBT bridge
+- read_first:
+  - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
+  - [battle.qnt](/workspace/typescript/dnd/battle.qnt)
+  - [packages/core/src/battle-machine-types.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-types.ts)
+  - [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd/packages/core/src/battle-projection.mbt.test.ts)
+- execution_goal:
+  - mirror Runbook 6's TS/MCP readyable spell payload ownership into Quint so `BATTLE_READY_SPELL` no longer remains parameter-fabrication-only at the spec layer
+  - mirror Runbook 6's after-damage trigger qualifiers and reactive effect payload semantics into Quint so `PIAfterDamage` legality is spec-visible
+  - update MBT bridge/tests so TS and Quint agree on the new owned payload/trigger shape
 
 ### `fighting-styles-in-battle`
 
