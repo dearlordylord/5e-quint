@@ -2,9 +2,9 @@
 
 ## Status
 
-TS/MCP action-surface implementation landed; Quint parity work is now partially mirrored.
+TS/MCP action-surface implementation landed; Runbook 6 Quint parity is mirrored except for the split Fire Shield active-effect payload node.
 
-The merge completed the TypeScript battle state, available-actions, MCP, and focused test portions of this runbook. The follow-up worktree updates `battle.qnt` so ready-spell setup derives modeled payload facts from spell identity and slot level, and so attack damage carries explicit after-damage trigger qualifiers for Hellish Rebuke and Retaliation. A narrower follow-up remains for Fire Shield's reactive active-effect payload if that automatic effect must become fully spec-visible.
+The merge completed the TypeScript battle state, available-actions, MCP, and focused test portions of this runbook. The follow-up worktree updates `battle.qnt` so ready-spell setup derives modeled payload facts from spell identity and slot level, and so attack damage carries explicit after-damage trigger qualifiers for Hellish Rebuke and Retaliation. The narrower Fire Shield active-effect payload caveat is split into [DAG_RUNBOOK_8.md](./DAG_RUNBOOK_8.md) as `fire-shield-reactive-effect-payload-parity`.
 
 This runbook captures the execution-grade batch after Runbook 5. Its scope comes from the ownership gaps discovered during Runbook 4 and confirmed still open after Runbook 5.
 
@@ -455,4 +455,4 @@ This runbook is complete when:
 Implementation note:
 
 - The TS/MCP action surface satisfies the exit criteria above for the current runtime projection layer.
-- `battle.qnt` now mirrors the ready-spell payload derivation and after-damage trigger qualifier shape used by Hellish Rebuke and Retaliation. Fire Shield's reactive active-effect payload remains TS-owned until the Quint active-effect schema gains an equivalent payload.
+- `battle.qnt` now mirrors the ready-spell payload derivation and after-damage trigger qualifier shape used by Hellish Rebuke and Retaliation. Fire Shield's reactive active-effect payload remains TS-owned until `fire-shield-reactive-effect-payload-parity` in [DAG_RUNBOOK_8.md](./DAG_RUNBOOK_8.md) gives the Quint active-effect schema an equivalent payload.
