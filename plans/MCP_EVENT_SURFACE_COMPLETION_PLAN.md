@@ -700,14 +700,14 @@ Commit after this task:
 
 Pre-research result, 2026-04-10:
 
-- Keep `BATTLE_LEGENDARY_ATTACK` blocked for now. Battle owns the legendary-action window (`laCtx.eligibleMonsters`) and each monster's `legendaryActionsRemaining`, but it does not own the specific legendary action payload/name.
+- Keep `BATTLE_LEGENDARY_ATTACK` blocked for now. Battle owns the legendary-action window (`laCtx.eligibleMonsters`) and each monster's `legendaryActionsRemaining`, but it does not own the specific legendary action payload/name/cost.
 - The public surface should probably be a monster-host `suggested_action` only after stat-block action payloads exist. A `control_command` could still be useful for fully external monster automation, but it should use the same stat-block payload validation rather than accepting arbitrary attack payloads.
 - Reuse the Task 20 attack runtime boundary once it exists: user/runtime inputs still include target, attack roll, damage, crit, target AC, knockout choice, visibility/range/adjacency facts, and `hitReactionCandidates`; battle/stat-block ownership should provide damage type, damage qualifiers, weapon properties, and melee/ranged shape.
 - Do not expose caller-supplied `weaponProperties`, `isFinesse`, `laDt`, or `damageQualifiers` as arbitrary public payloads before monster stat-block action ownership exists.
 
 Task 23 decision, 2026-04-10:
 
-- Keep `BATTLE_LEGENDARY_ATTACK` blocked. `BATTLE_LEGENDARY_PASS` is now correctly modeled as a `control_command`, but a legendary attack is still a monster-host `suggested_action` only after battle/stat-block ownership can name a specific Legendary Action option and derive its melee/ranged shape, weapon properties, damage type, and damage qualifiers.
+- Keep `BATTLE_LEGENDARY_ATTACK` blocked. `BATTLE_LEGENDARY_PASS` is now correctly modeled as a `control_command`, but a legendary attack is still a monster-host `suggested_action` only after battle/stat-block ownership can name a specific Legendary Action option and derive its cost, melee/ranged shape, weapon properties, damage type, and damage qualifiers.
 - Do not add a public `control_command` variant for legendary attack yet. A future external monster automation command may be useful, but it must share the same stat-block action payload validation as the suggested-action path instead of accepting arbitrary raw attack fields.
 - Current user/runtime holes remain `monsterId`, `laTarget`, `knockOut`, `laAtkRoll`, `laDmg`, `laCrit`, `laTgtAc`, visibility/range/adjacency facts, and `hitReactionCandidates`; MCP still lacks a public resolved-token contract for supplying those open table/session facts without inventing state.
 
