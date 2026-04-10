@@ -503,6 +503,22 @@ save_diff() {
   git -C "$workspace" diff --binary "$diff_base_sha" >"$output_file"
 }
 
+bootstrap_worktree_install() {
+  local workspace="$1"
+  local path
+
+  for path in \
+    "node_modules" \
+    "packages/core/node_modules" \
+    "packages/mcp/node_modules"; do
+    if [[ -e "$workspace/$path" || -L "$workspace/$path" ]]; then
+      rm -rf "$workspace/$path"
+    fi
+    mkdir -p "$(dirname "$workspace/$path")"
+    ln -s "$repo_root/$path" "$workspace/$path"
+  done
+}
+
 log "base $base_ref is $base_sha"
 log "output branch: $output_branch"
 log "run state: $run_root"
@@ -535,6 +551,8 @@ for task_no in "${task_numbers[@]}"; do
 
   git worktree add -B "$claude_branch" "$claude_worktree" "$task_base_sha"
   git worktree add -B "$codex_branch" "$codex_worktree" "$task_base_sha"
+  bootstrap_worktree_install "$claude_worktree"
+  bootstrap_worktree_install "$codex_worktree"
 
   write_prompt "Claude implementer" "$task_root/claude-implementer.prompt.md" "$claude_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
   write_prompt "Codex implementer" "$task_root/codex-implementer.prompt.md" "$codex_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
