@@ -11,6 +11,8 @@ It exists because Runbook 4 discovered two real ownership gaps:
 
 These are not implementation TODOs. They are missing battle-owned facilities that must be designed before an execution-grade `DAG_RUNBOOK_6.md` can be frozen honestly.
 
+Runbook 4 is now complete, so these blockers are implementation-validated rather than hypothetical scheduling guesses.
+
 ## Current Read
 
 The failed part of Runbook 4 was not token plumbing. It was ownership.

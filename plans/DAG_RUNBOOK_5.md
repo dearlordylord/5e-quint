@@ -15,7 +15,7 @@ This batch is intentionally narrower than Runbook 4. Its value is not breadth; i
 
 Before starting implementation, confirm:
 
-1. the Runbook 4 combat changes are landed or equivalent local code exists for:
+1. the Runbook 4 prerequisite combat facilities are already landed:
    - `weapon-property-aware-battle-resolution`
    - `battle-hand-occupancy-state`
    - `off-hand-attack-surface`
