@@ -499,8 +499,14 @@ export const spellcastingConfig = {
 } as const;
 
 export const rootEventHandlers = {
-  APPLY_CONDITION: { actions: ["applyCondition"] },
-  REMOVE_CONDITION: { actions: ["removeCondition"] },
+  APPLY_CONDITION: {
+    guard: "canChangeCondition" as const,
+    actions: ["applyCondition"],
+  },
+  REMOVE_CONDITION: {
+    guard: "canChangeCondition" as const,
+    actions: ["removeCondition"],
+  },
   ADD_EFFECT: { actions: ["addEffect"] },
   REMOVE_EFFECT: { actions: ["removeEffect"] },
   ADD_EXHAUSTION: { actions: ["addExhaustion"] },

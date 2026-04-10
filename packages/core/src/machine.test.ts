@@ -585,6 +585,34 @@ describe("damage track - dead absorbing", () => {
     stabilize(a);
     expect(isDead(snap(a))).toBe(true);
   });
+
+  it("dead state rejects APPLY_CONDITION and preserves existing conditions", () => {
+    const a = create();
+    takeDamage(a, DEFAULT_MAX_HP);
+    deathSave(a, 1);
+    deathSave(a, 5);
+    expect(isDead(snap(a))).toBe(true);
+    expect(ctx(a).unconscious).toBe(true);
+
+    applyCondition(a, "poisoned");
+
+    expect(ctx(a).poisoned).toBe(false);
+    expect(ctx(a).unconscious).toBe(true);
+  });
+
+  it("dead state rejects REMOVE_CONDITION and preserves existing conditions", () => {
+    const a = create();
+    takeDamage(a, DEFAULT_MAX_HP);
+    deathSave(a, 1);
+    deathSave(a, 5);
+    expect(isDead(snap(a))).toBe(true);
+    expect(ctx(a).unconscious).toBe(true);
+
+    removeCondition(a, "unconscious");
+
+    expect(ctx(a).unconscious).toBe(true);
+    expect(isIncapacitated(ctx(a))).toBe(true);
+  });
 });
 
 describe("damage track - resistance/vulnerability interaction", () => {

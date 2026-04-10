@@ -1035,7 +1035,7 @@ module creature {
   /// Unconscious -> incapacitated + prone.
   /// Petrified blocks poisoned condition.
   pure def pApplyCondition(s: CreatureState, c: Condition, immunities: Set[Condition]): CreatureState =
-    if (immunities.contains(c)) s
+    if (s.dead or immunities.contains(c)) s
     else match c {
     | CBlinded => s.with("blinded", true)
     | CCharmed => s.with("charmed", true)
@@ -1065,7 +1065,7 @@ module creature {
 
   /// Remove a condition, re-deriving implications.
   /// Prone is NOT removed when unconscious is removed — creature must stand up.
-  pure def pRemoveCondition(s: CreatureState, c: Condition): CreatureState = match c {
+  pure def pRemoveCondition(s: CreatureState, c: Condition): CreatureState = if (s.dead) s else match c {
     | CBlinded => s.with("blinded", false)
     | CCharmed => s.with("charmed", false)
     | CDeafened => s.with("deafened", false)

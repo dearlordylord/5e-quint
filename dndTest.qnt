@@ -723,6 +723,18 @@ module dndTest::Impl {
     all { assert(not(s.unconscious)), assert(s.prone), assert(not(isIncapacitated(s))) }
   }
 
+  run test_dead_condition_apply_noop = {
+    val deadS = pApplyCondition(FRESH20.with("hp", 0), CUnconscious, Set()).with("dead", true)
+    val s = pApplyCondition(deadS, CPoisoned, Set())
+    all { assert(s.dead), assert(s.unconscious), assert(not(s.poisoned)) }
+  }
+
+  run test_dead_condition_remove_noop = {
+    val s = pApplyCondition(FRESH20.with("hp", 0), CUnconscious, Set()).with("dead", true)
+    val s1 = pRemoveCondition(s, CUnconscious)
+    all { assert(s1.dead), assert(s1.unconscious), assert(isIncapacitated(s1)) }
+  }
+
   run test_petrified_blocks_poison = {
     val s = pApplyCondition(pApplyCondition(FRESH20, CPetrified, Set()), CPoisoned, Set())
     assert(not(s.poisoned))

@@ -29,7 +29,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 1,
       "id": "MCP0-A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Dead-Creature Condition Mutation Bug"
     },
     {
@@ -181,7 +181,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | MCP0-A - Dead-Creature Condition Mutation Bug | ready-for-implementation-after-light-research | none | MCP0-B, safer MCP table events | Read RAW Dead/Stable/Unconscious, then fix or explicitly model condition mutation on dead creatures | Best first MCP correctness slice |
+| 1 | MCP0-A - Dead-Creature Condition Mutation Bug | done | none | MCP0-B, safer MCP table events | Closed 2026-04-10: dead-creature condition apply/remove now reject at MCP/XState and no-op in Quint | Completed; policy documented in A16 |
 | 2 | MCP0-B - Dead-Creature Exhaustion Mutation Decision | ready-for-implementation-after-light-research | MCP0-A RAW/dead policy research | safer MCP table events | Read RAW Dead/Exhaustion, then decide and implement dead-exhaustion behavior | Should follow MCP0-A |
 | 3 | MCP0-C - Short Unknown Action Error | ready-for-implementation-after-light-research | none | MCP UX and downstream agents | Add short pre-decode unknown-action error | Small MCP adapter fix |
 | 4 | MCP0-D - SHORT_REST Documentation Clarity | ready-for-implementation-after-light-research | none | MCP docs accuracy | Clarify action-token ownership; do not add a duplicate command | Small docs/tool-description fix |
@@ -247,13 +247,13 @@ Do not start the full fighter-vs-goblin implementation before Task D has produce
 
 ### Task 1 - MCP0-A - Dead-Creature Condition Mutation Bug
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: Task MCP0-B, table-event confidence, MCP fighter-vs-goblin workflow.
 
-Next action: read RAW Dead/Stable/Unconscious, encode the chosen rule behavior in `creature.qnt` first, then update XState/MCP to match.
+Next action: Closed 2026-04-10. Use the A16 dead-creature condition policy as context for MCP0-B and MCP0-E follow-up work.
 
 Problem:
 
@@ -303,6 +303,27 @@ Verification:
 - Focused MCP tests for `record_table_event`.
 - `npx quint test --match "inv_" dndTest.qnt`.
 - Tier 1b creature MBT if `creature.qnt` or the creature MBT bridge changes.
+
+Verification completed:
+
+- RAW check completed against `.references/srd-5.2.1/Playing-the-Game.md` ("Dropping to 0 Hit Points", "Falling Unconscious", "Stabilizing a Character"), `.references/srd-5.2.1/Rules-Glossary.md` ("Dead", "Stable", "Unconscious [Condition]"), `ASSUMPTIONS.md` A16/A33, and `UBIQUITOUS_LANGUAGE.md`.
+- `/simplify` round 1: kept both the root guard and the action-level dead no-op. The root guard is needed for structured MCP rejection; the action-level no-op remains as defensive parity if condition actions are invoked outside the guarded root path. No simplification change needed.
+- `/simplify` round 2: re-checked for duplicate state or MCP-only dead-condition handling. None found; no further changes needed.
+- `pnpm --filter @dnd/core exec vitest run src/machine.test.ts -t "dead state rejects APPLY_CONDITION|dead state rejects REMOVE_CONDITION"`: passed.
+- `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts -t "record_table_event rejects condition application on dead creatures|record_table_event rejects condition removal on dead creatures"`: passed.
+- `npx quint test --match "test_dead_condition_(apply|remove)_noop" dndTest.qnt`: passed.
+- `npx quint test --match "inv_" dndTest.qnt`: passed (47 passing).
+- Tier 1b creature MBT: `START=$(date +%s); cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` completed with the MBT replay passing for seed `0x07709fff`, but the run still failed on the pre-existing schema-sync assertion `New Quint CreatureState fields not in schema: maxHpReduction`. No new CreatureState fields were introduced by MCP0-A.
+- `pnpm quality`: failed on pre-existing `prettier --check` drift in `packages/core/src` (`battle-machine-actions-attack.ts`, `context-encoding.ts`, `creature.mbt.test.ts`, `features/spell-available-actions.ts`, `machine-event-extractors.ts`, `machine-helpers.ts`, `machine-monk.ts`, `machine-queries.ts`, `machine-startturn.ts`, `machine.ts`, `types.ts`) before reaching typecheck.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCP0-A`: revise to `done`.
+  - `MCP0-B`: no-change; dependency context is now explicit in A16, and the task was already `ready-for-implementation-after-light-research`.
+  - `MCP0-E`: no-change; the dead-condition policy context is now documented for the later UX decision.
+- Plan edits: marked `MCP0-A` done in the Ralph task index and DAG row, updated the task closeout with verification results and downstream planning notes.
 
 Extra research needed:
 

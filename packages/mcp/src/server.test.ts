@@ -921,6 +921,73 @@ describe("MCP server adapter", () => {
     expect(immuneApply.state.charmed).toBe(false);
   });
 
+  test("record_table_event rejects condition application on dead creatures", () => {
+    const host = createDemoHost({ maxHp: 20 });
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 10,
+        damageType: "slashing",
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 20,
+        damageType: "slashing",
+      }),
+    );
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "APPLY_CONDITION",
+      condition: "poisoned",
+    });
+    const payload = readPayload(response);
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe("TABLE_EVENT_NOT_ACCEPTED");
+    expect(payload.state.dead).toBe(true);
+    expect(payload.state.unconscious).toBe(true);
+    expect(payload.state.poisoned).toBe(false);
+  });
+
+  test("record_table_event rejects condition removal on dead creatures", () => {
+    const host = createDemoHost({ maxHp: 20 });
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 10,
+        damageType: "slashing",
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 20,
+        damageType: "slashing",
+      }),
+    );
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "REMOVE_CONDITION",
+      condition: "unconscious",
+    });
+    const payload = readPayload(response);
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe("TABLE_EVENT_NOT_ACCEPTED");
+    expect(payload.state.dead).toBe(true);
+    expect(payload.state.unconscious).toBe(true);
+  });
+
   test("record_table_event applies creature exhaustion events with warnings", () => {
     const host = createDemoHost();
 
