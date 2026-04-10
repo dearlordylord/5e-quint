@@ -150,7 +150,7 @@ function conditionSet(
 
 function buildCreatureTableEvent(
   command: Extract<TableEventCommand, { readonly scope: "creature" }>,
-): DndEvent | null {
+): DndEvent {
   return Match.value(command).pipe(
     Match.when({ type: "TAKE_DAMAGE" }, (c) => ({
       type: "TAKE_DAMAGE" as const,
@@ -190,7 +190,13 @@ function buildCreatureTableEvent(
       type: "REDUCE_EXHAUSTION" as const,
       levels: c.levels,
     })),
-    Match.when({ type: "APPLY_FALL" }, () => null),
+    Match.when({ type: "APPLY_FALL" }, (c) => ({
+      type: "APPLY_FALL" as const,
+      damageRoll: c.damageRoll,
+      resistances: damageTypeSet(c.resistances),
+      vulnerabilities: damageTypeSet(c.vulnerabilities),
+      immunities: damageTypeSet(c.immunities),
+    })),
     Match.exhaustive,
   );
 }
@@ -200,13 +206,6 @@ function recordCreatureTableEvent(
   command: Extract<TableEventCommand, { readonly scope: "creature" }>,
 ) {
   const event = buildCreatureTableEvent(command);
-  if (event == null) {
-    return tableEventUnsupported(
-      command,
-      encodeDndContext(actor.getSnapshot().context),
-    );
-  }
-
   const before = actor.getSnapshot();
   const warnings = tableEventWarnings(command);
   if (!before.can(event)) {

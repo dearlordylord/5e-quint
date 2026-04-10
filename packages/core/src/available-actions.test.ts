@@ -722,6 +722,14 @@ describe("available actions contract", () => {
     expect(
       Schema.decodeUnknownEither(TableEventCommandSchema)({
         scope: "creature",
+        type: "APPLY_FALL",
+        damageRoll: 9,
+        resistances: ["bludgeoning"],
+      })._tag,
+    ).toBe("Right");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
         type: "TAKE_DAMAGE",
         amount: 8,
       })._tag,
@@ -748,6 +756,12 @@ describe("available actions contract", () => {
         scope: "creature",
         type: "ADD_EXHAUSTION",
         levels: 7,
+      })._tag,
+    ).toBe("Left");
+    expect(
+      Schema.decodeUnknownEither(TableEventCommandSchema)({
+        scope: "creature",
+        type: "APPLY_FALL",
       })._tag,
     ).toBe("Left");
   });

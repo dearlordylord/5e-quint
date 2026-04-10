@@ -556,34 +556,54 @@ describe("MCP server adapter", () => {
     );
   });
 
-  test("unsupported table events return a structured error without mutating state", () => {
+  test("record_table_event applies creature fall events with warnings", () => {
     const host = createDemoHost();
-    const before = readPayload(handleToolCall(host, "get_state", {}));
 
-    const response = handleToolCall(host, "record_table_event", {
-      scope: "creature",
-      type: "APPLY_FALL",
-    });
+    const fall = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "APPLY_FALL",
+        damageRoll: 10,
+        semanticAction: { kind: "spell", name: "thunderwave" },
+      }),
+    );
 
-    expect("isError" in response && response.isError).toBe(true);
-    expect(readPayload(response)).toEqual({
-      success: false,
-      appliedEvent: null,
+    expect(fall).toMatchObject({
+      success: true,
+      appliedEvent: {
+        scope: "creature",
+        type: "APPLY_FALL",
+        damageRoll: 10,
+        semanticAction: { kind: "spell", name: "thunderwave" },
+      },
       warnings: [
         {
-          code: "unsupported_domain_gap",
+          code: "external_table_fact",
           message:
-            "APPLY_FALL is reserved for the warning-aware table-event surface but is not wired to domain semantics yet.",
+            "APPLY_FALL records a table fact rather than an ordinary suggested action.",
+        },
+        {
+          code: "bypasses_semantic_action",
+          message:
+            "APPLY_FALL bypasses the stricter spell action path for thunderwave. Prefer a modeled action token when one exists.",
         },
       ],
-      state: before,
-      error: {
-        code: "TABLE_EVENT_NOT_IMPLEMENTED",
-        message: "Table event is not implemented yet",
-        event: { scope: "creature", type: "APPLY_FALL" },
-      },
     });
-    expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
+    expect(fall.state.hp).toBe(24);
+    expect(fall.state.prone).toBe(true);
+
+    const immuneHost = createDemoHost();
+    const immuneFall = readPayload(
+      handleToolCall(immuneHost, "record_table_event", {
+        scope: "creature",
+        type: "APPLY_FALL",
+        damageRoll: 10,
+        immunities: ["bludgeoning"],
+      }),
+    );
+    expect(immuneFall.success).toBe(true);
+    expect(immuneFall.state.hp).toBe(34);
+    expect(immuneFall.state.prone).toBe(false);
   });
 
   test("record_table_event applies creature damage and recovery events with warnings", () => {

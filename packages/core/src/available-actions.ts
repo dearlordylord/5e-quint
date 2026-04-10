@@ -656,16 +656,16 @@ export const CREATURE_CONDITION_EXHAUSTION_TABLE_EVENT_TYPES = [
 export type CreatureConditionExhaustionTableEventType =
   (typeof CREATURE_CONDITION_EXHAUSTION_TABLE_EVENT_TYPES)[number];
 
-export const CREATURE_REMAINING_TABLE_EVENT_TYPES = [
+export const CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES = [
   "APPLY_FALL",
 ] as const satisfies ReadonlyArray<DndEvent["type"]>;
-export type CreatureRemainingTableEventType =
-  (typeof CREATURE_REMAINING_TABLE_EVENT_TYPES)[number];
+export type CreatureEnvironmentalTableEventType =
+  (typeof CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES)[number];
 
 export const CREATURE_TABLE_EVENT_TYPES = [
   ...CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES,
   ...CREATURE_CONDITION_EXHAUSTION_TABLE_EVENT_TYPES,
-  ...CREATURE_REMAINING_TABLE_EVENT_TYPES,
+  ...CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES,
 ] as const satisfies ReadonlyArray<DndEvent["type"]>;
 export type CreatureTableEventType =
   (typeof CREATURE_TABLE_EVENT_TYPES)[number];
@@ -1238,9 +1238,12 @@ const CreatureReduceExhaustionTableEventSchema = Schema.Struct({
   ),
   ...TableEventSemanticActionField,
 });
-const RemainingCreatureTableEventSchema = Schema.Struct({
+const CreatureApplyFallTableEventSchema = Schema.Struct({
   scope: Schema.Literal("creature"),
-  type: Schema.Literal(...CREATURE_REMAINING_TABLE_EVENT_TYPES),
+  type: Schema.Literal("APPLY_FALL"),
+  damageRoll: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ...TableEventDamageModifiersSchema,
+  ...TableEventSemanticActionField,
 });
 const BattleTableEventSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
@@ -1257,7 +1260,7 @@ export const TableEventCommandSchema = Schema.Union(
   CreatureRemoveConditionTableEventSchema,
   CreatureAddExhaustionTableEventSchema,
   CreatureReduceExhaustionTableEventSchema,
-  RemainingCreatureTableEventSchema,
+  CreatureApplyFallTableEventSchema,
   BattleTableEventSchema,
 );
 export type TableEventCommand = Schema.Schema.Type<
