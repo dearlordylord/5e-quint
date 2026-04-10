@@ -77,7 +77,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 9,
       "id": "D",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Battle Attack Runtime/Session Boundary"
     },
     {
@@ -107,13 +107,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 14,
       "id": "F",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Legendary Attack Payload Ownership"
     },
     {
       "number": 15,
       "id": "G",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Attack Rider Ownership"
     },
     {
@@ -189,15 +189,15 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 6     | B - Battle Size Ownership For Grapple                                 | done                                          | none                                                     | Public `BATTLE_GRAPPLE`; helps clarify attack-size ownership patterns               | Closed 2026-04-10: battle/spec/init now own combatant `creatureSize`; `BATTLE_GRAPPLE` no longer accepts caller-supplied sizes and remains unexposed only because `targetSaveFailed` still needs the final public runtime/session contract | Completed; audit blocker text updated      |
 | 7     | A - Condition Consequence Table Completion Research                   | done                                          | none                                                     | none                                                                                | Closed 2026-04-10: rejected redundant/single-condition table columns, deferred initiative modifiers, and landed the SRD 5.2.1 incapacitated speech fix                 | Completed; no table expansion needed       |
 | 8     | C - ResourceCost Typed Refactor                                       | done                                          | none                                                     | Cleaner MCP/UI cost display and future resource docs                                | Closed 2026-04-10: `ResourceCost` now models immediate selectable costs as typed pool/quota items, docs define the shared vocabulary, and MCP/core tests cover the new shape | Completed; no downstream reorder needed    |
-| 9     | D - Battle Attack Runtime/Session Boundary                            | ready-for-research                            | none                                                     | F, G, MCP1-C, MCP2-A, possibly I; public `BATTLE_ATTACK`; off-hand/legendary/riders | Design token/runtime/session contract and stop conditions                                                                                                                | Research only; do not implement attack yet |
+| 9     | D - Battle Attack Runtime/Session Boundary                            | done                                          | none                                                     | F, G, MCP2-A, public `BATTLE_ATTACK`; off-hand/legendary/riders                      | Closed 2026-04-10: documented the first-slice `BATTLE_ATTACK` boundary. Public token carries only `targetId` and `knockOut`; runtime `battleAttack` carries explicit table/session facts plus rolled `weaponDamage` and optional `sneakAttackDamage`; battle derives crit, weapon payload, and damage aggregation. | Completed; MCP2-A can consume directly     |
 | 10    | MCP1-A - Session Host Architecture                                    | ready-for-research                            | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-A                                                                      | Design MCP session/router host without combat state duplication                                                                                                          | Research before implementation             |
 | 11    | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry        | ready-for-research                            | MCP0 tasks done or intentionally deferred                | MCP1-C, MCP2-B                                                                      | Design a reusable core statblock facility, document approved provenance for future entries, and add Goblin Minion as the first entry                                     | Research before implementation             |
 | 12    | E - Movement And Help Geometry/Session Ownership                      | ready-for-research                            | none                                                     | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK`                                          | Decide visibility/reach/threat/path/provocation ownership                                                                                                                | Research only                              |
 | 13    | J - Generic Table Events, Environmental Hazards, And Monster Commands | ready-for-research                            | none                                                     | Future raw table event exposure and monster command work                            | Pick one narrow source/provenance family or keep deferred                                                                                                                | Research only                              |
-| 14    | F - Legendary Attack Payload Ownership                                | blocked                                       | D plus monster stat-block payload ownership              | Public `BATTLE_LEGENDARY_ATTACK`                                                    | Wait for D, then define stat-block Legendary Action payload ownership                                                                                                    | Not handoff-ready                          |
-| 15    | G - Attack Rider Ownership                                            | blocked                                       | D                                                        | Attack rider tokens                                                                 | Wait for D, then classify rider timing and owned/runtime facts                                                                                                           | Not handoff-ready                          |
+| 14    | F - Legendary Attack Payload Ownership                                | ready-for-research                            | monster stat-block payload ownership                     | Public `BATTLE_LEGENDARY_ATTACK`                                                    | Reuse Task D's attack boundary, then define stat-block Legendary Action payload ownership                                                                                | Research before implementation             |
+| 15    | G - Attack Rider Ownership                                            | ready-for-research                            | none                                                     | Attack rider tokens                                                                 | Reuse Task D's attack boundary, then classify rider timing and owned/runtime facts                                                                                       | Research before implementation             |
 | 16    | MCP1-C - Encounter Start Tool/Command                                 | blocked                                       | MCP1-A, MCP1-B                                           | MCP2-A                                                                              | Initialize fighter-vs-goblin battle via MCP                                                                                                                              | Not handoff-ready                          |
-| 17    | MCP2-A - Battle Attack Public Boundary                                | blocked                                       | D, MCP1-C                                                | MCP2-B                                                                              | Implement first-slice main-hand `BATTLE_ATTACK` token after D decides the boundary                                                                                       | Not handoff-ready                          |
+| 17    | MCP2-A - Battle Attack Public Boundary                                | blocked                                       | MCP1-C                                                   | MCP2-B                                                                              | Implement first-slice main-hand `BATTLE_ATTACK` token using Task D's resolved-token and `battleAttack` runtime contract                                                 | Blocked only on encounter start            |
 | 18    | MCP2-B - Fighter Attacks Goblin End-to-End                            | blocked                                       | MCP2-A                                                   | motivating MCP flow                                                                 | Execute attack against goblin through MCP                                                                                                                                | Not handoff-ready                          |
 | 19    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | blocked                                       | MCP1-B, MCP2-A; possible stat-block attack-rider support | fuller goblin behavior                                                              | Model richer goblin behavior after the minion slice                                                                                                                      | Not handoff-ready                          |
 | 20    | H - PassiveModifiers Sub-Record                                       | deferred                                      | none                                                     | Possible passive modifier cleanup                                                   | Only revisit if the batch selects passive modifier restructuring                                                                                                         | Not current-batch work                     |
@@ -227,7 +227,7 @@ Merged MCP Fighter vs. Goblin baseline:
   - huge schema decode output for unknown `execute_action` types;
   - `SHORT_REST` documentation clarity;
   - `EXIT_COMBAT` after death UX decision.
-- The fighter-vs-goblin flow is blocked on Task D because MCP does not yet expose public `BATTLE_ATTACK`.
+- Task D now fixes the public attack boundary, but the fighter-vs-goblin flow remains blocked on Task MCP1-C and Task MCP2-A because MCP still does not expose public `BATTLE_ATTACK`.
 - The first monster-content slice should be a reusable core statblock facility with Goblin Minion as the initial SRD-backed entry, not a goblin-only architecture. Goblin Warrior still remains deferred because its advantage-based extra damage is not represented by the current `MonsterAttack` shape, and full goblin support also needs Nimble Escape as a monster bonus-action option.
 - Monster content must live in core stat-block/content modules. MCP should select or reference that content; it must not duplicate RAW stat-block numbers in its own registry.
 
@@ -235,15 +235,15 @@ Merged MCP Fighter vs. Goblin baseline:
 
 Recommended first coding-loop tasks:
 
-1. **Task D: Battle Attack Runtime/Session Boundary** if the goal is the next ownership/API research frontier after the MCP0 cleanup.
-2. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
-3. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is content/data-layer research without widening MCP ownership.
-4. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is monster-content research that feeds later public battle surfaces.
+1. **Task MCP1-A: Session Host Architecture** if the goal is MCP-side research that does not duplicate combat state.
+2. **Task MCP1-B: Core Statblock Facility + Initial Goblin Minion Entry** if the goal is content/data-layer research without widening MCP ownership.
+3. **Task F: Legendary Attack Payload Ownership** if the goal is the next attack-adjacent ownership research slice after Task D.
+4. **Task G: Attack Rider Ownership** if the goal is the next attack-timing research slice after Task D.
 5. **Task E: Movement And Help Geometry/Session Ownership** if the goal is another bounded ownership research slice.
 
-Do not start with `BATTLE_ATTACK` implementation. Its public runtime/session contract is the main unresolved API boundary and can easily absorb off-hand attacks, hit reactions, legendary actions, and riders.
+Do not widen `BATTLE_ATTACK` implementation beyond the Task D contract. The remaining risk is scope creep into off-hand attacks, hit reactions, legendary actions, and riders.
 
-Do not start the full fighter-vs-goblin implementation before Task D has produced the public attack boundary. The session and goblin-content tasks can be researched first, but the motivating "Fighter attacks Goblin through MCP" loop remains blocked until public `BATTLE_ATTACK` exists.
+Do not start the full fighter-vs-goblin implementation before Task MCP1-C and Task MCP2-A are complete. Task D has produced the public attack boundary; the remaining work is encounter start plus the actual `BATTLE_ATTACK` implementation.
 
 ### Task 1 - MCP0-A - Dead-Creature Condition Mutation Bug
 
@@ -877,13 +877,13 @@ Plan Impact:
 
 ### Task 9 - D - Battle Attack Runtime/Session Boundary
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
-Blocks: Task F, Task G, possibly Task I, public `BATTLE_ATTACK`, `BATTLE_OFF_HAND_ATTACK`, `BATTLE_LEGENDARY_ATTACK`, and attack riders.
+Blocks: Task F, Task G, public `BATTLE_ATTACK`, `BATTLE_OFF_HAND_ATTACK`, `BATTLE_LEGENDARY_ATTACK`, and attack riders.
 
-Next action: design and document the token/runtime/session contract; do not implement attack in this pass.
+Next action: Closed 2026-04-10. Task MCP2-A should consume this contract directly; off-hand, legendary, unarmed, and rider paths stay blocked.
 
 Purpose:
 
@@ -978,7 +978,35 @@ Verification:
 
 Extra research needed:
 
-- Yes. API contract design and RAW attack reread required.
+- No. This task's research output is recorded below.
+
+Research closeout:
+
+- RAW checked before writing the contract against `.references/srd-5.2.1/Playing-the-Game.md` ("Making an Attack", "Unseen Attackers and Targets", "Cover", ranged attack within 5 feet, long range disadvantage, and "Critical Hits"), `.references/srd-5.2.1/Rules-Glossary.md` (`Attack [Action]`, `Attack Roll`, `Armor Class`, `Help [Action]`, `Cover`, `Critical Hit`, `Invisible`, `Blinded`, `Frightened`, `Prone`, and `Unconscious`), and `UBIQUITOUS_LANGUAGE.md` (`Attack Roll`, `Critical Hit`, `Armor Class (AC)`, `Cover`, and condition / advantage terminology).
+- The first public slice remains one active-creature main-hand weapon attack token only. The public resolved token is `{ scope: "battle"; actorId: string; type: "BATTLE_ATTACK"; targetId: string; knockOut: boolean }`.
+- The runtime lane is `{ runtime: "battleAttack"; values: { attackRoll: number; targetAc: number; weaponDamage: number; sneakAttackDamage?: number; attackerWithin5ft: boolean; attackerWithin60ft?: boolean; hostileWithin5ft: boolean; targetCanSeeAttacker: boolean; attackerCanSeeTarget: boolean; frightSourceInLOS: boolean; hasAllyAdjacentToTarget: boolean; hitReactionCandidates: ReadonlyArray<string> } }`.
+- `attackerWithin60ft` may be omitted only when `attackerWithin5ft` is `true`; otherwise it remains an explicit session fact. `weaponDamage` is only the rolled main-hand weapon damage, and `sneakAttackDamage` defaults to `0` and is ignored unless battle determines Sneak Attack is legal.
+- Battle-owned facts that remain forbidden public inputs are active attacker identity, action / extra-attack spend, `attackActionUsed`, `lightAttackUsedThisTurn`, help consumption, crit range, main-hand weapon existence/profile, melee or ranged shape, damage type, default damage qualifiers, weapon properties, finesse status, on-hit payloads, battle-owned additive damage modifiers, and Sneak Attack legality / once-per-turn state.
+- `crit` is battle-derived, not runtime-supplied. Natural crit classification comes from `attackRoll` plus the battle-owned `critRange`, while effective crit handling can still incorporate battle-owned auto-crit rules.
+- Damage aggregation is battle-owned. Runtime supplies only rolled `weaponDamage` and optional `sneakAttackDamage`; battle applies additive modifiers, validates Sneak Attack legality, owns damage type/qualifiers, and enforces melee-only knockout legality.
+- Stop conditions for downstream implementation: Task MCP2-A may add only the active-creature main-hand `BATTLE_ATTACK` token using this exact contract. `BATTLE_OFF_HAND_ATTACK`, `BATTLE_LEGENDARY_ATTACK`, unarmed strike attack exposure, spell attacks, attack riders, and custom weapon payloads from MCP remain out of scope.
+
+Verification results:
+
+- RAW/domain-language check completed against the SRD and terminology sources listed above.
+- `/simplify` round 1: kept the public token limited to `targetId` and `knockOut`, and rejected moving battle-owned weapon or crit payload into MCP-visible input.
+- `/simplify` round 2: rechecked the runtime lane for redundant or fabricated state and kept target AC, geometry, visibility, adjacency, and hit-reaction candidates as explicit session inputs only.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `D`: revised from `ready-for-research` to `done`
+  - `F`: unblocked to `ready-for-research`
+  - `G`: unblocked to `ready-for-research`
+  - `MCP2-A`: left `blocked`, but revised to consume the Task D contract instead of redesigning it
+  - `I`: no change
+- Plan edits: synchronized Task 9 status in the index and DAG, removed `MCP1-C` from Task D's block list, unblocked Tasks F and G, and updated Task MCP2-A to consume the resolved-token and `battleAttack` runtime contract.
 
 ### Task 10 - MCP1-A - Session Host Architecture
 
@@ -1226,13 +1254,13 @@ Extra research needed:
 
 ### Task 14 - F - Legendary Attack Payload Ownership
 
-Status: blocked.
+Status: ready-for-research.
 
-Depends on: Task D and monster stat-block action payload ownership.
+Depends on: monster stat-block action payload ownership.
 
 Blocks: public `BATTLE_LEGENDARY_ATTACK`.
 
-Next action: wait for Task D; then define stat-block Legendary Action payload ownership and whether the action is a suggested action, monster-control command, or both.
+Next action: reuse Task D's attack boundary, then define stat-block Legendary Action payload ownership and whether the action is a suggested action, monster-control command, or both.
 
 Purpose:
 
@@ -1268,17 +1296,17 @@ Verification:
 
 Extra research needed:
 
-- Yes. Depends on attack boundary and monster payload ownership review.
+- Yes. Attack boundary is settled; this now depends only on monster payload ownership review.
 
 ### Task 15 - G - Attack Rider Ownership
 
-Status: blocked.
+Status: ready-for-research.
 
-Depends on: Task D.
+Depends on: none.
 
 Blocks: attack rider tokens.
 
-Next action: wait for Task D; then classify each rider by timing, owned feature state, and runtime/session facts.
+Next action: reuse Task D's attack boundary, then classify each rider by timing, owned feature state, and runtime/session facts.
 
 Purpose:
 
@@ -1316,12 +1344,12 @@ Acceptance criteria:
 
 Verification:
 
-- Docs-only until Task D is implemented.
+- Docs-only until implementation.
 - RAW check and `/simplify` convergence are required if the research later leads to implementation.
 
 Extra research needed:
 
-- Yes. Depends on attack boundary and RAW class feature reread.
+- Yes. Attack boundary is settled; proceed with the RAW class feature reread.
 
 ### Task 16 - MCP1-C - Encounter Start Tool/Command
 
@@ -1376,7 +1404,7 @@ Extra research needed:
 
 Status: blocked.
 
-Depends on: Task D done, Task MCP1-C.
+Depends on: Task MCP1-C.
 
 Blocks: Task MCP2-B.
 
@@ -1424,7 +1452,7 @@ Verification:
 
 Extra research needed:
 
-- Yes. Complete Task D first; this task should consume that contract rather than redesign attack ownership inside MCP.
+- Light. Consume Task D's settled contract after Task MCP1-C; do not redesign attack ownership inside MCP.
 
 ### Task 18 - MCP2-B - Fighter Attacks Goblin End-to-End
 
@@ -1606,16 +1634,15 @@ Needs extra research before coding:
 - Task MCP0-A: dead-creature condition policy and RAW citations for Unconscious/Dead/Stable.
 - Task MCP0-B: dead-creature exhaustion mutation policy.
 - Task A: Condition table completion. RAW condition reread and column decision required.
-- Task D: Battle attack boundary. API contract and RAW attack reread required.
 - Task E: Movement/help geometry. Session/product ownership decision required.
-- Task F: Legendary attack payload. Monster stat-block action payload ownership required, and it depends on Task D.
-- Task G: Attack riders. RAW class feature reread and Task D dependency.
+- Task F: Legendary attack payload. Monster stat-block action payload ownership required.
+- Task G: Attack riders. RAW class feature reread required.
 - Task I: Build-map metadata. Needs a concrete consumer.
 - Task J: Generic table events. Needs source/provenance review.
 - Task MCP1-A: current MCP stdio/test-host routing and minimal session-host shape.
 - Task MCP1-B: existing monster/stat-block ownership and Goblin Minion RAW projection.
 - Task MCP1-C: Fighter durable/config mapping into battle init.
-- Task MCP2-A: blocked on Task D battle attack boundary research.
+- Task MCP2-A: blocked on Task MCP1-C encounter start work; consume Task D's settled battle attack boundary.
 - Task MCP3-A: fuller goblin support after stat-block rider/bonus-action support exists.
 
 Light research only:
@@ -1646,7 +1673,7 @@ If choosing a support-layer cleanup:
 Avoid in the first APR10 implementation loop:
 
 - `BATTLE_ATTACK` implementation.
-- Fighter-vs-goblin end-to-end implementation before Task D and Task MCP1-C are complete.
+- Fighter-vs-goblin end-to-end implementation before Task MCP1-C and Task MCP2-A are complete.
 - Full Goblin Warrior/Nimble Escape support before core stat-block rider/bonus-action ownership exists.
 - `BATTLE_MOVE` / `BATTLE_HELP_ATTACK` implementation.
 - `BATTLE_LEGENDARY_ATTACK` implementation.
