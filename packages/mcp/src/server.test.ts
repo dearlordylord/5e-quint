@@ -12,7 +12,12 @@ import {
   spellSlotLevel,
 } from "@dnd/core/types.ts";
 
-import { createBattleHost, createDemoHost, handleToolCall } from "./server.ts";
+import {
+  createBattleHost,
+  createDemoHost,
+  handleToolCall,
+  toolDefinitions,
+} from "./server.ts";
 
 function readPayload(response: ReturnType<typeof handleToolCall>) {
   return JSON.parse(response.content[0]?.text ?? "null");
@@ -387,6 +392,122 @@ function initBattleHostWithParryWindow() {
 }
 
 describe("MCP server adapter", () => {
+  test("tool definitions include control command and table event skeletons", () => {
+    expect(toolDefinitions.map((tool) => tool.name)).toEqual([
+      "get_state",
+      "get_available_actions",
+      "execute_action",
+      "preview_action",
+      "execute_control_command",
+      "record_table_event",
+    ]);
+  });
+
+  test("execute_control_command validates a narrow command shape", () => {
+    const host = createDemoHost();
+
+    const invalidRawAction = handleToolCall(host, "execute_control_command", {
+      scope: "creature",
+      type: "USE_SECOND_WIND",
+    });
+
+    expect("isError" in invalidRawAction && invalidRawAction.isError).toBe(
+      true,
+    );
+    expect(readPayload(invalidRawAction).error).toBe(
+      "Invalid execute_control_command input",
+    );
+  });
+
+  test("record_table_event validates a narrow table-event shape", () => {
+    const host = createDemoHost();
+
+    const invalidRawAction = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "HEAL",
+      amount: 5,
+    });
+
+    expect("isError" in invalidRawAction && invalidRawAction.isError).toBe(
+      true,
+    );
+    expect(readPayload(invalidRawAction).error).toBe(
+      "Invalid record_table_event input",
+    );
+
+    const undecidedGenericSpell = handleToolCall(host, "record_table_event", {
+      scope: "battle",
+      type: "BATTLE_CAST_SAVE_SPELL",
+    });
+
+    expect(
+      "isError" in undecidedGenericSpell && undecidedGenericSpell.isError,
+    ).toBe(true);
+    expect(readPayload(undecidedGenericSpell).error).toBe(
+      "Invalid record_table_event input",
+    );
+  });
+
+  test("unsupported control commands return a structured error without mutating state", () => {
+    const host = createDemoHost();
+    const before = readPayload(handleToolCall(host, "get_state", {}));
+
+    const response = handleToolCall(host, "execute_control_command", {
+      scope: "creature",
+      type: "LONG_REST",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Control command is not implemented yet",
+      details: {
+        code: "CONTROL_COMMAND_NOT_IMPLEMENTED",
+        command: { scope: "creature", type: "LONG_REST" },
+      },
+    });
+    expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
+  });
+
+  test("unsupported table events return a structured error without mutating state", () => {
+    const host = createDemoHost();
+    const before = readPayload(handleToolCall(host, "get_state", {}));
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "HEAL",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Table event is not implemented yet",
+      details: {
+        code: "TABLE_EVENT_NOT_IMPLEMENTED",
+        command: { scope: "creature", type: "HEAL" },
+      },
+    });
+    expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
+  });
+
+  test("unsupported battle table events return a structured error without mutating state", () => {
+    const host = createBattleHost();
+    const before = readPayload(handleToolCall(host, "get_state", {}));
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "battle",
+      type: "BATTLE_HEAL",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Table event is not implemented yet",
+      details: {
+        code: "TABLE_EVENT_NOT_IMPLEMENTED",
+        command: { scope: "battle", type: "BATTLE_HEAL" },
+      },
+    });
+    expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
+  });
+
   test("get_available_actions only returns the supported executable action set", () => {
     const host = createDemoHost();
 

@@ -24,15 +24,19 @@ import {
   previewBattleAction,
   type BattleResolutionRequest,
   type BattleResolutionRuntimeInputs,
+  ControlCommandSchema,
   resolveBattleAction,
   resolveAction,
   ResolvedActionTokenSchema,
   type ActionToken,
   type BattleResolvedActionToken,
+  type ControlCommand,
   type ResolvedActionToken,
   type ResolutionRequest,
   type ResourceCost,
   type ResolutionRuntimeInputs,
+  TableEventCommandSchema,
+  type TableEventCommand,
 } from "@dnd/core/available-actions.ts";
 import { battleMainHandDamageDie } from "@dnd/core/battle-machine-creature.ts";
 import { pMartialArtsDie } from "@dnd/core/features/class-monk.ts";
@@ -111,6 +115,12 @@ export function groupByCost(
 export const executeActionJsonSchema = JSONSchema.make(
   ResolvedActionTokenSchema,
 );
+export const executeControlCommandJsonSchema =
+  JSONSchema.make(ControlCommandSchema);
+export const recordTableEventJsonSchema = JSONSchema.make(
+  TableEventCommandSchema,
+);
+const strictCommandParseOptions = { onExcessProperty: "error" } as const;
 
 export const toolDefinitions = [
   {
@@ -134,6 +144,18 @@ export const toolDefinitions = [
     description:
       "Preview a resolved scoped action token without spending resources or mutating state.",
     inputSchema: executeActionJsonSchema,
+  },
+  {
+    name: "execute_control_command",
+    description:
+      "Execute a narrow session, turn, rest, or monster-control command. The initial surface validates command shape but reports unsupported commands until each command is wired.",
+    inputSchema: executeControlCommandJsonSchema,
+  },
+  {
+    name: "record_table_event",
+    description:
+      "Record a narrow DM/table/world fact. The initial surface validates event shape but reports unsupported events until warning-aware table events are wired.",
+    inputSchema: recordTableEventJsonSchema,
   },
 ] as const;
 
@@ -316,7 +338,8 @@ function buildBattleRuntimeInputs(
     ),
     Match.when({ runtime: "readyAttack" }, () => {
       const actor = context.creatures.get(request.token.actorId as CreatureId);
-      const damageDie = actor == null ? 8 : (battleMainHandDamageDie(actor, true) ?? 8);
+      const damageDie =
+        actor == null ? 8 : (battleMainHandDamageDie(actor, true) ?? 8);
       return Effect.all({
         atkRoll: Random.nextIntBetween(1, 21),
         dmg: Random.nextIntBetween(1, damageDie + 1),
@@ -416,6 +439,20 @@ function scopeMismatchContent(
   );
 }
 
+function unsupportedControlCommandContent(command: ControlCommand) {
+  return errorContent("Control command is not implemented yet", {
+    code: "CONTROL_COMMAND_NOT_IMPLEMENTED",
+    command,
+  });
+}
+
+function unsupportedTableEventContent(command: TableEventCommand) {
+  return errorContent("Table event is not implemented yet", {
+    code: "TABLE_EVENT_NOT_IMPLEMENTED",
+    command,
+  });
+}
+
 function executeBattleResolvedAction(
   actor: BattleActor,
   token: BattleResolvedActionToken,
@@ -506,6 +543,50 @@ function previewResolvedAction(host: SupportedActionHost, args: unknown) {
   );
 }
 
+function executeControlCommand(host: SupportedActionHost, args: unknown) {
+  const decoded = Schema.decodeUnknownEither(
+    ControlCommandSchema,
+    strictCommandParseOptions,
+  )(args);
+  if (decoded._tag === "Left") {
+    return errorContent(
+      "Invalid execute_control_command input",
+      String(decoded.left),
+    );
+  }
+
+  if (decoded.right.scope !== host.scope) {
+    return errorContent(
+      `Control command scope ${decoded.right.scope} does not match the current ${host.scope} host.`,
+      "CONTROL_COMMAND_SCOPE_MISMATCH",
+    );
+  }
+
+  return unsupportedControlCommandContent(decoded.right);
+}
+
+function recordTableEvent(host: SupportedActionHost, args: unknown) {
+  const decoded = Schema.decodeUnknownEither(
+    TableEventCommandSchema,
+    strictCommandParseOptions,
+  )(args);
+  if (decoded._tag === "Left") {
+    return errorContent(
+      "Invalid record_table_event input",
+      String(decoded.left),
+    );
+  }
+
+  if (decoded.right.scope !== host.scope) {
+    return errorContent(
+      `Table event scope ${decoded.right.scope} does not match the current ${host.scope} host.`,
+      "TABLE_EVENT_SCOPE_MISMATCH",
+    );
+  }
+
+  return unsupportedTableEventContent(decoded.right);
+}
+
 export function handleToolCall(
   host: SupportedActionHost,
   name: string,
@@ -546,6 +627,14 @@ export function handleToolCall(
 
   if (name === "preview_action") {
     return previewResolvedAction(host, args);
+  }
+
+  if (name === "execute_control_command") {
+    return executeControlCommand(host, args);
+  }
+
+  if (name === "record_table_event") {
+    return recordTableEvent(host, args);
   }
 
   return errorContent(`Unknown tool: ${name}`);

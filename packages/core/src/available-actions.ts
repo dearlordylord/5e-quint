@@ -581,6 +581,42 @@ export type ResolvedActionToken =
   | CreatureResolvedActionToken
   | BattleResolvedActionToken;
 
+export const CREATURE_CONTROL_COMMAND_TYPES = [
+  "END_TURN",
+  "LONG_REST",
+] as const satisfies ReadonlyArray<DndEvent["type"]>;
+export type CreatureControlCommandType =
+  (typeof CREATURE_CONTROL_COMMAND_TYPES)[number];
+
+export const BATTLE_CONTROL_COMMAND_TYPES = [
+  "BATTLE_INIT",
+  "BATTLE_START_TURN",
+  "BATTLE_END_TURN",
+  "BATTLE_LEGENDARY_PASS",
+] as const satisfies ReadonlyArray<BattleEvent["type"]>;
+export type BattleControlCommandType =
+  (typeof BATTLE_CONTROL_COMMAND_TYPES)[number];
+
+export const CREATURE_TABLE_EVENT_TYPES = [
+  "TAKE_DAMAGE",
+  "HEAL",
+  "GRANT_TEMP_HP",
+  "STABILIZE",
+  "KNOCK_OUT",
+  "APPLY_CONDITION",
+  "REMOVE_CONDITION",
+  "ADD_EXHAUSTION",
+  "REDUCE_EXHAUSTION",
+  "APPLY_FALL",
+] as const satisfies ReadonlyArray<DndEvent["type"]>;
+export type CreatureTableEventType =
+  (typeof CREATURE_TABLE_EVENT_TYPES)[number];
+
+export const BATTLE_TABLE_EVENT_TYPES = [
+  "BATTLE_HEAL",
+] as const satisfies ReadonlyArray<BattleEvent["type"]>;
+export type BattleTableEventType = (typeof BATTLE_TABLE_EVENT_TYPES)[number];
+
 const EnterCombatResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("ENTER_COMBAT"),
 });
@@ -898,6 +934,31 @@ export const ResolvedActionTokenSchema = Schema.Union(
   SecondaryCreatureResolvedActionTokenSchema,
   BattleResolvedActionTokenSchema,
 );
+export const ControlCommandSchema = Schema.Union(
+  Schema.Struct({
+    scope: Schema.Literal("creature"),
+    type: Schema.Literal(...CREATURE_CONTROL_COMMAND_TYPES),
+  }),
+  Schema.Struct({
+    scope: Schema.Literal("battle"),
+    type: Schema.Literal(...BATTLE_CONTROL_COMMAND_TYPES),
+  }),
+);
+export type ControlCommand = Schema.Schema.Type<typeof ControlCommandSchema>;
+
+export const TableEventCommandSchema = Schema.Union(
+  Schema.Struct({
+    scope: Schema.Literal("creature"),
+    type: Schema.Literal(...CREATURE_TABLE_EVENT_TYPES),
+  }),
+  Schema.Struct({
+    scope: Schema.Literal("battle"),
+    type: Schema.Literal(...BATTLE_TABLE_EVENT_TYPES),
+  }),
+);
+export type TableEventCommand = Schema.Schema.Type<
+  typeof TableEventCommandSchema
+>;
 
 export type StartTurnRuntimeInputs = {
   readonly extraAttacks?: number;
@@ -2699,10 +2760,7 @@ export function getAvailableBattleActions(
     }
     if (activeCreature.prone) {
       const standCost = Math.floor(activeCreature.effectiveSpeed / 2);
-      if (
-        standCost > 0 &&
-        standCost <= activeCreature.movementRemaining
-      ) {
+      if (standCost > 0 && standCost <= activeCreature.movementRemaining) {
         tokens.push(
           battleToken({
             actorId: activeCreatureId,
@@ -3074,7 +3132,8 @@ export function finalizeBattleResolution(
           atkRoll: attackRoll,
           dmg: damage,
           dt: actor?.mainHandWeapon?.damageType ?? "slashing",
-          damageQualifiers: actor?.mainHandWeapon?.damageQualifiers ?? new Set(),
+          damageQualifiers:
+            actor?.mainHandWeapon?.damageQualifiers ?? new Set(),
           crit: runtimeInputs.values.crit,
           tgtAc: armorClass(targetAc),
           knockOut: runtimeInputs.values.knockOut,
@@ -3095,7 +3154,10 @@ export function finalizeBattleResolution(
     }),
     Match.when({ runtime: "readySpellRelease" }, (): FinalizedBattleAction => {
       if (runtimeInputs.runtime !== "readySpellRelease") {
-        return battleRuntimeMismatch("readySpellRelease", runtimeInputs.runtime);
+        return battleRuntimeMismatch(
+          "readySpellRelease",
+          runtimeInputs.runtime,
+        );
       }
       if (request.token.type !== "BATTLE_READY_SPELL_RELEASE") {
         return {
