@@ -295,6 +295,7 @@ Verification command: $test_command
 
 Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local constraints:
 - Use pnpm, never npm.
+- Edit only files inside the Workspace path above. Do not edit the main repo worktree at $repo_root or any sibling task worktree; the decider owns main-worktree changes.
 - This repo owns the whole stack; change the right layer instead of adding workaround adapters.
 - Do not duplicate state across layers.
 - For any modeled D&D rule, read the relevant SRD text under .references/srd-5.2.1/ and check UBIQUITOUS_LANGUAGE.md before implementing.
@@ -339,6 +340,7 @@ Current task file: $task_file
 Review report output path: $report
 
 Review the implementation diff against $task_base_sha. Do not modify repository files. Focus on correctness, Task $task_no coverage, repo instruction violations, missing verification, duplicated state, and SRD/UBIQUITOUS_LANGUAGE traceability for modeled rules. Flag any changes that implement later tasks prematurely. If you decide verification requires MBT, first check for existing vitest/quint_evaluator processes per AGENTS.md and do not launch a second MBT run while one is alive.
+Do not edit the main repo worktree at $repo_root or any sibling task worktree.
 
 Your final answer is the review report. The harness saves it to the output path above. Write markdown with these sections:
 - Verdict: accept | accept-with-fixes | reject
