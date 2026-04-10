@@ -262,7 +262,7 @@ Implemented in attack-pipeline plan Phase 2. `bLegendaryAttack` uses `resolveAtt
 
 ### F11. Readied movement [Low Impact — Deferred]
 
-*Source: PRD_READY_ACTION.md*
+*Source: historical Ready Action PRD, now available in git history*
 
 Release grants Speed worth of movement instead of an attack. Simpler than readied attacks (no reaction chain). New `bReadyReleaseMove` action. Phase 1-2 (ready + release as attack) are implemented.
 
@@ -270,7 +270,7 @@ Release grants Speed worth of movement instead of an attack. Simpler than readie
 
 ### F12. Readied spells with Concentration [Medium Impact — Deferred]
 
-*Source: PRD_READY_ACTION.md Phase 2 (to be expanded as Phase 2 addendum)*
+*Source: historical Ready Action PRD Phase 2 note, now available in git history*
 
 Slot spent on ready, Concentration held until release. If Concentration breaks, spell fizzles (slot lost). On release, spell enters normal resolution (Counterspellable). Needs `readiedSpellParams` on Combatant to track spell parameters between ready and release.
 
@@ -368,8 +368,8 @@ Every action must preserve 7 state variables. `keepBattle` covers 5; actions mod
 11. ~~**D8** (Battle MBT broken on master — `Unknown action: bDash`)~~ DONE -- added schema + dispatch handlers for bDash/bDisengage/bDodge/bActionSurge/bEnterRage/bDeclareReckless/bReady/bReadyPass/bReadyRelease/bCastBonusActionSpell to both MBT bridges
 12. ~~**D7** (MBT bridge schema gaps — `bReadyRelease` etc. missing from `battleDriverSchema`)~~ DONE -- added missing schema entries to battle-machine.mbt.test.ts
 13. ~~**D5** (AttackContext divergence Quint↔TS — heavy weapon, grapple, exhaustion)~~ DONE -- aligned Quint AttackContext to 5.2.1 (wielderStrScore/wielderDexScore replace wielderSizeSmallOrTiny); added attackerGrappled/targetIsGrappler to TS; removed 5.1 exhaustion disadvantage from both TS and Quint (5.2.1 uses flat -2*level penalty, already in exhaustionPenalty)
-14. ~~**PRD 3 continuation** (saveMiscBonus for Aura of Protection)~~ DONE -- covers F7. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 1
-15. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12. Plan: `PLAN_PRD_EXTENSIONS.md` Phase 2
+14. ~~**PRD 3 continuation** (saveMiscBonus for Aura of Protection)~~ DONE -- covers F7.
+15. **PRD 2 Phase 2** (readied spells w/ Concentration) -- covers F12. Historical details are available in git history.
 16. ~~**D6** (knockOut has no TS implementation)~~ DONE -- added `knockOut: boolean` to dealDamage, dealDamageWithAfterReactions, AttackHitCtx, AttackDamageCtx, all attack events (BATTLE_ATTACK, BATTLE_LEGENDARY_ATTACK, BATTLE_READY_RELEASE, BATTLE_MOVEMENT_OA_ATTACK), resolveAttack, and both MBT bridge schemas
 17. **F1** (more reactions) -- incremental, add as needed
 18. ~~**S2** (fix OA comment)~~ DONE

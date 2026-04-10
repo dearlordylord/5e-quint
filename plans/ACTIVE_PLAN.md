@@ -1,9 +1,10 @@
-# APR10 Daily Batch Plan
+# Active Plan
 
 Date: 2026-04-10
 
-Current codebase checked at `master` `cee895d` (`docs: preserve legendary action cost blocker`).
-This file prepares the April 10 batch for a coding loop. It combines active documented blockers with competitor/inspiration findings that were not fully promoted into current implementation plans.
+This is the single active planning queue. It replaces the previous dated APR10
+batch plan and folds in the useful follow-up notes from the deleted one-off
+plan files.
 
 ## Batch Objective
 
@@ -129,8 +130,9 @@ Purpose:
 
 Context:
 
-- Dedicated note: `plans/BATTLE_SIZE_OWNERSHIP.md`.
-- Audit rows: `plans/MCP_EVENT_SURFACE_AUDIT.md` and `plans/MCP_EVENT_SURFACE_COMPLETION_PLAN.md`.
+- Folded-in ownership note: battle Size ownership must be fixed before public
+  `BATTLE_GRAPPLE` exposure.
+- Audit row: `plans/MCP_EVENT_SURFACE_AUDIT.md`.
 - Current problem: `BATTLE_GRAPPLE` needs size, but `BattleCreatureState` and `battle.qnt` `Combatant` do not store size.
 - Current raw payload locations to inspect: `packages/core/src/battle-machine-events.ts` `BATTLE_GRAPPLE` and `packages/core/src/battle-machine-actions-turn.ts` grapple handling.
 
@@ -138,7 +140,6 @@ Inputs:
 
 - `.references/srd-5.2.1/Rules-Glossary.md` Grapple and Size text.
 - `UBIQUITOUS_LANGUAGE.md`.
-- `plans/BATTLE_SIZE_OWNERSHIP.md`.
 - `battle.qnt`.
 - `packages/core/src/battle-machine-types.ts`.
 - `packages/core/src/battle-machine-events.ts` if event payload shape changes.
@@ -240,7 +241,7 @@ Purpose:
 Context:
 
 - Main audit row: `plans/MCP_EVENT_SURFACE_AUDIT.md` `BATTLE_ATTACK`.
-- Plan task: `plans/MCP_EVENT_SURFACE_COMPLETION_PLAN.md` Task 20.
+- Audit row: `plans/MCP_EVENT_SURFACE_AUDIT.md` `BATTLE_ATTACK`.
 - Architectural rule: `ARCHITECTURE.md` says MCP must not remember, fabricate, or re-derive combat facts.
 
 Known split:
@@ -555,7 +556,6 @@ Context:
 Inputs:
 
 - `plans/MCP_EVENT_SURFACE_AUDIT.md`.
-- `plans/MCP_EVENT_SURFACE_COMPLETION_PLAN.md`.
 - Relevant SRD spell/effect examples if a specific table event is selected.
 - Monster stat-block/action data if a monster command is selected.
 
