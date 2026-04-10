@@ -990,7 +990,9 @@ Blocks: Task MCP1-C, Task MCP2-A.
 
 Purpose:
 
-- Introduce an MCP session/router model so the server can route tools to creature and battle hosts without treating the character list as active combat state.
+- Define the smallest in-process MCP session/router boundary that can switch between creature and battle hosts without copying combat state into MCP.
+- Keep this task adapter-only: the router may own host selection, encounter-draft inputs, and durable creature/battle references or IDs, but HP, conditions, action economy, initiative, and other mutable combat facts stay in `creatureMachine` / `battleMachine`.
+- Make the stdio entrypoint and test harness use the same routing shape so battle setup does not require a one-off demo tool or a parallel host registry.
 
 Inputs:
 
@@ -999,35 +1001,47 @@ Inputs:
 - `packages/mcp/src/server-shared.ts`.
 - `packages/mcp/src/server.test.ts`.
 - `ARCHITECTURE.md` MCP section.
+- Current host construction and tool dispatch paths in `packages/mcp`.
 
-Design output:
+Research output:
 
-- Define a `SessionHost` shape that can own current host routing, optional encounter draft inputs before battle initialization, active battle actor reference, and durable character-list references or IDs only.
-- Decide whether to add new tools or narrow control commands. Prefer generic architecture over a one-off `start_fighter_vs_goblin_demo`.
+- Document the current host wiring: stdio starts with `createDemoHost()` in `index.ts`, tests inject `SupportedActionHost` directly, and `server.ts` already distinguishes creature vs battle hosts at dispatch time.
+- Define the minimal `SessionHost` shape needed for routing only: active host selection, optional pre-battle encounter draft data, and durable character-list references or IDs only.
+- Decide whether session creation/selection belongs in a new tool, a narrow control command extension, or a pure in-process router object. Prefer the generic route that can also support later battle selection without a one-off `start_fighter_vs_goblin_demo`.
+- Call out any facts that must remain owned elsewhere so the plan never introduces duplicate mutable state.
 
 Implementation output:
 
 - Add a session/router layer in `packages/mcp`.
-- Route existing tools through the selected active host.
-- Add session-level tool(s) only if needed for battle creation/selection.
+- Route existing tools through the selected active host instead of letting `index.ts` hardwire one demo host for every workflow.
+- Add session-level tool(s) only if the router cannot express the needed battle-selection flow cleanly.
+- Keep battle creation/selection working through the same public path used by stdio and tests.
 
 Acceptance criteria:
 
-- Stdio server is no longer hardwired only to the demo creature host for all workflows.
-- Existing creature-host tests still pass.
+- Stdio no longer assumes one demo creature host for all workflows.
+- Existing creature-host tests still pass unchanged or with only routing-focused assertions updated.
 - Battle-host tests can use the same public routing path that stdio uses.
-- MCP does not store mutable HP, conditions, action economy, or goblin combat facts outside `battleMachine`.
+- MCP does not store mutable HP, conditions, action economy, initiative, or goblin combat facts outside `battleMachine`.
+- The router does not add duplicate combat state, a second character list, or a separate battle-state mirror.
 
 Verification:
 
 - RAW check: not applicable; adapter/session architecture only.
+- Read `ARCHITECTURE.md` and the current `packages/mcp` wiring before implementation to confirm the adapter boundary and shared-host assumptions.
 - `/simplify` convergence: minimum two rounds after implementation.
 - `pnpm --filter @dnd/mcp test`.
 - `pnpm --filter @dnd/mcp typecheck`.
 
 Extra research needed:
 
-- Yes. Confirm the current stdio/test-host wiring before coding, then pick the smallest routing model that supports a creature host and an active battle host.
+- Yes. Confirm the current stdio/test-host wiring before coding, then pick the smallest router that supports a creature host plus an active battle host without adding a second combat store.
+
+Plan impact:
+
+- `MCP1-C`: consume the session/router boundary and any explicit encounter-draft input instead of introducing a separate demo-only bootstrap path.
+- `MCP2-A`: keep using the same public routing path established here rather than adding a parallel battle-host selector.
+- Statuses and DAG dependencies stay unchanged at research time.
 
 ### Task 11 - MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry
 
@@ -1039,7 +1053,9 @@ Blocks: Task MCP1-C, Task MCP2-B.
 
 Purpose:
 
-- Add a reusable core-owned statblock/content facility, then express Goblin Minion through that facility without duplicating RAW stat-block fields in MCP.
+- Consolidate the existing core monster stat-block path into one reusable facility that core and battle/session adapters can consume, without introducing a parallel MCP-owned monster registry or duplicating RAW fields in multiple layers.
+- Add Goblin Minion as the first SRD-backed entry in that facility.
+- Treat the current `creature.qnt` proof-of-concept monster definitions and `packages/core/src/monster-types.ts` / `packages/core/src/mbt-shared.ts` projection helpers as the starting ownership surface, not as throwaway scaffolding.
 
 Inputs:
 
@@ -1047,53 +1063,66 @@ Inputs:
 - `.references/srd-5.2.1/Monsters/Overview.md` stat-block rules.
 - `UBIQUITOUS_LANGUAGE.md`.
 - `packages/core/src/monster-types.ts`.
+- `packages/core/src/mbt-shared.ts` stat-block parsing/projection helpers, if the shared facility reuses them.
 - `creature.qnt` stat-block definitions if Quint parity must be extended.
 - `packages/core/src/battle-machine-types.ts`.
 - `packages/core/src/battle-machine-actions-turn.ts`.
-- Any provenance/maintenance docs that describe where additional local statblocks should be sourced from.
+- Nearby provenance or maintenance docs that explain where future statblocks should be sourced from.
 
 Implementation output:
 
-- Add a reusable core-owned statblock/content facility for battle-init-compatible monster definitions.
-- Add a short description of approved provenance for future statblocks: local `.references/srd-5.2.1/` first; other corpora only by explicit owner decision. 5etools may be used as a research aid but is not the default imported source of truth.
-- Add a core-owned Goblin Minion stat-block/content entry using that shared facility.
-- Add a compiler/projection from stat-block content to `InitCreatureConfig` or directly to battle init state, depending on the ownership chosen in Task MCP1-A.
+- Reuse the existing `StatBlock` shape and helper path instead of introducing a second monster schema.
+- Add an explicit provenance note for future entries: `.references/srd-5.2.1/` is the default source of truth; other corpora require explicit owner approval; 5etools is research-only unless later promoted by a plan change.
+- Add a core-owned Goblin Minion entry in the shared facility.
+- Add the smallest projection from that entry into the battle-init/creature-init path chosen by Task MCP1-A.
+- If Quint parity is extended, keep the Goblin Minion definition aligned across Quint and TS rather than duplicating the numbers in MCP.
 - Represent only facts currently supported by core types:
   - name: Goblin Minion;
-  - type: Fey;
+  - creature type: Fey with Goblinoid tag;
   - size: Small;
   - AC 12;
-  - initiative mod +2, or default initiative score 12 if a score helper is added;
-  - HP 7, 2d6;
+  - initiative modifier +2, or initiative score 12 if a helper uses the stat-block fallback;
+  - HP 7 (2d6);
   - walk speed 30;
   - ability scores Str 8, Dex 15, Con 10, Int 10, Wis 8, Cha 8;
-  - Stealth +6;
-  - darkvision 60;
+  - save proficiency Dex +2;
+  - skill proficiency Stealth +6;
+  - gear note for daggers (3), if the shared facility records gear;
+  - darkvision 60 ft. and Passive Perception 9;
+  - Languages Common, Goblin;
   - CR 1/8, PB +2;
-  - dagger attack +4, reach 5 or range 20/60, average 4 Piercing.
-- Defer Goblin Warrior and Nimble Escape unless the needed stat-block attack rider/bonus-action support is already present.
-- Do not build a bulk corpus importer in this task.
+  - dagger attack +4, reach 5 ft. or range 20/60 ft., average 4 Piercing.
+- Defer Goblin Warrior and Nimble Escape unless the needed attack-rider and bonus-action support already exists.
+- Do not build a bulk corpus importer or an MCP-local monster registry in this task.
 
 Acceptance criteria:
 
-- A reusable statblock/content facility exists in core.
-- Goblin Minion is defined once in core using that facility.
-- MCP selects or references the core content; it does not repeat RAW numbers.
-- Future statblock provenance is documented clearly enough that a later task can add more entries without reopening the ownership question.
-- Goblin Warrior is explicitly deferred until advantage damage rider support exists.
+- There is one core-owned source of truth for named monster stat blocks.
+- Goblin Minion can be instantiated from that source without hand-written RAW literals in MCP.
+- MCP selects or references the core content; it does not repeat RAW numbers or maintain a second monster registry.
+- Future statblock provenance is documented clearly enough that later entries can follow the same sourcing rule without reopening ownership.
+- Goblin Warrior remains deferred until advantage-based damage rider support exists.
 - No bulk importer or non-SRD corpus ingestion is introduced by this task.
+- If Quint changes, the bridge projection and tests stay aligned with the same Goblin Minion facts.
 
 Verification:
 
-- RAW check: Goblin Minion and Monsters Overview in `.references/srd-5.2.1/`; terminology in `UBIQUITOUS_LANGUAGE.md`.
+- RAW check: reread Goblin Minion, Monsters Overview, and `UBIQUITOUS_LANGUAGE.md` before editing code.
 - `/simplify` convergence: minimum two rounds after implementation.
-- Focused unit tests for the shared statblock facility, Goblin Minion catalog values, and compiler projection.
-- Creature MBT only if `creature.qnt` or the creature bridge changes.
-- Tier 1 battle MBT only if battle semantics or Quint bridge changes.
+- Focused unit tests for the shared statblock facility, Goblin Minion catalog values, and the chosen projection path.
+- Creature MBT only if `creature.qnt` or the Quint bridge changes.
+- Tier 1 battle MBT only if battle semantics or the battle bridge changes.
 
 Extra research needed:
 
-- Yes. Confirm existing monster catalog/projection ownership before adding fields, and identify where the provenance note should live so future statblocks are added consistently.
+- Yes. Confirm whether the catalog should live in TS only, Quint only, or both, and whether the existing `creature.qnt` proof-of-concept monsters should be migrated into the shared facility or left as bridge-owned fixtures.
+
+Plan impact:
+
+- No blocked-task status changes are warranted at research time.
+- `MCP1-C` remains blocked on Task MCP1-B implementation.
+- `MCP2-B` remains blocked on Task MCP1-B plus Task MCP2-A.
+- `MCP3-A` remains blocked on Task MCP1-B and the later attack-rider support it also needs.
 
 ### Task 12 - E - Movement And Help Geometry/Session Ownership
 
