@@ -511,6 +511,11 @@ describe("MCP server adapter", () => {
       "object",
       "object",
     ]);
+    for (const tool of toolDefinitions) {
+      expect(tool.inputSchema).not.toHaveProperty("anyOf");
+      expect(tool.inputSchema).not.toHaveProperty("oneOf");
+      expect(tool.inputSchema).not.toHaveProperty("allOf");
+    }
   });
 
   test("execute_control_command validates a narrow command shape", () => {

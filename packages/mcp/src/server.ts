@@ -121,14 +121,34 @@ type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
   readonly type: "object";
 };
 
-function mcpObjectInputSchema(
-  schema: object,
-): McpObjectInputSchema {
-  const schemaRecord = schema as Readonly<Record<string, unknown>>;
-  return schemaRecord.type === "object"
-    ? ({ ...schemaRecord, type: "object" } satisfies McpObjectInputSchema)
-    : { ...schema, type: "object" };
-}
+const resolvedActionMcpInputSchema = {
+  type: "object",
+  required: ["type"],
+  properties: {
+    scope: {
+      type: "string",
+      enum: ["creature", "battle"],
+      description:
+        "Optional token scope. Creature tokens may omit this; battle tokens require battle scope.",
+    },
+    type: {
+      type: "string",
+      description:
+        "Resolved action token type from get_available_actions, with any required user choice fields included.",
+    },
+  },
+  additionalProperties: true,
+} satisfies McpObjectInputSchema;
+
+const scopedCommandMcpInputSchema = {
+  type: "object",
+  required: ["scope", "type"],
+  properties: {
+    scope: { type: "string", enum: ["creature", "battle"] },
+    type: { type: "string" },
+  },
+  additionalProperties: true,
+} satisfies McpObjectInputSchema;
 
 export const toolDefinitions = [
   {
@@ -145,25 +165,25 @@ export const toolDefinitions = [
     name: "execute_action",
     description:
       "Execute a resolved scoped action token. User-facing choices must already be filled; MCP supplies engine-only values like prerolls.",
-    inputSchema: mcpObjectInputSchema(executeActionJsonSchema),
+    inputSchema: resolvedActionMcpInputSchema,
   },
   {
     name: "preview_action",
     description:
       "Preview a resolved scoped action token without spending resources or mutating state.",
-    inputSchema: mcpObjectInputSchema(executeActionJsonSchema),
+    inputSchema: resolvedActionMcpInputSchema,
   },
   {
     name: "execute_control_command",
     description:
       "Execute a narrow session, turn, rest, or monster-control command. Supported battle turn commands require explicit runtime facts; MCP does not invent hidden start/end-turn inputs.",
-    inputSchema: mcpObjectInputSchema(executeControlCommandJsonSchema),
+    inputSchema: scopedCommandMcpInputSchema,
   },
   {
     name: "record_table_event",
     description:
       "Record a narrow DM/table/world fact. Creature damage/recovery and condition/exhaustion events are applied with provenance warnings; unsupported table events return structured errors without mutating state.",
-    inputSchema: mcpObjectInputSchema(recordTableEventJsonSchema),
+    inputSchema: scopedCommandMcpInputSchema,
   },
 ] as const;
 
