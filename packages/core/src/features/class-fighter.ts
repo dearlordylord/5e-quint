@@ -16,14 +16,19 @@ export type FightingStyle = (typeof FIGHTING_STYLES)[number];
 
 export interface FightingStyleBattleModifiers {
   readonly rangedWeaponAttackRollBonus: number;
+  readonly defenseArmorClassBonus: number;
+  readonly greatWeaponFightingDamageFloor: boolean;
   readonly lightPropertyExtraAttackAddsAbilityModifier: boolean;
 }
 
 export function fightingStyleBattleModifiers(
   styles: ReadonlySet<FightingStyle>,
+  isWearingArmor = false,
 ): FightingStyleBattleModifiers {
   return {
     rangedWeaponAttackRollBonus: styles.has("archery") ? 2 : 0,
+    defenseArmorClassBonus: defenseACBonus(styles, isWearingArmor),
+    greatWeaponFightingDamageFloor: styles.has("greatWeaponFighting"),
     lightPropertyExtraAttackAddsAbilityModifier:
       styles.has("twoWeaponFighting"),
   };

@@ -69,6 +69,10 @@ module battle {
     hasEvasion: bool,                        // Evasion feature (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
     saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
     critRange: int,                          // natural roll >= critRange is a critical hit (default 20, Champion 19/18)
+    isWearingArmor: bool,                    // battle-owned worn armor fact for Defense
+    defenseArmorClassBonus: int,             // Defense fighting style AC bonus while wearing armor
+    greatWeaponFightingDamageFloor: bool,    // Great Weapon Fighting concrete consumer
+    hiddenDiscoveryDc: int,                  // 0 = not hidden; otherwise Search DC from Hide check total
     rangedWeaponAttackRollBonus: int,        // additive bonus to attack rolls made with Ranged weapons
     fighterLevel: int,                       // 0 = not a fighter
     fighterState: FighterState,              // fighter class state (non-fighters carry freshFighterState(0))
@@ -507,6 +511,10 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    isWearingArmor: false,
+    defenseArmorClassBonus: 0,
+    greatWeaponFightingDamageFloor: false,
+    hiddenDiscoveryDc: 0,
     rangedWeaponAttackRollBonus: 0,
     fighterLevel: 0,
     fighterState: freshFighterState(0),
@@ -554,6 +562,10 @@ module battle {
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    isWearingArmor: false,
+    defenseArmorClassBonus: 0,
+    greatWeaponFightingDamageFloor: false,
+    hiddenDiscoveryDc: 0,
     rangedWeaponAttackRollBonus: 0,
     fighterLevel: 0,
     fighterState: freshFighterState(0),
@@ -602,6 +614,10 @@ module battle {
       hasEvasion: false,
       saveMiscBonus: 0,
       critRange: 20,
+      isWearingArmor: false,
+      defenseArmorClassBonus: 0,
+      greatWeaponFightingDamageFloor: false,
+      hiddenDiscoveryDc: 0,
       rangedWeaponAttackRollBonus: 0,
       fighterLevel: 0,
       fighterState: freshFighterState(0),
@@ -699,17 +715,28 @@ module battle {
     )
   }
 
-  pure def removeEffectsByCaster(creature: CreatureState, cId: CreatureId): CreatureState = {
-    val removed = creature.activeEffects.filter(e => e.casterId == cId)
+  pure def effectMatchesIdentity(e: ActiveEffect, casterId: CreatureId, spellId: str): bool =
+    e.casterId == casterId and e.spellId == spellId
+
+  pure def effectDependsOn(e: ActiveEffect, parentCasterId: CreatureId, parentSpellId: str): bool =
+    e.parentCasterId == parentCasterId and e.parentSpellId == parentSpellId
+
+  pure def removeEffectAndDependents(
+    creature: CreatureState, parentCasterId: CreatureId, parentSpellId: str
+  ): CreatureState = {
+    val removed = creature.activeEffects.filter(e =>
+      effectMatchesIdentity(e, parentCasterId, parentSpellId)
+      or effectDependsOn(e, parentCasterId, parentSpellId)
+    )
     if (removed.size() == 0) creature
     else removeConditionsForEffects(
-      creature.with("activeEffects", creature.activeEffects.filter(e => e.casterId != cId)),
+      creature.with("activeEffects", creature.activeEffects.exclude(removed)),
       removed
     )
   }
 
-  /// Break concentration for a caster and propagate: remove all effects
-  /// cast by this caster from ALL creatures in the battle.
+  /// Break concentration for a caster and propagate: remove the concentrated
+  /// effect and its dependents from ALL creatures in the battle.
   /// Also clears readiedSpellParams (SRD 5.2.1: "If your Concentration is broken,
   /// the spell dissipates without taking effect" — readied spell fizzles, slot lost).
   pure def breakConcentrationAndPropagate(
@@ -720,7 +747,7 @@ module battle {
     if (spellId == "") cs  // not concentrating
     else {
       val newSlots = pBreakConcentration(caster.slots)
-      val newCreature = removeEffectFromCreature(caster.creature, spellId)
+      val newCreature = removeEffectAndDependents(caster.creature, casterId, spellId)
       val cs1 = setSlots(setCreature(cs, casterId, newCreature), casterId, newSlots)
       // Clear readied spell params (concentration break = spell fizzles)
       val caster1 = cs1.get(casterId)
@@ -729,7 +756,7 @@ module battle {
       else cs1
       cs.keys().exclude(Set(casterId)).fold(cs1b, (acc, id) =>
         val c = acc.get(id)
-        val cleaned = removeEffectsByCaster(c.creature, casterId)
+        val cleaned = removeEffectAndDependents(c.creature, casterId, spellId)
         if (cleaned == c.creature) acc else setCreature(acc, id, cleaned)
       )
     }
@@ -1391,7 +1418,7 @@ module battle {
       targetDodging: tgt.turn.dodging,
       targetIncapacitated: isIncapacitated(tgt.creature),
       targetSpeedZero: tgt.turn.effectiveSpeed == 0,
-      targetCanSeeAttacker: targetCanSeeAttacker,
+      targetCanSeeAttacker: targetCanSeeAttacker and atk.hiddenDiscoveryDc == 0,
       attackerCanSeeTarget: attackerCanSeeTarget,
       attackerHelpedAgainstTarget: helpAdvantage,
       isRangedAttack: not(isMelee),
@@ -1416,6 +1443,30 @@ module battle {
     roll + attackRollBonus >= targetAc or roll >= critRange
   }
 
+  pure def effectiveArmorClass(cs: CreatureId -> Combatant, targetId: CreatureId, targetAc: int): int =
+    targetAc + (if (cs.get(targetId).isWearingArmor) cs.get(targetId).defenseArmorClassBonus else 0)
+
+  pure def greatWeaponFightingEligible(c: Combatant, isMelee: bool, weapon: Weapon): bool =
+    c.greatWeaponFightingDamageFloor
+    and isMelee
+    and battleMainHandUsesTwoHands(c)
+    and (weapon.properties.contains(TwoHanded) or weapon.properties.contains(Versatile))
+
+  pure def gwfDie(c: Combatant, isMelee: bool, weapon: Weapon, dieResult: int): int =
+    if (greatWeaponFightingEligible(c, isMelee, weapon) and dieResult <= 2) 3 else dieResult
+
+  pure def hasActiveInvisibleEffect(c: CreatureState): bool =
+    c.activeEffects.exists(effect => effect.grantedConditions.contains(CInvisible))
+
+  pure def endHidden(c: Combatant): Combatant =
+    if (c.hiddenDiscoveryDc > 0)
+      c.with("hiddenDiscoveryDc", 0)
+        .with("creature", c.creature.with("invisible", hasActiveInvisibleEffect(c.creature)))
+    else c
+
+  pure def revealHiddenForVerbalSpell(c: Combatant, spellName: str): Combatant =
+    if (battleSpellComponentRequirements(spellName).requiresVerbal) endHidden(c) else c
+
   /// Shared attack resolution: determines hit, enters reaction chain or deals damage.
   /// Called by bAttack, bMovementOAAttack, bLegendaryAttack, bReadyRelease.
   pure def resolveAttack(
@@ -1438,11 +1489,13 @@ module battle {
     // autoMiss forces miss; otherwise normal hit check
     val cs0 = cs
     val rangedWeaponBonus = if (not(weapon.isMelee)) cs0.get(attackerId).rangedWeaponAttackRollBonus else 0
-    val hit = not(mods.autoMiss) and isHitWithAttackRollBonus(attackRoll, targetAc, critRange, rangedWeaponBonus)
+    val effectiveTargetAc = effectiveArmorClass(cs0, targetId, targetAc)
+    val hit = not(mods.autoMiss) and isHitWithAttackRollBonus(attackRoll, effectiveTargetAc, critRange, rangedWeaponBonus)
+    val csAfterAttackRoll = cs0.set(attackerId, endHidden(cs0.get(attackerId)))
     if (not(hit)) {
-      { creatures: cs0, phase: returnToPhase(returnTo) }
+      { creatures: csAfterAttackRoll, phase: returnToPhase(returnTo) }
     } else {
-      val atk = cs0.get(attackerId)
+      val atk = csAfterAttackRoll.get(attackerId)
       val meleeDmgBonus = if (isMelee) atk.meleeDamageBonus else 0  // rage bonus: melee only (D1 fix)
       // Sneak Attack eligibility (SRD 5.2.1 Rogue "Sneak Attack")
       val eligibleWeapon = weapon.properties.contains(Finesse) or not(isMelee)  // finesse or ranged weapon
@@ -1455,10 +1508,10 @@ module battle {
       val effectiveKnockOut = knockOut and isMelee  // SRD: knock out is melee only
       val effectiveCrit = isCritical or mods.autoCrit  // Paralyzed/Unconscious within 5ft = auto-crit
       // Mark SA used on attacker if SA fired
-      val cs1 = if (saEligible) cs0.set(attackerId, atk.with("sneakAttackUsedThisTurn", true)) else cs0
+      val cs1 = if (saEligible) csAfterAttackRoll.set(attackerId, atk.with("sneakAttackUsedThisTurn", true)) else csAfterAttackRoll
       val atkCtx: AttackHitCtx = {
         attacker: attackerId, target: targetId,
-        attackRoll: attackRoll, targetAc: targetAc,
+        attackRoll: attackRoll, targetAc: effectiveTargetAc,
         damage: totalDmg, damageType: damageType, damageQualifiers: damageQualifiers, isCritical: effectiveCrit,
         critRange: critRange,
         atkReturnTo: returnTo,
@@ -1494,7 +1547,8 @@ module battle {
     // Does NOT model mixed-die weapons (e.g., 1d6+1d4) — would need per-die nondets.
     nondet diceCount = Set(1, 2).oneOf()
     nondet dieSize = Set(4, 6, 8, 10, 12).oneOf()
-    nondet dmg = diceCount.to(diceCount * dieSize).oneOf()
+    nondet die1 = 1.to(dieSize).oneOf()
+    nondet die2 = 1.to(dieSize).oneOf()
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
     nondet crit = Bool.oneOf()
     nondet tAc = 10.to(20).oneOf()
@@ -1542,6 +1596,10 @@ module battle {
       val newHelpTargets = if (helpAdv) bHelpTargets.exclude(helpMatches) else bHelpTargets
       val atkCtx = buildAttackContext(cs1, activeId, targetId, isMelee, weapon, attackerWithin5ft, hostileWithin5ft, targetCanSeeAttacker, attackerCanSeeTarget, frightSourceInLOS, helpAdv)
       val atkMods = pAggregateAttackMods(atkCtx)
+      val dmg = if (diceCount == 1)
+        gwfDie(ac, isMelee, weapon, die1)
+      else
+        gwfDie(ac, isMelee, weapon, die1) + gwfDie(ac, isMelee, weapon, die2)
       val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, Set(), crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, targetCanSeeAttacker, atkMods, weapon, hasAllyAdjacentToTarget, saDmg, hitRider, hitReactionCandidates)
       all {
         bCreatures' = result.creatures,
@@ -1839,7 +1897,7 @@ module battle {
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
-    val preparedCaster = prepareHandsForSpellComponents(ac)
+    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellName)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -1989,6 +2047,9 @@ module battle {
       if (conc.applyCondition) Set(conc.conditionOnFail) else Set(),
       Set(), Set(), Set()
     )
+      .map(e => if (e.spellId == conc.spellId and e.casterId == conc.caster)
+        e.with("parentSpellId", conc.spellId).with("parentCasterId", conc.caster)
+      else e)
     val cs4 = setCreature(cs3, conc.target, targetC.creature.with("activeEffects", newEffects))
     // Apply condition to target if applicable
     if (conc.applyCondition) {
@@ -2315,7 +2376,7 @@ module battle {
     nondet cond = Set(CParalyzed, CCharmed, CRestrained).oneOf()
     nondet applyCond = Bool.oneOf()
     nondet ritual = Bool.oneOf()
-    val preparedCaster = prepareHandsForSpellComponents(ac)
+    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellId)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -2418,7 +2479,7 @@ module battle {
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
     nondet ritual = Bool.oneOf()
-    val preparedCaster = prepareHandsForSpellComponents(ac)
+    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellName)
     all {
       bPhase == BPActiveTurn,
       bTurnStarted,
@@ -3065,6 +3126,61 @@ module battle {
     }
   }
 
+  action bHide = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    nondet stealthTotal = 1.to(30).oneOf()
+    nondet hasCoverOrObscurement = Bool.oneOf()
+    nondet outOfEnemyLineOfSight = Bool.oneOf()
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      val newTurn = pUseAction(ac.turn, ac.creature, AHide)
+      val success = stealthTotal >= 15 and hasCoverOrObscurement and outOfEnemyLineOfSight
+      val newCreature = if (success) ac.creature.with("invisible", true) else ac.creature
+      val newCombatant = ac.with("turn", newTurn)
+        .with("creature", newCreature)
+        .with("hiddenDiscoveryDc", if (success) stealthTotal else 0)
+      all {
+        bCreatures' = bCreatures.set(activeId, newCombatant),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  action bSearch = {
+    val activeId = bInitiative[bTurnIndex]
+    val allIds = bCreatures.keys()
+    val ac = bCreatures.get(activeId)
+    nondet targetId = allIds.exclude(Set(activeId)).oneOf()
+    nondet perceptionTotal = 1.to(30).oneOf()
+    val target = bCreatures.get(targetId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      ac.turn.actionsRemaining > 0,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      val newTurn = pUseAction(ac.turn, ac.creature, ASearch)
+      val cs1 = setTurn(bCreatures, activeId, newTurn)
+      val found = target.hiddenDiscoveryDc > 0 and perceptionTotal >= target.hiddenDiscoveryDc
+      val cs2 = if (found)
+        cs1.set(targetId, target
+          .with("hiddenDiscoveryDc", 0)
+          .with("creature", target.creature.with("invisible", hasActiveInvisibleEffect(target.creature))))
+      else cs1
+      all {
+        bCreatures' = cs2,
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
   action bGrapple = {
     val activeId = bInitiative[bTurnIndex]
     val allIds = bCreatures.keys()
@@ -3181,7 +3297,7 @@ module battle {
     nondet saveAb = Set(Dex, Con).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
-    val preparedCaster = prepareHandsForSpellComponents(ac)
+    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellName)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -3339,7 +3455,7 @@ module battle {
     nondet saveAb = Set(Dex, Con).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet spellName = ac.preparedSpells.oneOf()
-    val preparedCaster = prepareHandsForSpellComponents(ac)
+    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellName)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -3413,11 +3529,11 @@ module battle {
         if (canCastSpells) any {
           bAttack, bOffHandAttack, bHelpAttack, bCastSaveSpell, bCastAoE,
           bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
-          bMove, bHeal, bDash, bDisengage, bDodge, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge,
+          bMove, bHeal, bDash, bDisengage, bDodge, bHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge,
           bEnterRage, bDeclareReckless, bReady, bReadySpell, bEndTurn,
         } else any {
           bAttack, bOffHandAttack, bHelpAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage,
-          bDodge, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
+          bDodge, bHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
         }
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {

@@ -2,6 +2,7 @@ import { Match } from "effect";
 
 import {
   battleMainHandDamageDie,
+  endHidden,
   prepareHandsForSpellComponents,
   isIncapacitated,
 } from "#/battle-machine-creature.ts";
@@ -59,6 +60,48 @@ import { armorClass } from "#/types.ts";
 
 type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>;
 
+function greatWeaponFightingEligible(
+  attacker: BattleCreatureState,
+  isMelee: boolean,
+  weaponProperties: ReadonlySet<WeaponProperty>,
+): boolean {
+  return (
+    attacker.greatWeaponFightingDamageFloor &&
+    isMelee &&
+    attacker.leftHandUse === "mainWeapon" &&
+    attacker.rightHandUse === "mainWeapon" &&
+    (weaponProperties.has("twoHanded") || weaponProperties.has("versatile"))
+  );
+}
+
+function battleWeaponDamage(
+  attacker: BattleCreatureState,
+  isMelee: boolean,
+  weaponProperties: ReadonlySet<WeaponProperty>,
+  diceCount: number,
+  dieSize: number,
+  fallbackDamage: number,
+  damageDieRolls?: ReadonlyArray<number>,
+): number | null {
+  const useFloor = greatWeaponFightingEligible(
+    attacker,
+    isMelee,
+    weaponProperties,
+  );
+  if (damageDieRolls == null) return useFloor ? null : fallbackDamage;
+  if (damageDieRolls.length !== diceCount) return null;
+  if (
+    damageDieRolls.some(
+      (roll) => !Number.isInteger(roll) || roll < 1 || roll > dieSize,
+    )
+  )
+    return null;
+  return damageDieRolls.reduce(
+    (sum, roll) => sum + (useFloor && roll <= 2 ? 3 : roll),
+    0,
+  );
+}
+
 /** Build AttackContext from battle creature state + per-attack parameters. */
 export function buildBattleAttackContext(
   cs: Creatures,
@@ -94,7 +137,7 @@ export function buildBattleAttackContext(
     targetDodging: tgt.dodging,
     targetIncapacitated: isIncapacitated(tgt),
     targetSpeedZero: tgt.effectiveSpeed === 0,
-    targetCanSeeAttacker,
+    targetCanSeeAttacker: targetCanSeeAttacker && atk.hiddenDiscoveryDc <= 0,
     attackerCanSeeTarget,
     attackerHelpedAgainstTarget: helpAdvantage,
     isRangedAttack: !isMelee,
@@ -144,13 +187,26 @@ export function resolveAttack(
   const attackRollBonus = weaponIsRanged
     ? cs0.get(attackerId)!.rangedWeaponAttackRollBonus
     : 0;
+  const target = cs0.get(targetId)!;
+  const effectiveTargetAc =
+    targetAc + (target.isWearingArmor ? target.defenseArmorClassBonus : 0);
   const hit =
     !mods.autoMiss &&
-    isHitWithAttackRollBonus(attackRoll, targetAc, critRange, attackRollBonus);
+    isHitWithAttackRollBonus(
+      attackRoll,
+      effectiveTargetAc,
+      critRange,
+      attackRollBonus,
+    );
+  const csAfterAttackRoll = setCreature(
+    cs0,
+    attackerId,
+    endHidden(cs0.get(attackerId)!),
+  );
   if (!hit) {
-    return { creatures: cs0, ...returnToState(returnTo) };
+    return { creatures: csAfterAttackRoll, ...returnToState(returnTo) };
   }
-  const atk = cs0.get(attackerId)!;
+  const atk = csAfterAttackRoll.get(attackerId)!;
   const meleeDmgBonus = isMelee ? atk.meleeDamageBonus : 0; // rage bonus: melee only (D1 fix)
   // Sneak Attack eligibility (SRD 5.2.1 Rogue "Sneak Attack")
   const eligibleWeapon = weaponProperties.has("finesse") || !isMelee;
@@ -165,13 +221,16 @@ export function resolveAttack(
   const effectiveCrit = isCritical || mods.autoCrit;
   const effectiveKnockOut = knockOut && isMelee; // SRD: knock out is melee only
   const cs1 = saEligible
-    ? setCreature(cs0, attackerId, { ...atk, sneakAttackUsedThisTurn: true })
-    : cs0;
+    ? setCreature(csAfterAttackRoll, attackerId, {
+        ...atk,
+        sneakAttackUsedThisTurn: true,
+      })
+    : csAfterAttackRoll;
   const atkCtx: AttackHitCtx = {
     attacker: attackerId,
     target: targetId,
     attackRoll,
-    targetAc: armorClass(targetAc),
+    targetAc: armorClass(effectiveTargetAc),
     damage: totalDmg,
     damageType,
     damageQualifiers,
@@ -252,13 +311,23 @@ export function battleAttack({
   );
   const mods = aggregateAttackMods(ctx);
   const hasAnyDisadvantageSource = hasAttackDisadvantageSource(ctx);
+  const damage = battleWeaponDamage(
+    ac,
+    e.isMelee,
+    weaponProperties,
+    e.diceCount,
+    e.dieSize,
+    e.dmg,
+    e.damageDieRolls,
+  );
+  if (damage == null) return {};
   const result = resolveAttack(
     cs,
     id,
     e.targetId,
     e.attackRoll,
     e.tAc,
-    e.dmg,
+    damage,
     e.dt,
     e.damageQualifiers ?? ac.mainHandWeapon?.damageQualifiers ?? new Set(),
     e.crit,

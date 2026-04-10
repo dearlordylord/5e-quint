@@ -289,6 +289,8 @@ export interface ActiveEffect {
   readonly turnsRemaining: number;
   readonly expiresAt: ExpiryPhase;
   readonly casterId: CreatureId;
+  readonly parentSpellId?: SpellId;
+  readonly parentCasterId?: CreatureId;
   readonly expiryOwnerId?: CreatureId;
   readonly grantedConditions?: ReadonlyArray<Condition>;
   readonly startOfTurnHook?: EffectTurnHook;

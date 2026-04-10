@@ -77,6 +77,8 @@ export function resolveConcentration(
     "end",
     conc.caster,
     {
+      parentSpellId: conc.spellId,
+      parentCasterId: conc.caster,
       grantedConditions: conc.applyCondition ? [conc.conditionOnFail] : [],
     },
   );

@@ -649,19 +649,55 @@ export function removeEffect(
   );
 }
 
-export function removeEffectsByCaster(
+function dependsOnEffect(
+  effect: ActiveEffect,
+  parentCasterId: CreatureId,
+  parentSpellId: SpellId,
+): boolean {
+  return (
+    effect.parentCasterId === parentCasterId &&
+    effect.parentSpellId === parentSpellId
+  );
+}
+
+export function removeEffectAndDependents(
   c: BattleCreatureState,
-  casterId: CreatureId,
+  parentCasterId: CreatureId,
+  parentSpellId: SpellId,
 ): BattleCreatureState {
-  const removed = c.activeEffects.filter((e) => e.casterId === casterId);
+  const removed = c.activeEffects.filter(
+    (effect) =>
+      (effect.casterId === parentCasterId &&
+        effect.spellId === parentSpellId) ||
+      dependsOnEffect(effect, parentCasterId, parentSpellId),
+  );
   if (removed.length === 0) return c;
   return removeGrantedConditions(
     {
       ...c,
-      activeEffects: c.activeEffects.filter((e) => e.casterId !== casterId),
+      activeEffects: c.activeEffects.filter(
+        (effect) =>
+          !(
+            (effect.casterId === parentCasterId &&
+              effect.spellId === parentSpellId) ||
+            dependsOnEffect(effect, parentCasterId, parentSpellId)
+          ),
+      ),
     },
     removed,
   );
+}
+
+export function endHidden(c: BattleCreatureState): BattleCreatureState {
+  return c.hiddenDiscoveryDc > 0
+    ? {
+        ...c,
+        hiddenDiscoveryDc: 0,
+        invisible: c.activeEffects.some((effect) =>
+          effect.grantedConditions?.includes("invisible"),
+        ),
+      }
+    : c;
 }
 
 // --- Constants & factories (moved from battle-machine-types.ts) ---
@@ -757,6 +793,10 @@ export function freshCreature(
     hasEvasion: false,
     saveMiscBonus: 0,
     critRange: 20,
+    isWearingArmor: false,
+    defenseArmorClassBonus: 0,
+    greatWeaponFightingDamageFloor: false,
+    hiddenDiscoveryDc: 0,
     rangedWeaponAttackRollBonus: 0,
     fighterLevel: 0,
     actionSurgeCharges: 0,

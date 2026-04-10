@@ -111,6 +111,10 @@ export interface BattleCreatureState {
   readonly saveMiscBonus: number;
   // Natural roll >= critRange is a critical hit (default 20, Champion 19/18)
   readonly critRange: number;
+  readonly isWearingArmor: boolean;
+  readonly defenseArmorClassBonus: number;
+  readonly greatWeaponFightingDamageFloor: boolean;
+  readonly hiddenDiscoveryDc: number;
   readonly rangedWeaponAttackRollBonus: number;
   // Fighter state
   readonly fighterLevel: number;
@@ -439,6 +443,10 @@ export interface InitCreatureConfig {
   readonly hasEvasion?: boolean;
   readonly saveMiscBonus?: number;
   readonly critRange?: number;
+  readonly isWearingArmor?: boolean;
+  readonly defenseArmorClassBonus?: number;
+  readonly greatWeaponFightingDamageFloor?: boolean;
+  readonly hiddenDiscoveryDc?: number;
   readonly rangedWeaponAttackRollBonus?: number;
   readonly fighterLevel?: number;
   readonly barbarianLevel?: number;
