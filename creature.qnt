@@ -3489,7 +3489,20 @@ module creature {
     warlockLevel >= 11 and not(ws.mysticArcanumUsed.contains(spellLevel))
   }
 
-  /// Use Magical Cunning: set flag. Pact slot recovery is caller-managed.
+  /// Number of Pact Magic slots regained by Magical Cunning.
+  pure def pMagicalCunningRecovery(pactSlotsMax: int): int = {
+    (pactSlotsMax + 1) / 2
+  }
+
+  pure def pUseMagicalCunningSlots(ss: SpellSlotState): SpellSlotState = {
+    val restored = ss.pactSlotsCurrent + pMagicalCunningRecovery(ss.pactSlotsMax)
+    ss.with(
+      "pactSlotsCurrent",
+      if (restored > ss.pactSlotsMax) ss.pactSlotsMax else restored
+    )
+  }
+
+  /// Use Magical Cunning: set flag.
   pure def pUseMagicalCunning(ws: WarlockState): WarlockState = {
     ws.with("magicalCunningUsed", true)
   }
@@ -5549,14 +5562,13 @@ module creature {
   /// Magical Cunning: regain pact slots. Once per LR.
   /// SRD: "you regain expended Pact Magic spell slots but no more than a number
   /// equal to half your maximum (round up)"
-  /// Simplified: just sets the flag. Pact slot recovery is caller-managed.
   action doUseMagicalCunning = {
     if (turnPhase != "acting" or isIncapacitated(state)
         or not(canMagicalCunning(warlockState, classLevels.get(Warlock)))) unchanged
     else all {
       state' = state,
       turnState' = turnState,
-      spellSlots' = spellSlots,
+      spellSlots' = pUseMagicalCunningSlots(spellSlots),
       turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,
       monsterResourceState' = monsterResourceState,

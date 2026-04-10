@@ -3,6 +3,7 @@ import {
   canEldritchSmite,
   canUseMagicalCunning,
   canUseMysticArcanum,
+  magicalCunningRecovery,
 } from "#/features/class-warlock.ts";
 import { updateClass } from "#/machine-helpers.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
@@ -15,7 +16,7 @@ function w(c: DndContext) {
 
 // -- Actions --
 
-/** Magical Cunning: set used flag. Pact slot recovery is caller-managed.
+/** Magical Cunning: regain expended Pact Magic slots and set used flag.
  * SRD: "you regain expended Pact Magic spell slots but no more than a number
  * equal to half your maximum (round up). Once you use this feature, you can't
  * do so again until you finish a Long Rest." */
@@ -26,7 +27,13 @@ export function magicalCunningUpdate(c: DndContext): Partial<DndContext> {
       canUseMagicalCunning(ws.level, ws.magicalCunningUsed),
     "guard: canMagicalCunning should have prevented this",
   );
-  return updateClass(c, "warlock", { magicalCunningUsed: true });
+  return {
+    pactSlotsCurrent: Math.min(
+      c.pactSlotsMax,
+      c.pactSlotsCurrent + magicalCunningRecovery(c.pactSlotsMax),
+    ),
+    ...updateClass(c, "warlock", { magicalCunningUsed: true }),
+  };
 }
 
 /** Mystic Arcanum: mark spell level as used this LR.

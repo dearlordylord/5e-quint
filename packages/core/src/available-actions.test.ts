@@ -1989,6 +1989,101 @@ describe("available actions contract", () => {
     );
   });
 
+  test("exposes and executes Warlock and Sorcerer creature suggested actions", () => {
+    const warlock = makeActorWithInput(WARLOCK_13_INPUT);
+    warlock.send({ type: "ENTER_COMBAT" });
+    warlock.send({ type: "START_TURN" });
+    warlock.send({ type: "USE_ELDRITCH_SMITE" });
+    expect(warlock.getSnapshot().context.pactSlotsCurrent).toBe(2);
+    expect(
+      getAvailableActions(
+        warlock.getSnapshot().context,
+        warlock.getSnapshot().tags,
+      ),
+    ).toContainEqual(
+      creatureToken({
+        type: "USE_MAGICAL_CUNNING",
+        cost: { charge: "magicalCunning" },
+        outcome: {
+          summary:
+            "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
+        },
+      }),
+    );
+
+    const magicalCunningRequest = expectRequest(
+      resolveAction(
+        warlock.getSnapshot().context,
+        warlock.getSnapshot().tags,
+        creatureResolved({ type: "USE_MAGICAL_CUNNING" }),
+      ),
+    );
+    const magicalCunningFinalized = finalizeResolution(
+      magicalCunningRequest,
+      { runtime: "none" },
+      warlock.getSnapshot().context,
+    );
+    expect(magicalCunningFinalized).toEqual({
+      ok: true,
+      event: { type: "USE_MAGICAL_CUNNING" },
+      outcome:
+        "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
+    });
+    if (!magicalCunningFinalized.ok)
+      throw new Error("expected USE_MAGICAL_CUNNING finalization to succeed");
+    warlock.send(magicalCunningFinalized.event);
+    expect(
+      warlock.getSnapshot().context.classStates.warlock?.magicalCunningUsed,
+    ).toBe(true);
+    expect(warlock.getSnapshot().context.pactSlotsCurrent).toBe(3);
+
+    const sorcerer = makeActorWithInput(SORCERER_5_INPUT);
+    sorcerer.send({ type: "ENTER_COMBAT" });
+    sorcerer.send({ type: "START_TURN" });
+    expect(
+      getAvailableActions(
+        sorcerer.getSnapshot().context,
+        sorcerer.getSnapshot().tags,
+      ),
+    ).toContainEqual(
+      creatureToken({
+        type: "USE_INNATE_SORCERY",
+        cost: { bonusAction: true, charge: "innateSorcery" },
+        outcome: {
+          summary: "Use a bonus action to activate Innate Sorcery for 1 minute",
+        },
+      }),
+    );
+
+    const innateSorceryRequest = expectRequest(
+      resolveAction(
+        sorcerer.getSnapshot().context,
+        sorcerer.getSnapshot().tags,
+        creatureResolved({ type: "USE_INNATE_SORCERY" }),
+      ),
+    );
+    const innateSorceryFinalized = finalizeResolution(
+      innateSorceryRequest,
+      { runtime: "none" },
+      sorcerer.getSnapshot().context,
+    );
+    expect(innateSorceryFinalized).toEqual({
+      ok: true,
+      event: { type: "USE_INNATE_SORCERY" },
+      outcome: "Use a bonus action to activate Innate Sorcery for 1 minute",
+    });
+    if (!innateSorceryFinalized.ok)
+      throw new Error("expected USE_INNATE_SORCERY finalization to succeed");
+    sorcerer.send(innateSorceryFinalized.event);
+    expect(
+      sorcerer.getSnapshot().context.classStates.sorcerer?.innateSorceryActive,
+    ).toBe(true);
+    expect(
+      sorcerer.getSnapshot().context.classStates.sorcerer?.innateSorceryCharges,
+    ).toBe(1);
+    expect(sorcerer.getSnapshot().context.bonusActionUsed).toBe(true);
+  });
+
   test("surfaces Wild Resurgence charge recovery only after Wild Shape charges are depleted", () => {
     const actor = makeActorWithInput(DRUID_5_INPUT);
     actor.send({ type: "ENTER_COMBAT" });
@@ -2046,6 +2141,7 @@ describe("available actions contract", () => {
       "CONVERT_POINTS_TO_SLOT",
       "USE_ARCANE_RECOVERY",
       "USE_METAMAGIC",
+      "USE_INNATE_SORCERY",
       "USE_SECOND_WIND",
       "USE_TIRELESS",
       "EXIT_COMBAT",
@@ -2062,6 +2158,7 @@ describe("available actions contract", () => {
       "CONVERT_POINTS_TO_SLOT",
       "USE_ARCANE_RECOVERY",
       "USE_METAMAGIC",
+      "USE_INNATE_SORCERY",
       "USE_SECOND_WIND",
       "EXIT_COMBAT",
     ]);

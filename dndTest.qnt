@@ -5904,13 +5904,16 @@ module dndTest::Impl {
     }
   }
 
-  /// Trace: Magical Cunning sets flag
+  /// Trace: Magical Cunning restores Pact Magic slots and sets flag
   run test_trace_magicalCunning = {
     init.then(
       all {
         state' = freshCreature(50),
         turnState' = FRESH_TURN,
-        spellSlots' = FRESH_SPELL_SLOTS,
+        spellSlots' = FRESH_SPELL_SLOTS
+          .with("pactSlotsMax", 2)
+          .with("pactSlotsCurrent", 0)
+          .with("pactSlotLevel", 3),
         turnPhase' = "acting",
         creatureKind' = PC, monsterStatBlock' = NULL_STAT_BLOCK,
         monsterResourceState' = FRESH_MONSTER_RESOURCES,
@@ -5923,6 +5926,7 @@ module dndTest::Impl {
     ).then(doUseMagicalCunning)
     .then(all {
       assert(warlockState.magicalCunningUsed == true),
+      assert(spellSlots.pactSlotsCurrent == 1),
       state' = state, turnState' = turnState, spellSlots' = spellSlots,
       turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,
       creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock,

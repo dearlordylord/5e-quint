@@ -1695,6 +1695,101 @@ describe("MCP server adapter", () => {
     ).not.toContain("USE_METAMAGIC");
   });
 
+  test("execute_action supports Warlock and Sorcerer creature suggested actions", () => {
+    const warlockHost = createDemoHost({
+      maxHp: 28,
+      warlockLevel: classLevel(13),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    handleToolCall(
+      warlockHost,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      warlockHost,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
+    warlockHost.actor.send({ type: "USE_ELDRITCH_SMITE" });
+    expect(warlockHost.actor.getSnapshot().context.pactSlotsCurrent).toBe(2);
+
+    const warlockAvailable = readPayload(
+      handleToolCall(warlockHost, "get_available_actions", {}),
+    );
+    expect(warlockAvailable.free).toContainEqual(
+      creatureToken({
+        type: "USE_MAGICAL_CUNNING",
+        cost: { charge: "magicalCunning" },
+        outcome: {
+          summary:
+            "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
+        },
+      }),
+    );
+
+    const magicalCunning = handleToolCall(
+      warlockHost,
+      "execute_action",
+      creatureResolved({ type: "USE_MAGICAL_CUNNING" }),
+    );
+    expect("isError" in magicalCunning).toBe(false);
+    const magicalCunningPayload = readPayload(magicalCunning);
+    expect(magicalCunningPayload.success).toBe(true);
+    expect(
+      magicalCunningPayload.state.classStates.warlock.magicalCunningUsed,
+    ).toBe(true);
+    expect(magicalCunningPayload.state.pactSlotsCurrent).toBe(3);
+
+    const sorcererHost = createDemoHost({
+      maxHp: 30,
+      sorcererLevel: classLevel(5),
+      knownMetamagicOptions: ["careful", "subtle"],
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    handleToolCall(
+      sorcererHost,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      sorcererHost,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
+
+    const sorcererAvailable = readPayload(
+      handleToolCall(sorcererHost, "get_available_actions", {}),
+    );
+    expect(sorcererAvailable.bonusAction).toContainEqual(
+      creatureToken({
+        type: "USE_INNATE_SORCERY",
+        cost: { bonusAction: true, charge: "innateSorcery" },
+        outcome: {
+          summary: "Use a bonus action to activate Innate Sorcery for 1 minute",
+        },
+      }),
+    );
+
+    const innateSorcery = handleToolCall(
+      sorcererHost,
+      "execute_action",
+      creatureResolved({ type: "USE_INNATE_SORCERY" }),
+    );
+    expect("isError" in innateSorcery).toBe(false);
+    const innateSorceryPayload = readPayload(innateSorcery);
+    expect(innateSorceryPayload.success).toBe(true);
+    expect(
+      innateSorceryPayload.state.classStates.sorcerer.innateSorceryActive,
+    ).toBe(true);
+    expect(
+      innateSorceryPayload.state.classStates.sorcerer.innateSorceryCharges,
+    ).toBe(1);
+    expect(innateSorceryPayload.state.bonusActionUsed).toBe(true);
+  });
+
   test("execute_action supports a dice-roll runtime action with USE_TIRELESS", () => {
     const host = createDemoHost({
       maxHp: 32,
@@ -2149,6 +2244,17 @@ describe("MCP server adapter", () => {
               ],
             },
             "type": "CONVERT_POINTS_TO_SLOT",
+          },
+          {
+            "cost": {
+              "bonusAction": true,
+              "charge": "innateSorcery",
+            },
+            "outcome": {
+              "summary": "Use a bonus action to activate Innate Sorcery for 1 minute",
+            },
+            "scope": "creature",
+            "type": "USE_INNATE_SORCERY",
           },
           {
             "cost": {

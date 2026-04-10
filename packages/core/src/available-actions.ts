@@ -80,7 +80,9 @@ export const RESOURCE_COST_CHARGES = [
   "channelDivinity",
   "focusPoint",
   "indomitable",
+  "innateSorcery",
   "layOnHandsPool",
+  "magicalCunning",
   "mysticArcanum",
   "naturesVeil",
   "rage",
@@ -156,6 +158,8 @@ export const SUPPORTED_ACTION_TYPES = [
   "USE_ARCANE_RECOVERY",
   "USE_OVERCHANNEL",
   "USE_METAMAGIC",
+  "USE_INNATE_SORCERY",
+  "USE_MAGICAL_CUNNING",
   "USE_MYSTIC_ARCANUM",
   "USE_SECOND_WIND",
   "USE_TIRELESS",
@@ -224,6 +228,8 @@ type TokenByType = {
   readonly USE_METAMAGIC: SimpleToken<"USE_METAMAGIC"> & {
     readonly option: Hole<MetamagicOption>;
   };
+  readonly USE_INNATE_SORCERY: SimpleToken<"USE_INNATE_SORCERY">;
+  readonly USE_MAGICAL_CUNNING: SimpleToken<"USE_MAGICAL_CUNNING">;
   readonly USE_MYSTIC_ARCANUM: SimpleToken<"USE_MYSTIC_ARCANUM"> & {
     readonly spellLevel: Hole<SpellSlotLevelValue>;
   };
@@ -464,6 +470,8 @@ type ResolvedTokenByType = {
     readonly type: "USE_METAMAGIC";
     readonly option: MetamagicOption;
   };
+  readonly USE_INNATE_SORCERY: { readonly type: "USE_INNATE_SORCERY" };
+  readonly USE_MAGICAL_CUNNING: { readonly type: "USE_MAGICAL_CUNNING" };
   readonly USE_MYSTIC_ARCANUM: {
     readonly type: "USE_MYSTIC_ARCANUM";
     readonly spellLevel: SpellSlotLevelValue;
@@ -780,6 +788,12 @@ const UseMetamagicResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_METAMAGIC"),
   option: MetamagicOptionSchema,
 });
+const UseInnateSorceryResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_INNATE_SORCERY"),
+});
+const UseMagicalCunningResolvedActionSchema = Schema.Struct({
+  type: Schema.Literal("USE_MAGICAL_CUNNING"),
+});
 const UseMysticArcanumResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_MYSTIC_ARCANUM"),
   spellLevel: SpellSlotLevel,
@@ -868,6 +882,8 @@ const SecondaryCreatureResolvedActionTokenSchema = Schema.Union(
   UseArcaneRecoveryResolvedActionSchema,
   UseOverchannelResolvedActionSchema,
   UseMetamagicResolvedActionSchema,
+  UseInnateSorceryResolvedActionSchema,
+  UseMagicalCunningResolvedActionSchema,
   UseMysticArcanumResolvedActionSchema,
   UseSecondWindResolvedActionSchema,
   UseTirelessResolvedActionSchema,
@@ -1613,6 +1629,30 @@ export type ResolutionRequest =
       readonly outcome: string;
       readonly runtime: "none";
       readonly event: Extract<DndEvent, { readonly type: "USE_METAMAGIC" }>;
+    }
+  | {
+      readonly token: Extract<
+        ResolvedActionToken,
+        { readonly type: "USE_INNATE_SORCERY" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        DndEvent,
+        { readonly type: "USE_INNATE_SORCERY" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        ResolvedActionToken,
+        { readonly type: "USE_MAGICAL_CUNNING" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        DndEvent,
+        { readonly type: "USE_MAGICAL_CUNNING" }
+      >;
     }
   | {
       readonly token: Extract<
@@ -2498,6 +2538,38 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
         },
       };
     },
+  },
+  USE_INNATE_SORCERY: {
+    buildToken: (context) => {
+      if (!guards.canInnateSorcery(guardArgs(context))) return null;
+      const sorcerer = context.classStates.sorcerer;
+      return {
+        type: "USE_INNATE_SORCERY",
+        cost: {
+          bonusAction: true,
+          charge:
+            sorcerer && sorcerer.innateSorceryCharges > 0
+              ? "innateSorcery"
+              : "sorceryPoints",
+        },
+        outcome: {
+          summary: "Use a bonus action to activate Innate Sorcery for 1 minute",
+        },
+      };
+    },
+  },
+  USE_MAGICAL_CUNNING: {
+    buildToken: (context) =>
+      guards.canMagicalCunning(guardArgs(context))
+        ? {
+            type: "USE_MAGICAL_CUNNING",
+            cost: { charge: "magicalCunning" },
+            outcome: {
+              summary:
+                "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
+            },
+          }
+        : null,
   },
   USE_MYSTIC_ARCANUM: {
     buildToken: (context) => {
@@ -4249,6 +4321,20 @@ export function resolveAction(
         event: { type: "USE_METAMAGIC", option: token.option },
       };
     }
+    case "USE_INNATE_SORCERY":
+      return {
+        token,
+        outcome: available.outcome.summary,
+        runtime: "none",
+        event: { type: "USE_INNATE_SORCERY" },
+      };
+    case "USE_MAGICAL_CUNNING":
+      return {
+        token,
+        outcome: available.outcome.summary,
+        runtime: "none",
+        event: { type: "USE_MAGICAL_CUNNING" },
+      };
     case "USE_MYSTIC_ARCANUM":
       if (!legalMysticArcanumLevels(context).includes(token.spellLevel)) {
         return {
