@@ -2,7 +2,12 @@
 
 ## Status
 
-Ready for implementation.
+Complete.
+
+Result:
+
+- Lane A: Fire Shield's melee-hit-within-5ft reactive payload now lives in Quint `ActiveEffect` state as `ReactiveEffectPayload`, `battle.qnt` has a matching after-damage reactive-effect action, and the MBT bridge maps and compares the payload.
+- Lane B: stale mechanical status docs now mark the rulewise DAG wrap-up complete. `dm-override` and `transcript-port-to-dnd` remain later product/MCP work.
 
 This is the final mechanical/rulewise DAG wrap-up before switching back to MCP/product work. It intentionally excludes:
 

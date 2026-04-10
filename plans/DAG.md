@@ -147,16 +147,16 @@ authoritative-d20-modifier-query-surface
 | `closed-modifier-algebra` | facility | complete | none | `archery-in-battle`, `two-weapon-fighting-style-in-battle` | Landed as narrow battle-owned concrete fields for Ranged-weapon attack-roll bonuses and Light-property extra-attack ability-modifier damage. Deliberately did not introduce a generic modifier registry or tag-driven system. |
 | `oa-path-vocabulary` | facility | complete | none | `movement-provocation-kind`, `reach-extends-oa-range` | Landed in [battle/DOMAIN.md](/workspace/typescript/dnd/battle/DOMAIN.md), [battle.qnt](/workspace/typescript/dnd/battle.qnt), and [battle-machine-actions-movement.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-movement.ts); geometry remains caller-owned by design |
 | `authoritative-d20-modifier-query-surface` | facility | complete | none | `armor-training-disadvantage` | Landed authoritative d20 modifier/disadvantage query ownership in machine query/types surfaces; keep here because downstream planning still references the seam |
-| `available-actions-main` | plan | active | none | `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-surface`, `after-damage-reaction-surface`, `runbook6-quint-parity`, `fire-shield-reactive-effect-payload-parity`, `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Do not schedule the umbrella directly; schedule the concrete slices below. Mechanical/rulewise action-surface wrap-up is now narrowed to Fire Shield active-effect parity; product/MCP work remains separate. |
+| `available-actions-main` | plan | active | none | `battle-basic-action-surface`, `battle-ready-action-surface`, `battle-ready-spell-surface`, `after-damage-reaction-surface`, `runbook6-quint-parity`, `fire-shield-reactive-effect-payload-parity`, `preview-execution`, `dm-override`, `transcript-port-to-dnd` | Source of truth: [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Do not schedule the umbrella directly; schedule the concrete slices below. Mechanical/rulewise action-surface work is complete; product/MCP work remains separate. |
 | `legendary-resistance-fallback` | batch | complete | none | additional battle interrupt breadth | Closed as a narrow AoE failed-save regression slice; no separate breadth batch remains to schedule here |
 | `battle-basic-action-surface` | candidate | complete | `available-actions-main` | unified projection/execution of `dash`, `disengage`, and `dodge` in battle scope | Landed in core available-actions and MCP with deterministic action-surface coverage |
 | `battle-ready-action-surface` | candidate | complete | `available-actions-main` | battle-scoped `READY`, `READY_PASS`, and `READY_RELEASE` action-surface support | Landed in core available-actions and MCP over the existing battle ready window; follow-up simplification can reduce registry boilerplate, but the runbook slice is closed |
 | `battle-ready-spell-payload-state` | facility | complete | `available-actions-main` | `battle-ready-spell-surface`, `runbook6-quint-parity` | TS battle state owns typed readyable-spell save/effect payloads for the modeled ready-spell slice; `runbook6-quint-parity` mirrored that ownership into `battle.qnt`. |
 | `battle-ready-spell-surface` | candidate | complete | `available-actions-main`, `battle-ready-spell-payload-state` | battle-scoped `READY_SPELL` and `READY_SPELL_RELEASE` action-surface support | Landed in core available-actions and MCP with per-spell tokens, slot-level choice holes, target holes, and battle-owned event finalization. |
-| `after-damage-trigger-state` | facility | complete | `available-actions-main` | `after-damage-reaction-surface`, `runbook6-quint-parity`, `fire-shield-reactive-effect-payload-parity` | TS battle state carries after-damage trigger qualifiers plus narrow reactive active-effect payloads. `battle.qnt` mirrors the attack-derived qualifier shape for Hellish Rebuke and Retaliation; Fire Shield active-effect reactive payload parity is now split into its own final mechanical node. |
+| `after-damage-trigger-state` | facility | complete | `available-actions-main` | `after-damage-reaction-surface`, `runbook6-quint-parity`, `fire-shield-reactive-effect-payload-parity` | TS battle state carries after-damage trigger qualifiers plus narrow reactive active-effect payloads. `battle.qnt` mirrors the attack-derived qualifier shape for Hellish Rebuke and Retaliation plus Fire Shield active-effect reactive payload ownership. |
 | `after-damage-reaction-surface` | candidate | complete | `available-actions-main`, `after-damage-trigger-state` | battle-scoped `PIAfterDamage` reaction discovery/execution such as Hellish Rebuke / Fire Shield / Retaliation | Landed in core available-actions and MCP for Hellish Rebuke, Retaliation, and Fire Shield from owned trigger/effect facts without adding a generic reaction registry. |
-| `runbook6-quint-parity` | batch | complete | `battle-ready-spell-payload-state`, `after-damage-trigger-state` | `fire-shield-reactive-effect-payload-parity` | Spec-first follow-up for Runbook 6. Ready-spell payload derivation and attack-derived Hellish Rebuke/Retaliation trigger qualifiers are mirrored in `battle.qnt`; the remaining narrower Fire Shield active-effect payload caveat is split into `fire-shield-reactive-effect-payload-parity`. |
-| `fire-shield-reactive-effect-payload-parity` | candidate | ready | `runbook6-quint-parity`, `effect-dependency-graph` | mechanical/rulewise available-actions wrap-up, later `dm-override` | Final mechanical parity node. Mirror TS-owned `ActiveEffect.reactivePayload` semantics for Fire Shield into `creature.qnt` / `battle.qnt` plus MBT bridge/tests so Fire Shield is not the last TS-only reactive effect rule. |
+| `runbook6-quint-parity` | batch | complete | `battle-ready-spell-payload-state`, `after-damage-trigger-state` | `fire-shield-reactive-effect-payload-parity` | Spec-first follow-up for Runbook 6. Ready-spell payload derivation and attack-derived Hellish Rebuke/Retaliation trigger qualifiers are mirrored in `battle.qnt`; the narrower Fire Shield active-effect payload caveat was closed by `fire-shield-reactive-effect-payload-parity`. |
+| `fire-shield-reactive-effect-payload-parity` | candidate | complete | `runbook6-quint-parity`, `effect-dependency-graph` | mechanical/rulewise available-actions wrap-up, later `dm-override` | Final mechanical parity node landed. `ActiveEffect.reactivePayload` semantics for Fire Shield are mirrored into `creature.qnt` / `battle.qnt` with MBT bridge/tests so Fire Shield is no longer TS-only reactive effect logic. |
 | `preview-execution` | batch | complete | `available-actions-main`, `resolve-commit-doctrine`, `first-class-consumption-model` | no-spend scripted action preview | Landed end to end in core and MCP; retain only because later descriptive-mode/transcript work still depends on the doctrine/model it consumed |
 | `dm-override` | plan | later | `available-actions-main`, `fire-shield-reactive-effect-payload-parity`, `resolve-commit-doctrine`, `first-class-consumption-model` | descriptive-mode legality warnings | Phase 6 in [available-actions.md](/workspace/typescript/dnd/plans/available-actions.md). Product/MCP-tail work; do not include in the final mechanical/rulewise DAG wrap-up. |
 | `transcript-port-to-dnd` | plan | later | `dm-override`, `resolve-commit-doctrine` | end-to-end audio/transcript/action loop | Hellenvald demo + tail facilities already exist; port is explicitly out of scope until we switch back to transcript/MCP product work. |
@@ -198,12 +198,7 @@ authoritative-d20-modifier-query-surface
 
 ## Ready Queue
 
-If scheduling strictly by current value and low dependency risk, outside already-complete runbooks:
-
-- [DAG_RUNBOOK_8.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_8.md):
-  - `fire-shield-reactive-effect-payload-parity`
-  - mechanical/rulewise DAG closure pass
-- Runbook 7 is complete. No Runbook 7 nodes remain in the ready queue.
+No mechanical/rulewise implementation nodes remain in the ready queue. Runbooks 7 and 8 are complete.
 
 ## Research Queue
 
@@ -292,7 +287,7 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 
 ### `after-damage-trigger-state`
 
-- classification: `complete / TS+MCP landed; Quint attack-trigger parity mirrored`
+- classification: `complete / TS+MCP landed; Quint attack-trigger and Fire Shield payload parity mirrored`
 - owner_layer: battle-owned after-damage reaction trigger facts
 - read_first:
   - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
@@ -303,11 +298,11 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 - execution_goal:
   - landed the smallest owned trigger qualifiers and stored reactive effect choice facts needed to surface `PIAfterDamage` reactions honestly without inventing a generic registry
   - Quint parity: `battle.qnt` now carries explicit source-visible/source-within-5ft/source-within-60ft/melee-hit trigger facts for attack-derived after-damage windows used by Hellish Rebuke and Retaliation
-  - follow-up: `fire-shield-reactive-effect-payload-parity` mirrors Fire Shield's active-effect reactive payload in `creature.qnt`/`battle.qnt`
+  - Quint parity: `creature.qnt` / `battle.qnt` now mirror Fire Shield's active-effect reactive payload
 
 ### `runbook6-quint-parity`
 
-- classification: `complete / spec parity except split Fire Shield payload node`
+- classification: `complete / spec parity landed`
 - owner_layer: `battle.qnt` authoritative combat spec plus MBT bridge
 - read_first:
   - [DAG_RUNBOOK_6.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_6.md)
@@ -317,11 +312,11 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
 - execution_goal:
   - complete: Runbook 6's TS/MCP readyable spell payload ownership is mirrored into Quint so `BATTLE_READY_SPELL` uses modeled spell payload facts instead of caller-fabricated save/effect parameters at the spec layer
   - complete: Runbook 6's attack-derived after-damage trigger qualifiers are mirrored into Quint and MBT bridge/tests for Hellish Rebuke and Retaliation
-  - split follow-up: `fire-shield-reactive-effect-payload-parity`
+  - complete: the split Fire Shield active-effect payload follow-up landed in Runbook 8
 
 ### `fire-shield-reactive-effect-payload-parity`
 
-- classification: `ready / final mechanical parity`
+- classification: `complete / final mechanical parity`
 - owner_layer: `creature.qnt` active-effect schema, `battle.qnt` after-damage reaction semantics, MBT bridge
 - read_first:
   - [DAG_RUNBOOK_8.md](/workspace/typescript/dnd/plans/DAG_RUNBOOK_8.md)
@@ -331,11 +326,11 @@ Keep these compact and live. Completed historical handoffs belong in runbooks, n
   - [packages/core/src/types.ts](/workspace/typescript/dnd/packages/core/src/types.ts)
   - [packages/core/src/battle-machine-actions-attack.ts](/workspace/typescript/dnd/packages/core/src/battle-machine-actions-attack.ts)
   - [packages/core/src/available-actions.ts](/workspace/typescript/dnd/packages/core/src/available-actions.ts)
-- execution_goal:
-  - add the narrow Quint active-effect payload equivalent for Fire Shield's warm/chill retaliation damage type and melee-hit-within-5ft trigger
-  - add a Quint after-damage reactive-effect action equivalent to the TS `BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT` path, or refactor the existing after-damage spell reaction only if that preserves the no-spell-name-inference rule
-  - update MBT mapping/tests so Fire Shield is no longer TS-only reactive-effect logic
-  - update stale feature/status docs after parity lands
+- result:
+  - added the narrow Quint active-effect payload equivalent for Fire Shield's warm/chill retaliation damage type and melee-hit-within-5ft trigger
+  - added a Quint after-damage reactive-effect action equivalent to the TS `BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT` path without spell-name inference
+  - updated MBT mapping/tests so Fire Shield is no longer TS-only reactive-effect logic
+  - updated stale feature/status docs after parity landed
 
 ### `fighting-styles-in-battle`
 

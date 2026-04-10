@@ -836,19 +836,27 @@ module creature {
   /// SRD has two distinct expiry points — see PLAN.md timing analysis.
   type ExpiryPhase = AtStartOfTurn | AtEndOfTurn
 
+  type OneShotRiderTrigger = NoOneShotRider | ORNextMeleeWeaponHit | ORNextWeaponHit
+
+  /// Reactive payload on an active effect: automatic retaliation when triggered.
+  /// SRD 5.2.1 Fire Shield: creature within 5 ft hits shielded creature with melee attack roll →
+  /// 2d8 Fire (warm) or 2d8 Cold (chill). The payload stores the trigger and damage type.
+  type ReactiveEffectPayload =
+    | NoReactivePayload
+    | MeleeHitWithin5ft(DamageType)
+
   /// Timed effect on a creature (spell, ability, etc.) with duration in turns.
   /// Instant spells (Fireball, Healing Word) don't create an ActiveEffect —
   /// they just apply damage/healing/conditions directly.
-  /// Core spec owns lifecycle only; spell-specific behavior lives in caller.
+  /// Core spec owns lifecycle plus narrow persistent payloads that drive battle timing.
   type ActiveEffect = {
     spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase, casterId: str,
     parentSpellId: str, parentCasterId: str,
     grantedConditions: Set[Condition],
     grantedResistances: Set[DamageType], grantedVulnerabilities: Set[DamageType], grantedImmunities: Set[DamageType],
     consumeOnQualifiedHit: OneShotRiderTrigger,
+    reactivePayload: ReactiveEffectPayload,
   }
-
-  type OneShotRiderTrigger = NoOneShotRider | ORNextMeleeWeaponHit | ORNextWeaponHit
 
   /// End-of-turn save: caller provides spell, result, and conditions to remove on success.
   type EndOfTurnSave = { spellId: str, saveSucceeded: bool, conditionsToRemove: Set[Condition] }
@@ -895,7 +903,7 @@ module creature {
     unconscious: bool,
     incapacitatedSources: Set[IncapSource],
     hitDiceRemaining: ClassName -> int,  // per-class remaining HD (total per class = class level)
-    activeEffects: Set[ActiveEffect],   // timed effects (spells, abilities); lifecycle only
+    activeEffects: Set[ActiveEffect],   // timed effects (spells, abilities) with lifecycle and owned payloads
   }
 
   pure val ALL_DAMAGE_TYPES: Set[DamageType] =
@@ -936,12 +944,22 @@ module creature {
     s.with("maxHpReduction", intMax(0, s.maxHpReduction - intMax(0, amount)))
 
   // -- 8.1 Active Effect Lifecycle --
-  // Core owns add/remove/decrement/expire. Spell-specific behavior is caller's job.
+  // Core owns add/remove/decrement/expire plus narrow persistent payload metadata.
 
   /// Add an effect, replacing any existing with the same spellId (no stacking).
   pure def pAddEffect(
     effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
     grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
+  ): Set[ActiveEffect] =
+    pAddEffectWithReactivePayload(
+      effects, spellId, durationTurns, expiresAt, casterId,
+      grantedC, grantedR, grantedV, grantedI, NoReactivePayload
+    )
+
+  pure def pAddEffectWithReactivePayload(
+    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType],
+    reactivePayload: ReactiveEffectPayload
   ): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId).union(Set({
       spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
@@ -949,6 +967,7 @@ module creature {
       grantedConditions: grantedC,
       grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
       consumeOnQualifiedHit: NoOneShotRider,
+      reactivePayload: reactivePayload,
     }))
 
   /// Add an effect that depends on a battle-owned parent effect identity.
@@ -963,6 +982,7 @@ module creature {
       grantedConditions: grantedC,
       grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
       consumeOnQualifiedHit: NoOneShotRider,
+      reactivePayload: NoReactivePayload,
     }))
 
   /// Convenience wrapper: add effect with no granted R/V/I.

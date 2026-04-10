@@ -37,6 +37,7 @@ import {
   logMbtSeed,
   mapAbility,
   mapDamageType,
+  normalizeReactivePayload,
   parseDamageTypeSet,
   parseItfSize,
   QUINT_CONDITION_MAP,
@@ -181,9 +182,12 @@ interface NormalizedBattleCreature {
     turnsRemaining: number;
     expiresAt: string;
     casterId: string;
+    parentSpellId: string;
+    parentCasterId: string;
     grantedResistances: ReadonlySet<string>;
     grantedVulnerabilities: ReadonlySet<string>;
     grantedImmunities: ReadonlySet<string>;
+    reactivePayload: string;
   }>;
   movementRemaining: number;
   effectiveSpeed: number;
@@ -365,9 +369,12 @@ function xstateCreatureToNormalized(
         turnsRemaining: ae.turnsRemaining,
         expiresAt: ae.expiresAt,
         casterId: ae.casterId,
+        parentSpellId: ae.parentSpellId ?? "",
+        parentCasterId: ae.parentCasterId ?? "",
         grantedResistances: ae.grantedResistances ?? EMPTY_STRING_SET,
         grantedVulnerabilities: ae.grantedVulnerabilities ?? EMPTY_STRING_SET,
         grantedImmunities: ae.grantedImmunities ?? EMPTY_STRING_SET,
+        reactivePayload: normalizeReactivePayload(ae.reactivePayload),
       }))
       .sort((a, b) => a.spellId.localeCompare(b.spellId)),
     movementRemaining: c.movementRemaining,
@@ -509,6 +516,10 @@ const battleDriverSchema = {
     reactionDmg: OI,
     reactionSaved: OB,
     reactionDt: OV.optional(),
+    reactorId: OS,
+  },
+  bAfterDamageReactiveEffect: {
+    reactionDmg: OI,
     reactorId: OS,
   },
   bAfterDamageRetaliation: {
@@ -945,6 +956,20 @@ function createBattleMachineDriver() {
           reactionDmg: p(picks, "reactionDmg", 10),
           reactionSaved: pb(picks, "reactionSaved", false),
           reactionDt: mapDamageType(ps(picks, "reactionDt", "Fire")),
+        });
+      },
+      bAfterDamageReactiveEffect: (picks: Record<string, unknown>) => {
+        const reactorId = pcn(picks, "reactorId");
+        const reactor =
+          reactorId == null ? null : ctx().creatures.get(reactorId);
+        const payload = reactor?.activeEffects.find(
+          (effect) => effect.reactivePayload?.trigger === "meleeHitWithin5ft",
+        )?.reactivePayload;
+        send({
+          type: "BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT",
+          reactorId,
+          reactionDmg: p(picks, "reactionDmg", 8),
+          reactionDt: payload?.damageType ?? "fire",
         });
       },
       bAfterDamageRetaliation: (picks: Record<string, unknown>) => {

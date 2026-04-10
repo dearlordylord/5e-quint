@@ -22,6 +22,7 @@ import type {
   IncapSource,
   MovementFeet,
   QualifiedPhysicalBypass,
+  ReactiveEffectPayload,
   ResourceCount,
   ShoveChoice,
   Size,
@@ -367,6 +368,7 @@ export type DndEvent =
       readonly consumeOnQualifiedHit?: {
         readonly trigger: "nextWeaponHit" | "nextMeleeWeaponHit";
       };
+      readonly reactivePayload?: ReactiveEffectPayload;
     }
   | { readonly type: "REMOVE_EFFECT"; readonly spellId: SpellId }
   | { readonly type: "BREAK_CONCENTRATION" }

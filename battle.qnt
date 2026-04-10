@@ -1964,6 +1964,49 @@ module battle {
     }
   }
 
+  // Fire Shield after-damage reactive effect (automatic, no reaction spent).
+  // SRD 5.2.1: "whenever a creature within 5 feet of you hits you with a melee attack roll,
+  // the shield erupts with flame." Damage type comes from the active effect's reactive payload.
+  action bAfterDamageReactiveEffect = {
+    nondet reactionDmg = 1.to(16).oneOf()
+    match bPhase {
+      | BPAwaitingReaction(ctx) =>
+        match ctx.interrupt {
+          | PIAfterDamage(ad) =>
+            val remaining = ctx.eligible.exclude(ctx.offered)
+            if (remaining.size() == 0) {
+              all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+            } else {
+              nondet reactorId = remaining.oneOf()
+              val reactor = bCreatures.get(reactorId)
+              val payloads = reactor.creature.activeEffects.map(e => e.reactivePayload)
+                .filter(payload => match payload {
+                  | MeleeHitWithin5ft(dt) => dt == Fire or dt == Cold
+                  | _ => false
+                })
+              nondet payload = payloads.oneOf()
+              match payload {
+                | MeleeHitWithin5ft(dt) =>
+                  val result = applyDamageWithAfterReactions(
+                    bCreatures, ad.damageSource, reactorId,
+                    reactionDmg, dt, Set(), false, ad.returnTo, false
+                  )
+                  all {
+                    reactorId == ad.damagedCreature,
+                    payloads.size() > 0,
+                    ad.sourceWithin5ftOfDamagedCreature,
+                    ad.sourceHitWithMeleeAttackRoll,
+                    bCreatures' = result.creatures, bPhase' = result.phase, keepBattle,
+                  }
+                | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+              }
+            }
+          | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
   // --- Save spell transaction (B2) ---
   // Caster casts a save-or-suck spell on a target.
   // Flow: cast → Counterspell interrupt → resolve save → save-failed interrupt → apply effects.
@@ -3636,7 +3679,7 @@ module battle {
         | PIAttackHit(_) => any { bResolveHitReaction, }
         | PIAttackDamage(_) => any { bResolveDmgReaction, }
         | PIAfterDamage(_) => any {
-            bAfterDamageDecline, bAfterDamageSpellReaction, bAfterDamageRetaliation,
+            bAfterDamageDecline, bAfterDamageSpellReaction, bAfterDamageRetaliation, bAfterDamageReactiveEffect,
           }
         | PISpellCast(_) => any { bResolveCounterspell, }
         | _ => any { bResolveSaveFailedReaction, }

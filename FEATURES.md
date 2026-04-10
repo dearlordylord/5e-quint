@@ -109,9 +109,9 @@ Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** 
 | Cutting Words (-Nd12 from roll) | Attack hits | Battle | Done |
 | Uncanny Dodge (halve damage) | Attack damages | Battle | Done |
 | Deflect Attacks (flat reduction) | Attack damages | Battle | Done |
-| Hellish Rebuke (save-for-half) | Damage taken | Battle | Planned (PIAfterDamage facility done, reaction variant not wired) |
-| Fire Shield (retaliation) | Damage taken | Battle | Planned (PIAfterDamage facility done, reaction variant not wired) |
-| Retaliation attack | Damage taken | Battle | Planned (PIAfterDamage facility done, reaction variant not wired) |
+| Hellish Rebuke (save-for-half) | Damage taken | Battle | Done (Quint + TS + MBT parity) |
+| Fire Shield (retaliation) | Damage taken | Battle | Done (Quint reactive payload + TS + MBT parity) |
+| Retaliation attack | Damage taken | Battle | Done (Quint + TS + MBT parity) |
 | Counterspell (chain) | Spell being cast | Battle | Done |
 | Legendary Resistance (flip save) | Save failed | Battle | Done |
 | Opportunity Attack | Leaves reach | Battle | Done |

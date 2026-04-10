@@ -559,6 +559,7 @@ export const creatureMachine = setup({
             blocksOpportunityAttacks: ev.blocksOpportunityAttacks,
             speedDeltaFeet: ev.speedDeltaFeet,
             consumeOnQualifiedHit: ev.consumeOnQualifiedHit,
+            reactivePayload: ev.reactivePayload,
           },
         ),
       };

@@ -211,6 +211,39 @@ function initDamageReactionBattle({
   return actor;
 }
 
+function initFireShieldBattle(retaliationDamageType: "fire" | "cold") {
+  const actor = createActor(battleMachine);
+  actor.start();
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 10,
+        activeEffects: [
+          {
+            spellId: spellId("fire_shield"),
+            turnsRemaining: 10,
+            expiresAt: "end",
+            casterId: CreatureId("B"),
+            grantedResistances: new Set(
+              retaliationDamageType === "fire" ? ["cold"] : ["fire"],
+            ),
+            reactivePayload: {
+              trigger: "meleeHitWithin5ft",
+              damageType: retaliationDamageType,
+            },
+          },
+        ],
+      },
+    ],
+  });
+  return actor;
+}
+
 function initTwoCasterBattle() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -963,6 +996,64 @@ describe("battle rules scenario regressions", () => {
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackDamage");
     expect(creature(actor, "B").reactionAvailable).toBe(true);
     expect(creature(actor, "B").hp).toBe(20);
+  });
+
+  it("runbook_8: Fire Shield warm payload retaliates with fire damage from the active effect", () => {
+    const actor = initFireShieldBattle("fire");
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage");
+    send(actor, {
+      type: "BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT",
+      reactorId: CreatureId("B"),
+      reactionDmg: 9,
+      reactionDt: "fire",
+    });
+
+    expect(creature(actor, "A").hp).toBe(11);
+    expect(creature(actor, "B").hp).toBe(16);
+  });
+
+  it("runbook_8: Fire Shield chill payload retaliates with cold damage from the active effect", () => {
+    const actor = initFireShieldBattle("cold");
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 4,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage");
+    send(actor, {
+      type: "BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT",
+      reactorId: CreatureId("B"),
+      reactionDmg: 9,
+      reactionDt: "cold",
+    });
+
+    expect(creature(actor, "A").hp).toBe(11);
+    expect(creature(actor, "B").hp).toBe(16);
   });
 
   it("phase_2: Uncanny Dodge halves the damage against a visible attack and spends the reaction", () => {

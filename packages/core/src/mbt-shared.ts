@@ -16,6 +16,7 @@ import type {
   CreatureKind,
   DamageType,
   IncapSource,
+  ReactiveEffectPayload,
   ShoveChoice,
   Size,
 } from "#/types.ts";
@@ -196,6 +197,28 @@ export function mapDamageType(s: string): DamageType {
   return QUINT_DAMAGE_TYPE_MAP[s] ?? "bludgeoning";
 }
 
+/** Parse a Quint ReactiveEffectPayload variant into a normalized string. */
+export function parseReactivePayload(raw: unknown): string {
+  if (raw == null) return "none";
+  const tag = variantToString(raw);
+  if (tag === "NoReactivePayload") return "none";
+  if (tag !== "MeleeHitWithin5ft") return "none";
+  const value =
+    typeof raw === "object" && raw !== null && "value" in raw
+      ? (raw as Record<string, unknown>)["value"]
+      : undefined;
+  if (value == null) return "meleeHitWithin5ft:unknown";
+  return `meleeHitWithin5ft:${mapDamageType(variantToString(value))}`;
+}
+
+/** Normalize a TS-side ReactiveEffectPayload to the same string format as parseReactivePayload. */
+export function normalizeReactivePayload(
+  payload: ReactiveEffectPayload | undefined | null,
+): string {
+  if (payload == null) return "none";
+  return `${payload.trigger}:${payload.damageType}`;
+}
+
 const QUINT_ABILITY_MAP: Record<string, Ability> = {
   Str: "str",
   Dex: "dex",
@@ -358,6 +381,7 @@ export const QuintCreatureState = z.object({
       grantedResistances: ReadonlySet<string>;
       grantedVulnerabilities: ReadonlySet<string>;
       grantedImmunities: ReadonlySet<string>;
+      reactivePayload: string;
     }> = [];
     if (raw instanceof Set) {
       for (const e of raw) {
@@ -372,6 +396,7 @@ export const QuintCreatureState = z.object({
           grantedResistances: parseDamageTypeSet(r.grantedResistances),
           grantedVulnerabilities: parseDamageTypeSet(r.grantedVulnerabilities),
           grantedImmunities: parseDamageTypeSet(r.grantedImmunities),
+          reactivePayload: parseReactivePayload(r.reactivePayload),
         });
       }
     }
@@ -614,6 +639,7 @@ export interface NormalizedState {
     grantedResistances: ReadonlySet<string>;
     grantedVulnerabilities: ReadonlySet<string>;
     grantedImmunities: ReadonlySet<string>;
+    reactivePayload: string;
   }>;
   // TurnState
   readonly movementRemaining: number;
@@ -886,6 +912,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
         grantedResistances: ae.grantedResistances ?? EMPTY_STRING_SET,
         grantedVulnerabilities: ae.grantedVulnerabilities ?? EMPTY_STRING_SET,
         grantedImmunities: ae.grantedImmunities ?? EMPTY_STRING_SET,
+        reactivePayload: normalizeReactivePayload(ae.reactivePayload),
       }))
       .sort((a, b) => a.spellId.localeCompare(b.spellId)),
     movementRemaining: c.movementRemaining,
@@ -1113,6 +1140,7 @@ export function activeEffectsEqual(
       a[i].casterId !== b[i].casterId ||
       a[i].parentSpellId !== b[i].parentSpellId ||
       a[i].parentCasterId !== b[i].parentCasterId ||
+      a[i].reactivePayload !== b[i].reactivePayload ||
       !setsEqual(a[i].grantedResistances, b[i].grantedResistances) ||
       !setsEqual(a[i].grantedVulnerabilities, b[i].grantedVulnerabilities) ||
       !setsEqual(a[i].grantedImmunities, b[i].grantedImmunities)

@@ -344,6 +344,10 @@ const battleDriverSchema = {
     reactionDt: OV.optional(),
     reactorId: OS,
   },
+  bAfterDamageReactiveEffect: {
+    reactionDmg: OI,
+    reactorId: OS,
+  },
   bAfterDamageRetaliation: {
     retAtkRoll: OI,
     retDmg: OI,
@@ -1060,7 +1064,41 @@ function createBattleProjectionDriver() {
       }
     }
 
-    /** Track after-damage context for Hellish Rebuke / Retaliation */
+    function handleBAfterDamageReactiveEffect(
+      picks: ReadonlyMap<string, unknown>,
+    ) {
+      const reactorId = pickString(picks, "reactorId");
+      if (!reactorId) {
+        // remaining == 0: after-damage window closed
+        pendingAfterDamage = null;
+        return;
+      }
+
+      const reactorSnap = getSnap(reactorId);
+      const payload = reactorSnap.context.activeEffects.find(
+        (effect) => effect.reactivePayload?.trigger === "meleeHitWithin5ft",
+      )?.reactivePayload;
+      if (!payload || !pendingAfterDamage) {
+        return;
+      }
+
+      const reactionDmg = pickBigInt(picks, "reactionDmg") ?? 8;
+      const target = pendingAfterDamage.damageSource;
+      send(target, {
+        type: "TAKE_DAMAGE",
+        amount: reactionDmg,
+        damageType: payload.damageType,
+        ...EMPTY_DAMAGE_MODS,
+        isCritical: false,
+      });
+      pendingAfterDamage = {
+        damageSource: reactorId,
+        damagedCreature: target,
+      };
+      syncProjectedGrapples();
+    }
+
+    /** Track after-damage context for Hellish Rebuke / Retaliation / Fire Shield */
     let pendingAfterDamage: {
       damageSource: string;
       damagedCreature: string;
@@ -2054,6 +2092,10 @@ function createBattleProjectionDriver() {
       bAfterDamageSpellReaction: (p: Record<string, unknown>) => {
         before("bAfterDamageSpellReaction");
         handleBAfterDamageSpellReaction(toMap(p));
+      },
+      bAfterDamageReactiveEffect: (p: Record<string, unknown>) => {
+        before("bAfterDamageReactiveEffect");
+        handleBAfterDamageReactiveEffect(toMap(p));
       },
       bAfterDamageRetaliation: (p: Record<string, unknown>) => {
         before("bAfterDamageRetaliation");
