@@ -89,6 +89,14 @@ export interface MonsterAttack {
   readonly damageAmount: number; // average damage
   readonly damageType: DamageType;
   readonly isRanged: boolean;
+  /**
+   * Optional disambiguation for dual-mode attacks such as
+   * "Melee or Ranged Attack Roll".
+   *
+   * When omitted, existing consumers should continue to infer mode from the
+   * legacy `isRanged`/reach/range fields.
+   */
+  readonly attackMode?: "melee" | "ranged" | "meleeOrRanged";
 }
 
 // --- Multiattack Slot ---
@@ -133,6 +141,8 @@ export type Skill = (typeof SKILLS)[number];
 export interface StatBlock {
   readonly name: string;
   readonly creatureType: CreatureType;
+  /** SRD descriptive tags that follow the creature type, e.g. "(Goblinoid)". */
+  readonly descriptiveTags?: ReadonlyArray<string>;
   readonly creatureSize: Size;
   readonly ac: ArmorClass;
   readonly initiativeMod: AbilityModifier;
@@ -151,6 +161,9 @@ export interface StatBlock {
   readonly conditionImmunities: ReadonlySet<Condition>;
   readonly exhaustionImmune: boolean;
   readonly senses: Readonly<Record<SenseType, number>>;
+  readonly passivePerception?: number;
+  readonly languages?: ReadonlyArray<string>;
+  readonly gear?: ReadonlyArray<string>;
   readonly attacks: Readonly<Record<string, MonsterAttack>>;
   readonly multiattack: ReadonlyArray<MultiattackSlot>;
   // Phase L: Legendary / Recharge / X-Day

@@ -7,9 +7,10 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { createDemoHost, handleToolCall, toolDefinitions } from "./server.ts";
+import { createDemoHost, toolDefinitions } from "./server.ts";
+import { createSessionRouter } from "./session-router.ts";
 
-const host = createDemoHost();
+const router = createSessionRouter(createDemoHost());
 
 const server = new Server(
   { name: "dnd-available-actions", version: "0.1.0" },
@@ -21,7 +22,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) =>
-  handleToolCall(host, request.params.name, request.params.arguments),
+  router.handleToolCall(request.params.name, request.params.arguments),
 );
 
 const program = Effect.gen(function* () {

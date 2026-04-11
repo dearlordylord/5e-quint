@@ -785,6 +785,7 @@ export function freshCreature(
     rechargeAvailable: {},
     dailyUsesRemaining: {},
     creatureKind: kind,
+    creatureSize: "medium",
     rogueLevel: 0,
     monkLevel: 0,
     dexMod: 0,

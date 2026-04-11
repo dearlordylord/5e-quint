@@ -95,7 +95,7 @@ export function canAct(ctx: DndContext): boolean {
   return !isIncapacitated(ctx);
 }
 
-/** Can speak. Stunned creatures can speak falteringly (returns true). Matches Quint pCanSpeak. */
+/** Can speak. Matches Quint pCanSpeak and SRD 5.2.1 Incapacitated speechlessness. */
 export function canSpeak(ctx: DndContext): boolean {
   return !hasConditionConsequence(ctx, "blocksSpeech");
 }

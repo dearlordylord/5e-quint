@@ -39,7 +39,6 @@ import {
   mapDamageType,
   normalizeReactivePayload,
   parseDamageTypeSet,
-  parseItfSize,
   QUINT_CONDITION_MAP,
   QuintCreatureState,
   QuintMonsterResourceState,
@@ -82,6 +81,13 @@ const QuintCombatant = z.object({
   turn: QuintTurnState,
   slots: QuintSpellSlotState,
   kind: z.any().transform(variantToString),
+  creatureSize: z
+    .unknown()
+    .optional()
+    .transform((raw): Size => {
+      if (raw === undefined) return "medium";
+      return ITFSize.parse(raw);
+    }),
   monsterResources: QuintMonsterResourceState,
   statBlock: z.any(),
   rogueLevel: z.bigint(),
@@ -218,6 +224,7 @@ interface NormalizedBattleCreature {
   rechargeAvailable: Readonly<Record<string, boolean>>;
   dailyUsesRemaining: Readonly<Record<string, number>>;
   creatureKind: string;
+  creatureSize: string;
   hasEvasion: boolean;
   saveMiscBonus: number;
   critRange: number;
@@ -248,6 +255,7 @@ function quintCombatantToNormalized(
   const t = c.turn;
   const ss = c.slots;
   return {
+    creatureSize: c.creatureSize,
     hp: Number(s.hp),
     maxHp: Number(s.maxHp),
     tempHp: Number(s.tempHp),
@@ -339,6 +347,7 @@ function xstateCreatureToNormalized(
   c: BattleCreatureState,
 ): NormalizedBattleCreature {
   return {
+    creatureSize: c.creatureSize,
     hp: c.hp,
     maxHp: c.maxHp,
     tempHp: c.tempHp,
@@ -626,8 +635,6 @@ const battleDriverSchema = {
   bDodge: {},
   bGrapple: {
     targetId: OS,
-    attackerSize: ITFSize,
-    targetSize: ITFSize,
     targetSaveFailed: OB,
   },
   bReleaseGrapple: {},
@@ -724,13 +731,6 @@ function pb(
 ): boolean {
   const v = picks[key];
   return typeof v === "boolean" ? v : fallback;
-}
-function psz(
-  picks: Record<string, unknown>,
-  key: string,
-  fallback: Size,
-): Size {
-  return parseItfSize(picks[key], fallback);
 }
 function pcs(
   picks: Record<string, unknown>,
@@ -1159,8 +1159,6 @@ function createBattleMachineDriver() {
         send({
           type: "BATTLE_GRAPPLE",
           targetId: pc(picks, "targetId", ""),
-          attackerSize: psz(picks, "attackerSize", "medium"),
-          targetSize: psz(picks, "targetSize", "medium"),
           targetSaveFailed: pb(picks, "targetSaveFailed", false),
         });
       },

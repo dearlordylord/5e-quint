@@ -60,6 +60,7 @@ module battle {
     turn: TurnState,
     slots: SpellSlotState,
     kind: CreatureKind,
+    creatureSize: Size,
     monsterResources: MonsterResourceState,  // legendary actions/resistances (B10)
     statBlock: StatBlock,                    // stat block for reading LA uses, recharge, etc. (B12)
     rogueLevel: int,                         // 0 = not a rogue (B11)
@@ -547,6 +548,7 @@ module battle {
     turn: FRESH_TURN,
     slots: FRESH_SPELL_SLOTS,
     kind: k,
+    creatureSize: Medium,
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0, dexMod: 0,
@@ -599,6 +601,7 @@ module battle {
       concentrationSpellId: "",
     },
     kind: k,
+    creatureSize: Medium,
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0, dexMod: 0,
@@ -650,6 +653,7 @@ module battle {
         .with("effectiveSpeed", walkSpeed),
       slots: FRESH_SPELL_SLOTS,
       kind: Monster,
+      creatureSize: sb.creatureSize,
       monsterResources: EMPTY_MONSTER_RESOURCES
         .with("legendaryActionsRemaining", sb.legendaryActionUses)
         .with("legendaryResistancesRemaining", sb.legendaryResistanceUses),
@@ -3332,8 +3336,6 @@ module battle {
     val allIds = bCreatures.keys()
     val ac = bCreatures.get(activeId)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
-    nondet attackerSize = Set(Tiny, Small, Medium, Large, Huge, Gargantuan).oneOf()
-    nondet targetSize = Set(Tiny, Small, Medium, Large, Huge, Gargantuan).oneOf()
     nondet targetSaveFailed = Bool.oneOf()
     val tc = bCreatures.get(targetId)
     all {
@@ -3351,9 +3353,9 @@ module battle {
       else
         pUseAction(ac.turn, ac.creature, AAttack)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
-      val success = pGrapple(attackerSize, targetSize, tc.creature, targetSaveFailed, true).success
+      val success = pGrapple(ac.creatureSize, tc.creatureSize, tc.creature, targetSaveFailed, true).success
       val cs2 = if (success)
-        linkBattleGrapple(cs1, activeId, targetId, pTwoSizesSmaller(attackerSize, targetSize), activeId)
+        linkBattleGrapple(cs1, activeId, targetId, pTwoSizesSmaller(ac.creatureSize, tc.creatureSize), activeId)
       else cs1
       all {
         bCreatures' = cs2,

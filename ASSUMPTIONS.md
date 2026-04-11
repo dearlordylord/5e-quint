@@ -11,6 +11,7 @@ Each entry records the assumption, rules justification, and what changed in both
 **Rules basis (PHB Ch. 10, Ch. 12):** Casting a spell requires an action or bonus action. The Incapacitated condition (PHB Ch. 12) prevents taking actions or reactions. Multiple conditions impose Incapacitated: Unconscious (from dropping to 0 HP), Paralyzed, Petrified, Stunned, and direct Incapacitated. Any of these should block slot expenditure.
 
 **Changes:**
+
 - `creature.qnt`: `doExpendSlot` and `doExpendPactSlot` guarded by `isConscious(state) and pCanAct(state)`
 - `machine-states.ts`: `EXPEND_SLOT` and `EXPEND_PACT_SLOT` given `canExpendSlot` guard
 - `machine.ts`: added `canExpendSlot` guard (`c.hp > 0 && !isIncapacitated(c)`)
@@ -30,6 +31,7 @@ Each entry records the assumption, rules justification, and what changed in both
 **Rules basis:** The SRD 5.2.1 formally names only two of these states. "Stable" (Rules-Glossary): "A creature is Stable if it has 0 Hit Points but isn't required to make Death Saving Throws." "Dead" (Rules-Glossary): "A dead creature has no Hit Points and can't regain them unless it is first revived by magic." The SRD has no formal name for "hp > 0" or for "at 0 HP, making Death Saving Throws." Our names `alive` and `dying.unstable` are modeling inventions. We avoid "conscious" as a state name because it clashes with the Unconscious condition — a creature can be `alive` (hp > 0) while having the Unconscious condition (e.g., after being knocked out).
 
 **Changes:**
+
 - `machine-states.ts`: `damageTrack` states named `alive` / `dying.unstable` / `dying.stable` / `dead`
 - `creature.qnt`: predicate `isConscious(s)` = `s.hp > 0 and not(s.dead)` (Quint predates this assumption; name kept for spec continuity)
 
@@ -135,13 +137,13 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Changes:** `ChallengeRating` sum type in Quint (`creature.qnt`) and discriminated union in TypeScript (`monster-types.ts`). `crToProficiencyBonus` function handles all variants.
 
-## A16: Dead creatures: effect processing continues, heal/damage are no-ops
+## A16: Dead creatures: effect processing continues, heal/damage/exhaustion table mutations are no-ops
 
-**Assumption:** When a creature dies mid-turn (e.g., from a death save during START_TURN), remaining start-of-turn and end-of-turn effects continue processing. Saves still remove effects. Temp HP grants still apply (temp HP is not HP). Healing and damage are no-ops on dead creatures.
+**Assumption:** When a creature dies mid-turn (e.g., from a death save during START_TURN), remaining start-of-turn and end-of-turn effects continue processing. Saves still remove effects. Temp HP grants still apply (temp HP is not HP). Healing and damage are no-ops on dead creatures. Generic post-death condition application/removal is also a no-op unless a source-owned revival/effect rule explicitly changes the condition; conditions that existed at death persist while their durations are ongoing. Generic post-death exhaustion addition/reduction is also a no-op; the only RAW mechanism for changing exhaustion on a dead creature is revival ("returns with 1 fewer level"), which is a source-owned revival mechanic, not a general table event. Exhaustion levels that existed at death persist.
 
-**Rules basis (SRD 5.2.1 Rules Glossary "Dead"):** "A dead creature has no Hit Points and can't regain them." The SRD does not define whether ongoing effects continue to tick on a dead creature's turn — dead creatures don't take turns in practice. This assumption makes the modeling choice explicit: the effect loop runs to completion (matching a fold over all effects), but operations that the SRD implicitly blocks (healing, damage) are skipped.
+**Rules basis (SRD 5.2.1 Rules Glossary "Dead"):** "A dead creature has no Hit Points and can't regain them." The same entry says that, unless otherwise stated, a revived creature returns with ongoing conditions, magical contagions, or curses that affected it at death. "If the creature died with any Exhaustion levels, it returns with 1 fewer level." The SRD does not define whether ongoing effects continue to tick on a dead creature's turn — dead creatures don't take turns in practice. This assumption makes the modeling choice explicit: the effect loop runs to completion (matching a fold over all effects), but operations that the SRD implicitly blocks (healing, damage) or leaves to source-owned revival/effect rules (post-death condition/exhaustion mutation) are skipped.
 
-**Changes:** `creature.qnt`: `pProcessStartOfTurn` fold has no dead-break; `pHeal` and `pTakeDamage` check `s.dead` internally; `pGrantTempHp` does not check dead. XState: `computeStartTurn` (`machine-startturn.ts`) removed `if (dead) break`, guards heal/damage with `!dead`, leaves tempHp unguarded. `computeEndTurn` (`machine-endturn.ts`) uses `if (dead) continue` for damage loop.
+**Changes:** `creature.qnt`: `pProcessStartOfTurn` fold has no dead-break; `pHeal`, `pTakeDamage`, `pAddExhaustion`, and `pReduceExhaustion` check `s.dead` internally; `pGrantTempHp` does not check dead. XState: `computeStartTurn` (`machine-startturn.ts`) removed `if (dead) break`, guards heal/damage with `!dead`, leaves tempHp unguarded. Root handlers gate generic `ADD_EXHAUSTION`, `REDUCE_EXHAUSTION`, `APPLY_STARVATION`, and `APPLY_DEHYDRATION` when `dead`; revival-specific exhaustion reduction stays in dedicated revival/rest flows. `computeEndTurn` (`machine-endturn.ts`) uses `if (dead) continue` for damage loop.
 
 ## A17: Standing from prone requires nonzero movement cost
 
@@ -158,6 +160,7 @@ Each entry records the assumption, rules justification, and what changed in both
 **Rules basis (SRD 5.2.1 Monsters > Overview, "Multiattack"):** "Some creatures can make more than one attack when they take the Attack action. [...] This entry details the attacks a creature can make, as well as any additional abilities it can use, as part of the Attack action." In 5.2.1, Multiattack is explicitly part of the Attack action (unlike 5.1 where it was a separate action).
 
 **Simplification:** The spec reuses the `extraAttacksRemaining` counter for both Multiattack and PC Extra Attack. This is an architectural convenience — the action economy (one action → N strikes) is structurally the same. However, the SRD mechanics differ in important ways not currently modeled:
+
 - **Extra Attack** (PC) allows substituting any attack for a Grapple or Shove (SRD 5.2.1 Rules Glossary: "you can replace one of your attacks" with Grapple/Shove). **Multiattack** specifies fixed attack combinations — the monster makes the listed attacks, not arbitrary substitutions.
 - **Extra Attack** scales with class level (Fighter gets 2/3/4 attacks). **Multiattack** is fixed per stat block.
 - **Extra Attack** allows free choice of weapon per attack. **Multiattack** lists specific named attacks (e.g., "two Claw attacks and one Bite").
@@ -286,7 +289,7 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 **Initiative for new arrivals:** The SRD does not specify how a creature joining mid-combat enters the initiative order. The spec treats this as caller-provided: the caller supplies the initiative count when inserting a new creature.
 
-**Dead/unconscious creatures in initiative:** The SRD does not explicitly remove dead or unconscious creatures from initiative order. Dead monsters are implicitly removed (they cease to exist). Unconscious PCs remain in initiative but are Incapacitated (can't act, speed 0). The spec keeps dead/unconscious creatures in the initiative list until explicitly removed by the caller.
+**Dead/unconscious creatures in initiative:** The SRD does not explicitly remove dead or unconscious creatures from initiative order. Dead monsters are implicitly removed (they cease to exist). Unconscious PCs remain in initiative but are Incapacitated (can't act, speed 0). The spec keeps dead/unconscious creatures in the initiative list until explicitly removed by the caller. `EXIT_COMBAT` remains available after death as the caller-owned teardown mechanism; blocking it would strand a dead creature in initiative under A33.
 
 **Summoned creature initiative:** Varies by spell. Find Familiar: rolls own initiative. Find Steed / Summon Dragon: shares caster's initiative count, acts on caster's turn or immediately after. Conjure spells (Animals, Elemental, etc.): no independent turn — act as effects under caster control.
 
@@ -294,11 +297,11 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 ## A35: Environmental hazards beyond falling/underwater — DM agenda
 
-**Assumption:** Lava, extreme weather, traps, and similar environmental hazards are not modeled. The SRD describes these as DM-narrated events with DM-set DCs and damage. The spec models the *mechanical consequences* (damage, conditions) as caller-provided inputs; the hazard itself is DM agenda.
+**Assumption:** Lava, extreme weather, traps, and similar environmental hazards are not modeled. The SRD describes these as DM-narrated events with DM-set DCs and damage. The spec models the _mechanical consequences_ (damage, conditions) as caller-provided inputs; the hazard itself is DM agenda.
 
 ## A36: Summoned creature stat blocks — content layer
 
-**Assumption:** The battle spec models adding/removing creatures mid-combat (A33) but does not model summoning *spell effects* (specific stat blocks, durations, caster-control rules). These belong in `features/spell-*.ts` as content, not in the Quint spec.
+**Assumption:** The battle spec models adding/removing creatures mid-combat (A33) but does not model summoning _spell effects_ (specific stat blocks, durations, caster-control rules). These belong in `features/spell-*.ts` as content, not in the Quint spec.
 
 ## A34: Spell durations are non-negative
 
@@ -321,6 +324,7 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 ## A38: Creature-level prepared spell casting models deterministic prepared-spell defaults and caster-side bookkeeping only
 
 **Assumption:** The creature-level `CAST_PREPARED_SPELL` action does not model full player-chosen prepared spell lists or downstream spell effects. It models only caster-side bookkeeping:
+
 - spend a regular spell slot
 - consume Action or Bonus Action based on casting time
 - mark one-slot-per-turn flags
@@ -335,6 +339,7 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Out of scope for this phase:** Cantrips, ritual casting, reaction spells, pact-slot casting, slot-free class/subclass spell casts, target/effect resolution, and full class spell-list/preparation management.
 
 **Changes:**
+
 - `creature.qnt`: adds `doCastPreparedSpell`, deterministic `pDefaultPreparedSpells`, and spell-casting bookkeeping helpers.
 - TypeScript machine: adds `CAST_PREPARED_SPELL`, `preparedSpells` input/context, and default prepared-spell derivation when explicit input is omitted.
 - MBT bridge: adds `CAST_PREPARED_SPELL` driver mapping and compares `slotExpendedThisTurn` from the real creature machine state.

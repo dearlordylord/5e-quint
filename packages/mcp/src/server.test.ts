@@ -4,6 +4,7 @@ import { createActor } from "xstate";
 import { battleMachine } from "@dnd/core/battle-machine.ts";
 import type { BattleEvent } from "@dnd/core/battle-machine-types.ts";
 import { TABLE_EVENT_WARNING_CODES } from "@dnd/core/available-actions.ts";
+import type { BattleWeaponProfile } from "@dnd/core/types.ts";
 import {
   abilityModifier,
   armorClass,
@@ -20,7 +21,30 @@ import {
   handleToolCall,
   toolDefinitions,
 } from "./server.ts";
+import { createSessionRouter } from "./session-router.ts";
 import { tableEventSuccess } from "./server-table-events.ts";
+
+function quota(resource: "action" | "bonusAction" | "reaction") {
+  return { kind: "quota" as const, resource };
+}
+
+function movement(amount: number) {
+  return { kind: "quota" as const, resource: "movement" as const, amount };
+}
+
+function pool(resource: string) {
+  return { kind: "pool" as const, resource };
+}
+
+function cost(
+  ...items: ReadonlyArray<
+    | ReturnType<typeof quota>
+    | ReturnType<typeof movement>
+    | ReturnType<typeof pool>
+  >
+) {
+  return items;
+}
 
 function readPayload(response: ReturnType<typeof handleToolCall>) {
   return JSON.parse(response.content[0]?.text ?? "null");
@@ -51,6 +75,15 @@ const ZERO_BATTLE_SOT: Pick<
   sotSaveResult: false,
   sotConSave: true,
   deathSaveRoll: 0,
+};
+
+const LONGSWORD: BattleWeaponProfile = {
+  name: "Longsword",
+  damageType: "slashing",
+  isMelee: true,
+  damageDie: 8,
+  versatileDie: 10,
+  properties: new Set(["versatile"]),
 };
 
 function initBattleHostWithHitWindow() {
@@ -194,6 +227,53 @@ function initBattleHostWithFeatureActor() {
   return createBattleHost(actor);
 }
 
+function initBattleHostWithAttackActor() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 15,
+        mainHandWeapon: LONGSWORD,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
+function initBattleHostWithPublicAttackReactionWindow() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 20,
+        mainHandWeapon: LONGSWORD,
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["shield"]),
+        initiativeRoll: 15,
+      },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
 function initBattleHostWithGrapplingActor() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -208,8 +288,6 @@ function initBattleHostWithGrapplingActor() {
   actor.send({
     type: "BATTLE_GRAPPLE",
     targetId: CreatureId("B"),
-    attackerSize: "medium",
-    targetSize: "medium",
     targetSaveFailed: true,
   });
   return createBattleHost(actor);
@@ -494,6 +572,7 @@ describe("MCP server adapter", () => {
   test("tool definitions include control command and table event skeletons", () => {
     expect(toolDefinitions.map((tool) => tool.name)).toEqual([
       "get_state",
+      "start_battle",
       "get_available_actions",
       "execute_action",
       "preview_action",
@@ -502,8 +581,26 @@ describe("MCP server adapter", () => {
     ]);
   });
 
+  test("tool descriptions keep SHORT_REST on the action-token lane", () => {
+    expect(
+      toolDefinitions.find((tool) => tool.name === "get_available_actions")
+        ?.description,
+    ).toContain("SHORT_REST");
+    expect(
+      toolDefinitions.find((tool) => tool.name === "execute_action")
+        ?.description,
+    ).toContain("SHORT_REST");
+    expect(
+      toolDefinitions.find((tool) => tool.name === "execute_control_command")
+        ?.description,
+    ).toContain(
+      "does not mirror lifecycle flows already kept on execute_action, including SHORT_REST",
+    );
+  });
+
   test("tool definition input schemas satisfy MCP object-schema shape", () => {
     expect(toolDefinitions.map((tool) => tool.inputSchema.type)).toEqual([
+      "object",
       "object",
       "object",
       "object",
@@ -921,6 +1018,73 @@ describe("MCP server adapter", () => {
     expect(immuneApply.state.charmed).toBe(false);
   });
 
+  test("record_table_event rejects condition application on dead creatures", () => {
+    const host = createDemoHost({ maxHp: 20 });
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 10,
+        damageType: "slashing",
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 20,
+        damageType: "slashing",
+      }),
+    );
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "APPLY_CONDITION",
+      condition: "poisoned",
+    });
+    const payload = readPayload(response);
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe("TABLE_EVENT_NOT_ACCEPTED");
+    expect(payload.state.dead).toBe(true);
+    expect(payload.state.unconscious).toBe(true);
+    expect(payload.state.poisoned).toBe(false);
+  });
+
+  test("record_table_event rejects condition removal on dead creatures", () => {
+    const host = createDemoHost({ maxHp: 20 });
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 10,
+        damageType: "slashing",
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 20,
+        damageType: "slashing",
+      }),
+    );
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "REMOVE_CONDITION",
+      condition: "unconscious",
+    });
+    const payload = readPayload(response);
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe("TABLE_EVENT_NOT_ACCEPTED");
+    expect(payload.state.dead).toBe(true);
+    expect(payload.state.unconscious).toBe(true);
+  });
+
   test("record_table_event applies creature exhaustion events with warnings", () => {
     const host = createDemoHost();
 
@@ -963,6 +1127,86 @@ describe("MCP server adapter", () => {
     );
     expect(immuneExhaustion.success).toBe(true);
     expect(immuneExhaustion.state.exhaustion).toBe(0);
+  });
+
+  test("record_table_event rejects ADD_EXHAUSTION on dead creatures", () => {
+    const host = createDemoHost({ maxHp: 20 });
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "ADD_EXHAUSTION",
+        levels: 2,
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 10,
+        damageType: "slashing",
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 20,
+        damageType: "slashing",
+      }),
+    );
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "ADD_EXHAUSTION",
+      levels: 1,
+    });
+    const payload = readPayload(response);
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe("TABLE_EVENT_NOT_ACCEPTED");
+    expect(payload.state.dead).toBe(true);
+    expect(payload.state.exhaustion).toBe(2);
+  });
+
+  test("record_table_event rejects REDUCE_EXHAUSTION on dead creatures", () => {
+    const host = createDemoHost({ maxHp: 20 });
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "ADD_EXHAUSTION",
+        levels: 3,
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 10,
+        damageType: "slashing",
+      }),
+    );
+    readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "TAKE_DAMAGE",
+        amount: 20,
+        damageType: "slashing",
+      }),
+    );
+
+    const response = handleToolCall(host, "record_table_event", {
+      scope: "creature",
+      type: "REDUCE_EXHAUSTION",
+      levels: 1,
+    });
+    const payload = readPayload(response);
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe("TABLE_EVENT_NOT_ACCEPTED");
+    expect(payload.state.dead).toBe(true);
+    expect(payload.state.exhaustion).toBe(3);
   });
 
   test("record_table_event validates condition and exhaustion schema shapes", () => {
@@ -1079,7 +1323,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_INDOMITABLE",
-        cost: { charge: "indomitable" },
+        cost: cost(pool("indomitable")),
         outcome: {
           summary:
             "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level",
@@ -1138,7 +1382,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_TACTICAL_MIND",
-        cost: { charge: "secondWind" },
+        cost: cost(pool("secondWind")),
         outcome: {
           summary:
             "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
@@ -1355,6 +1599,52 @@ describe("MCP server adapter", () => {
     expect(readPayload(longRest).state.hp).toBe(44);
   });
 
+  test("EXIT_COMBAT remains executable after death because roster teardown is caller-owned", () => {
+    const host = createDemoHost();
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    host.actor.send({
+      type: "TAKE_DAMAGE",
+      amount: 88,
+      damageType: "slashing",
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false,
+    });
+
+    const stateAfterDeath = readPayload(handleToolCall(host, "get_state", {}));
+    expect(stateAfterDeath.dead).toBe(true);
+
+    const available = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    );
+    expect(available.free).toContainEqual(
+      creatureToken({
+        type: "EXIT_COMBAT",
+        cost: cost(),
+        outcome: {
+          summary: "Stop tracking this creature in combat and initiative order",
+        },
+      }),
+    );
+
+    const exitCombat = handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "EXIT_COMBAT" }),
+    );
+    expect("isError" in exitCombat).toBe(false);
+    expect(readPayload(exitCombat)).toMatchObject({
+      success: true,
+      outcome: "Stop tracking this creature in combat and initiative order",
+      state: { dead: true },
+    });
+  });
+
   test("battle control commands execute with explicit runtime facts", () => {
     const host = createBattleHost();
 
@@ -1460,7 +1750,7 @@ describe("MCP server adapter", () => {
         {
           scope: "creature",
           type: "ENTER_COMBAT",
-          cost: {},
+          cost: cost(),
           outcome: {
             summary: "Enter combat (begin tracking turns and action economy)",
           },
@@ -1528,6 +1818,98 @@ describe("MCP server adapter", () => {
     });
   });
 
+  test("execute_action returns compact error for unknown action type", () => {
+    const response = handleToolCall(createDemoHost(), "execute_action", {
+      type: "TOTALLY_FAKE_ACTION",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Unknown execute_action type: TOTALLY_FAKE_ACTION",
+      details: {
+        code: "UNKNOWN_ACTION_TYPE",
+        type: "TOTALLY_FAKE_ACTION",
+      },
+    });
+  });
+
+  test("execute_action returns compact error for missing action type", () => {
+    const response = handleToolCall(createDemoHost(), "execute_action", {});
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Unknown execute_action type: (missing)",
+      details: {
+        code: "UNKNOWN_ACTION_TYPE",
+        type: null,
+      },
+    });
+  });
+
+  test("execute_action keeps schema validation for malformed known action payloads", () => {
+    const response = handleToolCall(createDemoHost(), "execute_action", {
+      type: "SHORT_REST",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    const payload = readPayload(response);
+    expect(payload.error).toBe("Invalid execute_action input");
+    expect(String(payload.details)).toContain("spendHitDice");
+  });
+
+  test("execute_action keeps scope mismatch behavior for known battle action types", () => {
+    const response = handleToolCall(createDemoHost(), "execute_action", {
+      scope: "battle",
+      type: "BATTLE_DASH",
+      actorId: "fighter",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Action scope battle does not match the current creature host.",
+      details: "ACTION_SCOPE_MISMATCH",
+    });
+  });
+
+  test("preview_action returns compact error for unknown action type", () => {
+    const response = handleToolCall(createDemoHost(), "preview_action", {
+      type: "TOTALLY_FAKE_ACTION",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Unknown preview_action type: TOTALLY_FAKE_ACTION",
+      details: {
+        code: "UNKNOWN_ACTION_TYPE",
+        type: "TOTALLY_FAKE_ACTION",
+      },
+    });
+  });
+
+  test("preview_action returns compact error for missing action type", () => {
+    const response = handleToolCall(createDemoHost(), "preview_action", {});
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Unknown preview_action type: (missing)",
+      details: {
+        code: "UNKNOWN_ACTION_TYPE",
+        type: null,
+      },
+    });
+  });
+
+  test("preview_action keeps schema validation for malformed known action payloads", () => {
+    const response = handleToolCall(createDemoHost(), "preview_action", {
+      type: "SHORT_REST",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    const payload = readPayload(response);
+    expect(payload.error).toBe("Invalid preview_action input");
+    expect(String(payload.details)).toContain("spendHitDice");
+  });
+
   test("preview_action summarizes a creature action without mutating state", () => {
     const host = createDemoHost();
     handleToolCall(
@@ -1554,10 +1936,7 @@ describe("MCP server adapter", () => {
     expect(preview).toEqual({
       ok: true,
       summary: "Heal 1d10 + 5 HP",
-      cost: {
-        bonusAction: true,
-        charge: "secondWind",
-      },
+      cost: cost(quota("bonusAction"), pool("secondWind")),
       runtime: "secondWind",
     });
     expect(after).toEqual(before);
@@ -1612,7 +1991,7 @@ describe("MCP server adapter", () => {
       creatureToken({
         type: "SHORT_REST",
         availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features",
@@ -1660,7 +2039,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_HEROIC_INSPIRATION",
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Spend Heroic Inspiration to reroll a die and use the new roll",
@@ -1706,7 +2085,7 @@ describe("MCP server adapter", () => {
         type: "CAST_PREPARED_SPELL",
         spellName: "bless",
         slotLevel: { options: [1, 2, 3] },
-        cost: { action: true, charge: "spellSlot" },
+        cost: cost(quota("action"), pool("spellSlot")),
         outcome: {
           summary:
             "Cast Bless with a spell slot of the chosen level and begin concentrating on it",
@@ -1718,7 +2097,7 @@ describe("MCP server adapter", () => {
         type: "CAST_PREPARED_SPELL",
         spellName: "healing_word",
         slotLevel: { options: [1, 2, 3] },
-        cost: { bonusAction: true, charge: "spellSlot" },
+        cost: cost(quota("bonusAction"), pool("spellSlot")),
         outcome: {
           summary: "Cast Healing Word with a spell slot of the chosen level",
         },
@@ -1773,7 +2152,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_TACTICAL_MIND",
-        cost: { charge: "secondWind" },
+        cost: cost(pool("secondWind")),
         outcome: {
           summary:
             "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
@@ -1817,7 +2196,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual({
       scope: "creature",
       type: "USE_INDOMITABLE",
-      cost: { charge: "indomitable" },
+      cost: cost(pool("indomitable")),
       outcome: {
         summary:
           "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level",
@@ -1862,7 +2241,7 @@ describe("MCP server adapter", () => {
       creatureToken({
         type: "USE_METAMAGIC",
         option: { options: ["careful", "subtle"] },
-        cost: { charge: "sorceryPoints" },
+        cost: cost(pool("sorceryPoints")),
         outcome: {
           summary:
             "Apply a currently legal known Metamagic option to the spell you are casting",
@@ -1928,7 +2307,7 @@ describe("MCP server adapter", () => {
     expect(warlockAvailable.free).toContainEqual(
       creatureToken({
         type: "USE_MAGICAL_CUNNING",
-        cost: { charge: "magicalCunning" },
+        cost: cost(pool("magicalCunning")),
         outcome: {
           summary:
             "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
@@ -1969,7 +2348,7 @@ describe("MCP server adapter", () => {
     expect(fullRecoveryAvailable.free).toContainEqual(
       creatureToken({
         type: "USE_MAGICAL_CUNNING",
-        cost: { charge: "magicalCunning" },
+        cost: cost(pool("magicalCunning")),
         outcome: {
           summary:
             "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
@@ -2011,7 +2390,7 @@ describe("MCP server adapter", () => {
     expect(sorcererAvailable.bonusAction).toContainEqual(
       creatureToken({
         type: "USE_INNATE_SORCERY",
-        cost: { bonusAction: true, charge: "innateSorcery" },
+        cost: cost(quota("bonusAction"), pool("innateSorcery")),
         outcome: {
           summary: "Use a bonus action to activate Innate Sorcery for 1 minute",
         },
@@ -2101,7 +2480,7 @@ describe("MCP server adapter", () => {
     expect(available.bonusAction).toContainEqual(
       creatureToken({
         type: "ENTER_WILD_SHAPE",
-        cost: { bonusAction: true, charge: "wildShape" },
+        cost: cost(quota("bonusAction"), pool("wildShape")),
         outcome: {
           summary: "Shape-shift into a beast form, gaining 5 temporary HP",
         },
@@ -2110,7 +2489,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_WILD_RESURGENCE_SLOT",
-        cost: { charge: "wildShape" },
+        cost: cost(pool("wildShape")),
         outcome: {
           summary:
             "Expend one Wild Shape use to regain a level 1 spell slot; once per Long Rest",
@@ -2153,7 +2532,7 @@ describe("MCP server adapter", () => {
     expect(afterEnter.bonusAction).toContainEqual(
       creatureToken({
         type: "EXIT_WILD_SHAPE",
-        cost: { bonusAction: true },
+        cost: cost(quota("bonusAction")),
         outcome: {
           summary: "Revert from beast form to your normal form",
         },
@@ -2197,7 +2576,7 @@ describe("MCP server adapter", () => {
     expect(available.action).toContainEqual(
       creatureToken({
         type: "USE_TIRELESS",
-        cost: { action: true, charge: "tireless" },
+        cost: cost(quota("action"), pool("tireless")),
         outcome: { summary: "Gain 1d8 + 3 temporary HP (minimum 1)" },
       }),
     );
@@ -2242,7 +2621,7 @@ describe("MCP server adapter", () => {
       creatureToken({
         type: "USE_ARCANE_RECOVERY",
         slotLevel: { options: [2] },
-        cost: { charge: "arcaneRecovery" },
+        cost: cost(pool("arcaneRecovery")),
         outcome: {
           summary:
             "Recover one expended spell slot of the chosen level and use Arcane Recovery",
@@ -2304,7 +2683,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual({
       scope: "creature",
       type: "USE_OVERCHANNEL",
-      cost: {},
+      cost: cost(),
       outcome: {
         summary:
           "Overchannel the qualifying Fireball cast at slot level 3 for maximum damage",
@@ -2371,7 +2750,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_PEERLESS_SKILL",
-        cost: { charge: "bardicInspiration" },
+        cost: cost(pool("bardicInspiration")),
         outcome: {
           summary:
             "Add your Bardic Inspiration die to the failed attack roll; expend it only if the roll now succeeds",
@@ -2424,7 +2803,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_RELENTLESS_RAGE",
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Make a DC 10 Constitution save to stay at 22 HP instead of dropping to 0",
@@ -2473,7 +2852,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual({
       scope: "creature",
       type: "USE_SNEAK_ATTACK",
-      cost: {},
+      cost: cost(),
       outcome: { summary: "Apply Sneak Attack damage to the qualifying hit" },
     });
 
@@ -2523,7 +2902,7 @@ describe("MCP server adapter", () => {
     expect(available.free).toContainEqual(
       creatureToken({
         type: "USE_ACTION_SURGE",
-        cost: { charge: "actionSurge" },
+        cost: cost(pool("actionSurge")),
         outcome: {
           summary:
             "Expend one Action Surge use to gain one additional action this turn",
@@ -2533,7 +2912,7 @@ describe("MCP server adapter", () => {
     expect(available.bonusAction).toContainEqual(
       creatureToken({
         type: "FLURRY_OF_BLOWS",
-        cost: { bonusAction: true, charge: "focusPoint" },
+        cost: cost(quota("bonusAction"), pool("focusPoint")),
         outcome: {
           summary:
             "Spend 1 Focus Point to make 2 unarmed strikes as a bonus action",
@@ -2543,7 +2922,7 @@ describe("MCP server adapter", () => {
     expect(available.bonusAction).toContainEqual(
       creatureToken({
         type: "USE_BARDIC_INSPIRATION",
-        cost: { bonusAction: true, charge: "bardicInspiration" },
+        cost: cost(quota("bonusAction"), pool("bardicInspiration")),
         outcome: {
           summary:
             "Expend one Bardic Inspiration use to inspire another creature",
@@ -2630,10 +3009,16 @@ describe("MCP server adapter", () => {
       {
         "action": [
           {
-            "cost": {
-              "action": true,
-              "charge": "tireless",
-            },
+            "cost": [
+              {
+                "kind": "quota",
+                "resource": "action",
+              },
+              {
+                "kind": "pool",
+                "resource": "tireless",
+              },
+            ],
             "outcome": {
               "summary": "Gain 1d8 + 3 temporary HP (minimum 1)",
             },
@@ -2643,10 +3028,16 @@ describe("MCP server adapter", () => {
         ],
         "bonusAction": [
           {
-            "cost": {
-              "bonusAction": true,
-              "charge": "sorceryPoints",
-            },
+            "cost": [
+              {
+                "kind": "quota",
+                "resource": "bonusAction",
+              },
+              {
+                "kind": "pool",
+                "resource": "sorceryPoints",
+              },
+            ],
             "outcome": {
               "summary": "Spend sorcery points to create a spell slot of the chosen level",
             },
@@ -2660,10 +3051,16 @@ describe("MCP server adapter", () => {
             "type": "CONVERT_POINTS_TO_SLOT",
           },
           {
-            "cost": {
-              "bonusAction": true,
-              "charge": "innateSorcery",
-            },
+            "cost": [
+              {
+                "kind": "quota",
+                "resource": "bonusAction",
+              },
+              {
+                "kind": "pool",
+                "resource": "innateSorcery",
+              },
+            ],
             "outcome": {
               "summary": "Use a bonus action to activate Innate Sorcery for 1 minute",
             },
@@ -2671,10 +3068,16 @@ describe("MCP server adapter", () => {
             "type": "USE_INNATE_SORCERY",
           },
           {
-            "cost": {
-              "bonusAction": true,
-              "charge": "secondWind",
-            },
+            "cost": [
+              {
+                "kind": "quota",
+                "resource": "bonusAction",
+              },
+              {
+                "kind": "pool",
+                "resource": "secondWind",
+              },
+            ],
             "outcome": {
               "summary": "Heal 1d10 + 10 HP",
             },
@@ -2684,9 +3087,12 @@ describe("MCP server adapter", () => {
         ],
         "free": [
           {
-            "cost": {
-              "charge": "actionSurge",
-            },
+            "cost": [
+              {
+                "kind": "pool",
+                "resource": "actionSurge",
+              },
+            ],
             "outcome": {
               "summary": "Expend one Action Surge use to gain one additional action this turn",
             },
@@ -2694,9 +3100,12 @@ describe("MCP server adapter", () => {
             "type": "USE_ACTION_SURGE",
           },
           {
-            "cost": {
-              "charge": "arcaneRecovery",
-            },
+            "cost": [
+              {
+                "kind": "pool",
+                "resource": "arcaneRecovery",
+              },
+            ],
             "outcome": {
               "summary": "Recover one expended spell slot of the chosen level and use Arcane Recovery",
             },
@@ -2710,9 +3119,12 @@ describe("MCP server adapter", () => {
             "type": "USE_ARCANE_RECOVERY",
           },
           {
-            "cost": {
-              "charge": "sorceryPoints",
-            },
+            "cost": [
+              {
+                "kind": "pool",
+                "resource": "sorceryPoints",
+              },
+            ],
             "option": {
               "options": [
                 "careful",
@@ -2726,9 +3138,9 @@ describe("MCP server adapter", () => {
             "type": "USE_METAMAGIC",
           },
           {
-            "cost": {},
+            "cost": [],
             "outcome": {
-              "summary": "Leave combat (stop tracking turns)",
+              "summary": "Stop tracking this creature in combat and initiative order",
             },
             "scope": "creature",
             "type": "EXIT_COMBAT",
@@ -2782,7 +3194,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_SHIELD",
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Shield against the triggering attack",
@@ -2792,7 +3204,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "C",
           type: "USE_CUTTING_WORDS",
-          cost: { reaction: true, charge: "bardicInspiration" },
+          cost: cost(quota("reaction"), pool("bardicInspiration")),
           outcome: {
             summary:
               "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll",
@@ -2822,7 +3234,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "STAND_FROM_PRONE",
-          cost: { movement: 15, shape: "spend" },
+          cost: cost(movement(15)),
           outcome: {
             summary: "Spend half your Speed in movement to stand up from Prone",
           },
@@ -2845,7 +3257,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_ENTER_RAGE",
-          cost: { bonusAction: true, charge: "rage" },
+          cost: cost(quota("bonusAction"), pool("rage")),
           outcome: {
             summary:
               "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
@@ -2858,7 +3270,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_ACTION_SURGE",
-          cost: { charge: "actionSurge" },
+          cost: cost(pool("actionSurge")),
           outcome: {
             summary:
               "Expend one Action Surge use to gain one additional non-Magic action this turn",
@@ -2868,7 +3280,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_DECLARE_RECKLESS",
-          cost: {},
+          cost: cost(),
           outcome: { summary: "Declare Reckless Attack for this turn" },
         },
       ]),
@@ -2949,7 +3361,7 @@ describe("MCP server adapter", () => {
       ok: true,
       summary:
         "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
-      cost: { bonusAction: true, charge: "rage" },
+      cost: cost(quota("bonusAction"), pool("rage")),
       runtime: "none",
       eventType: "BATTLE_ENTER_RAGE",
     });
@@ -2970,7 +3382,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_RELEASE_GRAPPLE",
-          cost: {},
+          cost: cost(),
           outcome: {
             summary:
               "Release the creature you are grappling; no action required",
@@ -3001,6 +3413,201 @@ describe("MCP server adapter", () => {
     ).toBeNull();
   });
 
+  test("preview_action summarizes BATTLE_ATTACK without mutating state", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const before = readPayload(handleToolCall(host, "get_state", {}));
+    const preview = readPayload(
+      handleToolCall(host, "preview_action", {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+    const after = readPayload(handleToolCall(host, "get_state", {}));
+
+    expect(preview).toEqual({
+      ok: true,
+      summary:
+        "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+      cost: cost(quota("action")),
+      runtime: "battleAttack",
+    });
+    expect(after).toEqual(before);
+  });
+
+  test("execute_action requires explicit battleAttack runtime inputs for BATTLE_ATTACK", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error:
+        "BATTLE_ATTACK requires explicit runtime battleAttack inputs on execute_action.",
+      details: "INVALID_RUNTIME_INPUT",
+    });
+  });
+
+  test("execute_action rejects invalid BATTLE_ATTACK session facts", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 12,
+          targetAc: 12,
+          weaponDamage: 4,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: ["Z"],
+        },
+      },
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error:
+        "Battle hit reaction candidate Z is not a valid other creature in this battle.",
+      details: "INVALID_RUNTIME_INPUT",
+    });
+  });
+
+  test("execute_action routes public BATTLE_ATTACK hits through the battle lane", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 15,
+          targetAc: 10,
+          weaponDamage: 6,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: [],
+        },
+      },
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: { scope: "battle" },
+    });
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A")),
+    ).toMatchObject({ actionsRemaining: 0, attackActionUsed: true });
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B")),
+    ).toMatchObject({ hp: 14 });
+  });
+
+  test("execute_action routes public BATTLE_ATTACK misses through the battle lane", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 5,
+          targetAc: 20,
+          weaponDamage: 6,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: [],
+        },
+      },
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: { scope: "battle" },
+    });
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A")),
+    ).toMatchObject({ actionsRemaining: 0, attackActionUsed: true });
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B")),
+    ).toMatchObject({ hp: 20 });
+  });
+
+  test("execute_action routes public BATTLE_ATTACK into existing hit reaction windows", () => {
+    const host = initBattleHostWithPublicAttackReactionWindow();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 15,
+          targetAc: 10,
+          weaponDamage: 5,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: ["B"],
+        },
+      },
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: {
+        scope: "battle",
+        awaitingReaction: true,
+      },
+    });
+    expect(host.actor.getSnapshot().context.awaitCtx?.trigger).toBe(
+      "TAttackHits",
+    );
+  });
+
   test("battle hosts surface and execute escape grapple through MCP", () => {
     const host = initBattleHostWithGrapplingActor();
     host.actor.send({
@@ -3022,7 +3629,7 @@ describe("MCP server adapter", () => {
             actorId: "B",
             type: "BATTLE_ESCAPE_GRAPPLE",
             escapeSucceeded: { options: [true, false] },
-            cost: { action: true },
+            cost: cost(quota("action")),
           }),
         ]),
       }),
@@ -3094,7 +3701,7 @@ describe("MCP server adapter", () => {
             actorId: "B",
             type: "BATTLE_SEARCH",
             targetId: { options: ["A"] },
-            cost: { action: true },
+            cost: cost(quota("action")),
           }),
         ]),
       }),
@@ -3128,7 +3735,7 @@ describe("MCP server adapter", () => {
           actorId: "A",
           type: "BATTLE_READY_RELEASE",
           targetId: { options: ["B"] },
-          cost: { reaction: true },
+          cost: cost(quota("reaction")),
           outcome: {
             summary:
               "Spend your reaction to release the readied attack against the chosen target",
@@ -3140,7 +3747,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_READY_PASS",
-          cost: {},
+          cost: cost(),
           outcome: { summary: "Decline to release your readied action" },
         },
       ],
@@ -3264,7 +3871,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_HELLISH_REBUKE",
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
@@ -3304,7 +3911,7 @@ describe("MCP server adapter", () => {
           actorId: "B",
           type: "CAST_COUNTERSPELL",
           slotLevel: { options: [3] },
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Counterspell against the triggering spell",
@@ -3364,7 +3971,7 @@ describe("MCP server adapter", () => {
     expect(preview).toEqual({
       ok: true,
       summary: "Spend half your Speed in movement to stand up from Prone",
-      cost: { movement: 15, shape: "spend" },
+      cost: cost(movement(15)),
       runtime: "none",
       eventType: "BATTLE_STAND_FROM_PRONE",
     });
@@ -3412,7 +4019,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "C",
           type: "USE_CUTTING_WORDS",
-          cost: { reaction: true, charge: "bardicInspiration" },
+          cost: cost(quota("reaction"), pool("bardicInspiration")),
           outcome: {
             summary:
               "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll",
@@ -3507,7 +4114,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_SHIELD",
-          cost: { reaction: true, charge: "spellSlot" },
+          cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
               "Use your reaction to cast Shield against the triggering attack",
@@ -3623,5 +4230,248 @@ describe("MCP server adapter", () => {
       error: "Action scope creature does not match the current battle host.",
       details: "ACTION_SCOPE_MISMATCH",
     });
+  });
+});
+
+describe("SessionRouter", () => {
+  test("routes creature tools through the initial host", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
+      hp: 34,
+      maxHp: 44,
+    });
+    expect(router.getSnapshot()).toEqual({
+      activeScope: "creature",
+      encounterDraft: null,
+      characterListRefs: [],
+    });
+  });
+
+  test("start_battle promotes the router onto a battle host using the fighter snapshot and goblin stat block", () => {
+    const router = createSessionRouter(createDemoHost(), {
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      goblinId: "goblin-1",
+      fighterInitiativeRoll: 20,
+      goblinInitiativeRoll: 8,
+    });
+
+    expect("isError" in started).toBe(false);
+    expect(router.getSnapshot()).toEqual({
+      activeScope: "battle",
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+    expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
+      scope: "battle",
+      activeCreatureId: "fighter",
+      initiative: ["fighter", "goblin-1"],
+      creatureIds: ["fighter", "goblin-1"],
+    });
+
+    if (router.activeHost.scope !== "battle") {
+      throw new Error("expected battle host");
+    }
+    const fighter = router.activeHost.actor
+      .getSnapshot()
+      .context.creatures.get(CreatureId("fighter"));
+    const goblin = router.activeHost.actor
+      .getSnapshot()
+      .context.creatures.get(CreatureId("goblin-1"));
+
+    expect(fighter).toMatchObject({
+      hp: 44,
+      maxHp: 44,
+      fighterLevel: 5,
+      baseWalkSpeed: 30,
+      actionSurgeCharges: 1,
+    });
+    expect(goblin).toMatchObject({
+      maxHp: 7,
+      creatureKind: "Monster",
+      creatureSize: "small",
+      baseWalkSpeed: 30,
+      mainHandWeapon: {
+        name: "Dagger",
+        damageType: "piercing",
+        isMelee: true,
+        damageDie: 4,
+        properties: new Set(["finesse", "light", "thrown"]),
+      },
+    });
+  });
+
+  test("start_battle rejects invalid monster stat block ids", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      goblinId: "goblin-1",
+      goblinStatBlockId: "badGoblin",
+    });
+
+    expect("isError" in started && started.isError).toBe(true);
+    expect(readPayload(started).error).toBe("Invalid start_battle input");
+    expect(router.getSnapshot().activeScope).toBe("creature");
+  });
+
+  test("start_battle rejects duplicate creature ids", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      goblinId: "fighter",
+    });
+
+    expect("isError" in started && started.isError).toBe(true);
+    expect(readPayload(started)).toEqual({
+      error: "Battle creature IDs must be unique.",
+      details: "START_BATTLE_DUPLICATE_CREATURE_ID",
+    });
+    expect(router.getSnapshot().activeScope).toBe("creature");
+  });
+
+  test("start_battle rejects calls once the session is already on a battle host", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      goblinId: "goblin-1",
+    });
+
+    const restarted = router.handleToolCall("start_battle", {
+      fighterId: "fighter-2",
+      goblinId: "goblin-2",
+    });
+
+    expect("isError" in restarted && restarted.isError).toBe(true);
+    expect(readPayload(restarted)).toEqual({
+      error:
+        "start_battle can only be called while the session is on a creature host.",
+      details: "START_BATTLE_SCOPE_MISMATCH",
+    });
+  });
+
+  test("auto-promotes BATTLE_INIT onto a battle host through the stdio routing path", () => {
+    const router = createSessionRouter(createDemoHost(), {
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+
+    const init = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: "fighter", maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: "goblin-1", maxHp: 15, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    expect("isError" in init).toBe(false);
+    expect(router.getSnapshot()).toEqual({
+      activeScope: "battle",
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+    expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
+      scope: "battle",
+      round: 1,
+      turnIndex: 0,
+      activeCreatureId: "fighter",
+      initiative: ["fighter", "goblin-1"],
+      creatureIds: ["fighter", "goblin-1"],
+      phase: "activeTurn",
+      awaitingReaction: false,
+      resolvingAoE: false,
+      resolvingMovement: false,
+      awaitingLegendaryAction: false,
+      awaitingReadiedAction: false,
+    });
+  });
+
+  test("battle tools keep using the same routed public path after promotion", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: "A", maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: "B", maxHp: 15, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    const startTurn = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+    });
+
+    expect("isError" in startTurn).toBe(false);
+    expect(readPayload(startTurn)).toMatchObject({
+      success: true,
+      state: {
+        scope: "battle",
+        phase: "activeTurn",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_available_actions", {})),
+    ).toMatchObject({
+      bonusAction: [],
+      reaction: [],
+      free: [],
+    });
+    expect(
+      readPayload(router.handleToolCall("get_available_actions", {})).action,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+        }),
+      ]),
+    );
+  });
+
+  test("failed BATTLE_INIT leaves the creature host active", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const init = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+    });
+
+    expect("isError" in init && init.isError).toBe(true);
+    expect(router.getSnapshot()).toEqual({
+      activeScope: "creature",
+      encounterDraft: null,
+      characterListRefs: [],
+    });
+  });
+
+  test("duplicate creature ids are rejected on the raw BATTLE_INIT lane", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const init = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: "fighter", maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: "fighter", maxHp: 15, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    expect("isError" in init && init.isError).toBe(true);
+    expect(readPayload(init)).toEqual({
+      error: "Battle creature IDs must be unique.",
+      details: "BATTLE_INIT_DUPLICATE_CREATURE_ID",
+    });
+    expect(router.getSnapshot().activeScope).toBe("creature");
   });
 });

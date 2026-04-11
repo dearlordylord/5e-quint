@@ -299,6 +299,7 @@ export const creatureMachine = setup({
       deathSaves: DEATH_SAVES_RESET,
     })),
     applyCondition: assign(({ context: c, event: e }) => {
+      if (c.dead) return {};
       const ev = asApplyCondition(e);
       const u = applyConditionUpdate(
         ev.condition,
@@ -315,6 +316,7 @@ export const creatureMachine = setup({
       };
     }),
     removeCondition: assign(({ context: c, event: e }) => {
+      if (c.dead) return {};
       const cond = asCondition(e).condition;
       const u = removeConditionUpdate(
         cond,

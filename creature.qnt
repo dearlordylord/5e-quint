@@ -1035,7 +1035,7 @@ module creature {
   /// Unconscious -> incapacitated + prone.
   /// Petrified blocks poisoned condition.
   pure def pApplyCondition(s: CreatureState, c: Condition, immunities: Set[Condition]): CreatureState =
-    if (immunities.contains(c)) s
+    if (s.dead or immunities.contains(c)) s
     else match c {
     | CBlinded => s.with("blinded", true)
     | CCharmed => s.with("charmed", true)
@@ -1065,7 +1065,7 @@ module creature {
 
   /// Remove a condition, re-deriving implications.
   /// Prone is NOT removed when unconscious is removed — creature must stand up.
-  pure def pRemoveCondition(s: CreatureState, c: Condition): CreatureState = match c {
+  pure def pRemoveCondition(s: CreatureState, c: Condition): CreatureState = if (s.dead) s else match c {
     | CBlinded => s.with("blinded", false)
     | CCharmed => s.with("charmed", false)
     | CDeafened => s.with("deafened", false)
@@ -1091,9 +1091,9 @@ module creature {
          .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISUnconscious)))
   }
 
-  /// Increment exhaustion. Level 6 = death. If exhaustionImmune, no effect.
+  /// Increment exhaustion. Level 6 = death. If dead or exhaustionImmune, no effect.
   pure def pAddExhaustion(s: CreatureState, levels: int, exhaustionImmune: bool): CreatureState = {
-    if (exhaustionImmune) s
+    if (s.dead or exhaustionImmune) s
     else {
       val newLevel = intMin(s.exhaustion + levels, 6)
       val s1 = s.with("exhaustion", newLevel)
@@ -1102,10 +1102,13 @@ module creature {
     }
   }
 
-  /// Reduce exhaustion (min 0). HP does not auto-increase.
+  /// Reduce exhaustion (min 0). HP does not auto-increase. Dead creatures do not change.
   pure def pReduceExhaustion(s: CreatureState, levels: int): CreatureState = {
-    val newLevel = intMax(s.exhaustion - levels, 0)
-    s.with("exhaustion", newLevel)
+    if (s.dead) s
+    else {
+      val newLevel = intMax(s.exhaustion - levels, 0)
+      s.with("exhaustion", newLevel)
+    }
   }
 
   // -- Modifier aggregation --
@@ -1169,8 +1172,8 @@ module creature {
 
   pure def pCanAct(s: CreatureState): bool = not(isIncapacitated(s))
 
-  pure def pCanSpeak(s: CreatureState): bool =
-    not(s.paralyzed) and not(s.petrified) and not(s.unconscious)
+  /// SRD 5.2.1: Incapacitated includes "Speechless. You can't speak."
+  pure def pCanSpeak(s: CreatureState): bool = not(isIncapacitated(s))
 
   // ============================================================
   // 10. HIT POINTS (character/hitpoints)

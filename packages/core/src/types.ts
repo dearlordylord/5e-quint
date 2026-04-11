@@ -33,11 +33,7 @@ export const PHYSICAL_DAMAGE_TYPES = [
 ] as const satisfies ReadonlyArray<DamageType>;
 export type PhysicalDamageType = (typeof PHYSICAL_DAMAGE_TYPES)[number];
 
-export const DAMAGE_QUALIFIERS = [
-  "adamantine",
-  "magical",
-  "silvered",
-] as const;
+export const DAMAGE_QUALIFIERS = ["adamantine", "magical", "silvered"] as const;
 export type DamageQualifier = (typeof DAMAGE_QUALIFIERS)[number];
 
 export interface QualifiedPhysicalBypass {
@@ -127,6 +123,7 @@ export const CANONICAL_CONDITION_CONSEQUENCES: Readonly<
   incapacitated: {
     ...NO_CONDITION_CONSEQUENCES,
     blocksActions: true,
+    blocksSpeech: true,
   },
   invisible: NO_CONDITION_CONSEQUENCES,
   paralyzed: {
@@ -574,6 +571,11 @@ export function abilityModifier(n: number): AbilityModifier {
   return AbilityModifier.make(Math.floor(n));
 }
 export type { AbilityModifier };
+
+/** SRD ability score to modifier: floor((score - 10) / 2). */
+export function abilityScoreToMod(score: number): number {
+  return Math.floor((score - 10) / 2);
+}
 
 export const SpellSlotLevel = Schema.Number.pipe(
   Schema.int(),

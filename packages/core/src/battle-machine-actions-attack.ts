@@ -88,7 +88,10 @@ function battleWeaponDamage(
     isMelee,
     weaponProperties,
   );
-  if (damageDieRolls == null) return useFloor ? null : fallbackDamage;
+  // Public MCP attacks supply the rolled weapon damage total directly. When the
+  // caller owns the aggregate roll, trust that total instead of requiring the
+  // underlying die faces solely for Great Weapon Fighting validation.
+  if (damageDieRolls == null) return fallbackDamage;
   if (damageDieRolls.length !== diceCount) return null;
   if (
     damageDieRolls.some(
@@ -606,11 +609,7 @@ export function battleAfterDamageRetaliation({
   ) {
     return {};
   }
-  const cs1 = setCreature(
-    c.creatures,
-    e.reactorId,
-    spendReaction(reactor),
-  );
+  const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(reactor));
   const newOffered = new Set(aw.offered);
   newOffered.add(e.reactorId);
   if (!isHit(e.retAtkRoll, e.retTgtAc))

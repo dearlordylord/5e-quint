@@ -23,6 +23,11 @@ Active follow-up planning now lives in [ACTIVE_PLAN.md](./ACTIVE_PLAN.md).
 - `get_available_actions` returns query-time `ActionToken` values.
 - `execute_action` accepts `ResolvedActionToken` values with user-facing holes
   filled.
+- Some lifecycle/control events intentionally stay on the action-token lane when
+  they include user choice or runtime resolution. `SHORT_REST` remains a
+  `get_available_actions` / `execute_action` token because hit-die order is a
+  player choice and healing rolls are runtime-owned; do not mirror it on
+  `execute_control_command`.
 - Core resolves tokens into domain events; runtime-owned inputs such as dice or
   explicit table/session facts are supplied at execution time.
 - MCP must not remember, fabricate, or re-derive combat facts. If an action needs

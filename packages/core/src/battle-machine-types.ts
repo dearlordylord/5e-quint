@@ -22,6 +22,7 @@ import type {
   HandUse,
   IncapSource,
   QualifiedPhysicalBypass,
+  Size,
   SpellId,
   SpellSlotLevel,
 } from "#/types.ts";
@@ -90,6 +91,7 @@ export interface BattleCreatureState {
   readonly dailyUsesRemaining: Readonly<Record<string, number>>;
   // Identity
   readonly creatureKind: CreatureKind;
+  readonly creatureSize: Size;
   // Class levels tracked by battle Combatant
   readonly rogueLevel: number;
   readonly monkLevel: number;
@@ -378,49 +380,19 @@ export const PHASE_ACTIVE: Pick<
 export type PhaseFields = typeof PHASE_ACTIVE;
 
 export function phaseAwaitReaction(ctx: AwaitCtx): PhaseFields {
-  return {
-    awaitCtx: ctx,
-    aoeCtx: null,
-    movementCtx: null,
-    laCtx: null,
-    readyCtx: null,
-  };
+  return { ...PHASE_ACTIVE, awaitCtx: ctx };
 }
 export function phaseResolvingAoE(aoe: AoESpellCtx): PhaseFields {
-  return {
-    awaitCtx: null,
-    aoeCtx: aoe,
-    movementCtx: null,
-    laCtx: null,
-    readyCtx: null,
-  };
+  return { ...PHASE_ACTIVE, aoeCtx: aoe };
 }
 export function phaseResolvingMovement(mv: MovementCtx): PhaseFields {
-  return {
-    awaitCtx: null,
-    aoeCtx: null,
-    movementCtx: mv,
-    laCtx: null,
-    readyCtx: null,
-  };
+  return { ...PHASE_ACTIVE, movementCtx: mv };
 }
 export function phaseAwaitingLegendary(la: LAWindowCtx): PhaseFields {
-  return {
-    awaitCtx: null,
-    aoeCtx: null,
-    movementCtx: null,
-    laCtx: la,
-    readyCtx: null,
-  };
+  return { ...PHASE_ACTIVE, laCtx: la };
 }
 export function phaseAwaitingReady(ready: ReadyWindowCtx): PhaseFields {
-  return {
-    awaitCtx: null,
-    aoeCtx: null,
-    movementCtx: null,
-    laCtx: null,
-    readyCtx: ready,
-  };
+  return { ...PHASE_ACTIVE, readyCtx: ready };
 }
 
 /** Creature config for BATTLE_INIT — determines initial state per combatant. */
@@ -429,6 +401,7 @@ export interface InitCreatureConfig {
   readonly maxHp: number;
   readonly maxHpReduction?: number;
   readonly kind: CreatureKind;
+  readonly creatureSize?: Size;
   readonly caster?: boolean;
   readonly rogueLevel?: number;
   readonly monkLevel?: number;

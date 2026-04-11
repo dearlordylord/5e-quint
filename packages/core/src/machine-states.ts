@@ -499,12 +499,24 @@ export const spellcastingConfig = {
 } as const;
 
 export const rootEventHandlers = {
-  APPLY_CONDITION: { actions: ["applyCondition"] },
-  REMOVE_CONDITION: { actions: ["removeCondition"] },
+  APPLY_CONDITION: {
+    guard: "canChangeCondition" as const,
+    actions: ["applyCondition"],
+  },
+  REMOVE_CONDITION: {
+    guard: "canChangeCondition" as const,
+    actions: ["removeCondition"],
+  },
   ADD_EFFECT: { actions: ["addEffect"] },
   REMOVE_EFFECT: { actions: ["removeEffect"] },
-  ADD_EXHAUSTION: { actions: ["addExhaustion"] },
-  REDUCE_EXHAUSTION: { actions: ["reduceExhaustion"] },
+  ADD_EXHAUSTION: {
+    guard: "canChangeExhaustion" as const,
+    actions: ["addExhaustion"],
+  },
+  REDUCE_EXHAUSTION: {
+    guard: "canChangeExhaustion" as const,
+    actions: ["reduceExhaustion"],
+  },
   REDUCE_MAX_HP: { actions: ["reduceMaxHp"] },
   RESTORE_MAX_HP: { actions: ["restoreMaxHp"] },
   GRAPPLE: { actions: ["applyGrapple"] },
@@ -527,8 +539,14 @@ export const rootEventHandlers = {
     actions: ["longRest", "classLongRest"],
   },
   SPEND_HIT_DIE: { actions: ["spendHitDie"] },
-  APPLY_STARVATION: { actions: ["applyStarvation"] },
-  APPLY_DEHYDRATION: { actions: ["applyDehydration"] },
+  APPLY_STARVATION: {
+    guard: "canChangeExhaustion" as const,
+    actions: ["applyStarvation"],
+  },
+  APPLY_DEHYDRATION: {
+    guard: "canChangeExhaustion" as const,
+    actions: ["applyDehydration"],
+  },
   CLEAR_PENDING_RESOLUTION: { actions: ["clearPendingResolution"] },
   TRIGGER_INDOMITABLE: { actions: ["triggerIndomitable"] },
   TRIGGER_OVERCHANNEL: { actions: ["triggerOverchannel"] },

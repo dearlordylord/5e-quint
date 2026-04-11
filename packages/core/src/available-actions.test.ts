@@ -19,7 +19,10 @@ import { battleMachine } from "#/battle-machine.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { creatureMachine } from "#/machine.ts";
 import type { DndMachineInput } from "#/machine-types.ts";
-import type { CreatureId as CreatureIdT } from "#/types.ts";
+import type {
+  BattleWeaponProfile,
+  CreatureId as CreatureIdT,
+} from "#/types.ts";
 import {
   abilityModifier,
   armorClass,
@@ -30,6 +33,28 @@ import {
   spellId,
   spellSlotLevel,
 } from "#/types.ts";
+
+function quota(resource: "action" | "bonusAction" | "reaction") {
+  return { kind: "quota" as const, resource };
+}
+
+function movement(amount: number) {
+  return { kind: "quota" as const, resource: "movement" as const, amount };
+}
+
+function pool(resource: string) {
+  return { kind: "pool" as const, resource };
+}
+
+function cost(
+  ...items: ReadonlyArray<
+    | ReturnType<typeof quota>
+    | ReturnType<typeof movement>
+    | ReturnType<typeof pool>
+  >
+) {
+  return items;
+}
 
 const FIGHTER_5_INPUT: DndMachineInput = {
   maxHp: 44,
@@ -332,6 +357,15 @@ const ZERO_BATTLE_SOT: Pick<
   deathSaveRoll: 0,
 };
 
+const LONGSWORD: BattleWeaponProfile = {
+  name: "Longsword",
+  damageType: "slashing",
+  isMelee: true,
+  damageDie: 8,
+  versatileDie: 10,
+  properties: new Set(["versatile"]),
+};
+
 function makeBattleActor(...events: ReadonlyArray<BattleEvent>) {
   const actor = createActor(battleMachine);
   actor.start();
@@ -468,6 +502,24 @@ function initBattleForFeatureDiscovery() {
   return actor;
 }
 
+function initBattleForAttackDiscovery() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 15,
+        mainHandWeapon: LONGSWORD,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return actor;
+}
+
 function initBattleForReleaseGrappleDiscovery(
   {
     withGrapple,
@@ -489,8 +541,6 @@ function initBattleForReleaseGrappleDiscovery(
     actor.send({
       type: "BATTLE_GRAPPLE",
       targetId: CreatureId("B"),
-      attackerSize: "medium",
-      targetSize: "medium",
       targetSaveFailed: true,
     });
   }
@@ -875,7 +925,7 @@ describe("available actions contract", () => {
     ).toEqual([
       creatureToken({
         type: "ENTER_COMBAT",
-        cost: {},
+        cost: cost(),
         outcome: {
           summary: "Enter combat (begin tracking turns and action economy)",
         },
@@ -883,7 +933,7 @@ describe("available actions contract", () => {
       creatureToken({
         type: "SHORT_REST",
         availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features",
@@ -986,6 +1036,53 @@ describe("available actions contract", () => {
     expect(actor.getSnapshot().context.hp).toBe(44);
   });
 
+  test("EXIT_COMBAT remains available after death while roster teardown is caller-owned", () => {
+    const actor = makeActor();
+    actor.send({ type: "ENTER_COMBAT" });
+    actor.send({
+      type: "TAKE_DAMAGE",
+      amount: 88,
+      damageType: "slashing",
+      resistances: new Set(),
+      vulnerabilities: new Set(),
+      immunities: new Set(),
+      isCritical: false,
+    });
+
+    expect(actor.getSnapshot().context.dead).toBe(true);
+    expect(
+      getAvailableActions(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+      ),
+    ).toContainEqual({
+      scope: "creature",
+      type: "EXIT_COMBAT",
+      cost: cost(),
+      outcome: {
+        summary: "Stop tracking this creature in combat and initiative order",
+      },
+    });
+
+    const exitRequest = expectRequest(
+      resolveAction(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+        creatureResolved({ type: "EXIT_COMBAT" }),
+      ),
+    );
+    const exitFinalized = finalizeResolution(
+      exitRequest,
+      { runtime: "none" },
+      actor.getSnapshot().context,
+    );
+    expect(exitFinalized).toEqual({
+      ok: true,
+      event: { type: "EXIT_COMBAT" },
+      outcome: "Stop tracking this creature in combat and initiative order",
+    });
+  });
+
   test("exposes one prepared-spell token per prepared spell with slot-level choice holes", () => {
     const actor = makeActorWithInput(CLERIC_5_SPELL_INPUT);
     actor.send({ type: "ENTER_COMBAT" });
@@ -1003,7 +1100,7 @@ describe("available actions contract", () => {
         slotLevel: {
           options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)],
         },
-        cost: { action: true, charge: "spellSlot" },
+        cost: cost(quota("action"), pool("spellSlot")),
         outcome: {
           summary:
             "Cast Bless with a spell slot of the chosen level and begin concentrating on it",
@@ -1015,7 +1112,7 @@ describe("available actions contract", () => {
         slotLevel: {
           options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)],
         },
-        cost: { action: true, charge: "spellSlot" },
+        cost: cost(quota("action"), pool("spellSlot")),
         outcome: {
           summary: "Cast Guiding Bolt with a spell slot of the chosen level",
         },
@@ -1026,7 +1123,7 @@ describe("available actions contract", () => {
         slotLevel: {
           options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)],
         },
-        cost: { bonusAction: true, charge: "spellSlot" },
+        cost: cost(quota("bonusAction"), pool("spellSlot")),
         outcome: {
           summary: "Cast Healing Word with a spell slot of the chosen level",
         },
@@ -1098,7 +1195,7 @@ describe("available actions contract", () => {
       creatureToken({
         type: "SHORT_REST",
         availableHitDice: [{ className: "fighter", remaining: 2, dieSize: 10 }],
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Finish a short rest, spend hit dice in the chosen order, and recharge short-rest features",
@@ -1175,7 +1272,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_HEROIC_INSPIRATION",
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Spend Heroic Inspiration to reroll a die and use the new roll",
@@ -1231,7 +1328,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_TACTICAL_MIND",
-        cost: { charge: "secondWind" },
+        cost: cost(pool("secondWind")),
         outcome: {
           summary:
             "Add 1d10 to the failed ability check; expend Second Wind only if the check now succeeds",
@@ -1280,7 +1377,7 @@ describe("available actions contract", () => {
       creatureToken({
         type: "USE_METAMAGIC",
         option: { options: ["careful", "subtle"] },
-        cost: { charge: "sorceryPoints" },
+        cost: cost(pool("sorceryPoints")),
         outcome: {
           summary:
             "Apply a currently legal known Metamagic option to the spell you are casting",
@@ -1346,7 +1443,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_PEERLESS_SKILL",
-        cost: { charge: "bardicInspiration" },
+        cost: cost(pool("bardicInspiration")),
         outcome: {
           summary:
             "Add your Bardic Inspiration die to the failed attack roll; expend it only if the roll now succeeds",
@@ -1408,7 +1505,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_RELENTLESS_RAGE",
-        cost: {},
+        cost: cost(),
         outcome: {
           summary:
             "Make a DC 10 Constitution save to stay at 22 HP instead of dropping to 0",
@@ -1459,7 +1556,7 @@ describe("available actions contract", () => {
     ).toContainEqual({
       scope: "creature",
       type: "USE_INDOMITABLE",
-      cost: { charge: "indomitable" },
+      cost: cost(pool("indomitable")),
       outcome: {
         summary:
           "Expend one Indomitable use to reroll the failed saving throw and add your Fighter level",
@@ -1511,7 +1608,7 @@ describe("available actions contract", () => {
     ).toContainEqual({
       scope: "creature",
       type: "USE_OVERCHANNEL",
-      cost: {},
+      cost: cost(),
       outcome: {
         summary:
           "Overchannel the qualifying Fireball cast at slot level 3 for maximum damage",
@@ -1563,7 +1660,7 @@ describe("available actions contract", () => {
     ).toContainEqual({
       scope: "creature",
       type: "USE_SNEAK_ATTACK",
-      cost: {},
+      cost: cost(),
       outcome: { summary: "Apply Sneak Attack damage to the qualifying hit" },
     });
 
@@ -1635,7 +1732,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_ACTION_SURGE",
-        cost: { charge: "actionSurge" },
+        cost: cost(pool("actionSurge")),
         outcome: {
           summary:
             "Expend one Action Surge use to gain one additional action this turn",
@@ -1650,7 +1747,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "FLURRY_OF_BLOWS",
-        cost: { bonusAction: true, charge: "focusPoint" },
+        cost: cost(quota("bonusAction"), pool("focusPoint")),
         outcome: {
           summary:
             "Spend 1 Focus Point to make 2 unarmed strikes as a bonus action",
@@ -1665,7 +1762,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_BARDIC_INSPIRATION",
-        cost: { bonusAction: true, charge: "bardicInspiration" },
+        cost: cost(quota("bonusAction"), pool("bardicInspiration")),
         outcome: {
           summary:
             "Expend one Bardic Inspiration use to inspire another creature",
@@ -1784,7 +1881,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "WHOLENESS_OF_BODY",
-        cost: { bonusAction: true, charge: "wholenessOfBody" },
+        cost: cost(quota("bonusAction"), pool("wholenessOfBody")),
         outcome: { summary: "Heal 1d8 + 3 HP (minimum 1)" },
       }),
     );
@@ -1793,7 +1890,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "UNCANNY_METABOLISM",
-        cost: { charge: "uncannyMetabolism" },
+        cost: cost(pool("uncannyMetabolism")),
         outcome: {
           summary: "Regain all expended Focus Points and heal 1d8 + 6 HP",
         },
@@ -1870,7 +1967,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_TIRELESS",
-        cost: { action: true, charge: "tireless" },
+        cost: cost(quota("action"), pool("tireless")),
         outcome: { summary: "Gain 1d8 + 3 temporary HP (minimum 1)" },
       }),
     );
@@ -1911,7 +2008,7 @@ describe("available actions contract", () => {
       creatureToken({
         type: "USE_ARCANE_RECOVERY",
         slotLevel: { options: [spellSlotLevel(2)] },
-        cost: { charge: "arcaneRecovery" },
+        cost: cost(pool("arcaneRecovery")),
         outcome: {
           summary:
             "Recover one expended spell slot of the chosen level and use Arcane Recovery",
@@ -1942,7 +2039,7 @@ describe("available actions contract", () => {
       creatureToken({
         type: "USE_MYSTIC_ARCANUM",
         spellLevel: { options: [spellSlotLevel(6), spellSlotLevel(7)] },
-        cost: { charge: "mysticArcanum" },
+        cost: cost(pool("mysticArcanum")),
         outcome: {
           summary:
             "Cast an unused Mystic Arcanum spell of the chosen level without expending a slot",
@@ -1962,7 +2059,7 @@ describe("available actions contract", () => {
       creatureToken({
         type: "USE_LAY_ON_HANDS",
         amount: { options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
-        cost: { bonusAction: true, charge: "layOnHandsPool" },
+        cost: cost(quota("bonusAction"), pool("layOnHandsPool")),
         outcome: {
           summary: "Spend Lay on Hands points to restore up to that many HP",
         },
@@ -1977,7 +2074,7 @@ describe("available actions contract", () => {
       creatureToken({
         type: "USE_DIVINE_SMITE",
         slotLevel: { options: [spellSlotLevel(1)] },
-        cost: { bonusAction: true, charge: "spellSlot" },
+        cost: cost(quota("bonusAction"), pool("spellSlot")),
         outcome: {
           summary:
             "Expend a spell slot of the chosen level to use Divine Smite",
@@ -2014,7 +2111,7 @@ describe("available actions contract", () => {
         slotLevel: {
           options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)],
         },
-        cost: { charge: "spellSlot" },
+        cost: cost(pool("spellSlot")),
         outcome: {
           summary: "Expend a spell slot to regain one Bardic Inspiration use",
         },
@@ -2040,7 +2137,7 @@ describe("available actions contract", () => {
         slotLevel: {
           options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)],
         },
-        cost: { charge: "spellSlot" },
+        cost: cost(pool("spellSlot")),
         outcome: {
           summary:
             "Expend a spell slot to gain sorcery points equal to its level",
@@ -2056,7 +2153,7 @@ describe("available actions contract", () => {
       creatureToken({
         type: "CONVERT_POINTS_TO_SLOT",
         slotLevel: { options: [spellSlotLevel(1)] },
-        cost: { bonusAction: true, charge: "sorceryPoints" },
+        cost: cost(quota("bonusAction"), pool("sorceryPoints")),
         outcome: {
           summary:
             "Spend sorcery points to create a spell slot of the chosen level",
@@ -2079,7 +2176,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_MAGICAL_CUNNING",
-        cost: { charge: "magicalCunning" },
+        cost: cost(pool("magicalCunning")),
         outcome: {
           summary:
             "Regain expended Pact Magic spell slots (up to half your max, rounded up); once per Long Rest",
@@ -2124,7 +2221,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_INNATE_SORCERY",
-        cost: { bonusAction: true, charge: "innateSorcery" },
+        cost: cost(quota("bonusAction"), pool("innateSorcery")),
         outcome: {
           summary: "Use a bonus action to activate Innate Sorcery for 1 minute",
         },
@@ -2185,7 +2282,7 @@ describe("available actions contract", () => {
         slotLevel: {
           options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)],
         },
-        cost: { charge: "spellSlot" },
+        cost: cost(pool("spellSlot")),
         outcome: {
           summary: "Expend a spell slot to regain one Wild Shape use",
         },
@@ -2238,7 +2335,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "ENTER_WILD_SHAPE",
-        cost: { bonusAction: true, charge: "wildShape" },
+        cost: cost(quota("bonusAction"), pool("wildShape")),
         outcome: {
           summary: "Shape-shift into a beast form, gaining 5 temporary HP",
         },
@@ -2299,7 +2396,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "EXIT_WILD_SHAPE",
-        cost: { bonusAction: true },
+        cost: cost(quota("bonusAction")),
         outcome: {
           summary: "Revert from beast form to your normal form",
         },
@@ -2370,7 +2467,7 @@ describe("available actions contract", () => {
     ).toContainEqual(
       creatureToken({
         type: "USE_WILD_RESURGENCE_SLOT",
-        cost: { charge: "wildShape" },
+        cost: cost(pool("wildShape")),
         outcome: {
           summary:
             "Expend one Wild Shape use to regain a level 1 spell slot; once per Long Rest",
@@ -2510,7 +2607,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_SHIELD",
-        cost: { reaction: true, charge: "spellSlot" },
+        cost: cost(quota("reaction"), pool("spellSlot")),
         outcome: {
           summary:
             "Use your reaction to cast Shield against the triggering attack",
@@ -2520,7 +2617,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "C",
         type: "USE_CUTTING_WORDS",
-        cost: { reaction: true, charge: "bardicInspiration" },
+        cost: cost(quota("reaction"), pool("bardicInspiration")),
         outcome: {
           summary:
             "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll",
@@ -2538,14 +2635,14 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_DASH",
-          cost: { action: true },
+          cost: cost(quota("action")),
           outcome: { summary: "Spend your action to gain extra movement" },
         },
         {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_DISENGAGE",
-          cost: { action: true },
+          cost: cost(quota("action")),
           outcome: {
             summary:
               "Spend your action so your movement does not provoke opportunity attacks this turn",
@@ -2555,7 +2652,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_DODGE",
-          cost: { action: true },
+          cost: cost(quota("action")),
           outcome: {
             summary:
               "Spend your action to impose disadvantage on attacks against you until your next turn starts",
@@ -2565,7 +2662,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_READY",
-          cost: { action: true },
+          cost: cost(quota("action")),
           outcome: {
             summary:
               "Spend your action to ready an attack for release with your reaction",
@@ -2575,7 +2672,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "STAND_FROM_PRONE",
-          cost: { movement: 15, shape: "spend" },
+          cost: cost(movement(15)),
           outcome: {
             summary: "Spend half your Speed in movement to stand up from Prone",
           },
@@ -2610,6 +2707,152 @@ describe("available actions contract", () => {
     });
   });
 
+  test("battle discovery exposes BATTLE_ATTACK only when the active creature owns a main-hand attack payload", () => {
+    const actor = initBattleForAttackDiscovery();
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_ATTACK",
+          targetId: { options: ["B"] },
+          knockOut: { options: [false, true] },
+          cost: cost(quota("action")),
+          outcome: {
+            summary:
+              "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+          },
+        },
+      ]),
+    );
+
+    const noWeaponActor = initBattleForFeatureDiscovery();
+    expect(
+      getAvailableBattleActions(noWeaponActor.getSnapshot().context).some(
+        (token) => token.type === "BATTLE_ATTACK",
+      ),
+    ).toBe(false);
+  });
+
+  test("battle resolution exposes the public BATTLE_ATTACK runtime contract", () => {
+    const actor = initBattleForAttackDiscovery();
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      },
+      outcome:
+        "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+      runtime: "battleAttack",
+    });
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleAttack",
+          values: {
+            attackRoll: 15,
+            targetAc: 10,
+            weaponDamage: 6,
+            attackerWithin5ft: true,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            hitReactionCandidates: [],
+          },
+        },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_ATTACK",
+        targetId: CreatureId("B"),
+        attackRoll: 15,
+        diceCount: 1,
+        dieSize: 8,
+        dmg: 6,
+        dt: "slashing",
+        damageQualifiers: new Set(),
+        crit: false,
+        tAc: armorClass(10),
+        knockOut: false,
+        isMelee: true,
+        weaponProperties: new Set(["versatile"]),
+        isFinesse: false,
+        attackerWithin5ft: true,
+        hostileWithin5ft: false,
+        targetCanSeeAttacker: true,
+        attackerCanSeeTarget: true,
+        frightSourceInLOS: false,
+        hasAllyAdjacentToTarget: false,
+        saDmg: 0,
+        hitReactionCandidates: new Set(),
+      },
+      outcome:
+        "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+    });
+  });
+
+  test("battle resolution rejects ranged public BATTLE_ATTACK runtime that omits attackerWithin60ft", () => {
+    const actor = initBattleForAttackDiscovery();
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleAttack",
+          values: {
+            attackRoll: 15,
+            targetAc: 10,
+            weaponDamage: 6,
+            attackerWithin5ft: false,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            hitReactionCandidates: [],
+          },
+        },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: false,
+      error: {
+        code: "INVALID_RUNTIME_INPUT",
+        message:
+          "Battle attack runtime must include attackerWithin60ft when attackerWithin5ft is false.",
+      },
+    });
+  });
+
   test("previewBattleAction summarizes standing from prone without runtime inputs", () => {
     const actor = initBattleForProneDiscovery();
 
@@ -2622,7 +2865,7 @@ describe("available actions contract", () => {
     ).toEqual({
       ok: true,
       summary: "Spend half your Speed in movement to stand up from Prone",
-      cost: { movement: 15, shape: "spend" },
+      cost: cost(movement(15)),
       runtime: "none",
       eventType: "BATTLE_STAND_FROM_PRONE",
     });
@@ -2653,7 +2896,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_ACTION_SURGE",
-          cost: { charge: "actionSurge" },
+          cost: cost(pool("actionSurge")),
           outcome: {
             summary:
               "Expend one Action Surge use to gain one additional non-Magic action this turn",
@@ -2663,7 +2906,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_ENTER_RAGE",
-          cost: { bonusAction: true, charge: "rage" },
+          cost: cost(quota("bonusAction"), pool("rage")),
           outcome: {
             summary:
               "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
@@ -2673,7 +2916,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_DECLARE_RECKLESS",
-          cost: {},
+          cost: cost(),
           outcome: { summary: "Declare Reckless Attack for this turn" },
         },
       ]),
@@ -2702,7 +2945,7 @@ describe("available actions contract", () => {
       ok: true,
       summary:
         "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
-      cost: { bonusAction: true, charge: "rage" },
+      cost: cost(quota("bonusAction"), pool("rage")),
       runtime: "none",
       eventType: "BATTLE_ENTER_RAGE",
     });
@@ -2776,7 +3019,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_RELEASE_GRAPPLE",
-          cost: {},
+          cost: cost(),
           outcome: {
             summary:
               "Release the creature you are grappling; no action required",
@@ -2819,7 +3062,7 @@ describe("available actions contract", () => {
     ).toEqual({
       ok: true,
       summary: "Release the creature you are grappling; no action required",
-      cost: {},
+      cost: cost(),
       runtime: "none",
       eventType: "BATTLE_RELEASE_GRAPPLE",
     });
@@ -2874,7 +3117,7 @@ describe("available actions contract", () => {
           actorId: "B",
           type: "BATTLE_ESCAPE_GRAPPLE",
           escapeSucceeded: { options: [true, false] },
-          cost: { action: true },
+          cost: cost(quota("action")),
           outcome: {
             summary:
               "Spend your action to attempt to escape the grapple with a resolved Athletics or Acrobatics check",
@@ -2922,7 +3165,7 @@ describe("available actions contract", () => {
           },
           hasCoverOrObscurement: { options: [true, false] },
           outOfEnemyLineOfSight: { options: [true, false] },
-          cost: { action: true },
+          cost: cost(quota("action")),
         }),
       ]),
     );
@@ -2988,7 +3231,7 @@ describe("available actions contract", () => {
           perceptionTotal: {
             options: Array.from({ length: 30 }, (_, i) => i + 1),
           },
-          cost: { action: true },
+          cost: cost(quota("action")),
         }),
       ]),
     );
@@ -3045,7 +3288,7 @@ describe("available actions contract", () => {
       spellName: "hold_person",
       slotLevel: { options: [spellSlotLevel(2), spellSlotLevel(3)] },
       targetId: { options: ["B"] },
-      cost: { action: true, charge: "spellSlot" },
+      cost: cost(quota("action"), pool("spellSlot")),
       outcome: {
         summary:
           "Spend your action and a spell slot to Ready Hold Person and hold it with Concentration",
@@ -3123,7 +3366,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_READY_PASS",
-          cost: {},
+          cost: cost(),
           outcome: { summary: "Decline to release your readied action" },
         },
         {
@@ -3131,7 +3374,7 @@ describe("available actions contract", () => {
           actorId: "A",
           type: "BATTLE_READY_RELEASE",
           targetId: { options: ["B"] },
-          cost: { reaction: true },
+          cost: cost(quota("reaction")),
           outcome: {
             summary:
               "Spend your reaction to release the readied attack against the chosen target",
@@ -3223,14 +3466,14 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_READY_PASS",
-        cost: {},
+        cost: cost(),
         outcome: { summary: "Decline to release your readied action" },
       },
       {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_READY_SPELL_RELEASE",
-        cost: { reaction: true },
+        cost: cost(quota("reaction")),
         outcome: {
           summary:
             "Spend your reaction to release the readied spell against its chosen target",
@@ -3293,7 +3536,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "USE_UNCANNY_DODGE",
-        cost: { reaction: true },
+        cost: cost(quota("reaction")),
         outcome: {
           summary:
             "Use your reaction to halve the triggering attack's damage against you",
@@ -3383,7 +3626,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_HELLISH_REBUKE",
-        cost: { reaction: true, charge: "spellSlot" },
+        cost: cost(quota("reaction"), pool("spellSlot")),
         outcome: {
           summary:
             "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
@@ -3415,7 +3658,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_HELLISH_REBUKE",
-        cost: { reaction: true, charge: "spellSlot" },
+        cost: cost(quota("reaction"), pool("spellSlot")),
         outcome: {
           summary:
             "Use your reaction to cast Hellish Rebuke against the creature that damaged you",
@@ -3453,7 +3696,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "USE_RETALIATION",
-        cost: { reaction: true },
+        cost: cost(quota("reaction")),
         outcome: {
           summary:
             "Use your reaction to make a melee attack against the creature that damaged you",
@@ -3545,7 +3788,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "USE_DEFLECT_ATTACKS",
-        cost: { reaction: true },
+        cost: cost(quota("reaction")),
         outcome: {
           summary:
             "Use your reaction to reduce the triggering attack's damage with Deflect Attacks",
@@ -3594,7 +3837,7 @@ describe("available actions contract", () => {
         actorId: "B",
         type: "CAST_COUNTERSPELL",
         slotLevel: { options: [spellSlotLevel(3)] },
-        cost: { reaction: true, charge: "spellSlot" },
+        cost: cost(quota("reaction"), pool("spellSlot")),
         outcome: {
           summary:
             "Use your reaction to cast Counterspell against the triggering spell",
@@ -3883,10 +4126,7 @@ describe("available actions contract", () => {
     ).toEqual({
       ok: true,
       summary: "Heal 1d10 + 5 HP",
-      cost: {
-        bonusAction: true,
-        charge: "secondWind",
-      },
+      cost: cost(quota("bonusAction"), pool("secondWind")),
       runtime: "secondWind",
       eventType: undefined,
     });

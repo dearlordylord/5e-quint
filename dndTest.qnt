@@ -723,6 +723,18 @@ module dndTest::Impl {
     all { assert(not(s.unconscious)), assert(s.prone), assert(not(isIncapacitated(s))) }
   }
 
+  run test_dead_condition_apply_noop = {
+    val deadS = pApplyCondition(FRESH20.with("hp", 0), CUnconscious, Set()).with("dead", true)
+    val s = pApplyCondition(deadS, CPoisoned, Set())
+    all { assert(s.dead), assert(s.unconscious), assert(not(s.poisoned)) }
+  }
+
+  run test_dead_condition_remove_noop = {
+    val s = pApplyCondition(FRESH20.with("hp", 0), CUnconscious, Set()).with("dead", true)
+    val s1 = pRemoveCondition(s, CUnconscious)
+    all { assert(s1.dead), assert(s1.unconscious), assert(isIncapacitated(s1)) }
+  }
+
   run test_petrified_blocks_poison = {
     val s = pApplyCondition(pApplyCondition(FRESH20, CPetrified, Set()), CPoisoned, Set())
     assert(not(s.poisoned))
@@ -745,6 +757,18 @@ module dndTest::Impl {
   }
 
   run test_exhaustion_reduce = assert(pReduceExhaustion(pAddExhaustion(FRESH20, 3, false), 1).exhaustion == 2)
+
+  run test_dead_exhaustion_add_noop = {
+    val s = FRESH20.with("dead", true).with("hp", 0).with("exhaustion", 2)
+    val s1 = pAddExhaustion(s, 3, false)
+    all { assert(s1.dead), assert(s1.hp == 0), assert(s1.exhaustion == 2) }
+  }
+
+  run test_dead_exhaustion_reduce_noop = {
+    val s = FRESH20.with("dead", true).with("hp", 0).with("exhaustion", 3)
+    val s1 = pReduceExhaustion(s, 2)
+    all { assert(s1.dead), assert(s1.hp == 0), assert(s1.exhaustion == 3) }
+  }
 
   // -- Exhaustion Penalty --
 
@@ -1193,7 +1217,7 @@ module dndTest::Impl {
   run test_can_act_incapacitated = assert(not(pCanAct(pApplyCondition(FRESH20, CParalyzed, Set()))))
   run test_can_speak_normal = assert(pCanSpeak(FRESH20))
   run test_can_speak_paralyzed = assert(not(pCanSpeak(pApplyCondition(FRESH20, CParalyzed, Set()))))
-  run test_can_speak_stunned_ok = assert(pCanSpeak(pApplyCondition(FRESH20, CStunned, Set())))
+  run test_can_speak_stunned_blocked = assert(not(pCanSpeak(pApplyCondition(FRESH20, CStunned, Set()))))
 
   // ============================================================
   // Combined scenarios

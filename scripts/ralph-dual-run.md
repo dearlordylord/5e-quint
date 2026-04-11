@@ -5,15 +5,18 @@
 1. Parses the plan's `ralph-task-index` JSON block and uses `### Task N` headings only as body anchors.
 2. Creates an integration branch from the current main `HEAD`.
 3. For each task, creates two disposable worktrees from the current integration branch `HEAD`.
-4. Runs Claude in one worktree with `claude --dangerously-skip-permissions`.
-5. Runs Codex in the other with `codex exec --dangerously-bypass-approvals-and-sandbox`.
-6. Reviews both task diffs with Codex.
-7. Runs a Codex decider from the main worktree to apply, verify, reconcile any plan impact, and commit the reconciled Task N result to the integration branch.
-8. Refreshes the plan snapshot and task index from the updated plan file.
-9. Removes the task worktrees, then starts the next initially indexed task whose refreshed status is `ready-for-research` or `ready-for-implementation-after-light-research`.
+4. Links the main workspace install into each task worktree so `pnpm` and package-local test commands resolve the same dependency graph as the main repo.
+5. Runs Claude in one worktree with `claude --dangerously-skip-permissions`.
+6. Runs Codex in the other with `codex exec --dangerously-bypass-approvals-and-sandbox`.
+7. Reviews both task diffs with Codex.
+8. Runs a Codex decider from the main worktree to apply, verify, reconcile any plan impact, and commit the reconciled Task N result to the integration branch.
+9. Refreshes the plan snapshot and task index from the updated plan file.
+10. Removes the task worktrees, then starts the next initially indexed task whose refreshed status is `ready-for-research` or `ready-for-implementation-after-light-research`.
 
 Runtime logs, prompts, review reports, and diffs are written under ignored `.ralph/runs/<run-id>/task-<n>/`.
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs skip tasks whose refreshed `ralph-task-index` status is no longer ready. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
+
+Task worktrees reuse the main repo install by symlinking `node_modules`, `packages/core/node_modules`, and `packages/mcp/node_modules` into each disposable worktree. This keeps per-task verification fast and avoids a redundant `pnpm install` for every task rotation.
 
 ## Plan Format
 
@@ -72,11 +75,14 @@ To use the older behavior and commit reconciled results directly to `master`, pa
 scripts/ralph-dual-run.sh plans/some-plan.md --commit-to-master
 ```
 
-The script refuses to start unless the main worktree is clean and `HEAD` matches `master` (or the `--base` ref). Each implementer and reviewer prompt also includes the repo-specific stale-worktree check:
+The script refuses to start unless the main worktree is clean and `HEAD` matches `master` (or the `--base` ref) at run start. Each implementer and reviewer prompt also includes the repo-specific branch-base check:
 
 ```bash
 git log --oneline -1 master
+git log --oneline -1 HEAD
 ```
+
+Agents treat this as an ancestor check, not an exact-match requirement. Earlier tasks may already have advanced the integration branch beyond `master`, which is expected. Only when `master` is no longer in the current branch history should the worktree be considered stale.
 
 If a worktree is stale, the agent is instructed to run:
 
