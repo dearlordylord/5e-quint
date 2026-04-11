@@ -2,21 +2,24 @@ import { Match } from "effect";
 
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
 import {
-  MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
-  MONSTER_BATTLE_REACTION_OPTIONS,
-  SKILLS,
-  type MonsterAttack,
-  type Skill,
-  type StatBlock,
-} from "#/monster-types.ts";
+  GOBLIN_BOSS,
+  GOBLIN_MINION,
+  GOBLIN_WARRIOR,
+} from "#/monster-catalog-goblins.ts";
+import { type MonsterAttack, type StatBlock } from "#/monster-types.ts";
 import {
   CreatureId,
   abilityModifier,
   abilityScoreToMod,
-  armorClass,
   type BattleWeaponProfile,
   type CreatureId as CreatureIdT,
 } from "#/types.ts";
+
+export {
+  GOBLIN_BOSS,
+  GOBLIN_MINION,
+  GOBLIN_WARRIOR,
+} from "#/monster-catalog-goblins.ts";
 
 /**
  * Core-owned runtime catalog for named monster stat blocks.
@@ -48,262 +51,6 @@ export const MONSTER_STAT_BLOCK_PROVENANCE = {
     "Existing named stat blocks in creature.qnt are MBT/proof fixtures unless a later task explicitly unifies Quint with the runtime catalog.",
 } as const;
 
-function skillBonuses(
-  overrides: Partial<Record<Skill, number>>,
-): Record<Skill, number> {
-  const base = Object.fromEntries(SKILLS.map((skill) => [skill, 0])) as Record<
-    Skill,
-    number
-  >;
-  return { ...base, ...overrides };
-}
-
-/**
- * Goblin Minion — SRD 5.2.1:
- * `.references/srd-5.2.1/Monsters/Monsters-E-G.md` > `Goblins` >
- * `Goblin Minion`.
- */
-export const GOBLIN_MINION = {
-  name: "Goblin Minion",
-  creatureType: "fey",
-  descriptiveTags: ["Goblinoid"],
-  creatureSize: "small",
-  ac: armorClass(12),
-  initiativeMod: abilityModifier(2),
-  maxHp: 7,
-  hitDice: 2,
-  hitDieType: 6,
-  speeds: {
-    walk: 30,
-    fly: 0,
-    swim: 0,
-    climb: 0,
-    burrow: 0,
-  },
-  abilityScores: {
-    str: 8,
-    dex: 15,
-    con: 10,
-    int: 10,
-    wis: 8,
-    cha: 8,
-  },
-  saveProficiencies: new Set(["dex"]),
-  skillBonuses: skillBonuses({ stealth: 6 }),
-  cr: { type: "CR_Eighth" as const },
-  proficiencyBonus: 2,
-  resistances: new Set(),
-  vulnerabilities: new Set(),
-  damageImmunities: new Set(),
-  conditionImmunities: new Set(),
-  exhaustionImmune: false,
-  senses: {
-    blindsight: 0,
-    darkvision: 60,
-    tremorsense: 0,
-    truesight: 0,
-  },
-  passivePerception: 9,
-  languages: ["Common", "Goblin"],
-  gear: ["Daggers (3)"],
-  battleBonusActionOptions: MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
-  attacks: {
-    dagger: {
-      name: "Dagger",
-      attackBonus: 4,
-      reach: 5,
-      rangeNormal: 20,
-      rangeLong: 60,
-      damageAmount: 4,
-      damageType: "piercing",
-      isRanged: false,
-      attackMode: "meleeOrRanged",
-    },
-  },
-  multiattack: [],
-  legendaryActionUses: 0,
-  legendaryResistanceUses: 0,
-  legendaryActions: {},
-  rechargeAbilities: {},
-  dailyAbilities: {},
-  inLair: false,
-} as const satisfies StatBlock;
-
-/**
- * Goblin Warrior — SRD 5.2.1:
- * `.references/srd-5.2.1/Monsters/Monsters-E-G.md` > `Goblins` >
- * `Goblin Warrior`.
- */
-export const GOBLIN_WARRIOR = {
-  name: "Goblin Warrior",
-  creatureType: "fey",
-  descriptiveTags: ["Goblinoid"],
-  creatureSize: "small",
-  ac: armorClass(15),
-  initiativeMod: abilityModifier(2),
-  maxHp: 10,
-  hitDice: 3,
-  hitDieType: 6,
-  speeds: {
-    walk: 30,
-    fly: 0,
-    swim: 0,
-    climb: 0,
-    burrow: 0,
-  },
-  abilityScores: {
-    str: 8,
-    dex: 15,
-    con: 10,
-    int: 10,
-    wis: 8,
-    cha: 8,
-  },
-  saveProficiencies: new Set(["dex"]),
-  skillBonuses: skillBonuses({ stealth: 6 }),
-  cr: { type: "CR_Quarter" as const },
-  proficiencyBonus: 2,
-  resistances: new Set(),
-  vulnerabilities: new Set(),
-  damageImmunities: new Set(),
-  conditionImmunities: new Set(),
-  exhaustionImmune: false,
-  senses: {
-    blindsight: 0,
-    darkvision: 60,
-    tremorsense: 0,
-    truesight: 0,
-  },
-  passivePerception: 9,
-  languages: ["Common", "Goblin"],
-  gear: ["Leather Armor", "Scimitar", "Shield", "Shortbow"],
-  battleBonusActionOptions: MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
-  attacks: {
-    scimitar: {
-      name: "Scimitar",
-      attackBonus: 4,
-      reach: 5,
-      rangeNormal: 0,
-      rangeLong: 0,
-      damageAmount: 5,
-      damageType: "slashing",
-      isRanged: false,
-      attackMode: "melee",
-      extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
-    },
-    shortbow: {
-      name: "Shortbow",
-      attackBonus: 4,
-      reach: 0,
-      rangeNormal: 80,
-      rangeLong: 320,
-      damageAmount: 5,
-      damageType: "piercing",
-      isRanged: true,
-      attackMode: "ranged",
-      extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
-    },
-  },
-  multiattack: [],
-  legendaryActionUses: 0,
-  legendaryResistanceUses: 0,
-  legendaryActions: {},
-  rechargeAbilities: {},
-  dailyAbilities: {},
-  inLair: false,
-} as const satisfies StatBlock;
-
-/**
- * Goblin Boss — SRD 5.2.1:
- * `.references/srd-5.2.1/Monsters/Monsters-E-G.md` > `Goblins` >
- * `Goblin Boss`.
- *
- * Redirect Attack, Nimble Escape, and the advantage-hit rider all stay on the
- * generic battle surface; the catalog ID is only the durable SRD entry point.
- */
-export const GOBLIN_BOSS = {
-  name: "Goblin Boss",
-  creatureType: "fey",
-  descriptiveTags: ["Goblinoid"],
-  creatureSize: "small",
-  ac: armorClass(17),
-  initiativeMod: abilityModifier(2),
-  maxHp: 21,
-  hitDice: 6,
-  hitDieType: 6,
-  speeds: {
-    walk: 30,
-    fly: 0,
-    swim: 0,
-    climb: 0,
-    burrow: 0,
-  },
-  abilityScores: {
-    str: 10,
-    dex: 15,
-    con: 10,
-    int: 10,
-    wis: 8,
-    cha: 10,
-  },
-  saveProficiencies: new Set(["dex"]),
-  skillBonuses: skillBonuses({ stealth: 6 }),
-  cr: { type: "CRN" as const, value: 1 },
-  proficiencyBonus: 2,
-  resistances: new Set(),
-  vulnerabilities: new Set(),
-  damageImmunities: new Set(),
-  conditionImmunities: new Set(),
-  exhaustionImmune: false,
-  senses: {
-    blindsight: 0,
-    darkvision: 60,
-    tremorsense: 0,
-    truesight: 0,
-  },
-  passivePerception: 9,
-  languages: ["Common", "Goblin"],
-  gear: ["Chain Shirt", "Scimitar", "Shield", "Shortbow"],
-  battleBonusActionOptions: MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
-  battleReactionOptions: MONSTER_BATTLE_REACTION_OPTIONS,
-  attacks: {
-    scimitar: {
-      name: "Scimitar",
-      attackBonus: 4,
-      reach: 5,
-      rangeNormal: 0,
-      rangeLong: 0,
-      damageAmount: 5,
-      damageType: "slashing",
-      isRanged: false,
-      attackMode: "melee",
-      extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
-    },
-    shortbow: {
-      name: "Shortbow",
-      attackBonus: 4,
-      reach: 0,
-      rangeNormal: 80,
-      rangeLong: 320,
-      damageAmount: 5,
-      damageType: "piercing",
-      isRanged: true,
-      attackMode: "ranged",
-      extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
-    },
-  },
-  multiattack: [
-    { type: "MAttack", name: "Scimitar" },
-    { type: "MAttack", name: "Shortbow" },
-  ],
-  legendaryActionUses: 0,
-  legendaryResistanceUses: 0,
-  legendaryActions: {},
-  rechargeAbilities: {},
-  dailyAbilities: {},
-  inLair: false,
-} as const satisfies StatBlock;
-
 const MONSTER_STAT_BLOCKS: Readonly<Record<MonsterStatBlockId, StatBlock>> = {
   goblinMinion: GOBLIN_MINION,
   goblinWarrior: GOBLIN_WARRIOR,
@@ -316,6 +63,36 @@ export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
     Match.when("goblinWarrior", () => MONSTER_STAT_BLOCKS.goblinWarrior),
     Match.when("goblinBoss", () => MONSTER_STAT_BLOCKS.goblinBoss),
     Match.exhaustive,
+  );
+}
+
+export function statBlockAttacks(
+  statBlock: StatBlock,
+): Readonly<Record<string, MonsterAttack>> {
+  return Object.fromEntries(
+    statBlock.actions.flatMap((action) =>
+      action.kind === "attack" ? [[action.id, action.attack] as const] : [],
+    ),
+  );
+}
+
+export function statBlockMultiattack(statBlock: StatBlock) {
+  return (
+    statBlock.actions.flatMap((action) =>
+      action.kind === "multiattack" ? [action.slots] : [],
+    )[0] ?? []
+  );
+}
+
+export function statBlockBattleBonusActionOptions(statBlock: StatBlock) {
+  return statBlock.bonusActions.flatMap((bonusAction) =>
+    bonusAction.kind === "battleBonusAction" ? [...bonusAction.options] : [],
+  );
+}
+
+export function statBlockBattleReactionOptions(statBlock: StatBlock) {
+  return statBlock.reactions.flatMap((reaction) =>
+    reaction.kind === "battleReaction" ? [reaction.option] : [],
   );
 }
 
@@ -373,11 +150,12 @@ function statBlockPrimaryWeaponProfile(
   statBlock: StatBlock,
   primaryAttackName?: string,
 ): BattleWeaponProfile | null {
+  const attacks = statBlockAttacks(statBlock);
   if (primaryAttackName != null) {
-    const attack = statBlock.attacks[primaryAttackName];
+    const attack = attacks[primaryAttackName];
     return attack == null ? null : statBlockAttackToBattleWeaponProfile(attack);
   }
-  for (const attack of Object.values(statBlock.attacks)) {
+  for (const attack of Object.values(attacks)) {
     const profile = statBlockAttackToBattleWeaponProfile(attack);
     if (profile != null) return profile;
   }
@@ -414,8 +192,10 @@ export function statBlockToInitCreatureConfig(params: {
         ? params.statBlock.legendaryResistanceUses
         : undefined,
     baseWalkSpeed: params.statBlock.speeds.walk,
-    battleBonusActionOptions: params.statBlock.battleBonusActionOptions,
-    battleReactionOptions: params.statBlock.battleReactionOptions,
+    battleBonusActionOptions: statBlockBattleBonusActionOptions(
+      params.statBlock,
+    ),
+    battleReactionOptions: statBlockBattleReactionOptions(params.statBlock),
     initiativeRoll:
       params.initiativeRoll ?? statBlockInitiativeScore(params.statBlock),
     initiativeRollB: params.initiativeRollB,

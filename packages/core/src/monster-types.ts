@@ -31,6 +31,12 @@ export interface RechargeRollEvent {
   readonly d6Roll: number;
 }
 
+export interface StatBlockProvenance {
+  readonly edition: "SRD 5.2.1";
+  readonly document: string;
+  readonly section: string;
+}
+
 export interface MonsterResourceState {
   readonly legendaryActionsRemaining: ResourceCount;
   readonly legendaryResistancesRemaining: ResourceCount;
@@ -125,6 +131,81 @@ export type MultiattackSlot =
   | { readonly type: "MAttack"; readonly name: string }
   | { readonly type: "MSpecialAbility"; readonly name: string };
 
+export interface MonsterAbilityBase {
+  readonly id: string;
+  readonly name: string;
+  readonly text: string;
+}
+
+export interface MonsterTextAbility extends MonsterAbilityBase {
+  readonly kind: "text";
+  readonly nonExecutableReason: string;
+}
+
+export interface MonsterExecutableAbility extends MonsterAbilityBase {
+  readonly kind: "executable";
+  readonly mechanic: string;
+}
+
+export interface MonsterAttackAbility extends MonsterAbilityBase {
+  readonly kind: "attack";
+  readonly attack: MonsterAttack;
+}
+
+export interface MonsterMultiattackAbility extends MonsterAbilityBase {
+  readonly kind: "multiattack";
+  readonly slots: ReadonlyArray<MultiattackSlot>;
+}
+
+export interface MonsterBattleBonusActionAbility extends MonsterAbilityBase {
+  readonly kind: "battleBonusAction";
+  readonly options: ReadonlyArray<MonsterBattleBonusActionOption>;
+}
+
+export interface MonsterBattleReactionAbility extends MonsterAbilityBase {
+  readonly kind: "battleReaction";
+  readonly option: MonsterBattleReactionOption;
+}
+
+export interface MonsterLegendaryActionAbility extends MonsterAbilityBase {
+  readonly kind: "legendaryAction";
+  readonly cost: number;
+}
+
+export interface MonsterSpellReference {
+  readonly name: string;
+  readonly usage: string;
+  readonly level?: number;
+  readonly notes?: string;
+}
+
+export interface MonsterSpellcastingAbility extends MonsterAbilityBase {
+  readonly kind: "spellcasting";
+  readonly spellcastingAbility: Ability;
+  readonly saveDc?: number;
+  readonly attackBonus?: number;
+  readonly spells: ReadonlyArray<MonsterSpellReference>;
+}
+
+export type MonsterTrait = MonsterExecutableAbility | MonsterTextAbility;
+export type MonsterAction =
+  | MonsterAttackAbility
+  | MonsterExecutableAbility
+  | MonsterMultiattackAbility
+  | MonsterTextAbility;
+export type MonsterBonusAction =
+  | MonsterBattleBonusActionAbility
+  | MonsterExecutableAbility
+  | MonsterTextAbility;
+export type MonsterReaction =
+  | MonsterBattleReactionAbility
+  | MonsterExecutableAbility
+  | MonsterTextAbility;
+export type MonsterLegendaryAction =
+  | MonsterLegendaryActionAbility
+  | MonsterExecutableAbility
+  | MonsterTextAbility;
+
 // --- Speed Types ---
 
 export const SPEED_TYPES = ["walk", "fly", "swim", "climb", "burrow"] as const;
@@ -159,6 +240,7 @@ export type Skill = (typeof SKILLS)[number];
 // --- Stat Block (SRD 5.2.1: "contains the game statistics of a monster") ---
 
 export interface StatBlock {
+  readonly provenance: StatBlockProvenance;
   readonly name: string;
   readonly creatureType: CreatureType;
   /** SRD descriptive tags that follow the creature type, e.g. "(Goblinoid)". */
@@ -184,15 +266,16 @@ export interface StatBlock {
   readonly passivePerception?: number;
   readonly languages?: ReadonlyArray<string>;
   readonly gear?: ReadonlyArray<string>;
-  readonly battleBonusActionOptions?: ReadonlyArray<MonsterBattleBonusActionOption>;
-  readonly battleReactionOptions?: ReadonlyArray<MonsterBattleReactionOption>;
-  readonly attacks: Readonly<Record<string, MonsterAttack>>;
-  readonly multiattack: ReadonlyArray<MultiattackSlot>;
+  readonly traits: ReadonlyArray<MonsterTrait>;
+  readonly actions: ReadonlyArray<MonsterAction>;
+  readonly bonusActions: ReadonlyArray<MonsterBonusAction>;
+  readonly reactions: ReadonlyArray<MonsterReaction>;
   // Phase L: Legendary / Recharge / X-Day
   readonly legendaryActionUses: number; // 0 = no legendary actions
   readonly legendaryResistanceUses: number; // 0 = no LR
-  readonly legendaryActions: Readonly<Record<string, LegendaryActionDef>>;
+  readonly legendaryActions: ReadonlyArray<MonsterLegendaryAction>;
   readonly rechargeAbilities: Readonly<Record<string, RechargeAbilityDef>>;
   readonly dailyAbilities: Readonly<Record<string, number>>; // name -> max uses/day
+  readonly spellcasting: ReadonlyArray<MonsterSpellcastingAbility>;
   readonly inLair: boolean;
 }

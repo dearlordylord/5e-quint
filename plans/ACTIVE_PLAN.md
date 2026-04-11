@@ -215,7 +215,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 31,
       "id": "MON1",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Canonical Stat Block Schema + Goblin Backfill"
     }
   ]
@@ -278,7 +278,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 28    | MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion            | done                                          | none                                                 | MCP2-B                                                                        | Closed 2026-04-11: battle/spec/MCP now support mid-turn creature insertion with active-turn plus `turnStarted` guards, atomic duplicate-id rejection, stable in-block initiative sorting, turn-index repair, and default-position reindexing that preserves battle-owned init-derived rows without disturbing explicit positions. RAW/terminology check: `.references/srd-5.2.1/Playing-the-Game.md` / `Rules-Glossary.md` Initiative entries, `UBIQUITOUS_LANGUAGE.md`, and `ARCHITECTURE.md` tie/DM-decision notes reviewed; task remains architecture-only rather than a new SRD semantic extension. Verification: targeted core/MCP tests, Tier 1 battle projection MBT, `pnpm quality`, and `/simplify` rounds 1-2 converged.                                                                                                                                 | Completed; Task 29 unchanged and still ready                                                         |
 | 29    | MCP4-B - BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal           | done                                          | none                                                 | none                                                                          | Closed 2026-04-11: battle/spec/MCP now support mid-turn creature removal for one or more creatures with duplicate-id rejection, initiative turn-index repair, active-turn removal that ends the departing creature's turn and rolls the round when the removed active creature was last, cleanup for concentration, owned active effects, grapple links, and help targets, and parity plumbing in the battle projection MBT bridge. RAW/terminology check: `.references/srd-5.2.1/Rules-Glossary.md` Grappling + Help, `UBIQUITOUS_LANGUAGE.md` Grappled/Incapacitated/Concentration, and `ARCHITECTURE.md` battle-lifecycle notes reviewed; removal remains an architecture-owned battle-control slice rather than a new SRD mechanic. Verification: targeted core/MCP tests, Tier 1 battle projection MBT, `pnpm quality`, and `/simplify` rounds 1-2 converged. | Completed; no downstream plan changes                                                                |
 | 30    | ARCH-BATTLE-PROJ - Battle Projection Contract And Methodology         | done                                          | none                                                 | none                                                                          | Closed 2026-04-11: documented the explicit battle projection contract in `ARCHITECTURE.md`, defined `Combatant` / `BattleCreatureState` / `InitCreatureConfig` / `buildCreatureState` as the contract layers, recorded battle-owned vs caller/session-owned fact categories, and wrote the promotion methodology for new battle-owned fields. Conclusion: `dexMod` is battle-owned today because battle semantics read it directly, but the absence of `strMod` is not a permanent architecture boundary; any future Strength-backed battle semantics must promote the minimal canonical fact through the same projection path. Plan impact: Task MCP2-D now explicitly carries that projection-contract follow-through instead of allowing further inline PC projection drift. | Completed; Task MCP2-D revised, no new task added                                                    |
-| 31    | MON1 - Canonical Stat Block Schema + Goblin Backfill                  | ready-for-research                            | none                                                 | future monster database follow-ups                                            | Research and land the canonical authored-section `StatBlock` shape with explicit SRD provenance and executable-vs-text-only ability modeling, then backfill the existing goblin entries without changing public MCP behavior.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Ready; bounded first slice for monster database work                                                 |
+| 31    | MON1 - Canonical Stat Block Schema + Goblin Backfill                  | done                                          | none                                                 | future monster database follow-ups                                            | Closed 2026-04-11: `StatBlock` now stores canonical authored sections with explicit SRD provenance, goblin entries are backfilled into that shape, and battle/MCP compatibility surfaces are derived in core projection helpers instead of stored as duplicate primary fields.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Completed; future monster follow-ups can build on authored-section ownership                        |
 
 ## Current Integrated Baseline
 
@@ -2642,13 +2642,13 @@ Plan Impact:
 
 ### Task 31 - MON1 - Canonical Stat Block Schema + Goblin Backfill
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: follow-up monster database slices such as derived battle-option projection from authored sections, the first broader non-goblin SRD slice, spellcasting stat-block support, and later advanced generic monster facilities.
 
-Next action: read the relevant SRD goblin entries in `.references/srd-5.2.1/Monsters/Monsters-E-G.md`, re-read `UBIQUITOUS_LANGUAGE.md`, inspect `packages/core/src/monster-types.ts`, `packages/core/src/monster-catalog.ts`, and `packages/core/src/monster-catalog.md`, then write back and implement the canonical authored-section `StatBlock` shape with explicit provenance and goblin backfill while preserving current public MCP behavior.
+Next action: Closed 2026-04-11. Use the authored-section `StatBlock` shape and projection helpers as the ownership baseline for later monster slices; do not reintroduce battle-facing duplicate fields onto owned stat blocks.
 
 Purpose:
 
@@ -2705,6 +2705,23 @@ Follow-up shape note:
   - add the spellcasting stat-block foundation slice;
   - add advanced generic monster facilities only when repeated SRD patterns justify them.
 - Do not append those as concrete active-queue tasks until this schema/backfill slice closes and its exact projection consequences are known.
+
+Verification completed:
+
+- RAW check completed against `.references/srd-5.2.1/Monsters/Monsters-E-G.md` (Goblin Minion, Goblin Warrior, Goblin Boss) and `UBIQUITOUS_LANGUAGE.md` before editing. The landed sections and text follow those SRD entries directly: authored `actions`, `bonusActions`, and `reactions` now mirror the goblin stat blocks, and explicit provenance is stored per owned record.
+- `/simplify` round 1: removed the duplicated battle-facing storage from `StatBlock` and moved compatibility concerns into named projection helpers (`statBlockAttacks`, `statBlockMultiattack`, `statBlockBattleBonusActionOptions`, `statBlockBattleReactionOptions`). Goblin authored data moved into `monster-catalog-goblins.ts` so the catalog module owns lookup/projection rather than hand-maintaining two parallel shapes.
+- `/simplify` round 2: widened the authored ability family so executable abilities remain structurally representable across sections, including traits, instead of baking text-only traits into the schema. Re-checked for temporary aliases and kept none beyond the projection helpers that preserve current battle/MCP behavior.
+- `pnpm --filter @dnd/core exec vitest run src/monster-catalog.test.ts`: passed.
+- `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts -t "start_battle promotes the router onto a battle host using the fighter snapshot and monster stat block|start_battle supports the full fighter vs monster MCP attack workflow without mutating pre-battle session state"`: passed.
+- `pnpm --filter @dnd/core exec tsc --noEmit`: failed on pre-existing unrelated errors in `available-actions.ts`, `battle-machine-actions-attack.ts`, `battle-machine-helpers.ts`, and `battle-rules-scenarios.test.ts`; MON1 did not introduce new `StatBlock`-shape type failures in the touched files.
+- `pnpm quality`: failed on pre-existing `prettier --check` drift in `packages/core/src/context-encoding.ts`, `creature.mbt.test.ts`, `features/spell-available-actions.ts`, `machine-event-extractors.ts`, `machine-monk.ts`, `machine-queries.ts`, `machine-startturn.ts`, and `machine.ts`. After formatting the MON1 files, `pnpm quality` no longer reported task-local formatting failures.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MON1`: revise to `done`.
+- Plan edits: marked `MON1` done in the Ralph task index, DAG row, and task closeout. No new active-queue tasks were added; the existing future monster follow-up note remains sufficient.
 
 ## Extra Research Summary
 
