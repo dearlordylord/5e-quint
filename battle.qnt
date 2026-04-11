@@ -1326,6 +1326,13 @@ module battle {
     })
   }
 
+  /// Insert elements into a list at a 0-based index.
+  pure def listInsertAt(lst: List[CreatureId], idx: int, elems: List[CreatureId]): List[CreatureId] = {
+    val before = lst.slice(0, idx)
+    val after = lst.slice(idx, lst.length())
+    before.concat(elems).concat(after)
+  }
+
   // ============================================================
   // 4. BATTLE ACTIONS
   // ============================================================
@@ -3728,6 +3735,28 @@ module battle {
     }
   }
 
+  /// Add a creature mid-battle. Fixed creature ID "E" keeps state space bounded.
+  action bAddCreature = {
+    nondet hpE = Set(15, 25).oneOf()
+    nondet insertIdx = Set(0, 2).oneOf()
+    val newId = "E"
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      insertIdx >= 0,
+      insertIdx <= bInitiative.length(),
+      not(bCreatures.keys().contains(newId)),
+      bCreatures' = bCreatures.put(newId, mkCaster(hpE, PC)),
+      bInitiative' = listInsertAt(bInitiative, insertIdx, [newId]),
+      bTurnIndex' = if (insertIdx <= bTurnIndex) bTurnIndex + 1 else bTurnIndex,
+      bPhase' = BPActiveTurn,
+      bRound' = bRound,
+      bSpellStack' = bSpellStack,
+      bTurnStarted' = bTurnStarted,
+      bHelpTargets' = bHelpTargets,
+    }
+  }
+
   // ============================================================
   // 5. STEP + INVARIANTS
   // ============================================================
@@ -3753,10 +3782,10 @@ module battle {
           bAttack, bOffHandAttack, bHelpAttack, bCastSaveSpell, bCastAoE,
           bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
           bMove, bHeal, bDash, bDisengage, bBonusDisengage, bDodge, bHide, bBonusHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge,
-          bEnterRage, bDeclareReckless, bReady, bReadySpell, bEndTurn,
+          bEnterRage, bDeclareReckless, bReady, bReadySpell, bEndTurn, bAddCreature,
         } else any {
           bAttack, bOffHandAttack, bHelpAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage, bBonusDisengage,
-          bDodge, bHide, bBonusHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
+          bDodge, bHide, bBonusHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn, bAddCreature,
         }
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {

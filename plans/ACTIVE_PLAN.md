@@ -197,7 +197,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 28,
       "id": "MCP4-A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "BATTLE_ADD_CREATURE Mid-Battle Creature Insertion"
     },
     {
@@ -269,7 +269,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 25    | I - Build-Map / Hole Metadata                                         | deferred | Concrete consumer, possibly D                                             | Future token-hole metadata                                            | Only revisit when attack boundary, transcript disambiguation, or UI needs it                                                                                                                                                                                                                                                                                                                       | Not current-batch work                             |
 | 26    | MCP2-C - Concise Schema Validation Errors in MCP Tools                | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Tighten MCP schema decode failures so invalid tool inputs report concise, field-local errors instead of massive union dumps, while preserving precise validation semantics.                                                                                                                                                                                                                      | Ready; narrow MCP surface improvement               |
 | 27    | MCP2-D - Unarmed Strike Fallback in Battle Attack                     | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Implement unarmed-strike fallback for weaponless battle combatants, keeping damage parity with `creature.qnt:unarmedDamage` and using the narrowest battle-owned facts necessary.                                                                                                                                                                                                              | Ready; bounded core attack change                   |
-| 28    | MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion            | ready-for-implementation-after-light-research | none                                                          | MCP2-B                                                                | Implement mid-battle creature insertion in Quint, XState, and MCP using `InitCreatureConfig`, initiative insertion semantics, and active-turn-only guards.                                                                                                                                                                                                                                      | Ready; independent control/event slice              |
+| 28    | MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion            | done     | none                                                          | MCP2-B                                                                | Closed 2026-04-11: battle/spec/MCP now support mid-turn creature insertion with active-turn plus `turnStarted` guards, atomic duplicate-id rejection, stable in-block initiative sorting, turn-index repair, and default-position reindexing that preserves battle-owned init-derived rows without disturbing explicit positions. RAW/terminology check: `.references/srd-5.2.1/Playing-the-Game.md` / `Rules-Glossary.md` Initiative entries, `UBIQUITOUS_LANGUAGE.md`, and `ARCHITECTURE.md` tie/DM-decision notes reviewed; task remains architecture-only rather than a new SRD semantic extension. Verification: targeted core/MCP tests, Tier 1 battle projection MBT, `pnpm quality`, and `/simplify` rounds 1-2 converged. | Completed; Task 29 unchanged and still ready       |
 | 29    | MCP4-B - BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal           | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Implement mid-battle creature removal in Quint, XState, and MCP with concentration cleanup, grapple cleanup, and turn-index repair.                                                                                                                                                                                                                                                             | Ready; independent control/event slice              |
 | 30    | ARCH-BATTLE-PROJ - Battle Projection Contract And Methodology         | ready-for-research                         | none                                                          | none                                                                  | Research and document the explicit contract for what battle owns vs. what stays on creature/session layers, then decide whether battle projection should move to named projector functions or another common methodology.                                                                                                                                                                       | Ready; architecture/doc research with possible follow-up |
 
@@ -2406,13 +2406,13 @@ Verification:
 
 ### Task 28 - MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: Task MCP2-B (enables multi-goblin encounters).
 
-Next action: implement `BATTLE_ADD_CREATURE` event in battle machine, add control command schema, wire MCP adapter, add Quint spec parity action.
+Next action: none.
 
 Purpose:
 
@@ -2467,6 +2467,16 @@ Verification:
 - Unit tests: insert before/at/after turnIndex; duplicate ID rejection; phase guard.
 - Tier 1 MBT run passes with `bAddCreature` in `battleStep`.
 - `/simplify` convergence (2 rounds).
+
+Closeout (2026-04-11):
+
+- Added `BATTLE_ADD_CREATURE` across Quint, XState, the battle control schema, MCP routing, and the battle projection MBT driver.
+- Runtime acceptance is limited to `activeTurn` after `BATTLE_START_TURN`; insertion before the first turn or in reaction/AoE/movement/legendary/readied windows is rejected by no-op.
+- Duplicate IDs are rejected atomically against both the incoming batch and the existing battle roster; mixed batches do not partially apply.
+- New creatures are stable-sorted within the inserted block by effective initiative score, and `turnIndex` shifts only when insertion happens at or before the active creature.
+- Battle-owned default positions stay collision-free by shifting only combatants still using the init-derived `{ row: index * 2, col: 0 }` layout, leaving explicitly positioned combatants untouched.
+- RAW / terminology verification: reviewed `.references/srd-5.2.1/Playing-the-Game.md` and `.references/srd-5.2.1/Rules-Glossary.md` for Initiative ordering, plus `UBIQUITOUS_LANGUAGE.md` and `ARCHITECTURE.md` for initiative/tie terminology and DM-owned tie breaking. This task is an architecture/control-surface addition, not a new SRD combat mechanic.
+- Verification completed with targeted tests, a generated Tier 1 battle projection MBT run (`CI=true QUINT_SEED=0x1a2b3c4d MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`), `pnpm quality`, and `/simplify` rounds 1-2 convergence.
 
 ### Task 29 - MCP4-B - BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal
 

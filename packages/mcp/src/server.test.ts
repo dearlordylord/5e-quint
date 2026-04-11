@@ -629,21 +629,25 @@ describe("MCP server adapter", () => {
     expect(readPayload(invalidRawAction)).toEqual({
       error: "Invalid execute_control_command input",
       details:
-        'Invalid control command. Received type: "USE_SECOND_WIND". Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS.',
+        'Invalid control command. Received type: "USE_SECOND_WIND". Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_ADD_CREATURE, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS.',
     });
   });
 
   test("execute_control_command keeps field-level errors for known command types", () => {
     const host = createBattleHost();
 
-    const invalidKnownCommand = handleToolCall(host, "execute_control_command", {
-      scope: "battle",
-      type: "BATTLE_START_TURN",
-    });
-
-    expect("isError" in invalidKnownCommand && invalidKnownCommand.isError).toBe(
-      true,
+    const invalidKnownCommand = handleToolCall(
+      host,
+      "execute_control_command",
+      {
+        scope: "battle",
+        type: "BATTLE_START_TURN",
+      },
     );
+
+    expect(
+      "isError" in invalidKnownCommand && invalidKnownCommand.isError,
+    ).toBe(true);
     const payload = readPayload(invalidKnownCommand);
     expect(payload.error).toBe("Invalid execute_control_command input");
     expect(String(payload.details)).toContain("rechargeD6");
@@ -665,6 +669,34 @@ describe("MCP server adapter", () => {
       error: "Invalid execute_control_command input",
       details:
         'Invalid BATTLE_INIT creature config. Received kind: "Monster". Use either a raw creature config with maxHp and kind, or a Monster catalog config with statBlockId.',
+    });
+  });
+
+  test("execute_control_command accepts BATTLE_ADD_CREATURE on the battle lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    actor.send({
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const host = createBattleHost(actor);
+
+    const response = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [{ id: "C", maxHp: 18, kind: "PC" }],
+    });
+
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: {
+        initiative: ["A", "C", "B"],
+      },
     });
   });
 
@@ -3471,7 +3503,7 @@ describe("MCP server adapter", () => {
     expect(preview).toEqual({
       ok: true,
       summary:
-        "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+        "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
       cost: cost(quota("action")),
       runtime: "battleAttack",
     });
@@ -4637,5 +4669,25 @@ describe("SessionRouter", () => {
       details: "BATTLE_INIT_DUPLICATE_CREATURE_ID",
     });
     expect(router.getSnapshot().activeScope).toBe("creature");
+  });
+
+  test("duplicate creature ids are rejected on the raw BATTLE_ADD_CREATURE lane", () => {
+    const host = initBattleHostWithFeatureActor();
+
+    const response = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [
+        { id: "C", maxHp: 20, kind: "PC" },
+        { id: "C", maxHp: 20, kind: "PC" },
+      ],
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error: "Battle creature IDs must be unique.",
+      details: "BATTLE_INIT_DUPLICATE_CREATURE_ID",
+    });
   });
 });

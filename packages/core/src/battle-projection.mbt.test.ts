@@ -501,6 +501,10 @@ const battleDriverSchema = {
     applyCond: OB,
     slotLvl: OI,
   },
+  bAddCreature: {
+    hpE: OI,
+    insertIdx: OI,
+  },
   battleStep: {}, // composite — framework expands to leaf actions
 } as const;
 
@@ -2141,6 +2145,39 @@ function createBattleProjectionDriver() {
       castSaveSpell(picks, false);
     }
 
+    function handleBAddCreature(picks: ReadonlyMap<string, unknown>) {
+      const hpE = pickBigInt(picks, "hpE") ?? 20;
+      const insertIdx = pickBigInt(picks, "insertIdx") ?? initiative.length;
+      if (actors.has(mkCreatureId("E"))) return;
+
+      const casterSlots = [4, 3, 2, 0, 0, 0, 0, 0, 0];
+      const actorE = createActor(creatureMachine, {
+        input: {
+          maxHp: hpE,
+          selfId: mkCreatureId("E"),
+          effectiveSpeed: 30,
+          movementRemaining: 30,
+          extraAttacksRemaining: 1,
+          creatureKind: "PC",
+          slotsMax: casterSlots,
+          slotsCurrent: casterSlots,
+        },
+      });
+      actorE.start();
+      actorE.send({ type: "ENTER_COMBAT" });
+      actorE.send({ type: "START_TURN", extraAttacks: 1 });
+      actors.set(mkCreatureId("E"), actorE);
+      creatureKinds.set("E", "PC");
+      creatureSizes.set("E", "medium");
+      turnStarted.add("E");
+
+      const clampedIdx = Math.max(0, Math.min(insertIdx, initiative.length));
+      initiative.splice(clampedIdx, 0, "E");
+      if (clampedIdx <= turnIndex) {
+        turnIndex += 1;
+      }
+    }
+
     // ============================================================
     // Schema-based handler dispatch
     // ============================================================
@@ -2332,6 +2369,10 @@ function createBattleProjectionDriver() {
       bCastBonusActionSpell: (p: Record<string, unknown>) => {
         before("bCastBonusActionSpell");
         handleBCastBonusActionSpell(toMap(p));
+      },
+      bAddCreature: (p: Record<string, unknown>) => {
+        before("bAddCreature");
+        handleBAddCreature(toMap(p));
       },
       battleStep: () => {}, // composite — framework expands to leaf actions
       getState: () => {

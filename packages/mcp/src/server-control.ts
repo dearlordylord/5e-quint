@@ -119,6 +119,14 @@ function buildBattleControlEvent(
       type: "BATTLE_INIT" as const,
       creatures: creatures.map(toBattleInitCreatureConfig),
     })),
+    Match.when(
+      { type: "BATTLE_ADD_CREATURE" },
+      ({ creatures, insertAtIndex }) => ({
+        type: "BATTLE_ADD_CREATURE" as const,
+        creatures: creatures.map(toBattleInitCreatureConfig),
+        insertAtIndex,
+      }),
+    ),
     Match.when({ type: "BATTLE_START_TURN" }, (c) => ({
       type: "BATTLE_START_TURN" as const,
       rechargeD6: c.rechargeD6,
@@ -188,7 +196,7 @@ export function executeControlCommand(
     return invalidControlCommandContent(args);
   }
 
-  if (type === "BATTLE_INIT") {
+  if (type === "BATTLE_INIT" || type === "BATTLE_ADD_CREATURE") {
     const invalidCreature = invalidBattleInitCreatureContent(args);
     if (invalidCreature != null) return invalidCreature;
   }
@@ -214,7 +222,8 @@ export function executeControlCommand(
 
   if (
     decoded.right.scope === "battle" &&
-    decoded.right.type === "BATTLE_INIT" &&
+    (decoded.right.type === "BATTLE_INIT" ||
+      decoded.right.type === "BATTLE_ADD_CREATURE") &&
     hasDuplicateBattleCreatureIds(decoded.right.creatures)
   ) {
     return duplicateBattleCreatureIdContent();

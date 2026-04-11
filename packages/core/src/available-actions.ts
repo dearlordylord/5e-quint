@@ -814,6 +814,7 @@ export type CreatureControlCommandType =
 
 export const BATTLE_CONTROL_COMMAND_TYPES = [
   "BATTLE_INIT",
+  "BATTLE_ADD_CREATURE",
   "BATTLE_START_TURN",
   "BATTLE_END_TURN",
   "BATTLE_LEGENDARY_PASS",
@@ -1461,6 +1462,15 @@ const BattleInitControlSchema = Schema.Struct({
   type: Schema.Literal("BATTLE_INIT"),
   creatures: Schema.NonEmptyArray(BattleInitCreatureConfigSchema),
 });
+const BattleAddCreatureControlSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  type: Schema.Literal("BATTLE_ADD_CREATURE"),
+  creatures: Schema.NonEmptyArray(BattleInitCreatureConfigSchema),
+  insertAtIndex: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(0),
+  ),
+});
 const BattleStartTurnControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal("BATTLE_START_TURN"),
@@ -1489,6 +1499,7 @@ export const ControlCommandSchema = Schema.Union(
   CreatureEndTurnControlSchema,
   CreatureLongRestControlSchema,
   BattleInitControlSchema,
+  BattleAddCreatureControlSchema,
   BattleStartTurnControlSchema,
   BattleEndTurnControlSchema,
   BattleLegendaryPassControlSchema,
@@ -1497,6 +1508,7 @@ const CONTROL_COMMAND_SCHEMA_BY_TYPE = {
   END_TURN: CreatureEndTurnControlSchema,
   LONG_REST: CreatureLongRestControlSchema,
   BATTLE_INIT: BattleInitControlSchema,
+  BATTLE_ADD_CREATURE: BattleAddCreatureControlSchema,
   BATTLE_START_TURN: BattleStartTurnControlSchema,
   BATTLE_END_TURN: BattleEndTurnControlSchema,
   BATTLE_LEGENDARY_PASS: BattleLegendaryPassControlSchema,
@@ -1511,7 +1523,7 @@ export function controlCommandSchemaForType(
 ): typeof ControlCommandSchema {
   return CONTROL_COMMAND_SCHEMA_BY_TYPE[
     type as keyof typeof CONTROL_COMMAND_SCHEMA_BY_TYPE
-  ] as typeof ControlCommandSchema;
+  ] as unknown as typeof ControlCommandSchema;
 }
 
 export function toBattleInitCreatureConfig(
@@ -1687,7 +1699,7 @@ export function tableEventCommandSchemaForType(
 ): typeof TableEventCommandSchema {
   return TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE[
     type as keyof typeof TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE
-  ] as typeof TableEventCommandSchema;
+  ] as unknown as typeof TableEventCommandSchema;
 }
 
 export type RecordTableEventAppliedResult<State> = {

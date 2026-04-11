@@ -212,6 +212,21 @@ function initHitReactionBattle() {
   return actor;
 }
 
+function initStartedThreeCreatureBattle() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT });
+  return actor;
+}
+
 function initRedirectAttackBattle() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -856,6 +871,150 @@ function passSpellCastWindow(
 }
 
 describe("battle rules scenario regressions", () => {
+  it("adds creatures before, at, and after turnIndex while preserving the active creature", () => {
+    const beforeActor = initStartedThreeCreatureBattle();
+    send(beforeActor, {
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 0,
+      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC" }],
+    });
+    expect(ctx(beforeActor).initiative).toEqual([
+      CreatureId("D"),
+      CreatureId("A"),
+      CreatureId("B"),
+      CreatureId("C"),
+    ]);
+    expect(ctx(beforeActor).turnIndex).toBe(1);
+    expect(ctx(beforeActor).initiative[ctx(beforeActor).turnIndex]).toBe(
+      CreatureId("A"),
+    );
+    expect(creature(beforeActor, "D").battlePosition).toEqual({
+      row: 0,
+      col: 0,
+    });
+    expect(creature(beforeActor, "A").battlePosition).toEqual({
+      row: 2,
+      col: 0,
+    });
+
+    const atActor = initStartedThreeCreatureBattle();
+    send(atActor, {
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 0,
+      creatures: [
+        { id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 12 },
+        { id: CreatureId("E"), maxHp: 18, kind: "PC", initiativeRoll: 16 },
+      ],
+    });
+    expect(ctx(atActor).initiative).toEqual([
+      CreatureId("E"),
+      CreatureId("D"),
+      CreatureId("A"),
+      CreatureId("B"),
+      CreatureId("C"),
+    ]);
+    expect(ctx(atActor).turnIndex).toBe(2);
+    expect(ctx(atActor).initiative[ctx(atActor).turnIndex]).toBe(
+      CreatureId("A"),
+    );
+
+    const afterActor = initStartedThreeCreatureBattle();
+    send(afterActor, {
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 2,
+      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC" }],
+    });
+    expect(ctx(afterActor).initiative).toEqual([
+      CreatureId("A"),
+      CreatureId("B"),
+      CreatureId("D"),
+      CreatureId("C"),
+    ]);
+    expect(ctx(afterActor).turnIndex).toBe(0);
+    expect(ctx(afterActor).initiative[ctx(afterActor).turnIndex]).toBe(
+      CreatureId("A"),
+    );
+    expect(creature(afterActor, "D").battlePosition).toEqual({
+      row: 4,
+      col: 0,
+    });
+    expect(creature(afterActor, "C").battlePosition).toEqual({
+      row: 6,
+      col: 0,
+    });
+  });
+
+  it("rejects insertion before the first turn starts and on duplicate ids", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      ],
+    });
+    const before = ctx(actor);
+    send(actor, {
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [{ id: CreatureId("C"), maxHp: 18, kind: "PC" }],
+    });
+    expect(ctx(actor)).toEqual(before);
+
+    send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT });
+    const started = ctx(actor);
+    send(actor, {
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [{ id: CreatureId("A"), maxHp: 18, kind: "PC" }],
+    });
+    expect(ctx(actor)).toEqual(started);
+  });
+
+  it("rejects insertion outside the active-turn phase", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(
+      actor,
+      {
+        type: "BATTLE_INIT",
+        creatures: [
+          { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+          {
+            id: CreatureId("B"),
+            maxHp: 20,
+            kind: "PC",
+            caster: true,
+            preparedSpells: new Set(["shield"]),
+            initiativeRoll: 10,
+          },
+        ],
+      },
+      { type: "BATTLE_START_TURN", ...ZERO_SOT },
+      {
+        type: "BATTLE_ATTACK",
+        targetId: CreatureId("B"),
+        attackRoll: 15,
+        diceCount: 1,
+        dieSize: 8,
+        dmg: 5,
+        dt: "slashing",
+        crit: false,
+        tAc: armorClass(10),
+        ...DEFAULT_ATTACK_CONTEXT,
+        hitReactionCandidates: new Set([CreatureId("B")]),
+      },
+    );
+    const awaitingReaction = ctx(actor);
+    send(actor, {
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [{ id: CreatureId("C"), maxHp: 18, kind: "PC" }],
+    });
+    expect(ctx(actor)).toEqual(awaitingReaction);
+  });
+
   it("natural_20: Shield negates the triggering hit and spends the reaction", () => {
     const actor = initHitReactionBattle();
     startTurn(actor);

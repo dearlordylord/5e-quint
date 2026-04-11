@@ -803,6 +803,17 @@ describe("available actions contract", () => {
     ).toBe("Left");
   });
 
+  test("control command schema decodes BATTLE_ADD_CREATURE", () => {
+    expect(
+      Schema.decodeUnknownEither(ControlCommandSchema)({
+        scope: "battle",
+        type: "BATTLE_ADD_CREATURE",
+        insertAtIndex: 1,
+        creatures: [{ id: "A", maxHp: 20, kind: "PC" }],
+      })._tag,
+    ).toBe("Right");
+  });
+
   test("table event schema exposes wired creature commands without raw passthrough", () => {
     expect(
       Schema.decodeUnknownEither(TableEventCommandSchema)({
