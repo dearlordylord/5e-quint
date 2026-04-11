@@ -16,6 +16,18 @@
 Runtime logs, prompts, review reports, and diffs are written under ignored `.ralph/runs/<run-id>/task-<n>/`.
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
 
+Important: during a live run, the "source plan file" is the plan on the Ralph launcher worktree / integration branch, not `master`. If you add or reorder tasks while Ralph is running, committing the change on `master` is not enough for the active run. Sync the plan onto the live Ralph launcher branch too:
+
+```bash
+scripts/sync-active-plan-to-ralph.sh --message "plan: sync active plan"
+```
+
+In Ralph context, "add a task" should mean all of:
+
+1. update and commit `plans/ACTIVE_PLAN.md` on `master`;
+2. sync that plan into the active Ralph launcher worktree and commit it there;
+3. verify the files are identical before saying the live run will pick it up.
+
 Task worktrees reuse the main repo install by symlinking `node_modules`, `packages/core/node_modules`, and `packages/mcp/node_modules` into each disposable worktree. This keeps per-task verification fast and avoids a redundant `pnpm install` for every task rotation.
 
 The harness also kills stray fuzz / overnight MBT processes and removes generated MBT artifact files under `packages/` before the run starts, before each task begins, and after each task ends. Ralph task runs are not allowed to leave `mbt-failure-battle-*.log`, `mbt-failures.jsonl`, `mbt-timing.jsonl`, `mbt-fuzz.log`, `mbt-seed-blacklist.txt`, or `packages/fat-traces/` behind.
