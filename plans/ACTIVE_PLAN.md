@@ -101,7 +101,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 13,
       "id": "J",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generic Table Events, Environmental Hazards, And Monster Commands"
     },
     {
@@ -193,7 +193,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 10    | MCP1-A - Session Host Architecture                                    | done                                          | MCP0 tasks done or intentionally deferred                                 | MCP1-C, MCP2-A                                                        | Closed 2026-04-10: stdio now runs through an in-process session router that auto-promotes `BATTLE_INIT` onto a battle host while keeping encounter drafts / character-list refs as optional adapter-only metadata and leaving mutable combat state in the machines. Task ownership is session routing/lifecycle only. | Completed; shared public route established |
 | 11    | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry        | done                                          | MCP0 tasks done or intentionally deferred                                 | MCP1-C, MCP2-B                                                        | Closed 2026-04-10: core now owns a runtime monster statblock catalog, `BATTLE_INIT` can reference `goblinMinion` by `statBlockId`, and SRD provenance is documented without adding an MCP registry, parser/importer, or widened Quint fixtures.                                                                  | Completed; init hook is ready              |
 | 12    | E - Movement And Help Geometry/Session Ownership                      | done                                          | none                                                                      | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK`                            | Closed 2026-04-10: keep core/MCP geometry-free; use explicit caller/session spatial facts for any future public movement/help surface.                                                                                                                                                                            | Research closed                            |
-| 13    | J - Generic Table Events, Environmental Hazards, And Monster Commands | ready-for-research                            | none                                                                      | Future raw table event exposure and monster command work              | Pick one narrow source/provenance family or keep deferred                                                                                                                                                                                                                                                          | Research only                              |
+| 13    | J - Generic Table Events, Environmental Hazards, And Monster Commands | done                                          | none                                                                      | Future raw table event exposure and monster command work              | Closed 2026-04-10: all four families (max-HP provenance, active effects, environmental hazards, monster commands) deferred; no family is ready for safe public exposure without source-specific provenance, stat-block validation, or multi-step progress tracking                                                   | Research closed                            |
 | 14    | F - Legendary Attack Payload Ownership                                | ready-for-research                            | monster stat-block payload ownership                                      | Public `BATTLE_LEGENDARY_ATTACK`                                      | Reuse Task D's attack boundary, then define stat-block Legendary Action payload ownership                                                                                                                                                                                                                          | Research before implementation             |
 | 15    | G - Attack Rider Ownership                                            | ready-for-research                            | none                                                                      | Attack rider tokens                                                   | Reuse Task D's attack boundary, then classify rider timing and owned/runtime facts                                                                                                                                                                                                                                 | Research before implementation             |
 | 16    | MCP1-C - Encounter Start Tool/Command                                 | ready-for-implementation-after-light-research | MCP1-A, MCP1-B                                                            | MCP2-A                                                                | Confirm the fighter durable-to-`InitCreatureConfig` mapping, then start the battle through the routed `BATTLE_INIT` path using the shared `goblinMinion` statblock ID.                                                                                                                                             | Ready after fighter mapping check          |
@@ -238,7 +238,6 @@ Recommended first coding-loop tasks:
 1. **Task MCP1-C: Encounter Start Tool/Command** if the goal is to continue the fighter-vs-goblin MCP path. Only the fighter durable/config mapping blast-radius check remains before implementation.
 2. **Task F: Legendary Attack Payload Ownership** if the goal is the next attack-adjacent ownership research slice after Task D.
 3. **Task G: Attack Rider Ownership** if the goal is the next attack-timing research slice after Task D.
-4. **Task J: Generic Table Events, Environmental Hazards, And Monster Commands** only if the batch needs another bounded research slice after the MCP/battle routing work.
 
 Do not widen `BATTLE_ATTACK` implementation beyond the Task D contract. The remaining risk is scope creep into off-hand attacks, hit reactions, legendary actions, and riders.
 
@@ -1243,13 +1242,13 @@ Plan Impact:
 
 ### Task 13 - J - Generic Table Events, Environmental Hazards, And Monster Commands
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: future raw table event exposure and monster command work.
 
-Next action: choose one narrow source/provenance family to research, or mark the family deferred.
+Next action: Closed 2026-04-10. All four families remain deferred; reuse the documented blockers instead of reopening this batch.
 
 Purpose:
 
@@ -1271,11 +1270,11 @@ Inputs:
 
 Research output:
 
-- Pick one narrow table-event or monster-command family, or keep all deferred.
-- For max-HP work, distinguish `REDUCE_MAX_HP` and `RESTORE_MAX_HP` provenance and caps.
-- For effect work, distinguish raw `ADD_EFFECT` payloads from modeled semantic spell/feature effects.
-- For environmental work, decide whether to model a source-specific hazard like suffocation rather than exposing the raw terminal event.
-- For monster commands, decide whether a command owns a named stat-block action or must wait for monster action payload ownership.
+- All four candidate families remain deferred; no family is ready for safe public exposure in this batch.
+- `REDUCE_MAX_HP` / `RESTORE_MAX_HP` stay deferred until source-specific provenance, caps, and full-restoration semantics are owned by modeled commands rather than arbitrary `amount` payloads.
+- Raw `ADD_EFFECT` / `REMOVE_EFFECT` stay deferred until semantic spell/feature owners define duration, hooks, granted facts, and removal provenance instead of accepting internal payload dumps.
+- `SUFFOCATE`, `APPLY_STARVATION`, and `APPLY_DEHYDRATION` stay deferred because SRD 5.2.1 requires multi-step hazard progress tracking plus source-specific Exhaustion removal that the current raw events do not model.
+- `USE_LEGENDARY_ACTION`, `USE_RECHARGE_ABILITY`, and `USE_DAILY_ABILITY` stay deferred until stat-block validation, cost validation, and ability-specific payload ownership exist.
 
 Acceptance criteria:
 
@@ -1285,12 +1284,24 @@ Acceptance criteria:
 
 Verification:
 
-- Docs-only until implementation.
-- RAW check and `/simplify` convergence are required if the research later leads to implementation.
+- Docs-only research; no code changes, `/simplify`, or MBT runs required.
+- RAW check completed against `.references/srd-5.2.1/Rules-Glossary.md` for suffocation/malnutrition/dehydration and `.references/srd-5.2.1/Monsters/Overview.md` for monster-command ownership context.
+- `UBIQUITOUS_LANGUAGE.md` was reviewed as required; it still contains legacy suffocation wording, but because this task deferred environmental hazard exposure rather than implementing it, the tracked outcome is to keep the blocker in place rather than normalize terminology in this batch.
+- `plans/MCP_EVENT_SURFACE_AUDIT.md` blocker text was reviewed and remains aligned with the deferred outcome.
 
 Extra research needed:
 
-- Yes. Needs source-by-source provenance review.
+- No for Task J itself. Future implementation work should start from one deferred family and carry its source-specific provenance/ownership model before any MCP exposure.
+
+Plan impact:
+
+- Status: applied
+- Affected tasks:
+  - `J`: revised from `ready-for-research` to `done`; recorded the research closeout and kept all four families deferred.
+  - `F`: no-change; legendary attack payload ownership remains its own next research slice.
+  - `G`: no-change; attack rider ownership remains its own next research slice.
+  - `MCP1-C`: no-change; encounter-start work remains the highest-priority implementation task.
+- Plan edits: synchronized the Ralph task index, DAG row, queue guidance, and Task 13 closeout with the final research result. No downstream task statuses changed.
 
 ### Task 14 - F - Legendary Attack Payload Ownership
 
