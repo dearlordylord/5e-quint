@@ -1,12 +1,18 @@
 import { Match } from "effect";
 
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
-import { SKILLS, type Skill, type StatBlock } from "#/monster-types.ts";
+import {
+  SKILLS,
+  type MonsterAttack,
+  type Skill,
+  type StatBlock,
+} from "#/monster-types.ts";
 import {
   CreatureId,
   abilityModifier,
   abilityScoreToMod,
   armorClass,
+  type BattleWeaponProfile,
   type CreatureId as CreatureIdT,
 } from "#/types.ts";
 
@@ -139,6 +145,31 @@ export function statBlockInitiativeScore(statBlock: StatBlock): number {
   return 10 + statBlock.initiativeMod;
 }
 
+function statBlockAttackToBattleWeaponProfile(
+  attack: MonsterAttack,
+): BattleWeaponProfile | null {
+  if (attack.name === "Dagger") {
+    return {
+      name: attack.name,
+      damageType: attack.damageType,
+      isMelee: true,
+      damageDie: 4,
+      properties: new Set(["finesse", "light", "thrown"]),
+    };
+  }
+  return null;
+}
+
+function statBlockPrimaryWeaponProfile(
+  statBlock: StatBlock,
+): BattleWeaponProfile | null {
+  for (const attack of Object.values(statBlock.attacks)) {
+    const profile = statBlockAttackToBattleWeaponProfile(attack);
+    if (profile != null) return profile;
+  }
+  return null;
+}
+
 export function statBlockToInitCreatureConfig(params: {
   readonly id: CreatureIdT;
   readonly statBlock: StatBlock;
@@ -146,6 +177,7 @@ export function statBlockToInitCreatureConfig(params: {
   readonly initiativeRollB?: number;
   readonly surprised?: boolean;
 }): InitCreatureConfig {
+  const mainHandWeapon = statBlockPrimaryWeaponProfile(params.statBlock);
   const config: InitCreatureConfig = {
     id: CreatureId(params.id),
     kind: "Monster",
@@ -167,6 +199,7 @@ export function statBlockToInitCreatureConfig(params: {
       params.initiativeRoll ?? statBlockInitiativeScore(params.statBlock),
     initiativeRollB: params.initiativeRollB,
     surprised: params.surprised,
+    ...(mainHandWeapon != null ? { mainHandWeapon } : {}),
   };
   return config;
 }

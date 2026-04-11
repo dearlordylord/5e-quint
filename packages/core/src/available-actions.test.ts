@@ -19,7 +19,10 @@ import { battleMachine } from "#/battle-machine.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { creatureMachine } from "#/machine.ts";
 import type { DndMachineInput } from "#/machine-types.ts";
-import type { CreatureId as CreatureIdT } from "#/types.ts";
+import type {
+  BattleWeaponProfile,
+  CreatureId as CreatureIdT,
+} from "#/types.ts";
 import {
   abilityModifier,
   armorClass,
@@ -354,6 +357,15 @@ const ZERO_BATTLE_SOT: Pick<
   deathSaveRoll: 0,
 };
 
+const LONGSWORD: BattleWeaponProfile = {
+  name: "Longsword",
+  damageType: "slashing",
+  isMelee: true,
+  damageDie: 8,
+  versatileDie: 10,
+  properties: new Set(["versatile"]),
+};
+
 function makeBattleActor(...events: ReadonlyArray<BattleEvent>) {
   const actor = createActor(battleMachine);
   actor.start();
@@ -482,6 +494,24 @@ function initBattleForFeatureDiscovery() {
         fighterLevel: 2,
         barbarianLevel: 2,
         initiativeRoll: 15,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return actor;
+}
+
+function initBattleForAttackDiscovery() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 15,
+        mainHandWeapon: LONGSWORD,
       },
       { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
     ],
@@ -2674,6 +2704,152 @@ describe("available actions contract", () => {
       ok: true,
       event: { type: "BATTLE_STAND_FROM_PRONE" },
       outcome: "Spend half your Speed in movement to stand up from Prone",
+    });
+  });
+
+  test("battle discovery exposes BATTLE_ATTACK only when the active creature owns a main-hand attack payload", () => {
+    const actor = initBattleForAttackDiscovery();
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_ATTACK",
+          targetId: { options: ["B"] },
+          knockOut: { options: [false, true] },
+          cost: cost(quota("action")),
+          outcome: {
+            summary:
+              "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+          },
+        },
+      ]),
+    );
+
+    const noWeaponActor = initBattleForFeatureDiscovery();
+    expect(
+      getAvailableBattleActions(noWeaponActor.getSnapshot().context).some(
+        (token) => token.type === "BATTLE_ATTACK",
+      ),
+    ).toBe(false);
+  });
+
+  test("battle resolution exposes the public BATTLE_ATTACK runtime contract", () => {
+    const actor = initBattleForAttackDiscovery();
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      },
+      outcome:
+        "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+      runtime: "battleAttack",
+    });
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleAttack",
+          values: {
+            attackRoll: 15,
+            targetAc: 10,
+            weaponDamage: 6,
+            attackerWithin5ft: true,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            hitReactionCandidates: [],
+          },
+        },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_ATTACK",
+        targetId: CreatureId("B"),
+        attackRoll: 15,
+        diceCount: 1,
+        dieSize: 8,
+        dmg: 6,
+        dt: "slashing",
+        damageQualifiers: new Set(),
+        crit: false,
+        tAc: armorClass(10),
+        knockOut: false,
+        isMelee: true,
+        weaponProperties: new Set(["versatile"]),
+        isFinesse: false,
+        attackerWithin5ft: true,
+        hostileWithin5ft: false,
+        targetCanSeeAttacker: true,
+        attackerCanSeeTarget: true,
+        frightSourceInLOS: false,
+        hasAllyAdjacentToTarget: false,
+        saDmg: 0,
+        hitReactionCandidates: new Set(),
+      },
+      outcome:
+        "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+    });
+  });
+
+  test("battle resolution rejects ranged public BATTLE_ATTACK runtime that omits attackerWithin60ft", () => {
+    const actor = initBattleForAttackDiscovery();
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleAttack",
+          values: {
+            attackRoll: 15,
+            targetAc: 10,
+            weaponDamage: 6,
+            attackerWithin5ft: false,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            hitReactionCandidates: [],
+          },
+        },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: false,
+      error: {
+        code: "INVALID_RUNTIME_INPUT",
+        message:
+          "Battle attack runtime must include attackerWithin60ft when attackerWithin5ft is false.",
+      },
     });
   });
 

@@ -83,6 +83,13 @@ describe("monster catalog", () => {
       dexMod: 2,
       baseWalkSpeed: 30,
       initiativeRoll: 12,
+      mainHandWeapon: {
+        name: "Dagger",
+        damageType: "piercing",
+        isMelee: true,
+        damageDie: 4,
+        properties: new Set(["finesse", "light", "thrown"]),
+      },
     });
     expect(config.legendaryActions).toBeUndefined();
     expect(config.legendaryResistances).toBeUndefined();
@@ -132,6 +139,13 @@ describe("monster catalog", () => {
       dexMod: 2,
       baseWalkSpeed: 30,
       initiativeRoll: 12,
+      mainHandWeapon: {
+        name: "Dagger",
+        damageType: "piercing",
+        isMelee: true,
+        damageDie: 4,
+        properties: new Set(["finesse", "light", "thrown"]),
+      },
     });
   });
 });

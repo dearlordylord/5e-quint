@@ -31,6 +31,7 @@ import {
   buildBattleRuntimeInputs,
   buildRuntimeInputs,
 } from "./server-runtime.ts";
+import { decodeBattleAttackRuntimeInputs } from "./server-battle-attack-runtime.ts";
 import {
   type BattleActor,
   type DndActor,
@@ -220,6 +221,7 @@ function scopeMismatchContent(
 function executeBattleResolvedAction(
   actor: BattleActor,
   token: BattleResolvedActionToken,
+  args: unknown,
 ) {
   const before = actor.getSnapshot();
   const resolution = resolveBattleAction(before.context, token);
@@ -227,9 +229,13 @@ function executeBattleResolvedAction(
     return errorContent(resolution.message, resolution.code);
   }
 
-  const runtimeInputs = Effect.runSync(
-    buildBattleRuntimeInputs(resolution, before.context),
-  );
+  const runtimeInputs =
+    resolution.runtime === "battleAttack"
+      ? decodeBattleAttackRuntimeInputs(args, before.context, resolution.token)
+      : Effect.runSync(buildBattleRuntimeInputs(resolution, before.context));
+  if ("code" in runtimeInputs) {
+    return errorContent(runtimeInputs.message, runtimeInputs.code);
+  }
   const finalized = finalizeBattleResolution(
     resolution,
     runtimeInputs,
@@ -359,7 +365,7 @@ function executeResolvedAction(host: SupportedActionHost, args: unknown) {
       if (decoded.scope !== "battle") {
         return scopeMismatchContent(decoded.scope, "battle");
       }
-      return executeBattleResolvedAction(actor, decoded);
+      return executeBattleResolvedAction(actor, decoded, args);
     }),
     Match.exhaustive,
   );

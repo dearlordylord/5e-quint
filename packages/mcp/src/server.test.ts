@@ -4,6 +4,7 @@ import { createActor } from "xstate";
 import { battleMachine } from "@dnd/core/battle-machine.ts";
 import type { BattleEvent } from "@dnd/core/battle-machine-types.ts";
 import { TABLE_EVENT_WARNING_CODES } from "@dnd/core/available-actions.ts";
+import type { BattleWeaponProfile } from "@dnd/core/types.ts";
 import {
   abilityModifier,
   armorClass,
@@ -74,6 +75,15 @@ const ZERO_BATTLE_SOT: Pick<
   sotSaveResult: false,
   sotConSave: true,
   deathSaveRoll: 0,
+};
+
+const LONGSWORD: BattleWeaponProfile = {
+  name: "Longsword",
+  damageType: "slashing",
+  isMelee: true,
+  damageDie: 8,
+  versatileDie: 10,
+  properties: new Set(["versatile"]),
 };
 
 function initBattleHostWithHitWindow() {
@@ -211,6 +221,53 @@ function initBattleHostWithFeatureActor() {
         initiativeRoll: 15,
       },
       { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
+function initBattleHostWithAttackActor() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 15,
+        mainHandWeapon: LONGSWORD,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
+function initBattleHostWithPublicAttackReactionWindow() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 20,
+        mainHandWeapon: LONGSWORD,
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["shield"]),
+        initiativeRoll: 15,
+      },
     ],
   });
   actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
@@ -3356,6 +3413,201 @@ describe("MCP server adapter", () => {
     ).toBeNull();
   });
 
+  test("preview_action summarizes BATTLE_ATTACK without mutating state", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const before = readPayload(handleToolCall(host, "get_state", {}));
+    const preview = readPayload(
+      handleToolCall(host, "preview_action", {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+    const after = readPayload(handleToolCall(host, "get_state", {}));
+
+    expect(preview).toEqual({
+      ok: true,
+      summary:
+        "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+      cost: cost(quota("action")),
+      runtime: "battleAttack",
+    });
+    expect(after).toEqual(before);
+  });
+
+  test("execute_action requires explicit battleAttack runtime inputs for BATTLE_ATTACK", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error:
+        "BATTLE_ATTACK requires explicit runtime battleAttack inputs on execute_action.",
+      details: "INVALID_RUNTIME_INPUT",
+    });
+  });
+
+  test("execute_action rejects invalid BATTLE_ATTACK session facts", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 12,
+          targetAc: 12,
+          weaponDamage: 4,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: ["Z"],
+        },
+      },
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error:
+        "Battle hit reaction candidate Z is not a valid other creature in this battle.",
+      details: "INVALID_RUNTIME_INPUT",
+    });
+  });
+
+  test("execute_action routes public BATTLE_ATTACK hits through the battle lane", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 15,
+          targetAc: 10,
+          weaponDamage: 6,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: [],
+        },
+      },
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: { scope: "battle" },
+    });
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A")),
+    ).toMatchObject({ actionsRemaining: 0, attackActionUsed: true });
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B")),
+    ).toMatchObject({ hp: 14 });
+  });
+
+  test("execute_action routes public BATTLE_ATTACK misses through the battle lane", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 5,
+          targetAc: 20,
+          weaponDamage: 6,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: [],
+        },
+      },
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: { scope: "battle" },
+    });
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A")),
+    ).toMatchObject({ actionsRemaining: 0, attackActionUsed: true });
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B")),
+    ).toMatchObject({ hp: 20 });
+  });
+
+  test("execute_action routes public BATTLE_ATTACK into existing hit reaction windows", () => {
+    const host = initBattleHostWithPublicAttackReactionWindow();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 15,
+          targetAc: 10,
+          weaponDamage: 5,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: ["B"],
+        },
+      },
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: {
+        scope: "battle",
+        awaitingReaction: true,
+      },
+    });
+    expect(host.actor.getSnapshot().context.awaitCtx?.trigger).toBe(
+      "TAttackHits",
+    );
+  });
+
   test("battle hosts surface and execute escape grapple through MCP", () => {
     const host = initBattleHostWithGrapplingActor();
     host.actor.send({
@@ -4044,6 +4296,13 @@ describe("SessionRouter", () => {
       creatureKind: "Monster",
       creatureSize: "small",
       baseWalkSpeed: 30,
+      mainHandWeapon: {
+        name: "Dagger",
+        damageType: "piercing",
+        isMelee: true,
+        damageDie: 4,
+        properties: new Set(["finesse", "light", "thrown"]),
+      },
     });
   });
 

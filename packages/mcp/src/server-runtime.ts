@@ -105,6 +105,11 @@ export function buildBattleRuntimeInputs(
   context: BattleContext,
 ): Effect.Effect<BattleResolutionRuntimeInputs> {
   return Match.value(request).pipe(
+    Match.when({ runtime: "battleAttack" }, () =>
+      Effect.die(
+        "battleAttack runtime inputs must be supplied explicitly by execute_action.",
+      ),
+    ),
     Match.when({ runtime: "none" }, () =>
       Effect.succeed({ runtime: "none" as const }),
     ),

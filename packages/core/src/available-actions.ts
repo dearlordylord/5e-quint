@@ -60,10 +60,12 @@ import {
   CONDITIONS,
   CREATURE_KINDS,
   CreatureId,
+  DAMAGE_QUALIFIERS,
   DAMAGE_TYPES,
   SIZES,
   SpellSlotLevel,
   spellSlotLevel,
+  WEAPON_PROPERTIES,
   type D20Roll,
   type SpellName,
   type SpellSlotLevel as SpellSlotLevelValue,
@@ -316,6 +318,15 @@ type CreatureActionToken = TokenByType[SupportedActionType] & {
   readonly scope: "creature";
 };
 export type BattleActionToken =
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_ATTACK";
+      readonly targetId: Hole<string>;
+      readonly knockOut: Hole<boolean>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
   | {
       readonly scope: "battle";
       readonly actorId: string;
@@ -599,6 +610,13 @@ type CreatureResolvedActionToken = ResolvedTokenByType[SupportedActionType] & {
   readonly scope: "creature";
 };
 type SpecificBattleResolvedActionToken =
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_ATTACK";
+      readonly targetId: string;
+      readonly knockOut: boolean;
+    }
   | {
       readonly scope: "battle";
       readonly actorId: string;
@@ -1042,6 +1060,13 @@ const CastCounterspellBattleResolvedActionSchema = Schema.Struct({
   slotLevel: SpellSlotLevel,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleAttackResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_ATTACK"),
+  targetId: Schema.String,
+  knockOut: Schema.Boolean,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleActionSurgeResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_ACTION_SURGE"),
@@ -1173,6 +1198,7 @@ const TriggerFireShieldBattleResolvedActionSchema = Schema.Struct({
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const BattleResolvedActionTokenSchema = Schema.Union(
+  BattleAttackResolvedActionSchema,
   BattleActionSurgeResolvedActionSchema,
   BattleEnterRageResolvedActionSchema,
   BattleDeclareRecklessResolvedActionSchema,
@@ -1219,6 +1245,23 @@ const CreatureLongRestControlSchema = Schema.Struct({
   scope: Schema.Literal("creature"),
   type: Schema.Literal("LONG_REST"),
 });
+
+const BattleWeaponProfileSchema = Schema.Struct({
+  name: Schema.String,
+  damageType: Schema.Literal(...DAMAGE_TYPES),
+  isMelee: Schema.Boolean,
+  properties: Schema.Set(Schema.Literal(...WEAPON_PROPERTIES)),
+  damageDie: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  versatileDie: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
+  damageQualifiers: Schema.optional(
+    Schema.Set(Schema.Literal(...DAMAGE_QUALIFIERS)),
+  ),
+});
+
 const BattleInitRawCreatureConfigSchema = Schema.Struct({
   id: Schema.String,
   maxHp: Schema.Number.pipe(Schema.int(), Schema.positive()),
@@ -1290,6 +1333,8 @@ const BattleInitRawCreatureConfigSchema = Schema.Struct({
   surprised: Schema.optional(Schema.Boolean),
   hasShieldEquipped: Schema.optional(Schema.Boolean),
   mainHandUsesTwoHands: Schema.optional(Schema.Boolean),
+  mainHandWeapon: Schema.optional(BattleWeaponProfileSchema),
+  offHandWeapon: Schema.optional(BattleWeaponProfileSchema),
 });
 const BattleInitCatalogCreatureConfigSchema = Schema.Struct({
   id: Schema.String,
@@ -2109,6 +2154,14 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "BATTLE_ATTACK" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "battleAttack";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "BATTLE_ACTION_SURGE" }
       >;
       readonly outcome: string;
@@ -2374,6 +2427,23 @@ export type BattleResolutionRequest =
 
 export type BattleResolutionRuntimeInputs =
   | { readonly runtime: "none" }
+  | {
+      readonly runtime: "battleAttack";
+      readonly values: {
+        readonly attackRoll: number;
+        readonly targetAc: number;
+        readonly weaponDamage: number;
+        readonly sneakAttackDamage?: number;
+        readonly attackerWithin5ft: boolean;
+        readonly attackerWithin60ft?: boolean;
+        readonly hostileWithin5ft: boolean;
+        readonly targetCanSeeAttacker: boolean;
+        readonly attackerCanSeeTarget: boolean;
+        readonly frightSourceInLOS: boolean;
+        readonly hasAllyAdjacentToTarget: boolean;
+        readonly hitReactionCandidates: ReadonlyArray<string>;
+      };
+    }
   | {
       readonly runtime: "readyAttack";
       readonly values: {
@@ -3371,6 +3441,17 @@ function battleActiveReadyableSpellTokens(
   return tokens.sort((a, b) => a.spellName.localeCompare(b.spellName));
 }
 
+function canUseBattleAttack(actor: BattleCreatureState): boolean {
+  if (actor.mainHandWeapon == null) return false;
+  return actor.actionsRemaining > 0 || actor.extraAttacksRemaining > 0;
+}
+
+function battleAttackCost(actor: BattleCreatureState): ResourceCost {
+  return actor.attackActionUsed && actor.extraAttacksRemaining > 0
+    ? FREE_COST
+    : costs(quotaCost("action"));
+}
+
 function currentReadyableSpellPayloads(
   actor: BattleCreatureState,
   spellName: string,
@@ -3496,6 +3577,31 @@ export function getAvailableBattleActions(
       return [];
     }
     const tokens: Array<BattleActionToken> = [];
+    if (canUseBattleAttack(activeCreature)) {
+      const targetOptions = [...context.creatures.entries()]
+        .filter(
+          ([targetId, target]) => targetId !== activeCreatureId && !target.dead,
+        )
+        .map(([targetId]) => targetId)
+        .sort();
+      if (targetOptions.length > 0) {
+        tokens.push(
+          battleToken<
+            Extract<BattleActionToken, { readonly type: "BATTLE_ATTACK" }>
+          >({
+            actorId: activeCreatureId,
+            type: "BATTLE_ATTACK",
+            targetId: { options: targetOptions },
+            knockOut: { options: [false, true] },
+            cost: battleAttackCost(activeCreature),
+            outcome: {
+              summary:
+                "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+            },
+          }),
+        );
+      }
+    }
     if (
       activeCreature.actionSurgeCharges > 0 &&
       !activeCreature.actionSurgeUsedThisTurn
@@ -3758,6 +3864,12 @@ function availableBattleTokenForResolved(
     if (candidate.type === "BATTLE_SEARCH" && token.type === "BATTLE_SEARCH") {
       return candidate.targetId.options.includes(token.targetId);
     }
+    if (candidate.type === "BATTLE_ATTACK" && token.type === "BATTLE_ATTACK") {
+      return (
+        candidate.targetId.options.includes(token.targetId) &&
+        candidate.knockOut.options.includes(token.knockOut)
+      );
+    }
     return true;
   });
 }
@@ -3780,6 +3892,13 @@ export function resolveBattleAction(
       outcome: availableToken.outcome.summary,
       runtime: "none",
       event: { type: "BATTLE_ACTION_SURGE" },
+    };
+  }
+  if (token.type === "BATTLE_ATTACK") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "battleAttack",
     };
   }
   if (token.type === "BATTLE_ENTER_RAGE") {
@@ -4088,6 +4207,126 @@ export function finalizeBattleResolution(
   }
 
   return Match.value(request).pipe(
+    Match.when({ runtime: "battleAttack" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "battleAttack") {
+        return battleRuntimeMismatch("battleAttack", runtimeInputs.runtime);
+      }
+      if (request.token.type !== "BATTLE_ATTACK") {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Battle-attack runtime cannot finalize ${request.token.type}.`,
+          },
+        };
+      }
+      const actor = context.creatures.get(CreatureId(request.token.actorId));
+      const weapon = actor?.mainHandWeapon;
+      if (actor == null || weapon == null) {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_AVAILABLE",
+            message: `BATTLE_ATTACK is not currently available for ${request.token.actorId} in this battle state.`,
+          },
+        };
+      }
+      const {
+        attackRoll,
+        targetAc,
+        weaponDamage,
+        sneakAttackDamage,
+        attackerWithin5ft,
+        attackerWithin60ft,
+        hostileWithin5ft,
+        targetCanSeeAttacker,
+        attackerCanSeeTarget,
+        frightSourceInLOS,
+        hasAllyAdjacentToTarget,
+        hitReactionCandidates,
+      } = runtimeInputs.values;
+      if (attackRoll < 1 || attackRoll > 20) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Battle attack roll must be between 1 and 20.",
+          },
+        };
+      }
+      if (targetAc < 0) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Battle target AC must be non-negative.",
+          },
+        };
+      }
+      if (weaponDamage < 0) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Battle weapon damage must be non-negative.",
+          },
+        };
+      }
+      if (
+        sneakAttackDamage != null &&
+        (!Number.isInteger(sneakAttackDamage) || sneakAttackDamage < 0)
+      ) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message:
+              "Battle Sneak Attack damage must be a non-negative integer.",
+          },
+        };
+      }
+      if (!attackerWithin5ft && attackerWithin60ft === undefined) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message:
+              "Battle attack runtime must include attackerWithin60ft when attackerWithin5ft is false.",
+          },
+        };
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_ATTACK",
+          targetId: CreatureId(request.token.targetId),
+          attackRoll,
+          diceCount: 1,
+          dieSize: weapon.damageDie ?? 0,
+          dmg: weaponDamage,
+          dt: weapon.damageType,
+          damageQualifiers: weapon.damageQualifiers ?? new Set(),
+          crit: attackRoll >= actor.critRange,
+          tAc: armorClass(targetAc),
+          knockOut: request.token.knockOut,
+          isMelee: weapon.isMelee,
+          weaponProperties: weapon.properties,
+          isFinesse: weapon.properties.has("finesse"),
+          attackerWithin5ft,
+          ...(attackerWithin60ft !== undefined ? { attackerWithin60ft } : {}),
+          hostileWithin5ft,
+          targetCanSeeAttacker,
+          attackerCanSeeTarget,
+          frightSourceInLOS,
+          hasAllyAdjacentToTarget,
+          saDmg: sneakAttackDamage ?? 0,
+          hitReactionCandidates: new Set(
+            hitReactionCandidates.map((id) => CreatureId(id)),
+          ),
+        },
+        outcome: request.outcome,
+      };
+    }),
     Match.when({ runtime: "readyAttack" }, (): FinalizedBattleAction => {
       if (runtimeInputs.runtime !== "readyAttack") {
         return battleRuntimeMismatch("readyAttack", runtimeInputs.runtime);
