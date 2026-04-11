@@ -161,7 +161,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 22,
       "id": "MCP3-A3",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Monster Reaction Retarget/Swap Boundary"
     },
     {
@@ -257,8 +257,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 19    | MCP2-B - Fighter Attacks Goblin End-to-End                            | done     | MCP2-A1                                                                   | motivating MCP flow                                                   | Closed 2026-04-10: added a `SessionRouter` integration test that runs `start_battle` -> `BATTLE_START_TURN` -> `get_available_actions` -> `BATTLE_ATTACK`, proves the goblin death state and fighter turn-state mutate only inside `BattleContext.creatures`, confirms the promoted battle is not left in a hit-reaction window, and confirms the original creature host snapshot stays unchanged until some later explicit battle-close/commit step. RAW check: reused Task MCP1-B / MCP2-A citations only; no new combat semantics. `/simplify` rounds 1-2 found no further task-scoped reductions beyond collapsing the workflow to a single durable-state-preservation scenario. | Completed; motivating MCP flow now documented      |
 | 20    | MCP3-A1 - Stat-Block Advantage-Damage Rider Ownership                 | done     | MCP2-A                                                                   | MCP3-A                                                                | Closed 2026-04-10: Goblin Warrior/Boss attack metadata now stores a minimal same-type `1d4` advantage-hit rider on the named stat-block attack, `statBlockToInitCreatureConfig` can project a selected named attack lane into battle without exposing new public catalog IDs or MCP payloads, and battle/spec damage resolution apply the rider only on hits with net Advantage (including crit doubling of the rider dice average). RAW check: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Warrior/Boss entries and `UBIQUITOUS_LANGUAGE.md` Advantage/Attack Roll terminology reviewed. `/simplify` rounds 1-2 removed public-schema exposure and collapsed the rider metadata to same-type dice only. | Completed; warrior path now also has generic bonus-action support |
 | 21    | MCP3-A2 - Monster Bonus-Action Option Boundary                        | done     | MCP2-A                                                                   | MCP3-A                                                                | Closed 2026-04-11: battle/spec now expose generic `BATTLE_BONUS_HIDE` / `BATTLE_BONUS_DISENGAGE` only for combatants that own `battleBonusActionOptions`; raw and catalog `BATTLE_INIT` can project those options; Nimble Escape stays goblin-owned data, not a goblin-specific public command. RAW check: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Warrior/Boss `Nimble Escape`, `.references/srd-5.2.1/Rules-Glossary.md` `Bonus Action`, `Disengage [Action]`, and `Hide [Action]`, plus `UBIQUITOUS_LANGUAGE.md` reviewed. `/simplify` rounds 1-2 converged after tightening direct-event ownership guards and removing the schema/parity gaps. | Completed; Warrior path for MCP3-A is unblocked, Goblin Boss still needs MCP3-A3 for Redirect Attack |
-| 22    | MCP3-A3 - Monster Reaction Retarget/Swap Boundary                     | ready-for-implementation-after-light-research | MCP2-A                                                                   | MCP3-A                                                                | Extend the existing `PIAttackHit` reaction family with a monster-owned retarget/swap reaction for Redirect Attack, keeping target rewrite and position swap inside battle-owned hit-interrupt resolution rather than inventing a new public monster command                                                                                                                                        | Ready after hit-window shape check                 |
-| 23    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | ready-for-implementation-after-light-research | MCP3-A1, MCP3-A2; optionally MCP3-A3 for Goblin Boss                     | fuller goblin behavior                                                | Land Goblin Warrior now that the stat-block rider and generic monster bonus-action slices are done; extend to Goblin Boss only if Redirect Attack is selected in-batch                                                                                                                                                                                                                           | Warrior ready now; Boss still needs A3             |
+| 22    | MCP3-A3 - Monster Reaction Retarget/Swap Boundary                     | done     | MCP2-A                                                                   | MCP3-A                                                                | Closed 2026-04-11: `PIAttackHit` now owns generic `RRedirectAttack`, battle state owns redirect-side `battlePosition` / `battleSide` / redirect-candidate AC facts, Redirect Attack swaps positions and retargets the pending hit inside the hit window, and the rebuilt defender gets a fresh target-facing reaction window before damage proceeds. RAW check: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Boss `Redirect Attack`, `.references/srd-5.2.1/Monsters/Overview.md`, `.references/srd-5.2.1/Rules-Glossary.md` `Ally`, and `UBIQUITOUS_LANGUAGE.md` reviewed. `/simplify` round 1 added owned ally AC instead of a guessed redirect target AC; round 2 converged after collapsing redirect legality to battle-owned side/position checks and keeping the public surface on generic battle reactions. | Completed; Goblin Boss path for MCP3-A is now ready |
+| 23    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | ready-for-implementation-after-light-research | MCP3-A1, MCP3-A2; optionally MCP3-A3 for Goblin Boss                     | fuller goblin behavior                                                | Land the combined goblin follow-up now that the Warrior slices are done and Goblin Boss `Redirect Attack` is available inside the generic hit-reaction surface                                                                                                                                                                                                                                    | Warrior and Boss paths are both ready now          |
 | 24    | H - PassiveModifiers Sub-Record                                       | deferred | none                                                                      | Possible passive modifier cleanup                                     | Only revisit if the batch selects passive modifier restructuring                                                                                                                                                                                                                                                                                                                                   | Not current-batch work                             |
 | 25    | I - Build-Map / Hole Metadata                                         | deferred | Concrete consumer, possibly D                                             | Future token-hole metadata                                            | Only revisit when attack boundary, transcript disambiguation, or UI needs it                                                                                                                                                                                                                                                                                                                       | Not current-batch work                             |
 
@@ -2025,7 +2025,7 @@ Verification notes:
 
 ### Task 21 - MCP3-A2 - Monster Bonus-Action Option Boundary
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: Task MCP2-A.
 
@@ -2106,14 +2106,14 @@ Inputs:
 
 Implementation output:
 
-- Extend the hit-reaction decision family with a monster-owned redirect/swap decision.
-- Extend the owned attack-hit context with the minimum legality data needed to validate redirect targets.
+- Landed generic `RRedirectAttack` inside `PIAttackHit`.
+- Added battle-owned redirect inputs to the hit context: battle-side ownership, battle positions, and redirect-candidate ally AC facts.
 - Resolve the reaction inside `PIAttackHit` by:
   - spending the reactor's reaction;
   - swapping goblin/ally positions in battle state;
   - replacing the pending attack target;
-  - rebuilding any target-facing legality needed for the modified hit context before attack resolution continues.
-- Keep the public MCP surface generic battle reactions; do not add a `GOBLIN_REDIRECT_ATTACK` public command.
+  - rebuilding target-facing hit-reaction legality for the redirected defender before attack resolution continues.
+- Kept the public MCP surface on generic battle reactions; no `GOBLIN_REDIRECT_ATTACK` public command was added.
 
 Acceptance criteria:
 
@@ -2127,6 +2127,25 @@ Verification:
 - `/simplify` convergence: minimum two rounds after implementation.
 - Focused `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/battle-rules-scenarios.test.ts`.
 - Tier 1 battle MBT only if battle/spec semantics change.
+
+Closeout:
+
+- Done 2026-04-11.
+- Focused verification:
+  - `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/battle-rules-scenarios.test.ts`
+    - Redirect Attack coverage passed.
+    - One pre-existing unrelated failure remains: `runbook_7: Great Weapon Fighting requires explicit weapon damage die faces`.
+- `/simplify`:
+  - Round 1 replaced a guessed redirect-target AC with battle-owned `baseArmorClass`.
+  - Round 2 found no further task-scoped reductions worth landing.
+
+Plan Impact:
+
+- Status: applied.
+- Affected tasks:
+  - `MCP3-A3`: mark done.
+  - `MCP3-A`: update handoff readiness; Goblin Boss is no longer waiting on Redirect Attack.
+- Plan edits: updated Ralph index status, DAG row 22 closeout, and task 23 handoff text.
 
 Extra research needed:
 

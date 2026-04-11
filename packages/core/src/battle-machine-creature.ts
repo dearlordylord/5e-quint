@@ -29,6 +29,7 @@ import type {
   QualifiedPhysicalBypass,
   SpellId,
 } from "#/types.ts";
+import { armorClass } from "#/types.ts";
 import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 
 function applyDamageModifiers(
@@ -796,6 +797,9 @@ export function freshCreature(
     dailyUsesRemaining: {},
     creatureKind: kind,
     creatureSize: "medium",
+    baseArmorClass: armorClass(10),
+    battleSide: kind,
+    battlePosition: { row: 0, col: 0 },
     rogueLevel: 0,
     monkLevel: 0,
     dexMod: 0,
@@ -834,6 +838,7 @@ export function freshCreature(
     leftHandUse: "free",
     rightHandUse: "free",
     battleBonusActionOptions: [],
+    battleReactionOptions: [],
   };
 }
 

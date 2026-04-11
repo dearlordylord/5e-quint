@@ -3,6 +3,7 @@ import { Match } from "effect";
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
 import {
   MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
+  MONSTER_BATTLE_REACTION_OPTIONS,
   SKILLS,
   type MonsterAttack,
   type Skill,
@@ -261,6 +262,7 @@ export const GOBLIN_BOSS = {
   languages: ["Common", "Goblin"],
   gear: ["Chain Shirt", "Scimitar", "Shield", "Shortbow"],
   battleBonusActionOptions: MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
+  battleReactionOptions: MONSTER_BATTLE_REACTION_OPTIONS,
   attacks: {
     scimitar: {
       name: "Scimitar",
@@ -392,6 +394,7 @@ export function statBlockToInitCreatureConfig(params: {
     kind: "Monster",
     maxHp: params.statBlock.maxHp,
     creatureSize: params.statBlock.creatureSize,
+    baseArmorClass: params.statBlock.ac,
     dexMod: abilityModifier(
       abilityScoreToMod(params.statBlock.abilityScores.dex),
     ),
@@ -405,6 +408,7 @@ export function statBlockToInitCreatureConfig(params: {
         : undefined,
     baseWalkSpeed: params.statBlock.speeds.walk,
     battleBonusActionOptions: params.statBlock.battleBonusActionOptions,
+    battleReactionOptions: params.statBlock.battleReactionOptions,
     initiativeRoll:
       params.initiativeRoll ?? statBlockInitiativeScore(params.statBlock),
     initiativeRollB: params.initiativeRollB,

@@ -499,6 +499,14 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "USE_REDIRECT_ATTACK";
+      readonly allyId: Hole<string>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "USE_UNCANNY_DODGE";
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
@@ -758,6 +766,12 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "USE_CUTTING_WORDS";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "USE_REDIRECT_ATTACK";
+      readonly allyId: string;
     }
   | {
       readonly scope: "battle";
@@ -1216,6 +1230,12 @@ const UseCuttingWordsBattleResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("USE_CUTTING_WORDS"),
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const UseRedirectAttackBattleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("USE_REDIRECT_ATTACK"),
+  allyId: Schema.String,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const UseUncannyDodgeBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("USE_UNCANNY_DODGE"),
@@ -1265,6 +1285,7 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   CastShieldBattleResolvedActionSchema,
   UseParryBattleResolvedActionSchema,
   UseCuttingWordsBattleResolvedActionSchema,
+  UseRedirectAttackBattleResolvedActionSchema,
   UseUncannyDodgeBattleResolvedActionSchema,
   UseDeflectAttacksBattleResolvedActionSchema,
   CastHellishRebukeBattleResolvedActionSchema,
@@ -2468,6 +2489,18 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "USE_REDIRECT_ATTACK" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_RESOLVE_HIT_REACTION" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "USE_DEFLECT_ATTACKS" }
       >;
       readonly outcome: string;
@@ -3306,7 +3339,8 @@ function battleToken<T extends BattleActionToken>(token: Omit<T, "scope">): T {
 
 function hitReactionToken(
   actorId: string,
-  reaction: "RShield" | "RParry" | "RCuttingWords",
+  reaction: "RShield" | "RParry" | "RCuttingWords" | "RRedirectAttack",
+  redirectOptions: ReadonlyArray<string> = [],
 ): BattleActionToken {
   return Match.value(reaction).pipe(
     Match.when("RShield", () =>
@@ -3339,6 +3373,18 @@ function hitReactionToken(
         outcome: {
           summary:
             "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll",
+        },
+      }),
+    ),
+    Match.when("RRedirectAttack", () =>
+      battleToken({
+        actorId,
+        type: "USE_REDIRECT_ATTACK",
+        allyId: { options: redirectOptions },
+        cost: costs(quotaCost("reaction")),
+        outcome: {
+          summary:
+            "Use your reaction to swap places with a nearby Small or Medium ally and redirect the triggering attack",
         },
       }),
     ),
@@ -3910,7 +3956,16 @@ export function getAvailableBattleActions(
       .legalReactionsByCreature) {
       if (!awaitCtx.eligible.has(actorId)) continue;
       for (const reaction of legalReactions) {
-        tokens.push(hitReactionToken(actorId, reaction));
+        tokens.push(
+          hitReactionToken(
+            actorId,
+            reaction,
+            Array.from(
+              interrupt.ctx.redirectableAlliesByReactor.get(actorId)?.keys() ??
+                [],
+            ),
+          ),
+        );
       }
     }
     return tokens;
@@ -3979,6 +4034,12 @@ function availableBattleTokenForResolved(
         candidate.targetId.options.includes(token.targetId) &&
         candidate.knockOut.options.includes(token.knockOut)
       );
+    }
+    if (
+      candidate.type === "USE_REDIRECT_ATTACK" &&
+      token.type === "USE_REDIRECT_ATTACK"
+    ) {
+      return candidate.allyId.options.includes(token.allyId);
     }
     return true;
   });
@@ -4302,6 +4363,19 @@ export function resolveBattleAction(
       token: specificToken,
       outcome: availableToken.outcome.summary,
       runtime: "cuttingWords" as const,
+    })),
+    Match.when({ type: "USE_REDIRECT_ATTACK" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: {
+        type: "BATTLE_RESOLVE_HIT_REACTION" as const,
+        reactorId: CreatureId(specificToken.actorId),
+        decision: {
+          tag: "RRedirectAttack" as const,
+          allyId: CreatureId(specificToken.allyId),
+        },
+      },
     })),
     Match.when({ type: "USE_DEFLECT_ATTACKS" }, (specificToken) => ({
       token: specificToken,

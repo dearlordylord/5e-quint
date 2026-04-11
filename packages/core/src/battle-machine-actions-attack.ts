@@ -19,6 +19,7 @@ import {
   legalDamageReactionsByCreature,
   legalHitReactions,
   mkAwait,
+  redirectableAlliesByReactor,
   consumeHelp,
   findHelpAdvantage,
   piAfterDamage,
@@ -60,6 +61,16 @@ import type {
 import { armorClass } from "#/types.ts";
 
 type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>;
+
+function squaresBetween(
+  a: BattleCreatureState,
+  b: BattleCreatureState,
+): number {
+  return Math.max(
+    Math.abs(a.battlePosition.row - b.battlePosition.row),
+    Math.abs(a.battlePosition.col - b.battlePosition.col),
+  );
+}
 
 function greatWeaponFightingEligible(
   attacker: BattleCreatureState,
@@ -260,15 +271,21 @@ export function resolveAttack(
     isMeleeAttack: isMelee,
     isRangedWeaponAttack: weaponIsRanged,
     isWeaponAttack: onHitEffect == null,
+    redirectableAlliesByReactor: new Map(),
     legalReactionsByCreature: new Map(),
   };
+  const redirectableAllies = redirectableAlliesByReactor(cs1, atkCtx);
   const legalReactionsByCreature = legalHitReactions(
     cs1,
     atkCtx,
     hitReactionCandidates,
   );
   const elig = new Set(legalReactionsByCreature.keys());
-  const hitCtx = { ...atkCtx, legalReactionsByCreature };
+  const hitCtx = {
+    ...atkCtx,
+    redirectableAlliesByReactor: redirectableAllies,
+    legalReactionsByCreature,
+  };
   if (elig.size > 0) {
     return {
       creatures: new Map(cs1),
@@ -397,6 +414,12 @@ export function battleResolveHitReaction({
   const legalReactions = atk.legalReactionsByCreature.get(e.reactorId);
   if (e.decision.tag !== "RPass" && !legalReactions?.has(e.decision.tag))
     return {};
+  if (
+    e.decision.tag === "RRedirectAttack" &&
+    !atk.redirectableAlliesByReactor.get(e.reactorId)?.has(e.decision.allyId)
+  ) {
+    return {};
+  }
   const retroAtk = Match.value(e.decision).pipe(
     byTag("RShield", () => ({
       ...atk,
@@ -409,6 +432,13 @@ export function battleResolveHitReaction({
     byTag("RCuttingWords", (d) => ({
       ...atk,
       attackRoll: atk.attackRoll - d.reduction,
+    })),
+    byTag("RRedirectAttack", (d) => ({
+      ...atk,
+      target: d.allyId,
+      targetAc: atk.redirectableAlliesByReactor
+        .get(e.reactorId)!
+        .get(d.allyId)!,
     })),
     byTag("RPass", () => atk),
     Match.exhaustive,
@@ -441,17 +471,53 @@ export function battleResolveHitReaction({
           bardicInspirationCharges: reactor.bardicInspirationCharges - 1,
         };
       }),
+      byTag("RRedirectAttack", () => spendReaction(reactor)),
       byTag("RPass", () => reactor),
       Match.exhaustive,
     );
     if (updatedReactor === reactor) return {};
-    const cs = setCreature(c.creatures, e.reactorId, updatedReactor);
-    const newElig = new Set(aw.eligible);
-    newElig.delete(e.reactorId);
+    let cs = setCreature(c.creatures, e.reactorId, updatedReactor);
+    let rebuiltAtk = retroAtk;
+    if (e.decision.tag === "RRedirectAttack") {
+      const ally = cs.get(e.decision.allyId)!;
+      cs = setCreature(cs, e.reactorId, {
+        ...cs.get(e.reactorId)!,
+        battlePosition: ally.battlePosition,
+      });
+      cs = setCreature(cs, e.decision.allyId, {
+        ...ally,
+        battlePosition: reactor.battlePosition,
+      });
+      const attacker = cs.get(atk.attacker)!;
+      const redirectedTarget = cs.get(e.decision.allyId)!;
+      const redirectedSquares = squaresBetween(attacker, redirectedTarget);
+      rebuiltAtk = {
+        ...retroAtk,
+        targetCanSeeAttackerAtHit: atk.targetCanSeeAttackerAtHit,
+        attackerWithin5ftAtHit: redirectedSquares <= 1,
+        attackerWithin60ftAtHit: redirectedSquares * 5 <= 60,
+      };
+    }
+    const hitReactionCandidates = new Set(atk.legalReactionsByCreature.keys());
+    const rebuiltRedirectableAllies = redirectableAlliesByReactor(
+      cs,
+      rebuiltAtk,
+    );
+    const rebuiltHitCtx: AttackHitCtx = {
+      ...rebuiltAtk,
+      redirectableAlliesByReactor: rebuiltRedirectableAllies,
+      legalReactionsByCreature: legalHitReactions(
+        cs,
+        rebuiltAtk,
+        hitReactionCandidates,
+      ),
+    };
+    const newElig = new Set(rebuiltHitCtx.legalReactionsByCreature.keys());
+    for (const offeredId of newOffered) newElig.delete(offeredId);
     return {
       creatures: cs,
       ...phaseAwaitReaction({
-        interrupt: { tag: "PIAttackHit", ctx: retroAtk },
+        interrupt: { tag: "PIAttackHit", ctx: rebuiltHitCtx },
         trigger: "TAttackHits",
         eligible: newElig,
         offered: newOffered,

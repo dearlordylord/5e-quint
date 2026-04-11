@@ -212,6 +212,52 @@ function initHitReactionBattle() {
   return actor;
 }
 
+function initRedirectAttackBattle() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 20,
+        battleSide: "heroes",
+        battlePosition: { row: 0, col: 0 },
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["shield"]),
+        initiativeRoll: 15,
+        battleSide: "goblins",
+        battlePosition: { row: 1, col: 1 },
+      },
+      {
+        id: CreatureId("C"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 10,
+        battleSide: "goblins",
+        battlePosition: { row: 1, col: 0 },
+        battleReactionOptions: ["redirectAttack"],
+      },
+      {
+        id: CreatureId("D"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 5,
+        battleSide: "heroes",
+        battlePosition: { row: 3, col: 3 },
+      },
+    ],
+  });
+  return actor;
+}
+
 function initDamageReactionBattle({
   rogueLevel = 0,
   monkLevel = 0,
@@ -942,6 +988,57 @@ describe("battle rules scenario regressions", () => {
 
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage");
     expect(creature(actor, "B").hp).toBe(13);
+  });
+
+  it("phase_3: Redirect Attack swaps positions, retargets the hit, and rebuilds the new target's hit window", () => {
+    const actor = initRedirectAttackBattle();
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("C"),
+      attackRoll: 11,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit");
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("C"))).toBe(true);
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: CreatureId("C"),
+      decision: {
+        tag: "RRedirectAttack",
+        allyId: CreatureId("B"),
+      },
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit");
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("B"))).toBe(true);
+    expect(creature(actor, "C").battlePosition).toEqual({ row: 1, col: 1 });
+    expect(creature(actor, "B").battlePosition).toEqual({ row: 1, col: 0 });
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RShield" },
+    });
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" },
+    });
+
+    expect(ctx(actor).awaitCtx).toBeNull();
+    expect(creature(actor, "B").hp).toBe(20);
+    expect(creature(actor, "B").reactionAvailable).toBe(false);
+    expect(creature(actor, "C").reactionAvailable).toBe(false);
   });
 
   it("phase_1: the damage window is skipped when the target has no legal damage reaction", () => {

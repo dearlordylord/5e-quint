@@ -147,6 +147,18 @@ export function battleInit({
     creatures.set(cfg.id, {
       ...base,
       ...(cfg.creatureSize != null ? { creatureSize: cfg.creatureSize } : {}),
+      ...(cfg.baseArmorClass != null
+        ? { baseArmorClass: cfg.baseArmorClass }
+        : {}),
+      ...(cfg.battleSide != null ? { battleSide: cfg.battleSide } : {}),
+      ...(cfg.battlePosition != null
+        ? { battlePosition: cfg.battlePosition }
+        : {
+            battlePosition: {
+              row: initiative.length * 2,
+              col: 0,
+            },
+          }),
       ...(cfg.maxHpReduction != null
         ? { maxHpReduction: cfg.maxHpReduction }
         : {}),
@@ -247,6 +259,9 @@ export function battleInit({
         : {}),
       ...(cfg.battleBonusActionOptions != null
         ? { battleBonusActionOptions: cfg.battleBonusActionOptions }
+        : {}),
+      ...(cfg.battleReactionOptions != null
+        ? { battleReactionOptions: cfg.battleReactionOptions }
         : {}),
       ...handUses,
       ...(cfg.qualifiedPhysicalResistances != null

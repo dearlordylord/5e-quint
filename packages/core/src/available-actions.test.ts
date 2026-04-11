@@ -407,6 +407,47 @@ function initBattleForParryDiscovery() {
   });
 }
 
+function initBattleForRedirectAttackDiscovery() {
+  return makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 20,
+        battleSide: "heroes",
+        battlePosition: { row: 0, col: 0 },
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 15,
+        battleSide: "goblins",
+        battlePosition: { row: 1, col: 0 },
+        battleReactionOptions: ["redirectAttack"],
+      },
+      {
+        id: CreatureId("C"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 10,
+        battleSide: "goblins",
+        battlePosition: { row: 1, col: 1 },
+      },
+      {
+        id: CreatureId("D"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 5,
+        battleSide: "heroes",
+        battlePosition: { row: 3, col: 3 },
+      },
+    ],
+  });
+}
+
 function initBattleForDamageDiscovery() {
   return makeBattleActor({
     type: "BATTLE_INIT",
@@ -2630,6 +2671,38 @@ describe("available actions contract", () => {
         outcome: {
           summary:
             "Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll",
+        },
+      },
+    ]);
+  });
+
+  test("battle discovery exposes Redirect Attack only with valid allied swap targets", () => {
+    const actor = initBattleForRedirectAttackDiscovery();
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+    });
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "B",
+        type: "USE_REDIRECT_ATTACK",
+        allyId: { options: ["C"] },
+        cost: cost(quota("reaction")),
+        outcome: {
+          summary:
+            "Use your reaction to swap places with a nearby Small or Medium ally and redirect the triggering attack",
         },
       },
     ]);

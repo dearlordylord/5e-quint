@@ -87,6 +87,11 @@ export const MONSTER_BATTLE_BONUS_ACTION_OPTIONS = [
 export type MonsterBattleBonusActionOption =
   (typeof MONSTER_BATTLE_BONUS_ACTION_OPTIONS)[number];
 
+export const MONSTER_BATTLE_REACTION_OPTIONS = ["redirectAttack"] as const;
+
+export type MonsterBattleReactionOption =
+  (typeof MONSTER_BATTLE_REACTION_OPTIONS)[number];
+
 // --- Monster Attack ---
 
 export interface MonsterAttack {
@@ -180,6 +185,7 @@ export interface StatBlock {
   readonly languages?: ReadonlyArray<string>;
   readonly gear?: ReadonlyArray<string>;
   readonly battleBonusActionOptions?: ReadonlyArray<MonsterBattleBonusActionOption>;
+  readonly battleReactionOptions?: ReadonlyArray<MonsterBattleReactionOption>;
   readonly attacks: Readonly<Record<string, MonsterAttack>>;
   readonly multiattack: ReadonlyArray<MultiattackSlot>;
   // Phase L: Legendary / Recharge / X-Day
