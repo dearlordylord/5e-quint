@@ -113,7 +113,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 15,
       "id": "G",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Attack Rider Ownership"
     },
     {
@@ -195,7 +195,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 12    | E - Movement And Help Geometry/Session Ownership                      | done                                          | none                                                                      | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK`                            | Closed 2026-04-10: keep core/MCP geometry-free; use explicit caller/session spatial facts for any future public movement/help surface.                                                                                                                                                                            | Research closed                            |
 | 13    | J - Generic Table Events, Environmental Hazards, And Monster Commands | done                                          | none                                                                      | Future raw table event exposure and monster command work              | Closed 2026-04-10: all four families (max-HP provenance, active effects, environmental hazards, monster commands) deferred; no family is ready for safe public exposure without source-specific provenance, stat-block validation, or multi-step progress tracking                                                   | Research closed                            |
 | 14    | F - Legendary Attack Payload Ownership                                | done                                          | monster stat-block payload ownership                                      | Public `BATTLE_LEGENDARY_ATTACK`                                      | Closed 2026-04-10: legendary attack is a `suggested_action` via `get_available_actions`; reuses Task D's attack runtime lane; battle derives weapon/damage/cost from stat-block `LegendaryActionDef.attackRef` → `StatBlock.attacks`; MCP never accepts arbitrary damage type, qualifiers, weapon properties, cost, or melee/ranged. Non-attack LA options (spell, save, utility) remain deferred. | Research closed                            |
-| 15    | G - Attack Rider Ownership                                            | ready-for-research                            | none                                                                      | Attack rider tokens                                                   | Reuse Task D's attack boundary, then classify rider timing and owned/runtime facts                                                                                                                                                                                                                                 | Research before implementation             |
+| 15    | G - Attack Rider Ownership                                            | done                                          | none                                                                      | Attack rider tokens                                                   | Closed 2026-04-10: attack riders stay off creature MCP; Brutal Strike is a pre-roll attack declaration, Stunning Strike / Eldritch Smite / Divine Smite Free are post-hit rider windows, and Cunning Strike is a post-hit choice with post-damage effects layered onto Sneak Attack resolution.                                                                                                    | Research closed                            |
 | 16    | MCP1-C - Encounter Start Tool/Command                                 | ready-for-implementation-after-light-research | MCP1-A, MCP1-B                                                            | MCP2-A                                                                | Confirm the fighter durable-to-`InitCreatureConfig` mapping, then start the battle through the routed `BATTLE_INIT` path using the shared `goblinMinion` statblock ID.                                                                                                                                             | Ready after fighter mapping check          |
 | 17    | MCP2-A - Battle Attack Public Boundary                                | blocked                                       | MCP1-C                                                                    | MCP2-B                                                                | Implement first-slice main-hand `BATTLE_ATTACK` token using Task D's resolved-token and `battleAttack` runtime contract                                                                                                                                                                                            | Blocked only on encounter start            |
 | 18    | MCP2-B - Fighter Attacks Goblin End-to-End                            | blocked                                       | MCP2-A                                                                    | motivating MCP flow                                                   | Execute attack against goblin through MCP                                                                                                                                                                                                                                                                          | Not handoff-ready                          |
@@ -236,9 +236,7 @@ Merged MCP Fighter vs. Goblin baseline:
 Recommended first coding-loop tasks:
 
 1. **Task MCP1-C: Encounter Start Tool/Command** if the goal is to continue the fighter-vs-goblin MCP path. Only the fighter durable/config mapping blast-radius check remains before implementation.
-2. **Task G: Attack Rider Ownership** if the goal is the next attack-timing research slice after Task D.
-
-Task F (Legendary Attack Payload Ownership) is now complete. Reuse its ownership split for any future `BATTLE_LEGENDARY_ATTACK` implementation rather than reopening the boundary question.
+Tasks F and G are now complete. Reuse their ownership splits for any future `BATTLE_LEGENDARY_ATTACK` or attack-rider implementation rather than reopening the boundary question.
 
 Do not widen `BATTLE_ATTACK` implementation beyond the Task D contract. The remaining risk is scope creep into off-hand attacks, hit reactions, legendary actions, and riders.
 
@@ -1472,13 +1470,13 @@ Plan Impact:
 
 ### Task 15 - G - Attack Rider Ownership
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: attack rider tokens.
 
-Next action: reuse Task D's attack boundary, then classify each rider by timing, owned feature state, and runtime/session facts.
+Next action: Closed 2026-04-10. Reuse the timing/ownership split below when rider implementation work is scheduled; do not reintroduce creature-scope rider tokens.
 
 Purpose:
 
@@ -1521,7 +1519,30 @@ Verification:
 
 Extra research needed:
 
-- Yes. Attack boundary is settled; proceed with the RAW class feature reread.
+- No. This task's research output is recorded below.
+
+Research closeout:
+
+- RAW checked against `.references/srd-5.2.1/Classes/Barbarian.md` (`Reckless Attack`, `Brutal Strike`, `Improved Brutal Strike`), `.references/srd-5.2.1/Classes/Monk.md` (`Stunning Strike`), `.references/srd-5.2.1/Classes/Rogue.md` (`Sneak Attack`, `Cunning Strike`, `Improved Cunning Strike`), `.references/srd-5.2.1/Classes/Warlock.md` (`Eldritch Smite`), `.references/srd-5.2.1/Classes/Paladin.md` (`Paladin's Smite`), `.references/srd-5.2.1/Spells/Descriptions-A-D.md` (`Divine Smite`), `.references/srd-5.2.1/Rules-Glossary.md` (`Attack Roll`, `Armor Class`, `Critical Hit`, `Cover`, `Help [Action]`, `Blinded`, `Frightened`, `Invisible`, `Prone`, `Unconscious`), and `UBIQUITOUS_LANGUAGE.md` (`Attack Roll`, `Critical Hit`, `Armor Class (AC)`, `Cover`, and `Advantage and Disadvantage`).
+- No hit-qualified rider belongs on creature-scope MCP. Each rider depends on attack-phase facts that are only honest inside battle attack resolution after Task D's `BATTLE_ATTACK` / `battleAttack` split.
+- `USE_BRUTAL_STRIKE`: pre-roll declaration on one chosen Strength-based attack roll on the Barbarian's turn after `DECLARE_RECKLESS`. Battle owns the chosen-attack window, the "forgo Advantage" choice, the "mustn't have Disadvantage" gate, Barbarian level scaling for damage/effect count, and `brutalStrikeUsedThisTurn`. Runtime only needs a save result for `Staggering Blow`; `Forceful Blow` still needs later movement/session follow-through.
+- `STUNNING_STRIKE`: post-hit rider choice on a qualifying Monk-weapon or Unarmed Strike hit. Battle owns the hit qualification, target identity, once-per-turn timing, Monk level, `focusPoints`, and `stunningStrikeUsedThisTurn`. Runtime must supply the target's Constitution save result.
+- `USE_CUNNING_STRIKE`: post-hit / pre-Sneak-Attack-damage-roll rider choice when battle has already determined that Sneak Attack applies. Battle owns Sneak Attack legality, remaining Sneak Attack dice, Rogue level scaling, and `cunningStrikeUsesThisTurn`. Runtime must supply any per-effect saving throw result, and battle must still know target Size for `Trip`; the chosen effect resolves immediately after the attack's damage is dealt.
+- `USE_ELDRITCH_SMITE`: post-hit rider choice on a qualifying pact-weapon hit before final damage aggregation. Battle owns pact-weapon qualification, target identity, Warlock level, Pact Magic slot spend, `eldritchSmiteUsedThisTurn`, and target Size for the optional `Prone` rider. No extra runtime save is needed.
+- `USE_DIVINE_SMITE_FREE`: post-hit rider choice on a qualifying melee-weapon or Unarmed Strike hit. Battle owns the hit qualification, target identity, Paladin free-use availability, and the target's creature type for the Fiend / Undead bonus-damage clause. Because the spell's casting time is "Bonus Action, which you take immediately after hitting," implementation must respect the post-hit timing window rather than expose it as a generic turn action.
+- Preferred rider phase split for future implementation:
+  - pre-roll declaration window: Brutal Strike only
+  - post-hit / pre-damage window: Stunning Strike, Eldritch Smite, Divine Smite Free, and Cunning Strike choice
+  - post-damage effect resolution: Cunning Strike effects and any Brutal Strike option that later needs movement/session follow-through
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `G`: revised from `ready-for-research` to `done`
+  - `MCP2-A`: no change; it still must implement the public main-hand attack boundary before any rider work can land
+  - `MCP3-A`: no change; Goblin Warrior follow-up still depends on future attack / monster-option implementation, not on reopening rider ownership
+- Plan edits: synchronized Task 15 status in the index and DAG, removed Task 15 from the recommended ready-task list, and recorded the rider timing / ownership split for future implementation work.
 
 ### Task 16 - MCP1-C - Encounter Start Tool/Command
 
