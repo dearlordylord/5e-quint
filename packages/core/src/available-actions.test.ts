@@ -2914,6 +2914,90 @@ describe("available actions contract", () => {
     });
   });
 
+  test("battle resolution preserves two-die weapon profiles from projected loadouts", () => {
+    const actor = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 15,
+          mainHandWeapon: {
+            name: "Greatsword",
+            damageType: "slashing",
+            isMelee: true,
+            damageDie: 6,
+            diceCount: 2,
+            properties: new Set(["heavy", "twoHanded"]),
+          },
+          mainHandUsesTwoHands: true,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleAttack",
+          values: {
+            attackRoll: 15,
+            targetAc: 10,
+            weaponDamage: 7,
+            attackerWithin5ft: true,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            hitReactionCandidates: [],
+          },
+        },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_ATTACK",
+        targetId: CreatureId("B"),
+        attackRoll: 15,
+        diceCount: 2,
+        dieSize: 6,
+        dmg: 7,
+        dt: "slashing",
+        damageQualifiers: new Set(),
+        crit: false,
+        tAc: armorClass(10),
+        knockOut: false,
+        isMelee: true,
+        weaponProperties: new Set(["heavy", "twoHanded"]),
+        isFinesse: false,
+        attackerWithin5ft: true,
+        hostileWithin5ft: false,
+        targetCanSeeAttacker: true,
+        attackerCanSeeTarget: true,
+        frightSourceInLOS: false,
+        hasAllyAdjacentToTarget: false,
+        saDmg: 0,
+        hitReactionCandidates: new Set(),
+      },
+      outcome:
+        "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+    });
+  });
+
   test("battle resolution finalizes unarmed BATTLE_ATTACK with the SRD unarmed profile", () => {
     const actor = initBattleForFeatureDiscovery();
     const request = expectBattleRequest(

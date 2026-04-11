@@ -24,6 +24,14 @@ import {
   validateDraftFields,
   validateLanguages,
 } from "#/character-finalization-helpers.ts";
+import {
+  type CharacterEquipmentChoices,
+  type CharacterEquipmentChoicesDraft,
+} from "#/character-equipment.ts";
+import {
+  CHARACTER_EQUIPMENT_ISSUE_CODES,
+  validateCharacterEquipment,
+} from "#/character-equipment-validation.ts";
 import type {
   CharacterBuildChoices,
   CharacterClassResourcePool,
@@ -92,6 +100,39 @@ export {
   deriveCharacterClassResources,
   deriveProficiencyBonus,
 } from "#/character-resources.ts";
+export {
+  CHARACTER_ARMORS,
+  CHARACTER_BACKGROUND_EQUIPMENT_OPTIONS,
+  CHARACTER_CLASS_EQUIPMENT_OPTIONS,
+  CHARACTER_COMBAT_EQUIPMENT_ITEMS,
+  CHARACTER_WEAPONS,
+  type CharacterArmor,
+  type CharacterBackgroundEquipmentOption,
+  type CharacterClassEquipmentOption,
+  type CharacterCombatEquipmentItem,
+  type CharacterWeapon,
+} from "#/character-equipment-data.ts";
+export {
+  SHIELD_ARMOR_TRAINING,
+  WEAPON_GRIPS,
+  armorTrainingForArmor,
+  characterBattleEquipmentProjection,
+  ownedCombatEquipment,
+  projectBattleWeaponProfile,
+  startingGoldPieces,
+  weaponProficiencyMatchesWeapon,
+  type CharacterEquipmentChoices,
+  type CharacterEquipmentChoicesDraft,
+  type CharacterLoadout,
+  type CharacterOwnedCombatEquipment,
+  type CharacterWeaponGrip,
+} from "#/character-equipment.ts";
+export {
+  CHARACTER_EQUIPMENT_ISSUE_CODES,
+  validateCharacterEquipment,
+  type CharacterEquipmentIssue,
+  type CharacterEquipmentIssueCode,
+} from "#/character-equipment-validation.ts";
 
 /**
  * Character-domain ownership boundary.
@@ -162,6 +203,7 @@ export interface CharacterDraft {
   readonly languages?: ReadonlyArray<CharacterLanguage>;
   readonly alignment?: Alignment;
   readonly choices?: CharacterBuildChoices;
+  readonly equipment?: CharacterEquipmentChoicesDraft;
 }
 
 export interface CharacterSheet {
@@ -175,6 +217,7 @@ export interface CharacterSheet {
   readonly languages: ReadonlyArray<CharacterLanguage>;
   readonly alignment: Alignment;
   readonly choices: CharacterBuildChoices;
+  readonly equipment: CharacterEquipmentChoices;
 }
 
 export const CHARACTER_FINALIZATION_ISSUE_CODES = [
@@ -228,6 +271,7 @@ export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "duplicateGrantedLanguageChoice",
   "duplicateGrantedProficiency",
   "multiclassPrerequisiteNotMet",
+  ...CHARACTER_EQUIPMENT_ISSUE_CODES,
 ] as const;
 export type CharacterFinalizationIssueCode =
   (typeof CHARACTER_FINALIZATION_ISSUE_CODES)[number];
@@ -322,6 +366,7 @@ export function finalizeCharacterDraft(
     ...validateGrantedLanguages(draft, classLevels),
     ...(draft.languages == null ? [] : validateLanguages(draft.languages)),
     ...validateDuplicateGrantedProficiencies(draft),
+    ...validateCharacterEquipment(draft),
   ];
 
   let abilityScores: CharacterAbilityScores | undefined;
@@ -362,6 +407,15 @@ export function finalizeCharacterDraft(
       languages: [...draft.languages!],
       alignment: draft.alignment!,
       choices: draft.choices ?? {},
+      equipment: {
+        backgroundOption: draft.equipment!.backgroundOption!,
+        classOption: draft.equipment!.classOption!,
+        purchasedCombatEquipment: [
+          ...(draft.equipment!.purchasedCombatEquipment ?? []),
+        ],
+        remainingGoldPieces: draft.equipment!.remainingGoldPieces!,
+        loadout: { ...draft.equipment!.loadout! },
+      },
     },
   };
 }

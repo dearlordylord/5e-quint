@@ -96,6 +96,22 @@ export function buildStartBattleCommand(
               ),
             }
           : {}),
+        ...(fighterLoadout.offHandWeapon != null
+          ? {
+              offHandWeapon: encodeBattleWeaponProfile(
+                fighterLoadout.offHandWeapon,
+              ),
+            }
+          : {}),
+        ...(defined(fighterLoadout.hasShieldEquipped)
+          ? { hasShieldEquipped: fighterLoadout.hasShieldEquipped }
+          : {}),
+        ...(defined(fighterLoadout.isWearingArmor)
+          ? { isWearingArmor: fighterLoadout.isWearingArmor }
+          : {}),
+        ...(defined(fighterLoadout.mainHandUsesTwoHands)
+          ? { mainHandUsesTwoHands: fighterLoadout.mainHandUsesTwoHands }
+          : {}),
         ...(defined(input.fighterInitiativeRoll)
           ? { initiativeRoll: input.fighterInitiativeRoll }
           : {}),

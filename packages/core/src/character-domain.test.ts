@@ -2,12 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import {
   abilityModifiersFromScores,
+  characterBattleEquipmentProjection,
   characterClassResources,
   characterOriginFeats,
   characterProficiencySummary,
   finalizeCharacterDraft,
   finalAbilityModifiers,
+  ownedCombatEquipment,
   POINT_BUY_BUDGET,
+  projectBattleWeaponProfile,
+  startingGoldPieces,
   type CharacterDraft,
   deriveProficiencyBonus,
   singleClassLevels,
@@ -53,6 +57,16 @@ describe("character-domain", () => {
           proficiencies: ["history", "thievesTools", "viol"],
         },
       },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "packageA",
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: 18,
+        loadout: {
+          wieldedWeapon: "greatsword",
+          wieldedWeaponGrip: "twoHanded",
+        },
+      },
       ...overrides,
     };
   }
@@ -67,6 +81,16 @@ describe("character-domain", () => {
     expect(result.sheet.classLevels).toEqual({
       ...ZERO_CLASS_LEVELS,
       fighter: 1,
+    });
+    expect(result.sheet.equipment).toEqual({
+      backgroundOption: "package",
+      classOption: "packageA",
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: 18,
+      loadout: {
+        wieldedWeapon: "greatsword",
+        wieldedWeaponGrip: "twoHanded",
+      },
     });
     expect(totalClassLevels(result.sheet.classLevels)).toBe(1);
     expect(result.sheet.abilityScores).toEqual({
@@ -260,6 +284,18 @@ describe("character-domain", () => {
           multiclassBardInstrument: "lute",
           rangerDeftExplorerLanguages: ["Sylvan", "Primordial"],
         },
+        equipment: {
+          backgroundOption: "package",
+          classOption: "packageA",
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: 17,
+          loadout: {
+            wornArmor: "chainMail",
+            wieldedWeapon: "longsword",
+            shield: true,
+            wieldedWeaponGrip: "oneHanded",
+          },
+        },
       }),
     );
 
@@ -312,6 +348,17 @@ describe("character-domain", () => {
           ranger: { className: "ranger", subclass: "hunter" },
         },
       },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "packageA",
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: 15,
+        loadout: {
+          wornArmor: "studdedLeatherArmor",
+          wieldedWeapon: "longbow",
+          wieldedWeaponGrip: "twoHanded",
+        },
+      },
     });
 
     expect(result.ok).toBe(true);
@@ -348,6 +395,16 @@ describe("character-domain", () => {
         primaryClassSkills: ["arcana", "investigation"],
         speciesSkill: "perception",
       },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "packageA",
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: 13,
+        loadout: {
+          wieldedWeapon: "quarterstaff",
+          wieldedWeaponGrip: "twoHanded",
+        },
+      },
     });
 
     expect(result.ok).toBe(true);
@@ -366,6 +423,149 @@ describe("character-domain", () => {
     });
   });
 
+  it("owns starting equipment choices and projects battle-facing loadout facts from the sheet", () => {
+    const result = finalizeCharacterDraft(completeDraft());
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected successful finalization");
+
+    expect(ownedCombatEquipment(result.sheet)).toEqual({
+      armor: ["chainMail"],
+      weapons: [
+        "spear",
+        "shortbow",
+        "greatsword",
+        "flail",
+        "javelin",
+        "javelin",
+        "javelin",
+        "javelin",
+        "javelin",
+        "javelin",
+        "javelin",
+        "javelin",
+      ],
+      shields: 0,
+    });
+    expect(startingGoldPieces(result.sheet)).toBe(18);
+    expect(characterBattleEquipmentProjection(result.sheet)).toEqual({
+      hasShieldEquipped: false,
+      isWearingArmor: false,
+      mainHandUsesTwoHands: true,
+      mainHandWeapon: {
+        name: "Greatsword",
+        damageType: "slashing",
+        isMelee: true,
+        damageDie: 6,
+        diceCount: 2,
+        properties: new Set(["heavy", "twoHanded"]),
+      },
+    });
+  });
+
+  it("tracks gold-start combat purchases without reviving starter presets", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        equipment: {
+          backgroundOption: "package",
+          classOption: "gold",
+          purchasedCombatEquipment: ["chainMail", "shield", "longsword"],
+          remainingGoldPieces: 69,
+          loadout: {
+            wornArmor: "chainMail",
+            wieldedWeapon: "longsword",
+            shield: true,
+            wieldedWeaponGrip: "oneHanded",
+          },
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected successful finalization");
+
+    expect(ownedCombatEquipment(result.sheet)).toEqual({
+      armor: ["chainMail"],
+      weapons: ["spear", "shortbow", "longsword"],
+      shields: 1,
+    });
+    expect(startingGoldPieces(result.sheet)).toBe(169);
+    expect(characterBattleEquipmentProjection(result.sheet)).toEqual({
+      hasShieldEquipped: true,
+      isWearingArmor: true,
+      mainHandUsesTwoHands: false,
+      mainHandWeapon: {
+        name: "Longsword",
+        damageType: "slashing",
+        isMelee: true,
+        damageDie: 8,
+        versatileDie: 10,
+        properties: new Set(["versatile"]),
+      },
+    });
+  });
+
+  it("rejects loadouts that consume one owned weapon twice", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        equipment: {
+          backgroundOption: "gold",
+          classOption: "gold",
+          purchasedCombatEquipment: ["longsword"],
+          remainingGoldPieces: 190,
+          loadout: {
+            wieldedWeapon: "longsword",
+            secondaryWeapon: "longsword",
+            wieldedWeaponGrip: "oneHanded",
+          },
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failed finalization");
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "invalidLoadoutSecondaryWeapon",
+    );
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "loadoutConsumesSameWeaponTwice",
+    );
+  });
+
+  it("rejects two-handed weapons without an explicit two-handed grip", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        equipment: {
+          backgroundOption: "package",
+          classOption: "packageA",
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: 18,
+          loadout: {
+            wieldedWeapon: "greatsword",
+          },
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failed finalization");
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "twoHandedWeaponRequiresTwoHandedGrip",
+    );
+  });
+
+  it("records missing equipment facts at finalization time", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({ equipment: undefined }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failed finalization");
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "missingEquipmentChoices",
+    );
+  });
+
   it("rejects missing required canonical facts", () => {
     const result = finalizeCharacterDraft({});
 
@@ -382,6 +582,7 @@ describe("character-domain", () => {
       "missingSpecies",
       "missingLanguages",
       "missingAlignment",
+      "missingEquipmentChoices",
     ]);
   });
 
@@ -438,5 +639,16 @@ describe("character-domain", () => {
       cha: 5,
     });
     expect([...STANDARD_ARRAY_SCORES]).toEqual([15, 14, 13, 12, 10, 8]);
+  });
+
+  it("projects two-die weapon profiles without dropping diceCount", () => {
+    expect(projectBattleWeaponProfile("maul")).toEqual({
+      name: "Maul",
+      damageType: "bludgeoning",
+      isMelee: true,
+      damageDie: 6,
+      diceCount: 2,
+      properties: new Set(["heavy", "twoHanded"]),
+    });
   });
 });

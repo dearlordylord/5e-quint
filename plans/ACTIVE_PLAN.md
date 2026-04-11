@@ -54,13 +54,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 3,
       "id": "CHAR4",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Equipment And Loadout Projection"
     },
     {
       "number": 4,
       "id": "CHAR5",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Sheet-Derived Numbers And Spellcasting Projection"
     },
     {
@@ -118,8 +118,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 0 | CHAR1 - Canonical Character Domain | done | none | CHAR2, CHAR3, CHAR4, CHAR5, CHAR6, CHAR7 | Landed `CharacterDraft` / `CharacterSheet` in `packages/core/src/character-domain.ts` with finalization that rejects incomplete or contradictory class/background/species/language/alignment state. | Complete |
 | 1 | CHAR2 - Score Generation And Origin Validation | done | CHAR1 | CHAR3, CHAR5 | Landed owned ability-score generation, background score-increase validation, and SRD starting-language validation on the canonical character sheet. | Complete |
 | 2 | CHAR3 - Proficiencies Features And Level-Gated Character Facts | done | CHAR1, CHAR2 | CHAR4, CHAR5, CHAR7 | Landed owned build choices for class/background/species/feat-driven proficiencies, subclass ownership/gating, multiclass prerequisite validation, granted-language choices, and class-resource derivation helpers on the canonical character sheet. | Complete |
-| 3 | CHAR4 - Equipment And Loadout Projection | ready-for-implementation-after-light-research | CHAR1, CHAR3 | CHAR5 | Use the new owned proficiency and granted-language facts to model actual starting equipment and project combat-facing loadout state without reviving temporary presets. | Unblocked by CHAR3; next bounded slice |
-| 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | blocked | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Derive executable sheet numbers and spellcasting facts from the owned sheet, then project them into creature runtime and battle init without duplicated derivation. | Depends on prior sheet ownership slices |
+| 3 | CHAR4 - Equipment And Loadout Projection | done | CHAR1, CHAR3 | CHAR5 | Landed owned starting-equipment choices, leftover starting-gold tracking, bounded combat-equipment ownership, loadout validation, and battle-facing weapon/hand/shield/armor projection sourced from `CharacterSheet`. | Complete |
+| 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | ready-for-implementation-after-light-research | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Derive executable sheet numbers and spellcasting facts from the owned sheet, reusing CHAR4 equipment ownership/projection rather than reintroducing runtime presets. | Unblocked by CHAR4; next bounded slice |
 | 5 | CHAR6 - Guided Workflow Shell | blocked | CHAR1, CHAR2, CHAR5 | none | Once the owned domain and projections are stable, add a thin workflow shell over `CharacterDraft` rather than a second semantic model. | Product-shell work; intentionally later |
 | 6 | CHAR7 - Level Advancement And Multiclass Continuation | blocked | CHAR1, CHAR3, CHAR5 | none | Extend the same character domain into advancement, higher-level starts, ASI/feat choice points, and multiclass continuation. | Depends on executable sheet baseline |
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
@@ -156,8 +156,8 @@ Current architecture decisions for this batch:
 
 Recommended next coding-loop task:
 
-1. **CHAR3 - Proficiencies Features And Level-Gated Character Facts**
-   CHAR2 landed owned score generation and origin validation. The next slice should keep extending the same canonical sheet rather than introducing parallel proficiency or feature registries.
+1. **CHAR5 - Sheet-Derived Numbers And Spellcasting Projection**
+   CHAR4 landed owned equipment choices and loadout projection. The next slice should derive executable sheet numbers and spellcasting facts from the same canonical sheet instead of widening runtime init surfaces again.
 
 Do not jump ahead to workflow/UI work before the canonical domain exists. Do not solve character creation by widening `DndMachineInput`, `BATTLE_INIT`, or adapter-owned metadata.
 
@@ -342,7 +342,7 @@ Plan Impact:
 
 ### Task 3 - CHAR4 - Equipment And Loadout Projection
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: CHAR1, CHAR3.
 
@@ -358,9 +358,44 @@ Acceptance criteria:
 - The sheet owns combat-relevant loadout facts.
 - Creature and battle projection consume sheet-owned loadout data rather than narrow temporary presets.
 
+Closeout:
+
+- Landed owned `equipment` facts on `CharacterDraft` / `CharacterSheet`, including background/class package-vs-gold choices, purchased combat-relevant items, recorded remaining starting gold, and a bounded combat loadout.
+- Added SRD-backed combat equipment catalogs and starting-equipment package data for the current character-domain scope, keeping non-combat inventory simulation out of scope.
+- Added loadout validation that enforces ownership counts and hand-occupancy constraints without inventing non-RAW automatic versatile-hand defaults.
+- Added one-way battle projection from sheet-owned loadout facts into `mainHandWeapon`, `offHandWeapon`, `hasShieldEquipped`, `isWearingArmor`, and `mainHandUsesTwoHands`.
+- Updated the transitional `fighterStartBattleLoadout` / `start_battle` path to source those fields from a finalized canonical `CharacterSheet` instead of a narrow hardcoded preset.
+- Fixed the two-die weapon projection path so `greatsword` and `maul` preserve `diceCount: 2` through battle action resolution.
+
+Verification:
+
+- RAW check completed against `.references/srd-5.2.1/Character-Creation.md`, `.references/srd-5.2.1/Character-Origins.md`, `.references/srd-5.2.1/Classes/Fighter.md`, and `.references/srd-5.2.1/Equipment.md`, then cross-checked against `UBIQUITOUS_LANGUAGE.md`.
+- Focused tests passed:
+  - `pnpm --dir packages/core exec vitest run src/character-domain.test.ts src/available-actions.test.ts`
+  - `pnpm --dir packages/mcp exec vitest run src/server.test.ts -t "start_battle promotes the router onto a battle host using the fighter snapshot and monster stat block"`
+- Targeted lint passed on touched Task 3 files:
+  - `pnpm --filter @dnd/core exec eslint --no-inline-config -c eslint.config.mjs ...`
+  - `pnpm --filter @dnd/mcp exec eslint --no-inline-config -c eslint.config.mjs src/start-battle.ts src/server.test.ts`
+- Additional repo gates:
+  - `pnpm circular` passed.
+  - `pnpm quality` is currently blocked by pre-existing Prettier drift in unrelated core files (`context-encoding.ts`, `creature.mbt.test.ts`, `features/spell-available-actions.ts`, `machine-event-extractors.ts`, `machine-monk.ts`, `machine-queries.ts`, `machine-startturn.ts`, `machine.ts`).
+  - `pnpm --filter @dnd/core typecheck && pnpm --filter @dnd/mcp typecheck` is currently blocked by pre-existing unrelated core errors outside CHAR4-owned files.
+- `/simplify` convergence:
+  - Round 1: rejected the candidate branches' implicit versatile-hand defaults, missing ownership-count validation, and off-scope AC derivation; kept CHAR4 bounded to owned equipment/loadout facts plus battle-facing projection.
+  - Round 2: split the new equipment implementation into smaller data/projection/validation modules to satisfy repo file-size constraints and removed the remaining important duplication/structure issues.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `CHAR4`: marked `done`.
+  - `CHAR5`: unblocked and promoted to `ready-for-implementation-after-light-research`; it should now consume the owned equipment/loadout facts instead of re-deriving them from presets.
+  - `CHAR6`: no change; remains blocked behind `CHAR5`.
+  - `CHAR7`: no change; remains blocked behind `CHAR5`.
+
 ### Task 4 - CHAR5 - Sheet-Derived Numbers And Spellcasting Projection
 
-Status: blocked.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: CHAR1, CHAR2, CHAR3, CHAR4.
 
@@ -368,7 +403,7 @@ Blocks: CHAR6, CHAR7.
 
 Next action:
 
-- Derive executable sheet numbers and spellcasting facts from the canonical sheet, then project them into creature runtime and battle runtime.
+- Derive executable sheet numbers and spellcasting facts from the canonical sheet, then project them into creature runtime and battle runtime while consuming CHAR4-owned equipment/loadout facts instead of hardcoded presets.
 
 Acceptance criteria:
 
