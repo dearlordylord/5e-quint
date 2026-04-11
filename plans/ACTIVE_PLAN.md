@@ -243,7 +243,7 @@ Recommended first coding-loop tasks:
 
 Do not start with `BATTLE_ATTACK` implementation. Its public runtime/session contract is the main unresolved API boundary and can easily absorb off-hand attacks, hit reactions, legendary actions, and riders.
 
-Do not start the full fighter-vs-goblin implementation before Task D has produced the public attack boundary. The session and goblin-content tasks can be researched first, but the motivating "Fighter attacks Goblin through MCP" loop remains blocked until public `BATTLE_ATTACK` exists.
+Do not start the full fighter-vs-goblin implementation before Task D has produced the public attack boundary. The session-routing and statblock/catalog tasks can be researched first, but the motivating "Fighter attacks Goblin through MCP" loop remains blocked until public `BATTLE_ATTACK` exists.
 
 ### Task 1 - MCP0-A - Dead-Creature Condition Mutation Bug
 
@@ -895,7 +895,7 @@ Inputs:
 Implementation output:
 
 - Add a reusable core-owned statblock/content facility for battle-init-compatible monster definitions.
-- Add a short description of approved provenance for future statblocks: local `.references/srd-5.2.1/` first; other corpora only by explicit owner decision. 5etools may be used as a research aid but is not the default imported source of truth.
+- Add a short description of approved provenance for future statblocks: `.references/srd-5.2.1/` is the source of truth for this batch; other corpora only by explicit owner decision. 5etools may be used as a research aid but is not the default imported source of truth.
 - Add a core-owned Goblin Minion stat-block/content entry using that shared facility.
 - Add a compiler/projection from stat-block content to `InitCreatureConfig` or directly to battle init state, depending on the ownership chosen in Task MCP1-A.
 - Represent only facts currently supported by core types:
@@ -912,14 +912,14 @@ Implementation output:
   - CR 1/8, PB +2;
   - dagger attack +4, reach 5 or range 20/60, average 4 Piercing.
 - Defer Goblin Warrior and Nimble Escape unless the needed stat-block attack rider/bonus-action support is already present.
-- Do not build a bulk corpus importer in this task.
+- Do not build a parser, importer, or bulk corpus ingestion path in this task.
 
 Acceptance criteria:
 
 - A reusable statblock/content facility exists in core.
 - Goblin Minion is defined once in core using that facility.
 - MCP selects or references the core content; it does not repeat RAW numbers.
-- Future statblock provenance is documented clearly enough that a later task can add more entries without reopening the ownership question.
+- Future statblock provenance is documented clearly enough that a later task can add more entries using the same SRD-first sourcing rule without reopening the ownership question.
 - Goblin Warrior is explicitly deferred until advantage damage rider support exists.
 - No bulk importer or non-SRD corpus ingestion is introduced by this task.
 
@@ -933,7 +933,7 @@ Verification:
 
 Extra research needed:
 
-- Yes. Confirm existing monster catalog/projection ownership before adding fields, and identify where the provenance note should live so future statblocks are added consistently.
+- Yes. Confirm existing monster catalog/projection ownership before adding fields, and keep future statblock additions anchored to `.references/srd-5.2.1/` unless a later plan change explicitly broadens provenance.
 
 ### Task 12 - E - Movement And Help Geometry/Session Ownership
 
@@ -1148,8 +1148,8 @@ Purpose:
 
 Inputs:
 
-- Session host from Task MCP1-A.
-- Goblin compiler/content from Task MCP1-B.
+- Session router/lifecycle from Task MCP1-A.
+- Shared statblock catalog/projection from Task MCP1-B.
 - Existing `BATTLE_INIT` control command.
 - Fighter feature/config helpers, including `fightingStyleBattleModifiers` if relevant.
 
