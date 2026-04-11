@@ -181,6 +181,18 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "I",
       "status": "deferred",
       "title": "Build-Map / Hole Metadata"
+    },
+    {
+      "number": 26,
+      "id": "MCP2-C",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Concise Schema Validation Errors in MCP Tools"
+    },
+    {
+      "number": 27,
+      "id": "MCP2-D",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Unarmed Strike Fallback in Battle Attack"
     }
   ]
 }
@@ -2203,6 +2215,85 @@ Extra research needed:
 
 - Yes, but defer until a concrete consumer exists.
 
+### Task 26 - MCP2-C - Concise Schema Validation Errors in MCP Tools
+
+Status: ready-for-implementation-after-light-research.
+
+Depends on: none.
+
+Blocks: none (UX polish).
+
+Next action: replace `String(decoded.left)` with `ParseResult.TreeFormatter.formatIssueSync(decoded.left)` in all 4 locations, or write a custom formatter that lists valid `type` values for union schemas.
+
+Purpose:
+
+- When invalid input is passed to MCP tools (e.g., a bad `type` in `execute_control_command`), Effect Schema validation dumps the entire union type definition (10K+ characters of nested type signatures). Users should see a concise error like "Invalid type 'GET_TURN_OPTIONS'. Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS".
+
+Context:
+
+- Root cause: `String(decoded.left)` serializes the full `ParseIssue` tree including all union member schemas.
+- Effect provides `ParseResult.TreeFormatter.formatIssueSync()` which produces concise, human-readable output.
+
+Affected locations (same `String(decoded.left)` pattern):
+
+1. `packages/mcp/src/server-control.ts:136` — `execute_control_command`
+2. `packages/mcp/src/server-table-events.ts:317` — `record_table_event`
+3. `packages/mcp/src/server.ts:345` — action token validation
+4. `packages/mcp/src/start-battle.ts:41` — battle start validation
+
+Acceptance criteria:
+
+- All 4 locations produce concise error messages on invalid input.
+- Error messages include the invalid value and the valid alternatives where feasible.
+- No change to happy-path behavior.
+
+Verification:
+
+- Manual test: send an invalid `type` to `execute_control_command` and confirm the error fits in a few lines.
+- `/simplify` convergence (2 rounds).
+
+### Task 27 - MCP2-D - Unarmed Strike Fallback in Battle Attack
+
+Status: ready-for-implementation-after-light-research.
+
+Depends on: Task MCP2-A (battle attack public boundary, done).
+
+Blocks: Task MCP2-B (fighter attacks goblin end-to-end) — removes the need for a weapon-hardcoding workaround.
+
+Next action: light research on how `battleAttack` in `battle-machine-actions-attack.ts` resolves damage when `mainHandWeapon` is null, then implement the unarmed strike fallback.
+
+Purpose:
+
+- Per SRD 5.2.1 (Rules-Glossary.md), every creature can make an unarmed strike: 1 + STR mod bludgeoning damage, attack bonus = STR mod + Proficiency Bonus. The current `canUseBattleAttack` function returns `false` when `mainHandWeapon == null`, blocking all attacks for unarmed creatures.
+
+Context:
+
+- Bug location: `packages/core/src/available-actions.ts:3444-3447` — `canUseBattleAttack` returns false when `mainHandWeapon == null`.
+- Quint spec already models unarmed damage correctly: `creature.qnt:757-761` has `unarmedDamage(strMod)` returning `max(0, 1 + strMod)`.
+- The attack handler in `battle-machine-actions-attack.ts` is flexible — it falls back to event-provided values for most fields, so changes should be contained.
+- SRD unarmed strike offers three options (Damage, Grapple, Shove); only Damage needs modeling now. Grapple/Shove are separate actions.
+
+Implementation sketch:
+
+1. Remove the `mainHandWeapon == null` early-return in `canUseBattleAttack`.
+2. Define a synthetic unarmed `BattleWeaponProfile` constant: `{ name: "unarmed strike", damageType: "bludgeoning", isMelee: true, properties: new Set(), damageDie: undefined }`.
+3. In `battleAttack`, fall back to the unarmed profile when `mainHandWeapon` is null; compute flat damage as `1 + strMod` (matching `creature.qnt:unarmedDamage`).
+4. Ensure BATTLE_ATTACK token generation in `available-actions.ts` uses the unarmed profile for its summary text.
+
+Acceptance criteria:
+
+- A creature with `mainHandWeapon == null` can make a BATTLE_ATTACK (unarmed strike).
+- Unarmed strike damage = max(0, 1 + STR mod), bludgeoning, always proficient.
+- Unarmed strike is melee, 5-foot reach.
+- No regression for creatures with weapons equipped.
+- Quint parity: TS unarmed damage matches `creature.qnt:unarmedDamage`.
+
+Verification:
+
+- Tier 1 MBT run passes.
+- `/simplify` convergence (2 rounds).
+- RAW check against `.references/srd-5.2.1/Rules-Glossary.md` unarmed strike entry.
+
 ## Extra Research Summary
 
 Needs extra research before coding:
@@ -2225,6 +2316,8 @@ Light research only:
 - Task MCP0-C: current decode path and available action type index.
 - Task MCP0-D: current documentation/tool description wording for `SHORT_REST`.
 - Task MCP2-B: integration wiring once prerequisites are done.
+- Task MCP2-C: confirm `ParseResult.TreeFormatter` output is concise enough, check all 4 affected locations.
+- Task MCP2-D: confirm `battleAttack` damage resolution path for null weapon, check feature interactions (Rage, Divine Smite).
 - Task B: Battle size ownership. RAW Grapple/Size reread required, but design is already documented.
 - Task C: ResourceCost typed refactor. Confirm consumer blast radius and immediate-cost scope.
 - Task H: PassiveModifiers. Research only if selected; otherwise defer.
