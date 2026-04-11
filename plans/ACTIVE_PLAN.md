@@ -95,7 +95,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 12,
       "id": "E",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Movement And Help Geometry/Session Ownership"
     },
     {
@@ -192,7 +192,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 9     | D - Battle Attack Runtime/Session Boundary                            | done                                          | none                                                                      | F, G, MCP2-A, public `BATTLE_ATTACK`; off-hand/legendary/riders       | Closed 2026-04-10: documented the first-slice `BATTLE_ATTACK` boundary. Public token carries only `targetId` and `knockOut`; runtime `battleAttack` carries explicit table/session facts plus rolled `weaponDamage` and optional `sneakAttackDamage`; battle derives crit, weapon payload, and damage aggregation. | Completed; MCP2-A can consume directly     |
 | 10    | MCP1-A - Session Host Architecture                                    | done                                          | MCP0 tasks done or intentionally deferred                                 | MCP1-C, MCP2-A                                                        | Closed 2026-04-10: stdio now runs through an in-process session router that auto-promotes `BATTLE_INIT` onto a battle host while keeping encounter drafts / character-list refs as optional adapter-only metadata and leaving mutable combat state in the machines. Task ownership is session routing/lifecycle only. | Completed; shared public route established |
 | 11    | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry        | done                                          | MCP0 tasks done or intentionally deferred                                 | MCP1-C, MCP2-B                                                        | Closed 2026-04-10: core now owns a runtime monster statblock catalog, `BATTLE_INIT` can reference `goblinMinion` by `statBlockId`, and SRD provenance is documented without adding an MCP registry, parser/importer, or widened Quint fixtures.                                                                  | Completed; init hook is ready              |
-| 12    | E - Movement And Help Geometry/Session Ownership                      | ready-for-research                            | none                                                                      | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK`                            | Decide visibility/reach/threat/path/provocation ownership                                                                                                                                                                                                                                                          | Research only                              |
+| 12    | E - Movement And Help Geometry/Session Ownership                      | done                                          | none                                                                      | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK`                            | Closed 2026-04-10: keep core/MCP geometry-free; use explicit caller/session spatial facts for any future public movement/help surface.                                                                                                                                                                            | Research closed                            |
 | 13    | J - Generic Table Events, Environmental Hazards, And Monster Commands | ready-for-research                            | none                                                                      | Future raw table event exposure and monster command work              | Pick one narrow source/provenance family or keep deferred                                                                                                                                                                                                                                                          | Research only                              |
 | 14    | F - Legendary Attack Payload Ownership                                | ready-for-research                            | monster stat-block payload ownership                                      | Public `BATTLE_LEGENDARY_ATTACK`                                      | Reuse Task D's attack boundary, then define stat-block Legendary Action payload ownership                                                                                                                                                                                                                          | Research before implementation             |
 | 15    | G - Attack Rider Ownership                                            | ready-for-research                            | none                                                                      | Attack rider tokens                                                   | Reuse Task D's attack boundary, then classify rider timing and owned/runtime facts                                                                                                                                                                                                                                 | Research before implementation             |
@@ -238,8 +238,7 @@ Recommended first coding-loop tasks:
 1. **Task MCP1-C: Encounter Start Tool/Command** if the goal is to continue the fighter-vs-goblin MCP path. Only the fighter durable/config mapping blast-radius check remains before implementation.
 2. **Task F: Legendary Attack Payload Ownership** if the goal is the next attack-adjacent ownership research slice after Task D.
 3. **Task G: Attack Rider Ownership** if the goal is the next attack-timing research slice after Task D.
-4. **Task E: Movement And Help Geometry/Session Ownership** if the goal is another bounded ownership research slice.
-5. **Task J: Generic Table Events, Environmental Hazards, And Monster Commands** only if the batch needs another bounded research slice after the MCP/battle routing work.
+4. **Task J: Generic Table Events, Environmental Hazards, And Monster Commands** only if the batch needs another bounded research slice after the MCP/battle routing work.
 
 Do not widen `BATTLE_ATTACK` implementation beyond the Task D contract. The remaining risk is scope creep into off-hand attacks, hit reactions, legendary actions, and riders.
 
@@ -1166,13 +1165,13 @@ Plan impact:
 
 ### Task 12 - E - Movement And Help Geometry/Session Ownership
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: public `BATTLE_MOVE` and `BATTLE_HELP_ATTACK`.
 
-Next action: decide the owner of visibility, reach, threat, path, and provocation facts; do not implement movement/help until ownership is explicit.
+Next action: Closed 2026-04-10. Keep core/MCP geometry-free, record the caller/session ownership split, and leave movement/help implementation for a later bounded token task.
 
 Purpose:
 
@@ -1181,7 +1180,7 @@ Purpose:
 Context:
 
 - `BATTLE_MOVE` is blocked on position, path/destination, difficult terrain beyond a fixed step, reach exit, threatened creature set, and OA provocation.
-- `BATTLE_HELP_ATTACK` is blocked on helper/ally/target visibility and range/reach facts.
+- `BATTLE_HELP_ATTACK` initially looked blocked on helper/ally/target visibility and range/reach facts; RAW review in this task narrows that to helper-target 5-foot proximity plus ally/target choice.
 - `ARCHITECTURE.md` and `battle/DOMAIN.md` intentionally keep formal geometry out of the core.
 - `.references/inspirations/12-opportunity-attack-path-analysis.md` recommends adopting vocabulary but not adding grid/pathfinding.
 
@@ -1211,7 +1210,36 @@ Verification:
 
 Extra research needed:
 
-- Yes. This is product/session boundary design, not ready implementation.
+- No. Ownership decision recorded in `plans/MOVEMENT_GEOMETRY_OWNERSHIP.md`.
+
+Research closeout:
+
+- RAW check completed against `.references/srd-5.2.1/Playing-the-Game.md` (movement rules, Difficult Terrain) and `.references/srd-5.2.1/Rules-Glossary.md` (`Help [Action]`, `Opportunity Attacks`, `Reach`), plus `UBIQUITOUS_LANGUAGE.md`, `ARCHITECTURE.md`, `battle/DOMAIN.md`, `.references/inspirations/12-opportunity-attack-path-analysis.md`, and `plans/MCP_EVENT_SURFACE_AUDIT.md`.
+- Decision: do not introduce a geometry/grid owner in core, battle, or MCP. The existing positionless boundary is intentional and should remain durable.
+- Ownership split:
+  - visibility relations are caller/session-owned;
+  - path, destination, and difficult-terrain geometry are caller/session-owned;
+  - threat and reach-exit facts are caller/session-owned, using battle-owned reach statistics as inputs;
+  - provocation classification for movement remains caller/session-owned at the public boundary, while battle still owns downstream rule filters such as reaction availability and incapacitation;
+  - reach as a creature or weapon statistic remains core-owned, but "within reach now" and "left reach on this step" are spatial relations, so they stay caller/session-owned.
+- `BATTLE_HELP_ATTACK` is narrower than the original blocker text implied. RAW Help attack requires distracting an enemy within 5 feet of the helper; it does not require helper-to-ally or helper-to-target visibility. A future public Help token can therefore use explicit caller/session proximity only, plus `allyId` and `targetId`, without a geometry engine.
+- `BATTLE_MOVE` remains deferred. A future public movement token should stay checkpoint-based and accept explicit caller/session facts rather than positions or pathfinding internals: destination/path label, difficult-terrain cost beyond the fixed 5-foot spend, reach-exit and threatened-creature facts, and provocation classification.
+- The inspiration note remains useful vocabulary, not architecture direction: keep reach-exit checkpoint language and reject engine-owned grid or pathfinding.
+
+Verification results:
+
+- RAW/source check completed against the local SRD corpus and `UBIQUITOUS_LANGUAGE.md`.
+- `/simplify` round 1: rejected the overreaching candidate guidance that would have treated movement/help as implementation-ready just because the ownership split is now explicit.
+- `/simplify` round 2: no further important simplifications found; the final note keeps only the ownership decision, the RAW-backed Help narrowing, and the deferred movement boundary.
+- `git diff --check` passed.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `E`: revised from `ready-for-research` to `done`; recorded the final ownership split in the plan and task note.
+  - future public `BATTLE_MOVE` / `BATTLE_HELP_ATTACK` work: no status change; downstream implementation stays deferred, but future tasks should now reuse the explicit caller/session spatial-fact boundary instead of reopening geometry ownership.
+- Plan edits: synchronized the Ralph index and Task 12 section, removed Task E from queue guidance, added the tracked decision note in `plans/MOVEMENT_GEOMETRY_OWNERSHIP.md`, and updated `plans/MCP_EVENT_SURFACE_AUDIT.md` to replace the stale Help visibility blocker with the finalized ownership split.
 
 ### Task 13 - J - Generic Table Events, Environmental Hazards, And Monster Commands
 

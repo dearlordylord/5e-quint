@@ -113,6 +113,10 @@ For battle action tokens, `ResourceCost` is limited to the immediate up-front co
 
 **Threat Set** — The caller-provided set of creatures whose reach-exit checkpoints are crossed by the current movement step. The battle engine filters this set by reaction availability and incapacitation, but it does not compute geometry itself.
 
+**Visibility Relation** — A caller-owned yes/no fact for whether one creature can currently see another. The battle layer consumes this for opportunity attacks and attack legality, but it does not derive line of sight from positions, cover, or obscuration.
+
+**Help-Attack Proximity** — A caller-owned yes/no fact for whether the enemy distracted by the Help action is within 5 feet of the helper at the time of the action. The battle layer owns the action spend and resulting help link, not the geometry check.
+
 **Threatened** — A creature is threatened by an enemy if within that enemy's reach and the enemy can see them. Leaving a threatened area triggers an opportunity attack.
 
 ## State Dependencies
