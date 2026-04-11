@@ -420,6 +420,10 @@ export function battleResolveHitReaction({
   ) {
     return {};
   }
+  // TODO: This generic hit-reaction resolver currently owns the concrete rule
+  // mutations for Shield, Parry, Cutting Words, and Goblin Boss Redirect
+  // Attack, including the swap-and-retarget path. Keep parity, but move these
+  // rule-specific branches toward the owning reaction surfaces when refactoring.
   const retroAtk = Match.value(e.decision).pipe(
     byTag("RShield", () => ({
       ...atk,

@@ -339,6 +339,10 @@ export function applyDamage(
 ): Map<CreatureId, BattleCreatureState> {
   const old = cs.get(targetId)!;
   const nc = takeDamage(old, dmg, dt, damageQualifiers, crit);
+  // TODO: This generic damage helper currently owns the SRD 5.2.1
+  // "Knocking Out a Creature" melee-attacker choice. Keep the behavior, but
+  // move the rule-specific override closer to the owning battle damage rule
+  // surface when we refactor helper ownership.
   // SRD 5.2.1 "Knocking Out a Creature": melee attacker's choice when damage
   // would reduce a PC to 0 HP (not instant death). Sets HP to 1 + Unconscious.
   if (
@@ -475,12 +479,15 @@ function isRedirectAlly(
   reactor: BattleCreatureState,
   candidate: BattleCreatureState,
 ): boolean {
+  // TODO: Redirect Attack is the Goblin Boss SRD 5.2.1 reaction
+  // (.references/srd-5.2.1/Monsters/Monsters-E-G.md, "Goblin Boss"),
+  // which is limited to a Small or Medium ally within 5 feet.
+  // This rule-specific size filter does not belong in a generic battle helper;
+  // move it closer to the Redirect Attack rule surface when we refactor it.
   return (
     areAllies(reactor, candidate) &&
-    candidate.creatureSize !== "tiny" &&
-    candidate.creatureSize !== "large" &&
-    candidate.creatureSize !== "huge" &&
-    candidate.creatureSize !== "gargantuan" &&
+    (candidate.creatureSize === "small" ||
+      candidate.creatureSize === "medium") &&
     squaresBetween(reactor, candidate) <= 1
   );
 }
@@ -527,6 +534,10 @@ export function legalHitReactions(
   atk: AttackHitCtx,
   candidates: ReadonlySet<CreatureId>,
 ) {
+  // TODO: This generic helper currently owns hit-reaction legality for Shield,
+  // Parry, Cutting Words, and Goblin Boss Redirect Attack. Keep parity, but
+  // split rule-specific eligibility back toward the owning spell/feature/
+  // monster reaction surfaces instead of growing this helper further.
   const legalByCreature = new Map<
     CreatureId,
     Set<"RShield" | "RParry" | "RCuttingWords" | "RRedirectAttack">
@@ -580,6 +591,9 @@ export function legalDamageReactionsByCreature(
   cs: Creatures,
   atk: AttackDamageCtx,
 ) {
+  // TODO: This generic helper currently owns damage-reaction legality for
+  // Uncanny Dodge and Deflect Attacks. Keep parity, but move rule-specific
+  // eligibility closer to the owning feature surfaces when we refactor.
   const target = cs.get(atk.target)!;
   const legal = new Set<"RUncannyDodge" | "RDeflectAttacks">();
   if (
@@ -649,6 +663,10 @@ export function eligibleForCounterspell(
   cs: Creatures,
   excludeId: CreatureId,
 ): Set<CreatureId> {
+  // TODO: This generic helper currently owns Counterspell-specific eligibility
+  // (spell known/prepared, level 3+ slot, one-slot-per-turn gating, and
+  // component checks). Keep parity, but move this closer to the Counterspell
+  // reaction surface when we refactor helper ownership.
   const result = new Set<CreatureId>();
   for (const [id, c] of cs) {
     if (id === excludeId || !c.reactionAvailable || c.dead || c.unconscious)

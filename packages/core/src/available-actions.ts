@@ -3426,6 +3426,10 @@ function damageReactionToken(
 function afterDamageReactionTokens(
   context: BattleContext,
 ): ReadonlyArray<BattleActionToken> {
+  // TODO: This generic token enumerator currently recomputes rule-specific
+  // legality for Hellish Rebuke, Retaliation, and Fire Shield. Keep parity, but
+  // move those checks closer to the owning spell/feature surfaces instead of
+  // extending this generic action-listing layer.
   const awaitCtx = context.awaitCtx;
   const interrupt = awaitCtx?.interrupt;
   if (awaitCtx == null || interrupt?.tag !== "PIAfterDamage") return [];
