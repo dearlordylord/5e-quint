@@ -2341,19 +2341,21 @@ Verification:
 - `/simplify` convergence (2 rounds).
 - RAW check against `.references/srd-5.2.1/Rules-Glossary.md` unarmed strike entry.
 
-## Task MCP4-A: BATTLE_ADD_CREATURE Mid-Battle Creature Insertion
+### Task 28 - MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion
 
-Status: `ready-for-implementation-after-light-research`
+Status: ready-for-implementation-after-light-research.
 
-Depends on: None (independent of weapon/attack tasks).
+Depends on: none.
 
 Blocks: Task MCP2-B (enables multi-goblin encounters).
+
+Next action: implement `BATTLE_ADD_CREATURE` event in battle machine, add control command schema, wire MCP adapter, add Quint spec parity action.
 
 Purpose:
 
 - Allow adding one or more creatures to an ongoing battle mid-turn (DM spawns reinforcements, summons arrive, etc.). This is a pure state insertion — no automatic trigger evaluation (readied action triggers are DM decisions per ARCHITECTURE.md).
 
-Design:
+Context:
 
 **Event shape:**
 ```typescript
@@ -2378,7 +2380,7 @@ Design:
 
 **MCP surface:** `execute_control_command` with `scope: "battle", type: "BATTLE_ADD_CREATURE"`.
 
-Implementation:
+Implementation sketch:
 
 1. **`battle-machine-events.ts`**: Add `BATTLE_ADD_CREATURE` variant to `BattleEvent` union.
 2. **`battle-machine-actions-turn.ts`**: Add `battleAddCreature` action function. Extract shared `buildCreatureState(cfg: InitCreatureConfig): BattleCreatureState` helper from existing `battleInit` logic (lines 132-259) to avoid duplication.
@@ -2403,21 +2405,21 @@ Verification:
 - Tier 1 MBT run passes with `bAddCreature` in `battleStep`.
 - `/simplify` convergence (2 rounds).
 
----
+### Task 29 - MCP4-B - BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal
 
-## Task MCP4-B: BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal
+Status: ready-for-implementation-after-light-research.
 
-Status: `ready-for-implementation-after-light-research`
+Depends on: none (pairs with MCP4-A).
 
-Depends on: None (independent, but pairs with MCP4-A).
+Blocks: none.
 
-Blocks: None directly.
+Next action: implement `BATTLE_REMOVE_CREATURE` event in battle machine with concentration break, grapple release, and turnIndex adjustment. Add control command schema, wire MCP adapter, add Quint spec parity action.
 
 Purpose:
 
 - Allow removing one or more creatures from an ongoing battle mid-turn (creature flees, is banished, teleports away, DM narrative, etc.). This is a pure state removal — no automatic trigger evaluation.
 
-Design:
+Context:
 
 **Event shape:**
 ```typescript
@@ -2448,7 +2450,7 @@ Design:
 
 **MCP surface:** `execute_control_command` with `scope: "battle", type: "BATTLE_REMOVE_CREATURE"`.
 
-Implementation:
+Implementation sketch:
 
 1. **`battle-machine-events.ts`**: Add `BATTLE_REMOVE_CREATURE` variant to `BattleEvent` union.
 2. **`battle-machine-actions-turn.ts`**: Add `battleRemoveCreature` action function.
@@ -2479,8 +2481,6 @@ Verification:
 - Unit tests: remove before/at/after turnIndex; remove active creature; concentration break; grapple release; help cleanup.
 - Tier 1 MBT run passes with `bRemoveCreature` in `battleStep`.
 - `/simplify` convergence (2 rounds).
-
----
 
 ## Extra Research Summary
 
