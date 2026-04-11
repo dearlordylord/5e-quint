@@ -143,7 +143,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 19,
       "id": "MCP2-B",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fighter Attacks Goblin End-to-End"
     },
     {
@@ -254,7 +254,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 16    | MCP1-C - Encounter Start Tool/Command                                 | done     | MCP1-A, MCP1-B                                                            | MCP2-A                                                                | Closed 2026-04-10: added a session-level `start_battle` tool that compiles the active creature host's Fighter durable state into `BATTLE_INIT`, resolves `goblinMinion` through the core statblock catalog, and keeps mutable combatant state on the promoted battle host instead of the character-list snapshot.                                                                                  | Completed; MCP2-A unblocked                        |
 | 17    | MCP2-A - Battle Attack Public Boundary                                | done     | MCP1-C                                                                    | MCP2-B                                                                | Closed 2026-04-10: public MCP `BATTLE_ATTACK` now uses Task D's exact token/runtime contract, requires explicit caller-owned attack facts instead of sampled MCP defaults, reuses the battle hit-reaction windows, and exposes stat-block-owned main-hand attack payloads by projecting the goblin minion's SRD dagger into battle state.                                                          | Completed; fighter weapon ownership still separate |
 | 18    | MCP2-A1 - Fighter Main-Hand Weapon/Loadout Projection On start_battle | done     | MCP1-C, MCP2-A                                                           | MCP2-B                                                                | Closed 2026-04-10: `start_battle` now projects a narrow core-owned Fighter longsword loadout into `BATTLE_INIT`, keeps monsters on the stat-block attack path, and exposes public `BATTLE_ATTACK` after the promoted battle turn starts. RAW check: `.references/srd-5.2.1/Equipment.md` longsword/shield rules and `.references/srd-5.2.1/Monsters/Overview.md` Gear vs. attack notation reviewed. `/simplify` rounds 1-2 found no further task-scoped reductions after consolidating the Fighter loadout source. | Completed; MCP2-B unblocked                        |
-| 19    | MCP2-B - Fighter Attacks Goblin End-to-End                            | ready-for-implementation-after-light-research | MCP2-A1                                                                   | motivating MCP flow                                                   | Execute the end-to-end MCP attack flow against the goblin with explicit start-turn and attack runtime facts now that Fighter weapon projection is present at battle start                                                                                                                                                                                                                          | Ready after Task MCP2-A1 closeout                  |
+| 19    | MCP2-B - Fighter Attacks Goblin End-to-End                            | done     | MCP2-A1                                                                   | motivating MCP flow                                                   | Closed 2026-04-10: added a `SessionRouter` integration test that runs `start_battle` -> `BATTLE_START_TURN` -> `get_available_actions` -> `BATTLE_ATTACK`, proves the goblin death state and fighter turn-state mutate only inside `BattleContext.creatures`, confirms the promoted battle is not left in a hit-reaction window, and confirms the original creature host snapshot stays unchanged until some later explicit battle-close/commit step. RAW check: reused Task MCP1-B / MCP2-A citations only; no new combat semantics. `/simplify` rounds 1-2 found no further task-scoped reductions beyond collapsing the workflow to a single durable-state-preservation scenario. | Completed; motivating MCP flow now documented      |
 | 20    | MCP3-A1 - Stat-Block Advantage-Damage Rider Ownership                 | ready-for-implementation-after-light-research | MCP2-A                                                                   | MCP3-A                                                                | Add a core-owned way for named stat-block attacks to contribute extra on-hit damage when battle already knows the attack had net Advantage                                                                                                                                                                                                                                                        | Ready after rider-shape confirmation               |
 | 21    | MCP3-A2 - Monster Bonus-Action Option Boundary                        | ready-for-implementation-after-light-research | MCP2-A                                                                   | MCP3-A                                                                | Add generic battle support for monster-owned bonus-action options such as Nimble Escape without introducing goblin-specific action shortcuts                                                                                                                                                                                                                                                     | Ready after token/event shape confirmation         |
 | 22    | MCP3-A3 - Monster Reaction Retarget/Swap Boundary                     | ready-for-implementation-after-light-research | MCP2-A                                                                   | MCP3-A                                                                | Extend the existing `PIAttackHit` reaction family with a monster-owned retarget/swap reaction for Redirect Attack, keeping target rewrite and position swap inside battle-owned hit-interrupt resolution rather than inventing a new public monster command                                                                                                                                        | Ready after hit-window shape check                 |
@@ -286,7 +286,7 @@ Merged MCP Fighter vs. Goblin baseline:
   - huge schema decode output for unknown `execute_action` types;
   - `SHORT_REST` documentation clarity;
   - `EXIT_COMBAT` after death UX decision.
-- Task D fixed the public attack boundary, and Task MCP2-A now exposes public `BATTLE_ATTACK` when the battle state already owns a main-hand attack payload. The fighter-vs-goblin flow now depends on Task MCP2-A1 to project a Fighter-owned main-hand weapon through `start_battle`; current `start_battle` still keeps arbitrary weapon payloads out of the public session contract.
+- Task D fixed the public attack boundary, Task MCP2-A exposed public `BATTLE_ATTACK` when the battle state already owns a main-hand attack payload, Task MCP2-A1 projected the Fighter longsword into `start_battle`, and Task MCP2-B now records the full fighter-vs-goblin MCP workflow as a session-router integration test without mutating pre-battle durable state.
 - Task MCP1-B is now complete: the first monster-content slice lives in a reusable core statblock facility, `BATTLE_INIT` can reference `goblinMinion` by ID, and MCP does not duplicate RAW stat-block numbers in its own registry.
 - Goblin Warrior no longer needs one monolithic blocker. The remaining work splits into:
   - stat-block advantage-damage rider ownership for Scimitar/Shortbow;
@@ -299,14 +299,13 @@ Recommended first coding-loop tasks:
 
 1. **Task K: Grapple Movable Cost SRD Parity Fix** before the remaining MCP queue. `battle.qnt` is the semantic source of truth for combat ownership decisions, and the current grapple-drag refresh path restores movement on release in a way that conflicts with the project's 5.2.1 SRD-parity claim.
 2. **Task MCP2-A1: Fighter Main-Hand Weapon/Loadout Projection On start_battle** once Task K is either landed or explicitly deferred. Task MCP2-A already landed the public attack boundary and goblin stat-block attack payload projection; the remaining gap is the Fighter side of `start_battle`.
-3. **Task MCP2-B: Fighter Attacks Goblin End-to-End** immediately after Task MCP2-A1 lands.
-4. **Task MCP3-A1: Stat-Block Advantage-Damage Rider Ownership** if the goal is to keep moving toward Goblin Warrior without reopening MCP attack ownership.
-5. **Task MCP3-A2: Monster Bonus-Action Option Boundary** immediately after or alongside Task MCP3-A1 if the batch wants Goblin Warrior's full `Nimble Escape` behavior.
+3. **Task MCP3-A1: Stat-Block Advantage-Damage Rider Ownership** if the goal is to keep moving toward Goblin Warrior without reopening MCP attack ownership.
+4. **Task MCP3-A2: Monster Bonus-Action Option Boundary** immediately after or alongside Task MCP3-A1 if the batch wants Goblin Warrior's full `Nimble Escape` behavior.
    Tasks F and G are now complete. Reuse their ownership splits for any future `BATTLE_LEGENDARY_ATTACK` or attack-rider implementation rather than reopening the boundary question.
 
 Do not widen `BATTLE_ATTACK` implementation beyond the Task D contract. The remaining risk is scope creep into off-hand attacks, hit reactions, legendary actions, and riders.
 
-Do not start the full fighter-vs-goblin implementation before the fighter's owned battle weapon has a planned projection path. Task D produced the boundary, Task MCP1-C delivered encounter start, and Task MCP2-A landed the public `BATTLE_ATTACK` lane; the remaining blocker is fighter weapon ownership, not the attack contract itself.
+The fighter-vs-goblin MCP reference flow is now covered end to end. Keep future work focused on new ownership slices rather than reopening the already-landed `start_battle` -> `BATTLE_ATTACK` baseline.
 
 ### Task 0 - K - Grapple Movable Cost SRD Parity Fix
 
@@ -1916,7 +1915,7 @@ Extra research needed:
 
 ### Task 19 - MCP2-B - Fighter Attacks Goblin End-to-End
 
-Status: blocked.
+Status: done.
 
 Depends on: Task MCP2-A1.
 
@@ -1953,6 +1952,19 @@ Verification:
 Extra research needed:
 
 - Light. Mostly integration wiring once the fighter-side weapon ownership path is defined.
+
+Verification completed:
+
+- RAW check: reused Task MCP1-B / MCP2-A citations only. Re-read `UBIQUITOUS_LANGUAGE.md` to confirm the task remained adapter-only and did not add new combat semantics beyond exercising the existing `start_battle` and `BATTLE_ATTACK` contract.
+- `/simplify` round 1: rejected multi-test hit/miss/lethal expansions and kept one end-to-end scenario that proves the actual acceptance criteria: promoted battle-only mutable state, durable source-state preservation, and the routed MCP workflow.
+- `/simplify` round 2: re-checked for redundant fixtures and left the runtime facts inline in the single scenario instead of adding a one-off shared helper that would only duplicate the task-local inputs.
+- Verification: `pnpm --filter @dnd/mcp test`
+
+Plan Impact:
+
+- Status: applied.
+- MCP2-B: done; the motivating fighter-vs-goblin MCP flow is now covered by a task-scoped `SessionRouter` integration test.
+- Plan edits: marked MCP2-B done in the index and DAG, updated the integrated baseline and task-selection guidance to remove the stale pending-work wording, and recorded the task verification closeout.
 
 ### Task 20 - MCP3-A1 - Stat-Block Advantage-Damage Rider Ownership
 

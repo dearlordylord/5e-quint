@@ -4325,6 +4325,111 @@ describe("SessionRouter", () => {
     );
   });
 
+  test("start_battle supports the full fighter vs goblin MCP attack workflow without mutating pre-battle session state", () => {
+    const creatureHost = createDemoHost();
+    const router = createSessionRouter(creatureHost, {
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      goblinId: "goblin-1",
+      fighterInitiativeRoll: 20,
+      goblinInitiativeRoll: 8,
+    });
+
+    expect("isError" in started).toBe(false);
+
+    const startTurn = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+    });
+    expect("isError" in startTurn).toBe(false);
+
+    const available = readPayload(
+      router.handleToolCall("get_available_actions", {}),
+    );
+    const attackToken = available.action.find(
+      (token: { type?: string; actorId?: string }) =>
+        token.type === "BATTLE_ATTACK" && token.actorId === "fighter",
+    );
+
+    expect(attackToken).toMatchObject({
+      scope: "battle",
+      actorId: "fighter",
+      type: "BATTLE_ATTACK",
+      targetId: { options: ["goblin-1"] },
+      knockOut: { options: [false, true] },
+    });
+
+    const attack = router.handleToolCall("execute_action", {
+      scope: "battle",
+      actorId: "fighter",
+      type: "BATTLE_ATTACK",
+      targetId: "goblin-1",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 15,
+          targetAc: 12,
+          weaponDamage: 7,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: ["goblin-1"],
+        },
+      },
+    });
+
+    expect("isError" in attack).toBe(false);
+    expect(readPayload(attack)).toMatchObject({
+      success: true,
+      state: {
+        scope: "battle",
+        awaitingReaction: false,
+      },
+    });
+    expect(router.getSnapshot()).toEqual({
+      activeScope: "battle",
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+
+    if (router.activeHost.scope !== "battle") {
+      throw new Error("expected battle host");
+    }
+
+    const battleContext = router.activeHost.actor.getSnapshot().context;
+    const fighter = battleContext.creatures.get(CreatureId("fighter"));
+    const goblin = battleContext.creatures.get(CreatureId("goblin-1"));
+
+    expect(battleContext.awaitCtx).toBeNull();
+    expect(fighter).toMatchObject({
+      hp: 44,
+      maxHp: 44,
+      actionsRemaining: 0,
+      attackActionUsed: true,
+      dead: false,
+    });
+    expect(goblin).toMatchObject({
+      hp: 0,
+      maxHp: 7,
+      dead: true,
+    });
+    expect(creatureHost.actor.getSnapshot().context).toMatchObject({
+      hp: 34,
+      maxHp: 44,
+      inCombat: false,
+      dead: false,
+    });
+  });
+
   test("start_battle rejects invalid monster stat block ids", () => {
     const router = createSessionRouter(createDemoHost());
 
