@@ -66,7 +66,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 5,
       "id": "CHAR6",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Guided Workflow Shell"
     },
     {
@@ -144,7 +144,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 2 | CHAR3 - Proficiencies Features And Level-Gated Character Facts | done | CHAR1, CHAR2 | CHAR4, CHAR5, CHAR7 | Landed owned build choices for class/background/species/feat-driven proficiencies, subclass ownership/gating, multiclass prerequisite validation, granted-language choices, and class-resource derivation helpers on the canonical character sheet. | Complete |
 | 3 | CHAR4 - Equipment And Loadout Projection | done | CHAR1, CHAR3 | CHAR5 | Landed owned starting-equipment choices, leftover starting-gold tracking, bounded combat-equipment ownership, loadout validation, and battle-facing weapon/hand/shield/armor projection sourced from `CharacterSheet`. | Complete |
 | 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | done | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Landed owned spellcasting selections plus one `CharacterSheet` derivation path for sheet numbers, `DndMachineInput`, and battle init projection. | Complete |
-| 5 | CHAR6 - Guided Workflow Shell | ready-for-research | CHAR1, CHAR2, CHAR5 | none | Research a thin creation workflow shell that persists `CharacterDraft` and renders the already-owned sheet/projection outputs instead of re-deriving them in UI state. | Unblocked by CHAR5; needs product-shell scoping |
+| 5 | CHAR6 - Guided Workflow Shell | done | CHAR1, CHAR2, CHAR5 | none | Landed a thin `/character` workflow shell that persists `CharacterDraft`, keeps step order in the app surface, and renders canonical finalization plus derived projection outputs without UI-owned validation. | Complete |
 | 6 | CHAR7 - Level Advancement And Multiclass Continuation | ready-for-research | CHAR1, CHAR3, CHAR5 | none | Research advancement ownership using the landed sheet-derived HP/hit-dice/spell-slot path as the extension point for higher-level starts and multiclass continuation. | Unblocked by CHAR5; needs advancement scoping |
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
@@ -190,8 +190,8 @@ Post-`CHAR` planning note:
 
 Recommended next coding-loop task:
 
-1. **CHAR6 - Guided Workflow Shell**
-   CHAR5 landed the owned sheet/projection baseline. The next slice should research the thinnest workflow shell that persists `CharacterDraft` and consumes those derivations without introducing a second semantic model.
+1. **CHAR7 - Level Advancement And Multiclass Continuation**
+   CHAR6 landed the thin workflow shell. The next slice should research how advancement extends the same owned character domain and reuses the landed sheet-derived projection path instead of inventing a parallel higher-level-start surface.
 
 Do not jump ahead to workflow/UI work before the canonical domain exists. Do not solve character creation by widening `DndMachineInput`, `BATTLE_INIT`, or adapter-owned metadata.
 
@@ -203,8 +203,8 @@ Do not jump ahead to workflow/UI work before the canonical domain exists. Do not
    - [.references/srd-5.2.1/Character-Creation.md](../.references/srd-5.2.1/Character-Creation.md)
    - [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
    - [creature.qnt](../creature.qnt)
-2. Execute CHAR6 next.
-3. Keep CHAR7 sequenced after CHAR6 where the dependency table still requires it, then treat `POST1` through `POST4` as the additive post-`CHAR` queue described above.
+2. Execute CHAR7 next.
+3. Keep `POST1` through `POST4` as the additive post-`CHAR` queue described above once CHAR7 lands.
 4. Keep H and I deferred unless this file is explicitly reprioritized.
 
 ### Task 0 - CHAR1 - Canonical Character Domain
@@ -468,21 +468,41 @@ Plan Impact:
 
 ### Task 5 - CHAR6 - Guided Workflow Shell
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: CHAR1, CHAR2, CHAR5.
 
 Blocks: none.
 
-Next action:
+Closeout:
 
-- Research the thinnest workflow shell that persists `CharacterDraft` and renders the landed sheet/projection outputs without duplicating validation or derivation logic.
+- Landed `/character` in `packages/app` as the thinnest product shell that keeps the SRD step order in UI state while storing only `CharacterDraft`.
+- Added local-storage draft persistence, example loaders, and step navigation without draft sanitization or workflow-owned derivation tables.
+- Reused direct domain finalization plus `deriveCharacterSheetNumbers`, `characterSheetMachineInput`, and `characterSheetBattleProjection` for the review surface.
+- Kept complex Step 5 ownership in the draft by editing `choices`, `equipment`, and `spellcasting` as raw JSON instead of recreating class-specific rule logic in the app.
 
 Acceptance criteria:
 
 - The product can guide a user through SRD creation steps while persisting `CharacterDraft`.
 - The workflow shell does not duplicate derivation or validation logic.
 - Finalization produces the same `CharacterSheet` as direct domain-level finalization.
+
+Verification:
+
+- RAW/product-language check completed against `.references/srd-5.2.1/Character-Creation.md`, `.references/srd-5.2.1/Character-Origins.md`, and `UBIQUITOUS_LANGUAGE.md` to keep the UI step order aligned with the SRD sequence and with the repo's `CharacterDraft` / `CharacterSheet` terminology.
+- Focused app verification passed: `pnpm --filter @dnd/app test -- CharacterCreationPage`
+- Focused touched-file lint passed: `pnpm --filter @dnd/app exec eslint src/components/character-creation src/entry.tsx`
+- `/simplify` convergence:
+  - Round 1: rejected both Ralph candidate patches, then replaced them with a thinner shell that removed UI-side issue-code mapping and destructive draft sanitization.
+  - Round 2: split the page into shell, step-content, presets, and shared helpers to satisfy the app file-size cap and remove mutable helper code; no further important simplifications remained.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `CHAR6`: marked `done`.
+  - `CHAR7`: no dependency change, but it becomes the recommended next task now that the workflow shell exists.
+  - `POST1`: no status change; it remains blocked on `CHAR7` in addition to `CHAR6`.
 
 ### Task 6 - CHAR7 - Level Advancement And Multiclass Continuation
 
