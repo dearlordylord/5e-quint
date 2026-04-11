@@ -18,6 +18,8 @@ The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read th
 
 Task worktrees reuse the main repo install by symlinking `node_modules`, `packages/core/node_modules`, and `packages/mcp/node_modules` into each disposable worktree. This keeps per-task verification fast and avoids a redundant `pnpm install` for every task rotation.
 
+The harness also kills stray `mbt-fuzz` / `fuzz-all` / `fuzz-overnight` processes and removes generated MBT artifact files under `packages/` before the run starts, before each task begins, and after each task ends. Ralph task runs are not allowed to leave `mbt-failure-battle-*.log`, `mbt-failures.jsonl`, `mbt-timing.jsonl`, `mbt-fuzz.log`, or `packages/fat-traces/` behind.
+
 ## Plan Format
 
 Plans must include a machine-readable task index:
@@ -103,6 +105,8 @@ Default verification is `pnpm quality`. Override it per plan with `--test-comman
 The decider prompt also instructs agents to avoid broad formatters for docs-only tasks. Prefer the task-specific grep/search checks and `git diff --check` when a plan task changes only documentation.
 
 Every implementer, reviewer, and decider prompt includes the repo MBT guard: check for existing `vitest` and `quint_evaluator` processes before any MBT run, kill stale `quint_evaluator` processes, and never launch a second MBT while one is alive.
+
+Ralph task runs must never use the fuzz / overnight scripts (`./scripts/mbt-fuzz.sh`, `./scripts/fuzz-all.sh`, `./scripts/fuzz-overnight.sh`) and must never set `MBT_DEV=1` or `MBT_SAVE_TRACES=1`. If a task needs MBT verification, stay on Tier 1 / Tier 1b unless the task explicitly requires a higher tier.
 
 The decider must leave the main worktree with no tracked staged or unstaged changes after each task. This makes git the persistent state boundary between task rotations.
 

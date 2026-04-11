@@ -349,6 +349,7 @@ Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local
   ps aux | grep quint_evaluator | grep -v grep
   If a prior quint_evaluator is alive, stop it with killall -9 quint_evaluator before starting. If a vitest/MBT process is alive, do not start another MBT run; wait for it or report the blocker.
 - Run MBT with the repo background/timing protocol from AGENTS.md, never as a casual foreground exploratory command.
+- Never run ./scripts/mbt-fuzz.sh, ./scripts/fuzz-all.sh, ./scripts/fuzz-overnight.sh, or any MBT command with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. Ralph verification must stay on Tier 1 / Tier 1b only unless the task explicitly requires a higher tier.
 - Do not write to the memory system.
 
 Task:
@@ -431,6 +432,7 @@ Requirements:
 - Keep the main worktree on $output_branch; do not merge branches blindly.
 - Preserve repo constraints: pnpm only, no redundant state, Quint parity, SRD traceability for modeled rules, scarce MBT usage.
 - Before any MBT run, check for existing vitest and quint_evaluator processes per AGENTS.md. Kill stale quint_evaluator processes, and do not launch a second MBT while another vitest/MBT run is alive.
+- Never run ./scripts/mbt-fuzz.sh, ./scripts/fuzz-all.sh, ./scripts/fuzz-overnight.sh, or any MBT command with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, stay on Tier 1 / Tier 1b unless the task explicitly requires a higher tier.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - Inspect both implementations and both reviews for Plan Impact. If any impact is update-required, update the plan file at $plan_file in the same commit. If no plan update is needed, say so explicitly in the final Plan Impact section.
 - Commit the reconciled Task $task_no result to $output_branch in the main worktree after verification. Use a concise task-scoped commit message. Do not leave tracked changes staged or unstaged; the next task worktrees are created from the updated integration HEAD.
@@ -502,9 +504,34 @@ bootstrap_worktree_install() {
   done
 }
 
+kill_stray_mbt_processes() {
+  local pid
+  while read -r pid _rest; do
+    [[ -n "$pid" ]] || continue
+    kill "$pid" >/dev/null 2>&1 || true
+  done < <(pgrep -af 'scripts/mbt-fuzz\.sh|scripts/fuzz-all\.sh|scripts/fuzz-overnight\.sh' || true)
+  killall -9 quint_evaluator >/dev/null 2>&1 || true
+}
+
+cleanup_mbt_artifacts() {
+  find "$repo_root/packages" -maxdepth 1 \
+    \( -name 'mbt-failure-battle-*.log' \
+    -o -name 'mbt-failures.jsonl' \
+    -o -name 'mbt-timing.jsonl' \
+    -o -name 'mbt-fuzz.log' \
+    -o -name 'invariant-failures.jsonl' \
+    -o -name 'invariant-fuzz.log' \
+    -o -name 'escalate-fuzz.log' \) \
+    -delete 2>/dev/null || true
+  rm -rf "$repo_root/packages/fat-traces" 2>/dev/null || true
+}
+
 log "base $base_ref is $base_sha"
 log "output branch: $output_branch"
 log "run state: $run_root"
+
+kill_stray_mbt_processes
+cleanup_mbt_artifacts
 
 next_ready_task_row() {
   while IFS=$'\t' read -r task_no task_id status task_start task_end task_title; do
@@ -551,6 +578,9 @@ while true; do
 
   log "task $task_no: $task_title"
   log "task $task_no base is $task_base_sha"
+
+  kill_stray_mbt_processes
+  cleanup_mbt_artifacts
 
   git worktree add -B "$claude_branch" "$claude_worktree" "$task_base_sha"
   git worktree add -B "$codex_branch" "$codex_worktree" "$task_base_sha"
@@ -616,6 +646,8 @@ while true; do
   git diff --quiet || die "task $task_no decider left unstaged tracked changes; commit or clean them before continuing"
   git diff --cached --quiet || die "task $task_no decider left staged changes; commit or clean them before continuing"
   refresh_plan_snapshot
+  kill_stray_mbt_processes
+  cleanup_mbt_artifacts
 
   if [[ "$keep_worktrees" == false ]]; then
     git worktree remove --force "$claude_worktree" >/dev/null 2>&1 || true
