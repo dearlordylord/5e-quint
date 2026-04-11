@@ -191,7 +191,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 27,
       "id": "MCP2-D",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Unarmed Strike Fallback in Battle Attack"
     },
     {
@@ -2345,45 +2345,29 @@ Verification:
 
 ### Task 27 - MCP2-D - Unarmed Strike Fallback in Battle Attack
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: Task MCP2-A (battle attack public boundary, done).
 
-Blocks: Task MCP2-B (fighter attacks goblin end-to-end) — removes the need for a weapon-hardcoding workaround.
+Blocks: none.
 
-Next action: light research on how `battleAttack` in `battle-machine-actions-attack.ts` resolves damage when `mainHandWeapon` is null, then implement the unarmed strike fallback.
+Next action: none.
 
-Purpose:
+Closed 2026-04-11: battle action discovery, runtime finalization, and reducer execution now all support combatants whose `mainHandWeapon` is `null` by falling back to a shared synthetic unarmed-strike profile. `BATTLE_ATTACK` no longer disappears for unarmed creatures, finalized events now carry SRD-aligned unarmed semantics (`bludgeoning`, melee, no weapon properties), and the runtime now rejects unarmed public attacks that do not confirm the target is within 5 feet.
 
-- Per SRD 5.2.1 (Rules-Glossary.md), every creature can make an unarmed strike: 1 + STR mod bludgeoning damage, attack bonus = STR mod + Proficiency Bonus. The current `canUseBattleAttack` function returns `false` when `mainHandWeapon == null`, blocking all attacks for unarmed creatures.
+Light research outcome: the current battle/runtime contract from Task D still leaves the rolled attack total and damage total caller-owned. Battle state does not currently own `strMod`, so this task intentionally did not invent redundant Strength-modifier state just to recompute `1 + STR mod` inside the public runtime lane. Quint still owns the authoritative pure unarmed-damage rule in `creature.qnt`; this task fixed the public unarmed fallback and kept the existing caller-owned damage-total boundary intact.
 
-Context:
+RAW check: reviewed `.references/srd-5.2.1/Playing-the-Game.md` attack-roll ability table, attack action summary, melee/reach text, and `UBIQUITOUS_LANGUAGE.md` `Unarmed Strike`.
 
-- Bug location: `packages/core/src/available-actions.ts:3444-3447` — `canUseBattleAttack` returns false when `mainHandWeapon == null`.
-- Quint spec already models unarmed damage correctly: `creature.qnt:757-761` has `unarmedDamage(strMod)` returning `max(0, 1 + strMod)`.
-- The attack handler in `battle-machine-actions-attack.ts` is flexible — it falls back to event-provided values for most fields, so changes should be contained.
-- SRD unarmed strike offers three options (Damage, Grapple, Shove); only Damage needs modeling now. Grapple/Shove are separate actions.
+`/simplify` convergence:
 
-Implementation sketch:
-
-1. Remove the `mainHandWeapon == null` early-return in `canUseBattleAttack`.
-2. Define a synthetic unarmed `BattleWeaponProfile` constant: `{ name: "unarmed strike", damageType: "bludgeoning", isMelee: true, properties: new Set(), damageDie: undefined }`.
-3. In `battleAttack`, fall back to the unarmed profile when `mainHandWeapon` is null; compute flat damage as `1 + strMod` (matching `creature.qnt:unarmedDamage`).
-4. Ensure BATTLE_ATTACK token generation in `available-actions.ts` uses the unarmed profile for its summary text.
-
-Acceptance criteria:
-
-- A creature with `mainHandWeapon == null` can make a BATTLE_ATTACK (unarmed strike).
-- Unarmed strike damage = max(0, 1 + STR mod), bludgeoning, always proficient.
-- Unarmed strike is melee, 5-foot reach.
-- No regression for creatures with weapons equipped.
-- Quint parity: TS unarmed damage matches `creature.qnt:unarmedDamage`.
+- Round 1: removed the broken weapon-only gate, pushed the shared unarmed profile into both finalization and reducer paths, and added the missing 5-foot runtime guard.
+- Round 2: re-checked for redundant state and dead helpers; kept the fix on the existing caller-owned damage boundary and converged with no further task-scoped reductions.
 
 Verification:
 
-- Tier 1 MBT run passes.
-- `/simplify` convergence (2 rounds).
-- RAW check against `.references/srd-5.2.1/Rules-Glossary.md` unarmed strike entry.
+- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`
+- `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
 
 ### Task 28 - MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion
 

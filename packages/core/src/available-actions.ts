@@ -66,6 +66,7 @@ import {
   SIZES,
   SpellSlotLevel,
   spellSlotLevel,
+  UNARMED_STRIKE_PROFILE,
   WEAPON_PROPERTIES,
   type D20Roll,
   type SpellName,
@@ -3638,7 +3639,6 @@ function battleActiveReadyableSpellTokens(
 }
 
 function canUseBattleAttack(actor: BattleCreatureState): boolean {
-  if (actor.mainHandWeapon == null) return false;
   return actor.actionsRemaining > 0 || actor.extraAttacksRemaining > 0;
 }
 
@@ -3792,7 +3792,7 @@ export function getAvailableBattleActions(
             cost: battleAttackCost(activeCreature),
             outcome: {
               summary:
-                "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+                "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
             },
           }),
         );
@@ -4504,8 +4504,7 @@ export function finalizeBattleResolution(
         };
       }
       const actor = context.creatures.get(CreatureId(request.token.actorId));
-      const weapon = actor?.mainHandWeapon;
-      if (actor == null || weapon == null) {
+      if (actor == null) {
         return {
           ok: false,
           error: {
@@ -4514,6 +4513,7 @@ export function finalizeBattleResolution(
           },
         };
       }
+      const weapon = actor.mainHandWeapon ?? UNARMED_STRIKE_PROFILE;
       const {
         attackRoll,
         targetAc,
@@ -4543,6 +4543,16 @@ export function finalizeBattleResolution(
           error: {
             code: "INVALID_RUNTIME_INPUT",
             message: "Battle target AC must be non-negative.",
+          },
+        };
+      }
+      if (actor.mainHandWeapon == null && !attackerWithin5ft) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message:
+              "Unarmed strike runtime must confirm the target is within 5 feet.",
           },
         };
       }

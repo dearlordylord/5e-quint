@@ -58,7 +58,7 @@ import type {
   FullAttackMods,
   WeaponProperty,
 } from "#/types.ts";
-import { armorClass } from "#/types.ts";
+import { armorClass, UNARMED_STRIKE_PROFILE } from "#/types.ts";
 
 type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>;
 
@@ -307,11 +307,10 @@ export function battleAttack({
   const tc = c.creatures.get(e.targetId)!;
   if (ac.dead || isIncapacitated(ac) || tc.dead) return {};
   if (ac.actionsRemaining <= 0 && ac.extraAttacksRemaining <= 0) return {};
-  const weaponProperties =
-    e.weaponProperties ??
-    ac.mainHandWeapon?.properties ??
-    new Set(e.isFinesse === true ? ["finesse"] : []);
-  const expectedDamageDie = battleMainHandDamageDie(ac, e.isMelee);
+  const weapon = ac.mainHandWeapon ?? UNARMED_STRIKE_PROFILE;
+  const isMeleeAttack = ac.mainHandWeapon == null ? true : e.isMelee;
+  const weaponProperties = e.weaponProperties ?? weapon.properties ?? new Set();
+  const expectedDamageDie = battleMainHandDamageDie(ac, isMeleeAttack);
   if (
     expectedDamageDie != null &&
     ac.mainHandWeapon != null &&
@@ -324,7 +323,7 @@ export function battleAttack({
     ac.attackActionUsed && ac.extraAttacksRemaining > 0
       ? spendExtraAttack(ac)
       : spendAction(ac, "attack");
-  if (e.isMelee && weaponProperties.has("light")) {
+  if (isMeleeAttack && weaponProperties.has("light")) {
     updatedAc = { ...updatedAc, lightAttackUsedThisTurn: true };
   }
   const cs = setCreature(c.creatures, id, updatedAc);
@@ -333,7 +332,7 @@ export function battleAttack({
     cs,
     id,
     e.targetId,
-    e.isMelee,
+    isMeleeAttack,
     weaponProperties,
     e.attackerWithin5ft,
     e.hostileWithin5ft,
@@ -346,7 +345,7 @@ export function battleAttack({
   const hasAnyDisadvantageSource = hasAttackDisadvantageSource(ctx);
   const damage = battleWeaponDamage(
     ac,
-    e.isMelee,
+    isMeleeAttack,
     weaponProperties,
     e.diceCount,
     e.dieSize,
@@ -362,20 +361,20 @@ export function battleAttack({
     e.tAc,
     damage,
     e.dt,
-    e.damageQualifiers ?? ac.mainHandWeapon?.damageQualifiers ?? new Set(),
+    e.damageQualifiers ?? weapon.damageQualifiers ?? new Set(),
     e.crit,
     ac.critRange,
     ADR_ACTIVE_TURN,
     e.knockOut,
-    e.isMelee,
+    isMeleeAttack,
     e.attackerWithin5ft,
     e.attackerWithin60ft ?? false,
     e.targetCanSeeAttacker,
     mods,
-    ac.mainHandWeapon != null ? !ac.mainHandWeapon.isMelee : !e.isMelee,
+    !weapon.isMelee,
     e.onHitEffect,
     weaponProperties,
-    ac.mainHandWeapon?.statBlockAttackSource?.extraDamageOnAdvantageHit,
+    weapon.statBlockAttackSource?.extraDamageOnAdvantageHit,
     e.hasAllyAdjacentToTarget,
     hasAnyDisadvantageSource,
     e.saDmg,

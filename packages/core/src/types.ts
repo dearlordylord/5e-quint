@@ -410,6 +410,14 @@ export interface BattleWeaponProfile {
   readonly statBlockAttackSource?: StatBlockAttackSource;
 }
 
+/** Synthetic SRD 5.2.1 unarmed-strike attack profile. */
+export const UNARMED_STRIKE_PROFILE: BattleWeaponProfile = {
+  name: "unarmed strike",
+  damageType: "bludgeoning",
+  isMelee: true,
+  properties: new Set(),
+};
+
 // --- Branded numeric types ---
 /* eslint-disable no-magic-numbers -- Schema constraints and literal types use domain-specific constants */
 
