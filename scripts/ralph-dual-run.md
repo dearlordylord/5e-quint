@@ -11,10 +11,10 @@
 7. Reviews both task diffs with Codex.
 8. Runs a Codex decider from the main worktree to apply, verify, reconcile any plan impact, and commit the reconciled Task N result to the integration branch.
 9. Refreshes the plan snapshot and task index from the updated plan file.
-10. Removes the task worktrees, then starts the next initially indexed task whose refreshed status is `ready-for-research` or `ready-for-implementation-after-light-research`.
+10. Removes the task worktrees, then rescans the refreshed task index for the next task whose status is `ready-for-research` or `ready-for-implementation-after-light-research`.
 
 Runtime logs, prompts, review reports, and diffs are written under ignored `.ralph/runs/<run-id>/task-<n>/`.
-The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs skip tasks whose refreshed `ralph-task-index` status is no longer ready. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
+The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
 
 Task worktrees reuse the main repo install by symlinking `node_modules`, `packages/core/node_modules`, and `packages/mcp/node_modules` into each disposable worktree. This keeps per-task verification fast and avoids a redundant `pnpm install` for every task rotation.
 
