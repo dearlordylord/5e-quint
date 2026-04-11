@@ -86,6 +86,30 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "I",
       "status": "deferred",
       "title": "Build-Map / Hole Metadata"
+    },
+    {
+      "number": 9,
+      "id": "POST1",
+      "status": "blocked",
+      "title": "Formal Creation Semantics"
+    },
+    {
+      "number": 10,
+      "id": "POST2",
+      "status": "blocked",
+      "title": "Open Choices And Selective Invalidation"
+    },
+    {
+      "number": 11,
+      "id": "POST3",
+      "status": "blocked",
+      "title": "Formal Advancement And Higher-Level Starts"
+    },
+    {
+      "number": 12,
+      "id": "POST4",
+      "status": "blocked",
+      "title": "Workflow And Projection Convergence"
     }
   ]
 }
@@ -124,6 +148,10 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 6 | CHAR7 - Level Advancement And Multiclass Continuation | blocked | CHAR1, CHAR3, CHAR5 | none | Extend the same character domain into advancement, higher-level starts, ASI/feat choice points, and multiclass continuation. | Depends on executable sheet baseline |
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
+| 9 | POST1 - Formal Creation Semantics | blocked | CHAR6, CHAR7 | POST2, POST4 | After the current `CHAR` sequence lands, formalize the creation draft/sheet semantics in Quint while preserving the already-planned product/domain shape rather than reopening the earlier ownership decisions. | Future post-`CHAR` phase; blocked on the current batch landing |
+| 10 | POST2 - Open Choices And Selective Invalidation | blocked | POST1 | POST4 | Build the explicit `open choices` / `validation issues` / dependency-aware invalidation model on top of the `CHAR` foundation so guided workflows can distinguish incompleteness from illegality. | Depends on formal creation semantics |
+| 11 | POST3 - Formal Advancement And Higher-Level Starts | blocked | CHAR7, POST1 | POST4 | Formalize advancement as repeated legal level-up transitions over the same canonical sheet, then use that path for higher-level starts rather than bespoke bootstrapping. | Depends on advancement ownership plus formal creation semantics |
+| 12 | POST4 - Workflow And Projection Convergence | blocked | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Final post-`CHAR` integration phase |
 
 ## Current Integrated Baseline
 
@@ -150,6 +178,12 @@ Current architecture decisions for this batch:
 - `CharacterSheet` is the PC-owned canonical record; `StatBlock` remains monster-only language.
 - Character creation must not be generalized into the main battle machine.
 - Runtime projections must flow from owned character data to creature/battle runtime, not the reverse.
+
+Post-`CHAR` planning note:
+
+- The appended `POST*` tasks are additive only and should not cause mid-batch rewrites of `CHAR1` through `CHAR7`.
+- On `master`, treat the `CHAR` sequence as the foundation that must land first; the post-`CHAR` queue captures the next layer of work implied by the revised PRD.
+- New work should extend the planned character-domain/product shape toward the revised PRD semantics rather than reopening the earlier ownership decisions.
 
 ## Task Selection Guidance
 
@@ -371,3 +405,99 @@ Depends on: none.
 Blocks: none.
 
 Next action: Keep deferred. It is not part of the current character-creation batch.
+
+### Task 9 - POST1 - Formal Creation Semantics
+
+Status: blocked.
+
+Depends on: CHAR6, CHAR7.
+
+Blocks: POST2, POST4.
+
+User stories:
+
+- 32, 33, 35, 40, 41, 44, 47, 48, 50, 52
+
+What to build:
+
+- Formalize the creation-side semantic model in Quint using the planned `CharacterDraft` / `CharacterSheet` product shape as foundation rather than replacing it.
+- Model the canonical creation surfaces needed to explain an editable draft, a finalizable sheet, and projection from sheet to creature runtime.
+- Keep battle out of character creation while making the formal layer the durable owner of creation semantics that should not drift over time.
+
+Acceptance criteria:
+
+- The formal creation-semantics task treats the `CHAR` work as foundation, not as throwaway implementation.
+- The formal model owns canonical creation semantics rather than relying on workflow state or battle init as a proxy.
+- A clear projection boundary from finalized sheet to creature runtime is part of the formal design.
+
+### Task 10 - POST2 - Open Choices And Selective Invalidation
+
+Status: blocked.
+
+Depends on: POST1.
+
+Blocks: POST4.
+
+User stories:
+
+- 26, 27, 28, 29, 30, 41, 42, 47
+
+What to build:
+
+- Add explicit product/domain support for `open choices` distinct from `validation issues`.
+- Define dependency-aware invalidation so changing an earlier choice only invalidates later choices that actually depend on it.
+- Preserve the sequential SRD workflow shape without making step position the owner of legality or completeness.
+
+Acceptance criteria:
+
+- The system can distinguish missing required choices from illegal choices.
+- Backtracking semantics preserve unrelated later choices whenever they remain valid.
+- The guided workflow can surface open holes, illegal state, and reviewable complete state separately.
+
+### Task 11 - POST3 - Formal Advancement And Higher-Level Starts
+
+Status: blocked.
+
+Depends on: CHAR7, POST1.
+
+Blocks: POST4.
+
+User stories:
+
+- 12, 13, 16, 17, 31, 37, 38, 39, 46, 50
+
+What to build:
+
+- Model level advancement as a repeated legal transition over a finalized character sheet.
+- Use that same advancement path to explain higher-level starts: create the level 1 character, then advance repeatedly until the target level is reached.
+- Keep multiclass continuation, subclass gating, HP/hit-dice growth, feat/ASI picks, and spellcasting expansion on the same advancement path.
+
+Acceptance criteria:
+
+- Higher-level starts do not require a bespoke semantic path separate from creation plus advancement.
+- Advancement uses the same canonical sheet model as creation.
+- The design makes repeated level-up transitions the durable explanation for reaching higher-level characters.
+
+### Task 12 - POST4 - Workflow And Projection Convergence
+
+Status: blocked.
+
+Depends on: POST1, POST2, POST3.
+
+Blocks: none.
+
+User stories:
+
+- 28, 30, 31, 34, 39, 43, 44, 47, 48, 49, 50
+
+What to build:
+
+- Converge the guided workflow shell and runtime projections on the formal creation and advancement surfaces.
+- Keep the UI/workflow thin: it should persist draft state, surface open choices and issues, and render derived sheet/runtime outputs instead of re-deriving semantics locally.
+- Align higher-level starts, advancement, and battle-ready projection around the same finalized-sheet contract.
+
+Acceptance criteria:
+
+- Workflow, formal semantics, and runtime projections all use one canonical draft/sheet story.
+- The workflow shell does not become a second rules engine.
+- Runtime projection remains one-way derived from finalized owned character state.
