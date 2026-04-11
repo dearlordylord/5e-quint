@@ -138,7 +138,7 @@ export const toolDefinitions = [
   {
     name: "start_battle",
     description:
-      "Start a battle from the current creature host by compiling its Fighter durable state into BATTLE_INIT and adding a core-owned monster stat block such as goblinMinion.",
+      "Start a battle from the current creature host by compiling its Fighter durable state into BATTLE_INIT and adding a core-owned monster stat block through the generic monster session surface.",
     inputSchema: startBattleJsonSchema,
   },
   {

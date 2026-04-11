@@ -1390,7 +1390,7 @@ module creature {
 
   /// Compute effective walking speed from base speed minus penalties.
   /// Grappled/restrained: speed 0 (no bonuses apply).
-  /// Order: base - armorPenalty - exhaustion penalty - grapple halving.
+  /// Order: base - armorPenalty - exhaustion penalty.
   pure def pComputeEffectiveSpeed(
     baseWalkSpeed: int, exhaustion: int,
     grappled: bool, restrained: bool,
@@ -1402,10 +1402,7 @@ module creature {
     else {
       val afterArmor = intMax(0, baseWalkSpeed - armorPenalty)
       val afterExhaustion = intMax(0, afterArmor - 5 * exhaustion)
-      val afterGrappling =
-        if (isGrappling and not(grappledTargetTwoSizesSmaller)) afterExhaustion / 2
-        else afterExhaustion
-      intMax(0, afterGrappling)
+      intMax(0, afterExhaustion)
     }
   }
 
@@ -1951,12 +1948,14 @@ module creature {
     isDifficultTerrain: bool,
     isCrawling: bool,
     isClimbingOrSwimming: bool,
-    hasRelevantSpeed: bool
+    hasRelevantSpeed: bool,
+    isDraggingGrappledCreature: bool
   ): int = {
     val terrainExtra = if (isDifficultTerrain) 1 else 0
     val crawlExtra = if (isCrawling) 1 else 0
     val climbSwimExtra = if (isClimbingOrSwimming and not(hasRelevantSpeed)) 1 else 0
-    1 + terrainExtra + crawlExtra + climbSwimExtra
+    val dragExtra = if (isDraggingGrappledCreature) 1 else 0
+    1 + terrainExtra + crawlExtra + climbSwimExtra + dragExtra
   }
 
   // -- 14.2 Prone Movement --

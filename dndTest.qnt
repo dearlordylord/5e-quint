@@ -2,6 +2,7 @@
 
 module dndTest::Impl {
   import creature.* from "./creature"
+  import battle.* from "./battle"
 
   // ============================================================
   // Ability Modifier tests
@@ -1329,10 +1330,10 @@ module dndTest::Impl {
     assert(t.movementRemaining == 0)
   }
 
-  run test_speed_grappling_halved = {
+  run test_speed_grappling_full = {
     val t = pStartTurn(TEST_FIGHTER_5, FRESH20, Unarmored,
       true, false) // grappling, target not 2+ sizes smaller
-    assert(t.movementRemaining == 15)
+    assert(t.movementRemaining == 30)
   }
 
   run test_speed_grappling_tiny_target = {
@@ -1986,24 +1987,26 @@ module dndTest::Impl {
 
   // -- Movement Cost Multiplier --
 
-  run test_movement_cost_normal = assert(pMovementCost(false, false, false, false) == 1)
+  run test_movement_cost_normal = assert(pMovementCost(false, false, false, false, false) == 1)
 
-  run test_movement_cost_difficult_terrain = assert(pMovementCost(true, false, false, false) == 2)
+  run test_movement_cost_difficult_terrain = assert(pMovementCost(true, false, false, false, false) == 2)
 
-  run test_movement_cost_crawling = assert(pMovementCost(false, true, false, false) == 2)
+  run test_movement_cost_crawling = assert(pMovementCost(false, true, false, false, false) == 2)
 
-  run test_movement_cost_climbing_no_speed = assert(pMovementCost(false, false, true, false) == 2)
+  run test_movement_cost_climbing_no_speed = assert(pMovementCost(false, false, true, false, false) == 2)
 
-  run test_movement_cost_climbing_with_speed = assert(pMovementCost(false, false, true, true) == 1)
+  run test_movement_cost_climbing_with_speed = assert(pMovementCost(false, false, true, true, false) == 1)
 
   // PHB: "Crawling 1 foot in difficult terrain, therefore, costs 3 feet of movement."
-  run test_movement_cost_crawl_difficult = assert(pMovementCost(true, true, false, false) == 3)
+  run test_movement_cost_crawl_difficult = assert(pMovementCost(true, true, false, false, false) == 3)
 
   // PHB Ch8: climbing without speed in difficult terrain = 3 (1 base + 1 terrain + 1 climb)
-  run test_movement_cost_climb_no_speed_difficult = assert(pMovementCost(true, false, true, false) == 3)
+  run test_movement_cost_climb_no_speed_difficult = assert(pMovementCost(true, false, true, false, false) == 3)
 
   // Climbing WITH speed in difficult terrain: only terrain penalty
-  run test_movement_cost_climb_with_speed_difficult = assert(pMovementCost(true, false, true, true) == 2)
+  run test_movement_cost_climb_with_speed_difficult = assert(pMovementCost(true, false, true, true, false) == 2)
+
+  run test_movement_cost_dragging_grappled_creature = assert(pMovementCost(false, false, false, false, true) == 2)
 
   // -- Stand from Prone --
 
@@ -4273,6 +4276,18 @@ module dndTest::Impl {
   run test_monster_nat20_always_crit = {
     val r = resolveAttackRoll(20, SKELETON.attacks.get("Shortsword").attackBonus, 30, 0, 20)
     all { assert(r.hits == true), assert(r.isCritical == true) }
+  }
+
+  run test_advantage_hit_rider_damage_requires_advantage = {
+    assert(advantageHitRiderDamage({ diceCount: 1, dieSize: 4 }, false, false) == 0)
+  }
+
+  run test_advantage_hit_rider_damage_uses_average_when_advantaged = {
+    assert(advantageHitRiderDamage({ diceCount: 1, dieSize: 4 }, true, false) == 2)
+  }
+
+  run test_advantage_hit_rider_damage_doubles_on_crit = {
+    assert(advantageHitRiderDamage({ diceCount: 1, dieSize: 4 }, true, true) == 4)
   }
 
   // ============================================================

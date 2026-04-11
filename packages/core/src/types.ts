@@ -383,6 +383,16 @@ export interface AttackContext {
   readonly targetReckless: boolean;
 }
 
+export interface AdvantageDamageDice {
+  readonly diceCount: number;
+  readonly dieSize: number;
+}
+
+export interface StatBlockAttackSource {
+  readonly name: string;
+  readonly extraDamageOnAdvantageHit?: AdvantageDamageDice;
+}
+
 export interface BattleWeaponProfile {
   readonly name: string;
   readonly damageType: DamageType;
@@ -391,6 +401,13 @@ export interface BattleWeaponProfile {
   readonly damageDie?: number;
   readonly versatileDie?: number;
   readonly damageQualifiers?: ReadonlySet<DamageQualifier>;
+  /**
+   * Internal-only provenance for a projected monster stat-block attack.
+   *
+   * The public MCP `BATTLE_INIT` schema does not accept this field; core adds
+   * it only when projecting a selected stat-block attack into battle state.
+   */
+  readonly statBlockAttackSource?: StatBlockAttackSource;
 }
 
 // --- Branded numeric types ---

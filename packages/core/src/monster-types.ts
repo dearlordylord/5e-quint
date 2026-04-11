@@ -7,6 +7,7 @@ import type {
   Ability,
   AbilityModifier,
   ArmorClass,
+  AdvantageDamageDice,
   Condition,
   DamageType,
   ResourceCount,
@@ -78,6 +79,19 @@ export type ChallengeRating =
   | { readonly type: "CR_Half" }
   | { readonly type: "CRN"; readonly value: number };
 
+export const MONSTER_BATTLE_BONUS_ACTION_OPTIONS = [
+  "disengage",
+  "hide",
+] as const;
+
+export type MonsterBattleBonusActionOption =
+  (typeof MONSTER_BATTLE_BONUS_ACTION_OPTIONS)[number];
+
+export const MONSTER_BATTLE_REACTION_OPTIONS = ["redirectAttack"] as const;
+
+export type MonsterBattleReactionOption =
+  (typeof MONSTER_BATTLE_REACTION_OPTIONS)[number];
+
 // --- Monster Attack ---
 
 export interface MonsterAttack {
@@ -97,6 +111,12 @@ export interface MonsterAttack {
    * legacy `isRanged`/reach/range fields.
    */
   readonly attackMode?: "melee" | "ranged" | "meleeOrRanged";
+  /**
+   * Extra same-type damage from the stat block when the attack roll had
+   * Advantage, e.g. Goblin Warrior/Boss "plus 2 (1d4) ... if the attack roll
+   * had Advantage."
+   */
+  readonly extraDamageOnAdvantageHit?: AdvantageDamageDice;
 }
 
 // --- Multiattack Slot ---
@@ -164,6 +184,8 @@ export interface StatBlock {
   readonly passivePerception?: number;
   readonly languages?: ReadonlyArray<string>;
   readonly gear?: ReadonlyArray<string>;
+  readonly battleBonusActionOptions?: ReadonlyArray<MonsterBattleBonusActionOption>;
+  readonly battleReactionOptions?: ReadonlyArray<MonsterBattleReactionOption>;
   readonly attacks: Readonly<Record<string, MonsterAttack>>;
   readonly multiattack: ReadonlyArray<MultiattackSlot>;
   // Phase L: Legendary / Recharge / X-Day

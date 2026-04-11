@@ -270,28 +270,9 @@ if [[ ${#selected_tasks[@]} -gt 0 ]]; then
     lookup_task_row "$selected" >/dev/null || die "selected task not found in plan: $selected"
     task_numbers+=("$selected")
   done
-else
-  while IFS=$'\t' read -r task_no _task_id _status _task_start _task_end _task_title; do
-    task_numbers+=("$task_no")
-  done <"$task_index"
 fi
 
-task_selected() {
-  local task_no="$1"
-
-  if [[ ${#selected_tasks[@]} -eq 0 ]]; then
-    return 0
-  fi
-
-  local selected
-  for selected in "${selected_tasks[@]}"; do
-    if [[ "$selected" == "$task_no" ]]; then
-      return 0
-    fi
-  done
-
-  return 1
-}
+declare -A processed_tasks=()
 
 cleanup() {
   local status=$?
@@ -525,15 +506,35 @@ log "base $base_ref is $base_sha"
 log "output branch: $output_branch"
 log "run state: $run_root"
 
-for task_no in "${task_numbers[@]}"; do
-  task_selected "$task_no" || continue
+next_ready_task_row() {
+  while IFS=$'\t' read -r task_no task_id status task_start task_end task_title; do
+    [[ -n "$task_no" ]] || continue
+    [[ -z "${processed_tasks[$task_no]+x}" ]] || continue
+    if [[ "$status" == "ready-for-research" || "$status" == "ready-for-implementation-after-light-research" ]]; then
+      printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$task_no" "$task_id" "$status" "$task_start" "$task_end" "$task_title"
+      return 0
+    fi
+  done <"$task_index"
+
+  return 1
+}
+
+while true; do
   refresh_plan_snapshot
-  task_row="$(lookup_task_row "$task_no")" || die "task $task_no no longer exists in refreshed plan snapshot"
-  IFS=$'\t' read -r task_no task_id status task_start task_end task_title <<<"$task_row"
-  if [[ ${#selected_tasks[@]} -eq 0 && "$status" != "ready-for-research" && "$status" != "ready-for-implementation-after-light-research" ]]; then
-    log "task $task_no: skipping because refreshed status is $status"
-    continue
+  if [[ ${#selected_tasks[@]} -gt 0 ]]; then
+    task_row=""
+    for task_no in "${task_numbers[@]}"; do
+      [[ -z "${processed_tasks[$task_no]+x}" ]] || continue
+      task_row="$(lookup_task_row "$task_no")" || die "selected task $task_no no longer exists in refreshed plan snapshot"
+      break
+    done
+    [[ -n "$task_row" ]] || break
+  else
+    task_row="$(next_ready_task_row)" || break
   fi
+
+  IFS=$'\t' read -r task_no task_id status task_start task_end task_title <<<"$task_row"
+  processed_tasks["$task_no"]=1
 
   task_root="$run_root/task-$task_no"
   task_file="$task_root/task.md"

@@ -9,6 +9,10 @@ import type {
 } from "#/battle-machine-events.ts";
 import type { BattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
 import type {
+  MonsterBattleBonusActionOption,
+  MonsterBattleReactionOption,
+} from "#/monster-types.ts";
+import type {
   Ability,
   ActiveEffect,
   ArmorClass,
@@ -30,6 +34,11 @@ import type {
 export type { CreatureId } from "#/types.ts";
 
 type DeathSaves = { readonly successes: number; readonly failures: number };
+
+export interface BattlePosition {
+  readonly row: number;
+  readonly col: number;
+}
 
 export interface BattleCreatureState {
   readonly hp: number;
@@ -92,6 +101,9 @@ export interface BattleCreatureState {
   // Identity
   readonly creatureKind: CreatureKind;
   readonly creatureSize: Size;
+  readonly baseArmorClass: ArmorClass;
+  readonly battleSide: string;
+  readonly battlePosition: BattlePosition;
   // Class levels tracked by battle Combatant
   readonly rogueLevel: number;
   readonly monkLevel: number;
@@ -149,6 +161,8 @@ export interface BattleCreatureState {
   readonly offHandWeapon: BattleWeaponProfile | null;
   readonly leftHandUse: HandUse;
   readonly rightHandUse: HandUse;
+  readonly battleBonusActionOptions: ReadonlyArray<MonsterBattleBonusActionOption>;
+  readonly battleReactionOptions: ReadonlyArray<MonsterBattleReactionOption>;
 }
 
 /** Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready). */
@@ -185,6 +199,10 @@ export interface AttackHitCtx {
   readonly isMeleeAttack: boolean;
   readonly isRangedWeaponAttack: boolean;
   readonly isWeaponAttack: boolean;
+  readonly redirectableAlliesByReactor: ReadonlyMap<
+    CreatureId,
+    ReadonlyMap<CreatureId, ArmorClass>
+  >;
   readonly legalReactionsByCreature: ReadonlyMap<
     CreatureId,
     ReadonlySet<HitReactionKind>
@@ -410,6 +428,9 @@ export interface InitCreatureConfig {
   readonly maxHpReduction?: number;
   readonly kind: CreatureKind;
   readonly creatureSize?: Size;
+  readonly baseArmorClass?: ArmorClass;
+  readonly battleSide?: string;
+  readonly battlePosition?: BattlePosition;
   readonly caster?: boolean;
   readonly rogueLevel?: number;
   readonly monkLevel?: number;
@@ -457,6 +478,8 @@ export interface InitCreatureConfig {
    */
   readonly mainHandWeapon?: BattleWeaponProfile;
   readonly offHandWeapon?: BattleWeaponProfile;
+  readonly battleBonusActionOptions?: ReadonlyArray<MonsterBattleBonusActionOption>;
+  readonly battleReactionOptions?: ReadonlyArray<MonsterBattleReactionOption>;
   readonly hasShieldEquipped?: boolean;
   readonly mainHandUsesTwoHands?: boolean;
   readonly qualifiedPhysicalResistances?: ReadonlyArray<QualifiedPhysicalBypass>;

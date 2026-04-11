@@ -45,7 +45,8 @@ export type HitReactionDecision =
   | { readonly tag: "RPass" }
   | { readonly tag: "RShield" }
   | { readonly tag: "RParry"; readonly bonus: number }
-  | { readonly tag: "RCuttingWords"; readonly reduction: number };
+  | { readonly tag: "RCuttingWords"; readonly reduction: number }
+  | { readonly tag: "RRedirectAttack"; readonly allyId: CreatureId };
 
 export type HitReactionKind = Exclude<HitReactionDecision["tag"], "RPass">;
 export type DmgReactionKind = "RUncannyDodge" | "RDeflectAttacks";
@@ -293,9 +294,16 @@ export type BattleEvent =
     }
   | { readonly type: "BATTLE_DASH" }
   | { readonly type: "BATTLE_DISENGAGE" }
+  | { readonly type: "BATTLE_BONUS_DISENGAGE" }
   | { readonly type: "BATTLE_DODGE" }
   | {
       readonly type: "BATTLE_HIDE";
+      readonly stealthTotal: number;
+      readonly hasCoverOrObscurement: boolean;
+      readonly outOfEnemyLineOfSight: boolean;
+    }
+  | {
+      readonly type: "BATTLE_BONUS_HIDE";
       readonly stealthTotal: number;
       readonly hasCoverOrObscurement: boolean;
       readonly outOfEnemyLineOfSight: boolean;

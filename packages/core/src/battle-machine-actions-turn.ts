@@ -30,12 +30,14 @@ import {
   resolveSave,
   setCreature,
   spendAction,
+  spendBonusActionForAction,
   spendExtraAttack,
 } from "#/battle-machine-helpers.ts";
 import type {
   BattleActionArgs,
   BattleContext,
   BattleCreatureState,
+  BattleEvent,
   CreatureId,
 } from "#/battle-machine-types.ts";
 import {
@@ -145,6 +147,18 @@ export function battleInit({
     creatures.set(cfg.id, {
       ...base,
       ...(cfg.creatureSize != null ? { creatureSize: cfg.creatureSize } : {}),
+      ...(cfg.baseArmorClass != null
+        ? { baseArmorClass: cfg.baseArmorClass }
+        : {}),
+      ...(cfg.battleSide != null ? { battleSide: cfg.battleSide } : {}),
+      ...(cfg.battlePosition != null
+        ? { battlePosition: cfg.battlePosition }
+        : {
+            battlePosition: {
+              row: initiative.length * 2,
+              col: 0,
+            },
+          }),
       ...(cfg.maxHpReduction != null
         ? { maxHpReduction: cfg.maxHpReduction }
         : {}),
@@ -242,6 +256,12 @@ export function battleInit({
         : {}),
       ...(cfg.offHandWeapon != null
         ? { offHandWeapon: cfg.offHandWeapon }
+        : {}),
+      ...(cfg.battleBonusActionOptions != null
+        ? { battleBonusActionOptions: cfg.battleBonusActionOptions }
+        : {}),
+      ...(cfg.battleReactionOptions != null
+        ? { battleReactionOptions: cfg.battleReactionOptions }
         : {}),
       ...handUses,
       ...(cfg.qualifiedPhysicalResistances != null
@@ -507,6 +527,7 @@ export function battleReadyRelease({
       : !e.isMelee,
     undefined,
     e.weaponProperties ?? new Set(e.isFinesse === true ? ["finesse"] : []),
+    undefined,
     e.hasAllyAdjacentToTarget,
     readyHasAnyDisadvantageSource,
     e.saDmg,
@@ -564,6 +585,7 @@ export function battleLegendaryAttack({
     m.mainHandWeapon != null ? !m.mainHandWeapon.isMelee : !e.isMelee,
     undefined,
     e.weaponProperties ?? new Set(e.isFinesse === true ? ["finesse"] : []),
+    undefined,
     e.hasAllyAdjacentToTarget,
     laHasAnyDisadvantageSource,
     e.saDmg,
@@ -624,17 +646,56 @@ export function battleHelpAttack({
   };
 }
 
+function hasBattleBonusActionOption(
+  creature: BattleCreatureState,
+  option: "disengage" | "hide",
+): boolean {
+  return creature.battleBonusActionOptions.includes(option);
+}
+
+function isHideSuccessful(
+  stealthTotal: number,
+  hasCoverOrObscurement: boolean,
+  outOfEnemyLineOfSight: boolean,
+): boolean {
+  return stealthTotal >= 15 && hasCoverOrObscurement && outOfEnemyLineOfSight;
+}
+
 export function battleHide({
   context: c,
   event: e,
 }: BattleActionArgs<"BATTLE_HIDE">): Partial<BattleContext> {
+  return battleHideWithResource(c, e, "action");
+}
+
+function battleHideWithResource(
+  c: BattleContext,
+  e: Extract<
+    BattleEvent,
+    { readonly type: "BATTLE_HIDE" | "BATTLE_BONUS_HIDE" }
+  >,
+  resource: "action" | "bonusAction",
+): Partial<BattleContext> {
   if (!c.turnStarted) return {};
   const id = activeId(c);
   const ac = c.creatures.get(id)!;
-  if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {};
-  const next = spendAction(ac, "hide");
-  const hidden =
-    e.stealthTotal >= 15 && e.hasCoverOrObscurement && e.outOfEnemyLineOfSight;
+  if (ac.dead || isIncapacitated(ac)) return {};
+  if (resource === "action" && ac.actionsRemaining <= 0) return {};
+  if (
+    resource === "bonusAction" &&
+    (ac.bonusActionUsed || !hasBattleBonusActionOption(ac, "hide"))
+  ) {
+    return {};
+  }
+  const next =
+    resource === "action"
+      ? spendAction(ac, "hide")
+      : spendBonusActionForAction(ac, "hide");
+  const hidden = isHideSuccessful(
+    e.stealthTotal,
+    e.hasCoverOrObscurement,
+    e.outOfEnemyLineOfSight,
+  );
   return {
     creatures: setCreature(c.creatures, id, {
       ...next,
@@ -642,6 +703,13 @@ export function battleHide({
       invisible: hidden ? true : next.invisible,
     }),
   };
+}
+
+export function battleBonusHide({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_BONUS_HIDE">): Partial<BattleContext> {
+  return battleHideWithResource(c, e, "bonusAction");
 }
 
 export function battleSearch({
@@ -750,6 +818,7 @@ export function battleOffHandAttack({
     false,
     undefined,
     offHand.properties,
+    undefined,
     e.hasAllyAdjacentToTarget,
     hasAnyDisadvantageSource,
     e.saDmg,
@@ -762,13 +831,27 @@ type SimpleActionType = "dash" | "disengage" | "dodge" | "ready";
 function simpleAction(
   c: BattleContext,
   actionType: SimpleActionType,
+  resource: "action" | "bonusAction" = "action",
 ): Partial<BattleContext> {
   if (!c.turnStarted) return {};
   const id = activeId(c);
   const ac = c.creatures.get(id)!;
-  if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {};
+  if (ac.dead || isIncapacitated(ac)) return {};
+  if (resource === "action" && ac.actionsRemaining <= 0) return {};
+  if (
+    resource === "bonusAction" &&
+    (ac.bonusActionUsed || !hasBattleBonusActionOption(ac, "disengage"))
+  ) {
+    return {};
+  }
   return {
-    creatures: setCreature(c.creatures, id, spendAction(ac, actionType)),
+    creatures: setCreature(
+      c.creatures,
+      id,
+      resource === "action"
+        ? spendAction(ac, actionType)
+        : spendBonusActionForAction(ac, "disengage"),
+    ),
   };
 }
 
@@ -782,6 +865,12 @@ export function battleDisengage({
   context: c,
 }: BattleActionArgs<"BATTLE_DISENGAGE">): Partial<BattleContext> {
   return simpleAction(c, "disengage");
+}
+
+export function battleBonusDisengage({
+  context: c,
+}: BattleActionArgs<"BATTLE_BONUS_DISENGAGE">): Partial<BattleContext> {
+  return simpleAction(c, "disengage", "bonusAction");
 }
 
 export function battleDodge({

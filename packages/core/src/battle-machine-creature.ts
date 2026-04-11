@@ -29,6 +29,7 @@ import type {
   QualifiedPhysicalBypass,
   SpellId,
 } from "#/types.ts";
+import { armorClass } from "#/types.ts";
 import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 
 function applyDamageModifiers(
@@ -461,6 +462,16 @@ export function spendAction(
   return c1;
 }
 
+export function spendBonusActionForAction(
+  c: BattleCreatureState,
+  actionType: Extract<ActionType, "disengage" | "hide">,
+): BattleCreatureState {
+  if (c.bonusActionUsed || isIncapacitated(c)) return c;
+  return actionType === "disengage"
+    ? { ...c, bonusActionUsed: true, disengaged: true }
+    : { ...c, bonusActionUsed: true };
+}
+
 export function spendReaction(c: BattleCreatureState): BattleCreatureState {
   return c.reactionAvailable ? { ...c, reactionAvailable: false } : c;
 }
@@ -786,6 +797,9 @@ export function freshCreature(
     dailyUsesRemaining: {},
     creatureKind: kind,
     creatureSize: "medium",
+    baseArmorClass: armorClass(10),
+    battleSide: kind,
+    battlePosition: { row: 0, col: 0 },
     rogueLevel: 0,
     monkLevel: 0,
     dexMod: 0,
@@ -823,6 +837,8 @@ export function freshCreature(
     offHandWeapon: null,
     leftHandUse: "free",
     rightHandUse: "free",
+    battleBonusActionOptions: [],
+    battleReactionOptions: [],
   };
 }
 

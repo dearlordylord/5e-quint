@@ -44,10 +44,7 @@ export function applyDamageModifiers(
 }
 
 /** Effective max HP after explicit max-HP reduction. SRD allows this to reach 0. */
-export function effectiveMaxHp(
-  maxHp: number,
-  maxHpReduction = 0,
-): number {
+export function effectiveMaxHp(maxHp: number, maxHpReduction = 0): number {
   return Math.max(0, maxHp - Math.max(0, maxHpReduction));
 }
 
@@ -346,11 +343,7 @@ export function calculateEffectiveSpeed(params: {
     0,
     afterArmor - EXHAUSTION_SPEED_PENALTY_PER_LEVEL * params.exhaustion,
   );
-  const afterGrappling =
-    params.isGrappling && !params.grappledTargetTwoSizesSmaller
-      ? Math.floor(afterExhaustion / HALVE_DIVISOR)
-      : afterExhaustion;
-  return Math.max(0, afterGrappling + (params.effectSpeedDelta ?? 0));
+  return Math.max(0, afterExhaustion + (params.effectSpeedDelta ?? 0));
 }
 
 /** Movement cost multiplier. Matches Quint pMovementCost. */
@@ -359,12 +352,14 @@ export function movementCostMultiplier(params: {
   readonly isCrawling: boolean;
   readonly isClimbingOrSwimming: boolean;
   readonly hasRelevantSpeed: boolean;
+  readonly isDraggingGrappledCreature: boolean;
 }): number {
   const terrainExtra = params.isDifficultTerrain ? 1 : 0;
   const crawlExtra = params.isCrawling ? 1 : 0;
   const climbSwimExtra =
     params.isClimbingOrSwimming && !params.hasRelevantSpeed ? 1 : 0;
-  return 1 + terrainExtra + crawlExtra + climbSwimExtra;
+  const dragExtra = params.isDraggingGrappledCreature ? 1 : 0;
+  return 1 + terrainExtra + crawlExtra + climbSwimExtra + dragExtra;
 }
 
 /** Spend half effective speed (for standing from prone). Matches Quint pSpendHalfSpeed. */

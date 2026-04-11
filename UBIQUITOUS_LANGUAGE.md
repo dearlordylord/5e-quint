@@ -92,7 +92,7 @@
 | **Charmed** | Can't attack or harm the charmer; charmer has advantage on social checks against creature | — |
 | **Deafened** | Can't hear; auto-fails hearing-based checks | — |
 | **Frightened** | Disadvantage on ability checks and attack rolls while source of fear is in line of sight; can't willingly move closer to source | Scared, feared |
-| **Grappled** | Speed becomes 0; ends if grappler is incapacitated or creature is moved out of reach | Grabbed, held |
+| **Grappled** | Speed becomes 0; attack rolls against targets other than the grappler have disadvantage; the grappler can drag/carry the creature, but each foot of that movement costs 1 extra foot unless the target is Tiny or two or more sizes smaller; ends if grappler is incapacitated or creature is moved out of reach | Grabbed, held |
 | **Incapacitated** | Can't take actions, bonus actions, or reactions; concentration broken; can't speak; disadvantage on initiative rolls | Disabled, stunned (Stunned is a separate, stronger condition) |
 | **Invisible** | Can't be seen without magic; heavily obscured for hiding; attacks against have disadvantage; own attacks have advantage | Hidden (different — hidden requires both unseen and unheard) |
 | **Paralyzed** | Incapacitated; can't move or speak; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical | — |

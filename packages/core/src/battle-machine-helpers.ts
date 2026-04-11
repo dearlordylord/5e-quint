@@ -59,11 +59,13 @@ import { canCastShield } from "#/features/spell-abjuration.ts";
 import { getSpellComponentRequirements } from "#/features/spell-available-actions.ts";
 import type {
   ActiveEffect,
+  ArmorClass,
   DamageQualifier,
   DamageType,
   ExpiryPhase,
   SpellId,
 } from "#/types.ts";
+import { armorClass } from "#/types.ts";
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
 export const byTag = Match.discriminator("tag");
@@ -75,6 +77,7 @@ export {
   battleExpendSlot as expendSlot,
   heal,
   spendAction,
+  spendBonusActionForAction,
   spendExtraAttack,
   spendMovement,
   spendReaction,
@@ -141,10 +144,6 @@ export function setCreature(
   return m;
 }
 
-function isGrappling(c: BattleCreatureState): boolean {
-  return c.grapplingTarget != null;
-}
-
 function battleEffectiveSpeed(c: BattleCreatureState): number {
   return calculateEffectiveSpeed({
     baseSpeed: Math.max(0, c.baseWalkSpeed + speedDeltaFromEffects(c)),
@@ -155,8 +154,8 @@ function battleEffectiveSpeed(c: BattleCreatureState): number {
     restrained: c.restrained,
     unconscious: c.unconscious,
     exhaustion: c.exhaustion,
-    isGrappling: isGrappling(c),
-    grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
+    isGrappling: false,
+    grappledTargetTwoSizesSmaller: false,
   });
 }
 
@@ -223,6 +222,16 @@ function refreshCreatureSpeedProjection(
   return setCreature(cs, creatureId, refreshProjectedSpeed(current, current));
 }
 
+function refreshCurrentTurnTargetSpeedOnly(
+  cs: Creatures,
+  targetId: CreatureId,
+  currentTurnCreatureId: CreatureId,
+): Map<CreatureId, BattleCreatureState> {
+  return targetId === currentTurnCreatureId
+    ? refreshCurrentTurnCreatureSpeed(cs, currentTurnCreatureId)
+    : new Map(cs);
+}
+
 export function linkBattleGrapple(
   cs: Creatures,
   grapplerId: CreatureId,
@@ -243,15 +252,12 @@ export function linkBattleGrapple(
     grappled: true,
     grappledBy: grapplerId,
   });
-  result = refreshCreatureSpeedProjection(result, grapplerId);
   result = refreshCreatureSpeedProjection(result, targetId);
-  if (
-    grapplerId === currentTurnCreatureId ||
-    targetId === currentTurnCreatureId
-  ) {
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId);
-  }
-  return result;
+  return refreshCurrentTurnTargetSpeedOnly(
+    result,
+    targetId,
+    currentTurnCreatureId,
+  );
 }
 
 export function releaseBattleGrappleByGrappler(
@@ -262,14 +268,12 @@ export function releaseBattleGrappleByGrappler(
   const grappler = cs.get(grapplerId);
   if (!grappler?.grapplingTarget) return new Map(cs);
   let result = releaseGrapplePair(cs, grapplerId, grappler.grapplingTarget);
-  result = refreshCreatureSpeedProjection(result, grapplerId);
   result = refreshCreatureSpeedProjection(result, grappler.grapplingTarget);
-  if (
-    grapplerId === currentTurnCreatureId ||
-    grappler.grapplingTarget === currentTurnCreatureId
-  )
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId);
-  return result;
+  return refreshCurrentTurnTargetSpeedOnly(
+    result,
+    grappler.grapplingTarget,
+    currentTurnCreatureId,
+  );
 }
 
 export function escapeBattleGrapple(
@@ -280,14 +284,12 @@ export function escapeBattleGrapple(
   const target = cs.get(targetId);
   if (!target?.grappledBy) return new Map(cs);
   let result = releaseGrapplePair(cs, target.grappledBy, targetId);
-  result = refreshCreatureSpeedProjection(result, target.grappledBy);
   result = refreshCreatureSpeedProjection(result, targetId);
-  if (
-    targetId === currentTurnCreatureId ||
-    target.grappledBy === currentTurnCreatureId
-  )
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId);
-  return result;
+  return refreshCurrentTurnTargetSpeedOnly(
+    result,
+    targetId,
+    currentTurnCreatureId,
+  );
 }
 
 export function normalizeBattleGrapples(
@@ -455,6 +457,71 @@ export function eligibleTarget(
     : new Set();
 }
 
+function areAllies(a: BattleCreatureState, b: BattleCreatureState): boolean {
+  return a.battleSide === b.battleSide;
+}
+
+function squaresBetween(
+  a: BattleCreatureState,
+  b: BattleCreatureState,
+): number {
+  return Math.max(
+    Math.abs(a.battlePosition.row - b.battlePosition.row),
+    Math.abs(a.battlePosition.col - b.battlePosition.col),
+  );
+}
+
+function isRedirectAlly(
+  reactor: BattleCreatureState,
+  candidate: BattleCreatureState,
+): boolean {
+  return (
+    areAllies(reactor, candidate) &&
+    candidate.creatureSize !== "tiny" &&
+    candidate.creatureSize !== "large" &&
+    candidate.creatureSize !== "huge" &&
+    candidate.creatureSize !== "gargantuan" &&
+    squaresBetween(reactor, candidate) <= 1
+  );
+}
+
+export function redirectableAlliesByReactor(
+  cs: Creatures,
+  atk: Pick<AttackHitCtx, "attacker" | "target" | "targetCanSeeAttackerAtHit">,
+) {
+  const alliesByReactor = new Map<
+    CreatureId,
+    ReadonlyMap<CreatureId, ArmorClass>
+  >();
+  if (!atk.targetCanSeeAttackerAtHit) return alliesByReactor;
+  for (const [id, c] of cs) {
+    if (
+      id !== atk.target ||
+      !c.reactionAvailable ||
+      c.dead ||
+      c.unconscious ||
+      isIncapacitated(c) ||
+      !c.battleReactionOptions.includes("redirectAttack")
+    ) {
+      continue;
+    }
+    const allies = new Map<CreatureId, number>();
+    for (const [candidateId, candidate] of cs) {
+      if (
+        candidateId !== id &&
+        candidateId !== atk.attacker &&
+        !candidate.dead &&
+        !candidate.unconscious &&
+        isRedirectAlly(c, candidate)
+      ) {
+        allies.set(candidateId, armorClass(candidate.baseArmorClass));
+      }
+    }
+    if (allies.size > 0) alliesByReactor.set(id, allies);
+  }
+  return alliesByReactor;
+}
+
 export function legalHitReactions(
   cs: Creatures,
   atk: AttackHitCtx,
@@ -462,8 +529,9 @@ export function legalHitReactions(
 ) {
   const legalByCreature = new Map<
     CreatureId,
-    Set<"RShield" | "RParry" | "RCuttingWords">
+    Set<"RShield" | "RParry" | "RCuttingWords" | "RRedirectAttack">
   >();
+  const redirectableAllies = redirectableAlliesByReactor(cs, atk);
   for (const [id, c] of cs) {
     if (
       !c.reactionAvailable ||
@@ -473,7 +541,9 @@ export function legalHitReactions(
       id === atk.attacker
     )
       continue;
-    const legal = new Set<"RShield" | "RParry" | "RCuttingWords">();
+    const legal = new Set<
+      "RShield" | "RParry" | "RCuttingWords" | "RRedirectAttack"
+    >();
     if (
       id === atk.target &&
       canCastShield(c.reactionAvailable, hasAnySpellSlot(c)) &&
@@ -497,6 +567,9 @@ export function legalHitReactions(
       c.bardicInspirationCharges > 0
     ) {
       legal.add("RCuttingWords");
+    }
+    if (redirectableAllies.has(id)) {
+      legal.add("RRedirectAttack");
     }
     if (legal.size > 0) legalByCreature.set(id, legal);
   }

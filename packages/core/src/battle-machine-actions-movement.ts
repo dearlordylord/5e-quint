@@ -35,7 +35,9 @@ export function battleMove({
   const id = activeId(c);
   const ac = c.creatures.get(id)!;
   if (ac.dead || isIncapacitated(ac) || ac.movementRemaining <= 0) return {};
-  const cs = setCreature(c.creatures, id, spendMovement(ac, 5, 1));
+  const dragCost =
+    ac.grapplingTarget != null && !ac.grappledTargetTwoSizesSmaller ? 2 : 1;
+  const cs = setCreature(c.creatures, id, spendMovement(ac, 5, dragCost));
   // The caller owns geometry and provides the threat set for this 5ft reach-exit checkpoint.
   if (
     ac.disengaged ||
@@ -131,6 +133,7 @@ export function battleMovementOAAttack({
     false,
     undefined,
     weaponProperties,
+    undefined,
     e.hasAllyAdjacentToTarget,
     hasAnyDisadvantageSource,
     e.saDmg,

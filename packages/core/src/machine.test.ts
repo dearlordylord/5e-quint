@@ -1790,9 +1790,9 @@ describe("calculateEffectiveSpeed helper", () => {
     expect(calculateEffectiveSpeed({ ...baseParams, exhaustion: 5 })).toBe(5);
   });
 
-  it("grappling halves unless target 2 sizes smaller", () => {
+  it("grappling does not reduce the grappler's speed", () => {
     expect(calculateEffectiveSpeed({ ...baseParams, isGrappling: true })).toBe(
-      15,
+      30,
     );
     expect(
       calculateEffectiveSpeed({
@@ -1818,6 +1818,7 @@ describe("movementCostMultiplier helper", () => {
     isCrawling: false,
     isClimbingOrSwimming: false,
     hasRelevantSpeed: false,
+    isDraggingGrappledCreature: false,
   };
 
   it("normal terrain costs 1", () => {
@@ -1858,6 +1859,15 @@ describe("movementCostMultiplier helper", () => {
         isCrawling: true,
       }),
     ).toBe(3);
+  });
+
+  it("dragging a grappled creature adds 1 extra foot of cost", () => {
+    expect(
+      movementCostMultiplier({
+        ...baseParams,
+        isDraggingGrappledCreature: true,
+      }),
+    ).toBe(2);
   });
 });
 
@@ -2126,11 +2136,11 @@ describe("grapple", () => {
     expect(ctx(a).grappled).toBe(true);
   });
 
-  it("START_TURN with isGrappling halves speed", () => {
+  it("START_TURN with isGrappling keeps full speed", () => {
     const a = create();
     enterCombat(a);
     a.send({ type: "START_TURN", isGrappling: true });
-    expect(ctx(a).effectiveSpeed).toBe(15);
+    expect(ctx(a).effectiveSpeed).toBe(30);
   });
 
   it("START_TURN with isGrappling skips penalty for targets two sizes smaller", () => {

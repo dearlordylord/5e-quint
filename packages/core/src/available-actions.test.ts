@@ -18,11 +18,13 @@ import {
 import { battleMachine } from "#/battle-machine.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { creatureMachine } from "#/machine.ts";
+import {
+  GOBLIN_WARRIOR,
+  statBlockToInitCreatureConfig,
+} from "#/monster-catalog.ts";
 import type { DndMachineInput } from "#/machine-types.ts";
-import type {
-  BattleWeaponProfile,
-  CreatureId as CreatureIdT,
-} from "#/types.ts";
+import { fighterStartBattleLoadout } from "#/player-loadouts.ts";
+import type { CreatureId as CreatureIdT } from "#/types.ts";
 import {
   abilityModifier,
   armorClass,
@@ -357,15 +359,6 @@ const ZERO_BATTLE_SOT: Pick<
   deathSaveRoll: 0,
 };
 
-const LONGSWORD: BattleWeaponProfile = {
-  name: "Longsword",
-  damageType: "slashing",
-  isMelee: true,
-  damageDie: 8,
-  versatileDie: 10,
-  properties: new Set(["versatile"]),
-};
-
 function makeBattleActor(...events: ReadonlyArray<BattleEvent>) {
   const actor = createActor(battleMachine);
   actor.start();
@@ -409,6 +402,47 @@ function initBattleForParryDiscovery() {
         kind: "Monster",
         parryAcBonus: 2,
         initiativeRoll: 15,
+      },
+    ],
+  });
+}
+
+function initBattleForRedirectAttackDiscovery() {
+  return makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 20,
+        battleSide: "heroes",
+        battlePosition: { row: 0, col: 0 },
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 15,
+        battleSide: "goblins",
+        battlePosition: { row: 1, col: 0 },
+        battleReactionOptions: ["redirectAttack"],
+      },
+      {
+        id: CreatureId("C"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 10,
+        battleSide: "goblins",
+        battlePosition: { row: 1, col: 1 },
+      },
+      {
+        id: CreatureId("D"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 5,
+        battleSide: "heroes",
+        battlePosition: { row: 3, col: 3 },
       },
     ],
   });
@@ -511,7 +545,7 @@ function initBattleForAttackDiscovery() {
         maxHp: 20,
         kind: "PC",
         initiativeRoll: 15,
-        mainHandWeapon: LONGSWORD,
+        ...fighterStartBattleLoadout(),
       },
       { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
     ],
@@ -580,6 +614,22 @@ function initBattleForReadyWindow() {
     eotDt: "bludgeoning",
     eotConSave: true,
   });
+  return actor;
+}
+
+function initBattleForMonsterBonusActionDiscovery() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      statBlockToInitCreatureConfig({
+        id: CreatureId("A"),
+        statBlock: GOBLIN_WARRIOR,
+        initiativeRoll: 15,
+      }),
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
   return actor;
 }
 
@@ -2626,6 +2676,38 @@ describe("available actions contract", () => {
     ]);
   });
 
+  test("battle discovery exposes Redirect Attack only with valid allied swap targets", () => {
+    const actor = initBattleForRedirectAttackDiscovery();
+
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 5,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+    });
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
+      {
+        scope: "battle",
+        actorId: "B",
+        type: "USE_REDIRECT_ATTACK",
+        allyId: { options: ["C"] },
+        cost: cost(quota("reaction")),
+        outcome: {
+          summary:
+            "Use your reaction to swap places with a nearby Small or Medium ally and redirect the triggering attack",
+        },
+      },
+    ]);
+  });
+
   test("battle discovery and resolution expose standing from prone during the active turn", () => {
     const actor = initBattleForProneDiscovery();
 
@@ -3211,6 +3293,79 @@ describe("available actions contract", () => {
     ).toEqual({
       code: "INVALID_RUNTIME_INPUT",
       message: "Hide Stealth total must be an integer.",
+    });
+  });
+
+  test("battle discovery exposes generic monster bonus Hide and Disengage options when the combatant owns them", () => {
+    const actor = initBattleForMonsterBonusActionDiscovery();
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_BONUS_DISENGAGE",
+          cost: cost(quota("bonusAction")),
+        }),
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_BONUS_HIDE",
+          cost: cost(quota("bonusAction")),
+        }),
+      ]),
+    );
+  });
+
+  test("battle resolution exposes bonus-action Hide and Disengage without monster-specific commands", () => {
+    const actor = initBattleForMonsterBonusActionDiscovery();
+    const context = actor.getSnapshot().context;
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_BONUS_DISENGAGE",
+      }),
+    ).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_BONUS_DISENGAGE",
+      },
+      outcome:
+        "Spend your bonus action so your movement does not provoke opportunity attacks this turn",
+      runtime: "none",
+      event: { type: "BATTLE_BONUS_DISENGAGE" },
+    });
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_BONUS_HIDE",
+        stealthTotal: 19,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      }),
+    ).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_BONUS_HIDE",
+        stealthTotal: 19,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      },
+      outcome:
+        "Spend your bonus action to hide using explicit Stealth, cover or obscurement, and line-of-sight facts",
+      runtime: "none",
+      event: {
+        type: "BATTLE_BONUS_HIDE",
+        stealthTotal: 19,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      },
     });
   });
 

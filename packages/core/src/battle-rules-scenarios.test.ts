@@ -7,6 +7,10 @@ import { battleMainHandDamageDie } from "#/battle-machine-creature.ts";
 import { breakConcentrationAndPropagate } from "#/battle-machine-helpers.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
+import {
+  GOBLIN_WARRIOR,
+  statBlockToInitCreatureConfig,
+} from "#/monster-catalog.ts";
 import type {
   BattleWeaponProfile,
   CreatureId as CreatureIdT,
@@ -202,6 +206,52 @@ function initHitReactionBattle() {
         kind: "Monster",
         parryAcBonus: 2,
         initiativeRoll: 5,
+      },
+    ],
+  });
+  return actor;
+}
+
+function initRedirectAttackBattle() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  send(actor, {
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 20,
+        battleSide: "heroes",
+        battlePosition: { row: 0, col: 0 },
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: new Set(["shield"]),
+        initiativeRoll: 15,
+        battleSide: "goblins",
+        battlePosition: { row: 1, col: 1 },
+      },
+      {
+        id: CreatureId("C"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 10,
+        battleSide: "goblins",
+        battlePosition: { row: 1, col: 0 },
+        battleReactionOptions: ["redirectAttack"],
+      },
+      {
+        id: CreatureId("D"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 5,
+        battleSide: "heroes",
+        battlePosition: { row: 3, col: 3 },
       },
     ],
   });
@@ -938,6 +988,57 @@ describe("battle rules scenario regressions", () => {
 
     expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage");
     expect(creature(actor, "B").hp).toBe(13);
+  });
+
+  it("phase_3: Redirect Attack swaps positions, retargets the hit, and rebuilds the new target's hit window", () => {
+    const actor = initRedirectAttackBattle();
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("C"),
+      attackRoll: 11,
+      diceCount: 1,
+      dieSize: 8,
+      dmg: 7,
+      dt: "slashing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit");
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("C"))).toBe(true);
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: CreatureId("C"),
+      decision: {
+        tag: "RRedirectAttack",
+        allyId: CreatureId("B"),
+      },
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAttackHit");
+    expect(ctx(actor).awaitCtx?.eligible.has(CreatureId("B"))).toBe(true);
+    expect(creature(actor, "C").battlePosition).toEqual({ row: 1, col: 1 });
+    expect(creature(actor, "B").battlePosition).toEqual({ row: 1, col: 0 });
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: CreatureId("B"),
+      decision: { tag: "RShield" },
+    });
+    send(actor, {
+      type: "BATTLE_RESOLVE_HIT_REACTION",
+      reactorId: null,
+      decision: { tag: "RPass" },
+    });
+
+    expect(ctx(actor).awaitCtx).toBeNull();
+    expect(creature(actor, "B").hp).toBe(20);
+    expect(creature(actor, "B").reactionAvailable).toBe(false);
+    expect(creature(actor, "C").reactionAvailable).toBe(false);
   });
 
   it("phase_1: the damage window is skipped when the target has no legal damage reaction", () => {
@@ -1997,6 +2098,43 @@ describe("battle rules scenario regressions", () => {
     );
   });
 
+  it("monster bonus Disengage spends the bonus action and keeps the action available", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, { type: "BATTLE_BONUS_DISENGAGE" });
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+    expect(creature(actor, "A").bonusActionUsed).toBe(true);
+    expect(creature(actor, "A").disengaged).toBe(true);
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
+      threatened: new Set([CreatureId("B")]),
+    });
+
+    expect(ctx(actor).movementCtx).toBeNull();
+    expect(creature(actor, "B").reactionAvailable).toBe(true);
+  });
+
   it("natural_20: Dodge suppresses ally-adjacent Sneak Attack until the start of the dodger's next turn", () => {
     const actor = initSneakAttackBattle();
     startTurn(actor);
@@ -2474,7 +2612,7 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").actionsRemaining).toBe(0);
   });
 
-  it("natural_20: dragging a grappled target halves the grappler's speed unless the target is two sizes smaller", () => {
+  it("natural_20: dragging a grappled target keeps speed but doubles the movement cost unless the target is two sizes smaller", () => {
     const actor = initTwoPcBattle();
     startTurn(actor);
 
@@ -2484,8 +2622,8 @@ describe("battle rules scenario regressions", () => {
       targetSaveFailed: true,
     });
 
-    expect(creature(actor, "A").effectiveSpeed).toBe(15);
-    expect(creature(actor, "A").movementRemaining).toBe(15);
+    expect(creature(actor, "A").effectiveSpeed).toBe(30);
+    expect(creature(actor, "A").movementRemaining).toBe(30);
 
     send(actor, {
       type: "BATTLE_MOVE",
@@ -2493,7 +2631,7 @@ describe("battle rules scenario regressions", () => {
       threatened: new Set(),
     });
 
-    expect(creature(actor, "A").movementRemaining).toBe(10);
+    expect(creature(actor, "A").movementRemaining).toBe(20);
 
     const exemptActor = initTwoPcBattle({
       attackerSize: "huge",
@@ -2522,8 +2660,8 @@ describe("battle rules scenario regressions", () => {
     });
 
     expect(creature(actor, "A").actionsRemaining).toBe(0);
-    expect(creature(actor, "A").effectiveSpeed).toBe(15);
-    expect(creature(actor, "A").movementRemaining).toBe(15);
+    expect(creature(actor, "A").effectiveSpeed).toBe(30);
+    expect(creature(actor, "A").movementRemaining).toBe(30);
 
     send(actor, { type: "BATTLE_RELEASE_GRAPPLE" });
 
@@ -2533,6 +2671,30 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").movementRemaining).toBe(30);
     expect(creature(actor, "B").grappled).toBe(false);
     expect(creature(actor, "B").grappledBy).toBeNull();
+  });
+
+  it("natural_20: releasing a grapple mid-turn does not refund spent movement to the grappler", () => {
+    const actor = initTwoPcBattle();
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      targetSaveFailed: true,
+    });
+    send(actor, {
+      type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
+      threatened: new Set(),
+    });
+
+    expect(creature(actor, "A").movementRemaining).toBe(20);
+
+    send(actor, { type: "BATTLE_RELEASE_GRAPPLE" });
+
+    expect(creature(actor, "A").effectiveSpeed).toBe(30);
+    expect(creature(actor, "A").movementRemaining).toBe(20);
+    expect(creature(actor, "B").grappled).toBe(false);
   });
 
   it("natural_20: a successful escape spends the action and ends the grapple", () => {
@@ -4518,6 +4680,172 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").hp).toBe(19);
   });
 
+  it("applies the goblin stat-block rider only when the hit had net Advantage", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "slashing",
+      tAc: armorClass(10),
+      crit: false,
+      damageQualifiers: new Set(),
+      ...DEFAULT_ATTACK_CONTEXT,
+      targetCanSeeAttacker: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(13);
+  });
+
+  it("does not apply the goblin stat-block rider when Advantage and Disadvantage cancel", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "slashing",
+      tAc: armorClass(10),
+      crit: false,
+      damageQualifiers: new Set(),
+      ...DEFAULT_ATTACK_CONTEXT,
+      targetCanSeeAttacker: false,
+      attackerCanSeeTarget: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(15);
+  });
+
+  it("can apply the goblin rider on a selected shortbow attack lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          primaryAttackName: "shortbow",
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      tAc: armorClass(10),
+      crit: false,
+      damageQualifiers: new Set(),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isMelee: false,
+      attackerWithin5ft: false,
+      attackerWithin60ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(13);
+  });
+
+  it("doubles the goblin rider dice on a critical hit", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 20,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 10,
+      dt: "slashing",
+      tAc: armorClass(10),
+      crit: true,
+      damageQualifiers: new Set(),
+      ...DEFAULT_ATTACK_CONTEXT,
+      targetCanSeeAttacker: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(6);
+  });
+
   it("runbook_7: Hide stores discovery DC and Search below that DC does not reveal", () => {
     const actor = initTwoPcBattle();
     startTurn(actor);
@@ -4551,6 +4879,59 @@ describe("battle rules scenario regressions", () => {
       outOfEnemyLineOfSight: true,
     });
 
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
+    expect(creature(actor, "A").invisible).toBe(false);
+  });
+
+  it("monster bonus Hide stores hidden state and spends only the bonus action", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_BONUS_HIDE",
+      stealthTotal: 18,
+      hasCoverOrObscurement: true,
+      outOfEnemyLineOfSight: true,
+    });
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+    expect(creature(actor, "A").bonusActionUsed).toBe(true);
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(18);
+    expect(creature(actor, "A").invisible).toBe(true);
+  });
+
+  it("bonus Hide and Disengage are ignored when the active creature does not own the option", () => {
+    const actor = initTwoPcBattle();
+    startTurn(actor);
+
+    send(actor, { type: "BATTLE_BONUS_DISENGAGE" });
+    send(actor, {
+      type: "BATTLE_BONUS_HIDE",
+      stealthTotal: 18,
+      hasCoverOrObscurement: true,
+      outOfEnemyLineOfSight: true,
+    });
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+    expect(creature(actor, "A").bonusActionUsed).toBe(false);
+    expect(creature(actor, "A").disengaged).toBe(false);
     expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
     expect(creature(actor, "A").invisible).toBe(false);
   });

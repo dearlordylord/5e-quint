@@ -1,6 +1,8 @@
 import { Schema } from "effect";
 
 import { MONSTER_STAT_BLOCK_IDS } from "@dnd/core/monster-catalog.ts";
+import { fighterStartBattleLoadout } from "@dnd/core/player-loadouts.ts";
+import type { BattleWeaponProfile } from "@dnd/core/types.ts";
 
 import type { CreatureActionHost } from "./host-factories.ts";
 import { errorContent } from "./server-shared.ts";
@@ -14,14 +16,16 @@ const InitiativeRollSchema = Schema.Number.pipe(
 
 export const StartBattleInputSchema = Schema.Struct({
   fighterId: Schema.String,
-  goblinId: Schema.String,
+  monsterId: Schema.String,
   fighterInitiativeRoll: Schema.optional(InitiativeRollSchema),
   fighterInitiativeRollB: Schema.optional(InitiativeRollSchema),
   fighterSurprised: Schema.optional(Schema.Boolean),
-  goblinStatBlockId: Schema.optional(Schema.Literal(...MONSTER_STAT_BLOCK_IDS)),
-  goblinInitiativeRoll: Schema.optional(InitiativeRollSchema),
-  goblinInitiativeRollB: Schema.optional(InitiativeRollSchema),
-  goblinSurprised: Schema.optional(Schema.Boolean),
+  monsterStatBlockId: Schema.optional(
+    Schema.Literal(...MONSTER_STAT_BLOCK_IDS),
+  ),
+  monsterInitiativeRoll: Schema.optional(InitiativeRollSchema),
+  monsterInitiativeRollB: Schema.optional(InitiativeRollSchema),
+  monsterSurprised: Schema.optional(Schema.Boolean),
 });
 
 export type StartBattleInput = Schema.Schema.Type<
@@ -30,6 +34,16 @@ export type StartBattleInput = Schema.Schema.Type<
 
 function defined<T>(value: T | undefined): value is T {
   return value !== undefined;
+}
+
+function encodeBattleWeaponProfile(profile: BattleWeaponProfile) {
+  return {
+    ...profile,
+    properties: [...profile.properties],
+    ...(profile.damageQualifiers != null
+      ? { damageQualifiers: [...profile.damageQualifiers] }
+      : {}),
+  };
 }
 
 export function decodeStartBattleInput(args: unknown) {
@@ -49,6 +63,7 @@ export function buildStartBattleCommand(
 ) {
   const context = host.actor.getSnapshot().context;
   const fighterLevel = context.classStates.fighter?.level ?? 0;
+  const fighterLoadout = fighterStartBattleLoadout();
 
   if (fighterLevel <= 0) {
     return errorContent(
@@ -57,7 +72,7 @@ export function buildStartBattleCommand(
     );
   }
 
-  if (input.fighterId === input.goblinId) {
+  if (input.fighterId === input.monsterId) {
     return errorContent(
       "Battle creature IDs must be unique.",
       "START_BATTLE_DUPLICATE_CREATURE_ID",
@@ -74,6 +89,13 @@ export function buildStartBattleCommand(
         kind: "PC" as const,
         fighterLevel,
         baseWalkSpeed: context.baseWalkSpeed,
+        ...(fighterLoadout.mainHandWeapon != null
+          ? {
+              mainHandWeapon: encodeBattleWeaponProfile(
+                fighterLoadout.mainHandWeapon,
+              ),
+            }
+          : {}),
         ...(defined(input.fighterInitiativeRoll)
           ? { initiativeRoll: input.fighterInitiativeRoll }
           : {}),
@@ -85,17 +107,17 @@ export function buildStartBattleCommand(
           : {}),
       },
       {
-        id: input.goblinId,
+        id: input.monsterId,
         kind: "Monster" as const,
-        statBlockId: input.goblinStatBlockId ?? "goblinMinion",
-        ...(defined(input.goblinInitiativeRoll)
-          ? { initiativeRoll: input.goblinInitiativeRoll }
+        statBlockId: input.monsterStatBlockId ?? "goblinMinion",
+        ...(defined(input.monsterInitiativeRoll)
+          ? { initiativeRoll: input.monsterInitiativeRoll }
           : {}),
-        ...(defined(input.goblinInitiativeRollB)
-          ? { initiativeRollB: input.goblinInitiativeRollB }
+        ...(defined(input.monsterInitiativeRollB)
+          ? { initiativeRollB: input.monsterInitiativeRollB }
           : {}),
-        ...(defined(input.goblinSurprised)
-          ? { surprised: input.goblinSurprised }
+        ...(defined(input.monsterSurprised)
+          ? { surprised: input.monsterSurprised }
           : {}),
       },
     ],
