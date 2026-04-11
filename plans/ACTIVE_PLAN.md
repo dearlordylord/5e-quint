@@ -190,8 +190,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 7     | A - Condition Consequence Table Completion Research                   | done                                          | none                                                                      | none                                                                  | Closed 2026-04-10: rejected redundant/single-condition table columns, deferred initiative modifiers, and landed the SRD 5.2.1 incapacitated speech fix                                                                                                                                                             | Completed; no table expansion needed       |
 | 8     | C - ResourceCost Typed Refactor                                       | done                                          | none                                                                      | Cleaner MCP/UI cost display and future resource docs                  | Closed 2026-04-10: `ResourceCost` now models immediate selectable costs as typed pool/quota items, docs define the shared vocabulary, and MCP/core tests cover the new shape                                                                                                                                       | Completed; no downstream reorder needed    |
 | 9     | D - Battle Attack Runtime/Session Boundary                            | done                                          | none                                                                      | F, G, MCP2-A, public `BATTLE_ATTACK`; off-hand/legendary/riders       | Closed 2026-04-10: documented the first-slice `BATTLE_ATTACK` boundary. Public token carries only `targetId` and `knockOut`; runtime `battleAttack` carries explicit table/session facts plus rolled `weaponDamage` and optional `sneakAttackDamage`; battle derives crit, weapon payload, and damage aggregation. | Completed; MCP2-A can consume directly     |
-| 10    | MCP1-A - Session Host Architecture                                    | done                                          | MCP0 tasks done or intentionally deferred                                 | MCP1-C, MCP2-A                                                        | Closed 2026-04-10: stdio now runs through an in-process session router that auto-promotes `BATTLE_INIT` onto a battle host while keeping encounter drafts / character-list refs as optional adapter-only metadata and leaving mutable combat state in the machines.                                                | Completed; shared public route established |
-| 11    | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry        | done                                          | MCP0 tasks done or intentionally deferred                                 | MCP1-C, MCP2-B                                                        | Closed 2026-04-10: core now owns a runtime monster statblock catalog, `BATTLE_INIT` can reference `goblinMinion` by `statBlockId`, and future provenance is documented without adding an MCP registry or widening Quint fixtures.                                                                                  | Completed; init hook is ready              |
+| 10    | MCP1-A - Session Host Architecture                                    | done                                          | MCP0 tasks done or intentionally deferred                                 | MCP1-C, MCP2-A                                                        | Closed 2026-04-10: stdio now runs through an in-process session router that auto-promotes `BATTLE_INIT` onto a battle host while keeping encounter drafts / character-list refs as optional adapter-only metadata and leaving mutable combat state in the machines. Task ownership is session routing/lifecycle only. | Completed; shared public route established |
+| 11    | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry        | done                                          | MCP0 tasks done or intentionally deferred                                 | MCP1-C, MCP2-B                                                        | Closed 2026-04-10: core now owns a runtime monster statblock catalog, `BATTLE_INIT` can reference `goblinMinion` by `statBlockId`, and SRD provenance is documented without adding an MCP registry, parser/importer, or widened Quint fixtures.                                                                  | Completed; init hook is ready              |
 | 12    | E - Movement And Help Geometry/Session Ownership                      | ready-for-research                            | none                                                                      | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK`                            | Decide visibility/reach/threat/path/provocation ownership                                                                                                                                                                                                                                                          | Research only                              |
 | 13    | J - Generic Table Events, Environmental Hazards, And Monster Commands | ready-for-research                            | none                                                                      | Future raw table event exposure and monster command work              | Pick one narrow source/provenance family or keep deferred                                                                                                                                                                                                                                                          | Research only                              |
 | 14    | F - Legendary Attack Payload Ownership                                | ready-for-research                            | monster stat-block payload ownership                                      | Public `BATTLE_LEGENDARY_ATTACK`                                      | Reuse Task D's attack boundary, then define stat-block Legendary Action payload ownership                                                                                                                                                                                                                          | Research before implementation             |
@@ -243,7 +243,7 @@ Recommended first coding-loop tasks:
 
 Do not widen `BATTLE_ATTACK` implementation beyond the Task D contract. The remaining risk is scope creep into off-hand attacks, hit reactions, legendary actions, and riders.
 
-Do not start the full fighter-vs-goblin implementation before Task MCP1-C and Task MCP2-A are complete. Task D has produced the public attack boundary; the remaining work is encounter start plus the actual `BATTLE_ATTACK` implementation.
+Do not start the full fighter-vs-goblin implementation before Task MCP1-C and Task MCP2-A are complete. Task D has produced the public attack boundary; the remaining work is encounter start plus the actual `BATTLE_ATTACK` implementation. Treat Task MCP1-A as session-routing ownership and Task MCP1-B as statblock/catalog ownership.
 
 ### Task 1 - MCP0-A - Dead-Creature Condition Mutation Bug
 
@@ -1113,7 +1113,7 @@ Inputs:
 Implementation output:
 
 - Reuse the existing `StatBlock` shape and helper path instead of introducing a second monster schema.
-- Add an explicit provenance note for future entries: `.references/srd-5.2.1/` is the default source of truth; other corpora require explicit owner approval; 5etools is research-only unless later promoted by a plan change.
+- Add an explicit provenance note for future entries: `.references/srd-5.2.1/` is the source of truth for this batch; other corpora require explicit owner approval; 5etools is research-only unless later promoted by a plan change.
 - Add a core-owned Goblin Minion entry in the shared facility.
 - Add the smallest projection from that entry into the battle-init/creature-init path chosen by Task MCP1-A.
 - If Quint parity is extended, keep the Goblin Minion definition aligned across Quint and TS rather than duplicating the numbers in MCP.
@@ -1134,14 +1134,14 @@ Implementation output:
   - CR 1/8, PB +2;
   - dagger attack +4, reach 5 ft. or range 20/60 ft., average 4 Piercing.
 - Defer Goblin Warrior and Nimble Escape unless the needed attack-rider and bonus-action support already exists.
-- Do not build a bulk corpus importer or an MCP-local monster registry in this task.
+- Do not build a parser, importer, bulk corpus ingestion path, or an MCP-local monster registry in this task.
 
 Acceptance criteria:
 
 - There is one core-owned source of truth for named monster stat blocks.
 - Goblin Minion can be instantiated from that source without hand-written RAW literals in MCP.
 - MCP selects or references the core content; it does not repeat RAW numbers or maintain a second monster registry.
-- Future statblock provenance is documented clearly enough that later entries can follow the same sourcing rule without reopening ownership.
+- Future statblock provenance is documented clearly enough that later entries can follow the same SRD-first sourcing rule without reopening ownership.
 - Goblin Warrior remains deferred until advantage-based damage rider support exists.
 - No bulk importer or non-SRD corpus ingestion is introduced by this task.
 - If Quint changes, the bridge projection and tests stay aligned with the same Goblin Minion facts.
@@ -1377,8 +1377,8 @@ Purpose:
 
 Inputs:
 
-- Session host from Task MCP1-A.
-- Goblin compiler/content from Task MCP1-B.
+- Session router/lifecycle from Task MCP1-A.
+- Shared statblock catalog/projection from Task MCP1-B.
 - Existing `BATTLE_INIT` control command.
 - Fighter feature/config helpers, including `fightingStyleBattleModifiers` if relevant.
 
