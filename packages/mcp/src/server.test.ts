@@ -4248,7 +4248,7 @@ describe("SessionRouter", () => {
     });
   });
 
-  test("start_battle promotes the router onto a battle host using the fighter snapshot and goblin stat block", () => {
+  test("start_battle promotes the router onto a battle host using the fighter snapshot and monster stat block", () => {
     const router = createSessionRouter(createDemoHost(), {
       encounterDraft: { participantIds: ["fighter", "goblin-1"] },
       characterListRefs: [{ listId: "party-alpha" }],
@@ -4256,9 +4256,9 @@ describe("SessionRouter", () => {
 
     const started = router.handleToolCall("start_battle", {
       fighterId: "fighter",
-      goblinId: "goblin-1",
+      monsterId: "goblin-1",
       fighterInitiativeRoll: 20,
-      goblinInitiativeRoll: 8,
+      monsterInitiativeRoll: 8,
     });
 
     expect("isError" in started).toBe(false);
@@ -4325,7 +4325,7 @@ describe("SessionRouter", () => {
     );
   });
 
-  test("start_battle supports the full fighter vs goblin MCP attack workflow without mutating pre-battle session state", () => {
+  test("start_battle supports the full fighter vs monster MCP attack workflow without mutating pre-battle session state", () => {
     const creatureHost = createDemoHost();
     const router = createSessionRouter(creatureHost, {
       encounterDraft: { participantIds: ["fighter", "goblin-1"] },
@@ -4334,9 +4334,9 @@ describe("SessionRouter", () => {
 
     const started = router.handleToolCall("start_battle", {
       fighterId: "fighter",
-      goblinId: "goblin-1",
+      monsterId: "goblin-1",
       fighterInitiativeRoll: 20,
-      goblinInitiativeRoll: 8,
+      monsterInitiativeRoll: 8,
     });
 
     expect("isError" in started).toBe(false);
@@ -4435,8 +4435,8 @@ describe("SessionRouter", () => {
 
     const started = router.handleToolCall("start_battle", {
       fighterId: "fighter",
-      goblinId: "goblin-1",
-      goblinStatBlockId: "badGoblin",
+      monsterId: "goblin-1",
+      monsterStatBlockId: "badGoblin",
     });
 
     expect("isError" in started && started.isError).toBe(true);
@@ -4449,7 +4449,7 @@ describe("SessionRouter", () => {
 
     const started = router.handleToolCall("start_battle", {
       fighterId: "fighter",
-      goblinId: "fighter",
+      monsterId: "fighter",
     });
 
     expect("isError" in started && started.isError).toBe(true);
@@ -4465,12 +4465,12 @@ describe("SessionRouter", () => {
 
     router.handleToolCall("start_battle", {
       fighterId: "fighter",
-      goblinId: "goblin-1",
+      monsterId: "goblin-1",
     });
 
     const restarted = router.handleToolCall("start_battle", {
       fighterId: "fighter-2",
-      goblinId: "goblin-2",
+      monsterId: "goblin-2",
     });
 
     expect("isError" in restarted && restarted.isError).toBe(true);

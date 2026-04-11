@@ -167,7 +167,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 23,
       "id": "MCP3-A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Goblin Warrior/Nimble Escape Follow-Up"
     },
     {
@@ -258,7 +258,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 20    | MCP3-A1 - Stat-Block Advantage-Damage Rider Ownership                 | done     | MCP2-A                                                                   | MCP3-A                                                                | Closed 2026-04-10: Goblin Warrior/Boss attack metadata now stores a minimal same-type `1d4` advantage-hit rider on the named stat-block attack, `statBlockToInitCreatureConfig` can project a selected named attack lane into battle without exposing new public catalog IDs or MCP payloads, and battle/spec damage resolution apply the rider only on hits with net Advantage (including crit doubling of the rider dice average). RAW check: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Warrior/Boss entries and `UBIQUITOUS_LANGUAGE.md` Advantage/Attack Roll terminology reviewed. `/simplify` rounds 1-2 removed public-schema exposure and collapsed the rider metadata to same-type dice only. | Completed; warrior path now also has generic bonus-action support |
 | 21    | MCP3-A2 - Monster Bonus-Action Option Boundary                        | done     | MCP2-A                                                                   | MCP3-A                                                                | Closed 2026-04-11: battle/spec now expose generic `BATTLE_BONUS_HIDE` / `BATTLE_BONUS_DISENGAGE` only for combatants that own `battleBonusActionOptions`; raw and catalog `BATTLE_INIT` can project those options; Nimble Escape stays goblin-owned data, not a goblin-specific public command. RAW check: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Warrior/Boss `Nimble Escape`, `.references/srd-5.2.1/Rules-Glossary.md` `Bonus Action`, `Disengage [Action]`, and `Hide [Action]`, plus `UBIQUITOUS_LANGUAGE.md` reviewed. `/simplify` rounds 1-2 converged after tightening direct-event ownership guards and removing the schema/parity gaps. | Completed; Warrior path for MCP3-A is unblocked, Goblin Boss still needs MCP3-A3 for Redirect Attack |
 | 22    | MCP3-A3 - Monster Reaction Retarget/Swap Boundary                     | done     | MCP2-A                                                                   | MCP3-A                                                                | Closed 2026-04-11: `PIAttackHit` now owns generic `RRedirectAttack`, battle state owns redirect-side `battlePosition` / `battleSide` / redirect-candidate AC facts, Redirect Attack swaps positions and retargets the pending hit inside the hit window, and the rebuilt defender gets a fresh target-facing reaction window before damage proceeds. RAW check: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Boss `Redirect Attack`, `.references/srd-5.2.1/Monsters/Overview.md`, `.references/srd-5.2.1/Rules-Glossary.md` `Ally`, and `UBIQUITOUS_LANGUAGE.md` reviewed. `/simplify` round 1 added owned ally AC instead of a guessed redirect target AC; round 2 converged after collapsing redirect legality to battle-owned side/position checks and keeping the public surface on generic battle reactions. | Completed; Goblin Boss path for MCP3-A is now ready |
-| 23    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | ready-for-implementation-after-light-research | MCP3-A1, MCP3-A2; optionally MCP3-A3 for Goblin Boss                     | fuller goblin behavior                                                | Land the combined goblin follow-up now that the Warrior slices are done and Goblin Boss `Redirect Attack` is available inside the generic hit-reaction surface                                                                                                                                                                                                                                    | Warrior and Boss paths are both ready now          |
+| 23    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | done     | MCP3-A1, MCP3-A2; optionally MCP3-A3 for Goblin Boss                     | fuller goblin behavior                                                | Closed 2026-04-11: `start_battle` now uses a generic monster descriptor instead of goblin-named MCP fields, the core runtime catalog publishes `goblinWarrior` and `goblinBoss`, and focused core/MCP tests prove Nimble Escape bonus actions, advantage-hit riders, and Redirect Attack stay on the generic stat-block/battle surfaces rather than on goblin-specific MCP shortcuts. RAW check: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Warrior/Boss, `.references/srd-5.2.1/Monsters/Overview.md`, and `UBIQUITOUS_LANGUAGE.md` reviewed. `/simplify` round 1 removed the goblin-named `start_battle` schema surface; round 2 re-checked for redundant MCP aliases and converged with no further task-scoped reductions. | Completed; no downstream status changes            |
 | 24    | H - PassiveModifiers Sub-Record                                       | deferred | none                                                                      | Possible passive modifier cleanup                                     | Only revisit if the batch selects passive modifier restructuring                                                                                                                                                                                                                                                                                                                                   | Not current-batch work                             |
 | 25    | I - Build-Map / Hole Metadata                                         | deferred | Concrete consumer, possibly D                                             | Future token-hole metadata                                            | Only revisit when attack boundary, transcript disambiguation, or UI needs it                                                                                                                                                                                                                                                                                                                       | Not current-batch work                             |
 
@@ -2073,7 +2073,7 @@ Extra research needed:
 
 ### Task 22 - MCP3-A3 - Monster Reaction Retarget/Swap Boundary
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: Task MCP2-A.
 
@@ -2153,7 +2153,7 @@ Extra research needed:
 
 ### Task 23 - MCP3-A - Goblin Warrior/Nimble Escape Follow-Up
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: Task MCP3-A1, Task MCP3-A2; optionally Task MCP3-A3 for Goblin Boss.
 
@@ -2183,10 +2183,23 @@ Verification:
 - Focused stat-block/action tests.
 - Tier 1 battle MBT if battle semantics change.
 
-Extra research needed:
+Closeout:
 
-- Warrior path: no; Tasks MCP3-A1 and MCP3-A2 are done.
-- Goblin Boss extension: light only, via Task MCP3-A3.
+- Landed the combined follow-up by exposing `goblinWarrior` and `goblinBoss` through the core runtime stat-block catalog and by removing goblin-named MCP `start_battle` fields in favor of generic `monsterId` / `monsterStatBlockId` descriptors.
+- Focused verification covers the generic `statBlockId` `BATTLE_INIT` path in core plus the generic session-router `start_battle` path in MCP, including Goblin Warrior Nimble Escape projection and Goblin Boss Redirect Attack ownership.
+
+Verification notes:
+
+- RAW check completed against `.references/srd-5.2.1/Monsters/Monsters-E-G.md` (Goblin Warrior, Goblin Boss), `.references/srd-5.2.1/Monsters/Overview.md`, and `UBIQUITOUS_LANGUAGE.md`.
+- `/simplify` round 1 removed goblin-specific MCP field names and descriptions from `start_battle`.
+- `/simplify` round 2 re-checked for duplicate session surfaces and redundant state; kept the single generic monster descriptor and found no further task-scoped reductions.
+
+Plan Impact:
+
+- Status: applied.
+- Affected tasks:
+  - `MCP3-A`: mark done; no downstream queue/status changes required.
+- Plan edits: updated Ralph index status, DAG row 23 closeout, and task 23 closeout/verification text.
 
 ### Task 24 - H - PassiveModifiers Sub-Record
 

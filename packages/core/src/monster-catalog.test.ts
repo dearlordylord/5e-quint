@@ -101,7 +101,11 @@ describe("monster catalog", () => {
   });
 
   it("stores goblin rider metadata on named attacks without exposing new public IDs", () => {
-    expect(MONSTER_STAT_BLOCK_IDS).toEqual(["goblinMinion"]);
+    expect(MONSTER_STAT_BLOCK_IDS).toEqual([
+      "goblinMinion",
+      "goblinWarrior",
+      "goblinBoss",
+    ]);
     expect(GOBLIN_WARRIOR.attacks.scimitar.extraDamageOnAdvantageHit).toEqual({
       diceCount: 1,
       dieSize: 4,
@@ -118,6 +122,11 @@ describe("monster catalog", () => {
       diceCount: 1,
       dieSize: 4,
     });
+  });
+
+  it("publishes Goblin Warrior and Goblin Boss through the generic catalog lookup", () => {
+    expect(getMonsterStatBlock("goblinWarrior")).toBe(GOBLIN_WARRIOR);
+    expect(getMonsterStatBlock("goblinBoss")).toBe(GOBLIN_BOSS);
   });
 
   it("can project a selected named stat-block attack into the battle attack lane", () => {
@@ -191,6 +200,70 @@ describe("monster catalog", () => {
         isMelee: true,
         damageDie: 4,
         properties: new Set(["finesse", "light", "thrown"]),
+      },
+    });
+  });
+
+  it("accepts Goblin Warrior and Goblin Boss through the generic statBlockId surface", () => {
+    const warriorCommand = Schema.decodeSync(ControlCommandSchema)({
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "goblin-warrior-1",
+          kind: "Monster",
+          statBlockId: "goblinWarrior",
+        },
+      ],
+    });
+    const bossCommand = Schema.decodeSync(ControlCommandSchema)({
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "goblin-boss-1",
+          kind: "Monster",
+          statBlockId: "goblinBoss",
+        },
+      ],
+    });
+
+    expect(warriorCommand.type).toBe("BATTLE_INIT");
+    expect(bossCommand.type).toBe("BATTLE_INIT");
+    if (
+      warriorCommand.type !== "BATTLE_INIT" ||
+      bossCommand.type !== "BATTLE_INIT"
+    ) {
+      throw new Error("expected BATTLE_INIT");
+    }
+
+    expect(
+      toBattleInitCreatureConfig(warriorCommand.creatures[0]),
+    ).toMatchObject({
+      id: CreatureId("goblin-warrior-1"),
+      kind: "Monster",
+      maxHp: 10,
+      battleBonusActionOptions: ["disengage", "hide"],
+      mainHandWeapon: {
+        name: "Scimitar",
+        statBlockAttackSource: {
+          name: "Scimitar",
+          extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
+        },
+      },
+    });
+    expect(toBattleInitCreatureConfig(bossCommand.creatures[0])).toMatchObject({
+      id: CreatureId("goblin-boss-1"),
+      kind: "Monster",
+      maxHp: 21,
+      battleBonusActionOptions: ["disengage", "hide"],
+      battleReactionOptions: ["redirectAttack"],
+      mainHandWeapon: {
+        name: "Scimitar",
+        statBlockAttackSource: {
+          name: "Scimitar",
+          extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
+        },
       },
     });
   });

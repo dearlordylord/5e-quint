@@ -16,14 +16,16 @@ const InitiativeRollSchema = Schema.Number.pipe(
 
 export const StartBattleInputSchema = Schema.Struct({
   fighterId: Schema.String,
-  goblinId: Schema.String,
+  monsterId: Schema.String,
   fighterInitiativeRoll: Schema.optional(InitiativeRollSchema),
   fighterInitiativeRollB: Schema.optional(InitiativeRollSchema),
   fighterSurprised: Schema.optional(Schema.Boolean),
-  goblinStatBlockId: Schema.optional(Schema.Literal(...MONSTER_STAT_BLOCK_IDS)),
-  goblinInitiativeRoll: Schema.optional(InitiativeRollSchema),
-  goblinInitiativeRollB: Schema.optional(InitiativeRollSchema),
-  goblinSurprised: Schema.optional(Schema.Boolean),
+  monsterStatBlockId: Schema.optional(
+    Schema.Literal(...MONSTER_STAT_BLOCK_IDS),
+  ),
+  monsterInitiativeRoll: Schema.optional(InitiativeRollSchema),
+  monsterInitiativeRollB: Schema.optional(InitiativeRollSchema),
+  monsterSurprised: Schema.optional(Schema.Boolean),
 });
 
 export type StartBattleInput = Schema.Schema.Type<
@@ -70,7 +72,7 @@ export function buildStartBattleCommand(
     );
   }
 
-  if (input.fighterId === input.goblinId) {
+  if (input.fighterId === input.monsterId) {
     return errorContent(
       "Battle creature IDs must be unique.",
       "START_BATTLE_DUPLICATE_CREATURE_ID",
@@ -105,17 +107,17 @@ export function buildStartBattleCommand(
           : {}),
       },
       {
-        id: input.goblinId,
+        id: input.monsterId,
         kind: "Monster" as const,
-        statBlockId: input.goblinStatBlockId ?? "goblinMinion",
-        ...(defined(input.goblinInitiativeRoll)
-          ? { initiativeRoll: input.goblinInitiativeRoll }
+        statBlockId: input.monsterStatBlockId ?? "goblinMinion",
+        ...(defined(input.monsterInitiativeRoll)
+          ? { initiativeRoll: input.monsterInitiativeRoll }
           : {}),
-        ...(defined(input.goblinInitiativeRollB)
-          ? { initiativeRollB: input.goblinInitiativeRollB }
+        ...(defined(input.monsterInitiativeRollB)
+          ? { initiativeRollB: input.monsterInitiativeRollB }
           : {}),
-        ...(defined(input.goblinSurprised)
-          ? { surprised: input.goblinSurprised }
+        ...(defined(input.monsterSurprised)
+          ? { surprised: input.monsterSurprised }
           : {}),
       },
     ],

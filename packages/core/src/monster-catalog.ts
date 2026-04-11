@@ -29,7 +29,11 @@ import {
  * Quint unless a Quint consumer or parity test actually requires them.
  */
 
-export const MONSTER_STAT_BLOCK_IDS = ["goblinMinion"] as const;
+export const MONSTER_STAT_BLOCK_IDS = [
+  "goblinMinion",
+  "goblinWarrior",
+  "goblinBoss",
+] as const;
 export type MonsterStatBlockId = (typeof MONSTER_STAT_BLOCK_IDS)[number];
 
 export const MONSTER_STAT_BLOCK_PROVENANCE = {
@@ -214,9 +218,8 @@ export const GOBLIN_WARRIOR = {
  * `.references/srd-5.2.1/Monsters/Monsters-E-G.md` > `Goblins` >
  * `Goblin Boss`.
  *
- * Runtime catalog exposure remains deferred until the redirect-reaction
- * follow-up lands, but the named attacks and Nimble Escape ownership are
- * core-owned here.
+ * Redirect Attack, Nimble Escape, and the advantage-hit rider all stay on the
+ * generic battle surface; the catalog ID is only the durable SRD entry point.
  */
 export const GOBLIN_BOSS = {
   name: "Goblin Boss",
@@ -303,11 +306,15 @@ export const GOBLIN_BOSS = {
 
 const MONSTER_STAT_BLOCKS: Readonly<Record<MonsterStatBlockId, StatBlock>> = {
   goblinMinion: GOBLIN_MINION,
+  goblinWarrior: GOBLIN_WARRIOR,
+  goblinBoss: GOBLIN_BOSS,
 };
 
 export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
   return Match.value(id).pipe(
     Match.when("goblinMinion", () => MONSTER_STAT_BLOCKS.goblinMinion),
+    Match.when("goblinWarrior", () => MONSTER_STAT_BLOCKS.goblinWarrior),
+    Match.when("goblinBoss", () => MONSTER_STAT_BLOCKS.goblinBoss),
     Match.exhaustive,
   );
 }
