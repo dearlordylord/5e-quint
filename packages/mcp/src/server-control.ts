@@ -11,6 +11,7 @@ import {
   type ControlCommand,
 } from "@dnd/core/available-actions.ts";
 import { encodeDndContext } from "@dnd/core/context-encoding.ts";
+import { CreatureId } from "@dnd/core/types.ts";
 
 import {
   type BattleActor,
@@ -127,6 +128,10 @@ function buildBattleControlEvent(
         insertAtIndex,
       }),
     ),
+    Match.when({ type: "BATTLE_REMOVE_CREATURE" }, ({ creatureIds }) => ({
+      type: "BATTLE_REMOVE_CREATURE" as const,
+      creatureIds: creatureIds.map((id) => CreatureId(id)),
+    })),
     Match.when({ type: "BATTLE_START_TURN" }, (c) => ({
       type: "BATTLE_START_TURN" as const,
       rechargeD6: c.rechargeD6,

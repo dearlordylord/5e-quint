@@ -629,7 +629,7 @@ describe("MCP server adapter", () => {
     expect(readPayload(invalidRawAction)).toEqual({
       error: "Invalid execute_control_command input",
       details:
-        'Invalid control command. Received type: "USE_SECOND_WIND". Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_ADD_CREATURE, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS.',
+        'Invalid control command. Received type: "USE_SECOND_WIND". Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_ADD_CREATURE, BATTLE_REMOVE_CREATURE, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS.',
     });
   });
 
@@ -696,6 +696,34 @@ describe("MCP server adapter", () => {
       success: true,
       state: {
         initiative: ["A", "C", "B"],
+      },
+    });
+  });
+
+  test("execute_control_command accepts BATTLE_REMOVE_CREATURE on the battle lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    actor.send({
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+        { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const host = createBattleHost(actor);
+
+    const response = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_REMOVE_CREATURE",
+      creatureIds: ["B", "C"],
+    });
+
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: {
+        initiative: ["A"],
       },
     });
   });

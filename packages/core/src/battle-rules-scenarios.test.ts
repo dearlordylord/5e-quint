@@ -1015,6 +1015,161 @@ describe("battle rules scenario regressions", () => {
     expect(ctx(actor)).toEqual(awaitingReaction);
   });
 
+  it("removes multiple creatures, cleans help links, and rejects duplicate ids", () => {
+    const actor = initStartedThreeCreatureBattle();
+    send(actor, {
+      type: "BATTLE_HELP_ATTACK",
+      allyId: CreatureId("B"),
+      targetId: CreatureId("C"),
+      helperCanSeeAlly: true,
+      helperCanSeeTarget: true,
+      helperWithin5ftOfTarget: true,
+    });
+    expect(ctx(actor).helpTargets).toEqual([
+      {
+        helperId: CreatureId("A"),
+        allyId: CreatureId("B"),
+        targetEnemyId: CreatureId("C"),
+      },
+    ]);
+
+    send(actor, {
+      type: "BATTLE_REMOVE_CREATURE",
+      creatureIds: [CreatureId("B"), CreatureId("C")],
+    });
+
+    expect(ctx(actor).initiative).toEqual([CreatureId("A")]);
+    expect(ctx(actor).turnIndex).toBe(0);
+    expect(ctx(actor).helpTargets).toEqual([]);
+    expect(ctx(actor).creatures.has(CreatureId("B"))).toBe(false);
+    expect(ctx(actor).creatures.has(CreatureId("C"))).toBe(false);
+
+    const afterRemoval = ctx(actor);
+    send(actor, {
+      type: "BATTLE_REMOVE_CREATURE",
+      creatureIds: [CreatureId("A"), CreatureId("A")],
+    });
+    expect(ctx(actor)).toEqual(afterRemoval);
+  });
+
+  it("removing the last active creature advances the round and ends the turn", () => {
+    const actor = initStartedThreeCreatureBattle();
+
+    advanceToNextTurn(actor);
+    advanceToNextTurn(actor);
+
+    expect(ctx(actor).initiative[ctx(actor).turnIndex]).toBe(CreatureId("C"));
+    expect(ctx(actor).round).toBe(1);
+    expect(ctx(actor).turnStarted).toBe(true);
+
+    send(actor, {
+      type: "BATTLE_REMOVE_CREATURE",
+      creatureIds: [CreatureId("A"), CreatureId("C")],
+    });
+
+    expect(ctx(actor).initiative).toEqual([CreatureId("B")]);
+    expect(ctx(actor).turnIndex).toBe(0);
+    expect(ctx(actor).round).toBe(2);
+    expect(ctx(actor).turnStarted).toBe(false);
+    expect(ctx(actor).initiative[ctx(actor).turnIndex]).toBe(CreatureId("B"));
+  });
+
+  it("removing a creature clears concentration and owned effects", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    const hunter = spellId("hunters_mark");
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          caster: true,
+          initiativeRoll: 20,
+          preparedSpells: new Set(["hold_person"]),
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 15,
+          activeEffects: [
+            {
+              spellId: hunter,
+              turnsRemaining: 3,
+              expiresAt: "end",
+              casterId: CreatureId("A"),
+              grantedConditions: ["invisible"],
+            },
+          ],
+          invisible: true,
+        },
+        { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      ],
+    });
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_CAST_CONCENTRATION_SPELL",
+      targetId: CreatureId("B"),
+      slotLvl: spellSlotLevel(2),
+      duration: 10,
+      spellId: spellId("hold_person"),
+      cond: "paralyzed",
+      applyCond: true,
+      ritual: false,
+    });
+
+    expect(Option.isSome(creature(actor, "A").concentrationSpellId)).toBe(true);
+    expect(creature(actor, "B").paralyzed).toBe(true);
+    expect(creature(actor, "B").activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          spellId: hunter,
+          casterId: CreatureId("A"),
+        }),
+        expect.objectContaining({
+          spellId: spellId("hold_person"),
+          casterId: CreatureId("A"),
+        }),
+      ]),
+    );
+
+    send(actor, {
+      type: "BATTLE_REMOVE_CREATURE",
+      creatureIds: [CreatureId("A")],
+    });
+
+    expect(ctx(actor).creatures.has(CreatureId("A"))).toBe(false);
+    expect(creature(actor, "B").activeEffects).toEqual([]);
+    expect(creature(actor, "B").paralyzed).toBe(false);
+    expect(creature(actor, "B").invisible).toBe(false);
+    expect(ctx(actor).turnStarted).toBe(false);
+    expect(ctx(actor).initiative).toEqual([CreatureId("B"), CreatureId("C")]);
+  });
+
+  it("removing a grappler clears grapple links", () => {
+    const actor = initStartedThreeCreatureBattle();
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      targetSaveFailed: true,
+    });
+
+    expect(creature(actor, "A").grapplingTarget).toBe(CreatureId("B"));
+    expect(creature(actor, "B").grappledBy).toBe(CreatureId("A"));
+
+    send(actor, {
+      type: "BATTLE_REMOVE_CREATURE",
+      creatureIds: [CreatureId("A")],
+    });
+
+    expect(ctx(actor).creatures.has(CreatureId("A"))).toBe(false);
+    expect(creature(actor, "B").grappled).toBe(false);
+    expect(creature(actor, "B").grappledBy).toBeNull();
+    expect(ctx(actor).initiative).toEqual([CreatureId("B"), CreatureId("C")]);
+  });
+
   it("natural_20: Shield negates the triggering hit and spends the reaction", () => {
     const actor = initHitReactionBattle();
     startTurn(actor);

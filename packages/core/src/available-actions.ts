@@ -815,6 +815,7 @@ export type CreatureControlCommandType =
 export const BATTLE_CONTROL_COMMAND_TYPES = [
   "BATTLE_INIT",
   "BATTLE_ADD_CREATURE",
+  "BATTLE_REMOVE_CREATURE",
   "BATTLE_START_TURN",
   "BATTLE_END_TURN",
   "BATTLE_LEGENDARY_PASS",
@@ -1471,6 +1472,11 @@ const BattleAddCreatureControlSchema = Schema.Struct({
     Schema.greaterThanOrEqualTo(0),
   ),
 });
+const BattleRemoveCreatureControlSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  type: Schema.Literal("BATTLE_REMOVE_CREATURE"),
+  creatureIds: Schema.NonEmptyArray(Schema.String),
+});
 const BattleStartTurnControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal("BATTLE_START_TURN"),
@@ -1500,6 +1506,7 @@ export const ControlCommandSchema = Schema.Union(
   CreatureLongRestControlSchema,
   BattleInitControlSchema,
   BattleAddCreatureControlSchema,
+  BattleRemoveCreatureControlSchema,
   BattleStartTurnControlSchema,
   BattleEndTurnControlSchema,
   BattleLegendaryPassControlSchema,
@@ -1509,6 +1516,7 @@ const CONTROL_COMMAND_SCHEMA_BY_TYPE = {
   LONG_REST: CreatureLongRestControlSchema,
   BATTLE_INIT: BattleInitControlSchema,
   BATTLE_ADD_CREATURE: BattleAddCreatureControlSchema,
+  BATTLE_REMOVE_CREATURE: BattleRemoveCreatureControlSchema,
   BATTLE_START_TURN: BattleStartTurnControlSchema,
   BATTLE_END_TURN: BattleEndTurnControlSchema,
   BATTLE_LEGENDARY_PASS: BattleLegendaryPassControlSchema,

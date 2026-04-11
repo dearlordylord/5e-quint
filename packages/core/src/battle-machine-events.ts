@@ -88,6 +88,10 @@ export type BattleEvent =
       readonly insertAtIndex: number;
     }
   | {
+      readonly type: "BATTLE_REMOVE_CREATURE";
+      readonly creatureIds: ReadonlyArray<CreatureId>;
+    }
+  | {
       readonly type: "BATTLE_START_TURN";
       readonly rechargeD6: number;
       readonly sotDmg: number;

@@ -1,3 +1,5 @@
+import { Option } from "effect";
+
 import {
   buildBattleAttackContext,
   resolveAttack,
@@ -27,6 +29,7 @@ import {
   processEndTurn,
   processStartTurn,
   releaseBattleGrappleByGrappler,
+  removeCasterEffectsAndDependents,
   resolveSave,
   setCreature,
   spendAction,
@@ -363,6 +366,74 @@ export function battleAddCreature({
       e.insertAtIndex <= c.turnIndex
         ? c.turnIndex + insertedCount
         : c.turnIndex,
+  };
+}
+
+export function battleRemoveCreature({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_REMOVE_CREATURE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+
+  const creatureIds = [...new Set(e.creatureIds)];
+  if (creatureIds.length === 0) return {};
+  if (creatureIds.length !== e.creatureIds.length) return {};
+  if (creatureIds.some((id) => !c.creatures.has(id))) return {};
+  if (creatureIds.length >= c.initiative.length) return {};
+
+  const removedIds = new Set(creatureIds);
+  const currentActiveId = activeId(c);
+  const activeRemoved = removedIds.has(currentActiveId);
+  let creatures = new Map(c.creatures);
+
+  for (const id of creatureIds) {
+    const creature = creatures.get(id);
+    if (!creature) continue;
+    if (Option.isSome(creature.concentrationSpellId)) {
+      creatures = breakConcentrationAndPropagate(creatures, id);
+    }
+    creatures = removeCasterEffectsAndDependents(creatures, id);
+    const updated = creatures.get(id);
+    if (!updated) continue;
+    if (updated.grapplingTarget != null) {
+      creatures = releaseBattleGrappleByGrappler(
+        creatures,
+        id,
+        currentActiveId,
+      );
+    }
+    if (updated.grappledBy != null) {
+      creatures = escapeBattleGrapple(creatures, id, currentActiveId);
+    }
+  }
+
+  for (const id of creatureIds) {
+    creatures.delete(id);
+  }
+
+  const initiative = c.initiative.filter((id) => !removedIds.has(id));
+  const removedBefore = c.initiative
+    .slice(0, c.turnIndex)
+    .filter((id) => removedIds.has(id)).length;
+  let turnIndex = c.turnIndex - removedBefore;
+  let round = c.round;
+  if (activeRemoved && turnIndex >= initiative.length) {
+    turnIndex = 0;
+    round += 1;
+  }
+
+  return {
+    creatures,
+    initiative,
+    turnIndex,
+    round,
+    turnStarted: activeRemoved ? false : c.turnStarted,
+    helpTargets: c.helpTargets.filter(
+      (target) =>
+        !removedIds.has(target.helperId) &&
+        !removedIds.has(target.allyId) &&
+        !removedIds.has(target.targetEnemyId),
+    ),
   };
 }
 

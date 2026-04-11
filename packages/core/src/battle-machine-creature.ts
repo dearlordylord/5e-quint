@@ -699,6 +699,27 @@ export function removeEffectAndDependents(
   );
 }
 
+export function removeEffectsByCaster(
+  c: BattleCreatureState,
+  casterId: CreatureId,
+): BattleCreatureState {
+  const removed = c.activeEffects.filter(
+    (effect) =>
+      effect.casterId === casterId || effect.parentCasterId === casterId,
+  );
+  if (removed.length === 0) return c;
+  return removeGrantedConditions(
+    {
+      ...c,
+      activeEffects: c.activeEffects.filter(
+        (effect) =>
+          !(effect.casterId === casterId || effect.parentCasterId === casterId),
+      ),
+    },
+    removed,
+  );
+}
+
 export function endHidden(c: BattleCreatureState): BattleCreatureState {
   return c.hiddenDiscoveryDc > 0
     ? {

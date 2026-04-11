@@ -808,6 +808,19 @@ module battle {
     )
   }
 
+  pure def removeEffectsByCaster(
+    creature: CreatureState, casterId: CreatureId
+  ): CreatureState = {
+    val removed = creature.activeEffects.filter(e =>
+      e.casterId == casterId or e.parentCasterId == casterId
+    )
+    if (removed.size() == 0) creature
+    else removeConditionsForEffects(
+      creature.with("activeEffects", creature.activeEffects.exclude(removed)),
+      removed
+    )
+  }
+
   /// Break concentration for a caster and propagate: remove the concentrated
   /// effect and its dependents from ALL creatures in the battle.
   /// Also clears readiedSpellParams (SRD 5.2.1: "If your Concentration is broken,
@@ -3757,6 +3770,68 @@ module battle {
     }
   }
 
+  /// Remove one or more creatures mid-battle while preserving battle-owned turn state.
+  action bRemoveCreature = {
+    nondet removeIds = bCreatures.keys().powerset()
+      .filter(ids => ids.size() > 0 and ids.size() < bCreatures.keys().size())
+      .oneOf()
+    val activeId = bInitiative[bTurnIndex]
+    val activeRemoved = removeIds.contains(activeId)
+    val removedBefore = bInitiative.slice(0, bTurnIndex).select(id => removeIds.contains(id)).length()
+    val cs1 = removeIds.fold(bCreatures, (acc, id) =>
+      if (acc.get(id).slots.concentrationSpellId != "")
+        breakConcentrationAndPropagate(acc, id)
+      else acc
+    )
+    val cs2 = removeIds.fold(cs1, (acc, id) =>
+      acc.keys().fold(acc, (acc2, targetId) =>
+        val cleaned = removeEffectsByCaster(acc2.get(targetId).creature, id)
+        if (cleaned == acc2.get(targetId).creature) acc2
+        else setCreature(acc2, targetId, cleaned)
+      )
+    )
+    val cs3 = removeIds.fold(cs2, (acc, id) =>
+      if (acc.get(id).grapplingTarget != "")
+        releaseBattleGrappleByGrappler(acc, id, activeId)
+      else acc
+    )
+    val cs4 = removeIds.fold(cs3, (acc, id) =>
+      if (acc.get(id).grappledBy != "")
+        escapeBattleGrapple(acc, id, activeId)
+      else acc
+    )
+    val newCreatures = cs4.keys().exclude(removeIds).fold(Map(), (acc, id) =>
+      acc.put(id, cs4.get(id))
+    )
+    val newInitiative = bInitiative.select(id => not(removeIds.contains(id)))
+    val shiftedTurnIndex = bTurnIndex - removedBefore
+    val wrappedTurnIndex =
+      if (activeRemoved and shiftedTurnIndex >= newInitiative.length()) 0
+      else shiftedTurnIndex
+    val nextRound =
+      if (activeRemoved and shiftedTurnIndex >= newInitiative.length())
+        bRound + 1
+      else bRound
+    val newHelpTargets = bHelpTargets.filter(h =>
+      not(removeIds.contains(h.helperId)) and
+      not(removeIds.contains(h.allyId)) and
+      not(removeIds.contains(h.targetEnemyId))
+    )
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      bCreatures.keys().size() > 1,
+      bCreatures' = newCreatures,
+      bInitiative' = newInitiative,
+      bTurnIndex' = wrappedTurnIndex,
+      bPhase' = BPActiveTurn,
+      bRound' = nextRound,
+      bSpellStack' = bSpellStack,
+      bTurnStarted' = if (activeRemoved) false else bTurnStarted,
+      bHelpTargets' = newHelpTargets,
+    }
+  }
+
   // ============================================================
   // 5. STEP + INVARIANTS
   // ============================================================
@@ -3782,10 +3857,10 @@ module battle {
           bAttack, bOffHandAttack, bHelpAttack, bCastSaveSpell, bCastAoE,
           bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
           bMove, bHeal, bDash, bDisengage, bBonusDisengage, bDodge, bHide, bBonusHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge,
-          bEnterRage, bDeclareReckless, bReady, bReadySpell, bEndTurn, bAddCreature,
+          bEnterRage, bDeclareReckless, bReady, bReadySpell, bEndTurn, bAddCreature, bRemoveCreature,
         } else any {
           bAttack, bOffHandAttack, bHelpAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage, bBonusDisengage,
-          bDodge, bHide, bBonusHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn, bAddCreature,
+          bDodge, bHide, bBonusHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn, bAddCreature, bRemoveCreature,
         }
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {

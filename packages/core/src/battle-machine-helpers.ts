@@ -19,6 +19,7 @@ import {
   prepareHandsForSpellComponents,
   removeEffect,
   removeEffectAndDependents,
+  removeEffectsByCaster,
   releaseOneGrappleHand,
   speedDeltaFromEffects,
   takeDamage,
@@ -391,6 +392,18 @@ export function breakConcentrationAndPropagate(
     if (cid === casterId) continue;
     const cleaned = removeEffectAndDependents(c, casterId, spellId);
     if (cleaned !== c) result.set(cid, cleaned);
+  }
+  return result;
+}
+
+export function removeCasterEffectsAndDependents(
+  cs: Creatures,
+  casterId: CreatureId,
+): Map<CreatureId, BattleCreatureState> {
+  const result = new Map(cs);
+  for (const [id, creature] of result) {
+    const cleaned = removeEffectsByCaster(creature, casterId);
+    if (cleaned !== creature) result.set(id, cleaned);
   }
   return result;
 }

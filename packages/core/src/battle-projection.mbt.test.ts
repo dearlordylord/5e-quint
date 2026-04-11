@@ -303,6 +303,7 @@ const OI = ITFBigInt.optional();
 const OV = ITFVariant.optional();
 const OB = z.boolean().optional();
 const OS = z.string().optional();
+const OSA = z.array(z.string()).optional();
 
 const battleDriverSchema = {
   bInit: {
@@ -504,6 +505,9 @@ const battleDriverSchema = {
   bAddCreature: {
     hpE: OI,
     insertIdx: OI,
+  },
+  bRemoveCreature: {
+    removeIds: OSA,
   },
   battleStep: {}, // composite — framework expands to leaf actions
 } as const;
@@ -2178,6 +2182,66 @@ function createBattleProjectionDriver() {
       }
     }
 
+    function handleBRemoveCreature(picks: ReadonlyMap<string, unknown>) {
+      const removeIds = picks.get("removeIds");
+      if (!Array.isArray(removeIds) || removeIds.length === 0) return;
+      const ids = [...new Set(removeIds.map(String))];
+      if (ids.length !== removeIds.length) return;
+      if (ids.some((id) => !initiative.includes(id))) return;
+      if (ids.length >= initiative.length) return;
+
+      const removedIds = new Set(ids);
+      const active = activeId();
+      const activeRemoved = removedIds.has(active);
+
+      for (const id of ids) {
+        const removeSnap = getSnap(id).context;
+        if (Option.isSome(removeSnap.concentrationSpellId)) {
+          breakConcentrationAndPropagate(id);
+        }
+
+        for (const targetId of initiative) {
+          if (targetId === id || !actors.has(mkCreatureId(targetId))) continue;
+          const effects = getSnap(targetId).context.activeEffects.filter(
+            (effect) =>
+              effect.casterId === mkCreatureId(id) ||
+              effect.parentCasterId === mkCreatureId(id),
+          );
+          for (const effect of effects) {
+            send(targetId, { type: "REMOVE_EFFECT", spellId: effect.spellId });
+          }
+        }
+
+        const grapplingTarget = grapplingTargets.get(id);
+        if (grapplingTarget != null) {
+          clearProjectedGrapple(id, grapplingTarget);
+        }
+        const grapplerId = grappledBy.get(id);
+        if (grapplerId != null) {
+          clearProjectedGrapple(grapplerId, id);
+        }
+      }
+
+      const removedBefore = initiative
+        .slice(0, turnIndex)
+        .filter((id) => removedIds.has(id)).length;
+
+      for (const id of ids) {
+        actors.get(mkCreatureId(id))?.stop();
+        actors.delete(mkCreatureId(id));
+        creatureKinds.delete(id);
+        creatureSizes.delete(id);
+        hiddenDiscoveryDcs.delete(id);
+        turnStarted.delete(id);
+      }
+
+      initiative = initiative.filter((id) => !removedIds.has(id));
+      turnIndex -= removedBefore;
+      if (activeRemoved && turnIndex >= initiative.length) {
+        turnIndex = 0;
+      }
+    }
+
     // ============================================================
     // Schema-based handler dispatch
     // ============================================================
@@ -2373,6 +2437,10 @@ function createBattleProjectionDriver() {
       bAddCreature: (p: Record<string, unknown>) => {
         before("bAddCreature");
         handleBAddCreature(toMap(p));
+      },
+      bRemoveCreature: (p: Record<string, unknown>) => {
+        before("bRemoveCreature");
+        handleBRemoveCreature(toMap(p));
       },
       battleStep: () => {}, // composite — framework expands to leaf actions
       getState: () => {
