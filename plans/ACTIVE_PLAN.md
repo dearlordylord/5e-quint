@@ -27,6 +27,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
   "schema": "ralph-plan.v1",
   "tasks": [
     {
+      "number": 0,
+      "id": "K",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Grapple Movable Cost SRD Parity Fix"
+    },
+    {
       "number": 1,
       "id": "MCP0-A",
       "status": "done",
@@ -130,24 +136,48 @@ The Ralph harness reads this machine-readable index for task order and status. K
     },
     {
       "number": 18,
+      "id": "MCP2-A1",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Fighter Main-Hand Weapon/Loadout Projection On start_battle"
+    },
+    {
+      "number": 19,
       "id": "MCP2-B",
       "status": "blocked",
       "title": "Fighter Attacks Goblin End-to-End"
     },
     {
-      "number": 19,
+      "number": 20,
+      "id": "MCP3-A1",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Stat-Block Advantage-Damage Rider Ownership"
+    },
+    {
+      "number": 21,
+      "id": "MCP3-A2",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Monster Bonus-Action Option Boundary"
+    },
+    {
+      "number": 22,
+      "id": "MCP3-A3",
+      "status": "ready-for-research",
+      "title": "Monster Reaction Retarget/Swap Boundary"
+    },
+    {
+      "number": 23,
       "id": "MCP3-A",
       "status": "blocked",
       "title": "Goblin Warrior/Nimble Escape Follow-Up"
     },
     {
-      "number": 20,
+      "number": 24,
       "id": "H",
       "status": "deferred",
       "title": "PassiveModifiers Sub-Record"
     },
     {
-      "number": 21,
+      "number": 25,
       "id": "I",
       "status": "deferred",
       "title": "Build-Map / Hole Metadata"
@@ -181,6 +211,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task                                                                  | Status   | Depends on                                                                | Blocks                                                                | Next action                                                                                                                                                                                                                                                                                                                                                                                        | Handoff readiness                                  |
 | ----- | --------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| 0     | K - Grapple Movable Cost SRD Parity Fix                               | ready-for-implementation-after-light-research | none                                                                      | semantic grapple parity, future public `BATTLE_GRAPPLE`, QA triage confidence | Read SRD 5.2.1 Grappled/Movable text and current battle/creature movement code, then replace drag-via-speed-halving with drag-via-movement-cost in Quint first, mirror in TS/XState battle code, and revise A37 because the current "identical for all movement cases" claim is false once grapple state changes mid-turn | Ready after light RAW + blast-radius check         |
 | 1     | MCP0-A - Dead-Creature Condition Mutation Bug                         | done     | none                                                                      | MCP0-B, safer MCP table events                                        | Closed 2026-04-10: dead-creature condition apply/remove now reject at MCP/XState and no-op in Quint                                                                                                                                                                                                                                                                                                | Completed; policy documented in A16                |
 | 2     | MCP0-B - Dead-Creature Exhaustion Mutation Decision                   | done     | MCP0-A RAW/dead policy research                                           | safer MCP table events                                                | Closed 2026-04-10: dead-creature exhaustion add/reduce now reject at MCP/XState and no-op in Quint; generic starvation/dehydration exhaustion is also blocked while dead                                                                                                                                                                                                                           | Completed; policy documented in A16                |
 | 3     | MCP0-C - Short Unknown Action Error                                   | done     | none                                                                      | MCP UX and downstream agents                                          | Closed 2026-04-10: `execute_action` / `preview_action` now return compact `UNKNOWN_ACTION_TYPE` errors before full decode, while known-action schema validation remains intact                                                                                                                                                                                                                     | Completed; no downstream plan changes              |
@@ -198,10 +229,14 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 15    | G - Attack Rider Ownership                                            | done     | none                                                                      | Attack rider tokens                                                   | Closed 2026-04-10: attack riders stay off creature MCP; Brutal Strike is a pre-roll attack declaration, Stunning Strike / Eldritch Smite / Divine Smite Free are post-hit rider windows, and Cunning Strike is a post-hit choice with post-damage effects layered onto Sneak Attack resolution.                                                                                                    | Research closed                                    |
 | 16    | MCP1-C - Encounter Start Tool/Command                                 | done     | MCP1-A, MCP1-B                                                            | MCP2-A                                                                | Closed 2026-04-10: added a session-level `start_battle` tool that compiles the active creature host's Fighter durable state into `BATTLE_INIT`, resolves `goblinMinion` through the core statblock catalog, and keeps mutable combatant state on the promoted battle host instead of the character-list snapshot.                                                                                  | Completed; MCP2-A unblocked                        |
 | 17    | MCP2-A - Battle Attack Public Boundary                                | done     | MCP1-C                                                                    | MCP2-B                                                                | Closed 2026-04-10: public MCP `BATTLE_ATTACK` now uses Task D's exact token/runtime contract, requires explicit caller-owned attack facts instead of sampled MCP defaults, reuses the battle hit-reaction windows, and exposes stat-block-owned main-hand attack payloads by projecting the goblin minion's SRD dagger into battle state.                                                          | Completed; fighter weapon ownership still separate |
-| 18    | MCP2-B - Fighter Attacks Goblin End-to-End                            | blocked  | MCP2-A; fighter battle-weapon ownership on `start_battle` promotion       | motivating MCP flow                                                   | Wire the fighter's owned main-hand battle weapon into the `start_battle` path, then execute the end-to-end MCP attack flow against the goblin with explicit start-turn and attack runtime facts                                                                                                                                                                                                    | Blocked on fighter weapon projection               |
-| 19    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | blocked  | MCP2-A; possible stat-block attack rider and bonus-action monster support | fuller goblin behavior                                                | Model richer goblin behavior after the minion slice                                                                                                                                                                                                                                                                                                                                                | Not handoff-ready                                  |
-| 20    | H - PassiveModifiers Sub-Record                                       | deferred | none                                                                      | Possible passive modifier cleanup                                     | Only revisit if the batch selects passive modifier restructuring                                                                                                                                                                                                                                                                                                                                   | Not current-batch work                             |
-| 21    | I - Build-Map / Hole Metadata                                         | deferred | Concrete consumer, possibly D                                             | Future token-hole metadata                                            | Only revisit when attack boundary, transcript disambiguation, or UI needs it                                                                                                                                                                                                                                                                                                                       | Not current-batch work                             |
+| 18    | MCP2-A1 - Fighter Main-Hand Weapon/Loadout Projection On start_battle | ready-for-implementation-after-light-research | MCP1-C, MCP2-A                                                           | MCP2-B                                                                | Confirm the owned source for the Fighter's initial main-hand battle weapon/loadout, then project that Fighter-owned profile into `start_battle` / `BATTLE_INIT` without opening an arbitrary public weapon-payload lane or conflating monster stat-block attacks with equipment-derived loadouts                     | Ready after owned-source check                      |
+| 19    | MCP2-B - Fighter Attacks Goblin End-to-End                            | blocked  | MCP2-A1                                                                   | motivating MCP flow                                                   | After Task MCP2-A1 lands, execute the end-to-end MCP attack flow against the goblin with explicit start-turn and attack runtime facts                                                                                                                                                                                                                    | Blocked on fighter weapon projection               |
+| 20    | MCP3-A1 - Stat-Block Advantage-Damage Rider Ownership                 | ready-for-implementation-after-light-research | MCP2-A                                                                   | MCP3-A                                                                | Add a core-owned way for named stat-block attacks to contribute extra on-hit damage when battle already knows the attack had net Advantage                                                                                                                                                                                                                                                        | Ready after rider-shape confirmation               |
+| 21    | MCP3-A2 - Monster Bonus-Action Option Boundary                        | ready-for-implementation-after-light-research | MCP2-A                                                                   | MCP3-A                                                                | Add generic battle support for monster-owned bonus-action options such as Nimble Escape without introducing goblin-specific action shortcuts                                                                                                                                                                                                                                                     | Ready after token/event shape confirmation         |
+| 22    | MCP3-A3 - Monster Reaction Retarget/Swap Boundary                     | ready-for-implementation-after-light-research | MCP2-A                                                                   | MCP3-A                                                                | Extend the existing `PIAttackHit` reaction family with a monster-owned retarget/swap reaction for Redirect Attack, keeping target rewrite and position swap inside battle-owned hit-interrupt resolution rather than inventing a new public monster command                                                                                                                                        | Ready after hit-window shape check                 |
+| 23    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | blocked  | MCP3-A1, MCP3-A2; optionally MCP3-A3 for Goblin Boss                     | fuller goblin behavior                                                | Land Goblin Warrior after the minion slice, then extend to Goblin Boss when Redirect Attack is selected in-batch                                                                                                                                                                                                                                                                                | Warrior ready via split; Boss needs A3             |
+| 24    | H - PassiveModifiers Sub-Record                                       | deferred | none                                                                      | Possible passive modifier cleanup                                     | Only revisit if the batch selects passive modifier restructuring                                                                                                                                                                                                                                                                                                                                   | Not current-batch work                             |
+| 25    | I - Build-Map / Hole Metadata                                         | deferred | Concrete consumer, possibly D                                             | Future token-hole metadata                                            | Only revisit when attack boundary, transcript disambiguation, or UI needs it                                                                                                                                                                                                                                                                                                                       | Not current-batch work                             |
 
 ## Current Integrated Baseline
 
@@ -227,20 +262,125 @@ Merged MCP Fighter vs. Goblin baseline:
   - huge schema decode output for unknown `execute_action` types;
   - `SHORT_REST` documentation clarity;
   - `EXIT_COMBAT` after death UX decision.
-- Task D fixed the public attack boundary, and Task MCP2-A now exposes public `BATTLE_ATTACK` when the battle state already owns a main-hand attack payload. The fighter-vs-goblin flow still needs fighter battle-weapon ownership projected into `start_battle`; current `start_battle` continues to keep that payload out of the public session contract.
+- Task D fixed the public attack boundary, and Task MCP2-A now exposes public `BATTLE_ATTACK` when the battle state already owns a main-hand attack payload. The fighter-vs-goblin flow now depends on Task MCP2-A1 to project a Fighter-owned main-hand weapon through `start_battle`; current `start_battle` still keeps arbitrary weapon payloads out of the public session contract.
 - Task MCP1-B is now complete: the first monster-content slice lives in a reusable core statblock facility, `BATTLE_INIT` can reference `goblinMinion` by ID, and MCP does not duplicate RAW stat-block numbers in its own registry.
-- Goblin Warrior still remains deferred because its advantage-based extra damage is not represented by the current public attack flow, and full goblin support still needs Nimble Escape as a monster bonus-action option.
+- Goblin Warrior no longer needs one monolithic blocker. The remaining work splits into:
+  - stat-block advantage-damage rider ownership for Scimitar/Shortbow;
+  - generic monster bonus-action option support for Nimble Escape.
+- Goblin Boss remains a later extension, but the reaction research is now narrowed: `Redirect Attack` should extend the existing `PIAttackHit` window with a retarget/swap decision rather than introduce a separate top-level interrupt family.
 
 ## Task Selection Guidance
 
 Recommended first coding-loop tasks:
 
-1. **Task MCP2-B: Fighter Attacks Goblin End-to-End** once fighter-owned battle weapon projection is planned. Task MCP2-A already landed the public attack boundary and goblin stat-block attack payload projection; the remaining gap is the fighter side of `start_battle`.
+1. **Task K: Grapple Movable Cost SRD Parity Fix** before the remaining MCP queue. `battle.qnt` is the semantic source of truth for combat ownership decisions, and the current grapple-drag refresh path restores movement on release in a way that conflicts with the project's 5.2.1 SRD-parity claim.
+2. **Task MCP2-A1: Fighter Main-Hand Weapon/Loadout Projection On start_battle** once Task K is either landed or explicitly deferred. Task MCP2-A already landed the public attack boundary and goblin stat-block attack payload projection; the remaining gap is the Fighter side of `start_battle`.
+3. **Task MCP2-B: Fighter Attacks Goblin End-to-End** immediately after Task MCP2-A1 lands.
+4. **Task MCP3-A1: Stat-Block Advantage-Damage Rider Ownership** if the goal is to keep moving toward Goblin Warrior without reopening MCP attack ownership.
+5. **Task MCP3-A2: Monster Bonus-Action Option Boundary** immediately after or alongside Task MCP3-A1 if the batch wants Goblin Warrior's full `Nimble Escape` behavior.
    Tasks F and G are now complete. Reuse their ownership splits for any future `BATTLE_LEGENDARY_ATTACK` or attack-rider implementation rather than reopening the boundary question.
 
 Do not widen `BATTLE_ATTACK` implementation beyond the Task D contract. The remaining risk is scope creep into off-hand attacks, hit reactions, legendary actions, and riders.
 
 Do not start the full fighter-vs-goblin implementation before the fighter's owned battle weapon has a planned projection path. Task D produced the boundary, Task MCP1-C delivered encounter start, and Task MCP2-A landed the public `BATTLE_ATTACK` lane; the remaining blocker is fighter weapon ownership, not the attack contract itself.
+
+### Task 0 - K - Grapple Movable Cost SRD Parity Fix
+
+Status: ready-for-implementation-after-light-research.
+
+Depends on: none.
+
+Blocks: semantic grapple parity, future public `BATTLE_GRAPPLE`, QA triage confidence for grapple rulings, and any article/demo claim that the current model reflects 5.2.1 RAW drag behavior.
+
+Next action: Read the 5.2.1 Grappled / Movable rule text in `.references/srd-5.2.1/Rules-Glossary.md`, inspect the current `battle.qnt` refresh path and the mirrored TS battle helpers, then implement the drag-cost model in Quint first and mirror it into TS/XState battle code. Update `ASSUMPTIONS.md` in the same change because A37 is no longer defensible as written.
+
+Problem:
+
+- The project claims SRD 5.2.1 parity, with `.references/srd-5.2.1/` as ground truth and `ASSUMPTIONS.md` as the sole record of deviations.
+- `REVISION_RESEARCH.md` already records the 5.2.1 delta correctly: dragging a grappled creature costs 1 extra foot per foot moved; it is not a grappler speed-halving rule.
+- `creature.qnt` still models same-size dragging by halving the grappler's `effectiveSpeed` in `pComputeEffectiveSpeed`.
+- `battle.qnt` then refreshes current-turn movement budget from `newSpeed - spentMovement` whenever grapple state changes, which restores movement to the grappler on release.
+- This is not merely different wording. It changes observable behavior for mid-turn grapple/release and is the engine-level reason "grapple leapfrog" works.
+- `ASSUMPTIONS.md` A37 currently states the halving representation is "identical for all movement cases." That statement is false once grapple state can change mid-turn.
+
+Inputs:
+
+- `.references/srd-5.2.1/Rules-Glossary.md` entries for `Grappled` and `Speed`.
+- `ARCHITECTURE.md` sections establishing SRD 5.2.1 as ground truth and `battle.qnt` as the semantic combat authority.
+- `ASSUMPTIONS.md` A37.
+- `REVISION_RESEARCH.md` grapple delta notes.
+- `creature.qnt`:
+  - `pComputeEffectiveSpeed`
+  - `pMovementCost`
+  - `pUseMovement`
+- `battle.qnt`:
+  - `refreshProjectedSpeed`
+  - `linkBattleGrapple`
+  - `releaseBattleGrappleByGrappler`
+  - `escapeBattleGrapple`
+  - `bMove`
+- TS mirrors:
+  - `packages/core/src/battle-machine-helpers.ts`
+  - `packages/core/src/battle-machine-actions-movement.ts`
+  - `packages/core/src/battle-rules-scenarios.test.ts`
+  - any mirrored helper/test files touched by the Quint parity change
+
+Implementation output:
+
+- Quint semantics:
+  - Remove drag-induced speed halving from `pComputeEffectiveSpeed`. Grappling another creature should not reduce the grappler's `effectiveSpeed` under the 5.2.1 model.
+  - Extend `pMovementCost` with an explicit drag-cost input, e.g. `isDraggingGrappledCreature: bool`, and add a `dragExtra = if (isDraggingGrappledCreature) 1 else 0` term.
+  - Keep the grappled target's own speed at 0; only the grappler's per-foot movement cost changes.
+- Battle Quint wiring:
+  - Update `bMove` to spend movement with a multiplier of 2 while the active creature is dragging a not-two-sizes-smaller grappled target.
+  - Stop recomputing the grappler's current-turn `movementRemaining` on grapple link/release/escape. Grapple state changes should still refresh the target because the target's own speed changes to/from 0, but releasing a grapple must not "refund" movement to the grappler.
+  - Keep any necessary projected-speed refresh for the grappled target only.
+- TS / XState parity:
+  - Mirror the same semantic change in `battle-machine-helpers.ts` and `battle-machine-actions-movement.ts`.
+  - Update or replace tests that currently assert movement is restored to the grappler on `BATTLE_RELEASE_GRAPPLE`.
+- Assumptions/docs:
+  - Rewrite A37 from "modeled as speed halving" to the new policy: 5.2.1 drag cost is modeled as a movement-cost multiplier in battle semantics.
+  - Explicitly record that the previous halving model was removed because it diverged when grapple state changed mid-turn.
+  - If helper-level `creature.qnt` still carries any reduced abstraction after the patch, the assumption must describe the exact surviving boundary and why it does not affect battle semantics.
+
+Recommended patch shape:
+
+1. In `creature.qnt`, change `pComputeEffectiveSpeed(...)` so `isGrappling` no longer halves `afterExhaustion`.
+2. In `creature.qnt`, change `pMovementCost(...)` signature from:
+   - `pMovementCost(isDifficultTerrain, isCrawling, isClimbingOrSwimming, hasRelevantSpeed)`
+   to:
+   - `pMovementCost(isDifficultTerrain, isCrawling, isClimbingOrSwimming, hasRelevantSpeed, isDraggingGrappledCreature)`
+   and add `dragExtra`.
+3. In `battle.qnt` `bMove`, compute `isDraggingGrappledCreature = ac.grapplingTarget != "" and not(ac.grappledTargetTwoSizesSmaller)` and spend movement with that multiplier.
+4. In `battle.qnt`, narrow `refreshProjectedSpeed` usage on grapple link/release/escape so the grappler's current-turn movement budget is not rebuilt from `newSpeed - spentMovement`.
+5. Mirror the same change in TS battle helpers and tests before touching MCP-facing behavior.
+
+Acceptance criteria:
+
+- A grappler's `effectiveSpeed` is not reduced solely by holding a same-size grappled creature in the 5.2.1 path.
+- Moving while dragging a same-size grappled creature costs 2 feet per foot moved.
+- Releasing a grapple mid-turn does not restore movement budget to the grappler.
+- The grappled target still has speed 0 until the grapple ends.
+- Quint and TS/XState battle behavior agree after the change.
+- `ASSUMPTIONS.md` no longer claims the removed speed-halving model is equivalent for all movement cases.
+- Any QA seed or scenario that encoded the accepted-answer leapfrog interpretation is either updated, reclassified as disputed, or explicitly skipped.
+
+Verification:
+
+- RAW check: read the Grappled / Movable text in `.references/srd-5.2.1/Rules-Glossary.md`, plus `ARCHITECTURE.md`, `REVISION_RESEARCH.md`, and `ASSUMPTIONS.md` A37 before editing.
+- `/simplify` convergence: minimum two rounds after implementation, continuing until no important fixes remain.
+- Focused Quint tests covering:
+  - same-size drag movement cost;
+  - release mid-turn does not restore grappler movement;
+  - grappled target speed 0 / release restores target speed normally.
+- Focused TS/core tests mirroring the same scenarios.
+- `npx quint test` for the touched movement/grapple tests and relevant invariants.
+- Tier 1 battle MBT if `battle.qnt` or its mirrored TS battle semantics change.
+
+Implementation recommendation:
+
+- Do this now, before the remaining MCP queue, unless a fresh RAW reread unexpectedly shows the local SRD source says something materially different from `REVISION_RESEARCH.md`.
+- If the project wants to preserve the old accepted-answer behavior for historical 2014 experiments, keep it only behind an explicit legacy path or archived test fixture. Do not leave it in the main 5.2.1 combat semantics while claiming SRD parity.
 
 ### Task 1 - MCP0-A - Dead-Creature Condition Mutation Bug
 
@@ -1675,11 +1815,66 @@ Plan Impact:
 - MCP2-B: revise; it remains blocked, but the blocker is now fighter battle-weapon ownership on `start_battle` promotion rather than the public attack boundary itself.
 - Plan edits: marked MCP2-A done in the index and DAG, revised MCP2-B's dependency/next-action text to call out fighter weapon projection, and updated the integrated baseline/task-selection notes to reflect that public `BATTLE_ATTACK` is already live for battle-owned attack payloads.
 
-### Task 18 - MCP2-B - Fighter Attacks Goblin End-to-End
+### Task 18 - MCP2-A1 - Fighter Main-Hand Weapon/Loadout Projection On start_battle
+
+Status: ready-for-implementation-after-light-research.
+
+Depends on: Task MCP1-C, Task MCP2-A.
+
+Blocks: Task MCP2-B.
+
+Purpose:
+
+- Give the promoted Fighter battle state an owned main-hand weapon/loadout profile so the already-landed public `BATTLE_ATTACK` lane can appear after `start_battle`.
+- Keep the ownership split explicit:
+  - PCs project battle weapon/loadout facts from owned character/loadout data.
+  - Monsters continue to project attack payloads from named stat-block attack entries, which may diverge from normal `Equipment` rules.
+
+Inputs:
+
+- `.references/srd-5.2.1/Equipment.md` for the chosen Fighter initial SRD weapon/loadout (and Shield if used).
+- `.references/srd-5.2.1/Monsters/Overview.md` for the stat-block/gear distinction and monster-specific attack notation.
+- `UBIQUITOUS_LANGUAGE.md`.
+- `packages/mcp/src/start-battle.ts`.
+- `packages/core/src/available-actions.ts` `BATTLE_INIT` schema and `toBattleInitCreatureConfig`.
+- `packages/core/src/battle-machine-types.ts` `InitCreatureConfig`.
+- `packages/core/src/monster-catalog.ts`.
+- Existing core battle tests that construct `BattleWeaponProfile` fixtures.
+
+Implementation output:
+
+- Choose the narrowest owned source for the Fighter's initial main-hand weapon/loadout on `start_battle` promotion.
+- Prefer a core-owned named Fighter weapon/loadout reference over arbitrary public MCP weapon payloads.
+- Project the chosen Fighter main-hand `BattleWeaponProfile` into `BATTLE_INIT` for the Fighter combatant.
+- If the chosen initial loadout requires it, also project only the minimum related battle facts needed by existing core types, such as `hasShieldEquipped`, `mainHandUsesTwoHands`, or named fighting-style battle modifiers.
+- Do not reinterpret monster stat-block attacks as generic equipment loadouts in this task. Monster attack payloads continue to come from the core statblock catalog.
+- Do not add a generic MCP-side weapon registry or a free-form weapon payload schema in this task.
+
+Acceptance criteria:
+
+- After `start_battle`, the Fighter's `BattleCreatureState` owns a main-hand weapon/loadout profile sufficient for `BATTLE_ATTACK`.
+- `get_available_actions` exposes public `BATTLE_ATTACK` for the Fighter without inventing any hidden session facts.
+- The source of the Fighter weapon facts is explicit and reusable.
+- Monster attack ownership remains stat-block-action-based rather than newly equipment-derived.
+- No arbitrary public weapon payload can be injected through MCP.
+
+Verification:
+
+- RAW check: reread the chosen Fighter weapon/loadout entry (and Shield if used) in `.references/srd-5.2.1/Equipment.md`, plus `.references/srd-5.2.1/Monsters/Overview.md` for the monster stat-block / gear split; terminology in `UBIQUITOUS_LANGUAGE.md`.
+- `/simplify` convergence: minimum two rounds after implementation.
+- Focused `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/battle-rules-scenarios.test.ts`.
+- Focused `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts`.
+
+Extra research needed:
+
+- Light. Confirm there is no existing runtime Fighter equipment/loadout owner to project from; if none exists, keep the first slice on a narrow core-owned Fighter weapon/loadout reference rather than inventing a public arbitrary weapon payload contract.
+- Confirm the plan text keeps Fighters and monsters on separate sources of truth: Fighter loadout via owned character/loadout data, monster attacks via named stat-block actions.
+
+### Task 19 - MCP2-B - Fighter Attacks Goblin End-to-End
 
 Status: blocked.
 
-Depends on: Task MCP2-A; fighter battle-weapon ownership on `start_battle` promotion.
+Depends on: Task MCP2-A1.
 
 Blocks: objective completion.
 
@@ -1715,11 +1910,169 @@ Extra research needed:
 
 - Light. Mostly integration wiring once the fighter-side weapon ownership path is defined.
 
-### Task 19 - MCP3-A - Goblin Warrior/Nimble Escape Follow-Up
+### Task 20 - MCP3-A1 - Stat-Block Advantage-Damage Rider Ownership
+
+Status: ready-for-implementation-after-light-research.
+
+Depends on: Task MCP2-A.
+
+Blocks: Task MCP3-A.
+
+Purpose:
+
+- Add a core-owned way for a named stat-block attack to contribute extra on-hit damage when battle already knows the attack had net Advantage.
+
+Research output:
+
+- The current attack engine already computes net Advantage / Disadvantage in battle via `aggregateAttackMods(...)`, and `resolveAttack(...)` already consumes that result.
+- Goblin Warrior and Goblin Boss both use the same rider shape on `Scimitar` and `Shortbow`: extra `1d4` damage of the same damage type if the attack roll had Advantage.
+- No new public MCP runtime field is required for this first rider slice if the rider is derived from battle-owned attack context and stat-block-owned attack metadata.
+
+Inputs:
+
+- `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Warrior and Goblin Boss entries.
+- `packages/core/src/monster-types.ts`.
+- `packages/core/src/monster-catalog.ts`.
+- `packages/core/src/battle-machine-actions-attack.ts`.
+- `packages/core/src/machine-combat.ts`.
+
+Implementation output:
+
+- Extend the core stat-block attack representation with the minimum owned metadata needed for the goblin rider.
+- Apply that rider only when battle has already determined the hit used net Advantage.
+- Keep the rider stat-block-owned and battle-resolved; MCP must not accept a caller-supplied "had advantage rider" payload.
+
+Acceptance criteria:
+
+- Goblin Warrior / Boss attack metadata can express the SRD's extra-on-Advantage damage clause without a goblin-specific MCP shortcut.
+- Battle applies the extra damage only when the attack hit and the battle-owned attack context resolves to net Advantage.
+- The rider remains attached to the named stat-block attack rather than duplicated as MCP/runtime literals.
+
+Verification:
+
+- RAW check: Goblin Warrior and Goblin Boss attack entries in `.references/srd-5.2.1/Monsters/Monsters-E-G.md`.
+- `/simplify` convergence: minimum two rounds after implementation.
+- Focused `pnpm --filter @dnd/core exec vitest run src/monster-catalog.test.ts src/battle-rules-scenarios.test.ts`.
+- Tier 1 battle MBT only if battle/spec semantics change.
+
+Extra research needed:
+
+- Light. Confirm the narrowest stat-block-owned representation for "extra damage if the attack roll had Advantage" before implementation.
+
+### Task 21 - MCP3-A2 - Monster Bonus-Action Option Boundary
+
+Status: ready-for-implementation-after-light-research.
+
+Depends on: Task MCP2-A.
+
+Blocks: Task MCP3-A.
+
+Purpose:
+
+- Add generic battle support for monster-owned bonus-action options such as Nimble Escape without introducing goblin-specific action shortcuts.
+
+Research output:
+
+- Battle already has generic action-costed `BATTLE_HIDE` and `BATTLE_DISENGAGE`.
+- Their handlers currently spend an action, not a bonus action.
+- `Nimble Escape` therefore needs a generic battle bonus-action boundary for Hide/Disengage rather than a goblin-only exception.
+
+Inputs:
+
+- `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Warrior and Goblin Boss `Nimble Escape`.
+- `packages/core/src/available-actions.ts`.
+- `packages/core/src/battle-machine-events.ts`.
+- `packages/core/src/battle-machine-actions-turn.ts`.
+
+Implementation output:
+
+- Add the narrowest generic battle token/event support needed to take Hide or Disengage as a bonus action.
+- Surface those options only when a combatant owns the relevant feature/trait.
+- Keep the public MCP surface generic; no `GOBLIN_NIMBLE_ESCAPE` token.
+
+Acceptance criteria:
+
+- A monster trait can expose Hide/Disengage as a bonus action in battle without duplicating the underlying action semantics.
+- Bonus-action usage is tracked on the creature's existing `bonusActionUsed` state.
+- The public MCP surface remains generic battle actions rather than monster-specific commands.
+
+Verification:
+
+- RAW check: Goblin Warrior and Goblin Boss `Nimble Escape`; relevant `Hide` / `Disengage` glossary entries if implementation lands.
+- `/simplify` convergence: minimum two rounds after implementation.
+- Focused `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/battle-rules-scenarios.test.ts`.
+- Tier 1 battle MBT only if battle/spec semantics change.
+
+Extra research needed:
+
+- Light. Confirm the preferred generic token/event shape for "bonus-action Hide / Disengage" before implementation.
+
+### Task 22 - MCP3-A3 - Monster Reaction Retarget/Swap Boundary
+
+Status: ready-for-implementation-after-light-research.
+
+Depends on: Task MCP2-A.
+
+Blocks: Task MCP3-A when Goblin Boss is selected in-batch.
+
+Purpose:
+
+- Extend the current hit-reaction interrupt family so monster-owned reactions like `Redirect Attack` can retarget an incoming attack and swap creature positions without bypassing battle reaction windows.
+
+Research output:
+
+- Goblin Boss `Redirect Attack` triggers on an incoming attack roll, swaps positions with a Small or Medium ally within 5 feet, and retargets the attack to that ally.
+- The existing `PIAttackHit` window is the right home for this effect because it already owns attack-roll / target-AC hit reactions before damage resolution proceeds.
+- Unlike `Shield`, `Parry`, or `Cutting Words`, `Redirect Attack` must rewrite the pending defender and mutate battle position state; it cannot be modeled as a pure attack-roll or AC adjustment.
+- The current `HitReactionDecision` / `AttackHitCtx` shapes therefore need a narrow extension for:
+  - the chosen redirect ally;
+  - legality facts for ally size and within-5-feet adjacency;
+  - battle-owned target rewrite plus position swap before the hit pipeline continues.
+- No new public monster command is needed. This should stay inside the existing battle reaction surface.
+
+Inputs:
+
+- `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Boss `Redirect Attack`.
+- `.references/srd-5.2.1/Monsters/Overview.md`.
+- `packages/core/src/battle-machine-events.ts`.
+- `packages/core/src/battle-machine-types.ts`.
+- `packages/core/src/battle-machine-helpers.ts`.
+- `packages/core/src/battle-machine-actions-attack.ts`.
+- `packages/core/src/available-actions.ts`.
+
+Implementation output:
+
+- Extend the hit-reaction decision family with a monster-owned redirect/swap decision.
+- Extend the owned attack-hit context with the minimum legality data needed to validate redirect targets.
+- Resolve the reaction inside `PIAttackHit` by:
+  - spending the reactor's reaction;
+  - swapping goblin/ally positions in battle state;
+  - replacing the pending attack target;
+  - rebuilding any target-facing legality needed for the modified hit context before attack resolution continues.
+- Keep the public MCP surface generic battle reactions; do not add a `GOBLIN_REDIRECT_ATTACK` public command.
+
+Acceptance criteria:
+
+- `Redirect Attack` has a concrete implementation home inside `PIAttackHit`.
+- The design names the owned proximity/size facts needed for legality.
+- Target rewrite and position swap remain battle-owned and do not require caller-supplied monster command payloads.
+
+Verification:
+
+- RAW check: Goblin Boss plus Monsters Overview.
+- `/simplify` convergence: minimum two rounds after implementation.
+- Focused `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/battle-rules-scenarios.test.ts`.
+- Tier 1 battle MBT only if battle/spec semantics change.
+
+Extra research needed:
+
+- Light. Confirm the minimum added fields on `HitReactionDecision` / `AttackHitCtx` before implementation; the placement decision is already settled.
+
+### Task 23 - MCP3-A - Goblin Warrior/Nimble Escape Follow-Up
 
 Status: blocked.
 
-Depends on: Task MCP2-A; possibly stat-block attack rider and bonus-action monster support.
+Depends on: Task MCP3-A1, Task MCP3-A2; optionally Task MCP3-A3 for Goblin Boss.
 
 Blocks: fuller goblin behavior.
 
@@ -1729,9 +2082,10 @@ Purpose:
 
 Research output:
 
-- Decide how to represent Goblin Warrior's advantage-based extra damage on Scimitar/Shortbow.
-- Decide how to represent Nimble Escape as monster bonus-action Disengage/Hide without duplicating `BATTLE_DISENGAGE` / `BATTLE_HIDE`.
-- Decide whether Goblin Boss `Redirect Attack` belongs in battle reaction windows and whether it requires size/ally-position ownership.
+- Land Goblin Warrior by combining:
+  - stat-block-owned advantage-damage rider support;
+  - monster-owned bonus-action support for `Nimble Escape`.
+- Extend to Goblin Boss only if the batch also selects `Redirect Attack`.
 
 Acceptance criteria:
 
@@ -1748,9 +2102,10 @@ Verification:
 
 Extra research needed:
 
-- Yes. This is intentionally deferred until the minimal Fighter/Goblin Minion path and public attack boundary exist.
+- Warrior path: no, once Tasks MCP3-A1 and MCP3-A2 land.
+- Goblin Boss extension: light only, via Task MCP3-A3.
 
-### Task 20 - H - PassiveModifiers Sub-Record
+### Task 24 - H - PassiveModifiers Sub-Record
 
 Status: deferred.
 
@@ -1803,7 +2158,7 @@ Extra research needed:
 
 - Moderate. Not urgent; best paired with adding new passive modifier fields.
 
-### Task 21 - I - Build-Map / Hole Metadata
+### Task 25 - I - Build-Map / Hole Metadata
 
 Status: deferred.
 
