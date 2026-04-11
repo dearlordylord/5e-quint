@@ -504,12 +504,35 @@ bootstrap_worktree_install() {
   done
 }
 
+disable_fuzz_scripts_in_worktree() {
+  local workspace="$1"
+  local path
+
+  for path in \
+    "scripts/mbt-fuzz.sh" \
+    "scripts/mbt-fuzz-timed.sh" \
+    "scripts/fuzz-all.sh" \
+    "scripts/fuzz-overnight.sh" \
+    "scripts/escalate-fuzz.sh" \
+    "scripts/measure-tier-timing.sh"; do
+    [[ -f "$workspace/$path" ]] || continue
+    cat >"$workspace/$path" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+echo "This script is disabled inside Ralph task worktrees." >&2
+echo "Use Tier 1 / Tier 1b MBT or focused non-fuzz verification instead." >&2
+exit 97
+EOF
+    chmod 0555 "$workspace/$path"
+  done
+}
+
 kill_stray_mbt_processes() {
   local pid
   while read -r pid _rest; do
     [[ -n "$pid" ]] || continue
     kill "$pid" >/dev/null 2>&1 || true
-  done < <(pgrep -af 'scripts/mbt-fuzz\.sh|scripts/fuzz-all\.sh|scripts/fuzz-overnight\.sh' || true)
+  done < <(pgrep -af 'scripts/(mbt-fuzz|mbt-fuzz-timed|fuzz-all|fuzz-overnight|escalate-fuzz|measure-tier-timing)\.sh' || true)
   killall -9 quint_evaluator >/dev/null 2>&1 || true
 }
 
@@ -519,6 +542,7 @@ cleanup_mbt_artifacts() {
     -o -name 'mbt-failures.jsonl' \
     -o -name 'mbt-timing.jsonl' \
     -o -name 'mbt-fuzz.log' \
+    -o -name 'mbt-seed-blacklist.txt' \
     -o -name 'invariant-failures.jsonl' \
     -o -name 'invariant-fuzz.log' \
     -o -name 'escalate-fuzz.log' \) \
@@ -586,6 +610,8 @@ while true; do
   git worktree add -B "$codex_branch" "$codex_worktree" "$task_base_sha"
   bootstrap_worktree_install "$claude_worktree"
   bootstrap_worktree_install "$codex_worktree"
+  disable_fuzz_scripts_in_worktree "$claude_worktree"
+  disable_fuzz_scripts_in_worktree "$codex_worktree"
 
   write_prompt "Claude implementer" "$task_root/claude-implementer.prompt.md" "$claude_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
   write_prompt "Codex implementer" "$task_root/codex-implementer.prompt.md" "$codex_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"

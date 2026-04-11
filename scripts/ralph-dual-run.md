@@ -18,7 +18,18 @@ The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read th
 
 Task worktrees reuse the main repo install by symlinking `node_modules`, `packages/core/node_modules`, and `packages/mcp/node_modules` into each disposable worktree. This keeps per-task verification fast and avoids a redundant `pnpm install` for every task rotation.
 
-The harness also kills stray `mbt-fuzz` / `fuzz-all` / `fuzz-overnight` processes and removes generated MBT artifact files under `packages/` before the run starts, before each task begins, and after each task ends. Ralph task runs are not allowed to leave `mbt-failure-battle-*.log`, `mbt-failures.jsonl`, `mbt-timing.jsonl`, `mbt-fuzz.log`, or `packages/fat-traces/` behind.
+The harness also kills stray fuzz / overnight MBT processes and removes generated MBT artifact files under `packages/` before the run starts, before each task begins, and after each task ends. Ralph task runs are not allowed to leave `mbt-failure-battle-*.log`, `mbt-failures.jsonl`, `mbt-timing.jsonl`, `mbt-fuzz.log`, `mbt-seed-blacklist.txt`, or `packages/fat-traces/` behind.
+
+In addition, every temporary Ralph task worktree has these scripts replaced with hard-fail stubs before agents start:
+
+- `scripts/mbt-fuzz.sh`
+- `scripts/mbt-fuzz-timed.sh`
+- `scripts/fuzz-all.sh`
+- `scripts/fuzz-overnight.sh`
+- `scripts/escalate-fuzz.sh`
+- `scripts/measure-tier-timing.sh`
+
+That makes fuzz / overnight validation impossible inside task worktrees even if an agent ignores prompt guidance.
 
 ## Plan Format
 
