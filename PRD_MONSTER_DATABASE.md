@@ -147,7 +147,7 @@ Three durable layers are required.
 
 ### 1. `MonsterSourceRecord`
 
-Purpose: capture imported or parsed source material in source-native shape for auditing, regeneration, normalization, and diffing.
+Purpose: capture source citations and any supporting structured references used while authoring normalized records.
 
 Suggested shape:
 
@@ -169,8 +169,8 @@ interface MonsterSourceRecord {
 Rules:
 
 - `MonsterSourceRecord` is not consumed directly by battle.
-- It exists so imports are reproducible and provenance is inspectable.
-- `supportingStructuredInput` covers datasets such as 5e-tools. This is an ingestion aid classification, not a provenance classification.
+- It exists so provenance and supporting references are inspectable.
+- `supportingStructuredInput` covers datasets such as 5e-tools. This is a supporting-reference classification, not a provenance classification.
 
 ### 2. `MonsterStatBlock`
 
@@ -357,26 +357,24 @@ Rules:
 - A shipped SRD catalog should be an `SrdMonsterCatalog`, not a loose mixed-license bag of records.
 - Mixed-source views, if needed later, are integration views rather than canonical collections.
 
-## Import Pipeline
+## Authoring Model
 
-The catalog should stop being hand-maintained as a single TS file once the schema is widened.
-
-Add scripts:
-
-- `scripts/monsters/import-srd-monsters.ts`
-- `scripts/monsters/import-5etools-monsters.ts`
-- `scripts/monsters/normalize-monster.ts`
-- `scripts/monsters/validate-monster-automation.ts`
-
-Generated outputs:
-
-- `packages/core/src/generated/monster-source-records.ts`
-- `packages/core/src/generated/monster-catalog-srd.ts`
+The first SRD monster dataset should be hand-authored in core.
 
 Rules:
 
-- Generated SRD output is the shipped catalog source for SRD monsters.
-- Hand-authored core files should define schema, projection helpers, and validation logic, not hundreds of monster literals.
+- Do not assume an importer or code-generation step.
+- Accept some non-DRY repetition when it keeps provenance explicit and the owned dataset easy to inspect.
+- Show SRD provenance directly on authored records.
+- Supporting structured references such as 5e-tools may inform authoring and review, but they do not become the source of truth.
+
+Possible future tooling:
+
+- validation scripts;
+- coverage reports;
+- consistency checks against supporting structured references.
+
+Those tools may assist authoring later, but they are not part of the initial design requirement.
 
 ## Runtime Projection Rules
 
@@ -399,7 +397,7 @@ Deliverables:
 - widened monster type definitions;
 - provenance types;
 - authored section types;
-- automation support enum.
+- executable vs text-only ability split.
 
 ### Phase 2: Backfill Goblins Into New Shape
 
@@ -420,15 +418,15 @@ Deliverables:
 - derive reaction surfaces from reactions;
 - keep public MCP tokens generic.
 
-### Phase 4: Add Import Pipeline
+### Phase 4: Expand The Hand-Authored SRD Dataset
 
-Build SRD and 5e-tools import/cross-check scripts and generate the first broader SRD dataset.
+Add the broader SRD monster corpus directly in core using the widened canonical schema.
 
 Deliverables:
 
-- source records;
-- generated normalized SRD catalog;
-- validation report on unsupported ability patterns.
+- source citations and supporting references where useful;
+- hand-authored normalized SRD dataset;
+- a manual or scripted report on unsupported ability patterns.
 
 ### Phase 5: Expand Generic Facilities
 
@@ -456,9 +454,9 @@ This PRD succeeds when all of the following are true:
 
 - adding a new SRD monster usually means adding normalized data, not engine code;
 - shipped SRD monster records cite SRD provenance explicitly;
-- 5e-tools is useful to the pipeline without becoming the canonical provenance of shipped records;
+- 5e-tools is useful as a supporting structured reference without becoming provenance;
 - battle/MCP/app do not maintain their own monster registries;
-- unsupported monster abilities can still exist as display-only or partial entries;
+- unsupported monster abilities can still exist as text-only entries with explicit reasons;
 - generic engine facilities, not monster-specific handlers, are the normal route for automation expansion.
 
 ## Risks
@@ -473,11 +471,11 @@ Mitigation:
 
 ### Risk 2: Automation Scope Explosion
 
-Trying to fully automate every monster ability before importing the SRD corpus will stall the database effort.
+Trying to fully automate every monster ability before expanding the SRD corpus will stall the database effort.
 
 Mitigation:
 
-- make `automationSupport` explicit and allow partial/display-only entries.
+- allow text-only entries with explicit non-executable reasons.
 
 ### Risk 3: Provenance Drift
 
@@ -498,23 +496,17 @@ Mitigation:
 - derive runtime options from canonical authored data;
 - reject adapter-owned monster registries.
 
-## Open Questions
-
-1. Should `MonsterStatBlock` keep the existing name `StatBlock`, or should the wider canonical type be renamed and `StatBlock` remain a public alias?
-2. How much spellcasting structure should be normalized in the first pass versus retained as authored text plus spell references?
-3. Should generated monster catalog files be committed to git or regenerated in CI/build steps?
-
 ## Recommended Next Step
 
 Implement Phase 1 only:
 
 - widen `monster-types.ts` into the canonical schema and authored ability types;
 - backfill current goblins into that schema without changing public MCP behavior;
-- keep the import pipeline and broader SRD ingestion as the follow-up task.
+- keep the broader SRD hand-authoring pass as the follow-up task.
 
 ## Current Answers To Immediate Design Questions
 
-- `MonsterStatBlock` vs `StatBlock`: prefer the name that keeps domain language clean and avoids inheritance-heavy modeling. Composition wins over inheritance.
+- `MonsterStatBlock` vs `StatBlock`: use `StatBlock` as the canonical domain type name. `Stat Block` is already the repo's monster-only domain term, so the `Monster` prefix is redundant. If transition safety is needed, keep `MonsterStatBlock` only as a temporary alias to `StatBlock` and remove it later. Avoid inheritance-heavy modeling; composition wins.
 - XP: omit until a real consumer exists.
-- First-pass spellcasting normalization: normalize the stable structural parts now. That means spellcasting ability, save DC / attack bonus when authored, slot or frequency shape, and explicit spell references. Keep freeform tactical or prose-only casting notes in authored text until a generic spellcasting execution foundation exists. This gives a maintainable base without overcommitting to brittle parsing.
-- Generated catalog files: prefer committed generated outputs if they are the canonical shipped SRD dataset and regeneration is deterministic. That keeps the domain artifact explicit, reviewable, and DRY at the source-schema level. If regeneration later becomes cheap and ubiquitous, CI can verify determinism rather than becoming the only place the catalog exists.
+- First-pass spellcasting normalization: normalize the stable structural parts now and keep tactical/procedural prose as text. Normalize spellcasting section identity, casting ability, authored save DC / attack bonus, spellcasting level where relevant, spell references, and usage/frequency buckets such as at-will, per-day, and slots. Keep target-selection prose, tactical preferences, exception clauses, and anything that would require brittle parsing or a new spellcasting execution engine as authored text. The first pass should support rendering, lookup, legality projection, and later automation, not full spellcasting execution.
+- Dataset authoring model: do not generate the initial SRD dataset. SRD 5.2.1 is stable enough that the repo can accept some non-DRY hand-authored data, with provenance shown directly on the owned records. Later tooling may validate or cross-check that dataset, but generation is not a requirement.
