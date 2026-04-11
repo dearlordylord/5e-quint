@@ -42,13 +42,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 1,
       "id": "CHAR2",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Score Generation And Origin Validation"
     },
     {
       "number": 2,
       "id": "CHAR3",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Proficiencies Features And Level-Gated Character Facts"
     },
     {
@@ -116,8 +116,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
 | ----- | ---- | ------ | ---------- | ------ | ----------- | ----------------- |
 | 0 | CHAR1 - Canonical Character Domain | done | none | CHAR2, CHAR3, CHAR4, CHAR5, CHAR6, CHAR7 | Landed `CharacterDraft` / `CharacterSheet` in `packages/core/src/character-domain.ts` with finalization that rejects incomplete or contradictory class/background/species/language/alignment state. | Complete |
-| 1 | CHAR2 - Score Generation And Origin Validation | ready-for-implementation-after-light-research | CHAR1 | CHAR3, CHAR5 | Extend the canonical draft/sheet with ability-score generation and origin validation on top of the landed `primaryClass + classLevels` baseline; re-read the relevant SRD/background text before editing. | Unblocked by CHAR1; bounded follow-up |
-| 2 | CHAR3 - Proficiencies Features And Level-Gated Character Facts | blocked | CHAR1, CHAR2 | CHAR4, CHAR5, CHAR7 | After CHAR1-2, extend the sheet to own proficiencies, subclass gating, feats/feature choices, multiclass prerequisites, and class-resource derivations. | Shape understood; depends on draft/sheet baseline |
+| 1 | CHAR2 - Score Generation And Origin Validation | done | CHAR1 | CHAR3, CHAR5 | Landed owned ability-score generation, background score-increase validation, and SRD starting-language validation on the canonical character sheet. | Complete |
+| 2 | CHAR3 - Proficiencies Features And Level-Gated Character Facts | ready-for-implementation-after-light-research | CHAR1, CHAR2 | CHAR4, CHAR5, CHAR7 | Extend the now score-complete sheet to own proficiencies, subclass gating, feat/feature choices, multiclass prerequisites, and class-resource derivations. | Unblocked by CHAR2; next bounded slice |
 | 3 | CHAR4 - Equipment And Loadout Projection | blocked | CHAR1, CHAR3 | CHAR5 | Replace narrow starter-loadout assumptions with owned sheet equipment/loadout facts and project them into combat-facing hand, armor, shield, and weapon facts. | Depends on sheet feature/proficiency ownership |
 | 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | blocked | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Derive executable sheet numbers and spellcasting facts from the owned sheet, then project them into creature runtime and battle init without duplicated derivation. | Depends on prior sheet ownership slices |
 | 5 | CHAR6 - Guided Workflow Shell | blocked | CHAR1, CHAR2, CHAR5 | none | Once the owned domain and projections are stable, add a thin workflow shell over `CharacterDraft` rather than a second semantic model. | Product-shell work; intentionally later |
@@ -156,8 +156,8 @@ Current architecture decisions for this batch:
 
 Recommended next coding-loop task:
 
-1. **CHAR2 - Score Generation And Origin Validation**
-   CHAR1 landed the canonical ownership boundary. The next slice should add SRD score-generation and origin-validation semantics to the draft/sheet rather than introducing a second character representation elsewhere.
+1. **CHAR3 - Proficiencies Features And Level-Gated Character Facts**
+   CHAR2 landed owned score generation and origin validation. The next slice should keep extending the same canonical sheet rather than introducing parallel proficiency or feature registries.
 
 Do not jump ahead to workflow/UI work before the canonical domain exists. Do not solve character creation by widening `DndMachineInput`, `BATTLE_INIT`, or adapter-owned metadata.
 
@@ -169,8 +169,8 @@ Do not jump ahead to workflow/UI work before the canonical domain exists. Do not
    - [.references/srd-5.2.1/Character-Creation.md](../.references/srd-5.2.1/Character-Creation.md)
    - [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
    - [creature.qnt](../creature.qnt)
-2. Execute CHAR2 next.
-3. Keep CHAR3+ blocked until CHAR2 lands, since proficiencies and derived sheet numbers depend on validated score/origin ownership.
+2. Execute CHAR3 next.
+3. Keep CHAR4+ sequenced behind CHAR3 where the dependency table still requires it.
 4. Keep H and I deferred unless this file is explicitly reprioritized.
 
 ### Task 0 - CHAR1 - Canonical Character Domain
@@ -243,16 +243,18 @@ Plan Impact:
 
 ### Task 1 - CHAR2 - Score Generation And Origin Validation
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: CHAR1.
 
 Blocks: CHAR3, CHAR5.
 
-Next action:
+Closeout:
 
-- Re-read the relevant Character Creation / Character Origins SRD text, then extend the canonical domain with ability-score generation and origin validation.
-- Implement the first end-to-end SRD creation slice: class, background, species, languages, ability-score generation, alignment, and finalized score/modifier validation.
+- Extended `CharacterDraft` and `CharacterSheet` with owned SRD score-generation choices, background ability-score increases, and derived final ability scores.
+- Added pure score helpers in `packages/core/src/character-ability-scores.ts` and extracted score-validation helpers into `packages/core/src/character-finalization-helpers.ts`.
+- Kept final modifiers derived via helpers instead of storing redundant modifier state on the sheet.
+- Tightened starting-language validation to the SRD Standard Languages table for this slice: exactly `Common` plus two other standard languages, with rare/special languages left for later feature-driven tasks.
 
 Acceptance criteria:
 
@@ -262,9 +264,30 @@ Acceptance criteria:
 - Species and language choices finalize into owned sheet facts.
 - Final scores derive final modifiers automatically.
 
+Verification:
+
+- RAW check completed against `.references/srd-5.2.1/Character-Creation.md` Step 2 and Step 3 plus `.references/srd-5.2.1/Character-Origins.md` background ability-score text, then cross-checked terminology in `UBIQUITOUS_LANGUAGE.md` for Character Sheet, Standard Array, Point Buy, and Ability Modifier.
+- Focused tests passed: `pnpm --dir packages/core exec vitest run src/character-domain.test.ts`.
+- Focused lint passed on touched files: `pnpm --dir packages/core exec eslint --no-inline-config -c eslint.config.mjs src/character-domain.ts src/character-domain.test.ts src/character-ability-scores.ts src/character-finalization-helpers.ts`.
+- Dependency graph check passed: `pnpm circular`.
+- Repo verification attempted: `pnpm quality` still fails before typecheck on pre-existing Prettier drift in unrelated core files (`src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/features/spell-available-actions.ts`, `src/machine-event-extractors.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`).
+- Existing repo typecheck baseline remains red outside this task when run directly via `pnpm --dir packages/core exec tsc --noEmit`; failures are in battle/runtime files unrelated to CHAR2.
+- `/simplify` convergence:
+  - Round 1: kept the canonical sheet as the owner of generation method, background increase choice, and derived final scores while removing the rejected worktree script rewrites from scope.
+  - Round 2: extracted score-validation helpers to a dedicated module to satisfy the repo file-size limit without adding duplicate state or parallel character models.
+  - Round 3: tightened starting-language validation to Standard Languages only for this slice; no further important simplifications remained.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `CHAR2`: marked `done`.
+  - `CHAR3`: unblocked and promoted to `ready-for-implementation-after-light-research`.
+  - `CHAR5`: remains `blocked`; it still depends on `CHAR3` and `CHAR4` despite inheriting the score/origin baseline from `CHAR2`.
+
 ### Task 2 - CHAR3 - Proficiencies Features And Level-Gated Character Facts
 
-Status: blocked.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: CHAR1, CHAR2.
 
@@ -272,7 +295,7 @@ Blocks: CHAR4, CHAR5, CHAR7.
 
 Next action:
 
-- After CHAR1-2, extend the sheet to own proficiencies, subclass gating, feat/feature choices, multiclass prerequisites, and class-resource derivations.
+- Re-read the relevant SRD class/background/species proficiency and subclass passages, then extend the now score-complete sheet with owned proficiencies, subclass gating, feat/feature choices, multiclass prerequisites, and class-resource derivations.
 
 Acceptance criteria:
 
