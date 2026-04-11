@@ -36,13 +36,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 0,
       "id": "CHAR1",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Canonical Character Domain"
     },
     {
       "number": 1,
       "id": "CHAR2",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Score Generation And Origin Validation"
     },
     {
@@ -115,8 +115,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
 | ----- | ---- | ------ | ---------- | ------ | ----------- | ----------------- |
-| 0 | CHAR1 - Canonical Character Domain | ready-for-research | none | CHAR2, CHAR3, CHAR4, CHAR5, CHAR6, CHAR7 | Confirm the minimal durable shape for `CharacterDraft` and `CharacterSheet`, align it against `creature.qnt` construction fields and current TS runtime inputs, then either land the canonical models directly or update this file with the final owned-model decision. | Highest-priority active task |
-| 1 | CHAR2 - Score Generation And Origin Validation | blocked | CHAR1 | CHAR3, CHAR5 | Wait for canonical character-domain ownership to land, then implement the first end-to-end SRD creation slice: class, background, species, languages, ability-score generation, alignment, and finalized score/modifier validation. | Blocked only on canonical model landing |
+| 0 | CHAR1 - Canonical Character Domain | done | none | CHAR2, CHAR3, CHAR4, CHAR5, CHAR6, CHAR7 | Landed `CharacterDraft` / `CharacterSheet` in `packages/core/src/character-domain.ts` with finalization that rejects incomplete or contradictory class/background/species/language/alignment state. | Complete |
+| 1 | CHAR2 - Score Generation And Origin Validation | ready-for-implementation-after-light-research | CHAR1 | CHAR3, CHAR5 | Extend the canonical draft/sheet with ability-score generation and origin validation on top of the landed `primaryClass + classLevels` baseline; re-read the relevant SRD/background text before editing. | Unblocked by CHAR1; bounded follow-up |
 | 2 | CHAR3 - Proficiencies Features And Level-Gated Character Facts | blocked | CHAR1, CHAR2 | CHAR4, CHAR5, CHAR7 | After CHAR1-2, extend the sheet to own proficiencies, subclass gating, feats/feature choices, multiclass prerequisites, and class-resource derivations. | Shape understood; depends on draft/sheet baseline |
 | 3 | CHAR4 - Equipment And Loadout Projection | blocked | CHAR1, CHAR3 | CHAR5 | Replace narrow starter-loadout assumptions with owned sheet equipment/loadout facts and project them into combat-facing hand, armor, shield, and weapon facts. | Depends on sheet feature/proficiency ownership |
 | 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | blocked | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Derive executable sheet numbers and spellcasting facts from the owned sheet, then project them into creature runtime and battle init without duplicated derivation. | Depends on prior sheet ownership slices |
@@ -148,6 +148,7 @@ Already wired on `master` and relevant to this batch:
 Current architecture decisions for this batch:
 
 - `CharacterSheet` is the PC-owned canonical record; `StatBlock` remains monster-only language.
+- Canonical class/level ownership is `primaryClass + classLevels`; total level is derived from `classLevels` instead of being stored twice.
 - Character creation must not be generalized into the main battle machine.
 - Runtime projections must flow from owned character data to creature/battle runtime, not the reverse.
 
@@ -155,8 +156,8 @@ Current architecture decisions for this batch:
 
 Recommended next coding-loop task:
 
-1. **CHAR1 - Canonical Character Domain**
-   This is the enabling slice for the entire batch. Until the repo owns `CharacterDraft` and `CharacterSheet` explicitly, every later slice risks recreating character state in whichever layer happens to need it first.
+1. **CHAR2 - Score Generation And Origin Validation**
+   CHAR1 landed the canonical ownership boundary. The next slice should add SRD score-generation and origin-validation semantics to the draft/sheet rather than introducing a second character representation elsewhere.
 
 Do not jump ahead to workflow/UI work before the canonical domain exists. Do not solve character creation by widening `DndMachineInput`, `BATTLE_INIT`, or adapter-owned metadata.
 
@@ -168,27 +169,24 @@ Do not jump ahead to workflow/UI work before the canonical domain exists. Do not
    - [.references/srd-5.2.1/Character-Creation.md](../.references/srd-5.2.1/Character-Creation.md)
    - [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
    - [creature.qnt](../creature.qnt)
-2. Execute CHAR1 first.
-3. If CHAR1 lands cleanly, update this file in the same loop:
-   - mark CHAR1 `done`;
-   - promote CHAR2 to `ready-for-implementation-after-light-research` or `ready-for-research`;
-   - revise downstream task notes if the canonical model shape changed.
+2. Execute CHAR2 next.
+3. Keep CHAR3+ blocked until CHAR2 lands, since proficiencies and derived sheet numbers depend on validated score/origin ownership.
 4. Keep H and I deferred unless this file is explicitly reprioritized.
 
 ### Task 0 - CHAR1 - Canonical Character Domain
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: CHAR2, CHAR3, CHAR4, CHAR5, CHAR6, CHAR7.
 
-Next action:
+Closeout:
 
-- Confirm the minimal durable shape for `CharacterDraft` and `CharacterSheet`.
-- Align that shape with the existing construction/leveling surface in `creature.qnt` and the current TS runtime/battle projection needs.
-- Decide which facts belong on the finalized canonical sheet versus projection-only derived outputs.
-- Either land the canonical models directly if the research resolves cleanly, or update this file with the final ownership decision and promote follow-up tasks accordingly.
+- Landed `packages/core/src/character-domain.ts` with explicit `CharacterDraft` and `CharacterSheet` concepts.
+- Chose `primaryClass + classLevels` as the canonical class/level shape to match `creature.qnt` and avoid duplicating total level on the sheet.
+- Kept the sheet bounded to owned creation facts for this slice: primary class, class-level progression, background, species, languages, and alignment.
+- Left ability scores, subclass gating, proficiencies, and equipment/spellcasting derivations for downstream tasks instead of front-loading them into CHAR1.
 
 Problem:
 
@@ -216,7 +214,7 @@ Implementation output:
   - owned sheet facts;
   - derived sheet results;
   - runtime projection outputs.
-- If research discovers a better durable split, update this file before implementation continues.
+- A durable serialized sheet shape that keeps `languages` as an array and derives total level from `classLevels`.
 
 Acceptance criteria:
 
@@ -228,21 +226,24 @@ Acceptance criteria:
 
 Verification:
 
-- RAW check: read `.references/srd-5.2.1/Character-Creation.md` and `.references/srd-5.2.1/Character-Origins.md`, then re-check `UBIQUITOUS_LANGUAGE.md` before editing.
-- Cross-check the chosen canonical model against `creature.qnt` construction/leveling facilities before implementation.
-- `/simplify` convergence: minimum two rounds after implementation, continuing until no important fixes remain.
-- Add focused tests for the canonical-model finalization boundary if implementation lands in this loop.
+- RAW check completed against `.references/srd-5.2.1/Character-Creation.md` and `.references/srd-5.2.1/Character-Origins.md`, then `UBIQUITOUS_LANGUAGE.md`.
+- Cross-check completed against `creature.qnt` construction/leveling helpers, especially `CharConfig.className`, `CharConfig.classLevels`, `ZERO_CLASS_LEVELS`, `singleClassLevels`, and `pTotalLevel`.
+- Focused tests added for the canonical-model finalization boundary in `packages/core/src/character-domain.test.ts`.
+- `/simplify` convergence:
+  - Round 1: removed the persistence-hostile `Set` language storage from the candidate design and kept total level derived instead of stored.
+  - Round 2: kept the module bounded to durable CHAR1 facts only; no further important simplifications remained.
 
 Plan Impact:
 
-- Status: update-required
+- Status: applied
 - Affected tasks:
-  - `CHAR1`: will become `done` or stay `ready-*` with a clarified scope.
-  - `CHAR2` and downstream character tasks: status and wording should be updated based on the final canonical model shape.
+  - `CHAR1`: marked `done`.
+  - `CHAR2`: unblocked and promoted to `ready-for-implementation-after-light-research`.
+  - `CHAR3`, `CHAR4`, `CHAR5`, `CHAR6`, `CHAR7`: no dependency change beyond inheriting the clarified `primaryClass + classLevels` ownership baseline.
 
 ### Task 1 - CHAR2 - Score Generation And Origin Validation
 
-Status: blocked.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: CHAR1.
 
@@ -250,8 +251,8 @@ Blocks: CHAR3, CHAR5.
 
 Next action:
 
-- Wait for CHAR1 to land.
-- Then implement the first end-to-end SRD creation slice: class, background, species, languages, ability-score generation, alignment, and finalized score/modifier validation.
+- Re-read the relevant Character Creation / Character Origins SRD text, then extend the canonical domain with ability-score generation and origin validation.
+- Implement the first end-to-end SRD creation slice: class, background, species, languages, ability-score generation, alignment, and finalized score/modifier validation.
 
 Acceptance criteria:
 
