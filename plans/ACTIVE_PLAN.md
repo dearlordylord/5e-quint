@@ -205,6 +205,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "MCP4-B",
       "status": "ready-for-implementation-after-light-research",
       "title": "BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal"
+    },
+    {
+      "number": 30,
+      "id": "ARCH-BATTLE-PROJ",
+      "status": "ready-for-research",
+      "title": "Battle Projection Contract And Methodology"
     }
   ]
 }
@@ -261,6 +267,11 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 23    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | done     | MCP3-A1, MCP3-A2; optionally MCP3-A3 for Goblin Boss                     | fuller goblin behavior                                                | Closed 2026-04-11: `start_battle` now uses a generic monster descriptor instead of goblin-named MCP fields, the core runtime catalog publishes `goblinWarrior` and `goblinBoss`, and focused core/MCP tests prove Nimble Escape bonus actions, advantage-hit riders, and Redirect Attack stay on the generic stat-block/battle surfaces rather than on goblin-specific MCP shortcuts. RAW check: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Warrior/Boss, `.references/srd-5.2.1/Monsters/Overview.md`, and `UBIQUITOUS_LANGUAGE.md` reviewed. `/simplify` round 1 removed the goblin-named `start_battle` schema surface; round 2 re-checked for redundant MCP aliases and converged with no further task-scoped reductions. | Completed; no downstream status changes            |
 | 24    | H - PassiveModifiers Sub-Record                                       | deferred | none                                                                      | Possible passive modifier cleanup                                     | Only revisit if the batch selects passive modifier restructuring                                                                                                                                                                                                                                                                                                                                   | Not current-batch work                             |
 | 25    | I - Build-Map / Hole Metadata                                         | deferred | Concrete consumer, possibly D                                             | Future token-hole metadata                                            | Only revisit when attack boundary, transcript disambiguation, or UI needs it                                                                                                                                                                                                                                                                                                                       | Not current-batch work                             |
+| 26    | MCP2-C - Concise Schema Validation Errors in MCP Tools                | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Tighten MCP schema decode failures so invalid tool inputs report concise, field-local errors instead of massive union dumps, while preserving precise validation semantics.                                                                                                                                                                                                                      | Ready; narrow MCP surface improvement               |
+| 27    | MCP2-D - Unarmed Strike Fallback in Battle Attack                     | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Implement unarmed-strike fallback for weaponless battle combatants, keeping damage parity with `creature.qnt:unarmedDamage` and using the narrowest battle-owned facts necessary.                                                                                                                                                                                                              | Ready; bounded core attack change                   |
+| 28    | MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion            | ready-for-implementation-after-light-research | none                                                          | MCP2-B                                                                | Implement mid-battle creature insertion in Quint, XState, and MCP using `InitCreatureConfig`, initiative insertion semantics, and active-turn-only guards.                                                                                                                                                                                                                                      | Ready; independent control/event slice              |
+| 29    | MCP4-B - BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal           | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Implement mid-battle creature removal in Quint, XState, and MCP with concentration cleanup, grapple cleanup, and turn-index repair.                                                                                                                                                                                                                                                             | Ready; independent control/event slice              |
+| 30    | ARCH-BATTLE-PROJ - Battle Projection Contract And Methodology         | ready-for-research                         | none                                                          | none                                                                  | Research and document the explicit contract for what battle owns vs. what stays on creature/session layers, then decide whether battle projection should move to named projector functions or another common methodology.                                                                                                                                                                       | Ready; architecture/doc research with possible follow-up |
 
 ## Current Integrated Baseline
 
@@ -2523,6 +2534,65 @@ Acceptance criteria:
 - Removed creatures disappear from `creatures` map and `initiative` array.
 - `turnIndex` adjusted correctly (active creature unchanged unless it was removed).
 - Concentration broken on removal (spell effects cleaned up).
+
+### Task 30 - ARCH-BATTLE-PROJ - Battle Projection Contract And Methodology
+
+Status: ready-for-research.
+
+Depends on: none.
+
+Blocks: none.
+
+Next action: research the existing battle/creature ownership split in `ARCHITECTURE.md`, `battle.qnt`, `battle-machine-types.ts`, `battle-machine-actions-turn.ts`, and the MCP `start_battle` path; then write back a concrete projection contract and, if needed, spawn follow-up implementation tasks.
+
+Purpose:
+
+- The repo intentionally uses battle-owned combatant projections instead of embedding creature child actors inside battle. That architectural decision is documented, but the projection methodology is not declared as a first-class contract.
+- Recent task work exposed drift: `dexMod` is projected into battle for battle-owned Monk reaction math, while `strMod` is not, even though new unarmed-attack work started depending on Strength-owned semantics. That is a signal that battle-field promotion is happening opportunistically rather than through an explicit method.
+- We need a documented answer to:
+  - why battle owns a flat `Map<CreatureId, BattleCreatureState>` instead of reusing the creature machine directly;
+  - what facts must be promoted into `BattleCreatureState` / `Combatant`;
+  - what facts remain caller/session-owned;
+  - how future projection changes must be implemented consistently across Quint, TS, init config, MCP routing, and tests.
+
+Context:
+
+- `ARCHITECTURE.md` already says the battle machine is authoritative for combat semantics, while the creature machine is a local projection/debugging surface, and that battle uses flat creature context instead of child actors because combat needs atomic cross-creature updates and ordered reaction phases.
+- `battle.qnt` and `BattleCreatureState` already act as the de facto battle projection contract, but fields are added case-by-case.
+- `InitCreatureConfig` plus `battleInit` in `battle-machine-actions-turn.ts` is the real promotion path into battle state today.
+- `battle-projection.mbt.test.ts` already contains a more explicit projection pattern (`projectToBattle`) for MBT normalization, which may be a useful model for production projection methodology.
+- Recent work and docs (`plans/TODO.md`) show multiple abstraction leaks where generic battle helpers carry rule-specific logic; this task is about the adjacent architectural leak where battle ownership rules are implicit instead of declared.
+
+Research questions:
+
+1. What is the minimal explicit projection contract that matches current architecture without introducing redundant state?
+2. Should production code adopt named projector functions for PC and monster battle init, instead of ad hoc field accumulation in `battleInit` and session adapters?
+3. For battle-owned semantics, should the rule be "if battle resolves it, all required inputs belong on `Combatant` / `BattleCreatureState`"?
+4. Is the current `dexMod` without `strMod` split intentional, temporary, or architectural drift?
+5. What concrete documentation and code-structure changes would prevent future one-off field promotion mistakes?
+
+Acceptance criteria:
+
+- The plan records a clear, repo-consistent projection contract covering:
+  - authoritative owner for combat semantics;
+  - battle-owned projected facts;
+  - caller/session-owned facts;
+  - required update surfaces when promoting a new field.
+- The research writes back specific recommendations for code and docs, not just observations.
+- If the contract reveals missing implementation work, add bounded follow-up tasks rather than burying them in prose.
+- The conclusion explicitly addresses the `dexMod` / `strMod` mismatch and says whether it is intentional or should be corrected.
+
+Verification:
+
+- Read and cite the relevant local sources:
+  - `ARCHITECTURE.md`
+  - `battle.qnt`
+  - `packages/core/src/battle-machine-types.ts`
+  - `packages/core/src/battle-machine-actions-turn.ts`
+  - `packages/core/src/battle-projection.mbt.test.ts`
+  - MCP `start_battle` / runtime routing files
+- `/simplify` convergence (2 rounds).
+- Confirm the resulting plan/doc update keeps the `ralph-task-index`, DAG row, and task section synchronized.
 - Grapple links severed on removal.
 - Help targets cleaned up.
 - Event rejected during reaction/AoE/movement/legendary/ready phases.
