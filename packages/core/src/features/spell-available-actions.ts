@@ -197,16 +197,22 @@ export function getSpellComponentRequirements(
   const entry = SRD_SPELLS.find(
     (info) => snakeCaseSpellName(info.name) === spellName,
   );
-  return entry == null ? null : parseSpellComponentRequirements(entry.components);
+  return entry == null
+    ? null
+    : parseSpellComponentRequirements(entry.components);
 }
 
-function diceMaximum(dice: { readonly dice: number; readonly dieSize: number }) {
+function diceMaximum(dice: {
+  readonly dice: number;
+  readonly dieSize: number;
+}) {
   return dice.dice * dice.dieSize;
 }
 
 export function getBattleReadyableSpellPayload(
   spellName: SpellName,
   slotLevel: SpellSlotLevel,
+  saveDC: DifficultyClass = DEFAULT_BATTLE_SPELL_SAVE_DC,
 ): BattleReadyableSpellPayload | null {
   if (spellName === "burning_hands") {
     return {
@@ -215,7 +221,7 @@ export function getBattleReadyableSpellPayload(
       release: {
         kind: "save",
         saveAbility: "dex",
-        saveDC: DEFAULT_BATTLE_SPELL_SAVE_DC,
+        saveDC,
         halfOnSuccess: true,
         damageType: "fire",
         damageOnFail: diceMaximum(burningHandsDamage(slotLevel)),
@@ -231,7 +237,7 @@ export function getBattleReadyableSpellPayload(
       release: {
         kind: "save",
         saveAbility: SPELL_FIREBALL.saveAbility ?? "dex",
-        saveDC: DEFAULT_BATTLE_SPELL_SAVE_DC,
+        saveDC,
         halfOnSuccess: true,
         damageType: SPELL_FIREBALL.damageType,
         damageOnFail: diceMaximum(fireballDamage(slotLevel)),
@@ -247,7 +253,7 @@ export function getBattleReadyableSpellPayload(
       release: {
         kind: "save",
         saveAbility: HOLD_PERSON_INFO.saveAbility ?? "wis",
-        saveDC: DEFAULT_BATTLE_SPELL_SAVE_DC,
+        saveDC,
         halfOnSuccess: false,
         damageType: "psychic",
         damageOnFail: 0,
@@ -266,6 +272,7 @@ export function getBattleReadyableSpellPayloadForSlots(
   spellName: SpellName,
   baseLevel: SpellSlotLevel,
   slotsCurrent: ReadonlyArray<number>,
+  saveDC?: DifficultyClass,
 ): BattleReadyableSpellPayload | null {
   const slotIndex = slotsCurrent.findIndex(
     (remaining, index) => index + 1 >= baseLevel && remaining > 0,
@@ -274,12 +281,14 @@ export function getBattleReadyableSpellPayloadForSlots(
   return getBattleReadyableSpellPayload(
     spellName,
     spellSlotLevel(slotIndex + 1),
+    saveDC,
   );
 }
 
 export function battleReadyableSpellPayloadsFromPreparedSpells(
   preparedSpells: ReadonlySet<string>,
   slotsCurrent: ReadonlyArray<number>,
+  spellSaveDcBySpell?: ReadonlyMap<SpellName, DifficultyClass>,
 ): ReadonlyMap<SpellName, BattleReadyableSpellPayload> {
   const payloads = new Map<SpellName, BattleReadyableSpellPayload>();
   for (const spellName of preparedSpells) {
@@ -289,6 +298,7 @@ export function battleReadyableSpellPayloadsFromPreparedSpells(
       spellName as SpellName,
       spellSlotLevel(modeled.baseLevel),
       slotsCurrent,
+      spellSaveDcBySpell?.get(spellName as SpellName),
     );
     if (payload != null) payloads.set(spellName as SpellName, payload);
   }

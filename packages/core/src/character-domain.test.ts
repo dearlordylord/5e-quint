@@ -22,6 +22,97 @@ import {
 } from "#/character-domain.ts";
 
 describe("character-domain", () => {
+  const wizardLevelOneSpellcasting = {
+    wizard: {
+      cantrips: ["fire_bolt", "light", "mage_hand"],
+      preparedSpells: [
+        "burning_hands",
+        "charm_person",
+        "detect_magic",
+        "magic_missile",
+      ],
+      spellbook: [
+        "burning_hands",
+        "charm_person",
+        "detect_magic",
+        "magic_missile",
+        "identify",
+        "sleep",
+      ],
+    },
+  } as const;
+
+  const rangerLevelFourteenSpellcasting = {
+    ranger: {
+      preparedSpells: [
+        "cure_wounds",
+        "detect_magic",
+        "speak_with_animals",
+        "speak_with_plants",
+        "spike_growth",
+        "aid",
+        "goodberry",
+        "longstrider",
+        "pass_without_trace",
+        "silence",
+        "daylight",
+      ],
+    },
+  } as const;
+
+  const multiclassCasterSpellcasting = {
+    bard: {
+      cantrips: ["mage_hand", "minor_illusion", "vicious_mockery"],
+      preparedSpells: [
+        "charm_person",
+        "cure_wounds",
+        "detect_magic",
+        "healing_word",
+        "identify",
+        "sleep",
+        "speak_with_animals",
+        "suggestion",
+        "thunderwave",
+      ],
+    },
+    cleric: {
+      cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
+      preparedSpells: [
+        "bless",
+        "cure_wounds",
+        "detect_magic",
+        "guiding_bolt",
+        "healing_word",
+      ],
+    },
+    paladin: {
+      preparedSpells: ["bless", "cure_wounds", "detect_magic", "heroism"],
+    },
+    ranger: {
+      preparedSpells: [
+        "aid",
+        "cure_wounds",
+        "detect_magic",
+        "longstrider",
+        "speak_with_animals",
+        "spike_growth",
+      ],
+    },
+    sorcerer: {
+      cantrips: ["fire_bolt", "light", "mage_hand", "minor_illusion"],
+      preparedSpells: [
+        "burning_hands",
+        "charm_person",
+        "detect_magic",
+        "magic_missile",
+      ],
+    },
+    warlock: {
+      cantrips: ["eldritch_blast", "mage_hand"],
+      preparedSpells: ["charm_person", "detect_magic", "speak_with_animals"],
+    },
+  } as const;
+
   function completeDraft(
     overrides: Partial<CharacterDraft> = {},
   ): CharacterDraft {
@@ -284,6 +375,7 @@ describe("character-domain", () => {
           multiclassBardInstrument: "lute",
           rangerDeftExplorerLanguages: ["Sylvan", "Primordial"],
         },
+        spellcasting: multiclassCasterSpellcasting,
         equipment: {
           backgroundOption: "package",
           classOption: "packageA",
@@ -348,6 +440,7 @@ describe("character-domain", () => {
           ranger: { className: "ranger", subclass: "hunter" },
         },
       },
+      spellcasting: rangerLevelFourteenSpellcasting,
       equipment: {
         backgroundOption: "package",
         classOption: "packageA",
@@ -395,6 +488,7 @@ describe("character-domain", () => {
         primaryClassSkills: ["arcana", "investigation"],
         speciesSkill: "perception",
       },
+      spellcasting: wizardLevelOneSpellcasting,
       equipment: {
         backgroundOption: "package",
         classOption: "packageA",

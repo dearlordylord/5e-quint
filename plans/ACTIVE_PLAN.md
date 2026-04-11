@@ -60,19 +60,19 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 4,
       "id": "CHAR5",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Sheet-Derived Numbers And Spellcasting Projection"
     },
     {
       "number": 5,
       "id": "CHAR6",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Guided Workflow Shell"
     },
     {
       "number": 6,
       "id": "CHAR7",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Level Advancement And Multiclass Continuation"
     },
     {
@@ -119,9 +119,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 1 | CHAR2 - Score Generation And Origin Validation | done | CHAR1 | CHAR3, CHAR5 | Landed owned ability-score generation, background score-increase validation, and SRD starting-language validation on the canonical character sheet. | Complete |
 | 2 | CHAR3 - Proficiencies Features And Level-Gated Character Facts | done | CHAR1, CHAR2 | CHAR4, CHAR5, CHAR7 | Landed owned build choices for class/background/species/feat-driven proficiencies, subclass ownership/gating, multiclass prerequisite validation, granted-language choices, and class-resource derivation helpers on the canonical character sheet. | Complete |
 | 3 | CHAR4 - Equipment And Loadout Projection | done | CHAR1, CHAR3 | CHAR5 | Landed owned starting-equipment choices, leftover starting-gold tracking, bounded combat-equipment ownership, loadout validation, and battle-facing weapon/hand/shield/armor projection sourced from `CharacterSheet`. | Complete |
-| 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | ready-for-implementation-after-light-research | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Derive executable sheet numbers and spellcasting facts from the owned sheet, reusing CHAR4 equipment ownership/projection rather than reintroducing runtime presets. | Unblocked by CHAR4; next bounded slice |
-| 5 | CHAR6 - Guided Workflow Shell | blocked | CHAR1, CHAR2, CHAR5 | none | Once the owned domain and projections are stable, add a thin workflow shell over `CharacterDraft` rather than a second semantic model. | Product-shell work; intentionally later |
-| 6 | CHAR7 - Level Advancement And Multiclass Continuation | blocked | CHAR1, CHAR3, CHAR5 | none | Extend the same character domain into advancement, higher-level starts, ASI/feat choice points, and multiclass continuation. | Depends on executable sheet baseline |
+| 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | done | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Landed owned spellcasting selections plus one `CharacterSheet` derivation path for sheet numbers, `DndMachineInput`, and battle init projection. | Complete |
+| 5 | CHAR6 - Guided Workflow Shell | ready-for-research | CHAR1, CHAR2, CHAR5 | none | Research a thin creation workflow shell that persists `CharacterDraft` and renders the already-owned sheet/projection outputs instead of re-deriving them in UI state. | Unblocked by CHAR5; needs product-shell scoping |
+| 6 | CHAR7 - Level Advancement And Multiclass Continuation | ready-for-research | CHAR1, CHAR3, CHAR5 | none | Research advancement ownership using the landed sheet-derived HP/hit-dice/spell-slot path as the extension point for higher-level starts and multiclass continuation. | Unblocked by CHAR5; needs advancement scoping |
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 
@@ -156,8 +156,8 @@ Current architecture decisions for this batch:
 
 Recommended next coding-loop task:
 
-1. **CHAR5 - Sheet-Derived Numbers And Spellcasting Projection**
-   CHAR4 landed owned equipment choices and loadout projection. The next slice should derive executable sheet numbers and spellcasting facts from the same canonical sheet instead of widening runtime init surfaces again.
+1. **CHAR6 - Guided Workflow Shell**
+   CHAR5 landed the owned sheet/projection baseline. The next slice should research the thinnest workflow shell that persists `CharacterDraft` and consumes those derivations without introducing a second semantic model.
 
 Do not jump ahead to workflow/UI work before the canonical domain exists. Do not solve character creation by widening `DndMachineInput`, `BATTLE_INIT`, or adapter-owned metadata.
 
@@ -395,15 +395,18 @@ Plan Impact:
 
 ### Task 4 - CHAR5 - Sheet-Derived Numbers And Spellcasting Projection
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: CHAR1, CHAR2, CHAR3, CHAR4.
 
 Blocks: CHAR6, CHAR7.
 
-Next action:
+Closeout:
 
-- Derive executable sheet numbers and spellcasting facts from the canonical sheet, then project them into creature runtime and battle runtime while consuming CHAR4-owned equipment/loadout facts instead of hardcoded presets.
+- Extended `CharacterDraft` / `CharacterSheet` with owned class-keyed spellcasting selections, including Wizard spellbooks where the SRD requires them.
+- Landed `character-sheet-derived.ts` as the single derivation path for HP, Hit Dice, AC, initiative, saves, skills, passive Perception, slot state, spell save DC, spell attack bonus, machine input projection, and battle init projection.
+- Threaded battle init to consume projected slot state and projected readyable spell payloads instead of rebuilding them from the old caster preset.
+- Kept generic non-sheet runtime fallbacks intact for existing callers, but the owned sheet projection path now supplies prepared spells and slots directly so the character path no longer relies on runtime guessing.
 
 Acceptance criteria:
 
@@ -411,9 +414,27 @@ Acceptance criteria:
 - Known/prepared spell choices are owned sheet facts, not runtime guesses.
 - Creature and battle runtime projection consume those owned facts without re-deriving them elsewhere.
 
+Verification:
+
+- RAW check completed against `.references/srd-5.2.1/Classes/Bard.md`, `Cleric.md`, `Ranger.md`, `Sorcerer.md`, `Wizard.md`, and `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`, then cross-checked with `UBIQUITOUS_LANGUAGE.md` entries for Spell Save DC, Spell Attack, and Caster Type.
+- Focused tests passed: `cd packages/core && pnpm exec vitest run src/character-domain.test.ts src/character-sheet-derived.test.ts`.
+- Repo-required verification ran: `pnpm quality`. It still fails in pre-existing `packages/core` Prettier-check files outside CHAR5 (`src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/machine-event-extractors.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`).
+- `/simplify` convergence:
+  - Round 1: extracted spellcasting tables/rule-threshold helpers into `character-spellcasting-data.ts` and trimmed the integration slice to stay under repo file-size limits.
+  - Round 2: removed unnecessary `character-domain.ts` spellcasting re-exports and kept the owned derivation path split at the canonical-domain boundary; no further important simplifications remained.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `CHAR5`: marked `done`.
+  - `CHAR6`: unblocked and promoted to `ready-for-research`.
+  - `CHAR7`: unblocked and promoted to `ready-for-research`.
+- Plan edits: updated task statuses, queue guidance, and CHAR5 closeout/verification notes.
+
 ### Task 5 - CHAR6 - Guided Workflow Shell
 
-Status: blocked.
+Status: ready-for-research.
 
 Depends on: CHAR1, CHAR2, CHAR5.
 
@@ -421,7 +442,7 @@ Blocks: none.
 
 Next action:
 
-- Once the owned domain and projections are stable, add a thin workflow shell around `CharacterDraft`.
+- Research the thinnest workflow shell that persists `CharacterDraft` and renders the landed sheet/projection outputs without duplicating validation or derivation logic.
 
 Acceptance criteria:
 
@@ -431,7 +452,7 @@ Acceptance criteria:
 
 ### Task 6 - CHAR7 - Level Advancement And Multiclass Continuation
 
-Status: blocked.
+Status: ready-for-research.
 
 Depends on: CHAR1, CHAR3, CHAR5.
 
@@ -439,7 +460,7 @@ Blocks: none.
 
 Next action:
 
-- Extend the same character domain into advancement, higher-level starts, ASI/feat choice points, and multiclass continuation.
+- Research how advancement should extend the same owned character domain and reuse the landed CHAR5 derivation path for HP, hit dice, proficiency-sensitive values, and spell-slot projection.
 
 Acceptance criteria:
 

@@ -32,6 +32,11 @@ import {
   CHARACTER_EQUIPMENT_ISSUE_CODES,
   validateCharacterEquipment,
 } from "#/character-equipment-validation.ts";
+import {
+  CHARACTER_SPELLCASTING_ISSUE_CODES,
+  validateCharacterSpellcastingChoices,
+  type CharacterSpellcastingChoices,
+} from "#/character-spellcasting.ts";
 import type {
   CharacterBuildChoices,
   CharacterClassResourcePool,
@@ -133,13 +138,13 @@ export {
   type CharacterEquipmentIssue,
   type CharacterEquipmentIssueCode,
 } from "#/character-equipment-validation.ts";
-
 /**
  * Character-domain ownership boundary.
  *
  * - `CharacterDraft` owns incomplete SRD character-creation choices.
  * - `CharacterSheet` owns validated canonical PC facts plus the explicit
- *   proficiency- and feature-affecting choices needed to derive sheet facts.
+ *   proficiency-, feature-, and spell-selection choices needed to derive
+ *   sheet facts.
  * - Derived facts such as proficiency bonus, merged proficiencies, and class
  *   resources are computed from the sheet rather than stored twice.
  * - Runtime projections such as `CharConfig`, `DndMachineInput`, and
@@ -204,6 +209,7 @@ export interface CharacterDraft {
   readonly alignment?: Alignment;
   readonly choices?: CharacterBuildChoices;
   readonly equipment?: CharacterEquipmentChoicesDraft;
+  readonly spellcasting?: CharacterSpellcastingChoices;
 }
 
 export interface CharacterSheet {
@@ -218,6 +224,7 @@ export interface CharacterSheet {
   readonly alignment: Alignment;
   readonly choices: CharacterBuildChoices;
   readonly equipment: CharacterEquipmentChoices;
+  readonly spellcasting?: CharacterSpellcastingChoices;
 }
 
 export const CHARACTER_FINALIZATION_ISSUE_CODES = [
@@ -272,6 +279,7 @@ export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "duplicateGrantedProficiency",
   "multiclassPrerequisiteNotMet",
   ...CHARACTER_EQUIPMENT_ISSUE_CODES,
+  ...CHARACTER_SPELLCASTING_ISSUE_CODES,
 ] as const;
 export type CharacterFinalizationIssueCode =
   (typeof CHARACTER_FINALIZATION_ISSUE_CODES)[number];
@@ -367,6 +375,11 @@ export function finalizeCharacterDraft(
     ...(draft.languages == null ? [] : validateLanguages(draft.languages)),
     ...validateDuplicateGrantedProficiencies(draft),
     ...validateCharacterEquipment(draft),
+    ...validateCharacterSpellcastingChoices({
+      classLevels,
+      choices: draft.choices,
+      spellcasting: draft.spellcasting,
+    }),
   ];
 
   let abilityScores: CharacterAbilityScores | undefined;
@@ -394,28 +407,47 @@ export function finalizeCharacterDraft(
     } as CharacterAbilityScores,
   };
 
-  return {
-    ok: true,
-    sheet: {
-      primaryClass: draft.primaryClass!,
-      classLevels,
-      background: draft.background!,
-      abilityScoreGeneration,
-      backgroundAbilityScoreIncrease: draft.backgroundAbilityScoreIncrease!,
-      abilityScores: abilityScores!,
-      species: draft.species!,
-      languages: [...draft.languages!],
-      alignment: draft.alignment!,
-      choices: draft.choices ?? {},
-      equipment: {
-        backgroundOption: draft.equipment!.backgroundOption!,
-        classOption: draft.equipment!.classOption!,
-        purchasedCombatEquipment: [
-          ...(draft.equipment!.purchasedCombatEquipment ?? []),
-        ],
-        remainingGoldPieces: draft.equipment!.remainingGoldPieces!,
-        loadout: { ...draft.equipment!.loadout! },
-      },
+  const sheet: CharacterSheet = {
+    primaryClass: draft.primaryClass!,
+    classLevels,
+    background: draft.background!,
+    abilityScoreGeneration,
+    backgroundAbilityScoreIncrease: draft.backgroundAbilityScoreIncrease!,
+    abilityScores: abilityScores!,
+    species: draft.species!,
+    languages: [...draft.languages!],
+    alignment: draft.alignment!,
+    choices: draft.choices ?? {},
+    equipment: {
+      backgroundOption: draft.equipment!.backgroundOption!,
+      classOption: draft.equipment!.classOption!,
+      purchasedCombatEquipment: [
+        ...(draft.equipment!.purchasedCombatEquipment ?? []),
+      ],
+      remainingGoldPieces: draft.equipment!.remainingGoldPieces!,
+      loadout: { ...draft.equipment!.loadout! },
     },
+    ...(draft.spellcasting == null
+      ? {}
+      : {
+          spellcasting: Object.fromEntries(
+            Object.entries(draft.spellcasting).map(([className, entry]) => [
+              className,
+              {
+                ...(entry?.cantrips == null
+                  ? {}
+                  : { cantrips: [...entry.cantrips] }),
+                ...(entry?.preparedSpells == null
+                  ? {}
+                  : { preparedSpells: [...entry.preparedSpells] }),
+                ...(entry?.spellbook == null
+                  ? {}
+                  : { spellbook: [...entry.spellbook] }),
+              },
+            ]),
+          ) as CharacterSpellcastingChoices,
+        }),
   };
+
+  return { ok: true, sheet };
 }

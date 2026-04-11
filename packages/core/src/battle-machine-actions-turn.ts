@@ -136,6 +136,8 @@ export function buildCreatureState(
     mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
   });
   const preparedSpells = cfg.preparedSpells ?? base.preparedSpells;
+  const slotsMax = cfg.slotsMax ?? base.slotsMax;
+  const slotsCurrent = cfg.slotsCurrent ?? base.slotsCurrent;
   return {
     ...base,
     ...(cfg.creatureSize != null ? { creatureSize: cfg.creatureSize } : {}),
@@ -164,11 +166,18 @@ export function buildCreatureState(
       ? { legendaryResistancesRemaining: cfg.legendaryResistances }
       : {}),
     preparedSpells,
+    slotsMax,
+    slotsCurrent,
+    ...(cfg.pactSlotsMax != null ? { pactSlotsMax: cfg.pactSlotsMax } : {}),
+    ...(cfg.pactSlotsCurrent != null
+      ? { pactSlotsCurrent: cfg.pactSlotsCurrent }
+      : {}),
+    ...(cfg.pactSlotLevel != null ? { pactSlotLevel: cfg.pactSlotLevel } : {}),
     readyableSpellPayloads:
       cfg.readyableSpellPayloads ??
       battleReadyableSpellPayloadsFromPreparedSpells(
         preparedSpells,
-        base.slotsCurrent,
+        slotsCurrent,
       ),
     ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
     ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
