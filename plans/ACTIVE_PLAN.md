@@ -211,6 +211,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "ARCH-BATTLE-PROJ",
       "status": "ready-for-research",
       "title": "Battle Projection Contract And Methodology"
+    },
+    {
+      "number": 31,
+      "id": "MON1",
+      "status": "ready-for-research",
+      "title": "Canonical Stat Block Schema + Goblin Backfill"
     }
   ]
 }
@@ -272,6 +278,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 28    | MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion            | ready-for-implementation-after-light-research | none                                                          | MCP2-B                                                                | Implement mid-battle creature insertion in Quint, XState, and MCP using `InitCreatureConfig`, initiative insertion semantics, and active-turn-only guards.                                                                                                                                                                                                                                      | Ready; independent control/event slice              |
 | 29    | MCP4-B - BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal           | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Implement mid-battle creature removal in Quint, XState, and MCP with concentration cleanup, grapple cleanup, and turn-index repair.                                                                                                                                                                                                                                                             | Ready; independent control/event slice              |
 | 30    | ARCH-BATTLE-PROJ - Battle Projection Contract And Methodology         | ready-for-research                         | none                                                          | none                                                                  | Research and document the explicit contract for what battle owns vs. what stays on creature/session layers, then decide whether battle projection should move to named projector functions or another common methodology.                                                                                                                                                                       | Ready; architecture/doc research with possible follow-up |
+| 31    | MON1 - Canonical Stat Block Schema + Goblin Backfill                  | ready-for-research                         | none                                                          | future monster database follow-ups                                    | Research and land the canonical authored-section `StatBlock` shape with explicit SRD provenance and executable-vs-text-only ability modeling, then backfill the existing goblin entries without changing public MCP behavior.                                                                                                                                                                  | Ready; bounded first slice for monster database work |
 
 ## Current Integrated Baseline
 
@@ -2603,6 +2610,72 @@ Verification:
 - Unit tests: remove before/at/after turnIndex; remove active creature; concentration break; grapple release; help cleanup.
 - Tier 1 MBT run passes with `bRemoveCreature` in `battleStep`.
 - `/simplify` convergence (2 rounds).
+
+### Task 31 - MON1 - Canonical Stat Block Schema + Goblin Backfill
+
+Status: ready-for-research.
+
+Depends on: none.
+
+Blocks: follow-up monster database slices such as derived battle-option projection from authored sections, the first broader non-goblin SRD slice, spellcasting stat-block support, and later advanced generic monster facilities.
+
+Next action: read the relevant SRD goblin entries in `.references/srd-5.2.1/Monsters/Monsters-E-G.md`, re-read `UBIQUITOUS_LANGUAGE.md`, inspect `packages/core/src/monster-types.ts`, `packages/core/src/monster-catalog.ts`, and `packages/core/src/monster-catalog.md`, then write back and implement the canonical authored-section `StatBlock` shape with explicit provenance and goblin backfill while preserving current public MCP behavior.
+
+Purpose:
+
+- The repo already proved the ownership direction with a narrow goblin-focused stat-block facility, but the current `StatBlock` shape still centers attack maps and shortcut fields such as `battleBonusActionOptions` and `battleReactionOptions`.
+- The monster database PRD now fixes the durable decisions: `StatBlock` is the canonical monster-authored type, SRD is provenance, 5e-tools may assist normalization but never becomes provenance, and unsupported abilities must remain representable structurally rather than through decorative status enums.
+- Before wider SRD coverage or new generic monster facilities are queued, the core schema has to move from "goblin plus a few runtime shortcuts" to a durable authored record model that can absorb future monster sections without spawning duplicate registries or monster-specific handlers.
+
+Context:
+
+- `packages/core/src/monster-types.ts` currently defines `StatBlock`, `MonsterAttack`, `MultiattackSlot`, and the goblin-era bonus-action/reaction shortcut fields.
+- `packages/core/src/monster-catalog.ts` owns the current named goblin entries and already documents SRD provenance and core ownership.
+- `packages/core/src/monster-catalog.md` now states explicitly that SRD is provenance and 5e-tools is never provenance.
+- `PRD_MONSTER_DATABASE.md` and `plans/monster-database-plan.md` define the intended next architecture, but `ACTIVE_PLAN.md` should queue only the first bounded slice, not the whole rollout.
+- Existing goblin MCP behavior is already live and should remain stable while the underlying authored shape is widened.
+
+Research questions:
+
+1. What is the minimal canonical `StatBlock` authored-section shape that covers current goblins while remaining durable for later monster expansion?
+2. How should executable and text-only monster abilities be represented so the distinction exists in both type shape and runtime data without introducing a no-op status enum?
+3. Which current goblin shortcut fields should remain as derived projection outputs, and which should stop being primary authored storage?
+4. What explicit provenance shape on the owned goblin records best preserves SRD citation clarity without introducing redundant state or a speculative importer layer?
+5. What, if any, temporary compatibility aliases are justified during the backfill, and which should be avoided to keep the new shape clean?
+
+Implementation output:
+
+- Widen the monster type family around canonical authored sections such as traits, actions, bonus actions, reactions, legendary actions, and spellcasting-ready placeholders where needed by the new shape.
+- Add explicit provenance typing and owned-record provenance for the current goblin entries.
+- Represent executable abilities and text-only abilities structurally in the new type family.
+- Backfill `goblinMinion`, `goblinWarrior`, and `goblinBoss` into the new canonical authored shape.
+- Preserve current battle and MCP behavior by using compatibility projection rather than widening public surfaces in this task.
+- Write back any settled schema/projection decisions into the relevant monster docs if the implementation clarifies them.
+
+Acceptance criteria:
+
+- `StatBlock` is the canonical monster-authored type and stores goblin-authored sections explicitly instead of relying on attack-only and action-shortcut fields as the primary shape.
+- The current goblin entries carry explicit SRD provenance directly on the owned records.
+- The type system and runtime data distinguish executable abilities from text-only abilities structurally.
+- Existing goblin battle and MCP flows keep working without new monster-specific public commands or adapter-owned monster facts.
+- Any compatibility-only shortcut field retained for transition purposes is derived or clearly temporary rather than the new primary authored representation.
+
+Verification:
+
+- RAW check: read the relevant goblin stat blocks in `.references/srd-5.2.1/Monsters/Monsters-E-G.md`, plus `UBIQUITOUS_LANGUAGE.md`, before editing.
+- `/simplify` convergence: minimum two rounds after implementation, continuing until no important fixes remain.
+- Focused core tests covering the widened goblin stat-block shape and any updated projection helpers.
+- Focused MCP or integration tests sufficient to confirm the existing goblin encounter path still works after the backfill.
+- Run the narrowest parity checks needed for touched core behavior; avoid widening into unrelated MBT work unless the implementation changes battle semantics.
+
+Follow-up shape note:
+
+- If this task lands cleanly, likely follow-up queue items are:
+  - derive generic battle action surfaces from authored stat-block sections rather than primary shortcut fields;
+  - add the first non-goblin SRD monsters that fit the already-supported generic facilities;
+  - add the spellcasting stat-block foundation slice;
+  - add advanced generic monster facilities only when repeated SRD patterns justify them.
+- Do not append those as concrete active-queue tasks until this schema/backfill slice closes and its exact projection consequences are known.
 
 ## Extra Research Summary
 
