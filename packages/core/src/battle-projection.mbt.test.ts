@@ -441,8 +441,14 @@ const battleDriverSchema = {
   bHeal: { targetId: OS, amount: OI },
   bDash: {},
   bDisengage: {},
+  bBonusDisengage: {},
   bDodge: {},
   bHide: {
+    stealthTotal: OI,
+    hasCoverOrObscurement: OB,
+    outOfEnemyLineOfSight: OB,
+  },
+  bBonusHide: {
     stealthTotal: OI,
     hasCoverOrObscurement: OB,
     outOfEnemyLineOfSight: OB,
@@ -611,6 +617,35 @@ function createBattleProjectionDriver() {
       } else {
         hiddenDiscoveryDcs.delete(actorId);
       }
+    }
+
+    function handleBBonusHide(picks: ReadonlyMap<string, unknown>) {
+      const actorId = activeId();
+      const stealthTotal = pickBigInt(picks, "stealthTotal") ?? 1;
+      const hasCoverOrObscurement =
+        pickBool(picks, "hasCoverOrObscurement") ?? false;
+      const outOfEnemyLineOfSight =
+        pickBool(picks, "outOfEnemyLineOfSight") ?? false;
+      send(actorId, { type: "USE_ACTION", actionType: "hide" });
+      send(actorId, { type: "GRANT_EXTRA_ACTION" });
+      send(actorId, { type: "USE_BONUS_ACTION" });
+      if (
+        stealthTotal >= 15 &&
+        hasCoverOrObscurement &&
+        outOfEnemyLineOfSight
+      ) {
+        hiddenDiscoveryDcs.set(actorId, stealthTotal);
+        send(actorId, { type: "APPLY_CONDITION", condition: "invisible" });
+      } else {
+        hiddenDiscoveryDcs.delete(actorId);
+      }
+    }
+
+    function handleBBonusDisengage() {
+      const actorId = activeId();
+      send(actorId, { type: "USE_ACTION", actionType: "disengage" });
+      send(actorId, { type: "GRANT_EXTRA_ACTION" });
+      send(actorId, { type: "USE_BONUS_ACTION" });
     }
 
     function handleBSearch(picks: ReadonlyMap<string, unknown>) {
@@ -2230,6 +2265,10 @@ function createBattleProjectionDriver() {
         before("bDisengage");
         send(activeId(), { type: "USE_ACTION", actionType: "disengage" });
       },
+      bBonusDisengage: () => {
+        before("bBonusDisengage");
+        handleBBonusDisengage();
+      },
       bDodge: () => {
         before("bDodge");
         send(activeId(), { type: "USE_ACTION", actionType: "dodge" });
@@ -2237,6 +2276,10 @@ function createBattleProjectionDriver() {
       bHide: (p: Record<string, unknown>) => {
         before("bHide");
         handleBHide(toMap(p));
+      },
+      bBonusHide: (p: Record<string, unknown>) => {
+        before("bBonusHide");
+        handleBBonusHide(toMap(p));
       },
       bSearch: (p: Record<string, unknown>) => {
         before("bSearch");

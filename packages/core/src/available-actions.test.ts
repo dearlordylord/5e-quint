@@ -18,6 +18,10 @@ import {
 import { battleMachine } from "#/battle-machine.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { creatureMachine } from "#/machine.ts";
+import {
+  GOBLIN_WARRIOR,
+  statBlockToInitCreatureConfig,
+} from "#/monster-catalog.ts";
 import type { DndMachineInput } from "#/machine-types.ts";
 import { fighterStartBattleLoadout } from "#/player-loadouts.ts";
 import type { CreatureId as CreatureIdT } from "#/types.ts";
@@ -569,6 +573,22 @@ function initBattleForReadyWindow() {
     eotDt: "bludgeoning",
     eotConSave: true,
   });
+  return actor;
+}
+
+function initBattleForMonsterBonusActionDiscovery() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      statBlockToInitCreatureConfig({
+        id: CreatureId("A"),
+        statBlock: GOBLIN_WARRIOR,
+        initiativeRoll: 15,
+      }),
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
   return actor;
 }
 
@@ -3200,6 +3220,79 @@ describe("available actions contract", () => {
     ).toEqual({
       code: "INVALID_RUNTIME_INPUT",
       message: "Hide Stealth total must be an integer.",
+    });
+  });
+
+  test("battle discovery exposes generic monster bonus Hide and Disengage options when the combatant owns them", () => {
+    const actor = initBattleForMonsterBonusActionDiscovery();
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_BONUS_DISENGAGE",
+          cost: cost(quota("bonusAction")),
+        }),
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_BONUS_HIDE",
+          cost: cost(quota("bonusAction")),
+        }),
+      ]),
+    );
+  });
+
+  test("battle resolution exposes bonus-action Hide and Disengage without monster-specific commands", () => {
+    const actor = initBattleForMonsterBonusActionDiscovery();
+    const context = actor.getSnapshot().context;
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_BONUS_DISENGAGE",
+      }),
+    ).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_BONUS_DISENGAGE",
+      },
+      outcome:
+        "Spend your bonus action so your movement does not provoke opportunity attacks this turn",
+      runtime: "none",
+      event: { type: "BATTLE_BONUS_DISENGAGE" },
+    });
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_BONUS_HIDE",
+        stealthTotal: 19,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      }),
+    ).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_BONUS_HIDE",
+        stealthTotal: 19,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      },
+      outcome:
+        "Spend your bonus action to hide using explicit Stealth, cover or obscurement, and line-of-sight facts",
+      runtime: "none",
+      event: {
+        type: "BATTLE_BONUS_HIDE",
+        stealthTotal: 19,
+        hasCoverOrObscurement: true,
+        outOfEnemyLineOfSight: true,
+      },
     });
   });
 

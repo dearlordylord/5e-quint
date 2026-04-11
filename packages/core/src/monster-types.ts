@@ -79,6 +79,14 @@ export type ChallengeRating =
   | { readonly type: "CR_Half" }
   | { readonly type: "CRN"; readonly value: number };
 
+export const MONSTER_BATTLE_BONUS_ACTION_OPTIONS = [
+  "disengage",
+  "hide",
+] as const;
+
+export type MonsterBattleBonusActionOption =
+  (typeof MONSTER_BATTLE_BONUS_ACTION_OPTIONS)[number];
+
 // --- Monster Attack ---
 
 export interface MonsterAttack {
@@ -171,6 +179,7 @@ export interface StatBlock {
   readonly passivePerception?: number;
   readonly languages?: ReadonlyArray<string>;
   readonly gear?: ReadonlyArray<string>;
+  readonly battleBonusActionOptions?: ReadonlyArray<MonsterBattleBonusActionOption>;
   readonly attacks: Readonly<Record<string, MonsterAttack>>;
   readonly multiattack: ReadonlyArray<MultiattackSlot>;
   // Phase L: Legendary / Recharge / X-Day

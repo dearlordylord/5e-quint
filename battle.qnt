@@ -28,6 +28,8 @@ module battle {
 
   type HandUse = | HFree | HMainWeapon | HOffWeapon | HShield | HGrapple
 
+  type BattleBonusActionOption = | BADisengage | BAHide
+
   type MovementProvocationKind =
     | MPProvokesOpportunityAttacks
     | MPDoesNotProvokeOpportunityAttacks
@@ -102,6 +104,7 @@ module battle {
     offHandWeapon: Weapon,
     leftHandUse: HandUse,
     rightHandUse: HandUse,
+    battleBonusActionOptions: Set[BattleBonusActionOption],
   }
 
   /// Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready action).
@@ -605,6 +608,7 @@ module battle {
     offHandWeapon: NO_WEAPON,
     leftHandUse: HFree,
     rightHandUse: HFree,
+    battleBonusActionOptions: Set(),
   }
 
   // Combatant with spell slots (for casters in battle)
@@ -658,6 +662,7 @@ module battle {
     offHandWeapon: NO_WEAPON,
     leftHandUse: HFree,
     rightHandUse: HFree,
+    battleBonusActionOptions: Set(),
   }
 
   // Monster with legendary actions and resistances
@@ -712,6 +717,7 @@ module battle {
       offHandWeapon: NO_WEAPON,
       leftHandUse: HFree,
       rightHandUse: HFree,
+      battleBonusActionOptions: Set(),
     }
   }
 
@@ -3280,6 +3286,25 @@ module battle {
     }
   }
 
+  action bBonusDisengage = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      not(ac.turn.bonusActionUsed),
+      ac.battleBonusActionOptions.contains(BADisengage),
+      val newTurn = pBonusActionDisengage(ac.turn, ac.creature)
+      all {
+        bCreatures' = setTurn(bCreatures, activeId, newTurn),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
   action bDodge = {
     val activeId = bInitiative[bTurnIndex]
     val ac = bCreatures.get(activeId)
@@ -3311,6 +3336,33 @@ module battle {
       not(ac.creature.dead),
       not(isIncapacitated(ac.creature)),
       val newTurn = pUseAction(ac.turn, ac.creature, AHide)
+      val success = stealthTotal >= 15 and hasCoverOrObscurement and outOfEnemyLineOfSight
+      val newCreature = if (success) ac.creature.with("invisible", true) else ac.creature
+      val newCombatant = ac.with("turn", newTurn)
+        .with("creature", newCreature)
+        .with("hiddenDiscoveryDc", if (success) stealthTotal else 0)
+      all {
+        bCreatures' = bCreatures.set(activeId, newCombatant),
+        bPhase' = BPActiveTurn,
+        keepBattle,
+      }
+    }
+  }
+
+  action bBonusHide = {
+    val activeId = bInitiative[bTurnIndex]
+    val ac = bCreatures.get(activeId)
+    nondet stealthTotal = 1.to(30).oneOf()
+    nondet hasCoverOrObscurement = Bool.oneOf()
+    nondet outOfEnemyLineOfSight = Bool.oneOf()
+    all {
+      bPhase == BPActiveTurn,
+      bTurnStarted,
+      not(ac.creature.dead),
+      not(isIncapacitated(ac.creature)),
+      not(ac.turn.bonusActionUsed),
+      ac.battleBonusActionOptions.contains(BAHide),
+      val newTurn = pBonusActionHide(ac.turn, ac.creature)
       val success = stealthTotal >= 15 and hasCoverOrObscurement and outOfEnemyLineOfSight
       val newCreature = if (success) ac.creature.with("invisible", true) else ac.creature
       val newCombatant = ac.with("turn", newTurn)
@@ -3700,11 +3752,11 @@ module battle {
         if (canCastSpells) any {
           bAttack, bOffHandAttack, bHelpAttack, bCastSaveSpell, bCastAoE,
           bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,
-          bMove, bHeal, bDash, bDisengage, bDodge, bHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge,
+          bMove, bHeal, bDash, bDisengage, bBonusDisengage, bDodge, bHide, bBonusHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge,
           bEnterRage, bDeclareReckless, bReady, bReadySpell, bEndTurn,
         } else any {
-          bAttack, bOffHandAttack, bHelpAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage,
-          bDodge, bHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
+          bAttack, bOffHandAttack, bHelpAttack, bConcentrationCheck, bMove, bHeal, bDash, bDisengage, bBonusDisengage,
+          bDodge, bHide, bBonusHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn,
         }
       }
     | BPAwaitingReaction(ctx) => match ctx.interrupt {

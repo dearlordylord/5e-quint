@@ -293,9 +293,16 @@ export type BattleEvent =
     }
   | { readonly type: "BATTLE_DASH" }
   | { readonly type: "BATTLE_DISENGAGE" }
+  | { readonly type: "BATTLE_BONUS_DISENGAGE" }
   | { readonly type: "BATTLE_DODGE" }
   | {
       readonly type: "BATTLE_HIDE";
+      readonly stealthTotal: number;
+      readonly hasCoverOrObscurement: boolean;
+      readonly outOfEnemyLineOfSight: boolean;
+    }
+  | {
+      readonly type: "BATTLE_BONUS_HIDE";
       readonly stealthTotal: number;
       readonly hasCoverOrObscurement: boolean;
       readonly outOfEnemyLineOfSight: boolean;

@@ -53,6 +53,7 @@ import {
   MONSTER_STAT_BLOCK_IDS,
   monsterCatalogInitCreatureConfig,
 } from "#/monster-catalog.ts";
+import { MONSTER_BATTLE_BONUS_ACTION_OPTIONS } from "#/monster-types.ts";
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts";
 import type { DndContext, DndEvent } from "#/machine-types.ts";
 import {
@@ -380,6 +381,13 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_BONUS_DISENGAGE";
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_DODGE";
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
@@ -388,6 +396,16 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_HIDE";
+      readonly stealthTotal: Hole<number>;
+      readonly hasCoverOrObscurement: Hole<boolean>;
+      readonly outOfEnemyLineOfSight: Hole<boolean>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_BONUS_HIDE";
       readonly stealthTotal: Hole<number>;
       readonly hasCoverOrObscurement: Hole<boolean>;
       readonly outOfEnemyLineOfSight: Hole<boolean>;
@@ -656,12 +674,25 @@ type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_BONUS_DISENGAGE";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_DODGE";
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_HIDE";
+      readonly stealthTotal: number;
+      readonly hasCoverOrObscurement: boolean;
+      readonly outOfEnemyLineOfSight: boolean;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_BONUS_HIDE";
       readonly stealthTotal: number;
       readonly hasCoverOrObscurement: boolean;
       readonly outOfEnemyLineOfSight: boolean;
@@ -1103,6 +1134,11 @@ const BattleDisengageResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("BATTLE_DISENGAGE"),
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleBonusDisengageResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_BONUS_DISENGAGE"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleDodgeResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_DODGE"),
@@ -1111,6 +1147,14 @@ const BattleDodgeResolvedActionSchema = Schema.Struct({
 const BattleHideResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_HIDE"),
+  stealthTotal: Schema.Number,
+  hasCoverOrObscurement: Schema.Boolean,
+  outOfEnemyLineOfSight: Schema.Boolean,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleBonusHideResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_BONUS_HIDE"),
   stealthTotal: Schema.Number,
   hasCoverOrObscurement: Schema.Boolean,
   outOfEnemyLineOfSight: Schema.Boolean,
@@ -1206,8 +1250,10 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   BattleEscapeGrappleResolvedActionSchema,
   BattleDashResolvedActionSchema,
   BattleDisengageResolvedActionSchema,
+  BattleBonusDisengageResolvedActionSchema,
   BattleDodgeResolvedActionSchema,
   BattleHideResolvedActionSchema,
+  BattleBonusHideResolvedActionSchema,
   BattleSearchResolvedActionSchema,
   BattleReadyResolvedActionSchema,
   BattleReadyPassResolvedActionSchema,
@@ -1335,6 +1381,9 @@ const BattleInitRawCreatureConfigSchema = Schema.Struct({
   mainHandUsesTwoHands: Schema.optional(Schema.Boolean),
   mainHandWeapon: Schema.optional(BattleWeaponProfileSchema),
   offHandWeapon: Schema.optional(BattleWeaponProfileSchema),
+  battleBonusActionOptions: Schema.optional(
+    Schema.Array(Schema.Literal(...MONSTER_BATTLE_BONUS_ACTION_OPTIONS)),
+  ),
 });
 const BattleInitCatalogCreatureConfigSchema = Schema.Struct({
   id: Schema.String,
@@ -2243,6 +2292,18 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "BATTLE_BONUS_DISENGAGE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_BONUS_DISENGAGE" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "BATTLE_DODGE" }
       >;
       readonly outcome: string;
@@ -2257,6 +2318,18 @@ export type BattleResolutionRequest =
       readonly outcome: string;
       readonly runtime: "none";
       readonly event: Extract<BattleEvent, { readonly type: "BATTLE_HIDE" }>;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_BONUS_HIDE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_BONUS_HIDE" }
+      >;
     }
   | {
       readonly token: Extract<
@@ -3637,6 +3710,43 @@ export function getAvailableBattleActions(
       );
     }
     if (
+      !activeCreature.bonusActionUsed &&
+      activeCreature.battleBonusActionOptions.includes("hide")
+    ) {
+      tokens.push(
+        battleToken<
+          Extract<BattleActionToken, { readonly type: "BATTLE_BONUS_HIDE" }>
+        >({
+          actorId: activeCreatureId,
+          type: "BATTLE_BONUS_HIDE",
+          stealthTotal: { options: SUGGESTED_D20_CHECK_TOTAL_OPTIONS },
+          hasCoverOrObscurement: { options: [true, false] },
+          outOfEnemyLineOfSight: { options: [true, false] },
+          cost: costs(quotaCost("bonusAction")),
+          outcome: {
+            summary:
+              "Spend your bonus action to hide using explicit Stealth, cover or obscurement, and line-of-sight facts",
+          },
+        }),
+      );
+    }
+    if (
+      !activeCreature.bonusActionUsed &&
+      activeCreature.battleBonusActionOptions.includes("disengage")
+    ) {
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_BONUS_DISENGAGE",
+          cost: costs(quotaCost("bonusAction")),
+          outcome: {
+            summary:
+              "Spend your bonus action so your movement does not provoke opportunity attacks this turn",
+          },
+        }),
+      );
+    }
+    if (
       activeCreature.barbarianLevel >= 2 &&
       activeCreature.actionsRemaining > 0 &&
       !activeCreature.attackActionUsed &&
@@ -3937,12 +4047,15 @@ export function resolveBattleAction(
     };
   }
   if (
-    token.type === "BATTLE_HIDE" &&
+    (token.type === "BATTLE_HIDE" || token.type === "BATTLE_BONUS_HIDE") &&
     !isResolvedD20CheckTotal(token.stealthTotal)
   ) {
     return {
       code: "INVALID_RUNTIME_INPUT",
-      message: "Hide Stealth total must be an integer.",
+      message:
+        token.type === "BATTLE_HIDE"
+          ? "Hide Stealth total must be an integer."
+          : "Bonus Hide Stealth total must be an integer.",
     };
   }
   if (
@@ -3961,6 +4074,19 @@ export function resolveBattleAction(
       runtime: "none",
       event: {
         type: "BATTLE_HIDE",
+        stealthTotal: token.stealthTotal,
+        hasCoverOrObscurement: token.hasCoverOrObscurement,
+        outOfEnemyLineOfSight: token.outOfEnemyLineOfSight,
+      },
+    };
+  }
+  if (token.type === "BATTLE_BONUS_HIDE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: {
+        type: "BATTLE_BONUS_HIDE",
         stealthTotal: token.stealthTotal,
         hasCoverOrObscurement: token.hasCoverOrObscurement,
         outOfEnemyLineOfSight: token.outOfEnemyLineOfSight,
@@ -3992,6 +4118,12 @@ export function resolveBattleAction(
       outcome: availableToken.outcome.summary,
       runtime: "none" as const,
       event: { type: "BATTLE_DISENGAGE" as const },
+    })),
+    Match.when({ type: "BATTLE_BONUS_DISENGAGE" }, (specificToken) => ({
+      token: specificToken,
+      outcome: availableToken.outcome.summary,
+      runtime: "none" as const,
+      event: { type: "BATTLE_BONUS_DISENGAGE" as const },
     })),
     Match.when({ type: "BATTLE_DODGE" }, (specificToken) => ({
       token: specificToken,

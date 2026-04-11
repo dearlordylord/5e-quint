@@ -57,6 +57,7 @@ describe("monster catalog", () => {
     expect(statBlock.passivePerception).toBe(9);
     expect(statBlock.languages).toEqual(["Common", "Goblin"]);
     expect(statBlock.gear).toEqual(["Daggers (3)"]);
+    expect(statBlock.battleBonusActionOptions).toEqual(["disengage", "hide"]);
     expect(statBlock.cr).toEqual({ type: "CR_Eighth" });
     expect(statBlock.proficiencyBonus).toBe(2);
     expect(statBlock.attacks.dagger).toEqual({
@@ -85,6 +86,7 @@ describe("monster catalog", () => {
       creatureSize: "small",
       dexMod: 2,
       baseWalkSpeed: 30,
+      battleBonusActionOptions: ["disengage", "hide"],
       initiativeRoll: 12,
       mainHandWeapon: {
         name: "Dagger",
@@ -181,6 +183,7 @@ describe("monster catalog", () => {
       creatureSize: "small",
       dexMod: 2,
       baseWalkSpeed: 30,
+      battleBonusActionOptions: ["disengage", "hide"],
       initiativeRoll: 12,
       mainHandWeapon: {
         name: "Dagger",
@@ -189,6 +192,32 @@ describe("monster catalog", () => {
         damageDie: 4,
         properties: new Set(["finesse", "light", "thrown"]),
       },
+    });
+  });
+
+  it("accepts generic battle bonus-action options on raw BATTLE_INIT creatures", () => {
+    const command = Schema.decodeSync(ControlCommandSchema)({
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "monster-1",
+          kind: "Monster",
+          maxHp: 9,
+          battleBonusActionOptions: ["disengage", "hide"],
+        },
+      ],
+    });
+
+    expect(command.type).toBe("BATTLE_INIT");
+    if (command.type !== "BATTLE_INIT") throw new Error("expected BATTLE_INIT");
+    const config = toBattleInitCreatureConfig(command.creatures[0]);
+
+    expect(config).toMatchObject({
+      id: CreatureId("monster-1"),
+      kind: "Monster",
+      maxHp: 9,
+      battleBonusActionOptions: ["disengage", "hide"],
     });
   });
 });

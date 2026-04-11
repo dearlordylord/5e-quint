@@ -632,7 +632,13 @@ const battleDriverSchema = {
   bHeal: { targetId: OS, amount: OI },
   bDash: {},
   bDisengage: {},
+  bBonusDisengage: {},
   bDodge: {},
+  bBonusHide: {
+    stealthTotal: OI,
+    hasCoverOrObscurement: OB,
+    outOfEnemyLineOfSight: OB,
+  },
   bGrapple: {
     targetId: OS,
     targetSaveFailed: OB,
@@ -1152,8 +1158,19 @@ function createBattleMachineDriver() {
       bDisengage: () => {
         send({ type: "BATTLE_DISENGAGE" });
       },
+      bBonusDisengage: () => {
+        send({ type: "BATTLE_BONUS_DISENGAGE" });
+      },
       bDodge: () => {
         send({ type: "BATTLE_DODGE" });
+      },
+      bBonusHide: (picks: Record<string, unknown>) => {
+        send({
+          type: "BATTLE_BONUS_HIDE",
+          stealthTotal: p(picks, "stealthTotal", 1),
+          hasCoverOrObscurement: pb(picks, "hasCoverOrObscurement", false),
+          outOfEnemyLineOfSight: pb(picks, "outOfEnemyLineOfSight", false),
+        });
       },
       bGrapple: (picks: Record<string, unknown>) => {
         send({

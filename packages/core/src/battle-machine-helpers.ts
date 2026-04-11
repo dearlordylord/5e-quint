@@ -75,6 +75,7 @@ export {
   battleExpendSlot as expendSlot,
   heal,
   spendAction,
+  spendBonusActionForAction,
   spendExtraAttack,
   spendMovement,
   spendReaction,

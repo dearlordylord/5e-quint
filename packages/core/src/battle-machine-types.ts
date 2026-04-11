@@ -8,6 +8,7 @@ import type {
   TriggerType,
 } from "#/battle-machine-events.ts";
 import type { BattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
+import type { MonsterBattleBonusActionOption } from "#/monster-types.ts";
 import type {
   Ability,
   ActiveEffect,
@@ -149,6 +150,7 @@ export interface BattleCreatureState {
   readonly offHandWeapon: BattleWeaponProfile | null;
   readonly leftHandUse: HandUse;
   readonly rightHandUse: HandUse;
+  readonly battleBonusActionOptions: ReadonlyArray<MonsterBattleBonusActionOption>;
 }
 
 /** Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready). */
@@ -457,6 +459,7 @@ export interface InitCreatureConfig {
    */
   readonly mainHandWeapon?: BattleWeaponProfile;
   readonly offHandWeapon?: BattleWeaponProfile;
+  readonly battleBonusActionOptions?: ReadonlyArray<MonsterBattleBonusActionOption>;
   readonly hasShieldEquipped?: boolean;
   readonly mainHandUsesTwoHands?: boolean;
   readonly qualifiedPhysicalResistances?: ReadonlyArray<QualifiedPhysicalBypass>;

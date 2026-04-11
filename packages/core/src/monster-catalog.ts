@@ -2,6 +2,7 @@ import { Match } from "effect";
 
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
 import {
+  MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
   SKILLS,
   type MonsterAttack,
   type Skill,
@@ -56,10 +57,6 @@ function skillBonuses(
  * Goblin Minion — SRD 5.2.1:
  * `.references/srd-5.2.1/Monsters/Monsters-E-G.md` > `Goblins` >
  * `Goblin Minion`.
- *
- * Nimble Escape is intentionally deferred. It requires monster bonus-action
- * support and should land with the follow-up goblin task instead of being
- * approximated here.
  */
 export const GOBLIN_MINION = {
   name: "Goblin Minion",
@@ -104,6 +101,7 @@ export const GOBLIN_MINION = {
   passivePerception: 9,
   languages: ["Common", "Goblin"],
   gear: ["Daggers (3)"],
+  battleBonusActionOptions: MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
   attacks: {
     dagger: {
       name: "Dagger",
@@ -130,9 +128,6 @@ export const GOBLIN_MINION = {
  * Goblin Warrior — SRD 5.2.1:
  * `.references/srd-5.2.1/Monsters/Monsters-E-G.md` > `Goblins` >
  * `Goblin Warrior`.
- *
- * Runtime catalog exposure remains deferred until monster bonus-action support
- * lands, but core owns the named attack metadata already.
  */
 export const GOBLIN_WARRIOR = {
   name: "Goblin Warrior",
@@ -177,6 +172,7 @@ export const GOBLIN_WARRIOR = {
   passivePerception: 9,
   languages: ["Common", "Goblin"],
   gear: ["Leather Armor", "Scimitar", "Shield", "Shortbow"],
+  battleBonusActionOptions: MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
   attacks: {
     scimitar: {
       name: "Scimitar",
@@ -217,8 +213,9 @@ export const GOBLIN_WARRIOR = {
  * `.references/srd-5.2.1/Monsters/Monsters-E-G.md` > `Goblins` >
  * `Goblin Boss`.
  *
- * Runtime catalog exposure remains deferred until the bonus-action and
- * redirect-reaction follow-ups land, but the named attacks are core-owned here.
+ * Runtime catalog exposure remains deferred until the redirect-reaction
+ * follow-up lands, but the named attacks and Nimble Escape ownership are
+ * core-owned here.
  */
 export const GOBLIN_BOSS = {
   name: "Goblin Boss",
@@ -263,6 +260,7 @@ export const GOBLIN_BOSS = {
   passivePerception: 9,
   languages: ["Common", "Goblin"],
   gear: ["Chain Shirt", "Scimitar", "Shield", "Shortbow"],
+  battleBonusActionOptions: MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
   attacks: {
     scimitar: {
       name: "Scimitar",
@@ -406,6 +404,7 @@ export function statBlockToInitCreatureConfig(params: {
         ? params.statBlock.legendaryResistanceUses
         : undefined,
     baseWalkSpeed: params.statBlock.speeds.walk,
+    battleBonusActionOptions: params.statBlock.battleBonusActionOptions,
     initiativeRoll:
       params.initiativeRoll ?? statBlockInitiativeScore(params.statBlock),
     initiativeRollB: params.initiativeRollB,

@@ -12,4 +12,4 @@ Current scope:
 
 - `goblinMinion` is the first runtime catalog entry, sourced from `.references/srd-5.2.1/Monsters/Monsters-E-G.md`.
 - Goblin Warrior and Goblin Boss are internal-only SRD stat blocks for named-attack metadata. They are not exposed as public catalog IDs until the follow-up goblin tasks land.
-- Nimble Escape remains deferred. It needs monster bonus-action support rather than a goblin-specific shortcut.
+- Goblin stat blocks now project generic battle bonus-action options for `Nimble Escape` (`Hide` / `Disengage`) without adding goblin-specific public action names.

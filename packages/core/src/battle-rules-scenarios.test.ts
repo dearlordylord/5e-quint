@@ -2001,6 +2001,43 @@ describe("battle rules scenario regressions", () => {
     );
   });
 
+  it("monster bonus Disengage spends the bonus action and keeps the action available", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, { type: "BATTLE_BONUS_DISENGAGE" });
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+    expect(creature(actor, "A").bonusActionUsed).toBe(true);
+    expect(creature(actor, "A").disengaged).toBe(true);
+
+    send(actor, {
+      type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
+      threatened: new Set([CreatureId("B")]),
+    });
+
+    expect(ctx(actor).movementCtx).toBeNull();
+    expect(creature(actor, "B").reactionAvailable).toBe(true);
+  });
+
   it("natural_20: Dodge suppresses ally-adjacent Sneak Attack until the start of the dodger's next turn", () => {
     const actor = initSneakAttackBattle();
     startTurn(actor);
@@ -4745,6 +4782,59 @@ describe("battle rules scenario regressions", () => {
       outOfEnemyLineOfSight: true,
     });
 
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
+    expect(creature(actor, "A").invisible).toBe(false);
+  });
+
+  it("monster bonus Hide stores hidden state and spends only the bonus action", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_BONUS_HIDE",
+      stealthTotal: 18,
+      hasCoverOrObscurement: true,
+      outOfEnemyLineOfSight: true,
+    });
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+    expect(creature(actor, "A").bonusActionUsed).toBe(true);
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(18);
+    expect(creature(actor, "A").invisible).toBe(true);
+  });
+
+  it("bonus Hide and Disengage are ignored when the active creature does not own the option", () => {
+    const actor = initTwoPcBattle();
+    startTurn(actor);
+
+    send(actor, { type: "BATTLE_BONUS_DISENGAGE" });
+    send(actor, {
+      type: "BATTLE_BONUS_HIDE",
+      stealthTotal: 18,
+      hasCoverOrObscurement: true,
+      outOfEnemyLineOfSight: true,
+    });
+
+    expect(creature(actor, "A").actionsRemaining).toBe(1);
+    expect(creature(actor, "A").bonusActionUsed).toBe(false);
+    expect(creature(actor, "A").disengaged).toBe(false);
     expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
     expect(creature(actor, "A").invisible).toBe(false);
   });

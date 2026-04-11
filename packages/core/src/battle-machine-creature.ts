@@ -461,6 +461,16 @@ export function spendAction(
   return c1;
 }
 
+export function spendBonusActionForAction(
+  c: BattleCreatureState,
+  actionType: Extract<ActionType, "disengage" | "hide">,
+): BattleCreatureState {
+  if (c.bonusActionUsed || isIncapacitated(c)) return c;
+  return actionType === "disengage"
+    ? { ...c, bonusActionUsed: true, disengaged: true }
+    : { ...c, bonusActionUsed: true };
+}
+
 export function spendReaction(c: BattleCreatureState): BattleCreatureState {
   return c.reactionAvailable ? { ...c, reactionAvailable: false } : c;
 }
@@ -823,6 +833,7 @@ export function freshCreature(
     offHandWeapon: null,
     leftHandUse: "free",
     rightHandUse: "free",
+    battleBonusActionOptions: [],
   };
 }
 
