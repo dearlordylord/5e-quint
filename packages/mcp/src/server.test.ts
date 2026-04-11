@@ -4290,6 +4290,7 @@ describe("SessionRouter", () => {
       fighterLevel: 5,
       baseWalkSpeed: 30,
       actionSurgeCharges: 1,
+      mainHandWeapon: LONGSWORD,
     });
     expect(goblin).toMatchObject({
       maxHp: 7,
@@ -4304,6 +4305,24 @@ describe("SessionRouter", () => {
         properties: new Set(["finesse", "light", "thrown"]),
       },
     });
+
+    const startTurn = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+    });
+    expect("isError" in startTurn).toBe(false);
+    expect(
+      readPayload(router.handleToolCall("get_available_actions", {})).action,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "fighter",
+          type: "BATTLE_ATTACK",
+        }),
+      ]),
+    );
   });
 
   test("start_battle rejects invalid monster stat block ids", () => {

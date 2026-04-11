@@ -1,6 +1,8 @@
 import { Schema } from "effect";
 
 import { MONSTER_STAT_BLOCK_IDS } from "@dnd/core/monster-catalog.ts";
+import { fighterStartBattleLoadout } from "@dnd/core/player-loadouts.ts";
+import type { BattleWeaponProfile } from "@dnd/core/types.ts";
 
 import type { CreatureActionHost } from "./host-factories.ts";
 import { errorContent } from "./server-shared.ts";
@@ -32,6 +34,16 @@ function defined<T>(value: T | undefined): value is T {
   return value !== undefined;
 }
 
+function encodeBattleWeaponProfile(profile: BattleWeaponProfile) {
+  return {
+    ...profile,
+    properties: [...profile.properties],
+    ...(profile.damageQualifiers != null
+      ? { damageQualifiers: [...profile.damageQualifiers] }
+      : {}),
+  };
+}
+
 export function decodeStartBattleInput(args: unknown) {
   const decoded = Schema.decodeUnknownEither(
     StartBattleInputSchema,
@@ -49,6 +61,7 @@ export function buildStartBattleCommand(
 ) {
   const context = host.actor.getSnapshot().context;
   const fighterLevel = context.classStates.fighter?.level ?? 0;
+  const fighterLoadout = fighterStartBattleLoadout();
 
   if (fighterLevel <= 0) {
     return errorContent(
@@ -74,6 +87,13 @@ export function buildStartBattleCommand(
         kind: "PC" as const,
         fighterLevel,
         baseWalkSpeed: context.baseWalkSpeed,
+        ...(fighterLoadout.mainHandWeapon != null
+          ? {
+              mainHandWeapon: encodeBattleWeaponProfile(
+                fighterLoadout.mainHandWeapon,
+              ),
+            }
+          : {}),
         ...(defined(input.fighterInitiativeRoll)
           ? { initiativeRoll: input.fighterInitiativeRoll }
           : {}),

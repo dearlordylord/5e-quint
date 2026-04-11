@@ -19,10 +19,8 @@ import { battleMachine } from "#/battle-machine.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { creatureMachine } from "#/machine.ts";
 import type { DndMachineInput } from "#/machine-types.ts";
-import type {
-  BattleWeaponProfile,
-  CreatureId as CreatureIdT,
-} from "#/types.ts";
+import { fighterStartBattleLoadout } from "#/player-loadouts.ts";
+import type { CreatureId as CreatureIdT } from "#/types.ts";
 import {
   abilityModifier,
   armorClass,
@@ -357,15 +355,6 @@ const ZERO_BATTLE_SOT: Pick<
   deathSaveRoll: 0,
 };
 
-const LONGSWORD: BattleWeaponProfile = {
-  name: "Longsword",
-  damageType: "slashing",
-  isMelee: true,
-  damageDie: 8,
-  versatileDie: 10,
-  properties: new Set(["versatile"]),
-};
-
 function makeBattleActor(...events: ReadonlyArray<BattleEvent>) {
   const actor = createActor(battleMachine);
   actor.start();
@@ -511,7 +500,7 @@ function initBattleForAttackDiscovery() {
         maxHp: 20,
         kind: "PC",
         initiativeRoll: 15,
-        mainHandWeapon: LONGSWORD,
+        ...fighterStartBattleLoadout(),
       },
       { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
     ],
