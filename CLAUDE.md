@@ -18,6 +18,27 @@ Never duplicate data that already exists in another layer. Before adding a field
 
 This applies across all layers — Quint spec, XState context, TS types, React state. If a plan proposes adding fields, verify they don't already exist somewhere before implementing.
 
+## Provenance and modeling discipline (CRITICAL)
+
+When modeling content sources, distinguish three different concepts:
+
+- **provenance** — the canonical rules source the shipped data claims to come from;
+- **structured input** — machine-readable data used to help import, normalize, or cross-check;
+- **runtime projection** — derived execution-facing facts used by the engine.
+
+Do not collapse these into one field or one type.
+
+For monster data in this repo:
+
+- SRD is provenance for shipped SRD monsters.
+- 5e-tools is valuable structured data and normalization inspiration, but it is **never** provenance.
+- If a collection is supposed to be "the SRD catalog", model it so mixed-provenance or mixed-license states are unrepresentable at the collection boundary.
+
+General design rule:
+
+- **Make invalid states irrepresentable.** If a proposed type can represent contradictory provenance, contradictory ownership, or support-status markers with no type/runtime consequence, redesign the type.
+- Do not add status enums or metadata labels that neither affect the type system nor runtime behavior unless there is a specific, durable reason the repo needs them.
+
 ## Memory
 
 Do not write to the memory system unless explicitly asked.

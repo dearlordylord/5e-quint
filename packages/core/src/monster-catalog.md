@@ -3,8 +3,9 @@
 Core owns the runtime catalog for named monster stat blocks.
 
 - Default source of truth: `.references/srd-5.2.1/`.
+- SRD is provenance. 5e-tools is useful structured input and normalization inspiration, but it is never provenance.
 - Non-SRD corpora require explicit owner approval before they become catalog inputs.
-- 5etools and similar corpora remain research-only unless a later plan change promotes them.
+- Structured third-party corpora can be used to help normalize or cross-check SRD-backed data, but shipped SRD records must still cite SRD provenance directly.
 - MCP and other adapters must reference catalog IDs rather than restating RAW numbers in their own registries.
 - Existing named stat blocks in `creature.qnt` remain MBT/proof fixtures unless a later task explicitly unifies Quint with the runtime catalog.
 

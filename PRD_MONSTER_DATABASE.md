@@ -11,7 +11,7 @@ Owner: Core / battle architecture
 Add a scalable monster database to core that:
 
 - ships SRD-backed monster stat blocks with explicit SRD provenance;
-- uses 5e-tools as an import and cross-check aid, not as the canonical published provenance for shipped SRD records;
+- uses 5e-tools as structured input and normalization inspiration only, never as provenance;
 - avoids per-monster hardcoded TypeScript behavior for non-SRD monsters;
 - projects monster-authored content onto existing generic battle/runtime surfaces instead of creating monster-specific MCP or UI APIs;
 - remains aligned with the repo's ubiquitous language: monsters have **Stat Blocks**, PCs have **Character Sheets**, and combat is written against **creatures**.
@@ -21,7 +21,7 @@ Add a scalable monster database to core that:
 - Do not add licensed non-SRD monster content to the shipped catalog in this phase.
 - Do not add a second MCP-owned or app-owned monster registry.
 - Do not add a freeform automation interpreter or arbitrary embedded callbacks.
-- Do not treat 5e-tools as the canonical provenance of shipped monster records.
+- Do not treat 5e-tools as provenance.
 - Do not force every imported monster ability to be fully automated before the monster can exist in the database.
 - Do not invent homebrew mechanics, extrapolated rules, or non-SRD semantics.
 
@@ -33,6 +33,7 @@ The repo already established the correct ownership direction:
 - adapters reference stat block IDs instead of duplicating RAW literals;
 - monster-specific behaviors should land as generic battle surfaces when possible;
 - `Creature` is the shared combat abstraction, while `Stat Block` remains monster-only language.
+- SRD is provenance; 5e-tools is structured data and pattern inspiration, but never a provenance source.
 
 Relevant current files:
 
@@ -79,7 +80,7 @@ The project must have a single core-owned canonical monster catalog for shipped 
 Every shipped monster record must carry explicit provenance.
 
 - Shipped SRD monsters must cite the local SRD corpus in `.references/srd-5.2.1/`.
-- 5e-tools may be recorded as an import aid or cross-check source, but not as the canonical published provenance of shipped SRD records.
+- 5e-tools may be recorded as a supporting structured input used during normalization or cross-checking, but never as provenance.
 - The provenance shape must make source kind and license visible to both humans and tooling.
 
 ### R3. Data-Driven Monster Content
@@ -90,12 +91,12 @@ Monster content must be authored as data, not as per-monster code paths.
 - Executable semantics must be represented via reusable generic execution forms.
 - Adding a new monster should usually mean adding data, not engine code.
 
-### R4. Partial Automation Is Allowed
+### R4. Unsupported Abilities Must Be Represented Structurally
 
-A monster ability may exist in the catalog even if it is not fully automated yet.
+A monster ability may exist in the catalog even if it is not yet executable.
 
-- Every authored ability must declare whether it is fully automated, partially automated, or display-only.
-- Rules text must remain available even when execution support is partial.
+- Rules text must remain available even when execution support is absent.
+- The type system should distinguish executable abilities from text-only abilities directly, rather than through a status enum with no runtime or type consequences.
 - The database must not block on complete automation coverage.
 
 ### R5. Generic Engine Facilities, Not Monster-Specific APIs
@@ -146,16 +147,17 @@ Three durable layers are required.
 
 ### 1. `MonsterSourceRecord`
 
-Purpose: capture imported or parsed source material in source-native shape for auditing, regeneration, and diffing.
+Purpose: capture imported or parsed source material in source-native shape for auditing, regeneration, normalization, and diffing.
 
 Suggested shape:
 
 ```ts
-type MonsterSourceKind = "srd" | "5etools" | "licensed" | "homebrew"
+type MonsterSourceKind = "canonicalRulesText" | "supportingStructuredInput" | "licensedPack" | "homebrewPack"
 
 interface MonsterSourceRecord {
   readonly sourceRecordId: string
   readonly sourceKind: MonsterSourceKind
+  readonly sourceName: string
   readonly sourceVersion: string
   readonly canonicalUrl?: string
   readonly license: string
@@ -168,6 +170,7 @@ Rules:
 
 - `MonsterSourceRecord` is not consumed directly by battle.
 - It exists so imports are reproducible and provenance is inspectable.
+- `supportingStructuredInput` covers datasets such as 5e-tools. This is an ingestion aid classification, not a provenance classification.
 
 ### 2. `MonsterStatBlock`
 
@@ -243,11 +246,6 @@ Rules:
 Authored sections should follow the same pattern:
 
 ```ts
-type AutomationSupport =
-  | "fullyAutomated"
-  | "partiallyAutomated"
-  | "displayOnly"
-
 interface MonsterUsageDef {
   readonly recharge?: { readonly min: number }
   readonly dailyUses?: number
@@ -258,9 +256,20 @@ interface MonsterAbilityBase {
   readonly id: string
   readonly name: string
   readonly rulesText: string
-  readonly automationSupport: AutomationSupport
   readonly usage?: MonsterUsageDef
-  readonly execution?: MonsterExecutionDef
+}
+
+interface ExecutableMonsterAbility extends MonsterAbilityBase {
+  readonly execution: MonsterExecutionDef
+}
+
+interface TextOnlyMonsterAbility extends MonsterAbilityBase {
+  readonly execution?: undefined
+  readonly nonExecutableReason:
+    | "needsGenericFacility"
+    | "needsSpellcastingFoundation"
+    | "needsRulesResearch"
+    | "outOfScopeForCurrentSurface"
 }
 ```
 
@@ -272,7 +281,7 @@ Then:
 - `MonsterReactionDef extends MonsterAbilityBase`
 - `MonsterLegendaryActionDef extends MonsterAbilityBase`
 
-This keeps authored text and executable semantics side by side without forcing full automation.
+This keeps authored text and executable semantics side by side while making the supported/unsupported split visible in both the type system and runtime data.
 
 ## Generic Execution Model
 
@@ -300,22 +309,53 @@ Design rule:
 Suggested shape:
 
 ```ts
+interface SourceCitation {
+  readonly sourceName: string
+  readonly sourceKind: "canonicalRulesText" | "supportingStructuredInput"
+  readonly citation: string
+  readonly license: string
+  readonly role: "provenance" | "normalizationInput" | "crossCheck"
+}
+
 interface MonsterProvenance {
-  readonly canonicalSource: "srd"
-  readonly canonicalCitation: string
-  readonly license: "CC-BY-4.0"
-  readonly supportingSources?: ReadonlyArray<{
-    readonly sourceKind: "5etools"
-    readonly citation: string
-    readonly role: "importAid" | "crossCheck"
-  }>
+  readonly provenance: SourceCitation
+  readonly supportingInputs?: ReadonlyArray<SourceCitation>
 }
 ```
 
 Rules:
 
-- `canonicalSource` for shipped SRD monsters is always the local SRD corpus.
-- 5e-tools can appear only as a supporting source unless product policy changes later.
+- For shipped SRD monsters, `provenance.sourceKind` is always `canonicalRulesText` and the citation points to the local SRD corpus.
+- 5e-tools may appear only in `supportingInputs` with role `normalizationInput` or `crossCheck`.
+
+### Collection-Level Provenance Policy
+
+Do not model catalog provenance as loose per-record literals only. Make invalid collection states unrepresentable at the collection boundary.
+
+Suggested shape:
+
+```ts
+interface MonsterCatalog<TRecord, TProvenance extends SourceCitation> {
+  readonly provenancePolicy: TProvenance
+  readonly records: Readonly<Record<string, TRecord>>
+}
+
+type SrdMonsterCatalog = MonsterCatalog<
+  MonsterStatBlock,
+  {
+    readonly sourceKind: "canonicalRulesText"
+    readonly sourceName: "srd-5.2.1"
+    readonly license: "CC-BY-4.0"
+    readonly citation: string
+    readonly role: "provenance"
+  }
+>
+```
+
+Rules:
+
+- A shipped SRD catalog should be an `SrdMonsterCatalog`, not a loose mixed-license bag of records.
+- Mixed-source views, if needed later, are integration views rather than canonical collections.
 
 ## Import Pipeline
 
@@ -441,12 +481,13 @@ Mitigation:
 
 ### Risk 3: Provenance Drift
 
-Using 5e-tools as a convenience source can accidentally become de facto provenance if citations are not explicit.
+Using 5e-tools as a convenience source can accidentally become de facto provenance if source roles are not explicit.
 
 Mitigation:
 
 - require `MonsterProvenance` on every shipped record;
-- keep SRD citations mandatory for shipped SRD monsters.
+- keep SRD citations mandatory for shipped SRD monsters;
+- keep 5e-tools out of provenance-bearing fields entirely.
 
 ### Risk 4: Parallel Runtime Flags
 
@@ -460,10 +501,8 @@ Mitigation:
 ## Open Questions
 
 1. Should `MonsterStatBlock` keep the existing name `StatBlock`, or should the wider canonical type be renamed and `StatBlock` remain a public alias?
-2. Should XP be stored directly, derived from CR, or omitted until a consumer exists?
-3. How much spellcasting structure should be normalized in the first pass versus retained as authored text plus spell references?
-4. Should generated monster catalog files be committed to git or regenerated in CI/build steps?
-5. Should `displayOnly` monster abilities appear in available-actions style surfaces, or only in descriptive state output until automation exists?
+2. How much spellcasting structure should be normalized in the first pass versus retained as authored text plus spell references?
+3. Should generated monster catalog files be committed to git or regenerated in CI/build steps?
 
 ## Recommended Next Step
 
@@ -472,3 +511,10 @@ Implement Phase 1 only:
 - widen `monster-types.ts` into the canonical schema and authored ability types;
 - backfill current goblins into that schema without changing public MCP behavior;
 - keep the import pipeline and broader SRD ingestion as the follow-up task.
+
+## Current Answers To Immediate Design Questions
+
+- `MonsterStatBlock` vs `StatBlock`: prefer the name that keeps domain language clean and avoids inheritance-heavy modeling. Composition wins over inheritance.
+- XP: omit until a real consumer exists.
+- First-pass spellcasting normalization: normalize the stable structural parts now. That means spellcasting ability, save DC / attack bonus when authored, slot or frequency shape, and explicit spell references. Keep freeform tactical or prose-only casting notes in authored text until a generic spellcasting execution foundation exists. This gives a maintainable base without overcommitting to brittle parsing.
+- Generated catalog files: prefer committed generated outputs if they are the canonical shipped SRD dataset and regeneration is deterministic. That keeps the domain artifact explicit, reviewable, and DRY at the source-schema level. If regeneration later becomes cheap and ubiquitous, CI can verify determinism rather than becoming the only place the catalog exists.
