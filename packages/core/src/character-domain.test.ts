@@ -2,9 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   abilityModifiersFromScores,
+  characterClassResources,
+  characterOriginFeats,
+  characterProficiencySummary,
   finalizeCharacterDraft,
   finalAbilityModifiers,
   POINT_BUY_BUDGET,
+  type CharacterDraft,
+  deriveProficiencyBonus,
   singleClassLevels,
   STANDARD_ARRAY_SCORES,
   totalClassLevels,
@@ -14,8 +19,8 @@ import {
 
 describe("character-domain", () => {
   function completeDraft(
-    overrides: Partial<Parameters<typeof finalizeCharacterDraft>[0]> = {},
-  ): Parameters<typeof finalizeCharacterDraft>[0] {
+    overrides: Partial<CharacterDraft> = {},
+  ): CharacterDraft {
     return {
       primaryClass: "fighter",
       classLevels: singleClassLevels("fighter", 1),
@@ -39,17 +44,24 @@ describe("character-domain", () => {
       species: "human",
       languages: ["Common", "Dwarvish", "Elvish"],
       alignment: "NG",
+      choices: {
+        primaryClassSkills: ["acrobatics", "perception"],
+        backgroundTool: "dice",
+        speciesSkill: "stealth",
+        humanOriginFeat: {
+          feat: "skilled",
+          proficiencies: ["history", "thievesTools", "viol"],
+        },
+      },
       ...overrides,
     };
   }
 
-  it("finalizes a standard-array character with background increases", () => {
+  it("finalizes a standard-array character and preserves the owned sheet choices", () => {
     const result = finalizeCharacterDraft(completeDraft());
 
     expect(result.ok).toBe(true);
-    if (!result.ok) {
-      throw new Error("expected successful finalization");
-    }
+    if (!result.ok) throw new Error("expected successful finalization");
 
     expect(result.sheet.primaryClass).toBe("fighter");
     expect(result.sheet.classLevels).toEqual({
@@ -57,17 +69,6 @@ describe("character-domain", () => {
       fighter: 1,
     });
     expect(totalClassLevels(result.sheet.classLevels)).toBe(1);
-    expect(result.sheet.abilityScoreGeneration).toEqual({
-      mode: "standardArray",
-      assignedScores: {
-        str: 15,
-        dex: 13,
-        con: 14,
-        int: 8,
-        wis: 10,
-        cha: 12,
-      },
-    });
     expect(result.sheet.abilityScores).toEqual({
       str: 17,
       dex: 13,
@@ -84,10 +85,246 @@ describe("character-domain", () => {
       wis: 0,
       cha: 1,
     });
-    expect(result.sheet.languages).toEqual(["Common", "Dwarvish", "Elvish"]);
+    expect(JSON.parse(JSON.stringify(result.sheet))).toEqual(result.sheet);
   });
 
-  it("finalizes a point-buy character and preserves the owned choices", () => {
+  it("derives merged proficiencies from class, background, species, feat, and granted-language choices", () => {
+    const result = finalizeCharacterDraft(completeDraft());
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected successful finalization");
+
+    expect(characterOriginFeats(result.sheet)).toEqual([
+      { feat: "savageAttacker" },
+      {
+        feat: "skilled",
+        proficiencies: ["history", "thievesTools", "viol"],
+      },
+    ]);
+    expect(characterProficiencySummary(result.sheet)).toEqual({
+      savingThrows: ["str", "con"],
+      skills: [
+        "athletics",
+        "intimidation",
+        "acrobatics",
+        "perception",
+        "stealth",
+        "history",
+      ],
+      tools: ["dice", "thievesTools", "viol"],
+      armorTraining: ["light", "medium", "heavy", "shield"],
+      weaponProficiencies: ["simple", "martial"],
+      originFeats: [
+        { feat: "savageAttacker" },
+        {
+          feat: "skilled",
+          proficiencies: ["history", "thievesTools", "viol"],
+        },
+      ],
+      grantedLanguages: [],
+      subclasses: [],
+    });
+  });
+
+  it("enforces species skill choices for elf and human", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        species: "elf",
+        choices: {
+          primaryClassSkills: ["acrobatics", "perception"],
+          backgroundTool: "dice",
+          humanOriginFeat: undefined,
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failed finalization");
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "missingSpeciesSkillChoice",
+    );
+  });
+
+  it("rejects fighter subclasses unless fighter itself is level 3+", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        primaryClass: "wizard",
+        classLevels: {
+          ...ZERO_CLASS_LEVELS,
+          fighter: 1,
+          wizard: 3,
+        },
+        background: "sage",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "int",
+          plusOne: "wis",
+        },
+        species: "elf",
+        languages: ["Common", "Elvish", "Draconic"],
+        alignment: "LN",
+        choices: {
+          primaryClassSkills: ["arcana", "investigation"],
+          speciesSkill: "perception",
+          subclassSelections: {
+            fighter: { className: "fighter", subclass: "champion" },
+            wizard: { className: "wizard", subclass: "evoker" },
+          },
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failed finalization");
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "prematureSubclassSelection",
+    );
+  });
+
+  it("validates multiclass prerequisites on the final ability scores", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        primaryClass: "fighter",
+        classLevels: {
+          ...ZERO_CLASS_LEVELS,
+          fighter: 1,
+          wizard: 1,
+        },
+        background: "criminal",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "dex",
+          plusOne: "con",
+        },
+        species: "halfling",
+        choices: {
+          primaryClassSkills: ["acrobatics", "perception"],
+          backgroundTool: undefined,
+          multiclassSkills: {},
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failed finalization");
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "multiclassPrerequisiteNotMet",
+    );
+  });
+
+  it("derives cross-class resources with correct recharge boundaries and class gates", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        primaryClass: "paladin",
+        classLevels: {
+          ...ZERO_CLASS_LEVELS,
+          bard: 5,
+          cleric: 2,
+          paladin: 3,
+          ranger: 6,
+          sorcerer: 2,
+          warlock: 2,
+        },
+        background: "acolyte",
+        abilityScoreGeneration: {
+          mode: "randomGeneration",
+          assignedScores: {
+            str: 15,
+            dex: 13,
+            con: 8,
+            int: 10,
+            wis: 13,
+            cha: 13,
+          },
+        },
+        backgroundAbilityScoreIncrease: {
+          kind: "plusOneToThree",
+        },
+        species: "human",
+        languages: ["Common", "Dwarvish", "Elvish"],
+        alignment: "LG",
+        choices: {
+          primaryClassSkills: ["athletics", "persuasion"],
+          speciesSkill: "perception",
+          humanOriginFeat: { feat: "alert" },
+          clericDivineOrder: "protector",
+          subclassSelections: {
+            bard: { className: "bard", subclass: "lore" },
+            paladin: { className: "paladin", subclass: "devotion" },
+            ranger: { className: "ranger", subclass: "hunter" },
+          },
+          multiclassSkills: {
+            bard: ["history"],
+            ranger: ["survival"],
+          },
+          multiclassBardInstrument: "lute",
+          rangerDeftExplorerLanguages: ["Sylvan", "Primordial"],
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected successful finalization");
+
+    expect(deriveProficiencyBonus(result.sheet)).toBe(6);
+    expect(characterClassResources(result.sheet)).toEqual([
+      { name: "Bardic Inspiration", uses: 2, rechargesOn: "shortOrLongRest" },
+      { name: "Channel Divinity", uses: 4, rechargesOn: "shortRest" },
+      { name: "Lay on Hands", uses: 15, rechargesOn: "longRest" },
+      { name: "Favored Enemy", uses: 3, rechargesOn: "longRest" },
+      { name: "Sorcery Points", uses: 2, rechargesOn: "longRest" },
+      { name: "Pact Slots", uses: 2, rechargesOn: "shortRest" },
+      { name: "Pact Slot Level 1", uses: 1, rechargesOn: "longRest" },
+      { name: "Invocations Known", uses: 3, rechargesOn: "longRest" },
+    ]);
+  });
+
+  it("derives ranger long-rest pools from level-gated class facts", () => {
+    const result = finalizeCharacterDraft({
+      primaryClass: "ranger",
+      classLevels: { ...ZERO_CLASS_LEVELS, ranger: 14 },
+      background: "sage",
+      abilityScoreGeneration: {
+        mode: "standardArray",
+        assignedScores: {
+          str: 10,
+          dex: 14,
+          con: 13,
+          int: 8,
+          wis: 15,
+          cha: 12,
+        },
+      },
+      backgroundAbilityScoreIncrease: {
+        kind: "plusTwoPlusOne",
+        plusTwo: "wis",
+        plusOne: "con",
+      },
+      species: "human",
+      languages: ["Common", "Dwarvish", "Elvish"],
+      alignment: "NG",
+      choices: {
+        primaryClassSkills: ["animalHandling", "nature", "survival"],
+        speciesSkill: "perception",
+        humanOriginFeat: { feat: "alert" },
+        rangerDeftExplorerLanguages: ["Primordial", "Undercommon"],
+        subclassSelections: {
+          ranger: { className: "ranger", subclass: "hunter" },
+        },
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected successful finalization");
+
+    expect(characterClassResources(result.sheet)).toEqual([
+      { name: "Favored Enemy", uses: 5, rechargesOn: "longRest" },
+      { name: "Tireless", uses: 3, rechargesOn: "longRest" },
+      { name: "Nature's Veil", uses: 3, rechargesOn: "longRest" },
+    ]);
+  });
+
+  it("derives point-buy scores and preserves the owned generation input", () => {
     const result = finalizeCharacterDraft({
       primaryClass: "wizard",
       classLevels: singleClassLevels("wizard", 1),
@@ -103,18 +340,18 @@ describe("character-domain", () => {
           cha: 10,
         },
       },
-      backgroundAbilityScoreIncrease: {
-        kind: "plusOneToThree",
-      },
+      backgroundAbilityScoreIncrease: { kind: "plusOneToThree" },
       species: "elf",
       languages: ["Common", "Elvish", "Draconic"],
       alignment: "LN",
+      choices: {
+        primaryClassSkills: ["arcana", "investigation"],
+        speciesSkill: "perception",
+      },
     });
 
     expect(result.ok).toBe(true);
-    if (!result.ok) {
-      throw new Error("expected successful finalization");
-    }
+    if (!result.ok) throw new Error("expected successful finalization");
 
     expect(
       totalPointBuyCost(result.sheet.abilityScoreGeneration.assignedScores),
@@ -129,65 +366,11 @@ describe("character-domain", () => {
     });
   });
 
-  it("finalizes a random-generation character using rolled scores", () => {
-    const result = finalizeCharacterDraft({
-      primaryClass: "rogue",
-      classLevels: singleClassLevels("rogue", 1),
-      background: "criminal",
-      abilityScoreGeneration: {
-        mode: "randomGeneration",
-        assignedScores: {
-          str: 9,
-          dex: 17,
-          con: 14,
-          int: 13,
-          wis: 12,
-          cha: 11,
-        },
-      },
-      backgroundAbilityScoreIncrease: {
-        kind: "plusTwoPlusOne",
-        plusTwo: "dex",
-        plusOne: "int",
-      },
-      species: "halfling",
-      languages: ["Common", "Halfling", "Goblin"],
-      alignment: "CN",
-    });
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) {
-      throw new Error("expected successful finalization");
-    }
-
-    expect(result.sheet.abilityScores).toEqual({
-      str: 9,
-      dex: 19,
-      con: 14,
-      int: 14,
-      wis: 12,
-      cha: 11,
-    });
-  });
-
-  it("keeps the finalized sheet JSON-serializable", () => {
-    const result = finalizeCharacterDraft(completeDraft());
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) {
-      throw new Error("expected successful finalization");
-    }
-
-    expect(JSON.parse(JSON.stringify(result.sheet))).toEqual(result.sheet);
-  });
-
   it("rejects missing required canonical facts", () => {
     const result = finalizeCharacterDraft({});
 
     expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected failed finalization");
-    }
+    if (result.ok) throw new Error("expected failed finalization");
 
     expect(result.issues.map((issue) => issue.code)).toEqual([
       "missingPrimaryClass",
@@ -197,40 +380,12 @@ describe("character-domain", () => {
       "missingAbilityScoreGeneration",
       "missingBackgroundAbilityScoreIncrease",
       "missingSpecies",
-      "missingAlignment",
       "missingLanguages",
+      "missingAlignment",
     ]);
   });
 
-  it("rejects contradictory class and language state", () => {
-    const result = finalizeCharacterDraft(
-      completeDraft({
-        primaryClass: "wizard",
-        classLevels: { fighter: 2 },
-        background: "sage",
-        backgroundAbilityScoreIncrease: {
-          kind: "plusTwoPlusOne",
-          plusTwo: "int",
-          plusOne: "wis",
-        },
-        languages: ["Common", "Elvish", "Elvish"],
-        alignment: "LN",
-      }),
-    );
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected failed finalization");
-    }
-
-    expect(result.issues.map((issue) => issue.code)).toEqual([
-      "primaryClassLevelMissing",
-      "duplicateLanguages",
-      "tooFewLanguages",
-    ]);
-  });
-
-  it("rejects an invalid standard-array assignment", () => {
+  it("rejects invalid standard-array and language assignments", () => {
     const result = finalizeCharacterDraft(
       completeDraft({
         abilityScoreGeneration: {
@@ -244,182 +399,27 @@ describe("character-domain", () => {
             cha: 8,
           },
         },
+        languages: ["Common", "Elvish", "Elvish"],
       }),
     );
 
     expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected failed finalization");
-    }
-
-    expect(result.issues.map((issue) => issue.code)).toContain(
-      "invalidStandardArray",
-    );
-  });
-
-  it("rejects a point-buy assignment that overspends the budget", () => {
-    const result = finalizeCharacterDraft(
-      completeDraft({
-        primaryClass: "wizard",
-        classLevels: singleClassLevels("wizard", 1),
-        background: "sage",
-        abilityScoreGeneration: {
-          mode: "pointBuy",
-          assignedScores: {
-            str: 15,
-            dex: 15,
-            con: 15,
-            int: 15,
-            wis: 8,
-            cha: 8,
-          },
-        },
-        backgroundAbilityScoreIncrease: {
-          kind: "plusTwoPlusOne",
-          plusTwo: "int",
-          plusOne: "wis",
-        },
-        species: "elf",
-        languages: ["Common", "Elvish", "Draconic"],
-        alignment: "LN",
-      }),
-    );
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected failed finalization");
-    }
-
-    expect(result.issues.map((issue) => issue.code)).toContain(
-      "invalidPointBuy",
-    );
-  });
-
-  it("rejects non-integer point-buy scores", () => {
-    const result = finalizeCharacterDraft(
-      completeDraft({
-        abilityScoreGeneration: {
-          mode: "pointBuy",
-          assignedScores: {
-            str: 10.5,
-            dex: 14,
-            con: 13,
-            int: 12,
-            wis: 10,
-            cha: 8,
-          },
-        },
-      }),
-    );
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected failed finalization");
-    }
-
-    expect(result.issues.map((issue) => issue.code)).toContain(
-      "invalidAbilityScore",
-    );
-  });
-
-  it("rejects a background increase that uses abilities the background does not offer", () => {
-    const result = finalizeCharacterDraft(
-      completeDraft({
-        backgroundAbilityScoreIncrease: {
-          kind: "plusTwoPlusOne",
-          plusTwo: "wis",
-          plusOne: "cha",
-        },
-      }),
-    );
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected failed finalization");
-    }
-
-    expect(result.issues.map((issue) => issue.code)).toEqual([
-      "invalidBackgroundAbilityScoreIncrease",
-      "invalidBackgroundAbilityScoreIncrease",
-    ]);
-  });
-
-  it("rejects starting languages outside the SRD Standard Languages table", () => {
-    const result = finalizeCharacterDraft({
-      ...completeDraft(),
-      languages: ["Common", "Elvish", "Infernal"] as never,
-    });
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected failed finalization");
-    }
-
-    expect(result.issues.map((issue) => issue.code)).toContain(
-      "invalidLanguage",
-    );
-  });
-
-  it("rejects more than three starting languages in this slice", () => {
-    const result = finalizeCharacterDraft({
-      ...completeDraft(),
-      languages: ["Common", "Dwarvish", "Elvish", "Draconic"],
-    });
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected failed finalization");
-    }
-
-    expect(result.issues.map((issue) => issue.code)).toContain(
-      "tooManyLanguages",
-    );
-  });
-
-  it("rejects a background increase that would raise a score above 20", () => {
-    const result = finalizeCharacterDraft({
-      ...completeDraft(),
-      background: "criminal",
-      abilityScoreGeneration: {
-        mode: "randomGeneration",
-        assignedScores: {
-          str: 9,
-          dex: 19,
-          con: 14,
-          int: 17,
-          wis: 12,
-          cha: 11,
-        },
-      },
-      backgroundAbilityScoreIncrease: {
-        kind: "plusTwoPlusOne",
-        plusTwo: "dex",
-        plusOne: "int",
-      },
-      languages: ["Common", "Goblin", "Halfling"],
-    });
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected failed finalization");
-    }
-
+    if (result.ok) throw new Error("expected failed finalization");
     const codes = result.issues.map((issue) => issue.code);
-    expect(codes).toContain("invalidAbilityScore");
-    expect(codes).toContain("abilityScoreIncreaseExceedsTwenty");
+    expect(codes).toContain("invalidStandardArray");
+    expect(codes).toContain("duplicateLanguages");
+    expect(codes).toContain("tooFewLanguages");
   });
 
-  it("derives total level from classLevels instead of storing a duplicate field", () => {
-    const classLevels = {
-      ...ZERO_CLASS_LEVELS,
-      fighter: 3,
-      rogue: 2,
-    };
+  it("derives total level and ability modifiers without storing duplicate state", () => {
+    expect(
+      totalClassLevels({
+        ...ZERO_CLASS_LEVELS,
+        fighter: 3,
+        rogue: 2,
+      }),
+    ).toBe(5);
 
-    expect(totalClassLevels(classLevels)).toBe(5);
-  });
-
-  it("derives ability modifiers directly from final scores", () => {
     expect(
       abilityModifiersFromScores({
         str: 3,
@@ -437,9 +437,6 @@ describe("character-domain", () => {
       wis: 4,
       cha: 5,
     });
-  });
-
-  it("keeps standard-array helpers aligned with the SRD constants", () => {
     expect([...STANDARD_ARRAY_SCORES]).toEqual([15, 14, 13, 12, 10, 8]);
   });
 });

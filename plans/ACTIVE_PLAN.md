@@ -48,13 +48,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 2,
       "id": "CHAR3",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Proficiencies Features And Level-Gated Character Facts"
     },
     {
       "number": 3,
       "id": "CHAR4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Equipment And Loadout Projection"
     },
     {
@@ -117,8 +117,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | ----- | ---- | ------ | ---------- | ------ | ----------- | ----------------- |
 | 0 | CHAR1 - Canonical Character Domain | done | none | CHAR2, CHAR3, CHAR4, CHAR5, CHAR6, CHAR7 | Landed `CharacterDraft` / `CharacterSheet` in `packages/core/src/character-domain.ts` with finalization that rejects incomplete or contradictory class/background/species/language/alignment state. | Complete |
 | 1 | CHAR2 - Score Generation And Origin Validation | done | CHAR1 | CHAR3, CHAR5 | Landed owned ability-score generation, background score-increase validation, and SRD starting-language validation on the canonical character sheet. | Complete |
-| 2 | CHAR3 - Proficiencies Features And Level-Gated Character Facts | ready-for-implementation-after-light-research | CHAR1, CHAR2 | CHAR4, CHAR5, CHAR7 | Extend the now score-complete sheet to own proficiencies, subclass gating, feat/feature choices, multiclass prerequisites, and class-resource derivations. | Unblocked by CHAR2; next bounded slice |
-| 3 | CHAR4 - Equipment And Loadout Projection | blocked | CHAR1, CHAR3 | CHAR5 | Replace narrow starter-loadout assumptions with owned sheet equipment/loadout facts and project them into combat-facing hand, armor, shield, and weapon facts. | Depends on sheet feature/proficiency ownership |
+| 2 | CHAR3 - Proficiencies Features And Level-Gated Character Facts | done | CHAR1, CHAR2 | CHAR4, CHAR5, CHAR7 | Landed owned build choices for class/background/species/feat-driven proficiencies, subclass ownership/gating, multiclass prerequisite validation, granted-language choices, and class-resource derivation helpers on the canonical character sheet. | Complete |
+| 3 | CHAR4 - Equipment And Loadout Projection | ready-for-implementation-after-light-research | CHAR1, CHAR3 | CHAR5 | Use the new owned proficiency and granted-language facts to model actual starting equipment and project combat-facing loadout state without reviving temporary presets. | Unblocked by CHAR3; next bounded slice |
 | 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | blocked | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Derive executable sheet numbers and spellcasting facts from the owned sheet, then project them into creature runtime and battle init without duplicated derivation. | Depends on prior sheet ownership slices |
 | 5 | CHAR6 - Guided Workflow Shell | blocked | CHAR1, CHAR2, CHAR5 | none | Once the owned domain and projections are stable, add a thin workflow shell over `CharacterDraft` rather than a second semantic model. | Product-shell work; intentionally later |
 | 6 | CHAR7 - Level Advancement And Multiclass Continuation | blocked | CHAR1, CHAR3, CHAR5 | none | Extend the same character domain into advancement, higher-level starts, ASI/feat choice points, and multiclass continuation. | Depends on executable sheet baseline |
@@ -287,15 +287,11 @@ Plan Impact:
 
 ### Task 2 - CHAR3 - Proficiencies Features And Level-Gated Character Facts
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: CHAR1, CHAR2.
 
 Blocks: CHAR4, CHAR5, CHAR7.
-
-Next action:
-
-- Re-read the relevant SRD class/background/species proficiency and subclass passages, then extend the now score-complete sheet with owned proficiencies, subclass gating, feat/feature choices, multiclass prerequisites, and class-resource derivations.
 
 Acceptance criteria:
 
@@ -304,9 +300,49 @@ Acceptance criteria:
 - Multiclass prerequisites are validated on the character side.
 - Level-gated features and resource pools derive from owned sheet facts.
 
+Closeout:
+
+- Extended `packages/core/src/character-domain.ts` to keep explicit CHAR3 build choices on the canonical sheet rather than pushing them into adapters or runtime-only projections.
+- Added owned validation/derivation support for primary-class and multiclass skill picks, background tool picks, species skill picks, human Versatile origin-feat picks, subclass ownership, rogue/ranger granted-language choices, and class-feature choices that change proficiencies (`Divine Order`, `Primal Order`).
+- Landed merged proficiency/resource helpers in `packages/core/src/character-proficiencies.ts` and `packages/core/src/character-resources.ts`, with supporting data/types split into focused modules to stay under repo lint limits.
+- Kept `CharacterSheet` as the owned source of truth for explicit choices while deriving merged proficiencies and resource pools from those choices instead of storing parallel copies.
+
+Verification:
+
+- RAW check completed against:
+  - `.references/srd-5.2.1/Character-Creation.md`
+  - `.references/srd-5.2.1/Character-Origins.md`
+  - `.references/srd-5.2.1/Classes/Fighter.md`
+  - `.references/srd-5.2.1/Classes/Rogue.md`
+  - `.references/srd-5.2.1/Classes/Ranger.md`
+  - `.references/srd-5.2.1/Classes/Cleric.md`
+  - `.references/srd-5.2.1/Classes/Druid.md`
+  - `.references/srd-5.2.1/Classes/Paladin.md`
+  - `.references/srd-5.2.1/Classes/Bard.md`
+  - `.references/srd-5.2.1/Classes/Monk.md`
+  - `.references/srd-5.2.1/Feats.md`
+  - `UBIQUITOUS_LANGUAGE.md`
+- Focused verification passed:
+  - `pnpm --dir packages/core exec vitest run src/character-domain.test.ts`
+- Repo-wide verification attempted:
+  - `pnpm quality`
+  - still fails before typecheck on pre-existing Prettier drift in unrelated core files: `src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/features/spell-available-actions.ts`, `src/machine-event-extractors.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`
+- `/simplify` convergence:
+  - Round 1: collapsed the two rejected branch shapes into one bounded character-domain model with explicit build choices and no off-scope script edits.
+  - Round 2: split oversized validation/proficiency files into smaller modules (`character-build-choice-validation.ts`, `character-proficiency-data.ts`) and removed the remaining important duplication/structure issues.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `CHAR3`: marked `done`.
+  - `CHAR4`: unblocked and promoted to `ready-for-implementation-after-light-research`.
+  - `CHAR5`: no change; remains blocked behind `CHAR4`.
+  - `CHAR7`: no change; still blocked behind `CHAR5`.
+
 ### Task 3 - CHAR4 - Equipment And Loadout Projection
 
-Status: blocked.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: CHAR1, CHAR3.
 

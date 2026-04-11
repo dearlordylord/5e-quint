@@ -9,9 +9,32 @@ import {
   type CharacterBackground,
 } from "#/character-ability-scores.ts";
 import {
-  validateAbilityScoreGeneration,
-  validateBackgroundAbilityScoreIncrease,
+  validateFeatureChoices,
+  validateFeatChoices,
+  validateGrantedLanguages,
+  validateMulticlassChoices,
+  validateMulticlassPrerequisites,
+  validatePrimaryClassChoices,
+  validateSpeciesChoices,
+  validateSubclassSelections,
+  validateBackgroundToolChoice,
+  validateDuplicateGrantedProficiencies,
+} from "#/character-build-choice-validation.ts";
+import {
+  validateDraftFields,
+  validateLanguages,
 } from "#/character-finalization-helpers.ts";
+import type {
+  CharacterBuildChoices,
+  CharacterClassResourcePool,
+  CharacterOriginFeatSelection,
+  CharacterProficiencySummary,
+} from "#/character-feature-types.ts";
+import {
+  BACKGROUND_FIXED_ORIGIN_FEATS,
+  deriveCharacterProficiencies,
+} from "#/character-proficiencies.ts";
+import { deriveCharacterClassResources } from "#/character-resources.ts";
 import { CLASS_NAMES, type ClassName } from "#/features/class-tables.ts";
 
 export {
@@ -31,14 +54,53 @@ export type {
   CharacterBackground,
   CharacterDraftAbilityScores,
 } from "#/character-ability-scores.ts";
+export {
+  BACKGROUND_FIXED_ORIGIN_FEATS,
+  BACKGROUND_SKILLS,
+  ELF_KEEN_SENSES_SKILLS,
+  PRIMARY_CLASS_PROFICIENCIES,
+  MULTICLASS_PROFICIENCIES,
+  SKILL_ABILITIES,
+  SKILLS,
+  type Skill,
+  deriveCharacterProficiencies,
+} from "#/character-proficiencies.ts";
+export {
+  CHARACTER_RARE_LANGUAGES,
+  CHARACTER_TOOL_PROFICIENCIES,
+  CHARACTER_WEAPON_PROFICIENCIES,
+  CLERIC_DIVINE_ORDERS,
+  DRUID_PRIMAL_ORDERS,
+  SRD_SUBCLASSES,
+  type ArtisanTool,
+  type CharacterArmorTraining,
+  type CharacterBuildChoices,
+  type CharacterClassResourcePool,
+  type CharacterGrantedLanguage,
+  type CharacterOriginFeatId,
+  type CharacterOriginFeatSelection,
+  type CharacterProficiencySummary,
+  type CharacterSubclassSelection,
+  type CharacterToolProficiency,
+  type CharacterWeaponProficiency,
+  type ClericDivineOrder,
+  type DruidPrimalOrder,
+  type GamingSet,
+  type MusicalInstrument,
+} from "#/character-feature-types.ts";
+export {
+  deriveCharacterClassResources,
+  deriveProficiencyBonus,
+} from "#/character-resources.ts";
 
 /**
  * Character-domain ownership boundary.
  *
  * - `CharacterDraft` owns incomplete SRD character-creation choices.
- * - `CharacterSheet` owns validated canonical PC facts.
- * - Derived sheet results such as total level, proficiency bonus, and ability
- *   modifiers should be computed from the sheet rather than stored twice.
+ * - `CharacterSheet` owns validated canonical PC facts plus the explicit
+ *   proficiency- and feature-affecting choices needed to derive sheet facts.
+ * - Derived facts such as proficiency bonus, merged proficiencies, and class
+ *   resources are computed from the sheet rather than stored twice.
  * - Runtime projections such as `CharConfig`, `DndMachineInput`, and
  *   `InitCreatureConfig` are execution-facing outputs and are not owned here.
  */
@@ -99,6 +161,7 @@ export interface CharacterDraft {
   readonly species?: CharacterSpecies;
   readonly languages?: ReadonlyArray<CharacterLanguage>;
   readonly alignment?: Alignment;
+  readonly choices?: CharacterBuildChoices;
 }
 
 export interface CharacterSheet {
@@ -111,6 +174,7 @@ export interface CharacterSheet {
   readonly species: CharacterSpecies;
   readonly languages: ReadonlyArray<CharacterLanguage>;
   readonly alignment: Alignment;
+  readonly choices: CharacterBuildChoices;
 }
 
 export const CHARACTER_FINALIZATION_ISSUE_CODES = [
@@ -137,6 +201,33 @@ export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "tooFewLanguages",
   "tooManyLanguages",
   "missingAlignment",
+  "missingPrimaryClassSkillChoices",
+  "wrongPrimaryClassSkillChoiceCount",
+  "invalidPrimaryClassSkillChoice",
+  "duplicatePrimaryClassSkillChoice",
+  "missingMulticlassSkillChoice",
+  "wrongMulticlassSkillChoiceCount",
+  "invalidMulticlassSkillChoice",
+  "duplicateMulticlassSkillChoice",
+  "missingToolChoice",
+  "invalidToolChoiceCount",
+  "duplicateToolChoice",
+  "missingSpeciesSkillChoice",
+  "invalidSpeciesSkillChoice",
+  "missingOriginFeatChoice",
+  "invalidOriginFeatChoice",
+  "wrongSkilledChoiceCount",
+  "duplicateSkilledChoice",
+  "missingFeatureChoice",
+  "missingSubclassSelection",
+  "invalidSubclassSelection",
+  "prematureSubclassSelection",
+  "missingGrantedLanguageChoice",
+  "wrongGrantedLanguageChoiceCount",
+  "invalidGrantedLanguageChoice",
+  "duplicateGrantedLanguageChoice",
+  "duplicateGrantedProficiency",
+  "multiclassPrerequisiteNotMet",
 ] as const;
 export type CharacterFinalizationIssueCode =
   (typeof CHARACTER_FINALIZATION_ISSUE_CODES)[number];
@@ -160,10 +251,6 @@ function normalizeClassLevels(
     ...ZERO_CLASS_LEVELS,
     ...partial,
   };
-}
-
-function isValidClassLevel(level: number): boolean {
-  return Number.isInteger(level) && level >= 0 && level <= 20;
 }
 
 export function finalAbilityModifiers(
@@ -191,138 +278,76 @@ export function singleClassLevels(
   };
 }
 
+export function characterOriginFeats(
+  sheet: CharacterSheet,
+): ReadonlyArray<CharacterOriginFeatSelection> {
+  const feats: CharacterOriginFeatSelection[] = [
+    BACKGROUND_FIXED_ORIGIN_FEATS[sheet.background],
+  ];
+  if (sheet.species === "human" && sheet.choices.humanOriginFeat != null) {
+    feats.push(sheet.choices.humanOriginFeat);
+  }
+  return feats;
+}
+
+export function characterProficiencySummary(
+  sheet: CharacterSheet,
+): CharacterProficiencySummary {
+  return deriveCharacterProficiencies(sheet);
+}
+
+export function characterClassResources(
+  sheet: CharacterSheet,
+): ReadonlyArray<CharacterClassResourcePool> {
+  return deriveCharacterClassResources(sheet);
+}
+
 export function finalizeCharacterDraft(
   draft: CharacterDraft,
 ): CharacterFinalizationResult {
-  const issues: CharacterFinalizationIssue[] = [];
-
-  if (draft.primaryClass == null) {
-    issues.push({
-      code: "missingPrimaryClass",
-      message: "CharacterDraft requires a primary class before finalization.",
-    });
-  }
-
-  if (draft.classLevels == null) {
-    issues.push({
-      code: "missingClassLevels",
-      message: "CharacterDraft requires class levels before finalization.",
-    });
-  }
-
   const classLevels =
     draft.classLevels == null
       ? ZERO_CLASS_LEVELS
       : normalizeClassLevels(draft.classLevels);
 
-  for (const className of CLASS_NAMES) {
-    const classLevel = classLevels[className];
-    if (!isValidClassLevel(classLevel)) {
-      issues.push({
-        code: "invalidClassLevel",
-        message: `Class level for ${className} must be an integer between 0 and 20.`,
-      });
-    }
-  }
+  const issues: CharacterFinalizationIssue[] = [
+    ...validateDraftFields(draft, classLevels),
+    ...validatePrimaryClassChoices(draft),
+    ...validateMulticlassChoices(draft, classLevels),
+    ...validateBackgroundToolChoice(draft),
+    ...validateSpeciesChoices(draft),
+    ...validateFeatChoices(draft),
+    ...validateFeatureChoices(draft, classLevels),
+    ...validateSubclassSelections(draft, classLevels),
+    ...validateGrantedLanguages(draft, classLevels),
+    ...(draft.languages == null ? [] : validateLanguages(draft.languages)),
+    ...validateDuplicateGrantedProficiencies(draft),
+  ];
 
-  const totalLevel = totalClassLevels(classLevels);
-  if (totalLevel < 1 || totalLevel > 20) {
-    issues.push({
-      code: "invalidTotalLevel",
-      message: "Total character level must be between 1 and 20.",
-    });
-  }
-
-  if (draft.primaryClass != null && classLevels[draft.primaryClass] < 1) {
-    issues.push({
-      code: "primaryClassLevelMissing",
-      message: "Primary class must have at least one class level.",
-    });
-  }
-
-  if (draft.background == null) {
-    issues.push({
-      code: "missingBackground",
-      message: "CharacterDraft requires a background before finalization.",
-    });
-  }
-
-  if (draft.abilityScoreGeneration == null) {
-    issues.push({
-      code: "missingAbilityScoreGeneration",
-      message:
-        "CharacterDraft requires an ability score generation choice before finalization.",
-    });
-  }
-
-  if (draft.backgroundAbilityScoreIncrease == null) {
-    issues.push({
-      code: "missingBackgroundAbilityScoreIncrease",
-      message:
-        "CharacterDraft requires a background ability score increase choice before finalization.",
-    });
-  }
-
-  if (draft.abilityScoreGeneration != null) {
-    issues.push(
-      ...validateAbilityScoreGeneration(draft.abilityScoreGeneration),
-    );
-  }
-
+  let abilityScores: CharacterAbilityScores | undefined;
   if (
-    draft.background != null &&
     draft.abilityScoreGeneration != null &&
+    draft.background != null &&
     draft.backgroundAbilityScoreIncrease != null
   ) {
-    issues.push(
-      ...validateBackgroundAbilityScoreIncrease(
-        draft.background,
-        draft.abilityScoreGeneration,
-        draft.backgroundAbilityScoreIncrease,
-      ),
+    abilityScores = applyBackgroundAbilityScoreIncrease(
+      draft.abilityScoreGeneration.assignedScores as CharacterAbilityScores,
+      draft.background,
+      draft.backgroundAbilityScoreIncrease,
     );
-  }
-
-  if (draft.species == null) {
-    issues.push({
-      code: "missingSpecies",
-      message: "CharacterDraft requires a species before finalization.",
-    });
-  }
-
-  if (draft.alignment == null) {
-    issues.push({
-      code: "missingAlignment",
-      message: "CharacterDraft requires an alignment before finalization.",
-    });
-  }
-
-  if (draft.languages == null) {
-    issues.push({
-      code: "missingLanguages",
-      message: "CharacterDraft requires languages before finalization.",
-    });
-  }
-
-  if (draft.languages != null) {
-    validateLanguages(draft.languages, issues);
+    issues.push(...validateMulticlassPrerequisites(classLevels, abilityScores));
   }
 
   if (issues.length > 0) {
     return { ok: false, issues };
   }
 
-  const abilityScoreGeneration = {
+  const abilityScoreGeneration: CharacterAbilityScoreGeneration = {
     ...draft.abilityScoreGeneration!,
     assignedScores: {
       ...draft.abilityScoreGeneration!.assignedScores,
     } as CharacterAbilityScores,
-  } as CharacterAbilityScoreGeneration;
-  const abilityScores = applyBackgroundAbilityScoreIncrease(
-    abilityScoreGeneration.assignedScores,
-    draft.background!,
-    draft.backgroundAbilityScoreIncrease!,
-  );
+  };
 
   return {
     ok: true,
@@ -332,56 +357,11 @@ export function finalizeCharacterDraft(
       background: draft.background!,
       abilityScoreGeneration,
       backgroundAbilityScoreIncrease: draft.backgroundAbilityScoreIncrease!,
-      abilityScores,
+      abilityScores: abilityScores!,
       species: draft.species!,
       languages: [...draft.languages!],
       alignment: draft.alignment!,
+      choices: draft.choices ?? {},
     },
   };
-}
-
-function validateLanguages(
-  languages: ReadonlyArray<CharacterLanguage>,
-  issues: CharacterFinalizationIssue[],
-): void {
-  const uniqueLanguages = new Set(languages);
-
-  for (const language of uniqueLanguages) {
-    if (!CHARACTER_LANGUAGES.includes(language)) {
-      issues.push({
-        code: "invalidLanguage",
-        message: `Starting language "${language}" must come from the SRD Standard Languages table.`,
-      });
-    }
-  }
-
-  if (uniqueLanguages.size !== languages.length) {
-    issues.push({
-      code: "duplicateLanguages",
-      message: "Character languages must be unique.",
-    });
-  }
-
-  if (!uniqueLanguages.has("Common")) {
-    issues.push({
-      code: "missingCommonLanguage",
-      message: "Character languages must include Common.",
-    });
-  }
-
-  if (uniqueLanguages.size < 3) {
-    issues.push({
-      code: "tooFewLanguages",
-      message:
-        "Character languages must include Common plus two other Standard Languages.",
-    });
-  }
-
-  if (languages.length > 3 || uniqueLanguages.size > 3) {
-    issues.push({
-      code: "tooManyLanguages",
-      message:
-        "This character-creation slice supports exactly three starting languages: Common plus two other Standard Languages.",
-    });
-  }
 }
