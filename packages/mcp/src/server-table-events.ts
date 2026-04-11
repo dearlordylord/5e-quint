@@ -1,8 +1,11 @@
 import { Match, Schema } from "effect";
 
 import {
+  BATTLE_TABLE_EVENT_TYPES,
+  CREATURE_TABLE_EVENT_TYPES,
   type RecordTableEventResult,
   TableEventCommandSchema,
+  tableEventCommandSchemaForType,
   type TableEventCommand,
   type TableEventWarning,
   type CreatureSemanticTriggerTableEventType,
@@ -34,6 +37,32 @@ import {
 } from "./server-shared.ts";
 
 const strictCommandParseOptions = { onExcessProperty: "error" } as const;
+const TABLE_EVENT_TYPES = [
+  ...CREATURE_TABLE_EVENT_TYPES,
+  ...BATTLE_TABLE_EVENT_TYPES,
+] as const;
+const TABLE_EVENT_TYPE_SET = new Set<string>(TABLE_EVENT_TYPES);
+
+function formatSchemaValue(value: unknown): string {
+  if (value === undefined) return "(missing)";
+  if (typeof value === "string") return JSON.stringify(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function invalidTableEventContent(args: unknown) {
+  const actualType =
+    typeof args === "object" && args !== null && !Array.isArray(args)
+      ? Reflect.get(args, "type")
+      : undefined;
+  return errorContent(
+    "Invalid record_table_event input",
+    `Invalid table event.${typeof actualType === "string" ? ` Received type: ${JSON.stringify(actualType)}.` : ` Received: ${formatSchemaValue(args)}.`} Valid types: ${TABLE_EVENT_TYPES.join(", ")}.`,
+  );
+}
 
 export function tableEventWarning(
   code: TableEventWarning["code"],
@@ -307,8 +336,18 @@ function recordBattleTableEvent(
 }
 
 export function recordTableEvent(host: SupportedActionHost, args: unknown) {
+  if (typeof args !== "object" || args === null || Array.isArray(args)) {
+    return invalidTableEventContent(args);
+  }
+
+  const type = Reflect.get(args, "type");
+  if (typeof type !== "string" || !TABLE_EVENT_TYPE_SET.has(type)) {
+    return invalidTableEventContent(args);
+  }
+
+  const schema = tableEventCommandSchemaForType(type);
   const decoded = Schema.decodeUnknownEither(
-    TableEventCommandSchema,
+    schema ?? TableEventCommandSchema,
     strictCommandParseOptions,
   )(args);
   if (decoded._tag === "Left") {

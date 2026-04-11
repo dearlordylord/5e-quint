@@ -626,9 +626,46 @@ describe("MCP server adapter", () => {
     expect("isError" in invalidRawAction && invalidRawAction.isError).toBe(
       true,
     );
-    expect(readPayload(invalidRawAction).error).toBe(
-      "Invalid execute_control_command input",
+    expect(readPayload(invalidRawAction)).toEqual({
+      error: "Invalid execute_control_command input",
+      details:
+        'Invalid control command. Received type: "USE_SECOND_WIND". Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS.',
+    });
+  });
+
+  test("execute_control_command keeps field-level errors for known command types", () => {
+    const host = createBattleHost();
+
+    const invalidKnownCommand = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+    });
+
+    expect("isError" in invalidKnownCommand && invalidKnownCommand.isError).toBe(
+      true,
     );
+    const payload = readPayload(invalidKnownCommand);
+    expect(payload.error).toBe("Invalid execute_control_command input");
+    expect(String(payload.details)).toContain("rechargeD6");
+  });
+
+  test("execute_control_command keeps BATTLE_INIT creature-config errors concise", () => {
+    const host = createBattleHost();
+
+    const invalidBattleInit = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [{ id: "goblin-1", kind: "Monster" }],
+    });
+
+    expect("isError" in invalidBattleInit && invalidBattleInit.isError).toBe(
+      true,
+    );
+    expect(readPayload(invalidBattleInit)).toEqual({
+      error: "Invalid execute_control_command input",
+      details:
+        'Invalid BATTLE_INIT creature config. Received kind: "Monster". Use either a raw creature config with maxHp and kind, or a Monster catalog config with statBlockId.',
+    });
   });
 
   test("record_table_event validates a narrow table-event shape", () => {
@@ -644,9 +681,10 @@ describe("MCP server adapter", () => {
     expect("isError" in invalidRawAction && invalidRawAction.isError).toBe(
       true,
     );
-    expect(readPayload(invalidRawAction).error).toBe(
-      "Invalid record_table_event input",
-    );
+    expect(readPayload(invalidRawAction)).toEqual({
+      error: "Invalid record_table_event input",
+      details: expect.stringContaining("amount"),
+    });
     expect(readPayload(handleToolCall(host, "get_state", {}))).toEqual(before);
 
     const undecidedGenericSpell = handleToolCall(host, "record_table_event", {
@@ -657,9 +695,11 @@ describe("MCP server adapter", () => {
     expect(
       "isError" in undecidedGenericSpell && undecidedGenericSpell.isError,
     ).toBe(true);
-    expect(readPayload(undecidedGenericSpell).error).toBe(
-      "Invalid record_table_event input",
-    );
+    expect(readPayload(undecidedGenericSpell)).toEqual({
+      error: "Invalid record_table_event input",
+      details:
+        'Invalid table event. Received type: "BATTLE_CAST_SAVE_SPELL". Valid types: TAKE_DAMAGE, HEAL, GRANT_TEMP_HP, STABILIZE, KNOCK_OUT, APPLY_CONDITION, REMOVE_CONDITION, ADD_EXHAUSTION, REDUCE_EXHAUSTION, APPLY_FALL, BREAK_CONCENTRATION, RECORD_FAILED_SAVING_THROW, RECORD_FAILED_ABILITY_CHECK, BATTLE_HEAL.',
+    });
   });
 
   test("record_table_event exports the minimum warning vocabulary", () => {

@@ -2,7 +2,11 @@ import { Match, Schema } from "effect";
 
 import type { BattleEvent } from "@dnd/core/battle-machine-types.ts";
 import {
+  BATTLE_CONTROL_COMMAND_TYPES,
+  BattleInitCreatureConfigSchema,
+  CREATURE_CONTROL_COMMAND_TYPES,
   ControlCommandSchema,
+  controlCommandSchemaForType,
   toBattleInitCreatureConfig,
   type ControlCommand,
 } from "@dnd/core/available-actions.ts";
@@ -26,6 +30,55 @@ type BattleInitCommand = Extract<
 >;
 
 const strictCommandParseOptions = { onExcessProperty: "error" } as const;
+const CONTROL_COMMAND_TYPES = [
+  ...CREATURE_CONTROL_COMMAND_TYPES,
+  ...BATTLE_CONTROL_COMMAND_TYPES,
+] as const;
+const CONTROL_COMMAND_TYPE_SET = new Set<string>(CONTROL_COMMAND_TYPES);
+
+function formatSchemaValue(value: unknown): string {
+  if (value === undefined) return "(missing)";
+  if (typeof value === "string") return JSON.stringify(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function invalidControlCommandContent(args: unknown) {
+  const actualType =
+    typeof args === "object" && args !== null && !Array.isArray(args)
+      ? Reflect.get(args, "type")
+      : undefined;
+  return errorContent(
+    "Invalid execute_control_command input",
+    `Invalid control command.${typeof actualType === "string" ? ` Received type: ${JSON.stringify(actualType)}.` : ` Received: ${formatSchemaValue(args)}.`} Valid types: ${CONTROL_COMMAND_TYPES.join(", ")}.`,
+  );
+}
+
+function invalidBattleInitCreatureContent(args: unknown) {
+  if (typeof args !== "object" || args === null || Array.isArray(args)) {
+    return null;
+  }
+  const creatures = Reflect.get(args, "creatures");
+  if (!Array.isArray(creatures)) return null;
+
+  for (const creature of creatures) {
+    const decoded = Schema.decodeUnknownEither(
+      BattleInitCreatureConfigSchema,
+      strictCommandParseOptions,
+    )(creature);
+    if (decoded._tag === "Left") {
+      return errorContent(
+        "Invalid execute_control_command input",
+        String(decoded.left),
+      );
+    }
+  }
+
+  return null;
+}
 
 function duplicateBattleCreatureIdContent() {
   return errorContent(
@@ -126,8 +179,23 @@ export function executeControlCommand(
   host: SupportedActionHost,
   args: unknown,
 ) {
+  if (typeof args !== "object" || args === null || Array.isArray(args)) {
+    return invalidControlCommandContent(args);
+  }
+
+  const type = Reflect.get(args, "type");
+  if (typeof type !== "string" || !CONTROL_COMMAND_TYPE_SET.has(type)) {
+    return invalidControlCommandContent(args);
+  }
+
+  if (type === "BATTLE_INIT") {
+    const invalidCreature = invalidBattleInitCreatureContent(args);
+    if (invalidCreature != null) return invalidCreature;
+  }
+
+  const schema = controlCommandSchemaForType(type);
   const decoded = Schema.decodeUnknownEither(
-    ControlCommandSchema,
+    schema ?? ControlCommandSchema,
     strictCommandParseOptions,
   )(args);
   if (decoded._tag === "Left") {

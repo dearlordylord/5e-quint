@@ -888,6 +888,37 @@ export type TableEventWarning = {
   readonly message: string;
 };
 
+function formatConciseSchemaValue(value: unknown): string {
+  if (value === undefined) return "(missing)";
+  if (typeof value === "string") return JSON.stringify(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function readSchemaStringField(
+  value: unknown,
+  key: string,
+): string | undefined {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return undefined;
+  }
+  const field = Reflect.get(value, key);
+  return typeof field === "string" ? field : undefined;
+}
+
+function conciseBattleInitCreatureConfigMessage(issue: {
+  readonly actual?: unknown;
+}) {
+  const kind = readSchemaStringField(issue.actual, "kind");
+  return {
+    message: `Invalid BATTLE_INIT creature config.${kind ? ` Received kind: ${JSON.stringify(kind)}.` : ` Received: ${formatConciseSchemaValue(issue.actual)}.`} Use either a raw creature config with maxHp and kind, or a Monster catalog config with statBlockId.`,
+    override: true,
+  };
+}
+
 const EnterCombatResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("ENTER_COMBAT"),
 });
@@ -1418,10 +1449,12 @@ const BattleInitCatalogCreatureConfigSchema = Schema.Struct({
   ),
   surprised: Schema.optional(Schema.Boolean),
 });
-const BattleInitCreatureConfigSchema = Schema.Union(
+export const BattleInitCreatureConfigSchema = Schema.Union(
   BattleInitRawCreatureConfigSchema,
   BattleInitCatalogCreatureConfigSchema,
-);
+).annotations({
+  message: conciseBattleInitCreatureConfigMessage,
+});
 const BattleInitControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal("BATTLE_INIT"),
@@ -1459,10 +1492,26 @@ export const ControlCommandSchema = Schema.Union(
   BattleEndTurnControlSchema,
   BattleLegendaryPassControlSchema,
 );
+const CONTROL_COMMAND_SCHEMA_BY_TYPE = {
+  END_TURN: CreatureEndTurnControlSchema,
+  LONG_REST: CreatureLongRestControlSchema,
+  BATTLE_INIT: BattleInitControlSchema,
+  BATTLE_START_TURN: BattleStartTurnControlSchema,
+  BATTLE_END_TURN: BattleEndTurnControlSchema,
+  BATTLE_LEGENDARY_PASS: BattleLegendaryPassControlSchema,
+} as const;
 export type ControlCommand = Schema.Schema.Type<typeof ControlCommandSchema>;
 export type BattleInitControlCreatureConfig = Schema.Schema.Type<
   typeof BattleInitCreatureConfigSchema
 >;
+
+export function controlCommandSchemaForType(
+  type: string,
+): typeof ControlCommandSchema {
+  return CONTROL_COMMAND_SCHEMA_BY_TYPE[
+    type as keyof typeof CONTROL_COMMAND_SCHEMA_BY_TYPE
+  ] as typeof ControlCommandSchema;
+}
 
 export function toBattleInitCreatureConfig(
   config: BattleInitControlCreatureConfig,
@@ -1612,9 +1661,33 @@ export const TableEventCommandSchema = Schema.Union(
   CreatureRecordFailedAbilityCheckTableEventSchema,
   BattleTableEventSchema,
 );
+const TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE = {
+  TAKE_DAMAGE: CreatureTakeDamageTableEventSchema,
+  HEAL: CreatureHealTableEventSchema,
+  GRANT_TEMP_HP: CreatureGrantTempHpTableEventSchema,
+  STABILIZE: CreatureStabilizeTableEventSchema,
+  KNOCK_OUT: CreatureKnockOutTableEventSchema,
+  APPLY_CONDITION: CreatureApplyConditionTableEventSchema,
+  REMOVE_CONDITION: CreatureRemoveConditionTableEventSchema,
+  ADD_EXHAUSTION: CreatureAddExhaustionTableEventSchema,
+  REDUCE_EXHAUSTION: CreatureReduceExhaustionTableEventSchema,
+  APPLY_FALL: CreatureApplyFallTableEventSchema,
+  BREAK_CONCENTRATION: CreatureBreakConcentrationTableEventSchema,
+  RECORD_FAILED_SAVING_THROW: CreatureRecordFailedSavingThrowTableEventSchema,
+  RECORD_FAILED_ABILITY_CHECK: CreatureRecordFailedAbilityCheckTableEventSchema,
+  BATTLE_HEAL: BattleHealTableEventSchema,
+} as const;
 export type TableEventCommand = Schema.Schema.Type<
   typeof TableEventCommandSchema
 >;
+
+export function tableEventCommandSchemaForType(
+  type: string,
+): typeof TableEventCommandSchema {
+  return TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE[
+    type as keyof typeof TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE
+  ] as typeof TableEventCommandSchema;
+}
 
 export type RecordTableEventAppliedResult<State> = {
   readonly success: true;

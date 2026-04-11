@@ -185,7 +185,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 26,
       "id": "MCP2-C",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Concise Schema Validation Errors in MCP Tools"
     },
     {
@@ -2301,13 +2301,13 @@ Extra research needed:
 
 ### Task 26 - MCP2-C - Concise Schema Validation Errors in MCP Tools
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: none (UX polish).
 
-Next action: annotate the union schemas with `.annotations({ message })` so `String(decoded.left)` produces concise output. No call-site changes needed.
+Next action: Closed 2026-04-11: unknown `execute_control_command` / `record_table_event` types now fail fast with concise valid-type messages, known command/event payloads keep their field-level decode errors, and malformed `BATTLE_INIT` creature configs surface a compact nested union message. `start_battle` stayed unchanged because its struct decode was already task-appropriate and this task only targeted union-dump failures.
 
 Purpose:
 
@@ -2316,40 +2316,32 @@ Purpose:
 Context:
 
 - Root cause: `String(decoded.left)` already uses `TreeFormatter` under the hood, but TreeFormatter dumps every union branch for complex `Schema.Union` types.
-- Effect's `.annotations({ message: () => ({ message: "...", override: true }) })` on a `Schema.Union` makes TreeFormatter return only the custom string — no branch dump.
-
-Suggested approach: annotate each `Schema.Union` that surfaces through MCP with a `message` annotation with `override: true`. The schema owns its error message; no call-site changes to the 4 `String(decoded.left)` locations. Example:
-
-```typescript
-export const ControlCommandSchema = Schema.Union(
-  CreatureEndTurnControlSchema,
-  CreatureLongRestControlSchema,
-  // ...
-).annotations({
-  message: () => ({
-    message: "Invalid control command. Valid types: END_TURN, LONG_REST, ...",
-    override: true,
-  }),
-});
-```
+- The final implementation keeps schema-driven field errors for known payloads and only short-circuits the cases that were actually exploding: unknown control/table-event `type` values and the nested `BATTLE_INIT` creature-config union.
 
 Affected union schemas:
 
-1. `ControlCommandSchema` in `packages/core/src/available-actions.ts:1384`
-2. Action token union in `packages/mcp/src/server.ts` (if applicable)
-3. Table event schema in `packages/mcp/src/server-table-events.ts` (if applicable)
-4. Start battle schema in `packages/mcp/src/start-battle.ts` (if applicable)
+1. `ControlCommandSchema` input path in `packages/mcp/src/server-control.ts`
+2. Nested `BattleInitCreatureConfigSchema` in `packages/core/src/available-actions.ts`
+3. `TableEventCommandSchema` input path in `packages/mcp/src/server-table-events.ts`
+4. `ResolvedActionTokenSchema` / `start_battle` were reviewed and left unchanged for this task:
+   `execute_action` / `preview_action` already had concise unknown-type handling, and `start_battle` is a struct decoder rather than the union-dump path that motivated this task.
 
 Acceptance criteria:
 
-- All 4 locations produce concise error messages on invalid input.
+- Unknown `execute_control_command` and `record_table_event` inputs produce concise error messages.
+- Malformed `BATTLE_INIT` creature configs produce a concise nested-union error.
 - Error messages include the invalid value and the valid alternatives where feasible.
 - No change to happy-path behavior.
 
 Verification:
 
-- Manual test: send an invalid `type` to `execute_control_command` and confirm the error fits in a few lines.
-- `/simplify` convergence (2 rounds).
+- `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts`
+- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`
+- `pnpm --filter @dnd/core exec eslint --no-inline-config -c eslint.config.mjs src/available-actions.ts`
+- `pnpm --filter @dnd/mcp exec eslint --no-inline-config -c eslint.config.mjs src/server-control.ts src/server-table-events.ts src/server.test.ts`
+- `pnpm quality` attempted and blocked by pre-existing unrelated Prettier drift in `packages/core/src/context-encoding.ts`, `packages/core/src/creature.mbt.test.ts`, `packages/core/src/features/spell-available-actions.ts`, `packages/core/src/machine-event-extractors.ts`, `packages/core/src/machine-monk.ts`, `packages/core/src/machine-queries.ts`, `packages/core/src/machine-startturn.ts`, and `packages/core/src/machine.ts`.
+- `pnpm typecheck` attempted and blocked by pre-existing environment/repo issues: missing `vite/client` types in `@dnd/app` plus unrelated existing `@dnd/core` type errors outside Task 26. A targeted `pnpm --filter @dnd/mcp exec tsc --noEmit --pretty false 2>&1 | rg 'server-control\\.ts|server-table-events\\.ts'` check returned no matches.
+- `/simplify` rounds 1-2 converged on the final shape: round 1 removed misleading schema-wide overrides in favor of type-aware decode routing; round 2 added the targeted `BATTLE_INIT.creatures[*]` pre-decode so the nested concise message surfaced directly.
 
 ### Task 27 - MCP2-D - Unarmed Strike Fallback in Battle Attack
 
@@ -2556,7 +2548,6 @@ Light research only:
 - Task MCP0-C: current decode path and available action type index.
 - Task MCP0-D: current documentation/tool description wording for `SHORT_REST`.
 - Task MCP2-B: integration wiring once prerequisites are done.
-- Task MCP2-C: confirm `ParseResult.TreeFormatter` output is concise enough, check all 4 affected locations.
 - Task MCP2-D: confirm `battleAttack` damage resolution path for null weapon, check feature interactions (Rage, Divine Smite).
 - Task B: Battle size ownership. RAW Grapple/Size reread required, but design is already documented.
 - Task C: ResourceCost typed refactor. Confirm consumer blast radius and immediate-cost scope.
