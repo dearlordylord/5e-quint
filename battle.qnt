@@ -884,6 +884,14 @@ module battle {
   ): CreatureId -> Combatant =
     refreshProjectedSpeed(cs, currentTurnCreatureId)
 
+  pure def refreshCurrentTurnTargetSpeedOnly(
+    cs: CreatureId -> Combatant,
+    targetId: CreatureId,
+    currentTurnCreatureId: CreatureId
+  ): CreatureId -> Combatant =
+    if (targetId == currentTurnCreatureId) refreshCurrentTurnSpeed(cs, currentTurnCreatureId)
+    else cs
+
   pure def releaseGrapplePair(
     cs: CreatureId -> Combatant,
     grapplerId: CreatureId,
@@ -928,11 +936,8 @@ module battle {
       targetId,
       target.with("creature", pApplyCondition(target.creature, CGrappled, Set())).with("grappledBy", grapplerId)
     )
-    val cs2 = refreshProjectedSpeed(refreshProjectedSpeed(cs1, grapplerId), targetId)
-    if (grapplerId == currentTurnCreatureId or targetId == currentTurnCreatureId)
-      refreshCurrentTurnSpeed(cs2, currentTurnCreatureId)
-    else
-      cs2
+    val cs2 = refreshProjectedSpeed(cs1, targetId)
+    refreshCurrentTurnTargetSpeedOnly(cs2, targetId, currentTurnCreatureId)
   }
 
   pure def releaseBattleGrappleByGrappler(
@@ -945,10 +950,8 @@ module battle {
     else {
       val targetId = grappler.grapplingTarget
       val cs1 = releaseGrapplePair(cs, grapplerId, targetId)
-      val cs2 = refreshProjectedSpeed(refreshProjectedSpeed(cs1, grapplerId), targetId)
-      if (grapplerId == currentTurnCreatureId or targetId == currentTurnCreatureId)
-        refreshCurrentTurnSpeed(cs2, currentTurnCreatureId)
-      else cs2
+      val cs2 = refreshProjectedSpeed(cs1, targetId)
+      refreshCurrentTurnTargetSpeedOnly(cs2, targetId, currentTurnCreatureId)
     }
   }
 
@@ -962,10 +965,8 @@ module battle {
     else {
       val grapplerId = target.grappledBy
       val cs1 = releaseGrapplePair(cs, grapplerId, targetId)
-      val cs2 = refreshProjectedSpeed(refreshProjectedSpeed(cs1, grapplerId), targetId)
-      if (grapplerId == currentTurnCreatureId or targetId == currentTurnCreatureId)
-        refreshCurrentTurnSpeed(cs2, currentTurnCreatureId)
-      else cs2
+      val cs2 = refreshProjectedSpeed(cs1, targetId)
+      refreshCurrentTurnTargetSpeedOnly(cs2, targetId, currentTurnCreatureId)
     }
   }
 
@@ -2762,7 +2763,8 @@ module battle {
       ac.turn.movementRemaining > 0,
       threatened.size() > 0,
       // Spend some movement (simplified: 5ft per move action)
-      val newTurn = pUseMovement(ac.turn, 5, 1)
+      val dragCost = if (ac.grapplingTarget != "" and not(ac.grappledTargetTwoSizesSmaller)) 2 else 1
+      val newTurn = pUseMovement(ac.turn, 5, dragCost)
       val cs1 = setTurn(bCreatures, activeId, newTurn)
       // If disengaged, no OA triggers
       if (ac.turn.disengaged or provocationKind == MPDoesNotProvokeOpportunityAttacks) {

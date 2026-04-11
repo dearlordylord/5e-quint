@@ -29,7 +29,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 0,
       "id": "K",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Grapple Movable Cost SRD Parity Fix"
     },
     {
@@ -223,7 +223,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task                                                                  | Status   | Depends on                                                                | Blocks                                                                | Next action                                                                                                                                                                                                                                                                                                                                                                                        | Handoff readiness                                  |
 | ----- | --------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| 0     | K - Grapple Movable Cost SRD Parity Fix                               | ready-for-implementation-after-light-research | none                                                                      | semantic grapple parity, future public `BATTLE_GRAPPLE`, QA triage confidence | Read SRD 5.2.1 Grappled/Movable text and current battle/creature movement code, then replace drag-via-speed-halving with drag-via-movement-cost in Quint first, mirror in TS/XState battle code, and revise A37 because the current "identical for all movement cases" claim is false once grapple state changes mid-turn | Ready after light RAW + blast-radius check         |
+| 0     | K - Grapple Movable Cost SRD Parity Fix                               | done     | none                                                                      | semantic grapple parity, future public `BATTLE_GRAPPLE`, QA triage confidence | Closed 2026-04-10: battle/spec/helpers now model 5.2.1 grapple dragging as extra movement cost instead of grappler speed halving; releasing mid-turn no longer refunds movement; A37 and repo glossary traceability updated. | Completed; no downstream task status changes       |
 | 1     | MCP0-A - Dead-Creature Condition Mutation Bug                         | done     | none                                                                      | MCP0-B, safer MCP table events                                        | Closed 2026-04-10: dead-creature condition apply/remove now reject at MCP/XState and no-op in Quint                                                                                                                                                                                                                                                                                                | Completed; policy documented in A16                |
 | 2     | MCP0-B - Dead-Creature Exhaustion Mutation Decision                   | done     | MCP0-A RAW/dead policy research                                           | safer MCP table events                                                | Closed 2026-04-10: dead-creature exhaustion add/reduce now reject at MCP/XState and no-op in Quint; generic starvation/dehydration exhaustion is also blocked while dead                                                                                                                                                                                                                           | Completed; policy documented in A16                |
 | 3     | MCP0-C - Short Unknown Action Error                                   | done     | none                                                                      | MCP UX and downstream agents                                          | Closed 2026-04-10: `execute_action` / `preview_action` now return compact `UNKNOWN_ACTION_TYPE` errors before full decode, while known-action schema validation remains intact                                                                                                                                                                                                                     | Completed; no downstream plan changes              |
@@ -298,13 +298,13 @@ Do not start the full fighter-vs-goblin implementation before the fighter's owne
 
 ### Task 0 - K - Grapple Movable Cost SRD Parity Fix
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: semantic grapple parity, future public `BATTLE_GRAPPLE`, QA triage confidence for grapple rulings, and any article/demo claim that the current model reflects 5.2.1 RAW drag behavior.
 
-Next action: Read the 5.2.1 Grappled / Movable rule text in `.references/srd-5.2.1/Rules-Glossary.md`, inspect the current `battle.qnt` refresh path and the mirrored TS battle helpers, then implement the drag-cost model in Quint first and mirror it into TS/XState battle code. Update `ASSUMPTIONS.md` in the same change because A37 is no longer defensible as written.
+Next action: None. Closed 2026-04-10 after replacing drag-via-speed-halving with drag-via-movement-cost in Quint battle semantics and the mirrored TS helpers, then updating A37 and glossary traceability.
 
 Problem:
 
@@ -393,6 +393,26 @@ Implementation recommendation:
 
 - Do this now, before the remaining MCP queue, unless a fresh RAW reread unexpectedly shows the local SRD source says something materially different from `REVISION_RESEARCH.md`.
 - If the project wants to preserve the old accepted-answer behavior for historical 2014 experiments, keep it only behind an explicit legacy path or archived test fixture. Do not leave it in the main 5.2.1 combat semantics while claiming SRD parity.
+
+Verification completed:
+
+- RAW check: reread `.references/srd-5.2.1/Rules-Glossary.md` Grappled and Speed plus `ARCHITECTURE.md`, `REVISION_RESEARCH.md`, `UBIQUITOUS_LANGUAGE.md`, and `ASSUMPTIONS.md` A37 before editing. Final semantics match the local SRD text: grappler Speed is unchanged, target Speed remains 0, and dragging adds 1 extra foot of movement cost.
+- `/simplify` round 1: removed the grappler-side current-turn speed refresh from battle/spec helper paths so release/escape only refresh the target whose Speed actually changes.
+- `/simplify` round 2: rechecked helper signatures and kept the creature/machine `isGrappling` inputs as compatibility-only fields while removing their speed effect, avoiding broader non-task churn.
+- Focused Quint tests: updated movement helper tests to cover the new drag-cost input and the no-halving speed behavior.
+- Focused TS/core tests: updated battle regression cases for drag cost and added a mid-turn release-no-refund regression.
+- `pnpm exec quint test --match "test_speed_grappling_full|test_movement_cost_(normal|difficult_terrain|crawling|climbing_no_speed|climbing_with_speed|crawl_difficult|climb_no_speed_difficult|climb_with_speed_difficult|dragging_grappled_creature)" dndTest.qnt`
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts -t "dragging a grappled target|release the target at any time|releasing a grapple mid-turn does not refund spent movement"`
+- `pnpm --filter @dnd/core exec vitest run src/machine.test.ts -t "grappling does not reduce the grappler's speed|movementCostMultiplier helper|START_TURN with isGrappling keeps full speed"`
+- Tier 1 battle MBT required because `battle.qnt` and its TS mirror changed. Run only after checking for existing `vitest` and `quint_evaluator` processes.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `K`: revise to `done`.
+  - No downstream task status changed; this fixes semantic parity but does not alter any existing task dependency edges in the active queue.
+- Plan edits: marked Task `K` done in the Ralph task index, DAG row, and Task 0 section; added closeout verification notes.
 
 ### Task 1 - MCP0-A - Dead-Creature Condition Mutation Bug
 

@@ -2474,7 +2474,7 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").actionsRemaining).toBe(0);
   });
 
-  it("natural_20: dragging a grappled target halves the grappler's speed unless the target is two sizes smaller", () => {
+  it("natural_20: dragging a grappled target keeps speed but doubles the movement cost unless the target is two sizes smaller", () => {
     const actor = initTwoPcBattle();
     startTurn(actor);
 
@@ -2484,8 +2484,8 @@ describe("battle rules scenario regressions", () => {
       targetSaveFailed: true,
     });
 
-    expect(creature(actor, "A").effectiveSpeed).toBe(15);
-    expect(creature(actor, "A").movementRemaining).toBe(15);
+    expect(creature(actor, "A").effectiveSpeed).toBe(30);
+    expect(creature(actor, "A").movementRemaining).toBe(30);
 
     send(actor, {
       type: "BATTLE_MOVE",
@@ -2493,7 +2493,7 @@ describe("battle rules scenario regressions", () => {
       threatened: new Set(),
     });
 
-    expect(creature(actor, "A").movementRemaining).toBe(10);
+    expect(creature(actor, "A").movementRemaining).toBe(20);
 
     const exemptActor = initTwoPcBattle({
       attackerSize: "huge",
@@ -2522,8 +2522,8 @@ describe("battle rules scenario regressions", () => {
     });
 
     expect(creature(actor, "A").actionsRemaining).toBe(0);
-    expect(creature(actor, "A").effectiveSpeed).toBe(15);
-    expect(creature(actor, "A").movementRemaining).toBe(15);
+    expect(creature(actor, "A").effectiveSpeed).toBe(30);
+    expect(creature(actor, "A").movementRemaining).toBe(30);
 
     send(actor, { type: "BATTLE_RELEASE_GRAPPLE" });
 
@@ -2533,6 +2533,30 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").movementRemaining).toBe(30);
     expect(creature(actor, "B").grappled).toBe(false);
     expect(creature(actor, "B").grappledBy).toBeNull();
+  });
+
+  it("natural_20: releasing a grapple mid-turn does not refund spent movement to the grappler", () => {
+    const actor = initTwoPcBattle();
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_GRAPPLE",
+      targetId: CreatureId("B"),
+      targetSaveFailed: true,
+    });
+    send(actor, {
+      type: "BATTLE_MOVE",
+      provocationKind: "provokesOpportunityAttacks",
+      threatened: new Set(),
+    });
+
+    expect(creature(actor, "A").movementRemaining).toBe(20);
+
+    send(actor, { type: "BATTLE_RELEASE_GRAPPLE" });
+
+    expect(creature(actor, "A").effectiveSpeed).toBe(30);
+    expect(creature(actor, "A").movementRemaining).toBe(20);
+    expect(creature(actor, "B").grappled).toBe(false);
   });
 
   it("natural_20: a successful escape spends the action and ends the grapple", () => {

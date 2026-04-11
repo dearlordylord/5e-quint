@@ -311,15 +311,15 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 **Changes:** Invariant `turnsRemaining >= 0` added to safety invariants (see PLAN_INVARIANTS.md L2).
 
-## A37: Grapple Movable cost modeled as speed halving
+## A37: Grapple Movable cost modeled as movement cost, not speed reduction
 
-**Assumption:** The SRD 5.2.1 Grappled condition's Movable property says "every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it." The spec models this as halving `effectiveSpeed` at start-of-turn (`pStartTurn`) rather than tracking a per-foot movement cost multiplier.
+**Assumption:** The SRD 5.2.1 Grappled condition's Movable property is modeled directly in battle semantics as an extra movement cost: when the grappler moves while dragging a grappled creature, each foot costs 1 extra foot unless the target is Tiny or two or more sizes smaller than the grappler.
 
-**Rules basis:** The result is identical for all movement cases — 30 ft speed with double cost yields 15 ft of dragging, same as 15 ft effective speed. This holds through Dash (which adds `effectiveSpeed` to `movementRemaining`), difficult terrain stacking, and all other movement modifiers. The representation differs from RAW language but produces the same mechanical outcome.
+**Rules basis:** Rules-Glossary "Grappled [Condition]" says: "The grappler can drag or carry you when it moves, but every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it." This is a movement-cost rule, not a Speed reduction on the grappler. The grappled target still has Speed 0 until the grapple ends.
 
-**Rationale:** The spec tracks movement as a budget (`movementRemaining`) decremented by 1 per foot, not as a cost-per-foot system. Modeling Movable as a cost multiplier would require changing the movement system to track per-foot costs for grappling, difficult terrain, squeezing, etc. Halving speed is the simplest representation that preserves correctness.
+**Rationale:** The previous speed-halving representation diverged from RAW once grapple state changed mid-turn because recomputing `effectiveSpeed` could incorrectly rebuild `movementRemaining` for the grappler after link/release/escape. The current model keeps the grappler's Speed unchanged and applies the extra cost only when movement is actually spent while dragging. That preserves RAW behavior for mid-turn grapple changes and avoids fake movement refunds.
 
-**Changes:** `pStartTurn` in `creature.qnt` applies `afterExhaustion / 2` when `isGrappling and not(grappledTargetTwoSizesSmaller)`.
+**Changes:** `pComputeEffectiveSpeed` no longer halves speed for `isGrappling`. `pMovementCost` can represent drag cost explicitly, and `battle.qnt` / the TS battle machine spend 2 feet of movement per 1 foot moved when the active creature is dragging a non-exempt grappled target. The target-side Speed 0 behavior remains unchanged.
 
 ## A38: Creature-level prepared spell casting models deterministic prepared-spell defaults and caster-side bookkeeping only
 

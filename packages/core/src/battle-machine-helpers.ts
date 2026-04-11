@@ -141,10 +141,6 @@ export function setCreature(
   return m;
 }
 
-function isGrappling(c: BattleCreatureState): boolean {
-  return c.grapplingTarget != null;
-}
-
 function battleEffectiveSpeed(c: BattleCreatureState): number {
   return calculateEffectiveSpeed({
     baseSpeed: Math.max(0, c.baseWalkSpeed + speedDeltaFromEffects(c)),
@@ -155,8 +151,8 @@ function battleEffectiveSpeed(c: BattleCreatureState): number {
     restrained: c.restrained,
     unconscious: c.unconscious,
     exhaustion: c.exhaustion,
-    isGrappling: isGrappling(c),
-    grappledTargetTwoSizesSmaller: c.grappledTargetTwoSizesSmaller,
+    isGrappling: false,
+    grappledTargetTwoSizesSmaller: false,
   });
 }
 
@@ -223,6 +219,16 @@ function refreshCreatureSpeedProjection(
   return setCreature(cs, creatureId, refreshProjectedSpeed(current, current));
 }
 
+function refreshCurrentTurnTargetSpeedOnly(
+  cs: Creatures,
+  targetId: CreatureId,
+  currentTurnCreatureId: CreatureId,
+): Map<CreatureId, BattleCreatureState> {
+  return targetId === currentTurnCreatureId
+    ? refreshCurrentTurnCreatureSpeed(cs, currentTurnCreatureId)
+    : new Map(cs);
+}
+
 export function linkBattleGrapple(
   cs: Creatures,
   grapplerId: CreatureId,
@@ -243,15 +249,12 @@ export function linkBattleGrapple(
     grappled: true,
     grappledBy: grapplerId,
   });
-  result = refreshCreatureSpeedProjection(result, grapplerId);
   result = refreshCreatureSpeedProjection(result, targetId);
-  if (
-    grapplerId === currentTurnCreatureId ||
-    targetId === currentTurnCreatureId
-  ) {
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId);
-  }
-  return result;
+  return refreshCurrentTurnTargetSpeedOnly(
+    result,
+    targetId,
+    currentTurnCreatureId,
+  );
 }
 
 export function releaseBattleGrappleByGrappler(
@@ -262,14 +265,12 @@ export function releaseBattleGrappleByGrappler(
   const grappler = cs.get(grapplerId);
   if (!grappler?.grapplingTarget) return new Map(cs);
   let result = releaseGrapplePair(cs, grapplerId, grappler.grapplingTarget);
-  result = refreshCreatureSpeedProjection(result, grapplerId);
   result = refreshCreatureSpeedProjection(result, grappler.grapplingTarget);
-  if (
-    grapplerId === currentTurnCreatureId ||
-    grappler.grapplingTarget === currentTurnCreatureId
-  )
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId);
-  return result;
+  return refreshCurrentTurnTargetSpeedOnly(
+    result,
+    grappler.grapplingTarget,
+    currentTurnCreatureId,
+  );
 }
 
 export function escapeBattleGrapple(
@@ -280,14 +281,12 @@ export function escapeBattleGrapple(
   const target = cs.get(targetId);
   if (!target?.grappledBy) return new Map(cs);
   let result = releaseGrapplePair(cs, target.grappledBy, targetId);
-  result = refreshCreatureSpeedProjection(result, target.grappledBy);
   result = refreshCreatureSpeedProjection(result, targetId);
-  if (
-    targetId === currentTurnCreatureId ||
-    target.grappledBy === currentTurnCreatureId
-  )
-    result = refreshCurrentTurnCreatureSpeed(result, currentTurnCreatureId);
-  return result;
+  return refreshCurrentTurnTargetSpeedOnly(
+    result,
+    targetId,
+    currentTurnCreatureId,
+  );
 }
 
 export function normalizeBattleGrapples(
