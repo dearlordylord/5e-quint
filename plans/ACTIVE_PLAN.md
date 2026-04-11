@@ -72,7 +72,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 6,
       "id": "CHAR7",
-      "status": "ready-for-research",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Level Advancement And Multiclass Continuation"
     },
     {
@@ -145,7 +145,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 3 | CHAR4 - Equipment And Loadout Projection | done | CHAR1, CHAR3 | CHAR5 | Landed owned starting-equipment choices, leftover starting-gold tracking, bounded combat-equipment ownership, loadout validation, and battle-facing weapon/hand/shield/armor projection sourced from `CharacterSheet`. | Complete |
 | 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | done | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Landed owned spellcasting selections plus one `CharacterSheet` derivation path for sheet numbers, `DndMachineInput`, and battle init projection. | Complete |
 | 5 | CHAR6 - Guided Workflow Shell | done | CHAR1, CHAR2, CHAR5 | none | Landed a thin `/character` workflow shell that persists `CharacterDraft`, keeps step order in the app surface, and renders canonical finalization plus derived projection outputs without UI-owned validation. | Complete |
-| 6 | CHAR7 - Level Advancement And Multiclass Continuation | ready-for-research | CHAR1, CHAR3, CHAR5 | none | Research advancement ownership using the landed sheet-derived HP/hit-dice/spell-slot path as the extension point for higher-level starts and multiclass continuation. | Unblocked by CHAR5; needs advancement scoping |
+| 6 | CHAR7 - Level Advancement And Multiclass Continuation | ready-for-implementation-after-light-research | CHAR1, CHAR3, CHAR5 | none | Implement ordered level-up transitions over `CharacterDraft` / `CharacterSheet`, reusing `creature.qnt` advancement semantics and the landed `deriveCharacterSheetNumbers` projection path instead of adding a TS-only advancement rules engine. | Research complete; implementation must model explicit advancement steps for higher-level starts |
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 9 | POST1 - Formal Creation Semantics | blocked | CHAR6, CHAR7 | POST2, POST4 | Once the current `CHAR` sequence is complete, formalize the creation draft/sheet semantics in Quint, keeping the landed TS character domain as the implementation baseline and parity target rather than rewriting the product shape from scratch. | Future post-`CHAR` phase; depends on current workflow and advancement research landing |
@@ -506,7 +506,7 @@ Plan Impact:
 
 ### Task 6 - CHAR7 - Level Advancement And Multiclass Continuation
 
-Status: ready-for-research.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: CHAR1, CHAR3, CHAR5.
 
@@ -514,13 +514,38 @@ Blocks: none.
 
 Next action:
 
-- Research how advancement should extend the same owned character domain and reuse the landed CHAR5 derivation path for HP, hit dice, proficiency-sensitive values, and spell-slot projection.
+- Implement an ordered level-up input over the existing `CharacterDraft` / `CharacterSheet` boundary instead of introducing a separate advanced-character product.
+- Reuse `creature.qnt` as the semantic source for XP thresholds, ASI/feat cadence, multiclass legality, HP growth, hit-die growth, and caster-level/slot behavior; update lower layers if the TS side needs new support rather than copying those tables into a new TS module.
+- Keep `deriveCharacterSheetNumbers` and the existing sheet-to-runtime projections as the single TS derivation path once a sheet is finalized.
+- Make higher-level starts replay legal level-up transitions; a final-sheet-only multiclass prerequisite check is insufficient because later ASIs cannot retroactively legalize an earlier multiclass entry.
 
 Acceptance criteria:
 
 - Creation and advancement use the same owned character domain.
 - Advancement updates HP, hit dice, proficiency-sensitive values, features, and slot structures through one derivation path.
 - Higher-level starts do not require bespoke runtime bootstrapping.
+
+Research closeout:
+
+- RAW check completed against `.references/srd-5.2.1/Character-Creation.md` multiclassing and higher-level-start text, plus `UBIQUITOUS_LANGUAGE.md`.
+- `creature.qnt` already owns the reusable advancement semantics this task needs: XP thresholds (`pXpForLevel`), ASI levels (`ASI_LEVELS` / `pIsASILevel` / `pApplyASI`), multiclass prerequisite helpers, first-level HP, level-up HP, class-level aggregation, and multiclass caster-level/slot helpers.
+- The landed TS character layer already has the downstream projection path this task should feed: `deriveCharacterSheetNumbers`, class-resource derivation, and battle-init projection from finalized `CharacterSheet`.
+- Therefore CHAR7 should not ship a standalone TS advancement rules engine. The implementation should add the minimal ordered advancement input needed to reuse the existing sheet finalization/projection flow and to preserve parity with Quint-owned semantics.
+- Higher-level starts must preserve the ordered advancement history needed to verify each multiclass entry when it happened. Terminal validation against only the final post-ASI ability scores is too weak and would admit illegal builds.
+
+Verification:
+
+- Read `.references/srd-5.2.1/Character-Creation.md` for multiclass prerequisites, level advancement, and higher-level starts.
+- Read `UBIQUITOUS_LANGUAGE.md` to confirm advancement remains on the owned `CharacterDraft` / `CharacterSheet` boundary and runtime facts remain projections.
+- Inspected the current TS and Quint ownership surfaces (`packages/core/src/character-domain.ts`, `packages/core/src/character-sheet-derived.ts`, `packages/core/src/features/class-tables.ts`, `packages/core/src/machine-spells.ts`, `creature.qnt`) plus both Ralph implementation worktrees and review reports.
+- Did not run MBT because CHAR7 closeout in this merge is research/plan-only and the repo guidance forbids battle MBT for research tasks.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `CHAR7`: revise status and next action to implementation-ready with explicit ordered-transition requirements.
+  - `POST3`: no status change; formal advancement should consume the same ordered-transition model discovered here.
 
 ### Task 7 - H - PassiveModifiers Sub-Record
 
