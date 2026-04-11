@@ -137,6 +137,14 @@ export interface BattleCreatureState {
   readonly bardicInspirationCharges: number;
   readonly parryAcBonus: number;
   readonly lightPropertyExtraAttackAddsAbilityModifier: boolean;
+  /**
+   * Owned attack profile for the combatant's primary attack lane.
+   *
+   * PCs populate this from character equipment/loadout facts.
+   * Monsters may populate this by projecting a named stat-block attack into a
+   * `BattleWeaponProfile`; this does not imply the monster follows normal
+   * `Equipment` semantics for that attack.
+   */
   readonly mainHandWeapon: BattleWeaponProfile | null;
   readonly offHandWeapon: BattleWeaponProfile | null;
   readonly leftHandUse: HandUse;
@@ -439,6 +447,14 @@ export interface InitCreatureConfig {
   readonly initiativeRollB?: number;
   /** SRD 5.2.1: surprised combatant has Disadvantage on Initiative roll. Defaults to false. */
   readonly surprised?: boolean;
+  /**
+   * Primary battle attack profile.
+   *
+   * PCs should project this from owned equipment/loadout data.
+   * Monsters may project this from a named stat-block attack when the stat
+   * block owns the combat behavior; that projection is not a claim that the
+   * monster is using generic `Equipment` rules for the attack.
+   */
   readonly mainHandWeapon?: BattleWeaponProfile;
   readonly offHandWeapon?: BattleWeaponProfile;
   readonly hasShieldEquipped?: boolean;
