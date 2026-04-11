@@ -185,13 +185,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 26,
       "id": "MCP2-C",
-      "status": "done",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Concise Schema Validation Errors in MCP Tools"
     },
     {
       "number": 27,
       "id": "MCP2-D",
-      "status": "done",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Unarmed Strike Fallback in Battle Attack"
     },
     {
@@ -205,6 +205,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "MCP4-B",
       "status": "ready-for-implementation-after-light-research",
       "title": "BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal"
+    },
+    {
+      "number": 30,
+      "id": "ARCH-BATTLE-PROJ",
+      "status": "ready-for-research",
+      "title": "Battle Projection Contract And Methodology"
     }
   ]
 }
@@ -261,6 +267,11 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 23    | MCP3-A - Goblin Warrior / Nimble Escape Follow-Up                     | done     | MCP3-A1, MCP3-A2; optionally MCP3-A3 for Goblin Boss                     | fuller goblin behavior                                                | Closed 2026-04-11: `start_battle` now uses a generic monster descriptor instead of goblin-named MCP fields, the core runtime catalog publishes `goblinWarrior` and `goblinBoss`, and focused core/MCP tests prove Nimble Escape bonus actions, advantage-hit riders, and Redirect Attack stay on the generic stat-block/battle surfaces rather than on goblin-specific MCP shortcuts. RAW check: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` Goblin Warrior/Boss, `.references/srd-5.2.1/Monsters/Overview.md`, and `UBIQUITOUS_LANGUAGE.md` reviewed. `/simplify` round 1 removed the goblin-named `start_battle` schema surface; round 2 re-checked for redundant MCP aliases and converged with no further task-scoped reductions. | Completed; no downstream status changes            |
 | 24    | H - PassiveModifiers Sub-Record                                       | deferred | none                                                                      | Possible passive modifier cleanup                                     | Only revisit if the batch selects passive modifier restructuring                                                                                                                                                                                                                                                                                                                                   | Not current-batch work                             |
 | 25    | I - Build-Map / Hole Metadata                                         | deferred | Concrete consumer, possibly D                                             | Future token-hole metadata                                            | Only revisit when attack boundary, transcript disambiguation, or UI needs it                                                                                                                                                                                                                                                                                                                       | Not current-batch work                             |
+| 26    | MCP2-C - Concise Schema Validation Errors in MCP Tools                | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Tighten MCP schema decode failures so invalid tool inputs report concise, field-local errors instead of massive union dumps, while preserving precise validation semantics.                                                                                                                                                                                                                      | Ready; narrow MCP surface improvement               |
+| 27    | MCP2-D - Unarmed Strike Fallback in Battle Attack                     | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Implement unarmed-strike fallback for weaponless battle combatants, keeping damage parity with `creature.qnt:unarmedDamage` and using the narrowest battle-owned facts necessary.                                                                                                                                                                                                              | Ready; bounded core attack change                   |
+| 28    | MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion            | ready-for-implementation-after-light-research | none                                                          | MCP2-B                                                                | Implement mid-battle creature insertion in Quint, XState, and MCP using `InitCreatureConfig`, initiative insertion semantics, and active-turn-only guards.                                                                                                                                                                                                                                      | Ready; independent control/event slice              |
+| 29    | MCP4-B - BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal           | ready-for-implementation-after-light-research | none                                                          | none                                                                  | Implement mid-battle creature removal in Quint, XState, and MCP with concentration cleanup, grapple cleanup, and turn-index repair.                                                                                                                                                                                                                                                             | Ready; independent control/event slice              |
+| 30    | ARCH-BATTLE-PROJ - Battle Projection Contract And Methodology         | ready-for-research                         | none                                                          | none                                                                  | Research and document the explicit contract for what battle owns vs. what stays on creature/session layers, then decide whether battle projection should move to named projector functions or another common methodology.                                                                                                                                                                       | Ready; architecture/doc research with possible follow-up |
 
 ## Current Integrated Baseline
 
@@ -2301,13 +2312,13 @@ Extra research needed:
 
 ### Task 26 - MCP2-C - Concise Schema Validation Errors in MCP Tools
 
-Status: done.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: none.
 
 Blocks: none (UX polish).
 
-Next action: Closed 2026-04-11: unknown `execute_control_command` / `record_table_event` types now fail fast with concise valid-type messages, known command/event payloads keep their field-level decode errors, and malformed `BATTLE_INIT` creature configs surface a compact nested union message. `start_battle` stayed unchanged because its struct decode was already task-appropriate and this task only targeted union-dump failures.
+Next action: annotate the union schemas with `.annotations({ message })` so `String(decoded.left)` produces concise output. No call-site changes needed.
 
 Purpose:
 
@@ -2316,58 +2327,82 @@ Purpose:
 Context:
 
 - Root cause: `String(decoded.left)` already uses `TreeFormatter` under the hood, but TreeFormatter dumps every union branch for complex `Schema.Union` types.
-- The final implementation keeps schema-driven field errors for known payloads and only short-circuits the cases that were actually exploding: unknown control/table-event `type` values and the nested `BATTLE_INIT` creature-config union.
+- Effect's `.annotations({ message: () => ({ message: "...", override: true }) })` on a `Schema.Union` makes TreeFormatter return only the custom string — no branch dump.
+
+Suggested approach: annotate each `Schema.Union` that surfaces through MCP with a `message` annotation with `override: true`. The schema owns its error message; no call-site changes to the 4 `String(decoded.left)` locations. Example:
+
+```typescript
+export const ControlCommandSchema = Schema.Union(
+  CreatureEndTurnControlSchema,
+  CreatureLongRestControlSchema,
+  // ...
+).annotations({
+  message: () => ({
+    message: "Invalid control command. Valid types: END_TURN, LONG_REST, ...",
+    override: true,
+  }),
+});
+```
 
 Affected union schemas:
 
-1. `ControlCommandSchema` input path in `packages/mcp/src/server-control.ts`
-2. Nested `BattleInitCreatureConfigSchema` in `packages/core/src/available-actions.ts`
-3. `TableEventCommandSchema` input path in `packages/mcp/src/server-table-events.ts`
-4. `ResolvedActionTokenSchema` / `start_battle` were reviewed and left unchanged for this task:
-   `execute_action` / `preview_action` already had concise unknown-type handling, and `start_battle` is a struct decoder rather than the union-dump path that motivated this task.
+1. `ControlCommandSchema` in `packages/core/src/available-actions.ts:1384`
+2. Action token union in `packages/mcp/src/server.ts` (if applicable)
+3. Table event schema in `packages/mcp/src/server-table-events.ts` (if applicable)
+4. Start battle schema in `packages/mcp/src/start-battle.ts` (if applicable)
 
 Acceptance criteria:
 
-- Unknown `execute_control_command` and `record_table_event` inputs produce concise error messages.
-- Malformed `BATTLE_INIT` creature configs produce a concise nested-union error.
+- All 4 locations produce concise error messages on invalid input.
 - Error messages include the invalid value and the valid alternatives where feasible.
 - No change to happy-path behavior.
 
 Verification:
 
-- `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts`
-- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`
-- `pnpm --filter @dnd/core exec eslint --no-inline-config -c eslint.config.mjs src/available-actions.ts`
-- `pnpm --filter @dnd/mcp exec eslint --no-inline-config -c eslint.config.mjs src/server-control.ts src/server-table-events.ts src/server.test.ts`
-- `pnpm quality` attempted and blocked by pre-existing unrelated Prettier drift in `packages/core/src/context-encoding.ts`, `packages/core/src/creature.mbt.test.ts`, `packages/core/src/features/spell-available-actions.ts`, `packages/core/src/machine-event-extractors.ts`, `packages/core/src/machine-monk.ts`, `packages/core/src/machine-queries.ts`, `packages/core/src/machine-startturn.ts`, and `packages/core/src/machine.ts`.
-- `pnpm typecheck` attempted and blocked by pre-existing environment/repo issues: missing `vite/client` types in `@dnd/app` plus unrelated existing `@dnd/core` type errors outside Task 26. A targeted `pnpm --filter @dnd/mcp exec tsc --noEmit --pretty false 2>&1 | rg 'server-control\\.ts|server-table-events\\.ts'` check returned no matches.
-- `/simplify` rounds 1-2 converged on the final shape: round 1 removed misleading schema-wide overrides in favor of type-aware decode routing; round 2 added the targeted `BATTLE_INIT.creatures[*]` pre-decode so the nested concise message surfaced directly.
+- Manual test: send an invalid `type` to `execute_control_command` and confirm the error fits in a few lines.
+- `/simplify` convergence (2 rounds).
 
 ### Task 27 - MCP2-D - Unarmed Strike Fallback in Battle Attack
 
-Status: done.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: Task MCP2-A (battle attack public boundary, done).
 
-Blocks: none.
+Blocks: Task MCP2-B (fighter attacks goblin end-to-end) — removes the need for a weapon-hardcoding workaround.
 
-Next action: none.
+Next action: light research on how `battleAttack` in `battle-machine-actions-attack.ts` resolves damage when `mainHandWeapon` is null, then implement the unarmed strike fallback.
 
-Closed 2026-04-11: battle action discovery, runtime finalization, and reducer execution now all support combatants whose `mainHandWeapon` is `null` by falling back to a shared synthetic unarmed-strike profile. `BATTLE_ATTACK` no longer disappears for unarmed creatures, finalized events now carry SRD-aligned unarmed semantics (`bludgeoning`, melee, no weapon properties), and the runtime now rejects unarmed public attacks that do not confirm the target is within 5 feet.
+Purpose:
 
-Light research outcome: the current battle/runtime contract from Task D still leaves the rolled attack total and damage total caller-owned. Battle state does not currently own `strMod`, so this task intentionally did not invent redundant Strength-modifier state just to recompute `1 + STR mod` inside the public runtime lane. Quint still owns the authoritative pure unarmed-damage rule in `creature.qnt`; this task fixed the public unarmed fallback and kept the existing caller-owned damage-total boundary intact.
+- Per SRD 5.2.1 (Rules-Glossary.md), every creature can make an unarmed strike: 1 + STR mod bludgeoning damage, attack bonus = STR mod + Proficiency Bonus. The current `canUseBattleAttack` function returns `false` when `mainHandWeapon == null`, blocking all attacks for unarmed creatures.
 
-RAW check: reviewed `.references/srd-5.2.1/Playing-the-Game.md` attack-roll ability table, attack action summary, melee/reach text, and `UBIQUITOUS_LANGUAGE.md` `Unarmed Strike`.
+Context:
 
-`/simplify` convergence:
+- Bug location: `packages/core/src/available-actions.ts:3444-3447` — `canUseBattleAttack` returns false when `mainHandWeapon == null`.
+- Quint spec already models unarmed damage correctly: `creature.qnt:757-761` has `unarmedDamage(strMod)` returning `max(0, 1 + strMod)`.
+- The attack handler in `battle-machine-actions-attack.ts` is flexible — it falls back to event-provided values for most fields, so changes should be contained.
+- SRD unarmed strike offers three options (Damage, Grapple, Shove); only Damage needs modeling now. Grapple/Shove are separate actions.
 
-- Round 1: removed the broken weapon-only gate, pushed the shared unarmed profile into both finalization and reducer paths, and added the missing 5-foot runtime guard.
-- Round 2: re-checked for redundant state and dead helpers; kept the fix on the existing caller-owned damage boundary and converged with no further task-scoped reductions.
+Implementation sketch:
+
+1. Remove the `mainHandWeapon == null` early-return in `canUseBattleAttack`.
+2. Define a synthetic unarmed `BattleWeaponProfile` constant: `{ name: "unarmed strike", damageType: "bludgeoning", isMelee: true, properties: new Set(), damageDie: undefined }`.
+3. In `battleAttack`, fall back to the unarmed profile when `mainHandWeapon` is null; compute flat damage as `1 + strMod` (matching `creature.qnt:unarmedDamage`).
+4. Ensure BATTLE_ATTACK token generation in `available-actions.ts` uses the unarmed profile for its summary text.
+
+Acceptance criteria:
+
+- A creature with `mainHandWeapon == null` can make a BATTLE_ATTACK (unarmed strike).
+- Unarmed strike damage = max(0, 1 + STR mod), bludgeoning, always proficient.
+- Unarmed strike is melee, 5-foot reach.
+- No regression for creatures with weapons equipped.
+- Quint parity: TS unarmed damage matches `creature.qnt:unarmedDamage`.
 
 Verification:
 
-- `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts`
-- `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 pnpm exec vitest run src/battle-projection.mbt.test.ts`
+- Tier 1 MBT run passes.
+- `/simplify` convergence (2 rounds).
+- RAW check against `.references/srd-5.2.1/Rules-Glossary.md` unarmed strike entry.
 
 ### Task 28 - MCP4-A - BATTLE_ADD_CREATURE Mid-Battle Creature Insertion
 
@@ -2499,6 +2534,65 @@ Acceptance criteria:
 - Removed creatures disappear from `creatures` map and `initiative` array.
 - `turnIndex` adjusted correctly (active creature unchanged unless it was removed).
 - Concentration broken on removal (spell effects cleaned up).
+
+### Task 30 - ARCH-BATTLE-PROJ - Battle Projection Contract And Methodology
+
+Status: ready-for-research.
+
+Depends on: none.
+
+Blocks: none.
+
+Next action: research the existing battle/creature ownership split in `ARCHITECTURE.md`, `battle.qnt`, `battle-machine-types.ts`, `battle-machine-actions-turn.ts`, and the MCP `start_battle` path; then write back a concrete projection contract and, if needed, spawn follow-up implementation tasks.
+
+Purpose:
+
+- The repo intentionally uses battle-owned combatant projections instead of embedding creature child actors inside battle. That architectural decision is documented, but the projection methodology is not declared as a first-class contract.
+- Recent task work exposed drift: `dexMod` is projected into battle for battle-owned Monk reaction math, while `strMod` is not, even though new unarmed-attack work started depending on Strength-owned semantics. That is a signal that battle-field promotion is happening opportunistically rather than through an explicit method.
+- We need a documented answer to:
+  - why battle owns a flat `Map<CreatureId, BattleCreatureState>` instead of reusing the creature machine directly;
+  - what facts must be promoted into `BattleCreatureState` / `Combatant`;
+  - what facts remain caller/session-owned;
+  - how future projection changes must be implemented consistently across Quint, TS, init config, MCP routing, and tests.
+
+Context:
+
+- `ARCHITECTURE.md` already says the battle machine is authoritative for combat semantics, while the creature machine is a local projection/debugging surface, and that battle uses flat creature context instead of child actors because combat needs atomic cross-creature updates and ordered reaction phases.
+- `battle.qnt` and `BattleCreatureState` already act as the de facto battle projection contract, but fields are added case-by-case.
+- `InitCreatureConfig` plus `battleInit` in `battle-machine-actions-turn.ts` is the real promotion path into battle state today.
+- `battle-projection.mbt.test.ts` already contains a more explicit projection pattern (`projectToBattle`) for MBT normalization, which may be a useful model for production projection methodology.
+- Recent work and docs (`plans/TODO.md`) show multiple abstraction leaks where generic battle helpers carry rule-specific logic; this task is about the adjacent architectural leak where battle ownership rules are implicit instead of declared.
+
+Research questions:
+
+1. What is the minimal explicit projection contract that matches current architecture without introducing redundant state?
+2. Should production code adopt named projector functions for PC and monster battle init, instead of ad hoc field accumulation in `battleInit` and session adapters?
+3. For battle-owned semantics, should the rule be "if battle resolves it, all required inputs belong on `Combatant` / `BattleCreatureState`"?
+4. Is the current `dexMod` without `strMod` split intentional, temporary, or architectural drift?
+5. What concrete documentation and code-structure changes would prevent future one-off field promotion mistakes?
+
+Acceptance criteria:
+
+- The plan records a clear, repo-consistent projection contract covering:
+  - authoritative owner for combat semantics;
+  - battle-owned projected facts;
+  - caller/session-owned facts;
+  - required update surfaces when promoting a new field.
+- The research writes back specific recommendations for code and docs, not just observations.
+- If the contract reveals missing implementation work, add bounded follow-up tasks rather than burying them in prose.
+- The conclusion explicitly addresses the `dexMod` / `strMod` mismatch and says whether it is intentional or should be corrected.
+
+Verification:
+
+- Read and cite the relevant local sources:
+  - `ARCHITECTURE.md`
+  - `battle.qnt`
+  - `packages/core/src/battle-machine-types.ts`
+  - `packages/core/src/battle-machine-actions-turn.ts`
+  - `packages/core/src/battle-projection.mbt.test.ts`
+  - MCP `start_battle` / runtime routing files
+- `/simplify` convergence (2 rounds).
+- Confirm the resulting plan/doc update keeps the `ralph-task-index`, DAG row, and task section synchronized.
 - Grapple links severed on removal.
 - Help targets cleaned up.
 - Event rejected during reaction/AoE/movement/legendary/ready phases.
@@ -2532,6 +2626,7 @@ Light research only:
 - Task MCP0-C: current decode path and available action type index.
 - Task MCP0-D: current documentation/tool description wording for `SHORT_REST`.
 - Task MCP2-B: integration wiring once prerequisites are done.
+- Task MCP2-C: confirm `ParseResult.TreeFormatter` output is concise enough, check all 4 affected locations.
 - Task MCP2-D: confirm `battleAttack` damage resolution path for null weapon, check feature interactions (Rage, Divine Smite).
 - Task B: Battle size ownership. RAW Grapple/Size reread required, but design is already documented.
 - Task C: ResourceCost typed refactor. Confirm consumer blast radius and immediate-cost scope.
