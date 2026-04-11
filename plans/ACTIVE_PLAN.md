@@ -107,7 +107,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 14,
       "id": "F",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Legendary Attack Payload Ownership"
     },
     {
@@ -194,7 +194,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 11    | MCP1-B - Core Statblock Facility + Initial Goblin Minion Entry        | done                                          | MCP0 tasks done or intentionally deferred                                 | MCP1-C, MCP2-B                                                        | Closed 2026-04-10: core now owns a runtime monster statblock catalog, `BATTLE_INIT` can reference `goblinMinion` by `statBlockId`, and SRD provenance is documented without adding an MCP registry, parser/importer, or widened Quint fixtures.                                                                  | Completed; init hook is ready              |
 | 12    | E - Movement And Help Geometry/Session Ownership                      | done                                          | none                                                                      | Public `BATTLE_MOVE`, `BATTLE_HELP_ATTACK`                            | Closed 2026-04-10: keep core/MCP geometry-free; use explicit caller/session spatial facts for any future public movement/help surface.                                                                                                                                                                            | Research closed                            |
 | 13    | J - Generic Table Events, Environmental Hazards, And Monster Commands | done                                          | none                                                                      | Future raw table event exposure and monster command work              | Closed 2026-04-10: all four families (max-HP provenance, active effects, environmental hazards, monster commands) deferred; no family is ready for safe public exposure without source-specific provenance, stat-block validation, or multi-step progress tracking                                                   | Research closed                            |
-| 14    | F - Legendary Attack Payload Ownership                                | ready-for-research                            | monster stat-block payload ownership                                      | Public `BATTLE_LEGENDARY_ATTACK`                                      | Reuse Task D's attack boundary, then define stat-block Legendary Action payload ownership                                                                                                                                                                                                                          | Research before implementation             |
+| 14    | F - Legendary Attack Payload Ownership                                | done                                          | monster stat-block payload ownership                                      | Public `BATTLE_LEGENDARY_ATTACK`                                      | Closed 2026-04-10: legendary attack is a `suggested_action` via `get_available_actions`; reuses Task D's attack runtime lane; battle derives weapon/damage/cost from stat-block `LegendaryActionDef.attackRef` → `StatBlock.attacks`; MCP never accepts arbitrary damage type, qualifiers, weapon properties, cost, or melee/ranged. Non-attack LA options (spell, save, utility) remain deferred. | Research closed                            |
 | 15    | G - Attack Rider Ownership                                            | ready-for-research                            | none                                                                      | Attack rider tokens                                                   | Reuse Task D's attack boundary, then classify rider timing and owned/runtime facts                                                                                                                                                                                                                                 | Research before implementation             |
 | 16    | MCP1-C - Encounter Start Tool/Command                                 | ready-for-implementation-after-light-research | MCP1-A, MCP1-B                                                            | MCP2-A                                                                | Confirm the fighter durable-to-`InitCreatureConfig` mapping, then start the battle through the routed `BATTLE_INIT` path using the shared `goblinMinion` statblock ID.                                                                                                                                             | Ready after fighter mapping check          |
 | 17    | MCP2-A - Battle Attack Public Boundary                                | blocked                                       | MCP1-C                                                                    | MCP2-B                                                                | Implement first-slice main-hand `BATTLE_ATTACK` token using Task D's resolved-token and `battleAttack` runtime contract                                                                                                                                                                                            | Blocked only on encounter start            |
@@ -236,8 +236,9 @@ Merged MCP Fighter vs. Goblin baseline:
 Recommended first coding-loop tasks:
 
 1. **Task MCP1-C: Encounter Start Tool/Command** if the goal is to continue the fighter-vs-goblin MCP path. Only the fighter durable/config mapping blast-radius check remains before implementation.
-2. **Task F: Legendary Attack Payload Ownership** if the goal is the next attack-adjacent ownership research slice after Task D.
-3. **Task G: Attack Rider Ownership** if the goal is the next attack-timing research slice after Task D.
+2. **Task G: Attack Rider Ownership** if the goal is the next attack-timing research slice after Task D.
+
+Task F (Legendary Attack Payload Ownership) is now complete. Reuse its ownership split for any future `BATTLE_LEGENDARY_ATTACK` implementation rather than reopening the boundary question.
 
 Do not widen `BATTLE_ATTACK` implementation beyond the Task D contract. The remaining risk is scope creep into off-hand attacks, hit reactions, legendary actions, and riders.
 
@@ -1305,13 +1306,13 @@ Plan impact:
 
 ### Task 14 - F - Legendary Attack Payload Ownership
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: monster stat-block action payload ownership.
 
 Blocks: public `BATTLE_LEGENDARY_ATTACK`.
 
-Next action: reuse Task D's attack boundary, then define stat-block Legendary Action payload ownership and whether the action is a suggested action, monster-control command, or both.
+Next action: Closed 2026-04-10. Implementation should extend `LegendaryActionDef` with an `attackRef` field, then build the public token and runtime lane documented below.
 
 Purpose:
 
@@ -1347,7 +1348,127 @@ Verification:
 
 Extra research needed:
 
-- Yes. Attack boundary is settled; this now depends only on monster payload ownership review.
+- No. Research is complete; see closeout below.
+
+Research closeout:
+
+RAW checked against `.references/srd-5.2.1/Monsters/Overview.md` (Legendary Actions section, lines 251-256), all SRD 5.2.1 monster stat blocks with Legendary Actions (dragons, kraken, lich, mummy lord, solar, sphinxes), and `UBIQUITOUS_LANGUAGE.md` (Legendary Action, Stat Block, Creature entries).
+
+**1. SRD Legendary Action option taxonomy.** SRD 5.2.1 LA options fall into four shapes:
+
+- **Attack-shaped**: "makes one [Attack Name] attack" and references a named stat-block attack.
+- **Spell-shaped**: "uses Spellcasting to cast [Spell]" and references a stat-block Spellcasting action.
+- **Save-shaped**: direct save with damage/condition effect in the LA description.
+- **Utility-shaped**: teleport, movement, or other self-contained effects.
+
+Per-turn cooldown ("can't take this action again until the start of its next turn") applies to spell- and save-shaped options in the SRD corpus, but generally not to attack-shaped options.
+
+**2. `BATTLE_LEGENDARY_ATTACK` is a `suggested_action`, not a `control_command`.**
+
+It requires user choices (`monsterId`, LA option, target, knockout intent) plus runtime session facts, so it belongs on `get_available_actions` / `execute_action`, reusing Task D's attack lane. This is distinct from:
+
+- `BATTLE_LEGENDARY_PASS`: pure phase-advance control command.
+- Raw `USE_LEGENDARY_ACTION`: still deferred monster command work that would need stat-block validation, cost validation, and ability-specific payload ownership.
+
+**3. First-slice scope: attack-shaped LA options only.**
+
+Only LA options that reference a named stat-block attack are in scope. Spell-, save-, and utility-shaped LA options remain deferred until their own semantic tokens exist.
+
+**4. Public resolved token (reuses Task D pattern):**
+
+```typescript
+{
+  scope: "battle";
+  type: "BATTLE_LEGENDARY_ATTACK";
+  monsterId: CreatureId;
+  actionName: string;
+  targetId: CreatureId;
+  knockOut: boolean;
+}
+```
+
+Compared to Task D's `BATTLE_ATTACK` token, this adds `monsterId` constrained by `laCtx.eligibleMonsters` and `actionName` validated against the stat block's `legendaryActions`.
+
+**5. Runtime lane (same family as Task D's `battleAttack`):**
+
+```typescript
+{
+  runtime: "legendaryAttack";
+  values: {
+    attackRoll: number;
+    targetAc: number;
+    weaponDamage: number;
+    sneakAttackDamage?: number;
+    attackerWithin5ft: boolean;
+    attackerWithin60ft?: boolean;
+    hostileWithin5ft: boolean;
+    targetCanSeeAttacker: boolean;
+    attackerCanSeeTarget: boolean;
+    frightSourceInLOS: boolean;
+    hasAllyAdjacentToTarget: boolean;
+    hitReactionCandidates: ReadonlyArray<string>;
+  }
+}
+```
+
+Runtime session/table facts are identical to `battleAttack`; only the source of the attack payload differs.
+
+**6. Ownership split.**
+
+Battle derives, and public callers must not supply:
+
+- eligible monster identity from `laCtx.eligibleMonsters`
+- LA cost from `StatBlock.legendaryActions[actionName].cost`
+- referenced attack profile from `LegendaryActionDef.attackRef` to `StatBlock.attacks[ref]`
+- weapon payload facts such as damage type, qualifiers, melee/ranged, properties, and finesse
+- crit range, Help consumption, Sneak Attack legality, and damage aggregation
+
+MCP/caller supplies only:
+
+- `actionName`, validated against stat-block `legendaryActions`
+- `targetId`
+- `knockOut`
+- runtime session facts on the same `battleAttack` lane family
+
+MCP must not accept arbitrary `damageType`, `damageQualifiers`, `weaponProperties`, `isFinesse`, `actionCost`, or `isMelee` fields for legendary attacks.
+
+**7. Required `LegendaryActionDef` extension.**
+
+Current shape `{ name: string; cost: number }` needs:
+
+- `attackRef?: string` referencing a key in `StatBlock.attacks`
+
+When present, the LA option is attack-shaped and battle can derive the payload. When absent, it is non-attack-shaped and remains deferred. Quint needs the same extension so `battle.qnt` can stop nondeterministically inventing legendary-attack payload facts.
+
+**8. Current codebase gaps for future implementation.**
+
+- `bLegendaryAttack` in `battle.qnt` still nondeterministically chooses damage type, melee/ranged shape, and related payload facts instead of looking up the selected LA option.
+- `BATTLE_LEGENDARY_ATTACK` in `battle-machine-events.ts` currently accepts caller-supplied payload facts that should become battle-derived.
+- `battleLegendaryAttack` in `battle-machine-actions-turn.ts` currently reads those facts from the event instead of the stat block.
+- `LegendaryActionDef` in both `monster-types.ts` and `creature.qnt` needs the new `attackRef` field.
+- Per-option cooldown tracking remains deferred; it is not needed for the first attack-shaped slice.
+
+**9. Stop conditions.**
+
+- Only add attack-shaped LA support via `attackRef`.
+- Do not add spell-, save-, or utility-shaped LA options here.
+- Do not add per-option cooldown tracking in the first slice.
+- Do not add multiattack-style LA support.
+- Do not let MCP accept arbitrary payload facts for legendary attacks.
+
+Verification results:
+
+- RAW/domain-language check completed against the local SRD corpus and `UBIQUITOUS_LANGUAGE.md`.
+- Docs-only research; no code changes, `/simplify`, or MBT runs required.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `F`: revised from `ready-for-research` to `done`
+  - `G`: no-change; attack rider ownership remains its own next research slice
+  - `MCP2-A`: no-change; remains blocked on MCP1-C encounter start. A future legendary attack implementation should consume this ownership split rather than reopening it.
+- Plan edits: synchronized Task 14 status in the index and DAG, recorded the ownership closeout above. No downstream task statuses changed.
 
 ### Task 15 - G - Attack Rider Ownership
 
@@ -1686,7 +1807,6 @@ Needs extra research before coding:
 - Task MCP0-B: dead-creature exhaustion mutation policy.
 - Task A: Condition table completion. RAW condition reread and column decision required.
 - Task E: Movement/help geometry. Session/product ownership decision required.
-- Task F: Legendary attack payload. Monster stat-block action payload ownership required.
 - Task G: Attack riders. RAW class feature reread required.
 - Task I: Build-map metadata. Needs a concrete consumer.
 - Task J: Generic table events. Needs source/provenance review.
