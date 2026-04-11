@@ -26,24 +26,6 @@ Do not write to the memory system unless explicitly asked.
 
 Worktree creation sometimes branches from a stale ref instead of master's HEAD. When launching a worktree agent, always include in the prompt: `"Before starting, run 'git log --oneline -1 master' and verify your HEAD matches. If not, run 'git rebase master'."` This costs one command and prevents silent divergence that causes unmergeable conflicts.
 
-## Ralph live-plan sync
-
-When a Ralph loop is already running, `plans/ACTIVE_PLAN.md` has two relevant copies:
-
-1. `master` (the durable source of truth for future sessions), and
-2. the live Ralph launcher worktree on `ralph/<run-id>/integration` (the only copy the current run will refresh from).
-
-In Ralph context, "add/update a task" is not complete until both copies are updated.
-
-Required protocol:
-
-1. Commit the plan change on `master`.
-2. Sync the same plan into the active Ralph launcher worktree and commit it there:
-   `scripts/sync-active-plan-to-ralph.sh --message "plan: sync active plan"`
-3. Verify the files are identical before claiming the live run will pick it up.
-
-Do not tell the user that Ralph will see a new task if the change exists only as an uncommitted edit or only on `master`.
-
 ## MBT tests are nondeterministic
 
 MBT traces are generated with random seeds. Failures may not reproduce on the next run. When an MBT test fails, the error includes the seed (e.g., `seed: 0xfa2124eb`). **Always reproduce before fixing:** `cd packages/core && QUINT_SEED=0xfa2124eb npx vitest run -t "replays Quint"`. Do not dismiss MBT failures as flaky — reproduce with the seed, diagnose, and fix unless the user explicitly says otherwise.
