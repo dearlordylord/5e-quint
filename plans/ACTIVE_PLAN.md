@@ -161,7 +161,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 22,
       "id": "MCP3-A3",
-      "status": "ready-for-research",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Monster Reaction Retarget/Swap Boundary"
     },
     {
@@ -2223,23 +2223,38 @@ Depends on: none.
 
 Blocks: none (UX polish).
 
-Next action: replace `String(decoded.left)` with `ParseResult.TreeFormatter.formatIssueSync(decoded.left)` in all 4 locations, or write a custom formatter that lists valid `type` values for union schemas.
+Next action: annotate the union schemas with `.annotations({ message })` so `String(decoded.left)` produces concise output. No call-site changes needed.
 
 Purpose:
 
-- When invalid input is passed to MCP tools (e.g., a bad `type` in `execute_control_command`), Effect Schema validation dumps the entire union type definition (10K+ characters of nested type signatures). Users should see a concise error like "Invalid type 'GET_TURN_OPTIONS'. Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS".
+- When invalid input is passed to MCP tools (e.g., a bad `type` in `execute_control_command`), Effect Schema validation dumps the entire union type definition (10K+ characters of nested type signatures). Users should see a concise error like "Invalid control command. Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS".
 
 Context:
 
-- Root cause: `String(decoded.left)` serializes the full `ParseIssue` tree including all union member schemas.
-- Effect provides `ParseResult.TreeFormatter.formatIssueSync()` which produces concise, human-readable output.
+- Root cause: `String(decoded.left)` already uses `TreeFormatter` under the hood, but TreeFormatter dumps every union branch for complex `Schema.Union` types.
+- Effect's `.annotations({ message: () => ({ message: "...", override: true }) })` on a `Schema.Union` makes TreeFormatter return only the custom string — no branch dump.
 
-Affected locations (same `String(decoded.left)` pattern):
+Suggested approach: annotate each `Schema.Union` that surfaces through MCP with a `message` annotation with `override: true`. The schema owns its error message; no call-site changes to the 4 `String(decoded.left)` locations. Example:
 
-1. `packages/mcp/src/server-control.ts:136` — `execute_control_command`
-2. `packages/mcp/src/server-table-events.ts:317` — `record_table_event`
-3. `packages/mcp/src/server.ts:345` — action token validation
-4. `packages/mcp/src/start-battle.ts:41` — battle start validation
+```typescript
+export const ControlCommandSchema = Schema.Union(
+  CreatureEndTurnControlSchema,
+  CreatureLongRestControlSchema,
+  // ...
+).annotations({
+  message: () => ({
+    message: "Invalid control command. Valid types: END_TURN, LONG_REST, ...",
+    override: true,
+  }),
+});
+```
+
+Affected union schemas:
+
+1. `ControlCommandSchema` in `packages/core/src/available-actions.ts:1384`
+2. Action token union in `packages/mcp/src/server.ts` (if applicable)
+3. Table event schema in `packages/mcp/src/server-table-events.ts` (if applicable)
+4. Start battle schema in `packages/mcp/src/start-battle.ts` (if applicable)
 
 Acceptance criteria:
 
