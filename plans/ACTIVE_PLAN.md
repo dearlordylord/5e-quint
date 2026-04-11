@@ -203,8 +203,8 @@ Do not jump ahead to workflow/UI work before the canonical domain exists. Do not
    - [.references/srd-5.2.1/Character-Creation.md](../.references/srd-5.2.1/Character-Creation.md)
    - [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
    - [creature.qnt](../creature.qnt)
-2. Execute CHAR3 next.
-3. Keep CHAR4+ sequenced behind CHAR3 where the dependency table still requires it.
+2. Execute CHAR6 next.
+3. Keep CHAR7 sequenced after CHAR6 where the dependency table still requires it, then treat `POST1` through `POST4` as the additive post-`CHAR` queue described above.
 4. Keep H and I deferred unless this file is explicitly reprioritized.
 
 ### Task 0 - CHAR1 - Canonical Character Domain
