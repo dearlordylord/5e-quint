@@ -803,6 +803,27 @@ describe("available actions contract", () => {
     ).toBe("Left");
   });
 
+  test("control command schema decodes BATTLE_ADD_CREATURE", () => {
+    expect(
+      Schema.decodeUnknownEither(ControlCommandSchema)({
+        scope: "battle",
+        type: "BATTLE_ADD_CREATURE",
+        insertAtIndex: 1,
+        creatures: [{ id: "A", maxHp: 20, kind: "PC" }],
+      })._tag,
+    ).toBe("Right");
+  });
+
+  test("control command schema decodes BATTLE_REMOVE_CREATURE", () => {
+    expect(
+      Schema.decodeUnknownEither(ControlCommandSchema)({
+        scope: "battle",
+        type: "BATTLE_REMOVE_CREATURE",
+        creatureIds: ["A", "B"],
+      })._tag,
+    ).toBe("Right");
+  });
+
   test("table event schema exposes wired creature commands without raw passthrough", () => {
     expect(
       Schema.decodeUnknownEither(TableEventCommandSchema)({
@@ -2789,7 +2810,7 @@ describe("available actions contract", () => {
     });
   });
 
-  test("battle discovery exposes BATTLE_ATTACK only when the active creature owns a main-hand attack payload", () => {
+  test("battle discovery exposes BATTLE_ATTACK for armed and unarmed active creatures", () => {
     const actor = initBattleForAttackDiscovery();
 
     expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
@@ -2803,7 +2824,7 @@ describe("available actions contract", () => {
           cost: cost(quota("action")),
           outcome: {
             summary:
-              "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+              "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
           },
         },
       ]),
@@ -2814,7 +2835,7 @@ describe("available actions contract", () => {
       getAvailableBattleActions(noWeaponActor.getSnapshot().context).some(
         (token) => token.type === "BATTLE_ATTACK",
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   test("battle resolution exposes the public BATTLE_ATTACK runtime contract", () => {
@@ -2838,7 +2859,7 @@ describe("available actions contract", () => {
         knockOut: false,
       },
       outcome:
-        "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+        "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
       runtime: "battleAttack",
     });
 
@@ -2889,7 +2910,113 @@ describe("available actions contract", () => {
         hitReactionCandidates: new Set(),
       },
       outcome:
-        "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+        "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+    });
+  });
+
+  test("battle resolution finalizes unarmed BATTLE_ATTACK with the SRD unarmed profile", () => {
+    const actor = initBattleForFeatureDiscovery();
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleAttack",
+          values: {
+            attackRoll: 15,
+            targetAc: 10,
+            weaponDamage: 3,
+            attackerWithin5ft: true,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            hitReactionCandidates: [],
+          },
+        },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_ATTACK",
+        targetId: CreatureId("B"),
+        attackRoll: 15,
+        diceCount: 1,
+        dieSize: 0,
+        dmg: 3,
+        dt: "bludgeoning",
+        damageQualifiers: new Set(),
+        crit: false,
+        tAc: armorClass(10),
+        knockOut: false,
+        isMelee: true,
+        weaponProperties: new Set(),
+        isFinesse: false,
+        attackerWithin5ft: true,
+        hostileWithin5ft: false,
+        targetCanSeeAttacker: true,
+        attackerCanSeeTarget: true,
+        frightSourceInLOS: false,
+        hasAllyAdjacentToTarget: false,
+        saDmg: 0,
+        hitReactionCandidates: new Set(),
+      },
+      outcome:
+        "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+    });
+  });
+
+  test("battle resolution rejects unarmed BATTLE_ATTACK runtime outside 5 feet", () => {
+    const actor = initBattleForFeatureDiscovery();
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleAttack",
+          values: {
+            attackRoll: 15,
+            targetAc: 10,
+            weaponDamage: 3,
+            attackerWithin5ft: false,
+            attackerWithin60ft: true,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            hitReactionCandidates: [],
+          },
+        },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: false,
+      error: {
+        code: "INVALID_RUNTIME_INPUT",
+        message:
+          "Unarmed strike runtime must confirm the target is within 5 feet.",
+      },
     });
   });
 

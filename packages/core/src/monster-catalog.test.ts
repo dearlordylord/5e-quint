@@ -13,7 +13,11 @@ import {
   MONSTER_STAT_BLOCK_IDS,
   MONSTER_STAT_BLOCK_PROVENANCE,
   monsterCatalogInitCreatureConfig,
+  statBlockAttacks,
+  statBlockBattleBonusActionOptions,
+  statBlockBattleReactionOptions,
   statBlockInitiativeScore,
+  statBlockMultiattack,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
 import { CreatureId, abilityModifier } from "#/types.ts";
@@ -31,9 +35,14 @@ describe("monster catalog", () => {
     );
   });
 
-  it("stores Goblin Minion as an SRD-backed stat block", () => {
+  it("stores Goblin Minion as an SRD-backed authored stat block", () => {
     const statBlock = getMonsterStatBlock("goblinMinion");
 
+    expect(statBlock.provenance).toEqual({
+      edition: "SRD 5.2.1",
+      document: ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
+      section: "Goblins > Goblin Minion",
+    });
     expect(statBlock.name).toBe("Goblin Minion");
     expect(statBlock.creatureType).toBe("fey");
     expect(statBlock.descriptiveTags).toEqual(["Goblinoid"]);
@@ -57,10 +66,51 @@ describe("monster catalog", () => {
     expect(statBlock.passivePerception).toBe(9);
     expect(statBlock.languages).toEqual(["Common", "Goblin"]);
     expect(statBlock.gear).toEqual(["Daggers (3)"]);
-    expect(statBlock.battleBonusActionOptions).toEqual(["disengage", "hide"]);
     expect(statBlock.cr).toEqual({ type: "CR_Eighth" });
     expect(statBlock.proficiencyBonus).toBe(2);
-    expect(statBlock.attacks.dagger).toEqual({
+    expect(statBlock.actions).toEqual([
+      {
+        kind: "attack",
+        id: "dagger",
+        name: "Dagger",
+        text: "*Melee or Ranged Attack Roll:* +4, reach 5 ft. or range 20/60 ft. *Hit:* 4 (1d4 + 2) Piercing damage.",
+        attack: {
+          name: "Dagger",
+          attackBonus: 4,
+          reach: 5,
+          rangeNormal: 20,
+          rangeLong: 60,
+          damageAmount: 4,
+          damageType: "piercing",
+          isRanged: false,
+          attackMode: "meleeOrRanged",
+        },
+      },
+    ]);
+    expect(statBlock.bonusActions).toEqual([
+      {
+        kind: "battleBonusAction",
+        id: "nimbleEscape",
+        name: "Nimble Escape",
+        text: "The goblin takes the Disengage or Hide action.",
+        options: ["disengage", "hide"],
+      },
+    ]);
+  });
+
+  it("derives compatibility battle projections from authored sections", () => {
+    expect(statBlockBattleBonusActionOptions(GOBLIN_MINION)).toEqual([
+      "disengage",
+      "hide",
+    ]);
+    expect(statBlockBattleReactionOptions(GOBLIN_BOSS)).toEqual([
+      "redirectAttack",
+    ]);
+    expect(statBlockMultiattack(GOBLIN_BOSS)).toEqual([
+      { type: "MAttack", name: "Scimitar" },
+      { type: "MAttack", name: "Shortbow" },
+    ]);
+    expect(statBlockAttacks(GOBLIN_MINION).dagger).toEqual({
       name: "Dagger",
       attackBonus: 4,
       reach: 5,
@@ -73,52 +123,33 @@ describe("monster catalog", () => {
     });
   });
 
-  it("projects a catalog stat block into battle init without MCP-owned RAW literals", () => {
-    const config = monsterCatalogInitCreatureConfig({
-      id: CreatureId("goblin-1"),
-      statBlockId: "goblinMinion",
-    });
-
-    expect(config).toMatchObject({
-      id: CreatureId("goblin-1"),
-      kind: "Monster",
-      maxHp: 7,
-      creatureSize: "small",
-      dexMod: 2,
-      baseWalkSpeed: 30,
-      battleBonusActionOptions: ["disengage", "hide"],
-      initiativeRoll: 12,
-      mainHandWeapon: {
-        name: "Dagger",
-        damageType: "piercing",
-        isMelee: true,
-        damageDie: 4,
-        properties: new Set(["finesse", "light", "thrown"]),
-      },
-    });
-    expect(config.legendaryActions).toBeUndefined();
-    expect(config.legendaryResistances).toBeUndefined();
-  });
-
-  it("stores goblin rider metadata on named attacks without exposing new public IDs", () => {
+  it("stores goblin rider metadata on authored attacks without exposing new public IDs", () => {
     expect(MONSTER_STAT_BLOCK_IDS).toEqual([
       "goblinMinion",
       "goblinWarrior",
       "goblinBoss",
     ]);
-    expect(GOBLIN_WARRIOR.attacks.scimitar.extraDamageOnAdvantageHit).toEqual({
+    expect(
+      statBlockAttacks(GOBLIN_WARRIOR).scimitar.extraDamageOnAdvantageHit,
+    ).toEqual({
       diceCount: 1,
       dieSize: 4,
     });
-    expect(GOBLIN_WARRIOR.attacks.shortbow.extraDamageOnAdvantageHit).toEqual({
+    expect(
+      statBlockAttacks(GOBLIN_WARRIOR).shortbow.extraDamageOnAdvantageHit,
+    ).toEqual({
       diceCount: 1,
       dieSize: 4,
     });
-    expect(GOBLIN_BOSS.attacks.scimitar.extraDamageOnAdvantageHit).toEqual({
+    expect(
+      statBlockAttacks(GOBLIN_BOSS).scimitar.extraDamageOnAdvantageHit,
+    ).toEqual({
       diceCount: 1,
       dieSize: 4,
     });
-    expect(GOBLIN_BOSS.attacks.shortbow.extraDamageOnAdvantageHit).toEqual({
+    expect(
+      statBlockAttacks(GOBLIN_BOSS).shortbow.extraDamageOnAdvantageHit,
+    ).toEqual({
       diceCount: 1,
       dieSize: 4,
     });
@@ -147,6 +178,33 @@ describe("monster catalog", () => {
         extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
       },
     });
+  });
+
+  it("projects a catalog stat block into battle init without MCP-owned RAW literals", () => {
+    const config = monsterCatalogInitCreatureConfig({
+      id: CreatureId("goblin-1"),
+      statBlockId: "goblinMinion",
+    });
+
+    expect(config).toMatchObject({
+      id: CreatureId("goblin-1"),
+      kind: "Monster",
+      maxHp: 7,
+      creatureSize: "small",
+      dexMod: 2,
+      baseWalkSpeed: 30,
+      battleBonusActionOptions: ["disengage", "hide"],
+      initiativeRoll: 12,
+      mainHandWeapon: {
+        name: "Dagger",
+        damageType: "piercing",
+        isMelee: true,
+        damageDie: 4,
+        properties: new Set(["finesse", "light", "thrown"]),
+      },
+    });
+    expect(config.legendaryActions).toBeUndefined();
+    expect(config.legendaryResistances).toBeUndefined();
   });
 
   it("uses the stat block Initiative entry, not Dexterity mod, for no-roll init fallback", () => {

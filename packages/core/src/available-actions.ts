@@ -66,6 +66,7 @@ import {
   SIZES,
   SpellSlotLevel,
   spellSlotLevel,
+  UNARMED_STRIKE_PROFILE,
   WEAPON_PROPERTIES,
   type D20Roll,
   type SpellName,
@@ -813,6 +814,8 @@ export type CreatureControlCommandType =
 
 export const BATTLE_CONTROL_COMMAND_TYPES = [
   "BATTLE_INIT",
+  "BATTLE_ADD_CREATURE",
+  "BATTLE_REMOVE_CREATURE",
   "BATTLE_START_TURN",
   "BATTLE_END_TURN",
   "BATTLE_LEGENDARY_PASS",
@@ -887,6 +890,37 @@ export type TableEventWarning = {
   readonly code: TableEventWarningCode;
   readonly message: string;
 };
+
+function formatConciseSchemaValue(value: unknown): string {
+  if (value === undefined) return "(missing)";
+  if (typeof value === "string") return JSON.stringify(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function readSchemaStringField(
+  value: unknown,
+  key: string,
+): string | undefined {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return undefined;
+  }
+  const field = Reflect.get(value, key);
+  return typeof field === "string" ? field : undefined;
+}
+
+function conciseBattleInitCreatureConfigMessage(issue: {
+  readonly actual?: unknown;
+}) {
+  const kind = readSchemaStringField(issue.actual, "kind");
+  return {
+    message: `Invalid BATTLE_INIT creature config.${kind ? ` Received kind: ${JSON.stringify(kind)}.` : ` Received: ${formatConciseSchemaValue(issue.actual)}.`} Use either a raw creature config with maxHp and kind, or a Monster catalog config with statBlockId.`,
+    override: true,
+  };
+}
 
 const EnterCombatResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("ENTER_COMBAT"),
@@ -1418,14 +1452,30 @@ const BattleInitCatalogCreatureConfigSchema = Schema.Struct({
   ),
   surprised: Schema.optional(Schema.Boolean),
 });
-const BattleInitCreatureConfigSchema = Schema.Union(
+export const BattleInitCreatureConfigSchema = Schema.Union(
   BattleInitRawCreatureConfigSchema,
   BattleInitCatalogCreatureConfigSchema,
-);
+).annotations({
+  message: conciseBattleInitCreatureConfigMessage,
+});
 const BattleInitControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal("BATTLE_INIT"),
   creatures: Schema.NonEmptyArray(BattleInitCreatureConfigSchema),
+});
+const BattleAddCreatureControlSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  type: Schema.Literal("BATTLE_ADD_CREATURE"),
+  creatures: Schema.NonEmptyArray(BattleInitCreatureConfigSchema),
+  insertAtIndex: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(0),
+  ),
+});
+const BattleRemoveCreatureControlSchema = Schema.Struct({
+  scope: Schema.Literal("battle"),
+  type: Schema.Literal("BATTLE_REMOVE_CREATURE"),
+  creatureIds: Schema.NonEmptyArray(Schema.String),
 });
 const BattleStartTurnControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
@@ -1455,14 +1505,34 @@ export const ControlCommandSchema = Schema.Union(
   CreatureEndTurnControlSchema,
   CreatureLongRestControlSchema,
   BattleInitControlSchema,
+  BattleAddCreatureControlSchema,
+  BattleRemoveCreatureControlSchema,
   BattleStartTurnControlSchema,
   BattleEndTurnControlSchema,
   BattleLegendaryPassControlSchema,
 );
+const CONTROL_COMMAND_SCHEMA_BY_TYPE = {
+  END_TURN: CreatureEndTurnControlSchema,
+  LONG_REST: CreatureLongRestControlSchema,
+  BATTLE_INIT: BattleInitControlSchema,
+  BATTLE_ADD_CREATURE: BattleAddCreatureControlSchema,
+  BATTLE_REMOVE_CREATURE: BattleRemoveCreatureControlSchema,
+  BATTLE_START_TURN: BattleStartTurnControlSchema,
+  BATTLE_END_TURN: BattleEndTurnControlSchema,
+  BATTLE_LEGENDARY_PASS: BattleLegendaryPassControlSchema,
+} as const;
 export type ControlCommand = Schema.Schema.Type<typeof ControlCommandSchema>;
 export type BattleInitControlCreatureConfig = Schema.Schema.Type<
   typeof BattleInitCreatureConfigSchema
 >;
+
+export function controlCommandSchemaForType(
+  type: string,
+): typeof ControlCommandSchema {
+  return CONTROL_COMMAND_SCHEMA_BY_TYPE[
+    type as keyof typeof CONTROL_COMMAND_SCHEMA_BY_TYPE
+  ] as unknown as typeof ControlCommandSchema;
+}
 
 export function toBattleInitCreatureConfig(
   config: BattleInitControlCreatureConfig,
@@ -1612,9 +1682,33 @@ export const TableEventCommandSchema = Schema.Union(
   CreatureRecordFailedAbilityCheckTableEventSchema,
   BattleTableEventSchema,
 );
+const TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE = {
+  TAKE_DAMAGE: CreatureTakeDamageTableEventSchema,
+  HEAL: CreatureHealTableEventSchema,
+  GRANT_TEMP_HP: CreatureGrantTempHpTableEventSchema,
+  STABILIZE: CreatureStabilizeTableEventSchema,
+  KNOCK_OUT: CreatureKnockOutTableEventSchema,
+  APPLY_CONDITION: CreatureApplyConditionTableEventSchema,
+  REMOVE_CONDITION: CreatureRemoveConditionTableEventSchema,
+  ADD_EXHAUSTION: CreatureAddExhaustionTableEventSchema,
+  REDUCE_EXHAUSTION: CreatureReduceExhaustionTableEventSchema,
+  APPLY_FALL: CreatureApplyFallTableEventSchema,
+  BREAK_CONCENTRATION: CreatureBreakConcentrationTableEventSchema,
+  RECORD_FAILED_SAVING_THROW: CreatureRecordFailedSavingThrowTableEventSchema,
+  RECORD_FAILED_ABILITY_CHECK: CreatureRecordFailedAbilityCheckTableEventSchema,
+  BATTLE_HEAL: BattleHealTableEventSchema,
+} as const;
 export type TableEventCommand = Schema.Schema.Type<
   typeof TableEventCommandSchema
 >;
+
+export function tableEventCommandSchemaForType(
+  type: string,
+): typeof TableEventCommandSchema {
+  return TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE[
+    type as keyof typeof TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE
+  ] as unknown as typeof TableEventCommandSchema;
+}
 
 export type RecordTableEventAppliedResult<State> = {
   readonly success: true;
@@ -3565,7 +3659,6 @@ function battleActiveReadyableSpellTokens(
 }
 
 function canUseBattleAttack(actor: BattleCreatureState): boolean {
-  if (actor.mainHandWeapon == null) return false;
   return actor.actionsRemaining > 0 || actor.extraAttacksRemaining > 0;
 }
 
@@ -3719,7 +3812,7 @@ export function getAvailableBattleActions(
             cost: battleAttackCost(activeCreature),
             outcome: {
               summary:
-                "Make a main-hand weapon attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+                "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
             },
           }),
         );
@@ -4431,8 +4524,7 @@ export function finalizeBattleResolution(
         };
       }
       const actor = context.creatures.get(CreatureId(request.token.actorId));
-      const weapon = actor?.mainHandWeapon;
-      if (actor == null || weapon == null) {
+      if (actor == null) {
         return {
           ok: false,
           error: {
@@ -4441,6 +4533,7 @@ export function finalizeBattleResolution(
           },
         };
       }
+      const weapon = actor.mainHandWeapon ?? UNARMED_STRIKE_PROFILE;
       const {
         attackRoll,
         targetAc,
@@ -4470,6 +4563,16 @@ export function finalizeBattleResolution(
           error: {
             code: "INVALID_RUNTIME_INPUT",
             message: "Battle target AC must be non-negative.",
+          },
+        };
+      }
+      if (actor.mainHandWeapon == null && !attackerWithin5ft) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message:
+              "Unarmed strike runtime must confirm the target is within 5 feet.",
           },
         };
       }

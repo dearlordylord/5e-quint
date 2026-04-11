@@ -38,6 +38,8 @@ import {
 } from "#/battle-machine-actions-spell.ts";
 import {
   battleActionSurge,
+  battleAddCreature,
+  battleRemoveCreature,
   battleBonusDisengage,
   battleBonusHide,
   battleDash,
@@ -129,6 +131,8 @@ export const battleMachine = setup({
   },
   actions: {
     battleInit: narrow(battleInit),
+    battleAddCreature: narrow(battleAddCreature),
+    battleRemoveCreature: narrow(battleRemoveCreature),
     battleStartTurn: narrow(battleStartTurn),
     battleAttack: narrow(battleAttack),
     battleResolveHitReaction: narrow(battleResolveHitReaction),
@@ -196,6 +200,8 @@ export const battleMachine = setup({
             { guard: "hasReadyCtx", target: "awaitingReadiedAction" },
           ],
           on: {
+            BATTLE_ADD_CREATURE: { actions: "battleAddCreature" },
+            BATTLE_REMOVE_CREATURE: { actions: "battleRemoveCreature" },
             BATTLE_START_TURN: { actions: "battleStartTurn" },
             BATTLE_ATTACK: { actions: "battleAttack" },
             BATTLE_CAST_SAVE_SPELL: { actions: "battleCastSaveSpell" },

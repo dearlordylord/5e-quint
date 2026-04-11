@@ -11,6 +11,7 @@ Core owns the runtime catalog for named monster stat blocks.
 
 Current scope:
 
-- `goblinMinion` is the first runtime catalog entry, sourced from `.references/srd-5.2.1/Monsters/Monsters-E-G.md`.
-- Goblin Warrior and Goblin Boss are internal-only SRD stat blocks for named-attack metadata. They are not exposed as public catalog IDs until the follow-up goblin tasks land.
-- Goblin stat blocks now project generic battle bonus-action options for `Nimble Escape` (`Hide` / `Disengage`) without adding goblin-specific public action names.
+- Goblin records are authored in canonical SRD-facing sections: `traits`, `actions`, `bonusActions`, `reactions`, `legendaryActions`, and `spellcasting`.
+- Each owned record carries explicit SRD provenance (`edition`, `document`, `section`) directly on the stat block.
+- Compatibility battle surfaces such as named attacks, multiattack slots, `battleBonusActionOptions`, and `battleReactionOptions` are derived from authored sections in `monster-catalog.ts`; they are no longer primary storage on `StatBlock`.
+- Goblin stat blocks continue to project generic battle bonus-action options for `Nimble Escape` (`Hide` / `Disengage`) and the generic `redirectAttack` reaction without adding goblin-specific public action names.

@@ -1,3 +1,5 @@
+import { Option } from "effect";
+
 import {
   buildBattleAttackContext,
   resolveAttack,
@@ -27,6 +29,7 @@ import {
   processEndTurn,
   processStartTurn,
   releaseBattleGrappleByGrappler,
+  removeCasterEffectsAndDependents,
   resolveSave,
   setCreature,
   spendAction,
@@ -39,6 +42,7 @@ import type {
   BattleCreatureState,
   BattleEvent,
   CreatureId,
+  InitCreatureConfig,
 } from "#/battle-machine-types.ts";
 import {
   ADR_ACTIVE_TURN,
@@ -116,6 +120,161 @@ export function effectiveInitRoll(
   return surprised ? Math.min(roll1, roll2) : roll1;
 }
 
+export function buildCreatureState(
+  cfg: InitCreatureConfig,
+  positionIndex: number,
+): BattleCreatureState {
+  const base = cfg.caster
+    ? freshCaster(cfg.maxHp, cfg.kind)
+    : freshCreature(cfg.maxHp, cfg.kind);
+  const mainHandWeapon = cfg.mainHandWeapon ?? base.mainHandWeapon;
+  const offHandWeapon = cfg.offHandWeapon ?? base.offHandWeapon;
+  const handUses = deriveBattleHandUses({
+    mainHandWeapon,
+    offHandWeapon,
+    hasShieldEquipped: cfg.hasShieldEquipped ?? false,
+    mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
+  });
+  const preparedSpells = cfg.preparedSpells ?? base.preparedSpells;
+  return {
+    ...base,
+    ...(cfg.creatureSize != null ? { creatureSize: cfg.creatureSize } : {}),
+    ...(cfg.baseArmorClass != null
+      ? { baseArmorClass: cfg.baseArmorClass }
+      : {}),
+    ...(cfg.battleSide != null ? { battleSide: cfg.battleSide } : {}),
+    ...(cfg.battlePosition != null
+      ? { battlePosition: cfg.battlePosition }
+      : {
+          battlePosition: {
+            row: positionIndex * 2,
+            col: 0,
+          },
+        }),
+    ...(cfg.maxHpReduction != null
+      ? { maxHpReduction: cfg.maxHpReduction }
+      : {}),
+    ...(cfg.rogueLevel != null ? { rogueLevel: cfg.rogueLevel } : {}),
+    ...(cfg.monkLevel != null ? { monkLevel: cfg.monkLevel } : {}),
+    ...(cfg.dexMod != null ? { dexMod: cfg.dexMod } : {}),
+    ...(cfg.legendaryActions != null
+      ? { legendaryActionsRemaining: cfg.legendaryActions }
+      : {}),
+    ...(cfg.legendaryResistances != null
+      ? { legendaryResistancesRemaining: cfg.legendaryResistances }
+      : {}),
+    preparedSpells,
+    readyableSpellPayloads:
+      cfg.readyableSpellPayloads ??
+      battleReadyableSpellPayloadsFromPreparedSpells(
+        preparedSpells,
+        base.slotsCurrent,
+      ),
+    ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
+    ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
+    ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
+    ...(cfg.isWearingArmor != null
+      ? { isWearingArmor: cfg.isWearingArmor }
+      : {}),
+    ...(cfg.defenseArmorClassBonus != null
+      ? { defenseArmorClassBonus: cfg.defenseArmorClassBonus }
+      : {}),
+    ...(cfg.greatWeaponFightingDamageFloor != null
+      ? {
+          greatWeaponFightingDamageFloor: cfg.greatWeaponFightingDamageFloor,
+        }
+      : {}),
+    ...(cfg.hiddenDiscoveryDc != null
+      ? { hiddenDiscoveryDc: cfg.hiddenDiscoveryDc }
+      : {}),
+    ...(cfg.rangedWeaponAttackRollBonus != null
+      ? { rangedWeaponAttackRollBonus: cfg.rangedWeaponAttackRollBonus }
+      : {}),
+    ...(cfg.fighterLevel != null
+      ? (() => {
+          const asCharges = actionSurgeMaxCharges(cfg.fighterLevel);
+          return {
+            fighterLevel: cfg.fighterLevel,
+            ...(asCharges > 0
+              ? {
+                  actionSurgeCharges: asCharges,
+                  actionSurgeUsedThisTurn: false,
+                }
+              : {}),
+          };
+        })()
+      : {}),
+    ...(cfg.barbarianLevel != null
+      ? (() => {
+          const maxCharges = rageMaxCharges(cfg.barbarianLevel);
+          return {
+            barbarianLevel: cfg.barbarianLevel,
+            rageCharges: maxCharges,
+          };
+        })()
+      : {}),
+    ...(cfg.meleeDamageBonus != null
+      ? { meleeDamageBonus: cfg.meleeDamageBonus }
+      : {}),
+    ...(cfg.sneakAttackDice != null
+      ? { sneakAttackDice: cfg.sneakAttackDice }
+      : {}),
+    ...(cfg.bardLevel != null ? { bardLevel: cfg.bardLevel } : {}),
+    ...(cfg.bardicInspirationCharges != null
+      ? { bardicInspirationCharges: cfg.bardicInspirationCharges }
+      : {}),
+    ...(cfg.parryAcBonus != null ? { parryAcBonus: cfg.parryAcBonus } : {}),
+    ...(cfg.lightPropertyExtraAttackAddsAbilityModifier != null
+      ? {
+          lightPropertyExtraAttackAddsAbilityModifier:
+            cfg.lightPropertyExtraAttackAddsAbilityModifier,
+        }
+      : {}),
+    ...(cfg.prone === true ? { prone: true } : {}),
+    ...(cfg.activeEffects != null ? { activeEffects: cfg.activeEffects } : {}),
+    ...(cfg.baseWalkSpeed != null
+      ? {
+          baseWalkSpeed: cfg.baseWalkSpeed,
+          movementRemaining: cfg.baseWalkSpeed,
+          effectiveSpeed: cfg.baseWalkSpeed,
+        }
+      : {}),
+    ...(cfg.mainHandWeapon != null
+      ? { mainHandWeapon: cfg.mainHandWeapon }
+      : {}),
+    ...(cfg.offHandWeapon != null ? { offHandWeapon: cfg.offHandWeapon } : {}),
+    ...(cfg.battleBonusActionOptions != null
+      ? { battleBonusActionOptions: cfg.battleBonusActionOptions }
+      : {}),
+    ...(cfg.battleReactionOptions != null
+      ? { battleReactionOptions: cfg.battleReactionOptions }
+      : {}),
+    ...handUses,
+    ...(cfg.qualifiedPhysicalResistances != null
+      ? { qualifiedPhysicalResistances: cfg.qualifiedPhysicalResistances }
+      : {}),
+    ...(cfg.qualifiedPhysicalVulnerabilities != null
+      ? {
+          qualifiedPhysicalVulnerabilities:
+            cfg.qualifiedPhysicalVulnerabilities,
+        }
+      : {}),
+    ...(cfg.qualifiedPhysicalImmunities != null
+      ? { qualifiedPhysicalImmunities: cfg.qualifiedPhysicalImmunities }
+      : {}),
+  };
+}
+
+function isDefaultBattlePosition(
+  creature: BattleCreatureState,
+  initiativeIndex: number,
+): boolean {
+  return (
+    creature.battlePosition.row === initiativeIndex * 2 &&
+    creature.battlePosition.col === 0
+  );
+}
+
 export function battleInit({
   event: e,
 }: BattleActionArgs<"BATTLE_INIT">): Partial<BattleContext> {
@@ -132,151 +291,7 @@ export function battleInit({
   const sorted = [...scored].sort((a, b) => b.score - a.score);
   const initiative: Array<CreatureId> = [];
   for (const { cfg } of sorted) {
-    const base = cfg.caster
-      ? freshCaster(cfg.maxHp, cfg.kind)
-      : freshCreature(cfg.maxHp, cfg.kind);
-    const mainHandWeapon = cfg.mainHandWeapon ?? base.mainHandWeapon;
-    const offHandWeapon = cfg.offHandWeapon ?? base.offHandWeapon;
-    const handUses = deriveBattleHandUses({
-      mainHandWeapon,
-      offHandWeapon,
-      hasShieldEquipped: cfg.hasShieldEquipped ?? false,
-      mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
-    });
-    const preparedSpells = cfg.preparedSpells ?? base.preparedSpells;
-    creatures.set(cfg.id, {
-      ...base,
-      ...(cfg.creatureSize != null ? { creatureSize: cfg.creatureSize } : {}),
-      ...(cfg.baseArmorClass != null
-        ? { baseArmorClass: cfg.baseArmorClass }
-        : {}),
-      ...(cfg.battleSide != null ? { battleSide: cfg.battleSide } : {}),
-      ...(cfg.battlePosition != null
-        ? { battlePosition: cfg.battlePosition }
-        : {
-            battlePosition: {
-              row: initiative.length * 2,
-              col: 0,
-            },
-          }),
-      ...(cfg.maxHpReduction != null
-        ? { maxHpReduction: cfg.maxHpReduction }
-        : {}),
-      ...(cfg.rogueLevel != null ? { rogueLevel: cfg.rogueLevel } : {}),
-      ...(cfg.monkLevel != null ? { monkLevel: cfg.monkLevel } : {}),
-      ...(cfg.dexMod != null ? { dexMod: cfg.dexMod } : {}),
-      ...(cfg.legendaryActions != null
-        ? { legendaryActionsRemaining: cfg.legendaryActions }
-        : {}),
-      ...(cfg.legendaryResistances != null
-        ? { legendaryResistancesRemaining: cfg.legendaryResistances }
-        : {}),
-      preparedSpells,
-      readyableSpellPayloads:
-        cfg.readyableSpellPayloads ??
-        battleReadyableSpellPayloadsFromPreparedSpells(
-          preparedSpells,
-          base.slotsCurrent,
-        ),
-      ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
-      ...(cfg.saveMiscBonus != null
-        ? { saveMiscBonus: cfg.saveMiscBonus }
-        : {}),
-      ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
-      ...(cfg.isWearingArmor != null
-        ? { isWearingArmor: cfg.isWearingArmor }
-        : {}),
-      ...(cfg.defenseArmorClassBonus != null
-        ? { defenseArmorClassBonus: cfg.defenseArmorClassBonus }
-        : {}),
-      ...(cfg.greatWeaponFightingDamageFloor != null
-        ? {
-            greatWeaponFightingDamageFloor: cfg.greatWeaponFightingDamageFloor,
-          }
-        : {}),
-      ...(cfg.hiddenDiscoveryDc != null
-        ? { hiddenDiscoveryDc: cfg.hiddenDiscoveryDc }
-        : {}),
-      ...(cfg.rangedWeaponAttackRollBonus != null
-        ? { rangedWeaponAttackRollBonus: cfg.rangedWeaponAttackRollBonus }
-        : {}),
-      ...(cfg.fighterLevel != null
-        ? (() => {
-            const asCharges = actionSurgeMaxCharges(cfg.fighterLevel);
-            return {
-              fighterLevel: cfg.fighterLevel,
-              ...(asCharges > 0
-                ? {
-                    actionSurgeCharges: asCharges,
-                    actionSurgeUsedThisTurn: false,
-                  }
-                : {}),
-            };
-          })()
-        : {}),
-      ...(cfg.barbarianLevel != null
-        ? (() => {
-            const maxCharges = rageMaxCharges(cfg.barbarianLevel);
-            return {
-              barbarianLevel: cfg.barbarianLevel,
-              rageCharges: maxCharges,
-            };
-          })()
-        : {}),
-      ...(cfg.meleeDamageBonus != null
-        ? { meleeDamageBonus: cfg.meleeDamageBonus }
-        : {}),
-      ...(cfg.sneakAttackDice != null
-        ? { sneakAttackDice: cfg.sneakAttackDice }
-        : {}),
-      ...(cfg.bardLevel != null ? { bardLevel: cfg.bardLevel } : {}),
-      ...(cfg.bardicInspirationCharges != null
-        ? { bardicInspirationCharges: cfg.bardicInspirationCharges }
-        : {}),
-      ...(cfg.parryAcBonus != null ? { parryAcBonus: cfg.parryAcBonus } : {}),
-      ...(cfg.lightPropertyExtraAttackAddsAbilityModifier != null
-        ? {
-            lightPropertyExtraAttackAddsAbilityModifier:
-              cfg.lightPropertyExtraAttackAddsAbilityModifier,
-          }
-        : {}),
-      ...(cfg.prone === true ? { prone: true } : {}),
-      ...(cfg.activeEffects != null
-        ? { activeEffects: cfg.activeEffects }
-        : {}),
-      ...(cfg.baseWalkSpeed != null
-        ? {
-            baseWalkSpeed: cfg.baseWalkSpeed,
-            movementRemaining: cfg.baseWalkSpeed,
-            effectiveSpeed: cfg.baseWalkSpeed,
-          }
-        : {}),
-      ...(cfg.mainHandWeapon != null
-        ? { mainHandWeapon: cfg.mainHandWeapon }
-        : {}),
-      ...(cfg.offHandWeapon != null
-        ? { offHandWeapon: cfg.offHandWeapon }
-        : {}),
-      ...(cfg.battleBonusActionOptions != null
-        ? { battleBonusActionOptions: cfg.battleBonusActionOptions }
-        : {}),
-      ...(cfg.battleReactionOptions != null
-        ? { battleReactionOptions: cfg.battleReactionOptions }
-        : {}),
-      ...handUses,
-      ...(cfg.qualifiedPhysicalResistances != null
-        ? { qualifiedPhysicalResistances: cfg.qualifiedPhysicalResistances }
-        : {}),
-      ...(cfg.qualifiedPhysicalVulnerabilities != null
-        ? {
-            qualifiedPhysicalVulnerabilities:
-              cfg.qualifiedPhysicalVulnerabilities,
-          }
-        : {}),
-      ...(cfg.qualifiedPhysicalImmunities != null
-        ? { qualifiedPhysicalImmunities: cfg.qualifiedPhysicalImmunities }
-        : {}),
-    });
+    creatures.set(cfg.id, buildCreatureState(cfg, initiative.length));
     initiative.push(cfg.id);
   }
   return {
@@ -288,6 +303,137 @@ export function battleInit({
     spellStack: [],
     turnStarted: false,
     helpTargets: [],
+  };
+}
+
+export function battleAddCreature({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_ADD_CREATURE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  if (e.insertAtIndex < 0 || e.insertAtIndex > c.initiative.length) return {};
+  if (e.creatures.length === 0) return {};
+  if (new Set(e.creatures.map((cfg) => cfg.id)).size !== e.creatures.length)
+    return {};
+  if (e.creatures.some((cfg) => c.creatures.has(cfg.id))) return {};
+
+  const scored = e.creatures.map((cfg, index) => ({
+    cfg,
+    index,
+    score: effectiveInitRoll(
+      cfg.initiativeRoll ?? 10,
+      cfg.initiativeRollB ?? cfg.initiativeRoll ?? 10,
+      cfg.surprised ?? false,
+    ),
+  }));
+  const sorted = [...scored].sort(
+    (a, b) => b.score - a.score || a.index - b.index,
+  );
+
+  const creatures = new Map(c.creatures);
+  const initiative = [
+    ...c.initiative.slice(0, e.insertAtIndex),
+    ...sorted.map(({ cfg }) => cfg.id),
+    ...c.initiative.slice(e.insertAtIndex),
+  ];
+  const insertedCount = sorted.length;
+
+  for (
+    let oldIndex = e.insertAtIndex;
+    oldIndex < c.initiative.length;
+    oldIndex++
+  ) {
+    const shiftedId = c.initiative[oldIndex]!;
+    const shiftedCreature = creatures.get(shiftedId)!;
+    if (!isDefaultBattlePosition(shiftedCreature, oldIndex)) continue;
+    creatures.set(shiftedId, {
+      ...shiftedCreature,
+      battlePosition: {
+        row: (oldIndex + insertedCount) * 2,
+        col: 0,
+      },
+    });
+  }
+
+  for (const [offset, { cfg }] of sorted.entries()) {
+    creatures.set(cfg.id, buildCreatureState(cfg, e.insertAtIndex + offset));
+  }
+
+  return {
+    creatures,
+    initiative,
+    turnIndex:
+      e.insertAtIndex <= c.turnIndex
+        ? c.turnIndex + insertedCount
+        : c.turnIndex,
+  };
+}
+
+export function battleRemoveCreature({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_REMOVE_CREATURE">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+
+  const creatureIds = [...new Set(e.creatureIds)];
+  if (creatureIds.length === 0) return {};
+  if (creatureIds.length !== e.creatureIds.length) return {};
+  if (creatureIds.some((id) => !c.creatures.has(id))) return {};
+  if (creatureIds.length >= c.initiative.length) return {};
+
+  const removedIds = new Set(creatureIds);
+  const currentActiveId = activeId(c);
+  const activeRemoved = removedIds.has(currentActiveId);
+  let creatures = new Map(c.creatures);
+
+  for (const id of creatureIds) {
+    const creature = creatures.get(id);
+    if (!creature) continue;
+    if (Option.isSome(creature.concentrationSpellId)) {
+      creatures = breakConcentrationAndPropagate(creatures, id);
+    }
+    creatures = removeCasterEffectsAndDependents(creatures, id);
+    const updated = creatures.get(id);
+    if (!updated) continue;
+    if (updated.grapplingTarget != null) {
+      creatures = releaseBattleGrappleByGrappler(
+        creatures,
+        id,
+        currentActiveId,
+      );
+    }
+    if (updated.grappledBy != null) {
+      creatures = escapeBattleGrapple(creatures, id, currentActiveId);
+    }
+  }
+
+  for (const id of creatureIds) {
+    creatures.delete(id);
+  }
+
+  const initiative = c.initiative.filter((id) => !removedIds.has(id));
+  const removedBefore = c.initiative
+    .slice(0, c.turnIndex)
+    .filter((id) => removedIds.has(id)).length;
+  let turnIndex = c.turnIndex - removedBefore;
+  let round = c.round;
+  if (activeRemoved && turnIndex >= initiative.length) {
+    turnIndex = 0;
+    round += 1;
+  }
+
+  return {
+    creatures,
+    initiative,
+    turnIndex,
+    round,
+    turnStarted: activeRemoved ? false : c.turnStarted,
+    helpTargets: c.helpTargets.filter(
+      (target) =>
+        !removedIds.has(target.helperId) &&
+        !removedIds.has(target.allyId) &&
+        !removedIds.has(target.targetEnemyId),
+    ),
   };
 }
 

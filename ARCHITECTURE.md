@@ -132,6 +132,66 @@ This is not a limitation — it is the correct modeling boundary. The spec's val
 
 **Key constraint:** The creature machine and battle machine use completely different architectures. The battle machine is the authoritative engine because it mirrors `battle.qnt`. The creature machine is a local projection and debugging surface; when ownership questions arise, design from battle semantics outward and project local facts down. Creatures in battle are a `Map<CreatureId, BattleCreatureState>` in context, NOT spawned child actors -- D&D combat requires atomic cross-creature updates.
 
+### Battle Projection Contract
+
+The battle projection contract has four layers:
+
+- `battle.qnt:Combatant` is the semantic contract for battle-owned combat facts.
+- `packages/core/src/battle-machine-types.ts:BattleCreatureState` is the runtime mirror of that contract.
+- `packages/core/src/battle-machine-types.ts:InitCreatureConfig` is the promotion input contract.
+- `packages/core/src/battle-machine-actions-turn.ts:buildCreatureState` is the authoritative `InitCreatureConfig -> BattleCreatureState` projector.
+
+The battle engine keeps a flat `Map<CreatureId, BattleCreatureState>` rather than embedding creature child actors for three reasons:
+
+- combat resolution needs atomic cross-creature updates for AoE damage, reaction chains, grapple links, concentration cleanup, and death/removal cleanup;
+- reaction windows and turn advancement are ordered battle-level phases, which are simpler and safer when one transition owns the whole combatant map;
+- MBT parity is direct because `battle.qnt` already models battle state as `CreatureId -> Combatant`.
+
+Ownership rule:
+
+- If battle resolves a rule and the rule needs a persistent combat fact, that fact belongs on `Combatant` / `BattleCreatureState`.
+- Source owners compile their durable facts into `InitCreatureConfig`; once projected, battle owns the combatant copy.
+- Do not project whole source objects when battle only needs a stable derived fact, but do not leave battle dependent on caller-only state for battle-owned semantics.
+
+Battle-owned projected facts fall into these categories:
+
+- mutable combat state: vitals, conditions, grapple links, active effects, turn economy, spell-slot state, concentration, and monster per-encounter resources;
+- durable combatant facts battle rules read directly: creature kind, size, base AC, side, position, walk speed, projected weapon profiles, hand occupancy, resistances/vulnerabilities/immunities, and reaction/bonus-action option payloads;
+- projected class and modifier facts needed by battle-resolved rules: tracked class levels, `dexMod`, save bonuses, crit range, sneak-attack dice, melee damage bonus, parry bonus, and similar rule inputs already read from combatant state.
+
+The authoritative field list is the code itself: `battle.qnt:Combatant` plus `BattleCreatureState`. This section defines the ownership methodology, not a duplicate registry.
+
+Caller/session-owned facts remain outside the battle projection when they are transient runtime qualifiers or external adjudication:
+
+- spatial and geometry facts such as cover, distance, adjacency, threatened sets, line of sight, and pathing;
+- DM or table adjudication facts such as initiative tie ordering and whether a ready trigger actually occurred;
+- session routing metadata such as encounter drafts, active host selection, and character-list references;
+- full creature-sheet structures that battle does not read directly.
+
+Projection methodology for a new battle-owned field:
+
+1. Add the field to `battle.qnt:Combatant` if the rule changes battle semantics.
+2. Mirror it in `BattleCreatureState`.
+3. Mirror it in `InitCreatureConfig`.
+4. Thread it through `buildCreatureState`.
+5. Set fresh defaults in `packages/core/src/battle-machine-creature.ts` (`freshCreature` / `freshCaster`).
+6. Update MBT normalization in `packages/core/src/battle-projection.mbt.test.ts`.
+7. Update every source-specific compiler that produces `InitCreatureConfig`, including raw `BATTLE_INIT` / `BATTLE_ADD_CREATURE` adapter paths, `monsterCatalogInitCreatureConfig` / `statBlockToInitCreatureConfig`, and any PC or session-owned start-battle projector.
+8. Verify parity and task-scoped tests.
+9. Update this section if the new field changes the documented ownership categories.
+
+Source-specific compilers should stay separate from battle-state construction. The intended shape is:
+
+- source owner -> named `InitCreatureConfig` projector -> `buildCreatureState`
+
+The monster path already follows this with `statBlockToInitCreatureConfig`. The current PC/session `start_battle` path still assembles `BATTLE_INIT` creature objects inline, which is workable but not the desired steady-state methodology when new projected fields are added.
+
+Current `dexMod` / `strMod` note:
+
+- `dexMod` is battle-owned today because current battle semantics read it directly for Monk Deflect Attacks / Deflect Energy math.
+- `strMod` is not currently a battle-owned field because current battle semantics do not read it from combatant state.
+- That split is acceptable only while no battle-owned rule needs Strength-backed combat facts. It is not a permanent boundary. If battle starts resolving unarmed-strike, grapple, shove, or other Strength-based combat semantics from combatant state, the minimal canonical Strength-backed fact must be promoted through the same projection surface rather than fetched from caller-only state.
+
 ---
 
 ## 3. TS Features
