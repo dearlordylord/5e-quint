@@ -515,6 +515,7 @@ describe("MCP server adapter", () => {
   test("tool definitions include control command and table event skeletons", () => {
     expect(toolDefinitions.map((tool) => tool.name)).toEqual([
       "get_state",
+      "start_battle",
       "get_available_actions",
       "execute_action",
       "preview_action",
@@ -542,6 +543,7 @@ describe("MCP server adapter", () => {
 
   test("tool definition input schemas satisfy MCP object-schema shape", () => {
     expect(toolDefinitions.map((tool) => tool.inputSchema.type)).toEqual([
+      "object",
       "object",
       "object",
       "object",
@@ -3994,6 +3996,108 @@ describe("SessionRouter", () => {
     });
   });
 
+  test("start_battle promotes the router onto a battle host using the fighter snapshot and goblin stat block", () => {
+    const router = createSessionRouter(createDemoHost(), {
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      goblinId: "goblin-1",
+      fighterInitiativeRoll: 20,
+      goblinInitiativeRoll: 8,
+    });
+
+    expect("isError" in started).toBe(false);
+    expect(router.getSnapshot()).toEqual({
+      activeScope: "battle",
+      encounterDraft: { participantIds: ["fighter", "goblin-1"] },
+      characterListRefs: [{ listId: "party-alpha" }],
+    });
+    expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
+      scope: "battle",
+      activeCreatureId: "fighter",
+      initiative: ["fighter", "goblin-1"],
+      creatureIds: ["fighter", "goblin-1"],
+    });
+
+    if (router.activeHost.scope !== "battle") {
+      throw new Error("expected battle host");
+    }
+    const fighter = router.activeHost.actor
+      .getSnapshot()
+      .context.creatures.get(CreatureId("fighter"));
+    const goblin = router.activeHost.actor
+      .getSnapshot()
+      .context.creatures.get(CreatureId("goblin-1"));
+
+    expect(fighter).toMatchObject({
+      hp: 44,
+      maxHp: 44,
+      fighterLevel: 5,
+      baseWalkSpeed: 30,
+      actionSurgeCharges: 1,
+    });
+    expect(goblin).toMatchObject({
+      maxHp: 7,
+      creatureKind: "Monster",
+      creatureSize: "small",
+      baseWalkSpeed: 30,
+    });
+  });
+
+  test("start_battle rejects invalid monster stat block ids", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      goblinId: "goblin-1",
+      goblinStatBlockId: "badGoblin",
+    });
+
+    expect("isError" in started && started.isError).toBe(true);
+    expect(readPayload(started).error).toBe("Invalid start_battle input");
+    expect(router.getSnapshot().activeScope).toBe("creature");
+  });
+
+  test("start_battle rejects duplicate creature ids", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      goblinId: "fighter",
+    });
+
+    expect("isError" in started && started.isError).toBe(true);
+    expect(readPayload(started)).toEqual({
+      error: "Battle creature IDs must be unique.",
+      details: "START_BATTLE_DUPLICATE_CREATURE_ID",
+    });
+    expect(router.getSnapshot().activeScope).toBe("creature");
+  });
+
+  test("start_battle rejects calls once the session is already on a battle host", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      goblinId: "goblin-1",
+    });
+
+    const restarted = router.handleToolCall("start_battle", {
+      fighterId: "fighter-2",
+      goblinId: "goblin-2",
+    });
+
+    expect("isError" in restarted && restarted.isError).toBe(true);
+    expect(readPayload(restarted)).toEqual({
+      error:
+        "start_battle can only be called while the session is on a creature host.",
+      details: "START_BATTLE_SCOPE_MISMATCH",
+    });
+  });
+
   test("auto-promotes BATTLE_INIT onto a battle host through the stdio routing path", () => {
     const router = createSessionRouter(createDemoHost(), {
       encounterDraft: { participantIds: ["fighter", "goblin-1"] },
@@ -4090,5 +4194,25 @@ describe("SessionRouter", () => {
       encounterDraft: null,
       characterListRefs: [],
     });
+  });
+
+  test("duplicate creature ids are rejected on the raw BATTLE_INIT lane", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const init = router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: "fighter", maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: "fighter", maxHp: 15, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+
+    expect("isError" in init && init.isError).toBe(true);
+    expect(readPayload(init)).toEqual({
+      error: "Battle creature IDs must be unique.",
+      details: "BATTLE_INIT_DUPLICATE_CREATURE_ID",
+    });
+    expect(router.getSnapshot().activeScope).toBe("creature");
   });
 });

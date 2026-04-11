@@ -20,8 +20,26 @@ import {
 } from "./server-shared.ts";
 
 type DndMachineEvent = Parameters<DndActor["send"]>[0];
+type BattleInitCommand = Extract<
+  ControlCommand,
+  { readonly scope: "battle"; readonly type: "BATTLE_INIT" }
+>;
 
 const strictCommandParseOptions = { onExcessProperty: "error" } as const;
+
+function duplicateBattleCreatureIdContent() {
+  return errorContent(
+    "Battle creature IDs must be unique.",
+    "BATTLE_INIT_DUPLICATE_CREATURE_ID",
+  );
+}
+
+function hasDuplicateBattleCreatureIds(
+  creatures: BattleInitCommand["creatures"],
+) {
+  const ids = creatures.map((creature) => creature.id);
+  return new Set(ids).size !== ids.length;
+}
 
 function controlCommandNotAcceptedContent(command: ControlCommand) {
   return errorContent("Control command was not accepted by the machine", {
@@ -124,6 +142,14 @@ export function executeControlCommand(
       `Control command scope ${decoded.right.scope} does not match the current ${host.scope} host.`,
       "CONTROL_COMMAND_SCOPE_MISMATCH",
     );
+  }
+
+  if (
+    decoded.right.scope === "battle" &&
+    decoded.right.type === "BATTLE_INIT" &&
+    hasDuplicateBattleCreatureIds(decoded.right.creatures)
+  ) {
+    return duplicateBattleCreatureIdContent();
   }
 
   return Match.value(host).pipe(

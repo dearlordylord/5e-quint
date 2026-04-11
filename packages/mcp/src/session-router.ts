@@ -1,10 +1,14 @@
-import type { SupportedActionHost } from "./server-shared.ts";
+import { errorContent, type SupportedActionHost } from "./server-shared.ts";
 import { handleToolCall } from "./server.ts";
 import {
   createBattleHost,
   createDemoHost,
   type BattleActionHost,
 } from "./host-factories.ts";
+import {
+  buildStartBattleCommand,
+  decodeStartBattleInput,
+} from "./start-battle.ts";
 
 export type SessionCharacterListRef = {
   readonly listId: string;
@@ -64,6 +68,20 @@ export function createSessionRouter(
   const encounterDraft = cloneEncounterDraft(options.encounterDraft ?? null);
   const characterListRefs = [...(options.characterListRefs ?? [])];
 
+  function promoteToBattleHost(name: string, args: unknown): ToolCallResult {
+    const battleHost: BattleActionHost = createBattleHost();
+    const result = handleToolCall(battleHost, name, args);
+    if ("isError" in result) {
+      stopHost(battleHost);
+      return result;
+    }
+
+    const previousHost = activeHost;
+    activeHost = battleHost;
+    stopHost(previousHost);
+    return result;
+  }
+
   return {
     get activeHost() {
       return activeHost;
@@ -78,6 +96,27 @@ export function createSessionRouter(
     },
 
     handleToolCall(name: string, args: unknown): ToolCallResult {
+      if (name === "start_battle") {
+        if (activeHost.scope !== "creature") {
+          return errorContent(
+            "start_battle can only be called while the session is on a creature host.",
+            "START_BATTLE_SCOPE_MISMATCH",
+          );
+        }
+
+        const decoded = decodeStartBattleInput(args);
+        if ("isError" in decoded) {
+          return decoded;
+        }
+
+        const command = buildStartBattleCommand(activeHost, decoded);
+        if ("isError" in command) {
+          return command;
+        }
+
+        return promoteToBattleHost("execute_control_command", command);
+      }
+
       if (
         name === "execute_control_command" &&
         activeHost.scope !== "battle" &&
@@ -85,17 +124,7 @@ export function createSessionRouter(
         args.scope === "battle" &&
         args.type === "BATTLE_INIT"
       ) {
-        const battleHost: BattleActionHost = createBattleHost();
-        const result = handleToolCall(battleHost, name, args);
-        if ("isError" in result) {
-          stopHost(battleHost);
-          return result;
-        }
-
-        const previousHost = activeHost;
-        activeHost = battleHost;
-        stopHost(previousHost);
-        return result;
+        return promoteToBattleHost(name, args);
       }
 
       return handleToolCall(activeHost, name, args);

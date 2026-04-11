@@ -41,6 +41,7 @@ import {
   jsonContent,
   snapshotFingerprint,
 } from "./server-shared.ts";
+import { StartBattleInputSchema } from "./start-battle.ts";
 import { recordTableEvent } from "./server-table-events.ts";
 
 export type { BattleActor, DndActor, SupportedActionHost };
@@ -94,6 +95,10 @@ type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
   readonly type: "object";
 };
 
+export const startBattleJsonSchema = JSONSchema.make(
+  StartBattleInputSchema,
+) as unknown as McpObjectInputSchema;
+
 const resolvedActionMcpInputSchema = {
   type: "object",
   required: ["type"],
@@ -128,6 +133,12 @@ export const toolDefinitions = [
     name: "get_state",
     description: "Returns the current creature or battle host state as JSON.",
     inputSchema: { type: "object" as const, properties: {} },
+  },
+  {
+    name: "start_battle",
+    description:
+      "Start a battle from the current creature host by compiling its Fighter durable state into BATTLE_INIT and adding a core-owned monster stat block such as goblinMinion.",
+    inputSchema: startBattleJsonSchema,
   },
   {
     name: "get_available_actions",
