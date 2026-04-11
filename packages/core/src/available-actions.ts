@@ -49,6 +49,10 @@ import {
   legalPreparedSpellSlotLevels,
   legalWildResurgenceChargeLevels,
 } from "#/machine-guards.ts";
+import {
+  MONSTER_STAT_BLOCK_IDS,
+  monsterCatalogInitCreatureConfig,
+} from "#/monster-catalog.ts";
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts";
 import type { DndContext, DndEvent } from "#/machine-types.ts";
 import {
@@ -1215,7 +1219,7 @@ const CreatureLongRestControlSchema = Schema.Struct({
   scope: Schema.Literal("creature"),
   type: Schema.Literal("LONG_REST"),
 });
-const BattleInitCreatureConfigSchema = Schema.Struct({
+const BattleInitRawCreatureConfigSchema = Schema.Struct({
   id: Schema.String,
   maxHp: Schema.Number.pipe(Schema.int(), Schema.positive()),
   maxHpReduction: Schema.optional(
@@ -1287,6 +1291,22 @@ const BattleInitCreatureConfigSchema = Schema.Struct({
   hasShieldEquipped: Schema.optional(Schema.Boolean),
   mainHandUsesTwoHands: Schema.optional(Schema.Boolean),
 });
+const BattleInitCatalogCreatureConfigSchema = Schema.Struct({
+  id: Schema.String,
+  kind: Schema.Literal("Monster"),
+  statBlockId: Schema.Literal(...MONSTER_STAT_BLOCK_IDS),
+  initiativeRoll: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.between(1, 20)),
+  ),
+  initiativeRollB: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.between(1, 20)),
+  ),
+  surprised: Schema.optional(Schema.Boolean),
+});
+const BattleInitCreatureConfigSchema = Schema.Union(
+  BattleInitRawCreatureConfigSchema,
+  BattleInitCatalogCreatureConfigSchema,
+);
 const BattleInitControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal("BATTLE_INIT"),
@@ -1332,6 +1352,15 @@ export type BattleInitControlCreatureConfig = Schema.Schema.Type<
 export function toBattleInitCreatureConfig(
   config: BattleInitControlCreatureConfig,
 ): InitCreatureConfig {
+  if ("statBlockId" in config) {
+    return monsterCatalogInitCreatureConfig({
+      id: CreatureId(config.id),
+      statBlockId: config.statBlockId,
+      initiativeRoll: config.initiativeRoll,
+      initiativeRollB: config.initiativeRollB,
+      surprised: config.surprised,
+    });
+  }
   return {
     ...config,
     id: CreatureId(config.id),
