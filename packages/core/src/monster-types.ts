@@ -7,6 +7,7 @@ import type {
   Ability,
   AbilityModifier,
   ArmorClass,
+  AdvantageDamageDice,
   Condition,
   DamageType,
   ResourceCount,
@@ -97,6 +98,12 @@ export interface MonsterAttack {
    * legacy `isRanged`/reach/range fields.
    */
   readonly attackMode?: "melee" | "ranged" | "meleeOrRanged";
+  /**
+   * Extra same-type damage from the stat block when the attack roll had
+   * Advantage, e.g. Goblin Warrior/Boss "plus 2 (1d4) ... if the attack roll
+   * had Advantage."
+   */
+  readonly extraDamageOnAdvantageHit?: AdvantageDamageDice;
 }
 
 // --- Multiattack Slot ---

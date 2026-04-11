@@ -49,6 +49,7 @@ import {
   hasAttackDisadvantageSource,
 } from "#/machine-combat.ts";
 import type {
+  AdvantageDamageDice,
   AttackContext,
   CreatureId,
   DamageQualifier,
@@ -103,6 +104,10 @@ function battleWeaponDamage(
     (sum, roll) => sum + (useFloor && roll <= 2 ? 3 : roll),
     0,
   );
+}
+
+function averageDiceDamage(dice: AdvantageDamageDice): number {
+  return dice.diceCount * Math.floor((dice.dieSize + 1) / 2);
 }
 
 /** Build AttackContext from battle creature state + per-attack parameters. */
@@ -182,6 +187,7 @@ export function resolveAttack(
   weaponIsRanged: boolean,
   onHitEffect: AttackHitCtx["onHitEffect"],
   weaponProperties: ReadonlySet<WeaponProperty>,
+  extraDamageOnAdvantageHit: AdvantageDamageDice | undefined,
   hasAllyAdjacentToTarget: boolean,
   hasAnyDisadvantageSource: boolean,
   saDmg: number,
@@ -221,8 +227,13 @@ export function resolveAttack(
     !hasAnyDisadvantageSource &&
     (mods.hasAdvantage || hasAllyAdjacentToTarget);
   const effectiveSaDmg = saEligible ? saDmg : 0;
-  const totalDmg = damage + meleeDmgBonus + effectiveSaDmg;
   const effectiveCrit = isCritical || mods.autoCrit;
+  const effectiveAdvantageRiderDmg =
+    mods.hasAdvantage && extraDamageOnAdvantageHit != null
+      ? averageDiceDamage(extraDamageOnAdvantageHit) * (effectiveCrit ? 2 : 1)
+      : 0;
+  const totalDmg =
+    damage + meleeDmgBonus + effectiveSaDmg + effectiveAdvantageRiderDmg;
   const effectiveKnockOut = knockOut && isMelee; // SRD: knock out is melee only
   const cs1 = saEligible
     ? setCreature(csAfterAttackRoll, attackerId, {
@@ -347,6 +358,7 @@ export function battleAttack({
     ac.mainHandWeapon != null ? !ac.mainHandWeapon.isMelee : !e.isMelee,
     e.onHitEffect,
     weaponProperties,
+    ac.mainHandWeapon?.statBlockAttackSource?.extraDamageOnAdvantageHit,
     e.hasAllyAdjacentToTarget,
     hasAnyDisadvantageSource,
     e.saDmg,

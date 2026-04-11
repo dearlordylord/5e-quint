@@ -7,6 +7,10 @@ import { battleMainHandDamageDie } from "#/battle-machine-creature.ts";
 import { breakConcentrationAndPropagate } from "#/battle-machine-helpers.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
+import {
+  GOBLIN_WARRIOR,
+  statBlockToInitCreatureConfig,
+} from "#/monster-catalog.ts";
 import type {
   BattleWeaponProfile,
   CreatureId as CreatureIdT,
@@ -4540,6 +4544,172 @@ describe("battle rules scenario regressions", () => {
     });
     resolveAttackWindows(actor);
     expect(creature(actor, "A").hp).toBe(19);
+  });
+
+  it("applies the goblin stat-block rider only when the hit had net Advantage", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "slashing",
+      tAc: armorClass(10),
+      crit: false,
+      damageQualifiers: new Set(),
+      ...DEFAULT_ATTACK_CONTEXT,
+      targetCanSeeAttacker: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(13);
+  });
+
+  it("does not apply the goblin stat-block rider when Advantage and Disadvantage cancel", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "slashing",
+      tAc: armorClass(10),
+      crit: false,
+      damageQualifiers: new Set(),
+      ...DEFAULT_ATTACK_CONTEXT,
+      targetCanSeeAttacker: false,
+      attackerCanSeeTarget: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(15);
+  });
+
+  it("can apply the goblin rider on a selected shortbow attack lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          primaryAttackName: "shortbow",
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 12,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 5,
+      dt: "piercing",
+      tAc: armorClass(10),
+      crit: false,
+      damageQualifiers: new Set(),
+      ...DEFAULT_ATTACK_CONTEXT,
+      isMelee: false,
+      attackerWithin5ft: false,
+      attackerWithin60ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(13);
+  });
+
+  it("doubles the goblin rider dice on a critical hit", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: GOBLIN_WARRIOR,
+          initiativeRoll: 20,
+        }),
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 20,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 10,
+      dt: "slashing",
+      tAc: armorClass(10),
+      crit: true,
+      damageQualifiers: new Set(),
+      ...DEFAULT_ATTACK_CONTEXT,
+      targetCanSeeAttacker: false,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(6);
   });
 
   it("runbook_7: Hide stores discovery DC and Search below that DC does not reveal", () => {

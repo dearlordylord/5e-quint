@@ -286,6 +286,11 @@ module battle {
     legalReactionsByCreature: CreatureId -> Set[str],
   }
 
+  type AdvantageDamageDice = {
+    diceCount: int,
+    dieSize: int,
+  }
+
   type AttackHitRider =
     | NoAttackHitRider
     | AHRShockingGrasp
@@ -293,6 +298,18 @@ module battle {
 
   pure val SHOCKING_GRASP_SPELL_ID = "shocking_grasp"
   pure val RAY_OF_FROST_SPELL_ID = "ray_of_frost"
+
+  pure def advantageHitRiderDamage(
+    rider: AdvantageDamageDice,
+    hasAdvantage: bool,
+    isCritical: bool,
+  ): int =
+    if (not(hasAdvantage) or rider.diceCount <= 0 or rider.dieSize <= 0)
+      0
+    else {
+      val avgDamage = rider.diceCount * ((rider.dieSize + 1) / 2)
+      if (isCritical) avgDamage * 2 else avgDamage
+    }
 
   // Context for a spell being cast (Counterspell interrupt)
   type SpellCastCtx = {
@@ -1555,6 +1572,7 @@ module battle {
     attackerWithin60ftAtHit: bool,
     mods: FullAttackMods,
     weapon: Weapon,
+    advantageHitRider: AdvantageDamageDice,
     hasAllyAdjacentToTarget: bool,
     saDmg: int,
     hitRider: AttackHitRider,
@@ -1578,9 +1596,11 @@ module battle {
         and eligibleWeapon
         and (mods.hasAdvantage or (hasAllyAdjacentToTarget and not(mods.hasDisadvantage)))
       val effectiveSaDmg = if (saEligible) saDmg else 0
-      val totalDmg = damage + meleeDmgBonus + effectiveSaDmg
       val effectiveKnockOut = knockOut and isMelee  // SRD: knock out is melee only
       val effectiveCrit = isCritical or mods.autoCrit  // Paralyzed/Unconscious within 5ft = auto-crit
+      val effectiveAdvantageRiderDmg =
+        advantageHitRiderDamage(advantageHitRider, mods.hasAdvantage, effectiveCrit)
+      val totalDmg = damage + meleeDmgBonus + effectiveSaDmg + effectiveAdvantageRiderDmg
       // Mark SA used on attacker if SA fired
       val cs1 = if (saEligible) csAfterAttackRoll.set(attackerId, atk.with("sneakAttackUsedThisTurn", true)) else csAfterAttackRoll
       val atkCtx: AttackHitCtx = {
@@ -1678,7 +1698,7 @@ module battle {
         gwfDie(ac, isMelee, weapon, die1)
       else
         gwfDie(ac, isMelee, weapon, die1) + gwfDie(ac, isMelee, weapon, die2)
-      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, Set(), crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, targetCanSeeAttacker, attackerWithin5ft, attackerWithin60ft, atkMods, weapon, hasAllyAdjacentToTarget, saDmg, hitRider, hitReactionCandidates)
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, dmg, dt, Set(), crit, ac.critRange, ADRActiveTurn, knockOut, isMelee, targetCanSeeAttacker, attackerWithin5ft, attackerWithin60ft, atkMods, weapon, { diceCount: 0, dieSize: 0 }, hasAllyAdjacentToTarget, saDmg, hitRider, hitReactionCandidates)
       all {
         bCreatures' = result.creatures,
         bPhase' = result.phase,
@@ -2840,7 +2860,7 @@ module battle {
         val oaMods = pAggregateAttackMods(oaCtx)
         all {
         not(oaAttackerWithin5ft) or oaAttackerWithin60ft,
-        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, Set(), oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaTargetCanSeeAttacker, oaAttackerWithin5ft, oaAttackerWithin60ft, oaMods, weapon, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider, oaHitReactionCandidates.exclude(Set(reactorId)))
+        val result = resolveAttack(cs1, reactorId, mv.mover, oaAtkRoll, oaTgtAc, oaDmg, oaDt, Set(), oaCrit, reactor.critRange, ADRResolvingMovement(updatedMv), oaKnockOut, true, oaTargetCanSeeAttacker, oaAttackerWithin5ft, oaAttackerWithin60ft, oaMods, weapon, { diceCount: 0, dieSize: 0 }, oaHasAllyAdjacent, oaSaDmg, NoAttackHitRider, oaHitReactionCandidates.exclude(Set(reactorId)))
         all {
           bCreatures' = result.creatures,
           bPhase' = result.phase,
@@ -3006,7 +3026,7 @@ module battle {
           val readyReturn = ADRAwaitingReadiedAction(readyCtx)
           val readyAtkCtx = buildAttackContext(cs1, releaserId, targetId, readyIsMelee, weapon, readyAtkWithin5ft, readyHostileWithin5ft, readyTgtCanSee, readyAtkCanSee, readyFrightLOS, helpAdv)
           val readyMods = pAggregateAttackMods(readyAtkCtx)
-          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, Set(), crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyTgtCanSee, readyAtkWithin5ft, readyAtkWithin60ft, readyMods, weapon, readyHasAllyAdjacent, readySaDmg, NoAttackHitRider, readyHitReactionCandidates)
+          val result = resolveAttack(cs1, releaserId, targetId, atkRoll, tgtAc, dmg, dt, Set(), crit, releaser.critRange, readyReturn, readyKnockOut, readyIsMelee, readyTgtCanSee, readyAtkWithin5ft, readyAtkWithin60ft, readyMods, weapon, { diceCount: 0, dieSize: 0 }, readyHasAllyAdjacent, readySaDmg, NoAttackHitRider, readyHitReactionCandidates)
           all {
             bCreatures' = result.creatures,
             bPhase' = result.phase,
@@ -3111,7 +3131,7 @@ module battle {
         val laReturn = ADRAwaitingLegendaryAction(laCtx)
         val laAtkCtx = buildAttackContext(cs1, monsterId, laTarget, laIsMelee, weapon, laAtkWithin5ft, laHostileWithin5ft, laTgtCanSee, laAtkCanSee, laFrightLOS, helpAdv)
         val laMods = pAggregateAttackMods(laAtkCtx)
-        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, Set(), laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laTgtCanSee, laAtkWithin5ft, laAtkWithin60ft, laMods, weapon, laHasAllyAdjacent, laSaDmg, NoAttackHitRider, laHitReactionCandidates)
+        val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, Set(), laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laTgtCanSee, laAtkWithin5ft, laAtkWithin60ft, laMods, weapon, { diceCount: 0, dieSize: 0 }, laHasAllyAdjacent, laSaDmg, NoAttackHitRider, laHitReactionCandidates)
         all {
           not(laAtkWithin5ft) or laAtkWithin60ft,
           bCreatures' = result.creatures,
@@ -3210,7 +3230,7 @@ module battle {
       val newHelpTargets = if (helpAdv) bHelpTargets.exclude(helpMatches) else bHelpTargets
       val atkCtx = buildAttackContext(cs1, activeId, targetId, offHand.isMelee, offHand, attackerWithin5ft, hostileWithin5ft, targetCanSeeAttacker, attackerCanSeeTarget, frightSourceInLOS, helpAdv)
       val atkMods = pAggregateAttackMods(atkCtx)
-      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, adjustedDmg, offHand.damageType, Set(), crit, attacker.critRange, ADRActiveTurn, knockOut, offHand.isMelee, targetCanSeeAttacker, attackerWithin5ft, attackerWithin60ft, atkMods, offHand, hasAllyAdjacentToTarget, saDmg, NoAttackHitRider, hitReactionCandidates)
+      val result = resolveAttack(cs1, activeId, targetId, attackRoll, tAc, adjustedDmg, offHand.damageType, Set(), crit, attacker.critRange, ADRActiveTurn, knockOut, offHand.isMelee, targetCanSeeAttacker, attackerWithin5ft, attackerWithin60ft, atkMods, offHand, { diceCount: 0, dieSize: 0 }, hasAllyAdjacentToTarget, saDmg, NoAttackHitRider, hitReactionCandidates)
       all {
         bCreatures' = result.creatures,
         bPhase' = result.phase,

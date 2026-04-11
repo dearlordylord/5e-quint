@@ -11,5 +11,5 @@ Core owns the runtime catalog for named monster stat blocks.
 Current scope:
 
 - `goblinMinion` is the first runtime catalog entry, sourced from `.references/srd-5.2.1/Monsters/Monsters-E-G.md`.
-- Goblin Warrior remains deferred. Its advantage-based extra damage rider is not represented by the current public attack flow.
+- Goblin Warrior and Goblin Boss are internal-only SRD stat blocks for named-attack metadata. They are not exposed as public catalog IDs until the follow-up goblin tasks land.
 - Nimble Escape remains deferred. It needs monster bonus-action support rather than a goblin-specific shortcut.

@@ -2,6 +2,7 @@
 
 module dndTest::Impl {
   import creature.* from "./creature"
+  import battle.* from "./battle"
 
   // ============================================================
   // Ability Modifier tests
@@ -4275,6 +4276,18 @@ module dndTest::Impl {
   run test_monster_nat20_always_crit = {
     val r = resolveAttackRoll(20, SKELETON.attacks.get("Shortsword").attackBonus, 30, 0, 20)
     all { assert(r.hits == true), assert(r.isCritical == true) }
+  }
+
+  run test_advantage_hit_rider_damage_requires_advantage = {
+    assert(advantageHitRiderDamage({ diceCount: 1, dieSize: 4 }, false, false) == 0)
+  }
+
+  run test_advantage_hit_rider_damage_uses_average_when_advantaged = {
+    assert(advantageHitRiderDamage({ diceCount: 1, dieSize: 4 }, true, false) == 2)
+  }
+
+  run test_advantage_hit_rider_damage_doubles_on_crit = {
+    assert(advantageHitRiderDamage({ diceCount: 1, dieSize: 4 }, true, true) == 4)
   }
 
   // ============================================================

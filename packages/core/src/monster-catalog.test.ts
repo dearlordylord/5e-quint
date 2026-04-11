@@ -7,7 +7,10 @@ import {
 } from "#/available-actions.ts";
 import {
   getMonsterStatBlock,
+  GOBLIN_BOSS,
   GOBLIN_MINION,
+  GOBLIN_WARRIOR,
+  MONSTER_STAT_BLOCK_IDS,
   MONSTER_STAT_BLOCK_PROVENANCE,
   monsterCatalogInitCreatureConfig,
   statBlockInitiativeScore,
@@ -93,6 +96,46 @@ describe("monster catalog", () => {
     });
     expect(config.legendaryActions).toBeUndefined();
     expect(config.legendaryResistances).toBeUndefined();
+  });
+
+  it("stores goblin rider metadata on named attacks without exposing new public IDs", () => {
+    expect(MONSTER_STAT_BLOCK_IDS).toEqual(["goblinMinion"]);
+    expect(GOBLIN_WARRIOR.attacks.scimitar.extraDamageOnAdvantageHit).toEqual({
+      diceCount: 1,
+      dieSize: 4,
+    });
+    expect(GOBLIN_WARRIOR.attacks.shortbow.extraDamageOnAdvantageHit).toEqual({
+      diceCount: 1,
+      dieSize: 4,
+    });
+    expect(GOBLIN_BOSS.attacks.scimitar.extraDamageOnAdvantageHit).toEqual({
+      diceCount: 1,
+      dieSize: 4,
+    });
+    expect(GOBLIN_BOSS.attacks.shortbow.extraDamageOnAdvantageHit).toEqual({
+      diceCount: 1,
+      dieSize: 4,
+    });
+  });
+
+  it("can project a selected named stat-block attack into the battle attack lane", () => {
+    const config = statBlockToInitCreatureConfig({
+      id: CreatureId("goblin-warrior-1"),
+      statBlock: GOBLIN_WARRIOR,
+      primaryAttackName: "shortbow",
+    });
+
+    expect(config.mainHandWeapon).toMatchObject({
+      name: "Shortbow",
+      damageType: "piercing",
+      isMelee: false,
+      damageDie: 6,
+      properties: new Set(["ammunition", "twoHanded"]),
+      statBlockAttackSource: {
+        name: "Shortbow",
+        extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
+      },
+    });
   });
 
   it("uses the stat block Initiative entry, not Dexterity mod, for no-roll init fallback", () => {

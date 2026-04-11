@@ -133,6 +133,7 @@ export function battleMovementOAAttack({
     false,
     undefined,
     weaponProperties,
+    undefined,
     e.hasAllyAdjacentToTarget,
     hasAnyDisadvantageSource,
     e.saDmg,
