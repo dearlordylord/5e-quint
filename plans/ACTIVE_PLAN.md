@@ -193,6 +193,18 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "MCP2-D",
       "status": "ready-for-implementation-after-light-research",
       "title": "Unarmed Strike Fallback in Battle Attack"
+    },
+    {
+      "number": 28,
+      "id": "MCP4-A",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "BATTLE_ADD_CREATURE Mid-Battle Creature Insertion"
+    },
+    {
+      "number": 29,
+      "id": "MCP4-B",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal"
     }
   ]
 }
@@ -2328,6 +2340,147 @@ Verification:
 - Tier 1 MBT run passes.
 - `/simplify` convergence (2 rounds).
 - RAW check against `.references/srd-5.2.1/Rules-Glossary.md` unarmed strike entry.
+
+## Task MCP4-A: BATTLE_ADD_CREATURE Mid-Battle Creature Insertion
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: None (independent of weapon/attack tasks).
+
+Blocks: Task MCP2-B (enables multi-goblin encounters).
+
+Purpose:
+
+- Allow adding one or more creatures to an ongoing battle mid-turn (DM spawns reinforcements, summons arrive, etc.). This is a pure state insertion — no automatic trigger evaluation (readied action triggers are DM decisions per ARCHITECTURE.md).
+
+Design:
+
+**Event shape:**
+```typescript
+{
+  type: "BATTLE_ADD_CREATURE";
+  creatures: ReadonlyArray<InitCreatureConfig>;
+  insertAtIndex: number; // 0-based position in current initiative array
+}
+```
+
+- `creatures`: Non-empty array. Reuses `InitCreatureConfig` (same as BATTLE_INIT entries — supports both `statBlockId` catalog monsters and full PC configs).
+- `insertAtIndex`: Where in the initiative array the new creatures are inserted as a contiguous block. Range: `[0, initiative.length]`. New creatures are sorted among themselves by effective initiative score (descending, stable) within the block.
+- Per ARCHITECTURE.md: "Initiative tie-breaking: The DM decides ties (the spec receives the sorted order)." The caller controls placement via `insertAtIndex`.
+
+**Initiative turnIndex adjustment:**
+- If `insertAtIndex <= turnIndex`: `turnIndex' = turnIndex + creatures.length` (active creature shifts right).
+- If `insertAtIndex > turnIndex`: `turnIndex' = turnIndex` (unchanged).
+
+**Guards:**
+- Only accepted in `activeTurn` phase (not during reaction, AoE, movement, legendary action, or readied action windows).
+- Reject duplicate IDs (any new creature ID already in `creatures` map → silent no-op).
+
+**MCP surface:** `execute_control_command` with `scope: "battle", type: "BATTLE_ADD_CREATURE"`.
+
+Implementation:
+
+1. **`battle-machine-events.ts`**: Add `BATTLE_ADD_CREATURE` variant to `BattleEvent` union.
+2. **`battle-machine-actions-turn.ts`**: Add `battleAddCreature` action function. Extract shared `buildCreatureState(cfg: InitCreatureConfig): BattleCreatureState` helper from existing `battleInit` logic (lines 132-259) to avoid duplication.
+3. **`battle-machine.ts`**: Register action in the XState machine; add `BATTLE_ADD_CREATURE` event handler in the `activeTurn` state's `on` map.
+4. **`available-actions.ts`**: Add `BattleAddCreatureControlSchema` to `ControlCommandSchema` union. Schema: `{ scope: "battle", type: "BATTLE_ADD_CREATURE", creatures: NonEmptyArray(BattleInitCreatureConfigSchema), insertAtIndex: int >= 0 }`.
+5. **`server-control.ts`**: Add `Match.when` clause in `buildBattleControlEvent` mapping the command to the event (call `toBattleInitCreatureConfig` on each creature). Add duplicate-ID validation.
+6. **Quint spec (`battle.qnt`)**: Add `bAddCreature` action with nondeterministic creature + insertion index. Guard on `BPActiveTurn` and `bTurnStarted`. Add to `battleStep` dispatch. Single fixed creature ID "E" to keep state space manageable.
+7. **MBT bridge (`battle-projection.mbt.test.ts`)**: Add driver handler for `bAddCreature`.
+
+Acceptance criteria:
+
+- Creatures added mid-turn appear in `creatures` map and `initiative` array at correct position.
+- `turnIndex` adjusted correctly (active creature unchanged after insertion).
+- Duplicate IDs silently rejected.
+- Event rejected during reaction/AoE/movement/legendary/ready phases.
+- Multiple creatures sorted among themselves by initiative score within the inserted block.
+- Invariants preserved: `initiativeMatchesCreatures`, `initiativeNoDuplicates`, `turnIndexValid`.
+
+Verification:
+
+- Unit tests: insert before/at/after turnIndex; duplicate ID rejection; phase guard.
+- Tier 1 MBT run passes with `bAddCreature` in `battleStep`.
+- `/simplify` convergence (2 rounds).
+
+---
+
+## Task MCP4-B: BATTLE_REMOVE_CREATURE Mid-Battle Creature Removal
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: None (independent, but pairs with MCP4-A).
+
+Blocks: None directly.
+
+Purpose:
+
+- Allow removing one or more creatures from an ongoing battle mid-turn (creature flees, is banished, teleports away, DM narrative, etc.). This is a pure state removal — no automatic trigger evaluation.
+
+Design:
+
+**Event shape:**
+```typescript
+{
+  type: "BATTLE_REMOVE_CREATURE";
+  creatureIds: ReadonlyArray<CreatureId>; // Non-empty
+}
+```
+
+- `creatureIds`: Non-empty array of creature IDs to remove.
+- Removing the **active creature** (the one whose turn it is) should be handled: skip to the next turn (set `turnStarted: false`, advance `turnIndex`).
+
+**Initiative turnIndex adjustment:**
+- Count how many removed creatures have indices < `turnIndex` in the initiative array. Call this `removedBefore`.
+- `turnIndex' = turnIndex - removedBefore`.
+- If the active creature itself is removed: advance to next creature (`turnIndex` points to the next entry after removal, effectively ending the removed creature's turn).
+
+**Side effects on removal:**
+- **Concentration**: If a removed creature is concentrating, break concentration (end the spell's effects on other creatures via existing `breakConcentrationAndPropagate`).
+- **Grapple**: If a removed creature is grappling someone, release them (`grappledBy: null` on the grappled target). If a removed creature is being grappled, the grappler's `grapplingTarget` becomes null.
+- **Help targets**: Remove any help links involving the removed creature.
+- **Readied actions targeting removed creature**: Ready fizzles naturally — when the DM tries to release it, there's no valid target. No special handling needed.
+
+**Guards:**
+- Only accepted in `activeTurn` phase (same as BATTLE_ADD_CREATURE).
+- Reject if any `creatureId` is not in the `creatures` map (silent no-op).
+- Cannot remove ALL creatures (at least one must remain) — or allow it and let the battle end naturally.
+
+**MCP surface:** `execute_control_command` with `scope: "battle", type: "BATTLE_REMOVE_CREATURE"`.
+
+Implementation:
+
+1. **`battle-machine-events.ts`**: Add `BATTLE_REMOVE_CREATURE` variant to `BattleEvent` union.
+2. **`battle-machine-actions-turn.ts`**: Add `battleRemoveCreature` action function.
+3. **`battle-machine.ts`**: Register action; add event handler in `activeTurn` state.
+4. **`available-actions.ts`**: Add `BattleRemoveCreatureControlSchema` to `ControlCommandSchema` union. Schema: `{ scope: "battle", type: "BATTLE_REMOVE_CREATURE", creatureIds: NonEmptyArray(Schema.String) }`.
+5. **`server-control.ts`**: Add `Match.when` clause mapping the command to the event.
+6. **Quint spec (`battle.qnt`)**: Add `bRemoveCreature` action. Guard on `BPActiveTurn`. Nondeterministic choice of which creature to remove (from existing non-active creatures). Handle concentration break and grapple release.
+7. **MBT bridge**: Add driver handler for `bRemoveCreature`.
+
+Edge cases:
+
+- Removing a creature whose turn is active: treat as "fled on their turn" — end their turn immediately (equivalent to `BATTLE_END_TURN` + removal).
+- Removing the last enemy: battle continues (DM decides when combat ends per ARCHITECTURE.md).
+- Removing a creature that is a spell target: spell effects referencing that creature should clean up gracefully (existing `activeEffects` with source = removed creature get removed).
+
+Acceptance criteria:
+
+- Removed creatures disappear from `creatures` map and `initiative` array.
+- `turnIndex` adjusted correctly (active creature unchanged unless it was removed).
+- Concentration broken on removal (spell effects cleaned up).
+- Grapple links severed on removal.
+- Help targets cleaned up.
+- Event rejected during reaction/AoE/movement/legendary/ready phases.
+- At least one creature must remain after removal (or define explicit battle-end behavior).
+
+Verification:
+
+- Unit tests: remove before/at/after turnIndex; remove active creature; concentration break; grapple release; help cleanup.
+- Tier 1 MBT run passes with `bRemoveCreature` in `battleStep`.
+- `/simplify` convergence (2 rounds).
+
+---
 
 ## Extra Research Summary
 
