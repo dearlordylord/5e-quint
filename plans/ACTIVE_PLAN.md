@@ -228,7 +228,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 6 | CHAR7 - Level Advancement And Multiclass Continuation | done | CHAR1, CHAR3, CHAR5 | none | Landed ordered `advancement` history as the canonical legality surface for higher-level starts and multiclass continuation, including in-order subclass timing and feat / Epic Boon choices applied through final sheet derivation. | Complete |
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
-| 9 | POST1 - Formal Creation Semantics | done | CHAR6, CHAR7 | POST2, POST4 | Closed by `plans/post1-formal-creation-semantics.md`: creation semantics should live in Quint draft/sheet records that mirror the landed TS domain, with ordered `advancement` retained as the legality surface and runtime kept as one-way projection. | Complete |
+| 9 | POST1 - Formal Creation Semantics | done | CHAR6, CHAR7 | POST2, POST3, POST4 | Closed by `POST1_FORMAL_CREATION_SEMANTICS.md`: creation semantics should live in Quint draft/sheet records that mirror the landed TS domain, with ordered `advancement` retained as the legality surface and runtime kept as one-way projection. | Complete |
 | 10 | POST2 - Open Choices And Selective Invalidation | ready-for-implementation-after-light-research | POST1 | POST4 | Implement `OpenChoices` and dependency-aware invalidation on the settled `CharacterDraft` / `CharacterSheet` boundary from POST1 rather than on workflow state. | Ready once the implementer re-reads the POST1 note plus the SRD creation step order |
 | 11 | POST3 - Formal Advancement And Higher-Level Starts | ready-for-implementation-after-light-research | CHAR7, POST1 | POST4 | Implement repeated legal sheet-to-sheet level-up transitions on the POST1 draft/sheet foundation, reusing ordered `advancement` rather than introducing a second leveling model. | Ready once the implementer re-reads the POST1 note plus SRD advancement/multiclass text |
 | 12 | POST4 - Workflow And Projection Convergence | blocked | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Final post-`CHAR` integration phase |
@@ -455,7 +455,7 @@ Status: done.
 
 Depends on: CHAR6, CHAR7.
 
-Blocks: POST2, POST4.
+Blocks: POST2, POST3, POST4.
 
 User stories:
 
@@ -479,15 +479,16 @@ Research closeout:
 - The landed TS ownership split is already correct: `CharacterDraft` is the editable surface, `finalizeCharacterDraft` is the legality gate, `CharacterSheet` is the canonical finalized record, ordered `advancement` is the legality surface for higher-level starts and multiclass timing, and `character-sheet-derived.ts` is the one-way runtime projection path.
 - `creature.qnt` already owns most low-level reusable creation helpers, but it does not yet expose a creation-side semantic layer that directly explains the landed draft/sheet product model.
 - POST1 therefore should not replace the TS domain or pull creation semantics into battle/runtime config. It should add a Quint creation layer that mirrors draft/sheet ownership, treats `CharConfig` as a projection target, and reuses existing creature helpers under that surface.
-- The task-specific outcome is recorded in `plans/post1-formal-creation-semantics.md`.
+- The task-specific outcome is recorded in `POST1_FORMAL_CREATION_SEMANTICS.md`.
+- POST1 defines the intended formal module `character.qnt`, the core formal types `CharacterSheet`, `AdvancementEntry`, and `AdvancementFeatChoice`, the core functions `isLegalSheet`, `canAdvance`, `advanceLevel`, and `sheetToCharConfig`, five formal properties, and the downstream Tier 1b parity plan.
 
 Verification:
 
-- Read `.references/srd-5.2.1/Character-Creation.md` for creation order, level advancement, higher-level starts, and multiclassing.
+- Read `.references/srd-5.2.1/Character-Creation.md` for creation order, level advancement, higher-level starts, and multiclassing, plus `.references/srd-5.2.1/Character-Origins.md` for background/species-owned creation facts.
 - Read `UBIQUITOUS_LANGUAGE.md` to confirm the owned object remains the character sheet and runtime facts remain projections.
 - Inspected the current ownership surfaces in `packages/core/src/character-domain.ts`, `packages/core/src/character-advancement.ts`, `packages/core/src/character-sheet-derived.ts`, `packages/app/src/components/character-creation/CharacterCreationPage.tsx`, and `creature.qnt`.
 - `/simplify` round 1: removed a false alternative that would have made `CharConfig` the creation owner; kept it as a projection target instead.
-- `/simplify` round 2: reduced the proposal to the minimal durable function set (`draft -> issues`, `draft -> sheet`, `sheet -> runtime projection`) and deferred `OpenChoices` to POST2 so POST1 does not absorb later work.
+- `/simplify` round 2: expanded the note to the minimum task-complete formal surface: named module, named formal types/functions, five formal properties, and a creature-tier parity plan without introducing a parallel sheet model.
 - Did not run `pnpm quality` or MBT because this task changes only planning/documentation artifacts and no executable code paths.
 
 Plan Impact:
@@ -525,7 +526,7 @@ Acceptance criteria:
 
 Verification:
 
-- Re-read `plans/post1-formal-creation-semantics.md`, `.references/srd-5.2.1/Character-Creation.md`, and `UBIQUITOUS_LANGUAGE.md` before implementation.
+- Re-read `POST1_FORMAL_CREATION_SEMANTICS.md`, `.references/srd-5.2.1/Character-Creation.md`, `.references/srd-5.2.1/Character-Origins.md`, and `UBIQUITOUS_LANGUAGE.md` before implementation.
 - Keep the implementation on the owned draft/sheet domain. Do not let workflow state become the legality owner.
 
 ### Task 11 - POST3 - Formal Advancement And Higher-Level Starts
@@ -554,7 +555,7 @@ Acceptance criteria:
 
 Verification:
 
-- Re-read `plans/post1-formal-creation-semantics.md` plus `.references/srd-5.2.1/Character-Creation.md` sections for level advancement, higher-level starts, and multiclassing before implementation.
+- Re-read `POST1_FORMAL_CREATION_SEMANTICS.md` plus `.references/srd-5.2.1/Character-Creation.md` sections for level advancement, higher-level starts, and multiclassing before implementation.
 - Keep Quint as the owner of advancement semantics and preserve the one-way projection boundary from finalized sheet to runtime.
 
 ### Task 12 - POST4 - Workflow And Projection Convergence
