@@ -273,6 +273,7 @@ if [[ ${#selected_tasks[@]} -gt 0 ]]; then
 fi
 
 declare -A processed_tasks=()
+declare -A task_attempts=()
 
 cleanup() {
   local status=$?
@@ -560,7 +561,6 @@ cleanup_mbt_artifacts
 next_ready_task_row() {
   while IFS=$'\t' read -r task_no task_id status task_start task_end task_title; do
     [[ -n "$task_no" ]] || continue
-    [[ -z "${processed_tasks[$task_no]+x}" ]] || continue
     if [[ "$status" == "ready-for-research" || "$status" == "ready-for-implementation-after-light-research" ]]; then
       printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$task_no" "$task_id" "$status" "$task_start" "$task_end" "$task_title"
       return 0
@@ -569,6 +569,8 @@ next_ready_task_row() {
 
   return 1
 }
+
+MAX_TASK_ATTEMPTS=3
 
 while true; do
   refresh_plan_snapshot
@@ -585,7 +587,13 @@ while true; do
   fi
 
   IFS=$'\t' read -r task_no task_id status task_start task_end task_title <<<"$task_row"
-  processed_tasks["$task_no"]=1
+  task_attempts["$task_no"]=$(( ${task_attempts["$task_no"]:-0} + 1 ))
+  if (( task_attempts["$task_no"] > MAX_TASK_ATTEMPTS )); then
+    die "task $task_no ($task_id) exceeded ${MAX_TASK_ATTEMPTS} Ralph attempts in this run while remaining runnable; fix the plan transition or split the work into a new task number"
+  fi
+  if [[ ${#selected_tasks[@]} -gt 0 ]]; then
+    processed_tasks["$task_no"]=1
+  fi
 
   task_root="$run_root/task-$task_no"
   task_file="$task_root/task.md"
