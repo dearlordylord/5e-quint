@@ -110,7 +110,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task                                                 | Status                                 | Depends on | Blocks       | Next action                                                                                                                                                                                                                                  | Handoff readiness                                                                                                                                              |
 | ----- | ---------------------------------------------------- | -------------------------------------- | ---------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0     | CQ1 - Formal Character Creation Module               | ready-for-research                     | none       | CQ2, CQ3, CQ4 | Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) to design `character-creation.qnt`: formal `CharacterDraft`, open choices, incompleteness, legality, and finalization semantics grounded in SRD 5.2.1 creation text. Also update the historical `POST1` note so it clearly points at the landed formal module and becomes deletion-ready once the full `CQ*` track is complete. | Start with RAW and ubiquitous-language review, then pin the formal type/function surface and the minimum deterministic Quint test set for draft/finalization. |
+| 0     | CQ1 - Formal Character Creation Module               | ready-for-research                     | none       | CQ2, CQ3, CQ4 | Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) to design `character-creation.qnt`: formal `CharacterDraft`, open choices, incompleteness, legality, and finalization semantics grounded in SRD 5.2.1 creation text. Keep the Quint draft/sheet aligned with the canonical TS domain surface instead of introducing a reduced surrogate or shadow-presence metadata. Update the historical `POST1` note only when the landed module actually covers that owned surface and is deletion-ready once the full `CQ*` track is complete. | Start with RAW and ubiquitous-language review, then inventory the existing TS-owned draft/sheet fields and open-choice categories before sizing the Quint surface or tests. |
 | 1     | CQ2 - Formal Character Advancement Module            | blocked                                | CQ1        | CQ3, CQ4     | After CQ1 lands, implement `character.qnt` over finalized `CharacterSheet` semantics: `isLegalSheet`, `canAdvance`, `advanceLevel`, and higher-level starts as creation plus repeated legal level-ups. Also update the historical `POST3` note so it points at the landed formal advancement module and becomes deletion-ready once the full `CQ*` track is complete. | Blocked on CQ1 because advancement starts from the finalized-sheet boundary defined by creation formalization.                                               |
 | 2     | CQ3 - Character To Creature Projection Boundary      | blocked                                | CQ1, CQ2   | CQ4          | After CQ1 and CQ2 land, implement the formal handoff from character semantics into creature-facing execution semantics using the PRD's proposed `CharacterCreatureProjection` boundary and the downstream mapping into `CharConfig`. Remove or redirect any remaining references that still treat `POST1` / `POST3` as the current design authority. | Blocked until both creation and advancement semantics are formalized and the handoff surface can be sized once instead of guessed.                         |
 | 3     | CQ4 - Character Quint Parity Harness                 | blocked                                | CQ1, CQ2, CQ3 | none      | After the formal modules land, add deterministic Quint tests and TS parity for draft/finalization, advancement transitions, and the character-to-creature projection boundary against shared core functions rather than adapter shells. As part of closeout, delete `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` if their remaining value is fully subsumed by the landed `CQ*` artifacts and the current PRD. | Blocked on the formal modules and projection surface. Keep parity at shared-core depth; do not make MCP transport the first comparison target.             |
@@ -137,6 +137,7 @@ Already wired on `master` / `integration` and relevant to this batch:
   - ordered `advancement`
   - sheet-to-runtime projection helpers
   - a thin `/character` workflow shell that persists only draft state
+  - partial authored creation facts, including incomplete ability-score assignment plus owned choice / equipment / spellcasting state that CQ1 must formalize rather than trim away
 - The character/creature boundary is now stated explicitly in [ARCHITECTURE.md](../ARCHITECTURE.md):
   - in peace you're a character; in combat you're a creature
 - The new synthesis artifact for the remaining formalization work is [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).
@@ -206,17 +207,22 @@ Scope:
 - Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) to design `character-creation.qnt`.
 - Formalize `CharacterDraft`, open choices, incompleteness, legality, and finalization semantics.
 - Ground the design in SRD 5.2.1 character-creation text and existing reusable helper semantics in [creature.qnt](../creature.qnt).
-- Update `POST1_FORMAL_CREATION_SEMANTICS.md` so it clearly points at the landed formal module and becomes deletion-ready once the full `CQ*` track is complete.
+- Keep the Quint ownership surface aligned with the canonical TS domain in `packages/core/src/character-domain-model.ts`, `packages/core/src/character-ability-scores.ts`, and `packages/core/src/character-draft-analysis.ts`; do not replace optional / partial authored facts with a narrowed surrogate type or a duplicate `present`/status shadow.
+- Do not edit unrelated shared verification tooling as part of CQ1.
+- Update `POST1_FORMAL_CREATION_SEMANTICS.md` so it clearly points at the landed formal module only after that aligned surface exists, then leave it deletion-ready once the full `CQ*` track is complete.
 
 Next action:
 
 - Start with RAW and ubiquitous-language review.
-- Pin the formal type/function surface and the minimum deterministic Quint test set for draft/finalization.
+- Inventory the existing TS-owned draft/sheet fields, partial ability-score state, and open-choice / issue categories that CQ1 must preserve.
+- Pin the formal type/function surface and the minimum deterministic Quint test set for draft/finalization from that inventory.
+- If the owned surface still feels ambiguous after the inventory, stop and write the mapping back into this plan before implementing rather than shipping a reduced slice.
 
 Verification requirements:
 
 - Read the relevant SRD text in `.references/srd-5.2.1/` plus [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md) before editing code.
 - Confirm all modeled rules trace to specific SRD passages.
+- Verify that `character-creation.qnt` covers the same authored creation facts already owned by the TS draft/sheet surface, including incompleteness states and legality-relevant choice categories needed by downstream CQ2/CQ4 work.
 - Use deterministic Quint tests and the narrowest relevant parity surface.
 - Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
 
