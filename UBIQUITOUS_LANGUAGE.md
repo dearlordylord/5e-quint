@@ -281,7 +281,7 @@ Avoid these as domain-language terms because the SRD does not define them:
 | **Standard Array** | A fixed set of ability scores for character creation: 15, 14, 13, 12, 10, 8 | — |
 | **Point Buy** | An ability score generation method: 27 points to spend; scores range 8-15; each score has a cost (8=0, 9=1, 10=2, 11=3, 12=4, 13=5, 14=7, 15=9) | — |
 | **Ability Score Improvement (ASI)** | A class feature that usually appears at class levels 4, 8, 12, and 16 (with extra ASI class features for Fighter at 6 and 14 and Rogue at 10). It grants the Ability Score Improvement feat or another feat for which the character qualifies; the Ability Score Improvement feat allows +2 to one ability score or +1 to two, with scores capped at 20. | Stat increase |
-| **Epic Boon** | A level 19 class feature that grants an Epic Boon feat or another feat for which the character qualifies | Level-19 ASI |
+| **Epic Boon** | A level 19 class feature that grants an Epic Boon feat or another feat for which the character qualifies | — |
 | **Multiclassing** | Taking levels in more than one class; requires meeting ability score prerequisites for both the current and new class (13 in the relevant ability) | Multi-class, dual-class |
 | **Feat** | An optional feature chosen in place of an Ability Score Improvement; grants special capabilities outside the normal class progression | Talent, perk |
 | **Unarmored Defense** | A class feature replacing the default AC formula when not wearing armor: Barbarian = 10 + DEX + CON; Monk = 10 + DEX + WIS | Natural armor (different concept for monsters) |

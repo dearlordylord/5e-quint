@@ -1,4 +1,7 @@
-import type { CharacterSheet } from "#/character-domain.ts";
+import {
+  characterSubclassSelections,
+  type CharacterSheet,
+} from "#/character-domain.ts";
 import type {
   ArtisanTool,
   CharacterGrantedLanguage,
@@ -163,6 +166,26 @@ export function deriveCharacterProficiencies(
     }
   }
 
+  for (const entry of sheet.advancement) {
+    const choice = entry.feat?.choice;
+    if (
+      choice == null ||
+      choice.tag === "abilityScoreImprovement" ||
+      choice.featId !== "skilled"
+    ) {
+      continue;
+    }
+    for (const proficiency of choice.proficiencies ?? []) {
+      if ((SKILLS as ReadonlyArray<string>).includes(proficiency)) {
+        pushUnique(skills, [proficiency as Skill]);
+      } else {
+        pushUnique(toolProficiencies, [
+          proficiency as CharacterToolProficiency,
+        ]);
+      }
+    }
+  }
+
   if (
     sheet.classLevels.cleric > 0 &&
     sheet.choices?.clericDivineOrder === "protector"
@@ -193,16 +216,6 @@ export function deriveCharacterProficiencies(
     );
   }
 
-  const subclasses = Object.values(
-    sheet.choices?.subclassSelections ?? {},
-  ).filter(
-    (
-      selection,
-    ): selection is NonNullable<
-      CharacterProficiencySummary["subclasses"][number]
-    > => selection != null,
-  );
-
   return {
     savingThrows: primary.savingThrows,
     skills,
@@ -211,7 +224,7 @@ export function deriveCharacterProficiencies(
     weaponProficiencies,
     originFeats,
     grantedLanguages,
-    subclasses,
+    subclasses: characterSubclassSelections(sheet),
   };
 }
 

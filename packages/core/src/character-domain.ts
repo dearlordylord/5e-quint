@@ -13,7 +13,6 @@ import {
   validateFeatChoices,
   validateGrantedLanguages,
   validateMulticlassChoices,
-  validateMulticlassPrerequisites,
   validatePrimaryClassChoices,
   validateSpeciesChoices,
   validateSubclassSelections,
@@ -24,6 +23,21 @@ import {
   validateDraftFields,
   validateLanguages,
 } from "#/character-finalization-helpers.ts";
+import {
+  advancementToClassLevels,
+  characterSubclassSelections,
+  cloneAdvancement,
+  singleClassAdvancement,
+  validateAndReplayAdvancement,
+} from "#/character-advancement.ts";
+import {
+  characterClassResources,
+  characterOriginFeats,
+  characterProficiencySummary,
+  finalAbilityModifiers,
+  singleClassLevels,
+  totalClassLevels,
+} from "#/character-domain-derived.ts";
 import {
   type CharacterEquipmentChoices,
   type CharacterEquipmentChoicesDraft,
@@ -38,18 +52,23 @@ import {
   type CharacterSpellcastingChoices,
 } from "#/character-spellcasting.ts";
 import type {
+  CharacterAdvancementEntry,
   CharacterBuildChoices,
-  CharacterClassResourcePool,
-  CharacterOriginFeatSelection,
-  CharacterProficiencySummary,
 } from "#/character-feature-types.ts";
-import {
-  BACKGROUND_FIXED_ORIGIN_FEATS,
-  deriveCharacterProficiencies,
-} from "#/character-proficiencies.ts";
-import { deriveCharacterClassResources } from "#/character-resources.ts";
 import { CLASS_NAMES, type ClassName } from "#/features/class-tables.ts";
 
+export {
+  characterClassResources,
+  characterOriginFeats,
+  characterProficiencySummary,
+  finalAbilityModifiers,
+  singleClassLevels,
+  totalClassLevels,
+} from "#/character-domain-derived.ts";
+export {
+  singleClassAdvancement,
+  characterSubclassSelections,
+} from "#/character-advancement.ts";
 export {
   abilityModifiersFromScores,
   applyBackgroundAbilityScoreIncrease,
@@ -87,6 +106,8 @@ export {
   SRD_SUBCLASSES,
   type ArtisanTool,
   type CharacterArmorTraining,
+  type CharacterAdvancementEntry,
+  type CharacterAdvancementFeatSelection,
   type CharacterBuildChoices,
   type CharacterClassResourcePool,
   type CharacterGrantedLanguage,
@@ -101,10 +122,7 @@ export {
   type GamingSet,
   type MusicalInstrument,
 } from "#/character-feature-types.ts";
-export {
-  deriveCharacterClassResources,
-  deriveProficiencyBonus,
-} from "#/character-resources.ts";
+export { deriveProficiencyBonus } from "#/character-resources.ts";
 export {
   CHARACTER_ARMORS,
   CHARACTER_BACKGROUND_EQUIPMENT_OPTIONS,
@@ -138,19 +156,6 @@ export {
   type CharacterEquipmentIssue,
   type CharacterEquipmentIssueCode,
 } from "#/character-equipment-validation.ts";
-/**
- * Character-domain ownership boundary.
- *
- * - `CharacterDraft` owns incomplete SRD character-creation choices.
- * - `CharacterSheet` owns validated canonical PC facts plus the explicit
- *   proficiency-, feature-, and spell-selection choices needed to derive
- *   sheet facts.
- * - Derived facts such as proficiency bonus, merged proficiencies, and class
- *   resources are computed from the sheet rather than stored twice.
- * - Runtime projections such as `CharConfig`, `DndMachineInput`, and
- *   `InitCreatureConfig` are execution-facing outputs and are not owned here.
- */
-
 export const CHARACTER_SPECIES = [
   "dragonborn",
   "dwarf",
@@ -193,6 +198,7 @@ export type CharacterLanguage = (typeof CHARACTER_LANGUAGES)[number];
 
 export type CharacterClassLevels = Readonly<Record<ClassName, number>>;
 export type CharacterDraftClassLevels = Partial<Record<ClassName, number>>;
+export type CharacterAdvancement = ReadonlyArray<CharacterAdvancementEntry>;
 
 export const ZERO_CLASS_LEVELS = Object.fromEntries(
   CLASS_NAMES.map((className) => [className, 0]),
@@ -201,6 +207,7 @@ export const ZERO_CLASS_LEVELS = Object.fromEntries(
 export interface CharacterDraft {
   readonly primaryClass?: ClassName;
   readonly classLevels?: CharacterDraftClassLevels;
+  readonly advancement?: CharacterAdvancement;
   readonly background?: CharacterBackground;
   readonly abilityScoreGeneration?: CharacterAbilityScoreGenerationDraft;
   readonly backgroundAbilityScoreIncrease?: BackgroundAbilityScoreIncrease;
@@ -214,6 +221,7 @@ export interface CharacterDraft {
 
 export interface CharacterSheet {
   readonly primaryClass: ClassName;
+  readonly advancement: CharacterAdvancement;
   readonly classLevels: CharacterClassLevels;
   readonly background: CharacterBackground;
   readonly abilityScoreGeneration: CharacterAbilityScoreGeneration;
@@ -230,6 +238,9 @@ export interface CharacterSheet {
 export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "missingPrimaryClass",
   "missingClassLevels",
+  "missingAdvancement",
+  "advancementRequiredForHigherLevelStart",
+  "invalidAdvancement",
   "invalidClassLevel",
   "invalidTotalLevel",
   "primaryClassLevelMissing",
@@ -269,6 +280,10 @@ export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "wrongSkilledChoiceCount",
   "duplicateSkilledChoice",
   "missingFeatureChoice",
+  "missingAdvancementChoice",
+  "invalidAdvancementChoice",
+  "prematureFeatChoice",
+  "prematureEpicBoonChoice",
   "missingSubclassSelection",
   "invalidSubclassSelection",
   "prematureSubclassSelection",
@@ -278,6 +293,7 @@ export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "duplicateGrantedLanguageChoice",
   "duplicateGrantedProficiency",
   "multiclassPrerequisiteNotMet",
+  "abilityScoreIncreaseExceedsThirty",
   ...CHARACTER_EQUIPMENT_ISSUE_CODES,
   ...CHARACTER_SPELLCASTING_ISSUE_CODES,
 ] as const;
@@ -305,95 +321,59 @@ function normalizeClassLevels(
   };
 }
 
-export function finalAbilityModifiers(
-  sheet: Pick<CharacterSheet, "abilityScores">,
-): CharacterAbilityModifiers {
-  return abilityModifiersFromScores(sheet.abilityScores);
-}
-
-export function totalClassLevels(
-  classLevels: Readonly<Record<ClassName, number>>,
-): number {
-  return CLASS_NAMES.reduce(
-    (total, className) => total + classLevels[className],
-    0,
-  );
-}
-
-export function singleClassLevels(
-  primaryClass: ClassName,
-  level: number,
-): CharacterClassLevels {
-  return {
-    ...ZERO_CLASS_LEVELS,
-    [primaryClass]: level,
-  };
-}
-
-export function characterOriginFeats(
-  sheet: CharacterSheet,
-): ReadonlyArray<CharacterOriginFeatSelection> {
-  const feats: CharacterOriginFeatSelection[] = [
-    BACKGROUND_FIXED_ORIGIN_FEATS[sheet.background],
-  ];
-  if (sheet.species === "human" && sheet.choices.humanOriginFeat != null) {
-    feats.push(sheet.choices.humanOriginFeat);
-  }
-  return feats;
-}
-
-export function characterProficiencySummary(
-  sheet: CharacterSheet,
-): CharacterProficiencySummary {
-  return deriveCharacterProficiencies(sheet);
-}
-
-export function characterClassResources(
-  sheet: CharacterSheet,
-): ReadonlyArray<CharacterClassResourcePool> {
-  return deriveCharacterClassResources(sheet);
-}
-
 export function finalizeCharacterDraft(
   draft: CharacterDraft,
 ): CharacterFinalizationResult {
-  const classLevels =
-    draft.classLevels == null
-      ? ZERO_CLASS_LEVELS
-      : normalizeClassLevels(draft.classLevels);
+  const provisionalClassLevels =
+    draft.advancement != null
+      ? advancementToClassLevels(draft.advancement)
+      : draft.classLevels == null
+        ? ZERO_CLASS_LEVELS
+        : normalizeClassLevels(draft.classLevels);
 
   const issues: CharacterFinalizationIssue[] = [
-    ...validateDraftFields(draft, classLevels),
+    ...validateDraftFields(draft, provisionalClassLevels),
     ...validatePrimaryClassChoices(draft),
-    ...validateMulticlassChoices(draft, classLevels),
+    ...validateMulticlassChoices(draft, provisionalClassLevels),
     ...validateBackgroundToolChoice(draft),
     ...validateSpeciesChoices(draft),
     ...validateFeatChoices(draft),
-    ...validateFeatureChoices(draft, classLevels),
-    ...validateSubclassSelections(draft, classLevels),
-    ...validateGrantedLanguages(draft, classLevels),
+    ...validateFeatureChoices(draft, provisionalClassLevels),
+    ...validateSubclassSelections(draft, provisionalClassLevels),
+    ...validateGrantedLanguages(draft, provisionalClassLevels),
     ...(draft.languages == null ? [] : validateLanguages(draft.languages)),
     ...validateDuplicateGrantedProficiencies(draft),
     ...validateCharacterEquipment(draft),
     ...validateCharacterSpellcastingChoices({
-      classLevels,
+      classLevels: provisionalClassLevels,
       choices: draft.choices,
       spellcasting: draft.spellcasting,
     }),
   ];
 
   let abilityScores: CharacterAbilityScores | undefined;
+  let advancement: CharacterAdvancement | undefined;
+  let classLevels = provisionalClassLevels;
+  let primaryClass = draft.primaryClass;
   if (
     draft.abilityScoreGeneration != null &&
     draft.background != null &&
     draft.backgroundAbilityScoreIncrease != null
   ) {
-    abilityScores = applyBackgroundAbilityScoreIncrease(
+    const baseAbilityScores = applyBackgroundAbilityScoreIncrease(
       draft.abilityScoreGeneration.assignedScores as CharacterAbilityScores,
       draft.background,
       draft.backgroundAbilityScoreIncrease,
     );
-    issues.push(...validateMulticlassPrerequisites(classLevels, abilityScores));
+    const advancementReplay = validateAndReplayAdvancement(
+      draft,
+      baseAbilityScores,
+    );
+    abilityScores = advancementReplay.abilityScores;
+    advancement = advancementReplay.advancement;
+    classLevels = advancementReplay.classLevels;
+    primaryClass = advancementReplay.primaryClass ?? primaryClass;
+    issues.push(...advancementReplay.issues);
   }
 
   if (issues.length > 0) {
@@ -408,7 +388,8 @@ export function finalizeCharacterDraft(
   };
 
   const sheet: CharacterSheet = {
-    primaryClass: draft.primaryClass!,
+    primaryClass: primaryClass!,
+    advancement: cloneAdvancement(advancement!),
     classLevels,
     background: draft.background!,
     abilityScoreGeneration,

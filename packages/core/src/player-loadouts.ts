@@ -2,14 +2,14 @@ import type { InitCreatureConfig } from "#/battle-machine-types.ts";
 import {
   characterBattleEquipmentProjection,
   finalizeCharacterDraft,
-  singleClassLevels,
+  singleClassAdvancement,
   type CharacterSheet,
 } from "#/character-domain.ts";
 
 function canonicalFighterStartBattleSheet(): CharacterSheet {
   const result = finalizeCharacterDraft({
     primaryClass: "fighter",
-    classLevels: singleClassLevels("fighter", 1),
+    advancement: singleClassAdvancement("fighter", 1),
     background: "soldier",
     abilityScoreGeneration: {
       mode: "standardArray",

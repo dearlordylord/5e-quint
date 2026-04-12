@@ -11,17 +11,33 @@ import {
   ownedCombatEquipment,
   POINT_BUY_BUDGET,
   projectBattleWeaponProfile,
+  deriveProficiencyBonus,
+  singleClassAdvancement,
   startingGoldPieces,
   type CharacterDraft,
-  deriveProficiencyBonus,
-  singleClassLevels,
   STANDARD_ARRAY_SCORES,
   totalClassLevels,
   totalPointBuyCost,
   ZERO_CLASS_LEVELS,
 } from "#/character-domain.ts";
+import type { ClassName } from "#/features/class-tables.ts";
 
 describe("character-domain", () => {
+  const alertFeat = {
+    slot: "feat",
+    choice: { tag: "feat", featId: "alert" },
+  } as const;
+
+  function advancementEntry(
+    className: ClassName,
+    entry: Omit<
+      NonNullable<CharacterDraft["advancement"]>[number],
+      "className"
+    > = {},
+  ): NonNullable<CharacterDraft["advancement"]>[number] {
+    return { className, ...entry };
+  }
+
   const wizardLevelOneSpellcasting = {
     wizard: {
       cantrips: ["fire_bolt", "light", "mage_hand"],
@@ -118,7 +134,7 @@ describe("character-domain", () => {
   ): CharacterDraft {
     return {
       primaryClass: "fighter",
-      classLevels: singleClassLevels("fighter", 1),
+      advancement: singleClassAdvancement("fighter", 1),
       background: "soldier",
       abilityScoreGeneration: {
         mode: "standardArray",
@@ -264,11 +280,16 @@ describe("character-domain", () => {
     const result = finalizeCharacterDraft(
       completeDraft({
         primaryClass: "wizard",
-        classLevels: {
-          ...ZERO_CLASS_LEVELS,
-          fighter: 1,
-          wizard: 3,
-        },
+        advancement: [
+          advancementEntry("wizard"),
+          advancementEntry("wizard"),
+          advancementEntry("wizard", {
+            subclass: { className: "wizard", subclass: "evoker" },
+          }),
+          advancementEntry("fighter", {
+            subclass: { className: "fighter", subclass: "champion" },
+          }),
+        ],
         background: "sage",
         backgroundAbilityScoreIncrease: {
           kind: "plusTwoPlusOne",
@@ -281,10 +302,6 @@ describe("character-domain", () => {
         choices: {
           primaryClassSkills: ["arcana", "investigation"],
           speciesSkill: "perception",
-          subclassSelections: {
-            fighter: { className: "fighter", subclass: "champion" },
-            wizard: { className: "wizard", subclass: "evoker" },
-          },
         },
       }),
     );
@@ -300,11 +317,7 @@ describe("character-domain", () => {
     const result = finalizeCharacterDraft(
       completeDraft({
         primaryClass: "fighter",
-        classLevels: {
-          ...ZERO_CLASS_LEVELS,
-          fighter: 1,
-          wizard: 1,
-        },
+        advancement: [advancementEntry("fighter"), advancementEntry("wizard")],
         background: "criminal",
         backgroundAbilityScoreIncrease: {
           kind: "plusTwoPlusOne",
@@ -331,15 +344,34 @@ describe("character-domain", () => {
     const result = finalizeCharacterDraft(
       completeDraft({
         primaryClass: "paladin",
-        classLevels: {
-          ...ZERO_CLASS_LEVELS,
-          bard: 5,
-          cleric: 2,
-          paladin: 3,
-          ranger: 6,
-          sorcerer: 2,
-          warlock: 2,
-        },
+        advancement: [
+          advancementEntry("paladin"),
+          advancementEntry("paladin"),
+          advancementEntry("paladin", {
+            subclass: { className: "paladin", subclass: "devotion" },
+          }),
+          advancementEntry("bard"),
+          advancementEntry("bard"),
+          advancementEntry("bard", {
+            subclass: { className: "bard", subclass: "lore" },
+          }),
+          advancementEntry("bard", { feat: alertFeat }),
+          advancementEntry("bard"),
+          advancementEntry("cleric"),
+          advancementEntry("cleric"),
+          advancementEntry("ranger"),
+          advancementEntry("ranger"),
+          advancementEntry("ranger", {
+            subclass: { className: "ranger", subclass: "hunter" },
+          }),
+          advancementEntry("ranger", { feat: alertFeat }),
+          advancementEntry("ranger"),
+          advancementEntry("ranger"),
+          advancementEntry("sorcerer"),
+          advancementEntry("sorcerer"),
+          advancementEntry("warlock"),
+          advancementEntry("warlock"),
+        ],
         background: "acolyte",
         abilityScoreGeneration: {
           mode: "randomGeneration",
@@ -363,11 +395,6 @@ describe("character-domain", () => {
           speciesSkill: "perception",
           humanOriginFeat: { feat: "alert" },
           clericDivineOrder: "protector",
-          subclassSelections: {
-            bard: { className: "bard", subclass: "lore" },
-            paladin: { className: "paladin", subclass: "devotion" },
-            ranger: { className: "ranger", subclass: "hunter" },
-          },
           multiclassSkills: {
             bard: ["history"],
             ranger: ["survival"],
@@ -410,7 +437,18 @@ describe("character-domain", () => {
   it("derives ranger long-rest pools from level-gated class facts", () => {
     const result = finalizeCharacterDraft({
       primaryClass: "ranger",
-      classLevels: { ...ZERO_CLASS_LEVELS, ranger: 14 },
+      advancement: [
+        ...singleClassAdvancement("ranger", 2),
+        advancementEntry("ranger", {
+          subclass: { className: "ranger", subclass: "hunter" },
+        }),
+        advancementEntry("ranger", { feat: alertFeat }),
+        ...singleClassAdvancement("ranger", 3),
+        advancementEntry("ranger", { feat: alertFeat }),
+        ...singleClassAdvancement("ranger", 3),
+        advancementEntry("ranger", { feat: alertFeat }),
+        ...singleClassAdvancement("ranger", 2),
+      ],
       background: "sage",
       abilityScoreGeneration: {
         mode: "standardArray",
@@ -436,9 +474,6 @@ describe("character-domain", () => {
         speciesSkill: "perception",
         humanOriginFeat: { feat: "alert" },
         rangerDeftExplorerLanguages: ["Primordial", "Undercommon"],
-        subclassSelections: {
-          ranger: { className: "ranger", subclass: "hunter" },
-        },
       },
       spellcasting: rangerLevelFourteenSpellcasting,
       equipment: {
@@ -467,7 +502,7 @@ describe("character-domain", () => {
   it("derives point-buy scores and preserves the owned generation input", () => {
     const result = finalizeCharacterDraft({
       primaryClass: "wizard",
-      classLevels: singleClassLevels("wizard", 1),
+      advancement: singleClassAdvancement("wizard", 1),
       background: "acolyte",
       abilityScoreGeneration: {
         mode: "pointBuy",
@@ -515,6 +550,74 @@ describe("character-domain", () => {
       wis: 13,
       cha: 11,
     });
+  });
+
+  it("applies advancement ASIs to the canonical sheet ability scores", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        advancement: [
+          advancementEntry("fighter"),
+          advancementEntry("fighter"),
+          advancementEntry("fighter", {
+            subclass: { className: "fighter", subclass: "champion" },
+          }),
+          advancementEntry("fighter", {
+            feat: {
+              slot: "feat",
+              choice: {
+                tag: "abilityScoreImprovement",
+                abilities: ["str"],
+              },
+            },
+          }),
+        ],
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected successful finalization");
+    expect(result.sheet.abilityScores.str).toBe(19);
+  });
+
+  it("rejects Epic Boon feat ids before level 19", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        advancement: [
+          advancementEntry("fighter"),
+          advancementEntry("fighter"),
+          advancementEntry("fighter", {
+            subclass: { className: "fighter", subclass: "champion" },
+          }),
+          advancementEntry("fighter", {
+            feat: {
+              slot: "feat",
+              choice: { tag: "feat", featId: "boon_of_combat_prowess" },
+            },
+          }),
+        ],
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failed finalization");
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "prematureEpicBoonChoice",
+    );
+  });
+
+  it("rejects mismatched class levels alongside advancement", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        classLevels: { ...ZERO_CLASS_LEVELS, fighter: 2 },
+        advancement: [advancementEntry("fighter")],
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failed finalization");
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "invalidAdvancement",
+    );
   });
 
   it("owns starting equipment choices and projects battle-facing loadout facts from the sheet", () => {
@@ -669,6 +772,7 @@ describe("character-domain", () => {
     expect(result.issues.map((issue) => issue.code)).toEqual([
       "missingPrimaryClass",
       "missingClassLevels",
+      "missingAdvancement",
       "invalidTotalLevel",
       "missingBackground",
       "missingAbilityScoreGeneration",

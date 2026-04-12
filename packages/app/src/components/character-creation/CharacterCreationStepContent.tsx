@@ -95,7 +95,7 @@ export function CharacterCreationStepContent({
               setDraft((current) => ({
                 ...current,
                 primaryClass,
-                classLevels: current.classLevels ?? { [primaryClass]: 1 }
+                advancement: current.advancement ?? [{ className: primaryClass }]
               }))
             }}
             value={draft.primaryClass ?? ""}
@@ -109,20 +109,20 @@ export function CharacterCreationStepContent({
           </select>
         </label>
         <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm text-gray-300">
-          <p className="font-medium text-gray-100">Current class levels</p>
+          <p className="font-medium text-gray-100">Current advancement</p>
           <p className="mt-2 text-gray-400">
-            CHAR7 owns higher-level starts and multiclass flow. This shell preserves whatever class-level structure is
+            CHAR7 owns higher-level starts and multiclass flow. This shell preserves the ordered advancement record
             already in the draft.
           </p>
           <pre className="mt-3 overflow-auto rounded-md bg-black/30 p-3 text-xs text-gray-200">
-            {displayValue(draft.classLevels ?? {})}
+            {displayValue(draft.advancement ?? [])}
           </pre>
         </div>
         <div className="md:col-span-2">
           <JsonEditor
-            label="Class-level JSON override"
-            onChange={(value) => updateDraft({ classLevels: value as CharacterDraft["classLevels"] })}
-            value={draft.classLevels}
+            label="Advancement JSON override"
+            onChange={(value) => updateDraft({ advancement: value as CharacterDraft["advancement"] })}
+            value={draft.advancement}
           />
         </div>
       </div>

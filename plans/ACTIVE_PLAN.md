@@ -79,7 +79,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 6,
       "id": "CHAR7",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Level Advancement And Multiclass Continuation"
     },
     {
@@ -97,7 +97,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 9,
       "id": "POST1",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Formal Creation Semantics"
     },
     {
@@ -213,6 +213,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 - For any task that changes modeled D&D rule semantics, make the RAW/ASSUMPTIONS decision in Quint first, then update XState/TS/MCP to match. Adapter-only tasks, documentation-only tasks, and pure workflow-shell tasks are exempt.
 - For any implementation task, include `/simplify` convergence in the task closeout: minimum two rounds unless the changeset is trivial, and continue until no important fixes remain.
 - Do not run battle MBT for research-only tasks. For implementation tasks, use the narrowest verification tier that matches the touched ownership surface.
+- If broader lint/typecheck/test verification surfaces known pre-existing failures outside the touched ownership surface, record that baseline noise and stop. Do not widen the task into repo-wide cleanup; unrelated cleanup belongs in a separate task or sidecar investigation.
 
 ## DAG / Queue Order
 
@@ -224,10 +225,10 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 3 | CHAR4 - Equipment And Loadout Projection | done | CHAR1, CHAR3 | CHAR5 | Landed owned starting-equipment choices, leftover starting-gold tracking, bounded combat-equipment ownership, loadout validation, and battle-facing weapon/hand/shield/armor projection sourced from `CharacterSheet`. | Complete |
 | 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | done | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Landed owned spellcasting selections plus one `CharacterSheet` derivation path for sheet numbers, `DndMachineInput`, and battle init projection. | Complete |
 | 5 | CHAR6 - Guided Workflow Shell | done | CHAR1, CHAR2, CHAR5 | none | Landed a thin `/character` workflow shell that persists `CharacterDraft`, keeps step order in the app surface, and renders canonical finalization plus derived projection outputs without UI-owned validation. | Complete |
-| 6 | CHAR7 - Level Advancement And Multiclass Continuation | ready-for-implementation-after-light-research | CHAR1, CHAR3, CHAR5 | none | Implement ordered level-up transitions over `CharacterDraft` / `CharacterSheet` with advancement history as the canonical legality record for higher-level starts and multiclass continuation. Model the full level-gated advancement choice surface needed for legality and downstream derivation: class taken each level, subclass selections when they occur, Ability Score Improvement feat choices, alternative feat choices where allowed, and level-19 Epic Boon choices. Reuse `creature.qnt` as the semantic source for XP thresholds, multiclass legality, HP growth, hit-die growth, proficiency progression, and caster-level/slot behavior, but align any stale helper semantics to SRD 5.2.1 before relying on them. Keep finalized `CharacterSheet` and `deriveCharacterSheetNumbers` as the single downstream projection path, and do not keep `classLevels` and advancement history as contradictory peer-owned facts. | Ready only if implementation treats ordered advancement as the canonical legality surface, includes feat/ASI/Epic Boon choices where they affect legality or derivation, and removes stale SRD cadence assumptions before landing |
+| 6 | CHAR7 - Level Advancement And Multiclass Continuation | done | CHAR1, CHAR3, CHAR5 | none | Landed ordered `advancement` history as the canonical legality surface for higher-level starts and multiclass continuation, including in-order subclass timing and feat / Epic Boon choices applied through final sheet derivation. | Complete |
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
-| 9 | POST1 - Formal Creation Semantics | blocked | CHAR6, CHAR7 | POST2, POST4 | Once the current `CHAR` sequence is complete, formalize the creation draft/sheet semantics in Quint, keeping the landed TS character domain as the implementation baseline and parity target rather than rewriting the product shape from scratch. | Future post-`CHAR` phase; depends on current workflow and advancement research landing |
+| 9 | POST1 - Formal Creation Semantics | ready-for-research | CHAR6, CHAR7 | POST2, POST4 | Research how to formalize the landed `CharacterDraft` / `CharacterSheet` plus ordered `advancement` surface in Quint without reintroducing parallel state or battle-owned creation semantics. | Ready now that the `CHAR` implementation baseline is complete |
 | 10 | POST2 - Open Choices And Selective Invalidation | blocked | POST1 | POST4 | Build the explicit `open choices` / `validation issues` / dependency-aware invalidation model on top of the immutable `CHAR` foundation so guided workflows can distinguish incompleteness from illegality. | Depends on formal creation semantics |
 | 11 | POST3 - Formal Advancement And Higher-Level Starts | blocked | CHAR7, POST1 | POST4 | Formalize advancement as repeated legal level-up transitions over the same canonical sheet, then use that path for higher-level starts rather than bespoke bootstrapping. | Depends on advancement research plus formal creation semantics |
 | 12 | POST4 - Workflow And Projection Convergence | blocked | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Final post-`CHAR` integration phase |
@@ -385,24 +386,13 @@ Archived foundation summary:
 
 ### Task 6 - CHAR7 - Level Advancement And Multiclass Continuation
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: CHAR1, CHAR3, CHAR5.
 
 Blocks: none.
 
-Next action:
-
-- Implement an owned `advancement` / level-history record on the character domain and make it the canonical source for validating higher-level starts and multiclass continuation.
-- Record every legality-relevant advancement choice in order inside the canonical advancement history itself: gained class each level, subclass picks when they occur, Ability Score Improvement feat choices, alternative feat choices, and level-19 Epic Boon choices. Do not leave subclass timing in a side-channel choice record.
-- Validate multiclass entry against the character state that existed at the moment the new class level was taken, not only against final-sheet scores.
-- Derive aggregate class totals, proficiency-sensitive values, HP/hit dice growth, and caster-level/slot projections from that ordered history through the existing finalization and sheet-derivation path.
-- Align TS helpers, `creature.qnt`, and `UBIQUITOUS_LANGUAGE.md` to SRD 5.2.1 where current repo helpers still encode stale level-19 ASI assumptions.
-- Model the full ordered advancement choice surface rather than only class totals: each gained class level, subclass timing, score-changing feat/ASI choices, non-ASI feat choices where allowed, and level-19 Epic Boon choices where they affect legality or downstream derivation. Do not narrow this to a small feat whitelist that makes legal SRD builds unrepresentable.
-- Reject impossible advancement histories before they affect derived scores or legality checks. In particular, feat or Epic Boon selections must be validated against the actual class level where they occur.
-- Keep the task scoped to advancement/domain work. Do not rewrite or stub shared fuzz / overnight scripts as part of CHAR7.
-- Before reimplementing, inspect `plans/CHAR7_SALVAGE_HANDOFF.md` and the preserved `debug-ralph-foreground-7` Codex report/worktree for reusable domain and test changes. Reuse product code only; exclude harness-injected fuzz-script stubs and task-worktree `node_modules`.
-- Align repo-owned traceability helpers to SRD 5.2.1 before depending on them; level 19 is an Epic Boon feature, not an Ability Score Improvement.
+Next action: none. Landed on integration.
 
 Acceptance criteria:
 
@@ -426,15 +416,17 @@ Verification:
 - Read `.references/srd-5.2.1/Character-Creation.md` for multiclass prerequisites, level advancement, and higher-level starts.
 - Read `UBIQUITOUS_LANGUAGE.md` to confirm advancement remains on the owned `CharacterDraft` / `CharacterSheet` boundary and runtime facts remain projections.
 - Inspected the current TS and Quint ownership surfaces (`packages/core/src/character-domain.ts`, `packages/core/src/character-sheet-derived.ts`, `packages/core/src/features/class-tables.ts`, `packages/core/src/machine-spells.ts`, `creature.qnt`) plus both Ralph implementation worktrees and review reports.
-- Focused verification for the next rerun must include negative coverage for illegal early ASI / Epic Boon placement and positive coverage for subclass timing plus multiclass-entry legality at the moment of class pickup.
-- Did not run MBT because CHAR7 closeout in this merge is research/plan-only and the repo guidance forbids battle MBT for research tasks.
+- Focused core verification passed: `pnpm -C packages/core exec vitest run src/character-domain.test.ts src/character-sheet-derived.test.ts`.
+- `pnpm quality` still fails on pre-existing Prettier drift in unrelated core files (`packages/core/src/context-encoding.ts`, `packages/core/src/creature.mbt.test.ts`, `packages/core/src/machine-event-extractors.ts`, `packages/core/src/machine-monk.ts`, `packages/core/src/machine-queries.ts`, `packages/core/src/machine-startturn.ts`, `packages/core/src/machine.ts`).
+- Did not run MBT because the touched surface is character-domain validation and projection, and the repo guidance says to avoid battle MBT outside actual end-to-end need.
 
 Plan Impact:
 
 - Status: applied
 - Affected tasks:
-  - `CHAR7`: keep the task open and tighten the implementation handoff around ordered advancement choices, feat/ASI recording, and SRD-accurate Epic Boon handling.
-  - `POST3`: no status change; formal advancement should consume the same ordered-transition model discovered here.
+  - `CHAR7`: mark done.
+  - `POST1`: unblock to `ready-for-research`; formal creation now needs to consume the landed ordered advancement surface instead of a speculative handoff.
+  - `POST3`: no status change; formal advancement should consume the same ordered-transition model now landed in product code.
 
 ### Task 7 - H - PassiveModifiers Sub-Record
 
@@ -458,7 +450,7 @@ Next action: Keep deferred. It is not part of the current character-creation bat
 
 ### Task 9 - POST1 - Formal Creation Semantics
 
-Status: blocked.
+Status: ready-for-research.
 
 Depends on: CHAR6, CHAR7.
 
@@ -471,7 +463,7 @@ User stories:
 What to build:
 
 - Formalize the creation-side semantic model in Quint using the landed `CharacterDraft` / `CharacterSheet` product shape as foundation rather than replacing it.
-- Model the canonical creation surfaces needed to explain an editable draft, a finalizable sheet, and projection from sheet to creature runtime.
+- Model the canonical creation surfaces needed to explain an editable draft, a finalizable sheet, ordered advancement attached to that sheet, and projection from sheet to creature runtime.
 - Keep battle out of character creation while making the formal layer the durable owner of creation semantics that should not drift over time.
 
 Acceptance criteria:
