@@ -207,7 +207,7 @@ Scope:
 - Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) to design `character-creation.qnt`.
 - Formalize `CharacterDraft`, open choices, incompleteness, legality, and finalization semantics.
 - Ground the design in SRD 5.2.1 character-creation text and existing reusable helper semantics in [creature.qnt](../creature.qnt).
-- Keep the Quint ownership surface aligned with the canonical TS domain in `packages/core/src/character-domain-model.ts`, `packages/core/src/character-ability-scores.ts`, `packages/core/src/character-build-choice-validation.ts`, and `packages/core/src/character-draft-analysis.ts`; do not replace optional / partial authored facts with a narrowed surrogate type, flattened replacement record, or duplicate `present`/`has*` shadow state.
+- Keep the Quint ownership surface aligned with the canonical TS domain exposed through `packages/core/src/character-domain.ts` and implemented across `packages/core/src/character-domain-model.ts`, `packages/core/src/character-ability-scores.ts`, `packages/core/src/character-build-choice-validation.ts`, `packages/core/src/character-draft-analysis.ts`, `packages/core/src/character-equipment-validation.ts`, and `packages/core/src/character-spellcasting.ts`; do not replace optional / partial authored facts with a narrowed surrogate type, flattened replacement record, or duplicate `present`/`has*` shadow state.
 - Preserve the existing owned authored surface instead of summarizing it away: that includes the ordered class/level data, partial ability-score state, equipment/loadout choices, spellcasting picks, granted-language/proficiency choices, and multiclass-specific choice fields already present in the TS draft/sheet domain.
 - `finalizeDraft` semantics must stay guarded/partial: an illegal or incomplete draft must not produce a `CharacterSheet`, and the Quint legality/open-choice surface must cover the same issue categories that TS analysis already reports.
 - Do not edit unrelated shared verification tooling as part of CQ1.
@@ -217,7 +217,7 @@ Next action:
 
 - Start with RAW and ubiquitous-language review.
 - Inventory the existing TS-owned draft/sheet fields, partial ability-score state, and open-choice / issue categories that CQ1 must preserve.
-- Write that inventory back into the task notes before implementation if any part of the owned surface is still ambiguous, with explicit callouts for class-level structure, granted-language/proficiency choices, multiclass choice fields, equipment/loadout state, and spellcasting picks.
+- Write that inventory back into the task notes before implementation if any part of the owned surface is still ambiguous, with explicit callouts for class-level structure, granted-language/proficiency choices, multiclass choice fields, equipment/loadout state and legality, and spellcasting picks and legality.
 - Pin the formal type/function surface and the minimum deterministic Quint test set for draft/finalization from that inventory.
 - If the owned surface still feels ambiguous after the inventory, stop and write the mapping back into this plan before implementing rather than shipping a reduced slice.
 
