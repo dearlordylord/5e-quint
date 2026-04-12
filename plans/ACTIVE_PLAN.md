@@ -139,7 +139,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 16,
       "id": "MON4",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Hand-Authored SRD Dataset Expansion"
     },
     {
@@ -235,7 +235,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 13 | MON1 - Canonical Goblin Tracer Bullet | done | none | MON2 | Landed canonical goblin `StatBlock` records with explicit SRD provenance and one projection path into generic battle/MCP surfaces. | Complete |
 | 14 | MON2 - Second Monster Tracer Bullet | done | MON1 | MON3, MON4 | Landed a single-size non-goblin SRD stat block (`Pseudodragon`) through the same core-owned `StatBlock` and projection path, with unsupported authored save-based abilities preserved as text-only data instead of being improvised into runtime handlers. | Complete |
 | 15 | MON3 - Advanced Pattern Tracer Bullet | done | MON2 | MON4 | Landed `Centaur Trooper` as an SRD-authored tracer bullet with `rechargeAbilities` projected through the generic monster init/start-turn path, while keeping unsupported `Trampling Charge` resolution as explicit text-only authored content. | Complete |
-| 16 | MON4 - Hand-Authored SRD Dataset Expansion | ready-for-implementation-after-light-research | MON2, MON3 | none | Expand from the tracer bullets to the agreed SRD monster dataset, reusing the landed generic multiattack/recharge projection path and keeping unsupported patterns explicit. | Ready now that the advanced recharge tracer bullet has validated the generic facility |
+| 16 | MON4 - Hand-Authored SRD Dataset Expansion | done | MON2, MON3 | none | Landed the hand-authored SRD dataset expansion plus a code-derived unsupported-pattern audit while keeping spellcasting inside authored action-economy sections and leaving unrelated tooling untouched. | Complete |
 | 17 | MCPA1 - Battle Attack Public Contract | done | none | MCPA2, MCPA4, MCPA5, MCPA8 | Closed with the bounded `battleAttack` contract: public payload is `targetId` plus `knockOut`, runtime carries only explicit roll / AC / spatial / visibility / reaction facts, and battle retains weapon-profile, crit, legality, and rider ownership. | Complete; reuse this contract for later attack-shaped work instead of adding parallel payloads |
 | 18 | MCPA2 - Public Attack Action Slices | done | MCPA1 | none | Landed public `BATTLE_ATTACK` / `BATTLE_OFF_HAND_ATTACK` slices on one shared `battleAttack` runtime contract, with battle-owned melee-lane derivation, knockout narrowing, and Light extra-attack ability-mod handling. | Complete |
 | 19 | MCPA3 - Spatial Action Public Contracts | ready-for-research | none | none | Define bounded public contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` over explicit caller/session spatial facts only. | Independent MCP foundation research; no geometry owner in core or MCP |
@@ -671,16 +671,18 @@ Acceptance criteria:
 
 ### Task 16 - MON4 - Hand-Authored SRD Dataset Expansion
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: MON2, MON3.
 
 Blocks: none.
 
-Next action:
+Completed action:
 
-- Expand from the tracer-bullet monsters to the agreed hand-authored SRD dataset now that both the generic multiattack and generic recharge paths are proven.
-- Keep unsupported patterns explicit so later generic-facility work has a grounded queue.
+- Expanded the hand-authored SRD catalog from the tracer bullets to an explicit MON4 dataset: `Knight`, `Kobold Warrior`, `Mage`, `Ogre`, `Priest`, `Sahuagin Warrior`, and `Scout`, alongside the earlier goblin, pseudodragon, and centaur records.
+- Moved monster spellcasting into the canonical authored action-economy sections instead of keeping an unused parallel `StatBlock.spellcasting` field, so `Mage` and `Priest` stay single-source with no redundant monster data surface.
+- Added a code-derived unsupported-pattern audit over text-only abilities and structured spellcasting entries so later generic-facility work has a grounded queue without parsing explanatory prose.
+- Rejected the observed failed implementation paths directly in the landed MON4 shape: no audit logic derived from `nonExecutableReason` substring matching, and no unrelated fuzz/benchmark script rewrites inside this catalog-expansion task.
 
 Acceptance criteria:
 
@@ -688,6 +690,20 @@ Acceptance criteria:
 - New monster additions are primarily data entry and projection, not monster-specific engine work.
 - The project has an explicit report or audit view of unsupported ability patterns to drive later generic-facility work.
 - MCP, app, and other adapters continue consuming the core-owned stat block collection instead of maintaining parallel monster registries.
+
+Verification:
+
+- RAW / terminology check: reviewed `.references/srd-5.2.1/Monsters/Monsters-H-L.md`, `.references/srd-5.2.1/Monsters/Monsters-M-O.md`, and `.references/srd-5.2.1/Monsters/Monsters-P-S.md` for the landed MON4 records and cross-checked `UBIQUITOUS_LANGUAGE.md` for `Creature`, `Stat Block`, `Multiattack`, `Recharge`, and spellcasting terminology.
+- `/simplify` round 1: removed the redundant top-level monster `spellcasting` field and kept spellcasting authored only in the monster section arrays, so the catalog no longer has two ways to store the same monster fact.
+- `/simplify` round 2: confirmed the unsupported-pattern audit derives from durable structured ability kinds (`text`, `spellcasting`) rather than brittle prose matching, and kept MON4 bounded to catalog-owned files instead of unrelated repo tooling.
+- Verification command: `pnpm quality`
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MON4` - mark done and record explicit rerun guidance against prose-matched audits and unrelated script churn
+- Plan edits: updated this task's status and closeout details in this file
 
 ### Task 17 - MCPA1 - Battle Attack Public Contract
 

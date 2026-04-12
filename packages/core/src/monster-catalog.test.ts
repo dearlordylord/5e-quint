@@ -5,16 +5,24 @@ import {
   ControlCommandSchema,
   toBattleInitCreatureConfig,
 } from "#/available-actions.ts";
+import { MONSTER_CATALOG_UNSUPPORTED_AUDIT } from "#/monster-catalog-audit.ts";
 import {
   CENTAUR_TROOPER,
   getMonsterStatBlock,
   GOBLIN_BOSS,
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
+  KNIGHT,
+  KOBOLD_WARRIOR,
+  MAGE,
   MONSTER_STAT_BLOCK_IDS,
   MONSTER_STAT_BLOCK_PROVENANCE,
   monsterCatalogInitCreatureConfig,
+  OGRE,
   PSEUDODRAGON,
+  PRIEST,
+  SAHUAGIN_WARRIOR,
+  SCOUT,
   statBlockAttacks,
   statBlockBattleBonusActionOptions,
   statBlockBattleReactionOptions,
@@ -132,7 +140,14 @@ describe("monster catalog", () => {
       "goblinMinion",
       "goblinWarrior",
       "goblinBoss",
+      "knight",
+      "koboldWarrior",
+      "mage",
+      "ogre",
       "pseudodragon",
+      "priest",
+      "sahuaginWarrior",
+      "scout",
     ]);
     expect(
       statBlockAttacks(GOBLIN_WARRIOR).scimitar.extraDamageOnAdvantageHit,
@@ -329,6 +344,167 @@ describe("monster catalog", () => {
           "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
       },
     ]);
+  });
+
+  it("stores Mage and Priest spellcasting inside authored action-economy sections", () => {
+    expect(getMonsterStatBlock("mage")).toBe(MAGE);
+    expect(getMonsterStatBlock("priest")).toBe(PRIEST);
+    expect(MAGE.actions).toContainEqual({
+      kind: "spellcasting",
+      id: "spellcasting",
+      name: "Spellcasting",
+      text: "The mage casts one of the following spells, using Intelligence as the spellcasting ability (spell save DC 14).",
+      spellcastingAbility: "int",
+      saveDc: 14,
+      spells: [
+        { name: "Detect Magic", usage: "At Will" },
+        { name: "Light", usage: "At Will" },
+        { name: "Mage Armor", usage: "At Will", notes: "included in AC" },
+        { name: "Mage Hand", usage: "At Will" },
+        { name: "Prestidigitation", usage: "At Will" },
+        { name: "Fireball", usage: "2/Day Each", level: 4 },
+        { name: "Invisibility", usage: "2/Day Each" },
+        { name: "Cone of Cold", usage: "1/Day Each" },
+        { name: "Fly", usage: "1/Day Each" },
+      ],
+    });
+    expect(PRIEST.bonusActions).toContainEqual({
+      kind: "spellcasting",
+      id: "divineAid",
+      name: "Divine Aid",
+      text: "The priest casts *Bless*, *Dispel Magic*, *Healing Word*, or *Lesser Restoration*, using the same spellcasting ability as Spellcasting.",
+      spellcastingAbility: "wis",
+      spells: [
+        { name: "Bless", usage: "3/Day" },
+        { name: "Dispel Magic", usage: "3/Day" },
+        { name: "Healing Word", usage: "3/Day" },
+        { name: "Lesser Restoration", usage: "3/Day" },
+      ],
+    });
+  });
+
+  it("adds the expanded SRD dataset as authored stat blocks with explicit provenance", () => {
+    expect(getMonsterStatBlock("knight")).toBe(KNIGHT);
+    expect(getMonsterStatBlock("koboldWarrior")).toBe(KOBOLD_WARRIOR);
+    expect(getMonsterStatBlock("ogre")).toBe(OGRE);
+    expect(getMonsterStatBlock("sahuaginWarrior")).toBe(SAHUAGIN_WARRIOR);
+    expect(getMonsterStatBlock("scout")).toBe(SCOUT);
+    expect(KNIGHT.provenance).toEqual({
+      edition: "SRD 5.2.1",
+      document: ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
+      section: "Knight",
+    });
+    expect(KOBOLD_WARRIOR.traits).toEqual([
+      {
+        kind: "text",
+        id: "packTactics",
+        name: "Pack Tactics",
+        text: "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        nonExecutableReason:
+          "Conditional ally-based attack advantage from monster traits is not yet projected into the generic monster runtime surface.",
+      },
+      {
+        kind: "text",
+        id: "sunlightSensitivity",
+        name: "Sunlight Sensitivity",
+        text: "While in sunlight, the kobold has Disadvantage on ability checks and attack rolls.",
+        nonExecutableReason:
+          "Environment-gated attack and test penalties from monster traits are not yet projected into the generic monster runtime surface.",
+      },
+    ]);
+    expect(SAHUAGIN_WARRIOR.bonusActions).toEqual([
+      {
+        kind: "text",
+        id: "aquaticCharge",
+        name: "Aquatic Charge",
+        text: "The sahuagin swims up to its Swim Speed straight toward an enemy it can see.",
+        nonExecutableReason:
+          "Monster-only bonus-action movement without an attached generic attack or save effect is not yet projected into the generic monster runtime surface.",
+      },
+    ]);
+    expect(SCOUT.actions).toEqual([
+      {
+        kind: "multiattack",
+        id: "multiattack",
+        name: "Multiattack",
+        text: "The scout makes two attacks, using Shortsword and Longbow in any combination.",
+        slots: [
+          { type: "MAttack", name: "Shortsword" },
+          { type: "MAttack", name: "Longbow" },
+        ],
+      },
+      {
+        kind: "attack",
+        id: "shortsword",
+        name: "Shortsword",
+        text: "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Piercing damage.",
+        attack: {
+          name: "Shortsword",
+          attackBonus: 4,
+          reach: 5,
+          rangeNormal: 0,
+          rangeLong: 0,
+          damageAmount: 5,
+          damageType: "piercing",
+          isRanged: false,
+          attackMode: "melee",
+        },
+      },
+      {
+        kind: "attack",
+        id: "longbow",
+        name: "Longbow",
+        text: "*Ranged Attack Roll:* +4, range 150/600 ft. *Hit:* 6 (1d8 + 2) Piercing damage.",
+        attack: {
+          name: "Longbow",
+          attackBonus: 4,
+          reach: 0,
+          rangeNormal: 150,
+          rangeLong: 600,
+          damageAmount: 6,
+          damageType: "piercing",
+          isRanged: true,
+          attackMode: "ranged",
+        },
+      },
+    ]);
+  });
+
+  it("publishes a code-derived audit of unsupported monster patterns", () => {
+    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toEqual(
+      expect.arrayContaining([
+        {
+          statBlockId: "pseudodragon",
+          monsterName: "Pseudodragon",
+          section: "actions",
+          abilityId: "sting",
+          abilityName: "Sting",
+          pattern: "textOnlyAbility",
+          reason:
+            "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
+        },
+        {
+          statBlockId: "mage",
+          monsterName: "Mage",
+          section: "actions",
+          abilityId: "spellcasting",
+          abilityName: "Spellcasting",
+          pattern: "structuredSpellcasting",
+          reason:
+            "Spellcasting is cataloged structurally, but monster spell resolution still needs the generic spellcasting execution surface tracked by MCPA6.",
+        },
+        {
+          statBlockId: "knight",
+          monsterName: "Knight",
+          section: "reactions",
+          abilityId: "parry",
+          abilityName: "Parry",
+          pattern: "textOnlyAbility",
+          reason:
+            "Reactive AC boosts are not yet projected into the generic monster runtime surface.",
+        },
+      ]),
+    );
   });
 
   it("can project a selected named stat-block attack into the battle attack lane", () => {
@@ -645,6 +821,53 @@ describe("monster catalog", () => {
       kind: "Monster",
       maxHp: 9,
       battleBonusActionOptions: ["disengage", "hide"],
+    });
+  });
+
+  it("still projects expanded-dataset monsters through the same generic init surface", () => {
+    expect(
+      monsterCatalogInitCreatureConfig({
+        id: CreatureId("kobold-1"),
+        statBlockId: "koboldWarrior",
+      }),
+    ).toMatchObject({
+      id: CreatureId("kobold-1"),
+      kind: "Monster",
+      maxHp: 7,
+      creatureSize: "small",
+      baseWalkSpeed: 30,
+      initiativeRoll: 12,
+      mainHandWeapon: {
+        name: "Dagger",
+      },
+    });
+
+    expect(
+      monsterCatalogInitCreatureConfig({
+        id: CreatureId("mage-1"),
+        statBlockId: "mage",
+      }),
+    ).toMatchObject({
+      id: CreatureId("mage-1"),
+      kind: "Monster",
+      maxHp: 81,
+      creatureSize: "medium",
+      baseWalkSpeed: 30,
+      initiativeRoll: 12,
+    });
+
+    expect(
+      monsterCatalogInitCreatureConfig({
+        id: CreatureId("ogre-1"),
+        statBlockId: "ogre",
+      }),
+    ).toMatchObject({
+      id: CreatureId("ogre-1"),
+      kind: "Monster",
+      maxHp: 68,
+      creatureSize: "large",
+      baseWalkSpeed: 40,
+      initiativeRoll: 9,
     });
   });
 });

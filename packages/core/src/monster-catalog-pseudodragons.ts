@@ -1,15 +1,10 @@
-import { SKILLS, type Skill, type StatBlock } from "#/monster-types.ts";
+import {
+  monsterSenses,
+  monsterSkillBonuses,
+  monsterSpeeds,
+} from "#/monster-catalog-helpers.ts";
+import { type StatBlock } from "#/monster-types.ts";
 import { abilityModifier, armorClass } from "#/types.ts";
-
-function skillBonuses(
-  overrides: Partial<Record<Skill, number>>,
-): Record<Skill, number> {
-  const base = Object.fromEntries(SKILLS.map((skill) => [skill, 0])) as Record<
-    Skill,
-    number
-  >;
-  return { ...base, ...overrides };
-}
 
 const PSEUDODRAGON_SOURCE_DOCUMENT =
   ".references/srd-5.2.1/Monsters/Monsters-P-S.md";
@@ -32,13 +27,7 @@ export const PSEUDODRAGON = {
   maxHp: 10,
   hitDice: 3,
   hitDieType: 4,
-  speeds: {
-    walk: 15,
-    fly: 60,
-    swim: 0,
-    climb: 0,
-    burrow: 0,
-  },
+  speeds: monsterSpeeds({ walk: 15, fly: 60 }),
   abilityScores: {
     str: 6,
     dex: 15,
@@ -48,7 +37,7 @@ export const PSEUDODRAGON = {
     cha: 10,
   },
   saveProficiencies: new Set(),
-  skillBonuses: skillBonuses({ perception: 5, stealth: 4 }),
+  skillBonuses: monsterSkillBonuses({ perception: 5, stealth: 4 }),
   cr: { type: "CR_Quarter" as const },
   proficiencyBonus: 2,
   resistances: new Set(),
@@ -56,12 +45,7 @@ export const PSEUDODRAGON = {
   damageImmunities: new Set(),
   conditionImmunities: new Set(),
   exhaustionImmune: false,
-  senses: {
-    blindsight: 10,
-    darkvision: 60,
-    tremorsense: 0,
-    truesight: 0,
-  },
+  senses: monsterSenses({ blindsight: 10, darkvision: 60 }),
   passivePerception: 15,
   languages: ["Understands Common and Draconic but can't speak"],
   traits: [
@@ -118,6 +102,5 @@ export const PSEUDODRAGON = {
   legendaryActions: [],
   rechargeAbilities: {},
   dailyAbilities: {},
-  spellcasting: [],
   inLair: false,
 } as const satisfies StatBlock;

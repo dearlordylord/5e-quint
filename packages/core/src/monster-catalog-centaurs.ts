@@ -1,15 +1,10 @@
-import { SKILLS, type Skill, type StatBlock } from "#/monster-types.ts";
+import {
+  monsterSenses,
+  monsterSkillBonuses,
+  monsterSpeeds,
+} from "#/monster-catalog-helpers.ts";
+import { type StatBlock } from "#/monster-types.ts";
 import { abilityModifier, armorClass } from "#/types.ts";
-
-function skillBonuses(
-  overrides: Partial<Record<Skill, number>>,
-): Record<Skill, number> {
-  const base = Object.fromEntries(SKILLS.map((skill) => [skill, 0])) as Record<
-    Skill,
-    number
-  >;
-  return { ...base, ...overrides };
-}
 
 const CENTAUR_SOURCE_DOCUMENT =
   ".references/srd-5.2.1/Monsters/Monsters-C-D.md";
@@ -34,13 +29,7 @@ export const CENTAUR_TROOPER = {
   maxHp: 45,
   hitDice: 6,
   hitDieType: 10,
-  speeds: {
-    walk: 50,
-    fly: 0,
-    swim: 0,
-    climb: 0,
-    burrow: 0,
-  },
+  speeds: monsterSpeeds({ walk: 50 }),
   abilityScores: {
     str: 18,
     dex: 14,
@@ -50,7 +39,7 @@ export const CENTAUR_TROOPER = {
     cha: 11,
   },
   saveProficiencies: new Set(),
-  skillBonuses: skillBonuses({ athletics: 6, perception: 3 }),
+  skillBonuses: monsterSkillBonuses({ athletics: 6, perception: 3 }),
   cr: { type: "CRN", value: 2 },
   proficiencyBonus: 2,
   resistances: new Set(),
@@ -58,12 +47,7 @@ export const CENTAUR_TROOPER = {
   damageImmunities: new Set(),
   conditionImmunities: new Set(),
   exhaustionImmune: false,
-  senses: {
-    blindsight: 0,
-    darkvision: 0,
-    tremorsense: 0,
-    truesight: 0,
-  },
+  senses: monsterSenses({}),
   passivePerception: 13,
   languages: ["Elvish", "Sylvan"],
   gear: ["Breastplate", "Longbow", "Pike"],
@@ -135,6 +119,5 @@ export const CENTAUR_TROOPER = {
     },
   },
   dailyAbilities: {},
-  spellcasting: [],
   inLair: false,
 } as const satisfies StatBlock;

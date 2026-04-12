@@ -1,20 +1,13 @@
 import {
   MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
-  type Skill,
-  SKILLS,
   type StatBlock,
 } from "#/monster-types.ts";
+import {
+  monsterSenses,
+  monsterSkillBonuses,
+  monsterSpeeds,
+} from "#/monster-catalog-helpers.ts";
 import { abilityModifier, armorClass } from "#/types.ts";
-
-function skillBonuses(
-  overrides: Partial<Record<Skill, number>>,
-): Record<Skill, number> {
-  const base = Object.fromEntries(SKILLS.map((skill) => [skill, 0])) as Record<
-    Skill,
-    number
-  >;
-  return { ...base, ...overrides };
-}
 
 const GOBLIN_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-E-G.md";
 
@@ -38,13 +31,7 @@ export const GOBLIN_MINION = {
   maxHp: 7,
   hitDice: 2,
   hitDieType: 6,
-  speeds: {
-    walk: 30,
-    fly: 0,
-    swim: 0,
-    climb: 0,
-    burrow: 0,
-  },
+  speeds: monsterSpeeds({ walk: 30 }),
   abilityScores: {
     str: 8,
     dex: 15,
@@ -54,7 +41,7 @@ export const GOBLIN_MINION = {
     cha: 8,
   },
   saveProficiencies: new Set(["dex"]),
-  skillBonuses: skillBonuses({ stealth: 6 }),
+  skillBonuses: monsterSkillBonuses({ stealth: 6 }),
   cr: { type: "CR_Eighth" as const },
   proficiencyBonus: 2,
   resistances: new Set(),
@@ -62,12 +49,7 @@ export const GOBLIN_MINION = {
   damageImmunities: new Set(),
   conditionImmunities: new Set(),
   exhaustionImmune: false,
-  senses: {
-    blindsight: 0,
-    darkvision: 60,
-    tremorsense: 0,
-    truesight: 0,
-  },
+  senses: monsterSenses({ darkvision: 60 }),
   passivePerception: 9,
   languages: ["Common", "Goblin"],
   gear: ["Daggers (3)"],
@@ -106,7 +88,6 @@ export const GOBLIN_MINION = {
   legendaryActions: [],
   rechargeAbilities: {},
   dailyAbilities: {},
-  spellcasting: [],
   inLair: false,
 } as const satisfies StatBlock;
 
@@ -130,13 +111,7 @@ export const GOBLIN_WARRIOR = {
   maxHp: 10,
   hitDice: 3,
   hitDieType: 6,
-  speeds: {
-    walk: 30,
-    fly: 0,
-    swim: 0,
-    climb: 0,
-    burrow: 0,
-  },
+  speeds: monsterSpeeds({ walk: 30 }),
   abilityScores: {
     str: 8,
     dex: 15,
@@ -146,7 +121,7 @@ export const GOBLIN_WARRIOR = {
     cha: 8,
   },
   saveProficiencies: new Set(["dex"]),
-  skillBonuses: skillBonuses({ stealth: 6 }),
+  skillBonuses: monsterSkillBonuses({ stealth: 6 }),
   cr: { type: "CR_Quarter" as const },
   proficiencyBonus: 2,
   resistances: new Set(),
@@ -154,12 +129,7 @@ export const GOBLIN_WARRIOR = {
   damageImmunities: new Set(),
   conditionImmunities: new Set(),
   exhaustionImmune: false,
-  senses: {
-    blindsight: 0,
-    darkvision: 60,
-    tremorsense: 0,
-    truesight: 0,
-  },
+  senses: monsterSenses({ darkvision: 60 }),
   passivePerception: 9,
   languages: ["Common", "Goblin"],
   gear: ["Leather Armor", "Scimitar", "Shield", "Shortbow"],
@@ -217,7 +187,6 @@ export const GOBLIN_WARRIOR = {
   legendaryActions: [],
   rechargeAbilities: {},
   dailyAbilities: {},
-  spellcasting: [],
   inLair: false,
 } as const satisfies StatBlock;
 
@@ -241,13 +210,7 @@ export const GOBLIN_BOSS = {
   maxHp: 21,
   hitDice: 6,
   hitDieType: 6,
-  speeds: {
-    walk: 30,
-    fly: 0,
-    swim: 0,
-    climb: 0,
-    burrow: 0,
-  },
+  speeds: monsterSpeeds({ walk: 30 }),
   abilityScores: {
     str: 10,
     dex: 15,
@@ -257,7 +220,7 @@ export const GOBLIN_BOSS = {
     cha: 10,
   },
   saveProficiencies: new Set(["dex"]),
-  skillBonuses: skillBonuses({ stealth: 6 }),
+  skillBonuses: monsterSkillBonuses({ stealth: 6 }),
   cr: { type: "CRN" as const, value: 1 },
   proficiencyBonus: 2,
   resistances: new Set(),
@@ -265,12 +228,7 @@ export const GOBLIN_BOSS = {
   damageImmunities: new Set(),
   conditionImmunities: new Set(),
   exhaustionImmune: false,
-  senses: {
-    blindsight: 0,
-    darkvision: 60,
-    tremorsense: 0,
-    truesight: 0,
-  },
+  senses: monsterSenses({ darkvision: 60 }),
   passivePerception: 9,
   languages: ["Common", "Goblin"],
   gear: ["Chain Shirt", "Scimitar", "Shield", "Shortbow"],
@@ -346,6 +304,5 @@ export const GOBLIN_BOSS = {
   legendaryActions: [],
   rechargeAbilities: {},
   dailyAbilities: {},
-  spellcasting: [],
   inLair: false,
 } as const satisfies StatBlock;
