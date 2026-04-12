@@ -187,24 +187,31 @@ export interface MonsterSpellcastingAbility extends MonsterAbilityBase {
   readonly spells: ReadonlyArray<MonsterSpellReference>;
 }
 
-export type MonsterTrait = MonsterExecutableAbility | MonsterTextAbility;
+export type MonsterTrait =
+  | MonsterExecutableAbility
+  | MonsterTextAbility
+  | MonsterSpellcastingAbility;
 export type MonsterAction =
   | MonsterAttackAbility
   | MonsterExecutableAbility
   | MonsterMultiattackAbility
-  | MonsterTextAbility;
+  | MonsterTextAbility
+  | MonsterSpellcastingAbility;
 export type MonsterBonusAction =
   | MonsterBattleBonusActionAbility
   | MonsterExecutableAbility
-  | MonsterTextAbility;
+  | MonsterTextAbility
+  | MonsterSpellcastingAbility;
 export type MonsterReaction =
   | MonsterBattleReactionAbility
   | MonsterExecutableAbility
-  | MonsterTextAbility;
+  | MonsterTextAbility
+  | MonsterSpellcastingAbility;
 export type MonsterLegendaryAction =
   | MonsterLegendaryActionAbility
   | MonsterExecutableAbility
-  | MonsterTextAbility;
+  | MonsterTextAbility
+  | MonsterSpellcastingAbility;
 
 // --- Speed Types ---
 
@@ -276,6 +283,5 @@ export interface StatBlock {
   readonly legendaryActions: ReadonlyArray<MonsterLegendaryAction>;
   readonly rechargeAbilities: Readonly<Record<string, RechargeAbilityDef>>;
   readonly dailyAbilities: Readonly<Record<string, number>>; // name -> max uses/day
-  readonly spellcasting: ReadonlyArray<MonsterSpellcastingAbility>;
   readonly inLair: boolean;
 }

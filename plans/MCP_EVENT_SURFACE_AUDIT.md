@@ -55,13 +55,38 @@ Some public tokens wrap lower-level runtime events, and some public-worthy event
 - They must run over explicit caller/session spatial facts.
 - Core and MCP should not grow a grid engine, pathfinder, or persistent geometry subsystem.
 
+Implementation-ready bounded contracts:
+
+- `BATTLE_HELP_ATTACK` public token should stay minimal: `allyId` and `targetId`.
+- `BATTLE_HELP_ATTACK` execute-time/session fact surface should stay minimal:
+  `helperWithin5ftOfTarget`.
+- `BATTLE_HELP_ATTACK` battle-owned legality stays internal: active-helper
+  identity, action availability, dead/incapacitated checks, distinct/alive
+  participant validation, help expiry at the helper's next turn, and one-shot
+  consumption by the first qualifying attack.
+- `BATTLE_MOVE` public token should represent one 5-foot movement checkpoint
+  rather than a pathfinding request or persistent destination model.
+- `BATTLE_MOVE` execute-time/session fact surface should stay minimal:
+  `provocationKind` plus the set of threatening creatures for that specific
+  reach-exit checkpoint.
+- `BATTLE_MOVE` battle-owned legality stays internal: mover dead/incapacitated
+  checks, remaining movement spend, grapple-drag extra-cost handling, Disengage
+  suppression, opportunity-attack reaction availability, and the existing
+  movement-OA reaction window.
+- Non-goal: no coordinates, path traces, terrain ownership, reach computation
+  service, or persistent adjacency cache in MCP/core. The caller or session
+  adapter can compute local spatial facts and submit only the bounded booleans
+  and ID sets above.
+
 ### 3. Attack-shaped actions need a strict runtime boundary
 
 `BATTLE_ATTACK` is the template for future attack-shaped public surfaces.
 
-- Battle owns attacker state, resource spend, weapon/profile derivation, crit derivation, Sneak Attack legality/state, and damage aggregation semantics.
-- Caller/runtime must provide only the explicit battle-external facts needed to resolve the attack honestly.
-- Do not expose arbitrary caller-supplied attack payload fields such as damage type, weapon properties, finesse, or other battle-owned derived facts.
+- The first safe public slice is the active creature's Attack-action `BATTLE_ATTACK` using its already-derived main-hand weapon or Unarmed Strike. Off-hand, grapple, legendary, movement-OA, and rider flows remain separate follow-up surfaces.
+- The public token is caller-owned and minimal: `scope`, `actorId`, `type`, `targetId`, and `knockOut`.
+- The execute-time runtime envelope is limited to explicit battle-external facts: `attackRoll`, `targetAc`, rolled `weaponDamage`, `attackerWithin5ft`, `attackerWithin60ft` when the target is not within 5 feet, `hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, `hasAllyAdjacentToTarget`, and `hitReactionCandidates`.
+- Battle owns attacker state, action/attack spend, weapon or unarmed profile derivation, crit range and crit derivation, melee-versus-ranged classification, target legality, knock-out legality, Sneak Attack legality/state, rider timing, and damage aggregation semantics.
+- Do not expose caller-supplied attack payload fields such as damage type, damage dice, weapon properties, finesse, reach, legendary-action metadata, or rider damage totals inside the base attack payload.
 
 This same boundary will be reused by:
 
@@ -81,13 +106,18 @@ These stay blocked until battle owns the relevant hit qualification, target iden
 
 ### 5. Generic spell table events are blocked by multi-phase resolution
 
-Do not expose raw generic spell events until the full reaction/resolution flow has an honest owner.
+Do not expose raw generic spell events through `record_table_event`.
+Generic spell casting is battle-action work, and the full
+reaction/resolution flow must stay battle-owned.
 
 - `BATTLE_CAST_SAVE_SPELL`
 - `BATTLE_CAST_CONCENTRATION_SPELL`
 - `BATTLE_CAST_AOE`
 
-These are blocked because they can open counterspell windows, save-failed reaction windows, per-target AoE loops, or other follow-up MCP interaction. Prefer modeled spell actions with battle-owned payloads.
+These are blocked because they can open counterspell windows, save-failed
+reaction windows, per-target AoE loops, or other follow-up MCP interaction.
+Prefer battle-scoped spell tokens backed by core-owned spell payload
+projections. See `MCPA6_GENERIC_SPELL_RESOLUTION_OWNERSHIP.md`.
 
 ### 6. Raw effect payloads are not safe public schemas
 
@@ -104,6 +134,13 @@ These remain blocked until effect provenance, duration, hooks, granted facts, an
 - `RESTORE_MAX_HP`
 
 These are blocked because the raw amount-only events lose rule-source semantics and source-specific caps/restoration behavior.
+
+MCPA7 decision:
+
+- do not add generic public `REDUCE_MAX_HP` / `RESTORE_MAX_HP` table events;
+- keep max-HP change on the owning source surface (attack, spell, curse,
+  disease, rest, or future named route), with restoration semantics authored by
+  that same source.
 
 ### 8. Failed-save / failed-check semantic commands are the correct public trigger surface
 
@@ -130,31 +167,31 @@ These are the public-facing items that still matter. Keep this table current.
 
 | Item | Intended MCP surface | Current blocker(s) | Notes |
 | --- | --- | --- | --- |
-| `BATTLE_ATTACK` | `get_available_actions` | Finalize and wire the strict `battleAttack` token/runtime contract. Runtime still must carry explicit target AC, distance/visibility, adjacency, and hit-reaction candidate facts without MCP fabricating battle state. | First safe slice is active-creature main-hand weapon attack only. Battle owns crit derivation and damage semantics. |
-| `BATTLE_OFF_HAND_ATTACK` | `get_available_actions` | Depends on finalized `BATTLE_ATTACK` boundary. Also needs Light-property pairing and ability-modifier handling for extra attack damage. | Reuse the same target/roll/session-fact contract as `BATTLE_ATTACK`. |
-| `BATTLE_LEGENDARY_ATTACK` | `get_available_actions` or future monster-control route | Depends on finalized `BATTLE_ATTACK` boundary and on stat-block-owned legendary-action option payload/name/cost derivation. | Do not accept arbitrary caller-supplied monster attack payloads. |
-| `BATTLE_HELP_ATTACK` | `get_available_actions` | Needs a bounded token contract over explicit caller/session spatial facts only. | Required public holes are `allyId`, `targetId`, and helper-within-5-feet-of-target fact. No geometry owner in core/MCP. |
-| `BATTLE_MOVE` | `get_available_actions` | Needs a bounded token contract over explicit caller/session path, threat, provocation, and reach-exit facts. | No geometry owner in core/MCP. Opportunity-attack legality still depends on caller/session-owned reach-exit facts. |
-| `BATTLE_GRAPPLE` | `get_available_actions` | Public contract still needs `targetId` plus resolved save outcome wiring. | Size ownership is already solved in battle state. |
-| `USE_BRUTAL_STRIKE` | battle-driven rider window | Needs battle-owned chosen-attack window, legality, and effect follow-through. | Pre-roll declaration rider. |
-| `STUNNING_STRIKE` | battle-driven rider window | Needs battle-owned post-hit qualification, target identity, focus spend, and target save result handling. | Post-hit rider. |
-| `USE_CUNNING_STRIKE` | battle-driven rider window | Needs battle-owned Sneak Attack legality, rider-choice window, scaling, size/save follow-through. | Post-hit / pre-Sneak-Attack-damage rider-choice window. |
-| `USE_ELDRITCH_SMITE` | battle-driven rider window | Needs battle-owned pact-weapon hit qualification, slot spend, target identity, and target-size handling for optional `Prone`. | Post-hit rider. |
-| `USE_DIVINE_SMITE_FREE` | battle-driven rider window | Needs battle-owned melee/unarmed hit qualification, target identity, timing, free-use flag, and target creature-type handling. | Post-hit rider. |
-| `BATTLE_CAST_SAVE_SPELL` | future semantic spell action or future `record_table_event` route | Blocked on multi-phase reaction resolution and spell payload ownership. | Do not expose raw generic event while it can open counterspell and save-failed reaction windows. |
-| `BATTLE_CAST_CONCENTRATION_SPELL` | future semantic spell action or future `record_table_event` route | Blocked on counterspell resolution ownership and spell payload validation. | Raw `SpellId`/duration/condition payload is not a stable public contract. |
-| `BATTLE_CAST_AOE` | future semantic spell action or future `record_table_event` route | Blocked on counterspell resolution plus per-target AoE iteration ownership. | Do not expose raw AoE event until the per-target loop has an honest owner. |
-| `REDUCE_MAX_HP` | future `record_table_event` route | Needs source/provenance ownership for max-HP reduction semantics and caps. | Raw amount-only command is not sufficient. |
-| `RESTORE_MAX_HP` | future `record_table_event` route | Needs source/provenance ownership for restoration semantics and scope. | Prefer semantic spell/rest routes until provenance is owned. |
-| `ADD_EFFECT` | future semantic spell/effect route | Raw effect payload is too internal and unconstrained for MCP. | Add only through narrow semantic commands. |
-| `REMOVE_EFFECT` | future semantic spell/effect route | Removal by internal effect identity is not yet a stable public contract. | Prefer source-owned parent semantics such as concentration break, expiry, or spell-specific removal. |
+| `BATTLE_ATTACK` | `get_available_actions` | Contract finalized (MCPA1). Remaining work is MCPA2: wire the token as a public `get_available_actions` entry and confirm end-to-end MCP dispatch. | Public contract: caller supplies `targetId`, `knockOut`, `attackRoll` (1–20), `targetAc` (≥0), `weaponDamage` (≥0), spatial/visibility booleans (`attackerWithin5ft`, `attackerWithin60ft?`, `hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, `hasAllyAdjacentToTarget`), `hitReactionCandidates` (valid creature IDs). Battle derives weapon profile, damage type, crit, weapon properties, Sneak Attack legality, and damage bonuses. |
+| `BATTLE_OFF_HAND_ATTACK` | `get_available_actions` | Needs Light-property pairing plus battle-owned ability-modifier and extra-attack sequencing on top of the finalized `battleAttack` contract. | Reuse the same target/roll/session-fact contract as `BATTLE_ATTACK`; do not add a second attack payload schema. |
+| `BATTLE_LEGENDARY_ATTACK` | battle follow-up on `get_available_actions` after a monster-control choice | Depends on a named `USE_LEGENDARY_ACTION` control command keyed by `monsterId` + stat-block `abilityId`, plus reuse of the finalized `battleAttack` contract for the attack-shaped follow-up. | Do not accept arbitrary caller-supplied monster attack payloads or monster-authored attack data. |
+| `BATTLE_HELP_ATTACK` | `get_available_actions` | Contract defined (MCPA3). Remaining work: wire the token as a public `get_available_actions` entry. | Public contract: caller supplies `allyId`, `targetId`, and execute-time `helperWithin5ftOfTarget`. Battle owns action economy, identity validation, help-target tracking, and expiry. No geometry owner in core/MCP. See `MCPA3_SPATIAL_ACTION_CONTRACTS.md`. |
+| `BATTLE_MOVE` | `get_available_actions` | Contract defined (MCPA3). Remaining work: wire the token plus battle-driven OA follow-up entries as public surfaces. | Public contract: caller supplies one 5-foot checkpoint plus execute-time `provocationKind` and `threatened`. Battle owns movement budget, grapple drag cost, Disengage suppression, and OA eligibility filtering. The OA attack follow-up contract remains future work. No geometry owner in core/MCP. See `MCPA3_SPATIAL_ACTION_CONTRACTS.md`. |
+| `BATTLE_GRAPPLE` | `get_available_actions` | Public contract still needs `targetId` plus resolved save outcome wiring on a non-attack-roll contract. | Size ownership is already solved in battle state; do not copy the `battleAttack` payload just because grapple is attack-shaped in prose. |
+| `USE_BRUTAL_STRIKE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs a battle-owned pre-roll reservation window keyed to a specific Reckless qualifying attack. | Pre-roll declaration rider. |
+| `STUNNING_STRIKE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs a post-hit token plus explicit target save runtime. | Post-hit rider. |
+| `USE_CUNNING_STRIKE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs a battle-owned pending Sneak Attack commit step plus size/save follow-through. | Post-hit / pre-Sneak-Attack-damage rider-choice window. |
+| `USE_ELDRITCH_SMITE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs pact-weapon projection and the post-hit spend/follow-through window. | Post-hit rider. |
+| `USE_DIVINE_SMITE_FREE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs target creature-type projection and the shared Divine Smite hit window. | Post-hit rider. |
+| `BATTLE_CAST_SAVE_SPELL` | future battle spell token in `get_available_actions` | Needs a battle-scoped spell token backed by core-owned spell payload projection; counterspell and save-failed windows stay battle-owned. | Public input should identify spell, slot level, and target choice, not save DC / damage / condition payloads. |
+| `BATTLE_CAST_CONCENTRATION_SPELL` | future battle spell token in `get_available_actions` | Needs the same spell-payload owner plus battle-owned concentration start/break semantics. | Raw `SpellId` / duration / condition payload is not a stable public contract; `BREAK_CONCENTRATION` remains the narrow table-fact route. |
+| `BATTLE_CAST_AOE` | future battle spell token in `get_available_actions` | Needs the same spell-payload owner plus a bounded area-membership/runtime-save boundary while battle owns the per-target loop. | Do not expose raw AoE event or move the target-by-target continuation loop into MCP. |
+| `REDUCE_MAX_HP` | source-owned action / control / named ongoing-effect route | Generic `record_table_event` remains rejected after MCPA7; max-HP reduction must stay on the owning source surface with that source's cap/floor/restoration semantics. | Raw amount-only command is not sufficient. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `RESTORE_MAX_HP` | source-owned rest / action / named ongoing-effect route | Generic `record_table_event` remains rejected after MCPA7; restoration must stay on the owning source surface, and ordinary reset already belongs to `LONG_REST`. | Prefer semantic source-owned restoration over a free-floating restore amount. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `ADD_EFFECT` | source-owned spell / feature / named hazard route | Generic `record_table_event` remains rejected after MCPA7; public MCP must not send internal effect-hook payloads or granted-fact blobs. | Add only through parent/source semantics. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `REMOVE_EFFECT` | source-owned spell / feature / named hazard route | Generic `record_table_event` remains rejected after MCPA7; removal by internal effect identity is not a stable public contract. | Prefer concentration break, expiry/save-success semantics, or a source-specific end command. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
 | `DROP_PRONE` | future movement or `record_table_event` route | Blocked on session/position ownership because prone/standing interacts with movement-budget semantics. | Keep aligned with future movement ownership. |
-| `SUFFOCATE` | future `record_table_event` route | Needs explicit suffocation-progress ownership, not the current terminal shortcut event. | Current raw event is not the right public hazard shape. |
-| `APPLY_STARVATION` | future `record_table_event` route | Needs owned malnutrition progression semantics. | Current raw event does not capture the SRD process. |
-| `APPLY_DEHYDRATION` | future `record_table_event` route | Needs owned dehydration progression semantics by creature size and recovery/removal behavior. | Current raw event is too narrow. |
-| `USE_LEGENDARY_ACTION` | future `execute_control_command` route | Needs stat-block-owned action-name legality and cost projection. | Monster-control route, not ordinary player suggestion route. |
-| `USE_RECHARGE_ABILITY` | future `execute_control_command` route | Needs stat-block-owned recharge ability projection and legality. | Monster-control route. |
-| `USE_DAILY_ABILITY` | future `execute_control_command` route | Needs stat-block-owned daily-ability projection and legality. | Monster-control route. |
+| `SUFFOCATE` | future semantic `record_table_event` hazard family | Replace the shortcut with semantic suffocation progression such as `RECORD_HOLD_BREATH_EXPIRED`, `RECORD_SUFFOCATION_TURN_END`, and `RECORD_BREATHING_RESTORED`; core must own suffocation-sourced Exhaustion cleanup. | Current raw event is not the right public hazard shape and does not match SRD 5.2.1. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `APPLY_STARVATION` | future semantic `record_table_event` hazard route | Replace the shortcut with a daily-intake route such as `RECORD_DAILY_FOOD_INTAKE`; core must own the 5-day no-food counter and the malnutrition recovery lock. | Current raw event does not capture the SRD process. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `APPLY_DEHYDRATION` | future semantic `record_table_event` hazard route | Replace the shortcut with a daily-intake route such as `RECORD_DAILY_WATER_INTAKE`; core must own dehydration's recovery/removal lock. | Current raw event is too narrow. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `USE_LEGENDARY_ACTION` | `execute_control_command` | Public payload should be only `monsterId` + stat-block `abilityId`; battle/core must derive cost, timing legality, and follow-up from owned stat-block data. | Monster-control route, not ordinary player suggestion route. Attack-shaped options should open `BATTLE_LEGENDARY_ATTACK`; non-attack options stay blocked on their own generic facilities. |
+| `USE_RECHARGE_ABILITY` | `execute_control_command` | Public payload should be only `monsterId` + stat-block `abilityId`; core must derive availability and recharge legality from owned resource state. | Monster-control route. |
+| `USE_DAILY_ABILITY` | `execute_control_command` | Public payload should be only `monsterId` + stat-block `abilityId`; core must derive remaining-use legality from owned resource state. | Monster-control route. |
 
 ## Intentionally Internal
 

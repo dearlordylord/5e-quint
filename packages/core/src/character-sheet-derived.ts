@@ -324,6 +324,7 @@ type CharacterBattleProjection = Pick<
   | "baseArmorClass"
   | "baseWalkSpeed"
   | "caster"
+  | "strMod"
   | "dexMod"
   | "rogueLevel"
   | "monkLevel"
@@ -356,6 +357,7 @@ export function characterSheetBattleProjection(
     baseArmorClass: armorClass(derived.armorClass),
     baseWalkSpeed: derived.baseWalkSpeed,
     caster: derived.spellcasting.preparedSpells.size > 0,
+    strMod: abilityModifiers.str,
     dexMod: abilityModifiers.dex,
     rogueLevel: sheet.classLevels.rogue,
     monkLevel: sheet.classLevels.monk,

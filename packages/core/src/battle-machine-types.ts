@@ -1,6 +1,5 @@
 import type { Option } from "effect";
-
-// Events, decisions, and interrupts extracted to battle-machine-events.ts for max-lines compliance.
+import type { ReadiedSpellParams } from "#/battle-ready-types.ts";
 import type {
   DmgReactionKind,
   HitReactionKind,
@@ -9,38 +8,35 @@ import type {
 } from "#/battle-machine-events.ts";
 import type { BattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
 import type {
+  MonsterResourceState,
   MonsterBattleBonusActionOption,
   MonsterBattleReactionOption,
 } from "#/monster-types.ts";
 import type {
-  Ability,
   ActiveEffect,
   ArmorClass,
   BattleWeaponProfile,
-  Condition,
   CreatureId,
   CreatureKind,
   DamageQualifier,
   DamageType,
-  DifficultyClass,
   HandUse,
   IncapSource,
   QualifiedPhysicalBypass,
   Size,
-  SpellId,
-  SpellSlotLevel,
 } from "#/types.ts";
 
 export type { CreatureId } from "#/types.ts";
-
 type DeathSaves = { readonly successes: number; readonly failures: number };
+export type BattlePosition = Readonly<{ row: number; col: number }>;
 
-export interface BattlePosition {
-  readonly row: number;
-  readonly col: number;
-}
-
-export interface BattleCreatureState {
+export interface BattleCreatureState extends Pick<
+  MonsterResourceState,
+  | "legendaryActionsRemaining"
+  | "legendaryResistancesRemaining"
+  | "rechargeAvailable"
+  | "dailyUsesRemaining"
+> {
   readonly hp: number;
   readonly maxHp: number;
   readonly maxHpReduction: number;
@@ -93,21 +89,17 @@ export interface BattleCreatureState {
   readonly pactSlotsCurrent: number;
   readonly pactSlotLevel: number;
   readonly concentrationSpellId: Option.Option<SpellId>;
-  // MonsterResourceState
-  readonly legendaryActionsRemaining: number;
-  readonly legendaryResistancesRemaining: number;
-  readonly rechargeAvailable: Readonly<Record<string, boolean>>;
-  readonly dailyUsesRemaining: Readonly<Record<string, number>>;
+  readonly rechargeMinRolls: Readonly<Record<string, number>>;
   // Identity
   readonly creatureKind: CreatureKind;
   readonly creatureSize: Size;
   readonly baseArmorClass: ArmorClass;
   readonly battleSide: string;
   readonly battlePosition: BattlePosition;
-  // Class levels tracked by battle Combatant
   readonly rogueLevel: number;
   readonly monkLevel: number;
-  // Static combatant modifier owned by battle when battle-resolved rules need it.
+  // Static combatant modifiers owned by battle when battle-resolved rules need them.
+  readonly strMod: number;
   readonly dexMod: number;
   // Prepared spells (for CS eligibility)
   readonly preparedSpells: ReadonlySet<string>;
@@ -141,9 +133,7 @@ export interface BattleCreatureState {
   readonly qualifiedPhysicalImmunities: ReadonlyArray<QualifiedPhysicalBypass>;
   readonly sneakAttackDice: number;
   readonly sneakAttackUsedThisTurn: boolean;
-  // Readied spell (SRD 5.2.1 Ready action)
   readonly readiedSpellParams: ReadiedSpellParams | null;
-  // Walk speed (PC: 30, Monster: from stat block)
   readonly baseWalkSpeed: number;
   readonly bardLevel: number;
   readonly bardicInspirationCharges: number;
@@ -163,21 +153,6 @@ export interface BattleCreatureState {
   readonly rightHandUse: HandUse;
   readonly battleBonusActionOptions: ReadonlyArray<MonsterBattleBonusActionOption>;
   readonly battleReactionOptions: ReadonlyArray<MonsterBattleReactionOption>;
-}
-
-/** Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready). */
-export interface ReadiedSpellParams {
-  readonly caster: CreatureId;
-  readonly target: CreatureId;
-  readonly saveDC: DifficultyClass;
-  readonly damageOnFail: number;
-  readonly halfOnSuccess: boolean;
-  readonly damageType: DamageType;
-  readonly conditionOnFail: Condition;
-  readonly applyCondition: boolean;
-  readonly saveAbility: Ability;
-  readonly spellName: string;
-  readonly slotLvl: SpellSlotLevel;
 }
 
 export interface AttackHitCtx {
@@ -434,9 +409,12 @@ export interface InitCreatureConfig {
   readonly caster?: boolean;
   readonly rogueLevel?: number;
   readonly monkLevel?: number;
+  readonly strMod?: number;
   readonly dexMod?: number;
   readonly legendaryActions?: number;
   readonly legendaryResistances?: number;
+  readonly rechargeAvailable?: Readonly<Record<string, boolean>>;
+  readonly rechargeMinRolls?: Readonly<Record<string, number>>;
   readonly preparedSpells?: ReadonlySet<string>;
   readonly readyableSpellPayloads?: ReadonlyMap<
     string,

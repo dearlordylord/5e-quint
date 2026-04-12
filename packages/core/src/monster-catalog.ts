@@ -1,11 +1,22 @@
 import { Match } from "effect";
 
+import {
+  KNIGHT,
+  KOBOLD_WARRIOR,
+  MAGE,
+  OGRE,
+  PRIEST,
+  SAHUAGIN_WARRIOR,
+  SCOUT,
+} from "#/monster-catalog-srd-expanded.ts";
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
+import { CENTAUR_TROOPER } from "#/monster-catalog-centaurs.ts";
 import {
   GOBLIN_BOSS,
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
 } from "#/monster-catalog-goblins.ts";
+import { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
 import { type MonsterAttack, type StatBlock } from "#/monster-types.ts";
 import {
   CreatureId,
@@ -15,11 +26,22 @@ import {
   type CreatureId as CreatureIdT,
 } from "#/types.ts";
 
+export { CENTAUR_TROOPER } from "#/monster-catalog-centaurs.ts";
 export {
   GOBLIN_BOSS,
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
 } from "#/monster-catalog-goblins.ts";
+export { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
+export {
+  KNIGHT,
+  KOBOLD_WARRIOR,
+  MAGE,
+  OGRE,
+  PRIEST,
+  SAHUAGIN_WARRIOR,
+  SCOUT,
+} from "#/monster-catalog-srd-expanded.ts";
 
 /**
  * Core-owned runtime catalog for named monster stat blocks.
@@ -33,9 +55,18 @@ export {
  */
 
 export const MONSTER_STAT_BLOCK_IDS = [
+  "centaurTrooper",
   "goblinMinion",
   "goblinWarrior",
   "goblinBoss",
+  "knight",
+  "koboldWarrior",
+  "mage",
+  "ogre",
+  "pseudodragon",
+  "priest",
+  "sahuaginWarrior",
+  "scout",
 ] as const;
 export type MonsterStatBlockId = (typeof MONSTER_STAT_BLOCK_IDS)[number];
 
@@ -51,18 +82,49 @@ export const MONSTER_STAT_BLOCK_PROVENANCE = {
     "Existing named stat blocks in creature.qnt are MBT/proof fixtures unless a later task explicitly unifies Quint with the runtime catalog.",
 } as const;
 
-const MONSTER_STAT_BLOCKS: Readonly<Record<MonsterStatBlockId, StatBlock>> = {
+export const MONSTER_STAT_BLOCKS: Readonly<
+  Record<MonsterStatBlockId, StatBlock>
+> = {
+  centaurTrooper: CENTAUR_TROOPER,
   goblinMinion: GOBLIN_MINION,
   goblinWarrior: GOBLIN_WARRIOR,
   goblinBoss: GOBLIN_BOSS,
+  knight: KNIGHT,
+  koboldWarrior: KOBOLD_WARRIOR,
+  mage: MAGE,
+  ogre: OGRE,
+  pseudodragon: PSEUDODRAGON,
+  priest: PRIEST,
+  sahuaginWarrior: SAHUAGIN_WARRIOR,
+  scout: SCOUT,
 };
 
 export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
   return Match.value(id).pipe(
+    Match.when("centaurTrooper", () => MONSTER_STAT_BLOCKS.centaurTrooper),
     Match.when("goblinMinion", () => MONSTER_STAT_BLOCKS.goblinMinion),
     Match.when("goblinWarrior", () => MONSTER_STAT_BLOCKS.goblinWarrior),
     Match.when("goblinBoss", () => MONSTER_STAT_BLOCKS.goblinBoss),
+    Match.when("knight", () => MONSTER_STAT_BLOCKS.knight),
+    Match.when("koboldWarrior", () => MONSTER_STAT_BLOCKS.koboldWarrior),
+    Match.when("mage", () => MONSTER_STAT_BLOCKS.mage),
+    Match.when("ogre", () => MONSTER_STAT_BLOCKS.ogre),
+    Match.when("pseudodragon", () => MONSTER_STAT_BLOCKS.pseudodragon),
+    Match.when("priest", () => MONSTER_STAT_BLOCKS.priest),
+    Match.when("sahuaginWarrior", () => MONSTER_STAT_BLOCKS.sahuaginWarrior),
+    Match.when("scout", () => MONSTER_STAT_BLOCKS.scout),
     Match.exhaustive,
+  );
+}
+
+export function statBlockRechargeMinRolls(
+  statBlock: StatBlock,
+): Readonly<Record<string, number>> {
+  return Object.fromEntries(
+    Object.entries(statBlock.rechargeAbilities).map(([id, ability]) => [
+      id,
+      ability.rechargeMin,
+    ]),
   );
 }
 
@@ -143,6 +205,16 @@ function statBlockAttackToBattleWeaponProfile(
       statBlockAttackSource,
     };
   }
+  if (attack.name === "Bite") {
+    return {
+      name: attack.name,
+      damageType: attack.damageType,
+      isMelee: true,
+      damageDie: 4,
+      properties: new Set([]),
+      statBlockAttackSource,
+    };
+  }
   return null;
 }
 
@@ -180,6 +252,9 @@ export function statBlockToInitCreatureConfig(params: {
     maxHp: params.statBlock.maxHp,
     creatureSize: params.statBlock.creatureSize,
     baseArmorClass: params.statBlock.ac,
+    strMod: abilityModifier(
+      abilityScoreToMod(params.statBlock.abilityScores.str),
+    ),
     dexMod: abilityModifier(
       abilityScoreToMod(params.statBlock.abilityScores.dex),
     ),
@@ -191,6 +266,10 @@ export function statBlockToInitCreatureConfig(params: {
       params.statBlock.legendaryResistanceUses > 0
         ? params.statBlock.legendaryResistanceUses
         : undefined,
+    rechargeAvailable: Object.fromEntries(
+      Object.keys(params.statBlock.rechargeAbilities).map((id) => [id, false]),
+    ),
+    rechargeMinRolls: statBlockRechargeMinRolls(params.statBlock),
     baseWalkSpeed: params.statBlock.speeds.walk,
     battleBonusActionOptions: statBlockBattleBonusActionOptions(
       params.statBlock,

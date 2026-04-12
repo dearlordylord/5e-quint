@@ -110,6 +110,11 @@ export function buildBattleRuntimeInputs(
         "battleAttack runtime inputs must be supplied explicitly by execute_action.",
       ),
     ),
+    Match.when({ runtime: "battleGrapple" }, () =>
+      Effect.die(
+        "battleGrapple runtime inputs must be supplied explicitly by execute_action.",
+      ),
+    ),
     Match.when({ runtime: "none" }, () =>
       Effect.succeed({ runtime: "none" as const }),
     ),

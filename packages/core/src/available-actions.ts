@@ -31,7 +31,10 @@ import type {
   BattleEvent,
   InitCreatureConfig,
 } from "#/battle-machine-types.ts";
-import { isIncapacitated } from "#/battle-machine-creature.ts";
+import {
+  battleHasFreeHand,
+  isIncapacitated,
+} from "#/battle-machine-creature.ts";
 import { bardicInspirationDie } from "#/features/class-bard.ts";
 import { deflectAttacksReduction } from "#/features/class-monk-features.ts";
 import { counterspellAutoSuccess } from "#/features/spell-abjuration.ts";
@@ -56,6 +59,7 @@ import {
 import { MONSTER_BATTLE_BONUS_ACTION_OPTIONS } from "#/monster-types.ts";
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts";
 import type { DndContext, DndEvent } from "#/machine-types.ts";
+import { withinOneSize } from "#/machine-combat.ts";
 import {
   armorClass,
   CONDITIONS,
@@ -332,6 +336,15 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_OFF_HAND_ATTACK";
+      readonly targetId: Hole<string>;
+      readonly knockOut: Hole<boolean>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_ACTION_SURGE";
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
@@ -347,6 +360,14 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DECLARE_RECKLESS";
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_GRAPPLE";
+      readonly targetId: Hole<string>;
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
@@ -647,6 +668,13 @@ type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_OFF_HAND_ATTACK";
+      readonly targetId: string;
+      readonly knockOut: boolean;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_ACTION_SURGE";
     }
   | {
@@ -658,6 +686,12 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DECLARE_RECKLESS";
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_GRAPPLE";
+      readonly targetId: string;
     }
   | {
       readonly scope: "battle";
@@ -1146,6 +1180,13 @@ const BattleAttackResolvedActionSchema = Schema.Struct({
   knockOut: Schema.Boolean,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleOffHandAttackResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_OFF_HAND_ATTACK"),
+  targetId: Schema.String,
+  knockOut: Schema.Boolean,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleActionSurgeResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_ACTION_SURGE"),
@@ -1159,6 +1200,12 @@ const BattleEnterRageResolvedActionSchema = Schema.Struct({
 const BattleDeclareRecklessResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_DECLARE_RECKLESS"),
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleGrappleResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_GRAPPLE"),
+  targetId: Schema.String,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const BattleReleaseGrappleResolvedActionSchema = Schema.Struct({
@@ -1297,9 +1344,11 @@ const TriggerFireShieldBattleResolvedActionSchema = Schema.Struct({
 
 const BattleResolvedActionTokenSchema = Schema.Union(
   BattleAttackResolvedActionSchema,
+  BattleOffHandAttackResolvedActionSchema,
   BattleActionSurgeResolvedActionSchema,
   BattleEnterRageResolvedActionSchema,
   BattleDeclareRecklessResolvedActionSchema,
+  BattleGrappleResolvedActionSchema,
   BattleReleaseGrappleResolvedActionSchema,
   BattleEscapeGrappleResolvedActionSchema,
   BattleDashResolvedActionSchema,
@@ -1381,6 +1430,7 @@ const BattleInitRawCreatureConfigSchema = Schema.Struct({
   monkLevel: Schema.optional(
     Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
   ),
+  strMod: Schema.optional(Schema.Number.pipe(Schema.int())),
   dexMod: Schema.optional(Schema.Number.pipe(Schema.int())),
   legendaryActions: Schema.optional(
     Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
@@ -2321,10 +2371,20 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
-        { readonly type: "BATTLE_ATTACK" }
+        {
+          readonly type: "BATTLE_ATTACK" | "BATTLE_OFF_HAND_ATTACK";
+        }
       >;
       readonly outcome: string;
       readonly runtime: "battleAttack";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_GRAPPLE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "battleGrapple";
     }
   | {
       readonly token: Extract<
@@ -2636,7 +2696,6 @@ export type BattleResolutionRuntimeInputs =
         readonly attackRoll: number;
         readonly targetAc: number;
         readonly weaponDamage: number;
-        readonly sneakAttackDamage?: number;
         readonly attackerWithin5ft: boolean;
         readonly attackerWithin60ft?: boolean;
         readonly hostileWithin5ft: boolean;
@@ -2645,6 +2704,12 @@ export type BattleResolutionRuntimeInputs =
         readonly frightSourceInLOS: boolean;
         readonly hasAllyAdjacentToTarget: boolean;
         readonly hitReactionCandidates: ReadonlyArray<string>;
+      };
+    }
+  | {
+      readonly runtime: "battleGrapple";
+      readonly values: {
+        readonly targetSaveFailed: boolean;
       };
     }
   | {
@@ -3665,10 +3730,93 @@ function canUseBattleAttack(actor: BattleCreatureState): boolean {
   return actor.actionsRemaining > 0 || actor.extraAttacksRemaining > 0;
 }
 
+function canUseBattleOffHandAttack(actor: BattleCreatureState): boolean {
+  const mainHand = actor.mainHandWeapon;
+  const offHand = actor.offHandWeapon;
+  return (
+    !actor.bonusActionUsed &&
+    actor.attackActionUsed &&
+    actor.lightAttackUsedThisTurn &&
+    mainHand != null &&
+    offHand != null &&
+    mainHand.isMelee &&
+    offHand.isMelee &&
+    mainHand.properties.has("light") &&
+    offHand.properties.has("light")
+  );
+}
+
 function battleAttackCost(actor: BattleCreatureState): ResourceCost {
   return actor.attackActionUsed && actor.extraAttacksRemaining > 0
     ? FREE_COST
     : costs(quotaCost("action"));
+}
+
+function squaresBetween(
+  attacker: BattleCreatureState,
+  target: BattleCreatureState,
+): number {
+  return Math.max(
+    Math.abs(attacker.battlePosition.row - target.battlePosition.row),
+    Math.abs(attacker.battlePosition.col - target.battlePosition.col),
+  );
+}
+
+function canBattleAttackUseMeleeLane(
+  weapon: typeof UNARMED_STRIKE_PROFILE | BattleCreatureState["mainHandWeapon"],
+  attackerWithin5ft: boolean,
+): boolean {
+  if (weapon == null || !weapon.isMelee) return false;
+  return attackerWithin5ft || !weapon.properties.has("thrown");
+}
+
+function battleAttackTargetGroups(params: {
+  readonly context: BattleContext;
+  readonly attackerId: string;
+  readonly targetOptions: ReadonlyArray<string>;
+  readonly weapon:
+    | typeof UNARMED_STRIKE_PROFILE
+    | BattleCreatureState["mainHandWeapon"];
+}): ReadonlyArray<{
+  readonly targetOptions: ReadonlyArray<string>;
+  readonly knockOutOptions: ReadonlyArray<boolean>;
+}> {
+  const attacker = params.context.creatures.get(CreatureId(params.attackerId));
+  if (attacker == null) return [];
+  const meleeTargets: Array<string> = [];
+  const rangedTargets: Array<string> = [];
+  for (const targetId of params.targetOptions) {
+    const target = params.context.creatures.get(CreatureId(targetId));
+    if (target == null) continue;
+    if (
+      canBattleAttackUseMeleeLane(
+        params.weapon,
+        squaresBetween(attacker, target) <= 1,
+      )
+    ) {
+      meleeTargets.push(targetId);
+    } else {
+      rangedTargets.push(targetId);
+    }
+  }
+  return [
+    ...(meleeTargets.length > 0
+      ? [
+          {
+            targetOptions: meleeTargets,
+            knockOutOptions: [false, true] as const,
+          },
+        ]
+      : []),
+    ...(rangedTargets.length > 0
+      ? [
+          {
+            targetOptions: rangedTargets,
+            knockOutOptions: [false] as const,
+          },
+        ]
+      : []),
+  ];
 }
 
 function currentReadyableSpellPayloads(
@@ -3803,15 +3951,21 @@ export function getAvailableBattleActions(
         )
         .map(([targetId]) => targetId)
         .sort();
-      if (targetOptions.length > 0) {
+      const weapon = activeCreature.mainHandWeapon ?? UNARMED_STRIKE_PROFILE;
+      for (const targetGroup of battleAttackTargetGroups({
+        context,
+        attackerId: activeCreatureId,
+        targetOptions,
+        weapon,
+      })) {
         tokens.push(
           battleToken<
             Extract<BattleActionToken, { readonly type: "BATTLE_ATTACK" }>
           >({
             actorId: activeCreatureId,
             type: "BATTLE_ATTACK",
-            targetId: { options: targetOptions },
-            knockOut: { options: [false, true] },
+            targetId: { options: [...targetGroup.targetOptions] },
+            knockOut: { options: [...targetGroup.knockOutOptions] },
             cost: battleAttackCost(activeCreature),
             outcome: {
               summary:
@@ -3819,6 +3973,42 @@ export function getAvailableBattleActions(
             },
           }),
         );
+      }
+    }
+    if (canUseBattleOffHandAttack(activeCreature)) {
+      const targetOptions = [...context.creatures.entries()]
+        .filter(
+          ([targetId, target]) => targetId !== activeCreatureId && !target.dead,
+        )
+        .map(([targetId]) => targetId)
+        .sort();
+      const weapon = activeCreature.offHandWeapon;
+      if (weapon != null) {
+        for (const targetGroup of battleAttackTargetGroups({
+          context,
+          attackerId: activeCreatureId,
+          targetOptions,
+          weapon,
+        })) {
+          tokens.push(
+            battleToken<
+              Extract<
+                BattleActionToken,
+                { readonly type: "BATTLE_OFF_HAND_ATTACK" }
+              >
+            >({
+              actorId: activeCreatureId,
+              type: "BATTLE_OFF_HAND_ATTACK",
+              targetId: { options: [...targetGroup.targetOptions] },
+              knockOut: { options: [...targetGroup.knockOutOptions] },
+              cost: costs(quotaCost("bonusAction")),
+              outcome: {
+                summary:
+                  "Make the Light property's extra attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+              },
+            }),
+          );
+        }
       }
     }
     if (
@@ -3908,6 +4098,38 @@ export function getAvailableBattleActions(
           },
         }),
       );
+    }
+    if (
+      canUseBattleAttack(activeCreature) &&
+      activeCreature.grapplingTarget == null &&
+      battleHasFreeHand(activeCreature)
+    ) {
+      const targetOptions = [...context.creatures.entries()]
+        .filter(
+          ([targetId, target]) =>
+            targetId !== activeCreatureId &&
+            !target.dead &&
+            target.grappledBy == null &&
+            withinOneSize(activeCreature.creatureSize, target.creatureSize),
+        )
+        .map(([targetId]) => targetId)
+        .sort();
+      if (targetOptions.length > 0) {
+        tokens.push(
+          battleToken<
+            Extract<BattleActionToken, { readonly type: "BATTLE_GRAPPLE" }>
+          >({
+            actorId: activeCreatureId,
+            type: "BATTLE_GRAPPLE",
+            targetId: { options: targetOptions },
+            cost: battleAttackCost(activeCreature),
+            outcome: {
+              summary:
+                "Attempt to grapple the chosen target using the battle-owned size check and an explicit resolved Strength or Dexterity save outcome",
+            },
+          }),
+        );
+      }
     }
     if (activeCreature.grapplingTarget != null) {
       tokens.push(
@@ -4129,11 +4351,19 @@ function availableBattleTokenForResolved(
     if (candidate.type === "BATTLE_SEARCH" && token.type === "BATTLE_SEARCH") {
       return candidate.targetId.options.includes(token.targetId);
     }
-    if (candidate.type === "BATTLE_ATTACK" && token.type === "BATTLE_ATTACK") {
-      return (
-        candidate.targetId.options.includes(token.targetId) &&
-        candidate.knockOut.options.includes(token.knockOut)
-      );
+    if (
+      (candidate.type === "BATTLE_ATTACK" ||
+        candidate.type === "BATTLE_OFF_HAND_ATTACK") &&
+      candidate.type === token.type
+    ) {
+      if (!candidate.targetId.options.includes(token.targetId)) return false;
+      return candidate.knockOut.options.includes(token.knockOut);
+    }
+    if (
+      candidate.type === "BATTLE_GRAPPLE" &&
+      token.type === "BATTLE_GRAPPLE"
+    ) {
+      return candidate.targetId.options.includes(token.targetId);
     }
     if (
       candidate.type === "USE_REDIRECT_ATTACK" &&
@@ -4165,11 +4395,21 @@ export function resolveBattleAction(
       event: { type: "BATTLE_ACTION_SURGE" },
     };
   }
-  if (token.type === "BATTLE_ATTACK") {
+  if (
+    token.type === "BATTLE_ATTACK" ||
+    token.type === "BATTLE_OFF_HAND_ATTACK"
+  ) {
     return {
       token,
       outcome: availableToken.outcome.summary,
       runtime: "battleAttack",
+    };
+  }
+  if (token.type === "BATTLE_GRAPPLE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "battleGrapple",
     };
   }
   if (token.type === "BATTLE_ENTER_RAGE") {
@@ -4517,7 +4757,10 @@ export function finalizeBattleResolution(
       if (runtimeInputs.runtime !== "battleAttack") {
         return battleRuntimeMismatch("battleAttack", runtimeInputs.runtime);
       }
-      if (request.token.type !== "BATTLE_ATTACK") {
+      if (
+        request.token.type !== "BATTLE_ATTACK" &&
+        request.token.type !== "BATTLE_OFF_HAND_ATTACK"
+      ) {
         return {
           ok: false,
           error: {
@@ -4532,16 +4775,27 @@ export function finalizeBattleResolution(
           ok: false,
           error: {
             code: "ACTION_NOT_AVAILABLE",
-            message: `BATTLE_ATTACK is not currently available for ${request.token.actorId} in this battle state.`,
+            message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
           },
         };
       }
-      const weapon = actor.mainHandWeapon ?? UNARMED_STRIKE_PROFILE;
+      const weapon =
+        request.token.type === "BATTLE_ATTACK"
+          ? (actor.mainHandWeapon ?? UNARMED_STRIKE_PROFILE)
+          : actor.offHandWeapon;
+      if (weapon == null) {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_AVAILABLE",
+            message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
+          },
+        };
+      }
       const {
         attackRoll,
         targetAc,
         weaponDamage,
-        sneakAttackDamage,
         attackerWithin5ft,
         attackerWithin60ft,
         hostileWithin5ft,
@@ -4588,19 +4842,6 @@ export function finalizeBattleResolution(
           },
         };
       }
-      if (
-        sneakAttackDamage != null &&
-        (!Number.isInteger(sneakAttackDamage) || sneakAttackDamage < 0)
-      ) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message:
-              "Battle Sneak Attack damage must be a non-negative integer.",
-          },
-        };
-      }
       if (!attackerWithin5ft && attackerWithin60ft === undefined) {
         return {
           ok: false,
@@ -4611,34 +4852,68 @@ export function finalizeBattleResolution(
           },
         };
       }
+      const isMelee = canBattleAttackUseMeleeLane(weapon, attackerWithin5ft);
+      const commonEvent = {
+        targetId: CreatureId(request.token.targetId),
+        attackRoll,
+        crit: attackRoll >= actor.critRange,
+        tAc: armorClass(targetAc),
+        knockOut: request.token.knockOut,
+        attackerWithin5ft,
+        ...(attackerWithin60ft !== undefined ? { attackerWithin60ft } : {}),
+        hostileWithin5ft,
+        targetCanSeeAttacker,
+        attackerCanSeeTarget,
+        frightSourceInLOS,
+        hasAllyAdjacentToTarget,
+        saDmg: 0,
+        hitReactionCandidates: new Set(
+          hitReactionCandidates.map((id) => CreatureId(id)),
+        ),
+      };
+      return {
+        ok: true,
+        event:
+          request.token.type === "BATTLE_ATTACK"
+            ? {
+                type: "BATTLE_ATTACK",
+                ...commonEvent,
+                diceCount: weapon.diceCount ?? 1,
+                dieSize: weapon.damageDie ?? 0,
+                dmg: weaponDamage,
+                dt: weapon.damageType,
+                damageQualifiers: weapon.damageQualifiers ?? new Set(),
+                isMelee,
+                weaponProperties: weapon.properties,
+                isFinesse: weapon.properties.has("finesse"),
+              }
+            : {
+                type: "BATTLE_OFF_HAND_ATTACK",
+                ...commonEvent,
+                dmg: weaponDamage,
+              },
+        outcome: request.outcome,
+      };
+    }),
+    Match.when({ runtime: "battleGrapple" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "battleGrapple") {
+        return battleRuntimeMismatch("battleGrapple", runtimeInputs.runtime);
+      }
+      if (request.token.type !== "BATTLE_GRAPPLE") {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Battle-grapple runtime cannot finalize ${request.token.type}.`,
+          },
+        };
+      }
       return {
         ok: true,
         event: {
-          type: "BATTLE_ATTACK",
+          type: "BATTLE_GRAPPLE",
           targetId: CreatureId(request.token.targetId),
-          attackRoll,
-          diceCount: weapon.diceCount ?? 1,
-          dieSize: weapon.damageDie ?? 0,
-          dmg: weaponDamage,
-          dt: weapon.damageType,
-          damageQualifiers: weapon.damageQualifiers ?? new Set(),
-          crit: attackRoll >= actor.critRange,
-          tAc: armorClass(targetAc),
-          knockOut: request.token.knockOut,
-          isMelee: weapon.isMelee,
-          weaponProperties: weapon.properties,
-          isFinesse: weapon.properties.has("finesse"),
-          attackerWithin5ft,
-          ...(attackerWithin60ft !== undefined ? { attackerWithin60ft } : {}),
-          hostileWithin5ft,
-          targetCanSeeAttacker,
-          attackerCanSeeTarget,
-          frightSourceInLOS,
-          hasAllyAdjacentToTarget,
-          saDmg: sneakAttackDamage ?? 0,
-          hitReactionCandidates: new Set(
-            hitReactionCandidates.map((id) => CreatureId(id)),
-          ),
+          targetSaveFailed: runtimeInputs.values.targetSaveFailed,
         },
         outcome: request.outcome,
       };

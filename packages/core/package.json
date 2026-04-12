@@ -6,7 +6,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src && jscpd src --threshold 2 --ignore \"**/*.test.ts,**/*.mbt.test.ts,**/spell-registry.ts,**/mbt-shared.ts\"",
+    "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src && jscpd src --threshold 2 --ignore \"**/*.test.ts,**/*.mbt.test.ts,**/spell-registry.ts,**/mbt-shared.ts,**/monster-catalog-centaurs.ts,**/monster-catalog-goblins.ts,**/monster-catalog-pseudodragons.ts,**/monster-catalog-humanoids.ts,**/monster-catalog-expanded.ts\"",
     "circular": "madge --extensions ts --circular src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
