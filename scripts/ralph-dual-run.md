@@ -1,24 +1,32 @@
-# Dual Ralph Harness
+# Ralph Loop Harness
 
 `scripts/ralph-dual-run.sh` runs a per-task fresh-context implementation harness for a plan file:
 
 1. Parses the plan's `ralph-task-index` JSON block and uses `### Task N` headings only as body anchors.
 2. Creates an integration branch from the current main `HEAD`.
-3. For each task, creates two disposable worktrees from the current integration branch `HEAD`.
-4. Links the main workspace install into each task worktree so `pnpm` and package-local test commands resolve the same dependency graph as the main repo.
-5. Runs Claude in one worktree with `claude --dangerously-skip-permissions`.
-6. Runs Codex in the other with `codex exec --dangerously-bypass-approvals-and-sandbox`.
-7. Reviews both task diffs with Codex.
-8. Runs a Codex decider from the main worktree to apply, verify, reconcile any plan impact, and commit the reconciled Task N result to the integration branch.
-9. Refreshes the plan snapshot and task index from the updated plan file.
-10. Removes the task worktrees, then rescans the refreshed task index for the next task whose status is `ready-for-research` or `ready-for-implementation-after-light-research`.
+3. Refreshes the live plan snapshot every iteration.
+4. Asks Codex to choose the next runnable task from the refreshed plan instead of hard-coding earliest-runnable selection.
+5. For the chosen task, creates two disposable worktrees from the current integration branch `HEAD`.
+6. Links the main workspace install into each task worktree so `pnpm` and package-local test commands resolve the same dependency graph as the main repo.
+7. Runs Claude in one worktree with `claude --dangerously-skip-permissions`.
+8. Runs Codex in the other with `codex exec --dangerously-bypass-approvals-and-sandbox`.
+9. Reviews both task diffs with Codex.
+10. Runs a Codex decider from the main worktree to apply, verify, and either land the task or reject it while updating the plan for the next rerun.
+11. Refreshes the plan snapshot again and repeats until the chooser says there is no meaningful runnable work left.
 
-Runtime logs, prompts, review reports, and diffs are written under ignored `.ralph/runs/<run-id>/task-<n>/`.
+Runtime logs, prompts, review reports, chooser outputs, and diffs are written under ignored `.ralph/runs/<run-id>/`.
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
 
-Important queue contract: unfiltered Ralph runs are phase-capable. A numbered task may update later tasks, unblock later tasks, add new later tasks, reorder the future queue, or turn itself back into a runnable state after a research/plan pass. After every decider refresh, the harness rescans the whole queue from the top and picks the earliest runnable task number, even if that same task number ran earlier in the run. This preserves the intended behavior where a task can do research first and implementation second without inventing an extra task number.
+Important queue contract: unfiltered Ralph runs are phase-capable. A numbered task may update later tasks, unblock later tasks, add new later tasks, reorder the future queue, or turn itself back into a runnable state after a research/plan pass. After every decider refresh, the harness asks the chooser to pick again from the live runnable set, including reruns of the same numbered task when the plan clearly intends that.
 
-To keep that model safe, the harness caps each numbered task at three attempts per run. If a task keeps re-queueing itself and stays runnable past that cap, the harness fails loudly so the operator fixes the plan transition instead of spinning forever. Explicit `--task` selections remain single-pass in the order requested.
+The harness no longer uses a hard per-task attempt cap. Instead, it persists per-attempt history in `.ralph/runs/<run-id>/history.tsv` and gives that history to the chooser so the model can avoid blindly repeating unproductive attempts while still allowing intentional reruns.
+
+Every rerun of the same numbered task gets its own attempt directory:
+
+- `.ralph/runs/<run-id>/task-6/attempt-1/`
+- `.ralph/runs/<run-id>/task-6/attempt-2/`
+
+This avoids the old overwrite problem where later attempts destroyed the evidence from earlier ones.
 
 Important: during a live run, the "source plan file" is the plan on the Ralph launcher worktree / integration branch, not `master`. If you add or reorder tasks while Ralph is running, committing the change on `master` is not enough for the active run. Sync the plan onto the live Ralph launcher branch too:
 
@@ -75,7 +83,15 @@ Ralph treats the plan as bidirectional: the plan scopes the task, and the task m
 
 Every implementer, reviewer, and decider prompt requires a `Plan Impact` section. Use `none` when the task does not affect future work. Use `update-required` or `applied` when a discovery changes task status, dependencies, ordering, blockers, acceptance criteria, verification, or creates a follow-up task.
 
-The decider owns plan reconciliation. If either implementation or review reports plan impact, the decider must update the source plan file in the same task commit or explicitly explain why no plan update was needed. The harness fails the task if the decider final report omits `Plan Impact`.
+The decider owns plan reconciliation. If either implementation or review reports plan impact, the decider must update the source plan file in the same task commit or explicitly explain why no plan update was needed. The harness treats a decider report without `Plan Impact` as a fatal harness error because the loop can no longer safely continue.
+
+Rejected tasks are not terminal. The decider must:
+
+1. tighten the task description with helpful rerun guidance;
+2. put the task back into an appropriate runnable to-do status;
+3. commit that plan update so the next loop iteration can pick it again automatically.
+
+This is the key difference between a normal task rejection and a fatal harness failure. Rejection is part of the loop. Fatal harness failure is loss of a trustworthy repo or plan state.
 
 ## Usage
 
@@ -139,4 +155,32 @@ Broad verification is diagnostic, not an automatic scope-expander. When lint/typ
 
 The decider must leave the main worktree with no tracked staged or unstaged changes after each task. This makes git the persistent state boundary between task rotations.
 
-On interrupt or failure, the harness removes temporary worktrees, task branches, and `.ralph/runs/<run-id>` by default. Use `--keep-run` and/or `--keep-worktrees` when you want to preserve diagnostics.
+## Stop Conditions
+
+The loop stops only when one of these is true:
+
+1. the chooser reports there is no meaningful runnable work left in the plan;
+2. the operator interrupts the run;
+3. a fatal harness error occurs.
+
+Fatal harness errors are narrow:
+
+- the chooser fails or chooses an invalid/non-runnable task;
+- the decider exits non-zero;
+- the decider fails to include `Plan Impact`;
+- the main worktree is left dirty outside a committed decider result;
+- the plan snapshot cannot be parsed into a valid task index.
+
+Task rejection is explicitly not a stop condition.
+
+## Run State
+
+Run state is preserved by default under `.ralph/runs/<run-id>/`:
+
+- `plan.md` and `tasks.tsv` store the last refreshed plan snapshot;
+- `events.tsv` records high-level run events;
+- `history.tsv` records one row per task attempt;
+- `iterations/iteration-N/` stores chooser prompts and outputs;
+- `task-<n>/attempt-<m>/` stores implementer prompts, logs, diffs, reviews, and decider outputs.
+
+Temporary worktrees and task branches are still cleaned up by default unless `--keep-worktrees` is set, but the run evidence remains so post-mortems are possible even after a fatal exit.

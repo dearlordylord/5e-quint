@@ -5,14 +5,15 @@ usage() {
   cat <<'EOF'
 Usage: scripts/ralph-dual-run.sh <plan.md> [options]
 
-Runs a Ralph-style dual implementation loop:
+Runs a Ralph-style fresh-context loop:
   1. Parse the plan's ralph-task-index and matching ### Task N sections.
-  2. Create an integration branch from the current main HEAD, unless --commit-to-base is set.
-  3. For each task, create two disposable worktrees from the current integration HEAD.
-  4. Run Claude in one and Codex in the other, scoped to that task only.
-  5. Ask Codex to review both task diffs.
-  6. Ask Codex, from the main worktree, to reconcile and commit that task only.
-  7. Remove temporary worktrees, then continue with the next task.
+  2. Create an integration branch from the current base HEAD, unless --commit-to-base is set.
+  3. Refresh the live plan snapshot every iteration.
+  4. Ask Codex to choose the next runnable task from the refreshed plan.
+  5. For the chosen task, create two disposable worktrees from the current integration HEAD.
+  6. Run Claude and Codex implementers in parallel, then parallel reviews, then a Codex decider.
+  7. Let the decider either land the task or explicitly reject/update the plan.
+  8. Keep looping until the chooser reports there is no next meaningful runnable task.
 
 Options:
   --base <ref>            Base ref to branch from. Default: master
@@ -26,7 +27,6 @@ Options:
                           Default: pnpm quality
   --task <n>              Run only Task n. May be repeated; tasks run in
                           the order provided.
-  --keep-run              Keep .ralph/runs/<run-id> after failure/interrupt.
   --keep-worktrees        Leave temporary worktrees in place.
   --skip-decider          Stop each task after implementation and review.
   -h, --help              Show this help.
@@ -44,6 +44,14 @@ die() {
 
 log() {
   printf '[ralph-dual] %s\n' "$*"
+}
+
+note() {
+  local phase="$1"
+  local message="$2"
+  local now
+  now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  printf '%s\t%s\t%s\n' "$now" "$phase" "$message" | tee -a "$events_file" >/dev/null
 }
 
 quote_cmd() {
@@ -64,12 +72,12 @@ run_id="$(date -u +%Y%m%dT%H%M%SZ)"
 output_branch=""
 commit_to_base=false
 test_command="pnpm quality"
-keep_run=false
 keep_worktrees=false
 skip_decider=false
 selected_tasks=()
 child_pids=()
 task_branches=()
+active_worktrees=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -101,10 +109,6 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || die "--task requires a value"
       selected_tasks+=("$2")
       shift 2
-      ;;
-    --keep-run)
-      keep_run=true
-      shift
       ;;
     --keep-worktrees)
       keep_worktrees=true
@@ -165,7 +169,7 @@ if [[ "$commit_to_base" == false ]]; then
   if git show-ref --verify --quiet "refs/heads/$output_branch"; then
     die "output branch already exists: $output_branch"
   fi
-  log "creating/updating integration branch $output_branch from $base_ref ($base_sha)"
+  log "creating integration branch $output_branch from $base_ref ($base_sha)"
   git switch -C "$output_branch" "$base_sha"
 else
   [[ "$current_branch" == "$base_ref" ]] || die "--commit-to-base requires the current branch to be $base_ref"
@@ -173,10 +177,32 @@ fi
 
 run_root="$repo_root/.ralph/runs/$run_id"
 worktree_root="$repo_root/.worktrees/ralph/$run_id"
+iterations_root="$run_root/iterations"
+mkdir -p "$run_root" "$worktree_root" "$iterations_root"
 
-mkdir -p "$run_root" "$worktree_root"
 plan_snapshot="$run_root/plan.md"
 task_index="$run_root/tasks.tsv"
+events_file="$run_root/events.tsv"
+history_file="$run_root/history.tsv"
+state_file="$run_root/state.env"
+last_error_file="$run_root/last-error.txt"
+
+: >"$events_file"
+printf 'iteration\ttask_no\ttask_id\tattempt\tresult\tcommit\tmessage\n' >"$history_file"
+
+write_state() {
+  {
+    printf 'RUN_ID=%q\n' "$run_id"
+    printf 'BASE_REF=%q\n' "$base_ref"
+    printf 'BASE_SHA=%q\n' "$base_sha"
+    printf 'OUTPUT_BRANCH=%q\n' "$output_branch"
+    printf 'PLAN_FILE=%q\n' "$plan_file"
+    printf 'PLAN_SNAPSHOT=%q\n' "$plan_snapshot"
+    printf 'TASK_INDEX=%q\n' "$task_index"
+  } >"$state_file"
+}
+
+write_state
 
 write_task_index() {
   node - "$plan_snapshot" >"$task_index" <<'NODE'
@@ -190,7 +216,6 @@ if (!indexMatch) {
 }
 
 const index = JSON.parse(indexMatch[1])
-
 if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
   throw new Error(`invalid ralph-task-index schema in ${path}`)
 }
@@ -262,57 +287,82 @@ lookup_task_row() {
   ' "$task_index"
 }
 
-refresh_plan_snapshot
+task_status_is_runnable() {
+  local status="$1"
+  [[ "$status" == "ready-for-research" || "$status" == "ready-for-implementation-after-light-research" ]]
+}
 
-task_numbers=()
-if [[ ${#selected_tasks[@]} -gt 0 ]]; then
-  for selected in "${selected_tasks[@]}"; do
-    lookup_task_row "$selected" >/dev/null || die "selected task not found in plan: $selected"
-    task_numbers+=("$selected")
-  done
-fi
+write_ready_tasks_file() {
+  local output_file="$1"
+  : >"$output_file"
+  while IFS=$'\t' read -r task_no task_id status task_start task_end task_title; do
+    [[ -n "$task_no" ]] || continue
+    if task_status_is_runnable "$status"; then
+      printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$task_no" "$task_id" "$status" "$task_start" "$task_end" "$task_title" >>"$output_file"
+    fi
+  done <"$task_index"
+}
 
-declare -A processed_tasks=()
-declare -A task_attempts=()
+append_history() {
+  local iteration="$1"
+  local task_no="$2"
+  local task_id="$3"
+  local attempt="$4"
+  local result="$5"
+  local commit="$6"
+  local message="$7"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$iteration" "$task_no" "$task_id" "$attempt" "$result" "$commit" "$message" >>"$history_file"
+}
 
-cleanup() {
-  local status=$?
+cleanup_active_worktrees() {
   local wt
-  local pid
   local branch
 
-  if [[ "$status" -ne 0 ]]; then
-    for pid in "${child_pids[@]}"; do
-      [[ -n "$pid" ]] || continue
-      kill "$pid" >/dev/null 2>&1 || true
-    done
-    wait >/dev/null 2>&1 || true
-  fi
-
   if [[ "$keep_worktrees" == false ]]; then
-    for wt in "$worktree_root"/*/claude "$worktree_root"/*/codex; do
-      [[ -d "$wt" ]] || continue
-      git worktree remove --force "$wt" >/dev/null 2>&1 || true
+    for wt in "${active_worktrees[@]}"; do
+      [[ -n "$wt" ]] || continue
+      if git worktree list --porcelain | grep -Fqx "worktree $wt"; then
+        git worktree remove --force "$wt" >/dev/null 2>&1 || true
+      fi
     done
+    active_worktrees=()
+
+    for branch in "${task_branches[@]}"; do
+      [[ -n "$branch" ]] || continue
+      git branch -D "$branch" >/dev/null 2>&1 || true
+    done
+    task_branches=()
+
     find "$worktree_root" -type d -empty -delete >/dev/null 2>&1 || true
     rmdir "$worktree_root" >/dev/null 2>&1 || true
   fi
+}
 
-  if [[ "$keep_worktrees" == false ]]; then
-    for branch in "${task_branches[@]}"; do
-      git branch -D "$branch" >/dev/null 2>&1 || true
-    done
-  fi
+cleanup() {
+  local status=$?
+  local pid
 
-  if [[ "$status" -ne 0 && "$keep_run" == false ]]; then
-    rm -rf "$run_root"
+  for pid in "${child_pids[@]}"; do
+    [[ -n "$pid" ]] || continue
+    kill "$pid" >/dev/null 2>&1 || true
+  done
+  wait >/dev/null 2>&1 || true
+
+  cleanup_active_worktrees
+
+  if [[ "$status" -eq 0 ]]; then
+    note "run" "complete"
+  else
+    printf 'run exited with status %s\n' "$status" >"$last_error_file"
+    note "run" "aborted status=$status"
   fi
 
   exit "$status"
 }
 trap cleanup EXIT
-trap 'exit 130' INT
-trap 'exit 143' TERM
+trap 'printf "interrupted\n" >"$last_error_file"; exit 130' INT
+trap 'printf "terminated\n" >"$last_error_file"; exit 143' TERM
 
 write_prompt() {
   local role="$1"
@@ -412,7 +462,7 @@ write_decider_prompt() {
   local task_base_sha="$4"
   local claude_worktree="$5"
   local codex_worktree="$6"
-  local task_root="$7"
+  local attempt_root="$7"
 
   cat >"$output_file" <<EOF
 You are the master merge/decider agent for Task $task_no in a Ralph-style dual implementation run.
@@ -425,8 +475,12 @@ Plan file: $plan_snapshot
 Current task file: $task_file
 Claude worktree: $claude_worktree
 Codex worktree: $codex_worktree
-Claude review: $task_root/claude-review.md
-Codex review: $task_root/codex-review.md
+Claude implementer exit: $attempt_root/claude-implementer.exit
+Codex implementer exit: $attempt_root/codex-implementer.exit
+Claude review: $attempt_root/claude-review.md
+Codex review: $attempt_root/codex-review.md
+Claude review exit: $attempt_root/claude-review.exit
+Codex review exit: $attempt_root/codex-review.exit
 Verification command: $test_command
 
 Read AGENTS.md/CLAUDE.md first and follow the repo instructions. The two implementation worktrees are inputs, not final output. Inspect both Task $task_no diffs and both review reports. Apply the best final implementation for Task $task_no to the main worktree, combining useful parts when appropriate and rejecting broken or off-plan changes. Do not implement later tasks.
@@ -438,7 +492,8 @@ Requirements:
 - Never run ./scripts/mbt-fuzz.sh, ./scripts/fuzz-all.sh, ./scripts/fuzz-overnight.sh, or any MBT command with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, stay on Tier 1 / Tier 1b unless the task explicitly requires a higher tier.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
-- Inspect both implementations and both reviews for Plan Impact. If any impact is update-required, update the plan file at $plan_file in the same commit. If no plan update is needed, say so explicitly in the final Plan Impact section.
+- Inspect both implementations and both reviews for Plan Impact. If either implementation is rejected, the task description must be tightened with helpful rerun guidance before the decider finishes. If any impact is update-required, update the source plan file at $plan_file in the same commit. If no plan update is needed, say so explicitly in the final Plan Impact section.
+- If the task is rejected, put it back into the appropriate runnable to-do status, commit the rejection/plan guidance, and leave the plan in a shape where the next Ralph iteration can pick it again without operator intervention.
 - Commit the reconciled Task $task_no result to $output_branch in the main worktree after verification. Use a concise task-scoped commit message. Do not leave tracked changes staged or unstaged; the next task worktrees are created from the updated integration HEAD.
 - For docs-only tasks, prefer the task-specific grep/search checks and git diff --check over broad formatters that churn unrelated Markdown. Do not run broad formatters unless the task explicitly requires formatting.
 - Leave temporary worktree cleanup to the harness.
@@ -453,6 +508,37 @@ At the end, report:
   - Status: none | applied
   - Affected tasks: task IDs and final planning action for each
   - Plan edits: summary of updates made to $plan_file, or "none"
+EOF
+}
+
+write_chooser_prompt() {
+  local output_file="$1"
+  local ready_tasks_file="$2"
+  local iteration="$3"
+
+  cat >"$output_file" <<EOF
+You are the Ralph queue chooser for iteration $iteration.
+
+Main worktree: $repo_root
+Current branch: $output_branch
+Plan file: $plan_snapshot
+Task index: $task_index
+Ready task candidates: $ready_tasks_file
+Run history: $history_file
+
+Read the plan snapshot and the ready task candidate list. Pick the single best next runnable task for Ralph to execute now.
+
+Rules:
+- Choose exactly one runnable task from the candidate list when at least one meaningful runnable candidate exists.
+- Prefer the task that best advances the plan now; you are not required to pick the numerically earliest task.
+- Use the history file to avoid mindlessly repeating an unproductive attempt pattern, but do requeue the same task when the plan clearly intends a rerun.
+- Output stop only when there is no meaningful runnable work left in the plan right now.
+- Do not edit repository files.
+
+Write exactly these lines and nothing else:
+Decision: run-task | stop
+Task: <number>\t<id> | none
+Reason: <one concise sentence>
 EOF
 }
 
@@ -554,65 +640,125 @@ cleanup_mbt_artifacts() {
   rm -rf "$repo_root/packages/fat-traces" 2>/dev/null || true
 }
 
-log "base $base_ref is $base_sha"
-log "output branch: $output_branch"
-log "run state: $run_root"
-
-kill_stray_mbt_processes
-cleanup_mbt_artifacts
-
-next_ready_task_row() {
-  while IFS=$'\t' read -r task_no task_id status task_start task_end task_title; do
-    [[ -n "$task_no" ]] || continue
-    if [[ "$status" == "ready-for-research" || "$status" == "ready-for-implementation-after-light-research" ]]; then
-      printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$task_no" "$task_id" "$status" "$task_start" "$task_end" "$task_title"
-      return 0
-    fi
-  done <"$task_index"
-
-  return 1
+assert_clean_main_worktree() {
+  git diff --quiet || return 1
+  git diff --cached --quiet || return 1
 }
 
-MAX_TASK_ATTEMPTS=3
+parse_chooser_output() {
+  local chooser_output="$1"
+  node - "$chooser_output" <<'NODE'
+const fs = require("fs")
+const text = fs.readFileSync(process.argv[2], "utf8")
+const decision = text.match(/^Decision:\s*(.+)$/m)?.[1]?.trim() ?? ""
+const task = text.match(/^Task:\s*(.+)$/m)?.[1]?.trim() ?? ""
+const reason = text.match(/^Reason:\s*(.+)$/m)?.[1]?.trim() ?? ""
+if (!decision || !task || !reason) {
+  throw new Error("chooser output missing Decision/Task/Reason lines")
+}
+process.stdout.write(`${decision}\t${task}\t${reason}`)
+NODE
+}
 
-while true; do
+choose_next_task() {
+  local iteration="$1"
+  local chooser_root="$iterations_root/iteration-$iteration"
+  local ready_tasks_file="$chooser_root/ready-tasks.tsv"
+  local chooser_prompt="$chooser_root/chooser.prompt.md"
+  local chooser_output="$chooser_root/chooser.final.md"
+  local chooser_log="$chooser_root/chooser.log"
+  mkdir -p "$chooser_root"
+
   refresh_plan_snapshot
+
   if [[ ${#selected_tasks[@]} -gt 0 ]]; then
-    task_row=""
-    for task_no in "${task_numbers[@]}"; do
-      [[ -z "${processed_tasks[$task_no]+x}" ]] || continue
-      task_row="$(lookup_task_row "$task_no")" || die "selected task $task_no no longer exists in refreshed plan snapshot"
-      break
+    local selected
+    for selected in "${selected_tasks[@]}"; do
+      if lookup_task_row "$selected" >/dev/null 2>&1; then
+        lookup_task_row "$selected"
+        return 0
+      fi
     done
-    [[ -n "$task_row" ]] || break
-  else
-    task_row="$(next_ready_task_row)" || break
+    return 1
   fi
 
-  IFS=$'\t' read -r task_no task_id status task_start task_end task_title <<<"$task_row"
-  task_attempts["$task_no"]=$(( ${task_attempts["$task_no"]:-0} + 1 ))
-  if (( task_attempts["$task_no"] > MAX_TASK_ATTEMPTS )); then
-    die "task $task_no ($task_id) exceeded ${MAX_TASK_ATTEMPTS} Ralph attempts in this run while remaining runnable; fix the plan transition or split the work into a new task number"
-  fi
-  if [[ ${#selected_tasks[@]} -gt 0 ]]; then
-    processed_tasks["$task_no"]=1
+  write_ready_tasks_file "$ready_tasks_file"
+  if [[ ! -s "$ready_tasks_file" ]]; then
+    note "chooser" "no-runnable-tasks"
+    return 1
   fi
 
-  task_root="$run_root/task-$task_no"
-  task_file="$task_root/task.md"
-  claude_worktree="$worktree_root/task-$task_no/claude"
-  codex_worktree="$worktree_root/task-$task_no/codex"
-  claude_branch="ralph/$run_id/task-$task_no/claude"
-  codex_branch="ralph/$run_id/task-$task_no/codex"
-  task_base_ref="$output_branch"
+  write_chooser_prompt "$chooser_prompt" "$ready_tasks_file" "$iteration"
+  if ! run_codex "$repo_root" "$chooser_prompt" "$chooser_log" "$chooser_output"; then
+    printf 'chooser failed for iteration %s\n' "$iteration" >"$last_error_file"
+    note "chooser" "failed iteration=$iteration"
+    return 2
+  fi
+
+  local chooser_decision chooser_task chooser_reason chooser_task_no chooser_task_id task_row
+  IFS=$'\t' read -r chooser_decision chooser_task chooser_reason < <(parse_chooser_output "$chooser_output")
+  note "chooser" "decision=$chooser_decision task=$chooser_task reason=$chooser_reason"
+
+  if [[ "$chooser_decision" == "stop" ]]; then
+    return 1
+  fi
+
+  [[ "$chooser_decision" == "run-task" ]] || {
+    printf 'invalid chooser decision: %s\n' "$chooser_decision" >"$last_error_file"
+    return 2
+  }
+
+  chooser_task_no="${chooser_task%%$'\t'*}"
+  chooser_task_id="${chooser_task#*$'\t'}"
+  [[ "$chooser_task_no" != "$chooser_task_id" ]] || chooser_task_id=""
+
+  task_row="$(lookup_task_row "$chooser_task_no")" || {
+    printf 'chooser selected nonexistent task: %s\n' "$chooser_task_no" >"$last_error_file"
+    return 2
+  }
+
+  IFS=$'\t' read -r _task_no _task_id _status _task_start _task_end _task_title <<<"$task_row"
+  task_status_is_runnable "$_status" || {
+    printf 'chooser selected non-runnable task: %s (%s)\n' "$_task_no" "$_status" >"$last_error_file"
+    return 2
+  }
+  if [[ -n "$chooser_task_id" && "$chooser_task_id" != "$_task_id" ]]; then
+    printf 'chooser selected mismatched task id: expected %s got %s\n' "$_task_id" "$chooser_task_id" >"$last_error_file"
+    return 2
+  fi
+
+  printf '%s\n' "$task_row"
+}
+
+run_task_attempt() {
+  local iteration="$1"
+  local task_no="$2"
+  local task_id="$3"
+  local status="$4"
+  local task_start="$5"
+  local task_end="$6"
+  local task_title="$7"
+  local attempt_no="$8"
+
+  local task_root="$run_root/task-$task_no"
+  local attempt_root="$task_root/attempt-$attempt_no"
+  local task_file="$attempt_root/task.md"
+  local claude_worktree="$worktree_root/task-$task_no-attempt-$attempt_no/claude"
+  local codex_worktree="$worktree_root/task-$task_no-attempt-$attempt_no/codex"
+  local claude_branch="ralph/$run_id/task-$task_no/attempt-$attempt_no/claude"
+  local codex_branch="ralph/$run_id/task-$task_no/attempt-$attempt_no/codex"
+  local task_base_ref="$output_branch"
+  local task_base_sha
   task_base_sha="$(git rev-parse HEAD)"
-  task_branches+=("$claude_branch" "$codex_branch")
 
-  mkdir -p "$task_root" "$worktree_root/task-$task_no"
+  mkdir -p "$attempt_root" "$(dirname "$claude_worktree")"
   sed -n "${task_start},${task_end}p" "$plan_snapshot" >"$task_file"
 
-  log "task $task_no: $task_title"
-  log "task $task_no base is $task_base_sha"
+  task_branches+=("$claude_branch" "$codex_branch")
+  active_worktrees+=("$claude_worktree" "$codex_worktree")
+
+  log "task $task_no attempt $attempt_no: $task_title"
+  note "task" "start iteration=$iteration task=$task_no id=$task_id attempt=$attempt_no status=$status base=$task_base_sha"
 
   kill_stray_mbt_processes
   cleanup_mbt_artifacts
@@ -624,79 +770,157 @@ while true; do
   disable_fuzz_scripts_in_worktree "$claude_worktree"
   disable_fuzz_scripts_in_worktree "$codex_worktree"
 
-  write_prompt "Claude implementer" "$task_root/claude-implementer.prompt.md" "$claude_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
-  write_prompt "Codex implementer" "$task_root/codex-implementer.prompt.md" "$codex_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
+  write_prompt "Claude implementer" "$attempt_root/claude-implementer.prompt.md" "$claude_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
+  write_prompt "Codex implementer" "$attempt_root/codex-implementer.prompt.md" "$codex_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
 
-  run_claude "$claude_worktree" "$task_root/claude-implementer.prompt.md" "$task_root/claude-implementer.log" &
-  claude_pid=$!
+  run_claude "$claude_worktree" "$attempt_root/claude-implementer.prompt.md" "$attempt_root/claude-implementer.log" &
+  local claude_pid=$!
   child_pids+=("$claude_pid")
-  run_codex "$codex_worktree" "$task_root/codex-implementer.prompt.md" "$task_root/codex-implementer.log" "$task_root/codex-implementer.final.md" &
-  codex_pid=$!
+  run_codex "$codex_worktree" "$attempt_root/codex-implementer.prompt.md" "$attempt_root/codex-implementer.log" "$attempt_root/codex-implementer.final.md" &
+  local codex_pid=$!
   child_pids+=("$codex_pid")
 
-  claude_status=0
-  codex_status=0
+  local claude_status=0
+  local codex_status=0
   wait "$claude_pid" || claude_status=$?
   wait "$codex_pid" || codex_status=$?
   child_pids=()
 
-  printf '%s\n' "$claude_status" >"$task_root/claude-implementer.exit"
-  printf '%s\n' "$codex_status" >"$task_root/codex-implementer.exit"
+  printf '%s\n' "$claude_status" >"$attempt_root/claude-implementer.exit"
+  printf '%s\n' "$codex_status" >"$attempt_root/codex-implementer.exit"
+  save_diff "$claude_worktree" "$attempt_root/claude.diff" "$task_base_sha"
+  save_diff "$codex_worktree" "$attempt_root/codex.diff" "$task_base_sha"
 
-  save_diff "$claude_worktree" "$task_root/claude.diff" "$task_base_sha"
-  save_diff "$codex_worktree" "$task_root/codex.diff" "$task_base_sha"
+  write_review_prompt "Claude" "$claude_worktree" "$attempt_root/claude-review.md" "$attempt_root/claude-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
+  write_review_prompt "Codex" "$codex_worktree" "$attempt_root/codex-review.md" "$attempt_root/codex-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
 
-  write_review_prompt "Claude" "$claude_worktree" "$task_root/claude-review.md" "$task_root/claude-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
-  write_review_prompt "Codex" "$codex_worktree" "$task_root/codex-review.md" "$task_root/codex-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
-
-  run_codex "$claude_worktree" "$task_root/claude-review.prompt.md" "$task_root/claude-review.log" "$task_root/claude-review.md" &
-  claude_review_pid=$!
+  run_codex "$claude_worktree" "$attempt_root/claude-review.prompt.md" "$attempt_root/claude-review.log" "$attempt_root/claude-review.md" &
+  local claude_review_pid=$!
   child_pids+=("$claude_review_pid")
-  run_codex "$codex_worktree" "$task_root/codex-review.prompt.md" "$task_root/codex-review.log" "$task_root/codex-review.md" &
-  codex_review_pid=$!
+  run_codex "$codex_worktree" "$attempt_root/codex-review.prompt.md" "$attempt_root/codex-review.log" "$attempt_root/codex-review.md" &
+  local codex_review_pid=$!
   child_pids+=("$codex_review_pid")
 
-  claude_review_status=0
-  codex_review_status=0
+  local claude_review_status=0
+  local codex_review_status=0
   wait "$claude_review_pid" || claude_review_status=$?
   wait "$codex_review_pid" || codex_review_status=$?
   child_pids=()
 
-  printf '%s\n' "$claude_review_status" >"$task_root/claude-review.exit"
-  printf '%s\n' "$codex_review_status" >"$task_root/codex-review.exit"
-
-  save_diff "$claude_worktree" "$task_root/claude.after-review.diff" "$task_base_sha"
-  save_diff "$codex_worktree" "$task_root/codex.after-review.diff" "$task_base_sha"
+  printf '%s\n' "$claude_review_status" >"$attempt_root/claude-review.exit"
+  printf '%s\n' "$codex_review_status" >"$attempt_root/codex-review.exit"
+  save_diff "$claude_worktree" "$attempt_root/claude.after-review.diff" "$task_base_sha"
+  save_diff "$codex_worktree" "$attempt_root/codex.after-review.diff" "$task_base_sha"
 
   if [[ "$skip_decider" == true ]]; then
-    log "task $task_no: skipping decider by request"
-    continue
+    note "task" "skip-decider task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "skipped" "-" "skip-decider"
+    return 0
   fi
 
-  write_decider_prompt "$task_root/decider.prompt.md" "$task_no" "$task_file" "$task_base_sha" "$claude_worktree" "$codex_worktree" "$task_root"
-  run_codex "$repo_root" "$task_root/decider.prompt.md" "$task_root/decider.log" "$task_root/decider.final.md"
-
-  if ! grep -Eqi "Plan Impact|Plan impact" "$task_root/decider.final.md"; then
-    die "task $task_no decider final report is missing a Plan Impact section"
+  write_decider_prompt "$attempt_root/decider.prompt.md" "$task_no" "$task_file" "$task_base_sha" "$claude_worktree" "$codex_worktree" "$attempt_root"
+  if ! run_codex "$repo_root" "$attempt_root/decider.prompt.md" "$attempt_root/decider.log" "$attempt_root/decider.final.md"; then
+    printf 'decider failed for task %s attempt %s\n' "$task_no" "$attempt_no" >"$last_error_file"
+    note "task" "fatal-decider-failure task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-decider-failure" "-" "decider exited non-zero"
+    return 2
   fi
 
-  git diff --quiet || die "task $task_no decider left unstaged tracked changes; commit or clean them before continuing"
-  git diff --cached --quiet || die "task $task_no decider left staged changes; commit or clean them before continuing"
+  if ! grep -Eqi "Plan Impact|Plan impact" "$attempt_root/decider.final.md"; then
+    printf 'task %s attempt %s missing Plan Impact section in decider final\n' "$task_no" "$attempt_no" >"$last_error_file"
+    note "task" "fatal-missing-plan-impact task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-plan-impact" "-" "decider missing plan impact"
+    return 2
+  fi
+
+  if ! assert_clean_main_worktree; then
+    printf 'task %s attempt %s left main worktree dirty\n' "$task_no" "$attempt_no" >"$last_error_file"
+    note "task" "fatal-dirty-main-worktree task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-dirty-main-worktree" "-" "decider left tracked changes"
+    return 2
+  fi
+
   refresh_plan_snapshot
   kill_stray_mbt_processes
   cleanup_mbt_artifacts
+
+  local new_head
+  new_head="$(git rev-parse HEAD)"
+  note "task" "complete iteration=$iteration task=$task_no attempt=$attempt_no head=$new_head"
+  append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "completed" "$new_head" "$task_title"
 
   if [[ "$keep_worktrees" == false ]]; then
     git worktree remove --force "$claude_worktree" >/dev/null 2>&1 || true
     git worktree remove --force "$codex_worktree" >/dev/null 2>&1 || true
     git branch -D "$claude_branch" >/dev/null 2>&1 || true
     git branch -D "$codex_branch" >/dev/null 2>&1 || true
+    active_worktrees=("${active_worktrees[@]/$claude_worktree}")
+    active_worktrees=("${active_worktrees[@]/$codex_worktree}")
     task_branches=("${task_branches[@]/$claude_branch}")
     task_branches=("${task_branches[@]/$codex_branch}")
-    rmdir "$worktree_root/task-$task_no" >/dev/null 2>&1 || true
+    rmdir "$(dirname "$claude_worktree")" >/dev/null 2>&1 || true
   fi
 
-  log "task $task_no reconciled"
+  return 0
+}
+
+declare -A task_attempts=()
+iteration=0
+
+log "base $base_ref is $base_sha"
+log "output branch: $output_branch"
+log "run state: $run_root"
+note "run" "start base=$base_ref sha=$base_sha output=$output_branch"
+
+kill_stray_mbt_processes
+cleanup_mbt_artifacts
+refresh_plan_snapshot
+
+while true; do
+  if ! assert_clean_main_worktree; then
+    printf 'main worktree became dirty outside the decider path\n' >"$last_error_file"
+    note "run" "fatal-main-worktree-dirty"
+    exit 1
+  fi
+
+  iteration=$((iteration + 1))
+  task_row=""
+  chooser_status=0
+  task_row="$(choose_next_task "$iteration")" || chooser_status=$?
+
+  if [[ "$chooser_status" -eq 1 ]]; then
+    note "run" "no-next-task iteration=$iteration"
+    break
+  fi
+  if [[ "$chooser_status" -eq 2 ]]; then
+    note "run" "fatal-chooser iteration=$iteration"
+    exit 1
+  fi
+
+  IFS=$'\t' read -r task_no task_id status task_start task_end task_title <<<"$task_row"
+  task_attempts["$task_no"]=$(( ${task_attempts["$task_no"]:-0} + 1 ))
+  attempt_no="${task_attempts[$task_no]}"
+
+  task_result=0
+  run_task_attempt "$iteration" "$task_no" "$task_id" "$status" "$task_start" "$task_end" "$task_title" "$attempt_no" || task_result=$?
+  if [[ "$task_result" -eq 2 ]]; then
+    note "run" "fatal-task-error iteration=$iteration task=$task_no attempt=$attempt_no"
+    exit 1
+  fi
+
+  if [[ ${#selected_tasks[@]} -gt 0 ]]; then
+    new_selected_tasks=()
+    for selected in "${selected_tasks[@]}"; do
+      if [[ "$selected" != "$task_no" ]]; then
+        new_selected_tasks+=("$selected")
+      fi
+    done
+    selected_tasks=("${new_selected_tasks[@]}")
+    if [[ ${#selected_tasks[@]} -eq 0 ]]; then
+      note "run" "selected-tasks-finished"
+      break
+    fi
+  fi
 done
 
 log "done. run state: $run_root"
